@@ -29,15 +29,11 @@ GET   /password-reset                  controllers.Auth.passwordReset
 POST  /password-reset                  controllers.Auth.passwordResetApply
 GET   /logout                          controllers.Auth.logoutGet
 POST  /logout                          controllers.Auth.logout
-GET   /auth/magic-link                 controllers.Auth.magicLink
-POST  /auth/magic-link/apply           controllers.Auth.magicLinkApply
-GET   /auth/magic-link/sent            controllers.Auth.magicLinkSent
 GET   /auth/check-email                controllers.Auth.checkYourEmail
 POST  /auth/fix-email                  controllers.Auth.fixEmail
 GET   /auth/password-reset/:token      controllers.Auth.passwordResetToken(token)
 POST  /auth/password-reset/:token      controllers.Auth.passwordResetTokenApply(token)
-GET   /auth/token/:token               controllers.Auth.loginWithToken(token)
-POST  /auth/token/:token               controllers.Auth.loginWithTokenPost(token)
+GET   /auth/signup-confirm/:token      controllers.Auth.signupConfirmToken(token)
 
 # Analysis and Study
 GET   /analysis                        controllers.UserAnalysis.index

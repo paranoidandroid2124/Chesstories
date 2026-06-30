@@ -10,10 +10,6 @@ include "version"
 # change for additional encryption of password hashes
 user.password.bpass.secret = "9qEYN0ThHer1KWLNekA76Q=="
 
-# keep false for production so magic links only log in existing members.
-# set true only if you intentionally want beta-style email-only auto signup.
-auth.magicLink.autoCreate = false
-
 # keep true for open beta so new signups confirm their email before the account opens.
 security.email_confirm.enabled = true
 

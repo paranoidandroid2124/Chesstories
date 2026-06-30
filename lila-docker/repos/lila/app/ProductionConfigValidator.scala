@@ -111,9 +111,6 @@ object ProductionConfigValidator:
       invalid = Set("10000000-ffff-ffff-ffff-000000000001", "f91a151d-73e5-4a95-9d4e-74bfa19bec9d")
     )
 
-    if config.getOptional[Boolean]("auth.magicLink.autoCreate").getOrElse(false) then
-      errors += "auth.magicLink.autoCreate must be false in production."
-
   private def requireObservability(
       config: Configuration,
       errors: ListBuffer[String]

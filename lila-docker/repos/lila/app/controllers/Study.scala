@@ -405,7 +405,7 @@ final class Study(
       case Some(study) =>
         env.study.api
           .delete(study)
-          .inject(Redirect(mineLanding()).flashing("success" -> "Notebook deleted."))
+          .inject(Redirect(mineLanding()).flashing("success" -> "Review study deleted."))
       case _ => notFound
     }
   }

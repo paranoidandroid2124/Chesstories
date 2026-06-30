@@ -26,8 +26,7 @@ final class Spam(spamKeywords: () => lila.core.data.Strings) extends lila.core.s
   private lazy val staticBlacklist = List(
     "chess-bot.com",
     "chessbotx",
-    "/auth/magic-link/login/",
-    "/auth/token/"
+    "/auth/signup-confirm/"
   ) ::: bannedYoutubeIds ::: referBlacklist
 
   def replace(text: String): String =

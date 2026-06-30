@@ -36,31 +36,31 @@ function analyseView(ctrl: AnalyseCtrl): VNode {
   return renderMain(
     ctx,
     ctrl.keyboardHelp && keyboardView(ctrl),
-    renderSide(ctrl),
+    renderSide(),
     renderBoard(ctx),
     renderTools(ctx),
     renderControls(ctrl),
     renderUnderboard(ctx),
     trainingView(ctrl),
     !ctrl.synthetic &&
-    playable(ctrl.data) &&
-    hl(
-      'div.back-to-game',
+      playable(ctrl.data) &&
       hl(
-        'a.button.button-empty.text',
-        {
-          attrs: {
-            href: `/${ctrl.data.game.id}/${ctrl.data.player.color}`,
-            'data-icon': licon.Back,
+        'div.back-to-game',
+        hl(
+          'a.button.button-empty.text',
+          {
+            attrs: {
+              href: `/${ctrl.data.game.id}/${ctrl.data.player.color}`,
+              'data-icon': licon.Back,
+            },
           },
-        },
-        'Back to game',
+          'Back to game',
+        ),
       ),
-    ),
   );
 }
 
-function renderSide(ctrl: AnalyseCtrl): VNode | undefined {
+function renderSide(): VNode | undefined {
   return undefined;
 }
 

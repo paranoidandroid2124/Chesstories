@@ -32,26 +32,6 @@ The Chesstory team"""
           ).some
         )
 
-  def magicLinkLogin(email: EmailAddress, url: String): Funit =
-    mailer.canSend.so:
-      val body =
-        s"""Hello,
-           |
-           |Use this link to log in:
-           |$url
-           |
-           |If you did not request this, you can ignore this email.
-           |
-           |$regards
-           |""".stripMargin
-      mailer.sendOrSkip:
-        Mailer.Message(
-          to = email,
-          subject = "Your login link",
-          text = Mailer.txt.addServiceNote(body),
-          htmlBody = standardEmail(body).some
-        )
-
   def signupConfirm(user: User, email: EmailAddress, url: String): Funit =
     mailer.canSend.so:
       val body =

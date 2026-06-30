@@ -3,7 +3,7 @@ type ChesstoryBriefSectionKey =
   | 'middlegame-plan'
   | 'current-decision'
   | 'better-plan'
-  | 'proof';
+  | 'evidence';
 
 export interface ChesstoryBriefSection {
   key: ChesstoryBriefSectionKey;
@@ -39,9 +39,9 @@ export function chesstoryBriefSections(): ChesstoryBriefSection[] {
       pending: true,
     },
     {
-      key: 'proof',
-      title: 'Proof on the board',
-      body: 'Which line, eval shift, or board cue makes the lesson believable?',
+      key: 'evidence',
+      title: 'Evidence from the board',
+      body: 'Which engine line, eval shift, or board cue makes the idea trustworthy?',
       pending: true,
     },
   ];

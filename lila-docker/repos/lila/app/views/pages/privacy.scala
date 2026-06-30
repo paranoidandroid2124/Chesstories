@@ -63,9 +63,33 @@ object privacy:
                 ul(
                   li("Hosting and infrastructure providers"),
                   li("Email delivery providers"),
-                  li("AI or model providers when needed to generate analysis features. This may include chess positions, FENs, PGNs, move lists, candidate lines, notes or comments you ask Chesstory to explain, and related metadata needed to return the feature"),
+                  li("AI or model providers when needed to generate analysis features"),
                   li("Anti-abuse or captcha providers such as hCaptcha when enabled to protect the Service"),
                   li("Authorities or counterparties when required by law or reasonably necessary to protect rights, safety, or the Service")
+                ),
+                h3("AI and model processing"),
+                p(
+                  "Some Chesstory explanations may be generated with help from configured model providers, such as OpenAI, Together AI, or similar API providers. ",
+                  "Provider availability can change during beta, and providers with stricter age, privacy, or data-use requirements will not be enabled for public production unless Chesstory's access rules and notices are updated first."
+                ),
+                p("When you request an AI-assisted explanation, Chesstory may send only the information needed to produce that explanation, such as:"),
+                ul(
+                  li("PGN, FEN, move list, selected move, side to move, player color, candidate lines, Stockfish evaluation, MultiPV lines, and opening or middlegame context"),
+                  li("notes, comments, Study section text, or follow-up instructions you choose to ask Chesstory to explain"),
+                  li("limited technical metadata such as an internal request identifier, feature name, quota state, error state, and timing information needed for reliability, abuse prevention, and debugging")
+                ),
+                p(
+                  "Chesstory does not intentionally include your password, payment information, account email, contact messages, or unrelated account settings in model prompts. ",
+                  "Do not place sensitive personal information, confidential third-party material, or private non-chess information inside PGNs, notes, comments, or prompts unless you are comfortable with that information being processed for the requested explanation."
+                ),
+                p(
+                  "Generated explanations may be stored by Chesstory when you save them as part of a review study, note, import history, or analysis record. ",
+                  "Temporary request logs may be retained for a limited period for reliability, security, abuse prevention, and debugging. ",
+                  "Model providers may also process prompts and outputs under their own API terms, privacy terms, data-processing settings, and retention policies."
+                ),
+                p(
+                  "Chesstory does not use your private PGNs, notes, or saved review studies to train a general-purpose model. ",
+                  "We may use aggregated, de-identified, or manually reviewed product feedback to improve analysis quality, but we try to remove account identifiers where practical before internal review."
                 )
               ),
 
@@ -106,7 +130,7 @@ object privacy:
               st.section(cls := "legal-section")(
                 h2("6. Study Visibility and Sharing"),
                 p(
-                  "Review Studies can be private, link-shareable, or public depending on the visibility you choose. ",
+                  "Review studies can be private, link-shareable, or public depending on the visibility you choose. ",
                   "Private studies are intended for you and invited collaborators. Link-shareable studies can be opened by anyone who receives the link. Public studies may appear in public lists."
                 ),
                 p(

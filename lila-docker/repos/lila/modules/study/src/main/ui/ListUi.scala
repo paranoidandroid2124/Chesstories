@@ -18,7 +18,7 @@ final class ListUi(helpers: Helpers, bits: StudyBits):
 
   def all(pag: Paginator[WithChaptersAndLiked], order: StudyOrder)(using Context) =
     page(
-      title = "Public Review Studies",
+      title = "Public review studies",
       active = "all",
       order = order,
       pag = pag,
@@ -27,7 +27,7 @@ final class ListUi(helpers: Helpers, bits: StudyBits):
 
   def mine(pag: Paginator[WithChaptersAndLiked], order: StudyOrder)(using Context) =
     page(
-      title = "My Review Studies",
+      title = "My review studies",
       active = "mine",
       order = order,
       pag = pag,

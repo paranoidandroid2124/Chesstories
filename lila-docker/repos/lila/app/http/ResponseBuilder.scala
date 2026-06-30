@@ -89,7 +89,7 @@ trait ResponseBuilder(using Executor)
 
   def authenticationFailed(using ctx: Context): Fu[Result] =
     negotiate(
-      html = Redirect(routes.Auth.magicLink.url),
+      html = Redirect(routes.Auth.login.url),
       json = Unauthorized(jsonError("Login required"))
     )
 

@@ -116,7 +116,7 @@ final class Account(
     val closeF = env.user.api.disable(me.id) >> env.security.sessionStore.closeAllSessionsOf(me.id)
     closeF.inject(
       Redirect(routes.Main.landing)
-        .flashing("success" -> "Account closed. You can reopen it later with an email login link.")
+        .flashing("success" -> "Account closed. Contact support from the same email address if you need it reopened.")
         .discardingCookies(DiscardingCookie(env.security.api.sessionIdKey))
     )
   }

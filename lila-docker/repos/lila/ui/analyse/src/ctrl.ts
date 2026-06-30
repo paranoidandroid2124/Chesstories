@@ -49,7 +49,6 @@ import * as studyApi from './studyApi';
 import type { PgnError } from 'chessops/pgn';
 
 import { confirm } from 'lib/view';
-import api from './api';
 import { displayColumns } from 'lib/device';
 import { dispatchChessgroundResize } from 'lib/chessgroundResize';
 import * as Prefs from 'lib/prefs';
@@ -67,8 +66,8 @@ interface AnalyseHistoryState {
   analysePly: Ply;
 }
 
-function magicLinkHref(): string {
-  return `/auth/magic-link?referrer=${encodeURIComponent(location.pathname + location.search)}`;
+function loginHref(): string {
+  return `/login?referrer=${encodeURIComponent(location.pathname + location.search)}`;
 }
 
 export default class AnalyseCtrl implements CevalHandler {
@@ -227,8 +226,6 @@ export default class AnalyseCtrl implements CevalHandler {
       }
     });
     this.mergeIdbThenShowTreeView();
-    const analysisApi = api(this);
-    const globals = window as any;
   }
 
   private studyRef(): studyApi.StudyRef | null {
@@ -324,7 +321,7 @@ export default class AnalyseCtrl implements CevalHandler {
     });
   }
 
-  studyLoginHref = (): string => magicLinkHref();
+  studyLoginHref = (): string => loginHref();
 
   studyNeedsAuth = (): boolean => !myUserId();
 

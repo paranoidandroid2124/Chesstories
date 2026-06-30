@@ -90,7 +90,7 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
     val prefs = "Preferences"
     frag(
       div(cls := "signin-or-signup")(
-        a(href := s"${routes.Auth.magicLink.url}?referrer=${ctx.req.path}", cls := "signin")("Sign in")
+        a(href := s"${routes.Auth.login.url}?referrer=${ctx.req.path}", cls := "signin")("Sign in")
       ),
       div(cls := "dasher")(
         button(cls := "toggle anon link", title := prefs, aria.label := prefs, dataIcon := Icon.Gear),

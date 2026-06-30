@@ -6,8 +6,8 @@ import { type VNode, type LooseVNode, type LooseVNodes, bind, onInsert, icon, hl
 import { displayColumns, isMobile } from 'lib/device';
 import * as materialView from 'lib/game/view/material';
 
-import { boardSettingsView, view as actionMenu } from './actionMenu';
-import explorerView, { renderExplorerPanel } from '../explorer/explorerView';
+import { view as actionMenu } from './actionMenu';
+import explorerView from '../explorer/explorerView';
 import { view as forkView } from '../fork';
 import renderClocks from './clocks';
 import * as control from '../control';
@@ -557,7 +557,7 @@ function renderStudyWorkspacePanel(ctrl: AnalyseCtrl): VNode | null {
   const syncTone = ctrl.studyWriteError ? 'error' : ctrl.isStudyWriting() ? 'info' : 'success';
   const syncMessage = actionMessage || ctrl.studyStatusText();
   const privateStudy = study.visibility === 'private';
-  const copyLabel = privateStudy ? ' Copy private Study link' : ' Copy Review Study link';
+  const copyLabel = privateStudy ? ' Copy private study link' : ' Copy review study link';
   const sharePill = privateStudy ? 'Only collaborators can open the link' : 'Share the exact section link';
 
   return hl('section.copyables__study.copyables__study--current', [
@@ -575,7 +575,7 @@ function renderStudyWorkspacePanel(ctrl: AnalyseCtrl): VNode | null {
         studyUrl
           ? hl('a.button.button-thin.copyables__study-button', { attrs: { href: studyUrl } }, [
               renderNotebookGlyph('page', 'copyables__study-button-glyph'),
-              ' Open Review Study',
+              ' Open review study',
             ])
           : null,
         hl(
@@ -607,7 +607,7 @@ function renderStudyWorkspacePanel(ctrl: AnalyseCtrl): VNode | null {
             hl(
               'p',
               section.key === 'current-decision'
-                ? 'Attach notes and proof lines to this move when it changes the plan.'
+                ? 'Attach notes and supporting lines to this move when it changes the plan.'
                 : 'Use this slot before adding deeper variations.',
             ),
           ]),
@@ -756,7 +756,7 @@ function renderStudySetupModal(ctrl: AnalyseCtrl): VNode | null {
               },
               [
                 renderNotebookGlyph('notebook', 'copyables__study-button-glyph'),
-                busy ? ' Creating...' : ' Create Review Study',
+                busy ? ' Creating...' : ' Create review study',
               ],
             ),
           ]),
@@ -820,7 +820,7 @@ function renderStudyLaunchPanel(ctrl: AnalyseCtrl, pgnStatus: PgnDraftStatus): V
     hl('div.analyse-review__summary-grid.copyables__study-summary', [
       compactSummaryCard('Opening idea', 'start'),
       compactSummaryCard('Plan thread', 'middle'),
-      compactSummaryCard('Board notes', 'evidence'),
+      compactSummaryCard('Board cues', 'evidence'),
     ]),
     renderStudyStatusCard(
       busy
@@ -834,7 +834,7 @@ function renderStudyLaunchPanel(ctrl: AnalyseCtrl, pgnStatus: PgnDraftStatus): V
     error && !setupOpen ? renderStudyStatusCard(error, 'error') : null,
     hl('div.copyables__study-pills', [
       studyFeaturePill('page', 'Opening-to-plan notes'),
-      studyFeaturePill('section', 'Lines stay playable evidence'),
+      studyFeaturePill('section', 'Playable lines'),
       studyFeaturePill('bookmark', 'Shareable section link'),
     ]),
     renderStudySetupModal(ctrl),
@@ -990,10 +990,10 @@ function renderStudyStatusCard(message: string, tone: 'info' | 'success' | 'erro
       'strong',
       title ||
         (tone === 'error'
-          ? 'Review Study issue'
+          ? 'Review study issue'
           : tone === 'info'
-            ? 'Review Study in progress'
-            : 'Review Study ready'),
+            ? 'Review study in progress'
+            : 'Review study ready'),
     ),
     hl('span', message),
   ]);

@@ -79,7 +79,7 @@ async function writeManifest() {
       .replaceAll("'", '&#39;')
       .replaceAll('"', '&quot;');
     commitHash = cps.execSync('git rev-parse -q HEAD', { encoding: 'utf-8' }).trim();
-  } catch (e) {
+  } catch {
     // Ignore git errors
   }
 
@@ -91,13 +91,14 @@ async function writeManifest() {
     `s.info.message='${commitMessage}';`,
     `s.debug=${env.debug};`,
     's.asset={loadEsm:(m,o)=>import(`/assets/compiled/${m}${s.manifest.js[m]?"."+s.manifest.js[m]:""}.js`)' +
-    '.then(x=>(x.initModule||x.default)(o.init)),' +
-    'loadEsmPage:(m,o)=>s.asset.loadEsm(m,o)};',
+      '.then(x=>(x.initModule||x.default)(o.init)),' +
+      'loadEsmPage:(m,o)=>s.asset.loadEsm(m,o)};',
     // a light version of loadEsm for embeds. on pages this will be overwritten by site.js
   ];
   if (env.remoteLog) clientJs.push(await jsLogger());
 
-  const pairLine = ([name, info]: [string, SplitAsset]) => `'${name.replaceAll('\\', '/').replaceAll("'", "\\'")}':'${info.hash}'`;
+  const pairLine = ([name, info]: [string, SplitAsset]) =>
+    `'${name.replaceAll('\\', '/').replaceAll("'", "\\'")}':'${info.hash}'`;
 
   const jsLines = Object.entries(manifest.js)
     .filter(([name, _]) => !/lib\.[A-Z0-9]{8}/.test(name))

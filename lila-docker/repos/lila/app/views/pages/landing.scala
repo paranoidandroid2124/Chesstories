@@ -77,7 +77,7 @@ object landing:
           h1("Chess analysis that explains what the position is asking"),
           p(cls := "hero-summary")(
             "Paste a PGN or import a public game. Chesstory keeps Stockfish as evidence, " +
-              "then turns the key position into human strategic explanation and a shareable Review Study."
+              "then turns the key position into human strategic explanation and a shareable review study."
           ),
           div(cls := "hero-cta")(
             a(href := routes.UserAnalysis.index.url, cls := "btn-primary")("Analyze a game"),
@@ -94,15 +94,15 @@ object landing:
             board("motion-demo__board"),
             div(cls := "motion-demo__engine")(
               span(cls := "motion-demo__label")("Stockfish"),
-              strong("+0.71 depth 22"),
-              engineLine("c3", "+0.71", true),
-              engineLine("Nbd2", "+0.60", false),
-              engineLine("Re1", "+0.60", false)
+              strong("+0.37 depth 22"),
+              engineLine("c3", "+0.37", true),
+              engineLine("Nbd2", "+0.25", false),
+              engineLine("a4", "+0.22", false)
             ),
             div(cls := "motion-demo__explain")(
               span(cls := "motion-demo__label")("Chesstory"),
               strong("White is choosing how to make d4 real."),
-              p("h3 is playable at +0.59, but c3 first ties the next move to the central break the structure is asking for.")
+              p("h3 is playable at +0.20, but c3 first ties the next move to the central break the structure is asking for.")
             )
           )
         )
@@ -117,7 +117,7 @@ object landing:
           h2("Watch a game turn into an explanation you can study"),
           p(
             "Raw game text becomes a board you can inspect. Stockfish shows the evidence. " +
-              "Chesstory turns the key position into a plan, then keeps it as a Review Study."
+              "Chesstory turns the key position into a plan, then keeps it as a review study."
           )
         )
       ),
@@ -127,26 +127,26 @@ object landing:
             div(cls := "cinema-stage__shell")(
               div(cls := "cinema-layer cinema-layer--pgn")(
                 span(cls := "cinema-kicker")("Raw game"),
-                code("[White \"WhitePlayer\"] [Black \"BlackPlayer\"] 1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O Nf6 5. d3 O-O")
+                code("[White \"You\"] [Black \"Opponent\"] 1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O Nf6 5. d3 O-O")
               ),
               board("cinema-layer cinema-layer--board"),
               div(cls := "cinema-layer cinema-layer--engine")(
                 span(cls := "cinema-kicker")("Engine evidence"),
-                strong("+0.71 / depth 22"),
-                engineLine("c3", "+0.71", true),
-                engineLine("Nbd2", "+0.60", false),
-                engineLine("Re1", "+0.60", false)
+                strong("+0.37 / depth 22"),
+                engineLine("c3", "+0.37", true),
+                engineLine("Nbd2", "+0.25", false),
+                engineLine("a4", "+0.22", false)
               ),
               div(cls := "cinema-layer cinema-layer--brief")(
                 span(cls := "cinema-kicker")("Chesstory explanation"),
                 explanationRow("Position question", "Can White prepare d4 without giving Black easy counterplay?"),
-                explanationRow("Engine verdict", "Stockfish likes c3 best. h3 was checked separately at +0.59, only 0.12 lower."),
+                explanationRow("Engine verdict", "Stockfish likes c3 best. h3 was checked separately at +0.20, about 0.17 lower."),
                 explanationRow("Current move effect", "h3 prevents Bg4, but it spends a tempo on a problem Black has not forced yet."),
                 explanationRow("Human idea", "When the plan is d4, prefer quiet moves that make the pawn break stronger.")
               ),
               div(cls := "cinema-layer cinema-layer--study")(
-                span(cls := "cinema-kicker")("Review Study"),
-                strong("WhitePlayer vs BlackPlayer review"),
+                span(cls := "cinema-kicker")("Review study"),
+                strong("Your game vs opponent review"),
                 p("Opening to middlegame transition"),
                 span(cls := "study-link-pill")("/study/7kP2aQb/2rNf9xL")
               )
@@ -168,7 +168,7 @@ object landing:
             storyStep(
               "03",
               "Keep the engine as evidence",
-              "Stockfish still matters. Here the verified WASM line is c3 at +0.71, then Nbd2 and Re1 at +0.60.",
+              "Stockfish still matters. Here the verified WASM line is c3 at +0.37, then Nbd2 at +0.25 and a4 at +0.22.",
               "The numbers stay visible as evidence, not as the whole answer."
             ),
             storyStep(
@@ -180,7 +180,7 @@ object landing:
             storyStep(
               "05",
               "Save the explanation",
-              "Turn a serious review into a Study with sections, playable lines, notes, and a shareable link.",
+              "Turn a serious review into a study with sections, playable lines, notes, and a shareable link.",
               "A game becomes a review artifact."
             )
           )
@@ -193,7 +193,7 @@ object landing:
       div(cls := "landing-container landing-study-payoff__grid")(
         div(cls := "study-payoff-copy")(
           p(cls := "section-kicker")("The final artifact"),
-          h2("A Review Study is the page you can return to and share"),
+          h2("A review study is the page you can return to and share"),
           p(
             "Keep the board, candidate lines, and explanation together under a clear title, " +
               "then reopen it later or share it with someone who wants to see the reasoning."
@@ -205,9 +205,9 @@ object landing:
         ),
         div(cls := "study-artifact")(
           div(cls := "study-artifact__cover")(
-            span("Review Study"),
+            span("Review study"),
             strong("Opening to middlegame transition"),
-            p("WhitePlayer vs BlackPlayer")
+            p("Your game vs opponent")
           ),
           div(cls := "study-artifact__body")(
             explanationRow("Position question", "Can White prepare d4 without losing time?"),
@@ -237,11 +237,11 @@ object landing:
     )
 
   private def board(extraCls: String): Frag =
+    val pieces = heroPieces.map { case (piece, square) =>
+      span(cls := s"landing-piece landing-piece--$piece landing-piece--$square")()
+    }
     div(cls := s"landing-board $extraCls")(
-      div(cls := "landing-board__grid"),
-      heroPieces.map { case (piece, square) =>
-        span(cls := s"landing-piece landing-piece--$piece landing-piece--$square")()
-      }*
+      (div(cls := "landing-board__grid") :: pieces)*
     )
 
   private def engineLine(move: String, eval: String, active: Boolean): Frag =

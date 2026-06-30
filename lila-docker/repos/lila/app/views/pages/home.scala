@@ -56,8 +56,8 @@ object home:
             ),
             st.section(cls := "home-section")(
               div(cls := "home-section-head")(
-                strong("Review Studies"),
-                span("Use Review Studies when a game deserves shareable sections, notes, and variations.")
+                strong("Review studies"),
+                span("Use review studies when a game deserves shareable sections, notes, and variations.")
               ),
               if data.recentStudies.nonEmpty then
                 div(cls := "home-card-grid home-card-grid--notebooks")(
@@ -65,7 +65,7 @@ object home:
                 )
               else
                 renderEmptyStrip(
-                  "No saved Review Studies yet",
+                  "No saved review studies yet",
                   "Create one from a board when the position is worth keeping."
                 )
             ),
@@ -118,7 +118,7 @@ object home:
             "Reopen the saved review study when the board, lines, and notes are already connected."
           ),
           div(cls := "home-continue-card__actions")(
-            a(href := routes.Study.show(entry.study.id).url, cls := "button button-fat")("Open Review Study"),
+            a(href := routes.Study.show(entry.study.id).url, cls := "button button-fat")("Open review study"),
             a(href := routes.UserAnalysis.index.url, cls := "button button-metal")("Open board")
           )
         )
@@ -176,7 +176,7 @@ object home:
         s"$notePartCount ${if notePartCount == 1 then "section" else "sections"}"
       ),
       notePartPreview.nonEmpty.option(p(cls := "home-card__meta")(notePartPreview)),
-      span(cls := "home-card__cta")("Open Review Study")
+      span(cls := "home-card__cta")("Open review study")
     )
 
   private def renderAccountLookup(account: ImportHistory.Account): Frag =

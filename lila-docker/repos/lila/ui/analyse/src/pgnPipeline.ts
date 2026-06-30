@@ -18,7 +18,7 @@ export const reviewStudyCreateGate = (status: PgnDraftStatus): ReviewStudyCreate
     case 'current':
       return {
         disabled: false,
-        buttonLabel: 'Save as Review Study',
+        buttonLabel: 'Save as review study',
         message:
           'Save the loaded game and candidate lines as a review study. Add explanation notes after it opens.',
         tone: 'success',

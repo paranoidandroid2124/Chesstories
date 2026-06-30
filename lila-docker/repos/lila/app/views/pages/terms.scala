@@ -55,7 +55,7 @@ object terms:
                 ),
                 p(
                   "You are responsible for activity that occurs under your account and for keeping your sign-in methods secure. ",
-                  "Chesstory may use passwords, email confirmation links, password reset emails, and email login links as part of account security."
+                  "Chesstory may use passwords, email confirmation links, and password reset emails as part of account security."
                 ),
                 p(
                   "Chesstory may also store settings, analysis drafts, or performance caches in your browser when those features are enabled. ",
@@ -102,9 +102,11 @@ object terms:
                 ),
                 ul(
                   li("Analysis may be incomplete, inaccurate, or unavailable"),
+                  li("AI-assisted explanations may be generated from PGNs, FENs, engine lines, candidate moves, notes, comments, and related chess context that you submit for analysis"),
+                  li("Do not submit sensitive personal information, confidential third-party material, or private non-chess information inside PGNs, notes, comments, or prompts"),
                   li("You are responsible for how you use any chess recommendations"),
                   li("Some analysis features may require sign-in and may be subject to rate limits, daily quotas, fair-use controls, or plan/tier limits"),
-                  li("Some features may send chess positions, move lists, PGNs, comments, or notes to analysis systems or model providers when needed to return the requested explanation"),
+                  li("Some features may send chess positions, move lists, PGNs, comments, notes, engine lines, and related chess context to analysis systems or model providers when needed to return the requested explanation"),
                   li("Some features may fetch public chess data from third-party platforms at your request; do not use Chesstory to import private, restricted, or non-consensual data"),
                   li("Chesstory is not affiliated with or endorsed by Lichess, Chess.com, or other third-party platforms unless explicitly stated")
                 )

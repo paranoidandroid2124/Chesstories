@@ -15,6 +15,6 @@ describe('PGN review-study creation gate', () => {
     const gate = reviewStudyCreateGate('current');
 
     assert.equal(gate.disabled, false);
-    assert.equal(gate.buttonLabel, 'Save as Review Study');
+    assert.equal(gate.buttonLabel, 'Save as review study');
   });
 });

@@ -51,8 +51,6 @@ final class Auth(env: Env) extends LilaController(env):
     env.config.getOptional[String]("security.hcaptcha.public.sitekey").filter(_.nonEmpty)
   private val signupEmailConfirmRequired =
     env.config.getOptional[Boolean]("security.email_confirm.enabled").getOrElse(true)
-  private val magicLinkAutoCreateEnabled =
-    env.config.getOptional[Boolean]("auth.magicLink.autoCreate").getOrElse(false)
 
   private def mobileUserOk(u: UserModel, sessionId: SessionId): Fu[Result] =
     fuccess:
@@ -82,18 +80,6 @@ final class Auth(env: Env) extends LilaController(env):
 
   private def signupPage(form: Form[?])(using Context) =
     views.auth.signup(form, signupCaptchaEnabled, signupCaptchaSiteKey)
-
-  private def sendMagicLink(email: EmailAddress)(using Context): Fu[Result] =
-    val token = env.security.loginToken.generate(email, 15.minutes)
-    val url = s"${env.baseUrl}${routes.Auth.loginWithToken(token).url}"
-    env.mailer.automaticEmail.magicLinkLogin(email, url)
-
-    val mockEmail = env.config.getOptional[Boolean]("mailer.primary.mock").getOrElse(false)
-    val exposeMockLink = mockEmail && env.mode != Mode.Prod
-
-    if exposeMockLink then
-      Ok.page(views.auth.magicLinkDev(url))
-    else Redirect(routes.Auth.magicLinkSent).toFuccess
 
   def authenticateUser(
       u: UserModel,
@@ -157,7 +143,7 @@ final class Auth(env: Env) extends LilaController(env):
               if signupEmailConfirmRequired then
                 val email = data.normalizedEmail
                 val token = env.security.loginToken.generate(email, 30.minutes)
-                val url = s"${env.baseUrl}${routes.Auth.loginWithToken(token).url}"
+                val url = s"${env.baseUrl}${routes.Auth.signupConfirmToken(token).url}"
                 env.mailer.automaticEmail.signupConfirm(user, email, url).inject:
                   Redirect(routes.Auth.checkYourEmail)
                     .withCookies(EmailConfirm.cookie.set(user.id, email))
@@ -228,39 +214,6 @@ final class Auth(env: Env) extends LilaController(env):
                   .inject(Redirect(routes.Auth.login).flashing("success" -> "Password updated. Please log in."))
         )
 
-  private val magicLinkForm = Form(
-    single(
-      "email" -> nonEmptyText.verifying("invalid email", EmailAddress.isValid)
-    )
-  )
-
-  def magicLink = Open:
-    Ok.page(views.auth.magicLink(accountOnly = !magicLinkAutoCreateEnabled))
-
-  def magicLinkApply = OpenBody:
-    bindForm(magicLinkForm)(
-      _ => Ok.page(views.auth.magicLink(Some("Invalid email address"), accountOnly = !magicLinkAutoCreateEnabled)),
-      emailStr =>
-        val email = EmailAddress(emailStr)
-        val normalized = EmailAddress(email.normalize.value)
-        limit.magicLink(
-          normalized.value,
-          Ok.page(views.auth.magicLink(Some("Too many login emails, try again later"), accountOnly = !magicLinkAutoCreateEnabled))
-        ):
-          if magicLinkAutoCreateEnabled then
-            sendMagicLink(normalized)
-          else
-            env.user.repo.byEmail(normalized).flatMap:
-              case Some(user) =>
-                env.user.deleteRequestRepo.isPending(user.id).flatMap:
-                  case true  => Redirect(routes.Auth.magicLinkSent).toFuccess
-                  case false => sendMagicLink(normalized)
-              case None    => Redirect(routes.Auth.magicLinkSent).toFuccess
-    )
-
-  def magicLinkSent = Open:
-    Ok.page(views.auth.magicLinkSent())
-
   def checkYourEmail = Open:
     EmailConfirm.cookie.get(ctx.req).fold(fuccess(Redirect(routes.Auth.signup))): pending =>
       Ok.page:
@@ -297,7 +250,7 @@ final class Auth(env: Env) extends LilaController(env):
                 env.user.repo.updateEmail(pending.userId, email) >> env.user.repo.byId(pending.userId).flatMap:
                   case Some(user) =>
                     val token = env.security.loginToken.generate(email, 30.minutes)
-                    val url = s"${env.baseUrl}${routes.Auth.loginWithToken(token).url}"
+                    val url = s"${env.baseUrl}${routes.Auth.signupConfirmToken(token).url}"
                     env.mailer.automaticEmail.signupConfirm(user, email, url).inject:
                       Redirect(routes.Auth.checkYourEmail)
                         .withCookies(EmailConfirm.cookie.set(user.id, email))
@@ -306,8 +259,8 @@ final class Auth(env: Env) extends LilaController(env):
                     Redirect(routes.Auth.signup).toFuccess
       )
 
-  def loginWithToken(token: String) = Open:
-    env.security.loginToken.read(token).fold(Ok.page(views.auth.loginError("Invalid or expired login link. Please request a new one."))): email =>
+  def signupConfirmToken(token: String) = Open:
+    env.security.loginToken.read(token).fold(Ok.page(views.auth.loginError("Invalid or expired confirmation link."))): email =>
       val normalized = EmailAddress(email.normalize.value)
       val loginExistingUser = (user: UserModel) =>
         val enableF = if user.enabled.no then env.user.repo.enable(user.id) else funit
@@ -328,11 +281,7 @@ final class Auth(env: Env) extends LilaController(env):
               )
             case false =>
               loginExistingUser(user)
-        case None if magicLinkAutoCreateEnabled =>
-          env.user.repo.upsertEmailUser(normalized).flatMap(loginExistingUser)
         case None =>
           Ok.page(
-            views.auth.loginError("No account exists for this email. Create an account first.")
+            views.auth.loginError("No account exists for this confirmation link. Create an account first.")
           )
-
-  def loginWithTokenPost(token: String) = loginWithToken(token)

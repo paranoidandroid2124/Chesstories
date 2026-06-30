@@ -28,13 +28,11 @@ final class AnalyseUi(helpers: Helpers)(endpoints: AnalyseEndpoints):
       data: JsObject,
       pov: Pov,
       chess960PositionNum: Option[Int] = None,
-      withForecast: Boolean = false,
       inlinePgn: Option[String] = None,
       importHistory: Option[JsObject] = None
   )(using ctx: Context): Page =
     Page("Analysis")
       .css("analyse.workspace")
-      .css(withForecast.option("analyse.forecast"))
       .csp(bits.cspExternalEngine.compose(_.withExternalAnalysisApis))
       .js:
         bits.analyseModule(

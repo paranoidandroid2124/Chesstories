@@ -80,7 +80,7 @@ final class StudyBits(helpers: Helpers):
         a(href := url(o), cls := (order == o).option("current"))(Orders.name(o))
     )
 
-  def newForm(buttonLabel: String = "Create Review Study") =
+  def newForm(buttonLabel: String = "Create review study") =
     val visibilityChoices = List(
       (Visibility.unlisted, "Link sharing", "Anyone with the link can review it."),
       (Visibility.`private`, "Private", "Only you can open this review study."),

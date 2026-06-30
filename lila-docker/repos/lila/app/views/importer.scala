@@ -70,7 +70,7 @@ object importer:
                         div(cls := "importer-panel__hint")(
                           span("Public games only"),
                           span("Review starts from one game"),
-                          span("Saved study stays optional"),
+                          span("Saved review study stays optional"),
                           span("Independent from Lichess and Chess.com")
                         ),
                         button(cls := "auth-submit importer-submit", tpe := "submit")(
@@ -114,7 +114,7 @@ object importer:
                     div(cls := "importer-hero__eyebrow")(providerShortLabel(provider)),
                     h1(cls := "auth-title importer-hero__title")(s"@$username"),
                     p(cls := "auth-subtitle importer-hero__subtitle")(
-                      "Open one game on the review board first. Save a study only when the position is worth keeping."
+                      "Open one game on the review board first. Save a review study only when the position is worth keeping."
                     ),
                     div(cls := "importer-summary-strip")(
                       div(cls := "importer-summary-chip")(
@@ -127,7 +127,7 @@ object importer:
                       ),
                       div(cls := "importer-summary-chip")(
                         strong("Review first"),
-                        span("Saved study stays secondary")
+                        span("Saved review study stays secondary")
                       )
                     )
                   ),

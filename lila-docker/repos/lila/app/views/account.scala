@@ -234,7 +234,7 @@ object account:
         p("Closing your account disables sign-in and hides your profile."),
         div(cls := "warning-box")(
           strong("Warning: "),
-          "You can reopen the account later by requesting a new email login link from the same address. This page does not erase your saved game reviews."
+          "This disables sign-in. If you need the account reopened later, contact support from the same email address. This page does not erase your saved game reviews."
         ),
         postForm(action := routes.Account.closeConfirm, cls := "mt-2")(
           button(tpe := "submit", cls := "btn-danger")("I understand, close my account")

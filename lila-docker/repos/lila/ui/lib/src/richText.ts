@@ -5,19 +5,24 @@ import { escapeHtml } from './index';
 
 // from https://github.com/bryanwoods/autolink-js/blob/master/autolink.js
 const escapeRegex = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const internalHostPattern = (() => {
+let linkRegex: RegExp | undefined;
+
+function internalHostPattern(): string {
   const hosts = new Set<string>(['chesstory.com']);
   if (typeof location !== 'undefined') {
     hosts.add(location.host);
     hosts.add(location.hostname);
   }
   return Array.from(hosts).filter(Boolean).map(escapeRegex).join('|');
-})();
+}
 
-const linkRegex: RegExp = new RegExp(
-  `(^|[\\s\\n]|<[A-Za-z]*\\/?>)((?:(?:https?|ftp):\\/\\/|(?:${internalHostPattern}))[\\-A-Z0-9+\\u0026\\u2019@#\\/%?=()~_|!:,.;]*[\\-A-Z0-9+\\u0026@#\\/%=~()_|])`,
-  'gi',
-);
+function getLinkRegex(): RegExp {
+  return (linkRegex ??= new RegExp(
+    `(^|[\\s\\n]|<[A-Za-z]*\\/?>)((?:(?:https?|ftp):\\/\\/|(?:${internalHostPattern()}))[\\-A-Z0-9+\\u0026\\u2019@#\\/%?=()~_|!:,.;]*[\\-A-Z0-9+\\u0026@#\\/%=~()_|])`,
+    'gi',
+  ));
+}
+
 const newLineRegex: RegExp = /\n/g;
 
 const linkHtml = (href: string, content: string, expandable: boolean = true): string =>
@@ -29,7 +34,7 @@ function toLink(url: string): string {
 }
 
 const autolink = (str: string, callback: (str: string) => string): string =>
-  str.replace(linkRegex, (_, space, url) => space + callback(url));
+  str.replace(getLinkRegex(), (_, space, url) => space + callback(url));
 
 export const innerHTML = <A>(a: A, toHtml: (a: A) => string): Hooks => ({
   insert(vnode: VNode) {

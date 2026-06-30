@@ -6,7 +6,7 @@ describe('chesstory brief scaffold', () => {
   test('keeps the explanation panel ordered around chess meaning instead of engine prose', () => {
     assert.deepEqual(
       chesstoryBriefSections().map(section => section.key),
-      ['opening-idea', 'middlegame-plan', 'current-decision', 'better-plan', 'proof'],
+      ['opening-idea', 'middlegame-plan', 'current-decision', 'better-plan', 'evidence'],
     );
   });
 

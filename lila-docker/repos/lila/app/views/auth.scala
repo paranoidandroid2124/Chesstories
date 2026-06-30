@@ -129,8 +129,7 @@ object auth:
         ),
         div(cls := "auth-links")(
           a(href := routes.Auth.passwordReset.url)("Forgot password?"),
-          a(href := routes.Auth.signup.url)("Create account"),
-          a(href := routes.Auth.magicLink.url)("Use magic link instead")
+          a(href := routes.Auth.signup.url)("Create account")
         )
       )
 
@@ -194,8 +193,7 @@ object auth:
           )
         ),
         div(cls := "auth-links")(
-          a(href := routes.Auth.login.url)("Already have an account? Log in"),
-          a(href := routes.Auth.magicLink.url)("Use magic link instead")
+          a(href := routes.Auth.login.url)("Already have an account? Log in")
         )
       )
 
@@ -223,8 +221,7 @@ object auth:
           )
         ),
         div(cls := "auth-links")(
-          a(href := routes.Auth.login.url)("Back to login"),
-          a(href := routes.Auth.magicLink.url)("Use magic link")
+          a(href := routes.Auth.login.url)("Back to login")
         )
       )
 
@@ -297,78 +294,7 @@ object auth:
             "Resend confirmation",
             span(cls := "arrow")(" ->")
           )
-        ),
-        p(cls := "auth-note")(
-          "You can also use ",
-          a(href := routes.Auth.magicLink.url)("magic-link login"),
-          " anytime."
         )
-      )
-
-  def magicLink(error: Option[String] = None, accountOnly: Boolean = true)(using ctx: Context): Page =
-    authPage("Magic Link - Chesstory"):
-      val subtitle =
-        if accountOnly then
-          "Enter the email on your existing account and we'll send a secure magic link."
-        else
-          "Enter your email and we'll send a secure magic link."
-      frag(
-        h1(cls := "auth-title")("Passwordless login"),
-        p(cls := "auth-subtitle")(subtitle),
-        flashLine(none, error),
-        form(cls := "auth-form", method := "post", action := routes.Auth.magicLinkApply.url)(
-          div(cls := "form-group")(
-            input(
-              tpe := "email",
-              name := "email",
-              placeholder := "your@email.com",
-              aria.label := "Email address",
-              autocomplete := "email",
-              required,
-              autofocus
-            )
-          ),
-          button(cls := "auth-submit", tpe := "submit")(
-            "Send Magic Link",
-            span(cls := "arrow")(" ->")
-          )
-        ),
-        div(cls := "auth-links")(
-          a(href := routes.Auth.login.url)("Use password login"),
-          a(href := routes.Auth.signup.url)("Create account")
-        )
-      )
-
-  def magicLinkSent()(using ctx: Context): Page =
-    authPage("Check Your Email - Chesstory"):
-      div(cls := "text-center")(
-        div(cls := "auth-icon auth-success-icon")("✓"),
-        h1(cls := "auth-title")("Check your email"),
-        p(cls := "auth-message")(
-          "If an account exists for that email address, we've sent a magic link.",
-          br,
-          "Click the link to log in."
-        ),
-        p(cls := "auth-note")(
-          "Didn't receive it? Check your spam folder or ",
-          a(href := routes.Auth.magicLink.url)("try again"),
-          "."
-        )
-      )
-
-  def magicLinkDev(url: String)(using ctx: Context): Page =
-    authPage("Magic Link (Dev) - Chesstory"):
-      div(cls := "text-center")(
-        div(cls := "auth-icon auth-dev-icon")("D"),
-        h1(cls := "auth-title")("Magic Link (Dev Mode)"),
-        p(cls := "auth-message")("Email is mocked in this environment. Use the link below:"),
-        div(cls := "auth-dev-link")(
-          a(href := url, cls := "auth-submit")(
-            "Log In Now",
-            span(cls := "arrow")(" ->")
-          )
-        ),
-        p(cls := "auth-note auth-url")(code(url))
       )
 
   def loginError(message: String)(using ctx: Context): Page =
@@ -377,8 +303,8 @@ object auth:
         div(cls := "auth-icon auth-error-icon")("x"),
         h1(cls := "auth-title")("Link Error"),
         p(cls := "auth-message")(message),
-        a(href := routes.Auth.magicLink.url, cls := "auth-submit")(
-          "Request New Link",
+        a(href := routes.Auth.login.url, cls := "auth-submit")(
+          "Back to login",
           span(cls := "arrow")(" ->")
         )
       )

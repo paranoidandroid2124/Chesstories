@@ -3,8 +3,9 @@
 import { parseUci } from 'chessops';
 
 const destChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?';
+const files = 'abcdefgh';
 const uciChar = Object.fromEntries(
-  Array.from(destChars, (char, i) => [char, `${'abcdefgh'[i % 8]}${Math.floor(i / 8) + 1}` as Key]),
+  Array.from(destChars, (char, i) => [char, `${files[i % 8]}${Math.floor(i / 8) + 1}` as Key]),
 ) as Record<string, Key>;
 
 export const fenColor = (fen: string): Color => (fen.includes(' w') ? 'white' : 'black');
@@ -24,16 +25,13 @@ export const readDests = (lines?: string): Dests | null => {
   }, new Map());
 };
 
-const charByKey = Object.entries(uciChar).reduce<Record<string, string>>((acc, [ch, key]) => {
-  acc[key] = ch;
-  return acc;
-}, {});
+const charByKey = (key: Key): string => destChars[files.indexOf(key[0]) + (Number(key[1]) - 1) * 8];
 
 export const writeDests = (dests: Dests): string => {
   if (!dests.size) return '';
   return Array.from(dests, ([orig, dests]) => {
-    const origChar = charByKey[orig];
-    const destChars = dests.map(d => charByKey[d]).join('');
+    const origChar = charByKey(orig);
+    const destChars = dests.map(charByKey).join('');
     return origChar + destChars;
   }).join(' ');
 };
