@@ -156,6 +156,36 @@ describe('chesstory brief scaffold', () => {
     assert.deepEqual(plan?.items, []);
   });
 
+  test('does not explain bad move problems or comparison from carrierless semantics', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'bad', played_move: 'e4g3', reference_move: 'e4f6' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'bad',
+          priority: 'main',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          assessment: {
+            problem: { code: 'loses_activity', label: 'loses activity' },
+          },
+          evidence: { has_carrier: false, proof_level: 'none' },
+          comparison: {
+            reference_move: 'e4f6',
+            candidate_move: 'e4g3',
+            lost_ideas: [{ code: 'outpost_route', label: 'outpost route' }],
+          },
+        },
+      ],
+    });
+
+    const current = sections.find(section => section.key === 'current-decision');
+    const better = sections.find(section => section.key === 'better-plan');
+    assert.match(current?.body || '', /not enough public carrier evidence/);
+    assert.deepEqual(current?.items, []);
+    assert.doesNotMatch(better?.body || '', /outpost route/);
+    assert.deepEqual(better?.items, []);
+  });
+
   test('requires a public evidence carrier before writing board-evidence prose', () => {
     const sections = chesstoryBriefSections({
       verdict: { move_quality: 'good', played_move: 'c4c5', reference_move: 'c4c5' },

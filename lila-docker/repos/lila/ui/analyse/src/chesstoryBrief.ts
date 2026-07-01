@@ -86,22 +86,24 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const semantics = payload.move_semantics;
   const played = semantics.filter(s => s.subject === 'played_move');
   const reference = semantics.filter(s => s.subject === 'reference_move');
-  const mainPlayed = played.filter(s => s.priority === 'main');
   const bad = payload.verdict?.move_quality === 'bad' || played.some(s => s.move_quality === 'bad');
+  const evidenceSemantics = semantics.filter(hasEvidenceCarrier);
   const evidencePlayed = played.filter(hasEvidenceCarrier);
+  const evidenceReference = reference.filter(hasEvidenceCarrier);
+  const mainPlayed = evidencePlayed.filter(s => s.priority === 'main');
   const localIdeas = played.filter(s => s.assessment?.is_local_idea && hasEvidenceCarrier(s));
   const solved = uniqueLabels((bad ? localIdeas : evidencePlayed).map(ideaLabel)).slice(0, 4);
   const localIdeaLabels = uniqueLabels(localIdeas.map(ideaLabel)).slice(0, 4);
   const terminal = uniqueLabels(evidencePlayed.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
   const losses = uniqueLabels(
-    semantics.flatMap(s => (s.comparison_loss || s.comparison?.lost_ideas || []).map(codeLabel)),
+    evidenceSemantics.flatMap(s => (s.comparison_loss || s.comparison?.lost_ideas || []).map(codeLabel)),
   );
   const targets = uniqueLabels(evidencePlayed.flatMap(targetLabels)).slice(0, 5);
   const problem =
     firstLabel(mainPlayed.flatMap(problemLabels)) ||
-    (bad ? 'the move gives up more than its idea solves' : undefined);
-  const referenceIdeas = uniqueLabels(reference.map(ideaLabel)).slice(0, 3);
+    (bad && evidencePlayed.length ? 'the move gives up more than its idea solves' : undefined);
+  const referenceIdeas = uniqueLabels(evidenceReference.map(ideaLabel)).slice(0, 3);
   const handled = [...solved, ...terminal];
   const currentChange = targets.length ? joinHuman(targets) : solved.length ? joinHuman(solved) : '';
 
@@ -133,7 +135,9 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
       key: 'current-decision',
       title: bad ? 'Why it fails' : 'Current decision',
       body: bad
-        ? `The main problem is ${problem}.`
+        ? problem
+          ? `The main problem is ${problem}.`
+          : 'The graph has a verdict, but not enough public carrier evidence to explain the move.'
         : currentChange
           ? `The move is not just a verdict; it changes ${currentChange}.`
           : 'The graph has a verdict, but not enough public carrier evidence to explain the move.',
@@ -149,7 +153,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
           ? `The comparison turns on ${joinHuman([...losses, ...referenceIdeas].slice(0, 4))}.`
           : 'No clear candidate-move loss is available yet.',
       pending: false,
-      items: comparisonLines(semantics).slice(0, 3),
+      items: comparisonLines(evidenceSemantics).slice(0, 3),
       tone: bad ? 'bad' : 'neutral',
     },
     {
