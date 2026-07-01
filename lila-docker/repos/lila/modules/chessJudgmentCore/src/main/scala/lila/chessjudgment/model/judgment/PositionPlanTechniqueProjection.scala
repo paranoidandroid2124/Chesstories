@@ -983,7 +983,7 @@ object PositionPlanTechniqueProjection:
       causeRecords: List[(EvidenceRef, RelativeCauseFact)],
       evidenceIds: Set[String]
   ): List[(EvidenceRef, RelativeCauseFact)] =
-    detail.axisKey match
+    val axisMatched = detail.axisKey match
       case Some(axisKey) =>
         causeRecords.filter { case (_, cause) =>
           cause.strategicProofIdentity.axisKeys.contains(axisKey) &&
@@ -995,6 +995,10 @@ object PositionPlanTechniqueProjection:
           positionPlanTechniqueCauseKindMatchesUnitOnlyDetail(detail, cause.kind) &&
             positionPlanTechniqueHasAdmissibleProofForEvidence(cause, evidenceIds)
         }
+    (
+      axisMatched ++
+        positionPlanTechniqueRootOwnedStructuralCauseRecords(detail, causeRecords, evidenceIds)
+    ).distinctBy(_._1.id)
 
   private def positionPlanTechniqueContextCauseRecordsForDetail(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -1044,11 +1048,65 @@ object PositionPlanTechniqueProjection:
       kind: RelativeCauseKind
   ): Boolean =
     detail.axisKey.isEmpty &&
-      (
-        positionPlanTechniqueCauseKindsForUnit(detail.unit).contains(kind) ||
-          positionPlanTechniqueConcreteStructuralPlanCauseKind(detail, kind) ||
-          positionPlanTechniqueTerminalProofCauseKind(detail, kind)
-      )
+      positionPlanTechniqueCauseKindMatchesStructuralSourceDetail(detail, kind)
+
+  private def positionPlanTechniqueRootOwnedStructuralCauseRecords(
+      detail: PositionPlanTechniqueSemanticDetail,
+      causeRecords: List[(EvidenceRef, RelativeCauseFact)],
+      evidenceIds: Set[String]
+  ): List[(EvidenceRef, RelativeCauseFact)] =
+    if !positionPlanTechniqueRootOwnedStructuralDetail(detail) then Nil
+    else
+      causeRecords.filter { case (_, cause) =>
+        cause.attribution.directProofEligible &&
+          cause.attribution.rootMoveMatched &&
+          detail.structuralRouteMove.exists(move => positionPlanTechniqueSameMove(move, cause.eventRootMove)) &&
+          positionPlanTechniqueCauseKindMatchesStructuralSourceDetail(detail, cause.kind) &&
+          positionPlanTechniqueDirectStructuralTransitionProof(detail, cause, evidenceIds)
+      }
+
+  private def positionPlanTechniqueRootOwnedStructuralDetail(
+      detail: PositionPlanTechniqueSemanticDetail
+  ): Boolean =
+    detail.unit match
+      case PositionPlanTechniqueUnit.PieceRerouteRoute =>
+        positionPlanTechniqueConcretePieceRoute(detail)
+      case PositionPlanTechniqueUnit.StructuralTransformation =>
+        positionPlanTechniqueConcreteStructuralTransformation(detail)
+      case _ =>
+        false
+
+  private def positionPlanTechniqueCauseKindMatchesStructuralSourceDetail(
+      detail: PositionPlanTechniqueSemanticDetail,
+      kind: RelativeCauseKind
+  ): Boolean =
+    positionPlanTechniqueCauseKindsForUnit(detail.unit).contains(kind) ||
+      positionPlanTechniqueConcreteRoutePlanCauseKind(detail, kind) ||
+      positionPlanTechniqueConcreteStructuralPlanCauseKind(detail, kind) ||
+      positionPlanTechniqueTerminalProofCauseKind(detail, kind)
+
+  private def positionPlanTechniqueDirectStructuralTransitionProof(
+      detail: PositionPlanTechniqueSemanticDetail,
+      cause: RelativeCauseFact,
+      evidenceIds: Set[String]
+  ): Boolean =
+    cause.proof.toList.flatMap(_.directProof.transitionConsequences).exists { proof =>
+      evidenceIds.contains(proof.source.id) &&
+        proof.transition.line.contains(cause.eventLine) &&
+        positionPlanTechniqueSameMove(proof.transition.moveUci, cause.eventRootMove) &&
+        detail.structuralRouteMove.exists(move => positionPlanTechniqueSameMove(move, proof.transition.moveUci)) &&
+        positionPlanTechniqueStructuralConsequenceOverlapsDetail(detail, proof.consequence)
+    }
+
+  private def positionPlanTechniqueStructuralConsequenceOverlapsDetail(
+      detail: PositionPlanTechniqueSemanticDetail,
+      consequence: TransitionConsequence
+  ): Boolean =
+    val detailSubjects = detail.structuralPurposeSubjects.map(_.trim.toLowerCase).toSet
+    consequence.subjects.exists(subject => detailSubjects.contains(subject.trim.toLowerCase))
+
+  private def positionPlanTechniqueSameMove(left: String, right: String): Boolean =
+    JudgmentSubjectBinding.normalizeMove(left) == JudgmentSubjectBinding.normalizeMove(right)
 
   private def positionPlanTechniqueConcreteRoutePlanCauseKind(
       detail: PositionPlanTechniqueSemanticDetail,
