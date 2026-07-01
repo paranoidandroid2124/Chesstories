@@ -110,6 +110,7 @@ final class Analyse(
       "targets" -> publicTargetJson(surface.target),
       "priority" -> surface.priority,
       "comparison_loss" -> surface.comparisonLostIdeas.map(publicComparisonLossJson),
+      "terminal_consequences" -> surface.terminalConsequences.map(publicCodeJson),
       "endgame_technique" -> surface.endgameTechnique.map(publicEndgameTechniqueJson),
       "technique" -> surface.endgameTechnique.map(publicEndgameTechniqueJson),
       "comparison" -> surface.comparison.map(publicComparisonJson)

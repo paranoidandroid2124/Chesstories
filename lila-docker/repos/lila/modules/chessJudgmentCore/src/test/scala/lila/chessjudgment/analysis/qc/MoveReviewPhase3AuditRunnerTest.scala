@@ -2618,6 +2618,52 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     )
     assertEquals(badSurface, Nil)
 
+  test("move meaning public surface ranks terminal carriers before generic activity"):
+    val mateSignature =
+      "actor=Move:e2e3|actor=Piece:queen|actor=Square:e2|target=Square:h7|mechanism=Mechanism:mate|consequence=Consequence:mate"
+    val activitySignature =
+      "actor=Move:e2e3|actor=Piece:queen|actor=Square:e2|target=Square:e3|mechanism=Mechanism:activity|consequence=Consequence:activity"
+    val mateClaim = MoveMeaningClaim(
+      meaningKind = "PieceActivity",
+      role = "ImprovesPieceActivity",
+      laneKey = "kind=PieceActivity|axis=Activity:Gain:activity-gain|object=mate",
+      conflictKey = None,
+      supportLevel = "owned_cause_linked",
+      visibility = "reason_grade",
+      surfaceLane = "current_move_owned",
+      lineRole = "candidate",
+      moveUci = "e2e3",
+      frameId = "frame-terminal-mate",
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Gain:activity-gain"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      label = Some("activity-gain"),
+      causeKinds = List(RelativeCauseKind.ActivityGain),
+      causeSourceSides = List(RelativeCauseSourceSide.Candidate),
+      causeEvidenceIds = List("cause-terminal"),
+      sourceEvidenceIds = List("played-transition"),
+      objectBindingSignatures = List(mateSignature),
+      reasonTokens = List(s"objectBinding:$mateSignature"),
+      targetSquares = List("h7")
+    )
+    val activityClaim = mateClaim.copy(
+      laneKey = "kind=PieceActivity|axis=Activity:Gain:activity-gain|object=activity",
+      frameId = "frame-activity",
+      objectBindingSignatures = List(activitySignature),
+      reasonTokens = List(s"objectBinding:$activitySignature"),
+      targetSquares = List("e3")
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = Nil
+    ).copy(moveMeaningClaims = List(activityClaim, mateClaim))
+
+    val surface = MoveMeaningSurface.from(view)
+    assertEquals(surface.map(_.ideaType).take(2), List("terminal_mate", "piece_activity"))
+    assertEquals(surface.head.terminalConsequences.map(_.code), List("mate"))
+
   test("move meaning claims do not call bare weak-square target pressure a piece route"):
     val targetSignature =
       "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:WeakSquareTargetCreated|consequence=Consequence:WeakSquareTargetCreated"

@@ -1811,7 +1811,8 @@ case class MoveMeaningSurface(
     comparisonLosses: List[String] = Nil,
     comparisonLostIdeas: List[MoveMeaningSurfaceComparisonLoss] = Nil,
     endgameTechnique: Option[MoveMeaningSurfaceEndgameTechnique] = None,
-    comparison: Option[MoveMeaningSurfaceComparison] = None
+    comparison: Option[MoveMeaningSurfaceComparison] = None,
+    terminalConsequences: List[MoveMeaningSurfaceCode] = Nil
 )
 
 object MoveMeaningSurface:
@@ -1922,7 +1923,7 @@ object MoveMeaningSurface:
   private def claimSurfaceSortKey(
       verdict: Option[MoveJudgmentVerdictFrame],
       claim: MoveMeaningClaim
-  ): (Int, String, String) =
+  ): (Int, Int, String, String) =
     surfaceSortKey(fromClaim(verdict, claim))
 
   private def fromClaim(verdict: Option[MoveJudgmentVerdictFrame], claim: MoveMeaningClaim): MoveMeaningSurface =
@@ -1940,6 +1941,7 @@ object MoveMeaningSurface:
     val publicFailureFamily = Option.when(publicFailureClaim)(failureFamily(claim)).flatten
     val publicProblem = Option.when(publicFailureClaim)(problem(claim)).flatten
     val comparisonLossDetails = comparisonLostIdeas(verdict, claim)
+    val terminal = terminalConsequences(claim)
     MoveMeaningSurface(
       moveUci = claim.moveUci,
       subject = claimSubject,
@@ -1964,7 +1966,8 @@ object MoveMeaningSurface:
       comparisonLosses = comparisonLosses(claim),
       comparisonLostIdeas = comparisonLossDetails,
       endgameTechnique = endgameTechnique(claim),
-      comparison = Option.when(claimSubject == "played_move" || claimSubject == "reference_move")(comparison(verdict, comparisonLossDetails)).flatten
+      comparison = Option.when(claimSubject == "played_move" || claimSubject == "reference_move")(comparison(verdict, comparisonLossDetails)).flatten,
+      terminalConsequences = terminal
     )
 
   private def subject(claim: MoveMeaningClaim): String =
@@ -1997,7 +2000,7 @@ object MoveMeaningSurface:
       verdict == MoveChoiceVerdict.Blunder
 
   private def ideaType(claim: MoveMeaningClaim): String =
-    claim.unit match
+    terminalIdeaType(claim).getOrElse(claim.unit match
       case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
         "pawn_break_timing"
       case PositionPlanTechniqueUnit.CounterplayRace =>
@@ -2022,6 +2025,16 @@ object MoveMeaningSurface:
         axisIdeaType(claim).getOrElse("structure_shift")
       case PositionPlanTechniqueUnit.PlanOptionSet =>
         planOptionIdeaType(claim)
+    )
+
+  private def terminalIdeaType(claim: MoveMeaningClaim): Option[String] =
+    val codes = terminalConsequenceCodes(claim).toSet
+    if codes.contains("mate") then Some("terminal_mate")
+    else if codes.contains("promotion_race") then Some("promotion_race")
+    else if codes.contains("promotion") then Some("promotion")
+    else if codes.contains("material_gain") then Some("material_gain")
+    else if codes.contains("material_loss") then Some("material_loss")
+    else None
 
   private def planOptionIdeaType(claim: MoveMeaningClaim): String =
     claim.role match
@@ -2179,6 +2192,48 @@ object MoveMeaningSurface:
           )
       )(technique)
 
+  private def terminalConsequences(claim: MoveMeaningClaim): List[MoveMeaningSurfaceCode] =
+    terminalConsequenceCodes(claim).map(publicCode(_, terminalConsequenceLabels))
+
+  private def terminalConsequenceCodes(claim: MoveMeaningClaim): List[String] =
+    val explicit =
+      tokenValues(claim, "terminalConsequenceKind:").flatMap(publicTerminalConsequenceCode).map(_.code)
+    val carrierText = (claim.reasonTokens ++ claim.objectBindingSignatures).map(_.toLowerCase)
+    val hasPromotionRace = explicit.contains("promotion_race") || carrierText.exists(terminalPromotionRaceCarrier)
+    val carrierCodes =
+      List(
+        Option.when(carrierText.exists(terminalMateCarrier))("mate"),
+        Option.when(hasPromotionRace)("promotion_race"),
+        Option.when(!hasPromotionRace && carrierText.exists(terminalPromotionCarrier))("promotion"),
+        Option.when(carrierText.exists(terminalMaterialGainCarrier))("material_gain"),
+        Option.when(carrierText.exists(terminalMaterialLossCarrier))("material_loss")
+      ).flatten
+    (explicit ++ carrierCodes).distinct
+
+  private def terminalMateCarrier(token: String): Boolean =
+    token.contains("mechanism=mechanism:mate") ||
+      token.contains("consequence=consequence:mate")
+
+  private def terminalPromotionCarrier(token: String): Boolean =
+    token.contains("pawnpromotion") ||
+      token.contains("pawn-promotion") ||
+      token.contains("passed-pawn-promoted") ||
+      token.contains("promotiongain")
+
+  private def terminalPromotionRaceCarrier(token: String): Boolean =
+    token.contains("promotionrace") ||
+      token.contains("promotion-race")
+
+  private def terminalMaterialGainCarrier(token: String): Boolean =
+    token.contains("materialgain") ||
+      token.contains("material-gain") ||
+      token.contains("promotiongain")
+
+  private def terminalMaterialLossCarrier(token: String): Boolean =
+    token.contains("materialloss") ||
+      token.contains("material-loss") ||
+      token.contains("promotionloss")
+
   private def publicEndgameHorizonStatus(status: String): Option[String] =
     status match
       case "Active"       => Some("holding")
@@ -2314,6 +2369,11 @@ object MoveMeaningSurface:
     MoveMeaningSurfaceCode(code, labels.getOrElse(code, code.replace('_', ' ')))
 
   private val ideaLabels: Map[String, String] = Map(
+    "terminal_mate" -> "mate",
+    "promotion_race" -> "promotion",
+    "promotion" -> "promotion",
+    "material_gain" -> "material gain",
+    "material_loss" -> "material loss",
     "pawn_break_timing" -> "pawn break timing",
     "counterplay_race" -> "counterplay race",
     "ray_denial" -> "diagonal denial",
@@ -2328,6 +2388,14 @@ object MoveMeaningSurface:
     "target_pressure" -> "target pressure",
     "center_control" -> "center control",
     "plan_continuity" -> "plan continuity"
+  )
+
+  private val terminalConsequenceLabels: Map[String, String] = Map(
+    "mate" -> "mate",
+    "material_gain" -> "material gain",
+    "material_loss" -> "material loss",
+    "promotion_race" -> "promotion race",
+    "promotion" -> "promotion"
   )
 
   private val moveQualityLabels: Map[String, String] = Map(
@@ -2423,8 +2491,9 @@ object MoveMeaningSurface:
       normalizedTokens.contains("rayaxis:diagonal") &&
       normalizedTokens.contains("resourcedenied:diagonal")
 
-  private def surfaceSortKey(surface: MoveMeaningSurface): (Int, String, String) =
+  private def surfaceSortKey(surface: MoveMeaningSurface): (Int, Int, String, String) =
     (
+      terminalIdeaRank(surface.ideaType),
       surface.priority match
         case "main"       => 0
         case "supporting" => 1
@@ -2434,6 +2503,15 @@ object MoveMeaningSurface:
       surface.ideaType,
       surface.moveUci
     )
+
+  private def terminalIdeaRank(ideaType: String): Int =
+    ideaType match
+      case "terminal_mate"  => 0
+      case "promotion_race" => 1
+      case "promotion"      => 1
+      case "material_gain"  => 2
+      case "material_loss"  => 2
+      case _                => 9
 
 object MoveMeaningClaim:
   def from(
