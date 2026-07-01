@@ -1511,6 +1511,18 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
             List("target=Side:white|mechanism=Mechanism:counterplayrestraint")
         )
       )
+    val partialTokenDiagnostic =
+      concreteDiagnostic.copy(
+        id = "cmp-resource-contest-partial-token",
+        moveJudgmentView = concreteDiagnostic.moveJudgmentView.copy(
+          positionPlanTechniqueSemanticDetailTokens =
+            semanticTokens.filterNot(_.startsWith("resourceContestSquare:")) :+ "resourceContestSquare:a10",
+          positionPlanTechniqueSemanticDetailTokenGroups =
+            List(semanticTokens.filterNot(_.startsWith("resourceContestSquare:")) :+ "resourceContestSquare:a10"),
+          positionPlanTechniqueObjectBindingSignatures =
+            List("target=Square:a10|mechanism=Mechanism:counterplayrestraint")
+        )
+      )
     val concreteSlot =
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
         id = "queenside-space-resource-view",
@@ -1529,11 +1541,14 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(concreteSlot), List(concreteDiagnostic))
     val sideOnlyCoverage =
       MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(concreteSlot), List(sideOnlyDiagnostic))
+    val partialTokenCoverage =
+      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(concreteSlot), List(partialTokenDiagnostic))
     val emptyTargetCoverage =
       MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(emptyTargetSlot), List(concreteDiagnostic))
 
     assertEquals((concreteCoverage \ "matchedSlotCount").as[Int], 1)
     assertEquals((sideOnlyCoverage \ "matchedSlotCount").as[Int], 0)
+    assertEquals((partialTokenCoverage \ "matchedSlotCount").as[Int], 0)
     assertEquals((emptyTargetCoverage \ "matchedSlotCount").as[Int], 0)
 
   test("threat pressure marks active pawn counterplay as race only with root motif"):

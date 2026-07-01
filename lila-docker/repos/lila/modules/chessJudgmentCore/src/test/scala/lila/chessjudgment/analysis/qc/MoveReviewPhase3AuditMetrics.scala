@@ -1446,10 +1446,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     val normalized = token.trim
     normalized.nonEmpty &&
       !roleTokenValue(normalized).exists(_.isEmpty) &&
-      signatures.exists(_.contains(normalized))
+      signatures.exists(signature => MoveReviewPhase3AuditMetrics.signatureParts(signature).contains(normalized))
 
   private def objectBindingTokenSatisfied(token: String, values: List[String]): Boolean =
-    objectBindingSemanticDetailTokens(token).exists(required => values.exists(_.contains(required)))
+    objectBindingSemanticDetailTokens(token).exists(values.contains)
 
   private def objectBindingSemanticDetailTokens(token: String): List[String] =
     val normalized = token.trim
