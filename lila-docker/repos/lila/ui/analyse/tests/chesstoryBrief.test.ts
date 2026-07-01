@@ -210,6 +210,32 @@ describe('chesstory brief scaffold', () => {
     assert.deepEqual(evidence?.items, []);
   });
 
+  test('requires explicit evidence carriers before writing terminal or technique prose', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'good', played_move: 'g6g7', reference_move: 'g6g7' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'main',
+          idea: { code: 'terminal_mate', label: 'mate' },
+          terminal_consequences: [{ code: 'mate', label: 'mate' }],
+          endgame_technique: {
+            pattern_info: { code: 'lucena', label: 'Lucena' },
+            rook_geometry: { code: 'king_cut_off', label: 'king cut off' },
+            status_label: 'holding',
+          },
+        },
+      ],
+    });
+
+    const text = JSON.stringify(sections);
+    const evidence = sections.find(section => section.key === 'evidence');
+    assert.doesNotMatch(text, /mate|Lucena|king cut off/);
+    assert.match(evidence?.body || '', /not enough public evidence/);
+    assert.deepEqual(evidence?.items, []);
+  });
+
   test('keeps terminal and rook technique evidence in the LLM payload', () => {
     const payload: ChesstoryMoveMeaningPayload = {
       verdict: { move_quality: 'good', played_move: 'g6g7', reference_move: 'g6g7' },

@@ -298,8 +298,7 @@ function evidenceItems(semantics: ChesstoryMoveSemantic[]): string[] {
 }
 
 function hasEvidenceCarrier(semantic: ChesstoryMoveSemantic): boolean {
-  if (semantic.evidence) return semantic.evidence.has_carrier === true;
-  return Boolean(semantic.terminal_consequences?.length || semantic.endgame_technique);
+  return semantic.evidence?.has_carrier === true;
 }
 
 function uniqueLabels(labels: string[]): string[] {
