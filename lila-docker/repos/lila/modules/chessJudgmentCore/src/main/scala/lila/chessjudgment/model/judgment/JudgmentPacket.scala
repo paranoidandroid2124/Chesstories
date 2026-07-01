@@ -1837,16 +1837,25 @@ object MoveMeaningSurface:
       .take(12)
 
   def publicSurfaceClaim(claim: MoveMeaningClaim): Boolean =
-    claim.supportLevel != "contextual" &&
-      claim.surfaceLane != "inherited_context" &&
-      claim.surfaceLane != "pv_or_line_witness"
+    terminalOverriddenEndgameTechniqueClaim(claim) ||
+      (
+        claim.supportLevel != "contextual" &&
+          claim.surfaceLane != "inherited_context" &&
+          claim.surfaceLane != "pv_or_line_witness"
+      )
 
   private def publicSurfaceClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
     publicSurfaceClaim(claim) &&
       publicSpecificPlanContinuityClaim(view, claim) &&
       publicCurrentMoveFunctionClaim(view, claim) &&
-      !badMoveSuppressesPositiveLocalMotif(view, claim) &&
-      !terminalOverriddenEndgameTechniqueClaim(claim)
+      !badMoveSuppressesPositiveLocalMotif(view, claim)
+
+  private def terminalOverriddenEndgameTechniqueClaim(claim: MoveMeaningClaim): Boolean =
+    claim.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
+      claim.reasonTokens.exists(token =>
+        token == "horizonStatus:SupersededByTactic" ||
+          token == "horizonStatus:ContradictedByTerminalProof"
+      )
 
   private def publicCurrentMoveFunctionClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
     claim.surfaceLane != "current_move_function" ||
@@ -1912,13 +1921,6 @@ object MoveMeaningSurface:
         JudgmentSubjectBinding.normalizeMove(claim.moveUci) ==
         JudgmentSubjectBinding.normalizeMove(verdict.candidateLine.rootMove)
     )
-
-  private def terminalOverriddenEndgameTechniqueClaim(claim: MoveMeaningClaim): Boolean =
-    claim.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
-      claim.reasonTokens.exists(token =>
-        token == "horizonStatus:SupersededByTactic" ||
-          token == "horizonStatus:ContradictedByTerminalProof"
-      )
 
   private def claimSurfaceSortKey(
       verdict: Option[MoveJudgmentVerdictFrame],
@@ -2236,10 +2238,12 @@ object MoveMeaningSurface:
 
   private def publicEndgameHorizonStatus(status: String): Option[String] =
     status match
-      case "Active"       => Some("holding")
-      case "Transitioned" => Some("converted")
-      case "Failed"       => Some("broken")
-      case _              => None
+      case "Active"                      => Some("holding")
+      case "Transitioned"                => Some("converted")
+      case "Failed"                      => Some("broken")
+      case "SupersededByTactic"          => Some("forcing_result_first")
+      case "ContradictedByTerminalProof" => Some("line_refutes_technique")
+      case _                             => None
 
   private def publicEndgamePatternCode(pattern: String): Option[MoveMeaningSurfaceCode] =
     pattern match
@@ -2270,9 +2274,9 @@ object MoveMeaningSurface:
   private def publicEndgameFailureCode(reason: String): Option[MoveMeaningSurfaceCode] =
     reason match
       case "terminal-proof-supersedes-technique" =>
-        Some(MoveMeaningSurfaceCode("terminal_proof_supersedes_technique", "terminal proof overrides the technique"))
+        Some(MoveMeaningSurfaceCode("forcing_result_first", "forcing result comes first"))
       case "terminal-proof-contradicts-technique" =>
-        Some(MoveMeaningSurfaceCode("terminal_proof_contradicts_technique", "terminal proof contradicts the technique"))
+        Some(MoveMeaningSurfaceCode("line_refutes_technique", "forcing line shows the technique fails"))
       case _ => None
 
   private def publicSideCode(side: String): Option[String] =
@@ -2468,7 +2472,9 @@ object MoveMeaningSurface:
   private val endgameStatusLabels: Map[String, String] = Map(
     "holding" -> "technique held",
     "converted" -> "technique reached",
-    "broken" -> "technique broken"
+    "broken" -> "technique broken",
+    "forcing_result_first" -> "forcing result comes first",
+    "line_refutes_technique" -> "forcing line shows the technique fails"
   )
 
   private def hasPublicDetailSignal(claim: MoveMeaningClaim, value: String): Boolean =
@@ -2880,7 +2886,9 @@ object MoveMeaningClaim:
     val laneOwnershipReady =
       !currentMoveClaim ||
         currentMoveSurfaceProof
-    if reasonGradeCauseFrames.nonEmpty && ownedCause && laneOwnershipReady && hasConcreteObject && specificObjectAxis && direct && ownedMeaningReady &&
+    if terminalOverriddenEndgameTechniqueDetail(detail) && endgameTechniqueViewProof then
+      Some("contextual")
+    else if reasonGradeCauseFrames.nonEmpty && ownedCause && laneOwnershipReady && hasConcreteObject && specificObjectAxis && direct && ownedMeaningReady &&
         !planOptionCurrentFunctionOnly && !badCurrentMovePositiveMeaning && !broadPlanContinuityCurrentMove
     then
       Some("owned_cause_linked")
@@ -2901,44 +2909,64 @@ object MoveMeaningClaim:
       positionFen: String,
       currentMoveClaim: Boolean
   ): Boolean =
-    val moveOwnedSource =
-      detail.sourceEvidenceIds.exists(JudgmentSubjectBinding.sourceIdOwnsCurrentPlayedMove(_, claimMove))
-    detail.unit match
-      case PositionPlanTechniqueUnit.PieceRerouteRoute =>
-        moveOwnedSource &&
-          detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
-          pieceRouteDetailReady(detail) &&
-          pieceRouteOwnsClaimMove(detail, claimMove)
-      case PositionPlanTechniqueUnit.StructuralTransformation =>
-        moveOwnedSource &&
-          detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
-          generalDetailOwnsClaimMove(detail, objectSignatures, claimMove) &&
-          !currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove) &&
-          detail.axisKind.exists(kind =>
-            kind == StrategicAxisKind.Target ||
-              kind == StrategicAxisKind.SpaceCenter
-          ) &&
-          (
-            detail.structuralPurposeSubjects.exists(concreteSubject) ||
-              EvidenceObjectBinding.signatureTokens(objectSignatures, "target=").exists(EvidenceObjectBinding.concreteTargetToken)
-          )
-      case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
-        moveOwnedSource &&
-          pawnBreakEvidenceOwnsClaimMove(detail, objectSignatures, claimMove) &&
-          pawnMoveFromPawn(positionFen, claimMove) &&
-          pawnBreakOwnsClaimMove(detail, objectSignatures, claimMove) &&
-          pawnBreakCurrentMoveFunctionalCarrier(detail)
-      case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
-        moveOwnedSource &&
-          resourceDetailOwnsClaimMove(detail, objectSignatures, claimMove) &&
-          resourceDetailHasConcreteCarrier(detail, objectSignatures)
-      case PositionPlanTechniqueUnit.CounterplayRace =>
-        moveOwnedSource &&
-          counterplayRaceMeaningReady(detail, objectSignatures, claimMove, positionFen)
-      case PositionPlanTechniqueUnit.PlanOptionSet =>
-        planContinuityCurrentMoveFunctionalProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
-      case _ =>
-        false
+    if terminalConversionDetailOwnsClaimMove(detail, objectSignatures, claimMove) then true
+    else
+      val moveOwnedSource =
+        detail.sourceEvidenceIds.exists(JudgmentSubjectBinding.sourceIdOwnsCurrentPlayedMove(_, claimMove))
+      detail.unit match
+        case PositionPlanTechniqueUnit.PieceRerouteRoute =>
+          moveOwnedSource &&
+            detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
+            pieceRouteDetailReady(detail) &&
+            pieceRouteOwnsClaimMove(detail, claimMove)
+        case PositionPlanTechniqueUnit.StructuralTransformation =>
+          moveOwnedSource &&
+            detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
+            generalDetailOwnsClaimMove(detail, objectSignatures, claimMove) &&
+            !currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove) &&
+            detail.axisKind.exists(kind =>
+              kind == StrategicAxisKind.Target ||
+                kind == StrategicAxisKind.SpaceCenter
+            ) &&
+            (
+              detail.structuralPurposeSubjects.exists(concreteSubject) ||
+                EvidenceObjectBinding.signatureTokens(objectSignatures, "target=").exists(EvidenceObjectBinding.concreteTargetToken)
+            )
+        case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
+          moveOwnedSource &&
+            pawnBreakEvidenceOwnsClaimMove(detail, objectSignatures, claimMove) &&
+            pawnMoveFromPawn(positionFen, claimMove) &&
+            pawnBreakOwnsClaimMove(detail, objectSignatures, claimMove) &&
+            pawnBreakCurrentMoveFunctionalCarrier(detail)
+        case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
+          moveOwnedSource &&
+            resourceDetailOwnsClaimMove(detail, objectSignatures, claimMove) &&
+            resourceDetailHasConcreteCarrier(detail, objectSignatures)
+        case PositionPlanTechniqueUnit.CounterplayRace =>
+          moveOwnedSource &&
+            counterplayRaceMeaningReady(detail, objectSignatures, claimMove, positionFen)
+        case PositionPlanTechniqueUnit.PlanOptionSet =>
+          planContinuityCurrentMoveFunctionalProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
+        case _ =>
+          false
+
+  private def terminalConversionDetailOwnsClaimMove(
+      detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
+      claimMove: String
+  ): Boolean =
+    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
+    detail.terminalConsequenceKinds.contains("PromotionRace") &&
+      detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
+      objectSignatures.exists(terminalConversionSignatureOwnsMoveAndTarget(_, normalizedClaimMove))
+
+  private def terminalConversionSignatureOwnsMoveAndTarget(signature: String, normalizedClaimMove: String): Boolean =
+    val signatureList = List(signature)
+    EvidenceObjectBinding
+      .signatureTokens(signatureList, "actor=Move:")
+      .map(part => JudgmentSubjectBinding.normalizeMove(part.stripPrefix("actor=Move:")).toLowerCase)
+      .contains(normalizedClaimMove) &&
+      EvidenceObjectBinding.signatureTokens(signatureList, "target=").exists(EvidenceObjectBinding.concreteTargetToken)
 
   private def currentMoveDirectCarrier(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -2957,8 +2985,13 @@ object MoveMeaningClaim:
       detail.defenseMove.exists(move => sameMove(move, claimMove)) ||
       detail.endgameTechniqueTriggerMove.exists(move => sameMove(move, claimMove)) ||
       detail.raceCandidateRootMove.exists(move => sameMove(move, claimMove))
+    val lineHorizonOwnsCurrentMove =
+      detail.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
+        endgameTechniqueHorizonViewShape(detail) &&
+        detail.endgameTechniqueTriggerMove.exists(move => sameMove(move, claimMove))
     sourceOwnsCurrentMove ||
       objectOwnsCurrentMove ||
+      lineHorizonOwnsCurrentMove ||
       (metadataMoveOwnsCurrentMove && (sourceOwnsCurrentMove || objectOwnsCurrentMove))
 
   private def currentMoveProofObjectSignatures(objectSignatures: List[String]): Set[String] =
@@ -3045,6 +3078,9 @@ object MoveMeaningClaim:
         currentMoveFunctionalDetailProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
       case PositionPlanTechniqueUnit.PlanOptionSet =>
         planContinuityCurrentMoveFunctionalProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
+      case PositionPlanTechniqueUnit.EndgameTechniqueRecipe =>
+        endgameTechniqueHorizonViewShape(detail) &&
+          detailOwnsClaimMove(detail, objectSignatures, claimMove)
       case _ =>
         detailOwnsClaimMove(detail, objectSignatures, claimMove)
 
@@ -4164,10 +4200,22 @@ object MoveMeaningClaim:
       detail.sourceEvidenceIds.exists(id => id.toLowerCase.contains(":line:") || id.toLowerCase.startsWith("line:"))
 
   private def endgameTechniqueHorizonViewShape(detail: PositionPlanTechniqueSemanticDetail): Boolean =
-    endgameTechniqueHorizonOwnedShape(detail)
+    detail.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
+      detail.endgameTechniquePattern.nonEmpty &&
+      detail.endgameTechniqueRookPattern.nonEmpty &&
+      detail.endgameTechniqueHorizonStatus.nonEmpty &&
+      detail.requiredSquares.nonEmpty &&
+      (detail.maintainedSquares.nonEmpty || detail.brokenSquares.nonEmpty) &&
+      detail.sourceEvidenceIds.exists(id => id.toLowerCase.contains(":line:") || id.toLowerCase.startsWith("line:"))
 
   private def endgameTechniqueStatusOwnable(status: String): Boolean =
     status != "SupersededByTactic" && status != "ContradictedByTerminalProof"
+
+  private def terminalOverriddenEndgameTechniqueDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
+      detail.endgameTechniqueHorizonStatus.exists(status =>
+        status == "SupersededByTactic" || status == "ContradictedByTerminalProof"
+      )
 
   private def pieceRouteQualifiedCarrier(
       detail: PositionPlanTechniqueSemanticDetail,

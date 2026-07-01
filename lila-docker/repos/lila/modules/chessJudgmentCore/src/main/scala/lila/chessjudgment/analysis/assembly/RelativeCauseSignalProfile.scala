@@ -36,6 +36,11 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
     fact.comparison.winPercentLossForMover >= JudgmentThresholds.MATERIAL_THREAT_WP
   val candidateBetter: Boolean =
     fact.comparison.candidateWinPercentDeltaForMover >= JudgmentThresholds.PLAYABLE_LOSS_WP
+  val exactReferenceMove: Boolean =
+    fact.kind == CandidateComparisonKind.PlayedVsBest &&
+      fact.comparison.verdict == MoveChoiceVerdict.MatchesReference
+  val candidateProvedValue: Boolean =
+    candidateBetter || exactReferenceMove
   val primaryPlayedPositive: Boolean =
     fact.kind == CandidateComparisonKind.PlayedVsBest && candidateBetter
   val playedCandidateSideComparison: Boolean =
@@ -213,7 +218,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         candidateConversionMissWindow.nonEmpty && badLoss,
         Some(RelativeCauseSourceSide.Candidate)
       ),
-      causeDraft(RelativeCauseKind.ConversionSecured, candidateConversionWindow, candidateConversionWindow.nonEmpty && candidateBetter),
+      causeDraft(RelativeCauseKind.ConversionSecured, candidateConversionWindow, candidateConversionWindow.nonEmpty && candidateProvedValue),
       causeDraft(
         RelativeCauseKind.DrawResource,
         referenceDrawResource,
@@ -223,11 +228,11 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       causeDraft(
         RelativeCauseKind.DrawResource,
         candidateDrawResource,
-        candidateDrawResource.nonEmpty && candidateBetter,
+        candidateDrawResource.nonEmpty && candidateProvedValue,
         Some(RelativeCauseSourceSide.Candidate)
       ),
       causeDraft(RelativeCauseKind.ConversionMiss, referencePromotionResource, referencePromotionResource.nonEmpty && badLoss),
-      causeDraft(RelativeCauseKind.ConversionSecured, candidatePromotionResource, candidatePromotionResource.nonEmpty && candidateBetter),
+      causeDraft(RelativeCauseKind.ConversionSecured, candidatePromotionResource, candidatePromotionResource.nonEmpty && candidateProvedValue),
       causeDraft(RelativeCauseKind.MissedTacticalResource, referenceLooseMaterialExploit, referenceLooseMaterialExploit.nonEmpty && badLoss),
       causeDraft(
         if playedCandidateSideComparison then RelativeCauseKind.TacticalRefutationOfPlayed
@@ -334,13 +339,10 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
     }.distinctBy(draft => (draft.kind, draft.sourceSide, draft.support.map(_.ref.id).sorted.mkString("|")))
 
   private def currentMoveStrategicSupportDrafts(profile: RelativeCauseSignalProfile): List[RelativeCauseDraft] =
-    val exactReferenceMove =
-      profile.fact.kind == CandidateComparisonKind.PlayedVsBest &&
-        profile.fact.comparison.verdict == MoveChoiceVerdict.MatchesReference
     val candidateCurrentMoveCanOwnValue =
       profile.playedCandidateSideComparison &&
         profile.candidateBetter
-    if !exactReferenceMove && !candidateCurrentMoveCanOwnValue then Nil
+    if !profile.exactReferenceMove && !candidateCurrentMoveCanOwnValue then Nil
     else
       profile.candidateCurrentMoveStrategicSupport.flatMap {
         case record @ EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
@@ -350,7 +352,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
                 if kind == RelativeCauseKind.OpponentRestriction then
                   currentMoveConcreteCounterplayCanOwnValue(kind, payload, profile)
                 else
-                  exactReferenceMove ||
+                  profile.exactReferenceMove ||
                     candidateCurrentMoveCanOwnValue &&
                       (
                         kind == RelativeCauseKind.PawnBreakOpportunity ||
