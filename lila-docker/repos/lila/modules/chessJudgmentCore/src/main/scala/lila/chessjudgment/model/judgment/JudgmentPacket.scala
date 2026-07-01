@@ -1846,6 +1846,7 @@ object MoveMeaningSurface:
 
   private def publicSurfaceClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
     publicSurfaceClaim(claim) &&
+      !terminalOverriddenEndgameTechniqueShadowed(view, claim) &&
       publicSpecificPlanContinuityClaim(view, claim) &&
       publicCurrentMoveFunctionClaim(view, claim) &&
       !badMoveSuppressesPositiveLocalMotif(view, claim)
@@ -1855,6 +1856,18 @@ object MoveMeaningSurface:
       claim.reasonTokens.exists(token =>
         token == "horizonStatus:SupersededByTactic" ||
           token == "horizonStatus:ContradictedByTerminalProof"
+      )
+
+  private def terminalOverriddenEndgameTechniqueShadowed(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
+    terminalOverriddenEndgameTechniqueClaim(claim) &&
+      terminalConsequenceCodes(claim).nonEmpty &&
+      view.moveMeaningClaims.exists(other =>
+        other != claim &&
+          other.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+          other.supportLevel != "contextual" &&
+          (other.surfaceLane == "current_move_owned" || other.surfaceLane == "current_move_function") &&
+          other.moveUci == claim.moveUci &&
+          terminalConsequenceCodes(other).intersect(terminalConsequenceCodes(claim)).nonEmpty
       )
 
   private def publicCurrentMoveFunctionClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
@@ -2034,6 +2047,7 @@ object MoveMeaningSurface:
     if codes.contains("mate") then Some("terminal_mate")
     else if codes.contains("promotion_race") then Some("promotion_race")
     else if codes.contains("promotion") then Some("promotion")
+    else if codes.contains("draw_resource") then Some("draw_resource")
     else if codes.contains("material_gain") then Some("material_gain")
     else if codes.contains("material_loss") then Some("material_loss")
     else None
@@ -2269,6 +2283,7 @@ object MoveMeaningSurface:
       case "MaterialGain"  => Some(MoveMeaningSurfaceCode("material_gain", "material gain"))
       case "MaterialLoss"  => Some(MoveMeaningSurfaceCode("material_loss", "material loss"))
       case "PromotionRace" => Some(MoveMeaningSurfaceCode("promotion_race", "promotion race"))
+      case "DrawResource"  => Some(MoveMeaningSurfaceCode("draw_resource", "draw resource"))
       case _               => None
 
   private def publicEndgameFailureCode(reason: String): Option[MoveMeaningSurfaceCode] =
@@ -2376,6 +2391,7 @@ object MoveMeaningSurface:
     "terminal_mate" -> "mate",
     "promotion_race" -> "promotion",
     "promotion" -> "promotion",
+    "draw_resource" -> "draw resource",
     "material_gain" -> "material gain",
     "material_loss" -> "material loss",
     "pawn_break_timing" -> "pawn break timing",
@@ -2399,7 +2415,8 @@ object MoveMeaningSurface:
     "material_gain" -> "material gain",
     "material_loss" -> "material loss",
     "promotion_race" -> "promotion race",
-    "promotion" -> "promotion"
+    "promotion" -> "promotion",
+    "draw_resource" -> "draw resource"
   )
 
   private val moveQualityLabels: Map[String, String] = Map(
@@ -2515,6 +2532,7 @@ object MoveMeaningSurface:
       case "terminal_mate"  => 0
       case "promotion_race" => 1
       case "promotion"      => 1
+      case "draw_resource"  => 1
       case "material_gain"  => 2
       case "material_loss"  => 2
       case _                => 9
@@ -2915,7 +2933,7 @@ object MoveMeaningClaim:
       positionFen: String,
       currentMoveClaim: Boolean
   ): Boolean =
-    if terminalConversionDetailOwnsClaimMove(detail, objectSignatures, claimMove) then true
+    if terminalProofDetailOwnsClaimMove(detail, objectSignatures, claimMove) then true
     else
       val moveOwnedSource =
         detail.sourceEvidenceIds.exists(JudgmentSubjectBinding.sourceIdOwnsCurrentPlayedMove(_, claimMove))
@@ -2956,17 +2974,24 @@ object MoveMeaningClaim:
         case _ =>
           false
 
-  private def terminalConversionDetailOwnsClaimMove(
+  private def terminalProofDetailOwnsClaimMove(
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String],
       claimMove: String
   ): Boolean =
     val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
-    detail.terminalConsequenceKinds.contains("PromotionRace") &&
+    detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) &&
       detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
-      objectSignatures.exists(terminalConversionSignatureOwnsMoveAndTarget(_, normalizedClaimMove))
+      objectSignatures.exists(terminalProofSignatureOwnsMoveAndTarget(_, normalizedClaimMove))
 
-  private def terminalConversionSignatureOwnsMoveAndTarget(signature: String, normalizedClaimMove: String): Boolean =
+  private def terminalProofConsequenceKind(kind: String): Boolean =
+    kind == "Mate" ||
+      kind == "MaterialGain" ||
+      kind == "MaterialLoss" ||
+      kind == "PromotionRace" ||
+      kind == "DrawResource"
+
+  private def terminalProofSignatureOwnsMoveAndTarget(signature: String, normalizedClaimMove: String): Boolean =
     val signatureList = List(signature)
     EvidenceObjectBinding
       .signatureTokens(signatureList, "actor=Move:")
@@ -2995,9 +3020,13 @@ object MoveMeaningClaim:
       detail.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
         endgameTechniqueHorizonViewShape(detail) &&
         detail.endgameTechniqueTriggerMove.exists(move => sameMove(move, claimMove))
+    val terminalProofOwnsCurrentMove =
+      detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+        terminalProofDetailOwnsClaimMove(detail, objectSignatures, claimMove)
     sourceOwnsCurrentMove ||
       objectOwnsCurrentMove ||
       lineHorizonOwnsCurrentMove ||
+      terminalProofOwnsCurrentMove ||
       (metadataMoveOwnsCurrentMove && (sourceOwnsCurrentMove || objectOwnsCurrentMove))
 
   private def currentMoveProofObjectSignatures(objectSignatures: List[String]): Set[String] =
@@ -4502,7 +4531,8 @@ object MoveMeaningClaim:
           if hasRouteCarrier then Some("PieceRoute")
           else Some("PieceActivity")
         case PositionPlanTechniqueUnit.StructuralTransformation =>
-          detail.axisKind match
+          if detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) then Some("TerminalProof")
+          else detail.axisKind match
             case Some(StrategicAxisKind.Target)        => Some("TargetPressure")
             case Some(StrategicAxisKind.SpaceCenter)   => Some("CenterControl")
             case Some(StrategicAxisKind.PawnBreak)     => Some("PawnBreakTiming")
@@ -4553,6 +4583,8 @@ object MoveMeaningClaim:
         else "ImprovesPieceRoute"
       case "PieceActivity" =>
         if negativeStrategicDetail(detail) then "LosesPieceActivity" else "ImprovesPieceActivity"
+      case "TerminalProof" =>
+        terminalProofRole(detail)
       case "TechniqueConversion" =>
         endgameTechniqueRole(detail)
       case _ =>
@@ -4566,6 +4598,14 @@ object MoveMeaningClaim:
       case Some("ContradictedByTerminalProof")  => "TerminalProofContradictsTechnique"
       case Some("Active") | None                => "MaintainsTechnique"
       case Some(_)                              => "MaintainsTechnique"
+
+  private def terminalProofRole(detail: PositionPlanTechniqueSemanticDetail): String =
+    if detail.terminalConsequenceKinds.contains("Mate") then "ProvesMate"
+    else if detail.terminalConsequenceKinds.contains("PromotionRace") then "ProvesPromotionRace"
+    else if detail.terminalConsequenceKinds.contains("DrawResource") then "ProvesDrawResource"
+    else if detail.terminalConsequenceKinds.contains("MaterialGain") then "ProvesMaterialGain"
+    else if detail.terminalConsequenceKinds.contains("MaterialLoss") then "ProvesMaterialLoss"
+    else "ProvesTerminalResult"
 
   private def pawnBreakResolutionDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.axisPolarity.exists(negativePolarity) ||
@@ -5043,6 +5083,7 @@ object MoveMeaningClaim:
 
   private def kindRank(kind: String): Int =
     kind match
+      case "TerminalProof"       => 10
       case "TechniqueConversion" => 9
       case "PawnBreakTiming"     => 8
       case "CounterplayRace"     => 7

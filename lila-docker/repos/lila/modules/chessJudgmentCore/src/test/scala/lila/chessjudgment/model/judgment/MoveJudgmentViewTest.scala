@@ -4396,6 +4396,18 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(overriddenDetail.terminalConsequenceKinds, List("Mate"))
     assert(!overriddenView.moveMeaningClaims.exists(_.supportLevel == "owned_cause_linked"))
     assert(!overriddenView.moveMeaningClaims.exists(_.reasonTokens.exists(_.startsWith("causeEvidenceId:"))))
+    val terminalClaim = overriddenView.moveMeaningClaims
+      .find(claim =>
+        claim.reasonTokens.contains("terminalConsequenceKind:Mate") &&
+          claim.supportLevel == "view_surfaced" &&
+          claim.surfaceLane == "current_move_function"
+      )
+      .getOrElse(fail(overriddenView.moveMeaningClaims.toString))
+    assertEquals(terminalClaim.meaningKind, "TerminalProof")
+    assertEquals(terminalClaim.role, "ProvesMate")
+    assertEquals(terminalClaim.supportLevel, "view_surfaced")
+    assertEquals(terminalClaim.surfaceLane, "current_move_function")
+    assertEquals(MoveMeaningSurface.from(overriddenView).map(_.ideaType), List("terminal_mate"))
 
   private def evidenceRef(
       id: String,

@@ -2703,6 +2703,56 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(surface.map(_.ideaType).take(2), List("terminal_mate", "piece_activity"))
     assertEquals(surface.head.terminalConsequences.map(_.code), List("mate"))
 
+  test("move meaning claims surface root-owned terminal proof without a strategic axis"):
+    val mateSignature =
+      "actor=Move:e2e3|target=Square:h7|mechanism=Mechanism:Mate|consequence=Consequence:Mate|proof=DirectProof"
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.StructuralTransformation,
+      label = Some("terminal-proof"),
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralPurposeConsequences = List("Mate"),
+      structuralPurposeCategories = List("TerminalProof"),
+      terminalConsequenceKinds = List("Mate"),
+      sourceEvidenceIds = List("line:mate-proof", s"played-transition:${candidateLine.rootMove}"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List(mateSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(detail)
+    )
+
+    val claim = view.moveMeaningClaims.headOption.getOrElse(fail(view.moveMeaningClaims.toString))
+    assertEquals(claim.meaningKind, "TerminalProof")
+    assertEquals(claim.role, "ProvesMate")
+    assertEquals(claim.moveUci, candidateLine.rootMove)
+    assertEquals(claim.supportLevel, "view_surfaced")
+    assertEquals(claim.surfaceLane, "current_move_function")
+    assert(claim.reasonTokens.contains("terminalConsequenceKind:Mate"))
+    val surface = MoveMeaningSurface.from(view)
+    assertEquals(surface.map(_.ideaType), List("terminal_mate"))
+    assertEquals(surface.head.terminalConsequences.map(_.code), List("mate"))
+    val drawResourceView = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(
+        detail.copy(
+          structuralPurposeConsequences = List("DrawResource"),
+          terminalConsequenceKinds = List("DrawResource"),
+          objectBindingSignatures = List(
+            "actor=Move:e2e3|target=Square:e3|mechanism=Mechanism:DrawResource|consequence=Consequence:DrawResource|proof=DirectProof"
+          )
+        )
+      )
+    )
+    val drawSurface = MoveMeaningSurface.from(drawResourceView)
+    assertEquals(drawResourceView.moveMeaningClaims.map(_.meaningKind), List("TerminalProof"))
+    assertEquals(drawResourceView.moveMeaningClaims.map(_.role), List("ProvesDrawResource"))
+    assertEquals(drawSurface.map(_.ideaType), List("draw_resource"))
+    assertEquals(drawSurface.head.terminalConsequences.map(_.code), List("draw_resource"))
+
   test("move meaning claims do not call bare weak-square target pressure a piece route"):
     val targetSignature =
       "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:WeakSquareTargetCreated|consequence=Consequence:WeakSquareTargetCreated"

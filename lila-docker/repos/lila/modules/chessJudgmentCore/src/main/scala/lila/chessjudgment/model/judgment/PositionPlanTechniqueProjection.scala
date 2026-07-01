@@ -554,7 +554,7 @@ object PositionPlanTechniqueProjection:
       ideaVerdict: Option[IdeaVerdictSplit]
   ): Option[PositionPlanTechniqueFrame] =
     val horizons = payload.endgameTechniqueHorizons
-    val terminalConsequences = payload.proofSignalConsequences.filter(lineTerminalConversionConsequence)
+    val terminalConsequences = payload.proofSignalConsequences.filter(lineTerminalProofConsequence)
     Option.when(horizons.nonEmpty || terminalConsequences.nonEmpty) {
       val evidenceIds = List(ref.id)
       val objectBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, List(ref))
@@ -565,7 +565,7 @@ object PositionPlanTechniqueProjection:
       val semanticAnchors =
         (
           horizons.map(lineEndgameTechniqueSemanticAnchor) ++
-            terminalConsequences.map(lineTerminalConversionSemanticAnchor)
+            terminalConsequences.map(lineTerminalProofSemanticAnchor)
         ).distinctBy(_.stableKey).sortBy(_.stableKey)
       val units =
         (
@@ -586,7 +586,7 @@ object PositionPlanTechniqueProjection:
         objectBindings = positionPlanTechniqueObjectBindings(objectBindings),
         semanticDetails = positionPlanTechniqueEnrichedDetails(
           lineEndgameTechniquePlanDetails(horizons, evidenceIds) ++
-            lineTerminalConversionPlanDetails(terminalConsequences, evidenceIds),
+            lineTerminalProofPlanDetails(terminalConsequences, evidenceIds),
           graph,
           (evidenceIds ++ relativeCauseEvidenceIds).distinct.sorted
         ),
@@ -603,8 +603,12 @@ object PositionPlanTechniqueProjection:
       )
     }
 
-  private def lineTerminalConversionConsequence(consequence: LineConsequence): Boolean =
-    consequence.kind == LineConsequenceKind.PromotionRace && consequence.eventMove.nonEmpty
+  private def lineTerminalProofConsequence(consequence: LineConsequence): Boolean =
+    consequence.eventMove.nonEmpty &&
+      (
+        LineEndgameTechniqueHorizon.terminalProofOverrides(consequence.kind) ||
+          consequence.kind == LineConsequenceKind.DrawResource
+      )
 
   private def planTechniqueMechanismEligible(payload: StrategicMechanismEvidence): Boolean =
     payload.canAnchorStrategicIdea ||
@@ -1036,7 +1040,7 @@ object PositionPlanTechniqueProjection:
       positionPlanTechniqueConcreteCounterplayRaceCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteRoutePlanCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteStructuralPlanCauseKind(detail, kind) ||
-      positionPlanTechniqueTerminalConversionCauseKind(detail, kind)
+      positionPlanTechniqueTerminalProofCauseKind(detail, kind)
 
   private def positionPlanTechniqueCauseKindMatchesUnitOnlyDetail(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -1046,7 +1050,7 @@ object PositionPlanTechniqueProjection:
       (
         positionPlanTechniqueCauseKindsForUnit(detail.unit).contains(kind) ||
           positionPlanTechniqueConcreteStructuralPlanCauseKind(detail, kind) ||
-          positionPlanTechniqueTerminalConversionCauseKind(detail, kind)
+          positionPlanTechniqueTerminalProofCauseKind(detail, kind)
       )
 
   private def positionPlanTechniqueConcreteRoutePlanCauseKind(
@@ -1127,14 +1131,42 @@ object PositionPlanTechniqueProjection:
     detail.structuralRouteMove.nonEmpty &&
       detail.structuralMotifTags.exists(concreteMotifs)
 
-  private def positionPlanTechniqueTerminalConversionCauseKind(
+  private def positionPlanTechniqueTerminalProofCauseKind(
       detail: PositionPlanTechniqueSemanticDetail,
       kind: RelativeCauseKind
   ): Boolean =
     detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
-      detail.terminalConsequenceKinds.contains("PromotionRace") &&
+      detail.terminalConsequenceKinds.exists(positionPlanTechniqueTerminalProofConsequenceKind) &&
       detail.structuralRouteMove.nonEmpty &&
-      Set(RelativeCauseKind.ConversionMiss, RelativeCauseKind.ConversionSecured).contains(kind)
+      detail.terminalConsequenceKinds.exists(positionPlanTechniqueTerminalProofCauseKind(_, kind))
+
+  private def positionPlanTechniqueTerminalProofConsequenceKind(kind: String): Boolean =
+    kind == "Mate" ||
+      kind == "MaterialGain" ||
+      kind == "MaterialLoss" ||
+      kind == "PromotionRace" ||
+      kind == "DrawResource"
+
+  private def positionPlanTechniqueTerminalProofCauseKind(
+      consequenceKind: String,
+      causeKind: RelativeCauseKind
+  ): Boolean =
+    consequenceKind match
+      case "Mate" =>
+        Set(
+          RelativeCauseKind.KingForcing,
+          RelativeCauseKind.TacticalRefutationOfPlayed,
+          RelativeCauseKind.MissedTacticalResource,
+          RelativeCauseKind.CandidateTacticalLiability
+        ).contains(causeKind)
+      case "MaterialGain" | "MaterialLoss" =>
+        Set(RelativeCauseKind.MaterialSwing, RelativeCauseKind.SacrificeCompensation).contains(causeKind)
+      case "PromotionRace" =>
+        Set(RelativeCauseKind.ConversionMiss, RelativeCauseKind.ConversionSecured).contains(causeKind)
+      case "DrawResource" =>
+        Set(RelativeCauseKind.DrawResource, RelativeCauseKind.DefensiveResource).contains(causeKind)
+      case _ =>
+        false
 
   private def positionPlanTechniqueCauseKindsForUnit(
       unit: PositionPlanTechniqueUnit
@@ -2434,22 +2466,22 @@ object PositionPlanTechniqueProjection:
         )
       )
 
-  private def lineTerminalConversionPlanDetails(
+  private def lineTerminalProofPlanDetails(
       consequences: List[LineConsequence],
       evidenceIds: List[String]
   ): List[PositionPlanTechniqueSemanticDetail] =
     consequences
-      .filter(lineTerminalConversionConsequence)
+      .filter(lineTerminalProofConsequence)
       .flatMap { consequence =>
         consequence.eventMove.map(_.trim.toLowerCase).map { routeMove =>
           PositionPlanTechniqueSemanticDetail(
             unit = PositionPlanTechniqueUnit.StructuralTransformation,
-            label = Some("terminal-conversion"),
-            semanticAnchorKeys = List(lineTerminalConversionSemanticAnchor(consequence).stableKey),
+            label = Some("terminal-proof"),
+            semanticAnchorKeys = List(lineTerminalProofSemanticAnchor(consequence).stableKey),
             structuralRouteMove = Some(routeMove),
             structuralPurposeConsequences = List(consequence.kind.toString),
-            structuralPurposeCategories = List("TerminalConversion"),
-            structuralPurposePolarities = List("Gain"),
+            structuralPurposeCategories = List("TerminalProof"),
+            structuralPurposePolarities = List(lineTerminalProofPolarity(consequence.kind)),
             terminalConsequenceKinds = List(consequence.kind.toString),
             sourceEvidenceIds = evidenceIds
           )
@@ -2458,12 +2490,18 @@ object PositionPlanTechniqueProjection:
       .distinctBy(detail => (detail.structuralRouteMove, detail.terminalConsequenceKinds.mkString(",")))
       .sortBy(detail => detail.structuralRouteMove.getOrElse(""))
 
-  private def lineTerminalConversionSemanticAnchor(
+  private def lineTerminalProofPolarity(kind: LineConsequenceKind): String =
+    kind match
+      case LineConsequenceKind.MaterialLoss => "Loss"
+      case LineConsequenceKind.DrawResource => "Preserve"
+      case _                                => "Gain"
+
+  private def lineTerminalProofSemanticAnchor(
       consequence: LineConsequence
   ): EvidenceSemanticAnchor =
     EvidenceSemanticAnchor.of(
       EvidenceSemanticAnchorKind.LineConsequence,
-      "TerminalConversion",
+      "TerminalProof",
       consequence.kind.toString,
       consequence.eventMove.getOrElse("")
     )
