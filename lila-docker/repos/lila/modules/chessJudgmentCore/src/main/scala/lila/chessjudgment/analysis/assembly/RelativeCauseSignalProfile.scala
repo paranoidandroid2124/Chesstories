@@ -530,10 +530,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       )
     val exactSameRootCounterBreakCauses =
       if profile.exactReferenceMove &&
-          (
-            RelativeCauseSignalProfile.currentMoveSameRootBreakCarrier(profile.fact.candidateLine, profile.allRecords) ||
-              payload.sourceRefs.exists(RelativeCauseSignalProfile.currentMoveSameRootBreakCarrierRef(profile.fact.candidateLine, _))
-          )
+          RelativeCauseSignalProfile.currentMoveSameRootBreakCarrier(profile.fact.candidateLine, profile.allRecords)
       then
         payload.axisComparisons.collect {
           case comparison
@@ -804,10 +801,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
     fact.kind == CandidateComparisonKind.PlayedVsBest &&
       fact.comparison.verdict == MoveChoiceVerdict.MatchesReference &&
       JudgmentSubjectBinding.normalizeMove(fact.referenceLine.rootMove) == JudgmentSubjectBinding.normalizeMove(fact.candidateLine.rootMove) &&
-      (
-        currentMoveSameRootBreakCarrier(fact.candidateLine, records) ||
-          payload.sourceRefs.exists(currentMoveSameRootBreakCarrierRef(fact.candidateLine, _))
-      ) &&
+      currentMoveSameRootBreakCarrier(fact.candidateLine, records) &&
       payload.axisComparisons.exists(comparison =>
         comparison.outcome == StrategicAxisComparisonOutcome.SharedSustained &&
           comparison.axis.kind == StrategicAxisKind.Counterplay &&
@@ -1145,24 +1139,18 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         record
     }.distinctBy(_.ref.id)
 
-  private[chessjudgment] def currentMoveSameRootBreakCarrierRef(
-      candidateLine: LineNodeRef,
-      ref: EvidenceRef
-  ): Boolean =
-    ref.layer == EvidenceLayer.StructuralDelta &&
-      ref.scope == EvidenceScope.PlayedTransition &&
-      ref.line.contains(candidateLine)
-
   private def currentMoveBreakCarrierConsequence(consequence: TransitionConsequence): Boolean =
-    consequence.subjects.exists(currentMoveBreakFileSubject) ||
-      (
-        (consequence.kind == TransitionConsequenceKind.PawnTensionGain ||
-          consequence.kind == TransitionConsequenceKind.PawnTensionResolution) &&
-          consequence.subjects.exists(_.trim.nonEmpty)
-      )
+    (
+      consequence.kind == TransitionConsequenceKind.PawnTensionGain ||
+        consequence.kind == TransitionConsequenceKind.PawnTensionResolution
+    ) &&
+      consequence.subjects.exists(currentMoveBreakCarrierSubject)
 
-  private def currentMoveBreakFileSubject(subject: String): Boolean =
-    Option(subject).getOrElse("").trim.toLowerCase.startsWith("break-file:")
+  private def currentMoveBreakCarrierSubject(subject: String): Boolean =
+    val normalized = Option(subject).getOrElse("").trim.toLowerCase
+    normalized.startsWith("break-file:") ||
+      normalized.startsWith("created-tension:") ||
+      normalized.startsWith("resolved-tension:")
 
   private def currentMovePawnBreakAxis(axis: StrategicAxisDetail): Boolean =
     val normalized = axis.label.toLowerCase

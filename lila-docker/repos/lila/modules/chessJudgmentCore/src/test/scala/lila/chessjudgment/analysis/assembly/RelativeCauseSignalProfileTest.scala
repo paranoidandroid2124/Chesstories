@@ -2060,6 +2060,19 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
       parents = List(structuralRef)
     )
     val exactReferenceLine = LineNodeRef("exact-reference-line", "d4d5", 1, LineNodeRole.BestReference)
+    val malformedStructuralRecord = structuralRecord.copy(
+      ref = structuralRef.copy(id = "structural-delta:played:d4d5:not-a-carrier"),
+      payload = structuralRecord.payload.asInstanceOf[StructuralDeltaEvidence].copy(
+        consequences = List(
+          TransitionConsequence(
+            TransitionConsequenceKind.PawnTensionResolution,
+            StructuralSignalPolarity.Gain,
+            strength = 2,
+            subjects = List("not-a-carrier")
+          )
+        )
+      )
+    )
     val sharedContrastRecord = strategicContrastRecord(
       root = root,
       referenceLine = exactReferenceLine,
@@ -2083,6 +2096,7 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
     val exactProfile = exactPlayedProfile(exactReferenceLine, candidateLine, Nil, List(structuralRecord, mechanismRecord))
     val exactContrastProfile = exactPlayedProfile(exactReferenceLine, candidateLine, Nil, List(structuralRecord, sharedContrastRecord))
     val exactContrastRefProfile = exactPlayedProfile(exactReferenceLine, candidateLine, Nil, List(sharedContrastWithSupport))
+    val malformedExactProfile = exactPlayedProfile(exactReferenceLine, candidateLine, Nil, List(malformedStructuralRecord, sharedContrastRecord))
 
     val exactContrastDrafts = RelativeCauseDraftPlanner.drafts(exactContrastProfile)
 
@@ -2091,7 +2105,8 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
     assertEquals(RelativeCauseDraftPlanner.drafts(exactProfile).map(_.kind), List(RelativeCauseKind.OpponentRestriction))
     assertEquals(exactContrastDrafts.map(_.kind), List(RelativeCauseKind.OpponentRestriction))
     assert(exactContrastDrafts.exists(_.support.exists(_.ref.id == structuralRef.id)), exactContrastDrafts)
-    assertEquals(RelativeCauseDraftPlanner.drafts(exactContrastRefProfile).map(_.kind), List(RelativeCauseKind.OpponentRestriction))
+    assertEquals(RelativeCauseDraftPlanner.drafts(exactContrastRefProfile).map(_.kind), Nil)
+    assertEquals(RelativeCauseDraftPlanner.drafts(malformedExactProfile).map(_.kind), Nil)
 
   test("maps candidate positive counterplay restraint axis to opponent restriction"):
     val root = PositionNodeRef("8/8/8/8/8/8/3P4/8 w - - 0 1", 1, Some(Color.White), Some("root"))
