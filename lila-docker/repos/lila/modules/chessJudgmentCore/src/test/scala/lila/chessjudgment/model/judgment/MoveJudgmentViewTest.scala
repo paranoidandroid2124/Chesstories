@@ -1232,6 +1232,14 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       line = Some(playedLine),
       scope = EvidenceScope.Counterfactual
     )
+    val sameAxisKingSafetyCauseRef = evidenceRef(
+      id = "relative-cause:played-best:king-safety:e4e5",
+      producer = EvidenceProducer.RelativeMoveProducer,
+      layer = EvidenceLayer.RelativeCause,
+      position = root,
+      line = Some(playedLine),
+      scope = EvidenceScope.Counterfactual
+    )
     val played = MoveTransitionEdge(
       role = TransitionEdgeRole.Played,
       id = "played-transition:e4e5:diagonal-denial",
@@ -1279,7 +1287,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
-      relativeCauseEvidence = List(causeRef)
+      relativeCauseEvidence = List(causeRef, sameAxisKingSafetyCauseRef)
     )
     val transition = StructuralTransitionBinding(
       moveUci = "e4e5",
@@ -1352,11 +1360,18 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         )
       )
     )
+    val sameAxisKingSafetyCause =
+      cause.copy(kind = RelativeCauseKind.KingSafetyConcession)(cause.proof)
     val graph = TypedEvidenceGraph(
       List(
         EvidenceRecord(structuralRef, structuralDelta),
         EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef)),
-        EvidenceRecord(causeRef, RelativeCauseFactEvidence(cause), parents = List(mechanismRef, structuralRef))
+        EvidenceRecord(causeRef, RelativeCauseFactEvidence(cause), parents = List(mechanismRef, structuralRef)),
+        EvidenceRecord(
+          sameAxisKingSafetyCauseRef,
+          RelativeCauseFactEvidence(sameAxisKingSafetyCause),
+          parents = List(mechanismRef, structuralRef)
+        )
       )
     )
 
@@ -1374,6 +1389,12 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       .get
 
     assert(!view.causeAudit.all.exists(_.causeEvidenceIds.contains(causeRef.id)))
+    val counterplayDetail = view.positionPlanTechniqueFrames
+      .flatMap(_.semanticDetails)
+      .find(_.axisKey.contains(axis.stableKey))
+      .getOrElse(fail(s"frames=${view.positionPlanTechniqueFrames}"))
+    assertEquals(counterplayDetail.causeEvidenceIds, List(causeRef.id))
+    assert(!view.moveMeaningClaims.exists(_.causeEvidenceIds.contains(sameAxisKingSafetyCauseRef.id)), view.moveMeaningClaims)
 
     val claim = view.moveMeaningClaims
       .find(_.causeEvidenceIds.contains(causeRef.id))

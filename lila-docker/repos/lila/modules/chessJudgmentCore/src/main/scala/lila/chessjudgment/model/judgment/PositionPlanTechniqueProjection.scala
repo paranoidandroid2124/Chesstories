@@ -1072,7 +1072,9 @@ object PositionPlanTechniqueProjection:
       detail: PositionPlanTechniqueSemanticDetail,
       kind: RelativeCauseKind
   ): Boolean =
-    detail.axisKind.exists(axisKind => positionPlanTechniqueCauseKindsForAxis(axisKind, detail.label).contains(kind)) ||
+    detail.axisKind.exists(axisKind =>
+      positionPlanTechniqueCauseKindsForAxis(axisKind, detail.axisPolarity, detail.label).contains(kind)
+    ) ||
       positionPlanTechniqueConcreteCounterplayRaceCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteRoutePlanCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteStructuralPlanCauseKind(detail, kind) ||
@@ -1303,6 +1305,7 @@ object PositionPlanTechniqueProjection:
 
   private def positionPlanTechniqueCauseKindsForAxis(
       axisKind: StrategicAxisKind,
+      polarity: Option[StrategicAxisPolarity],
       label: Option[String]
   ): Set[RelativeCauseKind] =
     val labelLower = label.fold("")(_.toLowerCase)
@@ -1318,9 +1321,9 @@ object PositionPlanTechniqueProjection:
         Set(RelativeCauseKind.PawnBreakOpportunity)
       case StrategicAxisKind.Counterplay =>
         Set(
-          RelativeCauseKind.OpponentRestriction,
-          RelativeCauseKind.KingSafetyConcession
-        )
+          Option.when(polarity.contains(StrategicAxisPolarity.Restrain))(RelativeCauseKind.OpponentRestriction),
+          Option.when(label.exists(_.contains("king-safety")))(RelativeCauseKind.KingSafetyConcession)
+        ).flatten
       case StrategicAxisKind.Activity =>
         Set(
           RelativeCauseKind.ActivityGain,
