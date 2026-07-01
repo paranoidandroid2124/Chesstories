@@ -3945,6 +3945,32 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(view.moveMeaningClaims.map(_.surfaceLane), List("pv_or_line_witness"))
     assert(!view.moveMeaningClaims.exists(_.surfaceLane.startsWith("current_move")))
 
+  test("move meaning claims keep mixed contrast details line-neutral"):
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.StructuralTransformation,
+      axisKey = Some("Target:Support:mixed-contrast-target"),
+      axisKind = Some(StrategicAxisKind.Target),
+      axisPolarity = Some(StrategicAxisPolarity.Support),
+      contrastOutcome = Some(StrategicAxisComparisonOutcome.ReferenceStronger),
+      structuralPurposeSubjects = List("e4"),
+      referenceEvidenceIds = List("reference-transition"),
+      candidateEvidenceIds = List("candidate-transition"),
+      sourceEvidenceIds = List("reference-transition", "candidate-transition"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List("target=Square:e4|mechanism=Mechanism:target-pressure|proof=DirectProof"),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(detail)
+    )
+
+    assertEquals(view.moveMeaningClaims.map(_.lineRole), List("contrast"))
+    assertEquals(view.moveMeaningClaims.map(_.moveUci), List(""))
+    assertEquals(view.moveMeaningClaims.map(_.surfaceLane), List("pv_or_line_witness"))
+    assert(!view.moveMeaningClaims.exists(_.surfaceLane.startsWith("current_move")))
+
   test("move meaning claims keep reference-vs-alternative resources out of current move lanes"):
     val referenceAlternativeCause = causeFrame(
       causeId = "cause-reference-alternative-break",

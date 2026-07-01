@@ -4465,7 +4465,10 @@ object MoveMeaningClaim:
       verdict: MoveJudgmentVerdictFrame,
       lineRole: String
   ): String =
-    if lineRole == "reference" then verdict.referenceLine.rootMove else verdict.candidateLine.rootMove
+    if lineRole == "reference" then verdict.referenceLine.rootMove
+    else if lineRole == "candidate" then verdict.candidateLine.rootMove
+    else if sameMove(verdict.referenceLine.rootMove, verdict.candidateLine.rootMove) then verdict.candidateLine.rootMove
+    else ""
 
   private[judgment] def negativePolarity(polarity: StrategicAxisPolarity): Boolean =
     polarity == StrategicAxisPolarity.Loss ||
