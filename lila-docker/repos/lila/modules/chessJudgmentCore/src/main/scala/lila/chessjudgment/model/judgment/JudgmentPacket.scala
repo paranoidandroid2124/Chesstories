@@ -2791,7 +2791,7 @@ object MoveMeaningClaim:
       causeFramesById: Map[String, List[MoveJudgmentCauseFrame]]
   ): Option[MoveMeaningClaim] =
     val objectSignatures = detail.objectBindingSignatures.distinct.sorted
-    val linkedCauseFrames =
+    val directLinkedCauseFrames =
       detail.causeEvidenceIds.distinct.sorted
         .flatMap(id =>
           causeFramesById.getOrElse(id, Nil).filter(frame =>
@@ -2799,6 +2799,12 @@ object MoveMeaningClaim:
           )
         )
         .distinctBy(_.causeEvidenceIds)
+    val bridgedRouteCauseFrames =
+      causeFramesById.values.flatten.toList
+        .filter(frame => sameRootRouteOwnedCauseBridgeCandidate(frame, verdict, detail, objectSignatures))
+        .distinctBy(_.causeEvidenceIds)
+    val linkedCauseFrames = (directLinkedCauseFrames ++ bridgedRouteCauseFrames).distinctBy(_.causeEvidenceIds)
+    val bridgedRouteCauseIds = bridgedRouteCauseFrames.flatMap(_.causeEvidenceIds).toSet
     for
       baseMeaningKind <- kind(detail, objectSignatures, None)
       if detailMatchesLine(frame, detail, verdict)
@@ -2825,6 +2831,15 @@ object MoveMeaningClaim:
                 optionLineRole,
                 optionMove,
                 baseClaimRole
+              ) ||
+                sameRootRouteOwnedCauseBridge(
+                  linkedFrame,
+                  verdict,
+                  detail,
+                  objectSignatures,
+                  optionLineRole,
+                  optionMove,
+                  baseClaimRole
               )
             )
           val optionMeaningKind = kind(detail, objectSignatures, Some(optionMove)).getOrElse(baseMeaningKind)
@@ -2839,6 +2854,15 @@ object MoveMeaningClaim:
                 optionLineRole,
                 optionMove,
                 optionClaimRole
+              ) ||
+                sameRootRouteOwnedCauseBridge(
+                  linkedFrame,
+                  verdict,
+                  detail,
+                  objectSignatures,
+                  optionLineRole,
+                  optionMove,
+                  optionClaimRole
               )
             )
           (optionLineRole, optionMove, optionMeaningKind, optionClaimRole, optionRoleCompatibleCauseFrames)
@@ -2877,7 +2901,7 @@ object MoveMeaningClaim:
       val linkedCauseIds =
         roleCompatibleCauseFrames
           .flatMap(_.causeEvidenceIds)
-          .filter(detail.causeEvidenceIds.contains)
+          .filter(id => detail.causeEvidenceIds.contains(id) || bridgedRouteCauseIds.contains(id))
           .distinct
           .sorted
       MoveMeaningClaim(
@@ -3445,6 +3469,35 @@ object MoveMeaningClaim:
   ): Boolean =
     causeFrameLineOwnsClaimMove(frame, verdict, claimLineRole, claimMove) &&
       causeFrameMatchesMeaningDetail(frame, detail, objectSignatures) &&
+      detailOwnsClaimMove(detail, objectSignatures, claimMove) &&
+      causeFramePolarityCompatibleWithMeaning(frame, verdict, detail, claimRole)
+
+  private def sameRootRouteOwnedCauseBridgeCandidate(
+      frame: MoveJudgmentCauseFrame,
+      verdict: MoveJudgmentVerdictFrame,
+      detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String]
+  ): Boolean =
+    detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
+      currentMoveRouteLineRole(detail, objectSignatures, verdict) &&
+      nonLossMeaningVerdict(verdict.verdict) &&
+      crossComparisonPositiveCause(frame, detail) &&
+      detailCanOwnCrossComparisonCause(detail) &&
+      reasonGradeCauseFrame(frame) &&
+      crossComparisonOwnedRootTier(frame) &&
+      causeFrameObjectOverlapsDetail(frame, objectSignatures)
+
+  private def sameRootRouteOwnedCauseBridge(
+      frame: MoveJudgmentCauseFrame,
+      verdict: MoveJudgmentVerdictFrame,
+      detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
+      claimLineRole: String,
+      claimMove: String,
+      claimRole: String
+  ): Boolean =
+    sameRootRouteOwnedCauseBridgeCandidate(frame, verdict, detail, objectSignatures) &&
+      causeFrameLineOwnsClaimMove(frame, verdict, claimLineRole, claimMove) &&
       detailOwnsClaimMove(detail, objectSignatures, claimMove) &&
       causeFramePolarityCompatibleWithMeaning(frame, verdict, detail, claimRole)
 

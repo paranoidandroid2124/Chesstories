@@ -1594,10 +1594,19 @@ object CandidateComparisonDiagnostic:
     }
 
   private def moveMeaningClaimSurfaceSignature(claim: MoveMeaningClaim): String =
+    def signatureField(values: List[String]): String =
+      values.distinct.sorted match
+        case Nil    => "none"
+        case tokens => tokens.mkString(",")
+
     val axis = claim.axisKey.getOrElse("none")
-    val causes = claim.causeEvidenceIds.sorted.mkString(",") match
-      case ""    => "none"
-      case value => value
+    val proofTokens =
+      claim.reasonTokens.filter(_.startsWith("proofRole:")).map(_.stripPrefix("proofRole:")) ++
+        claim.objectBindingSignatures.flatMap(signature => EvidenceObjectBinding.signatureTokens(List(signature), "proof="))
+    val objectTokens =
+      claim.objectBindingSignatures
+        .map(_.replace('|', ';'))
+        .take(4)
     List(
       s"unit=${claim.unit}",
       s"axis=$axis",
@@ -1606,7 +1615,10 @@ object CandidateComparisonDiagnostic:
       s"lane=${claim.surfaceLane}",
       s"lineRole=${claim.lineRole}",
       s"move=${claim.moveUci}",
-      s"causes=$causes"
+      s"causes=${signatureField(claim.causeEvidenceIds)}",
+      s"sources=${signatureField(claim.sourceEvidenceIds.take(6))}",
+      s"proof=${signatureField(proofTokens)}",
+      s"objects=${signatureField(objectTokens)}"
     ).mkString("|")
 
   private def primaryRootCauseEvidenceIdTierSignature(

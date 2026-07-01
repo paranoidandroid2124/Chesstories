@@ -943,10 +943,12 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
         .distinct
         .sorted
     val expectedQuestions = expectedQuestionIds.map(_.trim).filter(_.nonEmpty).distinct.sorted
+    val measuredExpectedQuestionIds = expectedQuestions.filter(questionIds.toSet)
+    val unmeasuredExpectedQuestionIds = expectedQuestions.diff(measuredExpectedQuestionIds)
     val coveredExpectedQuestionIds =
       if expectedQuestions.isEmpty then matchedQuestionIds
-      else matchedQuestionIds.filter(expectedQuestions.contains)
-    val missingExpectedQuestionIds = expectedQuestions.diff(coveredExpectedQuestionIds)
+      else matchedQuestionIds.filter(measuredExpectedQuestionIds.contains)
+    val missingExpectedQuestionIds = measuredExpectedQuestionIds.diff(coveredExpectedQuestionIds)
     val missingSlotIds =
       slotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
     val failedRequiredTerminalStageSlotIds =
@@ -989,6 +991,9 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "failedRequiredTerminalStageSlotIdCounts" -> stringCountsJson(failedRequiredTerminalStageSlotIds),
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
+      "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
+      "unmeasuredExpectedQuestionIds" -> unmeasuredExpectedQuestionIds,
+      "unmeasuredExpectedQuestionIdCount" -> unmeasuredExpectedQuestionIds.size,
       "coveredExpectedQuestionIds" -> coveredExpectedQuestionIds,
       "missingExpectedQuestionIds" -> missingExpectedQuestionIds,
       "missingExpectedQuestionIdCount" -> missingExpectedQuestionIds.size,
@@ -997,7 +1002,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "missingQuestionIdSlotIds" -> slotRows
         .filter(row => (row \ "questionId").asOpt[String].isEmpty)
         .map(row => (row \ "id").as[String]),
-      "byQuestionId" -> semanticRubricExpectedSlotCoverageByQuestionIdJson(slotRows, expectedQuestions),
+      "byQuestionId" -> semanticRubricExpectedSlotCoverageByQuestionIdJson(slotRows, measuredExpectedQuestionIds),
       "slots" -> JsArray(slotRows)
     )
 
@@ -1034,10 +1039,12 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
         .filter(_.nonEmpty)
         .distinct
         .sorted
+    val measuredExpectedQuestionIds = expectedQuestions.filter(questionIds.toSet)
+    val unmeasuredExpectedQuestionIds = expectedQuestions.diff(measuredExpectedQuestionIds)
     val coveredExpectedQuestionIds =
       if expectedQuestions.isEmpty then matchedQuestionIds
-      else matchedQuestionIds.filter(expectedQuestions.contains)
-    val missingExpectedQuestionIds = expectedQuestions.diff(coveredExpectedQuestionIds)
+      else matchedQuestionIds.filter(measuredExpectedQuestionIds.contains)
+    val missingExpectedQuestionIds = measuredExpectedQuestionIds.diff(coveredExpectedQuestionIds)
     val missingSlotIds =
       slotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
     val failedRequiredTerminalStageSlotIds =
@@ -1081,6 +1088,9 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "failedRequiredTerminalStageSlotIdCounts" -> stringCountsJson(failedRequiredTerminalStageSlotIds),
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
+      "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
+      "unmeasuredExpectedQuestionIds" -> unmeasuredExpectedQuestionIds,
+      "unmeasuredExpectedQuestionIdCount" -> unmeasuredExpectedQuestionIds.size,
       "coveredExpectedQuestionIds" -> coveredExpectedQuestionIds,
       "missingExpectedQuestionIds" -> missingExpectedQuestionIds,
       "missingExpectedQuestionIdCount" -> missingExpectedQuestionIds.size,
@@ -1089,7 +1099,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "missingQuestionIdSlotIds" -> slotRows
         .filter(row => (row \ "questionId").asOpt[String].isEmpty)
         .map(row => (row \ "id").as[String]),
-      "byQuestionId" -> semanticRubricExpectedSlotCoverageByQuestionIdJson(slotRows, expectedQuestions),
+      "byQuestionId" -> semanticRubricExpectedSlotCoverageByQuestionIdJson(slotRows, measuredExpectedQuestionIds),
       "slots" -> JsArray(slotRows)
     )
 

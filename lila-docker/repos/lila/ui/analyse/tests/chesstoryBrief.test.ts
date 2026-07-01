@@ -75,6 +75,7 @@ describe('chesstory brief scaffold', () => {
             failure_family: { code: 'wrong_route', label: 'wrong route' },
           },
           target: { squares: ['e4', 'g3'], pieces: ['knight'] },
+          evidence: { has_carrier: true, proof_level: 'surface_evidence' },
           comparison: {
             reference_move: 'e4f6',
             candidate_move: 'e4g3',
@@ -126,6 +127,33 @@ describe('chesstory brief scaffold', () => {
     assert.doesNotMatch(text, /Useful idea inside the mistake|There may be a local idea/);
     assert.doesNotMatch(JSON.stringify(current?.items || []), /piece activity|knight|e4|g3/);
     assert.match(plan?.body || '', /No public local idea/);
+  });
+
+  test('ignores bad move local ideas without public evidence carriers', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'bad', played_move: 'e4g3', reference_move: 'e4f6' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'bad',
+          priority: 'main',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          assessment: {
+            move_quality: { code: 'bad', label: 'bad' },
+            idea_quality: { code: 'failed', label: 'failed' },
+            priority: { code: 'supporting', label: 'supporting' },
+            is_local_idea: true,
+            problem: { code: 'loses_activity', label: 'loses activity' },
+          },
+          evidence: { has_carrier: false, proof_level: 'none' },
+          target: { squares: ['e4', 'g3'], pieces: ['knight'] },
+        },
+      ],
+    });
+
+    const plan = sections.find(section => section.key === 'middlegame-plan');
+    assert.match(plan?.body || '', /No public local idea/);
+    assert.deepEqual(plan?.items, []);
   });
 
   test('requires a public evidence carrier before writing board-evidence prose', () => {

@@ -1147,7 +1147,9 @@ object RelativeAssessmentAssembler:
   private def activityGainConsequenceHasConcreteRoute(consequence: TransitionConsequence): Boolean =
     import TransitionConsequenceKind.*
     val routeKind =
-      consequence.kind == OutpostGain ||
+      consequence.kind == DevelopmentPieceActivated ||
+        consequence.kind == DevelopmentCenterControlGain ||
+        consequence.kind == OutpostGain ||
         consequence.kind == BatteryPressureGain ||
         consequence.kind == FileOccupationGain ||
         consequence.kind == FileAccessGain ||

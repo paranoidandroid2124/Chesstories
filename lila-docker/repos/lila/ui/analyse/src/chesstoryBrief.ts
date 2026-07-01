@@ -89,7 +89,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const mainPlayed = played.filter(s => s.priority === 'main');
   const bad = payload.verdict?.move_quality === 'bad' || played.some(s => s.move_quality === 'bad');
   const evidencePlayed = played.filter(hasEvidenceCarrier);
-  const localIdeas = played.filter(s => s.assessment?.is_local_idea);
+  const localIdeas = played.filter(s => s.assessment?.is_local_idea && hasEvidenceCarrier(s));
   const solved = uniqueLabels((bad ? localIdeas : evidencePlayed).map(ideaLabel)).slice(0, 4);
   const localIdeaLabels = uniqueLabels(localIdeas.map(ideaLabel)).slice(0, 4);
   const terminal = uniqueLabels(evidencePlayed.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));

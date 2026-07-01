@@ -437,6 +437,12 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _) if ref.id == source.id =>
         payload.consequencesOf(TransitionConsequenceKind.BatteryPressureGain).exists(consequence =>
           consequence.subjects.exists(currentMoveDiagonalBatterySubject)
+        ) ||
+          payload.consequencesOf(TransitionConsequenceKind.DevelopmentPieceActivated).exists(consequence =>
+            consequence.subjects.exists(currentMoveDevelopmentRouteSubject)
+          ) ||
+          payload.consequencesOf(TransitionConsequenceKind.DevelopmentCenterControlGain).exists(consequence =>
+            consequence.subjects.exists(currentMoveDevelopmentRouteSubject)
         )
       case _ =>
         false
@@ -445,6 +451,10 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
   private def currentMoveDiagonalBatterySubject(subject: String): Boolean =
     val normalized = Option(subject).getOrElse("").trim.toLowerCase
     normalized.startsWith("battery:diagonal:")
+
+  private def currentMoveDevelopmentRouteSubject(subject: String): Boolean =
+    val normalized = Option(subject).getOrElse("").trim.toLowerCase
+    normalized.matches(".*\\b(king|queen|rook|bishop|knight):[a-h][1-8]-[a-h][1-8].*")
 
   private def currentMoveConcreteCounterplayCanOwnValue(
       kind: RelativeCauseKind,

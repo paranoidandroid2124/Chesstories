@@ -100,6 +100,17 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       assert(Files.exists(dir.resolve("phase3_audit_summary_current_chunk01_rows001-001.json")))
     finally deleteRecursively(dir)
 
+  test("semantic rubric marks expected questions without slots as unmeasured, not missing"):
+    val coverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
+      expectedSlots = Nil,
+      diagnostics = Nil,
+      expectedQuestionIds = List("terminal_mate", "terminal_promotion_race")
+    )
+
+    assertEquals((coverage \ "missingExpectedQuestionIds").as[List[String]], List.empty[String])
+    assertEquals((coverage \ "unmeasuredExpectedQuestionIds").as[List[String]], List("terminal_mate", "terminal_promotion_race"))
+    assertEquals((coverage \ "expectedQuestionCoverageComplete").as[Boolean], true)
+
   test("writes replay input archive next to audit output"):
     val dir = Files.createTempDirectory("phase3-audit-runner")
     try
