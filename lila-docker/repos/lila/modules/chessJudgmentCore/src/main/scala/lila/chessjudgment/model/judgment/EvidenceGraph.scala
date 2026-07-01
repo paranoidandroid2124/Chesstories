@@ -2558,6 +2558,17 @@ enum LineConsequenceKind:
   case PromotionRace
 
 object LineConsequenceKind:
+  def terminalResultProof(kind: LineConsequenceKind): Boolean =
+    kind match
+      case LineConsequenceKind.Mate | LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss |
+          LineConsequenceKind.PromotionRace | LineConsequenceKind.DrawResource =>
+        true
+      case _ =>
+        false
+
+  def terminalResultProofName(kind: String): Boolean =
+    values.find(_.toString == kind).exists(terminalResultProof)
+
   def tacticalDriver(kind: LineConsequenceKind): Boolean =
     kind match
       case LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss |

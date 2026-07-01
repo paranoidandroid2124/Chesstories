@@ -4028,6 +4028,72 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(view.causeAudit.primary.head.narrativeRole, MoveJudgmentCauseNarrativeRole.RootCause)
     assertEquals(view.causeAudit.primary.head.rootArbitrationTier, MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot)
 
+  test("draw resource proof outranks exact long-term roots as a terminal result"):
+    val playedLine = LineNodeRef("played-line", "h6a6", 2, LineNodeRole.Played)
+    val referenceLine = LineNodeRef("reference-line", "h6a6", 1, LineNodeRole.BestReference)
+    def frame(
+        id: String,
+        kind: RelativeCauseKind,
+        hasLongTermProof: Boolean,
+        proofLineConsequences: List[LineConsequenceKind] = Nil
+    ): MoveJudgmentCauseFrame =
+      MoveJudgmentCauseFrame(
+        role = MoveJudgmentCauseFrameRole.PrimaryCause,
+        clusterId = None,
+        framed = true,
+        causeEvidenceIds = List(id),
+        causeKind = kind,
+        comparisonKind = CandidateComparisonKind.PlayedVsBest,
+        causeRole = RelativeCauseRole.PrimaryPlayedCause,
+        causeSourceSide = RelativeCauseSourceSide.Candidate,
+        causeImportance = RelativeCauseImportance.Primary,
+        attributionKind = CauseAttributionKind.CandidateCreatesValue,
+        attributionRootMoveMatched = true,
+        attributionDirectProofEligible = true,
+        referenceLine = referenceLine,
+        candidateLine = playedLine,
+        eventLine = playedLine,
+        eventRootMove = playedLine.rootMove,
+        causeClaimIds = Nil,
+        evaluationClaimIds = Nil,
+        witnessClaimIds = Nil,
+        ideaIds = Nil,
+        supportIdeaIds = Nil,
+        claimCandidateIds = Nil,
+        finalClaimIds = Nil,
+        relatedSupportClusterIds = Nil,
+        evidenceIds = Nil,
+        proofDirectSourceIds = List(s"line:$id"),
+        proofContrastSourceIds = Nil,
+        proofContextSupportSourceIds = Nil,
+        proofStrategicAxisLineage = Nil,
+        proofStrategicAxisKeys = Nil,
+        proofStrategicMechanismKinds = Nil,
+        proofStrategicMechanismSourceIds = Nil,
+        proofStrategicMechanismSignalSourceIds = Nil,
+        supportEvidenceSourceIds = Nil,
+        proofLineConsequences = proofLineConsequences,
+        objectBindingSignatures = List(
+          s"actor=Move:${playedLine.rootMove}|target=Square:a6|mechanism=Mechanism:proof|consequence=Consequence:proof|proof=DirectProof"
+        ),
+        concreteObjectReady = true,
+        hasOwnedAdmissibleLongTermProof = hasLongTermProof
+      )
+    val exactStructural = frame("exact-structural", RelativeCauseKind.StructuralImprovement, hasLongTermProof = true)
+    val drawResource =
+      frame("draw-resource", RelativeCauseKind.DrawResource, hasLongTermProof = false, List(LineConsequenceKind.DrawResource))
+
+    val narrated = MoveJudgmentCauseNarrativeProjection.withNarrativeRoles(List(exactStructural, drawResource))
+
+    assertEquals(
+      narrated.filter(_.narrativeRole == MoveJudgmentCauseNarrativeRole.RootCause).map(_.causeKind),
+      List(RelativeCauseKind.DrawResource)
+    )
+    assertEquals(
+      narrated.find(_.causeKind == RelativeCauseKind.StructuralImprovement).map(_.narrativeRole),
+      Some(MoveJudgmentCauseNarrativeRole.SupportingCause)
+    )
+
   test("does not demote tactical root when structural cause lacks owned admissible proof"):
     val root = PositionNodeRef("8/8/8/8/8/8/3P4/8 w - - 0 1", 1, Some(Color.White), Some("root"))
     val afterPlayed = PositionNodeRef("8/8/8/8/3P4/8/8/8 b - - 0 1", 2, Some(Color.Black), Some("after-played"))

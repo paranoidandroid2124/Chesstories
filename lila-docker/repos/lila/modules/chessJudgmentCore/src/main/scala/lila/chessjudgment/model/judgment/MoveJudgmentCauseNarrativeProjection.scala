@@ -119,7 +119,7 @@ object MoveJudgmentCauseNarrativeProjection:
     selected.distinctBy(causeFrameIdentity)
 
   private def terminalProofEventRoot(frame: MoveJudgmentCauseFrame): Boolean =
-    frame.proofLineConsequences.exists(LineEndgameTechniqueHorizon.terminalProofOverrides)
+    frame.proofLineConsequences.exists(LineConsequenceKind.terminalResultProof)
 
   private def selectedEventRootFrames(frames: List[MoveJudgmentCauseFrame]): List[MoveJudgmentCauseFrame] =
     frames.sortBy(eventRootSortKey).lastOption.toList

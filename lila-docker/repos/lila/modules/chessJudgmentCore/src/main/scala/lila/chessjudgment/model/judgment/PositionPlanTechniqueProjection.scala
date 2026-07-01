@@ -605,10 +605,7 @@ object PositionPlanTechniqueProjection:
 
   private def lineTerminalProofConsequence(consequence: LineConsequence): Boolean =
     consequence.eventMove.nonEmpty &&
-      (
-        LineEndgameTechniqueHorizon.terminalProofOverrides(consequence.kind) ||
-          consequence.kind == LineConsequenceKind.DrawResource
-      )
+      LineConsequenceKind.terminalResultProof(consequence.kind)
 
   private def planTechniqueMechanismEligible(payload: StrategicMechanismEvidence): Boolean =
     payload.canAnchorStrategicIdea ||
@@ -1141,11 +1138,7 @@ object PositionPlanTechniqueProjection:
       detail.terminalConsequenceKinds.exists(positionPlanTechniqueTerminalProofCauseKind(_, kind))
 
   private def positionPlanTechniqueTerminalProofConsequenceKind(kind: String): Boolean =
-    kind == "Mate" ||
-      kind == "MaterialGain" ||
-      kind == "MaterialLoss" ||
-      kind == "PromotionRace" ||
-      kind == "DrawResource"
+    LineConsequenceKind.terminalResultProofName(kind)
 
   private def positionPlanTechniqueTerminalProofCauseKind(
       consequenceKind: String,

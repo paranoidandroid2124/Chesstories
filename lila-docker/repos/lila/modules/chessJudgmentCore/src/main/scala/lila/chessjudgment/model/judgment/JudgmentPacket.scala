@@ -2985,11 +2985,7 @@ object MoveMeaningClaim:
       objectSignatures.exists(terminalProofSignatureOwnsMoveAndTarget(_, normalizedClaimMove))
 
   private def terminalProofConsequenceKind(kind: String): Boolean =
-    kind == "Mate" ||
-      kind == "MaterialGain" ||
-      kind == "MaterialLoss" ||
-      kind == "PromotionRace" ||
-      kind == "DrawResource"
+    LineConsequenceKind.terminalResultProofName(kind)
 
   private def terminalProofSignatureOwnsMoveAndTarget(signature: String, normalizedClaimMove: String): Boolean =
     val signatureList = List(signature)
@@ -3050,7 +3046,7 @@ object MoveMeaningClaim:
   private def reasonGradeFrameProofReady(frame: MoveJudgmentCauseFrame): Boolean =
     frame.concreteObjectReady ||
       EvidenceObjectBinding.directProofSpecificTargetReady(frame.objectBindingSignatures) ||
-      frame.proofLineConsequences.exists(LineEndgameTechniqueHorizon.terminalProofOverrides)
+      frame.proofLineConsequences.exists(LineConsequenceKind.terminalResultProof)
 
   private def positiveCurrentMoveReasonRole(
       claimRole: String,
