@@ -1315,11 +1315,7 @@ object PositionPlanTechniqueProjection:
       case StrategicAxisKind.SpaceCenter =>
         Set(RelativeCauseKind.CenterControlGain)
       case StrategicAxisKind.PawnBreak =>
-        Set(
-          RelativeCauseKind.PawnBreakOpportunity,
-          RelativeCauseKind.CenterControlGain,
-          RelativeCauseKind.PlanContradiction
-        )
+        Set(RelativeCauseKind.PawnBreakOpportunity)
       case StrategicAxisKind.Counterplay =>
         Set(
           RelativeCauseKind.OpponentRestriction,

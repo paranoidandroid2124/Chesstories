@@ -80,6 +80,22 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       line = Some(playedLine),
       scope = EvidenceScope.Counterfactual
     )
+    val sameAxisPlanCauseRef = evidenceRef(
+      id = "relative-cause:same-axis-plan",
+      producer = EvidenceProducer.RelativeMoveProducer,
+      layer = EvidenceLayer.RelativeCause,
+      position = root,
+      line = Some(playedLine),
+      scope = EvidenceScope.Counterfactual
+    )
+    val sameAxisCenterCauseRef = evidenceRef(
+      id = "relative-cause:same-axis-center",
+      producer = EvidenceProducer.RelativeMoveProducer,
+      layer = EvidenceLayer.RelativeCause,
+      position = root,
+      line = Some(playedLine),
+      scope = EvidenceScope.Counterfactual
+    )
     val axis = StrategicAxisDetail(StrategicAxisKind.PawnBreak, StrategicAxisPolarity.Support, "central-break-timing")
     val unrelatedAxis = StrategicAxisDetail(StrategicAxisKind.Activity, StrategicAxisPolarity.Gain, "shared-source-activity")
     val mechanism = StrategicMechanismEvidence(
@@ -168,6 +184,14 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       kind = RelativeCauseKind.TacticalRefutationOfPlayed,
       attribution = cause.attribution.copy(ownedEvidence = List(mechanismRef))
     )(cause.proof)
+    val sameAxisPlanCause = cause.copy(
+      kind = RelativeCauseKind.PlanContradiction,
+      attribution = cause.attribution.copy(ownedEvidence = List(mechanismRef))
+    )(cause.proof)
+    val sameAxisCenterCause = cause.copy(
+      kind = RelativeCauseKind.CenterControlGain,
+      attribution = cause.attribution.copy(ownedEvidence = List(mechanismRef))
+    )(cause.proof)
     val ideaRef = ChessIdeaRef("idea:central-break-cause-owned", ChessIdeaFamily.Strategic)
     val idea = ChessIdea(
       ref = ideaRef,
@@ -212,7 +236,9 @@ class MoveJudgmentViewTest extends munit.FunSuite:
             EvidenceRecord(mechanismRef, mechanism, parents = List(sourceRef)),
             EvidenceRecord(causeRef, RelativeCauseFactEvidence(cause), parents = List(mechanismRef)),
             EvidenceRecord(unrelatedCauseRef, RelativeCauseFactEvidence(unrelatedCause), parents = List(mechanismRef)),
-            EvidenceRecord(sameAxisTacticalCauseRef, RelativeCauseFactEvidence(sameAxisTacticalCause), parents = List(mechanismRef))
+            EvidenceRecord(sameAxisTacticalCauseRef, RelativeCauseFactEvidence(sameAxisTacticalCause), parents = List(mechanismRef)),
+            EvidenceRecord(sameAxisPlanCauseRef, RelativeCauseFactEvidence(sameAxisPlanCause), parents = List(mechanismRef)),
+            EvidenceRecord(sameAxisCenterCauseRef, RelativeCauseFactEvidence(sameAxisCenterCause), parents = List(mechanismRef))
           )
         ),
         ideas = List(idea),
@@ -232,6 +258,8 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(frame.claimIds, List(claim.id))
     val detail = frame.semanticDetails.find(_.axisKey.contains(axis.stableKey)).get
     assertEquals(detail.causeEvidenceIds, List(causeRef.id))
+    assert(!detail.causeEvidenceIds.contains(sameAxisPlanCauseRef.id), detail.causeEvidenceIds)
+    assert(!detail.causeEvidenceIds.contains(sameAxisCenterCauseRef.id), detail.causeEvidenceIds)
     assert(detail.proofRoles.contains(RelativeCauseProofRole.DirectProof), detail.proofRoles)
     assertEquals(detail.specificityTier, PositionPlanTechniqueSpecificityTier.BroadAxis)
     assert(detail.objectBindingSignatures.exists(_.contains("proof=DirectProof")), detail.objectBindingSignatures)
