@@ -3126,7 +3126,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       structuralPurposeSubjects = List("knight:e2-e3", "knight:e2-e3:mobility+2"),
       structuralPurposeConsequences = List("DevelopmentPieceActivated", "DevelopmentMobilityGain"),
       structuralPurposeCategories = List("Development", "OpeningDevelopment", "StrategicSupport"),
-      structuralMotifTags = List("iqp", "open", "space")
+      structuralMotifTags = List("open", "space")
     )
     val view = meaningClaimView(
       verdict = MoveChoiceVerdict.MatchesReference,
@@ -3140,7 +3140,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(claim.supportLevel, "view_surfaced")
     assertEquals(claim.surfaceLane, "current_move_function")
     assertEquals(claim.causeEvidenceIds, Nil)
-    assert(claim.reasonTokens.contains("structuralMotif:iqp"), claim.reasonTokens)
+    assertEquals(claim.sourceEvidenceIds, List("pawn-structure:before", "played-transition", "structural-delta:played:e2e3"))
     assert(claim.reasonTokens.contains("structuralMotif:open"), claim.reasonTokens)
     assert(claim.reasonTokens.contains("structuralSubject:knight:e2-e3"), claim.reasonTokens)
 
@@ -3166,7 +3166,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       structuralPurposeSubjects = List("knight:e2-e3", "knight:e2-e3:mobility+2"),
       structuralPurposeConsequences = List("DevelopmentPieceActivated", "DevelopmentMobilityGain"),
       structuralPurposeCategories = List("Development", "OpeningDevelopment", "StrategicSupport"),
-      structuralMotifTags = List("iqp", "open", "route", "reroute", "space")
+      structuralMotifTags = List("open", "route", "reroute", "space")
     )
     val view = meaningClaimView(
       verdict = MoveChoiceVerdict.MatchesReference,
@@ -3181,7 +3181,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(claim.surfaceLane, "current_move_function")
     assertEquals(claim.causeEvidenceIds, Nil)
     assertEquals(claim.sourceEvidenceIds, List("pawn-structure:before", "played-transition", "structural-delta:played:e2e3"))
-    assert(claim.reasonTokens.contains("structuralMotif:iqp"), claim.reasonTokens)
+    assert(claim.reasonTokens.contains("structuralMotif:open"), claim.reasonTokens)
     assert(claim.reasonTokens.contains("structuralSubject:knight:e2-e3"), claim.reasonTokens)
 
   test("move meaning claims do not surface generic structure shift from current-move route alone"):

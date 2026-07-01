@@ -758,6 +758,8 @@ object PositionPlanTechniqueProjection:
         .sorted
     val fallbackStructureRouteContext =
       positionPlanTechniqueStructureRouteContextKeys(fallbackAnchorKeys, Nil)
+    val fallbackStructureRouteSourceIds =
+      positionPlanTechniqueStructureRouteContextSourceIds(graph, fallbackRefs)
     val structuralPurposeBySourceId = positionPlanTechniqueStructuralPurposeBySourceId(graph, fallbackRefs)
     val fallbackStructuralPurpose =
       positionPlanTechniqueStructuralPurposeForSources(fallbackEvidenceIds, structuralPurposeBySourceId)
@@ -767,6 +769,7 @@ object PositionPlanTechniqueProjection:
           detail,
           fallbackStructuralPurpose,
           fallbackStructureRouteContext,
+          fallbackStructureRouteSourceIds,
           fallbackAnchorKeys
         )
       val taggedDetail = positionPlanTechniqueWithStructuralMotifs(routedDetail)
@@ -1734,6 +1737,7 @@ object PositionPlanTechniqueProjection:
       detail: PositionPlanTechniqueSemanticDetail,
       fallbackPurpose: Option[PositionPlanTechniqueStructuralPurpose],
       fallbackStructureRouteContext: Boolean,
+      fallbackStructureRouteSourceIds: List[String],
       fallbackAnchorKeys: List[String]
   ): PositionPlanTechniqueSemanticDetail =
     val withPurpose = fallbackPurpose
@@ -1743,11 +1747,38 @@ object PositionPlanTechniqueProjection:
           positionPlanTechniqueDevelopmentRoutePurpose(purpose)
       )
       .fold(detail)(purpose => detail.withStructuralPurpose(Some(purpose)))
-    if fallbackStructureRouteContext && positionPlanTechniqueDevelopmentRouteDetail(withPurpose) then
+    if (fallbackStructureRouteContext || positionPlanTechniqueStructureRouteContext(withPurpose)) &&
+        positionPlanTechniqueDevelopmentRouteDetail(withPurpose)
+    then
       withPurpose.copy(
+        sourceEvidenceIds = (withPurpose.sourceEvidenceIds ++ fallbackStructureRouteSourceIds).distinct.sorted,
         semanticAnchorKeys = (withPurpose.semanticAnchorKeys ++ fallbackAnchorKeys).distinct.sorted
       )
     else withPurpose
+
+  private def positionPlanTechniqueStructureRouteContextSourceIds(
+      graph: TypedEvidenceGraph,
+      refs: List[EvidenceRef]
+  ): List[String] =
+    val currentPly = refs.map(_.position.ply).minOption
+    val currentPositions = refs.map(_.position).filter(position => currentPly.contains(position.ply)).distinct
+    graph.records
+      .filter(record =>
+        record.ref.layer == EvidenceLayer.PawnStructure &&
+          positionPlanTechniqueActiveStructureScope(record.ref.scope) &&
+          currentPositions.contains(record.ref.position) &&
+          positionPlanTechniqueStructureRouteContextKeys(
+            StrategicMechanismEvidence.sourceSemanticAnchors(record).map(_.stableKey),
+            Nil
+          )
+      )
+      .map(_.ref)
+      .map(_.id)
+      .distinct
+      .sorted
+
+  private def positionPlanTechniqueActiveStructureScope(scope: EvidenceScope): Boolean =
+    scope == EvidenceScope.BeforePosition || scope == EvidenceScope.CurrentPosition
 
   private def positionPlanTechniqueStructureRouteContext(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     positionPlanTechniqueOpenCenterContext(detail) || positionPlanTechniqueIqpContext(detail)

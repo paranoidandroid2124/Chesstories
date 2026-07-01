@@ -1732,6 +1732,42 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       ),
       detail.objectBindingSignatures
     )
+    val fallbackContextContrast = contrast.copy(
+      axisComparisons = contrast.axisComparisons.map(_.copy(referenceSources = Nil, candidateSources = Nil)),
+      support = StrategicContrastSupport(
+        directSources = Nil,
+        contrastSources = Nil,
+        contextSources = List(structuralRef, openingRef)
+      )
+    )
+    val fallbackContextView = MoveJudgmentView
+      .from(
+        relativeAssessments = Nil,
+        evidenceGraph = TypedEvidenceGraph(
+          List(
+            EvidenceRecord(structuralRef, structuralDelta),
+            EvidenceRecord(pawnRef, pawnStructure),
+            EvidenceRecord(openingRef, openingAnchor),
+            EvidenceRecord(contrastRef, fallbackContextContrast)
+          )
+        ),
+        ideas = Nil,
+        claims = Nil,
+        claimLifecycle = Nil,
+        ideaVerdict = None,
+        claimSupportClusters = Nil,
+        claimEventClusters = Nil
+      )
+      .get
+    val fallbackContextDetail = fallbackContextView.positionPlanTechniqueFrames
+      .flatMap(_.semanticDetails)
+      .find(detail => detail.unit == PositionPlanTechniqueUnit.StructuralTransformation && detail.axisKey.contains(axis.stableKey))
+      .get
+
+    assertEquals(fallbackContextDetail.structuralRouteMove, Some("f8e7"))
+    assert(fallbackContextDetail.sourceEvidenceIds.contains(structuralRef.id), fallbackContextDetail.sourceEvidenceIds)
+    assert(fallbackContextDetail.sourceEvidenceIds.contains(pawnRef.id), fallbackContextDetail.sourceEvidenceIds)
+
     val iqpPawnRef = evidenceRef(
       id = "pawn-structure:before:iqp-black",
       producer = EvidenceProducer.PawnStructureProducer,
