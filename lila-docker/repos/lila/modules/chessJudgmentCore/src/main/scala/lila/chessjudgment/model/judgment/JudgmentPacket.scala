@@ -1811,7 +1811,11 @@ object MoveMeaningSurface:
   private def publicCurrentMoveFunctionClaim(claim: MoveMeaningClaim): Boolean =
     claim.surfaceLane != "current_move_function" ||
       claim.causeEvidenceIds.nonEmpty ||
-      claim.supportLevel == "owned_cause_linked"
+      claim.supportLevel == "owned_cause_linked" ||
+      (
+        claim.sourceEvidenceIds.nonEmpty &&
+          EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
+      )
 
   private def publicSpecificPlanContinuityClaim(claim: MoveMeaningClaim): Boolean =
     claim.meaningKind != "PlanContinuity" ||
@@ -2571,9 +2575,16 @@ object MoveMeaningClaim:
   private def reasonGradeCauseFrame(frame: MoveJudgmentCauseFrame): Boolean =
     (
       frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot ||
-        frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot
+        frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot ||
+        legacyOwnedProofFrame(frame)
     ) &&
       reasonGradeFrameProofReady(frame)
+
+  private def legacyOwnedProofFrame(frame: MoveJudgmentCauseFrame): Boolean =
+    frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ContextOnly &&
+      frame.hasOwnedAdmissibleLongTermProof &&
+      frame.attributionDirectProofEligible &&
+      frame.attributionRootMoveMatched
 
   private def reasonGradeFrameProofReady(frame: MoveJudgmentCauseFrame): Boolean =
     frame.concreteObjectReady ||
