@@ -1842,13 +1842,17 @@ object MoveMeaningSurface:
 
   private def publicSurfaceClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
     publicSurfaceClaim(claim) &&
-      publicSpecificPlanContinuityClaim(claim) &&
-      publicCurrentMoveFunctionClaim(claim) &&
+      publicSpecificPlanContinuityClaim(view, claim) &&
+      publicCurrentMoveFunctionClaim(view, claim) &&
       !badMoveSuppressesPositiveLocalMotif(view, claim) &&
       !terminalOverriddenEndgameTechniqueClaim(claim)
 
-  private def publicCurrentMoveFunctionClaim(claim: MoveMeaningClaim): Boolean =
+  private def publicCurrentMoveFunctionClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
     claim.surfaceLane != "current_move_function" ||
+      (
+        claim.meaningKind == "PlanContinuity" &&
+          MoveMeaningClaim.currentMovePlanContinuityFunctionReady(view.moveMeaningClaims, claim)
+      ) ||
       claim.causeEvidenceIds.nonEmpty ||
       claim.supportLevel == "owned_cause_linked" ||
       (
@@ -1856,15 +1860,19 @@ object MoveMeaningSurface:
           EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
       )
 
-  private def publicSpecificPlanContinuityClaim(claim: MoveMeaningClaim): Boolean =
-    claim.meaningKind != "PlanContinuity" ||
-      (
-        claim.reasonTokens.exists(token =>
-          token == "specificityTier:ExactObjectAxis" ||
-            token == "specificityTier:ConcreteObjectAxis"
-        ) &&
-          EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
-      )
+  private def publicSpecificPlanContinuityClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
+    if claim.meaningKind != "PlanContinuity" then true
+    else if claim.surfaceLane == "current_move_function" then
+      publicCurrentMovePlanContinuityClaim(view, claim)
+    else
+      claim.reasonTokens.exists(token =>
+        token == "specificityTier:ExactObjectAxis" ||
+          token == "specificityTier:ConcreteObjectAxis"
+      ) &&
+        EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
+
+  private def publicCurrentMovePlanContinuityClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
+    MoveMeaningClaim.currentMovePlanContinuityFunctionReady(view.moveMeaningClaims, claim)
 
   private def badMoveSuppressesPositiveLocalMotif(
       view: MoveJudgmentView,
@@ -2469,6 +2477,7 @@ object MoveMeaningClaim:
     claims.filterNot(claim =>
       claim.meaningKind == "PlanContinuity" &&
         claim.surfaceLane == "current_move_function" &&
+        !currentMovePlanContinuityFunctionReady(claims, claim) &&
         concreteCurrentClaims.exists(concreteClaimShadowsPlanContinuity(claim, _))
     )
 
@@ -2486,6 +2495,46 @@ object MoveMeaningClaim:
               concreteClaim.meaningKind == "PieceActivity"
           case _ =>
             true
+      )
+
+  private def planContinuityClaimHasCurrentMovePlanSubject(claim: MoveMeaningClaim): Boolean =
+    claim.meaningKind == "PlanContinuity" &&
+      claim.surfaceLane == "current_move_function" &&
+      claim.objectBindingSignatures.exists(signature =>
+        moveTokens(List(signature)).contains(JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase) &&
+          EvidenceObjectBinding.signatureTokens(List(signature), "target=").exists(_.toLowerCase.startsWith("target=plansubject:"))
+      )
+
+  def currentMovePlanContinuityFunctionReady(claims: List[MoveMeaningClaim], claim: MoveMeaningClaim): Boolean =
+    claim.supportLevel == "view_surfaced" &&
+      planContinuityClaimHasCurrentMovePlanSubject(claim) &&
+      planContinuityClaimHasSeparateCurrentMoveCarrier(claims, claim)
+
+  private def planContinuityClaimHasSeparateCurrentMoveCarrier(
+      claims: List[MoveMeaningClaim],
+      claim: MoveMeaningClaim
+  ): Boolean =
+    val normalizedMove = JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase
+    claims.exists(carrier =>
+      carrier != claim &&
+        carrier.meaningKind != "PlanContinuity" &&
+        carrier.unit != PositionPlanTechniqueUnit.PlanOptionSet &&
+        (carrier.surfaceLane == "current_move_owned" || carrier.surfaceLane == "current_move_function") &&
+        JudgmentSubjectBinding.normalizeMove(carrier.moveUci).toLowerCase == normalizedMove &&
+        carrier.sourceEvidenceIds.nonEmpty &&
+        carrier.objectBindingSignatures.exists(signature =>
+          moveTokens(List(signature)).contains(normalizedMove) &&
+            EvidenceObjectBinding.signatureTokens(List(signature), "target=").exists(nonPlanSubjectConcreteTargetToken)
+        )
+    )
+
+  private def nonPlanSubjectConcreteTargetToken(token: String): Boolean =
+    val lower = token.toLowerCase
+    !lower.startsWith("target=plansubject:") &&
+      (
+        EvidenceObjectBinding.concreteTargetToken(token) ||
+          token.contains("=Piece:") ||
+          lower.contains("piece:")
       )
 
   private def mergeMeaningClaims(claims: Iterable[MoveMeaningClaim]): Option[MoveMeaningClaim] =
@@ -2723,7 +2772,7 @@ object MoveMeaningClaim:
     val broadPlanContinuityCurrentMove =
       currentMoveClaim &&
         meaningKind == "PlanContinuity" &&
-        !planContinuityReasonGradeReady(detail, objectSignatures, claimMove, positionFen)
+        !planContinuityCurrentMoveFunctionReady(detail, objectSignatures, claimMove, positionFen)
     val ownedMeaningReady =
       detail.unit match
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
@@ -2864,14 +2913,13 @@ object MoveMeaningClaim:
     positiveMeaningRole(claimRole) ||
       (claimRole == "ExplainsMoveFunction" && !negativeStrategicDetail(detail))
 
-  private def planContinuityReasonGradeReady(
+  private def planContinuityCurrentMoveFunctionReady(
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String],
       claimMove: String,
       positionFen: String
   ): Boolean =
-    detailHasSpecificObjectAxis(detail) &&
-      detailHasConcreteSurfaceObject(detail, objectSignatures) &&
+    detailHasConcreteSurfaceObject(detail, objectSignatures) &&
       planContinuityCurrentMoveFunctionalProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim = true)
 
   private def currentMoveMeaningClaim(
@@ -4503,6 +4551,7 @@ object MoveMeaningClaim:
       currentMoveSurfaceReady(meaningKind, detail, detail.objectBindingSignatures, claimMove, positionFen, currentMove)
     val referenceLedPositiveCandidateWitness =
       currentMove &&
+        candidateMove != referenceMove &&
         claimLineRole == "candidate" &&
         PositionPlanTechniqueSemanticDetail.comparisonLossSides(detail).contains("candidate") &&
         positiveMeaningRole(claimRole)

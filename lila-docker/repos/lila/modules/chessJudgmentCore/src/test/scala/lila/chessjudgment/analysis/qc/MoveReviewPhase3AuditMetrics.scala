@@ -956,6 +956,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "expectedSlotCount" -> slotRows.size,
       "matchedSlotCount" -> slotRows.count(row => (row \ "matched").as[Boolean]),
       "viewSurfacedCount" -> slotRows.count(row => (row \ "viewSurfaced").as[Boolean]),
+      "ownedCauseLinkedCount" -> slotRows.count(row => (row \ "ownedCauseLinked").as[Boolean]),
       "clusteredCoherentCount" -> slotRows.count(row => (row \ "clusteredCoherent").as[Boolean]),
       "coLocatedSemanticDetailTokenFailureCount" -> slotRows.count(row =>
         (row \ "coLocatedSemanticDetailTokenFailure").asOpt[Boolean].contains(true)
@@ -1047,6 +1048,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "expectedSlotCount" -> slotRows.size,
       "matchedSlotCount" -> slotRows.count(row => (row \ "matched").as[Boolean]),
       "viewSurfacedCount" -> slotRows.count(row => (row \ "viewSurfaced").as[Boolean]),
+      "ownedCauseLinkedCount" -> slotRows.count(row => (row \ "ownedCauseLinked").as[Boolean]),
       "clusteredCoherentCount" -> slotRows.count(row => (row \ "clusteredCoherent").as[Boolean]),
       "coLocatedSemanticDetailTokenFailureCount" -> slotRows.count(row =>
         (row \ "coLocatedSemanticDetailTokenFailure").asOpt[Boolean].contains(true)

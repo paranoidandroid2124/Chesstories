@@ -1434,7 +1434,9 @@ object PositionPlanTechniqueProjection:
             turnsToImpact = detail.turnsToImpact.orElse(projection.turnsToImpact),
             defenseMove = detail.defenseMove.orElse(projection.defenseMove),
             prophylaxisNeeded = detail.prophylaxisNeeded.orElse(projection.prophylaxisNeeded),
-            maxWinPercentLossIfIgnored = detail.maxWinPercentLossIfIgnored.orElse(projection.maxWinPercentLossIfIgnored)
+            maxWinPercentLossIfIgnored = detail.maxWinPercentLossIfIgnored.orElse(projection.maxWinPercentLossIfIgnored),
+            resourceContestScopes =
+              (detail.resourceContestScopes ++ Option.when(projection.prophylaxisNeeded.contains(true))("prophylaxis").toList).distinct.sorted
           )
         )
       else detail
