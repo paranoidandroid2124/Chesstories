@@ -4356,6 +4356,50 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(view.moveMeaningClaims.map(_.surfaceLane), List("reference_or_opponent_resource"))
     assert(!view.moveMeaningClaims.exists(_.surfaceLane.startsWith("current_move")))
 
+  test("move meaning claims let cross-comparison reference roots own reference resources"):
+    val referenceAlternativeCause = causeFrame(
+      causeId = "cause-cross-reference-break",
+      axisKeys = List("PawnBreak:Support:reference-alternative-break"),
+      objectSignatures = List("target=File:e|mechanism=Mechanism:pawn-break|proof=DirectProof"),
+      causeKind = RelativeCauseKind.PawnBreakOpportunity
+    ).copy(
+      comparisonKind = CandidateComparisonKind.ReferenceVsAlternative,
+      causeRole = RelativeCauseRole.AlternativeDiagnostic,
+      causeSourceSide = RelativeCauseSourceSide.Reference,
+      eventLine = referenceLine,
+      eventRootMove = referenceLine.rootMove,
+      hasOwnedAdmissibleLongTermProof = true,
+      attributionDirectProofEligible = true,
+      rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot
+    )
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
+      axisKey = Some("PawnBreak:Support:reference-alternative-break"),
+      axisKind = Some(StrategicAxisKind.PawnBreak),
+      axisPolarity = Some(StrategicAxisPolarity.Support),
+      contrastOutcome = Some(StrategicAxisComparisonOutcome.ReferenceStronger),
+      breakFile = Some("e"),
+      tensionSquares = List("e4", "d5"),
+      referenceEvidenceIds = List("reference-alternative-transition"),
+      sourceEvidenceIds = List("reference-alternative-transition"),
+      causeEvidenceIds = List("cause-cross-reference-break"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof, RelativeCauseProofRole.ContrastProof),
+      objectBindingSignatures = List("target=File:e|mechanism=Mechanism:pawn-break|proof=DirectProof"),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      comparisonKind = CandidateComparisonKind.PlayedVsBest,
+      auditCauses = List(referenceAlternativeCause),
+      details = List(detail)
+    )
+
+    assertEquals(
+      view.moveMeaningClaims.map(c => (c.lineRole, c.moveUci, c.supportLevel, c.surfaceLane)),
+      List(("reference", referenceLine.rootMove, "owned_cause_linked", "reference_or_opponent_resource"))
+    )
+    assert(!view.moveMeaningClaims.exists(_.surfaceLane.startsWith("current_move")))
+
   test("axisless structural anchor inventory reports structural signals that cannot enter axis lineage"):
     val root = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(chess.Color.White), Some("root"))
     val after = PositionNodeRef("8/8/8/8/8/8/8/8 b - - 1 1", 2, Some(chess.Color.Black), Some("after"))

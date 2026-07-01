@@ -4328,7 +4328,6 @@ object MoveMeaningClaim:
       frame.hasOwnedAdmissibleLongTermProof &&
       frame.concreteObjectReady &&
       crossComparisonOwnedRootTier(frame) &&
-      crossComparisonLineOwnsClaimMove(frame, verdict) &&
       causeFrameObjectOverlapsDetail(frame, objectSignatures)
 
   private def crossComparisonOwnedRootTier(frame: MoveJudgmentCauseFrame): Boolean =
@@ -4556,32 +4555,6 @@ object MoveMeaningClaim:
 
   private def strategicRayRestrictionToken(normalized: String): Boolean =
     normalized.matches(".*bishop:(g7|b7|g2|b2):diagonal-denial:blocked-by:[c-f][45]:locked-center:mobility-[0-9]+-to-[0-9]+.*")
-
-  private def crossComparisonLineOwnsClaimMove(
-      frame: MoveJudgmentCauseFrame,
-      verdict: MoveJudgmentVerdictFrame
-  ): Boolean =
-    val claimMove = verdict.candidateLine.rootMove
-    frame.comparisonKind match
-      case CandidateComparisonKind.PlayedVsAlternative =>
-        frame.causeRole == RelativeCauseRole.PlayedAlternativeContext &&
-          frame.causeSourceSide == RelativeCauseSourceSide.Candidate &&
-          frame.eventLine == verdict.candidateLine &&
-          sameMove(frame.eventRootMove, claimMove)
-      case CandidateComparisonKind.BestVsSecond =>
-        frame.causeRole == RelativeCauseRole.CandidateSetConstraint &&
-          frame.causeSourceSide == RelativeCauseSourceSide.Reference &&
-          frame.eventLine == verdict.referenceLine &&
-          sameMove(verdict.referenceLine.rootMove, claimMove) &&
-          sameMove(frame.eventRootMove, claimMove)
-      case CandidateComparisonKind.ReferenceVsAlternative =>
-        frame.causeRole == RelativeCauseRole.AlternativeDiagnostic &&
-          frame.causeSourceSide == RelativeCauseSourceSide.Reference &&
-          frame.eventLine == verdict.referenceLine &&
-          sameMove(verdict.referenceLine.rootMove, claimMove) &&
-          sameMove(frame.eventRootMove, claimMove)
-      case _ =>
-        false
 
   private def sameMove(left: String, right: String): Boolean =
     JudgmentSubjectBinding.normalizeMove(left) == JudgmentSubjectBinding.normalizeMove(right)
