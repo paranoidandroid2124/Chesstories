@@ -297,9 +297,13 @@ export function renderTools({ ctrl, concealOf, allowVideo }: ViewContext, embedd
 
 function renderChesstoryBrief(ctrl: AnalyseCtrl): VNode {
   const node = ctrl.getNode();
+  ctrl.requestChesstoryBrief();
+  const brief = ctrl.chesstoryBrief();
+  const sections = chesstoryBriefSections(brief.payload);
   const moveLabel = node.san
     ? `${plyToTurn(node.ply)}${node.ply % 2 === 1 ? '.' : '...'} ${node.san}`
     : 'Initial position';
+  const stateLabel = brief.loading ? 'Reading position' : brief.payload ? 'Ready' : 'Not filled yet';
 
   return hl('section.analyse__chesstory-brief', [
     hl('div.analyse__chesstory-brief-head', [
@@ -307,24 +311,39 @@ function renderChesstoryBrief(ctrl: AnalyseCtrl): VNode {
         hl('span', 'Chesstory review'),
         hl('strong', 'Opening to middlegame'),
       ]),
-      hl('span.analyse__chesstory-brief-state', 'Not filled yet'),
+      hl('span.analyse__chesstory-brief-state', stateLabel),
     ]),
     hl('div.analyse__chesstory-brief-focus', [hl('span', 'Decision point'), hl('strong', moveLabel)]),
     hl(
       'div.analyse__chesstory-brief-list',
-      chesstoryBriefSections().map(section => renderChesstoryBriefSection(section)),
+      sections.map(section => renderChesstoryBriefSection(section)),
     ),
   ]);
 }
 
 function renderChesstoryBriefSection(section: ChesstoryBriefSection): VNode {
-  return hl('div.analyse__chesstory-brief-row', [
-    hl('div.analyse__chesstory-brief-row-head', [
-      hl('strong', section.title),
-      section.pending ? hl('span', 'Add note') : null,
-    ]),
-    hl('p', section.body),
-  ]);
+  return hl(
+    'div.analyse__chesstory-brief-row',
+    {
+      class: {
+        'is-good': section.tone === 'good',
+        'is-bad': section.tone === 'bad',
+      },
+    },
+    [
+      hl('div.analyse__chesstory-brief-row-head', [
+        hl('strong', section.title),
+        section.pending ? hl('span', 'Add note') : null,
+      ]),
+      hl('p', section.body),
+      section.items?.length
+        ? hl(
+            'ul',
+            section.items.map(item => hl('li', item)),
+          )
+        : null,
+    ],
+  );
 }
 
 export function renderBoard({ ctrl, playerBars, playerStrips, gaugeOn }: ViewContext, skipInfo = false) {
@@ -598,7 +617,7 @@ function renderStudyWorkspacePanel(ctrl: AnalyseCtrl): VNode | null {
     ]),
     hl(
       'div.copyables__study-thread',
-      chesstoryBriefSections()
+      chesstoryBriefSections(ctrl.chesstoryBrief().payload)
         .slice(0, 3)
         .map(section =>
           hl('div.copyables__study-thread-card', [

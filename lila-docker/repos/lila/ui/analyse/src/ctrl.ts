@@ -45,6 +45,8 @@ import pgnImport from './pgnImport';
 import * as pgnExport from './pgnExport';
 import { emptyPgnError, normalizeInlinePgn, submitPgnToImportPipeline } from './pgnPipeline';
 import * as studyApi from './studyApi';
+import type { ChesstoryMoveMeaningPayload } from './chesstoryBrief';
+import { defaultInit, jsonHeader, xhrHeader, ensureOk } from 'lib/xhr';
 
 import type { PgnError } from 'chessops/pgn';
 
@@ -64,6 +66,25 @@ const boardLabelModes = new Set<BoardLabelMode>(['off', 'inside', 'rim', 'full']
 
 interface AnalyseHistoryState {
   analysePly: Ply;
+}
+
+interface ChesstoryMoveMeaningRequest {
+  fen: FEN;
+  playedMoveUci: Uci;
+  variations: Array<{
+    moves: Uci[];
+    scoreCp: number;
+    mate?: number;
+    depth: number;
+  }>;
+  currentEvalCp?: number;
+  ply: Ply;
+  openingContext?: {
+    eco?: string;
+    name?: string;
+    family?: string;
+  };
+  movePrefixUci: Uci[];
 }
 
 function loginHref(): string {
@@ -144,6 +165,10 @@ export default class AnalyseCtrl implements CevalHandler {
   private studyActionTone: 'info' | 'success' | 'error' = 'info';
   private studyActionTimer?: number;
   private studyTransferCount = 0;
+  private chesstoryBriefKey?: string;
+  private chesstoryBriefPayload?: ChesstoryMoveMeaningPayload;
+  private chesstoryBriefLoading = false;
+  private chesstoryBriefUnavailable = false;
 
   // other paths
   initialPath: Tree.Path;
@@ -540,6 +565,109 @@ export default class AnalyseCtrl implements CevalHandler {
 
   getNode(): Tree.Node {
     return this.node;
+  }
+
+  chesstoryBrief(): { payload?: ChesstoryMoveMeaningPayload; loading: boolean; unavailable: boolean } {
+    return {
+      payload: this.chesstoryBriefPayload,
+      loading: this.chesstoryBriefLoading,
+      unavailable: this.chesstoryBriefUnavailable,
+    };
+  }
+
+  requestChesstoryBrief(): void {
+    const request = this.chesstoryBriefRequest();
+    const key = request
+      ? `${request.fen}|${request.playedMoveUci}|${request.variations.map(v => v.moves[0]).join(',')}`
+      : '';
+    if (!request) {
+      this.chesstoryBriefKey = undefined;
+      this.chesstoryBriefPayload = undefined;
+      this.chesstoryBriefUnavailable = true;
+      return;
+    }
+    if (key === this.chesstoryBriefKey || this.chesstoryBriefLoading) {
+      return;
+    }
+
+    this.chesstoryBriefKey = key;
+    this.chesstoryBriefLoading = true;
+    this.chesstoryBriefUnavailable = false;
+
+    fetch('/api/chess-judgment/move-meaning', {
+      ...defaultInit,
+      method: 'post',
+      headers: {
+        ...jsonHeader,
+        ...xhrHeader,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    })
+      .then(ensureOk)
+      .then(res => res.json())
+      .then(data => {
+        const review = Array.isArray(data.move_review) ? data.move_review[0] : data.move_review;
+        this.chesstoryBriefPayload = review?.renderable ? review : undefined;
+        this.chesstoryBriefUnavailable = !this.chesstoryBriefPayload;
+      })
+      .catch(e => {
+        console.info('Chesstory brief unavailable', e);
+        this.chesstoryBriefPayload = undefined;
+        this.chesstoryBriefUnavailable = true;
+      })
+      .finally(() => {
+        this.chesstoryBriefLoading = false;
+        this.redraw();
+      });
+  }
+
+  private chesstoryBriefRequest(): ChesstoryMoveMeaningRequest | undefined {
+    if (!this.isStudy() || this.nodeList.length < 2) return;
+    const played = this.node;
+    const before = this.nodeList[this.nodeList.length - 2];
+    if (!played.uci) return;
+
+    const beforeEval = before.ceval || before.eval;
+    if (!beforeEval?.pvs?.length) return;
+
+    const variations = beforeEval.pvs
+      .map(pv => ({
+        moves: Array.isArray(pv.moves) ? pv.moves : pv.moves.split(' ').filter(Boolean),
+        scoreCp: pv.cp ?? (pv.mate ? (pv.mate > 0 ? 10000 : -10000) : 0),
+        mate: pv.mate,
+        depth: beforeEval.depth || 0,
+      }))
+      .filter(v => v.moves.length);
+
+    if (!variations.some(v => v.moves[0] === played.uci)) {
+      const playedEval = played.ceval || played.eval;
+      variations.push({
+        moves: [played.uci],
+        scoreCp: playedEval?.cp ?? beforeEval.cp ?? 0,
+        mate: playedEval?.mate,
+        depth: playedEval?.depth || beforeEval.depth || 0,
+      });
+    }
+
+    return {
+      fen: before.fen,
+      playedMoveUci: played.uci,
+      variations,
+      currentEvalCp: beforeEval.cp,
+      ply: before.ply,
+      openingContext: this.data.game.opening
+        ? {
+            eco: this.data.game.opening.eco,
+            name: this.data.game.opening.name,
+            family: this.data.game.opening.eco?.slice(0, 1),
+          }
+        : undefined,
+      movePrefixUci: this.nodeList
+        .slice(1, -1)
+        .map(n => n.uci)
+        .filter((uci): uci is Uci => !!uci),
+    };
   }
 
   turnColor(): Color {
