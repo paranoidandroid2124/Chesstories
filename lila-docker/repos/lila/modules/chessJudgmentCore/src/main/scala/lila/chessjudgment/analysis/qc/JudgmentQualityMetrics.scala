@@ -1842,6 +1842,7 @@ object CandidateComparisonDiagnostic:
     val weakSquare = """weak-square:([a-h][1-8]).*""".r
     val pieceRestriction = """([a-z]+):([a-h][1-8]):diagonal-denial:blocked-by:([a-h][1-8]).*""".r
     val battery = """battery:([a-z]+):([a-h][1-8])-([a-h][1-8])(?::([a-z-]+))?.*""".r
+    val rookLift = """rook-lift:([a-h][1-8])-([a-h][1-8]):rank-([0-9]+).*""".r
     normalized match
       case outpost(piece, square) =>
         List(
@@ -1873,6 +1874,17 @@ object CandidateComparisonDiagnostic:
             s"route:$from-$to"
           )
         routeTokens ++ positionPlanTechniqueMoveAxisTokens(from + to)
+      case rookLift(from, to, rank) =>
+        List(
+          "piece",
+          "piece:rook",
+          "rook",
+          "route",
+          "reroute",
+          "rook-lift",
+          s"route:$from-$to",
+          s"routeRank:$rank"
+        ) ++ positionPlanTechniqueMoveAxisTokens(from + to)
       case pieceRestriction(piece, square, blocker) =>
         List(
           "piece",

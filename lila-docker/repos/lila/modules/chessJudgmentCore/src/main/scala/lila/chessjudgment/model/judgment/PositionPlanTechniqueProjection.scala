@@ -1217,7 +1217,8 @@ object PositionPlanTechniqueProjection:
       normalized.contains("fileoccupation") ||
       normalized.contains("file-occupation") ||
       normalized.contains("weak-square") ||
-      normalized.contains("weaksquare")
+      normalized.contains("weaksquare") ||
+      normalized.contains("rook-lift")
 
   private def positionPlanTechniqueConcreteStructuralPlanCauseKind(
       detail: PositionPlanTechniqueSemanticDetail,

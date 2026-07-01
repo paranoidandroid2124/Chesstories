@@ -793,6 +793,7 @@ private[judgment] object StructuralPurposeSubject:
   private val pieceRestriction = raw"([a-z]+):([a-h][1-8]):diagonal-denial:blocked-by:([a-h][1-8]).*".r
   private val pieceSquare = raw"([a-z]+):([a-h][1-8])(?::.*)?".r
   private val battery = raw"battery:([a-z]+):([a-h][1-8])-([a-h][1-8])(?::([a-z-]+))?.*".r
+  private val rookLift = raw"rook-lift:([a-h][1-8])-([a-h][1-8]):rank-([0-9]+).*".r
   private val tensionEdge = raw"([a-h][1-8])-([a-h][1-8])".r
 
   def parse(raw: String): Option[Parsed] =
@@ -801,6 +802,8 @@ private[judgment] object StructuralPurposeSubject:
         Some(Outpost(piece, square))
       case battery(axis, from, to, roles) =>
         Some(Battery(axis, from, to, Option(roles).toList.flatMap(_.split("-").toList).filter(_.nonEmpty).distinct.sorted))
+      case rookLift(from, to, _) =>
+        Some(PieceRoute("rook", from, to))
       case pieceRoute(piece, from, to) =>
         Some(PieceRoute(piece, from, to))
       case pieceRestriction(piece, square, blocker) =>

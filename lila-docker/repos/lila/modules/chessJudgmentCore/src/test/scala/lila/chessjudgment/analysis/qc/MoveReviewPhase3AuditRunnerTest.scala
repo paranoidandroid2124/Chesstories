@@ -2895,6 +2895,51 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assert(claims.exists(claim => claim.meaningKind == "CounterplayControl" && claim.reasonTokens.contains("counterBreakFile:c")))
     assert(claims.exists(claim => claim.meaningKind == "PieceRoute" && claim.reasonTokens.exists(_.contains("line-unlock"))))
 
+  test("move meaning claims keep rook-lift subjects as concrete route carriers"):
+    val rookLiftSignature =
+      "actor=Move:e2e3|actor=Piece:rook|actor=Square:e2|target=Square:e3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated|proof=DirectProof"
+    val mixedActivityLossSignature =
+      "actor=Move:e2e3|actor=Side:white|actor=Square:e2|mechanism=Mechanism:mobilityloss|consequence=Consequence:mobilityloss:loss|proof=DirectProof"
+    val rookLiftCause = causeFrame(
+      causeId = "cause-rook-lift",
+      axisKeys = List("Activity:Gain:activity-gain"),
+      objectSignatures = List(rookLiftSignature),
+      causeKind = RelativeCauseKind.ActivityGain,
+      rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot
+    ).copy(hasOwnedAdmissibleLongTermProof = true)
+    val rookLiftDetail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Gain:activity-gain"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      label = Some("activity-gain"),
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralPurposeSubjects = List("rook-lift:e2-e3:rank-3"),
+      structuralPurposeConsequences = List("RookLiftActivation", "FileOccupationGain"),
+      structuralMotifTags = List("file", "iqp", "piece", "reroute", "route"),
+      candidateEvidenceIds = List("structural-delta:played:e2e3"),
+      sourceEvidenceIds = List("structural-delta:played:e2e3"),
+      causeEvidenceIds = List("cause-rook-lift"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List(rookLiftSignature, mixedActivityLossSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
+    )
+
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = List(rookLiftCause),
+      details = List(rookLiftDetail)
+    )
+    val claim = view.moveMeaningClaims.head
+
+    assertEquals(claim.meaningKind, "PieceRoute")
+    assertEquals(claim.role, "ImprovesPieceRoute")
+    assertEquals(claim.surfaceLane, "current_move_owned")
+    assert(claim.reasonTokens.contains("routePiece:rook"))
+    assert(claim.reasonTokens.contains("routeFrom:e2"))
+    assert(claim.reasonTokens.contains("routeTo:e3"))
+    assert(claim.reasonTokens.contains("routeCarrier:rook-lift"))
+
   test("move meaning claims surface current-move structural route without cause ownership"):
     val routeSignature =
       "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated"

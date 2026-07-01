@@ -3463,7 +3463,7 @@ object MoveMeaningClaim:
     val routeSignatures =
       if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
           pieceRouteQualifiedCarrierForMove(detail, objectSignatures, claimMove)
-      then currentMoveSignatures.filter(qualifiedRouteObjectSignature)
+      then currentMoveSignatures.filter(pieceRouteObjectSignature)
       else Nil
     val signatures =
       if routeSignatures.nonEmpty then routeSignatures
@@ -4564,7 +4564,8 @@ object MoveMeaningClaim:
       normalized.contains("fileoccupation") ||
       normalized.contains("file-occupation") ||
       normalized.contains("weak-square") ||
-      normalized.contains("weaksquare")
+      normalized.contains("weaksquare") ||
+      normalized.contains("rook-lift")
 
   private def pieceRouteObjectSignature(signature: String): Boolean =
     val normalized = signature.toLowerCase
@@ -5106,7 +5107,8 @@ object MoveMeaningClaim:
       detail.structuralPurposeSubjects.flatMap { subject =>
         StructuralPurposeSubject.parse(subject) match
           case Some(StructuralPurposeSubject.PieceRoute(piece, from, to)) =>
-            List(s"routePiece:$piece", s"routeFrom:$from", s"routeTo:$to", s"routeSubject:$subject")
+            List(s"routePiece:$piece", s"routeFrom:$from", s"routeTo:$to", s"routeSubject:$subject") ++
+              Option.when(subject.toLowerCase.contains("rook-lift"))("routeCarrier:rook-lift").toList
           case Some(StructuralPurposeSubject.Outpost(piece, square)) =>
             List(s"routePiece:$piece", s"routeTarget:$square", s"routeCarrier:outpost", s"routeSubject:$subject")
           case Some(StructuralPurposeSubject.Battery(axis, from, to, roles)) =>
