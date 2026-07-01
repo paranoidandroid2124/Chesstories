@@ -2924,7 +2924,7 @@ object MoveMeaningClaim:
         causeKinds = roleCompatibleCauseFrames.map(_.causeKind).distinct.sortBy(_.toString),
         causeSourceSides = roleCompatibleCauseFrames.map(_.causeSourceSide).distinct.sortBy(_.toString),
         causeEvidenceIds = linkedCauseIds,
-        sourceEvidenceIds = detail.sourceEvidenceIds.distinct.sorted,
+        sourceEvidenceIds = moveMeaningClaimSourceEvidenceIds(detail, verdict, claimLineRole, claimMove),
         objectBindingSignatures = surfaceObjectSignatures,
         reasonTokens = reasonTokens(detail, surfaceObjectSignatures, linkedCauseIds, verdict, claimMove, frame.position.fen, surfaceClaimRole),
         targetSquares = surfaceTarget.squares,
@@ -3049,7 +3049,7 @@ object MoveMeaningClaim:
     if terminalProofDetailOwnsClaimMove(detail, objectSignatures, claimMove) then true
     else
       val moveOwnedSource =
-        detail.sourceEvidenceIds.exists(JudgmentSubjectBinding.sourceIdOwnsCurrentPlayedMove(_, claimMove))
+        currentMoveCarrierSourceOwnsClaimMove(detail, claimMove)
       detail.unit match
         case PositionPlanTechniqueUnit.PieceRerouteRoute =>
           moveOwnedSource &&
@@ -3120,8 +3120,7 @@ object MoveMeaningClaim:
   ): Boolean =
     val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
     val sourceOwnsCurrentMove =
-      (detail.sourceEvidenceIds ++ detail.candidateEvidenceIds)
-        .exists(JudgmentSubjectBinding.sourceIdOwnsCurrentPlayedMove(_, claimMove))
+      currentMoveCarrierSourceOwnsClaimMove(detail, claimMove)
     val objectOwnsCurrentMove =
       currentMoveProofObjectSignatures(objectSignatures)
         .exists(signature => moveTokens(List(signature)).contains(normalizedClaimMove))
@@ -3146,6 +3145,30 @@ object MoveMeaningClaim:
   private def currentMoveProofObjectSignatures(objectSignatures: List[String]): Set[String] =
     EvidenceObjectBinding.signaturesForProofRole(objectSignatures, Some(RelativeCauseProofRole.DirectProof)) ++
       EvidenceObjectBinding.signaturesForProofRole(objectSignatures, Some(RelativeCauseProofRole.ContrastProof))
+
+  private def moveMeaningClaimSourceEvidenceIds(
+      detail: PositionPlanTechniqueSemanticDetail,
+      verdict: MoveJudgmentVerdictFrame,
+      claimLineRole: String,
+      claimMove: String
+  ): List[String] =
+    if currentMoveMeaningClaim(verdict, claimLineRole, claimMove) then currentMoveCarrierSourceEvidenceIds(detail, claimMove)
+    else detail.sourceEvidenceIds.distinct.sorted
+
+  private def currentMoveCarrierSourceEvidenceIds(
+      detail: PositionPlanTechniqueSemanticDetail,
+      claimMove: String
+  ): List[String] =
+    (detail.sourceEvidenceIds ++ detail.candidateEvidenceIds)
+      .distinct
+      .sorted
+      .filter(JudgmentSubjectBinding.sourceIdOwnsCurrentPlayedMove(_, claimMove))
+
+  private def currentMoveCarrierSourceOwnsClaimMove(
+      detail: PositionPlanTechniqueSemanticDetail,
+      claimMove: String
+  ): Boolean =
+    currentMoveCarrierSourceEvidenceIds(detail, claimMove).nonEmpty
 
   private def reasonGradeCauseFrame(frame: MoveJudgmentCauseFrame): Boolean =
     (
@@ -3257,8 +3280,7 @@ object MoveMeaningClaim:
     val ownsCurrentMoveSource =
       currentMoveClaim &&
         (
-          (detail.sourceEvidenceIds ++ detail.candidateEvidenceIds)
-            .exists(JudgmentSubjectBinding.sourceIdOwnsCurrentPlayedMove(_, claimMove)) ||
+          currentMoveCarrierSourceOwnsClaimMove(detail, claimMove) ||
             typedCurrentMoveProof
         )
     val planSignal =
@@ -3761,7 +3783,8 @@ object MoveMeaningClaim:
   ): Boolean =
     val normalizedMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
     val sourceOwnsMove =
-      detail.sourceEvidenceIds.exists(JudgmentSubjectBinding.sourceIdOwnsPawnBreakMove(_, claimMove))
+      currentMoveCarrierSourceOwnsClaimMove(detail, claimMove) ||
+        detail.sourceEvidenceIds.exists(JudgmentSubjectBinding.sourceIdOwnsPawnBreakMove(_, claimMove))
     sourceOwnsMove ||
       moveTokens(objectSignatures).contains(normalizedMove) ||
       detail.structuralRouteMove.exists(move => sameMove(move, claimMove))
