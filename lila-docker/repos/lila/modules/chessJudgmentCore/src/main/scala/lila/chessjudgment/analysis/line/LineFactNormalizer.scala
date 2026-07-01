@@ -60,13 +60,13 @@ object LineFactNormalizer:
 
   private def replaySteps(startFen: String, facts: PrincipalVariationEvidence.LineFacts): List[LineReplayStep] =
     facts.line.moves.foldLeft((startFen, List.empty[LineReplayStep])) { case ((fenBefore, acc), move) =>
-      move.fenAfter -> (acc :+ LineReplayStep(
+      move.fenAfter -> (LineReplayStep(
         ply = move.ply,
         moveUci = move.uci,
         fenBefore = fenBefore,
         fenAfter = move.fenAfter
-      ))
-    }._2
+      ) :: acc)
+    }._2.reverse
 
   private def lineEvents(
       lineRef: LineNodeRef,

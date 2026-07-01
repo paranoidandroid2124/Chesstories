@@ -290,6 +290,8 @@ object MoveReviewPhase3AuditRunner:
   private[qc] type ExpectedSemanticSlot = MoveReviewPhase3AuditContract.ExpectedSemanticSlot
   private[qc] val ExpectedSemanticSlot = MoveReviewPhase3AuditContract.ExpectedSemanticSlot
 
+  private val SlimOutputFlag = "--slim"
+
   private given Writes[RawMoveReviewInput] = Json.writes[RawMoveReviewInput]
 
   private given Reads[RawMoveReviewInput] = Reads { json =>
@@ -311,10 +313,12 @@ object MoveReviewPhase3AuditRunner:
   }
 
   def main(args: Array[String]): Unit =
-    if args.isEmpty then
-      throw IllegalArgumentException("usage: MoveReviewPhase3AuditRunner <input.json|jsonl> [output.jsonl]")
-    val inputPath = Path.of(args(0))
-    val outputPath = args.lift(1).map(Path.of(_))
+    val slimOutput = args.contains(SlimOutputFlag)
+    val pathArgs = args.filterNot(_ == SlimOutputFlag)
+    if pathArgs.isEmpty then
+      throw IllegalArgumentException(s"usage: MoveReviewPhase3AuditRunner <input.json|jsonl> [output.jsonl] [$SlimOutputFlag]")
+    val inputPath = Path.of(pathArgs(0))
+    val outputPath = pathArgs.lift(1).map(Path.of(_))
     val samples =
       MoveReviewQualityInputFiles.parseJsonDocuments(inputPath).zipWithIndex.map { case (json, index) =>
         parseSample(json, index)
@@ -331,7 +335,8 @@ object MoveReviewPhase3AuditRunner:
           sample = sample,
           inputFingerprint = fingerprint,
           inputDuplicateOrdinal = ordinal,
-          inputDuplicateCount = duplicateCounts.getOrElse(fingerprint, 1)
+          inputDuplicateCount = duplicateCounts.getOrElse(fingerprint, 1),
+          slimOutput = slimOutput
         )
     }
     outputPath match
@@ -451,7 +456,8 @@ object MoveReviewPhase3AuditRunner:
       sample: AuditInputSample,
       inputFingerprint: String,
       inputDuplicateOrdinal: Int,
-      inputDuplicateCount: Int
+      inputDuplicateCount: Int,
+      slimOutput: Boolean
   ): JsObject =
     val result = MoveReviewJudgmentOrchestrator.build(sample.raw)
     val base =
@@ -483,38 +489,47 @@ object MoveReviewPhase3AuditRunner:
       )
     result match
       case Some(built) =>
-        base ++ Json.obj(
-          "buildStatus" -> "built",
-          "lineSummary" -> lineSummary(built),
-          "relativeAssessment" -> relativeSummary(built),
-          "semanticCoverage" -> semanticSummary(built, sample.expectedSemanticSlots, sample.expectedQuestionIds),
-          "qcFailureSummary" -> qcFailureSummary(built),
-          "layerGaps" -> layerGapSummary(built),
-          "issueKinds" -> Json.toJson(built.quality.audit.issues.map(_.kind.toString)),
-          "validationIssueKinds" -> Json.toJson(built.quality.validation.issues.map(_.kind.toString)),
-          "issues" -> issueDetails(built),
-          "validationIssues" -> validationIssueDetails(built),
-          "evidenceLoss" -> evidenceLossSummary(built),
-          "evidenceLayerCounts" -> evidenceLayerCounts(built),
-          "relationKinds" -> relationKinds(built),
-          "strategicKinds" -> strategicKinds(built),
-          "probeRequests" -> probeRequestSummary(built),
-          "probeDiagnostics" -> probeDiagnosticsSummary(built),
-          "claimSupportClusters" -> claimSupportClusters(built),
-          "claimEventClusters" -> claimEventClusters(built),
-          "moveJudgmentView" -> moveJudgmentView(built),
-          "semanticRubricExpectedSlotCoverage" -> semanticRubricExpectedSlotCoverageJson(
+        val slotCoverage =
+          semanticRubricExpectedSlotCoverageJson(
             sample.expectedSemanticSlots,
             built.quality.semanticCoverage.comparisonDiagnostics,
             expectedQuestionIds = sample.expectedQuestionIds
-          ),
-          "rankedPrimaryClaimDiagnostics" -> rankedClaimDiagnosticsByTier(built, PlayerFacingClaimTier.Primary),
-          "rankedSecondaryClaimDiagnostics" -> rankedClaimDiagnosticsByTier(built, PlayerFacingClaimTier.Secondary),
-          "rankedContextClaimDiagnostics" -> rankedClaimDiagnosticsByTier(built, PlayerFacingClaimTier.Context),
-          "rankedDiagnosticClaimDiagnostics" -> rankedClaimDiagnosticsByTier(built, PlayerFacingClaimTier.Diagnostic)
-        )
+          )
+        val common =
+          Json.obj(
+            "auditMode" -> (if slimOutput then "slim" else "full"),
+            "buildStatus" -> "built",
+            "lineSummary" -> lineSummary(built),
+            "relativeAssessment" -> relativeSummary(built),
+            "semanticCoverage" -> semanticSummary(built, slimOutput, slotCoverage),
+            "qcFailureSummary" -> qcFailureSummary(built),
+            "layerGaps" -> layerGapSummary(built),
+            "issueKinds" -> Json.toJson(built.quality.audit.issues.map(_.kind.toString)),
+            "validationIssueKinds" -> Json.toJson(built.quality.validation.issues.map(_.kind.toString)),
+            "issues" -> issueDetails(built),
+            "validationIssues" -> validationIssueDetails(built),
+            "evidenceLoss" -> evidenceLossSummary(built),
+            "evidenceLayerCounts" -> evidenceLayerCounts(built),
+            "relationKinds" -> relationKinds(built),
+            "strategicKinds" -> strategicKinds(built),
+            "probeRequests" -> probeRequestSummary(built),
+            "probeDiagnostics" -> probeDiagnosticsSummary(built),
+            "semanticRubricExpectedSlotCoverage" -> slotCoverage
+          )
+        val fullDiagnostics =
+          Json.obj(
+            "claimSupportClusters" -> claimSupportClusters(built),
+            "claimEventClusters" -> claimEventClusters(built),
+            "moveJudgmentView" -> moveJudgmentView(built),
+            "rankedPrimaryClaimDiagnostics" -> rankedClaimDiagnosticsByTier(built, PlayerFacingClaimTier.Primary),
+            "rankedSecondaryClaimDiagnostics" -> rankedClaimDiagnosticsByTier(built, PlayerFacingClaimTier.Secondary),
+            "rankedContextClaimDiagnostics" -> rankedClaimDiagnosticsByTier(built, PlayerFacingClaimTier.Context),
+            "rankedDiagnosticClaimDiagnostics" -> rankedClaimDiagnosticsByTier(built, PlayerFacingClaimTier.Diagnostic)
+          )
+        base ++ common ++ (if slimOutput then Json.obj() else fullDiagnostics)
       case None =>
         base ++ Json.obj(
+          "auditMode" -> (if slimOutput then "slim" else "full"),
           "buildStatus" -> "failed",
           "lineSummary" -> Json.obj(
             "inputVariationCount" -> sample.raw.variations.size,
@@ -663,8 +678,8 @@ object MoveReviewPhase3AuditRunner:
 
   private def semanticSummary(
       result: MoveReviewJudgmentResult,
-      expectedSemanticSlots: List[ExpectedSemanticSlot],
-      expectedQuestionIds: List[String]
+      slimOutput: Boolean,
+      slotCoverage: JsObject
   ): JsObject =
     val semantic = result.quality.semanticCoverage
     val playedBinding =
@@ -673,7 +688,38 @@ object MoveReviewPhase3AuditRunner:
         ideas = result.packet.ideas,
         claims = result.packet.claims
       )
-    Json.obj(
+    if slimOutput then
+      Json.obj(
+        "tacticalIdeas" -> semantic.tacticalIdeas,
+        "strategicIdeas" -> semantic.strategicIdeas,
+        "pawnStructureIdeas" -> semantic.pawnStructureIdeas,
+        "openingIdeas" -> semantic.openingIdeas,
+        "defensiveIdeas" -> semantic.defensiveIdeas,
+        "evaluationIdeas" -> semantic.evaluationIdeas,
+        "conversionIdeas" -> semantic.conversionIdeas,
+        "materialIdeas" -> semantic.materialIdeas,
+        "claimFamilies" -> semantic.claimFamilies.map(_.toString).toList.sorted,
+        "claimCandidateFamilies" -> semantic.claimCandidateFamilies.map(_.toString).toList.sorted,
+        "claimCandidateFamilyCounts" -> claimLifecycleCountsJson(semantic.claimCandidateFamilyCounts),
+        "claimLifecycleStageCounts" -> claimLifecycleCountsJson(semantic.claimLifecycleStageCounts),
+        "claimLifecycleTruthCounts" -> claimLifecycleCountsJson(semantic.claimLifecycleTruthCounts),
+        "playedBoundIdeaFamilies" -> playedBinding.playedBoundIdeaFamilies,
+        "playedBoundClaimFamilies" -> playedBinding.playedBoundClaimFamilies,
+        "playedBoundFamilies" -> playedBinding.playedBoundFamilies,
+        "hasRelativeAssessment" -> semantic.hasRelativeAssessment,
+        "candidateComparisonFacts" -> semantic.candidateComparisonFacts,
+        "relativeCauseFacts" -> semantic.relativeCauseFacts,
+        "moveVerdictCertifications" -> semantic.moveVerdictCertifications,
+        "playedRelatedComparisonFacts" -> semantic.playedRelatedComparisonFacts,
+        "primaryPlayedComparisonFacts" -> semantic.primaryPlayedComparisonFacts,
+        "playedRelativeCauseFacts" -> semantic.playedRelativeCauseFacts,
+        "hasVerdict" -> semantic.hasVerdict,
+        "hasCandidateSetComparison" -> semantic.hasCandidateSetComparison,
+        "hasOnlyMoveSignal" -> semantic.hasOnlyMoveSignal,
+        "hasForcedLineTheme" -> semantic.hasForcedLineTheme,
+        "semanticRubricExpectedSlotCoverage" -> slotCoverage
+      )
+    else Json.obj(
       "tacticalIdeas" -> semantic.tacticalIdeas,
       "strategicIdeas" -> semantic.strategicIdeas,
       "pawnStructureIdeas" -> semantic.pawnStructureIdeas,
@@ -788,11 +834,7 @@ object MoveReviewPhase3AuditRunner:
       "openingApplicabilityDiagnostics" -> openingApplicabilityDiagnosticsSummary(semantic.openingApplicabilityDiagnostics),
       "openingSupportDiagnostics" -> openingSupportDiagnosticsSummary(semantic.openingSupportDiagnostics),
       "comparisonDiagnostics" -> comparisonDiagnosticsSummary(semantic.comparisonDiagnostics),
-      "semanticRubricExpectedSlotCoverage" -> semanticRubricExpectedSlotCoverageJson(
-        expectedSemanticSlots,
-        semantic.comparisonDiagnostics,
-        expectedQuestionIds = expectedQuestionIds
-      ),
+      "semanticRubricExpectedSlotCoverage" -> slotCoverage,
       "hasVerdict" -> semantic.hasVerdict,
       "hasCandidateSetComparison" -> semantic.hasCandidateSetComparison,
       "hasOnlyMoveSignal" -> semantic.hasOnlyMoveSignal,

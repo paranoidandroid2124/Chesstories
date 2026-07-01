@@ -63,6 +63,43 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       assertEquals((summaryJson \ "schemaVersion").as[String], "move_review_phase3_audit_summary.v1")
     finally deleteRecursively(dir)
 
+  test("main can write slim audit rows without full view diagnostics"):
+    val dir = Files.createTempDirectory("phase3-audit-runner-slim")
+    try
+      val input = dir.resolve("input.jsonl")
+      val output = dir.resolve("phase3_audit_output_current_chunk01_rows001-001.jsonl")
+      val row =
+        Json.obj(
+          "sampleId" -> "sample-slim",
+          "input" -> Json.obj(
+            "fen" -> "8/8/8/8/8/8/4P3/4K3 w - - 0 1",
+            "playedMoveUci" -> "e2e4",
+            "variations" -> Json.arr(
+              Json.obj(
+                "moves" -> Json.arr("e2e4"),
+                "scoreCp" -> 20,
+                "depth" -> 16
+              )
+            ),
+            "currentEvalCp" -> 20,
+            "ply" -> 1,
+            "movePrefixUci" -> Json.arr("g1f3")
+          )
+        )
+      Files.writeString(input, Json.stringify(row), StandardCharsets.UTF_8)
+
+      MoveReviewPhase3AuditRunner.main(Array(input.toString, output.toString, "--slim"))
+
+      val auditRow = Json.parse(Files.readString(output, StandardCharsets.UTF_8))
+      assertEquals((auditRow \ "auditMode").as[String], "slim")
+      assert((auditRow \ "semanticCoverage").toOption.nonEmpty)
+      assert((auditRow \ "semanticRubricExpectedSlotCoverage").toOption.nonEmpty)
+      assert((auditRow \ "moveJudgmentView").toOption.isEmpty)
+      assert((auditRow \ "claimSupportClusters").toOption.isEmpty)
+      assert((auditRow \ "claimEventClusters").toOption.isEmpty)
+      assert(Files.exists(dir.resolve("phase3_audit_summary_current_chunk01_rows001-001.json")))
+    finally deleteRecursively(dir)
+
   test("writes replay input archive next to audit output"):
     val dir = Files.createTempDirectory("phase3-audit-runner")
     try

@@ -3,7 +3,7 @@ package controllers
 import play.api.libs.json.{ JsArray, JsObject, JsValue, Json }
 
 import lila.app.*
-import lila.chessjudgment.analysis.assembly.{ MoveReviewJudgmentOrchestrator, RawMoveReviewInput }
+import lila.chessjudgment.analysis.assembly.{ JudgmentPacketValidator, MoveReviewJudgmentOrchestrator, RawMoveReviewInput }
 import lila.chessjudgment.model.judgment.*
 
 final class Analyse(
@@ -51,17 +51,18 @@ final class Analyse(
       bodyCtx.body.body.validate[RawMoveReviewInput].fold(
         _ => BadRequest(Json.obj("ok" -> false, "error" -> "invalid_move_review_input")).toFuccess,
         raw =>
-          MoveReviewJudgmentOrchestrator.build(raw).fold(
+          MoveReviewJudgmentOrchestrator.packet(raw).fold(
             BadRequest(Json.obj("ok" -> false, "error" -> "move_review_not_buildable")).toFuccess
-          ): result =>
-            val status = publicReviewStatus(result.validation.isValid, result.quality.audit.isClean)
+          ): packet =>
+            val validation = JudgmentPacketValidator.validate(packet)
+            val status = publicReviewStatus(validation.isValid)
             val renderable = status == "ready"
             JsonOk(
               Json.obj(
                 "ok" -> true,
                 "status" -> status,
-                "availability" -> publicAvailabilityJson(result.validation.isValid, result.quality.audit.isClean),
-                "move_review" -> result.packet.moveJudgmentView.map(moveJudgmentViewMeaningJson(_, renderable))
+                "availability" -> publicAvailabilityJson(validation.isValid),
+                "move_review" -> packet.moveJudgmentView.map(moveJudgmentViewMeaningJson(_, renderable))
               )
             ).toFuccess
       )
@@ -75,15 +76,14 @@ final class Analyse(
          )
        else Json.obj())
 
-  private def publicReviewStatus(valid: Boolean, qualityClean: Boolean): String =
-    if valid && qualityClean then "ready" else "withheld"
+  private def publicReviewStatus(valid: Boolean): String =
+    if valid then "ready" else "withheld"
 
-  private def publicAvailabilityJson(valid: Boolean, qualityClean: Boolean): JsObject =
+  private def publicAvailabilityJson(valid: Boolean): JsObject =
     Json.obj(
-      "state" -> publicReviewStatus(valid, qualityClean),
+      "state" -> publicReviewStatus(valid),
       "reason" ->
         (if !valid then Some("validation_failed")
-         else if !qualityClean then Some("quality_gate")
          else None)
     )
 
