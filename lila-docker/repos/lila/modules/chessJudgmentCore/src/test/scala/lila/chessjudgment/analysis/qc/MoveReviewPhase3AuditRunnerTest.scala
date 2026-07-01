@@ -2647,6 +2647,9 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(surface.map(_.ideaType), List("piece_activity"))
     assertEquals(surface.map(_.ideaQuality), List("supported"))
     assertEquals(surface.map(_.priority), List("supporting"))
+    assertEquals(surface.map(_.evidence.hasCarrier), List(true))
+    assertEquals(surface.map(_.evidence.proofLevel), List("surface_evidence"))
+    assertEquals(surface.flatMap(_.evidence.sourceIds), List("played-transition"))
     assert(!claim.reasonTokens.exists(_.startsWith("routeCarrier:")))
     val badSurface = MoveMeaningSurface.from(
       meaningClaimView(
@@ -2702,6 +2705,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     val surface = MoveMeaningSurface.from(view)
     assertEquals(surface.map(_.ideaType).take(2), List("terminal_mate", "piece_activity"))
     assertEquals(surface.head.terminalConsequences.map(_.code), List("mate"))
+    assertEquals(surface.head.evidence.hasCarrier, true)
+    assertEquals(surface.head.evidence.proofLevel, "terminal_proof")
 
   test("move meaning claims surface root-owned terminal proof without a strategic axis"):
     val mateSignature =

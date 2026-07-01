@@ -38,6 +38,7 @@ describe('chesstory brief scaffold', () => {
           priority: 'main',
           idea_type: 'pawn_break_timing',
           idea: { code: 'pawn_break_timing', label: 'pawn break timing' },
+          evidence: { has_carrier: true, proof_level: 'owned_cause' },
           target: { squares: ['c5', 'd6'], files: ['c'], pieces: [] },
         },
         {
@@ -46,6 +47,7 @@ describe('chesstory brief scaffold', () => {
           priority: 'supporting',
           idea_type: 'counterplay_race',
           idea: { code: 'counterplay_race', label: 'counterplay race' },
+          evidence: { has_carrier: true, proof_level: 'surface_evidence' },
           target: { squares: ['c5'], files: ['c'], pieces: [] },
         },
       ],
@@ -68,6 +70,7 @@ describe('chesstory brief scaffold', () => {
           priority: 'main',
           idea: { code: 'piece_activity', label: 'piece activity' },
           assessment: {
+            is_local_idea: true,
             problem: { code: 'loses_activity', label: 'loses activity' },
             failure_family: { code: 'wrong_route', label: 'wrong route' },
           },
@@ -86,10 +89,67 @@ describe('chesstory brief scaffold', () => {
     });
 
     const current = sections.find(section => section.key === 'current-decision');
+    const plan = sections.find(section => section.key === 'middlegame-plan');
     const better = sections.find(section => section.key === 'better-plan');
+    assert.match(plan?.body || '', /piece activity/);
     assert.equal(current?.tone, 'bad');
     assert.match(current?.body || '', /loses activity/);
     assert.match(better?.body || '', /outpost route/);
+  });
+
+  test('does not invent a useful local idea for a bad move without local-idea evidence', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'bad', played_move: 'e4g3', reference_move: 'e4f6' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'bad',
+          priority: 'main',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          assessment: {
+            move_quality: { code: 'bad', label: 'bad' },
+            idea_quality: { code: 'failed', label: 'failed' },
+            priority: { code: 'main', label: 'main' },
+            is_verdict_reason: true,
+            is_local_idea: false,
+            problem: { code: 'loses_activity', label: 'loses activity' },
+          },
+          target: { squares: ['e4', 'g3'], pieces: ['knight'] },
+        },
+      ],
+    });
+
+    const plan = sections.find(section => section.key === 'middlegame-plan');
+    const current = sections.find(section => section.key === 'current-decision');
+    const text = JSON.stringify(sections);
+    assert.equal(plan?.tone, 'bad');
+    assert.doesNotMatch(text, /Useful idea inside the mistake|There may be a local idea/);
+    assert.doesNotMatch(JSON.stringify(current?.items || []), /piece activity|knight|e4|g3/);
+    assert.match(plan?.body || '', /No public local idea/);
+  });
+
+  test('requires a public evidence carrier before writing board-evidence prose', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'good', played_move: 'c4c5', reference_move: 'c4c5' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'main',
+          idea: { code: 'target_pressure', label: 'target pressure' },
+          target: { squares: ['d6'], files: ['d'], pieces: [] },
+          evidence: { has_carrier: false, proof_level: 'none' },
+        },
+      ],
+    });
+
+    const evidence = sections.find(section => section.key === 'evidence');
+    const plan = sections.find(section => section.key === 'middlegame-plan');
+    const current = sections.find(section => section.key === 'current-decision');
+    assert.match(plan?.body || '', /No public carrier/);
+    assert.match(current?.body || '', /not enough public carrier evidence/);
+    assert.match(evidence?.body || '', /not enough public evidence/);
+    assert.deepEqual(evidence?.items, []);
   });
 
   test('keeps terminal and rook technique evidence in the LLM payload', () => {
@@ -101,6 +161,7 @@ describe('chesstory brief scaffold', () => {
           move_quality: 'good',
           priority: 'main',
           idea: { code: 'terminal_mate', label: 'mate' },
+          evidence: { has_carrier: true, proof_level: 'terminal_proof' },
           terminal_consequences: [{ code: 'mate', label: 'mate' }],
           endgame_technique: {
             pattern_info: { code: 'lucena', label: 'Lucena' },

@@ -1795,6 +1795,14 @@ case class MoveMeaningSurfaceComparison(
     lostIdeas: List[MoveMeaningSurfaceComparisonLoss] = Nil
 )
 
+case class MoveMeaningSurfaceEvidence(
+    hasCarrier: Boolean = false,
+    proofLevel: String = "none",
+    targetBound: Boolean = false,
+    causeIds: List[String] = Nil,
+    sourceIds: List[String] = Nil
+)
+
 case class MoveMeaningSurface(
     moveUci: String,
     subject: String,
@@ -1812,7 +1820,8 @@ case class MoveMeaningSurface(
     comparisonLostIdeas: List[MoveMeaningSurfaceComparisonLoss] = Nil,
     endgameTechnique: Option[MoveMeaningSurfaceEndgameTechnique] = None,
     comparison: Option[MoveMeaningSurfaceComparison] = None,
-    terminalConsequences: List[MoveMeaningSurfaceCode] = Nil
+    terminalConsequences: List[MoveMeaningSurfaceCode] = Nil,
+    evidence: MoveMeaningSurfaceEvidence = MoveMeaningSurfaceEvidence()
 )
 
 object MoveMeaningSurface:
@@ -1957,6 +1966,8 @@ object MoveMeaningSurface:
     val publicProblem = Option.when(publicFailureClaim)(problem(claim)).flatten
     val comparisonLossDetails = comparisonLostIdeas(verdict, claim)
     val terminal = terminalConsequences(claim)
+    val target = MoveMeaningSurfaceTarget.fromClaim(claim)
+    val technique = endgameTechnique(claim)
     MoveMeaningSurface(
       moveUci = claim.moveUci,
       subject = claimSubject,
@@ -1975,14 +1986,42 @@ object MoveMeaningSurface:
       ),
       failureFamily = publicFailureFamily,
       problem = publicProblem,
-      target = MoveMeaningSurfaceTarget.fromClaim(claim),
+      target = target,
       priority = surfacePriority,
       comparisonLossSides = comparisonLossSides(claim),
       comparisonLosses = comparisonLosses(claim),
       comparisonLostIdeas = comparisonLossDetails,
-      endgameTechnique = endgameTechnique(claim),
+      endgameTechnique = technique,
       comparison = Option.when(claimSubject == "played_move" || claimSubject == "reference_move")(comparison(verdict, comparisonLossDetails)).flatten,
-      terminalConsequences = terminal
+      terminalConsequences = terminal,
+      evidence = publicEvidence(claim, target, terminal, technique)
+    )
+
+  private def publicEvidence(
+      claim: MoveMeaningClaim,
+      target: MoveMeaningSurfaceTarget,
+      terminal: List[MoveMeaningSurfaceCode],
+      technique: Option[MoveMeaningSurfaceEndgameTechnique]
+  ): MoveMeaningSurfaceEvidence =
+    val causeCarrier = claim.causeEvidenceIds.nonEmpty
+    val objectCarrier = EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
+    val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier
+    val terminalCarrier = terminal.nonEmpty
+    val techniqueCarrier = technique.nonEmpty
+    val hasCarrier = causeCarrier || sourceCarrier || terminalCarrier || techniqueCarrier
+    val proofLevel =
+      if terminalCarrier then "terminal_proof"
+      else if causeCarrier && claim.supportLevel == "owned_cause_linked" then "owned_cause"
+      else if causeCarrier then "cause_linked"
+      else if sourceCarrier then "surface_evidence"
+      else if techniqueCarrier then "technique"
+      else "none"
+    MoveMeaningSurfaceEvidence(
+      hasCarrier = hasCarrier,
+      proofLevel = proofLevel,
+      targetBound = target.squares.nonEmpty || target.files.nonEmpty || target.pieces.nonEmpty,
+      causeIds = claim.causeEvidenceIds.take(6),
+      sourceIds = claim.sourceEvidenceIds.take(6)
     )
 
   private def subject(claim: MoveMeaningClaim): String =

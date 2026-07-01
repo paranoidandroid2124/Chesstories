@@ -42,6 +42,13 @@ export interface ChesstoryMoveSemantic {
     files?: string[];
     pieces?: string[];
   };
+  evidence?: {
+    has_carrier?: boolean;
+    proof_level?: string;
+    target_bound?: boolean;
+    cause_ids?: string[];
+    source_ids?: string[];
+  };
   priority?: string;
   failure_family?: string;
   problem?: string;
@@ -80,18 +87,23 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const played = semantics.filter(s => s.subject === 'played_move');
   const reference = semantics.filter(s => s.subject === 'reference_move');
   const mainPlayed = played.filter(s => s.priority === 'main');
-  const solved = uniqueLabels(played.map(ideaLabel)).slice(0, 4);
-  const terminal = uniqueLabels(played.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));
-  const technique = uniqueLabels(played.flatMap(techniqueLabels));
+  const bad = payload.verdict?.move_quality === 'bad' || played.some(s => s.move_quality === 'bad');
+  const evidencePlayed = played.filter(hasEvidenceCarrier);
+  const localIdeas = played.filter(s => s.assessment?.is_local_idea);
+  const solved = uniqueLabels((bad ? localIdeas : evidencePlayed).map(ideaLabel)).slice(0, 4);
+  const localIdeaLabels = uniqueLabels(localIdeas.map(ideaLabel)).slice(0, 4);
+  const terminal = uniqueLabels(evidencePlayed.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));
+  const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
   const losses = uniqueLabels(
     semantics.flatMap(s => (s.comparison_loss || s.comparison?.lost_ideas || []).map(codeLabel)),
   );
-  const targets = uniqueLabels(played.flatMap(targetLabels)).slice(0, 5);
-  const bad = payload.verdict?.move_quality === 'bad' || played.some(s => s.move_quality === 'bad');
+  const targets = uniqueLabels(evidencePlayed.flatMap(targetLabels)).slice(0, 5);
   const problem =
     firstLabel(mainPlayed.flatMap(problemLabels)) ||
     (bad ? 'the move gives up more than its idea solves' : undefined);
   const referenceIdeas = uniqueLabels(reference.map(ideaLabel)).slice(0, 3);
+  const handled = [...solved, ...terminal];
+  const currentChange = targets.length ? joinHuman(targets) : solved.length ? joinHuman(solved) : '';
 
   return [
     {
@@ -105,12 +117,16 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     },
     {
       key: 'middlegame-plan',
-      title: bad ? 'Useful idea inside the mistake' : 'What this move handles',
+      title: bad ? (localIdeaLabels.length ? 'Local idea that failed' : 'What this move misses') : 'What this move handles',
       body: bad
-        ? `There may be a local idea, but it does not survive the position's main demand.`
-        : `This move handles ${joinHuman(solved)}${terminal.length ? ` and reaches ${joinHuman(terminal)}` : ''}.`,
+        ? localIdeaLabels.length
+          ? `The move has ${joinHuman(localIdeaLabels)}, but it does not survive the position's main demand.`
+          : 'No public local idea is strong enough to explain this mistake.'
+        : handled.length
+          ? `This move handles ${joinHuman(handled)}.`
+          : 'No public carrier is strong enough to explain this move yet.',
       pending: false,
-      items: [...solved, ...terminal, ...technique].slice(0, 5),
+      items: (bad ? localIdeaLabels : [...solved, ...terminal, ...technique]).slice(0, 5),
       tone: bad ? 'bad' : 'good',
     },
     {
@@ -118,9 +134,11 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
       title: bad ? 'Why it fails' : 'Current decision',
       body: bad
         ? `The main problem is ${problem}.`
-        : `The move is not just a verdict; it changes ${targets.length ? joinHuman(targets) : joinHuman(solved)}.`,
+        : currentChange
+          ? `The move is not just a verdict; it changes ${currentChange}.`
+          : 'The graph has a verdict, but not enough public carrier evidence to explain the move.',
       pending: false,
-      items: mainPlayed.map(summaryLine).filter(Boolean).slice(0, 3),
+      items: (bad ? uniqueLabels(mainPlayed.flatMap(problemLabels)) : mainPlayed.map(summaryLine).filter(Boolean)).slice(0, 3),
       tone: bad ? 'bad' : 'good',
     },
     {
@@ -255,23 +273,29 @@ function comparisonLines(semantics: ChesstoryMoveSemantic[]): string[] {
 }
 
 function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
-  const terminal = uniqueLabels(semantics.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));
+  const evidenceSemantics = semantics.filter(hasEvidenceCarrier);
+  const terminal = uniqueLabels(evidenceSemantics.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));
   if (terminal.length) return `The terminal result is ${joinHuman(terminal)}.`;
-  const technique = uniqueLabels(semantics.flatMap(techniqueLabels));
+  const technique = uniqueLabels(evidenceSemantics.flatMap(techniqueLabels));
   if (technique.length) return `The ending technique evidence is ${joinHuman(technique)}.`;
-  const targets = uniqueLabels(semantics.flatMap(targetLabels));
+  const targets = uniqueLabels(evidenceSemantics.flatMap(targetLabels));
   if (targets.length) return `The concrete board evidence is ${joinHuman(targets.slice(0, 5))}.`;
   return undefined;
 }
 
 function evidenceItems(semantics: ChesstoryMoveSemantic[]): string[] {
   return uniqueLabels(
-    semantics.flatMap(s => [
+    semantics.filter(hasEvidenceCarrier).flatMap(s => [
       ...targetLabels(s),
       ...(s.terminal_consequences || []).map(codeLabel),
       ...techniqueLabels(s),
     ]),
   );
+}
+
+function hasEvidenceCarrier(semantic: ChesstoryMoveSemantic): boolean {
+  if (semantic.evidence) return semantic.evidence.has_carrier === true;
+  return Boolean(semantic.terminal_consequences?.length || semantic.endgame_technique);
 }
 
 function uniqueLabels(labels: string[]): string[] {

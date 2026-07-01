@@ -113,7 +113,8 @@ final class Analyse(
       "terminal_consequences" -> surface.terminalConsequences.map(publicCodeJson),
       "endgame_technique" -> surface.endgameTechnique.map(publicEndgameTechniqueJson),
       "technique" -> surface.endgameTechnique.map(publicEndgameTechniqueJson),
-      "comparison" -> surface.comparison.map(publicComparisonJson)
+      "comparison" -> surface.comparison.map(publicComparisonJson),
+      "evidence" -> publicEvidenceJson(surface.evidence)
     )
 
   private def publicAssessmentJson(assessment: MoveMeaningSurfaceAssessment): JsObject =
@@ -131,6 +132,15 @@ final class Analyse(
     Json.obj(
       "code" -> code.code,
       "label" -> code.label
+    )
+
+  private def publicEvidenceJson(evidence: MoveMeaningSurfaceEvidence): JsObject =
+    Json.obj(
+      "has_carrier" -> evidence.hasCarrier,
+      "proof_level" -> evidence.proofLevel,
+      "target_bound" -> evidence.targetBound,
+      "cause_ids" -> evidence.causeIds,
+      "source_ids" -> evidence.sourceIds
     )
 
   private def publicEndgameTechniqueJson(technique: MoveMeaningSurfaceEndgameTechnique): JsObject =
