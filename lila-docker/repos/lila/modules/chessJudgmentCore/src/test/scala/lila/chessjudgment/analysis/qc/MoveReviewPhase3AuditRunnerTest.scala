@@ -3521,6 +3521,10 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(surface.flatMap(_.problem), Nil)
     assertEquals(surface.flatMap(_.comparisonLossSides), List("candidate"))
     assertEquals(surface.flatMap(_.comparisonLosses), List("break_option_missed"))
+    assertEquals(surface.flatMap(_.comparisonLostIdeas.map(_.side)), List("played_move"))
+    assertEquals(surface.flatMap(_.comparisonLostIdeas.map(_.label)), List("missed pawn break option"))
+    assertEquals(surface.flatMap(_.comparison.toList.flatMap(_.moves.map(_.role))).distinct, List("played_move", "best_move"))
+    assertEquals(surface.flatMap(_.comparison.toList.flatMap(_.lostIdeas.map(_.side))), List("played_move"))
     assertEquals(surface.flatMap(_.target.files), List("e"))
 
   test("move meaning comparison loss tokens require a distinct compared move"):

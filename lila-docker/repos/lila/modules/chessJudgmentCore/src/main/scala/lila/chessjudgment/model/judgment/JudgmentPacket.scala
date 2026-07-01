@@ -1668,9 +1668,9 @@ case class MoveMeaningSurfaceTarget(
 object MoveMeaningSurfaceTarget:
   def fromClaim(claim: MoveMeaningClaim): MoveMeaningSurfaceTarget =
     MoveMeaningSurfaceTarget(
-      squares = claim.targetSquares.distinct.sorted,
-      files = claim.targetFiles.distinct.sorted,
-      pieces = claim.targetPieces.distinct.sorted
+      squares = claim.targetSquares.flatMap(cleanSquare).distinct.sorted,
+      files = claim.targetFiles.flatMap(cleanFile).distinct.sorted,
+      pieces = claim.targetPieces.flatMap(cleanPiece).distinct.sorted
     )
 
   private[judgment] def fromDetail(
@@ -1741,22 +1741,58 @@ case class MoveMeaningSurfaceVerdict(
     referenceMove: String
 )
 
+case class MoveMeaningSurfaceCode(
+    code: String,
+    label: String
+)
+
+case class MoveMeaningSurfaceMoveRef(
+    role: String,
+    uci: String
+)
+
+case class MoveMeaningSurfaceComparisonLoss(
+    side: String,
+    code: String,
+    label: String
+)
+
+case class MoveMeaningSurfaceAssessment(
+    moveQuality: MoveMeaningSurfaceCode,
+    ideaQuality: MoveMeaningSurfaceCode,
+    priority: MoveMeaningSurfaceCode,
+    verdictReason: Boolean,
+    localIdea: Boolean,
+    failureFamily: Option[MoveMeaningSurfaceCode] = None,
+    problem: Option[MoveMeaningSurfaceCode] = None
+)
+
 case class MoveMeaningSurfaceEndgameTechnique(
     pattern: Option[String] = None,
+    patternLabel: Option[String] = None,
     rookPattern: Option[String] = None,
+    rookPatternLabel: Option[String] = None,
     side: Option[String] = None,
     horizonStatus: Option[String] = None,
+    statusLabel: Option[String] = None,
     triggerMove: Option[String] = None,
+    entryPlyOffset: Option[Int] = None,
+    terminalPlyOffset: Option[Int] = None,
     requiredSquares: List[String] = Nil,
     maintainedSquares: List[String] = Nil,
-    brokenSquares: List[String] = Nil
+    brokenSquares: List[String] = Nil,
+    terminalConsequences: List[MoveMeaningSurfaceCode] = Nil,
+    failureReason: Option[MoveMeaningSurfaceCode] = None
 )
 
 case class MoveMeaningSurfaceComparison(
     kind: String,
+    relation: String,
     referenceMove: String,
     candidateMove: String,
-    secondMove: Option[String] = None
+    secondMove: Option[String] = None,
+    moves: List[MoveMeaningSurfaceMoveRef] = Nil,
+    lostIdeas: List[MoveMeaningSurfaceComparisonLoss] = Nil
 )
 
 case class MoveMeaningSurface(
@@ -1764,13 +1800,16 @@ case class MoveMeaningSurface(
     subject: String,
     moveQuality: String,
     ideaType: String,
+    idea: MoveMeaningSurfaceCode,
     ideaQuality: String,
+    assessment: MoveMeaningSurfaceAssessment,
     failureFamily: Option[String],
     problem: Option[String],
     target: MoveMeaningSurfaceTarget,
     priority: String,
     comparisonLossSides: List[String] = Nil,
     comparisonLosses: List[String] = Nil,
+    comparisonLostIdeas: List[MoveMeaningSurfaceComparisonLoss] = Nil,
     endgameTechnique: Option[MoveMeaningSurfaceEndgameTechnique] = None,
     comparison: Option[MoveMeaningSurfaceComparison] = None
 )
@@ -1886,20 +1925,38 @@ object MoveMeaningSurface:
       badPlayedMove &&
         claim.surfaceLane == "current_move_owned" &&
         claim.supportLevel == "owned_cause_linked"
+    val quality = if played then verdict.map(frame => moveQuality(frame.verdict)).getOrElse("unknown") else "not_applicable"
+    val idea = ideaType(claim)
+    val qualityOfIdea = ideaQuality(claim, claimSubject, badPlayedMove)
+    val surfacePriority = priority(claim, claimSubject)
+    val publicFailureFamily = Option.when(publicFailureClaim)(failureFamily(claim)).flatten
+    val publicProblem = Option.when(publicFailureClaim)(problem(claim)).flatten
+    val comparisonLossDetails = comparisonLostIdeas(verdict, claim)
     MoveMeaningSurface(
       moveUci = claim.moveUci,
       subject = claimSubject,
-      moveQuality = if played then verdict.map(frame => moveQuality(frame.verdict)).getOrElse("unknown") else "not_applicable",
-      ideaType = ideaType(claim),
-      ideaQuality = ideaQuality(claim, claimSubject, badPlayedMove),
-      failureFamily = Option.when(publicFailureClaim)(failureFamily(claim)).flatten,
-      problem = Option.when(publicFailureClaim)(problem(claim)).flatten,
+      moveQuality = quality,
+      ideaType = idea,
+      idea = publicCode(idea, ideaLabels),
+      ideaQuality = qualityOfIdea,
+      assessment = MoveMeaningSurfaceAssessment(
+        moveQuality = publicCode(quality, moveQualityLabels),
+        ideaQuality = publicCode(qualityOfIdea, ideaQualityLabels),
+        priority = publicCode(surfacePriority, priorityLabels),
+        verdictReason = publicFailureClaim,
+        localIdea = claimSubject == "played_move" && claim.surfaceLane == "current_move_function",
+        failureFamily = publicFailureFamily.map(publicCode(_, failureFamilyLabels)),
+        problem = publicProblem.map(publicCode(_, problemLabels))
+      ),
+      failureFamily = publicFailureFamily,
+      problem = publicProblem,
       target = MoveMeaningSurfaceTarget.fromClaim(claim),
-      priority = priority(claim, claimSubject),
+      priority = surfacePriority,
       comparisonLossSides = comparisonLossSides(claim),
       comparisonLosses = comparisonLosses(claim),
+      comparisonLostIdeas = comparisonLossDetails,
       endgameTechnique = endgameTechnique(claim),
-      comparison = Option.when(claimSubject == "played_move" || claimSubject == "reference_move")(comparison(verdict)).flatten
+      comparison = Option.when(claimSubject == "played_move" || claimSubject == "reference_move")(comparison(verdict, comparisonLossDetails)).flatten
     )
 
   private def subject(claim: MoveMeaningClaim): String =
@@ -1992,8 +2049,8 @@ object MoveMeaningSurface:
     else "variation"
 
   private def failureFamily(claim: MoveMeaningClaim): Option[String] =
-    motifFailureFamily(claim)
-      .orElse(claim.causeKinds.flatMap(causeEventFamily).headOption)
+    claim.causeKinds.flatMap(causeEventFamily).headOption
+      .orElse(motifFailureFamily(claim))
 
   private def motifFailureFamily(claim: MoveMeaningClaim): Option[String] =
     if claim.causeKinds.contains(RelativeCauseKind.PawnBreakOpportunity) || claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute
@@ -2051,6 +2108,7 @@ object MoveMeaningSurface:
         case token if token.startsWith("comparisonLoss:") =>
           token.stripPrefix("comparisonLoss:")
       }
+      .flatMap(publicComparisonLossCode)
       .distinct
       .sorted
 
@@ -2060,22 +2118,49 @@ object MoveMeaningSurface:
         case token if token.startsWith("comparisonLossSide:") =>
           token.stripPrefix("comparisonLossSide:")
       }
+      .filter(side => side == "candidate" || side == "reference")
       .distinct
       .sorted
+
+  private def comparisonLostIdeas(
+      verdict: Option[MoveJudgmentVerdictFrame],
+      claim: MoveMeaningClaim
+  ): List[MoveMeaningSurfaceComparisonLoss] =
+    verdict.toList.flatMap { frame =>
+      val sides = comparisonLossSides(claim)
+      val losses = comparisonLosses(claim).map(publicCode(_, comparisonLossLabels))
+      for
+        side <- sides
+        loss <- losses
+      yield MoveMeaningSurfaceComparisonLoss(
+        side = publicComparisonSideRole(frame.comparisonKind, side),
+        code = loss.code,
+        label = loss.label
+      )
+    }.distinct.sortBy(loss => (loss.side, loss.code))
 
   private def endgameTechnique(claim: MoveMeaningClaim): Option[MoveMeaningSurfaceEndgameTechnique] =
     if claim.unit != PositionPlanTechniqueUnit.EndgameTechniqueRecipe then None
     else
       val publicStatus = tokenValue(claim, "horizonStatus:").flatMap(publicEndgameHorizonStatus)
+      val pattern = tokenValue(claim, "pattern:").flatMap(publicEndgamePatternCode)
+      val rookPattern = tokenValue(claim, "rook-pattern:").flatMap(publicRookPatternCode)
       val technique = MoveMeaningSurfaceEndgameTechnique(
-        pattern = tokenValue(claim, "pattern:"),
-        rookPattern = tokenValue(claim, "rook-pattern:"),
-        side = tokenValue(claim, "techniqueSide:"),
+        pattern = pattern.map(_.code),
+        patternLabel = pattern.map(_.label),
+        rookPattern = rookPattern.map(_.code),
+        rookPatternLabel = rookPattern.map(_.label),
+        side = tokenValue(claim, "techniqueSide:").flatMap(publicSideCode),
         horizonStatus = publicStatus,
-        triggerMove = tokenValue(claim, "triggerMove:"),
-        requiredSquares = tokenValues(claim, "requiredSquare:"),
-        maintainedSquares = tokenValues(claim, "maintainedSquare:"),
-        brokenSquares = tokenValues(claim, "brokenSquare:")
+        statusLabel = publicStatus.map(publicCode(_, endgameStatusLabels).label),
+        triggerMove = tokenValue(claim, "triggerMove:").flatMap(publicUciMove),
+        entryPlyOffset = tokenValue(claim, "entryPlyOffset:").flatMap(_.toIntOption),
+        terminalPlyOffset = tokenValue(claim, "terminalPlyOffset:").flatMap(_.toIntOption),
+        requiredSquares = tokenValues(claim, "requiredSquare:").flatMap(publicSquare),
+        maintainedSquares = tokenValues(claim, "maintainedSquare:").flatMap(publicSquare),
+        brokenSquares = tokenValues(claim, "brokenSquare:").flatMap(publicSquare),
+        terminalConsequences = tokenValues(claim, "terminalConsequenceKind:").flatMap(publicTerminalConsequenceCode),
+        failureReason = tokenValue(claim, "failureReason:").flatMap(publicEndgameFailureCode)
       )
       Option.when(
         technique.horizonStatus.nonEmpty &&
@@ -2093,17 +2178,90 @@ object MoveMeaningSurface:
       case "Failed"       => Some("broken")
       case _              => None
 
+  private def publicEndgamePatternCode(pattern: String): Option[MoveMeaningSurfaceCode] =
+    pattern match
+      case "Lucena"                => Some(MoveMeaningSurfaceCode("lucena", "Lucena"))
+      case "PhilidorDefense"      => Some(MoveMeaningSurfaceCode("philidor_defense", "Philidor defense"))
+      case "VancuraDefense"       => Some(MoveMeaningSurfaceCode("vancura_defense", "Vancura defense"))
+      case "ShortSideDefense"     => Some(MoveMeaningSurfaceCode("short_side_defense", "short-side defense"))
+      case "TarraschDefenseActive" => Some(MoveMeaningSurfaceCode("active_tarrasch_defense", "active Tarrasch defense"))
+      case "PassiveRookDefense"   => Some(MoveMeaningSurfaceCode("passive_rook_defense", "passive rook defense"))
+      case _                       => None
+
+  private def publicRookPatternCode(pattern: String): Option[MoveMeaningSurfaceCode] =
+    pattern match
+      case "RookBehindPassedPawn"  => Some(MoveMeaningSurfaceCode("rook_behind_passed_pawn", "rook behind passed pawn"))
+      case "KingCutOff"            => Some(MoveMeaningSurfaceCode("king_cut_off", "king cut off"))
+      case "TarraschDefenseActive" => Some(MoveMeaningSurfaceCode("active_tarrasch_defense", "active Tarrasch defense"))
+      case "PassiveRookDefense"    => Some(MoveMeaningSurfaceCode("passive_rook_defense", "passive rook defense"))
+      case _                       => None
+
+  private def publicTerminalConsequenceCode(kind: String): Option[MoveMeaningSurfaceCode] =
+    kind match
+      case "Mate"          => Some(MoveMeaningSurfaceCode("mate", "mate"))
+      case "MaterialGain"  => Some(MoveMeaningSurfaceCode("material_gain", "material gain"))
+      case "MaterialLoss"  => Some(MoveMeaningSurfaceCode("material_loss", "material loss"))
+      case "PromotionRace" => Some(MoveMeaningSurfaceCode("promotion_race", "promotion race"))
+      case _               => None
+
+  private def publicEndgameFailureCode(reason: String): Option[MoveMeaningSurfaceCode] =
+    reason match
+      case "terminal-proof-supersedes-technique" =>
+        Some(MoveMeaningSurfaceCode("terminal_proof_supersedes_technique", "terminal proof overrides the technique"))
+      case "terminal-proof-contradicts-technique" =>
+        Some(MoveMeaningSurfaceCode("terminal_proof_contradicts_technique", "terminal proof contradicts the technique"))
+      case _ => None
+
+  private def publicSideCode(side: String): Option[String] =
+    Option.when(side == "white" || side == "black")(side)
+
+  private def publicSquare(square: String): Option[String] =
+    Option.when(square.matches("[a-h][1-8]"))(square)
+
+  private def publicUciMove(move: String): Option[String] =
+    val normalized = JudgmentSubjectBinding.normalizeMove(move).toLowerCase
+    Option.when(normalized.matches("[a-h][1-8][a-h][1-8][nbrq]?"))(normalized)
+
   private def comparison(
-      verdict: Option[MoveJudgmentVerdictFrame]
+      verdict: Option[MoveJudgmentVerdictFrame],
+      lostIdeas: List[MoveMeaningSurfaceComparisonLoss]
   ): Option[MoveMeaningSurfaceComparison] =
     verdict.map { frame =>
       MoveMeaningSurfaceComparison(
         kind = comparisonKindCode(frame.comparisonKind),
+        relation = comparisonRelation(frame.comparisonKind),
         referenceMove = frame.referenceLine.rootMove,
         candidateMove = frame.candidateLine.rootMove,
-        secondMove = frame.candidateSet.flatMap(_.secondLine.map(_.rootMove))
+        secondMove = frame.candidateSet.flatMap(_.secondLine.map(_.rootMove)),
+        moves = comparisonMoves(frame),
+        lostIdeas = lostIdeas
       )
     }
+
+  private def comparisonMoves(frame: MoveJudgmentVerdictFrame): List[MoveMeaningSurfaceMoveRef] =
+    val roleMoves =
+      frame.comparisonKind match
+        case CandidateComparisonKind.PlayedVsBest =>
+          List(
+            MoveMeaningSurfaceMoveRef("played_move", frame.candidateLine.rootMove),
+            MoveMeaningSurfaceMoveRef("best_move", frame.referenceLine.rootMove)
+          ) ++ frame.candidateSet.flatMap(_.secondLine.map(line => MoveMeaningSurfaceMoveRef("next_candidate_move", line.rootMove))).toList
+        case CandidateComparisonKind.BestVsSecond =>
+          List(
+            MoveMeaningSurfaceMoveRef("best_move", frame.referenceLine.rootMove),
+            MoveMeaningSurfaceMoveRef("next_candidate_move", frame.candidateLine.rootMove)
+          )
+        case CandidateComparisonKind.PlayedVsAlternative =>
+          List(
+            MoveMeaningSurfaceMoveRef("played_move", frame.candidateLine.rootMove),
+            MoveMeaningSurfaceMoveRef("alternative_move", frame.referenceLine.rootMove)
+          )
+        case CandidateComparisonKind.ReferenceVsAlternative =>
+          List(
+            MoveMeaningSurfaceMoveRef("best_move", frame.referenceLine.rootMove),
+            MoveMeaningSurfaceMoveRef("alternative_move", frame.candidateLine.rootMove)
+          )
+    roleMoves.filter(_.uci.nonEmpty).distinct
 
   private def comparisonKindCode(kind: CandidateComparisonKind): String =
     kind match
@@ -2111,6 +2269,18 @@ object MoveMeaningSurface:
       case CandidateComparisonKind.BestVsSecond           => "reference_vs_next_candidate"
       case CandidateComparisonKind.PlayedVsAlternative    => "played_vs_alternative"
       case CandidateComparisonKind.ReferenceVsAlternative => "reference_vs_alternative"
+
+  private def publicComparisonSideRole(kind: CandidateComparisonKind, side: String): String =
+    (kind, side) match
+      case (CandidateComparisonKind.PlayedVsBest, "candidate")           => "played_move"
+      case (CandidateComparisonKind.PlayedVsBest, "reference")           => "best_move"
+      case (CandidateComparisonKind.BestVsSecond, "candidate")           => "next_candidate_move"
+      case (CandidateComparisonKind.BestVsSecond, "reference")           => "best_move"
+      case (CandidateComparisonKind.PlayedVsAlternative, "candidate")    => "played_move"
+      case (CandidateComparisonKind.PlayedVsAlternative, "reference")    => "alternative_move"
+      case (CandidateComparisonKind.ReferenceVsAlternative, "candidate") => "alternative_move"
+      case (CandidateComparisonKind.ReferenceVsAlternative, "reference") => "best_move"
+      case (_, value)                                                    => value
 
   private[judgment] def comparisonRelation(kind: CandidateComparisonKind): String =
     kind match
@@ -2128,6 +2298,102 @@ object MoveMeaningSurface:
       .filter(_.nonEmpty)
       .distinct
       .sorted
+
+  private def publicComparisonLossCode(value: String): Option[String] =
+    Option.when(comparisonLossLabels.contains(value))(value)
+
+  private def publicCode(code: String, labels: Map[String, String]): MoveMeaningSurfaceCode =
+    MoveMeaningSurfaceCode(code, labels.getOrElse(code, code.replace('_', ' ')))
+
+  private val ideaLabels: Map[String, String] = Map(
+    "pawn_break_timing" -> "pawn break timing",
+    "counterplay_race" -> "counterplay race",
+    "ray_denial" -> "diagonal denial",
+    "counterplay_control" -> "counterplay control",
+    "outpost_attempt" -> "outpost attempt",
+    "long_diagonal_pressure" -> "long diagonal pressure",
+    "piece_route" -> "piece route",
+    "piece_activity" -> "piece activity",
+    "endgame_technique" -> "endgame technique",
+    "compensation" -> "compensation",
+    "structure_shift" -> "structure shift",
+    "target_pressure" -> "target pressure",
+    "center_control" -> "center control",
+    "plan_continuity" -> "plan continuity"
+  )
+
+  private val moveQualityLabels: Map[String, String] = Map(
+    "good" -> "good move",
+    "playable" -> "playable move",
+    "bad" -> "bad move",
+    "unknown" -> "unknown move quality",
+    "not_applicable" -> "not applicable"
+  )
+
+  private val ideaQualityLabels: Map[String, String] = Map(
+    "real" -> "owned reason",
+    "supported" -> "supporting idea",
+    "weak" -> "weak local idea",
+    "background" -> "background context",
+    "failed" -> "failed idea"
+  )
+
+  private val priorityLabels: Map[String, String] = Map(
+    "main" -> "main reason",
+    "supporting" -> "supporting idea",
+    "comparison" -> "comparison idea",
+    "context" -> "context",
+    "variation" -> "line variation"
+  )
+
+  private val failureFamilyLabels: Map[String, String] = Map(
+    "pawn_break_timing" -> "pawn break timing",
+    "counterplay" -> "counterplay",
+    "strategic" -> "strategic concession",
+    "piece_activity" -> "piece activity",
+    "target_pressure" -> "target pressure",
+    "king_safety" -> "king safety",
+    "tactical" -> "tactical issue",
+    "defensive_resource" -> "defensive resource",
+    "conversion" -> "conversion",
+    "material" -> "material"
+  )
+
+  private val problemLabels: Map[String, String] = Map(
+    "tactical_flaw" -> "tactical flaw",
+    "missed_tactical_resource" -> "missed tactical resource",
+    "wrong_move_order" -> "wrong move order",
+    "wrong_recapturer" -> "wrong recapturer",
+    "missed_defense" -> "missed defense",
+    "missed_only_move" -> "missed only move",
+    "too_slow" -> "too slow",
+    "opponent_counterplay_arrives_first" -> "opponent counterplay arrives first",
+    "loses_race" -> "loses the race",
+    "tension_released_early" -> "tension released too early",
+    "break_timing" -> "break timing",
+    "outpost_conceded" -> "outpost conceded",
+    "piece_activity_lost" -> "piece activity lost",
+    "plan_conflict" -> "plan conflict",
+    "strategic_concession" -> "strategic concession",
+    "pressure_released" -> "pressure released",
+    "king_safety" -> "king safety",
+    "missed_conversion" -> "missed conversion"
+  )
+
+  private val comparisonLossLabels: Map[String, String] = Map(
+    "break_option_missed" -> "missed pawn break option",
+    "counter_break_allowed" -> "allowed counter-break",
+    "outpost_route_missed" -> "missed outpost route",
+    "diagonal_pressure_lost" -> "lost diagonal pressure",
+    "move_order_too_slow" -> "move order too slow",
+    "tension_released_early" -> "released tension too early"
+  )
+
+  private val endgameStatusLabels: Map[String, String] = Map(
+    "holding" -> "technique held",
+    "converted" -> "technique reached",
+    "broken" -> "technique broken"
+  )
 
   private def hasPublicDetailSignal(claim: MoveMeaningClaim, value: String): Boolean =
     val needle = value.toLowerCase

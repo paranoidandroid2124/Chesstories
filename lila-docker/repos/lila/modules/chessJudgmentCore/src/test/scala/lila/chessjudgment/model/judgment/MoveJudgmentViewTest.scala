@@ -4341,6 +4341,15 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assert(claim.reasonTokens.contains("sourceEvidenceId:line:lucena-horizon"), claim.reasonTokens)
     assert(claim.reasonTokens.contains("requiredSquare:d8"), claim.reasonTokens)
     assert(claim.reasonTokens.contains("maintainedSquare:d8"), claim.reasonTokens)
+    val surfaceTechnique = MoveMeaningSurface.from(view).flatMap(_.endgameTechnique).headOption.getOrElse(fail(MoveMeaningSurface.from(view).toString))
+    assertEquals(surfaceTechnique.pattern, Some("lucena"))
+    assertEquals(surfaceTechnique.patternLabel, Some("Lucena"))
+    assertEquals(surfaceTechnique.rookPattern, Some("rook_behind_passed_pawn"))
+    assertEquals(surfaceTechnique.rookPatternLabel, Some("rook behind passed pawn"))
+    assertEquals(surfaceTechnique.horizonStatus, Some("converted"))
+    assertEquals(surfaceTechnique.triggerMove, Some("d7d8q"))
+    assert(surfaceTechnique.requiredSquares.contains("d8"), surfaceTechnique.requiredSquares)
+    assert(surfaceTechnique.maintainedSquares.contains("d8"), surfaceTechnique.maintainedSquares)
 
     val mate = LineConsequence(
       LineConsequenceKind.Mate,
