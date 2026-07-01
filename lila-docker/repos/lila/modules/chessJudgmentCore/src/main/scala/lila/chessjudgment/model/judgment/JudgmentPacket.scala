@@ -2710,11 +2710,17 @@ object MoveMeaningClaim:
       baseMeaningKind <- kind(detail, objectSignatures, None)
       if detailMatchesLine(frame, detail, verdict)
       baseClaimRole = role(baseMeaningKind, detail)
+      currentRouteLineRole =
+        Option.when(
+          detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
+            detail.structuralRouteMove.exists(move => sameMove(move, verdict.candidateLine.rootMove)) &&
+            pieceRouteQualifiedCarrierForMove(detail, objectSignatures, verdict.candidateLine.rootMove)
+        )("candidate")
       lineRoleOptions =
-        List(
+        (currentRouteLineRole.toList ++ List(
           lineRole(frame, detail, verdict, Nil),
           lineRole(frame, detail, verdict, linkedCauseFrames)
-        ).distinct
+        )).distinct
       claimOptions =
         lineRoleOptions.map { optionLineRole =>
           val optionMove = moveUci(verdict, optionLineRole)
@@ -4236,10 +4242,15 @@ object MoveMeaningClaim:
         val moves = moveTokens(List(signature))
         moves.contains(normalizedClaimMove) || (moves.isEmpty && detailMoveOwnsClaim)
       )
+    val routeTaggedPieceSubject =
+      detail.structuralMotifTags.exists(tag => tag.equalsIgnoreCase("route") || tag.equalsIgnoreCase("reroute")) &&
+        detail.structuralPurposeSubjects.exists(subject =>
+          StructuralPurposeSubject.parse(subject).exists(_.isInstanceOf[StructuralPurposeSubject.PieceRoute])
+        )
     moveOwnedObjectSignatures.exists(qualifiedRouteObjectSignature) ||
       (
         detailMoveOwnsClaim &&
-          detail.structuralPurposeSubjects.exists(qualifiedRouteSubjectToken)
+          (detail.structuralPurposeSubjects.exists(qualifiedRouteSubjectToken) || routeTaggedPieceSubject)
       )
 
   private def qualifiedRouteSubjectToken(subject: String): Boolean =

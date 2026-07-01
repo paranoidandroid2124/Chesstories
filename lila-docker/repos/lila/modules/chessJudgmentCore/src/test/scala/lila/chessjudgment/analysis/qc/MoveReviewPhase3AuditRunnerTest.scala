@@ -2543,6 +2543,45 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assert(!view.moveMeaningClaims.head.reasonTokens.contains("causeEvidenceId:cause-alt-activity"))
     assert(!view.moveMeaningClaims.head.reasonTokens.exists(_.startsWith("routeCarrier:")))
 
+  test("move meaning claims preserve route tagged current-move piece routes"):
+    val routeSignature =
+      "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated|proof=DirectProof"
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Gain:activity-gain"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      label = Some("activity-gain"),
+      candidateEvidenceIds = List("played-transition"),
+      referenceEvidenceIds = List("reference-transition"),
+      sourceEvidenceIds = List("structural-delta:played:e2e3", "structural-delta:reference:e2e3", "played-transition", "reference-transition"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof, RelativeCauseProofRole.ContrastProof),
+      objectBindingSignatures = List(routeSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis,
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralRouteRole = Some("Played"),
+      contrastOutcome = Some(StrategicAxisComparisonOutcome.SharedSustained),
+      structuralPurposeSubjects = List("knight:e2-e3", "knight:e2-e3:center+1", "knight:e2-e3:mobility+2"),
+      structuralPurposeConsequences = List("DevelopmentPieceActivated", "DevelopmentMobilityGain"),
+      structuralPurposeCategories = List("PieceActivity", "Development"),
+      structuralMotifTags = List("piece", "reroute", "route")
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(detail)
+    )
+
+    assertEquals(view.moveMeaningClaims.map(_.meaningKind), List("PieceRoute"))
+    assertEquals(view.moveMeaningClaims.map(_.supportLevel), List("view_surfaced"))
+    assertEquals(view.moveMeaningClaims.map(_.surfaceLane), List("current_move_function"))
+    assertEquals(view.moveMeaningClaims.map(_.lineRole), List("candidate"))
+    assertEquals(view.moveMeaningClaims.head.causeEvidenceIds, Nil)
+    assert(view.moveMeaningClaims.head.reasonTokens.contains("routePiece:knight"))
+    assert(view.moveMeaningClaims.head.reasonTokens.contains("routeFrom:e2"))
+    assert(view.moveMeaningClaims.head.reasonTokens.contains("routeTo:e3"))
+    assert(view.moveMeaningClaims.head.reasonTokens.contains("routeCarrier:reroute"))
+
   test("move meaning claims surface current-move structural route without cause ownership"):
     val routeSignature =
       "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated"
