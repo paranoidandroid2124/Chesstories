@@ -1503,7 +1503,7 @@ object CandidateComparisonDiagnostic:
     val comparisonMoveMeaningClaimSet = moveMeaningClaims.toSet
     val publicMoveMeaningClaims =
       packet.moveJudgmentView.toList
-        .flatMap(MoveMeaningSurface.publicClaimCandidates)
+        .flatMap(MoveMeaningSurface.publicClaimsForSurface)
         .filter(comparisonMoveMeaningClaimSet.contains)
     ComparisonMoveJudgmentViewDiagnostics(
       primaryCauseKinds = primaryFrames.map(_.causeKind).distinct,
