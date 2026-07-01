@@ -334,22 +334,23 @@ object PositionPlanTechniqueProjection:
       val units = positionPlanTechniqueUnits(payload, anchors)
       val objectBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, refs)
       val evidenceIds = refs.map(_.id).distinct.sorted
-      val relativeCauseEvidenceIds =
+      val candidateRelativeCauseEvidenceIds =
         relativeCauseEvidenceIdsFor(
           graph,
           evidenceIds.toSet,
           frameLine = ref.line,
           axisKeys = payload.axisDetails.map(_.stableKey).toSet
         )
-      val linkedEvidenceIds = (evidenceIds ++ relativeCauseEvidenceIds).toSet
-      val ideaIds = positionPlanTechniqueIdeaIds(ideas, linkedEvidenceIds)
-      val claimIds = positionPlanTechniqueClaimIds(claims, linkedEvidenceIds, ideaIds.toSet)
       val semanticDetails =
         positionPlanTechniqueEnrichedDetails(
           mechanismPlanTechniqueDetails(payload, units, anchors, graph, refs),
           graph,
-          (evidenceIds ++ relativeCauseEvidenceIds).distinct.sorted
+          (evidenceIds ++ candidateRelativeCauseEvidenceIds).distinct.sorted
         )
+      val relativeCauseEvidenceIds = semanticDetails.flatMap(_.causeEvidenceIds).distinct.sorted
+      val linkedEvidenceIds = (evidenceIds ++ relativeCauseEvidenceIds).toSet
+      val ideaIds = positionPlanTechniqueIdeaIds(ideas, linkedEvidenceIds)
+      val claimIds = positionPlanTechniqueClaimIds(claims, linkedEvidenceIds, ideaIds.toSet)
       val frameUnits = (units ++ semanticDetails.map(_.unit)).distinct.sortBy(_.toString)
       Option.when(units.nonEmpty) {
         PositionPlanTechniqueFrame(
@@ -398,7 +399,7 @@ object PositionPlanTechniqueProjection:
           .sortBy(_.toString)
       val objectBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, refs)
       val evidenceIds = refs.map(_.id).distinct.sorted
-      val relativeCauseEvidenceIds =
+      val candidateRelativeCauseEvidenceIds =
         relativeCauseEvidenceIdsFor(
           graph,
           evidenceIds.toSet,
@@ -408,15 +409,16 @@ object PositionPlanTechniqueProjection:
           frameLine = Some(payload.candidateLine),
           axisKeys = payload.axisKeys.toSet
         )
-      val linkedEvidenceIds = (evidenceIds ++ relativeCauseEvidenceIds).toSet
-      val ideaIds = positionPlanTechniqueIdeaIds(ideas, linkedEvidenceIds)
-      val claimIds = positionPlanTechniqueClaimIds(claims, linkedEvidenceIds, ideaIds.toSet)
       val semanticDetails =
         positionPlanTechniqueEnrichedDetails(
           contrastPlanTechniqueDetails(payload, anchors, graph, refs),
           graph,
-          (evidenceIds ++ relativeCauseEvidenceIds).distinct.sorted
+          (evidenceIds ++ candidateRelativeCauseEvidenceIds).distinct.sorted
         )
+      val relativeCauseEvidenceIds = semanticDetails.flatMap(_.causeEvidenceIds).distinct.sorted
+      val linkedEvidenceIds = (evidenceIds ++ relativeCauseEvidenceIds).toSet
+      val ideaIds = positionPlanTechniqueIdeaIds(ideas, linkedEvidenceIds)
+      val claimIds = positionPlanTechniqueClaimIds(claims, linkedEvidenceIds, ideaIds.toSet)
       val frameUnits = (units ++ semanticDetails.map(_.unit)).distinct.sortBy(_.toString)
       Option.when(units.nonEmpty) {
         PositionPlanTechniqueFrame(
@@ -879,6 +881,20 @@ object PositionPlanTechniqueProjection:
                   ))
               ).flatten.mkString("|")
             )
+          case Some(StructuralPurposeSubject.PieceRestriction(piece, square, blocker))
+              if positionPlanTechniqueStrategicRayRestrictionSubject(subject) =>
+            List(
+              (
+                detail.structuralRouteMove.map(move => s"actor=Move:${move.toLowerCase}") ::
+                  List(
+                    Some(s"actor=Piece:${piece.toLowerCase}"),
+                    Some(s"target=Square:${square.toLowerCase}"),
+                    Some(s"target=Square:${blocker.toLowerCase}"),
+                    Some("mechanism=Mechanism:diagonal-denial"),
+                    Some("consequence=Consequence:mobilityloss")
+                  )
+              ).flatten.mkString("|")
+            )
           case _ =>
             Nil
       }.distinct.sorted
@@ -1053,6 +1069,8 @@ object PositionPlanTechniqueProjection:
         positionPlanTechniqueQualifiedRouteSubject(subject)
       case Some(StructuralPurposeSubject.Outpost(_, _))       => true
       case Some(StructuralPurposeSubject.Battery(_, _, _, _)) => true
+      case Some(StructuralPurposeSubject.PieceRestriction(_, _, _)) =>
+        positionPlanTechniqueStrategicRayRestrictionSubject(subject)
       case _                                                  => false
 
   private def positionPlanTechniquePieceRouteSubject(subject: String): Boolean =
@@ -1060,6 +1078,8 @@ object PositionPlanTechniqueProjection:
       case Some(StructuralPurposeSubject.PieceRoute(_, _, _))   => true
       case Some(StructuralPurposeSubject.Outpost(_, _))          => true
       case Some(StructuralPurposeSubject.Battery(_, _, _, _))    => true
+      case Some(StructuralPurposeSubject.PieceRestriction(_, _, _)) =>
+        positionPlanTechniqueStrategicRayRestrictionSubject(subject)
       case _                                                    => false
 
   private def positionPlanTechniqueQualifiedRouteSubject(subject: String): Boolean =
@@ -1180,7 +1200,8 @@ object PositionPlanTechniqueProjection:
       evidenceIds: Set[String]
   ): List[(EvidenceRef, RelativeCauseFact)] =
     graph.records.collect {
-      case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) if relativeCauseEvidenceIds(cause).exists(evidenceIds.contains) =>
+      case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), parents)
+          if relativeCauseLinkedEvidenceIds(cause, parents).exists(evidenceIds.contains) =>
         ref -> cause
     }.distinctBy(_._1.id).sortBy(_._1.id)
 
@@ -1188,12 +1209,29 @@ object PositionPlanTechniqueProjection:
       cause: RelativeCauseFact,
       evidenceIds: Set[String]
   ): List[RelativeCauseProofRole] =
-    cause.proof.toList
-      .flatMap(_.sections)
-      .filter(section => positionPlanTechniqueProofSectionEvidenceIds(section).exists(evidenceIds.contains))
-      .map(_.role)
-      .distinct
-      .sortBy(_.toString)
+    (
+      cause.proof.toList
+        .flatMap(_.sections)
+        .filter(section => positionPlanTechniqueProofSectionEvidenceIds(section).exists(evidenceIds.contains))
+        .map(_.role) ++
+        positionPlanTechniqueAttributionProofRolesForEvidence(cause, evidenceIds)
+    ).distinct.sortBy(_.toString)
+
+  private def positionPlanTechniqueAttributionProofRolesForEvidence(
+      cause: RelativeCauseFact,
+      evidenceIds: Set[String]
+  ): List[RelativeCauseProofRole] =
+    List(
+      Option.when(cause.attribution.directProofEligible && cause.attribution.ownedEvidence.exists(ref => evidenceIds.contains(ref.id)))(
+        RelativeCauseProofRole.DirectProof
+      ),
+      Option.when(cause.attribution.contrastEvidence.exists(ref => evidenceIds.contains(ref.id)))(
+        RelativeCauseProofRole.ContrastProof
+      ),
+      Option.when(cause.attribution.contextEvidence.exists(ref => evidenceIds.contains(ref.id)))(
+        RelativeCauseProofRole.ContextSupport
+      )
+    ).flatten
 
   private def positionPlanTechniqueAdmissibleProofRoles(
       cause: RelativeCauseFact
@@ -1231,7 +1269,8 @@ object PositionPlanTechniqueProjection:
     else PositionPlanTechniqueSpecificityTier.ContextOnly
 
   private def positionPlanTechniqueNonBroadObjectSignature(signature: String): Boolean =
-    EvidenceObjectBinding.hasConcreteActorOrTargetSignature(signature)
+    EvidenceObjectBinding.playerFacingReadySignatures(List(signature)) ||
+      EvidenceObjectBinding.signatureTokens(List(signature), "target=").exists(EvidenceObjectBinding.concreteTargetToken)
 
   private def mechanismPlanTechniqueDetails(
       payload: StrategicMechanismEvidence,
@@ -1906,7 +1945,10 @@ object PositionPlanTechniqueProjection:
       (
         detail.raceLeadingLineRole.nonEmpty ||
           (detail.raceCandidateRootMove.nonEmpty && detail.raceReferenceRootMove.nonEmpty) ||
-          positionPlanTechniqueCounterplayPawnBreakRace(detail)
+          (
+            positionPlanTechniqueCounterplayPawnBreakRace(detail) &&
+              positionPlanTechniquePawnBreakRaceLineEvidence(detail)
+          )
       )
 
   private def positionPlanTechniqueCounterplayPawnBreakRace(detail: PositionPlanTechniqueSemanticDetail): Boolean =
@@ -1914,11 +1956,21 @@ object PositionPlanTechniqueProjection:
       detail.counterBreakFiles.exists(_.trim.nonEmpty) &&
       detail.semanticAnchorKeys.exists(_.startsWith("CounterplayRace:PawnBreak:"))
 
+  private def positionPlanTechniquePawnBreakRaceLineEvidence(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.raceLeadingLineRole.nonEmpty ||
+      (detail.raceCandidateRootMove.nonEmpty && detail.raceReferenceRootMove.nonEmpty)
+
   private def positionPlanTechniqueConcreteSubject(subject: String): Boolean =
     val normalized = subject.toLowerCase
-    normalized.matches(".*[a-h][1-8].*") ||
-      normalized.contains("file") ||
-      normalized.contains("diagonal")
+    if normalized.contains("diagonal-denial") then positionPlanTechniqueStrategicRayRestrictionSubject(normalized)
+    else
+      normalized.matches(".*[a-h][1-8].*") ||
+        normalized.contains("file") ||
+        normalized.contains("diagonal")
+
+  private def positionPlanTechniqueStrategicRayRestrictionSubject(subject: String): Boolean =
+    val normalized = subject.toLowerCase
+    normalized.matches(".*bishop:(g7|b7|g2|b2):diagonal-denial:blocked-by:[c-f][45]:locked-center:mobility-[0-9]+-to-[0-9]+.*")
 
   private def positionPlanTechniqueWithStructuralMotifs(
       detail: PositionPlanTechniqueSemanticDetail
@@ -1939,7 +1991,8 @@ object PositionPlanTechniqueProjection:
       StructuralPurposeSubject.parse(subject) match
         case Some(StructuralPurposeSubject.Battery(axis, _, _, _)) if axis.equalsIgnoreCase("diagonal") =>
           List("axis:Diagonal")
-        case Some(StructuralPurposeSubject.PieceRestriction(_, _, _)) =>
+        case Some(StructuralPurposeSubject.PieceRestriction(_, _, _))
+            if positionPlanTechniqueStrategicRayRestrictionSubject(subject) =>
           List("axis:Diagonal")
         case _ =>
           Nil
@@ -2188,32 +2241,8 @@ object PositionPlanTechniqueProjection:
   private def positionPlanTechniqueWithPawnBreakRaceDetails(
       details: List[PositionPlanTechniqueSemanticDetail]
   ): List[PositionPlanTechniqueSemanticDetail] =
-    val breakFiles =
-      details
-        .filter(positionPlanTechniquePawnBreakRaceSiblingCandidate)
-        .flatMap(_.breakFile.map(positionPlanTechniqueRaceToken))
-        .filter(_.nonEmpty)
-        .distinct
-        .sorted
-    val enrichedDetails =
-      details.map(positionPlanTechniqueWithSiblingCounterBreakFiles(_, breakFiles))
+    val enrichedDetails = details
     enrichedDetails ++ enrichedDetails.flatMap(positionPlanTechniquePawnBreakRaceDetail)
-
-  private def positionPlanTechniqueWithSiblingCounterBreakFiles(
-      detail: PositionPlanTechniqueSemanticDetail,
-      breakFiles: List[String]
-  ): PositionPlanTechniqueSemanticDetail =
-    if detail.unit != PositionPlanTechniqueUnit.TensionBreakPolicyRoute ||
-        !positionPlanTechniquePawnBreakTransitionEvidence(detail)
-    then detail
-    else
-      detail.breakFile.map(positionPlanTechniqueRaceToken).filter(_.nonEmpty) match
-        case Some(breakFile) =>
-          val siblingFiles = breakFiles.filter(file => file.nonEmpty && file != breakFile)
-          if siblingFiles.isEmpty then detail
-          else detail.copy(counterBreakFiles = (detail.counterBreakFiles ++ siblingFiles).distinct.sorted)
-        case None =>
-          detail
 
   private def positionPlanTechniquePawnBreakRaceDetail(
       detail: PositionPlanTechniqueSemanticDetail
@@ -2246,6 +2275,7 @@ object PositionPlanTechniqueProjection:
     detail.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
       detail.breakFile.exists(_.trim.nonEmpty) &&
       distinctCounterBreak &&
+      positionPlanTechniquePawnBreakRaceLineEvidence(detail) &&
       (
         detail.pawnPlayDriver.exists(driver =>
           val normalized = driver.toLowerCase
@@ -2255,14 +2285,6 @@ object PositionPlanTechniqueProjection:
         ) || positionPlanTechniquePawnBreakTransitionEvidence(detail)
       ) &&
       positionPlanTechniquePawnBreakTensionCarrier(detail)
-
-  private def positionPlanTechniquePawnBreakRaceSiblingCandidate(
-      detail: PositionPlanTechniqueSemanticDetail
-  ): Boolean =
-    detail.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
-      detail.breakFile.exists(_.trim.nonEmpty) &&
-      positionPlanTechniquePawnBreakTensionCarrier(detail) &&
-      positionPlanTechniquePawnBreakRaceSiblingEvidence(detail)
 
   private def positionPlanTechniquePawnBreakTensionCarrier(
       detail: PositionPlanTechniqueSemanticDetail
@@ -2279,18 +2301,6 @@ object PositionPlanTechniqueProjection:
         normalized.contains(":transition:played") ||
         normalized.contains(":transition:reference")
     )
-
-  private def positionPlanTechniquePawnBreakRaceSiblingEvidence(
-      detail: PositionPlanTechniqueSemanticDetail
-  ): Boolean =
-    positionPlanTechniquePawnBreakTransitionEvidence(detail) ||
-      detail.sourceEvidenceIds.exists(id =>
-        val normalized = id.toLowerCase
-        normalized.contains(":after-played") ||
-          normalized.contains(":after-reference") ||
-          normalized.contains(":structural-delta:played") ||
-          normalized.contains(":structural-delta:reference")
-      )
 
   private def positionPlanTechniqueRaceToken(raw: String): String =
     raw.trim.toLowerCase.replaceAll("[^a-z0-9]+", "-").stripPrefix("-").stripSuffix("-")
@@ -2532,8 +2542,8 @@ object PositionPlanTechniqueProjection:
       axisKeys: Set[String] = Set.empty
   ): List[String] =
     graph.records.collect {
-      case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _)
-          if relativeCauseEvidenceIds(cause).exists(evidenceIds.contains) &&
+      case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), parents)
+          if relativeCauseLinkedEvidenceIds(cause, parents).exists(evidenceIds.contains) &&
             comparisonKind.forall(_ == cause.comparisonKind) &&
             referenceLine.forall(_ == cause.referenceLine) &&
             candidateLine.forall(_ == cause.candidateLine) &&
@@ -2541,6 +2551,9 @@ object PositionPlanTechniqueProjection:
             axisKeysMatch(cause, axisKeys) =>
         ref.id
     }.distinct.sorted
+
+  private def relativeCauseLinkedEvidenceIds(cause: RelativeCauseFact, parents: List[EvidenceRef]): List[String] =
+    (relativeCauseEvidenceIds(cause) ++ parents.map(_.id)).distinct.sorted
 
   private def causeLineMatches(cause: RelativeCauseFact, line: LineNodeRef): Boolean =
     cause.referenceLine == line ||
@@ -2555,6 +2568,9 @@ object PositionPlanTechniqueProjection:
   private def relativeCauseEvidenceIds(cause: RelativeCauseFact): List[String] =
     (
       (cause.supportEvidence ++
+        cause.attribution.ownedEvidence ++
+        cause.attribution.contrastEvidence ++
+        cause.attribution.contextEvidence ++
         cause.proof.toList.flatMap(proof =>
           proof.directProof.sourceRefs ++ proof.contrastProof.sourceRefs ++ proof.contextSupport.sourceRefs
         )).map(_.id) ++ cause.strategicProofIdentity.signalSourceIds

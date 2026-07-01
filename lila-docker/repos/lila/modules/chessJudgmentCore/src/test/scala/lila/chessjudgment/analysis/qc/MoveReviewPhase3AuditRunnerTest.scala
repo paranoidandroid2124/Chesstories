@@ -630,6 +630,10 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
         positionPlanTechniqueObjectBindingSignatures = List("target=Pawn:e4|mechanism=Mechanism:pawn-break|proof=DirectProof"),
         positionPlanTechniqueRelativeCauseEvidenceIds = List("cause-central-break"),
+        moveMeaningClaimSurfaceSignatures =
+          List("unit=TensionBreakPolicyRoute|axis=PawnBreak:Support:central-break-timing|kind=PawnBreakTiming|support=owned_cause_linked|lane=current_move_owned|causes=cause-central-break"),
+        publicMoveMeaningClaimSurfaceSignatures =
+          List("unit=TensionBreakPolicyRoute|axis=PawnBreak:Support:central-break-timing|kind=PawnBreakTiming|support=owned_cause_linked|lane=current_move_owned|causes=cause-central-break"),
         primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
       )
     val borrowed =
@@ -681,6 +685,10 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
         positionPlanTechniqueObjectBindingSignatures = List("target=Pawn:e4|mechanism=Mechanism:pawn-break|proof=DirectProof"),
         positionPlanTechniqueRelativeCauseEvidenceIds = relativeCauseEvidenceIds,
+        moveMeaningClaimSurfaceSignatures =
+          List("unit=TensionBreakPolicyRoute|axis=PawnBreak:Support:central-break-timing|kind=PawnBreakTiming|support=owned_cause_linked|lane=current_move_owned|causes=cause-central-break"),
+        publicMoveMeaningClaimSurfaceSignatures =
+          List("unit=TensionBreakPolicyRoute|axis=PawnBreak:Support:central-break-timing|kind=PawnBreakTiming|support=owned_cause_linked|lane=current_move_owned|causes=cause-central-break"),
         primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
       )
     val slot =
@@ -877,6 +885,10 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueObjectBindingSignatures =
           List("target=Square:d8|mechanism=Mechanism:EndgameTechnique|proof=DirectProof"),
         positionPlanTechniqueRelativeCauseEvidenceIds = List(causeId),
+        moveMeaningClaimSurfaceSignatures =
+          List(s"unit=EndgameTechniqueRecipe|axis=none|kind=RookEndgameTechnique|support=owned_cause_linked|lane=current_move_owned|causes=$causeId"),
+        publicMoveMeaningClaimSurfaceSignatures =
+          List(s"unit=EndgameTechniqueRecipe|axis=none|kind=RookEndgameTechnique|support=owned_cause_linked|lane=current_move_owned|causes=$causeId"),
         primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
       )
 
@@ -1265,7 +1277,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "slots" \ 0 \ "objectBound").as[Boolean], false)
     assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "missing_semantic_slot")
 
-  test("recognition view slots can match semantic details without cause ownership"):
+  test("recognition view slots require semantic details to reach public surface"):
     val detailTokens =
       List(
         "unit:EndgameTechniqueRecipe",
@@ -1273,6 +1285,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         "rook-pattern:RookBehindPassedPawn",
         "requiredSquare:f8"
       )
+    val publicSurfaceSignature =
+      "unit=EndgameTechniqueRecipe|axis=none|kind=RookEndgameTechnique|support=view_surfaced|lane=current_move_function|causes=none"
     val diagnostic =
       comparisonDiagnostic(
         id = "cmp-rook-recognition-view",
@@ -1285,7 +1299,17 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueUnits = List(PositionPlanTechniqueUnit.EndgameTechniqueRecipe),
         positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.EndgameTechniqueRecipe),
         positionPlanTechniqueSemanticDetailTokens = detailTokens,
-        positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens)
+        positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
+        moveMeaningClaimSurfaceSignatures = List(publicSurfaceSignature),
+        publicMoveMeaningClaimSurfaceSignatures = List(publicSurfaceSignature)
+      )
+    val detailOnlyDiagnostic =
+      diagnostic.copy(
+        id = "cmp-rook-recognition-detail-only",
+        moveJudgmentView = diagnostic.moveJudgmentView.copy(
+          moveMeaningClaimSurfaceSignatures = Nil,
+          publicMoveMeaningClaimSurfaceSignatures = Nil
+        )
       )
     val recognitionSlot =
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
@@ -1302,11 +1326,15 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
     val coverage =
       MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(recognitionSlot, ownedSlot), List(diagnostic))
+    val detailOnlyCoverage =
+      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(recognitionSlot), List(detailOnlyDiagnostic))
 
     assertEquals((coverage \ "matchedSlotCount").as[Int], 1)
     assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "view_surfaced")
     assertEquals((coverage \ "slots" \ 0 \ "matched").as[Boolean], true)
     assertEquals((coverage \ "slots" \ 1 \ "matched").as[Boolean], false)
+    assertEquals((detailOnlyCoverage \ "matchedSlotCount").as[Int], 0)
+    assertEquals((detailOnlyCoverage \ "slots" \ 0 \ "terminalStage").as[String], "semantic_detected")
 
   test("resource contest view slots require concrete target binding"):
     val semanticTokens =
@@ -1329,7 +1357,11 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueUnits = List(PositionPlanTechniqueUnit.SpacePreventionResourceDenial),
         positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.SpacePreventionResourceDenial),
         positionPlanTechniqueSemanticDetailTokens = semanticTokens,
-        positionPlanTechniqueSemanticDetailTokenGroups = List(semanticTokens)
+        positionPlanTechniqueSemanticDetailTokenGroups = List(semanticTokens),
+        moveMeaningClaimSurfaceSignatures =
+          List("unit=SpacePreventionResourceDenial|axis=none|kind=CounterplayControl|support=view_surfaced|lane=current_move_function|causes=none"),
+        publicMoveMeaningClaimSurfaceSignatures =
+          List("unit=SpacePreventionResourceDenial|axis=none|kind=CounterplayControl|support=view_surfaced|lane=current_move_function|causes=none")
       )
     val sideOnlyDiagnostic =
       concreteDiagnostic.copy(
@@ -2537,8 +2569,17 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
     val surface = MoveMeaningSurface.from(view)
     assertEquals(surface.map(_.ideaType), List("piece_activity"))
-    assertEquals(surface.map(_.priority), List("secondary"))
+    assertEquals(surface.map(_.ideaQuality), List("supported"))
+    assertEquals(surface.map(_.priority), List("supporting"))
     assert(!claim.reasonTokens.exists(_.startsWith("routeCarrier:")))
+    val badSurface = MoveMeaningSurface.from(
+      meaningClaimView(
+        verdict = MoveChoiceVerdict.Mistake,
+        auditCauses = Nil,
+        details = Nil
+      ).copy(moveMeaningClaims = List(claim.copy(causeKinds = List(RelativeCauseKind.TempoLoss))))
+    )
+    assertEquals(badSurface, Nil)
 
   test("move meaning claims do not call bare weak-square target pressure a piece route"):
     val targetSignature =
@@ -2890,6 +2931,28 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       label = Some("counterplay-race-e-vs-e"),
       counterBreakFiles = List("e")
     )
+    val captureCandidateLine = lineRef("played-capture", "e2d3", 2, LineNodeRole.Played)
+    val captureReferenceLine = lineRef("best-capture", "g1f3", 1, LineNodeRole.BestReference)
+    val captureToFilePawnBreakRace = pawnBreakRace.copy(
+      axisKey = Some("PawnBreak:Support:break-file-d-created-tension-e2-d3"),
+      label = Some("counterplay-race-d-vs-e"),
+      raceCandidateRootMove = Some(captureCandidateLine.rootMove),
+      raceReferenceRootMove = Some(captureReferenceLine.rootMove),
+      sourceEvidenceIds = List("structural-delta:played:e2d3", "played-transition"),
+      objectBindingSignatures =
+        List("actor=Move:e2d3|target=File:d|mechanism=Mechanism:pawnbreak|mechanism=Mechanism:counterplayrace"),
+      breakFile = Some("d"),
+      tensionEdges = List("e2-d3"),
+      counterBreakFiles = List("e")
+    )
+    val captureFromFilePawnBreakRace = captureToFilePawnBreakRace.copy(
+      axisKey = Some("PawnBreak:Support:break-file-e-created-tension-e2-d3"),
+      label = Some("counterplay-race-e-vs-d"),
+      objectBindingSignatures =
+        List("actor=Move:e2d3|target=File:e|mechanism=Mechanism:pawnbreak|mechanism=Mechanism:counterplayrace"),
+      breakFile = Some("e"),
+      counterBreakFiles = List("d")
+    )
     val delaysOpponentRace = raceDetail.copy(
       causeEvidenceIds = Nil,
       proofRoles = List(RelativeCauseProofRole.DirectProof),
@@ -2955,6 +3018,20 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       auditCauses = Nil,
       details = List(allowedCounterplayRace)
     )
+    val captureToFilePawnBreakRaceView = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(captureToFilePawnBreakRace),
+      reference = captureReferenceLine,
+      candidate = captureCandidateLine
+    )
+    val captureFromFilePawnBreakRaceView = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(captureFromFilePawnBreakRace),
+      reference = captureReferenceLine,
+      candidate = captureCandidateLine
+    )
     val delaysOpponentRaceView = meaningClaimView(
       verdict = MoveChoiceVerdict.MatchesReference,
       auditCauses = Nil,
@@ -2985,6 +3062,9 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(allowedCounterplayRaceView.moveMeaningClaims.head.surfaceLane, "current_move_function")
     assert(allowedCounterplayRaceView.moveMeaningClaims.head.reasonTokens.contains("raceRole:allows_opponent_race"))
     assert(allowedCounterplayRaceView.moveMeaningClaims.head.reasonTokens.contains("raceTempoOrder:opponent_arrives_first"))
+    assertEquals(captureToFilePawnBreakRaceView.moveMeaningClaims.map(_.meaningKind), List("CounterplayRace"))
+    assert(captureToFilePawnBreakRaceView.moveMeaningClaims.head.reasonTokens.contains("raceBreakFile:d"))
+    assertEquals(captureFromFilePawnBreakRaceView.moveMeaningClaims, Nil)
     assertEquals(actorOnlyView.moveMeaningClaims, Nil)
     assertEquals(restraintOnlyView.moveMeaningClaims, Nil)
     assertEquals(counterBreakOnlyView.moveMeaningClaims, Nil)
@@ -3130,6 +3210,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     )
 
     assertEquals(broadView.moveMeaningClaims.headOption.map(_.supportLevel), Some("contextual"))
+    assertEquals(MoveMeaningSurface.from(broadView), Nil)
     assertEquals(broadActivitySupportView.moveMeaningClaims, Nil)
     assertEquals(pawnActivityAsRouteView.moveMeaningClaims.headOption.map(_.supportLevel), Some("view_surfaced"))
     assertEquals(routeMotifWithoutPieceObjectView.moveMeaningClaims.headOption.map(_.supportLevel), Some("view_surfaced"))
@@ -3435,7 +3516,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     val surface = MoveMeaningSurface.from(view)
     assertEquals(surface.map(_.subject), List("reference_move"))
     assertEquals(surface.map(_.moveQuality), List("not_applicable"))
-    assertEquals(surface.map(_.priority), List("alternative"))
+    assertEquals(surface.map(_.priority), List("comparison"))
     assertEquals(surface.flatMap(_.failureFamily), Nil)
     assertEquals(surface.flatMap(_.problem), Nil)
     assertEquals(surface.flatMap(_.comparisonLossSides), List("candidate"))
@@ -3997,7 +4078,9 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       verdict: MoveChoiceVerdict,
       comparisonKind: CandidateComparisonKind = CandidateComparisonKind.PlayedVsBest,
       auditCauses: List[MoveJudgmentCauseFrame],
-      details: List[PositionPlanTechniqueSemanticDetail]
+      details: List[PositionPlanTechniqueSemanticDetail],
+      reference: LineNodeRef = referenceLine,
+      candidate: LineNodeRef = candidateLine
   ): MoveJudgmentView =
     val base =
       MoveJudgmentView(
@@ -4009,13 +4092,13 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
           relativeAssessmentEvidenceId = "relative-assessment",
           verdictCertificationEvidenceId = None,
           comparisonKind = comparisonKind,
-          referenceLine = referenceLine,
-          candidateLine = candidateLine
+          referenceLine = reference,
+          candidateLine = candidate
         )
       ),
       verdictCarriers = Nil,
       causeAudit = MoveJudgmentCauseAudit(context = auditCauses),
-      positionPlanTechniqueFrames = List(meaningClaimPlanTechniqueFrame(details)),
+      positionPlanTechniqueFrames = List(meaningClaimPlanTechniqueFrame(details, candidate)),
       supportContextClusterIds = Nil,
       overriddenLocalIdeas = Nil,
       preservedLocalIdeas = Nil
@@ -4028,14 +4111,15 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     cleared.copy(moveMeaningClaims = claims)
 
   private def meaningClaimPlanTechniqueFrame(
-      details: List[PositionPlanTechniqueSemanticDetail]
+      details: List[PositionPlanTechniqueSemanticDetail],
+      candidate: LineNodeRef = candidateLine
   ): PositionPlanTechniqueFrame =
     PositionPlanTechniqueFrame(
       id = "frame-move-meaning",
       units = details.map(_.unit).distinct.sortBy(_.toString),
       position = meaningClaimPosition,
-      line = Some(candidateLine),
-      moveUci = Some(candidateLine.rootMove),
+      line = Some(candidate),
+      moveUci = Some(candidate.rootMove),
       scope = EvidenceScope.PlayedTransition,
       mechanismKinds = details.flatMap(_.mechanismKinds).distinct.sortBy(_.toString),
       strategicAxisKeys = details.flatMap(_.axisKey).distinct.sorted,
@@ -4077,6 +4161,10 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       positionPlanTechniqueObjectBindingSignatures =
         List("target=Square:d8|mechanism=Mechanism:EndgameTechniqueHorizon|proof=DirectProof"),
       positionPlanTechniqueRelativeCauseEvidenceIds = List(causeId),
+      moveMeaningClaimSurfaceSignatures =
+        List(s"unit=$unit|axis=none|kind=RookEndgameTechnique|support=owned_cause_linked|lane=current_move_owned|causes=$causeId"),
+      publicMoveMeaningClaimSurfaceSignatures =
+        List(s"unit=$unit|axis=none|kind=RookEndgameTechnique|support=owned_cause_linked|lane=current_move_owned|causes=$causeId"),
       primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
     )
 
@@ -4139,6 +4227,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       positionPlanTechniqueObjectBindingSignatures: List[String] = Nil,
       positionPlanTechniqueEvidenceIds: List[String] = Nil,
       positionPlanTechniqueRelativeCauseEvidenceIds: List[String] = Nil,
+      moveMeaningClaimSurfaceSignatures: List[String] = Nil,
+      publicMoveMeaningClaimSurfaceSignatures: List[String] = Nil,
       rootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier] = Nil,
       primaryRootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier] = Nil,
       primaryRootCauseEvidenceIdTierSignatures: List[String] = Nil,
@@ -4249,7 +4339,9 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailTokenGroups = positionPlanTechniqueSemanticDetailTokenGroups,
         positionPlanTechniqueObjectBindingSignatures = positionPlanTechniqueObjectBindingSignatures,
         positionPlanTechniqueEvidenceIds = positionPlanTechniqueEvidenceIds,
-        positionPlanTechniqueRelativeCauseEvidenceIds = positionPlanTechniqueRelativeCauseEvidenceIds
+        positionPlanTechniqueRelativeCauseEvidenceIds = positionPlanTechniqueRelativeCauseEvidenceIds,
+        moveMeaningClaimSurfaceSignatures = moveMeaningClaimSurfaceSignatures,
+        publicMoveMeaningClaimSurfaceSignatures = publicMoveMeaningClaimSurfaceSignatures
       ),
       advisoryCauseHints = Nil,
       significanceReasons = List(CandidateComparisonSignificanceReason.PlayedLoss),

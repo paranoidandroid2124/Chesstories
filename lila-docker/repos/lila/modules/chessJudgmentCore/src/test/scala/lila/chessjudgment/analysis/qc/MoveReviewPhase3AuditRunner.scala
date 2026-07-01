@@ -1846,7 +1846,9 @@ object MoveReviewPhase3AuditRunner:
       "moveMeaningClaimSupportLevels" -> diagnostic.moveMeaningClaimSupportLevels,
       "moveMeaningClaimVisibility" -> diagnostic.moveMeaningClaimVisibility,
       "moveMeaningClaimSurfaceLanes" -> diagnostic.moveMeaningClaimSurfaceLanes,
-      "moveMeaningClaimLaneKeys" -> diagnostic.moveMeaningClaimLaneKeys
+      "moveMeaningClaimLaneKeys" -> diagnostic.moveMeaningClaimLaneKeys,
+      "moveMeaningClaimSurfaceSignatures" -> diagnostic.moveMeaningClaimSurfaceSignatures,
+      "publicMoveMeaningClaimSurfaceSignatures" -> diagnostic.publicMoveMeaningClaimSurfaceSignatures
     )
 
   private def relativeCauseDiagnosticsJson(diagnostic: ComparisonRelativeCauseDiagnostics): JsObject =

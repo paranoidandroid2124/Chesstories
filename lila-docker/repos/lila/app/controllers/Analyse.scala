@@ -54,20 +54,25 @@ final class Analyse(
           MoveReviewJudgmentOrchestrator.build(raw).fold(
             BadRequest(Json.obj("ok" -> false, "error" -> "move_review_not_buildable")).toFuccess
           ): result =>
+            val status = publicReviewStatus(result.validation.isValid, result.quality.audit.isClean)
+            val renderable = status == "ready"
             JsonOk(
               Json.obj(
                 "ok" -> true,
-                "status" -> publicReviewStatus(result.validation.isValid, result.quality.audit.isClean),
-                "move_review" -> result.packet.moveJudgmentView.map(moveJudgmentViewMeaningJson)
+                "status" -> status,
+                "move_review" -> result.packet.moveJudgmentView.map(moveJudgmentViewMeaningJson(_, renderable))
               )
             ).toFuccess
       )
 
-  private def moveJudgmentViewMeaningJson(view: MoveJudgmentView): JsObject =
-    Json.obj(
-      "verdict" -> view.verdict.map(frame => publicVerdictJson(MoveMeaningSurface.verdict(frame))),
-      "move_semantics" -> MoveMeaningSurface.from(view).take(12).map(publicMoveSemanticJson)
-    )
+  private def moveJudgmentViewMeaningJson(view: MoveJudgmentView, renderable: Boolean): JsObject =
+    Json.obj("renderable" -> renderable) ++
+      (if renderable then
+         Json.obj(
+           "verdict" -> view.verdict.map(frame => publicVerdictJson(MoveMeaningSurface.verdict(frame))),
+           "move_semantics" -> MoveMeaningSurface.from(view).map(publicMoveSemanticJson)
+         )
+       else Json.obj())
 
   private def publicReviewStatus(valid: Boolean, qualityClean: Boolean): String =
     if valid && qualityClean then "ready" else "needs_review"
@@ -90,7 +95,31 @@ final class Analyse(
       "failure_family" -> surface.failureFamily,
       "problem" -> surface.problem,
       "target" -> publicTargetJson(surface.target),
-      "priority" -> surface.priority
+      "priority" -> surface.priority,
+      "comparison_loss_sides" -> surface.comparisonLossSides,
+      "comparison_losses" -> surface.comparisonLosses,
+      "endgame_technique" -> surface.endgameTechnique.map(publicEndgameTechniqueJson),
+      "comparison" -> surface.comparison.map(publicComparisonJson)
+    )
+
+  private def publicEndgameTechniqueJson(technique: MoveMeaningSurfaceEndgameTechnique): JsObject =
+    Json.obj(
+      "pattern" -> technique.pattern,
+      "rook_pattern" -> technique.rookPattern,
+      "side" -> technique.side,
+      "horizon_status" -> technique.horizonStatus,
+      "trigger_move" -> technique.triggerMove,
+      "required_squares" -> technique.requiredSquares,
+      "maintained_squares" -> technique.maintainedSquares,
+      "broken_squares" -> technique.brokenSquares
+    )
+
+  private def publicComparisonJson(comparison: MoveMeaningSurfaceComparison): JsObject =
+    Json.obj(
+      "kind" -> comparison.kind,
+      "reference_move" -> comparison.referenceMove,
+      "candidate_move" -> comparison.candidateMove,
+      "second_move" -> comparison.secondMove
     )
 
   private def publicTargetJson(target: MoveMeaningSurfaceTarget): JsObject =

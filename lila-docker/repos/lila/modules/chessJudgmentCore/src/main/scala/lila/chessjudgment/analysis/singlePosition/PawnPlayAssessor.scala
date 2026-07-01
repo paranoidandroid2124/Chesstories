@@ -54,7 +54,7 @@ object PawnPlayAssessor:
       val advanceOrCapture = checkTensionResolution(features, positionAssessment)
       val (urgency, blockade, blockadeSq, blockadeRole, support) = analyzePassedPawns(features, board, isWhite)
       val minorityAttack = checkMinorityAttack(board, isWhite)
-      val counterBreakFiles = extractCounterBreakFiles(motifs, isWhite)
+      val counterBreakFiles = extractCounterBreakFiles(features, motifs, board, isWhite)
       val counterBreak = counterBreakFiles.nonEmpty
       val tensionPolicy = computeTensionPolicy(features, positionAssessment, breakReady, advanceOrCapture)
       val tensionSquares = extractTensionSquares(board)
@@ -119,6 +119,13 @@ object PawnPlayAssessor:
     board: Board,
     isWhite: Boolean
   ): Option[BreakCandidate] =
+    detectBoardBreakCandidates(features, board, isWhite).headOption
+
+  private def detectBoardBreakCandidates(
+    features: PositionFeatures,
+    board: Board,
+    isWhite: Boolean
+  ): List[BreakCandidate] =
     val color = if isWhite then Color.White else Color.Black
     val enemy = !color
     val myPawns = board.byPiece(color, Pawn)
@@ -151,9 +158,8 @@ object PawnPlayAssessor:
     val centralAdvanceLevers =
       myPawns.squares.flatMap(pawnSq => centralAdvanceBreak(features, board, pawnSq, color))
 
-    (captureLevers ++ centralAdvanceLevers)
+    (captureLevers ++ centralAdvanceLevers).toList
       .sortBy(candidate => -candidate.priority)
-      .headOption
 
   private def centralAdvanceBreak(
     features: PositionFeatures,
@@ -362,13 +368,18 @@ object PawnPlayAssessor:
     myQSide > 0 && myQSide < oppQSide
 
   private def extractCounterBreakFiles(
+    features: PositionFeatures,
     motifs: List[Motif],
+    board: Board,
     isWhite: Boolean
   ): List[String] =
-    motifs.collect {
+    val motifFiles = motifs.collect {
       case m: Motif.PawnBreak if !colorMatches(m.color, isWhite) =>
         m.file.char.toString.toLowerCase
-    }.distinct.sorted
+    }
+    val potentialFiles =
+      detectBoardBreakCandidates(features, board, !isWhite).map(_.file)
+    (motifFiles ++ potentialFiles).distinct.sorted
 
   private def computeTensionPolicy(
     features: PositionFeatures,

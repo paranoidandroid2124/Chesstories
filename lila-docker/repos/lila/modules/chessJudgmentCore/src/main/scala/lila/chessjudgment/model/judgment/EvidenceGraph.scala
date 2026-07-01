@@ -91,7 +91,7 @@ final case class EvidenceObjectBinding(
     target.nonEmpty ||
       (actor.nonEmpty && (mechanism.nonEmpty || consequence.nonEmpty))
   def playerFacingReady: Boolean =
-    target.nonEmpty &&
+    target.exists(EvidenceObjectBinding.specificSurfaceTargetObject) &&
       mechanism.nonEmpty &&
       (consequence.nonEmpty || witness.nonEmpty) &&
       proofRole.forall(_ != RelativeCauseProofRole.ContextSupport)
@@ -180,12 +180,6 @@ object EvidenceObjectBinding:
     val prefix = s"$role=$kind:"
     signatureTokens(signatures, prefix).toList.map(_.drop(prefix.length)).sorted
 
-  private[chessjudgment] def hasConcreteActorOrTargetSignature(signature: String): Boolean =
-    signatureParts(signature).exists(part =>
-      (part.toLowerCase.startsWith("target=") || part.toLowerCase.startsWith("actor=")) &&
-        !part.toLowerCase.contains("=side:")
-    )
-
   private[chessjudgment] def concreteTargetToken(token: String): Boolean =
     !token.toLowerCase.contains("=side:") &&
       (
@@ -204,9 +198,6 @@ object EvidenceObjectBinding:
           token.toLowerCase.contains("square:") ||
         token.toLowerCase.matches(".*[a-h][1-8].*")
       )
-
-  private[chessjudgment] def directProofSurfaceObjectReady(signatures: Iterable[String]): Boolean =
-    signaturesForProofRole(signatures, Some(RelativeCauseProofRole.DirectProof)).exists(surfaceReadyObjectSignature)
 
   private[chessjudgment] def directProofSpecificTargetReady(signatures: Iterable[String]): Boolean =
     signaturesForProofRole(signatures, Some(RelativeCauseProofRole.DirectProof)).exists(specificTargetSurfaceReadySignature)
@@ -240,9 +231,18 @@ object EvidenceObjectBinding:
       (
         normalized.startsWith("target=plansubject:") && {
           val subject = normalized.stripPrefix("target=plansubject:")
-          subject.contains(":") || subject.matches(".*[a-h][1-8].*")
+          subject.matches(".*[a-h][1-8].*")
         }
       )
+
+  private[chessjudgment] def specificSurfaceTargetObject(obj: ConcreteChessObject): Boolean =
+    obj.kind match
+      case EvidenceObjectKind.Square | EvidenceObjectKind.File | EvidenceObjectKind.Pawn | EvidenceObjectKind.Piece =>
+        true
+      case EvidenceObjectKind.PlanSubject =>
+        obj.key.toLowerCase.matches(".*[a-h][1-8].*")
+      case _ =>
+        false
 
   def playerFacingReady(bindings: List[EvidenceObjectBinding]): Boolean =
     bindings.exists(_.playerFacingReady)
@@ -3721,17 +3721,23 @@ object StructuralDeltaEvidence:
     val normalized = Option(subject).getOrElse("").trim.toLowerCase
     normalized match
       case opponentMobilityRestrictionSubject(bishopSquare, blockerSquare, before, after) =>
-        Set("g7", "b7", "g2", "b2").contains(bishopSquare) &&
-          blockerSquare.matches("[c-f][45]") &&
+        fianchettoBishopSquare(bishopSquare) &&
+          centralDiagonalBlockerSquare(blockerSquare) &&
           after.toIntOption.exists(afterValue => before.toIntOption.exists(beforeValue => afterValue < beforeValue))
       case _ =>
         false
+
+  private def fianchettoBishopSquare(square: String): Boolean =
+    Set("g7", "b7", "g2", "b2").contains(square.toLowerCase)
+
+  private def centralDiagonalBlockerSquare(square: String): Boolean =
+    square.toLowerCase.matches("[c-f][45]")
 
   private def consequenceKindsFor(category: TransitionConsequenceCategory): Set[TransitionConsequenceKind] =
     consequenceCategories.collect { case (kind, categories) if categories.contains(category) => kind }.toSet
 
   private val opponentMobilityRestrictionSubject =
-    raw"bishop:(g7|b7|g2|b2):diagonal-denial:blocked-by:([c-f][45]):locked-center:mobility-([0-9]+)-to-([0-9]+)".r
+    raw"bishop:([a-h][1-8]):diagonal-denial:blocked-by:([a-h][1-8]):locked-center:mobility-([0-9]+)-to-([0-9]+)".r
 
   private lazy val consequenceCategories: Map[TransitionConsequenceKind, Set[TransitionConsequenceCategory]] =
     Map(

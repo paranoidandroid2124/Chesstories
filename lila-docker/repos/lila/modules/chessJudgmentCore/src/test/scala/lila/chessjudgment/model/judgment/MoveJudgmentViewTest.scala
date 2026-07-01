@@ -222,13 +222,13 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     val frame = view.positionPlanTechniqueFrames.head
     assert(frame.relativeCauseEvidenceIds.contains(causeRef.id), frame.relativeCauseEvidenceIds)
     assert(!frame.relativeCauseEvidenceIds.contains(unrelatedCauseRef.id), frame.relativeCauseEvidenceIds)
-    assert(frame.relativeCauseEvidenceIds.contains(sameAxisTacticalCauseRef.id), frame.relativeCauseEvidenceIds)
+    assert(!frame.relativeCauseEvidenceIds.contains(sameAxisTacticalCauseRef.id), frame.relativeCauseEvidenceIds)
     assertEquals(frame.ideaIds, List(ideaRef.id))
     assertEquals(frame.claimIds, List(claim.id))
     val detail = frame.semanticDetails.find(_.axisKey.contains(axis.stableKey)).get
     assertEquals(detail.causeEvidenceIds, List(causeRef.id))
     assert(detail.proofRoles.contains(RelativeCauseProofRole.DirectProof), detail.proofRoles)
-    assertEquals(detail.specificityTier, PositionPlanTechniqueSpecificityTier.ExactObjectAxis)
+    assertEquals(detail.specificityTier, PositionPlanTechniqueSpecificityTier.BroadAxis)
     assert(detail.objectBindingSignatures.exists(_.contains("proof=DirectProof")), detail.objectBindingSignatures)
     assert(!detail.objectBindingSignatures.exists(_.contains("proof=ContextSupport")), detail.objectBindingSignatures)
     assert(detail.objectBindingSignatures.exists(_.contains("target=PlanSubject:centralbreakthrough")), detail.objectBindingSignatures)
@@ -1164,7 +1164,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     )
     val surface = MoveMeaningSurface.from(view).find(_.ideaType == "ray_denial").getOrElse(fail(MoveMeaningSurface.from(view).toString))
     assertEquals(surface.subject, "played_move")
-    assertEquals(surface.priority, "primary")
+    assertEquals(surface.priority, "main")
     assertEquals(surface.target.pieces, List("bishop"))
     assertEquals(surface.target.squares, List("e5", "g7"))
 
@@ -2798,7 +2798,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     val activityFrame = view.causeAudit.secondary.find(_.causeKind == RelativeCauseKind.ActivityLoss).get
     val tacticalFrame = view.causeAudit.primary.find(_.causeKind == RelativeCauseKind.TacticalRefutationOfPlayed).get
     assertEquals(view.causeAudit.primary.map(_.causeKind), List(RelativeCauseKind.TacticalRefutationOfPlayed))
-    assertEquals(activityFrame.concreteObjectReady, true)
+    assertEquals(activityFrame.concreteObjectReady, false)
     assertEquals(activityFrame.narrativeRole, MoveJudgmentCauseNarrativeRole.SupportingCause)
     assertEquals(activityFrame.rootArbitrationTier, MoveJudgmentCauseRootArbitrationTier.BroadOwnedRoot)
     assertEquals(tacticalFrame.narrativeRole, MoveJudgmentCauseNarrativeRole.RootCause)

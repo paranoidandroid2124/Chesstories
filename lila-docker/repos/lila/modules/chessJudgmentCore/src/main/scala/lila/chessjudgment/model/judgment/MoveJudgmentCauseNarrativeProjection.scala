@@ -109,12 +109,17 @@ object MoveJudgmentCauseNarrativeProjection:
       profile.eventKind &&
         (profile.tier == MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot || profile.tier == MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
     }
+    val terminalEventRoots = eventRoots.filter { case (frame, _) => terminalProofEventRoot(frame) }
     val fallbackRoots = profiled.filter { case (_, profile) => profile.tier == MoveJudgmentCauseRootArbitrationTier.FallbackRoot }
     val selected =
-      if qualifiedLongTermRoots.nonEmpty then qualifiedLongTermRoots.map(_._1)
+      if terminalEventRoots.nonEmpty then selectedEventRootFrames(terminalEventRoots.map(_._1))
+      else if qualifiedLongTermRoots.nonEmpty then qualifiedLongTermRoots.map(_._1)
       else if eventRoots.nonEmpty then selectedEventRootFrames(eventRoots.map(_._1))
       else selectedFallbackRootFrames(fallbackRoots.map(_._1))
     selected.distinctBy(causeFrameIdentity)
+
+  private def terminalProofEventRoot(frame: MoveJudgmentCauseFrame): Boolean =
+    frame.proofLineConsequences.exists(LineEndgameTechniqueHorizon.terminalProofOverrides)
 
   private def selectedEventRootFrames(frames: List[MoveJudgmentCauseFrame]): List[MoveJudgmentCauseFrame] =
     frames.sortBy(eventRootSortKey).lastOption.toList
@@ -218,10 +223,7 @@ object MoveJudgmentCauseNarrativeProjection:
     )
 
   private def rootArbitrationObjectReady(frame: MoveJudgmentCauseFrame): Boolean =
-    frame.concreteObjectReady || directProofSurfaceObjectReady(frame)
-
-  private def directProofSurfaceObjectReady(frame: MoveJudgmentCauseFrame): Boolean =
-    EvidenceObjectBinding.directProofSurfaceObjectReady(frame.objectBindingSignatures)
+    frame.concreteObjectReady || directProofSpecificTargetReady(frame)
 
   private def directProofSpecificTargetReady(frame: MoveJudgmentCauseFrame): Boolean =
     EvidenceObjectBinding.directProofSpecificTargetReady(frame.objectBindingSignatures)

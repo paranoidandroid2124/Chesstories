@@ -787,7 +787,9 @@ final case class ComparisonMoveJudgmentViewDiagnostics(
     moveMeaningClaimSupportLevels: List[String] = Nil,
     moveMeaningClaimVisibility: List[String] = Nil,
     moveMeaningClaimSurfaceLanes: List[String] = Nil,
-    moveMeaningClaimLaneKeys: List[String] = Nil
+    moveMeaningClaimLaneKeys: List[String] = Nil,
+    moveMeaningClaimSurfaceSignatures: List[String] = Nil,
+    publicMoveMeaningClaimSurfaceSignatures: List[String] = Nil
 ):
   val hasPrimaryCause: Boolean = primaryCauseKinds.nonEmpty
 
@@ -1496,7 +1498,13 @@ object CandidateComparisonDiagnostic:
     val planTechniqueFrames = comparisonPositionPlanTechniqueFrames(packet, fact, comparisonPosition)
     val allFrames = primaryFrames ++ secondaryFrames ++ contextFrames
     val primaryRootFrames = primaryFrames.filter(_.narrativeRole == MoveJudgmentCauseNarrativeRole.RootCause)
-    val moveMeaningClaims = comparisonMoveMeaningClaims(packet, fact)
+    val moveMeaningClaims =
+      comparisonMoveMeaningClaims(packet, fact, planTechniqueFrames.map(_.id).toSet)
+    val comparisonMoveMeaningClaimSet = moveMeaningClaims.toSet
+    val publicMoveMeaningClaims =
+      packet.moveJudgmentView.toList
+        .flatMap(MoveMeaningSurface.publicClaimCandidates)
+        .filter(comparisonMoveMeaningClaimSet.contains)
     ComparisonMoveJudgmentViewDiagnostics(
       primaryCauseKinds = primaryFrames.map(_.causeKind).distinct,
       secondaryCauseKinds = secondaryFrames.map(_.causeKind).distinct,
@@ -1554,8 +1562,8 @@ object CandidateComparisonDiagnostic:
         positionPlanTechniqueSemanticDetailTokens(planTechniqueFrames),
       positionPlanTechniqueSemanticDetailTokenGroups =
         positionPlanTechniqueSemanticDetailTokenGroups(planTechniqueFrames),
-        positionPlanTechniqueObjectBindingSignatures =
-          positionPlanTechniqueObjectBindingSignatures(planTechniqueFrames),
+      positionPlanTechniqueObjectBindingSignatures =
+        positionPlanTechniqueObjectBindingSignatures(planTechniqueFrames),
       positionPlanTechniqueEvidenceIds = planTechniqueFrames.flatMap(_.evidenceIds).distinct.sorted,
       positionPlanTechniqueRelativeCauseEvidenceIds = planTechniqueFrames.flatMap(_.relativeCauseEvidenceIds).distinct.sorted,
       moveMeaningClaimKinds = moveMeaningClaims.map(_.meaningKind).distinct.sorted,
@@ -1563,19 +1571,43 @@ object CandidateComparisonDiagnostic:
       moveMeaningClaimSupportLevels = moveMeaningClaims.map(_.supportLevel).distinct.sorted,
       moveMeaningClaimVisibility = moveMeaningClaims.map(_.visibility).distinct.sorted,
       moveMeaningClaimSurfaceLanes = moveMeaningClaims.map(_.surfaceLane).distinct.sorted,
-      moveMeaningClaimLaneKeys = moveMeaningClaims.map(_.laneKey).distinct.sorted
+      moveMeaningClaimLaneKeys = moveMeaningClaims.map(_.laneKey).distinct.sorted,
+      moveMeaningClaimSurfaceSignatures =
+        moveMeaningClaims.map(moveMeaningClaimSurfaceSignature).distinct.sorted,
+      publicMoveMeaningClaimSurfaceSignatures =
+        publicMoveMeaningClaims.map(moveMeaningClaimSurfaceSignature)
+          .distinct
+          .sorted
     )
 
   private def comparisonMoveMeaningClaims(
       packet: EvidenceBackedJudgmentPacket,
-      fact: CandidateComparisonFact
+      fact: CandidateComparisonFact,
+      comparisonFrameIds: Set[String]
   ): List[MoveMeaningClaim] =
     val referenceMove = JudgmentSubjectBinding.normalizeMove(fact.referenceLine.rootMove)
     val candidateMove = JudgmentSubjectBinding.normalizeMove(fact.candidateLine.rootMove)
     packet.moveJudgmentView.toList.flatMap(_.moveMeaningClaims).filter { claim =>
       val move = JudgmentSubjectBinding.normalizeMove(claim.moveUci)
-      move == referenceMove || move == candidateMove
+      comparisonFrameIds.contains(claim.frameId) &&
+        (move == referenceMove || move == candidateMove)
     }
+
+  private def moveMeaningClaimSurfaceSignature(claim: MoveMeaningClaim): String =
+    val axis = claim.axisKey.getOrElse("none")
+    val causes = claim.causeEvidenceIds.sorted.mkString(",") match
+      case ""    => "none"
+      case value => value
+    List(
+      s"unit=${claim.unit}",
+      s"axis=$axis",
+      s"kind=${claim.meaningKind}",
+      s"support=${claim.supportLevel}",
+      s"lane=${claim.surfaceLane}",
+      s"lineRole=${claim.lineRole}",
+      s"move=${claim.moveUci}",
+      s"causes=$causes"
+    ).mkString("|")
 
   private def primaryRootCauseEvidenceIdTierSignature(
       causeEvidenceId: String,

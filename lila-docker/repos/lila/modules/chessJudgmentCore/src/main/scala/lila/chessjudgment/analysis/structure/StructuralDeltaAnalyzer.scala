@@ -31,6 +31,7 @@ private[chessjudgment] final case class TransitionStructuralDelta(
     developmentDelta: Int = 0,
     centerControlDelta: Int = 0,
     lineUnlockDelta: Int = 0,
+    lineUnlocks: List[String] = Nil,
     developmentMoves: List[DevelopmentMoveDelta] = Nil,
     fileOccupation: List[String] = Nil,
     releasedTargetPressure: List[String] = Nil,
@@ -43,6 +44,7 @@ private[chessjudgment] final case class TransitionStructuralDelta(
     outpostRemoved: List[String] = Nil,
     rookLiftCreated: List[String] = Nil,
     batteryCreated: List[String] = Nil,
+    blockedOwnRays: List[String] = Nil,
     opponentMobilityRestrictions: List[String] = Nil,
     kingRingPressureDelta: Int = 0
 ):
@@ -93,7 +95,7 @@ private[chessjudgment] object StructuralDeltaContracts:
       ),
       signedSignal(MobilityChanged, delta.mobilityDelta, Nil),
       signedSignal(KingSafetyChanged, delta.kingShelterDelta, Nil),
-      signal(LineUnlocked, Gain, delta.lineUnlockDelta, Nil),
+      signal(LineUnlocked, Gain, delta.lineUnlockDelta, delta.lineUnlocks),
       signal(PassedPawnCreated, Gain, delta.passedPawnCreated.size, delta.passedPawnCreated),
       signal(PassedPawnAdvanced, Gain, delta.passedPawnAdvanced.size, delta.passedPawnAdvanced),
       signedSignal(PromotionPressureChanged, delta.promotionPressureDelta, Nil),
@@ -233,10 +235,15 @@ private[chessjudgment] object StructuralDeltaContracts:
           TransitionConsequence(MobilityGain, Gain, delta.mobilityDelta, developmentMoveSubjectsWithMobilityGain(delta.developmentMoves))
         ),
         Option.when(delta.lineUnlockDelta > 0)(
-          TransitionConsequence(LineUnlockGain, Gain, delta.lineUnlockDelta)
+          TransitionConsequence(LineUnlockGain, Gain, delta.lineUnlockDelta, delta.lineUnlocks)
         ),
         Option.when(delta.mobilityDelta < 0)(
-          TransitionConsequence(MobilityLoss, Loss, -delta.mobilityDelta, developmentMoveSubjectsWithMobilityLoss(delta.developmentMoves))
+          TransitionConsequence(
+            MobilityLoss,
+            Loss,
+            -delta.mobilityDelta,
+            (developmentMoveSubjectsWithMobilityLoss(delta.developmentMoves) ++ delta.blockedOwnRays).distinct.sorted
+          )
         ),
         Option.when(delta.fileOccupation.nonEmpty)(
           TransitionConsequence(
@@ -383,10 +390,12 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       .getOrElse(PieceTargetPressureDelta(Nil, Nil))
     val passedPawnDelta = passedPawnDeltaFor(beforeBoard, afterBoard, side, moveUci)
     val moveMotifs = moveUci.toList.flatMap(uci => transitionMoveMotifs(beforeFen, uci))
-    val outpostDelta = outpostDeltaFor(moveMotifs, side)
+    val outpostDelta = outpostDeltaFor(beforeFen, afterFen, moveMotifs, side)
     val mobilityDeltaValue = mobilityDelta(before.features, after.features, side)
     val developmentDeltaValue = developmentDelta(before.features, after.features, side)
     val centerControlDeltaValue = centerControlDelta(before.features, after.features, side)
+    val lineUnlock: (Int, List[String]) =
+      moveUci.map(uci => lineUnlockDeltaAndSubjects(beforeBoard, afterBoard, side, uci)).getOrElse(0 -> Nil)
     Some(
       TransitionStructuralDelta(
         openedFiles = after.openFiles.diff(before.openFiles).toList.sorted,
@@ -403,7 +412,8 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         mobilityDelta = mobilityDeltaValue,
         developmentDelta = developmentDeltaValue,
         centerControlDelta = centerControlDeltaValue,
-        lineUnlockDelta = moveUci.map(uci => lineUnlockDelta(beforeBoard, afterBoard, side, uci)).getOrElse(0),
+        lineUnlockDelta = lineUnlock._1,
+        lineUnlocks = lineUnlock._2,
         developmentMoves = moveUci.flatMap(uci => developmentMoveDelta(beforeBoard, afterBoard, side, uci)).toList,
         fileOccupation = moveUci.map(uci => fileOccupationGain(beforeBoard, afterBoard, after, side, uci)).getOrElse(Nil),
         releasedTargetPressure = pieceTargetPressure.released,
@@ -416,6 +426,7 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         outpostRemoved = outpostDelta.removed,
         rookLiftCreated = rookLiftLabels(moveMotifs, side),
         batteryCreated = batteryLines(afterFen, side).diff(batteryLines(beforeFen, side)).toList.sorted,
+        blockedOwnRays = diagonalRestrictions(beforeBoard, afterBoard, after.features, side, side, moveUci),
         opponentMobilityRestrictions = opponentDiagonalRestrictions(beforeBoard, afterBoard, after.features, side, moveUci),
         kingRingPressureDelta = kingRingPressureDelta(before.features, after.features, side)
       )
@@ -538,14 +549,27 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       removed: List[String]
   )
 
-  private def outpostDeltaFor(motifs: List[Motif], side: Color): OutpostTransitionDelta =
+  private def outpostDeltaFor(beforeFen: String, afterFen: String, motifs: List[Motif], side: Color): OutpostTransitionDelta =
+    val beforeOutposts = outpostLabels(beforeFen, side)
+    val afterOutposts = outpostLabels(afterFen, side)
     OutpostTransitionDelta(
-      created = motifs.collect {
+      created =
+        (
+          motifs.collect {
+            case Motif.Outpost(role, square, color, _, _) if color == side =>
+              s"outpost:${role.name}:${square.key}"
+          } ++ afterOutposts.diff(beforeOutposts)
+        ).distinct.sorted,
+      removed = beforeOutposts.diff(afterOutposts).toList.sorted
+    )
+
+  private def outpostLabels(fen: String, side: Color): Set[String] =
+    Fen.read(_root_.chess.variant.Standard, Fen.Full(fen)).toList.flatMap { position =>
+      MoveAnalyzer.detectStateMotifs(position, 0).collect {
         case Motif.Outpost(role, square, color, _, _) if color == side =>
           s"outpost:${role.name}:${square.key}"
-      }.distinct.sorted,
-      removed = Nil
-    )
+      }
+    }.toSet
 
   private def transitionMoveMotifs(beforeFen: String, moveUci: String): List[Motif] =
     Fen.read(_root_.chess.variant.Standard, Fen.Full(beforeFen)).toList.flatMap { position =>
@@ -579,35 +603,58 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       side: Color,
       moveUci: Option[String]
   ): List[String] =
+    diagonalRestrictions(beforeBoard, afterBoard, afterFeatures, blockerSide = side, restrictedSide = !side, moveUci = moveUci)
+
+  private def diagonalRestrictions(
+      beforeBoard: Board,
+      afterBoard: Board,
+      afterFeatures: Option[PositionFeatures],
+      blockerSide: Color,
+      restrictedSide: Color,
+      moveUci: Option[String]
+  ): List[String] =
     moveUci.toList.flatMap { uci =>
       val origin = squareAt(uci.take(2))
       val dest = squareAt(uci.drop(2).take(2))
       val movedPiece = origin.flatMap(beforeBoard.pieceAt)
       (origin, dest, movedPiece) match
         case (Some(_), Some(to), Some(piece))
-            if piece.color == side &&
+            if piece.color == blockerSide &&
               piece.role == Pawn &&
-              centralDiagonalBlocker(to) &&
-              afterFeatures.exists(_.centralSpace.lockedCenter) &&
-              afterBoard.pieceAt(to).exists(afterPiece => afterPiece.color == side && afterPiece.role == Pawn) =>
-          fianchettoBishopSquares(!side).flatMap { bishopSquare =>
-            val bishopBefore = beforeBoard.pieceAt(bishopSquare).exists(piece => piece.color == !side && piece.role == Bishop)
-            val bishopAfter = afterBoard.pieceAt(bishopSquare).exists(piece => piece.color == !side && piece.role == Bishop)
-            val beforeMobility = if bishopBefore then slidingMobility(beforeBoard, bishopSquare, Bishop, !side) else 0
-            val afterMobility = if bishopAfter then slidingMobility(afterBoard, bishopSquare, Bishop, !side) else 0
+              afterBoard.pieceAt(to).exists(afterPiece => afterPiece.color == blockerSide && afterPiece.role == Pawn) =>
+          val candidateBishops =
+            if blockerSide == restrictedSide then bishopSquares(beforeBoard, restrictedSide)
+            else fianchettoBishopSquares(restrictedSide).filter(square => beforeBoard.pieceAt(square).exists(piece => piece.color == restrictedSide && piece.role == Bishop))
+          candidateBishops.flatMap { bishopSquare =>
+            val bishopBefore = beforeBoard.pieceAt(bishopSquare).exists(piece => piece.color == restrictedSide && piece.role == Bishop)
+            val bishopAfter = afterBoard.pieceAt(bishopSquare).exists(piece => piece.color == restrictedSide && piece.role == Bishop)
+            val beforeMobility = if bishopBefore then slidingMobility(beforeBoard, bishopSquare, Bishop, restrictedSide) else 0
+            val afterMobility = if bishopAfter then slidingMobility(afterBoard, bishopSquare, Bishop, restrictedSide) else 0
+            val strategicOpponentRestriction =
+              blockerSide != restrictedSide &&
+                afterFeatures.exists(_.centralSpace.lockedCenter) &&
+                centralDiagonalBlocker(to) &&
+                fianchettoBishopSquares(restrictedSide).contains(bishopSquare)
+            val restrictionScope =
+              if blockerSide == restrictedSide then "self-block"
+              else "locked-center"
             Option.when(
               bishopBefore &&
                 bishopAfter &&
+                (blockerSide == restrictedSide || strategicOpponentRestriction) &&
                 diagonalAligned(bishopSquare, to) &&
                 firstOccupiedSquareOnRay(afterBoard, bishopSquare, to).contains(to) &&
                 beforeMobility > afterMobility
             )(
-              s"bishop:${bishopSquare.key}:diagonal-denial:blocked-by:${to.key}:locked-center:mobility-$beforeMobility-to-$afterMobility"
+              s"bishop:${bishopSquare.key}:diagonal-denial:blocked-by:${to.key}:$restrictionScope:mobility-$beforeMobility-to-$afterMobility"
             )
           }
         case _ =>
           Nil
     }.distinct.sorted
+
+  private def bishopSquares(board: Board, side: Color): List[Square] =
+    board.byPiece(side, Bishop).squares.toList
 
   private def fianchettoBishopSquares(side: Color): List[Square] =
     if side.white then List(Square.G2, Square.B2) else List(Square.G7, Square.B7)
@@ -689,26 +736,31 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       case _ =>
         Nil
 
-  private def lineUnlockDelta(
+  private def lineUnlockDeltaAndSubjects(
       beforeBoard: Board,
       afterBoard: Board,
       side: Color,
       moveUci: String
-  ): Int =
+  ): (Int, List[String]) =
     val origin = squareAt(moveUci.take(2))
     val movedPiece = origin.flatMap(beforeBoard.pieceAt)
     movedPiece match
       case Some(piece) if piece.color == side && piece.role == Pawn =>
-        ownSlidingPieces(beforeBoard, side).map { case (square, role) =>
-          val beforeMobility = slidingMobility(beforeBoard, square, role, side)
-          val afterMobility =
-            if afterBoard.pieceAt(square).exists(afterPiece => afterPiece.color == side && afterPiece.role == role)
-            then slidingMobility(afterBoard, square, role, side)
-            else 0
-          (afterMobility - beforeMobility).max(0)
-        }.sum
+        val unlocked =
+          ownSlidingPieces(beforeBoard, side).flatMap { case (square, role) =>
+            val beforeMobility = slidingMobility(beforeBoard, square, role, side)
+            val afterMobility =
+              if afterBoard.pieceAt(square).exists(afterPiece => afterPiece.color == side && afterPiece.role == role)
+              then slidingMobility(afterBoard, square, role, side)
+              else 0
+            val gain = (afterMobility - beforeMobility).max(0)
+            Option.when(gain > 0)(
+              gain -> s"${role.name}:${square.key}:line-unlock:by:${moveUci.toLowerCase}:mobility+$gain"
+            )
+          }
+        unlocked.map(_._1).sum -> unlocked.map(_._2).distinct.sorted
       case _ =>
-        0
+        0 -> Nil
 
   private def ownSlidingPieces(board: Board, side: Color): List[(Square, Role)] =
     Square.all.toList.flatMap { square =>

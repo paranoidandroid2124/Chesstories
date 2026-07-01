@@ -148,7 +148,7 @@ private[qc] object MoveReviewPhase3AuditMetrics:
     val prefix = s"$role="
     signatureParts(signature).collect { case part if part.startsWith(prefix) => part.stripPrefix(prefix) }
 
-  private def signatureParts(signature: String): List[String] =
+  private[qc] def signatureParts(signature: String): List[String] =
     signature.split("\\|").toList.map(_.trim).filter(_.nonEmpty)
 
   private[qc] def axislessStructuralInventorySignal(signal: StrategicMechanismSignal): Boolean =
@@ -888,7 +888,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       primaryRootCauseEvidenceIdTierSignatures: List[String],
       causeIds: List[String],
       causeIdKindSignatures: List[String],
-      claimIds: List[String]
+      claimIds: List[String],
+      publicSurfaceClaimSignatures: List[String]
   )
 
   private[qc] def semanticRubricFunnelJson(
@@ -1334,6 +1335,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "causeIds" -> matches.flatMap(_.causeIds).distinct.sorted,
       "causeIdKindSignatures" -> matches.flatMap(_.causeIdKindSignatures).distinct.sorted,
       "claimIds" -> matches.flatMap(_.claimIds).distinct.sorted,
+      "publicSurfaceClaimSignatures" -> matches.flatMap(_.publicSurfaceClaimSignatures).distinct.sorted,
       "bestLineageTrace" -> best.map(semanticRubricLineageTraceJson).getOrElse(Json.obj()),
       "lineageTraces" -> JsArray(
         matches
@@ -1368,6 +1370,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "causeIds" -> row.causeIds,
       "causeIdKindSignatures" -> row.causeIdKindSignatures,
       "claimIds" -> row.claimIds,
+      "publicSurfaceClaimSignatures" -> row.publicSurfaceClaimSignatures,
       "primaryRootCauseKinds" -> row.primaryRootCauseKinds.map(_.toString),
       "primaryRootCauseEvidenceIds" -> row.primaryRootCauseEvidenceIds,
       "primaryRootArbitrationTiers" -> row.primaryRootArbitrationTiers.map(_.toString),
@@ -1707,13 +1710,24 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       fallbackFlows.exists(flow => flow.hasOwnedTypedDepth || flow.hasOwnedAdmissibleLongTermProof)
     val claimSurvived =
       fallbackFlows.exists(_.claimIds.nonEmpty)
+    val causeIds = fallbackFlows.map(_.causeId).distinct.sorted
+    val publicSurfaceClaimSignatures =
+      view.publicMoveMeaningClaimSurfaceSignatures.filter(signature =>
+        semanticRubricSurfaceClaimMatches(signature, unit, axisKey)
+      )
+    val publicSurfaceClaimSurfaced =
+      publicSurfaceClaimSignatures.nonEmpty
+    val publicSurfaceClaimCauseIds =
+      publicSurfaceClaimSignatures.flatMap(semanticRubricSurfaceClaimCauseIds).distinct.sorted
     val ownedCauseLinked =
       fallbackFlows.exists(flow =>
         frameCauseIds.contains(flow.causeId) &&
-          (flow.hasOwnedTypedDepth || flow.hasOwnedAdmissibleLongTermProof)
+          (flow.hasOwnedTypedDepth || flow.hasOwnedAdmissibleLongTermProof) &&
+          publicSurfaceClaimCauseIds.contains(flow.causeId)
       )
     val viewSurfaced =
-      unitSurfaced &&
+      publicSurfaceClaimSurfaced &&
+        unitSurfaced &&
         (
           axisKey.forall(frameAxisKeys.contains) ||
             fallbackFlows.exists(flow => frameCauseIds.contains(flow.causeId)) ||
@@ -1725,7 +1739,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
         frameIds.nonEmpty &&
         claimSurvived &&
         ownedCauseLinked
-    val causeIds = fallbackFlows.map(_.causeId).distinct.sorted
     val strictCauseLineageBound =
       semanticRubricCauseLineageBound(causeIds, semanticDetailTokenGroups)
     val strictPrimaryRootLineageBound =
@@ -1790,8 +1803,28 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
           .map(flow => causeIdKindSignature(flow.causeId, flow.causeKind))
           .distinct
           .sorted,
-      claimIds = fallbackFlows.flatMap(_.claimIds).distinct.sorted
+      claimIds = fallbackFlows.flatMap(_.claimIds).distinct.sorted,
+      publicSurfaceClaimSignatures = publicSurfaceClaimSignatures.distinct.sorted
     )
+
+  private def semanticRubricSurfaceClaimMatches(
+      signature: String,
+      unit: PositionPlanTechniqueUnit,
+      axisKey: Option[String]
+  ): Boolean =
+    val parts = MoveReviewPhase3AuditMetrics.signatureParts(signature)
+    parts.contains(s"unit=$unit") &&
+      axisKey.forall(axis => parts.contains(s"axis=$axis")) &&
+      parts.exists(part => part == "lane=current_move_owned" || part == "lane=current_move_function")
+
+  private def semanticRubricSurfaceClaimCauseIds(signature: String): List[String] =
+    MoveReviewPhase3AuditMetrics
+      .signatureParts(signature)
+      .collectFirst { case part if part.startsWith("causes=") => part.stripPrefix("causes=") }
+      .toList
+      .flatMap(_.split(",").toList)
+      .map(_.trim)
+      .filter(value => value.nonEmpty && value != "none")
 
   private def semanticRubricUnitsForAxis(axisKey: String): List[PositionPlanTechniqueUnit] =
     axisPart(axisKey, 0) match

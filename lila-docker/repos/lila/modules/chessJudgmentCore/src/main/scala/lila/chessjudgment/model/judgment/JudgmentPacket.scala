@@ -1551,7 +1551,8 @@ case class MoveJudgmentVerdictFrame(
     verdictCertificationEvidenceId: Option[String],
     comparisonKind: CandidateComparisonKind,
     referenceLine: LineNodeRef,
-    candidateLine: LineNodeRef
+    candidateLine: LineNodeRef,
+    candidateSet: Option[CandidateSetComparison] = None
 )
 
 case class MoveJudgmentClaimFrame(
@@ -1605,6 +1606,7 @@ case class MoveJudgmentCauseFrame(
     proofStrategicMechanismSourceIds: List[String],
     proofStrategicMechanismSignalSourceIds: List[String],
     supportEvidenceSourceIds: List[String],
+    proofLineConsequences: List[LineConsequenceKind] = Nil,
     objectBindingSignatures: List[String],
     concreteObjectReady: Boolean,
     hasOwnedAdmissibleLongTermProof: Boolean = false,
@@ -1739,6 +1741,24 @@ case class MoveMeaningSurfaceVerdict(
     referenceMove: String
 )
 
+case class MoveMeaningSurfaceEndgameTechnique(
+    pattern: Option[String] = None,
+    rookPattern: Option[String] = None,
+    side: Option[String] = None,
+    horizonStatus: Option[String] = None,
+    triggerMove: Option[String] = None,
+    requiredSquares: List[String] = Nil,
+    maintainedSquares: List[String] = Nil,
+    brokenSquares: List[String] = Nil
+)
+
+case class MoveMeaningSurfaceComparison(
+    kind: String,
+    referenceMove: String,
+    candidateMove: String,
+    secondMove: Option[String] = None
+)
+
 case class MoveMeaningSurface(
     moveUci: String,
     subject: String,
@@ -1750,7 +1770,9 @@ case class MoveMeaningSurface(
     target: MoveMeaningSurfaceTarget,
     priority: String,
     comparisonLossSides: List[String] = Nil,
-    comparisonLosses: List[String] = Nil
+    comparisonLosses: List[String] = Nil,
+    endgameTechnique: Option[MoveMeaningSurfaceEndgameTechnique] = None,
+    comparison: Option[MoveMeaningSurfaceComparison] = None
 )
 
 object MoveMeaningSurface:
@@ -1763,26 +1785,117 @@ object MoveMeaningSurface:
     )
 
   def from(view: MoveJudgmentView): List[MoveMeaningSurface] =
-    view.moveMeaningClaims
+    publicClaimsForSurface(view)
       .map(claim => fromClaim(view.verdict, claim))
-      .sortBy(surfaceSortKey)
+
+  def publicClaimCandidates(view: MoveJudgmentView): List[MoveMeaningClaim] =
+    view.moveMeaningClaims.filter(claim => publicSurfaceClaim(view, claim))
+
+  def publicClaimsForSurface(view: MoveJudgmentView): List[MoveMeaningClaim] =
+    publicClaimCandidates(view)
+      .sortBy(claim => claimSurfaceSortKey(view.verdict, claim))
+      .take(12)
+
+  def publicSurfaceClaim(claim: MoveMeaningClaim): Boolean =
+    claim.supportLevel != "contextual" &&
+      claim.surfaceLane != "inherited_context" &&
+      claim.surfaceLane != "pv_or_line_witness"
+
+  private def publicSurfaceClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
+    publicSurfaceClaim(claim) &&
+      publicSpecificPlanContinuityClaim(claim) &&
+      publicCurrentMoveFunctionClaim(claim) &&
+      !badMoveSuppressesPositiveLocalMotif(view, claim) &&
+      !terminalOverriddenEndgameTechniqueClaim(claim)
+
+  private def publicCurrentMoveFunctionClaim(claim: MoveMeaningClaim): Boolean =
+    claim.surfaceLane != "current_move_function" ||
+      claim.causeEvidenceIds.nonEmpty ||
+      claim.supportLevel == "owned_cause_linked"
+
+  private def publicSpecificPlanContinuityClaim(claim: MoveMeaningClaim): Boolean =
+    claim.meaningKind != "PlanContinuity" ||
+      (
+        claim.reasonTokens.exists(token =>
+          token == "specificityTier:ExactObjectAxis" ||
+            token == "specificityTier:ConcreteObjectAxis"
+        ) &&
+          EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
+      )
+
+  private def badMoveSuppressesPositiveLocalMotif(
+      view: MoveJudgmentView,
+      claim: MoveMeaningClaim
+  ): Boolean =
+    badMoveVisible(view) &&
+      positiveCurrentMoveMotif(view, claim)
+
+  private def badMoveVisible(view: MoveJudgmentView): Boolean =
+    view.verdict.exists(verdict => badVerdict(verdict.verdict))
+
+  private def positiveCurrentMoveMotif(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
+    currentMoveClaim(view, claim) &&
+      (
+        MoveMeaningClaim.positiveMeaningRole(claim.role) ||
+          positiveCurrentMoveMeaning(claim)
+      )
+
+  private def positiveCurrentMoveMeaning(claim: MoveMeaningClaim): Boolean =
+    claim.role == "ExplainsMoveFunction" &&
+      !negativeCurrentMoveMeaning(claim)
+
+  private def negativeCurrentMoveMeaning(claim: MoveMeaningClaim): Boolean =
+    claim.axisPolarity.exists(MoveMeaningClaim.negativePolarity) ||
+      claim.role.startsWith("Concedes") ||
+      claim.role.startsWith("Loses") ||
+      claim.role.startsWith("Allows") ||
+      claim.role.startsWith("Releases") ||
+      claim.role.startsWith("Breaks") ||
+      claim.causeKinds.exists(MoveMeaningClaim.negativeCauseKind)
+
+  private def currentMoveClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
+    view.verdict.exists(verdict =>
+      (claim.surfaceLane == "current_move_owned" || claim.surfaceLane == "current_move_function") &&
+        claim.lineRole == "candidate" &&
+        JudgmentSubjectBinding.normalizeMove(claim.moveUci) ==
+        JudgmentSubjectBinding.normalizeMove(verdict.candidateLine.rootMove)
+    )
+
+  private def terminalOverriddenEndgameTechniqueClaim(claim: MoveMeaningClaim): Boolean =
+    claim.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
+      claim.reasonTokens.exists(token =>
+        token == "horizonStatus:SupersededByTactic" ||
+          token == "horizonStatus:ContradictedByTerminalProof"
+      )
+
+  private def claimSurfaceSortKey(
+      verdict: Option[MoveJudgmentVerdictFrame],
+      claim: MoveMeaningClaim
+  ): (Int, String, String) =
+    surfaceSortKey(fromClaim(verdict, claim))
 
   private def fromClaim(verdict: Option[MoveJudgmentVerdictFrame], claim: MoveMeaningClaim): MoveMeaningSurface =
     val claimSubject = subject(claim)
     val played = claimSubject == "played_move"
     val badPlayedMove = played && verdict.exists(frame => badVerdict(frame.verdict))
+    val publicFailureClaim =
+      badPlayedMove &&
+        claim.surfaceLane == "current_move_owned" &&
+        claim.supportLevel == "owned_cause_linked"
     MoveMeaningSurface(
       moveUci = claim.moveUci,
       subject = claimSubject,
       moveQuality = if played then verdict.map(frame => moveQuality(frame.verdict)).getOrElse("unknown") else "not_applicable",
       ideaType = ideaType(claim),
       ideaQuality = ideaQuality(claim, claimSubject, badPlayedMove),
-      failureFamily = Option.when(badPlayedMove)(failureFamily(claim)).flatten,
-      problem = Option.when(badPlayedMove)(problem(claim)).flatten,
+      failureFamily = Option.when(publicFailureClaim)(failureFamily(claim)).flatten,
+      problem = Option.when(publicFailureClaim)(problem(claim)).flatten,
       target = MoveMeaningSurfaceTarget.fromClaim(claim),
       priority = priority(claim, claimSubject),
       comparisonLossSides = comparisonLossSides(claim),
-      comparisonLosses = comparisonLosses(claim)
+      comparisonLosses = comparisonLosses(claim),
+      endgameTechnique = endgameTechnique(claim),
+      comparison = Option.when(claimSubject == "played_move" || claimSubject == "reference_move")(comparison(verdict)).flatten
     )
 
   private def subject(claim: MoveMeaningClaim): String =
@@ -1859,37 +1972,40 @@ object MoveMeaningSurface:
 
   private def ideaQuality(claim: MoveMeaningClaim, claimSubject: String, badPlayedMove: Boolean): String =
     if claimSubject == "background" || claim.supportLevel == "contextual" then "background"
-    else if badPlayedMove && (claim.surfaceLane == "current_move_owned" || claim.surfaceLane == "current_move_function") then "failed"
-    else if claim.surfaceLane == "current_move_owned" || claim.surfaceLane == "current_move_function" then "real"
+    else if badPlayedMove && claim.surfaceLane == "current_move_owned" && claim.supportLevel == "owned_cause_linked" then "failed"
+    else if badPlayedMove && claim.surfaceLane == "current_move_function" then "weak"
+    else if claim.surfaceLane == "current_move_owned" then "real"
     else if claim.supportLevel == "owned_cause_linked" then "real"
+    else if claim.surfaceLane == "current_move_function" then "supported"
     else "weak"
 
   private def priority(claim: MoveMeaningClaim, claimSubject: String): String =
-    if claimSubject == "played_move" && claim.surfaceLane == "current_move_owned" then "primary"
-    else if claimSubject == "played_move" && claim.surfaceLane == "current_move_function" then "secondary"
-    else if claimSubject == "reference_move" then "alternative"
+    if claimSubject == "played_move" && claim.surfaceLane == "current_move_owned" then "main"
+    else if claimSubject == "played_move" && claim.surfaceLane == "current_move_function" then "supporting"
+    else if claimSubject == "reference_move" then "comparison"
     else if claimSubject == "opponent_resource" then "context"
     else if claimSubject == "background" then "context"
-    else "line"
+    else "variation"
 
   private def failureFamily(claim: MoveMeaningClaim): Option[String] =
-    claim.causeKinds.flatMap(causeEventFamily).headOption
-      .orElse {
-        if claim.causeKinds.contains(RelativeCauseKind.PawnBreakOpportunity) || claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute
-        then Some("pawn_break_timing")
-        else if claim.causeKinds.contains(RelativeCauseKind.OpponentRestriction) || claim.unit == PositionPlanTechniqueUnit.CounterplayRace
-        then Some("counterplay")
-        else if claim.causeKinds.exists(strategicCause) then Some("strategic")
-        else if claim.causeKinds.contains(RelativeCauseKind.ActivityLoss) then Some("piece_activity")
-        else if claim.causeKinds.contains(RelativeCauseKind.TargetPressureRelease) then Some("target_pressure")
-        else if claim.causeKinds.contains(RelativeCauseKind.KingSafetyConcession) then Some("king_safety")
-        else None
-      }
+    motifFailureFamily(claim)
+      .orElse(claim.causeKinds.flatMap(causeEventFamily).headOption)
+
+  private def motifFailureFamily(claim: MoveMeaningClaim): Option[String] =
+    if claim.causeKinds.contains(RelativeCauseKind.PawnBreakOpportunity) || claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute
+    then Some("pawn_break_timing")
+    else if claim.causeKinds.contains(RelativeCauseKind.OpponentRestriction) || claim.unit == PositionPlanTechniqueUnit.CounterplayRace
+    then Some("counterplay")
+    else if claim.causeKinds.exists(strategicCause) then Some("strategic")
+    else if claim.causeKinds.contains(RelativeCauseKind.ActivityLoss) then Some("piece_activity")
+    else if claim.causeKinds.contains(RelativeCauseKind.TargetPressureRelease) then Some("target_pressure")
+    else if claim.causeKinds.contains(RelativeCauseKind.KingSafetyConcession) then Some("king_safety")
+    else None
 
   private def causeEventFamily(kind: RelativeCauseKind): Option[String] =
     ClaimEventCluster.kindForCause(kind).map {
       case ClaimEventClusterKind.TacticalEvent   => "tactical"
-      case ClaimEventClusterKind.DefensiveEvent  => "defense"
+      case ClaimEventClusterKind.DefensiveEvent  => "defensive_resource"
       case ClaimEventClusterKind.ConversionEvent => "conversion"
       case ClaimEventClusterKind.MaterialEvent   => "material"
     }
@@ -1916,6 +2032,8 @@ object MoveMeaningSurface:
     else if claim.unit == PositionPlanTechniqueUnit.CounterplayRace && claim.targetFiles.nonEmpty then Some("loses_race")
     else if claim.role == "ReleasesPawnTension" then Some("tension_released_early")
     else if claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute then Some("break_timing")
+    else if claim.role == "ConcedesOutpost" then Some("outpost_conceded")
+    else if claim.role == "ConcedesPieceRoute" || claim.role == "LosesPieceActivity" then Some("piece_activity_lost")
     else if claim.causeKinds.contains(RelativeCauseKind.PlanContradiction) then Some("plan_conflict")
     else if claim.causeKinds.contains(RelativeCauseKind.StrategicConcession) then Some("strategic_concession")
     else if claim.causeKinds.contains(RelativeCauseKind.TargetPressureRelease) then Some("pressure_released")
@@ -1938,6 +2056,72 @@ object MoveMeaningSurface:
         case token if token.startsWith("comparisonLossSide:") =>
           token.stripPrefix("comparisonLossSide:")
       }
+      .distinct
+      .sorted
+
+  private def endgameTechnique(claim: MoveMeaningClaim): Option[MoveMeaningSurfaceEndgameTechnique] =
+    if claim.unit != PositionPlanTechniqueUnit.EndgameTechniqueRecipe then None
+    else
+      val publicStatus = tokenValue(claim, "horizonStatus:").flatMap(publicEndgameHorizonStatus)
+      val technique = MoveMeaningSurfaceEndgameTechnique(
+        pattern = tokenValue(claim, "pattern:"),
+        rookPattern = tokenValue(claim, "rook-pattern:"),
+        side = tokenValue(claim, "techniqueSide:"),
+        horizonStatus = publicStatus,
+        triggerMove = tokenValue(claim, "triggerMove:"),
+        requiredSquares = tokenValues(claim, "requiredSquare:"),
+        maintainedSquares = tokenValues(claim, "maintainedSquare:"),
+        brokenSquares = tokenValues(claim, "brokenSquare:")
+      )
+      Option.when(
+        technique.horizonStatus.nonEmpty &&
+          (
+            technique.requiredSquares.nonEmpty ||
+              technique.maintainedSquares.nonEmpty ||
+              technique.brokenSquares.nonEmpty
+          )
+      )(technique)
+
+  private def publicEndgameHorizonStatus(status: String): Option[String] =
+    status match
+      case "Active"       => Some("holding")
+      case "Transitioned" => Some("converted")
+      case "Failed"       => Some("broken")
+      case _              => None
+
+  private def comparison(
+      verdict: Option[MoveJudgmentVerdictFrame]
+  ): Option[MoveMeaningSurfaceComparison] =
+    verdict.map { frame =>
+      MoveMeaningSurfaceComparison(
+        kind = comparisonKindCode(frame.comparisonKind),
+        referenceMove = frame.referenceLine.rootMove,
+        candidateMove = frame.candidateLine.rootMove,
+        secondMove = frame.candidateSet.flatMap(_.secondLine.map(_.rootMove))
+      )
+    }
+
+  private def comparisonKindCode(kind: CandidateComparisonKind): String =
+    kind match
+      case CandidateComparisonKind.PlayedVsBest           => "played_vs_reference"
+      case CandidateComparisonKind.BestVsSecond           => "reference_vs_next_candidate"
+      case CandidateComparisonKind.PlayedVsAlternative    => "played_vs_alternative"
+      case CandidateComparisonKind.ReferenceVsAlternative => "reference_vs_alternative"
+
+  private[judgment] def comparisonRelation(kind: CandidateComparisonKind): String =
+    kind match
+      case CandidateComparisonKind.PlayedVsBest           => "best_vs_played"
+      case CandidateComparisonKind.BestVsSecond           => "best_vs_second"
+      case CandidateComparisonKind.PlayedVsAlternative    => "alternative_vs_played"
+      case CandidateComparisonKind.ReferenceVsAlternative => "best_vs_alternative"
+
+  private def tokenValue(claim: MoveMeaningClaim, prefix: String): Option[String] =
+    claim.reasonTokens.collectFirst { case token if token.startsWith(prefix) => token.stripPrefix(prefix) }.filter(_.nonEmpty)
+
+  private def tokenValues(claim: MoveMeaningClaim, prefix: String): List[String] =
+    claim.reasonTokens
+      .collect { case token if token.startsWith(prefix) => token.stripPrefix(prefix) }
+      .filter(_.nonEmpty)
       .distinct
       .sorted
 
@@ -1964,11 +2148,11 @@ object MoveMeaningSurface:
   private def surfaceSortKey(surface: MoveMeaningSurface): (Int, String, String) =
     (
       surface.priority match
-        case "primary"     => 0
-        case "secondary"   => 1
-        case "alternative" => 2
-        case "context"     => 3
-        case _             => 4,
+        case "main"       => 0
+        case "supporting" => 1
+        case "comparison" => 2
+        case "context"    => 3
+        case _            => 4,
       surface.ideaType,
       surface.moveUci
     )
@@ -2006,16 +2190,16 @@ object MoveMeaningClaim:
       .sortBy(claim => (claim.meaningKind, claim.role, claim.lineRole, claim.laneKey, claim.frameId))
 
   private def suppressShadowedPlanContinuity(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
-    val concreteOwnedCurrentClaims =
+    val concreteCurrentClaims =
       claims
         .filter(claim =>
           claim.meaningKind != "PlanContinuity" &&
-            claim.surfaceLane == "current_move_owned"
+            (claim.surfaceLane == "current_move_owned" || claim.surfaceLane == "current_move_function")
         )
     claims.filterNot(claim =>
       claim.meaningKind == "PlanContinuity" &&
         claim.surfaceLane == "current_move_function" &&
-        concreteOwnedCurrentClaims.exists(concreteClaimShadowsPlanContinuity(claim, _))
+        concreteCurrentClaims.exists(concreteClaimShadowsPlanContinuity(claim, _))
     )
 
   private def concreteClaimShadowsPlanContinuity(
@@ -2241,12 +2425,19 @@ object MoveMeaningClaim:
     val direct = detailHasDirectOrContrastProof(detail)
     val hasDetailEvidence = detailHasEvidenceLink(detail)
     val currentMoveClaim = currentMoveMeaningClaim(verdict, claimLineRole, claimMove)
+    val directCurrentMoveCarrier =
+      !currentMoveClaim ||
+        currentMoveDirectCarrier(detail, objectSignatures, claimMove)
     val currentMoveFunctionalProof =
-      currentMoveFunctionalDetailProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
-    val currentMoveSurfaceProof = currentMoveSurfaceReady(meaningKind, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
+      directCurrentMoveCarrier &&
+        currentMoveFunctionalDetailProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
+    val currentMoveSurfaceProof =
+      directCurrentMoveCarrier &&
+        currentMoveSurfaceReady(meaningKind, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
+    val reasonGradeCauseFrames = roleCompatibleCauseFrames.filter(reasonGradeCauseFrame)
     val ownedCause =
-      roleCompatibleCauseFrames.exists(frame => frame.concreteObjectReady && frame.hasOwnedAdmissibleLongTermProof) ||
-        roleCompatibleCauseFrames.exists(frame => frame.concreteObjectReady && frame.attributionDirectProofEligible)
+      reasonGradeCauseFrames.exists(frame => frame.concreteObjectReady && frame.hasOwnedAdmissibleLongTermProof) ||
+        reasonGradeCauseFrames.exists(frame => frame.concreteObjectReady && frame.attributionDirectProofEligible)
     val planOptionCurrentFunctionOnly =
       currentMoveClaim &&
         detail.unit == PositionPlanTechniqueUnit.PlanOptionSet
@@ -2254,13 +2445,21 @@ object MoveMeaningClaim:
       allLinkedCauseFrames.nonEmpty &&
         roleCompatibleCauseFrames.isEmpty &&
         positiveMeaningRole(claimRole) &&
-        allLinkedCauseFrames.exists(frame => !causeFramePolarityCompatibleWithMeaning(frame, detail, claimRole))
+        allLinkedCauseFrames.exists(frame => !causeFramePolarityCompatibleWithMeaning(frame, verdict, detail, claimRole))
+    val badCurrentMovePositiveMeaning =
+      currentMoveClaim &&
+        badVerdict(verdict.verdict) &&
+        positiveCurrentMoveReasonRole(claimRole, detail)
+    val broadPlanContinuityCurrentMove =
+      currentMoveClaim &&
+        meaningKind == "PlanContinuity" &&
+        !planContinuityReasonGradeReady(detail, objectSignatures, claimMove, positionFen)
     val ownedMeaningReady =
       detail.unit match
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
           pawnBreakOwnedCauseReady(detail, objectSignatures, claimMove, positionFen)
         case PositionPlanTechniqueUnit.CounterplayRace =>
-          counterplayRaceOwnedCauseReady(detail, objectSignatures, claimMove, positionFen)
+          counterplayRaceMeaningReady(detail, objectSignatures, claimMove, positionFen)
         case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" =>
           pieceRouteOwnedCauseReady(detail, objectSignatures, claimMove)
         case PositionPlanTechniqueUnit.EndgameTechniqueRecipe =>
@@ -2280,16 +2479,18 @@ object MoveMeaningClaim:
           else true
         case _ =>
           true
+    val endgameTechniqueViewProof = endgameTechniqueHorizonViewShape(detail)
     val laneOwnershipReady =
       !currentMoveClaim ||
         currentMoveSurfaceProof
-    if roleCompatibleCauseFrames.nonEmpty && ownedCause && laneOwnershipReady && hasConcreteObject && specificObjectAxis && direct && ownedMeaningReady &&
-        !planOptionCurrentFunctionOnly
+    if reasonGradeCauseFrames.nonEmpty && ownedCause && laneOwnershipReady && hasConcreteObject && specificObjectAxis && direct && ownedMeaningReady &&
+        !planOptionCurrentFunctionOnly && !badCurrentMovePositiveMeaning && !broadPlanContinuityCurrentMove
     then
       Some("owned_cause_linked")
-    else if laneOwnershipReady && viewMeaningReady && hasConcreteObject && (specificObjectAxis || currentMoveFunctionalProof) && hasDetailEvidence &&
-        (detailHasAnyProofLink(detail) || currentMoveFunctionalProof) &&
-        !rejectedPositiveCause
+    else if laneOwnershipReady && viewMeaningReady && hasConcreteObject &&
+        (specificObjectAxis || currentMoveFunctionalProof || endgameTechniqueViewProof) && hasDetailEvidence &&
+        (detailHasAnyProofLink(detail) || currentMoveFunctionalProof || endgameTechniqueViewProof) &&
+        !rejectedPositiveCause && !badCurrentMovePositiveMeaning && !broadPlanContinuityCurrentMove
     then
       Some("view_surfaced")
     else if hasDetailEvidence && contextualMeaningDetail(detail) then
@@ -2336,11 +2537,65 @@ object MoveMeaningClaim:
           resourceDetailHasConcreteCarrier(detail, objectSignatures)
       case PositionPlanTechniqueUnit.CounterplayRace =>
         moveOwnedSource &&
-          counterplayRaceViewReady(detail, objectSignatures, claimMove, positionFen)
+          counterplayRaceMeaningReady(detail, objectSignatures, claimMove, positionFen)
       case PositionPlanTechniqueUnit.PlanOptionSet =>
         planContinuityCurrentMoveFunctionalProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
       case _ =>
         false
+
+  private def currentMoveDirectCarrier(
+      detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
+      claimMove: String
+  ): Boolean =
+    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
+    val sourceOwnsCurrentMove =
+      (detail.sourceEvidenceIds ++ detail.candidateEvidenceIds)
+        .exists(JudgmentSubjectBinding.sourceIdOwnsCurrentPlayedMove(_, claimMove))
+    val objectOwnsCurrentMove =
+      currentMoveProofObjectSignatures(objectSignatures)
+        .exists(signature => moveTokens(List(signature)).contains(normalizedClaimMove))
+    val metadataMoveOwnsCurrentMove =
+      detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) ||
+      detail.defenseMove.exists(move => sameMove(move, claimMove)) ||
+      detail.endgameTechniqueTriggerMove.exists(move => sameMove(move, claimMove)) ||
+      detail.raceCandidateRootMove.exists(move => sameMove(move, claimMove))
+    sourceOwnsCurrentMove ||
+      objectOwnsCurrentMove ||
+      (metadataMoveOwnsCurrentMove && (sourceOwnsCurrentMove || objectOwnsCurrentMove))
+
+  private def currentMoveProofObjectSignatures(objectSignatures: List[String]): Set[String] =
+    EvidenceObjectBinding.signaturesForProofRole(objectSignatures, Some(RelativeCauseProofRole.DirectProof)) ++
+      EvidenceObjectBinding.signaturesForProofRole(objectSignatures, Some(RelativeCauseProofRole.ContrastProof))
+
+  private def reasonGradeCauseFrame(frame: MoveJudgmentCauseFrame): Boolean =
+    (
+      frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot ||
+        frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot
+    ) &&
+      reasonGradeFrameProofReady(frame)
+
+  private def reasonGradeFrameProofReady(frame: MoveJudgmentCauseFrame): Boolean =
+    frame.concreteObjectReady ||
+      EvidenceObjectBinding.directProofSpecificTargetReady(frame.objectBindingSignatures) ||
+      frame.proofLineConsequences.exists(LineEndgameTechniqueHorizon.terminalProofOverrides)
+
+  private def positiveCurrentMoveReasonRole(
+      claimRole: String,
+      detail: PositionPlanTechniqueSemanticDetail
+  ): Boolean =
+    positiveMeaningRole(claimRole) ||
+      (claimRole == "ExplainsMoveFunction" && !negativeStrategicDetail(detail))
+
+  private def planContinuityReasonGradeReady(
+      detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
+      claimMove: String,
+      positionFen: String
+  ): Boolean =
+    detailHasSpecificObjectAxis(detail) &&
+      detailHasConcreteSurfaceObject(detail, objectSignatures) &&
+      planContinuityCurrentMoveFunctionalProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim = true)
 
   private def currentMoveMeaningClaim(
       verdict: MoveJudgmentVerdictFrame,
@@ -2370,19 +2625,19 @@ object MoveMeaningClaim:
       case PositionPlanTechniqueUnit.CounterplayRace =>
         currentMoveFunctionalDetailProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim) ||
           (
-            counterplayRaceViewReady(detail, objectSignatures, claimMove, positionFen) &&
+            counterplayRaceMeaningReady(detail, objectSignatures, claimMove, positionFen) &&
               moveTokens(objectSignatures).contains(JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase)
           )
       case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" =>
         pieceRouteViewReady(detail, objectSignatures, claimMove) &&
           detailOwnsClaimMove(detail, objectSignatures, claimMove) &&
-          !currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove)
+          (!currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove) || explicitNegativeRouteCarrier(detail))
       case PositionPlanTechniqueUnit.PieceRerouteRoute =>
         generalDetailOwnsClaimMove(detail, objectSignatures, claimMove) &&
-          !currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove)
+          (!currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove) || explicitNegativeActivityCarrier(detail))
       case PositionPlanTechniqueUnit.StructuralTransformation if meaningKind == "PieceActivity" =>
         generalDetailOwnsClaimMove(detail, objectSignatures, claimMove) &&
-          !currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove)
+          (!currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove) || explicitNegativeActivityCarrier(detail))
       case PositionPlanTechniqueUnit.SpacePreventionResourceDenial | PositionPlanTechniqueUnit.StructuralTransformation =>
         currentMoveFunctionalDetailProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
       case PositionPlanTechniqueUnit.PlanOptionSet =>
@@ -2620,7 +2875,7 @@ object MoveMeaningClaim:
     causeFrameLineOwnsClaimMove(frame, verdict, claimLineRole, claimMove) &&
       causeFrameMatchesMeaningDetail(frame, detail, objectSignatures) &&
       detailOwnsClaimMove(detail, objectSignatures, claimMove) &&
-      causeFramePolarityCompatibleWithMeaning(frame, detail, claimRole)
+      causeFramePolarityCompatibleWithMeaning(frame, verdict, detail, claimRole)
 
   private def causeFrameLineOwnsClaimMove(
       frame: MoveJudgmentCauseFrame,
@@ -3051,17 +3306,7 @@ object MoveMeaningClaim:
       detail.structuralPurposeSubjects.exists(concreteSubject) ||
       EvidenceObjectBinding.signatureTokens(objectSignatures, "target=").exists(EvidenceObjectBinding.concreteTargetToken)
 
-  private def counterplayRaceOwnedCauseReady(
-      detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String],
-      claimMove: String,
-      positionFen: String
-  ): Boolean =
-    counterplayRaceClaimReady(detail, claimMove, positionFen) &&
-      counterplayRaceOrderProof(detail) &&
-      counterplayRaceOwnsClaimMove(detail, objectSignatures, claimMove)
-
-  private def counterplayRaceViewReady(
+  private def counterplayRaceMeaningReady(
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String],
       claimMove: String,
@@ -3091,7 +3336,7 @@ object MoveMeaningClaim:
   private def counterplayRaceSemanticProof(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.unit == PositionPlanTechniqueUnit.CounterplayRace &&
       !counterplayRaceGenericRestraint(detail) &&
-      (counterplayRaceDynamicThreat(detail) || counterplayRaceLineProof(detail) || counterplayRacePawnBreakProof(detail))
+      (counterplayRaceDynamicThreat(detail) || counterplayRaceLineProof(detail))
 
   private def counterplayRaceDynamicThreat(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     counterplayRaceText(detail).contains("dynamic-counterplay-race") &&
@@ -3111,14 +3356,8 @@ object MoveMeaningClaim:
           )
       )
 
-  private def counterplayRacePawnBreakProof(detail: PositionPlanTechniqueSemanticDetail): Boolean =
-    counterplayRacePawnBreakDetail(detail) &&
-      counterplayRaceDistinctBreakFiles(detail) &&
-      pawnBreakConcreteTransitionCarrier(detail)
-
   private def counterplayRaceOrderProof(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     counterplayRaceDynamicThreat(detail) ||
-      counterplayRacePawnBreakProof(detail) ||
       detail.raceLeadingLineRole.nonEmpty ||
       (detail.raceCandidateRootMove.nonEmpty && detail.raceReferenceRootMove.nonEmpty)
 
@@ -3185,22 +3424,20 @@ object MoveMeaningClaim:
       detail: PositionPlanTechniqueSemanticDetail,
       claimMove: String
   ): Boolean =
-    moveTouchesBreakFile(detail, claimMove) ||
-      moveEndpoints(claimMove).exists { case (from, to) =>
-        val moveSquares = Set(from, to)
-        val breakFile = detail.breakFile.map(counterplayRaceFileToken)
-        breakFile.exists(file =>
-          detail.tensionEdges.exists(edge =>
-            val edgeSquares = squareTokens(edge)
-            edgeSquares.exists(moveSquares.contains) &&
-              edgeSquares.exists(square => square.take(1) == file)
-          ) ||
-            detail.tensionSquares.exists(square =>
-              moveSquares.contains(square.toLowerCase) &&
-                square.toLowerCase.take(1) == file
-            )
-        )
-      }
+    moveEndpoints(claimMove).exists { case (_, to) =>
+      val breakFile = detail.breakFile.map(counterplayRaceFileToken)
+      breakFile.exists(file =>
+        detail.tensionEdges.exists(edge =>
+          val edgeSquares = squareTokens(edge)
+          edgeSquares.contains(to) &&
+            to.take(1) == file
+        ) ||
+          detail.tensionSquares.exists(square =>
+            square.toLowerCase == to &&
+              square.toLowerCase.take(1) == file
+          )
+      )
+    }
 
   private def counterplayRaceLineLeadOwnsClaimMove(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -3342,10 +3579,14 @@ object MoveMeaningClaim:
 
   private def causeFramePolarityCompatibleWithMeaning(
       frame: MoveJudgmentCauseFrame,
+      verdict: MoveJudgmentVerdictFrame,
       detail: PositionPlanTechniqueSemanticDetail,
       claimRole: String
   ): Boolean =
     val positiveRole = positiveMeaningRole(claimRole)
+    val decisiveBadMoveEvent =
+      lossVerdict(verdict.verdict) &&
+        decisiveBadMoveCauseKind(frame.causeKind)
     val negativeDetail =
       detail.axisPolarity.exists(negativePolarity) ||
         detail.contrastOutcome.contains(StrategicAxisComparisonOutcome.CandidateConcession) ||
@@ -3353,9 +3594,9 @@ object MoveMeaningClaim:
           val normalized = token.toLowerCase
           normalized.contains("loss") || normalized.contains("concede") || normalized.contains("release")
         )
-    !(positiveRole && (negativeCauseKind(frame.causeKind) || negativeDetail))
+    !(positiveRole && (negativeCauseKind(frame.causeKind) || decisiveBadMoveEvent || negativeDetail))
 
-  private def positiveMeaningRole(role: String): Boolean =
+  private[judgment] def positiveMeaningRole(role: String): Boolean =
     role == "ImprovesPieceRoute" ||
       role == "ImprovesPieceActivity" ||
       role == "PreparesBreak" ||
@@ -3373,7 +3614,7 @@ object MoveMeaningClaim:
       role == "PreparesBreakOption" ||
       role == "DevelopsPieceForPlan"
 
-  private def negativeCauseKind(kind: RelativeCauseKind): Boolean =
+  private[judgment] def negativeCauseKind(kind: RelativeCauseKind): Boolean =
     kind == RelativeCauseKind.ActivityLoss ||
       kind == RelativeCauseKind.TargetPressureRelease ||
       kind == RelativeCauseKind.StrategicConcession ||
@@ -3386,6 +3627,9 @@ object MoveMeaningClaim:
       kind == RelativeCauseKind.WrongRecapturer ||
       kind == RelativeCauseKind.WrongMoveOrder ||
       kind == RelativeCauseKind.TempoLoss
+
+  private[judgment] def decisiveBadMoveCauseKind(kind: RelativeCauseKind): Boolean =
+    ClaimEventCluster.kindForCause(kind).nonEmpty
 
   private def detailHasSpecificObjectAxis(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.specificityTier == PositionPlanTechniqueSpecificityTier.ExactObjectAxis ||
@@ -3516,6 +3760,9 @@ object MoveMeaningClaim:
       (detail.maintainedSquares.nonEmpty || detail.brokenSquares.nonEmpty) &&
       detail.sourceEvidenceIds.exists(id => id.toLowerCase.contains(":line:") || id.toLowerCase.startsWith("line:"))
 
+  private def endgameTechniqueHorizonViewShape(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    endgameTechniqueHorizonOwnedShape(detail)
+
   private def endgameTechniqueStatusOwnable(status: String): Boolean =
     status != "SupersededByTactic" && status != "ContradictedByTerminalProof"
 
@@ -3549,6 +3796,7 @@ object MoveMeaningClaim:
     StructuralPurposeSubject.parse(normalized) match
       case Some(StructuralPurposeSubject.Outpost(_, _))       => true
       case Some(StructuralPurposeSubject.Battery(_, _, _, _)) => true
+      case Some(StructuralPurposeSubject.PieceRestriction(_, _, _)) => strategicRayRestrictionToken(normalized)
       case Some(StructuralPurposeSubject.PieceRoute(_, _, _)) => qualifiedRouteToken(normalized)
       case _                                                  => false
 
@@ -3562,6 +3810,7 @@ object MoveMeaningClaim:
           normalized.contains("mechanism=mechanism:rerouting") ||
           normalized.contains("mechanism=mechanism:improvingscope") ||
           normalized.contains("mechanism=mechanism:maneuver") ||
+          (normalized.contains("mechanism=mechanism:diagonal-denial") && strategicRayRestrictionToken(normalized)) ||
           normalized.contains("mechanism=mechanism:filecontrol") ||
           normalized.contains("mechanism=mechanism:file-control") ||
           normalized.contains("mechanism=mechanism:fileaccess") ||
@@ -3571,6 +3820,7 @@ object MoveMeaningClaim:
           routeWeakSquareObjectSignature(normalized) ||
           normalized.contains("consequence=consequence:outpost") ||
           normalized.contains("consequence=consequence:batteryline") ||
+          (normalized.contains("consequence=consequence:mobilityloss") && strategicRayRestrictionToken(normalized)) ||
           normalized.contains("consequence=consequence:diagonalpressure")
       )
 
@@ -3591,7 +3841,7 @@ object MoveMeaningClaim:
     val normalized = token.toLowerCase
     normalized.contains("outpost") ||
       normalized.contains("battery") ||
-      normalized.contains("diagonal") ||
+      strategicRayRestrictionToken(normalized) ||
       normalized.contains("maneuver") ||
       normalized.contains("filecontrol") ||
       normalized.contains("file-control") ||
@@ -3619,8 +3869,13 @@ object MoveMeaningClaim:
       normalized.contains("maneuver") ||
       normalized.contains("battery") ||
       normalized.contains("bishop-long-diagonal") ||
+      strategicRayRestrictionToken(normalized) ||
       normalized.contains("diagonalpressure") ||
+      (normalized.contains("mobilityloss") && strategicRayRestrictionToken(normalized)) ||
       routeWeakSquareObjectSignature(normalized)
+
+  private def strategicRayRestrictionToken(normalized: String): Boolean =
+    normalized.matches(".*bishop:(g7|b7|g2|b2):diagonal-denial:blocked-by:[c-f][45]:locked-center:mobility-[0-9]+-to-[0-9]+.*")
 
   private def crossComparisonLineOwnsClaimMove(
       frame: MoveJudgmentCauseFrame,
@@ -3662,6 +3917,8 @@ object MoveMeaningClaim:
     val sharedTargets = frameTargets.intersect(detailTargets)
     if sharedTargets.nonEmpty then true
     else
+      val frameHasSpecificTarget = frameTargets.nonEmpty || EvidenceObjectBinding.playerFacingReadySignatures(frame.objectBindingSignatures)
+      val detailHasSpecificTarget = detailTargets.nonEmpty || EvidenceObjectBinding.playerFacingReadySignatures(objectSignatures)
       val frameActors =
         EvidenceObjectBinding.signatureTokens(frame.objectBindingSignatures, "actor=").filter(EvidenceObjectBinding.specificActorToken)
       val detailActors =
@@ -3673,7 +3930,7 @@ object MoveMeaningClaim:
       val sharedConsequences =
         EvidenceObjectBinding.signatureTokens(frame.objectBindingSignatures, "consequence=")
           .intersect(EvidenceObjectBinding.signatureTokens(objectSignatures, "consequence="))
-      sharedActors.nonEmpty && (sharedMechanisms.nonEmpty || sharedConsequences.nonEmpty)
+      !frameHasSpecificTarget && !detailHasSpecificTarget && sharedActors.nonEmpty && (sharedMechanisms.nonEmpty || sharedConsequences.nonEmpty)
 
   private def contextualMeaningDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.unit == PositionPlanTechniqueUnit.PlanOptionSet ||
@@ -3683,7 +3940,8 @@ object MoveMeaningClaim:
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String]
   ): Boolean =
-    objectSignatures.exists(EvidenceObjectBinding.hasConcreteActorOrTargetSignature) ||
+    EvidenceObjectBinding.playerFacingReadySignatures(objectSignatures) ||
+      EvidenceObjectBinding.signatureTokens(objectSignatures, "target=").exists(EvidenceObjectBinding.concreteTargetToken) ||
       detail.requiredSquares.nonEmpty ||
       detail.maintainedSquares.nonEmpty ||
       detail.resourceContestSquares.nonEmpty ||
@@ -3735,8 +3993,10 @@ object MoveMeaningClaim:
     if sourceSides == List(RelativeCauseSourceSide.Candidate) then "candidate"
     else if sourceSides == List(RelativeCauseSourceSide.Reference) then "reference"
     else if detail.candidateEvidenceIds.nonEmpty && detail.referenceEvidenceIds.nonEmpty then "contrast"
-    else if detail.candidateEvidenceIds.nonEmpty || frame.line.contains(verdict.candidateLine) then "candidate"
-    else if detail.referenceEvidenceIds.nonEmpty || frame.line.contains(verdict.referenceLine) then "reference"
+    else if detail.referenceEvidenceIds.nonEmpty then "reference"
+    else if detail.candidateEvidenceIds.nonEmpty then "candidate"
+    else if frame.line.contains(verdict.candidateLine) then "candidate"
+    else if frame.line.contains(verdict.referenceLine) then "reference"
     else "contrast"
 
   private def moveUci(
@@ -3745,7 +4005,7 @@ object MoveMeaningClaim:
   ): String =
     if lineRole == "reference" then verdict.referenceLine.rootMove else verdict.candidateLine.rootMove
 
-  private def negativePolarity(polarity: StrategicAxisPolarity): Boolean =
+  private[judgment] def negativePolarity(polarity: StrategicAxisPolarity): Boolean =
     polarity == StrategicAxisPolarity.Loss ||
       polarity == StrategicAxisPolarity.Release ||
       polarity == StrategicAxisPolarity.Concede
@@ -3823,9 +4083,11 @@ object MoveMeaningClaim:
         then "AllowsOpponentCounterplayRace"
         else "StartsCounterplayRace"
       case "PieceRoute" =>
-        "ImprovesPieceRoute"
+        if outpostConcessionDetail(detail) then "ConcedesOutpost"
+        else if negativeStrategicDetail(detail) then "ConcedesPieceRoute"
+        else "ImprovesPieceRoute"
       case "PieceActivity" =>
-        "ImprovesPieceActivity"
+        if negativeStrategicDetail(detail) then "LosesPieceActivity" else "ImprovesPieceActivity"
       case "TechniqueConversion" =>
         endgameTechniqueRole(detail)
       case _ =>
@@ -3847,6 +4109,33 @@ object MoveMeaningClaim:
       detail.label.exists(_.toLowerCase.contains("resolved-tension")) ||
       detail.axisKey.exists(_.toLowerCase.contains("resolved-tension")) ||
       detail.structuralPurposeSubjects.exists(_.toLowerCase.contains("resolved-tension"))
+
+  private def outpostConcessionDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    explicitConsequence(detail, TransitionConsequenceKind.OutpostConcession)
+
+  private def explicitNegativeRouteCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    outpostConcessionDetail(detail)
+
+  private def explicitNegativeActivityCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    List(
+      TransitionConsequenceKind.OutpostConcession,
+      TransitionConsequenceKind.MobilityLoss,
+      TransitionConsequenceKind.FileAccessLoss,
+      TransitionConsequenceKind.TargetPressureRelease,
+      TransitionConsequenceKind.CenterControlLoss
+    ).exists(explicitConsequence(detail, _))
+
+  private def explicitConsequence(
+      detail: PositionPlanTechniqueSemanticDetail,
+      consequence: TransitionConsequenceKind
+  ): Boolean =
+    detail.structuralPurposeConsequences.exists(_.equalsIgnoreCase(consequence.toString))
+
+  private def negativeStrategicDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.axisPolarity.exists(negativePolarity) ||
+      detail.contrastOutcome.contains(StrategicAxisComparisonOutcome.CandidateConcession) ||
+      detail.structuralPurposePolarities.exists(negativeStructuralToken) ||
+      detail.structuralPurposeConsequences.exists(negativeStructuralToken)
 
   private def laneKey(
       meaningKind: String,
@@ -3992,6 +4281,8 @@ object MoveMeaningClaim:
     (
       List(
         Some(s"unit:${detail.unit}"),
+        Some(s"comparisonKind:${verdict.comparisonKind}"),
+        Some(s"comparisonRelation:${MoveMeaningSurface.comparisonRelation(verdict.comparisonKind)}"),
         detail.axisKey.map(value => s"axisKey:$value"),
         detail.axisKind.map(value => s"axisKind:$value"),
         detail.axisPolarity.map(value => s"axisPolarity:$value"),
@@ -4004,6 +4295,7 @@ object MoveMeaningClaim:
         detail.tensionPolicy.map(value => s"tensionPolicy:$value"),
         detail.endgameTechniquePattern.map(value => s"pattern:$value"),
         detail.endgameTechniqueRookPattern.map(value => s"rook-pattern:$value"),
+        detail.endgameTechniqueSide.map(value => s"techniqueSide:$value"),
         detail.endgameTechniqueHorizonStatus.map(value => s"horizonStatus:$value"),
         detail.endgameTechniqueTriggerMove.map(value => s"triggerMove:$value"),
         detail.endgameTechniqueEntryPlyOffset.map(value => s"entryPlyOffset:$value"),
@@ -4080,7 +4372,8 @@ object MoveMeaningClaim:
           case Some(StructuralPurposeSubject.Battery(axis, from, to, roles)) =>
             roles.map(role => s"routePiece:$role") ++
               List(s"routeAxis:$axis", s"routeFrom:$from", s"routeTo:$to", s"routeCarrier:battery", s"routeSubject:$subject")
-          case Some(StructuralPurposeSubject.PieceRestriction(piece, square, blocker)) =>
+          case Some(StructuralPurposeSubject.PieceRestriction(piece, square, blocker))
+              if StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject(subject) =>
             List(
               s"routePiece:$piece",
               s"routeTarget:$square",
@@ -4155,7 +4448,7 @@ object MoveMeaningClaim:
             normalized.contains("mechanism=mechanism:bishop-long-diagonal") ||
             normalized.contains("consequence=consequence:diagonalpressure")
         val diagonalDenial =
-          normalized.contains("diagonal-denial") ||
+          strategicRayRestrictionToken(normalized) ||
             (hasValidatedDenialSubject &&
               (
                 normalized.contains("mechanism=mechanism:opponentmobilityrestriction") ||
@@ -4258,6 +4551,11 @@ object MoveMeaningClaim:
   private def lossVerdict(verdict: MoveChoiceVerdict): Boolean =
     verdict == MoveChoiceVerdict.PlayableLoss ||
       verdict == MoveChoiceVerdict.Inaccuracy ||
+      verdict == MoveChoiceVerdict.Mistake ||
+      verdict == MoveChoiceVerdict.Blunder
+
+  private def badVerdict(verdict: MoveChoiceVerdict): Boolean =
+    verdict == MoveChoiceVerdict.Inaccuracy ||
       verdict == MoveChoiceVerdict.Mistake ||
       verdict == MoveChoiceVerdict.Blunder
 
@@ -4364,7 +4662,7 @@ object MoveJudgmentView:
         positionPlanTechniqueFrames = planTechniqueFrames,
         supportContextClusterIds = supportContextClusterIds,
         overriddenLocalIdeas = overriddenLocalIdeas(ideaVerdict, claims),
-        preservedLocalIdeas = preservedLocalIdeas(claims)
+        preservedLocalIdeas = preservedLocalIdeas(claims, evidenceGraph, playedMoves)
       )
     val moveMeaningClaims = MoveMeaningClaim.from(evidenceGraph, baseView, narratedCauseFrames)
     val view =
@@ -4720,7 +5018,8 @@ object MoveJudgmentView:
       verdictCertificationEvidenceId = assessment.verdictCertificationEvidence.map(_.id),
       comparisonKind = CandidateComparisonKind.PlayedVsBest,
       referenceLine = assessment.reference.ref,
-      candidateLine = assessment.candidate.ref
+      candidateLine = assessment.candidate.ref,
+      candidateSet = assessment.comparison.candidateSet
     )
 
   private def claimFrame(
@@ -4822,6 +5121,7 @@ object MoveJudgmentView:
       proofStrategicMechanismSourceIds = strategicProof.mechanismSourceIds,
       proofStrategicMechanismSignalSourceIds = strategicProof.signalSourceIds,
       supportEvidenceSourceIds = judgmentVisibleEvidenceIds(graph, cluster.causeProofs.flatMap(_.supportEvidenceSourceIds)),
+      proofLineConsequences = cluster.proofLineConsequences.distinct.sortBy(_.toString),
       objectBindingSignatures = cluster.objectBindingSignatures,
       concreteObjectReady = EvidenceObjectBinding.playerFacingReadySignatures(cluster.objectBindingSignatures),
       hasOwnedTacticalProof = clusterHasOwnedTacticalProof(cluster),
@@ -4963,6 +5263,7 @@ object MoveJudgmentView:
       proofStrategicMechanismSourceIds = strategicProof.mechanismSourceIds,
       proofStrategicMechanismSignalSourceIds = strategicProof.signalSourceIds,
       supportEvidenceSourceIds = judgmentVisibleCauseEvidenceIds(cause.supportEvidence, cause),
+      proofLineConsequences = proof.lineConsequences.distinct.sortBy(_.toString),
       objectBindingSignatures = EvidenceObjectBinding.objectSignatures(objectBindings),
       concreteObjectReady = EvidenceObjectBinding.playerFacingReady(objectBindings),
       hasOwnedAdmissibleLongTermProof = cause.hasOwnedAdmissibleLongTermProof,
@@ -5184,10 +5485,12 @@ object MoveJudgmentView:
     }.distinctBy(frame => (frame.ideaId, frame.relation))
 
   private def preservedLocalIdeas(
-      claims: List[ClaimSeed]
+      claims: List[ClaimSeed],
+      graph: TypedEvidenceGraph,
+      playedMoves: Set[String]
   ): List[MoveJudgmentLocalIdeaFrame] =
     val claimsById = claims.map(claim => claim.id -> claim).toMap
-    claims.flatMap { claim =>
+    claims.filter(preservedLocalIdeaClaimReady(_, graph, playedMoves)).flatMap { claim =>
       claim.salience.toList.flatMap(_.interactions).filter(_.kind == ClaimInteractionKind.BadVerdictPreservesLocalIdea).flatMap {
         interaction =>
           claim.ideaRefs.map { idea =>
@@ -5200,6 +5503,20 @@ object MoveJudgmentView:
           }
       }
     }.distinctBy(frame => (frame.ideaId, frame.claimIds.mkString(","), frame.evidenceIds.mkString(",")))
+
+  private def preservedLocalIdeaClaimReady(
+      claim: ClaimSeed,
+      graph: TypedEvidenceGraph,
+      playedMoves: Set[String]
+  ): Boolean =
+    val binding = JudgmentSubjectBinding.claimBinding(claim, graph, playedMoves)
+    val playedMoveBound =
+      claim.subjectMove.exists(move => playedMoves.contains(JudgmentSubjectBinding.normalizeMove(move)))
+    playedMoveBound &&
+      (
+        binding == SubjectBindingClass.DirectPlayed ||
+          binding == SubjectBindingClass.PrimaryPlayedCause
+      )
 
 case class EvidenceBackedJudgmentPacket(
     root: PositionNodeRef,
@@ -5224,5 +5541,3 @@ case class EvidenceBackedJudgmentPacket(
 
   def referenceTransition: Option[MoveTransitionEdge] =
     transitions.find(_.role == TransitionEdgeRole.Reference)
-
-type LlmJudgmentPacket = EvidenceBackedJudgmentPacket
