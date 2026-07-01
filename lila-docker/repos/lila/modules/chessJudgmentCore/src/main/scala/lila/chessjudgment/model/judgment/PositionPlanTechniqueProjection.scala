@@ -207,9 +207,9 @@ object PositionPlanTechniqueSemanticDetail:
         tokens.exists(token => token.contains("moveorder") || token.contains("move-order"))
       val losses =
         List(
-          Option.when(pawnBreak && tensionRelease)("tension_released_early"),
-          Option.when(pawnBreak && tensionMaintain && !tensionRelease)("tension_preservation_missed"),
-          Option.when(pawnBreak && !tensionRelease && !tensionMaintain)("break_option_missed"),
+          Option.when(pawnBreak && tensionRelease && !counterplay)("tension_released_early"),
+          Option.when(pawnBreak && tensionMaintain && !tensionRelease && !counterplay)("tension_preservation_missed"),
+          Option.when(pawnBreak && !tensionRelease && !tensionMaintain && !counterplay)("break_option_missed"),
           Option.when(counterplay)("counter_break_allowed"),
           Option.when(outpost)("outpost_route_missed"),
           Option.when(longDiagonal)("diagonal_pressure_lost"),

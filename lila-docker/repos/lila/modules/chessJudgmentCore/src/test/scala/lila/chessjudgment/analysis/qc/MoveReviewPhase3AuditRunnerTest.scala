@@ -3097,6 +3097,11 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot,
       causeKind = RelativeCauseKind.PawnBreakOpportunity
     )
+    val pawnBreakRaceSourceDetail =
+      pawnBreakRace.copy(
+        unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
+        label = Some("break-file-e-created-tension-e3-d4")
+      )
     val offFilePawnBreakRace = pawnBreakRace.copy(
       axisKey = Some("PawnBreak:Support:break-file-a-created-tension-e3-d4"),
       label = Some("counterplay-race-a-vs-c"),
@@ -3159,6 +3164,11 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       verdict = MoveChoiceVerdict.MatchesReference,
       auditCauses = List(pawnBreakRaceCause),
       details = List(pawnBreakRace)
+    )
+    val pawnBreakRaceWithSourceView = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = List(pawnBreakRaceCause),
+      details = List(pawnBreakRaceSourceDetail, pawnBreakRace)
     )
     val actorOnlyView = meaningClaimView(
       verdict = MoveChoiceVerdict.MatchesReference,
@@ -3234,6 +3244,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assert(pawnBreakRaceView.moveMeaningClaims.head.reasonTokens.contains("raceBreakFile:e"))
     assert(pawnBreakRaceView.moveMeaningClaims.head.reasonTokens.contains("raceCounterBreakFile:c"))
     assert(pawnBreakRaceView.moveMeaningClaims.head.reasonTokens.contains("raceBreakMove:e2e3"))
+    assertEquals(pawnBreakRaceWithSourceView.moveMeaningClaims.map(_.meaningKind), List("CounterplayRace"))
     assertEquals(allowedCounterplayRaceView.moveMeaningClaims.map(_.meaningKind), List("CounterplayRace"))
     assertEquals(allowedCounterplayRaceView.moveMeaningClaims.map(_.role), List("AllowsOpponentCounterplayRace"))
     assertEquals(allowedCounterplayRaceView.moveMeaningClaims.head.surfaceLane, "current_move_function")
@@ -3799,7 +3810,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(PositionPlanTechniqueSemanticDetail.comparisonLossSides(candidateRelease), List("candidate"))
     assert(PositionPlanTechniqueSemanticDetail.comparisonLossKinds(pawnRelease).contains("tension_released_early"))
     assertEquals(PositionPlanTechniqueSemanticDetail.comparisonLossKinds(pawnBreakWithTargetContext), List("break_option_missed"))
-    assert(PositionPlanTechniqueSemanticDetail.comparisonLossKinds(counterRace).contains("counter_break_allowed"))
+    assertEquals(PositionPlanTechniqueSemanticDetail.comparisonLossKinds(counterRace), List("counter_break_allowed"))
     assert(!PositionPlanTechniqueSemanticDetail.comparisonLossKinds(genericCounterRace).contains("counter_break_allowed"))
     assert(PositionPlanTechniqueSemanticDetail.comparisonLossKinds(outpostRoute).contains("outpost_route_missed"))
     assert(PositionPlanTechniqueSemanticDetail.comparisonLossKinds(diagonalPressure).contains("diagonal_pressure_lost"))

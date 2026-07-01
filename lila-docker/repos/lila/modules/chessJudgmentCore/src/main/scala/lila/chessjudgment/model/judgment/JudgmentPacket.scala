@@ -2605,8 +2605,44 @@ object MoveMeaningClaim:
         .values
         .flatMap(mergeMeaningClaims)
         .toList
-    suppressShadowedPlanContinuity(claims)
+    suppressShadowedPlanContinuity(suppressShadowedCounterplayRacePawnBreak(claims))
       .sortBy(claim => (claim.meaningKind, claim.role, claim.lineRole, claim.laneKey, claim.frameId))
+
+  private def suppressShadowedCounterplayRacePawnBreak(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
+    val raceClaims =
+      claims.filter(claim =>
+        claim.meaningKind == "CounterplayRace" &&
+          claim.unit == PositionPlanTechniqueUnit.CounterplayRace &&
+          claim.supportLevel != "contextual" &&
+          claim.reasonTokens.exists(_.startsWith("raceBreakFile:"))
+      )
+    if raceClaims.isEmpty then claims
+    else
+      claims.filterNot(claim =>
+        claim.meaningKind == "PawnBreakTiming" &&
+          claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
+          raceClaims.exists(counterplayRaceShadowsPawnBreak(_, claim))
+      )
+
+  private def counterplayRaceShadowsPawnBreak(
+      raceClaim: MoveMeaningClaim,
+      pawnBreakClaim: MoveMeaningClaim
+  ): Boolean =
+    raceClaim.moveUci == pawnBreakClaim.moveUci &&
+      raceClaim.lineRole == pawnBreakClaim.lineRole &&
+      raceClaim.surfaceLane == pawnBreakClaim.surfaceLane &&
+      strengthRank(raceClaim.supportLevel) >= strengthRank(pawnBreakClaim.supportLevel) &&
+      claimBreakFiles(raceClaim).intersect(claimBreakFiles(pawnBreakClaim)).nonEmpty &&
+      (
+        raceClaim.sourceEvidenceIds.intersect(pawnBreakClaim.sourceEvidenceIds).nonEmpty ||
+          raceClaim.causeEvidenceIds.intersect(pawnBreakClaim.causeEvidenceIds).nonEmpty
+      )
+
+  private def claimBreakFiles(claim: MoveMeaningClaim): Set[String] =
+    claim.reasonTokens.collect {
+      case token if token.startsWith("breakFile:")     => token.stripPrefix("breakFile:").trim.toLowerCase.take(1)
+      case token if token.startsWith("raceBreakFile:") => token.stripPrefix("raceBreakFile:").trim.toLowerCase.take(1)
+    }.filter(_.nonEmpty).toSet
 
   private def suppressShadowedPlanContinuity(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
     val concreteCurrentClaims =
