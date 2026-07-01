@@ -1821,9 +1821,16 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       axisKey: Option[String]
   ): Boolean =
     val parts = MoveReviewPhase3AuditMetrics.signatureParts(signature)
+    val currentMoveLane =
+      parts.exists(part => part == "lane=current_move_owned" || part == "lane=current_move_function")
+    val referenceOwnedLane =
+      parts.contains("lane=reference_or_opponent_resource") &&
+        parts.contains("lineRole=reference") &&
+        parts.contains("support=owned_cause_linked") &&
+        semanticRubricSurfaceClaimCauseIds(signature).nonEmpty
     parts.contains(s"unit=$unit") &&
       axisKey.forall(axis => parts.contains(s"axis=$axis")) &&
-      parts.exists(part => part == "lane=current_move_owned" || part == "lane=current_move_function")
+      (currentMoveLane || referenceOwnedLane)
 
   private def semanticRubricSurfaceClaimCauseIds(signature: String): List[String] =
     MoveReviewPhase3AuditMetrics

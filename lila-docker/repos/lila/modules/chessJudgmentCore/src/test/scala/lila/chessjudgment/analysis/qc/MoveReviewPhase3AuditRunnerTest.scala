@@ -1474,6 +1474,64 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "slots" \ 0 \ "matched").as[Boolean], true)
     assertEquals((coverage \ "slots" \ 1 \ "matched").as[Boolean], false)
 
+  test("ownership slots accept reference-owned public pawn break without current-move overclaim"):
+    val axis = "PawnBreak:Support:break-file-e-created-tension-e5-d4"
+    val causeId = "cause-reference-break"
+    val detailTokens =
+      List("unit:TensionBreakPolicyRoute", "axisKind:PawnBreak", "breakFile:e", s"causeEvidenceId:$causeId")
+    val publicReferenceOwnedSignature =
+      s"unit=TensionBreakPolicyRoute|axis=$axis|kind=PawnBreakTiming|support=owned_cause_linked|lane=reference_or_opponent_resource|lineRole=reference|move=e6e5|causes=$causeId"
+    val publicReferenceSoftSignature =
+      s"unit=TensionBreakPolicyRoute|axis=$axis|kind=PawnBreakTiming|support=view_surfaced|lane=reference_or_opponent_resource|lineRole=reference|move=e6e5|causes=none"
+    val diagnostic =
+      comparisonDiagnostic(
+        id = "cmp-reference-owned-pawn-break",
+        referenceLeadAxes = List(axis),
+        producedKinds = List(RelativeCauseKind.PawnBreakOpportunity),
+        flows = List(causeFlow(causeId, RelativeCauseKind.PawnBreakOpportunity, List(axis), List("claim-reference-break"))),
+        primaryRootKinds = List(RelativeCauseKind.PawnBreakOpportunity),
+        primaryRootIds = List(causeId),
+        positionPlanTechniqueFrameIds = List("frame-reference-owned-pawn-break"),
+        positionPlanTechniqueUnits = List(PositionPlanTechniqueUnit.TensionBreakPolicyRoute),
+        positionPlanTechniqueAxisKeys = List(axis),
+        positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.TensionBreakPolicyRoute),
+        positionPlanTechniqueSemanticDetailAxisKeys = List(axis),
+        positionPlanTechniqueSemanticDetailTokens = detailTokens,
+        positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
+        positionPlanTechniqueObjectBindingSignatures = List("target=File:e|mechanism=Mechanism:pawnbreak|proof=DirectProof"),
+        positionPlanTechniqueRelativeCauseEvidenceIds = List(causeId),
+        moveMeaningClaimSurfaceSignatures = List(publicReferenceOwnedSignature),
+        publicMoveMeaningClaimSurfaceSignatures = List(publicReferenceOwnedSignature),
+        primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
+      )
+    val softReferenceDiagnostic =
+      diagnostic.copy(
+        id = "cmp-reference-soft-pawn-break",
+        moveJudgmentView = diagnostic.moveJudgmentView.copy(
+          moveMeaningClaimSurfaceSignatures = List(publicReferenceSoftSignature),
+          publicMoveMeaningClaimSurfaceSignatures = List(publicReferenceSoftSignature)
+        )
+      )
+    val slot =
+      MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
+        id = "reference-owned-pawn-break",
+        unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
+        requiredTerminalStage = Some("owned_cause_linked"),
+        requiredCauseKinds = List(RelativeCauseKind.PawnBreakOpportunity),
+        requiredSemanticDetailTokens = List("axisKind:PawnBreak", "breakFile:e")
+      )
+
+    val coverage =
+      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(slot), List(diagnostic))
+    val softCoverage =
+      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(slot), List(softReferenceDiagnostic))
+
+    assertEquals((coverage \ "matchedSlotCount").as[Int], 1)
+    assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "clustered_coherent")
+    assertEquals((coverage \ "slots" \ 0 \ "publicSurfaceClaimSignatures").as[List[String]], List(publicReferenceOwnedSignature))
+    assertEquals((softCoverage \ "matchedSlotCount").as[Int], 0)
+    assertEquals((softCoverage \ "slots" \ 0 \ "terminalStage").as[String], "claim_survived")
+
   test("resource contest view slots require concrete target binding"):
     val semanticTokens =
       List(
