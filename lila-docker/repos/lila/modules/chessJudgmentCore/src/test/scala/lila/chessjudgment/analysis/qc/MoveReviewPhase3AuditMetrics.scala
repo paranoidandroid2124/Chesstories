@@ -997,7 +997,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "coveredExpectedQuestionIds" -> coveredExpectedQuestionIds,
       "missingExpectedQuestionIds" -> missingExpectedQuestionIds,
       "missingExpectedQuestionIdCount" -> missingExpectedQuestionIds.size,
-      "expectedQuestionCoverageComplete" -> missingExpectedQuestionIds.isEmpty,
+      "expectedQuestionCoverageComplete" -> (missingExpectedQuestionIds.isEmpty && unmeasuredExpectedQuestionIds.isEmpty),
       "missingQuestionIdSlotCount" -> slotRows.count(row => (row \ "questionId").asOpt[String].isEmpty),
       "missingQuestionIdSlotIds" -> slotRows
         .filter(row => (row \ "questionId").asOpt[String].isEmpty)
@@ -1094,7 +1094,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "coveredExpectedQuestionIds" -> coveredExpectedQuestionIds,
       "missingExpectedQuestionIds" -> missingExpectedQuestionIds,
       "missingExpectedQuestionIdCount" -> missingExpectedQuestionIds.size,
-      "expectedQuestionCoverageComplete" -> missingExpectedQuestionIds.isEmpty,
+      "expectedQuestionCoverageComplete" -> (missingExpectedQuestionIds.isEmpty && unmeasuredExpectedQuestionIds.isEmpty),
       "missingQuestionIdSlotCount" -> slotRows.count(row => (row \ "questionId").asOpt[String].isEmpty),
       "missingQuestionIdSlotIds" -> slotRows
         .filter(row => (row \ "questionId").asOpt[String].isEmpty)
