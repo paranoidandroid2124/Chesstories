@@ -1887,6 +1887,7 @@ object MoveMeaningSurface:
       ) ||
       claim.causeEvidenceIds.nonEmpty ||
       claim.supportLevel == "owned_cause_linked" ||
+      terminalConsequenceCodes(claim).nonEmpty ||
       (
         claim.sourceEvidenceIds.nonEmpty &&
           EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
@@ -3152,7 +3153,11 @@ object MoveMeaningClaim:
       claimLineRole: String,
       claimMove: String
   ): List[String] =
-    if currentMoveMeaningClaim(verdict, claimLineRole, claimMove) then currentMoveCarrierSourceEvidenceIds(detail, claimMove)
+    if currentMoveMeaningClaim(verdict, claimLineRole, claimMove) then
+      (
+        currentMoveCarrierSourceEvidenceIds(detail, claimMove) ++
+          currentMoveStructureContextSourceEvidenceIds(detail)
+      ).distinct.sorted
     else detail.sourceEvidenceIds.distinct.sorted
 
   private def currentMoveCarrierSourceEvidenceIds(
@@ -3163,6 +3168,17 @@ object MoveMeaningClaim:
       .distinct
       .sorted
       .filter(JudgmentSubjectBinding.sourceIdOwnsCurrentPlayedMove(_, claimMove))
+
+  private def currentMoveStructureContextSourceEvidenceIds(
+      detail: PositionPlanTechniqueSemanticDetail
+  ): List[String] =
+    if structuralOpenCenterDevelopmentRoute(detail) then
+      detail.sourceEvidenceIds.filter(currentMoveStructureContextSourceId)
+    else Nil
+
+  private def currentMoveStructureContextSourceId(id: String): Boolean =
+    val normalized = id.toLowerCase
+    normalized.contains("pawn-structure")
 
   private def currentMoveCarrierSourceOwnsClaimMove(
       detail: PositionPlanTechniqueSemanticDetail,

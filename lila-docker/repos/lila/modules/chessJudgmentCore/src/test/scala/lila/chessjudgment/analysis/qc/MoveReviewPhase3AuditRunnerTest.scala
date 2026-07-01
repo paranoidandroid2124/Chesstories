@@ -3180,6 +3180,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(claim.supportLevel, "view_surfaced")
     assertEquals(claim.surfaceLane, "current_move_function")
     assertEquals(claim.causeEvidenceIds, Nil)
+    assertEquals(claim.sourceEvidenceIds, List("pawn-structure:before", "played-transition", "structural-delta:played:e2e3"))
     assert(claim.reasonTokens.contains("structuralMotif:iqp"), claim.reasonTokens)
     assert(claim.reasonTokens.contains("structuralSubject:knight:e2-e3"), claim.reasonTokens)
 

@@ -1555,7 +1555,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(detail.causeEvidenceIds, List(causeRef.id))
     assert(detail.proofRoles.contains(RelativeCauseProofRole.DirectProof), detail.proofRoles)
 
-  test("keeps active open-center structure attached to quiet development route"):
+  test("keeps active open-center and IQP structure attached to quiet development route"):
     val root = PositionNodeRef("r1b1kb1r/pp3ppp/2nqpn2/8/2BN4/8/PPP2PPP/R1BQ1RK1 b kq - 0 10", 1, Some(Color.Black), Some("root"))
     val afterPlayed = PositionNodeRef("r1b1k2r/pp2bppp/2nqpn2/8/2BN4/8/PPP2PPP/R1BQ1RK1 w kq - 1 11", 2, Some(Color.White), Some("after-played"))
     val playedLine = LineNodeRef("played-line", "f8e7", 1, LineNodeRole.Played)
@@ -1720,8 +1720,10 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assert(detail.sourceEvidenceIds.contains(structuralRef.id), detail.sourceEvidenceIds)
     assert(detail.structuralPurposeSubjects.contains("bishop:f8-e7"), detail.structuralPurposeSubjects)
     assert(detail.structuralPurposeConsequences.contains("DevelopmentPieceActivated"), detail.structuralPurposeConsequences)
-    assert(detail.structuralMotifTags.contains("iqp"), detail.structuralMotifTags)
     assert(detail.structuralMotifTags.contains("open"), detail.structuralMotifTags)
+    assert(!detail.structuralMotifTags.contains("iqp"), detail.structuralMotifTags)
+    assert(!detail.structuralMotifTags.contains("isolated"), detail.structuralMotifTags)
+    assert(!detail.structuralMotifTags.contains("transition"), detail.structuralMotifTags)
     assert(
       detail.objectBindingSignatures.exists(signature =>
         signature.contains("actor=Move:f8e7") &&
@@ -1730,6 +1732,63 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       ),
       detail.objectBindingSignatures
     )
+    val iqpPawnRef = evidenceRef(
+      id = "pawn-structure:before:iqp-black",
+      producer = EvidenceProducer.PawnStructureProducer,
+      layer = EvidenceLayer.PawnStructure,
+      position = root,
+      line = None,
+      scope = EvidenceScope.CurrentPosition
+    )
+    val iqpContrastRef = evidenceRef(
+      id = "strategic-contrast:played-vs-best:f8e7:iqp",
+      producer = EvidenceProducer.StrategicMechanismProducer,
+      layer = EvidenceLayer.StrategicMechanism,
+      position = root,
+      line = Some(playedLine),
+      scope = EvidenceScope.Counterfactual
+    )
+    val iqpPawnStructure = pawnStructure.copy(
+      profile = pawnStructure.profile.copy(primary = StructureId.IQPBlack),
+      pawnPlay = None
+    )
+    val iqpContrast = contrast.copy(
+      axisComparisons = contrast.axisComparisons.map(_.copy(candidateSources = List(iqpPawnRef))),
+      support = contrast.support.copy(
+        directSources = List(iqpPawnRef),
+        contextSources = List(structuralRef)
+      )
+    )
+    val iqpView = MoveJudgmentView
+      .from(
+        relativeAssessments = Nil,
+        evidenceGraph = TypedEvidenceGraph(
+          List(
+            EvidenceRecord(structuralRef, structuralDelta),
+            EvidenceRecord(iqpPawnRef, iqpPawnStructure),
+            EvidenceRecord(iqpContrastRef, iqpContrast)
+          )
+        ),
+        ideas = Nil,
+        claims = Nil,
+        claimLifecycle = Nil,
+        ideaVerdict = None,
+        claimSupportClusters = Nil,
+        claimEventClusters = Nil
+      )
+      .get
+    val iqpDetail = iqpView.positionPlanTechniqueFrames
+      .flatMap(_.semanticDetails)
+      .find(detail => detail.unit == PositionPlanTechniqueUnit.StructuralTransformation && detail.axisKey.contains(axis.stableKey))
+      .get
+
+    assertEquals(iqpDetail.structuralRouteMove, Some("f8e7"))
+    assert(iqpDetail.sourceEvidenceIds.contains(iqpPawnRef.id), iqpDetail.sourceEvidenceIds)
+    assert(iqpDetail.sourceEvidenceIds.contains(structuralRef.id), iqpDetail.sourceEvidenceIds)
+    assert(iqpDetail.structuralPurposeSubjects.contains("bishop:f8-e7"), iqpDetail.structuralPurposeSubjects)
+    assert(iqpDetail.structuralMotifTags.contains("iqp"), iqpDetail.structuralMotifTags)
+    assert(iqpDetail.structuralMotifTags.contains("isolated"), iqpDetail.structuralMotifTags)
+    assert(iqpDetail.structuralMotifTags.contains("transition"), iqpDetail.structuralMotifTags)
 
   test("preserves diagonal battery piece roles and target squares in piece route detail"):
     val root = PositionNodeRef("8/8/8/8/8/8/6P1/2B1K2Q w - - 0 1", 1, Some(Color.White), Some("root"))
