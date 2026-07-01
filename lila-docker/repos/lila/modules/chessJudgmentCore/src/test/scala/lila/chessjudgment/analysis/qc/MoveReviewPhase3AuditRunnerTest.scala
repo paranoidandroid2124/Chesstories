@@ -853,7 +853,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
           RelativeCauseKind.TargetPressureGain,
           RelativeCauseKind.PlanContradiction
         ),
-        requiredSemanticDetailTokens = List("iqp", "isolated", "transition")
+        requiredSemanticDetailTokens = List("IQP", "isolated", "transition")
       )
     val ownedCoverage =
       MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
@@ -1240,6 +1240,56 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assert(drawResource.rootMoveMatched("h6a6"), drawResource)
     assert(payload.rootOwnedEndgameTechniqueHorizons("h6a6", RelativeCauseKind.DrawResource).nonEmpty)
 
+  test("line normalizer marks Vancura transition as draw resource proof"):
+    val startFen = "8/8/k7/P7/K7/r7/8/7R b - - 0 1"
+    val afterFen = PrincipalVariationEvidence.legalFenAfter(startFen, "a3g3").get
+    val rawLine =
+      PrincipalVariationEvidence.LineVariationRef(
+        List(PrincipalVariationEvidence.LineMoveRef(1, "a3g3", afterFen))
+      )
+    val validated = PrincipalVariationEvidence.validatedLine(startFen, rawLine, "a3g3").get
+    val facts =
+      PrincipalVariationEvidence.LineFacts(
+        line = validated.line,
+        first = validated.moves.head,
+        reply = validated.reply,
+        continuation = validated.continuation,
+        continuationTail = validated.moves.drop(3)
+      )
+    val position = PositionNodeRef(startFen, 1, Some(chess.Color.Black), Some("root"))
+    val record =
+      LineFactNormalizer.fromValidatedLine(
+        id = "line:vancura-draw-resource",
+        lineRef = lineRef("vancura-draw-resource", "a3g3", 1, LineNodeRole.BestReference),
+        facts = facts,
+        position = position,
+        scope = EvidenceScope.BestLine
+      )
+    val payload =
+      record.payload match
+        case payload: LineFactEvidence => payload
+        case _                         => fail("expected line fact evidence")
+    val vancura = payload.endgameTechniqueHorizons.find(_.pattern == "VancuraDefense").get
+    val detail =
+      PositionPlanTechniqueProjection
+        .frames(TypedEvidenceGraph(List(record)), Nil, Nil, None)
+        .flatMap(_.semanticDetails)
+        .find(_.endgameTechniquePattern.contains("VancuraDefense"))
+        .get
+
+    assertEquals(vancura.rookPattern, RookEndgamePattern.RookBehindPassedPawn.toString)
+    assertEquals(vancura.status, LineEndgameTechniqueHorizonStatus.Transitioned)
+    assertEquals(vancura.triggerMove, Some("a3g3"))
+    assert(vancura.requiredSquares.nonEmpty)
+    assert(vancura.maintainedSquares.nonEmpty)
+    assertEquals(vancura.brokenSquares, Nil)
+    assert(payload.rootOwnedEndgameTechniqueHorizons("a3g3", RelativeCauseKind.DrawResource).nonEmpty)
+    assert(payload.proofSignalConsequencesOf(LineConsequenceKind.DrawResource).exists(_.rootMoveMatched("a3g3")))
+    assertEquals(detail.endgameTechniqueRookPattern, Some(RookEndgamePattern.RookBehindPassedPawn.toString))
+    assertEquals(detail.endgameTechniqueHorizonStatus, Some(LineEndgameTechniqueHorizonStatus.Transitioned.toString))
+    assertEquals(detail.endgameTechniqueTriggerMove, Some("a3g3"))
+    assert(detail.requiredSquares.nonEmpty)
+
   test("non-capture promotion terminal proof owns root move before suppressing rook technique"):
     val startFen = "6K1/3k1P2/8/8/R7/8/8/7r w - - 0 1"
     val afterFen = PrincipalVariationEvidence.legalFenAfter(startFen, "f7f8q").get
@@ -1372,6 +1422,44 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "slots" \ 1 \ "matched").as[Boolean], false)
     assertEquals((detailOnlyCoverage \ "matchedSlotCount").as[Int], 0)
     assertEquals((detailOnlyCoverage \ "slots" \ 0 \ "terminalStage").as[String], "semantic_detected")
+
+  test("recognition view slots without token probes match public current move surface"):
+    val publicSurfaceSignature =
+      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=view_surfaced|lane=current_move_function|causes=none"
+    val diagnostic =
+      comparisonDiagnostic(
+        id = "cmp-route-recognition-view",
+        referenceLeadAxes = Nil,
+        producedKinds = Nil,
+        flows = Nil,
+        primaryRootKinds = Nil,
+        primaryRootIds = Nil,
+        positionPlanTechniqueFrameIds = List("frame-route-recognition-view"),
+        positionPlanTechniqueUnits = List(PositionPlanTechniqueUnit.PieceRerouteRoute),
+        positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.PieceRerouteRoute),
+        positionPlanTechniqueSemanticDetailTokens = List("unit:PieceRerouteRoute"),
+        positionPlanTechniqueSemanticDetailTokenGroups = List(List("unit:PieceRerouteRoute")),
+        moveMeaningClaimSurfaceSignatures = List(publicSurfaceSignature),
+        publicMoveMeaningClaimSurfaceSignatures = List(publicSurfaceSignature)
+      )
+    val recognitionSlot =
+      MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
+        id = "route-recognition-view",
+        unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+        requiredTerminalStage = Some("view_surfaced")
+      )
+    val ownedSlot =
+      recognitionSlot.copy(
+        id = "route-recognition-owned",
+        requiredTerminalStage = Some("owned_cause_linked")
+      )
+
+    val coverage =
+      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(recognitionSlot, ownedSlot), List(diagnostic))
+
+    assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "view_surfaced")
+    assertEquals((coverage \ "slots" \ 0 \ "matched").as[Boolean], true)
+    assertEquals((coverage \ "slots" \ 1 \ "matched").as[Boolean], false)
 
   test("resource contest view slots require concrete target binding"):
     val semanticTokens =
@@ -1915,7 +2003,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     val vancuraFen = "6k1/7R/P1r3K1/8/8/8/8/8 w - - 0 1"
     val vancura = feature(vancuraFen, chess.Color.Black)
     assertEquals(vancura.primaryPattern, Some("VancuraDefense"))
-    assertEquals(vancura.rookEndgamePattern, RookEndgamePattern.KingCutOff)
+    assertEquals(vancura.rookEndgamePattern, RookEndgamePattern.RookBehindPassedPawn)
     assertEquals(anchorKeys(vancuraFen, chess.Color.Black), List("a6", "a8", "c6", "g6", "g8", "h7"))
 
     val shortSideFen = "k7/8/8/1P5r/2K5/8/8/7R b - - 0 1"
@@ -2582,6 +2670,103 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assert(view.moveMeaningClaims.head.reasonTokens.contains("routeTo:e3"))
     assert(view.moveMeaningClaims.head.reasonTokens.contains("routeCarrier:reroute"))
 
+  test("move meaning claims preserve same-root break, counter-break, and line-unlock siblings"):
+    val breakSignature =
+      "actor=Move:e2e3|target=File:e|target=Square:e3|target=Square:d4|mechanism=Mechanism:pawn-break|proof=DirectProof"
+    val counterBreakSignature =
+      "actor=Move:e2e3|target=File:e|target=File:c|mechanism=Mechanism:pawnbreak|consequence=Consequence:counterbreak-race|proof=DirectProof"
+    val lineUnlockSignature =
+      "actor=Move:e2e3|actor=Piece:queen|actor=Square:d1|target=Square:d1|mechanism=Mechanism:line-unlock|consequence=Consequence:lineunlockgain|proof=DirectProof"
+    val breakCause = causeFrame(
+      causeId = "cause-e-break",
+      axisKeys = List("PawnBreak:Release:break-file-e-resolved-tension-e3-d4"),
+      objectSignatures = List(breakSignature),
+      causeKind = RelativeCauseKind.PawnBreakOpportunity,
+      rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot
+    ).copy(hasOwnedAdmissibleLongTermProof = true)
+    val counterBreakCause = causeFrame(
+      causeId = "cause-counter-break",
+      axisKeys = List("Counterplay:Restrain:defensive-counter-break-c"),
+      objectSignatures = List("mechanism=Mechanism:counterplayrestraint|proof=DirectProof"),
+      causeKind = RelativeCauseKind.OpponentRestriction,
+      rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot
+    ).copy(hasOwnedAdmissibleLongTermProof = true)
+    val lineUnlockCause = causeFrame(
+      causeId = "cause-line-unlock",
+      axisKeys = List("Activity:Gain:activity-gain"),
+      objectSignatures = List(lineUnlockSignature),
+      causeKind = RelativeCauseKind.ActivityGain,
+      rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot
+    ).copy(hasOwnedAdmissibleLongTermProof = true)
+    val breakDetail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
+      axisKey = Some("PawnBreak:Release:break-file-e-resolved-tension-e3-d4"),
+      axisKind = Some(StrategicAxisKind.PawnBreak),
+      axisPolarity = Some(StrategicAxisPolarity.Release),
+      label = Some("break-file-e-resolved-tension-e3-d4"),
+      breakFile = Some("e"),
+      tensionPolicy = Some("release"),
+      tensionSquares = List("e3", "d4"),
+      tensionEdges = List("e3-d4"),
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralPurposeSubjects = List("break-file:e", "resolved-tension:e3-d4"),
+      structuralPurposeConsequences = List("PawnTensionResolution"),
+      candidateEvidenceIds = List("structural-delta:played:e2e3"),
+      sourceEvidenceIds = List("structural-delta:played:e2e3"),
+      causeEvidenceIds = List("cause-e-break"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List(breakSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
+    )
+    val counterBreakDetail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.SpacePreventionResourceDenial,
+      axisKey = Some("Counterplay:Restrain:defensive-counter-break-c"),
+      axisKind = Some(StrategicAxisKind.Counterplay),
+      axisPolarity = Some(StrategicAxisPolarity.Restrain),
+      label = Some("defensive-counter-break-c"),
+      breakFile = Some("e"),
+      counterBreakFiles = List("c"),
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralPurposeSubjects = List("break-file:e", "resolved-tension:e3-d4"),
+      structuralPurposeConsequences = List("PawnTensionResolution"),
+      candidateEvidenceIds = List("structural-delta:played:e2e3"),
+      sourceEvidenceIds = List("structural-delta:played:e2e3"),
+      causeEvidenceIds = List("cause-counter-break"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List(counterBreakSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
+    )
+    val lineUnlockDetail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Gain:activity-gain"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      label = Some("activity-gain"),
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralPurposeSubjects = List("queen:d1:line-unlock:by:e2e3:mobility+1"),
+      structuralPurposeConsequences = List("LineUnlockGain"),
+      structuralMotifTags = List("piece", "reroute", "route"),
+      candidateEvidenceIds = List("structural-delta:played:e2e3"),
+      sourceEvidenceIds = List("structural-delta:played:e2e3"),
+      causeEvidenceIds = List("cause-line-unlock"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List(lineUnlockSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
+    )
+
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = List(breakCause, counterBreakCause, lineUnlockCause),
+      details = List(breakDetail, counterBreakDetail, lineUnlockDetail)
+    )
+    val claims = view.moveMeaningClaims
+
+    assertEquals(claims.map(_.meaningKind).toSet, Set("PawnBreakTiming", "CounterplayControl", "PieceRoute"))
+    assert(claims.forall(_.moveUci == candidateLine.rootMove), claims)
+    assert(claims.forall(_.surfaceLane == "current_move_owned"), claims)
+    assert(claims.exists(claim => claim.meaningKind == "CounterplayControl" && claim.reasonTokens.contains("counterBreakFile:c")))
+    assert(claims.exists(claim => claim.meaningKind == "PieceRoute" && claim.reasonTokens.exists(_.contains("line-unlock"))))
+
   test("move meaning claims surface current-move structural route without cause ownership"):
     val routeSignature =
       "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated"
@@ -2847,6 +3032,86 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       ),
       false
     )
+
+  test("move meaning claims surface open-center structural route without cause ownership"):
+    val routeSignature =
+      "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated"
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.StructuralTransformation,
+      axisKey = None,
+      axisKind = None,
+      contrastOutcome = Some(StrategicAxisComparisonOutcome.SharedSustained),
+      candidateEvidenceIds = List("played-transition"),
+      referenceEvidenceIds = List("reference-transition"),
+      sourceEvidenceIds = List("pawn-structure:before", "structural-delta:played:e2e3"),
+      semanticAnchorKeys = List(
+        "OpeningAnchor:PawnStructure:PawnBreakObserved",
+        "PawnPlay:break-file-e",
+        "PawnPlay:center-break",
+        "PawnStructure:OpenCenter"
+      ),
+      objectBindingSignatures = List(routeSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.BroadAxis,
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralPurposeSubjects = List("knight:e2-e3", "knight:e2-e3:mobility+2"),
+      structuralPurposeConsequences = List("DevelopmentPieceActivated", "DevelopmentMobilityGain"),
+      structuralPurposeCategories = List("Development", "OpeningDevelopment", "StrategicSupport"),
+      structuralMotifTags = List("iqp", "open", "space")
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(detail)
+    )
+
+    val claim = view.moveMeaningClaims.headOption.getOrElse(fail(view.moveMeaningClaims.toString))
+    assertEquals(claim.meaningKind, "PieceActivity")
+    assertEquals(claim.role, "ImprovesPieceActivity")
+    assertEquals(claim.supportLevel, "view_surfaced")
+    assertEquals(claim.surfaceLane, "current_move_function")
+    assertEquals(claim.causeEvidenceIds, Nil)
+    assert(claim.reasonTokens.contains("structuralMotif:iqp"), claim.reasonTokens)
+    assert(claim.reasonTokens.contains("structuralMotif:open"), claim.reasonTokens)
+    assert(claim.reasonTokens.contains("structuralSubject:knight:e2-e3"), claim.reasonTokens)
+
+  test("move meaning claims surface open-center development route as route recognition without cause ownership"):
+    val routeSignature =
+      "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated"
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = None,
+      axisKind = None,
+      contrastOutcome = Some(StrategicAxisComparisonOutcome.SharedSustained),
+      candidateEvidenceIds = List("played-transition"),
+      referenceEvidenceIds = List("reference-transition"),
+      sourceEvidenceIds = List("pawn-structure:before", "structural-delta:played:e2e3"),
+      semanticAnchorKeys = List(
+        "OpeningAnchor:PawnStructure:PawnBreakObserved",
+        "PawnPlay:center-break",
+        "PawnStructure:OpenCenter"
+      ),
+      objectBindingSignatures = List(routeSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.BroadAxis,
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralPurposeSubjects = List("knight:e2-e3", "knight:e2-e3:mobility+2"),
+      structuralPurposeConsequences = List("DevelopmentPieceActivated", "DevelopmentMobilityGain"),
+      structuralPurposeCategories = List("Development", "OpeningDevelopment", "StrategicSupport"),
+      structuralMotifTags = List("iqp", "open", "route", "reroute", "space")
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(detail)
+    )
+
+    val claim = view.moveMeaningClaims.headOption.getOrElse(fail(view.moveMeaningClaims.toString))
+    assertEquals(claim.meaningKind, "PieceRoute")
+    assertEquals(claim.role, "ImprovesPieceRoute")
+    assertEquals(claim.supportLevel, "view_surfaced")
+    assertEquals(claim.surfaceLane, "current_move_function")
+    assertEquals(claim.causeEvidenceIds, Nil)
+    assert(claim.reasonTokens.contains("structuralMotif:iqp"), claim.reasonTokens)
+    assert(claim.reasonTokens.contains("structuralSubject:knight:e2-e3"), claim.reasonTokens)
 
   test("move meaning claims do not surface generic structure shift from current-move route alone"):
     val routeSignature =

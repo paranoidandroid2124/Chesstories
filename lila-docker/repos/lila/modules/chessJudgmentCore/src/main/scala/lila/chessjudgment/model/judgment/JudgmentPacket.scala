@@ -2805,9 +2805,7 @@ object MoveMeaningClaim:
       baseClaimRole = role(baseMeaningKind, detail)
       currentRouteLineRole =
         Option.when(
-          detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
-            detail.structuralRouteMove.exists(move => sameMove(move, verdict.candidateLine.rootMove)) &&
-            pieceRouteQualifiedCarrierForMove(detail, objectSignatures, verdict.candidateLine.rootMove)
+          currentMoveRouteLineRole(detail, objectSignatures, verdict)
         )("candidate")
       lineRoleOptions =
         (currentRouteLineRole.toList ++ List(
@@ -2908,6 +2906,22 @@ object MoveMeaningClaim:
         targetSquares = surfaceTarget.squares,
         targetFiles = surfaceTarget.files,
         targetPieces = surfaceTarget.pieces
+      )
+
+  private def currentMoveRouteLineRole(
+      detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
+      verdict: MoveJudgmentVerdictFrame
+  ): Boolean =
+    detail.structuralRouteMove.exists(move => sameMove(move, verdict.candidateLine.rootMove)) &&
+      (
+        detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+          structuralOpenCenterDevelopmentRoute(detail) ||
+          detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
+            (
+              pieceRouteQualifiedCarrierForMove(detail, objectSignatures, verdict.candidateLine.rootMove) ||
+                structuralOpenCenterDevelopmentRoute(detail)
+            )
       )
 
   private def supportLevel(
@@ -3016,20 +3030,25 @@ object MoveMeaningClaim:
         case PositionPlanTechniqueUnit.PieceRerouteRoute =>
           moveOwnedSource &&
             detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
-            pieceRouteDetailReady(detail) &&
+            (pieceRouteDetailReady(detail) || structuralOpenCenterDevelopmentRoute(detail)) &&
             pieceRouteOwnsClaimMove(detail, claimMove)
         case PositionPlanTechniqueUnit.StructuralTransformation =>
           moveOwnedSource &&
             detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
             generalDetailOwnsClaimMove(detail, objectSignatures, claimMove) &&
             !currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove) &&
-            detail.axisKind.exists(kind =>
-              kind == StrategicAxisKind.Target ||
-                kind == StrategicAxisKind.SpaceCenter
-            ) &&
             (
-              detail.structuralPurposeSubjects.exists(concreteSubject) ||
-                EvidenceObjectBinding.signatureTokens(objectSignatures, "target=").exists(EvidenceObjectBinding.concreteTargetToken)
+              (
+                detail.axisKind.exists(kind =>
+                  kind == StrategicAxisKind.Target ||
+                    kind == StrategicAxisKind.SpaceCenter
+                ) &&
+                  (
+                    detail.structuralPurposeSubjects.exists(concreteSubject) ||
+                      EvidenceObjectBinding.signatureTokens(objectSignatures, "target=").exists(EvidenceObjectBinding.concreteTargetToken)
+                  )
+              ) ||
+                structuralOpenCenterDevelopmentRoute(detail)
             )
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
           moveOwnedSource &&
@@ -3379,8 +3398,15 @@ object MoveMeaningClaim:
     val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
     val currentMoveSignatures =
       objectSignatures.filter(signature => moveTokens(List(signature)).contains(normalizedClaimMove))
+    val routeSignatures =
+      if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
+          pieceRouteQualifiedCarrierForMove(detail, objectSignatures, claimMove)
+      then currentMoveSignatures.filter(qualifiedRouteObjectSignature)
+      else Nil
     val signatures =
-      if currentMoveSignatures.nonEmpty then currentMoveSignatures else objectSignatures
+      if routeSignatures.nonEmpty then routeSignatures
+      else if currentMoveSignatures.nonEmpty then currentMoveSignatures
+      else objectSignatures
     detail.axisPolarity.exists(negativePolarity) ||
       detail.contrastOutcome.contains(StrategicAxisComparisonOutcome.CandidateConcession) ||
       detail.structuralPurposePolarities.exists(negativeStructuralToken) ||
@@ -3437,11 +3463,11 @@ object MoveMeaningClaim:
       claimLineRole match
         case "candidate" =>
           frame.causeSourceSide == RelativeCauseSourceSide.Candidate &&
-            frame.eventLine == verdict.candidateLine &&
+            (frame.eventLine == verdict.candidateLine || frame.eventLine == verdict.referenceLine) &&
             frameRootMatches
         case "reference" =>
           frame.causeSourceSide == RelativeCauseSourceSide.Reference &&
-            frame.eventLine == verdict.referenceLine &&
+            (frame.eventLine == verdict.referenceLine || frame.eventLine == verdict.candidateLine) &&
             frameRootMatches
         case "contrast" =>
           frameRootMatches &&
@@ -3477,7 +3503,36 @@ object MoveMeaningClaim:
   ): Boolean =
     detail.causeEvidenceIds.exists(frame.causeEvidenceIds.contains) &&
       sameComparisonCauseMatchesDetail(frame.causeKind, detail) &&
-      causeFrameObjectOverlapsDetail(frame, objectSignatures)
+      (
+        causeFrameObjectOverlapsDetail(frame, objectSignatures) ||
+          sameRootCounterBreakCauseMatchesDetail(frame, detail)
+      )
+
+  private def sameRootCounterBreakCauseMatchesDetail(
+      frame: MoveJudgmentCauseFrame,
+      detail: PositionPlanTechniqueSemanticDetail
+  ): Boolean =
+    frame.causeKind == RelativeCauseKind.OpponentRestriction &&
+      detail.unit == PositionPlanTechniqueUnit.SpacePreventionResourceDenial &&
+      detail.axisKey.exists(counterBreakAxisKey) &&
+      frame.proofStrategicAxisKeys.exists(axisKey => detail.axisKey.exists(_.equalsIgnoreCase(axisKey))) &&
+      detail.counterBreakFiles.exists(_.trim.nonEmpty) &&
+      detail.structuralRouteMove.exists(move => sameMove(move, frame.eventRootMove)) &&
+      (
+        detail.breakFile.exists(_.trim.nonEmpty) ||
+          detail.tensionEdges.nonEmpty ||
+          detail.tensionSquares.nonEmpty ||
+          detail.structuralPurposeSubjects.exists(pawnBreakTensionSubject)
+      )
+
+  private def opponentRestrictionSpaceDetailCanOwn(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.axisKey.exists(counterBreakAxisKey) ||
+      detail.structuralPurposeSubjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
+
+  private def counterBreakAxisKey(axisKey: String): Boolean =
+    val normalized = axisKey.toLowerCase
+    normalized.equals("counterplay:restrain:defensive-counter-break-c") ||
+      normalized.contains("counterplay:restrain:defensive-counter-break-")
 
   private def sameComparisonCauseMatchesDetail(
       kind: RelativeCauseKind,
@@ -3511,7 +3566,7 @@ object MoveMeaningClaim:
       case RelativeCauseKind.OpponentRestriction =>
         detail.axisKind.contains(StrategicAxisKind.Counterplay) &&
           (
-            detail.unit == PositionPlanTechniqueUnit.SpacePreventionResourceDenial ||
+            (detail.unit == PositionPlanTechniqueUnit.SpacePreventionResourceDenial && opponentRestrictionSpaceDetailCanOwn(detail)) ||
               detail.unit == PositionPlanTechniqueUnit.CounterplayRace
           )
       case RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
@@ -4135,9 +4190,12 @@ object MoveMeaningClaim:
     val negativeDetail =
       detail.axisPolarity.exists(negativePolarity) ||
         detail.contrastOutcome.contains(StrategicAxisComparisonOutcome.CandidateConcession) ||
-        detail.structuralPurposePolarities.exists(token =>
-          val normalized = token.toLowerCase
-          normalized.contains("loss") || normalized.contains("concede") || normalized.contains("release")
+        (
+          detail.axisPolarity.isEmpty &&
+            detail.structuralPurposePolarities.exists(token =>
+              val normalized = token.toLowerCase
+              normalized.contains("loss") || normalized.contains("concede") || normalized.contains("release")
+            )
         )
     !(positiveRole && (negativeCauseKind(frame.causeKind) || decisiveBadMoveEvent || negativeDetail))
 
@@ -4360,6 +4418,7 @@ object MoveMeaningClaim:
       case Some(StructuralPurposeSubject.Battery(_, _, _, _)) => true
       case Some(StructuralPurposeSubject.PieceRestriction(_, _, _)) => strategicRayRestrictionToken(normalized)
       case Some(StructuralPurposeSubject.PieceRoute(_, _, _)) => qualifiedRouteToken(normalized)
+      case Some(StructuralPurposeSubject.PieceSquare(_, _))   => lineUnlockRouteToken(normalized)
       case _                                                  => false
 
   private def qualifiedRouteObjectSignature(signature: String): Boolean =
@@ -4379,9 +4438,11 @@ object MoveMeaningClaim:
           normalized.contains("mechanism=mechanism:file-access") ||
           normalized.contains("mechanism=mechanism:fileoccupation") ||
           normalized.contains("mechanism=mechanism:file-occupation") ||
+          normalized.contains("mechanism=mechanism:line-unlock") ||
           routeWeakSquareObjectSignature(normalized) ||
           normalized.contains("consequence=consequence:outpost") ||
           normalized.contains("consequence=consequence:batteryline") ||
+          normalized.contains("consequence=consequence:lineunlockgain") ||
           (normalized.contains("consequence=consequence:mobilityloss") && strategicRayRestrictionToken(normalized)) ||
           normalized.contains("consequence=consequence:diagonalpressure")
       )
@@ -4433,8 +4494,12 @@ object MoveMeaningClaim:
       normalized.contains("bishop-long-diagonal") ||
       strategicRayRestrictionToken(normalized) ||
       normalized.contains("diagonalpressure") ||
+      normalized.contains("line-unlock") ||
       (normalized.contains("mobilityloss") && strategicRayRestrictionToken(normalized)) ||
       routeWeakSquareObjectSignature(normalized)
+
+  private def lineUnlockRouteToken(normalized: String): Boolean =
+    normalized.contains(":line-unlock:by:") && normalized.contains(":mobility+")
 
   private def strategicRayRestrictionToken(normalized: String): Boolean =
     normalized.matches(".*bishop:(g7|b7|g2|b2):diagonal-denial:blocked-by:[c-f][45]:locked-center:mobility-[0-9]+-to-[0-9]+.*")
@@ -4603,6 +4668,7 @@ object MoveMeaningClaim:
           else Some("PieceActivity")
         case PositionPlanTechniqueUnit.StructuralTransformation =>
           if detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) then Some("TerminalProof")
+          else if structuralOpenCenterDevelopmentRoute(detail) then Some("PieceActivity")
           else detail.axisKind match
             case Some(StrategicAxisKind.Target)        => Some("TargetPressure")
             case Some(StrategicAxisKind.SpaceCenter)   => Some("CenterControl")
@@ -4706,6 +4772,38 @@ object MoveMeaningClaim:
       consequence: TransitionConsequenceKind
   ): Boolean =
     detail.structuralPurposeConsequences.exists(_.equalsIgnoreCase(consequence.toString))
+
+  private def structuralOpenCenterDevelopmentRoute(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.structuralRouteMove.nonEmpty &&
+      structuralOpenCenterContext(detail) &&
+      structuralDevelopmentRoute(detail)
+
+  private def structuralOpenCenterContext(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    val anchors = detail.semanticAnchorKeys.map(_.toLowerCase)
+    val motifs = detail.structuralMotifTags.map(_.toLowerCase)
+    motifs.exists(tag => tag == "iqp" || tag == "open") ||
+      anchors.exists(anchor =>
+        anchor == "pawnstructure:opencenter" ||
+          anchor == "pawnplay:center-break" ||
+          anchor.contains("openinganchor:pawnstructure:pawnbreakobserved") ||
+          anchor.contains("pawnbreakpreparation")
+      )
+
+  private def structuralDevelopmentRoute(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.structuralPurposeSubjects.exists(subject =>
+      StructuralPurposeSubject.parse(subject).exists {
+        case _: StructuralPurposeSubject.PieceRoute => true
+        case _                                     => false
+      } || subject.toLowerCase.matches(".*(bishop|knight|rook|queen|king):[a-h][1-8]-[a-h][1-8].*")
+    ) ||
+      detail.structuralPurposeConsequences.exists(value =>
+        val normalized = value.toLowerCase
+        normalized.contains("development") || normalized.contains("mobilitygain")
+      ) ||
+      detail.structuralPurposeCategories.exists(value =>
+        val normalized = value.toLowerCase
+        normalized.contains("development") || normalized.contains("pieceactivity")
+      )
 
   private def negativeStrategicDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.axisPolarity.exists(negativePolarity) ||
@@ -4957,6 +5055,13 @@ object MoveMeaningClaim:
               s"routeBlocker:$blocker",
               "routeAxis:diagonal",
               "routeCarrier:diagonal-denial",
+              s"routeSubject:$subject"
+            )
+          case Some(StructuralPurposeSubject.PieceSquare(piece, square)) if lineUnlockRouteToken(subject.toLowerCase) =>
+            List(
+              s"routePiece:$piece",
+              s"routeTarget:$square",
+              "routeCarrier:line-unlock",
               s"routeSubject:$subject"
             )
           case _ =>

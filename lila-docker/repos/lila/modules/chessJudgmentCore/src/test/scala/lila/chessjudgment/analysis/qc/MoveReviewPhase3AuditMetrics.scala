@@ -1380,7 +1380,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     )
 
   private def tokensSatisfied(requiredTokens: List[String], values: List[String]): Boolean =
-    requiredTokens.forall(token => values.exists(value => value.contains(token)))
+    requiredTokens.forall { token =>
+      val normalizedToken = token.toLowerCase
+      values.exists(value => value.toLowerCase.contains(normalizedToken))
+    }
 
   private def semanticDetailTokensSatisfiedForSlot(
       slot: ExpectedSemanticSlot,
@@ -1653,14 +1656,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slot.requiredCauseKinds.isEmpty &&
       slot.requiredPrimaryRootCauseKinds.isEmpty &&
       slot.requiredPrimaryRootArbitrationTiers.isEmpty &&
-      expectedSemanticSlotHasSemanticProbe(slot) &&
       row.viewSurfaced
-
-  private def expectedSemanticSlotHasSemanticProbe(slot: ExpectedSemanticSlot): Boolean =
-    slot.requiredSemanticDetailTokens.nonEmpty ||
-      slot.requiredCoLocatedSemanticDetailTokens.nonEmpty ||
-      slot.requiredSemanticAnchorTokens.nonEmpty ||
-      slot.requiredObjectBindingTokens.nonEmpty
 
   private def semanticRubricSlotRows(diagnostic: CandidateComparisonDiagnostic): List[SemanticRubricSlotRow] =
     val axisRows =

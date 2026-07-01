@@ -1,6 +1,14 @@
 package lila.chessjudgment.analysis.strategic
 
 import chess.*
+import chess.format.Fen
+import chess.variant.Standard
+import lila.chessjudgment.model.judgment.{
+  LineConsequenceKind,
+  LineEndgameTechniqueHorizon,
+  LineEndgameTechniqueHorizonStatus,
+  LineReplayStep
+}
 import lila.chessjudgment.model.strategic.*
 
 object EndgamePatternOracle:
@@ -62,6 +70,41 @@ object EndgamePatternOracle:
       detect(board, color, core).map(applyPattern(core, _)).getOrElse(core)
     }
 
+  def techniqueHorizons(
+      startFen: String,
+      replay: List[LineReplayStep],
+      terminalKinds: List[LineConsequenceKind]
+  ): List[LineEndgameTechniqueHorizon] =
+    val snapshots =
+      (techniqueSnapshots(startFen, -1, None) ++
+        replay.zipWithIndex.flatMap { case (step, index) =>
+          techniqueSnapshots(step.fenAfter, index, Some(normalizeUci(step.moveUci)))
+        }).sortBy(_.plyOffset)
+    val finalPlyOffset = if replay.nonEmpty then replay.size - 1 else -1
+    val normalizedTerminalKinds = terminalKinds.distinct.sortBy(_.toString)
+    val terminalOverrideKinds = normalizedTerminalKinds.filter(LineEndgameTechniqueHorizon.terminalProofOverrides)
+    val replayMovesByPly =
+      replay.zipWithIndex.map { case (step, index) =>
+        index -> normalizeUci(step.moveUci)
+      }.toMap
+    snapshots
+      .groupBy(_.key)
+      .values
+      .toList
+      .flatMap(group =>
+        contiguousTechniqueEpisodes(group.sortBy(_.plyOffset)).map(episode =>
+          lineEndgameTechniqueHorizon(
+            episode,
+            snapshots,
+            replayMovesByPly,
+            finalPlyOffset,
+            normalizedTerminalKinds,
+            terminalOverrideKinds
+          )
+        )
+      )
+      .sortBy(horizon => (horizon.pattern, horizon.techniqueSideKey, horizon.entryPlyOffset))
+
   def applyPattern(core: EndgameFeature, pattern: PatternMatch): EndgameFeature =
     val overrides = pattern.signalOverrides
     val updatedZugLikelihood = overrides.zugzwangLikelihood.getOrElse(core.zugzwangLikelihood)
@@ -95,6 +138,115 @@ object EndgamePatternOracle:
     val majorPieces = matWhite.rooks + matWhite.queens + matBlack.rooks + matBlack.queens
     val minorPieces = matWhite.knights + matWhite.bishops + matBlack.knights + matBlack.bishops
     board.occupied.count <= 15 || majorPieces <= 2 && minorPieces <= 2
+
+  private final case class EndgameTechniqueSnapshot(
+      plyOffset: Int,
+      moveUci: Option[String],
+      pattern: String,
+      rookPattern: String,
+      techniqueSide: Color,
+      requiredSquares: List[String]
+  ):
+    def key: (String, Color) = pattern -> techniqueSide
+
+  private def contiguousTechniqueEpisodes(group: List[EndgameTechniqueSnapshot]): List[List[EndgameTechniqueSnapshot]] =
+    group.foldLeft(List.empty[List[EndgameTechniqueSnapshot]]) { case (episodes, snapshot) =>
+      episodes.lastOption match
+        case None =>
+          List(List(snapshot))
+        case Some(current) if snapshot.plyOffset <= current.last.plyOffset + 1 =>
+          episodes.dropRight(1) :+ (current :+ snapshot)
+        case Some(_) =>
+          episodes :+ List(snapshot)
+    }
+
+  private def techniqueSnapshots(
+      fen: String,
+      plyOffset: Int,
+      moveUci: Option[String]
+  ): List[EndgameTechniqueSnapshot] =
+    positionAfter(fen).toList.flatMap { position =>
+      List(Color.White, Color.Black).flatMap { side =>
+        analyze(position.board, side).toList.flatMap(feature =>
+          for
+            pattern <- feature.primaryPattern
+            geometry <- feature.rookEndgameGeometry
+            if feature.rookEndgamePattern != RookEndgamePattern.None
+          yield
+          EndgameTechniqueSnapshot(
+            plyOffset = plyOffset,
+            moveUci = moveUci,
+            pattern = pattern,
+            rookPattern = feature.rookEndgamePattern.toString,
+            techniqueSide = geometry.techniqueSide,
+            requiredSquares = geometry.anchorSquares.map(_.key).distinct.sorted
+          )
+        )
+      }
+    }.distinctBy(snapshot => (snapshot.plyOffset, snapshot.pattern, snapshot.techniqueSide, snapshot.requiredSquares.mkString(",")))
+
+  private def lineEndgameTechniqueHorizon(
+      group: List[EndgameTechniqueSnapshot],
+      allSnapshots: List[EndgameTechniqueSnapshot],
+      replayMovesByPly: Map[Int, String],
+      finalPlyOffset: Int,
+      terminalKinds: List[LineConsequenceKind],
+      terminalOverrideKinds: List[LineConsequenceKind]
+  ): LineEndgameTechniqueHorizon =
+    val first = group.head
+    val last = group.last
+    val requiredSquares = first.requiredSquares
+    val presentAtFinal = group.exists(_.plyOffset == finalPlyOffset)
+    val maintainedSquares =
+      if presentAtFinal then requiredSquares.intersect(last.requiredSquares).distinct.sorted
+      else Nil
+    val baseStatus =
+      if terminalOverrideKinds.nonEmpty && LineEndgameTechniqueHorizon.defensivePattern(first.pattern) then
+        LineEndgameTechniqueHorizonStatus.ContradictedByTerminalProof
+      else if terminalOverrideKinds.nonEmpty then
+        LineEndgameTechniqueHorizonStatus.SupersededByTactic
+      else if first.plyOffset > -1 && presentAtFinal then
+        LineEndgameTechniqueHorizonStatus.Transitioned
+      else if presentAtFinal then
+        LineEndgameTechniqueHorizonStatus.Active
+      else
+        LineEndgameTechniqueHorizonStatus.Failed
+    val missingAfterLastMove =
+      replayMovesByPly.get(last.plyOffset + 1).orElse(
+        allSnapshots
+          .filter(snapshot => snapshot.plyOffset > last.plyOffset)
+          .sortBy(_.plyOffset)
+          .find(snapshot => snapshot.key != first.key)
+          .flatMap(_.moveUci)
+      )
+    val triggerMove =
+      if baseStatus == LineEndgameTechniqueHorizonStatus.Failed then missingAfterLastMove.orElse(first.moveUci)
+      else if first.plyOffset > -1 then first.moveUci
+      else None
+    val brokenSquares = requiredSquares.diff(maintainedSquares).distinct.sorted
+    LineEndgameTechniqueHorizon(
+      pattern = first.pattern,
+      rookPattern = first.rookPattern,
+      techniqueSide = first.techniqueSide,
+      entryPlyOffset = first.plyOffset,
+      terminalPlyOffset = if presentAtFinal then finalPlyOffset else last.plyOffset,
+      status = baseStatus,
+      triggerMove = triggerMove,
+      requiredSquares = requiredSquares,
+      maintainedSquares = maintainedSquares,
+      brokenSquares = brokenSquares,
+      terminalConsequenceKinds = terminalKinds,
+      failureReason =
+        Option.when(baseStatus == LineEndgameTechniqueHorizonStatus.Failed)("technique-geometry-not-maintained")
+          .orElse(Option.when(baseStatus == LineEndgameTechniqueHorizonStatus.ContradictedByTerminalProof)("terminal-proof-overrides-technique"))
+          .orElse(Option.when(baseStatus == LineEndgameTechniqueHorizonStatus.SupersededByTactic)("terminal-proof-supersedes-technique"))
+    )
+
+  private def positionAfter(fen: String): Option[Position] =
+    Fen.read(Standard, Fen.Full(fen))
+
+  private def normalizeUci(uci: String): String =
+    Option(uci).getOrElse("").trim.toLowerCase
 
   private def baseFeature(board: Board, color: Color): EndgameFeature =
     val (hasOpposition, oppositionType) = opposition(board, color)
@@ -215,15 +367,26 @@ object EndgamePatternOracle:
       else if matA.queens > 0 || matD.queens > 0 || matA.knights + matA.bishops + matD.knights + matD.bishops > 0 then None
       else
         val rookPawn = passedPawns(board, attacker)
-          .filter(p => isFlankPawn(p) && relativeRank(p, attacker) == 6)
+          .filter(p => isFlankPawn(p) && relativeRank(p, attacker) >= 5 && relativeRank(p, attacker) <= 6)
           .sortBy(p => -relativeRank(p, attacker))
           .headOption
         for
           pawn <- rookPawn
+          dKing <- board.kingPosOf(defender)
           dRook <- board.byPiece(defender, Rook).squares.headOption
           aRook <- board.byPiece(attacker, Rook).squares.headOption
-          if dRook.rank == pawn.rank
-          if fileDistance(dRook.file, pawn.file) >= 1
+          relative = relativeRank(pawn, attacker)
+          sideCheckRank = if attacker.white then Rank.Third else Rank.Sixth
+          if (
+            relative == 6 &&
+              dRook.rank == pawn.rank &&
+              fileDistance(dRook.file, pawn.file) >= 1
+          ) || (
+            relative == 5 &&
+              dRook.rank == sideCheckRank &&
+              fileDistance(dRook.file, pawn.file) >= 2 &&
+              chebyshev(dKing, pawn) <= 2
+          )
           if !isRookBehindPawn(board, attacker, pawn)
         yield
           val geometry = rookTechniqueGeometry(board, defender, attacker, defender, pawn, Some(aRook), Some(dRook))
@@ -232,7 +395,7 @@ object EndgamePatternOracle:
             outcomeOverride = Some(TheoreticalOutcomeHint.Draw),
             confidenceFloor = 0.76,
             signalOverrides = PatternSignalOverrides(
-              rookEndgamePattern = Some(RookEndgamePattern.KingCutOff),
+              rookEndgamePattern = Some(RookEndgamePattern.RookBehindPassedPawn),
               rookEndgameAnchorSquares = geometry.anchorSquares,
               rookEndgameGeometry = Some(geometry)
             ),

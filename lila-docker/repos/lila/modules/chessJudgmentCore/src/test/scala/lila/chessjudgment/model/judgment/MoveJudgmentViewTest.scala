@@ -5,14 +5,19 @@ import lila.chessjudgment.analysis.position.PositionFactNormalizer
 import lila.chessjudgment.model.{ Fact, FactScope, PlanSequenceSummary, TransitionType }
 import lila.chessjudgment.analysis.singlePosition.{
   DefenseAssessment,
+  PassedPawnUrgency,
+  PawnPlayAnalysis,
+  PawnPlayDriver,
   Threat,
   ThreatAnalysis,
   ThreatDriver,
   ThreatEvidenceSource,
   ThreatKind,
-  ThreatSeverity
+  ThreatSeverity,
+  TensionPolicy
 }
 import lila.chessjudgment.model.strategic.VariationLine
+import lila.chessjudgment.model.structure.*
 
 class MoveJudgmentViewTest extends munit.FunSuite:
 
@@ -1500,6 +1505,182 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(detail.structuralMotifTags, List("open", "space"))
     assertEquals(detail.causeEvidenceIds, List(causeRef.id))
     assert(detail.proofRoles.contains(RelativeCauseProofRole.DirectProof), detail.proofRoles)
+
+  test("keeps active open-center structure attached to quiet development route"):
+    val root = PositionNodeRef("r1b1kb1r/pp3ppp/2nqpn2/8/2BN4/8/PPP2PPP/R1BQ1RK1 b kq - 0 10", 1, Some(Color.Black), Some("root"))
+    val afterPlayed = PositionNodeRef("r1b1k2r/pp2bppp/2nqpn2/8/2BN4/8/PPP2PPP/R1BQ1RK1 w kq - 1 11", 2, Some(Color.White), Some("after-played"))
+    val playedLine = LineNodeRef("played-line", "f8e7", 1, LineNodeRole.Played)
+    val referenceLine = LineNodeRef("reference-line", "f8e7", 1, LineNodeRole.BestReference)
+    val structuralRef = evidenceRef(
+      id = "structural-delta:played:f8e7:development",
+      producer = EvidenceProducer.StructuralDeltaProducer,
+      layer = EvidenceLayer.StructuralDelta,
+      position = root,
+      line = Some(playedLine),
+      scope = EvidenceScope.PlayedTransition
+    )
+    val pawnRef = evidenceRef(
+      id = "pawn-structure:before:open-center",
+      producer = EvidenceProducer.PawnStructureProducer,
+      layer = EvidenceLayer.PawnStructure,
+      position = root,
+      line = None,
+      scope = EvidenceScope.CurrentPosition
+    )
+    val openingRef = evidenceRef(
+      id = "feature-anchor:pawn-structure:break-observed",
+      producer = EvidenceProducer.FeatureAnchorProducer,
+      layer = EvidenceLayer.FeatureAnchor,
+      position = root,
+      line = None,
+      scope = EvidenceScope.CurrentPosition
+    )
+    val contrastRef = evidenceRef(
+      id = "strategic-contrast:played-vs-best:f8e7",
+      producer = EvidenceProducer.StrategicMechanismProducer,
+      layer = EvidenceLayer.StrategicMechanism,
+      position = root,
+      line = Some(playedLine),
+      scope = EvidenceScope.Counterfactual
+    )
+    val transition = StructuralTransitionBinding(
+      moveUci = "f8e7",
+      role = TransitionEdgeRole.Played,
+      from = root,
+      to = afterPlayed,
+      line = Some(playedLine),
+      perspective = Color.Black
+    )
+    val structuralDelta = StructuralDeltaEvidence(
+      transition = transition,
+      signals = Nil,
+      consequences = List(
+        TransitionConsequence(
+          kind = TransitionConsequenceKind.DevelopmentPieceActivated,
+          polarity = StructuralSignalPolarity.Gain,
+          strength = 2,
+          subjects = List("bishop:f8-e7")
+        ),
+        TransitionConsequence(
+          kind = TransitionConsequenceKind.DevelopmentMobilityGain,
+          polarity = StructuralSignalPolarity.Gain,
+          strength = 1,
+          subjects = List("bishop:f8-e7:mobility+1")
+        )
+      )
+    )
+    val pawnStructure = PawnStructureFactEvidence(
+      StructureProfile(
+        primary = StructureId.OpenCenter,
+        confidence = 0.75,
+        alternatives = Nil,
+        centerState = CenterState.Open,
+        evidenceCodes = Nil
+      ),
+      alignment = None,
+      pawnPlay = Some(
+        PawnPlayAnalysis(
+          pawnBreakReady = true,
+          breakFile = Some("e"),
+          breakImpact = 80,
+          advanceOrCapture = false,
+          passedPawnUrgency = PassedPawnUrgency.Background,
+          passerBlockade = false,
+          blockadeSquare = None,
+          blockadeRole = None,
+          pusherSupport = false,
+          minorityAttack = false,
+          counterBreak = true,
+          tensionPolicy = TensionPolicy.Maintain,
+          tensionSquares = Nil,
+          primaryDriver = PawnPlayDriver.BreakReady,
+          counterBreakFiles = List("c")
+        )
+      )
+    )
+    val openingAnchor = FeatureAnchorEvidence(
+      FeatureAnchor(
+        theme = OpeningTheme.PawnStructure,
+        signal = FeatureAnchorSignal.PawnBreakObserved,
+        sourceLayer = EvidenceLayer.PawnStructure,
+        strength = 0.7
+      )
+    )
+    val axis = StrategicAxisDetail(StrategicAxisKind.Target, StrategicAxisPolarity.Support, "TargetFixation")
+    val contrast = StrategicMechanismContrastEvidence(
+      comparisonKind = CandidateComparisonKind.PlayedVsBest,
+      referenceLine = referenceLine,
+      candidateLine = playedLine,
+      axisComparisons = List(
+        StrategicAxisComparison(
+          axis = axis,
+          outcome = StrategicAxisComparisonOutcome.CandidateStronger,
+          referenceStrength = 2,
+          candidateStrength = 3,
+          referenceSources = Nil,
+          candidateSources = List(pawnRef)
+        )
+      ),
+      planComparison = Some(
+        StrategicPlanComparison(
+          referencePlanIds = List("OpeningDevelopment", "PawnBreakPreparation"),
+          candidatePlanIds = List("OpeningDevelopment", "PawnBreakPreparation"),
+          outcome = StrategicAxisComparisonOutcome.SharedSustained
+        )
+      ),
+      sustainability = StrategicSustainabilityAssessment(
+        horizon = StrategicSustainabilityHorizon.MediumPv,
+        lineMaintained = true,
+        pvMaintained = true,
+        referencePlyCount = 6,
+        candidatePlyCount = 6
+      ),
+      support = StrategicContrastSupport(
+        directSources = List(pawnRef),
+        contrastSources = Nil,
+        contextSources = List(structuralRef, openingRef)
+      )
+    )
+
+    val view = MoveJudgmentView
+      .from(
+        relativeAssessments = Nil,
+        evidenceGraph = TypedEvidenceGraph(
+          List(
+            EvidenceRecord(structuralRef, structuralDelta),
+            EvidenceRecord(pawnRef, pawnStructure),
+            EvidenceRecord(openingRef, openingAnchor),
+            EvidenceRecord(contrastRef, contrast)
+          )
+        ),
+        ideas = Nil,
+        claims = Nil,
+        claimLifecycle = Nil,
+        ideaVerdict = None,
+        claimSupportClusters = Nil,
+        claimEventClusters = Nil
+      )
+      .get
+    val detail = view.positionPlanTechniqueFrames
+      .flatMap(_.semanticDetails)
+      .find(detail => detail.unit == PositionPlanTechniqueUnit.StructuralTransformation && detail.axisKey.contains(axis.stableKey))
+      .get
+
+    assertEquals(detail.structuralRouteMove, Some("f8e7"))
+    assert(detail.sourceEvidenceIds.contains(pawnRef.id), detail.sourceEvidenceIds)
+    assert(detail.sourceEvidenceIds.contains(structuralRef.id), detail.sourceEvidenceIds)
+    assert(detail.structuralPurposeSubjects.contains("bishop:f8-e7"), detail.structuralPurposeSubjects)
+    assert(detail.structuralPurposeConsequences.contains("DevelopmentPieceActivated"), detail.structuralPurposeConsequences)
+    assert(detail.structuralMotifTags.contains("iqp"), detail.structuralMotifTags)
+    assert(detail.structuralMotifTags.contains("open"), detail.structuralMotifTags)
+    assert(
+      detail.objectBindingSignatures.exists(signature =>
+        signature.contains("actor=Move:f8e7") &&
+          signature.contains("actor=Piece:bishop") &&
+          signature.contains("target=Square:e7")
+      ),
+      detail.objectBindingSignatures
+    )
 
   test("preserves diagonal battery piece roles and target squares in piece route detail"):
     val root = PositionNodeRef("8/8/8/8/8/8/6P1/2B1K2Q w - - 0 1", 1, Some(Color.White), Some("root"))

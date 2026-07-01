@@ -1323,6 +1323,71 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
     assertEquals(mixedReleaseSignals, Nil)
     assertEquals(releaseSignals.map(_.source.id), List(structuralRef.id))
 
+  test("same-root counter-break proof signals can use the played break carrier"):
+    val root = PositionNodeRef("8/8/8/2p5/3P4/8/8/8 w - - 0 1", 1, Some(Color.White), Some("root"))
+    val after = PositionNodeRef("8/8/8/3P4/8/8/8/8 b - - 0 1", 2, Some(Color.Black), Some("after"))
+    val playedLine = LineNodeRef("played-line", "d4d5", 1, LineNodeRole.Played)
+    val structuralRef = EvidenceRef(
+      id = "structural-delta:played:d4d5:counter-break-carrier",
+      producer = EvidenceProducer.StructuralDeltaProducer,
+      layer = EvidenceLayer.StructuralDelta,
+      position = root,
+      line = Some(playedLine),
+      scope = EvidenceScope.PlayedTransition,
+      confidence = EvidenceConfidence.EngineBacked
+    )
+    val structural = StructuralDeltaEvidence(
+      transition = StructuralTransitionBinding(
+        moveUci = "d4d5",
+        role = TransitionEdgeRole.Played,
+        from = root,
+        to = after,
+        line = Some(playedLine),
+        perspective = Color.White
+      ),
+      signals = Nil,
+      consequences = List(
+        TransitionConsequence(
+          TransitionConsequenceKind.PawnTensionResolution,
+          StructuralSignalPolarity.Neutral,
+          strength = 2,
+          subjects = List("break-file:d", "resolved-tension:d4-c5")
+        )
+      )
+    )
+    def payload(axis: StrategicAxisDetail) =
+      StrategicMechanismEvidence(
+        kind = StrategicMechanismKind.PawnStructure,
+        signals = List(
+          StrategicMechanismSignal(
+            kind = StrategicMechanismSignalKind.StructuralDelta,
+            label = axis.label,
+            source = structuralRef,
+            strength = 2,
+            axis = Some(axis)
+          )
+        ),
+        semanticAnchors = Nil
+      )
+    val graph = TypedEvidenceGraph(List(EvidenceRecord(structuralRef, structural)))
+    val counterBreakSignals = RelativeAssessmentAssembler.strategicMechanismProofSignals(
+      graph,
+      RelativeCauseKind.OpponentRestriction,
+      payload(StrategicAxisDetail(StrategicAxisKind.Counterplay, StrategicAxisPolarity.Restrain, "defensive-counter-break-c")),
+      RelativeCauseSourceSide.Candidate,
+      selectedStructuralSourceIds = Set(structuralRef.id)
+    )
+    val genericSignals = RelativeAssessmentAssembler.strategicMechanismProofSignals(
+      graph,
+      RelativeCauseKind.OpponentRestriction,
+      payload(StrategicAxisDetail(StrategicAxisKind.Counterplay, StrategicAxisPolarity.Restrain, "opponent-low-mobility")),
+      RelativeCauseSourceSide.Candidate,
+      selectedStructuralSourceIds = Set(structuralRef.id)
+    )
+
+    assertEquals(counterBreakSignals.map(_.source.id), List(structuralRef.id))
+    assertEquals(genericSignals, Nil)
+
   test("does not duplicate current move support across played-vs-alternative comparisons"):
     val root = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(Color.White), Some("root"))
     val alternativeLine = LineNodeRef("alternative-line", "g1f3", 1, LineNodeRole.Alternative)
@@ -1854,6 +1919,111 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
 
     assertEquals(RelativeCauseDraftPlanner.drafts(profile).map(_.kind), Nil)
 
+  test("drafts same-root counter-break support only with a concrete break carrier"):
+    val root = PositionNodeRef("8/8/8/3p4/3P4/8/8/8 w - - 0 1", 1, Some(Color.White), Some("root"))
+    val after = PositionNodeRef("8/8/8/3P4/8/8/8/8 b - - 0 1", 2, Some(Color.Black), Some("after"))
+    val referenceLine = LineNodeRef("reference-line", "g1f3", 1, LineNodeRole.BestReference)
+    val candidateLine = LineNodeRef("candidate-line", "d4d5", 2, LineNodeRole.Alternative)
+    val structuralRef = EvidenceRef(
+      id = "structural-delta:played:d4d5:tension",
+      producer = EvidenceProducer.StructuralDeltaProducer,
+      layer = EvidenceLayer.StructuralDelta,
+      position = root,
+      line = Some(candidateLine),
+      scope = EvidenceScope.PlayedTransition,
+      confidence = EvidenceConfidence.EngineBacked
+    )
+    val mechanismRef = EvidenceRef(
+      id = "strategic-mechanism:counter-break:d4d5",
+      producer = EvidenceProducer.StrategicMechanismProducer,
+      layer = EvidenceLayer.StrategicMechanism,
+      position = root,
+      line = Some(candidateLine),
+      scope = EvidenceScope.PlayedTransition,
+      confidence = EvidenceConfidence.EngineBacked
+    )
+    val pawnRef = EvidenceRef(
+      id = "pawn-structure:played:d4d5:counter-break",
+      producer = EvidenceProducer.PawnStructureProducer,
+      layer = EvidenceLayer.PawnStructure,
+      position = after,
+      line = Some(candidateLine),
+      scope = EvidenceScope.PlayedTransition,
+      confidence = EvidenceConfidence.EngineBacked
+    )
+    val structuralRecord = EvidenceRecord(
+      structuralRef,
+      StructuralDeltaEvidence(
+        transition = StructuralTransitionBinding(
+          moveUci = "d4d5",
+          role = TransitionEdgeRole.Played,
+          from = root,
+          to = after,
+          line = Some(candidateLine),
+          perspective = Color.White
+        ),
+        signals = Nil,
+        consequences = List(
+          TransitionConsequence(
+            TransitionConsequenceKind.PawnTensionResolution,
+            StructuralSignalPolarity.Gain,
+            strength = 2,
+            subjects = List("resolved-tension:d4-c5")
+          )
+        )
+      )
+    )
+    val mechanismRecord = EvidenceRecord(
+      mechanismRef,
+      StrategicMechanismEvidence(
+        kind = StrategicMechanismKind.PawnStructure,
+        signals = List(
+          StrategicMechanismSignal(
+            kind = StrategicMechanismSignalKind.PawnStructure,
+            label = "defensive-counter-break-c",
+            source = pawnRef,
+            strength = 2,
+            axis = Some(StrategicAxisDetail(StrategicAxisKind.Counterplay, StrategicAxisPolarity.Restrain, "defensive-counter-break-c"))
+          )
+        ),
+        semanticAnchors = Nil
+      ),
+      parents = List(structuralRef)
+    )
+    val exactReferenceLine = LineNodeRef("exact-reference-line", "d4d5", 1, LineNodeRole.BestReference)
+    val sharedContrastRecord = strategicContrastRecord(
+      root = root,
+      referenceLine = exactReferenceLine,
+      candidateLine = candidateLine,
+      comparisons = List(
+        strategicAxisComparison(
+          StrategicAxisDetail(StrategicAxisKind.Counterplay, StrategicAxisPolarity.Restrain, "defensive-counter-break-c"),
+          StrategicAxisComparisonOutcome.SharedSustained,
+          referenceSources = List(pawnRef),
+          candidateSources = List(pawnRef)
+        )
+      ),
+      planComparison = None
+    )
+    val sharedContrastWithSupport = sharedContrastRecord.copy(
+      payload = sharedContrastRecord.payload.asInstanceOf[StrategicMechanismContrastEvidence].copy(
+        support = StrategicContrastSupport(directSources = List(structuralRef), contrastSources = Nil, contextSources = Nil)
+      )
+    )
+    val profile = candidateBetterProfile(referenceLine, candidateLine, List(structuralRecord, mechanismRecord))
+    val exactProfile = exactPlayedProfile(exactReferenceLine, candidateLine, Nil, List(structuralRecord, mechanismRecord))
+    val exactContrastProfile = exactPlayedProfile(exactReferenceLine, candidateLine, Nil, List(structuralRecord, sharedContrastRecord))
+    val exactContrastRefProfile = exactPlayedProfile(exactReferenceLine, candidateLine, Nil, List(sharedContrastWithSupport))
+
+    val exactContrastDrafts = RelativeCauseDraftPlanner.drafts(exactContrastProfile)
+
+    assertEquals(RelativeCauseDraftPlanner.drafts(profile).map(_.kind), List(RelativeCauseKind.OpponentRestriction))
+    assertEquals(RelativeCauseDraftPlanner.drafts(candidateBetterProfile(referenceLine, candidateLine, List(mechanismRecord))).map(_.kind), Nil)
+    assertEquals(RelativeCauseDraftPlanner.drafts(exactProfile).map(_.kind), List(RelativeCauseKind.OpponentRestriction))
+    assertEquals(exactContrastDrafts.map(_.kind), List(RelativeCauseKind.OpponentRestriction))
+    assert(exactContrastDrafts.exists(_.support.exists(_.ref.id == structuralRef.id)), exactContrastDrafts)
+    assertEquals(RelativeCauseDraftPlanner.drafts(exactContrastRefProfile).map(_.kind), List(RelativeCauseKind.OpponentRestriction))
+
   test("maps candidate positive counterplay restraint axis to opponent restriction"):
     val root = PositionNodeRef("8/8/8/8/8/8/3P4/8 w - - 0 1", 1, Some(Color.White), Some("root"))
     val referenceLine = LineNodeRef("reference-line", "g1f3", 1, LineNodeRole.BestReference)
@@ -2087,7 +2257,8 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
   private def exactPlayedProfile(
       referenceLine: LineNodeRef,
       playedLine: LineNodeRef,
-      candidateRecords: List[EvidenceRecord]
+      candidateRecords: List[EvidenceRecord],
+      sharedRecords: List[EvidenceRecord] = Nil
   ): RelativeCauseSignalProfile =
     RelativeCauseSignalProfile.from(
       fact = CandidateComparisonFact(
@@ -2107,7 +2278,7 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
       ),
       referenceRecords = Nil,
       candidateRecords = candidateRecords,
-      sharedRecords = Nil
+      sharedRecords = sharedRecords
     )
 
   private def strategicContrastRecord(

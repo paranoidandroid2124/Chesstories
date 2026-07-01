@@ -719,6 +719,7 @@ object PositionPlanTechniqueProjection:
   )
 
   private final case class PositionPlanTechniqueStructuralPurpose(
+      sourceIds: List[String],
       routeMove: Option[String],
       routeRole: Option[String],
       routePerspective: Option[String],
@@ -747,8 +748,28 @@ object PositionPlanTechniqueProjection:
       graph: TypedEvidenceGraph,
       fallbackEvidenceIds: List[String]
   ): List[PositionPlanTechniqueSemanticDetail] =
+    val fallbackRefs = fallbackEvidenceIds.flatMap(id => graph.byId.get(id).map(_.ref))
+    val fallbackAnchorKeys =
+      fallbackRefs
+        .flatMap(ref => graph.byId.get(ref.id))
+        .flatMap(StrategicMechanismEvidence.sourceSemanticAnchors)
+        .map(_.stableKey)
+        .distinct
+        .sorted
+    val fallbackOpenCenterContext =
+      positionPlanTechniqueOpenCenterContextKeys(fallbackAnchorKeys, Nil)
+    val structuralPurposeBySourceId = positionPlanTechniqueStructuralPurposeBySourceId(graph, fallbackRefs)
+    val fallbackStructuralPurpose =
+      positionPlanTechniqueStructuralPurposeForSources(fallbackEvidenceIds, structuralPurposeBySourceId)
     details.map { detail =>
-      val taggedDetail = positionPlanTechniqueWithStructuralMotifs(detail)
+      val routedDetail =
+        positionPlanTechniqueWithFallbackOpenCenterRoute(
+          detail,
+          fallbackStructuralPurpose,
+          fallbackOpenCenterContext,
+          fallbackAnchorKeys
+        )
+      val taggedDetail = positionPlanTechniqueWithStructuralMotifs(routedDetail)
       val causeLinkage = positionPlanTechniqueDetailCauseLinkage(taggedDetail, graph, fallbackEvidenceIds)
       taggedDetail.copy(
         causeEvidenceIds = causeLinkage.causeEvidenceIds,
@@ -848,7 +869,8 @@ object PositionPlanTechniqueProjection:
       detail: PositionPlanTechniqueSemanticDetail
   ): List[String] =
     if detail.unit != PositionPlanTechniqueUnit.PieceRerouteRoute &&
-        detail.unit != PositionPlanTechniqueUnit.PlanOptionSet
+        detail.unit != PositionPlanTechniqueUnit.PlanOptionSet &&
+        detail.unit != PositionPlanTechniqueUnit.StructuralTransformation
     then Nil
     else
       detail.structuralPurposeSubjects.flatMap { subject =>
@@ -906,6 +928,19 @@ object PositionPlanTechniqueProjection:
                     Some(s"target=Square:${blocker.toLowerCase}"),
                     Some("mechanism=Mechanism:diagonal-denial"),
                     Some("consequence=Consequence:mobilityloss")
+                  )
+              ).flatten.mkString("|")
+            )
+          case Some(StructuralPurposeSubject.PieceSquare(piece, square)) if positionPlanTechniqueLineUnlockRouteSubject(subject) =>
+            List(
+              (
+                detail.structuralRouteMove.map(move => s"actor=Move:${move.toLowerCase}") ::
+                  List(
+                    Some(s"actor=Piece:${piece.toLowerCase}"),
+                    Some(s"actor=Square:${square.toLowerCase}"),
+                    Some(s"target=Square:${square.toLowerCase}"),
+                    Some("mechanism=Mechanism:line-unlock"),
+                    Some("consequence=Consequence:lineunlockgain")
                   )
               ).flatten.mkString("|")
             )
@@ -1145,6 +1180,8 @@ object PositionPlanTechniqueProjection:
       case Some(StructuralPurposeSubject.Battery(_, _, _, _)) => true
       case Some(StructuralPurposeSubject.PieceRestriction(_, _, _)) =>
         positionPlanTechniqueStrategicRayRestrictionSubject(subject)
+      case Some(StructuralPurposeSubject.PieceSquare(_, _)) =>
+        positionPlanTechniqueLineUnlockRouteSubject(subject)
       case _                                                  => false
 
   private def positionPlanTechniquePieceRouteSubject(subject: String): Boolean =
@@ -1154,7 +1191,13 @@ object PositionPlanTechniqueProjection:
       case Some(StructuralPurposeSubject.Battery(_, _, _, _))    => true
       case Some(StructuralPurposeSubject.PieceRestriction(_, _, _)) =>
         positionPlanTechniqueStrategicRayRestrictionSubject(subject)
+      case Some(StructuralPurposeSubject.PieceSquare(_, _)) =>
+        positionPlanTechniqueLineUnlockRouteSubject(subject)
       case _                                                    => false
+
+  private def positionPlanTechniqueLineUnlockRouteSubject(subject: String): Boolean =
+    val normalized = subject.toLowerCase
+    normalized.contains(":line-unlock:by:") && normalized.contains(":mobility+")
 
   private def positionPlanTechniqueQualifiedRouteSubject(subject: String): Boolean =
     val normalized = subject.toLowerCase
@@ -1515,6 +1558,7 @@ object PositionPlanTechniqueProjection:
       if positionPlanTechniqueStructuralPurposeApplies(detail) then
         purpose.fold(detail)(structural =>
           detail.copy(
+            sourceEvidenceIds = (detail.sourceEvidenceIds ++ structural.sourceIds).distinct.sorted,
             structuralRouteMove = structural.routeMove,
             structuralRouteRole = structural.routeRole,
             structuralRoutePerspective = structural.routePerspective,
@@ -1687,6 +1731,72 @@ object PositionPlanTechniqueProjection:
         .filter(positionPlanTechniqueStructuralPurposeMatchesDetail(detail, _))
     )
 
+  private def positionPlanTechniqueWithFallbackOpenCenterRoute(
+      detail: PositionPlanTechniqueSemanticDetail,
+      fallbackPurpose: Option[PositionPlanTechniqueStructuralPurpose],
+      fallbackOpenCenterContext: Boolean,
+      fallbackAnchorKeys: List[String]
+  ): PositionPlanTechniqueSemanticDetail =
+    val withPurpose = fallbackPurpose
+      .filter(purpose =>
+        detail.structuralRouteMove.isEmpty &&
+          (positionPlanTechniqueOpenCenterContext(detail) || fallbackOpenCenterContext) &&
+          positionPlanTechniqueDevelopmentRoutePurpose(purpose)
+      )
+      .fold(detail)(purpose => detail.withStructuralPurpose(Some(purpose)))
+    if fallbackOpenCenterContext && positionPlanTechniqueDevelopmentRouteDetail(withPurpose) then
+      withPurpose.copy(
+        semanticAnchorKeys = (withPurpose.semanticAnchorKeys ++ fallbackAnchorKeys).distinct.sorted
+      )
+    else withPurpose
+
+  private def positionPlanTechniqueOpenCenterContext(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    positionPlanTechniqueOpenCenterContextKeys(detail.semanticAnchorKeys, detail.openingPriorTypicalPawnStructures)
+
+  private def positionPlanTechniqueOpenCenterContextKeys(
+      anchorKeys: List[String],
+      openingPriorTypicalPawnStructures: List[String]
+  ): Boolean =
+    val normalizedAnchorKeys = anchorKeys.map(_.toLowerCase)
+    normalizedAnchorKeys.exists(key =>
+      key == "pawnstructure:opencenter" ||
+        key == "pawnplay:center-break" ||
+        key.contains("openinganchor:pawnstructure:pawnbreakobserved") ||
+        key.contains("pawnbreakpreparation")
+    ) ||
+      openingPriorTypicalPawnStructures.exists(value =>
+        val normalized = value.toLowerCase
+        normalized.contains("iqp") || normalized.contains("open")
+      )
+
+  private def positionPlanTechniqueDevelopmentRoutePurpose(
+      purpose: PositionPlanTechniqueStructuralPurpose
+  ): Boolean =
+    purpose.routeMove.nonEmpty &&
+      (
+        purpose.subjects.exists(positionPlanTechniquePieceRouteSubject) ||
+          purpose.consequenceKinds.exists(positionPlanTechniquePieceRouteConsequence) ||
+          purpose.categories.exists(positionPlanTechniqueDevelopmentRouteCategory)
+      )
+
+  private def positionPlanTechniqueDevelopmentRouteDetail(
+      detail: PositionPlanTechniqueSemanticDetail
+  ): Boolean =
+    detail.structuralRouteMove.nonEmpty &&
+      (
+        detail.structuralPurposeSubjects.exists(positionPlanTechniquePieceRouteSubject) ||
+          detail.structuralPurposeConsequences.exists(value =>
+            TransitionConsequenceKind.values.exists(kind =>
+              kind.toString.equalsIgnoreCase(value) && positionPlanTechniquePieceRouteConsequence(kind)
+            )
+          ) ||
+          detail.structuralPurposeCategories.exists(positionPlanTechniqueDevelopmentRouteCategory)
+      )
+
+  private def positionPlanTechniqueDevelopmentRouteCategory(category: String): Boolean =
+    val normalized = category.toLowerCase
+    normalized.contains("development") || normalized.contains("pieceactivity")
+
   private def positionPlanTechniqueStructuralBreakFile(subjects: List[String]): Option[String] =
     subjects.collectFirst {
       case subject if subject.toLowerCase.startsWith("break-file:") =>
@@ -1753,24 +1863,27 @@ object PositionPlanTechniqueProjection:
   private def positionPlanTechniqueStructuralPurposesForLineage(
       records: List[EvidenceRecord]
   ): List[PositionPlanTechniqueStructuralPurpose] =
-    records.collect { case EvidenceRecord(_, payload: StructuralDeltaEvidence, _) =>
-      positionPlanTechniqueStructuralPurposes(payload)
+    records.collect { case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _) =>
+      positionPlanTechniqueStructuralPurposes(ref.id, payload)
     }.flatten
 
   private def positionPlanTechniqueStructuralPurposes(
+      sourceId: String,
       payload: StructuralDeltaEvidence
   ): List[PositionPlanTechniqueStructuralPurpose] =
     val consequences = payload.consequences.filter(_.strength > 0)
     val groupedConsequences =
       if consequences.nonEmpty then consequences.map(List(_))
       else List(Nil)
-    groupedConsequences.map(positionPlanTechniqueStructuralPurpose(payload, _))
+    groupedConsequences.map(positionPlanTechniqueStructuralPurpose(sourceId, payload, _))
 
   private def positionPlanTechniqueStructuralPurpose(
+      sourceId: String,
       payload: StructuralDeltaEvidence,
       consequences: List[TransitionConsequence]
   ): PositionPlanTechniqueStructuralPurpose =
     PositionPlanTechniqueStructuralPurpose(
+      sourceIds = List(sourceId),
       routeMove = Some(payload.transition.moveUci).filter(_.nonEmpty),
       routeRole = Some(payload.transition.role.toString),
       routePerspective = Some(positionPlanTechniqueColorKey(payload.transition.perspective)),
@@ -1889,6 +2002,7 @@ object PositionPlanTechniqueProjection:
   ): Option[PositionPlanTechniqueStructuralPurpose] =
     Option.when(purposes.nonEmpty) {
       PositionPlanTechniqueStructuralPurpose(
+        sourceIds = purposes.flatMap(_.sourceIds).distinct.sorted,
         routeMove = positionPlanTechniqueSingleValue(purposes.flatMap(_.routeMove)),
         routeRole = positionPlanTechniqueSingleValue(purposes.flatMap(_.routeRole)),
         routePerspective = positionPlanTechniqueSingleValue(purposes.flatMap(_.routePerspective)),
@@ -2116,12 +2230,16 @@ object PositionPlanTechniqueProjection:
       val anchorKeys = detail.semanticAnchorKeys.map(_.toLowerCase)
       val sourceIds = detail.sourceEvidenceIds.map(_.toLowerCase)
       val consequences = detail.structuralPurposeConsequences.map(_.toLowerCase)
+      val hasOpenCenterRouteContext =
+        positionPlanTechniqueOpenCenterContext(detail) &&
+          positionPlanTechniqueDevelopmentRouteDetail(detail)
       val hasIqpAnchor =
         anchorKeys.exists(key =>
           key == "pawnstructure:iqp" ||
             key == "pawnstructure:iqpwhite" ||
             key == "pawnstructure:iqpblack"
-        )
+        ) ||
+          hasOpenCenterRouteContext
       val hasStructuralTransition =
         anchorKeys.exists(_.startsWith("structuraldelta:")) ||
           sourceIds.exists(_.contains("structural-delta")) ||
@@ -2132,13 +2250,15 @@ object PositionPlanTechniqueProjection:
             key.contains("semiopenfileaccess") ||
             key.contains("openfileaccess")
         ) ||
-          consequences.exists(_.contains("lineunlock"))
+          consequences.exists(_.contains("lineunlock")) ||
+          hasOpenCenterRouteContext
       val hasSpaceSignal =
         anchorKeys.exists(key =>
           key.startsWith("strategicaxis:spacecenter") ||
             key.contains("centercontrol")
         ) ||
-          detail.structuralPurposeCategories.exists(_.toLowerCase.contains("center"))
+          detail.structuralPurposeCategories.exists(_.toLowerCase.contains("center")) ||
+          hasOpenCenterRouteContext
       val hasCentralOpenSignal =
         hasOpenSignal && detail.structuralRouteMove.exists(positionPlanTechniqueCentralRouteMove)
       (
@@ -2173,10 +2293,13 @@ object PositionPlanTechniqueProjection:
         consequences.exists(consequence =>
           consequence.contains("developmentpieceactivated") ||
             consequence.contains("developmentmobilitygain") ||
-            consequence.contains("mobilitygain")
+          consequence.contains("mobilitygain")
         ) ||
         categories.exists(category => category.contains("pieceactivity") || category.contains("development")) ||
         anchorKeys.exists(key => key.contains("pieceactivation"))
+    val hasOpenCenterRouteContext =
+      positionPlanTechniqueOpenCenterContext(detail) &&
+        positionPlanTechniqueDevelopmentRouteDetail(detail)
     val hasOutpost =
       consequences.exists(_.contains("outpost")) ||
         categories.exists(_.contains("outpost")) ||
@@ -2202,6 +2325,9 @@ object PositionPlanTechniqueProjection:
       Option.when(hasPieceActivity)("piece").toList ++
         Option.when(hasQualifiedRoute || hasQualifiedRouteToken)("route").toList ++
         Option.when((hasQualifiedRoute || hasQualifiedRouteToken) && detail.structuralRouteMove.nonEmpty)("reroute").toList ++
+        Option.when(hasOpenCenterRouteContext)("iqp").toList ++
+        Option.when(hasOpenCenterRouteContext)("open").toList ++
+        Option.when(hasOpenCenterRouteContext)("space").toList ++
         Option.when(hasOutpost)("outpost").toList ++
         Option.when(hasBattery)("battery").toList ++
         Option.when(hasDiagonal)("diagonal").toList ++

@@ -1286,9 +1286,8 @@ object RelativeAssessmentAssembler:
       case RelativeCauseKind.CenterControlGain =>
         payload.consequencesOf(CenterControlGain)
       case RelativeCauseKind.OpponentRestriction =>
-        payload.consequencesOf(OpponentMobilityRestriction).filter(consequence =>
-          consequence.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
-        )
+        opponentRestrictionConsequences(payload) ++
+          counterBreakCarrierConsequences(payload)
       case RelativeCauseKind.KingSafetyConcession =>
         payload.consequencesOf(KingSafetyConcession) ++
           payload.consequencesOf(KingRingPressureConcession)
@@ -1359,6 +1358,13 @@ object RelativeAssessmentAssembler:
             Nil
           case None =>
             structuralConsequencesForCause(kind, payload)
+      case RelativeCauseKind.OpponentRestriction =>
+        axis match
+          case Some(detail) if RelativeCauseSignalProfile.currentMoveCounterBreakAxis(detail) =>
+            opponentRestrictionConsequences(payload) ++
+              counterBreakCarrierConsequences(payload)
+          case _ =>
+            opponentRestrictionConsequences(payload)
       case _ =>
         structuralConsequencesForCause(kind, payload)
 
@@ -1366,6 +1372,26 @@ object RelativeAssessmentAssembler:
     val normalized = axis.label.toLowerCase
     normalized.contains("resolved-tension") ||
       normalized.contains("-release-")
+
+  private def opponentRestrictionConsequences(payload: StructuralDeltaEvidence): List[TransitionConsequence] =
+    payload.consequencesOf(TransitionConsequenceKind.OpponentMobilityRestriction).filter(consequence =>
+      consequence.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
+    )
+
+  private def counterBreakCarrierConsequences(payload: StructuralDeltaEvidence): List[TransitionConsequence] =
+    payload.consequences.filter(counterBreakCarrierConsequence)
+
+  private def counterBreakCarrierConsequence(consequence: TransitionConsequence): Boolean =
+    (
+      consequence.kind == TransitionConsequenceKind.PawnTensionGain ||
+        consequence.kind == TransitionConsequenceKind.PawnTensionResolution
+    ) &&
+      consequence.subjects.exists(subject =>
+        val normalized = Option(subject).getOrElse("").trim.toLowerCase
+        normalized.startsWith("break-file:") ||
+          normalized.startsWith("created-tension:") ||
+          normalized.startsWith("resolved-tension:")
+      )
 
   private def mergeCauseCandidates(candidates: List[RelativeCauseDraft]): List[RelativeCauseDraft] =
     candidates
