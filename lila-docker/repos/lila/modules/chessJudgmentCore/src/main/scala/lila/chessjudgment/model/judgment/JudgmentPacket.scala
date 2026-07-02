@@ -2867,7 +2867,15 @@ object MoveMeaningClaim:
           .filter(id => detail.causeEvidenceIds.contains(id) || bridgedRouteCauseIds.contains(id))
           .distinct
           .sorted
-      val sourceEvidenceIds = moveMeaningClaimSourceEvidenceIds(evidenceGraph, detail, verdict, claimLineRole, claimMove)
+      val sourceEvidenceIds =
+        moveMeaningClaimSourceEvidenceIds(
+          evidenceGraph,
+          detail,
+          surfaceObjectSignatures,
+          verdict,
+          claimLineRole,
+          claimMove
+        )
       val objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames)
       val publicHasCarrier = objectCarrierReady && (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty)
       val publicProofLevel =
@@ -2890,6 +2898,7 @@ object MoveMeaningClaim:
             claimLineRole,
             claimMove,
             support,
+            surfaceObjectSignatures,
             roleCompatibleCauseFrames
           ),
         lineRole = claimLineRole,
@@ -3178,8 +3187,15 @@ object MoveMeaningClaim:
       !currentMoveClaim ||
         ownedCandidateCauseOwnsCurrentMove ||
         currentMoveSurfaceProof
+    val ownedTerminalProof =
+      currentMoveClaim &&
+        meaningKind == "TerminalProof" &&
+        hasDetailEvidence &&
+        terminalProofDetailOwnsClaimMove(detail, objectSignatures, claimMove)
     if terminalOverriddenEndgameTechniqueDetail(detail) && endgameTechniqueViewProof then
       Some("contextual")
+    else if ownedTerminalProof && ownedLaneOwnershipReady && ownedMeaningReady && !badCurrentMovePositiveMeaning then
+      Some("owned_cause_linked")
     else if reasonGradeCauseFrames.nonEmpty && ownedCause && ownedLaneOwnershipReady && ownedMeaningReady &&
         !planOptionCurrentFunctionOnly && !badCurrentMovePositiveMeaning && !broadPlanContinuityCurrentMove
     then
@@ -3289,13 +3305,21 @@ object MoveMeaningClaim:
   private def moveMeaningClaimSourceEvidenceIds(
       evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
       verdict: MoveJudgmentVerdictFrame,
       claimLineRole: String,
       claimMove: String
   ): List[String] =
     if currentMoveMeaningClaim(verdict, claimLineRole, claimMove) then
+      val terminalProofSources =
+        Option
+          .when(
+            terminalProofDetailOwnsClaimMove(detail, objectSignatures, claimMove)
+          )(detail.sourceEvidenceIds)
+          .getOrElse(Nil)
       (
         currentMoveCarrierSourceEvidenceIds(evidenceGraph, detail, claimMove) ++
+          terminalProofSources ++
           currentMoveStructureContextSourceEvidenceIds(evidenceGraph, detail)
       ).distinct.sorted
     else detail.sourceEvidenceIds.distinct.sorted
@@ -4989,13 +5013,15 @@ object MoveMeaningClaim:
       claimLineRole: String,
       claimMove: String,
       supportLevel: String,
+      objectSignatures: List[String],
       linkedCauseFrames: List[MoveJudgmentCauseFrame]
   ): String =
     val currentMove = currentMoveMeaningClaim(verdict, claimLineRole, claimMove)
     val candidateOwnedCause = linkedCauseFrames.exists(_.causeSourceSide == RelativeCauseSourceSide.Candidate)
+    val terminalProofOwned = terminalProofDetailOwnsClaimMove(detail, objectSignatures, claimMove)
     if claimLineRole == "reference" then
       "reference_or_opponent_resource"
-    else if supportLevel == "owned_cause_linked" && currentMove && candidateOwnedCause then
+    else if supportLevel == "owned_cause_linked" && currentMove && (candidateOwnedCause || terminalProofOwned) then
       "current_move_owned"
     else if supportLevel == "view_surfaced" && currentMove && claimLineRole == "candidate" then
       "current_move_function"
