@@ -3894,6 +3894,9 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assert(claim.reasonTokens.contains("routePiece:knight"), claim.reasonTokens)
     assert(claim.reasonTokens.contains("routeFrom:e2"), claim.reasonTokens)
     assert(claim.reasonTokens.contains("routeTo:e3"), claim.reasonTokens)
+    val surface = MoveMeaningSurface.from(view)
+    assertEquals(surface.map(_.ideaType), List("piece_route"))
+    assertEquals(surface.map(_.assessment.localIdea), List(false))
 
   test("move meaning claims do not surface plan-pressure-only break option as current move function"):
     val planPressureSignature =

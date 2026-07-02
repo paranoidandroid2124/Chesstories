@@ -2012,7 +2012,10 @@ object MoveMeaningSurface:
         ideaQuality = publicCode(qualityOfIdea, ideaQualityLabels),
         priority = publicCode(surfacePriority, priorityLabels),
         verdictReason = publicFailureClaim,
-        localIdea = claimSubject == "played_move" && claim.surfaceLane == "current_move_function",
+        localIdea =
+          claimSubject == "played_move" &&
+            claim.surfaceLane == "current_move_function" &&
+            !negativeCurrentMoveMeaning(claim),
         failureFamily = publicFailureFamily.map(publicCode(_, failureFamilyLabels)),
         problem = publicProblem.map(publicCode(_, problemLabels))
       ),
