@@ -4585,7 +4585,7 @@ object MoveMeaningClaim:
       detail.endgameTechniqueHorizonStatus.exists(endgameTechniqueStatusOwnable) &&
       detail.requiredSquares.nonEmpty &&
       (detail.maintainedSquares.nonEmpty || detail.brokenSquares.nonEmpty) &&
-      detail.sourceEvidenceIds.exists(id => id.toLowerCase.contains(":line:") || id.toLowerCase.startsWith("line:"))
+      endgameTechniqueHasLineWitness(detail)
 
   private def endgameTechniqueHorizonViewShape(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
@@ -4594,7 +4594,12 @@ object MoveMeaningClaim:
       detail.endgameTechniqueHorizonStatus.nonEmpty &&
       detail.requiredSquares.nonEmpty &&
       (detail.maintainedSquares.nonEmpty || detail.brokenSquares.nonEmpty) &&
-      detail.sourceEvidenceIds.exists(id => id.toLowerCase.contains(":line:") || id.toLowerCase.startsWith("line:"))
+      endgameTechniqueHasLineWitness(detail)
+
+  private def endgameTechniqueHasLineWitness(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.endgameTechniqueTriggerMove.nonEmpty ||
+      detail.endgameTechniqueEntryPlyOffset.nonEmpty ||
+      detail.endgameTechniqueTerminalPlyOffset.nonEmpty
 
   private def endgameTechniqueStatusOwnable(status: String): Boolean =
     status != "SupersededByTactic" && status != "ContradictedByTerminalProof"
