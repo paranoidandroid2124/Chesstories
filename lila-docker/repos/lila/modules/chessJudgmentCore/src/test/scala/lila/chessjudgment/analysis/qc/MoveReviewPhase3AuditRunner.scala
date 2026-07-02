@@ -1695,7 +1695,20 @@ object MoveReviewPhase3AuditRunner:
       "sourceEvidenceIds" -> diagnostic.sourceEvidenceIds,
       "hasCarrier" -> diagnostic.hasCarrier,
       "hasBoardCarrier" -> diagnostic.hasBoardCarrier,
-      "proofLevel" -> diagnostic.proofLevel
+      "proofLevel" -> diagnostic.proofLevel,
+      "boardCarriers" -> diagnostic.boardCarriers.map(carrier =>
+        Json.obj(
+          "role" -> carrier.role,
+          "kind" -> carrier.kind,
+          "value" -> carrier.value,
+          "from" -> carrier.from,
+          "to" -> carrier.to
+        )
+      ),
+      "targetSquares" -> diagnostic.targetSquares,
+      "targetFiles" -> diagnostic.targetFiles,
+      "targetPieces" -> diagnostic.targetPieces,
+      "routeIdentityParts" -> diagnostic.routeIdentityParts
     )
 
   private def relativeCauseDiagnosticsJson(diagnostic: ComparisonRelativeCauseDiagnostics): JsObject =

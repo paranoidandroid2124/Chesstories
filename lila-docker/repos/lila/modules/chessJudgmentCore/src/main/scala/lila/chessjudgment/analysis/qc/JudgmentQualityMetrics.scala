@@ -754,7 +754,12 @@ final case class PublicMoveMeaningClaimDiagnostic(
     sourceEvidenceIds: List[String] = Nil,
     hasCarrier: Boolean,
     hasBoardCarrier: Boolean,
-    proofLevel: String
+    proofLevel: String,
+    boardCarriers: List[MoveMeaningSurfaceBoardCarrier] = Nil,
+    targetSquares: List[String] = Nil,
+    targetFiles: List[String] = Nil,
+    targetPieces: List[String] = Nil,
+    routeIdentityParts: List[String] = Nil
 )
 
 final case class CandidateComparisonDiagnostic(
@@ -1230,7 +1235,12 @@ object CandidateComparisonDiagnostic:
       sourceEvidenceIds = claim.sourceEvidenceIds.distinct.sorted,
       hasCarrier = evidence.hasCarrier,
       hasBoardCarrier = evidence.boardCarriers.nonEmpty,
-      proofLevel = evidence.proofLevel
+      proofLevel = evidence.proofLevel,
+      boardCarriers = evidence.boardCarriers,
+      targetSquares = claim.targetSquares.distinct.sorted,
+      targetFiles = claim.targetFiles.distinct.sorted,
+      targetPieces = claim.targetPieces.distinct.sorted,
+      routeIdentityParts = claim.routeIdentityParts.distinct.sorted
     )
 
   private def comparisonPositionPlanTechniqueFrames(
@@ -1391,7 +1401,6 @@ object CandidateComparisonDiagnostic:
         detail.resourceContestSquares.map(value => s"resourceContestSquare:$value") ++
         detail.resourceContestFiles.map(value => s"resourceContestFile:$value") ++
         detail.resourceContestScopes.map(value => s"resourceContestScope:$value") ++
-        positionPlanTechniqueStructuralRouteTokens(detail) ++
         detail.structuralPurposeConsequences.map(value => s"structuralPurposeConsequence:$value") ++
         detail.structuralPurposeSubjects.map(value => s"structuralPurposeSubject:$value") ++
         detail.structuralPurposeCategories.map(value => s"structuralPurposeCategory:$value") ++
@@ -1413,138 +1422,6 @@ object CandidateComparisonDiagnostic:
       Option
         .when(evidenceId.startsWith("line:") || evidenceId.contains(":evidence:line:"))("sourceEvidenceId:line:")
         .toList
-
-  private def positionPlanTechniqueStructuralRouteTokens(detail: PositionPlanTechniqueSemanticDetail): List[String] =
-    val subjectTokens =
-      detail.structuralPurposeSubjects.flatMap(positionPlanTechniqueStructuralSubjectTokens)
-    val routeAxisTokens =
-      detail.structuralRouteMove.toList.flatMap(positionPlanTechniqueMoveAxisTokens)
-    val hasTargetPurpose =
-      detail.axisKind.contains(StrategicAxisKind.Target) ||
-        detail.structuralPurposeCategories.exists(_.toLowerCase.contains("target"))
-    val concreteTargetTokens =
-      Option
-        .when(hasTargetPurpose)(detail.structuralPurposeSubjects.flatMap(positionPlanTechniqueConcreteTargetTokens))
-        .getOrElse(Nil)
-    val targetTokens =
-      Option
-        .when(detail.structuralPurposeCategories.exists(_.toLowerCase.contains("target")))(
-          List("target", "routeTarget")
-        )
-        .getOrElse(Nil)
-    (subjectTokens ++ routeAxisTokens ++ concreteTargetTokens ++ targetTokens).distinct.sorted
-
-  private def positionPlanTechniqueStructuralSubjectTokens(subject: String): List[String] =
-    val normalized = subject.toLowerCase
-    val pieceRoute = """([a-z]+):([a-h][1-8])-([a-h][1-8]).*""".r
-    val outpost = """outpost:([a-z]+):([a-h][1-8]).*""".r
-    val weakSquare = """weak-square:([a-h][1-8]).*""".r
-    val pieceRestriction = """([a-z]+):([a-h][1-8]):diagonal-denial:blocked-by:([a-h][1-8]).*""".r
-    val battery = """battery:([a-z]+):([a-h][1-8])-([a-h][1-8])(?::([a-z-]+))?.*""".r
-    val rookLift = """rook-lift:([a-h][1-8])-([a-h][1-8]):rank-([0-9]+).*""".r
-    normalized match
-      case outpost(piece, square) =>
-        List(
-          "piece",
-          s"piece:$piece",
-          piece,
-          s"structuralPurposeSubject:$piece",
-          "route",
-          "outpost",
-          s"targetSquare:$square",
-          s"objectTarget:Square:$square"
-        )
-      case weakSquare(square) =>
-        List(
-          "weak-square",
-          "target",
-          "routeTarget",
-          s"targetSquare:$square",
-          s"objectTarget:Square:$square"
-        )
-      case pieceRoute(piece, from, to) =>
-        val routeTokens =
-          List(
-            "piece",
-            s"piece:$piece",
-            piece,
-            "route",
-            "reroute",
-            s"route:$from-$to"
-          )
-        routeTokens ++ positionPlanTechniqueMoveAxisTokens(from + to)
-      case rookLift(from, to, rank) =>
-        List(
-          "piece",
-          "piece:rook",
-          "rook",
-          "route",
-          "reroute",
-          "rook-lift",
-          s"route:$from-$to",
-          s"routeRank:$rank"
-        ) ++ positionPlanTechniqueMoveAxisTokens(from + to)
-      case pieceRestriction(piece, square, blocker) =>
-        List(
-          "piece",
-          s"piece:$piece",
-          piece,
-          s"structuralPurposeSubject:$piece",
-          "restriction",
-          "diagonal-denial",
-          "diagonal",
-          "axis:Diagonal",
-          s"targetSquare:$square",
-          s"blockedSquare:$blocker",
-          s"objectTarget:Square:$square",
-          s"objectTarget:Square:$blocker"
-        )
-      case battery(axis, from, to, roles) =>
-        val axisTokens =
-          axis match
-            case "diagonal" => List("diagonal", "axis:Diagonal")
-            case "file"     => List("file", "axis:File")
-            case "rank"     => List("rank", "axis:Rank")
-            case other      => List(other)
-        val geometryAxisTokens =
-          positionPlanTechniqueMoveAxisTokens(from + to)
-        val compatibleGeometryAxisTokens =
-          axisTokens.find(_.startsWith("axis:")) match
-            case Some(declaredAxis) => geometryAxisTokens.filter(_ == declaredAxis)
-            case None               => geometryAxisTokens
-        val roleTokens =
-          Option(roles).toList
-            .flatMap(_.split("-").toList)
-            .filter(_.nonEmpty)
-            .distinct
-            .flatMap(role => List("piece", role, s"piece:$role", s"structuralPurposeSubject:$role"))
-        List("battery", s"battery:$axis", s"route:$from-$to", s"targetSquare:$from", s"targetSquare:$to") ++
-          axisTokens ++
-          roleTokens ++
-          compatibleGeometryAxisTokens
-      case _ =>
-        Nil
-
-  private def positionPlanTechniqueConcreteTargetTokens(subject: String): List[String] =
-    val normalized = subject.toLowerCase.trim
-    if normalized.matches("[a-h][1-8]") then
-      List(s"targetSquare:$normalized", s"objectTarget:Square:$normalized")
-    else Nil
-
-  private def positionPlanTechniqueMoveAxisTokens(move: String): List[String] =
-    val normalized = move.toLowerCase
-    if normalized.matches("[a-h][1-8][a-h][1-8].*") then
-      val fromFile = normalized.charAt(0) - 'a'
-      val fromRank = normalized.charAt(1) - '1'
-      val toFile = normalized.charAt(2) - 'a'
-      val toRank = normalized.charAt(3) - '1'
-      val fileDelta = (toFile - fromFile).abs
-      val rankDelta = (toRank - fromRank).abs
-      if fileDelta == rankDelta && fileDelta > 0 then List("diagonal", "axis:Diagonal")
-      else if fileDelta == 0 && rankDelta > 0 then List("file", "axis:File")
-      else if rankDelta == 0 && fileDelta > 0 then List("rank", "axis:Rank")
-      else Nil
-    else Nil
 
   private def relativeCauseMatchesComparison(cause: RelativeCauseFact, fact: CandidateComparisonFact): Boolean =
     cause.comparisonKind == fact.kind &&
