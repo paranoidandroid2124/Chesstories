@@ -334,6 +334,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
               meaningKind = "RookEndgameTechnique",
               supportLevel = "owned_cause_linked",
               surfaceLane = "current_move_owned",
+              lineRole = "candidate",
+              moveUci = candidateLine.rootMove,
               causeEvidenceIds = List(causeId)
             )
           ),
@@ -728,6 +730,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
               meaningKind = "RookEndgameTechnique",
               supportLevel = "view_surfaced",
               surfaceLane = "current_move_function",
+              lineRole = "candidate",
+              moveUci = candidateLine.rootMove,
               sourceEvidenceIds = List("line:rook-horizon"),
               proofLevel = "DirectProof"
             )
@@ -785,6 +789,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
               meaningKind = "PieceRoute",
               supportLevel = "view_surfaced",
               surfaceLane = "current_move_function",
+              lineRole = "candidate",
+              moveUci = candidateLine.rootMove,
               sourceEvidenceIds = List("route-src")
             )
           )
@@ -4754,14 +4760,25 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       supportLevel: String,
       surfaceLane: String,
       axisKey: Option[String] = None,
-      lineRole: String = "",
-      moveUci: String = "",
+      lineRole: String,
+      moveUci: String,
       causeEvidenceIds: List[String] = Nil,
       sourceEvidenceIds: List[String] = Nil,
-      hasCarrier: Boolean = true,
-      hasBoardCarrier: Boolean = true,
-      proofLevel: String = "none"
+      hasCarrier: Option[Boolean] = None,
+      hasBoardCarrier: Option[Boolean] = None,
+      proofLevel: String = ""
   ): PublicMoveMeaningClaimDiagnostic =
+    val graphCarrier = causeEvidenceIds.nonEmpty || sourceEvidenceIds.nonEmpty
+    val lineMoveCarrier = lineRole.trim.nonEmpty && moveUci.trim.nonEmpty
+    val effectiveHasCarrier = hasCarrier.getOrElse(graphCarrier && lineMoveCarrier)
+    val effectiveHasBoardCarrier = hasBoardCarrier.getOrElse(effectiveHasCarrier)
+    val effectiveProofLevel =
+      Option(proofLevel).map(_.trim).filter(_.nonEmpty).getOrElse {
+        if !effectiveHasCarrier then "none"
+        else if causeEvidenceIds.nonEmpty && supportLevel == "owned_cause_linked" then "owned_cause"
+        else if causeEvidenceIds.nonEmpty then "cause_linked"
+        else "surface_evidence"
+      }
     PublicMoveMeaningClaimDiagnostic(
       unit = unit,
       axisKey = axisKey,
@@ -4772,7 +4789,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       moveUci = moveUci,
       causeEvidenceIds = causeEvidenceIds,
       sourceEvidenceIds = sourceEvidenceIds,
-      hasCarrier = hasCarrier,
-      hasBoardCarrier = hasBoardCarrier,
-      proofLevel = proofLevel
+      hasCarrier = effectiveHasCarrier,
+      hasBoardCarrier = effectiveHasBoardCarrier,
+      proofLevel = effectiveProofLevel
     )
