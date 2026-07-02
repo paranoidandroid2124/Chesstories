@@ -142,7 +142,6 @@ object PositionPlanTechniqueSemanticDetail:
   def comparisonLossKinds(detail: PositionPlanTechniqueSemanticDetail): List[String] =
     if comparisonLossSides(detail).isEmpty then Nil
     else
-      val tokens = comparisonTextTokens(detail)
       val pawnBreak =
         detail.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute ||
           detail.axisKind.contains(StrategicAxisKind.PawnBreak) ||
@@ -150,7 +149,7 @@ object PositionPlanTechniqueSemanticDetail:
       val tensionRelease =
         detail.axisPolarity.contains(StrategicAxisPolarity.Release) ||
           detail.tensionPolicy.exists(policy => policy.toLowerCase.contains("release")) ||
-          tokens.exists(token => token.contains("resolved-tension") || token.contains("tensionrelease"))
+          detail.structuralPurposeSubjects.exists(subject => subject.toLowerCase.startsWith("resolved-tension:"))
       val tensionMaintain =
         detail.tensionPolicy.exists(policy =>
           val normalized = policy.toLowerCase
@@ -162,49 +161,32 @@ object PositionPlanTechniqueSemanticDetail:
           detail.counterBreakFiles.exists(_.trim.nonEmpty)
       val outpost =
         detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
-          (
-            detail.structuralPurposeSubjects.exists(subject =>
-              StructuralPurposeSubject.parse(subject).exists(_.isInstanceOf[StructuralPurposeSubject.Outpost])
-            ) ||
-              detail.objectBindingSignatures.exists(signature =>
-                val normalized = signature.toLowerCase
-                normalized.contains("mechanism=mechanism:outpost") ||
-                  normalized.contains("consequence=consequence:outpost")
-              )
+          detail.structuralPurposeSubjects.exists(subject =>
+            StructuralPurposeSubject.parse(subject).exists(_.isInstanceOf[StructuralPurposeSubject.Outpost])
           )
       val longDiagonal =
         detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
-          (
-            detail.structuralPurposeSubjects.exists(subject =>
-              StructuralPurposeSubject.parse(subject) match
-                case Some(StructuralPurposeSubject.Battery(axis, _, _, _)) => axis == "diagonal"
-                case _                                                     => false
-            ) ||
-              detail.objectBindingSignatures.exists(signature =>
-                val normalized = signature.toLowerCase
-                normalized.contains("mechanism=mechanism:bishop-long-diagonal") ||
-                  normalized.contains("mechanism=mechanism:battery-diagonal") ||
-                  normalized.contains("consequence=consequence:diagonalpressure")
-              )
+          detail.structuralPurposeSubjects.exists(subject =>
+            StructuralPurposeSubject.parse(subject) match
+              case Some(StructuralPurposeSubject.Battery(axis, _, _, _)) => axis.equalsIgnoreCase("diagonal")
+              case _                                                     => false
           )
       val pieceRoute =
         detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
-          (detail.structuralPurposeSubjects.exists(subject =>
+          detail.structuralPurposeSubjects.exists(subject =>
             StructuralPurposeSubject.parse(subject).exists(_.isInstanceOf[StructuralPurposeSubject.PieceRoute])
-          ) ||
-            detail.objectBindingSignatures.exists(signature =>
-              val normalized = signature.toLowerCase
-              normalized.contains("mechanism=mechanism:rerouting") ||
-                normalized.contains("mechanism=mechanism:maneuver")
-            ))
+          )
       val targetPressure =
         detail.axisKind.contains(StrategicAxisKind.Target) ||
-          (
-            detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
-              tokens.exists(token => token.contains("target-pressure") || token.contains("weak-pawn") || token.contains("weak-square"))
+          detail.structuralPurposeConsequences.exists(consequence =>
+            consequence.equalsIgnoreCase(TransitionConsequenceKind.TargetPressureGain.toString) ||
+              consequence.equalsIgnoreCase(TransitionConsequenceKind.TargetPressureRelease.toString)
           )
       val slowMoveOrder =
-        tokens.exists(token => token.contains("moveorder") || token.contains("move-order"))
+        detail.planAlignmentReasonCodes.exists(reason =>
+          val normalized = reason.trim.toLowerCase
+          normalized == "move_order_too_slow" || normalized == "move-order-too-slow"
+        )
       val losses =
         List(
           Option.when(pawnBreak && tensionRelease && !counterplay)("tension_released_early"),
@@ -225,32 +207,6 @@ object PositionPlanTechniqueSemanticDetail:
     polarity == StrategicAxisPolarity.Loss ||
       polarity == StrategicAxisPolarity.Release ||
       polarity == StrategicAxisPolarity.Concede
-
-  private def comparisonTextTokens(detail: PositionPlanTechniqueSemanticDetail): List[String] =
-    (
-      detail.axisKey.toList ++
-        detail.label.toList ++
-        detail.semanticAnchorKeys ++
-        detail.referencePlanIds ++
-        detail.candidatePlanIds ++
-        detail.matchedPlanIds ++
-        detail.missingPlanIds ++
-        detail.planAlignmentReasonCodes ++
-        detail.openingPriorThemes ++
-        detail.openingPriorCenterBreaks ++
-        detail.openingPriorDevelopmentPriorities ++
-        detail.resourceContestKinds ++
-        detail.resourceContestSignals ++
-        detail.resourceContestScopes ++
-        detail.structuralPurposeConsequences ++
-        detail.structuralPurposeSubjects ++
-        detail.structuralPurposeCategories ++
-        detail.structuralPurposePolarities ++
-        detail.structuralMotifTags ++
-        detail.boardAnchorKinds ++
-        detail.boardAnchorSignals ++
-        detail.objectBindingSignatures
-    ).map(_.toLowerCase)
 
 case class PositionPlanTechniqueObjectBinding(
     sourceEvidenceId: String,
