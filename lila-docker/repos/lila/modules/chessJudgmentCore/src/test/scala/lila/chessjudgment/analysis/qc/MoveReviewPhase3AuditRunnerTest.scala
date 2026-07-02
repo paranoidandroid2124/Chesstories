@@ -282,22 +282,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       (coverage \ "boardCarrierlessPublicMoveMeaningClaimSignatures").as[List[String]],
       List(carrierlessPublicSignature)
     )
-    assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasEvidenceCarrier(publicSignature), true)
-    assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasBoardCarrier(publicSignature), true)
-    assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasEvidenceCarrier(carrierlessPublicSignature), false)
-    assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasBoardCarrier(carrierlessPublicSignature), false)
-    assertEquals(
-      MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasEvidenceCarrier(
-        "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=owned_cause_linked|lane=current_move_owned|lineRole=played|move=g1f3|causes=cause-route|sources=none|proof=none|objects=none"
-      ),
-      false
-    )
-    assertEquals(
-      MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasBoardCarrier(
-        "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=owned_cause_linked|lane=current_move_owned|lineRole=played|move=g1f3|causes=cause-route|sources=none|proof=none|objects=none"
-      ),
-      false
-    )
     assertEquals((coverage \ "suppressedMoveMeaningClaimCount").as[Int], 1)
     assertEquals((coverage \ "suppressedMoveMeaningClaimSignatures").as[List[String]], List(suppressedSignature))
     assertEquals((coverage \ "mergedOwnershipClaimCount").as[Int], 1)

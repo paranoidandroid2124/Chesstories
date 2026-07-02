@@ -159,20 +159,9 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       .map(_.trim)
       .filter(value => value.nonEmpty && value != "none")
 
-  private def signatureFlag(signature: String, key: String): Option[Boolean] =
-    signatureParts(signature).collectFirst:
-      case part if part == s"$key=true"  => true
-      case part if part == s"$key=false" => false
-
   private def multiOwnerMoveMeaningClaim(signature: String): Boolean =
     signatureValues(signature, "causes").size > 1 ||
       signatureValues(signature, "sources").size > 1
-
-  private[qc] def publicSurfaceClaimHasEvidenceCarrier(signature: String): Boolean =
-    signatureFlag(signature, "carrier").contains(true)
-
-  private[qc] def publicSurfaceClaimHasBoardCarrier(signature: String): Boolean =
-    signatureFlag(signature, "boardCarrier").contains(true)
 
   private[qc] def moveMeaningSurfaceDiagnosticsJson(
       diagnostics: List[CandidateComparisonDiagnostic]
