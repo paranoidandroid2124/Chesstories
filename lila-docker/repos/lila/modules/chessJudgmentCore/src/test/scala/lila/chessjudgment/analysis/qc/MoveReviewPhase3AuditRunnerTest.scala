@@ -2823,7 +2823,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       candidateEvidenceIds = List("structural-delta:played:e2e3:tension-kind-only"),
       sourceEvidenceIds = List("structural-delta:played:e2e3:tension-kind-only"),
       objectBindingSignatures =
-        List("actor=Move:e2e3|target=File:e|mechanism=Mechanism:pawn-break|proof=DirectProof"),
+        List("actor=Move:e2e3|target=File:e|mechanism=Mechanism:pawn-break|consequence=Consequence:pawnbreak|proof=DirectProof"),
       specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
     )
     val view = meaningClaimView(
@@ -4841,8 +4841,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       proofRoles = List(RelativeCauseProofRole.DirectProof, RelativeCauseProofRole.ContrastProof),
       objectBindingSignatures =
         List(
-          "actor=Move:e2e3|target=File:e|mechanism=Mechanism:pawn-break|proof=DirectProof",
-          "actor=Move:e2e4|target=File:e|mechanism=Mechanism:pawn-break|proof=DirectProof"
+          "actor=Move:e2e3|target=File:e|mechanism=Mechanism:pawn-break|consequence=Consequence:pawnbreak|proof=DirectProof",
+          "actor=Move:e2e4|target=File:e|mechanism=Mechanism:pawn-break|consequence=Consequence:pawnbreak|proof=DirectProof"
         ),
       specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
     )
@@ -4981,7 +4981,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     val cause = causeFrame(
       causeId = "cause-pawn-target",
       axisKeys = List("Target:Gain:pawn-target"),
-      objectSignatures = List("target=Pawn:weak-pawn:d4|mechanism=Mechanism:target|proof=DirectProof"),
+      objectSignatures = List("target=Pawn:weak-pawn:d4|mechanism=Mechanism:target|consequence=Consequence:targetpressure|proof=DirectProof"),
       causeKind = RelativeCauseKind.PawnWeaknessTarget
     ).copy(
       hasOwnedAdmissibleLongTermProof = true,
@@ -4997,7 +4997,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       sourceEvidenceIds = List("played-transition"),
       causeEvidenceIds = List("cause-pawn-target"),
       proofRoles = List(RelativeCauseProofRole.DirectProof),
-      objectBindingSignatures = List("target=Pawn:weak-pawn:d4|mechanism=Mechanism:target|proof=DirectProof"),
+      objectBindingSignatures = List("target=Pawn:weak-pawn:d4|mechanism=Mechanism:target|consequence=Consequence:targetpressure|proof=DirectProof"),
       specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis,
       structuralRouteMove = Some(candidateLine.rootMove),
       structuralPurposeSubjects = List("weak-pawn:d4")
@@ -5017,7 +5017,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       causeId = "cause-diagonal-battery",
       axisKeys = List("Activity:Gain:battery-pressure-gain"),
       objectSignatures = List(
-        "actor=Move:e2e3|actor=Piece:bishop|actor=Piece:queen|target=Square:c1|target=Square:h6|mechanism=Mechanism:battery-diagonal"
+        "actor=Move:e2e3|actor=Piece:bishop|actor=Piece:queen|target=Square:c1|target=Square:h6|mechanism=Mechanism:battery-diagonal|consequence=Consequence:diagonalpressure"
       ),
       causeKind = RelativeCauseKind.ActivityGain
     ).copy(
@@ -5039,7 +5039,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       structuralPurposeSubjects = List("battery:diagonal:c1-h6:bishop-queen"),
       structuralPurposeConsequences = List("BatteryPressureGain"),
       objectBindingSignatures = List(
-        "actor=Move:e2e3|actor=Piece:bishop|actor=Piece:queen|target=Square:c1|target=Square:h6|mechanism=Mechanism:battery-diagonal"
+        "actor=Move:e2e3|actor=Piece:bishop|actor=Piece:queen|target=Square:c1|target=Square:h6|mechanism=Mechanism:battery-diagonal|consequence=Consequence:diagonalpressure"
       ),
       specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
     )
@@ -5096,7 +5096,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       causeId = "cause-file-battery",
       axisKeys = List("Activity:Gain:battery-pressure-gain"),
       objectSignatures = List(
-        "actor=Move:e2e3|actor=Piece:rook|actor=Piece:queen|target=Square:a5|target=Square:h5|mechanism=Mechanism:battery-file"
+        "actor=Move:e2e3|actor=Piece:rook|actor=Piece:queen|target=Square:a5|target=Square:h5|mechanism=Mechanism:battery-file|consequence=Consequence:filepressure"
       ),
       causeKind = RelativeCauseKind.ActivityGain
     ).copy(
@@ -5118,7 +5118,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       structuralPurposeSubjects = List("battery:file:a5-h5:rook-queen"),
       structuralPurposeConsequences = List("BatteryPressureGain"),
       objectBindingSignatures = List(
-        "actor=Move:e2e3|actor=Piece:rook|actor=Piece:queen|target=Square:a5|target=Square:h5|mechanism=Mechanism:battery-file"
+        "actor=Move:e2e3|actor=Piece:rook|actor=Piece:queen|target=Square:a5|target=Square:h5|mechanism=Mechanism:battery-file|consequence=Consequence:filepressure"
       ),
       specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
     )

@@ -206,10 +206,8 @@ object EvidenceObjectBinding:
     signatures.exists(playerFacingReadySignature)
 
   private def playerFacingReadySignature(signature: String): Boolean =
-    val parts = signatureParts(signature)
-    parts.exists(specificSurfaceTargetPart) &&
-      parts.exists(_.startsWith("mechanism=")) &&
-      !parts.contains("proof=ContextSupport")
+    specificTargetSurfaceReadySignature(signature) &&
+      !signatureParts(signature).contains("proof=ContextSupport")
 
   private def specificTargetSurfaceReadySignature(signature: String): Boolean =
     val parts = signatureParts(signature)
