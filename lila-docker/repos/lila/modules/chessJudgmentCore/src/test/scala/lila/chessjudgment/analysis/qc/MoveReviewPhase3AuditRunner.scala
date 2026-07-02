@@ -1359,7 +1359,6 @@ object MoveReviewPhase3AuditRunner:
     Json.obj(
       "missingCauseComparisonIds" -> diagnostics.filter(_.relativeCauseDiagnostics.missingCause).map(_.id),
       "shallowProofComparisonIds" -> diagnostics.filter(_.relativeCauseDiagnostics.shallowProofCauseIds.nonEmpty).map(_.id),
-      "genericCauseComparisonIds" -> diagnostics.filter(_.relativeCauseDiagnostics.genericCauseIds.nonEmpty).map(_.id),
       "strategic_cause_without_contrast" -> diagnostics.filter(
         _.relativeCauseDiagnostics.strategicCauseWithoutContrastIds.nonEmpty
       ).map(_.id),
@@ -1805,9 +1804,7 @@ object MoveReviewPhase3AuditRunner:
       "producedCauseEventLines" -> diagnostic.producedCauseEventLines.map(lineRefSummary),
       "missingCause" -> diagnostic.missingCause,
       "shallowProofCauseIds" -> diagnostic.shallowProofCauseIds,
-      "genericCauseIds" -> diagnostic.genericCauseIds,
       "ownedTypedDepthCauseIds" -> diagnostic.ownedTypedDepthCauseIds,
-      "nonGenericCauseIds" -> diagnostic.nonGenericCauseIds,
       "unboundEvidenceIds" -> diagnostic.unboundEvidenceIds,
       "wrongRoleCauseIds" -> diagnostic.wrongRoleCauseIds,
       "wrongSourceSideCauseIds" -> diagnostic.wrongSourceSideCauseIds,
@@ -2049,7 +2046,6 @@ object MoveReviewPhase3AuditRunner:
       case CandidateComparisonFailureClass.MissingEvidence           => "missing_evidence"
       case CandidateComparisonFailureClass.UnboundEvidence           => "unbound_evidence"
       case CandidateComparisonFailureClass.LowDepthCause             => "low_depth_cause"
-      case CandidateComparisonFailureClass.GenericCause              => "generic_cause"
       case CandidateComparisonFailureClass.FailedCauseTemplate       => "failed_cause_template"
       case CandidateComparisonFailureClass.UnknownChessPattern       => "unknown_chess_pattern"
 
@@ -2084,7 +2080,6 @@ object MoveReviewPhase3AuditRunner:
       case CandidateComparisonFailureReason.LowSignalMaterialContext  => "low_signal_material_context"
       case CandidateComparisonFailureReason.LowSignalStrategicContext => "low_signal_strategic_context"
       case CandidateComparisonFailureReason.LowDepthGeneratedCause    => "low_depth_generated_cause"
-      case CandidateComparisonFailureReason.GenericGeneratedCause     => "generic_generated_cause"
       case CandidateComparisonFailureReason.UnboundEvidenceWithGeneratedCause =>
         "unbound_evidence_with_generated_cause"
       case CandidateComparisonFailureReason.ContextCauseProjectionMissing => "context_cause_projection_missing"

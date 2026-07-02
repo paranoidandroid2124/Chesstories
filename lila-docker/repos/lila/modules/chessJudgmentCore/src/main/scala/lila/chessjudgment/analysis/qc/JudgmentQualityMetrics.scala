@@ -328,7 +328,6 @@ enum CandidateComparisonFailureClass:
   case MissingEvidence
   case UnboundEvidence
   case LowDepthCause
-  case GenericCause
   case FailedCauseTemplate
   case UnknownChessPattern
 
@@ -358,7 +357,6 @@ enum CandidateComparisonFailureReason:
   case LowSignalMaterialContext
   case LowSignalStrategicContext
   case LowDepthGeneratedCause
-  case GenericGeneratedCause
   case UnboundEvidenceWithGeneratedCause
   case ContextCauseProjectionMissing
   case PlayableLossPrimaryOverclaim
@@ -714,9 +712,7 @@ final case class ComparisonRelativeCauseDiagnostics(
     producedCauseEventLines: List[LineNodeRef],
     missingCause: Boolean,
     shallowProofCauseIds: List[String],
-    genericCauseIds: List[String],
     ownedTypedDepthCauseIds: List[String],
-    nonGenericCauseIds: List[String],
     unboundEvidenceIds: List[String],
     wrongRoleCauseIds: List[String],
     wrongSourceSideCauseIds: List[String],
@@ -1431,8 +1427,6 @@ object CandidateComparisonDiagnostic:
         val hasLowDepthCause =
           lowDepthCauseShouldBeAudited(fact, causeKinds) &&
             causeSupport.exists(!_.hasOwnedTypedDepth)
-        val hasGenericCause =
-          relativeCauseDiagnostics.genericCauseIds.nonEmpty
         val hasUnboundEvidence =
           relativeCauseDiagnostics.unboundEvidenceIds.nonEmpty
         CandidateComparisonDiagnostic(
@@ -1476,7 +1470,6 @@ object CandidateComparisonDiagnostic:
             trace,
             moveJudgmentViewDiagnostics,
             hasLowDepthCause,
-            hasGenericCause,
             hasUnboundEvidence
           ),
           failureReasons = failureReasonsFor(
@@ -1486,7 +1479,6 @@ object CandidateComparisonDiagnostic:
             trace,
             moveJudgmentViewDiagnostics,
             hasLowDepthCause,
-            hasGenericCause,
             hasUnboundEvidence
           )
         )
@@ -2122,16 +2114,8 @@ object CandidateComparisonDiagnostic:
     val expectedCauseHints = (producedCauseKinds ++ missingExpectedCauseHints).distinct
     val shallowProofCauseIds =
       causeSupport.filterNot(_.hasOwnedTypedDepth).map(_.id).distinct.sorted
-    val genericCauseIds =
-      causeSupport
-        .filter(_.semanticSupportKinds.contains("GenericComparisonOnly"))
-        .map(_.id)
-        .distinct
-        .sorted
     val ownedTypedDepthCauseIds =
       causeSupport.filter(_.hasOwnedTypedDepth).map(_.id).distinct.sorted
-    val nonGenericCauseIds =
-      producedCauseIds.filterNot(genericCauseIds.contains)
     val boundEvidenceIds =
       (
         causeRecords.flatMap(entry => entry.record.parents.map(_.id)) ++
@@ -2175,9 +2159,7 @@ object CandidateComparisonDiagnostic:
       producedCauseEventLines = producedCauseEventLines,
       missingCause = requiresExplanatoryCause(fact) && causeRecords.isEmpty,
       shallowProofCauseIds = shallowProofCauseIds,
-      genericCauseIds = genericCauseIds,
       ownedTypedDepthCauseIds = ownedTypedDepthCauseIds,
-      nonGenericCauseIds = nonGenericCauseIds,
       unboundEvidenceIds = unboundEvidenceIds,
       wrongRoleCauseIds = wrongRoleCauseIds,
       wrongSourceSideCauseIds = wrongSourceSideCauseIds,
@@ -2503,19 +2485,19 @@ object CandidateComparisonDiagnostic:
     kind match
       case RelativeCauseKind.OnlyMoveNecessity =>
         val kinds = onlyMoveNecessitySupportKinds(parentRecords) ++ typedProofSupportKinds(proof)
-        if kinds.nonEmpty then kinds.distinct.sorted else List("GenericComparisonOnly")
+        kinds.distinct.sorted
       case RelativeCauseKind.OnlyDefenseNecessity | RelativeCauseKind.DefensiveResource =>
         val kinds = defensiveResourceSupportKinds(parentRecords) ++ typedProofSupportKinds(proof)
-        if kinds.nonEmpty then kinds.distinct.sorted else List("GenericComparisonOnly")
+        kinds.distinct.sorted
       case RelativeCauseKind.MaterialSwing | RelativeCauseKind.SacrificeCompensation =>
         val kinds = materialSupportKinds(parentRecords) ++ typedProofSupportKinds(proof)
-        if kinds.nonEmpty then kinds.distinct.sorted else List("GenericComparisonOnly")
+        kinds.distinct.sorted
       case causeKind if tacticalCause(causeKind) =>
         val kinds = tacticalSupportKinds(causeKind, parentRecords) ++ typedProofSupportKinds(proof)
-        if kinds.nonEmpty then kinds.distinct.sorted else List("GenericComparisonOnly")
+        kinds.distinct.sorted
       case causeKind if strategicCause(causeKind) =>
         val kinds = strategicSupportKinds(parentRecords) ++ typedProofSupportKinds(proof)
-        if kinds.nonEmpty then kinds.distinct.sorted else List("GenericComparisonOnly")
+        kinds.distinct.sorted
       case _ =>
         Nil
 
@@ -2990,7 +2972,6 @@ object CandidateComparisonDiagnostic:
       trace: CandidateCauseDecisionTrace,
       viewDiagnostics: ComparisonMoveJudgmentViewDiagnostics,
       hasLowDepthCause: Boolean,
-      hasGenericCause: Boolean,
       hasUnboundEvidence: Boolean
   ): CandidateComparisonFailureClass =
     val significantEnginePreference = CandidateComparisonDiagnostic.significantEnginePreference(fact)
@@ -3007,8 +2988,6 @@ object CandidateComparisonDiagnostic:
       CandidateComparisonFailureClass.NoFailure
     else if hasKnownCause && hasLowDepthCause then
       CandidateComparisonFailureClass.LowDepthCause
-    else if hasKnownCause && hasGenericCause then
-      CandidateComparisonFailureClass.GenericCause
     else if hasKnownCause && hasUnboundEvidence then
       CandidateComparisonFailureClass.UnboundEvidence
     else if hasKnownCause then
@@ -3327,7 +3306,6 @@ object CandidateComparisonDiagnostic:
       trace: CandidateCauseDecisionTrace,
       viewDiagnostics: ComparisonMoveJudgmentViewDiagnostics,
       hasLowDepthCause: Boolean,
-      hasGenericCause: Boolean,
       hasUnboundEvidence: Boolean
   ): List[CandidateComparisonFailureReason] =
     val missingLine =
@@ -3361,7 +3339,6 @@ object CandidateComparisonDiagnostic:
     if generatedKnownCause && !generatedOnlyUnexplained then
       return List(
         Option.when(hasLowDepthCause)(CandidateComparisonFailureReason.LowDepthGeneratedCause),
-        Option.when(hasGenericCause)(CandidateComparisonFailureReason.GenericGeneratedCause),
         Option.when(hasUnboundEvidence)(CandidateComparisonFailureReason.UnboundEvidenceWithGeneratedCause)
       ).flatten.distinct
     if positiveContextAlternative(fact) && causeKinds.isEmpty then
@@ -3370,7 +3347,6 @@ object CandidateComparisonDiagnostic:
       return List(CandidateComparisonFailureReason.ContextAlternativeComparison)
     val reasons = List(
       Option.when(hasLowDepthCause)(CandidateComparisonFailureReason.LowDepthGeneratedCause),
-      Option.when(hasGenericCause)(CandidateComparisonFailureReason.GenericGeneratedCause),
       Option.when(hasUnboundEvidence)(CandidateComparisonFailureReason.UnboundEvidenceWithGeneratedCause),
       Option.when(
         requiresCause &&
