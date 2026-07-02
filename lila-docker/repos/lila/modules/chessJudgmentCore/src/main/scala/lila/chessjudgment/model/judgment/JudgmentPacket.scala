@@ -1868,7 +1868,7 @@ object MoveMeaningSurface:
       !terminalOverriddenEndgameTechniqueShadowed(view, claim) &&
       publicSpecificPlanContinuityClaim(view, claim) &&
       publicCurrentMoveFunctionClaim(view, claim) &&
-      !badMoveSuppressesPositiveLocalMotif(view, claim)
+      !badMoveSuppressesCurrentMoveSurface(view, claim)
 
   private def terminalOverriddenEndgameTechniqueClaim(claim: MoveMeaningClaim): Boolean =
     claim.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
@@ -1917,12 +1917,16 @@ object MoveMeaningSurface:
   private def publicCurrentMovePlanContinuityClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
     MoveMeaningClaim.currentMovePlanContinuityFunctionReady(view.moveMeaningClaims, claim)
 
-  private def badMoveSuppressesPositiveLocalMotif(
+  private def badMoveSuppressesCurrentMoveSurface(
       view: MoveJudgmentView,
       claim: MoveMeaningClaim
   ): Boolean =
     badMoveVisible(view) &&
-      positiveCurrentMoveMotif(view, claim)
+      currentMoveClaim(view, claim) &&
+      (
+        (claim.surfaceLane == "current_move_owned" && positiveCurrentMoveMotif(view, claim)) ||
+          (claim.surfaceLane == "current_move_function" && negativeCurrentMoveMeaning(claim))
+      )
 
   private def badMoveVisible(view: MoveJudgmentView): Boolean =
     view.verdict.exists(verdict => badVerdict(verdict.verdict))
@@ -3117,7 +3121,7 @@ object MoveMeaningClaim:
     else if laneOwnershipReady && viewMeaningReady && hasConcreteObject &&
         (specificObjectAxis || currentMoveFunctionalProof || endgameTechniqueViewProof) && hasDetailEvidence &&
         (detailHasAnyProofLink(detail) || currentMoveFunctionalProof || endgameTechniqueViewProof) &&
-        !rejectedPositiveCause && !badCurrentMovePositiveMeaning && !broadPlanContinuityCurrentMove
+        !rejectedPositiveCause && !broadPlanContinuityCurrentMove
     then
       Some("view_surfaced")
     else if hasDetailEvidence && contextualMeaningDetail(detail) then

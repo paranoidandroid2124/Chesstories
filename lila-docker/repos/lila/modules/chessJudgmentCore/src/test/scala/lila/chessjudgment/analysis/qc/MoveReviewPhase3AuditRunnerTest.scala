@@ -3627,6 +3627,46 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
     assertEquals(view.moveMeaningClaims, Nil)
 
+  test("move meaning claims keep concrete bad-move route as weak local idea"):
+    val routeSignature =
+      "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:maneuver|consequence=Consequence:developmentpieceactivated"
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Gain:activity-gain"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      label = Some("activity-gain"),
+      candidateEvidenceIds = List("played-transition"),
+      sourceEvidenceIds = List("structural-delta:played:e2e3", "played-transition"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List(routeSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis,
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralPurposeSubjects = List("knight:e2-e3:mobility+2"),
+      structuralPurposeConsequences = List("DevelopmentPieceActivated", "DevelopmentMobilityGain"),
+      structuralPurposeCategories = List("PieceActivity"),
+      structuralMotifTags = List("piece", "reroute", "route")
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.Mistake,
+      auditCauses = Nil,
+      details = List(detail)
+    )
+
+    val claim = view.moveMeaningClaims.headOption.getOrElse(fail(view.moveMeaningClaims.toString))
+    assertEquals(claim.meaningKind, "PieceRoute")
+    assertEquals(claim.supportLevel, "view_surfaced")
+    assertEquals(claim.surfaceLane, "current_move_function")
+    assertEquals(claim.causeEvidenceIds, Nil)
+    assert(claim.sourceEvidenceIds.contains("played-transition"), claim.sourceEvidenceIds)
+
+    val surface = MoveMeaningSurface.from(view)
+    assertEquals(surface.map(_.ideaType), List("piece_route"))
+    assertEquals(surface.head.assessment.localIdea, true)
+    assertEquals(surface.head.assessment.verdictReason, false)
+    assertEquals(surface.head.ideaQuality, "weak")
+    assertEquals(surface.head.evidence.hasCarrier, true)
+
   test("move meaning claims surface explicit negative current-move route carriers as route loss"):
     val routeSignature =
       "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:maneuver|consequence=Consequence:mobilityloss"
