@@ -558,7 +558,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slot.requiredCoLocatedSemanticDetailTokens.nonEmpty ||
       slot.requiredSemanticAnchorTokens.nonEmpty ||
       slot.requiredObjectBindingTokens.nonEmpty ||
-      slot.requiredTerminalStage.exists(stage => semanticRubricStageRank(stage) > semanticRubricStageRank("semantic_detected"))
+      slot.requiredTerminalStage.nonEmpty
 
   private[qc] def semanticRubricExpectedSlotCorpusCoverageJson(coverages: List[JsValue]): JsObject =
     val slotRows =
@@ -840,32 +840,24 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       rootTierLineageTokenCoLocatedRows.filter(row =>
         tokensSatisfied(slot.requiredSemanticAnchorTokens, row.detailSemanticAnchorKeys)
       )
-    val legacyBest =
-      legacyMatches.sortBy(row => -semanticRubricStageRank(row.terminalStage)).headOption
+    val legacyBest = legacyMatches.headOption
     val legacyTerminalStage = legacyBest.map(_.terminalStage).getOrElse("missing_semantic_slot")
     val legacyMatched =
       legacyBest.nonEmpty &&
-        slot.requiredTerminalStage.forall(required =>
-          semanticRubricStageRank(legacyTerminalStage) >= semanticRubricStageRank(required)
-        )
+        slot.requiredTerminalStage.forall(semanticRubricStageSatisfied(legacyTerminalStage, _))
     val causeBorrowFalsePositive =
       slot.requiredCauseKinds.nonEmpty && legacyMatched && !causeLineageTokenCoLocationSatisfied
     val primaryRootBorrowFalsePositive =
       slot.requiredPrimaryRootCauseKinds.nonEmpty && legacyMatched && !rootLineageTokenCoLocationSatisfied
     val rootTierBorrowFalsePositive =
       slot.requiredPrimaryRootArbitrationTiers.nonEmpty && legacyMatched && !rootTierLineageTokenCoLocationSatisfied
-    val best = matches.sortBy(row => -semanticRubricStageRank(expectedSemanticSlotTerminalStage(slot, row))).headOption
-    val terminalStage = best.map(row => expectedSemanticSlotTerminalStage(slot, row)).getOrElse("missing_semantic_slot")
-    val strictLineageTerminalStage =
-      best.map(row => expectedSemanticSlotStrictTerminalStage(slot, row)).getOrElse("missing_semantic_slot")
+    val best = matches.headOption
+    val terminalStage = best.map(_.terminalStage).getOrElse("missing_semantic_slot")
+    val strictLineageTerminalStage = best.map(_.strictLineageTerminalStage).getOrElse("missing_semantic_slot")
     val terminalStageSatisfied =
-      slot.requiredTerminalStage.forall(required =>
-        semanticRubricStageRank(terminalStage) >= semanticRubricStageRank(required)
-      )
+      slot.requiredTerminalStage.forall(semanticRubricStageSatisfied(terminalStage, _))
     val strictLineageTerminalStageSatisfied =
-      slot.requiredTerminalStage.forall(required =>
-        semanticRubricStageRank(strictLineageTerminalStage) >= semanticRubricStageRank(required)
-      )
+      slot.requiredTerminalStage.forall(semanticRubricStageSatisfied(strictLineageTerminalStage, _))
     val matched = best.nonEmpty && terminalStageSatisfied
     Json.obj(
       "id" -> slot.id,
@@ -941,7 +933,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "bestLineageTrace" -> best.map(semanticRubricLineageTraceJson).getOrElse(Json.obj()),
       "lineageTraces" -> JsArray(
         matches
-          .sortBy(row => (-semanticRubricStageRank(row.terminalStage), row.comparisonId))
+          .sortBy(_.comparisonId)
           .map(semanticRubricLineageTraceJson)
       )
     )
@@ -982,6 +974,9 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
   private def tokenSatisfied(requiredToken: String, values: List[String]): Boolean =
     values.exists(value => tokenMatches(requiredToken, value))
 
+  private def semanticRubricStageSatisfied(actual: String, required: String): Boolean =
+    actual == required.trim
+
   private def tokenMatches(requiredToken: String, value: String): Boolean =
     val required = requiredToken.trim.toLowerCase
     val candidate = value.trim.toLowerCase
@@ -1020,17 +1015,14 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
 
   private def planOptionOwnedCauseExpectation(slot: ExpectedSemanticSlot): Boolean =
     slot.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-      slot.requiredTerminalStage.exists(stage =>
-        semanticRubricStageRank(stage) >= semanticRubricStageRank("owned_cause_linked")
-      )
+      slot.requiredTerminalStage.contains("owned_cause_linked")
 
   private def viewOnlyOwnedCauseExpectation(
       slot: ExpectedSemanticSlot,
       best: Option[SemanticRubricSlotRow]
   ): Boolean =
-    slot.requiredTerminalStage.exists(stage =>
-      semanticRubricStageRank(stage) >= semanticRubricStageRank("owned_cause_linked")
-    ) && best.exists(row => row.viewSurfaced && !row.ownedCauseLinked)
+    slot.requiredTerminalStage.contains("owned_cause_linked") &&
+      best.exists(row => row.viewSurfaced && !row.ownedCauseLinked)
 
   private def objectBindingTokensCoLocated(
       requiredObjectBindingTokens: List[String],
@@ -1226,43 +1218,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
   private def missingRequiredTokens(requiredTokens: List[String], values: List[String]): List[String] =
     requiredTokens.filterNot(token => tokenSatisfied(token, values))
 
-  private def semanticRubricStageRank(stage: String): Int =
-    stage match
-      case "missing_semantic_slot"  => 0
-      case "semantic_detected"      => 1
-      case "object_bound"           => 2
-      case "exact_axis_or_pattern"  => 3
-      case "cause_owned"            => 4
-      case "claim_survived"         => 5
-      case "view_surfaced"          => 6
-      case "owned_cause_linked"     => 7
-      case "clustered_coherent"     => 8
-      case _                        => 0
-
-  private def expectedSemanticSlotTerminalStage(
-      slot: ExpectedSemanticSlot,
-      row: SemanticRubricSlotRow
-  ): String =
-    if expectedSemanticSlotRecognitionViewMatch(slot, row) then "view_surfaced"
-    else row.terminalStage
-
-  private def expectedSemanticSlotStrictTerminalStage(
-      slot: ExpectedSemanticSlot,
-      row: SemanticRubricSlotRow
-  ): String =
-    if expectedSemanticSlotRecognitionViewMatch(slot, row) then "view_surfaced"
-    else row.strictLineageTerminalStage
-
-  private def expectedSemanticSlotRecognitionViewMatch(
-      slot: ExpectedSemanticSlot,
-      row: SemanticRubricSlotRow
-  ): Boolean =
-    slot.requiredTerminalStage.contains("view_surfaced") &&
-      slot.requiredCauseKinds.isEmpty &&
-      slot.requiredPrimaryRootCauseKinds.isEmpty &&
-      slot.requiredPrimaryRootArbitrationTiers.isEmpty &&
-      row.viewSurfaced
-
   private def semanticRubricSlotRows(diagnostic: CandidateComparisonDiagnostic): List[SemanticRubricSlotRow] =
     val publicRows =
       diagnostic.moveJudgmentView.publicMoveMeaningClaimDiagnostics.map(claim =>
@@ -1311,6 +1266,12 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       )
     val publicSurfaceClaimWithCarrier =
       publicSurfaceClaimDiagnostics.filter(_.hasCarrier)
+    val publicSurfaceStage =
+      publicSurfaceClaimWithCarrier.headOption
+        .map(_.supportLevel)
+        .filter(_.nonEmpty)
+        .orElse(publicSurfaceClaimDiagnostics.headOption.map(_ => "no_public_carrier"))
+        .getOrElse(if unitSurfaced then "view_only" else "missing_semantic_slot")
     val ownedCauseLinked =
       publicSurfaceClaimWithCarrier.exists(claim =>
         claim.supportLevel == "owned_cause_linked" &&
@@ -1339,33 +1300,12 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
         view.primaryRootCauseEvidenceTiers,
         semanticDetailTokenGroups
       )
-    val strictCauseOwned = causeOwned && strictCauseLineageBound
-    val strictClaimSurvived = claimSurvived && strictCauseOwned
-    val strictViewSurfaced = viewSurfaced && strictClaimSurvived
-    val strictOwnedCauseLinked = ownedCauseLinked && strictViewSurfaced
-    val strictClusteredCoherent = clusteredCoherent && strictOwnedCauseLinked
     SemanticRubricSlotRow(
       comparisonId = diagnostic.id,
       unit = unit,
       axisKey = axisKey,
-      terminalStage = semanticRubricTerminalStage(
-        objectBound = objectBound,
-        exactAxisOrPattern = exactAxisOrPattern,
-        causeOwned = causeOwned,
-        claimSurvived = claimSurvived,
-        viewSurfaced = viewSurfaced,
-        ownedCauseLinked = ownedCauseLinked,
-        clusteredCoherent = clusteredCoherent
-      ),
-      strictLineageTerminalStage = semanticRubricTerminalStage(
-        objectBound = objectBound,
-        exactAxisOrPattern = exactAxisOrPattern,
-        causeOwned = strictCauseOwned,
-        claimSurvived = strictClaimSurvived,
-        viewSurfaced = strictViewSurfaced,
-        ownedCauseLinked = strictOwnedCauseLinked,
-        clusteredCoherent = strictClusteredCoherent
-      ),
+      terminalStage = publicSurfaceStage,
+      strictLineageTerminalStage = publicSurfaceStage,
       objectBound = objectBound,
       exactAxisOrPattern = exactAxisOrPattern,
       causeOwned = causeOwned,
@@ -1404,24 +1344,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
   ): Boolean =
     diagnostic.unit == unit &&
       axisKey.forall(diagnostic.axisKey.contains)
-
-  private def semanticRubricTerminalStage(
-      objectBound: Boolean,
-      exactAxisOrPattern: Boolean,
-      causeOwned: Boolean,
-      claimSurvived: Boolean,
-      viewSurfaced: Boolean,
-      ownedCauseLinked: Boolean,
-      clusteredCoherent: Boolean
-  ): String =
-    if !objectBound then "semantic_detected"
-    else if !exactAxisOrPattern then "object_bound"
-    else if !causeOwned then "exact_axis_or_pattern"
-    else if !claimSurvived then "cause_owned"
-    else if !viewSurfaced then "claim_survived"
-    else if !ownedCauseLinked then "view_surfaced"
-    else if !clusteredCoherent then "owned_cause_linked"
-    else "clustered_coherent"
 
   private def axisPart(axisKey: String, index: Int): String =
     axisKey.split(":", 3).lift(index).getOrElse("")
