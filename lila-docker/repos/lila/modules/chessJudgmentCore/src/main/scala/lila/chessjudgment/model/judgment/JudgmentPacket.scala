@@ -4181,8 +4181,8 @@ object MoveMeaningClaim:
       claimMove: String
   ): Boolean =
     moveEndpoints(claimMove).exists { case (_, to) =>
-      val breakFile = detail.breakFile.map(counterplayRaceFileToken)
-      breakFile.exists(file =>
+      val raceFiles = (detail.breakFile.toList ++ detail.counterBreakFiles).map(counterplayRaceFileToken).filter(_.nonEmpty)
+      raceFiles.exists(file =>
         detail.tensionEdges.exists(edge =>
           val edgeSquares = squareTokens(edge)
           edgeSquares.contains(to) &&
