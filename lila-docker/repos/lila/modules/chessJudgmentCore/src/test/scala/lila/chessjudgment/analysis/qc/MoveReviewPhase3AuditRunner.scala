@@ -1483,8 +1483,7 @@ object MoveReviewPhase3AuditRunner:
       ),
       "relativeCauseStageCounts" -> relativeCauseStageCountsJson(diagnostics),
       "structuralWitnessFunnel" -> structuralWitnessFunnelJson(diagnostics),
-      "planTechniqueEligibilityFunnel" -> planTechniqueEligibilityFunnelJson(diagnostics),
-      "structuralOpportunityGenerationFunnel" -> structuralOpportunityGenerationFunnelJson(diagnostics)
+      "planTechniqueEligibilityFunnel" -> planTechniqueEligibilityFunnelJson(diagnostics)
     )
 
   private def referenceLeadSemanticAxis(diagnostic: CandidateComparisonDiagnostic): Boolean =
@@ -1593,11 +1592,6 @@ object MoveReviewPhase3AuditRunner:
 
   private def structuralWitnessFunnelJson(diagnostics: List[CandidateComparisonDiagnostic]): JsObject =
     auditFunnelMetrics.structuralWitnessFunnelJson(diagnostics)
-
-  private[qc] def structuralOpportunityGenerationFunnelJson(
-      diagnostics: List[CandidateComparisonDiagnostic]
-  ): JsObject =
-    auditFunnelMetrics.structuralOpportunityGenerationFunnelJson(diagnostics)
 
   private[qc] def semanticRubricExpectedSlotCoverageJson(
       expectedSlots: List[ExpectedSemanticSlot],
