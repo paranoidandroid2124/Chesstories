@@ -86,11 +86,6 @@ private[qc] object MoveReviewPhase3AuditMetrics:
             EvidenceObjectBinding.signatureTokens(List(signature), "target=").exists(EvidenceObjectBinding.concreteTargetToken)
           )
       )
-    val weakConcreteReadyFrames =
-      frames.filter(frame =>
-        frame.concreteObjectReady &&
-          !EvidenceObjectBinding.playerFacingReadySignatures(frame.objectBindingSignatures)
-      )
     val axisObjectFingerprints =
       frames.flatMap(frame =>
         val fingerprints = frame.objectBindingSignatures.map(objectFingerprint).filter(_.nonEmpty).distinct
@@ -117,8 +112,6 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       "playerFacingObjectReadyFrameCount" -> playerFacingObjectReadyFrames.size,
       "targetOnlyObjectBindingFrameCount" -> targetOnlyObjectBindingFrames.size,
       "targetOnlyObjectBindingFrameIds" -> targetOnlyObjectBindingFrames.flatMap(_.causeEvidenceIds).distinct.sorted,
-      "weakConcreteReadyFrameCount" -> weakConcreteReadyFrames.size,
-      "weakConcreteReadyFrameIds" -> weakConcreteReadyFrames.flatMap(_.causeEvidenceIds).distinct.sorted,
       "axisWithMultipleObjectFingerprintsCount" -> axisWithMultipleFingerprints.size,
       "axisWithMultipleObjectFingerprints" -> JsObject(
         axisWithMultipleFingerprints.toList.sortBy(_._1).map { case (axis, fingerprints) =>
