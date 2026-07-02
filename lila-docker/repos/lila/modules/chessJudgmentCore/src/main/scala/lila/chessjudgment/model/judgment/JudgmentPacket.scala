@@ -1844,13 +1844,19 @@ object MoveMeaningSurface:
     )
 
   def from(view: MoveJudgmentView): List[MoveMeaningSurface] =
-    publicClaimsForSurface(view)
-      .map(claim => fromClaim(view.verdict, claim))
+    publicClaimsWithEvidenceForSurface(view)
+      .map((claim, evidence) => fromClaim(view.verdict, claim, evidence))
 
   def publicClaimsForSurface(view: MoveJudgmentView): List[MoveMeaningClaim] =
+    publicClaimsWithEvidenceForSurface(view).map(_._1)
+
+  private def publicClaimsWithEvidenceForSurface(view: MoveJudgmentView): List[(MoveMeaningClaim, MoveMeaningSurfaceEvidence)] =
     view.moveMeaningClaims
-      .filter(claim => publicSurfaceClaim(view, claim))
-      .sortBy(claimSurfaceSortKey)
+      .flatMap { claim =>
+        val evidence = evidenceForClaim(claim)
+        Option.when(publicSurfaceClaim(view, claim, evidence))(claim -> evidence)
+      }
+      .sortBy((claim, _) => claimSurfaceSortKey(claim))
       .take(12)
 
   private[chessjudgment] def evidenceForClaim(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
@@ -1865,9 +1871,13 @@ object MoveMeaningSurface:
           claim.surfaceLane != "pv_or_line_witness"
       )
 
-  private def publicSurfaceClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
+  private def publicSurfaceClaim(
+      view: MoveJudgmentView,
+      claim: MoveMeaningClaim,
+      evidence: MoveMeaningSurfaceEvidence
+  ): Boolean =
     publicSurfaceLaneAllowed(claim) &&
-      evidenceForClaim(claim).hasCarrier &&
+      evidence.hasCarrier &&
       !terminalOverriddenEndgameTechniqueShadowed(view, claim) &&
       publicSpecificPlanContinuityClaim(view, claim) &&
       publicCurrentMoveFunctionClaim(view, claim) &&
@@ -1968,7 +1978,11 @@ object MoveMeaningSurface:
       claim.moveUci
     )
 
-  private def fromClaim(verdict: Option[MoveJudgmentVerdictFrame], claim: MoveMeaningClaim): MoveMeaningSurface =
+  private def fromClaim(
+      verdict: Option[MoveJudgmentVerdictFrame],
+      claim: MoveMeaningClaim,
+      evidence: MoveMeaningSurfaceEvidence
+  ): MoveMeaningSurface =
     val claimSubject = subject(claim)
     val played = claimSubject == "played_move"
     val badPlayedMove = played && verdict.exists(frame => badVerdict(frame.verdict))
@@ -2013,7 +2027,7 @@ object MoveMeaningSurface:
       endgameTechnique = technique,
       comparison = Option.when(claimSubject == "played_move" || claimSubject == "reference_move")(comparison(verdict, comparisonLossDetails)).flatten,
       terminalConsequences = terminal,
-      evidence = publicEvidence(claim, target, terminal, technique)
+      evidence = evidence
     )
 
   private def publicEvidence(
