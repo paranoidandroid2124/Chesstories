@@ -26,12 +26,7 @@ private[qc] object MoveReviewPhase3AuditContract:
       requiredMechanismKinds: List[StrategicMechanismKind] = Nil,
       requiredCauseKinds: List[RelativeCauseKind] = Nil,
       requiredPrimaryRootCauseKinds: List[RelativeCauseKind] = Nil,
-      requiredPrimaryRootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier] = Nil,
-      requiredTerminalConsequenceKinds: List[LineConsequenceKind] = Nil,
-      requiredSemanticDetailTokens: List[String] = Nil,
-      requiredCoLocatedSemanticDetailTokens: List[String] = Nil,
-      requiredSemanticAnchorTokens: List[String] = Nil,
-      requiredObjectBindingTokens: List[String] = Nil
+      requiredPrimaryRootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier] = Nil
   )
 
   def parseExpectedQuestionIds(json: JsValue): List[String] =
@@ -74,17 +69,7 @@ private[qc] object MoveReviewPhase3AuditContract:
           (json \ "requiredPrimaryRootArbitrationTiers")
             .asOpt[List[String]]
             .getOrElse(Nil)
-            .flatMap(raw => MoveJudgmentCauseRootArbitrationTier.values.find(_.toString == raw.trim)),
-        requiredTerminalConsequenceKinds =
-          (json \ "requiredTerminalConsequenceKinds")
-            .asOpt[List[String]]
-            .getOrElse(Nil)
-            .flatMap(raw => LineConsequenceKind.values.find(_.toString == raw.trim)),
-        requiredSemanticDetailTokens = (json \ "requiredSemanticDetailTokens").asOpt[List[String]].getOrElse(Nil),
-        requiredCoLocatedSemanticDetailTokens =
-          (json \ "requiredCoLocatedSemanticDetailTokens").asOpt[List[String]].getOrElse(Nil),
-        requiredSemanticAnchorTokens = (json \ "requiredSemanticAnchorTokens").asOpt[List[String]].getOrElse(Nil),
-        requiredObjectBindingTokens = (json \ "requiredObjectBindingTokens").asOpt[List[String]].getOrElse(Nil)
+            .flatMap(raw => MoveJudgmentCauseRootArbitrationTier.values.find(_.toString == raw.trim))
       )
 
   private def expectedSemanticUnit(raw: String): Option[PositionPlanTechniqueUnit] =
@@ -101,10 +86,5 @@ private[qc] object MoveReviewPhase3AuditContract:
       "requiredMechanismKinds" -> slot.requiredMechanismKinds.map(_.toString),
       "requiredCauseKinds" -> slot.requiredCauseKinds.map(_.toString),
       "requiredPrimaryRootCauseKinds" -> slot.requiredPrimaryRootCauseKinds.map(_.toString),
-      "requiredPrimaryRootArbitrationTiers" -> slot.requiredPrimaryRootArbitrationTiers.map(_.toString),
-      "requiredTerminalConsequenceKinds" -> slot.requiredTerminalConsequenceKinds.map(_.toString),
-      "requiredSemanticDetailTokens" -> slot.requiredSemanticDetailTokens,
-      "requiredCoLocatedSemanticDetailTokens" -> slot.requiredCoLocatedSemanticDetailTokens,
-      "requiredSemanticAnchorTokens" -> slot.requiredSemanticAnchorTokens,
-      "requiredObjectBindingTokens" -> slot.requiredObjectBindingTokens
+      "requiredPrimaryRootArbitrationTiers" -> slot.requiredPrimaryRootArbitrationTiers.map(_.toString)
     )

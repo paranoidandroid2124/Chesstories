@@ -116,8 +116,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         id: String,
         questionId: String,
         stage: String,
-        consequence: LineConsequenceKind,
-        objectTokens: List[String],
         causeKinds: List[RelativeCauseKind] = Nil
     ) =
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
@@ -125,10 +123,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         unit = PositionPlanTechniqueUnit.StructuralTransformation,
         questionId = Some(questionId),
         requiredSupportLevel = Some(stage),
-        requiredCauseKinds = causeKinds,
-        requiredTerminalConsequenceKinds = List(consequence),
-        requiredCoLocatedSemanticDetailTokens = List("proofRole:DirectProof"),
-        requiredObjectBindingTokens = objectTokens
+        requiredCauseKinds = causeKinds
       )
     def terminalDiagnostic(
         id: String,
@@ -197,17 +192,13 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       terminalSlot(
         id = "terminal-mate-view",
         questionId = "terminal_mate",
-        stage = "view_surfaced",
-        consequence = LineConsequenceKind.Mate,
-        objectTokens = List("target=Square:h7", "mechanism=Mechanism:Mate")
+        stage = "view_surfaced"
       )
     val promotionRaceSlot =
       terminalSlot(
         id = "terminal-promotion-race-owned",
         questionId = "terminal_promotion_race",
         stage = "owned_cause_linked",
-        consequence = LineConsequenceKind.PromotionRace,
-        objectTokens = List("target=Square:a8", "mechanism=Mechanism:promotionrace"),
         causeKinds = List(RelativeCauseKind.ConversionSecured)
       )
     val coverage =
@@ -394,212 +385,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       Nil
     )
 
-  test("expected semantic ownership slots require cause evidence co-located with semantic detail".ignore):
-    def diagnosticWithDetailTokens(
-        id: String,
-        detailTokens: List[String],
-        flowDiagnostics: List[RelativeCauseFlowDiagnostic] = List(
-          causeFlow(
-            causeId = "cause-central-break",
-            kind = RelativeCauseKind.PawnBreakOpportunity,
-            proofAxisKeys = List("PawnBreak:Support:central-break-timing"),
-            claimIds = List("claim-central-break")
-          )
-        ),
-        relativeCauseEvidenceIds: List[String] = List("cause-central-break")
-    ): CandidateComparisonDiagnostic =
-      comparisonDiagnostic(
-        id = id,
-        referenceLeadAxes = List("PawnBreak:Support:central-break-timing"),
-        producedKinds = flowDiagnostics.map(_.causeKind).distinct,
-        flows = flowDiagnostics,
-        primaryRootKinds = List(RelativeCauseKind.PawnBreakOpportunity),
-        primaryRootIds = List("cause-central-break"),
-        positionPlanTechniqueFrameIds = List(s"frame-$id"),
-        positionPlanTechniqueUnits = List(PositionPlanTechniqueUnit.TensionBreakPolicyRoute),
-        positionPlanTechniqueAxisKeys = List("PawnBreak:Support:central-break-timing"),
-        positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.TensionBreakPolicyRoute),
-        positionPlanTechniqueSemanticDetailAxisKeys = List("PawnBreak:Support:central-break-timing"),
-        positionPlanTechniqueSemanticDetailTokens = detailTokens,
-        positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
-        positionPlanTechniqueObjectBindingSignatures = List("target=Pawn:e4|mechanism=Mechanism:pawn-break|proof=DirectProof"),
-        positionPlanTechniqueRelativeCauseEvidenceIds = relativeCauseEvidenceIds,
-        publicMoveMeaningClaimDiagnostics =
-          List(
-            publicMoveMeaningClaimDiagnostic(
-              unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
-              axisKey = Some("PawnBreak:Support:central-break-timing"),
-              meaningKind = "PawnBreakTiming",
-              supportLevel = "owned_cause_linked",
-              surfaceLane = "current_move_owned",
-              causeEvidenceIds = List("cause-central-break")
-            )
-          ),
-        primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
-      )
-    val slot =
-      MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
-        id = "owned-pawn-break-slot",
-        unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
-        questionId = Some("pawn_break_timing_ownership"),
-        requiredSupportLevel = Some("owned_cause_linked"),
-        requiredCauseKinds = List(RelativeCauseKind.PawnBreakOpportunity, RelativeCauseKind.PlanImprovement),
-        requiredSemanticDetailTokens = List("pawnBreakReady:true")
-      )
-    val borrowedCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
-        List(slot),
-        List(
-          diagnosticWithDetailTokens(
-            "borrowed-row-cause",
-            List("unit:TensionBreakPolicyRoute", "pawnBreakReady:true", "objectTarget:Pawn:e4")
-          )
-        )
-      )
-    val ownedCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
-        List(slot),
-        List(
-          diagnosticWithDetailTokens(
-            "co-located-cause",
-            List(
-              "unit:TensionBreakPolicyRoute",
-              "pawnBreakReady:true",
-              "objectTarget:Pawn:e4",
-              "causeEvidenceId:cause-central-break"
-            )
-          )
-        )
-      )
-    val pawnBreakOnlySlot = slot.copy(
-      id = "owned-pawn-break-slot-id-kind-bound",
-      requiredCauseKinds = List(RelativeCauseKind.PawnBreakOpportunity)
-    )
-    val wrongKindCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
-        List(pawnBreakOnlySlot),
-        List(
-          diagnosticWithDetailTokens(
-            "wrong-kind-cause-id",
-            List(
-              "unit:TensionBreakPolicyRoute",
-              "pawnBreakReady:true",
-              "objectTarget:Pawn:e4",
-              "causeEvidenceId:cause-defensive-context"
-            ),
-            flowDiagnostics = List(
-              causeFlow(
-                causeId = "cause-central-break",
-                kind = RelativeCauseKind.PawnBreakOpportunity,
-                proofAxisKeys = List("PawnBreak:Support:central-break-timing"),
-                claimIds = List("claim-central-break")
-              ),
-              causeFlow(
-                causeId = "cause-defensive-context",
-                kind = RelativeCauseKind.DefensiveResource,
-                proofAxisKeys = List("PawnBreak:Support:central-break-timing"),
-                claimIds = List("claim-defensive-context")
-              )
-            ),
-            relativeCauseEvidenceIds = List("cause-central-break", "cause-defensive-context")
-          )
-        )
-      )
-
-    assertEquals((borrowedCoverage \ "matchedSlotCount").as[Int], 0)
-    assertEquals((borrowedCoverage \ "causeBorrowFalsePositiveCount").as[Int], 1)
-    assertEquals((borrowedCoverage \ "slots" \ 0 \ "causeLineageTokenCoLocationSatisfied").as[Boolean], false)
-    assertEquals((borrowedCoverage \ "slots" \ 0 \ "legacyMatchedBeforeStrictLineage").as[Boolean], true)
-    assertEquals((ownedCoverage \ "matchedSlotCount").as[Int], 1)
-    assertEquals((ownedCoverage \ "slots" \ 0 \ "supportLevelSatisfied").as[Boolean], true)
-    assertEquals((ownedCoverage \ "slots" \ 0 \ "causeLineageTokenCoLocationSatisfied").as[Boolean], true)
-    assert((ownedCoverage \ "slots" \ 0 \ "supportLevel").as[String] == "clustered_coherent")
-    assertEquals((wrongKindCoverage \ "matchedSlotCount").as[Int], 0)
-    assertEquals((wrongKindCoverage \ "causeBorrowFalsePositiveCount").as[Int], 1)
-    assertEquals((wrongKindCoverage \ "slots" \ 0 \ "causeLineageTokenCoLocationSatisfied").as[Boolean], false)
-    assertEquals((wrongKindCoverage \ "slots" \ 0 \ "legacyMatchedBeforeStrictLineage").as[Boolean], true)
-
-  test("structure compensation slots do not borrow center control ownership from IQP transition detail".ignore):
-    val causeId = "move-review:demo:evidence:relative-cause:played-vs-best:center-control-gain:a:b:0"
-    def diagnosticWithStructuralTokens(
-        id: String,
-        detailTokens: List[String]
-    ): CandidateComparisonDiagnostic =
-      comparisonDiagnostic(
-        id = id,
-        referenceLeadAxes = List("Target:Gain:weak-pawn-target"),
-        producedKinds = List(RelativeCauseKind.CenterControlGain),
-        flows = List(
-          causeFlow(
-            causeId = causeId,
-            kind = RelativeCauseKind.CenterControlGain,
-            proofAxisKeys = List("Target:Gain:weak-pawn-target"),
-            claimIds = List("claim-structural-compensation")
-          )
-        ),
-        primaryRootKinds = List(RelativeCauseKind.CenterControlGain),
-        primaryRootIds = List(causeId),
-        positionPlanTechniqueFrameIds = List(s"frame-$id"),
-        positionPlanTechniqueUnits = List(PositionPlanTechniqueUnit.StructuralTransformation),
-        positionPlanTechniqueAxisKeys = List("Target:Gain:weak-pawn-target"),
-        positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.StructuralTransformation),
-        positionPlanTechniqueSemanticDetailAxisKeys = List("Target:Gain:weak-pawn-target"),
-        positionPlanTechniqueSemanticDetailTokens = detailTokens,
-        positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
-        positionPlanTechniqueObjectBindingSignatures = List("target=Pawn:weak-pawn:d4|mechanism=Mechanism:WeakPawnTargetCreated|proof=DirectProof"),
-        positionPlanTechniqueRelativeCauseEvidenceIds = List(causeId),
-        primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
-      )
-    val slot =
-      MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
-        id = "iqp-structure-compensation-owned",
-        unit = PositionPlanTechniqueUnit.StructuralTransformation,
-        questionId = Some("structure_compensation"),
-        requiredSupportLevel = Some("clustered_coherent"),
-        requiredCauseKinds = List(
-          RelativeCauseKind.StructuralImprovement,
-          RelativeCauseKind.PawnWeaknessTarget,
-          RelativeCauseKind.TargetPressureGain,
-          RelativeCauseKind.PlanContradiction
-        ),
-        requiredSemanticDetailTokens = List("IQP", "isolated", "transition")
-      )
-    val ownedCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
-        List(slot),
-        List(
-          diagnosticWithStructuralTokens(
-            "owned-iqp-transition",
-            List(
-              "unit:StructuralTransformation",
-              "axisKey:Target:Gain:weak-pawn-target",
-              "iqp",
-              "isolated",
-              "transition",
-              s"causeEvidenceId:$causeId"
-            )
-          )
-        )
-      )
-    val borrowedCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
-        List(slot),
-        List(
-          diagnosticWithStructuralTokens(
-            "borrowed-iqp-transition",
-            List("unit:StructuralTransformation", "axisKey:Target:Gain:weak-pawn-target", "iqp", "isolated", "transition")
-          )
-        )
-      )
-
-    assertEquals((ownedCoverage \ "matchedSlotCount").as[Int], 0)
-    assertEquals((ownedCoverage \ "slots" \ 0 \ "semanticDetailTokensSatisfied").as[Boolean], true)
-    assertEquals((ownedCoverage \ "slots" \ 0 \ "causeKinds").as[List[String]], Nil)
-    assertEquals((ownedCoverage \ "slots" \ 0 \ "supportLevel").as[String], "missing_semantic_slot")
-    assertEquals((ownedCoverage \ "slots" \ 0 \ "causeLineageTokenCoLocationSatisfied").as[Boolean], false)
-    assertEquals((borrowedCoverage \ "matchedSlotCount").as[Int], 0)
-    assertEquals((borrowedCoverage \ "slots" \ 0 \ "causeLineageTokenCoLocationSatisfied").as[Boolean], false)
-
   test("expected semantic slots match explicit rook endgame technique probes outside structural funnel"):
     def endgameDiagnostic(
         id: String,
@@ -651,9 +436,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         questionId = Some("rook_endgame.conversion_recipe"),
         requiredSupportLevel = Some("owned_cause_linked"),
         requiredMechanismKinds = List(StrategicMechanismKind.Endgame),
-        requiredCauseKinds = List(RelativeCauseKind.ConversionSecured),
-        requiredSemanticDetailTokens = List("boardAnchorSignal:EndgameRookPattern"),
-        requiredSemanticAnchorTokens = List("pattern:Lucena", "rook-pattern:RookBehindPassedPawn")
+        requiredCauseKinds = List(RelativeCauseKind.ConversionSecured)
       )
     val philidorSlot =
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
@@ -662,9 +445,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         questionId = Some("rook_endgame.draw_resource"),
         requiredSupportLevel = Some("owned_cause_linked"),
         requiredMechanismKinds = List(StrategicMechanismKind.Endgame),
-        requiredCauseKinds = List(RelativeCauseKind.DrawResource),
-        requiredSemanticDetailTokens = List("boardAnchorSignal:EndgameRookPattern"),
-        requiredSemanticAnchorTokens = List("pattern:PhilidorDefense", "rook-pattern:KingCutOff")
+        requiredCauseKinds = List(RelativeCauseKind.DrawResource)
       )
 
     val coverage =
@@ -735,65 +516,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(detail.endgameTechniqueTerminalPlyOffset, Some(2))
     assertEquals(detail.requiredSquares, List("d7", "d8", "e7"))
     assertEquals(detail.maintainedSquares, List("d7", "d8", "e7"))
-
-  test("owned rook horizon slots require semantic anchors squares and line evidence".ignore):
-    val slot =
-      MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
-        id = "owned-line-lucena-horizon",
-        unit = PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
-        questionId = Some("rook_endgame_technique"),
-        requiredSupportLevel = Some("owned_cause_linked"),
-        requiredCauseKinds = List(RelativeCauseKind.ConversionSecured),
-        requiredSemanticDetailTokens = List(
-          "pattern:Lucena",
-          "rook-pattern:RookBehindPassedPawn",
-          "horizonStatus:Transitioned",
-          "requiredSquare:d8",
-          "sourceEvidenceId:line:lucena-horizon"
-        )
-      )
-    val patternOnlyTokens =
-      List(
-        "unit:EndgameTechniqueRecipe",
-        "pattern:Lucena",
-        "rook-pattern:RookBehindPassedPawn",
-        "horizonStatus:Transitioned",
-        "causeEvidenceId:cause-lucena"
-      )
-    val ownedTokens =
-      patternOnlyTokens ++
-        List(
-          "requiredSquare:d8",
-          "maintainedSquare:d8",
-          "sourceEvidenceId:line:lucena-horizon"
-        )
-    val patternOnlyCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
-        List(slot),
-        List(
-          diagnosticWithDetailTokens(
-            "pattern-only-lucena",
-            patternOnlyTokens,
-            causeKind = RelativeCauseKind.ConversionSecured
-          )
-        )
-      )
-    val ownedCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
-        List(slot),
-        List(
-          diagnosticWithDetailTokens(
-            "owned-lucena",
-            ownedTokens,
-            causeKind = RelativeCauseKind.ConversionSecured
-          )
-        )
-      )
-
-    assertEquals((patternOnlyCoverage \ "matchedSlotCount").as[Int], 0)
-    assertEquals((patternOnlyCoverage \ "slots" \ 0 \ "semanticDetailTokensSatisfied").as[Boolean], false)
-    assertEquals((ownedCoverage \ "matchedSlotCount").as[Int], 1)
-    assertEquals((ownedCoverage \ "slots" \ 0 \ "causeLineageTokenCoLocationSatisfied").as[Boolean], true)
 
   test("terminal proof overrides rook technique cause ownership"):
     val line = lineRef("mate-line", "d7d8q", 1, LineNodeRole.BestReference)
@@ -1117,7 +839,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         id = "rook-recognition-view",
         unit = PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
         requiredSupportLevel = Some("view_surfaced"),
-        requiredSemanticDetailTokens = List("pattern:Lucena", "requiredSquare:f8")
       )
     val ownedSlot =
       recognitionSlot.copy(
@@ -1204,7 +925,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         id = "minority-plan-owned",
         unit = PositionPlanTechniqueUnit.PlanOptionSet,
         requiredSupportLevel = Some("owned_cause_linked"),
-        requiredSemanticDetailTokens = List("minorityAttack:true")
       )
 
     val coverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(slot), List(diagnostic))
@@ -1291,7 +1011,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
         requiredSupportLevel = Some("owned_cause_linked"),
         requiredCauseKinds = List(RelativeCauseKind.PawnBreakOpportunity),
-        requiredSemanticDetailTokens = List("axisKind:PawnBreak", "breakFile:e")
       )
 
     val coverage =
@@ -1303,148 +1022,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "slots" \ 0 \ "supportLevel").as[String], "owned_cause_linked")
     assertEquals((softCoverage \ "matchedSlotCount").as[Int], 0)
     assertEquals((softCoverage \ "slots" \ 0 \ "supportLevel").as[String], "missing_semantic_slot")
-
-  test("resource contest view slots require concrete target binding".ignore):
-    val semanticTokens =
-      List(
-        "unit:SpacePreventionResourceDenial",
-        "space",
-        "queenside",
-        "resourceContestKind:CounterplayRestraint",
-        "resourceContestSquare:a1"
-      )
-    val concreteDiagnostic =
-      comparisonDiagnostic(
-        id = "cmp-resource-contest-concrete",
-        referenceLeadAxes = Nil,
-        producedKinds = Nil,
-        flows = Nil,
-        primaryRootKinds = Nil,
-        primaryRootIds = Nil,
-        positionPlanTechniqueFrameIds = List("frame-resource-contest-concrete"),
-        positionPlanTechniqueUnits = List(PositionPlanTechniqueUnit.SpacePreventionResourceDenial),
-        positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.SpacePreventionResourceDenial),
-        positionPlanTechniqueSemanticDetailTokens = semanticTokens,
-        positionPlanTechniqueSemanticDetailTokenGroups = List(semanticTokens),
-        publicMoveMeaningClaimDiagnostics =
-          List(
-            publicMoveMeaningClaimDiagnostic(
-              unit = PositionPlanTechniqueUnit.SpacePreventionResourceDenial,
-              meaningKind = "CounterplayControl",
-              supportLevel = "view_surfaced",
-              surfaceLane = "current_move_function",
-              sourceEvidenceIds = List("resource-src"),
-              proofLevel = "DirectProof"
-            )
-          )
-      )
-    val sideOnlyDiagnostic =
-      concreteDiagnostic.copy(
-        id = "cmp-resource-contest-side-only",
-        moveJudgmentView = concreteDiagnostic.moveJudgmentView.copy(
-          positionPlanTechniqueSemanticDetailTokens =
-            semanticTokens.filterNot(_.startsWith("resourceContestSquare:")),
-          positionPlanTechniqueSemanticDetailTokenGroups =
-            List(semanticTokens.filterNot(_.startsWith("resourceContestSquare:"))),
-          positionPlanTechniqueObjectBindingSignatures =
-            List("target=Side:white|mechanism=Mechanism:counterplayrestraint")
-        )
-      )
-    val partialTokenDiagnostic =
-      concreteDiagnostic.copy(
-        id = "cmp-resource-contest-partial-token",
-        moveJudgmentView = concreteDiagnostic.moveJudgmentView.copy(
-          positionPlanTechniqueSemanticDetailTokens =
-            semanticTokens.filterNot(_.startsWith("resourceContestSquare:")) :+ "resourceContestSquare:a10",
-          positionPlanTechniqueSemanticDetailTokenGroups =
-            List(semanticTokens.filterNot(_.startsWith("resourceContestSquare:")) :+ "resourceContestSquare:a10"),
-          positionPlanTechniqueObjectBindingSignatures =
-            List("target=Square:a10|mechanism=Mechanism:counterplayrestraint")
-        )
-      )
-    val concreteSlot =
-      MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
-        id = "queenside-space-resource-view",
-        unit = PositionPlanTechniqueUnit.SpacePreventionResourceDenial,
-        requiredSupportLevel = Some("view_surfaced"),
-        requiredSemanticDetailTokens = List("queenside", "space", "resourceContest"),
-        requiredObjectBindingTokens = List("target=Square:a1")
-      )
-    val emptyTargetSlot =
-      concreteSlot.copy(
-        id = "queenside-space-resource-view-empty-target",
-        requiredObjectBindingTokens = List("target=")
-      )
-
-    val concreteCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(concreteSlot), List(concreteDiagnostic))
-    val sideOnlyCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(concreteSlot), List(sideOnlyDiagnostic))
-    val partialTokenCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(concreteSlot), List(partialTokenDiagnostic))
-    val emptyTargetCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(emptyTargetSlot), List(concreteDiagnostic))
-
-    assertEquals((concreteCoverage \ "matchedSlotCount").as[Int], 1)
-    assertEquals((sideOnlyCoverage \ "matchedSlotCount").as[Int], 0)
-    assertEquals((partialTokenCoverage \ "matchedSlotCount").as[Int], 0)
-    assertEquals((emptyTargetCoverage \ "matchedSlotCount").as[Int], 0)
-
-  test("semantic rubric detail tokens match role values and declared prefixes, not substrings".ignore):
-    val iqpSlot =
-      MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
-        id = "iqp-motif",
-        unit = PositionPlanTechniqueUnit.StructuralTransformation,
-        requiredSupportLevel = Some("view_surfaced"),
-        requiredSemanticDetailTokens = List("IQP")
-      )
-    val routeSubjectSlot =
-      iqpSlot.copy(
-        id = "bishop-route-subject",
-        requiredSemanticDetailTokens = List("structuralPurposeSubject:bishop")
-      )
-    val exactIqpCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
-        List(iqpSlot),
-        List(
-          diagnosticWithDetailTokens(
-            "structural-motif-iqp",
-            List("unit:StructuralTransformation", "structuralMotif:iqp"),
-            RelativeCauseKind.StructuralImprovement,
-            unit = PositionPlanTechniqueUnit.StructuralTransformation
-          )
-        )
-      )
-    val substringCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
-        List(iqpSlot),
-        List(
-          diagnosticWithDetailTokens(
-            "substring-iqp",
-            List("unit:StructuralTransformation", "notIQP:true", "iqpTransition:present"),
-            RelativeCauseKind.StructuralImprovement,
-            unit = PositionPlanTechniqueUnit.StructuralTransformation
-          )
-        )
-      )
-    val subjectPrefixCoverage =
-      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
-        List(routeSubjectSlot),
-        List(
-          diagnosticWithDetailTokens(
-            "bishop-route-subject",
-            List("unit:StructuralTransformation", "structuralPurposeSubject:bishop:f8-e7"),
-            RelativeCauseKind.StructuralImprovement,
-            unit = PositionPlanTechniqueUnit.StructuralTransformation
-          )
-        )
-      )
-
-    assertEquals((exactIqpCoverage \ "matchedSlotCount").as[Int], 1)
-    assertEquals((substringCoverage \ "matchedSlotCount").as[Int], 0)
-    assertEquals((substringCoverage \ "semanticTokenExpectationMissSlotIds").as[List[String]], List("iqp-motif"))
-    assertEquals((substringCoverage \ "slots" \ 0 \ "semanticTokenExpectationMiss").as[Boolean], true)
-    assertEquals((subjectPrefixCoverage \ "matchedSlotCount").as[Int], 1)
 
   test("threat pressure marks active pawn counterplay as race only with root motif"):
     val fen = "4k3/8/8/8/2P5/8/8/4K3 w - - 0 1"
@@ -5017,42 +4594,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       relationToVerdict = None,
       confidence = EvidenceConfidence.EngineBacked,
       salience = 10
-    )
-
-  private def diagnosticWithDetailTokens(
-      id: String,
-      detailTokens: List[String],
-      causeKind: RelativeCauseKind,
-      causeId: String = "cause-lucena",
-      unit: PositionPlanTechniqueUnit = PositionPlanTechniqueUnit.EndgameTechniqueRecipe
-  ): CandidateComparisonDiagnostic =
-    comparisonDiagnostic(
-      id = id,
-      referenceLeadAxes = Nil,
-      producedKinds = List(causeKind),
-      flows = List(causeFlow(causeId, causeKind, proofAxisKeys = Nil, claimIds = List(s"claim-$id"))),
-      primaryRootKinds = List(causeKind),
-      primaryRootIds = List(causeId),
-      positionPlanTechniqueFrameIds = List(s"frame-$id"),
-      positionPlanTechniqueUnits = List(unit),
-      positionPlanTechniqueSemanticDetailUnits = List(unit),
-      positionPlanTechniqueSemanticDetailMechanismKinds = List(StrategicMechanismKind.Endgame),
-      positionPlanTechniqueSemanticDetailTokens = detailTokens,
-      positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
-      positionPlanTechniqueObjectBindingSignatures =
-        List("target=Square:d8|mechanism=Mechanism:EndgameTechniqueHorizon|proof=DirectProof"),
-      positionPlanTechniqueRelativeCauseEvidenceIds = List(causeId),
-      publicMoveMeaningClaimDiagnostics =
-        List(
-          publicMoveMeaningClaimDiagnostic(
-            unit = unit,
-            meaningKind = "RookEndgameTechnique",
-            supportLevel = "owned_cause_linked",
-            surfaceLane = "current_move_owned",
-            causeEvidenceIds = List(causeId)
-          )
-        ),
-      primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
     )
 
   private def dynamicAssessment: SinglePositionAssessment =

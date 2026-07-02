@@ -428,10 +428,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       strictPrimaryRootTierLineageBound: Boolean,
       frameIds: List[String],
       detailMechanismKinds: List[StrategicMechanismKind],
-      detailSemanticAnchorKeys: List[String],
-      semanticDetailTokens: List[String],
-      semanticDetailTokenGroups: List[List[String]],
-      objectBindingSignatures: List[String],
       sourceEvidenceIds: List[String],
       causeKinds: List[RelativeCauseKind],
       primaryRootCauseKinds: List[RelativeCauseKind],
@@ -628,11 +624,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "requiredCauseKinds" -> slot.requiredCauseKinds.map(_.toString),
       "requiredPrimaryRootCauseKinds" -> slot.requiredPrimaryRootCauseKinds.map(_.toString),
       "requiredPrimaryRootArbitrationTiers" -> slot.requiredPrimaryRootArbitrationTiers.map(_.toString),
-      "requiredTerminalConsequenceKinds" -> slot.requiredTerminalConsequenceKinds.map(_.toString),
-      "requiredSemanticDetailTokens" -> slot.requiredSemanticDetailTokens,
-      "requiredCoLocatedSemanticDetailTokens" -> slot.requiredCoLocatedSemanticDetailTokens,
-      "requiredSemanticAnchorTokens" -> slot.requiredSemanticAnchorTokens,
-      "requiredObjectBindingTokens" -> slot.requiredObjectBindingTokens,
       "matched" -> matched,
       "supportLevel" -> supportLevel,
       "lineRole" -> best.map(_.lineRole),
@@ -648,16 +639,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "matchedComparisonIds" -> matches.map(_.comparisonId).distinct.sorted,
       "frameIds" -> matches.flatMap(_.frameIds).distinct.sorted,
       "detailMechanismKinds" -> matches.flatMap(_.detailMechanismKinds).distinct.sortBy(_.toString).map(_.toString),
-      "detailSemanticAnchorKeys" -> matches.flatMap(_.detailSemanticAnchorKeys).distinct.sorted,
-      "semanticDetailTokens" -> matches.flatMap(_.semanticDetailTokens).distinct.sorted,
-      "semanticDetailTokenGroups" -> JsArray(
-        matches
-          .flatMap(_.semanticDetailTokenGroups)
-          .distinct
-          .sortBy(_.mkString("\u0000"))
-          .map(tokens => JsArray(tokens.map(JsString.apply)))
-      ),
-      "objectBindingSignatures" -> matches.flatMap(_.objectBindingSignatures).distinct.sorted,
       "sourceEvidenceIds" -> matches.flatMap(_.sourceEvidenceIds).distinct.sorted,
       "causeKinds" -> matches.flatMap(_.causeKinds).distinct.sortBy(_.toString).map(_.toString),
       "primaryRootCauseKinds" -> matches.flatMap(_.primaryRootCauseKinds).distinct.sortBy(_.toString).map(_.toString),
@@ -687,15 +668,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "frameIds" -> row.frameIds,
       "sourceEvidenceIds" -> row.sourceEvidenceIds,
       "detailMechanismKinds" -> row.detailMechanismKinds.distinct.sortBy(_.toString).map(_.toString),
-      "detailSemanticAnchorKeys" -> row.detailSemanticAnchorKeys.distinct.sorted,
-      "semanticDetailTokens" -> row.semanticDetailTokens.distinct.sorted,
-      "semanticDetailTokenGroups" -> JsArray(
-        row.semanticDetailTokenGroups
-          .distinct
-          .sortBy(_.mkString("\u0000"))
-          .map(tokens => JsArray(tokens.map(JsString.apply)))
-      ),
-      "objectBindingSignatures" -> row.objectBindingSignatures,
       "causeKinds" -> row.causeKinds.map(_.toString),
       "causeIds" -> row.causeIds,
       "claimIds" -> row.claimIds,
@@ -722,10 +694,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     val claimCauseIds = claim.causeEvidenceIds.distinct.sorted
     val claimCauseIdSet = claimCauseIds.toSet
     val detailMechanismKinds = view.positionPlanTechniqueSemanticDetailMechanismKinds
-    val detailSemanticAnchorKeys = view.positionPlanTechniqueSemanticDetailAnchorKeys
-    val semanticDetailTokens = view.positionPlanTechniqueSemanticDetailTokens
-    val semanticDetailTokenGroups = view.positionPlanTechniqueSemanticDetailTokenGroups
-    val objectBindingSignatures = view.positionPlanTechniqueObjectBindingSignatures
     val frameCauseFlows =
       diagnostic.relativeCauseDiagnostics.causeFlow.filter(flow => claimCauseIdSet.contains(flow.causeId))
     val exactAxisOrPattern =
@@ -773,10 +741,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       strictPrimaryRootTierLineageBound = strictPrimaryRootTierLineageBound,
       frameIds = frameIds,
       detailMechanismKinds = detailMechanismKinds,
-      detailSemanticAnchorKeys = detailSemanticAnchorKeys,
-      semanticDetailTokens = semanticDetailTokens,
-      semanticDetailTokenGroups = semanticDetailTokenGroups,
-      objectBindingSignatures = objectBindingSignatures,
       sourceEvidenceIds = claim.sourceEvidenceIds.distinct.sorted,
       causeKinds = frameCauseFlows.map(_.causeKind).distinct.sortBy(_.toString),
       primaryRootCauseKinds =
