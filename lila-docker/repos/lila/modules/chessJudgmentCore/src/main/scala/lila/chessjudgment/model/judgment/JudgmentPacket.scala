@@ -2781,7 +2781,7 @@ object MoveMeaningClaim:
       detail: PositionPlanTechniqueSemanticDetail,
       verdict: MoveJudgmentVerdictFrame,
       causeFramesById: Map[String, List[MoveJudgmentCauseFrame]]
-  ): Option[MoveMeaningClaim] =
+  ): List[MoveMeaningClaim] =
     val objectSignatures = detail.objectBindingSignatures.distinct.sorted
     val directLinkedCauseFrames =
       detail.causeEvidenceIds.distinct.sorted
@@ -2797,33 +2797,24 @@ object MoveMeaningClaim:
         .distinctBy(_.causeEvidenceIds)
     val linkedCauseFrames = (directLinkedCauseFrames ++ bridgedRouteCauseFrames).distinctBy(_.causeEvidenceIds)
     val bridgedRouteCauseIds = bridgedRouteCauseFrames.flatMap(_.causeEvidenceIds).toSet
-    for
-      baseMeaningKind <- kind(detail, objectSignatures, None)
-      if detailMatchesLine(frame, detail, verdict)
-      currentRouteLineRole =
-        Option.when(
-          currentMoveRouteLineRole(detail, objectSignatures, verdict)
-        )("candidate")
-      lineRoleOptions =
-        (currentRouteLineRole.toList ++ lineRoles(frame, detail, verdict, linkedCauseFrames)).distinct
-      claimOptions =
-        lineRoleOptions.map { optionLineRole =>
-          val optionMove = moveUci(verdict, optionLineRole)
-          val optionObjectSignatures = surfaceObjectBindingSignatures(detail, objectSignatures, optionMove)
-          val optionMeaningKind = kind(detail, optionObjectSignatures, Some(optionMove)).getOrElse(baseMeaningKind)
-          val optionClaimRole = role(optionMeaningKind, detail, optionMove, frame.position.fen, optionLineRole)
-          val optionRoleCompatibleCauseFrames =
-            linkedCauseFrames.filter(linkedFrame =>
-              causeFrameOwnsMeaningClaim(
-                linkedFrame,
-                verdict,
-                detail,
-                objectSignatures,
-                optionLineRole,
-                optionMove,
-                optionClaimRole
-              ) ||
-                sameRootRouteOwnedCauseBridge(
+    kind(detail, objectSignatures, None).toList
+      .filter(_ => detailMatchesLine(frame, detail, verdict))
+      .flatMap { baseMeaningKind =>
+        val currentRouteLineRole =
+          Option.when(
+            currentMoveRouteLineRole(detail, objectSignatures, verdict)
+          )("candidate")
+        val lineRoleOptions =
+          (currentRouteLineRole.toList ++ lineRoles(frame, detail, verdict, linkedCauseFrames)).distinct
+        val claimOptions =
+          lineRoleOptions.map { optionLineRole =>
+            val optionMove = moveUci(verdict, optionLineRole)
+            val optionObjectSignatures = surfaceObjectBindingSignatures(detail, objectSignatures, optionMove)
+            val optionMeaningKind = kind(detail, optionObjectSignatures, Some(optionMove)).getOrElse(baseMeaningKind)
+            val optionClaimRole = role(optionMeaningKind, detail, optionMove, frame.position.fen, optionLineRole)
+            val optionRoleCompatibleCauseFrames =
+              linkedCauseFrames.filter(linkedFrame =>
+                causeFrameOwnsMeaningClaim(
                   linkedFrame,
                   verdict,
                   detail,
@@ -2831,123 +2822,126 @@ object MoveMeaningClaim:
                   optionLineRole,
                   optionMove,
                   optionClaimRole
+                ) ||
+                  sameRootRouteOwnedCauseBridge(
+                    linkedFrame,
+                    verdict,
+                    detail,
+                    objectSignatures,
+                    optionLineRole,
+                    optionMove,
+                    optionClaimRole
+                )
               )
-            )
-          (optionLineRole, optionMove, optionObjectSignatures, optionMeaningKind, optionClaimRole, optionRoleCompatibleCauseFrames)
+            (optionLineRole, optionMove, optionObjectSignatures, optionMeaningKind, optionClaimRole, optionRoleCompatibleCauseFrames)
+          }
+        val boardCarriers = publicBoardCarriers(detail)
+        val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, boardCarriers)
+        claimOptions.flatMap {
+          case (claimLineRole, claimMove, surfaceObjectSignatures, meaningKind, claimRole, roleCompatibleCauseFrames) =>
+            supportLevel(
+              detail,
+              meaningKind,
+              linkedCauseFrames,
+              roleCompatibleCauseFrames,
+              surfaceObjectSignatures,
+              verdict,
+              claimLineRole,
+              claimMove,
+              frame.position.fen,
+              claimRole,
+              evidenceGraph
+            ).map { support =>
+              val linkedCauseIds =
+                roleCompatibleCauseFrames
+                  .flatMap(_.causeEvidenceIds)
+                  .filter(id => detail.causeEvidenceIds.contains(id) || bridgedRouteCauseIds.contains(id))
+                  .distinct
+                  .sorted
+              val sourceEvidenceIds =
+                moveMeaningClaimSourceEvidenceIds(
+                  evidenceGraph,
+                  detail,
+                  surfaceObjectSignatures,
+                  verdict,
+                  claimLineRole,
+                  claimMove
+                )
+              val objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames)
+              val publicHasCarrier = objectCarrierReady && (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty)
+              val publicProofLevel =
+                if !publicHasCarrier then "none"
+                else if detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) then "terminal_proof"
+                else if linkedCauseIds.nonEmpty && support == "owned_cause_linked" then "owned_cause"
+                else if linkedCauseIds.nonEmpty then "cause_linked"
+                else "surface_evidence"
+              MoveMeaningClaim(
+                meaningKind = meaningKind,
+                role = claimRole,
+                laneKey = laneKey(meaningKind, detail, boardCarriers),
+                conflictKey = conflictKey(meaningKind, detail, boardCarriers),
+                supportLevel = support,
+                visibility = visibility(support),
+                surfaceLane =
+                  surfaceLane(
+                    detail,
+                    verdict,
+                    claimLineRole,
+                    claimMove,
+                    support,
+                    surfaceObjectSignatures,
+                    roleCompatibleCauseFrames
+                  ),
+                lineRole = claimLineRole,
+                moveUci = moveUci(verdict, claimLineRole),
+                frameId = frame.id,
+                unit = detail.unit,
+                axisKey = detail.axisKey,
+                axisKind = detail.axisKind,
+                axisPolarity = detail.axisPolarity,
+                label = detail.label,
+                causeKinds = roleCompatibleCauseFrames.map(_.causeKind).distinct.sortBy(_.toString),
+                causeSourceSides = roleCompatibleCauseFrames.map(_.causeSourceSide).distinct.sortBy(_.toString),
+                causeEvidenceIds = linkedCauseIds,
+                sourceEvidenceIds = sourceEvidenceIds,
+                objectBindingSignatures = Nil,
+                reasonTokens = Nil,
+                comparisonLossSides =
+                  PositionPlanTechniqueSemanticDetail
+                    .comparisonLossSides(detail)
+                    .filter(side => side == "candidate" || side == "reference")
+                    .distinct
+                    .sorted,
+                comparisonLossKinds = PositionPlanTechniqueSemanticDetail.comparisonLossKinds(detail).distinct.sorted,
+                objectCarrierReady = objectCarrierReady,
+                boardCarriers = boardCarriers,
+                targetSquares = surfaceTarget.squares,
+                targetFiles = surfaceTarget.files,
+                targetPieces = surfaceTarget.pieces,
+                routeIdentityParts = routeIdentityParts(detail),
+                breakIdentityParts = breakIdentityParts(detail),
+                breakFiles = detail.breakFile.toList.flatMap(claimFile).distinct.sorted,
+                specificityTier = detail.specificityTier,
+                terminalConsequenceKinds = detail.terminalConsequenceKinds.distinct.sorted,
+                endgameTechniquePattern = detail.endgameTechniquePattern,
+                endgameTechniqueRookPattern = detail.endgameTechniqueRookPattern,
+                endgameTechniqueSide = detail.endgameTechniqueSide,
+                endgameTechniqueHorizonStatus = detail.endgameTechniqueHorizonStatus,
+                endgameTechniqueTriggerMove = detail.endgameTechniqueTriggerMove,
+                endgameTechniqueEntryPlyOffset = detail.endgameTechniqueEntryPlyOffset,
+                endgameTechniqueTerminalPlyOffset = detail.endgameTechniqueTerminalPlyOffset,
+                endgameTechniqueFailureReason = detail.endgameTechniqueFailureReason,
+                requiredSquares = detail.requiredSquares.distinct.sorted,
+                maintainedSquares = detail.maintainedSquares.distinct.sorted,
+                brokenSquares = detail.brokenSquares.distinct.sorted,
+                publicIdeaType = publicIdeaType(detail, meaningKind),
+                publicHasCarrier = publicHasCarrier,
+                publicProofLevel = publicProofLevel,
+                publicTargetBound = boardCarriers.exists(_.role == "target")
+              )
+            }
         }
-      claimSelection =
-        claimOptions.find(option => option._6.nonEmpty && option._1 != "contrast")
-          .orElse(claimOptions.find(_._6.nonEmpty))
-          .getOrElse(claimOptions.head)
-      claimLineRole = claimSelection._1
-      claimMove = claimSelection._2
-      surfaceObjectSignatures = claimSelection._3
-      meaningKind = claimSelection._4
-      claimRole = claimSelection._5
-      roleCompatibleCauseFrames = claimSelection._6
-      support <- supportLevel(
-        detail,
-        meaningKind,
-        linkedCauseFrames,
-        roleCompatibleCauseFrames,
-        surfaceObjectSignatures,
-        verdict,
-        claimLineRole,
-        claimMove,
-        frame.position.fen,
-        claimRole,
-        evidenceGraph
-      )
-    yield
-      val boardCarriers = publicBoardCarriers(detail)
-      val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, boardCarriers)
-      val linkedCauseIds =
-        roleCompatibleCauseFrames
-          .flatMap(_.causeEvidenceIds)
-          .filter(id => detail.causeEvidenceIds.contains(id) || bridgedRouteCauseIds.contains(id))
-          .distinct
-          .sorted
-      val sourceEvidenceIds =
-        moveMeaningClaimSourceEvidenceIds(
-          evidenceGraph,
-          detail,
-          surfaceObjectSignatures,
-          verdict,
-          claimLineRole,
-          claimMove
-        )
-      val objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames)
-      val publicHasCarrier = objectCarrierReady && (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty)
-      val publicProofLevel =
-        if !publicHasCarrier then "none"
-        else if detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) then "terminal_proof"
-        else if linkedCauseIds.nonEmpty && support == "owned_cause_linked" then "owned_cause"
-        else if linkedCauseIds.nonEmpty then "cause_linked"
-        else "surface_evidence"
-      MoveMeaningClaim(
-        meaningKind = meaningKind,
-        role = claimRole,
-        laneKey = laneKey(meaningKind, detail, boardCarriers),
-        conflictKey = conflictKey(meaningKind, detail, boardCarriers),
-        supportLevel = support,
-        visibility = visibility(support),
-        surfaceLane =
-          surfaceLane(
-            detail,
-            verdict,
-            claimLineRole,
-            claimMove,
-            support,
-            surfaceObjectSignatures,
-            roleCompatibleCauseFrames
-          ),
-        lineRole = claimLineRole,
-        moveUci = moveUci(verdict, claimLineRole),
-        frameId = frame.id,
-        unit = detail.unit,
-        axisKey = detail.axisKey,
-        axisKind = detail.axisKind,
-        axisPolarity = detail.axisPolarity,
-        label = detail.label,
-        causeKinds = roleCompatibleCauseFrames.map(_.causeKind).distinct.sortBy(_.toString),
-        causeSourceSides = roleCompatibleCauseFrames.map(_.causeSourceSide).distinct.sortBy(_.toString),
-        causeEvidenceIds = linkedCauseIds,
-        sourceEvidenceIds = sourceEvidenceIds,
-        objectBindingSignatures = Nil,
-        reasonTokens = Nil,
-        comparisonLossSides =
-          PositionPlanTechniqueSemanticDetail
-            .comparisonLossSides(detail)
-            .filter(side => side == "candidate" || side == "reference")
-            .distinct
-            .sorted,
-        comparisonLossKinds = PositionPlanTechniqueSemanticDetail.comparisonLossKinds(detail).distinct.sorted,
-        objectCarrierReady = objectCarrierReady,
-        boardCarriers = boardCarriers,
-        targetSquares = surfaceTarget.squares,
-        targetFiles = surfaceTarget.files,
-        targetPieces = surfaceTarget.pieces,
-        routeIdentityParts = routeIdentityParts(detail),
-        breakIdentityParts = breakIdentityParts(detail),
-        breakFiles = detail.breakFile.toList.flatMap(claimFile).distinct.sorted,
-        specificityTier = detail.specificityTier,
-        terminalConsequenceKinds = detail.terminalConsequenceKinds.distinct.sorted,
-        endgameTechniquePattern = detail.endgameTechniquePattern,
-        endgameTechniqueRookPattern = detail.endgameTechniqueRookPattern,
-        endgameTechniqueSide = detail.endgameTechniqueSide,
-        endgameTechniqueHorizonStatus = detail.endgameTechniqueHorizonStatus,
-        endgameTechniqueTriggerMove = detail.endgameTechniqueTriggerMove,
-        endgameTechniqueEntryPlyOffset = detail.endgameTechniqueEntryPlyOffset,
-        endgameTechniqueTerminalPlyOffset = detail.endgameTechniqueTerminalPlyOffset,
-        endgameTechniqueFailureReason = detail.endgameTechniqueFailureReason,
-        requiredSquares = detail.requiredSquares.distinct.sorted,
-        maintainedSquares = detail.maintainedSquares.distinct.sorted,
-        brokenSquares = detail.brokenSquares.distinct.sorted,
-        publicIdeaType = publicIdeaType(detail, meaningKind),
-        publicHasCarrier = publicHasCarrier,
-        publicProofLevel = publicProofLevel,
-        publicTargetBound = boardCarriers.exists(_.role == "target")
-      )
+      }
 
   private def publicBoardCarriers(
       detail: PositionPlanTechniqueSemanticDetail
