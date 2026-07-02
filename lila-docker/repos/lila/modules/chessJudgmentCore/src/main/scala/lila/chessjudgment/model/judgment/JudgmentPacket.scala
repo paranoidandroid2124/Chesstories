@@ -1669,7 +1669,8 @@ case class MoveMeaningClaim(
     endgameTechniqueFailureReason: Option[String] = None,
     requiredSquares: List[String] = Nil,
     maintainedSquares: List[String] = Nil,
-    brokenSquares: List[String] = Nil
+    brokenSquares: List[String] = Nil,
+    publicIdeaType: Option[String] = None
 )
 
 case class MoveMeaningSurfaceTarget(
@@ -2143,16 +2144,10 @@ object MoveMeaningSurface:
         "pawn_break_timing"
       case PositionPlanTechniqueUnit.CounterplayRace =>
         "counterplay_race"
-      case PositionPlanTechniqueUnit.SpacePreventionResourceDenial if hasRayDenialSignal(claim) =>
-        "ray_denial"
       case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
-        "counterplay_control"
-      case PositionPlanTechniqueUnit.PieceRerouteRoute if claim.meaningKind == "PieceRoute" && hasPublicDetailSignal(claim, "outpost") =>
-        "outpost_attempt"
-      case PositionPlanTechniqueUnit.PieceRerouteRoute if claim.meaningKind == "PieceRoute" && hasLongDiagonalPressureSignal(claim) =>
-        "long_diagonal_pressure"
+        claim.publicIdeaType.getOrElse("counterplay_control")
       case PositionPlanTechniqueUnit.PieceRerouteRoute if claim.meaningKind == "PieceRoute" =>
-        "piece_route"
+        claim.publicIdeaType.getOrElse("piece_route")
       case PositionPlanTechniqueUnit.PieceRerouteRoute =>
         "piece_activity"
       case PositionPlanTechniqueUnit.EndgameTechniqueRecipe =>
@@ -2571,26 +2566,6 @@ object MoveMeaningSurface:
     "line_refutes_technique" -> "forcing line shows the technique fails"
   )
 
-  private def hasPublicDetailSignal(claim: MoveMeaningClaim, value: String): Boolean =
-    val needle = value.toLowerCase
-    (claim.reasonTokens ++ claim.label.toList ++ claim.axisKey.toList)
-      .exists(_.toLowerCase.contains(needle))
-
-  private def hasLongDiagonalPressureSignal(claim: MoveMeaningClaim): Boolean =
-    val tokens = claim.reasonTokens ++ claim.label.toList ++ claim.axisKey.toList ++ claim.objectBindingSignatures
-    tokens.exists(token =>
-      val normalized = token.toLowerCase
-      normalized.contains("battery:diagonal") ||
-        normalized.contains("mechanism=mechanism:battery-diagonal") ||
-        normalized.contains("mechanism=mechanism:bishop-long-diagonal")
-    )
-
-  private def hasRayDenialSignal(claim: MoveMeaningClaim): Boolean =
-    val normalizedTokens = claim.reasonTokens.map(_.toLowerCase)
-    normalizedTokens.contains("rayrole:denial") &&
-      normalizedTokens.contains("rayaxis:diagonal") &&
-      normalizedTokens.contains("resourcedenied:diagonal")
-
   private def terminalIdeaRank(ideaType: String): Int =
     ideaType match
       case "terminal_mate"  => 0
@@ -2976,8 +2951,38 @@ object MoveMeaningClaim:
         endgameTechniqueFailureReason = detail.endgameTechniqueFailureReason,
         requiredSquares = detail.requiredSquares.distinct.sorted,
         maintainedSquares = detail.maintainedSquares.distinct.sorted,
-        brokenSquares = detail.brokenSquares.distinct.sorted
+        brokenSquares = detail.brokenSquares.distinct.sorted,
+        publicIdeaType = publicIdeaType(detail, meaningKind)
       )
+
+  private def publicIdeaType(
+      detail: PositionPlanTechniqueSemanticDetail,
+      meaningKind: String
+  ): Option[String] =
+    detail.unit match
+      case PositionPlanTechniqueUnit.SpacePreventionResourceDenial if rayDenialDetail(detail) =>
+        Some("ray_denial")
+      case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && outpostRouteDetail(detail) =>
+        Some("outpost_attempt")
+      case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && longDiagonalRouteDetail(detail) =>
+        Some("long_diagonal_pressure")
+      case _ =>
+        None
+
+  private def outpostRouteDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.structuralPurposeSubjects.exists(subject =>
+      StructuralPurposeSubject.parse(subject).exists(_.isInstanceOf[StructuralPurposeSubject.Outpost])
+    )
+
+  private def longDiagonalRouteDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.structuralPurposeSubjects.exists(subject =>
+      StructuralPurposeSubject.parse(subject) match
+        case Some(StructuralPurposeSubject.Battery(axis, _, _, _)) => axis.equalsIgnoreCase("diagonal")
+        case _                                                     => false
+    )
+
+  private def rayDenialDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.structuralPurposeSubjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
 
   private def currentMoveRouteLineRole(
       detail: PositionPlanTechniqueSemanticDetail,
