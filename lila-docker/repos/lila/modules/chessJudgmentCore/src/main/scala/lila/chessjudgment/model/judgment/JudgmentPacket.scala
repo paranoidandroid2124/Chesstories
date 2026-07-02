@@ -1656,7 +1656,8 @@ case class MoveMeaningClaim(
     reasonTokens: List[String],
     targetSquares: List[String] = Nil,
     targetFiles: List[String] = Nil,
-    targetPieces: List[String] = Nil
+    targetPieces: List[String] = Nil,
+    specificityTier: PositionPlanTechniqueSpecificityTier = PositionPlanTechniqueSpecificityTier.ContextOnly
 )
 
 case class MoveMeaningSurfaceTarget(
@@ -1910,10 +1911,8 @@ object MoveMeaningSurface:
     else if claim.surfaceLane == "current_move_function" then
       publicCurrentMovePlanContinuityClaim(view, claim)
     else
-      claim.reasonTokens.exists(token =>
-        token == "specificityTier:ExactObjectAxis" ||
-          token == "specificityTier:ConcreteObjectAxis"
-      ) &&
+      (claim.specificityTier == PositionPlanTechniqueSpecificityTier.ExactObjectAxis ||
+        claim.specificityTier == PositionPlanTechniqueSpecificityTier.ConcreteObjectAxis) &&
         EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
 
   private def publicCurrentMovePlanContinuityClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
@@ -3008,7 +3007,8 @@ object MoveMeaningClaim:
         reasonTokens = reasonTokens(detail, surfaceObjectSignatures, linkedCauseIds, verdict, claimMove, frame.position.fen, claimRole),
         targetSquares = surfaceTarget.squares,
         targetFiles = surfaceTarget.files,
-        targetPieces = surfaceTarget.pieces
+        targetPieces = surfaceTarget.pieces,
+        specificityTier = detail.specificityTier
       )
 
   private def currentMoveRouteLineRole(
@@ -5171,8 +5171,7 @@ object MoveMeaningClaim:
         detail.endgameTechniqueTriggerMove.map(value => s"triggerMove:$value"),
         detail.endgameTechniqueEntryPlyOffset.map(value => s"entryPlyOffset:$value"),
         detail.endgameTechniqueTerminalPlyOffset.map(value => s"terminalPlyOffset:$value"),
-        detail.endgameTechniqueFailureReason.map(value => s"failureReason:$value"),
-        Some(s"specificityTier:${detail.specificityTier}")
+        detail.endgameTechniqueFailureReason.map(value => s"failureReason:$value")
       ).flatten ++
         raceReasonTokens ++
         rayReasonTokens ++
@@ -5441,7 +5440,7 @@ object MoveMeaningClaim:
   private def sortKey(claim: MoveMeaningClaim): (Int, Int, Int, Int, String) =
     (
       strengthRank(claim.supportLevel),
-      if claim.reasonTokens.exists(_.startsWith("specificityTier:ExactObjectAxis")) then 1 else 0,
+      if claim.specificityTier == PositionPlanTechniqueSpecificityTier.ExactObjectAxis then 1 else 0,
       kindRank(claim.meaningKind),
       claim.objectBindingSignatures.size,
       claim.frameId
