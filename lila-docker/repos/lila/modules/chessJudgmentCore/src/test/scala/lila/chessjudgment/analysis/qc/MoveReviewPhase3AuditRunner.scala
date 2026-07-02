@@ -789,9 +789,6 @@ object MoveReviewPhase3AuditRunner:
       "hasForcedLineTheme" -> semantic.hasForcedLineTheme
     )
 
-  private[qc] def objectBindingSignatureSampleJson(signatures: List[String]): JsObject =
-    MoveReviewPhase3AuditViewJson.objectBindingSignatureSampleJson(signatures)
-
   private[qc] def positionPlanTechniqueObjectBindingsSampleJson(
       bindings: List[PositionPlanTechniqueObjectBinding]
   ): JsObject =
@@ -1674,7 +1671,6 @@ object MoveReviewPhase3AuditRunner:
       "positionPlanTechniqueSemanticDetailTokenGroups" -> JsArray(
         diagnostic.positionPlanTechniqueSemanticDetailTokenGroups.map(tokens => JsArray(tokens.map(JsString.apply)))
       ),
-      "positionPlanTechniqueObjectBindingSignatures" -> diagnostic.positionPlanTechniqueObjectBindingSignatures,
       "positionPlanTechniqueEvidenceIds" -> diagnostic.positionPlanTechniqueEvidenceIds,
       "positionPlanTechniqueRelativeCauseEvidenceIds" -> diagnostic.positionPlanTechniqueRelativeCauseEvidenceIds,
       "moveMeaningClaimKinds" -> diagnostic.moveMeaningClaimKinds,
@@ -1781,7 +1777,7 @@ object MoveReviewPhase3AuditRunner:
       "relativeCauseWithoutObjectSignature" -> flow.relativeCauseWithoutObjectSignature,
       "graphObjectLostBetweenEvidenceAndCause" -> flow.objectLostBetweenEvidenceAndCause,
       "graphObjectLostBetweenCauseAndClaim" -> flow.objectLostBetweenCauseAndClaim
-    ) ++ objectBindingSignatureSampleJson(flow.objectBindingSignatures)
+    )
 
   private def tacticalLossTraceJson(trace: TacticalLossTrace): JsObject =
     Json.obj(
@@ -3349,7 +3345,7 @@ object MoveReviewPhase3AuditRunner:
       "strategicAxisSourceEvidenceIds" -> frame.strategicAxisSourceEvidenceIds,
       "strategicAxisRelativeCauseIds" -> frame.strategicAxisRelativeCauseIds,
       "concreteObjectReady" -> frame.concreteObjectReady
-    ) ++ objectBindingSignatureSampleJson(frame.objectBindingSignatures)
+    )
 
   private def moveJudgmentCauseFrameJson(packet: EvidenceBackedJudgmentPacket, frame: MoveJudgmentCauseFrame): JsObject =
     val ideasById = packet.ideas.map(idea => idea.ref.id -> idea).toMap
@@ -3409,7 +3405,7 @@ object MoveReviewPhase3AuditRunner:
       "witnessBindingSignals" -> frame.witnessBindingSignals.map(_.toString),
       "witnessBindingRootCauseEvidenceIds" -> frame.witnessBindingRootCauseEvidenceIds,
       "concreteObjectReady" -> frame.concreteObjectReady
-    ) ++ objectBindingSignatureSampleJson(frame.objectBindingSignatures)
+    )
 
   private def moveMeaningClaimJson(claim: MoveMeaningClaim): JsObject =
     Json.obj(
