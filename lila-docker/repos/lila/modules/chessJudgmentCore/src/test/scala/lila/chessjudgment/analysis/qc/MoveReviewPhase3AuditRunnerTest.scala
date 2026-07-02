@@ -282,6 +282,22 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       (coverage \ "boardCarrierlessPublicMoveMeaningClaimSignatures").as[List[String]],
       List(carrierlessPublicSignature)
     )
+    assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasProofCarrier(publicSignature), true)
+    assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasBoardCarrier(publicSignature), true)
+    assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasProofCarrier(carrierlessPublicSignature), true)
+    assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasBoardCarrier(carrierlessPublicSignature), false)
+    assertEquals(
+      MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasProofCarrier(
+        "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=owned_cause_linked|lane=current_move_owned|lineRole=played|move=g1f3|causes=cause-route|sources=none|proof=none|objects=none"
+      ),
+      true
+    )
+    assertEquals(
+      MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasBoardCarrier(
+        "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=owned_cause_linked|lane=current_move_owned|lineRole=played|move=g1f3|causes=cause-route|sources=none|proof=none|objects=none"
+      ),
+      false
+    )
     assertEquals((coverage \ "suppressedMoveMeaningClaimCount").as[Int], 1)
     assertEquals((coverage \ "suppressedMoveMeaningClaimSignatures").as[List[String]], List(suppressedSignature))
     assertEquals((coverage \ "mergedOwnershipClaimCount").as[Int], 1)
@@ -3428,6 +3444,90 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       ).copy(moveMeaningClaims = List(claim.copy(causeKinds = List(RelativeCauseKind.TempoLoss))))
     )
     assertEquals(badSurface, Nil)
+
+  test("move meaning public evidence requires a board carrier for claim proof"):
+    val proofOnlyClaim = MoveMeaningClaim(
+      meaningKind = "PieceActivity",
+      role = "ImprovesPieceActivity",
+      laneKey = "kind=PieceActivity|axis=Activity:Gain:activity-gain|object=none",
+      conflictKey = None,
+      supportLevel = "owned_cause_linked",
+      visibility = "reason_grade",
+      surfaceLane = "current_move_owned",
+      lineRole = "candidate",
+      moveUci = "e2e3",
+      frameId = "frame-proof-only",
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Gain:activity-gain"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      label = Some("activity-gain"),
+      causeKinds = List(RelativeCauseKind.ActivityGain),
+      causeSourceSides = List(RelativeCauseSourceSide.Candidate),
+      causeEvidenceIds = List("cause-proof-only"),
+      sourceEvidenceIds = Nil,
+      objectBindingSignatures = Nil,
+      reasonTokens = Nil
+    )
+    val surface = MoveMeaningSurface.from(
+      meaningClaimView(
+        verdict = MoveChoiceVerdict.MatchesReference,
+        auditCauses = Nil,
+        details = Nil
+      ).copy(moveMeaningClaims = List(proofOnlyClaim))
+    )
+
+    assertEquals(surface.map(_.ideaType), List("piece_activity"))
+    assertEquals(surface.head.evidence.hasCarrier, false)
+    assertEquals(surface.head.evidence.proofLevel, "none")
+    assertEquals(surface.head.evidence.boardCarriers, Nil)
+    assertEquals(surface.head.evidence.causeIds, List("cause-proof-only"))
+
+  test("move meaning public evidence scans all object signatures before capping board carriers"):
+    val fillerSignatures =
+      List(
+        "mechanism=Mechanism:context|consequence=Consequence:context",
+        "actor=Side:white|mechanism=Mechanism:context|consequence=Consequence:context",
+        "target=Side:black|mechanism=Mechanism:context|consequence=Consequence:context",
+        "mechanism=Mechanism:activity|consequence=Consequence:activity"
+      )
+    val carrierSignature =
+      "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated"
+    val claim = MoveMeaningClaim(
+      meaningKind = "PieceActivity",
+      role = "ImprovesPieceActivity",
+      laneKey = "kind=PieceActivity|axis=Activity:Gain:activity-gain|object=target=Square:e3",
+      conflictKey = None,
+      supportLevel = "view_surfaced",
+      visibility = "functional_explanation",
+      surfaceLane = "current_move_function",
+      lineRole = "candidate",
+      moveUci = "e2e3",
+      frameId = "frame-late-carrier",
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Gain:activity-gain"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      label = Some("activity-gain"),
+      causeKinds = Nil,
+      causeSourceSides = Nil,
+      causeEvidenceIds = Nil,
+      sourceEvidenceIds = List("played-transition"),
+      objectBindingSignatures = fillerSignatures :+ carrierSignature,
+      reasonTokens = List(s"objectBinding:$carrierSignature")
+    )
+    val surface = MoveMeaningSurface.from(
+      meaningClaimView(
+        verdict = MoveChoiceVerdict.MatchesReference,
+        auditCauses = Nil,
+        details = Nil
+      ).copy(moveMeaningClaims = List(claim))
+    )
+
+    assertEquals(surface.head.evidence.hasCarrier, true)
+    assertEquals(surface.head.evidence.proofLevel, "surface_evidence")
+    assert(surface.head.evidence.boardCarriers.contains(MoveMeaningSurfaceBoardCarrier("actor", "Move", "e2e3", Some("e2"), Some("e3"))))
+    assert(surface.head.evidence.boardCarriers.contains(MoveMeaningSurfaceBoardCarrier("target", "Square", "e3")))
 
   test("move meaning public surface ranks terminal carriers before generic activity"):
     val mateSignature =

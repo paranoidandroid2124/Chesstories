@@ -2019,9 +2019,11 @@ object MoveMeaningSurface:
       terminal: List[MoveMeaningSurfaceCode],
       technique: Option[MoveMeaningSurfaceEndgameTechnique]
   ): MoveMeaningSurfaceEvidence =
-    val causeCarrier = claim.causeEvidenceIds.nonEmpty
+    val boardCarriers = publicBoardCarriers(claim.objectBindingSignatures, target)
+    val hasBoardCarrier = boardCarriers.nonEmpty
+    val causeCarrier = claim.causeEvidenceIds.nonEmpty && hasBoardCarrier
     val objectCarrier = EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
-    val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier
+    val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
     val targetBound = target.squares.nonEmpty || target.files.nonEmpty || target.pieces.nonEmpty
     val terminalCarrier = terminal.nonEmpty && (targetBound || objectCarrier)
     val techniqueCarrier = technique.nonEmpty && (targetBound || objectCarrier)
@@ -2039,7 +2041,7 @@ object MoveMeaningSurface:
       targetBound = targetBound,
       causeIds = claim.causeEvidenceIds.take(6),
       sourceIds = claim.sourceEvidenceIds.take(6),
-      boardCarriers = publicBoardCarriers(claim.objectBindingSignatures, target)
+      boardCarriers = boardCarriers
     )
 
   private def publicBoardCarriers(
@@ -2051,11 +2053,10 @@ object MoveMeaningSurface:
         target.files.map(value => MoveMeaningSurfaceBoardCarrier("target", "File", value)) ++
         target.pieces.map(value => MoveMeaningSurfaceBoardCarrier("target", "Piece", value)) ++
         objectBindingSignatures
-          .take(4)
           .flatMap(signature => EvidenceObjectBinding.signatureParts(signature).flatMap(publicBoardCarrierPart))
     ).distinct.sortBy(carrier =>
       (carrier.role, carrier.kind, carrier.value, carrier.from.getOrElse(""), carrier.to.getOrElse(""))
-    )
+    ).take(8)
 
   private def publicBoardCarrierPart(part: String): Option[MoveMeaningSurfaceBoardCarrier] =
     val keyValue = part.split("=", 2)

@@ -163,7 +163,7 @@ private[qc] object MoveReviewPhase3AuditMetrics:
     signatureValues(signature, "causes").size > 1 ||
       signatureValues(signature, "sources").size > 1
 
-  private[qc] def publicSurfaceClaimHasEvidenceCarrier(signature: String): Boolean =
+  private[qc] def publicSurfaceClaimHasProofCarrier(signature: String): Boolean =
     val sources = signatureValues(signature, "sources")
     val objects = signatureValues(signature, "objects")
     signatureValues(signature, "causes").nonEmpty ||
@@ -2042,10 +2042,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
         semanticRubricSurfaceClaimCauseIds(signature).nonEmpty
     parts.contains(s"unit=$unit") &&
       axisKey.forall(axis => parts.contains(s"axis=$axis")) &&
-      ((currentMoveLane && semanticRubricSurfaceClaimHasEvidenceCarrier(signature)) || referenceOwnedLane)
+      ((currentMoveLane && semanticRubricSurfaceClaimHasProofCarrier(signature)) || referenceOwnedLane)
 
-  private def semanticRubricSurfaceClaimHasEvidenceCarrier(signature: String): Boolean =
-    MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasEvidenceCarrier(signature)
+  private def semanticRubricSurfaceClaimHasProofCarrier(signature: String): Boolean =
+    MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasProofCarrier(signature)
 
   private def semanticRubricSurfaceClaimCauseIds(signature: String): List[String] =
     MoveReviewPhase3AuditMetrics
