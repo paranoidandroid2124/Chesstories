@@ -2154,8 +2154,7 @@ object MoveReviewPhase3AuditRunner:
           evidenceCandidates(result, Set(EvidenceLayer.RelativeAssessment, EvidenceLayer.CandidateComparison, EvidenceLayer.Eval)) ++
             ideaCandidates(result, Set(ChessIdeaFamily.Evaluation))
         case JudgmentGraphSlot.TacticalClaim =>
-          ideaCandidates(result, Set(ChessIdeaFamily.Tactical)) ++
-            comparisonCandidates(result, _.failureReasons.exists(tacticalFailureReason))
+          ideaCandidates(result, Set(ChessIdeaFamily.Tactical))
         case JudgmentGraphSlot.StrategicClaim =>
           ideaCandidates(result, Set(ChessIdeaFamily.Strategic)) ++
             evidenceCandidates(result, Set(EvidenceLayer.Strategic, EvidenceLayer.StructuralDelta))
@@ -2255,15 +2254,6 @@ object MoveReviewPhase3AuditRunner:
           )
         )
       )
-
-  private def tacticalFailureReason(reason: CandidateComparisonFailureReason): Boolean =
-    reason == CandidateComparisonFailureReason.TacticalEvidenceUnbound ||
-      reason == CandidateComparisonFailureReason.LatentTacticalEvidence ||
-      reason == CandidateComparisonFailureReason.TacticalEvidenceBelowThreshold ||
-      reason == CandidateComparisonFailureReason.TacticalSignalNeedsWidthDepth ||
-      reason == CandidateComparisonFailureReason.LowSignalTacticalContext ||
-      reason == CandidateComparisonFailureReason.MaterialEvidenceBelowThreshold ||
-      reason == CandidateComparisonFailureReason.LowSignalMaterialContext
 
   private def rawInputAudit(raw: RawMoveReviewInput): JsObject =
     val playedMove = MoveReviewInputNormalizer.normalizeUci(raw.playedMoveUci)
