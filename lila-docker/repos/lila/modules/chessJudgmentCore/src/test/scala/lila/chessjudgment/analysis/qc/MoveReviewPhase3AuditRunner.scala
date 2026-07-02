@@ -738,7 +738,6 @@ object MoveReviewPhase3AuditRunner:
       "relativeCauseProofs" -> semantic.relativeCauseProofs,
       "strategicAxisIntegrity" -> strategicAxisIntegritySummary(result.packet),
       "objectBindingIntegrity" -> objectBindingIntegritySummary(result.packet),
-      "bindingWidthAudit" -> result.packet.moveJudgmentView.map(bindingWidthAuditJson).getOrElse(bindingWidthAuditJson(None)),
       "hasRelativeAssessment" -> semantic.hasRelativeAssessment,
       "candidateComparisonFacts" -> semantic.candidateComparisonFacts,
       "relativeCauseFacts" -> semantic.relativeCauseFacts,
@@ -797,12 +796,6 @@ object MoveReviewPhase3AuditRunner:
       "hasOnlyMoveSignal" -> semantic.hasOnlyMoveSignal,
       "hasForcedLineTheme" -> semantic.hasForcedLineTheme
     )
-
-  private[qc] def bindingWidthAuditJson(view: MoveJudgmentView): JsObject =
-    MoveReviewPhase3AuditMetrics.bindingWidthAuditJson(view)
-
-  private def bindingWidthAuditJson(view: Option[MoveJudgmentView]): JsObject =
-    MoveReviewPhase3AuditMetrics.bindingWidthAuditJson(view)
 
   private[qc] def objectBindingSignatureSampleJson(signatures: List[String]): JsObject =
     MoveReviewPhase3AuditViewJson.objectBindingSignatureSampleJson(signatures)
