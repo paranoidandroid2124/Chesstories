@@ -151,6 +151,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "failedRequiredSupportLevelSlotIdCounts" -> stringCountsJson(failedRequiredSupportLevelSlotIds),
       "survivalFailureClassCounts" -> stringCountsJson(slotRows.map(survivalFailureClass)),
       "survivalFailureSlotIds" -> survivalFailureSlotIdsJson(slotRows),
+      "survivalFailureQuestionIds" ->
+        survivalFailureQuestionIdsJson(missingExpectedQuestionIds, unmeasuredExpectedQuestionIds),
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
       "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
@@ -220,6 +222,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "failedRequiredSupportLevelSlotIdCounts" -> stringCountsJson(failedRequiredSupportLevelSlotIds),
       "survivalFailureClassCounts" -> stringCountsJson(slotRows.map(survivalFailureClass)),
       "survivalFailureSlotIds" -> survivalFailureSlotIdsJson(slotRows),
+      "survivalFailureQuestionIds" ->
+        survivalFailureQuestionIdsJson(missingExpectedQuestionIds, unmeasuredExpectedQuestionIds),
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
       "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
@@ -470,6 +474,15 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
         .map { case (failureClass, rows) =>
           failureClass -> JsArray(rows.map(row => JsString((row \ "id").as[String])).distinct)
         }
+    )
+
+  private def survivalFailureQuestionIdsJson(
+      missingExpectedQuestionIds: List[String],
+      unmeasuredExpectedQuestionIds: List[String]
+  ): JsObject =
+    Json.obj(
+      "coverage_shortage" -> missingExpectedQuestionIds.distinct.sorted,
+      "measurement_gap" -> unmeasuredExpectedQuestionIds.distinct.sorted
     )
 
   def noEventCauseFlow(flow: RelativeCauseFlowDiagnostic): Boolean =
