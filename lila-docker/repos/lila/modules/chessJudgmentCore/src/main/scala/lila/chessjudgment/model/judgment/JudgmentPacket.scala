@@ -5561,14 +5561,13 @@ object MoveJudgmentView:
   private[judgment] def causeAuditBuckets(
       frames: List[MoveJudgmentCauseFrame]
   ): MoveJudgmentCauseAudit =
-    val visibleFrames = frames.filterNot(exactCurrentMoveStrategicSupportFrame)
     val concretePeerKeys =
-      visibleFrames
+      frames
         .filter(causeAuditConcretePeer)
         .map(moveJudgmentCauseComparisonKey)
         .toSet
-    val primaryCandidates = visibleFrames.filter(_.role == MoveJudgmentCauseFrameRole.PrimaryCause)
-    val secondaryCandidates = visibleFrames.filter(_.role == MoveJudgmentCauseFrameRole.SecondaryCause)
+    val primaryCandidates = frames.filter(_.role == MoveJudgmentCauseFrameRole.PrimaryCause)
+    val secondaryCandidates = frames.filter(_.role == MoveJudgmentCauseFrameRole.SecondaryCause)
     val weakDemoted =
       (primaryCandidates ++ secondaryCandidates)
         .filter(frame => moveJudgmentCauseDemoteWeakFrame(frame, concretePeerKeys))
@@ -5584,7 +5583,7 @@ object MoveJudgmentView:
       secondary = compacted.secondary,
       context =
         (
-          visibleFrames.filter(_.role == MoveJudgmentCauseFrameRole.ContextCause) ++ weakDemoted ++ compacted.context
+          frames.filter(_.role == MoveJudgmentCauseFrameRole.ContextCause) ++ weakDemoted ++ compacted.context
         ).distinctBy(moveJudgmentCauseFrameIdentity)
     )
 
@@ -6060,20 +6059,6 @@ object MoveJudgmentView:
       kind == RelativeCauseKind.TargetPressureGain ||
       kind == RelativeCauseKind.PawnBreakOpportunity ||
       kind == RelativeCauseKind.OpponentRestriction
-
-  private def exactCurrentMoveStrategicSupportFrame(frame: MoveJudgmentCauseFrame): Boolean =
-    ClaimEventCluster.kindForCause(frame.causeKind).isEmpty &&
-      exactCurrentMoveStrategicSupportKind(frame.causeKind) &&
-      frame.concreteObjectReady &&
-      frame.hasOwnedAdmissibleLongTermProof &&
-      frame.attributionDirectProofEligible &&
-      frame.attributionRootMoveMatched &&
-      frame.comparisonKind == CandidateComparisonKind.PlayedVsBest &&
-      frame.causeRole == RelativeCauseRole.PrimaryPlayedCause &&
-      frame.causeSourceSide == RelativeCauseSourceSide.Candidate &&
-      frame.causeImportance == RelativeCauseImportance.Primary &&
-      frame.eventLine == frame.candidateLine &&
-      JudgmentSubjectBinding.normalizeMove(frame.eventRootMove) == JudgmentSubjectBinding.normalizeMove(frame.candidateLine.rootMove)
 
   private def lossVerdict(verdict: MoveChoiceVerdict): Boolean =
     verdict match

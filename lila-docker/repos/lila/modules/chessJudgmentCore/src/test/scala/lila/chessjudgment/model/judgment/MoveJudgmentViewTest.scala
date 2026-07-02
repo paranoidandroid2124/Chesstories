@@ -730,7 +730,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       )
       .get
 
-    assert(!view.causeAudit.all.exists(_.causeEvidenceIds.contains(causeRef.id)))
+    assert(view.causeAudit.all.exists(_.causeEvidenceIds.contains(causeRef.id)))
 
     val claim = view.moveMeaningClaims.find(_.causeEvidenceIds.contains(causeRef.id)).get
     assertEquals(claim.meaningKind, "TargetPressure")
@@ -1153,7 +1153,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       )
       .get
 
-    assert(!view.causeAudit.all.exists(_.causeEvidenceIds.contains(causeRef.id)))
+    assert(view.causeAudit.all.exists(_.causeEvidenceIds.contains(causeRef.id)))
 
     val claim = view.moveMeaningClaims.find(_.causeEvidenceIds.contains(causeRef.id)).get
     assertEquals(claim.meaningKind, "PawnBreakTiming")
@@ -1388,7 +1388,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       )
       .get
 
-    assert(!view.causeAudit.all.exists(_.causeEvidenceIds.contains(causeRef.id)))
+    assert(view.causeAudit.all.exists(_.causeEvidenceIds.contains(causeRef.id)))
     val counterplayDetail = view.positionPlanTechniqueFrames
       .flatMap(_.semanticDetails)
       .find(_.axisKey.contains(axis.stableKey))
