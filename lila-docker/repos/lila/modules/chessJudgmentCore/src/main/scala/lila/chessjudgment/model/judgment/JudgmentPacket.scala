@@ -2041,9 +2041,10 @@ object MoveMeaningSurface:
     val objectCarrier = EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
     val causeCarrier = claim.causeEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
     val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
+    val graphCarrier = claim.causeEvidenceIds.nonEmpty || claim.sourceEvidenceIds.nonEmpty
     val targetBound = boardCarriers.exists(_.role == "target")
-    val terminalCarrier = terminal.nonEmpty && objectCarrier && hasBoardCarrier
-    val techniqueCarrier = technique.nonEmpty && objectCarrier && hasBoardCarrier
+    val terminalCarrier = graphCarrier && terminal.nonEmpty && objectCarrier && hasBoardCarrier
+    val techniqueCarrier = graphCarrier && technique.nonEmpty && objectCarrier && hasBoardCarrier
     val hasCarrier = causeCarrier || sourceCarrier || terminalCarrier || techniqueCarrier
     val proofLevel =
       if terminalCarrier then "terminal_proof"
