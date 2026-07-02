@@ -999,6 +999,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
     val failedRequiredTerminalStageSlotIds =
       slotRows.filter(row => !(row \ "terminalStageSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
+    val classifiedMissingSlotIds = classifiedMissingSlotIdsFor(slotRows)
+    val unclassifiedMissingSlotIds = unclassifiedMissingSlotIdsFor(missingSlotIds, classifiedMissingSlotIds)
     val planOptionOwnedCauseExpectationSlotIds = slotIdsWithFlag(slotRows, "planOptionOwnedCauseExpectation")
     val viewOnlyOwnedCauseExpectationSlotIds = slotIdsWithFlag(slotRows, "viewOnlyOwnedCauseExpectation")
     val semanticTokenExpectationMissSlotIds = slotIdsWithFlag(slotRows, "semanticTokenExpectationMiss")
@@ -1035,6 +1037,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "missingSlotIds" -> missingSlotIds,
       "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
       "missingSlotIdCounts" -> stringCountsJson(missingSlotIds),
+      "classifiedMissingSlotIds" -> classifiedMissingSlotIds,
+      "classifiedMissingSlotCount" -> classifiedMissingSlotIds.size,
+      "unclassifiedMissingSlotIds" -> unclassifiedMissingSlotIds,
+      "unclassifiedMissingSlotCount" -> unclassifiedMissingSlotIds.size,
       "failedRequiredTerminalStageSlotIds" -> failedRequiredTerminalStageSlotIds,
       "failedRequiredTerminalStageUniqueSlotIds" -> failedRequiredTerminalStageSlotIds.distinct.sorted,
       "failedRequiredTerminalStageSlotIdCounts" -> stringCountsJson(failedRequiredTerminalStageSlotIds),
@@ -1105,6 +1111,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
     val failedRequiredTerminalStageSlotIds =
       slotRows.filter(row => !(row \ "terminalStageSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
+    val classifiedMissingSlotIds = classifiedMissingSlotIdsFor(slotRows)
+    val unclassifiedMissingSlotIds = unclassifiedMissingSlotIdsFor(missingSlotIds, classifiedMissingSlotIds)
     val planOptionOwnedCauseExpectationSlotIds = slotIdsWithFlag(slotRows, "planOptionOwnedCauseExpectation")
     val viewOnlyOwnedCauseExpectationSlotIds = slotIdsWithFlag(slotRows, "viewOnlyOwnedCauseExpectation")
     val semanticTokenExpectationMissSlotIds = slotIdsWithFlag(slotRows, "semanticTokenExpectationMiss")
@@ -1142,6 +1150,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "missingSlotIds" -> missingSlotIds,
       "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
       "missingSlotIdCounts" -> stringCountsJson(missingSlotIds),
+      "classifiedMissingSlotIds" -> classifiedMissingSlotIds,
+      "classifiedMissingSlotCount" -> classifiedMissingSlotIds.size,
+      "unclassifiedMissingSlotIds" -> unclassifiedMissingSlotIds,
+      "unclassifiedMissingSlotCount" -> unclassifiedMissingSlotIds.size,
       "failedRequiredTerminalStageSlotIds" -> failedRequiredTerminalStageSlotIds,
       "failedRequiredTerminalStageUniqueSlotIds" -> failedRequiredTerminalStageSlotIds.distinct.sorted,
       "failedRequiredTerminalStageSlotIdCounts" -> stringCountsJson(failedRequiredTerminalStageSlotIds),
@@ -1223,6 +1235,31 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       .flatMap(row => (row \ "id").asOpt[String])
       .distinct
       .sorted
+
+  private def classifiedMissingSlotIdsFor(slotRows: List[JsObject]): List[String] =
+    slotRows
+      .filter(row => !(row \ "matched").as[Boolean] && knownMissingClassification(row))
+      .flatMap(row => (row \ "id").asOpt[String])
+      .distinct
+      .sorted
+
+  private def unclassifiedMissingSlotIdsFor(
+      missingSlotIds: List[String],
+      classifiedMissingSlotIds: List[String]
+  ): List[String] =
+    val classified = classifiedMissingSlotIds.toSet
+    missingSlotIds.distinct.sorted.filterNot(classified)
+
+  private def knownMissingClassification(row: JsObject): Boolean =
+    List(
+      "coLocatedSemanticDetailTokenFailure",
+      "causeBorrowFalsePositive",
+      "primaryRootBorrowFalsePositive",
+      "rootTierBorrowFalsePositive",
+      "planOptionOwnedCauseExpectation",
+      "viewOnlyOwnedCauseExpectation",
+      "semanticTokenExpectationMiss"
+    ).exists(flag => (row \ flag).asOpt[Boolean].contains(true))
 
   private def expectedSemanticSlotCoverage(
       slot: ExpectedSemanticSlot,
