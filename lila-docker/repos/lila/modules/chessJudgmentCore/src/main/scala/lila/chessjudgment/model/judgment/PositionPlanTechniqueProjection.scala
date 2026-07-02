@@ -2311,7 +2311,9 @@ object PositionPlanTechniqueProjection:
   ): List[String] =
     if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute then
       positionPlanTechniquePieceRouteMotifTags(detail)
-    else if detail.unit == PositionPlanTechniqueUnit.StructuralTransformation then
+    else if detail.unit == PositionPlanTechniqueUnit.StructuralTransformation ||
+        detail.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute
+    then
       val anchorKeys = detail.semanticAnchorKeys.map(_.toLowerCase)
       val sourceIds = detail.sourceEvidenceIds.map(_.toLowerCase)
       val consequences = detail.structuralPurposeConsequences.map(_.toLowerCase)
