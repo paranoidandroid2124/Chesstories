@@ -1403,7 +1403,6 @@ object CandidateComparisonDiagnostic:
         detail.proofRoles.map(value => s"proofRole:$value") ++
         detail.contextCauseEvidenceIds.map(value => s"contextCauseEvidenceId:$value") ++
         detail.contextProofRoles.map(value => s"contextProofRole:$value") ++
-        detail.objectBindingSignatures.flatMap(positionPlanTechniqueObjectBindingTokens) ++
         detail.planAlignmentReasonWeights.toList
           .sortBy(_._1)
           .map { case (reason, weight) => s"planAlignmentReasonWeight:$reason=$weight" } ++
@@ -1553,30 +1552,6 @@ object CandidateComparisonDiagnostic:
       else if rankDelta == 0 && fileDelta > 0 then List("rank", "axis:Rank")
       else Nil
     else Nil
-
-  private def positionPlanTechniqueObjectBindingTokens(signature: String): List[String] =
-    val parts = signature
-      .split("\\|")
-      .toList
-    (
-      parts.collect {
-        case part if part.startsWith("actor=")       => s"objectActor:${part.stripPrefix("actor=")}"
-        case part if part.startsWith("target=")      => s"objectTarget:${part.stripPrefix("target=")}"
-        case part if part.startsWith("mechanism=")   => s"objectMechanism:${part.stripPrefix("mechanism=")}"
-        case part if part.startsWith("consequence=") => s"objectConsequence:${part.stripPrefix("consequence=")}"
-        case part if part.startsWith("witness=")     => s"objectWitness:${part.stripPrefix("witness=")}"
-      } ++ parts.flatMap(positionPlanTechniquePawnAdvanceBreakFileTokens)
-    ).distinct
-
-  private def positionPlanTechniquePawnAdvanceBreakFileTokens(part: String): List[String] =
-    val normalized = part.toLowerCase
-    val pattern = """.*pawnadvance\([^)]*some\(([a-h][1-8][a-h][1-8][a-z]?)\).*""".r
-    normalized match
-      case pattern(move) =>
-        val file = move.take(1)
-        List(s"breakFile:$file", s"break-file-$file")
-      case _ =>
-        Nil
 
   private def relativeCauseMatchesComparison(cause: RelativeCauseFact, fact: CandidateComparisonFact): Boolean =
     cause.comparisonKind == fact.kind &&
