@@ -1655,6 +1655,8 @@ case class MoveMeaningClaim(
     sourceEvidenceIds: List[String],
     objectBindingSignatures: List[String],
     reasonTokens: List[String],
+    comparisonLossSides: List[String] = Nil,
+    comparisonLossKinds: List[String] = Nil,
     objectCarrierReady: Boolean = false,
     boardCarriers: List[MoveMeaningSurfaceBoardCarrier] = Nil,
     targetSquares: List[String] = Nil,
@@ -2226,21 +2228,13 @@ object MoveMeaningSurface:
     else None
 
   private def comparisonLosses(claim: MoveMeaningClaim): List[String] =
-    claim.reasonTokens
-      .collect {
-        case token if token.startsWith("comparisonLoss:") =>
-          token.stripPrefix("comparisonLoss:")
-      }
+    claim.comparisonLossKinds
       .flatMap(publicComparisonLossCode)
       .distinct
       .sorted
 
   private def comparisonLossSides(claim: MoveMeaningClaim): List[String] =
-    claim.reasonTokens
-      .collect {
-        case token if token.startsWith("comparisonLossSide:") =>
-          token.stripPrefix("comparisonLossSide:")
-      }
+    claim.comparisonLossSides
       .filter(side => side == "candidate" || side == "reference")
       .distinct
       .sorted
@@ -2727,6 +2721,8 @@ object MoveMeaningClaim:
         sourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted,
         objectBindingSignatures = list.flatMap(_.objectBindingSignatures).distinct.sorted,
         reasonTokens = list.flatMap(_.reasonTokens).distinct.sorted,
+        comparisonLossSides = list.flatMap(_.comparisonLossSides).distinct.sorted,
+        comparisonLossKinds = list.flatMap(_.comparisonLossKinds).distinct.sorted,
         objectCarrierReady = list.exists(_.objectCarrierReady),
         boardCarriers = list.flatMap(_.boardCarriers).distinct.sortBy(boardCarrierSortKey).take(8),
         targetSquares = list.flatMap(_.targetSquares).distinct.sorted,
@@ -2922,6 +2918,13 @@ object MoveMeaningClaim:
         sourceEvidenceIds = moveMeaningClaimSourceEvidenceIds(evidenceGraph, detail, verdict, claimLineRole, claimMove),
         objectBindingSignatures = surfaceObjectSignatures,
         reasonTokens = reasonTokens(detail, surfaceObjectSignatures, linkedCauseIds, verdict, claimMove, frame.position.fen, claimRole),
+        comparisonLossSides =
+          PositionPlanTechniqueSemanticDetail
+            .comparisonLossSides(detail)
+            .filter(side => side == "candidate" || side == "reference")
+            .distinct
+            .sorted,
+        comparisonLossKinds = PositionPlanTechniqueSemanticDetail.comparisonLossKinds(detail).distinct.sorted,
         objectCarrierReady = EvidenceObjectBinding.playerFacingReadySignatures(surfaceObjectSignatures),
         boardCarriers = boardCarriers,
         targetSquares = surfaceTarget.squares,
