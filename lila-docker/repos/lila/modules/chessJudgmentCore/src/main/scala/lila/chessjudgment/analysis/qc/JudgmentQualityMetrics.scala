@@ -733,6 +733,7 @@ final case class ComparisonMoveJudgmentViewDiagnostics(
     moveMeaningClaimVisibility: List[String] = Nil,
     moveMeaningClaimSurfaceLanes: List[String] = Nil,
     moveMeaningClaimLaneKeys: List[String] = Nil,
+    moveMeaningClaimDiagnostics: List[PublicMoveMeaningClaimDiagnostic] = Nil,
     publicMoveMeaningClaimDiagnostics: List[PublicMoveMeaningClaimDiagnostic] = Nil
 ):
   val hasPrimaryCause: Boolean = primaryCauseKinds.nonEmpty
@@ -1128,6 +1129,10 @@ object CandidateComparisonDiagnostic:
     val moveMeaningClaims =
       comparisonMoveMeaningClaims(packet, fact, planTechniqueFrames.map(_.id).toSet)
     val comparisonMoveMeaningClaimSet = moveMeaningClaims.toSet
+    val moveMeaningClaimDiagnostics =
+      moveMeaningClaims
+        .map(claim => publicMoveMeaningClaimDiagnostic(claim, MoveMeaningSurface.evidenceForClaim(claim)))
+        .distinct
     val publicMoveMeaningClaims =
       packet.moveJudgmentView.toList
         .flatMap(MoveMeaningSurface.publicClaimsWithEvidenceForSurface)
@@ -1202,6 +1207,7 @@ object CandidateComparisonDiagnostic:
       moveMeaningClaimVisibility = moveMeaningClaims.map(_.visibility).distinct.sorted,
       moveMeaningClaimSurfaceLanes = moveMeaningClaims.map(_.surfaceLane).distinct.sorted,
       moveMeaningClaimLaneKeys = moveMeaningClaims.map(_.laneKey).distinct.sorted,
+      moveMeaningClaimDiagnostics = moveMeaningClaimDiagnostics,
       publicMoveMeaningClaimDiagnostics =
         publicMoveMeaningClaimDiagnostics
     )

@@ -101,7 +101,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       sourceEvidenceIds: List[String],
       primaryRootCauseEvidenceIds: List[String],
       causeIds: List[String],
-      claimIds: List[String]
+      claimIds: List[String],
+      publicSurface: Boolean
   )
 
   private[qc] def semanticRubricExpectedSlotCoverageJson(
@@ -111,7 +112,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
   ): JsObject =
     val rows = diagnostics.flatMap(semanticRubricSlotRows)
     val slotRows =
-      expectedSlots.map(slot => expectedSemanticSlotCoverage(slot, rows))
+      expectedSlots.map(slot => expectedSemanticSlotCoverage(slot, rows, diagnostics))
     val measuredSlotRows = slotRows.filter(row => (row \ "measured").as[Boolean])
     val questionIds = measuredSlotRows.flatMap(row => (row \ "questionId").asOpt[String]).distinct.sorted
     val matchedQuestionIds =
@@ -148,6 +149,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "failedRequiredSupportLevelSlotIds" -> failedRequiredSupportLevelSlotIds,
       "failedRequiredSupportLevelUniqueSlotIds" -> failedRequiredSupportLevelSlotIds.distinct.sorted,
       "failedRequiredSupportLevelSlotIdCounts" -> stringCountsJson(failedRequiredSupportLevelSlotIds),
+      "survivalFailureClassCounts" -> stringCountsJson(slotRows.map(survivalFailureClass)),
+      "survivalFailureSlotIds" -> survivalFailureSlotIdsJson(slotRows),
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
       "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
@@ -215,6 +218,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "failedRequiredSupportLevelSlotIds" -> failedRequiredSupportLevelSlotIds,
       "failedRequiredSupportLevelUniqueSlotIds" -> failedRequiredSupportLevelSlotIds.distinct.sorted,
       "failedRequiredSupportLevelSlotIdCounts" -> stringCountsJson(failedRequiredSupportLevelSlotIds),
+      "survivalFailureClassCounts" -> stringCountsJson(slotRows.map(survivalFailureClass)),
+      "survivalFailureSlotIds" -> survivalFailureSlotIdsJson(slotRows),
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
       "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
@@ -249,6 +254,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
             "expectedSlotCount" -> rows.size,
             "matchedSlotCount" -> rows.count(row => (row \ "matched").as[Boolean]),
             "supportLevelCounts" -> stringCountsJson(rows.map(row => (row \ "supportLevel").as[String])),
+            "survivalFailureClassCounts" -> stringCountsJson(rows.map(survivalFailureClass)),
             "missingSlotIds" -> missingSlotIds,
             "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
             "missingSlotIdCounts" -> stringCountsJson(missingSlotIds),
@@ -260,7 +266,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
 
   private def expectedSemanticSlotCoverage(
       slot: ExpectedSemanticSlot,
-      rows: List[SemanticRubricSlotRow]
+      rows: List[SemanticRubricSlotRow],
+      diagnostics: List[CandidateComparisonDiagnostic]
   ): JsObject =
     val measured = slot.lineRole.exists(_.trim.nonEmpty) && slot.moveUci.exists(_.trim.nonEmpty)
     val unitEligibleRows =
@@ -274,17 +281,33 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
               JudgmentSubjectBinding.normalizeMove(row.moveUci) == JudgmentSubjectBinding.normalizeMove(expectedMove)
             )
         )
-    val matches = unitEligibleRows
+    val publicMatches = unitEligibleRows.filter(_.publicSurface)
+    val claimMatches = unitEligibleRows.filterNot(_.publicSurface)
     val best =
       slot.requiredSupportLevel
-        .flatMap(required => matches.find(_.supportLevel == required.trim))
-        .orElse(matches.headOption)
+        .flatMap(required => publicMatches.find(_.supportLevel == required.trim))
+        .orElse(publicMatches.headOption)
+    val bestClaim =
+      slot.requiredSupportLevel
+        .flatMap(required => claimMatches.find(_.supportLevel == required.trim))
+        .orElse(claimMatches.headOption)
     val supportLevel =
       if measured then best.map(_.supportLevel).getOrElse("missing_semantic_slot")
       else "unmeasured_semantic_slot"
+    val claimSupportLevel =
+      if measured then bestClaim.map(_.supportLevel).getOrElse("missing_semantic_claim")
+      else "unmeasured_semantic_slot"
     val supportLevelSatisfied =
       measured && slot.requiredSupportLevel.forall(required => supportLevel == required.trim)
+    val claimSupportLevelSatisfied =
+      measured && slot.requiredSupportLevel.forall(required => claimSupportLevel == required.trim)
     val matched = measured && best.nonEmpty && supportLevelSatisfied
+    val survivalFailureClass =
+      if !measured then "measurement_gap"
+      else if matched then "covered"
+      else if best.isEmpty && claimSupportLevelSatisfied then "public_surface_blocked"
+      else if claimMatches.nonEmpty || semanticDetailPresent(slot, diagnostics) then "structural_bottleneck"
+      else "coverage_shortage"
     Json.obj(
       "id" -> slot.id,
       "measured" -> measured,
@@ -297,18 +320,30 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "requiredSupportLevel" -> slot.requiredSupportLevel,
       "matched" -> matched,
       "supportLevel" -> supportLevel,
+      "claimSupportLevel" -> claimSupportLevel,
       "lineRole" -> best.map(_.lineRole),
       "moveUci" -> best.map(_.moveUci),
       "supportLevelSatisfied" -> supportLevelSatisfied,
-      "matchedComparisonIds" -> matches.map(_.comparisonId).distinct.sorted,
-      "frameIds" -> matches.flatMap(_.frameIds).distinct.sorted,
-      "sourceEvidenceIds" -> matches.flatMap(_.sourceEvidenceIds).distinct.sorted,
-      "primaryRootCauseEvidenceIds" -> matches.flatMap(_.primaryRootCauseEvidenceIds).distinct.sorted,
-      "causeIds" -> matches.flatMap(_.causeIds).distinct.sorted,
-      "claimIds" -> matches.flatMap(_.claimIds).distinct.sorted,
+      "claimSupportLevelSatisfied" -> claimSupportLevelSatisfied,
+      "claimPresent" -> claimMatches.nonEmpty,
+      "publicSurfacePresent" -> publicMatches.nonEmpty,
+      "survivalFailureClass" -> survivalFailureClass,
+      "matchedComparisonIds" -> publicMatches.map(_.comparisonId).distinct.sorted,
+      "claimComparisonIds" -> claimMatches.map(_.comparisonId).distinct.sorted,
+      "frameIds" -> publicMatches.flatMap(_.frameIds).distinct.sorted,
+      "sourceEvidenceIds" -> publicMatches.flatMap(_.sourceEvidenceIds).distinct.sorted,
+      "primaryRootCauseEvidenceIds" -> publicMatches.flatMap(_.primaryRootCauseEvidenceIds).distinct.sorted,
+      "causeIds" -> publicMatches.flatMap(_.causeIds).distinct.sorted,
+      "claimIds" -> publicMatches.flatMap(_.claimIds).distinct.sorted,
       "bestLineageTrace" -> best.map(semanticRubricLineageTraceJson).getOrElse(Json.obj()),
+      "bestClaimLineageTrace" -> bestClaim.map(semanticRubricLineageTraceJson).getOrElse(Json.obj()),
       "lineageTraces" -> JsArray(
-        matches
+        publicMatches
+          .sortBy(_.comparisonId)
+          .map(semanticRubricLineageTraceJson)
+      ),
+      "claimLineageTraces" -> JsArray(
+        claimMatches
           .sortBy(_.comparisonId)
           .map(semanticRubricLineageTraceJson)
       )
@@ -326,21 +361,28 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "sourceEvidenceIds" -> row.sourceEvidenceIds,
       "causeIds" -> row.causeIds,
       "claimIds" -> row.claimIds,
-      "primaryRootCauseEvidenceIds" -> row.primaryRootCauseEvidenceIds
+      "primaryRootCauseEvidenceIds" -> row.primaryRootCauseEvidenceIds,
+      "publicSurface" -> row.publicSurface
     )
 
   private def semanticRubricSlotRows(diagnostic: CandidateComparisonDiagnostic): List[SemanticRubricSlotRow] =
+    val claimRows =
+      diagnostic.moveJudgmentView.moveMeaningClaimDiagnostics
+        .map(claim => semanticRubricSlotRow(diagnostic, claim, publicSurface = false))
     val publicRows =
       diagnostic.moveJudgmentView.publicMoveMeaningClaimDiagnostics
         .filter(_.hasCarrier)
-        .map(claim => semanticRubricSlotRow(diagnostic, claim))
-    publicRows
-      .distinctBy(row => (row.comparisonId, row.unit, row.axisKey, row.lineRole, row.moveUci))
-      .sortBy(row => (row.comparisonId, row.unit.toString, row.axisKey.getOrElse(""), row.lineRole, row.moveUci))
+        .map(claim => semanticRubricSlotRow(diagnostic, claim, publicSurface = true))
+    (claimRows ++ publicRows)
+      .distinctBy(row => (row.publicSurface, row.comparisonId, row.unit, row.axisKey, row.lineRole, row.moveUci))
+      .sortBy(row =>
+        (row.comparisonId, row.unit.toString, row.axisKey.getOrElse(""), row.lineRole, row.moveUci, row.publicSurface)
+      )
 
   private def semanticRubricSlotRow(
       diagnostic: CandidateComparisonDiagnostic,
-      claim: PublicMoveMeaningClaimDiagnostic
+      claim: PublicMoveMeaningClaimDiagnostic,
+      publicSurface: Boolean
   ): SemanticRubricSlotRow =
     val view = diagnostic.moveJudgmentView
     val frameIds = view.positionPlanTechniqueFrameIds
@@ -363,7 +405,35 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       sourceEvidenceIds = claim.sourceEvidenceIds.distinct.sorted,
       primaryRootCauseEvidenceIds = claimPrimaryRootCauseIds,
       causeIds = claimCauseIds,
-      claimIds = frameCauseFlows.flatMap(_.claimIds).distinct.sorted
+      claimIds = frameCauseFlows.flatMap(_.claimIds).distinct.sorted,
+      publicSurface = publicSurface
+    )
+
+  private def semanticDetailPresent(
+      slot: ExpectedSemanticSlot,
+      diagnostics: List[CandidateComparisonDiagnostic]
+  ): Boolean =
+    diagnostics.exists { diagnostic =>
+      val view = diagnostic.moveJudgmentView
+      view.positionPlanTechniqueSemanticDetailUnits.contains(slot.unit) &&
+      slot.axisKey.forall(axis =>
+        view.positionPlanTechniqueSemanticDetailAxisKeys.contains(axis) ||
+          view.positionPlanTechniqueAxisKeys.contains(axis)
+      )
+    }
+
+  private def survivalFailureClass(row: JsObject): String =
+    (row \ "survivalFailureClass").as[String]
+
+  private def survivalFailureSlotIdsJson(slotRows: List[JsObject]): JsObject =
+    JsObject(
+      slotRows
+        .groupBy(survivalFailureClass)
+        .toList
+        .sortBy(_._1)
+        .map { case (failureClass, rows) =>
+          failureClass -> JsArray(rows.map(row => JsString((row \ "id").as[String])).distinct)
+        }
     )
 
   def noEventCauseFlow(flow: RelativeCauseFlowDiagnostic): Boolean =
