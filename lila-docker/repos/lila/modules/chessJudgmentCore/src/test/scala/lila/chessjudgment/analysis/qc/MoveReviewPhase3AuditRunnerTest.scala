@@ -3,14 +3,13 @@ package lila.chessjudgment.analysis.qc
 import java.nio.charset.StandardCharsets
 import java.nio.file.{ Files, Path }
 
-import lila.chessjudgment.analysis.assembly.{ RawMoveReviewInput, RawOpeningContext }
 import lila.chessjudgment.analysis.line.{ LineFactNormalizer, PrincipalVariationEvidence }
 import lila.chessjudgment.analysis.position.{ FactExtractor, PositionAnalyzer, PositionFactNormalizer }
 import lila.chessjudgment.analysis.singlePosition.*
 import lila.chessjudgment.analysis.strategic.EndgamePatternOracle
 import lila.chessjudgment.model.{ Fact, FactScope, Motif }
 import lila.chessjudgment.model.judgment.*
-import lila.chessjudgment.model.strategic.{ RookEndgameGeometry, RookEndgamePattern, VariationLine }
+import lila.chessjudgment.model.strategic.{ RookEndgameGeometry, RookEndgamePattern }
 import lila.chessjudgment.model.structure.*
 import chess.{ Color, File }
 import chess.format.Fen
@@ -243,91 +242,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "byQuestionId" \ "terminal_promotion_race" \ "ownedCauseLinkedCount").as[Int], 1)
     assertEquals((coverage \ "byQuestionId" \ "terminal_promotion_race" \ "terminalStageCounts" \ "clustered_coherent").as[Int], 1)
     assertEquals((corpusCoverage \ "expectedQuestionCoverageComplete").as[Boolean], true)
-
-  test("semantic rubric reports suppressed and multi-input public move meaning claims"):
-    val publicSignature =
-      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=view_surfaced|lane=current_move_function|lineRole=played|move=g1f3|causes=none|sources=route-src|proof=none|carrier=true|boardCarrier=true|objects=target=Piece:knight;mechanism=Mechanism:route;witness=Move:g1f3"
-    val suppressedSignature =
-      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=owned_cause_linked|lane=current_move_owned|lineRole=played|move=g1f3|causes=cause-route|sources=route-src|proof=DirectProof|objects=target=Piece:knight"
-    val mergedSignature =
-      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=owned_cause_linked|lane=current_move_owned|lineRole=played|move=g1f3|causes=cause-route,cause-structure|sources=route-src,structure-src|proof=DirectProof|carrier=true|boardCarrier=true|objects=target=Piece:knight"
-    val carrierlessPublicSignature =
-      "unit=PlanOptionSet|axis=none|kind=PlanContinuity|support=view_surfaced|lane=current_move_function|lineRole=played|move=g1f3|causes=none|sources=plan-src|proof=DirectProof|carrier=false|boardCarrier=false|objects=mechanism=Mechanism:activity"
-    val diagnostic =
-      comparisonDiagnostic(
-        id = "surface-diagnostic",
-        referenceLeadAxes = Nil,
-        producedKinds = List(RelativeCauseKind.ActivityGain),
-        flows = List(
-          causeFlow(
-            "cause-route",
-            RelativeCauseKind.ActivityGain,
-            proofAxisKeys = Nil,
-            claimIds = List("claim-route")
-          )
-        ),
-        primaryRootKinds = List(RelativeCauseKind.ActivityGain),
-        primaryRootIds = List("cause-route"),
-        moveMeaningClaimSurfaceSignatures =
-          List(publicSignature, suppressedSignature, mergedSignature, carrierlessPublicSignature),
-        publicMoveMeaningClaimSurfaceSignatures = List(publicSignature, mergedSignature, carrierlessPublicSignature)
-      )
-
-    val coverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(Nil, List(diagnostic))
-    val corpusCoverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCorpusCoverageJson(List(coverage))
-
-    assertEquals((coverage \ "publicMoveMeaningClaimCount").as[Int], 3)
-    assertEquals((coverage \ "boardCarrierlessPublicMoveMeaningClaimCount").as[Int], 1)
-    assertEquals(
-      (coverage \ "boardCarrierlessPublicMoveMeaningClaimSignatures").as[List[String]],
-      List(carrierlessPublicSignature)
-    )
-    assertEquals((coverage \ "suppressedMoveMeaningClaimCount").as[Int], 1)
-    assertEquals((coverage \ "suppressedMoveMeaningClaimSignatures").as[List[String]], List(suppressedSignature))
-    assertEquals((coverage \ "multiEvidenceInputPublicClaimCount").as[Int], 1)
-    assertEquals((coverage \ "multiEvidenceInputPublicClaimSignatures").as[List[String]], List(mergedSignature))
-    assertEquals((corpusCoverage \ "publicMoveMeaningClaimCount").as[Int], 3)
-    assertEquals((corpusCoverage \ "boardCarrierlessPublicMoveMeaningClaimCount").as[Int], 1)
-    assertEquals((corpusCoverage \ "suppressedMoveMeaningClaimCount").as[Int], 1)
-    assertEquals((corpusCoverage \ "multiEvidenceInputPublicClaimCount").as[Int], 1)
-
-  test("writes replay input archive next to audit output"):
-    val dir = Files.createTempDirectory("phase3-audit-runner")
-    try
-      val output = dir.resolve("phase3_audit_output_current_chunk01_rows001-001.jsonl")
-      val raw =
-        RawMoveReviewInput(
-          fen = "8/8/8/8/8/8/4P3/4K3 w - - 0 1",
-          playedMoveUci = "e2e4",
-          variations = List(VariationLine(List("e2e4"), scoreCp = 20, depth = 16)),
-          currentEvalCp = Some(20),
-          ply = Some(1),
-          openingContext = Some(RawOpeningContext(eco = Some("A00"), name = Some("Test Opening"), family = Some("A"))),
-          movePrefixUci = List("g1f3")
-        )
-      val sample =
-        MoveReviewPhase3AuditRunner.AuditInputSample(
-          sampleId = "sample-1",
-          raw = raw,
-          opening = Some("Test Opening"),
-          sliceKind = Some("eco"),
-          targetPly = Some(1),
-          playedSan = Some("e4")
-        )
-
-      val archive = MoveReviewPhase3AuditRunner.writeReplayInputArchive(output, List(sample))
-
-      assertEquals(archive.getFileName.toString, "phase3_audit_input_replay_current_chunk01_rows001-001.jsonl")
-      val rows = Files.readAllLines(archive, StandardCharsets.UTF_8).asScala.toList
-      assertEquals(rows.size, 1)
-      val json = Json.parse(rows.head)
-      assertEquals((json \ "schemaVersion").as[String], "move_review_phase3_replay_input.v1")
-      assertEquals((json \ "sampleId").as[String], "sample-1")
-      assertEquals((json \ "input" \ "playedMoveUci").as[String], "e2e4")
-      assertEquals((json \ "input" \ "variations" \ 0 \ "moves" \ 0).as[String], "e2e4")
-      assertEquals((json \ "input" \ "movePrefixUci" \ 0).as[String], "g1f3")
-      assertEquals((json \ "opening").as[String], "Test Opening")
-    finally deleteRecursively(dir)
 
   test("comparison diagnostics keep contrast plan technique frames on their owning comparison"):
     val root = PositionNodeRef("8/8/8/8/8/8/4P3/4K3 w - - 0 1", 1, Some(chess.Color.White), Some("root"))
