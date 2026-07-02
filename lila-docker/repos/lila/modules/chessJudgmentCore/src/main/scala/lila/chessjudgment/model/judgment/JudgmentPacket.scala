@@ -5230,14 +5230,13 @@ object MoveJudgmentView:
       .toList
       .sortBy(causeAuditSecondaryCauseSortKey)
 
-  private def causeAuditPrimaryCauseSortKey(frame: MoveJudgmentCauseFrame): (Int, Int, Int, Int, Int, Int, String) =
+  private def causeAuditPrimaryCauseSortKey(frame: MoveJudgmentCauseFrame): (Int, Int, Int, Int, Int, String) =
     (
       causeAuditCauseKindRank(frame.causeKind),
       causeAuditRootTierRank(frame.rootArbitrationTier),
       boolRank(frame.causeSourceSide == RelativeCauseSourceSide.Candidate),
       boolRank(frame.concreteObjectReady),
       frame.proofDirectSourceIds.distinct.size,
-      frame.objectBindingSignatures.distinct.size,
       frame.causeKind.toString
     )
 

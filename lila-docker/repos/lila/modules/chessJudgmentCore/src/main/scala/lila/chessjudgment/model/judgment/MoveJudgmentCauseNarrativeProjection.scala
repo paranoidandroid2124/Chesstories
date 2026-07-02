@@ -128,24 +128,22 @@ object MoveJudgmentCauseNarrativeProjection:
   private def selectedFallbackRootFrames(frames: List[MoveJudgmentCauseFrame]): List[MoveJudgmentCauseFrame] =
     frames.sortBy(fallbackRootSortKey).lastOption.toList
 
-  private def eventRootSortKey(graph: TypedEvidenceGraph, frame: MoveJudgmentCauseFrame): (Int, Int, Int, Int, Int, Int, Int, String) =
+  private def eventRootSortKey(graph: TypedEvidenceGraph, frame: MoveJudgmentCauseFrame): (Int, Int, Int, Int, Int, Int, String) =
     (
       eventRootKindRank(graph, frame),
       boolRank(rootArbitrationObjectReady(frame)),
       boolRank(frame.attributionRootMoveMatched),
       boolRank(frame.attributionDirectProofEligible),
       frame.proofDirectSourceIds.distinct.size,
-      frame.objectBindingSignatures.distinct.size,
       sourceSideRank(frame.causeSourceSide),
       frame.causeKind.toString
     )
 
-  private def fallbackRootSortKey(frame: MoveJudgmentCauseFrame): (Int, Int, Int, Int, Int, String) =
+  private def fallbackRootSortKey(frame: MoveJudgmentCauseFrame): (Int, Int, Int, Int, String) =
     (
       fallbackRootKindRank(frame.causeKind),
       boolRank(rootArbitrationObjectReady(frame)),
       frame.proofDirectSourceIds.distinct.size,
-      frame.objectBindingSignatures.distinct.size,
       sourceSideRank(frame.causeSourceSide),
       frame.causeKind.toString
     )
