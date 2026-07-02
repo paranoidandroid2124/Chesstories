@@ -1641,6 +1641,42 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "slots" \ 0 \ "matched").as[Boolean], true)
     assertEquals((coverage \ "slots" \ 1 \ "matched").as[Boolean], false)
 
+  test("semantic rubric flags plan option owned-cause expectations without upgrading recognition"):
+    val publicPlanSignature =
+      "unit=PlanOptionSet|axis=none|kind=PlanContinuity|support=view_surfaced|lane=current_move_function|causes=none|sources=plan-src|proof=none|objects=target=PlanSubject:pawnbreakpreparation"
+    val diagnostic =
+      comparisonDiagnostic(
+        id = "cmp-plan-option-view",
+        referenceLeadAxes = Nil,
+        producedKinds = List(RelativeCauseKind.ActivityGain),
+        flows = List(causeFlow("cause-activity", RelativeCauseKind.ActivityGain, Nil, List("claim-activity"))),
+        primaryRootKinds = List(RelativeCauseKind.ActivityGain),
+        primaryRootIds = List("cause-activity"),
+        positionPlanTechniqueFrameIds = List("frame-plan-option-view"),
+        positionPlanTechniqueUnits = List(PositionPlanTechniqueUnit.PlanOptionSet),
+        positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.PlanOptionSet),
+        positionPlanTechniqueSemanticDetailTokens = List("unit:PlanOptionSet", "minorityAttack:true"),
+        positionPlanTechniqueSemanticDetailTokenGroups = List(List("unit:PlanOptionSet", "minorityAttack:true")),
+        positionPlanTechniqueObjectBindingSignatures =
+          List("target=PlanSubject:pawnbreakpreparation|mechanism=Mechanism:plan-pressure"),
+        moveMeaningClaimSurfaceSignatures = List(publicPlanSignature),
+        publicMoveMeaningClaimSurfaceSignatures = List(publicPlanSignature)
+      )
+    val slot =
+      MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
+        id = "minority-plan-owned",
+        unit = PositionPlanTechniqueUnit.PlanOptionSet,
+        requiredTerminalStage = Some("owned_cause_linked"),
+        requiredSemanticDetailTokens = List("minorityAttack:true")
+      )
+
+    val coverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(slot), List(diagnostic))
+
+    assertEquals((coverage \ "matchedSlotCount").as[Int], 0)
+    assertEquals((coverage \ "planOptionOwnedCauseExpectationSlotIds").as[List[String]], List("minority-plan-owned"))
+    assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "view_surfaced")
+    assertEquals((coverage \ "slots" \ 0 \ "planOptionOwnedCauseExpectation").as[Boolean], true)
+
   test("recognition view slots require a public carrier signature"):
     val carrierlessPublicSurfaceSignature =
       "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=view_surfaced|lane=current_move_function|lineRole=played|move=g1f3|causes=none|sources=none|proof=none|objects=none"
