@@ -302,9 +302,15 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
     val claimSupportLevelSatisfied =
       measured && slot.requiredSupportLevel.forall(required => supportLevelSatisfies(claimSupportLevel, required))
     val matched = measured && best.nonEmpty && supportLevelSatisfied
+    val broadPlanOwnershipExpectation =
+      slot.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+        slot.requiredSupportLevel.exists(required => supportLevelSatisfies("owned_cause_linked", required)) &&
+        unitEligibleRows.nonEmpty &&
+        unitEligibleRows.forall(_.causeIds.isEmpty)
     val survivalFailureClass =
       if !measured then "measurement_gap"
       else if matched then "covered"
+      else if broadPlanOwnershipExpectation then "measurement_gap"
       else if best.isEmpty && claimSupportLevelSatisfied then "public_surface_blocked"
       else if claimMatches.nonEmpty || semanticDetailPresent(slot, diagnostics) then "structural_bottleneck"
       else "coverage_shortage"
