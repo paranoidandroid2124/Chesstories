@@ -1815,6 +1815,7 @@ case class MoveMeaningSurfaceBoardCarrier(
 case class MoveMeaningSurface(
     moveUci: String,
     subject: String,
+    lineRole: String,
     moveQuality: String,
     ideaType: String,
     idea: MoveMeaningSurfaceCode,
@@ -1981,6 +1982,7 @@ object MoveMeaningSurface:
     MoveMeaningSurface(
       moveUci = claim.moveUci,
       subject = claimSubject,
+      lineRole = claim.lineRole,
       moveQuality = quality,
       ideaType = idea,
       idea = publicCode(idea, ideaLabels),

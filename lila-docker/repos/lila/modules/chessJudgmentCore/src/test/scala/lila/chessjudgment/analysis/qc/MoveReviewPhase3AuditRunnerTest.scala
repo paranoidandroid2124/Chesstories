@@ -3410,6 +3410,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
     val surface = MoveMeaningSurface.from(view)
     assertEquals(surface.map(_.ideaType), List("piece_activity"))
+    assertEquals(surface.map(_.lineRole), List("candidate"))
     assertEquals(surface.map(_.ideaQuality), List("supported"))
     assertEquals(surface.map(_.priority), List("supporting"))
     assertEquals(surface.map(_.evidence.hasCarrier), List(true))
@@ -4628,6 +4629,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
     val surface = MoveMeaningSurface.from(view)
     assertEquals(surface.map(_.subject), List("reference_move"))
+    assertEquals(surface.map(_.lineRole), List("reference"))
     assertEquals(surface.map(_.moveQuality), List("not_applicable"))
     assertEquals(surface.map(_.priority), List("comparison"))
     assertEquals(surface.flatMap(_.failureFamily), Nil)

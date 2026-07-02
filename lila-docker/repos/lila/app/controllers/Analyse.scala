@@ -99,6 +99,7 @@ final class Analyse(
     Json.obj(
       "move_uci" -> surface.moveUci,
       "subject" -> surface.subject,
+      "line_role" -> surface.lineRole,
       "move_quality" -> surface.moveQuality,
       "idea_type" -> surface.ideaType,
       "idea" -> publicCodeJson(surface.idea),
@@ -114,7 +115,7 @@ final class Analyse(
       "endgame_technique" -> surface.endgameTechnique.map(publicEndgameTechniqueJson),
       "technique" -> surface.endgameTechnique.map(publicEndgameTechniqueJson),
       "comparison" -> surface.comparison.map(publicComparisonJson),
-      "evidence" -> publicEvidenceJson(surface.evidence)
+      "evidence" -> publicEvidenceJson(surface)
     )
 
   private def publicAssessmentJson(assessment: MoveMeaningSurfaceAssessment): JsObject =
@@ -134,18 +135,22 @@ final class Analyse(
       "label" -> code.label
     )
 
-  private def publicEvidenceJson(evidence: MoveMeaningSurfaceEvidence): JsObject =
+  private def publicEvidenceJson(surface: MoveMeaningSurface): JsObject =
+    val evidence = surface.evidence
     Json.obj(
       "has_carrier" -> evidence.hasCarrier,
       "proof_level" -> evidence.proofLevel,
       "target_bound" -> evidence.targetBound,
       "cause_ids" -> evidence.causeIds,
       "source_ids" -> evidence.sourceIds,
-      "board_carriers" -> evidence.boardCarriers.map(publicBoardCarrierJson)
+      "board_carriers" -> evidence.boardCarriers.map(publicBoardCarrierJson(_, surface))
     )
 
-  private def publicBoardCarrierJson(carrier: MoveMeaningSurfaceBoardCarrier): JsObject =
+  private def publicBoardCarrierJson(carrier: MoveMeaningSurfaceBoardCarrier, surface: MoveMeaningSurface): JsObject =
     Json.obj(
+      "subject" -> surface.subject,
+      "line_role" -> surface.lineRole,
+      "move_uci" -> surface.moveUci,
       "role" -> carrier.role,
       "kind" -> carrier.kind,
       "value" -> carrier.value,

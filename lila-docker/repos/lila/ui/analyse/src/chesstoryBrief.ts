@@ -25,6 +25,7 @@ export interface ChesstoryMoveMeaningPayload {
 
 export interface ChesstoryMoveSemantic {
   subject?: string;
+  line_role?: string;
   move_quality?: string;
   idea_type?: string;
   idea?: ChesstoryCode;
@@ -49,6 +50,9 @@ export interface ChesstoryMoveSemantic {
     cause_ids?: string[];
     source_ids?: string[];
     board_carriers?: {
+      subject?: string;
+      line_role?: string;
+      move_uci?: string;
       role?: string;
       kind?: string;
       value?: string;
