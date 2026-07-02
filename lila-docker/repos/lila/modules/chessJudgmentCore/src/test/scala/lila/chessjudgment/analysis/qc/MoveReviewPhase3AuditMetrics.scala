@@ -5,29 +5,6 @@ import play.api.libs.json.*
 import MoveReviewPhase3AuditContract.ExpectedSemanticSlot
 
 private[qc] object MoveReviewPhase3AuditMetrics:
-  def rootArbitrationQualitySummaryJson(
-      diagnostics: List[CandidateComparisonDiagnostic]
-  ): JsObject =
-    val fallbackRootDiagnostics =
-      diagnostics.filter(_.moveJudgmentView.primaryRootArbitrationTiers.contains(MoveJudgmentCauseRootArbitrationTier.FallbackRoot))
-    val broadOwnedDiagnostics =
-      diagnostics.filter(_.moveJudgmentView.rootArbitrationTiers.contains(MoveJudgmentCauseRootArbitrationTier.BroadOwnedRoot))
-    val contextOnlyDiagnostics =
-      diagnostics.filter(_.moveJudgmentView.rootArbitrationTiers.contains(MoveJudgmentCauseRootArbitrationTier.ContextOnly))
-    Json.obj(
-      "classification" -> "audit_only",
-      "comparisonCount" -> diagnostics.size,
-      "tierCounts" -> stringCountsJson(diagnostics.flatMap(_.moveJudgmentView.rootArbitrationTiers.map(_.toString))),
-      "primaryRootTierCounts" ->
-        stringCountsJson(diagnostics.flatMap(_.moveJudgmentView.primaryRootArbitrationTiers.map(_.toString))),
-      "fallbackRootComparisonIds" -> fallbackRootDiagnostics.map(_.id).distinct.sorted,
-      "fallbackRootComparisonCount" -> fallbackRootDiagnostics.map(_.id).distinct.size,
-      "broadOwnedRootComparisonIds" -> broadOwnedDiagnostics.map(_.id).distinct.sorted,
-      "broadOwnedRootComparisonCount" -> broadOwnedDiagnostics.map(_.id).distinct.size,
-      "contextOnlyComparisonIds" -> contextOnlyDiagnostics.map(_.id).distinct.sorted,
-      "contextOnlyComparisonCount" -> contextOnlyDiagnostics.map(_.id).distinct.size
-    )
-
   def axislessStructuralAnchorInventoryJson(
       graph: TypedEvidenceGraph,
       lineRefSummary: LineNodeRef => JsObject

@@ -1490,16 +1490,10 @@ object MoveReviewPhase3AuditRunner:
         "failureReasonCounts" -> stringCountsJson(diagnostics.flatMap(_.failureReasons.map(failureReasonId)))
       ),
       "relativeCauseStageCounts" -> relativeCauseStageCountsJson(diagnostics),
-      "rootArbitrationQuality" -> rootArbitrationQualitySummaryJson(diagnostics),
       "structuralWitnessFunnel" -> structuralWitnessFunnelJson(diagnostics),
       "planTechniqueEligibilityFunnel" -> planTechniqueEligibilityFunnelJson(diagnostics),
       "structuralOpportunityGenerationFunnel" -> structuralOpportunityGenerationFunnelJson(diagnostics)
     )
-
-  private[qc] def rootArbitrationQualitySummaryJson(
-      diagnostics: List[CandidateComparisonDiagnostic]
-  ): JsObject =
-    MoveReviewPhase3AuditMetrics.rootArbitrationQualitySummaryJson(diagnostics)
 
   private def referenceLeadSemanticAxis(diagnostic: CandidateComparisonDiagnostic): Boolean =
     diagnostic.decisionTrace.semanticAxisDiagnostics.referenceLeadAxes.nonEmpty
