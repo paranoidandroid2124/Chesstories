@@ -2869,8 +2869,8 @@ object MoveMeaningClaim:
       MoveMeaningClaim(
         meaningKind = meaningKind,
         role = claimRole,
-        laneKey = laneKey(meaningKind, detail, surfaceObjectSignatures),
-        conflictKey = conflictKey(meaningKind, detail, surfaceObjectSignatures),
+        laneKey = laneKey(meaningKind, detail, boardCarriers),
+        conflictKey = conflictKey(meaningKind, detail, boardCarriers),
         supportLevel = support,
         visibility = visibility(support),
         surfaceLane =
@@ -2936,8 +2936,9 @@ object MoveMeaningClaim:
       detail: PositionPlanTechniqueSemanticDetail
   ): List[MoveMeaningSurfaceBoardCarrier] =
     (
-      detail.structuralRouteMove.toList.map(move => publicMoveCarrier("actor", move)) ++
+        detail.structuralRouteMove.toList.map(move => publicMoveCarrier("actor", move)) ++
         detail.structuralPurposeSubjects.flatMap(publicStructuralSubjectCarriers) ++
+        publicPlanSubjectCarriers(detail) ++
         detail.breakFile.toList.flatMap(file => publicFileCarrier("target", file)) ++
         detail.counterBreakFiles.flatMap(file => publicFileCarrier("target", file)) ++
         detail.resourceContestFiles.flatMap(file => publicFileCarrier("target", file)) ++
@@ -2965,6 +2966,15 @@ object MoveMeaningClaim:
         publicPieceCarrier("actor", piece) ++ publicSquareCarrier("actor", square) ++ publicSquareCarrier("target", square)
       case _ =>
         Nil
+
+  private def publicPlanSubjectCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
+    if detail.unit != PositionPlanTechniqueUnit.PlanOptionSet then Nil
+    else
+      (detail.matchedPlanIds ++ detail.referencePlanIds ++ detail.candidatePlanIds)
+        .map(_.trim.toLowerCase)
+        .filter(_.nonEmpty)
+        .distinct
+        .map(value => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", value))
 
   private def publicObjectCarrierReady(boardCarriers: List[MoveMeaningSurfaceBoardCarrier]): Boolean =
     boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind != "Move")
@@ -4942,55 +4952,31 @@ object MoveMeaningClaim:
   private def laneKey(
       meaningKind: String,
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String]
+      boardCarriers: List[MoveMeaningSurfaceBoardCarrier]
   ): String =
     List(
       s"kind=$meaningKind",
       detail.axisKey.map(value => s"axis=$value").getOrElse(s"axis=${detail.axisKind.map(_.toString).getOrElse("none")}"),
-      s"object=${semanticObjectKey(detail, objectSignatures)}"
+      s"object=${semanticObjectKey(boardCarriers)}"
     ).mkString("|")
 
   private def conflictKey(
       meaningKind: String,
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String]
+      boardCarriers: List[MoveMeaningSurfaceBoardCarrier]
   ): Option[String] =
     Option.when(meaningKind == "PlanContinuity" || meaningKind == "PawnBreakTiming")(
       List(
         s"kind=$meaningKind",
         detail.axisKey.map(value => s"axis=$value").getOrElse(s"axis=${detail.axisKind.map(_.toString).getOrElse("none")}"),
-        s"object=${semanticObjectKey(detail, objectSignatures)}"
+        s"object=${semanticObjectKey(boardCarriers)}"
       ).mkString("|")
     )
 
   private def semanticObjectKey(
-      detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String]
+      boardCarriers: List[MoveMeaningSurfaceBoardCarrier]
   ): String =
-    val exactObjects =
-      objectSignatures
-        .flatMap(signature =>
-          signature.split("\\|").toList.collect {
-            case part if part.startsWith("target=") && !part.contains("=Side:") => part
-            case part if part.startsWith("actor=") && !part.contains("=Side:")  => part
-          }
-        )
-        .distinct
-        .sorted
-    val detailObjects =
-      (
-        detail.breakFile.map(value => s"breakFile=$value").toList ++
-          detail.tensionEdges.map(value => s"tensionEdge=$value") ++
-          detail.tensionSquares.map(value => s"tensionSquare=$value") ++
-          detail.counterBreakFiles.map(value => s"counterBreakFile=$value") ++
-          detail.resourceContestSquares.map(value => s"resourceContestSquare=$value") ++
-          detail.resourceContestFiles.map(value => s"resourceContestFile=$value") ++
-          detail.matchedPlanIds.map(value => s"matchedPlan=$value") ++
-          detail.referencePlanIds.map(value => s"referencePlan=$value") ++
-          detail.candidatePlanIds.map(value => s"candidatePlan=$value") ++
-          detail.structuralPurposeSubjects.map(value => s"subject=$value")
-      ).distinct.sorted
-    (exactObjects ++ detailObjects).take(6).mkString(";") match
+    boardCarriers.map(carrier => s"${carrier.role}=${carrier.kind}:${carrier.value}").distinct.sorted.take(6).mkString(";") match
       case ""    => "none"
       case value => value
 
