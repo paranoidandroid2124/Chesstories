@@ -730,7 +730,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
   private def semanticRubricSlotRows(diagnostic: CandidateComparisonDiagnostic): List[SemanticRubricSlotRow] =
     val publicRows =
       diagnostic.moveJudgmentView.publicMoveMeaningClaimDiagnostics.map(claim =>
-        semanticRubricSlotRow(diagnostic, claim.unit, claim.axisKey)
+        semanticRubricSlotRow(diagnostic, claim.unit, claim.axisKey, Some(claim))
       )
     val viewOnlyRows =
       diagnostic.moveJudgmentView.positionPlanTechniqueUnits
@@ -743,7 +743,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
   private def semanticRubricSlotRow(
       diagnostic: CandidateComparisonDiagnostic,
       unit: PositionPlanTechniqueUnit,
-      axisKey: Option[String]
+      axisKey: Option[String],
+      surfaceClaim: Option[PublicMoveMeaningClaimDiagnostic] = None
   ): SemanticRubricSlotRow =
     val view = diagnostic.moveJudgmentView
     val frameIds = view.positionPlanTechniqueFrameIds
@@ -770,8 +771,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     val objectBound =
       objectBindingSignatures.nonEmpty
     val publicSurfaceClaimDiagnostics =
-      view.publicMoveMeaningClaimDiagnostics.filter(diagnostic =>
-        semanticRubricSurfaceClaimMatches(diagnostic, unit, axisKey)
+      surfaceClaim.map(List(_)).getOrElse(
+        view.publicMoveMeaningClaimDiagnostics.filter(diagnostic =>
+          semanticRubricSurfaceClaimMatches(diagnostic, unit, axisKey)
+        )
       )
     val publicSurfaceClaimWithCarrier =
       publicSurfaceClaimDiagnostics.filter(_.hasCarrier)
