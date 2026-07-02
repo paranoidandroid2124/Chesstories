@@ -109,6 +109,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const problemMove = bad || playableLoss;
   const mainPlayed = evidencePlayed.filter(s => s.priority === 'main');
   const localIdeas = played.filter(s => s.assessment?.is_local_idea && hasEvidenceCarrier(s));
+  const verdictReasons = evidencePlayed.filter(s => s.assessment?.is_verdict_reason);
   const positionEvidence = problemMove ? evidenceReference : evidencePlayed;
   const solved = uniqueLabels(positionEvidence.map(ideaLabel)).slice(0, 4);
   const localIdeaLabels = uniqueLabels(localIdeas.map(ideaLabel)).slice(0, 4);
@@ -116,7 +117,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
   const losses = uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels));
   const targets = uniqueLabels(positionEvidence.flatMap(targetLabels)).slice(0, 5);
-  const problem = firstLabel(mainPlayed.flatMap(problemLabels));
+  const problem = firstLabel(verdictReasons.flatMap(problemLabels));
   const referenceIdeas = uniqueLabels(evidenceReference.map(ideaLabel)).slice(0, 3);
   const handled = [...solved, ...terminal];
   const currentChange = targets.length ? joinHuman(targets) : solved.length ? joinHuman(solved) : '';
@@ -156,7 +157,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
           ? `The move is not just a verdict; it changes ${currentChange}.`
           : 'The graph has a verdict, but not enough public carrier evidence to explain the move.',
       pending: false,
-      items: (problemMove ? uniqueLabels(mainPlayed.flatMap(problemLabels)) : mainPlayed.map(summaryLine).filter(Boolean)).slice(0, 3),
+      items: (problemMove ? uniqueLabels(verdictReasons.flatMap(problemLabels)) : mainPlayed.map(summaryLine).filter(Boolean)).slice(0, 3),
       tone: problemMove ? 'bad' : 'good',
     },
     {
@@ -258,6 +259,12 @@ function targetLabels(semantic: ChesstoryMoveSemantic): string[] {
   ];
 }
 
+function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
+  return (semantic.evidence?.board_carriers || []).map(carrier =>
+    [carrier.value, carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : undefined].filter(Boolean).join(' '),
+  );
+}
+
 function techniqueLabels(semantic: ChesstoryMoveSemantic): string[] {
   const technique = semantic.endgame_technique;
   if (!technique) return [];
@@ -309,6 +316,8 @@ function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
   if (technique.length) return `The ending technique evidence is ${joinHuman(technique)}.`;
   const targets = uniqueLabels(evidenceSemantics.flatMap(targetLabels));
   if (targets.length) return `The concrete board evidence is ${joinHuman(targets.slice(0, 5))}.`;
+  const carriers = uniqueLabels(evidenceSemantics.flatMap(boardCarrierLabels));
+  if (carriers.length) return `The concrete board evidence is ${joinHuman(carriers.slice(0, 5))}.`;
   return undefined;
 }
 
@@ -316,6 +325,7 @@ function evidenceItems(semantics: ChesstoryMoveSemantic[]): string[] {
   return uniqueLabels(
     semantics.filter(hasEvidenceCarrier).flatMap(s => [
       ...targetLabels(s),
+      ...boardCarrierLabels(s),
       ...(s.terminal_consequences || []).map(codeLabel),
       ...techniqueLabels(s),
     ]),

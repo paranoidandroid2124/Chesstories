@@ -71,6 +71,7 @@ describe('chesstory brief scaffold', () => {
           idea: { code: 'piece_activity', label: 'piece activity' },
           assessment: {
             is_local_idea: true,
+            is_verdict_reason: true,
             problem: { code: 'loses_activity', label: 'loses activity' },
             failure_family: { code: 'wrong_route', label: 'wrong route' },
           },
@@ -114,6 +115,7 @@ describe('chesstory brief scaffold', () => {
           idea: { code: 'piece_activity', label: 'piece activity' },
           assessment: {
             is_local_idea: true,
+            is_verdict_reason: true,
             problem: { code: 'loses_activity', label: 'loses activity' },
           },
           target: { squares: ['e4', 'g3'], pieces: ['knight'] },
@@ -253,6 +255,29 @@ describe('chesstory brief scaffold', () => {
     assert.doesNotMatch(current?.body || '', /gives up more than its idea solves/);
   });
 
+  test('uses only verdict-reason semantics for bad-move problem prose', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'bad', played_move: 'e4g3', reference_move: 'e4f6' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'bad',
+          priority: 'main',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          assessment: {
+            is_verdict_reason: false,
+            problem: { code: 'loses_activity', label: 'loses activity' },
+          },
+          evidence: { has_carrier: true, proof_level: 'surface_evidence' },
+        },
+      ],
+    });
+
+    const current = sections.find(section => section.key === 'current-decision');
+    assert.doesNotMatch(current?.body || '', /loses activity/);
+    assert.deepEqual(current?.items, []);
+  });
+
   test('does not let carrierless played semantics choose bad-move framing without a verdict', () => {
     const sections = chesstoryBriefSections({
       move_semantics: [
@@ -381,6 +406,29 @@ describe('chesstory brief scaffold', () => {
     assert.match(current?.body || '', /not enough public carrier evidence/);
     assert.match(evidence?.body || '', /not enough public evidence/);
     assert.deepEqual(evidence?.items, []);
+  });
+
+  test('uses public board carriers when targets are absent', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'good', played_move: 'g1f3', reference_move: 'g1f3' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'main',
+          idea: { code: 'piece_route', label: 'piece route' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            board_carriers: [{ role: 'actor', kind: 'Move', value: 'g1f3', from: 'g1', to: 'f3' }],
+          },
+        },
+      ],
+    });
+
+    const evidence = sections.find(section => section.key === 'evidence');
+    assert.match(evidence?.body || '', /g1f3/);
+    assert.match(JSON.stringify(evidence?.items || []), /g1f3/);
   });
 
   test('requires explicit evidence carriers before writing terminal or technique prose', () => {
