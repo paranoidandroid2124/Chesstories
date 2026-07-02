@@ -1907,24 +1907,17 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
         semanticRubricSurfaceClaimMatches(diagnostic, unit, axisKey)
       )
     val publicSurfaceClaimSignatures = publicSurfaceClaimDiagnostics.map(_.signature)
-    val publicSurfaceClaimSurfaced =
-      publicSurfaceClaimDiagnostics.nonEmpty
-    val publicSurfaceClaimCauseIds =
-      publicSurfaceClaimDiagnostics.flatMap(_.causeEvidenceIds).distinct.sorted
+    val publicSurfaceClaimWithCarrier =
+      publicSurfaceClaimDiagnostics.filter(_.hasCarrier)
     val ownedCauseLinked =
-      fallbackFlows.exists(flow =>
-        frameCauseIds.contains(flow.causeId) &&
-          (flow.hasOwnedTypedDepth || flow.hasOwnedAdmissibleLongTermProof) &&
-          publicSurfaceClaimCauseIds.contains(flow.causeId)
+      publicSurfaceClaimWithCarrier.exists(claim =>
+        claim.supportLevel == "owned_cause_linked" &&
+          claim.causeEvidenceIds.exists(frameCauseIds.contains)
       )
     val viewSurfaced =
-      publicSurfaceClaimSurfaced &&
+      publicSurfaceClaimWithCarrier.nonEmpty &&
         unitSurfaced &&
-        (
-          axisKey.forall(frameAxisKeys.contains) ||
-            fallbackFlows.exists(flow => frameCauseIds.contains(flow.causeId)) ||
-            axisKey.isEmpty
-        )
+        axisKey.forall(frameAxisKeys.contains)
     val clusteredCoherent =
       viewSurfaced &&
         decodedDetailSurfaced &&
