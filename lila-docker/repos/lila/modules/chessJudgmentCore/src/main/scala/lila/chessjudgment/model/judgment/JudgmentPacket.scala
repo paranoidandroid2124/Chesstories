@@ -367,7 +367,7 @@ object JudgmentSubjectBinding:
       (localLineBinding || playedTransitionBinding) && directEvidencePayload(record.payload)
     }
 
-  private def recordMentionsMove(record: EvidenceRecord, move: String): Boolean =
+  def recordMentionsMove(record: EvidenceRecord, move: String): Boolean =
     record.payload match
       case payload: MoveMotifEvidence =>
         sameMove(payload.moveUci, move)
@@ -418,22 +418,23 @@ object JudgmentSubjectBinding:
   def playedRelated(binding: SubjectBindingClass): Boolean =
     binding != SubjectBindingClass.Other
 
-  def sourceIdOwnsCurrentPlayedMove(sourceId: String, move: String): Boolean =
-    val normalizedId = sourceId.toLowerCase
-    val normalizedMove = normalizeMove(move).toLowerCase
-    normalizedId.contains(s":played:$normalizedMove") ||
-      normalizedId.contains(s":$normalizedMove:played-transition") ||
-      normalizedId.contains(s"played-transition:$normalizedMove") ||
-      normalizedId == "played-transition" ||
-      normalizedId == s"played-transition:$normalizedMove"
+  def sourceRecordOwnsCurrentPlayedMove(record: EvidenceRecord, move: String): Boolean =
+    recordMentionsMove(record, move) &&
+      (
+        record.ref.scope == EvidenceScope.PlayedTransition ||
+          record.ref.line.exists(line => line.role == LineNodeRole.Played && sameMove(line.rootMove, move))
+      )
 
-  def sourceIdOwnsPawnBreakMove(sourceId: String, move: String): Boolean =
-    val normalizedId = sourceId.toLowerCase
-    val normalizedMove = normalizeMove(move).toLowerCase
-    normalizedId.contains(s":played:$normalizedMove") ||
-      normalizedId.contains(s":reference:$normalizedMove") ||
-      normalizedId.contains(s":$normalizedMove:played-transition") ||
-      normalizedId.contains(s":$normalizedMove:reference-transition")
+  def sourceRecordOwnsPawnBreakMove(record: EvidenceRecord, move: String): Boolean =
+    recordMentionsMove(record, move) &&
+      (
+        record.ref.scope == EvidenceScope.PlayedTransition ||
+          record.ref.scope == EvidenceScope.ReferenceTransition ||
+          record.ref.line.exists(line =>
+            (line.role == LineNodeRole.Played || line.role == LineNodeRole.BestReference) &&
+              sameMove(line.rootMove, move)
+          )
+      )
 
   def normalizeMove(raw: String): String =
     Option(raw).getOrElse("").trim.toLowerCase
@@ -2560,7 +2561,7 @@ object MoveMeaningClaim:
             .filter(frame => frameMatches(evidenceGraph, frame, verdict))
             .flatMap(frame =>
               frame.semanticDetails.flatMap(detail =>
-                fromDetail(frame, detail, verdict, causeFramesById)
+                fromDetail(evidenceGraph, frame, detail, verdict, causeFramesById)
               )
             )
         )
@@ -2792,6 +2793,7 @@ object MoveMeaningClaim:
     candidateLineMoveMatches || referenceLineMoveMatches || contrastMatches
 
   private def fromDetail(
+      evidenceGraph: TypedEvidenceGraph,
       frame: PositionPlanTechniqueFrame,
       detail: PositionPlanTechniqueSemanticDetail,
       verdict: MoveJudgmentVerdictFrame,
@@ -2873,7 +2875,8 @@ object MoveMeaningClaim:
         claimLineRole,
         claimMove,
         frame.position.fen,
-        claimRole
+        claimRole,
+        evidenceGraph
       )
     yield
       val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, surfaceObjectSignatures)
@@ -2892,7 +2895,19 @@ object MoveMeaningClaim:
         supportLevel = support,
         visibility = visibility(support),
         surfaceLane =
-          surfaceLane(meaningKind, detail, surfaceObjectSignatures, verdict, claimLineRole, claimMove, frame.position.fen, support, roleCompatibleCauseFrames, claimRole),
+          surfaceLane(
+            evidenceGraph,
+            meaningKind,
+            detail,
+            surfaceObjectSignatures,
+            verdict,
+            claimLineRole,
+            claimMove,
+            frame.position.fen,
+            support,
+            roleCompatibleCauseFrames,
+            claimRole
+          ),
         lineRole = claimLineRole,
         moveUci = moveUci(verdict, claimLineRole),
         frameId = frame.id,
@@ -2904,7 +2919,7 @@ object MoveMeaningClaim:
         causeKinds = roleCompatibleCauseFrames.map(_.causeKind).distinct.sortBy(_.toString),
         causeSourceSides = roleCompatibleCauseFrames.map(_.causeSourceSide).distinct.sortBy(_.toString),
         causeEvidenceIds = linkedCauseIds,
-        sourceEvidenceIds = moveMeaningClaimSourceEvidenceIds(detail, verdict, claimLineRole, claimMove),
+        sourceEvidenceIds = moveMeaningClaimSourceEvidenceIds(evidenceGraph, detail, verdict, claimLineRole, claimMove),
         objectBindingSignatures = surfaceObjectSignatures,
         reasonTokens = reasonTokens(detail, surfaceObjectSignatures, linkedCauseIds, verdict, claimMove, frame.position.fen, claimRole),
         objectCarrierReady = EvidenceObjectBinding.playerFacingReadySignatures(surfaceObjectSignatures),
@@ -3017,7 +3032,8 @@ object MoveMeaningClaim:
       claimLineRole: String,
       claimMove: String,
       positionFen: String,
-      claimRole: String
+      claimRole: String,
+      evidenceGraph: TypedEvidenceGraph
   ): Option[String] =
     val hasConcreteObject = detailHasConcreteSurfaceObject(detail, objectSignatures)
     val specificObjectAxis = detailHasSpecificObjectAxis(detail)
@@ -3025,13 +3041,13 @@ object MoveMeaningClaim:
     val currentMoveClaim = currentMoveMeaningClaim(verdict, claimLineRole, claimMove)
     val directCurrentMoveCarrier =
       !currentMoveClaim ||
-        currentMoveDirectCarrier(detail, objectSignatures, claimMove)
+        currentMoveDirectCarrier(evidenceGraph, detail, objectSignatures, claimMove)
     lazy val currentMoveFunctionalProof =
       directCurrentMoveCarrier &&
-        currentMoveFunctionalDetailProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
+        currentMoveFunctionalDetailProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
     lazy val currentMoveSurfaceProof =
       directCurrentMoveCarrier &&
-        currentMoveSurfaceReady(meaningKind, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
+        currentMoveSurfaceReady(evidenceGraph, meaningKind, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
     val reasonGradeCauseFrames = roleCompatibleCauseFrames.filter(reasonGradeCauseFrame)
     val ownedCause =
       reasonGradeCauseFrames.exists(frame => frame.hasOwnedAdmissibleLongTermProof || frame.attributionDirectProofEligible)
@@ -3050,7 +3066,7 @@ object MoveMeaningClaim:
     val broadPlanContinuityCurrentMove =
       currentMoveClaim &&
         meaningKind == "PlanContinuity" &&
-        !planContinuityCurrentMoveFunctionReady(detail, objectSignatures, claimMove, positionFen)
+        !planContinuityCurrentMoveFunctionReady(evidenceGraph, detail, objectSignatures, claimMove, positionFen)
     val ownedMeaningReady =
       detail.unit match
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
@@ -3104,6 +3120,7 @@ object MoveMeaningClaim:
     else None
 
   private def currentMoveFunctionalDetailProof(
+      evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String],
       claimMove: String,
@@ -3113,7 +3130,7 @@ object MoveMeaningClaim:
     if terminalProofDetailOwnsClaimMove(detail, objectSignatures, claimMove) then true
     else
       val moveOwnedSource =
-        currentMoveCarrierSourceOwnsClaimMove(detail, claimMove)
+        currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove)
       detail.unit match
         case PositionPlanTechniqueUnit.PieceRerouteRoute =>
           moveOwnedSource &&
@@ -3140,7 +3157,7 @@ object MoveMeaningClaim:
             )
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
           moveOwnedSource &&
-            pawnBreakEvidenceOwnsClaimMove(detail, objectSignatures, claimMove) &&
+            pawnBreakEvidenceOwnsClaimMove(evidenceGraph, detail, objectSignatures, claimMove) &&
             pawnMoveFromPawn(positionFen, claimMove) &&
             pawnBreakOwnsClaimMove(detail, objectSignatures, claimMove) &&
             pawnBreakCurrentMoveFunctionalCarrier(detail)
@@ -3152,7 +3169,7 @@ object MoveMeaningClaim:
           moveOwnedSource &&
             counterplayRaceMeaningReady(detail, objectSignatures, claimMove, positionFen)
         case PositionPlanTechniqueUnit.PlanOptionSet =>
-          planContinuityCurrentMoveFunctionalProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
+          planContinuityCurrentMoveFunctionalProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
         case _ =>
           false
 
@@ -3184,13 +3201,14 @@ object MoveMeaningClaim:
       EvidenceObjectBinding.signatureTokens(signatureList, "target=").exists(EvidenceObjectBinding.concreteTargetToken)
 
   private def currentMoveDirectCarrier(
+      evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String],
       claimMove: String
   ): Boolean =
     val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
     val sourceOwnsCurrentMove =
-      currentMoveCarrierSourceOwnsClaimMove(detail, claimMove)
+      currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove)
     val objectOwnsCurrentMove =
       currentMoveProofObjectSignatures(objectSignatures)
         .exists(signature => moveTokens(List(signature)).contains(normalizedClaimMove))
@@ -3217,6 +3235,7 @@ object MoveMeaningClaim:
       EvidenceObjectBinding.signaturesForProofRole(objectSignatures, Some(RelativeCauseProofRole.ContrastProof))
 
   private def moveMeaningClaimSourceEvidenceIds(
+      evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail,
       verdict: MoveJudgmentVerdictFrame,
       claimLineRole: String,
@@ -3224,36 +3243,39 @@ object MoveMeaningClaim:
   ): List[String] =
     if currentMoveMeaningClaim(verdict, claimLineRole, claimMove) then
       (
-        currentMoveCarrierSourceEvidenceIds(detail, claimMove) ++
-          currentMoveStructureContextSourceEvidenceIds(detail)
+        currentMoveCarrierSourceEvidenceIds(evidenceGraph, detail, claimMove) ++
+          currentMoveStructureContextSourceEvidenceIds(evidenceGraph, detail)
       ).distinct.sorted
     else detail.sourceEvidenceIds.distinct.sorted
 
   private def currentMoveCarrierSourceEvidenceIds(
+      evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail,
       claimMove: String
   ): List[String] =
     (detail.sourceEvidenceIds ++ detail.candidateEvidenceIds)
       .distinct
       .sorted
-      .filter(JudgmentSubjectBinding.sourceIdOwnsCurrentPlayedMove(_, claimMove))
+      .filter(id => evidenceGraph.byId.get(id).exists(JudgmentSubjectBinding.sourceRecordOwnsCurrentPlayedMove(_, claimMove)))
 
   private def currentMoveStructureContextSourceEvidenceIds(
+      evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail
   ): List[String] =
     if structuralOpenCenterDevelopmentRoute(detail) then
-      detail.sourceEvidenceIds.filter(currentMoveStructureContextSourceId)
+      detail.sourceEvidenceIds.filter(id => evidenceGraph.byId.get(id).exists(currentMoveStructureContextRecord))
     else Nil
 
-  private def currentMoveStructureContextSourceId(id: String): Boolean =
-    val normalized = id.toLowerCase
-    normalized.contains("pawn-structure")
+  private def currentMoveStructureContextRecord(record: EvidenceRecord): Boolean =
+    record.ref.producer == EvidenceProducer.PawnStructureProducer ||
+      record.payload.isInstanceOf[PawnStructureFactEvidence]
 
   private def currentMoveCarrierSourceOwnsClaimMove(
+      evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail,
       claimMove: String
   ): Boolean =
-    currentMoveCarrierSourceEvidenceIds(detail, claimMove).nonEmpty
+    currentMoveCarrierSourceEvidenceIds(evidenceGraph, detail, claimMove).nonEmpty
 
   private def reasonGradeCauseFrame(frame: MoveJudgmentCauseFrame): Boolean =
     (
@@ -3288,13 +3310,14 @@ object MoveMeaningClaim:
       (claimRole == "ExplainsMoveFunction" && !negativeStrategicDetail(detail))
 
   private def planContinuityCurrentMoveFunctionReady(
+      evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String],
       claimMove: String,
       positionFen: String
   ): Boolean =
     detailHasConcreteSurfaceObject(detail, objectSignatures) &&
-      planContinuityCurrentMoveFunctionalProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim = true)
+      planContinuityCurrentMoveFunctionalProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim = true)
 
   private def currentMoveMeaningClaim(
       verdict: MoveJudgmentVerdictFrame,
@@ -3311,6 +3334,7 @@ object MoveMeaningClaim:
       normalizedClaimMove == candidateMove
 
   private def currentMoveSurfaceReady(
+      evidenceGraph: TypedEvidenceGraph,
       meaningKind: String,
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String],
@@ -3320,9 +3344,9 @@ object MoveMeaningClaim:
   ): Boolean =
     detail.unit match
       case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
-        currentMoveFunctionalDetailProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
+        currentMoveFunctionalDetailProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
       case PositionPlanTechniqueUnit.CounterplayRace =>
-        currentMoveFunctionalDetailProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim) ||
+        currentMoveFunctionalDetailProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim) ||
           (
             counterplayRaceMeaningReady(detail, objectSignatures, claimMove, positionFen) &&
               moveTokens(objectSignatures).contains(JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase)
@@ -3338,9 +3362,9 @@ object MoveMeaningClaim:
         generalDetailOwnsClaimMove(detail, objectSignatures, claimMove) &&
           (!currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove) || explicitNegativeActivityCarrier(detail))
       case PositionPlanTechniqueUnit.SpacePreventionResourceDenial | PositionPlanTechniqueUnit.StructuralTransformation =>
-        currentMoveFunctionalDetailProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
+        currentMoveFunctionalDetailProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
       case PositionPlanTechniqueUnit.PlanOptionSet =>
-        planContinuityCurrentMoveFunctionalProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
+        planContinuityCurrentMoveFunctionalProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
       case PositionPlanTechniqueUnit.EndgameTechniqueRecipe =>
         endgameTechniqueHorizonViewShape(detail) &&
           detailOwnsClaimMove(detail, objectSignatures, claimMove)
@@ -3348,6 +3372,7 @@ object MoveMeaningClaim:
         detailOwnsClaimMove(detail, objectSignatures, claimMove)
 
   private def planContinuityCurrentMoveFunctionalProof(
+      evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String],
       claimMove: String,
@@ -3371,7 +3396,7 @@ object MoveMeaningClaim:
     val ownsCurrentMoveSource =
       currentMoveClaim &&
         (
-          currentMoveCarrierSourceOwnsClaimMove(detail, claimMove) ||
+          currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove) ||
             typedCurrentMoveProof
         )
     val planSignal =
@@ -3872,14 +3897,17 @@ object MoveMeaningClaim:
       )
 
   private def pawnBreakEvidenceOwnsClaimMove(
+      evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String],
       claimMove: String
   ): Boolean =
     val normalizedMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
     val sourceOwnsMove =
-      currentMoveCarrierSourceOwnsClaimMove(detail, claimMove) ||
-        detail.sourceEvidenceIds.exists(JudgmentSubjectBinding.sourceIdOwnsPawnBreakMove(_, claimMove))
+      currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove) ||
+        detail.sourceEvidenceIds.exists(id =>
+          evidenceGraph.byId.get(id).exists(JudgmentSubjectBinding.sourceRecordOwnsPawnBreakMove(_, claimMove))
+        )
     sourceOwnsMove ||
       moveTokens(objectSignatures).contains(normalizedMove) ||
       detail.structuralRouteMove.exists(move => sameMove(move, claimMove))
@@ -5044,6 +5072,7 @@ object MoveMeaningClaim:
       case _                    => "soft_context"
 
   private def surfaceLane(
+      evidenceGraph: TypedEvidenceGraph,
       meaningKind: String,
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String],
@@ -5069,7 +5098,7 @@ object MoveMeaningClaim:
         detail.candidateEvidenceIds.isEmpty &&
         !currentMove
     lazy val currentMoveSurfaceReadyForLane =
-      currentMoveSurfaceReady(meaningKind, detail, objectSignatures, claimMove, positionFen, currentMove)
+      currentMoveSurfaceReady(evidenceGraph, meaningKind, detail, objectSignatures, claimMove, positionFen, currentMove)
     val ownedCandidateCauseOwnsCurrentMove =
       currentMove &&
         linkedCauseFrames.exists(frame => reasonGradeCauseFrame(frame) && ownedCandidateCauseFrameOwnsClaimMove(frame, claimMove))
