@@ -2706,7 +2706,7 @@ object MoveMeaningClaim:
         causeSourceSides = list.flatMap(_.causeSourceSides).distinct.sortBy(_.toString),
         causeEvidenceIds = list.flatMap(_.causeEvidenceIds).distinct.sorted,
         sourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted,
-        objectBindingSignatures = list.flatMap(_.objectBindingSignatures).distinct.sorted,
+        objectBindingSignatures = Nil,
         reasonTokens = Nil,
         comparisonLossSides = list.flatMap(_.comparisonLossSides).distinct.sorted,
         comparisonLossKinds = list.flatMap(_.comparisonLossKinds).distinct.sorted,
@@ -2899,7 +2899,7 @@ object MoveMeaningClaim:
         causeSourceSides = roleCompatibleCauseFrames.map(_.causeSourceSide).distinct.sortBy(_.toString),
         causeEvidenceIds = linkedCauseIds,
         sourceEvidenceIds = moveMeaningClaimSourceEvidenceIds(evidenceGraph, detail, verdict, claimLineRole, claimMove),
-        objectBindingSignatures = surfaceObjectSignatures,
+        objectBindingSignatures = Nil,
         reasonTokens = Nil,
         comparisonLossSides =
           PositionPlanTechniqueSemanticDetail
