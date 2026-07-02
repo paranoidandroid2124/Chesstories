@@ -1869,6 +1869,7 @@ object MoveMeaningSurface:
 
   private def publicSurfaceClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
     publicSurfaceClaim(claim) &&
+      evidenceForClaim(claim).hasCarrier &&
       !terminalOverriddenEndgameTechniqueShadowed(view, claim) &&
       publicSpecificPlanContinuityClaim(view, claim) &&
       publicCurrentMoveFunctionClaim(view, claim) &&
@@ -1895,17 +1896,8 @@ object MoveMeaningSurface:
 
   private def publicCurrentMoveFunctionClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
     claim.surfaceLane != "current_move_function" ||
-      (
-        claim.meaningKind == "PlanContinuity" &&
-          MoveMeaningClaim.currentMovePlanContinuityFunctionReady(view.moveMeaningClaims, claim)
-      ) ||
-      claim.causeEvidenceIds.nonEmpty ||
-      claim.supportLevel == "owned_cause_linked" ||
-      terminalConsequenceCodes(claim).nonEmpty ||
-      (
-        claim.sourceEvidenceIds.nonEmpty &&
-          EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
-      )
+      claim.meaningKind != "PlanContinuity" ||
+      MoveMeaningClaim.currentMovePlanContinuityFunctionReady(view.moveMeaningClaims, claim)
 
   private def publicSpecificPlanContinuityClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
     if claim.meaningKind != "PlanContinuity" then true
@@ -2024,13 +2016,13 @@ object MoveMeaningSurface:
       technique: Option[MoveMeaningSurfaceEndgameTechnique]
   ): MoveMeaningSurfaceEvidence =
     val boardCarriers = publicBoardCarriers(claim.objectBindingSignatures, target)
-    val hasBoardCarrier = boardCarriers.nonEmpty
+    val hasBoardCarrier = publicObjectBoardCarriers(claim.objectBindingSignatures).nonEmpty
     val causeCarrier = claim.causeEvidenceIds.nonEmpty && hasBoardCarrier
     val objectCarrier = EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
     val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
     val targetBound = target.squares.nonEmpty || target.files.nonEmpty || target.pieces.nonEmpty
-    val terminalCarrier = terminal.nonEmpty && (targetBound || objectCarrier)
-    val techniqueCarrier = technique.nonEmpty && (targetBound || objectCarrier)
+    val terminalCarrier = terminal.nonEmpty && hasBoardCarrier
+    val techniqueCarrier = technique.nonEmpty && hasBoardCarrier
     val hasCarrier = causeCarrier || sourceCarrier || terminalCarrier || techniqueCarrier
     val proofLevel =
       if terminalCarrier then "terminal_proof"
@@ -2061,6 +2053,10 @@ object MoveMeaningSurface:
     ).distinct.sortBy(carrier =>
       (carrier.role, carrier.kind, carrier.value, carrier.from.getOrElse(""), carrier.to.getOrElse(""))
     ).take(8)
+
+  private def publicObjectBoardCarriers(objectBindingSignatures: List[String]): List[MoveMeaningSurfaceBoardCarrier] =
+    objectBindingSignatures
+      .flatMap(signature => EvidenceObjectBinding.signatureParts(signature).flatMap(publicBoardCarrierPart))
 
   private def publicBoardCarrierPart(part: String): Option[MoveMeaningSurfaceBoardCarrier] =
     val keyValue = part.split("=", 2)

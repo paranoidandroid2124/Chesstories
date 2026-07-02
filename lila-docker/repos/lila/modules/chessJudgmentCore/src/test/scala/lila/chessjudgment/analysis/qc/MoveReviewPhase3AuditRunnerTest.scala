@@ -3445,7 +3445,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     )
     assertEquals(badSurface, Nil)
 
-  test("move meaning public evidence requires a board carrier for claim proof"):
+  test("move meaning public surface requires a board carrier for claim proof"):
     val proofOnlyClaim = MoveMeaningClaim(
       meaningKind = "PieceActivity",
       role = "ImprovesPieceActivity",
@@ -3467,7 +3467,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       causeEvidenceIds = List("cause-proof-only"),
       sourceEvidenceIds = Nil,
       objectBindingSignatures = Nil,
-      reasonTokens = Nil
+      reasonTokens = Nil,
+      targetSquares = List("e4")
     )
     val surface = MoveMeaningSurface.from(
       meaningClaimView(
@@ -3477,11 +3478,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       ).copy(moveMeaningClaims = List(proofOnlyClaim))
     )
 
-    assertEquals(surface.map(_.ideaType), List("piece_activity"))
-    assertEquals(surface.head.evidence.hasCarrier, false)
-    assertEquals(surface.head.evidence.proofLevel, "none")
-    assertEquals(surface.head.evidence.boardCarriers, Nil)
-    assertEquals(surface.head.evidence.causeIds, List("cause-proof-only"))
+    assertEquals(surface, Nil)
 
   test("move meaning public evidence scans all object signatures before capping board carriers"):
     val fillerSignatures =
@@ -3662,11 +3659,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
           )
         )
       )
-    assertEquals(targetlessSurface.map(_.ideaType), List("terminal_mate"))
-    assertEquals(targetlessSurface.head.evidence.hasCarrier, false)
-    assertEquals(targetlessSurface.head.evidence.proofLevel, "none")
-    assertEquals(targetlessSurface.head.evidence.targetBound, false)
-    assertEquals(targetlessSurface.head.evidence.boardCarriers, Nil)
+    assertEquals(targetlessSurface, Nil)
 
   test("move meaning claims do not call bare weak-square target pressure a piece route"):
     val targetSignature =
