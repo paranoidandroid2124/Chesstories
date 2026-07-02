@@ -235,15 +235,13 @@ function codeLabel(code?: ChesstoryCode): string {
 }
 
 function ideaLabel(semantic: ChesstoryMoveSemantic): string {
-  return codeLabel(semantic.idea) || semantic.idea_type?.replace(/_/g, ' ') || '';
+  return codeLabel(semantic.idea);
 }
 
 function problemLabels(semantic: ChesstoryMoveSemantic): string[] {
   return [
     semantic.assessment?.problem,
     semantic.assessment?.failure_family,
-    semantic.problem ? { label: semantic.problem } : undefined,
-    semantic.failure_family ? { label: semantic.failure_family } : undefined,
   ]
     .map(codeLabel)
     .filter(Boolean);

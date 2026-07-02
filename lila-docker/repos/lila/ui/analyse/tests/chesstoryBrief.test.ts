@@ -60,6 +60,27 @@ describe('chesstory brief scaffold', () => {
     assert.ok(sections.every(section => !section.pending));
   });
 
+  test('does not invent public labels from legacy semantic strings', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'bad', played_move: 'e4g3', reference_move: 'e4f6' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'bad',
+          priority: 'main',
+          idea_type: 'TensionBreakPolicyRoute',
+          assessment: { is_verdict_reason: true },
+          problem: 'legacy problem',
+          failure_family: 'legacy family',
+          evidence: { has_carrier: true, proof_level: 'owned_cause' },
+        },
+      ],
+    });
+
+    const text = JSON.stringify(sections);
+    assert.doesNotMatch(text, /TensionBreakPolicyRoute|legacy problem|legacy family/);
+  });
+
   test('separates a bad move local idea from the actual failure and comparison', () => {
     const sections = chesstoryBriefSections({
       verdict: { move_quality: 'bad', played_move: 'e4g3', reference_move: 'e4f6' },
