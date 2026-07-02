@@ -178,9 +178,19 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
         positionPlanTechniqueObjectBindingSignatures = List(objectSignature),
         positionPlanTechniqueRelativeCauseEvidenceIds = if causes.nonEmpty then List(causeId) else Nil,
-        publicMoveMeaningClaimSurfaceSignatures =
+        publicMoveMeaningClaimDiagnostics =
           List(
-            s"unit=StructuralTransformation|axis=none|kind=TerminalProof|support=$support|lane=$lane|lineRole=candidate|move=$move|causes=$causeId|sources=line:$id|proof=DirectProof|carrier=true|boardCarrier=true|objects=${objectSignature.replace('|', ';')}"
+            publicMoveMeaningClaimDiagnostic(
+              unit = PositionPlanTechniqueUnit.StructuralTransformation,
+              meaningKind = "TerminalProof",
+              supportLevel = support,
+              surfaceLane = lane,
+              lineRole = "candidate",
+              moveUci = move,
+              causeEvidenceIds = if causeId == "none" then Nil else List(causeId),
+              sourceEvidenceIds = List(s"line:$id"),
+              proofLevel = "DirectProof"
+            )
           )
       )
 
@@ -413,8 +423,17 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
         positionPlanTechniqueObjectBindingSignatures = List("target=Pawn:e4|mechanism=Mechanism:pawn-break|proof=DirectProof"),
         positionPlanTechniqueRelativeCauseEvidenceIds = List("cause-central-break"),
-        publicMoveMeaningClaimSurfaceSignatures =
-          List("unit=TensionBreakPolicyRoute|axis=PawnBreak:Support:central-break-timing|kind=PawnBreakTiming|support=owned_cause_linked|lane=current_move_owned|causes=cause-central-break|carrier=true|boardCarrier=true|objects=target=Pawn:e4;mechanism=Mechanism:pawn-break"),
+        publicMoveMeaningClaimDiagnostics =
+          List(
+            publicMoveMeaningClaimDiagnostic(
+              unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
+              axisKey = Some("PawnBreak:Support:central-break-timing"),
+              meaningKind = "PawnBreakTiming",
+              supportLevel = "owned_cause_linked",
+              surfaceLane = "current_move_owned",
+              causeEvidenceIds = List("cause-central-break")
+            )
+          ),
         primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
       )
     val borrowed =
@@ -466,8 +485,17 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
         positionPlanTechniqueObjectBindingSignatures = List("target=Pawn:e4|mechanism=Mechanism:pawn-break|proof=DirectProof"),
         positionPlanTechniqueRelativeCauseEvidenceIds = relativeCauseEvidenceIds,
-        publicMoveMeaningClaimSurfaceSignatures =
-          List("unit=TensionBreakPolicyRoute|axis=PawnBreak:Support:central-break-timing|kind=PawnBreakTiming|support=owned_cause_linked|lane=current_move_owned|causes=cause-central-break|carrier=true|boardCarrier=true|objects=target=Pawn:e4;mechanism=Mechanism:pawn-break"),
+        publicMoveMeaningClaimDiagnostics =
+          List(
+            publicMoveMeaningClaimDiagnostic(
+              unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
+              axisKey = Some("PawnBreak:Support:central-break-timing"),
+              meaningKind = "PawnBreakTiming",
+              supportLevel = "owned_cause_linked",
+              surfaceLane = "current_move_owned",
+              causeEvidenceIds = List("cause-central-break")
+            )
+          ),
         primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
       )
     val slot =
@@ -664,8 +692,16 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueObjectBindingSignatures =
           List("target=Square:d8|mechanism=Mechanism:EndgameTechnique|proof=DirectProof"),
         positionPlanTechniqueRelativeCauseEvidenceIds = List(causeId),
-        publicMoveMeaningClaimSurfaceSignatures =
-          List(s"unit=EndgameTechniqueRecipe|axis=none|kind=RookEndgameTechnique|support=owned_cause_linked|lane=current_move_owned|causes=$causeId|carrier=true|boardCarrier=true|objects=target=Square:d8;mechanism=Mechanism:EndgameTechnique"),
+        publicMoveMeaningClaimDiagnostics =
+          List(
+            publicMoveMeaningClaimDiagnostic(
+              unit = PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
+              meaningKind = "RookEndgameTechnique",
+              supportLevel = "owned_cause_linked",
+              surfaceLane = "current_move_owned",
+              causeEvidenceIds = List(causeId)
+            )
+          ),
         primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
       )
 
@@ -1105,8 +1141,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         "rook-pattern:RookBehindPassedPawn",
         "requiredSquare:f8"
       )
-    val publicSurfaceSignature =
-      "unit=EndgameTechniqueRecipe|axis=none|kind=RookEndgameTechnique|support=view_surfaced|lane=current_move_function|causes=none|sources=line:rook-horizon|proof=DirectProof|carrier=true|boardCarrier=true|objects=target=Square:f8"
     val diagnostic =
       comparisonDiagnostic(
         id = "cmp-rook-recognition-view",
@@ -1120,7 +1154,17 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.EndgameTechniqueRecipe),
         positionPlanTechniqueSemanticDetailTokens = detailTokens,
         positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
-        publicMoveMeaningClaimSurfaceSignatures = List(publicSurfaceSignature)
+        publicMoveMeaningClaimDiagnostics =
+          List(
+            publicMoveMeaningClaimDiagnostic(
+              unit = PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
+              meaningKind = "RookEndgameTechnique",
+              supportLevel = "view_surfaced",
+              surfaceLane = "current_move_function",
+              sourceEvidenceIds = List("line:rook-horizon"),
+              proofLevel = "DirectProof"
+            )
+          )
       )
     val detailOnlyDiagnostic =
       diagnostic.copy(
@@ -1155,8 +1199,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((detailOnlyCoverage \ "slots" \ 0 \ "terminalStage").as[String], "semantic_detected")
 
   test("recognition view slots without token probes match public current move surface"):
-    val publicSurfaceSignature =
-      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=view_surfaced|lane=current_move_function|causes=none|sources=route-src|proof=none|carrier=true|boardCarrier=true|objects=target=Piece:knight"
     val diagnostic =
       comparisonDiagnostic(
         id = "cmp-route-recognition-view",
@@ -1170,7 +1212,16 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.PieceRerouteRoute),
         positionPlanTechniqueSemanticDetailTokens = List("unit:PieceRerouteRoute"),
         positionPlanTechniqueSemanticDetailTokenGroups = List(List("unit:PieceRerouteRoute")),
-        publicMoveMeaningClaimSurfaceSignatures = List(publicSurfaceSignature)
+        publicMoveMeaningClaimDiagnostics =
+          List(
+            publicMoveMeaningClaimDiagnostic(
+              unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+              meaningKind = "PieceRoute",
+              supportLevel = "view_surfaced",
+              surfaceLane = "current_move_function",
+              sourceEvidenceIds = List("route-src")
+            )
+          )
       )
     val recognitionSlot =
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
@@ -1207,7 +1258,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailTokenGroups = List(List("unit:PlanOptionSet", "minorityAttack:true")),
         positionPlanTechniqueObjectBindingSignatures =
           List("target=PlanSubject:pawnbreakpreparation|mechanism=Mechanism:plan-pressure"),
-        publicMoveMeaningClaimSurfaceSignatures = Nil
+        publicMoveMeaningClaimDiagnostics = Nil
       )
     val slot =
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
@@ -1242,7 +1293,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.PieceRerouteRoute),
         positionPlanTechniqueSemanticDetailTokens = List("unit:PieceRerouteRoute"),
         positionPlanTechniqueSemanticDetailTokenGroups = List(List("unit:PieceRerouteRoute")),
-        publicMoveMeaningClaimSurfaceSignatures = Nil
+        publicMoveMeaningClaimDiagnostics = Nil
       )
     val recognitionSlot =
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
@@ -1262,8 +1313,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     val causeId = "cause-reference-break"
     val detailTokens =
       List("unit:TensionBreakPolicyRoute", "axisKind:PawnBreak", "breakFile:e", s"causeEvidenceId:$causeId")
-    val publicReferenceOwnedSignature =
-      s"unit=TensionBreakPolicyRoute|axis=$axis|kind=PawnBreakTiming|support=owned_cause_linked|lane=reference_or_opponent_resource|lineRole=reference|move=e6e5|causes=$causeId|carrier=true|boardCarrier=true|objects=target=File:e;mechanism=Mechanism:pawnbreak"
     val diagnostic =
       comparisonDiagnostic(
         id = "cmp-reference-owned-pawn-break",
@@ -1281,7 +1330,19 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
         positionPlanTechniqueObjectBindingSignatures = List("target=File:e|mechanism=Mechanism:pawnbreak|proof=DirectProof"),
         positionPlanTechniqueRelativeCauseEvidenceIds = List(causeId),
-        publicMoveMeaningClaimSurfaceSignatures = List(publicReferenceOwnedSignature),
+        publicMoveMeaningClaimDiagnostics =
+          List(
+            publicMoveMeaningClaimDiagnostic(
+              unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
+              axisKey = Some(axis),
+              meaningKind = "PawnBreakTiming",
+              supportLevel = "owned_cause_linked",
+              surfaceLane = "reference_or_opponent_resource",
+              lineRole = "reference",
+              moveUci = "e6e5",
+              causeEvidenceIds = List(causeId)
+            )
+          ),
         primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
       )
     val softReferenceDiagnostic =
@@ -1332,9 +1393,16 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.SpacePreventionResourceDenial),
         positionPlanTechniqueSemanticDetailTokens = semanticTokens,
         positionPlanTechniqueSemanticDetailTokenGroups = List(semanticTokens),
-        publicMoveMeaningClaimSurfaceSignatures =
+        publicMoveMeaningClaimDiagnostics =
           List(
-            "unit=SpacePreventionResourceDenial|axis=none|kind=CounterplayControl|support=view_surfaced|lane=current_move_function|causes=none|sources=resource-src|proof=DirectProof|carrier=true|boardCarrier=true|objects=target=Square:a1;mechanism=Mechanism:counterplayrestraint"
+            publicMoveMeaningClaimDiagnostic(
+              unit = PositionPlanTechniqueUnit.SpacePreventionResourceDenial,
+              meaningKind = "CounterplayControl",
+              supportLevel = "view_surfaced",
+              surfaceLane = "current_move_function",
+              sourceEvidenceIds = List("resource-src"),
+              proofLevel = "DirectProof"
+            )
           )
       )
     val sideOnlyDiagnostic =
@@ -5043,8 +5111,16 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       positionPlanTechniqueObjectBindingSignatures =
         List("target=Square:d8|mechanism=Mechanism:EndgameTechniqueHorizon|proof=DirectProof"),
       positionPlanTechniqueRelativeCauseEvidenceIds = List(causeId),
-      publicMoveMeaningClaimSurfaceSignatures =
-        List(s"unit=$unit|axis=none|kind=RookEndgameTechnique|support=owned_cause_linked|lane=current_move_owned|causes=$causeId|carrier=true|boardCarrier=true|objects=target=Square:d8;mechanism=Mechanism:EndgameTechniqueHorizon"),
+      publicMoveMeaningClaimDiagnostics =
+        List(
+          publicMoveMeaningClaimDiagnostic(
+            unit = unit,
+            meaningKind = "RookEndgameTechnique",
+            supportLevel = "owned_cause_linked",
+            surfaceLane = "current_move_owned",
+            causeEvidenceIds = List(causeId)
+          )
+        ),
       primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
     )
 
@@ -5107,7 +5183,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       positionPlanTechniqueObjectBindingSignatures: List[String] = Nil,
       positionPlanTechniqueEvidenceIds: List[String] = Nil,
       positionPlanTechniqueRelativeCauseEvidenceIds: List[String] = Nil,
-      publicMoveMeaningClaimSurfaceSignatures: List[String] = Nil,
+      publicMoveMeaningClaimDiagnostics: List[PublicMoveMeaningClaimDiagnostic] = Nil,
       rootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier] = Nil,
       primaryRootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier] = Nil,
       primaryRootCauseEvidenceIdTierSignatures: List[String] = Nil,
@@ -5115,8 +5191,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       relationKinds: List[RelationFactKind] = Nil
   ): CandidateComparisonDiagnostic =
     val axes = semanticAxes(referenceLeadAxes)
-    val publicMoveMeaningClaimDiagnostics =
-      publicMoveMeaningClaimSurfaceSignatures.flatMap(publicMoveMeaningClaimDiagnostic)
     val rootCauseEvidenceIdTierSignatures =
       if primaryRootCauseEvidenceIdTierSignatures.nonEmpty then primaryRootCauseEvidenceIdTierSignatures
       else
@@ -5314,28 +5388,32 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       failureClass = CandidateComparisonFailureClass.NoFailure,
       failureReasons = Nil
     )
-  private def publicMoveMeaningClaimDiagnostic(signature: String): Option[PublicMoveMeaningClaimDiagnostic] =
-    val parts = signature.split("\\|").toList.map(_.trim).filter(_.nonEmpty)
-    def value(key: String): Option[String] =
-      parts.collectFirst { case part if part.startsWith(s"$key=") => part.stripPrefix(s"$key=") }
-    def values(key: String): List[String] =
-      value(key).toList
-        .flatMap(_.split(",").toList)
-        .map(_.trim)
-        .filter(value => value.nonEmpty && value != "none")
-    value("unit").flatMap(unitName => PositionPlanTechniqueUnit.values.find(_.toString == unitName)).map { unit =>
-      PublicMoveMeaningClaimDiagnostic(
-        unit = unit,
-        axisKey = value("axis").filter(_ != "none"),
-        meaningKind = value("kind").getOrElse(""),
-        supportLevel = value("support").getOrElse(""),
-        surfaceLane = value("lane").getOrElse(""),
-        lineRole = value("lineRole").getOrElse(""),
-        moveUci = value("move").getOrElse(""),
-        causeEvidenceIds = values("causes"),
-        sourceEvidenceIds = values("sources"),
-        hasCarrier = value("carrier").contains("true"),
-        hasBoardCarrier = value("boardCarrier").contains("true"),
-        proofLevel = value("proof").getOrElse("none")
-      )
-    }
+
+  private def publicMoveMeaningClaimDiagnostic(
+      unit: PositionPlanTechniqueUnit,
+      meaningKind: String,
+      supportLevel: String,
+      surfaceLane: String,
+      axisKey: Option[String] = None,
+      lineRole: String = "",
+      moveUci: String = "",
+      causeEvidenceIds: List[String] = Nil,
+      sourceEvidenceIds: List[String] = Nil,
+      hasCarrier: Boolean = true,
+      hasBoardCarrier: Boolean = true,
+      proofLevel: String = "none"
+  ): PublicMoveMeaningClaimDiagnostic =
+    PublicMoveMeaningClaimDiagnostic(
+      unit = unit,
+      axisKey = axisKey,
+      meaningKind = meaningKind,
+      supportLevel = supportLevel,
+      surfaceLane = surfaceLane,
+      lineRole = lineRole,
+      moveUci = moveUci,
+      causeEvidenceIds = causeEvidenceIds,
+      sourceEvidenceIds = sourceEvidenceIds,
+      hasCarrier = hasCarrier,
+      hasBoardCarrier = hasBoardCarrier,
+      proofLevel = proofLevel
+    )
