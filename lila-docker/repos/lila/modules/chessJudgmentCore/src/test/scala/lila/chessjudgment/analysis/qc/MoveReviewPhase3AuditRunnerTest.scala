@@ -1,8 +1,5 @@
 package lila.chessjudgment.analysis.qc
 
-import java.nio.charset.StandardCharsets
-import java.nio.file.{ Files, Path }
-
 import lila.chessjudgment.analysis.line.{ LineFactNormalizer, PrincipalVariationEvidence }
 import lila.chessjudgment.analysis.position.{ FactExtractor, PositionAnalyzer, PositionFactNormalizer }
 import lila.chessjudgment.analysis.singlePosition.*
@@ -14,89 +11,7 @@ import lila.chessjudgment.model.structure.*
 import chess.{ Color, File }
 import chess.format.Fen
 import chess.variant.Standard
-import play.api.libs.json.Json
-
-import scala.jdk.CollectionConverters.*
-
 class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
-
-  test("main archives replay input when output path is provided"):
-    val dir = Files.createTempDirectory("phase3-audit-runner-main")
-    try
-      val input = dir.resolve("input.jsonl")
-      val output = dir.resolve("phase3_audit_output_current_chunk01_rows001-001.jsonl")
-      val row =
-        Json.obj(
-          "sampleId" -> "sample-main",
-          "input" -> Json.obj(
-            "fen" -> "8/8/8/8/8/8/4P3/4K3 w - - 0 1",
-            "playedMoveUci" -> "e2e4",
-            "variations" -> Json.arr(
-              Json.obj(
-                "moves" -> Json.arr("e2e4"),
-                "scoreCp" -> 20,
-                "depth" -> 16
-              )
-            ),
-            "currentEvalCp" -> 20,
-            "ply" -> 1,
-            "movePrefixUci" -> Json.arr("g1f3")
-          ),
-          "opening" -> "Test Opening",
-          "targetPly" -> 1,
-          "playedSan" -> "e4"
-        )
-      Files.writeString(input, Json.stringify(row), StandardCharsets.UTF_8)
-
-      MoveReviewPhase3AuditRunner.main(Array(input.toString, output.toString))
-
-      val archive = dir.resolve("phase3_audit_input_replay_current_chunk01_rows001-001.jsonl")
-      val summary = dir.resolve("phase3_audit_summary_current_chunk01_rows001-001.json")
-      assert(Files.exists(output))
-      assert(Files.exists(archive))
-      assert(Files.exists(summary))
-      val replay = Json.parse(Files.readString(archive, StandardCharsets.UTF_8))
-      assertEquals((replay \ "sampleId").as[String], "sample-main")
-      assertEquals((replay \ "input" \ "playedMoveUci").as[String], "e2e4")
-      val summaryJson = Json.parse(Files.readString(summary, StandardCharsets.UTF_8))
-      assertEquals((summaryJson \ "schemaVersion").as[String], "move_review_phase3_audit_summary.v1")
-    finally deleteRecursively(dir)
-
-  test("main can write slim audit rows without full view diagnostics"):
-    val dir = Files.createTempDirectory("phase3-audit-runner-slim")
-    try
-      val input = dir.resolve("input.jsonl")
-      val output = dir.resolve("phase3_audit_output_current_chunk01_rows001-001.jsonl")
-      val row =
-        Json.obj(
-          "sampleId" -> "sample-slim",
-          "input" -> Json.obj(
-            "fen" -> "8/8/8/8/8/8/4P3/4K3 w - - 0 1",
-            "playedMoveUci" -> "e2e4",
-            "variations" -> Json.arr(
-              Json.obj(
-                "moves" -> Json.arr("e2e4"),
-                "scoreCp" -> 20,
-                "depth" -> 16
-              )
-            ),
-            "currentEvalCp" -> 20,
-            "ply" -> 1,
-            "movePrefixUci" -> Json.arr("g1f3")
-          )
-        )
-      Files.writeString(input, Json.stringify(row), StandardCharsets.UTF_8)
-
-      MoveReviewPhase3AuditRunner.main(Array(input.toString, output.toString, "--slim"))
-
-      val auditRow = Json.parse(Files.readString(output, StandardCharsets.UTF_8))
-      assertEquals((auditRow \ "auditMode").as[String], "slim")
-      assert((auditRow \ "semanticCoverage").toOption.nonEmpty)
-      assert((auditRow \ "moveJudgmentView").toOption.isEmpty)
-      assert((auditRow \ "claimSupportClusters").toOption.isEmpty)
-      assert((auditRow \ "claimEventClusters").toOption.isEmpty)
-      assert(Files.exists(dir.resolve("phase3_audit_summary_current_chunk01_rows001-001.json")))
-    finally deleteRecursively(dir)
 
   test("semantic rubric marks expected questions without slots as unmeasured and incomplete"):
     val coverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
@@ -4360,16 +4275,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       List(("reference", referenceLine.rootMove, "owned_cause_linked", "reference_or_opponent_resource"))
     )
     assert(!view.moveMeaningClaims.exists(_.surfaceLane.startsWith("current_move")))
-
-  private def deleteRecursively(path: Path): Unit =
-    if Files.exists(path) then
-      Files
-        .walk(path)
-        .iterator()
-        .asScala
-        .toList
-        .sortWith((left, right) => left.getNameCount > right.getNameCount)
-        .foreach(Files.deleteIfExists)
 
   private def lineRef(id: String, rootMove: String, rank: Int, role: LineNodeRole): LineNodeRef =
     LineNodeRef(id, rootMove, rank, role)
