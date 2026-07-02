@@ -3509,6 +3509,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     val surface = MoveMeaningSurface.from(view)
     assertEquals(surface.map(_.ideaType), List("piece_activity"))
     assertEquals(surface.map(_.evidence.proofLevel), List("surface_evidence"))
+    assertEquals(surface.map(_.evidence.targetBound), List(true))
     assert(surface.head.evidence.boardCarriers.contains(MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", "e3-development")))
 
   test("move meaning claims classify route activity from the surfaced carrier"):
