@@ -116,18 +116,34 @@ describe('chesstory brief scaffold', () => {
             is_local_idea: true,
             problem: { code: 'loses_activity', label: 'loses activity' },
           },
+          target: { squares: ['e4', 'g3'], pieces: ['knight'] },
+          evidence: { has_carrier: true, proof_level: 'owned_cause' },
+        },
+        {
+          subject: 'reference_move',
+          move_quality: 'good',
+          priority: 'main',
+          idea: { code: 'outpost_route', label: 'outpost route' },
+          target: { squares: ['f6'], pieces: ['knight'] },
           evidence: { has_carrier: true, proof_level: 'owned_cause' },
         },
       ],
     });
 
+    const opening = sections.find(section => section.key === 'opening-idea');
     const plan = sections.find(section => section.key === 'middlegame-plan');
     const current = sections.find(section => section.key === 'current-decision');
+    const evidence = sections.find(section => section.key === 'evidence');
+    assert.match(opening?.body || '', /outpost route/);
+    assert.doesNotMatch(`${opening?.body || ''} ${(opening?.items || []).join(' ')}`, /piece activity|e4|g3/);
     assert.equal(plan?.tone, 'bad');
+    assert.match(plan?.body || '', /piece activity/);
     assert.equal(current?.title, 'What remains loose');
     assert.doesNotMatch(plan?.body || '', /This move handles/);
     assert.match(plan?.body || '', /does not fully meet/);
     assert.match(current?.body || '', /loses activity/);
+    assert.match(JSON.stringify(evidence), /f6/);
+    assert.doesNotMatch(JSON.stringify(evidence), /e4|g3/);
   });
 
   test('does not invent a useful local idea for a bad move without local-idea evidence', () => {
@@ -258,6 +274,49 @@ describe('chesstory brief scaffold', () => {
     assert.equal(plan?.tone, 'good');
     assert.equal(current?.tone, 'good');
     assert.doesNotMatch(JSON.stringify(sections), /loses activity|piece activity/);
+  });
+
+  test('does not let carried played semantics choose bad-move framing without a verdict', () => {
+    const sections = chesstoryBriefSections({
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'bad',
+          priority: 'main',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          assessment: {
+            problem: { code: 'loses_activity', label: 'loses activity' },
+          },
+          evidence: { has_carrier: true, proof_level: 'owned_cause' },
+        },
+      ],
+    });
+
+    const plan = sections.find(section => section.key === 'middlegame-plan');
+    const current = sections.find(section => section.key === 'current-decision');
+    assert.equal(plan?.tone, 'good');
+    assert.equal(current?.tone, 'good');
+    assert.doesNotMatch(current?.body || '', /loses activity/);
+  });
+
+  test('does not let played semantic quality override a good verdict', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { verdict_code: 'matches_reference', move_quality: 'good', played_move: 'g1f3' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'bad',
+          priority: 'main',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          evidence: { has_carrier: true, proof_level: 'owned_cause' },
+        },
+      ],
+    });
+
+    const plan = sections.find(section => section.key === 'middlegame-plan');
+    const current = sections.find(section => section.key === 'current-decision');
+    assert.equal(plan?.tone, 'good');
+    assert.equal(current?.title, 'Current decision');
   });
 
   test('does not turn reference-only comparison losses into played-move failures', () => {

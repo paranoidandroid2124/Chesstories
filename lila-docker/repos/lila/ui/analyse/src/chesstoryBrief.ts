@@ -105,17 +105,18 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const evidenceSemantics = semantics.filter(hasEvidenceCarrier);
   const evidencePlayed = played.filter(hasEvidenceCarrier);
   const evidenceReference = reference.filter(hasEvidenceCarrier);
-  const bad = payload.verdict?.move_quality === 'bad' || evidencePlayed.some(s => s.move_quality === 'bad');
+  const bad = payload.verdict?.move_quality === 'bad';
   const playableLoss = normalizeCode(payload.verdict?.verdict_code) === 'playable_loss';
   const problemMove = bad || playableLoss;
   const mainPlayed = evidencePlayed.filter(s => s.priority === 'main');
   const localIdeas = played.filter(s => s.assessment?.is_local_idea && hasEvidenceCarrier(s));
-  const solved = uniqueLabels((problemMove ? localIdeas : evidencePlayed).map(ideaLabel)).slice(0, 4);
+  const positionEvidence = problemMove ? evidenceReference : evidencePlayed;
+  const solved = uniqueLabels(positionEvidence.map(ideaLabel)).slice(0, 4);
   const localIdeaLabels = uniqueLabels(localIdeas.map(ideaLabel)).slice(0, 4);
   const terminal = uniqueLabels(evidencePlayed.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
   const losses = uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels));
-  const targets = uniqueLabels(evidencePlayed.flatMap(targetLabels)).slice(0, 5);
+  const targets = uniqueLabels(positionEvidence.flatMap(targetLabels)).slice(0, 5);
   const problem = firstLabel(mainPlayed.flatMap(problemLabels));
   const referenceIdeas = uniqueLabels(evidenceReference.map(ideaLabel)).slice(0, 3);
   const handled = [...solved, ...terminal];
@@ -174,10 +175,10 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
       key: 'evidence',
       title: 'Evidence from the board',
       body:
-        evidenceLine(played) ||
+        evidenceLine(problemMove ? evidenceReference : played) ||
         'The graph has a move verdict, but not enough public evidence to explain it cleanly.',
       pending: false,
-      items: evidenceItems(played).slice(0, 5),
+      items: evidenceItems(problemMove ? evidenceReference : played).slice(0, 5),
     },
   ];
 }
