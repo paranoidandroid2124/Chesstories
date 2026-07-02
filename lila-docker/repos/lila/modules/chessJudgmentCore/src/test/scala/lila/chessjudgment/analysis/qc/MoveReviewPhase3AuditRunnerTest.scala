@@ -113,6 +113,42 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "expectedQuestionCoverageComplete").as[Boolean], false)
     assertEquals((corpusCoverage \ "expectedQuestionCoverageComplete").as[Boolean], false)
 
+  test("semantic rubric reports suppressed and merged move meaning claims"):
+    val publicSignature =
+      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=view_surfaced|lane=current_move_function|lineRole=played|move=g1f3|causes=none|sources=route-src|proof=none|objects=target=Piece:knight"
+    val suppressedSignature =
+      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=owned_cause_linked|lane=current_move_owned|lineRole=played|move=g1f3|causes=cause-route|sources=route-src|proof=DirectProof|objects=target=Piece:knight"
+    val mergedSignature =
+      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=owned_cause_linked|lane=current_move_owned|lineRole=played|move=g1f3|causes=cause-route,cause-structure|sources=route-src,structure-src|proof=DirectProof|objects=target=Piece:knight"
+    val diagnostic =
+      comparisonDiagnostic(
+        id = "surface-diagnostic",
+        referenceLeadAxes = Nil,
+        producedKinds = List(RelativeCauseKind.ActivityGain),
+        flows = List(
+          causeFlow(
+            "cause-route",
+            RelativeCauseKind.ActivityGain,
+            proofAxisKeys = Nil,
+            claimIds = List("claim-route")
+          )
+        ),
+        primaryRootKinds = List(RelativeCauseKind.ActivityGain),
+        primaryRootIds = List("cause-route"),
+        moveMeaningClaimSurfaceSignatures = List(publicSignature, suppressedSignature, mergedSignature),
+        publicMoveMeaningClaimSurfaceSignatures = List(publicSignature, mergedSignature)
+      )
+
+    val coverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(Nil, List(diagnostic))
+    val corpusCoverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCorpusCoverageJson(List(coverage))
+
+    assertEquals((coverage \ "suppressedMoveMeaningClaimCount").as[Int], 1)
+    assertEquals((coverage \ "suppressedMoveMeaningClaimSignatures").as[List[String]], List(suppressedSignature))
+    assertEquals((coverage \ "mergedOwnershipClaimCount").as[Int], 1)
+    assertEquals((coverage \ "mergedOwnershipClaimSignatures").as[List[String]], List(mergedSignature))
+    assertEquals((corpusCoverage \ "suppressedMoveMeaningClaimCount").as[Int], 1)
+    assertEquals((corpusCoverage \ "mergedOwnershipClaimCount").as[Int], 1)
+
   test("writes replay input archive next to audit output"):
     val dir = Files.createTempDirectory("phase3-audit-runner")
     try

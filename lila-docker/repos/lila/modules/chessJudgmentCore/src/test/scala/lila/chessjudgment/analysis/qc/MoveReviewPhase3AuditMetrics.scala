@@ -151,6 +151,52 @@ private[qc] object MoveReviewPhase3AuditMetrics:
   private[qc] def signatureParts(signature: String): List[String] =
     signature.split("\\|").toList.map(_.trim).filter(_.nonEmpty)
 
+  private def signatureValues(signature: String, key: String): List[String] =
+    signatureParts(signature)
+      .collectFirst { case part if part.startsWith(s"$key=") => part.stripPrefix(s"$key=") }
+      .toList
+      .flatMap(_.split(",").toList)
+      .map(_.trim)
+      .filter(value => value.nonEmpty && value != "none")
+
+  private def multiOwnerMoveMeaningClaim(signature: String): Boolean =
+    signatureValues(signature, "causes").size > 1 ||
+      signatureValues(signature, "sources").size > 1
+
+  private[qc] def moveMeaningSurfaceDiagnosticsJson(
+      diagnostics: List[CandidateComparisonDiagnostic]
+  ): JsObject =
+    val internalSignatures =
+      diagnostics.flatMap(_.moveJudgmentView.moveMeaningClaimSurfaceSignatures).distinct.sorted
+    val publicSignatures =
+      diagnostics.flatMap(_.moveJudgmentView.publicMoveMeaningClaimSurfaceSignatures).distinct.sorted
+    val suppressedSignatures = internalSignatures.diff(publicSignatures)
+    val mergedSignatures = internalSignatures.filter(multiOwnerMoveMeaningClaim)
+    Json.obj(
+      "suppressedMoveMeaningClaimCount" -> suppressedSignatures.size,
+      "suppressedMoveMeaningClaimSignatures" -> suppressedSignatures,
+      "mergedOwnershipClaimCount" -> mergedSignatures.size,
+      "mergedOwnershipClaimSignatures" -> mergedSignatures
+    )
+
+  private[qc] def moveMeaningSurfaceCorpusDiagnosticsJson(coverages: List[JsValue]): JsObject =
+    val suppressedSignatures =
+      coverages
+        .flatMap(coverage => (coverage \ "suppressedMoveMeaningClaimSignatures").asOpt[List[String]].getOrElse(Nil))
+        .distinct
+        .sorted
+    val mergedSignatures =
+      coverages
+        .flatMap(coverage => (coverage \ "mergedOwnershipClaimSignatures").asOpt[List[String]].getOrElse(Nil))
+        .distinct
+        .sorted
+    Json.obj(
+      "suppressedMoveMeaningClaimCount" -> suppressedSignatures.size,
+      "suppressedMoveMeaningClaimSignatures" -> suppressedSignatures,
+      "mergedOwnershipClaimCount" -> mergedSignatures.size,
+      "mergedOwnershipClaimSignatures" -> mergedSignatures
+    )
+
   private[qc] def axislessStructuralInventorySignal(signal: StrategicMechanismSignal): Boolean =
     signal.label != "structural-improvement" &&
       signal.label != "strategic-concession" &&
@@ -1004,7 +1050,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
         .map(row => (row \ "id").as[String]),
       "byQuestionId" -> semanticRubricExpectedSlotCoverageByQuestionIdJson(slotRows, measuredExpectedQuestionIds),
       "slots" -> JsArray(slotRows)
-    )
+    ) ++ MoveReviewPhase3AuditMetrics.moveMeaningSurfaceDiagnosticsJson(diagnostics)
 
   private def expectedSemanticSlotRequiresExplicitProbeRows(slot: ExpectedSemanticSlot): Boolean =
     slot.axisKey.nonEmpty ||
@@ -1101,7 +1147,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
         .map(row => (row \ "id").as[String]),
       "byQuestionId" -> semanticRubricExpectedSlotCoverageByQuestionIdJson(slotRows, measuredExpectedQuestionIds),
       "slots" -> JsArray(slotRows)
-    )
+    ) ++ MoveReviewPhase3AuditMetrics.moveMeaningSurfaceCorpusDiagnosticsJson(coverages)
 
   private def semanticRubricExpectedSlotCoverageByQuestionIdJson(
       slotRows: List[JsObject],
