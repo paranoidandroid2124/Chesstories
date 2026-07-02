@@ -246,37 +246,6 @@ object MoveReviewPgnRawInputRunner:
       case Some(path) => Files.writeString(path, output, StandardCharsets.UTF_8)
       case None       => println(output)
 
-final case class MoveReviewPhase3PlayedBindingSummary(
-    playedBoundIdeaFamilies: List[String],
-    playedBoundClaimFamilies: List[String],
-    playedBoundFamilies: List[String]
-)
-
-object MoveReviewPhase3PlayedBindingSummary:
-  def from(
-      playedMoveUci: String,
-      ideas: List[ChessIdea],
-      claims: List[ClaimSeed]
-  ): MoveReviewPhase3PlayedBindingSummary =
-    val playedMoves = Set(JudgmentSubjectBinding.normalizeMove(playedMoveUci)).filter(_.nonEmpty)
-    val ideaFamilies =
-      ideas
-        .filter(idea => JudgmentSubjectBinding.directPlayedSubject(idea.moveUci, idea.primaryLine, playedMoves))
-        .map(_.ref.family.toString)
-        .distinct
-        .sorted
-    val claimFamilies =
-      claims
-        .filter(claim => JudgmentSubjectBinding.directPlayedClaim(claim, playedMoves))
-        .map(_.family.toString)
-        .distinct
-        .sorted
-    MoveReviewPhase3PlayedBindingSummary(
-      playedBoundIdeaFamilies = ideaFamilies,
-      playedBoundClaimFamilies = claimFamilies,
-      playedBoundFamilies = (ideaFamilies ++ claimFamilies).distinct.sorted
-    )
-
 object MoveReviewPhase3AuditRunner:
   import RawOpeningContextJson.given
   import MoveReviewPhase3AuditContract.{
@@ -682,12 +651,6 @@ object MoveReviewPhase3AuditRunner:
       slotCoverage: JsObject
   ): JsObject =
     val semantic = result.quality.semanticCoverage
-    val playedBinding =
-      MoveReviewPhase3PlayedBindingSummary.from(
-        playedMoveUci = result.packet.playedTransition.map(_.moveUci).getOrElse(""),
-        ideas = result.packet.ideas,
-        claims = result.packet.claims
-      )
     if slimOutput then
       Json.obj(
         "tacticalIdeas" -> semantic.tacticalIdeas,
@@ -703,9 +666,6 @@ object MoveReviewPhase3AuditRunner:
         "claimCandidateFamilyCounts" -> claimLifecycleCountsJson(semantic.claimCandidateFamilyCounts),
         "claimLifecycleStageCounts" -> claimLifecycleCountsJson(semantic.claimLifecycleStageCounts),
         "claimLifecycleTruthCounts" -> claimLifecycleCountsJson(semantic.claimLifecycleTruthCounts),
-        "playedBoundIdeaFamilies" -> playedBinding.playedBoundIdeaFamilies,
-        "playedBoundClaimFamilies" -> playedBinding.playedBoundClaimFamilies,
-        "playedBoundFamilies" -> playedBinding.playedBoundFamilies,
         "hasRelativeAssessment" -> semantic.hasRelativeAssessment,
         "candidateComparisonFacts" -> semantic.candidateComparisonFacts,
         "relativeCauseFacts" -> semantic.relativeCauseFacts,
@@ -779,9 +739,6 @@ object MoveReviewPhase3AuditRunner:
       "strategicAxisIntegrity" -> strategicAxisIntegritySummary(result.packet),
       "objectBindingIntegrity" -> objectBindingIntegritySummary(result.packet),
       "bindingWidthAudit" -> result.packet.moveJudgmentView.map(bindingWidthAuditJson).getOrElse(bindingWidthAuditJson(None)),
-      "playedBoundIdeaFamilies" -> playedBinding.playedBoundIdeaFamilies,
-      "playedBoundClaimFamilies" -> playedBinding.playedBoundClaimFamilies,
-      "playedBoundFamilies" -> playedBinding.playedBoundFamilies,
       "hasRelativeAssessment" -> semantic.hasRelativeAssessment,
       "candidateComparisonFacts" -> semantic.candidateComparisonFacts,
       "relativeCauseFacts" -> semantic.relativeCauseFacts,
