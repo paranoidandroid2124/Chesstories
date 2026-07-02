@@ -1674,8 +1674,10 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
     assertEquals((coverage \ "matchedSlotCount").as[Int], 0)
     assertEquals((coverage \ "planOptionOwnedCauseExpectationSlotIds").as[List[String]], List("minority-plan-owned"))
+    assertEquals((coverage \ "viewOnlyOwnedCauseExpectationSlotIds").as[List[String]], List("minority-plan-owned"))
     assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "view_surfaced")
     assertEquals((coverage \ "slots" \ 0 \ "planOptionOwnedCauseExpectation").as[Boolean], true)
+    assertEquals((coverage \ "slots" \ 0 \ "viewOnlyOwnedCauseExpectation").as[Boolean], true)
 
   test("recognition view slots require a public carrier signature"):
     val carrierlessPublicSurfaceSignature =
@@ -1902,6 +1904,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
     assertEquals((exactIqpCoverage \ "matchedSlotCount").as[Int], 1)
     assertEquals((substringCoverage \ "matchedSlotCount").as[Int], 0)
+    assertEquals((substringCoverage \ "semanticTokenExpectationMissSlotIds").as[List[String]], List("iqp-motif"))
+    assertEquals((substringCoverage \ "slots" \ 0 \ "semanticTokenExpectationMiss").as[Boolean], true)
     assertEquals((subjectPrefixCoverage \ "matchedSlotCount").as[Int], 1)
 
   test("threat pressure marks active pawn counterplay as race only with root motif"):

@@ -999,7 +999,9 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
     val failedRequiredTerminalStageSlotIds =
       slotRows.filter(row => !(row \ "terminalStageSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
-    val planOptionOwnedCauseExpectationSlotIds = planOptionOwnedCauseExpectationSlotIdsFor(slotRows)
+    val planOptionOwnedCauseExpectationSlotIds = slotIdsWithFlag(slotRows, "planOptionOwnedCauseExpectation")
+    val viewOnlyOwnedCauseExpectationSlotIds = slotIdsWithFlag(slotRows, "viewOnlyOwnedCauseExpectation")
+    val semanticTokenExpectationMissSlotIds = slotIdsWithFlag(slotRows, "semanticTokenExpectationMiss")
     Json.obj(
       "classification" -> "audit_only",
       "expectedSlotCount" -> slotRows.size,
@@ -1038,6 +1040,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "failedRequiredTerminalStageSlotIdCounts" -> stringCountsJson(failedRequiredTerminalStageSlotIds),
       "planOptionOwnedCauseExpectationSlotIds" -> planOptionOwnedCauseExpectationSlotIds,
       "planOptionOwnedCauseExpectationSlotCount" -> planOptionOwnedCauseExpectationSlotIds.size,
+      "viewOnlyOwnedCauseExpectationSlotIds" -> viewOnlyOwnedCauseExpectationSlotIds,
+      "viewOnlyOwnedCauseExpectationSlotCount" -> viewOnlyOwnedCauseExpectationSlotIds.size,
+      "semanticTokenExpectationMissSlotIds" -> semanticTokenExpectationMissSlotIds,
+      "semanticTokenExpectationMissSlotCount" -> semanticTokenExpectationMissSlotIds.size,
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
       "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
@@ -1099,7 +1105,9 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
     val failedRequiredTerminalStageSlotIds =
       slotRows.filter(row => !(row \ "terminalStageSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
-    val planOptionOwnedCauseExpectationSlotIds = planOptionOwnedCauseExpectationSlotIdsFor(slotRows)
+    val planOptionOwnedCauseExpectationSlotIds = slotIdsWithFlag(slotRows, "planOptionOwnedCauseExpectation")
+    val viewOnlyOwnedCauseExpectationSlotIds = slotIdsWithFlag(slotRows, "viewOnlyOwnedCauseExpectation")
+    val semanticTokenExpectationMissSlotIds = slotIdsWithFlag(slotRows, "semanticTokenExpectationMiss")
     Json.obj(
       "classification" -> "audit_only",
       "coverageRowCount" -> coverages.size,
@@ -1139,6 +1147,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "failedRequiredTerminalStageSlotIdCounts" -> stringCountsJson(failedRequiredTerminalStageSlotIds),
       "planOptionOwnedCauseExpectationSlotIds" -> planOptionOwnedCauseExpectationSlotIds,
       "planOptionOwnedCauseExpectationSlotCount" -> planOptionOwnedCauseExpectationSlotIds.size,
+      "viewOnlyOwnedCauseExpectationSlotIds" -> viewOnlyOwnedCauseExpectationSlotIds,
+      "viewOnlyOwnedCauseExpectationSlotCount" -> viewOnlyOwnedCauseExpectationSlotIds.size,
+      "semanticTokenExpectationMissSlotIds" -> semanticTokenExpectationMissSlotIds,
+      "semanticTokenExpectationMissSlotCount" -> semanticTokenExpectationMissSlotIds.size,
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
       "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
@@ -1205,9 +1217,9 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       .distinct
       .sorted
 
-  private def planOptionOwnedCauseExpectationSlotIdsFor(slotRows: List[JsObject]): List[String] =
+  private def slotIdsWithFlag(slotRows: List[JsObject], flag: String): List[String] =
     slotRows
-      .filter(row => (row \ "planOptionOwnedCauseExpectation").asOpt[Boolean].contains(true))
+      .filter(row => (row \ flag).asOpt[Boolean].contains(true))
       .flatMap(row => (row \ "id").asOpt[String])
       .distinct
       .sorted
@@ -1378,6 +1390,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "primaryRootBorrowFalsePositive" -> primaryRootBorrowFalsePositive,
       "rootTierBorrowFalsePositive" -> rootTierBorrowFalsePositive,
       "planOptionOwnedCauseExpectation" -> planOptionOwnedCauseExpectation(slot),
+      "viewOnlyOwnedCauseExpectation" -> viewOnlyOwnedCauseExpectation(slot, best),
+      "semanticTokenExpectationMiss" -> (slot.requiredSemanticDetailTokens.nonEmpty && !semanticDetailTokensSatisfied),
       "legacyMatchedBeforeStrictLineage" -> legacyMatched,
       "legacyTerminalStageBeforeStrictLineage" -> legacyTerminalStage,
       "objectBound" -> best.exists(_.objectBound),
@@ -1529,6 +1543,14 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slot.requiredTerminalStage.exists(stage =>
         semanticRubricStageRank(stage) >= semanticRubricStageRank("owned_cause_linked")
       )
+
+  private def viewOnlyOwnedCauseExpectation(
+      slot: ExpectedSemanticSlot,
+      best: Option[SemanticRubricSlotRow]
+  ): Boolean =
+    slot.requiredTerminalStage.exists(stage =>
+      semanticRubricStageRank(stage) >= semanticRubricStageRank("owned_cause_linked")
+    ) && best.exists(row => row.viewSurfaced && !row.ownedCauseLinked)
 
   private def objectBindingTokensCoLocated(
       requiredObjectBindingTokens: List[String],
