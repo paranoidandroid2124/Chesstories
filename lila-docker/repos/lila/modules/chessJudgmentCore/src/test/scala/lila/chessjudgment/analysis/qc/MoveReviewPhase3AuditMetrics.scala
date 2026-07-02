@@ -161,43 +161,28 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       diagnostics: List[CandidateComparisonDiagnostic]
   ): JsObject =
     val publicClaimDiagnostics =
-      diagnostics.flatMap(_.moveJudgmentView.publicMoveMeaningClaimDiagnostics).distinct.sortBy(_.signature)
-    val publicSignatures = publicClaimDiagnostics.map(_.signature).distinct.sorted
-    val multiInputPublicSignatures =
-      publicClaimDiagnostics.filter(multiEvidenceInputPublicClaim).map(_.signature).distinct.sorted
-    val boardCarrierlessPublicSignatures =
-      publicClaimDiagnostics.filterNot(_.hasBoardCarrier).map(_.signature).distinct.sorted
+      diagnostics.flatMap(_.moveJudgmentView.publicMoveMeaningClaimDiagnostics).distinct
+    val multiInputPublicClaimCount =
+      publicClaimDiagnostics.count(multiEvidenceInputPublicClaim)
+    val boardCarrierlessPublicClaimCount =
+      publicClaimDiagnostics.count(diagnostic => !diagnostic.hasBoardCarrier)
     Json.obj(
-      "publicMoveMeaningClaimCount" -> publicSignatures.size,
-      "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicSignatures.size,
-      "boardCarrierlessPublicMoveMeaningClaimSignatures" -> boardCarrierlessPublicSignatures,
-      "multiEvidenceInputPublicClaimCount" -> multiInputPublicSignatures.size,
-      "multiEvidenceInputPublicClaimSignatures" -> multiInputPublicSignatures
+      "publicMoveMeaningClaimCount" -> publicClaimDiagnostics.size,
+      "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicClaimCount,
+      "multiEvidenceInputPublicClaimCount" -> multiInputPublicClaimCount
     )
 
   private[qc] def moveMeaningSurfaceCorpusDiagnosticsJson(coverages: List[JsValue]): JsObject =
     val publicClaimCount =
       coverages.map(coverage => (coverage \ "publicMoveMeaningClaimCount").asOpt[Int].getOrElse(0)).sum
-    val boardCarrierlessPublicSignatures =
-      coverages
-        .flatMap(coverage =>
-          (coverage \ "boardCarrierlessPublicMoveMeaningClaimSignatures").asOpt[List[String]].getOrElse(Nil)
-        )
-        .distinct
-        .sorted
-    val multiInputPublicSignatures =
-      coverages
-        .flatMap(coverage =>
-          (coverage \ "multiEvidenceInputPublicClaimSignatures").asOpt[List[String]].getOrElse(Nil)
-        )
-        .distinct
-        .sorted
+    val boardCarrierlessPublicClaimCount =
+      coverages.map(coverage => (coverage \ "boardCarrierlessPublicMoveMeaningClaimCount").asOpt[Int].getOrElse(0)).sum
+    val multiInputPublicClaimCount =
+      coverages.map(coverage => (coverage \ "multiEvidenceInputPublicClaimCount").asOpt[Int].getOrElse(0)).sum
     Json.obj(
       "publicMoveMeaningClaimCount" -> publicClaimCount,
-      "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicSignatures.size,
-      "boardCarrierlessPublicMoveMeaningClaimSignatures" -> boardCarrierlessPublicSignatures,
-      "multiEvidenceInputPublicClaimCount" -> multiInputPublicSignatures.size,
-      "multiEvidenceInputPublicClaimSignatures" -> multiInputPublicSignatures
+      "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicClaimCount,
+      "multiEvidenceInputPublicClaimCount" -> multiInputPublicClaimCount
     )
 
   private[qc] def axislessStructuralInventorySignal(signal: StrategicMechanismSignal): Boolean =
@@ -937,8 +922,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       primaryRootCauseEvidenceIdTierSignatures: List[String],
       causeIds: List[String],
       causeIdKindSignatures: List[String],
-      claimIds: List[String],
-      publicSurfaceClaimSignatures: List[String]
+      claimIds: List[String]
   )
 
   private[qc] def semanticRubricFunnelJson(
@@ -1463,7 +1447,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "causeIds" -> matches.flatMap(_.causeIds).distinct.sorted,
       "causeIdKindSignatures" -> matches.flatMap(_.causeIdKindSignatures).distinct.sorted,
       "claimIds" -> matches.flatMap(_.claimIds).distinct.sorted,
-      "publicSurfaceClaimSignatures" -> matches.flatMap(_.publicSurfaceClaimSignatures).distinct.sorted,
       "bestLineageTrace" -> best.map(semanticRubricLineageTraceJson).getOrElse(Json.obj()),
       "lineageTraces" -> JsArray(
         matches
@@ -1498,7 +1481,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "causeIds" -> row.causeIds,
       "causeIdKindSignatures" -> row.causeIdKindSignatures,
       "claimIds" -> row.claimIds,
-      "publicSurfaceClaimSignatures" -> row.publicSurfaceClaimSignatures,
       "primaryRootCauseKinds" -> row.primaryRootCauseKinds.map(_.toString),
       "primaryRootCauseEvidenceIds" -> row.primaryRootCauseEvidenceIds,
       "primaryRootArbitrationTiers" -> row.primaryRootArbitrationTiers.map(_.toString),
@@ -1885,7 +1867,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       view.publicMoveMeaningClaimDiagnostics.filter(diagnostic =>
         semanticRubricSurfaceClaimMatches(diagnostic, unit, axisKey)
       )
-    val publicSurfaceClaimSignatures = publicSurfaceClaimDiagnostics.map(_.signature)
     val publicSurfaceClaimWithCarrier =
       publicSurfaceClaimDiagnostics.filter(_.hasCarrier)
     val ownedCauseLinked =
@@ -1971,8 +1952,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
           .map(flow => causeIdKindSignature(flow.causeId, flow.causeKind))
           .distinct
           .sorted,
-      claimIds = frameCauseFlows.flatMap(_.claimIds).distinct.sorted,
-      publicSurfaceClaimSignatures = publicSurfaceClaimSignatures.distinct.sorted
+      claimIds = frameCauseFlows.flatMap(_.claimIds).distinct.sorted
     )
 
   private def semanticRubricSurfaceClaimMatches(

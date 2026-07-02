@@ -804,8 +804,7 @@ final case class PublicMoveMeaningClaimDiagnostic(
     sourceEvidenceIds: List[String] = Nil,
     hasCarrier: Boolean,
     hasBoardCarrier: Boolean,
-    proofLevel: String,
-    signature: String
+    proofLevel: String
 )
 
 final case class CandidateComparisonDiagnostic(
@@ -1524,7 +1523,6 @@ object CandidateComparisonDiagnostic:
       publicMoveMeaningClaims
         .map((claim, evidence) => publicMoveMeaningClaimDiagnostic(claim, evidence))
         .distinct
-        .sortBy(_.signature)
     ComparisonMoveJudgmentViewDiagnostics(
       primaryCauseKinds = primaryFrames.map(_.causeKind).distinct,
       secondaryCauseKinds = secondaryFrames.map(_.causeKind).distinct,
@@ -1609,39 +1607,6 @@ object CandidateComparisonDiagnostic:
         (move == referenceMove || move == candidateMove)
     }
 
-  private def moveMeaningClaimSurfaceSignature(
-      claim: MoveMeaningClaim,
-      publicEvidence: MoveMeaningSurfaceEvidence
-  ): String =
-    def signatureField(values: List[String]): String =
-      values.distinct.sorted match
-        case Nil    => "none"
-        case tokens => tokens.mkString(",")
-
-    val axis = claim.axisKey.getOrElse("none")
-    val proofTokens =
-      claim.reasonTokens.filter(_.startsWith("proofRole:")).map(_.stripPrefix("proofRole:")) ++
-        claim.objectBindingSignatures.flatMap(signature => EvidenceObjectBinding.signatureTokens(List(signature), "proof="))
-    val objectTokens =
-      claim.objectBindingSignatures
-        .map(_.replace('|', ';'))
-        .take(4)
-    List(
-      s"unit=${claim.unit}",
-      s"axis=$axis",
-      s"kind=${claim.meaningKind}",
-      s"support=${claim.supportLevel}",
-      s"lane=${claim.surfaceLane}",
-      s"lineRole=${claim.lineRole}",
-      s"move=${claim.moveUci}",
-      s"causes=${signatureField(claim.causeEvidenceIds)}",
-      s"sources=${signatureField(claim.sourceEvidenceIds.take(6))}",
-      s"proof=${signatureField(proofTokens)}",
-      s"carrier=${publicEvidence.hasCarrier}",
-      s"boardCarrier=${publicEvidence.boardCarriers.nonEmpty}",
-      s"objects=${signatureField(objectTokens)}"
-    ).mkString("|")
-
   private def publicMoveMeaningClaimDiagnostic(
       claim: MoveMeaningClaim,
       evidence: MoveMeaningSurfaceEvidence
@@ -1658,8 +1623,7 @@ object CandidateComparisonDiagnostic:
       sourceEvidenceIds = claim.sourceEvidenceIds.distinct.sorted,
       hasCarrier = evidence.hasCarrier,
       hasBoardCarrier = evidence.boardCarriers.nonEmpty,
-      proofLevel = evidence.proofLevel,
-      signature = moveMeaningClaimSurfaceSignature(claim, evidence)
+      proofLevel = evidence.proofLevel
     )
 
   private def primaryRootCauseEvidenceIdTierSignature(

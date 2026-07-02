@@ -1307,7 +1307,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
     assertEquals((coverage \ "matchedSlotCount").as[Int], 1)
     assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "clustered_coherent")
-    assertEquals((coverage \ "slots" \ 0 \ "publicSurfaceClaimSignatures").as[List[String]], List(publicReferenceOwnedSignature))
     assertEquals((softCoverage \ "matchedSlotCount").as[Int], 0)
     assertEquals((softCoverage \ "slots" \ 0 \ "terminalStage").as[String], "claim_survived")
 
@@ -5337,7 +5336,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         sourceEvidenceIds = values("sources"),
         hasCarrier = value("carrier").contains("true"),
         hasBoardCarrier = value("boardCarrier").contains("true"),
-        proofLevel = value("proof").getOrElse("none"),
-        signature = signature
+        proofLevel = value("proof").getOrElse("none")
       )
     }

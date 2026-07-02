@@ -1905,8 +1905,7 @@ object MoveReviewPhase3AuditRunner:
       "sourceEvidenceIds" -> diagnostic.sourceEvidenceIds,
       "hasCarrier" -> diagnostic.hasCarrier,
       "hasBoardCarrier" -> diagnostic.hasBoardCarrier,
-      "proofLevel" -> diagnostic.proofLevel,
-      "signature" -> diagnostic.signature
+      "proofLevel" -> diagnostic.proofLevel
     )
 
   private def relativeCauseDiagnosticsJson(diagnostic: ComparisonRelativeCauseDiagnostics): JsObject =
