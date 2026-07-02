@@ -3432,7 +3432,7 @@ object MoveReviewPhase3AuditRunner:
       "causeSourceSides" -> claim.causeSourceSides.map(_.toString),
       "causeEvidenceIds" -> claim.causeEvidenceIds,
       "sourceEvidenceIds" -> claim.sourceEvidenceIds
-    ) ++ objectBindingSignatureSampleJson(claim.objectBindingSignatures)
+    )
 
   private def moveJudgmentPositionPlanTechniqueFrameJson(frame: PositionPlanTechniqueFrame): JsObject =
     MoveReviewPhase3AuditViewJson.positionPlanTechniqueFrameJson(frame, lineRefSummary)
