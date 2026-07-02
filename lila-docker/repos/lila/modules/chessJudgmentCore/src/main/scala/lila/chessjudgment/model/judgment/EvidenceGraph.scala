@@ -1664,6 +1664,22 @@ final case class StrategicMechanismContrastEvidence(
 
 object StrategicMechanismContrastEvidence:
   private[chessjudgment] def hasActionableContrastOrSameRootCarrier(
+      payload: StrategicMechanismContrastEvidence,
+      records: List[EvidenceRecord]
+  ): Boolean =
+    hasActionableContrastOrSameRootCarrier(
+      records.collectFirst {
+        case EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
+            if fact.kind == payload.comparisonKind &&
+              fact.referenceLine == payload.referenceLine &&
+              fact.candidateLine == payload.candidateLine =>
+          fact
+      },
+      payload,
+      records
+    )
+
+  private[chessjudgment] def hasActionableContrastOrSameRootCarrier(
       fact: CandidateComparisonFact,
       payload: StrategicMechanismContrastEvidence,
       records: List[EvidenceRecord]

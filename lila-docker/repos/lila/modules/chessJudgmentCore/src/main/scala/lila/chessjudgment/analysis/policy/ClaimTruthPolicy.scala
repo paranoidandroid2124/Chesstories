@@ -374,7 +374,7 @@ object ClaimTruthPolicy:
       case EvidenceRecord(_, MoveVerdictCertificationEvidence(certification), _) =>
         certification.causes.exists(strategicRelativeCauseHasProof)
       case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-        payload.hasActionableContrast
+        StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(payload, records)
       case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
         payload.canAnchorStrategicIdea
       case _ =>

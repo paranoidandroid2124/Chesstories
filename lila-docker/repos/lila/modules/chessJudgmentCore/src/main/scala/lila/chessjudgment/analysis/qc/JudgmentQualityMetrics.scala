@@ -2393,7 +2393,7 @@ object CandidateComparisonDiagnostic:
         case EvidenceRecord(_, MoveVerdictCertificationEvidence(certification), _) =>
           certification.causes.exists(_.hasOwnedAdmissibleLongTermProof)
         case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-          payload.hasActionableContrast
+          StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(payload, packet.evidenceGraph.records)
         case _ =>
           false
       }

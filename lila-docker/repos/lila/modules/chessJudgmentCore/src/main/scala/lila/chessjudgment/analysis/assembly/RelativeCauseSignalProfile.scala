@@ -759,19 +759,12 @@ private[chessjudgment] object RelativeCauseSignalProfile:
   ): List[EvidenceRecord] =
     records.collect {
       case record @ EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _)
-          if (payload.hasActionableContrast || exactSameRootConcreteCarrierContrast(fact, payload, records)) &&
+          if StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(fact, payload, records) &&
             payload.comparisonKind == fact.kind &&
             payload.referenceLine == fact.referenceLine &&
             payload.candidateLine == fact.candidateLine =>
         record
     }.distinctBy(_.ref.id)
-
-  private[chessjudgment] def exactSameRootConcreteCarrierContrast(
-      fact: CandidateComparisonFact,
-      payload: StrategicMechanismContrastEvidence,
-      records: List[EvidenceRecord]
-  ): Boolean =
-    StrategicMechanismContrastEvidence.exactSameRootConcreteCarrierContrast(fact, payload, records)
 
   private[chessjudgment] def tacticalRiskRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
