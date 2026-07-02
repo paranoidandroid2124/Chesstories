@@ -160,12 +160,9 @@ private[qc] object MoveReviewPhase3AuditMetrics:
   private[qc] def moveMeaningSurfaceDiagnosticsJson(
       diagnostics: List[CandidateComparisonDiagnostic]
   ): JsObject =
-    val internalSignatures =
-      diagnostics.flatMap(_.moveJudgmentView.moveMeaningClaimSurfaceSignatures).distinct.sorted
     val publicClaimDiagnostics =
       diagnostics.flatMap(_.moveJudgmentView.publicMoveMeaningClaimDiagnostics).distinct.sortBy(_.signature)
     val publicSignatures = publicClaimDiagnostics.map(_.signature).distinct.sorted
-    val suppressedSignatures = internalSignatures.diff(publicSignatures)
     val multiInputPublicSignatures =
       publicClaimDiagnostics.filter(multiEvidenceInputPublicClaim).map(_.signature).distinct.sorted
     val boardCarrierlessPublicSignatures =
@@ -174,8 +171,6 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       "publicMoveMeaningClaimCount" -> publicSignatures.size,
       "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicSignatures.size,
       "boardCarrierlessPublicMoveMeaningClaimSignatures" -> boardCarrierlessPublicSignatures,
-      "suppressedMoveMeaningClaimCount" -> suppressedSignatures.size,
-      "suppressedMoveMeaningClaimSignatures" -> suppressedSignatures,
       "multiEvidenceInputPublicClaimCount" -> multiInputPublicSignatures.size,
       "multiEvidenceInputPublicClaimSignatures" -> multiInputPublicSignatures
     )
@@ -190,11 +185,6 @@ private[qc] object MoveReviewPhase3AuditMetrics:
         )
         .distinct
         .sorted
-    val suppressedSignatures =
-      coverages
-        .flatMap(coverage => (coverage \ "suppressedMoveMeaningClaimSignatures").asOpt[List[String]].getOrElse(Nil))
-        .distinct
-        .sorted
     val multiInputPublicSignatures =
       coverages
         .flatMap(coverage =>
@@ -206,8 +196,6 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       "publicMoveMeaningClaimCount" -> publicClaimCount,
       "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicSignatures.size,
       "boardCarrierlessPublicMoveMeaningClaimSignatures" -> boardCarrierlessPublicSignatures,
-      "suppressedMoveMeaningClaimCount" -> suppressedSignatures.size,
-      "suppressedMoveMeaningClaimSignatures" -> suppressedSignatures,
       "multiEvidenceInputPublicClaimCount" -> multiInputPublicSignatures.size,
       "multiEvidenceInputPublicClaimSignatures" -> multiInputPublicSignatures
     )
