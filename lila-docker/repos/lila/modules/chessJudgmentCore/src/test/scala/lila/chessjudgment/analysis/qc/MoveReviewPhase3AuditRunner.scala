@@ -784,8 +784,6 @@ object MoveReviewPhase3AuditRunner:
         semantic.contextTacticalOutrankingDiagnostics
       ),
       "contextTacticalOutranksPrimaryPlayed" -> semantic.contextTacticalOutranksPrimaryPlayed,
-      "genericComparisonOnlyCauseCount" -> genericComparisonOnlyCauseCount(semantic.comparisonDiagnostics),
-      "genericComparisonOnlyCauseDetails" -> genericComparisonOnlyDetails(semantic.comparisonDiagnostics),
       "openingApplicabilityDiagnostics" -> openingApplicabilityDiagnosticsSummary(semantic.openingApplicabilityDiagnostics),
       "openingSupportDiagnostics" -> openingSupportDiagnosticsSummary(semantic.openingSupportDiagnostics),
       "comparisonDiagnostics" -> comparisonDiagnosticsSummary(semantic.comparisonDiagnostics),
@@ -2804,55 +2802,6 @@ object MoveReviewPhase3AuditRunner:
               support.parentEvidenceIds.contains(subjectId)
           )
       )
-
-  private def genericComparisonOnlyDetails(diagnostics: List[CandidateComparisonDiagnostic]): JsArray =
-    JsArray(
-      diagnostics
-        .flatMap(diagnostic =>
-          diagnostic.causeSupport
-            .filter(support => support.semanticSupportKinds.contains("GenericComparisonOnly"))
-            .map(support =>
-              Json.obj(
-                "comparisonId" -> diagnostic.id,
-                "comparisonKind" -> diagnostic.comparisonKind.toString,
-                "referenceMove" -> diagnostic.referenceLine.rootMove,
-                "candidateMove" -> diagnostic.candidateLine.rootMove,
-                "causeId" -> support.id,
-                "causeKind" -> support.kind.toString,
-                "parentEvidenceIds" -> support.parentEvidenceIds,
-                "parentLayerSignature" -> support.parentLayerSignature,
-                "hasOwnedTypedDepth" -> support.hasOwnedTypedDepth,
-                "hasOwnedTacticalProof" -> support.hasOwnedTacticalProof,
-                "hasOwnedStrategicContrastDepth" -> support.hasOwnedStrategicContrastDepth,
-                "hasOwnedAdmissibleLongTermProof" -> support.hasOwnedAdmissibleLongTermProof,
-                "rawProofHasDirectProof" -> support.rawProofHasDirectProof,
-                "rawProofHasContrastProof" -> support.rawProofHasContrastProof,
-                "rawProofHasContextSupport" -> support.rawProofHasContextSupport,
-                "directProofSourceIds" -> support.directProofSourceIds,
-                "contrastProofSourceIds" -> support.contrastProofSourceIds,
-                "contextSupportSourceIds" -> support.contextSupportSourceIds,
-                "directProofKinds" -> support.directProofKinds,
-                "contrastProofKinds" -> support.contrastProofKinds,
-                "contextSupportKinds" -> support.contextSupportKinds,
-                "proofLineConsequences" -> support.proofLineConsequences.map(_.toString),
-                "proofRelationKinds" -> support.proofRelationKinds.map(_.toString),
-                "proofRelationDetails" -> support.proofRelationDetails,
-                "proofRelationSourceIds" -> support.proofRelationSourceIds,
-                "proofTacticalMechanismKinds" -> support.proofTacticalMechanismKinds.map(_.toString),
-                "proofTacticalMechanismSourceIds" -> support.proofTacticalMechanismSourceIds,
-                "proofStrategicAxisKeys" -> support.proofStrategicAxisKeys,
-                "proofStrategicMechanismKinds" -> support.proofStrategicMechanismKinds.map(_.toString),
-                "proofStrategicMechanismSourceIds" -> support.proofStrategicMechanismSourceIds,
-                "proofStrategicMechanismSignalSourceIds" -> support.proofStrategicMechanismSignalSourceIds,
-                "proofTransitionConsequences" -> support.proofTransitionConsequences.map(transitionConsequenceJson)
-              )
-            )
-        )
-        .take(20)
-    )
-
-  private def genericComparisonOnlyCauseCount(diagnostics: List[CandidateComparisonDiagnostic]): Int =
-    diagnostics.flatMap(_.causeSupport).count(_.semanticSupportKinds.contains("GenericComparisonOnly"))
 
   private def branchReplyProbeLifecycle(result: MoveReviewJudgmentResult): JsObject =
     val requests = result.packet.probeRequests.filter(request => request.purpose.exists(branchReplyProbePurpose))
