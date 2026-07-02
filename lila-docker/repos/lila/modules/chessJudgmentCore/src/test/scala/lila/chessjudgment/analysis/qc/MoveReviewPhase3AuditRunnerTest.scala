@@ -180,9 +180,13 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueObjectBindingSignatures = List(objectSignature),
         positionPlanTechniqueRelativeCauseEvidenceIds = if causes.nonEmpty then List(causeId) else Nil,
         moveMeaningClaimSurfaceSignatures =
-          List(s"unit=StructuralTransformation|axis=none|kind=TerminalProof|support=$support|lane=$lane|lineRole=candidate|move=$move|causes=$causeId"),
+          List(
+            s"unit=StructuralTransformation|axis=none|kind=TerminalProof|support=$support|lane=$lane|lineRole=candidate|move=$move|causes=$causeId|sources=line:$id|proof=DirectProof|objects=${objectSignature.replace('|', ';')}"
+          ),
         publicMoveMeaningClaimSurfaceSignatures =
-          List(s"unit=StructuralTransformation|axis=none|kind=TerminalProof|support=$support|lane=$lane|lineRole=candidate|move=$move|causes=$causeId")
+          List(
+            s"unit=StructuralTransformation|axis=none|kind=TerminalProof|support=$support|lane=$lane|lineRole=candidate|move=$move|causes=$causeId|sources=line:$id|proof=DirectProof|objects=${objectSignature.replace('|', ';')}"
+          )
       )
 
     val mateSlot =
@@ -1549,7 +1553,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         "requiredSquare:f8"
       )
     val publicSurfaceSignature =
-      "unit=EndgameTechniqueRecipe|axis=none|kind=RookEndgameTechnique|support=view_surfaced|lane=current_move_function|causes=none"
+      "unit=EndgameTechniqueRecipe|axis=none|kind=RookEndgameTechnique|support=view_surfaced|lane=current_move_function|causes=none|sources=line:rook-horizon|proof=DirectProof|objects=target=Square:f8"
     val diagnostic =
       comparisonDiagnostic(
         id = "cmp-rook-recognition-view",
@@ -1601,7 +1605,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
   test("recognition view slots without token probes match public current move surface"):
     val publicSurfaceSignature =
-      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=view_surfaced|lane=current_move_function|causes=none"
+      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=view_surfaced|lane=current_move_function|causes=none|sources=route-src|proof=none|objects=target=Piece:knight"
     val diagnostic =
       comparisonDiagnostic(
         id = "cmp-route-recognition-view",
@@ -1636,6 +1640,38 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "view_surfaced")
     assertEquals((coverage \ "slots" \ 0 \ "matched").as[Boolean], true)
     assertEquals((coverage \ "slots" \ 1 \ "matched").as[Boolean], false)
+
+  test("recognition view slots require a public carrier signature"):
+    val carrierlessPublicSurfaceSignature =
+      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=view_surfaced|lane=current_move_function|lineRole=played|move=g1f3|causes=none|sources=none|proof=none|objects=none"
+    val diagnostic =
+      comparisonDiagnostic(
+        id = "cmp-route-recognition-carrierless",
+        referenceLeadAxes = Nil,
+        producedKinds = Nil,
+        flows = Nil,
+        primaryRootKinds = Nil,
+        primaryRootIds = Nil,
+        positionPlanTechniqueFrameIds = List("frame-route-recognition-carrierless"),
+        positionPlanTechniqueUnits = List(PositionPlanTechniqueUnit.PieceRerouteRoute),
+        positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.PieceRerouteRoute),
+        positionPlanTechniqueSemanticDetailTokens = List("unit:PieceRerouteRoute"),
+        positionPlanTechniqueSemanticDetailTokenGroups = List(List("unit:PieceRerouteRoute")),
+        moveMeaningClaimSurfaceSignatures = List(carrierlessPublicSurfaceSignature),
+        publicMoveMeaningClaimSurfaceSignatures = List(carrierlessPublicSurfaceSignature)
+      )
+    val recognitionSlot =
+      MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
+        id = "route-recognition-carrierless",
+        unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+        requiredTerminalStage = Some("view_surfaced")
+      )
+
+    val coverage =
+      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(recognitionSlot), List(diagnostic))
+
+    assertEquals((coverage \ "slots" \ 0 \ "matched").as[Boolean], false)
+    assertEquals((coverage \ "slots" \ 0 \ "viewSurfaced").as[Boolean], false)
 
   test("ownership slots accept reference-owned public pawn break without current-move overclaim"):
     val axis = "PawnBreak:Support:break-file-e-created-tension-e5-d4"
@@ -1718,9 +1754,13 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailTokens = semanticTokens,
         positionPlanTechniqueSemanticDetailTokenGroups = List(semanticTokens),
         moveMeaningClaimSurfaceSignatures =
-          List("unit=SpacePreventionResourceDenial|axis=none|kind=CounterplayControl|support=view_surfaced|lane=current_move_function|causes=none"),
+          List(
+            "unit=SpacePreventionResourceDenial|axis=none|kind=CounterplayControl|support=view_surfaced|lane=current_move_function|causes=none|sources=resource-src|proof=DirectProof|objects=target=Square:a1;mechanism=Mechanism:counterplayrestraint"
+          ),
         publicMoveMeaningClaimSurfaceSignatures =
-          List("unit=SpacePreventionResourceDenial|axis=none|kind=CounterplayControl|support=view_surfaced|lane=current_move_function|causes=none")
+          List(
+            "unit=SpacePreventionResourceDenial|axis=none|kind=CounterplayControl|support=view_surfaced|lane=current_move_function|causes=none|sources=resource-src|proof=DirectProof|objects=target=Square:a1;mechanism=Mechanism:counterplayrestraint"
+          )
       )
     val sideOnlyDiagnostic =
       concreteDiagnostic.copy(

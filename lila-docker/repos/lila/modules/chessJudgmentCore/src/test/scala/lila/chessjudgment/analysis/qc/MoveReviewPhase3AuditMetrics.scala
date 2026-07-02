@@ -1882,7 +1882,22 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
         semanticRubricSurfaceClaimCauseIds(signature).nonEmpty
     parts.contains(s"unit=$unit") &&
       axisKey.forall(axis => parts.contains(s"axis=$axis")) &&
-      (currentMoveLane || referenceOwnedLane)
+      ((currentMoveLane && semanticRubricSurfaceClaimHasCarrier(signature)) || referenceOwnedLane)
+
+  private def semanticRubricSurfaceClaimHasCarrier(signature: String): Boolean =
+    def values(key: String): List[String] =
+      MoveReviewPhase3AuditMetrics
+        .signatureParts(signature)
+        .collectFirst { case part if part.startsWith(s"$key=") => part.stripPrefix(s"$key=") }
+        .toList
+        .flatMap(_.split(",").toList)
+        .map(_.trim)
+        .filter(value => value.nonEmpty && value != "none")
+    val sources = values("sources")
+    val objects = values("objects")
+    semanticRubricSurfaceClaimCauseIds(signature).nonEmpty ||
+      (sources.nonEmpty && objects.nonEmpty) ||
+      (values("proof").nonEmpty && objects.nonEmpty)
 
   private def semanticRubricSurfaceClaimCauseIds(signature: String): List[String] =
     MoveReviewPhase3AuditMetrics
