@@ -3431,6 +3431,39 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     )
     assertEquals(badSurface, Nil)
 
+  test("move meaning claims classify route activity from the surfaced carrier"):
+    val rawRouteOnly =
+      "actor=Piece:rook|mechanism=Mechanism:filecontrol|proof=DirectProof"
+    val genericSurface =
+      "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated|proof=DirectProof"
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Gain:activity-gain"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      label = Some("activity-gain"),
+      candidateEvidenceIds = List("played-transition"),
+      sourceEvidenceIds = List("played-transition"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List(rawRouteOnly, genericSurface),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis,
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralPurposeSubjects = List("knight:e2-e3"),
+      structuralPurposeConsequences = List("DevelopmentPieceActivated"),
+      structuralPurposeCategories = List("PieceActivity"),
+      structuralMotifTags = List("piece")
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(detail)
+    )
+    val claim = view.moveMeaningClaims.head
+
+    assertEquals(claim.meaningKind, "PieceActivity")
+    assertEquals(claim.role, "ImprovesPieceActivity")
+    assert(!claim.reasonTokens.exists(_.startsWith("routeCarrier:")))
+    assertEquals(MoveMeaningSurface.from(view).map(_.ideaType), List("piece_activity"))
   test("move meaning public surface uses rendered target carrier for claim proof"):
     val proofOnlyClaim = MoveMeaningClaim(
       meaningKind = "PieceActivity",

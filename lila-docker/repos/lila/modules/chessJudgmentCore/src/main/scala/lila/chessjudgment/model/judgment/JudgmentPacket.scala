@@ -2902,7 +2902,6 @@ object MoveMeaningClaim:
     for
       baseMeaningKind <- kind(detail, objectSignatures, None)
       if detailMatchesLine(frame, detail, verdict)
-      baseClaimRole = role(baseMeaningKind, detail)
       currentRouteLineRole =
         Option.when(
           currentMoveRouteLineRole(detail, objectSignatures, verdict)
@@ -2915,31 +2914,11 @@ object MoveMeaningClaim:
       claimOptions =
         lineRoleOptions.map { optionLineRole =>
           val optionMove = moveUci(verdict, optionLineRole)
-          val optionLinkedCauseFrames =
-            linkedCauseFrames.filter(linkedFrame =>
-              causeFrameOwnsMeaningClaim(
-                linkedFrame,
-                verdict,
-                detail,
-                objectSignatures,
-                optionLineRole,
-                optionMove,
-                baseClaimRole
-              ) ||
-                sameRootRouteOwnedCauseBridge(
-                  linkedFrame,
-                  verdict,
-                  detail,
-                  objectSignatures,
-                  optionLineRole,
-                  optionMove,
-                  baseClaimRole
-              )
-            )
-          val optionMeaningKind = kind(detail, objectSignatures, Some(optionMove)).getOrElse(baseMeaningKind)
+          val optionObjectSignatures = surfaceObjectBindingSignatures(detail, objectSignatures, optionMove)
+          val optionMeaningKind = kind(detail, optionObjectSignatures, Some(optionMove)).getOrElse(baseMeaningKind)
           val optionClaimRole = role(optionMeaningKind, detail, optionMove, frame.position.fen, optionLineRole)
           val optionRoleCompatibleCauseFrames =
-            optionLinkedCauseFrames.filter(linkedFrame =>
+            linkedCauseFrames.filter(linkedFrame =>
               causeFrameOwnsMeaningClaim(
                 linkedFrame,
                 verdict,
@@ -2959,23 +2938,24 @@ object MoveMeaningClaim:
                   optionClaimRole
               )
             )
-          (optionLineRole, optionMove, optionMeaningKind, optionClaimRole, optionRoleCompatibleCauseFrames)
+          (optionLineRole, optionMove, optionObjectSignatures, optionMeaningKind, optionClaimRole, optionRoleCompatibleCauseFrames)
         }
       claimSelection =
-        claimOptions.find(option => option._5.nonEmpty && option._1 != "contrast")
-          .orElse(claimOptions.find(_._5.nonEmpty))
+        claimOptions.find(option => option._6.nonEmpty && option._1 != "contrast")
+          .orElse(claimOptions.find(_._6.nonEmpty))
           .getOrElse(claimOptions.head)
       claimLineRole = claimSelection._1
       claimMove = claimSelection._2
-      meaningKind = claimSelection._3
-      claimRole = claimSelection._4
-      roleCompatibleCauseFrames = claimSelection._5
+      surfaceObjectSignatures = claimSelection._3
+      meaningKind = claimSelection._4
+      claimRole = claimSelection._5
+      roleCompatibleCauseFrames = claimSelection._6
       support <- supportLevel(
         detail,
         meaningKind,
         linkedCauseFrames,
         roleCompatibleCauseFrames,
-        objectSignatures,
+        surfaceObjectSignatures,
         verdict,
         claimLineRole,
         claimMove,
@@ -2983,15 +2963,7 @@ object MoveMeaningClaim:
         claimRole
       )
     yield
-      val surfaceObjectSignatures = surfaceObjectBindingSignatures(detail, objectSignatures, claimMove)
       val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, surfaceObjectSignatures)
-      val surfaceMeaningKind =
-        if meaningKind == "PieceRoute" && !pieceRouteQualifiedCarrierForMove(detail, surfaceObjectSignatures, claimMove) then
-          "PieceActivity"
-        else meaningKind
-      val surfaceClaimRole =
-        if surfaceMeaningKind == meaningKind then claimRole
-        else role(surfaceMeaningKind, detail, claimMove, frame.position.fen, claimLineRole)
       val linkedCauseIds =
         roleCompatibleCauseFrames
           .flatMap(_.causeEvidenceIds)
@@ -2999,14 +2971,14 @@ object MoveMeaningClaim:
           .distinct
           .sorted
       MoveMeaningClaim(
-        meaningKind = surfaceMeaningKind,
-        role = surfaceClaimRole,
-        laneKey = laneKey(surfaceMeaningKind, detail, surfaceObjectSignatures),
-        conflictKey = conflictKey(surfaceMeaningKind, detail, surfaceObjectSignatures),
+        meaningKind = meaningKind,
+        role = claimRole,
+        laneKey = laneKey(meaningKind, detail, surfaceObjectSignatures),
+        conflictKey = conflictKey(meaningKind, detail, surfaceObjectSignatures),
         supportLevel = support,
         visibility = visibility(support),
         surfaceLane =
-          surfaceLane(surfaceMeaningKind, detail, verdict, claimLineRole, claimMove, frame.position.fen, support, roleCompatibleCauseFrames, surfaceClaimRole),
+          surfaceLane(meaningKind, detail, surfaceObjectSignatures, verdict, claimLineRole, claimMove, frame.position.fen, support, roleCompatibleCauseFrames, claimRole),
         lineRole = claimLineRole,
         moveUci = moveUci(verdict, claimLineRole),
         frameId = frame.id,
@@ -3020,7 +2992,7 @@ object MoveMeaningClaim:
         causeEvidenceIds = linkedCauseIds,
         sourceEvidenceIds = moveMeaningClaimSourceEvidenceIds(detail, verdict, claimLineRole, claimMove),
         objectBindingSignatures = surfaceObjectSignatures,
-        reasonTokens = reasonTokens(detail, surfaceObjectSignatures, linkedCauseIds, verdict, claimMove, frame.position.fen, surfaceClaimRole),
+        reasonTokens = reasonTokens(detail, surfaceObjectSignatures, linkedCauseIds, verdict, claimMove, frame.position.fen, claimRole),
         targetSquares = surfaceTarget.squares,
         targetFiles = surfaceTarget.files,
         targetPieces = surfaceTarget.pieces
@@ -5084,6 +5056,7 @@ object MoveMeaningClaim:
   private def surfaceLane(
       meaningKind: String,
       detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
       verdict: MoveJudgmentVerdictFrame,
       claimLineRole: String,
       claimMove: String,
@@ -5106,7 +5079,7 @@ object MoveMeaningClaim:
         detail.candidateEvidenceIds.isEmpty &&
         !currentMove
     lazy val currentMoveSurfaceReadyForLane =
-      currentMoveSurfaceReady(meaningKind, detail, detail.objectBindingSignatures, claimMove, positionFen, currentMove)
+      currentMoveSurfaceReady(meaningKind, detail, objectSignatures, claimMove, positionFen, currentMove)
     val ownedCandidateCauseOwnsCurrentMove =
       currentMove &&
         linkedCauseFrames.exists(frame => reasonGradeCauseFrame(frame) && ownedCandidateCauseFrameOwnsClaimMove(frame, claimMove))
