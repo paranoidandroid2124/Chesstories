@@ -92,7 +92,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       val auditRow = Json.parse(Files.readString(output, StandardCharsets.UTF_8))
       assertEquals((auditRow \ "auditMode").as[String], "slim")
       assert((auditRow \ "semanticCoverage").toOption.nonEmpty)
-      assert((auditRow \ "semanticRubricExpectedSlotCoverage").toOption.nonEmpty)
       assert((auditRow \ "moveJudgmentView").toOption.isEmpty)
       assert((auditRow \ "claimSupportClusters").toOption.isEmpty)
       assert((auditRow \ "claimEventClusters").toOption.isEmpty)

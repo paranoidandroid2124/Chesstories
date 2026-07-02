@@ -482,8 +482,7 @@ object MoveReviewPhase3AuditRunner:
             "relationKinds" -> relationKinds(built),
             "strategicKinds" -> strategicKinds(built),
             "probeRequests" -> probeRequestSummary(built),
-            "probeDiagnostics" -> probeDiagnosticsSummary(built),
-            "semanticRubricExpectedSlotCoverage" -> slotCoverage
+            "probeDiagnostics" -> probeDiagnosticsSummary(built)
           )
         val fullDiagnostics =
           Json.obj(

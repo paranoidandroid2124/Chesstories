@@ -191,6 +191,7 @@ describe('chesstory brief scaffold', () => {
             problem: { code: 'loses_activity', label: 'loses activity' },
           },
           target: { squares: ['e4', 'g3'], pieces: ['knight'] },
+          evidence: { has_carrier: true, proof_level: 'owned_cause' },
         },
       ],
     });
@@ -226,9 +227,8 @@ describe('chesstory brief scaffold', () => {
       ],
     });
 
-    const plan = sections.find(section => section.key === 'middlegame-plan');
-    assert.match(plan?.body || '', /No public local idea/);
-    assert.deepEqual(plan?.items, []);
+    assert.ok(sections.every(section => section.pending));
+    assert.doesNotMatch(JSON.stringify(sections), /piece activity|loses activity|e4|g3|knight/);
   });
 
   test('does not explain bad move problems or comparison from carrierless semantics', () => {
@@ -253,12 +253,8 @@ describe('chesstory brief scaffold', () => {
       ],
     });
 
-    const current = sections.find(section => section.key === 'current-decision');
-    const better = sections.find(section => section.key === 'better-plan');
-    assert.match(current?.body || '', /not enough public carrier evidence/);
-    assert.deepEqual(current?.items, []);
-    assert.doesNotMatch(better?.body || '', /outpost route/);
-    assert.deepEqual(better?.items, []);
+    assert.ok(sections.every(section => section.pending));
+    assert.doesNotMatch(JSON.stringify(sections), /loses activity|outpost route|e4g3|e4f6/);
   });
 
   test('does not invent a bad-move problem from carried semantics without a public problem', () => {
@@ -319,10 +315,7 @@ describe('chesstory brief scaffold', () => {
       ],
     });
 
-    const plan = sections.find(section => section.key === 'middlegame-plan');
-    const current = sections.find(section => section.key === 'current-decision');
-    assert.equal(plan?.tone, 'good');
-    assert.equal(current?.tone, 'good');
+    assert.ok(sections.every(section => section.pending));
     assert.doesNotMatch(JSON.stringify(sections), /loses activity|piece activity/);
   });
 
@@ -424,13 +417,8 @@ describe('chesstory brief scaffold', () => {
       ],
     });
 
-    const evidence = sections.find(section => section.key === 'evidence');
-    const plan = sections.find(section => section.key === 'middlegame-plan');
-    const current = sections.find(section => section.key === 'current-decision');
-    assert.match(plan?.body || '', /No public carrier/);
-    assert.match(current?.body || '', /not enough public carrier evidence/);
-    assert.match(evidence?.body || '', /not enough public evidence/);
-    assert.deepEqual(evidence?.items, []);
+    assert.ok(sections.every(section => section.pending));
+    assert.doesNotMatch(JSON.stringify(sections), /target pressure|d6|c4c5/);
   });
 
   test('uses public board carriers when targets are absent', () => {
@@ -495,10 +483,8 @@ describe('chesstory brief scaffold', () => {
     });
 
     const text = JSON.stringify(sections);
-    const evidence = sections.find(section => section.key === 'evidence');
+    assert.ok(sections.every(section => section.pending));
     assert.doesNotMatch(text, /mate|Lucena|king cut off/);
-    assert.match(evidence?.body || '', /not enough public evidence/);
-    assert.deepEqual(evidence?.items, []);
   });
 
   test('keeps terminal and rook technique evidence in the LLM payload', () => {

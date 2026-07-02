@@ -97,7 +97,7 @@ interface ChesstoryComparisonLoss extends ChesstoryCode {
 }
 
 export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): ChesstoryBriefSection[] {
-  if (!payload?.move_semantics?.length) return placeholderSections();
+  if (!payload?.move_semantics?.some(hasEvidenceCarrier)) return placeholderSections();
 
   const semantics = payload.move_semantics;
   const played = semantics.filter(s => s.subject === 'played_move');
