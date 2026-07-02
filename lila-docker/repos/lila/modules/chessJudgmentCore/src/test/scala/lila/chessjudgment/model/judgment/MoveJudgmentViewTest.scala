@@ -738,8 +738,8 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(claim.supportLevel, "owned_cause_linked")
     assertEquals(claim.surfaceLane, "current_move_owned")
     assertEquals(claim.lineRole, "candidate")
-    assert(claim.reasonTokens.contains(s"causeEvidenceId:${causeRef.id}"), claim.reasonTokens)
-    assert(claim.objectBindingSignatures.exists(_.contains("target=Square:b7")), claim.objectBindingSignatures)
+    assertEquals(claim.causeEvidenceIds, List(causeRef.id))
+    assert(claim.targetSquares.contains("b7"), claim.targetSquares)
 
   test("links exact quiet piece route through root owned structural proof without axis identity"):
     val root = PositionNodeRef("8/8/8/8/8/8/8/4KN2 w - - 0 1", 1, Some(Color.White), Some("root"))
@@ -1401,27 +1401,11 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(claim.supportLevel, "owned_cause_linked")
     assertEquals(claim.surfaceLane, "current_move_owned")
     assertEquals(claim.lineRole, "candidate")
-    assert(claim.reasonTokens.contains("structuralConsequence:OpponentMobilityRestriction"), claim.reasonTokens)
-    assert(
-      claim.reasonTokens.contains("structuralSubject:bishop:g7:diagonal-denial:blocked-by:e5:locked-center:mobility-3-to-2"),
-      claim.reasonTokens
-    )
-    assert(claim.reasonTokens.contains("rayRole:denial"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("rayAxis:diagonal"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("rayPiece:bishop"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("raySquare:g7"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("rayBlockedSquare:e5"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("resourceDenied:diagonal"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("counterplayDelay:diagonal"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains(s"causeEvidenceId:${causeRef.id}"), claim.reasonTokens)
-    assert(
-      claim.objectBindingSignatures.exists(signature =>
-        signature.contains("target=Piece:bishop") &&
-          signature.contains("target=Square:g7") &&
-          signature.contains("target=Square:e5")
-      ),
-      claim.objectBindingSignatures
-    )
+    assertEquals(claim.causeEvidenceIds, List(causeRef.id))
+    assertEquals(claim.publicIdeaType, Some("ray_denial"))
+    assert(claim.targetPieces.contains("bishop"), claim.targetPieces)
+    assert(claim.targetSquares.contains("g7"), claim.targetSquares)
+    assert(claim.targetSquares.contains("e5"), claim.targetSquares)
     val surface = MoveMeaningSurface.from(view).find(_.ideaType == "ray_denial").getOrElse(fail(MoveMeaningSurface.from(view).toString))
     assertEquals(surface.subject, "played_move")
     assertEquals(surface.priority, "main")
@@ -4458,15 +4442,13 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(claim.supportLevel, "owned_cause_linked")
     assertEquals(claim.visibility, "reason_grade")
     assertEquals(claim.surfaceLane, "reference_or_opponent_resource")
-    assert(claim.laneKey.contains("target=File:e"), claim.laneKey)
     assertEquals(claim.lineRole, "reference")
     assertEquals(claim.moveUci, "e2e4")
-    assert(claim.reasonTokens.contains(s"causeEvidenceId:${causeRef.id}"), claim.reasonTokens)
-    assert(claim.objectBindingSignatures.exists(_.contains("target=File:e")), claim.objectBindingSignatures)
-    assert(
-      claim.objectBindingSignatures.exists(signature => signature.contains("target=Square:e4") && signature.contains("target=Square:d5")),
-      claim.objectBindingSignatures
-    )
+    assertEquals(claim.causeEvidenceIds, List(causeRef.id))
+    assertEquals(claim.breakFiles, List("e"))
+    assert(claim.targetFiles.contains("e"), claim.targetFiles)
+    assert(claim.targetSquares.contains("e4"), claim.targetSquares)
+    assert(claim.targetSquares.contains("d5"), claim.targetSquares)
 
   test("keeps pure tactical played blunder as root when no proved structural root exists"):
     val root = PositionNodeRef("8/8/8/8/8/8/3P4/8 w - - 0 1", 1, Some(Color.White), Some("root"))
@@ -4951,10 +4933,10 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(overriddenDetail.proofRoles, Nil)
     assertEquals(overriddenDetail.terminalConsequenceKinds, List("Mate"))
     assert(!overriddenView.moveMeaningClaims.exists(_.supportLevel == "owned_cause_linked"))
-    assert(!overriddenView.moveMeaningClaims.exists(_.reasonTokens.exists(_.startsWith("causeEvidenceId:"))))
+    assert(!overriddenView.moveMeaningClaims.exists(_.causeEvidenceIds.nonEmpty))
     val terminalClaim = overriddenView.moveMeaningClaims
       .find(claim =>
-        claim.reasonTokens.contains("terminalConsequenceKind:Mate") &&
+        claim.terminalConsequenceKinds.contains("Mate") &&
           claim.supportLevel == "view_surfaced" &&
           claim.surfaceLane == "current_move_function"
       )
