@@ -4577,7 +4577,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     val drawResource =
       frame("draw-resource", RelativeCauseKind.DrawResource, hasLongTermProof = false, List(LineConsequenceKind.DrawResource))
 
-    val narrated = MoveJudgmentCauseNarrativeProjection.withNarrativeRoles(List(exactStructural, drawResource))
+    val narrated = MoveJudgmentCauseNarrativeProjection.withNarrativeRoles(TypedEvidenceGraph.empty, List(exactStructural, drawResource))
 
     assertEquals(
       narrated.filter(_.narrativeRole == MoveJudgmentCauseNarrativeRole.RootCause).map(_.causeKind),

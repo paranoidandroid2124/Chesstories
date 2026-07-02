@@ -5527,7 +5527,7 @@ object MoveJudgmentView:
             frame.eventLine.id
           )
         )
-    val narratedCauseFrames = MoveJudgmentCauseNarrativeProjection.withNarrativeRoles(causeFrames)
+    val narratedCauseFrames = MoveJudgmentCauseNarrativeProjection.withNarrativeRoles(evidenceGraph, causeFrames)
     val verdictCarrierIds =
       (claimEventClusters.flatMap(_.evaluationClaimIds) ++
         claims.filter(claim => claim.family == ClaimFamily.Evaluation && claimCarriesVerdict(claim, evidenceGraph, playedMoves)).map(_.id))

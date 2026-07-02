@@ -7,9 +7,9 @@ object MoveJudgmentCauseNarrativeProjection:
       case MoveJudgmentCauseFrameRole.SecondaryCause => MoveJudgmentCauseNarrativeRole.SupportingCause
       case MoveJudgmentCauseFrameRole.ContextCause   => MoveJudgmentCauseNarrativeRole.ContextCause
 
-  def withNarrativeRoles(frames: List[MoveJudgmentCauseFrame]): List[MoveJudgmentCauseFrame] =
+  def withNarrativeRoles(graph: TypedEvidenceGraph, frames: List[MoveJudgmentCauseFrame]): List[MoveJudgmentCauseFrame] =
     val selectedRootsByComparison =
-      selectedRootFramesByComparison(frames)
+      selectedRootFramesByComparison(graph, frames)
     val selectedRootIds =
       selectedRootsByComparison.values.flatten.map(causeFrameIdentity).toSet
     val selectedLongTermRootsByComparison =
@@ -17,14 +17,14 @@ object MoveJudgmentCauseNarrativeProjection:
         .mapValues(_.filter(longTermRootFrame))
         .toMap
     frames.map { frame =>
-      val arbitrationTier = rootArbitrationProfile(frame).tier
+      val arbitrationTier = rootArbitrationProfile(graph, frame).tier
       val frameWithTier = frame.copy(rootArbitrationTier = arbitrationTier)
       val matchingLongTermRoots = selectedLongTermRootsByComparison.getOrElse(comparisonFrameKey(frame), Nil)
       if selectedRootIds.contains(causeFrameIdentity(frame)) then
         if longTermRootFrame(frame) then
           val witnesses =
             frames
-              .filter(candidate => sameComparison(candidate, frame) && tacticalWitnessNarrativeFrame(candidate))
+              .filter(candidate => sameComparison(candidate, frame) && tacticalWitnessNarrativeFrame(graph, candidate))
               .filterNot(candidate => causeFrameIdentity(candidate) == causeFrameIdentity(frame))
           val witnessBindings = witnesses.map(witness => witness -> witnessBinding(frame, witness))
           val punishmentWitnesses =
@@ -49,7 +49,7 @@ object MoveJudgmentCauseNarrativeProjection:
             contextualTacticalWitnessCauseKinds = contextualWitnesses.map(_.causeKind).distinct
           )
         else frameWithTier.copy(narrativeRole = MoveJudgmentCauseNarrativeRole.RootCause)
-      else if tacticalWitnessNarrativeFrame(frame) && matchingLongTermRoots.nonEmpty then
+      else if tacticalWitnessNarrativeFrame(graph, frame) && matchingLongTermRoots.nonEmpty then
         val binding = strongestWitnessBinding(frame, matchingLongTermRoots)
         if binding.level == MoveJudgmentCauseWitnessBindingLevel.SameComparisonOnly then
           frameWithTier.copy(
@@ -83,18 +83,19 @@ object MoveJudgmentCauseNarrativeProjection:
   )
 
   private def selectedRootFramesByComparison(
+      graph: TypedEvidenceGraph,
       frames: List[MoveJudgmentCauseFrame]
   ): Map[(CandidateComparisonKind, LineNodeRef, LineNodeRef), List[MoveJudgmentCauseFrame]] =
     frames
       .filter(arbitrationManagedPrimaryFrame)
       .groupBy(comparisonFrameKey)
       .view
-      .mapValues(selectedRootFrames)
+      .mapValues(selectedRootFrames(graph, _))
       .filter { case (_, selected) => selected.nonEmpty }
       .toMap
 
-  private def selectedRootFrames(frames: List[MoveJudgmentCauseFrame]): List[MoveJudgmentCauseFrame] =
-    val profiled = frames.map(frame => frame -> rootArbitrationProfile(frame))
+  private def selectedRootFrames(graph: TypedEvidenceGraph, frames: List[MoveJudgmentCauseFrame]): List[MoveJudgmentCauseFrame] =
+    val profiled = frames.map(frame => frame -> rootArbitrationProfile(graph, frame))
     val qualifiedLongTermRoots =
       profiled.filter { case (frame, profile) =>
         longTermRootFrame(frame) &&
@@ -112,24 +113,24 @@ object MoveJudgmentCauseNarrativeProjection:
     val terminalEventRoots = eventRoots.filter { case (frame, _) => terminalProofEventRoot(frame) }
     val fallbackRoots = profiled.filter { case (_, profile) => profile.tier == MoveJudgmentCauseRootArbitrationTier.FallbackRoot }
     val selected =
-      if terminalEventRoots.nonEmpty then selectedEventRootFrames(terminalEventRoots.map(_._1))
+      if terminalEventRoots.nonEmpty then selectedEventRootFrames(graph, terminalEventRoots.map(_._1))
       else if qualifiedLongTermRoots.nonEmpty then qualifiedLongTermRoots.map(_._1)
-      else if eventRoots.nonEmpty then selectedEventRootFrames(eventRoots.map(_._1))
+      else if eventRoots.nonEmpty then selectedEventRootFrames(graph, eventRoots.map(_._1))
       else selectedFallbackRootFrames(fallbackRoots.map(_._1))
     selected.distinctBy(causeFrameIdentity)
 
   private def terminalProofEventRoot(frame: MoveJudgmentCauseFrame): Boolean =
     frame.proofLineConsequences.exists(LineConsequenceKind.terminalResultProof)
 
-  private def selectedEventRootFrames(frames: List[MoveJudgmentCauseFrame]): List[MoveJudgmentCauseFrame] =
-    frames.sortBy(eventRootSortKey).lastOption.toList
+  private def selectedEventRootFrames(graph: TypedEvidenceGraph, frames: List[MoveJudgmentCauseFrame]): List[MoveJudgmentCauseFrame] =
+    frames.sortBy(eventRootSortKey(graph, _)).lastOption.toList
 
   private def selectedFallbackRootFrames(frames: List[MoveJudgmentCauseFrame]): List[MoveJudgmentCauseFrame] =
     frames.sortBy(fallbackRootSortKey).lastOption.toList
 
-  private def eventRootSortKey(frame: MoveJudgmentCauseFrame): (Int, Int, Int, Int, Int, Int, Int, String) =
+  private def eventRootSortKey(graph: TypedEvidenceGraph, frame: MoveJudgmentCauseFrame): (Int, Int, Int, Int, Int, Int, Int, String) =
     (
-      eventRootKindRank(frame),
+      eventRootKindRank(graph, frame),
       boolRank(rootArbitrationObjectReady(frame)),
       boolRank(frame.attributionRootMoveMatched),
       boolRank(frame.attributionDirectProofEligible),
@@ -149,9 +150,9 @@ object MoveJudgmentCauseNarrativeProjection:
       frame.causeKind.toString
     )
 
-  private def eventRootKindRank(frame: MoveJudgmentCauseFrame): Int =
+  private def eventRootKindRank(graph: TypedEvidenceGraph, frame: MoveJudgmentCauseFrame): Int =
     frame.causeKind match
-      case RelativeCauseKind.WrongRecapturer if eventRootCaptureBound(frame) =>
+      case RelativeCauseKind.WrongRecapturer if eventRootCaptureBound(graph, frame) =>
         110
       case RelativeCauseKind.WrongMoveOrder | RelativeCauseKind.TempoLoss =>
         100
@@ -183,30 +184,34 @@ object MoveJudgmentCauseNarrativeProjection:
       case RelativeCauseSourceSide.Candidate | RelativeCauseSourceSide.Reference => 1
       case RelativeCauseSourceSide.Mixed | RelativeCauseSourceSide.Shared        => 0
 
-  private def eventRootSelectable(frame: MoveJudgmentCauseFrame): Boolean =
-    frame.causeKind != RelativeCauseKind.WrongRecapturer || eventRootCaptureBound(frame)
+  private def eventRootSelectable(graph: TypedEvidenceGraph, frame: MoveJudgmentCauseFrame): Boolean =
+    frame.causeKind != RelativeCauseKind.WrongRecapturer || eventRootCaptureBound(graph, frame)
 
-  private def eventRootCaptureBound(frame: MoveJudgmentCauseFrame): Boolean =
-    val moveToken = s"actor=Move:${frame.eventRootMove}"
-    frame.objectBindingSignatures.exists(signature =>
-      signature.contains(moveToken) &&
-        (
-          signature.contains("mechanism=Mechanism:capture") ||
-            signature.contains("mechanism=Motif:capture") ||
-            signature.contains("consequence=Consequence:capture")
-        )
-    )
+  private def eventRootCaptureBound(graph: TypedEvidenceGraph, frame: MoveJudgmentCauseFrame): Boolean =
+    EvidenceRecord.hasRootCaptureEvent(frameEvidenceRecords(graph, frame), frame.eventRootMove)
+
+  private def frameEvidenceRecords(graph: TypedEvidenceGraph, frame: MoveJudgmentCauseFrame): List[EvidenceRecord] =
+    (
+      frame.evidenceIds ++
+        frame.causeEvidenceIds ++
+        frame.proofDirectSourceIds ++
+        frame.proofContrastSourceIds ++
+        frame.proofContextSupportSourceIds ++
+        frame.proofStrategicMechanismSourceIds ++
+        frame.proofStrategicMechanismSignalSourceIds ++
+        frame.supportEvidenceSourceIds
+    ).distinct.flatMap(id => graph.byId.get(id))
 
   private def boolRank(value: Boolean): Int =
     if value then 1 else 0
 
-  private def rootArbitrationProfile(frame: MoveJudgmentCauseFrame): RootArbitrationProfile =
+  private def rootArbitrationProfile(graph: TypedEvidenceGraph, frame: MoveJudgmentCauseFrame): RootArbitrationProfile =
     val lineOwned = frame.attributionDirectProofEligible && frame.attributionRootMoveMatched
     val fallbackKind = fallbackRootKind(frame.causeKind)
     val arbitrationObjectReady =
       if broadObjectSensitiveRootKind(frame.causeKind) then directProofSpecificTargetReady(frame)
       else rootArbitrationObjectReady(frame)
-    val eventKind = tacticalWitnessFrame(frame) && eventRootSelectable(frame)
+    val eventKind = tacticalWitnessFrame(frame) && eventRootSelectable(graph, frame)
     val tier =
       if !lineOwned then MoveJudgmentCauseRootArbitrationTier.ContextOnly
       else if fallbackKind && fallbackRootProofReady(frame) then MoveJudgmentCauseRootArbitrationTier.FallbackRoot
@@ -452,8 +457,8 @@ object MoveJudgmentCauseNarrativeProjection:
           kind == ClaimEventClusterKind.MaterialEvent
       )
 
-  private def tacticalWitnessNarrativeFrame(frame: MoveJudgmentCauseFrame): Boolean =
-    tacticalWitnessFrame(frame) && eventRootSelectable(frame)
+  private def tacticalWitnessNarrativeFrame(graph: TypedEvidenceGraph, frame: MoveJudgmentCauseFrame): Boolean =
+    tacticalWitnessFrame(frame) && eventRootSelectable(graph, frame)
 
   private def sameComparison(left: MoveJudgmentCauseFrame, right: MoveJudgmentCauseFrame): Boolean =
     comparisonFrameKey(left) == comparisonFrameKey(right)
