@@ -1058,10 +1058,6 @@ object MoveReviewPhase3AuditRunner:
       ),
       "relativeCauseQualitySummary" -> (relativeCauseSummary
         ++ Json.obj(
-          "planTechniqueAnchorEligibility" -> planTechniqueAnchorEligibilityJson(
-            semantic.comparisonDiagnostics,
-            result.packet.evidenceGraph
-          ),
           "hasRelativeCauseFamilyMismatch" -> semantic.hasRelativeCauseFamilyMismatch,
           "relativeCauseFamilyMismatchKindCounts" -> claimLifecycleCountsJson(semantic.relativeCauseFamilyMismatchKindCounts),
           "relativeCauseFamilyMismatchDetails" -> relativeCauseFamilyMismatchCompactJson(
@@ -1480,10 +1476,7 @@ object MoveReviewPhase3AuditRunner:
           contextInventoryDiagnostics.map(diagnostic => failureClassId(diagnostic.failureClass))
         ),
         "failureReasonCounts" -> stringCountsJson(diagnostics.flatMap(_.failureReasons.map(failureReasonId)))
-      ),
-      "relativeCauseStageCounts" -> relativeCauseStageCountsJson(diagnostics),
-      "structuralWitnessFunnel" -> structuralWitnessFunnelJson(diagnostics),
-      "planTechniqueEligibilityFunnel" -> planTechniqueEligibilityFunnelJson(diagnostics)
+      )
     )
 
   private def referenceLeadSemanticAxis(diagnostic: CandidateComparisonDiagnostic): Boolean =
@@ -1571,27 +1564,14 @@ object MoveReviewPhase3AuditRunner:
     )
 
   private def auditFunnelMetrics: MoveReviewPhase3AuditFunnelMetrics =
-    new MoveReviewPhase3AuditFunnelMetrics(lineRefSummary)
+    new MoveReviewPhase3AuditFunnelMetrics
 
-  private def relativeCauseStageCountsJson(diagnostics: List[CandidateComparisonDiagnostic]): JsObject =
-    auditFunnelMetrics.relativeCauseStageCountsJson(diagnostics)
 
   private def noEventCauseFlow(flow: RelativeCauseFlowDiagnostic): Boolean =
     auditFunnelMetrics.noEventCauseFlow(flow)
 
-  private[qc] def planTechniqueEligibilityFunnelJson(
-      diagnostics: List[CandidateComparisonDiagnostic]
-  ): JsObject =
-    auditFunnelMetrics.planTechniqueEligibilityFunnelJson(diagnostics)
 
-  private[qc] def planTechniqueAnchorEligibilityJson(
-      diagnostics: List[CandidateComparisonDiagnostic],
-      graph: TypedEvidenceGraph
-  ): JsObject =
-    auditFunnelMetrics.planTechniqueAnchorEligibilityJson(diagnostics, graph)
 
-  private def structuralWitnessFunnelJson(diagnostics: List[CandidateComparisonDiagnostic]): JsObject =
-    auditFunnelMetrics.structuralWitnessFunnelJson(diagnostics)
 
   private[qc] def semanticRubricExpectedSlotCoverageJson(
       expectedSlots: List[ExpectedSemanticSlot],
