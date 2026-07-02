@@ -3335,6 +3335,11 @@ object MoveMotifEvent:
           (Nil, Nil, Nil, List(Pawn))
         case Motif.Opposition(opponentKingSquare, ownKingSquare, _, _, _, _) =>
           (List(evidenceSquare(ownKingSquare)), List(evidenceSquare(opponentKingSquare)), Nil, List(King))
+        case Motif.KingStep(_, _, _, move) =>
+          val normalized = move.map(_.trim.toLowerCase).getOrElse("")
+          val from = Square.fromKey(normalized.take(2)).map(evidenceSquare).toList
+          val to = Square.fromKey(normalized.slice(2, 4)).map(evidenceSquare).toList
+          (from, to, Nil, List(King))
         case Motif.OpenFileControl(file, _, _, _) =>
           (Nil, Nil, Nil, Nil)
         case Motif.SemiOpenFileControl(file, _, _, _) =>

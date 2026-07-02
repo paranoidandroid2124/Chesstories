@@ -4582,6 +4582,7 @@ object MoveMeaningClaim:
       (
         normalized.contains("mechanism=mechanism:outpost") ||
         normalized.contains("mechanism=mechanism:battery") ||
+          normalized.contains("mechanism=motif:kingstep") ||
           normalized.contains("mechanism=mechanism:bishop-long-diagonal") ||
           normalized.contains("mechanism=mechanism:rerouting") ||
           normalized.contains("mechanism=mechanism:improvingscope") ||
@@ -4646,6 +4647,7 @@ object MoveMeaningClaim:
     val normalized = signature.toLowerCase
     normalized.contains("rerouting") ||
       normalized.contains("maneuver") ||
+      normalized.contains("mechanism=motif:kingstep") ||
       normalized.contains("battery") ||
       normalized.contains("bishop-long-diagonal") ||
       strategicRayRestrictionToken(normalized) ||

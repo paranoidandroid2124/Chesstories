@@ -828,8 +828,35 @@ object EvidenceFactAssembler:
       .groupBy(candidate => (candidate.kind, candidate.position, candidate.line, candidate.scope))
       .toList
       .flatMap { case ((kind, position, line, scope), grouped) =>
-        val sourceRecords = grouped.map(_.source).distinctBy(_.ref.id)
-        val signals = grouped.map(_.signal).distinct
+        val routeRecords =
+          if kind != StrategicMechanismKind.Activity && kind != StrategicMechanismKind.Endgame then Nil
+          else
+            context.transitions
+              .filter(_.to == position)
+              .flatMap(edge =>
+                context.evidenceGraph.records.collect {
+                  case record @ EvidenceRecord(ref, payload: MoveMotifEvidence, _)
+                      if ref.position == edge.from &&
+                        ref.scope == edge.role.scope &&
+                        transitionRecordMentionsMove(record, edge.moveUci) &&
+                        payload.isRootEvent &&
+                        payload.motif.isInstanceOf[Motif.KingStep] =>
+                    record
+                }
+              )
+              .distinctBy(_.ref.id)
+        val routeSignals =
+          routeRecords.map(record =>
+            StrategicMechanismSignal(
+              StrategicMechanismSignalKind.StrategicFact,
+              "current-move-route",
+              record.ref,
+              1,
+              Some(StrategicAxisDetail(StrategicAxisKind.Activity, StrategicAxisPolarity.Support, "current-move-route"))
+            )
+          )
+        val sourceRecords = (grouped.map(_.source) ++ routeRecords).distinctBy(_.ref.id)
+        val signals = (grouped.map(_.signal) ++ routeSignals).distinct
         val semanticAnchors =
           (
             EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.StrategicMechanism, kind.toString) ::
