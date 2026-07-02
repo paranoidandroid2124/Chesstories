@@ -1710,6 +1710,7 @@ object MoveMeaningSurfaceTarget:
           targetCarriers.filter(_.kind == "Square").map(_.value) ++
             pawnTargets.flatMap(squareFromText) ++
             detail.tensionSquares ++
+            detail.blockadeSquare.toList ++
             detail.resourceContestSquares ++
             detail.requiredSquares ++
             detail.maintainedSquares ++
@@ -2955,6 +2956,7 @@ object MoveMeaningClaim:
         detail.resourceContestFiles.flatMap(file => publicFileCarrier("target", file)) ++
         (
           detail.tensionSquares ++
+            detail.blockadeSquare.toList ++
             detail.resourceContestSquares ++
             detail.requiredSquares ++
             detail.maintainedSquares ++
