@@ -2981,8 +2981,15 @@ object MoveMeaningClaim:
   private def publicBoardCarriers(
       detail: PositionPlanTechniqueSemanticDetail
   ): List[MoveMeaningSurfaceBoardCarrier] =
+    val terminalTargetCarriers =
+      if detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) then
+        EvidenceObjectBinding
+          .signatureTokens(detail.objectBindingSignatures, "target=Square:")
+          .flatMap(token => publicSquareCarrier("target", token.stripPrefix("target=Square:")))
+      else Nil
     (
         detail.structuralRouteMove.toList.map(move => publicMoveCarrier("actor", move)) ++
+        terminalTargetCarriers ++
         detail.structuralPurposeSubjects.flatMap(publicStructuralSubjectCarriers) ++
         publicPlanSubjectCarriers(detail) ++
         detail.breakFile.toList.flatMap(file => publicFileCarrier("target", file)) ++
