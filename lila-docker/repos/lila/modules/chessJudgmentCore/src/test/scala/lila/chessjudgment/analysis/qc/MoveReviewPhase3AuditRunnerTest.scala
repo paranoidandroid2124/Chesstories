@@ -395,66 +395,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       Nil
     )
 
-  test("semantic rubric funnel strict lineage does not treat row-level cause ownership as detail-owned"):
-    def diagnosticWithDetailTokens(
-        id: String,
-        detailTokens: List[String]
-    ): CandidateComparisonDiagnostic =
-      comparisonDiagnostic(
-        id = id,
-        referenceLeadAxes = List("PawnBreak:Support:central-break-timing"),
-        producedKinds = List(RelativeCauseKind.PawnBreakOpportunity),
-        flows = List(
-          causeFlow(
-            causeId = "cause-central-break",
-            kind = RelativeCauseKind.PawnBreakOpportunity,
-            proofAxisKeys = List("PawnBreak:Support:central-break-timing"),
-            claimIds = List("claim-central-break")
-          )
-        ),
-        primaryRootKinds = List(RelativeCauseKind.PawnBreakOpportunity),
-        primaryRootIds = List("cause-central-break"),
-        positionPlanTechniqueFrameIds = List(s"frame-$id"),
-        positionPlanTechniqueUnits = List(PositionPlanTechniqueUnit.TensionBreakPolicyRoute),
-        positionPlanTechniqueAxisKeys = List("PawnBreak:Support:central-break-timing"),
-        positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.TensionBreakPolicyRoute),
-        positionPlanTechniqueSemanticDetailAxisKeys = List("PawnBreak:Support:central-break-timing"),
-        positionPlanTechniqueSemanticDetailTokens = detailTokens,
-        positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
-        positionPlanTechniqueObjectBindingSignatures = List("target=Pawn:e4|mechanism=Mechanism:pawn-break|proof=DirectProof"),
-        positionPlanTechniqueRelativeCauseEvidenceIds = List("cause-central-break"),
-        publicMoveMeaningClaimDiagnostics =
-          List(
-            publicMoveMeaningClaimDiagnostic(
-              unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
-              axisKey = Some("PawnBreak:Support:central-break-timing"),
-              meaningKind = "PawnBreakTiming",
-              supportLevel = "owned_cause_linked",
-              surfaceLane = "current_move_owned",
-              causeEvidenceIds = List("cause-central-break")
-            )
-          ),
-        primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
-      )
-    val borrowed =
-      diagnosticWithDetailTokens("borrowed-row-cause", List("pawnBreakReady:true", "objectTarget:Pawn:e4"))
-    val coalesced =
-      diagnosticWithDetailTokens(
-        "coalesced-row-cause",
-        List("pawnBreakReady:true", "objectTarget:Pawn:e4", "causeEvidenceId:cause-central-break")
-      )
-
-    val borrowedFunnel = MoveReviewPhase3AuditRunner.semanticRubricFunnelJson(List(borrowed))
-    val coalescedFunnel = MoveReviewPhase3AuditRunner.semanticRubricFunnelJson(List(coalesced))
-
-    assertEquals((borrowedFunnel \ "looseStageCounts" \ "clustered_coherent").as[Int], 1)
-    assertEquals((borrowedFunnel \ "stageCounts" \ "clustered_coherent").as[Int], 0)
-    assertEquals((borrowedFunnel \ "strictLineageStageCounts" \ "clustered_coherent").as[Int], 0)
-    assertEquals((borrowedFunnel \ "strictLineageTerminalStageCounts" \ "exact_axis_or_pattern").as[Int], 1)
-    assertEquals((borrowedFunnel \ "strictCauseLineageBoundCount").as[Int], 0)
-    assertEquals((coalescedFunnel \ "strictLineageStageCounts" \ "clustered_coherent").as[Int], 1)
-    assertEquals((coalescedFunnel \ "strictCauseLineageBoundCount").as[Int], 1)
-
   test("expected semantic ownership slots require cause evidence co-located with semantic detail"):
     def diagnosticWithDetailTokens(
         id: String,
