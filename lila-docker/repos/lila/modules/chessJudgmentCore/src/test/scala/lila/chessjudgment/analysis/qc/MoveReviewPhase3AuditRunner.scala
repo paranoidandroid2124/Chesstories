@@ -3441,7 +3441,35 @@ object MoveReviewPhase3AuditRunner:
       "causeKinds" -> claim.causeKinds.map(_.toString),
       "causeSourceSides" -> claim.causeSourceSides.map(_.toString),
       "causeEvidenceIds" -> claim.causeEvidenceIds,
-      "sourceEvidenceIds" -> claim.sourceEvidenceIds
+      "sourceEvidenceIds" -> claim.sourceEvidenceIds,
+      "objectCarrierReady" -> claim.objectCarrierReady,
+      "publicHasCarrier" -> claim.publicHasCarrier,
+      "publicProofLevel" -> claim.publicProofLevel,
+      "publicTargetBound" -> claim.publicTargetBound,
+      "targetSquares" -> claim.targetSquares,
+      "targetFiles" -> claim.targetFiles,
+      "targetPieces" -> claim.targetPieces,
+      "routeIdentityParts" -> claim.routeIdentityParts,
+      "breakIdentityParts" -> claim.breakIdentityParts,
+      "breakFiles" -> claim.breakFiles,
+      "comparisonMoveRefs" -> claim.comparisonMoveRefs.map(ref =>
+        Json.obj(
+          "role" -> ref.role,
+          "uci" -> ref.uci
+        )
+      ),
+      "terminalConsequenceKinds" -> claim.terminalConsequenceKinds,
+      "endgameTechniquePattern" -> claim.endgameTechniquePattern,
+      "endgameTechniqueRookPattern" -> claim.endgameTechniqueRookPattern,
+      "endgameTechniqueSide" -> claim.endgameTechniqueSide,
+      "endgameTechniqueHorizonStatus" -> claim.endgameTechniqueHorizonStatus,
+      "endgameTechniqueTriggerMove" -> claim.endgameTechniqueTriggerMove,
+      "endgameTechniqueEntryPlyOffset" -> claim.endgameTechniqueEntryPlyOffset,
+      "endgameTechniqueTerminalPlyOffset" -> claim.endgameTechniqueTerminalPlyOffset,
+      "endgameTechniqueFailureReason" -> claim.endgameTechniqueFailureReason,
+      "requiredSquares" -> claim.requiredSquares,
+      "maintainedSquares" -> claim.maintainedSquares,
+      "brokenSquares" -> claim.brokenSquares
     )
 
   private def moveJudgmentPositionPlanTechniqueFrameJson(frame: PositionPlanTechniqueFrame): JsObject =
