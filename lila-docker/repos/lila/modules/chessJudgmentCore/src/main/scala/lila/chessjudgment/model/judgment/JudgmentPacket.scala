@@ -1855,6 +1855,10 @@ object MoveMeaningSurface:
       .sortBy(claim => claimSurfaceSortKey(view.verdict, claim))
       .take(12)
 
+  private[chessjudgment] def evidenceForClaim(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
+    val target = MoveMeaningSurfaceTarget.fromClaim(claim)
+    publicEvidence(claim, target, terminalConsequences(claim), endgameTechnique(claim))
+
   def publicSurfaceClaim(claim: MoveMeaningClaim): Boolean =
     terminalOverriddenEndgameTechniqueClaim(claim) ||
       (

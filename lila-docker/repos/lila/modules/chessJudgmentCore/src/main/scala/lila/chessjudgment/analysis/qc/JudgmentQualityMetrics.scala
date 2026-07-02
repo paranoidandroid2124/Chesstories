@@ -1607,6 +1607,7 @@ object CandidateComparisonDiagnostic:
       claim.objectBindingSignatures
         .map(_.replace('|', ';'))
         .take(4)
+    val publicEvidence = MoveMeaningSurface.evidenceForClaim(claim)
     List(
       s"unit=${claim.unit}",
       s"axis=$axis",
@@ -1618,6 +1619,8 @@ object CandidateComparisonDiagnostic:
       s"causes=${signatureField(claim.causeEvidenceIds)}",
       s"sources=${signatureField(claim.sourceEvidenceIds.take(6))}",
       s"proof=${signatureField(proofTokens)}",
+      s"carrier=${publicEvidence.hasCarrier}",
+      s"boardCarrier=${publicEvidence.boardCarriers.nonEmpty}",
       s"objects=${signatureField(objectTokens)}"
     ).mkString("|")
 

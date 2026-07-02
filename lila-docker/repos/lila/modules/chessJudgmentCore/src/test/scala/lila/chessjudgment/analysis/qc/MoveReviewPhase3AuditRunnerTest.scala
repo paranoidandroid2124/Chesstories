@@ -246,7 +246,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
   test("semantic rubric reports suppressed and merged move meaning claims"):
     val publicSignature =
-      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=view_surfaced|lane=current_move_function|lineRole=played|move=g1f3|causes=none|sources=route-src|proof=none|objects=target=Piece:knight"
+      "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=view_surfaced|lane=current_move_function|lineRole=played|move=g1f3|causes=none|sources=route-src|proof=none|objects=target=Piece:knight;mechanism=Mechanism:route;witness=Move:g1f3"
     val suppressedSignature =
       "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=owned_cause_linked|lane=current_move_owned|lineRole=played|move=g1f3|causes=cause-route|sources=route-src|proof=DirectProof|objects=target=Piece:knight"
     val mergedSignature =
@@ -282,15 +282,15 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       (coverage \ "boardCarrierlessPublicMoveMeaningClaimSignatures").as[List[String]],
       List(carrierlessPublicSignature)
     )
-    assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasProofCarrier(publicSignature), true)
+    assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasEvidenceCarrier(publicSignature), true)
     assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasBoardCarrier(publicSignature), true)
-    assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasProofCarrier(carrierlessPublicSignature), true)
+    assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasEvidenceCarrier(carrierlessPublicSignature), false)
     assertEquals(MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasBoardCarrier(carrierlessPublicSignature), false)
     assertEquals(
-      MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasProofCarrier(
+      MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasEvidenceCarrier(
         "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=owned_cause_linked|lane=current_move_owned|lineRole=played|move=g1f3|causes=cause-route|sources=none|proof=none|objects=none"
       ),
-      true
+      false
     )
     assertEquals(
       MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasBoardCarrier(
@@ -1701,12 +1701,12 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
     assertEquals((coverage \ "matchedSlotCount").as[Int], 0)
     assertEquals((coverage \ "planOptionOwnedCauseExpectationSlotIds").as[List[String]], List("minority-plan-owned"))
-    assertEquals((coverage \ "viewOnlyOwnedCauseExpectationSlotIds").as[List[String]], List("minority-plan-owned"))
+    assertEquals((coverage \ "viewOnlyOwnedCauseExpectationSlotIds").as[List[String]], Nil)
     assertEquals((coverage \ "classifiedMissingSlotIds").as[List[String]], List("minority-plan-owned"))
     assertEquals((coverage \ "unclassifiedMissingSlotIds").as[List[String]], Nil)
-    assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "view_surfaced")
+    assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "claim_survived")
     assertEquals((coverage \ "slots" \ 0 \ "planOptionOwnedCauseExpectation").as[Boolean], true)
-    assertEquals((coverage \ "slots" \ 0 \ "viewOnlyOwnedCauseExpectation").as[Boolean], true)
+    assertEquals((coverage \ "slots" \ 0 \ "viewOnlyOwnedCauseExpectation").as[Boolean], false)
 
   test("recognition view slots require a public carrier signature"):
     val carrierlessPublicSurfaceSignature =

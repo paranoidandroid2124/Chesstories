@@ -159,19 +159,28 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       .map(_.trim)
       .filter(value => value.nonEmpty && value != "none")
 
+  private def signatureFlag(signature: String, key: String): Option[Boolean] =
+    signatureParts(signature).collectFirst:
+      case part if part == s"$key=true"  => true
+      case part if part == s"$key=false" => false
+
   private def multiOwnerMoveMeaningClaim(signature: String): Boolean =
     signatureValues(signature, "causes").size > 1 ||
       signatureValues(signature, "sources").size > 1
 
-  private[qc] def publicSurfaceClaimHasProofCarrier(signature: String): Boolean =
-    val sources = signatureValues(signature, "sources")
-    val objects = signatureValues(signature, "objects")
-    signatureValues(signature, "causes").nonEmpty ||
-      (sources.nonEmpty && objects.nonEmpty) ||
-      (signatureValues(signature, "proof").nonEmpty && objects.nonEmpty)
+  private[qc] def publicSurfaceClaimHasEvidenceCarrier(signature: String): Boolean =
+    signatureFlag(signature, "carrier").getOrElse:
+      val hasObjectField = signatureParts(signature).exists(_.startsWith("objects="))
+      val hasBoardCarrier = publicSurfaceClaimHasBoardCarrier(signature)
+      val hasEvidenceLink =
+        signatureValues(signature, "causes").nonEmpty ||
+          signatureValues(signature, "sources").nonEmpty ||
+          signatureValues(signature, "proof").nonEmpty
+      if hasObjectField then hasEvidenceLink && hasBoardCarrier else hasEvidenceLink
 
   private[qc] def publicSurfaceClaimHasBoardCarrier(signature: String): Boolean =
-    signatureValues(signature, "objects").exists(publicSurfaceObjectHasBoardAnchor)
+    signatureFlag(signature, "boardCarrier").getOrElse:
+      signatureValues(signature, "objects").exists(publicSurfaceObjectHasBoardAnchor)
 
   private def publicSurfaceObjectHasBoardAnchor(objectSignature: String): Boolean =
     objectSignature
@@ -2039,13 +2048,14 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       parts.contains("lane=reference_or_opponent_resource") &&
         parts.contains("lineRole=reference") &&
         parts.contains("support=owned_cause_linked") &&
-        semanticRubricSurfaceClaimCauseIds(signature).nonEmpty
+        semanticRubricSurfaceClaimCauseIds(signature).nonEmpty &&
+        semanticRubricSurfaceClaimHasEvidenceCarrier(signature)
     parts.contains(s"unit=$unit") &&
       axisKey.forall(axis => parts.contains(s"axis=$axis")) &&
-      ((currentMoveLane && semanticRubricSurfaceClaimHasProofCarrier(signature)) || referenceOwnedLane)
+      ((currentMoveLane && semanticRubricSurfaceClaimHasEvidenceCarrier(signature)) || referenceOwnedLane)
 
-  private def semanticRubricSurfaceClaimHasProofCarrier(signature: String): Boolean =
-    MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasProofCarrier(signature)
+  private def semanticRubricSurfaceClaimHasEvidenceCarrier(signature: String): Boolean =
+    MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasEvidenceCarrier(signature)
 
   private def semanticRubricSurfaceClaimCauseIds(signature: String): List[String] =
     MoveReviewPhase3AuditMetrics
