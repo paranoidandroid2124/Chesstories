@@ -2310,41 +2310,51 @@ object MoveMeaningSurface:
   private def terminalConsequenceCodes(claim: MoveMeaningClaim): List[String] =
     val explicit =
       tokenValues(claim, "terminalConsequenceKind:").flatMap(publicTerminalConsequenceCode).map(_.code)
-    val carrierText = (claim.reasonTokens ++ claim.objectBindingSignatures).map(_.toLowerCase)
-    val hasPromotionRace = explicit.contains("promotion_race") || carrierText.exists(terminalPromotionRaceCarrier)
+    val carrierTokens = terminalCarrierTokens(claim.objectBindingSignatures)
+    val hasPromotionRace = explicit.contains("promotion_race") || carrierTokens.exists(terminalPromotionRaceCarrier)
     val carrierCodes =
       List(
-        Option.when(carrierText.exists(terminalMateCarrier))("mate"),
+        Option.when(carrierTokens.exists(terminalMateCarrier))("mate"),
         Option.when(hasPromotionRace)("promotion_race"),
-        Option.when(!hasPromotionRace && carrierText.exists(terminalPromotionCarrier))("promotion"),
-        Option.when(carrierText.exists(terminalMaterialGainCarrier))("material_gain"),
-        Option.when(carrierText.exists(terminalMaterialLossCarrier))("material_loss")
+        Option.when(!hasPromotionRace && carrierTokens.exists(terminalPromotionCarrier))("promotion"),
+        Option.when(carrierTokens.exists(terminalMaterialGainCarrier))("material_gain"),
+        Option.when(carrierTokens.exists(terminalMaterialLossCarrier))("material_loss")
       ).flatten
     (explicit ++ carrierCodes).distinct
 
+  private def terminalCarrierTokens(objectBindingSignatures: List[String]): Set[String] =
+    (
+      EvidenceObjectBinding.signatureTokens(objectBindingSignatures, "mechanism=") ++
+        EvidenceObjectBinding.signatureTokens(objectBindingSignatures, "consequence=") ++
+        EvidenceObjectBinding.signatureTokens(objectBindingSignatures, "target=")
+    ).map(terminalCarrierToken)
+
+  private def terminalCarrierToken(token: String): String =
+    token.dropWhile(_ != '=').drop(1).toLowerCase.filter(_.isLetterOrDigit)
+
   private def terminalMateCarrier(token: String): Boolean =
-    token.contains("mechanism=mechanism:mate") ||
-      token.contains("consequence=consequence:mate")
+    token == "mechanismmate" ||
+      token == "consequencemate"
 
   private def terminalPromotionCarrier(token: String): Boolean =
-    token.contains("pawnpromotion") ||
-      token.contains("pawn-promotion") ||
-      token.contains("passed-pawn-promoted") ||
-      token.contains("promotiongain")
+    token == "mechanismpawnpromotion" ||
+      token == "consequencepawnpromotion" ||
+      token == "consequencepromotiongain" ||
+      token.startsWith("pawnpassedpawnpromoted")
 
   private def terminalPromotionRaceCarrier(token: String): Boolean =
-    token.contains("promotionrace") ||
-      token.contains("promotion-race")
+    token == "mechanismpromotionrace" ||
+      token == "consequencepromotionrace"
 
   private def terminalMaterialGainCarrier(token: String): Boolean =
-    token.contains("materialgain") ||
-      token.contains("material-gain") ||
-      token.contains("promotiongain")
+    token == "mechanismmaterialgain" ||
+      token == "consequencematerialgain" ||
+      token == "consequencepromotiongain"
 
   private def terminalMaterialLossCarrier(token: String): Boolean =
-    token.contains("materialloss") ||
-      token.contains("material-loss") ||
-      token.contains("promotionloss")
+    token == "mechanismmaterialloss" ||
+      token == "consequencematerialloss" ||
+      token == "consequencepromotionloss"
 
   private def publicEndgameHorizonStatus(status: String): Option[String] =
     status match
