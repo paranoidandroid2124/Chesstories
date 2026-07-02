@@ -2858,7 +2858,7 @@ object MoveMeaningClaim:
         evidenceGraph
       )
     yield
-      val boardCarriers = publicBoardCarriers(surfaceObjectSignatures)
+      val boardCarriers = publicBoardCarriers(detail)
       val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, boardCarriers)
       val linkedCauseIds =
         roleCompatibleCauseFrames
@@ -2908,7 +2908,7 @@ object MoveMeaningClaim:
             .distinct
             .sorted,
         comparisonLossKinds = PositionPlanTechniqueSemanticDetail.comparisonLossKinds(detail).distinct.sorted,
-        objectCarrierReady = EvidenceObjectBinding.playerFacingReadySignatures(surfaceObjectSignatures),
+        objectCarrierReady = publicObjectCarrierReady(boardCarriers),
         boardCarriers = boardCarriers,
         targetSquares = surfaceTarget.squares,
         targetFiles = surfaceTarget.files,
@@ -2933,38 +2933,58 @@ object MoveMeaningClaim:
       )
 
   private def publicBoardCarriers(
-      objectBindingSignatures: List[String]
+      detail: PositionPlanTechniqueSemanticDetail
   ): List[MoveMeaningSurfaceBoardCarrier] =
-    objectBindingSignatures
-      .flatMap(signature => EvidenceObjectBinding.signatureParts(signature).flatMap(publicBoardCarrierPart))
-      .distinct
-      .sortBy(boardCarrierSortKey)
-      .take(8)
+    (
+      detail.structuralRouteMove.toList.map(move => publicMoveCarrier("actor", move)) ++
+        detail.structuralPurposeSubjects.flatMap(publicStructuralSubjectCarriers) ++
+        detail.breakFile.toList.flatMap(file => publicFileCarrier("target", file)) ++
+        detail.counterBreakFiles.flatMap(file => publicFileCarrier("target", file)) ++
+        detail.resourceContestFiles.flatMap(file => publicFileCarrier("target", file)) ++
+        (
+          detail.tensionSquares ++
+            detail.resourceContestSquares ++
+            detail.requiredSquares ++
+            detail.maintainedSquares ++
+            detail.brokenSquares
+        ).flatMap(square => publicSquareCarrier("target", square))
+    ).distinct.sortBy(boardCarrierSortKey).take(8)
 
-  private def publicBoardCarrierPart(part: String): Option[MoveMeaningSurfaceBoardCarrier] =
-    val keyValue = part.split("=", 2)
-    if keyValue.length != 2 then None
-    else
-      keyValue(0) match
-        case role @ ("actor" | "target" | "witness") => typedPublicBoardCarrier(role, keyValue(1))
-        case _                                       => None
+  private def publicStructuralSubjectCarriers(subject: String): List[MoveMeaningSurfaceBoardCarrier] =
+    StructuralPurposeSubject.parse(subject) match
+      case Some(StructuralPurposeSubject.PieceRoute(piece, from, to)) =>
+        publicPieceCarrier("actor", piece) ++ publicSquareCarrier("actor", from) ++ publicSquareCarrier("target", to)
+      case Some(StructuralPurposeSubject.Outpost(piece, square)) =>
+        publicPieceCarrier("actor", piece) ++ publicSquareCarrier("target", square)
+      case Some(StructuralPurposeSubject.Battery(_, from, to, roles)) =>
+        roles.flatMap(role => publicPieceCarrier("actor", role)) ++
+          publicSquareCarrier("target", from) ++ publicSquareCarrier("target", to)
+      case Some(StructuralPurposeSubject.PieceRestriction(piece, square, blocker)) =>
+        publicPieceCarrier("actor", piece) ++ publicSquareCarrier("target", square) ++ publicSquareCarrier("target", blocker)
+      case Some(StructuralPurposeSubject.PieceSquare(piece, square)) =>
+        publicPieceCarrier("actor", piece) ++ publicSquareCarrier("actor", square) ++ publicSquareCarrier("target", square)
+      case _ =>
+        Nil
 
-  private def typedPublicBoardCarrier(role: String, value: String): Option[MoveMeaningSurfaceBoardCarrier] =
-    val typedValue = value.split(":", 2)
-    if typedValue.length != 2 || typedValue(1).isEmpty then None
-    else
-      typedValue(0) match
-        case kind @ ("Move" | "Square" | "File" | "Piece" | "Pawn") =>
-          val (from, to) = moveEndpoints(kind, typedValue(1))
-          Some(MoveMeaningSurfaceBoardCarrier(role, kind, typedValue(1), from, to))
-        case kind @ "PlanSubject" if role == "target" && EvidenceObjectBinding.concreteTargetToken(s"$role=$value") =>
-          Some(MoveMeaningSurfaceBoardCarrier(role, kind, typedValue(1)))
-        case _ => None
+  private def publicObjectCarrierReady(boardCarriers: List[MoveMeaningSurfaceBoardCarrier]): Boolean =
+    boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind != "Move")
 
-  private def moveEndpoints(kind: String, value: String): (Option[String], Option[String]) =
-    if kind == "Move" && value.length >= 4 then
-      (Some(value.take(2)), Some(value.slice(2, 4)))
-    else (None, None)
+  private def publicMoveCarrier(role: String, move: String): MoveMeaningSurfaceBoardCarrier =
+    val normalized = JudgmentSubjectBinding.normalizeMove(move).toLowerCase
+    val (from, to) =
+      if normalized.length >= 4 then (Some(normalized.take(2)), Some(normalized.slice(2, 4)))
+      else (None, None)
+    MoveMeaningSurfaceBoardCarrier(role, "Move", normalized, from, to)
+
+  private def publicSquareCarrier(role: String, square: String): List[MoveMeaningSurfaceBoardCarrier] =
+    claimSquare(square).map(value => MoveMeaningSurfaceBoardCarrier(role, "Square", value)).toList
+
+  private def publicFileCarrier(role: String, file: String): List[MoveMeaningSurfaceBoardCarrier] =
+    claimFile(file).map(value => MoveMeaningSurfaceBoardCarrier(role, "File", value)).toList
+
+  private def publicPieceCarrier(role: String, piece: String): List[MoveMeaningSurfaceBoardCarrier] =
+    val normalized = piece.trim.toLowerCase
+    Option.when(normalized.nonEmpty)(MoveMeaningSurfaceBoardCarrier(role, "Piece", normalized)).toList
 
   private def routeIdentityParts(detail: PositionPlanTechniqueSemanticDetail): List[String] =
     detail.structuralPurposeSubjects.flatMap { subject =>
