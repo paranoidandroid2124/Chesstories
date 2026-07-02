@@ -330,11 +330,7 @@ function evidenceItems(semantics: ChesstoryMoveSemantic[]): string[] {
 }
 
 function hasEvidenceCarrier(semantic: ChesstoryMoveSemantic): boolean {
-  const evidence = semantic.evidence;
-  return (
-    evidence?.has_carrier === true &&
-    Boolean(evidence.board_carriers?.length || evidence.cause_ids?.length || evidence.source_ids?.length)
-  );
+  return semantic.evidence?.has_carrier === true;
 }
 
 function normalizeCode(code?: string): string {
