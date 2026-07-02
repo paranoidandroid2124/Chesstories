@@ -1658,7 +1658,18 @@ case class MoveMeaningClaim(
     targetFiles: List[String] = Nil,
     targetPieces: List[String] = Nil,
     specificityTier: PositionPlanTechniqueSpecificityTier = PositionPlanTechniqueSpecificityTier.ContextOnly,
-    terminalConsequenceKinds: List[String] = Nil
+    terminalConsequenceKinds: List[String] = Nil,
+    endgameTechniquePattern: Option[String] = None,
+    endgameTechniqueRookPattern: Option[String] = None,
+    endgameTechniqueSide: Option[String] = None,
+    endgameTechniqueHorizonStatus: Option[String] = None,
+    endgameTechniqueTriggerMove: Option[String] = None,
+    endgameTechniqueEntryPlyOffset: Option[Int] = None,
+    endgameTechniqueTerminalPlyOffset: Option[Int] = None,
+    endgameTechniqueFailureReason: Option[String] = None,
+    requiredSquares: List[String] = Nil,
+    maintainedSquares: List[String] = Nil,
+    brokenSquares: List[String] = Nil
 )
 
 case class MoveMeaningSurfaceTarget(
@@ -1885,9 +1896,9 @@ object MoveMeaningSurface:
 
   private def terminalOverriddenEndgameTechniqueClaim(claim: MoveMeaningClaim): Boolean =
     claim.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
-      claim.reasonTokens.exists(token =>
-        token == "horizonStatus:SupersededByTactic" ||
-          token == "horizonStatus:ContradictedByTerminalProof"
+      claim.endgameTechniqueHorizonStatus.exists(status =>
+        status == "SupersededByTactic" ||
+          status == "ContradictedByTerminalProof"
       )
 
   private def terminalOverriddenEndgameTechniqueShadowed(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
@@ -2291,25 +2302,25 @@ object MoveMeaningSurface:
   private def endgameTechnique(claim: MoveMeaningClaim): Option[MoveMeaningSurfaceEndgameTechnique] =
     if claim.unit != PositionPlanTechniqueUnit.EndgameTechniqueRecipe then None
     else
-      val publicStatus = tokenValue(claim, "horizonStatus:").flatMap(publicEndgameHorizonStatus)
-      val pattern = tokenValue(claim, "pattern:").flatMap(publicEndgamePatternCode)
-      val rookPattern = tokenValue(claim, "rook-pattern:").flatMap(publicRookPatternCode)
+      val publicStatus = claim.endgameTechniqueHorizonStatus.flatMap(publicEndgameHorizonStatus)
+      val pattern = claim.endgameTechniquePattern.flatMap(publicEndgamePatternCode)
+      val rookPattern = claim.endgameTechniqueRookPattern.flatMap(publicRookPatternCode)
       val technique = MoveMeaningSurfaceEndgameTechnique(
         pattern = pattern.map(_.code),
         patternLabel = pattern.map(_.label),
         rookPattern = rookPattern.map(_.code),
         rookPatternLabel = rookPattern.map(_.label),
-        side = tokenValue(claim, "techniqueSide:").flatMap(publicSideCode),
+        side = claim.endgameTechniqueSide.flatMap(publicSideCode),
         horizonStatus = publicStatus,
         statusLabel = publicStatus.map(publicCode(_, endgameStatusLabels).label),
-        triggerMove = tokenValue(claim, "triggerMove:").flatMap(publicUciMove),
-        entryPlyOffset = tokenValue(claim, "entryPlyOffset:").flatMap(_.toIntOption),
-        terminalPlyOffset = tokenValue(claim, "terminalPlyOffset:").flatMap(_.toIntOption),
-        requiredSquares = tokenValues(claim, "requiredSquare:").flatMap(publicSquare),
-        maintainedSquares = tokenValues(claim, "maintainedSquare:").flatMap(publicSquare),
-        brokenSquares = tokenValues(claim, "brokenSquare:").flatMap(publicSquare),
+        triggerMove = claim.endgameTechniqueTriggerMove.flatMap(publicUciMove),
+        entryPlyOffset = claim.endgameTechniqueEntryPlyOffset,
+        terminalPlyOffset = claim.endgameTechniqueTerminalPlyOffset,
+        requiredSquares = claim.requiredSquares.flatMap(publicSquare),
+        maintainedSquares = claim.maintainedSquares.flatMap(publicSquare),
+        brokenSquares = claim.brokenSquares.flatMap(publicSquare),
         terminalConsequences = claim.terminalConsequenceKinds.flatMap(publicTerminalConsequenceCode),
-        failureReason = tokenValue(claim, "failureReason:").flatMap(publicEndgameFailureCode)
+        failureReason = claim.endgameTechniqueFailureReason.flatMap(publicEndgameFailureCode)
       )
       Option.when(
         technique.horizonStatus.nonEmpty &&
@@ -2446,16 +2457,6 @@ object MoveMeaningSurface:
       case CandidateComparisonKind.BestVsSecond           => "best_vs_second"
       case CandidateComparisonKind.PlayedVsAlternative    => "alternative_vs_played"
       case CandidateComparisonKind.ReferenceVsAlternative => "best_vs_alternative"
-
-  private def tokenValue(claim: MoveMeaningClaim, prefix: String): Option[String] =
-    claim.reasonTokens.collectFirst { case token if token.startsWith(prefix) => token.stripPrefix(prefix) }.filter(_.nonEmpty)
-
-  private def tokenValues(claim: MoveMeaningClaim, prefix: String): List[String] =
-    claim.reasonTokens
-      .collect { case token if token.startsWith(prefix) => token.stripPrefix(prefix) }
-      .filter(_.nonEmpty)
-      .distinct
-      .sorted
 
   private def publicComparisonLossCode(value: String): Option[String] =
     Option.when(comparisonLossLabels.contains(value))(value)
@@ -2964,7 +2965,18 @@ object MoveMeaningClaim:
         targetFiles = surfaceTarget.files,
         targetPieces = surfaceTarget.pieces,
         specificityTier = detail.specificityTier,
-        terminalConsequenceKinds = detail.terminalConsequenceKinds.distinct.sorted
+        terminalConsequenceKinds = detail.terminalConsequenceKinds.distinct.sorted,
+        endgameTechniquePattern = detail.endgameTechniquePattern,
+        endgameTechniqueRookPattern = detail.endgameTechniqueRookPattern,
+        endgameTechniqueSide = detail.endgameTechniqueSide,
+        endgameTechniqueHorizonStatus = detail.endgameTechniqueHorizonStatus,
+        endgameTechniqueTriggerMove = detail.endgameTechniqueTriggerMove,
+        endgameTechniqueEntryPlyOffset = detail.endgameTechniqueEntryPlyOffset,
+        endgameTechniqueTerminalPlyOffset = detail.endgameTechniqueTerminalPlyOffset,
+        endgameTechniqueFailureReason = detail.endgameTechniqueFailureReason,
+        requiredSquares = detail.requiredSquares.distinct.sorted,
+        maintainedSquares = detail.maintainedSquares.distinct.sorted,
+        brokenSquares = detail.brokenSquares.distinct.sorted
       )
 
   private def currentMoveRouteLineRole(
