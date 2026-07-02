@@ -2908,7 +2908,7 @@ object MoveMeaningClaim:
             .distinct
             .sorted,
         comparisonLossKinds = PositionPlanTechniqueSemanticDetail.comparisonLossKinds(detail).distinct.sorted,
-        objectCarrierReady = publicObjectCarrierReady(boardCarriers),
+        objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames),
         boardCarriers = boardCarriers,
         targetSquares = surfaceTarget.squares,
         targetFiles = surfaceTarget.files,
@@ -2976,8 +2976,22 @@ object MoveMeaningClaim:
         .distinct
         .map(value => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", value))
 
-  private def publicObjectCarrierReady(boardCarriers: List[MoveMeaningSurfaceBoardCarrier]): Boolean =
-    boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind != "Move")
+  private def publicObjectCarrierReady(
+      evidenceGraph: TypedEvidenceGraph,
+      detail: PositionPlanTechniqueSemanticDetail,
+      roleCompatibleCauseFrames: List[MoveJudgmentCauseFrame]
+  ): Boolean =
+    roleCompatibleCauseFrames.exists(_.concreteObjectReady) ||
+      EvidenceObjectBinding.playerFacingReady(
+        EvidenceObjectBinding.fromEvidenceRefs(
+          evidenceGraph,
+          (
+            detail.sourceEvidenceIds ++
+              detail.referenceEvidenceIds ++
+              detail.candidateEvidenceIds
+          ).distinct.flatMap(id => evidenceGraph.byId.get(id).map(_.ref))
+        )
+      )
 
   private def publicMoveCarrier(role: String, move: String): MoveMeaningSurfaceBoardCarrier =
     val normalized = JudgmentSubjectBinding.normalizeMove(move).toLowerCase
@@ -3310,8 +3324,7 @@ object MoveMeaningClaim:
   private def reasonGradeCauseFrame(frame: MoveJudgmentCauseFrame): Boolean =
     (
       frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot ||
-        frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot ||
-        legacyOwnedProofFrame(frame)
+        frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot
     ) &&
       reasonGradeFrameProofReady(frame)
 
@@ -3320,12 +3333,6 @@ object MoveMeaningClaim:
       frame.attributionDirectProofEligible &&
       frame.attributionRootMoveMatched &&
       sameMove(frame.eventRootMove, claimMove)
-
-  private def legacyOwnedProofFrame(frame: MoveJudgmentCauseFrame): Boolean =
-    frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ContextOnly &&
-      frame.hasOwnedAdmissibleLongTermProof &&
-      frame.attributionDirectProofEligible &&
-      frame.attributionRootMoveMatched
 
   private def reasonGradeFrameProofReady(frame: MoveJudgmentCauseFrame): Boolean =
     frame.concreteObjectReady ||
