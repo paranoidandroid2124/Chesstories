@@ -3415,6 +3415,9 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(surface.map(_.evidence.hasCarrier), List(true))
     assertEquals(surface.map(_.evidence.proofLevel), List("surface_evidence"))
     assertEquals(surface.flatMap(_.evidence.sourceIds), List("played-transition"))
+    assert(surface.head.evidence.boardCarriers.contains(MoveMeaningSurfaceBoardCarrier("actor", "Move", "e2e3", Some("e2"), Some("e3"))))
+    assert(surface.head.evidence.boardCarriers.contains(MoveMeaningSurfaceBoardCarrier("actor", "Piece", "knight")))
+    assert(surface.head.evidence.boardCarriers.contains(MoveMeaningSurfaceBoardCarrier("target", "Square", "e3")))
     assert(!claim.reasonTokens.exists(_.startsWith("routeCarrier:")))
     val badSurface = MoveMeaningSurface.from(
       meaningClaimView(
@@ -3536,7 +3539,9 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     )
     assertEquals(forcedMateView.moveMeaningClaims.map(_.meaningKind), List("TerminalProof"))
     assertEquals(forcedMateView.moveMeaningClaims.map(_.surfaceLane), List("current_move_function"))
-    assertEquals(MoveMeaningSurface.from(forcedMateView).map(_.ideaType), List("terminal_mate"))
+    val forcedMateSurface = MoveMeaningSurface.from(forcedMateView)
+    assertEquals(forcedMateSurface.map(_.ideaType), List("terminal_mate"))
+    assert(forcedMateSurface.head.evidence.boardCarriers.contains(MoveMeaningSurfaceBoardCarrier("witness", "Move", "e2e3", Some("e2"), Some("e3"))))
 
     val targetlessSurface =
       MoveMeaningSurface.from(
@@ -3560,6 +3565,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(targetlessSurface.head.evidence.hasCarrier, false)
     assertEquals(targetlessSurface.head.evidence.proofLevel, "none")
     assertEquals(targetlessSurface.head.evidence.targetBound, false)
+    assertEquals(targetlessSurface.head.evidence.boardCarriers, Nil)
 
   test("move meaning claims do not call bare weak-square target pressure a piece route"):
     val targetSignature =

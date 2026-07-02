@@ -48,6 +48,13 @@ export interface ChesstoryMoveSemantic {
     target_bound?: boolean;
     cause_ids?: string[];
     source_ids?: string[];
+    board_carriers?: {
+      role?: string;
+      kind?: string;
+      value?: string;
+      from?: string;
+      to?: string;
+    }[];
   };
   priority?: string;
   failure_family?: string;

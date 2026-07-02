@@ -1800,7 +1800,16 @@ case class MoveMeaningSurfaceEvidence(
     proofLevel: String = "none",
     targetBound: Boolean = false,
     causeIds: List[String] = Nil,
-    sourceIds: List[String] = Nil
+    sourceIds: List[String] = Nil,
+    boardCarriers: List[MoveMeaningSurfaceBoardCarrier] = Nil
+)
+
+case class MoveMeaningSurfaceBoardCarrier(
+    role: String,
+    kind: String,
+    value: String,
+    from: Option[String] = None,
+    to: Option[String] = None
 )
 
 case class MoveMeaningSurface(
@@ -2023,8 +2032,47 @@ object MoveMeaningSurface:
       proofLevel = proofLevel,
       targetBound = targetBound,
       causeIds = claim.causeEvidenceIds.take(6),
-      sourceIds = claim.sourceEvidenceIds.take(6)
+      sourceIds = claim.sourceEvidenceIds.take(6),
+      boardCarriers = publicBoardCarriers(claim.objectBindingSignatures, target)
     )
+
+  private def publicBoardCarriers(
+      objectBindingSignatures: List[String],
+      target: MoveMeaningSurfaceTarget
+  ): List[MoveMeaningSurfaceBoardCarrier] =
+    (
+      target.squares.map(value => MoveMeaningSurfaceBoardCarrier("target", "Square", value)) ++
+        target.files.map(value => MoveMeaningSurfaceBoardCarrier("target", "File", value)) ++
+        target.pieces.map(value => MoveMeaningSurfaceBoardCarrier("target", "Piece", value)) ++
+        objectBindingSignatures
+          .take(4)
+          .flatMap(signature => EvidenceObjectBinding.signatureParts(signature).flatMap(publicBoardCarrierPart))
+    ).distinct.sortBy(carrier =>
+      (carrier.role, carrier.kind, carrier.value, carrier.from.getOrElse(""), carrier.to.getOrElse(""))
+    )
+
+  private def publicBoardCarrierPart(part: String): Option[MoveMeaningSurfaceBoardCarrier] =
+    val keyValue = part.split("=", 2)
+    if keyValue.length != 2 then None
+    else
+      keyValue(0) match
+        case role @ ("actor" | "target" | "witness") => typedPublicBoardCarrier(role, keyValue(1))
+        case _                                       => None
+
+  private def typedPublicBoardCarrier(role: String, value: String): Option[MoveMeaningSurfaceBoardCarrier] =
+    val typedValue = value.split(":", 2)
+    if typedValue.length != 2 || typedValue(1).isEmpty then None
+    else
+      typedValue(0) match
+        case kind @ ("Move" | "Square" | "File" | "Piece" | "Pawn") =>
+          val (from, to) = moveEndpoints(kind, typedValue(1))
+          Some(MoveMeaningSurfaceBoardCarrier(role, kind, typedValue(1), from, to))
+        case _ => None
+
+  private def moveEndpoints(kind: String, value: String): (Option[String], Option[String]) =
+    if kind == "Move" && value.length >= 4 then
+      (Some(value.take(2)), Some(value.slice(2, 4)))
+    else (None, None)
 
   private def subject(claim: MoveMeaningClaim): String =
     claim.surfaceLane match

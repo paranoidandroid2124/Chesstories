@@ -140,7 +140,17 @@ final class Analyse(
       "proof_level" -> evidence.proofLevel,
       "target_bound" -> evidence.targetBound,
       "cause_ids" -> evidence.causeIds,
-      "source_ids" -> evidence.sourceIds
+      "source_ids" -> evidence.sourceIds,
+      "board_carriers" -> evidence.boardCarriers.map(publicBoardCarrierJson)
+    )
+
+  private def publicBoardCarrierJson(carrier: MoveMeaningSurfaceBoardCarrier): JsObject =
+    Json.obj(
+      "role" -> carrier.role,
+      "kind" -> carrier.kind,
+      "value" -> carrier.value,
+      "from" -> carrier.from,
+      "to" -> carrier.to
     )
 
   private def publicEndgameTechniqueJson(technique: MoveMeaningSurfaceEndgameTechnique): JsObject =
