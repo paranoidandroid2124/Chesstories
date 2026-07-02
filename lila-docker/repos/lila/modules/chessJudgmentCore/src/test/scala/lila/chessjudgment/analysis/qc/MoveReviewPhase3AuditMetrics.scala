@@ -1666,15 +1666,15 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       row.viewSurfaced
 
   private def semanticRubricSlotRows(diagnostic: CandidateComparisonDiagnostic): List[SemanticRubricSlotRow] =
-    val axisRows =
-      structuralOpportunityAxisOpportunities(diagnostic).flatMap(axis =>
-        semanticRubricUnitsForAxis(axis.key).map(unit => semanticRubricSlotRow(diagnostic, unit, Some(axis.key)))
+    val publicRows =
+      diagnostic.moveJudgmentView.publicMoveMeaningClaimDiagnostics.map(claim =>
+        semanticRubricSlotRow(diagnostic, claim.unit, claim.axisKey)
       )
     val viewOnlyRows =
       diagnostic.moveJudgmentView.positionPlanTechniqueUnits
-        .filterNot(unit => axisRows.exists(_.unit == unit))
+        .filterNot(unit => publicRows.exists(_.unit == unit))
         .map(unit => semanticRubricSlotRow(diagnostic, unit, None))
-    (axisRows ++ viewOnlyRows)
+    (publicRows ++ viewOnlyRows)
       .distinctBy(row => (row.comparisonId, row.unit, row.axisKey))
       .sortBy(row => (row.comparisonId, row.unit.toString, row.axisKey.getOrElse("")))
 
@@ -1806,24 +1806,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
   ): Boolean =
     diagnostic.unit == unit &&
       axisKey.forall(diagnostic.axisKey.contains)
-
-  private def semanticRubricUnitsForAxis(axisKey: String): List[PositionPlanTechniqueUnit] =
-    axisPart(axisKey, 0) match
-      case "PawnBreak" =>
-        List(PositionPlanTechniqueUnit.TensionBreakPolicyRoute)
-      case "PlanCoherence" =>
-        List(PositionPlanTechniqueUnit.PlanOptionSet)
-      case "Counterplay" =>
-        if axisPart(axisKey, 1) == "Restrain" then List(PositionPlanTechniqueUnit.SpacePreventionResourceDenial)
-        else List(PositionPlanTechniqueUnit.CounterplayRace)
-      case "Activity" =>
-        List(PositionPlanTechniqueUnit.PieceRerouteRoute)
-      case "SpaceCenter" =>
-        List(PositionPlanTechniqueUnit.SpacePreventionResourceDenial)
-      case "Target" =>
-        List(PositionPlanTechniqueUnit.StructuralTransformation)
-      case _ =>
-        Nil
 
   private def semanticRubricTerminalStage(
       objectBound: Boolean,
