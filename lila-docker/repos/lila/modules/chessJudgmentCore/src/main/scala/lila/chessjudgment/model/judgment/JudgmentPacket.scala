@@ -1662,6 +1662,9 @@ case class MoveMeaningClaim(
     targetSquares: List[String] = Nil,
     targetFiles: List[String] = Nil,
     targetPieces: List[String] = Nil,
+    routeIdentityParts: List[String] = Nil,
+    breakIdentityParts: List[String] = Nil,
+    breakFiles: List[String] = Nil,
     specificityTier: PositionPlanTechniqueSpecificityTier = PositionPlanTechniqueSpecificityTier.ContextOnly,
     terminalConsequenceKinds: List[String] = Nil,
     endgameTechniquePattern: Option[String] = None,
@@ -2590,26 +2593,15 @@ object MoveMeaningClaim:
       )
 
   private def routeIdentityKey(claim: MoveMeaningClaim): Option[(String, String, List[String])] =
-    val routeTokens =
-      claim.reasonTokens
-        .filter(token =>
-          token.startsWith("routePiece:") ||
-            token.startsWith("routeFrom:") ||
-            token.startsWith("routeTo:") ||
-            token.startsWith("routeTarget:") ||
-            token.startsWith("routeSubject:")
-        )
-        .distinct
-        .sorted
-    Option.when(routeTokens.nonEmpty)((claim.lineRole, claim.moveUci, routeTokens))
+    Option.when(claim.routeIdentityParts.nonEmpty)((claim.lineRole, claim.moveUci, claim.routeIdentityParts))
 
   private def suppressShadowedCounterplayRacePawnBreak(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
     val raceClaims =
       claims.filter(claim =>
-        claim.meaningKind == "CounterplayRace" &&
+          claim.meaningKind == "CounterplayRace" &&
           claim.unit == PositionPlanTechniqueUnit.CounterplayRace &&
           claim.supportLevel != "contextual" &&
-          claim.reasonTokens.exists(_.startsWith("raceBreakFile:"))
+          claim.breakFiles.nonEmpty
       )
     if raceClaims.isEmpty then claims
     else
@@ -2627,17 +2619,11 @@ object MoveMeaningClaim:
       raceClaim.lineRole == pawnBreakClaim.lineRole &&
       raceClaim.surfaceLane == pawnBreakClaim.surfaceLane &&
       strengthRank(raceClaim.supportLevel) >= strengthRank(pawnBreakClaim.supportLevel) &&
-      claimBreakFiles(raceClaim).intersect(claimBreakFiles(pawnBreakClaim)).nonEmpty &&
+      raceClaim.breakFiles.toSet.intersect(pawnBreakClaim.breakFiles.toSet).nonEmpty &&
       (
         raceClaim.sourceEvidenceIds.intersect(pawnBreakClaim.sourceEvidenceIds).nonEmpty ||
           raceClaim.causeEvidenceIds.intersect(pawnBreakClaim.causeEvidenceIds).nonEmpty
       )
-
-  private def claimBreakFiles(claim: MoveMeaningClaim): Set[String] =
-    claim.reasonTokens.collect {
-      case token if token.startsWith("breakFile:")     => token.stripPrefix("breakFile:").trim.toLowerCase.take(1)
-      case token if token.startsWith("raceBreakFile:") => token.stripPrefix("raceBreakFile:").trim.toLowerCase.take(1)
-    }.filter(_.nonEmpty).toSet
 
   private def suppressShadowedPlanContinuity(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
     val concreteCurrentClaims =
@@ -2727,7 +2713,10 @@ object MoveMeaningClaim:
         boardCarriers = list.flatMap(_.boardCarriers).distinct.sortBy(boardCarrierSortKey).take(8),
         targetSquares = list.flatMap(_.targetSquares).distinct.sorted,
         targetFiles = list.flatMap(_.targetFiles).distinct.sorted,
-        targetPieces = list.flatMap(_.targetPieces).distinct.sorted
+        targetPieces = list.flatMap(_.targetPieces).distinct.sorted,
+        routeIdentityParts = list.flatMap(_.routeIdentityParts).distinct.sorted,
+        breakIdentityParts = list.flatMap(_.breakIdentityParts).distinct.sorted,
+        breakFiles = list.flatMap(_.breakFiles).distinct.sorted
       )
     )
 
@@ -2737,14 +2726,7 @@ object MoveMeaningClaim:
   private def duplicateMeaningKey(claim: MoveMeaningClaim): (String, String, String, String, String) =
     val objectKey =
       if claim.meaningKind == "PawnBreakTiming" then
-        claim.reasonTokens
-          .filter(token =>
-            token.startsWith("breakFile:") ||
-              token.startsWith("tensionEdge:") ||
-              token.startsWith("tensionSquare:")
-          )
-          .sorted
-          .mkString("|")
+        claim.breakIdentityParts.mkString("|")
       else claim.laneKey
     (claim.meaningKind, claim.role, claim.surfaceLane, claim.moveUci, objectKey)
 
@@ -2930,6 +2912,9 @@ object MoveMeaningClaim:
         targetSquares = surfaceTarget.squares,
         targetFiles = surfaceTarget.files,
         targetPieces = surfaceTarget.pieces,
+        routeIdentityParts = routeIdentityParts(detail),
+        breakIdentityParts = breakIdentityParts(detail),
+        breakFiles = detail.breakFile.toList.flatMap(claimFile).distinct.sorted,
         specificityTier = detail.specificityTier,
         terminalConsequenceKinds = detail.terminalConsequenceKinds.distinct.sorted,
         endgameTechniquePattern = detail.endgameTechniquePattern,
@@ -2979,6 +2964,40 @@ object MoveMeaningClaim:
     if kind == "Move" && value.length >= 4 then
       (Some(value.take(2)), Some(value.slice(2, 4)))
     else (None, None)
+
+  private def routeIdentityParts(detail: PositionPlanTechniqueSemanticDetail): List[String] =
+    detail.structuralPurposeSubjects.flatMap { subject =>
+      val normalizedSubject = subject.trim.toLowerCase
+      StructuralPurposeSubject.parse(subject) match
+        case Some(StructuralPurposeSubject.PieceRoute(piece, from, to)) =>
+          List(s"piece:$piece", s"from:$from", s"to:$to", s"subject:$normalizedSubject")
+        case Some(StructuralPurposeSubject.Outpost(piece, square)) =>
+          List(s"piece:$piece", s"target:$square", s"subject:$normalizedSubject")
+        case Some(StructuralPurposeSubject.Battery(axis, from, to, roles)) =>
+          List(s"axis:${axis.toLowerCase}", s"from:$from", s"to:$to", s"subject:$normalizedSubject") ++ roles.map(role => s"piece:$role")
+        case Some(StructuralPurposeSubject.PieceRestriction(piece, square, blocker)) =>
+          List(s"piece:$piece", s"target:$square", s"blocker:$blocker", s"subject:$normalizedSubject")
+        case Some(StructuralPurposeSubject.PieceSquare(piece, square)) if lineUnlockRouteToken(normalizedSubject) =>
+          List(s"piece:$piece", s"target:$square", s"subject:$normalizedSubject")
+        case _ =>
+          Nil
+    }.distinct.sorted
+
+  private def breakIdentityParts(detail: PositionPlanTechniqueSemanticDetail): List[String] =
+    (
+      detail.breakFile.toList.flatMap(claimFile).map(file => s"breakFile:$file") ++
+        detail.tensionSquares.flatMap(claimSquare).map(square => s"tensionSquare:$square") ++
+        detail.tensionEdges.flatMap(edge =>
+          val normalized = edge.trim.toLowerCase
+          Option.when(normalized.nonEmpty)(s"tensionEdge:$normalized")
+        )
+    ).distinct.sorted
+
+  private def claimFile(value: String): Option[String] =
+    Option(value).map(_.trim.toLowerCase.take(1)).filter(_.matches("[a-h]"))
+
+  private def claimSquare(value: String): Option[String] =
+    Option(value).map(_.trim.toLowerCase).filter(_.matches("[a-h][1-8]"))
 
   private def publicIdeaType(
       detail: PositionPlanTechniqueSemanticDetail,
