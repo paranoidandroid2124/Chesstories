@@ -52,7 +52,7 @@ export interface ChesstoryMoveSemantic {
   priority?: string;
   failure_family?: string;
   problem?: string;
-  comparison_loss?: ChesstoryCode[];
+  comparison_loss?: ChesstoryComparisonLoss[];
   terminal_consequences?: ChesstoryCode[];
   endgame_technique?: {
     pattern_info?: ChesstoryCode;
@@ -71,7 +71,7 @@ export interface ChesstoryMoveSemantic {
     reference_move?: string;
     candidate_move?: string;
     moves?: { role?: string; uci?: string }[];
-    lost_ideas?: ChesstoryCode[];
+    lost_ideas?: ChesstoryComparisonLoss[];
   };
 }
 
@@ -80,25 +80,27 @@ interface ChesstoryCode {
   label?: string;
 }
 
+interface ChesstoryComparisonLoss extends ChesstoryCode {
+  side?: string;
+}
+
 export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): ChesstoryBriefSection[] {
   if (!payload?.move_semantics?.length) return placeholderSections();
 
   const semantics = payload.move_semantics;
   const played = semantics.filter(s => s.subject === 'played_move');
   const reference = semantics.filter(s => s.subject === 'reference_move');
-  const bad = payload.verdict?.move_quality === 'bad' || played.some(s => s.move_quality === 'bad');
   const evidenceSemantics = semantics.filter(hasEvidenceCarrier);
   const evidencePlayed = played.filter(hasEvidenceCarrier);
   const evidenceReference = reference.filter(hasEvidenceCarrier);
+  const bad = payload.verdict?.move_quality === 'bad' || evidencePlayed.some(s => s.move_quality === 'bad');
   const mainPlayed = evidencePlayed.filter(s => s.priority === 'main');
   const localIdeas = played.filter(s => s.assessment?.is_local_idea && hasEvidenceCarrier(s));
   const solved = uniqueLabels((bad ? localIdeas : evidencePlayed).map(ideaLabel)).slice(0, 4);
   const localIdeaLabels = uniqueLabels(localIdeas.map(ideaLabel)).slice(0, 4);
   const terminal = uniqueLabels(evidencePlayed.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
-  const losses = uniqueLabels(
-    evidenceSemantics.flatMap(s => (s.comparison_loss || s.comparison?.lost_ideas || []).map(codeLabel)),
-  );
+  const losses = uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels));
   const targets = uniqueLabels(evidencePlayed.flatMap(targetLabels)).slice(0, 5);
   const problem =
     firstLabel(mainPlayed.flatMap(problemLabels)) ||
@@ -153,7 +155,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
           ? `The comparison turns on ${joinHuman([...losses, ...referenceIdeas].slice(0, 4))}.`
           : 'No clear candidate-move loss is available yet.',
       pending: false,
-      items: comparisonLines(evidenceSemantics).slice(0, 3),
+      items: comparisonLines(evidencePlayed).slice(0, 3),
       tone: bad ? 'bad' : 'neutral',
     },
     {
@@ -269,11 +271,22 @@ function comparisonLines(semantics: ChesstoryMoveSemantic[]): string[] {
     const moves = (comparison.moves || [])
       .filter(move => move.uci)
       .map(move => `${move.role?.replace(/_/g, ' ') || 'move'} ${move.uci}`);
-    const lost = (comparison.lost_ideas || []).map(codeLabel);
+    const lost = (comparison.lost_ideas || []).filter(isPlayedComparisonLoss).map(codeLabel);
     return [moves.length ? moves.join(', ') : '', lost.length ? `Lost idea: ${joinHuman(lost)}` : ''].filter(
       Boolean,
     );
   });
+}
+
+function playedComparisonLossLabels(semantic: ChesstoryMoveSemantic): string[] {
+  return [...(semantic.comparison_loss || []), ...(semantic.comparison?.lost_ideas || [])]
+    .filter(isPlayedComparisonLoss)
+    .map(codeLabel);
+}
+
+function isPlayedComparisonLoss(loss: ChesstoryComparisonLoss): boolean {
+  const side = loss.side?.toLowerCase();
+  return !side || side === 'candidate' || side === 'candidate_move' || side === 'played' || side === 'played_move';
 }
 
 function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {

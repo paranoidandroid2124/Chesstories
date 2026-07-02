@@ -186,6 +186,69 @@ describe('chesstory brief scaffold', () => {
     assert.deepEqual(better?.items, []);
   });
 
+  test('does not let carrierless played semantics choose bad-move framing without a verdict', () => {
+    const sections = chesstoryBriefSections({
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'bad',
+          priority: 'main',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          assessment: {
+            problem: { code: 'loses_activity', label: 'loses activity' },
+          },
+          evidence: { has_carrier: false, proof_level: 'none' },
+        },
+      ],
+    });
+
+    const plan = sections.find(section => section.key === 'middlegame-plan');
+    const current = sections.find(section => section.key === 'current-decision');
+    assert.equal(plan?.tone, 'good');
+    assert.equal(current?.tone, 'good');
+    assert.doesNotMatch(JSON.stringify(sections), /loses activity|piece activity/);
+  });
+
+  test('does not turn reference-only comparison losses into played-move failures', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'bad', played_move: 'e4g3', reference_move: 'e4f6' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'bad',
+          priority: 'main',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          assessment: {
+            problem: { code: 'loses_activity', label: 'loses activity' },
+          },
+          evidence: { has_carrier: true, proof_level: 'owned_cause' },
+        },
+        {
+          subject: 'reference_move',
+          move_quality: 'good',
+          priority: 'main',
+          idea: { code: 'outpost_route', label: 'outpost route' },
+          evidence: { has_carrier: true, proof_level: 'owned_cause' },
+          comparison_loss: [{ side: 'reference', code: 'reference_only_tactic', label: 'reference-only tactic' }],
+          comparison: {
+            reference_move: 'e4f6',
+            candidate_move: 'e4g3',
+            lost_ideas: [{ side: 'reference', code: 'reference_only_tactic', label: 'reference-only tactic' }],
+            moves: [
+              { role: 'played_move', uci: 'e4g3' },
+              { role: 'best_move', uci: 'e4f6' },
+            ],
+          },
+        },
+      ],
+    });
+
+    const better = sections.find(section => section.key === 'better-plan');
+    assert.match(better?.body || '', /outpost route/);
+    assert.doesNotMatch(better?.body || '', /reference-only tactic/);
+    assert.doesNotMatch(JSON.stringify(better?.items || []), /reference-only tactic/);
+  });
+
   test('requires a public evidence carrier before writing board-evidence prose', () => {
     const sections = chesstoryBriefSections({
       verdict: { move_quality: 'good', played_move: 'c4c5', reference_move: 'c4c5' },
