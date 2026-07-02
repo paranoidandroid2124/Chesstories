@@ -2016,17 +2016,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       unit: PositionPlanTechniqueUnit,
       axisKey: Option[String]
   ): Boolean =
-    val currentMoveLane =
-      diagnostic.surfaceLane == "current_move_owned" || diagnostic.surfaceLane == "current_move_function"
-    val referenceOwnedLane =
-      diagnostic.surfaceLane == "reference_or_opponent_resource" &&
-        diagnostic.lineRole == "reference" &&
-        diagnostic.supportLevel == "owned_cause_linked" &&
-        diagnostic.causeEvidenceIds.nonEmpty &&
-        diagnostic.hasCarrier
     diagnostic.unit == unit &&
-      axisKey.forall(diagnostic.axisKey.contains) &&
-      ((currentMoveLane && diagnostic.hasCarrier) || referenceOwnedLane)
+      axisKey.forall(diagnostic.axisKey.contains)
 
   private def semanticRubricUnitsForAxis(axisKey: String): List[PositionPlanTechniqueUnit] =
     axisPart(axisKey, 0) match

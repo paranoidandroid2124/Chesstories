@@ -1672,7 +1672,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueObjectBindingSignatures =
           List("target=PlanSubject:pawnbreakpreparation|mechanism=Mechanism:plan-pressure"),
         moveMeaningClaimSurfaceSignatures = List(publicPlanSignature),
-        publicMoveMeaningClaimSurfaceSignatures = List(publicPlanSignature)
+        publicMoveMeaningClaimSurfaceSignatures = Nil
       )
     val slot =
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
@@ -1710,7 +1710,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         positionPlanTechniqueSemanticDetailTokens = List("unit:PieceRerouteRoute"),
         positionPlanTechniqueSemanticDetailTokenGroups = List(List("unit:PieceRerouteRoute")),
         moveMeaningClaimSurfaceSignatures = List(carrierlessPublicSurfaceSignature),
-        publicMoveMeaningClaimSurfaceSignatures = List(carrierlessPublicSurfaceSignature)
+        publicMoveMeaningClaimSurfaceSignatures = Nil
       )
     val recognitionSlot =
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
@@ -1760,8 +1760,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         id = "cmp-reference-soft-pawn-break",
         moveJudgmentView = diagnostic.moveJudgmentView.copy(
           moveMeaningClaimSurfaceSignatures = List(publicReferenceSoftSignature),
-          publicMoveMeaningClaimDiagnostics = publicMoveMeaningClaimDiagnostic(publicReferenceSoftSignature).toList,
-          publicMoveMeaningClaimSurfaceSignatures = List(publicReferenceSoftSignature)
+          publicMoveMeaningClaimDiagnostics = Nil,
+          publicMoveMeaningClaimSurfaceSignatures = Nil
         )
       )
     val slot =
