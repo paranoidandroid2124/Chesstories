@@ -2014,7 +2014,7 @@ object MoveMeaningSurface:
       technique: Option[MoveMeaningSurfaceEndgameTechnique]
   ): MoveMeaningSurfaceEvidence =
     val boardCarriers = publicBoardCarriers(claim.objectBindingSignatures, target)
-    val hasBoardCarrier = publicObjectBoardCarriers(claim.objectBindingSignatures).nonEmpty
+    val hasBoardCarrier = boardCarriers.nonEmpty
     val causeCarrier = claim.causeEvidenceIds.nonEmpty && hasBoardCarrier
     val objectCarrier = EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
     val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
@@ -2051,10 +2051,6 @@ object MoveMeaningSurface:
     ).distinct.sortBy(carrier =>
       (carrier.role, carrier.kind, carrier.value, carrier.from.getOrElse(""), carrier.to.getOrElse(""))
     ).take(8)
-
-  private def publicObjectBoardCarriers(objectBindingSignatures: List[String]): List[MoveMeaningSurfaceBoardCarrier] =
-    objectBindingSignatures
-      .flatMap(signature => EvidenceObjectBinding.signatureParts(signature).flatMap(publicBoardCarrierPart))
 
   private def publicBoardCarrierPart(part: String): Option[MoveMeaningSurfaceBoardCarrier] =
     val keyValue = part.split("=", 2)
