@@ -2961,6 +2961,50 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assert(view.moveMeaningClaims.head.reasonTokens.contains("routeTo:e3"))
     assert(view.moveMeaningClaims.head.reasonTokens.contains("routeCarrier:reroute"))
 
+  test("move meaning claims own same-root subject route carriers without route object signatures"):
+    val routeSubjectOnlySignature =
+      "actor=Move:e2e3|target=Square:e3|mechanism=Mechanism:developmentchoice|proof=DirectProof"
+    val routeCause = causeFrame(
+      causeId = "cause-subject-route",
+      axisKeys = List("Activity:Gain:activity-gain"),
+      objectSignatures = List(routeSubjectOnlySignature),
+      causeKind = RelativeCauseKind.ActivityGain,
+      rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot
+    ).copy(hasOwnedAdmissibleLongTermProof = true)
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Gain:activity-gain"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      label = Some("activity-gain"),
+      candidateEvidenceIds = List("structural-delta:played:e2e3"),
+      sourceEvidenceIds = List("structural-delta:played:e2e3"),
+      causeEvidenceIds = List("cause-subject-route"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List(routeSubjectOnlySignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis,
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralRouteRole = Some("Played"),
+      structuralPurposeSubjects = List("knight:e2-e3:maneuver"),
+      structuralPurposeConsequences = List("DevelopmentPieceActivated"),
+      structuralPurposeCategories = List("PieceActivity", "Development"),
+      structuralMotifTags = List("piece", "reroute", "route")
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = List(routeCause),
+      details = List(detail)
+    )
+    val claim = view.moveMeaningClaims.head
+
+    assertEquals(claim.meaningKind, "PieceRoute")
+    assertEquals(claim.supportLevel, "owned_cause_linked")
+    assertEquals(claim.surfaceLane, "current_move_owned")
+    assertEquals(claim.causeEvidenceIds, List("cause-subject-route"))
+    assert(claim.reasonTokens.contains("routePiece:knight"))
+    assert(claim.reasonTokens.contains("routeFrom:e2"))
+    assert(claim.reasonTokens.contains("routeTo:e3"))
+
   test("move meaning claims preserve same-root break, counter-break, and line-unlock siblings"):
     val breakSignature =
       "actor=Move:e2e3|target=File:e|target=Square:e3|target=Square:d4|mechanism=Mechanism:pawn-break|proof=DirectProof"

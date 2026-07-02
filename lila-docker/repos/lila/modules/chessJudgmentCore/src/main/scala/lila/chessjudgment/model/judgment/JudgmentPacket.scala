@@ -3711,7 +3711,11 @@ object MoveMeaningClaim:
       routeObjectSignatures.exists(signature => moveTokens(List(signature)).contains(normalizedClaimMove))
     val routeObjectWithoutMoveActor =
       routeObjectSignatures.exists(signature => moveTokens(List(signature)).isEmpty)
+    val routeSubjectForClaimMove =
+      detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
+        detail.structuralPurposeSubjects.exists(qualifiedRouteSubjectToken)
     routeObjectForClaimMove ||
+      routeSubjectForClaimMove ||
       (
         detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
           routeActorMoves.forall(_ == normalizedClaimMove) &&
@@ -4449,7 +4453,11 @@ object MoveMeaningClaim:
 
   private def pieceRouteDetailReady(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     val hasRouteIntent = pieceRouteQualifiedCarrier(detail, detail.objectBindingSignatures)
-    hasRouteIntent && detail.objectBindingSignatures.exists(pieceRouteObjectSignature)
+    hasRouteIntent &&
+      (
+        detail.objectBindingSignatures.exists(pieceRouteObjectSignature) ||
+          detail.structuralPurposeSubjects.exists(qualifiedRouteSubjectToken)
+      )
 
   private def endgameTechniqueHorizonOwnedShape(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
