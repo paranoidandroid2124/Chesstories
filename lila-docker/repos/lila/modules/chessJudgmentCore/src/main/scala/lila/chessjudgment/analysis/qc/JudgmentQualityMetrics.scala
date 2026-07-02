@@ -788,9 +788,7 @@ final case class ComparisonMoveJudgmentViewDiagnostics(
     moveMeaningClaimVisibility: List[String] = Nil,
     moveMeaningClaimSurfaceLanes: List[String] = Nil,
     moveMeaningClaimLaneKeys: List[String] = Nil,
-    moveMeaningClaimSurfaceSignatures: List[String] = Nil,
-    publicMoveMeaningClaimDiagnostics: List[PublicMoveMeaningClaimDiagnostic] = Nil,
-    publicMoveMeaningClaimSurfaceSignatures: List[String] = Nil
+    publicMoveMeaningClaimDiagnostics: List[PublicMoveMeaningClaimDiagnostic] = Nil
 ):
   val hasPrimaryCause: Boolean = primaryCauseKinds.nonEmpty
 
@@ -1594,14 +1592,8 @@ object CandidateComparisonDiagnostic:
       moveMeaningClaimVisibility = moveMeaningClaims.map(_.visibility).distinct.sorted,
       moveMeaningClaimSurfaceLanes = moveMeaningClaims.map(_.surfaceLane).distinct.sorted,
       moveMeaningClaimLaneKeys = moveMeaningClaims.map(_.laneKey).distinct.sorted,
-      moveMeaningClaimSurfaceSignatures =
-        moveMeaningClaims.map(moveMeaningClaimSurfaceSignature).distinct.sorted,
       publicMoveMeaningClaimDiagnostics =
-        publicMoveMeaningClaimDiagnostics,
-      publicMoveMeaningClaimSurfaceSignatures =
-        publicMoveMeaningClaimDiagnostics.map(_.signature)
-          .distinct
-          .sorted
+        publicMoveMeaningClaimDiagnostics
     )
 
   private def comparisonMoveMeaningClaims(
@@ -1616,9 +1608,6 @@ object CandidateComparisonDiagnostic:
       comparisonFrameIds.contains(claim.frameId) &&
         (move == referenceMove || move == candidateMove)
     }
-
-  private def moveMeaningClaimSurfaceSignature(claim: MoveMeaningClaim): String =
-    moveMeaningClaimSurfaceSignature(claim, MoveMeaningSurface.evidenceForClaim(claim))
 
   private def moveMeaningClaimSurfaceSignature(
       claim: MoveMeaningClaim,
