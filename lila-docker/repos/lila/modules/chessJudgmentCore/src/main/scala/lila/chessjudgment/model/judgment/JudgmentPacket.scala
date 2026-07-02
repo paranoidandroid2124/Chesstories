@@ -3028,7 +3028,6 @@ object MoveMeaningClaim:
   ): Option[String] =
     val hasConcreteObject = detailHasConcreteSurfaceObject(detail, objectSignatures)
     val specificObjectAxis = detailHasSpecificObjectAxis(detail)
-    val direct = detailHasDirectOrContrastProof(detail)
     val hasDetailEvidence = detailHasEvidenceLink(detail)
     val currentMoveClaim = currentMoveMeaningClaim(verdict, claimLineRole, claimMove)
     val directCurrentMoveCarrier =
@@ -3042,8 +3041,7 @@ object MoveMeaningClaim:
         currentMoveSurfaceReady(meaningKind, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
     val reasonGradeCauseFrames = roleCompatibleCauseFrames.filter(reasonGradeCauseFrame)
     val ownedCause =
-      reasonGradeCauseFrames.exists(frame => frame.concreteObjectReady && frame.hasOwnedAdmissibleLongTermProof) ||
-        reasonGradeCauseFrames.exists(frame => frame.concreteObjectReady && frame.attributionDirectProofEligible)
+      reasonGradeCauseFrames.exists(frame => frame.hasOwnedAdmissibleLongTermProof || frame.attributionDirectProofEligible)
     val planOptionCurrentFunctionOnly =
       currentMoveClaim &&
         detail.unit == PositionPlanTechniqueUnit.PlanOptionSet
@@ -3098,7 +3096,7 @@ object MoveMeaningClaim:
         currentMoveSurfaceProof
     if terminalOverriddenEndgameTechniqueDetail(detail) && endgameTechniqueViewProof then
       Some("contextual")
-    else if reasonGradeCauseFrames.nonEmpty && ownedCause && ownedLaneOwnershipReady && hasConcreteObject && specificObjectAxis && direct && ownedMeaningReady &&
+    else if reasonGradeCauseFrames.nonEmpty && ownedCause && ownedLaneOwnershipReady && ownedMeaningReady &&
         !planOptionCurrentFunctionOnly && !badCurrentMovePositiveMeaning && !broadPlanContinuityCurrentMove
     then
       Some("owned_cause_linked")
