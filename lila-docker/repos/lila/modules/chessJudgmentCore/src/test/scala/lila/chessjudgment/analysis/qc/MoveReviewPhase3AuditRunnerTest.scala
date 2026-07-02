@@ -115,15 +115,13 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     def terminalSlot(
         id: String,
         questionId: String,
-        stage: String,
-        causeKinds: List[RelativeCauseKind] = Nil
+        stage: String
     ) =
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
         id = id,
         unit = PositionPlanTechniqueUnit.StructuralTransformation,
         questionId = Some(questionId),
-        requiredSupportLevel = Some(stage),
-        requiredCauseKinds = causeKinds
+        requiredSupportLevel = Some(stage)
       )
     def terminalDiagnostic(
         id: String,
@@ -198,8 +196,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       terminalSlot(
         id = "terminal-promotion-race-owned",
         questionId = "terminal_promotion_race",
-        stage = "owned_cause_linked",
-        causeKinds = List(RelativeCauseKind.ConversionSecured)
+        stage = "owned_cause_linked"
       )
     val coverage =
       MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
@@ -434,18 +431,14 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         id = "rook-endgame-lucena-recognition",
         unit = PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
         questionId = Some("rook_endgame.conversion_recipe"),
-        requiredSupportLevel = Some("owned_cause_linked"),
-        requiredMechanismKinds = List(StrategicMechanismKind.Endgame),
-        requiredCauseKinds = List(RelativeCauseKind.ConversionSecured)
+        requiredSupportLevel = Some("owned_cause_linked")
       )
     val philidorSlot =
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
         id = "rook-endgame-philidor-recognition",
         unit = PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
         questionId = Some("rook_endgame.draw_resource"),
-        requiredSupportLevel = Some("owned_cause_linked"),
-        requiredMechanismKinds = List(StrategicMechanismKind.Endgame),
-        requiredCauseKinds = List(RelativeCauseKind.DrawResource)
+        requiredSupportLevel = Some("owned_cause_linked")
       )
 
     val coverage =
@@ -843,7 +836,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     val ownedSlot =
       recognitionSlot.copy(
         id = "rook-recognition-owned",
-        requiredCauseKinds = List(RelativeCauseKind.ConversionSecured)
+        requiredSupportLevel = Some("owned_cause_linked")
       )
 
     val coverage =
@@ -1009,8 +1002,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
         id = "reference-owned-pawn-break",
         unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
+        axisKey = Some(axis),
         requiredSupportLevel = Some("owned_cause_linked"),
-        requiredCauseKinds = List(RelativeCauseKind.PawnBreakOpportunity),
       )
 
     val coverage =

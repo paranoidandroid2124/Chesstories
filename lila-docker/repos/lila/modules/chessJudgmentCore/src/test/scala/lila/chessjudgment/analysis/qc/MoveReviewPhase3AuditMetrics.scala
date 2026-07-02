@@ -105,18 +105,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       ownedCauseLinked: Boolean,
       clusteredCoherent: Boolean,
       strictCauseLineageBound: Boolean,
-      strictPrimaryRootLineageBound: Boolean,
-      strictPrimaryRootTierLineageBound: Boolean,
       frameIds: List[String],
-      detailMechanismKinds: List[StrategicMechanismKind],
       sourceEvidenceIds: List[String],
-      causeKinds: List[RelativeCauseKind],
-      primaryRootCauseKinds: List[RelativeCauseKind],
       primaryRootCauseEvidenceIds: List[String],
-      primaryRootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier],
-      primaryRootCauseEvidenceTiers: List[PrimaryRootCauseEvidenceTier],
       causeIds: List[String],
-      causeIdKinds: List[(String, RelativeCauseKind)],
       claimIds: List[String]
   )
 
@@ -276,20 +268,13 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
     val unitEligibleRows =
       rows.filter(row =>
         row.unit == slot.unit &&
-          slot.axisKey.forall(expectedAxis => row.axisKey.contains(expectedAxis)) &&
-          slot.requiredMechanismKinds.forall(kind => row.detailMechanismKinds.contains(kind))
+          slot.axisKey.forall(expectedAxis => row.axisKey.contains(expectedAxis))
       )
-    val structurallyEligibleRows =
-      unitEligibleRows.filter(row =>
-          (slot.requiredCauseKinds.isEmpty ||
-            slot.requiredCauseKinds.exists(kind => row.causeKinds.contains(kind))) &&
-          (slot.requiredPrimaryRootCauseKinds.isEmpty ||
-            slot.requiredPrimaryRootCauseKinds.exists(kind => row.primaryRootCauseKinds.contains(kind))) &&
-          (slot.requiredPrimaryRootArbitrationTiers.isEmpty ||
-            slot.requiredPrimaryRootArbitrationTiers.exists(tier => row.primaryRootArbitrationTiers.contains(tier)))
-      )
-    val matches = structurallyEligibleRows
-    val best = matches.headOption
+    val matches = unitEligibleRows
+    val best =
+      slot.requiredSupportLevel
+        .flatMap(required => matches.find(_.supportLevel == required.trim))
+        .orElse(matches.headOption)
     val supportLevel = best.map(_.supportLevel).getOrElse("missing_semantic_slot")
     val supportLevelSatisfied =
       slot.requiredSupportLevel.forall(required => supportLevel == required.trim)
@@ -301,10 +286,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "questionId" -> slot.questionId,
       "description" -> slot.description,
       "requiredSupportLevel" -> slot.requiredSupportLevel,
-      "requiredMechanismKinds" -> slot.requiredMechanismKinds.map(_.toString),
-      "requiredCauseKinds" -> slot.requiredCauseKinds.map(_.toString),
-      "requiredPrimaryRootCauseKinds" -> slot.requiredPrimaryRootCauseKinds.map(_.toString),
-      "requiredPrimaryRootArbitrationTiers" -> slot.requiredPrimaryRootArbitrationTiers.map(_.toString),
       "matched" -> matched,
       "supportLevel" -> supportLevel,
       "lineRole" -> best.map(_.lineRole),
@@ -319,12 +300,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "clusteredCoherent" -> best.exists(_.clusteredCoherent),
       "matchedComparisonIds" -> matches.map(_.comparisonId).distinct.sorted,
       "frameIds" -> matches.flatMap(_.frameIds).distinct.sorted,
-      "detailMechanismKinds" -> matches.flatMap(_.detailMechanismKinds).distinct.sortBy(_.toString).map(_.toString),
       "sourceEvidenceIds" -> matches.flatMap(_.sourceEvidenceIds).distinct.sorted,
-      "causeKinds" -> matches.flatMap(_.causeKinds).distinct.sortBy(_.toString).map(_.toString),
-      "primaryRootCauseKinds" -> matches.flatMap(_.primaryRootCauseKinds).distinct.sortBy(_.toString).map(_.toString),
       "primaryRootCauseEvidenceIds" -> matches.flatMap(_.primaryRootCauseEvidenceIds).distinct.sorted,
-      "primaryRootArbitrationTiers" -> matches.flatMap(_.primaryRootArbitrationTiers).distinct.sortBy(_.toString).map(_.toString),
       "causeIds" -> matches.flatMap(_.causeIds).distinct.sorted,
       "claimIds" -> matches.flatMap(_.claimIds).distinct.sorted,
       "bestLineageTrace" -> best.map(semanticRubricLineageTraceJson).getOrElse(Json.obj()),
@@ -344,17 +321,11 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "lineRole" -> row.lineRole,
       "moveUci" -> row.moveUci,
       "strictCauseLineageBound" -> row.strictCauseLineageBound,
-      "strictPrimaryRootLineageBound" -> row.strictPrimaryRootLineageBound,
-      "strictPrimaryRootTierLineageBound" -> row.strictPrimaryRootTierLineageBound,
       "frameIds" -> row.frameIds,
       "sourceEvidenceIds" -> row.sourceEvidenceIds,
-      "detailMechanismKinds" -> row.detailMechanismKinds.distinct.sortBy(_.toString).map(_.toString),
-      "causeKinds" -> row.causeKinds.map(_.toString),
       "causeIds" -> row.causeIds,
       "claimIds" -> row.claimIds,
-      "primaryRootCauseKinds" -> row.primaryRootCauseKinds.map(_.toString),
-      "primaryRootCauseEvidenceIds" -> row.primaryRootCauseEvidenceIds,
-      "primaryRootArbitrationTiers" -> row.primaryRootArbitrationTiers.map(_.toString)
+      "primaryRootCauseEvidenceIds" -> row.primaryRootCauseEvidenceIds
     )
 
   private def semanticRubricSlotRows(diagnostic: CandidateComparisonDiagnostic): List[SemanticRubricSlotRow] =
@@ -374,7 +345,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
     val frameIds = view.positionPlanTechniqueFrameIds
     val claimCauseIds = claim.causeEvidenceIds.distinct.sorted
     val claimCauseIdSet = claimCauseIds.toSet
-    val detailMechanismKinds = view.positionPlanTechniqueSemanticDetailMechanismKinds
     val frameCauseFlows =
       diagnostic.relativeCauseDiagnostics.causeFlow.filter(flow => claimCauseIdSet.contains(flow.causeId))
     val exactAxisOrPattern =
@@ -397,12 +367,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       claimCauseIds.nonEmpty
     val claimPrimaryRootCauseIds =
       view.primaryRootCauseEvidenceIds.distinct.sorted.filter(claimCauseIdSet)
-    val claimPrimaryRootTiers =
-      view.primaryRootCauseEvidenceTiers.filter(tier => claimCauseIdSet.contains(tier.causeEvidenceId))
-    val strictPrimaryRootLineageBound =
-      claimPrimaryRootCauseIds.nonEmpty
-    val strictPrimaryRootTierLineageBound =
-      claimPrimaryRootTiers.nonEmpty
     SemanticRubricSlotRow(
       comparisonId = diagnostic.id,
       unit = claim.unit,
@@ -418,24 +382,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       ownedCauseLinked = ownedCauseLinked,
       clusteredCoherent = clusteredCoherent,
       strictCauseLineageBound = strictCauseLineageBound,
-      strictPrimaryRootLineageBound = strictPrimaryRootLineageBound,
-      strictPrimaryRootTierLineageBound = strictPrimaryRootTierLineageBound,
       frameIds = frameIds,
-      detailMechanismKinds = detailMechanismKinds,
       sourceEvidenceIds = claim.sourceEvidenceIds.distinct.sorted,
-      causeKinds = frameCauseFlows.map(_.causeKind).distinct.sortBy(_.toString),
-      primaryRootCauseKinds =
-        Option.when(claimPrimaryRootCauseIds.nonEmpty)(view.primaryRootCauseKinds.distinct.sortBy(_.toString)).getOrElse(Nil),
       primaryRootCauseEvidenceIds = claimPrimaryRootCauseIds,
-      primaryRootArbitrationTiers =
-        Option.when(claimPrimaryRootTiers.nonEmpty)(view.primaryRootArbitrationTiers.distinct.sortBy(_.toString)).getOrElse(Nil),
-      primaryRootCauseEvidenceTiers = claimPrimaryRootTiers.distinct.sortBy(tier => (tier.causeEvidenceId, tier.tier.toString)),
       causeIds = claimCauseIds,
-      causeIdKinds =
-        frameCauseFlows
-          .map(flow => flow.causeId -> flow.causeKind)
-          .distinct
-          .sortBy((causeId, kind) => (causeId, kind.toString)),
       claimIds = frameCauseFlows.flatMap(_.claimIds).distinct.sorted
     )
 

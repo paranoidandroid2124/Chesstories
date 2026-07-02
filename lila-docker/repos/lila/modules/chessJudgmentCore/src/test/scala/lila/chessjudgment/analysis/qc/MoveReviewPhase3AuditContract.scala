@@ -22,11 +22,7 @@ private[qc] object MoveReviewPhase3AuditContract:
       axisKey: Option[String] = None,
       questionId: Option[String] = None,
       description: Option[String] = None,
-      requiredSupportLevel: Option[String] = None,
-      requiredMechanismKinds: List[StrategicMechanismKind] = Nil,
-      requiredCauseKinds: List[RelativeCauseKind] = Nil,
-      requiredPrimaryRootCauseKinds: List[RelativeCauseKind] = Nil,
-      requiredPrimaryRootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier] = Nil
+      requiredSupportLevel: Option[String] = None
   )
 
   def parseExpectedQuestionIds(json: JsValue): List[String] =
@@ -49,27 +45,7 @@ private[qc] object MoveReviewPhase3AuditContract:
         axisKey = (json \ "axisKey").asOpt[String],
         questionId = (json \ "questionId").asOpt[String],
         description = (json \ "description").asOpt[String],
-        requiredSupportLevel = (json \ "requiredSupportLevel").asOpt[String].orElse((json \ "requiredTerminalStage").asOpt[String]),
-        requiredMechanismKinds =
-          (json \ "requiredMechanismKinds")
-            .asOpt[List[String]]
-            .getOrElse(Nil)
-            .flatMap(raw => StrategicMechanismKind.values.find(_.toString == raw.trim)),
-        requiredCauseKinds =
-          (json \ "requiredCauseKinds")
-            .asOpt[List[String]]
-            .getOrElse(Nil)
-            .flatMap(raw => RelativeCauseKind.values.find(_.toString == raw.trim)),
-        requiredPrimaryRootCauseKinds =
-          (json \ "requiredPrimaryRootCauseKinds")
-            .asOpt[List[String]]
-            .getOrElse(Nil)
-            .flatMap(raw => RelativeCauseKind.values.find(_.toString == raw.trim)),
-        requiredPrimaryRootArbitrationTiers =
-          (json \ "requiredPrimaryRootArbitrationTiers")
-            .asOpt[List[String]]
-            .getOrElse(Nil)
-            .flatMap(raw => MoveJudgmentCauseRootArbitrationTier.values.find(_.toString == raw.trim))
+        requiredSupportLevel = (json \ "requiredSupportLevel").asOpt[String].orElse((json \ "requiredTerminalStage").asOpt[String])
       )
 
   private def expectedSemanticUnit(raw: String): Option[PositionPlanTechniqueUnit] =
@@ -82,9 +58,5 @@ private[qc] object MoveReviewPhase3AuditContract:
       "axisKey" -> slot.axisKey,
       "questionId" -> slot.questionId,
       "description" -> slot.description,
-      "requiredSupportLevel" -> slot.requiredSupportLevel,
-      "requiredMechanismKinds" -> slot.requiredMechanismKinds.map(_.toString),
-      "requiredCauseKinds" -> slot.requiredCauseKinds.map(_.toString),
-      "requiredPrimaryRootCauseKinds" -> slot.requiredPrimaryRootCauseKinds.map(_.toString),
-      "requiredPrimaryRootArbitrationTiers" -> slot.requiredPrimaryRootArbitrationTiers.map(_.toString)
+      "requiredSupportLevel" -> slot.requiredSupportLevel
     )
