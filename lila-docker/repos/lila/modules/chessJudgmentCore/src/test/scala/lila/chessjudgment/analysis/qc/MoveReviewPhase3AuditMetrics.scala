@@ -251,7 +251,11 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
     val unitEligibleRows =
       rows.filter(row =>
         row.unit == slot.unit &&
-          slot.axisKey.forall(expectedAxis => row.axisKey.contains(expectedAxis))
+          slot.axisKey.forall(expectedAxis => row.axisKey.contains(expectedAxis)) &&
+          slot.lineRole.forall(expectedRole => row.lineRole == expectedRole.trim) &&
+          slot.moveUci.forall(expectedMove =>
+            JudgmentSubjectBinding.normalizeMove(row.moveUci) == JudgmentSubjectBinding.normalizeMove(expectedMove)
+          )
       )
     val matches = unitEligibleRows
     val best =
@@ -266,6 +270,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "id" -> slot.id,
       "unit" -> slot.unit.toString,
       "axisKey" -> slot.axisKey,
+      "lineRole" -> slot.lineRole,
+      "moveUci" -> slot.moveUci,
       "questionId" -> slot.questionId,
       "description" -> slot.description,
       "requiredSupportLevel" -> slot.requiredSupportLevel,

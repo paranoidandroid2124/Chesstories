@@ -20,6 +20,8 @@ private[qc] object MoveReviewPhase3AuditContract:
       id: String,
       unit: PositionPlanTechniqueUnit,
       axisKey: Option[String] = None,
+      lineRole: Option[String] = None,
+      moveUci: Option[String] = None,
       questionId: Option[String] = None,
       description: Option[String] = None,
       requiredSupportLevel: Option[String] = None
@@ -43,6 +45,8 @@ private[qc] object MoveReviewPhase3AuditContract:
         id = id,
         unit = unit,
         axisKey = (json \ "axisKey").asOpt[String],
+        lineRole = (json \ "lineRole").asOpt[String],
+        moveUci = (json \ "moveUci").asOpt[String],
         questionId = (json \ "questionId").asOpt[String],
         description = (json \ "description").asOpt[String],
         requiredSupportLevel = (json \ "requiredSupportLevel").asOpt[String]
@@ -56,6 +60,8 @@ private[qc] object MoveReviewPhase3AuditContract:
       "id" -> slot.id,
       "unit" -> slot.unit.toString,
       "axisKey" -> slot.axisKey,
+      "lineRole" -> slot.lineRole,
+      "moveUci" -> slot.moveUci,
       "questionId" -> slot.questionId,
       "description" -> slot.description,
       "requiredSupportLevel" -> slot.requiredSupportLevel
