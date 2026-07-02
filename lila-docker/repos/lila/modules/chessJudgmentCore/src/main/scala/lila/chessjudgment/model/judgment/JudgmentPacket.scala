@@ -2015,8 +2015,8 @@ object MoveMeaningSurface:
   ): MoveMeaningSurfaceEvidence =
     val boardCarriers = publicBoardCarriers(claim.objectBindingSignatures, target)
     val hasBoardCarrier = boardCarriers.nonEmpty
-    val causeCarrier = claim.causeEvidenceIds.nonEmpty && hasBoardCarrier
     val objectCarrier = EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
+    val causeCarrier = claim.causeEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
     val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
     val targetBound = target.squares.nonEmpty || target.files.nonEmpty || target.pieces.nonEmpty
     val terminalCarrier = terminal.nonEmpty && hasBoardCarrier

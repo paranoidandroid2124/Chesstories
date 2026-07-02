@@ -3464,7 +3464,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(claim.role, "ImprovesPieceActivity")
     assert(!claim.reasonTokens.exists(_.startsWith("routeCarrier:")))
     assertEquals(MoveMeaningSurface.from(view).map(_.ideaType), List("piece_activity"))
-  test("move meaning public surface uses rendered target carrier for claim proof"):
+  test("move meaning public surface does not use rendered target as claim proof"):
     val proofOnlyClaim = MoveMeaningClaim(
       meaningKind = "PieceActivity",
       role = "ImprovesPieceActivity",
@@ -3497,9 +3497,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       ).copy(moveMeaningClaims = List(proofOnlyClaim))
     )
 
-    assertEquals(surface.map(_.evidence.proofLevel), List("owned_cause"))
-    assertEquals(surface.flatMap(_.evidence.causeIds), List("cause-proof-only"))
-    assert(surface.head.evidence.boardCarriers.contains(MoveMeaningSurfaceBoardCarrier("target", "Square", "e4")))
+    assertEquals(surface, Nil)
 
   test("move meaning public evidence scans all object signatures before capping board carriers"):
     val fillerSignatures =
