@@ -1099,7 +1099,8 @@ object PositionPlanTechniqueProjection:
       kind: RelativeCauseKind
   ): Boolean =
     detail.axisKind.exists(axisKind =>
-      positionPlanTechniqueCauseKindsForAxis(axisKind, detail.axisPolarity, detail.label).contains(kind)
+      !(detail.unit == PositionPlanTechniqueUnit.CounterplayRace && axisKind == StrategicAxisKind.PawnBreak) &&
+        positionPlanTechniqueCauseKindsForAxis(axisKind, detail.axisPolarity, detail.label).contains(kind)
     ) ||
       positionPlanTechniqueConcreteCounterplayRaceCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteRoutePlanCauseKind(detail, kind) ||
