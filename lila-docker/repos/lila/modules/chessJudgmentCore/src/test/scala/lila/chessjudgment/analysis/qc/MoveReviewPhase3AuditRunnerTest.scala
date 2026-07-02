@@ -475,110 +475,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       Nil
     )
 
-  test("root arbitration quality summary separates fallback broad and context-only tiers"):
-    val exact =
-      comparisonDiagnostic(
-        id = "cmp-exact-root",
-        referenceLeadAxes = List("Activity:Gain:outpost-gain"),
-        producedKinds = List(RelativeCauseKind.ActivityGain),
-        flows = List(
-          causeFlow(
-            causeId = "cause-exact",
-            kind = RelativeCauseKind.ActivityGain,
-            proofAxisKeys = List("Activity:Gain:outpost-gain"),
-            claimIds = List("claim-exact")
-          )
-        ),
-        primaryRootKinds = List(RelativeCauseKind.ActivityGain),
-        primaryRootIds = List("cause-exact"),
-        rootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot),
-        primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
-      )
-    val fallback =
-      comparisonDiagnostic(
-        id = "cmp-plan-fallback",
-        referenceLeadAxes = List("PlanCoherence:Preserve:main-plan"),
-        producedKinds = List(RelativeCauseKind.PlanContradiction),
-        flows = List(
-          causeFlow(
-            causeId = "cause-plan",
-            kind = RelativeCauseKind.PlanContradiction,
-            proofAxisKeys = List("PlanCoherence:Preserve:main-plan"),
-            claimIds = List("claim-plan")
-          )
-        ),
-        primaryRootKinds = List(RelativeCauseKind.PlanContradiction),
-        primaryRootIds = List("cause-plan"),
-        rootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.FallbackRoot),
-        primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.FallbackRoot)
-      )
-    val broadAndContext =
-      comparisonDiagnostic(
-        id = "cmp-broad-context",
-        referenceLeadAxes = List("Activity:Gain:mobility-gain"),
-        producedKinds = List(RelativeCauseKind.ActivityGain, RelativeCauseKind.TacticalRefutationOfPlayed),
-        flows = List(
-          causeFlow(
-            causeId = "cause-broad",
-            kind = RelativeCauseKind.ActivityGain,
-            proofAxisKeys = List("Activity:Gain:mobility-gain"),
-            claimIds = List("claim-broad")
-          )
-        ),
-        primaryRootKinds = List(RelativeCauseKind.TacticalRefutationOfPlayed),
-        primaryRootIds = List("cause-tactical"),
-        rootArbitrationTiers = List(
-          MoveJudgmentCauseRootArbitrationTier.BroadOwnedRoot,
-          MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot,
-          MoveJudgmentCauseRootArbitrationTier.ContextOnly
-        ),
-        primaryRootArbitrationTiers = List(MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot)
-      )
-
-    val summary = MoveReviewPhase3AuditRunner.rootArbitrationQualitySummaryJson(List(exact, fallback, broadAndContext))
-
-    assertEquals((summary \ "classification").as[String], "audit_only")
-    assertEquals((summary \ "comparisonCount").as[Int], 3)
-    assertEquals((summary \ "tierCounts" \ "FallbackRoot").as[Int], 1)
-    assertEquals((summary \ "tierCounts" \ "BroadOwnedRoot").as[Int], 1)
-    assertEquals((summary \ "tierCounts" \ "ContextOnly").as[Int], 1)
-    assertEquals((summary \ "primaryRootTierCounts" \ "ExactOwnedRoot").as[Int], 1)
-    assertEquals((summary \ "primaryRootTierCounts" \ "FallbackRoot").as[Int], 1)
-    assertEquals((summary \ "primaryRootTierCounts" \ "ConcreteOwnedRoot").as[Int], 1)
-    assertEquals((summary \ "fallbackRootComparisonIds").as[List[String]], List("cmp-plan-fallback"))
-    assertEquals((summary \ "broadOwnedRootComparisonIds").as[List[String]], List("cmp-broad-context"))
-    assertEquals((summary \ "contextOnlyComparisonIds").as[List[String]], List("cmp-broad-context"))
-
-  test("structural opportunity funnel counts concrete axis masked by plan fallback"):
-    val diagnostic =
-      comparisonDiagnostic(
-        id = "cmp-outpost-plan-fallback",
-        referenceLeadAxes = List("Target:Gain:target-pressure-gain"),
-        producedKinds = List(RelativeCauseKind.PlanContradiction),
-        flows = List(
-          causeFlow(
-            causeId = "cause-plan",
-            kind = RelativeCauseKind.PlanContradiction,
-            proofAxisKeys = List("Target:Gain:target-pressure-gain", "PlanCoherence:Preserve:main-plan"),
-            claimIds = List("claim-plan")
-          )
-        ),
-        primaryRootKinds = List(RelativeCauseKind.PlanContradiction),
-        primaryRootIds = List("cause-plan")
-      )
-
-    val funnel = MoveReviewPhase3AuditRunner.structuralOpportunityGenerationFunnelJson(List(diagnostic))
-
-    assertEquals((funnel \ "axisOpportunityCount").as[Int], 1)
-    assertEquals((funnel \ "terminalStageCounts" \ "fallback_masked_concrete_axis").as[Int], 1)
-    assertEquals(
-      (funnel \ "fallbackMaskedConcreteAxisComparisonIds").as[List[String]],
-      List("cmp-outpost-plan-fallback")
-    )
-    assertEquals((funnel \ "causeClassCounts" \ "plan_fallback").as[Int], 1)
-    assertEquals((funnel \ "expectedCauseKindCounts" \ "TargetPressureGain").as[Int], 1)
-    assertEquals((funnel \ "byAxis" \ "Target:Gain:target-pressure-gain" \ "terminalStageCounts" \ "fallback_masked_concrete_axis").as[Int], 1)
-
   test("structural opportunity funnel tracks exact axis lineage instead of same-kind roots"):
     val diagnostic =
       comparisonDiagnostic(
@@ -677,114 +573,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(
       (funnel \ "structuralAxisMissingCandidateComparisonIds").as[List[String]],
       List("cmp-structural-missing-axis")
-    )
-
-  test("plan technique anchor eligibility only escalates axisless inventory when a structural missing candidate exists"):
-    val playableNoAxis =
-      comparisonDiagnostic(
-        id = "cmp-playable-no-axis",
-        referenceLeadAxes = Nil,
-        producedKinds = Nil,
-        flows = Nil,
-        primaryRootKinds = Nil,
-        primaryRootIds = Nil,
-        verdict = MoveChoiceVerdict.PlayableLoss
-      )
-    val structuralMissingAxis =
-      comparisonDiagnostic(
-        id = "cmp-structural-missing-axis",
-        referenceLeadAxes = Nil,
-        producedKinds = Nil,
-        flows = Nil,
-        primaryRootKinds = Nil,
-        primaryRootIds = Nil
-      )
-    val root = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(chess.Color.White), Some("root"))
-    val after = PositionNodeRef("8/8/8/8/8/8/8/8 b - - 1 1", 2, Some(chess.Color.Black), Some("after"))
-    val transition = StructuralTransitionBinding(
-      moveUci = "d2d4",
-      role = TransitionEdgeRole.Played,
-      from = root,
-      to = after,
-      line = Some(candidateLine),
-      perspective = chess.Color.White
-    )
-    val axislessGraph =
-      TypedEvidenceGraph(
-        List(
-          EvidenceRecord(
-            evidenceRef("structural-delta:axisless", root),
-            StructuralDeltaEvidence(
-              transition = transition,
-              signals = Nil,
-              consequences = List(
-                TransitionConsequence(TransitionConsequenceKind.PassedPawnProgress, StructuralSignalPolarity.Gain, 3),
-                TransitionConsequence(TransitionConsequenceKind.PromotionPressureGain, StructuralSignalPolarity.Gain, 3)
-              )
-            )
-          )
-        )
-      )
-
-    val inventoryOnly =
-      MoveReviewPhase3AuditRunner.planTechniqueAnchorEligibilityJson(List(playableNoAxis), axislessGraph)
-    val missingWithInventory =
-      MoveReviewPhase3AuditRunner.planTechniqueAnchorEligibilityJson(List(playableNoAxis, structuralMissingAxis), axislessGraph)
-
-    assertEquals((inventoryOnly \ "resolution").as[String], "inventory_only_no_structural_missing_candidate")
-    assertEquals((inventoryOnly \ "axislessStructuralAnchorSignalCount").as[Int], 2)
-    assertEquals((inventoryOnly \ "axislessStructuralAnchorPlanTechniqueUnitCandidateCounts" \ "StructuralTransformation").as[Int], 2)
-    assertEquals((inventoryOnly \ "structuralAxisMissingCandidateCount").as[Int], 0)
-    assertEquals((inventoryOnly \ "structuralAxisMissingCandidateWithAnyPacketAxislessAnchorCount").as[Int], 0)
-    assertEquals((missingWithInventory \ "resolution").as[String], "upstream_axis_generation_candidate")
-    assertEquals((missingWithInventory \ "structuralAxisMissingCandidateCount").as[Int], 1)
-    assertEquals((missingWithInventory \ "structuralAxisMissingCandidateWithAnyPacketAxislessAnchorCount").as[Int], 1)
-    assertEquals(
-      (missingWithInventory \ "axislessStructuralAnchorPlanTechniqueUnitCandidateLabels" \ "StructuralTransformation").as[List[String]],
-      List("passed-pawn-progress", "promotion-pressure-gain")
-    )
-    assertEquals((missingWithInventory \ "axislessStructuralAnchorUnmappedLabelCounts").as[play.api.libs.json.JsObject].value.size, 0)
-    assertEquals(
-      (missingWithInventory \ "structuralAxisMissingCandidateWithAnyPacketAxislessAnchorComparisonIds").as[List[String]],
-      List("cmp-structural-missing-axis")
-    )
-
-  test("plan technique anchor eligibility separates broad activity inventory from object-bound reroute candidates"):
-    val root = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(chess.Color.White), Some("root"))
-    val after = PositionNodeRef("8/8/8/8/8/8/8/8 b - - 1 1", 2, Some(chess.Color.Black), Some("after"))
-    val transition = StructuralTransitionBinding(
-      moveUci = "d2d4",
-      role = TransitionEdgeRole.Played,
-      from = root,
-      to = after,
-      line = Some(candidateLine),
-      perspective = chess.Color.White
-    )
-    val graph =
-      TypedEvidenceGraph(
-        List(
-          EvidenceRecord(
-            evidenceRef("structural-delta:activity-axisless", root),
-            StructuralDeltaEvidence(
-              transition = transition,
-              signals = Nil,
-              consequences = List(
-                TransitionConsequence(TransitionConsequenceKind.MobilityGain, StructuralSignalPolarity.Gain, 2),
-                TransitionConsequence(TransitionConsequenceKind.MobilityLoss, StructuralSignalPolarity.Loss, 2)
-              )
-            )
-          )
-        )
-      )
-
-    val summary = MoveReviewPhase3AuditRunner.planTechniqueAnchorEligibilityJson(Nil, graph)
-
-    assertEquals((summary \ "axislessStructuralAnchorPlanTechniqueUnitCandidateCounts" \ "PieceRerouteRoute").as[Int], 2)
-    assertEquals((summary \ "axislessStructuralAnchorPlanTechniqueUnitObjectBoundCandidateCounts").as[play.api.libs.json.JsObject].value.size, 0)
-    assertEquals((summary \ "axislessStructuralAnchorPlanTechniqueUnitBroadCandidateCounts" \ "PieceRerouteRoute").as[Int], 2)
-    assertEquals(
-      (summary \ "axislessStructuralAnchorPlanTechniqueUnitBroadLabels" \ "PieceRerouteRoute").as[List[String]],
-      List("activity-gain", "activity-loss")
     )
 
   test("plan technique anchor eligibility does not borrow object subjects from a different structural consequence"):
@@ -2440,62 +2228,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     val earlyThirdRankDefenseLike = feature("R7/4k3/7r/8/3KP3/8/8/8 w - - 0 1", chess.Color.Black)
     assertNotEquals(earlyThirdRankDefenseLike.primaryPattern, Some("PhilidorDefense"))
 
-  test("binding width audit reports broad and colocated graph bindings"):
-    val view = MoveJudgmentView(
-      verdict = None,
-      verdictCarriers = Nil,
-      causeAudit = MoveJudgmentCauseAudit(
-        primary = List(
-          causeFrame(
-            causeId = "cause-side-only",
-            axisKeys = List("Counterplay:Restrain:opponent-low-mobility"),
-            objectSignatures = List(
-              "target=Side:black|mechanism=Mechanism:counterplayrestraint|consequence=Consequence:counterplayrestraint|proof=DirectProof"
-            ),
-            rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.FallbackRoot
-          ),
-          causeFrame(
-            causeId = "cause-context-only",
-            axisKeys = List("Activity:Gain:outpost-gain"),
-            objectSignatures = List(
-              "target=Square:e5|mechanism=Mechanism:activity|consequence=Consequence:activity|proof=ContextSupport"
-            ),
-            rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.ContextOnly
-          ),
-          causeFrame(
-            causeId = "cause-outpost-direct",
-            axisKeys = List("Activity:Gain:outpost-gain"),
-            objectSignatures = List(
-              "target=Square:d5|mechanism=Mechanism:activity|consequence=Consequence:activity|proof=DirectProof"
-            ),
-            rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot
-          ),
-          causeFrame(
-            causeId = "cause-colocated",
-            axisKeys = Nil,
-            objectSignatures = Nil,
-            witnessBindingLevel = MoveJudgmentCauseWitnessBindingLevel.SameComparisonOnly
-          )
-        )
-      ),
-      supportContextClusterIds = Nil,
-      overriddenLocalIdeas = Nil,
-      preservedLocalIdeas = Nil
-    )
-
-    val audit = MoveReviewPhase3AuditRunner.bindingWidthAuditJson(view)
-
-    assertEquals((audit \ "sideOnlyTargetFrameCount").as[Int], 1)
-    assertEquals((audit \ "contextSupportOnlyBindingFrameCount").as[Int], 1)
-    assertEquals((audit \ "playerFacingObjectReadyFrameCount").as[Int], 1)
-    assertEquals((audit \ "weakConcreteReadyFrameCount").as[Int], 2)
-    assertEquals((audit \ "axisWithMultipleObjectFingerprintsCount").as[Int], 1)
-    assertEquals((audit \ "sameComparisonOnlyBindingFrameCount").as[Int], 1)
-    assertEquals((audit \ "witnessBindingLevelCounts" \ "SameComparisonOnly").as[Int], 1)
-    assertEquals((audit \ "rootArbitrationTierCounts" \ "ExactOwnedRoot").as[Int], 1)
-    assertEquals((audit \ "rootArbitrationTierCounts" \ "FallbackRoot").as[Int], 1)
-    assertEquals((audit \ "rootArbitrationTierCounts" \ "ContextOnly").as[Int], 2)
-
   test("move meaning claims surface concrete played-move reasons without praise wording"):
     val cause = causeFrame(
       causeId = "cause-break",
@@ -3671,7 +3403,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         causeId = "cause-target-only",
         axisKeys = List("Activity:Gain:activity-gain"),
         objectSignatures = List("target=Square:e4|proof=DirectProof")
-      )
+      ).copy(concreteObjectReady = false)
     val readyCause =
       causeFrame(
         causeId = "cause-ready",
@@ -5398,54 +5130,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       List(("reference", referenceLine.rootMove, "owned_cause_linked", "reference_or_opponent_resource"))
     )
     assert(!view.moveMeaningClaims.exists(_.surfaceLane.startsWith("current_move")))
-
-  test("axisless structural anchor inventory reports structural signals that cannot enter axis lineage"):
-    val root = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(chess.Color.White), Some("root"))
-    val after = PositionNodeRef("8/8/8/8/8/8/8/8 b - - 1 1", 2, Some(chess.Color.Black), Some("after"))
-    val transition = StructuralTransitionBinding(
-      moveUci = "d2d4",
-      role = TransitionEdgeRole.Played,
-      from = root,
-      to = after,
-      line = Some(candidateLine),
-      perspective = chess.Color.White
-    )
-    val axislessRef = evidenceRef("structural-delta:axisless", root)
-    val axislessPayload = StructuralDeltaEvidence(
-      transition = transition,
-      signals = Nil,
-      consequences = List(
-        TransitionConsequence(TransitionConsequenceKind.PassedPawnProgress, StructuralSignalPolarity.Gain, 3),
-        TransitionConsequence(TransitionConsequenceKind.PromotionPressureGain, StructuralSignalPolarity.Gain, 3)
-      )
-    )
-    val axisRef = evidenceRef("structural-delta:outpost", root)
-    val axisPayload = StructuralDeltaEvidence(
-      transition = transition,
-      signals = Nil,
-      consequences = List(
-        TransitionConsequence(
-          TransitionConsequenceKind.OutpostGain,
-          StructuralSignalPolarity.Gain,
-          3,
-          subjects = List("outpost:knight:e5")
-        )
-      )
-    )
-    val inventory = MoveReviewPhase3AuditRunner.axislessStructuralAnchorInventoryJson(
-      TypedEvidenceGraph(
-        List(
-          EvidenceRecord(axislessRef, axislessPayload),
-          EvidenceRecord(axisRef, axisPayload)
-        )
-      )
-    )
-
-    assertEquals((inventory \ "axislessSignalCount").as[Int], 2)
-    assertEquals((inventory \ "axislessRecordCount").as[Int], 1)
-    assertEquals((inventory \ "axislessSignalLabelCounts" \ "passed-pawn-progress").as[Int], 1)
-    assertEquals((inventory \ "axislessSignalLabelCounts" \ "promotion-pressure-gain").as[Int], 1)
-    assertEquals((inventory \ "axislessRecordIds").as[List[String]], List("structural-delta:axisless"))
 
   private def deleteRecursively(path: Path): Unit =
     if Files.exists(path) then

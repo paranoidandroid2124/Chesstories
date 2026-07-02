@@ -78,10 +78,10 @@ private[qc] object MoveReviewPhase3AuditMetrics:
           frame.objectBindingSignatures.forall(signature => signatureParts(signature).contains("proof=ContextSupport"))
       )
     val playerFacingObjectReadyFrames =
-      frames.filter(frame => EvidenceObjectBinding.playerFacingReadySignatures(frame.objectBindingSignatures))
+      frames.filter(_.concreteObjectReady)
     val targetOnlyObjectBindingFrames =
       frames.filter(frame =>
-        !EvidenceObjectBinding.playerFacingReadySignatures(frame.objectBindingSignatures) &&
+        !frame.concreteObjectReady &&
           frame.objectBindingSignatures.exists(signature =>
             EvidenceObjectBinding.signatureTokens(List(signature), "target=").exists(EvidenceObjectBinding.concreteTargetToken)
           )
