@@ -3473,6 +3473,44 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     )
     assertEquals(badSurface, Nil)
 
+  test("move meaning public surface trusts self-contained plan subject carrier"):
+    val signature =
+      "actor=Move:e2e3|target=PlanSubject:e3-development|mechanism=Mechanism:developmentchoice|consequence=Consequence:plancoherence"
+    val claim = MoveMeaningClaim(
+      meaningKind = "PlanContinuity",
+      role = "DevelopsPieceForPlan",
+      laneKey = "kind=PlanContinuity|axis=PlanCoherence:Support:development|object=target=PlanSubject:e3-development",
+      conflictKey = None,
+      supportLevel = "view_surfaced",
+      visibility = "functional_explanation",
+      surfaceLane = "current_move_function",
+      lineRole = "candidate",
+      moveUci = "e2e3",
+      frameId = "frame-plan-subject-carrier",
+      unit = PositionPlanTechniqueUnit.PlanOptionSet,
+      axisKey = Some("PlanCoherence:Support:development"),
+      axisKind = Some(StrategicAxisKind.PlanCoherence),
+      axisPolarity = Some(StrategicAxisPolarity.Support),
+      label = Some("development"),
+      causeKinds = Nil,
+      causeSourceSides = Nil,
+      causeEvidenceIds = Nil,
+      sourceEvidenceIds = List("played-transition"),
+      objectBindingSignatures = List(signature),
+      reasonTokens = List(s"objectBinding:$signature")
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = Nil
+    ).copy(moveMeaningClaims = List(claim))
+
+    assertEquals(MoveMeaningClaim.currentMovePlanContinuityFunctionReady(view.moveMeaningClaims, claim), true)
+    val surface = MoveMeaningSurface.from(view)
+    assertEquals(surface.map(_.ideaType), List("piece_activity"))
+    assertEquals(surface.map(_.evidence.proofLevel), List("surface_evidence"))
+    assert(surface.head.evidence.boardCarriers.contains(MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", "e3-development")))
+
   test("move meaning claims classify route activity from the surfaced carrier"):
     val rawRouteOnly =
       "actor=Piece:rook|mechanism=Mechanism:filecontrol|proof=DirectProof"

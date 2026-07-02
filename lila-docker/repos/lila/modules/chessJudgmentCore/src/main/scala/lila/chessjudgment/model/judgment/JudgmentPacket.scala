@@ -2090,6 +2090,8 @@ object MoveMeaningSurface:
         case kind @ ("Move" | "Square" | "File" | "Piece" | "Pawn") =>
           val (from, to) = moveEndpoints(kind, typedValue(1))
           Some(MoveMeaningSurfaceBoardCarrier(role, kind, typedValue(1), from, to))
+        case kind @ "PlanSubject" if role == "target" && EvidenceObjectBinding.concreteTargetToken(s"$role=$value") =>
+          Some(MoveMeaningSurfaceBoardCarrier(role, kind, typedValue(1)))
         case _ => None
 
   private def moveEndpoints(kind: String, value: String): (Option[String], Option[String]) =
@@ -2788,7 +2790,11 @@ object MoveMeaningClaim:
   def currentMovePlanContinuityFunctionReady(claims: List[MoveMeaningClaim], claim: MoveMeaningClaim): Boolean =
     claim.supportLevel == "view_surfaced" &&
       planContinuityClaimHasCurrentMovePlanSubject(claim) &&
-      planContinuityClaimHasSeparateCurrentMoveCarrier(claims, claim)
+      (
+        claim.sourceEvidenceIds.nonEmpty &&
+          EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures) ||
+          planContinuityClaimHasSeparateCurrentMoveCarrier(claims, claim)
+      )
 
   private def planContinuityClaimHasSeparateCurrentMoveCarrier(
       claims: List[MoveMeaningClaim],
