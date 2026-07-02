@@ -1847,10 +1847,9 @@ object MoveMeaningSurface:
     publicClaimsWithEvidenceForSurface(view)
       .map((claim, evidence) => fromClaim(view.verdict, claim, evidence))
 
-  def publicClaimsForSurface(view: MoveJudgmentView): List[MoveMeaningClaim] =
-    publicClaimsWithEvidenceForSurface(view).map(_._1)
-
-  private def publicClaimsWithEvidenceForSurface(view: MoveJudgmentView): List[(MoveMeaningClaim, MoveMeaningSurfaceEvidence)] =
+  private[chessjudgment] def publicClaimsWithEvidenceForSurface(
+      view: MoveJudgmentView
+  ): List[(MoveMeaningClaim, MoveMeaningSurfaceEvidence)] =
     view.moveMeaningClaims
       .flatMap { claim =>
         val evidence = evidenceForClaim(claim)

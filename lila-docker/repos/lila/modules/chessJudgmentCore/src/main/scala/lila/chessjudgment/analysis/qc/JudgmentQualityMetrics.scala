@@ -1519,10 +1519,13 @@ object CandidateComparisonDiagnostic:
     val comparisonMoveMeaningClaimSet = moveMeaningClaims.toSet
     val publicMoveMeaningClaims =
       packet.moveJudgmentView.toList
-        .flatMap(MoveMeaningSurface.publicClaimsForSurface)
-        .filter(comparisonMoveMeaningClaimSet.contains)
+        .flatMap(MoveMeaningSurface.publicClaimsWithEvidenceForSurface)
+        .filter((claim, _) => comparisonMoveMeaningClaimSet.contains(claim))
     val publicMoveMeaningClaimDiagnostics =
-      publicMoveMeaningClaims.map(publicMoveMeaningClaimDiagnostic).distinct.sortBy(_.signature)
+      publicMoveMeaningClaims
+        .map((claim, evidence) => publicMoveMeaningClaimDiagnostic(claim, evidence))
+        .distinct
+        .sortBy(_.signature)
     ComparisonMoveJudgmentViewDiagnostics(
       primaryCauseKinds = primaryFrames.map(_.causeKind).distinct,
       secondaryCauseKinds = secondaryFrames.map(_.causeKind).distinct,
@@ -1649,8 +1652,10 @@ object CandidateComparisonDiagnostic:
       s"objects=${signatureField(objectTokens)}"
     ).mkString("|")
 
-  private def publicMoveMeaningClaimDiagnostic(claim: MoveMeaningClaim): PublicMoveMeaningClaimDiagnostic =
-    val evidence = MoveMeaningSurface.evidenceForClaim(claim)
+  private def publicMoveMeaningClaimDiagnostic(
+      claim: MoveMeaningClaim,
+      evidence: MoveMeaningSurfaceEvidence
+  ): PublicMoveMeaningClaimDiagnostic =
     PublicMoveMeaningClaimDiagnostic(
       unit = claim.unit,
       axisKey = claim.axisKey,
