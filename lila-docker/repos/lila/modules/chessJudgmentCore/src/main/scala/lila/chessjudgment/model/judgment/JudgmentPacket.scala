@@ -2423,7 +2423,7 @@ object MoveMeaningSurface:
     Option.when(comparisonLossLabels.contains(value))(value)
 
   private def publicCode(code: String, labels: Map[String, String]): MoveMeaningSurfaceCode =
-    MoveMeaningSurfaceCode(code, labels.getOrElse(code, code.replace('_', ' ')))
+    MoveMeaningSurfaceCode(code, labels.getOrElse(code, ""))
 
   private val ideaLabels: Map[String, String] = Map(
     "terminal_mate" -> "mate",
