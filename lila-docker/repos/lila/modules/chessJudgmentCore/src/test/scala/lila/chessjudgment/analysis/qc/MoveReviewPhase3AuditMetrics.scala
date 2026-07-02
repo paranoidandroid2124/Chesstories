@@ -1438,10 +1438,47 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     )
 
   private def tokensSatisfied(requiredTokens: List[String], values: List[String]): Boolean =
-    requiredTokens.forall { token =>
-      val normalizedToken = token.toLowerCase
-      values.exists(value => value.toLowerCase.contains(normalizedToken))
-    }
+    requiredTokens.forall(token => tokenSatisfied(token, values))
+
+  private def tokenSatisfied(requiredToken: String, values: List[String]): Boolean =
+    values.exists(value => tokenMatches(requiredToken, value))
+
+  private def tokenMatches(requiredToken: String, value: String): Boolean =
+    val required = requiredToken.trim
+    val candidate = value.trim
+    val normalizedRequired = required.toLowerCase
+    val normalizedCandidate = candidate.toLowerCase
+    val acronymToken =
+      required.length <= 3 && required.exists(_.isLetter) && required.forall(ch => !ch.isLetter || ch.isUpper)
+    normalizedRequired.nonEmpty &&
+      (
+        normalizedCandidate == normalizedRequired ||
+          (
+            normalizedRequired.endsWith(":") &&
+              normalizedCandidate.startsWith(normalizedRequired)
+          ) ||
+          (
+            normalizedRequired.contains(":") &&
+              (
+                normalizedCandidate.startsWith(s"$normalizedRequired:") ||
+                  normalizedCandidate.contains(s":$normalizedRequired:") ||
+                  normalizedCandidate.endsWith(s":$normalizedRequired")
+              )
+          ) ||
+          (
+            !normalizedRequired.contains(":") &&
+              normalizedCandidate.split(":").lastOption.contains(normalizedRequired)
+          ) ||
+          (
+            !acronymToken &&
+              !normalizedRequired.contains(":") &&
+              candidate.startsWith(required) &&
+              candidate
+                .drop(required.length)
+                .headOption
+                .exists(ch => ch == ':' || ch == '-' || ch == '_' || ch.isUpper)
+          )
+      )
 
   private def semanticDetailTokensSatisfiedForSlot(
       slot: ExpectedSemanticSlot,
@@ -1650,12 +1687,12 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       rows
         .flatMap(row => semanticDetailTokenGroupsForSlot(slot, row))
         .filter(group =>
-          requiredSemanticDetailTokens.exists(token => group.exists(_.contains(token))) ||
+          requiredSemanticDetailTokens.exists(token => tokenSatisfied(token, group)) ||
             requiredObjectBindingTokens.exists(token => objectBindingTokenSatisfied(token, group))
         )
         .sortBy(group =>
           (
-            -requiredSemanticDetailTokens.count(token => group.exists(_.contains(token))),
+            -requiredSemanticDetailTokens.count(token => tokenSatisfied(token, group)),
             -requiredObjectBindingTokens.count(token => objectBindingTokenSatisfied(token, group)),
             group.mkString("\u0000")
           )
@@ -1675,13 +1712,13 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     else
       rows
         .flatMap(row => semanticDetailTokenGroupsForSlot(slot, row))
-        .filter(group => requiredTokens.exists(token => group.exists(_.contains(token))))
-        .sortBy(group => (-requiredTokens.count(token => group.exists(_.contains(token))), group.mkString("\u0000")))
+        .filter(group => requiredTokens.exists(token => tokenSatisfied(token, group)))
+        .sortBy(group => (-requiredTokens.count(token => tokenSatisfied(token, group)), group.mkString("\u0000")))
         .headOption
         .getOrElse(Nil)
 
   private def missingRequiredTokens(requiredTokens: List[String], values: List[String]): List[String] =
-    requiredTokens.filterNot(token => values.exists(_.contains(token)))
+    requiredTokens.filterNot(token => tokenSatisfied(token, values))
 
   private def semanticRubricStageRank(stage: String): Int =
     stage match

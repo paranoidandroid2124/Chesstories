@@ -1814,6 +1814,60 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((partialTokenCoverage \ "matchedSlotCount").as[Int], 0)
     assertEquals((emptyTargetCoverage \ "matchedSlotCount").as[Int], 0)
 
+  test("semantic rubric detail tokens match role values and declared prefixes, not substrings"):
+    val iqpSlot =
+      MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
+        id = "iqp-motif",
+        unit = PositionPlanTechniqueUnit.StructuralTransformation,
+        requiredTerminalStage = Some("view_surfaced"),
+        requiredSemanticDetailTokens = List("IQP")
+      )
+    val routeSubjectSlot =
+      iqpSlot.copy(
+        id = "bishop-route-subject",
+        requiredSemanticDetailTokens = List("structuralPurposeSubject:bishop")
+      )
+    val exactIqpCoverage =
+      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
+        List(iqpSlot),
+        List(
+          diagnosticWithDetailTokens(
+            "structural-motif-iqp",
+            List("unit:StructuralTransformation", "structuralMotif:iqp"),
+            RelativeCauseKind.StructuralImprovement,
+            unit = PositionPlanTechniqueUnit.StructuralTransformation
+          )
+        )
+      )
+    val substringCoverage =
+      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
+        List(iqpSlot),
+        List(
+          diagnosticWithDetailTokens(
+            "substring-iqp",
+            List("unit:StructuralTransformation", "notIQP:true", "iqpTransition:present"),
+            RelativeCauseKind.StructuralImprovement,
+            unit = PositionPlanTechniqueUnit.StructuralTransformation
+          )
+        )
+      )
+    val subjectPrefixCoverage =
+      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
+        List(routeSubjectSlot),
+        List(
+          diagnosticWithDetailTokens(
+            "bishop-route-subject",
+            List("unit:StructuralTransformation", "structuralPurposeSubject:bishop:f8-e7"),
+            RelativeCauseKind.StructuralImprovement,
+            unit = PositionPlanTechniqueUnit.StructuralTransformation
+          )
+        )
+      )
+
+    assertEquals((exactIqpCoverage \ "matchedSlotCount").as[Int], 1)
+    assertEquals((substringCoverage \ "matchedSlotCount").as[Int], 0)
+    assertEquals((subjectPrefixCoverage \ "matchedSlotCount").as[Int], 1)
+
   test("threat pressure marks active pawn counterplay as race only with root motif"):
     val fen = "4k3/8/8/8/2P5/8/8/4K3 w - - 0 1"
     val activePv =
