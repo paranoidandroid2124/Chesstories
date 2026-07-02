@@ -169,47 +169,23 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       signatureValues(signature, "sources").size > 1
 
   private[qc] def publicSurfaceClaimHasEvidenceCarrier(signature: String): Boolean =
-    signatureFlag(signature, "carrier").getOrElse:
-      val hasObjectField = signatureParts(signature).exists(_.startsWith("objects="))
-      val hasBoardCarrier = publicSurfaceClaimHasBoardCarrier(signature)
-      val hasEvidenceLink =
-        signatureValues(signature, "causes").nonEmpty ||
-          signatureValues(signature, "sources").nonEmpty ||
-          signatureValues(signature, "proof").nonEmpty
-      if hasObjectField then hasEvidenceLink && hasBoardCarrier else hasEvidenceLink
+    signatureFlag(signature, "carrier").contains(true)
 
   private[qc] def publicSurfaceClaimHasBoardCarrier(signature: String): Boolean =
-    signatureFlag(signature, "boardCarrier").getOrElse:
-      signatureValues(signature, "objects").exists(publicSurfaceObjectHasBoardAnchor)
-
-  private def publicSurfaceObjectHasBoardAnchor(objectSignature: String): Boolean =
-    objectSignature
-      .split(";")
-      .map(_.trim)
-      .exists(part =>
-        part.startsWith("actor=Move:") ||
-          part.startsWith("actor=Piece:") ||
-          part.startsWith("actor=Square:") ||
-          part.startsWith("target=Square:") ||
-          part.startsWith("target=File:") ||
-          part.startsWith("target=Piece:") ||
-          part.startsWith("target=Pawn:") ||
-          part.startsWith("witness=Move:") ||
-          part.startsWith("witness=Line:") ||
-          part.startsWith("witness=Square:")
-      )
+    signatureFlag(signature, "boardCarrier").contains(true)
 
   private[qc] def moveMeaningSurfaceDiagnosticsJson(
       diagnostics: List[CandidateComparisonDiagnostic]
   ): JsObject =
     val internalSignatures =
       diagnostics.flatMap(_.moveJudgmentView.moveMeaningClaimSurfaceSignatures).distinct.sorted
-    val publicSignatures =
-      diagnostics.flatMap(_.moveJudgmentView.publicMoveMeaningClaimSurfaceSignatures).distinct.sorted
+    val publicClaimDiagnostics =
+      diagnostics.flatMap(_.moveJudgmentView.publicMoveMeaningClaimDiagnostics).distinct.sortBy(_.signature)
+    val publicSignatures = publicClaimDiagnostics.map(_.signature).distinct.sorted
     val suppressedSignatures = internalSignatures.diff(publicSignatures)
     val mergedSignatures = internalSignatures.filter(multiOwnerMoveMeaningClaim)
     val boardCarrierlessPublicSignatures =
-      publicSignatures.filterNot(publicSurfaceClaimHasBoardCarrier)
+      publicClaimDiagnostics.filterNot(_.hasBoardCarrier).map(_.signature).distinct.sorted
     Json.obj(
       "publicMoveMeaningClaimCount" -> publicSignatures.size,
       "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicSignatures.size,
@@ -1940,14 +1916,15 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     val claimSurvived =
       fallbackFlows.exists(_.claimIds.nonEmpty)
     val causeIds = fallbackFlows.map(_.causeId).distinct.sorted
-    val publicSurfaceClaimSignatures =
-      view.publicMoveMeaningClaimSurfaceSignatures.filter(signature =>
-        semanticRubricSurfaceClaimMatches(signature, unit, axisKey)
+    val publicSurfaceClaimDiagnostics =
+      view.publicMoveMeaningClaimDiagnostics.filter(diagnostic =>
+        semanticRubricSurfaceClaimMatches(diagnostic, unit, axisKey)
       )
+    val publicSurfaceClaimSignatures = publicSurfaceClaimDiagnostics.map(_.signature)
     val publicSurfaceClaimSurfaced =
-      publicSurfaceClaimSignatures.nonEmpty
+      publicSurfaceClaimDiagnostics.nonEmpty
     val publicSurfaceClaimCauseIds =
-      publicSurfaceClaimSignatures.flatMap(semanticRubricSurfaceClaimCauseIds).distinct.sorted
+      publicSurfaceClaimDiagnostics.flatMap(_.causeEvidenceIds).distinct.sorted
     val ownedCauseLinked =
       fallbackFlows.exists(flow =>
         frameCauseIds.contains(flow.causeId) &&
@@ -2037,34 +2014,21 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     )
 
   private def semanticRubricSurfaceClaimMatches(
-      signature: String,
+      diagnostic: PublicMoveMeaningClaimDiagnostic,
       unit: PositionPlanTechniqueUnit,
       axisKey: Option[String]
   ): Boolean =
-    val parts = MoveReviewPhase3AuditMetrics.signatureParts(signature)
     val currentMoveLane =
-      parts.exists(part => part == "lane=current_move_owned" || part == "lane=current_move_function")
+      diagnostic.surfaceLane == "current_move_owned" || diagnostic.surfaceLane == "current_move_function"
     val referenceOwnedLane =
-      parts.contains("lane=reference_or_opponent_resource") &&
-        parts.contains("lineRole=reference") &&
-        parts.contains("support=owned_cause_linked") &&
-        semanticRubricSurfaceClaimCauseIds(signature).nonEmpty &&
-        semanticRubricSurfaceClaimHasEvidenceCarrier(signature)
-    parts.contains(s"unit=$unit") &&
-      axisKey.forall(axis => parts.contains(s"axis=$axis")) &&
-      ((currentMoveLane && semanticRubricSurfaceClaimHasEvidenceCarrier(signature)) || referenceOwnedLane)
-
-  private def semanticRubricSurfaceClaimHasEvidenceCarrier(signature: String): Boolean =
-    MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasEvidenceCarrier(signature)
-
-  private def semanticRubricSurfaceClaimCauseIds(signature: String): List[String] =
-    MoveReviewPhase3AuditMetrics
-      .signatureParts(signature)
-      .collectFirst { case part if part.startsWith("causes=") => part.stripPrefix("causes=") }
-      .toList
-      .flatMap(_.split(",").toList)
-      .map(_.trim)
-      .filter(value => value.nonEmpty && value != "none")
+      diagnostic.surfaceLane == "reference_or_opponent_resource" &&
+        diagnostic.lineRole == "reference" &&
+        diagnostic.supportLevel == "owned_cause_linked" &&
+        diagnostic.causeEvidenceIds.nonEmpty &&
+        diagnostic.hasCarrier
+    diagnostic.unit == unit &&
+      axisKey.forall(diagnostic.axisKey.contains) &&
+      ((currentMoveLane && diagnostic.hasCarrier) || referenceOwnedLane)
 
   private def semanticRubricUnitsForAxis(axisKey: String): List[PositionPlanTechniqueUnit] =
     axisPart(axisKey, 0) match
