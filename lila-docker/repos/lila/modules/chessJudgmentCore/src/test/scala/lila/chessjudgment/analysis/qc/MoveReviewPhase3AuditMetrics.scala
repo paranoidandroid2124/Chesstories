@@ -97,14 +97,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       supportLevel: String,
       lineRole: String,
       moveUci: String,
-      objectBound: Boolean,
-      exactAxisOrPattern: Boolean,
-      causeOwned: Boolean,
-      claimSurvived: Boolean,
-      viewSurfaced: Boolean,
-      ownedCauseLinked: Boolean,
-      clusteredCoherent: Boolean,
-      strictCauseLineageBound: Boolean,
       frameIds: List[String],
       sourceEvidenceIds: List[String],
       primaryRootCauseEvidenceIds: List[String],
@@ -142,9 +134,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "classification" -> "audit_only",
       "expectedSlotCount" -> slotRows.size,
       "matchedSlotCount" -> slotRows.count(row => (row \ "matched").as[Boolean]),
-      "viewSurfacedCount" -> slotRows.count(row => (row \ "viewSurfaced").as[Boolean]),
-      "ownedCauseLinkedCount" -> slotRows.count(row => (row \ "ownedCauseLinked").as[Boolean]),
-      "clusteredCoherentCount" -> slotRows.count(row => (row \ "clusteredCoherent").as[Boolean]),
       "supportLevelCounts" -> stringCountsJson(slotRows.map(row => (row \ "supportLevel").as[String])),
       "missingSlotIds" -> missingSlotIds,
       "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
@@ -205,9 +194,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "coverageRowCount" -> coverages.size,
       "expectedSlotCount" -> slotRows.size,
       "matchedSlotCount" -> slotRows.count(row => (row \ "matched").as[Boolean]),
-      "viewSurfacedCount" -> slotRows.count(row => (row \ "viewSurfaced").as[Boolean]),
-      "ownedCauseLinkedCount" -> slotRows.count(row => (row \ "ownedCauseLinked").as[Boolean]),
-      "clusteredCoherentCount" -> slotRows.count(row => (row \ "clusteredCoherent").as[Boolean]),
       "supportLevelCounts" -> stringCountsJson(slotRows.map(row => (row \ "supportLevel").as[String])),
       "missingSlotIds" -> missingSlotIds,
       "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
@@ -248,9 +234,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
             "missingExpectedQuestion" -> (expectedQuestionIds.contains(questionId) && rows.isEmpty),
             "expectedSlotCount" -> rows.size,
             "matchedSlotCount" -> rows.count(row => (row \ "matched").as[Boolean]),
-            "viewSurfacedCount" -> rows.count(row => (row \ "viewSurfaced").as[Boolean]),
-            "ownedCauseLinkedCount" -> rows.count(row => (row \ "ownedCauseLinked").as[Boolean]),
-            "clusteredCoherentCount" -> rows.count(row => (row \ "clusteredCoherent").as[Boolean]),
             "supportLevelCounts" -> stringCountsJson(rows.map(row => (row \ "supportLevel").as[String])),
             "missingSlotIds" -> missingSlotIds,
             "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
@@ -291,13 +274,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "lineRole" -> best.map(_.lineRole),
       "moveUci" -> best.map(_.moveUci),
       "supportLevelSatisfied" -> supportLevelSatisfied,
-      "objectBound" -> best.exists(_.objectBound),
-      "exactAxisOrPattern" -> best.exists(_.exactAxisOrPattern),
-      "causeOwned" -> best.exists(_.causeOwned),
-      "claimSurvived" -> best.exists(_.claimSurvived),
-      "viewSurfaced" -> best.exists(_.viewSurfaced),
-      "ownedCauseLinked" -> best.exists(_.ownedCauseLinked),
-      "clusteredCoherent" -> best.exists(_.clusteredCoherent),
       "matchedComparisonIds" -> matches.map(_.comparisonId).distinct.sorted,
       "frameIds" -> matches.flatMap(_.frameIds).distinct.sorted,
       "sourceEvidenceIds" -> matches.flatMap(_.sourceEvidenceIds).distinct.sorted,
@@ -320,7 +296,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "supportLevel" -> row.supportLevel,
       "lineRole" -> row.lineRole,
       "moveUci" -> row.moveUci,
-      "strictCauseLineageBound" -> row.strictCauseLineageBound,
       "frameIds" -> row.frameIds,
       "sourceEvidenceIds" -> row.sourceEvidenceIds,
       "causeIds" -> row.causeIds,
@@ -347,24 +322,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
     val claimCauseIdSet = claimCauseIds.toSet
     val frameCauseFlows =
       diagnostic.relativeCauseDiagnostics.causeFlow.filter(flow => claimCauseIdSet.contains(flow.causeId))
-    val exactAxisOrPattern =
-      claim.axisKey.nonEmpty || view.positionPlanTechniqueUnits.contains(claim.unit)
-    val objectBound =
-      claim.hasBoardCarrier
     val publicSurfaceSupportLevel =
       Option(claim.supportLevel).filter(_.nonEmpty).getOrElse("missing_semantic_slot")
-    val ownedCauseLinked =
-      publicSurfaceSupportLevel == "owned_cause_linked"
-    val causeOwned =
-      claimCauseIds.nonEmpty
-    val claimSurvived =
-      true
-    val viewSurfaced =
-      true
-    val clusteredCoherent =
-      publicSurfaceSupportLevel == "clustered_coherent"
-    val strictCauseLineageBound =
-      claimCauseIds.nonEmpty
     val claimPrimaryRootCauseIds =
       view.primaryRootCauseEvidenceIds.distinct.sorted.filter(claimCauseIdSet)
     SemanticRubricSlotRow(
@@ -374,14 +333,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       supportLevel = publicSurfaceSupportLevel,
       lineRole = claim.lineRole,
       moveUci = claim.moveUci,
-      objectBound = objectBound,
-      exactAxisOrPattern = exactAxisOrPattern,
-      causeOwned = causeOwned,
-      claimSurvived = claimSurvived,
-      viewSurfaced = viewSurfaced,
-      ownedCauseLinked = ownedCauseLinked,
-      clusteredCoherent = clusteredCoherent,
-      strictCauseLineageBound = strictCauseLineageBound,
       frameIds = frameIds,
       sourceEvidenceIds = claim.sourceEvidenceIds.distinct.sorted,
       primaryRootCauseEvidenceIds = claimPrimaryRootCauseIds,

@@ -147,7 +147,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "coveredExpectedQuestionIds").as[List[String]], List("terminal_mate", "terminal_promotion_race"))
     assertEquals((coverage \ "expectedQuestionCoverageComplete").as[Boolean], true)
     assertEquals((coverage \ "byQuestionId" \ "terminal_mate" \ "supportLevelCounts" \ "view_surfaced").as[Int], 1)
-    assertEquals((coverage \ "byQuestionId" \ "terminal_promotion_race" \ "ownedCauseLinkedCount").as[Int], 1)
     assertEquals((coverage \ "byQuestionId" \ "terminal_promotion_race" \ "supportLevelCounts" \ "owned_cause_linked").as[Int], 1)
     assertEquals((corpusCoverage \ "expectedQuestionCoverageComplete").as[Boolean], true)
 
@@ -376,7 +375,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       )
 
     assertEquals((coverage \ "matchedSlotCount").as[Int], 2)
-    assertEquals((coverage \ "viewSurfacedCount").as[Int], 2)
     assertEquals((coverage \ "missingSlotIds").as[List[String]], Nil)
 
   test("line endgame horizons surface through EndgameTechniqueRecipe details"):
@@ -699,7 +697,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
     val coverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(slot), List(viewOnlyContext))
 
-    assertEquals((coverage \ "slots" \ 0 \ "objectBound").as[Boolean], false)
+    assertEquals((coverage \ "slots" \ 0 \ "matched").as[Boolean], false)
     assertEquals((coverage \ "slots" \ 0 \ "supportLevel").as[String], "missing_semantic_slot")
 
   test("recognition view slots require semantic details to reach public surface"):
@@ -867,7 +865,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(recognitionSlot), List(diagnostic))
 
     assertEquals((coverage \ "slots" \ 0 \ "matched").as[Boolean], false)
-    assertEquals((coverage \ "slots" \ 0 \ "viewSurfaced").as[Boolean], false)
+    assertEquals((coverage \ "slots" \ 0 \ "supportLevel").as[String], "missing_semantic_slot")
 
   test("ownership slots accept reference-owned public pawn break without current-move overclaim"):
     val axis = "PawnBreak:Support:break-file-e-created-tension-e5-d4"
