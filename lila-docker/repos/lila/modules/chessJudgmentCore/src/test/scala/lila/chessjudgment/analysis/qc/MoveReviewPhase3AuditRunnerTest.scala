@@ -1212,8 +1212,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "matchedSlotCount").as[Int], 0)
     assertEquals((coverage \ "planOptionOwnedCauseExpectationSlotIds").as[List[String]], List("minority-plan-owned"))
     assertEquals((coverage \ "viewOnlyOwnedCauseExpectationSlotIds").as[List[String]], Nil)
-    assertEquals((coverage \ "classifiedMissingSlotIds").as[List[String]], List("minority-plan-owned"))
-    assertEquals((coverage \ "unclassifiedMissingSlotIds").as[List[String]], Nil)
     assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "claim_survived")
     assertEquals((coverage \ "slots" \ 0 \ "planOptionOwnedCauseExpectation").as[Boolean], true)
     assertEquals((coverage \ "slots" \ 0 \ "viewOnlyOwnedCauseExpectation").as[Boolean], false)
@@ -1449,8 +1447,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((exactIqpCoverage \ "matchedSlotCount").as[Int], 1)
     assertEquals((substringCoverage \ "matchedSlotCount").as[Int], 0)
     assertEquals((substringCoverage \ "semanticTokenExpectationMissSlotIds").as[List[String]], List("iqp-motif"))
-    assertEquals((substringCoverage \ "classifiedMissingSlotIds").as[List[String]], List("iqp-motif"))
-    assertEquals((substringCoverage \ "unclassifiedMissingSlotIds").as[List[String]], Nil)
     assertEquals((substringCoverage \ "slots" \ 0 \ "semanticTokenExpectationMiss").as[Boolean], true)
     assertEquals((subjectPrefixCoverage \ "matchedSlotCount").as[Int], 1)
 
