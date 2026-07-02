@@ -1659,6 +1659,7 @@ case class MoveMeaningClaim(
     comparisonLossKinds: List[String] = Nil,
     objectCarrierReady: Boolean = false,
     boardCarriers: List[MoveMeaningSurfaceBoardCarrier] = Nil,
+    comparisonMoveRefs: List[MoveMeaningSurfaceMoveRef] = Nil,
     targetSquares: List[String] = Nil,
     targetFiles: List[String] = Nil,
     targetPieces: List[String] = Nil,
@@ -1953,7 +1954,12 @@ object MoveMeaningSurface:
       comparisonLosses = comparisonLosses(claim),
       comparisonLostIdeas = comparisonLossDetails,
       endgameTechnique = technique,
-      comparison = Option.when(claimSubject == "played_move" || claimSubject == "reference_move")(comparison(verdict, comparisonLossDetails)).flatten,
+      comparison =
+        Option
+          .when(claimSubject == "played_move" || claimSubject == "reference_move")(
+            comparison(verdict, comparisonLossDetails, claim)
+          )
+          .flatten,
       terminalConsequences = terminal,
       evidence = evidence
     )
@@ -2233,13 +2239,14 @@ object MoveMeaningSurface:
   private def publicSquare(square: String): Option[String] =
     Option.when(square.matches("[a-h][1-8]"))(square)
 
-  private def publicUciMove(move: String): Option[String] =
+  private[judgment] def publicUciMove(move: String): Option[String] =
     val normalized = JudgmentSubjectBinding.normalizeMove(move).toLowerCase
     Option.when(normalized.matches("[a-h][1-8][a-h][1-8][nbrq]?"))(normalized)
 
   private def comparison(
       verdict: Option[MoveJudgmentVerdictFrame],
-      lostIdeas: List[MoveMeaningSurfaceComparisonLoss]
+      lostIdeas: List[MoveMeaningSurfaceComparisonLoss],
+      claim: MoveMeaningClaim
   ): Option[MoveMeaningSurfaceComparison] =
     verdict.map { frame =>
       MoveMeaningSurfaceComparison(
@@ -2248,12 +2255,12 @@ object MoveMeaningSurface:
         referenceMove = frame.referenceLine.rootMove,
         candidateMove = frame.candidateLine.rootMove,
         secondMove = frame.candidateSet.flatMap(_.secondLine.map(_.rootMove)),
-        moves = comparisonMoves(frame),
+        moves = comparisonMoves(frame, claim),
         lostIdeas = lostIdeas
       )
     }
 
-  private def comparisonMoves(frame: MoveJudgmentVerdictFrame): List[MoveMeaningSurfaceMoveRef] =
+  private def comparisonMoves(frame: MoveJudgmentVerdictFrame, claim: MoveMeaningClaim): List[MoveMeaningSurfaceMoveRef] =
     val roleMoves =
       frame.comparisonKind match
         case CandidateComparisonKind.PlayedVsBest =>
@@ -2276,7 +2283,7 @@ object MoveMeaningSurface:
             MoveMeaningSurfaceMoveRef("best_move", frame.referenceLine.rootMove),
             MoveMeaningSurfaceMoveRef("alternative_move", frame.candidateLine.rootMove)
           )
-    roleMoves.filter(_.uci.nonEmpty).distinct
+    (roleMoves ++ claim.comparisonMoveRefs).filter(_.uci.nonEmpty).distinct
 
   private def comparisonKindCode(kind: CandidateComparisonKind): String =
     kind match
@@ -2705,6 +2712,7 @@ object MoveMeaningClaim:
         comparisonLossKinds = list.flatMap(_.comparisonLossKinds).distinct.sorted,
         objectCarrierReady = list.exists(_.objectCarrierReady),
         boardCarriers = list.flatMap(_.boardCarriers).distinct.sortBy(boardCarrierSortKey).take(8),
+        comparisonMoveRefs = list.flatMap(_.comparisonMoveRefs).distinct.sortBy(ref => (ref.role, ref.uci)).take(12),
         targetSquares = list.flatMap(_.targetSquares).distinct.sorted,
         targetFiles = list.flatMap(_.targetFiles).distinct.sorted,
         targetPieces = list.flatMap(_.targetPieces).distinct.sorted,
@@ -2868,6 +2876,7 @@ object MoveMeaningClaim:
                   claimLineRole,
                   claimMove
                 )
+              val comparisonMoveRefs = comparisonMoveRefsFromLineEvidence(evidenceGraph, sourceEvidenceIds)
               val objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames)
               val publicHasCarrier = objectCarrierReady && (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty)
               val publicProofLevel =
@@ -2916,6 +2925,7 @@ object MoveMeaningClaim:
                 comparisonLossKinds = PositionPlanTechniqueSemanticDetail.comparisonLossKinds(detail).distinct.sorted,
                 objectCarrierReady = objectCarrierReady,
                 boardCarriers = boardCarriers,
+                comparisonMoveRefs = comparisonMoveRefs,
                 targetSquares = surfaceTarget.squares,
                 targetFiles = surfaceTarget.files,
                 targetPieces = surfaceTarget.pieces,
@@ -2943,6 +2953,30 @@ object MoveMeaningClaim:
             }
         }
       }
+
+  private def comparisonMoveRefsFromLineEvidence(
+      evidenceGraph: TypedEvidenceGraph,
+      sourceEvidenceIds: List[String]
+  ): List[MoveMeaningSurfaceMoveRef] =
+    sourceEvidenceIds
+      .flatMap(id => evidenceGraph.byId.get(id))
+      .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
+      .flatMap(line =>
+        val prefix =
+          line.line.role match
+            case LineNodeRole.Played        => Some("played_pv")
+            case LineNodeRole.BestReference => Some("best_pv")
+            case LineNodeRole.Alternative   => Some("alternative_pv")
+            case LineNodeRole.Threat        => None
+        prefix.toList.flatMap(role =>
+          line.lineReplayContinuationMoves
+            .flatMap(MoveMeaningSurface.publicUciMove)
+            .take(4)
+            .zipWithIndex
+            .map((move, index) => MoveMeaningSurfaceMoveRef(s"${role}_${index + 1}", move))
+        )
+      )
+      .distinct
 
   private def publicBoardCarriers(
       detail: PositionPlanTechniqueSemanticDetail
