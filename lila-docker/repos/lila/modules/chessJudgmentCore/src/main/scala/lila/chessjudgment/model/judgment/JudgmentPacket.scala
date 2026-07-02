@@ -1697,13 +1697,14 @@ object MoveMeaningSurfaceTarget:
 
   private[judgment] def fromDetail(
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String]
+      boardCarriers: List[MoveMeaningSurfaceBoardCarrier]
   ): MoveMeaningSurfaceTarget =
-    val pawnTargets = EvidenceObjectBinding.signatureValues(objectSignatures, "target", "Pawn")
+    val targetCarriers = boardCarriers.filter(_.role == "target")
+    val pawnTargets = targetCarriers.filter(_.kind == "Pawn").map(_.value)
     MoveMeaningSurfaceTarget(
       squares =
         (
-          EvidenceObjectBinding.signatureValues(objectSignatures, "target", "Square") ++
+          targetCarriers.filter(_.kind == "Square").map(_.value) ++
             pawnTargets.flatMap(squareFromText) ++
             detail.tensionSquares ++
             detail.resourceContestSquares ++
@@ -1713,14 +1714,14 @@ object MoveMeaningSurfaceTarget:
         ).flatMap(cleanSquare).distinct.sorted,
       files =
         (
-          EvidenceObjectBinding.signatureValues(objectSignatures, "target", "File") ++
+          targetCarriers.filter(_.kind == "File").map(_.value) ++
             detail.breakFile.toList ++
             detail.counterBreakFiles ++
             detail.resourceContestFiles
         ).flatMap(cleanFile).distinct.sorted,
       pieces =
         (
-          EvidenceObjectBinding.signatureValues(objectSignatures, "target", "Piece").flatMap(cleanPiece) ++
+          targetCarriers.filter(_.kind == "Piece").map(_.value).flatMap(cleanPiece) ++
             Option.when(pawnTargets.nonEmpty)("pawn").toList
         ).distinct.sorted
     )
@@ -2857,8 +2858,8 @@ object MoveMeaningClaim:
         evidenceGraph
       )
     yield
-      val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, surfaceObjectSignatures)
       val boardCarriers = publicBoardCarriers(surfaceObjectSignatures)
+      val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, boardCarriers)
       val linkedCauseIds =
         roleCompatibleCauseFrames
           .flatMap(_.causeEvidenceIds)
