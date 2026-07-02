@@ -303,7 +303,7 @@ function playedComparisonLossLabels(semantic: ChesstoryMoveSemantic): string[] {
 
 function isPlayedComparisonLoss(loss: ChesstoryComparisonLoss): boolean {
   const side = loss.side?.toLowerCase();
-  return !side || side === 'candidate' || side === 'candidate_move' || side === 'played' || side === 'played_move';
+  return side === 'candidate' || side === 'candidate_move' || side === 'played' || side === 'played_move';
 }
 
 function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
@@ -328,7 +328,11 @@ function evidenceItems(semantics: ChesstoryMoveSemantic[]): string[] {
 }
 
 function hasEvidenceCarrier(semantic: ChesstoryMoveSemantic): boolean {
-  return semantic.evidence?.has_carrier === true;
+  const evidence = semantic.evidence;
+  return (
+    evidence?.has_carrier === true &&
+    Boolean(evidence.board_carriers?.length || evidence.cause_ids?.length || evidence.source_ids?.length)
+  );
 }
 
 function normalizeCode(code?: string): string {
