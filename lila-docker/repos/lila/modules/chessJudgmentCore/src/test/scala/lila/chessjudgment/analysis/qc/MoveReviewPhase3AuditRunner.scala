@@ -825,17 +825,17 @@ object MoveReviewPhase3AuditRunner:
               EvidenceObjectBinding.fromEvidenceRefs(graph, List(record.ref)).forall(_.target.isEmpty) =>
           record.ref.id
       }.distinct.sorted
-    val relativeCauseWithoutObjectSignatureIds =
+    val relativeCauseWithoutConcreteObjectIds =
       graph.records.collect {
         case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _)
-            if EvidenceObjectBinding.objectSignatures(EvidenceObjectBinding.fromRelativeCause(cause, graph)).isEmpty =>
+            if !EvidenceObjectBinding.hasConcreteObject(EvidenceObjectBinding.fromRelativeCause(cause, graph)) =>
           ref.id
       }.distinct.sorted
     Json.obj(
       "claim_without_concrete_object" -> claimWithoutConcreteObjectIds,
       "strategic_axis_without_subject" -> strategicAxisWithoutSubjectIds,
       "tactical_mechanism_without_target" -> tacticalMechanismWithoutTargetIds,
-      "relative_cause_without_object_signature" -> relativeCauseWithoutObjectSignatureIds
+      "relative_cause_without_concrete_object" -> relativeCauseWithoutConcreteObjectIds
     )
 
   private def strategicAxisIntegritySummary(packet: EvidenceBackedJudgmentPacket): JsObject =
@@ -1290,7 +1290,7 @@ object MoveReviewPhase3AuditRunner:
       "support_promoted_to_direct_proof" -> diagnostics.filter(
         _.relativeCauseDiagnostics.supportPromotedToDirectProofCauseIds.nonEmpty
       ).map(_.id),
-      "relative_cause_without_object_signature" -> diagnostics.filter(
+      "relative_cause_without_concrete_object" -> diagnostics.filter(
         _.relativeCauseDiagnostics.relativeCauseWithoutObjectSignatureIds.nonEmpty
       ).map(_.id),
       "graph_object_lost_between_evidence_and_cause" -> diagnostics.filter(
@@ -1743,7 +1743,7 @@ object MoveReviewPhase3AuditRunner:
       "unattributedCauseIds" -> diagnostic.unattributedCauseIds,
       "rootMismatchedCauseIds" -> diagnostic.rootMismatchedCauseIds,
       "supportPromotedToDirectProofCauseIds" -> diagnostic.supportPromotedToDirectProofCauseIds,
-      "relativeCauseWithoutObjectSignatureIds" -> diagnostic.relativeCauseWithoutObjectSignatureIds,
+      "relativeCauseWithoutConcreteObjectIds" -> diagnostic.relativeCauseWithoutObjectSignatureIds,
       "graphObjectLostBetweenEvidenceAndCauseIds" -> diagnostic.objectLostBetweenEvidenceAndCauseIds,
       "graphObjectLostBetweenCauseAndClaimIds" -> diagnostic.objectLostBetweenCauseAndClaimIds,
       "causeFlow" -> JsArray(diagnostic.causeFlow.map(relativeCauseFlowJson))
@@ -1787,7 +1787,7 @@ object MoveReviewPhase3AuditRunner:
       "unattributedCause" -> flow.unattributedCause,
       "rootMismatchedAttribution" -> flow.rootMismatchedAttribution,
       "supportPromotedToDirectProof" -> flow.supportPromotedToDirectProof,
-      "relativeCauseWithoutObjectSignature" -> flow.relativeCauseWithoutObjectSignature,
+      "relativeCauseWithoutConcreteObject" -> flow.relativeCauseWithoutObjectSignature,
       "graphObjectLostBetweenEvidenceAndCause" -> flow.objectLostBetweenEvidenceAndCause,
       "graphObjectLostBetweenCauseAndClaim" -> flow.objectLostBetweenCauseAndClaim
     )
