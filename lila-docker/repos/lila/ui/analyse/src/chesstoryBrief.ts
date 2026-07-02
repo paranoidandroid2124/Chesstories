@@ -16,6 +16,7 @@ export interface ChesstoryBriefSection {
 
 export interface ChesstoryMoveMeaningPayload {
   verdict?: {
+    verdict_code?: string;
     move_quality?: string;
     played_move?: string;
     reference_move?: string;
@@ -105,9 +106,11 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const evidencePlayed = played.filter(hasEvidenceCarrier);
   const evidenceReference = reference.filter(hasEvidenceCarrier);
   const bad = payload.verdict?.move_quality === 'bad' || evidencePlayed.some(s => s.move_quality === 'bad');
+  const playableLoss = normalizeCode(payload.verdict?.verdict_code) === 'playable_loss';
+  const problemMove = bad || playableLoss;
   const mainPlayed = evidencePlayed.filter(s => s.priority === 'main');
   const localIdeas = played.filter(s => s.assessment?.is_local_idea && hasEvidenceCarrier(s));
-  const solved = uniqueLabels((bad ? localIdeas : evidencePlayed).map(ideaLabel)).slice(0, 4);
+  const solved = uniqueLabels((problemMove ? localIdeas : evidencePlayed).map(ideaLabel)).slice(0, 4);
   const localIdeaLabels = uniqueLabels(localIdeas.map(ideaLabel)).slice(0, 4);
   const terminal = uniqueLabels(evidencePlayed.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
@@ -130,22 +133,22 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     },
     {
       key: 'middlegame-plan',
-      title: bad ? (localIdeaLabels.length ? 'Local idea that failed' : 'What this move misses') : 'What this move handles',
-      body: bad
+      title: problemMove ? (localIdeaLabels.length ? 'Local idea that failed' : 'What this move misses') : 'What this move handles',
+      body: problemMove
         ? localIdeaLabels.length
-          ? `The move has ${joinHuman(localIdeaLabels)}, but it does not survive the position's main demand.`
+          ? `The move has ${joinHuman(localIdeaLabels)}, but it does not fully meet the position's main demand.`
           : 'No public local idea is strong enough to explain this mistake.'
         : handled.length
           ? `This move handles ${joinHuman(handled)}.`
           : 'No public carrier is strong enough to explain this move yet.',
       pending: false,
-      items: (bad ? localIdeaLabels : [...solved, ...terminal, ...technique]).slice(0, 5),
-      tone: bad ? 'bad' : 'good',
+      items: (problemMove ? localIdeaLabels : [...solved, ...terminal, ...technique]).slice(0, 5),
+      tone: problemMove ? 'bad' : 'good',
     },
     {
       key: 'current-decision',
-      title: bad ? 'Why it fails' : 'Current decision',
-      body: bad
+      title: problemMove ? (bad ? 'Why it fails' : 'What remains loose') : 'Current decision',
+      body: problemMove
         ? problem
           ? `The main problem is ${problem}.`
           : 'The graph has a verdict, but not enough public carrier evidence to explain the move.'
@@ -153,12 +156,12 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
           ? `The move is not just a verdict; it changes ${currentChange}.`
           : 'The graph has a verdict, but not enough public carrier evidence to explain the move.',
       pending: false,
-      items: (bad ? uniqueLabels(mainPlayed.flatMap(problemLabels)) : mainPlayed.map(summaryLine).filter(Boolean)).slice(0, 3),
-      tone: bad ? 'bad' : 'good',
+      items: (problemMove ? uniqueLabels(mainPlayed.flatMap(problemLabels)) : mainPlayed.map(summaryLine).filter(Boolean)).slice(0, 3),
+      tone: problemMove ? 'bad' : 'good',
     },
     {
       key: 'better-plan',
-      title: bad ? 'What the better move keeps' : 'Compared with the alternatives',
+      title: problemMove ? 'What the better move keeps' : 'Compared with the alternatives',
       body:
         losses.length || referenceIdeas.length
           ? `The comparison turns on ${joinHuman([...losses, ...referenceIdeas].slice(0, 4))}.`
@@ -323,6 +326,11 @@ function hasEvidenceCarrier(semantic: ChesstoryMoveSemantic): boolean {
   return semantic.evidence?.has_carrier === true;
 }
 
+function normalizeCode(code?: string): string {
+  return (code || '')
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .toLowerCase();
+}
 function uniqueLabels(labels: string[]): string[] {
   return [...new Set(labels.map(l => l.trim()).filter(Boolean))];
 }

@@ -98,6 +98,38 @@ describe('chesstory brief scaffold', () => {
     assert.match(better?.body || '', /outpost route/);
   });
 
+  test('keeps playable loss out of good-move framing', () => {
+    const sections = chesstoryBriefSections({
+      verdict: {
+        verdict_code: 'playable_loss',
+        move_quality: 'playable',
+        played_move: 'e4g3',
+        reference_move: 'e4f6',
+      },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'playable',
+          priority: 'main',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          assessment: {
+            is_local_idea: true,
+            problem: { code: 'loses_activity', label: 'loses activity' },
+          },
+          evidence: { has_carrier: true, proof_level: 'owned_cause' },
+        },
+      ],
+    });
+
+    const plan = sections.find(section => section.key === 'middlegame-plan');
+    const current = sections.find(section => section.key === 'current-decision');
+    assert.equal(plan?.tone, 'bad');
+    assert.equal(current?.title, 'What remains loose');
+    assert.doesNotMatch(plan?.body || '', /This move handles/);
+    assert.match(plan?.body || '', /does not fully meet/);
+    assert.match(current?.body || '', /loses activity/);
+  });
+
   test('does not invent a useful local idea for a bad move without local-idea evidence', () => {
     const sections = chesstoryBriefSections({
       verdict: { move_quality: 'bad', played_move: 'e4g3', reference_move: 'e4f6' },
