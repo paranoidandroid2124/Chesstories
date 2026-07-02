@@ -3382,26 +3382,12 @@ object MoveMeaningClaim:
       positionFen: String,
       currentMoveClaim: Boolean
   ): Boolean =
-    val ownsCurrentMoveObject =
-      planContinuityObjectOwnsClaimMove(objectSignatures, claimMove)
     val ownsMove =
       detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) ||
-        detail.defenseMove.exists(move => sameMove(move, claimMove)) ||
-        ownsCurrentMoveObject
-    val typedCurrentMoveProof =
-      detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) ||
-        detail.defenseMove.exists(move => sameMove(move, claimMove)) ||
-        planContinuityObjectOwnsClaimMoveWith(
-          objectSignatures,
-          claimMove,
-          signature => planContinuityTypedCurrentMoveSignature(signature, claimMove)
-        )
+        detail.defenseMove.exists(move => sameMove(move, claimMove))
     val ownsCurrentMoveSource =
       currentMoveClaim &&
-        (
-          currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove) ||
-            typedCurrentMoveProof
-        )
+        currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove)
     val planSignal =
       detail.axisKind.contains(StrategicAxisKind.PlanCoherence) ||
         detail.matchedPlanIds.nonEmpty ||
@@ -3414,49 +3400,27 @@ object MoveMeaningClaim:
     val concretePlanHook =
       (
         detail.structuralPurposeSubjects.exists(concreteSubject) &&
-          planContinuityCurrentMoveRouteObject(objectSignatures, claimMove)
+          detail.structuralRouteMove.exists(move => sameMove(move, claimMove))
       ) ||
-        planContinuityCurrentMoveBreakOption(detail, objectSignatures, claimMove, positionFen) ||
-        planContinuityCurrentMoveDevelopmentOption(detail, objectSignatures, claimMove)
+        planContinuityCurrentMoveBreakOption(detail, claimMove, positionFen) ||
+        planContinuityCurrentMoveDevelopmentOption(detail, claimMove)
     ownsMove && ownsCurrentMoveSource && planSignal && concretePlanHook && !currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove)
-
-  private def planContinuityCurrentMoveRouteObject(
-      objectSignatures: List[String],
-      claimMove: String
-  ): Boolean =
-    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
-    objectSignatures.exists(signature =>
-      moveTokens(List(signature)).contains(normalizedClaimMove) &&
-        planContinuityRouteObjectSignature(signature)
-    )
 
   private def planContinuityCurrentMoveBreakOption(
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String],
       claimMove: String,
       positionFen: String
   ): Boolean =
     planContinuityBreakOptionDetail(detail) &&
       pawnMoveFromPawn(positionFen, claimMove) &&
-      (
-        detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) ||
-          planContinuityObjectOwnsClaimMoveWith(
-            objectSignatures,
-            claimMove,
-            signature => planContinuityConcreteBreakOptionSignature(signature, claimMove)
-          )
-      )
+      detail.structuralRouteMove.exists(move => sameMove(move, claimMove))
 
   private def planContinuityCurrentMoveDevelopmentOption(
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String],
       claimMove: String
   ): Boolean =
     planContinuityDevelopmentOptionDetail(detail) &&
-      (
-        detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) ||
-          planContinuityObjectOwnsClaimMoveWith(objectSignatures, claimMove, planContinuityDevelopmentOptionSignature)
-      )
+      detail.structuralRouteMove.exists(move => sameMove(move, claimMove))
 
   private def planContinuityBreakOptionDetail(
       detail: PositionPlanTechniqueSemanticDetail
@@ -3493,67 +3457,8 @@ object MoveMeaningClaim:
         detail.planAlignmentReasonCodes ++
         detail.structuralPurposeSubjects ++
         detail.structuralPurposeConsequences ++
-        detail.structuralPurposeCategories ++
-        detail.objectBindingSignatures
+        detail.structuralPurposeCategories
     ).map(_.toLowerCase)
-
-  private def planContinuityObjectOwnsClaimMove(
-      objectSignatures: List[String],
-      claimMove: String
-  ): Boolean =
-    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
-    objectSignatures.exists(signature => moveTokens(List(signature)).contains(normalizedClaimMove))
-
-  private def planContinuityObjectOwnsClaimMoveWith(
-      objectSignatures: List[String],
-      claimMove: String,
-      signaturePredicate: String => Boolean
-  ): Boolean =
-    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
-    objectSignatures.exists(signature =>
-      signaturePredicate(signature) &&
-        moveTokens(List(signature)).contains(normalizedClaimMove)
-    )
-
-  private def planContinuityBreakOptionSignature(signature: String): Boolean =
-    val normalized = signature.toLowerCase
-    normalized.contains("pawnbreakpreparation") ||
-      normalized.contains("pawn-break-preparation") ||
-      normalized.contains("breakpreparation") ||
-      normalized.contains("centerbreak") ||
-      normalized.contains("center-break")
-
-  private def planContinuityDevelopmentOptionSignature(signature: String): Boolean =
-    val normalized = signature.toLowerCase
-    normalized.contains("developmentchoice") ||
-      normalized.contains("developmentpieceactivated") ||
-      normalized.contains("mobility") ||
-      normalized.contains("pieceactivation")
-
-  private def planContinuityRouteObjectSignature(signature: String): Boolean =
-    val mechanisms = EvidenceObjectBinding.signatureTokens(List(signature), "mechanism=")
-    val consequences = EvidenceObjectBinding.signatureTokens(List(signature), "consequence=")
-    mechanisms.exists(token =>
-      token.endsWith("Mechanism:developmentchoice")
-    ) &&
-      consequences.exists(token =>
-        token.endsWith("Consequence:developmentpieceactivated")
-      )
-
-  private def planContinuityTypedCurrentMoveSignature(signature: String, claimMove: String): Boolean =
-    planContinuityRouteObjectSignature(signature) ||
-      planContinuityConcreteBreakOptionSignature(signature, claimMove)
-
-  private def planContinuityConcreteBreakOptionSignature(signature: String, claimMove: String): Boolean =
-    val normalized = signature.toLowerCase
-    val normalizedMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
-    planContinuityBreakOptionSignature(signature) &&
-      normalized.contains("mechanism:plan-pressure") &&
-      (
-        normalized.contains("target=plansubject:pawnbreakpreparation") ||
-          normalized.contains("consequence=consequence:pawnbreakpreparation")
-      ) &&
-      normalized.contains(s"some($normalizedMove)")
 
   private def currentMoveNegativeStructuralHook(
       detail: PositionPlanTechniqueSemanticDetail,
