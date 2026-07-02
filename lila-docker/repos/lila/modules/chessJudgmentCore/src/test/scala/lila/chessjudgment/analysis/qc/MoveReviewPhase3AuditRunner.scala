@@ -806,17 +806,6 @@ object MoveReviewPhase3AuditRunner:
         .map(_.id)
         .distinct
         .sorted
-    val objectlessPlayerFacingClaimIds =
-      packet.claims
-        .filter(claim =>
-          val tier = PlayerFacingClaimPolicy.tier(packet, claim)
-          tier == PlayerFacingClaimTier.Primary || tier == PlayerFacingClaimTier.Secondary
-        )
-        .filter(claim => PlayerFacingClaimPolicy.requiresConcreteObject(claim.family))
-        .filterNot(claim => EvidenceObjectBinding.playerFacingReady(EvidenceObjectBinding.fromClaim(claim, graph)))
-        .map(_.id)
-        .distinct
-        .sorted
     val strategicAxisWithoutSubjectIds =
       graph.records.collect {
         case record @ EvidenceRecord(_, payload: StrategicMechanismEvidence, _)
@@ -849,8 +838,7 @@ object MoveReviewPhase3AuditRunner:
       "claim_without_concrete_object" -> claimWithoutConcreteObjectIds,
       "strategic_axis_without_subject" -> strategicAxisWithoutSubjectIds,
       "tactical_mechanism_without_target" -> tacticalMechanismWithoutTargetIds,
-      "relative_cause_without_object_signature" -> relativeCauseWithoutObjectSignatureIds,
-      "objectless_player_facing_claim" -> objectlessPlayerFacingClaimIds
+      "relative_cause_without_object_signature" -> relativeCauseWithoutObjectSignatureIds
     )
 
   private def strategicAxisIntegritySummary(packet: EvidenceBackedJudgmentPacket): JsObject =
@@ -1308,15 +1296,14 @@ object MoveReviewPhase3AuditRunner:
       "relative_cause_without_object_signature" -> diagnostics.filter(
         _.relativeCauseDiagnostics.relativeCauseWithoutObjectSignatureIds.nonEmpty
       ).map(_.id),
-      "object_lost_between_evidence_and_cause" -> diagnostics.filter(
+      "graph_object_lost_between_evidence_and_cause" -> diagnostics.filter(
         _.relativeCauseDiagnostics.objectLostBetweenEvidenceAndCauseIds.nonEmpty
       ).map(_.id),
-      "object_lost_between_cause_and_claim" -> diagnostics.filter(
+      "graph_object_lost_between_cause_and_claim" -> diagnostics.filter(
         _.relativeCauseDiagnostics.objectLostBetweenCauseAndClaimIds.nonEmpty
       ).map(_.id),
-      "objectless_player_facing_claim" -> diagnostics.filter(diagnostic =>
-        diagnostic.moveJudgmentView.objectlessPrimaryCauseEvidenceIds.nonEmpty ||
-          diagnostic.moveJudgmentView.objectlessSecondaryCauseEvidenceIds.nonEmpty
+      "public_move_meaning_without_carrier" -> diagnostics.filter(diagnostic =>
+        diagnostic.moveJudgmentView.publicMoveMeaningClaimDiagnostics.exists(!_.hasCarrier)
       ).map(_.id),
       "unboundEvidenceComparisonIds" -> diagnostics.filter(_.relativeCauseDiagnostics.unboundEvidenceIds.nonEmpty).map(_.id),
       "causeWithoutIdeaComparisonIds" -> diagnostics.filter(_.relativeCauseDiagnostics.causeWithoutIdeaIds.nonEmpty).map(_.id),
@@ -1748,8 +1735,8 @@ object MoveReviewPhase3AuditRunner:
       "rootMismatchedCauseIds" -> diagnostic.rootMismatchedCauseIds,
       "supportPromotedToDirectProofCauseIds" -> diagnostic.supportPromotedToDirectProofCauseIds,
       "relativeCauseWithoutObjectSignatureIds" -> diagnostic.relativeCauseWithoutObjectSignatureIds,
-      "objectLostBetweenEvidenceAndCauseIds" -> diagnostic.objectLostBetweenEvidenceAndCauseIds,
-      "objectLostBetweenCauseAndClaimIds" -> diagnostic.objectLostBetweenCauseAndClaimIds,
+      "graphObjectLostBetweenEvidenceAndCauseIds" -> diagnostic.objectLostBetweenEvidenceAndCauseIds,
+      "graphObjectLostBetweenCauseAndClaimIds" -> diagnostic.objectLostBetweenCauseAndClaimIds,
       "causeFlow" -> JsArray(diagnostic.causeFlow.map(relativeCauseFlowJson))
     )
 
@@ -1792,8 +1779,8 @@ object MoveReviewPhase3AuditRunner:
       "rootMismatchedAttribution" -> flow.rootMismatchedAttribution,
       "supportPromotedToDirectProof" -> flow.supportPromotedToDirectProof,
       "relativeCauseWithoutObjectSignature" -> flow.relativeCauseWithoutObjectSignature,
-      "objectLostBetweenEvidenceAndCause" -> flow.objectLostBetweenEvidenceAndCause,
-      "objectLostBetweenCauseAndClaim" -> flow.objectLostBetweenCauseAndClaim
+      "graphObjectLostBetweenEvidenceAndCause" -> flow.objectLostBetweenEvidenceAndCause,
+      "graphObjectLostBetweenCauseAndClaim" -> flow.objectLostBetweenCauseAndClaim
     ) ++ objectBindingSignatureSampleJson(flow.objectBindingSignatures)
 
   private def tacticalLossTraceJson(trace: TacticalLossTrace): JsObject =
