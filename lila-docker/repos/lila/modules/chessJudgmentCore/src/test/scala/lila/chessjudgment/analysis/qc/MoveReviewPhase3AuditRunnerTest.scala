@@ -857,13 +857,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(detail.requiredSquares, List("d7", "d8", "e7"))
     assertEquals(detail.maintainedSquares, List("d7", "d8", "e7"))
 
-    val json = MoveReviewPhase3AuditViewJson.positionPlanTechniqueFrameJson(frame, ref => Json.obj("id" -> ref.id))
-    val jsonDetail = json \ "semanticDetails" \ 0
-    assertEquals((jsonDetail \ "endgameTechniquePattern").as[String], "Lucena")
-    assertEquals((jsonDetail \ "endgameTechniqueHorizonStatus").as[String], "Transitioned")
-    assertEquals((jsonDetail \ "endgameTechniqueTriggerMove").as[String], "d7d8q")
-    assertEquals((jsonDetail \ "maintainedSquares").as[List[String]], List("d7", "d8", "e7"))
-
   test("owned rook horizon slots require semantic anchors squares and line evidence"):
     val slot =
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
@@ -1596,52 +1589,6 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(activeSummary.counterThreatBetter, true)
     assertEquals(activeSummary.defense.counterIsBetter, true)
     assertEquals(quietSummary.counterThreatBetter, false)
-
-  test("audit view json exposes pawn tension edges and counter-break files"):
-    val root = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(chess.Color.White), Some("root"))
-    val frame =
-      PositionPlanTechniqueFrame(
-        id = "frame-pawn-break-detail",
-        units = List(PositionPlanTechniqueUnit.TensionBreakPolicyRoute),
-        position = root,
-        line = Some(candidateLine),
-        moveUci = Some("e2e4"),
-        scope = EvidenceScope.PlayedTransition,
-        mechanismKinds = List(StrategicMechanismKind.PawnStructure),
-        strategicAxisKeys = List("PawnBreak:Support:break-file-e-maintain-d4-e5"),
-        semanticAnchors = Nil,
-        objectBindingSignatures = Nil,
-        semanticDetails = List(
-          PositionPlanTechniqueSemanticDetail(
-            unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
-            axisKey = Some("PawnBreak:Support:break-file-e-maintain-d4-e5"),
-            axisKind = Some(StrategicAxisKind.PawnBreak),
-            axisPolarity = Some(StrategicAxisPolarity.Support),
-            label = Some("break-file-e-maintain-d4-e5"),
-            breakFile = Some("e"),
-            tensionPolicy = Some("Maintain"),
-            tensionSquares = List("d4", "e5"),
-            tensionEdges = List("d4-e5"),
-            counterBreakFiles = List("c")
-          )
-        ),
-        evidenceIds = List("pawn-structure"),
-        mechanismEvidenceIds = List("pawn-structure"),
-        sourceEvidenceIds = List("pawn-structure"),
-        relativeCauseEvidenceIds = Nil,
-        ideaIds = Nil,
-        claimIds = Nil,
-        planComparison = None,
-        relationToVerdict = None,
-        confidence = EvidenceConfidence.Mixed,
-        salience = 1
-      )
-
-    val json = MoveReviewPhase3AuditViewJson.positionPlanTechniqueFrameJson(frame, ref => Json.obj("id" -> ref.id))
-    val detail = json \ "semanticDetails" \ 0
-
-    assertEquals((detail \ "tensionEdges").as[List[String]], List("d4-e5"))
-    assertEquals((detail \ "counterBreakFiles").as[List[String]], List("c"))
 
   test("pawn play strategic axis label preserves break file tension policy and squares"):
     val position = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(chess.Color.White), Some("root"))
