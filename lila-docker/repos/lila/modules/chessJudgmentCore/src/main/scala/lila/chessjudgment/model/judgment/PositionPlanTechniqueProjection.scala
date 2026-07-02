@@ -1093,6 +1093,8 @@ object PositionPlanTechniqueProjection:
         positionPlanTechniqueConcretePieceRoute(detail)
       case PositionPlanTechniqueUnit.StructuralTransformation =>
         positionPlanTechniqueConcreteStructuralTransformation(detail)
+      case PositionPlanTechniqueUnit.CounterplayRace =>
+        positionPlanTechniqueCounterplayPawnBreakRace(detail)
       case _ =>
         false
 
@@ -1101,6 +1103,7 @@ object PositionPlanTechniqueProjection:
       kind: RelativeCauseKind
   ): Boolean =
     positionPlanTechniqueCauseKindsForUnit(detail.unit).contains(kind) ||
+      positionPlanTechniqueConcreteCounterplayRaceCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteRoutePlanCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteStructuralPlanCauseKind(detail, kind) ||
       positionPlanTechniqueTerminalProofCauseKind(detail, kind)
@@ -1142,14 +1145,19 @@ object PositionPlanTechniqueProjection:
       kind: RelativeCauseKind
   ): Boolean =
     detail.unit == PositionPlanTechniqueUnit.CounterplayRace &&
-      detail.axisKind.contains(StrategicAxisKind.Counterplay) &&
       positionPlanTechniqueCounterplayRaceProof(detail) &&
       (
-        detail.resourceContestSquares.nonEmpty ||
-          detail.resourceContestFiles.nonEmpty ||
-          detail.structuralPurposeSubjects.exists(positionPlanTechniqueConcreteSubject)
-      ) &&
-      kind == RelativeCauseKind.StructuralImprovement
+        detail.axisKind.contains(StrategicAxisKind.Counterplay) &&
+          (
+            detail.resourceContestSquares.nonEmpty ||
+              detail.resourceContestFiles.nonEmpty ||
+              detail.structuralPurposeSubjects.exists(positionPlanTechniqueConcreteSubject)
+          ) &&
+          kind == RelativeCauseKind.StructuralImprovement ||
+          detail.axisKind.contains(StrategicAxisKind.PawnBreak) &&
+            positionPlanTechniqueCounterplayPawnBreakRace(detail) &&
+            kind == RelativeCauseKind.PawnBreakOpportunity
+      )
 
   private def positionPlanTechniqueConcretePieceRoute(
       detail: PositionPlanTechniqueSemanticDetail
