@@ -1879,111 +1879,13 @@ object MoveMeaningSurface:
     view.moveMeaningClaims
       .flatMap { claim =>
         val evidence = evidenceForClaim(claim)
-        Option.when(publicSurfaceClaim(view, claim, evidence))(claim -> evidence)
+        Option.when(evidence.hasCarrier)(claim -> evidence)
       }
       .sortBy((claim, _) => claimSurfaceSortKey(claim))
       .take(12)
 
   private[chessjudgment] def evidenceForClaim(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
     publicEvidence(claim)
-
-  private def publicSurfaceLaneAllowed(claim: MoveMeaningClaim): Boolean =
-    terminalOverriddenEndgameTechniqueClaim(claim) ||
-      (
-        claim.supportLevel != "contextual" &&
-          claim.surfaceLane != "inherited_context" &&
-          claim.surfaceLane != "pv_or_line_witness"
-      )
-
-  private def publicSurfaceClaim(
-      view: MoveJudgmentView,
-      claim: MoveMeaningClaim,
-      evidence: MoveMeaningSurfaceEvidence
-  ): Boolean =
-    publicSurfaceLaneAllowed(claim) &&
-      evidence.hasCarrier &&
-      !terminalOverriddenEndgameTechniqueShadowed(view, claim) &&
-      publicSpecificPlanContinuityClaim(view, claim) &&
-      publicCurrentMoveFunctionClaim(view, claim) &&
-      !badMoveSuppressesCurrentMoveSurface(view, claim)
-
-  private def terminalOverriddenEndgameTechniqueClaim(claim: MoveMeaningClaim): Boolean =
-    claim.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
-      claim.endgameTechniqueHorizonStatus.exists(status =>
-        status == "SupersededByTactic" ||
-          status == "ContradictedByTerminalProof"
-      )
-
-  private def terminalOverriddenEndgameTechniqueShadowed(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
-    terminalOverriddenEndgameTechniqueClaim(claim) &&
-      terminalConsequenceCodes(claim).nonEmpty &&
-      view.moveMeaningClaims.exists(other =>
-        other != claim &&
-          other.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
-          other.supportLevel != "contextual" &&
-          (other.surfaceLane == "current_move_owned" || other.surfaceLane == "current_move_function") &&
-          other.moveUci == claim.moveUci &&
-          terminalConsequenceCodes(other).intersect(terminalConsequenceCodes(claim)).nonEmpty
-      )
-
-  private def publicCurrentMoveFunctionClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
-    claim.surfaceLane != "current_move_function" ||
-      claim.meaningKind != "PlanContinuity" ||
-      MoveMeaningClaim.currentMovePlanContinuityFunctionReady(view.moveMeaningClaims, claim)
-
-  private def publicSpecificPlanContinuityClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
-    if claim.meaningKind != "PlanContinuity" then true
-    else if claim.surfaceLane == "current_move_function" then
-      publicCurrentMovePlanContinuityClaim(view, claim)
-    else
-      (claim.specificityTier == PositionPlanTechniqueSpecificityTier.ExactObjectAxis ||
-        claim.specificityTier == PositionPlanTechniqueSpecificityTier.ConcreteObjectAxis) &&
-        claim.objectCarrierReady
-
-  private def publicCurrentMovePlanContinuityClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
-    MoveMeaningClaim.currentMovePlanContinuityFunctionReady(view.moveMeaningClaims, claim)
-
-  private def badMoveSuppressesCurrentMoveSurface(
-      view: MoveJudgmentView,
-      claim: MoveMeaningClaim
-  ): Boolean =
-    badMoveVisible(view) &&
-      currentMoveClaim(view, claim) &&
-      (
-        (claim.surfaceLane == "current_move_owned" && positiveCurrentMoveMotif(view, claim)) ||
-          (claim.surfaceLane == "current_move_function" && negativeCurrentMoveMeaning(claim))
-      )
-
-  private def badMoveVisible(view: MoveJudgmentView): Boolean =
-    view.verdict.exists(verdict => badVerdict(verdict.verdict))
-
-  private def positiveCurrentMoveMotif(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
-    currentMoveClaim(view, claim) &&
-      (
-        MoveMeaningClaim.positiveMeaningRole(claim.role) ||
-          positiveCurrentMoveMeaning(claim)
-      )
-
-  private def positiveCurrentMoveMeaning(claim: MoveMeaningClaim): Boolean =
-    claim.role == "ExplainsMoveFunction" &&
-      !negativeCurrentMoveMeaning(claim)
-
-  private def negativeCurrentMoveMeaning(claim: MoveMeaningClaim): Boolean =
-    claim.axisPolarity.exists(MoveMeaningClaim.negativePolarity) ||
-      claim.role.startsWith("Concedes") ||
-      claim.role.startsWith("Loses") ||
-      claim.role.startsWith("Allows") ||
-      claim.role.startsWith("Releases") ||
-      claim.role.startsWith("Breaks") ||
-      claim.causeKinds.exists(MoveMeaningClaim.negativeCauseKind)
-
-  private def currentMoveClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
-    view.verdict.exists(verdict =>
-      (claim.surfaceLane == "current_move_owned" || claim.surfaceLane == "current_move_function") &&
-        claim.lineRole == "candidate" &&
-        JudgmentSubjectBinding.normalizeMove(claim.moveUci) ==
-        JudgmentSubjectBinding.normalizeMove(verdict.candidateLine.rootMove)
-    )
 
   private def claimSurfaceSortKey(claim: MoveMeaningClaim): (Int, Int, String, String) =
     val claimSubject = subject(claim)
@@ -2038,7 +1940,7 @@ object MoveMeaningSurface:
         localIdea =
           claimSubject == "played_move" &&
             claim.surfaceLane == "current_move_function" &&
-            !negativeCurrentMoveMeaning(claim),
+            !MoveMeaningClaim.negativeCurrentMoveMeaning(claim),
         failureFamily = publicFailureFamily.map(publicCode(_, failureFamilyLabels)),
         problem = publicProblem.map(publicCode(_, problemLabels))
       ),
@@ -2553,8 +2455,114 @@ object MoveMeaningClaim:
         .values
         .flatMap(mergeMeaningClaims)
         .toList
-    suppressShadowedPlanContinuity(suppressShadowedRouteFunctionClaims(suppressShadowedCounterplayRacePawnBreak(claims)))
-      .sortBy(claim => (claim.meaningKind, claim.role, claim.lineRole, claim.laneKey, claim.frameId))
+    val unshadowedClaims =
+      suppressShadowedPlanContinuity(
+        suppressShadowedRouteFunctionClaims(suppressShadowedCounterplayRacePawnBreak(claims))
+      )
+    withPublicSurfaceEligibility(view.verdict, unshadowedClaims)
+      .sortBy(claim =>
+        (claim.meaningKind, claim.role, claim.lineRole, claim.laneKey, claim.frameId)
+      )
+
+  private def withPublicSurfaceEligibility(
+      verdict: Option[MoveJudgmentVerdictFrame],
+      claims: List[MoveMeaningClaim]
+  ): List[MoveMeaningClaim] =
+    claims.map { claim =>
+      if publicSurfaceCarrierAllowed(verdict, claims, claim) then claim
+      else claim.copy(publicHasCarrier = false, publicProofLevel = "none", publicTargetBound = false)
+    }
+
+  private def publicSurfaceCarrierAllowed(
+      verdict: Option[MoveJudgmentVerdictFrame],
+      claims: List[MoveMeaningClaim],
+      claim: MoveMeaningClaim
+  ): Boolean =
+    publicSurfaceLaneAllowed(claim) &&
+      !terminalOverriddenEndgameTechniqueShadowed(claims, claim) &&
+      publicSpecificPlanContinuityClaim(claims, claim) &&
+      !badMoveSuppressesCurrentMoveSurface(verdict, claim)
+
+  private def publicSurfaceLaneAllowed(claim: MoveMeaningClaim): Boolean =
+    terminalOverriddenEndgameTechniqueClaim(claim) ||
+      (
+        claim.supportLevel != "contextual" &&
+          claim.surfaceLane != "inherited_context" &&
+          claim.surfaceLane != "pv_or_line_witness"
+      )
+
+  private def terminalOverriddenEndgameTechniqueClaim(claim: MoveMeaningClaim): Boolean =
+    claim.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
+      claim.endgameTechniqueHorizonStatus.exists(status =>
+        status == "SupersededByTactic" ||
+          status == "ContradictedByTerminalProof"
+      )
+
+  private def terminalOverriddenEndgameTechniqueShadowed(
+      claims: List[MoveMeaningClaim],
+      claim: MoveMeaningClaim
+  ): Boolean =
+    val terminalKinds = terminalConsequenceKinds(claim)
+    terminalOverriddenEndgameTechniqueClaim(claim) &&
+      terminalKinds.nonEmpty &&
+      claims.exists(other =>
+        other != claim &&
+          other.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+          other.supportLevel != "contextual" &&
+          (other.surfaceLane == "current_move_owned" || other.surfaceLane == "current_move_function") &&
+          other.moveUci == claim.moveUci &&
+          terminalConsequenceKinds(other).intersect(terminalKinds).nonEmpty
+      )
+
+  private def terminalConsequenceKinds(claim: MoveMeaningClaim): Set[String] =
+    claim.terminalConsequenceKinds.filter(LineConsequenceKind.terminalResultProofName).toSet
+
+  private def publicSpecificPlanContinuityClaim(
+      claims: List[MoveMeaningClaim],
+      claim: MoveMeaningClaim
+  ): Boolean =
+    if claim.meaningKind != "PlanContinuity" then true
+    else if claim.surfaceLane == "current_move_function" then
+      currentMovePlanContinuityFunctionReady(claims, claim)
+    else
+      (claim.specificityTier == PositionPlanTechniqueSpecificityTier.ExactObjectAxis ||
+        claim.specificityTier == PositionPlanTechniqueSpecificityTier.ConcreteObjectAxis) &&
+        claim.objectCarrierReady
+
+  private def badMoveSuppressesCurrentMoveSurface(
+      verdict: Option[MoveJudgmentVerdictFrame],
+      claim: MoveMeaningClaim
+  ): Boolean =
+    verdict.exists(frame =>
+      badVerdict(frame.verdict) &&
+        currentMoveClaim(frame, claim) &&
+        (
+          (claim.surfaceLane == "current_move_owned" && positiveCurrentMoveMotif(claim)) ||
+            (claim.surfaceLane == "current_move_function" && negativeCurrentMoveMeaning(claim))
+        )
+    )
+
+  private def positiveCurrentMoveMotif(claim: MoveMeaningClaim): Boolean =
+    positiveMeaningRole(claim.role) || positiveCurrentMoveMeaning(claim)
+
+  private def positiveCurrentMoveMeaning(claim: MoveMeaningClaim): Boolean =
+    claim.role == "ExplainsMoveFunction" &&
+      !negativeCurrentMoveMeaning(claim)
+
+  private[judgment] def negativeCurrentMoveMeaning(claim: MoveMeaningClaim): Boolean =
+    claim.axisPolarity.exists(negativePolarity) ||
+      claim.role.startsWith("Concedes") ||
+      claim.role.startsWith("Loses") ||
+      claim.role.startsWith("Allows") ||
+      claim.role.startsWith("Releases") ||
+      claim.role.startsWith("Breaks") ||
+      claim.causeKinds.exists(negativeCauseKind)
+
+  private def currentMoveClaim(verdict: MoveJudgmentVerdictFrame, claim: MoveMeaningClaim): Boolean =
+    (claim.surfaceLane == "current_move_owned" || claim.surfaceLane == "current_move_function") &&
+      claim.lineRole == "candidate" &&
+      JudgmentSubjectBinding.normalizeMove(claim.moveUci) ==
+      JudgmentSubjectBinding.normalizeMove(verdict.candidateLine.rootMove)
 
   private def suppressShadowedRouteFunctionClaims(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
     val ownedRouteKeys =
