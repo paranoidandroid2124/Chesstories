@@ -1654,6 +1654,8 @@ case class MoveMeaningClaim(
     sourceEvidenceIds: List[String],
     objectBindingSignatures: List[String],
     reasonTokens: List[String],
+    objectCarrierReady: Boolean = false,
+    boardCarriers: List[MoveMeaningSurfaceBoardCarrier] = Nil,
     targetSquares: List[String] = Nil,
     targetFiles: List[String] = Nil,
     targetPieces: List[String] = Nil,
@@ -1926,7 +1928,7 @@ object MoveMeaningSurface:
     else
       (claim.specificityTier == PositionPlanTechniqueSpecificityTier.ExactObjectAxis ||
         claim.specificityTier == PositionPlanTechniqueSpecificityTier.ConcreteObjectAxis) &&
-        EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
+        claim.objectCarrierReady
 
   private def publicCurrentMovePlanContinuityClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
     MoveMeaningClaim.currentMovePlanContinuityFunctionReady(view.moveMeaningClaims, claim)
@@ -2048,9 +2050,9 @@ object MoveMeaningSurface:
       terminal: List[MoveMeaningSurfaceCode],
       technique: Option[MoveMeaningSurfaceEndgameTechnique]
   ): MoveMeaningSurfaceEvidence =
-    val boardCarriers = publicBoardCarriers(claim.objectBindingSignatures)
+    val boardCarriers = claim.boardCarriers
     val hasBoardCarrier = boardCarriers.nonEmpty
-    val objectCarrier = EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
+    val objectCarrier = claim.objectCarrierReady
     val causeCarrier = claim.causeEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
     val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
     val graphCarrier = claim.causeEvidenceIds.nonEmpty || claim.sourceEvidenceIds.nonEmpty
@@ -2073,41 +2075,6 @@ object MoveMeaningSurface:
       sourceIds = claim.sourceEvidenceIds.take(6),
       boardCarriers = boardCarriers
     )
-
-  private def publicBoardCarriers(
-      objectBindingSignatures: List[String]
-  ): List[MoveMeaningSurfaceBoardCarrier] =
-    objectBindingSignatures
-      .flatMap(signature => EvidenceObjectBinding.signatureParts(signature).flatMap(publicBoardCarrierPart))
-      .distinct
-      .sortBy(carrier =>
-        (carrier.role, carrier.kind, carrier.value, carrier.from.getOrElse(""), carrier.to.getOrElse(""))
-      ).take(8)
-
-  private def publicBoardCarrierPart(part: String): Option[MoveMeaningSurfaceBoardCarrier] =
-    val keyValue = part.split("=", 2)
-    if keyValue.length != 2 then None
-    else
-      keyValue(0) match
-        case role @ ("actor" | "target" | "witness") => typedPublicBoardCarrier(role, keyValue(1))
-        case _                                       => None
-
-  private def typedPublicBoardCarrier(role: String, value: String): Option[MoveMeaningSurfaceBoardCarrier] =
-    val typedValue = value.split(":", 2)
-    if typedValue.length != 2 || typedValue(1).isEmpty then None
-    else
-      typedValue(0) match
-        case kind @ ("Move" | "Square" | "File" | "Piece" | "Pawn") =>
-          val (from, to) = moveEndpoints(kind, typedValue(1))
-          Some(MoveMeaningSurfaceBoardCarrier(role, kind, typedValue(1), from, to))
-        case kind @ "PlanSubject" if role == "target" && EvidenceObjectBinding.concreteTargetToken(s"$role=$value") =>
-          Some(MoveMeaningSurfaceBoardCarrier(role, kind, typedValue(1)))
-        case _ => None
-
-  private def moveEndpoints(kind: String, value: String): (Option[String], Option[String]) =
-    if kind == "Move" && value.length >= 4 then
-      (Some(value.take(2)), Some(value.slice(2, 4)))
-    else (None, None)
 
   private def subject(claim: MoveMeaningClaim): String =
     claim.surfaceLane match
@@ -2708,19 +2675,18 @@ object MoveMeaningClaim:
       )
 
   private def planContinuityClaimHasCurrentMovePlanSubject(claim: MoveMeaningClaim): Boolean =
+    val normalizedMove = JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase
     claim.meaningKind == "PlanContinuity" &&
       claim.surfaceLane == "current_move_function" &&
-      claim.objectBindingSignatures.exists(signature =>
-        moveTokens(List(signature)).contains(JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase) &&
-          EvidenceObjectBinding.signatureTokens(List(signature), "target=").exists(_.toLowerCase.startsWith("target=plansubject:"))
-      )
+      claim.boardCarriers.exists(boardCarrierMove(_, normalizedMove)) &&
+      claim.boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "PlanSubject")
 
   def currentMovePlanContinuityFunctionReady(claims: List[MoveMeaningClaim], claim: MoveMeaningClaim): Boolean =
     claim.supportLevel == "view_surfaced" &&
       planContinuityClaimHasCurrentMovePlanSubject(claim) &&
       (
         claim.sourceEvidenceIds.nonEmpty &&
-          EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures) ||
+          claim.objectCarrierReady ||
           planContinuityClaimHasSeparateCurrentMoveCarrier(claims, claim)
       )
 
@@ -2736,20 +2702,19 @@ object MoveMeaningClaim:
         (carrier.surfaceLane == "current_move_owned" || carrier.surfaceLane == "current_move_function") &&
         JudgmentSubjectBinding.normalizeMove(carrier.moveUci).toLowerCase == normalizedMove &&
         carrier.sourceEvidenceIds.nonEmpty &&
-        carrier.objectBindingSignatures.exists(signature =>
-          moveTokens(List(signature)).contains(normalizedMove) &&
-            EvidenceObjectBinding.signatureTokens(List(signature), "target=").exists(nonPlanSubjectConcreteTargetToken)
-        )
+        carrier.boardCarriers.exists(boardCarrierMove(_, normalizedMove)) &&
+        carrier.boardCarriers.exists(nonPlanSubjectBoardCarrier)
     )
 
-  private def nonPlanSubjectConcreteTargetToken(token: String): Boolean =
-    val lower = token.toLowerCase
-    !lower.startsWith("target=plansubject:") &&
-      (
-        EvidenceObjectBinding.concreteTargetToken(token) ||
-          token.contains("=Piece:") ||
-          lower.contains("piece:")
-      )
+  private def boardCarrierMove(carrier: MoveMeaningSurfaceBoardCarrier, normalizedMove: String): Boolean =
+    (carrier.role == "actor" || carrier.role == "witness") &&
+      carrier.kind == "Move" &&
+      JudgmentSubjectBinding.normalizeMove(carrier.value).toLowerCase == normalizedMove
+
+  private def nonPlanSubjectBoardCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
+    carrier.role == "target" &&
+      carrier.kind != "PlanSubject" &&
+      (carrier.kind == "Square" || carrier.kind == "File" || carrier.kind == "Piece" || carrier.kind == "Pawn")
 
   private def mergeMeaningClaims(claims: Iterable[MoveMeaningClaim]): Option[MoveMeaningClaim] =
     val list = claims.toList
@@ -2761,11 +2726,16 @@ object MoveMeaningClaim:
         sourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted,
         objectBindingSignatures = list.flatMap(_.objectBindingSignatures).distinct.sorted,
         reasonTokens = list.flatMap(_.reasonTokens).distinct.sorted,
+        objectCarrierReady = list.exists(_.objectCarrierReady),
+        boardCarriers = list.flatMap(_.boardCarriers).distinct.sortBy(boardCarrierSortKey).take(8),
         targetSquares = list.flatMap(_.targetSquares).distinct.sorted,
         targetFiles = list.flatMap(_.targetFiles).distinct.sorted,
         targetPieces = list.flatMap(_.targetPieces).distinct.sorted
       )
     )
+
+  private def boardCarrierSortKey(carrier: MoveMeaningSurfaceBoardCarrier): (String, String, String, String, String) =
+    (carrier.role, carrier.kind, carrier.value, carrier.from.getOrElse(""), carrier.to.getOrElse(""))
 
   private def duplicateMeaningKey(claim: MoveMeaningClaim): (String, String, String, String, String) =
     val objectKey =
@@ -2907,6 +2877,7 @@ object MoveMeaningClaim:
       )
     yield
       val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, surfaceObjectSignatures)
+      val boardCarriers = publicBoardCarriers(surfaceObjectSignatures)
       val linkedCauseIds =
         roleCompatibleCauseFrames
           .flatMap(_.causeEvidenceIds)
@@ -2936,6 +2907,8 @@ object MoveMeaningClaim:
         sourceEvidenceIds = moveMeaningClaimSourceEvidenceIds(detail, verdict, claimLineRole, claimMove),
         objectBindingSignatures = surfaceObjectSignatures,
         reasonTokens = reasonTokens(detail, surfaceObjectSignatures, linkedCauseIds, verdict, claimMove, frame.position.fen, claimRole),
+        objectCarrierReady = EvidenceObjectBinding.playerFacingReadySignatures(surfaceObjectSignatures),
+        boardCarriers = boardCarriers,
         targetSquares = surfaceTarget.squares,
         targetFiles = surfaceTarget.files,
         targetPieces = surfaceTarget.pieces,
@@ -2954,6 +2927,40 @@ object MoveMeaningClaim:
         brokenSquares = detail.brokenSquares.distinct.sorted,
         publicIdeaType = publicIdeaType(detail, meaningKind)
       )
+
+  private def publicBoardCarriers(
+      objectBindingSignatures: List[String]
+  ): List[MoveMeaningSurfaceBoardCarrier] =
+    objectBindingSignatures
+      .flatMap(signature => EvidenceObjectBinding.signatureParts(signature).flatMap(publicBoardCarrierPart))
+      .distinct
+      .sortBy(boardCarrierSortKey)
+      .take(8)
+
+  private def publicBoardCarrierPart(part: String): Option[MoveMeaningSurfaceBoardCarrier] =
+    val keyValue = part.split("=", 2)
+    if keyValue.length != 2 then None
+    else
+      keyValue(0) match
+        case role @ ("actor" | "target" | "witness") => typedPublicBoardCarrier(role, keyValue(1))
+        case _                                       => None
+
+  private def typedPublicBoardCarrier(role: String, value: String): Option[MoveMeaningSurfaceBoardCarrier] =
+    val typedValue = value.split(":", 2)
+    if typedValue.length != 2 || typedValue(1).isEmpty then None
+    else
+      typedValue(0) match
+        case kind @ ("Move" | "Square" | "File" | "Piece" | "Pawn") =>
+          val (from, to) = moveEndpoints(kind, typedValue(1))
+          Some(MoveMeaningSurfaceBoardCarrier(role, kind, typedValue(1), from, to))
+        case kind @ "PlanSubject" if role == "target" && EvidenceObjectBinding.concreteTargetToken(s"$role=$value") =>
+          Some(MoveMeaningSurfaceBoardCarrier(role, kind, typedValue(1)))
+        case _ => None
+
+  private def moveEndpoints(kind: String, value: String): (Option[String], Option[String]) =
+    if kind == "Move" && value.length >= 4 then
+      (Some(value.take(2)), Some(value.slice(2, 4)))
+    else (None, None)
 
   private def publicIdeaType(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -5415,7 +5422,7 @@ object MoveMeaningClaim:
       strengthRank(claim.supportLevel),
       if claim.specificityTier == PositionPlanTechniqueSpecificityTier.ExactObjectAxis then 1 else 0,
       kindRank(claim.meaningKind),
-      claim.objectBindingSignatures.size,
+      claim.boardCarriers.size,
       claim.frameId
     )
 
