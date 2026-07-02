@@ -269,27 +269,27 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       rows: List[SemanticRubricSlotRow],
       diagnostics: List[CandidateComparisonDiagnostic]
   ): JsObject =
-    val measured = slot.lineRole.exists(_.trim.nonEmpty) && slot.moveUci.exists(_.trim.nonEmpty)
+    val diagnosticsById = diagnostics.map(diagnostic => diagnostic.id -> diagnostic).toMap
+    val measured = true
     val unitEligibleRows =
-      if !measured then Nil
-      else
-        rows.filter(row =>
-          row.unit == slot.unit &&
-            slot.axisKey.forall(expectedAxis => row.axisKey.contains(expectedAxis)) &&
-            slot.lineRole.forall(expectedRole => row.lineRole == expectedRole.trim) &&
-            slot.moveUci.forall(expectedMove =>
-              JudgmentSubjectBinding.normalizeMove(row.moveUci) == JudgmentSubjectBinding.normalizeMove(expectedMove)
-            )
-        )
+      rows.filter(row =>
+        row.unit == slot.unit &&
+          slot.axisKey.forall(expectedAxis => row.axisKey.contains(expectedAxis)) &&
+          slot.lineRole.forall(expectedRole => row.lineRole == expectedRole.trim) &&
+          slot.moveUci.forall(expectedMove =>
+            JudgmentSubjectBinding.normalizeMove(row.moveUci) == JudgmentSubjectBinding.normalizeMove(expectedMove)
+          ) &&
+          diagnosticsById.get(row.comparisonId).forall(diagnostic => slotSemanticTokensSatisfied(slot, diagnostic))
+      )
     val publicMatches = unitEligibleRows.filter(_.publicSurface)
     val claimMatches = unitEligibleRows.filterNot(_.publicSurface)
     val best =
       slot.requiredSupportLevel
-        .flatMap(required => publicMatches.find(_.supportLevel == required.trim))
+        .flatMap(required => publicMatches.find(row => supportLevelSatisfies(row.supportLevel, required)))
         .orElse(publicMatches.headOption)
     val bestClaim =
       slot.requiredSupportLevel
-        .flatMap(required => claimMatches.find(_.supportLevel == required.trim))
+        .flatMap(required => claimMatches.find(row => supportLevelSatisfies(row.supportLevel, required)))
         .orElse(claimMatches.headOption)
     val supportLevel =
       if measured then best.map(_.supportLevel).getOrElse("missing_semantic_slot")
@@ -298,9 +298,9 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       if measured then bestClaim.map(_.supportLevel).getOrElse("missing_semantic_claim")
       else "unmeasured_semantic_slot"
     val supportLevelSatisfied =
-      measured && slot.requiredSupportLevel.forall(required => supportLevel == required.trim)
+      measured && slot.requiredSupportLevel.forall(required => supportLevelSatisfies(supportLevel, required))
     val claimSupportLevelSatisfied =
-      measured && slot.requiredSupportLevel.forall(required => claimSupportLevel == required.trim)
+      measured && slot.requiredSupportLevel.forall(required => supportLevelSatisfies(claimSupportLevel, required))
     val matched = measured && best.nonEmpty && supportLevelSatisfied
     val survivalFailureClass =
       if !measured then "measurement_gap"
@@ -318,6 +318,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "questionId" -> slot.questionId,
       "description" -> slot.description,
       "requiredSupportLevel" -> slot.requiredSupportLevel,
+      "requiredSemanticDetailTokens" -> slot.requiredSemanticDetailTokens,
       "matched" -> matched,
       "supportLevel" -> supportLevel,
       "claimSupportLevel" -> claimSupportLevel,
@@ -419,8 +420,37 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       slot.axisKey.forall(axis =>
         view.positionPlanTechniqueSemanticDetailAxisKeys.contains(axis) ||
           view.positionPlanTechniqueAxisKeys.contains(axis)
-      )
+      ) &&
+      slotSemanticTokensSatisfied(slot, diagnostic)
     }
+
+  private def slotSemanticTokensSatisfied(
+      slot: ExpectedSemanticSlot,
+      diagnostic: CandidateComparisonDiagnostic
+  ): Boolean =
+    slot.requiredSemanticDetailTokens.isEmpty ||
+      diagnostic.moveJudgmentView.positionPlanTechniqueSemanticDetailTokenGroups.exists(tokens =>
+        tokens.contains(s"unit:${slot.unit}") &&
+          slot.requiredSemanticDetailTokens.forall(requiredSemanticToken(tokens, _))
+      )
+
+  private def requiredSemanticToken(tokens: List[String], required: String): Boolean =
+    val expected = required.trim
+    expected.isEmpty ||
+      tokens.contains(expected) ||
+      tokens.exists(_.startsWith(s"$expected:")) ||
+      (expected.endsWith(":") && tokens.exists(_.startsWith(expected)))
+
+  private def supportLevelSatisfies(actual: String, required: String): Boolean =
+    supportLevelRank(actual) >= supportLevelRank(required)
+
+  private def supportLevelRank(level: String): Int =
+    level.trim match
+      case "owned_cause_linked"  => 3
+      case "clustered_coherent"  => 2
+      case "view_surfaced"       => 1
+      case "missing_semantic_slot" | "missing_semantic_claim" | "unmeasured_semantic_slot" => 0
+      case _                    => 0
 
   private def survivalFailureClass(row: JsObject): String =
     (row \ "survivalFailureClass").as[String]

@@ -24,7 +24,8 @@ private[qc] object MoveReviewPhase3AuditContract:
       moveUci: Option[String] = None,
       questionId: Option[String] = None,
       description: Option[String] = None,
-      requiredSupportLevel: Option[String] = None
+      requiredSupportLevel: Option[String] = None,
+      requiredSemanticDetailTokens: List[String] = Nil
   )
 
   def parseExpectedQuestionIds(json: JsValue): List[String] =
@@ -49,7 +50,10 @@ private[qc] object MoveReviewPhase3AuditContract:
         moveUci = (json \ "moveUci").asOpt[String],
         questionId = (json \ "questionId").asOpt[String],
         description = (json \ "description").asOpt[String],
-        requiredSupportLevel = (json \ "requiredSupportLevel").asOpt[String]
+        requiredSupportLevel =
+          (json \ "requiredSupportLevel").asOpt[String].orElse((json \ "requiredTerminalStage").asOpt[String]),
+        requiredSemanticDetailTokens =
+          (json \ "requiredSemanticDetailTokens").asOpt[List[String]].getOrElse(Nil)
       )
 
   private def expectedSemanticUnit(raw: String): Option[PositionPlanTechniqueUnit] =
@@ -64,5 +68,7 @@ private[qc] object MoveReviewPhase3AuditContract:
       "moveUci" -> slot.moveUci,
       "questionId" -> slot.questionId,
       "description" -> slot.description,
-      "requiredSupportLevel" -> slot.requiredSupportLevel
+      "requiredSupportLevel" -> slot.requiredSupportLevel,
+      "requiredTerminalStage" -> slot.requiredSupportLevel,
+      "requiredSemanticDetailTokens" -> slot.requiredSemanticDetailTokens
     )
