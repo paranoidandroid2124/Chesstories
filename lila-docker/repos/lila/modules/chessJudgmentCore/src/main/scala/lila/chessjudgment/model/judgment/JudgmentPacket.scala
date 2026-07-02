@@ -3064,7 +3064,7 @@ object MoveMeaningClaim:
     val currentMoveClaim = currentMoveMeaningClaim(verdict, claimLineRole, claimMove)
     val directCurrentMoveCarrier =
       !currentMoveClaim ||
-        currentMoveDirectCarrier(evidenceGraph, detail, objectSignatures, claimMove)
+        currentMoveDirectCarrier(evidenceGraph, detail, claimMove)
     lazy val currentMoveFunctionalProof =
       directCurrentMoveCarrier &&
         currentMoveFunctionalDetailProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
@@ -3226,27 +3226,16 @@ object MoveMeaningClaim:
   private def currentMoveDirectCarrier(
       evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String],
       claimMove: String
   ): Boolean =
     val sourceOwnsCurrentMove =
       currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove)
-    val metadataMoveOwnsCurrentMove =
-      detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) ||
-      detail.defenseMove.exists(move => sameMove(move, claimMove)) ||
-      detail.endgameTechniqueTriggerMove.exists(move => sameMove(move, claimMove)) ||
-      detail.raceCandidateRootMove.exists(move => sameMove(move, claimMove))
     val lineHorizonOwnsCurrentMove =
       detail.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
         endgameTechniqueHorizonViewShape(detail) &&
         detail.endgameTechniqueTriggerMove.exists(move => sameMove(move, claimMove))
-    val terminalProofOwnsCurrentMove =
-      detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
-        terminalProofDetailOwnsClaimMove(detail, objectSignatures, claimMove)
     sourceOwnsCurrentMove ||
-      lineHorizonOwnsCurrentMove ||
-      terminalProofOwnsCurrentMove ||
-      (metadataMoveOwnsCurrentMove && sourceOwnsCurrentMove)
+      lineHorizonOwnsCurrentMove
 
   private def moveMeaningClaimSourceEvidenceIds(
       evidenceGraph: TypedEvidenceGraph,
