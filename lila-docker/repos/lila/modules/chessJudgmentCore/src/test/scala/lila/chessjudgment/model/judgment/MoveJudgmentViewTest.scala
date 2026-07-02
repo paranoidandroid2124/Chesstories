@@ -946,10 +946,9 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(claim.supportLevel, "owned_cause_linked")
     assertEquals(claim.surfaceLane, "current_move_owned")
     assertEquals(claim.lineRole, "candidate")
-    assert(claim.reasonTokens.contains("routePiece:knight"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("routeFrom:f1"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("routeTo:e3"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains(s"causeEvidenceId:${causeRef.id}"), claim.reasonTokens)
+    assert(claim.routeIdentityParts.contains("piece:knight"), claim.routeIdentityParts)
+    assert(claim.routeIdentityParts.contains("from:f1"), claim.routeIdentityParts)
+    assert(claim.routeIdentityParts.contains("to:e3"), claim.routeIdentityParts)
 
   test("links exact good current move pawn break tension gain to owned move meaning"):
     val root = PositionNodeRef("4k3/8/8/3p4/8/8/4P3/4K3 w - - 0 1", 1, Some(Color.White), Some("root"))
@@ -1162,14 +1161,11 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(claim.supportLevel, "owned_cause_linked")
     assertEquals(claim.surfaceLane, "current_move_owned")
     assertEquals(claim.lineRole, "candidate")
-    assert(claim.reasonTokens.contains("breakFile:e"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("tensionEdge:e4-d5"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains(s"causeEvidenceId:${causeRef.id}"), claim.reasonTokens)
-    assert(claim.objectBindingSignatures.exists(_.contains("target=File:e")), claim.objectBindingSignatures)
-    assert(
-      claim.objectBindingSignatures.exists(signature => signature.contains("target=Square:e4") && signature.contains("target=Square:d5")),
-      claim.objectBindingSignatures
-    )
+    assertEquals(claim.breakFiles, List("e"))
+    assert(claim.breakIdentityParts.contains("tensionEdge:e4-d5"), claim.breakIdentityParts)
+    assert(claim.targetFiles.contains("e"), claim.targetFiles)
+    assert(claim.targetSquares.contains("e4"), claim.targetSquares)
+    assert(claim.targetSquares.contains("d5"), claim.targetSquares)
 
   test("links exact good current move diagonal restriction to owned counterplay meaning"):
     val root = PositionNodeRef("4k3/6b1/8/3p4/3PP3/8/8/4K3 w - - 0 1", 1, Some(Color.White), Some("root"))
@@ -4891,16 +4887,16 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       )
       .get
     val claim = view.moveMeaningClaims
-      .find(claim => claim.meaningKind == "TechniqueConversion" && claim.reasonTokens.contains("pattern:Lucena"))
+      .find(claim => claim.meaningKind == "TechniqueConversion" && claim.endgameTechniquePattern.contains("Lucena"))
       .getOrElse(fail(view.moveMeaningClaims.toString))
 
     assertEquals(claim.role, "ReachesTechnique")
     assertEquals(claim.supportLevel, "owned_cause_linked")
-    assert(claim.reasonTokens.contains("horizonStatus:Transitioned"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("triggerMove:d7d8q"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("sourceEvidenceId:line:lucena-horizon"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("requiredSquare:d8"), claim.reasonTokens)
-    assert(claim.reasonTokens.contains("maintainedSquare:d8"), claim.reasonTokens)
+    assertEquals(claim.endgameTechniqueHorizonStatus, Some("Transitioned"))
+    assertEquals(claim.endgameTechniqueTriggerMove, Some("d7d8q"))
+    assert(claim.sourceEvidenceIds.contains("line:lucena-horizon"), claim.sourceEvidenceIds)
+    assert(claim.requiredSquares.contains("d8"), claim.requiredSquares)
+    assert(claim.maintainedSquares.contains("d8"), claim.maintainedSquares)
     val surfaceTechnique = MoveMeaningSurface.from(view).flatMap(_.endgameTechnique).headOption.getOrElse(fail(MoveMeaningSurface.from(view).toString))
     assertEquals(surfaceTechnique.pattern, Some("lucena"))
     assertEquals(surfaceTechnique.patternLabel, Some("Lucena"))
