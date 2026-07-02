@@ -479,11 +479,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
     val failedRequiredTerminalStageSlotIds =
       slotRows.filter(row => !(row \ "terminalStageSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
-    val classifiedMissingSlotIds = classifiedMissingSlotIdsFor(slotRows)
-    val unclassifiedMissingSlotIds = unclassifiedMissingSlotIdsFor(missingSlotIds, classifiedMissingSlotIds)
-    val planOptionOwnedCauseExpectationSlotIds = slotIdsWithFlag(slotRows, "planOptionOwnedCauseExpectation")
-    val viewOnlyOwnedCauseExpectationSlotIds = slotIdsWithFlag(slotRows, "viewOnlyOwnedCauseExpectation")
-    val semanticTokenExpectationMissSlotIds = slotIdsWithFlag(slotRows, "semanticTokenExpectationMiss")
     Json.obj(
       "classification" -> "audit_only",
       "expectedSlotCount" -> slotRows.size,
@@ -491,45 +486,13 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "viewSurfacedCount" -> slotRows.count(row => (row \ "viewSurfaced").as[Boolean]),
       "ownedCauseLinkedCount" -> slotRows.count(row => (row \ "ownedCauseLinked").as[Boolean]),
       "clusteredCoherentCount" -> slotRows.count(row => (row \ "clusteredCoherent").as[Boolean]),
-      "coLocatedSemanticDetailTokenFailureCount" -> slotRows.count(row =>
-        (row \ "coLocatedSemanticDetailTokenFailure").asOpt[Boolean].contains(true)
-      ),
-      "causeLineageTokenCoLocationSatisfied" -> slotRows.forall(row =>
-        (row \ "causeLineageTokenCoLocationSatisfied").asOpt[Boolean].getOrElse(true)
-      ),
-      "rootLineageTokenCoLocationSatisfied" -> slotRows.forall(row =>
-        (row \ "rootLineageTokenCoLocationSatisfied").asOpt[Boolean].getOrElse(true)
-      ),
-      "rootTierLineageTokenCoLocationSatisfied" -> slotRows.forall(row =>
-        (row \ "rootTierLineageTokenCoLocationSatisfied").asOpt[Boolean].getOrElse(true)
-      ),
-      "causeBorrowFalsePositiveCount" -> slotRows.count(row =>
-        (row \ "causeBorrowFalsePositive").asOpt[Boolean].contains(true)
-      ),
-      "primaryRootBorrowFalsePositiveCount" -> slotRows.count(row =>
-        (row \ "primaryRootBorrowFalsePositive").asOpt[Boolean].contains(true)
-      ),
-      "rootTierBorrowFalsePositiveCount" -> slotRows.count(row =>
-        (row \ "rootTierBorrowFalsePositive").asOpt[Boolean].contains(true)
-      ),
-      "coLocatedSemanticDetailTokenFailureSlotIds" -> coLocatedSemanticDetailTokenFailureSlotIds(slotRows),
       "terminalStageCounts" -> stringCountsJson(slotRows.map(row => (row \ "terminalStage").as[String])),
       "missingSlotIds" -> missingSlotIds,
       "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
       "missingSlotIdCounts" -> stringCountsJson(missingSlotIds),
-      "classifiedMissingSlotIds" -> classifiedMissingSlotIds,
-      "classifiedMissingSlotCount" -> classifiedMissingSlotIds.size,
-      "unclassifiedMissingSlotIds" -> unclassifiedMissingSlotIds,
-      "unclassifiedMissingSlotCount" -> unclassifiedMissingSlotIds.size,
       "failedRequiredTerminalStageSlotIds" -> failedRequiredTerminalStageSlotIds,
       "failedRequiredTerminalStageUniqueSlotIds" -> failedRequiredTerminalStageSlotIds.distinct.sorted,
       "failedRequiredTerminalStageSlotIdCounts" -> stringCountsJson(failedRequiredTerminalStageSlotIds),
-      "planOptionOwnedCauseExpectationSlotIds" -> planOptionOwnedCauseExpectationSlotIds,
-      "planOptionOwnedCauseExpectationSlotCount" -> planOptionOwnedCauseExpectationSlotIds.size,
-      "viewOnlyOwnedCauseExpectationSlotIds" -> viewOnlyOwnedCauseExpectationSlotIds,
-      "viewOnlyOwnedCauseExpectationSlotCount" -> viewOnlyOwnedCauseExpectationSlotIds.size,
-      "semanticTokenExpectationMissSlotIds" -> semanticTokenExpectationMissSlotIds,
-      "semanticTokenExpectationMissSlotCount" -> semanticTokenExpectationMissSlotIds.size,
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
       "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
@@ -553,11 +516,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slot.requiredCauseKinds.nonEmpty ||
       slot.requiredPrimaryRootCauseKinds.nonEmpty ||
       slot.requiredPrimaryRootArbitrationTiers.nonEmpty ||
-      slot.requiredTerminalConsequenceKinds.nonEmpty ||
-      slot.requiredSemanticDetailTokens.nonEmpty ||
-      slot.requiredCoLocatedSemanticDetailTokens.nonEmpty ||
-      slot.requiredSemanticAnchorTokens.nonEmpty ||
-      slot.requiredObjectBindingTokens.nonEmpty ||
       slot.requiredTerminalStage.nonEmpty
 
   private[qc] def semanticRubricExpectedSlotCorpusCoverageJson(coverages: List[JsValue]): JsObject =
@@ -591,11 +549,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
     val failedRequiredTerminalStageSlotIds =
       slotRows.filter(row => !(row \ "terminalStageSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
-    val classifiedMissingSlotIds = classifiedMissingSlotIdsFor(slotRows)
-    val unclassifiedMissingSlotIds = unclassifiedMissingSlotIdsFor(missingSlotIds, classifiedMissingSlotIds)
-    val planOptionOwnedCauseExpectationSlotIds = slotIdsWithFlag(slotRows, "planOptionOwnedCauseExpectation")
-    val viewOnlyOwnedCauseExpectationSlotIds = slotIdsWithFlag(slotRows, "viewOnlyOwnedCauseExpectation")
-    val semanticTokenExpectationMissSlotIds = slotIdsWithFlag(slotRows, "semanticTokenExpectationMiss")
     Json.obj(
       "classification" -> "audit_only",
       "coverageRowCount" -> coverages.size,
@@ -604,45 +557,13 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "viewSurfacedCount" -> slotRows.count(row => (row \ "viewSurfaced").as[Boolean]),
       "ownedCauseLinkedCount" -> slotRows.count(row => (row \ "ownedCauseLinked").as[Boolean]),
       "clusteredCoherentCount" -> slotRows.count(row => (row \ "clusteredCoherent").as[Boolean]),
-      "coLocatedSemanticDetailTokenFailureCount" -> slotRows.count(row =>
-        (row \ "coLocatedSemanticDetailTokenFailure").asOpt[Boolean].contains(true)
-      ),
-      "causeLineageTokenCoLocationSatisfied" -> slotRows.forall(row =>
-        (row \ "causeLineageTokenCoLocationSatisfied").asOpt[Boolean].getOrElse(true)
-      ),
-      "rootLineageTokenCoLocationSatisfied" -> slotRows.forall(row =>
-        (row \ "rootLineageTokenCoLocationSatisfied").asOpt[Boolean].getOrElse(true)
-      ),
-      "rootTierLineageTokenCoLocationSatisfied" -> slotRows.forall(row =>
-        (row \ "rootTierLineageTokenCoLocationSatisfied").asOpt[Boolean].getOrElse(true)
-      ),
-      "causeBorrowFalsePositiveCount" -> slotRows.count(row =>
-        (row \ "causeBorrowFalsePositive").asOpt[Boolean].contains(true)
-      ),
-      "primaryRootBorrowFalsePositiveCount" -> slotRows.count(row =>
-        (row \ "primaryRootBorrowFalsePositive").asOpt[Boolean].contains(true)
-      ),
-      "rootTierBorrowFalsePositiveCount" -> slotRows.count(row =>
-        (row \ "rootTierBorrowFalsePositive").asOpt[Boolean].contains(true)
-      ),
-      "coLocatedSemanticDetailTokenFailureSlotIds" -> coLocatedSemanticDetailTokenFailureSlotIds(slotRows),
       "terminalStageCounts" -> stringCountsJson(slotRows.map(row => (row \ "terminalStage").as[String])),
       "missingSlotIds" -> missingSlotIds,
       "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
       "missingSlotIdCounts" -> stringCountsJson(missingSlotIds),
-      "classifiedMissingSlotIds" -> classifiedMissingSlotIds,
-      "classifiedMissingSlotCount" -> classifiedMissingSlotIds.size,
-      "unclassifiedMissingSlotIds" -> unclassifiedMissingSlotIds,
-      "unclassifiedMissingSlotCount" -> unclassifiedMissingSlotIds.size,
       "failedRequiredTerminalStageSlotIds" -> failedRequiredTerminalStageSlotIds,
       "failedRequiredTerminalStageUniqueSlotIds" -> failedRequiredTerminalStageSlotIds.distinct.sorted,
       "failedRequiredTerminalStageSlotIdCounts" -> stringCountsJson(failedRequiredTerminalStageSlotIds),
-      "planOptionOwnedCauseExpectationSlotIds" -> planOptionOwnedCauseExpectationSlotIds,
-      "planOptionOwnedCauseExpectationSlotCount" -> planOptionOwnedCauseExpectationSlotIds.size,
-      "viewOnlyOwnedCauseExpectationSlotIds" -> viewOnlyOwnedCauseExpectationSlotIds,
-      "viewOnlyOwnedCauseExpectationSlotCount" -> viewOnlyOwnedCauseExpectationSlotIds.size,
-      "semanticTokenExpectationMissSlotIds" -> semanticTokenExpectationMissSlotIds,
-      "semanticTokenExpectationMissSlotCount" -> semanticTokenExpectationMissSlotIds.size,
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
       "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
@@ -679,19 +600,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
             "viewSurfacedCount" -> rows.count(row => (row \ "viewSurfaced").as[Boolean]),
             "ownedCauseLinkedCount" -> rows.count(row => (row \ "ownedCauseLinked").as[Boolean]),
             "clusteredCoherentCount" -> rows.count(row => (row \ "clusteredCoherent").as[Boolean]),
-            "coLocatedSemanticDetailTokenFailureCount" -> rows.count(row =>
-              (row \ "coLocatedSemanticDetailTokenFailure").asOpt[Boolean].contains(true)
-            ),
-            "causeBorrowFalsePositiveCount" -> rows.count(row =>
-              (row \ "causeBorrowFalsePositive").asOpt[Boolean].contains(true)
-            ),
-            "primaryRootBorrowFalsePositiveCount" -> rows.count(row =>
-              (row \ "primaryRootBorrowFalsePositive").asOpt[Boolean].contains(true)
-            ),
-            "rootTierBorrowFalsePositiveCount" -> rows.count(row =>
-              (row \ "rootTierBorrowFalsePositive").asOpt[Boolean].contains(true)
-            ),
-            "coLocatedSemanticDetailTokenFailureSlotIds" -> coLocatedSemanticDetailTokenFailureSlotIds(rows),
             "terminalStageCounts" -> stringCountsJson(rows.map(row => (row \ "terminalStage").as[String])),
             "missingSlotIds" -> missingSlotIds,
             "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
@@ -701,45 +609,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
           )
         }
     )
-
-  private def coLocatedSemanticDetailTokenFailureSlotIds(slotRows: List[JsObject]): List[String] =
-    slotRows
-      .filter(row => (row \ "coLocatedSemanticDetailTokenFailure").asOpt[Boolean].contains(true))
-      .flatMap(row => (row \ "id").asOpt[String])
-      .distinct
-      .sorted
-
-  private def slotIdsWithFlag(slotRows: List[JsObject], flag: String): List[String] =
-    slotRows
-      .filter(row => (row \ flag).asOpt[Boolean].contains(true))
-      .flatMap(row => (row \ "id").asOpt[String])
-      .distinct
-      .sorted
-
-  private def classifiedMissingSlotIdsFor(slotRows: List[JsObject]): List[String] =
-    slotRows
-      .filter(row => !(row \ "matched").as[Boolean] && knownMissingClassification(row))
-      .flatMap(row => (row \ "id").asOpt[String])
-      .distinct
-      .sorted
-
-  private def unclassifiedMissingSlotIdsFor(
-      missingSlotIds: List[String],
-      classifiedMissingSlotIds: List[String]
-  ): List[String] =
-    val classified = classifiedMissingSlotIds.toSet
-    missingSlotIds.distinct.sorted.filterNot(classified)
-
-  private def knownMissingClassification(row: JsObject): Boolean =
-    List(
-      "coLocatedSemanticDetailTokenFailure",
-      "causeBorrowFalsePositive",
-      "primaryRootBorrowFalsePositive",
-      "rootTierBorrowFalsePositive",
-      "planOptionOwnedCauseExpectation",
-      "viewOnlyOwnedCauseExpectation",
-      "semanticTokenExpectationMiss"
-    ).exists(flag => (row \ flag).asOpt[Boolean].contains(true))
 
   private def expectedSemanticSlotCoverage(
       slot: ExpectedSemanticSlot,
@@ -760,97 +629,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
           (slot.requiredPrimaryRootArbitrationTiers.isEmpty ||
             slot.requiredPrimaryRootArbitrationTiers.exists(tier => row.primaryRootArbitrationTiers.contains(tier)))
       )
-    val semanticDetailTokenRows =
-      unitEligibleRows.filter(row => semanticDetailTokensSatisfiedForSlot(slot, row))
-    val coLocatedSemanticDetailTokenRows =
-      semanticDetailTokenRows.filter(row =>
-        coLocatedTokensSatisfied(slot.requiredCoLocatedSemanticDetailTokens, semanticDetailTokenGroupsForSlot(slot, row))
-      )
-    val structurallySemanticDetailTokenRows =
-      structurallyEligibleRows.filter(row => semanticDetailTokensSatisfiedForSlot(slot, row))
-    val structurallyCoLocatedSemanticDetailTokenRows =
-      structurallySemanticDetailTokenRows.filter(row =>
-        coLocatedTokensSatisfied(slot.requiredCoLocatedSemanticDetailTokens, semanticDetailTokenGroupsForSlot(slot, row))
-      )
-    val semanticDetailTokensSatisfied = semanticDetailTokenRows.nonEmpty
-    val coLocatedSemanticDetailTokensSatisfied =
-      slot.requiredCoLocatedSemanticDetailTokens.isEmpty || coLocatedSemanticDetailTokenRows.nonEmpty
-    val coLocatedSemanticDetailTokenFailure =
-      slot.requiredCoLocatedSemanticDetailTokens.nonEmpty &&
-        semanticDetailTokensSatisfied &&
-        !coLocatedSemanticDetailTokensSatisfied
-    val bestCoLocatedSemanticDetailTokenGroup =
-      bestCoLocatedSemanticDetailTokens(slot, semanticDetailTokenRows)
-    val missingCoLocatedSemanticDetailTokensFromBestGroup =
-      missingRequiredTokens(slot.requiredCoLocatedSemanticDetailTokens, bestCoLocatedSemanticDetailTokenGroup)
-    val objectBindingTokensSatisfiedRows =
-      coLocatedSemanticDetailTokenRows.filter(row => objectBindingTokensSatisfiedForSlot(slot, row))
-    val objectBindingTokenCoLocatedRows =
-      objectBindingTokensSatisfiedRows.filter(row =>
-        objectBindingTokensCoLocated(
-          slot.requiredObjectBindingTokens,
-          semanticDetailCoLocationTokens(slot),
-          semanticDetailTokenGroupsForSlot(slot, row)
-        )
-      )
-    val structurallyObjectBindingTokensSatisfiedRows =
-      structurallyCoLocatedSemanticDetailTokenRows.filter(row => objectBindingTokensSatisfiedForSlot(slot, row))
-    val structurallyObjectBindingTokenCoLocatedRows =
-      structurallyObjectBindingTokensSatisfiedRows.filter(row =>
-        objectBindingTokensCoLocated(
-          slot.requiredObjectBindingTokens,
-          semanticDetailCoLocationTokens(slot),
-          semanticDetailTokenGroupsForSlot(slot, row)
-        )
-      )
-    val objectBindingTokensSatisfied =
-      slot.requiredObjectBindingTokens.isEmpty || objectBindingTokensSatisfiedRows.nonEmpty
-    val objectBindingTokenCoLocationSatisfied =
-      slot.requiredObjectBindingTokens.isEmpty || objectBindingTokenCoLocatedRows.nonEmpty
-    val bestObjectBindingTokenGroup =
-      bestObjectBindingTokenGroupFor(
-        slot,
-        objectBindingTokensSatisfiedRows
-      )
-    val missingObjectBindingTokensFromBestGroup =
-      missingObjectBindingTokens(slot.requiredObjectBindingTokens, bestObjectBindingTokenGroup)
-    val legacyMatches =
-      structurallyObjectBindingTokenCoLocatedRows.filter(row =>
-          tokensSatisfied(slot.requiredSemanticAnchorTokens, row.detailSemanticAnchorKeys)
-      )
-    val causeLineageTokenCoLocatedRows =
-      if causeLineageTokenCoLocationRequired(slot) then
-        structurallyObjectBindingTokenCoLocatedRows.filter(row => causeLineageTokensCoLocated(slot, row))
-      else structurallyObjectBindingTokenCoLocatedRows
-    val rootLineageTokenCoLocatedRows =
-      if rootLineageTokenCoLocationRequired(slot) then
-        causeLineageTokenCoLocatedRows.filter(row => rootLineageTokensCoLocated(slot, row))
-      else causeLineageTokenCoLocatedRows
-    val rootTierLineageTokenCoLocatedRows =
-      if rootTierLineageTokenCoLocationRequired(slot) then
-        rootLineageTokenCoLocatedRows.filter(row => rootTierLineageTokensCoLocated(slot, row))
-      else rootLineageTokenCoLocatedRows
-    val causeLineageTokenCoLocationSatisfied =
-      !causeLineageTokenCoLocationRequired(slot) || causeLineageTokenCoLocatedRows.nonEmpty
-    val rootLineageTokenCoLocationSatisfied =
-      !rootLineageTokenCoLocationRequired(slot) || rootLineageTokenCoLocatedRows.nonEmpty
-    val rootTierLineageTokenCoLocationSatisfied =
-      !rootTierLineageTokenCoLocationRequired(slot) || rootTierLineageTokenCoLocatedRows.nonEmpty
-    val matches =
-      rootTierLineageTokenCoLocatedRows.filter(row =>
-        tokensSatisfied(slot.requiredSemanticAnchorTokens, row.detailSemanticAnchorKeys)
-      )
-    val legacyBest = legacyMatches.headOption
-    val legacyTerminalStage = legacyBest.map(_.terminalStage).getOrElse("missing_semantic_slot")
-    val legacyMatched =
-      legacyBest.nonEmpty &&
-        slot.requiredTerminalStage.forall(semanticRubricStageSatisfied(legacyTerminalStage, _))
-    val causeBorrowFalsePositive =
-      slot.requiredCauseKinds.nonEmpty && legacyMatched && !causeLineageTokenCoLocationSatisfied
-    val primaryRootBorrowFalsePositive =
-      slot.requiredPrimaryRootCauseKinds.nonEmpty && legacyMatched && !rootLineageTokenCoLocationSatisfied
-    val rootTierBorrowFalsePositive =
-      slot.requiredPrimaryRootArbitrationTiers.nonEmpty && legacyMatched && !rootTierLineageTokenCoLocationSatisfied
+    val matches = structurallyEligibleRows
     val best = matches.headOption
     val terminalStage = best.map(_.terminalStage).getOrElse("missing_semantic_slot")
     val strictLineageTerminalStage = best.map(_.strictLineageTerminalStage).getOrElse("missing_semantic_slot")
@@ -880,29 +659,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "strictLineageTerminalStage" -> strictLineageTerminalStage,
       "terminalStageSatisfied" -> terminalStageSatisfied,
       "strictLineageTerminalStageSatisfied" -> strictLineageTerminalStageSatisfied,
-      "semanticDetailTokensSatisfied" -> semanticDetailTokensSatisfied,
-      "coLocatedSemanticDetailTokensSatisfied" -> coLocatedSemanticDetailTokensSatisfied,
-      "coLocatedSemanticDetailTokenFailure" -> coLocatedSemanticDetailTokenFailure,
-      "bestCoLocatedSemanticDetailTokenGroup" -> bestCoLocatedSemanticDetailTokenGroup,
-      "missingCoLocatedSemanticDetailTokensFromBestGroup" -> missingCoLocatedSemanticDetailTokensFromBestGroup,
-      "objectBindingTokensSatisfied" -> objectBindingTokensSatisfied,
-      "objectBindingTokenCoLocationSatisfied" -> objectBindingTokenCoLocationSatisfied,
-      "bestObjectBindingTokenGroup" -> bestObjectBindingTokenGroup,
-      "missingObjectBindingTokensFromBestGroup" -> missingObjectBindingTokensFromBestGroup,
-      "causeLineageTokenCoLocationRequired" -> causeLineageTokenCoLocationRequired(slot),
-      "rootLineageTokenCoLocationRequired" -> rootLineageTokenCoLocationRequired(slot),
-      "rootTierLineageTokenCoLocationRequired" -> rootTierLineageTokenCoLocationRequired(slot),
-      "causeLineageTokenCoLocationSatisfied" -> causeLineageTokenCoLocationSatisfied,
-      "rootLineageTokenCoLocationSatisfied" -> rootLineageTokenCoLocationSatisfied,
-      "rootTierLineageTokenCoLocationSatisfied" -> rootTierLineageTokenCoLocationSatisfied,
-      "causeBorrowFalsePositive" -> causeBorrowFalsePositive,
-      "primaryRootBorrowFalsePositive" -> primaryRootBorrowFalsePositive,
-      "rootTierBorrowFalsePositive" -> rootTierBorrowFalsePositive,
-      "planOptionOwnedCauseExpectation" -> planOptionOwnedCauseExpectation(slot),
-      "viewOnlyOwnedCauseExpectation" -> viewOnlyOwnedCauseExpectation(slot, best),
-      "semanticTokenExpectationMiss" -> (slot.requiredSemanticDetailTokens.nonEmpty && !semanticDetailTokensSatisfied),
-      "legacyMatchedBeforeStrictLineage" -> legacyMatched,
-      "legacyTerminalStageBeforeStrictLineage" -> legacyTerminalStage,
       "objectBound" -> best.exists(_.objectBound),
       "exactAxisOrPattern" -> best.exists(_.exactAxisOrPattern),
       "causeOwned" -> best.exists(_.causeOwned),
@@ -968,255 +724,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "primaryRootArbitrationTiers" -> row.primaryRootArbitrationTiers.map(_.toString)
     )
 
-  private def tokensSatisfied(requiredTokens: List[String], values: List[String]): Boolean =
-    requiredTokens.forall(token => tokenSatisfied(token, values))
-
-  private def tokenSatisfied(requiredToken: String, values: List[String]): Boolean =
-    values.exists(value => tokenMatches(requiredToken, value))
-
   private def semanticRubricStageSatisfied(actual: String, required: String): Boolean =
     actual == required.trim
-
-  private def tokenMatches(requiredToken: String, value: String): Boolean =
-    val required = requiredToken.trim.toLowerCase
-    val candidate = value.trim.toLowerCase
-    required.nonEmpty &&
-      (candidate == required || (required.endsWith(":") && candidate.startsWith(required)))
-
-  private def semanticDetailTokensSatisfiedForSlot(
-      slot: ExpectedSemanticSlot,
-      row: SemanticRubricSlotRow
-  ): Boolean =
-    expectedSemanticDetailTokens(slot).isEmpty ||
-      semanticDetailTokenGroupsForSlot(slot, row).exists(group =>
-        tokensSatisfied(expectedSemanticDetailTokens(slot), group)
-      )
-
-  private def semanticDetailTokenGroupsForSlot(
-      slot: ExpectedSemanticSlot,
-      row: SemanticRubricSlotRow
-  ): List[List[String]] =
-    val unitToken = s"unit:${slot.unit}"
-    row.semanticDetailTokenGroups
-      .map(_.distinct.sorted)
-      .filter(_.contains(unitToken))
-
-  private def coLocatedTokensSatisfied(requiredTokens: List[String], tokenGroups: List[List[String]]): Boolean =
-    requiredTokens.isEmpty ||
-      tokenGroups.exists(group => tokensSatisfied(requiredTokens, group))
-
-  private def semanticDetailCoLocationTokens(slot: ExpectedSemanticSlot): List[String] =
-    if slot.requiredCoLocatedSemanticDetailTokens.nonEmpty then slot.requiredCoLocatedSemanticDetailTokens
-    else expectedSemanticDetailTokens(slot)
-
-  private def expectedSemanticDetailTokens(slot: ExpectedSemanticSlot): List[String] =
-    (slot.requiredSemanticDetailTokens ++
-      slot.requiredTerminalConsequenceKinds.map(kind => s"terminalConsequenceKind:$kind")).distinct
-
-  private def planOptionOwnedCauseExpectation(slot: ExpectedSemanticSlot): Boolean =
-    slot.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-      slot.requiredTerminalStage.contains("owned_cause_linked")
-
-  private def viewOnlyOwnedCauseExpectation(
-      slot: ExpectedSemanticSlot,
-      best: Option[SemanticRubricSlotRow]
-  ): Boolean =
-    slot.requiredTerminalStage.contains("owned_cause_linked") &&
-      best.exists(row => row.viewSurfaced && !row.ownedCauseLinked)
-
-  private def objectBindingTokensCoLocated(
-      requiredObjectBindingTokens: List[String],
-      requiredSemanticDetailTokens: List[String],
-      tokenGroups: List[List[String]]
-  ): Boolean =
-    requiredObjectBindingTokens.isEmpty ||
-      tokenGroups.exists(group =>
-        tokensSatisfied(requiredSemanticDetailTokens, group) &&
-          requiredObjectBindingTokens.forall(token => objectBindingTokenSatisfied(token, group))
-      )
-
-  private def objectBindingTokensSatisfiedForSlot(
-      slot: ExpectedSemanticSlot,
-      row: SemanticRubricSlotRow
-  ): Boolean =
-    slot.requiredObjectBindingTokens.isEmpty ||
-      slot.requiredObjectBindingTokens.forall(token =>
-        semanticDetailTokenGroupsForSlot(slot, row).exists(group => objectBindingTokenSatisfied(token, group))
-      )
-
-  private def objectBindingTokenSatisfied(token: String, values: List[String]): Boolean =
-    objectBindingSemanticDetailTokens(token).exists(values.contains)
-
-  private def objectBindingSemanticDetailTokens(token: String): List[String] =
-    val normalized = token.trim
-    val targetValue = roleTokenValue(normalized).filter(_ => normalized.startsWith("target="))
-    if roleTokenValue(normalized).exists(_.isEmpty) then Nil
-    else
-      (
-        List(
-          roleTokenValue(normalized).filter(_ => normalized.startsWith("actor=")).map(value => s"objectActor:$value"),
-          targetValue.map(value => s"objectTarget:$value"),
-          roleTokenValue(normalized).filter(_ => normalized.startsWith("mechanism=")).map(value => s"objectMechanism:$value"),
-          roleTokenValue(normalized).filter(_ => normalized.startsWith("consequence=")).map(value => s"objectConsequence:$value"),
-          roleTokenValue(normalized).filter(_ => normalized.startsWith("witness=")).map(value => s"objectWitness:$value"),
-          Some(normalized)
-        ).flatten ++ targetValue.toList.flatMap(resourceContestTargetTokens)
-      ).distinct
-
-  private def roleTokenValue(token: String): Option[String] =
-    List("actor=", "target=", "mechanism=", "consequence=", "witness=")
-      .find(token.startsWith)
-      .map(token.stripPrefix)
-
-  private def resourceContestTargetTokens(targetValue: String): List[String] =
-    if targetValue.startsWith("Square:") then
-      List(s"resourceContestSquare:${targetValue.stripPrefix("Square:")}")
-    else if targetValue.startsWith("File:") then
-      List(s"resourceContestFile:${targetValue.stripPrefix("File:")}")
-    else Nil
-
-  private def causeLineageTokenCoLocationRequired(slot: ExpectedSemanticSlot): Boolean =
-    slot.requiredCauseKinds.nonEmpty && semanticLineageTokenCoLocationRequired(slot)
-
-  private def rootLineageTokenCoLocationRequired(slot: ExpectedSemanticSlot): Boolean =
-    (slot.requiredPrimaryRootCauseKinds.nonEmpty || slot.requiredPrimaryRootArbitrationTiers.nonEmpty) &&
-      semanticLineageTokenCoLocationRequired(slot)
-
-  private def rootTierLineageTokenCoLocationRequired(slot: ExpectedSemanticSlot): Boolean =
-    slot.requiredPrimaryRootArbitrationTiers.nonEmpty && semanticLineageTokenCoLocationRequired(slot)
-
-  private def semanticLineageTokenCoLocationRequired(slot: ExpectedSemanticSlot): Boolean =
-    expectedSemanticDetailTokens(slot).nonEmpty ||
-      slot.requiredCoLocatedSemanticDetailTokens.nonEmpty ||
-      slot.requiredObjectBindingTokens.nonEmpty
-
-  private def causeLineageTokensCoLocated(slot: ExpectedSemanticSlot, row: SemanticRubricSlotRow): Boolean =
-    val causeIds = row.causeIds.toSet
-    val causeIdKinds = row.causeIdKinds.toSet
-    causeIds.nonEmpty &&
-      lineageCandidateTokenGroups(slot, row).exists(group =>
-        causeEvidenceIdsFromTokens(group).exists(causeEvidenceId =>
-          causeIds.contains(causeEvidenceId) &&
-            (
-              slot.requiredCauseKinds.isEmpty ||
-                slot.requiredCauseKinds.exists(kind =>
-                  causeIdKinds.contains(causeEvidenceId -> kind)
-                )
-            )
-        )
-      )
-
-  private def rootLineageTokensCoLocated(slot: ExpectedSemanticSlot, row: SemanticRubricSlotRow): Boolean =
-    val rootCauseEvidenceIds = row.primaryRootCauseEvidenceIds.toSet
-    rootCauseEvidenceIds.nonEmpty &&
-      lineageCandidateTokenGroups(slot, row).exists(group =>
-        rootLineageEvidenceIdsFromTokens(group).exists(rootCauseEvidenceIds.contains)
-      )
-
-  private def rootTierLineageTokensCoLocated(slot: ExpectedSemanticSlot, row: SemanticRubricSlotRow): Boolean =
-    val requiredTiers = slot.requiredPrimaryRootArbitrationTiers.toSet
-    row.primaryRootCauseEvidenceTiers.nonEmpty &&
-      requiredTiers.nonEmpty &&
-      lineageCandidateTokenGroups(slot, row).exists(group =>
-        val rootCauseEvidenceIds = rootLineageEvidenceIdsFromTokens(group).toSet
-        row.primaryRootCauseEvidenceTiers.exists(tier =>
-          rootCauseEvidenceIds(tier.causeEvidenceId) && requiredTiers(tier.tier)
-        )
-      )
-
-  private def semanticRubricCauseLineageBound(
-      causeIds: List[String],
-      tokenGroups: List[List[String]]
-  ): Boolean =
-    val ids = causeIds.toSet
-    ids.nonEmpty &&
-      tokenGroups.exists(group => causeEvidenceIdsFromTokens(group).exists(ids.contains))
-
-  private def semanticRubricPrimaryRootLineageBound(
-      primaryRootCauseEvidenceIds: List[String],
-      tokenGroups: List[List[String]]
-  ): Boolean =
-    val ids = primaryRootCauseEvidenceIds.toSet
-    ids.nonEmpty &&
-      tokenGroups.exists(group => rootLineageEvidenceIdsFromTokens(group).exists(ids.contains))
-
-  private def semanticRubricPrimaryRootTierLineageBound(
-      primaryRootCauseEvidenceTiers: List[PrimaryRootCauseEvidenceTier],
-      tokenGroups: List[List[String]]
-  ): Boolean =
-    primaryRootCauseEvidenceTiers.nonEmpty &&
-      tokenGroups.exists(group =>
-        val rootCauseEvidenceIds = rootLineageEvidenceIdsFromTokens(group).toSet
-        primaryRootCauseEvidenceTiers.exists(tier =>
-          rootCauseEvidenceIds(tier.causeEvidenceId)
-        )
-      )
-
-  private def lineageCandidateTokenGroups(slot: ExpectedSemanticSlot, row: SemanticRubricSlotRow): List[List[String]] =
-    val requiredSemanticTokens = semanticDetailCoLocationTokens(slot)
-    semanticDetailTokenGroupsForSlot(slot, row)
-      .filter(group =>
-        tokensSatisfied(requiredSemanticTokens, group) &&
-          slot.requiredObjectBindingTokens.forall(token => objectBindingTokenSatisfied(token, group))
-      )
-
-  private def causeEvidenceIdsFromTokens(tokens: List[String]): List[String] =
-    tokenValuesWithPrefix(tokens, "causeEvidenceId:")
-
-  private def rootLineageEvidenceIdsFromTokens(tokens: List[String]): List[String] =
-    (tokenValuesWithPrefix(tokens, "causeEvidenceId:") ++
-      tokenValuesWithPrefix(tokens, "rootCauseEvidenceId:")).distinct
-
-  private def tokenValuesWithPrefix(tokens: List[String], prefix: String): List[String] =
-    tokens
-      .filter(_.startsWith(prefix))
-      .map(_.stripPrefix(prefix).trim)
-      .filter(_.nonEmpty)
-      .distinct
-
-  private def bestObjectBindingTokenGroupFor(
-      slot: ExpectedSemanticSlot,
-      rows: List[SemanticRubricSlotRow]
-  ): List[String] =
-    val requiredObjectBindingTokens = slot.requiredObjectBindingTokens
-    val requiredSemanticDetailTokens = semanticDetailCoLocationTokens(slot)
-    if requiredObjectBindingTokens.isEmpty then Nil
-    else
-      rows
-        .flatMap(row => semanticDetailTokenGroupsForSlot(slot, row))
-        .filter(group =>
-          requiredSemanticDetailTokens.exists(token => tokenSatisfied(token, group)) ||
-            requiredObjectBindingTokens.exists(token => objectBindingTokenSatisfied(token, group))
-        )
-        .sortBy(group =>
-          (
-            -requiredSemanticDetailTokens.count(token => tokenSatisfied(token, group)),
-            -requiredObjectBindingTokens.count(token => objectBindingTokenSatisfied(token, group)),
-            group.mkString("\u0000")
-          )
-        )
-        .headOption
-        .getOrElse(Nil)
-
-  private def missingObjectBindingTokens(requiredTokens: List[String], values: List[String]): List[String] =
-    requiredTokens.filterNot(token => objectBindingTokenSatisfied(token, values))
-
-  private def bestCoLocatedSemanticDetailTokens(
-      slot: ExpectedSemanticSlot,
-      rows: List[SemanticRubricSlotRow]
-  ): List[String] =
-    val requiredTokens = slot.requiredCoLocatedSemanticDetailTokens
-    if requiredTokens.isEmpty then Nil
-    else
-      rows
-        .flatMap(row => semanticDetailTokenGroupsForSlot(slot, row))
-        .filter(group => requiredTokens.exists(token => tokenSatisfied(token, group)))
-        .sortBy(group => (-requiredTokens.count(token => tokenSatisfied(token, group)), group.mkString("\u0000")))
-        .headOption
-        .getOrElse(Nil)
-
-  private def missingRequiredTokens(requiredTokens: List[String], values: List[String]): List[String] =
-    requiredTokens.filterNot(token => tokenSatisfied(token, values))
 
   private def semanticRubricSlotRows(diagnostic: CandidateComparisonDiagnostic): List[SemanticRubricSlotRow] =
     val publicRows =
@@ -1270,8 +779,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       publicSurfaceClaimWithCarrier.headOption
         .map(_.supportLevel)
         .filter(_.nonEmpty)
-        .orElse(publicSurfaceClaimDiagnostics.headOption.map(_ => "no_public_carrier"))
-        .getOrElse(if unitSurfaced then "view_only" else "missing_semantic_slot")
+        .getOrElse("missing_semantic_slot")
     val ownedCauseLinked =
       publicSurfaceClaimWithCarrier.exists(claim =>
         claim.supportLevel == "owned_cause_linked" &&
@@ -1292,14 +800,11 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
         claimSurvived &&
         ownedCauseLinked
     val strictCauseLineageBound =
-      semanticRubricCauseLineageBound(causeIds, semanticDetailTokenGroups)
+      causeIds.nonEmpty
     val strictPrimaryRootLineageBound =
-      semanticRubricPrimaryRootLineageBound(view.primaryRootCauseEvidenceIds, semanticDetailTokenGroups)
+      view.primaryRootCauseEvidenceIds.nonEmpty
     val strictPrimaryRootTierLineageBound =
-      semanticRubricPrimaryRootTierLineageBound(
-        view.primaryRootCauseEvidenceTiers,
-        semanticDetailTokenGroups
-      )
+      view.primaryRootCauseEvidenceTiers.nonEmpty
     SemanticRubricSlotRow(
       comparisonId = diagnostic.id,
       unit = unit,
