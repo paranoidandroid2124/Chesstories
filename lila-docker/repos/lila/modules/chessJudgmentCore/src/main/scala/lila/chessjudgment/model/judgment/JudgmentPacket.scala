@@ -3123,7 +3123,7 @@ object MoveMeaningClaim:
     val ownedMeaningReady =
       detail.unit match
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
-          pawnBreakOwnedCauseReady(detail, objectSignatures, claimMove, positionFen)
+          pawnBreakOwnedCauseReady(detail, claimMove, positionFen)
         case PositionPlanTechniqueUnit.CounterplayRace =>
           counterplayRaceMeaningReady(detail, objectSignatures, claimMove, positionFen)
         case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" =>
@@ -3209,7 +3209,7 @@ object MoveMeaningClaim:
           moveOwnedSource &&
             pawnBreakEvidenceOwnsClaimMove(evidenceGraph, detail, objectSignatures, claimMove) &&
             pawnMoveFromPawn(positionFen, claimMove) &&
-            pawnBreakOwnsClaimMove(detail, objectSignatures, claimMove) &&
+            pawnBreakOwnsClaimMove(detail, claimMove) &&
             pawnBreakCurrentMoveFunctionalCarrier(detail)
         case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
           moveOwnedSource &&
@@ -3711,7 +3711,7 @@ object MoveMeaningClaim:
     if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute then
       pieceRouteOwnsClaimMove(detail, claimMove)
     else if detail.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute then
-      pawnBreakOwnsClaimMove(detail, objectSignatures, claimMove)
+      pawnBreakOwnsClaimMove(detail, claimMove)
     else if actorMoves.nonEmpty && !actorMoves.contains(normalizedClaimMove) then false
     else
       detail.unit match
@@ -3771,7 +3771,6 @@ object MoveMeaningClaim:
 
   private def pawnBreakOwnsClaimMove(
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String],
       claimMove: String
   ): Boolean =
     val hasTensionCarrier = pawnBreakTensionCarrier(detail)
@@ -3785,7 +3784,7 @@ object MoveMeaningClaim:
         case Some(_) =>
           moveTouchesBreakFile(detail, claimMove)
         case None =>
-          targetTokensTouchMove(objectSignatures, claimMove)
+          false
 
   private def pawnBreakFileOwnsClaimMove(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -3801,13 +3800,12 @@ object MoveMeaningClaim:
 
   private def pawnBreakOwnedCauseReady(
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String],
       claimMove: String,
       positionFen: String
   ): Boolean =
     pawnMoveFromPawn(positionFen, claimMove) &&
       pawnBreakTensionCarrier(detail) &&
-      pawnBreakOwnsClaimMove(detail, objectSignatures, claimMove) &&
+      pawnBreakOwnsClaimMove(detail, claimMove) &&
       pawnBreakTensionPolicyOwnsMove(detail, claimMove)
 
   private def pawnBreakTensionCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
@@ -4024,8 +4022,7 @@ object MoveMeaningClaim:
     else
       directlyOwnsMove ||
         moveTouchesSquares(claimMove, detail.resourceContestSquares) ||
-        moveTouchesFiles(claimMove, detail.resourceContestFiles) ||
-        targetTokensTouchMove(objectSignatures, claimMove)
+        moveTouchesFiles(claimMove, detail.resourceContestFiles)
 
   private def resourceDetailHasConcreteCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.resourceContestSquares.nonEmpty ||
@@ -4218,19 +4215,6 @@ object MoveMeaningClaim:
       files.map(_.toLowerCase.trim).exists(file => moveFiles.contains(file.take(1)))
     }
 
-  private def targetTokensTouchMove(
-      objectSignatures: List[String],
-      claimMove: String
-  ): Boolean =
-    moveEndpoints(claimMove).exists { case (from, to) =>
-      EvidenceObjectBinding.signatureTokens(objectSignatures, "target=").exists { token =>
-        val normalized = token.toLowerCase
-        normalized.contains(from) ||
-          normalized.contains(to) ||
-          (normalized.contains("file:") && Set(from.take(1), to.take(1)).exists(file => normalized.endsWith(s":$file")))
-      }
-    }
-
   private def moveEndpoints(move: String): Option[(String, String)] =
     val normalized = JudgmentSubjectBinding.normalizeMove(move).toLowerCase
     Option.when(normalized.matches("[a-h][1-8][a-h][1-8].*"))(
@@ -4281,7 +4265,6 @@ object MoveMeaningClaim:
           val raceSignatures =
             objectSignatures.filter(signature =>
               moveTokens(List(signature)).contains(normalizedClaimMove) ||
-                targetTokensTouchMove(List(signature), claimMove) ||
                 moveTokens(List(signature)).isEmpty
             )
           if raceSignatures.nonEmpty then raceSignatures
@@ -4290,8 +4273,7 @@ object MoveMeaningClaim:
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
           val pawnSignatures =
             objectSignatures.filter(signature =>
-              moveTokens(List(signature)).contains(normalizedClaimMove) ||
-                targetTokensTouchMove(List(signature), claimMove)
+              moveTokens(List(signature)).contains(normalizedClaimMove)
             )
           if pawnSignatures.nonEmpty then pawnSignatures else noMoveActorSignatures
         case _ =>
