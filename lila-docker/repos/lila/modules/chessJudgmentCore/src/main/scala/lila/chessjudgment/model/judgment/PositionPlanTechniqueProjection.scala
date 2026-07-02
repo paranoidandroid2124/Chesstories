@@ -1547,7 +1547,29 @@ object PositionPlanTechniqueProjection:
                 !structural.subjects.exists(positionPlanTechniquePieceRouteSubject)
             then (structural.subjects ++ structural.transitionRouteSubject).distinct.sorted
             else structural.subjects
+          val subjectLabels = purposeSubjects.map(_.trim.toLowerCase)
+          val breakLabel = subjectLabels.collectFirst { case subject if subject.startsWith("break-file:") => subject.replace(':', '-') }
+          val tensionLabel = subjectLabels.collectFirst {
+            case subject if subject.startsWith("created-tension:") || subject.startsWith("resolved-tension:") =>
+              subject.replace(':', '-')
+          }
+          val structuralLabel =
+            detail.label.orElse(
+              Option.when(breakLabel.nonEmpty)((breakLabel.toList ++ tensionLabel.toList).mkString("-")).orElse(
+                structural.consequenceKinds.collectFirst {
+                  case TransitionConsequenceKind.WeakPawnTargetCreated        => "weak-pawn-target"
+                  case TransitionConsequenceKind.WeakSquareTargetCreated      => "weak-square-target"
+                  case TransitionConsequenceKind.TargetPressureGain           => "target-pressure-gain"
+                  case TransitionConsequenceKind.TargetPressureRelease        => "target-pressure-release"
+                  case TransitionConsequenceKind.LineUnlockGain               => "line-unlock"
+                  case TransitionConsequenceKind.MobilityGain                 => "mobility-gain"
+                  case TransitionConsequenceKind.MobilityLoss                 => "mobility-loss"
+                  case TransitionConsequenceKind.OpponentMobilityRestriction  => "opponent-mobility-restriction"
+                }
+              )
+            )
           detail.copy(
+            label = structuralLabel,
             sourceEvidenceIds = (detail.sourceEvidenceIds ++ structural.sourceIds).distinct.sorted,
             structuralRouteMove = structural.routeMove,
             structuralRouteRole = structural.routeRole,
