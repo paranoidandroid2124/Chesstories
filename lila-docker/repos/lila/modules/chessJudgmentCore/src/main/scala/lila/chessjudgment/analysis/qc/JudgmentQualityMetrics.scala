@@ -616,10 +616,6 @@ final case class RelativeCauseFlowDiagnostic(
     causeSourceSide: RelativeCauseSourceSide,
     causeEventLine: LineNodeRef,
     proofStrategicAxisKeys: List[String],
-    familyMismatchKinds: Set[ClaimFamilyMismatchKind],
-    expectedIdeaFamilies: Set[ChessIdeaFamily],
-    actualIdeaFamilies: Set[ChessIdeaFamily],
-    expectedClaimFamilies: Set[ClaimFamily],
     claimCandidateFamilies: Set[ClaimFamily],
     finalClaimFamilies: Set[ClaimFamily],
     directProofSourceIds: List[String],
@@ -653,53 +649,6 @@ final case class RelativeCauseFlowDiagnostic(
     relativeCauseWithoutObjectSignature: Boolean,
     objectLostBetweenEvidenceAndCause: Boolean,
     objectLostBetweenCauseAndClaim: Boolean
-)
-
-enum ClaimFamilyMismatchKind:
-  case ExpectedTacticalIdeaActualOther
-  case ExpectedStrategicIdeaActualOther
-  case ExpectedPawnStructureIdeaActualOther
-  case ExpectedOpeningIdeaActualOther
-  case ExpectedDefensiveIdeaActualOther
-  case ExpectedMaterialIdeaActualOther
-  case ExpectedConversionIdeaActualOther
-  case TacticalIdeaClaimFamilyMismatch
-  case StrategicSupportUsedAsTacticalProof
-  case TacticalEvidenceAbsorbedByLongTermClaim
-  case MaterialConversionCauseOnlyEvaluationClaim
-  case ExpectedIdeaFamilyMissing
-  case ExpectedClaimFamilyMissing
-
-final case class RelativeCauseFamilyMismatchDiagnostic(
-    causeId: String,
-    comparisonIds: List[String],
-    causeKind: RelativeCauseKind,
-    causeRole: RelativeCauseRole,
-    causeComparisonKind: CandidateComparisonKind,
-    causeSourceSide: RelativeCauseSourceSide,
-    causeEventLine: LineNodeRef,
-    expectedIdeaFamilies: Set[ChessIdeaFamily],
-    actualIdeaFamilies: Set[ChessIdeaFamily],
-    expectedClaimFamilies: Set[ClaimFamily],
-    claimCandidateFamilies: Set[ClaimFamily],
-    finalClaimFamilies: Set[ClaimFamily],
-    ideaIds: List[String],
-    claimCandidateIds: List[String],
-    finalClaimIds: List[String],
-    lifecycleStages: Set[ClaimLifecycleStage],
-    lifecycleTruthStatuses: Set[ClaimLifecycleTruthStatus],
-    supportLayers: Set[EvidenceLayer],
-    directProofLayers: Set[EvidenceLayer],
-    contrastProofLayers: Set[EvidenceLayer],
-    contextSupportLayers: Set[EvidenceLayer],
-    directProofSourceIds: List[String],
-    contrastProofSourceIds: List[String],
-    contextSupportSourceIds: List[String],
-    directProofKinds: List[String],
-    contrastProofKinds: List[String],
-    contextSupportKinds: List[String],
-    proofSourceIds: List[String],
-    mismatchKinds: Set[ClaimFamilyMismatchKind]
 )
 
 final case class ComparisonRelativeCauseDiagnostics(
@@ -1026,344 +975,6 @@ object CandidateComparisonDiagnostic:
           diagnostic.proofDirectKinds.isEmpty &&
           diagnostic.proofContrastKinds.isEmpty &&
           diagnostic.proofContextSupportKinds.isEmpty
-
-  def familyMismatchDiagnostics(packet: EvidenceBackedJudgmentPacket): List[RelativeCauseFamilyMismatchDiagnostic] =
-    relativeCauseDiagnosticRecords(packet)
-      .map(entry => familyMismatchDiagnosticFor(packet, entry))
-      .filter(_.mismatchKinds.nonEmpty)
-
-  private def familyMismatchDiagnosticFor(
-      packet: EvidenceBackedJudgmentPacket,
-      entry: RelativeCauseDiagnosticRecord
-  ): RelativeCauseFamilyMismatchDiagnostic =
-    val ideasById = packet.ideas.map(idea => idea.ref.id -> idea).toMap
-    val claimsById = packet.claims.map(claim => claim.id -> claim).toMap
-    val exactLifecycle =
-      packet.claimLifecycle.filter(diagnostic =>
-        diagnostic.relativeCauses.exists(relativeCauseLifecycleMatches(_, entry))
-      )
-    val evidenceIdeaIds =
-      packet.ideas.filter(_.evidence.exists(_.id == entry.record.ref.id)).map(_.ref.id)
-    val ideaIds =
-      (evidenceIdeaIds ++ exactLifecycle.flatMap(_.ideaIds)).distinct.sorted
-    val actualIdeaFamilies =
-      ideaIds.flatMap(id => ideasById.get(id).map(_.ref.family)).toSet
-    val candidateFamilies =
-      exactLifecycle.map(_.family).toSet
-    val candidateIds =
-      exactLifecycle.map(_.candidateId).distinct.sorted
-    val lifecycleFinalClaimIds =
-      exactLifecycle.flatMap(_.finalClaimId).distinct.sorted
-    val finalClaimIds =
-      if lifecycleFinalClaimIds.nonEmpty then lifecycleFinalClaimIds
-      else
-        packet.claims
-          .filter(claim =>
-            claim.evidence.exists(_.id == entry.record.ref.id) ||
-              claim.ideaRefs.exists(idea => ideaIds.contains(idea.id))
-          )
-          .map(_.id)
-          .distinct
-          .sorted
-    val finalFamilies =
-      finalClaimIds.flatMap(id => claimsById.get(id).map(_.family)).toSet
-    val supportRecords = familyMismatchSupportRecords(packet.evidenceGraph, entry)
-    val depthRecords = familyMismatchDepthRecords(packet.evidenceGraph, entry)
-    val directProofRefs = entry.cause.proof.map(_.directProof.sourceRefs).getOrElse(Nil)
-    val contrastProofRefs = entry.cause.proof.map(_.contrastProof.sourceRefs).getOrElse(Nil)
-    val contextSupportRefs = entry.cause.proof.map(_.contextSupport.sourceRefs).getOrElse(Nil)
-    val directProofKinds = entry.cause.proof.map(_.directProof.kindLabels).getOrElse(Nil)
-    val contrastProofKinds = entry.cause.proof.map(_.contrastProof.kindLabels).getOrElse(Nil)
-    val contextSupportKinds = entry.cause.proof.map(_.contextSupport.kindLabels).getOrElse(Nil)
-    val directProofLayers = proofLayers(packet.evidenceGraph, directProofRefs)
-    val contrastProofLayers = proofLayers(packet.evidenceGraph, contrastProofRefs)
-    val contextSupportLayers = proofLayers(packet.evidenceGraph, contextSupportRefs) ++
-      entry.cause.proof.map(_.contextSupport.contextLayers.toSet).getOrElse(Set.empty)
-    val expectedIdeaFamilies = expectedIdeaFamiliesFor(entry.cause, supportRecords)
-    val expectedClaimFamilies = expectedClaimFamiliesFor(entry.cause, expectedIdeaFamilies)
-    val mismatchKinds =
-      claimFamilyMismatchKinds(
-        expectedIdeaFamilies = expectedIdeaFamilies,
-        actualIdeaFamilies = actualIdeaFamilies,
-        expectedClaimFamilies = expectedClaimFamilies,
-        candidateFamilies = candidateFamilies,
-        finalFamilies = finalFamilies,
-        hasLongTermDepthProof = depthRecords.exists(longTermSupportRecord),
-        hasConcreteTacticalDepthProof = relativeCauseHasTacticalProof(entry.cause)
-      )
-    RelativeCauseFamilyMismatchDiagnostic(
-      causeId = entry.id,
-      comparisonIds = comparisonIdsForCause(packet, entry.cause),
-      causeKind = entry.cause.kind,
-      causeRole = entry.cause.role,
-      causeComparisonKind = entry.cause.comparisonKind,
-      causeSourceSide = entry.cause.sourceSide,
-      causeEventLine = entry.cause.eventLine,
-      expectedIdeaFamilies = expectedIdeaFamilies,
-      actualIdeaFamilies = actualIdeaFamilies,
-      expectedClaimFamilies = expectedClaimFamilies,
-      claimCandidateFamilies = candidateFamilies,
-      finalClaimFamilies = finalFamilies,
-      ideaIds = ideaIds,
-      claimCandidateIds = candidateIds,
-      finalClaimIds = finalClaimIds,
-      lifecycleStages = exactLifecycle.flatMap(_.stages).toSet,
-      lifecycleTruthStatuses = exactLifecycle.flatMap(_.truthStatus).toSet,
-      supportLayers = supportRecords.map(_.ref.layer).toSet,
-      directProofLayers = directProofLayers,
-      contrastProofLayers = contrastProofLayers,
-      contextSupportLayers = contextSupportLayers,
-      directProofSourceIds = directProofRefs.map(_.id).distinct.sorted,
-      contrastProofSourceIds = contrastProofRefs.map(_.id).distinct.sorted,
-      contextSupportSourceIds = contextSupportRefs.map(_.id).distinct.sorted,
-      directProofKinds = directProofKinds.distinct.sorted,
-      contrastProofKinds = contrastProofKinds.distinct.sorted,
-      contextSupportKinds = contextSupportKinds.distinct.sorted,
-      proofSourceIds = supportRecords.map(_.ref.id).distinct.sorted,
-      mismatchKinds = mismatchKinds
-    )
-
-  private def expectedIdeaFamiliesFor(
-      cause: RelativeCauseFact,
-      supportRecords: List[EvidenceRecord]
-  ): Set[ChessIdeaFamily] =
-    val base =
-      ClaimEventCluster.kindForCause(cause.kind) match
-        case Some(ClaimEventClusterKind.TacticalEvent)   => Set(ChessIdeaFamily.Tactical)
-        case Some(ClaimEventClusterKind.DefensiveEvent)  => Set(ChessIdeaFamily.Defensive)
-        case Some(ClaimEventClusterKind.ConversionEvent) => Set(ChessIdeaFamily.Conversion)
-        case Some(ClaimEventClusterKind.MaterialEvent)   => Set(ChessIdeaFamily.Material)
-        case None                                        => Set(ChessIdeaFamily.Strategic)
-    val tactical =
-        Option.when(relativeCauseHasTacticalProof(cause))(ChessIdeaFamily.Tactical)
-    val pawn =
-      Option.when(strategicRelativeCause(cause.kind) && supportRecords.exists(pawnStructureSupportRecord))(ChessIdeaFamily.PawnStructure)
-    val opening =
-      Option.when(strategicRelativeCause(cause.kind) && openingSupportRecordsCanSeedIdea(supportRecords))(ChessIdeaFamily.Opening)
-    val conversion =
-      Option.when(supportRecords.exists(conversionSupportRecord))(ChessIdeaFamily.Conversion)
-    cause.kind match
-      case RelativeCauseKind.MaterialSwing =>
-        Option.when(cause.hasOwnedTypedDepth)(ChessIdeaFamily.Material).toSet ++
-          Option.when(materialSwingHasTacticalProof(cause))(ChessIdeaFamily.Tactical).toSet ++
-          Option.when(cause.hasOwnedTypedDepth && conversion.nonEmpty)(ChessIdeaFamily.Conversion).toSet
-      case RelativeCauseKind.SacrificeCompensation =>
-        Option.when(cause.hasOwnedTypedDepth)(ChessIdeaFamily.Material).toSet ++
-          tactical.toSet ++
-          Option.when(supportRecords.exists(strategicSupportRecord))(ChessIdeaFamily.Strategic).toSet
-      case kind if strategicRelativeCause(kind) =>
-        Option.when(supportRecords.exists(strategicSupportRecord))(ChessIdeaFamily.Strategic).toSet ++ pawn.toSet ++ opening.toSet
-      case RelativeCauseKind.RecaptureRecoveryWindow =>
-        tactical.toSet ++ Option.when(cause.hasOwnedTypedDepth)(conversion).flatten.toSet
-      case _ =>
-        val baseFamily =
-          base.filter(family =>
-            (family != ChessIdeaFamily.Tactical || tactical.nonEmpty) &&
-              (family != ChessIdeaFamily.Material || cause.hasOwnedTypedDepth) &&
-              (family != ChessIdeaFamily.Conversion || cause.hasOwnedTypedDepth) &&
-              (family != ChessIdeaFamily.Defensive || ClaimTruthPolicy.defensiveRelativeCauseCanSeedIdea(cause))
-          )
-        baseFamily ++
-          Option.when(
-            materialConversionCause(cause.kind) &&
-              cause.hasOwnedTypedDepth &&
-              conversion.nonEmpty
-          )(ChessIdeaFamily.Conversion).toSet
-
-  private def expectedClaimFamiliesFor(
-      cause: RelativeCauseFact,
-      expectedIdeaFamilies: Set[ChessIdeaFamily]
-  ): Set[ClaimFamily] =
-    val mapped = expectedIdeaFamilies.map(expectedClaimFamilyForIdea)
-    val plan =
-      Option.when(
-        cause.kind == RelativeCauseKind.PlanImprovement ||
-          cause.kind == RelativeCauseKind.PlanContradiction
-      )(ClaimFamily.Plan)
-    mapped ++ plan.toSet
-
-  private def expectedClaimFamilyForIdea(family: ChessIdeaFamily): ClaimFamily =
-    family match
-      case ChessIdeaFamily.Tactical      => ClaimFamily.Tactical
-      case ChessIdeaFamily.Strategic     => ClaimFamily.Strategic
-      case ChessIdeaFamily.PawnStructure => ClaimFamily.PawnStructure
-      case ChessIdeaFamily.Opening       => ClaimFamily.Opening
-      case ChessIdeaFamily.Defensive     => ClaimFamily.Defensive
-      case ChessIdeaFamily.Conversion    => ClaimFamily.Conversion
-      case ChessIdeaFamily.Material      => ClaimFamily.Material
-      case ChessIdeaFamily.Evaluation    => ClaimFamily.Evaluation
-
-  private def claimFamilyMismatchKinds(
-      expectedIdeaFamilies: Set[ChessIdeaFamily],
-      actualIdeaFamilies: Set[ChessIdeaFamily],
-      expectedClaimFamilies: Set[ClaimFamily],
-      candidateFamilies: Set[ClaimFamily],
-      finalFamilies: Set[ClaimFamily],
-      hasLongTermDepthProof: Boolean,
-      hasConcreteTacticalDepthProof: Boolean
-  ): Set[ClaimFamilyMismatchKind] =
-    val actualClaimFamilies = candidateFamilies ++ finalFamilies
-    val longTermClaims = actualClaimFamilies.intersect(Set(ClaimFamily.Strategic, ClaimFamily.PawnStructure, ClaimFamily.Opening, ClaimFamily.Plan))
-    val finalFamiliesOnlyEvaluation = finalFamilies.nonEmpty && finalFamilies.subsetOf(Set(ClaimFamily.Evaluation))
-    Set(
-      Option.when(
-        expectedIdeaFamilies.contains(ChessIdeaFamily.Tactical) &&
-          actualIdeaFamilies.nonEmpty &&
-          !actualIdeaFamilies.contains(ChessIdeaFamily.Tactical)
-      )(ClaimFamilyMismatchKind.ExpectedTacticalIdeaActualOther),
-      Option.when(
-        expectedIdeaFamilies.contains(ChessIdeaFamily.Strategic) &&
-          actualIdeaFamilies.nonEmpty &&
-          !actualIdeaFamilies.contains(ChessIdeaFamily.Strategic)
-      )(ClaimFamilyMismatchKind.ExpectedStrategicIdeaActualOther),
-      Option.when(
-        expectedIdeaFamilies.contains(ChessIdeaFamily.PawnStructure) &&
-          actualIdeaFamilies.nonEmpty &&
-          !actualIdeaFamilies.contains(ChessIdeaFamily.PawnStructure)
-      )(ClaimFamilyMismatchKind.ExpectedPawnStructureIdeaActualOther),
-      Option.when(
-        expectedIdeaFamilies.contains(ChessIdeaFamily.Opening) &&
-          actualIdeaFamilies.nonEmpty &&
-          !actualIdeaFamilies.contains(ChessIdeaFamily.Opening)
-      )(ClaimFamilyMismatchKind.ExpectedOpeningIdeaActualOther),
-      Option.when(
-        expectedIdeaFamilies.contains(ChessIdeaFamily.Defensive) &&
-          actualIdeaFamilies.nonEmpty &&
-          !actualIdeaFamilies.contains(ChessIdeaFamily.Defensive)
-      )(ClaimFamilyMismatchKind.ExpectedDefensiveIdeaActualOther),
-      Option.when(
-        expectedIdeaFamilies.contains(ChessIdeaFamily.Material) &&
-          actualIdeaFamilies.nonEmpty &&
-          !actualIdeaFamilies.contains(ChessIdeaFamily.Material)
-      )(ClaimFamilyMismatchKind.ExpectedMaterialIdeaActualOther),
-      Option.when(
-        expectedIdeaFamilies.contains(ChessIdeaFamily.Conversion) &&
-          actualIdeaFamilies.nonEmpty &&
-          !actualIdeaFamilies.contains(ChessIdeaFamily.Conversion)
-      )(ClaimFamilyMismatchKind.ExpectedConversionIdeaActualOther),
-      Option.when(
-        actualIdeaFamilies.contains(ChessIdeaFamily.Tactical) &&
-          actualClaimFamilies.nonEmpty &&
-          !actualClaimFamilies.contains(ClaimFamily.Tactical)
-      )(ClaimFamilyMismatchKind.TacticalIdeaClaimFamilyMismatch),
-      Option.when(
-        actualClaimFamilies.contains(ClaimFamily.Tactical) &&
-          hasLongTermDepthProof &&
-          !hasConcreteTacticalDepthProof
-      )(ClaimFamilyMismatchKind.StrategicSupportUsedAsTacticalProof),
-      Option.when(
-        expectedIdeaFamilies.contains(ChessIdeaFamily.Tactical) &&
-          longTermClaims.nonEmpty &&
-          !actualClaimFamilies.contains(ClaimFamily.Tactical)
-      )(ClaimFamilyMismatchKind.TacticalEvidenceAbsorbedByLongTermClaim),
-      Option.when(
-        expectedClaimFamilies.exists(family => family == ClaimFamily.Material || family == ClaimFamily.Conversion) &&
-          finalFamiliesOnlyEvaluation
-      )(ClaimFamilyMismatchKind.MaterialConversionCauseOnlyEvaluationClaim),
-      Option.when(
-        actualIdeaFamilies.nonEmpty &&
-          expectedIdeaFamilies.intersect(actualIdeaFamilies).isEmpty
-      )(ClaimFamilyMismatchKind.ExpectedIdeaFamilyMissing),
-      Option.when(
-        actualClaimFamilies.nonEmpty &&
-          expectedClaimFamilies.intersect(actualClaimFamilies).isEmpty
-      )(ClaimFamilyMismatchKind.ExpectedClaimFamilyMissing)
-    ).flatten
-
-  private def familyMismatchSupportRecords(
-      graph: TypedEvidenceGraph,
-      entry: RelativeCauseDiagnosticRecord
-  ): List[EvidenceRecord] =
-    val proofRefs =
-      entry.cause.proof.toList.flatMap(proof =>
-        proof.directProof.sourceRefs ++ proof.contrastProof.sourceRefs ++ proof.contextSupport.sourceRefs
-      )
-    val comparisonParents = entry.record.parents.filter(ref =>
-      graph.byId.get(ref.id).exists {
-        case EvidenceRecord(_, CandidateComparisonEvidence(_), _) => true
-        case _                                                    => false
-      }
-    )
-    (comparisonParents ++ entry.cause.supportEvidence ++ proofRefs)
-      .distinctBy(_.id)
-      .flatMap(ref => graph.byId.get(ref.id))
-
-  private def familyMismatchDepthRecords(
-      graph: TypedEvidenceGraph,
-      entry: RelativeCauseDiagnosticRecord
-  ): List[EvidenceRecord] =
-    val depthProofRefs =
-      entry.cause.proof.toList.flatMap(proof => proof.directProof.sourceRefs ++ proof.contrastProof.sourceRefs)
-    depthProofRefs
-      .distinctBy(_.id)
-      .flatMap(ref => graph.byId.get(ref.id))
-
-  private def comparisonIdsForCause(
-      packet: EvidenceBackedJudgmentPacket,
-      cause: RelativeCauseFact
-  ): List[String] =
-    packet.evidenceGraph.records.collect {
-      case EvidenceRecord(ref, CandidateComparisonEvidence(fact), _) if causeMatchesComparison(cause, fact) =>
-        ref.id
-    }.distinct.sorted
-
-  private def proofLayers(
-      graph: TypedEvidenceGraph,
-      refs: List[EvidenceRef]
-  ): Set[EvidenceLayer] =
-    refs.flatMap(ref => graph.byId.get(ref.id).map(_.ref.layer)).toSet
-
-  private def relativeCauseHasTacticalProof(cause: RelativeCauseFact): Boolean =
-    cause.hasOwnedTacticalProof
-
-  private def materialSwingHasTacticalProof(cause: RelativeCauseFact): Boolean =
-    val engineBackedMaterialSwing =
-      cause.winPercentLossForMover >= JudgmentThresholds.INACCURACY_WP ||
-        cause.candidateWinPercentDeltaForMover >= JudgmentThresholds.PLAYABLE_LOSS_WP
-    engineBackedMaterialSwing && relativeCauseHasTacticalProof(cause)
-
-  private def materialConversionCause(kind: RelativeCauseKind): Boolean =
-    kind == RelativeCauseKind.RecaptureRecoveryWindow || kind == RelativeCauseKind.MaterialSwing
-
-  private def longTermSupportRecord(record: EvidenceRecord): Boolean =
-    record.payload match
-      case payload: StrategicMechanismEvidence =>
-        payload.canSupportStrategicCause || payload.canAnchorPlanIdea || payload.canAnchorOpeningIdea
-      case _ =>
-        false
-
-  private def strategicRelativeCause(kind: RelativeCauseKind): Boolean =
-    ClaimEventCluster.kindForCause(kind).isEmpty
-
-  private def pawnStructureSupportRecord(record: EvidenceRecord): Boolean =
-    record.payload match
-      case payload: StrategicMechanismEvidence =>
-        payload.canAnchorPawnStructureIdea
-      case _ =>
-        false
-
-  private def strategicSupportRecord(record: EvidenceRecord): Boolean =
-    record.payload match
-      case payload: StrategicMechanismEvidence =>
-        payload.canSupportStrategicCause || payload.canAnchorPlanIdea
-      case _ =>
-        false
-
-  private def openingSupportRecordsCanSeedIdea(records: List[EvidenceRecord]): Boolean =
-    StrategicMechanismEvidence.openingClaimSupported(records)
-
-  private def conversionSupportRecord(record: EvidenceRecord): Boolean =
-    record.payload match
-      case payload: LineFactEvidence =>
-        payload.hasConversionConsequence
-      case payload: StructuralDeltaEvidence =>
-        payload.consequences.exists(_.kind == TransitionConsequenceKind.PromotionPressureGain)
-      case payload: RelationFactEvidence =>
-        payload.kind == RelationFactKind.BadPieceLiquidation
-      case SinglePositionEvidence(assessment) =>
-        assessment.simplifyBias.shouldSimplify || assessment.gamePhase.isEndgame
-      case _ =>
-        false
 
   def fromPacket(packet: EvidenceBackedJudgmentPacket): List[CandidateComparisonDiagnostic] =
     fromPacket(packet, JudgmentPacketValidator.validate(packet))
@@ -2248,7 +1859,6 @@ object CandidateComparisonDiagnostic:
             ClaimLifecycleStage.ArbitrationSuppressed
           )
         )
-      val familyMismatch = familyMismatchDiagnosticFor(packet, entry)
       val proof = cause.proof.getOrElse(RelativeCauseProof())
       val strategicCauseWithoutContrast =
         cause.strategicCauseKind && !cause.hasOwnedAdmissibleLongTermProof
@@ -2278,12 +1888,8 @@ object CandidateComparisonDiagnostic:
         causeSourceSide = cause.sourceSide,
         causeEventLine = cause.eventLine,
         proofStrategicAxisKeys = cause.strategicProofIdentity.axisKeys,
-        familyMismatchKinds = familyMismatch.mismatchKinds,
-        expectedIdeaFamilies = familyMismatch.expectedIdeaFamilies,
-        actualIdeaFamilies = familyMismatch.actualIdeaFamilies,
-        expectedClaimFamilies = familyMismatch.expectedClaimFamilies,
-        claimCandidateFamilies = familyMismatch.claimCandidateFamilies,
-        finalClaimFamilies = familyMismatch.finalClaimFamilies,
+        claimCandidateFamilies = lifecycleCandidates.map(_.family).toSet,
+        finalClaimFamilies = claims.map(_.family).toSet,
         directProofSourceIds = proof.directProof.sourceRefs.map(_.id).distinct.sorted,
         contrastProofSourceIds = proof.contrastProof.sourceRefs.map(_.id).distinct.sorted,
         contextSupportSourceIds = proof.contextSupport.sourceRefs.map(_.id).distinct.sorted,
@@ -4000,9 +3606,6 @@ final case class SemanticCoverageMetrics(
     claimLifecycleTruthCounts: Map[ClaimLifecycleTruthStatus, Int],
     claimLifecycleRelativeCauseIdeaDroppedIds: List[String],
     claimLifecycleRelativeCauseDroppedByStage: Map[ClaimLifecycleStage, List[String]],
-    relativeCauseFamilyMismatchDiagnostics: List[RelativeCauseFamilyMismatchDiagnostic],
-    relativeCauseFamilyMismatchKindCounts: Map[ClaimFamilyMismatchKind, Int],
-    hasRelativeCauseFamilyMismatch: Boolean,
     claimSupportClusters: Int,
     clusteredAnchorClaims: Int,
     clusteredSupportingClaims: Int,
@@ -4089,7 +3692,6 @@ object SemanticCoverageMetrics:
     val primaryPlayedComparisonRecords = primaryPlayedCandidateComparisonRecords(packet)
     val playedCauseRecords = playedRelativeCauseRecords(packet)
     val comparisonDiagnostics = CandidateComparisonDiagnostic.fromPacket(packet)
-    val familyMismatchDiagnostics = CandidateComparisonDiagnostic.familyMismatchDiagnostics(packet)
     val clusteredEventClaimIds = packet.claimEventClusters.flatMap(_.memberClaimIds).toSet
     val unclusteredConcreteClaims =
       packet.claims.filter(claim => claim.family.isEvent && !clusteredEventClaimIds.contains(claim.id))
@@ -4199,10 +3801,6 @@ object SemanticCoverageMetrics:
       claimLifecycleTruthCounts = claimLifecycleTruthCounts(packet.claimLifecycle),
       claimLifecycleRelativeCauseIdeaDroppedIds = claimLifecycleRelativeCauseIdeaDroppedIds(packet.claimLifecycle),
       claimLifecycleRelativeCauseDroppedByStage = claimLifecycleRelativeCauseDroppedByStage(packet.claimLifecycle),
-      relativeCauseFamilyMismatchDiagnostics = familyMismatchDiagnostics,
-      relativeCauseFamilyMismatchKindCounts =
-        familyMismatchDiagnostics.flatMap(_.mismatchKinds).groupMapReduce(identity)(_ => 1)(_ + _),
-      hasRelativeCauseFamilyMismatch = familyMismatchDiagnostics.nonEmpty,
       claimSupportClusters = packet.claimSupportClusters.size,
       clusteredAnchorClaims = packet.claimSupportClusters.flatMap(_.anchorClaimIds).distinct.size,
       clusteredSupportingClaims = packet.claimSupportClusters.flatMap(_.supportingClaimIds).distinct.size,

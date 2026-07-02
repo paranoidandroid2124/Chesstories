@@ -697,11 +697,6 @@ object MoveReviewPhase3AuditRunner:
         semantic.claimLifecycleRelativeCauseDroppedByStage
       ),
       "claimLifecycleDiagnostics" -> claimLifecycleDiagnosticsJson(semantic.claimLifecycleDiagnostics),
-      "hasRelativeCauseFamilyMismatch" -> semantic.hasRelativeCauseFamilyMismatch,
-      "relativeCauseFamilyMismatchKindCounts" -> claimLifecycleCountsJson(semantic.relativeCauseFamilyMismatchKindCounts),
-      "relativeCauseFamilyMismatchDiagnostics" -> relativeCauseFamilyMismatchDiagnosticsJson(
-        semantic.relativeCauseFamilyMismatchDiagnostics
-      ),
       "claimSupportClusters" -> semantic.claimSupportClusters,
       "clusteredAnchorClaims" -> semantic.clusteredAnchorClaims,
       "clusteredSupportingClaims" -> semantic.clusteredSupportingClaims,
@@ -1054,14 +1049,7 @@ object MoveReviewPhase3AuditRunner:
       "contextTacticalOutrankingDiagnostics" -> contextTacticalOutrankingDiagnosticsJson(
         semantic.contextTacticalOutrankingDiagnostics
       ),
-      "relativeCauseQualitySummary" -> (relativeCauseSummary
-        ++ Json.obj(
-          "hasRelativeCauseFamilyMismatch" -> semantic.hasRelativeCauseFamilyMismatch,
-          "relativeCauseFamilyMismatchKindCounts" -> claimLifecycleCountsJson(semantic.relativeCauseFamilyMismatchKindCounts),
-          "relativeCauseFamilyMismatchDetails" -> relativeCauseFamilyMismatchCompactJson(
-            semantic.relativeCauseFamilyMismatchDiagnostics
-          )
-        ))
+      "relativeCauseQualitySummary" -> relativeCauseSummary
     )
 
   private def contextTacticalOutrankingDiagnosticsJson(
@@ -1197,72 +1185,6 @@ object MoveReviewPhase3AuditRunner:
           "mechanismEvidenceId" -> entry.mechanismEvidenceId,
           "signalSourceEvidenceId" -> entry.signalSourceEvidenceId,
           "signalSourceLayer" -> entry.signalSourceLayer.toString
-        )
-      )
-    )
-
-  private def relativeCauseFamilyMismatchDiagnosticsJson(
-      diagnostics: List[RelativeCauseFamilyMismatchDiagnostic]
-  ): JsArray =
-    JsArray(
-      diagnostics.map(diagnostic =>
-        Json.obj(
-          "causeId" -> diagnostic.causeId,
-          "comparisonIds" -> diagnostic.comparisonIds,
-          "causeKind" -> diagnostic.causeKind.toString,
-          "causeRole" -> diagnostic.causeRole.toString,
-          "causeComparisonKind" -> diagnostic.causeComparisonKind.toString,
-          "causeSourceSide" -> diagnostic.causeSourceSide.toString,
-          "causeEventLine" -> lineRefSummary(diagnostic.causeEventLine),
-          "expectedIdeaFamilies" -> diagnostic.expectedIdeaFamilies.map(_.toString).toList.sorted,
-          "actualIdeaFamilies" -> diagnostic.actualIdeaFamilies.map(_.toString).toList.sorted,
-          "expectedClaimFamilies" -> diagnostic.expectedClaimFamilies.map(_.toString).toList.sorted,
-          "claimCandidateFamilies" -> diagnostic.claimCandidateFamilies.map(_.toString).toList.sorted,
-          "finalClaimFamilies" -> diagnostic.finalClaimFamilies.map(_.toString).toList.sorted,
-          "ideaIds" -> diagnostic.ideaIds,
-          "claimCandidateIds" -> diagnostic.claimCandidateIds,
-          "finalClaimIds" -> diagnostic.finalClaimIds,
-          "lifecycleStages" -> diagnostic.lifecycleStages.map(_.toString).toList.sorted,
-          "lifecycleTruthStatuses" -> diagnostic.lifecycleTruthStatuses.map(_.toString).toList.sorted,
-          "supportLayers" -> diagnostic.supportLayers.map(_.toString).toList.sorted,
-          "directProofLayers" -> diagnostic.directProofLayers.map(_.toString).toList.sorted,
-          "contrastProofLayers" -> diagnostic.contrastProofLayers.map(_.toString).toList.sorted,
-          "contextSupportLayers" -> diagnostic.contextSupportLayers.map(_.toString).toList.sorted,
-          "directProofSourceIds" -> diagnostic.directProofSourceIds,
-          "contrastProofSourceIds" -> diagnostic.contrastProofSourceIds,
-          "contextSupportSourceIds" -> diagnostic.contextSupportSourceIds,
-          "directProofKinds" -> diagnostic.directProofKinds,
-          "contrastProofKinds" -> diagnostic.contrastProofKinds,
-          "contextSupportKinds" -> diagnostic.contextSupportKinds,
-          "proofSourceIds" -> diagnostic.proofSourceIds,
-          "mismatchKinds" -> diagnostic.mismatchKinds.map(_.toString).toList.sorted
-        )
-      )
-    )
-
-  private def relativeCauseFamilyMismatchCompactJson(
-      diagnostics: List[RelativeCauseFamilyMismatchDiagnostic]
-  ): JsArray =
-    JsArray(
-      diagnostics.map(diagnostic =>
-        Json.obj(
-          "causeId" -> diagnostic.causeId,
-          "comparisonIds" -> diagnostic.comparisonIds,
-          "mismatchKinds" -> diagnostic.mismatchKinds.map(_.toString).toList.sorted,
-          "expectedIdeaFamilies" -> diagnostic.expectedIdeaFamilies.map(_.toString).toList.sorted,
-          "actualIdeaFamilies" -> diagnostic.actualIdeaFamilies.map(_.toString).toList.sorted,
-          "expectedClaimFamilies" -> diagnostic.expectedClaimFamilies.map(_.toString).toList.sorted,
-          "claimCandidateFamilies" -> diagnostic.claimCandidateFamilies.map(_.toString).toList.sorted,
-          "finalClaimFamilies" -> diagnostic.finalClaimFamilies.map(_.toString).toList.sorted,
-          "directProofSourceIds" -> diagnostic.directProofSourceIds,
-          "contrastProofSourceIds" -> diagnostic.contrastProofSourceIds,
-          "contextSupportSourceIds" -> diagnostic.contextSupportSourceIds,
-          "directProofKinds" -> diagnostic.directProofKinds,
-          "contrastProofKinds" -> diagnostic.contrastProofKinds,
-          "contextSupportKinds" -> diagnostic.contextSupportKinds,
-          "claimCandidateIds" -> diagnostic.claimCandidateIds,
-          "finalClaimIds" -> diagnostic.finalClaimIds,
-          "lifecycleStages" -> diagnostic.lifecycleStages.map(_.toString).toList.sorted
         )
       )
     )
@@ -1840,10 +1762,6 @@ object MoveReviewPhase3AuditRunner:
       "causeSourceSide" -> flow.causeSourceSide.toString,
       "causeEventLine" -> lineRefSummary(flow.causeEventLine),
       "proofStrategicAxisKeys" -> flow.proofStrategicAxisKeys,
-      "familyMismatchKinds" -> flow.familyMismatchKinds.map(_.toString).toList.sorted,
-      "expectedIdeaFamilies" -> flow.expectedIdeaFamilies.map(_.toString).toList.sorted,
-      "actualIdeaFamilies" -> flow.actualIdeaFamilies.map(_.toString).toList.sorted,
-      "expectedClaimFamilies" -> flow.expectedClaimFamilies.map(_.toString).toList.sorted,
       "claimCandidateFamilies" -> flow.claimCandidateFamilies.map(_.toString).toList.sorted,
       "finalClaimFamilies" -> flow.finalClaimFamilies.map(_.toString).toList.sorted,
       "directProofSourceIds" -> flow.directProofSourceIds,
