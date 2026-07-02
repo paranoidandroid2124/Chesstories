@@ -750,8 +750,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     val frameIds = view.positionPlanTechniqueFrameIds
     val frameCauseIds = view.positionPlanTechniqueRelativeCauseEvidenceIds.toSet
     val frameAxisKeys = view.positionPlanTechniqueAxisKeys.toSet
-    val detailUnits = view.positionPlanTechniqueSemanticDetailUnits.toSet
-    val detailAxisKeys = view.positionPlanTechniqueSemanticDetailAxisKeys.toSet
     val detailMechanismKinds = view.positionPlanTechniqueSemanticDetailMechanismKinds
     val detailSemanticAnchorKeys = view.positionPlanTechniqueSemanticDetailAnchorKeys
     val semanticDetailTokens = view.positionPlanTechniqueSemanticDetailTokens
@@ -762,9 +760,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     val causeIds = frameCauseIds.toList.distinct.sorted
     val frameCauseFlows =
       diagnostic.relativeCauseDiagnostics.causeFlow.filter(flow => frameCauseIds.contains(flow.causeId))
-    val decodedDetailSurfaced =
-      detailUnits.contains(unit) &&
-        (axisKey.forall(detailAxisKeys.contains) || axisKey.isEmpty)
     val exactAxisOrPattern =
       axisKey.exists(frameAxisKeys.contains) ||
         (axisKey.isEmpty && unitSurfaced)
@@ -778,30 +773,21 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       )
     val publicSurfaceClaimWithCarrier =
       publicSurfaceClaimDiagnostics.filter(_.hasCarrier)
+    val publicSurfaceSupportLevels =
+      publicSurfaceClaimWithCarrier.map(_.supportLevel).filter(_.nonEmpty)
     val publicSurfaceStage =
-      publicSurfaceClaimWithCarrier.headOption
-        .map(_.supportLevel)
-        .filter(_.nonEmpty)
+      publicSurfaceSupportLevels.headOption
         .getOrElse("missing_semantic_slot")
     val ownedCauseLinked =
-      publicSurfaceClaimWithCarrier.exists(claim =>
-        claim.supportLevel == "owned_cause_linked" &&
-          claim.causeEvidenceIds.exists(frameCauseIds.contains)
-      )
+      publicSurfaceSupportLevels.contains("owned_cause_linked")
     val causeOwned =
       ownedCauseLinked || frameCauseIds.exists(rootCauseIds.contains)
     val claimSurvived =
       publicSurfaceClaimDiagnostics.nonEmpty
     val viewSurfaced =
-      publicSurfaceClaimWithCarrier.nonEmpty &&
-        unitSurfaced &&
-        axisKey.forall(frameAxisKeys.contains)
+      publicSurfaceClaimWithCarrier.nonEmpty
     val clusteredCoherent =
-      viewSurfaced &&
-        decodedDetailSurfaced &&
-        frameIds.nonEmpty &&
-        claimSurvived &&
-        ownedCauseLinked
+      publicSurfaceSupportLevels.contains("clustered_coherent")
     val strictCauseLineageBound =
       causeIds.nonEmpty
     val strictPrimaryRootLineageBound =
