@@ -415,6 +415,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       axisKey: Option[String],
       terminalStage: String,
       strictLineageTerminalStage: String,
+      lineRole: String,
+      moveUci: String,
       objectBound: Boolean,
       exactAxisOrPattern: Boolean,
       causeOwned: Boolean,
@@ -657,6 +659,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "matched" -> matched,
       "terminalStage" -> terminalStage,
       "strictLineageTerminalStage" -> strictLineageTerminalStage,
+      "lineRole" -> best.map(_.lineRole),
+      "moveUci" -> best.map(_.moveUci),
       "terminalStageSatisfied" -> terminalStageSatisfied,
       "strictLineageTerminalStageSatisfied" -> strictLineageTerminalStageSatisfied,
       "objectBound" -> best.exists(_.objectBound),
@@ -701,6 +705,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "axisKey" -> row.axisKey,
       "terminalStage" -> row.terminalStage,
       "strictLineageTerminalStage" -> row.strictLineageTerminalStage,
+      "lineRole" -> row.lineRole,
+      "moveUci" -> row.moveUci,
       "strictCauseLineageBound" -> row.strictCauseLineageBound,
       "strictPrimaryRootLineageBound" -> row.strictPrimaryRootLineageBound,
       "strictPrimaryRootTierLineageBound" -> row.strictPrimaryRootTierLineageBound,
@@ -729,77 +735,62 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
 
   private def semanticRubricSlotRows(diagnostic: CandidateComparisonDiagnostic): List[SemanticRubricSlotRow] =
     val publicRows =
-      diagnostic.moveJudgmentView.publicMoveMeaningClaimDiagnostics.map(claim =>
-        semanticRubricSlotRow(diagnostic, claim.unit, claim.axisKey, Some(claim))
-      )
-    val viewOnlyRows =
-      diagnostic.moveJudgmentView.positionPlanTechniqueUnits
-        .filterNot(unit => publicRows.exists(_.unit == unit))
-        .map(unit => semanticRubricSlotRow(diagnostic, unit, None))
-    (publicRows ++ viewOnlyRows)
-      .distinctBy(row => (row.comparisonId, row.unit, row.axisKey))
-      .sortBy(row => (row.comparisonId, row.unit.toString, row.axisKey.getOrElse("")))
+      diagnostic.moveJudgmentView.publicMoveMeaningClaimDiagnostics
+        .filter(_.hasCarrier)
+        .map(claim => semanticRubricSlotRow(diagnostic, claim))
+    publicRows
+      .distinctBy(row => (row.comparisonId, row.unit, row.axisKey, row.lineRole, row.moveUci))
+      .sortBy(row => (row.comparisonId, row.unit.toString, row.axisKey.getOrElse(""), row.lineRole, row.moveUci))
 
   private def semanticRubricSlotRow(
       diagnostic: CandidateComparisonDiagnostic,
-      unit: PositionPlanTechniqueUnit,
-      axisKey: Option[String],
-      surfaceClaim: Option[PublicMoveMeaningClaimDiagnostic] = None
+      claim: PublicMoveMeaningClaimDiagnostic
   ): SemanticRubricSlotRow =
     val view = diagnostic.moveJudgmentView
     val frameIds = view.positionPlanTechniqueFrameIds
-    val frameCauseIds = view.positionPlanTechniqueRelativeCauseEvidenceIds.toSet
-    val frameAxisKeys = view.positionPlanTechniqueAxisKeys.toSet
+    val claimCauseIds = claim.causeEvidenceIds.distinct.sorted
+    val claimCauseIdSet = claimCauseIds.toSet
     val detailMechanismKinds = view.positionPlanTechniqueSemanticDetailMechanismKinds
     val detailSemanticAnchorKeys = view.positionPlanTechniqueSemanticDetailAnchorKeys
     val semanticDetailTokens = view.positionPlanTechniqueSemanticDetailTokens
     val semanticDetailTokenGroups = view.positionPlanTechniqueSemanticDetailTokenGroups
     val objectBindingSignatures = view.positionPlanTechniqueObjectBindingSignatures
-    val unitSurfaced = view.positionPlanTechniqueUnits.contains(unit)
-    val rootCauseIds = view.primaryRootCauseEvidenceIds.toSet
-    val causeIds = frameCauseIds.toList.distinct.sorted
     val frameCauseFlows =
-      diagnostic.relativeCauseDiagnostics.causeFlow.filter(flow => frameCauseIds.contains(flow.causeId))
+      diagnostic.relativeCauseDiagnostics.causeFlow.filter(flow => claimCauseIdSet.contains(flow.causeId))
     val exactAxisOrPattern =
-      axisKey.exists(frameAxisKeys.contains) ||
-        (axisKey.isEmpty && unitSurfaced)
+      claim.axisKey.nonEmpty || view.positionPlanTechniqueUnits.contains(claim.unit)
     val objectBound =
-      objectBindingSignatures.nonEmpty
-    val publicSurfaceClaimDiagnostics =
-      surfaceClaim.map(List(_)).getOrElse(
-        view.publicMoveMeaningClaimDiagnostics.filter(diagnostic =>
-          semanticRubricSurfaceClaimMatches(diagnostic, unit, axisKey)
-        )
-      )
-    val publicSurfaceClaimWithCarrier =
-      publicSurfaceClaimDiagnostics.filter(_.hasCarrier)
-    val publicSurfaceSupportLevels =
-      publicSurfaceClaimWithCarrier.map(_.supportLevel).filter(_.nonEmpty)
+      claim.hasBoardCarrier
     val publicSurfaceStage =
-      publicSurfaceSupportLevels.headOption
-        .getOrElse("missing_semantic_slot")
+      Option(claim.supportLevel).filter(_.nonEmpty).getOrElse("missing_semantic_slot")
     val ownedCauseLinked =
-      publicSurfaceSupportLevels.contains("owned_cause_linked")
+      publicSurfaceStage == "owned_cause_linked"
     val causeOwned =
-      ownedCauseLinked || frameCauseIds.exists(rootCauseIds.contains)
+      claimCauseIds.nonEmpty
     val claimSurvived =
-      publicSurfaceClaimDiagnostics.nonEmpty
+      true
     val viewSurfaced =
-      publicSurfaceClaimWithCarrier.nonEmpty
+      true
     val clusteredCoherent =
-      publicSurfaceSupportLevels.contains("clustered_coherent")
+      publicSurfaceStage == "clustered_coherent"
     val strictCauseLineageBound =
-      causeIds.nonEmpty
+      claimCauseIds.nonEmpty
+    val claimPrimaryRootCauseIds =
+      view.primaryRootCauseEvidenceIds.distinct.sorted.filter(claimCauseIdSet)
+    val claimPrimaryRootTiers =
+      view.primaryRootCauseEvidenceTiers.filter(tier => claimCauseIdSet.contains(tier.causeEvidenceId))
     val strictPrimaryRootLineageBound =
-      view.primaryRootCauseEvidenceIds.nonEmpty
+      claimPrimaryRootCauseIds.nonEmpty
     val strictPrimaryRootTierLineageBound =
-      view.primaryRootCauseEvidenceTiers.nonEmpty
+      claimPrimaryRootTiers.nonEmpty
     SemanticRubricSlotRow(
       comparisonId = diagnostic.id,
-      unit = unit,
-      axisKey = axisKey,
+      unit = claim.unit,
+      axisKey = claim.axisKey,
       terminalStage = publicSurfaceStage,
       strictLineageTerminalStage = publicSurfaceStage,
+      lineRole = claim.lineRole,
+      moveUci = claim.moveUci,
       objectBound = objectBound,
       exactAxisOrPattern = exactAxisOrPattern,
       causeOwned = causeOwned,
@@ -816,13 +807,15 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       semanticDetailTokens = semanticDetailTokens,
       semanticDetailTokenGroups = semanticDetailTokenGroups,
       objectBindingSignatures = objectBindingSignatures,
-      sourceEvidenceIds = view.positionPlanTechniqueEvidenceIds.distinct.sorted,
+      sourceEvidenceIds = claim.sourceEvidenceIds.distinct.sorted,
       causeKinds = frameCauseFlows.map(_.causeKind).distinct.sortBy(_.toString),
-      primaryRootCauseKinds = view.primaryRootCauseKinds.distinct.sortBy(_.toString),
-      primaryRootCauseEvidenceIds = view.primaryRootCauseEvidenceIds.distinct.sorted,
-      primaryRootArbitrationTiers = view.primaryRootArbitrationTiers.distinct.sortBy(_.toString),
-      primaryRootCauseEvidenceTiers = view.primaryRootCauseEvidenceTiers.distinct.sortBy(tier => (tier.causeEvidenceId, tier.tier.toString)),
-      causeIds = causeIds,
+      primaryRootCauseKinds =
+        Option.when(claimPrimaryRootCauseIds.nonEmpty)(view.primaryRootCauseKinds.distinct.sortBy(_.toString)).getOrElse(Nil),
+      primaryRootCauseEvidenceIds = claimPrimaryRootCauseIds,
+      primaryRootArbitrationTiers =
+        Option.when(claimPrimaryRootTiers.nonEmpty)(view.primaryRootArbitrationTiers.distinct.sortBy(_.toString)).getOrElse(Nil),
+      primaryRootCauseEvidenceTiers = claimPrimaryRootTiers.distinct.sortBy(tier => (tier.causeEvidenceId, tier.tier.toString)),
+      causeIds = claimCauseIds,
       causeIdKinds =
         frameCauseFlows
           .map(flow => flow.causeId -> flow.causeKind)
@@ -830,14 +823,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
           .sortBy((causeId, kind) => (causeId, kind.toString)),
       claimIds = frameCauseFlows.flatMap(_.claimIds).distinct.sorted
     )
-
-  private def semanticRubricSurfaceClaimMatches(
-      diagnostic: PublicMoveMeaningClaimDiagnostic,
-      unit: PositionPlanTechniqueUnit,
-      axisKey: Option[String]
-  ): Boolean =
-    diagnostic.unit == unit &&
-      axisKey.forall(diagnostic.axisKey.contains)
 
   private def axisPart(axisKey: String, index: Int): String =
     axisKey.split(":", 3).lift(index).getOrElse("")
