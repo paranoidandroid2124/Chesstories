@@ -141,6 +141,8 @@ final class Analyse(
       "has_carrier" -> evidence.hasCarrier,
       "proof_level" -> evidence.proofLevel,
       "target_bound" -> evidence.targetBound,
+      "cause_ids" -> evidence.causeIds,
+      "source_ids" -> evidence.sourceIds,
       "board_carriers" -> evidence.boardCarriers.map(publicBoardCarrierJson(_, surface))
     )
 

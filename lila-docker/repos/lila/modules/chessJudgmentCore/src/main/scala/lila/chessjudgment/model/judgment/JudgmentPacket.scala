@@ -2664,11 +2664,11 @@ object MoveMeaningClaim:
       claim.boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "PlanSubject")
 
   def currentMovePlanContinuityFunctionReady(claims: List[MoveMeaningClaim], claim: MoveMeaningClaim): Boolean =
+    val hasProofCarrier = claim.sourceEvidenceIds.nonEmpty && claim.objectCarrierReady
     claim.supportLevel == "view_surfaced" &&
-      planContinuityClaimHasCurrentMovePlanSubject(claim) &&
+      hasProofCarrier &&
       (
-        claim.sourceEvidenceIds.nonEmpty &&
-          claim.objectCarrierReady ||
+        planContinuityClaimHasCurrentMovePlanSubject(claim) ||
           planContinuityClaimHasSeparateCurrentMoveCarrier(claims, claim)
       )
 
@@ -2701,17 +2701,25 @@ object MoveMeaningClaim:
   private def mergeMeaningClaims(claims: Iterable[MoveMeaningClaim]): Option[MoveMeaningClaim] =
     val list = claims.toList
     list.sortBy(sortKey).lastOption.map(best =>
+      val mergedCauseEvidenceIds = list.flatMap(_.causeEvidenceIds).distinct.sorted
+      val mergedSourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted
+      val mergedObjectCarrierReady = list.exists(_.objectCarrierReady)
+      val mergedBoardCarriers = list.flatMap(_.boardCarriers).distinct.sortBy(boardCarrierSortKey).take(8)
+      val mergedPublicHasCarrier =
+        list.exists(_.publicHasCarrier) ||
+          (mergedObjectCarrierReady && (mergedCauseEvidenceIds.nonEmpty || mergedSourceEvidenceIds.nonEmpty))
+      val mergedPublicProofLevel = list.map(_.publicProofLevel).sortBy(publicProofLevelRank).lastOption.getOrElse("none")
       best.copy(
         causeKinds = list.flatMap(_.causeKinds).distinct.sortBy(_.toString),
         causeSourceSides = list.flatMap(_.causeSourceSides).distinct.sortBy(_.toString),
-        causeEvidenceIds = list.flatMap(_.causeEvidenceIds).distinct.sorted,
-        sourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted,
+        causeEvidenceIds = mergedCauseEvidenceIds,
+        sourceEvidenceIds = mergedSourceEvidenceIds,
         objectBindingSignatures = Nil,
         reasonTokens = Nil,
         comparisonLossSides = list.flatMap(_.comparisonLossSides).distinct.sorted,
         comparisonLossKinds = list.flatMap(_.comparisonLossKinds).distinct.sorted,
-        objectCarrierReady = list.exists(_.objectCarrierReady),
-        boardCarriers = list.flatMap(_.boardCarriers).distinct.sortBy(boardCarrierSortKey).take(8),
+        objectCarrierReady = mergedObjectCarrierReady,
+        boardCarriers = mergedBoardCarriers,
         comparisonMoveRefs = list.flatMap(_.comparisonMoveRefs).distinct.sortBy(ref => (ref.role, ref.uci)).take(12),
         targetSquares = list.flatMap(_.targetSquares).distinct.sorted,
         targetFiles = list.flatMap(_.targetFiles).distinct.sorted,
@@ -2719,9 +2727,11 @@ object MoveMeaningClaim:
         routeIdentityParts = list.flatMap(_.routeIdentityParts).distinct.sorted,
         breakIdentityParts = list.flatMap(_.breakIdentityParts).distinct.sorted,
         breakFiles = list.flatMap(_.breakFiles).distinct.sorted,
-        publicHasCarrier = list.exists(_.publicHasCarrier),
-        publicProofLevel = list.map(_.publicProofLevel).sortBy(publicProofLevelRank).lastOption.getOrElse("none"),
-        publicTargetBound = list.exists(_.publicTargetBound)
+        publicHasCarrier = mergedPublicHasCarrier,
+        publicProofLevel =
+          if mergedPublicHasCarrier && publicProofLevelRank(mergedPublicProofLevel) == 0 then "surface_evidence"
+          else mergedPublicProofLevel,
+        publicTargetBound = list.exists(_.publicTargetBound) || mergedBoardCarriers.exists(_.role == "target")
       )
     )
 
