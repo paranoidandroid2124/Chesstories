@@ -809,7 +809,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       primaryRootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier],
       primaryRootCauseEvidenceTiers: List[PrimaryRootCauseEvidenceTier],
       causeIds: List[String],
-      causeIdKindSignatures: List[String],
+      causeIdKinds: List[(String, RelativeCauseKind)],
       claimIds: List[String]
   )
 
@@ -1308,7 +1308,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "primaryRootCauseEvidenceIds" -> matches.flatMap(_.primaryRootCauseEvidenceIds).distinct.sorted,
       "primaryRootArbitrationTiers" -> matches.flatMap(_.primaryRootArbitrationTiers).distinct.sortBy(_.toString).map(_.toString),
       "causeIds" -> matches.flatMap(_.causeIds).distinct.sorted,
-      "causeIdKindSignatures" -> matches.flatMap(_.causeIdKindSignatures).distinct.sorted,
       "claimIds" -> matches.flatMap(_.claimIds).distinct.sorted,
       "bestLineageTrace" -> best.map(semanticRubricLineageTraceJson).getOrElse(Json.obj()),
       "lineageTraces" -> JsArray(
@@ -1342,7 +1341,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "objectBindingSignatures" -> row.objectBindingSignatures,
       "causeKinds" -> row.causeKinds.map(_.toString),
       "causeIds" -> row.causeIds,
-      "causeIdKindSignatures" -> row.causeIdKindSignatures,
       "claimIds" -> row.claimIds,
       "primaryRootCauseKinds" -> row.primaryRootCauseKinds.map(_.toString),
       "primaryRootCauseEvidenceIds" -> row.primaryRootCauseEvidenceIds,
@@ -1504,7 +1502,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
 
   private def causeLineageTokensCoLocated(slot: ExpectedSemanticSlot, row: SemanticRubricSlotRow): Boolean =
     val causeIds = row.causeIds.toSet
-    val causeIdKindSignatures = row.causeIdKindSignatures.toSet
+    val causeIdKinds = row.causeIdKinds.toSet
     causeIds.nonEmpty &&
       lineageCandidateTokenGroups(slot, row).exists(group =>
         causeEvidenceIdsFromTokens(group).exists(causeEvidenceId =>
@@ -1512,7 +1510,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
             (
               slot.requiredCauseKinds.isEmpty ||
                 slot.requiredCauseKinds.exists(kind =>
-                  causeIdKindSignatures.contains(causeIdKindSignature(causeEvidenceId, kind))
+                  causeIdKinds.contains(causeEvidenceId -> kind)
                 )
             )
         )
@@ -1535,9 +1533,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
           rootCauseEvidenceIds(tier.causeEvidenceId) && requiredTiers(tier.tier)
         )
       )
-
-  private def causeIdKindSignature(causeEvidenceId: String, kind: RelativeCauseKind): String =
-    s"$causeEvidenceId|kind=$kind"
 
   private def semanticRubricCauseLineageBound(
       causeIds: List[String],
@@ -1796,11 +1791,11 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       primaryRootArbitrationTiers = view.primaryRootArbitrationTiers.distinct.sortBy(_.toString),
       primaryRootCauseEvidenceTiers = view.primaryRootCauseEvidenceTiers.distinct.sortBy(tier => (tier.causeEvidenceId, tier.tier.toString)),
       causeIds = causeIds,
-      causeIdKindSignatures =
+      causeIdKinds =
         frameCauseFlows
-          .map(flow => causeIdKindSignature(flow.causeId, flow.causeKind))
+          .map(flow => flow.causeId -> flow.causeKind)
           .distinct
-          .sorted,
+          .sortBy((causeId, kind) => (causeId, kind.toString)),
       claimIds = frameCauseFlows.flatMap(_.claimIds).distinct.sorted
     )
 
