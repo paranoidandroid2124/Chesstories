@@ -3214,7 +3214,7 @@ object MoveMeaningClaim:
         case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
           moveOwnedSource &&
             resourceDetailOwnsClaimMove(detail, objectSignatures, claimMove) &&
-            resourceDetailHasConcreteCarrier(detail, objectSignatures)
+            resourceDetailHasConcreteCarrier(detail)
         case PositionPlanTechniqueUnit.CounterplayRace =>
           moveOwnedSource &&
             counterplayRaceMeaningReady(detail, objectSignatures, claimMove, positionFen)
@@ -4027,14 +4027,10 @@ object MoveMeaningClaim:
         moveTouchesFiles(claimMove, detail.resourceContestFiles) ||
         targetTokensTouchMove(objectSignatures, claimMove)
 
-  private def resourceDetailHasConcreteCarrier(
-      detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String]
-  ): Boolean =
+  private def resourceDetailHasConcreteCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.resourceContestSquares.nonEmpty ||
       detail.resourceContestFiles.nonEmpty ||
-      detail.structuralPurposeSubjects.exists(concreteSubject) ||
-      EvidenceObjectBinding.signatureTokens(objectSignatures, "target=").exists(EvidenceObjectBinding.concreteTargetToken)
+      detail.structuralPurposeSubjects.exists(concreteSubject)
 
   private def counterplayRaceMeaningReady(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -4464,7 +4460,7 @@ object MoveMeaningClaim:
           detail.tensionEdges.nonEmpty ||
           detail.counterBreakFiles.nonEmpty
       case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
-        resourceDetailHasConcreteCarrier(detail, detail.objectBindingSignatures)
+        resourceDetailHasConcreteCarrier(detail)
       case PositionPlanTechniqueUnit.CounterplayRace =>
         counterplayRaceShapeReady(detail)
       case PositionPlanTechniqueUnit.EndgameTechniqueRecipe =>
