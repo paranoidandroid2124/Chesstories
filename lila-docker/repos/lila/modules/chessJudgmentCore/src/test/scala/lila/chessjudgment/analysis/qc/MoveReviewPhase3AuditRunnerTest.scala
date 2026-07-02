@@ -3064,7 +3064,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       axisKeys = List("Activity:Gain:activity-gain"),
       objectSignatures =
         List(
-          "actor=Piece:knight|actor=Square:g1|target=Square:f3|mechanism=Mechanism:developmentchoice|proof=DirectProof"
+          "actor=Piece:knight|actor=Square:g1|target=Square:f3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated|proof=DirectProof"
         )
     ).copy(
       role = MoveJudgmentCauseFrameRole.ContextCause,
@@ -3095,7 +3095,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       proofRoles = List(RelativeCauseProofRole.DirectProof, RelativeCauseProofRole.ContrastProof),
       objectBindingSignatures =
         List(
-          "actor=Piece:knight|actor=Square:g1|target=Square:f3|mechanism=Mechanism:developmentchoice|proof=DirectProof"
+          "actor=Piece:knight|actor=Square:g1|target=Square:f3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated|proof=DirectProof"
         ),
       specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis,
       structuralRouteMove = Some(candidateLine.rootMove),
@@ -3579,6 +3579,71 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     )
 
     assertEquals(surface, Nil)
+
+  test("move meaning claims do not treat target-only object signature as surface carrier"):
+    val targetOnlyDetail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.StructuralTransformation,
+      axisKey = Some("Target:Gain:target-pressure-gain"),
+      axisKind = Some(StrategicAxisKind.Target),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      label = Some("target-pressure-gain"),
+      candidateEvidenceIds = List("played-transition"),
+      sourceEvidenceIds = List("structural-delta:played:e2e3", "played-transition"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List("actor=Move:e2e3|target=Square:e3|proof=DirectProof"),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis,
+      structuralRouteMove = Some(candidateLine.rootMove)
+    )
+    val readyDetail = targetOnlyDetail.copy(
+      objectBindingSignatures =
+        List("actor=Move:e2e3|target=Square:e3|mechanism=Mechanism:target|consequence=Consequence:targetpressure|proof=DirectProof")
+    )
+    val targetOnlyView = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(targetOnlyDetail)
+    )
+    val readyView = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(readyDetail)
+    )
+
+    assert(!targetOnlyView.moveMeaningClaims.exists(_.supportLevel == "view_surfaced"), targetOnlyView.moveMeaningClaims)
+    assert(
+      readyView.moveMeaningClaims.exists(claim =>
+        claim.supportLevel == "view_surfaced" &&
+          claim.surfaceLane == "current_move_function"
+      ),
+      readyView.moveMeaningClaims
+    )
+
+  test("binding width audit reports target-only object bindings separately"):
+    val targetOnlyCause =
+      causeFrame(
+        causeId = "cause-target-only",
+        axisKeys = List("Activity:Gain:activity-gain"),
+        objectSignatures = List("target=Square:e4|proof=DirectProof")
+      )
+    val readyCause =
+      causeFrame(
+        causeId = "cause-ready",
+        axisKeys = List("Activity:Gain:activity-gain"),
+        objectSignatures = List("target=Square:e4|mechanism=Mechanism:activity|consequence=Consequence:activity|proof=DirectProof")
+      )
+    val view = MoveJudgmentView(
+      verdict = None,
+      verdictCarriers = Nil,
+      causeAudit = MoveJudgmentCauseAudit(primary = List(targetOnlyCause, readyCause)),
+      supportContextClusterIds = Nil,
+      overriddenLocalIdeas = Nil,
+      preservedLocalIdeas = Nil
+    )
+    val audit = MoveReviewPhase3AuditRunner.bindingWidthAuditJson(view)
+
+    assertEquals((audit \ "playerFacingObjectReadyFrameCount").as[Int], 1)
+    assertEquals((audit \ "targetOnlyObjectBindingFrameCount").as[Int], 1)
+    assertEquals((audit \ "targetOnlyObjectBindingFrameIds").as[List[String]], List("cause-target-only"))
 
   test("move meaning public evidence scans all object signatures before capping board carriers"):
     val fillerSignatures =
@@ -4429,7 +4494,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       axisKeys = List("Activity:Gain:activity-gain"),
       objectSignatures =
         List(
-          "actor=Piece:knight|actor=Square:g1|target=Square:f3|mechanism=Mechanism:developmentchoice|proof=DirectProof"
+          "actor=Piece:knight|actor=Square:g1|target=Square:f3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated|proof=DirectProof"
         )
     ).copy(
       role = MoveJudgmentCauseFrameRole.ContextCause,
@@ -4458,7 +4523,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       proofRoles = List(RelativeCauseProofRole.DirectProof, RelativeCauseProofRole.ContrastProof),
       objectBindingSignatures =
         List(
-          "actor=Piece:knight|actor=Square:g1|target=Square:f3|mechanism=Mechanism:developmentchoice|proof=DirectProof"
+          "actor=Piece:knight|actor=Square:g1|target=Square:f3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated|proof=DirectProof"
         ),
       specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis,
       structuralRouteMove = Some(candidateLine.rootMove)
@@ -4519,7 +4584,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       structuralPurposeSubjects = List("piece:knight:b1-d2"),
       objectBindingSignatures =
         List(
-          "actor=Move:d2d4|actor=Piece:knight|actor=Square:b1|target=Square:d2|mechanism=Mechanism:developmentchoice|proof=DirectProof"
+          "actor=Move:d2d4|actor=Piece:knight|actor=Square:b1|target=Square:d2|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated|proof=DirectProof"
         )
     )
     val alternativeMoveObjectView = meaningClaimView(

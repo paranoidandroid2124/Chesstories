@@ -4744,7 +4744,6 @@ object MoveMeaningClaim:
       objectSignatures: List[String]
   ): Boolean =
     EvidenceObjectBinding.playerFacingReadySignatures(objectSignatures) ||
-      EvidenceObjectBinding.signatureTokens(objectSignatures, "target=").exists(EvidenceObjectBinding.concreteTargetToken) ||
       detail.requiredSquares.nonEmpty ||
       detail.maintainedSquares.nonEmpty ||
       detail.resourceContestSquares.nonEmpty ||

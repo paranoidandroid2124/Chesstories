@@ -1446,8 +1446,7 @@ object PositionPlanTechniqueProjection:
     else PositionPlanTechniqueSpecificityTier.ContextOnly
 
   private def positionPlanTechniqueNonBroadObjectSignature(signature: String): Boolean =
-    EvidenceObjectBinding.playerFacingReadySignatures(List(signature)) ||
-      EvidenceObjectBinding.signatureTokens(List(signature), "target=").exists(EvidenceObjectBinding.concreteTargetToken)
+    EvidenceObjectBinding.playerFacingReadySignatures(List(signature))
 
   private def mechanismPlanTechniqueDetails(
       payload: StrategicMechanismEvidence,
