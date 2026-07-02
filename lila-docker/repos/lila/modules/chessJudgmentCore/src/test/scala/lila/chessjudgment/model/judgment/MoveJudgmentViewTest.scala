@@ -1826,6 +1826,124 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assert(iqpDetail.structuralMotifTags.contains("isolated"), iqpDetail.structuralMotifTags)
     assert(iqpDetail.structuralMotifTags.contains("transition"), iqpDetail.structuralMotifTags)
 
+  test("keeps IQP maneuver carrier when activity consequence has no route subject"):
+    val root = PositionNodeRef(
+      "3r2k1/pp2npp1/2qrp2p/8/3P1Q2/1B1R2P1/PP3P1P/3R2K1 b - - 10 25",
+      1,
+      Some(Color.Black),
+      Some("root")
+    )
+    val afterPlayed = PositionNodeRef(
+      "3r2k1/pp3pp1/2qrp2p/3n4/3P1Q2/1B1R2P1/PP3P1P/3R2K1 w - - 11 26",
+      2,
+      Some(Color.White),
+      Some("after-played")
+    )
+    val playedLine = LineNodeRef("played-line", "e7d5", 1, LineNodeRole.Played)
+    val structuralRef = evidenceRef(
+      id = "structural-delta:played:e7d5:iqp-maneuver",
+      producer = EvidenceProducer.StructuralDeltaProducer,
+      layer = EvidenceLayer.StructuralDelta,
+      position = root,
+      line = Some(playedLine),
+      scope = EvidenceScope.PlayedTransition
+    )
+    val pawnRef = evidenceRef(
+      id = "pawn-structure:before:iqp-black",
+      producer = EvidenceProducer.PawnStructureProducer,
+      layer = EvidenceLayer.PawnStructure,
+      position = root,
+      line = None,
+      scope = EvidenceScope.CurrentPosition
+    )
+    val mechanismRef = evidenceRef(
+      id = "strategic-mechanism:activity:e7d5:iqp-maneuver",
+      producer = EvidenceProducer.StrategicMechanismProducer,
+      layer = EvidenceLayer.StrategicMechanism,
+      position = root,
+      line = Some(playedLine),
+      scope = EvidenceScope.PlayedTransition
+    )
+    val transition = StructuralTransitionBinding(
+      moveUci = "e7d5",
+      role = TransitionEdgeRole.Played,
+      from = root,
+      to = afterPlayed,
+      line = Some(playedLine),
+      perspective = Color.Black
+    )
+    val structuralDelta = StructuralDeltaEvidence(
+      transition = transition,
+      signals = Nil,
+      consequences = List(
+        TransitionConsequence(
+          kind = TransitionConsequenceKind.MobilityGain,
+          polarity = StructuralSignalPolarity.Gain,
+          strength = 1,
+          subjects = Nil
+        )
+      )
+    )
+    val pawnStructure = PawnStructureFactEvidence(
+      StructureProfile(
+        primary = StructureId.IQPBlack,
+        confidence = 0.8,
+        alternatives = Nil,
+        centerState = CenterState.Open,
+        evidenceCodes = Nil
+      ),
+      alignment = None,
+      pawnPlay = None
+    )
+    val axis = StrategicAxisDetail(StrategicAxisKind.Activity, StrategicAxisPolarity.Gain, "activity-gain")
+    val mechanism = StrategicMechanismEvidence(
+      kind = StrategicMechanismKind.Activity,
+      signals = List(
+        StrategicMechanismSignal(
+          kind = StrategicMechanismSignalKind.StructuralDelta,
+          label = "activity-gain",
+          source = structuralRef,
+          strength = 2,
+          axis = Some(axis)
+        )
+      ),
+      semanticAnchors = Nil
+    )
+
+    val view = MoveJudgmentView
+      .from(
+        relativeAssessments = Nil,
+        evidenceGraph = TypedEvidenceGraph(
+          List(
+            EvidenceRecord(structuralRef, structuralDelta),
+            EvidenceRecord(pawnRef, pawnStructure),
+            EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef, pawnRef))
+          )
+        ),
+        ideas = Nil,
+        claims = Nil,
+        claimLifecycle = Nil,
+        ideaVerdict = None,
+        claimSupportClusters = Nil,
+        claimEventClusters = Nil
+      )
+      .get
+    val detail = view.positionPlanTechniqueFrames
+      .flatMap(_.semanticDetails)
+      .find(detail => detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute && detail.axisKey.contains(axis.stableKey))
+      .get
+
+    assert(detail.structuralPurposeSubjects.contains("knight:e7-d5:maneuver"), detail.structuralPurposeSubjects)
+    assert(
+      detail.objectBindingSignatures.exists(signature =>
+        signature.contains("actor=Move:e7d5") &&
+          signature.contains("actor=Piece:knight") &&
+          signature.contains("actor=Square:e7") &&
+          signature.contains("target=Square:d5")
+      ),
+      detail.objectBindingSignatures
+    )
+
   test("preserves diagonal battery piece roles and target squares in piece route detail"):
     val root = PositionNodeRef("8/8/8/8/8/8/6P1/2B1K2Q w - - 0 1", 1, Some(Color.White), Some("root"))
     val afterPlayed = PositionNodeRef("8/8/7Q/8/8/8/6P1/2B1K3 b - - 1 1", 2, Some(Color.Black), Some("after-played"))

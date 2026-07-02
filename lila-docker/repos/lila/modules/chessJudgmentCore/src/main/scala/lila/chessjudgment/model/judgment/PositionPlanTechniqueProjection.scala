@@ -721,6 +721,7 @@ object PositionPlanTechniqueProjection:
   private final case class PositionPlanTechniqueStructuralPurpose(
       sourceIds: List[String],
       routeMove: Option[String],
+      transitionRouteSubject: Option[String],
       routeRole: Option[String],
       routePerspective: Option[String],
       routeFromPly: Option[Int],
@@ -1560,6 +1561,12 @@ object PositionPlanTechniqueProjection:
     private def withStructuralPurpose(purpose: Option[PositionPlanTechniqueStructuralPurpose]): PositionPlanTechniqueSemanticDetail =
       if positionPlanTechniqueStructuralPurposeApplies(detail) then
         purpose.fold(detail)(structural =>
+          val purposeSubjects =
+            if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
+                positionPlanTechniqueStructureRouteContext(detail) &&
+                !structural.subjects.exists(positionPlanTechniquePieceRouteSubject)
+            then (structural.subjects ++ structural.transitionRouteSubject).distinct.sorted
+            else structural.subjects
           detail.copy(
             sourceEvidenceIds = (detail.sourceEvidenceIds ++ structural.sourceIds).distinct.sorted,
             structuralRouteMove = structural.routeMove,
@@ -1568,12 +1575,12 @@ object PositionPlanTechniqueProjection:
             structuralRouteFromPly = structural.routeFromPly,
             structuralRouteToPly = structural.routeToPly,
             structuralPurposeConsequences = structural.consequences,
-            structuralPurposeSubjects = structural.subjects,
+            structuralPurposeSubjects = purposeSubjects,
             structuralPurposeCategories = structural.categories,
             structuralPurposePolarities = structural.polarities,
             structuralPurposeStrength = structural.strength,
-            breakFile = detail.breakFile.orElse(positionPlanTechniqueStructuralBreakFile(structural.subjects)),
-            tensionEdges = (detail.tensionEdges ++ positionPlanTechniqueStructuralTensionEdges(structural.subjects)).distinct.sorted
+            breakFile = detail.breakFile.orElse(positionPlanTechniqueStructuralBreakFile(purposeSubjects)),
+            tensionEdges = (detail.tensionEdges ++ positionPlanTechniqueStructuralTensionEdges(purposeSubjects)).distinct.sorted
           )
         )
       else detail
@@ -1944,6 +1951,7 @@ object PositionPlanTechniqueProjection:
     PositionPlanTechniqueStructuralPurpose(
       sourceIds = List(sourceId),
       routeMove = Some(payload.transition.moveUci).filter(_.nonEmpty),
+      transitionRouteSubject = positionPlanTechniqueTransitionRouteSubject(payload),
       routeRole = Some(payload.transition.role.toString),
       routePerspective = Some(positionPlanTechniqueColorKey(payload.transition.perspective)),
       routeFromPly = Some(payload.transition.from.ply),
@@ -1955,6 +1963,21 @@ object PositionPlanTechniqueProjection:
       polarities = consequences.map(_.polarity.toString).distinct.sorted,
       strength = Option.when(consequences.nonEmpty)(consequences.map(_.strength).sum)
     )
+
+  private def positionPlanTechniqueTransitionRouteSubject(payload: StructuralDeltaEvidence): Option[String] =
+    for
+      move <- Some(payload.transition.moveUci.trim.toLowerCase).filter(_.length >= 4)
+      fromKey = move.take(2)
+      toKey = move.slice(2, 4)
+      from <- _root_.chess.Square.all.find(_.key == fromKey)
+      position <- _root_.chess.format.Fen.read(
+        _root_.chess.variant.Standard,
+        _root_.chess.format.Fen.Full(payload.transition.from.fen)
+      )
+      piece <- position.board.pieceAt(from)
+      role = piece.role.name.trim.toLowerCase
+      if piece.color == payload.transition.perspective && role != "pawn" && role != "king"
+    yield s"$role:$fromKey-$toKey:maneuver"
 
   private def positionPlanTechniqueStructuralPurposeMatchesDetail(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -2063,6 +2086,7 @@ object PositionPlanTechniqueProjection:
       PositionPlanTechniqueStructuralPurpose(
         sourceIds = purposes.flatMap(_.sourceIds).distinct.sorted,
         routeMove = positionPlanTechniqueSingleValue(purposes.flatMap(_.routeMove)),
+        transitionRouteSubject = positionPlanTechniqueSingleValue(purposes.flatMap(_.transitionRouteSubject)),
         routeRole = positionPlanTechniqueSingleValue(purposes.flatMap(_.routeRole)),
         routePerspective = positionPlanTechniqueSingleValue(purposes.flatMap(_.routePerspective)),
         routeFromPly = positionPlanTechniqueSingleInt(purposes.flatMap(_.routeFromPly)),

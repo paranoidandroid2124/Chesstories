@@ -2606,8 +2606,41 @@ object MoveMeaningClaim:
         .values
         .flatMap(mergeMeaningClaims)
         .toList
-    suppressShadowedPlanContinuity(suppressShadowedCounterplayRacePawnBreak(claims))
+    suppressShadowedPlanContinuity(suppressShadowedRouteFunctionClaims(suppressShadowedCounterplayRacePawnBreak(claims)))
       .sortBy(claim => (claim.meaningKind, claim.role, claim.lineRole, claim.laneKey, claim.frameId))
+
+  private def suppressShadowedRouteFunctionClaims(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
+    val ownedRouteKeys =
+      claims
+        .filter(claim =>
+          claim.meaningKind == "PieceRoute" &&
+            claim.surfaceLane == "current_move_owned" &&
+            claim.supportLevel == "owned_cause_linked"
+        )
+        .flatMap(routeIdentityKey)
+        .toSet
+    if ownedRouteKeys.isEmpty then claims
+    else
+      claims.filterNot(claim =>
+        claim.meaningKind == "PieceRoute" &&
+          claim.surfaceLane == "current_move_function" &&
+          claim.causeEvidenceIds.isEmpty &&
+          routeIdentityKey(claim).exists(ownedRouteKeys.contains)
+      )
+
+  private def routeIdentityKey(claim: MoveMeaningClaim): Option[(String, String, List[String])] =
+    val routeTokens =
+      claim.reasonTokens
+        .filter(token =>
+          token.startsWith("routePiece:") ||
+            token.startsWith("routeFrom:") ||
+            token.startsWith("routeTo:") ||
+            token.startsWith("routeTarget:") ||
+            token.startsWith("routeSubject:")
+        )
+        .distinct
+        .sorted
+    Option.when(routeTokens.nonEmpty)((claim.lineRole, claim.moveUci, routeTokens))
 
   private def suppressShadowedCounterplayRacePawnBreak(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
     val raceClaims =
@@ -4796,7 +4829,7 @@ object MoveMeaningClaim:
         else "StartsCounterplayRace"
       case "PieceRoute" =>
         if outpostConcessionDetail(detail) then "ConcedesOutpost"
-        else if negativeStrategicDetail(detail) then "ConcedesPieceRoute"
+        else if pieceRouteConcessionDetail(detail) then "ConcedesPieceRoute"
         else "ImprovesPieceRoute"
       case "PieceActivity" =>
         if negativeStrategicDetail(detail) then "LosesPieceActivity" else "ImprovesPieceActivity"
@@ -4836,7 +4869,15 @@ object MoveMeaningClaim:
     explicitConsequence(detail, TransitionConsequenceKind.OutpostConcession)
 
   private def explicitNegativeRouteCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
-    outpostConcessionDetail(detail)
+    outpostConcessionDetail(detail) ||
+      List(
+        TransitionConsequenceKind.MobilityLoss,
+        TransitionConsequenceKind.FileAccessLoss,
+        TransitionConsequenceKind.CenterControlLoss,
+        TransitionConsequenceKind.DevelopmentMobilityLoss,
+        TransitionConsequenceKind.DevelopmentCenterControlLoss,
+        TransitionConsequenceKind.DevelopmentPieceRetreated
+      ).exists(explicitConsequence(detail, _))
 
   private def explicitNegativeActivityCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     List(
@@ -4890,6 +4931,21 @@ object MoveMeaningClaim:
       detail.contrastOutcome.contains(StrategicAxisComparisonOutcome.CandidateConcession) ||
       detail.structuralPurposePolarities.exists(negativeStructuralToken) ||
       detail.structuralPurposeConsequences.exists(negativeStructuralToken)
+
+  private def pieceRouteConcessionDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.axisPolarity.exists(negativePolarity) ||
+      detail.contrastOutcome.contains(StrategicAxisComparisonOutcome.CandidateConcession) ||
+      (
+        detail.axisPolarity.forall(routeAxisAllowsPurposeConcession) &&
+          (detail.structuralPurposePolarities.exists(negativeStructuralToken) ||
+            detail.structuralPurposeConsequences.exists(negativeStructuralToken))
+      )
+
+  private def routeAxisAllowsPurposeConcession(polarity: StrategicAxisPolarity): Boolean =
+    polarity != StrategicAxisPolarity.Gain &&
+      polarity != StrategicAxisPolarity.Support &&
+      polarity != StrategicAxisPolarity.Preserve &&
+      polarity != StrategicAxisPolarity.Restrain
 
   private def laneKey(
       meaningKind: String,

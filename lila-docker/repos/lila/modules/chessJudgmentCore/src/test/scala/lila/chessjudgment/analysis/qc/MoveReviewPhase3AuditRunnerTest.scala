@@ -3026,7 +3026,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       structuralRouteMove = Some(candidateLine.rootMove),
       structuralRouteRole = Some("Played"),
       structuralPurposeSubjects = List("knight:e2-e3:maneuver"),
-      structuralPurposeConsequences = List("DevelopmentPieceActivated"),
+      structuralPurposeConsequences = List("DevelopmentPieceActivated", "MobilityLoss"),
+      structuralPurposePolarities = List("Gain", "Loss"),
       structuralPurposeCategories = List("PieceActivity", "Development"),
       structuralMotifTags = List("piece", "reroute", "route")
     )
@@ -3040,10 +3041,60 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(claim.meaningKind, "PieceRoute")
     assertEquals(claim.supportLevel, "owned_cause_linked")
     assertEquals(claim.surfaceLane, "current_move_owned")
+    assertEquals(claim.role, "ImprovesPieceRoute")
     assertEquals(claim.causeEvidenceIds, List("cause-subject-route"))
     assert(claim.reasonTokens.contains("routePiece:knight"))
     assert(claim.reasonTokens.contains("routeFrom:e2"))
     assert(claim.reasonTokens.contains("routeTo:e3"))
+
+  test("move meaning claims suppress view-only route copies when an owned same-route carrier exists"):
+    val routeSignature =
+      "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:developmentchoice|proof=DirectProof"
+    val routeCause = causeFrame(
+      causeId = "cause-owned-route",
+      axisKeys = List("Activity:Gain:activity-gain"),
+      objectSignatures = List(routeSignature),
+      causeKind = RelativeCauseKind.ActivityGain,
+      rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot
+    ).copy(hasOwnedAdmissibleLongTermProof = true)
+    val ownedDetail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Gain:activity-gain"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      label = Some("activity-gain"),
+      candidateEvidenceIds = List("structural-delta:played:e2e3"),
+      sourceEvidenceIds = List("structural-delta:played:e2e3"),
+      causeEvidenceIds = List("cause-owned-route"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List(routeSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis,
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralRouteRole = Some("Played"),
+      structuralPurposeSubjects = List("knight:e2-e3:maneuver"),
+      structuralPurposeConsequences = List("DevelopmentPieceActivated"),
+      structuralPurposeCategories = List("PieceActivity", "Development"),
+      structuralMotifTags = List("piece", "reroute", "route")
+    )
+    val viewOnlyDetail = ownedDetail.copy(
+      axisKey = Some("Activity:Loss:activity-loss"),
+      axisPolarity = Some(StrategicAxisPolarity.Loss),
+      label = Some("activity-loss"),
+      causeEvidenceIds = Nil,
+      proofRoles = Nil,
+      structuralPurposeConsequences = List("MobilityLoss"),
+      structuralPurposePolarities = List("Loss")
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = List(routeCause),
+      details = List(ownedDetail, viewOnlyDetail)
+    )
+    val routeClaims = view.moveMeaningClaims.filter(_.meaningKind == "PieceRoute")
+
+    assertEquals(routeClaims.map(_.supportLevel), List("owned_cause_linked"))
+    assertEquals(routeClaims.map(_.surfaceLane), List("current_move_owned"))
+    assertEquals(routeClaims.map(_.role), List("ImprovesPieceRoute"))
 
   test("move meaning claims preserve same-root break, counter-break, and line-unlock siblings"):
     val breakSignature =
@@ -3436,6 +3487,41 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     )
 
     assertEquals(view.moveMeaningClaims, Nil)
+
+  test("move meaning claims surface explicit negative current-move route carriers as route loss"):
+    val routeSignature =
+      "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:maneuver|consequence=Consequence:mobilityloss"
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Loss:activity-loss"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Loss),
+      label = Some("activity-loss"),
+      candidateEvidenceIds = List("played-transition"),
+      sourceEvidenceIds = List("structural-delta:played:e2e3", "played-transition"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List(routeSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis,
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralPurposeSubjects = List("knight:e2-e3:maneuver"),
+      structuralPurposeConsequences = List("MobilityLoss"),
+      structuralPurposeCategories = List("PieceActivity"),
+      structuralMotifTags = List("piece", "reroute", "route")
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(detail)
+    )
+    val claim = view.moveMeaningClaims.headOption.getOrElse(fail(view.moveMeaningClaims.toString))
+
+    assertEquals(claim.meaningKind, "PieceRoute")
+    assertEquals(claim.role, "ConcedesPieceRoute")
+    assertEquals(claim.supportLevel, "view_surfaced")
+    assertEquals(claim.surfaceLane, "current_move_function")
+    assert(claim.reasonTokens.contains("routePiece:knight"), claim.reasonTokens)
+    assert(claim.reasonTokens.contains("routeFrom:e2"), claim.reasonTokens)
+    assert(claim.reasonTokens.contains("routeTo:e3"), claim.reasonTokens)
 
   test("move meaning claims do not surface plan-pressure-only break option as current move function"):
     val planPressureSignature =
