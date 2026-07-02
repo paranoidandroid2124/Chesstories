@@ -1850,7 +1850,7 @@ object MoveMeaningSurface:
   def publicClaimsForSurface(view: MoveJudgmentView): List[MoveMeaningClaim] =
     view.moveMeaningClaims
       .filter(claim => publicSurfaceClaim(view, claim))
-      .sortBy(claim => claimSurfaceSortKey(view.verdict, claim))
+      .sortBy(claimSurfaceSortKey)
       .take(12)
 
   private[chessjudgment] def evidenceForClaim(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
@@ -1953,11 +1953,20 @@ object MoveMeaningSurface:
         JudgmentSubjectBinding.normalizeMove(verdict.candidateLine.rootMove)
     )
 
-  private def claimSurfaceSortKey(
-      verdict: Option[MoveJudgmentVerdictFrame],
-      claim: MoveMeaningClaim
-  ): (Int, Int, String, String) =
-    surfaceSortKey(fromClaim(verdict, claim))
+  private def claimSurfaceSortKey(claim: MoveMeaningClaim): (Int, Int, String, String) =
+    val claimSubject = subject(claim)
+    val idea = ideaType(claim)
+    (
+      terminalIdeaRank(idea),
+      priority(claim, claimSubject) match
+        case "main"       => 0
+        case "supporting" => 1
+        case "comparison" => 2
+        case "context"    => 3
+        case _            => 4,
+      idea,
+      claim.moveUci
+    )
 
   private def fromClaim(verdict: Option[MoveJudgmentVerdictFrame], claim: MoveMeaningClaim): MoveMeaningSurface =
     val claimSubject = subject(claim)
@@ -2613,19 +2622,6 @@ object MoveMeaningSurface:
     normalizedTokens.contains("rayrole:denial") &&
       normalizedTokens.contains("rayaxis:diagonal") &&
       normalizedTokens.contains("resourcedenied:diagonal")
-
-  private def surfaceSortKey(surface: MoveMeaningSurface): (Int, Int, String, String) =
-    (
-      terminalIdeaRank(surface.ideaType),
-      surface.priority match
-        case "main"       => 0
-        case "supporting" => 1
-        case "comparison" => 2
-        case "context"    => 3
-        case _            => 4,
-      surface.ideaType,
-      surface.moveUci
-    )
 
   private def terminalIdeaRank(ideaType: String): Int =
     ideaType match
