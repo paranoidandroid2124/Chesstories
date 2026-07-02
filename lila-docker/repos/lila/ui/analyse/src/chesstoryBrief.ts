@@ -102,7 +102,6 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const semantics = payload.move_semantics;
   const played = semantics.filter(s => s.subject === 'played_move');
   const reference = semantics.filter(s => s.subject === 'reference_move');
-  const evidenceSemantics = semantics.filter(hasEvidenceCarrier);
   const evidencePlayed = played.filter(hasEvidenceCarrier);
   const evidenceReference = reference.filter(hasEvidenceCarrier);
   const bad = payload.verdict?.move_quality === 'bad';
