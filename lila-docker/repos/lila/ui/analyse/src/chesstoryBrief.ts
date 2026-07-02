@@ -248,14 +248,16 @@ function problemLabels(semantic: ChesstoryMoveSemantic): string[] {
 }
 
 function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
-  return (semantic.evidence?.board_carriers || []).map(carrier =>
-    [carrier.value, carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : undefined].filter(Boolean).join(' '),
-  );
+  return (semantic.evidence?.board_carriers || [])
+    .filter(carrier => ['Square', 'File', 'Piece', 'Move'].includes(carrier.kind || ''))
+    .map(carrier =>
+      [carrier.value, carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : undefined].filter(Boolean).join(' '),
+    );
 }
 
 function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
   return (semantic.evidence?.board_carriers || [])
-    .filter(carrier => carrier.role === 'target')
+    .filter(carrier => carrier.role === 'target' && ['Square', 'File', 'Piece', 'Move'].includes(carrier.kind || ''))
     .map(carrier =>
       [carrier.value, carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : undefined]
         .filter(Boolean)
