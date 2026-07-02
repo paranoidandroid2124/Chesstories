@@ -5125,17 +5125,14 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       publicMoveMeaningClaimDiagnostics: List[PublicMoveMeaningClaimDiagnostic] = Nil,
       rootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier] = Nil,
       primaryRootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier] = Nil,
-      primaryRootCauseEvidenceIdTierSignatures: List[String] = Nil,
       verdict: MoveChoiceVerdict = MoveChoiceVerdict.Mistake,
       relationKinds: List[RelationFactKind] = Nil
   ): CandidateComparisonDiagnostic =
     val axes = semanticAxes(referenceLeadAxes)
-    val rootCauseEvidenceIdTierSignatures =
-      if primaryRootCauseEvidenceIdTierSignatures.nonEmpty then primaryRootCauseEvidenceIdTierSignatures
-      else
-        primaryRootIds
-          .zip(primaryRootArbitrationTiers)
-          .map { case (causeEvidenceId, tier) => s"$causeEvidenceId|tier=$tier" }
+    val rootCauseEvidenceTiers =
+      primaryRootIds
+        .zip(primaryRootArbitrationTiers)
+        .map { case (causeEvidenceId, tier) => PrimaryRootCauseEvidenceTier(causeEvidenceId, tier) }
     CandidateComparisonDiagnostic(
       id = id,
       comparisonFingerprint = id,
@@ -5214,7 +5211,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         primaryContextualTacticalWitnessCauseEvidenceIds = Nil,
         rootArbitrationTiers = rootArbitrationTiers,
         primaryRootArbitrationTiers = primaryRootArbitrationTiers,
-        primaryRootCauseEvidenceIdTierSignatures = rootCauseEvidenceIdTierSignatures,
+        primaryRootCauseEvidenceTiers = rootCauseEvidenceTiers,
         secondaryCauseEvidenceIds = Nil,
         contextCauseEvidenceIds = Nil,
         projectedContextCauseNoViewIds = Nil,

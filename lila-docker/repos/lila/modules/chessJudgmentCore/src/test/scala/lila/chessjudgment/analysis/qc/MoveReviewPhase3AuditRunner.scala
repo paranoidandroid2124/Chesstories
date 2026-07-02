@@ -1790,7 +1790,6 @@ object MoveReviewPhase3AuditRunner:
       "rootArbitrationTierCounts" -> stringCountsJson(diagnostic.rootArbitrationTiers.map(_.toString)),
       "primaryRootArbitrationTiers" -> diagnostic.primaryRootArbitrationTiers.map(_.toString),
       "primaryRootArbitrationTierCounts" -> stringCountsJson(diagnostic.primaryRootArbitrationTiers.map(_.toString)),
-      "primaryRootCauseEvidenceIdTierSignatures" -> diagnostic.primaryRootCauseEvidenceIdTierSignatures,
       "primaryTacticalWitnessCauseKinds" -> diagnostic.primaryTacticalWitnessCauseKinds.map(_.toString),
       "primaryPunishmentWitnessCauseKinds" -> diagnostic.primaryPunishmentWitnessCauseKinds.map(_.toString),
       "primaryContextualTacticalWitnessCauseKinds" -> diagnostic.primaryContextualTacticalWitnessCauseKinds.map(_.toString),

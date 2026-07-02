@@ -759,7 +759,7 @@ final case class ComparisonMoveJudgmentViewDiagnostics(
     primaryRootCauseEvidenceIds: List[String],
     rootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier] = Nil,
     primaryRootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier] = Nil,
-    primaryRootCauseEvidenceIdTierSignatures: List[String] = Nil,
+    primaryRootCauseEvidenceTiers: List[PrimaryRootCauseEvidenceTier] = Nil,
     primaryTacticalWitnessCauseEvidenceIds: List[String],
     primaryPunishmentWitnessCauseEvidenceIds: List[String],
     primaryContextualTacticalWitnessCauseEvidenceIds: List[String],
@@ -791,6 +791,11 @@ final case class ComparisonMoveJudgmentViewDiagnostics(
     publicMoveMeaningClaimDiagnostics: List[PublicMoveMeaningClaimDiagnostic] = Nil
 ):
   val hasPrimaryCause: Boolean = primaryCauseKinds.nonEmpty
+
+final case class PrimaryRootCauseEvidenceTier(
+    causeEvidenceId: String,
+    tier: MoveJudgmentCauseRootArbitrationTier
+)
 
 final case class PublicMoveMeaningClaimDiagnostic(
     unit: PositionPlanTechniqueUnit,
@@ -1542,15 +1547,15 @@ object CandidateComparisonDiagnostic:
         primaryRootFrames.flatMap(_.causeEvidenceIds).distinct.sorted,
       rootArbitrationTiers = allFrames.map(_.rootArbitrationTier).sortBy(_.toString),
       primaryRootArbitrationTiers = primaryRootFrames.map(_.rootArbitrationTier).sortBy(_.toString),
-      primaryRootCauseEvidenceIdTierSignatures =
+      primaryRootCauseEvidenceTiers =
         primaryRootFrames
           .flatMap(frame =>
             frame.causeEvidenceIds.distinct.sorted.map(causeEvidenceId =>
-              primaryRootCauseEvidenceIdTierSignature(causeEvidenceId, frame.rootArbitrationTier)
+              PrimaryRootCauseEvidenceTier(causeEvidenceId, frame.rootArbitrationTier)
             )
           )
           .distinct
-          .sorted,
+          .sortBy(tier => (tier.causeEvidenceId, tier.tier.toString)),
       primaryTacticalWitnessCauseEvidenceIds = primaryTacticalWitnessFrames.flatMap(_.causeEvidenceIds).distinct.sorted,
       primaryPunishmentWitnessCauseEvidenceIds = primaryPunishmentWitnessFrames.flatMap(_.causeEvidenceIds).distinct.sorted,
       primaryContextualTacticalWitnessCauseEvidenceIds =
@@ -1625,12 +1630,6 @@ object CandidateComparisonDiagnostic:
       hasBoardCarrier = evidence.boardCarriers.nonEmpty,
       proofLevel = evidence.proofLevel
     )
-
-  private def primaryRootCauseEvidenceIdTierSignature(
-      causeEvidenceId: String,
-      tier: MoveJudgmentCauseRootArbitrationTier
-  ): String =
-    s"$causeEvidenceId|tier=$tier"
 
   private def comparisonPositionPlanTechniqueFrames(
       packet: EvidenceBackedJudgmentPacket,
