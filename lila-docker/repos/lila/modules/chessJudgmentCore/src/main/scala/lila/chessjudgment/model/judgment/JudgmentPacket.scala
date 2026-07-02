@@ -3088,7 +3088,7 @@ object MoveMeaningClaim:
       claimRole: String,
       evidenceGraph: TypedEvidenceGraph
   ): Option[String] =
-    val hasConcreteObject = detailHasConcreteSurfaceObject(detail, objectSignatures)
+    val hasConcreteObject = detailHasConcreteSurfaceObject(detail)
     val specificObjectAxis = detailHasSpecificObjectAxis(detail)
     val hasDetailEvidence = detailHasEvidenceLink(detail)
     val currentMoveClaim = currentMoveMeaningClaim(verdict, claimLineRole, claimMove)
@@ -3201,10 +3201,7 @@ object MoveMeaningClaim:
                   kind == StrategicAxisKind.Target ||
                     kind == StrategicAxisKind.SpaceCenter
                 ) &&
-                  (
-                    detail.structuralPurposeSubjects.exists(concreteSubject) ||
-                      EvidenceObjectBinding.signatureTokens(objectSignatures, "target=").exists(EvidenceObjectBinding.concreteTargetToken)
-                  )
+                  detail.structuralPurposeSubjects.exists(concreteSubject)
               ) ||
                 structuralOpenCenterDevelopmentRoute(detail)
             )
@@ -3349,7 +3346,7 @@ object MoveMeaningClaim:
       claimMove: String,
       positionFen: String
   ): Boolean =
-    detailHasConcreteSurfaceObject(detail, objectSignatures) &&
+    detailHasConcreteSurfaceObject(detail) &&
       planContinuityCurrentMoveFunctionalProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim = true)
 
   private def currentMoveMeaningClaim(
@@ -4679,12 +4676,8 @@ object MoveMeaningClaim:
     detail.unit == PositionPlanTechniqueUnit.PlanOptionSet ||
       detail.axisKind.contains(StrategicAxisKind.PlanCoherence)
 
-  private def detailHasConcreteSurfaceObject(
-      detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String]
-  ): Boolean =
-    EvidenceObjectBinding.playerFacingReadySignatures(objectSignatures) ||
-      detail.requiredSquares.nonEmpty ||
+  private def detailHasConcreteSurfaceObject(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.requiredSquares.nonEmpty ||
       detail.maintainedSquares.nonEmpty ||
       detail.resourceContestSquares.nonEmpty ||
       detail.resourceContestFiles.nonEmpty ||
