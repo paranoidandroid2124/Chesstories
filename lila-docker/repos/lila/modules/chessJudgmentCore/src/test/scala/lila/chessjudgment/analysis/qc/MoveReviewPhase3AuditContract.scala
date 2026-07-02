@@ -45,7 +45,7 @@ private[qc] object MoveReviewPhase3AuditContract:
         axisKey = (json \ "axisKey").asOpt[String],
         questionId = (json \ "questionId").asOpt[String],
         description = (json \ "description").asOpt[String],
-        requiredSupportLevel = (json \ "requiredSupportLevel").asOpt[String].orElse((json \ "requiredTerminalStage").asOpt[String])
+        requiredSupportLevel = (json \ "requiredSupportLevel").asOpt[String]
       )
 
   private def expectedSemanticUnit(raw: String): Option[PositionPlanTechniqueUnit] =
