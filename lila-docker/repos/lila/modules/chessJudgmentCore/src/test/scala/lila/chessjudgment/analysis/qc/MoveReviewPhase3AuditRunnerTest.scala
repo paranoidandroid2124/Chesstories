@@ -124,7 +124,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         id = id,
         unit = PositionPlanTechniqueUnit.StructuralTransformation,
         questionId = Some(questionId),
-        requiredTerminalStage = Some(stage),
+        requiredSupportLevel = Some(stage),
         requiredCauseKinds = causeKinds,
         requiredTerminalConsequenceKinds = List(consequence),
         requiredCoLocatedSemanticDetailTokens = List("proofRole:DirectProof"),
@@ -243,9 +243,9 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "unmeasuredExpectedQuestionIds").as[List[String]], Nil)
     assertEquals((coverage \ "coveredExpectedQuestionIds").as[List[String]], List("terminal_mate", "terminal_promotion_race"))
     assertEquals((coverage \ "expectedQuestionCoverageComplete").as[Boolean], true)
-    assertEquals((coverage \ "byQuestionId" \ "terminal_mate" \ "terminalStageCounts" \ "view_surfaced").as[Int], 1)
+    assertEquals((coverage \ "byQuestionId" \ "terminal_mate" \ "supportLevelCounts" \ "view_surfaced").as[Int], 1)
     assertEquals((coverage \ "byQuestionId" \ "terminal_promotion_race" \ "ownedCauseLinkedCount").as[Int], 1)
-    assertEquals((coverage \ "byQuestionId" \ "terminal_promotion_race" \ "terminalStageCounts" \ "owned_cause_linked").as[Int], 1)
+    assertEquals((coverage \ "byQuestionId" \ "terminal_promotion_race" \ "supportLevelCounts" \ "owned_cause_linked").as[Int], 1)
     assertEquals((corpusCoverage \ "expectedQuestionCoverageComplete").as[Boolean], true)
 
   test("comparison diagnostics keep contrast plan technique frames on their owning comparison"):
@@ -442,7 +442,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         id = "owned-pawn-break-slot",
         unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
         questionId = Some("pawn_break_timing_ownership"),
-        requiredTerminalStage = Some("owned_cause_linked"),
+        requiredSupportLevel = Some("owned_cause_linked"),
         requiredCauseKinds = List(RelativeCauseKind.PawnBreakOpportunity, RelativeCauseKind.PlanImprovement),
         requiredSemanticDetailTokens = List("pawnBreakReady:true")
       )
@@ -511,9 +511,9 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((borrowedCoverage \ "slots" \ 0 \ "causeLineageTokenCoLocationSatisfied").as[Boolean], false)
     assertEquals((borrowedCoverage \ "slots" \ 0 \ "legacyMatchedBeforeStrictLineage").as[Boolean], true)
     assertEquals((ownedCoverage \ "matchedSlotCount").as[Int], 1)
-    assertEquals((ownedCoverage \ "slots" \ 0 \ "terminalStageSatisfied").as[Boolean], true)
+    assertEquals((ownedCoverage \ "slots" \ 0 \ "supportLevelSatisfied").as[Boolean], true)
     assertEquals((ownedCoverage \ "slots" \ 0 \ "causeLineageTokenCoLocationSatisfied").as[Boolean], true)
-    assert((ownedCoverage \ "slots" \ 0 \ "terminalStage").as[String] == "clustered_coherent")
+    assert((ownedCoverage \ "slots" \ 0 \ "supportLevel").as[String] == "clustered_coherent")
     assertEquals((wrongKindCoverage \ "matchedSlotCount").as[Int], 0)
     assertEquals((wrongKindCoverage \ "causeBorrowFalsePositiveCount").as[Int], 1)
     assertEquals((wrongKindCoverage \ "slots" \ 0 \ "causeLineageTokenCoLocationSatisfied").as[Boolean], false)
@@ -555,7 +555,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         id = "iqp-structure-compensation-owned",
         unit = PositionPlanTechniqueUnit.StructuralTransformation,
         questionId = Some("structure_compensation"),
-        requiredTerminalStage = Some("clustered_coherent"),
+        requiredSupportLevel = Some("clustered_coherent"),
         requiredCauseKinds = List(
           RelativeCauseKind.StructuralImprovement,
           RelativeCauseKind.PawnWeaknessTarget,
@@ -595,7 +595,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((ownedCoverage \ "matchedSlotCount").as[Int], 0)
     assertEquals((ownedCoverage \ "slots" \ 0 \ "semanticDetailTokensSatisfied").as[Boolean], true)
     assertEquals((ownedCoverage \ "slots" \ 0 \ "causeKinds").as[List[String]], Nil)
-    assertEquals((ownedCoverage \ "slots" \ 0 \ "terminalStage").as[String], "missing_semantic_slot")
+    assertEquals((ownedCoverage \ "slots" \ 0 \ "supportLevel").as[String], "missing_semantic_slot")
     assertEquals((ownedCoverage \ "slots" \ 0 \ "causeLineageTokenCoLocationSatisfied").as[Boolean], false)
     assertEquals((borrowedCoverage \ "matchedSlotCount").as[Int], 0)
     assertEquals((borrowedCoverage \ "slots" \ 0 \ "causeLineageTokenCoLocationSatisfied").as[Boolean], false)
@@ -649,7 +649,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         id = "rook-endgame-lucena-recognition",
         unit = PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
         questionId = Some("rook_endgame.conversion_recipe"),
-        requiredTerminalStage = Some("owned_cause_linked"),
+        requiredSupportLevel = Some("owned_cause_linked"),
         requiredMechanismKinds = List(StrategicMechanismKind.Endgame),
         requiredCauseKinds = List(RelativeCauseKind.ConversionSecured),
         requiredSemanticDetailTokens = List("boardAnchorSignal:EndgameRookPattern"),
@@ -660,7 +660,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         id = "rook-endgame-philidor-recognition",
         unit = PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
         questionId = Some("rook_endgame.draw_resource"),
-        requiredTerminalStage = Some("owned_cause_linked"),
+        requiredSupportLevel = Some("owned_cause_linked"),
         requiredMechanismKinds = List(StrategicMechanismKind.Endgame),
         requiredCauseKinds = List(RelativeCauseKind.DrawResource),
         requiredSemanticDetailTokens = List("boardAnchorSignal:EndgameRookPattern"),
@@ -742,7 +742,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         id = "owned-line-lucena-horizon",
         unit = PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
         questionId = Some("rook_endgame_technique"),
-        requiredTerminalStage = Some("owned_cause_linked"),
+        requiredSupportLevel = Some("owned_cause_linked"),
         requiredCauseKinds = List(RelativeCauseKind.ConversionSecured),
         requiredSemanticDetailTokens = List(
           "pattern:Lucena",
@@ -1070,7 +1070,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     val coverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(slot), List(viewOnlyContext))
 
     assertEquals((coverage \ "slots" \ 0 \ "objectBound").as[Boolean], false)
-    assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "missing_semantic_slot")
+    assertEquals((coverage \ "slots" \ 0 \ "supportLevel").as[String], "missing_semantic_slot")
 
   test("recognition view slots require semantic details to reach public surface"):
     val detailTokens =
@@ -1116,7 +1116,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
         id = "rook-recognition-view",
         unit = PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
-        requiredTerminalStage = Some("view_surfaced"),
+        requiredSupportLevel = Some("view_surfaced"),
         requiredSemanticDetailTokens = List("pattern:Lucena", "requiredSquare:f8")
       )
     val ownedSlot =
@@ -1131,11 +1131,11 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(recognitionSlot), List(detailOnlyDiagnostic))
 
     assertEquals((coverage \ "matchedSlotCount").as[Int], 1)
-    assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "view_surfaced")
+    assertEquals((coverage \ "slots" \ 0 \ "supportLevel").as[String], "view_surfaced")
     assertEquals((coverage \ "slots" \ 0 \ "matched").as[Boolean], true)
     assertEquals((coverage \ "slots" \ 1 \ "matched").as[Boolean], false)
     assertEquals((detailOnlyCoverage \ "matchedSlotCount").as[Int], 0)
-    assertEquals((detailOnlyCoverage \ "slots" \ 0 \ "terminalStage").as[String], "missing_semantic_slot")
+    assertEquals((detailOnlyCoverage \ "slots" \ 0 \ "supportLevel").as[String], "missing_semantic_slot")
 
   test("recognition view slots without token probes match public current move surface"):
     val diagnostic =
@@ -1166,18 +1166,18 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
         id = "route-recognition-view",
         unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
-        requiredTerminalStage = Some("view_surfaced")
+        requiredSupportLevel = Some("view_surfaced")
       )
     val ownedSlot =
       recognitionSlot.copy(
         id = "route-recognition-owned",
-        requiredTerminalStage = Some("owned_cause_linked")
+        requiredSupportLevel = Some("owned_cause_linked")
       )
 
     val coverage =
       MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(recognitionSlot, ownedSlot), List(diagnostic))
 
-    assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "view_surfaced")
+    assertEquals((coverage \ "slots" \ 0 \ "supportLevel").as[String], "view_surfaced")
     assertEquals((coverage \ "slots" \ 0 \ "matched").as[Boolean], true)
     assertEquals((coverage \ "slots" \ 1 \ "matched").as[Boolean], false)
 
@@ -1203,14 +1203,14 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
         id = "minority-plan-owned",
         unit = PositionPlanTechniqueUnit.PlanOptionSet,
-        requiredTerminalStage = Some("owned_cause_linked"),
+        requiredSupportLevel = Some("owned_cause_linked"),
         requiredSemanticDetailTokens = List("minorityAttack:true")
       )
 
     val coverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(slot), List(diagnostic))
 
     assertEquals((coverage \ "matchedSlotCount").as[Int], 0)
-    assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "missing_semantic_slot")
+    assertEquals((coverage \ "slots" \ 0 \ "supportLevel").as[String], "missing_semantic_slot")
 
   test("recognition view slots require a public carrier signature"):
     val diagnostic =
@@ -1232,7 +1232,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
         id = "route-recognition-carrierless",
         unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
-        requiredTerminalStage = Some("view_surfaced")
+        requiredSupportLevel = Some("view_surfaced")
       )
 
     val coverage =
@@ -1289,7 +1289,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
         id = "reference-owned-pawn-break",
         unit = PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
-        requiredTerminalStage = Some("owned_cause_linked"),
+        requiredSupportLevel = Some("owned_cause_linked"),
         requiredCauseKinds = List(RelativeCauseKind.PawnBreakOpportunity),
         requiredSemanticDetailTokens = List("axisKind:PawnBreak", "breakFile:e")
       )
@@ -1300,9 +1300,9 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(slot), List(softReferenceDiagnostic))
 
     assertEquals((coverage \ "matchedSlotCount").as[Int], 1)
-    assertEquals((coverage \ "slots" \ 0 \ "terminalStage").as[String], "owned_cause_linked")
+    assertEquals((coverage \ "slots" \ 0 \ "supportLevel").as[String], "owned_cause_linked")
     assertEquals((softCoverage \ "matchedSlotCount").as[Int], 0)
-    assertEquals((softCoverage \ "slots" \ 0 \ "terminalStage").as[String], "missing_semantic_slot")
+    assertEquals((softCoverage \ "slots" \ 0 \ "supportLevel").as[String], "missing_semantic_slot")
 
   test("resource contest view slots require concrete target binding".ignore):
     val semanticTokens =
@@ -1366,7 +1366,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
         id = "queenside-space-resource-view",
         unit = PositionPlanTechniqueUnit.SpacePreventionResourceDenial,
-        requiredTerminalStage = Some("view_surfaced"),
+        requiredSupportLevel = Some("view_surfaced"),
         requiredSemanticDetailTokens = List("queenside", "space", "resourceContest"),
         requiredObjectBindingTokens = List("target=Square:a1")
       )
@@ -1395,7 +1395,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
         id = "iqp-motif",
         unit = PositionPlanTechniqueUnit.StructuralTransformation,
-        requiredTerminalStage = Some("view_surfaced"),
+        requiredSupportLevel = Some("view_surfaced"),
         requiredSemanticDetailTokens = List("IQP")
       )
     val routeSubjectSlot =

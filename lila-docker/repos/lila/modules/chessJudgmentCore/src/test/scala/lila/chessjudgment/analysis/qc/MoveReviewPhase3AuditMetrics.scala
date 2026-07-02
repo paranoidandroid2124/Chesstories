@@ -413,8 +413,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       comparisonId: String,
       unit: PositionPlanTechniqueUnit,
       axisKey: Option[String],
-      terminalStage: String,
-      strictLineageTerminalStage: String,
+      supportLevel: String,
       lineRole: String,
       moveUci: String,
       objectBound: Boolean,
@@ -479,8 +478,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     val missingExpectedQuestionIds = measuredExpectedQuestionIds.diff(coveredExpectedQuestionIds)
     val missingSlotIds =
       slotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
-    val failedRequiredTerminalStageSlotIds =
-      slotRows.filter(row => !(row \ "terminalStageSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
+    val failedRequiredSupportLevelSlotIds =
+      slotRows.filter(row => !(row \ "supportLevelSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
     Json.obj(
       "classification" -> "audit_only",
       "expectedSlotCount" -> slotRows.size,
@@ -488,13 +487,13 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "viewSurfacedCount" -> slotRows.count(row => (row \ "viewSurfaced").as[Boolean]),
       "ownedCauseLinkedCount" -> slotRows.count(row => (row \ "ownedCauseLinked").as[Boolean]),
       "clusteredCoherentCount" -> slotRows.count(row => (row \ "clusteredCoherent").as[Boolean]),
-      "terminalStageCounts" -> stringCountsJson(slotRows.map(row => (row \ "terminalStage").as[String])),
+      "supportLevelCounts" -> stringCountsJson(slotRows.map(row => (row \ "supportLevel").as[String])),
       "missingSlotIds" -> missingSlotIds,
       "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
       "missingSlotIdCounts" -> stringCountsJson(missingSlotIds),
-      "failedRequiredTerminalStageSlotIds" -> failedRequiredTerminalStageSlotIds,
-      "failedRequiredTerminalStageUniqueSlotIds" -> failedRequiredTerminalStageSlotIds.distinct.sorted,
-      "failedRequiredTerminalStageSlotIdCounts" -> stringCountsJson(failedRequiredTerminalStageSlotIds),
+      "failedRequiredSupportLevelSlotIds" -> failedRequiredSupportLevelSlotIds,
+      "failedRequiredSupportLevelUniqueSlotIds" -> failedRequiredSupportLevelSlotIds.distinct.sorted,
+      "failedRequiredSupportLevelSlotIdCounts" -> stringCountsJson(failedRequiredSupportLevelSlotIds),
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
       "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
@@ -518,7 +517,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slot.requiredCauseKinds.nonEmpty ||
       slot.requiredPrimaryRootCauseKinds.nonEmpty ||
       slot.requiredPrimaryRootArbitrationTiers.nonEmpty ||
-      slot.requiredTerminalStage.nonEmpty
+      slot.requiredSupportLevel.nonEmpty
 
   private[qc] def semanticRubricExpectedSlotCorpusCoverageJson(coverages: List[JsValue]): JsObject =
     val slotRows =
@@ -549,8 +548,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     val missingExpectedQuestionIds = measuredExpectedQuestionIds.diff(coveredExpectedQuestionIds)
     val missingSlotIds =
       slotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
-    val failedRequiredTerminalStageSlotIds =
-      slotRows.filter(row => !(row \ "terminalStageSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
+    val failedRequiredSupportLevelSlotIds =
+      slotRows.filter(row => !(row \ "supportLevelSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
     Json.obj(
       "classification" -> "audit_only",
       "coverageRowCount" -> coverages.size,
@@ -559,13 +558,13 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "viewSurfacedCount" -> slotRows.count(row => (row \ "viewSurfaced").as[Boolean]),
       "ownedCauseLinkedCount" -> slotRows.count(row => (row \ "ownedCauseLinked").as[Boolean]),
       "clusteredCoherentCount" -> slotRows.count(row => (row \ "clusteredCoherent").as[Boolean]),
-      "terminalStageCounts" -> stringCountsJson(slotRows.map(row => (row \ "terminalStage").as[String])),
+      "supportLevelCounts" -> stringCountsJson(slotRows.map(row => (row \ "supportLevel").as[String])),
       "missingSlotIds" -> missingSlotIds,
       "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
       "missingSlotIdCounts" -> stringCountsJson(missingSlotIds),
-      "failedRequiredTerminalStageSlotIds" -> failedRequiredTerminalStageSlotIds,
-      "failedRequiredTerminalStageUniqueSlotIds" -> failedRequiredTerminalStageSlotIds.distinct.sorted,
-      "failedRequiredTerminalStageSlotIdCounts" -> stringCountsJson(failedRequiredTerminalStageSlotIds),
+      "failedRequiredSupportLevelSlotIds" -> failedRequiredSupportLevelSlotIds,
+      "failedRequiredSupportLevelUniqueSlotIds" -> failedRequiredSupportLevelSlotIds.distinct.sorted,
+      "failedRequiredSupportLevelSlotIdCounts" -> stringCountsJson(failedRequiredSupportLevelSlotIds),
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
       "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
@@ -602,7 +601,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
             "viewSurfacedCount" -> rows.count(row => (row \ "viewSurfaced").as[Boolean]),
             "ownedCauseLinkedCount" -> rows.count(row => (row \ "ownedCauseLinked").as[Boolean]),
             "clusteredCoherentCount" -> rows.count(row => (row \ "clusteredCoherent").as[Boolean]),
-            "terminalStageCounts" -> stringCountsJson(rows.map(row => (row \ "terminalStage").as[String])),
+            "supportLevelCounts" -> stringCountsJson(rows.map(row => (row \ "supportLevel").as[String])),
             "missingSlotIds" -> missingSlotIds,
             "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
             "missingSlotIdCounts" -> stringCountsJson(missingSlotIds),
@@ -633,20 +632,17 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       )
     val matches = structurallyEligibleRows
     val best = matches.headOption
-    val terminalStage = best.map(_.terminalStage).getOrElse("missing_semantic_slot")
-    val strictLineageTerminalStage = best.map(_.strictLineageTerminalStage).getOrElse("missing_semantic_slot")
-    val terminalStageSatisfied =
-      slot.requiredTerminalStage.forall(semanticRubricStageSatisfied(terminalStage, _))
-    val strictLineageTerminalStageSatisfied =
-      slot.requiredTerminalStage.forall(semanticRubricStageSatisfied(strictLineageTerminalStage, _))
-    val matched = best.nonEmpty && terminalStageSatisfied
+    val supportLevel = best.map(_.supportLevel).getOrElse("missing_semantic_slot")
+    val supportLevelSatisfied =
+      slot.requiredSupportLevel.forall(required => supportLevel == required.trim)
+    val matched = best.nonEmpty && supportLevelSatisfied
     Json.obj(
       "id" -> slot.id,
       "unit" -> slot.unit.toString,
       "axisKey" -> slot.axisKey,
       "questionId" -> slot.questionId,
       "description" -> slot.description,
-      "requiredTerminalStage" -> slot.requiredTerminalStage,
+      "requiredSupportLevel" -> slot.requiredSupportLevel,
       "requiredMechanismKinds" -> slot.requiredMechanismKinds.map(_.toString),
       "requiredCauseKinds" -> slot.requiredCauseKinds.map(_.toString),
       "requiredPrimaryRootCauseKinds" -> slot.requiredPrimaryRootCauseKinds.map(_.toString),
@@ -657,12 +653,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "requiredSemanticAnchorTokens" -> slot.requiredSemanticAnchorTokens,
       "requiredObjectBindingTokens" -> slot.requiredObjectBindingTokens,
       "matched" -> matched,
-      "terminalStage" -> terminalStage,
-      "strictLineageTerminalStage" -> strictLineageTerminalStage,
+      "supportLevel" -> supportLevel,
       "lineRole" -> best.map(_.lineRole),
       "moveUci" -> best.map(_.moveUci),
-      "terminalStageSatisfied" -> terminalStageSatisfied,
-      "strictLineageTerminalStageSatisfied" -> strictLineageTerminalStageSatisfied,
+      "supportLevelSatisfied" -> supportLevelSatisfied,
       "objectBound" -> best.exists(_.objectBound),
       "exactAxisOrPattern" -> best.exists(_.exactAxisOrPattern),
       "causeOwned" -> best.exists(_.causeOwned),
@@ -703,8 +697,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "comparisonId" -> row.comparisonId,
       "unit" -> row.unit.toString,
       "axisKey" -> row.axisKey,
-      "terminalStage" -> row.terminalStage,
-      "strictLineageTerminalStage" -> row.strictLineageTerminalStage,
+      "supportLevel" -> row.supportLevel,
       "lineRole" -> row.lineRole,
       "moveUci" -> row.moveUci,
       "strictCauseLineageBound" -> row.strictCauseLineageBound,
@@ -729,9 +722,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "primaryRootCauseEvidenceIds" -> row.primaryRootCauseEvidenceIds,
       "primaryRootArbitrationTiers" -> row.primaryRootArbitrationTiers.map(_.toString)
     )
-
-  private def semanticRubricStageSatisfied(actual: String, required: String): Boolean =
-    actual == required.trim
 
   private def semanticRubricSlotRows(diagnostic: CandidateComparisonDiagnostic): List[SemanticRubricSlotRow] =
     val publicRows =
@@ -761,10 +751,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       claim.axisKey.nonEmpty || view.positionPlanTechniqueUnits.contains(claim.unit)
     val objectBound =
       claim.hasBoardCarrier
-    val publicSurfaceStage =
+    val publicSurfaceSupportLevel =
       Option(claim.supportLevel).filter(_.nonEmpty).getOrElse("missing_semantic_slot")
     val ownedCauseLinked =
-      publicSurfaceStage == "owned_cause_linked"
+      publicSurfaceSupportLevel == "owned_cause_linked"
     val causeOwned =
       claimCauseIds.nonEmpty
     val claimSurvived =
@@ -772,7 +762,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     val viewSurfaced =
       true
     val clusteredCoherent =
-      publicSurfaceStage == "clustered_coherent"
+      publicSurfaceSupportLevel == "clustered_coherent"
     val strictCauseLineageBound =
       claimCauseIds.nonEmpty
     val claimPrimaryRootCauseIds =
@@ -787,8 +777,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       comparisonId = diagnostic.id,
       unit = claim.unit,
       axisKey = claim.axisKey,
-      terminalStage = publicSurfaceStage,
-      strictLineageTerminalStage = publicSurfaceStage,
+      supportLevel = publicSurfaceSupportLevel,
       lineRole = claim.lineRole,
       moveUci = claim.moveUci,
       objectBound = objectBound,
