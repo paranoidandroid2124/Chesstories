@@ -231,7 +231,7 @@ function placeholderSections(): ChesstoryBriefSection[] {
 }
 
 function codeLabel(code?: ChesstoryCode): string {
-  return code?.label || code?.code?.replace(/_/g, ' ') || '';
+  return code?.label || '';
 }
 
 function ideaLabel(semantic: ChesstoryMoveSemantic): string {
@@ -303,7 +303,7 @@ function playedComparisonLossLabels(semantic: ChesstoryMoveSemantic): string[] {
 
 function isPlayedComparisonLoss(loss: ChesstoryComparisonLoss): boolean {
   const side = loss.side?.toLowerCase();
-  return side === 'candidate' || side === 'candidate_move' || side === 'played' || side === 'played_move';
+  return side === 'played_move';
 }
 
 function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
