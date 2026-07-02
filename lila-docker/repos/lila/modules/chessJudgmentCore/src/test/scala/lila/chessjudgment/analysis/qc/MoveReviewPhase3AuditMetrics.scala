@@ -1881,27 +1881,18 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     val semanticDetailTokenGroups = view.positionPlanTechniqueSemanticDetailTokenGroups
     val objectBindingSignatures = view.positionPlanTechniqueObjectBindingSignatures
     val unitSurfaced = view.positionPlanTechniqueUnits.contains(unit)
+    val rootCauseIds = view.primaryRootCauseEvidenceIds.toSet
+    val causeIds = frameCauseIds.toList.distinct.sorted
+    val frameCauseFlows =
+      diagnostic.relativeCauseDiagnostics.causeFlow.filter(flow => frameCauseIds.contains(flow.causeId))
     val decodedDetailSurfaced =
       detailUnits.contains(unit) &&
         (axisKey.forall(detailAxisKeys.contains) || axisKey.isEmpty)
-    val flows =
-      diagnostic.relativeCauseDiagnostics.causeFlow.filter(flow =>
-        axisKey.exists(flow.proofStrategicAxisKeys.contains) ||
-          frameCauseIds.contains(flow.causeId)
-      )
-    val fallbackFlows =
-      Option.when(flows.isEmpty && axisKey.isEmpty)(diagnostic.relativeCauseDiagnostics.causeFlow).getOrElse(flows)
     val exactAxisOrPattern =
-      axisKey.exists(axis => flows.exists(_.proofStrategicAxisKeys.contains(axis)) || frameAxisKeys.contains(axis)) ||
+      axisKey.exists(frameAxisKeys.contains) ||
         (axisKey.isEmpty && unitSurfaced)
     val objectBound =
-      fallbackFlows.exists(_.objectBindingSignatures.nonEmpty) ||
-        objectBindingSignatures.nonEmpty
-    val causeOwned =
-      fallbackFlows.exists(flow => flow.hasOwnedTypedDepth || flow.hasOwnedAdmissibleLongTermProof)
-    val claimSurvived =
-      fallbackFlows.exists(_.claimIds.nonEmpty)
-    val causeIds = fallbackFlows.map(_.causeId).distinct.sorted
+      objectBindingSignatures.nonEmpty
     val publicSurfaceClaimDiagnostics =
       view.publicMoveMeaningClaimDiagnostics.filter(diagnostic =>
         semanticRubricSurfaceClaimMatches(diagnostic, unit, axisKey)
@@ -1914,6 +1905,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
         claim.supportLevel == "owned_cause_linked" &&
           claim.causeEvidenceIds.exists(frameCauseIds.contains)
       )
+    val causeOwned =
+      ownedCauseLinked || frameCauseIds.exists(rootCauseIds.contains)
+    val claimSurvived =
+      publicSurfaceClaimDiagnostics.nonEmpty
     val viewSurfaced =
       publicSurfaceClaimWithCarrier.nonEmpty &&
         unitSurfaced &&
@@ -1977,18 +1972,18 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       semanticDetailTokenGroups = semanticDetailTokenGroups,
       objectBindingSignatures = objectBindingSignatures,
       sourceEvidenceIds = view.positionPlanTechniqueEvidenceIds.distinct.sorted,
-      causeKinds = fallbackFlows.map(_.causeKind).distinct.sortBy(_.toString),
+      causeKinds = frameCauseFlows.map(_.causeKind).distinct.sortBy(_.toString),
       primaryRootCauseKinds = view.primaryRootCauseKinds.distinct.sortBy(_.toString),
       primaryRootCauseEvidenceIds = view.primaryRootCauseEvidenceIds.distinct.sorted,
       primaryRootArbitrationTiers = view.primaryRootArbitrationTiers.distinct.sortBy(_.toString),
       primaryRootCauseEvidenceIdTierSignatures = view.primaryRootCauseEvidenceIdTierSignatures.distinct.sorted,
       causeIds = causeIds,
       causeIdKindSignatures =
-        fallbackFlows
+        frameCauseFlows
           .map(flow => causeIdKindSignature(flow.causeId, flow.causeKind))
           .distinct
           .sorted,
-      claimIds = fallbackFlows.flatMap(_.claimIds).distinct.sorted,
+      claimIds = frameCauseFlows.flatMap(_.claimIds).distinct.sorted,
       publicSurfaceClaimSignatures = publicSurfaceClaimSignatures.distinct.sorted
     )
 
