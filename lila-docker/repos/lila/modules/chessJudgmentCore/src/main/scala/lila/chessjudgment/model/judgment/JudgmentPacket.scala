@@ -1657,7 +1657,8 @@ case class MoveMeaningClaim(
     targetSquares: List[String] = Nil,
     targetFiles: List[String] = Nil,
     targetPieces: List[String] = Nil,
-    specificityTier: PositionPlanTechniqueSpecificityTier = PositionPlanTechniqueSpecificityTier.ContextOnly
+    specificityTier: PositionPlanTechniqueSpecificityTier = PositionPlanTechniqueSpecificityTier.ContextOnly,
+    terminalConsequenceKinds: List[String] = Nil
 )
 
 case class MoveMeaningSurfaceTarget(
@@ -2307,7 +2308,7 @@ object MoveMeaningSurface:
         requiredSquares = tokenValues(claim, "requiredSquare:").flatMap(publicSquare),
         maintainedSquares = tokenValues(claim, "maintainedSquare:").flatMap(publicSquare),
         brokenSquares = tokenValues(claim, "brokenSquare:").flatMap(publicSquare),
-        terminalConsequences = tokenValues(claim, "terminalConsequenceKind:").flatMap(publicTerminalConsequenceCode),
+        terminalConsequences = claim.terminalConsequenceKinds.flatMap(publicTerminalConsequenceCode),
         failureReason = tokenValue(claim, "failureReason:").flatMap(publicEndgameFailureCode)
       )
       Option.when(
@@ -2323,53 +2324,7 @@ object MoveMeaningSurface:
     terminalConsequenceCodes(claim).map(publicCode(_, terminalConsequenceLabels))
 
   private def terminalConsequenceCodes(claim: MoveMeaningClaim): List[String] =
-    val explicit =
-      tokenValues(claim, "terminalConsequenceKind:").flatMap(publicTerminalConsequenceCode).map(_.code)
-    val carrierTokens = terminalCarrierTokens(claim.objectBindingSignatures)
-    val hasPromotionRace = explicit.contains("promotion_race") || carrierTokens.exists(terminalPromotionRaceCarrier)
-    val carrierCodes =
-      List(
-        Option.when(carrierTokens.exists(terminalMateCarrier))("mate"),
-        Option.when(hasPromotionRace)("promotion_race"),
-        Option.when(!hasPromotionRace && carrierTokens.exists(terminalPromotionCarrier))("promotion"),
-        Option.when(carrierTokens.exists(terminalMaterialGainCarrier))("material_gain"),
-        Option.when(carrierTokens.exists(terminalMaterialLossCarrier))("material_loss")
-      ).flatten
-    (explicit ++ carrierCodes).distinct
-
-  private def terminalCarrierTokens(objectBindingSignatures: List[String]): Set[String] =
-    (
-      EvidenceObjectBinding.signatureTokens(objectBindingSignatures, "mechanism=") ++
-        EvidenceObjectBinding.signatureTokens(objectBindingSignatures, "consequence=") ++
-        EvidenceObjectBinding.signatureTokens(objectBindingSignatures, "target=")
-    ).map(terminalCarrierToken)
-
-  private def terminalCarrierToken(token: String): String =
-    token.dropWhile(_ != '=').drop(1).toLowerCase.filter(_.isLetterOrDigit)
-
-  private def terminalMateCarrier(token: String): Boolean =
-    token == "mechanismmate" ||
-      token == "consequencemate"
-
-  private def terminalPromotionCarrier(token: String): Boolean =
-    token == "mechanismpawnpromotion" ||
-      token == "consequencepawnpromotion" ||
-      token == "consequencepromotiongain" ||
-      token.startsWith("pawnpassedpawnpromoted")
-
-  private def terminalPromotionRaceCarrier(token: String): Boolean =
-    token == "mechanismpromotionrace" ||
-      token == "consequencepromotionrace"
-
-  private def terminalMaterialGainCarrier(token: String): Boolean =
-    token == "mechanismmaterialgain" ||
-      token == "consequencematerialgain" ||
-      token == "consequencepromotiongain"
-
-  private def terminalMaterialLossCarrier(token: String): Boolean =
-    token == "mechanismmaterialloss" ||
-      token == "consequencematerialloss" ||
-      token == "consequencepromotionloss"
+    claim.terminalConsequenceKinds.flatMap(publicTerminalConsequenceCode).map(_.code).distinct
 
   private def publicEndgameHorizonStatus(status: String): Option[String] =
     status match
@@ -3008,7 +2963,8 @@ object MoveMeaningClaim:
         targetSquares = surfaceTarget.squares,
         targetFiles = surfaceTarget.files,
         targetPieces = surfaceTarget.pieces,
-        specificityTier = detail.specificityTier
+        specificityTier = detail.specificityTier,
+        terminalConsequenceKinds = detail.terminalConsequenceKinds.distinct.sorted
       )
 
   private def currentMoveRouteLineRole(
