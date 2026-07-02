@@ -248,21 +248,35 @@ function problemLabels(semantic: ChesstoryMoveSemantic): string[] {
 }
 
 function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
-  return (semantic.evidence?.board_carriers || [])
-    .filter(carrier => ['Square', 'File', 'Piece', 'Move'].includes(carrier.kind || ''))
-    .map(carrier =>
-      [carrier.value, carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : undefined].filter(Boolean).join(' '),
-    );
+  return [
+    ...(semantic.evidence?.board_carriers || [])
+      .filter(carrier => ['Square', 'File', 'Piece', 'Move'].includes(carrier.kind || ''))
+      .map(carrier =>
+        [carrier.value, carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : undefined].filter(Boolean).join(' '),
+      ),
+    ...targetLabels(semantic),
+  ];
 }
 
 function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
-  return (semantic.evidence?.board_carriers || [])
-    .filter(carrier => carrier.role === 'target' && ['Square', 'File', 'Piece', 'Move'].includes(carrier.kind || ''))
-    .map(carrier =>
-      [carrier.value, carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : undefined]
-        .filter(Boolean)
-        .join(' '),
-    );
+  return [
+    ...(semantic.evidence?.board_carriers || [])
+      .filter(carrier => carrier.role === 'target' && ['Square', 'File', 'Piece', 'Move'].includes(carrier.kind || ''))
+      .map(carrier =>
+        [carrier.value, carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : undefined]
+          .filter(Boolean)
+          .join(' '),
+      ),
+    ...targetLabels(semantic),
+  ];
+}
+
+function targetLabels(semantic: ChesstoryMoveSemantic): string[] {
+  return uniqueLabels([
+    ...(semantic.target?.files || []).map(file => `${file}-file`),
+    ...(semantic.target?.squares || []),
+    ...(semantic.target?.pieces || []),
+  ]);
 }
 
 function techniqueLabels(semantic: ChesstoryMoveSemantic): string[] {
@@ -305,7 +319,7 @@ function playedComparisonLossLabels(semantic: ChesstoryMoveSemantic): string[] {
 
 function isPlayedComparisonLoss(loss: ChesstoryComparisonLoss): boolean {
   const side = loss.side?.toLowerCase();
-  return side === 'played_move';
+  return side === 'played_move' || side === 'candidate';
 }
 
 function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
