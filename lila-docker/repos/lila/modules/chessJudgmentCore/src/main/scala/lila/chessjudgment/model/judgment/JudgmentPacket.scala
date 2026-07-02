@@ -2058,14 +2058,13 @@ object MoveMeaningSurface:
       technique: Option[MoveMeaningSurfaceEndgameTechnique]
   ): MoveMeaningSurfaceEvidence =
     val boardCarriers = claim.boardCarriers
-    val hasBoardCarrier = boardCarriers.nonEmpty
     val objectCarrier = claim.objectCarrierReady
-    val causeCarrier = claim.causeEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
-    val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
+    val causeCarrier = claim.causeEvidenceIds.nonEmpty && objectCarrier
+    val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier
     val graphCarrier = claim.causeEvidenceIds.nonEmpty || claim.sourceEvidenceIds.nonEmpty
     val targetBound = boardCarriers.exists(_.role == "target")
-    val terminalCarrier = graphCarrier && terminal.nonEmpty && objectCarrier && hasBoardCarrier
-    val techniqueCarrier = graphCarrier && technique.nonEmpty && objectCarrier && hasBoardCarrier
+    val terminalCarrier = graphCarrier && terminal.nonEmpty && objectCarrier
+    val techniqueCarrier = graphCarrier && technique.nonEmpty && objectCarrier
     val hasCarrier = causeCarrier || sourceCarrier || terminalCarrier || techniqueCarrier
     val proofLevel =
       if terminalCarrier then "terminal_proof"
