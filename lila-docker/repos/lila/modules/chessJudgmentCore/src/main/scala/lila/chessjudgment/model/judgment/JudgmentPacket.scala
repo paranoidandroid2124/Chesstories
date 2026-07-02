@@ -3349,11 +3349,7 @@ object MoveMeaningClaim:
       case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
         currentMoveFunctionalDetailProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
       case PositionPlanTechniqueUnit.CounterplayRace =>
-        currentMoveFunctionalDetailProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim) ||
-          (
-            counterplayRaceMeaningReady(detail, objectSignatures, claimMove, positionFen) &&
-              moveTokens(objectSignatures).contains(JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase)
-          )
+        currentMoveFunctionalDetailProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
       case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" =>
         pieceRouteViewReady(detail, objectSignatures, claimMove) &&
           detailOwnsClaimMove(detail, objectSignatures, claimMove) &&
