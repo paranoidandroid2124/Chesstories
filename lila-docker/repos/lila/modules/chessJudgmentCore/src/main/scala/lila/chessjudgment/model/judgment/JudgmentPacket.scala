@@ -3072,10 +3072,10 @@ object MoveMeaningClaim:
     val directCurrentMoveCarrier =
       !currentMoveClaim ||
         currentMoveDirectCarrier(detail, objectSignatures, claimMove)
-    val currentMoveFunctionalProof =
+    lazy val currentMoveFunctionalProof =
       directCurrentMoveCarrier &&
         currentMoveFunctionalDetailProof(detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
-    val currentMoveSurfaceProof =
+    lazy val currentMoveSurfaceProof =
       directCurrentMoveCarrier &&
         currentMoveSurfaceReady(meaningKind, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
     val reasonGradeCauseFrames = roleCompatibleCauseFrames.filter(reasonGradeCauseFrame)
@@ -3110,7 +3110,7 @@ object MoveMeaningClaim:
           endgameTechniqueHorizonOwnedShape(detail)
         case _ =>
           true
-    val viewMeaningReady =
+    lazy val viewMeaningReady =
       detail.unit match
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
           currentMoveSurfaceProof
@@ -3124,12 +3124,19 @@ object MoveMeaningClaim:
         case _ =>
           true
     val endgameTechniqueViewProof = endgameTechniqueHorizonViewShape(detail)
-    val laneOwnershipReady =
+    lazy val laneOwnershipReady =
       !currentMoveClaim ||
+        currentMoveSurfaceProof
+    val ownedCandidateCauseOwnsCurrentMove =
+      currentMoveClaim &&
+        reasonGradeCauseFrames.exists(ownedCandidateCauseFrameOwnsClaimMove(_, claimMove))
+    val ownedLaneOwnershipReady =
+      !currentMoveClaim ||
+        ownedCandidateCauseOwnsCurrentMove ||
         currentMoveSurfaceProof
     if terminalOverriddenEndgameTechniqueDetail(detail) && endgameTechniqueViewProof then
       Some("contextual")
-    else if reasonGradeCauseFrames.nonEmpty && ownedCause && laneOwnershipReady && hasConcreteObject && specificObjectAxis && direct && ownedMeaningReady &&
+    else if reasonGradeCauseFrames.nonEmpty && ownedCause && ownedLaneOwnershipReady && hasConcreteObject && specificObjectAxis && direct && ownedMeaningReady &&
         !planOptionCurrentFunctionOnly && !badCurrentMovePositiveMeaning && !broadPlanContinuityCurrentMove
     then
       Some("owned_cause_linked")
@@ -3302,6 +3309,12 @@ object MoveMeaningClaim:
         legacyOwnedProofFrame(frame)
     ) &&
       reasonGradeFrameProofReady(frame)
+
+  private def ownedCandidateCauseFrameOwnsClaimMove(frame: MoveJudgmentCauseFrame, claimMove: String): Boolean =
+    frame.causeSourceSide == RelativeCauseSourceSide.Candidate &&
+      frame.attributionDirectProofEligible &&
+      frame.attributionRootMoveMatched &&
+      sameMove(frame.eventRootMove, claimMove)
 
   private def legacyOwnedProofFrame(frame: MoveJudgmentCauseFrame): Boolean =
     frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ContextOnly &&
@@ -5102,8 +5115,11 @@ object MoveMeaningClaim:
       detail.referenceEvidenceIds.nonEmpty &&
         detail.candidateEvidenceIds.isEmpty &&
         !currentMove
-    val currentMoveSurfaceReadyForLane =
+    lazy val currentMoveSurfaceReadyForLane =
       currentMoveSurfaceReady(meaningKind, detail, detail.objectBindingSignatures, claimMove, positionFen, currentMove)
+    val ownedCandidateCauseOwnsCurrentMove =
+      currentMove &&
+        linkedCauseFrames.exists(frame => reasonGradeCauseFrame(frame) && ownedCandidateCauseFrameOwnsClaimMove(frame, claimMove))
     val referenceLedPositiveCandidateWitness =
       currentMove &&
         candidateMove != referenceMove &&
@@ -5112,7 +5128,8 @@ object MoveMeaningClaim:
         positiveMeaningRole(claimRole)
     if referenceMoveOnly || (referenceOwnedCause && !candidateOwnedCause) || referenceDetailOnly then
       "reference_or_opponent_resource"
-    else if supportLevel == "owned_cause_linked" && currentMove && candidateOwnedCause && currentMoveSurfaceReadyForLane &&
+    else if supportLevel == "owned_cause_linked" && currentMove && candidateOwnedCause &&
+        (ownedCandidateCauseOwnsCurrentMove || currentMoveSurfaceReadyForLane) &&
         !referenceLedPositiveCandidateWitness
     then
       "current_move_owned"
