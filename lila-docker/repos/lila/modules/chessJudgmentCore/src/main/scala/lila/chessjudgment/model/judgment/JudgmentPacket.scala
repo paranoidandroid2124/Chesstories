@@ -1847,11 +1847,9 @@ object MoveMeaningSurface:
     publicClaimsForSurface(view)
       .map(claim => fromClaim(view.verdict, claim))
 
-  def publicClaimCandidates(view: MoveJudgmentView): List[MoveMeaningClaim] =
-    view.moveMeaningClaims.filter(claim => publicSurfaceClaim(view, claim))
-
   def publicClaimsForSurface(view: MoveJudgmentView): List[MoveMeaningClaim] =
-    publicClaimCandidates(view)
+    view.moveMeaningClaims
+      .filter(claim => publicSurfaceClaim(view, claim))
       .sortBy(claim => claimSurfaceSortKey(view.verdict, claim))
       .take(12)
 
@@ -1859,7 +1857,7 @@ object MoveMeaningSurface:
     val target = MoveMeaningSurfaceTarget.fromClaim(claim)
     publicEvidence(claim, target, terminalConsequences(claim), endgameTechnique(claim))
 
-  def publicSurfaceClaim(claim: MoveMeaningClaim): Boolean =
+  private def publicSurfaceLaneAllowed(claim: MoveMeaningClaim): Boolean =
     terminalOverriddenEndgameTechniqueClaim(claim) ||
       (
         claim.supportLevel != "contextual" &&
@@ -1868,7 +1866,7 @@ object MoveMeaningSurface:
       )
 
   private def publicSurfaceClaim(view: MoveJudgmentView, claim: MoveMeaningClaim): Boolean =
-    publicSurfaceClaim(claim) &&
+    publicSurfaceLaneAllowed(claim) &&
       evidenceForClaim(claim).hasCarrier &&
       !terminalOverriddenEndgameTechniqueShadowed(view, claim) &&
       publicSpecificPlanContinuityClaim(view, claim) &&
