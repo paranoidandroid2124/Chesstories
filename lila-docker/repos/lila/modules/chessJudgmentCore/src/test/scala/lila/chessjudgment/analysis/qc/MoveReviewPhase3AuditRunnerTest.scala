@@ -244,7 +244,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "byQuestionId" \ "terminal_promotion_race" \ "terminalStageCounts" \ "clustered_coherent").as[Int], 1)
     assertEquals((corpusCoverage \ "expectedQuestionCoverageComplete").as[Boolean], true)
 
-  test("semantic rubric reports suppressed and merged move meaning claims"):
+  test("semantic rubric reports suppressed and multi-input public move meaning claims"):
     val publicSignature =
       "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=view_surfaced|lane=current_move_function|lineRole=played|move=g1f3|causes=none|sources=route-src|proof=none|carrier=true|boardCarrier=true|objects=target=Piece:knight;mechanism=Mechanism:route;witness=Move:g1f3"
     val suppressedSignature =
@@ -284,12 +284,12 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     )
     assertEquals((coverage \ "suppressedMoveMeaningClaimCount").as[Int], 1)
     assertEquals((coverage \ "suppressedMoveMeaningClaimSignatures").as[List[String]], List(suppressedSignature))
-    assertEquals((coverage \ "mergedOwnershipClaimCount").as[Int], 1)
-    assertEquals((coverage \ "mergedOwnershipClaimSignatures").as[List[String]], List(mergedSignature))
+    assertEquals((coverage \ "multiEvidenceInputPublicClaimCount").as[Int], 1)
+    assertEquals((coverage \ "multiEvidenceInputPublicClaimSignatures").as[List[String]], List(mergedSignature))
     assertEquals((corpusCoverage \ "publicMoveMeaningClaimCount").as[Int], 3)
     assertEquals((corpusCoverage \ "boardCarrierlessPublicMoveMeaningClaimCount").as[Int], 1)
     assertEquals((corpusCoverage \ "suppressedMoveMeaningClaimCount").as[Int], 1)
-    assertEquals((corpusCoverage \ "mergedOwnershipClaimCount").as[Int], 1)
+    assertEquals((corpusCoverage \ "multiEvidenceInputPublicClaimCount").as[Int], 1)
 
   test("writes replay input archive next to audit output"):
     val dir = Files.createTempDirectory("phase3-audit-runner")
@@ -5993,6 +5993,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         lineRole = value("lineRole").getOrElse(""),
         moveUci = value("move").getOrElse(""),
         causeEvidenceIds = values("causes"),
+        sourceEvidenceIds = values("sources"),
         hasCarrier = value("carrier").contains("true"),
         hasBoardCarrier = value("boardCarrier").contains("true"),
         proofLevel = value("proof").getOrElse("none"),

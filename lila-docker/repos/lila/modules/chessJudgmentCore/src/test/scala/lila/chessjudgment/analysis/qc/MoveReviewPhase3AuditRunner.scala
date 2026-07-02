@@ -1904,6 +1904,7 @@ object MoveReviewPhase3AuditRunner:
       "lineRole" -> diagnostic.lineRole,
       "moveUci" -> diagnostic.moveUci,
       "causeEvidenceIds" -> diagnostic.causeEvidenceIds,
+      "sourceEvidenceIds" -> diagnostic.sourceEvidenceIds,
       "hasCarrier" -> diagnostic.hasCarrier,
       "hasBoardCarrier" -> diagnostic.hasBoardCarrier,
       "proofLevel" -> diagnostic.proofLevel,

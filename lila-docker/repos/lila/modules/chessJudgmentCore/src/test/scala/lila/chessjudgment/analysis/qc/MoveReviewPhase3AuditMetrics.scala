@@ -160,17 +160,9 @@ private[qc] object MoveReviewPhase3AuditMetrics:
   private[qc] def signatureParts(signature: String): List[String] =
     signature.split("\\|").toList.map(_.trim).filter(_.nonEmpty)
 
-  private[qc] def signatureValues(signature: String, key: String): List[String] =
-    signatureParts(signature)
-      .collectFirst { case part if part.startsWith(s"$key=") => part.stripPrefix(s"$key=") }
-      .toList
-      .flatMap(_.split(",").toList)
-      .map(_.trim)
-      .filter(value => value.nonEmpty && value != "none")
-
-  private def multiOwnerMoveMeaningClaim(signature: String): Boolean =
-    signatureValues(signature, "causes").size > 1 ||
-      signatureValues(signature, "sources").size > 1
+  private def multiEvidenceInputPublicClaim(diagnostic: PublicMoveMeaningClaimDiagnostic): Boolean =
+    diagnostic.causeEvidenceIds.size > 1 ||
+      diagnostic.sourceEvidenceIds.size > 1
 
   private[qc] def moveMeaningSurfaceDiagnosticsJson(
       diagnostics: List[CandidateComparisonDiagnostic]
@@ -181,7 +173,8 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       diagnostics.flatMap(_.moveJudgmentView.publicMoveMeaningClaimDiagnostics).distinct.sortBy(_.signature)
     val publicSignatures = publicClaimDiagnostics.map(_.signature).distinct.sorted
     val suppressedSignatures = internalSignatures.diff(publicSignatures)
-    val mergedSignatures = internalSignatures.filter(multiOwnerMoveMeaningClaim)
+    val multiInputPublicSignatures =
+      publicClaimDiagnostics.filter(multiEvidenceInputPublicClaim).map(_.signature).distinct.sorted
     val boardCarrierlessPublicSignatures =
       publicClaimDiagnostics.filterNot(_.hasBoardCarrier).map(_.signature).distinct.sorted
     Json.obj(
@@ -190,8 +183,8 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       "boardCarrierlessPublicMoveMeaningClaimSignatures" -> boardCarrierlessPublicSignatures,
       "suppressedMoveMeaningClaimCount" -> suppressedSignatures.size,
       "suppressedMoveMeaningClaimSignatures" -> suppressedSignatures,
-      "mergedOwnershipClaimCount" -> mergedSignatures.size,
-      "mergedOwnershipClaimSignatures" -> mergedSignatures
+      "multiEvidenceInputPublicClaimCount" -> multiInputPublicSignatures.size,
+      "multiEvidenceInputPublicClaimSignatures" -> multiInputPublicSignatures
     )
 
   private[qc] def moveMeaningSurfaceCorpusDiagnosticsJson(coverages: List[JsValue]): JsObject =
@@ -209,9 +202,11 @@ private[qc] object MoveReviewPhase3AuditMetrics:
         .flatMap(coverage => (coverage \ "suppressedMoveMeaningClaimSignatures").asOpt[List[String]].getOrElse(Nil))
         .distinct
         .sorted
-    val mergedSignatures =
+    val multiInputPublicSignatures =
       coverages
-        .flatMap(coverage => (coverage \ "mergedOwnershipClaimSignatures").asOpt[List[String]].getOrElse(Nil))
+        .flatMap(coverage =>
+          (coverage \ "multiEvidenceInputPublicClaimSignatures").asOpt[List[String]].getOrElse(Nil)
+        )
         .distinct
         .sorted
     Json.obj(
@@ -220,8 +215,8 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       "boardCarrierlessPublicMoveMeaningClaimSignatures" -> boardCarrierlessPublicSignatures,
       "suppressedMoveMeaningClaimCount" -> suppressedSignatures.size,
       "suppressedMoveMeaningClaimSignatures" -> suppressedSignatures,
-      "mergedOwnershipClaimCount" -> mergedSignatures.size,
-      "mergedOwnershipClaimSignatures" -> mergedSignatures
+      "multiEvidenceInputPublicClaimCount" -> multiInputPublicSignatures.size,
+      "multiEvidenceInputPublicClaimSignatures" -> multiInputPublicSignatures
     )
 
   private[qc] def axislessStructuralInventorySignal(signal: StrategicMechanismSignal): Boolean =
