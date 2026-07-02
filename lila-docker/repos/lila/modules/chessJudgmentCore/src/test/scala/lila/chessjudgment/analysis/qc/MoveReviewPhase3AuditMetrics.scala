@@ -41,9 +41,6 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       )
     )
 
-  private[qc] def signatureParts(signature: String): List[String] =
-    signature.split("\\|").toList.map(_.trim).filter(_.nonEmpty)
-
   private def multiEvidenceInputPublicClaim(diagnostic: PublicMoveMeaningClaimDiagnostic): Boolean =
     diagnostic.causeEvidenceIds.size > 1 ||
       diagnostic.sourceEvidenceIds.size > 1
@@ -1458,15 +1455,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
   ): Boolean =
     slot.requiredObjectBindingTokens.isEmpty ||
       slot.requiredObjectBindingTokens.forall(token =>
-        objectBindingSignatureTokenSatisfied(token, row.objectBindingSignatures) ||
-          semanticDetailTokenGroupsForSlot(slot, row).exists(group => objectBindingTokenSatisfied(token, group))
+        semanticDetailTokenGroupsForSlot(slot, row).exists(group => objectBindingTokenSatisfied(token, group))
       )
-
-  private def objectBindingSignatureTokenSatisfied(token: String, signatures: List[String]): Boolean =
-    val normalized = token.trim
-    normalized.nonEmpty &&
-      !roleTokenValue(normalized).exists(_.isEmpty) &&
-      signatures.exists(signature => MoveReviewPhase3AuditMetrics.signatureParts(signature).contains(normalized))
 
   private def objectBindingTokenSatisfied(token: String, values: List[String]): Boolean =
     objectBindingSemanticDetailTokens(token).exists(values.contains)
