@@ -1859,8 +1859,7 @@ object MoveMeaningSurface:
       .take(12)
 
   private[chessjudgment] def evidenceForClaim(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
-    val target = MoveMeaningSurfaceTarget.fromClaim(claim)
-    publicEvidence(claim, target, terminalConsequences(claim), endgameTechnique(claim))
+    publicEvidence(claim, terminalConsequences(claim), endgameTechnique(claim))
 
   private def publicSurfaceLaneAllowed(claim: MoveMeaningClaim): Boolean =
     terminalOverriddenEndgameTechniqueClaim(claim) ||
@@ -2034,7 +2033,6 @@ object MoveMeaningSurface:
 
   private def publicEvidence(
       claim: MoveMeaningClaim,
-      target: MoveMeaningSurfaceTarget,
       terminal: List[MoveMeaningSurfaceCode],
       technique: Option[MoveMeaningSurfaceEndgameTechnique]
   ): MoveMeaningSurfaceEvidence =
@@ -2043,11 +2041,9 @@ object MoveMeaningSurface:
     val objectCarrier = EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
     val causeCarrier = claim.causeEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
     val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
-    val targetBound =
-      target.squares.nonEmpty || target.files.nonEmpty || target.pieces.nonEmpty ||
-        boardCarriers.exists(_.role == "target")
-    val terminalCarrier = terminal.nonEmpty && hasBoardCarrier
-    val techniqueCarrier = technique.nonEmpty && hasBoardCarrier
+    val targetBound = boardCarriers.exists(_.role == "target")
+    val terminalCarrier = terminal.nonEmpty && objectCarrier && hasBoardCarrier
+    val techniqueCarrier = technique.nonEmpty && objectCarrier && hasBoardCarrier
     val hasCarrier = causeCarrier || sourceCarrier || terminalCarrier || techniqueCarrier
     val proofLevel =
       if terminalCarrier then "terminal_proof"
@@ -2072,8 +2068,8 @@ object MoveMeaningSurface:
       .flatMap(signature => EvidenceObjectBinding.signatureParts(signature).flatMap(publicBoardCarrierPart))
       .distinct
       .sortBy(carrier =>
-      (carrier.role, carrier.kind, carrier.value, carrier.from.getOrElse(""), carrier.to.getOrElse(""))
-    ).take(8)
+        (carrier.role, carrier.kind, carrier.value, carrier.from.getOrElse(""), carrier.to.getOrElse(""))
+      ).take(8)
 
   private def publicBoardCarrierPart(part: String): Option[MoveMeaningSurfaceBoardCarrier] =
     val keyValue = part.split("=", 2)

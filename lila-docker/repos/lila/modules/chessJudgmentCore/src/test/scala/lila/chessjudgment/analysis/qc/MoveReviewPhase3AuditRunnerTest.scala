@@ -3579,8 +3579,9 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     )
 
     assertEquals(surface, Nil)
+    assertEquals(MoveMeaningSurface.evidenceForClaim(proofOnlyClaim).targetBound, false)
 
-  test("move meaning public surface does not use rendered target as terminal carrier"):
+  test("move meaning public surface does not use target-only objects as terminal or technique carrier"):
     val terminalTargetOnlyClaim = MoveMeaningClaim(
       meaningKind = "TerminalProof",
       role = "ForcesTerminalResult",
@@ -3601,19 +3602,30 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       causeSourceSides = Nil,
       causeEvidenceIds = Nil,
       sourceEvidenceIds = List("line-terminal"),
-      objectBindingSignatures = Nil,
+      objectBindingSignatures = List("target=Square:e8"),
       reasonTokens = List("terminalConsequenceKind:Mate"),
       targetSquares = List("e8")
+    )
+    val techniqueTargetOnlyClaim = terminalTargetOnlyClaim.copy(
+      meaningKind = "RookEndgameTechnique",
+      role = "HoldsTechnique",
+      laneKey = "kind=RookEndgameTechnique|axis=none|object=none",
+      unit = PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
+      label = Some("rook-endgame-technique"),
+      sourceEvidenceIds = List("line-technique"),
+      reasonTokens = List("horizonStatus:Active", "requiredSquare:e8")
     )
     val surface = MoveMeaningSurface.from(
       meaningClaimView(
         verdict = MoveChoiceVerdict.MatchesReference,
         auditCauses = Nil,
         details = Nil
-      ).copy(moveMeaningClaims = List(terminalTargetOnlyClaim))
+      ).copy(moveMeaningClaims = List(terminalTargetOnlyClaim, techniqueTargetOnlyClaim))
     )
 
     assertEquals(surface, Nil)
+    assertEquals(MoveMeaningSurface.evidenceForClaim(terminalTargetOnlyClaim).hasCarrier, false)
+    assertEquals(MoveMeaningSurface.evidenceForClaim(techniqueTargetOnlyClaim).hasCarrier, false)
 
   test("move meaning claims do not treat target-only object signature as surface carrier"):
     val targetOnlyDetail = PositionPlanTechniqueSemanticDetail(
