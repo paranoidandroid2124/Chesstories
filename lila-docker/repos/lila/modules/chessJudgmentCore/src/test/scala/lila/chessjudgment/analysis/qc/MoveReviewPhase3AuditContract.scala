@@ -27,6 +27,7 @@ private[qc] object MoveReviewPhase3AuditContract:
       requiredCauseKinds: List[RelativeCauseKind] = Nil,
       requiredPrimaryRootCauseKinds: List[RelativeCauseKind] = Nil,
       requiredPrimaryRootArbitrationTiers: List[MoveJudgmentCauseRootArbitrationTier] = Nil,
+      requiredTerminalConsequenceKinds: List[LineConsequenceKind] = Nil,
       requiredSemanticDetailTokens: List[String] = Nil,
       requiredCoLocatedSemanticDetailTokens: List[String] = Nil,
       requiredSemanticAnchorTokens: List[String] = Nil,
@@ -74,6 +75,11 @@ private[qc] object MoveReviewPhase3AuditContract:
             .asOpt[List[String]]
             .getOrElse(Nil)
             .flatMap(raw => MoveJudgmentCauseRootArbitrationTier.values.find(_.toString == raw.trim)),
+        requiredTerminalConsequenceKinds =
+          (json \ "requiredTerminalConsequenceKinds")
+            .asOpt[List[String]]
+            .getOrElse(Nil)
+            .flatMap(raw => LineConsequenceKind.values.find(_.toString == raw.trim)),
         requiredSemanticDetailTokens = (json \ "requiredSemanticDetailTokens").asOpt[List[String]].getOrElse(Nil),
         requiredCoLocatedSemanticDetailTokens =
           (json \ "requiredCoLocatedSemanticDetailTokens").asOpt[List[String]].getOrElse(Nil),
@@ -96,6 +102,7 @@ private[qc] object MoveReviewPhase3AuditContract:
       "requiredCauseKinds" -> slot.requiredCauseKinds.map(_.toString),
       "requiredPrimaryRootCauseKinds" -> slot.requiredPrimaryRootCauseKinds.map(_.toString),
       "requiredPrimaryRootArbitrationTiers" -> slot.requiredPrimaryRootArbitrationTiers.map(_.toString),
+      "requiredTerminalConsequenceKinds" -> slot.requiredTerminalConsequenceKinds.map(_.toString),
       "requiredSemanticDetailTokens" -> slot.requiredSemanticDetailTokens,
       "requiredCoLocatedSemanticDetailTokens" -> slot.requiredCoLocatedSemanticDetailTokens,
       "requiredSemanticAnchorTokens" -> slot.requiredSemanticAnchorTokens,

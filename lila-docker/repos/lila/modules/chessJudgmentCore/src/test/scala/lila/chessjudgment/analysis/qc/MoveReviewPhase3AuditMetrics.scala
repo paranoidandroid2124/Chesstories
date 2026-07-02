@@ -1058,6 +1058,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slot.requiredCauseKinds.nonEmpty ||
       slot.requiredPrimaryRootCauseKinds.nonEmpty ||
       slot.requiredPrimaryRootArbitrationTiers.nonEmpty ||
+      slot.requiredTerminalConsequenceKinds.nonEmpty ||
       slot.requiredSemanticDetailTokens.nonEmpty ||
       slot.requiredCoLocatedSemanticDetailTokens.nonEmpty ||
       slot.requiredSemanticAnchorTokens.nonEmpty ||
@@ -1335,6 +1336,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       "requiredCauseKinds" -> slot.requiredCauseKinds.map(_.toString),
       "requiredPrimaryRootCauseKinds" -> slot.requiredPrimaryRootCauseKinds.map(_.toString),
       "requiredPrimaryRootArbitrationTiers" -> slot.requiredPrimaryRootArbitrationTiers.map(_.toString),
+      "requiredTerminalConsequenceKinds" -> slot.requiredTerminalConsequenceKinds.map(_.toString),
       "requiredSemanticDetailTokens" -> slot.requiredSemanticDetailTokens,
       "requiredCoLocatedSemanticDetailTokens" -> slot.requiredCoLocatedSemanticDetailTokens,
       "requiredSemanticAnchorTokens" -> slot.requiredSemanticAnchorTokens,
@@ -1445,9 +1447,9 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       slot: ExpectedSemanticSlot,
       row: SemanticRubricSlotRow
   ): Boolean =
-    slot.requiredSemanticDetailTokens.isEmpty ||
+    expectedSemanticDetailTokens(slot).isEmpty ||
       semanticDetailTokenGroupsForSlot(slot, row).exists(group =>
-        tokensSatisfied(slot.requiredSemanticDetailTokens, group)
+        tokensSatisfied(expectedSemanticDetailTokens(slot), group)
       )
 
   private def semanticDetailTokenGroupsForSlot(
@@ -1465,7 +1467,11 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
 
   private def semanticDetailCoLocationTokens(slot: ExpectedSemanticSlot): List[String] =
     if slot.requiredCoLocatedSemanticDetailTokens.nonEmpty then slot.requiredCoLocatedSemanticDetailTokens
-    else slot.requiredSemanticDetailTokens
+    else expectedSemanticDetailTokens(slot)
+
+  private def expectedSemanticDetailTokens(slot: ExpectedSemanticSlot): List[String] =
+    (slot.requiredSemanticDetailTokens ++
+      slot.requiredTerminalConsequenceKinds.map(kind => s"terminalConsequenceKind:$kind")).distinct
 
   private def objectBindingTokensCoLocated(
       requiredObjectBindingTokens: List[String],
@@ -1536,7 +1542,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     slot.requiredPrimaryRootArbitrationTiers.nonEmpty && semanticLineageTokenCoLocationRequired(slot)
 
   private def semanticLineageTokenCoLocationRequired(slot: ExpectedSemanticSlot): Boolean =
-    slot.requiredSemanticDetailTokens.nonEmpty ||
+    expectedSemanticDetailTokens(slot).nonEmpty ||
       slot.requiredCoLocatedSemanticDetailTokens.nonEmpty ||
       slot.requiredObjectBindingTokens.nonEmpty
 

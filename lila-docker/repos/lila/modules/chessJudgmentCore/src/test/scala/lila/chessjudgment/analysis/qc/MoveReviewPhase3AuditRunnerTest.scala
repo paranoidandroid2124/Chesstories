@@ -113,6 +113,133 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "expectedQuestionCoverageComplete").as[Boolean], false)
     assertEquals((corpusCoverage \ "expectedQuestionCoverageComplete").as[Boolean], false)
 
+  test("semantic rubric measures terminal proof questions through explicit carrier slots"):
+    def terminalSlot(
+        id: String,
+        questionId: String,
+        stage: String,
+        consequence: LineConsequenceKind,
+        objectTokens: List[String],
+        causeKinds: List[RelativeCauseKind] = Nil
+    ) =
+      MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
+        id = id,
+        unit = PositionPlanTechniqueUnit.StructuralTransformation,
+        questionId = Some(questionId),
+        requiredTerminalStage = Some(stage),
+        requiredCauseKinds = causeKinds,
+        requiredTerminalConsequenceKinds = List(consequence),
+        requiredCoLocatedSemanticDetailTokens = List("proofRole:DirectProof"),
+        requiredObjectBindingTokens = objectTokens
+      )
+    def terminalDiagnostic(
+        id: String,
+        move: String,
+        consequence: String,
+        objectSignature: String,
+        support: String,
+        lane: String,
+        causeKind: Option[RelativeCauseKind] = None,
+        causeId: String = "none"
+    ) =
+      val detailTokens =
+        List(
+          "unit:StructuralTransformation",
+          s"terminalConsequenceKind:$consequence",
+          "proofRole:DirectProof",
+          s"structuralConsequence:$consequence",
+          "structuralCategory:TerminalProof"
+        ) ++
+          Option.when(causeId != "none")(s"causeEvidenceId:$causeId").toList ++
+          objectSignature.split("\\|").toList.flatMap {
+            case token if token.startsWith("actor=")       => List(s"objectActor:${token.stripPrefix("actor=")}")
+            case token if token.startsWith("target=")      => List(s"objectTarget:${token.stripPrefix("target=")}")
+            case token if token.startsWith("mechanism=")   => List(s"objectMechanism:${token.stripPrefix("mechanism=")}")
+            case token if token.startsWith("consequence=") => List(s"objectConsequence:${token.stripPrefix("consequence=")}")
+            case token if token.startsWith("witness=")     => List(s"objectWitness:${token.stripPrefix("witness=")}")
+            case _                                         => Nil
+          }
+      val causes = causeKind.toList
+      val flows =
+        causeKind
+          .filter(_ => causeId != "none")
+          .map(kind => causeFlow(causeId, kind, proofAxisKeys = Nil, claimIds = List(s"claim-$id")))
+          .toList
+      comparisonDiagnostic(
+        id = id,
+        referenceLeadAxes = Nil,
+        producedKinds = causes,
+        flows = flows,
+        primaryRootKinds = causes,
+        primaryRootIds = if causes.nonEmpty then List(causeId) else Nil,
+        positionPlanTechniqueFrameIds = List(s"frame-$id"),
+        positionPlanTechniqueUnits = List(PositionPlanTechniqueUnit.StructuralTransformation),
+        positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.StructuralTransformation),
+        positionPlanTechniqueSemanticDetailTokens = detailTokens,
+        positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens),
+        positionPlanTechniqueObjectBindingSignatures = List(objectSignature),
+        positionPlanTechniqueRelativeCauseEvidenceIds = if causes.nonEmpty then List(causeId) else Nil,
+        moveMeaningClaimSurfaceSignatures =
+          List(s"unit=StructuralTransformation|axis=none|kind=TerminalProof|support=$support|lane=$lane|lineRole=candidate|move=$move|causes=$causeId"),
+        publicMoveMeaningClaimSurfaceSignatures =
+          List(s"unit=StructuralTransformation|axis=none|kind=TerminalProof|support=$support|lane=$lane|lineRole=candidate|move=$move|causes=$causeId")
+      )
+
+    val mateSlot =
+      terminalSlot(
+        id = "terminal-mate-view",
+        questionId = "terminal_mate",
+        stage = "view_surfaced",
+        consequence = LineConsequenceKind.Mate,
+        objectTokens = List("target=Square:h7", "mechanism=Mechanism:Mate")
+      )
+    val promotionRaceSlot =
+      terminalSlot(
+        id = "terminal-promotion-race-owned",
+        questionId = "terminal_promotion_race",
+        stage = "owned_cause_linked",
+        consequence = LineConsequenceKind.PromotionRace,
+        objectTokens = List("target=Square:a8", "mechanism=Mechanism:promotionrace"),
+        causeKinds = List(RelativeCauseKind.ConversionSecured)
+      )
+    val coverage =
+      MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
+        expectedSlots = List(mateSlot, promotionRaceSlot),
+        diagnostics = List(
+          terminalDiagnostic(
+            id = "terminal-mate",
+            move = "g6g7",
+            consequence = "Mate",
+            objectSignature = "actor=Move:g6g7|target=Square:h7|mechanism=Mechanism:Mate|consequence=Consequence:Mate|proof=DirectProof",
+            support = "view_surfaced",
+            lane = "current_move_function"
+          ),
+          terminalDiagnostic(
+            id = "terminal-promotion-race",
+            move = "a7a8q",
+            consequence = "PromotionRace",
+            objectSignature =
+              "actor=Move:a7a8q|target=Square:a8|mechanism=Mechanism:promotionrace|consequence=Consequence:promotionrace|proof=DirectProof",
+            support = "owned_cause_linked",
+            lane = "current_move_owned",
+            causeKind = Some(RelativeCauseKind.ConversionSecured),
+            causeId = "cause-promotion-race"
+          )
+        ),
+        expectedQuestionIds = List("terminal_mate", "terminal_promotion_race")
+      )
+    val corpusCoverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCorpusCoverageJson(List(coverage))
+
+    assertEquals((coverage \ "matchedSlotCount").as[Int], 2)
+    assertEquals((coverage \ "measuredExpectedQuestionIds").as[List[String]], List("terminal_mate", "terminal_promotion_race"))
+    assertEquals((coverage \ "unmeasuredExpectedQuestionIds").as[List[String]], Nil)
+    assertEquals((coverage \ "coveredExpectedQuestionIds").as[List[String]], List("terminal_mate", "terminal_promotion_race"))
+    assertEquals((coverage \ "expectedQuestionCoverageComplete").as[Boolean], true)
+    assertEquals((coverage \ "byQuestionId" \ "terminal_mate" \ "terminalStageCounts" \ "view_surfaced").as[Int], 1)
+    assertEquals((coverage \ "byQuestionId" \ "terminal_promotion_race" \ "ownedCauseLinkedCount").as[Int], 1)
+    assertEquals((coverage \ "byQuestionId" \ "terminal_promotion_race" \ "terminalStageCounts" \ "clustered_coherent").as[Int], 1)
+    assertEquals((corpusCoverage \ "expectedQuestionCoverageComplete").as[Boolean], true)
+
   test("semantic rubric reports suppressed and merged move meaning claims"):
     val publicSignature =
       "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=view_surfaced|lane=current_move_function|lineRole=played|move=g1f3|causes=none|sources=route-src|proof=none|objects=target=Piece:knight"
@@ -3151,6 +3278,21 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(drawResourceView.moveMeaningClaims.map(_.role), List("ProvesDrawResource"))
     assertEquals(drawSurface.map(_.ideaType), List("draw_resource"))
     assertEquals(drawSurface.head.terminalConsequences.map(_.code), List("draw_resource"))
+    val forcedMateView = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(
+        detail.copy(
+          structuralRouteMove = Some("h7h8"),
+          objectBindingSignatures = List(
+            "actor=Move:h7h8|target=Square:h8|mechanism=Mechanism:Mate|consequence=Consequence:Mate|witness=Move:e2e3|proof=DirectProof"
+          )
+        )
+      )
+    )
+    assertEquals(forcedMateView.moveMeaningClaims.map(_.meaningKind), List("TerminalProof"))
+    assertEquals(forcedMateView.moveMeaningClaims.map(_.surfaceLane), List("current_move_function"))
+    assertEquals(MoveMeaningSurface.from(forcedMateView).map(_.ideaType), List("terminal_mate"))
 
   test("move meaning claims do not call bare weak-square target pressure a piece route"):
     val targetSignature =

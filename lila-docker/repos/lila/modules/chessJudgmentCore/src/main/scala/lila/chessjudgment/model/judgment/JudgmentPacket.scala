@@ -3100,7 +3100,7 @@ object MoveMeaningClaim:
   ): Boolean =
     val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
     detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) &&
-      detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
+      detail.structuralRouteMove.nonEmpty &&
       objectSignatures.exists(terminalProofSignatureOwnsMoveAndTarget(_, normalizedClaimMove))
 
   private def terminalProofConsequenceKind(kind: String): Boolean =
@@ -3108,9 +3108,15 @@ object MoveMeaningClaim:
 
   private def terminalProofSignatureOwnsMoveAndTarget(signature: String, normalizedClaimMove: String): Boolean =
     val signatureList = List(signature)
-    EvidenceObjectBinding
-      .signatureTokens(signatureList, "actor=Move:")
-      .map(part => JudgmentSubjectBinding.normalizeMove(part.stripPrefix("actor=Move:")).toLowerCase)
+    (
+      EvidenceObjectBinding.signatureTokens(signatureList, "actor=Move:") ++
+        EvidenceObjectBinding.signatureTokens(signatureList, "witness=Move:")
+    )
+      .map(part =>
+        JudgmentSubjectBinding
+          .normalizeMove(part.stripPrefix("actor=Move:").stripPrefix("witness=Move:"))
+          .toLowerCase
+      )
       .contains(normalizedClaimMove) &&
       EvidenceObjectBinding.signatureTokens(signatureList, "target=").exists(EvidenceObjectBinding.concreteTargetToken)
 
