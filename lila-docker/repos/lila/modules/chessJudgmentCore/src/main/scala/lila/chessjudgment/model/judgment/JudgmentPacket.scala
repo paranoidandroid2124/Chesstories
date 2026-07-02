@@ -3229,12 +3229,8 @@ object MoveMeaningClaim:
       objectSignatures: List[String],
       claimMove: String
   ): Boolean =
-    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
     val sourceOwnsCurrentMove =
       currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove)
-    val objectOwnsCurrentMove =
-      currentMoveProofObjectSignatures(objectSignatures)
-        .exists(signature => moveTokens(List(signature)).contains(normalizedClaimMove))
     val metadataMoveOwnsCurrentMove =
       detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) ||
       detail.defenseMove.exists(move => sameMove(move, claimMove)) ||
@@ -3248,14 +3244,9 @@ object MoveMeaningClaim:
       detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
         terminalProofDetailOwnsClaimMove(detail, objectSignatures, claimMove)
     sourceOwnsCurrentMove ||
-      objectOwnsCurrentMove ||
       lineHorizonOwnsCurrentMove ||
       terminalProofOwnsCurrentMove ||
-      (metadataMoveOwnsCurrentMove && (sourceOwnsCurrentMove || objectOwnsCurrentMove))
-
-  private def currentMoveProofObjectSignatures(objectSignatures: List[String]): Set[String] =
-    EvidenceObjectBinding.signaturesForProofRole(objectSignatures, Some(RelativeCauseProofRole.DirectProof)) ++
-      EvidenceObjectBinding.signaturesForProofRole(objectSignatures, Some(RelativeCauseProofRole.ContrastProof))
+      (metadataMoveOwnsCurrentMove && sourceOwnsCurrentMove)
 
   private def moveMeaningClaimSourceEvidenceIds(
       evidenceGraph: TypedEvidenceGraph,
