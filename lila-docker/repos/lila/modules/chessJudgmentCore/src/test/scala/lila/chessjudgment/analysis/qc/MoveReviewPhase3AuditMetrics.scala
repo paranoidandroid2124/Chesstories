@@ -62,11 +62,11 @@ private[qc] object MoveReviewPhase3AuditMetrics:
 
   private[qc] def moveMeaningSurfaceCorpusDiagnosticsJson(coverages: List[JsValue]): JsObject =
     val publicClaimCount =
-      coverages.map(coverage => (coverage \ "publicMoveMeaningClaimCount").asOpt[Int].getOrElse(0)).sum
+      coverages.map(coverage => (coverage \ "publicMoveMeaningClaimCount").as[Int]).sum
     val boardCarrierlessPublicClaimCount =
-      coverages.map(coverage => (coverage \ "boardCarrierlessPublicMoveMeaningClaimCount").asOpt[Int].getOrElse(0)).sum
+      coverages.map(coverage => (coverage \ "boardCarrierlessPublicMoveMeaningClaimCount").as[Int]).sum
     val multiInputPublicClaimCount =
-      coverages.map(coverage => (coverage \ "multiEvidenceInputPublicClaimCount").asOpt[Int].getOrElse(0)).sum
+      coverages.map(coverage => (coverage \ "multiEvidenceInputPublicClaimCount").as[Int]).sum
     Json.obj(
       "publicMoveMeaningClaimCount" -> publicClaimCount,
       "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicClaimCount,
@@ -112,9 +112,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
     val rows = diagnostics.flatMap(semanticRubricSlotRows)
     val slotRows =
       expectedSlots.map(slot => expectedSemanticSlotCoverage(slot, rows))
-    val questionIds = slotRows.flatMap(row => (row \ "questionId").asOpt[String]).distinct.sorted
+    val measuredSlotRows = slotRows.filter(row => (row \ "measured").as[Boolean])
+    val questionIds = measuredSlotRows.flatMap(row => (row \ "questionId").asOpt[String]).distinct.sorted
     val matchedQuestionIds =
-      slotRows
+      measuredSlotRows
         .filter(row => (row \ "matched").as[Boolean])
         .flatMap(row => (row \ "questionId").asOpt[String])
         .distinct
@@ -127,14 +128,20 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       else matchedQuestionIds.filter(measuredExpectedQuestionIds.contains)
     val missingExpectedQuestionIds = measuredExpectedQuestionIds.diff(coveredExpectedQuestionIds)
     val missingSlotIds =
-      slotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
+      measuredSlotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
+    val unmeasuredSlotIds =
+      slotRows.filterNot(row => (row \ "measured").as[Boolean]).map(row => (row \ "id").as[String])
     val failedRequiredSupportLevelSlotIds =
-      slotRows.filter(row => !(row \ "supportLevelSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
+      measuredSlotRows.filter(row => !(row \ "supportLevelSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
     Json.obj(
       "classification" -> "audit_only",
       "expectedSlotCount" -> slotRows.size,
-      "matchedSlotCount" -> slotRows.count(row => (row \ "matched").as[Boolean]),
-      "supportLevelCounts" -> stringCountsJson(slotRows.map(row => (row \ "supportLevel").as[String])),
+      "measuredSlotCount" -> measuredSlotRows.size,
+      "matchedSlotCount" -> measuredSlotRows.count(row => (row \ "matched").as[Boolean]),
+      "supportLevelCounts" -> stringCountsJson(measuredSlotRows.map(row => (row \ "supportLevel").as[String])),
+      "unmeasuredSlotIds" -> unmeasuredSlotIds,
+      "unmeasuredUniqueSlotIds" -> unmeasuredSlotIds.distinct.sorted,
+      "unmeasuredSlotIdCounts" -> stringCountsJson(unmeasuredSlotIds),
       "missingSlotIds" -> missingSlotIds,
       "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
       "missingSlotIdCounts" -> stringCountsJson(missingSlotIds),
@@ -160,21 +167,22 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
 
   private[qc] def semanticRubricExpectedSlotCorpusCoverageJson(coverages: List[JsValue]): JsObject =
     val slotRows =
-      coverages.flatMap(coverage => (coverage \ "slots").asOpt[List[JsObject]].getOrElse(Nil))
+      coverages.flatMap(coverage => (coverage \ "slots").as[List[JsObject]])
+    val measuredSlotRows = slotRows.filter(row => (row \ "measured").as[Boolean])
     val questionIds =
-      (slotRows.flatMap(row => (row \ "questionId").asOpt[String]) ++
-        coverages.flatMap(coverage => (coverage \ "questionIds").asOpt[List[String]].getOrElse(Nil)))
+      (measuredSlotRows.flatMap(row => (row \ "questionId").asOpt[String]) ++
+        coverages.flatMap(coverage => (coverage \ "questionIds").as[List[String]]))
         .distinct
         .sorted
     val matchedQuestionIds =
-      slotRows
+      measuredSlotRows
         .filter(row => (row \ "matched").as[Boolean])
         .flatMap(row => (row \ "questionId").asOpt[String])
         .distinct
         .sorted
     val expectedQuestions =
       coverages
-        .flatMap(coverage => (coverage \ "expectedQuestionIds").asOpt[List[String]].getOrElse(Nil))
+        .flatMap(coverage => (coverage \ "expectedQuestionIds").as[List[String]])
         .map(_.trim)
         .filter(_.nonEmpty)
         .distinct
@@ -186,15 +194,21 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       else matchedQuestionIds.filter(measuredExpectedQuestionIds.contains)
     val missingExpectedQuestionIds = measuredExpectedQuestionIds.diff(coveredExpectedQuestionIds)
     val missingSlotIds =
-      slotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
+      measuredSlotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
+    val unmeasuredSlotIds =
+      slotRows.filterNot(row => (row \ "measured").as[Boolean]).map(row => (row \ "id").as[String])
     val failedRequiredSupportLevelSlotIds =
-      slotRows.filter(row => !(row \ "supportLevelSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
+      measuredSlotRows.filter(row => !(row \ "supportLevelSatisfied").as[Boolean]).map(row => (row \ "id").as[String])
     Json.obj(
       "classification" -> "audit_only",
       "coverageRowCount" -> coverages.size,
       "expectedSlotCount" -> slotRows.size,
-      "matchedSlotCount" -> slotRows.count(row => (row \ "matched").as[Boolean]),
-      "supportLevelCounts" -> stringCountsJson(slotRows.map(row => (row \ "supportLevel").as[String])),
+      "measuredSlotCount" -> measuredSlotRows.size,
+      "matchedSlotCount" -> measuredSlotRows.count(row => (row \ "matched").as[Boolean]),
+      "supportLevelCounts" -> stringCountsJson(measuredSlotRows.map(row => (row \ "supportLevel").as[String])),
+      "unmeasuredSlotIds" -> unmeasuredSlotIds,
+      "unmeasuredUniqueSlotIds" -> unmeasuredSlotIds.distinct.sorted,
+      "unmeasuredSlotIdCounts" -> stringCountsJson(unmeasuredSlotIds),
       "missingSlotIds" -> missingSlotIds,
       "missingUniqueSlotIds" -> missingSlotIds.distinct.sorted,
       "missingSlotIdCounts" -> stringCountsJson(missingSlotIds),
@@ -248,26 +262,32 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       slot: ExpectedSemanticSlot,
       rows: List[SemanticRubricSlotRow]
   ): JsObject =
+    val measured = slot.lineRole.exists(_.trim.nonEmpty) && slot.moveUci.exists(_.trim.nonEmpty)
     val unitEligibleRows =
-      rows.filter(row =>
-        row.unit == slot.unit &&
-          slot.axisKey.forall(expectedAxis => row.axisKey.contains(expectedAxis)) &&
-          slot.lineRole.forall(expectedRole => row.lineRole == expectedRole.trim) &&
-          slot.moveUci.forall(expectedMove =>
-            JudgmentSubjectBinding.normalizeMove(row.moveUci) == JudgmentSubjectBinding.normalizeMove(expectedMove)
-          )
-      )
+      if !measured then Nil
+      else
+        rows.filter(row =>
+          row.unit == slot.unit &&
+            slot.axisKey.forall(expectedAxis => row.axisKey.contains(expectedAxis)) &&
+            slot.lineRole.forall(expectedRole => row.lineRole == expectedRole.trim) &&
+            slot.moveUci.forall(expectedMove =>
+              JudgmentSubjectBinding.normalizeMove(row.moveUci) == JudgmentSubjectBinding.normalizeMove(expectedMove)
+            )
+        )
     val matches = unitEligibleRows
     val best =
       slot.requiredSupportLevel
         .flatMap(required => matches.find(_.supportLevel == required.trim))
         .orElse(matches.headOption)
-    val supportLevel = best.map(_.supportLevel).getOrElse("missing_semantic_slot")
+    val supportLevel =
+      if measured then best.map(_.supportLevel).getOrElse("missing_semantic_slot")
+      else "unmeasured_semantic_slot"
     val supportLevelSatisfied =
-      slot.requiredSupportLevel.forall(required => supportLevel == required.trim)
-    val matched = best.nonEmpty && supportLevelSatisfied
+      measured && slot.requiredSupportLevel.forall(required => supportLevel == required.trim)
+    val matched = measured && best.nonEmpty && supportLevelSatisfied
     Json.obj(
       "id" -> slot.id,
+      "measured" -> measured,
       "unit" -> slot.unit.toString,
       "axisKey" -> slot.axisKey,
       "lineRole" -> slot.lineRole,

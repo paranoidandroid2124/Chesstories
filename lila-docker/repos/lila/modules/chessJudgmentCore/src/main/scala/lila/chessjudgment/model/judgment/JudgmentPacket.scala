@@ -1678,7 +1678,10 @@ case class MoveMeaningClaim(
     requiredSquares: List[String] = Nil,
     maintainedSquares: List[String] = Nil,
     brokenSquares: List[String] = Nil,
-    publicIdeaType: Option[String] = None
+    publicIdeaType: Option[String] = None,
+    publicHasCarrier: Boolean = false,
+    publicProofLevel: String = "none",
+    publicTargetBound: Boolean = false
 )
 
 case class MoveMeaningSurfaceTarget(
@@ -1882,7 +1885,7 @@ object MoveMeaningSurface:
       .take(12)
 
   private[chessjudgment] def evidenceForClaim(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
-    publicEvidence(claim, terminalConsequences(claim), endgameTechnique(claim))
+    publicEvidence(claim)
 
   private def publicSurfaceLaneAllowed(claim: MoveMeaningClaim): Boolean =
     terminalOverriddenEndgameTechniqueClaim(claim) ||
@@ -2052,34 +2055,14 @@ object MoveMeaningSurface:
       evidence = evidence
     )
 
-  private def publicEvidence(
-      claim: MoveMeaningClaim,
-      terminal: List[MoveMeaningSurfaceCode],
-      technique: Option[MoveMeaningSurfaceEndgameTechnique]
-  ): MoveMeaningSurfaceEvidence =
-    val boardCarriers = claim.boardCarriers
-    val objectCarrier = claim.objectCarrierReady
-    val causeCarrier = claim.causeEvidenceIds.nonEmpty && objectCarrier
-    val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier
-    val graphCarrier = claim.causeEvidenceIds.nonEmpty || claim.sourceEvidenceIds.nonEmpty
-    val targetBound = boardCarriers.exists(_.role == "target")
-    val terminalCarrier = graphCarrier && terminal.nonEmpty && objectCarrier
-    val techniqueCarrier = graphCarrier && technique.nonEmpty && objectCarrier
-    val hasCarrier = causeCarrier || sourceCarrier || terminalCarrier || techniqueCarrier
-    val proofLevel =
-      if terminalCarrier then "terminal_proof"
-      else if causeCarrier && claim.supportLevel == "owned_cause_linked" then "owned_cause"
-      else if causeCarrier then "cause_linked"
-      else if sourceCarrier then "surface_evidence"
-      else if techniqueCarrier then "technique"
-      else "none"
+  private def publicEvidence(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
     MoveMeaningSurfaceEvidence(
-      hasCarrier = hasCarrier,
-      proofLevel = proofLevel,
-      targetBound = targetBound,
+      hasCarrier = claim.publicHasCarrier,
+      proofLevel = claim.publicProofLevel,
+      targetBound = claim.publicTargetBound,
       causeIds = claim.causeEvidenceIds.take(6),
       sourceIds = claim.sourceEvidenceIds.take(6),
-      boardCarriers = boardCarriers
+      boardCarriers = claim.boardCarriers
     )
 
   private def subject(claim: MoveMeaningClaim): String =
@@ -2608,6 +2591,8 @@ object MoveMeaningClaim:
       claims.filterNot(claim =>
         claim.meaningKind == "PawnBreakTiming" &&
           claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
+          claim.supportLevel != "owned_cause_linked" &&
+          claim.causeEvidenceIds.isEmpty &&
           raceClaims.exists(counterplayRaceShadowsPawnBreak(_, claim))
       )
 
@@ -2716,12 +2701,24 @@ object MoveMeaningClaim:
         targetPieces = list.flatMap(_.targetPieces).distinct.sorted,
         routeIdentityParts = list.flatMap(_.routeIdentityParts).distinct.sorted,
         breakIdentityParts = list.flatMap(_.breakIdentityParts).distinct.sorted,
-        breakFiles = list.flatMap(_.breakFiles).distinct.sorted
+        breakFiles = list.flatMap(_.breakFiles).distinct.sorted,
+        publicHasCarrier = list.exists(_.publicHasCarrier),
+        publicProofLevel = list.map(_.publicProofLevel).sortBy(publicProofLevelRank).lastOption.getOrElse("none"),
+        publicTargetBound = list.exists(_.publicTargetBound)
       )
     )
 
   private def boardCarrierSortKey(carrier: MoveMeaningSurfaceBoardCarrier): (String, String, String, String, String) =
     (carrier.role, carrier.kind, carrier.value, carrier.from.getOrElse(""), carrier.to.getOrElse(""))
+
+  private def publicProofLevelRank(level: String): Int =
+    level match
+      case "terminal_proof"   => 5
+      case "owned_cause"      => 4
+      case "cause_linked"     => 3
+      case "surface_evidence" => 2
+      case "technique"        => 1
+      case _                  => 0
 
   private def duplicateMeaningKey(claim: MoveMeaningClaim): (String, String, String, String, String) =
     val objectKey =
@@ -2800,10 +2797,7 @@ object MoveMeaningClaim:
           currentMoveRouteLineRole(detail, objectSignatures, verdict)
         )("candidate")
       lineRoleOptions =
-        (currentRouteLineRole.toList ++ List(
-          lineRole(frame, detail, verdict, Nil),
-          lineRole(frame, detail, verdict, linkedCauseFrames)
-        )).distinct
+        (currentRouteLineRole.toList ++ lineRoles(frame, detail, verdict, linkedCauseFrames)).distinct
       claimOptions =
         lineRoleOptions.map { optionLineRole =>
           val optionMove = moveUci(verdict, optionLineRole)
@@ -2865,6 +2859,15 @@ object MoveMeaningClaim:
           .filter(id => detail.causeEvidenceIds.contains(id) || bridgedRouteCauseIds.contains(id))
           .distinct
           .sorted
+      val sourceEvidenceIds = moveMeaningClaimSourceEvidenceIds(evidenceGraph, detail, verdict, claimLineRole, claimMove)
+      val objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames)
+      val publicHasCarrier = objectCarrierReady && (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty)
+      val publicProofLevel =
+        if !publicHasCarrier then "none"
+        else if detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) then "terminal_proof"
+        else if linkedCauseIds.nonEmpty && support == "owned_cause_linked" then "owned_cause"
+        else if linkedCauseIds.nonEmpty then "cause_linked"
+        else "surface_evidence"
       MoveMeaningClaim(
         meaningKind = meaningKind,
         role = claimRole,
@@ -2874,17 +2877,12 @@ object MoveMeaningClaim:
         visibility = visibility(support),
         surfaceLane =
           surfaceLane(
-            evidenceGraph,
-            meaningKind,
             detail,
-            surfaceObjectSignatures,
             verdict,
             claimLineRole,
             claimMove,
-            frame.position.fen,
             support,
-            roleCompatibleCauseFrames,
-            claimRole
+            roleCompatibleCauseFrames
           ),
         lineRole = claimLineRole,
         moveUci = moveUci(verdict, claimLineRole),
@@ -2897,7 +2895,7 @@ object MoveMeaningClaim:
         causeKinds = roleCompatibleCauseFrames.map(_.causeKind).distinct.sortBy(_.toString),
         causeSourceSides = roleCompatibleCauseFrames.map(_.causeSourceSide).distinct.sortBy(_.toString),
         causeEvidenceIds = linkedCauseIds,
-        sourceEvidenceIds = moveMeaningClaimSourceEvidenceIds(evidenceGraph, detail, verdict, claimLineRole, claimMove),
+        sourceEvidenceIds = sourceEvidenceIds,
         objectBindingSignatures = Nil,
         reasonTokens = Nil,
         comparisonLossSides =
@@ -2907,7 +2905,7 @@ object MoveMeaningClaim:
             .distinct
             .sorted,
         comparisonLossKinds = PositionPlanTechniqueSemanticDetail.comparisonLossKinds(detail).distinct.sorted,
-        objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames),
+        objectCarrierReady = objectCarrierReady,
         boardCarriers = boardCarriers,
         targetSquares = surfaceTarget.squares,
         targetFiles = surfaceTarget.files,
@@ -2928,7 +2926,10 @@ object MoveMeaningClaim:
         requiredSquares = detail.requiredSquares.distinct.sorted,
         maintainedSquares = detail.maintainedSquares.distinct.sorted,
         brokenSquares = detail.brokenSquares.distinct.sorted,
-        publicIdeaType = publicIdeaType(detail, meaningKind)
+        publicIdeaType = publicIdeaType(detail, meaningKind),
+        publicHasCarrier = publicHasCarrier,
+        publicProofLevel = publicProofLevel,
+        publicTargetBound = boardCarriers.exists(_.role == "target")
       )
 
   private def publicBoardCarriers(
@@ -4702,21 +4703,32 @@ object MoveMeaningClaim:
         (detail.candidateEvidenceIds.nonEmpty || detail.referenceEvidenceIds.nonEmpty)
     candidateMoveMatches || referenceMoveMatches || candidateRootMatches || referenceRootMatches || contrastDetail
 
-  private def lineRole(
+  private def lineRoles(
       frame: PositionPlanTechniqueFrame,
       detail: PositionPlanTechniqueSemanticDetail,
       verdict: MoveJudgmentVerdictFrame,
       linkedCauseFrames: List[MoveJudgmentCauseFrame]
-  ): String =
-    val sourceSides = linkedCauseFrames.map(_.causeSourceSide).distinct
-    if sourceSides == List(RelativeCauseSourceSide.Candidate) then "candidate"
-    else if sourceSides == List(RelativeCauseSourceSide.Reference) then "reference"
-    else if detail.candidateEvidenceIds.nonEmpty && detail.referenceEvidenceIds.nonEmpty then "contrast"
-    else if detail.referenceEvidenceIds.nonEmpty then "reference"
-    else if detail.candidateEvidenceIds.nonEmpty then "candidate"
-    else if frame.line.contains(verdict.candidateLine) then "candidate"
-    else if frame.line.contains(verdict.referenceLine) then "reference"
-    else "contrast"
+  ): List[String] =
+    val graphRoles =
+      linkedCauseFrames.flatMap(frame => causeFrameLineRole(frame, verdict)).distinct
+    if graphRoles.nonEmpty then graphRoles
+    else if frame.line.contains(verdict.candidateLine) then List("candidate")
+    else if frame.line.contains(verdict.referenceLine) then List("reference")
+    else if detail.candidateEvidenceIds.nonEmpty && detail.referenceEvidenceIds.nonEmpty then List("contrast")
+    else if detail.referenceEvidenceIds.nonEmpty then List("reference")
+    else if detail.candidateEvidenceIds.nonEmpty then List("candidate")
+    else List("contrast")
+
+  private def causeFrameLineRole(frame: MoveJudgmentCauseFrame, verdict: MoveJudgmentVerdictFrame): Option[String] =
+    frame.causeSourceSide match
+      case RelativeCauseSourceSide.Candidate =>
+        Some("candidate")
+      case RelativeCauseSourceSide.Reference =>
+        Some("reference")
+      case RelativeCauseSourceSide.Mixed | RelativeCauseSourceSide.Shared =>
+        if frame.eventLine == verdict.candidateLine then Some("candidate")
+        else if frame.eventLine == verdict.referenceLine then Some("reference")
+        else Some("contrast")
 
   private def moveUci(
       verdict: MoveJudgmentVerdictFrame,
@@ -4964,56 +4976,24 @@ object MoveMeaningClaim:
       case _                    => "soft_context"
 
   private def surfaceLane(
-      evidenceGraph: TypedEvidenceGraph,
-      meaningKind: String,
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String],
       verdict: MoveJudgmentVerdictFrame,
       claimLineRole: String,
       claimMove: String,
-      positionFen: String,
       supportLevel: String,
-      linkedCauseFrames: List[MoveJudgmentCauseFrame],
-      claimRole: String
+      linkedCauseFrames: List[MoveJudgmentCauseFrame]
   ): String =
-    val candidateMove = JudgmentSubjectBinding.normalizeMove(verdict.candidateLine.rootMove)
-    val referenceMove = JudgmentSubjectBinding.normalizeMove(verdict.referenceLine.rootMove)
-    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove)
     val currentMove = currentMoveMeaningClaim(verdict, claimLineRole, claimMove)
-    val referenceMoveOnly = normalizedClaimMove == referenceMove && candidateMove != referenceMove
-    val referenceOwnedCause =
-      linkedCauseFrames.exists(frame => frame.causeSourceSide == RelativeCauseSourceSide.Reference)
-    val candidateOwnedCause =
-      linkedCauseFrames.exists(frame => frame.causeSourceSide == RelativeCauseSourceSide.Candidate)
-    val referenceDetailOnly =
-      detail.referenceEvidenceIds.nonEmpty &&
-        detail.candidateEvidenceIds.isEmpty &&
-        !currentMove
-    lazy val currentMoveSurfaceReadyForLane =
-      currentMoveSurfaceReady(evidenceGraph, meaningKind, detail, objectSignatures, claimMove, positionFen, currentMove)
-    val ownedCandidateCauseOwnsCurrentMove =
-      currentMove &&
-        linkedCauseFrames.exists(frame => reasonGradeCauseFrame(frame) && ownedCandidateCauseFrameOwnsClaimMove(frame, claimMove))
-    val referenceLedPositiveCandidateWitness =
-      currentMove &&
-        candidateMove != referenceMove &&
-        claimLineRole == "candidate" &&
-        PositionPlanTechniqueSemanticDetail.comparisonLossSides(detail).contains("candidate") &&
-        positiveMeaningRole(claimRole)
-    if referenceMoveOnly || (referenceOwnedCause && !candidateOwnedCause) || referenceDetailOnly then
+    val candidateOwnedCause = linkedCauseFrames.exists(_.causeSourceSide == RelativeCauseSourceSide.Candidate)
+    if claimLineRole == "reference" then
       "reference_or_opponent_resource"
-    else if supportLevel == "owned_cause_linked" && currentMove && candidateOwnedCause &&
-        (ownedCandidateCauseOwnsCurrentMove || currentMoveSurfaceReadyForLane) &&
-        !referenceLedPositiveCandidateWitness
-    then
+    else if supportLevel == "owned_cause_linked" && currentMove && candidateOwnedCause then
       "current_move_owned"
-    else if supportLevel == "view_surfaced" && currentMove && claimLineRole == "candidate" && currentMoveSurfaceReadyForLane &&
-        !referenceLedPositiveCandidateWitness
-    then
+    else if supportLevel == "view_surfaced" && currentMove && claimLineRole == "candidate" then
       "current_move_function"
     else if supportLevel == "contextual" || contextualMeaningDetail(detail) then
       "inherited_context"
-    else if claimLineRole == "contrast" || detail.contrastOutcome.nonEmpty then
+    else if claimLineRole == "contrast" then
       "pv_or_line_witness"
     else
       "pv_or_line_witness"
@@ -5029,12 +5009,11 @@ object MoveMeaningClaim:
       verdict == MoveChoiceVerdict.Mistake ||
       verdict == MoveChoiceVerdict.Blunder
 
-  private def sortKey(claim: MoveMeaningClaim): (Int, Int, Int, Int, String) =
+  private def sortKey(claim: MoveMeaningClaim): (Int, Int, Int, String) =
     (
       strengthRank(claim.supportLevel),
       if claim.specificityTier == PositionPlanTechniqueSpecificityTier.ExactObjectAxis then 1 else 0,
       kindRank(claim.meaningKind),
-      claim.boardCarriers.size,
       claim.frameId
     )
 

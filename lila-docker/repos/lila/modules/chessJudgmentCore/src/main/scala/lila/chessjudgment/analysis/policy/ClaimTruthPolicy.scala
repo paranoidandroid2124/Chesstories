@@ -39,8 +39,7 @@ object ClaimTruthPolicy:
       if claim.evidence.isEmpty || missingEvidence.nonEmpty then ClaimTruthStatus.Rejected
       else if claimBoundRecords.isEmpty then ClaimTruthStatus.Rejected
       else if !hasFamilyProof then ClaimTruthStatus.Deferred
-      else if missingGroups.isEmpty then ClaimTruthStatus.Certified
-      else ClaimTruthStatus.Deferred
+      else ClaimTruthStatus.Certified
     ClaimTruthDecision(
       claim = claim,
       status = status,
@@ -56,7 +55,7 @@ object ClaimTruthPolicy:
   ): Boolean =
     val claimEvidenceIds = claim.evidence.map(_.id).toSet
     val samePosition = record.ref.position == claim.primaryPosition
-    val layerCompatible = claimLayerCompatible(claim.family, record)
+    val layerCompatible = claimLayerCompatible(record)
     val sameLine = layerCompatible && claim.primaryLine.exists(line => recordLineMatches(record, line))
     val sameSubjectMove = layerCompatible && claim.subjectMove.exists(move => recordMentionsMove(record, move, claim.primaryLine))
     val comparisonLineSupport =
@@ -90,7 +89,7 @@ object ClaimTruthPolicy:
       graph: TypedEvidenceGraph,
       samePositionLocal: Boolean
   ): Boolean =
-    val supportLayer = linkedSupportLayer(claim.family, record.ref.layer)
+    val supportLayer = linkedSupportLayer(record.ref.layer)
     (supportLayer && claim.primaryLine.exists(line => recordLineMatches(record, line))) ||
       (supportLayer && claim.subjectMove.exists(move => recordMentionsMove(record, move, claim.primaryLine))) ||
       samePositionLocal ||
@@ -108,59 +107,18 @@ object ClaimTruthPolicy:
       comparisonLinesForClaim(claim, graph).exists(line => recordLineMatches(record, line))
     claim.primaryLine.nonEmpty &&
       (record.ref.position == claim.primaryPosition || comparisonLineBound) &&
-      linkedSupportLayer(claim.family, record.ref.layer)
+      linkedSupportLayer(record.ref.layer)
 
-  private def linkedSupportLayer(family: ClaimFamily, layer: EvidenceLayer): Boolean =
-    family match
-      case ClaimFamily.Tactical =>
-        layer match
-          case EvidenceLayer.TacticalMechanism | EvidenceLayer.Relation | EvidenceLayer.MoveMotif | EvidenceLayer.Line |
-              EvidenceLayer.Eval | EvidenceLayer.RelativeCause | EvidenceLayer.RelativeAssessment |
-              EvidenceLayer.CandidateComparison | EvidenceLayer.Counterfactual | EvidenceLayer.MoveVerdictCertification =>
-            true
-          case _ =>
-            false
-      case ClaimFamily.Defensive =>
-        layer match
-          case EvidenceLayer.TacticalMechanism | EvidenceLayer.ThreatPressure | EvidenceLayer.RelativeCause | EvidenceLayer.Line |
-              EvidenceLayer.RelativeAssessment | EvidenceLayer.CandidateComparison | EvidenceLayer.Counterfactual |
-              EvidenceLayer.MoveVerdictCertification =>
-            true
-          case _ =>
-            false
-      case ClaimFamily.Plan =>
-        layer match
-          case EvidenceLayer.StrategicMechanism | EvidenceLayer.RelativeCause | EvidenceLayer.MoveVerdictCertification |
-              EvidenceLayer.CandidateComparison | EvidenceLayer.RelativeAssessment =>
-            true
-          case _ =>
-            false
-      case ClaimFamily.Strategic | ClaimFamily.PawnStructure | ClaimFamily.Opening =>
-        layer match
-          case EvidenceLayer.StrategicMechanism | EvidenceLayer.RelativeCause | EvidenceLayer.MoveVerdictCertification |
-              EvidenceLayer.CandidateComparison | EvidenceLayer.RelativeAssessment =>
-            true
-          case _ =>
-            false
-      case ClaimFamily.Conversion =>
-        layer match
-          case EvidenceLayer.Line | EvidenceLayer.Eval | EvidenceLayer.RelativeCause | EvidenceLayer.Relation |
-              EvidenceLayer.StructuralDelta | EvidenceLayer.RelativeAssessment | EvidenceLayer.CandidateComparison |
-              EvidenceLayer.Counterfactual | EvidenceLayer.MoveVerdictCertification | EvidenceLayer.SinglePosition =>
-            true
-          case _ =>
-            false
-      case ClaimFamily.Material | ClaimFamily.Evaluation =>
-        layer match
-          case EvidenceLayer.Line | EvidenceLayer.Eval | EvidenceLayer.RelativeCause |
-              EvidenceLayer.RelativeAssessment | EvidenceLayer.CandidateComparison | EvidenceLayer.Counterfactual |
-              EvidenceLayer.MoveVerdictCertification | EvidenceLayer.SinglePosition =>
-            true
-          case _ =>
-            false
+  private def linkedSupportLayer(layer: EvidenceLayer): Boolean =
+    claimProofCarrierLayer(layer)
 
-  private def claimLayerCompatible(family: ClaimFamily, record: EvidenceRecord): Boolean =
-    linkedSupportLayer(family, record.ref.layer) ||
+  private def claimProofCarrierLayer(layer: EvidenceLayer): Boolean =
+    layer match
+      case EvidenceLayer.Board | EvidenceLayer.Claim | EvidenceLayer.ChessIdea => false
+      case _                                                                   => true
+
+  private def claimLayerCompatible(record: EvidenceRecord): Boolean =
+    linkedSupportLayer(record.ref.layer) ||
       positionLocalLayer(record.ref.layer)
 
   private def positionContextLayer(family: ClaimFamily, layer: EvidenceLayer): Boolean =

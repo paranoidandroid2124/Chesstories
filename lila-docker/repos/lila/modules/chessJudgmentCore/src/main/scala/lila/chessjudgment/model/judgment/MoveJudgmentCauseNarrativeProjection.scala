@@ -110,17 +110,12 @@ object MoveJudgmentCauseNarrativeProjection:
       profile.eventKind &&
         (profile.tier == MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot || profile.tier == MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
     }
-    val terminalEventRoots = eventRoots.filter { case (frame, _) => terminalProofEventRoot(frame) }
     val fallbackRoots = profiled.filter { case (_, profile) => profile.tier == MoveJudgmentCauseRootArbitrationTier.FallbackRoot }
     val selected =
-      if terminalEventRoots.nonEmpty then selectedEventRootFrames(graph, terminalEventRoots.map(_._1))
-      else if qualifiedLongTermRoots.nonEmpty then qualifiedLongTermRoots.map(_._1)
+      if qualifiedLongTermRoots.nonEmpty then qualifiedLongTermRoots.map(_._1)
       else if eventRoots.nonEmpty then selectedEventRootFrames(graph, eventRoots.map(_._1))
       else selectedFallbackRootFrames(fallbackRoots.map(_._1))
     selected.distinctBy(causeFrameIdentity)
-
-  private def terminalProofEventRoot(frame: MoveJudgmentCauseFrame): Boolean =
-    frame.proofLineConsequences.exists(LineConsequenceKind.terminalResultProof)
 
   private def selectedEventRootFrames(graph: TypedEvidenceGraph, frames: List[MoveJudgmentCauseFrame]): List[MoveJudgmentCauseFrame] =
     frames.sortBy(eventRootSortKey(graph, _)).lastOption.toList
@@ -128,22 +123,23 @@ object MoveJudgmentCauseNarrativeProjection:
   private def selectedFallbackRootFrames(frames: List[MoveJudgmentCauseFrame]): List[MoveJudgmentCauseFrame] =
     frames.sortBy(fallbackRootSortKey).lastOption.toList
 
-  private def eventRootSortKey(graph: TypedEvidenceGraph, frame: MoveJudgmentCauseFrame): (Int, Int, Int, Int, Int, Int, String) =
+  private def eventRootSortKey(graph: TypedEvidenceGraph, frame: MoveJudgmentCauseFrame): (Int, Int, Int, Int, Int, Int, Int, String) =
     (
-      eventRootKindRank(graph, frame),
       boolRank(rootArbitrationObjectReady(frame)),
       boolRank(frame.attributionRootMoveMatched),
       boolRank(frame.attributionDirectProofEligible),
       frame.proofDirectSourceIds.distinct.size,
+      boolRank(frame.proofLineConsequences.exists(LineConsequenceKind.terminalResultProof)),
+      eventRootKindRank(graph, frame),
       sourceSideRank(frame.causeSourceSide),
       frame.causeKind.toString
     )
 
   private def fallbackRootSortKey(frame: MoveJudgmentCauseFrame): (Int, Int, Int, Int, String) =
     (
-      fallbackRootKindRank(frame.causeKind),
       boolRank(rootArbitrationObjectReady(frame)),
       frame.proofDirectSourceIds.distinct.size,
+      fallbackRootKindRank(frame.causeKind),
       sourceSideRank(frame.causeSourceSide),
       frame.causeKind.toString
     )
