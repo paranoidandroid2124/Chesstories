@@ -2007,8 +2007,9 @@ object MoveMeaningSurface:
     val causeCarrier = claim.causeEvidenceIds.nonEmpty
     val objectCarrier = EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
     val sourceCarrier = claim.sourceEvidenceIds.nonEmpty && objectCarrier
-    val terminalCarrier = terminal.nonEmpty
-    val techniqueCarrier = technique.nonEmpty
+    val targetBound = target.squares.nonEmpty || target.files.nonEmpty || target.pieces.nonEmpty
+    val terminalCarrier = terminal.nonEmpty && (targetBound || objectCarrier)
+    val techniqueCarrier = technique.nonEmpty && (targetBound || objectCarrier)
     val hasCarrier = causeCarrier || sourceCarrier || terminalCarrier || techniqueCarrier
     val proofLevel =
       if terminalCarrier then "terminal_proof"
@@ -2020,7 +2021,7 @@ object MoveMeaningSurface:
     MoveMeaningSurfaceEvidence(
       hasCarrier = hasCarrier,
       proofLevel = proofLevel,
-      targetBound = target.squares.nonEmpty || target.files.nonEmpty || target.pieces.nonEmpty,
+      targetBound = targetBound,
       causeIds = claim.causeEvidenceIds.take(6),
       sourceIds = claim.sourceEvidenceIds.take(6)
     )

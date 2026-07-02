@@ -151,7 +151,7 @@ private[qc] object MoveReviewPhase3AuditMetrics:
   private[qc] def signatureParts(signature: String): List[String] =
     signature.split("\\|").toList.map(_.trim).filter(_.nonEmpty)
 
-  private def signatureValues(signature: String, key: String): List[String] =
+  private[qc] def signatureValues(signature: String, key: String): List[String] =
     signatureParts(signature)
       .collectFirst { case part if part.startsWith(s"$key=") => part.stripPrefix(s"$key=") }
       .toList
@@ -163,6 +163,33 @@ private[qc] object MoveReviewPhase3AuditMetrics:
     signatureValues(signature, "causes").size > 1 ||
       signatureValues(signature, "sources").size > 1
 
+  private[qc] def publicSurfaceClaimHasEvidenceCarrier(signature: String): Boolean =
+    val sources = signatureValues(signature, "sources")
+    val objects = signatureValues(signature, "objects")
+    signatureValues(signature, "causes").nonEmpty ||
+      (sources.nonEmpty && objects.nonEmpty) ||
+      (signatureValues(signature, "proof").nonEmpty && objects.nonEmpty)
+
+  private[qc] def publicSurfaceClaimHasBoardCarrier(signature: String): Boolean =
+    signatureValues(signature, "objects").exists(publicSurfaceObjectHasBoardAnchor)
+
+  private def publicSurfaceObjectHasBoardAnchor(objectSignature: String): Boolean =
+    objectSignature
+      .split(";")
+      .map(_.trim)
+      .exists(part =>
+        part.startsWith("actor=Move:") ||
+          part.startsWith("actor=Piece:") ||
+          part.startsWith("actor=Square:") ||
+          part.startsWith("target=Square:") ||
+          part.startsWith("target=File:") ||
+          part.startsWith("target=Piece:") ||
+          part.startsWith("target=Pawn:") ||
+          part.startsWith("witness=Move:") ||
+          part.startsWith("witness=Line:") ||
+          part.startsWith("witness=Square:")
+      )
+
   private[qc] def moveMeaningSurfaceDiagnosticsJson(
       diagnostics: List[CandidateComparisonDiagnostic]
   ): JsObject =
@@ -172,7 +199,12 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       diagnostics.flatMap(_.moveJudgmentView.publicMoveMeaningClaimSurfaceSignatures).distinct.sorted
     val suppressedSignatures = internalSignatures.diff(publicSignatures)
     val mergedSignatures = internalSignatures.filter(multiOwnerMoveMeaningClaim)
+    val boardCarrierlessPublicSignatures =
+      publicSignatures.filterNot(publicSurfaceClaimHasBoardCarrier)
     Json.obj(
+      "publicMoveMeaningClaimCount" -> publicSignatures.size,
+      "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicSignatures.size,
+      "boardCarrierlessPublicMoveMeaningClaimSignatures" -> boardCarrierlessPublicSignatures,
       "suppressedMoveMeaningClaimCount" -> suppressedSignatures.size,
       "suppressedMoveMeaningClaimSignatures" -> suppressedSignatures,
       "mergedOwnershipClaimCount" -> mergedSignatures.size,
@@ -180,6 +212,15 @@ private[qc] object MoveReviewPhase3AuditMetrics:
     )
 
   private[qc] def moveMeaningSurfaceCorpusDiagnosticsJson(coverages: List[JsValue]): JsObject =
+    val publicClaimCount =
+      coverages.map(coverage => (coverage \ "publicMoveMeaningClaimCount").asOpt[Int].getOrElse(0)).sum
+    val boardCarrierlessPublicSignatures =
+      coverages
+        .flatMap(coverage =>
+          (coverage \ "boardCarrierlessPublicMoveMeaningClaimSignatures").asOpt[List[String]].getOrElse(Nil)
+        )
+        .distinct
+        .sorted
     val suppressedSignatures =
       coverages
         .flatMap(coverage => (coverage \ "suppressedMoveMeaningClaimSignatures").asOpt[List[String]].getOrElse(Nil))
@@ -191,6 +232,9 @@ private[qc] object MoveReviewPhase3AuditMetrics:
         .distinct
         .sorted
     Json.obj(
+      "publicMoveMeaningClaimCount" -> publicClaimCount,
+      "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicSignatures.size,
+      "boardCarrierlessPublicMoveMeaningClaimSignatures" -> boardCarrierlessPublicSignatures,
       "suppressedMoveMeaningClaimCount" -> suppressedSignatures.size,
       "suppressedMoveMeaningClaimSignatures" -> suppressedSignatures,
       "mergedOwnershipClaimCount" -> mergedSignatures.size,
@@ -1998,22 +2042,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
         semanticRubricSurfaceClaimCauseIds(signature).nonEmpty
     parts.contains(s"unit=$unit") &&
       axisKey.forall(axis => parts.contains(s"axis=$axis")) &&
-      ((currentMoveLane && semanticRubricSurfaceClaimHasCarrier(signature)) || referenceOwnedLane)
+      ((currentMoveLane && semanticRubricSurfaceClaimHasEvidenceCarrier(signature)) || referenceOwnedLane)
 
-  private def semanticRubricSurfaceClaimHasCarrier(signature: String): Boolean =
-    def values(key: String): List[String] =
-      MoveReviewPhase3AuditMetrics
-        .signatureParts(signature)
-        .collectFirst { case part if part.startsWith(s"$key=") => part.stripPrefix(s"$key=") }
-        .toList
-        .flatMap(_.split(",").toList)
-        .map(_.trim)
-        .filter(value => value.nonEmpty && value != "none")
-    val sources = values("sources")
-    val objects = values("objects")
-    semanticRubricSurfaceClaimCauseIds(signature).nonEmpty ||
-      (sources.nonEmpty && objects.nonEmpty) ||
-      (values("proof").nonEmpty && objects.nonEmpty)
+  private def semanticRubricSurfaceClaimHasEvidenceCarrier(signature: String): Boolean =
+    MoveReviewPhase3AuditMetrics.publicSurfaceClaimHasEvidenceCarrier(signature)
 
   private def semanticRubricSurfaceClaimCauseIds(signature: String): List[String] =
     MoveReviewPhase3AuditMetrics

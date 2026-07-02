@@ -251,6 +251,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=owned_cause_linked|lane=current_move_owned|lineRole=played|move=g1f3|causes=cause-route|sources=route-src|proof=DirectProof|objects=target=Piece:knight"
     val mergedSignature =
       "unit=PieceRerouteRoute|axis=none|kind=PieceRoute|support=owned_cause_linked|lane=current_move_owned|lineRole=played|move=g1f3|causes=cause-route,cause-structure|sources=route-src,structure-src|proof=DirectProof|objects=target=Piece:knight"
+    val carrierlessPublicSignature =
+      "unit=PlanOptionSet|axis=none|kind=PlanContinuity|support=view_surfaced|lane=current_move_function|lineRole=played|move=g1f3|causes=none|sources=plan-src|proof=DirectProof|objects=mechanism=Mechanism:activity"
     val diagnostic =
       comparisonDiagnostic(
         id = "surface-diagnostic",
@@ -266,17 +268,26 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         ),
         primaryRootKinds = List(RelativeCauseKind.ActivityGain),
         primaryRootIds = List("cause-route"),
-        moveMeaningClaimSurfaceSignatures = List(publicSignature, suppressedSignature, mergedSignature),
-        publicMoveMeaningClaimSurfaceSignatures = List(publicSignature, mergedSignature)
+        moveMeaningClaimSurfaceSignatures =
+          List(publicSignature, suppressedSignature, mergedSignature, carrierlessPublicSignature),
+        publicMoveMeaningClaimSurfaceSignatures = List(publicSignature, mergedSignature, carrierlessPublicSignature)
       )
 
     val coverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(Nil, List(diagnostic))
     val corpusCoverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCorpusCoverageJson(List(coverage))
 
+    assertEquals((coverage \ "publicMoveMeaningClaimCount").as[Int], 3)
+    assertEquals((coverage \ "boardCarrierlessPublicMoveMeaningClaimCount").as[Int], 1)
+    assertEquals(
+      (coverage \ "boardCarrierlessPublicMoveMeaningClaimSignatures").as[List[String]],
+      List(carrierlessPublicSignature)
+    )
     assertEquals((coverage \ "suppressedMoveMeaningClaimCount").as[Int], 1)
     assertEquals((coverage \ "suppressedMoveMeaningClaimSignatures").as[List[String]], List(suppressedSignature))
     assertEquals((coverage \ "mergedOwnershipClaimCount").as[Int], 1)
     assertEquals((coverage \ "mergedOwnershipClaimSignatures").as[List[String]], List(mergedSignature))
+    assertEquals((corpusCoverage \ "publicMoveMeaningClaimCount").as[Int], 3)
+    assertEquals((corpusCoverage \ "boardCarrierlessPublicMoveMeaningClaimCount").as[Int], 1)
     assertEquals((corpusCoverage \ "suppressedMoveMeaningClaimCount").as[Int], 1)
     assertEquals((corpusCoverage \ "mergedOwnershipClaimCount").as[Int], 1)
 
@@ -3526,6 +3537,29 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(forcedMateView.moveMeaningClaims.map(_.meaningKind), List("TerminalProof"))
     assertEquals(forcedMateView.moveMeaningClaims.map(_.surfaceLane), List("current_move_function"))
     assertEquals(MoveMeaningSurface.from(forcedMateView).map(_.ideaType), List("terminal_mate"))
+
+    val targetlessSurface =
+      MoveMeaningSurface.from(
+        view.copy(
+          moveMeaningClaims = List(
+            claim.copy(
+              causeEvidenceIds = Nil,
+              sourceEvidenceIds = Nil,
+              objectBindingSignatures = Nil,
+              targetSquares = Nil,
+              targetFiles = Nil,
+              targetPieces = Nil,
+              reasonTokens = claim.reasonTokens.filterNot(token =>
+                token.startsWith("object") || token.startsWith("sourceEvidenceId:")
+              )
+            )
+          )
+        )
+      )
+    assertEquals(targetlessSurface.map(_.ideaType), List("terminal_mate"))
+    assertEquals(targetlessSurface.head.evidence.hasCarrier, false)
+    assertEquals(targetlessSurface.head.evidence.proofLevel, "none")
+    assertEquals(targetlessSurface.head.evidence.targetBound, false)
 
   test("move meaning claims do not call bare weak-square target pressure a piece route"):
     val targetSignature =
