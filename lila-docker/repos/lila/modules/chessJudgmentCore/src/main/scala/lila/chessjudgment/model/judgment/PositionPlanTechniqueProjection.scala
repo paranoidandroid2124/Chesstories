@@ -451,10 +451,11 @@ object PositionPlanTechniqueProjection:
       payload: StrategicMechanismContrastEvidence,
       graph: TypedEvidenceGraph
   ): Boolean =
-    payload.hasActionableContrast ||
-      contrastCandidateComparisonFact(payload, graph).exists(fact =>
-        StrategicMechanismContrastEvidence.exactSameRootConcreteCarrierContrast(fact, payload, graph.records)
-      )
+    StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(
+      contrastCandidateComparisonFact(payload, graph),
+      payload,
+      graph.records
+    )
 
   private def contrastCandidateComparisonFact(
       payload: StrategicMechanismContrastEvidence,

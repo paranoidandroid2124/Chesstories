@@ -1663,6 +1663,21 @@ final case class StrategicMechanismContrastEvidence(
     axisComparisons.map(_.axisKey).distinct.sorted
 
 object StrategicMechanismContrastEvidence:
+  private[chessjudgment] def hasActionableContrastOrSameRootCarrier(
+      fact: CandidateComparisonFact,
+      payload: StrategicMechanismContrastEvidence,
+      records: List[EvidenceRecord]
+  ): Boolean =
+    hasActionableContrastOrSameRootCarrier(Some(fact), payload, records)
+
+  private[chessjudgment] def hasActionableContrastOrSameRootCarrier(
+      fact: Option[CandidateComparisonFact],
+      payload: StrategicMechanismContrastEvidence,
+      records: List[EvidenceRecord]
+  ): Boolean =
+    payload.hasActionableContrast ||
+      fact.exists(exactSameRootConcreteCarrierContrast(_, payload, records))
+
   private[chessjudgment] def exactSameRootConcreteCarrierContrast(
       fact: CandidateComparisonFact,
       payload: StrategicMechanismContrastEvidence,

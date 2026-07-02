@@ -305,8 +305,23 @@ object RelativeAssessmentAssembler:
           )
         val support =
           strategicContrastSupport(axisComparisons, neighborhood.sharedRecords)
+        val payload = StrategicMechanismContrastEvidence(
+          comparisonKind = fact.kind,
+          referenceLine = fact.referenceLine,
+          candidateLine = fact.candidateLine,
+          axisComparisons = axisComparisons,
+          planComparison = planComparison,
+          sustainability = sustainability,
+          support = support
+        )
         Option
-          .when(axisComparisons.exists(_.hasContrast) || planComparison.exists(_.hasPlanDelta)) {
+          .when(
+            StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(
+              fact,
+              payload,
+              context.evidenceGraph.records
+            )
+          ) {
             EvidenceRecord(
               ref = EvidenceRef(
                 id = allocator.evidenceId(
@@ -319,15 +334,7 @@ object RelativeAssessmentAssembler:
                 scope = EvidenceScope.Counterfactual,
                 confidence = comparisonConfidence(context, fact)
               ),
-              payload = StrategicMechanismContrastEvidence(
-                comparisonKind = fact.kind,
-                referenceLine = fact.referenceLine,
-                candidateLine = fact.candidateLine,
-                axisComparisons = axisComparisons,
-                planComparison = planComparison,
-                sustainability = sustainability,
-                support = support
-              ),
+              payload = payload,
               parents = (comparisonRecord.ref :: support.all).distinctBy(_.id)
             )
           }
@@ -1196,10 +1203,7 @@ object RelativeAssessmentAssembler:
       payload: StrategicMechanismContrastEvidence,
       sourceSide: RelativeCauseSourceSide
   ): Boolean =
-    payload.actionableComparisons.exists(axis =>
-      strategicAxisCanProveCause(kind, axis.axis, sourceSide) &&
-        axis.hasContrast
-    ) ||
+    payload.actionableComparisons.exists(axis => strategicAxisCanProveCause(kind, axis.axis, sourceSide)) ||
       (
         sourceSide == RelativeCauseSourceSide.Candidate &&
           StrategicMechanismContrastEvidence.exactSameRootConcreteCarrierContrast(fact, payload, graph.records) &&

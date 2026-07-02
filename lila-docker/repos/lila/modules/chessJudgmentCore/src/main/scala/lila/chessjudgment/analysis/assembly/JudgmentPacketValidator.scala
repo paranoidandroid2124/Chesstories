@@ -1139,7 +1139,9 @@ object JudgmentPacketValidator:
       proof.relationProofs.forall(relationProof => parents.exists(parentHasRelationProof(_, relationProof))) &&
       proof.tacticalMechanisms.forall(mechanismProof => parents.exists(parentHasTacticalMechanism(_, mechanismProof))) &&
       proof.strategicMechanisms.forall(mechanismProof => parents.exists(parentHasStrategicMechanism(_, mechanismProof))) &&
-      proof.strategicMechanismContrasts.forall(contrastProof => parents.exists(parentHasStrategicMechanismContrast(_, contrastProof))) &&
+      proof.strategicMechanismContrasts.forall(contrastProof =>
+        parents.exists(parentHasStrategicMechanismContrast(graph, _, contrastProof))
+      ) &&
       proof.threatEpisodes.forall(threatProof => parents.exists(parentHasThreatEpisode(_, threatProof))) &&
       proof.transitionConsequences.forall(proof => parents.exists(parentHasTransitionConsequence(_, proof))) &&
       proof.contextLayers.forall(layer => parents.exists(_.ref.layer == layer))
@@ -1277,7 +1279,11 @@ object JudgmentPacketValidator:
       case _ =>
         false
 
-  private def parentHasStrategicMechanismContrast(record: EvidenceRecord, proof: StrategicMechanismContrastProof): Boolean =
+  private def parentHasStrategicMechanismContrast(
+      graph: TypedEvidenceGraph,
+      record: EvidenceRecord,
+      proof: StrategicMechanismContrastProof
+  ): Boolean =
     record match
       case EvidenceRecord(ref, payload: StrategicMechanismContrastEvidence, _) =>
         ref.id == proof.source.id &&
@@ -1286,7 +1292,17 @@ object JudgmentPacketValidator:
           payload.candidateLine == proof.candidateLine &&
           payload.axisComparisons == proof.axisComparisons &&
           payload.sustainability == proof.sustainability &&
-          payload.hasActionableContrast
+          StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(
+            graph.records.collectFirst {
+              case EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
+                  if fact.kind == payload.comparisonKind &&
+                    fact.referenceLine == payload.referenceLine &&
+                    fact.candidateLine == payload.candidateLine =>
+                fact
+            },
+            payload,
+            graph.records
+          )
       case _ =>
         false
 
