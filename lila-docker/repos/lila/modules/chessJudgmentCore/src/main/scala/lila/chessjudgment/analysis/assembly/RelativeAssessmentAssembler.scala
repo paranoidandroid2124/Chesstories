@@ -1317,7 +1317,8 @@ object RelativeAssessmentAssembler:
         payload.consequencesOf(KingSafetyConcession) ++
           payload.consequencesOf(KingRingPressureConcession)
       case RelativeCauseKind.PawnWeaknessTarget =>
-        payload.consequencesOf(WeakPawnTargetCreated)
+        payload.consequencesOf(WeakPawnTargetCreated) ++
+          payload.consequencesOf(WeakSquareTargetCreated)
       case RelativeCauseKind.PawnBreakOpportunity =>
         payload.consequencesOf(PawnTensionGain) ++
           payload.consequencesOf(PawnTensionResolution)

@@ -1298,7 +1298,9 @@ object PositionPlanTechniqueProjection:
         Set(
           RelativeCauseKind.TargetPressureGain,
           RelativeCauseKind.TargetPressureRelease
-        ) ++ Option.when(labelLower.contains("weak-pawn"))(RelativeCauseKind.PawnWeaknessTarget)
+        ) ++ Option.when(labelLower.contains("weak-pawn") || labelLower.contains("weak-square"))(
+          RelativeCauseKind.PawnWeaknessTarget
+        )
       case StrategicAxisKind.SpaceCenter =>
         Set(RelativeCauseKind.CenterControlGain)
       case StrategicAxisKind.PawnBreak =>

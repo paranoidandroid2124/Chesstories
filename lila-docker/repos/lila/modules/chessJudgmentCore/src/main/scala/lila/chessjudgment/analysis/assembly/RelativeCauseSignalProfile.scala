@@ -533,7 +533,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
 
   private def strategicReferenceLeadCause(axis: StrategicAxisDetail): RelativeCauseKind =
     axis.kind match
-      case StrategicAxisKind.Target if axis.label.contains("weak-pawn") =>
+      case StrategicAxisKind.Target if weakTargetAxis(axis) =>
         RelativeCauseKind.PawnWeaknessTarget
       case StrategicAxisKind.Target =>
         RelativeCauseKind.TargetPressureGain
@@ -570,7 +570,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
     axis.kind match
       case StrategicAxisKind.Target if axis.polarity == StrategicAxisPolarity.Release =>
         RelativeCauseKind.TargetPressureRelease
-      case StrategicAxisKind.Target if axis.label.contains("weak-pawn") =>
+      case StrategicAxisKind.Target if weakTargetAxis(axis) =>
         RelativeCauseKind.PawnWeaknessTarget
       case StrategicAxisKind.Target =>
         RelativeCauseKind.TargetPressureGain
@@ -591,7 +591,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
 
   private def strategicCandidatePositiveCause(axis: StrategicAxisDetail): RelativeCauseKind =
     axis.kind match
-      case StrategicAxisKind.Target if axis.label.contains("weak-pawn") =>
+      case StrategicAxisKind.Target if weakTargetAxis(axis) =>
         RelativeCauseKind.PawnWeaknessTarget
       case StrategicAxisKind.Target =>
         RelativeCauseKind.TargetPressureGain
@@ -618,6 +618,9 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         true
       case _ =>
         false
+
+  private def weakTargetAxis(axis: StrategicAxisDetail): Boolean =
+    axis.label.contains("weak-pawn") || axis.label.contains("weak-square")
 
   private def broadStrategicAxisFallback(kind: RelativeCauseKind): Boolean =
     kind match
