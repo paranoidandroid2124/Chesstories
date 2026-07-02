@@ -983,41 +983,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     values.exists(value => tokenMatches(requiredToken, value))
 
   private def tokenMatches(requiredToken: String, value: String): Boolean =
-    val required = requiredToken.trim
-    val candidate = value.trim
-    val normalizedRequired = required.toLowerCase
-    val normalizedCandidate = candidate.toLowerCase
-    val acronymToken =
-      required.length <= 3 && required.exists(_.isLetter) && required.forall(ch => !ch.isLetter || ch.isUpper)
-    normalizedRequired.nonEmpty &&
-      (
-        normalizedCandidate == normalizedRequired ||
-          (
-            normalizedRequired.endsWith(":") &&
-              normalizedCandidate.startsWith(normalizedRequired)
-          ) ||
-          (
-            normalizedRequired.contains(":") &&
-              (
-                normalizedCandidate.startsWith(s"$normalizedRequired:") ||
-                  normalizedCandidate.contains(s":$normalizedRequired:") ||
-                  normalizedCandidate.endsWith(s":$normalizedRequired")
-              )
-          ) ||
-          (
-            !normalizedRequired.contains(":") &&
-              normalizedCandidate.split(":").lastOption.contains(normalizedRequired)
-          ) ||
-          (
-            !acronymToken &&
-              !normalizedRequired.contains(":") &&
-              candidate.startsWith(required) &&
-              candidate
-                .drop(required.length)
-                .headOption
-                .exists(ch => ch == ':' || ch == '-' || ch == '_' || ch.isUpper)
-          )
-      )
+    val required = requiredToken.trim.toLowerCase
+    val candidate = value.trim.toLowerCase
+    required.nonEmpty &&
+      (candidate == required || (required.endsWith(":") && candidate.startsWith(required)))
 
   private def semanticDetailTokensSatisfiedForSlot(
       slot: ExpectedSemanticSlot,
