@@ -534,6 +534,7 @@ object RelativeAssessmentAssembler:
               )
           val proof = relativeCauseProof(
             context.evidenceGraph,
+            fact,
             kind,
             binding.sourceSide,
             proofRecords.directProof,
@@ -681,6 +682,7 @@ object RelativeAssessmentAssembler:
 
   private def relativeCauseProof(
       graph: TypedEvidenceGraph,
+      fact: CandidateComparisonFact,
       kind: RelativeCauseKind,
       sourceSide: RelativeCauseSourceSide,
       directRecords: List[EvidenceRecord],
@@ -692,6 +694,7 @@ object RelativeAssessmentAssembler:
         role = RelativeCauseProofRole.DirectProof,
         strength = RelativeCauseProofStrength.Primary,
         kind = kind,
+        fact = fact,
         sourceSide = sourceSide,
         graph = graph,
         records = directRecords,
@@ -701,6 +704,7 @@ object RelativeAssessmentAssembler:
         role = RelativeCauseProofRole.ContrastProof,
         strength = RelativeCauseProofStrength.Supporting,
         kind = kind,
+        fact = fact,
         sourceSide = sourceSide,
         graph = graph,
         records = contrastRecords,
@@ -710,6 +714,7 @@ object RelativeAssessmentAssembler:
         role = RelativeCauseProofRole.ContextSupport,
         strength = RelativeCauseProofStrength.WeakHint,
         kind = kind,
+        fact = fact,
         sourceSide = sourceSide,
         graph = graph,
         records = contextRecords,
@@ -721,6 +726,7 @@ object RelativeAssessmentAssembler:
       role: RelativeCauseProofRole,
       strength: RelativeCauseProofStrength,
       kind: RelativeCauseKind,
+      fact: CandidateComparisonFact,
       sourceSide: RelativeCauseSourceSide,
       graph: TypedEvidenceGraph,
       records: List[EvidenceRecord],
@@ -789,7 +795,8 @@ object RelativeAssessmentAssembler:
           )
       }.filter(_.signals.nonEmpty).distinct,
       strategicMechanismContrasts = proofRecords.collect {
-        case EvidenceRecord(ref, payload: StrategicMechanismContrastEvidence, _) if payload.hasActionableContrast =>
+        case EvidenceRecord(ref, payload: StrategicMechanismContrastEvidence, _)
+            if strategicContrastCanDirectlyProveCause(graph, fact, kind, payload, sourceSide) =>
           StrategicMechanismContrastProof(
             source = ref,
             comparisonKind = payload.comparisonKind,
