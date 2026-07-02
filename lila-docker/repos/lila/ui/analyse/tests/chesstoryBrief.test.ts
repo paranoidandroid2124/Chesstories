@@ -186,6 +186,25 @@ describe('chesstory brief scaffold', () => {
     assert.deepEqual(better?.items, []);
   });
 
+  test('does not invent a bad-move problem from carried semantics without a public problem', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'bad', played_move: 'e4g3', reference_move: 'e4f6' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'bad',
+          priority: 'main',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          evidence: { has_carrier: true, proof_level: 'surface_evidence' },
+        },
+      ],
+    });
+
+    const current = sections.find(section => section.key === 'current-decision');
+    assert.match(current?.body || '', /not enough public carrier evidence/);
+    assert.doesNotMatch(current?.body || '', /gives up more than its idea solves/);
+  });
+
   test('does not let carrierless played semantics choose bad-move framing without a verdict', () => {
     const sections = chesstoryBriefSections({
       move_semantics: [

@@ -113,9 +113,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
   const losses = uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels));
   const targets = uniqueLabels(evidencePlayed.flatMap(targetLabels)).slice(0, 5);
-  const problem =
-    firstLabel(mainPlayed.flatMap(problemLabels)) ||
-    (bad && evidencePlayed.length ? 'the move gives up more than its idea solves' : undefined);
+  const problem = firstLabel(mainPlayed.flatMap(problemLabels));
   const referenceIdeas = uniqueLabels(evidenceReference.map(ideaLabel)).slice(0, 3);
   const handled = [...solved, ...terminal];
   const currentChange = targets.length ? joinHuman(targets) : solved.length ? joinHuman(solved) : '';
