@@ -1212,9 +1212,16 @@ object PositionPlanTechniqueProjection:
       detail: PositionPlanTechniqueSemanticDetail,
       kind: RelativeCauseKind
   ): Boolean =
+    val causeKinds =
+      Set(RelativeCauseKind.PlanImprovement, RelativeCauseKind.PlanContradiction) ++
+        Option
+          .when(positionPlanTechniqueOpenCenterContext(detail) && positionPlanTechniqueDevelopmentRouteDetail(detail))(
+            Set(RelativeCauseKind.ActivityGain, RelativeCauseKind.ActivityLoss)
+          )
+          .getOrElse(Set.empty)
     detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
       positionPlanTechniqueConcreteStructuralTransformation(detail) &&
-      Set(RelativeCauseKind.PlanImprovement, RelativeCauseKind.PlanContradiction).contains(kind)
+      causeKinds.contains(kind)
 
   private def positionPlanTechniqueConcreteStructuralTransformation(
       detail: PositionPlanTechniqueSemanticDetail

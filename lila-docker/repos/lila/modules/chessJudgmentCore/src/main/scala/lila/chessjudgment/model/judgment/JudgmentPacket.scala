@@ -3754,8 +3754,14 @@ object MoveMeaningClaim:
   ): Boolean =
     kind match
       case RelativeCauseKind.ActivityGain | RelativeCauseKind.ActivityLoss =>
-        detail.axisKind.contains(StrategicAxisKind.Activity) &&
-          detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute
+        (
+          detail.axisKind.contains(StrategicAxisKind.Activity) &&
+            detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute
+        ) ||
+          (
+            detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+              structuralOpenCenterDevelopmentRoute(detail)
+          )
       case RelativeCauseKind.TargetPressureGain | RelativeCauseKind.TargetPressureRelease | RelativeCauseKind.PawnWeaknessTarget =>
         detail.axisKind.contains(StrategicAxisKind.Target) &&
           (
@@ -4498,7 +4504,11 @@ object MoveMeaningClaim:
   ): Boolean =
     causeKind match
       case RelativeCauseKind.ActivityGain =>
-        detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute
+        detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute ||
+          (
+            detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+              structuralOpenCenterDevelopmentRoute(detail)
+          )
       case RelativeCauseKind.TargetPressureGain | RelativeCauseKind.PawnWeaknessTarget =>
         detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute ||
           detail.unit == PositionPlanTechniqueUnit.StructuralTransformation ||
