@@ -1409,22 +1409,6 @@ object MoveReviewPhase3AuditRunner:
       "claimWithoutEventClusterComparisonIds" -> diagnostics.filter(
         _.relativeCauseDiagnostics.claimWithoutEventClusterCauseIds.nonEmpty
       ).map(_.id),
-      "relativeCauseClaimRejectedComparisonIds" -> relativeCauseClaimDroppedComparisonIds(
-        diagnostics,
-        ClaimLifecycleStage.TruthRejected
-      ),
-      "relativeCauseClaimDeferredComparisonIds" -> relativeCauseClaimDroppedComparisonIds(
-        diagnostics,
-        ClaimLifecycleStage.TruthDeferred
-      ),
-      "relativeCauseClaimDedupeDroppedComparisonIds" -> relativeCauseClaimDroppedComparisonIds(
-        diagnostics,
-        ClaimLifecycleStage.DedupeDropped
-      ),
-      "relativeCauseClaimArbitrationSuppressedComparisonIds" -> relativeCauseClaimDroppedComparisonIds(
-        diagnostics,
-        ClaimLifecycleStage.ArbitrationSuppressed
-      ),
       "primaryFailures" -> Json.obj(
         "primaryPlayedCauseNoPrimary" -> comparisonGroupJson(primaryPlayedCauseNoPrimaryDiagnostics)
       ),
@@ -1580,12 +1564,6 @@ object MoveReviewPhase3AuditRunner:
 
   private[qc] def semanticRubricExpectedSlotCorpusCoverageJson(coverages: List[JsValue]): JsObject =
     auditFunnelMetrics.semanticRubricExpectedSlotCorpusCoverageJson(coverages)
-
-  private def relativeCauseClaimDroppedComparisonIds(
-      diagnostics: List[CandidateComparisonDiagnostic],
-      stage: ClaimLifecycleStage
-  ): List[String] =
-    auditFunnelMetrics.relativeCauseClaimDroppedComparisonIds(diagnostics, stage)
 
   private def stringCountsJson(values: List[String]): JsObject =
     MoveReviewPhase3AuditMetrics.stringCountsJson(values)

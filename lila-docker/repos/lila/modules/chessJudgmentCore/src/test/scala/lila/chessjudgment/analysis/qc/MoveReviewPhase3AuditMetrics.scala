@@ -392,14 +392,5 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
   def noEventCauseFlow(flow: RelativeCauseFlowDiagnostic): Boolean =
     ClaimEventCluster.kindForCause(flow.causeKind).isEmpty
 
-
-  def relativeCauseClaimDroppedComparisonIds(
-      diagnostics: List[CandidateComparisonDiagnostic],
-      stage: ClaimLifecycleStage
-  ): List[String] =
-    diagnostics
-      .filter(_.relativeCauseDiagnostics.causeFlow.exists(_.claimCandidateDroppedStages.contains(stage)))
-      .map(_.id)
-
   private def stringCountsJson(values: List[String]): JsObject =
     MoveReviewPhase3AuditMetrics.stringCountsJson(values)
