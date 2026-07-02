@@ -1188,8 +1188,7 @@ object CandidateComparisonDiagnostic:
         positionPlanTechniqueSemanticDetailTokens(planTechniqueFrames),
       positionPlanTechniqueSemanticDetailTokenGroups =
         positionPlanTechniqueSemanticDetailTokenGroups(planTechniqueFrames),
-      positionPlanTechniqueObjectBindingSignatures =
-        positionPlanTechniqueObjectBindingSignatures(planTechniqueFrames),
+      positionPlanTechniqueObjectBindingSignatures = Nil,
       positionPlanTechniqueEvidenceIds = planTechniqueFrames.flatMap(_.evidenceIds).distinct.sorted,
       positionPlanTechniqueRelativeCauseEvidenceIds = planTechniqueFrames.flatMap(_.relativeCauseEvidenceIds).distinct.sorted,
       moveMeaningClaimKinds = moveMeaningClaims.map(_.meaningKind).distinct.sorted,
@@ -1414,12 +1413,6 @@ object CandidateComparisonDiagnostic:
       Option
         .when(evidenceId.startsWith("line:") || evidenceId.contains(":evidence:line:"))("sourceEvidenceId:line:")
         .toList
-
-  private def positionPlanTechniqueObjectBindingSignatures(frames: List[PositionPlanTechniqueFrame]): List[String] =
-    (
-      frames.flatMap(_.objectBindings.map(_.signature)) ++
-        frames.flatMap(_.semanticDetails.flatMap(_.objectBindingSignatures))
-    ).distinct.sorted
 
   private def positionPlanTechniqueStructuralRouteTokens(detail: PositionPlanTechniqueSemanticDetail): List[String] =
     val subjectTokens =
