@@ -328,6 +328,7 @@ object MoveJudgmentCauseNarrativeProjection:
     val sharedDirectConsequence = sharedObjectToken(root, witness, "consequence", Some(RelativeCauseProofRole.DirectProof))
     val sameEvent = root.eventLine == witness.eventLine
     val directProofOverlap = root.proofDirectSourceIds.toSet.intersect(witness.proofDirectSourceIds.toSet).nonEmpty
+    val graphBound = sameEvent || directProofOverlap
     val signals =
       List(
         Some(MoveJudgmentCauseWitnessBindingSignal.SameComparison),
@@ -347,14 +348,14 @@ object MoveJudgmentCauseNarrativeProjection:
       ).flatten.distinct.sortBy(_.toString)
     TacticalWitnessBinding(
       level = witnessBindingLevel(
-        objectBound = sharedSurfaceExact || sharedActor || sharedTarget,
-        directObjectBound = sharedDirectSurfaceExact || sharedDirectActor || sharedDirectTarget,
-        mechanismBound = sharedMechanism,
-        consequenceBound = sharedConsequence,
-        directMechanismBound = sharedDirectMechanism,
-        directConsequenceBound = sharedDirectConsequence,
-        lineOrEvalBound = sharedWitness || sameEvent || directProofOverlap,
-        eventOrEvalBound = sameEvent || directProofOverlap,
+        objectBound = graphBound && (sharedSurfaceExact || sharedActor || sharedTarget),
+        directObjectBound = graphBound && (sharedDirectSurfaceExact || sharedDirectActor || sharedDirectTarget),
+        mechanismBound = graphBound && sharedMechanism,
+        consequenceBound = graphBound && sharedConsequence,
+        directMechanismBound = graphBound && sharedDirectMechanism,
+        directConsequenceBound = graphBound && sharedDirectConsequence,
+        lineOrEvalBound = graphBound,
+        eventOrEvalBound = graphBound,
         ownedTacticalProof = witness.hasOwnedTacticalProof
       ),
       signals = signals,
