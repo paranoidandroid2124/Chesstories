@@ -2038,7 +2038,7 @@ object MoveMeaningSurface:
       terminal: List[MoveMeaningSurfaceCode],
       technique: Option[MoveMeaningSurfaceEndgameTechnique]
   ): MoveMeaningSurfaceEvidence =
-    val boardCarriers = publicBoardCarriers(claim.objectBindingSignatures, target)
+    val boardCarriers = publicBoardCarriers(claim.objectBindingSignatures)
     val hasBoardCarrier = boardCarriers.nonEmpty
     val objectCarrier = EvidenceObjectBinding.playerFacingReadySignatures(claim.objectBindingSignatures)
     val causeCarrier = claim.causeEvidenceIds.nonEmpty && objectCarrier && hasBoardCarrier
@@ -2066,16 +2066,12 @@ object MoveMeaningSurface:
     )
 
   private def publicBoardCarriers(
-      objectBindingSignatures: List[String],
-      target: MoveMeaningSurfaceTarget
+      objectBindingSignatures: List[String]
   ): List[MoveMeaningSurfaceBoardCarrier] =
-    (
-      target.squares.map(value => MoveMeaningSurfaceBoardCarrier("target", "Square", value)) ++
-        target.files.map(value => MoveMeaningSurfaceBoardCarrier("target", "File", value)) ++
-        target.pieces.map(value => MoveMeaningSurfaceBoardCarrier("target", "Piece", value)) ++
-        objectBindingSignatures
-          .flatMap(signature => EvidenceObjectBinding.signatureParts(signature).flatMap(publicBoardCarrierPart))
-    ).distinct.sortBy(carrier =>
+    objectBindingSignatures
+      .flatMap(signature => EvidenceObjectBinding.signatureParts(signature).flatMap(publicBoardCarrierPart))
+      .distinct
+      .sortBy(carrier =>
       (carrier.role, carrier.kind, carrier.value, carrier.from.getOrElse(""), carrier.to.getOrElse(""))
     ).take(8)
 

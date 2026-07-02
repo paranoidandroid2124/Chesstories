@@ -3580,6 +3580,41 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
 
     assertEquals(surface, Nil)
 
+  test("move meaning public surface does not use rendered target as terminal carrier"):
+    val terminalTargetOnlyClaim = MoveMeaningClaim(
+      meaningKind = "TerminalProof",
+      role = "ForcesTerminalResult",
+      laneKey = "kind=TerminalProof|axis=none|object=none",
+      conflictKey = None,
+      supportLevel = "view_surfaced",
+      visibility = "functional_explanation",
+      surfaceLane = "current_move_function",
+      lineRole = "candidate",
+      moveUci = "e2e3",
+      frameId = "frame-terminal-target-only",
+      unit = PositionPlanTechniqueUnit.StructuralTransformation,
+      axisKey = None,
+      axisKind = None,
+      axisPolarity = None,
+      label = Some("mate"),
+      causeKinds = Nil,
+      causeSourceSides = Nil,
+      causeEvidenceIds = Nil,
+      sourceEvidenceIds = List("line-terminal"),
+      objectBindingSignatures = Nil,
+      reasonTokens = List("terminalConsequenceKind:Mate"),
+      targetSquares = List("e8")
+    )
+    val surface = MoveMeaningSurface.from(
+      meaningClaimView(
+        verdict = MoveChoiceVerdict.MatchesReference,
+        auditCauses = Nil,
+        details = Nil
+      ).copy(moveMeaningClaims = List(terminalTargetOnlyClaim))
+    )
+
+    assertEquals(surface, Nil)
+
   test("move meaning claims do not treat target-only object signature as surface carrier"):
     val targetOnlyDetail = PositionPlanTechniqueSemanticDetail(
       unit = PositionPlanTechniqueUnit.StructuralTransformation,

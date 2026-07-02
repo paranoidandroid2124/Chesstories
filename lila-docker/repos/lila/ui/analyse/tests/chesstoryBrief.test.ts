@@ -127,7 +127,11 @@ describe('chesstory brief scaffold', () => {
           priority: 'main',
           idea: { code: 'outpost_route', label: 'outpost route' },
           target: { squares: ['f6'], pieces: ['knight'] },
-          evidence: { has_carrier: true, proof_level: 'owned_cause' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'owned_cause',
+            board_carriers: [{ role: 'target', kind: 'Square', value: 'f6' }],
+          },
         },
       ],
     });
@@ -429,6 +433,25 @@ describe('chesstory brief scaffold', () => {
     const evidence = sections.find(section => section.key === 'evidence');
     assert.match(evidence?.body || '', /g1f3/);
     assert.match(JSON.stringify(evidence?.items || []), /g1f3/);
+  });
+
+  test('does not turn semantic targets into public board evidence without board carriers', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'good', played_move: 'd4d5', reference_move: 'd4d5' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'main',
+          idea: { code: 'pawn_break_timing', label: 'pawn break timing' },
+          target: { squares: ['d6'], files: ['d'], pieces: [] },
+          evidence: { has_carrier: true, proof_level: 'surface_evidence', board_carriers: [] },
+        },
+      ],
+    });
+
+    const text = JSON.stringify(sections);
+    assert.doesNotMatch(text, /Board focus: d6|changes d6|concrete board evidence is d6/);
   });
 
   test('requires explicit evidence carriers before writing terminal or technique prose', () => {

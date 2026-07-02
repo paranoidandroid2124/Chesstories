@@ -116,7 +116,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const terminal = uniqueLabels(evidencePlayed.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
   const losses = uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels));
-  const targets = uniqueLabels(positionEvidence.flatMap(targetLabels)).slice(0, 5);
+  const targets = uniqueLabels(positionEvidence.flatMap(boardCarrierTargetLabels)).slice(0, 5);
   const problem = firstLabel(verdictReasons.flatMap(problemLabels));
   const referenceIdeas = uniqueLabels(evidenceReference.map(ideaLabel)).slice(0, 3);
   const handled = [...solved, ...terminal];
@@ -249,20 +249,20 @@ function problemLabels(semantic: ChesstoryMoveSemantic): string[] {
     .filter(Boolean);
 }
 
-function targetLabels(semantic: ChesstoryMoveSemantic): string[] {
-  const target = semantic.target;
-  if (!target) return [];
-  return [
-    ...(target.squares || []).map(s => `${s}`),
-    ...(target.files || []).map(f => `${f}-file`),
-    ...(target.pieces || []),
-  ];
-}
-
 function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
   return (semantic.evidence?.board_carriers || []).map(carrier =>
     [carrier.value, carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : undefined].filter(Boolean).join(' '),
   );
+}
+
+function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
+  return (semantic.evidence?.board_carriers || [])
+    .filter(carrier => carrier.role === 'target')
+    .map(carrier =>
+      [carrier.value, carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : undefined]
+        .filter(Boolean)
+        .join(' '),
+    );
 }
 
 function techniqueLabels(semantic: ChesstoryMoveSemantic): string[] {
@@ -279,7 +279,7 @@ function techniqueLabels(semantic: ChesstoryMoveSemantic): string[] {
 
 function summaryLine(semantic: ChesstoryMoveSemantic): string {
   const idea = ideaLabel(semantic);
-  const targets = targetLabels(semantic).slice(0, 3);
+  const targets = boardCarrierTargetLabels(semantic).slice(0, 3);
   return [idea, targets.length ? `on ${joinHuman(targets)}` : ''].filter(Boolean).join(' ');
 }
 
@@ -314,8 +314,6 @@ function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
   if (terminal.length) return `The terminal result is ${joinHuman(terminal)}.`;
   const technique = uniqueLabels(evidenceSemantics.flatMap(techniqueLabels));
   if (technique.length) return `The ending technique evidence is ${joinHuman(technique)}.`;
-  const targets = uniqueLabels(evidenceSemantics.flatMap(targetLabels));
-  if (targets.length) return `The concrete board evidence is ${joinHuman(targets.slice(0, 5))}.`;
   const carriers = uniqueLabels(evidenceSemantics.flatMap(boardCarrierLabels));
   if (carriers.length) return `The concrete board evidence is ${joinHuman(carriers.slice(0, 5))}.`;
   return undefined;
@@ -324,7 +322,6 @@ function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
 function evidenceItems(semantics: ChesstoryMoveSemantic[]): string[] {
   return uniqueLabels(
     semantics.filter(hasEvidenceCarrier).flatMap(s => [
-      ...targetLabels(s),
       ...boardCarrierLabels(s),
       ...(s.terminal_consequences || []).map(codeLabel),
       ...techniqueLabels(s),
