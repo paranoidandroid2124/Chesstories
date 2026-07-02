@@ -3012,7 +3012,9 @@ object MoveMeaningClaim:
       case Some(StructuralPurposeSubject.PieceSquare(piece, square)) =>
         publicPieceCarrier("actor", piece) ++ publicSquareCarrier("actor", square) ++ publicSquareCarrier("target", square)
       case _ =>
-        Nil
+        publicSquareCarrier("target", subject) match
+          case Nil      => publicFileCarrier("target", subject)
+          case carriers => carriers
 
   private def publicPlanSubjectCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
     if detail.unit != PositionPlanTechniqueUnit.PlanOptionSet then Nil
