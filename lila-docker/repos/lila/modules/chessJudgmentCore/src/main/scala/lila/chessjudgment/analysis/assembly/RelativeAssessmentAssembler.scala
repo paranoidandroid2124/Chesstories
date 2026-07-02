@@ -967,7 +967,7 @@ object RelativeAssessmentAssembler:
           payload.comparisonKind == fact.kind &&
           payload.referenceLine == fact.referenceLine &&
           payload.candidateLine == fact.candidateLine &&
-          strategicContrastCanDirectlyProveCause(kind, payload, binding.sourceSide)
+          strategicContrastCanDirectlyProveCause(graph, fact, kind, payload, binding.sourceSide)
       case _ =>
         false
 
@@ -1183,6 +1183,8 @@ object RelativeAssessmentAssembler:
     )
 
   private def strategicContrastCanDirectlyProveCause(
+      graph: TypedEvidenceGraph,
+      fact: CandidateComparisonFact,
       kind: RelativeCauseKind,
       payload: StrategicMechanismContrastEvidence,
       sourceSide: RelativeCauseSourceSide
@@ -1190,7 +1192,17 @@ object RelativeAssessmentAssembler:
     payload.actionableComparisons.exists(axis =>
       strategicAxisCanProveCause(kind, axis.axis, sourceSide) &&
         axis.hasContrast
-    )
+    ) ||
+      (
+        sourceSide == RelativeCauseSourceSide.Candidate &&
+          StrategicMechanismContrastEvidence.exactSameRootConcreteCarrierContrast(fact, payload, graph.records) &&
+          payload.axisComparisons.exists(comparison =>
+            comparison.outcome == StrategicAxisComparisonOutcome.SharedSustained &&
+              StrategicMechanismContrastEvidence
+                .exactSameRootConcreteCarrierCauseKindsForAxis(fact.candidateLine, graph.records, comparison.axis)
+                .contains(kind)
+          )
+      )
 
   private def strategicAxisCanProveCause(
       kind: RelativeCauseKind,

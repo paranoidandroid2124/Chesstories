@@ -354,44 +354,28 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       sourceSide: RelativeCauseSourceSide
   ): List[EvidenceRecord] =
     val sameRootBreakCarriers =
-      if exactSameRootCounterBreakCause(payload, profile, kind, sourceSide) then
+      if exactSameRootConcreteCarrierCause(payload, profile, kind, sourceSide) && kind == RelativeCauseKind.OpponentRestriction then
         RelativeCauseSignalProfile.currentMoveSameRootBreakCarrierRecords(profile.fact.candidateLine, profile.allRecords)
       else Nil
     val sameRootActivityCarriers =
-      if exactSameRootActivityCause(payload, profile, kind, sourceSide) then
+      if exactSameRootConcreteCarrierCause(payload, profile, kind, sourceSide) && kind == RelativeCauseKind.ActivityGain then
         RelativeCauseSignalProfile.currentMoveConcreteActivityCarrierRecords(profile.fact.candidateLine, profile.allRecords)
       else Nil
     (record :: sameRootBreakCarriers ++ sameRootActivityCarriers).distinctBy(_.ref.id)
 
-  private def exactSameRootCounterBreakCause(
+  private def exactSameRootConcreteCarrierCause(
       payload: StrategicMechanismContrastEvidence,
       profile: RelativeCauseSignalProfile,
       kind: RelativeCauseKind,
       sourceSide: RelativeCauseSourceSide
   ): Boolean =
-    kind == RelativeCauseKind.OpponentRestriction &&
-      sourceSide == RelativeCauseSourceSide.Candidate &&
+    sourceSide == RelativeCauseSourceSide.Candidate &&
       profile.exactReferenceMove &&
       payload.axisComparisons.exists(comparison =>
         comparison.outcome == StrategicAxisComparisonOutcome.SharedSustained &&
-          comparison.axis.kind == StrategicAxisKind.Counterplay &&
-          comparison.axis.polarity == StrategicAxisPolarity.Restrain &&
-          RelativeCauseSignalProfile.currentMoveCounterBreakAxis(comparison.axis)
-      )
-
-  private def exactSameRootActivityCause(
-      payload: StrategicMechanismContrastEvidence,
-      profile: RelativeCauseSignalProfile,
-      kind: RelativeCauseKind,
-      sourceSide: RelativeCauseSourceSide
-  ): Boolean =
-    kind == RelativeCauseKind.ActivityGain &&
-      sourceSide == RelativeCauseSourceSide.Candidate &&
-      profile.exactReferenceMove &&
-      RelativeCauseSignalProfile.currentMoveConcreteActivityCarrierRecords(profile.fact.candidateLine, profile.allRecords).nonEmpty &&
-      payload.axisComparisons.exists(comparison =>
-        comparison.outcome == StrategicAxisComparisonOutcome.SharedSustained &&
-          RelativeCauseSignalProfile.currentMoveActivityValueAxis(comparison.axis)
+          RelativeCauseSignalProfile
+            .exactSameRootConcreteCarrierCauseKindsForAxis(profile.fact.candidateLine, profile.allRecords, comparison.axis)
+            .contains(kind)
       )
 
   private def currentMoveStrategicSupportDrafts(profile: RelativeCauseSignalProfile): List[RelativeCauseDraft] =
@@ -519,31 +503,17 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
           List(strategicCandidatePositiveCause(axis) -> RelativeCauseSourceSide.Candidate)
         else Nil
       )
-    val exactSameRootCounterBreakCauses =
-      if profile.exactReferenceMove &&
-          RelativeCauseSignalProfile.currentMoveSameRootBreakCarrier(profile.fact.candidateLine, profile.allRecords)
-      then
-        payload.axisComparisons.collect {
-          case comparison
-              if comparison.outcome == StrategicAxisComparisonOutcome.SharedSustained &&
-                comparison.axis.kind == StrategicAxisKind.Counterplay &&
-                comparison.axis.polarity == StrategicAxisPolarity.Restrain &&
-                RelativeCauseSignalProfile.currentMoveCounterBreakAxis(comparison.axis) =>
-            RelativeCauseKind.OpponentRestriction -> RelativeCauseSourceSide.Candidate
+    val exactSameRootConcreteCauses =
+      if profile.exactReferenceMove then
+        payload.axisComparisons.flatMap {
+          case comparison if comparison.outcome == StrategicAxisComparisonOutcome.SharedSustained =>
+            RelativeCauseSignalProfile
+              .exactSameRootConcreteCarrierCauseKindsForAxis(profile.fact.candidateLine, profile.allRecords, comparison.axis)
+              .map(_ -> RelativeCauseSourceSide.Candidate)
+          case _ =>
+            Nil
         }
       else Nil
-    val exactSameRootActivityCauses =
-      if profile.exactReferenceMove &&
-          RelativeCauseSignalProfile.currentMoveConcreteActivityCarrierRecords(profile.fact.candidateLine, profile.allRecords).nonEmpty
-      then
-        payload.axisComparisons.collect {
-          case comparison
-              if comparison.outcome == StrategicAxisComparisonOutcome.SharedSustained &&
-                RelativeCauseSignalProfile.currentMoveActivityValueAxis(comparison.axis) =>
-            RelativeCauseKind.ActivityGain -> RelativeCauseSourceSide.Candidate
-        }
-      else Nil
-    val exactSameRootConcreteCauses = exactSameRootCounterBreakCauses ++ exactSameRootActivityCauses
     val specificAxisCauses =
       (axisCauses ++ exactSameRootConcreteCauses).filter((kind, _) => specificStrategicAxisCause(kind))
     val narrowedAxisCauses =
@@ -796,29 +766,12 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         record
     }.distinctBy(_.ref.id)
 
-  private def exactSameRootConcreteCarrierContrast(
+  private[chessjudgment] def exactSameRootConcreteCarrierContrast(
       fact: CandidateComparisonFact,
       payload: StrategicMechanismContrastEvidence,
       records: List[EvidenceRecord]
   ): Boolean =
-    fact.kind == CandidateComparisonKind.PlayedVsBest &&
-      fact.comparison.verdict == MoveChoiceVerdict.MatchesReference &&
-      JudgmentSubjectBinding.normalizeMove(fact.referenceLine.rootMove) == JudgmentSubjectBinding.normalizeMove(fact.candidateLine.rootMove) &&
-      payload.axisComparisons.exists(comparison =>
-        comparison.outcome == StrategicAxisComparisonOutcome.SharedSustained &&
-          (
-            (
-              comparison.axis.kind == StrategicAxisKind.Counterplay &&
-                comparison.axis.polarity == StrategicAxisPolarity.Restrain &&
-                currentMoveCounterBreakAxis(comparison.axis) &&
-                currentMoveSameRootBreakCarrier(fact.candidateLine, records)
-            ) ||
-              (
-                currentMoveActivityValueAxis(comparison.axis) &&
-                  currentMoveConcreteActivityCarrierRecords(fact.candidateLine, records).nonEmpty
-              )
-          )
-      )
+    StrategicMechanismContrastEvidence.exactSameRootConcreteCarrierContrast(fact, payload, records)
 
   private[chessjudgment] def tacticalRiskRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
@@ -1121,49 +1074,26 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         Nil
 
   private[chessjudgment] def currentMoveActivityValueAxis(axis: StrategicAxisDetail): Boolean =
-    axis.kind == StrategicAxisKind.Activity &&
-      (axis.polarity == StrategicAxisPolarity.Gain || axis.polarity == StrategicAxisPolarity.Support)
+    StrategicMechanismContrastEvidence.currentMoveActivityValueAxis(axis)
+
+  private[chessjudgment] def exactSameRootConcreteCarrierCauseKindsForAxis(
+      candidateLine: LineNodeRef,
+      records: List[EvidenceRecord],
+      axis: StrategicAxisDetail
+  ): List[RelativeCauseKind] =
+    StrategicMechanismContrastEvidence.exactSameRootConcreteCarrierCauseKindsForAxis(candidateLine, records, axis)
 
   private[chessjudgment] def currentMoveConcreteActivityCarrierRecords(
       candidateLine: LineNodeRef,
       records: List[EvidenceRecord]
   ): List[EvidenceRecord] =
-    records.collect {
-      case record @ EvidenceRecord(ref, payload: StructuralDeltaEvidence, _)
-          if ref.scope == EvidenceScope.PlayedTransition &&
-            payload.line.contains(candidateLine) &&
-            payload.role == TransitionEdgeRole.Played &&
-            JudgmentSubjectBinding.normalizeMove(payload.moveUci) == JudgmentSubjectBinding.normalizeMove(candidateLine.rootMove) &&
-            currentMoveConcreteActivitySource(ref, records) =>
-        record
-    }.distinctBy(_.ref.id)
+    StrategicMechanismContrastEvidence.currentMoveConcreteActivityCarrierRecords(candidateLine, records)
 
   private[chessjudgment] def currentMoveConcreteActivitySource(
       source: EvidenceRef,
       records: List[EvidenceRecord]
   ): Boolean =
-    records.exists {
-      case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _) if ref.id == source.id =>
-        payload.consequencesOf(TransitionConsequenceKind.BatteryPressureGain).exists(consequence =>
-          consequence.subjects.exists(currentMoveDiagonalBatterySubject)
-        ) ||
-          payload.consequencesOf(TransitionConsequenceKind.DevelopmentPieceActivated).exists(consequence =>
-            consequence.subjects.exists(currentMoveDevelopmentRouteSubject)
-          ) ||
-          payload.consequencesOf(TransitionConsequenceKind.DevelopmentCenterControlGain).exists(consequence =>
-            consequence.subjects.exists(currentMoveDevelopmentRouteSubject)
-        )
-      case _ =>
-        false
-    }
-
-  private def currentMoveDiagonalBatterySubject(subject: String): Boolean =
-    val normalized = Option(subject).getOrElse("").trim.toLowerCase
-    normalized.startsWith("battery:diagonal:")
-
-  private def currentMoveDevelopmentRouteSubject(subject: String): Boolean =
-    val normalized = Option(subject).getOrElse("").trim.toLowerCase
-    normalized.matches(".*\\b(king|queen|rook|bishop|knight):[a-h][1-8]-[a-h][1-8].*")
+    StrategicMechanismContrastEvidence.currentMoveConcreteActivitySource(source, records)
 
   private def currentMoveCounterBreakSupportSignal(
       signal: StrategicMechanismSignal,
@@ -1174,39 +1104,19 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       currentMoveSameRootBreakCarrier(candidateLine, records)
 
   private[chessjudgment] def currentMoveCounterBreakAxis(axis: StrategicAxisDetail): Boolean =
-    axis.label.toLowerCase.startsWith("defensive-counter-break-")
+    StrategicMechanismContrastEvidence.currentMoveCounterBreakAxis(axis)
 
   private[chessjudgment] def currentMoveSameRootBreakCarrier(
       candidateLine: LineNodeRef,
       records: List[EvidenceRecord]
   ): Boolean =
-    currentMoveSameRootBreakCarrierRecords(candidateLine, records).nonEmpty
+    StrategicMechanismContrastEvidence.currentMoveSameRootBreakCarrier(candidateLine, records)
 
   private[chessjudgment] def currentMoveSameRootBreakCarrierRecords(
       candidateLine: LineNodeRef,
       records: List[EvidenceRecord]
   ): List[EvidenceRecord] =
-    records.collect {
-      case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _)
-          if payload.line.contains(candidateLine) &&
-            payload.role == TransitionEdgeRole.Played &&
-            JudgmentSubjectBinding.normalizeMove(payload.moveUci) == JudgmentSubjectBinding.normalizeMove(candidateLine.rootMove) &&
-            payload.consequences.exists(currentMoveBreakCarrierConsequence) =>
-        record
-    }.distinctBy(_.ref.id)
-
-  private def currentMoveBreakCarrierConsequence(consequence: TransitionConsequence): Boolean =
-    (
-      consequence.kind == TransitionConsequenceKind.PawnTensionGain ||
-        consequence.kind == TransitionConsequenceKind.PawnTensionResolution
-    ) &&
-      consequence.subjects.exists(currentMoveBreakCarrierSubject)
-
-  private def currentMoveBreakCarrierSubject(subject: String): Boolean =
-    val normalized = Option(subject).getOrElse("").trim.toLowerCase
-    normalized.startsWith("break-file:") ||
-      normalized.startsWith("created-tension:") ||
-      normalized.startsWith("resolved-tension:")
+    StrategicMechanismContrastEvidence.currentMoveSameRootBreakCarrierRecords(candidateLine, records)
 
   private def currentMovePawnBreakAxis(axis: StrategicAxisDetail): Boolean =
     val normalized = axis.label.toLowerCase
