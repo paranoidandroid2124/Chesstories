@@ -1493,8 +1493,7 @@ object MoveReviewPhase3AuditRunner:
       "rootArbitrationQuality" -> rootArbitrationQualitySummaryJson(diagnostics),
       "structuralWitnessFunnel" -> structuralWitnessFunnelJson(diagnostics),
       "planTechniqueEligibilityFunnel" -> planTechniqueEligibilityFunnelJson(diagnostics),
-      "structuralOpportunityGenerationFunnel" -> structuralOpportunityGenerationFunnelJson(diagnostics),
-      "semanticRubricFunnel" -> semanticRubricFunnelJson(diagnostics)
+      "structuralOpportunityGenerationFunnel" -> structuralOpportunityGenerationFunnelJson(diagnostics)
     )
 
   private[qc] def rootArbitrationQualitySummaryJson(
@@ -1613,11 +1612,6 @@ object MoveReviewPhase3AuditRunner:
       diagnostics: List[CandidateComparisonDiagnostic]
   ): JsObject =
     auditFunnelMetrics.structuralOpportunityGenerationFunnelJson(diagnostics)
-
-  private[qc] def semanticRubricFunnelJson(
-      diagnostics: List[CandidateComparisonDiagnostic]
-  ): JsObject =
-    auditFunnelMetrics.semanticRubricFunnelJson(diagnostics)
 
   private[qc] def semanticRubricExpectedSlotCoverageJson(
       expectedSlots: List[ExpectedSemanticSlot],

@@ -925,30 +925,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
       claimIds: List[String]
   )
 
-  private[qc] def semanticRubricFunnelJson(
-      diagnostics: List[CandidateComparisonDiagnostic]
-  ): JsObject =
-    val rows = diagnostics.filter(primaryActionableStructuralOpportunity).flatMap(semanticRubricSlotRows)
-    Json.obj(
-      "classification" -> "audit_only",
-      "semanticSlotCount" -> rows.size,
-      "comparisonCount" -> rows.map(_.comparisonId).distinct.size,
-      "comparisonIds" -> rows.map(_.comparisonId).distinct.sorted,
-      "stageCounts" -> semanticRubricStrictLineageStageCountsJson(rows),
-      "terminalStageCounts" -> stringCountsJson(rows.map(_.strictLineageTerminalStage)),
-      "looseStageCounts" -> semanticRubricStageCountsJson(rows),
-      "looseTerminalStageCounts" -> stringCountsJson(rows.map(_.terminalStage)),
-      "strictLineageStageCounts" -> semanticRubricStrictLineageStageCountsJson(rows),
-      "strictLineageTerminalStageCounts" -> stringCountsJson(rows.map(_.strictLineageTerminalStage)),
-      "strictCauseLineageBoundCount" -> rows.count(_.strictCauseLineageBound),
-      "strictPrimaryRootLineageBoundCount" -> rows.count(_.strictPrimaryRootLineageBound),
-      "strictPrimaryRootTierLineageBoundCount" -> rows.count(_.strictPrimaryRootTierLineageBound),
-      "byUnit" -> semanticRubricByUnitJson(rows),
-      "strictLineageByUnit" -> semanticRubricStrictLineageByUnitJson(rows),
-      "byTerminalStage" -> semanticRubricByTerminalStageJson(rows),
-      "viewMissingComparisonIds" -> rows.filterNot(_.viewSurfaced).map(_.comparisonId).distinct.sorted
-    )
-
   private[qc] def semanticRubricExpectedSlotCoverageJson(
       expectedSlots: List[ExpectedSemanticSlot],
       diagnostics: List[CandidateComparisonDiagnostic],
@@ -1998,99 +1974,6 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics(lineRefSummary: LineN
     else if !ownedCauseLinked then "view_surfaced"
     else if !clusteredCoherent then "owned_cause_linked"
     else "clustered_coherent"
-
-  private def semanticRubricStageCountsJson(rows: List[SemanticRubricSlotRow]): JsObject =
-    Json.obj(
-      "semantic_detected" -> rows.size,
-      "object_bound" -> rows.count(_.objectBound),
-      "exact_axis_or_pattern" -> rows.count(_.exactAxisOrPattern),
-      "cause_owned" -> rows.count(_.causeOwned),
-      "claim_survived" -> rows.count(_.claimSurvived),
-      "view_surfaced" -> rows.count(_.viewSurfaced),
-      "owned_cause_linked" -> rows.count(_.ownedCauseLinked),
-      "clustered_coherent" -> rows.count(_.clusteredCoherent)
-    )
-
-  private def semanticRubricStrictLineageStageCountsJson(rows: List[SemanticRubricSlotRow]): JsObject =
-    semanticRubricRankStageCountsJson(rows.map(_.strictLineageTerminalStage))
-
-  private def semanticRubricRankStageCountsJson(stages: List[String]): JsObject =
-    Json.obj(
-      "semantic_detected" -> stages.count(stage => semanticRubricStageRank(stage) >= semanticRubricStageRank("semantic_detected")),
-      "object_bound" -> stages.count(stage => semanticRubricStageRank(stage) >= semanticRubricStageRank("object_bound")),
-      "exact_axis_or_pattern" -> stages.count(stage =>
-        semanticRubricStageRank(stage) >= semanticRubricStageRank("exact_axis_or_pattern")
-      ),
-      "cause_owned" -> stages.count(stage => semanticRubricStageRank(stage) >= semanticRubricStageRank("cause_owned")),
-      "claim_survived" -> stages.count(stage => semanticRubricStageRank(stage) >= semanticRubricStageRank("claim_survived")),
-      "view_surfaced" -> stages.count(stage => semanticRubricStageRank(stage) >= semanticRubricStageRank("view_surfaced")),
-      "owned_cause_linked" -> stages.count(stage =>
-        semanticRubricStageRank(stage) >= semanticRubricStageRank("owned_cause_linked")
-      ),
-      "clustered_coherent" -> stages.count(stage =>
-        semanticRubricStageRank(stage) >= semanticRubricStageRank("clustered_coherent")
-      )
-    )
-
-  private def semanticRubricByUnitJson(rows: List[SemanticRubricSlotRow]): JsObject =
-    JsObject(
-      rows
-        .groupBy(_.unit)
-        .toList
-        .sortBy(_._1.toString)
-        .map { case (unit, unitRows) =>
-          unit.toString -> Json.obj(
-            "semanticSlotCount" -> unitRows.size,
-            "comparisonCount" -> unitRows.map(_.comparisonId).distinct.size,
-            "comparisonIds" -> unitRows.map(_.comparisonId).distinct.sorted,
-            "stageCounts" -> semanticRubricStrictLineageStageCountsJson(unitRows),
-            "terminalStageCounts" -> stringCountsJson(unitRows.map(_.strictLineageTerminalStage)),
-            "looseStageCounts" -> semanticRubricStageCountsJson(unitRows),
-            "looseTerminalStageCounts" -> stringCountsJson(unitRows.map(_.terminalStage)),
-            "axisKeys" -> unitRows.flatMap(_.axisKey).distinct.sorted,
-            "frameIds" -> unitRows.flatMap(_.frameIds).distinct.sorted,
-            "causeIds" -> unitRows.flatMap(_.causeIds).distinct.sorted,
-            "claimIds" -> unitRows.flatMap(_.claimIds).distinct.sorted
-          )
-        }
-    )
-
-  private def semanticRubricStrictLineageByUnitJson(rows: List[SemanticRubricSlotRow]): JsObject =
-    JsObject(
-      rows
-        .groupBy(_.unit)
-        .toList
-        .sortBy(_._1.toString)
-        .map { case (unit, unitRows) =>
-          unit.toString -> Json.obj(
-            "semanticSlotCount" -> unitRows.size,
-            "strictLineageStageCounts" -> semanticRubricStrictLineageStageCountsJson(unitRows),
-            "strictLineageTerminalStageCounts" -> stringCountsJson(unitRows.map(_.strictLineageTerminalStage)),
-            "strictCauseLineageBoundCount" -> unitRows.count(_.strictCauseLineageBound),
-            "strictPrimaryRootLineageBoundCount" -> unitRows.count(_.strictPrimaryRootLineageBound),
-            "strictPrimaryRootTierLineageBoundCount" -> unitRows.count(_.strictPrimaryRootTierLineageBound),
-            "comparisonIds" -> unitRows.map(_.comparisonId).distinct.sorted
-          )
-        }
-    )
-
-  private def semanticRubricByTerminalStageJson(rows: List[SemanticRubricSlotRow]): JsObject =
-    JsObject(
-      rows
-        .groupBy(_.terminalStage)
-        .toList
-        .sortBy(_._1)
-        .map { case (stage, stageRows) =>
-          stage -> Json.obj(
-            "semanticSlotCount" -> stageRows.size,
-            "comparisonCount" -> stageRows.map(_.comparisonId).distinct.size,
-            "comparisonIds" -> stageRows.map(_.comparisonId).distinct.sorted,
-            "unitCounts" -> stringCountsJson(stageRows.map(_.unit.toString)),
-            "axisKeys" -> stageRows.flatMap(_.axisKey).distinct.sorted,
-            "frameIds" -> stageRows.flatMap(_.frameIds).distinct.sorted
-          )
-        }
-    )
 
   private def structuralOpportunityByAxisJson(rows: List[StructuralOpportunityAxisRow]): JsObject =
     JsObject(
