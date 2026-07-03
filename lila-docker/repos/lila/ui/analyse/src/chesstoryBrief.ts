@@ -127,6 +127,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     solved.length && targets.length ? `${joinHuman(solved)} around ${joinHuman(targets)}` : joinHuman(concreteSolved);
   const currentChange = targets.length ? joinHuman(targets) : solved.length ? joinHuman(solved) : '';
   const lineEvidence = comparisonLines(evidencePlayed).slice(0, 3);
+  const comparisonFocus = [...losses, ...referenceIdeas].slice(0, 4);
 
   return [
     {
@@ -170,10 +171,12 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
       key: 'better-plan',
       title: problemMove ? 'What the better move keeps' : 'Compared with the alternatives',
       body:
-        losses.length || referenceIdeas.length
-          ? `The comparison turns on ${joinHuman([...losses, ...referenceIdeas].slice(0, 4))}.`
+        comparisonFocus.length && lineEvidence.length
+          ? `The comparison turns on ${joinHuman(comparisonFocus)}; ${lineEvidence[0]}.`
+        : comparisonFocus.length
+          ? `The comparison turns on ${joinHuman(comparisonFocus)}.`
           : lineEvidence.length
-            ? `The line evidence is ${lineEvidence[0]}.`
+            ? `The line evidence shows ${lineEvidence[0]}.`
           : 'No clear candidate-move loss is available yet.',
       pending: false,
       items: lineEvidence,
@@ -334,13 +337,18 @@ function comparisonLines(semantics: ChesstoryMoveSemantic[]): string[] {
   return semantics.flatMap(s => {
     const comparison = s.comparison;
     if (!comparison) return [];
-    const moves = (comparison.moves || [])
-      .filter(move => move.uci)
+    const moves = (comparison.moves || []).filter(move => move.uci);
+    const pvMoves = moves
+      .filter(move => move.role?.includes('_pv_'))
+      .map(move => `${move.role?.replace(/_/g, ' ') || 'pv'} ${move.uci}`);
+    const rootMoves = moves
+      .filter(move => !move.role?.includes('_pv_'))
       .map(move => `${move.role?.replace(/_/g, ' ') || 'move'} ${move.uci}`);
     const lost = (comparison.lost_ideas || []).filter(isPlayedComparisonLoss).map(codeLabel);
-    return [moves.length ? moves.join(', ') : '', lost.length ? `Lost idea: ${joinHuman(lost)}` : ''].filter(
-      Boolean,
-    );
+    return [
+      pvMoves.length ? `PV continues ${joinHuman(pvMoves)}` : rootMoves.length ? rootMoves.join(', ') : '',
+      lost.length ? `Lost idea: ${joinHuman(lost)}` : '',
+    ].filter(Boolean);
   });
 }
 

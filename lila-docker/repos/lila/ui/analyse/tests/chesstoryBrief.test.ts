@@ -402,6 +402,36 @@ describe('chesstory brief scaffold', () => {
     assert.doesNotMatch(JSON.stringify(better?.items || []), /reference-only tactic/);
   });
 
+  test('surfaces PV continuation without burying it behind root move refs', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'good', played_move: 'd1g4', reference_move: 'd1g4' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'main',
+          idea: { code: 'target_pressure', label: 'target pressure' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'owned_cause',
+            board_carriers: [{ role: 'target', kind: 'Square', value: 'g7' }],
+          },
+          comparison: {
+            moves: [
+              { role: 'played_move', uci: 'd1g4' },
+              { role: 'best_move', uci: 'd1g4' },
+              { role: 'played_pv_1', uci: 'd5g2' },
+              { role: 'played_pv_2', uci: 'g4g2' },
+            ],
+          },
+        },
+      ],
+    });
+
+    const better = sections.find(section => section.key === 'better-plan');
+    assert.match(better?.body || '', /PV continues played pv 1 d5g2 and played pv 2 g4g2/);
+    assert.doesNotMatch(better?.body || '', /played move d1g4|best move d1g4/);
+  });
   test('requires a public evidence carrier before writing board-evidence prose', () => {
     const sections = chesstoryBriefSections({
       verdict: { move_quality: 'good', played_move: 'c4c5', reference_move: 'c4c5' },
