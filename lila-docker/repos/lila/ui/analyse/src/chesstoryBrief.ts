@@ -122,7 +122,9 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
   const losses = cleanTerminalLabels(uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels)), problemMove);
   const targets = conciseCarrierLabels(positionEvidence.flatMap(boardCarrierTargetLabels)).slice(0, 5);
-  const currentCarriers = conciseCarrierLabels([...positionEvidence.flatMap(moveCarrierLabels), ...targets]).slice(0, 3);
+  const currentCarriers = conciseCarrierLabels([...positionEvidence.flatMap(moveCarrierLabels), ...targets])
+    .filter(label => !/^[a-h]-file$/.test(label))
+    .slice(0, 3);
   const problem = firstLabel(verdictReasons.flatMap(problemLabels));
   const referenceIdeas = cleanTerminalLabels(uniqueLabels(evidenceReference.map(ideaLabel)), problemMove).slice(0, 3);
   const concreteIdeas = targets.length
