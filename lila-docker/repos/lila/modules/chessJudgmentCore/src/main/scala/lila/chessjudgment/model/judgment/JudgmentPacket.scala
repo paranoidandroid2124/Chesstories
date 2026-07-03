@@ -2910,6 +2910,8 @@ object MoveMeaningClaim:
     val objectKey =
       if claim.meaningKind == "PawnBreakTiming" then
         claim.breakIdentityParts.mkString("|")
+      else if claim.meaningKind == "PlanContinuity" && claim.routeIdentityParts.nonEmpty then
+        (claim.routeIdentityParts ++ claim.breakIdentityParts).mkString("|")
       else claim.laneKey
     (claim.meaningKind, claim.role, claim.surfaceLane, claim.moveUci, objectKey)
 
