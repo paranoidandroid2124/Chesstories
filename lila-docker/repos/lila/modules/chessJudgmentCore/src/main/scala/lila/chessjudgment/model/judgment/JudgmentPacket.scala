@@ -2938,6 +2938,12 @@ object MoveMeaningClaim:
     val objectKey =
       if claim.meaningKind == "PawnBreakTiming" then
         claim.breakIdentityParts.mkString("|")
+      else if claim.meaningKind == "PieceRoute" then
+        routeCoreIdentity(claim)
+          .map((lineRole, moveUci, piece, from, to, target) =>
+            List(lineRole, moveUci, piece, from.getOrElse(""), to.getOrElse(""), target.getOrElse("")).mkString("|")
+          )
+          .getOrElse(claim.laneKey)
       else if claim.meaningKind == "PlanContinuity" && claim.routeIdentityParts.nonEmpty then
         (claim.routeIdentityParts ++ claim.breakIdentityParts).mkString("|")
       else if claim.meaningKind == "TargetPressure" && targetIdentityParts(claim).nonEmpty then
