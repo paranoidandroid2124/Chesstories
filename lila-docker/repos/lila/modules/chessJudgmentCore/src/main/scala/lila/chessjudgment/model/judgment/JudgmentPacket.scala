@@ -2894,6 +2894,7 @@ object MoveMeaningClaim:
                   .take(12)
               val spareIdentityCarriers =
                 lineUnlockIdentityCarriers(detail) ++
+                  batteryPressureIdentityCarriers(detail) ++
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
                   passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
                   materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove)
@@ -3129,6 +3130,23 @@ object MoveMeaningClaim:
       .distinct
       .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"line-unlock:$square"))
 
+  private def batteryPressureIdentityCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
+    detail.objectBindingSignatures
+      .filter(batteryPressureSignature)
+      .flatMap { signature =>
+        val squares =
+          EvidenceObjectBinding
+            .signatureTokens(List(signature), "target=Square:")
+            .toList
+            .flatMap(token => claimSquare(token.stripPrefix("target=Square:")))
+            .distinct
+            .sorted
+        Option.when(squares.nonEmpty)(
+          MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"battery-pressure:${squares.mkString("-")}")
+        )
+      }
+      .distinct
+
   private def lineUnlockDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.objectBindingSignatures.exists(signature => signature.toLowerCase.contains("lineunlock") || signature.toLowerCase.contains("line-unlock"))
 
@@ -3137,6 +3155,11 @@ object MoveMeaningClaim:
     normalized.contains("mechanism=mechanism:lineunlock") ||
       normalized.contains("mechanism=mechanism:line-unlock") ||
       normalized.contains("consequence=consequence:lineunlock")
+
+  private def batteryPressureSignature(signature: String): Boolean =
+    val normalized = signature.toLowerCase
+    normalized.contains("mechanism=mechanism:batterypressure") ||
+      normalized.contains("consequence=consequence:batterypressure")
 
   private def sameFileMoveFile(move: String): Option[String] =
     moveEndpoints(move).collect { case (from, to) if from.take(1) == to.take(1) => from.take(1) }
