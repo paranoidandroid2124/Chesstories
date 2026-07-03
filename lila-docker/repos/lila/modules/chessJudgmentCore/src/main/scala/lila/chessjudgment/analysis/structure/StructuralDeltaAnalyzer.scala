@@ -32,6 +32,7 @@ private[chessjudgment] final case class TransitionStructuralDelta(
     mobilityDelta: Int = 0,
     developmentDelta: Int = 0,
     centerControlDelta: Int = 0,
+    centerControlSquares: List[String] = Nil,
     lineUnlockDelta: Int = 0,
     lineUnlocks: List[String] = Nil,
     developmentMoves: List[DevelopmentMoveDelta] = Nil,
@@ -340,8 +341,8 @@ private[chessjudgment] object StructuralDeltaContracts:
     moves.filter(_.centerControlDelta < 0).map(move => s"${developmentMoveLabel(move)}:center${move.centerControlDelta}")
 
   private def centerControlSubjects(delta: TransitionStructuralDelta): List[String] =
-    if delta.centerControlDelta > 0 then developmentMoveSubjectsWithCenterGain(delta.developmentMoves)
-    else if delta.centerControlDelta < 0 then developmentMoveSubjectsWithCenterLoss(delta.developmentMoves)
+    if delta.centerControlDelta > 0 then (developmentMoveSubjectsWithCenterGain(delta.developmentMoves) ++ delta.centerControlSquares).distinct.sorted
+    else if delta.centerControlDelta < 0 then (developmentMoveSubjectsWithCenterLoss(delta.developmentMoves) ++ delta.centerControlSquares).distinct.sorted
     else Nil
 
   private def fileAccessSubjects(delta: TransitionStructuralDelta): List[String] =
@@ -432,6 +433,8 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
     val mobilityDeltaValue = mobilityDelta(before.features, after.features, side)
     val developmentDeltaValue = developmentDelta(before.features, after.features, side)
     val centerControlDeltaValue = centerControlDelta(before.features, after.features, side)
+    val centerControlSquaresValue =
+      if centerControlDeltaValue != 0 then centerControlChangedSquares(beforeBoard, afterBoard, side) else Nil
     val shelterFiles = moveUci.map(moveFiles).getOrElse(Nil)
     val targetKingSubjects = kingSubjects(afterBoard, !side)
     val lineUnlock: (Int, List[String]) =
@@ -454,6 +457,7 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         mobilityDelta = mobilityDeltaValue,
         developmentDelta = developmentDeltaValue,
         centerControlDelta = centerControlDeltaValue,
+        centerControlSquares = centerControlSquaresValue,
         lineUnlockDelta = lineUnlock._1,
         lineUnlocks = lineUnlock._2,
         developmentMoves = moveUci.flatMap(uci => developmentMoveDelta(beforeBoard, afterBoard, side, uci)).toList,
@@ -843,8 +847,19 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         case Pawn   => square.pawnAttacks(side)
     (targets & centerSquares).count
 
+  private def centerControlChangedSquares(beforeBoard: Board, afterBoard: Board, side: Color): List[String] =
+    val before = controlledCenterSquares(beforeBoard, side)
+    val after = controlledCenterSquares(afterBoard, side)
+    (before.diff(after) ++ after.diff(before)).toList.map(_.key).sorted
+
+  private def controlledCenterSquares(board: Board, side: Color): Set[Square] =
+    centerSquareList.filter(square => board.attackers(square, side).nonEmpty).toSet
+
   private val centerSquares =
     Square.D4.bb | Square.E4.bb | Square.D5.bb | Square.E5.bb
+
+  private val centerSquareList =
+    List(Square.D4, Square.E4, Square.D5, Square.E5)
 
   private def backRank(square: Square, side: Color): Boolean =
     if side.white then square.rank.value == 0 else square.rank.value == 7
