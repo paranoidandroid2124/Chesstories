@@ -149,7 +149,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
       : [];
   const pvProof = carrierProof.length ? `, confirming ${joinHuman(carrierProof)}` : terminalProof;
   const currentDecisionLine =
-    currentChange && lineEvidence.length
+    currentChange && lineEvidence.length && pvProof
       ? `The move changes ${currentChange}; ${lineEvidence[0]}${pvProof}.`
       : currentChange
         ? `The move changes ${currentChange}.`
