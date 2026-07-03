@@ -432,10 +432,18 @@ describe('chesstory brief scaffold', () => {
             ],
           },
           terminal_consequences: [{ code: 'material_gain', label: 'material gain' }],
+        },
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'supporting',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          evidence: {
+            has_carrier: false,
+            proof_level: 'none',
+          },
           comparison: {
             moves: [
-              { role: 'played_move', uci: 'd1g4' },
-              { role: 'best_move', uci: 'd1g4' },
               { role: 'played_pv_1', uci: 'd5g2' },
               { role: 'played_pv_2', uci: 'g4g2' },
               { role: 'played_pv_3', uci: 'd5g2' },
@@ -454,14 +462,6 @@ describe('chesstory brief scaffold', () => {
             board_carriers: [{ role: 'target', kind: 'Square', value: 'g7' }],
           },
           terminal_consequences: [{ code: 'material_loss', label: 'material loss' }],
-          comparison: {
-            moves: [
-              { role: 'played_pv_1', uci: 'd5g2' },
-              { role: 'played_pv_2', uci: 'g4g2' },
-              { role: 'played_pv_3', uci: 'd5g2' },
-              { role: 'played_pv_4', uci: 'g4g2' },
-            ],
-          },
         },
       ],
     };

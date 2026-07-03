@@ -135,7 +135,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
       ? `${concreteIdeas.length === 2 ? `${concreteIdeas[0]} with ${concreteIdeas[1]}` : joinHuman(concreteIdeas)} around ${joinHuman(targets)}`
       : joinHuman(concreteSolved);
   const currentChange = currentCarriers.length ? joinHuman(currentCarriers) : solved.length ? joinHuman(solved) : '';
-  const lineEvidence = comparisonLines(evidencePlayed).slice(0, 3);
+  const lineEvidence = comparisonLines(problemMove ? evidencePlayed : currentChange ? played : evidencePlayed).slice(0, 3);
   const terminalProof = terminal.length ? `, proving ${joinHuman(terminal)}` : '';
   const currentDecisionLine =
     currentChange && lineEvidence.length
