@@ -290,7 +290,7 @@ object MoveReviewPhase3AuditRunner:
     val outputPath = pathArgs.lift(1).map(Path.of(_))
     val parsedSamples =
       MoveReviewQualityInputFiles.parseJsonDocuments(inputPath).zipWithIndex.map { case (json, index) =>
-        parseSample(json, index)
+        normalizeExpectedSemanticSlots(parseSample(json, index))
       }
     val explicitQuestionIdsByFingerprint =
       parsedSamples
@@ -398,7 +398,7 @@ object MoveReviewPhase3AuditRunner:
       ),
       "carrier_coverage_queen_interposition_defense" -> List(
         spec("qe8_queen_route_carrier", PositionPlanTechniqueUnit.PieceRerouteRoute, "Activity:Gain:activity-gain", tokens = List("route")),
-        spec("qe8_target_pressure_carrier", PositionPlanTechniqueUnit.StructuralTransformation, "Target:Support:TargetFixation")
+        spec("qe8_target_pressure_carrier", PositionPlanTechniqueUnit.StructuralTransformation, "Target:Gain:target-pressure-gain")
       ),
       "carrier_coverage_open_diagonal_pawn_sacrifice" -> List(
         spec(
@@ -463,6 +463,15 @@ object MoveReviewPhase3AuditRunner:
   private def inferredGoodNotesExpectedSemanticSlots(sample: AuditInputSample): List[ExpectedSemanticSlot] =
     sample.expectedQuestionIds.flatMap(questionId =>
       GoodNotesExpectedSlotSpecs.getOrElse(questionId, Nil).map(_.toSlot(sample.raw.playedMoveUci, questionId))
+    )
+
+  private def normalizeExpectedSemanticSlots(sample: AuditInputSample): AuditInputSample =
+    sample.copy(expectedSemanticSlots =
+      sample.expectedSemanticSlots.map {
+        case slot if slot.id == "qe8_target_pressure_carrier" =>
+          slot.copy(axisKey = Some("Target:Gain:target-pressure-gain"))
+        case slot => slot
+      }
     )
 
   private def writeAuditRowsWithSummary(path: Path, rows: Iterator[JsObject]): Unit =
