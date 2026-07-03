@@ -2708,7 +2708,11 @@ object MoveMeaningClaim:
       val mergedBoardCarriers = list.flatMap(_.boardCarriers).distinct.sortBy(boardCarrierSortKey).take(12)
       val mergedPublicHasCarrier =
         list.exists(_.publicHasCarrier) ||
-          (mergedObjectCarrierReady && (mergedCauseEvidenceIds.nonEmpty || mergedSourceEvidenceIds.nonEmpty))
+          (
+            mergedObjectCarrierReady &&
+              (mergedCauseEvidenceIds.nonEmpty || mergedSourceEvidenceIds.nonEmpty) &&
+              publicCarrierAllowed(best.unit, list.flatMap(_.causeKinds), mergedBoardCarriers)
+          )
       val mergedPublicProofLevel = list.map(_.publicProofLevel).sortBy(publicProofLevelRank).lastOption.getOrElse("none")
       best.copy(
         causeKinds = list.flatMap(_.causeKinds).distinct.sortBy(_.toString),
@@ -2747,6 +2751,21 @@ object MoveMeaningClaim:
       case "surface_evidence" => 2
       case "technique"        => 1
       case _                  => 0
+
+  private def publicCarrierAllowed(
+      unit: PositionPlanTechniqueUnit,
+      causeKinds: List[RelativeCauseKind],
+      boardCarriers: List[MoveMeaningSurfaceBoardCarrier]
+  ): Boolean =
+    unit != PositionPlanTechniqueUnit.CompensationSource ||
+      (
+        causeKinds.contains(RelativeCauseKind.SacrificeCompensation) &&
+          boardCarriers.exists(carrier =>
+            carrier.role == "target" &&
+              carrier.kind == "PlanSubject" &&
+              carrier.value.toLowerCase.startsWith("material-sacrifice:")
+          )
+      )
 
   private def duplicateMeaningKey(claim: MoveMeaningClaim): (String, String, String, String, String) =
     val objectKey =
@@ -2915,7 +2934,10 @@ object MoveMeaningClaim:
               val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, claimBoardCarriers)
               val claimBreakFiles = (detail.breakFile.toList.flatMap(claimFile) ++ currentPawnBreakFiles).distinct.sorted
               val objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames)
-              val publicHasCarrier = objectCarrierReady && (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty)
+              val publicHasCarrier =
+                objectCarrierReady &&
+                  (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty) &&
+                  publicCarrierAllowed(detail.unit, roleCompatibleCauseFrames.map(_.causeKind), claimBoardCarriers)
               val publicProofLevel =
                 if !publicHasCarrier then "none"
                 else if detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) then "terminal_proof"

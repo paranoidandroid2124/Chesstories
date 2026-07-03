@@ -727,6 +727,11 @@ object PositionPlanTechniqueProjection:
       graph: TypedEvidenceGraph,
       fallbackEvidenceIds: List[String]
   ): List[PositionPlanTechniqueSemanticDetail] =
+    val rawDetails =
+      (
+        details ++
+          details.flatMap(positionPlanTechniqueMaterialCompensationDetails(_, graph, fallbackEvidenceIds))
+      ).distinctBy(detail => (detail.unit, detail.axisKey, detail.label, detail.sourceEvidenceIds.mkString(",")))
     val fallbackRefs = fallbackEvidenceIds.flatMap(id => graph.byId.get(id).map(_.ref))
     val fallbackAnchorKeys =
       fallbackRefs
@@ -742,7 +747,7 @@ object PositionPlanTechniqueProjection:
     val structuralPurposeBySourceId = positionPlanTechniqueStructuralPurposeBySourceId(graph, fallbackRefs)
     val fallbackStructuralPurpose =
       positionPlanTechniqueStructuralPurposeForSources(fallbackEvidenceIds, structuralPurposeBySourceId)
-    details.map { detail =>
+    rawDetails.map { detail =>
       val routedDetail =
         positionPlanTechniqueWithFallbackOpenCenterRoute(
           detail,
@@ -762,6 +767,61 @@ object PositionPlanTechniqueProjection:
         specificityTier = causeLinkage.specificityTier
       )
     }
+
+  private def positionPlanTechniqueMaterialCompensationDetails(
+      detail: PositionPlanTechniqueSemanticDetail,
+      graph: TypedEvidenceGraph,
+      fallbackEvidenceIds: List[String]
+  ): List[PositionPlanTechniqueSemanticDetail] =
+    if detail.unit == PositionPlanTechniqueUnit.CompensationSource ||
+      !positionPlanTechniqueConcreteCompensationCarrier(detail)
+    then Nil
+    else
+      val localEvidenceIds =
+        (
+          detail.sourceEvidenceIds ++
+            detail.referenceEvidenceIds ++
+            detail.candidateEvidenceIds
+        ).distinct.sorted
+      val evidenceIds =
+        if localEvidenceIds.nonEmpty then localEvidenceIds else fallbackEvidenceIds.distinct.sorted
+      val refs = evidenceIds.flatMap(id => graph.byId.get(id).map(_.ref))
+      val signatures = EvidenceObjectBinding.objectSignatures(EvidenceObjectBinding.fromEvidenceRefs(graph, refs))
+      Option
+        .when(signatures.exists(positionPlanTechniqueMaterialSacrificeSignature))(
+          detail.copy(
+            unit = PositionPlanTechniqueUnit.CompensationSource,
+            axisKey = None,
+            axisKind = None,
+            axisPolarity = None
+          )
+        )
+        .toList
+
+  private def positionPlanTechniqueConcreteCompensationCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute ||
+      detail.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute ||
+      (
+        detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+          (
+            detail.label.exists(label =>
+              val normalized = label.toLowerCase
+              normalized.contains("target-pressure") ||
+                normalized.contains("break-file") ||
+                normalized.contains("line-unlock") ||
+                normalized.contains("mobility")
+            ) ||
+              detail.structuralPurposeConsequences.exists(consequence =>
+                val normalized = consequence.toLowerCase
+                normalized.contains("targetpressure") ||
+                  normalized.contains("lineunlock") ||
+                  normalized.contains("mobility")
+              )
+          )
+      )
+
+  private def positionPlanTechniqueMaterialSacrificeSignature(signature: String): Boolean =
+    signature.toLowerCase.contains("target=plansubject:material-sacrifice:")
 
   private def positionPlanTechniqueDetailCauseLinkage(
       detail: PositionPlanTechniqueSemanticDetail,
