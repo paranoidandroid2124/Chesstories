@@ -261,8 +261,16 @@ function problemLabels(semantic: ChesstoryMoveSemantic): string[] {
 function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
   return [...(semantic.evidence?.board_carriers || [])]
     .filter(carrier => ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''))
-    .sort((a, b) => (a.role === 'target' ? 0 : 1) - (b.role === 'target' ? 0 : 1))
+    .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
     .map(boardCarrierLabel);
+}
+
+function boardCarrierRank(carrier: ChesstoryBoardCarrier): number {
+  if (carrier.role !== 'target') return 4;
+  if (carrier.kind === 'PlanSubject') return 0;
+  if (carrier.kind === 'File' || carrier.kind === 'Square' || carrier.kind === 'Pawn') return 1;
+  if (carrier.kind === 'Piece') return 2;
+  return 3;
 }
 
 function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {

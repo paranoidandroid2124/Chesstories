@@ -488,6 +488,7 @@ describe('chesstory brief scaffold', () => {
             proof_level: 'owned_cause',
             board_carriers: [
               { role: 'actor', kind: 'Move', value: 'b7b5', from: 'b7', to: 'b5' },
+              { role: 'target', kind: 'Piece', value: 'pawn' },
               { role: 'target', kind: 'PlanSubject', value: 'break-file:b' },
             ],
           },
@@ -496,7 +497,7 @@ describe('chesstory brief scaffold', () => {
     });
 
     const evidence = sections.find(section => section.key === 'evidence');
-    assert.match(evidence?.body || '', /b-file break.*b7b5/);
+    assert.match(evidence?.body || '', /b-file break.*pawn.*b7b5/);
   });
   test('does not turn semantic targets into public board evidence without board carriers', () => {
     const sections = chesstoryBriefSections({
