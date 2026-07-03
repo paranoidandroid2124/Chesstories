@@ -2892,8 +2892,11 @@ object MoveMeaningClaim:
                   .distinct
                   .sortBy(boardCarrierSortKey)
                   .take(12)
+              val spareIdentityCarriers =
+                lineUnlockIdentityCarriers(detail) ++
+                  defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove)
               val claimBoardCarriers =
-                (baseClaimBoardCarriers ++ lineUnlockIdentityCarriers(detail).take(12 - baseClaimBoardCarriers.size))
+                (baseClaimBoardCarriers ++ spareIdentityCarriers.take(12 - baseClaimBoardCarriers.size))
                   .distinct
                   .sortBy(boardCarrierSortKey)
                   .take(12)
@@ -3031,6 +3034,24 @@ object MoveMeaningClaim:
       line.lineEvents
         .filter(event => event.kind == LineEventKind.Check || event.kind == LineEventKind.Capture)
         .flatMap(event => event.square.toList.flatMap(square => publicSquareCarrier("target", square.key)))
+
+  private def defenderMoveIdentityCarriersFromLineEvidence(
+      evidenceGraph: TypedEvidenceGraph,
+      sourceEvidenceIds: List[String],
+      claimMove: String
+  ): List[MoveMeaningSurfaceBoardCarrier] =
+    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
+    sourceEvidenceIds
+      .flatMap(id => evidenceGraph.byId.get(id))
+      .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
+      .flatMap(_.lineEvents)
+      .filter(event =>
+        event.kind == LineEventKind.DefenderMove &&
+          (event.plyOffset == 0 || JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove)
+      )
+      .flatMap(_.square.toList)
+      .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"defender-move:${square.key}"))
+      .distinct
 
   private def publicBoardCarriers(
       detail: PositionPlanTechniqueSemanticDetail
