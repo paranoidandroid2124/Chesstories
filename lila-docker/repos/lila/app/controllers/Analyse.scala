@@ -178,7 +178,11 @@ final class Analyse(
     val consequenceCarriers = publicLlmCarrierPairs(evidenceSurfaces)
       .filter((carrier, _) => carrier.role == "target" && publicLlmConsequenceCarrierKind(carrier.kind))
     val concreteConsequence = consequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
-    if evidenceSurfaces.isEmpty || (terminal.isEmpty && technique.isEmpty && (pv.isEmpty || !concreteConsequence)) then Nil
+    val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
+      surface.evidence.proofLevel == "owned_cause" &&
+        surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
+    )
+    if evidenceSurfaces.isEmpty || (terminal.isEmpty && technique.isEmpty && (pv.isEmpty || (!concreteConsequence && !ownedRouteCarrier))) then Nil
     else
       val carriers = publicLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
         (carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) ||

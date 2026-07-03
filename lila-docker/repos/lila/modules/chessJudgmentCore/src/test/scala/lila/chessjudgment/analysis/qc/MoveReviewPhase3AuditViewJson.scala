@@ -131,7 +131,11 @@ object MoveReviewPhase3AuditViewJson:
     val consequenceCarriers = moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces)
       .filter((carrier, _) => carrier.role == "target" && moveMeaningSurfaceLlmConsequenceCarrierKind(carrier.kind))
     val concreteConsequence = consequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
-    if evidenceSurfaces.isEmpty || (terminal.isEmpty && technique.isEmpty && (pv.isEmpty || !concreteConsequence)) then Nil
+    val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
+      surface.evidence.proofLevel == "owned_cause" &&
+        surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
+    )
+    if evidenceSurfaces.isEmpty || (terminal.isEmpty && technique.isEmpty && (pv.isEmpty || (!concreteConsequence && !ownedRouteCarrier))) then Nil
     else
       val carriers = moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
         (carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) ||
