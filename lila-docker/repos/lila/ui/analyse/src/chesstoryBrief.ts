@@ -115,15 +115,15 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const localIdeas = played.filter(s => s.assessment?.is_local_idea && hasEvidenceCarrier(s));
   const verdictReasons = evidencePlayed.filter(s => s.assessment?.is_verdict_reason);
   const positionEvidence = problemMove ? evidenceReference : evidencePlayed;
-  const solved = uniqueLabels(positionEvidence.map(ideaLabel)).slice(0, 4);
+  const solved = cleanTerminalLabels(uniqueLabels(positionEvidence.map(ideaLabel)), problemMove).slice(0, 4);
   const localIdeaLabels = uniqueLabels(localIdeas.map(ideaLabel)).slice(0, 4);
-  const terminal = uniqueLabels(evidencePlayed.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));
+  const terminal = cleanTerminalLabels(uniqueLabels(evidencePlayed.flatMap(terminalLabels)));
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
-  const losses = uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels));
+  const losses = cleanTerminalLabels(uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels)), problemMove);
   const targets = conciseCarrierLabels(positionEvidence.flatMap(boardCarrierTargetLabels)).slice(0, 5);
   const currentCarriers = conciseCarrierLabels([...positionEvidence.flatMap(moveCarrierLabels), ...targets]).slice(0, 5);
   const problem = firstLabel(verdictReasons.flatMap(problemLabels));
-  const referenceIdeas = uniqueLabels(evidenceReference.map(ideaLabel)).slice(0, 3);
+  const referenceIdeas = cleanTerminalLabels(uniqueLabels(evidenceReference.map(ideaLabel)), problemMove).slice(0, 3);
   const concreteIdeas = targets.length
     ? solved.filter(label => !broadIdeaLabels.has(label))
     : solved;
@@ -279,8 +279,20 @@ function codeLabel(code?: ChesstoryCode): string {
   return code?.label || '';
 }
 
+function terminalLabels(semantic: ChesstoryMoveSemantic): string[] {
+  const labels = uniqueLabels((semantic.terminal_consequences || []).map(codeLabel));
+  return cleanTerminalLabels(labels, normalizeCode(semantic.move_quality) === 'bad');
+}
+
+function cleanTerminalLabels(labels: string[], preferLoss = false): string[] {
+  if (labels.includes('material gain') && labels.includes('material loss')) {
+    return labels.filter(label => label !== (preferLoss ? 'material gain' : 'material loss'));
+  }
+  return labels;
+}
+
 function ideaLabel(semantic: ChesstoryMoveSemantic): string {
-  const terminal = uniqueLabels((semantic.terminal_consequences || []).map(codeLabel));
+  const terminal = terminalLabels(semantic);
   if (terminal.length) return joinHuman(terminal);
   return codeLabel(semantic.idea);
 }
@@ -450,7 +462,7 @@ function isPlayedComparisonLoss(loss: ChesstoryComparisonLoss): boolean {
 
 function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
   const evidenceSemantics = semantics.filter(hasEvidenceCarrier);
-  const terminal = uniqueLabels(evidenceSemantics.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));
+  const terminal = cleanTerminalLabels(uniqueLabels(evidenceSemantics.flatMap(terminalLabels)));
   if (terminal.length) return `The terminal result is ${joinHuman(terminal)}.`;
   const technique = uniqueLabels(evidenceSemantics.flatMap(techniqueLabels));
   if (technique.length) return `The ending technique evidence is ${joinHuman(technique)}.`;
@@ -460,12 +472,15 @@ function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
 }
 
 function evidenceItems(semantics: ChesstoryMoveSemantic[]): string[] {
+  const evidenceSemantics = semantics.filter(hasEvidenceCarrier);
+  const terminal = cleanTerminalLabels(uniqueLabels(evidenceSemantics.flatMap(terminalLabels)));
   return conciseCarrierLabels(
-    semantics.filter(hasEvidenceCarrier).flatMap(s => [
-      ...boardCarrierLabels(s),
-      ...(s.terminal_consequences || []).map(codeLabel),
-      ...techniqueLabels(s),
-    ]),
+    evidenceSemantics
+      .flatMap(s => [
+        ...boardCarrierLabels(s),
+        ...techniqueLabels(s),
+      ])
+      .concat(terminal),
   );
 }
 
@@ -477,7 +492,7 @@ function hasConcreteSurfaceCarrier(semantic: ChesstoryMoveSemantic): boolean {
   return (
     hasEvidenceCarrier(semantic) &&
     ((semantic.evidence?.board_carriers || []).length > 0 ||
-      (semantic.terminal_consequences || []).some(codeLabel) ||
+      terminalLabels(semantic).length > 0 ||
       techniqueLabels(semantic).length > 0)
   );
 }
