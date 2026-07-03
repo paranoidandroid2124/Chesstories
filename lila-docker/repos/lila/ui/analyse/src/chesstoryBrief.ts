@@ -311,8 +311,8 @@ function planSubjectLabel(value: string): string {
   if (passedPawn) return `passed pawn on ${passedPawn[1]}`;
   const breakFile = normalized.match(/^break-file:([a-h])$/);
   if (breakFile) return `${breakFile[1]}-file break`;
-  const battery = normalized.match(/^battery-pressure:([a-h][1-8](?:-[a-h][1-8])?)$/);
-  if (battery) return `battery pressure ${battery[1]}`;
+  const pressure = normalized.match(/^(battery-pressure|pin-pressure):([a-h][1-8](?:-[a-h][1-8])?)$/);
+  if (pressure) return `${pressure[1].replace(/-/g, ' ')} ${pressure[2]}`;
   const actionSquare = normalized.match(/^(defender-move|material-capture):([a-h][1-8])$/);
   if (actionSquare) return `${actionSquare[1].replace(/-/g, ' ')} on ${actionSquare[2]}`;
   const createdTension = normalized.match(/^created-tension:([a-h][1-8])(-[a-h][1-8])?$/);
@@ -322,7 +322,9 @@ function planSubjectLabel(value: string): string {
   return normalized
     .replace(/pawnbreakpreparation/g, 'pawn break preparation')
     .replace(/pawnbreak/g, 'pawn break')
+    .replace(/weakpawnattack/g, 'weak pawn attack')
     .replace(/weakpawn/g, 'weak pawn')
+    .replace(/openingdevelopment/g, 'opening development')
     .replace(/pieceactivation/g, 'piece activation')
     .replace(/-/g, ' ');
 }

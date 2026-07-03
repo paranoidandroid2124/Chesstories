@@ -525,6 +525,33 @@ describe('chesstory brief scaffold', () => {
     assert.equal(opening?.body, 'The position is asking about passed pawn advance d5-d6.');
   });
 
+  test('reads compound plan-subject carriers as chess words', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'good', played_move: 'd1g4', reference_move: 'd1g4' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'main',
+          idea: { code: 'target_pressure', label: 'target pressure' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'owned_cause',
+            board_carriers: [
+              { role: 'target', kind: 'PlanSubject', value: 'pin-pressure:g2-h1,weakpawnattack,openingdevelopment' },
+            ],
+          },
+        },
+      ],
+    });
+
+    const text = JSON.stringify(sections);
+    assert.match(text, /pin pressure g2-h1/);
+    assert.match(text, /weak pawn attack/);
+    assert.match(text, /opening development/);
+    assert.doesNotMatch(text, /pin-pressure|weakpawnattack|openingdevelopment|weak pawnattack/);
+  });
+
   test('does not turn semantic targets into public board evidence without board carriers', () => {
     const sections = chesstoryBriefSections({
       verdict: { move_quality: 'good', played_move: 'd4d5', reference_move: 'd4d5' },
