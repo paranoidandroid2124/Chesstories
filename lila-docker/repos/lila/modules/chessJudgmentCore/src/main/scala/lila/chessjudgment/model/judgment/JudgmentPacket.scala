@@ -2895,6 +2895,7 @@ object MoveMeaningClaim:
               val spareIdentityCarriers =
                 lineUnlockIdentityCarriers(detail) ++
                   batteryPressureIdentityCarriers(detail) ++
+                  pinPressureIdentityCarriers(detail) ++
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
                   passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
                   materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove)
@@ -3147,6 +3148,23 @@ object MoveMeaningClaim:
       }
       .distinct
 
+  private def pinPressureIdentityCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
+    detail.objectBindingSignatures
+      .filter(pinPressureSignature)
+      .flatMap { signature =>
+        val squares =
+          EvidenceObjectBinding
+            .signatureTokens(List(signature), "target=Square:")
+            .toList
+            .flatMap(token => claimSquare(token.stripPrefix("target=Square:")))
+            .distinct
+            .sorted
+        Option.when(squares.nonEmpty)(
+          MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"pin-pressure:${squares.mkString("-")}")
+        )
+      }
+      .distinct
+
   private def lineUnlockDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.objectBindingSignatures.exists(signature => signature.toLowerCase.contains("lineunlock") || signature.toLowerCase.contains("line-unlock"))
 
@@ -3160,6 +3178,11 @@ object MoveMeaningClaim:
     val normalized = signature.toLowerCase
     normalized.contains("mechanism=mechanism:batterypressure") ||
       normalized.contains("consequence=consequence:batterypressure")
+
+  private def pinPressureSignature(signature: String): Boolean =
+    val normalized = signature.toLowerCase
+    normalized.contains("mechanism=mechanism:pinpressure") ||
+      normalized.contains("consequence=consequence:pinpressure")
 
   private def sameFileMoveFile(move: String): Option[String] =
     moveEndpoints(move).collect { case (from, to) if from.take(1) == to.take(1) => from.take(1) }
