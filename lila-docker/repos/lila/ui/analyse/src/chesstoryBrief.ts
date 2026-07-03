@@ -228,6 +228,9 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
   const sections = chesstoryBriefSections(payload);
   const currentDecisionBody = sections.find(section => section.key === 'current-decision')?.body || '';
   const currentDecisionHasLineProof = /PV continues|proving /.test(currentDecisionBody);
+  const evidenceBody = sections.find(section => section.key === 'evidence')?.body || '';
+  const evidenceHasLineProof = /^The terminal result is |^The line (?:wins|loses|confirms) |^The ending technique evidence is /.test(evidenceBody);
+  if (!currentDecisionHasLineProof && !evidenceHasLineProof) return [];
   return sections
     .filter(section => !section.pending)
     .filter(section => section.items?.length || !/not clear from the board|No clean better-move lesson|needs a concrete plan|does not show a clear enough|does not reveal/.test(section.body))

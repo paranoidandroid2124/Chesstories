@@ -539,6 +539,40 @@ describe('chesstory brief scaffold', () => {
     assert.deepEqual(chesstoryLlmPayload(payload), []);
   });
 
+  test('does not let unrelated PV proof unlock carrier-only LLM prose', () => {
+    const payload: ChesstoryMoveMeaningPayload = {
+      verdict: { move_quality: 'good', played_move: 'd1g4', reference_move: 'd1g4' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'main',
+          idea: { code: 'target_pressure', label: 'target pressure' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            board_carriers: [{ role: 'target', kind: 'Square', value: 'g7' }],
+          },
+        },
+        {
+          subject: 'reference_move',
+          move_quality: 'good',
+          priority: 'supporting',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          evidence: { has_carrier: false, proof_level: 'none' },
+          comparison: {
+            moves: [
+              { role: 'reference_pv_1', uci: 'd5g2' },
+              { role: 'reference_pv_2', uci: 'g4g2' },
+            ],
+          },
+        },
+      ],
+    };
+
+    assert.deepEqual(chesstoryLlmPayload(payload), []);
+  });
+
   test('keeps generic piece targets out of the position thread when a specific target exists', () => {
     const sections = chesstoryBriefSections({
       verdict: { move_quality: 'good', played_move: 'b7b5', reference_move: 'b7b5' },
