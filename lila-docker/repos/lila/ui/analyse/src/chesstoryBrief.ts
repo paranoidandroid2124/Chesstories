@@ -139,7 +139,9 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const terminalProof = terminal.length ? `, proving ${joinHuman(terminal)}` : '';
   const carrierProof =
     !terminal.length && lineEvidence.length
-      ? concreteSolved.filter(label => !label.startsWith('the ') && !/^[a-h]-file$/.test(label)).slice(0, 3)
+      ? concreteSolved
+          .filter(label => !broadIdeaLabels.has(label) && !label.startsWith('the ') && !/^[a-h]-file$/.test(label))
+          .slice(0, 3)
       : [];
   const pvProof = carrierProof.length ? `, confirming ${joinHuman(carrierProof)}` : terminalProof;
   const currentDecisionLine =
