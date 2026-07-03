@@ -3039,6 +3039,7 @@ object MoveMeaningClaim:
     (
         detail.structuralRouteMove.toList.map(move => publicMoveCarrier("actor", move)) ++
         terminalTargetCarriers ++
+        structuralRouteFileCarriers(detail) ++
         detail.structuralPurposeSubjects.flatMap(publicStructuralSubjectCarriers) ++
         publicPlanSubjectCarriers(detail) ++
         detail.breakFile.toList.flatMap(file => publicFileCarrier("target", file)) ++
@@ -3053,6 +3054,16 @@ object MoveMeaningClaim:
             detail.brokenSquares
         ).flatMap(square => publicSquareCarrier("target", square))
     ).distinct.sortBy(boardCarrierSortKey).take(8)
+
+  private def structuralRouteFileCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
+    if !lineUnlockDetail(detail) then Nil
+    else detail.structuralRouteMove.toList.flatMap(sameFileMoveFile).flatMap(file => publicFileCarrier("target", file))
+
+  private def lineUnlockDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.objectBindingSignatures.exists(signature => signature.toLowerCase.contains("lineunlock") || signature.toLowerCase.contains("line-unlock"))
+
+  private def sameFileMoveFile(move: String): Option[String] =
+    moveEndpoints(move).collect { case (from, to) if from.take(1) == to.take(1) => from.take(1) }
 
   private def publicStructuralSubjectCarriers(subject: String): List[MoveMeaningSurfaceBoardCarrier] =
     StructuralPurposeSubject.parse(subject) match
