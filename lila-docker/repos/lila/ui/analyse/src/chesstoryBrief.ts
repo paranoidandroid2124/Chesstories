@@ -555,7 +555,7 @@ function conciseCarrierLabels(labels: string[]): string[] {
       ...(label.match(/^(?:king|queen|rook|bishop|knight) ([a-h][1-8])-([a-h][1-8])$/)?.slice(1) || []),
     ]),
   );
-  return unique
+  const concise = unique
     .filter(label => !hasConcrete || !barePieces.has(label))
     .filter(label => !label.match(/^[a-h][1-8]-[a-h][1-8]$/) || (!coveredRoutes.has(label) && !pieceRoutes.has(label)))
     .filter(label => {
@@ -571,6 +571,15 @@ function conciseCarrierLabels(labels: string[]): string[] {
       const square = standaloneSquare(label);
       return square ? `the ${square} square` : label;
     });
+  const weakSquares = concise.flatMap(label => label.match(/^weak square on ([a-h][1-8])$/)?.slice(1) || []);
+  if (weakSquares.length < 2) return concise;
+  let weakSquareGroupUsed = false;
+  return concise.flatMap(label => {
+    if (!label.startsWith('weak square on ')) return [label];
+    if (weakSquareGroupUsed) return [];
+    weakSquareGroupUsed = true;
+    return [`weak squares ${joinHuman(weakSquares)}`];
+  });
 }
 
 function firstLabel(labels: string[]): string | undefined {

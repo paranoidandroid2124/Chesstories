@@ -586,6 +586,21 @@ describe('chesstory brief scaffold', () => {
             ],
           },
         },
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'supporting',
+          idea: { code: 'weak_squares', label: 'weak squares' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            board_carriers: [
+              { role: 'target', kind: 'PlanSubject', value: 'weak-square:a3' },
+              { role: 'target', kind: 'PlanSubject', value: 'weak-square:a4' },
+              { role: 'target', kind: 'PlanSubject', value: 'weak-square:a5' },
+            ],
+          },
+        },
       ],
     });
 
@@ -593,8 +608,10 @@ describe('chesstory brief scaffold', () => {
     const opening = sections.find(section => section.key === 'opening-idea');
     assert.match(opening?.body || '', /b-file break/);
     assert.match(opening?.body || '', /line unlock on d8/);
+    assert.match(opening?.body || '', /weak squares a3, a4, and a5/);
     assert.doesNotMatch(opening?.body || '', /b-file break.*b-file/);
     assert.doesNotMatch(opening?.body || '', /line unlock on d8.*d8/);
+    assert.doesNotMatch(opening?.body || '', /weak square on a3.*weak square on a4/);
     assert.doesNotMatch(opening?.body || '', /b-file break.*pawn/);
     assert.match(evidence?.body || '', /b-file break.*b7-b5/);
     assert.doesNotMatch(evidence?.body || '', /, pawn|and pawn/);
