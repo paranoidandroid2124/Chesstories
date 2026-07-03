@@ -361,6 +361,11 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       if exactSameRootConcreteCarrierCause(payload, profile, kind, sourceSide) && kind == RelativeCauseKind.ActivityGain then
         RelativeCauseSignalProfile.currentMoveConcreteActivityCarrierRecords(profile.fact.candidateLine, profile.allRecords)
       else Nil
+    val sameRootTargetCarriers =
+      if exactSameRootConcreteCarrierCause(payload, profile, kind, sourceSide) &&
+          (kind == RelativeCauseKind.TargetPressureGain || kind == RelativeCauseKind.PawnWeaknessTarget)
+      then RelativeCauseSignalProfile.currentMoveConcreteTargetCarrierRecords(profile.fact.candidateLine, profile.allRecords)
+      else Nil
     val sameRootPlanCarriers =
       if sourceSide == RelativeCauseSourceSide.Candidate &&
           profile.exactReferenceMove &&
@@ -368,7 +373,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
           payload.planComparison.exists(_.hasPlanDelta)
       then RelativeCauseSignalProfile.currentMoveConcretePlanCarrierRecords(profile.fact.candidateLine, profile.allRecords)
       else Nil
-    (record :: sameRootBreakCarriers ++ sameRootActivityCarriers ++ sameRootPlanCarriers).distinctBy(_.ref.id)
+    (record :: sameRootBreakCarriers ++ sameRootActivityCarriers ++ sameRootTargetCarriers ++ sameRootPlanCarriers).distinctBy(_.ref.id)
 
   private def exactSameRootConcreteCarrierCause(
       payload: StrategicMechanismContrastEvidence,
@@ -1098,6 +1103,12 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       records: List[EvidenceRecord]
   ): List[EvidenceRecord] =
     StrategicMechanismContrastEvidence.currentMoveConcreteActivityCarrierRecords(candidateLine, records)
+
+  private[chessjudgment] def currentMoveConcreteTargetCarrierRecords(
+      candidateLine: LineNodeRef,
+      records: List[EvidenceRecord]
+  ): List[EvidenceRecord] =
+    StrategicMechanismContrastEvidence.currentMoveConcreteTargetCarrierRecords(candidateLine, records)
 
   private[chessjudgment] def currentMoveConcretePlanCarrierRecords(
       candidateLine: LineNodeRef,

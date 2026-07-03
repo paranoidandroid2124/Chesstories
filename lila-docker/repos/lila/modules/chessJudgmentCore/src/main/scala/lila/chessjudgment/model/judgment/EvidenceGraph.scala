@@ -1848,6 +1848,12 @@ object StrategicMechanismContrastEvidence:
         currentMoveCounterBreakAxis(axis) &&
         currentMoveSameRootBreakCarrier(candidateLine, records)
     then List(RelativeCauseKind.OpponentRestriction)
+    else if axis.kind == StrategicAxisKind.Target &&
+        axis.polarity == StrategicAxisPolarity.Gain &&
+        currentMoveConcreteTargetCarrierRecords(candidateLine, records).nonEmpty
+    then
+      if weakTargetAxis(axis) then List(RelativeCauseKind.PawnWeaknessTarget)
+      else List(RelativeCauseKind.TargetPressureGain)
     else if currentMoveActivityValueAxis(axis) &&
         currentMoveConcreteActivityCarrierRecords(candidateLine, records).nonEmpty
     then List(RelativeCauseKind.ActivityGain)
@@ -1877,6 +1883,19 @@ object StrategicMechanismContrastEvidence:
             payload.role == TransitionEdgeRole.Played &&
             JudgmentSubjectBinding.normalizeMove(payload.moveUci) == JudgmentSubjectBinding.normalizeMove(candidateLine.rootMove) &&
             currentMoveConcreteActivitySource(ref, records) =>
+        record
+    }.distinctBy(_.ref.id)
+
+  private[chessjudgment] def currentMoveConcreteTargetCarrierRecords(
+      candidateLine: LineNodeRef,
+      records: List[EvidenceRecord]
+  ): List[EvidenceRecord] =
+    records.collect {
+      case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _)
+          if payload.line.contains(candidateLine) &&
+            payload.role == TransitionEdgeRole.Played &&
+            JudgmentSubjectBinding.normalizeMove(payload.moveUci) == JudgmentSubjectBinding.normalizeMove(candidateLine.rootMove) &&
+            payload.consequences.exists(currentMoveTargetCarrierConsequence) =>
         record
     }.distinctBy(_.ref.id)
 
@@ -1930,6 +1949,25 @@ object StrategicMechanismContrastEvidence:
   private def currentMoveDevelopmentRouteSubject(subject: String): Boolean =
     val normalized = Option(subject).getOrElse("").trim.toLowerCase
     normalized.matches(".*\\b(king|queen|rook|bishop|knight):[a-h][1-8]-[a-h][1-8].*")
+
+  private def weakTargetAxis(axis: StrategicAxisDetail): Boolean =
+    val normalized = axis.label.toLowerCase
+    normalized.contains("weak-pawn") || normalized.contains("weak-square")
+
+  private def currentMoveTargetCarrierConsequence(consequence: TransitionConsequence): Boolean =
+    (
+      consequence.kind == TransitionConsequenceKind.TargetPressureGain ||
+        consequence.kind == TransitionConsequenceKind.WeakPawnTargetCreated ||
+        consequence.kind == TransitionConsequenceKind.WeakSquareTargetCreated
+    ) &&
+      consequence.subjects.exists(currentMoveConcreteTargetSubject)
+
+  private def currentMoveConcreteTargetSubject(subject: String): Boolean =
+    val normalized = Option(subject).getOrElse("").trim.toLowerCase
+    normalized.matches(".*[a-h][1-8].*") ||
+      normalized.startsWith("file:") ||
+      normalized.startsWith("weak-pawn:") ||
+      normalized.startsWith("weak-square:")
 
   private[chessjudgment] def currentMoveCounterBreakAxis(axis: StrategicAxisDetail): Boolean =
     axis.label.toLowerCase.startsWith("defensive-counter-break-")
@@ -4011,7 +4049,8 @@ final case class StructuralDeltaEvidence(
     hasConsequenceCategory(TransitionConsequenceCategory.StrategicSupport)
   def hasPositivePlanAnchor: Boolean =
     positiveConsequences.exists(consequence =>
-      StructuralDeltaEvidence.hasConsequenceCategory(consequence.kind, TransitionConsequenceCategory.PlanAnchor)
+      StructuralDeltaEvidence.hasConsequenceCategory(consequence.kind, TransitionConsequenceCategory.PlanAnchor) ||
+        consequence.kind == PassedPawnProgress
     )
   def structuralImprovementScore: Int =
     positiveConsequences

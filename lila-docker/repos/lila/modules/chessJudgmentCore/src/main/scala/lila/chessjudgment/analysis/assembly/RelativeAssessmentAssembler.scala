@@ -1172,8 +1172,13 @@ object RelativeAssessmentAssembler:
     consequenceHasConcreteStrategicTarget(consequence) &&
       (
         routeKind ||
+          (consequence.kind == MobilityGain && consequence.subjects.exists(activityGainMoveRouteSubject)) ||
           consequence.subjects.exists(activityGainQualifiedRouteSubject)
       )
+
+  private def activityGainMoveRouteSubject(subject: String): Boolean =
+    val normalized = Option(subject).getOrElse("").trim.toLowerCase
+    normalized.matches(".*\\b(king|queen|rook|bishop|knight|pawn):[a-h][1-8]-[a-h][1-8].*")
 
   private def activityGainQualifiedRouteSubject(subject: String): Boolean =
     val normalized = Option(subject).getOrElse("").trim.toLowerCase
