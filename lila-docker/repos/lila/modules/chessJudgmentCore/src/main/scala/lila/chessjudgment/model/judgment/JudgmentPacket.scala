@@ -3102,7 +3102,7 @@ object MoveMeaningClaim:
                   checkIdentityCarriers ++
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
                   passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
-                  materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
+                  materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove, detail, verdict) ++
                   currentPawnBreakFiles.map(file => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"break-file:$file"))
               val claimBoardCarriers =
                 (baseClaimBoardCarriers ++ spareIdentityCarriers)
@@ -3313,26 +3313,43 @@ object MoveMeaningClaim:
   private def materialCaptureIdentityCarriersFromLineEvidence(
       evidenceGraph: TypedEvidenceGraph,
       sourceEvidenceIds: List[String],
-      claimMove: String
+      claimMove: String,
+      detail: PositionPlanTechniqueSemanticDetail,
+      verdict: MoveJudgmentVerdictFrame
   ): List[MoveMeaningSurfaceBoardCarrier] =
     val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
+    val claimDestination = moveEndpoints(claimMove).map(_._2)
+    val currentMoveSacrificeAllowed =
+      detail.mechanismKinds.contains(StrategicMechanismKind.StrategicConcession) ||
+        verdict.verdict == MoveChoiceVerdict.ImprovesOnReference ||
+        verdict.verdict == MoveChoiceVerdict.MatchesReference
     sourceEvidenceIds
       .flatMap(id => evidenceGraph.byId.get(id))
       .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
       .flatMap(line =>
-        line.materialCaptures
-          .filter(capture =>
-            capture.plyOffset == 0 || JudgmentSubjectBinding.normalizeMove(capture.moveUci).toLowerCase == normalizedClaimMove
-          )
-          .flatMap(capture =>
-            val prefix = if capture.recapture then "material-recapture" else "material-capture"
-            val base = MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"$prefix:${capture.square.key}")
-            val sacrifice =
-              Option.when(line.materialSacrificeCapture(capture))(
-                MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"material-sacrifice:${capture.square.key}")
-              )
-            base :: sacrifice.toList
-          )
+        val currentCaptureCarriers =
+          line.materialCaptures
+            .filter(capture =>
+              capture.plyOffset == 0 || JudgmentSubjectBinding.normalizeMove(capture.moveUci).toLowerCase == normalizedClaimMove
+            )
+            .flatMap(capture =>
+              val prefix = if capture.recapture then "material-recapture" else "material-capture"
+              val base = MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"$prefix:${capture.square.key}")
+              val sacrifice =
+                Option.when(line.materialSacrificeCapture(capture))(
+                  MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"material-sacrifice:${capture.square.key}")
+                )
+              base :: sacrifice.toList
+            )
+        val replyCapturesMovedPiece =
+          if !currentMoveSacrificeAllowed then Nil
+          else
+            claimDestination.toList.flatMap(destination =>
+              line.materialCaptures
+                .filter(capture => capture.plyOffset == 1 && !capture.recapture && capture.square.key == destination)
+                .map(capture => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"material-sacrifice:${capture.square.key}"))
+            )
+        currentCaptureCarriers ++ replyCapturesMovedPiece
       )
       .distinct
 

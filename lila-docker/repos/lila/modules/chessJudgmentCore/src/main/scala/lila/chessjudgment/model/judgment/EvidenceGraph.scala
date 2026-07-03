@@ -2124,7 +2124,8 @@ object StrategicMechanismEvidence:
               StrategicMechanismSignalKind.StructuralDelta,
               "strategic-concession",
               record.ref,
-              3
+              3,
+              concreteAxis(record, structuralDeltaAxis(StrategicAxisKind.PlanCoherence, StrategicAxisPolarity.Concede, "strategic-concession"))
             )
           )
         ).flatten ++ structuralPawnBreakSignals(record, payload)
