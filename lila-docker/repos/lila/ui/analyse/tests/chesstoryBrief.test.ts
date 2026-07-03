@@ -500,7 +500,7 @@ describe('chesstory brief scaffold', () => {
     assert.doesNotMatch(llmPayload, /No clean better-move lesson|not clear from the board/);
   });
 
-  test('puts concrete targets before actor carriers in board clues', () => {
+  test('keeps generic piece targets out of the position thread when a specific target exists', () => {
     const sections = chesstoryBriefSections({
       verdict: { move_quality: 'good', played_move: 'b7b5', reference_move: 'b7b5' },
       move_semantics: [
@@ -524,7 +524,8 @@ describe('chesstory brief scaffold', () => {
 
     const evidence = sections.find(section => section.key === 'evidence');
     const opening = sections.find(section => section.key === 'opening-idea');
-    assert.match(opening?.body || '', /b-file break.*pawn/);
+    assert.match(opening?.body || '', /b-file break/);
+    assert.doesNotMatch(opening?.body || '', /b-file break.*pawn/);
     assert.match(evidence?.body || '', /b-file break.*pawn.*b7-b5/);
   });
   test('does not repeat a generic idea when a carrier already names it concretely', () => {

@@ -284,12 +284,14 @@ function boardCarrierRank(carrier: ChesstoryBoardCarrier): number {
 }
 
 function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
-  return (semantic.evidence?.board_carriers || [])
-    .filter(
-      carrier =>
-        carrier.role === 'target' &&
-        ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''),
-    )
+  const carriers = (semantic.evidence?.board_carriers || []).filter(
+    carrier =>
+      carrier.role === 'target' &&
+      ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''),
+  );
+  const hasSpecificTarget = carriers.some(carrier => carrier.kind !== 'Piece');
+  return carriers
+    .filter(carrier => !hasSpecificTarget || carrier.kind !== 'Piece')
     .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
     .map(boardCarrierLabel);
 }
