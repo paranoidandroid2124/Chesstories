@@ -2504,7 +2504,7 @@ object MoveMeaningClaim:
   ): Boolean =
     publicSurfaceLaneAllowed(claim) &&
       !terminalOverriddenEndgameTechniqueShadowed(claims, claim) &&
-      !lineUnlockActivityShadowedByOwnedRoute(claims, claim) &&
+      !routeActivityShadowedByOwnedRoute(claims, claim) &&
       !planContinuityShadowedByOwnedRoute(claims, claim) &&
       publicSpecificPlanContinuityClaim(claims, claim) &&
       !badMoveSuppressesCurrentMoveSurface(verdict, claim)
@@ -2612,15 +2612,15 @@ object MoveMeaningClaim:
   private def routeIdentityKey(claim: MoveMeaningClaim): Option[(String, String, List[String])] =
     Option.when(claim.routeIdentityParts.nonEmpty)((claim.lineRole, claim.moveUci, claim.routeIdentityParts))
 
-  private def lineUnlockActivityShadowedByOwnedRoute(
+  private def routeActivityShadowedByOwnedRoute(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
     claim.meaningKind == "PieceActivity" &&
-      claim.surfaceLane == "current_move_function" &&
-      claim.causeEvidenceIds.isEmpty &&
-      claim.routeIdentityParts.exists(_.contains("line-unlock")) &&
-      ownedRouteClaimWithSameIdentity(claims, claim)
+      claim.role == "ImprovesPieceActivity" &&
+      (claim.surfaceLane == "current_move_owned" || claim.surfaceLane == "current_move_function") &&
+      claim.routeIdentityParts.nonEmpty &&
+      routeClaimWithSameIdentity(claims, claim)
 
   private def planContinuityShadowedByOwnedRoute(
       claims: List[MoveMeaningClaim],
@@ -2630,20 +2630,50 @@ object MoveMeaningClaim:
       claim.role == "DevelopsPieceForPlan" &&
       claim.surfaceLane == "current_move_function" &&
       claim.causeEvidenceIds.isEmpty &&
-      ownedRouteClaimWithSameIdentity(claims, claim)
+      routeClaimWithSameIdentity(claims, claim)
 
-  private def ownedRouteClaimWithSameIdentity(
+  private def routeClaimWithSameIdentity(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
-    routeIdentityKey(claim).exists(key =>
+    val exact = routeIdentityKey(claim).exists(key =>
       claims.exists(other =>
+        other != claim &&
         other.meaningKind == "PieceRoute" &&
-          other.surfaceLane == "current_move_owned" &&
-          other.supportLevel == "owned_cause_linked" &&
+          currentMoveSurfaceLane(other) &&
+          other.supportLevel != "contextual" &&
+          other.publicHasCarrier &&
           routeIdentityKey(other).contains(key)
       )
     )
+    exact ||
+      routeCoreIdentity(claim).exists(key =>
+        claims.exists(other =>
+          other != claim &&
+          other.meaningKind == "PieceRoute" &&
+            currentMoveSurfaceLane(other) &&
+            other.supportLevel != "contextual" &&
+            other.publicHasCarrier &&
+            routeCoreIdentity(other).contains(key)
+        )
+      )
+
+  private def currentMoveSurfaceLane(claim: MoveMeaningClaim): Boolean =
+    claim.surfaceLane == "current_move_owned" || claim.surfaceLane == "current_move_function"
+
+  private def routeCoreIdentity(claim: MoveMeaningClaim): Option[(String, String, String, Option[String], Option[String], Option[String])] =
+    val piece = routePart(claim, "piece:")
+    val from = routePart(claim, "from:")
+    val to = routePart(claim, "to:")
+    val target = routePart(claim, "target:")
+    piece.flatMap(p =>
+      Option.when(from.nonEmpty || to.nonEmpty || target.nonEmpty)(
+        (claim.lineRole, claim.moveUci, p, from, to, target)
+      )
+    )
+
+  private def routePart(claim: MoveMeaningClaim, prefix: String): Option[String] =
+    claim.routeIdentityParts.collectFirst { case part if part.startsWith(prefix) => part.stripPrefix(prefix) }
 
   private def suppressShadowedCounterplayRacePawnBreak(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
     val raceClaims =
