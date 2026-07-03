@@ -519,6 +519,25 @@ object EvidenceObjectBinding:
           line = Some(payload.line)
         )
       }
+    val materialCaptureBindings =
+      payload.materialCaptures.map { capture =>
+        val move = normalize(capture.moveUci)
+        EvidenceObjectBinding(
+          source = ref,
+          actor = moveObjects(move) ++
+            roleObject(Some(capture.attackerRole)) ++
+            objectOf(EvidenceObjectKind.Side, colorKey(capture.side)),
+          target = squareObject(Some(capture.square)) ++ roleObject(Some(capture.capturedRole)),
+          mechanism = objectOf(
+            EvidenceObjectKind.Mechanism,
+            if capture.recapture then "MaterialRecapture" else "MaterialCapture"
+          ),
+          consequence = objectOf(EvidenceObjectKind.Consequence, "MaterialCapture"),
+          witness = objectOf(EvidenceObjectKind.Move, move) ++ squareObject(Some(capture.square)) ++ lineObject(payload.line),
+          line = Some(payload.line),
+          horizon = Some(s"ply:${capture.plyOffset}")
+        )
+      }
     val horizonBindings =
       payload.endgameTechniqueHorizons.map { horizon =>
         val triggerMove = horizon.triggerMove.map(normalize)
@@ -538,7 +557,9 @@ object EvidenceObjectBinding:
           horizon = Some(s"endgame:${horizon.status}:entry=${horizon.entryPlyOffset}:terminal=${horizon.terminalPlyOffset}")
         )
       }
-    (replayBindings ++ eventBindings ++ consequenceBindings ++ horizonBindings).distinctBy(_.signature)
+    (replayBindings ++ eventBindings ++ consequenceBindings ++ horizonBindings ++ materialCaptureBindings).distinctBy(
+      _.signature
+    )
 
   private def fromMoveMotif(ref: EvidenceRef, payload: MoveMotifEvidence): EvidenceObjectBinding =
     val proof = payload.proof
@@ -2942,6 +2963,8 @@ final case class LineFactEvidence(
     replay.map(_.moveUci)
   def lineReplayContinuationMoves: List[String] =
     lineReplayMoves.drop(1)
+  def materialCaptures: List[LineMaterialCapture] =
+    material.toList.flatMap(_.captures)
   def lineEvents: List[LineMoveEvent] =
     events
   def lineConsequences: List[LineConsequence] =
