@@ -54,9 +54,20 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       publicClaimDiagnostics.count(multiEvidenceInputPublicClaim)
     val boardCarrierlessPublicClaimCount =
       publicClaimDiagnostics.count(diagnostic => !diagnostic.hasBoardCarrier)
+    val boardCarrierTotal =
+      publicClaimDiagnostics.map(_.boardCarriers.size).sum
+    val boardCarrierSaturatedPublicClaimCount =
+      publicClaimDiagnostics.count(_.boardCarriers.size >= 12)
+    val targetObjectPublicClaimCount =
+      publicClaimDiagnostics.count(diagnostic =>
+        diagnostic.targetSquares.nonEmpty || diagnostic.targetFiles.nonEmpty || diagnostic.targetPieces.nonEmpty
+      )
     Json.obj(
       "publicMoveMeaningClaimCount" -> publicClaimDiagnostics.size,
       "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicClaimCount,
+      "publicMoveMeaningBoardCarrierTotal" -> boardCarrierTotal,
+      "boardCarrierSaturatedPublicMoveMeaningClaimCount" -> boardCarrierSaturatedPublicClaimCount,
+      "targetObjectPublicMoveMeaningClaimCount" -> targetObjectPublicClaimCount,
       "multiEvidenceInputPublicClaimCount" -> multiInputPublicClaimCount
     )
 
@@ -67,9 +78,18 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       coverages.map(coverage => (coverage \ "boardCarrierlessPublicMoveMeaningClaimCount").as[Int]).sum
     val multiInputPublicClaimCount =
       coverages.map(coverage => (coverage \ "multiEvidenceInputPublicClaimCount").as[Int]).sum
+    val boardCarrierTotal =
+      coverages.map(coverage => (coverage \ "publicMoveMeaningBoardCarrierTotal").asOpt[Int].getOrElse(0)).sum
+    val boardCarrierSaturatedPublicClaimCount =
+      coverages.map(coverage => (coverage \ "boardCarrierSaturatedPublicMoveMeaningClaimCount").asOpt[Int].getOrElse(0)).sum
+    val targetObjectPublicClaimCount =
+      coverages.map(coverage => (coverage \ "targetObjectPublicMoveMeaningClaimCount").asOpt[Int].getOrElse(0)).sum
     Json.obj(
       "publicMoveMeaningClaimCount" -> publicClaimCount,
       "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicClaimCount,
+      "publicMoveMeaningBoardCarrierTotal" -> boardCarrierTotal,
+      "boardCarrierSaturatedPublicMoveMeaningClaimCount" -> boardCarrierSaturatedPublicClaimCount,
+      "targetObjectPublicMoveMeaningClaimCount" -> targetObjectPublicClaimCount,
       "multiEvidenceInputPublicClaimCount" -> multiInputPublicClaimCount
     )
 
