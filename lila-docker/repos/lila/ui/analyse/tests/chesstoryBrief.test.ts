@@ -549,10 +549,14 @@ describe('chesstory brief scaffold', () => {
     assert.deepEqual(better?.items, ['PV continues with d5-g2 and g4-g2']);
     assert.doesNotMatch(better?.body || '', /played move d1g4|best move d1g4|d5g2|g4g2/);
     assert.equal(evidence?.body, 'The line wins material.');
-    const llmPayload = JSON.stringify(chesstoryLlmPayload(payload));
-    assert.equal(llmPayload.match(/PV continues/g)?.length, 1);
-    assert.doesNotMatch(llmPayload, /The line wins material/);
-    assert.doesNotMatch(llmPayload, /This move handles g7/);
+    const llmPayload = chesstoryLlmPayload(payload);
+    assert.equal(llmPayload.length, 1);
+    assert.equal(llmPayload[0].key, 'current-move-chain');
+    assert.equal(llmPayload[0].current_move, 'd1g4');
+    assert.deepEqual(llmPayload[0].pv, ['d5g2', 'g4g2']);
+    assert.deepEqual(llmPayload[0].terminal_consequences, ['material gain']);
+    assert.deepEqual(llmPayload[0].consequences, []);
+    assert.doesNotMatch(JSON.stringify(llmPayload), /PV continues|The line wins material|This move handles g7/);
   });
   test('requires a public evidence carrier before writing board-evidence prose', () => {
     const sections = chesstoryBriefSections({

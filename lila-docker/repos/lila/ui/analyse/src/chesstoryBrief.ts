@@ -99,6 +99,24 @@ interface ChesstoryComparisonLoss extends ChesstoryCode {
 
 type ChesstoryBoardCarrier = NonNullable<NonNullable<ChesstoryMoveSemantic['evidence']>['board_carriers']>[number];
 
+export interface ChesstoryLlmChain {
+  key: 'current-move-chain';
+  current_move?: string;
+  reference_move?: string;
+  move_quality?: string;
+  subject: string;
+  proof_levels: string[];
+  carriers: ChesstoryBoardCarrier[];
+  carrier_labels: string[];
+  pv: string[];
+  consequences: string[];
+  terminal_consequences: string[];
+  technique: string[];
+  cause_ids: string[];
+  source_ids: string[];
+  player_facing_reason_allowed: true;
+}
+
 const broadIdeaLabels = new Set(['piece route', 'piece activity', 'target pressure', 'plan continuity', 'counterplay control']);
 
 export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): ChesstoryBriefSection[] {
@@ -230,51 +248,60 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   ];
 }
 
-export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
+export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload): ChesstoryLlmChain[] {
   const semantics = payload?.move_semantics || [];
-  const hasLineProof = semantics.some(semantic =>
-    terminalLabels(semantic).length > 0 ||
-    techniqueLabels(semantic).length > 0 ||
-    (semantic.comparison?.moves || []).some(move => !!move.uci && !!move.role?.includes('_pv_')),
+  const bad = payload?.verdict?.move_quality === 'bad';
+  const problemMove = bad || normalizeCode(payload?.verdict?.verdict_code) === 'playable_loss';
+  const subject = problemMove ? 'reference_move' : 'played_move';
+  const evidenceSemantics = semantics.filter(s => s.subject === subject && hasConcreteSurfaceCarrier(s));
+  if (!evidenceSemantics.length) return [];
+
+  const pv = compactRepeatedMoves(
+    uniqueLabels(semantics
+      .filter(s => s.subject === 'played_move')
+      .flatMap(s => s.comparison?.moves || [])
+      .filter(move => !!move.uci && move.role?.startsWith('played_pv_'))
+      .map(move => move.uci || '')),
   );
-  if (!semantics.some(hasConcreteSurfaceCarrier) || !hasLineProof) return [];
-  const sections = chesstoryBriefSections(payload);
-  const currentDecisionBody = sections.find(section => section.key === 'current-decision')?.body || '';
-  const currentDecisionHasProof = /(?:confirming|proving) /.test(currentDecisionBody);
-  const evidenceBody = sections.find(section => section.key === 'evidence')?.body || '';
-  const evidenceHasLineProof = /^The terminal result is |^The line (?:wins|loses|confirms) |^The ending technique evidence is /.test(evidenceBody);
-  const evidenceProofAlreadyInCurrent =
-    (evidenceBody === 'The line wins material.' && currentDecisionBody.includes('material gain')) ||
-    (evidenceBody === 'The line loses material.' && currentDecisionBody.includes('material loss'));
-  if (!currentDecisionHasProof && !evidenceHasLineProof) return [];
-  return sections
-    .filter(section => !section.pending)
-    .filter(section => section.items?.length || !/not clear from the board|No clean better-move lesson|needs a concrete plan|does not show a clear enough|does not reveal/.test(section.body))
-    .filter(section => {
-      const handled = section.key === 'middlegame-plan' ? section.body.match(/^This move handles (.*)\.$/)?.[1] : '';
-      const handledItems = handled?.replace(/, and | and /g, ', ').split(', ').filter(Boolean);
-      const coveredItems = handledItems?.filter(item => currentDecisionBody.includes(item)).length || 0;
-      return !handledItems?.length || coveredItems < Math.max(handledItems.length - 1, 1);
-    })
-    .filter(section => section.key !== 'middlegame-plan' || !currentDecisionHasProof || !section.body.startsWith('This move handles '))
-    .filter(section => section.key !== 'better-plan' || !section.items?.some(item => currentDecisionBody.includes(item)))
-    .filter(section =>
-      section.key !== 'evidence' ||
-      (!evidenceProofAlreadyInCurrent &&
-        (section.body.startsWith('The terminal result is ') ||
-          section.body === 'The line wins material.' ||
-          section.body === 'The line loses material.' ||
-          section.body.startsWith('The line confirms ') ||
-          section.body.startsWith('The ending technique evidence is ')))
+  const terminal = cleanTerminalLabels(uniqueLabels(evidenceSemantics.flatMap(terminalLabels)), problemMove);
+  const technique = uniqueLabels(evidenceSemantics.flatMap(techniqueLabels));
+  const consequences = conciseCarrierLabels(evidenceSemantics.flatMap(boardCarrierTargetLabels))
+    .filter(label => !broadIdeaLabels.has(label) && !label.startsWith('the ') && !/^[a-h]-file$/.test(label))
+    .sort((a, b) => Number(!a.endsWith('file break')) - Number(!b.endsWith('file break')))
+    .slice(0, 6);
+  if (!terminal.length && !technique.length && (!pv.length || !consequences.length)) return [];
+  const currentMove = payload?.verdict?.played_move || evidenceSemantics.find(s => s.move_uci)?.move_uci;
+  const carrierKeys = new Set<string>();
+  const carriers = evidenceSemantics
+    .flatMap(s => s.evidence?.board_carriers || [])
+    .filter(carrier =>
+      (carrier.role === 'actor' && carrier.kind === 'Move' && (!currentMove || carrier.value === currentMove)) ||
+      (carrier.role === 'target' && (carrier.kind === 'PlanSubject' || carrier.kind === 'Pawn')),
     )
-    .filter(section => section.key !== 'opening-idea')
-    .map(({ key, title, body, items, tone }) => ({
-      key,
-      title,
-      body,
-      items: items || [],
-      tone: tone || 'neutral',
-    }));
+    .filter(carrier => {
+      const key = [carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to].join(':');
+      if (carrierKeys.has(key)) return false;
+      carrierKeys.add(key);
+      return true;
+    });
+
+  return [{
+    key: 'current-move-chain',
+    current_move: currentMove,
+    reference_move: payload?.verdict?.reference_move,
+    move_quality: payload?.verdict?.move_quality,
+    subject,
+    proof_levels: uniqueLabels(evidenceSemantics.map(s => s.evidence?.proof_level || '')),
+    carriers,
+    carrier_labels: conciseCarrierLabels([...evidenceSemantics.flatMap(moveCarrierLabels), ...consequences]).slice(0, 12),
+    pv,
+    consequences,
+    terminal_consequences: terminal,
+    technique,
+    cause_ids: uniqueLabels(evidenceSemantics.flatMap(s => s.evidence?.cause_ids || [])),
+    source_ids: uniqueLabels(evidenceSemantics.flatMap(s => s.evidence?.source_ids || [])),
+    player_facing_reason_allowed: true,
+  }];
 }
 
 function placeholderSections(): ChesstoryBriefSection[] {
