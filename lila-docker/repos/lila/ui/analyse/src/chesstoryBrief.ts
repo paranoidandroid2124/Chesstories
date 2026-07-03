@@ -107,9 +107,8 @@ export interface ChesstoryLlmChain {
   subject: string;
   proof_levels: string[];
   carriers: ChesstoryBoardCarrier[];
-  carrier_labels: string[];
   pv: string[];
-  consequences: string[];
+  consequence_carriers: ChesstoryBoardCarrier[];
   terminal_consequences: string[];
   technique: string[];
   cause_ids: string[];
@@ -265,18 +264,25 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload): Ches
   );
   const terminal = cleanTerminalLabels(uniqueLabels(evidenceSemantics.flatMap(terminalLabels)), problemMove);
   const technique = uniqueLabels(evidenceSemantics.flatMap(techniqueLabels));
-  const consequences = conciseCarrierLabels(evidenceSemantics.flatMap(boardCarrierTargetLabels))
-    .filter(label => !broadIdeaLabels.has(label) && !label.startsWith('the ') && !/^[a-h]-file$/.test(label))
-    .sort((a, b) => Number(!a.endsWith('file break')) - Number(!b.endsWith('file break')))
-    .slice(0, 6);
-  if (!terminal.length && !technique.length && (!pv.length || !consequences.length)) return [];
   const currentMove = payload?.verdict?.played_move || evidenceSemantics.find(s => s.move_uci)?.move_uci;
+  const consequenceKeys = new Set<string>();
+  const consequenceCarriers = evidenceSemantics
+    .flatMap(s => s.evidence?.board_carriers || [])
+    .filter(carrier => carrier.role === 'target' && ['PlanSubject', 'Pawn', 'Square', 'File'].includes(carrier.kind || ''))
+    .filter(carrier => {
+      const key = [carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to].join(':');
+      if (consequenceKeys.has(key)) return false;
+      consequenceKeys.add(key);
+      return true;
+    });
+  const concreteConsequenceCarriers = consequenceCarriers.filter(carrier => carrier.kind === 'PlanSubject' || carrier.kind === 'Pawn');
+  if (!terminal.length && !technique.length && (!pv.length || !concreteConsequenceCarriers.length)) return [];
   const carrierKeys = new Set<string>();
   const carriers = evidenceSemantics
     .flatMap(s => s.evidence?.board_carriers || [])
     .filter(carrier =>
       (carrier.role === 'actor' && carrier.kind === 'Move' && (!currentMove || carrier.value === currentMove)) ||
-      (carrier.role === 'target' && (carrier.kind === 'PlanSubject' || carrier.kind === 'Pawn')),
+      (carrier.role === 'target' && ['PlanSubject', 'Pawn', 'Square', 'File'].includes(carrier.kind || '')),
     )
     .filter(carrier => {
       const key = [carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to].join(':');
@@ -293,9 +299,8 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload): Ches
     subject,
     proof_levels: uniqueLabels(evidenceSemantics.map(s => s.evidence?.proof_level || '')),
     carriers,
-    carrier_labels: conciseCarrierLabels([...evidenceSemantics.flatMap(moveCarrierLabels), ...consequences]).slice(0, 12),
     pv,
-    consequences,
+    consequence_carriers: consequenceCarriers,
     terminal_consequences: terminal,
     technique,
     cause_ids: uniqueLabels(evidenceSemantics.flatMap(s => s.evidence?.cause_ids || [])),

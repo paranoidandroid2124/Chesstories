@@ -555,7 +555,10 @@ describe('chesstory brief scaffold', () => {
     assert.equal(llmPayload[0].current_move, 'd1g4');
     assert.deepEqual(llmPayload[0].pv, ['d5g2', 'g4g2']);
     assert.deepEqual(llmPayload[0].terminal_consequences, ['material gain']);
-    assert.deepEqual(llmPayload[0].consequences, []);
+    assert.equal(llmPayload[0].consequence_carriers.length, 1);
+    assert.deepEqual(llmPayload[0].consequence_carriers[0], { role: 'target', kind: 'Square', value: 'g7' });
+    assert.equal('carrier_labels' in (llmPayload[0] as any), false);
+    assert.equal('consequences' in (llmPayload[0] as any), false);
     assert.doesNotMatch(JSON.stringify(llmPayload), /PV continues|The line wins material|This move handles g7/);
   });
   test('requires a public evidence carrier before writing board-evidence prose', () => {
