@@ -437,13 +437,17 @@ function uniqueLabels(labels: string[]): string[] {
 
 function conciseCarrierLabels(labels: string[]): string[] {
   const unique = uniqueLabels(labels);
+  const barePieces = new Set(['king', 'queen', 'rook', 'bishop', 'knight', 'pawn', 'piece']);
+  const hasConcrete = unique.some(label => !barePieces.has(label));
   const coveredFiles = new Set(unique.flatMap(label => label.match(/^([a-h])-file break$/)?.[1] || []));
   const coveredSquares = new Set(
-    unique.flatMap(
-      label => label.match(/^(?:line unlock|material sacrifice|weak square|check) on ([a-h][1-8])$/)?.[1] || [],
-    ),
+    unique.flatMap(label => [
+      ...(label.match(/^(?:line unlock|material sacrifice|weak square|check) on ([a-h][1-8])$/)?.slice(1) || []),
+      ...(label.match(/^([a-h][1-8])-([a-h][1-8])$/)?.slice(1) || []),
+    ]),
   );
   return unique
+    .filter(label => !hasConcrete || !barePieces.has(label))
     .filter(label => !label.match(/^([a-h])-file$/) || !coveredFiles.has(label[0]))
     .filter(label => !label.match(/^[a-h][1-8]$/) || !coveredSquares.has(label));
 }

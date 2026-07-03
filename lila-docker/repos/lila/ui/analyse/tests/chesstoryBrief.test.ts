@@ -480,7 +480,7 @@ describe('chesstory brief scaffold', () => {
 
   test('uses public board carriers when targets are absent', () => {
     const payload: ChesstoryMoveMeaningPayload = {
-      verdict: { move_quality: 'good', played_move: 'g1f3', reference_move: 'g1f3' },
+      verdict: { move_quality: 'good', played_move: 'b8d7', reference_move: 'b8d7' },
       move_semantics: [
         {
           subject: 'played_move',
@@ -490,7 +490,12 @@ describe('chesstory brief scaffold', () => {
           evidence: {
             has_carrier: true,
             proof_level: 'surface_evidence',
-            board_carriers: [{ role: 'actor', kind: 'Move', value: 'g1f3', from: 'g1', to: 'f3' }],
+            board_carriers: [
+              { role: 'actor', kind: 'Move', value: 'b8d7', from: 'b8', to: 'd7' },
+              { role: 'actor', kind: 'Piece', value: 'knight' },
+              { role: 'source', kind: 'Square', value: 'b8' },
+              { role: 'object', kind: 'Square', value: 'd7' },
+            ],
           },
         },
       ],
@@ -498,10 +503,10 @@ describe('chesstory brief scaffold', () => {
     const sections = chesstoryBriefSections(payload);
 
     const evidence = sections.find(section => section.key === 'evidence');
-    assert.match(evidence?.body || '', /g1-f3/);
-    assert.doesNotMatch(evidence?.body || '', /g1f3 g1-f3/);
+    assert.match(evidence?.body || '', /b8-d7/);
+    assert.doesNotMatch(evidence?.body || '', /b8d7 b8-d7|, knight|and knight|, b8\b|and b8\b|, d7\b|and d7\b/);
     const llmPayload = JSON.stringify(chesstoryLlmPayload(payload));
-    assert.match(llmPayload, /g1-f3/);
+    assert.match(llmPayload, /b8-d7/);
     assert.doesNotMatch(llmPayload, /No clean better-move lesson|not clear from the board/);
   });
 
@@ -549,7 +554,8 @@ describe('chesstory brief scaffold', () => {
     assert.doesNotMatch(opening?.body || '', /b-file break.*b-file/);
     assert.doesNotMatch(opening?.body || '', /line unlock on d8.*d8/);
     assert.doesNotMatch(opening?.body || '', /b-file break.*pawn/);
-    assert.match(evidence?.body || '', /b-file break.*pawn.*b7-b5/);
+    assert.match(evidence?.body || '', /b-file break.*b7-b5/);
+    assert.doesNotMatch(evidence?.body || '', /, pawn|and pawn/);
     assert.doesNotMatch(evidence?.body || '', /b-file break.*b-file/);
     assert.doesNotMatch(evidence?.body || '', /line unlock on d8.*d8/);
   });
