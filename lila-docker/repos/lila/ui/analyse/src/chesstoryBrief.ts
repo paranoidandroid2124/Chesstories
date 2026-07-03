@@ -96,6 +96,8 @@ interface ChesstoryComparisonLoss extends ChesstoryCode {
   side?: string;
 }
 
+type ChesstoryBoardCarrier = NonNullable<NonNullable<ChesstoryMoveSemantic['evidence']>['board_carriers']>[number];
+
 export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): ChesstoryBriefSection[] {
   if (!payload?.move_semantics?.some(hasEvidenceCarrier)) return placeholderSections();
 
@@ -250,10 +252,8 @@ function problemLabels(semantic: ChesstoryMoveSemantic): string[] {
 function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
   return [
     ...(semantic.evidence?.board_carriers || [])
-      .filter(carrier => ['Square', 'File', 'Piece', 'Move'].includes(carrier.kind || ''))
-      .map(carrier =>
-        [carrier.value, carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : undefined].filter(Boolean).join(' '),
-      ),
+      .filter(carrier => ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''))
+      .map(boardCarrierLabel),
     ...targetLabels(semantic),
   ];
 }
@@ -261,14 +261,47 @@ function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
 function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
   return [
     ...(semantic.evidence?.board_carriers || [])
-      .filter(carrier => carrier.role === 'target' && ['Square', 'File', 'Piece', 'Move'].includes(carrier.kind || ''))
-      .map(carrier =>
-        [carrier.value, carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : undefined]
-          .filter(Boolean)
-          .join(' '),
-      ),
+      .filter(
+        carrier =>
+          carrier.role === 'target' &&
+          ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''),
+      )
+      .map(boardCarrierLabel),
     ...targetLabels(semantic),
   ];
+}
+
+function boardCarrierLabel(carrier: ChesstoryBoardCarrier): string {
+  const value = carrierValueLabel(carrier.kind, carrier.value);
+  const route = carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : '';
+  return [value, route].filter(Boolean).join(' ');
+}
+
+function carrierValueLabel(kind?: string, value?: string): string {
+  const raw = value || '';
+  if (kind === 'File' && raw) return `${raw}-file`;
+  if (kind === 'Pawn' && raw.startsWith('weak-pawn:')) return `weak pawn ${raw.slice('weak-pawn:'.length)}`;
+  if (kind === 'PlanSubject') return planSubjectLabel(raw);
+  return raw;
+}
+
+function planSubjectLabel(value: string): string {
+  const normalized = value.trim().toLowerCase();
+  const squareSubject = normalized.match(/^(line-unlock|material-sacrifice|weak-square|check):([a-h][1-8])$/);
+  if (squareSubject) return `${squareSubject[1].replace(/-/g, ' ')} on ${squareSubject[2]}`;
+  const passedAdvance = normalized.match(/^passed-pawn-advanced:([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
+  if (passedAdvance) return `passed pawn advance ${passedAdvance[1]}-${passedAdvance[2]}`;
+  const passedPawn = normalized.match(/^passed-pawn:([a-h][1-8])$/);
+  if (passedPawn) return `passed pawn on ${passedPawn[1]}`;
+  const breakFile = normalized.match(/^break-file:([a-h])$/);
+  if (breakFile) return `${breakFile[1]}-file break`;
+  const battery = normalized.match(/^battery-pressure:([a-h][1-8](?:-[a-h][1-8])?)$/);
+  if (battery) return `battery pressure ${battery[1]}`;
+  return normalized
+    .replace(/pawnbreak/g, 'pawn break')
+    .replace(/weakpawn/g, 'weak pawn')
+    .replace(/pieceactivation/g, 'piece activation')
+    .replace(/-/g, ' ');
 }
 
 function targetLabels(semantic: ChesstoryMoveSemantic): string[] {
