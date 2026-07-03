@@ -2045,13 +2045,7 @@ object MoveMeaningSurface:
       val normalized = signature.toLowerCase
       normalized.contains("mechanism=mechanism:check") ||
         normalized.contains("consequence=consequence:check")
-    ) &&
-      claim.boardCarriers.exists(carrier =>
-        carrier.role == "target" &&
-          carrier.kind == "Piece" &&
-          carrier.value != "king" &&
-          carrier.value != "pawn"
-      )
+    )
 
   private def longDiagonalPressureClaim(claim: MoveMeaningClaim): Boolean =
     (
@@ -3188,7 +3182,7 @@ object MoveMeaningClaim:
                 requiredSquares = detail.requiredSquares.distinct.sorted,
                 maintainedSquares = detail.maintainedSquares.distinct.sorted,
                 brokenSquares = detail.brokenSquares.distinct.sorted,
-                publicIdeaType = publicIdeaType(detail, meaningKind),
+                publicIdeaType = publicIdeaType(detail, meaningKind, surfaceObjectSignatures),
                 publicHasCarrier = publicHasCarrier,
                 publicProofLevel = publicProofLevel,
                 publicTargetBound = claimBoardCarriers.exists(_.role == "target")
@@ -3596,7 +3590,8 @@ object MoveMeaningClaim:
 
   private def publicIdeaType(
       detail: PositionPlanTechniqueSemanticDetail,
-      meaningKind: String
+      meaningKind: String,
+      objectSignatures: List[String]
   ): Option[String] =
     detail.unit match
       case PositionPlanTechniqueUnit.SpacePreventionResourceDenial if rayDenialDetail(detail) =>
@@ -3605,7 +3600,7 @@ object MoveMeaningClaim:
         Some("outpost_attempt")
       case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && longDiagonalRouteDetail(detail) =>
         Some("long_diagonal_pressure")
-      case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && checkingRouteTargetPressureDetail(detail) =>
+      case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && checkingRouteTargetPressureDetail(objectSignatures) =>
         Some("target_pressure")
       case _ =>
         None
@@ -3622,17 +3617,8 @@ object MoveMeaningClaim:
         case _                                                     => false
     )
 
-  private def checkingRouteTargetPressureDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
-    detail.objectBindingSignatures.exists(checkSignature) &&
-      detail.objectBindingSignatures.exists(nonKingTargetPieceSignature)
-
-  private def nonKingTargetPieceSignature(signature: String): Boolean =
-    EvidenceObjectBinding
-      .signatureTokens(List(signature), "target=Piece:")
-      .exists(token =>
-        val piece = token.stripPrefix("target=Piece:").trim.toLowerCase
-        piece.nonEmpty && piece != "king" && piece != "pawn"
-      )
+  private def checkingRouteTargetPressureDetail(objectSignatures: List[String]): Boolean =
+    objectSignatures.exists(checkSignature)
 
   private def rayDenialDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.structuralPurposeSubjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
