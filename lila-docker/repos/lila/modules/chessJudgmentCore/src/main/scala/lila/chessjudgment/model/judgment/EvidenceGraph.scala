@@ -489,15 +489,20 @@ object EvidenceObjectBinding:
       payload.proofSignalConsequences.map { consequence =>
         val lineMoves = consequence.lineMoves.map(normalize)
         val eventMove = consequence.eventMove.orElse(lineMoves.headOption).map(normalize)
+        val consequenceMoves = (lineMoves ++ eventMove.toList).distinct
         val lineMoveWitness =
-          lineMoves.flatMap(move => objectOf(EvidenceObjectKind.Move, move) ++ moveTargetSquare(move))
+          consequenceMoves.flatMap(move => objectOf(EvidenceObjectKind.Move, move) ++ moveTargetSquare(move))
+        val lineEventWitness =
+          payload.lineEvents
+            .filter(event => consequenceMoves.contains(normalize(event.moveUci)))
+            .flatMap(event => squareObject(event.square) ++ roleObject(event.pieceRole) ++ roleObject(event.targetRole))
         EvidenceObjectBinding(
           source = ref,
           actor = eventMove.toList.flatMap(moveObjects),
           target = eventMove.toList.flatMap(moveTargetSquare),
           mechanism = objectOf(EvidenceObjectKind.Mechanism, consequence.kind.toString),
           consequence = objectOf(EvidenceObjectKind.Consequence, consequence.kind.toString),
-          witness = lineMoveWitness ++ lineObject(payload.line),
+          witness = lineMoveWitness ++ lineEventWitness ++ lineObject(payload.line),
           line = Some(payload.line)
         )
       }
