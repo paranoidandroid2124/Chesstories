@@ -480,6 +480,7 @@ function uniqueLabels(labels: string[]): string[] {
 
 function conciseCarrierLabels(labels: string[]): string[] {
   const unique = uniqueLabels(labels);
+  const standaloneSquare = (label: string) => label.match(/^(?:the )?([a-h][1-8])(?: square)?$/)?.[1];
   const barePieces = new Set(['king', 'queen', 'rook', 'bishop', 'knight', 'pawn', 'piece']);
   const hasConcrete = unique.some(label => !barePieces.has(label));
   const coveredFiles = new Set(unique.flatMap(label => label.match(/^([a-h])-file break$/)?.[1] || []));
@@ -510,8 +511,14 @@ function conciseCarrierLabels(labels: string[]): string[] {
       return !route || !coveredRoutes.has(route);
     })
     .filter(label => !label.match(/^([a-h])-file$/) || !coveredFiles.has(label[0]))
-    .filter(label => !label.match(/^[a-h][1-8]$/) || !coveredSquares.has(label))
-    .map(label => (label.match(/^[a-h][1-8]$/) ? `the ${label} square` : label));
+    .filter(label => {
+      const square = standaloneSquare(label);
+      return !square || !coveredSquares.has(square);
+    })
+    .map(label => {
+      const square = standaloneSquare(label);
+      return square ? `the ${square} square` : label;
+    });
 }
 
 function firstLabel(labels: string[]): string | undefined {
