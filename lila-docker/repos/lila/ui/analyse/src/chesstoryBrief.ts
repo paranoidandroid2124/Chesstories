@@ -121,7 +121,10 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const targets = uniqueLabels(positionEvidence.flatMap(boardCarrierTargetLabels)).slice(0, 5);
   const problem = firstLabel(verdictReasons.flatMap(problemLabels));
   const referenceIdeas = uniqueLabels(evidenceReference.map(ideaLabel)).slice(0, 3);
-  const handled = [...solved, ...terminal];
+  const concreteSolved = targets.length ? targets : solved;
+  const handled = [...concreteSolved, ...terminal];
+  const positionThread =
+    solved.length && targets.length ? `${joinHuman(solved)} around ${joinHuman(targets)}` : joinHuman(concreteSolved);
   const currentChange = targets.length ? joinHuman(targets) : solved.length ? joinHuman(solved) : '';
   const lineEvidence = comparisonLines(evidencePlayed).slice(0, 3);
 
@@ -129,8 +132,8 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     {
       key: 'opening-idea',
       title: 'Position thread',
-      body: solved.length
-        ? `The position is asking about ${joinHuman(solved)}.`
+      body: positionThread
+        ? `The position is asking about ${positionThread}.`
         : 'The position needs a concrete plan before the engine line becomes useful.',
       pending: false,
       items: targets.length ? [`Board focus: ${joinHuman(targets)}`] : undefined,
