@@ -3443,7 +3443,7 @@ object MoveReviewPhase3AuditRunner:
       "causeEvidenceIds" -> claim.causeEvidenceIds,
       "sourceEvidenceIds" -> claim.sourceEvidenceIds,
       "objectBindingSignatureCount" -> claim.objectBindingSignatures.size,
-      "objectBindingSignaturesSample" -> claim.objectBindingSignatures.distinct.sorted.take(5),
+      "objectBindingSignaturesSample" -> MoveReviewPhase3AuditViewJson.objectBindingSignatureSample(claim.objectBindingSignatures),
       "objectCarrierReady" -> claim.objectCarrierReady,
       "boardCarrierCount" -> claim.boardCarriers.size,
       "boardCarriersSample" -> claim.boardCarriers.take(8).map(carrier =>

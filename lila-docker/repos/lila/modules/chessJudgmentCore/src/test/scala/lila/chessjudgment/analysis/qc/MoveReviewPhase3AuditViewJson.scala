@@ -4,11 +4,29 @@ import lila.chessjudgment.model.judgment.*
 import play.api.libs.json.*
 
 object MoveReviewPhase3AuditViewJson:
+  def objectBindingSignatureSample(signatures: List[String]): List[String] =
+    signatures.distinct.sortBy(objectBindingSignatureSampleSortKey).take(5)
+
   def objectBindingSignatureSampleJson(signatures: List[String]): JsObject =
     Json.obj(
       "objectBindingSignatureCount" -> signatures.size,
-      "objectBindingSignaturesSample" -> signatures.distinct.sorted.take(5)
+      "objectBindingSignaturesSample" -> objectBindingSignatureSample(signatures)
     )
+
+  private def objectBindingSignatureSampleSortKey(signature: String): (Int, Int, String) =
+    val normalized = signature.toLowerCase
+    val targetRank =
+      if normalized.contains("target=square:") ||
+        normalized.contains("target=file:") ||
+        normalized.contains("target=piece:") ||
+        normalized.contains("target=pawn:") ||
+        normalized.contains("target=plansubject:")
+      then 0
+      else if normalized.contains("target=") then 1
+      else 2
+    val moveRank =
+      if normalized.contains("actor=move:") || normalized.contains("witness=move:") then 0 else 1
+    (targetRank, moveRank, signature)
 
   def positionPlanTechniqueObjectBindingsSampleJson(
       bindings: List[PositionPlanTechniqueObjectBinding]
