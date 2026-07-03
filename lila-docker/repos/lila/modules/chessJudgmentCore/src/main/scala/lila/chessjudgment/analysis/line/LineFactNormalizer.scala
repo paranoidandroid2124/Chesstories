@@ -20,7 +20,7 @@ object LineFactNormalizer:
       parents: List[EvidenceRef] = Nil
   ): EvidenceRecord =
     val replay = replaySteps(position.fen, facts)
-    val events = lineEvents(lineRef, facts, forcedTheme, materialSummary)
+    val events = lineEvents(lineRef, facts, replay, forcedTheme, materialSummary)
     val baseConsequences = lineConsequences(facts, forcedTheme, materialSummary)
     val endgameHorizons = endgameTechniqueHorizons(position.fen, replay, baseConsequences)
     val consequences = (baseConsequences ++ endgameTechniqueConsequences(facts, endgameHorizons)).distinct
@@ -71,12 +71,26 @@ object LineFactNormalizer:
   private def lineEvents(
       lineRef: LineNodeRef,
       facts: PrincipalVariationEvidence.LineFacts,
+      replay: List[LineReplayStep],
       forcedTheme: Option[ForcedLineThemeEvidence],
       materialSummary: Option[LineMaterialSummary]
   ): List[LineMoveEvent] =
     val replayEvents =
       facts.line.moves.zipWithIndex.flatMap { case (move, index) =>
         val normalized = PrincipalVariationEvidence.normalizeUci(move.uci)
+        val checkDefense =
+          replay.lift(index).toList.flatMap(step =>
+            positionAfter(step.fenBefore).toList.filter(_.check.yes).map { position =>
+              LineMoveEvent(
+                kind = LineEventKind.DefenderMove,
+                moveUci = normalized,
+                plyOffset = index,
+                side = Some(position.color),
+                targetRole = Some(EvidencePieceRole(King.name)),
+                square = position.board.kingPosOf(position.color).map(square => EvidenceSquare(square.key))
+              )
+            }
+          )
         val stateEvents =
           positionAfter(move.fenAfter).toList.flatMap { position =>
             val kingSquare = position.board.kingPosOf(position.color).map(square => EvidenceSquare(square.key))
@@ -135,7 +149,7 @@ object LineFactNormalizer:
               )
             ).flatten
           }
-        castlingEvent(normalized, index).toList ++ stateEvents
+        castlingEvent(normalized, index).toList ++ checkDefense ++ stateEvents
       }
     val roleEvents =
       Option
