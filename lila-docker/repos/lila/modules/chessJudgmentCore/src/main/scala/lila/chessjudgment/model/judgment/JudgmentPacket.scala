@@ -2528,6 +2528,7 @@ object MoveMeaningClaim:
       claim: MoveMeaningClaim
   ): Boolean =
     publicSurfaceLaneAllowed(claim) &&
+      !sameRootReferenceSurface(verdict, claim) &&
       !terminalOverriddenEndgameTechniqueShadowed(claims, claim) &&
       !routeActivityShadowedByOwnedRoute(claims, claim) &&
       !planContinuityShadowedByOwnedRoute(claims, claim) &&
@@ -2535,6 +2536,17 @@ object MoveMeaningClaim:
       !genericActivityOrPlanShadowedByOwnedTargetPressure(claims, claim) &&
       publicSpecificPlanContinuityClaim(claims, claim) &&
       !badMoveSuppressesCurrentMoveSurface(verdict, claim)
+
+  private def sameRootReferenceSurface(
+      verdict: Option[MoveJudgmentVerdictFrame],
+      claim: MoveMeaningClaim
+  ): Boolean =
+    claim.surfaceLane == "reference_or_opponent_resource" &&
+      claim.lineRole == "reference" &&
+      verdict.exists(frame =>
+        sameMove(frame.candidateLine.rootMove, frame.referenceLine.rootMove) &&
+          sameMove(claim.moveUci, frame.candidateLine.rootMove)
+      )
 
   private def publicSurfaceLaneAllowed(claim: MoveMeaningClaim): Boolean =
     terminalOverriddenEndgameTechniqueClaim(claim) ||
