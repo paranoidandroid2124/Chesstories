@@ -2892,10 +2892,16 @@ object MoveMeaningClaim:
                   .distinct
                   .sortBy(boardCarrierSortKey)
                   .take(12)
+              val pressureIdentityCarriers =
+                mechanismSquareIdentityCarriers(detail, "battery-pressure", batteryPressureSignature) ++
+                  mechanismSquareIdentityCarriers(detail, "pin-pressure", pinPressureSignature)
+              val checkIdentityCarriers =
+                if pressureIdentityCarriers.nonEmpty then Nil
+                else mechanismSquareIdentityCarriers(detail, "check", checkSignature)
               val spareIdentityCarriers =
                 lineUnlockIdentityCarriers(detail) ++
-                  batteryPressureIdentityCarriers(detail) ++
-                  pinPressureIdentityCarriers(detail) ++
+                  pressureIdentityCarriers ++
+                  checkIdentityCarriers ++
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
                   passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
                   materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove)
@@ -3131,9 +3137,13 @@ object MoveMeaningClaim:
       .distinct
       .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"line-unlock:$square"))
 
-  private def batteryPressureIdentityCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
+  private def mechanismSquareIdentityCarriers(
+      detail: PositionPlanTechniqueSemanticDetail,
+      carrierPrefix: String,
+      signatureMatches: String => Boolean
+  ): List[MoveMeaningSurfaceBoardCarrier] =
     detail.objectBindingSignatures
-      .filter(batteryPressureSignature)
+      .filter(signatureMatches)
       .flatMap { signature =>
         val squares =
           EvidenceObjectBinding
@@ -3143,24 +3153,7 @@ object MoveMeaningClaim:
             .distinct
             .sorted
         Option.when(squares.nonEmpty)(
-          MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"battery-pressure:${squares.mkString("-")}")
-        )
-      }
-      .distinct
-
-  private def pinPressureIdentityCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
-    detail.objectBindingSignatures
-      .filter(pinPressureSignature)
-      .flatMap { signature =>
-        val squares =
-          EvidenceObjectBinding
-            .signatureTokens(List(signature), "target=Square:")
-            .toList
-            .flatMap(token => claimSquare(token.stripPrefix("target=Square:")))
-            .distinct
-            .sorted
-        Option.when(squares.nonEmpty)(
-          MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"pin-pressure:${squares.mkString("-")}")
+          MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"$carrierPrefix:${squares.mkString("-")}")
         )
       }
       .distinct
@@ -3183,6 +3176,11 @@ object MoveMeaningClaim:
     val normalized = signature.toLowerCase
     normalized.contains("mechanism=mechanism:pinpressure") ||
       normalized.contains("consequence=consequence:pinpressure")
+
+  private def checkSignature(signature: String): Boolean =
+    val normalized = signature.toLowerCase
+    normalized.contains("mechanism=mechanism:check") ||
+      normalized.contains("consequence=consequence:check")
 
   private def sameFileMoveFile(move: String): Option[String] =
     moveEndpoints(move).collect { case (from, to) if from.take(1) == to.take(1) => from.take(1) }
