@@ -466,6 +466,19 @@ object EvidenceObjectBinding:
         Nil
 
   private def fromLineFact(ref: EvidenceRef, payload: LineFactEvidence): List[EvidenceObjectBinding] =
+    val replayBindings =
+      payload.lineReplayContinuationMoves.take(4).map { moveUci =>
+        val move = normalize(moveUci)
+        EvidenceObjectBinding(
+          source = ref,
+          actor = moveObjects(move),
+          target = moveTargetSquare(move),
+          mechanism = objectOf(EvidenceObjectKind.Mechanism, "LineContinuation"),
+          consequence = objectOf(EvidenceObjectKind.Consequence, "LineContinuation"),
+          witness = objectOf(EvidenceObjectKind.Move, move) ++ moveTargetSquare(move) ++ lineObject(payload.line),
+          line = Some(payload.line)
+        )
+      }
     val eventBindings =
       payload.lineEvents.map { event =>
         val move = normalize(event.moveUci)
@@ -525,7 +538,7 @@ object EvidenceObjectBinding:
           horizon = Some(s"endgame:${horizon.status}:entry=${horizon.entryPlyOffset}:terminal=${horizon.terminalPlyOffset}")
         )
       }
-    (eventBindings ++ consequenceBindings ++ horizonBindings).distinctBy(_.signature)
+    (replayBindings ++ eventBindings ++ consequenceBindings ++ horizonBindings).distinctBy(_.signature)
 
   private def fromMoveMotif(ref: EvidenceRef, payload: MoveMotifEvidence): EvidenceObjectBinding =
     val proof = payload.proof
