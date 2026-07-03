@@ -164,11 +164,13 @@ final class Analyse(
   private def publicLlmPayload(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[JsObject] =
     val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
     val subject = if problemMove then "reference_move" else "played_move"
+    val subjectMove = if problemMove then verdict.referenceMove else verdict.playedMove
+    val pvRolePrefix = if problemMove then "reference_pv_" else "played_pv_"
     val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && publicLlmSurfaceHasCarrier(surface))
     val pv = surfaces
-      .filter(_.subject == "played_move")
+      .filter(_.subject == subject)
       .flatMap(_.comparison.toList.flatMap(_.moves))
-      .filter(move => move.uci.nonEmpty && move.role.startsWith("played_pv_"))
+      .filter(move => move.uci.nonEmpty && move.role.startsWith(pvRolePrefix))
       .map(_.uci)
       .distinct
     val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
@@ -179,7 +181,7 @@ final class Analyse(
     if evidenceSurfaces.isEmpty || (terminal.isEmpty && technique.isEmpty && (pv.isEmpty || !concreteConsequence)) then Nil
     else
       val carriers = publicLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
-        (carrier.role == "actor" && carrier.kind == "Move" && carrier.value == verdict.playedMove) ||
+        (carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) ||
           (carrier.role == "target" && publicLlmConsequenceCarrierKind(carrier.kind))
       )
       List(
