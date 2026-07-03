@@ -632,13 +632,21 @@ object EvidenceObjectBinding:
   private def fromActivePlans(ref: EvidenceRef, activePlans: ActivePlans): List[EvidenceObjectBinding] =
     (activePlans.primary :: activePlans.secondary.toList).map { plan =>
       val evidenceAtoms = plan.evidence
+      val evidenceMoveWitnessObjects =
+        evidenceAtoms
+          .flatMap(_.motif.move.toList)
+          .map(normalize)
+          .filter(move => ref.line.exists(line => EvidenceRef.sameMove(line.rootMove, move)))
+          .flatMap(move => objectOf(EvidenceObjectKind.Move, move) ++ moveTargetSquare(move))
+          .distinctBy(_.signaturePart)
       EvidenceObjectBinding(
         source = ref,
         actor = evidenceAtoms.flatMap(planEvidenceActorObjects(_, ref)).distinctBy(_.signaturePart),
         target = objectOf(EvidenceObjectKind.PlanSubject, plan.plan.id.toString),
         mechanism = objectOf(EvidenceObjectKind.Mechanism, "plan-pressure"),
         consequence = objectOf(EvidenceObjectKind.Consequence, plan.plan.id.toString),
-        witness = evidenceAtoms.flatMap(evidence => objectOf(EvidenceObjectKind.PlanSubject, evidence.toString)),
+        witness = evidenceAtoms.flatMap(evidence => objectOf(EvidenceObjectKind.PlanSubject, evidence.toString)) ++
+          evidenceMoveWitnessObjects,
         line = ref.line
       )
     }.distinctBy(_.signature)
