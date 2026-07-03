@@ -343,6 +343,19 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       requiresOwnedCause &&
         unitEligibleRows.nonEmpty &&
         unitEligibleRows.forall(_.causeIds.isEmpty)
+    val shadowedByOwnedCarrier =
+      best.isEmpty &&
+        claimSupportLevelSatisfied &&
+        claimMatches.exists(claim =>
+          rows.exists(row =>
+            row.publicSurface &&
+              row.unit != slot.unit &&
+              row.lineRole == claim.lineRole &&
+              JudgmentSubjectBinding.normalizeMove(row.moveUci) == JudgmentSubjectBinding.normalizeMove(claim.moveUci) &&
+              supportLevelSatisfies(row.supportLevel, "owned_cause_linked") &&
+              row.causeIds.nonEmpty
+          )
+        )
     val requiredDetailTokenAbsent =
       slot.requiredSemanticDetailTokens.nonEmpty &&
         semanticDetailUnitPresent(slot, diagnostics) &&
@@ -370,6 +383,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       else if matched then "covered"
       else if ownedExpectationWithoutProof then "ownership_proof_gap"
       else if requiredDetailTokenAbsent || counterplayRaceExpectationOverspecified then "rubric_input_gap"
+      else if shadowedByOwnedCarrier then "shadowed_by_owned_carrier"
       else if best.isEmpty && claimSupportLevelSatisfied then "public_surface_blocked"
       else if claimMatches.nonEmpty || semanticDetailPresent(slot, diagnostics) then "structural_bottleneck"
       else "coverage_shortage"
@@ -395,6 +409,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "publicSurfacePresent" -> publicMatches.nonEmpty,
       "requiresOwnedCause" -> requiresOwnedCause,
       "ownedExpectationWithoutProof" -> ownedExpectationWithoutProof,
+      "shadowedByOwnedCarrier" -> shadowedByOwnedCarrier,
       "requiredDetailTokenAbsent" -> requiredDetailTokenAbsent,
       "counterplayRaceExpectationOverspecified" -> counterplayRaceExpectationOverspecified,
       "survivalFailureClass" -> survivalFailureClass,
