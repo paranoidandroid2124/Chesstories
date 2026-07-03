@@ -480,21 +480,24 @@ object EvidenceObjectBinding:
           },
           mechanism = objectOf(EvidenceObjectKind.Mechanism, event.kind.toString),
           consequence = objectOf(EvidenceObjectKind.Consequence, event.kind.toString),
-          witness = objectOf(EvidenceObjectKind.Move, move) ++ lineObject(payload.line),
+          witness = objectOf(EvidenceObjectKind.Move, move) ++ moveTargetSquare(move) ++ lineObject(payload.line),
           line = Some(payload.line),
           horizon = Some(s"ply:${event.plyOffset}")
         )
       }
     val consequenceBindings =
       payload.proofSignalConsequences.map { consequence =>
-        val eventMove = consequence.eventMove.orElse(consequence.lineMoves.headOption).map(normalize)
+        val lineMoves = consequence.lineMoves.map(normalize)
+        val eventMove = consequence.eventMove.orElse(lineMoves.headOption).map(normalize)
+        val lineMoveWitness =
+          lineMoves.flatMap(move => objectOf(EvidenceObjectKind.Move, move) ++ moveTargetSquare(move))
         EvidenceObjectBinding(
           source = ref,
           actor = eventMove.toList.flatMap(moveObjects),
           target = eventMove.toList.flatMap(moveTargetSquare),
           mechanism = objectOf(EvidenceObjectKind.Mechanism, consequence.kind.toString),
           consequence = objectOf(EvidenceObjectKind.Consequence, consequence.kind.toString),
-          witness = consequence.lineMoves.flatMap(move => objectOf(EvidenceObjectKind.Move, move)) ++ lineObject(payload.line),
+          witness = lineMoveWitness ++ lineObject(payload.line),
           line = Some(payload.line)
         )
       }
@@ -566,6 +569,8 @@ object EvidenceObjectBinding:
   private def fromThreatEpisode(ref: EvidenceRef, payload: ThreatEpisodeEvidence): EvidenceObjectBinding =
     val episode = payload.episode
     val attackSquareObjects = episode.attackSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key))
+    val defenseWitness =
+      episode.bestDefense.toList.map(normalize).flatMap(move => objectOf(EvidenceObjectKind.Move, move) ++ moveTargetSquare(move))
     EvidenceObjectBinding(
       source = ref,
       actor = attackSquareObjects,
@@ -575,7 +580,7 @@ object EvidenceObjectBinding:
       mechanism = objectOf(EvidenceObjectKind.Mechanism, episode.kind.toString) ++
         objectOf(EvidenceObjectKind.Mechanism, episode.driver.toString),
       consequence = objectOf(EvidenceObjectKind.Consequence, episode.severity.toString),
-      witness = episode.bestDefense.toList.flatMap(move => objectOf(EvidenceObjectKind.Move, move)) ++
+      witness = defenseWitness ++
         attackSquareObjects ++
         episode.motifs.flatMap(motif =>
           objectOf(EvidenceObjectKind.Motif, motif.getClass.getSimpleName.stripSuffix("$"))
