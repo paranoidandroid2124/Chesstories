@@ -118,7 +118,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const terminal = uniqueLabels(evidencePlayed.flatMap(s => (s.terminal_consequences || []).map(codeLabel)));
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
   const losses = uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels));
-  const targets = uniqueLabels(positionEvidence.flatMap(boardCarrierTargetLabels)).slice(0, 5);
+  const targets = conciseCarrierLabels(positionEvidence.flatMap(boardCarrierTargetLabels)).slice(0, 5);
   const problem = firstLabel(verdictReasons.flatMap(problemLabels));
   const referenceIdeas = uniqueLabels(evidenceReference.map(ideaLabel)).slice(0, 3);
   const concreteIdeas = targets.length
@@ -297,10 +297,12 @@ function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
       ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''),
   );
   const hasSpecificTarget = carriers.some(carrier => carrier.kind !== 'Piece');
-  return carriers
-    .filter(carrier => !hasSpecificTarget || carrier.kind !== 'Piece')
-    .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
-    .map(boardCarrierLabel);
+  return conciseCarrierLabels(
+    carriers
+      .filter(carrier => !hasSpecificTarget || carrier.kind !== 'Piece')
+      .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
+      .map(boardCarrierLabel),
+  );
 }
 
 function boardCarrierLabel(carrier: ChesstoryBoardCarrier): string {
@@ -405,13 +407,13 @@ function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
   if (terminal.length) return `The terminal result is ${joinHuman(terminal)}.`;
   const technique = uniqueLabels(evidenceSemantics.flatMap(techniqueLabels));
   if (technique.length) return `The ending technique evidence is ${joinHuman(technique)}.`;
-  const carriers = uniqueLabels(evidenceSemantics.flatMap(boardCarrierLabels));
+  const carriers = conciseCarrierLabels(evidenceSemantics.flatMap(boardCarrierLabels));
   if (carriers.length) return `The concrete board evidence is ${joinHuman(carriers.slice(0, 5))}.`;
   return undefined;
 }
 
 function evidenceItems(semantics: ChesstoryMoveSemantic[]): string[] {
-  return uniqueLabels(
+  return conciseCarrierLabels(
     semantics.filter(hasEvidenceCarrier).flatMap(s => [
       ...boardCarrierLabels(s),
       ...(s.terminal_consequences || []).map(codeLabel),
@@ -431,6 +433,19 @@ function normalizeCode(code?: string): string {
 }
 function uniqueLabels(labels: string[]): string[] {
   return [...new Set(labels.map(l => l.trim()).filter(Boolean))];
+}
+
+function conciseCarrierLabels(labels: string[]): string[] {
+  const unique = uniqueLabels(labels);
+  const coveredFiles = new Set(unique.flatMap(label => label.match(/^([a-h])-file break$/)?.[1] || []));
+  const coveredSquares = new Set(
+    unique.flatMap(
+      label => label.match(/^(?:line unlock|material sacrifice|weak square|check) on ([a-h][1-8])$/)?.[1] || [],
+    ),
+  );
+  return unique
+    .filter(label => !label.match(/^([a-h])-file$/) || !coveredFiles.has(label[0]))
+    .filter(label => !label.match(/^[a-h][1-8]$/) || !coveredSquares.has(label));
 }
 
 function firstLabel(labels: string[]): string | undefined {

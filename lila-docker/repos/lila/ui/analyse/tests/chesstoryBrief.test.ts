@@ -521,6 +521,21 @@ describe('chesstory brief scaffold', () => {
               { role: 'actor', kind: 'Move', value: 'b7b5', from: 'b7', to: 'b5' },
               { role: 'target', kind: 'Piece', value: 'pawn' },
               { role: 'target', kind: 'PlanSubject', value: 'break-file:b' },
+              { role: 'target', kind: 'File', value: 'b' },
+            ],
+          },
+        },
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'supporting',
+          idea: { code: 'line_unlock', label: 'line unlock' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            board_carriers: [
+              { role: 'target', kind: 'PlanSubject', value: 'line-unlock:d8' },
+              { role: 'target', kind: 'Square', value: 'd8' },
             ],
           },
         },
@@ -530,8 +545,13 @@ describe('chesstory brief scaffold', () => {
     const evidence = sections.find(section => section.key === 'evidence');
     const opening = sections.find(section => section.key === 'opening-idea');
     assert.match(opening?.body || '', /b-file break/);
+    assert.match(opening?.body || '', /line unlock on d8/);
+    assert.doesNotMatch(opening?.body || '', /b-file break.*b-file/);
+    assert.doesNotMatch(opening?.body || '', /line unlock on d8.*d8/);
     assert.doesNotMatch(opening?.body || '', /b-file break.*pawn/);
     assert.match(evidence?.body || '', /b-file break.*pawn.*b7-b5/);
+    assert.doesNotMatch(evidence?.body || '', /b-file break.*b-file/);
+    assert.doesNotMatch(evidence?.body || '', /line unlock on d8.*d8/);
   });
   test('does not repeat a generic idea when a carrier already names it concretely', () => {
     const sections = chesstoryBriefSections({
