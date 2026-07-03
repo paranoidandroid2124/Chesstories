@@ -140,7 +140,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     currentChange && lineEvidence.length
       ? `The move changes ${currentChange}; ${lineEvidence[0]}${terminalProof}.`
       : currentChange
-        ? `The move is not just a verdict; it changes ${currentChange}.`
+        ? `The move changes ${currentChange}.`
         : 'This move is marked, but the lesson is not clear from the board yet.';
   const comparisonFocus = [...losses, ...referenceIdeas].slice(0, 4);
 
