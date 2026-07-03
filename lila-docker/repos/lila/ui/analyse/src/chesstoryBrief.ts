@@ -476,7 +476,7 @@ function isPlayedComparisonLoss(loss: ChesstoryComparisonLoss): boolean {
 function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
   const evidenceSemantics = semantics.filter(hasEvidenceCarrier);
   const terminal = cleanTerminalLabels(uniqueLabels(evidenceSemantics.flatMap(terminalLabels)));
-  if (terminal.length) return `The terminal result is ${joinHuman(terminal)}.`;
+  if (terminal.length) return terminal.includes('material sacrifice') ? `The line confirms ${joinHuman(terminal)}.` : `The terminal result is ${joinHuman(terminal)}.`;
   const technique = uniqueLabels(evidenceSemantics.flatMap(techniqueLabels));
   if (technique.length) return `The ending technique evidence is ${joinHuman(technique)}.`;
   const carriers = conciseCarrierLabels(evidenceSemantics.flatMap(boardCarrierLabels));

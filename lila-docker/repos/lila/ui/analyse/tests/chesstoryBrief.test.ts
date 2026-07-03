@@ -727,6 +727,7 @@ describe('chesstory brief scaffold', () => {
 
     const text = JSON.stringify(sections);
     assert.match(text, /material sacrifice/);
-    assert.doesNotMatch(text, /handles .*material loss|terminal result is material loss/);
+    assert.match(text, /line confirms material sacrifice/);
+    assert.doesNotMatch(text, /handles .*material loss|terminal result is material (?:loss|sacrifice)/);
   });
 });
