@@ -1696,7 +1696,7 @@ object MoveMeaningSurfaceTarget:
     MoveMeaningSurfaceTarget(
       squares = claim.targetSquares.flatMap(cleanSquare).distinct.sorted,
       files = claim.targetFiles.flatMap(cleanFile).distinct.sorted,
-      pieces = claim.targetPieces.flatMap(cleanPiece).distinct.sorted
+      pieces = (claim.targetPieces ++ routePieces(claim.routeIdentityParts)).flatMap(cleanPiece).distinct.sorted
     )
 
   private[judgment] def fromDetail(
@@ -1749,6 +1749,9 @@ object MoveMeaningSurfaceTarget:
         cleaned == "knight" ||
         cleaned == "pawn"
     )(cleaned)
+
+  private def routePieces(parts: List[String]): List[String] =
+    parts.collect { case part if part.startsWith("piece:") => part.stripPrefix("piece:") }
 
   private def squareFromText(value: String): List[String] =
     "[a-h][1-8]".r.findAllIn(cleanTheme(value)).toList.distinct
@@ -2012,7 +2015,7 @@ object MoveMeaningSurface:
       case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
         claim.publicIdeaType.getOrElse("counterplay_control")
       case PositionPlanTechniqueUnit.PieceRerouteRoute if claim.meaningKind == "PieceRoute" =>
-        claim.publicIdeaType.getOrElse("piece_route")
+        claim.publicIdeaType.orElse(Option.when(checkingRouteTargetPressureClaim(claim))("target_pressure")).getOrElse("piece_route")
       case PositionPlanTechniqueUnit.PieceRerouteRoute =>
         "piece_activity"
       case PositionPlanTechniqueUnit.EndgameTechniqueRecipe =>
@@ -2034,6 +2037,19 @@ object MoveMeaningSurface:
     else if codes.contains("material_gain") then Some("material_gain")
     else if codes.contains("material_loss") then Some("material_loss")
     else None
+
+  private def checkingRouteTargetPressureClaim(claim: MoveMeaningClaim): Boolean =
+    claim.objectBindingSignatures.exists(signature =>
+      val normalized = signature.toLowerCase
+      normalized.contains("mechanism=mechanism:check") ||
+        normalized.contains("consequence=consequence:check")
+    ) &&
+      claim.boardCarriers.exists(carrier =>
+        carrier.role == "target" &&
+          carrier.kind == "Piece" &&
+          carrier.value != "king" &&
+          carrier.value != "pawn"
+      )
 
   private def planOptionIdeaType(claim: MoveMeaningClaim): String =
     claim.role match
@@ -2488,6 +2504,7 @@ object MoveMeaningClaim:
   ): Boolean =
     publicSurfaceLaneAllowed(claim) &&
       !terminalOverriddenEndgameTechniqueShadowed(claims, claim) &&
+      !lineUnlockActivityShadowedByOwnedRoute(claims, claim) &&
       publicSpecificPlanContinuityClaim(claims, claim) &&
       !badMoveSuppressesCurrentMoveSurface(verdict, claim)
 
@@ -2593,6 +2610,23 @@ object MoveMeaningClaim:
 
   private def routeIdentityKey(claim: MoveMeaningClaim): Option[(String, String, List[String])] =
     Option.when(claim.routeIdentityParts.nonEmpty)((claim.lineRole, claim.moveUci, claim.routeIdentityParts))
+
+  private def lineUnlockActivityShadowedByOwnedRoute(
+      claims: List[MoveMeaningClaim],
+      claim: MoveMeaningClaim
+  ): Boolean =
+    claim.meaningKind == "PieceActivity" &&
+      claim.surfaceLane == "current_move_function" &&
+      claim.causeEvidenceIds.isEmpty &&
+      claim.routeIdentityParts.exists(_.contains("line-unlock")) &&
+      routeIdentityKey(claim).exists(key =>
+        claims.exists(other =>
+          other.meaningKind == "PieceRoute" &&
+            other.surfaceLane == "current_move_owned" &&
+            other.supportLevel == "owned_cause_linked" &&
+            routeIdentityKey(other).contains(key)
+        )
+      )
 
   private def suppressShadowedCounterplayRacePawnBreak(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
     val raceClaims =
@@ -3421,6 +3455,8 @@ object MoveMeaningClaim:
         Some("outpost_attempt")
       case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && longDiagonalRouteDetail(detail) =>
         Some("long_diagonal_pressure")
+      case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && checkingRouteTargetPressureDetail(detail) =>
+        Some("target_pressure")
       case _ =>
         None
 
@@ -3435,6 +3471,18 @@ object MoveMeaningClaim:
         case Some(StructuralPurposeSubject.Battery(axis, _, _, _)) => axis.equalsIgnoreCase("diagonal")
         case _                                                     => false
     )
+
+  private def checkingRouteTargetPressureDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.objectBindingSignatures.exists(checkSignature) &&
+      detail.objectBindingSignatures.exists(nonKingTargetPieceSignature)
+
+  private def nonKingTargetPieceSignature(signature: String): Boolean =
+    EvidenceObjectBinding
+      .signatureTokens(List(signature), "target=Piece:")
+      .exists(token =>
+        val piece = token.stripPrefix("target=Piece:").trim.toLowerCase
+        piece.nonEmpty && piece != "king" && piece != "pawn"
+      )
 
   private def rayDenialDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.structuralPurposeSubjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
