@@ -497,6 +497,8 @@ describe('chesstory brief scaffold', () => {
     });
 
     const evidence = sections.find(section => section.key === 'evidence');
+    const opening = sections.find(section => section.key === 'opening-idea');
+    assert.match(opening?.body || '', /b-file break.*pawn/);
     assert.match(evidence?.body || '', /b-file break.*pawn.*b7b5/);
   });
   test('does not turn semantic targets into public board evidence without board carriers', () => {

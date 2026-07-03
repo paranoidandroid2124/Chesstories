@@ -280,6 +280,7 @@ function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
         carrier.role === 'target' &&
         ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''),
     )
+    .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
     .map(boardCarrierLabel);
 }
 
