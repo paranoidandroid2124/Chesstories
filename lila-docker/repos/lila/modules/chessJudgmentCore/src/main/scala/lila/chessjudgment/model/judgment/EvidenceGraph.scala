@@ -791,6 +791,7 @@ object EvidenceObjectBinding:
     objectOf(EvidenceObjectKind.Line, line.id) ++ objectOf(EvidenceObjectKind.Move, line.rootMove)
 
   private def subjectObject(raw: String): List[ConcreteChessObject] =
+    val fileSquareTarget = StructuralPurposeSubject.fileSquareTarget(raw)
     val cleaned = StructuralPurposeSubject.carrierToken(raw)
     val weakPawnSquare = StructuralPurposeSubject.weakPawnSquare(cleaned)
     StructuralPurposeSubject.parse(cleaned) match
@@ -814,6 +815,10 @@ object EvidenceObjectBinding:
         weakPawnSquare.toList.flatMap(square =>
           objectOf(EvidenceObjectKind.Pawn, s"weak-pawn:$square") ++ objectOf(EvidenceObjectKind.Square, square)
         )
+      case None if fileSquareTarget.nonEmpty =>
+        fileSquareTarget.toList.flatMap { case (file, square) =>
+          objectOf(EvidenceObjectKind.File, file) ++ objectOf(EvidenceObjectKind.Square, square)
+        }
       case None if cleaned.matches("[a-h][1-8]") => objectOf(EvidenceObjectKind.Square, cleaned)
       case None if cleaned.matches("[a-h]")      => objectOf(EvidenceObjectKind.File, cleaned)
       case None if cleaned.contains("pawn")      => objectOf(EvidenceObjectKind.Pawn, cleaned)
@@ -856,7 +861,7 @@ private[judgment] object StructuralPurposeSubject:
   private val battery = raw"battery:([a-z]+):([a-h][1-8])-([a-h][1-8])(?::([a-z-]+))?.*".r
   private val rookLift = raw"rook-lift:([a-h][1-8])-([a-h][1-8]):rank-([0-9]+).*".r
   private val tensionEdge = raw"([a-h][1-8])-([a-h][1-8])".r
-  private val fileSquare = raw"[a-h]:([a-h][1-8])(?::.*)?".r
+  private val fileSquare = raw"([a-h]):([a-h][1-8])(?::.*)?".r
   private val carrierPrefixes = List(
     "square:",
     "file:",
@@ -872,8 +877,8 @@ private[judgment] object StructuralPurposeSubject:
 
   def carrierToken(raw: String): String =
     carrierPrefixes.foldLeft(normalize(raw))((value, prefix) => value.stripPrefix(prefix)) match
-      case fileSquare(square) => square
-      case value              => value
+      case fileSquare(_, square) => square
+      case value                 => value
 
   def parse(raw: String): Option[Parsed] =
     carrierToken(raw) match
@@ -904,6 +909,11 @@ private[judgment] object StructuralPurposeSubject:
     carrierToken(raw) match
       case weakPawn(square) => Some(square)
       case _                => None
+
+  def fileSquareTarget(raw: String): Option[(String, String)] =
+    normalize(raw).stripPrefix("subject:") match
+      case fileSquare(file, square) => Some(file -> square)
+      case _                        => None
 
   private def normalize(raw: String): String =
     Option(raw).getOrElse("").trim.toLowerCase

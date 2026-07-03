@@ -3067,6 +3067,7 @@ object MoveMeaningClaim:
 
   private def publicStructuralSubjectCarriers(subject: String): List[MoveMeaningSurfaceBoardCarrier] =
     val weakPawnSquare = StructuralPurposeSubject.weakPawnSquare(subject)
+    val fileSquareTarget = StructuralPurposeSubject.fileSquareTarget(subject)
     StructuralPurposeSubject.parse(subject) match
       case Some(StructuralPurposeSubject.PieceRoute(piece, from, to)) =>
         publicPieceCarrier("actor", piece) ++ publicSquareCarrier("actor", from) ++ publicSquareCarrier("target", to)
@@ -3085,6 +3086,10 @@ object MoveMeaningClaim:
         weakPawnSquare.toList.flatMap(square =>
           MoveMeaningSurfaceBoardCarrier("target", "Pawn", s"weak-pawn:$square") :: publicSquareCarrier("target", square)
         )
+      case _ if fileSquareTarget.nonEmpty =>
+        fileSquareTarget.toList.flatMap { case (file, square) =>
+          publicFileCarrier("target", file) ++ publicSquareCarrier("target", square)
+        }
       case _ =>
         val carrierSubject = StructuralPurposeSubject.carrierToken(subject)
         val carriers = StructuralPurposeSubject.parse(carrierSubject) match
