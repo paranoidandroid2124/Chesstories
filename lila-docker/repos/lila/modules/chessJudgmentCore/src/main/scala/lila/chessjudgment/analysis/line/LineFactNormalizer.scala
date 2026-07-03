@@ -80,6 +80,7 @@ object LineFactNormalizer:
     val replayEvents =
       facts.line.moves.zipWithIndex.flatMap { case (move, index) =>
         val normalized = PrincipalVariationEvidence.normalizeUci(move.uci)
+        val moverRole = replay.lift(index).flatMap(step => movingPieceRole(step.fenBefore, normalized))
         val checkDefense =
           replay.lift(index).toList.flatMap(step =>
             positionAfter(step.fenBefore).toList.filter(_.check.yes).map { position =>
@@ -104,7 +105,8 @@ object LineFactNormalizer:
                     moveUci = normalized,
                     plyOffset = index,
                     side = Some(!position.color),
-                    pieceRole = Some(EvidencePieceRole(King.name)),
+                    pieceRole = moverRole,
+                    targetRole = Some(EvidencePieceRole(King.name)),
                     square = kingSquare
                   ),
                   LineMoveEvent(
@@ -112,7 +114,8 @@ object LineFactNormalizer:
                     moveUci = normalized,
                     plyOffset = index,
                     side = Some(!position.color),
-                    pieceRole = Some(EvidencePieceRole(King.name)),
+                    pieceRole = moverRole,
+                    targetRole = Some(EvidencePieceRole(King.name)),
                     square = kingSquare
                   )
                 )
@@ -124,7 +127,8 @@ object LineFactNormalizer:
                       moveUci = normalized,
                       plyOffset = index,
                       side = Some(!position.color),
-                      pieceRole = Some(EvidencePieceRole(King.name)),
+                      pieceRole = moverRole,
+                      targetRole = Some(EvidencePieceRole(King.name)),
                       square = kingSquare
                     ),
                     LineMoveEvent(
@@ -132,7 +136,8 @@ object LineFactNormalizer:
                       moveUci = normalized,
                       plyOffset = index,
                       side = Some(!position.color),
-                      pieceRole = Some(EvidencePieceRole(King.name)),
+                      pieceRole = moverRole,
+                      targetRole = Some(EvidencePieceRole(King.name)),
                       square = kingSquare
                     )
                   )
@@ -145,7 +150,8 @@ object LineFactNormalizer:
                   moveUci = normalized,
                   plyOffset = index,
                   side = Some(!position.color),
-                  pieceRole = Some(EvidencePieceRole(King.name)),
+                  pieceRole = moverRole,
+                  targetRole = Some(EvidencePieceRole(King.name)),
                   square = position.board.kingPosOf(position.color).map(square => EvidenceSquare(square.key))
                 )
               )
@@ -414,6 +420,13 @@ object LineFactNormalizer:
 
   private def destinationSquare(moveUci: String): Option[EvidenceSquare] =
     Option.when(moveUci.length >= 4)(EvidenceSquare(moveUci.slice(2, 4)))
+
+  private def movingPieceRole(fenBefore: String, moveUci: String): Option[EvidencePieceRole] =
+    for
+      position <- positionAfter(fenBefore)
+      from <- _root_.chess.Square.all.find(_.key == moveUci.take(2))
+      piece <- position.board.pieceAt(from)
+    yield EvidencePieceRole(piece.role.name)
 
   private def positionAfter(fen: String): Option[Position] =
     Fen.read(Standard, Fen.Full(fen))
