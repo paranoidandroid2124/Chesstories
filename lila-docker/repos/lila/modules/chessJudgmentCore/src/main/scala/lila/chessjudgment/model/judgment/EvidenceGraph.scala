@@ -798,6 +798,7 @@ private[judgment] object StructuralPurposeSubject:
   private val battery = raw"battery:([a-z]+):([a-h][1-8])-([a-h][1-8])(?::([a-z-]+))?.*".r
   private val rookLift = raw"rook-lift:([a-h][1-8])-([a-h][1-8]):rank-([0-9]+).*".r
   private val tensionEdge = raw"([a-h][1-8])-([a-h][1-8])".r
+  private val fileSquare = raw"[a-h]:([a-h][1-8])(?::.*)?".r
   private val carrierPrefixes = List(
     "square:",
     "file:",
@@ -813,10 +814,12 @@ private[judgment] object StructuralPurposeSubject:
   )
 
   def carrierToken(raw: String): String =
-    carrierPrefixes.foldLeft(normalize(raw))((value, prefix) => value.stripPrefix(prefix))
+    carrierPrefixes.foldLeft(normalize(raw))((value, prefix) => value.stripPrefix(prefix)) match
+      case fileSquare(square) => square
+      case value              => value
 
   def parse(raw: String): Option[Parsed] =
-    normalize(raw) match
+    carrierToken(raw) match
       case outpost(piece, square) =>
         Some(Outpost(piece, square))
       case battery(axis, from, to, roles) =>
