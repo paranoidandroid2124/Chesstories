@@ -330,13 +330,22 @@ object LineFactNormalizer:
         val promotionMoveUcis = promotionMoves(facts).map(_._2)
         val proofMoves = (summary.captures.map(_.moveUci) ++ promotionMoveUcis).distinct
         val promotionEventMove = promotionMoveUcis.lastOption
+        val rootMove = facts.line.moves.headOption.map(move => PrincipalVariationEvidence.normalizeUci(move.uci))
+        val materialGainEventMove =
+          promotionEventMove
+            .filter(_ => summary.hasPromotionGainForMover)
+            .orElse(materialCaptureEventMove(summary.nonPawnCapturesByMover ++ summary.pawnCapturesByMover ++ summary.capturesByMover, rootMove))
+        val materialLossEventMove =
+          promotionEventMove
+            .filter(_ => summary.hasPromotionLossForMover)
+            .orElse(materialCaptureEventMove(summary.nonPawnCapturesByOpponent ++ summary.pawnCapturesByOpponent ++ summary.capturesByOpponent, rootMove))
         List(
           Option.when(summary.hasProofSignalMaterialGain || summary.hasUnrecoveredPawnGainForMover)(
             LineConsequence(
               LineConsequenceKind.MaterialGain,
               proofMoves,
               proofSignal = summary.hasProofSignalMaterialGain,
-              eventMove = promotionEventMove.filter(_ => summary.hasPromotionGainForMover)
+              eventMove = materialGainEventMove
             )
           ),
           Option.when(summary.hasProofSignalMaterialLoss || summary.hasUnrecoveredPawnLossForMover)(
@@ -344,7 +353,7 @@ object LineFactNormalizer:
               LineConsequenceKind.MaterialLoss,
               proofMoves,
               proofSignal = summary.hasProofSignalMaterialLoss,
-              eventMove = promotionEventMove.filter(_ => summary.hasPromotionLossForMover)
+              eventMove = materialLossEventMove
             )
           ),
           Option.when(summary.hasResolvedMaterialSequence)(
@@ -368,6 +377,12 @@ object LineFactNormalizer:
       case (move, index) if PrincipalVariationEvidence.normalizeUci(move.uci).length == 5 =>
         index -> PrincipalVariationEvidence.normalizeUci(move.uci)
     }
+
+  private def materialCaptureEventMove(captures: List[LineMaterialCapture], rootMove: Option[String]): Option[String] =
+    captures
+      .sortBy(_.plyOffset)
+      .map(capture => PrincipalVariationEvidence.normalizeUci(capture.moveUci))
+      .find(move => rootMove.exists(_ == move))
 
   private def endgameTechniqueConsequences(
       facts: PrincipalVariationEvidence.LineFacts,
