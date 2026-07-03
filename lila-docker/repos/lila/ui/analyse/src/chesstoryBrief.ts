@@ -255,11 +255,12 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
       section.body.startsWith('The ending technique evidence is ') ||
       (currentDecisionHasLineProof && (section.items || []).some(item => !currentDecisionBody.includes(item))),
     )
+    .filter(section => section.key !== 'opening-idea')
     .map(({ key, title, body, items, tone }) => ({
       key,
       title,
       body,
-      items: key === 'opening-idea' ? [] : items || [],
+      items: items || [],
       tone: tone || 'neutral',
     }));
 }
