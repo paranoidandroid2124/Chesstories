@@ -576,6 +576,7 @@ describe('chesstory brief scaffold', () => {
             has_carrier: true,
             proof_level: 'surface_evidence',
             board_carriers: [
+              { role: 'actor', kind: 'Move', value: 'd5d6', from: 'd5', to: 'd6' },
               { role: 'target', kind: 'PlanSubject', value: 'passed-pawn-advanced:d5-d6:rank-6' },
               { role: 'target', kind: 'Square', value: 'd6' },
             ],
@@ -586,6 +587,7 @@ describe('chesstory brief scaffold', () => {
 
     const opening = sections.find(section => section.key === 'opening-idea');
     assert.equal(opening?.body, 'The position is asking about passed pawn advance d5-d6.');
+    assert.doesNotMatch(JSON.stringify(sections), /changes d5-d6, passed pawn advance|passed pawn advance d5-d6, d5-d6/);
   });
 
   test('reads compound plan-subject carriers as chess words', () => {

@@ -457,6 +457,9 @@ function conciseCarrierLabels(labels: string[]): string[] {
   const barePieces = new Set(['king', 'queen', 'rook', 'bishop', 'knight', 'pawn', 'piece']);
   const hasConcrete = unique.some(label => !barePieces.has(label));
   const coveredFiles = new Set(unique.flatMap(label => label.match(/^([a-h])-file break$/)?.[1] || []));
+  const coveredRoutes = new Set(
+    unique.flatMap(label => label.match(/^(?:passed pawn advance|rook lift) ([a-h][1-8]-[a-h][1-8])$/)?.slice(1) || []),
+  );
   const coveredSquares = new Set(
     unique.flatMap(label => [
       ...(label.match(/^(?:line unlock|material sacrifice|weak square|check) on ([a-h][1-8])$/)?.slice(1) || []),
@@ -471,6 +474,7 @@ function conciseCarrierLabels(labels: string[]): string[] {
   );
   return unique
     .filter(label => !hasConcrete || !barePieces.has(label))
+    .filter(label => !label.match(/^[a-h][1-8]-[a-h][1-8]$/) || !coveredRoutes.has(label))
     .filter(label => !label.match(/^([a-h])-file$/) || !coveredFiles.has(label[0]))
     .filter(label => !label.match(/^[a-h][1-8]$/) || !coveredSquares.has(label));
 }
