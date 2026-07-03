@@ -125,7 +125,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const problem = firstLabel(verdictReasons.flatMap(problemLabels));
   const referenceIdeas = cleanTerminalLabels(uniqueLabels(evidenceReference.map(ideaLabel)), problemMove).slice(0, 3);
   const concreteIdeas = targets.length
-    ? solved.filter(label => !broadIdeaLabels.has(label))
+    ? solved.filter(label => !broadIdeaLabels.has(label) && !terminal.includes(label))
     : solved;
   const concreteSolved = targets.length ? targets : solved;
   const handled = concreteSolved.length ? concreteSolved : terminal;
