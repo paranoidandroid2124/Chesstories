@@ -25,6 +25,7 @@ export interface ChesstoryMoveMeaningPayload {
 }
 
 export interface ChesstoryMoveSemantic {
+  move_uci?: string;
   subject?: string;
   line_role?: string;
   move_quality?: string;
@@ -352,6 +353,7 @@ function moveCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
   return conciseCarrierLabels(
     carriers
       .filter(carrier => carrier.role === 'actor' && carrier.kind === 'Move' && carrier.from && carrier.to)
+      .filter(carrier => !semantic.move_uci || carrier.value === semantic.move_uci)
       .map(carrier => boardCarrierLabel(carrier, actorPiece)),
   );
 }

@@ -417,6 +417,7 @@ describe('chesstory brief scaffold', () => {
       verdict: { move_quality: 'good', played_move: 'd1g4', reference_move: 'd1g4' },
       move_semantics: [
         {
+          move_uci: 'd1g4',
           subject: 'played_move',
           move_quality: 'good',
           priority: 'main',
@@ -424,7 +425,11 @@ describe('chesstory brief scaffold', () => {
           evidence: {
             has_carrier: true,
             proof_level: 'owned_cause',
-            board_carriers: [{ role: 'target', kind: 'Square', value: 'g7' }],
+            board_carriers: [
+              { role: 'actor', kind: 'Move', value: 'd1g4', from: 'd1', to: 'g4' },
+              { role: 'actor', kind: 'Move', value: 'd5g2', from: 'd5', to: 'g2' },
+              { role: 'target', kind: 'Square', value: 'g7' },
+            ],
           },
           terminal_consequences: [{ code: 'material_gain', label: 'material gain' }],
           comparison: {
@@ -468,7 +473,8 @@ describe('chesstory brief scaffold', () => {
     assert.match(opening?.body || '', /g7/);
     assert.doesNotMatch(opening?.body || '', /target pressure around/);
     assert.doesNotMatch(opening?.body || '', /material gain around/);
-    assert.match(current?.body || '', /changes the g7 square; PV continues with d5-g2 and g4-g2, proving material gain/);
+    assert.match(current?.body || '', /changes d1-g4 and the g7 square; PV continues with d5-g2 and g4-g2, proving material gain/);
+    assert.doesNotMatch(current?.body || '', /changes .*d5-g2.*;/);
     assert.doesNotMatch(current?.body || '', /material gain and material sacrifice/);
     assert.doesNotMatch(JSON.stringify(current?.items || []), /target pressure|piece activity/);
     assert.match(better?.body || '', /PV continues with d5-g2 and g4-g2/);
