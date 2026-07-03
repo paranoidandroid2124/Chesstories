@@ -404,7 +404,7 @@ function planSubjectLabel(value: string): string {
     return parts.length === 2 ? `${parts[0]} with ${parts[1]}` : joinHuman(parts);
   }
   const lineUnlock = normalized.match(/^line-unlock:([a-h][1-8])$/);
-  if (lineUnlock) return `opens the line from ${lineUnlock[1]}`;
+  if (lineUnlock) return `line opening from ${lineUnlock[1]}`;
   const squareSubject = normalized.match(/^(material-sacrifice|weak-square|check):([a-h][1-8])$/);
   if (squareSubject) return `${squareSubject[1].replace(/-/g, ' ')} on ${squareSubject[2]}`;
   const passedAdvance = normalized.match(/^passed-pawn-advanced:([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
@@ -414,7 +414,7 @@ function planSubjectLabel(value: string): string {
   const breakFile = normalized.match(/^break-file:([a-h])$/);
   if (breakFile) return `${breakFile[1]}-file break`;
   const pressure = normalized.match(/^(battery-pressure|pin-pressure):([a-h][1-8](?:-[a-h][1-8])?)$/);
-  if (pressure) return `${pressure[1].replace(/-/g, ' ')} on ${pressure[2]}`;
+  if (pressure) return `${pressure[1].replace(/-/g, ' ')} ${pressure[2].includes('-') ? 'along' : 'on'} ${pressure[2]}`;
   const defenderMove = normalized.match(/^defender-move:([a-h][1-8])$/);
   if (defenderMove) return `defensive resource on ${defenderMove[1]}`;
   const actionSquare = normalized.match(/^(defender-move|material-capture):([a-h][1-8])$/);
@@ -559,10 +559,10 @@ function conciseCarrierLabels(labels: string[]): string[] {
   const coveredSquares = new Set(
     unique.flatMap(label => [
       ...(label.match(/^(?:material sacrifice|weak square|check|weak pawn) on ([a-h][1-8])$/)?.slice(1) || []),
-      ...(label.match(/^opens the line from ([a-h][1-8])$/)?.slice(1) || []),
+      ...(label.match(/^line opening from ([a-h][1-8])$/)?.slice(1) || []),
       ...(label.match(/^passed pawn on ([a-h][1-8])$/)?.slice(1) || []),
       ...(
-        label.match(/^(?:passed pawn advance|rook lift|created tension|(?:battery|pin) pressure on) ([a-h][1-8])(?:-([a-h][1-8]))?$/)
+        label.match(/^(?:passed pawn advance|rook lift|created tension|(?:battery|pin) pressure (?:on|along)) ([a-h][1-8])(?:-([a-h][1-8]))?$/)
           ?.slice(1)
           .filter(Boolean) || []
       ),
