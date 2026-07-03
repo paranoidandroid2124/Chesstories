@@ -400,6 +400,12 @@ object EvidenceObjectBinding:
       detail.toList.flatMap(detail =>
         squareObject(detail.targetSquare) ++
           roleObject(detail.targetRole) ++
+          Option
+            .when(anchor.kind == BoardAnchorKind.LooseMaterial)(
+              squareObject(detail.subjectSquare) ++ roleObject(detail.subjectRole)
+            )
+            .toList
+            .flatten ++
           fileObject(detail.file) ++
           detail.relatedSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
           Option
