@@ -2887,8 +2887,13 @@ object MoveMeaningClaim:
                   claimMove
                 )
               val comparisonMoveRefs = comparisonMoveRefsFromLineEvidence(evidenceGraph, sourceEvidenceIds)
-              val claimBoardCarriers =
+              val baseClaimBoardCarriers =
                 (boardCarriers ++ lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove))
+                  .distinct
+                  .sortBy(boardCarrierSortKey)
+                  .take(12)
+              val claimBoardCarriers =
+                (baseClaimBoardCarriers ++ lineUnlockIdentityCarriers(detail).take(12 - baseClaimBoardCarriers.size))
                   .distinct
                   .sortBy(boardCarrierSortKey)
                   .take(12)
@@ -3059,8 +3064,23 @@ object MoveMeaningClaim:
     if !lineUnlockDetail(detail) then Nil
     else detail.structuralRouteMove.toList.flatMap(sameFileMoveFile).flatMap(file => publicFileCarrier("target", file))
 
+  private def lineUnlockIdentityCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
+    detail.objectBindingSignatures
+      .filter(lineUnlockSignature)
+      .flatMap(signature => EvidenceObjectBinding.signatureTokens(List(signature), "target=Square:"))
+      .toList
+      .flatMap(token => claimSquare(token.stripPrefix("target=Square:")))
+      .distinct
+      .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"line-unlock:$square"))
+
   private def lineUnlockDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.objectBindingSignatures.exists(signature => signature.toLowerCase.contains("lineunlock") || signature.toLowerCase.contains("line-unlock"))
+
+  private def lineUnlockSignature(signature: String): Boolean =
+    val normalized = signature.toLowerCase
+    normalized.contains("mechanism=mechanism:lineunlock") ||
+      normalized.contains("mechanism=mechanism:line-unlock") ||
+      normalized.contains("consequence=consequence:lineunlock")
 
   private def sameFileMoveFile(move: String): Option[String] =
     moveEndpoints(move).collect { case (from, to) if from.take(1) == to.take(1) => from.take(1) }
