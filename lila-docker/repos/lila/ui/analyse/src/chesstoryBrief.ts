@@ -208,6 +208,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
 }
 
 export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
+  if (!payload?.move_semantics?.some(hasConcreteSurfaceCarrier)) return [];
   const sections = chesstoryBriefSections(payload);
   const currentDecisionBody = sections.find(section => section.key === 'current-decision')?.body || '';
   return sections
@@ -441,6 +442,15 @@ function evidenceItems(semantics: ChesstoryMoveSemantic[]): string[] {
 
 function hasEvidenceCarrier(semantic: ChesstoryMoveSemantic): boolean {
   return semantic.evidence?.has_carrier === true;
+}
+
+function hasConcreteSurfaceCarrier(semantic: ChesstoryMoveSemantic): boolean {
+  return (
+    hasEvidenceCarrier(semantic) &&
+    ((semantic.evidence?.board_carriers || []).length > 0 ||
+      (semantic.terminal_consequences || []).some(codeLabel) ||
+      techniqueLabels(semantic).length > 0)
+  );
 }
 
 function normalizeCode(code?: string): string {

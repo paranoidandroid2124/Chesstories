@@ -619,7 +619,7 @@ describe('chesstory brief scaffold', () => {
   });
 
   test('does not turn semantic targets into public board evidence without board carriers', () => {
-    const sections = chesstoryBriefSections({
+    const payload: ChesstoryMoveMeaningPayload = {
       verdict: { move_quality: 'good', played_move: 'd4d5', reference_move: 'd4d5' },
       move_semantics: [
         {
@@ -631,9 +631,11 @@ describe('chesstory brief scaffold', () => {
           evidence: { has_carrier: true, proof_level: 'surface_evidence', board_carriers: [] },
         },
       ],
-    });
+    };
+    const sections = chesstoryBriefSections(payload);
 
     const text = JSON.stringify(sections);
+    assert.deepEqual(chesstoryLlmPayload(payload), []);
     assert.doesNotMatch(text, /d-file|d6/);
   });
 
