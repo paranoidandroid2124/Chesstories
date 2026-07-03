@@ -3442,6 +3442,8 @@ object MoveReviewPhase3AuditRunner:
       "causeSourceSides" -> claim.causeSourceSides.map(_.toString),
       "causeEvidenceIds" -> claim.causeEvidenceIds,
       "sourceEvidenceIds" -> claim.sourceEvidenceIds,
+      "objectBindingSignatureCount" -> claim.objectBindingSignatures.size,
+      "objectBindingSignaturesSample" -> claim.objectBindingSignatures.distinct.sorted.take(5),
       "objectCarrierReady" -> claim.objectCarrierReady,
       "publicHasCarrier" -> claim.publicHasCarrier,
       "publicProofLevel" -> claim.publicProofLevel,

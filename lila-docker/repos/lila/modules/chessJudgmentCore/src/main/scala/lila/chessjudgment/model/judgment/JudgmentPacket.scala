@@ -2703,6 +2703,7 @@ object MoveMeaningClaim:
     list.sortBy(sortKey).lastOption.map(best =>
       val mergedCauseEvidenceIds = list.flatMap(_.causeEvidenceIds).distinct.sorted
       val mergedSourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted
+      val mergedObjectBindingSignatures = list.flatMap(_.objectBindingSignatures).distinct.sorted
       val mergedObjectCarrierReady = list.exists(_.objectCarrierReady)
       val mergedBoardCarriers = list.flatMap(_.boardCarriers).distinct.sortBy(boardCarrierSortKey).take(8)
       val mergedPublicHasCarrier =
@@ -2714,7 +2715,7 @@ object MoveMeaningClaim:
         causeSourceSides = list.flatMap(_.causeSourceSides).distinct.sortBy(_.toString),
         causeEvidenceIds = mergedCauseEvidenceIds,
         sourceEvidenceIds = mergedSourceEvidenceIds,
-        objectBindingSignatures = Nil,
+        objectBindingSignatures = mergedObjectBindingSignatures,
         reasonTokens = Nil,
         comparisonLossSides = list.flatMap(_.comparisonLossSides).distinct.sorted,
         comparisonLossKinds = list.flatMap(_.comparisonLossKinds).distinct.sorted,
@@ -2929,7 +2930,7 @@ object MoveMeaningClaim:
                 causeSourceSides = roleCompatibleCauseFrames.map(_.causeSourceSide).distinct.sortBy(_.toString),
                 causeEvidenceIds = linkedCauseIds,
                 sourceEvidenceIds = sourceEvidenceIds,
-                objectBindingSignatures = Nil,
+                objectBindingSignatures = surfaceObjectSignatures,
                 reasonTokens = Nil,
                 comparisonLossSides =
                   PositionPlanTechniqueSemanticDetail
