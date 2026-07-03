@@ -425,11 +425,29 @@ describe('chesstory brief scaffold', () => {
             ],
           },
         },
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'supporting',
+          idea: { code: 'piece_activity', label: 'piece activity' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            board_carriers: [{ role: 'target', kind: 'Square', value: 'g7' }],
+          },
+          comparison: {
+            moves: [
+              { role: 'played_pv_1', uci: 'd5g2' },
+              { role: 'played_pv_2', uci: 'g4g2' },
+            ],
+          },
+        },
       ],
     });
 
     const better = sections.find(section => section.key === 'better-plan');
     assert.match(better?.body || '', /PV continues with d5g2 and g4g2/);
+    assert.deepEqual(better?.items, ['PV continues with d5g2 and g4g2']);
     assert.doesNotMatch(better?.body || '', /played move d1g4|best move d1g4/);
   });
   test('requires a public evidence carrier before writing board-evidence prose', () => {

@@ -348,7 +348,7 @@ function summaryLine(semantic: ChesstoryMoveSemantic): string {
 }
 
 function comparisonLines(semantics: ChesstoryMoveSemantic[]): string[] {
-  return semantics.flatMap(s => {
+  return uniqueLabels(semantics.flatMap(s => {
     const comparison = s.comparison;
     if (!comparison) return [];
     const moves = (comparison.moves || []).filter(move => move.uci);
@@ -363,7 +363,7 @@ function comparisonLines(semantics: ChesstoryMoveSemantic[]): string[] {
       pvMoves.length ? `PV continues with ${joinHuman(pvMoves)}` : rootMoves.length ? rootMoves.join(', ') : '',
       lost.length ? `Lost idea: ${joinHuman(lost)}` : '',
     ].filter(Boolean);
-  });
+  }));
 }
 
 function playedComparisonLossLabels(semantic: ChesstoryMoveSemantic): string[] {
