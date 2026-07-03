@@ -474,6 +474,30 @@ describe('chesstory brief scaffold', () => {
     assert.match(JSON.stringify(evidence?.items || []), /g1f3/);
   });
 
+  test('puts concrete targets before actor carriers in board clues', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'good', played_move: 'b7b5', reference_move: 'b7b5' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'main',
+          idea: { code: 'pawn_break_timing', label: 'pawn break timing' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'owned_cause',
+            board_carriers: [
+              { role: 'actor', kind: 'Move', value: 'b7b5', from: 'b7', to: 'b5' },
+              { role: 'target', kind: 'PlanSubject', value: 'break-file:b' },
+            ],
+          },
+        },
+      ],
+    });
+
+    const evidence = sections.find(section => section.key === 'evidence');
+    assert.match(evidence?.body || '', /b-file break.*b7b5/);
+  });
   test('does not turn semantic targets into public board evidence without board carriers', () => {
     const sections = chesstoryBriefSections({
       verdict: { move_quality: 'good', played_move: 'd4d5', reference_move: 'd4d5' },

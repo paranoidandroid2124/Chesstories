@@ -259,8 +259,9 @@ function problemLabels(semantic: ChesstoryMoveSemantic): string[] {
 }
 
 function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
-  return (semantic.evidence?.board_carriers || [])
+  return [...(semantic.evidence?.board_carriers || [])]
     .filter(carrier => ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''))
+    .sort((a, b) => (a.role === 'target' ? 0 : 1) - (b.role === 'target' ? 0 : 1))
     .map(boardCarrierLabel);
 }
 
