@@ -537,12 +537,19 @@ object EvidenceObjectBinding:
     val materialCaptureBindings =
       payload.materialCaptures.map { capture =>
         val move = normalize(capture.moveUci)
+        val prefix = if capture.recapture then "material-recapture" else "material-capture"
+        val materialIdentityTargets =
+          objectOf(EvidenceObjectKind.PlanSubject, s"$prefix:${capture.square.key}") ++
+            Option
+              .when(payload.materialSacrificeCapture(capture))(s"material-sacrifice:${capture.square.key}")
+              .toList
+              .flatMap(objectOf(EvidenceObjectKind.PlanSubject, _))
         EvidenceObjectBinding(
           source = ref,
           actor = moveObjects(move) ++
             roleObject(Some(capture.attackerRole)) ++
             objectOf(EvidenceObjectKind.Side, colorKey(capture.side)),
-          target = squareObject(Some(capture.square)) ++ roleObject(Some(capture.capturedRole)),
+          target = squareObject(Some(capture.square)) ++ roleObject(Some(capture.capturedRole)) ++ materialIdentityTargets,
           mechanism = objectOf(
             EvidenceObjectKind.Mechanism,
             if capture.recapture then "MaterialRecapture" else "MaterialCapture"
@@ -3024,6 +3031,15 @@ final case class LineFactEvidence(
     lineReplayMoves.drop(1)
   def materialCaptures: List[LineMaterialCapture] =
     material.toList.flatMap(_.captures)
+  def materialSacrificeCapture(capture: LineMaterialCapture): Boolean =
+    !capture.recapture &&
+      materialValue(capture.attackerRole) > materialValue(capture.capturedRole) &&
+      materialCaptures.exists(reply =>
+        reply.recapture &&
+          reply.plyOffset > capture.plyOffset &&
+          reply.square == capture.square &&
+          reply.side != capture.side
+      )
   def lineEvents: List[LineMoveEvent] =
     events
   def lineConsequences: List[LineConsequence] =
@@ -3252,6 +3268,15 @@ final case class LineFactEvidence(
     ).flatten.distinct
   def hasMaterialOutcomeConsequence(kind: LineConsequenceKind): Boolean =
     materialOutcomeConsequenceKinds.contains(kind)
+
+  private def materialValue(role: EvidencePieceRole): Int =
+    role.name.toLowerCase match
+      case "queen"             => 9
+      case "rook"              => 5
+      case "bishop" | "knight" => 3
+      case "pawn"              => 1
+      case "king"              => 100
+      case _                   => 0
 
 object LineFactEvidence:
   def fromRecords(records: List[EvidenceRecord]): List[LineFactEvidence] =
