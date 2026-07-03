@@ -2966,7 +2966,7 @@ object MoveMeaningClaim:
                 targetSquares = surfaceTarget.squares,
                 targetFiles = surfaceTarget.files,
                 targetPieces = surfaceTarget.pieces,
-                routeIdentityParts = routeIdentityParts(detail),
+                routeIdentityParts = routeIdentityParts(detail, claimMove),
                 breakIdentityParts = breakIdentityParts(detail, claimBreakFiles),
                 breakFiles = claimBreakFiles,
                 specificityTier = detail.specificityTier,
@@ -3331,23 +3331,65 @@ object MoveMeaningClaim:
     val normalized = piece.trim.toLowerCase
     Option.when(normalized.nonEmpty)(MoveMeaningSurfaceBoardCarrier(role, "Piece", normalized)).toList
 
-  private def routeIdentityParts(detail: PositionPlanTechniqueSemanticDetail): List[String] =
-    detail.structuralPurposeSubjects.flatMap { subject =>
-      val normalizedSubject = subject.trim.toLowerCase
-      StructuralPurposeSubject.parse(subject) match
-        case Some(StructuralPurposeSubject.PieceRoute(piece, from, to)) =>
-          List(s"piece:$piece", s"from:$from", s"to:$to", s"subject:$normalizedSubject")
-        case Some(StructuralPurposeSubject.Outpost(piece, square)) =>
-          List(s"piece:$piece", s"target:$square", s"subject:$normalizedSubject")
-        case Some(StructuralPurposeSubject.Battery(axis, from, to, roles)) =>
-          List(s"axis:${axis.toLowerCase}", s"from:$from", s"to:$to", s"subject:$normalizedSubject") ++ roles.map(role => s"piece:$role")
-        case Some(StructuralPurposeSubject.PieceRestriction(piece, square, blocker)) =>
-          List(s"piece:$piece", s"target:$square", s"blocker:$blocker", s"subject:$normalizedSubject")
-        case Some(StructuralPurposeSubject.PieceSquare(piece, square)) if lineUnlockRouteToken(normalizedSubject) =>
-          List(s"piece:$piece", s"target:$square", s"subject:$normalizedSubject")
-        case _ =>
-          Nil
-    }.distinct.sorted
+  private def routeIdentityParts(detail: PositionPlanTechniqueSemanticDetail, claimMove: String): List[String] =
+    (
+      detail.structuralPurposeSubjects.flatMap { subject =>
+        val normalizedSubject = subject.trim.toLowerCase
+        StructuralPurposeSubject.parse(subject) match
+          case Some(StructuralPurposeSubject.PieceRoute(piece, from, to)) =>
+            List(s"piece:$piece", s"from:$from", s"to:$to", s"subject:$normalizedSubject")
+          case Some(StructuralPurposeSubject.Outpost(piece, square)) =>
+            List(s"piece:$piece", s"target:$square", s"subject:$normalizedSubject")
+          case Some(StructuralPurposeSubject.Battery(axis, from, to, roles)) =>
+            List(s"axis:${axis.toLowerCase}", s"from:$from", s"to:$to", s"subject:$normalizedSubject") ++ roles.map(role => s"piece:$role")
+          case Some(StructuralPurposeSubject.PieceRestriction(piece, square, blocker)) =>
+            List(s"piece:$piece", s"target:$square", s"blocker:$blocker", s"subject:$normalizedSubject")
+          case Some(StructuralPurposeSubject.PieceSquare(piece, square)) if lineUnlockRouteToken(normalizedSubject) =>
+            List(s"piece:$piece", s"target:$square", s"subject:$normalizedSubject")
+          case _ =>
+            Nil
+      } ++ lineEventRouteIdentityParts(detail, claimMove)
+    ).distinct.sorted
+
+  private def lineEventRouteIdentityParts(detail: PositionPlanTechniqueSemanticDetail, claimMove: String): List[String] =
+    if detail.unit != PositionPlanTechniqueUnit.PieceRerouteRoute then Nil
+    else
+      val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
+      detail.objectBindingSignatures.flatMap { signature =>
+        val signatureList = List(signature)
+        if !lineEventRouteSignature(signature) then Nil
+        else
+          val pieces =
+            EvidenceObjectBinding
+              .signatureTokens(signatureList, "actor=Piece:")
+              .toList
+              .map(_.stripPrefix("actor=Piece:").trim.toLowerCase)
+              .filter(piece => piece.nonEmpty && piece != "king" && piece != "pawn")
+          val moves =
+            EvidenceObjectBinding
+              .signatureTokens(signatureList, "actor=Move:")
+              .toList
+              .map(token => JudgmentSubjectBinding.normalizeMove(token.stripPrefix("actor=Move:")).toLowerCase)
+              .filter(_ == normalizedClaimMove)
+              .flatMap(moveEndpoints)
+          for
+            piece <- pieces
+            (from, to) <- moves
+            if EvidenceObjectBinding.signatureTokens(signatureList, "actor=Square:").exists(_.stripPrefix("actor=Square:").equalsIgnoreCase(from))
+          yield List(s"piece:$piece", s"from:$from", s"to:$to", s"subject:$piece:$from-$to:line-event")
+      }.flatten
+
+  private def lineEventRouteSignature(signature: String): Boolean =
+    val normalized = signature.toLowerCase
+    normalized.contains("horizon=ply:") &&
+      (
+        normalized.contains("mechanism=mechanism:check") ||
+          normalized.contains("mechanism=mechanism:tempo") ||
+          normalized.contains("mechanism=mechanism:capture") ||
+          normalized.contains("mechanism=mechanism:materialcapture") ||
+          normalized.contains("mechanism=mechanism:materialrecapture") ||
+          normalized.contains("mechanism=mechanism:defendermove")
+      )
 
   private def breakIdentityParts(detail: PositionPlanTechniqueSemanticDetail, breakFiles: List[String]): List[String] =
     (
