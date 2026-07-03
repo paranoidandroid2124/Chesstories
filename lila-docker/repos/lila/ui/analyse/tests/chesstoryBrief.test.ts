@@ -403,7 +403,7 @@ describe('chesstory brief scaffold', () => {
   });
 
   test('surfaces PV continuation without burying it behind root move refs', () => {
-    const sections = chesstoryBriefSections({
+    const payload: ChesstoryMoveMeaningPayload = {
       verdict: { move_quality: 'good', played_move: 'd1g4', reference_move: 'd1g4' },
       move_semantics: [
         {
@@ -443,7 +443,8 @@ describe('chesstory brief scaffold', () => {
           },
         },
       ],
-    });
+    };
+    const sections = chesstoryBriefSections(payload);
 
     const better = sections.find(section => section.key === 'better-plan');
     const current = sections.find(section => section.key === 'current-decision');
@@ -451,6 +452,7 @@ describe('chesstory brief scaffold', () => {
     assert.match(better?.body || '', /PV continues with d5g2 and g4g2/);
     assert.deepEqual(better?.items, ['PV continues with d5g2 and g4g2']);
     assert.doesNotMatch(better?.body || '', /played move d1g4|best move d1g4/);
+    assert.equal(JSON.stringify(chesstoryLlmPayload(payload)).match(/PV continues/g)?.length, 1);
   });
   test('requires a public evidence carrier before writing board-evidence prose', () => {
     const sections = chesstoryBriefSections({

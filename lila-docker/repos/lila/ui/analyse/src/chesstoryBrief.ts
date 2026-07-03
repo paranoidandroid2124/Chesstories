@@ -201,9 +201,12 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
 }
 
 export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
-  return chesstoryBriefSections(payload)
+  const sections = chesstoryBriefSections(payload);
+  const currentDecisionBody = sections.find(section => section.key === 'current-decision')?.body || '';
+  return sections
     .filter(section => !section.pending)
     .filter(section => section.items?.length || !/not clear from the board|No clean better-move lesson|needs a concrete plan|does not show a clear enough|does not reveal/.test(section.body))
+    .filter(section => section.key !== 'better-plan' || !section.body.startsWith('The line evidence shows ') || !section.items?.some(item => currentDecisionBody.includes(item)))
     .map(({ key, title, body, items, tone }) => ({
       key,
       title,
