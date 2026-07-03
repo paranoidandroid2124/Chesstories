@@ -792,6 +792,7 @@ object EvidenceObjectBinding:
 
   private def subjectObject(raw: String): List[ConcreteChessObject] =
     val cleaned = StructuralPurposeSubject.carrierToken(raw)
+    val weakPawnSquare = StructuralPurposeSubject.weakPawnSquare(cleaned)
     StructuralPurposeSubject.parse(cleaned) match
       case Some(StructuralPurposeSubject.PieceRoute(role, _, to)) =>
         objectOf(EvidenceObjectKind.Piece, role) ++ objectOf(EvidenceObjectKind.Square, to)
@@ -809,6 +810,10 @@ object EvidenceObjectBinding:
           objectOf(EvidenceObjectKind.Square, to)
       case Some(StructuralPurposeSubject.TensionEdge(from, to)) =>
         objectOf(EvidenceObjectKind.Square, from) ++ objectOf(EvidenceObjectKind.Square, to)
+      case None if weakPawnSquare.nonEmpty =>
+        weakPawnSquare.toList.flatMap(square =>
+          objectOf(EvidenceObjectKind.Pawn, s"weak-pawn:$square") ++ objectOf(EvidenceObjectKind.Square, square)
+        )
       case None if cleaned.matches("[a-h][1-8]") => objectOf(EvidenceObjectKind.Square, cleaned)
       case None if cleaned.matches("[a-h]")      => objectOf(EvidenceObjectKind.File, cleaned)
       case None if cleaned.contains("pawn")      => objectOf(EvidenceObjectKind.Pawn, cleaned)
@@ -847,6 +852,7 @@ private[judgment] object StructuralPurposeSubject:
   private val passedPawnRoute = raw"passed-pawn-(?:advanced|breakthrough|promoted):([a-h][1-8])-([a-h][1-8]).*".r
   private val passedPawnSquare = raw"passed-pawn-(?:created|lost):([a-h][1-8]).*".r
   private val passedPawn = raw"passed-pawn:([a-h][1-8]).*".r
+  private val weakPawn = raw"weak-pawn:([a-h][1-8]).*".r
   private val battery = raw"battery:([a-z]+):([a-h][1-8])-([a-h][1-8])(?::([a-z-]+))?.*".r
   private val rookLift = raw"rook-lift:([a-h][1-8])-([a-h][1-8]):rank-([0-9]+).*".r
   private val tensionEdge = raw"([a-h][1-8])-([a-h][1-8])".r
@@ -861,8 +867,7 @@ private[judgment] object StructuralPurposeSubject:
     "break-file:",
     "open-file:",
     "semi-open-file:",
-    "weak-square:",
-    "weak-pawn:"
+    "weak-square:"
   )
 
   def carrierToken(raw: String): String =
@@ -894,6 +899,11 @@ private[judgment] object StructuralPurposeSubject:
         Some(TensionEdge(from, to))
       case _ =>
         None
+
+  def weakPawnSquare(raw: String): Option[String] =
+    carrierToken(raw) match
+      case weakPawn(square) => Some(square)
+      case _                => None
 
   private def normalize(raw: String): String =
     Option(raw).getOrElse("").trim.toLowerCase

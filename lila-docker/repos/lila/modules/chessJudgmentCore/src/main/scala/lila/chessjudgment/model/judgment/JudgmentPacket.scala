@@ -3066,6 +3066,7 @@ object MoveMeaningClaim:
     moveEndpoints(move).collect { case (from, to) if from.take(1) == to.take(1) => from.take(1) }
 
   private def publicStructuralSubjectCarriers(subject: String): List[MoveMeaningSurfaceBoardCarrier] =
+    val weakPawnSquare = StructuralPurposeSubject.weakPawnSquare(subject)
     StructuralPurposeSubject.parse(subject) match
       case Some(StructuralPurposeSubject.PieceRoute(piece, from, to)) =>
         publicPieceCarrier("actor", piece) ++ publicSquareCarrier("actor", from) ++ publicSquareCarrier("target", to)
@@ -3080,6 +3081,10 @@ object MoveMeaningClaim:
         publicPieceCarrier("actor", piece) ++ publicSquareCarrier("actor", square) ++ publicSquareCarrier("target", square)
       case Some(StructuralPurposeSubject.TensionEdge(from, to)) =>
         publicSquareCarrier("target", from) ++ publicSquareCarrier("target", to)
+      case _ if weakPawnSquare.nonEmpty =>
+        weakPawnSquare.toList.flatMap(square =>
+          MoveMeaningSurfaceBoardCarrier("target", "Pawn", s"weak-pawn:$square") :: publicSquareCarrier("target", square)
+        )
       case _ =>
         val carrierSubject = StructuralPurposeSubject.carrierToken(subject)
         val carriers = StructuralPurposeSubject.parse(carrierSubject) match
