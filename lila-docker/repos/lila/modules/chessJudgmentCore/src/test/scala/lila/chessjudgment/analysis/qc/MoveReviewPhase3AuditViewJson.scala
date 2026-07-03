@@ -29,9 +29,12 @@ object MoveReviewPhase3AuditViewJson:
     (targetRank, moveRank, signature)
 
   def moveMeaningSurfacePayloadJson(view: MoveJudgmentView): JsObject =
+    val verdict = view.verdict.map(frame => MoveMeaningSurface.verdict(frame))
+    val surfaces = MoveMeaningSurface.from(view)
     Json.obj(
-      "verdict" -> view.verdict.map(frame => moveMeaningSurfaceVerdictJson(MoveMeaningSurface.verdict(frame))),
-      "move_semantics" -> MoveMeaningSurface.from(view).map(moveMeaningSurfaceJson)
+      "verdict" -> verdict.map(moveMeaningSurfaceVerdictJson),
+      "move_semantics" -> surfaces.map(moveMeaningSurfaceJson),
+      "llm_payload" -> verdict.toList.flatMap(moveMeaningSurfaceLlmPayloadJson(_, surfaces))
     )
 
   private def moveMeaningSurfaceVerdictJson(verdict: MoveMeaningSurfaceVerdict): JsObject =
@@ -107,6 +110,65 @@ object MoveReviewPhase3AuditViewJson:
       "from" -> carrier.from,
       "to" -> carrier.to
     )
+
+  private def moveMeaningSurfaceLlmPayloadJson(
+      verdict: MoveMeaningSurfaceVerdict,
+      surfaces: List[MoveMeaningSurface]
+  ): List[JsObject] =
+    val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
+    val subject = if problemMove then "reference_move" else "played_move"
+    val subjectMove = if problemMove then verdict.referenceMove else verdict.playedMove
+    val pvRolePrefix = if problemMove then "reference_pv_" else "played_pv_"
+    val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && moveMeaningSurfaceHasLlmCarrier(surface))
+    val pv = surfaces
+      .filter(_.subject == subject)
+      .flatMap(_.comparison.toList.flatMap(_.moves))
+      .filter(move => move.uci.nonEmpty && move.role.startsWith(pvRolePrefix))
+      .map(_.uci)
+      .distinct
+    val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
+    val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
+    val consequenceCarriers = moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces)
+      .filter((carrier, _) => carrier.role == "target" && moveMeaningSurfaceLlmConsequenceCarrierKind(carrier.kind))
+    val concreteConsequence = consequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
+    if evidenceSurfaces.isEmpty || (terminal.isEmpty && technique.isEmpty && (pv.isEmpty || !concreteConsequence)) then Nil
+    else
+      val carriers = moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
+        (carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) ||
+          (carrier.role == "target" && moveMeaningSurfaceLlmConsequenceCarrierKind(carrier.kind))
+      )
+      List(
+        Json.obj(
+          "key" -> "current-move-chain",
+          "current_move" -> verdict.playedMove,
+          "reference_move" -> verdict.referenceMove,
+          "move_quality" -> verdict.moveQuality,
+          "subject" -> subject,
+          "proof_levels" -> evidenceSurfaces.map(_.evidence.proofLevel).distinct,
+          "carriers" -> carriers.map((carrier, surface) => moveMeaningSurfaceBoardCarrierJson(carrier, surface)),
+          "pv" -> pv,
+          "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => moveMeaningSurfaceBoardCarrierJson(carrier, surface)),
+          "terminal_consequences" -> terminal.map(moveMeaningSurfaceCodeJson),
+          "technique" -> technique.map(moveMeaningSurfaceTechniqueJson),
+          "cause_ids" -> evidenceSurfaces.flatMap(_.evidence.causeIds).distinct,
+          "source_ids" -> evidenceSurfaces.flatMap(_.evidence.sourceIds).distinct,
+          "player_facing_reason_allowed" -> true
+        )
+      )
+
+  private def moveMeaningSurfaceHasLlmCarrier(surface: MoveMeaningSurface): Boolean =
+    surface.evidence.hasCarrier &&
+      (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
+
+  private def moveMeaningSurfaceLlmConsequenceCarrierKind(kind: String): Boolean =
+    kind == "PlanSubject" || kind == "Pawn" || kind == "Square" || kind == "File"
+
+  private def moveMeaningSurfaceLlmCarrierPairs(
+      surfaces: List[MoveMeaningSurface]
+  ): List[(MoveMeaningSurfaceBoardCarrier, MoveMeaningSurface)] =
+    surfaces
+      .flatMap(surface => surface.evidence.boardCarriers.map(carrier => carrier -> surface))
+      .distinctBy((carrier, surface) => (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to))
 
   private def moveMeaningSurfaceTechniqueJson(technique: MoveMeaningSurfaceEndgameTechnique): JsObject =
     Json.obj(
