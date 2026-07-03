@@ -226,6 +226,11 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
       return !handledItems?.length || coveredItems < Math.max(handledItems.length - 1, 1);
     })
     .filter(section => section.key !== 'better-plan' || !section.body.startsWith('The line evidence shows ') || !section.items?.some(item => currentDecisionBody.includes(item)))
+    .filter(section =>
+      section.key !== 'evidence' ||
+      section.body.startsWith('The terminal result is ') ||
+      (section.items || []).some(item => !currentDecisionBody.includes(item)),
+    )
     .map(({ key, title, body, items, tone }) => ({
       key,
       title,
