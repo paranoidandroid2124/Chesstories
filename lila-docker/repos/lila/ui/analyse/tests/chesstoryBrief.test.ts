@@ -448,6 +448,7 @@ describe('chesstory brief scaffold', () => {
             proof_level: 'surface_evidence',
             board_carriers: [{ role: 'target', kind: 'Square', value: 'g7' }],
           },
+          terminal_consequences: [{ code: 'material_loss', label: 'material loss' }],
           comparison: {
             moves: [
               { role: 'played_pv_1', uci: 'd5g2' },
@@ -468,6 +469,7 @@ describe('chesstory brief scaffold', () => {
     assert.doesNotMatch(opening?.body || '', /target pressure around/);
     assert.doesNotMatch(opening?.body || '', /material gain around/);
     assert.match(current?.body || '', /changes the g7 square; PV continues with d5-g2 and g4-g2, proving material gain/);
+    assert.doesNotMatch(current?.body || '', /material gain and material sacrifice/);
     assert.doesNotMatch(JSON.stringify(current?.items || []), /target pressure|piece activity/);
     assert.match(better?.body || '', /PV continues with d5-g2 and g4-g2/);
     assert.deepEqual(better?.items, ['PV continues with d5-g2 and g4-g2']);

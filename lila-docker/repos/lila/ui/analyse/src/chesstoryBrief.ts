@@ -293,6 +293,9 @@ function cleanTerminalLabels(labels: string[], preferLoss = false): string[] {
   if (labels.includes('material gain') && labels.includes('material loss')) {
     return labels.filter(label => label !== (preferLoss ? 'material gain' : 'material loss'));
   }
+  if (labels.includes('material gain') && labels.includes('material sacrifice')) {
+    return labels.filter(label => label !== 'material sacrifice');
+  }
   return labels;
 }
 
