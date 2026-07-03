@@ -22,6 +22,7 @@ export interface ChesstoryMoveMeaningPayload {
     reference_move?: string;
   };
   move_semantics?: ChesstoryMoveSemantic[];
+  llm_payload?: ChesstoryLlmChain[];
 }
 
 export interface ChesstoryMoveSemantic {

@@ -70,9 +70,12 @@ final class Analyse(
   private def moveJudgmentViewMeaningJson(view: MoveJudgmentView, renderable: Boolean): JsObject =
     Json.obj("renderable" -> renderable) ++
       (if renderable then
+         val verdict = view.verdict.map(frame => MoveMeaningSurface.verdict(frame))
+         val surfaces = MoveMeaningSurface.from(view)
          Json.obj(
-           "verdict" -> view.verdict.map(frame => publicVerdictJson(MoveMeaningSurface.verdict(frame))),
-           "move_semantics" -> MoveMeaningSurface.from(view).map(publicMoveSemanticJson)
+           "verdict" -> verdict.map(publicVerdictJson),
+           "move_semantics" -> surfaces.map(publicMoveSemanticJson),
+           "llm_payload" -> verdict.toList.flatMap(publicLlmPayload(_, surfaces))
          )
        else Json.obj())
 
@@ -157,6 +160,60 @@ final class Analyse(
       "from" -> carrier.from,
       "to" -> carrier.to
     )
+
+  private def publicLlmPayload(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[JsObject] =
+    val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
+    val subject = if problemMove then "reference_move" else "played_move"
+    val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && publicLlmSurfaceHasCarrier(surface))
+    val pv = surfaces
+      .filter(_.subject == "played_move")
+      .flatMap(_.comparison.toList.flatMap(_.moves))
+      .filter(move => move.uci.nonEmpty && move.role.startsWith("played_pv_"))
+      .map(_.uci)
+      .distinct
+    val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
+    val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
+    val consequenceCarriers = publicLlmCarrierPairs(evidenceSurfaces)
+      .filter((carrier, _) => carrier.role == "target" && publicLlmConsequenceCarrierKind(carrier.kind))
+    val concreteConsequence = consequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
+    if evidenceSurfaces.isEmpty || (terminal.isEmpty && technique.isEmpty && (pv.isEmpty || !concreteConsequence)) then Nil
+    else
+      val carriers = publicLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
+        (carrier.role == "actor" && carrier.kind == "Move" && carrier.value == verdict.playedMove) ||
+          (carrier.role == "target" && publicLlmConsequenceCarrierKind(carrier.kind))
+      )
+      List(
+        Json.obj(
+          "key" -> "current-move-chain",
+          "current_move" -> verdict.playedMove,
+          "reference_move" -> verdict.referenceMove,
+          "move_quality" -> verdict.moveQuality,
+          "subject" -> subject,
+          "proof_levels" -> evidenceSurfaces.map(_.evidence.proofLevel).distinct,
+          "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
+          "pv" -> pv,
+          "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
+          "terminal_consequences" -> terminal.map(publicCodeJson),
+          "technique" -> technique.map(publicEndgameTechniqueJson),
+          "cause_ids" -> evidenceSurfaces.flatMap(_.evidence.causeIds).distinct,
+          "source_ids" -> evidenceSurfaces.flatMap(_.evidence.sourceIds).distinct,
+          "player_facing_reason_allowed" -> true
+        )
+      )
+
+  private def publicLlmSurfaceHasCarrier(surface: MoveMeaningSurface): Boolean =
+    surface.evidence.hasCarrier &&
+      (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
+
+  private def publicLlmConsequenceCarrierKind(kind: String): Boolean =
+    kind == "PlanSubject" || kind == "Pawn" || kind == "Square" || kind == "File"
+
+  private def publicLlmCarrierPairs(
+      surfaces: List[MoveMeaningSurface]
+  ): List[(MoveMeaningSurfaceBoardCarrier, MoveMeaningSurface)] =
+    surfaces
+      .flatMap(surface => surface.evidence.boardCarriers.map(carrier => carrier -> surface))
+      .distinctBy((carrier, surface) => (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to))
 
   private def publicEndgameTechniqueJson(technique: MoveMeaningSurfaceEndgameTechnique): JsObject =
     Json.obj(
