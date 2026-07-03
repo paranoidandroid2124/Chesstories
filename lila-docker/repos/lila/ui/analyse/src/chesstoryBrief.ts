@@ -98,6 +98,8 @@ interface ChesstoryComparisonLoss extends ChesstoryCode {
 
 type ChesstoryBoardCarrier = NonNullable<NonNullable<ChesstoryMoveSemantic['evidence']>['board_carriers']>[number];
 
+const broadIdeaLabels = new Set(['piece route', 'piece activity', 'target pressure', 'plan continuity', 'counterplay control']);
+
 export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): ChesstoryBriefSection[] {
   if (!payload?.move_semantics?.some(hasEvidenceCarrier)) return placeholderSections();
 
@@ -122,7 +124,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const problem = firstLabel(verdictReasons.flatMap(problemLabels));
   const referenceIdeas = uniqueLabels(evidenceReference.map(ideaLabel)).slice(0, 3);
   const concreteIdeas = targets.length
-    ? solved.filter(label => !['piece route', 'piece activity', 'target pressure', 'plan continuity', 'counterplay control'].includes(label))
+    ? solved.filter(label => !broadIdeaLabels.has(label))
     : solved;
   const concreteSolved = targets.length ? targets : solved;
   const handled = uniqueLabels([...concreteSolved, ...terminal]);
@@ -368,6 +370,7 @@ function techniqueLabels(semantic: ChesstoryMoveSemantic): string[] {
 function summaryLine(semantic: ChesstoryMoveSemantic): string {
   const idea = ideaLabel(semantic);
   const targets = boardCarrierTargetLabels(semantic).slice(0, 3);
+  if (targets.length && broadIdeaLabels.has(idea)) return joinHuman(targets);
   return [idea, targets.length ? `on ${joinHuman(targets)}` : ''].filter(Boolean).join(' ');
 }
 
