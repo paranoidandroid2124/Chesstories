@@ -2895,7 +2895,8 @@ object MoveMeaningClaim:
               val spareIdentityCarriers =
                 lineUnlockIdentityCarriers(detail) ++
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
-                  passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds)
+                  passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
+                  materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove)
               val claimBoardCarriers =
                 (baseClaimBoardCarriers ++ spareIdentityCarriers.take(12 - baseClaimBoardCarriers.size))
                   .distinct
@@ -3064,6 +3065,27 @@ object MoveMeaningClaim:
       .flatMap(_.lineEventsOf(LineEventKind.PassedPawn))
       .flatMap(_.square.toList)
       .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"passed-pawn:${square.key}"))
+      .distinct
+
+  private def materialCaptureIdentityCarriersFromLineEvidence(
+      evidenceGraph: TypedEvidenceGraph,
+      sourceEvidenceIds: List[String],
+      claimMove: String
+  ): List[MoveMeaningSurfaceBoardCarrier] =
+    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
+    sourceEvidenceIds
+      .flatMap(id => evidenceGraph.byId.get(id))
+      .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
+      .flatMap(line =>
+        line.materialCaptures
+          .filter(capture =>
+            capture.plyOffset == 0 || JudgmentSubjectBinding.normalizeMove(capture.moveUci).toLowerCase == normalizedClaimMove
+          )
+          .map(capture =>
+            val prefix = if capture.recapture then "material-recapture" else "material-capture"
+            MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"$prefix:${capture.square.key}")
+          )
+      )
       .distinct
 
   private def publicBoardCarriers(
