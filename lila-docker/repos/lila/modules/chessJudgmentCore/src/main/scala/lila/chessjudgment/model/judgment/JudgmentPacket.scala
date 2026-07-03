@@ -3028,9 +3028,20 @@ object MoveMeaningClaim:
         publicPieceCarrier("actor", piece) ++ publicSquareCarrier("target", square) ++ publicSquareCarrier("target", blocker)
       case Some(StructuralPurposeSubject.PieceSquare(piece, square)) =>
         publicPieceCarrier("actor", piece) ++ publicSquareCarrier("actor", square) ++ publicSquareCarrier("target", square)
+      case Some(StructuralPurposeSubject.TensionEdge(from, to)) =>
+        publicSquareCarrier("target", from) ++ publicSquareCarrier("target", to)
       case _ =>
-        publicSquareCarrier("target", subject) match
-          case Nil      => publicFileCarrier("target", subject)
+        val carrierSubject = StructuralPurposeSubject.carrierToken(subject)
+        val carriers = StructuralPurposeSubject.parse(carrierSubject) match
+          case Some(StructuralPurposeSubject.TensionEdge(from, to)) =>
+            publicSquareCarrier("target", from) ++ publicSquareCarrier("target", to)
+          case _ =>
+            publicSquareCarrier("target", carrierSubject) match
+              case Nil if carrierSubject.matches("[a-h]") => publicFileCarrier("target", carrierSubject)
+              case Nil                                   => Nil
+              case carriers => carriers
+        carriers match
+          case Nil      => Nil
           case carriers => carriers
 
   private def publicPlanSubjectCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =

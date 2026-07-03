@@ -742,15 +742,7 @@ object EvidenceObjectBinding:
     objectOf(EvidenceObjectKind.Line, line.id) ++ objectOf(EvidenceObjectKind.Move, line.rootMove)
 
   private def subjectObject(raw: String): List[ConcreteChessObject] =
-    val cleaned = normalize(raw)
-      .stripPrefix("square:")
-      .stripPrefix("file:")
-      .stripPrefix("target:")
-      .stripPrefix("subject:")
-      .stripPrefix("created-tension:")
-      .stripPrefix("resolved-tension:")
-      .stripPrefix("break-file:")
-      .stripPrefix("weak-square:")
+    val cleaned = StructuralPurposeSubject.carrierToken(raw)
     StructuralPurposeSubject.parse(cleaned) match
       case Some(StructuralPurposeSubject.PieceRoute(role, _, to)) =>
         objectOf(EvidenceObjectKind.Piece, role) ++ objectOf(EvidenceObjectKind.Square, to)
@@ -806,6 +798,22 @@ private[judgment] object StructuralPurposeSubject:
   private val battery = raw"battery:([a-z]+):([a-h][1-8])-([a-h][1-8])(?::([a-z-]+))?.*".r
   private val rookLift = raw"rook-lift:([a-h][1-8])-([a-h][1-8]):rank-([0-9]+).*".r
   private val tensionEdge = raw"([a-h][1-8])-([a-h][1-8])".r
+  private val carrierPrefixes = List(
+    "square:",
+    "file:",
+    "target:",
+    "subject:",
+    "created-tension:",
+    "resolved-tension:",
+    "break-file:",
+    "open-file:",
+    "semi-open-file:",
+    "weak-square:",
+    "weak-pawn:"
+  )
+
+  def carrierToken(raw: String): String =
+    carrierPrefixes.foldLeft(normalize(raw))((value, prefix) => value.stripPrefix(prefix))
 
   def parse(raw: String): Option[Parsed] =
     normalize(raw) match
