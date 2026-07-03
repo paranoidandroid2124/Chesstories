@@ -124,7 +124,9 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const concreteSolved = targets.length ? targets : solved;
   const handled = [...concreteSolved, ...terminal];
   const positionThread =
-    solved.length && targets.length ? `${joinHuman(solved)} around ${joinHuman(targets)}` : joinHuman(concreteSolved);
+    solved.length && targets.length && !targets.some(target => target.startsWith(solved[0]))
+      ? `${joinHuman(solved)} around ${joinHuman(targets)}`
+      : joinHuman(concreteSolved);
   const currentChange = targets.length ? joinHuman(targets) : solved.length ? joinHuman(solved) : '';
   const lineEvidence = comparisonLines(evidencePlayed).slice(0, 3);
   const comparisonFocus = [...losses, ...referenceIdeas].slice(0, 4);

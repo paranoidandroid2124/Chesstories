@@ -501,6 +501,30 @@ describe('chesstory brief scaffold', () => {
     assert.match(opening?.body || '', /b-file break.*pawn/);
     assert.match(evidence?.body || '', /b-file break.*pawn.*b7b5/);
   });
+  test('does not repeat a generic idea when a carrier already names it concretely', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'good', played_move: 'd5d6', reference_move: 'd5d6' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'supporting',
+          idea: { code: 'passed_pawn_advance', label: 'passed pawn advance' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            board_carriers: [
+              { role: 'target', kind: 'PlanSubject', value: 'passed-pawn-advanced:d5-d6:rank-6' },
+            ],
+          },
+        },
+      ],
+    });
+
+    const opening = sections.find(section => section.key === 'opening-idea');
+    assert.equal(opening?.body, 'The position is asking about passed pawn advance d5-d6.');
+  });
+
   test('does not turn semantic targets into public board evidence without board carriers', () => {
     const sections = chesstoryBriefSections({
       verdict: { move_quality: 'good', played_move: 'd4d5', reference_move: 'd4d5' },
