@@ -2891,7 +2891,6 @@ object MoveMeaningClaim:
                 (boardCarriers ++ lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove))
                   .distinct
                   .sortBy(boardCarrierSortKey)
-                  .take(12)
               val pressureIdentityCarriers =
                 mechanismSquareIdentityCarriers(detail, "battery-pressure", batteryPressureSignature) ++
                   mechanismSquareIdentityCarriers(detail, "pin-pressure", pinPressureSignature)
@@ -2906,7 +2905,7 @@ object MoveMeaningClaim:
                   passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
                   materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove)
               val claimBoardCarriers =
-                (baseClaimBoardCarriers ++ spareIdentityCarriers.take(12 - baseClaimBoardCarriers.size))
+                (baseClaimBoardCarriers ++ spareIdentityCarriers)
                   .distinct
                   .sortBy(boardCarrierSortKey)
                   .take(12)
