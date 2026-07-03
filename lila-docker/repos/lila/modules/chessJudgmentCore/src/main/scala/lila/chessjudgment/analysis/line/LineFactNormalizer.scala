@@ -21,7 +21,7 @@ object LineFactNormalizer:
       parents: List[EvidenceRef] = Nil
   ): EvidenceRecord =
     val replay = replaySteps(position.fen, facts)
-    val events = lineEvents(position.fen, lineRef, facts, replay, forcedTheme, materialSummary)
+    val events = lineEvents(lineRef, facts, replay, forcedTheme, materialSummary)
     val baseConsequences = lineConsequences(facts, forcedTheme, materialSummary)
     val endgameHorizons = endgameTechniqueHorizons(position.fen, replay, baseConsequences)
     val consequences = (baseConsequences ++ endgameTechniqueConsequences(facts, endgameHorizons)).distinct
@@ -70,7 +70,6 @@ object LineFactNormalizer:
     }._2.reverse
 
   private def lineEvents(
-      startFen: String,
       lineRef: LineNodeRef,
       facts: PrincipalVariationEvidence.LineFacts,
       replay: List[LineReplayStep],
@@ -253,35 +252,34 @@ object LineFactNormalizer:
           )
         )
       }
-    val passedPawnEvents = linePassedPawnEvents(startFen, facts)
+    val passedPawnEvents = linePassedPawnEvents(replay)
     (replayEvents ++ roleEvents ++ forcedEvents ++ materialEvents ++ passedPawnEvents ++ carriedDefense).distinct
 
-  private def linePassedPawnEvents(startFen: String, facts: PrincipalVariationEvidence.LineFacts): List[LineMoveEvent] =
-    val eventMove = facts.line.moves.lastOption.map(move => PrincipalVariationEvidence.normalizeUci(move.uci))
-    val plyOffset = facts.line.moves.size - 1
-    val endPosition = facts.line.moves.lastOption.map(_.fenAfter).flatMap(positionAfter)
-    val beforeAfter =
-      for
-        before <- positionAfter(startFen).toList
-        after <- endPosition.toList
-      yield (before, after)
-    beforeAfter.flatMap { case (before, after) =>
-      List(Color.White, Color.Black).flatMap { color =>
-        val beforePassed = passedPawnSquares(before, color)
-        val gained = passedPawnSquares(after, color).diff(beforePassed)
-        eventMove.toList.flatMap(move =>
+  private def linePassedPawnEvents(replay: List[LineReplayStep]): List[LineMoveEvent] =
+    replay.zipWithIndex.flatMap { case (step, index) =>
+      val beforeAfter =
+        for
+          before <- positionAfter(step.fenBefore).toList
+          after <- positionAfter(step.fenAfter).toList
+        yield (before, after)
+      beforeAfter.flatMap { case (before, after) =>
+        val move = PrincipalVariationEvidence.normalizeUci(step.moveUci)
+        val moverRole = movingPieceRole(step.fenBefore, move)
+        List(Color.White, Color.Black).flatMap { color =>
+          val beforePassed = passedPawnSquares(before, color)
+          val gained = passedPawnSquares(after, color).diff(beforePassed)
           gained.toList.sorted.map(square =>
             LineMoveEvent(
               kind = LineEventKind.PassedPawn,
               moveUci = move,
-              plyOffset = plyOffset,
+              plyOffset = index,
               side = Some(color),
-              pieceRole = Some(EvidencePieceRole(Pawn.name)),
+              pieceRole = moverRole,
               targetRole = Some(EvidencePieceRole(Pawn.name)),
               square = Some(EvidenceSquare(square))
             )
           )
-        )
+        }
       }
     }
 
