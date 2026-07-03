@@ -121,7 +121,9 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const terminal = cleanTerminalLabels(uniqueLabels(evidencePlayed.flatMap(terminalLabels)));
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
   const losses = cleanTerminalLabels(uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels)), problemMove);
-  const targets = conciseCarrierLabels(positionEvidence.flatMap(boardCarrierTargetLabels)).slice(0, 5);
+  const targets = conciseCarrierLabels(positionEvidence.flatMap(boardCarrierTargetLabels))
+    .sort((a, b) => Number(!a.endsWith('file break')) - Number(!b.endsWith('file break')))
+    .slice(0, 5);
   const currentCarriers = conciseCarrierLabels([...positionEvidence.flatMap(moveCarrierLabels), ...targets])
     .filter(label => !/^[a-h]-file$/.test(label) && !/^the [a-h][1-8] square$/.test(label))
     .slice(0, 3);
