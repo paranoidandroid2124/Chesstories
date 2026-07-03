@@ -365,7 +365,10 @@ function carrierValueLabel(kind?: string, value?: string): string {
 
 function planSubjectLabel(value: string): string {
   const normalized = value.trim().toLowerCase();
-  if (normalized.includes(',')) return joinHuman(normalized.split(',').map(planSubjectLabel));
+  if (normalized.includes(',')) {
+    const parts = normalized.split(',').map(planSubjectLabel);
+    return parts.length === 2 ? `${parts[0]} with ${parts[1]}` : joinHuman(parts);
+  }
   const squareSubject = normalized.match(/^(line-unlock|material-sacrifice|weak-square|check):([a-h][1-8])$/);
   if (squareSubject) return `${squareSubject[1].replace(/-/g, ' ')} on ${squareSubject[2]}`;
   const passedAdvance = normalized.match(/^passed-pawn-advanced:([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
