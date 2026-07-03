@@ -389,6 +389,12 @@ function planSubjectLabel(value: string): string {
   const normalized = value.trim().toLowerCase();
   if (normalized.includes(',')) {
     const parts = normalized.split(',').map(planSubjectLabel);
+    if (parts.includes('piece activation') && parts.includes('pawn break preparation')) {
+      return 'piece development for the pawn break';
+    }
+    if (parts.includes('opening development') && parts.includes('pawn break preparation')) {
+      return 'development for the pawn break';
+    }
     return parts.length === 2 ? `${parts[0]} with ${parts[1]}` : joinHuman(parts);
   }
   const squareSubject = normalized.match(/^(line-unlock|material-sacrifice|weak-square|check):([a-h][1-8])$/);
