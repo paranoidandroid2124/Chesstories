@@ -416,6 +416,7 @@ describe('chesstory brief scaffold', () => {
             proof_level: 'owned_cause',
             board_carriers: [{ role: 'target', kind: 'Square', value: 'g7' }],
           },
+          terminal_consequences: [{ code: 'material_gain', label: 'material gain' }],
           comparison: {
             moves: [
               { role: 'played_move', uci: 'd1g4' },
@@ -451,7 +452,7 @@ describe('chesstory brief scaffold', () => {
     const current = sections.find(section => section.key === 'current-decision');
     assert.match(opening?.body || '', /g7/);
     assert.doesNotMatch(opening?.body || '', /target pressure around/);
-    assert.match(current?.body || '', /changes g7; PV continues with d5-g2 and g4-g2/);
+    assert.match(current?.body || '', /changes g7; PV continues with d5-g2 and g4-g2, proving material gain/);
     assert.match(better?.body || '', /PV continues with d5-g2 and g4-g2/);
     assert.deepEqual(better?.items, ['PV continues with d5-g2 and g4-g2']);
     assert.doesNotMatch(better?.body || '', /played move d1g4|best move d1g4|d5g2|g4g2/);
@@ -661,7 +662,7 @@ describe('chesstory brief scaffold', () => {
           subject: 'played_move',
           move_quality: 'good',
           priority: 'main',
-          idea: { code: 'terminal_mate', label: 'mate' },
+          idea: { code: 'terminal_proof', label: 'terminal proof' },
           evidence: { has_carrier: true, proof_level: 'terminal_proof', source_ids: ['g6g7-terminal'] },
           terminal_consequences: [{ code: 'mate', label: 'mate' }],
           endgame_technique: {
@@ -676,6 +677,7 @@ describe('chesstory brief scaffold', () => {
 
     const llmPayload = JSON.stringify(chesstoryLlmPayload(payload));
     assert.match(llmPayload, /mate/);
+    assert.doesNotMatch(llmPayload, /terminal proof/);
     assert.match(llmPayload, /Lucena/);
     assert.match(llmPayload, /king cut off/);
   });

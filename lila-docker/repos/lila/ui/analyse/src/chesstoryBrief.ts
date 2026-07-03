@@ -125,16 +125,17 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     ? solved.filter(label => !['piece route', 'piece activity', 'target pressure', 'plan continuity', 'counterplay control'].includes(label))
     : solved;
   const concreteSolved = targets.length ? targets : solved;
-  const handled = [...concreteSolved, ...terminal];
+  const handled = uniqueLabels([...concreteSolved, ...terminal]);
   const positionThread =
     concreteIdeas.length && targets.length && !targets.some(target => target.startsWith(concreteIdeas[0]))
       ? `${joinHuman(concreteIdeas)} around ${joinHuman(targets)}`
       : joinHuman(concreteSolved);
   const currentChange = targets.length ? joinHuman(targets) : solved.length ? joinHuman(solved) : '';
   const lineEvidence = comparisonLines(evidencePlayed).slice(0, 3);
+  const terminalProof = terminal.length ? `, proving ${joinHuman(terminal)}` : '';
   const currentDecisionLine =
     currentChange && lineEvidence.length
-      ? `The move changes ${currentChange}; ${lineEvidence[0]}.`
+      ? `The move changes ${currentChange}; ${lineEvidence[0]}${terminalProof}.`
       : currentChange
         ? `The move is not just a verdict; it changes ${currentChange}.`
         : 'This move is marked, but the lesson is not clear from the board yet.';
@@ -211,7 +212,8 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
     .filter(section => section.items?.length || !/not clear from the board|No clean better-move lesson|needs a concrete plan|does not show a clear enough|does not reveal/.test(section.body))
     .filter(section => {
       const handled = section.key === 'middlegame-plan' ? section.body.match(/^This move handles (.*)\.$/)?.[1] : '';
-      return !handled || !currentDecisionBody.includes(handled);
+      const handledItems = handled?.replace(/, and | and /g, ', ').split(', ').filter(Boolean);
+      return !handledItems?.length || !handledItems.every(item => currentDecisionBody.includes(item));
     })
     .filter(section => section.key !== 'better-plan' || !section.body.startsWith('The line evidence shows ') || !section.items?.some(item => currentDecisionBody.includes(item)))
     .map(({ key, title, body, items, tone }) => ({
@@ -263,6 +265,8 @@ function codeLabel(code?: ChesstoryCode): string {
 }
 
 function ideaLabel(semantic: ChesstoryMoveSemantic): string {
+  const terminal = uniqueLabels((semantic.terminal_consequences || []).map(codeLabel));
+  if (terminal.length) return joinHuman(terminal);
   return codeLabel(semantic.idea);
 }
 
