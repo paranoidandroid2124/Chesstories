@@ -176,17 +176,28 @@ final class Analyse(
     val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
     val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
     val consequenceCarriers = publicLlmCarrierPairs(evidenceSurfaces)
-      .filter((carrier, _) => carrier.role == "target" && publicLlmConsequenceCarrierKind(carrier.kind))
+      .filter((carrier, _) => carrier.role == "target" && publicLlmConsequenceCarrier(carrier))
     val concreteConsequence = consequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
     val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
       surface.evidence.proofLevel == "owned_cause" &&
         surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
     )
-    if evidenceSurfaces.isEmpty || (terminal.isEmpty && technique.isEmpty && (pv.isEmpty || (!concreteConsequence && !ownedRouteCarrier))) then Nil
+    val directStructuralCarrier = evidenceSurfaces.exists { surface =>
+      val carriers = surface.evidence.boardCarriers
+      surface.evidence.sourceIds.exists(_.contains("structural-delta")) &&
+        carriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) &&
+        carriers.exists(carrier =>
+          carrier.role == "target" &&
+            (carrier.kind == "Pawn" || (carrier.kind == "PlanSubject" && carrier.value.startsWith("passed-pawn")))
+        )
+    }
+    if evidenceSurfaces.isEmpty ||
+      (terminal.isEmpty && technique.isEmpty && !directStructuralCarrier && (pv.isEmpty || (!concreteConsequence && !ownedRouteCarrier)))
+    then Nil
     else
       val carriers = publicLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
         (carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) ||
-          (carrier.role == "target" && publicLlmConsequenceCarrierKind(carrier.kind))
+          (carrier.role == "target" && publicLlmConsequenceCarrier(carrier))
       )
       List(
         Json.obj(
@@ -211,8 +222,11 @@ final class Analyse(
     surface.evidence.hasCarrier &&
       (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
 
-  private def publicLlmConsequenceCarrierKind(kind: String): Boolean =
-    kind == "PlanSubject" || kind == "Pawn" || kind == "Square" || kind == "File"
+  private def publicLlmConsequenceCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
+    carrier.kind match
+      case "PlanSubject" => !carrier.value.contains(",")
+      case "Pawn" | "Square" | "File" => true
+      case _ => false
 
   private def publicLlmCarrierPairs(
       surfaces: List[MoveMeaningSurface]
