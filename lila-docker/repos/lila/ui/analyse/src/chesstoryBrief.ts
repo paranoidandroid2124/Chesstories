@@ -177,7 +177,12 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
           : 'The graph has a verdict, but not enough public carrier evidence to explain the move.'
         : currentDecisionLine,
       pending: false,
-      items: (problemMove ? uniqueLabels(verdictReasons.flatMap(problemLabels)) : mainPlayed.map(summaryLine).filter(Boolean)).slice(0, 3),
+      items: (problemMove
+        ? uniqueLabels(verdictReasons.flatMap(problemLabels))
+        : currentCarriers.length
+          ? currentCarriers
+          : mainPlayed.map(summaryLine).filter(Boolean)
+      ).slice(0, 3),
       tone: problemMove ? 'bad' : 'good',
     },
     {
