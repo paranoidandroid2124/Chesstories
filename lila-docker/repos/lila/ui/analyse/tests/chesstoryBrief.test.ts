@@ -610,16 +610,17 @@ describe('chesstory brief scaffold', () => {
     const evidence = sections.find(section => section.key === 'evidence');
     const opening = sections.find(section => section.key === 'opening-idea');
     assert.match(opening?.body || '', /b-file break/);
-    assert.match(opening?.body || '', /line unlock on d8/);
+    assert.match(opening?.body || '', /tension between b5 and c6/);
+    assert.match(opening?.body || '', /opens the line from d8/);
     assert.match(opening?.body || '', /weak squares a3, a4, and a5/);
     assert.doesNotMatch(opening?.body || '', /b-file break.*b-file/);
-    assert.doesNotMatch(opening?.body || '', /line unlock on d8.*d8/);
+    assert.doesNotMatch(opening?.body || '', /opens the line from d8.*d8/);
     assert.doesNotMatch(opening?.body || '', /weak square on a3.*weak square on a4/);
     assert.doesNotMatch(opening?.body || '', /b-file break.*pawn/);
     assert.match(evidence?.body || '', /b-file break.*b7-b5/);
     assert.doesNotMatch(evidence?.body || '', /, pawn|and pawn/);
     assert.doesNotMatch(evidence?.body || '', /b-file break.*b-file/);
-    assert.doesNotMatch(evidence?.body || '', /line unlock on d8.*d8/);
+    assert.doesNotMatch(evidence?.body || '', /opens the line from d8.*d8/);
     assert.doesNotMatch(opening?.body || '', /break file b created tension/);
   });
   test('does not repeat a generic idea when a carrier already names it concretely', () => {
@@ -664,7 +665,9 @@ describe('chesstory brief scaffold', () => {
             board_carriers: [
               { role: 'target', kind: 'PlanSubject', value: 'pin-pressure:g2-h1,weakpawnattack,openingdevelopment' },
               { role: 'target', kind: 'PlanSubject', value: 'pieceactivation,pawnbreakpreparation' },
+              { role: 'target', kind: 'PlanSubject', value: 'simplification,pawnbreakpreparation' },
               { role: 'target', kind: 'PlanSubject', value: 'defender-move:g4' },
+              { role: 'target', kind: 'Pawn', value: 'weak-pawn:b4' },
             ],
           },
         },
@@ -672,12 +675,14 @@ describe('chesstory brief scaffold', () => {
     });
 
     const text = JSON.stringify(sections);
-    assert.match(text, /pin pressure g2-h1/);
+    assert.match(text, /pin pressure on g2-h1/);
     assert.match(text, /weak pawn attack/);
     assert.match(text, /opening development/);
     assert.match(text, /piece development for the pawn break/);
+    assert.match(text, /simplification for the pawn break/);
     assert.match(text, /defensive resource on g4/);
-    assert.doesNotMatch(text, /pin-pressure|weakpawnattack|openingdevelopment|weak pawnattack|piece activation with pawn break preparation|defender move on/);
+    assert.match(text, /weak pawn on b4/);
+    assert.doesNotMatch(text, /pin-pressure|weakpawnattack|openingdevelopment|weak pawnattack|piece activation with pawn break preparation|simplification with pawn break preparation|defender move on|weak pawn b4/);
   });
 
   test('does not turn semantic targets into public board evidence without board carriers', () => {

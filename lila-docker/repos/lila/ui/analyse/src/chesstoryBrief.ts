@@ -383,7 +383,7 @@ function boardCarrierLabel(carrier: ChesstoryBoardCarrier, actorPiece?: string):
 function carrierValueLabel(kind?: string, value?: string): string {
   const raw = value || '';
   if (kind === 'File' && raw) return `${raw}-file`;
-  if (kind === 'Pawn' && raw.startsWith('weak-pawn:')) return `weak pawn ${raw.slice('weak-pawn:'.length)}`;
+  if (kind === 'Pawn' && raw.startsWith('weak-pawn:')) return `weak pawn on ${raw.slice('weak-pawn:'.length)}`;
   if (kind === 'PlanSubject') return planSubjectLabel(raw);
   return raw;
 }
@@ -398,9 +398,14 @@ function planSubjectLabel(value: string): string {
     if (parts.includes('opening development') && parts.includes('pawn break preparation')) {
       return 'development for the pawn break';
     }
+    if (parts.includes('simplification') && parts.includes('pawn break preparation')) {
+      return 'simplification for the pawn break';
+    }
     return parts.length === 2 ? `${parts[0]} with ${parts[1]}` : joinHuman(parts);
   }
-  const squareSubject = normalized.match(/^(line-unlock|material-sacrifice|weak-square|check):([a-h][1-8])$/);
+  const lineUnlock = normalized.match(/^line-unlock:([a-h][1-8])$/);
+  if (lineUnlock) return `opens the line from ${lineUnlock[1]}`;
+  const squareSubject = normalized.match(/^(material-sacrifice|weak-square|check):([a-h][1-8])$/);
   if (squareSubject) return `${squareSubject[1].replace(/-/g, ' ')} on ${squareSubject[2]}`;
   const passedAdvance = normalized.match(/^passed-pawn-advanced:([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
   if (passedAdvance) return `passed pawn advance ${passedAdvance[1]}-${passedAdvance[2]}`;
@@ -409,13 +414,14 @@ function planSubjectLabel(value: string): string {
   const breakFile = normalized.match(/^break-file:([a-h])$/);
   if (breakFile) return `${breakFile[1]}-file break`;
   const pressure = normalized.match(/^(battery-pressure|pin-pressure):([a-h][1-8](?:-[a-h][1-8])?)$/);
-  if (pressure) return `${pressure[1].replace(/-/g, ' ')} ${pressure[2]}`;
+  if (pressure) return `${pressure[1].replace(/-/g, ' ')} on ${pressure[2]}`;
   const defenderMove = normalized.match(/^defender-move:([a-h][1-8])$/);
   if (defenderMove) return `defensive resource on ${defenderMove[1]}`;
   const actionSquare = normalized.match(/^(defender-move|material-capture):([a-h][1-8])$/);
   if (actionSquare) return `${actionSquare[1].replace(/-/g, ' ')} on ${actionSquare[2]}`;
   const createdTension = normalized.match(/^created-tension:([a-h][1-8])(-[a-h][1-8])?$/);
-  if (createdTension) return `created tension ${createdTension[1]}${createdTension[2] || ''}`;
+  if (createdTension?.[2]) return `tension between ${createdTension[1]} and ${createdTension[2].slice(1)}`;
+  if (createdTension) return `tension on ${createdTension[1]}`;
   const rookLift = normalized.match(/^rook-lift:([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
   if (rookLift) return `rook lift ${rookLift[1]}-${rookLift[2]}`;
   return normalized
@@ -552,13 +558,16 @@ function conciseCarrierLabels(labels: string[]): string[] {
   );
   const coveredSquares = new Set(
     unique.flatMap(label => [
-      ...(label.match(/^(?:line unlock|material sacrifice|weak square|check) on ([a-h][1-8])$/)?.slice(1) || []),
+      ...(label.match(/^(?:material sacrifice|weak square|check|weak pawn) on ([a-h][1-8])$/)?.slice(1) || []),
+      ...(label.match(/^opens the line from ([a-h][1-8])$/)?.slice(1) || []),
       ...(label.match(/^passed pawn on ([a-h][1-8])$/)?.slice(1) || []),
       ...(
-        label.match(/^(?:passed pawn advance|rook lift|battery pressure|pin pressure|created tension) ([a-h][1-8])(?:-([a-h][1-8]))?$/)
+        label.match(/^(?:passed pawn advance|rook lift|created tension|(?:battery|pin) pressure on) ([a-h][1-8])(?:-([a-h][1-8]))?$/)
           ?.slice(1)
           .filter(Boolean) || []
       ),
+      ...(label.match(/^tension between ([a-h][1-8]) and ([a-h][1-8])$/)?.slice(1) || []),
+      ...(label.match(/^tension on ([a-h][1-8])$/)?.slice(1) || []),
       ...(label.match(/^([a-h][1-8])-([a-h][1-8])$/)?.slice(1) || []),
       ...(label.match(/^(?:king|queen|rook|bishop|knight) ([a-h][1-8])-([a-h][1-8])$/)?.slice(1) || []),
     ]),
