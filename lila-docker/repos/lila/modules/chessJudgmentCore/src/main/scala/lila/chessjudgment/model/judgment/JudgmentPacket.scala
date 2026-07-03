@@ -3005,6 +3005,7 @@ object MoveMeaningClaim:
       .flatMap(line =>
         line.lineEventsOf(LineEventKind.PassedPawn)
           .flatMap(event => event.square.toList.flatMap(square => publicSquareCarrier("target", square.key))) ++
+          lineForkTargetCarriers(line) ++
           line.lineEvents
             .filter(event =>
               (event.kind == LineEventKind.Capture || event.kind == LineEventKind.Recapture) &&
@@ -3013,6 +3014,15 @@ object MoveMeaningClaim:
             .flatMap(event => event.targetRole.toList.flatMap(role => publicPieceCarrier("target", role.name)))
       )
       .distinct
+
+  private def lineForkTargetCarriers(line: LineFactEvidence): List[MoveMeaningSurfaceBoardCarrier] =
+    val hasCheck = line.hasLineEvent(LineEventKind.Check)
+    val hasCapture = line.hasLineEvent(LineEventKind.Capture)
+    if !hasCheck || !hasCapture then Nil
+    else
+      line.lineEvents
+        .filter(event => event.kind == LineEventKind.Check || event.kind == LineEventKind.Capture)
+        .flatMap(event => event.square.toList.flatMap(square => publicSquareCarrier("target", square.key)))
 
   private def publicBoardCarriers(
       detail: PositionPlanTechniqueSemanticDetail
