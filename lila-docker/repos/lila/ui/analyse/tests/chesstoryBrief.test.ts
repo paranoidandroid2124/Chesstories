@@ -470,6 +470,7 @@ describe('chesstory brief scaffold', () => {
     const opening = sections.find(section => section.key === 'opening-idea');
     const better = sections.find(section => section.key === 'better-plan');
     const current = sections.find(section => section.key === 'current-decision');
+    const evidence = sections.find(section => section.key === 'evidence');
     assert.match(opening?.body || '', /g7/);
     assert.doesNotMatch(opening?.body || '', /target pressure around/);
     assert.doesNotMatch(opening?.body || '', /material gain around/);
@@ -480,8 +481,10 @@ describe('chesstory brief scaffold', () => {
     assert.match(better?.body || '', /PV continues with d5-g2 and g4-g2/);
     assert.deepEqual(better?.items, ['PV continues with d5-g2 and g4-g2']);
     assert.doesNotMatch(better?.body || '', /played move d1g4|best move d1g4|d5g2|g4g2/);
+    assert.equal(evidence?.body, 'The line wins material.');
     const llmPayload = JSON.stringify(chesstoryLlmPayload(payload));
     assert.equal(llmPayload.match(/PV continues/g)?.length, 1);
+    assert.match(llmPayload, /The line wins material/);
     assert.doesNotMatch(llmPayload, /This move handles g7/);
   });
   test('requires a public evidence carrier before writing board-evidence prose', () => {

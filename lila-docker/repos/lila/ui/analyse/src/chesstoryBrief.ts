@@ -234,6 +234,9 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
     .filter(section =>
       section.key !== 'evidence' ||
       section.body.startsWith('The terminal result is ') ||
+      section.body === 'The line wins material.' ||
+      section.body === 'The line loses material.' ||
+      section.body.startsWith('The line confirms ') ||
       (section.items || []).some(item => !currentDecisionBody.includes(item)),
     )
     .map(({ key, title, body, items, tone }) => ({
@@ -487,7 +490,10 @@ function isPlayedComparisonLoss(loss: ChesstoryComparisonLoss): boolean {
 function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
   const evidenceSemantics = semantics.filter(hasEvidenceCarrier);
   const terminal = cleanTerminalLabels(uniqueLabels(evidenceSemantics.flatMap(terminalLabels)));
-  if (terminal.length) return terminal.includes('material sacrifice') ? `The line confirms ${joinHuman(terminal)}.` : `The terminal result is ${joinHuman(terminal)}.`;
+  if (terminal.includes('material sacrifice')) return `The line confirms ${joinHuman(terminal)}.`;
+  if (terminal.length === 1 && terminal[0] === 'material gain') return 'The line wins material.';
+  if (terminal.length === 1 && terminal[0] === 'material loss') return 'The line loses material.';
+  if (terminal.length) return `The terminal result is ${joinHuman(terminal)}.`;
   const technique = uniqueLabels(evidenceSemantics.flatMap(techniqueLabels));
   if (technique.length) return `The ending technique evidence is ${joinHuman(technique)}.`;
   const carriers = conciseCarrierLabels(evidenceSemantics.flatMap(boardCarrierLabels));
