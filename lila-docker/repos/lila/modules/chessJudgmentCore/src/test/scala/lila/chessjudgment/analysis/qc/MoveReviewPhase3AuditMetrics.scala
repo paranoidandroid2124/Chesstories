@@ -346,11 +346,29 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       slot.requiredSemanticDetailTokens.nonEmpty &&
         semanticDetailUnitPresent(slot, diagnostics) &&
         !semanticDetailPresent(slot, diagnostics)
+    val counterplayRaceExpectationOverspecified =
+      slot.unit == PositionPlanTechniqueUnit.CounterplayRace &&
+        !semanticDetailUnitPresent(slot, diagnostics) &&
+        diagnostics.exists { diagnostic =>
+          val groups = diagnostic.moveJudgmentView.positionPlanTechniqueSemanticDetailTokenGroups
+          val hasRace = groups.exists(_.contains("unit:CounterplayRace"))
+          val hasCounterplayControl =
+            groups.exists(tokens =>
+              tokens.contains("unit:SpacePreventionResourceDenial") &&
+                tokens.contains("axisKind:Counterplay") &&
+                (
+                  tokens.contains("counterBreak:true") ||
+                    tokens.contains("resourceContestKind:CounterplayRestraint") ||
+                    tokens.contains("resourceContestScope:counterplay")
+                )
+            )
+          hasCounterplayControl && !hasRace
+        }
     val survivalFailureClass =
       if !measured then "measurement_gap"
       else if matched then "covered"
       else if broadPlanOwnershipExpectation then "measurement_gap"
-      else if requiredDetailTokenAbsent then "rubric_input_gap"
+      else if requiredDetailTokenAbsent || counterplayRaceExpectationOverspecified then "rubric_input_gap"
       else if best.isEmpty && claimSupportLevelSatisfied then "public_surface_blocked"
       else if claimMatches.nonEmpty || semanticDetailPresent(slot, diagnostics) then "structural_bottleneck"
       else "coverage_shortage"
@@ -375,6 +393,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "claimPresent" -> claimMatches.nonEmpty,
       "publicSurfacePresent" -> publicMatches.nonEmpty,
       "requiredDetailTokenAbsent" -> requiredDetailTokenAbsent,
+      "counterplayRaceExpectationOverspecified" -> counterplayRaceExpectationOverspecified,
       "survivalFailureClass" -> survivalFailureClass,
       "matchedComparisonIds" -> publicMatches.map(_.comparisonId).distinct.sorted,
       "claimComparisonIds" -> claimMatches.map(_.comparisonId).distinct.sorted,
