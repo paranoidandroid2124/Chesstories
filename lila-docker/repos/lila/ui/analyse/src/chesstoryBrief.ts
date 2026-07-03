@@ -123,7 +123,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const losses = cleanTerminalLabels(uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels)), problemMove);
   const targets = conciseCarrierLabels(positionEvidence.flatMap(boardCarrierTargetLabels)).slice(0, 5);
   const currentCarriers = conciseCarrierLabels([...positionEvidence.flatMap(moveCarrierLabels), ...targets])
-    .filter(label => !/^[a-h]-file$/.test(label))
+    .filter(label => !/^[a-h]-file$/.test(label) && !/^the [a-h][1-8] square$/.test(label))
     .slice(0, 3);
   const problem = firstLabel(verdictReasons.flatMap(problemLabels));
   const referenceIdeas = cleanTerminalLabels(uniqueLabels(evidenceReference.map(ideaLabel)), problemMove).slice(0, 3);
@@ -137,7 +137,9 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
       ? `${concreteIdeas.length === 2 ? `${concreteIdeas[0]} with ${concreteIdeas[1]}` : joinHuman(concreteIdeas)} around ${joinHuman(targets)}`
       : joinHuman(concreteSolved);
   const currentChange = currentCarriers.length ? joinHuman(currentCarriers) : solved.length ? joinHuman(solved) : '';
-  const lineEvidence = comparisonLines(problemMove ? evidencePlayed : currentChange ? played : evidencePlayed).slice(0, 3);
+  const lineEvidence = comparisonLines(problemMove ? evidencePlayed : currentChange ? played : evidencePlayed)
+    .filter(line => line.startsWith('PV continues'))
+    .slice(0, 3);
   const terminalProof = terminal.length ? `, proving ${joinHuman(terminal)}` : '';
   const carrierProof =
     !terminal.length && lineEvidence.length

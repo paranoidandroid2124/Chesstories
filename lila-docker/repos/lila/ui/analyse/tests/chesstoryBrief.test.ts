@@ -541,7 +541,7 @@ describe('chesstory brief scaffold', () => {
     assert.match(opening?.body || '', /g7/);
     assert.doesNotMatch(opening?.body || '', /target pressure around/);
     assert.doesNotMatch(opening?.body || '', /material gain around/);
-    assert.match(current?.body || '', /changes d1-g4 and the g7 square; PV continues with d5-g2 and g4-g2, proving material gain/);
+    assert.match(current?.body || '', /changes d1-g4; PV continues with d5-g2 and g4-g2, proving material gain/);
     assert.doesNotMatch(current?.body || '', /changes .*d5-g2.*;/);
     assert.doesNotMatch(current?.body || '', /material gain and material sacrifice/);
     assert.doesNotMatch(JSON.stringify(current?.items || []), /target pressure|piece activity/);
