@@ -289,6 +289,7 @@ function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
 function boardCarrierLabel(carrier: ChesstoryBoardCarrier): string {
   const value = carrierValueLabel(carrier.kind, carrier.value);
   const route = carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : '';
+  if (carrier.kind === 'Move' && route) return route;
   return [value, route].filter(Boolean).join(' ');
 }
 

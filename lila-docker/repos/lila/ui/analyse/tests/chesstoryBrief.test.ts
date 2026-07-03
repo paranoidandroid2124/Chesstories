@@ -488,8 +488,8 @@ describe('chesstory brief scaffold', () => {
     });
 
     const evidence = sections.find(section => section.key === 'evidence');
-    assert.match(evidence?.body || '', /g1f3/);
-    assert.match(JSON.stringify(evidence?.items || []), /g1f3/);
+    assert.match(evidence?.body || '', /g1-f3/);
+    assert.doesNotMatch(evidence?.body || '', /g1f3 g1-f3/);
   });
 
   test('puts concrete targets before actor carriers in board clues', () => {
@@ -517,7 +517,7 @@ describe('chesstory brief scaffold', () => {
     const evidence = sections.find(section => section.key === 'evidence');
     const opening = sections.find(section => section.key === 'opening-idea');
     assert.match(opening?.body || '', /b-file break.*pawn/);
-    assert.match(evidence?.body || '', /b-file break.*pawn.*b7b5/);
+    assert.match(evidence?.body || '', /b-file break.*pawn.*b7-b5/);
   });
   test('does not repeat a generic idea when a carrier already names it concretely', () => {
     const sections = chesstoryBriefSections({
