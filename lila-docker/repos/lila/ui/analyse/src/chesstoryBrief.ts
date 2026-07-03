@@ -230,7 +230,7 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
       key,
       title,
       body,
-      items: items || [],
+      items: key === 'opening-idea' ? [] : items || [],
       tone: tone || 'neutral',
     }));
 }
