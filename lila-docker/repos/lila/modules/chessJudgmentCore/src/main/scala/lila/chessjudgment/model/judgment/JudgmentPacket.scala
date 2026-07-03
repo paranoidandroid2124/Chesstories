@@ -2855,7 +2855,6 @@ object MoveMeaningClaim:
             (optionLineRole, optionMove, optionObjectSignatures, optionMeaningKind, optionClaimRole, optionRoleCompatibleCauseFrames)
           }
         val boardCarriers = publicBoardCarriers(detail)
-        val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, boardCarriers)
         claimOptions.flatMap {
           case (claimLineRole, claimMove, surfaceObjectSignatures, meaningKind, claimRole, roleCompatibleCauseFrames) =>
             supportLevel(
@@ -2887,6 +2886,12 @@ object MoveMeaningClaim:
                   claimMove
                 )
               val comparisonMoveRefs = comparisonMoveRefsFromLineEvidence(evidenceGraph, sourceEvidenceIds)
+              val claimBoardCarriers =
+                (boardCarriers ++ lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds))
+                  .distinct
+                  .sortBy(boardCarrierSortKey)
+                  .take(8)
+              val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, claimBoardCarriers)
               val objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames)
               val publicHasCarrier = objectCarrierReady && (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty)
               val publicProofLevel =
@@ -2934,7 +2939,7 @@ object MoveMeaningClaim:
                     .sorted,
                 comparisonLossKinds = PositionPlanTechniqueSemanticDetail.comparisonLossKinds(detail).distinct.sorted,
                 objectCarrierReady = objectCarrierReady,
-                boardCarriers = boardCarriers,
+                boardCarriers = claimBoardCarriers,
                 comparisonMoveRefs = comparisonMoveRefs,
                 targetSquares = surfaceTarget.squares,
                 targetFiles = surfaceTarget.files,
@@ -2958,7 +2963,7 @@ object MoveMeaningClaim:
                 publicIdeaType = publicIdeaType(detail, meaningKind),
                 publicHasCarrier = publicHasCarrier,
                 publicProofLevel = publicProofLevel,
-                publicTargetBound = boardCarriers.exists(_.role == "target")
+                publicTargetBound = claimBoardCarriers.exists(_.role == "target")
               )
             }
         }
@@ -2986,6 +2991,17 @@ object MoveMeaningClaim:
             .map((move, index) => MoveMeaningSurfaceMoveRef(s"${role}_${index + 1}", move))
         )
       )
+      .distinct
+
+  private def lineEventBoardCarriersFromLineEvidence(
+      evidenceGraph: TypedEvidenceGraph,
+      sourceEvidenceIds: List[String]
+  ): List[MoveMeaningSurfaceBoardCarrier] =
+    sourceEvidenceIds
+      .flatMap(id => evidenceGraph.byId.get(id))
+      .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
+      .flatMap(_.lineEventsOf(LineEventKind.PassedPawn))
+      .flatMap(event => event.square.toList.flatMap(square => publicSquareCarrier("target", square.key)))
       .distinct
 
   private def publicBoardCarriers(
