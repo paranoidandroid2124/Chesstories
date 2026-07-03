@@ -429,7 +429,7 @@ describe('chesstory brief scaffold', () => {
     });
 
     const better = sections.find(section => section.key === 'better-plan');
-    assert.match(better?.body || '', /PV continues played pv 1 d5g2 and played pv 2 g4g2/);
+    assert.match(better?.body || '', /PV continues with d5g2 and g4g2/);
     assert.doesNotMatch(better?.body || '', /played move d1g4|best move d1g4/);
   });
   test('requires a public evidence carrier before writing board-evidence prose', () => {

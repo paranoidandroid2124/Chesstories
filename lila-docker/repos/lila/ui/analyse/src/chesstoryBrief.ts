@@ -341,13 +341,13 @@ function comparisonLines(semantics: ChesstoryMoveSemantic[]): string[] {
     const moves = (comparison.moves || []).filter(move => move.uci);
     const pvMoves = moves
       .filter(move => move.role?.includes('_pv_'))
-      .map(move => `${move.role?.replace(/_/g, ' ') || 'pv'} ${move.uci}`);
+      .map(move => move.uci || '');
     const rootMoves = moves
       .filter(move => !move.role?.includes('_pv_'))
       .map(move => `${move.role?.replace(/_/g, ' ') || 'move'} ${move.uci}`);
     const lost = (comparison.lost_ideas || []).filter(isPlayedComparisonLoss).map(codeLabel);
     return [
-      pvMoves.length ? `PV continues ${joinHuman(pvMoves)}` : rootMoves.length ? rootMoves.join(', ') : '',
+      pvMoves.length ? `PV continues with ${joinHuman(pvMoves)}` : rootMoves.length ? rootMoves.join(', ') : '',
       lost.length ? `Lost idea: ${joinHuman(lost)}` : '',
     ].filter(Boolean);
   });
