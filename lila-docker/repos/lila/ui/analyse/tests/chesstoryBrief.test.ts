@@ -2,7 +2,6 @@ import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   chesstoryBriefSections,
-  chesstoryLlmPayload,
   type ChesstoryMoveMeaningPayload,
 } from '../src/chesstoryBrief';
 
@@ -549,17 +548,6 @@ describe('chesstory brief scaffold', () => {
     assert.deepEqual(better?.items, ['PV continues with d5-g2 and g4-g2']);
     assert.doesNotMatch(better?.body || '', /played move d1g4|best move d1g4|d5g2|g4g2/);
     assert.equal(evidence?.body, 'The line wins material.');
-    const llmPayload = chesstoryLlmPayload(payload);
-    assert.equal(llmPayload.length, 1);
-    assert.equal(llmPayload[0].key, 'current-move-chain');
-    assert.equal(llmPayload[0].current_move, 'd1g4');
-    assert.deepEqual(llmPayload[0].pv, ['d5g2', 'g4g2']);
-    assert.deepEqual(llmPayload[0].terminal_consequences, ['material gain']);
-    assert.equal(llmPayload[0].consequence_carriers.length, 1);
-    assert.deepEqual(llmPayload[0].consequence_carriers[0], { role: 'target', kind: 'Square', value: 'g7' });
-    assert.equal('carrier_labels' in (llmPayload[0] as any), false);
-    assert.equal('consequences' in (llmPayload[0] as any), false);
-    assert.doesNotMatch(JSON.stringify(llmPayload), /PV continues|The line wins material|This move handles g7/);
   });
   test('requires a public evidence carrier before writing board-evidence prose', () => {
     const sections = chesstoryBriefSections({
@@ -610,41 +598,6 @@ describe('chesstory brief scaffold', () => {
     assert.doesNotMatch(current?.body || '', /not just a verdict/);
     assert.match(evidence?.body || '', /b8-d7/);
     assert.doesNotMatch(evidence?.body || '', /b8d7 b8-d7|, knight|and knight|, b8\b|and b8\b|, d7\b|and d7\b/);
-    assert.deepEqual(chesstoryLlmPayload(payload), []);
-  });
-
-  test('does not let unrelated PV proof unlock carrier-only LLM prose', () => {
-    const payload: ChesstoryMoveMeaningPayload = {
-      verdict: { move_quality: 'good', played_move: 'd1g4', reference_move: 'd1g4' },
-      move_semantics: [
-        {
-          subject: 'played_move',
-          move_quality: 'good',
-          priority: 'main',
-          idea: { code: 'target_pressure', label: 'target pressure' },
-          evidence: {
-            has_carrier: true,
-            proof_level: 'surface_evidence',
-            board_carriers: [{ role: 'target', kind: 'Square', value: 'g7' }],
-          },
-        },
-        {
-          subject: 'reference_move',
-          move_quality: 'good',
-          priority: 'supporting',
-          idea: { code: 'piece_activity', label: 'piece activity' },
-          evidence: { has_carrier: false, proof_level: 'none' },
-          comparison: {
-            moves: [
-              { role: 'reference_pv_1', uci: 'd5g2' },
-              { role: 'reference_pv_2', uci: 'g4g2' },
-            ],
-          },
-        },
-      ],
-    };
-
-    assert.deepEqual(chesstoryLlmPayload(payload), []);
   });
 
   test('keeps generic piece targets out of the position thread when a specific target exists', () => {
@@ -755,30 +708,6 @@ describe('chesstory brief scaffold', () => {
     assert.equal(opening?.body, 'The position is asking about passed pawn advance d5-d6.');
     assert.doesNotMatch(JSON.stringify(sections), /changes d5-d6, passed pawn advance|passed pawn advance d5-d6, d5-d6/);
 
-    const llmPayload = chesstoryLlmPayload({
-      verdict: { move_quality: 'good', played_move: 'd5d6', reference_move: 'd5d6' },
-      move_semantics: [
-        {
-          subject: 'played_move',
-          move_quality: 'good',
-          priority: 'supporting',
-          idea: { code: 'passed_pawn_advance', label: 'passed pawn advance' },
-          evidence: {
-            has_carrier: true,
-            proof_level: 'surface_evidence',
-            board_carriers: [
-              { role: 'actor', kind: 'Move', value: 'd5d6', from: 'd5', to: 'd6' },
-              { role: 'target', kind: 'PlanSubject', value: 'passed-pawn-advanced:d5-d6:rank-6' },
-              { role: 'target', kind: 'PlanSubject', value: 'simplification,pawnbreakpreparation' },
-              { role: 'target', kind: 'PlanSubject', value: 'line-unlock:e8' },
-              { role: 'target', kind: 'PlanSubject', value: 'break-file:d' },
-              { role: 'target', kind: 'PlanSubject', value: 'weak-square:e8' },
-            ],
-          },
-        },
-      ],
-    });
-    assert.deepEqual(llmPayload, []);
   });
 
   test('reads compound plan-subject carriers as chess words', () => {
@@ -833,7 +762,6 @@ describe('chesstory brief scaffold', () => {
     const sections = chesstoryBriefSections(payload);
 
     const text = JSON.stringify(sections);
-    assert.deepEqual(chesstoryLlmPayload(payload), []);
     assert.doesNotMatch(text, /d-file|d6/);
   });
 
@@ -859,34 +787,6 @@ describe('chesstory brief scaffold', () => {
     const text = JSON.stringify(sections);
     assert.ok(sections.every(section => section.pending));
     assert.doesNotMatch(text, /mate|Lucena|king cut off/);
-  });
-
-  test('keeps terminal and rook technique evidence in the LLM payload', () => {
-    const payload: ChesstoryMoveMeaningPayload = {
-      verdict: { move_quality: 'good', played_move: 'g6g7', reference_move: 'g6g7' },
-      move_semantics: [
-        {
-          subject: 'played_move',
-          move_quality: 'good',
-          priority: 'main',
-          idea: { code: 'terminal_proof', label: 'terminal proof' },
-          evidence: { has_carrier: true, proof_level: 'terminal_proof', source_ids: ['g6g7-terminal'] },
-          terminal_consequences: [{ code: 'mate', label: 'mate' }],
-          endgame_technique: {
-            pattern_info: { code: 'lucena', label: 'Lucena' },
-            rook_geometry: { code: 'king_cut_off', label: 'king cut off' },
-            status_label: 'holding',
-            squares: { required: ['e4'], maintained: ['e4'], broken: [] },
-          },
-        },
-      ],
-    };
-
-    const llmPayload = JSON.stringify(chesstoryLlmPayload(payload));
-    assert.match(llmPayload, /mate/);
-    assert.doesNotMatch(llmPayload, /terminal proof/);
-    assert.match(llmPayload, /Lucena/);
-    assert.match(llmPayload, /king cut off/);
   });
 
   test('reads good material loss as sacrifice instead of handled loss', () => {

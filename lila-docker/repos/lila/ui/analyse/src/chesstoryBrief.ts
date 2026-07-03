@@ -248,68 +248,6 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   ];
 }
 
-export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload): ChesstoryLlmChain[] {
-  const semantics = payload?.move_semantics || [];
-  const bad = payload?.verdict?.move_quality === 'bad';
-  const problemMove = bad || normalizeCode(payload?.verdict?.verdict_code) === 'playable_loss';
-  const subject = problemMove ? 'reference_move' : 'played_move';
-  const evidenceSemantics = semantics.filter(s => s.subject === subject && hasConcreteSurfaceCarrier(s));
-  if (!evidenceSemantics.length) return [];
-
-  const pv = compactRepeatedMoves(
-    uniqueLabels(semantics
-      .filter(s => s.subject === 'played_move')
-      .flatMap(s => s.comparison?.moves || [])
-      .filter(move => !!move.uci && move.role?.startsWith('played_pv_'))
-      .map(move => move.uci || '')),
-  );
-  const terminal = cleanTerminalLabels(uniqueLabels(evidenceSemantics.flatMap(terminalLabels)), problemMove);
-  const technique = uniqueLabels(evidenceSemantics.flatMap(techniqueLabels));
-  const currentMove = payload?.verdict?.played_move || evidenceSemantics.find(s => s.move_uci)?.move_uci;
-  const consequenceKeys = new Set<string>();
-  const consequenceCarriers = evidenceSemantics
-    .flatMap(s => s.evidence?.board_carriers || [])
-    .filter(carrier => carrier.role === 'target' && ['PlanSubject', 'Pawn', 'Square', 'File'].includes(carrier.kind || ''))
-    .filter(carrier => {
-      const key = [carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to].join(':');
-      if (consequenceKeys.has(key)) return false;
-      consequenceKeys.add(key);
-      return true;
-    });
-  const concreteConsequenceCarriers = consequenceCarriers.filter(carrier => carrier.kind === 'PlanSubject' || carrier.kind === 'Pawn');
-  if (!terminal.length && !technique.length && (!pv.length || !concreteConsequenceCarriers.length)) return [];
-  const carrierKeys = new Set<string>();
-  const carriers = evidenceSemantics
-    .flatMap(s => s.evidence?.board_carriers || [])
-    .filter(carrier =>
-      (carrier.role === 'actor' && carrier.kind === 'Move' && (!currentMove || carrier.value === currentMove)) ||
-      (carrier.role === 'target' && ['PlanSubject', 'Pawn', 'Square', 'File'].includes(carrier.kind || '')),
-    )
-    .filter(carrier => {
-      const key = [carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to].join(':');
-      if (carrierKeys.has(key)) return false;
-      carrierKeys.add(key);
-      return true;
-    });
-
-  return [{
-    key: 'current-move-chain',
-    current_move: currentMove,
-    reference_move: payload?.verdict?.reference_move,
-    move_quality: payload?.verdict?.move_quality,
-    subject,
-    proof_levels: uniqueLabels(evidenceSemantics.map(s => s.evidence?.proof_level || '')),
-    carriers,
-    pv,
-    consequence_carriers: consequenceCarriers,
-    terminal_consequences: terminal,
-    technique,
-    cause_ids: uniqueLabels(evidenceSemantics.flatMap(s => s.evidence?.cause_ids || [])),
-    source_ids: uniqueLabels(evidenceSemantics.flatMap(s => s.evidence?.source_ids || [])),
-    player_facing_reason_allowed: true,
-  }];
-}
-
 function placeholderSections(): ChesstoryBriefSection[] {
   return [
     {
