@@ -3843,12 +3843,15 @@ object MoveMeaningClaim:
     val routeActorMoves = moveTokens(routeObjectSignatures)
     val routeObjectForClaimMove =
       routeObjectSignatures.exists(signature => moveTokens(List(signature)).contains(normalizedClaimMove))
+    val routeContinuationForClaimMove =
+      routeObjectSignatures.exists(routeContinuationSignatureOwnsClaimMove(_, claimMove))
     val routeObjectWithoutMoveActor =
       routeObjectSignatures.exists(signature => moveTokens(List(signature)).isEmpty)
     val routeSubjectForClaimMove =
       detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
         detail.structuralPurposeSubjects.exists(qualifiedRouteSubjectToken)
     routeObjectForClaimMove ||
+      routeContinuationForClaimMove ||
       routeSubjectForClaimMove ||
       (
         detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
@@ -3866,8 +3869,10 @@ object MoveMeaningClaim:
     val routeActorMoves = moveTokens(routeObjectSignatures)
     val detailMoveOwnsClaim = detail.structuralRouteMove.exists(move => sameMove(move, claimMove))
     val currentMoveActor = routeActorMoves.contains(normalizedClaimMove)
+    val currentMoveContinuation =
+      routeObjectSignatures.exists(routeContinuationSignatureOwnsClaimMove(_, claimMove))
     val noBorrowedActor = routeActorMoves.isEmpty || currentMoveActor
-    noBorrowedActor && (currentMoveActor || detailMoveOwnsClaim)
+    currentMoveContinuation || (noBorrowedActor && (currentMoveActor || detailMoveOwnsClaim))
 
   private def pieceRouteOwnedCauseReady(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -4300,6 +4305,10 @@ object MoveMeaningClaim:
     EvidenceObjectBinding.signatureTokens(signatures, "actor=Move:")
       .map(part => JudgmentSubjectBinding.normalizeMove(part.stripPrefix("actor=Move:")).toLowerCase)
 
+  private def witnessMoveTokens(signatures: List[String]): Set[String] =
+    EvidenceObjectBinding.signatureTokens(signatures, "witness=Move:")
+      .map(part => JudgmentSubjectBinding.normalizeMove(part.stripPrefix("witness=Move:")).toLowerCase)
+
   private def moveTouchesBreakFile(
       detail: PositionPlanTechniqueSemanticDetail,
       claimMove: String
@@ -4635,10 +4644,21 @@ object MoveMeaningClaim:
           StructuralPurposeSubject.parse(subject).exists(_.isInstanceOf[StructuralPurposeSubject.PieceRoute])
         )
     moveOwnedObjectSignatures.exists(qualifiedRouteObjectSignature) ||
+      objectSignatures.exists(routeContinuationSignatureOwnsClaimMove(_, claimMove)) ||
       (
         detailMoveOwnsClaim &&
           (detail.structuralPurposeSubjects.exists(qualifiedRouteSubjectToken) || routeTaggedPieceSubject)
       )
+
+  private def routeContinuationSignatureOwnsClaimMove(signature: String, claimMove: String): Boolean =
+    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
+    moveEndpoints(claimMove).exists { case (_, to) =>
+      val normalized = signature.toLowerCase
+      witnessMoveTokens(List(signature)).contains(normalizedClaimMove) &&
+        normalized.contains(s"actor=square:$to") &&
+        normalized.contains("actor=piece:") &&
+        EvidenceObjectBinding.signatureTokens(List(signature), "target=").exists(EvidenceObjectBinding.concreteTargetToken)
+    }
 
   private def qualifiedRouteSubjectToken(subject: String): Boolean =
     val normalized = subject.toLowerCase
@@ -4777,7 +4797,8 @@ object MoveMeaningClaim:
       detail.tensionSquares.nonEmpty ||
       detail.tensionEdges.nonEmpty ||
       detail.breakFile.nonEmpty ||
-      detail.structuralPurposeSubjects.exists(concreteSubject)
+      detail.structuralPurposeSubjects.exists(concreteSubject) ||
+      EvidenceObjectBinding.playerFacingReadySignatures(detail.objectBindingSignatures)
 
   private def concreteSubject(subject: String): Boolean =
     val normalized = subject.toLowerCase.trim
