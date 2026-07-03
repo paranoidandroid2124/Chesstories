@@ -3850,10 +3850,30 @@ object MoveMeaningClaim:
             terminalProofDetailOwnsClaimMove(detail, objectSignatures, claimMove)
           )(detail.sourceEvidenceIds)
           .getOrElse(Nil)
+      val signatureLineIds =
+        (
+          EvidenceObjectBinding.signatureTokens(objectSignatures, "line=").map(_.stripPrefix("line=")) ++
+            EvidenceObjectBinding.signatureTokens(objectSignatures, "witness=Line:").map(_.stripPrefix("witness=Line:"))
+        ).filter(_.nonEmpty).toSet
+      val signatureLineRole =
+        claimLineRole match
+          case "candidate"   => Some(LineNodeRole.Played)
+          case "reference"   => Some(LineNodeRole.BestReference)
+          case "alternative" => Some(LineNodeRole.Alternative)
+          case _             => None
+      val lineWitnessSources =
+        if signatureLineIds.isEmpty then Nil
+        else
+          evidenceGraph.records.collect {
+            case EvidenceRecord(ref, _: LineFactEvidence, _)
+                if ref.line.exists(line => signatureLineIds.contains(line.id) && signatureLineRole.forall(_ == line.role)) =>
+              ref.id
+          }
       (
         currentMoveCarrierSourceEvidenceIds(evidenceGraph, detail, claimMove) ++
           terminalProofSources ++
-          currentMoveStructureContextSourceEvidenceIds(evidenceGraph, detail)
+          currentMoveStructureContextSourceEvidenceIds(evidenceGraph, detail) ++
+          lineWitnessSources
       ).distinct.sorted
     else detail.sourceEvidenceIds.distinct.sorted
 
