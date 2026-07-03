@@ -5381,9 +5381,9 @@ object MoveMeaningClaim:
           else Some("PieceActivity")
         case PositionPlanTechniqueUnit.StructuralTransformation =>
           if detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) then Some("TerminalProof")
-          else if structuralOpenCenterDevelopmentRoute(detail) then Some("PieceActivity")
           else detail.axisKind match
             case Some(StrategicAxisKind.Target)        => Some("TargetPressure")
+            case _ if structuralOpenCenterDevelopmentRoute(detail) => Some("PieceActivity")
             case Some(StrategicAxisKind.SpaceCenter)   => Some("CenterControl")
             case Some(StrategicAxisKind.PawnBreak)     => Some("PawnBreakTiming")
             case Some(StrategicAxisKind.Counterplay)   => Option.when(counterplayRaceSemanticProof(detail))("CounterplayRace")
