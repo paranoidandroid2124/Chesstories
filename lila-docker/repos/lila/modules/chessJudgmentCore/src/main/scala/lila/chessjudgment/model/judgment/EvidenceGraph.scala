@@ -466,8 +466,10 @@ object EvidenceObjectBinding:
         Nil
 
   private def fromLineFact(ref: EvidenceRef, payload: LineFactEvidence): List[EvidenceObjectBinding] =
+    val continuationMoves =
+      (payload.lineReplayContinuationMoves.take(4) ++ payload.lineReplayContinuationMoves.takeRight(4)).distinct
     val replayBindings =
-      payload.lineReplayContinuationMoves.take(4).map { moveUci =>
+      continuationMoves.map { moveUci =>
         val move = normalize(moveUci)
         EvidenceObjectBinding(
           source = ref,
