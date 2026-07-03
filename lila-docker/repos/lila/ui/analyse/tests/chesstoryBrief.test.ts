@@ -556,6 +556,20 @@ describe('chesstory brief scaffold', () => {
           subject: 'played_move',
           move_quality: 'good',
           priority: 'supporting',
+          idea: { code: 'structure_shift', label: 'break file b created tension b5 c6' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            board_carriers: [
+              { role: 'target', kind: 'PlanSubject', value: 'break-file:b' },
+              { role: 'target', kind: 'PlanSubject', value: 'created-tension:b5-c6' },
+            ],
+          },
+        },
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'supporting',
           idea: { code: 'line_unlock', label: 'line unlock' },
           evidence: {
             has_carrier: true,
@@ -580,6 +594,7 @@ describe('chesstory brief scaffold', () => {
     assert.doesNotMatch(evidence?.body || '', /, pawn|and pawn/);
     assert.doesNotMatch(evidence?.body || '', /b-file break.*b-file/);
     assert.doesNotMatch(evidence?.body || '', /line unlock on d8.*d8/);
+    assert.doesNotMatch(opening?.body || '', /break file b created tension/);
   });
   test('does not repeat a generic idea when a carrier already names it concretely', () => {
     const sections = chesstoryBriefSections({
