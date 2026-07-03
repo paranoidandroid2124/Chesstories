@@ -1558,7 +1558,6 @@ object PositionPlanTechniqueProjection:
         purpose.fold(detail)(structural =>
           val purposeSubjects =
             if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
-                positionPlanTechniqueStructureRouteContext(detail) &&
                 !structural.subjects.exists(positionPlanTechniquePieceRouteSubject)
             then (structural.subjects ++ structural.transitionRouteSubject).distinct.sorted
             else structural.subjects
