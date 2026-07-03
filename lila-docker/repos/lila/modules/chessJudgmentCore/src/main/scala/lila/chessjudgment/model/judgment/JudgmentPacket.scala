@@ -3159,7 +3159,7 @@ object MoveMeaningClaim:
       detail.structuralRouteMove.exists(move => sameMove(move, verdict.candidateLine.rootMove)) &&
       (
         detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
-          structuralOpenCenterDevelopmentRoute(detail) ||
+          structuralCurrentMoveCarrier(detail) ||
           detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
             (
               pieceRouteQualifiedCarrierForMove(detail, objectSignatures, verdict.candidateLine.rootMove) ||
@@ -3293,16 +3293,12 @@ object MoveMeaningClaim:
           moveOwnedSource &&
             detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
             generalDetailOwnsClaimMove(detail, objectSignatures, claimMove) &&
-            !currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove) &&
             (
-              (
-                detail.axisKind.exists(kind =>
-                  kind == StrategicAxisKind.Target ||
-                    kind == StrategicAxisKind.SpaceCenter
-                ) &&
-                  detail.structuralPurposeSubjects.exists(concreteSubject)
-              ) ||
-                structuralOpenCenterDevelopmentRoute(detail)
+              !currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove) ||
+                positiveStructuralCurrentMoveCarrier(detail)
+            ) &&
+            (
+              structuralCurrentMoveCarrier(detail)
             )
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
           moveOwnedSource &&
@@ -3393,10 +3389,21 @@ object MoveMeaningClaim:
       detail: PositionPlanTechniqueSemanticDetail,
       claimMove: String
   ): List[String] =
-    (detail.sourceEvidenceIds ++ detail.candidateEvidenceIds)
+    val graphOwnedSources =
+      (detail.sourceEvidenceIds ++ detail.candidateEvidenceIds)
       .distinct
       .sorted
       .filter(id => evidenceGraph.byId.get(id).exists(JudgmentSubjectBinding.sourceRecordOwnsCurrentPlayedMove(_, claimMove)))
+    if graphOwnedSources.nonEmpty then graphOwnedSources
+    else if detail.unit == PositionPlanTechniqueUnit.StructuralTransformation && structuralCurrentMoveCarrier(detail) then
+      detail.sourceEvidenceIds.distinct.sorted.filter(currentMovePlayedSourceId(_, claimMove))
+    else Nil
+
+  private def currentMovePlayedSourceId(id: String, claimMove: String): Boolean =
+    val normalizedMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
+    val normalizedId = id.toLowerCase
+    normalizedId.contains(s":played:$normalizedMove") ||
+      normalizedId.contains(s":$normalizedMove:played-transition")
 
   private def currentMoveStructureContextSourceEvidenceIds(
       evidenceGraph: TypedEvidenceGraph,
@@ -5018,6 +5025,25 @@ object MoveMeaningClaim:
     detail.structuralRouteMove.nonEmpty &&
       structuralOpenCenterContext(detail) &&
       structuralDevelopmentRoute(detail)
+
+  private def structuralCurrentMoveCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    structuralOpenCenterDevelopmentRoute(detail) ||
+      (
+        detail.structuralRouteMove.nonEmpty &&
+          detailHasSpecificObjectAxis(detail) &&
+          detail.axisKind.exists(kind =>
+            kind == StrategicAxisKind.Target ||
+              kind == StrategicAxisKind.SpaceCenter
+          ) &&
+          detail.structuralPurposeSubjects.exists(concreteSubject)
+      )
+
+  private def positiveStructuralCurrentMoveCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+      structuralCurrentMoveCarrier(detail) &&
+      detail.axisPolarity.forall(polarity => !negativePolarity(polarity)) &&
+      !detail.structuralPurposePolarities.exists(negativeStructuralToken) &&
+      !detail.structuralPurposeConsequences.exists(negativeStructuralToken)
 
   private def structuralOpenCenterContext(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     val anchors = detail.semanticAnchorKeys.map(_.toLowerCase)
