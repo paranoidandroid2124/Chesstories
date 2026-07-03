@@ -62,12 +62,18 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       publicClaimDiagnostics.count(diagnostic =>
         diagnostic.targetSquares.nonEmpty || diagnostic.targetFiles.nonEmpty || diagnostic.targetPieces.nonEmpty
       )
+    val targetObjectWithoutBoardCarrierPublicClaimCount =
+      publicClaimDiagnostics.count(diagnostic =>
+        !diagnostic.hasBoardCarrier &&
+          (diagnostic.targetSquares.nonEmpty || diagnostic.targetFiles.nonEmpty || diagnostic.targetPieces.nonEmpty)
+      )
     Json.obj(
       "publicMoveMeaningClaimCount" -> publicClaimDiagnostics.size,
       "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicClaimCount,
       "publicMoveMeaningBoardCarrierTotal" -> boardCarrierTotal,
       "boardCarrierSaturatedPublicMoveMeaningClaimCount" -> boardCarrierSaturatedPublicClaimCount,
       "targetObjectPublicMoveMeaningClaimCount" -> targetObjectPublicClaimCount,
+      "targetObjectWithoutBoardCarrierPublicMoveMeaningClaimCount" -> targetObjectWithoutBoardCarrierPublicClaimCount,
       "multiEvidenceInputPublicClaimCount" -> multiInputPublicClaimCount
     )
 
@@ -84,12 +90,17 @@ private[qc] object MoveReviewPhase3AuditMetrics:
       coverages.map(coverage => (coverage \ "boardCarrierSaturatedPublicMoveMeaningClaimCount").asOpt[Int].getOrElse(0)).sum
     val targetObjectPublicClaimCount =
       coverages.map(coverage => (coverage \ "targetObjectPublicMoveMeaningClaimCount").asOpt[Int].getOrElse(0)).sum
+    val targetObjectWithoutBoardCarrierPublicClaimCount =
+      coverages
+        .map(coverage => (coverage \ "targetObjectWithoutBoardCarrierPublicMoveMeaningClaimCount").asOpt[Int].getOrElse(0))
+        .sum
     Json.obj(
       "publicMoveMeaningClaimCount" -> publicClaimCount,
       "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicClaimCount,
       "publicMoveMeaningBoardCarrierTotal" -> boardCarrierTotal,
       "boardCarrierSaturatedPublicMoveMeaningClaimCount" -> boardCarrierSaturatedPublicClaimCount,
       "targetObjectPublicMoveMeaningClaimCount" -> targetObjectPublicClaimCount,
+      "targetObjectWithoutBoardCarrierPublicMoveMeaningClaimCount" -> targetObjectWithoutBoardCarrierPublicClaimCount,
       "multiEvidenceInputPublicClaimCount" -> multiInputPublicClaimCount
     )
 
