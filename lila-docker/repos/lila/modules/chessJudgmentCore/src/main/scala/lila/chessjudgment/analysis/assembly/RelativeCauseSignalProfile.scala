@@ -361,7 +361,14 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       if exactSameRootConcreteCarrierCause(payload, profile, kind, sourceSide) && kind == RelativeCauseKind.ActivityGain then
         RelativeCauseSignalProfile.currentMoveConcreteActivityCarrierRecords(profile.fact.candidateLine, profile.allRecords)
       else Nil
-    (record :: sameRootBreakCarriers ++ sameRootActivityCarriers).distinctBy(_.ref.id)
+    val sameRootPlanCarriers =
+      if sourceSide == RelativeCauseSourceSide.Candidate &&
+          profile.exactReferenceMove &&
+          kind == RelativeCauseKind.PlanImprovement &&
+          payload.planComparison.exists(_.hasPlanDelta)
+      then RelativeCauseSignalProfile.currentMoveConcretePlanCarrierRecords(profile.fact.candidateLine, profile.allRecords)
+      else Nil
+    (record :: sameRootBreakCarriers ++ sameRootActivityCarriers ++ sameRootPlanCarriers).distinctBy(_.ref.id)
 
   private def exactSameRootConcreteCarrierCause(
       payload: StrategicMechanismContrastEvidence,
@@ -519,16 +526,21 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
     val narrowedAxisCauses =
       if specificAxisCauses.nonEmpty then (axisCauses ++ exactSameRootConcreteCauses).filterNot((kind, _) => broadStrategicAxisFallback(kind))
       else axisCauses ++ exactSameRootConcreteCauses
+    val currentMovePlanCarriers =
+      RelativeCauseSignalProfile.currentMoveConcretePlanCarrierRecords(profile.fact.candidateLine, profile.allRecords)
+    val exactSameRootPlanCarrier =
+      profile.exactReferenceMove && currentMovePlanCarriers.nonEmpty
     val planCauses =
-      if specificAxisCauses.nonEmpty then Nil
-      else
-        payload.planComparison.toList.flatMap { plan =>
-          if structuralLoss && plan.outcome != StrategicAxisComparisonOutcome.CandidateOnly then
-            List(RelativeCauseKind.PlanContradiction -> RelativeCauseSourceSide.Candidate)
-          else if profile.candidateBetter && plan.outcome != StrategicAxisComparisonOutcome.ReferenceOnly then
-            List(RelativeCauseKind.PlanImprovement -> RelativeCauseSourceSide.Candidate)
-          else Nil
-        }
+      if specificAxisCauses.nonEmpty && currentMovePlanCarriers.isEmpty then Nil
+      else payload.planComparison.toList.filter(_.hasPlanDelta).flatMap { plan =>
+        if structuralLoss && plan.outcome != StrategicAxisComparisonOutcome.CandidateOnly then
+          List(RelativeCauseKind.PlanContradiction -> RelativeCauseSourceSide.Candidate)
+        else if (profile.candidateBetter || exactSameRootPlanCarrier) &&
+            (plan.outcome != StrategicAxisComparisonOutcome.ReferenceOnly || exactSameRootPlanCarrier)
+        then
+          List(RelativeCauseKind.PlanImprovement -> RelativeCauseSourceSide.Candidate)
+        else Nil
+      }
     (narrowedAxisCauses ++ planCauses).distinct
 
   private def strategicReferenceLeadCause(axis: StrategicAxisDetail): RelativeCauseKind =
@@ -1049,6 +1061,8 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         List(RelativeCauseKind.TargetPressureGain)
       case StrategicAxisKind.Activity if currentMoveActivityValueAxis(axis) =>
         List(RelativeCauseKind.ActivityGain)
+      case StrategicAxisKind.PlanCoherence if StrategicMechanismContrastEvidence.currentMovePlanCoherenceAxis(axis) =>
+        List(RelativeCauseKind.PlanImprovement)
       case StrategicAxisKind.Counterplay
           if axis.polarity == StrategicAxisPolarity.Restrain &&
             (axis.label == "opponent-diagonal-restriction" || currentMoveCounterBreakAxis(axis)) =>
@@ -1084,6 +1098,12 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       records: List[EvidenceRecord]
   ): List[EvidenceRecord] =
     StrategicMechanismContrastEvidence.currentMoveConcreteActivityCarrierRecords(candidateLine, records)
+
+  private[chessjudgment] def currentMoveConcretePlanCarrierRecords(
+      candidateLine: LineNodeRef,
+      records: List[EvidenceRecord]
+  ): List[EvidenceRecord] =
+    StrategicMechanismContrastEvidence.currentMoveConcretePlanCarrierRecords(candidateLine, records)
 
   private[chessjudgment] def currentMoveConcreteActivitySource(
       source: EvidenceRef,

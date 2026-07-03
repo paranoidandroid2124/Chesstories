@@ -3688,12 +3688,17 @@ object MoveMeaningClaim:
     lazy val currentMoveSurfaceProof =
       directCurrentMoveCarrier &&
         currentMoveSurfaceReady(evidenceGraph, meaningKind, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
-    val reasonGradeCauseFrames = roleCompatibleCauseFrames.filter(reasonGradeCauseFrame)
+    val reasonGradeCauseFrames =
+      roleCompatibleCauseFrames.filter(frame => reasonGradeCauseFrame(frame) || planOptionFallbackReasonFrame(detail, frame))
     val ownedCause =
       reasonGradeCauseFrames.exists(frame => frame.hasOwnedAdmissibleLongTermProof || frame.attributionDirectProofEligible)
+    val ownedCandidateCauseOwnsCurrentMove =
+      currentMoveClaim &&
+        reasonGradeCauseFrames.exists(ownedCandidateCauseFrameOwnsClaimMove(_, claimMove))
     val planOptionCurrentFunctionOnly =
       currentMoveClaim &&
-        detail.unit == PositionPlanTechniqueUnit.PlanOptionSet
+        detail.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+        !ownedCandidateCauseOwnsCurrentMove
     val rejectedPositiveCause =
       allLinkedCauseFrames.nonEmpty &&
         roleCompatibleCauseFrames.isEmpty &&
@@ -3736,9 +3741,6 @@ object MoveMeaningClaim:
     lazy val laneOwnershipReady =
       !currentMoveClaim ||
         currentMoveSurfaceProof
-    val ownedCandidateCauseOwnsCurrentMove =
-      currentMoveClaim &&
-        reasonGradeCauseFrames.exists(ownedCandidateCauseFrameOwnsClaimMove(_, claimMove))
     val ownedLaneOwnershipReady =
       !currentMoveClaim ||
         ownedCandidateCauseOwnsCurrentMove ||
@@ -3944,6 +3946,18 @@ object MoveMeaningClaim:
       frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot ||
         frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot
     ) &&
+      reasonGradeFrameProofReady(frame)
+
+  private def planOptionFallbackReasonFrame(
+      detail: PositionPlanTechniqueSemanticDetail,
+      frame: MoveJudgmentCauseFrame
+  ): Boolean =
+    detail.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+      frame.causeKind == RelativeCauseKind.PlanImprovement &&
+      frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.FallbackRoot &&
+      frame.hasOwnedAdmissibleLongTermProof &&
+      frame.attributionDirectProofEligible &&
+      frame.attributionRootMoveMatched &&
       reasonGradeFrameProofReady(frame)
 
   private def ownedCandidateCauseFrameOwnsClaimMove(frame: MoveJudgmentCauseFrame, claimMove: String): Boolean =
@@ -6300,7 +6314,8 @@ object MoveJudgmentView:
     kind == RelativeCauseKind.ActivityGain ||
       kind == RelativeCauseKind.TargetPressureGain ||
       kind == RelativeCauseKind.PawnBreakOpportunity ||
-      kind == RelativeCauseKind.OpponentRestriction
+      kind == RelativeCauseKind.OpponentRestriction ||
+      kind == RelativeCauseKind.PlanImprovement
 
   private def lossVerdict(verdict: MoveChoiceVerdict): Boolean =
     verdict match

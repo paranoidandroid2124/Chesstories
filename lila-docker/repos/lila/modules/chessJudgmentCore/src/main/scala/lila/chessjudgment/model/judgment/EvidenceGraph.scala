@@ -1851,11 +1851,20 @@ object StrategicMechanismContrastEvidence:
     else if currentMoveActivityValueAxis(axis) &&
         currentMoveConcreteActivityCarrierRecords(candidateLine, records).nonEmpty
     then List(RelativeCauseKind.ActivityGain)
+    else if currentMovePlanCoherenceAxis(axis) &&
+        currentMoveConcretePlanCarrierRecords(candidateLine, records).nonEmpty
+    then List(RelativeCauseKind.PlanImprovement)
     else Nil
 
   private[chessjudgment] def currentMoveActivityValueAxis(axis: StrategicAxisDetail): Boolean =
     axis.kind == StrategicAxisKind.Activity &&
       (axis.polarity == StrategicAxisPolarity.Gain || axis.polarity == StrategicAxisPolarity.Support)
+
+  private[chessjudgment] def currentMovePlanCoherenceAxis(axis: StrategicAxisDetail): Boolean =
+    axis.kind == StrategicAxisKind.PlanCoherence &&
+      (axis.polarity == StrategicAxisPolarity.Gain ||
+        axis.polarity == StrategicAxisPolarity.Support ||
+        axis.polarity == StrategicAxisPolarity.Preserve)
 
   private[chessjudgment] def currentMoveConcreteActivityCarrierRecords(
       candidateLine: LineNodeRef,
@@ -1870,6 +1879,30 @@ object StrategicMechanismContrastEvidence:
             currentMoveConcreteActivitySource(ref, records) =>
         record
     }.distinctBy(_.ref.id)
+
+  private[chessjudgment] def currentMovePlanAnchorCarrierRecords(
+      candidateLine: LineNodeRef,
+      records: List[EvidenceRecord]
+  ): List[EvidenceRecord] =
+    records.collect {
+      case record @ EvidenceRecord(ref, payload: StructuralDeltaEvidence, _)
+          if ref.scope == EvidenceScope.PlayedTransition &&
+            payload.line.contains(candidateLine) &&
+            payload.role == TransitionEdgeRole.Played &&
+            JudgmentSubjectBinding.normalizeMove(payload.moveUci) == JudgmentSubjectBinding.normalizeMove(candidateLine.rootMove) &&
+            payload.hasPositivePlanAnchor =>
+        record
+    }.distinctBy(_.ref.id)
+
+  private[chessjudgment] def currentMoveConcretePlanCarrierRecords(
+      candidateLine: LineNodeRef,
+      records: List[EvidenceRecord]
+  ): List[EvidenceRecord] =
+    (
+      currentMoveConcreteActivityCarrierRecords(candidateLine, records) ++
+        currentMoveSameRootBreakCarrierRecords(candidateLine, records) ++
+        currentMovePlanAnchorCarrierRecords(candidateLine, records)
+    ).distinctBy(_.ref.id)
 
   private[chessjudgment] def currentMoveConcreteActivitySource(
       source: EvidenceRef,
