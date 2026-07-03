@@ -28,6 +28,16 @@ describe('chesstory brief scaffold', () => {
     assert.match(text, /plan/i);
   });
 
+  test('frames the empty state as position reading before coach prose', () => {
+    const text = chesstoryBriefSections()
+      .map(section => `${section.title} ${section.body}`)
+      .join(' ');
+
+    assert.match(text, /read/i);
+    assert.match(text, /stockfish/i);
+    assert.match(text, /coach explanation/i);
+  });
+
   test('turns public move semantics into player-facing cards without internal labels', () => {
     const sections = chesstoryBriefSections({
       verdict: { move_quality: 'good', played_move: 'c4c5', reference_move: 'c4c5' },
@@ -202,7 +212,7 @@ describe('chesstory brief scaffold', () => {
     assert.equal(plan?.tone, 'bad');
     assert.doesNotMatch(text, /Useful idea inside the mistake|There may be a local idea/);
     assert.doesNotMatch(JSON.stringify(current?.items || []), /piece activity|knight|e4|g3/);
-    assert.match(plan?.body || '', /No public local idea/);
+    assert.match(plan?.body || '', /does not reveal a clear useful idea/);
   });
 
   test('ignores bad move local ideas without public evidence carriers', () => {
@@ -272,7 +282,7 @@ describe('chesstory brief scaffold', () => {
     });
 
     const current = sections.find(section => section.key === 'current-decision');
-    assert.match(current?.body || '', /not enough public carrier evidence/);
+    assert.match(current?.body || '', /lesson is not clear from the board/);
     assert.doesNotMatch(current?.body || '', /gives up more than its idea solves/);
   });
 

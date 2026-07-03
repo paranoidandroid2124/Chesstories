@@ -156,14 +156,18 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     },
     {
       key: 'middlegame-plan',
-      title: problemMove ? (localIdeaLabels.length ? 'Local idea that failed' : 'What this move misses') : 'What this move handles',
+      title: problemMove
+        ? localIdeaLabels.length
+          ? 'Local idea that failed'
+          : 'What this move misses'
+        : 'What this move handles',
       body: problemMove
         ? localIdeaLabels.length
           ? `The move has ${joinHuman(localIdeaLabels)}, but it does not fully meet the position's main demand.`
-          : 'No public local idea is strong enough to explain this mistake.'
+          : 'The move does not reveal a clear useful idea yet.'
         : handled.length
           ? `This move handles ${joinHuman(handled)}.`
-          : 'No public carrier is strong enough to explain this move yet.',
+          : 'The board does not show a clear enough reason for this move yet.',
       pending: false,
       items: (problemMove ? localIdeaLabels : [...concreteSolved, ...terminal, ...technique]).slice(0, 5),
       tone: problemMove ? 'bad' : 'good',
@@ -174,7 +178,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
       body: problemMove
         ? problem
           ? `The main problem is ${problem}.`
-          : 'The graph has a verdict, but not enough public carrier evidence to explain the move.'
+          : 'This move is marked, but the lesson is not clear from the board yet.'
         : currentDecisionLine,
       pending: false,
       items: (problemMove
@@ -195,17 +199,17 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
           ? `The comparison turns on ${joinHuman(comparisonFocus)}.`
           : lineEvidence.length
             ? `The line evidence shows ${lineEvidence[0]}.`
-          : 'No clear candidate-move loss is available yet.',
+          : 'No clean better-move lesson is visible yet.',
       pending: false,
       items: lineEvidence,
-      tone: bad ? 'bad' : 'neutral',
+      tone: problemMove ? 'bad' : 'neutral',
     },
     {
       key: 'evidence',
-      title: 'Evidence from the board',
+      title: 'Board clues',
       body:
         evidenceLine(problemMove ? evidenceReference : played) ||
-        'The graph has a move verdict, but not enough public evidence to explain it cleanly.',
+        'This move is marked, but the lesson is not clear from the board yet.',
       pending: false,
       items: evidenceItems(problemMove ? evidenceReference : played).slice(0, 5),
     },
@@ -245,31 +249,31 @@ function placeholderSections(): ChesstoryBriefSection[] {
     {
       key: 'opening-idea',
       title: 'Opening idea',
-      body: 'Which structure, tension, or tabiya did this game come from?',
+      body: 'Chesstory reads the opening structure, tension, or tabiya behind this game.',
       pending: true,
     },
     {
       key: 'middlegame-plan',
       title: 'Plan created by the opening',
-      body: 'Which pawn break, piece route, or target should guide the middlegame?',
+      body: 'Your review points to the pawn break, piece route, or target that guides the middlegame.',
       pending: true,
     },
     {
       key: 'current-decision',
       title: 'Current decision',
-      body: 'What did the selected move change in the plan or structure?',
+      body: 'Each move you review shows what the move means beyond the live Stockfish number.',
       pending: true,
     },
     {
       key: 'better-plan',
       title: 'Better plan / alternative',
-      body: 'Which candidate kept the plan clearer, safer, or more forcing?',
+      body: 'Coach explanation can turn this position read into deeper chess language.',
       pending: true,
     },
     {
       key: 'evidence',
-      title: 'Evidence from the board',
-      body: 'Which engine line, eval shift, or board cue makes the idea trustworthy?',
+      title: 'Board clues',
+      body: 'Board clues, eval shifts, and candidate lines stay visible as the reference.',
       pending: true,
     },
   ];
