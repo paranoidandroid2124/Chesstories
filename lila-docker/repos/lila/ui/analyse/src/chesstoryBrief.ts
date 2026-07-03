@@ -102,18 +102,18 @@ type ChesstoryBoardCarrier = NonNullable<NonNullable<ChesstoryMoveSemantic['evid
 const broadIdeaLabels = new Set(['piece route', 'piece activity', 'target pressure', 'plan continuity', 'counterplay control']);
 
 export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): ChesstoryBriefSection[] {
-  if (!payload?.move_semantics?.some(hasEvidenceCarrier)) return placeholderSections();
+  if (!payload?.move_semantics?.some(hasConcreteSurfaceCarrier)) return placeholderSections();
 
   const semantics = payload.move_semantics;
   const played = semantics.filter(s => s.subject === 'played_move');
   const reference = semantics.filter(s => s.subject === 'reference_move');
-  const evidencePlayed = played.filter(hasEvidenceCarrier);
-  const evidenceReference = reference.filter(hasEvidenceCarrier);
+  const evidencePlayed = played.filter(hasConcreteSurfaceCarrier);
+  const evidenceReference = reference.filter(hasConcreteSurfaceCarrier);
   const bad = payload.verdict?.move_quality === 'bad';
   const playableLoss = normalizeCode(payload.verdict?.verdict_code) === 'playable_loss';
   const problemMove = bad || playableLoss;
   const mainPlayed = evidencePlayed.filter(s => s.priority === 'main');
-  const localIdeas = played.filter(s => s.assessment?.is_local_idea && hasEvidenceCarrier(s));
+  const localIdeas = played.filter(s => s.assessment?.is_local_idea && hasConcreteSurfaceCarrier(s));
   const verdictReasons = evidencePlayed.filter(s => s.assessment?.is_verdict_reason);
   const positionEvidence = problemMove ? evidenceReference : evidencePlayed;
   const solved = cleanTerminalLabels(uniqueLabels(positionEvidence.map(ideaLabel)), problemMove).slice(0, 4);
@@ -507,7 +507,7 @@ function isPlayedComparisonLoss(loss: ChesstoryComparisonLoss): boolean {
 }
 
 function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
-  const evidenceSemantics = semantics.filter(hasEvidenceCarrier);
+  const evidenceSemantics = semantics.filter(hasConcreteSurfaceCarrier);
   const terminal = cleanTerminalLabels(uniqueLabels(evidenceSemantics.flatMap(terminalLabels)));
   if (terminal.includes('material sacrifice')) return `The line confirms ${joinHuman(terminal)}.`;
   if (terminal.length === 1 && terminal[0] === 'material gain') return 'The line wins material.';
@@ -521,7 +521,7 @@ function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
 }
 
 function evidenceItems(semantics: ChesstoryMoveSemantic[]): string[] {
-  const evidenceSemantics = semantics.filter(hasEvidenceCarrier);
+  const evidenceSemantics = semantics.filter(hasConcreteSurfaceCarrier);
   const terminal = cleanTerminalLabels(uniqueLabels(evidenceSemantics.flatMap(terminalLabels)));
   return conciseCarrierLabels(
     evidenceSemantics

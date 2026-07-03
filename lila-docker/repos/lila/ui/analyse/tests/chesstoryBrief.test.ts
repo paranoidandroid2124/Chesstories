@@ -48,7 +48,15 @@ describe('chesstory brief scaffold', () => {
           priority: 'main',
           idea_type: 'pawn_break_timing',
           idea: { code: 'pawn_break_timing', label: 'pawn break timing' },
-          evidence: { has_carrier: true, proof_level: 'owned_cause', source_ids: ['c4c5-break'] },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'owned_cause',
+            source_ids: ['c4c5-break'],
+            board_carriers: [
+              { role: 'target', kind: 'PlanSubject', value: 'break-file:c' },
+              { role: 'target', kind: 'Square', value: 'c5' },
+            ],
+          },
           target: { squares: ['c5', 'd6'], files: ['c'], pieces: [] },
         },
         {
@@ -57,7 +65,12 @@ describe('chesstory brief scaffold', () => {
           priority: 'supporting',
           idea_type: 'counterplay_race',
           idea: { code: 'counterplay_race', label: 'counterplay race' },
-          evidence: { has_carrier: true, proof_level: 'surface_evidence', source_ids: ['c4c5-race'] },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            source_ids: ['c4c5-race'],
+            board_carriers: [{ role: 'target', kind: 'Square', value: 'c5' }],
+          },
           target: { squares: ['c5'], files: ['c'], pieces: [] },
         },
       ],
@@ -107,7 +120,15 @@ describe('chesstory brief scaffold', () => {
             failure_family: { code: 'wrong_route', label: 'wrong route' },
           },
           target: { squares: ['e4', 'g3'], pieces: ['knight'] },
-          evidence: { has_carrier: true, proof_level: 'surface_evidence', source_ids: ['e4g3-local'] },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            source_ids: ['e4g3-local'],
+            board_carriers: [
+              { role: 'actor', kind: 'Move', value: 'e4g3', from: 'e4', to: 'g3' },
+              { role: 'actor', kind: 'Piece', value: 'knight' },
+            ],
+          },
           comparison: {
             reference_move: 'e4f6',
             candidate_move: 'e4g3',
@@ -150,7 +171,15 @@ describe('chesstory brief scaffold', () => {
             problem: { code: 'loses_activity', label: 'loses activity' },
           },
           target: { squares: ['e4', 'g3'], pieces: ['knight'] },
-          evidence: { has_carrier: true, proof_level: 'owned_cause', source_ids: ['e4g3-local'] },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'owned_cause',
+            source_ids: ['e4g3-local'],
+            board_carriers: [
+              { role: 'actor', kind: 'Move', value: 'e4g3', from: 'e4', to: 'g3' },
+              { role: 'actor', kind: 'Piece', value: 'knight' },
+            ],
+          },
         },
         {
           subject: 'reference_move',
@@ -201,7 +230,15 @@ describe('chesstory brief scaffold', () => {
             problem: { code: 'loses_activity', label: 'loses activity' },
           },
           target: { squares: ['e4', 'g3'], pieces: ['knight'] },
-          evidence: { has_carrier: true, proof_level: 'owned_cause', source_ids: ['e4g3-failure'] },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'owned_cause',
+            source_ids: ['e4g3-failure'],
+            board_carriers: [
+              { role: 'actor', kind: 'Move', value: 'e4g3', from: 'e4', to: 'g3' },
+              { role: 'actor', kind: 'Piece', value: 'knight' },
+            ],
+          },
         },
       ],
     });
@@ -276,7 +313,12 @@ describe('chesstory brief scaffold', () => {
           move_quality: 'bad',
           priority: 'main',
           idea: { code: 'piece_activity', label: 'piece activity' },
-          evidence: { has_carrier: true, proof_level: 'surface_evidence', source_ids: ['e4g3-carrier'] },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            source_ids: ['e4g3-carrier'],
+            board_carriers: [{ role: 'actor', kind: 'Move', value: 'e4g3', from: 'e4', to: 'g3' }],
+          },
         },
       ],
     });
@@ -299,7 +341,12 @@ describe('chesstory brief scaffold', () => {
             is_verdict_reason: false,
             problem: { code: 'loses_activity', label: 'loses activity' },
           },
-          evidence: { has_carrier: true, proof_level: 'surface_evidence', source_ids: ['e4g3-problem'] },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            source_ids: ['e4g3-problem'],
+            board_carriers: [{ role: 'actor', kind: 'Move', value: 'e4g3', from: 'e4', to: 'g3' }],
+          },
         },
       ],
     });
@@ -340,7 +387,12 @@ describe('chesstory brief scaffold', () => {
           assessment: {
             problem: { code: 'loses_activity', label: 'loses activity' },
           },
-          evidence: { has_carrier: true, proof_level: 'owned_cause', source_ids: ['e4g3-carrier'] },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'owned_cause',
+            source_ids: ['e4g3-carrier'],
+            board_carriers: [{ role: 'actor', kind: 'Move', value: 'e4g3', from: 'e4', to: 'g3' }],
+          },
         },
       ],
     });
@@ -361,7 +413,12 @@ describe('chesstory brief scaffold', () => {
           move_quality: 'bad',
           priority: 'main',
           idea: { code: 'piece_activity', label: 'piece activity' },
-          evidence: { has_carrier: true, proof_level: 'owned_cause', source_ids: ['g1f3-carrier'] },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'owned_cause',
+            source_ids: ['g1f3-carrier'],
+            board_carriers: [{ role: 'actor', kind: 'Move', value: 'g1f3', from: 'g1', to: 'f3' }],
+          },
         },
       ],
     });
@@ -384,14 +441,24 @@ describe('chesstory brief scaffold', () => {
           assessment: {
             problem: { code: 'loses_activity', label: 'loses activity' },
           },
-          evidence: { has_carrier: true, proof_level: 'owned_cause', source_ids: ['e4g3-problem'] },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'owned_cause',
+            source_ids: ['e4g3-problem'],
+            board_carriers: [{ role: 'actor', kind: 'Move', value: 'e4g3', from: 'e4', to: 'g3' }],
+          },
         },
         {
           subject: 'reference_move',
           move_quality: 'good',
           priority: 'main',
           idea: { code: 'outpost_route', label: 'outpost route' },
-          evidence: { has_carrier: true, proof_level: 'owned_cause', source_ids: ['e4f6-route'] },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'owned_cause',
+            source_ids: ['e4f6-route'],
+            board_carriers: [{ role: 'target', kind: 'Square', value: 'f6' }],
+          },
           comparison_loss: [{ side: 'reference', code: 'reference_only_tactic', label: 'reference-only tactic' }],
           comparison: {
             reference_move: 'e4f6',
