@@ -3088,12 +3088,36 @@ object MoveMeaningClaim:
           .filter(capture =>
             capture.plyOffset == 0 || JudgmentSubjectBinding.normalizeMove(capture.moveUci).toLowerCase == normalizedClaimMove
           )
-          .map(capture =>
+          .flatMap(capture =>
             val prefix = if capture.recapture then "material-recapture" else "material-capture"
-            MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"$prefix:${capture.square.key}")
+            val base = MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"$prefix:${capture.square.key}")
+            val sacrifice =
+              Option.when(materialSacrificeCapture(line, capture))(
+                MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"material-sacrifice:${capture.square.key}")
+              )
+            base :: sacrifice.toList
           )
       )
       .distinct
+
+  private def materialSacrificeCapture(line: LineFactEvidence, capture: LineMaterialCapture): Boolean =
+    !capture.recapture &&
+      materialValue(capture.attackerRole) > materialValue(capture.capturedRole) &&
+      line.materialCaptures.exists(reply =>
+        reply.recapture &&
+          reply.plyOffset > capture.plyOffset &&
+          reply.square == capture.square &&
+          reply.side != capture.side
+      )
+
+  private def materialValue(role: EvidencePieceRole): Int =
+    role.name.toLowerCase match
+      case "queen"              => 9
+      case "rook"               => 5
+      case "bishop" | "knight"  => 3
+      case "pawn"               => 1
+      case "king"               => 100
+      case _                    => 0
 
   private def publicBoardCarriers(
       detail: PositionPlanTechniqueSemanticDetail
