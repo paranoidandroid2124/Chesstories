@@ -137,9 +137,14 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const currentChange = currentCarriers.length ? joinHuman(currentCarriers) : solved.length ? joinHuman(solved) : '';
   const lineEvidence = comparisonLines(problemMove ? evidencePlayed : currentChange ? played : evidencePlayed).slice(0, 3);
   const terminalProof = terminal.length ? `, proving ${joinHuman(terminal)}` : '';
+  const carrierProof =
+    !terminal.length && lineEvidence.length
+      ? concreteSolved.filter(label => !label.startsWith('the ') && !/^[a-h]-file$/.test(label)).slice(0, 3)
+      : [];
+  const pvProof = carrierProof.length ? `, confirming ${joinHuman(carrierProof)}` : terminalProof;
   const currentDecisionLine =
     currentChange && lineEvidence.length
-      ? `The move changes ${currentChange}; ${lineEvidence[0]}${terminalProof}.`
+      ? `The move changes ${currentChange}; ${lineEvidence[0]}${pvProof}.`
       : currentChange
         ? `The move changes ${currentChange}.`
         : 'This move is marked, but the lesson is not clear from the board yet.';
