@@ -2515,6 +2515,7 @@ object MoveMeaningClaim:
       !terminalOverriddenEndgameTechniqueShadowed(claims, claim) &&
       !routeActivityShadowedByOwnedRoute(claims, claim) &&
       !planContinuityShadowedByOwnedRoute(claims, claim) &&
+      !planContinuityBreakOptionShadowedByOwnedBreak(claims, claim) &&
       publicSpecificPlanContinuityClaim(claims, claim) &&
       !badMoveSuppressesCurrentMoveSurface(verdict, claim)
 
@@ -2640,6 +2641,25 @@ object MoveMeaningClaim:
       claim.surfaceLane == "current_move_function" &&
       claim.causeEvidenceIds.isEmpty &&
       routeClaimWithSameIdentity(claims, claim)
+
+  private def planContinuityBreakOptionShadowedByOwnedBreak(
+      claims: List[MoveMeaningClaim],
+      claim: MoveMeaningClaim
+  ): Boolean =
+    claim.meaningKind == "PlanContinuity" &&
+      claim.role == "PreparesBreakOption" &&
+      claim.surfaceLane == "current_move_function" &&
+      claim.breakFiles.nonEmpty &&
+      claims.exists(other =>
+        other != claim &&
+          (other.meaningKind == "PawnBreakTiming" || other.meaningKind == "CounterplayRace") &&
+          other.supportLevel == "owned_cause_linked" &&
+          other.publicHasCarrier &&
+          other.moveUci == claim.moveUci &&
+          other.lineRole == claim.lineRole &&
+          currentMoveSurfaceLane(other) &&
+          other.breakFiles.toSet.intersect(claim.breakFiles.toSet).nonEmpty
+      )
 
   private def routeClaimWithSameIdentity(
       claims: List[MoveMeaningClaim],
