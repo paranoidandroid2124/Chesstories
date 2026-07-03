@@ -3066,9 +3066,13 @@ object MoveMeaningClaim:
     moveEndpoints(move).collect { case (from, to) if from.take(1) == to.take(1) => from.take(1) }
 
   private def publicStructuralSubjectCarriers(subject: String): List[MoveMeaningSurfaceBoardCarrier] =
+    val identityCarriers =
+      StructuralPurposeSubject.structuralIdentity(subject).toList.map { value =>
+        MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", value)
+      }
     val weakPawnSquare = StructuralPurposeSubject.weakPawnSquare(subject)
     val fileSquareTarget = StructuralPurposeSubject.fileSquareTarget(subject)
-    StructuralPurposeSubject.parse(subject) match
+    val carriers = StructuralPurposeSubject.parse(subject) match
       case Some(StructuralPurposeSubject.PieceRoute(piece, from, to)) =>
         publicPieceCarrier("actor", piece) ++ publicSquareCarrier("actor", from) ++ publicSquareCarrier("target", to)
       case Some(StructuralPurposeSubject.Outpost(piece, square)) =>
@@ -3103,6 +3107,7 @@ object MoveMeaningClaim:
         carriers match
           case Nil      => Nil
           case carriers => carriers
+    (identityCarriers ++ carriers).distinct
 
   private def publicPlanSubjectCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
     if detail.unit != PositionPlanTechniqueUnit.PlanOptionSet then Nil

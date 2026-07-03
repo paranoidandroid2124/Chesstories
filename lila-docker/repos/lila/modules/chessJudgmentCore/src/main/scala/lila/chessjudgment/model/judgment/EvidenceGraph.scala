@@ -791,38 +791,42 @@ object EvidenceObjectBinding:
     objectOf(EvidenceObjectKind.Line, line.id) ++ objectOf(EvidenceObjectKind.Move, line.rootMove)
 
   private def subjectObject(raw: String): List[ConcreteChessObject] =
+    val identityObject =
+      StructuralPurposeSubject.structuralIdentity(raw).toList.flatMap { identity =>
+        objectOf(EvidenceObjectKind.PlanSubject, identity)
+      }
     val fileSquareTarget = StructuralPurposeSubject.fileSquareTarget(raw)
     val cleaned = StructuralPurposeSubject.carrierToken(raw)
     val weakPawnSquare = StructuralPurposeSubject.weakPawnSquare(cleaned)
     StructuralPurposeSubject.parse(cleaned) match
       case Some(StructuralPurposeSubject.PieceRoute(role, _, to)) =>
-        objectOf(EvidenceObjectKind.Piece, role) ++ objectOf(EvidenceObjectKind.Square, to)
+        identityObject ++ objectOf(EvidenceObjectKind.Piece, role) ++ objectOf(EvidenceObjectKind.Square, to)
       case Some(StructuralPurposeSubject.Outpost(role, square)) =>
-        objectOf(EvidenceObjectKind.Piece, role) ++ objectOf(EvidenceObjectKind.Square, square)
+        identityObject ++ objectOf(EvidenceObjectKind.Piece, role) ++ objectOf(EvidenceObjectKind.Square, square)
       case Some(StructuralPurposeSubject.PieceRestriction(role, square, blocker)) =>
-        objectOf(EvidenceObjectKind.Piece, role) ++
+        identityObject ++ objectOf(EvidenceObjectKind.Piece, role) ++
           objectOf(EvidenceObjectKind.Square, square) ++
           objectOf(EvidenceObjectKind.Square, blocker)
       case Some(StructuralPurposeSubject.PieceSquare(role, square)) =>
-        objectOf(EvidenceObjectKind.Piece, role) ++ objectOf(EvidenceObjectKind.Square, square)
+        identityObject ++ objectOf(EvidenceObjectKind.Piece, role) ++ objectOf(EvidenceObjectKind.Square, square)
       case Some(StructuralPurposeSubject.Battery(_, from, to, roles)) =>
-        roles.flatMap(role => objectOf(EvidenceObjectKind.Piece, role)) ++
+        identityObject ++ roles.flatMap(role => objectOf(EvidenceObjectKind.Piece, role)) ++
           objectOf(EvidenceObjectKind.Square, from) ++
           objectOf(EvidenceObjectKind.Square, to)
       case Some(StructuralPurposeSubject.TensionEdge(from, to)) =>
-        objectOf(EvidenceObjectKind.Square, from) ++ objectOf(EvidenceObjectKind.Square, to)
+        identityObject ++ objectOf(EvidenceObjectKind.Square, from) ++ objectOf(EvidenceObjectKind.Square, to)
       case None if weakPawnSquare.nonEmpty =>
-        weakPawnSquare.toList.flatMap(square =>
+        identityObject ++ weakPawnSquare.toList.flatMap(square =>
           objectOf(EvidenceObjectKind.Pawn, s"weak-pawn:$square") ++ objectOf(EvidenceObjectKind.Square, square)
         )
       case None if fileSquareTarget.nonEmpty =>
-        fileSquareTarget.toList.flatMap { case (file, square) =>
+        identityObject ++ fileSquareTarget.toList.flatMap { case (file, square) =>
           objectOf(EvidenceObjectKind.File, file) ++ objectOf(EvidenceObjectKind.Square, square)
         }
-      case None if cleaned.matches("[a-h][1-8]") => objectOf(EvidenceObjectKind.Square, cleaned)
-      case None if cleaned.matches("[a-h]")      => objectOf(EvidenceObjectKind.File, cleaned)
-      case None if cleaned.contains("pawn")      => objectOf(EvidenceObjectKind.Pawn, cleaned)
-      case None                                  => objectOf(EvidenceObjectKind.PlanSubject, cleaned)
+      case None if cleaned.matches("[a-h][1-8]") => identityObject ++ objectOf(EvidenceObjectKind.Square, cleaned)
+      case None if cleaned.matches("[a-h]")      => identityObject ++ objectOf(EvidenceObjectKind.File, cleaned)
+      case None if cleaned.contains("pawn")      => identityObject ++ objectOf(EvidenceObjectKind.Pawn, cleaned)
+      case None                                  => identityObject ++ objectOf(EvidenceObjectKind.PlanSubject, cleaned)
 
   private def tensionEdgeObjects(raw: String): List[ConcreteChessObject] =
     normalize(raw)
@@ -914,6 +918,15 @@ private[judgment] object StructuralPurposeSubject:
     normalize(raw).stripPrefix("subject:") match
       case fileSquare(file, square) => Some(file -> square)
       case _                        => None
+
+  def structuralIdentity(raw: String): Option[String] =
+    val value = normalize(raw).stripPrefix("subject:")
+    Option.when(
+      value.startsWith("created-tension:") ||
+        value.startsWith("resolved-tension:") ||
+        value.startsWith("weak-square:") ||
+        value.startsWith("rook-lift:")
+    )(value)
 
   private def normalize(raw: String): String =
     Option(raw).getOrElse("").trim.toLowerCase
