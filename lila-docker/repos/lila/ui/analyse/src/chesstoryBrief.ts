@@ -120,7 +120,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const localIdeaLabels = uniqueLabels(localIdeas.map(ideaLabel)).slice(0, 4);
   const terminal = cleanTerminalLabels(uniqueLabels(evidencePlayed.flatMap(terminalLabels)));
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
-  const losses = cleanTerminalLabels(uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels)), problemMove);
+  const losses = problemMove ? cleanTerminalLabels(uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels)), true) : [];
   const targets = conciseCarrierLabels(positionEvidence.flatMap(boardCarrierTargetLabels))
     .sort((a, b) => Number(!a.endsWith('file break')) - Number(!b.endsWith('file break')))
     .slice(0, 5);
