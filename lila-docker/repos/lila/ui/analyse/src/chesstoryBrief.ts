@@ -123,6 +123,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const referenceIdeas = uniqueLabels(evidenceReference.map(ideaLabel)).slice(0, 3);
   const handled = [...solved, ...terminal];
   const currentChange = targets.length ? joinHuman(targets) : solved.length ? joinHuman(solved) : '';
+  const lineEvidence = comparisonLines(evidencePlayed).slice(0, 3);
 
   return [
     {
@@ -168,9 +169,11 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
       body:
         losses.length || referenceIdeas.length
           ? `The comparison turns on ${joinHuman([...losses, ...referenceIdeas].slice(0, 4))}.`
+          : lineEvidence.length
+            ? `The line evidence is ${lineEvidence[0]}.`
           : 'No clear candidate-move loss is available yet.',
       pending: false,
-      items: comparisonLines(evidencePlayed).slice(0, 3),
+      items: lineEvidence,
       tone: bad ? 'bad' : 'neutral',
     },
     {
