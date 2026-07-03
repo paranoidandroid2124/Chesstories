@@ -223,7 +223,29 @@ object LineFactNormalizer:
           ).toList
         captureEvents ++ promotionEvents
       }
-    (replayEvents ++ roleEvents ++ forcedEvents ++ materialEvents).distinct
+    val carriedDefense =
+      facts.line.moves.headOption.toList.flatMap { root =>
+        val rootMove = PrincipalVariationEvidence.normalizeUci(root.uci)
+        val rootTo = Option.when(rootMove.length >= 4)(rootMove.slice(2, 4))
+        val rootSide = replay.headOption.flatMap(step => positionAfter(step.fenBefore).map(_.color))
+        val laterDefense = replayEvents.collectFirst {
+          case event
+              if event.kind == LineEventKind.DefenderMove &&
+                event.plyOffset > 0 &&
+                PrincipalVariationEvidence.normalizeUci(event.moveUci).take(2) == rootTo.getOrElse("") =>
+            event
+        }
+        laterDefense.map(event =>
+          event.copy(
+            moveUci = rootMove,
+            plyOffset = 0,
+            side = rootSide.orElse(event.side),
+            pieceRole = None,
+            square = rootTo.map(EvidenceSquare.apply)
+          )
+        )
+      }
+    (replayEvents ++ roleEvents ++ forcedEvents ++ materialEvents ++ carriedDefense).distinct
 
   private def lineConsequences(
       facts: PrincipalVariationEvidence.LineFacts,
