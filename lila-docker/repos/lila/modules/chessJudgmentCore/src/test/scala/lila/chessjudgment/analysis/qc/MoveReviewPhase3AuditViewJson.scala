@@ -28,6 +28,148 @@ object MoveReviewPhase3AuditViewJson:
       if normalized.contains("actor=move:") || normalized.contains("witness=move:") then 0 else 1
     (targetRank, moveRank, signature)
 
+  def moveMeaningSurfacePayloadJson(view: MoveJudgmentView): JsObject =
+    Json.obj(
+      "verdict" -> view.verdict.map(frame => moveMeaningSurfaceVerdictJson(MoveMeaningSurface.verdict(frame))),
+      "move_semantics" -> MoveMeaningSurface.from(view).map(moveMeaningSurfaceJson)
+    )
+
+  private def moveMeaningSurfaceVerdictJson(verdict: MoveMeaningSurfaceVerdict): JsObject =
+    Json.obj(
+      "verdict_code" -> verdict.verdictCode,
+      "move_quality" -> verdict.moveQuality,
+      "played_move" -> verdict.playedMove,
+      "reference_move" -> verdict.referenceMove
+    )
+
+  private def moveMeaningSurfaceJson(surface: MoveMeaningSurface): JsObject =
+    Json.obj(
+      "move_uci" -> surface.moveUci,
+      "subject" -> surface.subject,
+      "line_role" -> surface.lineRole,
+      "move_quality" -> surface.moveQuality,
+      "idea_type" -> surface.ideaType,
+      "idea" -> moveMeaningSurfaceCodeJson(surface.idea),
+      "idea_quality" -> surface.ideaQuality,
+      "assessment" -> moveMeaningSurfaceAssessmentJson(surface.assessment),
+      "failure_family" -> surface.failureFamily,
+      "problem" -> surface.problem,
+      "target" -> moveMeaningSurfaceTargetJson(surface.target),
+      "targets" -> moveMeaningSurfaceTargetJson(surface.target),
+      "priority" -> surface.priority,
+      "comparison_loss" -> surface.comparisonLostIdeas.map(moveMeaningSurfaceComparisonLossJson),
+      "terminal_consequences" -> surface.terminalConsequences.map(moveMeaningSurfaceCodeJson),
+      "endgame_technique" -> surface.endgameTechnique.map(moveMeaningSurfaceTechniqueJson),
+      "technique" -> surface.endgameTechnique.map(moveMeaningSurfaceTechniqueJson),
+      "comparison" -> surface.comparison.map(moveMeaningSurfaceComparisonJson),
+      "evidence" -> moveMeaningSurfaceEvidenceJson(surface)
+    )
+
+  private def moveMeaningSurfaceCodeJson(code: MoveMeaningSurfaceCode): JsObject =
+    Json.obj(
+      "code" -> code.code,
+      "label" -> code.label
+    )
+
+  private def moveMeaningSurfaceAssessmentJson(assessment: MoveMeaningSurfaceAssessment): JsObject =
+    Json.obj(
+      "move_quality" -> moveMeaningSurfaceCodeJson(assessment.moveQuality),
+      "idea_quality" -> moveMeaningSurfaceCodeJson(assessment.ideaQuality),
+      "priority" -> moveMeaningSurfaceCodeJson(assessment.priority),
+      "is_verdict_reason" -> assessment.verdictReason,
+      "is_local_idea" -> assessment.localIdea,
+      "failure_family" -> assessment.failureFamily.map(moveMeaningSurfaceCodeJson),
+      "problem" -> assessment.problem.map(moveMeaningSurfaceCodeJson)
+    )
+
+  private def moveMeaningSurfaceEvidenceJson(surface: MoveMeaningSurface): JsObject =
+    val evidence = surface.evidence
+    Json.obj(
+      "has_carrier" -> evidence.hasCarrier,
+      "proof_level" -> evidence.proofLevel,
+      "target_bound" -> evidence.targetBound,
+      "cause_ids" -> evidence.causeIds,
+      "source_ids" -> evidence.sourceIds,
+      "board_carriers" -> evidence.boardCarriers.map(moveMeaningSurfaceBoardCarrierJson(_, surface))
+    )
+
+  private def moveMeaningSurfaceBoardCarrierJson(
+      carrier: MoveMeaningSurfaceBoardCarrier,
+      surface: MoveMeaningSurface
+  ): JsObject =
+    Json.obj(
+      "subject" -> surface.subject,
+      "line_role" -> surface.lineRole,
+      "move_uci" -> surface.moveUci,
+      "role" -> carrier.role,
+      "kind" -> carrier.kind,
+      "value" -> carrier.value,
+      "from" -> carrier.from,
+      "to" -> carrier.to
+    )
+
+  private def moveMeaningSurfaceTechniqueJson(technique: MoveMeaningSurfaceEndgameTechnique): JsObject =
+    Json.obj(
+      "pattern" -> technique.pattern,
+      "pattern_label" -> technique.patternLabel,
+      "pattern_info" -> technique.pattern.zip(technique.patternLabel).headOption.map { case (code, label) =>
+        moveMeaningSurfaceCodeJson(MoveMeaningSurfaceCode(code, label))
+      },
+      "rook_pattern" -> technique.rookPattern,
+      "rook_pattern_label" -> technique.rookPatternLabel,
+      "rook_geometry" -> technique.rookPattern.zip(technique.rookPatternLabel).headOption.map { case (code, label) =>
+        moveMeaningSurfaceCodeJson(MoveMeaningSurfaceCode(code, label))
+      },
+      "side" -> technique.side,
+      "status" -> technique.horizonStatus,
+      "status_label" -> technique.statusLabel,
+      "trigger_move" -> technique.triggerMove,
+      "status_move" -> technique.triggerMove.map(move => Json.obj("uci" -> move)),
+      "entry_ply_offset" -> technique.entryPlyOffset,
+      "terminal_ply_offset" -> technique.terminalPlyOffset,
+      "required_squares" -> technique.requiredSquares,
+      "maintained_squares" -> technique.maintainedSquares,
+      "broken_squares" -> technique.brokenSquares,
+      "squares" -> Json.obj(
+        "required" -> technique.requiredSquares,
+        "maintained" -> technique.maintainedSquares,
+        "broken" -> technique.brokenSquares
+      ),
+      "terminal_consequences" -> technique.terminalConsequences.map(moveMeaningSurfaceCodeJson),
+      "failure_reason" -> technique.failureReason.map(moveMeaningSurfaceCodeJson)
+    )
+
+  private def moveMeaningSurfaceComparisonJson(comparison: MoveMeaningSurfaceComparison): JsObject =
+    Json.obj(
+      "kind" -> comparison.kind,
+      "relation" -> comparison.relation,
+      "reference_move" -> comparison.referenceMove,
+      "candidate_move" -> comparison.candidateMove,
+      "second_move" -> comparison.secondMove,
+      "moves" -> comparison.moves.map(moveMeaningSurfaceMoveRefJson),
+      "lost_ideas" -> comparison.lostIdeas.map(moveMeaningSurfaceComparisonLossJson)
+    )
+
+  private def moveMeaningSurfaceMoveRefJson(move: MoveMeaningSurfaceMoveRef): JsObject =
+    Json.obj(
+      "role" -> move.role,
+      "uci" -> move.uci
+    )
+
+  private def moveMeaningSurfaceComparisonLossJson(loss: MoveMeaningSurfaceComparisonLoss): JsObject =
+    Json.obj(
+      "side" -> loss.side,
+      "code" -> loss.code,
+      "label" -> loss.label
+    )
+
+  private def moveMeaningSurfaceTargetJson(target: MoveMeaningSurfaceTarget): JsObject =
+    Json.obj(
+      "squares" -> target.squares,
+      "files" -> target.files,
+      "pieces" -> target.pieces
+    )
+
   def positionPlanTechniqueObjectBindingsSampleJson(
       bindings: List[PositionPlanTechniqueObjectBinding]
   ): JsObject =
