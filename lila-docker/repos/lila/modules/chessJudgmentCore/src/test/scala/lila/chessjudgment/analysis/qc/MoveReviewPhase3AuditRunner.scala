@@ -3445,6 +3445,16 @@ object MoveReviewPhase3AuditRunner:
       "objectBindingSignatureCount" -> claim.objectBindingSignatures.size,
       "objectBindingSignaturesSample" -> claim.objectBindingSignatures.distinct.sorted.take(5),
       "objectCarrierReady" -> claim.objectCarrierReady,
+      "boardCarrierCount" -> claim.boardCarriers.size,
+      "boardCarriersSample" -> claim.boardCarriers.take(8).map(carrier =>
+        Json.obj(
+          "role" -> carrier.role,
+          "kind" -> carrier.kind,
+          "value" -> carrier.value,
+          "from" -> carrier.from,
+          "to" -> carrier.to
+        )
+      ),
       "publicHasCarrier" -> claim.publicHasCarrier,
       "publicProofLevel" -> claim.publicProofLevel,
       "publicTargetBound" -> claim.publicTargetBound,

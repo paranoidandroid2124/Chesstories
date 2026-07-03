@@ -3053,7 +3053,7 @@ object MoveMeaningClaim:
             detail.maintainedSquares ++
             detail.brokenSquares
         ).flatMap(square => publicSquareCarrier("target", square))
-    ).distinct.sortBy(boardCarrierSortKey).take(8)
+    ).distinct.sortBy(boardCarrierSortKey).take(12)
 
   private def structuralRouteFileCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
     if !lineUnlockDetail(detail) then Nil
