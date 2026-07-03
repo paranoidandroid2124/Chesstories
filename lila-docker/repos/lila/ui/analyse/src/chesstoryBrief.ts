@@ -237,6 +237,9 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
   const currentDecisionHasLineProof = /PV continues|proving /.test(currentDecisionBody);
   const evidenceBody = sections.find(section => section.key === 'evidence')?.body || '';
   const evidenceHasLineProof = /^The terminal result is |^The line (?:wins|loses|confirms) |^The ending technique evidence is /.test(evidenceBody);
+  const evidenceProofAlreadyInCurrent =
+    (evidenceBody === 'The line wins material.' && currentDecisionBody.includes('material gain')) ||
+    (evidenceBody === 'The line loses material.' && currentDecisionBody.includes('material loss'));
   if (!currentDecisionHasLineProof && !evidenceHasLineProof) return [];
   return sections
     .filter(section => !section.pending)
@@ -248,14 +251,15 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
       return !handledItems?.length || coveredItems < Math.max(handledItems.length - 1, 1);
     })
     .filter(section => section.key !== 'middlegame-plan' || !currentDecisionHasLineProof || !section.body.startsWith('This move handles '))
-    .filter(section => section.key !== 'better-plan' || !section.body.startsWith('The line evidence shows ') || !section.items?.some(item => currentDecisionBody.includes(item)))
+    .filter(section => section.key !== 'better-plan' || !section.items?.some(item => currentDecisionBody.includes(item)))
     .filter(section =>
       section.key !== 'evidence' ||
-      section.body.startsWith('The terminal result is ') ||
-      section.body === 'The line wins material.' ||
-      section.body === 'The line loses material.' ||
-      section.body.startsWith('The line confirms ') ||
-      section.body.startsWith('The ending technique evidence is '),
+      (!evidenceProofAlreadyInCurrent &&
+        (section.body.startsWith('The terminal result is ') ||
+          section.body === 'The line wins material.' ||
+          section.body === 'The line loses material.' ||
+          section.body.startsWith('The line confirms ') ||
+          section.body.startsWith('The ending technique evidence is ')))
     )
     .filter(section => section.key !== 'opening-idea')
     .map(({ key, title, body, items, tone }) => ({

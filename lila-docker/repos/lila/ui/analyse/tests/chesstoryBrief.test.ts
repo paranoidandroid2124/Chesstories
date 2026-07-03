@@ -551,7 +551,7 @@ describe('chesstory brief scaffold', () => {
     assert.equal(evidence?.body, 'The line wins material.');
     const llmPayload = JSON.stringify(chesstoryLlmPayload(payload));
     assert.equal(llmPayload.match(/PV continues/g)?.length, 1);
-    assert.match(llmPayload, /The line wins material/);
+    assert.doesNotMatch(llmPayload, /The line wins material/);
     assert.doesNotMatch(llmPayload, /This move handles g7/);
   });
   test('requires a public evidence carrier before writing board-evidence prose', () => {
