@@ -27,6 +27,7 @@ private[chessjudgment] final case class TransitionStructuralDelta(
     targetPressureDelta: Int = 0,
     fileAccessDelta: Int = 0,
     kingShelterDelta: Int = 0,
+    kingShelterFiles: List[String] = Nil,
     mobilityDelta: Int = 0,
     developmentDelta: Int = 0,
     centerControlDelta: Int = 0,
@@ -75,7 +76,7 @@ private[chessjudgment] object StructuralDeltaContracts:
     List(
       signal(FileOpened, Gain, delta.openedFiles.size, delta.openedFiles),
       signal(SemiOpenFileCreated, Gain, delta.semiOpenedFiles.size, delta.semiOpenedFiles),
-      signedSignal(FileAccessChanged, delta.fileAccessDelta, Nil),
+      signedSignal(FileAccessChanged, delta.fileAccessDelta, fileAccessSubjects(delta)),
       signal(FileOccupied, Gain, delta.fileOccupation.size, delta.fileOccupation),
       signal(WeakPawnCreated, Gain, delta.newWeakPawns.size, delta.newWeakPawns),
       signal(WeakSquareCreated, Gain, delta.newWeakSquares.size, delta.newWeakSquares),
@@ -85,7 +86,7 @@ private[chessjudgment] object StructuralDeltaContracts:
       signal(TargetPressureCreated, Gain, delta.createdTargetPressure.size, delta.createdTargetPressure),
       signal(TargetPressureReleased, Loss, delta.releasedTargetPressure.size, delta.releasedTargetPressure),
       signedSignal(TargetPressureChanged, delta.targetPressureDelta, Nil),
-      signedSignal(CenterControlChanged, delta.centerControlDelta, Nil),
+      signedSignal(CenterControlChanged, delta.centerControlDelta, centerControlSubjects(delta)),
       signedSignal(DevelopmentChanged, delta.developmentDelta, Nil),
       signal(
         DevelopmentChoice,
@@ -94,11 +95,11 @@ private[chessjudgment] object StructuralDeltaContracts:
         developedPieces.map(developmentMoveLabel)
       ),
       signedSignal(MobilityChanged, delta.mobilityDelta, Nil),
-      signedSignal(KingSafetyChanged, delta.kingShelterDelta, Nil),
+      signedSignal(KingSafetyChanged, delta.kingShelterDelta, kingShelterSubjects(delta)),
       signal(LineUnlocked, Gain, delta.lineUnlockDelta, delta.lineUnlocks),
       signal(PassedPawnCreated, Gain, delta.passedPawnCreated.size, delta.passedPawnCreated),
       signal(PassedPawnAdvanced, Gain, delta.passedPawnAdvanced.size, delta.passedPawnAdvanced),
-      signedSignal(PromotionPressureChanged, delta.promotionPressureDelta, Nil),
+      signedSignal(PromotionPressureChanged, delta.promotionPressureDelta, promotionPressureSubjects(delta)),
       signal(OutpostCreated, Gain, delta.outpostCreated.size, delta.outpostCreated),
       signal(OutpostRemoved, Loss, delta.outpostRemoved.size, delta.outpostRemoved),
       signal(RookLiftCreated, Gain, delta.rookLiftCreated.size, delta.rookLiftCreated),
@@ -174,8 +175,12 @@ private[chessjudgment] object StructuralDeltaContracts:
             delta.releasedTargetPressure
           )
         ),
-        Option.when(delta.centerControlDelta > 0)(TransitionConsequence(CenterControlGain, Gain, delta.centerControlDelta)),
-        Option.when(delta.centerControlDelta < 0)(TransitionConsequence(CenterControlLoss, Loss, -delta.centerControlDelta)),
+        Option.when(delta.centerControlDelta > 0)(
+          TransitionConsequence(CenterControlGain, Gain, delta.centerControlDelta, centerControlSubjects(delta))
+        ),
+        Option.when(delta.centerControlDelta < 0)(
+          TransitionConsequence(CenterControlLoss, Loss, -delta.centerControlDelta, centerControlSubjects(delta))
+        ),
         Option.when(delta.developmentDelta > 0)(
           TransitionConsequence(DevelopmentLagReduced, Gain, delta.developmentDelta, Nil)
         ),
@@ -253,10 +258,18 @@ private[chessjudgment] object StructuralDeltaContracts:
             delta.fileOccupation
           )
         ),
-        Option.when(delta.fileAccessDelta > 0)(TransitionConsequence(FileAccessGain, Gain, delta.fileAccessDelta)),
-        Option.when(delta.fileAccessDelta < 0)(TransitionConsequence(FileAccessLoss, Loss, -delta.fileAccessDelta)),
-        Option.when(delta.kingShelterDelta > 0)(TransitionConsequence(KingSafetyPressure, Gain, delta.kingShelterDelta)),
-        Option.when(delta.kingShelterDelta < 0)(TransitionConsequence(KingSafetyConcession, Loss, -delta.kingShelterDelta)),
+        Option.when(delta.fileAccessDelta > 0)(
+          TransitionConsequence(FileAccessGain, Gain, delta.fileAccessDelta, fileAccessSubjects(delta))
+        ),
+        Option.when(delta.fileAccessDelta < 0)(
+          TransitionConsequence(FileAccessLoss, Loss, -delta.fileAccessDelta, fileAccessSubjects(delta))
+        ),
+        Option.when(delta.kingShelterDelta > 0)(
+          TransitionConsequence(KingSafetyPressure, Gain, delta.kingShelterDelta, kingShelterSubjects(delta))
+        ),
+        Option.when(delta.kingShelterDelta < 0)(
+          TransitionConsequence(KingSafetyConcession, Loss, -delta.kingShelterDelta, kingShelterSubjects(delta))
+        ),
         Option.when(delta.passedPawnCreated.nonEmpty || delta.passedPawnAdvanced.nonEmpty)(
           TransitionConsequence(
             PassedPawnProgress,
@@ -269,10 +282,10 @@ private[chessjudgment] object StructuralDeltaContracts:
           TransitionConsequence(PassedPawnConcession, Loss, delta.passedPawnLost.size, delta.passedPawnLost)
         ),
         Option.when(delta.promotionPressureDelta > 0)(
-          TransitionConsequence(PromotionPressureGain, Gain, delta.promotionPressureDelta)
+          TransitionConsequence(PromotionPressureGain, Gain, delta.promotionPressureDelta, promotionPressureSubjects(delta))
         ),
         Option.when(delta.promotionPressureDelta < 0)(
-          TransitionConsequence(PromotionPressureConcession, Loss, -delta.promotionPressureDelta)
+          TransitionConsequence(PromotionPressureConcession, Loss, -delta.promotionPressureDelta, promotionPressureSubjects(delta))
         ),
         Option.when(delta.outpostCreated.nonEmpty)(
           TransitionConsequence(OutpostGain, Gain, delta.outpostCreated.size, delta.outpostCreated)
@@ -324,6 +337,27 @@ private[chessjudgment] object StructuralDeltaContracts:
 
   private def developmentMoveSubjectsWithCenterLoss(moves: List[DevelopmentMoveDelta]): List[String] =
     moves.filter(_.centerControlDelta < 0).map(move => s"${developmentMoveLabel(move)}:center${move.centerControlDelta}")
+
+  private def centerControlSubjects(delta: TransitionStructuralDelta): List[String] =
+    if delta.centerControlDelta > 0 then developmentMoveSubjectsWithCenterGain(delta.developmentMoves)
+    else if delta.centerControlDelta < 0 then developmentMoveSubjectsWithCenterLoss(delta.developmentMoves)
+    else Nil
+
+  private def fileAccessSubjects(delta: TransitionStructuralDelta): List[String] =
+    (
+      delta.openedFiles.map(file => s"open-file:$file") ++
+        delta.semiOpenedFiles.map(file => s"semi-open-file:$file") ++
+        delta.fileOccupation ++
+        delta.lineUnlocks
+    ).distinct.sorted
+
+  private def kingShelterSubjects(delta: TransitionStructuralDelta): List[String] =
+    delta.kingShelterFiles.map(file => s"file:$file").distinct.sorted
+
+  private def promotionPressureSubjects(delta: TransitionStructuralDelta): List[String] =
+    if delta.promotionPressureDelta > 0 then (delta.passedPawnCreated ++ delta.passedPawnAdvanced).distinct.sorted
+    else if delta.promotionPressureDelta < 0 then delta.passedPawnLost.distinct.sorted
+    else Nil
 
   private def pawnTensionSubjects(prefix: String, edges: List[String]): List[String] =
     edges.flatMap { edge =>
@@ -394,6 +428,7 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
     val mobilityDeltaValue = mobilityDelta(before.features, after.features, side)
     val developmentDeltaValue = developmentDelta(before.features, after.features, side)
     val centerControlDeltaValue = centerControlDelta(before.features, after.features, side)
+    val shelterFiles = moveUci.map(moveFiles).getOrElse(Nil)
     val lineUnlock: (Int, List[String]) =
       moveUci.map(uci => lineUnlockDeltaAndSubjects(beforeBoard, afterBoard, side, uci)).getOrElse(0 -> Nil)
     Some(
@@ -408,7 +443,8 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         pawnTensionAfter = afterAttacks.size,
         targetPressureDelta = targetPressureDelta,
         fileAccessDelta = after.fileAccess - before.fileAccess,
-        kingShelterDelta = kingShelterDelta(before.features, after.features, side, moveUci.map(moveFiles).getOrElse(Nil)),
+        kingShelterDelta = kingShelterDelta(before.features, after.features, side, shelterFiles),
+        kingShelterFiles = shelterFiles.map(_.toString),
         mobilityDelta = mobilityDeltaValue,
         developmentDelta = developmentDeltaValue,
         centerControlDelta = centerControlDeltaValue,
