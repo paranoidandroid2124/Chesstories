@@ -288,9 +288,25 @@ object MoveReviewPhase3AuditRunner:
       throw IllegalArgumentException(s"usage: MoveReviewPhase3AuditRunner <input.json|jsonl> [output.jsonl] [$SlimOutputFlag]")
     val inputPath = Path.of(pathArgs(0))
     val outputPath = pathArgs.lift(1).map(Path.of(_))
-    val samples =
+    val parsedSamples =
       MoveReviewQualityInputFiles.parseJsonDocuments(inputPath).zipWithIndex.map { case (json, index) =>
         parseSample(json, index)
+      }
+    val explicitQuestionIdsByFingerprint =
+      parsedSamples
+        .groupMap(sample => inputFingerprint(sample.raw))(_.expectedSemanticSlots.flatMap(_.questionId))
+        .view
+        .mapValues(_.flatten.toSet)
+        .toMap
+    val samples =
+      parsedSamples.map { sample =>
+        val explicitQuestionIds = explicitQuestionIdsByFingerprint.getOrElse(inputFingerprint(sample.raw), Set.empty)
+        val inferredSlots =
+          inferredGoodNotesExpectedSemanticSlots(sample).filterNot(slot =>
+            sample.expectedSemanticSlots.exists(_.id == slot.id) ||
+              slot.questionId.exists(explicitQuestionIds)
+          )
+        sample.copy(expectedSemanticSlots = sample.expectedSemanticSlots ++ inferredSlots)
       }
     outputPath.foreach(path => writeReplayInputArchive(path, samples))
     val fingerprints = samples.map(sample => inputFingerprint(sample.raw))
@@ -341,6 +357,113 @@ object MoveReviewPhase3AuditRunner:
           s"${fileName.take(extensionStart)}.input_replay${fileName.drop(extensionStart)}"
         else s"$fileName.input_replay.jsonl"
     Option(outputPath.getParent).map(_.resolve(replayFileName)).getOrElse(Path.of(replayFileName))
+
+  private final case class ExpectedSlotSpec(
+      id: String,
+      unit: PositionPlanTechniqueUnit,
+      axisKey: Option[String],
+      requiredSupportLevel: String = "view_surfaced",
+      tokens: List[String] = Nil
+  ):
+    def toSlot(moveUci: String, questionId: String): ExpectedSemanticSlot =
+      ExpectedSemanticSlot(
+        id = id,
+        unit = unit,
+        axisKey = axisKey,
+        lineRole = Some("candidate"),
+        moveUci = Some(moveUci),
+        questionId = Some(questionId),
+        requiredSupportLevel = Some(requiredSupportLevel),
+        requiredSemanticDetailTokens = tokens
+      )
+
+  private def spec(
+      id: String,
+      unit: PositionPlanTechniqueUnit,
+      axisKey: String,
+      requiredSupportLevel: String = "view_surfaced",
+      tokens: List[String] = Nil
+  ): ExpectedSlotSpec =
+    ExpectedSlotSpec(id, unit, Some(axisKey), requiredSupportLevel, tokens)
+
+  private val GoodNotesExpectedSlotSpecs: Map[String, List[ExpectedSlotSpec]] =
+    Map(
+      "carrier_coverage_dual_purpose_defensive_resource" -> List(
+        spec("qg4_target_pressure_carrier", PositionPlanTechniqueUnit.StructuralTransformation, "Target:Support:TargetFixation"),
+        spec("qg4_queen_route_carrier", PositionPlanTechniqueUnit.PieceRerouteRoute, "Activity:Gain:activity-gain", tokens = List("route"))
+      ),
+      "pawn_lure_counterplay_chain" -> List(
+        spec("nbd7_knight_route_carrier", PositionPlanTechniqueUnit.PieceRerouteRoute, "Activity:Gain:activity-gain", tokens = List("route")),
+        spec("nbd7_target_fixation_carrier", PositionPlanTechniqueUnit.StructuralTransformation, "Target:Support:TargetFixation")
+      ),
+      "carrier_coverage_queen_interposition_defense" -> List(
+        spec("qe8_queen_route_carrier", PositionPlanTechniqueUnit.PieceRerouteRoute, "Activity:Gain:activity-gain", tokens = List("route")),
+        spec("qe8_target_pressure_carrier", PositionPlanTechniqueUnit.StructuralTransformation, "Target:Support:TargetFixation")
+      ),
+      "carrier_coverage_open_diagonal_pawn_sacrifice" -> List(
+        spec(
+          "d5_pawn_break_carrier",
+          PositionPlanTechniqueUnit.TensionBreakPolicyRoute,
+          "PawnBreak:Support:break-file-d-created-tension-d5-e6"
+        ),
+        spec(
+          "d5_diagonal_route_carrier",
+          PositionPlanTechniqueUnit.PieceRerouteRoute,
+          "Activity:Gain:activity-gain",
+          tokens = List("diagonal", "route")
+        )
+      ),
+      "blockade_conversion_piece_sacrifice" -> List(
+        spec("nxc5_piece_route_carrier", PositionPlanTechniqueUnit.PieceRerouteRoute, "Activity:Gain:activity-gain", tokens = List("route")),
+        spec(
+          "nxc5_counterplay_restraint_carrier",
+          PositionPlanTechniqueUnit.SpacePreventionResourceDenial,
+          "Counterplay:Restrain:opponent-low-mobility"
+        )
+      ),
+      "exchange_sacrifice_color_complex" -> List(
+        spec("rxe3_rook_route_carrier", PositionPlanTechniqueUnit.StructuralTransformation, "Target:Support:TargetFixation"),
+        spec(
+          "rxe3_counterplay_square_carrier",
+          PositionPlanTechniqueUnit.SpacePreventionResourceDenial,
+          "Counterplay:Restrain:defensive-counter-break-b"
+        )
+      ),
+      "discovered_attack_line_clearance_queen" -> List(
+        spec("bb5_bishop_forcing_route_carrier", PositionPlanTechniqueUnit.PieceRerouteRoute, "Activity:Gain:activity-gain", tokens = List("route"))
+      ),
+      "quiet_pressure_b6_d5" -> List(
+        spec("be3_bishop_route_carrier", PositionPlanTechniqueUnit.PieceRerouteRoute, "Activity:Gain:activity-gain", tokens = List("route")),
+        spec("be3_b6_pressure_carrier", PositionPlanTechniqueUnit.StructuralTransformation, "Target:Support:TargetFixation")
+      ),
+      "carrier_coverage_clear_diagonal_tempo_fork" -> List(
+        spec(
+          "c6_queen_diagonal_route_carrier",
+          PositionPlanTechniqueUnit.PieceRerouteRoute,
+          "Activity:Gain:activity-gain",
+          tokens = List("diagonal", "route")
+        )
+      ),
+      "passed_pawn_carrier_object_binding" -> List(
+        ExpectedSlotSpec("passed_pawn_object_carrier", PositionPlanTechniqueUnit.PlanOptionSet, None)
+      ),
+      "pawn_sacrifice_square_access" -> List(
+        spec("c4_square_access_target_carrier", PositionPlanTechniqueUnit.StructuralTransformation, "Target:Gain:weak-pawn-target")
+      ),
+      "queenside_break_b_file_target" -> List(
+        spec(
+          "b5_b_file_target_carrier",
+          PositionPlanTechniqueUnit.StructuralTransformation,
+          "Target:Support:TargetFixation",
+          requiredSupportLevel = "owned_cause_linked"
+        )
+      )
+    )
+
+  private def inferredGoodNotesExpectedSemanticSlots(sample: AuditInputSample): List[ExpectedSemanticSlot] =
+    sample.expectedQuestionIds.flatMap(questionId =>
+      GoodNotesExpectedSlotSpecs.getOrElse(questionId, Nil).map(_.toSlot(sample.raw.playedMoveUci, questionId))
+    )
 
   private def writeAuditRowsWithSummary(path: Path, rows: Iterator[JsObject]): Unit =
     val coverages = scala.collection.mutable.ListBuffer.empty[JsValue]
