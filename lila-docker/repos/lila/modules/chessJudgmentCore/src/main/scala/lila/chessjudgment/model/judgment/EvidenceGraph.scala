@@ -537,13 +537,17 @@ object EvidenceObjectBinding:
     val materialCaptureBindings =
       payload.materialCaptures.map { capture =>
         val move = normalize(capture.moveUci)
+        val rootMove = payload.rootMove.map(normalize)
+        val rootOwnedCapture = capture.plyOffset == 0 || rootMove.contains(move)
         val prefix = if capture.recapture then "material-recapture" else "material-capture"
         val materialIdentityTargets =
-          objectOf(EvidenceObjectKind.PlanSubject, s"$prefix:${capture.square.key}") ++
-            Option
-              .when(payload.materialSacrificeCapture(capture))(s"material-sacrifice:${capture.square.key}")
-              .toList
-              .flatMap(objectOf(EvidenceObjectKind.PlanSubject, _))
+          if rootOwnedCapture then
+            objectOf(EvidenceObjectKind.PlanSubject, s"$prefix:${capture.square.key}") ++
+              Option
+                .when(payload.materialSacrificeCapture(capture))(s"material-sacrifice:${capture.square.key}")
+                .toList
+                .flatMap(objectOf(EvidenceObjectKind.PlanSubject, _))
+          else Nil
         EvidenceObjectBinding(
           source = ref,
           actor = moveObjects(move) ++
