@@ -368,16 +368,20 @@ function comparisonLines(semantics: ChesstoryMoveSemantic[]): string[] {
     const moves = (comparison.moves || []).filter(move => move.uci);
     const pvMoves = moves
       .filter(move => move.role?.includes('_pv_'))
-      .map(move => move.uci || '');
+      .map(move => moveLabel(move.uci || ''));
     const rootMoves = moves
       .filter(move => !move.role?.includes('_pv_'))
-      .map(move => `${move.role?.replace(/_/g, ' ') || 'move'} ${move.uci}`);
+      .map(move => `${move.role?.replace(/_/g, ' ') || 'move'} ${moveLabel(move.uci || '')}`);
     const lost = (comparison.lost_ideas || []).filter(isPlayedComparisonLoss).map(codeLabel);
     return [
       pvMoves.length ? `PV continues with ${joinHuman(pvMoves)}` : rootMoves.length ? rootMoves.join(', ') : '',
       lost.length ? `Lost idea: ${joinHuman(lost)}` : '',
     ].filter(Boolean);
   }));
+}
+
+function moveLabel(uci: string): string {
+  return uci.replace(/^([a-h][1-8])([a-h][1-8])([nbrq])?$/, '$1-$2$3');
 }
 
 function playedComparisonLossLabels(semantic: ChesstoryMoveSemantic): string[] {
