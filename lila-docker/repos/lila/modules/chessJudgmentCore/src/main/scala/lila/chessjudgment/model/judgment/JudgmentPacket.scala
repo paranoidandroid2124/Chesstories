@@ -2887,7 +2887,7 @@ object MoveMeaningClaim:
                 )
               val comparisonMoveRefs = comparisonMoveRefsFromLineEvidence(evidenceGraph, sourceEvidenceIds)
               val claimBoardCarriers =
-                (boardCarriers ++ lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds))
+                (boardCarriers ++ lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove))
                   .distinct
                   .sortBy(boardCarrierSortKey)
                   .take(8)
@@ -2995,13 +2995,23 @@ object MoveMeaningClaim:
 
   private def lineEventBoardCarriersFromLineEvidence(
       evidenceGraph: TypedEvidenceGraph,
-      sourceEvidenceIds: List[String]
+      sourceEvidenceIds: List[String],
+      claimMove: String
   ): List[MoveMeaningSurfaceBoardCarrier] =
+    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
     sourceEvidenceIds
       .flatMap(id => evidenceGraph.byId.get(id))
       .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
-      .flatMap(_.lineEventsOf(LineEventKind.PassedPawn))
-      .flatMap(event => event.square.toList.flatMap(square => publicSquareCarrier("target", square.key)))
+      .flatMap(line =>
+        line.lineEventsOf(LineEventKind.PassedPawn)
+          .flatMap(event => event.square.toList.flatMap(square => publicSquareCarrier("target", square.key))) ++
+          line.lineEvents
+            .filter(event =>
+              (event.kind == LineEventKind.Capture || event.kind == LineEventKind.Recapture) &&
+                (event.plyOffset == 0 || JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove)
+            )
+            .flatMap(event => event.targetRole.toList.flatMap(role => publicPieceCarrier("target", role.name)))
+      )
       .distinct
 
   private def publicBoardCarriers(
