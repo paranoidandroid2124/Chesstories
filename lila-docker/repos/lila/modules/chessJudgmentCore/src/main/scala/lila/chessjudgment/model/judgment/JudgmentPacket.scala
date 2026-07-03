@@ -2007,26 +2007,28 @@ object MoveMeaningSurface:
       verdict == MoveChoiceVerdict.Blunder
 
   private def ideaType(claim: MoveMeaningClaim): String =
-    terminalIdeaType(claim).getOrElse(claim.unit match
-      case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
-        "pawn_break_timing"
-      case PositionPlanTechniqueUnit.CounterplayRace =>
-        "counterplay_race"
-      case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
-        claim.publicIdeaType.getOrElse("counterplay_control")
-      case PositionPlanTechniqueUnit.PieceRerouteRoute if claim.meaningKind == "PieceRoute" =>
-        claim.publicIdeaType.orElse(Option.when(checkingRouteTargetPressureClaim(claim))("target_pressure")).getOrElse("piece_route")
-      case PositionPlanTechniqueUnit.PieceRerouteRoute =>
-        "piece_activity"
-      case PositionPlanTechniqueUnit.EndgameTechniqueRecipe =>
-        "endgame_technique"
-      case PositionPlanTechniqueUnit.CompensationSource =>
-        "compensation"
-      case PositionPlanTechniqueUnit.StructuralTransformation =>
-        axisIdeaType(claim).getOrElse("structure_shift")
-      case PositionPlanTechniqueUnit.PlanOptionSet =>
-        planOptionIdeaType(claim)
-    )
+    terminalIdeaType(claim)
+      .orElse(Option.when(longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
+      .getOrElse(claim.unit match
+        case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
+          "pawn_break_timing"
+        case PositionPlanTechniqueUnit.CounterplayRace =>
+          "counterplay_race"
+        case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
+          claim.publicIdeaType.getOrElse("counterplay_control")
+        case PositionPlanTechniqueUnit.PieceRerouteRoute if claim.meaningKind == "PieceRoute" =>
+          claim.publicIdeaType.orElse(Option.when(checkingRouteTargetPressureClaim(claim))("target_pressure")).getOrElse("piece_route")
+        case PositionPlanTechniqueUnit.PieceRerouteRoute =>
+          "piece_activity"
+        case PositionPlanTechniqueUnit.EndgameTechniqueRecipe =>
+          "endgame_technique"
+        case PositionPlanTechniqueUnit.CompensationSource =>
+          "compensation"
+        case PositionPlanTechniqueUnit.StructuralTransformation =>
+          axisIdeaType(claim).getOrElse("structure_shift")
+        case PositionPlanTechniqueUnit.PlanOptionSet =>
+          planOptionIdeaType(claim)
+      )
 
   private def terminalIdeaType(claim: MoveMeaningClaim): Option[String] =
     val codes = terminalConsequenceCodes(claim).toSet
@@ -2049,6 +2051,20 @@ object MoveMeaningSurface:
           carrier.kind == "Piece" &&
           carrier.value != "king" &&
           carrier.value != "pawn"
+      )
+
+  private def longDiagonalPressureClaim(claim: MoveMeaningClaim): Boolean =
+    (
+      claim.routeIdentityParts.exists(_.equalsIgnoreCase("piece:bishop")) &&
+        claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":line-unlock:by:"))
+    ) ||
+      claim.objectBindingSignatures.exists(signature =>
+        val normalized = signature.toLowerCase
+        normalized.contains("actor=piece:bishop") &&
+          (
+            normalized.contains("mechanism=mechanism:bishop-long-diagonal") ||
+              normalized.contains("consequence=consequence:diagonalpressure")
+          )
       )
 
   private def planOptionIdeaType(claim: MoveMeaningClaim): String =
