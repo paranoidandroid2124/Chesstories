@@ -2891,6 +2891,8 @@ object MoveMeaningClaim:
                 (boardCarriers ++ lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove))
                   .distinct
                   .sortBy(boardCarrierSortKey)
+              val currentPawnBreakFiles =
+                currentPawnAdvanceBreakFiles(detail, baseClaimBoardCarriers, claimMove, sourceEvidenceIds)
               val pressureIdentityCarriers =
                 mechanismSquareIdentityCarriers(detail, "battery-pressure", batteryPressureSignature) ++
                   mechanismSquareIdentityCarriers(detail, "pin-pressure", pinPressureSignature)
@@ -2903,13 +2905,15 @@ object MoveMeaningClaim:
                   checkIdentityCarriers ++
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
                   passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
-                  materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove)
+                  materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
+                  currentPawnBreakFiles.map(file => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"break-file:$file"))
               val claimBoardCarriers =
                 (baseClaimBoardCarriers ++ spareIdentityCarriers)
                   .distinct
                   .sortBy(boardCarrierSortKey)
                   .take(12)
               val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, claimBoardCarriers)
+              val claimBreakFiles = (detail.breakFile.toList.flatMap(claimFile) ++ currentPawnBreakFiles).distinct.sorted
               val objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames)
               val publicHasCarrier = objectCarrierReady && (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty)
               val publicProofLevel =
@@ -2963,8 +2967,8 @@ object MoveMeaningClaim:
                 targetFiles = surfaceTarget.files,
                 targetPieces = surfaceTarget.pieces,
                 routeIdentityParts = routeIdentityParts(detail),
-                breakIdentityParts = breakIdentityParts(detail),
-                breakFiles = detail.breakFile.toList.flatMap(claimFile).distinct.sorted,
+                breakIdentityParts = breakIdentityParts(detail, claimBreakFiles),
+                breakFiles = claimBreakFiles,
                 specificityTier = detail.specificityTier,
                 terminalConsequenceKinds = detail.terminalConsequenceKinds.distinct.sorted,
                 endgameTechniquePattern = detail.endgameTechniquePattern,
@@ -3073,6 +3077,38 @@ object MoveMeaningClaim:
       .flatMap(_.square.toList)
       .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"passed-pawn:${square.key}"))
       .distinct
+
+  private def currentPawnAdvanceBreakFiles(
+      detail: PositionPlanTechniqueSemanticDetail,
+      boardCarriers: List[MoveMeaningSurfaceBoardCarrier],
+      claimMove: String,
+      sourceEvidenceIds: List[String]
+  ): List[String] =
+    if !pawnBreakClaimDetail(detail) || !sourceEvidenceIds.exists(_.contains(":evidence:structural-delta:")) then Nil
+    else
+      moveEndpoints(claimMove).toList.flatMap { case (from, to) =>
+        val file = from.take(1)
+        val targetFiles =
+          boardCarriers.collect { case MoveMeaningSurfaceBoardCarrier("target", "File", value, _, _) => value }.distinct
+        Option
+          .when(
+            from.take(1) == to.take(1) &&
+              targetFiles.contains(file) &&
+              pawnAdvanceRanks(from, to)
+          )(file)
+          .toList
+      }.distinct
+
+  private def pawnBreakClaimDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.breakFile.nonEmpty ||
+      detail.axisKey.exists(_.toLowerCase.contains("pawnbreak")) ||
+      detail.label.exists(_.toLowerCase.contains("pawnbreak"))
+
+  private def pawnAdvanceRanks(from: String, to: String): Boolean =
+    (for
+      fromRank <- from.drop(1).toIntOption
+      toRank <- to.drop(1).toIntOption
+    yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
 
   private def materialCaptureIdentityCarriersFromLineEvidence(
       evidenceGraph: TypedEvidenceGraph,
@@ -3313,9 +3349,9 @@ object MoveMeaningClaim:
           Nil
     }.distinct.sorted
 
-  private def breakIdentityParts(detail: PositionPlanTechniqueSemanticDetail): List[String] =
+  private def breakIdentityParts(detail: PositionPlanTechniqueSemanticDetail, breakFiles: List[String]): List[String] =
     (
-      detail.breakFile.toList.flatMap(claimFile).map(file => s"breakFile:$file") ++
+      breakFiles.map(file => s"breakFile:$file") ++
         detail.tensionSquares.flatMap(claimSquare).map(square => s"tensionSquare:$square") ++
         detail.tensionEdges.flatMap(edge =>
           val normalized = edge.trim.toLowerCase
