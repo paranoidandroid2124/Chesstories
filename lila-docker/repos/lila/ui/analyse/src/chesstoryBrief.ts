@@ -300,6 +300,12 @@ function planSubjectLabel(value: string): string {
   if (breakFile) return `${breakFile[1]}-file break`;
   const battery = normalized.match(/^battery-pressure:([a-h][1-8](?:-[a-h][1-8])?)$/);
   if (battery) return `battery pressure ${battery[1]}`;
+  const actionSquare = normalized.match(/^(defender-move|material-capture):([a-h][1-8])$/);
+  if (actionSquare) return `${actionSquare[1].replace(/-/g, ' ')} on ${actionSquare[2]}`;
+  const createdTension = normalized.match(/^created-tension:([a-h][1-8])(-[a-h][1-8])?$/);
+  if (createdTension) return `created tension ${createdTension[1]}${createdTension[2] || ''}`;
+  const rookLift = normalized.match(/^rook-lift:([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
+  if (rookLift) return `rook lift ${rookLift[1]}-${rookLift[2]}`;
   return normalized
     .replace(/pawnbreak/g, 'pawn break')
     .replace(/weakpawn/g, 'weak pawn')
