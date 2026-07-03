@@ -347,7 +347,7 @@ function problemLabels(semantic: ChesstoryMoveSemantic): string[] {
 
 function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
   const carriers = semantic.evidence?.board_carriers || [];
-  const actorPiece = isPieceRouteSemantic(semantic) ? actorRoutePiece(carriers) : undefined;
+  const actorPiece = actorRoutePiece(carriers);
   return [...carriers]
     .filter(carrier => ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''))
     .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
@@ -379,7 +379,7 @@ function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
 
 function moveCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
   const carriers = semantic.evidence?.board_carriers || [];
-  const actorPiece = isPieceRouteSemantic(semantic) ? actorRoutePiece(carriers) : undefined;
+  const actorPiece = actorRoutePiece(carriers);
   return conciseCarrierLabels(
     carriers
       .filter(carrier => carrier.role === 'actor' && carrier.kind === 'Move' && carrier.from && carrier.to)
@@ -393,15 +393,11 @@ function actorRoutePiece(carriers: ChesstoryBoardCarrier[]): string | undefined 
   return piece && piece !== 'pawn' && piece !== 'piece' ? piece : undefined;
 }
 
-function isPieceRouteSemantic(semantic: ChesstoryMoveSemantic): boolean {
-  return normalizeCode(semantic.idea?.code || semantic.idea_type) === 'piece_route';
-}
-
 function boardCarrierLabel(carrier: ChesstoryBoardCarrier, actorPiece?: string): string {
   const value = carrierValueLabel(carrier.kind, carrier.value);
   const route = carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : '';
   if (carrier.kind === 'Move' && route) {
-    const piece = actorPiece && carrier.from?.[0] !== carrier.to?.[0] ? `${actorPiece} ` : '';
+    const piece = actorPiece ? `${actorPiece} ` : '';
     return `${piece}${route}`;
   }
   return [value, route].filter(Boolean).join(' ');
