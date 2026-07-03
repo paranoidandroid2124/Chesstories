@@ -577,6 +577,7 @@ describe('chesstory brief scaffold', () => {
             proof_level: 'surface_evidence',
             board_carriers: [
               { role: 'target', kind: 'PlanSubject', value: 'passed-pawn-advanced:d5-d6:rank-6' },
+              { role: 'target', kind: 'Square', value: 'd6' },
             ],
           },
         },

@@ -216,7 +216,8 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
     .filter(section => {
       const handled = section.key === 'middlegame-plan' ? section.body.match(/^This move handles (.*)\.$/)?.[1] : '';
       const handledItems = handled?.replace(/, and | and /g, ', ').split(', ').filter(Boolean);
-      return !handledItems?.length || !handledItems.every(item => currentDecisionBody.includes(item));
+      const coveredItems = handledItems?.filter(item => currentDecisionBody.includes(item)).length || 0;
+      return !handledItems?.length || coveredItems < Math.max(handledItems.length - 1, 1);
     })
     .filter(section => section.key !== 'better-plan' || !section.body.startsWith('The line evidence shows ') || !section.items?.some(item => currentDecisionBody.includes(item)))
     .map(({ key, title, body, items, tone }) => ({
@@ -459,6 +460,12 @@ function conciseCarrierLabels(labels: string[]): string[] {
   const coveredSquares = new Set(
     unique.flatMap(label => [
       ...(label.match(/^(?:line unlock|material sacrifice|weak square|check) on ([a-h][1-8])$/)?.slice(1) || []),
+      ...(label.match(/^passed pawn on ([a-h][1-8])$/)?.slice(1) || []),
+      ...(
+        label.match(/^(?:passed pawn advance|rook lift|battery pressure|pin pressure|created tension) ([a-h][1-8])(?:-([a-h][1-8]))?$/)
+          ?.slice(1)
+          .filter(Boolean) || []
+      ),
       ...(label.match(/^([a-h][1-8])-([a-h][1-8])$/)?.slice(1) || []),
     ]),
   );
