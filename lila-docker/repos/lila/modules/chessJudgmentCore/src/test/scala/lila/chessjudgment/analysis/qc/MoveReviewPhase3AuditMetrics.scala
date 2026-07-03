@@ -183,7 +183,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "survivalFailureClassCounts" -> stringCountsJson(slotRows.map(survivalFailureClass)),
       "survivalFailureSlotIds" -> survivalFailureSlotIdsJson(slotRows),
       "survivalFailureQuestionIds" ->
-        survivalFailureQuestionIdsJson(missingExpectedQuestionIds, unmeasuredExpectedQuestionIds),
+        survivalFailureQuestionIdsJson(slotRows, unmeasuredExpectedQuestionIds),
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
       "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
@@ -254,7 +254,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "survivalFailureClassCounts" -> stringCountsJson(slotRows.map(survivalFailureClass)),
       "survivalFailureSlotIds" -> survivalFailureSlotIdsJson(slotRows),
       "survivalFailureQuestionIds" ->
-        survivalFailureQuestionIdsJson(missingExpectedQuestionIds, unmeasuredExpectedQuestionIds),
+        survivalFailureQuestionIdsJson(slotRows, unmeasuredExpectedQuestionIds),
       "questionIds" -> questionIds,
       "expectedQuestionIds" -> expectedQuestions,
       "measuredExpectedQuestionIds" -> measuredExpectedQuestionIds,
@@ -342,10 +342,15 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
         slot.requiredSupportLevel.exists(required => supportLevelSatisfies("owned_cause_linked", required)) &&
         unitEligibleRows.nonEmpty &&
         unitEligibleRows.forall(_.causeIds.isEmpty)
+    val requiredDetailTokenAbsent =
+      slot.requiredSemanticDetailTokens.nonEmpty &&
+        semanticDetailUnitPresent(slot, diagnostics) &&
+        !semanticDetailPresent(slot, diagnostics)
     val survivalFailureClass =
       if !measured then "measurement_gap"
       else if matched then "covered"
       else if broadPlanOwnershipExpectation then "measurement_gap"
+      else if requiredDetailTokenAbsent then "rubric_input_gap"
       else if best.isEmpty && claimSupportLevelSatisfied then "public_surface_blocked"
       else if claimMatches.nonEmpty || semanticDetailPresent(slot, diagnostics) then "structural_bottleneck"
       else "coverage_shortage"
@@ -369,6 +374,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "claimSupportLevelSatisfied" -> claimSupportLevelSatisfied,
       "claimPresent" -> claimMatches.nonEmpty,
       "publicSurfacePresent" -> publicMatches.nonEmpty,
+      "requiredDetailTokenAbsent" -> requiredDetailTokenAbsent,
       "survivalFailureClass" -> survivalFailureClass,
       "matchedComparisonIds" -> publicMatches.map(_.comparisonId).distinct.sorted,
       "claimComparisonIds" -> claimMatches.map(_.comparisonId).distinct.sorted,
@@ -455,14 +461,20 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       slot: ExpectedSemanticSlot,
       diagnostics: List[CandidateComparisonDiagnostic]
   ): Boolean =
+    semanticDetailUnitPresent(slot, diagnostics) &&
+      diagnostics.exists(diagnostic => slotSemanticTokensSatisfied(slot, diagnostic))
+
+  private def semanticDetailUnitPresent(
+      slot: ExpectedSemanticSlot,
+      diagnostics: List[CandidateComparisonDiagnostic]
+  ): Boolean =
     diagnostics.exists { diagnostic =>
       val view = diagnostic.moveJudgmentView
       view.positionPlanTechniqueSemanticDetailUnits.contains(slot.unit) &&
       slot.axisKey.forall(axis =>
         view.positionPlanTechniqueSemanticDetailAxisKeys.contains(axis) ||
           view.positionPlanTechniqueAxisKeys.contains(axis)
-      ) &&
-      slotSemanticTokensSatisfied(slot, diagnostic)
+      )
     }
 
   private def slotSemanticTokensSatisfied(
@@ -508,12 +520,21 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
     )
 
   private def survivalFailureQuestionIdsJson(
-      missingExpectedQuestionIds: List[String],
+      slotRows: List[JsObject],
       unmeasuredExpectedQuestionIds: List[String]
   ): JsObject =
-    Json.obj(
-      "coverage_shortage" -> missingExpectedQuestionIds.distinct.sorted,
-      "measurement_gap" -> unmeasuredExpectedQuestionIds.distinct.sorted
+    val missingQuestionIdsByClass =
+      slotRows
+        .filterNot(row => (row \ "matched").as[Boolean])
+        .flatMap(row => (row \ "questionId").asOpt[String].map(survivalFailureClass(row) -> _))
+        .groupMap(_._1)(_._2)
+    val measurementGapQuestionIds =
+      (missingQuestionIdsByClass.getOrElse("measurement_gap", Nil) ++ unmeasuredExpectedQuestionIds).distinct.sorted
+    JsObject(
+      (missingQuestionIdsByClass + ("measurement_gap" -> measurementGapQuestionIds))
+        .toList
+        .sortBy(_._1)
+        .map((failureClass, questionIds) => failureClass -> Json.toJson(questionIds.distinct.sorted))
     )
 
   def noEventCauseFlow(flow: RelativeCauseFlowDiagnostic): Boolean =
