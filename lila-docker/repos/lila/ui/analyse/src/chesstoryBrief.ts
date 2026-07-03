@@ -129,6 +129,12 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
       : joinHuman(concreteSolved);
   const currentChange = targets.length ? joinHuman(targets) : solved.length ? joinHuman(solved) : '';
   const lineEvidence = comparisonLines(evidencePlayed).slice(0, 3);
+  const currentDecisionLine =
+    currentChange && lineEvidence.length
+      ? `The move changes ${currentChange}; ${lineEvidence[0]}.`
+      : currentChange
+        ? `The move is not just a verdict; it changes ${currentChange}.`
+        : 'This move is marked, but the lesson is not clear from the board yet.';
   const comparisonFocus = [...losses, ...referenceIdeas].slice(0, 4);
 
   return [
@@ -162,9 +168,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
         ? problem
           ? `The main problem is ${problem}.`
           : 'The graph has a verdict, but not enough public carrier evidence to explain the move.'
-        : currentChange
-          ? `The move is not just a verdict; it changes ${currentChange}.`
-          : 'The graph has a verdict, but not enough public carrier evidence to explain the move.',
+        : currentDecisionLine,
       pending: false,
       items: (problemMove ? uniqueLabels(verdictReasons.flatMap(problemLabels)) : mainPlayed.map(summaryLine).filter(Boolean)).slice(0, 3),
       tone: problemMove ? 'bad' : 'good',

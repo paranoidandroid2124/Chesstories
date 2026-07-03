@@ -446,6 +446,8 @@ describe('chesstory brief scaffold', () => {
     });
 
     const better = sections.find(section => section.key === 'better-plan');
+    const current = sections.find(section => section.key === 'current-decision');
+    assert.match(current?.body || '', /changes g7; PV continues with d5g2 and g4g2/);
     assert.match(better?.body || '', /PV continues with d5g2 and g4g2/);
     assert.deepEqual(better?.items, ['PV continues with d5g2 and g4g2']);
     assert.doesNotMatch(better?.body || '', /played move d1g4|best move d1g4/);
