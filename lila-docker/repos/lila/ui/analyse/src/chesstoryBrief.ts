@@ -410,6 +410,8 @@ function planSubjectLabel(value: string): string {
   if (breakFile) return `${breakFile[1]}-file break`;
   const pressure = normalized.match(/^(battery-pressure|pin-pressure):([a-h][1-8](?:-[a-h][1-8])?)$/);
   if (pressure) return `${pressure[1].replace(/-/g, ' ')} ${pressure[2]}`;
+  const defenderMove = normalized.match(/^defender-move:([a-h][1-8])$/);
+  if (defenderMove) return `defensive resource on ${defenderMove[1]}`;
   const actionSquare = normalized.match(/^(defender-move|material-capture):([a-h][1-8])$/);
   if (actionSquare) return `${actionSquare[1].replace(/-/g, ' ')} on ${actionSquare[2]}`;
   const createdTension = normalized.match(/^created-tension:([a-h][1-8])(-[a-h][1-8])?$/);

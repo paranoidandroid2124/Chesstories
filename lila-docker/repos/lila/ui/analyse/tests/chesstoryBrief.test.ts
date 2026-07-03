@@ -664,6 +664,7 @@ describe('chesstory brief scaffold', () => {
             board_carriers: [
               { role: 'target', kind: 'PlanSubject', value: 'pin-pressure:g2-h1,weakpawnattack,openingdevelopment' },
               { role: 'target', kind: 'PlanSubject', value: 'pieceactivation,pawnbreakpreparation' },
+              { role: 'target', kind: 'PlanSubject', value: 'defender-move:g4' },
             ],
           },
         },
@@ -675,7 +676,8 @@ describe('chesstory brief scaffold', () => {
     assert.match(text, /weak pawn attack/);
     assert.match(text, /opening development/);
     assert.match(text, /piece development for the pawn break/);
-    assert.doesNotMatch(text, /pin-pressure|weakpawnattack|openingdevelopment|weak pawnattack|piece activation with pawn break preparation/);
+    assert.match(text, /defensive resource on g4/);
+    assert.doesNotMatch(text, /pin-pressure|weakpawnattack|openingdevelopment|weak pawnattack|piece activation with pawn break preparation|defender move on/);
   });
 
   test('does not turn semantic targets into public board evidence without board carriers', () => {
