@@ -486,7 +486,8 @@ function conciseCarrierLabels(labels: string[]): string[] {
     .filter(label => !hasConcrete || !barePieces.has(label))
     .filter(label => !label.match(/^[a-h][1-8]-[a-h][1-8]$/) || !coveredRoutes.has(label))
     .filter(label => !label.match(/^([a-h])-file$/) || !coveredFiles.has(label[0]))
-    .filter(label => !label.match(/^[a-h][1-8]$/) || !coveredSquares.has(label));
+    .filter(label => !label.match(/^[a-h][1-8]$/) || !coveredSquares.has(label))
+    .map(label => (label.match(/^[a-h][1-8]$/) ? `the ${label} square` : label));
 }
 
 function firstLabel(labels: string[]): string | undefined {

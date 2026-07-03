@@ -452,7 +452,7 @@ describe('chesstory brief scaffold', () => {
     const current = sections.find(section => section.key === 'current-decision');
     assert.match(opening?.body || '', /g7/);
     assert.doesNotMatch(opening?.body || '', /target pressure around/);
-    assert.match(current?.body || '', /changes g7; PV continues with d5-g2 and g4-g2, proving material gain/);
+    assert.match(current?.body || '', /changes the g7 square; PV continues with d5-g2 and g4-g2, proving material gain/);
     assert.doesNotMatch(JSON.stringify(current?.items || []), /target pressure|piece activity/);
     assert.match(better?.body || '', /PV continues with d5-g2 and g4-g2/);
     assert.deepEqual(better?.items, ['PV continues with d5-g2 and g4-g2']);
