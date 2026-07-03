@@ -2894,7 +2894,8 @@ object MoveMeaningClaim:
                   .take(12)
               val spareIdentityCarriers =
                 lineUnlockIdentityCarriers(detail) ++
-                  defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove)
+                  defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
+                  passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds)
               val claimBoardCarriers =
                 (baseClaimBoardCarriers ++ spareIdentityCarriers.take(12 - baseClaimBoardCarriers.size))
                   .distinct
@@ -3051,6 +3052,18 @@ object MoveMeaningClaim:
       )
       .flatMap(_.square.toList)
       .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"defender-move:${square.key}"))
+      .distinct
+
+  private def passedPawnIdentityCarriersFromLineEvidence(
+      evidenceGraph: TypedEvidenceGraph,
+      sourceEvidenceIds: List[String]
+  ): List[MoveMeaningSurfaceBoardCarrier] =
+    sourceEvidenceIds
+      .flatMap(id => evidenceGraph.byId.get(id))
+      .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
+      .flatMap(_.lineEventsOf(LineEventKind.PassedPawn))
+      .flatMap(_.square.toList)
+      .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"passed-pawn:${square.key}"))
       .distinct
 
   private def publicBoardCarriers(
