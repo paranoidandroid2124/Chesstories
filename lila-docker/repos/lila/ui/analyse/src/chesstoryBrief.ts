@@ -285,10 +285,12 @@ function problemLabels(semantic: ChesstoryMoveSemantic): string[] {
 }
 
 function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
-  return [...(semantic.evidence?.board_carriers || [])]
+  const carriers = semantic.evidence?.board_carriers || [];
+  const actorPiece = isPieceRouteSemantic(semantic) ? actorRoutePiece(carriers) : undefined;
+  return [...carriers]
     .filter(carrier => ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''))
     .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
-    .map(boardCarrierLabel);
+    .map(carrier => boardCarrierLabel(carrier, actorPiece));
 }
 
 function boardCarrierRank(carrier: ChesstoryBoardCarrier): number {
@@ -315,17 +317,31 @@ function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
 }
 
 function moveCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
+  const carriers = semantic.evidence?.board_carriers || [];
+  const actorPiece = isPieceRouteSemantic(semantic) ? actorRoutePiece(carriers) : undefined;
   return conciseCarrierLabels(
-    (semantic.evidence?.board_carriers || [])
+    carriers
       .filter(carrier => carrier.role === 'actor' && carrier.kind === 'Move' && carrier.from && carrier.to)
-      .map(boardCarrierLabel),
+      .map(carrier => boardCarrierLabel(carrier, actorPiece)),
   );
 }
 
-function boardCarrierLabel(carrier: ChesstoryBoardCarrier): string {
+function actorRoutePiece(carriers: ChesstoryBoardCarrier[]): string | undefined {
+  const piece = carriers.find(carrier => carrier.role === 'actor' && carrier.kind === 'Piece')?.value?.toLowerCase();
+  return piece && piece !== 'pawn' && piece !== 'piece' ? piece : undefined;
+}
+
+function isPieceRouteSemantic(semantic: ChesstoryMoveSemantic): boolean {
+  return normalizeCode(semantic.idea?.code || semantic.idea_type) === 'piece_route';
+}
+
+function boardCarrierLabel(carrier: ChesstoryBoardCarrier, actorPiece?: string): string {
   const value = carrierValueLabel(carrier.kind, carrier.value);
   const route = carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : '';
-  if (carrier.kind === 'Move' && route) return route;
+  if (carrier.kind === 'Move' && route) {
+    const piece = actorPiece && carrier.from?.[0] !== carrier.to?.[0] ? `${actorPiece} ` : '';
+    return `${piece}${route}`;
+  }
   return [value, route].filter(Boolean).join(' ');
 }
 
@@ -467,6 +483,9 @@ function conciseCarrierLabels(labels: string[]): string[] {
   const barePieces = new Set(['king', 'queen', 'rook', 'bishop', 'knight', 'pawn', 'piece']);
   const hasConcrete = unique.some(label => !barePieces.has(label));
   const coveredFiles = new Set(unique.flatMap(label => label.match(/^([a-h])-file break$/)?.[1] || []));
+  const pieceRoutes = new Set(
+    unique.flatMap(label => label.match(/^(?:king|queen|rook|bishop|knight) ([a-h][1-8]-[a-h][1-8])$/)?.slice(1) || []),
+  );
   const coveredRoutes = new Set(
     unique.flatMap(label => label.match(/^(?:passed pawn advance|rook lift) ([a-h][1-8]-[a-h][1-8])$/)?.slice(1) || []),
   );
@@ -480,11 +499,16 @@ function conciseCarrierLabels(labels: string[]): string[] {
           .filter(Boolean) || []
       ),
       ...(label.match(/^([a-h][1-8])-([a-h][1-8])$/)?.slice(1) || []),
+      ...(label.match(/^(?:king|queen|rook|bishop|knight) ([a-h][1-8])-([a-h][1-8])$/)?.slice(1) || []),
     ]),
   );
   return unique
     .filter(label => !hasConcrete || !barePieces.has(label))
-    .filter(label => !label.match(/^[a-h][1-8]-[a-h][1-8]$/) || !coveredRoutes.has(label))
+    .filter(label => !label.match(/^[a-h][1-8]-[a-h][1-8]$/) || (!coveredRoutes.has(label) && !pieceRoutes.has(label)))
+    .filter(label => {
+      const route = label.match(/^(?:king|queen|rook|bishop|knight) ([a-h][1-8]-[a-h][1-8])$/)?.[1];
+      return !route || !coveredRoutes.has(route);
+    })
     .filter(label => !label.match(/^([a-h])-file$/) || !coveredFiles.has(label[0]))
     .filter(label => !label.match(/^[a-h][1-8]$/) || !coveredSquares.has(label))
     .map(label => (label.match(/^[a-h][1-8]$/) ? `the ${label} square` : label));
