@@ -3346,7 +3346,12 @@ object MoveMeaningClaim:
           else
             claimDestination.toList.flatMap(destination =>
               line.materialCaptures
-                .filter(capture => capture.plyOffset == 1 && !capture.recapture && capture.square.key == destination)
+                .filter(capture =>
+                  capture.plyOffset == 1 &&
+                    !capture.recapture &&
+                    capture.square.key == destination &&
+                    capture.capturedRole.name.equalsIgnoreCase("pawn")
+                )
                 .map(capture => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"material-sacrifice:${capture.square.key}"))
             )
         currentCaptureCarriers ++ replyCapturesMovedPiece
