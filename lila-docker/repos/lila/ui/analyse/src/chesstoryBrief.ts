@@ -165,7 +165,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
           ? `This move handles ${joinHuman(handled)}.`
           : 'No public carrier is strong enough to explain this move yet.',
       pending: false,
-      items: (problemMove ? localIdeaLabels : [...solved, ...terminal, ...technique]).slice(0, 5),
+      items: (problemMove ? localIdeaLabels : [...concreteSolved, ...terminal, ...technique]).slice(0, 5),
       tone: problemMove ? 'bad' : 'good',
     },
     {
