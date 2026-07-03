@@ -2940,8 +2940,17 @@ object MoveMeaningClaim:
         claim.breakIdentityParts.mkString("|")
       else if claim.meaningKind == "PlanContinuity" && claim.routeIdentityParts.nonEmpty then
         (claim.routeIdentityParts ++ claim.breakIdentityParts).mkString("|")
+      else if claim.meaningKind == "TargetPressure" && targetIdentityParts(claim).nonEmpty then
+        targetIdentityParts(claim).mkString("|")
       else claim.laneKey
     (claim.meaningKind, claim.role, claim.surfaceLane, claim.moveUci, objectKey)
+
+  private def targetIdentityParts(claim: MoveMeaningClaim): List[String] =
+    (
+      claim.targetSquares.map(square => s"square:$square") ++
+        claim.targetFiles.map(file => s"file:$file") ++
+        claim.targetPieces.map(piece => s"piece:$piece")
+    ).distinct.sorted
 
   private def provenanceKey(claim: MoveMeaningClaim): String =
     if claim.meaningKind == "PawnBreakTiming" then
