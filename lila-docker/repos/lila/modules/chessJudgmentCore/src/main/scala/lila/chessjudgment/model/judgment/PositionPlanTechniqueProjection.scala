@@ -2749,12 +2749,15 @@ object PositionPlanTechniqueProjection:
       .filter(lineTerminalProofConsequence)
       .flatMap { consequence =>
         consequence.eventMove.map(_.trim.toLowerCase).map { routeMove =>
+          val targetSquare =
+            _root_.chess.Square.all.find(_.key == routeMove.slice(2, 4)).map(square => s"target:${square.key}")
           PositionPlanTechniqueSemanticDetail(
             unit = PositionPlanTechniqueUnit.StructuralTransformation,
             label = Some("terminal-proof"),
             semanticAnchorKeys = List(lineTerminalProofSemanticAnchor(consequence).stableKey),
             structuralRouteMove = Some(routeMove),
             structuralPurposeConsequences = List(consequence.kind.toString),
+            structuralPurposeSubjects = targetSquare.toList,
             structuralPurposeCategories = List("TerminalProof"),
             structuralPurposePolarities = List(lineTerminalProofPolarity(consequence.kind)),
             terminalConsequenceKinds = List(consequence.kind.toString),
