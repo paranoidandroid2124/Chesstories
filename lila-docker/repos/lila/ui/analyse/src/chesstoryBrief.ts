@@ -435,9 +435,9 @@ function comparisonLines(semantics: ChesstoryMoveSemantic[]): string[] {
     const comparison = s.comparison;
     if (!comparison) return [];
     const moves = (comparison.moves || []).filter(move => move.uci);
-    const pvMoves = moves
+    const pvMoves = compactRepeatedMoves(moves
       .filter(move => move.role?.includes('_pv_'))
-      .map(move => moveLabel(move.uci || ''));
+      .map(move => moveLabel(move.uci || '')));
     const rootMoves = moves
       .filter(move => !move.role?.includes('_pv_'))
       .map(move => `${move.role?.replace(/_/g, ' ') || 'move'} ${moveLabel(move.uci || '')}`);
@@ -447,6 +447,14 @@ function comparisonLines(semantics: ChesstoryMoveSemantic[]): string[] {
       lost.length ? `Lost idea: ${joinHuman(lost)}` : '',
     ].filter(Boolean);
   }));
+}
+
+function compactRepeatedMoves(moves: string[]): string[] {
+  const half = moves.length / 2;
+  if (moves.length > 2 && moves.length % 2 === 0 && moves.slice(0, half).every((move, i) => move === moves[i + half])) {
+    return moves.slice(0, half);
+  }
+  return moves;
 }
 
 function moveLabel(uci: string): string {

@@ -433,6 +433,8 @@ describe('chesstory brief scaffold', () => {
               { role: 'best_move', uci: 'd1g4' },
               { role: 'played_pv_1', uci: 'd5g2' },
               { role: 'played_pv_2', uci: 'g4g2' },
+              { role: 'played_pv_3', uci: 'd5g2' },
+              { role: 'played_pv_4', uci: 'g4g2' },
             ],
           },
         },
@@ -450,6 +452,8 @@ describe('chesstory brief scaffold', () => {
             moves: [
               { role: 'played_pv_1', uci: 'd5g2' },
               { role: 'played_pv_2', uci: 'g4g2' },
+              { role: 'played_pv_3', uci: 'd5g2' },
+              { role: 'played_pv_4', uci: 'g4g2' },
             ],
           },
         },
