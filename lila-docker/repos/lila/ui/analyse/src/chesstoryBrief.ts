@@ -290,6 +290,7 @@ function carrierValueLabel(kind?: string, value?: string): string {
 
 function planSubjectLabel(value: string): string {
   const normalized = value.trim().toLowerCase();
+  if (normalized.includes(',')) return joinHuman(normalized.split(',').map(planSubjectLabel));
   const squareSubject = normalized.match(/^(line-unlock|material-sacrifice|weak-square|check):([a-h][1-8])$/);
   if (squareSubject) return `${squareSubject[1].replace(/-/g, ' ')} on ${squareSubject[2]}`;
   const passedAdvance = normalized.match(/^passed-pawn-advanced:([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
@@ -307,6 +308,7 @@ function planSubjectLabel(value: string): string {
   const rookLift = normalized.match(/^rook-lift:([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
   if (rookLift) return `rook lift ${rookLift[1]}-${rookLift[2]}`;
   return normalized
+    .replace(/pawnbreakpreparation/g, 'pawn break preparation')
     .replace(/pawnbreak/g, 'pawn break')
     .replace(/weakpawn/g, 'weak pawn')
     .replace(/pieceactivation/g, 'piece activation')
