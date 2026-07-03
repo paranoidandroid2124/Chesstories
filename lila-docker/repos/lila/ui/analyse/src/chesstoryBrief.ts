@@ -209,6 +209,10 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
   return sections
     .filter(section => !section.pending)
     .filter(section => section.items?.length || !/not clear from the board|No clean better-move lesson|needs a concrete plan|does not show a clear enough|does not reveal/.test(section.body))
+    .filter(section => {
+      const handled = section.key === 'middlegame-plan' ? section.body.match(/^This move handles (.*)\.$/)?.[1] : '';
+      return !handled || !currentDecisionBody.includes(handled);
+    })
     .filter(section => section.key !== 'better-plan' || !section.body.startsWith('The line evidence shows ') || !section.items?.some(item => currentDecisionBody.includes(item)))
     .map(({ key, title, body, items, tone }) => ({
       key,
