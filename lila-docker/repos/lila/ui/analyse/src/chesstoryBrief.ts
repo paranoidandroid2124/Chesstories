@@ -122,7 +122,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
   const losses = cleanTerminalLabels(uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels)), problemMove);
   const targets = conciseCarrierLabels(positionEvidence.flatMap(boardCarrierTargetLabels)).slice(0, 5);
-  const currentCarriers = conciseCarrierLabels([...positionEvidence.flatMap(moveCarrierLabels), ...targets]).slice(0, 5);
+  const currentCarriers = conciseCarrierLabels([...positionEvidence.flatMap(moveCarrierLabels), ...targets]).slice(0, 3);
   const problem = firstLabel(verdictReasons.flatMap(problemLabels));
   const referenceIdeas = cleanTerminalLabels(uniqueLabels(evidenceReference.map(ideaLabel)), problemMove).slice(0, 3);
   const concreteIdeas = targets.length
@@ -247,6 +247,7 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
       const coveredItems = handledItems?.filter(item => currentDecisionBody.includes(item)).length || 0;
       return !handledItems?.length || coveredItems < Math.max(handledItems.length - 1, 1);
     })
+    .filter(section => section.key !== 'middlegame-plan' || !currentDecisionHasLineProof || !section.body.startsWith('This move handles '))
     .filter(section => section.key !== 'better-plan' || !section.body.startsWith('The line evidence shows ') || !section.items?.some(item => currentDecisionBody.includes(item)))
     .filter(section =>
       section.key !== 'evidence' ||
@@ -254,8 +255,7 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
       section.body === 'The line wins material.' ||
       section.body === 'The line loses material.' ||
       section.body.startsWith('The line confirms ') ||
-      section.body.startsWith('The ending technique evidence is ') ||
-      (currentDecisionHasLineProof && (section.items || []).some(item => !currentDecisionBody.includes(item))),
+      section.body.startsWith('The ending technique evidence is '),
     )
     .filter(section => section.key !== 'opening-idea')
     .map(({ key, title, body, items, tone }) => ({
