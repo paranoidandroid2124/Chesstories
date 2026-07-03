@@ -785,15 +785,26 @@ object PositionPlanTechniqueProjection:
         ).distinct.sorted
       val evidenceIds =
         if localEvidenceIds.nonEmpty then localEvidenceIds else fallbackEvidenceIds.distinct.sorted
-      val refs = evidenceIds.flatMap(id => graph.byId.get(id).map(_.ref))
-      val signatures = EvidenceObjectBinding.objectSignatures(EvidenceObjectBinding.fromEvidenceRefs(graph, refs))
+      val sacrificeEvidenceIds =
+        evidenceIds.filter(id =>
+          graph.byId
+            .get(id)
+            .exists(record =>
+              EvidenceObjectBinding
+                .objectSignatures(EvidenceObjectBinding.fromEvidenceRefs(graph, List(record.ref)))
+                .exists(positionPlanTechniqueMaterialSacrificeSignature)
+            )
+        )
       Option
-        .when(signatures.exists(positionPlanTechniqueMaterialSacrificeSignature))(
+        .when(sacrificeEvidenceIds.nonEmpty)(
           detail.copy(
             unit = PositionPlanTechniqueUnit.CompensationSource,
             axisKey = None,
             axisKind = None,
-            axisPolarity = None
+            axisPolarity = None,
+            sourceEvidenceIds = sacrificeEvidenceIds,
+            referenceEvidenceIds = Nil,
+            candidateEvidenceIds = Nil
           )
         )
         .toList
@@ -860,13 +871,21 @@ object PositionPlanTechniqueProjection:
         evidenceIdSet.contains(binding.source.id) &&
           binding.proofRole.exists(positionPlanTechniqueAdmissibleDetailProofRole)
       )
-    val detailBindings =
+    val rawDetailBindings =
       if localCauseBindings.nonEmpty then localCauseBindings
       else
         EvidenceObjectBinding.fromEvidenceRefs(
           graph,
           evidenceIds.flatMap(id => graph.byId.get(id).map(_.ref))
         )
+    val detailBindings =
+      if detail.unit == PositionPlanTechniqueUnit.CompensationSource then
+        rawDetailBindings.filter(binding =>
+          EvidenceObjectBinding
+            .objectSignatures(List(binding))
+            .exists(positionPlanTechniqueMaterialSacrificeSignature)
+        )
+      else rawDetailBindings
     val objectBindingSignatures =
       (
         EvidenceObjectBinding.objectSignatures(detailBindings) ++
