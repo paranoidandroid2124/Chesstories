@@ -356,6 +356,7 @@ function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
 
 function boardCarrierRank(carrier: ChesstoryBoardCarrier): number {
   if (carrier.role !== 'target') return 4;
+  if (carrier.kind === 'PlanSubject' && carrier.value?.startsWith('defender-move:')) return -1;
   if (carrier.kind === 'PlanSubject') return 0;
   if (carrier.kind === 'File' || carrier.kind === 'Square' || carrier.kind === 'Pawn') return 1;
   if (carrier.kind === 'Piece') return 2;
@@ -389,6 +390,9 @@ function moveCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
 }
 
 function actorRoutePiece(carriers: ChesstoryBoardCarrier[]): string | undefined {
+  const moveFrom = carriers.find(carrier => carrier.role === 'actor' && carrier.kind === 'Move' && carrier.from)?.from;
+  const actorSquare = carriers.find(carrier => carrier.role === 'actor' && carrier.kind === 'Square')?.value;
+  if (moveFrom && actorSquare && moveFrom !== actorSquare) return undefined;
   const piece = carriers.find(carrier => carrier.role === 'actor' && carrier.kind === 'Piece')?.value?.toLowerCase();
   return piece && piece !== 'pawn' && piece !== 'piece' ? piece : undefined;
 }
