@@ -199,6 +199,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
 export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
   return chesstoryBriefSections(payload)
     .filter(section => !section.pending)
+    .filter(section => section.items?.length || !/not clear from the board|No clean better-move lesson|needs a concrete plan|does not show a clear enough|does not reveal/.test(section.body))
     .map(({ key, title, body, items, tone }) => ({
       key,
       title,

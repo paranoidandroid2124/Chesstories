@@ -470,7 +470,7 @@ describe('chesstory brief scaffold', () => {
   });
 
   test('uses public board carriers when targets are absent', () => {
-    const sections = chesstoryBriefSections({
+    const payload: ChesstoryMoveMeaningPayload = {
       verdict: { move_quality: 'good', played_move: 'g1f3', reference_move: 'g1f3' },
       move_semantics: [
         {
@@ -485,11 +485,15 @@ describe('chesstory brief scaffold', () => {
           },
         },
       ],
-    });
+    };
+    const sections = chesstoryBriefSections(payload);
 
     const evidence = sections.find(section => section.key === 'evidence');
     assert.match(evidence?.body || '', /g1-f3/);
     assert.doesNotMatch(evidence?.body || '', /g1f3 g1-f3/);
+    const llmPayload = JSON.stringify(chesstoryLlmPayload(payload));
+    assert.match(llmPayload, /g1-f3/);
+    assert.doesNotMatch(llmPayload, /No clean better-move lesson|not clear from the board/);
   });
 
   test('puts concrete targets before actor carriers in board clues', () => {
