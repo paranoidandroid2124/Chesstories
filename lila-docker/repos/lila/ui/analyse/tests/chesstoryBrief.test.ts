@@ -704,4 +704,28 @@ describe('chesstory brief scaffold', () => {
     assert.match(llmPayload, /Lucena/);
     assert.match(llmPayload, /king cut off/);
   });
+
+  test('reads good material loss as sacrifice instead of handled loss', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'good', played_move: 'd3c5', reference_move: 'd3c5' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'main',
+          idea: { code: 'piece_route', label: 'piece route' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            board_carriers: [{ role: 'target', kind: 'PlanSubject', value: 'material-sacrifice:c5' }],
+          },
+          terminal_consequences: [{ code: 'material_loss', label: 'material loss' }],
+        },
+      ],
+    });
+
+    const text = JSON.stringify(sections);
+    assert.match(text, /material sacrifice/);
+    assert.doesNotMatch(text, /handles .*material loss|terminal result is material loss/);
+  });
 });

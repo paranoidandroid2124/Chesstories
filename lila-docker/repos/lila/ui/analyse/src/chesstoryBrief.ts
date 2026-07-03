@@ -128,7 +128,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     ? solved.filter(label => !broadIdeaLabels.has(label))
     : solved;
   const concreteSolved = targets.length ? targets : solved;
-  const handled = uniqueLabels([...concreteSolved, ...terminal]);
+  const handled = concreteSolved.length ? concreteSolved : terminal;
   const positionThread =
     concreteIdeas.length && targets.length && !targets.some(target => target.startsWith(concreteIdeas[0]))
       ? `${concreteIdeas.length === 2 ? `${concreteIdeas[0]} with ${concreteIdeas[1]}` : joinHuman(concreteIdeas)} around ${joinHuman(targets)}`
@@ -284,8 +284,9 @@ function codeLabel(code?: ChesstoryCode): string {
 }
 
 function terminalLabels(semantic: ChesstoryMoveSemantic): string[] {
-  const labels = uniqueLabels((semantic.terminal_consequences || []).map(codeLabel));
-  return cleanTerminalLabels(labels, normalizeCode(semantic.move_quality) === 'bad');
+  const bad = normalizeCode(semantic.move_quality) === 'bad';
+  const labels = cleanTerminalLabels(uniqueLabels((semantic.terminal_consequences || []).map(codeLabel)), bad);
+  return bad ? labels : labels.map(label => label === 'material loss' ? 'material sacrifice' : label);
 }
 
 function cleanTerminalLabels(labels: string[], preferLoss = false): string[] {
