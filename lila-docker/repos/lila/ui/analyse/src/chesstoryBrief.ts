@@ -218,9 +218,16 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
 }
 
 export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
-  if (!payload?.move_semantics?.some(hasConcreteSurfaceCarrier)) return [];
+  const semantics = payload?.move_semantics || [];
+  const hasLineProof = semantics.some(semantic =>
+    terminalLabels(semantic).length > 0 ||
+    techniqueLabels(semantic).length > 0 ||
+    (semantic.comparison?.moves || []).some(move => !!move.uci && !!move.role?.includes('_pv_')),
+  );
+  if (!semantics.some(hasConcreteSurfaceCarrier) || !hasLineProof) return [];
   const sections = chesstoryBriefSections(payload);
   const currentDecisionBody = sections.find(section => section.key === 'current-decision')?.body || '';
+  const currentDecisionHasLineProof = /PV continues|proving /.test(currentDecisionBody);
   return sections
     .filter(section => !section.pending)
     .filter(section => section.items?.length || !/not clear from the board|No clean better-move lesson|needs a concrete plan|does not show a clear enough|does not reveal/.test(section.body))
@@ -237,7 +244,8 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
       section.body === 'The line wins material.' ||
       section.body === 'The line loses material.' ||
       section.body.startsWith('The line confirms ') ||
-      (section.items || []).some(item => !currentDecisionBody.includes(item)),
+      section.body.startsWith('The ending technique evidence is ') ||
+      (currentDecisionHasLineProof && (section.items || []).some(item => !currentDecisionBody.includes(item))),
     )
     .map(({ key, title, body, items, tone }) => ({
       key,

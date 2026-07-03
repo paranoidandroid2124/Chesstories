@@ -536,9 +536,7 @@ describe('chesstory brief scaffold', () => {
     assert.doesNotMatch(current?.body || '', /not just a verdict/);
     assert.match(evidence?.body || '', /b8-d7/);
     assert.doesNotMatch(evidence?.body || '', /b8d7 b8-d7|, knight|and knight|, b8\b|and b8\b|, d7\b|and d7\b/);
-    const llmPayload = JSON.stringify(chesstoryLlmPayload(payload));
-    assert.match(llmPayload, /b8-d7/);
-    assert.doesNotMatch(llmPayload, /No clean better-move lesson|not clear from the board/);
+    assert.deepEqual(chesstoryLlmPayload(payload), []);
   });
 
   test('keeps generic piece targets out of the position thread when a specific target exists', () => {
@@ -648,6 +646,31 @@ describe('chesstory brief scaffold', () => {
     const opening = sections.find(section => section.key === 'opening-idea');
     assert.equal(opening?.body, 'The position is asking about passed pawn advance d5-d6.');
     assert.doesNotMatch(JSON.stringify(sections), /changes d5-d6, passed pawn advance|passed pawn advance d5-d6, d5-d6/);
+
+    const llmPayload = chesstoryLlmPayload({
+      verdict: { move_quality: 'good', played_move: 'd5d6', reference_move: 'd5d6' },
+      move_semantics: [
+        {
+          subject: 'played_move',
+          move_quality: 'good',
+          priority: 'supporting',
+          idea: { code: 'passed_pawn_advance', label: 'passed pawn advance' },
+          evidence: {
+            has_carrier: true,
+            proof_level: 'surface_evidence',
+            board_carriers: [
+              { role: 'actor', kind: 'Move', value: 'd5d6', from: 'd5', to: 'd6' },
+              { role: 'target', kind: 'PlanSubject', value: 'passed-pawn-advanced:d5-d6:rank-6' },
+              { role: 'target', kind: 'PlanSubject', value: 'simplification,pawnbreakpreparation' },
+              { role: 'target', kind: 'PlanSubject', value: 'line-unlock:e8' },
+              { role: 'target', kind: 'PlanSubject', value: 'break-file:d' },
+              { role: 'target', kind: 'PlanSubject', value: 'weak-square:e8' },
+            ],
+          },
+        },
+      ],
+    });
+    assert.deepEqual(llmPayload, []);
   });
 
   test('reads compound plan-subject carriers as chess words', () => {
