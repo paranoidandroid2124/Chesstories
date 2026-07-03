@@ -337,9 +337,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
     val claimSupportLevelSatisfied =
       measured && slot.requiredSupportLevel.forall(required => supportLevelSatisfies(claimSupportLevel, required))
     val matched = measured && best.nonEmpty && supportLevelSatisfied
-    val broadPlanOwnershipExpectation =
-      slot.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-        slot.requiredSupportLevel.exists(required => supportLevelSatisfies("owned_cause_linked", required)) &&
+    val requiresOwnedCause =
+      slot.requiredSupportLevel.exists(required => supportLevelSatisfies(required, "owned_cause_linked"))
+    val ownedExpectationWithoutProof =
+      requiresOwnedCause &&
         unitEligibleRows.nonEmpty &&
         unitEligibleRows.forall(_.causeIds.isEmpty)
     val requiredDetailTokenAbsent =
@@ -367,7 +368,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
     val survivalFailureClass =
       if !measured then "measurement_gap"
       else if matched then "covered"
-      else if broadPlanOwnershipExpectation then "measurement_gap"
+      else if ownedExpectationWithoutProof then "ownership_proof_gap"
       else if requiredDetailTokenAbsent || counterplayRaceExpectationOverspecified then "rubric_input_gap"
       else if best.isEmpty && claimSupportLevelSatisfied then "public_surface_blocked"
       else if claimMatches.nonEmpty || semanticDetailPresent(slot, diagnostics) then "structural_bottleneck"
@@ -392,6 +393,8 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "claimSupportLevelSatisfied" -> claimSupportLevelSatisfied,
       "claimPresent" -> claimMatches.nonEmpty,
       "publicSurfacePresent" -> publicMatches.nonEmpty,
+      "requiresOwnedCause" -> requiresOwnedCause,
+      "ownedExpectationWithoutProof" -> ownedExpectationWithoutProof,
       "requiredDetailTokenAbsent" -> requiredDetailTokenAbsent,
       "counterplayRaceExpectationOverspecified" -> counterplayRaceExpectationOverspecified,
       "survivalFailureClass" -> survivalFailureClass,
