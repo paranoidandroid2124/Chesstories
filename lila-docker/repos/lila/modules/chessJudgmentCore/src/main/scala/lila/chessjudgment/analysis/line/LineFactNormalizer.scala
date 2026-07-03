@@ -1,9 +1,10 @@
 package lila.chessjudgment.analysis.line
 
-import chess.{ Color, King, Position }
+import chess.{ Color, King, Pawn, Position }
 import chess.format.Fen
 import chess.variant.Standard
 
+import lila.chessjudgment.analysis.position.PositionAnalyzer
 import lila.chessjudgment.analysis.strategic.EndgamePatternOracle
 import lila.chessjudgment.model.judgment.*
 
@@ -20,7 +21,7 @@ object LineFactNormalizer:
       parents: List[EvidenceRef] = Nil
   ): EvidenceRecord =
     val replay = replaySteps(position.fen, facts)
-    val events = lineEvents(lineRef, facts, replay, forcedTheme, materialSummary)
+    val events = lineEvents(position.fen, lineRef, facts, replay, forcedTheme, materialSummary)
     val baseConsequences = lineConsequences(facts, forcedTheme, materialSummary)
     val endgameHorizons = endgameTechniqueHorizons(position.fen, replay, baseConsequences)
     val consequences = (baseConsequences ++ endgameTechniqueConsequences(facts, endgameHorizons)).distinct
@@ -69,6 +70,7 @@ object LineFactNormalizer:
     }._2.reverse
 
   private def lineEvents(
+      startFen: String,
       lineRef: LineNodeRef,
       facts: PrincipalVariationEvidence.LineFacts,
       replay: List[LineReplayStep],
@@ -245,7 +247,43 @@ object LineFactNormalizer:
           )
         )
       }
-    (replayEvents ++ roleEvents ++ forcedEvents ++ materialEvents ++ carriedDefense).distinct
+    val passedPawnEvents = linePassedPawnEvents(startFen, facts)
+    (replayEvents ++ roleEvents ++ forcedEvents ++ materialEvents ++ passedPawnEvents ++ carriedDefense).distinct
+
+  private def linePassedPawnEvents(startFen: String, facts: PrincipalVariationEvidence.LineFacts): List[LineMoveEvent] =
+    val eventMove = facts.line.moves.lastOption.map(move => PrincipalVariationEvidence.normalizeUci(move.uci))
+    val plyOffset = facts.line.moves.size - 1
+    val endPosition = facts.line.moves.lastOption.map(_.fenAfter).flatMap(positionAfter)
+    val beforeAfter =
+      for
+        before <- positionAfter(startFen).toList
+        after <- endPosition.toList
+      yield (before, after)
+    beforeAfter.flatMap { case (before, after) =>
+      List(Color.White, Color.Black).flatMap { color =>
+        val beforePassed = passedPawnSquares(before, color)
+        val gained = passedPawnSquares(after, color).diff(beforePassed)
+        eventMove.toList.flatMap(move =>
+          gained.toList.sorted.map(square =>
+            LineMoveEvent(
+              kind = LineEventKind.PassedPawn,
+              moveUci = move,
+              plyOffset = plyOffset,
+              side = Some(color),
+              pieceRole = Some(EvidencePieceRole(Pawn.name)),
+              targetRole = Some(EvidencePieceRole(Pawn.name)),
+              square = Some(EvidenceSquare(square))
+            )
+          )
+        )
+      }
+    }
+
+  private def passedPawnSquares(position: Position, color: Color): Set[String] =
+    PositionAnalyzer
+      .passedPawns(color, position.board.byPiece(color, Pawn), position.board.byPiece(!color, Pawn))
+      .map(_.key)
+      .toSet
 
   private def lineConsequences(
       facts: PrincipalVariationEvidence.LineFacts,

@@ -2746,6 +2746,7 @@ enum LineEventKind:
   case Tempo
   case Stalemate
   case Promotion
+  case PassedPawn
   case ForcedTheme
 
 final case class LineMoveEvent(
