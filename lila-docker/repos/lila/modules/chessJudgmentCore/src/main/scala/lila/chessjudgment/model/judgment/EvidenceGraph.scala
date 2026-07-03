@@ -844,6 +844,9 @@ private[judgment] object StructuralPurposeSubject:
   private val outpost = raw"outpost:([a-z]+):([a-h][1-8]).*".r
   private val pieceRestriction = raw"([a-z]+):([a-h][1-8]):diagonal-denial:blocked-by:([a-h][1-8]).*".r
   private val pieceSquare = raw"([a-z]+):([a-h][1-8])(?::.*)?".r
+  private val passedPawnRoute = raw"passed-pawn-(?:advanced|breakthrough|promoted):([a-h][1-8])-([a-h][1-8]).*".r
+  private val passedPawnSquare = raw"passed-pawn-(?:created|lost):([a-h][1-8]).*".r
+  private val passedPawn = raw"passed-pawn:([a-h][1-8]).*".r
   private val battery = raw"battery:([a-z]+):([a-h][1-8])-([a-h][1-8])(?::([a-z-]+))?.*".r
   private val rookLift = raw"rook-lift:([a-h][1-8])-([a-h][1-8]):rank-([0-9]+).*".r
   private val tensionEdge = raw"([a-h][1-8])-([a-h][1-8])".r
@@ -875,6 +878,12 @@ private[judgment] object StructuralPurposeSubject:
         Some(Battery(axis, from, to, Option(roles).toList.flatMap(_.split("-").toList).filter(_.nonEmpty).distinct.sorted))
       case rookLift(from, to, _) =>
         Some(PieceRoute("rook", from, to))
+      case passedPawnRoute(from, to) =>
+        Some(PieceRoute("pawn", from, to))
+      case passedPawnSquare(square) =>
+        Some(PieceSquare("pawn", square))
+      case passedPawn(square) =>
+        Some(PieceSquare("pawn", square))
       case pieceRoute(piece, from, to) =>
         Some(PieceRoute(piece, from, to))
       case pieceRestriction(piece, square, blocker) =>
