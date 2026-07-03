@@ -253,25 +253,19 @@ function problemLabels(semantic: ChesstoryMoveSemantic): string[] {
 }
 
 function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
-  return [
-    ...(semantic.evidence?.board_carriers || [])
-      .filter(carrier => ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''))
-      .map(boardCarrierLabel),
-    ...targetLabels(semantic),
-  ];
+  return (semantic.evidence?.board_carriers || [])
+    .filter(carrier => ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''))
+    .map(boardCarrierLabel);
 }
 
 function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
-  return [
-    ...(semantic.evidence?.board_carriers || [])
-      .filter(
-        carrier =>
-          carrier.role === 'target' &&
-          ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''),
-      )
-      .map(boardCarrierLabel),
-    ...targetLabels(semantic),
-  ];
+  return (semantic.evidence?.board_carriers || [])
+    .filter(
+      carrier =>
+        carrier.role === 'target' &&
+        ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''),
+    )
+    .map(boardCarrierLabel);
 }
 
 function boardCarrierLabel(carrier: ChesstoryBoardCarrier): string {
@@ -313,14 +307,6 @@ function planSubjectLabel(value: string): string {
     .replace(/weakpawn/g, 'weak pawn')
     .replace(/pieceactivation/g, 'piece activation')
     .replace(/-/g, ' ');
-}
-
-function targetLabels(semantic: ChesstoryMoveSemantic): string[] {
-  return uniqueLabels([
-    ...(semantic.target?.files || []).map(file => `${file}-file`),
-    ...(semantic.target?.squares || []),
-    ...(semantic.target?.pieces || []),
-  ]);
 }
 
 function techniqueLabels(semantic: ChesstoryMoveSemantic): string[] {

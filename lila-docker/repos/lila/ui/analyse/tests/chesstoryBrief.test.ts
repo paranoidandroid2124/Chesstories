@@ -460,7 +460,7 @@ describe('chesstory brief scaffold', () => {
     });
 
     const text = JSON.stringify(sections);
-    assert.doesNotMatch(text, /Board focus: d6|changes d6|concrete board evidence is d6/);
+    assert.doesNotMatch(text, /d-file|d6/);
   });
 
   test('requires explicit evidence carriers before writing terminal or technique prose', () => {
