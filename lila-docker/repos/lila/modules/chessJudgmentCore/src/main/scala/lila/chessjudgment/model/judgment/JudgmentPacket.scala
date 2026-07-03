@@ -2052,10 +2052,18 @@ object MoveMeaningSurface:
       )
 
   private def planOptionIdeaType(claim: MoveMeaningClaim): String =
-    claim.role match
+    if passedPawnAdvanceClaim(claim) then "passed_pawn_advance"
+    else claim.role match
       case "PreparesBreakOption"  => "pawn_break_timing"
       case "DevelopsPieceForPlan" => "piece_activity"
       case _                      => "plan_continuity"
+
+  private def passedPawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
+    claim.routeIdentityParts.exists(_.startsWith("subject:passed-pawn-advanced:")) ||
+      claim.boardCarriers.exists(carrier =>
+        carrier.kind == "PlanSubject" &&
+          (carrier.value.startsWith("passed-pawn:") || carrier.value.startsWith("passed-pawn-advanced:"))
+      )
 
   private def axisIdeaType(claim: MoveMeaningClaim): Option[String] =
     claim.axisKind.map {
@@ -2348,6 +2356,7 @@ object MoveMeaningSurface:
     "long_diagonal_pressure" -> "long diagonal pressure",
     "piece_route" -> "piece route",
     "piece_activity" -> "piece activity",
+    "passed_pawn_advance" -> "passed pawn advance",
     "endgame_technique" -> "endgame technique",
     "compensation" -> "compensation",
     "structure_shift" -> "structure shift",
