@@ -446,8 +446,11 @@ describe('chesstory brief scaffold', () => {
     };
     const sections = chesstoryBriefSections(payload);
 
+    const opening = sections.find(section => section.key === 'opening-idea');
     const better = sections.find(section => section.key === 'better-plan');
     const current = sections.find(section => section.key === 'current-decision');
+    assert.match(opening?.body || '', /g7/);
+    assert.doesNotMatch(opening?.body || '', /target pressure around/);
     assert.match(current?.body || '', /changes g7; PV continues with d5g2 and g4g2/);
     assert.match(better?.body || '', /PV continues with d5g2 and g4g2/);
     assert.deepEqual(better?.items, ['PV continues with d5g2 and g4g2']);

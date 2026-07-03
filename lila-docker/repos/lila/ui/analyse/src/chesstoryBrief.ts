@@ -121,11 +121,14 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const targets = uniqueLabels(positionEvidence.flatMap(boardCarrierTargetLabels)).slice(0, 5);
   const problem = firstLabel(verdictReasons.flatMap(problemLabels));
   const referenceIdeas = uniqueLabels(evidenceReference.map(ideaLabel)).slice(0, 3);
+  const concreteIdeas = targets.length
+    ? solved.filter(label => !['piece route', 'piece activity', 'target pressure', 'plan continuity', 'counterplay control'].includes(label))
+    : solved;
   const concreteSolved = targets.length ? targets : solved;
   const handled = [...concreteSolved, ...terminal];
   const positionThread =
-    solved.length && targets.length && !targets.some(target => target.startsWith(solved[0]))
-      ? `${joinHuman(solved)} around ${joinHuman(targets)}`
+    concreteIdeas.length && targets.length && !targets.some(target => target.startsWith(concreteIdeas[0]))
+      ? `${joinHuman(concreteIdeas)} around ${joinHuman(targets)}`
       : joinHuman(concreteSolved);
   const currentChange = targets.length ? joinHuman(targets) : solved.length ? joinHuman(solved) : '';
   const lineEvidence = comparisonLines(evidencePlayed).slice(0, 3);
