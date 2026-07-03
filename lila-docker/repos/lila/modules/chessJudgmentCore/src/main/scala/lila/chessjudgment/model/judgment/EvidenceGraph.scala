@@ -925,7 +925,8 @@ private[judgment] object StructuralPurposeSubject:
       value.startsWith("created-tension:") ||
         value.startsWith("resolved-tension:") ||
         value.startsWith("weak-square:") ||
-        value.startsWith("rook-lift:")
+        value.startsWith("rook-lift:") ||
+        value.startsWith("passed-pawn-")
     )(value)
 
   private def normalize(raw: String): String =
