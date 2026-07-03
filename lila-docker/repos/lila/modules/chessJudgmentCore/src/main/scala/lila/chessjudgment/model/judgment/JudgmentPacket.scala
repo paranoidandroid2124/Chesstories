@@ -2516,6 +2516,7 @@ object MoveMeaningClaim:
       !routeActivityShadowedByOwnedRoute(claims, claim) &&
       !planContinuityShadowedByOwnedRoute(claims, claim) &&
       !planContinuityBreakOptionShadowedByOwnedBreak(claims, claim) &&
+      !genericActivityOrPlanShadowedByOwnedTargetPressure(claims, claim) &&
       publicSpecificPlanContinuityClaim(claims, claim) &&
       !badMoveSuppressesCurrentMoveSurface(verdict, claim)
 
@@ -2660,6 +2661,34 @@ object MoveMeaningClaim:
           currentMoveSurfaceLane(other) &&
           other.breakFiles.toSet.intersect(claim.breakFiles.toSet).nonEmpty
       )
+
+  private def genericActivityOrPlanShadowedByOwnedTargetPressure(
+      claims: List[MoveMeaningClaim],
+      claim: MoveMeaningClaim
+  ): Boolean =
+    (
+      claim.meaningKind == "PieceActivity" && claim.role == "ImprovesPieceActivity" ||
+        claim.meaningKind == "PlanContinuity" && claim.role == "ReferencePreservesPlan"
+    ) &&
+      currentMoveSurfaceLane(claim) &&
+      claims.exists(other =>
+        other != claim &&
+          other.meaningKind == "TargetPressure" &&
+          other.supportLevel == "owned_cause_linked" &&
+          other.publicHasCarrier &&
+          other.moveUci == claim.moveUci &&
+          other.lineRole == claim.lineRole &&
+          currentMoveSurfaceLane(other) &&
+          (
+            other.causeEvidenceIds.intersect(claim.causeEvidenceIds).nonEmpty ||
+              targetOverlap(other, claim)
+          )
+      )
+
+  private def targetOverlap(left: MoveMeaningClaim, right: MoveMeaningClaim): Boolean =
+    left.targetSquares.intersect(right.targetSquares).nonEmpty ||
+      left.targetPieces.intersect(right.targetPieces).nonEmpty ||
+      left.targetFiles.intersect(right.targetFiles).nonEmpty
 
   private def routeClaimWithSameIdentity(
       claims: List[MoveMeaningClaim],
