@@ -505,6 +505,8 @@ describe('chesstory brief scaffold', () => {
     const sections = chesstoryBriefSections(payload);
 
     const evidence = sections.find(section => section.key === 'evidence');
+    const current = sections.find(section => section.key === 'current-decision');
+    assert.match(current?.body || '', /changes b8-d7/);
     assert.match(evidence?.body || '', /b8-d7/);
     assert.doesNotMatch(evidence?.body || '', /b8d7 b8-d7|, knight|and knight|, b8\b|and b8\b|, d7\b|and d7\b/);
     const llmPayload = JSON.stringify(chesstoryLlmPayload(payload));

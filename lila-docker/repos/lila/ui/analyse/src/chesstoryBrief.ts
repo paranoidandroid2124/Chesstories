@@ -121,6 +121,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
   const losses = uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels));
   const targets = conciseCarrierLabels(positionEvidence.flatMap(boardCarrierTargetLabels)).slice(0, 5);
+  const currentCarriers = conciseCarrierLabels([...positionEvidence.flatMap(moveCarrierLabels), ...targets]).slice(0, 5);
   const problem = firstLabel(verdictReasons.flatMap(problemLabels));
   const referenceIdeas = uniqueLabels(evidenceReference.map(ideaLabel)).slice(0, 3);
   const concreteIdeas = targets.length
@@ -132,7 +133,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     concreteIdeas.length && targets.length && !targets.some(target => target.startsWith(concreteIdeas[0]))
       ? `${joinHuman(concreteIdeas)} around ${joinHuman(targets)}`
       : joinHuman(concreteSolved);
-  const currentChange = targets.length ? joinHuman(targets) : solved.length ? joinHuman(solved) : '';
+  const currentChange = currentCarriers.length ? joinHuman(currentCarriers) : solved.length ? joinHuman(solved) : '';
   const lineEvidence = comparisonLines(evidencePlayed).slice(0, 3);
   const terminalProof = terminal.length ? `, proving ${joinHuman(terminal)}` : '';
   const currentDecisionLine =
@@ -307,6 +308,14 @@ function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
     carriers
       .filter(carrier => !hasSpecificTarget || carrier.kind !== 'Piece')
       .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
+      .map(boardCarrierLabel),
+  );
+}
+
+function moveCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
+  return conciseCarrierLabels(
+    (semantic.evidence?.board_carriers || [])
+      .filter(carrier => carrier.role === 'actor' && carrier.kind === 'Move' && carrier.from && carrier.to)
       .map(boardCarrierLabel),
   );
 }
