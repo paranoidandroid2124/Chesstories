@@ -238,13 +238,13 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
   if (!semantics.some(hasConcreteSurfaceCarrier) || !hasLineProof) return [];
   const sections = chesstoryBriefSections(payload);
   const currentDecisionBody = sections.find(section => section.key === 'current-decision')?.body || '';
-  const currentDecisionHasLineProof = /PV continues|proving /.test(currentDecisionBody);
+  const currentDecisionHasProof = /(?:confirming|proving) /.test(currentDecisionBody);
   const evidenceBody = sections.find(section => section.key === 'evidence')?.body || '';
   const evidenceHasLineProof = /^The terminal result is |^The line (?:wins|loses|confirms) |^The ending technique evidence is /.test(evidenceBody);
   const evidenceProofAlreadyInCurrent =
     (evidenceBody === 'The line wins material.' && currentDecisionBody.includes('material gain')) ||
     (evidenceBody === 'The line loses material.' && currentDecisionBody.includes('material loss'));
-  if (!currentDecisionHasLineProof && !evidenceHasLineProof) return [];
+  if (!currentDecisionHasProof && !evidenceHasLineProof) return [];
   return sections
     .filter(section => !section.pending)
     .filter(section => section.items?.length || !/not clear from the board|No clean better-move lesson|needs a concrete plan|does not show a clear enough|does not reveal/.test(section.body))
@@ -254,7 +254,7 @@ export function chesstoryLlmPayload(payload?: ChesstoryMoveMeaningPayload) {
       const coveredItems = handledItems?.filter(item => currentDecisionBody.includes(item)).length || 0;
       return !handledItems?.length || coveredItems < Math.max(handledItems.length - 1, 1);
     })
-    .filter(section => section.key !== 'middlegame-plan' || !currentDecisionHasLineProof || !section.body.startsWith('This move handles '))
+    .filter(section => section.key !== 'middlegame-plan' || !currentDecisionHasProof || !section.body.startsWith('This move handles '))
     .filter(section => section.key !== 'better-plan' || !section.items?.some(item => currentDecisionBody.includes(item)))
     .filter(section =>
       section.key !== 'evidence' ||
