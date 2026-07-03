@@ -428,7 +428,7 @@ function planSubjectLabel(value: string): string {
   if (pressure) return `${pressure[1].replace(/-/g, ' ')} ${pressure[2].includes('-') ? 'along' : 'on'} ${pressure[2]}`;
   const defenderMove = normalized.match(/^defender-move:([a-h][1-8])$/);
   if (defenderMove) return `defensive resource on ${defenderMove[1]}`;
-  const actionSquare = normalized.match(/^(defender-move|material-capture):([a-h][1-8])$/);
+  const actionSquare = normalized.match(/^(defender-move|material-capture|material-recapture):([a-h][1-8])$/);
   if (actionSquare) return `${actionSquare[1].replace(/-/g, ' ')} on ${actionSquare[2]}`;
   const createdTension = normalized.match(/^created-tension:([a-h][1-8])(-[a-h][1-8])?$/);
   if (createdTension?.[2]) return `tension between ${createdTension[1]} and ${createdTension[2].slice(1)}`;
@@ -440,6 +440,7 @@ function planSubjectLabel(value: string): string {
     .replace(/pawnbreak/g, 'pawn break')
     .replace(/weakpawnattack/g, 'weak pawn attack')
     .replace(/weakpawn/g, 'weak pawn')
+    .replace(/pawnstorm/g, 'pawn storm')
     .replace(/openingdevelopment/g, 'opening development')
     .replace(/pieceactivation/g, 'piece activation')
     .replace(/-/g, ' ');
