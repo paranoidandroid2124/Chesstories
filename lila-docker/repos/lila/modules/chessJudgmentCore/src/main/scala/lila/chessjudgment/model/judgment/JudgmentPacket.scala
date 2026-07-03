@@ -6313,6 +6313,7 @@ object MoveJudgmentView:
   private def exactCurrentMoveStrategicSupportKind(kind: RelativeCauseKind): Boolean =
     kind == RelativeCauseKind.ActivityGain ||
       kind == RelativeCauseKind.TargetPressureGain ||
+      kind == RelativeCauseKind.PawnWeaknessTarget ||
       kind == RelativeCauseKind.PawnBreakOpportunity ||
       kind == RelativeCauseKind.OpponentRestriction ||
       kind == RelativeCauseKind.PlanImprovement
