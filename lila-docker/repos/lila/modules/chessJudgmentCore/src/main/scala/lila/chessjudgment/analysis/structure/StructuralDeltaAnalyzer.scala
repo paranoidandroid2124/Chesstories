@@ -28,6 +28,7 @@ private[chessjudgment] final case class TransitionStructuralDelta(
     fileAccessDelta: Int = 0,
     kingShelterDelta: Int = 0,
     kingShelterFiles: List[String] = Nil,
+    kingTargetSubjects: List[String] = Nil,
     mobilityDelta: Int = 0,
     developmentDelta: Int = 0,
     centerControlDelta: Int = 0,
@@ -104,7 +105,7 @@ private[chessjudgment] object StructuralDeltaContracts:
       signal(OutpostRemoved, Loss, delta.outpostRemoved.size, delta.outpostRemoved),
       signal(RookLiftCreated, Gain, delta.rookLiftCreated.size, delta.rookLiftCreated),
       signal(BatteryCreated, Gain, delta.batteryCreated.size, delta.batteryCreated),
-      signedSignal(KingRingPressureChanged, delta.kingRingPressureDelta, Nil)
+      signedSignal(KingRingPressureChanged, delta.kingRingPressureDelta, kingTargetSubjects(delta))
     ).flatten
 
   def consequences(delta: TransitionStructuralDelta): List[TransitionConsequence] =
@@ -308,10 +309,10 @@ private[chessjudgment] object StructuralDeltaContracts:
           )
         ),
         Option.when(delta.kingRingPressureDelta > 0)(
-          TransitionConsequence(KingRingPressureGain, Gain, delta.kingRingPressureDelta)
+          TransitionConsequence(KingRingPressureGain, Gain, delta.kingRingPressureDelta, kingTargetSubjects(delta))
         ),
         Option.when(delta.kingRingPressureDelta < 0)(
-          TransitionConsequence(KingRingPressureConcession, Loss, -delta.kingRingPressureDelta)
+          TransitionConsequence(KingRingPressureConcession, Loss, -delta.kingRingPressureDelta, kingTargetSubjects(delta))
         )
       ).flatten.distinctBy(consequence => (consequence.kind, consequence.polarity, consequence.strength, consequence.subjects.sorted.mkString(",")))
     baseConsequences
@@ -352,7 +353,10 @@ private[chessjudgment] object StructuralDeltaContracts:
     ).distinct.sorted
 
   private def kingShelterSubjects(delta: TransitionStructuralDelta): List[String] =
-    delta.kingShelterFiles.map(file => s"file:$file").distinct.sorted
+    (delta.kingTargetSubjects ++ delta.kingShelterFiles.map(file => s"file:$file")).distinct.sorted
+
+  private def kingTargetSubjects(delta: TransitionStructuralDelta): List[String] =
+    delta.kingTargetSubjects.distinct.sorted
 
   private def promotionPressureSubjects(delta: TransitionStructuralDelta): List[String] =
     if delta.promotionPressureDelta > 0 then (delta.passedPawnCreated ++ delta.passedPawnAdvanced).distinct.sorted
@@ -429,6 +433,7 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
     val developmentDeltaValue = developmentDelta(before.features, after.features, side)
     val centerControlDeltaValue = centerControlDelta(before.features, after.features, side)
     val shelterFiles = moveUci.map(moveFiles).getOrElse(Nil)
+    val targetKingSubjects = kingSubjects(afterBoard, !side)
     val lineUnlock: (Int, List[String]) =
       moveUci.map(uci => lineUnlockDeltaAndSubjects(beforeBoard, afterBoard, side, uci)).getOrElse(0 -> Nil)
     Some(
@@ -445,6 +450,7 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         fileAccessDelta = after.fileAccess - before.fileAccess,
         kingShelterDelta = kingShelterDelta(before.features, after.features, side, shelterFiles),
         kingShelterFiles = shelterFiles.map(_.toString),
+        kingTargetSubjects = targetKingSubjects,
         mobilityDelta = mobilityDeltaValue,
         developmentDelta = developmentDeltaValue,
         centerControlDelta = centerControlDeltaValue,
@@ -859,6 +865,9 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
 
   private def enemyOccupiedSquares(board: Board, side: Color): List[Square] =
     Square.all.toList.filter(square => board.pieceAt(square).exists(_.color != side))
+
+  private def kingSubjects(board: Board, side: Color): List[String] =
+    board.kingPosOf(side).map(square => s"king:${square.key}").toList
 
   private def structureSnapshot(
       fen: String,
