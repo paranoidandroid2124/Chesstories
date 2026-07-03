@@ -2705,7 +2705,7 @@ object MoveMeaningClaim:
       val mergedSourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted
       val mergedObjectBindingSignatures = list.flatMap(_.objectBindingSignatures).distinct.sorted
       val mergedObjectCarrierReady = list.exists(_.objectCarrierReady)
-      val mergedBoardCarriers = list.flatMap(_.boardCarriers).distinct.sortBy(boardCarrierSortKey).take(8)
+      val mergedBoardCarriers = list.flatMap(_.boardCarriers).distinct.sortBy(boardCarrierSortKey).take(12)
       val mergedPublicHasCarrier =
         list.exists(_.publicHasCarrier) ||
           (mergedObjectCarrierReady && (mergedCauseEvidenceIds.nonEmpty || mergedSourceEvidenceIds.nonEmpty))
@@ -2891,7 +2891,7 @@ object MoveMeaningClaim:
                 (boardCarriers ++ lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove))
                   .distinct
                   .sortBy(boardCarrierSortKey)
-                  .take(8)
+                  .take(12)
               val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, claimBoardCarriers)
               val objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames)
               val publicHasCarrier = objectCarrierReady && (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty)
@@ -3004,13 +3004,15 @@ object MoveMeaningClaim:
       .flatMap(id => evidenceGraph.byId.get(id))
       .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
       .flatMap(line =>
+        val carryLineCapturePieces = line.hasTacticalLineConsequence || line.hasProofSignalMaterialEvent
         line.lineEventsOf(LineEventKind.PassedPawn)
           .flatMap(event => event.square.toList.flatMap(square => publicSquareCarrier("target", square.key))) ++
           lineForkTargetCarriers(line) ++
           line.lineEvents
             .filter(event =>
               (event.kind == LineEventKind.Capture || event.kind == LineEventKind.Recapture) &&
-                (event.plyOffset == 0 || JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove)
+                (carryLineCapturePieces || event.plyOffset == 0 ||
+                  JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove)
             )
             .flatMap(event => event.targetRole.toList.flatMap(role => publicPieceCarrier("target", role.name)))
       )
