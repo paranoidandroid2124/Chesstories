@@ -580,6 +580,12 @@ function conciseCarrierLabels(labels: string[]): string[] {
   const barePieces = new Set(['king', 'queen', 'rook', 'bishop', 'knight', 'pawn', 'piece']);
   const hasConcrete = unique.some(label => !barePieces.has(label));
   const coveredFiles = new Set(unique.flatMap(label => label.match(/^([a-h])-file break$/)?.[1] || []));
+  const captureSacrificeSquares = new Set(
+    unique.flatMap(label => {
+      const square = label.match(/^material capture on ([a-h][1-8])$/)?.[1];
+      return square && unique.includes(`material sacrifice on ${square}`) ? [square] : [];
+    }),
+  );
   const pieceRoutes = new Set(
     unique.flatMap(label => label.match(/^(?:king|queen|rook|bishop|knight) ([a-h][1-8]-[a-h][1-8])$/)?.slice(1) || []),
   );
@@ -588,7 +594,7 @@ function conciseCarrierLabels(labels: string[]): string[] {
   );
   const coveredSquares = new Set(
     unique.flatMap(label => [
-      ...(label.match(/^(?:material sacrifice|weak square|check|weak pawn) on ([a-h][1-8])$/)?.slice(1) || []),
+      ...(label.match(/^(?:material capture|material sacrifice|capture and sacrifice|weak square|check|weak pawn) on ([a-h][1-8])$/)?.slice(1) || []),
       ...(label.match(/^line opening from ([a-h][1-8])$/)?.slice(1) || []),
       ...(label.match(/^passed pawn on ([a-h][1-8])$/)?.slice(1) || []),
       ...(
@@ -602,7 +608,15 @@ function conciseCarrierLabels(labels: string[]): string[] {
       ...(label.match(/^(?:king|queen|rook|bishop|knight) ([a-h][1-8])-([a-h][1-8])$/)?.slice(1) || []),
     ]),
   );
+  const captureSacrificeUsed = new Set<string>();
   const concise = unique
+    .flatMap(label => {
+      const square = label.match(/^material (?:capture|sacrifice) on ([a-h][1-8])$/)?.[1];
+      if (!square || !captureSacrificeSquares.has(square)) return [label];
+      if (captureSacrificeUsed.has(square)) return [];
+      captureSacrificeUsed.add(square);
+      return [`capture and sacrifice on ${square}`];
+    })
     .filter(label => !hasConcrete || !barePieces.has(label))
     .filter(label => !label.match(/^[a-h][1-8]-[a-h][1-8]$/) || (!coveredRoutes.has(label) && !pieceRoutes.has(label)))
     .filter(label => {
