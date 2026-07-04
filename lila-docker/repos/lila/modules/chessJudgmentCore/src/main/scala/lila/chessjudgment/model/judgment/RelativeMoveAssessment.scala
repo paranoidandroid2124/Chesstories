@@ -248,7 +248,7 @@ case class RelativeCauseFact(
   def eventRootMove: String = eventLine.rootMove
   def hasRawTypedDepth: Boolean = proof.exists(_.hasRawTypedDepth)
   def hasOwnedTypedDepth: Boolean =
-    attribution.directProofEligible && hasRawTypedDepth
+    attribution.directProofEligible && (hasRawTypedDepth || hasOwnedRootDefenderMoveProof)
   def strategicCauseKind: Boolean =
     RelativeCauseKind.strategicContrastBacked(kind)
   def hasStrategicContrastDepth: Boolean =
@@ -265,6 +265,12 @@ case class RelativeCauseFact(
   def hasOwnedTacticalProof: Boolean =
     attribution.directProofEligible &&
       proof.exists(proof => proof.directProof.hasTacticalProof || proof.contrastProof.hasTacticalProof)
+  private def hasOwnedRootDefenderMoveProof: Boolean =
+    kind == RelativeCauseKind.ConversionSecured &&
+      proof.exists(_.directProof.lineEvents.exists(event =>
+        event.kind == LineEventKind.DefenderMove &&
+          event.rootMoveMatched(eventRootMove)
+      ))
   def strategicProofIdentity: RelativeCauseStrategicProofIdentity =
     RelativeCauseStrategicProofIdentity.fromCause(this)
   def identityKey: RelativeCauseIdentityKey = RelativeCauseIdentityKey.from(this)

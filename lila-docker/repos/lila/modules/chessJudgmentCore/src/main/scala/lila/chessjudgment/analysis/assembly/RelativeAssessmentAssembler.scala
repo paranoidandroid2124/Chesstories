@@ -590,7 +590,9 @@ object RelativeAssessmentAssembler:
       neighborhood: ComparisonEvidenceNeighborhood
   ): RelativeCauseProofRecords =
     val directSeed =
-      support.filter(record => directProofSource(graph, fact, kind, binding, record)).distinctBy(_.ref.id)
+      (support ++ comparisonProof)
+        .filter(record => directProofSource(graph, fact, kind, binding, record))
+        .distinctBy(_.ref.id)
     val directRecords =
       proofSectionRecords(graph, directSeed, Some(kind), Some(binding))
         .filter(record => directProofSource(graph, fact, kind, binding, record))
@@ -1026,7 +1028,11 @@ object RelativeAssessmentAssembler:
             consequence.kind == LineConsequenceKind.RecoveryWindow ||
             consequence.kind == LineConsequenceKind.PromotionRace
         ) ||
-          payload.rootOwnedEndgameTechniqueHorizons(rootMove, kind).nonEmpty
+          payload.rootOwnedEndgameTechniqueHorizons(rootMove, kind).nonEmpty ||
+          (
+            kind == RelativeCauseKind.ConversionSecured &&
+              payload.rootOwnedLineEvents(rootMove).exists(_.kind == LineEventKind.DefenderMove)
+          )
       case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
           RelativeCauseKind.CandidateTacticalLiability =>
         rootOwnedConsequences.exists(consequence => LineConsequenceKind.tacticalDriver(consequence.kind)) ||

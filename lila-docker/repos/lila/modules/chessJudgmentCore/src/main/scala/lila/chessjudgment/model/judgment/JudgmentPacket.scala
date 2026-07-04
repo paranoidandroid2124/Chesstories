@@ -2990,7 +2990,24 @@ object MoveMeaningClaim:
             false
         }
       )
-    candidateLineMoveMatches || referenceLineMoveMatches || contrastMatches
+    val causeMatches =
+      frame.semanticDetails.exists(detail =>
+        detail.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
+          detail.causeEvidenceIds.exists(id =>
+            graph.byId.get(id).exists {
+              case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
+                cause.kind == RelativeCauseKind.ConversionSecured &&
+                  cause.hasOwnedTypedDepth &&
+                  cause.comparisonKind == verdict.comparisonKind &&
+                  cause.referenceLine == verdict.referenceLine &&
+                  cause.candidateLine == verdict.candidateLine &&
+                  endgameTechniqueRootDefenderMoveShape(detail, detail.objectBindingSignatures, cause.eventRootMove)
+              case _ =>
+                false
+            }
+          )
+      )
+    candidateLineMoveMatches || referenceLineMoveMatches || contrastMatches || causeMatches
 
   private def fromDetail(
       evidenceGraph: TypedEvidenceGraph,
@@ -3015,7 +3032,7 @@ object MoveMeaningClaim:
     val linkedCauseFrames = (directLinkedCauseFrames ++ bridgedRouteCauseFrames).distinctBy(_.causeEvidenceIds)
     val bridgedRouteCauseIds = bridgedRouteCauseFrames.flatMap(_.causeEvidenceIds).toSet
     kind(detail, objectSignatures, None).toList
-      .filter(_ => detailMatchesLine(frame, detail, verdict))
+      .filter(_ => detailMatchesLine(frame, detail, verdict, linkedCauseFrames))
       .flatMap { baseMeaningKind =>
         val currentRouteLineRole =
           Option.when(
@@ -3721,7 +3738,7 @@ object MoveMeaningClaim:
         case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" =>
           pieceRouteOwnedCauseReady(detail, objectSignatures, claimMove)
         case PositionPlanTechniqueUnit.EndgameTechniqueRecipe =>
-          endgameTechniqueHorizonOwnedShape(detail)
+          endgameTechniqueOwnedShape(detail, objectSignatures, claimMove)
         case _ =>
           true
     lazy val viewMeaningReady =
@@ -4031,7 +4048,7 @@ object MoveMeaningClaim:
       case PositionPlanTechniqueUnit.PlanOptionSet =>
         planContinuityCurrentMoveFunctionalProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
       case PositionPlanTechniqueUnit.EndgameTechniqueRecipe =>
-        endgameTechniqueHorizonViewShape(detail) &&
+        endgameTechniqueViewShape(detail, objectSignatures, claimMove) &&
           detailOwnsClaimMove(detail, objectSignatures, claimMove)
       case _ =>
         detailOwnsClaimMove(detail, objectSignatures, claimMove)
@@ -5146,6 +5163,40 @@ object MoveMeaningClaim:
       detail.endgameTechniqueEntryPlyOffset.nonEmpty ||
       detail.endgameTechniqueTerminalPlyOffset.nonEmpty
 
+  private def endgameTechniqueOwnedShape(
+      detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
+      claimMove: String
+  ): Boolean =
+    endgameTechniqueHorizonOwnedShape(detail) ||
+      (
+        detail.proofRoles.exists(_ == RelativeCauseProofRole.DirectProof) &&
+          endgameTechniqueRootDefenderMoveShape(detail, objectSignatures, claimMove)
+      )
+
+  private def endgameTechniqueViewShape(
+      detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
+      claimMove: String
+  ): Boolean =
+    endgameTechniqueHorizonViewShape(detail) ||
+      endgameTechniqueRootDefenderMoveShape(detail, objectSignatures, claimMove)
+
+  private def endgameTechniqueRootDefenderMoveShape(
+      detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
+      claimMove: String
+  ): Boolean =
+    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
+    detail.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
+      detail.causeEvidenceIds.nonEmpty &&
+      objectSignatures.exists(signature =>
+        val signatureList = List(signature)
+        signature.toLowerCase.contains("mechanism=mechanism:defendermove") &&
+          moveTokens(signatureList).contains(normalizedClaimMove) &&
+          EvidenceObjectBinding.signatureTokens(signatureList, "target=").exists(EvidenceObjectBinding.concreteTargetToken)
+      )
+
   private def endgameTechniqueStatusOwnable(status: String): Boolean =
     status != "SupersededByTactic" && status != "ContradictedByTerminalProof"
 
@@ -5350,7 +5401,8 @@ object MoveMeaningClaim:
   private def detailMatchesLine(
       frame: PositionPlanTechniqueFrame,
       detail: PositionPlanTechniqueSemanticDetail,
-      verdict: MoveJudgmentVerdictFrame
+      verdict: MoveJudgmentVerdictFrame,
+      linkedCauseFrames: List[MoveJudgmentCauseFrame]
   ): Boolean =
     val candidateMove = JudgmentSubjectBinding.normalizeMove(verdict.candidateLine.rootMove)
     val referenceMove = JudgmentSubjectBinding.normalizeMove(verdict.referenceLine.rootMove)
@@ -5366,7 +5418,20 @@ object MoveMeaningClaim:
     val contrastDetail =
       detail.contrastOutcome.nonEmpty &&
         (detail.candidateEvidenceIds.nonEmpty || detail.referenceEvidenceIds.nonEmpty)
-    candidateMoveMatches || referenceMoveMatches || candidateRootMatches || referenceRootMatches || contrastDetail
+    val causeRootMatches =
+      linkedCauseFrames.exists(causeFrame =>
+        detail.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe &&
+          causeFrame.causeKind == RelativeCauseKind.ConversionSecured &&
+          causeFrame.attributionDirectProofEligible &&
+          detail.proofRoles.exists(_ == RelativeCauseProofRole.DirectProof) &&
+          endgameTechniqueRootDefenderMoveShape(detail, detail.objectBindingSignatures, causeFrame.eventRootMove) &&
+          causeFrameMatches(causeFrame, verdict) &&
+          (
+            JudgmentSubjectBinding.normalizeMove(causeFrame.eventRootMove) == candidateMove ||
+              JudgmentSubjectBinding.normalizeMove(causeFrame.eventRootMove) == referenceMove
+          )
+      )
+    candidateMoveMatches || referenceMoveMatches || candidateRootMatches || referenceRootMatches || contrastDetail || causeRootMatches
 
   private def lineRoles(
       frame: PositionPlanTechniqueFrame,
