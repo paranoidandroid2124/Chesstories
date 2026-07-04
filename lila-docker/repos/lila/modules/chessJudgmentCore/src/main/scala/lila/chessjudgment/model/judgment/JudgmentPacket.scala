@@ -1884,7 +1884,6 @@ object MoveMeaningSurface:
     val surfaces = MoveMeaningSurface.from(view)
     Json.obj(
       "verdict" -> verdict.map(publicVerdictJson),
-      "move_semantics" -> surfaces.map(publicMoveSemanticJson),
       "llm_payload" -> verdict.toList.flatMap(publicLlmPayload(_, surfaces))
     )
 
@@ -1894,29 +1893,6 @@ object MoveMeaningSurface:
       "move_quality" -> verdict.moveQuality,
       "played_move" -> verdict.playedMove,
       "reference_move" -> verdict.referenceMove
-    )
-
-  private def publicMoveSemanticJson(surface: MoveMeaningSurface): JsObject =
-    Json.obj(
-      "move_uci" -> surface.moveUci,
-      "subject" -> surface.subject,
-      "line_role" -> surface.lineRole,
-      "move_quality" -> surface.moveQuality,
-      "idea_type" -> surface.ideaType,
-      "idea" -> publicCodeJson(surface.idea),
-      "idea_quality" -> surface.ideaQuality,
-      "assessment" -> publicAssessmentJson(surface.assessment),
-      "failure_family" -> surface.failureFamily,
-      "problem" -> surface.problem,
-      "target" -> publicTargetJson(surface.target),
-      "targets" -> publicTargetJson(surface.target),
-      "priority" -> surface.priority,
-      "comparison_loss" -> surface.comparisonLostIdeas.map(publicComparisonLossJson),
-      "terminal_consequences" -> surface.terminalConsequences.map(publicCodeJson),
-      "endgame_technique" -> surface.endgameTechnique.map(publicEndgameTechniqueJson),
-      "technique" -> surface.endgameTechnique.map(publicEndgameTechniqueJson),
-      "comparison" -> surface.comparison.map(publicComparisonJson),
-      "evidence" -> publicEvidenceJson(surface)
     )
 
   private def publicAssessmentJson(assessment: MoveMeaningSurfaceAssessment): JsObject =
@@ -1934,17 +1910,6 @@ object MoveMeaningSurface:
     Json.obj(
       "code" -> code.code,
       "label" -> code.label
-    )
-
-  private def publicEvidenceJson(surface: MoveMeaningSurface): JsObject =
-    val evidence = surface.evidence
-    Json.obj(
-      "has_carrier" -> evidence.hasCarrier,
-      "proof_level" -> evidence.proofLevel,
-      "target_bound" -> evidence.targetBound,
-      "cause_ids" -> evidence.causeIds,
-      "source_ids" -> evidence.sourceIds,
-      "board_carriers" -> evidence.boardCarriers.map(publicBoardCarrierJson(_, surface))
     )
 
   private def publicBoardCarrierJson(carrier: MoveMeaningSurfaceBoardCarrier, surface: MoveMeaningSurface): JsObject =
@@ -2090,23 +2055,6 @@ object MoveMeaningSurface:
       ),
       "terminal_consequences" -> technique.terminalConsequences.map(publicCodeJson),
       "failure_reason" -> technique.failureReason.map(publicCodeJson)
-    )
-
-  private def publicComparisonJson(comparison: MoveMeaningSurfaceComparison): JsObject =
-    Json.obj(
-      "kind" -> comparison.kind,
-      "relation" -> comparison.relation,
-      "reference_move" -> comparison.referenceMove,
-      "candidate_move" -> comparison.candidateMove,
-      "second_move" -> comparison.secondMove,
-      "moves" -> comparison.moves.map(publicMoveRefJson),
-      "lost_ideas" -> comparison.lostIdeas.map(publicComparisonLossJson)
-    )
-
-  private def publicMoveRefJson(move: MoveMeaningSurfaceMoveRef): JsObject =
-    Json.obj(
-      "role" -> move.role,
-      "uci" -> move.uci
     )
 
   private def publicComparisonLossJson(loss: MoveMeaningSurfaceComparisonLoss): JsObject =
