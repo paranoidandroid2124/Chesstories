@@ -731,7 +731,7 @@ object PositionPlanTechniqueProjection:
       (
         details ++
           details.flatMap(positionPlanTechniqueMaterialCompensationDetails(_, graph, fallbackEvidenceIds))
-      ).distinctBy(detail => (detail.unit, detail.axisKey, detail.label, detail.sourceEvidenceIds.mkString(",")))
+      ).distinctBy(detail => (detail.unit, detail.axisKey, detail.label, detail.terminalConsequenceKinds.mkString(","), detail.sourceEvidenceIds.mkString(",")))
     val fallbackRefs = fallbackEvidenceIds.flatMap(id => graph.byId.get(id).map(_.ref))
     val fallbackAnchorKeys =
       fallbackRefs
