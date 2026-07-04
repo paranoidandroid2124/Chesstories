@@ -2115,7 +2115,10 @@ object MoveMeaningSurface:
     view.moveMeaningClaims
       .flatMap { claim =>
         val evidence = evidenceForClaim(claim)
-        Option.when(evidence.hasCarrier)(claim -> evidence)
+        Option.when(
+          evidence.hasCarrier &&
+            (evidence.proofLevel == "owned_cause" || evidence.proofLevel == "terminal_proof")
+        )(claim -> evidence)
       }
       .sortBy((claim, _) => claimSurfaceSortKey(claim))
       .take(12)

@@ -260,6 +260,8 @@ object PositionPlanTechniqueProjection:
           mechanismPlanTechniqueFrame(record, ref, payload, parents, graph, ideas, claims, ideaVerdict).toList
         case record @ EvidenceRecord(ref, payload: StrategicMechanismContrastEvidence, parents) =>
           contrastPlanTechniqueFrame(record, ref, payload, parents, graph, ideas, claims, ideaVerdict).toList
+        case record @ EvidenceRecord(ref, payload: StructuralDeltaEvidence, parents) =>
+          structuralDeltaPlanTechniqueFrame(record, ref, payload, parents, graph, ideas, claims, ideaVerdict).toList
         case EvidenceRecord(ref, payload: ThreatEpisodeEvidence, parents) =>
           threatEpisodePlanTechniqueFrame(ref, payload, parents, graph, ideas, claims, ideaVerdict).toList
         case EvidenceRecord(ref, payload: BoardFactEvidence, _) if payload.endgameTechniqueAnchors.nonEmpty =>
@@ -272,6 +274,158 @@ object PositionPlanTechniqueProjection:
       .filter(_.units.nonEmpty)
       .distinctBy(_.id)
       .sortBy(frame => (-frame.salience, frame.id))
+
+  private def structuralDeltaPlanTechniqueFrame(
+      record: EvidenceRecord,
+      ref: EvidenceRef,
+      payload: StructuralDeltaEvidence,
+      parents: List[EvidenceRef],
+      graph: TypedEvidenceGraph,
+      ideas: List[ChessIdea],
+      claims: List[ClaimSeed],
+      ideaVerdict: Option[IdeaVerdictSplit]
+  ): Option[PositionPlanTechniqueFrame] =
+    if !payload.hasTypedOutput || payload.role == TransitionEdgeRole.Threat || payload.moveUci.trim.isEmpty then None
+    else
+      val refs = (ref :: parents).distinctBy(_.id)
+      val anchors = semanticAnchorsFor(graph, record, refs)
+      val evidenceIds = List(ref.id)
+      val structureContextSourceIds = positionPlanTechniqueStructureRouteContextSourceIds(graph, refs)
+      val structureContextAnchorKeys =
+        structureContextSourceIds
+          .flatMap(id => graph.byId.get(id))
+          .flatMap(StrategicMechanismEvidence.sourceSemanticAnchors)
+          .map(_.stableKey)
+          .distinct
+          .sorted
+      val candidateRelativeCauseEvidenceIds =
+        relativeCauseEvidenceIdsFor(
+          graph,
+          evidenceIds.toSet,
+          frameLine = payload.line.orElse(ref.line)
+        )
+      val semanticDetails =
+        positionPlanTechniqueEnrichedDetails(
+          structuralDeltaPlanTechniqueDetails(payload, anchors, evidenceIds, structureContextSourceIds, structureContextAnchorKeys),
+          graph,
+          (evidenceIds ++ candidateRelativeCauseEvidenceIds ++ structureContextSourceIds).distinct.sorted
+        )
+      val relativeCauseEvidenceIds = semanticDetails.flatMap(_.causeEvidenceIds).distinct.sorted
+      val linkedEvidenceIds = (evidenceIds ++ relativeCauseEvidenceIds).toSet
+      val ideaIds = positionPlanTechniqueIdeaIds(ideas, linkedEvidenceIds)
+      val claimIds = positionPlanTechniqueClaimIds(claims, linkedEvidenceIds, ideaIds.toSet)
+      val frameUnits = semanticDetails.map(_.unit).distinct.sortBy(_.toString)
+      Option.when(frameUnits.nonEmpty) {
+        val objectBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, List(ref))
+        PositionPlanTechniqueFrame(
+          id = s"position-plan-technique:${ref.id}:structural-delta",
+          units = frameUnits,
+          position = ref.position,
+          line = payload.line.orElse(ref.line),
+          moveUci = Some(payload.moveUci.trim.toLowerCase),
+          scope = ref.scope,
+          mechanismKinds = structuralDeltaPlanTechniqueMechanismKinds(frameUnits),
+          strategicAxisKeys = Nil,
+          semanticAnchors = anchors,
+          objectBindingSignatures = EvidenceObjectBinding.objectSignatures(objectBindings),
+          objectBindings = positionPlanTechniqueObjectBindings(objectBindings),
+          semanticDetails = semanticDetails,
+          evidenceIds = evidenceIds,
+          mechanismEvidenceIds = Nil,
+          sourceEvidenceIds = parents.map(_.id).distinct.sorted,
+          relativeCauseEvidenceIds = relativeCauseEvidenceIds,
+          ideaIds = ideaIds,
+          claimIds = claimIds,
+          planComparison = None,
+          relationToVerdict = positionPlanTechniqueRelation(ideaVerdict, ideaIds.toSet),
+          confidence = ref.confidence,
+          salience =
+            payload.consequences.map(_.strength).sum +
+              payload.signals.size +
+              frameUnits.size +
+              ideaIds.size +
+              claimIds.size +
+              relativeCauseEvidenceIds.size
+        )
+      }
+
+  private def structuralDeltaPlanTechniqueDetails(
+      payload: StructuralDeltaEvidence,
+      anchors: List[EvidenceSemanticAnchor],
+      evidenceIds: List[String],
+      structureContextSourceIds: List[String],
+      structureContextAnchorKeys: List[String]
+  ): List[PositionPlanTechniqueSemanticDetail] =
+    val anchorKeys = anchors.map(_.stableKey).distinct.sorted
+    val structureRouteContext = positionPlanTechniqueStructureRouteContextKeys(structureContextAnchorKeys, Nil)
+    positionPlanTechniqueStructuralPurposes(evidenceIds.head, payload)
+      .filter(structuralDeltaPlanTechniqueConcretePurpose)
+      .flatMap(purpose =>
+        val contextApplies = structureRouteContext && positionPlanTechniqueDevelopmentRoutePurpose(purpose)
+        val detailEvidenceIds =
+          if contextApplies then (evidenceIds ++ structureContextSourceIds).distinct.sorted else evidenceIds
+        val detailAnchorKeys =
+          if contextApplies then (anchorKeys ++ structureContextAnchorKeys).distinct.sorted else anchorKeys
+        structuralDeltaPlanTechniqueUnits(purpose, structureRouteContext).map(unit =>
+          PositionPlanTechniqueSemanticDetail(
+            unit = unit,
+            semanticAnchorKeys = detailAnchorKeys,
+            sourceEvidenceIds = detailEvidenceIds
+          ).withStructuralPurpose(Some(purpose))
+        )
+      )
+      .distinctBy(detail =>
+        (
+          detail.unit,
+          detail.structuralRouteMove,
+          detail.structuralPurposeSubjects.mkString(","),
+          detail.structuralPurposeConsequences.mkString(",")
+        )
+      )
+      .sortBy(detail => (detail.unit.toString, detail.structuralRouteMove.getOrElse(""), detail.structuralPurposeSubjects.mkString(",")))
+
+  private def structuralDeltaPlanTechniqueConcretePurpose(
+      purpose: PositionPlanTechniqueStructuralPurpose
+  ): Boolean =
+    purpose.routeMove.exists(_.trim.nonEmpty) &&
+      (
+        purpose.transitionRouteSubject.exists(_.trim.nonEmpty) ||
+          purpose.subjects.exists(positionPlanTechniqueConcreteSubject)
+      )
+
+  private def structuralDeltaPlanTechniqueUnits(
+      purpose: PositionPlanTechniqueStructuralPurpose,
+      structureRouteContext: Boolean
+  ): List[PositionPlanTechniqueUnit] =
+    (
+      Option
+        .when(purpose.subjects.exists(positionPlanTechniqueConcreteSubject) || (structureRouteContext && positionPlanTechniqueDevelopmentRoutePurpose(purpose)))(
+          PositionPlanTechniqueUnit.StructuralTransformation
+        )
+        .toList ++
+        Option.when(positionPlanTechniqueDevelopmentRoutePurpose(purpose))(PositionPlanTechniqueUnit.PieceRerouteRoute).toList ++
+        Option.when(structuralDeltaPawnBreakPurpose(purpose))(PositionPlanTechniqueUnit.TensionBreakPolicyRoute).toList
+    ).distinct.sortBy(_.toString)
+
+  private def structuralDeltaPawnBreakPurpose(
+      purpose: PositionPlanTechniqueStructuralPurpose
+  ): Boolean =
+    purpose.subjects.exists(subject =>
+      val normalized = subject.toLowerCase
+      normalized.startsWith("break-file:") ||
+        normalized.startsWith("created-tension:") ||
+        normalized.startsWith("resolved-tension:")
+    ) ||
+      purpose.consequenceKinds.exists(positionPlanTechniquePawnTensionConsequence)
+
+  private def structuralDeltaPlanTechniqueMechanismKinds(
+      units: List[PositionPlanTechniqueUnit]
+  ): List[StrategicMechanismKind] =
+    (
+      List(StrategicMechanismKind.StructuralImprovement) ++
+        Option.when(units.contains(PositionPlanTechniqueUnit.PieceRerouteRoute))(StrategicMechanismKind.Activity).toList ++
+        Option.when(units.contains(PositionPlanTechniqueUnit.TensionBreakPolicyRoute))(StrategicMechanismKind.PawnStructure).toList
+    ).distinct.sortBy(_.toString)
 
   private def mechanismPlanTechniqueFrame(
       record: EvidenceRecord,
@@ -2352,7 +2506,8 @@ object PositionPlanTechniqueProjection:
         )
     )) ||
       (detail.axisKey.isEmpty &&
-        detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+        (detail.unit == PositionPlanTechniqueUnit.StructuralTransformation ||
+          detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute) &&
         (
           detail.mechanismKinds.exists(positionPlanTechniqueStructuralPurposeMechanism) ||
             positionPlanTechniqueStructuralPurposeAnchor(detail)
