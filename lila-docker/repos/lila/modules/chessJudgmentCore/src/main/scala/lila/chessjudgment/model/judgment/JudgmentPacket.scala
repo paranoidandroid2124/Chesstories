@@ -2126,7 +2126,7 @@ object MoveMeaningSurface:
   private[chessjudgment] def evidenceForClaim(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
     publicEvidence(claim)
 
-  private def claimSurfaceSortKey(claim: MoveMeaningClaim): (Int, Int, String, String) =
+  private def claimSurfaceSortKey(claim: MoveMeaningClaim): (Int, Int, Int, String, String) =
     val claimSubject = subject(claim)
     val idea = ideaType(claim)
     (
@@ -2137,9 +2137,24 @@ object MoveMeaningSurface:
         case "comparison" => 2
         case "context"    => 3
         case _            => 4,
+      publicSpecificityRank(claim),
       idea,
       claim.moveUci
     )
+
+  private def publicSpecificityRank(claim: MoveMeaningClaim): Int =
+    val concreteRoute =
+      claim.meaningKind == "PieceRoute" &&
+        (claim.routeIdentityParts.nonEmpty || claim.structuralMotifTags.exists(tag => tag == "route" || tag == "reroute"))
+    val directStructure =
+      claim.sourceEvidenceIds.exists(_.contains("structural-delta")) &&
+        claim.structuralMotifTags.nonEmpty
+    val compactTarget =
+      (claim.targetSquares.size + claim.targetFiles.size + claim.targetPieces.size) <= 2
+    if concreteRoute then 0
+    else if directStructure then 1
+    else if claim.publicTargetBound && compactTarget then 2
+    else 3
 
   private def fromClaim(
       verdict: Option[MoveJudgmentVerdictFrame],
