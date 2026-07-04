@@ -146,7 +146,7 @@ object MoveReviewPhase3AuditViewJson:
           )
       }
       if evidenceSurfaces.isEmpty ||
-        (terminal.isEmpty && technique.isEmpty && !directStructuralCarrier && (pv.isEmpty || (!concreteConsequence && !ownedRouteCarrier)))
+        (terminal.isEmpty && technique.isEmpty && !directStructuralCarrier && !ownedRouteCarrier && (pv.isEmpty || !concreteConsequence))
       then Nil
       else
         val carriers = moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
