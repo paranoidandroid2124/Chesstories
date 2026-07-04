@@ -1960,8 +1960,10 @@ object MoveMeaningSurface:
               (carrier.kind == "Pawn" || (carrier.kind == "PlanSubject" && carrier.value.startsWith("passed-pawn")))
           )
       }
+      val playerFacingReasonAllowed =
+        terminal.nonEmpty || technique.nonEmpty || directStructuralCarrier || ownedRouteCarrier || (pv.nonEmpty && concreteConsequence)
       if evidenceSurfaces.isEmpty ||
-        (terminal.isEmpty && technique.isEmpty && !directStructuralCarrier && !ownedRouteCarrier && (pv.isEmpty || !concreteConsequence))
+        (!playerFacingReasonAllowed && carrierPairs.isEmpty)
       then Nil
       else
         val publicSemantics = evidenceSurfaces.distinctBy(surface =>
@@ -2028,13 +2030,13 @@ object MoveMeaningSurface:
             "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "terminal_consequences" -> terminal.map(publicCodeJson),
             "technique" -> technique.map(publicEndgameTechniqueJson),
-            "player_facing_reason_allowed" -> true
+            "player_facing_reason_allowed" -> playerFacingReasonAllowed
           )
         )
     }
 
   private def publicIdeaChainSurfaceHasCarrier(surface: MoveMeaningSurface): Boolean =
-    (surface.evidence.proofLevel == "owned_cause" || surface.evidence.proofLevel == "terminal_proof") &&
+    surface.evidence.proofLevel != "none" &&
       surface.evidence.hasCarrier &&
       (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
 
@@ -2129,9 +2131,14 @@ object MoveMeaningSurface:
     view.moveMeaningClaims
       .flatMap { claim =>
         val evidence = evidenceForClaim(claim)
+        val badPlayedMove =
+          view.verdict.exists(frame => badVerdict(frame.verdict)) &&
+            subject(claim) == "played_move"
+        val strongProof =
+          evidence.proofLevel == "owned_cause" || evidence.proofLevel == "terminal_proof"
         Option.when(
           evidence.hasCarrier &&
-            (evidence.proofLevel == "owned_cause" || evidence.proofLevel == "terminal_proof")
+            (strongProof || (evidence.proofLevel != "none" && !badPlayedMove))
         )(claim -> evidence)
       }
       .sortBy((claim, _) => claimSurfaceSortKey(claim))
@@ -2278,6 +2285,17 @@ object MoveMeaningSurface:
 
   private def ideaType(claim: MoveMeaningClaim): String =
     terminalIdeaType(claim)
+      .orElse(Option.when(claim.causeKinds.contains(RelativeCauseKind.DefensiveResource))("defensive_resource"))
+      .orElse(
+        Option.when(
+          claim.causeKinds.contains(RelativeCauseKind.RecaptureRecoveryWindow) &&
+            claim.boardCarriers.exists(carrier =>
+              carrier.role == "target" &&
+                carrier.kind == "PlanSubject" &&
+                carrier.value.startsWith("defender-move:")
+            )
+        )("defensive_resource")
+      )
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
       .orElse(Option.when(longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
       .getOrElse(claim.unit match
@@ -2627,6 +2645,7 @@ object MoveMeaningSurface:
     "promotion_race" -> "promotion",
     "promotion" -> "promotion",
     "draw_resource" -> "draw resource",
+    "defensive_resource" -> "defensive resource",
     "material_gain" -> "material gain",
     "material_loss" -> "material loss",
     "pawn_break_timing" -> "pawn break timing",

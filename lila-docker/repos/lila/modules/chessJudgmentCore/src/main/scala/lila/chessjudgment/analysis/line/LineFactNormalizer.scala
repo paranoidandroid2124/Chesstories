@@ -235,7 +235,7 @@ object LineFactNormalizer:
         val rootMove = PrincipalVariationEvidence.normalizeUci(root.uci)
         val rootTo = Option.when(rootMove.length >= 4)(rootMove.slice(2, 4))
         val rootSide = replay.headOption.flatMap(step => positionAfter(step.fenBefore).map(_.color))
-        val laterDefense = replayEvents.collectFirst {
+        val laterDefense = (replayEvents ++ materialEvents).collectFirst {
           case event
               if event.kind == LineEventKind.DefenderMove &&
                 event.plyOffset > 0 &&
