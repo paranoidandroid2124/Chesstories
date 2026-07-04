@@ -2006,6 +2006,7 @@ object MoveMeaningSurface:
             "reference_move" -> verdict.referenceMove,
             "move_quality" -> verdict.moveQuality,
             "subject" -> subject,
+            "move_semantics" -> evidenceSurfaces.map(publicMoveSemanticJson).distinct,
             "proof_levels" -> evidenceSurfaces.map(_.evidence.proofLevel).distinct,
             "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "pv" -> pv,

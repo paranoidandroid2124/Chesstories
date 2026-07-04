@@ -45,6 +45,15 @@ describe('chesstory brief scaffold', () => {
           reference_move: 'f8e7',
           move_quality: 'good',
           subject: 'played_move',
+          move_semantics: [
+            {
+              subject: 'played_move',
+              move_uci: 'f8e7',
+              idea_type: 'pawn_break_timing',
+              idea: { code: 'pawn_break_timing', label: 'pawn break timing' },
+              priority: 'main',
+            },
+          ],
           proof_levels: ['owned_cause'],
           carriers: [
             { role: 'actor', kind: 'Move', value: 'f8e7', from: 'f8', to: 'e7' },
@@ -64,6 +73,7 @@ describe('chesstory brief scaffold', () => {
     const text = JSON.stringify(sections);
 
     assert.ok(sections.every(section => !section.pending));
+    assert.match(text, /pawn break timing/);
     assert.match(text, /bishop f8-e7/);
     assert.match(text, /e-file break/);
     assert.match(text, /c2-c3/);

@@ -106,6 +106,7 @@ export interface ChesstoryLlmChain {
   reference_move?: string;
   move_quality?: string;
   subject: string;
+  move_semantics?: ChesstoryMoveSemantic[];
   proof_levels: string[];
   carriers: ChesstoryBoardCarrier[];
   pv: string[];
@@ -124,6 +125,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const referenceMove = moveLabel(chain.reference_move || payload?.verdict?.reference_move || '');
   const moveQuality = labelCode(chain.move_quality || payload?.verdict?.move_quality);
   const proofLevels = uniqueLabels(chain.proof_levels.map(labelCode)).slice(0, 4);
+  const ideas = uniqueLabels((chain.move_semantics || []).map(semantic => codeLabel(semantic.idea) || labelCode(semantic.idea_type))).slice(0, 5);
   const carriers = carrierLabels(chain.carriers).slice(0, 5);
   const consequences = carrierLabels(chain.consequence_carriers).slice(0, 6);
   const terminal = uniqueLabels(chain.terminal_consequences.map(codeLabel)).slice(0, 4);
@@ -135,8 +137,8 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   return [
     {
       key: 'opening-idea',
-      title: 'Public chain',
-      body: [subjectLabel(chain.subject), currentMove].filter(Boolean).join(' / '),
+      title: 'Graph ideas',
+      body: ideas.length ? joinHuman(ideas) : [subjectLabel(chain.subject), currentMove].filter(Boolean).join(' / '),
       pending: false,
       items: [`Move quality: ${moveQuality || 'available'}`, ...proofLevels.map(level => `Proof: ${level}`)],
       tone,
