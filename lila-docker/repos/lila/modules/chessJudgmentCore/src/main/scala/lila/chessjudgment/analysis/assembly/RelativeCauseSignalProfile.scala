@@ -492,11 +492,11 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         )
         val sameRootCounterBreak =
           signal.axis.exists(RelativeCauseSignalProfile.currentMoveCounterBreakAxis) &&
-            RelativeCauseSignalProfile.currentMoveSameRootBreakCarrier(candidateLine, records)
+            RelativeCauseSignalProfile.currentMoveCounterplayRestraintCarrier(candidateLine, records)
         diagonalRestriction || sameRootCounterBreak
       case _ =>
         signal.axis.exists(RelativeCauseSignalProfile.currentMoveCounterBreakAxis) &&
-          RelativeCauseSignalProfile.currentMoveSameRootBreakCarrier(candidateLine, records)
+          RelativeCauseSignalProfile.currentMoveCounterplayRestraintCarrier(candidateLine, records)
     }
 
   private def currentMoveStrategicSupportCauseKinds(
@@ -1142,7 +1142,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       records: List[EvidenceRecord]
   ): Boolean =
     signal.axis.exists(currentMoveCounterBreakAxis) &&
-      currentMoveSameRootBreakCarrier(candidateLine, records)
+      currentMoveCounterplayRestraintCarrier(candidateLine, records)
 
   private[chessjudgment] def currentMoveCounterBreakAxis(axis: StrategicAxisDetail): Boolean =
     StrategicMechanismContrastEvidence.currentMoveCounterBreakAxis(axis)
@@ -1152,6 +1152,12 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       records: List[EvidenceRecord]
   ): Boolean =
     StrategicMechanismContrastEvidence.currentMoveSameRootBreakCarrier(candidateLine, records)
+
+  private[chessjudgment] def currentMoveCounterplayRestraintCarrier(
+      candidateLine: LineNodeRef,
+      records: List[EvidenceRecord]
+  ): Boolean =
+    StrategicMechanismContrastEvidence.currentMoveCounterplayRestraintCarrier(candidateLine, records)
 
   private[chessjudgment] def currentMoveSameRootBreakCarrierRecords(
       candidateLine: LineNodeRef,

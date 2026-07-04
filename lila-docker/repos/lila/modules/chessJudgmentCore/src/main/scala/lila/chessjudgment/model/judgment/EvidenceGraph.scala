@@ -1846,7 +1846,7 @@ object StrategicMechanismContrastEvidence:
     if axis.kind == StrategicAxisKind.Counterplay &&
         axis.polarity == StrategicAxisPolarity.Restrain &&
         currentMoveCounterBreakAxis(axis) &&
-        currentMoveSameRootBreakCarrier(candidateLine, records)
+        currentMoveCounterplayRestraintCarrier(candidateLine, records)
     then List(RelativeCauseKind.OpponentRestriction)
     else if axis.kind == StrategicAxisKind.Target &&
         axis.polarity == StrategicAxisPolarity.Gain &&
@@ -1937,6 +1937,12 @@ object StrategicMechanismContrastEvidence:
           ) ||
           payload.consequencesOf(TransitionConsequenceKind.DevelopmentCenterControlGain).exists(consequence =>
             consequence.subjects.exists(currentMoveDevelopmentRouteSubject)
+          ) ||
+          payload.consequencesOf(TransitionConsequenceKind.MobilityGain).exists(consequence =>
+            consequence.subjects.exists(currentMoveDevelopmentRouteSubject)
+          ) ||
+          payload.consequencesOf(TransitionConsequenceKind.OutpostGain).exists(consequence =>
+            consequence.subjects.exists(currentMoveOutpostSubject)
           )
       case _ =>
         false
@@ -1949,6 +1955,10 @@ object StrategicMechanismContrastEvidence:
   private def currentMoveDevelopmentRouteSubject(subject: String): Boolean =
     val normalized = Option(subject).getOrElse("").trim.toLowerCase
     normalized.matches(".*\\b(king|queen|rook|bishop|knight):[a-h][1-8]-[a-h][1-8].*")
+
+  private def currentMoveOutpostSubject(subject: String): Boolean =
+    val normalized = Option(subject).getOrElse("").trim.toLowerCase
+    normalized.matches("outpost:(king|queen|rook|bishop|knight):[a-h][1-8]")
 
   private def weakTargetAxis(axis: StrategicAxisDetail): Boolean =
     val normalized = axis.label.toLowerCase
@@ -1977,6 +1987,13 @@ object StrategicMechanismContrastEvidence:
       records: List[EvidenceRecord]
   ): Boolean =
     currentMoveSameRootBreakCarrierRecords(candidateLine, records).nonEmpty
+
+  private[chessjudgment] def currentMoveCounterplayRestraintCarrier(
+      candidateLine: LineNodeRef,
+      records: List[EvidenceRecord]
+  ): Boolean =
+    currentMoveSameRootBreakCarrier(candidateLine, records) ||
+      currentMoveConcreteActivityCarrierRecords(candidateLine, records).nonEmpty
 
   private[chessjudgment] def currentMoveSameRootBreakCarrierRecords(
       candidateLine: LineNodeRef,
