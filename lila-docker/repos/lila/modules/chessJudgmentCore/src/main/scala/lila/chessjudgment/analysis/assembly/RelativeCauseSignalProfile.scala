@@ -134,6 +134,20 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
 
   private def rawDrafts(profile: RelativeCauseSignalProfile): List[RelativeCauseDraft] =
     import profile.*
+    val exactCurrentMoveRecaptureResource =
+      exactReferenceMove &&
+        candidateRecaptureResource.exists {
+          case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
+            payload.kind == TacticalMechanismKind.RecaptureChoice &&
+              payload.moveUci.exists(EvidenceRef.sameMove(_, fact.candidateLine.rootMove))
+          case EvidenceRecord(_, payload: LineFactEvidence, _) =>
+            payload.rootOwnedProofSignalConsequences(fact.candidateLine.rootMove).exists(consequence =>
+              consequence.kind == LineConsequenceKind.RecaptureSequence ||
+                consequence.kind == LineConsequenceKind.RecoveryWindow
+            )
+          case _ =>
+            false
+        }
     List(
       causeDraft(
         RelativeCauseKind.OnlyMoveNecessity,
@@ -190,7 +204,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       causeDraft(
         RelativeCauseKind.RecaptureRecoveryWindow,
         candidateRecaptureResource,
-        candidateRecaptureResource.nonEmpty && candidateBetter
+        candidateRecaptureResource.nonEmpty && (candidateBetter || exactCurrentMoveRecaptureResource)
       ),
       causeDraft(
         RelativeCauseKind.WrongMoveOrder,

@@ -1091,8 +1091,19 @@ object PositionPlanTechniqueProjection:
           positionPlanTechniqueCauseKindMatchesUnitOnlyDetail(detail, cause.kind) &&
             positionPlanTechniqueHasAdmissibleProofForEvidence(cause, evidenceIds)
         }
+    val concreteRouteProofMatched =
+      if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute && positionPlanTechniqueConcretePieceRoute(detail) then
+        causeRecords.filter { case (_, cause) =>
+          cause.attribution.directProofEligible &&
+            cause.attribution.rootMoveMatched &&
+            detail.structuralRouteMove.exists(move => positionPlanTechniqueSameMove(move, cause.eventRootMove)) &&
+            positionPlanTechniqueConcreteRouteCauseKind(detail, cause.kind) &&
+            positionPlanTechniqueHasAdmissibleProofForEvidence(cause, evidenceIds)
+        }
+      else Nil
     (
       axisMatched ++
+        concreteRouteProofMatched ++
         positionPlanTechniqueRootOwnedStructuralCauseRecords(detail, causeRecords, evidenceIds)
     ).distinctBy(_._1.id)
 
@@ -1138,7 +1149,7 @@ object PositionPlanTechniqueProjection:
         positionPlanTechniqueCauseKindsForAxis(axisKind, detail.axisPolarity, detail.label).contains(kind)
     ) ||
       positionPlanTechniqueConcreteCounterplayRaceCauseKind(detail, kind) ||
-      positionPlanTechniqueConcreteRoutePlanCauseKind(detail, kind) ||
+      positionPlanTechniqueConcreteRouteCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteStructuralPlanCauseKind(detail, kind) ||
       positionPlanTechniqueTerminalProofCauseKind(detail, kind)
 
@@ -1183,7 +1194,7 @@ object PositionPlanTechniqueProjection:
   ): Boolean =
     positionPlanTechniqueCauseKindsForUnit(detail.unit).contains(kind) ||
       positionPlanTechniqueConcreteCounterplayRaceCauseKind(detail, kind) ||
-      positionPlanTechniqueConcreteRoutePlanCauseKind(detail, kind) ||
+      positionPlanTechniqueConcreteRouteCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteStructuralPlanCauseKind(detail, kind) ||
       positionPlanTechniqueTerminalProofCauseKind(detail, kind)
 
@@ -1210,14 +1221,19 @@ object PositionPlanTechniqueProjection:
   private def positionPlanTechniqueSameMove(left: String, right: String): Boolean =
     JudgmentSubjectBinding.normalizeMove(left) == JudgmentSubjectBinding.normalizeMove(right)
 
-  private def positionPlanTechniqueConcreteRoutePlanCauseKind(
+  private def positionPlanTechniqueConcreteRouteCauseKind(
       detail: PositionPlanTechniqueSemanticDetail,
       kind: RelativeCauseKind
   ): Boolean =
     detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
       detail.axisKind.contains(StrategicAxisKind.Activity) &&
       positionPlanTechniqueConcretePieceRoute(detail) &&
-      Set(RelativeCauseKind.PlanImprovement, RelativeCauseKind.PlanContradiction).contains(kind)
+      Set(
+        RelativeCauseKind.PlanImprovement,
+        RelativeCauseKind.PlanContradiction,
+        RelativeCauseKind.RecaptureRecoveryWindow,
+        RelativeCauseKind.KingForcing
+      ).contains(kind)
 
   private def positionPlanTechniqueConcreteCounterplayRaceCauseKind(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -1475,6 +1491,7 @@ object PositionPlanTechniqueProjection:
   private def positionPlanTechniqueProofSectionEvidenceIds(section: RelativeCauseProofSection): List[String] =
     (
       section.sourceRefs.map(_.id) ++
+        section.tacticalMechanisms.flatMap(_.signals.flatMap(_.source.map(_.id))) ++
         section.strategicMechanisms.flatMap(_.signals.map(_.source.id)) ++
         section.strategicMechanismContrasts.flatMap(_.axisComparisons.flatMap(_.sources.map(_.id)))
     ).distinct.sorted
@@ -3021,6 +3038,8 @@ object PositionPlanTechniqueProjection:
       cause.strategicProofIdentity.axisKeys.exists(axisKeys.contains)
 
   private def relativeCauseEvidenceIds(cause: RelativeCauseFact): List[String] =
+    val tacticalSignalSourceIds =
+      cause.proof.toList.flatMap(_.sections.flatMap(_.tacticalMechanisms.flatMap(_.signals.flatMap(_.source.map(_.id)))))
     (
       (cause.supportEvidence ++
         cause.attribution.ownedEvidence ++
@@ -3028,5 +3047,5 @@ object PositionPlanTechniqueProjection:
         cause.attribution.contextEvidence ++
         cause.proof.toList.flatMap(proof =>
           proof.directProof.sourceRefs ++ proof.contrastProof.sourceRefs ++ proof.contextSupport.sourceRefs
-        )).map(_.id) ++ cause.strategicProofIdentity.signalSourceIds
+        )).map(_.id) ++ cause.strategicProofIdentity.signalSourceIds ++ tacticalSignalSourceIds
     ).distinct.sorted
