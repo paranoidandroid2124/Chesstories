@@ -115,133 +115,62 @@ export interface ChesstoryLlmChain {
   player_facing_reason_allowed: true;
 }
 
-const broadIdeaLabels = new Set(['piece route', 'piece activity', 'target pressure', 'plan continuity', 'counterplay control']);
-
 export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): ChesstoryBriefSection[] {
-  if (!payload?.move_semantics?.some(hasConcreteSurfaceCarrier)) return placeholderSections();
+  const chains = (payload?.llm_payload || []).filter(chain => chain.player_facing_reason_allowed === true);
+  const chain = chains.find(item => item.subject === 'played_move') || chains[0];
+  if (!chain) return placeholderSections();
 
-  const semantics = payload.move_semantics;
-  const played = semantics.filter(s => s.subject === 'played_move');
-  const reference = semantics.filter(s => s.subject === 'reference_move');
-  const evidencePlayed = played.filter(hasConcreteSurfaceCarrier);
-  const evidenceReference = reference.filter(hasConcreteSurfaceCarrier);
-  const bad = payload.verdict?.move_quality === 'bad';
-  const playableLoss = normalizeCode(payload.verdict?.verdict_code) === 'playable_loss';
-  const problemMove = bad || playableLoss;
-  const mainPlayed = evidencePlayed.filter(s => s.priority === 'main');
-  const localIdeas = played.filter(s => s.assessment?.is_local_idea && hasConcreteSurfaceCarrier(s));
-  const verdictReasons = evidencePlayed.filter(s => s.assessment?.is_verdict_reason);
-  const positionEvidence = problemMove ? evidenceReference : evidencePlayed;
-  const solved = cleanTerminalLabels(uniqueLabels(positionEvidence.map(ideaLabel)), problemMove).slice(0, 4);
-  const localIdeaLabels = uniqueLabels(localIdeas.map(ideaLabel)).slice(0, 4);
-  const terminal = cleanTerminalLabels(uniqueLabels(evidencePlayed.flatMap(terminalLabels)));
-  const technique = uniqueLabels(evidencePlayed.flatMap(techniqueLabels));
-  const losses = problemMove ? cleanTerminalLabels(uniqueLabels(evidencePlayed.flatMap(playedComparisonLossLabels)), true) : [];
-  const targets = conciseCarrierLabels(positionEvidence.flatMap(boardCarrierTargetLabels))
-    .sort((a, b) => Number(!a.endsWith('file break')) - Number(!b.endsWith('file break')))
-    .slice(0, 5);
-  const currentCarriers = conciseCarrierLabels([...positionEvidence.flatMap(moveCarrierLabels), ...targets])
-    .filter(label => !/^[a-h]-file$/.test(label) && !/^the [a-h][1-8] square$/.test(label))
-    .slice(0, 3);
-  const problem = firstLabel(verdictReasons.flatMap(problemLabels));
-  const referenceIdeas = cleanTerminalLabels(uniqueLabels(evidenceReference.map(ideaLabel)), problemMove).slice(0, 3);
-  const concreteIdeas = targets.length
-    ? solved.filter(label => !broadIdeaLabels.has(label) && !terminal.includes(label) && !/^break file [a-h] created tension /.test(label))
-    : solved;
-  const concreteSolved = targets.length ? targets : solved;
-  const handled = concreteSolved.length ? concreteSolved : terminal;
-  const positionThread =
-    concreteIdeas.length && targets.length && !targets.some(target => target.startsWith(concreteIdeas[0]))
-      ? `${concreteIdeas.length === 2 ? `${concreteIdeas[0]} with ${concreteIdeas[1]}` : joinHuman(concreteIdeas)} around ${joinHuman(targets)}`
-      : joinHuman(concreteSolved);
-  const currentChange = currentCarriers.length ? joinHuman(currentCarriers) : solved.length ? joinHuman(solved) : '';
-  const lineEvidence = comparisonLines(problemMove ? evidencePlayed : currentChange ? played : evidencePlayed)
-    .filter(line => line.startsWith('PV continues'))
-    .slice(0, 3);
-  const terminalProof = terminal.length ? `, proving ${joinHuman(terminal)}` : '';
-  const carrierProof =
-    !terminal.length && lineEvidence.length
-      ? concreteSolved
-          .filter(label => !broadIdeaLabels.has(label) && !label.startsWith('the ') && !/^[a-h]-file$/.test(label))
-          .slice(0, 3)
-      : [];
-  const pvProof = carrierProof.length ? `, confirming ${joinHuman(carrierProof)}` : terminalProof;
-  const currentDecisionLine =
-    currentChange && lineEvidence.length && pvProof
-      ? `The move changes ${currentChange}; ${lineEvidence[0]}${pvProof}.`
-      : currentChange
-        ? `The move changes ${currentChange}.`
-        : 'This move is marked, but the lesson is not clear from the board yet.';
-  const comparisonFocus = [...losses, ...referenceIdeas].filter(label => !broadIdeaLabels.has(label)).slice(0, 4);
+  const currentMove = moveLabel(chain.current_move || payload?.verdict?.played_move || '');
+  const referenceMove = moveLabel(chain.reference_move || payload?.verdict?.reference_move || '');
+  const moveQuality = labelCode(chain.move_quality || payload?.verdict?.move_quality);
+  const proofLevels = uniqueLabels(chain.proof_levels.map(labelCode)).slice(0, 4);
+  const carriers = carrierLabels(chain.carriers).slice(0, 5);
+  const consequences = carrierLabels(chain.consequence_carriers).slice(0, 6);
+  const terminal = uniqueLabels(chain.terminal_consequences.map(codeLabel)).slice(0, 4);
+  const technique = techniqueLabels(chain.technique).slice(0, 4);
+  const pv = uniqueLabels(chain.pv.map(moveLabel)).slice(0, 6);
+  const consequenceItems = uniqueLabels([...consequences, ...terminal, ...technique]).slice(0, 6);
+  const tone = moveQuality === 'bad' ? 'bad' : moveQuality ? 'good' : 'neutral';
 
   return [
     {
       key: 'opening-idea',
-      title: 'Position thread',
-      body: positionThread
-        ? `The position is asking about ${positionThread}.`
-        : 'The position needs a concrete plan before the engine line becomes useful.',
+      title: 'Public chain',
+      body: [subjectLabel(chain.subject), currentMove].filter(Boolean).join(' / '),
       pending: false,
-      items: targets.length ? [`Board focus: ${joinHuman(targets)}`] : undefined,
+      items: [`Move quality: ${moveQuality || 'available'}`, ...proofLevels.map(level => `Proof: ${level}`)],
+      tone,
     },
     {
       key: 'middlegame-plan',
-      title: problemMove
-        ? localIdeaLabels.length
-          ? 'Local idea that failed'
-          : 'What this move misses'
-        : 'What this move handles',
-      body: problemMove
-        ? localIdeaLabels.length
-          ? `The move has ${joinHuman(localIdeaLabels)}, but it does not fully meet the position's main demand.`
-          : 'The move does not reveal a clear useful idea yet.'
-        : handled.length
-          ? `This move handles ${joinHuman(handled)}.`
-          : 'The board does not show a clear enough reason for this move yet.',
+      title: 'Board carriers',
+      body: carriers.length ? joinHuman(carriers) : 'No public board carrier in this chain.',
       pending: false,
-      items: (problemMove ? localIdeaLabels : [...concreteSolved, ...terminal, ...technique]).slice(0, 5),
-      tone: problemMove ? 'bad' : 'good',
+      items: carriers,
+      tone,
     },
     {
       key: 'current-decision',
-      title: problemMove ? (bad ? 'Why it fails' : 'What remains loose') : 'Current decision',
-      body: problemMove
-        ? problem
-          ? `The main problem is ${problem}.`
-          : 'This move is marked, but the lesson is not clear from the board yet.'
-        : currentDecisionLine,
+      title: 'Concrete consequences',
+      body: consequenceItems.length ? joinHuman(consequenceItems) : 'No public consequence carrier in this chain.',
       pending: false,
-      items: (problemMove
-        ? uniqueLabels(verdictReasons.flatMap(problemLabels))
-        : currentCarriers.length
-          ? currentCarriers
-          : mainPlayed.map(summaryLine).filter(Boolean)
-      ).slice(0, 3),
-      tone: problemMove ? 'bad' : 'good',
+      items: consequenceItems,
+      tone,
     },
     {
       key: 'better-plan',
-      title: problemMove ? 'What the better move keeps' : 'Compared with the alternatives',
-      body:
-        comparisonFocus.length && lineEvidence.length
-          ? `The comparison turns on ${joinHuman(comparisonFocus)}; ${lineEvidence[0]}.`
-        : comparisonFocus.length
-          ? `The comparison turns on ${joinHuman(comparisonFocus)}.`
-          : lineEvidence.length
-            ? `The line evidence shows ${lineEvidence[0]}.`
-          : 'No clean better-move lesson is visible yet.',
+      title: referenceMove && referenceMove !== currentMove ? 'Reference chain' : 'PV / forced line',
+      body: pv.length ? joinHuman(pv) : 'No public PV in this chain.',
       pending: false,
-      items: lineEvidence,
-      tone: problemMove ? 'bad' : 'neutral',
+      items: referenceMove && referenceMove !== currentMove ? [`Reference: ${referenceMove}`, ...pv] : pv,
+      tone: 'neutral',
     },
     {
       key: 'evidence',
-      title: 'Board clues',
-      body:
-        evidenceLine(problemMove ? evidenceReference : played) ||
-        'This move is marked, but the lesson is not clear from the board yet.',
+      title: 'LLM input',
+      body: 'Only graph-approved carriers and proof are shown.',
       pending: false,
-      items: evidenceItems(problemMove ? evidenceReference : played).slice(0, 5),
+      items: [`Allowed: ${chain.player_facing_reason_allowed ? 'yes' : 'no'}`],
     },
   ];
 }
@@ -281,83 +210,22 @@ function placeholderSections(): ChesstoryBriefSection[] {
   ];
 }
 
-function codeLabel(code?: ChesstoryCode): string {
-  return code?.label || '';
-}
-
-function terminalLabels(semantic: ChesstoryMoveSemantic): string[] {
-  const bad = normalizeCode(semantic.move_quality) === 'bad';
-  const labels = cleanTerminalLabels(uniqueLabels((semantic.terminal_consequences || []).map(codeLabel)), bad);
-  return bad ? labels : labels.map(label => label === 'material loss' ? 'material sacrifice' : label);
-}
-
-function cleanTerminalLabels(labels: string[], preferLoss = false): string[] {
-  if (labels.includes('material gain') && labels.includes('material loss')) {
-    return labels.filter(label => label !== (preferLoss ? 'material gain' : 'material loss'));
-  }
-  if (labels.includes('material gain') && labels.includes('material sacrifice')) {
-    return labels.filter(label => label !== 'material sacrifice');
-  }
-  return labels;
-}
-
-function ideaLabel(semantic: ChesstoryMoveSemantic): string {
-  const terminal = terminalLabels(semantic);
-  if (terminal.length) return joinHuman(terminal);
-  return codeLabel(semantic.idea);
-}
-
-function problemLabels(semantic: ChesstoryMoveSemantic): string[] {
-  return [
-    semantic.assessment?.problem,
-    semantic.assessment?.failure_family,
-  ]
-    .map(codeLabel)
-    .filter(Boolean);
-}
-
-function boardCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
-  const carriers = semantic.evidence?.board_carriers || [];
+function carrierLabels(carriers: ChesstoryBoardCarrier[]): string[] {
   const actorPiece = actorRoutePiece(carriers);
-  return [...carriers]
-    .filter(carrier => ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''))
-    .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
-    .map(carrier => boardCarrierLabel(carrier, actorPiece));
+  return conciseCarrierLabels(
+    carriers
+      .filter(carrier => carrier.role === 'target' || (carrier.role === 'actor' && carrier.kind === 'Move'))
+      .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
+      .map(carrier => boardCarrierLabel(carrier, actorPiece)),
+  );
 }
 
 function boardCarrierRank(carrier: ChesstoryBoardCarrier): number {
   if (carrier.role !== 'target') return 4;
-  if (carrier.kind === 'PlanSubject' && carrier.value?.startsWith('defender-move:')) return -1;
   if (carrier.kind === 'PlanSubject') return 0;
   if (carrier.kind === 'File' || carrier.kind === 'Square' || carrier.kind === 'Pawn') return 1;
   if (carrier.kind === 'Piece') return 2;
   return 3;
-}
-
-function boardCarrierTargetLabels(semantic: ChesstoryMoveSemantic): string[] {
-  const carriers = (semantic.evidence?.board_carriers || []).filter(
-    carrier =>
-      carrier.role === 'target' &&
-      ['Square', 'File', 'Piece', 'Move', 'Pawn', 'PlanSubject'].includes(carrier.kind || ''),
-  );
-  const hasSpecificTarget = carriers.some(carrier => carrier.kind !== 'Piece');
-  return conciseCarrierLabels(
-    carriers
-      .filter(carrier => !hasSpecificTarget || carrier.kind !== 'Piece')
-      .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
-      .map(boardCarrierLabel),
-  );
-}
-
-function moveCarrierLabels(semantic: ChesstoryMoveSemantic): string[] {
-  const carriers = semantic.evidence?.board_carriers || [];
-  const actorPiece = actorRoutePiece(carriers);
-  return conciseCarrierLabels(
-    carriers
-      .filter(carrier => carrier.role === 'actor' && carrier.kind === 'Move' && carrier.from && carrier.to)
-      .filter(carrier => !semantic.move_uci || carrier.value === semantic.move_uci)
-      .map(carrier => boardCarrierLabel(carrier, actorPiece)),
-  );
 }
 
 function actorRoutePiece(carriers: ChesstoryBoardCarrier[]): string | undefined {
@@ -388,22 +256,10 @@ function carrierValueLabel(kind?: string, value?: string): string {
 
 function planSubjectLabel(value: string): string {
   const normalized = value.trim().toLowerCase();
-  if (normalized.includes(',')) {
-    const parts = normalized.split(',').map(planSubjectLabel);
-    if (parts.includes('piece activation') && parts.includes('pawn break preparation')) {
-      return 'piece development for the pawn break';
-    }
-    if (parts.includes('opening development') && parts.includes('pawn break preparation')) {
-      return 'development for the pawn break';
-    }
-    if (parts.includes('simplification') && parts.includes('pawn break preparation')) {
-      return 'simplification for the pawn break';
-    }
-    return parts.length === 2 ? `${parts[0]} with ${parts[1]}` : joinHuman(parts);
-  }
+  if (normalized.includes(',')) return joinHuman(normalized.split(',').map(planSubjectLabel));
   const lineUnlock = normalized.match(/^line-unlock:([a-h][1-8])$/);
   if (lineUnlock) return `line opening from ${lineUnlock[1]}`;
-  const squareSubject = normalized.match(/^(material-sacrifice|weak-square|check):([a-h][1-8])$/);
+  const squareSubject = normalized.match(/^(material-sacrifice|material-capture|material-recapture|weak-square|check):([a-h][1-8])$/);
   if (squareSubject) return `${squareSubject[1].replace(/-/g, ' ')} on ${squareSubject[2]}`;
   const passedAdvance = normalized.match(/^passed-pawn-advanced:([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
   if (passedAdvance) return `passed pawn advance ${passedAdvance[1]}-${passedAdvance[2]}`;
@@ -415,132 +271,55 @@ function planSubjectLabel(value: string): string {
   if (pressure) return `${pressure[1].replace(/-/g, ' ')} ${pressure[2].includes('-') ? 'along' : 'on'} ${pressure[2]}`;
   const defenderMove = normalized.match(/^defender-move:([a-h][1-8])$/);
   if (defenderMove) return `defensive resource on ${defenderMove[1]}`;
-  const actionSquare = normalized.match(/^(defender-move|material-capture|material-recapture):([a-h][1-8])$/);
-  if (actionSquare) return `${actionSquare[1].replace(/-/g, ' ')} on ${actionSquare[2]}`;
   const createdTension = normalized.match(/^created-tension:([a-h][1-8])(-[a-h][1-8])?$/);
   if (createdTension?.[2]) return `tension between ${createdTension[1]} and ${createdTension[2].slice(1)}`;
   if (createdTension) return `tension on ${createdTension[1]}`;
   const rookLift = normalized.match(/^rook-lift:([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
   if (rookLift) return `rook lift ${rookLift[1]}-${rookLift[2]}`;
-  return normalized
-    .replace(/pawnbreakpreparation/g, 'pawn break preparation')
-    .replace(/pawnbreak/g, 'pawn break')
-    .replace(/weakpawnattack/g, 'weak pawn attack')
-    .replace(/weakpawn/g, 'weak pawn')
-    .replace(/pawnstorm/g, 'pawn storm')
-    .replace(/openingdevelopment/g, 'opening development')
-    .replace(/pieceactivation/g, 'piece activation')
-    .replace(/-/g, ' ');
+  return labelCode(normalized);
 }
 
-function techniqueLabels(semantic: ChesstoryMoveSemantic): string[] {
-  const technique = semantic.endgame_technique;
-  if (!technique) return [];
-  return [
-    codeLabel(technique.pattern_info),
-    codeLabel(technique.rook_geometry),
-    technique.status_label,
-    ...(technique.terminal_consequences || []).map(codeLabel),
-    codeLabel(technique.failure_reason),
-  ].filter((label): label is string => !!label);
-}
-
-function summaryLine(semantic: ChesstoryMoveSemantic): string {
-  const idea = ideaLabel(semantic);
-  const targets = boardCarrierTargetLabels(semantic).slice(0, 3);
-  if (targets.length && broadIdeaLabels.has(idea)) return joinHuman(targets);
-  return [idea, targets.length ? `on ${joinHuman(targets)}` : ''].filter(Boolean).join(' ');
-}
-
-function comparisonLines(semantics: ChesstoryMoveSemantic[]): string[] {
-  return uniqueLabels(semantics.flatMap(s => {
-    const comparison = s.comparison;
-    if (!comparison) return [];
-    const moves = (comparison.moves || []).filter(move => move.uci);
-    const pvMoves = compactRepeatedMoves(moves
-      .filter(move => move.role?.includes('_pv_'))
-      .map(move => moveLabel(move.uci || '')));
-    const rootMoves = moves
-      .filter(move => !move.role?.includes('_pv_'))
-      .map(move => `${move.role?.replace(/_/g, ' ') || 'move'} ${moveLabel(move.uci || '')}`);
-    const lost = (comparison.lost_ideas || []).filter(isPlayedComparisonLoss).map(codeLabel);
+function techniqueLabels(values: unknown[]): string[] {
+  return uniqueLabels(values.flatMap(value => {
+    if (!value || typeof value !== 'object') return [];
+    const record = value as Record<string, unknown>;
     return [
-      pvMoves.length ? `PV continues with ${joinHuman(pvMoves)}` : rootMoves.length ? rootMoves.join(', ') : '',
-      lost.length ? `Lost idea: ${joinHuman(lost)}` : '',
-    ].filter(Boolean);
+      nestedCodeLabel(record.pattern_info),
+      nestedCodeLabel(record.rook_geometry),
+      stringValue(record.status_label),
+      stringValue(record.trigger_move).map(move => `trigger ${moveLabel(move)}`),
+    ].flat();
   }));
 }
 
-function compactRepeatedMoves(moves: string[]): string[] {
-  const half = moves.length / 2;
-  if (moves.length > 2 && moves.length % 2 === 0 && moves.slice(0, half).every((move, i) => move === moves[i + half])) {
-    return moves.slice(0, half);
-  }
-  return moves;
+function nestedCodeLabel(value: unknown): string[] {
+  if (!value || typeof value !== 'object') return [];
+  const label = (value as Record<string, unknown>).label;
+  return typeof label === 'string' && label ? [label] : [];
+}
+
+function stringValue(value: unknown): string[] {
+  return typeof value === 'string' && value ? [value] : [];
+}
+
+function codeLabel(code?: ChesstoryCode): string {
+  return code?.label || labelCode(code?.code);
+}
+
+function labelCode(raw?: string): string {
+  return (raw || '').replace(/[_-]+/g, ' ').trim().toLowerCase();
+}
+
+function subjectLabel(raw: string): string {
+  return labelCode(raw) || 'move chain';
 }
 
 function moveLabel(uci: string): string {
   return uci.replace(/^([a-h][1-8])([a-h][1-8])([nbrq])?$/, '$1-$2$3');
 }
 
-function playedComparisonLossLabels(semantic: ChesstoryMoveSemantic): string[] {
-  return [...(semantic.comparison_loss || []), ...(semantic.comparison?.lost_ideas || [])]
-    .filter(isPlayedComparisonLoss)
-    .map(codeLabel);
-}
-
-function isPlayedComparisonLoss(loss: ChesstoryComparisonLoss): boolean {
-  const side = loss.side?.toLowerCase();
-  return side === 'played_move' || side === 'candidate';
-}
-
-function evidenceLine(semantics: ChesstoryMoveSemantic[]): string | undefined {
-  const evidenceSemantics = semantics.filter(hasConcreteSurfaceCarrier);
-  const terminal = cleanTerminalLabels(uniqueLabels(evidenceSemantics.flatMap(terminalLabels)));
-  if (terminal.includes('material sacrifice')) return `The line confirms ${joinHuman(terminal)}.`;
-  if (terminal.length === 1 && terminal[0] === 'material gain') return 'The line wins material.';
-  if (terminal.length === 1 && terminal[0] === 'material loss') return 'The line loses material.';
-  if (terminal.length) return `The terminal result is ${joinHuman(terminal)}.`;
-  const technique = uniqueLabels(evidenceSemantics.flatMap(techniqueLabels));
-  if (technique.length) return `The ending technique evidence is ${joinHuman(technique)}.`;
-  const carriers = conciseCarrierLabels(evidenceSemantics.flatMap(boardCarrierLabels));
-  if (carriers.length) return `The concrete board evidence is ${joinHuman(carriers.slice(0, 5))}.`;
-  return undefined;
-}
-
-function evidenceItems(semantics: ChesstoryMoveSemantic[]): string[] {
-  const evidenceSemantics = semantics.filter(hasConcreteSurfaceCarrier);
-  const terminal = cleanTerminalLabels(uniqueLabels(evidenceSemantics.flatMap(terminalLabels)));
-  return conciseCarrierLabels(
-    evidenceSemantics
-      .flatMap(s => [
-        ...boardCarrierLabels(s),
-        ...techniqueLabels(s),
-      ])
-      .concat(terminal),
-  );
-}
-
-function hasEvidenceCarrier(semantic: ChesstoryMoveSemantic): boolean {
-  return semantic.evidence?.has_carrier === true;
-}
-
-function hasConcreteSurfaceCarrier(semantic: ChesstoryMoveSemantic): boolean {
-  return (
-    hasEvidenceCarrier(semantic) &&
-    ((semantic.evidence?.board_carriers || []).length > 0 ||
-      terminalLabels(semantic).length > 0 ||
-      techniqueLabels(semantic).length > 0)
-  );
-}
-
-function normalizeCode(code?: string): string {
-  return (code || '')
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-    .toLowerCase();
-}
 function uniqueLabels(labels: string[]): string[] {
-  return [...new Set(labels.map(l => l.trim()).filter(Boolean))];
+  return [...new Set(labels.map(label => label.trim()).filter(Boolean))];
 }
 
 function conciseCarrierLabels(labels: string[]): string[] {
@@ -610,10 +389,6 @@ function conciseCarrierLabels(labels: string[]): string[] {
     weakSquareGroupUsed = true;
     return [`weak squares ${joinHuman(weakSquares)}`];
   });
-}
-
-function firstLabel(labels: string[]): string | undefined {
-  return labels.find(Boolean);
 }
 
 function joinHuman(items: string[]): string {
