@@ -61,17 +61,16 @@ final class Analyse(
                 "ok" -> true,
                 "status" -> status,
                 "availability" -> publicAvailabilityJson(validation.isValid),
-                "move_review" -> packet.moveJudgmentView.map(moveJudgmentViewMeaningJson(_, validation.isValid))
+                "move_review" -> packet.moveJudgmentView.map(moveJudgmentViewMeaningJson)
               )
             ).toFuccess
       )
 
-  private def moveJudgmentViewMeaningJson(view: MoveJudgmentView, valid: Boolean): JsObject =
+  private def moveJudgmentViewMeaningJson(view: MoveJudgmentView): JsObject =
     val payload = MoveMeaningSurface.publicPayloadJson(view)
     val hasApprovedChain = (payload \ "llm_payload").asOpt[JsArray].exists(_.value.nonEmpty)
-    val renderable = valid || hasApprovedChain
-    Json.obj("renderable" -> renderable) ++
-      (if renderable then payload else Json.obj())
+    Json.obj("renderable" -> hasApprovedChain) ++
+      (if hasApprovedChain then payload else Json.obj())
 
   private def publicReviewStatus(valid: Boolean): String =
     if valid then "ready" else "withheld"
