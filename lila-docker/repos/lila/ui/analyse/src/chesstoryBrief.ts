@@ -21,7 +21,7 @@ export interface ChesstoryMoveMeaningPayload {
     played_move?: string;
     reference_move?: string;
   };
-  llm_payload?: ChesstoryLlmChain[];
+  idea_chains?: ChesstoryIdeaChain[];
 }
 
 export interface ChesstoryMoveSemantic {
@@ -90,7 +90,7 @@ interface ChesstoryBoardCarrier {
   to?: string;
 }
 
-export interface ChesstoryLlmChain {
+export interface ChesstoryIdeaChain {
   key: 'current-move-chain';
   current_move?: string;
   reference_move?: string;
@@ -107,7 +107,7 @@ export interface ChesstoryLlmChain {
 }
 
 export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): ChesstoryBriefSection[] {
-  const chains = (payload?.llm_payload || []).filter(chain => chain.player_facing_reason_allowed === true);
+  const chains = (payload?.idea_chains || []).filter(chain => chain.player_facing_reason_allowed === true);
   const chain = chains.find(item => item.subject === 'played_move') || chains[0];
   if (!chain) return placeholderSections();
 
@@ -159,7 +159,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     },
     {
       key: 'evidence',
-      title: 'LLM input',
+      title: 'Structured chain',
       body: 'Only graph-approved carriers and proof are shown.',
       pending: false,
       items: [`Allowed: ${chain.player_facing_reason_allowed ? 'yes' : 'no'}`],

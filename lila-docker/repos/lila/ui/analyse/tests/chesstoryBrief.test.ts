@@ -36,10 +36,10 @@ describe('chesstory brief scaffold', () => {
     assert.ok(sections.every(section => section.pending));
   });
 
-  test('uses only graph-approved llm_payload chains for filled cards', () => {
+  test('uses only graph-approved idea chains for filled cards', () => {
     const payload: ChesstoryMoveMeaningPayload = {
       verdict: { move_quality: 'good', played_move: 'f8e7', reference_move: 'f8e7' },
-      llm_payload: [
+      idea_chains: [
         {
           key: 'current-move-chain',
           current_move: 'f8e7',

@@ -590,12 +590,15 @@ object MoveReviewPhase3AuditRunner:
       )
     result match
       case Some(built) =>
+        val publicSurface =
+          built.packet.moveJudgmentView.fold(Json.obj())(MoveReviewPhase3AuditViewJson.moveMeaningSurfacePayloadJson)
+        val publicIdeaChainCount = (publicSurface \ "idea_chains").asOpt[JsArray].fold(0)(_.value.size)
         val slotCoverage =
           semanticRubricExpectedSlotCoverageJson(
             sample.expectedSemanticSlots,
             built.quality.semanticCoverage.comparisonDiagnostics,
             expectedQuestionIds = sample.expectedQuestionIds
-          )
+          ) ++ Json.obj("publicIdeaChainCount" -> publicIdeaChainCount)
         val common =
           Json.obj(
             "auditMode" -> (if slimOutput then "slim" else "full"),
@@ -620,7 +623,7 @@ object MoveReviewPhase3AuditRunner:
           Json.obj(
             "claimSupportClusters" -> claimSupportClusters(built),
             "claimEventClusters" -> claimEventClusters(built),
-            "moveJudgmentView" -> moveJudgmentView(built),
+            "moveJudgmentView" -> moveJudgmentView(built, publicSurface),
             "rankedPrimaryClaimDiagnostics" -> rankedClaimDiagnosticsByTier(built, PlayerFacingClaimTier.Primary),
             "rankedSecondaryClaimDiagnostics" -> rankedClaimDiagnosticsByTier(built, PlayerFacingClaimTier.Secondary),
             "rankedContextClaimDiagnostics" -> rankedClaimDiagnosticsByTier(built, PlayerFacingClaimTier.Context),
@@ -3447,7 +3450,7 @@ object MoveReviewPhase3AuditRunner:
       )
     )
 
-  private def moveJudgmentView(result: MoveReviewJudgmentResult): JsValue =
+  private def moveJudgmentView(result: MoveReviewJudgmentResult, publicSurface: JsObject): JsValue =
     result.packet.moveJudgmentView.fold[JsValue](JsNull)(view =>
       Json.obj(
         "verdict" -> view.verdict.map(moveJudgmentVerdictJson),
@@ -3457,7 +3460,7 @@ object MoveReviewPhase3AuditRunner:
           "secondary" -> view.causeAudit.secondary.map(moveJudgmentCauseFrameJson(result.packet, _)),
           "context" -> view.causeAudit.context.map(moveJudgmentCauseFrameJson(result.packet, _))
         ),
-        "publicSurface" -> MoveReviewPhase3AuditViewJson.moveMeaningSurfacePayloadJson(view),
+        "publicSurface" -> publicSurface,
         "moveMeaningClaims" -> view.moveMeaningClaims.map(moveMeaningClaimJson),
         "positionPlanTechniqueFrames" -> view.positionPlanTechniqueFrames.map(moveJudgmentPositionPlanTechniqueFrameJson),
         "supportContextClusterIds" -> view.supportContextClusterIds,

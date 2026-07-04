@@ -80,6 +80,8 @@ private[qc] object MoveReviewPhase3AuditMetrics:
   private[qc] def moveMeaningSurfaceCorpusDiagnosticsJson(coverages: List[JsValue]): JsObject =
     val publicClaimCount =
       coverages.map(coverage => (coverage \ "publicMoveMeaningClaimCount").as[Int]).sum
+    val publicIdeaChainCount =
+      coverages.map(coverage => (coverage \ "publicIdeaChainCount").asOpt[Int].getOrElse(0)).sum
     val boardCarrierlessPublicClaimCount =
       coverages.map(coverage => (coverage \ "boardCarrierlessPublicMoveMeaningClaimCount").as[Int]).sum
     val multiInputPublicClaimCount =
@@ -96,6 +98,7 @@ private[qc] object MoveReviewPhase3AuditMetrics:
         .sum
     Json.obj(
       "publicMoveMeaningClaimCount" -> publicClaimCount,
+      "publicIdeaChainCount" -> publicIdeaChainCount,
       "boardCarrierlessPublicMoveMeaningClaimCount" -> boardCarrierlessPublicClaimCount,
       "publicMoveMeaningBoardCarrierTotal" -> boardCarrierTotal,
       "boardCarrierSaturatedPublicMoveMeaningClaimCount" -> boardCarrierSaturatedPublicClaimCount,
