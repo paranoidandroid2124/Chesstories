@@ -1962,9 +1962,7 @@ object MoveMeaningSurface:
       }
       val playerFacingReasonAllowed =
         terminal.nonEmpty || technique.nonEmpty || directStructuralCarrier || ownedRouteCarrier || (pv.nonEmpty && concreteConsequence)
-      if evidenceSurfaces.isEmpty ||
-        (!playerFacingReasonAllowed && carrierPairs.isEmpty)
-      then Nil
+      if evidenceSurfaces.isEmpty || !playerFacingReasonAllowed then Nil
       else
         val publicSemantics = evidenceSurfaces.distinctBy(surface =>
           (surface.moveUci, surface.subject, surface.lineRole, surface.idea.code, surface.evidence.proofLevel)
