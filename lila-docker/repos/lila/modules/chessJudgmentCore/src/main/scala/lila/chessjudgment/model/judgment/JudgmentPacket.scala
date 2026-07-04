@@ -2288,7 +2288,8 @@ object MoveMeaningSurface:
       .orElse(Option.when(claim.causeKinds.contains(RelativeCauseKind.DefensiveResource))("defensive_resource"))
       .orElse(
         Option.when(
-          claim.causeKinds.contains(RelativeCauseKind.RecaptureRecoveryWindow) &&
+          (claim.causeKinds.contains(RelativeCauseKind.RecaptureRecoveryWindow) ||
+            claim.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe) &&
             claim.boardCarriers.exists(carrier =>
               carrier.role == "target" &&
                 carrier.kind == "PlanSubject" &&
@@ -2347,11 +2348,16 @@ object MoveMeaningSurface:
     else None
 
   private def checkingRouteTargetPressureClaim(claim: MoveMeaningClaim): Boolean =
-    claim.objectBindingSignatures.exists(signature =>
-      val normalized = signature.toLowerCase
-      normalized.contains("mechanism=mechanism:check") ||
-        normalized.contains("consequence=consequence:check")
-    )
+    claim.boardCarriers.exists(carrier =>
+      carrier.role == "target" &&
+        carrier.kind == "PlanSubject" &&
+        (carrier.value.startsWith("check:") || carrier.value.startsWith("line-unlock:"))
+    ) ||
+      claim.objectBindingSignatures.exists(signature =>
+        val normalized = signature.toLowerCase
+        normalized.contains("mechanism=mechanism:check") ||
+          normalized.contains("consequence=consequence:check")
+      )
 
   private def longDiagonalPressureClaim(claim: MoveMeaningClaim): Boolean =
     (
