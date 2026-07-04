@@ -302,7 +302,7 @@ object MoveReviewPhase3AuditRunner:
       parsedSamples.map { sample =>
         val explicitQuestionIds = explicitQuestionIdsByFingerprint.getOrElse(inputFingerprint(sample.raw), Set.empty)
         val inferredSlots =
-          inferredGoodNotesExpectedSemanticSlots(sample).filterNot(slot =>
+          inferredExpectedSemanticSlots(sample).filterNot(slot =>
             sample.expectedSemanticSlots.exists(_.id == slot.id) ||
               slot.questionId.exists(explicitQuestionIds)
           )
@@ -386,8 +386,28 @@ object MoveReviewPhase3AuditRunner:
   ): ExpectedSlotSpec =
     ExpectedSlotSpec(id, unit, Some(axisKey), requiredSupportLevel, tokens)
 
-  private val GoodNotesExpectedSlotSpecs: Map[String, List[ExpectedSlotSpec]] =
+  private val InferredExpectedSlotSpecs: Map[String, List[ExpectedSlotSpec]] =
     Map(
+      "terminal_mate" -> List(
+        ExpectedSlotSpec("terminal_mate_proof", PositionPlanTechniqueUnit.StructuralTransformation, None)
+      ),
+      "terminal_promotion_race" -> List(
+        ExpectedSlotSpec(
+          "terminal_promotion_race_proof",
+          PositionPlanTechniqueUnit.StructuralTransformation,
+          None,
+          requiredSupportLevel = "owned_cause_linked",
+          tokens = List("terminalConsequenceKind:PromotionRace")
+        )
+      ),
+      "terminal_only_defense" -> List(
+        ExpectedSlotSpec(
+          "terminal_only_defense_resource",
+          PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
+          None,
+          requiredSupportLevel = "owned_cause_linked"
+        )
+      ),
       "carrier_coverage_dual_purpose_defensive_resource" -> List(
         spec("qg4_target_pressure_carrier", PositionPlanTechniqueUnit.StructuralTransformation, "Target:Support:TargetFixation"),
         spec("qg4_queen_route_carrier", PositionPlanTechniqueUnit.PieceRerouteRoute, "Activity:Gain:activity-gain", tokens = List("route"))
@@ -460,9 +480,9 @@ object MoveReviewPhase3AuditRunner:
       )
     )
 
-  private def inferredGoodNotesExpectedSemanticSlots(sample: AuditInputSample): List[ExpectedSemanticSlot] =
+  private def inferredExpectedSemanticSlots(sample: AuditInputSample): List[ExpectedSemanticSlot] =
     sample.expectedQuestionIds.flatMap(questionId =>
-      GoodNotesExpectedSlotSpecs.getOrElse(questionId, Nil).map(_.toSlot(sample.raw.playedMoveUci, questionId))
+      InferredExpectedSlotSpecs.getOrElse(questionId, Nil).map(_.toSlot(sample.raw.playedMoveUci, questionId))
     )
 
   private def normalizeExpectedSemanticSlots(sample: AuditInputSample): AuditInputSample =
