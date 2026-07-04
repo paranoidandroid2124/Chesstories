@@ -1963,6 +1963,9 @@ object MoveMeaningSurface:
       then Nil
       else
         val consequenceCarriers = allConsequenceCarriers.take(6)
+        val publicSemantics = evidenceSurfaces.distinctBy(surface =>
+          (surface.moveUci, surface.subject, surface.lineRole, surface.idea.code, surface.evidence.proofLevel)
+        )
         val subjectFrom = Option.when(subjectMove.length >= 4)(subjectMove.take(2))
         val currentMoveCarriers = carrierPairs.filter((carrier, _) =>
             carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
@@ -1989,7 +1992,7 @@ object MoveMeaningSurface:
             "reference_move" -> verdict.referenceMove,
             "move_quality" -> verdict.moveQuality,
             "subject" -> subject,
-            "move_semantics" -> evidenceSurfaces.map(publicIdeaChainMoveSemanticJson).distinct,
+            "move_semantics" -> publicSemantics.map(publicIdeaChainMoveSemanticJson),
             "proof_levels" -> evidenceSurfaces.map(_.evidence.proofLevel).distinct,
             "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "pv" -> pv,
