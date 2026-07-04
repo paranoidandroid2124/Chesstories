@@ -73,8 +73,7 @@ final class Analyse(
   private def moveJudgmentViewMeaningJson(view: MoveJudgmentView): JsObject =
     val payload = MoveMeaningSurface.publicPayloadJson(view)
     val hasApprovedChain = (payload \ "idea_chains").asOpt[JsArray].exists(_.value.nonEmpty)
-    Json.obj("renderable" -> hasApprovedChain) ++
-      (if hasApprovedChain then payload else Json.obj())
+    Json.obj("renderable" -> hasApprovedChain) ++ payload
 
   private def publicReviewStatus(available: Boolean): String =
     if available then "ready" else "withheld"
