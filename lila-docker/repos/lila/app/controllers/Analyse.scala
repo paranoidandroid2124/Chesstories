@@ -56,20 +56,22 @@ final class Analyse(
           ): packet =>
             val validation = JudgmentPacketValidator.validate(packet)
             val status = publicReviewStatus(validation.isValid)
-            val renderable = status == "ready"
             JsonOk(
               Json.obj(
                 "ok" -> true,
                 "status" -> status,
                 "availability" -> publicAvailabilityJson(validation.isValid),
-                "move_review" -> packet.moveJudgmentView.map(moveJudgmentViewMeaningJson(_, renderable))
+                "move_review" -> packet.moveJudgmentView.map(moveJudgmentViewMeaningJson(_, validation.isValid))
               )
             ).toFuccess
       )
 
-  private def moveJudgmentViewMeaningJson(view: MoveJudgmentView, renderable: Boolean): JsObject =
+  private def moveJudgmentViewMeaningJson(view: MoveJudgmentView, valid: Boolean): JsObject =
+    val payload = MoveMeaningSurface.publicPayloadJson(view)
+    val hasApprovedChain = (payload \ "llm_payload").asOpt[JsArray].exists(_.value.nonEmpty)
+    val renderable = valid || hasApprovedChain
     Json.obj("renderable" -> renderable) ++
-      (if renderable then MoveMeaningSurface.publicPayloadJson(view) else Json.obj())
+      (if renderable then payload else Json.obj())
 
   private def publicReviewStatus(valid: Boolean): String =
     if valid then "ready" else "withheld"
