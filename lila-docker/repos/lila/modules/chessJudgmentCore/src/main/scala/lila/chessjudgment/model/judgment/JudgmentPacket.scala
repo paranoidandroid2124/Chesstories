@@ -1929,7 +1929,7 @@ object MoveMeaningSurface:
   private def publicIdeaChains(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[JsObject] =
     val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
     val subjectSpecs =
-      if problemMove then List(("reference_move", verdict.referenceMove, "reference_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
+      if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
       else List(("played_move", verdict.playedMove, "played_pv_"))
     subjectSpecs.flatMap { (subject, subjectMove, pvRolePrefix) =>
       val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && publicIdeaChainSurfaceHasCarrier(surface))
@@ -1964,10 +1964,22 @@ object MoveMeaningSurface:
         (terminal.isEmpty && technique.isEmpty && !directStructuralCarrier && !ownedRouteCarrier && (pv.isEmpty || !concreteConsequence))
       then Nil
       else
-        val consequenceCarriers = allConsequenceCarriers.take(6)
         val publicSemantics = evidenceSurfaces.distinctBy(surface =>
           (surface.moveUci, surface.subject, surface.lineRole, surface.idea.code, surface.evidence.proofLevel)
         )
+        val semanticTargetCarriers =
+          publicSemantics.flatMap(surface =>
+            surface.evidence.boardCarriers
+              .filter(carrier => carrier.role == "target" && publicIdeaChainConsequenceCarrier(carrier))
+              .take(1)
+              .map(carrier => carrier -> surface)
+          )
+        val consequenceCarriers =
+          (semanticTargetCarriers ++ allConsequenceCarriers)
+            .distinctBy((carrier, surface) =>
+              (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to)
+            )
+            .take(6)
         val subjectFrom = Option.when(subjectMove.length >= 4)(subjectMove.take(2))
         val semanticTargetPieces =
           publicSemantics.flatMap(_.target.pieces).map(_.trim.toLowerCase).filter(_.nonEmpty).distinct
@@ -2047,7 +2059,9 @@ object MoveMeaningSurface:
       "evidence" -> Json.obj(
         "has_carrier" -> surface.evidence.hasCarrier,
         "proof_level" -> surface.evidence.proofLevel,
-        "target_bound" -> surface.evidence.targetBound
+        "target_bound" -> surface.evidence.targetBound,
+        "cause_ids" -> surface.evidence.causeIds,
+        "source_ids" -> surface.evidence.sourceIds
       )
     )
 
@@ -2146,12 +2160,17 @@ object MoveMeaningSurface:
     val concreteRoute =
       claim.meaningKind == "PieceRoute" &&
         (claim.routeIdentityParts.nonEmpty || claim.structuralMotifTags.exists(tag => tag == "route" || tag == "reroute"))
+    val concreteRace =
+      claim.unit == PositionPlanTechniqueUnit.CounterplayRace &&
+        claim.causeEvidenceIds.nonEmpty &&
+        (claim.breakFiles.nonEmpty || claim.targetFiles.nonEmpty || claim.targetSquares.nonEmpty)
     val directStructure =
       claim.sourceEvidenceIds.exists(_.contains("structural-delta")) &&
         claim.structuralMotifTags.nonEmpty
     val compactTarget =
       (claim.targetSquares.size + claim.targetFiles.size + claim.targetPieces.size) <= 2
     if concreteRoute then 0
+    else if concreteRace then 1
     else if directStructure then 1
     else if claim.publicTargetBound && compactTarget then 2
     else 3
@@ -2259,6 +2278,7 @@ object MoveMeaningSurface:
 
   private def ideaType(claim: MoveMeaningClaim): String =
     terminalIdeaType(claim)
+      .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
       .orElse(Option.when(longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
       .getOrElse(claim.unit match
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
