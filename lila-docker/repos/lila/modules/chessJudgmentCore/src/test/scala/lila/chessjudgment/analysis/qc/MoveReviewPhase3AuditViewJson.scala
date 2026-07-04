@@ -116,43 +116,44 @@ object MoveReviewPhase3AuditViewJson:
       surfaces: List[MoveMeaningSurface]
   ): List[JsObject] =
     val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
-    val subject = if problemMove then "reference_move" else "played_move"
-    val subjectMove = if problemMove then verdict.referenceMove else verdict.playedMove
-    val pvRolePrefix = if problemMove then "reference_pv_" else "played_pv_"
-    val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && moveMeaningSurfaceHasLlmCarrier(surface))
-    val pv = surfaces
-      .filter(_.subject == subject)
-      .flatMap(_.comparison.toList.flatMap(_.moves))
-      .filter(move => move.uci.nonEmpty && move.role.startsWith(pvRolePrefix))
-      .map(_.uci)
-      .distinct
-    val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
-    val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
-    val consequenceCarriers = moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces)
-      .filter((carrier, _) => carrier.role == "target" && moveMeaningSurfaceLlmConsequenceCarrier(carrier))
-    val concreteConsequence = consequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
-    val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
-      surface.evidence.proofLevel == "owned_cause" &&
-        surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
-    )
-    val directStructuralCarrier = evidenceSurfaces.exists { surface =>
-      val carriers = surface.evidence.boardCarriers
-      surface.evidence.sourceIds.exists(_.contains("structural-delta")) &&
-        carriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) &&
-        carriers.exists(carrier =>
-          carrier.role == "target" &&
-            (carrier.kind == "Pawn" || (carrier.kind == "PlanSubject" && carrier.value.startsWith("passed-pawn")))
-        )
-    }
-    if evidenceSurfaces.isEmpty ||
-      (terminal.isEmpty && technique.isEmpty && !directStructuralCarrier && (pv.isEmpty || (!concreteConsequence && !ownedRouteCarrier)))
-    then Nil
-    else
-      val carriers = moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
-        (carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) ||
-          (carrier.role == "target" && moveMeaningSurfaceLlmConsequenceCarrier(carrier))
+    val subjectSpecs =
+      if problemMove then List(("reference_move", verdict.referenceMove, "reference_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
+      else List(("played_move", verdict.playedMove, "played_pv_"))
+    subjectSpecs.flatMap { (subject, subjectMove, pvRolePrefix) =>
+      val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && moveMeaningSurfaceHasLlmCarrier(surface))
+      val pv = surfaces
+        .filter(_.subject == subject)
+        .flatMap(_.comparison.toList.flatMap(_.moves))
+        .filter(move => move.uci.nonEmpty && move.role.startsWith(pvRolePrefix))
+        .map(_.uci)
+        .distinct
+      val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
+      val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
+      val consequenceCarriers = moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces)
+        .filter((carrier, _) => carrier.role == "target" && moveMeaningSurfaceLlmConsequenceCarrier(carrier))
+      val concreteConsequence = consequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
+      val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
+        surface.evidence.proofLevel == "owned_cause" &&
+          surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
       )
-      List(
+      val directStructuralCarrier = evidenceSurfaces.exists { surface =>
+        val carriers = surface.evidence.boardCarriers
+        surface.evidence.sourceIds.exists(_.contains("structural-delta")) &&
+          carriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) &&
+          carriers.exists(carrier =>
+            carrier.role == "target" &&
+              (carrier.kind == "Pawn" || (carrier.kind == "PlanSubject" && carrier.value.startsWith("passed-pawn")))
+          )
+      }
+      if evidenceSurfaces.isEmpty ||
+        (terminal.isEmpty && technique.isEmpty && !directStructuralCarrier && (pv.isEmpty || (!concreteConsequence && !ownedRouteCarrier)))
+      then Nil
+      else
+        val carriers = moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
+          (carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) ||
+            (carrier.role == "target" && moveMeaningSurfaceLlmConsequenceCarrier(carrier))
+        )
+        List(
         Json.obj(
           "key" -> "current-move-chain",
           "current_move" -> verdict.playedMove,
@@ -170,6 +171,7 @@ object MoveReviewPhase3AuditViewJson:
           "player_facing_reason_allowed" -> true
         )
       )
+    }
 
   private def moveMeaningSurfaceHasLlmCarrier(surface: MoveMeaningSurface): Boolean =
     (surface.evidence.proofLevel == "owned_cause" || surface.evidence.proofLevel == "terminal_proof") &&
