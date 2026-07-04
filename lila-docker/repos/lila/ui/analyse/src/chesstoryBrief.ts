@@ -214,11 +214,12 @@ function carrierLabels(carriers: ChesstoryBoardCarrier[]): string[] {
 }
 
 function boardCarrierRank(carrier: ChesstoryBoardCarrier): number {
+  if (carrier.role === 'actor' && carrier.kind === 'Move') return 0;
   if (carrier.role !== 'target') return 4;
-  if (carrier.kind === 'PlanSubject') return 0;
-  if (carrier.kind === 'File' || carrier.kind === 'Square' || carrier.kind === 'Pawn') return 1;
-  if (carrier.kind === 'Piece') return 2;
-  return 3;
+  if (carrier.kind === 'PlanSubject') return 1;
+  if (carrier.kind === 'File' || carrier.kind === 'Square' || carrier.kind === 'Pawn') return 2;
+  if (carrier.kind === 'Piece') return 3;
+  return 4;
 }
 
 function actorRoutePiece(carriers: ChesstoryBoardCarrier[]): string | undefined {
