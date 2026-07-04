@@ -160,10 +160,10 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     },
     {
       key: 'evidence',
-      title: 'Structured chain',
-      body: 'Only graph-approved carriers and proof are shown.',
+      title: 'Evidence',
+      body: proofLevels.length ? joinHuman(proofLevels) : 'Available',
       pending: false,
-      items: [`Allowed: ${chain.player_facing_reason_allowed ? 'yes' : 'no'}`],
+      items: proofLevels,
     },
   ];
 }
