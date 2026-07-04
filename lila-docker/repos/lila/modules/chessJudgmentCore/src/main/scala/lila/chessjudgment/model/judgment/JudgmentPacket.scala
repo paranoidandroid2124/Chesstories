@@ -1966,10 +1966,11 @@ object MoveMeaningSurface:
       else List(("played_move", verdict.playedMove, "played_pv_"))
     subjectSpecs.flatMap { (subject, subjectMove, pvRolePrefix) =>
       val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && publicLlmSurfaceHasCarrier(surface))
+      val rootMoveRole = if subject == "reference_move" then "best_move" else "played_move"
       val pv = surfaces
         .filter(_.subject == subject)
         .flatMap(_.comparison.toList.flatMap(_.moves))
-        .filter(move => move.uci.nonEmpty && move.role.startsWith(pvRolePrefix))
+        .filter(move => move.uci.nonEmpty && (move.role == rootMoveRole || move.role.startsWith(pvRolePrefix)))
         .map(_.uci)
         .distinct
       val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
