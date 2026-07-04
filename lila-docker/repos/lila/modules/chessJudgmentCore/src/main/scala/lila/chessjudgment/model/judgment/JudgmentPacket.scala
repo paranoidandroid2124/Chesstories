@@ -2006,7 +2006,7 @@ object MoveMeaningSurface:
             "reference_move" -> verdict.referenceMove,
             "move_quality" -> verdict.moveQuality,
             "subject" -> subject,
-            "move_semantics" -> evidenceSurfaces.map(publicMoveSemanticJson).distinct,
+            "move_semantics" -> evidenceSurfaces.map(publicLlmMoveSemanticJson).distinct,
             "proof_levels" -> evidenceSurfaces.map(_.evidence.proofLevel).distinct,
             "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "pv" -> pv,
@@ -2022,6 +2022,30 @@ object MoveMeaningSurface:
     (surface.evidence.proofLevel == "owned_cause" || surface.evidence.proofLevel == "terminal_proof") &&
       surface.evidence.hasCarrier &&
       (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
+
+  private def publicLlmMoveSemanticJson(surface: MoveMeaningSurface): JsObject =
+    Json.obj(
+      "move_uci" -> surface.moveUci,
+      "subject" -> surface.subject,
+      "line_role" -> surface.lineRole,
+      "move_quality" -> surface.moveQuality,
+      "idea_type" -> surface.ideaType,
+      "idea" -> publicCodeJson(surface.idea),
+      "idea_quality" -> surface.ideaQuality,
+      "assessment" -> publicAssessmentJson(surface.assessment),
+      "failure_family" -> surface.failureFamily,
+      "problem" -> surface.problem,
+      "target" -> publicTargetJson(surface.target),
+      "priority" -> surface.priority,
+      "comparison_loss" -> surface.comparisonLostIdeas.map(publicComparisonLossJson),
+      "terminal_consequences" -> surface.terminalConsequences.map(publicCodeJson),
+      "endgame_technique" -> surface.endgameTechnique.map(publicEndgameTechniqueJson),
+      "evidence" -> Json.obj(
+        "has_carrier" -> surface.evidence.hasCarrier,
+        "proof_level" -> surface.evidence.proofLevel,
+        "target_bound" -> surface.evidence.targetBound
+      )
+    )
 
   private def publicLlmConsequenceCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
     carrier.kind match
