@@ -2298,6 +2298,23 @@ object MoveMeaningSurface:
       )
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
       .orElse(Option.when(longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
+      .orElse(
+        Option.when(
+          claim.unit != PositionPlanTechniqueUnit.SpacePreventionResourceDenial &&
+            claim.boardCarriers.exists(carrier =>
+              carrier.role == "target" &&
+                carrier.kind == "PlanSubject" &&
+                carrier.value.startsWith("material-sacrifice:")
+            ) &&
+            claim.causeKinds.exists(kind =>
+              kind == RelativeCauseKind.ActivityGain ||
+                kind == RelativeCauseKind.TargetPressureGain ||
+                kind == RelativeCauseKind.PawnWeaknessTarget ||
+                kind == RelativeCauseKind.PawnBreakOpportunity ||
+                kind == RelativeCauseKind.PlanImprovement
+            )
+        )("compensation")
+      )
       .getOrElse(claim.unit match
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
           "pawn_break_timing"
