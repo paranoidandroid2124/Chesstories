@@ -55,13 +55,17 @@ final class Analyse(
             BadRequest(Json.obj("ok" -> false, "error" -> "move_review_not_buildable")).toFuccess
           ): packet =>
             val validation = JudgmentPacketValidator.validate(packet)
-            val status = publicReviewStatus(validation.isValid)
+            val moveReview = packet.moveJudgmentView.map(moveJudgmentViewMeaningJson)
+            val renderable = validation.isValid && moveReview.exists(review =>
+              (review \ "renderable").asOpt[Boolean].contains(true)
+            )
+            val status = publicReviewStatus(renderable)
             JsonOk(
               Json.obj(
                 "ok" -> true,
                 "status" -> status,
-                "availability" -> publicAvailabilityJson(validation.isValid),
-                "move_review" -> packet.moveJudgmentView.map(moveJudgmentViewMeaningJson)
+                "availability" -> publicAvailabilityJson(validation.isValid, renderable),
+                "move_review" -> moveReview
               )
             ).toFuccess
       )
@@ -72,13 +76,14 @@ final class Analyse(
     Json.obj("renderable" -> hasApprovedChain) ++
       (if hasApprovedChain then payload else Json.obj())
 
-  private def publicReviewStatus(valid: Boolean): String =
-    if valid then "ready" else "withheld"
+  private def publicReviewStatus(available: Boolean): String =
+    if available then "ready" else "withheld"
 
-  private def publicAvailabilityJson(valid: Boolean): JsObject =
+  private def publicAvailabilityJson(valid: Boolean, renderable: Boolean): JsObject =
     Json.obj(
-      "state" -> publicReviewStatus(valid),
+      "state" -> publicReviewStatus(renderable),
       "reason" ->
         (if !valid then Some("validation_failed")
+         else if !renderable then Some("no_public_chain")
          else None)
     )
