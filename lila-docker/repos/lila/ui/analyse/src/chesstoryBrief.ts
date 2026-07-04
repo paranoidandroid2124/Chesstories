@@ -21,7 +21,6 @@ export interface ChesstoryMoveMeaningPayload {
     played_move?: string;
     reference_move?: string;
   };
-  move_semantics?: ChesstoryMoveSemantic[];
   llm_payload?: ChesstoryLlmChain[];
 }
 
@@ -50,18 +49,6 @@ export interface ChesstoryMoveSemantic {
     has_carrier?: boolean;
     proof_level?: string;
     target_bound?: boolean;
-    cause_ids?: string[];
-    source_ids?: string[];
-    board_carriers?: {
-      subject?: string;
-      line_role?: string;
-      move_uci?: string;
-      role?: string;
-      kind?: string;
-      value?: string;
-      from?: string;
-      to?: string;
-    }[];
   };
   priority?: string;
   failure_family?: string;
@@ -81,12 +68,6 @@ export interface ChesstoryMoveSemantic {
     terminal_consequences?: ChesstoryCode[];
     failure_reason?: ChesstoryCode;
   };
-  comparison?: {
-    reference_move?: string;
-    candidate_move?: string;
-    moves?: { role?: string; uci?: string }[];
-    lost_ideas?: ChesstoryComparisonLoss[];
-  };
 }
 
 interface ChesstoryCode {
@@ -98,7 +79,16 @@ interface ChesstoryComparisonLoss extends ChesstoryCode {
   side?: string;
 }
 
-type ChesstoryBoardCarrier = NonNullable<NonNullable<ChesstoryMoveSemantic['evidence']>['board_carriers']>[number];
+interface ChesstoryBoardCarrier {
+  subject?: string;
+  line_role?: string;
+  move_uci?: string;
+  role?: string;
+  kind?: string;
+  value?: string;
+  from?: string;
+  to?: string;
+}
 
 export interface ChesstoryLlmChain {
   key: 'current-move-chain';

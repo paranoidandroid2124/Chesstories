@@ -16,8 +16,8 @@ describe('chesstory brief scaffold', () => {
     assert.ok(sections.every(section => section.pending));
   });
 
-  test('does not turn move_semantics alone into player-facing prose', () => {
-    const sections = chesstoryBriefSections({
+  test('does not turn raw semantics alone into player-facing prose', () => {
+    const rawSemanticPayload = {
       verdict: { move_quality: 'good', played_move: 'c4c5', reference_move: 'c4c5' },
       move_semantics: [
         {
@@ -30,7 +30,8 @@ describe('chesstory brief scaffold', () => {
           },
         },
       ],
-    });
+    };
+    const sections = chesstoryBriefSections(rawSemanticPayload as ChesstoryMoveMeaningPayload);
 
     assert.ok(sections.every(section => section.pending));
   });
