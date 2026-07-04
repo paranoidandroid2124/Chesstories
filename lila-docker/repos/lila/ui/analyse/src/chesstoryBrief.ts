@@ -122,15 +122,16 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const technique = techniqueLabels(chain.technique).slice(0, 4);
   const pv = uniqueLabels(chain.pv.map(moveLabel)).slice(0, 6);
   const consequenceItems = uniqueLabels([...consequences, ...terminal, ...technique]).slice(0, 6);
+  const chainItems = uniqueLabels([...carriers, ...consequenceItems]).slice(0, 6);
   const tone = moveQuality === 'bad' ? 'bad' : moveQuality ? 'good' : 'neutral';
 
   return [
     {
       key: 'opening-idea',
-      title: 'Graph ideas',
-      body: ideas.length ? joinHuman(ideas) : [subjectLabel(chain.subject), currentMove].filter(Boolean).join(' / '),
+      title: 'Idea chain',
+      body: chainItems.length ? joinHuman(chainItems) : ideas.length ? joinHuman(ideas) : [subjectLabel(chain.subject), currentMove].filter(Boolean).join(' / '),
       pending: false,
-      items: [`Move quality: ${moveQuality || 'available'}`, ...proofLevels.map(level => `Proof: ${level}`)],
+      items: [`Move quality: ${moveQuality || 'available'}`, ...proofLevels.map(level => `Proof: ${level}`), ...ideas.map(idea => `Idea: ${idea}`)],
       tone,
     },
     {

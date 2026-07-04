@@ -74,6 +74,8 @@ describe('chesstory brief scaffold', () => {
     const text = JSON.stringify(sections);
 
     assert.ok(sections.every(section => !section.pending));
+    assert.equal(sections[0].title, 'Idea chain');
+    assert.match(sections[0].body, /bishop f8-e7/);
     assert.match(text, /pawn break timing/);
     assert.match(text, /bishop f8-e7/);
     assert.match(text, /e-file break/);
