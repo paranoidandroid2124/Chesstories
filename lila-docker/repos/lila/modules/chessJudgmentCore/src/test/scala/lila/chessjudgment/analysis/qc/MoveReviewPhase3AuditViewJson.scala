@@ -172,7 +172,8 @@ object MoveReviewPhase3AuditViewJson:
       )
 
   private def moveMeaningSurfaceHasLlmCarrier(surface: MoveMeaningSurface): Boolean =
-    surface.evidence.hasCarrier &&
+    (surface.evidence.proofLevel == "owned_cause" || surface.evidence.proofLevel == "terminal_proof") &&
+      surface.evidence.hasCarrier &&
       (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
 
   private def moveMeaningSurfaceLlmConsequenceCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =

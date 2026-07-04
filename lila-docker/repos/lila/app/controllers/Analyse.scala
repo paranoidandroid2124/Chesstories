@@ -219,7 +219,8 @@ final class Analyse(
       )
 
   private def publicLlmSurfaceHasCarrier(surface: MoveMeaningSurface): Boolean =
-    surface.evidence.hasCarrier &&
+    (surface.evidence.proofLevel == "owned_cause" || surface.evidence.proofLevel == "terminal_proof") &&
+      surface.evidence.hasCarrier &&
       (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
 
   private def publicLlmConsequenceCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
