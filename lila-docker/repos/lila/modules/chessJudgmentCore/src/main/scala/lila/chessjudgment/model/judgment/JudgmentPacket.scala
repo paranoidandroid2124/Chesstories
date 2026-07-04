@@ -1927,6 +1927,7 @@ object MoveMeaningSurface:
     )
 
   private def publicIdeaChains(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[JsObject] =
+    val allowedSubjects = publicIdeaChainSubjects(verdict, surfaces).toSet
     val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
     val subjectSpecs =
       if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
@@ -1946,23 +1947,7 @@ object MoveMeaningSurface:
       val allConsequenceCarriers = carrierPairs.filter((carrier, _) =>
         carrier.role == "target" && publicIdeaChainConsequenceCarrier(carrier)
       )
-      val concreteConsequence = allConsequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
-      val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
-        surface.evidence.proofLevel == "owned_cause" &&
-          surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
-      )
-      val directStructuralCarrier = evidenceSurfaces.exists { surface =>
-        val carriers = surface.evidence.boardCarriers
-        surface.evidence.sourceIds.exists(_.contains("structural-delta")) &&
-          carriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) &&
-          carriers.exists(carrier =>
-            carrier.role == "target" &&
-              (carrier.kind == "Pawn" || (carrier.kind == "PlanSubject" && carrier.value.startsWith("passed-pawn")))
-          )
-      }
-      val playerFacingReasonAllowed =
-        terminal.nonEmpty || technique.nonEmpty || directStructuralCarrier || ownedRouteCarrier || (pv.nonEmpty && concreteConsequence)
-      if evidenceSurfaces.isEmpty || !playerFacingReasonAllowed then Nil
+      if evidenceSurfaces.isEmpty || !allowedSubjects.contains(subject) then Nil
       else
         val publicSemantics = evidenceSurfaces.distinctBy(surface =>
           (surface.moveUci, surface.subject, surface.lineRole, surface.idea.code, surface.evidence.proofLevel)
@@ -2028,10 +2013,57 @@ object MoveMeaningSurface:
             "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "terminal_consequences" -> terminal.map(publicCodeJson),
             "technique" -> technique.map(publicEndgameTechniqueJson),
-            "player_facing_reason_allowed" -> playerFacingReasonAllowed
+            "player_facing_reason_allowed" -> true
           )
         )
     }
+
+  private def publicIdeaChainSubjects(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[String] =
+    val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
+    val subjectSpecs =
+      if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
+      else List(("played_move", verdict.playedMove, "played_pv_"))
+    subjectSpecs.collect {
+      case (subject, subjectMove, pvRolePrefix) if publicIdeaChainAllowed(subject, subjectMove, pvRolePrefix, surfaces) =>
+        subject
+    }
+
+  private def publicIdeaChainAllowed(
+      subject: String,
+      subjectMove: String,
+      pvRolePrefix: String,
+      surfaces: List[MoveMeaningSurface]
+  ): Boolean =
+    val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && publicIdeaChainSurfaceHasCarrier(surface))
+    val rootMoveRole = if subject == "reference_move" then "best_move" else "played_move"
+    val pv = surfaces
+      .filter(_.subject == subject)
+      .flatMap(_.comparison.toList.flatMap(_.moves))
+      .filter(move => move.uci.nonEmpty && (move.role == rootMoveRole || move.role.startsWith(pvRolePrefix)))
+      .map(_.uci)
+      .distinct
+    val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
+    val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
+    val carrierPairs = publicIdeaChainCarrierPairs(evidenceSurfaces)
+    val allConsequenceCarriers = carrierPairs.filter((carrier, _) =>
+      carrier.role == "target" && publicIdeaChainConsequenceCarrier(carrier)
+    )
+    val concreteConsequence = allConsequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
+    val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
+      surface.evidence.proofLevel == "owned_cause" &&
+        surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
+    )
+    val directStructuralCarrier = evidenceSurfaces.exists { surface =>
+      val carriers = surface.evidence.boardCarriers
+      surface.evidence.sourceIds.exists(_.contains("structural-delta")) &&
+        carriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) &&
+        carriers.exists(carrier =>
+          carrier.role == "target" &&
+            (carrier.kind == "Pawn" || (carrier.kind == "PlanSubject" && carrier.value.startsWith("passed-pawn")))
+        )
+    }
+    evidenceSurfaces.nonEmpty &&
+      (terminal.nonEmpty || technique.nonEmpty || directStructuralCarrier || ownedRouteCarrier || (pv.nonEmpty && concreteConsequence))
 
   private def publicIdeaChainSurfaceHasCarrier(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel != "none" &&
@@ -2124,6 +2156,20 @@ object MoveMeaningSurface:
     )
 
   private[chessjudgment] def publicClaimsWithEvidenceForSurface(
+      view: MoveJudgmentView
+  ): List[(MoveMeaningClaim, MoveMeaningSurfaceEvidence)] =
+    val candidates = publicClaimEvidenceCandidates(view)
+    view.verdict match
+      case None => candidates
+      case Some(frame) =>
+        val verdict = MoveMeaningSurface.verdict(frame)
+        val surfaces = candidates.map((claim, evidence) => (claim, evidence, fromClaim(view.verdict, claim, evidence)))
+        val allowedSubjects = publicIdeaChainSubjects(verdict, surfaces.map(_._3)).toSet
+        surfaces.collect {
+          case (claim, evidence, surface) if allowedSubjects.contains(surface.subject) => claim -> evidence
+        }
+
+  private def publicClaimEvidenceCandidates(
       view: MoveJudgmentView
   ): List[(MoveMeaningClaim, MoveMeaningSurfaceEvidence)] =
     view.moveMeaningClaims
