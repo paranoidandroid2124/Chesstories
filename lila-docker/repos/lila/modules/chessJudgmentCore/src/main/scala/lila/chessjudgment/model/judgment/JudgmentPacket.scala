@@ -1667,6 +1667,7 @@ case class MoveMeaningClaim(
     routeIdentityParts: List[String] = Nil,
     breakIdentityParts: List[String] = Nil,
     breakFiles: List[String] = Nil,
+    structuralMotifTags: List[String] = Nil,
     specificityTier: PositionPlanTechniqueSpecificityTier = PositionPlanTechniqueSpecificityTier.ContextOnly,
     terminalConsequenceKinds: List[String] = Nil,
     endgameTechniquePattern: Option[String] = None,
@@ -1863,6 +1864,7 @@ case class MoveMeaningSurface(
     endgameTechnique: Option[MoveMeaningSurfaceEndgameTechnique] = None,
     comparison: Option[MoveMeaningSurfaceComparison] = None,
     terminalConsequences: List[MoveMeaningSurfaceCode] = Nil,
+    structureContext: List[String] = Nil,
     evidence: MoveMeaningSurfaceEvidence = MoveMeaningSurfaceEvidence()
 )
 
@@ -2041,6 +2043,7 @@ object MoveMeaningSurface:
       "comparison_loss" -> surface.comparisonLostIdeas.map(publicComparisonLossJson),
       "terminal_consequences" -> surface.terminalConsequences.map(publicCodeJson),
       "endgame_technique" -> surface.endgameTechnique.map(publicEndgameTechniqueJson),
+      "structure_context" -> surface.structureContext,
       "evidence" -> Json.obj(
         "has_carrier" -> surface.evidence.hasCarrier,
         "proof_level" -> surface.evidence.proofLevel,
@@ -2193,6 +2196,7 @@ object MoveMeaningSurface:
           )
           .flatten,
       terminalConsequences = terminal,
+      structureContext = claim.structuralMotifTags,
       evidence = evidence
     )
 
@@ -3095,14 +3099,29 @@ object MoveMeaningClaim:
       val mergedSourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted
       val mergedObjectBindingSignatures = list.flatMap(_.objectBindingSignatures).distinct.sorted
       val mergedObjectCarrierReady = list.exists(_.objectCarrierReady)
-      val mergedBoardCarriers = list.flatMap(_.boardCarriers).distinct.sortBy(boardCarrierSortKey).take(12)
+      val mergedBreakFileCarriers =
+        list
+          .flatMap(_.breakFiles)
+          .distinct
+          .sorted
+          .map(file => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"break-file:$file"))
+      val mergedCarrierPool = list.flatMap(_.boardCarriers)
+      val mergedBoardCarriers =
+        (
+          mergedCarrierPool.filter(carrier => carrier.role == "actor" && carrier.kind == "Move") ++
+            mergedBreakFileCarriers ++
+            mergedCarrierPool.distinct.sortBy(boardCarrierSortKey)
+        ).distinct.take(12)
+      val mergedPublicDrawableCarrier =
+        mergedBoardCarriers.nonEmpty ||
+          best.terminalConsequenceKinds.nonEmpty ||
+          best.endgameTechniquePattern.nonEmpty ||
+          best.endgameTechniqueRookPattern.nonEmpty
       val mergedPublicHasCarrier =
-        list.exists(_.publicHasCarrier) ||
-          (
-            mergedObjectCarrierReady &&
-              (mergedCauseEvidenceIds.nonEmpty || mergedSourceEvidenceIds.nonEmpty) &&
-              publicCarrierAllowed(best.unit, list.flatMap(_.causeKinds), mergedBoardCarriers)
-          )
+        mergedPublicDrawableCarrier &&
+          mergedObjectCarrierReady &&
+          (mergedCauseEvidenceIds.nonEmpty || mergedSourceEvidenceIds.nonEmpty) &&
+          publicCarrierAllowed(best.unit, list.flatMap(_.causeKinds), mergedBoardCarriers)
       val mergedPublicProofLevel = list.map(_.publicProofLevel).sortBy(publicProofLevelRank).lastOption.getOrElse("none")
       best.copy(
         causeKinds = list.flatMap(_.causeKinds).distinct.sortBy(_.toString),
@@ -3122,6 +3141,7 @@ object MoveMeaningClaim:
         routeIdentityParts = list.flatMap(_.routeIdentityParts).distinct.sorted,
         breakIdentityParts = list.flatMap(_.breakIdentityParts).distinct.sorted,
         breakFiles = list.flatMap(_.breakFiles).distinct.sorted,
+        structuralMotifTags = list.flatMap(_.structuralMotifTags).distinct.sorted,
         publicHasCarrier = mergedPublicHasCarrier,
         publicProofLevel =
           if mergedPublicHasCarrier && publicProofLevelRank(mergedPublicProofLevel) == 0 then "surface_evidence"
@@ -3330,12 +3350,21 @@ object MoveMeaningClaim:
                   claimMove
                 )
               val comparisonMoveRefs = comparisonMoveRefsFromLineEvidence(evidenceGraph, sourceEvidenceIds)
+              val claimOwnedBoardCarriers =
+                boardCarriers.filterNot(carrier =>
+                  carrier.role == "actor" &&
+                    carrier.kind == "Move" &&
+                    !sameMove(carrier.value, claimMove)
+                )
               val baseClaimBoardCarriers =
-                (boardCarriers ++ lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove))
+                (claimOwnedBoardCarriers ++ lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove))
                   .distinct
                   .sortBy(boardCarrierSortKey)
               val currentPawnBreakFiles =
-                currentPawnAdvanceBreakFiles(detail, baseClaimBoardCarriers, claimMove, sourceEvidenceIds)
+                currentPawnAdvanceBreakFiles(detail, claimMove, sourceEvidenceIds)
+              val claimBreakFiles = (detail.breakFile.toList.flatMap(claimFile) ++ currentPawnBreakFiles).distinct.sorted
+              val breakFileIdentityCarriers =
+                claimBreakFiles.map(file => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"break-file:$file"))
               val pressureIdentityCarriers =
                 mechanismSquareIdentityCarriers(detail, "battery-pressure", batteryPressureSignature) ++
                   mechanismSquareIdentityCarriers(detail, "pin-pressure", pinPressureSignature)
@@ -3349,17 +3378,24 @@ object MoveMeaningClaim:
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
                   passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
                   materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove, detail, verdict) ++
-                  currentPawnBreakFiles.map(file => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"break-file:$file"))
+                  breakFileIdentityCarriers
               val claimBoardCarriers =
-                (baseClaimBoardCarriers ++ spareIdentityCarriers)
-                  .distinct
-                  .sortBy(boardCarrierSortKey)
+                (
+                  baseClaimBoardCarriers.filter(carrier => carrier.role == "actor" && carrier.kind == "Move") ++
+                    breakFileIdentityCarriers ++
+                    (baseClaimBoardCarriers ++ spareIdentityCarriers).distinct.sortBy(boardCarrierSortKey)
+                ).distinct
                   .take(12)
               val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, claimBoardCarriers)
-              val claimBreakFiles = (detail.breakFile.toList.flatMap(claimFile) ++ currentPawnBreakFiles).distinct.sorted
               val objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames)
+              val publicDrawableCarrier =
+                claimBoardCarriers.nonEmpty ||
+                  detail.terminalConsequenceKinds.nonEmpty ||
+                  detail.endgameTechniquePattern.nonEmpty ||
+                  detail.endgameTechniqueRookPattern.nonEmpty
               val publicHasCarrier =
-                objectCarrierReady &&
+                publicDrawableCarrier &&
+                  objectCarrierReady &&
                   (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty) &&
                   publicCarrierAllowed(detail.unit, roleCompatibleCauseFrames.map(_.causeKind), claimBoardCarriers)
               val publicProofLevel =
@@ -3415,6 +3451,7 @@ object MoveMeaningClaim:
                 routeIdentityParts = routeIdentityParts(detail, claimMove),
                 breakIdentityParts = breakIdentityParts(detail, claimBreakFiles),
                 breakFiles = claimBreakFiles,
+                structuralMotifTags = detail.structuralMotifTags.distinct.sorted,
                 specificityTier = detail.specificityTier,
                 terminalConsequenceKinds = detail.terminalConsequenceKinds.distinct.sorted,
                 endgameTechniquePattern = detail.endgameTechniquePattern,
@@ -3526,7 +3563,6 @@ object MoveMeaningClaim:
 
   private def currentPawnAdvanceBreakFiles(
       detail: PositionPlanTechniqueSemanticDetail,
-      boardCarriers: List[MoveMeaningSurfaceBoardCarrier],
       claimMove: String,
       sourceEvidenceIds: List[String]
   ): List[String] =
@@ -3534,12 +3570,9 @@ object MoveMeaningClaim:
     else
       moveEndpoints(claimMove).toList.flatMap { case (from, to) =>
         val file = from.take(1)
-        val targetFiles =
-          boardCarriers.collect { case MoveMeaningSurfaceBoardCarrier("target", "File", value, _, _) => value }.distinct
         Option
           .when(
             from.take(1) == to.take(1) &&
-              targetFiles.contains(file) &&
               pawnAdvanceRanks(from, to)
           )(file)
           .toList
