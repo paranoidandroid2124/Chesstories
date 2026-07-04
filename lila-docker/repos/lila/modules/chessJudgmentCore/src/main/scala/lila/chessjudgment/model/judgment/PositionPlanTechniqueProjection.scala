@@ -1148,6 +1148,7 @@ object PositionPlanTechniqueProjection:
       !(detail.unit == PositionPlanTechniqueUnit.CounterplayRace && axisKind == StrategicAxisKind.PawnBreak) &&
         positionPlanTechniqueCauseKindsForAxis(axisKind, detail.axisPolarity, detail.label).contains(kind)
     ) ||
+      positionPlanTechniqueCounterplayRestraintPlanCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteCounterplayRaceCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteRouteCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteStructuralPlanCauseKind(detail, kind) ||
@@ -1185,6 +1186,8 @@ object PositionPlanTechniqueProjection:
         positionPlanTechniqueConcreteStructuralTransformation(detail)
       case PositionPlanTechniqueUnit.CounterplayRace =>
         positionPlanTechniqueCounterplayPawnBreakRace(detail)
+      case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
+        positionPlanTechniqueCounterplayRestraintPlanCauseKind(detail, RelativeCauseKind.PlanImprovement)
       case _ =>
         false
 
@@ -1193,6 +1196,7 @@ object PositionPlanTechniqueProjection:
       kind: RelativeCauseKind
   ): Boolean =
     positionPlanTechniqueCauseKindsForUnit(detail.unit).contains(kind) ||
+      positionPlanTechniqueCounterplayRestraintPlanCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteCounterplayRaceCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteRouteCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteStructuralPlanCauseKind(detail, kind) ||
@@ -1252,6 +1256,23 @@ object PositionPlanTechniqueProjection:
           detail.axisKind.contains(StrategicAxisKind.PawnBreak) &&
             positionPlanTechniqueCounterplayPawnBreakRace(detail) &&
             kind == RelativeCauseKind.PawnBreakOpportunity
+      )
+
+  private def positionPlanTechniqueCounterplayRestraintPlanCauseKind(
+      detail: PositionPlanTechniqueSemanticDetail,
+      kind: RelativeCauseKind
+  ): Boolean =
+    kind == RelativeCauseKind.PlanImprovement &&
+      detail.unit == PositionPlanTechniqueUnit.SpacePreventionResourceDenial &&
+      detail.axisKind.contains(StrategicAxisKind.Counterplay) &&
+      detail.axisPolarity.contains(StrategicAxisPolarity.Restrain) &&
+      detail.structuralRouteMove.nonEmpty &&
+      (
+        detail.resourceContestSquares.nonEmpty ||
+          detail.resourceContestFiles.nonEmpty ||
+          detail.counterBreakFiles.nonEmpty ||
+          detail.breakFile.exists(_.trim.nonEmpty) ||
+          detail.structuralPurposeSubjects.exists(positionPlanTechniqueConcreteSubject)
       )
 
   private def positionPlanTechniqueConcretePieceRoute(

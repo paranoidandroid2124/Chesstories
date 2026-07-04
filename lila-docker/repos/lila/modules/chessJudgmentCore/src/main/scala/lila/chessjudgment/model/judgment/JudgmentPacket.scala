@@ -3706,7 +3706,7 @@ object MoveMeaningClaim:
       directCurrentMoveCarrier &&
         currentMoveSurfaceReady(evidenceGraph, meaningKind, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
     val reasonGradeCauseFrames =
-      roleCompatibleCauseFrames.filter(frame => reasonGradeCauseFrame(frame) || planOptionFallbackReasonFrame(detail, frame))
+      roleCompatibleCauseFrames.filter(frame => reasonGradeCauseFrame(frame) || planFallbackReasonFrame(detail, frame))
     val ownedCause =
       reasonGradeCauseFrames.exists(frame => frame.hasOwnedAdmissibleLongTermProof || frame.attributionDirectProofEligible)
     val ownedCandidateCauseOwnsCurrentMove =
@@ -3965,17 +3965,20 @@ object MoveMeaningClaim:
     ) &&
       reasonGradeFrameProofReady(frame)
 
-  private def planOptionFallbackReasonFrame(
+  private def planFallbackReasonFrame(
       detail: PositionPlanTechniqueSemanticDetail,
       frame: MoveJudgmentCauseFrame
   ): Boolean =
-    detail.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-      frame.causeKind == RelativeCauseKind.PlanImprovement &&
+    frame.causeKind == RelativeCauseKind.PlanImprovement &&
       frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.FallbackRoot &&
       frame.hasOwnedAdmissibleLongTermProof &&
       frame.attributionDirectProofEligible &&
       frame.attributionRootMoveMatched &&
-      reasonGradeFrameProofReady(frame)
+      reasonGradeFrameProofReady(frame) &&
+      (
+        detail.unit == PositionPlanTechniqueUnit.PlanOptionSet ||
+          counterplayRestraintCarrierDetail(detail)
+      )
 
   private def ownedCandidateCauseFrameOwnsClaimMove(frame: MoveJudgmentCauseFrame, claimMove: String): Boolean =
     frame.causeSourceSide == RelativeCauseSourceSide.Candidate &&
@@ -4305,7 +4308,15 @@ object MoveMeaningClaim:
 
   private def opponentRestrictionSpaceDetailCanOwn(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.axisKey.exists(counterBreakAxisKey) ||
-      detail.structuralPurposeSubjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
+      detail.structuralPurposeSubjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject) ||
+      counterplayRestraintCarrierDetail(detail)
+
+  private def counterplayRestraintCarrierDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.unit == PositionPlanTechniqueUnit.SpacePreventionResourceDenial &&
+      detail.axisKind.contains(StrategicAxisKind.Counterplay) &&
+      detail.axisPolarity.contains(StrategicAxisPolarity.Restrain) &&
+      detail.structuralRouteMove.nonEmpty &&
+      resourceDetailHasConcreteCarrier(detail)
 
   private def counterBreakAxisKey(axisKey: String): Boolean =
     val normalized = axisKey.toLowerCase
@@ -4355,7 +4366,8 @@ object MoveMeaningClaim:
           )
       case RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
         detail.axisKind.contains(StrategicAxisKind.PlanCoherence) ||
-          detail.unit == PositionPlanTechniqueUnit.PlanOptionSet
+          detail.unit == PositionPlanTechniqueUnit.PlanOptionSet ||
+          (kind == RelativeCauseKind.PlanImprovement && counterplayRestraintCarrierDetail(detail))
       case RelativeCauseKind.StructuralImprovement | RelativeCauseKind.MissedStrategicImprovement |
           RelativeCauseKind.StrategicConcession =>
         detail.unit == PositionPlanTechniqueUnit.StructuralTransformation ||

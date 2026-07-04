@@ -240,15 +240,22 @@ object MoveJudgmentCauseNarrativeProjection:
   private def fallbackRootProofReady(frame: MoveJudgmentCauseFrame): Boolean =
     frame.causeKind match
       case RelativeCauseKind.PlanContradiction | RelativeCauseKind.PlanImprovement =>
-        directPlanCoherenceProofReady(frame)
+        directPlanRootProofReady(frame)
       case _ =>
         true
 
-  private def directPlanCoherenceProofReady(frame: MoveJudgmentCauseFrame): Boolean =
+  private def directPlanRootProofReady(frame: MoveJudgmentCauseFrame): Boolean =
     val directSourceIds = frame.proofDirectSourceIds.toSet
     frame.proofStrategicAxisLineage.exists(lineage =>
-      lineage.axisKind == StrategicAxisKind.PlanCoherence &&
-        directSourceIds.contains(lineage.mechanismEvidenceId)
+      directSourceIds.contains(lineage.mechanismEvidenceId) &&
+        (
+          lineage.axisKind == StrategicAxisKind.PlanCoherence ||
+            (
+              frame.causeKind == RelativeCauseKind.PlanImprovement &&
+                lineage.axisKind == StrategicAxisKind.Counterplay &&
+                lineage.axisPolarity == StrategicAxisPolarity.Restrain
+            )
+        )
     )
 
   private def broadObjectSensitiveRootKind(kind: RelativeCauseKind): Boolean =
