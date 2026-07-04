@@ -1940,8 +1940,10 @@ object MoveMeaningSurface:
         .distinct
       val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
       val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
-      val allConsequenceCarriers = publicIdeaChainCarrierPairs(evidenceSurfaces)
-        .filter((carrier, _) => carrier.role == "target" && publicIdeaChainConsequenceCarrier(carrier))
+      val carrierPairs = publicIdeaChainCarrierPairs(evidenceSurfaces)
+      val allConsequenceCarriers = carrierPairs.filter((carrier, _) =>
+        carrier.role == "target" && publicIdeaChainConsequenceCarrier(carrier)
+      )
       val concreteConsequence = allConsequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
       val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
         surface.evidence.proofLevel == "owned_cause" &&
@@ -1961,10 +1963,25 @@ object MoveMeaningSurface:
       then Nil
       else
         val consequenceCarriers = allConsequenceCarriers.take(6)
-        val carriers =
-          publicIdeaChainCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
+        val subjectFrom = Option.when(subjectMove.length >= 4)(subjectMove.take(2))
+        val currentMoveCarriers = carrierPairs.filter((carrier, _) =>
             carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
-          ).take(1) ++ consequenceCarriers
+          ).take(1)
+        val currentMoveActorCarriers = carrierPairs.filter((carrier, surface) =>
+          carrier.role == "actor" &&
+            (carrier.kind == "Move" && carrier.value == subjectMove ||
+              carrier.kind == "Piece" ||
+              subjectFrom.exists(from => carrier.kind == "Square" && carrier.value == from)) &&
+            surface.evidence.boardCarriers.exists(carrier =>
+              carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
+            ) &&
+            subjectFrom.exists(from =>
+              surface.evidence.boardCarriers.exists(carrier =>
+                carrier.role == "actor" && carrier.kind == "Square" && carrier.value == from
+              )
+            )
+        ).take(3)
+        val carriers = (if currentMoveActorCarriers.nonEmpty then currentMoveActorCarriers else currentMoveCarriers) ++ consequenceCarriers
         List(
           Json.obj(
             "key" -> "current-move-chain",
