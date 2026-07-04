@@ -1967,10 +1967,17 @@ object MoveMeaningSurface:
           (surface.moveUci, surface.subject, surface.lineRole, surface.idea.code, surface.evidence.proofLevel)
         )
         val subjectFrom = Option.when(subjectMove.length >= 4)(subjectMove.take(2))
+        val semanticTargetPieces =
+          publicSemantics.flatMap(_.target.pieces).map(_.trim.toLowerCase).filter(_.nonEmpty).distinct
+        val actorPieceHint =
+          if subjectMove.length > 4 then Some("pawn")
+          else semanticTargetPieces match
+            case piece :: Nil => Some(piece)
+            case _            => None
         val currentMoveCarriers = carrierPairs.filter((carrier, _) =>
             carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
           ).take(1)
-        val currentMoveActorCarriers = currentMoveCarriers ++ carrierPairs.filter((carrier, surface) =>
+        val currentMoveActorCarrierCandidates = carrierPairs.filter((carrier, surface) =>
           carrier.role == "actor" &&
             (carrier.kind == "Piece" ||
               subjectFrom.exists(from => carrier.kind == "Square" && carrier.value == from)) &&
@@ -1982,6 +1989,15 @@ object MoveMeaningSurface:
                 carrier.role == "actor" && carrier.kind == "Square" && carrier.value == from
               )
             )
+        )
+        val actorPieceValues =
+          currentMoveActorCarrierCandidates
+            .collect { case (carrier, _) if carrier.kind == "Piece" => carrier.value.trim.toLowerCase }
+            .distinct
+        val currentMoveActorCarriers = currentMoveCarriers ++ currentMoveActorCarrierCandidates.filter((carrier, _) =>
+          carrier.kind != "Piece" ||
+            actorPieceValues.size <= 1 ||
+            actorPieceHint.contains(carrier.value.trim.toLowerCase)
         ).take(2)
         val carriers = currentMoveActorCarriers ++ consequenceCarriers
         List(
@@ -2157,6 +2173,7 @@ object MoveMeaningSurface:
         localIdea =
           claimSubject == "played_move" &&
             claim.surfaceLane == "current_move_function" &&
+            !badPlayedMove &&
             !MoveMeaningClaim.negativeCurrentMoveMeaning(claim),
         failureFamily = publicFailureFamily.map(publicCode(_, failureFamilyLabels)),
         problem = publicProblem.map(publicCode(_, problemLabels))
