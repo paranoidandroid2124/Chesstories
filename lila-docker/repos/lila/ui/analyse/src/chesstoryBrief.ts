@@ -110,10 +110,8 @@ export interface ChesstoryLlmChain {
   carriers: ChesstoryBoardCarrier[];
   pv: string[];
   consequence_carriers: ChesstoryBoardCarrier[];
-  terminal_consequences: string[];
-  technique: string[];
-  cause_ids: string[];
-  source_ids: string[];
+  terminal_consequences: ChesstoryCode[];
+  technique: unknown[];
   player_facing_reason_allowed: true;
 }
 

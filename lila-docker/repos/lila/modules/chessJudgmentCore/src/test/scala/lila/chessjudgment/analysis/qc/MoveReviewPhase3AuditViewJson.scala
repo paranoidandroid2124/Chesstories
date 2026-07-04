@@ -129,9 +129,9 @@ object MoveReviewPhase3AuditViewJson:
         .distinct
       val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
       val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
-      val consequenceCarriers = moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces)
+      val allConsequenceCarriers = moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces)
         .filter((carrier, _) => carrier.role == "target" && moveMeaningSurfaceLlmConsequenceCarrier(carrier))
-      val concreteConsequence = consequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
+      val concreteConsequence = allConsequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
       val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
         surface.evidence.proofLevel == "owned_cause" &&
           surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
@@ -149,10 +149,11 @@ object MoveReviewPhase3AuditViewJson:
         (terminal.isEmpty && technique.isEmpty && !directStructuralCarrier && !ownedRouteCarrier && (pv.isEmpty || !concreteConsequence))
       then Nil
       else
-        val carriers = moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
-          (carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) ||
-            (carrier.role == "target" && moveMeaningSurfaceLlmConsequenceCarrier(carrier))
-        )
+        val consequenceCarriers = allConsequenceCarriers.take(6)
+        val carriers =
+          moveMeaningSurfaceLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
+            carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
+          ).take(1) ++ consequenceCarriers
         List(
         Json.obj(
           "key" -> "current-move-chain",
@@ -166,8 +167,6 @@ object MoveReviewPhase3AuditViewJson:
           "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => moveMeaningSurfaceBoardCarrierJson(carrier, surface)),
           "terminal_consequences" -> terminal.map(moveMeaningSurfaceCodeJson),
           "technique" -> technique.map(moveMeaningSurfaceTechniqueJson),
-          "cause_ids" -> evidenceSurfaces.flatMap(_.evidence.causeIds).distinct,
-          "source_ids" -> evidenceSurfaces.flatMap(_.evidence.sourceIds).distinct,
           "player_facing_reason_allowed" -> true
         )
       )

@@ -176,9 +176,9 @@ final class Analyse(
         .distinct
       val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
       val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
-      val consequenceCarriers = publicLlmCarrierPairs(evidenceSurfaces)
+      val allConsequenceCarriers = publicLlmCarrierPairs(evidenceSurfaces)
         .filter((carrier, _) => carrier.role == "target" && publicLlmConsequenceCarrier(carrier))
-      val concreteConsequence = consequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
+      val concreteConsequence = allConsequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
       val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
         surface.evidence.proofLevel == "owned_cause" &&
           surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
@@ -196,10 +196,11 @@ final class Analyse(
         (terminal.isEmpty && technique.isEmpty && !directStructuralCarrier && !ownedRouteCarrier && (pv.isEmpty || !concreteConsequence))
       then Nil
       else
-        val carriers = publicLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
-          (carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) ||
-            (carrier.role == "target" && publicLlmConsequenceCarrier(carrier))
-        )
+        val consequenceCarriers = allConsequenceCarriers.take(6)
+        val carriers =
+          publicLlmCarrierPairs(evidenceSurfaces).filter((carrier, _) =>
+            carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
+          ).take(1) ++ consequenceCarriers
         List(
         Json.obj(
           "key" -> "current-move-chain",
@@ -213,8 +214,6 @@ final class Analyse(
           "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
           "terminal_consequences" -> terminal.map(publicCodeJson),
           "technique" -> technique.map(publicEndgameTechniqueJson),
-          "cause_ids" -> evidenceSurfaces.flatMap(_.evidence.causeIds).distinct,
-          "source_ids" -> evidenceSurfaces.flatMap(_.evidence.sourceIds).distinct,
           "player_facing_reason_allowed" -> true
         )
       )
