@@ -1970,10 +1970,9 @@ object MoveMeaningSurface:
         val currentMoveCarriers = carrierPairs.filter((carrier, _) =>
             carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
           ).take(1)
-        val currentMoveActorCarriers = carrierPairs.filter((carrier, surface) =>
+        val currentMoveActorCarriers = currentMoveCarriers ++ carrierPairs.filter((carrier, surface) =>
           carrier.role == "actor" &&
-            (carrier.kind == "Move" && carrier.value == subjectMove ||
-              carrier.kind == "Piece" ||
+            (carrier.kind == "Piece" ||
               subjectFrom.exists(from => carrier.kind == "Square" && carrier.value == from)) &&
             surface.evidence.boardCarriers.exists(carrier =>
               carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
@@ -1983,8 +1982,8 @@ object MoveMeaningSurface:
                 carrier.role == "actor" && carrier.kind == "Square" && carrier.value == from
               )
             )
-        ).take(3)
-        val carriers = (if currentMoveActorCarriers.nonEmpty then currentMoveActorCarriers else currentMoveCarriers) ++ consequenceCarriers
+        ).take(2)
+        val carriers = currentMoveActorCarriers ++ consequenceCarriers
         List(
           Json.obj(
             "key" -> "current-move-chain",
