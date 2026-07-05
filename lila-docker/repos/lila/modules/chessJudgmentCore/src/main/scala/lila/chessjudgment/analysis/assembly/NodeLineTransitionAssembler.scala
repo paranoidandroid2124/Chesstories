@@ -231,8 +231,9 @@ object CandidateLineAssembler:
         case None =>
           legal = false
     val replayed = refs.toList
+    val replayedMoves = replayed.map(_.uci)
     Option
-      .when(legal && replayed.nonEmpty)(PrincipalVariationEvidence.LineVariationRef(replayed))
+      .when(replayed.nonEmpty)(PrincipalVariationEvidence.LineVariationRef(replayed))
       .flatMap(PrincipalVariationEvidence.validatedLineFromStart(root.fen, _))
       .flatMap { validated =>
         validated.first.map { first =>
@@ -244,7 +245,7 @@ object CandidateLineAssembler:
               continuation = validated.continuation,
               continuationTail = validated.moves.drop(3).take(3)
             ),
-            materialSummary = lineMaterialSummary(line.line.moves, root.fen)
+            materialSummary = lineMaterialSummary(replayedMoves, root.fen)
           )
         }
       }
