@@ -2358,7 +2358,7 @@ object MoveMeaningSurface:
         )("defensive_resource")
       )
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
-      .orElse(Option.when(longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
+      .orElse(Option.when(claim.meaningKind != "TargetPressure" && longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
       .orElse(
         Option.when(
           claim.unit != PositionPlanTechniqueUnit.SpacePreventionResourceDenial &&
