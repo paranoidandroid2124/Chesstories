@@ -161,7 +161,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
     val coveredExpectedQuestionIds =
       if expectedQuestions.isEmpty then matchedQuestionIds
       else matchedQuestionIds.filter(measuredExpectedQuestionIds.contains)
-    val missingExpectedQuestionIds = measuredExpectedQuestionIds.diff(coveredExpectedQuestionIds)
+    val rubricInputGapExpectedQuestionIds =
+      failureQuestionIds(slotRows, "rubric_input_gap").filter(measuredExpectedQuestionIds.contains)
+    val missingExpectedQuestionIds =
+      measuredExpectedQuestionIds.diff(coveredExpectedQuestionIds).diff(rubricInputGapExpectedQuestionIds)
     val missingSlotIds =
       measuredSlotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
     val unmeasuredSlotIds =
@@ -193,6 +196,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "unmeasuredExpectedQuestionIds" -> unmeasuredExpectedQuestionIds,
       "unmeasuredExpectedQuestionIdCount" -> unmeasuredExpectedQuestionIds.size,
       "coveredExpectedQuestionIds" -> coveredExpectedQuestionIds,
+      "rubricInputGapExpectedQuestionIds" -> rubricInputGapExpectedQuestionIds,
       "missingExpectedQuestionIds" -> missingExpectedQuestionIds,
       "missingExpectedQuestionIdCount" -> missingExpectedQuestionIds.size,
       "expectedQuestionCoverageComplete" -> (missingExpectedQuestionIds.isEmpty && unmeasuredExpectedQuestionIds.isEmpty),
@@ -231,7 +235,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
     val coveredExpectedQuestionIds =
       if expectedQuestions.isEmpty then matchedQuestionIds
       else matchedQuestionIds.filter(measuredExpectedQuestionIds.contains)
-    val missingExpectedQuestionIds = measuredExpectedQuestionIds.diff(coveredExpectedQuestionIds)
+    val rubricInputGapExpectedQuestionIds =
+      failureQuestionIds(slotRows, "rubric_input_gap").filter(measuredExpectedQuestionIds.contains)
+    val missingExpectedQuestionIds =
+      measuredExpectedQuestionIds.diff(coveredExpectedQuestionIds).diff(rubricInputGapExpectedQuestionIds)
     val missingSlotIds =
       measuredSlotRows.filterNot(row => (row \ "matched").as[Boolean]).map(row => (row \ "id").as[String])
     val unmeasuredSlotIds =
@@ -264,6 +271,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "unmeasuredExpectedQuestionIds" -> unmeasuredExpectedQuestionIds,
       "unmeasuredExpectedQuestionIdCount" -> unmeasuredExpectedQuestionIds.size,
       "coveredExpectedQuestionIds" -> coveredExpectedQuestionIds,
+      "rubricInputGapExpectedQuestionIds" -> rubricInputGapExpectedQuestionIds,
       "missingExpectedQuestionIds" -> missingExpectedQuestionIds,
       "missingExpectedQuestionIdCount" -> missingExpectedQuestionIds.size,
       "expectedQuestionCoverageComplete" -> (missingExpectedQuestionIds.isEmpty && unmeasuredExpectedQuestionIds.isEmpty),
@@ -547,6 +555,13 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
 
   private def survivalFailureClass(row: JsObject): String =
     (row \ "survivalFailureClass").as[String]
+
+  private def failureQuestionIds(slotRows: List[JsObject], failureClass: String): List[String] =
+    slotRows
+      .filter(row => !(row \ "matched").as[Boolean] && survivalFailureClass(row) == failureClass)
+      .flatMap(row => (row \ "questionId").asOpt[String])
+      .distinct
+      .sorted
 
   private def survivalFailureSlotIdsJson(slotRows: List[JsObject]): JsObject =
     JsObject(
