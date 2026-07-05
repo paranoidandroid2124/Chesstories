@@ -789,9 +789,9 @@ object PositionPlanTechniqueProjection:
 
   private def lineCastlingRookDestination(moveUci: String): Option[String] =
     moveUci.trim.toLowerCase match
-      case "e1g1"          => Some("f1")
+      case "e1g1" | "e1h1" => Some("f1")
       case "e1c1" | "e1a1" => Some("d1")
-      case "e8g8"          => Some("f8")
+      case "e8g8" | "e8h8" => Some("f8")
       case "e8c8" | "e8a8" => Some("d8")
       case _               => None
 
