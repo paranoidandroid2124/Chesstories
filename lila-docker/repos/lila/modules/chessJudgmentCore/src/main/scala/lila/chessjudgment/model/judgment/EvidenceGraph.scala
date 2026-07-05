@@ -2129,6 +2129,15 @@ object StrategicMechanismEvidence:
               concreteAxis(record, structuralDeltaAxis(StrategicAxisKind.SpaceCenter, StrategicAxisPolarity.Gain, "center-control-gain"))
             )
           ),
+          Option.when(payload.hasAnyConsequence(Set(TransitionConsequenceKind.KingSafetyPressure, TransitionConsequenceKind.KingRingPressureGain)))(
+            StrategicMechanismKind.TargetPressure -> signal(
+              StrategicMechanismSignalKind.StructuralDelta,
+              "king-safety-pressure",
+              record.ref,
+              3,
+              concreteAxis(record, structuralDeltaAxis(StrategicAxisKind.Target, StrategicAxisPolarity.Gain, "king-safety-pressure"))
+            )
+          ),
           Option.when(payload.hasAnyConsequence(Set(TransitionConsequenceKind.KingSafetyConcession, TransitionConsequenceKind.KingRingPressureConcession)))(
             StrategicMechanismKind.KingSafety -> signal(
               StrategicMechanismSignalKind.StructuralDelta,

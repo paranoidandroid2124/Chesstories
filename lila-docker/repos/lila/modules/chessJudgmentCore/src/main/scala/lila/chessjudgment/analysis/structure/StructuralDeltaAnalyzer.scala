@@ -437,6 +437,16 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       if centerControlDeltaValue != 0 then centerControlChangedSquares(beforeBoard, afterBoard, side) else Nil
     val shelterFiles = moveUci.map(moveFiles).getOrElse(Nil)
     val targetKingSubjects = kingSubjects(afterBoard, !side)
+    val targetKingFile = afterBoard.kingPosOf(!side).map(_.file.value)
+    val kingShelterDeltaValue = kingShelterDelta(
+      before.features,
+      after.features,
+      side,
+      shelterFiles,
+      targetKingFile
+    )
+    val flankPawnKingPressure =
+      moveUci.map(uci => flankPawnKingPressureDelta(beforeBoard, afterBoard, side, uci, targetKingFile)).getOrElse(0)
     val lineUnlock: (Int, List[String]) =
       moveUci.map(uci => lineUnlockDeltaAndSubjects(beforeBoard, afterBoard, side, uci)).getOrElse(0 -> Nil)
     Some(
@@ -451,13 +461,7 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         pawnTensionAfter = afterAttacks.size,
         targetPressureDelta = targetPressureDelta,
         fileAccessDelta = after.fileAccess - before.fileAccess,
-        kingShelterDelta = kingShelterDelta(
-          before.features,
-          after.features,
-          side,
-          shelterFiles,
-          afterBoard.kingPosOf(!side).map(_.file.value)
-        ),
+        kingShelterDelta = if kingShelterDeltaValue == 0 then flankPawnKingPressure else kingShelterDeltaValue,
         kingShelterFiles = shelterFiles.map(_.toString),
         kingTargetSubjects = targetKingSubjects,
         mobilityDelta = mobilityDeltaValue,
@@ -987,6 +991,31 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         if side.white then beforeFeatures.kingSafety.blackKingShield - afterFeatures.kingSafety.blackKingShield
         else beforeFeatures.kingSafety.whiteKingShield - afterFeatures.kingSafety.whiteKingShield
       }.getOrElse(0)
+
+  private def flankPawnKingPressureDelta(
+      beforeBoard: Board,
+      afterBoard: Board,
+      side: Color,
+      moveUci: String,
+      targetKingFile: Option[Int]
+  ): Int =
+    val origin = squareAt(moveUci.take(2))
+    val dest = squareAt(moveUci.drop(2).take(2))
+    (origin, dest, origin.flatMap(beforeBoard.pieceAt), targetKingFile) match
+      case (Some(from), Some(to), Some(piece), Some(kingFile))
+          if piece.color == side &&
+            piece.role == Pawn &&
+            from.file == to.file &&
+            afterBoard.pieceAt(to).exists(afterPiece => afterPiece.color == side && afterPiece.role == Pawn) &&
+            isOuterFlankFile(to.key.head) &&
+            relativeRank(to, side) >= 4 &&
+            (to.file.value - kingFile).abs <= 1 =>
+        1
+      case _ =>
+        0
+
+  private def isOuterFlankFile(file: Char): Boolean =
+    file.toLower == 'a' || file.toLower == 'b' || file.toLower == 'g' || file.toLower == 'h'
 
   private def kingRingPressureDelta(
       before: Option[PositionFeatures],

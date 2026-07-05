@@ -2332,6 +2332,8 @@ object PositionPlanTechniqueProjection:
   private def positionPlanTechniqueTargetConsequence(kind: TransitionConsequenceKind): Boolean =
     kind == TransitionConsequenceKind.TargetPressureGain ||
       kind == TransitionConsequenceKind.TargetPressureRelease ||
+      kind == TransitionConsequenceKind.KingSafetyPressure ||
+      kind == TransitionConsequenceKind.KingRingPressureGain ||
       kind == TransitionConsequenceKind.WeakPawnTargetCreated ||
       kind == TransitionConsequenceKind.WeakSquareTargetCreated
 

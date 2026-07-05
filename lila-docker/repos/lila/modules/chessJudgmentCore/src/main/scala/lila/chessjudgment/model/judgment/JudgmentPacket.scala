@@ -2419,10 +2419,17 @@ object MoveMeaningSurface:
 
   private def planOptionIdeaType(claim: MoveMeaningClaim): String =
     if passedPawnAdvanceClaim(claim) then "passed_pawn_advance"
+    else if planContinuityTargetPressureCarrier(claim) then "target_pressure"
     else claim.role match
       case "PreparesBreakOption"  => "pawn_break_timing"
       case "DevelopsPieceForPlan" => "piece_activity"
       case _                      => "plan_continuity"
+
+  private def planContinuityTargetPressureCarrier(claim: MoveMeaningClaim): Boolean =
+    claim.meaningKind == "PlanContinuity" &&
+      claim.sourceEvidenceIds.exists(_.contains(":strategic-mechanism:target-pressure:")) &&
+      (claim.targetSquares.nonEmpty || claim.targetFiles.nonEmpty || claim.targetPieces.nonEmpty) &&
+      claim.objectCarrierReady
 
   private def passedPawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
     claim.routeIdentityParts.exists(_.startsWith("subject:passed-pawn-advanced:")) ||
@@ -3052,22 +3059,30 @@ object MoveMeaningClaim:
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
+    def concreteTargetPressurePlan(other: MoveMeaningClaim): Boolean =
+      other.meaningKind == "PlanContinuity" &&
+        other.sourceEvidenceIds.exists(_.contains(":strategic-mechanism:target-pressure:")) &&
+        (other.targetSquares.nonEmpty || other.targetFiles.nonEmpty || other.targetPieces.nonEmpty) &&
+        other.objectCarrierReady
     (
       claim.meaningKind == "PieceActivity" && claim.role == "ImprovesPieceActivity" ||
-        claim.meaningKind == "PlanContinuity" && claim.role == "ReferencePreservesPlan"
+        claim.meaningKind == "PlanContinuity" && claim.role == "ReferencePreservesPlan" ||
+        claim.meaningKind == "PlanContinuity" && claim.role == "PreparesBreakOption" && claim.breakFiles.nonEmpty &&
+          claim.targetSquares.isEmpty
     ) &&
       currentMoveSurfaceLane(claim) &&
       claims.exists(other =>
         other != claim &&
-          other.meaningKind == "TargetPressure" &&
           other.supportLevel == "owned_cause_linked" &&
           other.publicHasCarrier &&
           other.moveUci == claim.moveUci &&
           other.lineRole == claim.lineRole &&
           currentMoveSurfaceLane(other) &&
+          (other.meaningKind == "TargetPressure" || concreteTargetPressurePlan(other)) &&
           (
             other.causeEvidenceIds.intersect(claim.causeEvidenceIds).nonEmpty ||
-              targetOverlap(other, claim)
+              targetOverlap(other, claim) ||
+              (claim.role == "PreparesBreakOption" && concreteTargetPressurePlan(other))
           )
       )
 
