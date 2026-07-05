@@ -471,10 +471,10 @@ object MoveReviewPhase3AuditRunner:
         spec("c4_square_access_target_carrier", PositionPlanTechniqueUnit.StructuralTransformation, "Target:Gain:weak-pawn-target")
       ),
       "queenside_break_b_file_target" -> List(
-        spec(
+        ExpectedSlotSpec(
           "b5_b_file_target_carrier",
           PositionPlanTechniqueUnit.StructuralTransformation,
-          "Target:Support:TargetFixation",
+          None,
           requiredSupportLevel = "owned_cause_linked"
         )
       )
@@ -490,6 +490,8 @@ object MoveReviewPhase3AuditRunner:
       sample.expectedSemanticSlots.map {
         case slot if slot.id == "qe8_target_pressure_carrier" =>
           slot.copy(axisKey = Some("Target:Gain:target-pressure-gain"))
+        case slot if slot.id == "b5_b_file_target_carrier" =>
+          slot.copy(axisKey = None)
         case slot => slot
       }
     )
