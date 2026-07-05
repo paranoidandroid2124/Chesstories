@@ -110,9 +110,13 @@ object MoveJudgmentCauseNarrativeProjection:
       profile.eventKind &&
         (profile.tier == MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot || profile.tier == MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot)
     }
+    val terminalEventRoots = eventRoots.filter { case (frame, _) =>
+      frame.proofLineConsequences.exists(LineConsequenceKind.terminalResultProof)
+    }
     val fallbackRoots = profiled.filter { case (_, profile) => profile.tier == MoveJudgmentCauseRootArbitrationTier.FallbackRoot }
     val selected =
-      if qualifiedLongTermRoots.nonEmpty then qualifiedLongTermRoots.map(_._1)
+      if terminalEventRoots.nonEmpty then selectedEventRootFrames(graph, terminalEventRoots.map(_._1))
+      else if qualifiedLongTermRoots.nonEmpty then qualifiedLongTermRoots.map(_._1)
       else if eventRoots.nonEmpty then selectedEventRootFrames(graph, eventRoots.map(_._1))
       else selectedFallbackRootFrames(fallbackRoots.map(_._1))
     selected.distinctBy(causeFrameIdentity)

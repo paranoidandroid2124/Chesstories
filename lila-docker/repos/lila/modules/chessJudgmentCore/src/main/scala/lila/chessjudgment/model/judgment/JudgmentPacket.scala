@@ -1729,6 +1729,9 @@ object MoveMeaningSurfaceTarget:
       pieces =
         (
           targetCarriers.filter(_.kind == "Piece").map(_.value).flatMap(cleanPiece) ++
+            EvidenceObjectBinding
+              .signatureValues(detail.objectBindingSignatures, "target", "Piece")
+              .flatMap(cleanPiece) ++
             Option.when(pawnTargets.nonEmpty)("pawn").toList
         ).distinct.sorted
     )
@@ -4184,15 +4187,8 @@ object MoveMeaningClaim:
       !currentMoveClaim ||
         ownedCandidateCauseOwnsCurrentMove ||
         currentMoveSurfaceProof
-    val ownedTerminalProof =
-      currentMoveClaim &&
-        meaningKind == "TerminalProof" &&
-        hasDetailEvidence &&
-        terminalProofDetailOwnsClaimMove(detail, objectSignatures, claimMove)
     if terminalOverriddenEndgameTechniqueDetail(detail) && endgameTechniqueViewProof then
       Some("contextual")
-    else if ownedTerminalProof && ownedLaneOwnershipReady && ownedMeaningReady && !badCurrentMovePositiveMeaning then
-      Some("owned_cause_linked")
     else if reasonGradeCauseFrames.nonEmpty && ownedCause && ownedLaneOwnershipReady && ownedMeaningReady &&
         !planOptionCurrentFunctionOnly && !badCurrentMovePositiveMeaning && !broadPlanContinuityCurrentMove
     then
