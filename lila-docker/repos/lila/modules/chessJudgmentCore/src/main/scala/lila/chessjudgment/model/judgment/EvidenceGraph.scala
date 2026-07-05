@@ -1920,8 +1920,29 @@ object StrategicMechanismContrastEvidence:
     (
       currentMoveConcreteActivityCarrierRecords(candidateLine, records) ++
         currentMoveSameRootBreakCarrierRecords(candidateLine, records) ++
-        currentMovePlanAnchorCarrierRecords(candidateLine, records)
+        currentMovePlanAnchorCarrierRecords(candidateLine, records) ++
+        currentMoveFlankPawnAdvanceCarrierRecords(candidateLine, records)
     ).distinctBy(_.ref.id)
+
+  private def currentMoveFlankPawnAdvanceCarrierRecords(
+      candidateLine: LineNodeRef,
+      records: List[EvidenceRecord]
+  ): List[EvidenceRecord] =
+    records.collect {
+      case record @ EvidenceRecord(ref, payload: MoveMotifEvidence, _)
+          if payload.recordLineBound(ref) &&
+            ref.line.contains(candidateLine) &&
+            JudgmentSubjectBinding.normalizeMove(payload.moveUci) == JudgmentSubjectBinding.normalizeMove(candidateLine.rootMove) &&
+            currentMoveFlankPawnAdvance(payload.motif) =>
+        record
+    }.distinctBy(_.ref.id)
+
+  private def currentMoveFlankPawnAdvance(motif: Motif): Boolean =
+    motif match
+      case Motif.PawnAdvance(file, _, _, _, _, _) =>
+        file == File.A || file == File.B || file == File.G || file == File.H
+      case _ =>
+        false
 
   private[chessjudgment] def currentMoveConcreteActivitySource(
       source: EvidenceRef,

@@ -2940,6 +2940,13 @@ object MoveMeaningClaim:
     if claim.meaningKind != "PlanContinuity" then true
     else if claim.surfaceLane == "current_move_function" then
       currentMovePlanContinuityFunctionReady(claims, claim)
+    else if claim.surfaceLane == "current_move_owned" &&
+        claim.supportLevel == "owned_cause_linked" &&
+        claim.causeKinds.contains(RelativeCauseKind.PlanImprovement) &&
+        claim.causeEvidenceIds.nonEmpty &&
+        claim.objectCarrierReady &&
+        claim.boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "PlanSubject")
+    then true
     else
       (claim.specificityTier == PositionPlanTechniqueSpecificityTier.ExactObjectAxis ||
         claim.specificityTier == PositionPlanTechniqueSpecificityTier.ConcreteObjectAxis) &&
@@ -3402,8 +3409,12 @@ object MoveMeaningClaim:
       causeFramesById.values.flatten.toList
         .filter(frame => sameRootRouteOwnedCauseBridgeCandidate(frame, verdict, detail, objectSignatures))
         .distinctBy(_.causeEvidenceIds)
-    val linkedCauseFrames = (directLinkedCauseFrames ++ bridgedRouteCauseFrames).distinctBy(_.causeEvidenceIds)
-    val bridgedRouteCauseIds = bridgedRouteCauseFrames.flatMap(_.causeEvidenceIds).toSet
+    val bridgedPlanCauseFrames =
+      causeFramesById.values.flatten.toList
+        .filter(frame => sameRootPlanOwnedCauseBridgeCandidate(frame, verdict, detail))
+        .distinctBy(_.causeEvidenceIds)
+    val linkedCauseFrames = (directLinkedCauseFrames ++ bridgedRouteCauseFrames ++ bridgedPlanCauseFrames).distinctBy(_.causeEvidenceIds)
+    val bridgedCauseIds = (bridgedRouteCauseFrames ++ bridgedPlanCauseFrames).flatMap(_.causeEvidenceIds).toSet
     kind(detail, objectSignatures, None).toList
       .filter(_ => detailMatchesLine(frame, detail, verdict, linkedCauseFrames))
       .flatMap { baseMeaningKind =>
@@ -3438,7 +3449,15 @@ object MoveMeaningClaim:
                     optionLineRole,
                     optionMove,
                     optionClaimRole
-                )
+                  ) ||
+                  sameRootPlanOwnedCauseBridge(
+                    linkedFrame,
+                    verdict,
+                    detail,
+                    optionLineRole,
+                    optionMove,
+                    optionClaimRole
+                  )
               )
             (optionLineRole, optionMove, optionObjectSignatures, optionMeaningKind, optionClaimRole, optionRoleCompatibleCauseFrames)
           }
@@ -3461,7 +3480,7 @@ object MoveMeaningClaim:
               val linkedCauseIds =
                 roleCompatibleCauseFrames
                   .flatMap(_.causeEvidenceIds)
-                  .filter(id => detail.causeEvidenceIds.contains(id) || bridgedRouteCauseIds.contains(id))
+                  .filter(id => detail.causeEvidenceIds.contains(id) || bridgedCauseIds.contains(id))
                   .distinct
                   .sorted
               val sourceEvidenceIds =
@@ -3898,6 +3917,7 @@ object MoveMeaningClaim:
     if detail.unit != PositionPlanTechniqueUnit.PlanOptionSet then Nil
     else
       (detail.matchedPlanIds ++ detail.referencePlanIds ++ detail.candidatePlanIds)
+        .flatMap(_.split(",").toList)
         .map(_.trim.toLowerCase)
         .filter(_.nonEmpty)
         .distinct
@@ -4114,6 +4134,7 @@ object MoveMeaningClaim:
     val broadPlanContinuityCurrentMove =
       currentMoveClaim &&
         meaningKind == "PlanContinuity" &&
+        !ownedCandidateCauseOwnsCurrentMove &&
         !planContinuityCurrentMoveFunctionReady(evidenceGraph, detail, objectSignatures, claimMove, positionFen)
     val ownedMeaningReady =
       detail.unit match
@@ -4601,6 +4622,16 @@ object MoveMeaningClaim:
       crossComparisonOwnedRootTier(frame) &&
       causeFrameObjectOverlapsDetail(frame, objectSignatures)
 
+  private def sameRootPlanOwnedCauseBridgeCandidate(
+      frame: MoveJudgmentCauseFrame,
+      verdict: MoveJudgmentVerdictFrame,
+      detail: PositionPlanTechniqueSemanticDetail
+  ): Boolean =
+    detail.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+      nonLossMeaningVerdict(verdict.verdict) &&
+      planFallbackReasonFrame(detail, frame) &&
+      planCauseFrameOverlapsDetail(frame, detail)
+
   private def sameRootRouteOwnedCauseBridge(
       frame: MoveJudgmentCauseFrame,
       verdict: MoveJudgmentVerdictFrame,
@@ -4614,6 +4645,47 @@ object MoveMeaningClaim:
       causeFrameLineOwnsClaimMove(frame, verdict, claimLineRole, claimMove) &&
       detailOwnsClaimMove(detail, objectSignatures, claimMove) &&
       causeFramePolarityCompatibleWithMeaning(frame, verdict, detail, claimRole)
+
+  private def sameRootPlanOwnedCauseBridge(
+      frame: MoveJudgmentCauseFrame,
+      verdict: MoveJudgmentVerdictFrame,
+      detail: PositionPlanTechniqueSemanticDetail,
+      claimLineRole: String,
+      claimMove: String,
+      claimRole: String
+  ): Boolean =
+    sameRootPlanOwnedCauseBridgeCandidate(frame, verdict, detail) &&
+      causeFrameLineOwnsClaimMove(frame, verdict, claimLineRole, claimMove) &&
+      causeFramePolarityCompatibleWithMeaning(frame, verdict, detail, claimRole)
+
+  private def planCauseFrameOverlapsDetail(
+      frame: MoveJudgmentCauseFrame,
+      detail: PositionPlanTechniqueSemanticDetail
+  ): Boolean =
+    val detailTokens = planMeaningTokens(
+      detail.matchedPlanIds ++
+        detail.referencePlanIds ++
+        detail.candidatePlanIds ++
+        detail.label.toList ++
+        detail.axisKey.toList ++
+        detail.semanticAnchorKeys
+    )
+    val frameTokens = planMeaningTokens(frame.proofStrategicAxisKeys ++ frame.objectBindingSignatures)
+    detailTokens.intersect(frameTokens).nonEmpty
+
+  private def planMeaningTokens(values: List[String]): Set[String] =
+    values
+      .flatMap(_.split("[^A-Za-z0-9]+").toList)
+      .map(_.trim.toLowerCase)
+      .filter(token => token.length > 3)
+      .filterNot(token =>
+        token == "plan" ||
+          token == "support" ||
+          token == "plancoherence" ||
+          token == "planpressure" ||
+          token == "strategicaxis"
+      )
+      .toSet
 
   private def causeFrameLineOwnsClaimMove(
       frame: MoveJudgmentCauseFrame,

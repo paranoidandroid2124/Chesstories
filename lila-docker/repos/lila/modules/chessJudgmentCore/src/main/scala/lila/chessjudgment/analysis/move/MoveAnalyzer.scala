@@ -669,8 +669,7 @@ object MoveAnalyzer:
     val board = nextPos.board
     // 1. Must be a piece blocking an ENEMY pawn
     val rankVal = mv.dest.rank.value
-    // If white, pawn is down (rank - 1); if black, pawn is up (rank + 1)
-    val enemyPawnRankVal = if (color.white) rankVal - 1 else rankVal + 1
+    val enemyPawnRankVal = if (color.white) rankVal + 1 else rankVal - 1
     
     if (enemyPawnRankVal < 0 || enemyPawnRankVal > 7) return None
 

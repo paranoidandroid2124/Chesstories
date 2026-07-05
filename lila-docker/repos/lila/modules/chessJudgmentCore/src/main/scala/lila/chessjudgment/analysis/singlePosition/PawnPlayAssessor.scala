@@ -99,7 +99,8 @@ object PawnPlayAssessor:
       val primaryBreak = pawnBreakMotifs.head
       // `chess.File.toString` is numeric in some contexts; use `.char` for file letter.
       val file = primaryBreak.file.char.toString.toLowerCase
-      val impact = estimateBreakImpact(features, file, isWhite)
+      val color = if isWhite then Color.White else Color.Black
+      val impact = estimateBreakImpact(features, board, file, color)
       (true, Some(file), impact)
     else
       // Detect potential breaks from pawn structure
@@ -139,7 +140,7 @@ object PawnPlayAssessor:
           val centralFile = isCentralFile(pawnSq.file)
           val wingLever = !centralFile && features.centralSpace.lockedCenter
           val impact =
-            estimateBreakImpact(features, file, isWhite) +
+            estimateBreakImpact(features, board, file, color) +
               fileOpennessBonus(board, pawnSq.file) +
               (if centralFile then 15 else 10) +
               (if wingLever then 20 else 0)
@@ -178,7 +179,7 @@ object PawnPlayAssessor:
         val file = pawnSq.file.char.toString.toLowerCase
         val attackedTargets = (targetSq.pawnAttacks(color) & board.byColor(!color)).count
         val impact =
-          estimateBreakImpact(features, file, color.white) +
+          estimateBreakImpact(features, board, file, color) +
             fileOpennessBonus(board, pawnSq.file) +
             20 +
             attackedTargets * 10
@@ -211,21 +212,25 @@ object PawnPlayAssessor:
     val centralFile = square.file == File.C || square.file == File.D || square.file == File.E || square.file == File.F
     centralRank && centralFile
 
-  private def estimateBreakImpact(features: PositionFeatures, file: String, isWhite: Boolean): Int =
+  private def estimateBreakImpact(features: PositionFeatures, board: Board, file: String, color: Color): Int =
     // Base impact from opening a file
     val baseImpact = 80
     
     // Bonus if we have rooks to use the file
-    val rookBonus = if isWhite then
+    val rookBonus = if color.white then
       if features.imbalance.whiteRooks > 0 then 50 else 0
     else
       if features.imbalance.blackRooks > 0 then 50 else 0
     
-    // Bonus for attacking toward enemy king
-    val kingAttackBonus = file match
-      case "f" | "g" | "h" if isWhite => 30  // Kingside file, attacking black king
-      case "a" | "b" | "c" if !isWhite => 30 // Queenside, attacking white queen
-      case _ => 0
+    val fileIndex = file.headOption.map(ch => ch.toLower - 'a')
+    val kingAttackBonus =
+      (for
+        f <- fileIndex
+        king <- board.kingPosOf(!color)
+      yield
+        val distance = (f - king.file.value).abs
+        if distance <= 1 then 30 else if distance == 2 then 15 else 0
+      ).getOrElse(0)
     
     baseImpact + rookBonus + kingAttackBonus
 
