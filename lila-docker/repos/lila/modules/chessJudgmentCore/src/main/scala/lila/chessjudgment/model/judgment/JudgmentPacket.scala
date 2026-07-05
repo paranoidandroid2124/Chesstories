@@ -2056,6 +2056,19 @@ object MoveMeaningSurface:
       surface.evidence.proofLevel == "owned_cause" &&
         surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
     )
+    val normalizedSubjectMove = JudgmentSubjectBinding.normalizeMove(subjectMove).toLowerCase
+    val directPieceRouteCarrier = subject == "played_move" && evidenceSurfaces.exists { surface =>
+      surface.idea.code == "piece_route" &&
+        surface.evidence.proofLevel == "surface_evidence" &&
+        surface.evidence.sourceIds.exists(_.contains("structural-delta")) &&
+        surface.evidence.boardCarriers.exists(carrier =>
+          carrier.role == "actor" &&
+            carrier.kind == "Move" &&
+            JudgmentSubjectBinding.normalizeMove(carrier.value).toLowerCase == normalizedSubjectMove
+        ) &&
+        surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Piece") &&
+        surface.evidence.boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "Square")
+    }
     val directStructuralCarrier = evidenceSurfaces.exists { surface =>
       val carriers = surface.evidence.boardCarriers
       surface.evidence.sourceIds.exists(_.contains("structural-delta")) &&
@@ -2066,7 +2079,7 @@ object MoveMeaningSurface:
         )
     }
     evidenceSurfaces.nonEmpty &&
-      (terminal.nonEmpty || technique.nonEmpty || directStructuralCarrier || ownedRouteCarrier || (pv.nonEmpty && concreteConsequence))
+      (terminal.nonEmpty || technique.nonEmpty || directStructuralCarrier || ownedRouteCarrier || directPieceRouteCarrier || (pv.nonEmpty && concreteConsequence))
 
   private def publicIdeaChainSurfaceHasCarrier(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel != "none" &&
