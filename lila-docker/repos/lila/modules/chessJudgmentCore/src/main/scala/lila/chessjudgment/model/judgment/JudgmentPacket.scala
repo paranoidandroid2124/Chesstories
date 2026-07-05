@@ -3831,6 +3831,7 @@ object MoveMeaningClaim:
         detail.structuralRouteMove.toList.map(move => publicMoveCarrier("actor", move)) ++
         terminalTargetCarriers ++
         structuralRouteFileCarriers(detail) ++
+        flankPawnAdvanceDestinationCarriers(detail) ++
         detail.structuralPurposeSubjects.flatMap(publicStructuralSubjectCarriers) ++
         publicPlanSubjectCarriers(detail) ++
         detail.breakFile.toList.flatMap(file => publicFileCarrier("target", file)) ++
@@ -3849,6 +3850,30 @@ object MoveMeaningClaim:
   private def structuralRouteFileCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
     if !lineUnlockDetail(detail) then Nil
     else detail.structuralRouteMove.toList.flatMap(sameFileMoveFile).flatMap(file => publicFileCarrier("target", file))
+
+  private def flankPawnAdvanceDestinationCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
+    detail.structuralRouteMove.toList.flatMap(flankPawnAdvanceDestination).flatMap(square => publicSquareCarrier("target", square))
+
+  private def flankPawnAdvanceDestination(move: String): Option[String] =
+    moveEndpoints(move).collect {
+      case (from, to)
+          if from.take(1) == to.take(1) &&
+            from.headOption.exists(flankFile) &&
+            pawnAdvanceRankShape(from, to) =>
+        to
+    }
+
+  private def flankFile(file: Char): Boolean =
+    file == 'a' || file == 'b' || file == 'g' || file == 'h'
+
+  private def pawnAdvanceRankShape(from: String, to: String): Boolean =
+    val fromRank = from.drop(1).headOption.filter(_.isDigit).map(_.asDigit)
+    val toRank = to.drop(1).headOption.filter(_.isDigit).map(_.asDigit)
+    fromRank.zip(toRank).exists { case (fromValue, toValue) =>
+      val rankDelta = (toValue - fromValue).abs
+      rankDelta >= 1 && rankDelta <= 2 &&
+        ((toValue > fromValue && toValue >= 4) || (toValue < fromValue && toValue <= 5))
+    }
 
   private def lineUnlockIdentityCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
     detail.objectBindingSignatures
