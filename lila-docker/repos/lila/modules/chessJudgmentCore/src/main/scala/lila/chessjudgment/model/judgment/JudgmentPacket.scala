@@ -3041,10 +3041,25 @@ object MoveMeaningClaim:
       claim: MoveMeaningClaim
   ): Boolean =
     claim.meaningKind == "PieceActivity" &&
-      claim.role == "ImprovesPieceActivity" &&
-      (claim.surfaceLane == "current_move_owned" || claim.surfaceLane == "current_move_function") &&
-      claim.routeIdentityParts.nonEmpty &&
-      routeClaimWithSameIdentity(claims, claim)
+      (
+        claim.role == "ImprovesPieceActivity" ||
+          claim.role == "LosesPieceActivity" && claim.causeKinds.nonEmpty && claim.causeKinds.forall(kind => !negativeCauseKind(kind))
+      ) &&
+      currentMoveSurfaceLane(claim) &&
+      (
+        claim.routeIdentityParts.nonEmpty && routeClaimWithSameIdentity(claims, claim) ||
+          claim.causeEvidenceIds.nonEmpty &&
+            claims.exists(other =>
+              other != claim &&
+                other.meaningKind == "PieceRoute" &&
+                currentMoveSurfaceLane(other) &&
+                other.supportLevel == "owned_cause_linked" &&
+                other.publicHasCarrier &&
+                other.moveUci == claim.moveUci &&
+                other.lineRole == claim.lineRole &&
+                other.causeEvidenceIds.intersect(claim.causeEvidenceIds).nonEmpty
+            )
+      )
 
   private def planContinuityShadowedByOwnedRoute(
       claims: List[MoveMeaningClaim],
