@@ -267,7 +267,7 @@ object PositionPlanTechniqueProjection:
         case EvidenceRecord(ref, payload: BoardFactEvidence, _) if payload.endgameTechniqueAnchors.nonEmpty =>
           boardEndgameTechniqueFrame(ref, payload, graph, ideas, claims, ideaVerdict).toList
         case EvidenceRecord(ref, payload: LineFactEvidence, _) =>
-          lineEndgameTechniqueFrame(ref, payload, graph, ideas, claims, ideaVerdict).toList
+          linePlanTechniqueFrame(ref, payload, graph, ideas, claims, ideaVerdict).toList
         case _ =>
           Nil
       }
@@ -677,7 +677,7 @@ object PositionPlanTechniqueProjection:
       )
     }
 
-  private def lineEndgameTechniqueFrame(
+  private def linePlanTechniqueFrame(
       ref: EvidenceRef,
       payload: LineFactEvidence,
       graph: TypedEvidenceGraph,
@@ -687,8 +687,9 @@ object PositionPlanTechniqueProjection:
   ): Option[PositionPlanTechniqueFrame] =
     val horizons = payload.endgameTechniqueHorizons
     val terminalConsequences = payload.proofSignalConsequences.filter(lineTerminalProofConsequence)
-    Option.when(horizons.nonEmpty || terminalConsequences.nonEmpty) {
-      val evidenceIds = List(ref.id)
+    val evidenceIds = List(ref.id)
+    val castlingContinuationDetails = lineCastlingContinuationPlanDetails(payload, evidenceIds)
+    Option.when(horizons.nonEmpty || terminalConsequences.nonEmpty || castlingContinuationDetails.nonEmpty) {
       val objectBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, List(ref))
       val relativeCauseEvidenceIds = relativeCauseEvidenceIdsFor(graph, evidenceIds.toSet, frameLine = ref.line)
       val linkedEvidenceIds = (evidenceIds ++ relativeCauseEvidenceIds).toSet
@@ -697,28 +698,37 @@ object PositionPlanTechniqueProjection:
       val semanticAnchors =
         (
           horizons.map(lineEndgameTechniqueSemanticAnchor) ++
-            terminalConsequences.map(lineTerminalProofSemanticAnchor)
+            terminalConsequences.map(lineTerminalProofSemanticAnchor) ++
+            castlingContinuationDetails.flatMap(lineCastlingContinuationSemanticAnchors)
         ).distinctBy(_.stableKey).sortBy(_.stableKey)
       val units =
         (
           Option.when(horizons.nonEmpty)(PositionPlanTechniqueUnit.EndgameTechniqueRecipe).toList ++
-            Option.when(terminalConsequences.nonEmpty)(PositionPlanTechniqueUnit.StructuralTransformation).toList
+            Option.when(terminalConsequences.nonEmpty)(PositionPlanTechniqueUnit.StructuralTransformation).toList ++
+            castlingContinuationDetails.map(_.unit)
         ).distinct.sortBy(_.toString)
       PositionPlanTechniqueFrame(
-        id = s"position-plan-technique:${ref.id}:endgame-horizon",
+        id =
+          if horizons.nonEmpty || terminalConsequences.nonEmpty then s"position-plan-technique:${ref.id}:endgame-horizon"
+          else s"position-plan-technique:${ref.id}:line-continuation",
         units = units,
         position = ref.position,
         line = ref.line,
         moveUci = ref.line.map(_.rootMove).filter(_.nonEmpty),
         scope = ref.scope,
-        mechanismKinds = List(StrategicMechanismKind.Endgame),
+        mechanismKinds =
+          (
+            Option.when(horizons.nonEmpty || terminalConsequences.nonEmpty)(StrategicMechanismKind.Endgame).toList ++
+              Option.when(castlingContinuationDetails.nonEmpty)(StrategicMechanismKind.Activity).toList
+          ).distinct.sortBy(_.toString),
         strategicAxisKeys = Nil,
         semanticAnchors = semanticAnchors,
         objectBindingSignatures = EvidenceObjectBinding.objectSignatures(objectBindings),
         objectBindings = positionPlanTechniqueObjectBindings(objectBindings),
         semanticDetails = positionPlanTechniqueEnrichedDetails(
           lineEndgameTechniquePlanDetails(horizons, evidenceIds) ++
-            lineTerminalProofPlanDetails(terminalConsequences, evidenceIds),
+            lineTerminalProofPlanDetails(terminalConsequences, evidenceIds) ++
+            castlingContinuationDetails,
           graph,
           (evidenceIds ++ relativeCauseEvidenceIds).distinct.sorted
         ),
@@ -731,9 +741,81 @@ object PositionPlanTechniqueProjection:
         planComparison = None,
         relationToVerdict = positionPlanTechniqueRelation(ideaVerdict, ideaIds.toSet),
         confidence = ref.confidence,
-        salience = horizons.size * 2 + terminalConsequences.size * 3 + ideaIds.size + claimIds.size + relativeCauseEvidenceIds.size
+        salience =
+          horizons.size * 2 + terminalConsequences.size * 3 + castlingContinuationDetails.size * 2 +
+            ideaIds.size + claimIds.size + relativeCauseEvidenceIds.size
       )
     }
+
+  private def lineCastlingContinuationPlanDetails(
+      payload: LineFactEvidence,
+      evidenceIds: List[String]
+  ): List[PositionPlanTechniqueSemanticDetail] =
+    payload.rootMove.toList.flatMap { rootMove =>
+      val normalizedRoot = rootMove.trim.toLowerCase
+      val rootCastle =
+        payload.lineEventsOf(LineEventKind.Castling).exists(event =>
+          event.plyOffset == 0 && event.moveUci.trim.equalsIgnoreCase(normalizedRoot)
+        )
+      if !rootCastle then Nil
+      else
+        lineCastlingRookDestination(normalizedRoot).toList.flatMap { rookSquare =>
+          payload.lineReplaySteps
+            .drop(1)
+            .collectFirst {
+              case step if lineRookContinuationMove(step.moveUci, rookSquare) =>
+                val move = step.moveUci.trim.toLowerCase
+                val target = move.slice(2, 4)
+                PositionPlanTechniqueSemanticDetail(
+                  unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+                  label = Some("line-continuation-route"),
+                  semanticAnchorKeys = lineCastlingContinuationSemanticAnchorKeys(rookSquare, target),
+                  structuralRouteMove = Some(normalizedRoot),
+                  structuralPurposeConsequences = List(TransitionConsequenceKind.FileOccupationGain.toString),
+                  structuralPurposeSubjects = List(s"rook:$rookSquare-$target:maneuver", s"file:${target.take(1)}:$target"),
+                  structuralPurposeCategories = List(
+                    TransitionConsequenceCategory.PieceActivity.toString,
+                    TransitionConsequenceCategory.StrategicSupport.toString
+                  ),
+                  structuralPurposePolarities = List(StructuralSignalPolarity.Gain.toString),
+                  structuralPurposeStrength = Some(1),
+                  sourceEvidenceIds = evidenceIds
+                )
+            }
+            .toList
+        }
+    }
+
+  private def lineCastlingRookDestination(moveUci: String): Option[String] =
+    moveUci.trim.toLowerCase match
+      case "e1g1"          => Some("f1")
+      case "e1c1" | "e1a1" => Some("d1")
+      case "e8g8"          => Some("f8")
+      case "e8c8" | "e8a8" => Some("d8")
+      case _               => None
+
+  private def lineRookContinuationMove(moveUci: String, from: String): Boolean =
+    val move = moveUci.trim.toLowerCase
+    move.length >= 4 &&
+      move.take(2) == from &&
+      Set("a", "h").contains(move.slice(2, 3))
+
+  private def lineCastlingContinuationSemanticAnchorKeys(from: String, to: String): List[String] =
+    lineCastlingContinuationSemanticAnchors(from, to).map(_.stableKey).distinct.sorted
+
+  private def lineCastlingContinuationSemanticAnchors(
+      detail: PositionPlanTechniqueSemanticDetail
+  ): List[EvidenceSemanticAnchor] =
+    detail.structuralPurposeSubjects.collectFirst {
+      case subject if subject.startsWith("rook:") && subject.contains("-") =>
+        val route = subject.stripPrefix("rook:").takeWhile(_ != ':')
+        route.split("-").toList match
+          case from :: to :: Nil => lineCastlingContinuationSemanticAnchors(from, to)
+          case _                 => Nil
+    }.getOrElse(Nil)
+
+  private def lineCastlingContinuationSemanticAnchors(from: String, to: String): List[EvidenceSemanticAnchor] =
+    List(EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.LineEvent, LineEventKind.Castling.toString, "RookContinuation", s"$from-$to"))
 
   private def lineTerminalProofConsequence(consequence: LineConsequence): Boolean =
     consequence.eventMove.nonEmpty &&
