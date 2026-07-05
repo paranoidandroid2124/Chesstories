@@ -868,13 +868,12 @@ object PositionAnalyzer:
     val hFile = if color.white then List(Square.H2, Square.H3, Square.H4, Square.H5) else List(Square.H7, Square.H6, Square.H5, Square.H4)
     val hasA = aFile.exists(sq => board.pieceAt(sq).contains(Piece(color, Pawn)))
     val hasH = hFile.exists(sq => board.pieceAt(sq).contains(Piece(color, Pawn)))
-    val kingFlankAligned =
-      board.kingPosOf(color).exists { k =>
-        if hasH then k.file.value >= File.F.value
-        else if hasA then k.file.value <= File.C.value
-        else false
+    val targetKingFlankAligned =
+      board.kingPosOf(!color).exists { k =>
+        (hasH && k.file.value >= File.F.value) ||
+          (hasA && k.file.value <= File.C.value)
       }
-    (hasA || hasH) && kingFlankAligned
+    (hasA || hasH) && targetKingFlankAligned
 
   private def hookCreationChance(board: Board, color: Color): Boolean =
     val enemy = !color

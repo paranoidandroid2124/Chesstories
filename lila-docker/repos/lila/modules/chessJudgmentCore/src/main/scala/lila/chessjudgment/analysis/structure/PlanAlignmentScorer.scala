@@ -122,22 +122,28 @@ object PlanAlignmentScorer:
       case CounterBreakWatch =>
         pawnAnalysis.exists(_.counterBreak)
       case KingFlankFocus =>
-        val flankPawnPush = pawnAnalysis.exists(_.breakFile.exists(f => f == "f" || f == "g" || f == "h")) ||
+        val flankPawnPush = pawnAnalysis.exists(_.breakFile.exists(isOuterFlankFile)) ||
           motifs.exists {
-            case m: Motif.PawnAdvance => Set('f', 'g', 'h').contains(m.file.char)
+            case m: Motif.PawnAdvance => isOuterFlankFile(m.file.char)
             case _ => false
           }
         val flankPieceActivity = motifs.exists {
-          case m: Motif.Outpost => Set('f', 'g', 'h').contains(m.square.file.char)
-          case m: Motif.Maneuver => maneuverTouchesKingFlank(m.move)
+          case m: Motif.Outpost => isOuterFlankFile(m.square.file.char)
+          case m: Motif.Maneuver => maneuverTouchesOuterFlank(m.move)
           case _ => false
         }
         flankPawnPush && flankPieceActivity
 
-  private def maneuverTouchesKingFlank(move: Option[String]): Boolean =
+  private def maneuverTouchesOuterFlank(move: Option[String]): Boolean =
     move.exists { raw =>
       val normalized = Option(raw).getOrElse("").trim.toLowerCase
       val originFile = normalized.lift(0)
       val targetFile = normalized.lift(2)
-      (originFile.toList ++ targetFile.toList).exists(file => file == 'f' || file == 'g' || file == 'h')
+      (originFile.toList ++ targetFile.toList).exists(isOuterFlankFile)
     }
+
+  private def isOuterFlankFile(raw: String): Boolean =
+    raw.length == 1 && isOuterFlankFile(raw.head)
+
+  private def isOuterFlankFile(file: Char): Boolean =
+    file.toLower == 'a' || file.toLower == 'b' || file.toLower == 'g' || file.toLower == 'h'

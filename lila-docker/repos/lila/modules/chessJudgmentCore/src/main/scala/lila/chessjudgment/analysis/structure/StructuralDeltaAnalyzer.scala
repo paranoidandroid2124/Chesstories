@@ -451,7 +451,13 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         pawnTensionAfter = afterAttacks.size,
         targetPressureDelta = targetPressureDelta,
         fileAccessDelta = after.fileAccess - before.fileAccess,
-        kingShelterDelta = kingShelterDelta(before.features, after.features, side, shelterFiles),
+        kingShelterDelta = kingShelterDelta(
+          before.features,
+          after.features,
+          side,
+          shelterFiles,
+          afterBoard.kingPosOf(!side).map(_.file.value)
+        ),
         kingShelterFiles = shelterFiles.map(_.toString),
         kingTargetSubjects = targetKingSubjects,
         mobilityDelta = mobilityDeltaValue,
@@ -957,10 +963,14 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       before: Option[PositionFeatures],
       after: Option[PositionFeatures],
       side: Color,
-      files: List[Char]
+      files: List[Char],
+      targetKingFile: Option[Int]
   ): Int =
-    val kingside = files.exists(file => Set('f', 'g', 'h').contains(file))
-    if !kingside then 0
+    val nearTargetKing =
+      targetKingFile.exists(kingFile =>
+        files.exists(file => (file.toLower - 'a' - kingFile).abs <= 2)
+      )
+    if !nearTargetKing then 0
     else
       before.zip(after).map { case (beforeFeatures, afterFeatures) =>
         if side.white then beforeFeatures.kingSafety.blackKingShield - afterFeatures.kingSafety.blackKingShield

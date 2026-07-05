@@ -343,7 +343,7 @@ object PlanMatcher:
 
   private def flankInfrastructure(m: List[Motif], ctx: PlanInteractionContext, side: Color, s: SideSnapshot): PlanMatch =
     val ev = evidence(m, 0.19) {
-      case PawnAdvance(file, _, _, c, _, _) if c == side && (file == File.A || file == File.H) => true
+      case PawnAdvance(file, _, _, c, _, _) if c == side && isFlank(file) => true
       case RookLift(_, _, _, c, _, _) if c == side => true
       case PawnChain(_, _, c, _, _) if c == side => true
     }
