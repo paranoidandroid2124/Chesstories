@@ -680,11 +680,8 @@ object MoveAnalyzer:
        val colorBehind = board.colorAt(pSq)
        
        if (pieceBehind.contains(Pawn) && colorBehind.contains(!color)) {
-         val rank = pSq.rank
-         val isAdvanced = if (color.white) rank.value >= 3 else rank.value <= 4 
-         
-         if (isAdvanced && mv.piece.role == Knight) { 
-            Some(Motif.Blockade(Knight, mv.dest, pSq, color, plyIndex, moveUci))
+         if (Set(Knight, Bishop, Rook, King).contains(mv.piece.role)) {
+            Some(Motif.Blockade(mv.piece.role, mv.dest, pSq, color, plyIndex, moveUci))
          } else None
        } else None
     }
