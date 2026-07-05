@@ -3618,6 +3618,14 @@ object MoveMotifEvent:
           val from = Square.fromKey(normalized.take(2)).map(evidenceSquare).toList
           val to = Square.fromKey(normalized.slice(2, 4)).map(evidenceSquare).toList
           (from, to, Nil, List(King))
+        case Motif.Castling(side, color, _, _) =>
+          val rank = if color.white then "1" else "8"
+          val (kingTo, rookFrom, rookTo) =
+            if side == Motif.CastlingSide.Kingside then (s"g$rank", s"h$rank", s"f$rank")
+            else (s"c$rank", s"a$rank", s"d$rank")
+          val subject = List(s"e$rank", rookFrom).flatMap(Square.fromKey).map(evidenceSquare)
+          val target = List(kingTo, rookTo).flatMap(Square.fromKey).map(evidenceSquare)
+          (subject, target, Nil, List(King, Rook))
         case Motif.OpenFileControl(file, _, _, _) =>
           (Nil, Nil, Nil, Nil)
         case Motif.SemiOpenFileControl(file, _, _, _) =>

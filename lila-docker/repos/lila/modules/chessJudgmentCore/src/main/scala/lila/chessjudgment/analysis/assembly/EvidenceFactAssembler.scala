@@ -840,7 +840,7 @@ object EvidenceFactAssembler:
                         ref.scope == edge.role.scope &&
                         transitionRecordMentionsMove(record, edge.moveUci) &&
                         payload.isRootEvent &&
-                        payload.motif.isInstanceOf[Motif.KingStep] =>
+                        (payload.motif.isInstanceOf[Motif.KingStep] || payload.motif.isInstanceOf[Motif.Castling]) =>
                     record
                 }
               )

@@ -427,12 +427,15 @@ object LineFactNormalizer:
 
   private def castlingSide(moveUci: String): Option[Color] =
     moveUci match
-      case "e1g1" | "e1c1" => Some(Color.White)
-      case "e8g8" | "e8c8" => Some(Color.Black)
+      case "e1g1" | "e1c1" | "e1a1" => Some(Color.White)
+      case "e8g8" | "e8c8" | "e8a8" => Some(Color.Black)
       case _               => None
 
   private def destinationSquare(moveUci: String): Option[EvidenceSquare] =
-    Option.when(moveUci.length >= 4)(EvidenceSquare(moveUci.slice(2, 4)))
+    moveUci match
+      case "e1a1" => Some(EvidenceSquare("c1"))
+      case "e8a8" => Some(EvidenceSquare("c8"))
+      case _      => Option.when(moveUci.length >= 4)(EvidenceSquare(moveUci.slice(2, 4)))
 
   private def movingPieceRole(fenBefore: String, moveUci: String): Option[EvidencePieceRole] =
     for
