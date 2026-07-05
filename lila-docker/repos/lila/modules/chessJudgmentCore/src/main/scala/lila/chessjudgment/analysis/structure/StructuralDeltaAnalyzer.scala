@@ -747,6 +747,17 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
     val dest = squareAt(moveUci.drop(2).take(2))
     val movedPiece = origin.flatMap(beforeBoard.pieceAt)
     (origin, dest, movedPiece) match
+      case (Some(from), Some(to), Some(piece)) if piece.color == side && piece.role == Pawn =>
+        val beforeTargets = enemyOccupiedSquares(beforeBoard, side).filter(square =>
+          pawnAttacks(from.key, side).contains(square.key)
+        )
+        val afterTargets = enemyOccupiedSquares(afterBoard, side).filter(square =>
+          pawnAttacks(to.key, side).contains(square.key)
+        )
+        PieceTargetPressureDelta(
+          released = beforeTargets.diff(afterTargets).map(_.key).distinct.sorted,
+          created = afterTargets.diff(beforeTargets).map(_.key).distinct.sorted
+        )
       case (Some(from), Some(to), Some(piece)) if piece.color == side && piece.role != Pawn =>
         val beforeTargets = enemyOccupiedSquares(beforeBoard, side).filter(square =>
           beforeBoard.attackers(square, side).squares.contains(from)
