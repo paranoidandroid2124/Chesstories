@@ -134,7 +134,7 @@ object MoveReviewInputNormalizer:
       }
       val played =
         ranked
-          .find { case (line, _) => line.moves.headOption.exists(move => normalizeUci(move) == playedMove) }
+          .find { case (line, _) => line.moves.headOption.exists(move => sameRootMove(beforeFen, move, playedMove)) }
           .map { case (line, index) => NormalizedCandidateLine(LineNodeRole.Played, index + 1, normalizedLine(line)) }
       val alternatives =
         ranked
@@ -144,6 +144,9 @@ object MoveReviewInputNormalizer:
           .map { case (line, index) => NormalizedCandidateLine(LineNodeRole.Alternative, index + 1, normalizedLine(line)) }
       val lines = (reference.toList ++ played.toList ++ alternatives).distinctBy(line => line.role -> line.rank)
       raw.currentEvalCp.orElse(reference.map(_.line.scoreCp)).map { currentWhitePovEvalCp =>
+        val graphPlayedMove = played.flatMap(_.rootMove).getOrElse(playedMove)
+        val graphAfterPlayed =
+          PrincipalVariationEvidence.legalFenAfter(beforeFen, graphPlayedMove).getOrElse(afterPlayed)
         val afterReference =
           reference.flatMap(_.rootMove).flatMap(PrincipalVariationEvidence.legalFenAfter(beforeFen, _))
         val threatBranchNormalization =
@@ -155,10 +158,10 @@ object MoveReviewInputNormalizer:
           )
         NormalizedMoveReviewInput(
           beforeFen = beforeFen,
-          playedMoveUci = playedMove,
+          playedMoveUci = graphPlayedMove,
           beforePly = beforePly,
           sideToMove = side,
-          afterPlayedFen = afterPlayed,
+          afterPlayedFen = graphAfterPlayed,
           afterReferenceFen = afterReference,
           lines = lines,
           currentWhitePovEvalCp = currentWhitePovEvalCp,
@@ -185,7 +188,7 @@ object MoveReviewInputNormalizer:
       sideToMove: Option[Color]
   ): List[(VariationLine, Int)] =
     val selectedLines = lines
-      .groupBy { case (line, _) => line.moves.headOption.map(normalizeUci).getOrElse("") }
+      .groupBy { case (line, _) => line.moves.headOption.map(rootMoveKey(startFen, _)).getOrElse("") }
       .values
       .map { entries =>
         val earliestRank = entries.map(_._2).min
@@ -347,8 +350,8 @@ object MoveReviewInputNormalizer:
               case Some(expectedBranchFen) if expectedBranchFen == fen =>
                 val matchingMoveLines =
                   rootLines
-                  .filterNot(_.role == LineNodeRole.Threat)
-                  .filter(line => line.rootMove.contains(move))
+                    .filterNot(_.role == LineNodeRole.Threat)
+                    .filter(line => line.rootMove.exists(rootMove => sameRootMove(beforeFen, rootMove, move)))
                 if matchingMoveLines.isEmpty then
                   Left(baseDiagnostic(List("ROOT_LINE_UNBOUND")))
                 else if probe.variationHash.forall(_.trim.isEmpty) then
@@ -464,6 +467,20 @@ object MoveReviewInputNormalizer:
       line.moves.foldLeft(Option(startFen)) { (fen, move) =>
         fen.flatMap(PrincipalVariationEvidence.legalFenAfter(_, normalizeUci(move)))
       }.nonEmpty
+
+  private def rootMoveKey(startFen: String, move: String): String =
+    PrincipalVariationEvidence.legalFenAfter(startFen, normalizeUci(move)).getOrElse(normalizeUci(move))
+
+  private def sameRootMove(startFen: String, left: String, right: String): Boolean =
+    val normalizedLeft = normalizeUci(left)
+    val normalizedRight = normalizeUci(right)
+    normalizedLeft == normalizedRight ||
+      (
+        normalizedLeft.nonEmpty &&
+          normalizedRight.nonEmpty &&
+          PrincipalVariationEvidence.legalFenAfter(startFen, normalizedLeft)
+            .exists(after => PrincipalVariationEvidence.legalFenAfter(startFen, normalizedRight).contains(after))
+      )
 
   private def normalizeFen(fen: String): String =
     Option(fen).getOrElse("").trim.split("\\s+").filter(_.nonEmpty).mkString(" ")

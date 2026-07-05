@@ -3390,6 +3390,13 @@ object MoveMeaningClaim:
     val frameMove = frame.moveUci.map(JudgmentSubjectBinding.normalizeMove)
     val candidateLineMoveMatches = frame.line.contains(verdict.candidateLine) && frameMove.contains(candidateMove)
     val referenceLineMoveMatches = frame.line.contains(verdict.referenceLine) && frameMove.contains(referenceMove)
+    val routeScopeMatches =
+      frame.semanticDetails.exists(detail =>
+        frame.scope == EvidenceScope.AfterPlayedPosition &&
+          detail.structuralRouteMove.exists(move => sameMove(move, verdict.candidateLine.rootMove)) ||
+          frame.scope == EvidenceScope.AfterReferencePosition &&
+            detail.structuralRouteMove.exists(move => sameMove(move, verdict.referenceLine.rootMove))
+      )
     val contrastMatches =
       (frame.mechanismEvidenceIds ++ frame.evidenceIds).exists(id =>
         graph.byId.get(id).exists {
@@ -3418,7 +3425,7 @@ object MoveMeaningClaim:
             }
           )
       )
-    candidateLineMoveMatches || referenceLineMoveMatches || contrastMatches || causeMatches
+    candidateLineMoveMatches || referenceLineMoveMatches || routeScopeMatches || contrastMatches || causeMatches
 
   private def fromDetail(
       evidenceGraph: TypedEvidenceGraph,
@@ -5938,6 +5945,12 @@ object MoveMeaningClaim:
     if graphRoles.nonEmpty then graphRoles
     else if frame.line.contains(verdict.candidateLine) then List("candidate")
     else if frame.line.contains(verdict.referenceLine) then List("reference")
+    else if frame.scope == EvidenceScope.AfterPlayedPosition &&
+        detail.structuralRouteMove.exists(move => sameMove(move, verdict.candidateLine.rootMove))
+    then List("candidate")
+    else if frame.scope == EvidenceScope.AfterReferencePosition &&
+        detail.structuralRouteMove.exists(move => sameMove(move, verdict.referenceLine.rootMove))
+    then List("reference")
     else if detail.candidateEvidenceIds.nonEmpty && detail.referenceEvidenceIds.nonEmpty then List("contrast")
     else if detail.referenceEvidenceIds.nonEmpty then List("reference")
     else if detail.candidateEvidenceIds.nonEmpty then List("candidate")

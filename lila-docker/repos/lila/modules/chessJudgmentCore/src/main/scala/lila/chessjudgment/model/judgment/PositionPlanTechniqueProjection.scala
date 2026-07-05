@@ -1,6 +1,7 @@
 package lila.chessjudgment.model.judgment
 
 import lila.chessjudgment.analysis.singlePosition.{ PawnPlayAnalysis, ThreatSeverity }
+import lila.chessjudgment.model.Motif
 import lila.chessjudgment.model.structure.PlanAlignment
 
 enum PositionPlanTechniqueUnit:
@@ -1787,6 +1788,7 @@ object PositionPlanTechniqueProjection:
     val openingPriorBySourceId = positionPlanTechniqueOpeningPriorBySourceId(graph, refs)
     val resourceContestBySourceId = positionPlanTechniqueResourceContestBySourceId(graph, refs)
     val structuralPurposeBySourceId = positionPlanTechniqueStructuralPurposeBySourceId(graph, refs)
+    val routePurposeBySourceId = positionPlanTechniqueRoutePurposeBySourceId(graph, refs)
     val threatBySourceId = positionPlanTechniqueThreatBySourceId(graph, refs)
     val axisDetails =
       payload.axisDetails.flatMap(axis =>
@@ -1809,6 +1811,7 @@ object PositionPlanTechniqueProjection:
             .withOpeningPrior(positionPlanTechniqueOpeningPriorForSources(sourceIds, openingPriorBySourceId))
             .withResourceContest(positionPlanTechniqueResourceContestForSources(sourceIds, resourceContestBySourceId))
             .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForDetailSources(detail, sourceIds, structuralPurposeBySourceId))
+            .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForSources(sourceIds, routePurposeBySourceId))
             .withThreatProjection(positionPlanTechniqueThreatForSources(sourceIds, threatBySourceId))
         )
       )
@@ -1829,6 +1832,7 @@ object PositionPlanTechniqueProjection:
             .withOpeningPrior(positionPlanTechniqueOpeningPriorForSources(sourceIds, openingPriorBySourceId))
             .withResourceContest(positionPlanTechniqueResourceContestForSources(sourceIds, resourceContestBySourceId))
             .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForSources(sourceIds, structuralPurposeBySourceId))
+            .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForSources(sourceIds, routePurposeBySourceId))
             .withThreatProjection(positionPlanTechniqueThreatForSources(sourceIds, threatBySourceId))
         )
     positionPlanTechniqueWithPawnBreakRaceDetails(axisDetails ++ unitOnlyDetails)
@@ -2108,6 +2112,61 @@ object PositionPlanTechniqueProjection:
       sourceIds
         .flatMap(id => structuralPurposeBySourceId.getOrElse(id, Nil))
         .filter(positionPlanTechniqueStructuralPurposeMatchesDetail(detail, _))
+    )
+
+  private def positionPlanTechniqueRoutePurposeBySourceId(
+      graph: TypedEvidenceGraph,
+      refs: List[EvidenceRef]
+  ): Map[String, List[PositionPlanTechniqueStructuralPurpose]] =
+    refs.flatMap(ref =>
+      graph.byId.get(ref.id).map(record => ref.id -> positionPlanTechniqueRoutePurposes(record))
+    ).toMap
+
+  private def positionPlanTechniqueRoutePurposes(record: EvidenceRecord): List[PositionPlanTechniqueStructuralPurpose] =
+    record.payload match
+      case payload: MoveMotifEvidence =>
+        val move = payload.moveUci.trim.toLowerCase
+        payload.motif match
+          case Motif.KingStep(_, color, _, _) =>
+            positionPlanTechniqueRoutePurpose(record.ref.id, move, color, List(s"king:${move.take(2)}-${move.slice(2, 4)}")).toList
+          case Motif.Castling(side, color, _, _) =>
+            val rank = if color.white then "1" else "8"
+            val (kingTo, rookFrom, rookTo) =
+              if side == Motif.CastlingSide.Kingside then (s"g$rank", s"h$rank", s"f$rank")
+              else (s"c$rank", s"a$rank", s"d$rank")
+            positionPlanTechniqueRoutePurpose(
+              record.ref.id,
+              move,
+              color,
+              List(s"king:e$rank-$kingTo", s"rook:$rookFrom-$rookTo")
+            ).toList
+          case _ =>
+            Nil
+      case _ =>
+        Nil
+
+  private def positionPlanTechniqueRoutePurpose(
+      sourceId: String,
+      move: String,
+      color: chess.Color,
+      subjects: List[String]
+  ): Option[PositionPlanTechniqueStructuralPurpose] =
+    Option.when(move.matches("[a-h][1-8][a-h][1-8].*") && subjects.nonEmpty)(
+      PositionPlanTechniqueStructuralPurpose(
+        sourceIds = List(sourceId),
+        routeMove = Some(move),
+        transitionRouteSubject = None,
+        routeRole = None,
+        routePerspective = Some(if color.white then "White" else "Black"),
+        routeFromPly = None,
+        routeToPly = None,
+        consequenceKinds = List(TransitionConsequenceKind.DevelopmentPieceActivated),
+        consequences = List(TransitionConsequenceKind.DevelopmentPieceActivated.toString),
+        subjects = subjects.distinct.sorted,
+        categories = List(TransitionConsequenceCategory.PieceActivity.toString, TransitionConsequenceCategory.StrategicSupport.toString),
+        polarities = List(StructuralSignalPolarity.Gain.toString),
+        strength = Some(subjects.size)
+      )
     )
 
   private def positionPlanTechniqueWithFallbackOpenCenterRoute(
