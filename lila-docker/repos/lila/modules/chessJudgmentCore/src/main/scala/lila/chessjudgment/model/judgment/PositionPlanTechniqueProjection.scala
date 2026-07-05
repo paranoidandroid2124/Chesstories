@@ -1485,7 +1485,7 @@ object PositionPlanTechniqueProjection:
     val causeKinds =
       Set(RelativeCauseKind.PlanImprovement, RelativeCauseKind.PlanContradiction) ++
         Option
-          .when(positionPlanTechniqueOpenCenterContext(detail) && positionPlanTechniqueDevelopmentRouteDetail(detail))(
+          .when(positionPlanTechniqueStructureRouteContext(detail) && positionPlanTechniqueDevelopmentRouteDetail(detail))(
             Set(RelativeCauseKind.ActivityGain, RelativeCauseKind.ActivityLoss)
           )
           .getOrElse(Set.empty)
