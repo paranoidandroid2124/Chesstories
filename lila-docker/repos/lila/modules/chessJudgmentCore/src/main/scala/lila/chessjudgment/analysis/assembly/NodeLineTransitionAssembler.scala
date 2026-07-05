@@ -257,7 +257,8 @@ object CandidateLineAssembler:
       val sideToMove = replay.headOption.map(_.move.piece.color)
       sideToMove.flatMap { mover =>
         val captures = replay.zipWithIndex.flatMap { case (step, index) =>
-          step.capturedRole.map { captured =>
+          if LineFactNormalizer.castlingSide(PrincipalVariationEvidence.normalizeUci(step.uci)).nonEmpty then None
+          else step.capturedRole.map { captured =>
             val previous = replay.lift(index - 1)
             LineMaterialCapture(
               moveUci = step.uci,

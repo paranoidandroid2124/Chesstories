@@ -425,7 +425,7 @@ object LineFactNormalizer:
       )
     )
 
-  private def castlingSide(moveUci: String): Option[Color] =
+  private[chessjudgment] def castlingSide(moveUci: String): Option[Color] =
     moveUci match
       case "e1g1" | "e1c1" | "e1a1" => Some(Color.White)
       case "e8g8" | "e8c8" | "e8a8" => Some(Color.Black)

@@ -2060,7 +2060,11 @@ object MoveMeaningSurface:
     val directPieceRouteCarrier = subject == "played_move" && evidenceSurfaces.exists { surface =>
       surface.idea.code == "piece_route" &&
         surface.evidence.proofLevel == "surface_evidence" &&
-        surface.evidence.sourceIds.exists(_.contains("structural-delta")) &&
+        (
+          surface.evidence.sourceIds.exists(_.contains("structural-delta")) ||
+            (pv.exists(move => JudgmentSubjectBinding.normalizeMove(move).toLowerCase != normalizedSubjectMove) &&
+              surface.evidence.sourceIds.exists(_.contains(":evidence:line:")))
+        ) &&
         surface.evidence.boardCarriers.exists(carrier =>
           carrier.role == "actor" &&
             carrier.kind == "Move" &&
