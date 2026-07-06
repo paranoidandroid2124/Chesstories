@@ -2428,7 +2428,7 @@ object MoveMeaningSurface:
     val mobilityGainCarrier =
       mechanismTokens.contains("mechanism:mobilitygain") ||
         consequenceTokens.contains("consequence:mobilitygain:gain")
-    val flankPawnAdvancePlan =
+    val flankInfrastructurePawnMove =
       planSubjects.contains("pawnstorm") && currentFlankPawnAdvanceDestination(claim.moveUci).nonEmpty
     val bishopCarrier =
       claim.targetPieces.exists(_.equalsIgnoreCase("bishop")) ||
@@ -2455,7 +2455,7 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => "creates pawn tension"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => "resolves pawn tension"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
-        case ("pawn_break_timing", _) if flankPawnAdvancePlan => "flank pawn advance"
+        case ("pawn_break_timing", _) if flankInfrastructurePawnMove => "flank pawn advance"
         case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
         case ("pawn_break_timing", label) if label.contains("PieceActivation") && mobilityGainCarrier => "piece activation"
         case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => "break preparation"
@@ -2479,7 +2479,7 @@ object MoveMeaningSurface:
     val flankDestination = currentFlankPawnAdvanceDestination(claim.moveUci)
     val target =
       flankDestination match
-        case Some(destination) if flankPawnAdvancePlan =>
+        case Some(destination) if flankInfrastructurePawnMove =>
           baseTarget.copy(
             squares = List(destination),
             files = List(destination.take(1)),
