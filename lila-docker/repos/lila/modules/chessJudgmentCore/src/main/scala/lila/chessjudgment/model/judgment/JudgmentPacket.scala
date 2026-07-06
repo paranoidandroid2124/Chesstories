@@ -2497,12 +2497,33 @@ object MoveMeaningSurface:
     val bishopCarrier =
       claim.targetPieces.exists(_.equalsIgnoreCase("bishop")) ||
         evidence.boardCarriers.exists(carrier => carrier.kind == "Piece" && carrier.value.equalsIgnoreCase("bishop"))
-    val opensLineLabel =
-      if claim.routeIdentityParts.exists(_.equalsIgnoreCase("piece:bishop")) then "opens a diagonal"
-      else "opens a line"
     val routePiece = claim.routeIdentityParts.collectFirst {
       case part if part.toLowerCase.startsWith("piece:") => part.drop("piece:".length).toLowerCase
     }
+    val routeUnlockMoveFile = claim.routeIdentityParts
+      .flatMap { part =>
+        val lower = part.toLowerCase
+        val marker = ":line-unlock:by:"
+        val index = lower.indexOf(marker)
+        Option.when(index >= 0)(lower.drop(index + marker.length).takeWhile(_ != ':'))
+      }
+      .find(_.matches("[a-h][1-8][a-h][1-8]"))
+      .map(_.take(1))
+    val lineUnlockFile =
+      routeUnlockMoveFile.orElse((claim.targetFiles ++ carrierTargetFiles).map(_.trim.toLowerCase).distinct match
+        case file :: Nil => Some(file).filter(_.matches("[a-h]"))
+        case _           => None
+      )
+    val opensLineLabel =
+      routePiece match
+        case Some("bishop") => "opens bishop diagonal"
+        case Some("queen")  => "opens queen line"
+        case Some(piece) =>
+          lineUnlockFile match
+            case Some(file) => s"opens $file-file for $piece"
+            case None       => s"opens $piece line"
+        case None if bishopCarrier => "opens bishop diagonal"
+        case None => lineUnlockFile.map(file => s"opens $file-file").getOrElse("opens a line")
     val routeFrom = claim.routeIdentityParts.collectFirst {
       case part if part.toLowerCase.startsWith("from:") => part.drop("from:".length).toLowerCase
     }
@@ -2558,7 +2579,7 @@ object MoveMeaningSurface:
         case ("piece_route", _) if routeLineUnlockClaim(claim) => opensLineLabel
         case ("piece_route", _) if initialDevelopmentRoute => "piece development"
         case ("piece_route", label) if routeManeuverClaim(claim, label) => routeManeuverLabel
-        case ("piece_route", label) if routeDevelopmentLabel(label) => "piece development"
+        case ("piece_route", label) if routeDevelopmentLabel(label) => routeManeuverLabel
         case ("piece_activity", label) if routeManeuverClaim(claim, label) => "piece activity lost"
         case ("piece_activity", _) if initialDevelopmentRoute => "piece development"
         case ("piece_activity", label) if routeDevelopmentLabel(label) => "piece activation"
