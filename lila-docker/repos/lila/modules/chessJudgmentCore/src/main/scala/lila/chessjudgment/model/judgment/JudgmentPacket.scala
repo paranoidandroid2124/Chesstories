@@ -2649,6 +2649,15 @@ object MoveMeaningSurface:
           carrier.value.stripPrefix("material-sacrifice:").toLowerCase
       }
       .filter(_.matches("[a-h][1-8]"))
+    val materialGainLabel =
+      claim.boardCarriers
+        .collectFirst {
+          case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.startsWith("material-capture:") =>
+            carrier.value.stripPrefix("material-capture:").toLowerCase
+        }
+        .filter(_.matches("[a-h][1-8]"))
+        .map(square => s"wins material on $square")
+        .getOrElse("material gain")
     val sacrificeCompensationLabel =
       materialSacrificeSquare.map(square => s"compensation for $square sacrifice").getOrElse("sacrifice compensation")
     val weakPawnSquares = claim.boardCarriers
@@ -2841,6 +2850,7 @@ object MoveMeaningSurface:
         case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => opensLineLabel
         case ("long_diagonal_pressure", _) if centralTargetSquare => "central diagonal pressure"
         case ("long_diagonal_pressure", _) if bishopCarrier => "bishop diagonal pressure"
+        case ("material_gain", _) => materialGainLabel
         case ("compensation", _) if materialSacrificeCompensationClaim(claim) => sacrificeCompensationLabel
         case ("passed_pawn_advance", _) => passedPawnAdvanceLabel
         case ("outpost_attempt", _) => outpostLabel
