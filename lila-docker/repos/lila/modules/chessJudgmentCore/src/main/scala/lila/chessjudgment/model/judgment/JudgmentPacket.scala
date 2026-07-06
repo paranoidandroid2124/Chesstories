@@ -2485,13 +2485,13 @@ object MoveMeaningSurface:
         .flatMap(signature => EvidenceObjectBinding.signatureValues(List(signature), "actor", "Piece"))
         .map(_.toLowerCase)
         .distinct
-    val lineUnlockCarrier =
-      signatureList.exists(signature =>
+    val lineUnlockSignatures =
+      signatureList.filter(signature =>
         val normalized = signature.toLowerCase
         normalized.contains("mechanism=mechanism:line-unlock") ||
           normalized.contains("mechanism=mechanism:lineunlocked") ||
           normalized.contains("consequence=consequence:lineunlockgain")
-      ) || claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":line-unlock:by:"))
+      )
     val flankInfrastructurePawnMove =
       planSubjects.exists(Set("pawnstorm", "spaceadvantage")) && currentFlankPawnAdvanceDestination(claim.moveUci).nonEmpty
     val bishopCarrier =
@@ -2499,7 +2499,14 @@ object MoveMeaningSurface:
         evidence.boardCarriers.exists(carrier => carrier.kind == "Piece" && carrier.value.equalsIgnoreCase("bishop"))
     val routePiece = claim.routeIdentityParts.collectFirst {
       case part if part.toLowerCase.startsWith("piece:") => part.drop("piece:".length).toLowerCase
-    }
+    }.orElse(
+      lineUnlockSignatures
+        .flatMap(signature => EvidenceObjectBinding.signatureValues(List(signature), "target", "Piece"))
+        .map(_.toLowerCase)
+        .distinct match
+        case piece :: Nil => Some(piece)
+        case _            => None
+    )
     val openedLineSquare = claim.boardCarriers
       .collectFirst {
         case carrier
@@ -2542,14 +2549,17 @@ object MoveMeaningSurface:
         case Some("bishop") => routeTargetSquare.map(square => s"opens bishop diagonal from $square").getOrElse("opens bishop diagonal")
         case Some("queen")  => routeTargetSquare.map(square => s"opens queen line from $square").getOrElse("opens queen line")
         case Some(piece) =>
-          lineUnlockFile match
+          lineUnlockFile.filter(file => routeTargetSquare.exists(_.startsWith(file))) match
             case Some(file) => s"opens $file-file for $piece"
             case None       => routeTargetSquare.map(square => s"opens $piece line from $square").getOrElse(s"opens $piece line")
-        case None if bishopCarrier => "opens bishop diagonal"
         case None =>
-          lineUnlockFile
-            .map(file => openedLineSquare.map(square => s"opens $file-file from $square").getOrElse(s"opens $file-file"))
-            .getOrElse("opens a line")
+          openedLineSquare match
+            case Some(square) if lineUnlockFile.contains(square.take(1)) => s"opens ${square.take(1)}-file from $square"
+            case Some(square)                                           => s"opens line from $square"
+            case None =>
+              lineUnlockFile
+                .map(file => s"opens $file-file")
+                .getOrElse(if bishopCarrier then "opens bishop diagonal" else "opens a line")
     val routeFrom = claim.routeIdentityParts.collectFirst {
       case part if part.toLowerCase.startsWith("from:") => part.drop("from:".length).toLowerCase
     }
@@ -2579,8 +2589,13 @@ object MoveMeaningSurface:
         case file :: Nil             => s"restrains $file-pawn break"
         case files if files.nonEmpty => s"restrains ${files.mkString("/")}-pawn breaks"
         case _                       => "restricts counterplay"
-    val routeManeuverLabel = routePiece.map(piece => s"$piece maneuver").getOrElse("piece maneuver")
-    val developmentLabel = routePiece.map(piece => s"$piece development").getOrElse("piece development")
+    val routeDestinationLabel =
+      routeToSquares.toList.sorted match
+        case square :: Nil             => s" to $square"
+        case squares if squares.nonEmpty => s" to ${squares.mkString("/")}"
+        case _                         => ""
+    val routeManeuverLabel = routePiece.map(piece => s"$piece maneuver$routeDestinationLabel").getOrElse("piece maneuver")
+    val developmentLabel = routePiece.map(piece => s"$piece development$routeDestinationLabel").getOrElse("piece development")
     val developmentPressureTargets =
       claim.targetSquares.map(_.toLowerCase).filter(_.matches("[a-h][1-8]")).filterNot(routeToSquares.contains).distinct.sorted
     val developmentPressureLabel =
@@ -2694,7 +2709,6 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if kingPressureCarrier => "king safety pressure"
         case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => weakPawnTargetLabel
         case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
-        case ("target_pressure", _) if lineUnlockCarrier => opensLineLabel
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
         case ("target_pressure", "TargetFixation") => targetFixationLabel
         case ("target_pressure", _) if filePressureCarrier => "file pressure"
@@ -2714,7 +2728,6 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
         case ("pawn_break_timing", _) if flankInfrastructurePawnMove => "flank pawn advance"
         case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
-        case ("pawn_break_timing", label) if label.contains("PieceActivation") && lineUnlockCarrier => opensLineLabel
         case ("pawn_break_timing", label) if label.contains("PieceActivation") && mobilityGainCarrier => "piece activation"
         case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => breakPreparationLabel
         case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => opensLineLabel
@@ -3686,10 +3699,16 @@ object MoveMeaningClaim:
       claim: MoveMeaningClaim
   ): Boolean =
     claim.meaningKind == "PlanContinuity" &&
-      claim.role == "DevelopsPieceForPlan" &&
-      claim.surfaceLane == "current_move_function" &&
-      claim.causeEvidenceIds.isEmpty &&
-      ownedRouteClaimWithSameIdentity(claims, claim)
+      ownedRouteClaimWithSameIdentity(claims, claim) &&
+      (
+        claim.role == "DevelopsPieceForPlan" &&
+          claim.surfaceLane == "current_move_function" &&
+          claim.causeEvidenceIds.isEmpty ||
+          claim.role == "PreparesBreakOption" &&
+            currentMoveSurfaceLane(claim) &&
+            claim.label.exists(_.contains("PieceActivation")) &&
+            claim.routeIdentityParts.exists(_.toLowerCase.contains(":line-unlock:by:"))
+      )
 
   private def breakFunctionShadowedByOwnedBreak(
       claims: List[MoveMeaningClaim],
