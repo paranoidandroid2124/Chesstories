@@ -2053,7 +2053,15 @@ object MoveMeaningSurface:
     val allConsequenceCarriers = carrierPairs.filter((carrier, _) =>
       carrier.role == "target" && publicIdeaChainConsequenceCarrier(carrier)
     )
-    val concreteConsequence = allConsequenceCarriers.exists((carrier, _) => carrier.kind == "PlanSubject" || carrier.kind == "Pawn")
+    val materialTacticalCarrier = allConsequenceCarriers.exists((carrier, _) => materialEventPlanSubjectCarrier(carrier))
+    val strongProofSurface =
+      terminal.nonEmpty ||
+        technique.nonEmpty ||
+        evidenceSurfaces.exists(surface => surface.evidence.proofLevel != "surface_evidence" || surface.evidence.causeIds.nonEmpty)
+    val concreteConsequence = allConsequenceCarriers.exists((carrier, _) =>
+      carrier.kind == "Pawn" ||
+        (carrier.kind == "PlanSubject" && !materialEventPlanSubjectCarrier(carrier))
+    )
     val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
       surface.evidence.proofLevel == "owned_cause" &&
         surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
@@ -2063,9 +2071,7 @@ object MoveMeaningSurface:
       surface.idea.code == "piece_route" &&
         surface.evidence.proofLevel == "surface_evidence" &&
         (
-          surface.evidence.sourceIds.exists(_.contains("structural-delta")) ||
-            (pv.exists(move => JudgmentSubjectBinding.normalizeMove(move).toLowerCase != normalizedSubjectMove) &&
-              surface.evidence.sourceIds.exists(_.contains(":evidence:line:")))
+          surface.evidence.sourceIds.exists(_.contains("structural-delta"))
         ) &&
         surface.evidence.boardCarriers.exists(carrier =>
           carrier.role == "actor" &&
@@ -2085,12 +2091,29 @@ object MoveMeaningSurface:
         )
     }
     evidenceSurfaces.nonEmpty &&
+      (!materialTacticalCarrier || strongProofSurface) &&
       (terminal.nonEmpty || technique.nonEmpty || directStructuralCarrier || ownedRouteCarrier || directPieceRouteCarrier || (pv.nonEmpty && concreteConsequence))
 
   private def publicIdeaChainSurfaceHasCarrier(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel != "none" &&
       surface.evidence.hasCarrier &&
-      (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
+      (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty) &&
+      !surfaceOnlyStrategicMaterialEvent(surface)
+
+  private def surfaceOnlyStrategicMaterialEvent(surface: MoveMeaningSurface): Boolean =
+    surface.evidence.proofLevel == "surface_evidence" &&
+      surface.evidence.causeIds.isEmpty &&
+      surface.ideaType == "strategic" &&
+      surface.evidence.boardCarriers.exists(carrier =>
+        carrier.kind == "PlanSubject" && materialEventPlanSubjectCarrier(carrier)
+      )
+
+  private def materialEventPlanSubjectCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
+    carrier.kind == "PlanSubject" &&
+      (
+        carrier.value.startsWith("material-capture:") ||
+          carrier.value.startsWith("material-recapture:")
+      )
 
   private def publicIdeaChainMoveSemanticJson(surface: MoveMeaningSurface): JsObject =
     Json.obj(
@@ -4316,7 +4339,7 @@ object MoveMeaningClaim:
       directCurrentMoveCarrier &&
         currentMoveSurfaceReady(evidenceGraph, meaningKind, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
     val reasonGradeCauseFrames =
-      roleCompatibleCauseFrames.filter(frame => reasonGradeCauseFrame(frame) || planFallbackReasonFrame(detail, frame))
+      roleCompatibleCauseFrames.filter(frame => reasonGradeCauseFrame(frame) || planFallbackReasonFrame(detail, frame, Some(meaningKind)))
     val ownedCause =
       reasonGradeCauseFrames.exists(frame => frame.hasOwnedAdmissibleLongTermProof || frame.attributionDirectProofEligible)
     val ownedCandidateCauseOwnsCurrentMove =
@@ -4571,8 +4594,13 @@ object MoveMeaningClaim:
 
   private def planFallbackReasonFrame(
       detail: PositionPlanTechniqueSemanticDetail,
-      frame: MoveJudgmentCauseFrame
+      frame: MoveJudgmentCauseFrame,
+      meaningKind: Option[String] = None
   ): Boolean =
+    val concretePlanCarrier =
+      meaningKind.forall(planFallbackMeaningKindAllowed) &&
+        planImprovementConcreteCarrierDetail(detail, frame) &&
+        planCauseFrameOverlapsDetail(frame, detail)
     frame.causeKind == RelativeCauseKind.PlanImprovement &&
       frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.FallbackRoot &&
       frame.hasOwnedAdmissibleLongTermProof &&
@@ -4581,8 +4609,43 @@ object MoveMeaningClaim:
       reasonGradeFrameProofReady(frame) &&
       (
         detail.unit == PositionPlanTechniqueUnit.PlanOptionSet ||
-          counterplayRestraintCarrierDetail(detail)
+          counterplayRestraintCarrierDetail(detail) ||
+          concretePlanCarrier
       )
+
+  private def planFallbackMeaningKindAllowed(meaningKind: String): Boolean =
+    meaningKind != "StructureShift"
+
+  private def planImprovementConcreteCarrierDetail(
+      detail: PositionPlanTechniqueSemanticDetail,
+      frame: MoveJudgmentCauseFrame
+  ): Boolean =
+    (
+      detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute ||
+        detail.unit == PositionPlanTechniqueUnit.StructuralTransformation ||
+        detail.unit == PositionPlanTechniqueUnit.SpacePreventionResourceDenial
+    ) &&
+      detail.structuralRouteMove.exists(move => sameMove(move, frame.eventRootMove)) &&
+      !detail.axisKind.contains(StrategicAxisKind.PlanCoherence) &&
+      !negativeStrategicDetail(detail) &&
+      !planImprovementFallbackFrameHasNegativeAxis(frame) &&
+      detailHasConcreteSurfaceObject(detail) &&
+      detailHasSpecificObjectAxis(detail) &&
+      detailHasDirectOrContrastProof(detail) &&
+      !detail.objectBindingSignatures.exists(lineEventRouteSignature) &&
+      (
+        causeFrameObjectOverlapsDetail(frame, detail.objectBindingSignatures) ||
+          frame.proofStrategicAxisKeys.exists(axisKey => detail.axisKey.exists(_.equalsIgnoreCase(axisKey)))
+      )
+
+  private def planImprovementFallbackFrameHasNegativeAxis(frame: MoveJudgmentCauseFrame): Boolean =
+    frame.proofStrategicAxisKeys.exists(axisKey =>
+      val normalized = axisKey.toLowerCase
+      normalized.contains(":concede:") ||
+        normalized.contains(":loss:") ||
+        normalized.contains("concession") ||
+        normalized.contains("liability")
+    )
 
   private def ownedCandidateCauseFrameOwnsClaimMove(frame: MoveJudgmentCauseFrame, claimMove: String): Boolean =
     frame.causeSourceSide == RelativeCauseSourceSide.Candidate &&
@@ -4938,7 +5001,7 @@ object MoveMeaningClaim:
       objectSignatures: List[String]
   ): Boolean =
     detail.causeEvidenceIds.exists(frame.causeEvidenceIds.contains) &&
-      sameComparisonCauseMatchesDetail(frame.causeKind, detail) &&
+      sameComparisonCauseMatchesDetail(frame, detail) &&
       (
         causeFrameObjectOverlapsDetail(frame, objectSignatures) ||
           sameRootCounterBreakCauseMatchesDetail(frame, detail)
@@ -4979,10 +5042,10 @@ object MoveMeaningClaim:
       normalized.contains("counterplay:restrain:defensive-counter-break-")
 
   private def sameComparisonCauseMatchesDetail(
-      kind: RelativeCauseKind,
+      frame: MoveJudgmentCauseFrame,
       detail: PositionPlanTechniqueSemanticDetail
   ): Boolean =
-    kind match
+    frame.causeKind match
       case RelativeCauseKind.ActivityGain | RelativeCauseKind.ActivityLoss =>
         (
           detail.axisKind.contains(StrategicAxisKind.Activity) &&
@@ -5022,13 +5085,14 @@ object MoveMeaningClaim:
       case RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
         detail.axisKind.contains(StrategicAxisKind.PlanCoherence) ||
           detail.unit == PositionPlanTechniqueUnit.PlanOptionSet ||
-          (kind == RelativeCauseKind.PlanImprovement && counterplayRestraintCarrierDetail(detail))
+          (frame.causeKind == RelativeCauseKind.PlanImprovement &&
+            (counterplayRestraintCarrierDetail(detail) || planImprovementConcreteCarrierDetail(detail, frame)))
       case RelativeCauseKind.StructuralImprovement | RelativeCauseKind.MissedStrategicImprovement |
           RelativeCauseKind.StrategicConcession =>
         detail.unit == PositionPlanTechniqueUnit.StructuralTransformation ||
           detail.unit == PositionPlanTechniqueUnit.CompensationSource
       case _ =>
-        ClaimEventCluster.kindForCause(kind).nonEmpty
+        ClaimEventCluster.kindForCause(frame.causeKind).nonEmpty
 
   private def detailOwnsClaimMove(
       detail: PositionPlanTechniqueSemanticDetail,
