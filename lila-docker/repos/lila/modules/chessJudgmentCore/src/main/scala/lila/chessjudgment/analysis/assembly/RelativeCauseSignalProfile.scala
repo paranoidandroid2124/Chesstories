@@ -418,12 +418,20 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
                 if kind == RelativeCauseKind.OpponentRestriction then
                   currentMoveConcreteCounterplayCanOwnValue(kind, payload, profile)
                 else
-                  profile.exactReferenceMove ||
-                    candidateCurrentMoveCanOwnValue &&
+                  (
+                    profile.exactReferenceMove &&
                       (
-                        kind == RelativeCauseKind.PawnBreakOpportunity ||
+                        kind != RelativeCauseKind.ActivityGain ||
                           currentMoveConcreteActivityCanOwnValue(kind, payload, profile)
                       )
+                  ) ||
+                    (
+                      candidateCurrentMoveCanOwnValue &&
+                        (
+                          kind == RelativeCauseKind.PawnBreakOpportunity ||
+                            currentMoveConcreteActivityCanOwnValue(kind, payload, profile)
+                        )
+                    )
               )
           causeKinds.map(kind =>
             RelativeCauseDraft(
