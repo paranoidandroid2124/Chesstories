@@ -2411,6 +2411,7 @@ object MoveMeaningSurface:
         case ("target_pressure", "weak-pawn-target") => "weak pawn target"
         case ("target_pressure", "king-safety-pressure") => "king safety pressure"
         case ("target_pressure", _) if checkingPressureClaim(claim) => "checking pressure"
+        case ("target_pressure", _) if planPawnAdvanceClaim(claim) => "space advance"
         case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => "weak pawn target"
         case ("target_pressure", _)
             if claim.causeKinds.contains(RelativeCauseKind.TargetPressureGain) &&
@@ -2713,6 +2714,29 @@ object MoveMeaningSurface:
     actorPieces.contains("pawn") ||
       claim.routeIdentityParts.exists(_.equalsIgnoreCase("piece:pawn")) ||
       (actorPieces.isEmpty && sameFileMove)
+
+  private def planPawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
+    val destination = moveDestination(claim.moveUci)
+    claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+      destination.exists(to => claim.targetSquares.exists(_.equalsIgnoreCase(to))) &&
+      claim.boardCarriers.exists(carrier =>
+        carrier.role == "target" &&
+          carrier.kind == "PlanSubject" &&
+          Set("spaceadvantage", "pawnstorm", "openingdevelopment")(carrier.value.toLowerCase)
+      ) &&
+      sameFilePawnAdvanceMove(claim.moveUci)
+
+  private def sameFilePawnAdvanceMove(move: String): Boolean =
+    val normalized = JudgmentSubjectBinding.normalizeMove(move).toLowerCase
+    if !normalized.matches("[a-h][1-8][a-h][1-8].*") then false
+    else
+      val from = normalized.take(2)
+      val to = normalized.slice(2, 4)
+      from.take(1) == to.take(1) &&
+        (for
+          fromRank <- from.drop(1).toIntOption
+          toRank <- to.drop(1).toIntOption
+        yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
 
   private def currentMoveActorPiece(claim: MoveMeaningClaim, piece: String): Boolean =
     (claim.moveUci.length > 4 && piece == "pawn") ||
@@ -3846,7 +3870,8 @@ object MoveMeaningClaim:
                   surfaceObjectSignatures,
                   verdict,
                   claimLineRole,
-                  claimMove
+                  claimMove,
+                  frame.position.fen
                 )
               val comparisonMoveRefs = comparisonMoveRefsFromLineEvidence(evidenceGraph, sourceEvidenceIds)
               val claimOwnedBoardCarriers =
@@ -3864,6 +3889,8 @@ object MoveMeaningClaim:
               val claimBreakFiles = (detail.breakFile.toList.flatMap(claimFile) ++ currentPawnBreakFiles).distinct.sorted
               val breakFileIdentityCarriers =
                 claimBreakFiles.map(file => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"break-file:$file"))
+              val planPawnAdvanceCarriers =
+                planPawnAdvanceIdentityCarriers(detail, surfaceObjectSignatures, claimMove, frame.position.fen)
               val pressureIdentityCarriers =
                 mechanismSquareIdentityCarriers(detail, "battery-pressure", batteryPressureSignature) ++
                   mechanismSquareIdentityCarriers(detail, "pin-pressure", pinPressureSignature)
@@ -3877,6 +3904,7 @@ object MoveMeaningClaim:
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
                   passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
                   materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove, detail, verdict) ++
+                  planPawnAdvanceCarriers ++
                   breakFileIdentityCarriers
               val claimBoardCarriers =
                 (
@@ -3886,7 +3914,9 @@ object MoveMeaningClaim:
                 ).distinct
                   .take(12)
               val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, claimBoardCarriers)
-              val objectCarrierReady = publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames)
+              val objectCarrierReady =
+                publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames) ||
+                  planPawnAdvanceCarriers.nonEmpty
               val publicDrawableCarrier =
                 claimBoardCarriers.nonEmpty ||
                   detail.terminalConsequenceKinds.nonEmpty ||
@@ -4164,6 +4194,17 @@ object MoveMeaningClaim:
             detail.brokenSquares
         ).flatMap(square => publicSquareCarrier("target", square))
     ).distinct.sortBy(boardCarrierSortKey).take(12)
+
+  private def planPawnAdvanceIdentityCarriers(
+      detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
+      claimMove: String,
+      positionFen: String
+  ): List[MoveMeaningSurfaceBoardCarrier] =
+    if !planContinuityCurrentMovePawnAdvanceOption(detail, objectSignatures, claimMove, positionFen) then Nil
+    else
+      publicMoveCarrier("actor", claimMove) ::
+        moveEndpoints(claimMove).toList.flatMap((_, to) => publicSquareCarrier("target", to))
 
   private def structuralRouteFileCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
     if !lineUnlockDetail(detail) then Nil
@@ -4479,10 +4520,12 @@ object MoveMeaningClaim:
       claimRole: String,
       evidenceGraph: TypedEvidenceGraph
   ): Option[String] =
-    val hasConcreteObject = detailHasConcreteSurfaceObject(detail)
+    val currentMoveClaim = currentMoveMeaningClaim(verdict, claimLineRole, claimMove)
+    val currentMovePlanPawnAdvance =
+      currentMoveClaim && planContinuityCurrentMovePawnAdvanceOption(detail, objectSignatures, claimMove, positionFen)
+    val hasConcreteObject = detailHasConcreteSurfaceObject(detail) || currentMovePlanPawnAdvance
     val specificObjectAxis = detailHasSpecificObjectAxis(detail)
     val hasDetailEvidence = detailHasEvidenceLink(detail)
-    val currentMoveClaim = currentMoveMeaningClaim(verdict, claimLineRole, claimMove)
     val directCurrentMoveCarrier =
       !currentMoveClaim ||
         currentMoveDirectCarrier(evidenceGraph, detail, objectSignatures, claimMove)
@@ -4663,9 +4706,16 @@ object MoveMeaningClaim:
       objectSignatures: List[String],
       verdict: MoveJudgmentVerdictFrame,
       claimLineRole: String,
-      claimMove: String
+      claimMove: String,
+      positionFen: String
   ): List[String] =
     if currentMoveMeaningClaim(verdict, claimLineRole, claimMove) then
+      val planPawnAdvanceSources =
+        Option
+          .when(planContinuityCurrentMovePawnAdvanceOption(detail, objectSignatures, claimMove, positionFen))(
+            detail.sourceEvidenceIds
+          )
+          .getOrElse(Nil)
       val terminalProofSources =
         Option
           .when(
@@ -4693,6 +4743,7 @@ object MoveMeaningClaim:
           }
       (
         currentMoveCarrierSourceEvidenceIds(evidenceGraph, detail, claimMove) ++
+          planPawnAdvanceSources ++
           terminalProofSources ++
           currentMoveStructureContextSourceEvidenceIds(evidenceGraph, detail) ++
           lineWitnessSources
@@ -4885,12 +4936,15 @@ object MoveMeaningClaim:
       positionFen: String,
       currentMoveClaim: Boolean
   ): Boolean =
+    val pawnAdvanceOption =
+      planContinuityCurrentMovePawnAdvanceOption(detail, objectSignatures, claimMove, positionFen)
     val ownsMove =
       detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) ||
-        detail.defenseMove.exists(move => sameMove(move, claimMove))
+        detail.defenseMove.exists(move => sameMove(move, claimMove)) ||
+        pawnAdvanceOption
     val ownsCurrentMoveSource =
       currentMoveClaim &&
-        currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove)
+        (currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove) || pawnAdvanceOption)
     val planSignal =
       detail.axisKind.contains(StrategicAxisKind.PlanCoherence) ||
         detail.matchedPlanIds.nonEmpty ||
@@ -4906,8 +4960,30 @@ object MoveMeaningClaim:
           detail.structuralRouteMove.exists(move => sameMove(move, claimMove))
       ) ||
         planContinuityCurrentMoveBreakOption(detail, claimMove, positionFen) ||
-        planContinuityCurrentMoveDevelopmentOption(detail, claimMove)
-    ownsMove && ownsCurrentMoveSource && planSignal && concretePlanHook && !currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove)
+        planContinuityCurrentMoveDevelopmentOption(detail, claimMove) ||
+        pawnAdvanceOption
+    ownsMove && ownsCurrentMoveSource && planSignal && concretePlanHook &&
+      (!currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove) || pawnAdvanceOption)
+
+  private def planContinuityCurrentMovePawnAdvanceOption(
+      detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
+      claimMove: String,
+      positionFen: String
+  ): Boolean =
+    val normalizedMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
+    val destination = moveEndpoints(claimMove).map(_._2)
+    detail.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+      pawnMoveFromPawn(positionFen, claimMove) &&
+      objectSignatures.exists { signature =>
+        val normalizedSignature = signature.toLowerCase
+        moveTokens(List(signature)).contains(normalizedMove) &&
+          normalizedSignature.contains("pawnadvance") &&
+          destination.exists(to =>
+            normalizedSignature.contains(s"target=square:$to") ||
+              normalizedSignature.contains(s"witness=square:$to")
+          )
+      }
 
   private def planContinuityCurrentMoveBreakOption(
       detail: PositionPlanTechniqueSemanticDetail,
