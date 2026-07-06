@@ -2537,6 +2537,9 @@ object MoveMeaningSurface:
         case file :: Nil => s"prepares $file-pawn break"
         case _           => "prepares pawn break"
     val routeManeuverLabel = routePiece.map(piece => s"$piece maneuver").getOrElse("piece maneuver")
+    val developmentLabel = routePiece.map(piece => s"$piece development").getOrElse("piece development")
+    val developmentPressureLabel =
+      routePiece.map(piece => s"$piece develops with pressure").getOrElse("develops with pressure")
     val defensiveResourceLabel =
       defenderMoveActorPieces match
         case piece :: Nil => s"defends with $piece"
@@ -2551,7 +2554,7 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => "weak pawn target"
         case ("target_pressure", _) if checkingPressureClaim(claim) => "checking pressure"
         case ("target_pressure", _) if lineUnlockCarrier => opensLineLabel
-        case ("target_pressure", _) if initialDevelopmentRoute => "develops with pressure"
+        case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
         case ("target_pressure", "TargetFixation") => "target fixation"
         case ("target_pressure", _) if filePressureCarrier => "file pressure"
         case ("target_pressure", _) if planPawnAdvanceClaim(claim) => "space advance"
@@ -2577,11 +2580,11 @@ object MoveMeaningSurface:
         case ("long_diagonal_pressure", _) if bishopCarrier => "bishop diagonal pressure"
         case ("compensation", _) if materialSacrificeCompensationClaim(claim) => "sacrifice compensation"
         case ("piece_route", _) if routeLineUnlockClaim(claim) => opensLineLabel
-        case ("piece_route", _) if initialDevelopmentRoute => "piece development"
+        case ("piece_route", _) if initialDevelopmentRoute => developmentLabel
         case ("piece_route", label) if routeManeuverClaim(claim, label) => routeManeuverLabel
         case ("piece_route", label) if routeDevelopmentLabel(label) => routeManeuverLabel
         case ("piece_activity", label) if routeManeuverClaim(claim, label) => "piece activity lost"
-        case ("piece_activity", _) if initialDevelopmentRoute => "piece development"
+        case ("piece_activity", _) if initialDevelopmentRoute => developmentLabel
         case ("piece_activity", label) if routeDevelopmentLabel(label) => "piece activation"
         case _ => ideaLabels.getOrElse(idea, "")
     val qualityOfIdea = ideaQuality(claim, claimSubject, badPlayedMove)
