@@ -2201,6 +2201,10 @@ object MoveMeaningSurface:
       case "outpost_attempt"       => 5
       case "compensation"          => 6
       case "long_diagonal_pressure" => 7
+      case "target_pressure" if surface.idea.label.startsWith("weak ") =>
+        7
+      case "target_pressure" if surface.idea.label == "king safety pressure" =>
+        9
       case "target_pressure"
           if surface.target.files.isEmpty &&
             surface.target.squares.nonEmpty &&
@@ -2740,11 +2744,11 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if sameFilePassedPawnMove => passedPawnAdvanceLabel
         case ("target_pressure", _) if passedPawnAdvanceClaim(claim) => passedPawnAdvanceLabel
         case ("target_pressure", "weak-pawn-target") => weakPawnTargetLabel
+        case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => weakPawnTargetLabel
+        case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
         case ("target_pressure", "king-safety-pressure") => "king safety pressure"
         case ("target_pressure", "target-pressure-release") => "pressure release"
         case ("target_pressure", _) if kingPressureCarrier => "king safety pressure"
-        case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => weakPawnTargetLabel
-        case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
         case ("target_pressure", "TargetFixation") => targetFixationLabel
         case ("target_pressure", _) if filePressureCarrier => "file pressure"
