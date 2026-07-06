@@ -2493,6 +2493,7 @@ object MoveMeaningSurface:
         case ("piece_route", label) if routeManeuverClaim(claim, label) => "piece maneuver"
         case ("piece_route", label) if routeDevelopmentLabel(label) => "piece development"
         case ("piece_activity", label) if routeManeuverClaim(claim, label) => "piece activity lost"
+        case ("piece_activity", _) if initialDevelopmentRoute => "piece development"
         case ("piece_activity", label) if routeDevelopmentLabel(label) => "piece activation"
         case _ => ideaLabels.getOrElse(idea, "")
     val qualityOfIdea = ideaQuality(claim, claimSubject, badPlayedMove)
