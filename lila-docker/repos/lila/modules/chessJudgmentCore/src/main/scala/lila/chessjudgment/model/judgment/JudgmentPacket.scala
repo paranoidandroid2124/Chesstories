@@ -2540,6 +2540,14 @@ object MoveMeaningSurface:
     val developmentLabel = routePiece.map(piece => s"$piece development").getOrElse("piece development")
     val developmentPressureLabel =
       routePiece.map(piece => s"$piece develops with pressure").getOrElse("develops with pressure")
+    val materialSacrificeSquare = claim.boardCarriers
+      .collectFirst {
+        case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.startsWith("material-sacrifice:") =>
+          carrier.value.stripPrefix("material-sacrifice:").toLowerCase
+      }
+      .filter(_.matches("[a-h][1-8]"))
+    val sacrificeCompensationLabel =
+      materialSacrificeSquare.map(square => s"compensation for $square sacrifice").getOrElse("sacrifice compensation")
     val defensiveResourceLabel =
       defenderMoveActorPieces match
         case piece :: Nil => s"defends with $piece"
@@ -2578,7 +2586,7 @@ object MoveMeaningSurface:
         case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => opensLineLabel
         case ("long_diagonal_pressure", _) if centralTargetSquare => "central diagonal pressure"
         case ("long_diagonal_pressure", _) if bishopCarrier => "bishop diagonal pressure"
-        case ("compensation", _) if materialSacrificeCompensationClaim(claim) => "sacrifice compensation"
+        case ("compensation", _) if materialSacrificeCompensationClaim(claim) => sacrificeCompensationLabel
         case ("piece_route", _) if routeLineUnlockClaim(claim) => opensLineLabel
         case ("piece_route", _) if initialDevelopmentRoute => developmentLabel
         case ("piece_route", label) if routeManeuverClaim(claim, label) => routeManeuverLabel
