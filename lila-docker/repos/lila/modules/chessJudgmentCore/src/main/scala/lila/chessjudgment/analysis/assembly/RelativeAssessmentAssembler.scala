@@ -1316,7 +1316,9 @@ object RelativeAssessmentAssembler:
     import TransitionConsequenceKind.*
     kind match
       case RelativeCauseKind.TargetPressureGain =>
-        payload.consequencesOf(TargetPressureGain)
+        payload.consequencesOf(TargetPressureGain) ++
+          payload.consequencesOf(KingSafetyPressure) ++
+          payload.consequencesOf(KingRingPressureGain)
       case RelativeCauseKind.TargetPressureRelease =>
         payload.consequencesOf(TargetPressureRelease)
       case RelativeCauseKind.CenterControlGain =>

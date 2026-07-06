@@ -2653,14 +2653,20 @@ object MoveMeaningSurface:
       tensionEdge.map(edge => s"creates $edge pawn tension").getOrElse("creates pawn tension")
     val resolvesPawnTensionLabel =
       tensionEdge.map(edge => s"resolves $edge pawn tension").getOrElse("resolves pawn tension")
-    val checkSquares = claim.boardCarriers
-      .collect {
-        case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("check:") =>
-          carrier.value.toLowerCase.stripPrefix("check:")
-      }
-      .filter(_.matches("[a-h][1-8]"))
-      .distinct
-      .sorted
+    val checkSquares =
+      (
+        claim.boardCarriers.collect {
+          case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("check:") =>
+            carrier.value.toLowerCase.stripPrefix("check:")
+        } ++ signatureList
+          .filter(signature =>
+            val normalized = signature.toLowerCase
+            normalized.contains("mechanism=mechanism:check") ||
+              normalized.contains("consequence=consequence:check")
+          )
+          .flatMap(signature => EvidenceObjectBinding.signatureValues(List(signature), "target", "Square"))
+          .map(_.toLowerCase)
+      ).filter(_.matches("[a-h][1-8]")).distinct.sorted
     val checkingPressureLabel =
       checkSquares match
         case square :: Nil => s"checking pressure on $square"
@@ -2822,6 +2828,8 @@ object MoveMeaningSurface:
             squares = (destination :: baseTarget.squares).distinct.sorted,
             files = List(destination.take(1))
           )
+        case _ if idea == "target_pressure" && checkingPressureClaim(claim) && checkSquares.nonEmpty =>
+          baseTarget.copy(squares = (baseTarget.squares ++ checkSquares).distinct.sorted)
         case _ if idea == "target_pressure" && filePressureCarrier && carrierTargetFiles.nonEmpty =>
           baseTarget.copy(files = (baseTarget.files ++ carrierTargetFiles).distinct.sorted)
         case _ => baseTarget
@@ -4399,7 +4407,9 @@ object MoveMeaningClaim:
                 mechanismSquareIdentityCarriers(detail, "battery-pressure", batteryPressureSignature) ++
                   mechanismSquareIdentityCarriers(detail, "pin-pressure", pinPressureSignature)
               val checkIdentityCarriers =
-                if pressureIdentityCarriers.nonEmpty then Nil
+                if pressureIdentityCarriers.nonEmpty ||
+                    (detail.axisKey.toList ++ detail.label.toList).exists(_.toLowerCase.contains("king-safety-pressure"))
+                then Nil
                 else mechanismSquareIdentityCarriers(detail, "check", checkSignature)
               val defenderMoveActorCarriers =
                 surfaceObjectSignatures
@@ -4558,7 +4568,7 @@ object MoveMeaningClaim:
         val carryLineCapturePieces = line.hasTacticalLineConsequence || line.hasProofSignalMaterialEvent
         line.lineEventsOf(LineEventKind.PassedPawn)
           .flatMap(event => event.square.toList.flatMap(square => publicSquareCarrier("target", square.key))) ++
-          lineForkTargetCarriers(line) ++
+          lineForkTargetCarriers(line, normalizedClaimMove) ++
           line.lineEvents
             .filter(event =>
               (event.kind == LineEventKind.Capture || event.kind == LineEventKind.Recapture) &&
@@ -4575,13 +4585,16 @@ object MoveMeaningClaim:
       )
       .distinct
 
-  private def lineForkTargetCarriers(line: LineFactEvidence): List[MoveMeaningSurfaceBoardCarrier] =
+  private def lineForkTargetCarriers(line: LineFactEvidence, normalizedClaimMove: String): List[MoveMeaningSurfaceBoardCarrier] =
     val hasCheck = line.hasLineEvent(LineEventKind.Check)
     val hasCapture = line.hasLineEvent(LineEventKind.Capture)
     if !hasCheck || !hasCapture then Nil
     else
       line.lineEvents
-        .filter(event => event.kind == LineEventKind.Check || event.kind == LineEventKind.Capture)
+        .filter(event =>
+          (event.kind == LineEventKind.Check || event.kind == LineEventKind.Capture) &&
+            (event.plyOffset == 0 || JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove)
+        )
         .flatMap(event => event.square.toList.flatMap(square => publicSquareCarrier("target", square.key)))
 
   private def defenderMoveIdentityCarriersFromLineEvidence(
@@ -6402,8 +6415,24 @@ object MoveMeaningClaim:
       objectSignatures.filter(signature => moveTokens(List(signature)).contains(normalizedClaimMove))
     val noMoveActorSignatures =
       objectSignatures.filter(signature => moveTokens(List(signature)).isEmpty)
+    val directKingPressureSignatures =
+      currentMoveSignatures.filter(signature =>
+        val normalized = signature.toLowerCase
+        normalized.contains("target=piece:king") &&
+          (
+            normalized.contains("mechanism=mechanism:kingsafety") ||
+              normalized.contains("mechanism=mechanism:kingring") ||
+              normalized.contains("consequence=consequence:kingsafety") ||
+              normalized.contains("consequence=consequence:kingring") ||
+              normalized.contains("consequence=consequence:target:gain:king-safety-pressure")
+          )
+      )
     val surface =
       detail.unit match
+        case PositionPlanTechniqueUnit.StructuralTransformation
+            if directKingPressureSignatures.nonEmpty &&
+              (detail.axisKey.toList ++ detail.label.toList).exists(_.toLowerCase.contains("king-safety-pressure")) =>
+          directKingPressureSignatures
         case PositionPlanTechniqueUnit.PieceRerouteRoute =>
           val detailMoveOwnsClaim = detail.structuralRouteMove.exists(move => sameMove(move, claimMove))
           val routeSignatures =

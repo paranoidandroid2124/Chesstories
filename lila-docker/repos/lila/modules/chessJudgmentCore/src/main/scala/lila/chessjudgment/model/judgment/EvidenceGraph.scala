@@ -1999,6 +1999,8 @@ object StrategicMechanismContrastEvidence:
   private def currentMoveTargetCarrierConsequence(consequence: TransitionConsequence): Boolean =
     (
       consequence.kind == TransitionConsequenceKind.TargetPressureGain ||
+        consequence.kind == TransitionConsequenceKind.KingSafetyPressure ||
+        consequence.kind == TransitionConsequenceKind.KingRingPressureGain ||
         consequence.kind == TransitionConsequenceKind.WeakPawnTargetCreated ||
         consequence.kind == TransitionConsequenceKind.WeakSquareTargetCreated
     ) &&
