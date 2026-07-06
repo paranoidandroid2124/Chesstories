@@ -2443,6 +2443,17 @@ object MoveMeaningSurface:
     val opensLineLabel =
       if claim.routeIdentityParts.exists(_.equalsIgnoreCase("piece:bishop")) then "opens a diagonal"
       else "opens a line"
+    val routePiece = claim.routeIdentityParts.collectFirst {
+      case part if part.toLowerCase.startsWith("piece:") => part.drop("piece:".length).toLowerCase
+    }
+    val routeFrom = claim.routeIdentityParts.collectFirst {
+      case part if part.toLowerCase.startsWith("from:") => part.drop("from:".length).toLowerCase
+    }
+    val initialDevelopmentRoute =
+      (routePiece, routeFrom) match
+        case (Some("knight"), Some(square)) => Set("b1", "g1", "b8", "g8")(square)
+        case (Some("bishop"), Some(square)) => Set("c1", "f1", "c8", "f8")(square)
+        case _ => false
     val ideaLabel =
       (idea, claim.label.map(_.trim).getOrElse("")) match
         case ("target_pressure", "weak-pawn-target") => "weak pawn target"
@@ -2477,6 +2488,7 @@ object MoveMeaningSurface:
         case ("long_diagonal_pressure", _) if bishopCarrier => "bishop diagonal pressure"
         case ("compensation", _) if materialSacrificeCompensationClaim(claim) => "sacrifice compensation"
         case ("piece_route", _) if routeLineUnlockClaim(claim) => opensLineLabel
+        case ("piece_route", _) if initialDevelopmentRoute => "piece development"
         case ("piece_route", label) if routeManeuverClaim(claim, label) => "piece maneuver"
         case ("piece_route", label) if routeDevelopmentLabel(label) => "piece development"
         case ("piece_activity", label) if routeManeuverClaim(claim, label) => "piece activity lost"
