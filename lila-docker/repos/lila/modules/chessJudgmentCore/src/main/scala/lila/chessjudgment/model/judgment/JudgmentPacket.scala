@@ -1959,11 +1959,13 @@ object MoveMeaningSurface:
           publicSemantics.flatMap(surface =>
             surface.evidence.boardCarriers
               .filter(carrier => carrier.role == "target" && publicIdeaChainConsequenceCarrier(carrier))
+              .sortBy(publicIdeaChainConsequenceCarrierSortKey)
               .take(1)
               .map(carrier => carrier -> surface)
           )
         val consequenceCarriers =
           (semanticTargetCarriers ++ allConsequenceCarriers)
+            .sortBy((carrier, _) => publicIdeaChainConsequenceCarrierSortKey(carrier))
             .distinctBy((carrier, surface) =>
               (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to)
             )
@@ -2123,6 +2125,23 @@ object MoveMeaningSurface:
       case "Pawn" | "Square" | "File" => true
       case _                           => false
 
+  private def publicIdeaChainConsequenceCarrierSortKey(carrier: MoveMeaningSurfaceBoardCarrier): (Int, String, String) =
+    val value = carrier.value.toLowerCase
+    val rank =
+      if carrier.kind == "PlanSubject" &&
+          (
+            value.startsWith("material-capture:") ||
+              value.startsWith("material-recapture:") ||
+              value.startsWith("defender-move:") ||
+              value.startsWith("passed-pawn:")
+          )
+      then 0
+      else if carrier.kind == "Pawn" then 1
+      else if carrier.kind == "Square" || carrier.kind == "File" then 2
+      else if carrier.kind == "PlanSubject" then 3
+      else 4
+    (rank, carrier.kind, carrier.value)
+
   private def publicIdeaChainCarrierPairs(
       surfaces: List[MoveMeaningSurface]
   ): List[(MoveMeaningSurfaceBoardCarrier, MoveMeaningSurface)] =
@@ -2236,6 +2255,13 @@ object MoveMeaningSurface:
         (claim.breakFiles.nonEmpty || claim.breakIdentityParts.nonEmpty)
     val directBreakPlan =
       MoveMeaningClaim.directBreakPlanClaim(claim)
+    val directPassedPawnAdvance =
+      concretePassedPawnAdvanceClaim(claim)
+    val directCheckingPressure =
+      claim.meaningKind == "TargetPressure" &&
+        claim.publicHasCarrier &&
+        !currentMoveLikelyPawnAdvance(claim) &&
+        checkingPressureClaim(claim)
     val concreteRoute =
       claim.meaningKind == "PieceRoute" &&
         (claim.routeIdentityParts.nonEmpty || claim.structuralMotifTags.exists(tag => tag == "route" || tag == "reroute"))
@@ -2254,6 +2280,8 @@ object MoveMeaningSurface:
     if directTerminal then 0
     else if directPawnBreak then 0
     else if directBreakPlan then 0
+    else if directPassedPawnAdvance then 0
+    else if directCheckingPressure then 0
     else if concreteOutpostRoute then 0
     else if concreteRace then 1
     else if concreteRoute then 1
@@ -2364,6 +2392,7 @@ object MoveMeaningSurface:
 
   private def ideaType(claim: MoveMeaningClaim): String =
     terminalIdeaType(claim)
+      .orElse(Option.when(concretePassedPawnAdvanceClaim(claim))("passed_pawn_advance"))
       .orElse(Option.when(claim.causeKinds.contains(RelativeCauseKind.DefensiveResource))("defensive_resource"))
       .orElse(
         Option.when(
@@ -2441,6 +2470,18 @@ object MoveMeaningSurface:
           normalized.contains("consequence=consequence:check")
       )
 
+  private def checkingPressureClaim(claim: MoveMeaningClaim): Boolean =
+    claim.boardCarriers.exists(carrier =>
+      carrier.role == "target" &&
+        carrier.kind == "PlanSubject" &&
+        carrier.value.startsWith("check:")
+    ) ||
+      claim.objectBindingSignatures.exists(signature =>
+        val normalized = signature.toLowerCase
+        normalized.contains("mechanism=mechanism:check") ||
+          normalized.contains("consequence=consequence:check")
+      )
+
   private def longDiagonalPressureClaim(claim: MoveMeaningClaim): Boolean =
     (
       claim.routeIdentityParts.exists(_.equalsIgnoreCase("piece:bishop")) &&
@@ -2478,6 +2519,23 @@ object MoveMeaningSurface:
               (carrier.value.startsWith("passed-pawn:") || carrier.value.startsWith("passed-pawn-advanced:"))
           )
       )
+
+  private def concretePassedPawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
+    claim.publicHasCarrier &&
+      claim.unit != PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
+      claim.unit != PositionPlanTechniqueUnit.CounterplayRace &&
+      passedPawnAdvanceClaim(claim)
+
+  private def currentMoveLikelyPawnAdvance(claim: MoveMeaningClaim): Boolean =
+    val actorPieces =
+      claim.boardCarriers.collect {
+        case carrier if carrier.role == "actor" && carrier.kind == "Piece" => carrier.value.toLowerCase
+      }
+    val sameFileMove =
+      claim.moveUci.length >= 4 && claim.moveUci.take(1) == claim.moveUci.slice(2, 3)
+    actorPieces.contains("pawn") ||
+      claim.routeIdentityParts.exists(_.equalsIgnoreCase("piece:pawn")) ||
+      (actorPieces.isEmpty && sameFileMove)
 
   private def currentMoveActorPiece(claim: MoveMeaningClaim, piece: String): Boolean =
     (claim.moveUci.length > 4 && piece == "pawn") ||
