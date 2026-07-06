@@ -3520,6 +3520,7 @@ object MoveMeaningClaim:
       !planContinuityShadowedByConcreteCurrentClaim(claims, claim) &&
       !breakFunctionShadowedByOwnedBreak(claims, claim) &&
       !genericActivityOrPlanShadowedByOwnedTargetPressure(claims, claim) &&
+      !genericCounterplayShadowedByConcreteCurrentClaim(claims, claim) &&
       publicSpecificPlanContinuityClaim(claims, claim) &&
       !badMoveSuppressesCurrentMoveSurface(verdict, claim)
 
@@ -3758,7 +3759,44 @@ object MoveMeaningClaim:
             other.causeEvidenceIds.intersect(claim.causeEvidenceIds).nonEmpty ||
               targetOverlap(other, claim) ||
               (claim.role == "PreparesBreakOption" && concreteTargetPressurePlan(other))
-          )
+        )
+      )
+
+  private def genericCounterplayShadowedByConcreteCurrentClaim(
+      claims: List[MoveMeaningClaim],
+      claim: MoveMeaningClaim
+  ): Boolean =
+    val concreteCounterplayCarrier =
+      claim.breakFiles.nonEmpty ||
+        claim.label.exists(_.startsWith("defensive-counter-break-")) ||
+        claim.boardCarriers.exists(carrier =>
+          carrier.role == "target" &&
+            carrier.kind == "PlanSubject" &&
+            (
+              carrier.value.startsWith("break-file:") ||
+                carrier.value.startsWith("material-capture:") ||
+                carrier.value.startsWith("material-recapture:") ||
+                carrier.value.startsWith("passed-pawn:")
+            )
+        )
+    claim.meaningKind == "CounterplayControl" &&
+      claim.role == "PreventsCounterplay" &&
+      claim.label.contains("opponent-low-mobility") &&
+      !concreteCounterplayCarrier &&
+      currentMoveSurfaceLane(claim) &&
+      claims.exists(other =>
+        other != claim &&
+          other.supportLevel == "owned_cause_linked" &&
+          other.publicHasCarrier &&
+          other.moveUci == claim.moveUci &&
+          other.lineRole == claim.lineRole &&
+          currentMoveSurfaceLane(other) &&
+          (
+            other.meaningKind == "TargetPressure" ||
+              other.meaningKind == "PieceRoute" ||
+              other.meaningKind == "PawnBreakTiming"
+          ) &&
+          targetOverlap(other, claim)
       )
 
   private def targetOverlap(left: MoveMeaningClaim, right: MoveMeaningClaim): Boolean =
