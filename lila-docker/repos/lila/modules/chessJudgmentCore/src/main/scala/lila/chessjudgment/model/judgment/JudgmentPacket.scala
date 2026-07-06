@@ -2758,6 +2758,11 @@ object MoveMeaningSurface:
         case square :: Nil => s"releases pressure on $square"
         case squares if squares.nonEmpty && squares.size <= 4 => s"releases pressure on ${squares.mkString("/")}"
         case _             => "pressure release"
+    val targetPressureLabel =
+      claim.targetSquares.map(_.toLowerCase).distinct.sorted match
+        case square :: Nil => s"pressure on $square"
+        case squares if squares.nonEmpty && squares.size <= 4 => s"pressure on ${squares.mkString("/")}"
+        case _             => "target pressure"
     val outpostLabel =
       val square = moveDestination(claim.moveUci).orElse(claim.targetSquares.map(_.toLowerCase).distinct.sorted.headOption)
       val piece =
@@ -2848,6 +2853,7 @@ object MoveMeaningSurface:
               claim.targetSquares.forall(square => Set("d4", "d5", "e4", "e5")(square.toLowerCase)) =>
           centralPressureLabel
         case ("target_pressure", _) if bishopCarrier && claim.targetSquares.nonEmpty => bishopPressureLabel
+        case ("target_pressure", _) if claim.targetSquares.nonEmpty => targetPressureLabel
         case ("counterplay_race", _) => counterplayRaceLabel
         case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => counterplayRestrictionLabel
         case ("counterplay_control", "opponent-low-mobility") if counterplayBreakFiles.nonEmpty => counterplayRestrictionLabel
@@ -3001,7 +3007,6 @@ object MoveMeaningSurface:
       )
       .orElse(Option.when(ownedDefenderMoveResourceClaim(claim))("defensive_resource"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
-      .orElse(Option.when(claim.meaningKind == "PieceActivity")("piece_activity"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.PieceRerouteRoute && longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
       .orElse(
         Option.when(
@@ -3019,6 +3024,7 @@ object MoveMeaningSurface:
             )
         )("compensation")
       )
+      .orElse(Option.when(claim.meaningKind == "PieceActivity")("piece_activity"))
       .getOrElse(claim.unit match
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
           "pawn_break_timing"
@@ -3067,28 +3073,32 @@ object MoveMeaningSurface:
       )
 
   private def checkingRouteTargetPressureClaim(claim: MoveMeaningClaim): Boolean =
-    claim.boardCarriers.exists(carrier =>
-      carrier.role == "target" &&
-        carrier.kind == "PlanSubject" &&
-        carrier.value.startsWith("check:")
-    ) ||
-      claim.objectBindingSignatures.exists(signature =>
-        val normalized = signature.toLowerCase
-        normalized.contains("mechanism=mechanism:check") ||
-          normalized.contains("consequence=consequence:check")
-      )
+    checkingPressureClaim(claim)
 
   private def checkingPressureClaim(claim: MoveMeaningClaim): Boolean =
-    claim.boardCarriers.exists(carrier =>
-      carrier.role == "target" &&
-        carrier.kind == "PlanSubject" &&
-        carrier.value.startsWith("check:")
-    ) ||
-      claim.objectBindingSignatures.exists(signature =>
-        val normalized = signature.toLowerCase
-        normalized.contains("mechanism=mechanism:check") ||
-          normalized.contains("consequence=consequence:check")
-      )
+    def square(value: String): Option[String] =
+      Option(value).map(_.trim.toLowerCase).filter(_.matches("[a-h][1-8]"))
+    val targetSquares = claim.targetSquares.flatMap(square).toSet
+    if targetSquares.isEmpty then false
+    else
+      val carrierCheckSquares =
+        claim.boardCarriers.collect {
+          case carrier
+              if carrier.role == "target" &&
+                carrier.kind == "PlanSubject" &&
+                carrier.value.toLowerCase.startsWith("check:") =>
+            carrier.value.toLowerCase.stripPrefix("check:")
+        }.flatMap(square)
+      val signatureCheckSquares =
+        claim.objectBindingSignatures
+          .filter(signature =>
+            val normalized = signature.toLowerCase
+            normalized.contains("mechanism=mechanism:check") ||
+              normalized.contains("consequence=consequence:check")
+          )
+          .flatMap(signature => EvidenceObjectBinding.signatureValues(List(signature), "target", "Square"))
+          .flatMap(square)
+      (carrierCheckSquares ++ signatureCheckSquares).exists(targetSquares.contains)
 
   private def longDiagonalPressureClaim(claim: MoveMeaningClaim): Boolean =
     lineUnlockClaim(claim) ||
@@ -3145,6 +3155,12 @@ object MoveMeaningSurface:
     else if MoveMeaningClaim.directBreakPlanClaim(claim) then "pawn_break_timing"
     else if planContinuityTargetPressureCarrier(claim) then "target_pressure"
     else claim.role match
+      case "DevelopsPieceForPlan"
+          if claim.supportLevel == "owned_cause_linked" &&
+            claim.causeKinds.contains(RelativeCauseKind.PlanImprovement) &&
+            claim.causeEvidenceIds.nonEmpty &&
+            claim.objectCarrierReady =>
+        "plan_continuity"
       case "DevelopsPieceForPlan" => "piece_activity"
       case _                      => "plan_continuity"
 
@@ -4100,9 +4116,28 @@ object MoveMeaningClaim:
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
+    val nonPlanConcreteCurrentClaim =
+      claims.exists(other =>
+        other != claim &&
+          other.meaningKind != "PlanContinuity" &&
+          other.meaningKind != "PieceRoute" &&
+          other.meaningKind != "PieceActivity" &&
+          other.unit != PositionPlanTechniqueUnit.PlanOptionSet &&
+          currentMoveSurfaceLane(other) &&
+          other.publicHasCarrier &&
+          other.sourceEvidenceIds.nonEmpty
+      )
+    val ownedPlanImprovement =
+      claim.supportLevel == "owned_cause_linked" &&
+        claim.causeKinds.contains(RelativeCauseKind.PlanImprovement) &&
+        claim.causeEvidenceIds.nonEmpty &&
+        claim.objectCarrierReady &&
+        claim.publicHasCarrier &&
+        !nonPlanConcreteCurrentClaim
     claim.meaningKind == "PlanContinuity" &&
       claim.surfaceLane == "current_move_owned" &&
       !directBreakPlanClaim(claim) &&
+      !ownedPlanImprovement &&
       claims.exists(other =>
         other != claim &&
           other.meaningKind != "PlanContinuity" &&
@@ -4114,8 +4149,15 @@ object MoveMeaningClaim:
       )
 
   private[judgment] def directBreakPlanClaim(claim: MoveMeaningClaim): Boolean =
+    val flankKingPressurePawnAdvance =
+      claim.targetPieces.exists(_.equalsIgnoreCase("king")) &&
+        moveEndpoints(claim.moveUci).exists { case (from, to) =>
+          from.take(1) == to.take(1) &&
+            Set("a", "b", "g", "h").contains(from.take(1))
+        }
     claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
       claim.role == "PreparesBreakOption" &&
+      (!claim.label.exists(_.contains("PieceActivation")) || flankKingPressurePawnAdvance) &&
       claim.publicHasCarrier &&
       claim.causeEvidenceIds.nonEmpty &&
       (claim.breakFiles.nonEmpty || claim.breakIdentityParts.nonEmpty) &&
