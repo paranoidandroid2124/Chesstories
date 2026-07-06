@@ -2500,6 +2500,19 @@ object MoveMeaningSurface:
     val routePiece = claim.routeIdentityParts.collectFirst {
       case part if part.toLowerCase.startsWith("piece:") => part.drop("piece:".length).toLowerCase
     }
+    val routeTargetSquare =
+      routePiece
+        .flatMap(piece =>
+          claim.routeIdentityParts.collectFirst {
+            case part if part.toLowerCase.startsWith(s"subject:$piece:") =>
+              part.split(":").lift(2).map(_.toLowerCase)
+          }.flatten
+        )
+        .orElse(
+          claim.routeIdentityParts
+            .collectFirst { case part if part.toLowerCase.startsWith("target:") => part.drop("target:".length).toLowerCase }
+        )
+        .filter(_.matches("[a-h][1-8]"))
     val routeUnlockMoveFile = claim.routeIdentityParts
       .flatMap { part =>
         val lower = part.toLowerCase
@@ -2516,12 +2529,12 @@ object MoveMeaningSurface:
       )
     val opensLineLabel =
       routePiece match
-        case Some("bishop") => "opens bishop diagonal"
-        case Some("queen")  => "opens queen line"
+        case Some("bishop") => routeTargetSquare.map(square => s"opens bishop diagonal from $square").getOrElse("opens bishop diagonal")
+        case Some("queen")  => routeTargetSquare.map(square => s"opens queen line from $square").getOrElse("opens queen line")
         case Some(piece) =>
           lineUnlockFile match
             case Some(file) => s"opens $file-file for $piece"
-            case None       => s"opens $piece line"
+            case None       => routeTargetSquare.map(square => s"opens $piece line from $square").getOrElse(s"opens $piece line")
         case None if bishopCarrier => "opens bishop diagonal"
         case None => lineUnlockFile.map(file => s"opens $file-file").getOrElse("opens a line")
     val routeFrom = claim.routeIdentityParts.collectFirst {
