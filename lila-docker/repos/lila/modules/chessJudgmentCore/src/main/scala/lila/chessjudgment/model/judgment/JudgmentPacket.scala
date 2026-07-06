@@ -2572,7 +2572,7 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if label.contains("PieceActivation") && lineUnlockCarrier => opensLineLabel
         case ("pawn_break_timing", label) if label.contains("PieceActivation") && mobilityGainCarrier => "piece activation"
         case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => breakPreparationLabel
-        case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => "opens a diagonal"
+        case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => opensLineLabel
         case ("long_diagonal_pressure", _) if centralTargetSquare => "central diagonal pressure"
         case ("long_diagonal_pressure", _) if bishopCarrier => "bishop diagonal pressure"
         case ("compensation", _) if materialSacrificeCompensationClaim(claim) => "sacrifice compensation"
