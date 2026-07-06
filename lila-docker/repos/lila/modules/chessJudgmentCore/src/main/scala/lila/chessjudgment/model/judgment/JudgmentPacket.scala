@@ -2579,8 +2579,21 @@ object MoveMeaningSurface:
         case (Some("knight"), Some(square)) => Set("b1", "g1", "b8", "g8")(square)
         case (Some("bishop"), Some(square)) => Set("c1", "f1", "c8", "f8")(square)
         case _ => false
+    val currentMoveFile =
+      JudgmentSubjectBinding
+        .normalizeMove(claim.moveUci)
+        .toLowerCase
+        .take(2)
+        .filter(_.isLetter)
+        .take(1) match
+          case file if file.matches("[a-h]") => Some(file)
+          case _                             => None
+    val breakPreparationFiles =
+      val files = claim.breakFiles.map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
+      val withoutCurrent = currentMoveFile.fold(files)(file => files.filterNot(_ == file))
+      if withoutCurrent.nonEmpty then withoutCurrent else files
     val breakPreparationLabel =
-      claim.breakFiles.distinct.sorted match
+      breakPreparationFiles match
         case file :: Nil       => s"prepares $file-pawn break"
         case files if files.nonEmpty => s"prepares ${files.mkString("/")}-pawn breaks"
         case _                 => "prepares pawn break"
@@ -2600,15 +2613,6 @@ object MoveMeaningSurface:
         case file :: Nil             => s"restrains $file-pawn break"
         case files if files.nonEmpty => s"restrains ${files.mkString("/")}-pawn breaks"
         case _                       => "restricts counterplay"
-    val currentMoveFile =
-      JudgmentSubjectBinding
-        .normalizeMove(claim.moveUci)
-        .toLowerCase
-        .take(2)
-        .filter(_.isLetter)
-        .take(1) match
-          case file if file.matches("[a-h]") => Some(file)
-          case _                             => None
     val counterplayRaceFiles =
       currentMoveFile.filter(counterplayBreakFiles.contains).toList match
         case file :: Nil => List(file)
@@ -2820,11 +2824,11 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
         case ("pawn_break_timing", _) if flankInfrastructurePawnMove || flankPressurePawnMove => flankPawnAdvanceLabel
         case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
+        case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => breakPreparationLabel
         case ("pawn_break_timing", label) if label.contains("PieceActivation") && mobilityGainCarrier =>
           claim.targetPieces.map(_.toLowerCase).distinct.sorted match
             case piece :: Nil => s"activates $piece"
             case _            => "piece activation"
-        case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => breakPreparationLabel
         case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => opensLineLabel
         case ("long_diagonal_pressure", _) if centralTargetSquare => "central diagonal pressure"
         case ("long_diagonal_pressure", _) if bishopCarrier => "bishop diagonal pressure"
