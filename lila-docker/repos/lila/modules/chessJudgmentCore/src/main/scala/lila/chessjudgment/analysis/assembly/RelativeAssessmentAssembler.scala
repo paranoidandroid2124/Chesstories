@@ -589,15 +589,16 @@ object RelativeAssessmentAssembler:
       comparisonProof: List[EvidenceRecord],
       neighborhood: ComparisonEvidenceNeighborhood
   ): RelativeCauseProofRecords =
+    val supportIds = supportClosureRecordIds(graph, support)
     val directSeed =
-      (support ++ comparisonProof)
+      (support ++ comparisonProof.filter(record => supportIds.contains(record.ref.id)))
         .filter(record => directProofSource(graph, fact, kind, binding, record))
         .distinctBy(_.ref.id)
     val directRecords =
       proofSectionRecords(graph, directSeed, Some(kind), Some(binding))
         .filter(record => directProofSource(graph, fact, kind, binding, record))
+        .filter(record => supportIds.contains(record.ref.id))
         .distinctBy(_.ref.id)
-    val supportIds = supportClosureRecordIds(graph, support)
     val directIds = directRecords.map(_.ref.id).toSet
     val contrastRecords =
       comparisonProof

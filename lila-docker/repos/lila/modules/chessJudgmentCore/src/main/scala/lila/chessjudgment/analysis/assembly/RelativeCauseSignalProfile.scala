@@ -910,8 +910,6 @@ private[chessjudgment] object RelativeCauseSignalProfile:
 
   private[chessjudgment] def conversionWindowRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
-      case EvidenceRecord(_, SinglePositionEvidence(assessment), _) =>
-        assessment.simplifyBias.shouldSimplify
       case EvidenceRecord(_, payload: RelationFactEvidence, _) if payload.kind == RelationFactKind.BadPieceLiquidation =>
         true
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
