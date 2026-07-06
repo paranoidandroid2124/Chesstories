@@ -3504,7 +3504,7 @@ object MoveMeaningClaim:
       !routeActivityShadowedByOwnedRoute(claims, claim) &&
       !planContinuityShadowedByOwnedRoute(claims, claim) &&
       !planContinuityShadowedByConcreteCurrentClaim(claims, claim) &&
-      !planContinuityBreakOptionShadowedByOwnedBreak(claims, claim) &&
+      !breakFunctionShadowedByOwnedBreak(claims, claim) &&
       !genericActivityOrPlanShadowedByOwnedTargetPressure(claims, claim) &&
       publicSpecificPlanContinuityClaim(claims, claim) &&
       !badMoveSuppressesCurrentMoveSurface(verdict, claim)
@@ -3641,7 +3641,7 @@ object MoveMeaningClaim:
       ) &&
       currentMoveSurfaceLane(claim) &&
       (
-        claim.routeIdentityParts.nonEmpty && routeClaimWithSameIdentity(claims, claim) ||
+        claim.routeIdentityParts.nonEmpty && ownedRouteClaimWithSameIdentity(claims, claim) ||
           claim.causeEvidenceIds.nonEmpty &&
             claims.exists(other =>
               other != claim &&
@@ -3663,16 +3663,26 @@ object MoveMeaningClaim:
       claim.role == "DevelopsPieceForPlan" &&
       claim.surfaceLane == "current_move_function" &&
       claim.causeEvidenceIds.isEmpty &&
-      routeClaimWithSameIdentity(claims, claim)
+      ownedRouteClaimWithSameIdentity(claims, claim)
 
-  private def planContinuityBreakOptionShadowedByOwnedBreak(
+  private def breakFunctionShadowedByOwnedBreak(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
-    claim.meaningKind == "PlanContinuity" &&
-      claim.role == "PreparesBreakOption" &&
+    val shadowablePlanBreak =
+      claim.meaningKind == "PlanContinuity" &&
+        claim.role == "PreparesBreakOption" &&
+        claim.surfaceLane == "current_move_function" &&
+        claim.breakFiles.nonEmpty
+    val shadowableSurfaceBreak =
       claim.surfaceLane == "current_move_function" &&
-      claim.breakFiles.nonEmpty &&
+        claim.supportLevel == "view_surfaced" &&
+        claim.causeEvidenceIds.isEmpty &&
+        (
+          claim.meaningKind == "PawnBreakTiming" ||
+            claim.meaningKind == "PieceActivity" && claim.label.exists(_.startsWith("break-file-"))
+        )
+    (shadowablePlanBreak || shadowableSurfaceBreak) &&
       claims.exists(other =>
         other != claim &&
           (other.meaningKind == "PawnBreakTiming" || other.meaningKind == "CounterplayRace") &&
@@ -3693,8 +3703,18 @@ object MoveMeaningClaim:
         other.sourceEvidenceIds.exists(_.contains(":strategic-mechanism:target-pressure:")) &&
         (other.targetSquares.nonEmpty || other.targetFiles.nonEmpty || other.targetPieces.nonEmpty) &&
         other.objectCarrierReady
+    def targetPressureActivity(claim: MoveMeaningClaim): Boolean =
+      claim.meaningKind == "PieceActivity" &&
+        claim.surfaceLane == "current_move_function" &&
+        claim.causeEvidenceIds.isEmpty &&
+        claim.label.exists(label =>
+          label == "weak-pawn-target" ||
+            label == "target-pressure-gain" ||
+            label == "TargetFixation"
+        )
     (
       claim.meaningKind == "PieceActivity" && claim.role == "ImprovesPieceActivity" ||
+        targetPressureActivity(claim) ||
         claim.meaningKind == "PlanContinuity" && claim.role == "ReferencePreservesPlan" ||
         claim.meaningKind == "PlanContinuity" && claim.role == "PreparesBreakOption" && claim.breakFiles.nonEmpty &&
           claim.targetSquares.isEmpty && !directBreakPlanClaim(claim)
@@ -3720,7 +3740,7 @@ object MoveMeaningClaim:
       left.targetPieces.intersect(right.targetPieces).nonEmpty ||
       left.targetFiles.intersect(right.targetFiles).nonEmpty
 
-  private def routeClaimWithSameIdentity(
+  private def ownedRouteClaimWithSameIdentity(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -3728,8 +3748,8 @@ object MoveMeaningClaim:
       claims.exists(other =>
         other != claim &&
         other.meaningKind == "PieceRoute" &&
-          currentMoveSurfaceLane(other) &&
-          other.supportLevel != "contextual" &&
+          other.surfaceLane == "current_move_owned" &&
+          other.supportLevel == "owned_cause_linked" &&
           other.publicHasCarrier &&
           routeIdentityKey(other).contains(key)
       )
@@ -3738,9 +3758,9 @@ object MoveMeaningClaim:
       routeCoreIdentity(claim).exists(key =>
         claims.exists(other =>
           other != claim &&
-          other.meaningKind == "PieceRoute" &&
-            currentMoveSurfaceLane(other) &&
-            other.supportLevel != "contextual" &&
+            other.meaningKind == "PieceRoute" &&
+            other.surfaceLane == "current_move_owned" &&
+            other.supportLevel == "owned_cause_linked" &&
             other.publicHasCarrier &&
             routeCoreIdentity(other).contains(key)
         )
