@@ -2463,6 +2463,7 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => "weak pawn target"
         case ("target_pressure", _) if checkingPressureClaim(claim) => "checking pressure"
         case ("target_pressure", _) if lineUnlockCarrier => opensLineLabel
+        case ("target_pressure", _) if initialDevelopmentRoute => "develops with pressure"
         case ("target_pressure", "TargetFixation") => "target fixation"
         case ("target_pressure", _) if filePressureCarrier => "file pressure"
         case ("target_pressure", _) if planPawnAdvanceClaim(claim) => "space advance"
