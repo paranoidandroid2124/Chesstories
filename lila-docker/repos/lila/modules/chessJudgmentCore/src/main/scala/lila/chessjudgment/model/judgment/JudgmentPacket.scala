@@ -2423,6 +2423,7 @@ object MoveMeaningSurface:
         case ("target_pressure", "TargetFixation") => "target fixation"
         case ("target_pressure", "weak-pawn-target") => "weak pawn target"
         case ("target_pressure", "king-safety-pressure") => "king safety pressure"
+        case ("target_pressure", "target-pressure-release") => "pressure release"
         case ("target_pressure", _) if kingPressureCarrier => "king safety pressure"
         case ("target_pressure", _) if checkingPressureClaim(claim) => "checking pressure"
         case ("target_pressure", _) if planPawnAdvanceClaim(claim) => "space advance"
