@@ -417,6 +417,9 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
               .filter(kind =>
                 if kind == RelativeCauseKind.OpponentRestriction then
                   currentMoveConcreteCounterplayCanOwnValue(kind, payload, profile)
+                else if kind == RelativeCauseKind.TargetPressureGain || kind == RelativeCauseKind.PawnWeaknessTarget then
+                  profile.exactReferenceMove &&
+                    RelativeCauseSignalProfile.currentMoveConcreteTargetCarrierRecords(profile.fact.candidateLine, profile.allRecords).nonEmpty
                 else
                   (
                     profile.exactReferenceMove &&

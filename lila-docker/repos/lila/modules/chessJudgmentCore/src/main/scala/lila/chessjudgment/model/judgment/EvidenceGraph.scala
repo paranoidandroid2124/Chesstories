@@ -1962,6 +1962,17 @@ object StrategicMechanismContrastEvidence:
           payload.consequencesOf(TransitionConsequenceKind.MobilityGain).exists(consequence =>
             consequence.subjects.exists(currentMoveDevelopmentRouteSubject)
           ) ||
+          (
+            !payload.hasTargetPressureGain &&
+              !payload.hasConsequence(TransitionConsequenceKind.WeakPawnTargetCreated) &&
+              !payload.hasConsequence(TransitionConsequenceKind.WeakSquareTargetCreated) &&
+              payload.consequencesOf(TransitionConsequenceKind.LineUnlockGain).exists(consequence =>
+                consequence.subjects.exists(subject =>
+                  val normalized = Option(subject).getOrElse("").trim.toLowerCase
+                  normalized.contains("line-unlock") && normalized.matches(".*[a-h][1-8].*")
+                )
+              )
+          ) ||
           payload.consequencesOf(TransitionConsequenceKind.OutpostGain).exists(consequence =>
             consequence.subjects.exists(currentMoveOutpostSubject)
           )
