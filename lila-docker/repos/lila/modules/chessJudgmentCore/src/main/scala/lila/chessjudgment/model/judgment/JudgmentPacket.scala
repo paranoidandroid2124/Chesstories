@@ -2440,6 +2440,9 @@ object MoveMeaningSurface:
     val bishopCarrier =
       claim.targetPieces.exists(_.equalsIgnoreCase("bishop")) ||
         evidence.boardCarriers.exists(carrier => carrier.kind == "Piece" && carrier.value.equalsIgnoreCase("bishop"))
+    val opensLineLabel =
+      if claim.routeIdentityParts.exists(_.equalsIgnoreCase("piece:bishop")) then "opens a diagonal"
+      else "opens a line"
     val ideaLabel =
       (idea, claim.label.map(_.trim).getOrElse("")) match
         case ("target_pressure", "weak-pawn-target") => "weak pawn target"
@@ -2448,7 +2451,7 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if kingPressureCarrier => "king safety pressure"
         case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => "weak pawn target"
         case ("target_pressure", _) if checkingPressureClaim(claim) => "checking pressure"
-        case ("target_pressure", _) if lineUnlockCarrier => "line unlock"
+        case ("target_pressure", _) if lineUnlockCarrier => opensLineLabel
         case ("target_pressure", "TargetFixation") => "target fixation"
         case ("target_pressure", _) if filePressureCarrier => "file pressure"
         case ("target_pressure", _) if planPawnAdvanceClaim(claim) => "space advance"
@@ -2466,13 +2469,14 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
         case ("pawn_break_timing", _) if flankInfrastructurePawnMove => "flank pawn advance"
         case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
+        case ("pawn_break_timing", label) if label.contains("PieceActivation") && lineUnlockCarrier => opensLineLabel
         case ("pawn_break_timing", label) if label.contains("PieceActivation") && mobilityGainCarrier => "piece activation"
         case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => "break preparation"
-        case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => "line unlock"
+        case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => "opens a diagonal"
         case ("long_diagonal_pressure", _) if centralTargetSquare => "central diagonal pressure"
         case ("long_diagonal_pressure", _) if bishopCarrier => "bishop diagonal pressure"
         case ("compensation", _) if materialSacrificeCompensationClaim(claim) => "sacrifice compensation"
-        case ("piece_route", _) if routeLineUnlockClaim(claim) => "line unlock"
+        case ("piece_route", _) if routeLineUnlockClaim(claim) => opensLineLabel
         case ("piece_route", label) if routeManeuverClaim(claim, label) => "piece maneuver"
         case ("piece_route", label) if routeDevelopmentLabel(label) => "piece development"
         case ("piece_activity", label) if routeManeuverClaim(claim, label) => "piece activity lost"
