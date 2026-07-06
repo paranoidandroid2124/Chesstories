@@ -2405,6 +2405,12 @@ object MoveMeaningSurface:
         claim.supportLevel == "owned_cause_linked"
     val quality = if played then verdict.map(frame => moveQuality(frame.verdict)).getOrElse("unknown") else "not_applicable"
     val idea = ideaType(claim)
+    val centralTargetSquare =
+      claim.targetFiles.isEmpty &&
+        claim.targetSquares.exists(square => Set("d4", "d5", "e4", "e5")(square.toLowerCase))
+    val bishopCarrier =
+      claim.targetPieces.exists(_.equalsIgnoreCase("bishop")) ||
+        evidence.boardCarriers.exists(carrier => carrier.kind == "Piece" && carrier.value.equalsIgnoreCase("bishop"))
     val ideaLabel =
       (idea, claim.label.map(_.trim).getOrElse("")) match
         case ("target_pressure", "TargetFixation") => "target fixation"
@@ -2419,12 +2425,15 @@ object MoveMeaningSurface:
               claim.targetSquares.nonEmpty &&
               claim.targetSquares.forall(square => Set("d4", "d5", "e4", "e5")(square.toLowerCase)) =>
           "central pressure"
+        case ("target_pressure", _) if bishopCarrier && claim.targetSquares.nonEmpty => "bishop pressure"
         case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => "counter-break control"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => "creates pawn tension"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => "resolves pawn tension"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
         case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => "break preparation"
         case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => "line unlock"
+        case ("long_diagonal_pressure", _) if centralTargetSquare => "central diagonal pressure"
+        case ("long_diagonal_pressure", _) if bishopCarrier => "bishop diagonal pressure"
         case ("compensation", _) if materialSacrificeCompensationClaim(claim) => "sacrifice compensation"
         case ("piece_route", _) if routeLineUnlockClaim(claim) => "line unlock"
         case ("piece_route", label) if routeManeuverClaim(claim, label) => "piece maneuver"
