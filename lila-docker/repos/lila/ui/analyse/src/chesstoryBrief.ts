@@ -251,8 +251,8 @@ function carrierValueLabel(kind?: string, value?: string): string {
 function planSubjectLabel(value: string): string {
   const normalized = value.trim().toLowerCase();
   if (normalized.includes(',')) return joinHuman(normalized.split(',').map(planSubjectLabel));
-  const lineUnlock = normalized.match(/^line-unlock:([a-h][1-8])$/);
-  if (lineUnlock) return `line opening from ${lineUnlock[1]}`;
+  const openedLine = normalized.match(/^(?:opened-line|line-unlock):([a-h][1-8])$/);
+  if (openedLine) return `opens a line from ${openedLine[1]}`;
   const squareSubject = normalized.match(/^(material-sacrifice|material-capture|material-recapture|weak-square|check):([a-h][1-8])$/);
   if (squareSubject) return `${squareSubject[1].replace(/-/g, ' ')} on ${squareSubject[2]}`;
   const passedAdvance = normalized.match(/^passed-pawn-advanced:([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
@@ -337,7 +337,7 @@ function conciseCarrierLabels(labels: string[]): string[] {
   const coveredSquares = new Set(
     unique.flatMap(label => [
       ...(label.match(/^(?:material capture|material sacrifice|capture and sacrifice|weak square|check|weak pawn) on ([a-h][1-8])$/)?.slice(1) || []),
-      ...(label.match(/^line opening from ([a-h][1-8])$/)?.slice(1) || []),
+      ...(label.match(/^opens a line from ([a-h][1-8])$/)?.slice(1) || []),
       ...(label.match(/^passed pawn on ([a-h][1-8])$/)?.slice(1) || []),
       ...(
         label.match(/^(?:passed pawn advance|rook lift|created tension|(?:battery|pin) pressure (?:on|along)) ([a-h][1-8])(?:-([a-h][1-8]))?$/)

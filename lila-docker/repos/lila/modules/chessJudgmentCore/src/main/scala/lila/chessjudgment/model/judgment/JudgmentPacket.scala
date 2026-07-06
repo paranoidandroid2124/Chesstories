@@ -4333,7 +4333,7 @@ object MoveMeaningClaim:
       .toList
       .flatMap(token => claimSquare(token.stripPrefix("target=Square:")))
       .distinct
-      .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"line-unlock:$square"))
+      .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"opened-line:$square"))
 
   private def mechanismSquareIdentityCarriers(
       detail: PositionPlanTechniqueSemanticDetail,
