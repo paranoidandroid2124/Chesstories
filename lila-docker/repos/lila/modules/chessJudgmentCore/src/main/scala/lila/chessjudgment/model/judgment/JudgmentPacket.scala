@@ -2235,7 +2235,7 @@ object MoveMeaningSurface:
         claim.publicHasCarrier &&
         (claim.breakFiles.nonEmpty || claim.breakIdentityParts.nonEmpty)
     val directBreakPlan =
-      directBreakPlanClaim(claim)
+      MoveMeaningClaim.directBreakPlanClaim(claim)
     val concreteRoute =
       claim.meaningKind == "PieceRoute" &&
         (claim.routeIdentityParts.nonEmpty || claim.structuralMotifTags.exists(tag => tag == "route" || tag == "reroute"))
@@ -2383,7 +2383,7 @@ object MoveMeaningSurface:
           claim.unit != PositionPlanTechniqueUnit.SpacePreventionResourceDenial &&
             claim.unit != PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
             claim.unit != PositionPlanTechniqueUnit.CounterplayRace &&
-            !directBreakPlanClaim(claim) &&
+            !MoveMeaningClaim.directBreakPlanClaim(claim) &&
             claim.boardCarriers.exists(carrier =>
               carrier.role == "target" &&
                 carrier.kind == "PlanSubject" &&
@@ -2457,7 +2457,7 @@ object MoveMeaningSurface:
 
   private def planOptionIdeaType(claim: MoveMeaningClaim): String =
     if passedPawnAdvanceClaim(claim) then "passed_pawn_advance"
-    else if directBreakPlanClaim(claim) then "pawn_break_timing"
+    else if MoveMeaningClaim.directBreakPlanClaim(claim) then "pawn_break_timing"
     else if planContinuityTargetPressureCarrier(claim) then "target_pressure"
     else claim.role match
       case "DevelopsPieceForPlan" => "piece_activity"
@@ -2478,27 +2478,6 @@ object MoveMeaningSurface:
               (carrier.value.startsWith("passed-pawn:") || carrier.value.startsWith("passed-pawn-advanced:"))
           )
       )
-
-  private def directBreakPlanClaim(claim: MoveMeaningClaim): Boolean =
-    claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-      claim.role == "PreparesBreakOption" &&
-      claim.publicHasCarrier &&
-      claim.causeEvidenceIds.nonEmpty &&
-      (claim.breakFiles.nonEmpty || claim.breakIdentityParts.nonEmpty) &&
-      currentMovePawnAdvanceShape(claim.moveUci)
-
-  private def currentMovePawnAdvanceShape(move: String): Boolean =
-    publicUciMove(move).exists(normalized =>
-      val from = normalized.take(2)
-      val to = normalized.slice(2, 4)
-      from.take(1) == to.take(1) && pawnAdvanceRankShape(from, to)
-    )
-
-  private def pawnAdvanceRankShape(from: String, to: String): Boolean =
-    (for
-      fromRank <- from.drop(1).toIntOption
-      toRank <- to.drop(1).toIntOption
-    yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
 
   private def currentMoveActorPiece(claim: MoveMeaningClaim, piece: String): Boolean =
     (claim.moveUci.length > 4 && piece == "pawn") ||
@@ -2962,6 +2941,7 @@ object MoveMeaningClaim:
       !terminalOverriddenEndgameTechniqueShadowed(claims, claim) &&
       !routeActivityShadowedByOwnedRoute(claims, claim) &&
       !planContinuityShadowedByOwnedRoute(claims, claim) &&
+      !planContinuityShadowedByConcreteCurrentClaim(claims, claim) &&
       !planContinuityBreakOptionShadowedByOwnedBreak(claims, claim) &&
       !genericActivityOrPlanShadowedByOwnedTargetPressure(claims, claim) &&
       publicSpecificPlanContinuityClaim(claims, claim) &&
@@ -3275,13 +3255,45 @@ object MoveMeaningClaim:
       (
         planClaim.role match
           case "PreparesBreakOption" =>
-            concreteClaim.meaningKind == "PawnBreakTiming"
+            if directBreakPlanClaim(planClaim) then concreteClaim.meaningKind == "PawnBreakTiming"
+            else concreteClaim.meaningKind != "PlanContinuity"
           case "DevelopsPieceForPlan" =>
             concreteClaim.meaningKind == "PieceRoute" ||
               concreteClaim.meaningKind == "PieceActivity"
           case _ =>
             true
       )
+
+  private def planContinuityShadowedByConcreteCurrentClaim(
+      claims: List[MoveMeaningClaim],
+      claim: MoveMeaningClaim
+  ): Boolean =
+    claim.meaningKind == "PlanContinuity" &&
+      claim.surfaceLane == "current_move_owned" &&
+      !directBreakPlanClaim(claim) &&
+      claims.exists(other =>
+        other != claim &&
+          other.meaningKind != "PlanContinuity" &&
+          other.unit != PositionPlanTechniqueUnit.PlanOptionSet &&
+          currentMoveSurfaceLane(other) &&
+          other.publicHasCarrier &&
+          other.sourceEvidenceIds.nonEmpty &&
+          concreteClaimShadowsPlanContinuity(claim, other)
+      )
+
+  private[judgment] def directBreakPlanClaim(claim: MoveMeaningClaim): Boolean =
+    claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+      claim.role == "PreparesBreakOption" &&
+      claim.publicHasCarrier &&
+      claim.causeEvidenceIds.nonEmpty &&
+      (claim.breakFiles.nonEmpty || claim.breakIdentityParts.nonEmpty) &&
+      moveEndpoints(claim.moveUci).exists { case (from, to) =>
+        from.take(1) == to.take(1) &&
+          (for
+            fromRank <- from.drop(1).toIntOption
+            toRank <- to.drop(1).toIntOption
+          yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
+      }
 
   private def planContinuityClaimHasCurrentMovePlanSubject(claim: MoveMeaningClaim): Boolean =
     val normalizedMove = JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase
