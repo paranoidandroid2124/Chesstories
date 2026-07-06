@@ -2687,6 +2687,7 @@ object MoveMeaningSurface:
     val bishopPressureLabel =
       claim.targetSquares.map(_.toLowerCase).distinct.sorted match
         case square :: Nil => s"bishop pressure on $square"
+        case squares if squares.nonEmpty && squares.size <= 4 => s"bishop pressure on ${squares.mkString("/")}"
         case _             => "bishop pressure"
     val targetFixationLabel =
       claim.targetSquares.map(_.toLowerCase).distinct.sorted match
@@ -2782,7 +2783,10 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
         case ("pawn_break_timing", _) if flankInfrastructurePawnMove || flankPressurePawnMove => "flank pawn advance"
         case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
-        case ("pawn_break_timing", label) if label.contains("PieceActivation") && mobilityGainCarrier => "piece activation"
+        case ("pawn_break_timing", label) if label.contains("PieceActivation") && mobilityGainCarrier =>
+          claim.targetPieces.map(_.toLowerCase).distinct.sorted match
+            case piece :: Nil => s"activates $piece"
+            case _            => "piece activation"
         case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => breakPreparationLabel
         case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => opensLineLabel
         case ("long_diagonal_pressure", _) if centralTargetSquare => "central diagonal pressure"
