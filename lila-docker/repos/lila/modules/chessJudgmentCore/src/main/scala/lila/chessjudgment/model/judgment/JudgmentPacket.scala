@@ -2597,6 +2597,24 @@ object MoveMeaningSurface:
         case file :: Nil             => s"restrains $file-pawn break"
         case files if files.nonEmpty => s"restrains ${files.mkString("/")}-pawn breaks"
         case _                       => "restricts counterplay"
+    val currentMoveFile =
+      JudgmentSubjectBinding
+        .normalizeMove(claim.moveUci)
+        .toLowerCase
+        .take(2)
+        .filter(_.isLetter)
+        .take(1) match
+          case file if file.matches("[a-h]") => Some(file)
+          case _                             => None
+    val counterplayRaceFiles =
+      currentMoveFile.filter(counterplayBreakFiles.contains).toList match
+        case file :: Nil => List(file)
+        case _           => counterplayBreakFiles
+    val counterplayRaceLabel =
+      counterplayRaceFiles match
+        case file :: Nil             => s"$file-pawn counterplay race"
+        case files if files.nonEmpty => s"${files.mkString("/")}-pawn counterplay race"
+        case _                       => "counterplay race"
     val routeDestinationLabel =
       routeToSquares.toList.sorted match
         case square :: Nil             => s" to $square"
@@ -2781,6 +2799,7 @@ object MoveMeaningSurface:
               claim.targetSquares.forall(square => Set("d4", "d5", "e4", "e5")(square.toLowerCase)) =>
           centralPressureLabel
         case ("target_pressure", _) if bishopCarrier && claim.targetSquares.nonEmpty => bishopPressureLabel
+        case ("counterplay_race", _) => counterplayRaceLabel
         case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => "counter-break control"
         case ("counterplay_control", "opponent-low-mobility") if counterplayBreakFiles.nonEmpty => counterplayRestrictionLabel
         case ("counterplay_control", "opponent-low-mobility") => "restricts counterplay"
