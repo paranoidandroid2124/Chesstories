@@ -2648,7 +2648,14 @@ object MoveMeaningSurface:
 
   private def breakPreparationPlanClaim(claim: MoveMeaningClaim, label: String): Boolean =
     claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-      label.contains("PawnBreakPreparation")
+      (
+        label.contains("PawnBreakPreparation") ||
+          (
+            claim.role == "PreparesBreakOption" &&
+              (label.contains("OpeningDevelopment") || label.contains("PieceActivation")) &&
+              (claim.breakFiles.nonEmpty || claim.breakIdentityParts.exists(_.startsWith("breakFile:")))
+          )
+      )
 
   private def planOptionIdeaType(claim: MoveMeaningClaim): String =
     if passedPawnAdvanceClaim(claim) then "passed_pawn_advance"
