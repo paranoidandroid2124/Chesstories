@@ -2155,7 +2155,7 @@ object MoveMeaningSurface:
             surface.target.squares.nonEmpty &&
             moveDestination(surface.moveUci).exists(to => surface.target.squares.forall(_.equalsIgnoreCase(to))) =>
         10
-      case "target_pressure" if surface.idea.label == "target pressure" =>
+      case "target_pressure" if surface.idea.label == "target pressure" || surface.idea.label == "central pressure" =>
         10
       case "target_pressure"        => 8
       case "piece_route"            => 9
@@ -2412,6 +2412,12 @@ object MoveMeaningSurface:
         case ("target_pressure", "king-safety-pressure") => "king safety pressure"
         case ("target_pressure", _) if checkingPressureClaim(claim) => "checking pressure"
         case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => "weak pawn target"
+        case ("target_pressure", _)
+            if claim.causeKinds.contains(RelativeCauseKind.TargetPressureGain) &&
+              claim.targetFiles.isEmpty &&
+              claim.targetSquares.nonEmpty &&
+              claim.targetSquares.forall(square => Set("d4", "d5", "e4", "e5")(square.toLowerCase)) =>
+          "central pressure"
         case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => "counter-break control"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => "creates pawn tension"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => "resolves pawn tension"
