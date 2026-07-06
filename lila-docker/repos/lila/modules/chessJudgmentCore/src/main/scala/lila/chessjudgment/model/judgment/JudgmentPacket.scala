@@ -2666,6 +2666,19 @@ object MoveMeaningSurface:
         case square :: Nil => s"checking pressure on $square"
         case squares if squares.nonEmpty => s"checking pressure on ${squares.mkString("/")}"
         case _ => "checking pressure"
+    val kingPressureSquares =
+      signatureList
+        .filter(signature => EvidenceObjectBinding.signatureValues(List(signature), "target", "Piece").exists(_.equalsIgnoreCase("king")))
+        .flatMap(signature => EvidenceObjectBinding.signatureValues(List(signature), "target", "Square"))
+        .map(_.toLowerCase)
+        .filter(_.matches("[a-h][1-8]"))
+        .distinct
+        .sorted
+    val kingPressureLabel =
+      kingPressureSquares match
+        case square :: Nil => s"king pressure on $square"
+        case squares if squares.nonEmpty => s"king pressure on ${squares.mkString("/")}"
+        case _ => "king safety pressure"
     val centralPressureLabel =
       claim.targetSquares.map(_.toLowerCase).filter(Set("d4", "d5", "e4", "e5")).distinct.sorted match
         case square :: Nil => s"pressure on $square"
@@ -2746,9 +2759,9 @@ object MoveMeaningSurface:
         case ("target_pressure", "weak-pawn-target") => weakPawnTargetLabel
         case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => weakPawnTargetLabel
         case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
-        case ("target_pressure", "king-safety-pressure") => "king safety pressure"
+        case ("target_pressure", "king-safety-pressure") => kingPressureLabel
         case ("target_pressure", "target-pressure-release") => "pressure release"
-        case ("target_pressure", _) if kingPressureCarrier => "king safety pressure"
+        case ("target_pressure", _) if kingPressureCarrier => kingPressureLabel
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
         case ("target_pressure", "TargetFixation") => targetFixationLabel
         case ("target_pressure", _) if filePressureCarrier => "file pressure"
