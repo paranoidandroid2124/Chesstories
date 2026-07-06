@@ -2410,6 +2410,7 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => "creates pawn tension"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => "resolves pawn tension"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
+        case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => "break preparation"
         case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => "line unlock"
         case _ => ideaLabels.getOrElse(idea, "")
     val qualityOfIdea = ideaQuality(claim, claimSubject, badPlayedMove)
@@ -2626,6 +2627,10 @@ object MoveMeaningSurface:
   private def ownedTensionBreakClaim(claim: MoveMeaningClaim): Boolean =
     claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
       claim.publicProofLevel == "owned_cause"
+
+  private def breakPreparationPlanClaim(claim: MoveMeaningClaim, label: String): Boolean =
+    claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+      label.contains("PawnBreakPreparation")
 
   private def planOptionIdeaType(claim: MoveMeaningClaim): String =
     if passedPawnAdvanceClaim(claim) then "passed_pawn_advance"
