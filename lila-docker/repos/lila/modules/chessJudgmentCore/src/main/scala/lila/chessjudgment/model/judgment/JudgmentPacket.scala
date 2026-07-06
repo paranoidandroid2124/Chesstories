@@ -2408,30 +2408,36 @@ object MoveMeaningSurface:
     val centralTargetSquare =
       claim.targetFiles.isEmpty &&
         claim.targetSquares.exists(square => Set("d4", "d5", "e4", "e5")(square.toLowerCase))
+    val signatureList = claim.objectBindingSignatures
+    val mechanismTokens =
+      EvidenceObjectBinding.signatureTokens(signatureList, "mechanism=").map(_.stripPrefix("mechanism=").toLowerCase)
+    val consequenceTokens =
+      EvidenceObjectBinding.signatureTokens(signatureList, "consequence=").map(_.stripPrefix("consequence=").toLowerCase)
+    val planSubjects =
+      EvidenceObjectBinding.signatureValues(signatureList, "target", "PlanSubject").map(_.toLowerCase).toSet
     val kingPressureCarrier =
-      claim.objectBindingSignatures.exists(signature =>
-        val normalized = signature.toLowerCase
-        normalized.contains("mechanism=mechanism:kingsafetychanged") ||
-          normalized.contains("mechanism=mechanism:kingringpressure") ||
-          normalized.contains("consequence=consequence:kingringpressure") ||
-          normalized.contains("consequence=consequence:target:gain:king-safety-pressure")
-      )
+      mechanismTokens.contains("mechanism:kingsafetychanged") ||
+        mechanismTokens.contains("mechanism:kingringpressure") ||
+        consequenceTokens.contains("consequence:kingringpressure") ||
+        consequenceTokens.contains("consequence:target:gain:king-safety-pressure")
     val filePressureCarrier =
-      claim.objectBindingSignatures.exists(signature =>
-        val normalized = signature.toLowerCase
-        normalized.contains("mechanism=mechanism:fileoccupationgain") ||
-          normalized.contains("consequence=consequence:fileoccupationgain:gain")
-      )
+      mechanismTokens.contains("mechanism:fileoccupationgain") ||
+        consequenceTokens.contains("consequence:fileoccupationgain:gain")
+    val mobilityGainCarrier =
+      mechanismTokens.contains("mechanism:mobilitygain") ||
+        consequenceTokens.contains("consequence:mobilitygain:gain")
+    val flankPawnAdvancePlan =
+      planSubjects.contains("pawnstorm") && currentFlankPawnAdvanceDestination(claim.moveUci).nonEmpty
     val bishopCarrier =
       claim.targetPieces.exists(_.equalsIgnoreCase("bishop")) ||
         evidence.boardCarriers.exists(carrier => carrier.kind == "Piece" && carrier.value.equalsIgnoreCase("bishop"))
     val ideaLabel =
       (idea, claim.label.map(_.trim).getOrElse("")) match
-        case ("target_pressure", "TargetFixation") => "target fixation"
         case ("target_pressure", "weak-pawn-target") => "weak pawn target"
         case ("target_pressure", "king-safety-pressure") => "king safety pressure"
         case ("target_pressure", "target-pressure-release") => "pressure release"
         case ("target_pressure", _) if kingPressureCarrier => "king safety pressure"
+        case ("target_pressure", "TargetFixation") => "target fixation"
         case ("target_pressure", _) if filePressureCarrier => "file pressure"
         case ("target_pressure", _) if checkingPressureClaim(claim) => "checking pressure"
         case ("target_pressure", _) if planPawnAdvanceClaim(claim) => "space advance"
@@ -2447,6 +2453,9 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => "creates pawn tension"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => "resolves pawn tension"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
+        case ("pawn_break_timing", _) if flankPawnAdvancePlan => "flank pawn advance"
+        case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
+        case ("pawn_break_timing", label) if label.contains("PieceActivation") && mobilityGainCarrier => "piece activation"
         case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => "break preparation"
         case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => "line unlock"
         case ("long_diagonal_pressure", _) if centralTargetSquare => "central diagonal pressure"
@@ -2464,7 +2473,22 @@ object MoveMeaningSurface:
     val publicProblem = Option.when(publicFailureClaim)(problem(claim)).flatten
     val comparisonLossDetails = comparisonLostIdeas(verdict, claim)
     val terminal = terminalConsequences(claim)
-    val target = MoveMeaningSurfaceTarget.fromClaim(claim)
+    val baseTarget = MoveMeaningSurfaceTarget.fromClaim(claim)
+    val flankDestination = currentFlankPawnAdvanceDestination(claim.moveUci)
+    val target =
+      flankDestination match
+        case Some(destination) if flankPawnAdvancePlan =>
+          baseTarget.copy(
+            squares = List(destination),
+            files = List(destination.take(1)),
+            pieces = baseTarget.pieces.filter(piece => piece == "king" || piece == "pawn")
+          )
+        case Some(destination) if idea == "pawn_break_timing" && kingPressureCarrier =>
+          baseTarget.copy(
+            squares = (destination :: baseTarget.squares).distinct.sorted,
+            files = List(destination.take(1))
+          )
+        case _ => baseTarget
     val technique = endgameTechnique(claim)
     MoveMeaningSurface(
       moveUci = claim.moveUci,
@@ -2765,6 +2789,15 @@ object MoveMeaningSurface:
           toRank <- to.drop(1).toIntOption
         yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
 
+  private def currentFlankPawnAdvanceDestination(move: String): Option[String] =
+    val normalized = JudgmentSubjectBinding.normalizeMove(move).toLowerCase
+    Option.when(
+      normalized.matches("[a-h][1-8][a-h][1-8].*") &&
+        Set('a', 'b', 'g', 'h').contains(normalized.head) &&
+        normalized.head == normalized.charAt(2) &&
+        sameFilePawnAdvanceMove(normalized)
+    )(normalized.slice(2, 4))
+
   private def currentMoveActorPiece(claim: MoveMeaningClaim, piece: String): Boolean =
     (claim.moveUci.length > 4 && piece == "pawn") ||
       claim.boardCarriers.exists(carrier =>
@@ -2873,16 +2906,18 @@ object MoveMeaningSurface:
       claim: MoveMeaningClaim
   ): List[MoveMeaningSurfaceComparisonLoss] =
     verdict.toList.flatMap { frame =>
-      val sides = comparisonLossSides(claim)
-      val losses = comparisonLosses(claim).map(publicCode(_, comparisonLossLabels))
-      for
-        side <- sides
-        loss <- losses
-      yield MoveMeaningSurfaceComparisonLoss(
-        side = publicComparisonSideRole(frame.comparisonKind, side),
-        code = loss.code,
-        label = loss.label
-      )
+      if frame.verdict == MoveChoiceVerdict.MatchesReference then Nil
+      else
+        val sides = comparisonLossSides(claim)
+        val losses = comparisonLosses(claim).map(publicCode(_, comparisonLossLabels))
+        for
+          side <- sides
+          loss <- losses
+        yield MoveMeaningSurfaceComparisonLoss(
+          side = publicComparisonSideRole(frame.comparisonKind, side),
+          code = loss.code,
+          label = loss.label
+        )
     }.distinct.sortBy(loss => (loss.side, loss.code))
 
   private def endgameTechnique(claim: MoveMeaningClaim): Option[MoveMeaningSurfaceEndgameTechnique] =
