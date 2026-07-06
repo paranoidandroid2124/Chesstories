@@ -2480,6 +2480,7 @@ object MoveMeaningSurface:
             )
         )("defensive_resource")
       )
+      .orElse(Option.when(ownedDefenderMoveResourceClaim(claim))("defensive_resource"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.PieceRerouteRoute && longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
       .orElse(
@@ -2532,6 +2533,22 @@ object MoveMeaningSurface:
     else if codes.contains("material_gain") then Some("material_gain")
     else if codes.contains("material_loss") then Some("material_loss")
     else None
+
+  private def ownedDefenderMoveResourceClaim(claim: MoveMeaningClaim): Boolean =
+    claim.supportLevel == "owned_cause_linked" &&
+      claim.surfaceLane == "current_move_owned" &&
+      claim.causeEvidenceIds.nonEmpty &&
+      claim.publicHasCarrier &&
+      claim.boardCarriers.exists(carrier =>
+        carrier.role == "target" &&
+          carrier.kind == "PlanSubject" &&
+          carrier.value.startsWith("defender-move:")
+      ) &&
+      claim.boardCarriers.exists(carrier =>
+        carrier.role == "target" &&
+          carrier.kind == "PlanSubject" &&
+          carrier.value.startsWith("check:")
+      )
 
   private def checkingRouteTargetPressureClaim(claim: MoveMeaningClaim): Boolean =
     claim.boardCarriers.exists(carrier =>
@@ -3268,7 +3285,7 @@ object MoveMeaningClaim:
       claim.meaningKind == "PieceActivity" && claim.role == "ImprovesPieceActivity" ||
         claim.meaningKind == "PlanContinuity" && claim.role == "ReferencePreservesPlan" ||
         claim.meaningKind == "PlanContinuity" && claim.role == "PreparesBreakOption" && claim.breakFiles.nonEmpty &&
-          claim.targetSquares.isEmpty
+          claim.targetSquares.isEmpty && !directBreakPlanClaim(claim)
     ) &&
       currentMoveSurfaceLane(claim) &&
       claims.exists(other =>
