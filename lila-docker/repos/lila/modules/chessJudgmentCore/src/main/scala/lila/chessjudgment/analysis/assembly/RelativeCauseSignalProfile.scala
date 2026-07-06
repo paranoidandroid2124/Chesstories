@@ -1085,7 +1085,8 @@ private[chessjudgment] object RelativeCauseSignalProfile:
   private[chessjudgment] def currentMoveStrategicSupportCauseKindsForAxis(axis: StrategicAxisDetail): List[RelativeCauseKind] =
     axis.kind match
       case StrategicAxisKind.Target if axis.polarity == StrategicAxisPolarity.Gain =>
-        List(RelativeCauseKind.TargetPressureGain)
+        if axis.label.contains("weak-pawn") || axis.label.contains("weak-square") then List(RelativeCauseKind.PawnWeaknessTarget)
+        else List(RelativeCauseKind.TargetPressureGain)
       case StrategicAxisKind.Activity if currentMoveActivityValueAxis(axis) =>
         List(RelativeCauseKind.ActivityGain)
       case StrategicAxisKind.PlanCoherence if StrategicMechanismContrastEvidence.currentMovePlanCoherenceAxis(axis) =>
