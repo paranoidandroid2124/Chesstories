@@ -2563,6 +2563,19 @@ object MoveMeaningSurface:
         case file :: Nil       => s"prepares $file-pawn break"
         case files if files.nonEmpty => s"prepares ${files.mkString("/")}-pawn breaks"
         case _                 => "prepares pawn break"
+    val counterplayBreakFiles =
+      (
+        claim.breakFiles ++
+          claim.boardCarriers.collect {
+            case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.startsWith("break-file:") =>
+              carrier.value.stripPrefix("break-file:")
+          }
+      ).map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
+    val counterplayRestrictionLabel =
+      counterplayBreakFiles match
+        case file :: Nil             => s"restrains $file-pawn break"
+        case files if files.nonEmpty => s"restrains ${files.mkString("/")}-pawn breaks"
+        case _                       => "restricts counterplay"
     val routeManeuverLabel = routePiece.map(piece => s"$piece maneuver").getOrElse("piece maneuver")
     val developmentLabel = routePiece.map(piece => s"$piece development").getOrElse("piece development")
     val developmentPressureLabel =
@@ -2683,6 +2696,7 @@ object MoveMeaningSurface:
           centralPressureLabel
         case ("target_pressure", _) if bishopCarrier && claim.targetSquares.nonEmpty => bishopPressureLabel
         case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => "counter-break control"
+        case ("counterplay_control", "opponent-low-mobility") if counterplayBreakFiles.nonEmpty => counterplayRestrictionLabel
         case ("counterplay_control", "opponent-low-mobility") => "restricts counterplay"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => createsPawnTensionLabel
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => resolvesPawnTensionLabel
