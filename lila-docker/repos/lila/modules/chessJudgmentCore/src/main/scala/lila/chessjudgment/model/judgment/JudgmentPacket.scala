@@ -2436,7 +2436,7 @@ object MoveMeaningSurface:
           normalized.contains("consequence=consequence:lineunlockgain")
       ) || claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":line-unlock:by:"))
     val flankInfrastructurePawnMove =
-      planSubjects.contains("pawnstorm") && currentFlankPawnAdvanceDestination(claim.moveUci).nonEmpty
+      planSubjects.exists(Set("pawnstorm", "spaceadvantage")) && currentFlankPawnAdvanceDestination(claim.moveUci).nonEmpty
     val bishopCarrier =
       claim.targetPieces.exists(_.equalsIgnoreCase("bishop")) ||
         evidence.boardCarriers.exists(carrier => carrier.kind == "Piece" && carrier.value.equalsIgnoreCase("bishop"))

@@ -348,6 +348,9 @@ object PlanMatcher:
       case PawnChain(_, _, c, _, _) if c == side => true
     }
     val hasRookLiftSignal = m.exists { case RookLift(_, _, _, c, _, _) if c == side => true; case _ => false }
+    val flankPawnAdvanceCount =
+      m.count { case PawnAdvance(file, _, _, c, _, _) if c == side && isFlank(file) => true; case _ => false }
+    val hasPawnChainSignal = m.exists { case PawnChain(_, _, c, _, _) if c == side => true; case _ => false }
     val hasHookSignal =
       s.hookChance ||
         m.exists {
@@ -366,7 +369,11 @@ object PlanMatcher:
         math.min(0.25, ev.size * 0.10) -
         (if s.openCenter && s.kingExposure >= 2 then 0.12 else 0.0) -
         (if ctx.strategicThreatToUs then 0.08 else 0.0)
-    themed(Theme.FlankInfrastructure, Plan.PawnStorm(side), score, ev, Some(subplanId))
+    val plan =
+      if (flankPawnAdvanceCount >= 2 || hasPawnChainSignal) && (s.hookChance || s.kingExposure > 0) then
+        Plan.PawnStorm(side)
+      else Plan.SpaceAdvantage(side)
+    themed(Theme.FlankInfrastructure, plan, score, ev, Some(subplanId))
 
   private def advantageTransformation(m: List[Motif], ctx: PlanInteractionContext, side: Color, s: SideSnapshot): PlanMatch =
     val ev = evidence(m, 0.17) {
