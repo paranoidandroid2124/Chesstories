@@ -1946,13 +1946,18 @@ object MoveMeaningSurface:
         .distinct
       val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
       val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
-      val carrierPairs = publicIdeaChainCarrierPairs(evidenceSurfaces)
+      val strongChainProof =
+        terminal.nonEmpty ||
+          technique.nonEmpty ||
+          evidenceSurfaces.exists(surface => surface.evidence.proofLevel == "terminal_proof" || surface.evidence.proofLevel == "owned_cause")
+      val chainSurfaces = evidenceSurfaces.filter(surface => publicIdeaChainSemanticAllowed(surface, strongChainProof))
+      val carrierPairs = publicIdeaChainCarrierPairs(chainSurfaces)
       val allConsequenceCarriers = carrierPairs.filter((carrier, _) =>
         carrier.role == "target" && publicIdeaChainConsequenceCarrier(carrier)
       )
       if evidenceSurfaces.isEmpty || !allowedSubjects.contains(subject) then Nil
       else
-        val publicSemantics = evidenceSurfaces.distinctBy(surface =>
+        val publicSemantics = chainSurfaces.distinctBy(surface =>
           (surface.moveUci, surface.subject, surface.lineRole, surface.idea.code, surface.evidence.proofLevel)
         )
         val semanticTargetCarriers =
@@ -2012,7 +2017,7 @@ object MoveMeaningSurface:
             "move_quality" -> verdict.moveQuality,
             "subject" -> subject,
             "move_semantics" -> publicSemantics.map(publicIdeaChainMoveSemanticJson),
-            "proof_levels" -> evidenceSurfaces.map(_.evidence.proofLevel).distinct,
+            "proof_levels" -> chainSurfaces.map(_.evidence.proofLevel).distinct,
             "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "pv" -> pv,
             "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
@@ -2099,6 +2104,13 @@ object MoveMeaningSurface:
       surface.evidence.hasCarrier &&
       (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty) &&
       !surfaceOnlyStrategicMaterialEvent(surface)
+
+  private def publicIdeaChainSemanticAllowed(surface: MoveMeaningSurface, strongChainProof: Boolean): Boolean =
+    !strongChainProof ||
+      surface.evidence.proofLevel != "surface_evidence" ||
+      surface.evidence.causeIds.nonEmpty ||
+      surface.terminalConsequences.nonEmpty ||
+      surface.endgameTechnique.nonEmpty
 
   private def surfaceOnlyStrategicMaterialEvent(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel == "surface_evidence" &&
