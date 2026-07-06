@@ -2452,6 +2452,7 @@ object MoveMeaningSurface:
           "central pressure"
         case ("target_pressure", _) if bishopCarrier && claim.targetSquares.nonEmpty => "bishop pressure"
         case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => "counter-break control"
+        case ("counterplay_control", "opponent-low-mobility") => "restricts counterplay"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => "creates pawn tension"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => "resolves pawn tension"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
