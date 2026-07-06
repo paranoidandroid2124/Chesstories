@@ -2401,6 +2401,13 @@ object MoveMeaningSurface:
         claim.supportLevel == "owned_cause_linked"
     val quality = if played then verdict.map(frame => moveQuality(frame.verdict)).getOrElse("unknown") else "not_applicable"
     val idea = ideaType(claim)
+    val ideaLabel =
+      (idea, claim.label.map(_.trim).getOrElse("")) match
+        case ("target_pressure", "TargetFixation") => "target fixation"
+        case ("target_pressure", "weak-pawn-target") => "weak pawn target"
+        case ("target_pressure", "king-safety-pressure") => "king safety pressure"
+        case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => "counter-break control"
+        case _ => ideaLabels.getOrElse(idea, "")
     val qualityOfIdea = ideaQuality(claim, claimSubject, badPlayedMove)
     val surfacePriority = priority(claim, claimSubject)
     val publicFailureFamily = Option.when(publicFailureClaim)(failureFamily(claim)).flatten
@@ -2415,7 +2422,7 @@ object MoveMeaningSurface:
       lineRole = claim.lineRole,
       moveQuality = quality,
       ideaType = idea,
-      idea = publicCode(idea, ideaLabels),
+      idea = MoveMeaningSurfaceCode(idea, ideaLabel),
       ideaQuality = qualityOfIdea,
       assessment = MoveMeaningSurfaceAssessment(
         moveQuality = publicCode(quality, moveQualityLabels),
