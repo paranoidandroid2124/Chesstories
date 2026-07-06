@@ -3766,6 +3766,12 @@ object MoveMeaningClaim:
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
+    def concreteCurrentClaim(other: MoveMeaningClaim): Boolean =
+      other.meaningKind == "TargetPressure" ||
+        other.meaningKind == "PieceRoute" ||
+        other.meaningKind == "PawnBreakTiming" ||
+        (other.meaningKind == "PieceActivity" && other.role == "ImprovesPieceActivity") ||
+        (other.meaningKind == "PlanContinuity" && other.role == "PreparesBreakOption" && other.breakFiles.nonEmpty)
     val concreteCounterplayCarrier =
       claim.breakFiles.nonEmpty ||
         claim.label.exists(_.startsWith("defensive-counter-break-")) ||
@@ -3784,19 +3790,18 @@ object MoveMeaningClaim:
       claim.label.contains("opponent-low-mobility") &&
       !concreteCounterplayCarrier &&
       currentMoveSurfaceLane(claim) &&
-      claims.exists(other =>
-        other != claim &&
-          other.supportLevel == "owned_cause_linked" &&
-          other.publicHasCarrier &&
-          other.moveUci == claim.moveUci &&
-          other.lineRole == claim.lineRole &&
-          currentMoveSurfaceLane(other) &&
-          (
-            other.meaningKind == "TargetPressure" ||
-              other.meaningKind == "PieceRoute" ||
-              other.meaningKind == "PawnBreakTiming"
-          ) &&
-          targetOverlap(other, claim)
+      (
+        claim.supportLevel == "view_surfaced" && claim.causeEvidenceIds.isEmpty ||
+          claims.exists(other =>
+            other != claim &&
+              other.supportLevel == "owned_cause_linked" &&
+              other.publicHasCarrier &&
+              other.moveUci == claim.moveUci &&
+              other.lineRole == claim.lineRole &&
+              currentMoveSurfaceLane(other) &&
+              concreteCurrentClaim(other) &&
+              targetOverlap(other, claim)
+          )
       )
 
   private def targetOverlap(left: MoveMeaningClaim, right: MoveMeaningClaim): Boolean =
