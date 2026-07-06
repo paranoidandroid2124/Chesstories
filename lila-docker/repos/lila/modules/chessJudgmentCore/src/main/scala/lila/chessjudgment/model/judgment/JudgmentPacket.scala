@@ -2618,6 +2618,8 @@ object MoveMeaningSurface:
         case file :: Nil             => s"$file-pawn counterplay race"
         case files if files.nonEmpty => s"${files.mkString("/")}-pawn counterplay race"
         case _                       => "counterplay race"
+    val flankPawnAdvanceLabel =
+      currentFlankPawnAdvanceDestination(claim.moveUci).map(destination => s"${destination.take(1)}-pawn advance").getOrElse("flank pawn advance")
     val pawnSpaceAdvanceLabel =
       currentMoveFile.map(file => s"$file-pawn space advance").getOrElse("space advance")
     val routeDestinationLabel =
@@ -2816,7 +2818,7 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => createsPawnTensionLabel
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => resolvesPawnTensionLabel
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
-        case ("pawn_break_timing", _) if flankInfrastructurePawnMove || flankPressurePawnMove => "flank pawn advance"
+        case ("pawn_break_timing", _) if flankInfrastructurePawnMove || flankPressurePawnMove => flankPawnAdvanceLabel
         case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
         case ("pawn_break_timing", label) if label.contains("PieceActivation") && mobilityGainCarrier =>
           claim.targetPieces.map(_.toLowerCase).distinct.sorted match
