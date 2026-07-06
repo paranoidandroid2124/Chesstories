@@ -2534,8 +2534,9 @@ object MoveMeaningSurface:
         case _ => false
     val breakPreparationLabel =
       claim.breakFiles.distinct.sorted match
-        case file :: Nil => s"prepares $file-pawn break"
-        case _           => "prepares pawn break"
+        case file :: Nil       => s"prepares $file-pawn break"
+        case files if files.nonEmpty => s"prepares ${files.mkString("/")}-pawn breaks"
+        case _                 => "prepares pawn break"
     val routeManeuverLabel = routePiece.map(piece => s"$piece maneuver").getOrElse("piece maneuver")
     val developmentLabel = routePiece.map(piece => s"$piece development").getOrElse("piece development")
     val developmentPressureLabel =
