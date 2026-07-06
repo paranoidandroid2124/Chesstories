@@ -2413,6 +2413,10 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
         case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => "break preparation"
         case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => "line unlock"
+        case ("piece_route", _) if routeLineUnlockClaim(claim) => "line unlock"
+        case ("piece_route", label) if routeManeuverClaim(claim, label) => "piece maneuver"
+        case ("piece_route", label) if routeDevelopmentLabel(label) => "piece development"
+        case ("piece_activity", label) if routeDevelopmentLabel(label) => "piece activation"
         case _ => ideaLabels.getOrElse(idea, "")
     val qualityOfIdea = ideaQuality(claim, claimSubject, badPlayedMove)
     val surfacePriority = priority(claim, claimSubject)
@@ -2623,7 +2627,20 @@ object MoveMeaningSurface:
 
   private def lineUnlockClaim(claim: MoveMeaningClaim): Boolean =
     claim.routeIdentityParts.exists(_.equalsIgnoreCase("piece:bishop")) &&
-      claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":line-unlock:by:"))
+      routeLineUnlockClaim(claim)
+
+  private def routeLineUnlockClaim(claim: MoveMeaningClaim): Boolean =
+    claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":line-unlock:by:"))
+
+  private def routeManeuverClaim(claim: MoveMeaningClaim, label: String): Boolean =
+    val normalizedLabel = label.toLowerCase
+    normalizedLabel == "activity-loss" ||
+      normalizedLabel == "mobility-loss" ||
+      (normalizedLabel.isEmpty && claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":maneuver")))
+
+  private def routeDevelopmentLabel(label: String): Boolean =
+    val normalized = label.toLowerCase
+    normalized == "activity-gain" || normalized == "mobility-gain" || normalized == "activity"
 
   private def ownedTensionBreakClaim(claim: MoveMeaningClaim): Boolean =
     claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
