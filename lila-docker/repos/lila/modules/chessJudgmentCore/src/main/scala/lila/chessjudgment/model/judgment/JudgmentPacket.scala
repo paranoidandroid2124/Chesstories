@@ -2561,6 +2561,24 @@ object MoveMeaningSurface:
         case square :: Nil => s"weak $square pawn"
         case squares if squares.nonEmpty => s"weak ${squares.mkString("/")} pawns"
         case _ => "weak pawn target"
+    val tensionEdge = (
+      claim.breakIdentityParts.collect {
+        case part if part.toLowerCase.startsWith("tensionedge:") => part.toLowerCase.stripPrefix("tensionedge:")
+      } ++ claim.boardCarriers.collect {
+        case carrier
+            if carrier.role == "target" &&
+              carrier.kind == "PlanSubject" &&
+              (
+                carrier.value.toLowerCase.startsWith("created-tension:") ||
+                  carrier.value.toLowerCase.startsWith("resolved-tension:")
+              ) =>
+          carrier.value.toLowerCase.dropWhile(_ != ':').drop(1)
+      }
+    ).filter(_.matches("[a-h][1-8]-[a-h][1-8]")).distinct.headOption
+    val createsPawnTensionLabel =
+      tensionEdge.map(edge => s"creates $edge pawn tension").getOrElse("creates pawn tension")
+    val resolvesPawnTensionLabel =
+      tensionEdge.map(edge => s"resolves $edge pawn tension").getOrElse("resolves pawn tension")
     val defensiveResourceLabel =
       defenderMoveActorPieces match
         case piece :: Nil => s"defends with $piece"
@@ -2588,8 +2606,8 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if bishopCarrier && claim.targetSquares.nonEmpty => "bishop pressure"
         case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => "counter-break control"
         case ("counterplay_control", "opponent-low-mobility") => "restricts counterplay"
-        case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => "creates pawn tension"
-        case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => "resolves pawn tension"
+        case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => createsPawnTensionLabel
+        case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => resolvesPawnTensionLabel
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
         case ("pawn_break_timing", _) if flankInfrastructurePawnMove => "flank pawn advance"
         case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
