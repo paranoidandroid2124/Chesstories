@@ -2580,6 +2580,28 @@ object MoveMeaningSurface:
       tensionEdge.map(edge => s"creates $edge pawn tension").getOrElse("creates pawn tension")
     val resolvesPawnTensionLabel =
       tensionEdge.map(edge => s"resolves $edge pawn tension").getOrElse("resolves pawn tension")
+    val checkSquares = claim.boardCarriers
+      .collect {
+        case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("check:") =>
+          carrier.value.toLowerCase.stripPrefix("check:")
+      }
+      .filter(_.matches("[a-h][1-8]"))
+      .distinct
+      .sorted
+    val checkingPressureLabel =
+      checkSquares match
+        case square :: Nil => s"checking pressure on $square"
+        case squares if squares.nonEmpty => s"checking pressure on ${squares.mkString("/")}"
+        case _ => "checking pressure"
+    val centralPressureLabel =
+      claim.targetSquares.map(_.toLowerCase).filter(Set("d4", "d5", "e4", "e5")).distinct.sorted match
+        case square :: Nil => s"pressure on $square"
+        case squares if squares.nonEmpty => s"pressure on ${squares.mkString("/")}"
+        case _ => "central pressure"
+    val bishopPressureLabel =
+      claim.targetSquares.map(_.toLowerCase).distinct.sorted match
+        case square :: Nil => s"bishop pressure on $square"
+        case _             => "bishop pressure"
     val defensiveResourceLabel =
       defenderMoveActorPieces match
         case piece :: Nil => s"defends with $piece"
@@ -2592,7 +2614,7 @@ object MoveMeaningSurface:
         case ("target_pressure", "target-pressure-release") => "pressure release"
         case ("target_pressure", _) if kingPressureCarrier => "king safety pressure"
         case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => weakPawnTargetLabel
-        case ("target_pressure", _) if checkingPressureClaim(claim) => "checking pressure"
+        case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
         case ("target_pressure", _) if lineUnlockCarrier => opensLineLabel
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
         case ("target_pressure", "TargetFixation") => "target fixation"
@@ -2603,8 +2625,8 @@ object MoveMeaningSurface:
               claim.targetFiles.isEmpty &&
               claim.targetSquares.nonEmpty &&
               claim.targetSquares.forall(square => Set("d4", "d5", "e4", "e5")(square.toLowerCase)) =>
-          "central pressure"
-        case ("target_pressure", _) if bishopCarrier && claim.targetSquares.nonEmpty => "bishop pressure"
+          centralPressureLabel
+        case ("target_pressure", _) if bishopCarrier && claim.targetSquares.nonEmpty => bishopPressureLabel
         case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => "counter-break control"
         case ("counterplay_control", "opponent-low-mobility") => "restricts counterplay"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => createsPawnTensionLabel
