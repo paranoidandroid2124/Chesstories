@@ -2691,6 +2691,7 @@ object MoveMeaningSurface:
     val targetFixationLabel =
       claim.targetSquares.map(_.toLowerCase).distinct.sorted match
         case square :: Nil => s"fixes target on $square"
+        case squares if squares.nonEmpty && squares.size <= 4 => s"fixes targets on ${squares.mkString("/")}"
         case _             => "target fixation"
     val passedPawnCarrierValues =
       claim.boardCarriers
