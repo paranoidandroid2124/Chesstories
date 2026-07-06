@@ -2148,6 +2148,11 @@ object MoveMeaningSurface:
       case "outpost_attempt"       => 5
       case "compensation"          => 6
       case "long_diagonal_pressure" => 7
+      case "target_pressure"
+          if surface.target.files.isEmpty &&
+            surface.target.squares.nonEmpty &&
+            moveDestination(surface.moveUci).exists(to => surface.target.squares.forall(_.equalsIgnoreCase(to))) =>
+        10
       case "target_pressure"        => 8
       case "piece_route"            => 9
       case "piece_activity"         => 10
@@ -2165,6 +2170,10 @@ object MoveMeaningSurface:
               carrier.value.startsWith("passed-pawn:")
           )
       )
+
+  private def moveDestination(move: String): Option[String] =
+    val normalized = JudgmentSubjectBinding.normalizeMove(move).toLowerCase
+    Option.when(normalized.matches("[a-h][1-8][a-h][1-8].*"))(normalized.slice(2, 4))
 
   private def surfaceOnlyStrategicMaterialEvent(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel == "surface_evidence" &&
