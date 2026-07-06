@@ -2734,6 +2734,15 @@ object MoveMeaningSurface:
         case square :: Nil => s"releases pressure on $square"
         case squares if squares.nonEmpty && squares.size <= 4 => s"releases pressure on ${squares.mkString("/")}"
         case _             => "pressure release"
+    val outpostLabel =
+      val square = moveDestination(claim.moveUci).orElse(claim.targetSquares.map(_.toLowerCase).distinct.sorted.headOption)
+      val piece =
+        if claim.targetPieces.exists(_.equalsIgnoreCase("knight")) then Some("knight")
+        else routePiece
+      (piece, square) match
+        case (Some(piece), Some(square)) => s"$piece outpost on $square"
+        case (_, Some(square))           => s"outpost on $square"
+        case _                           => "outpost attempt"
     val passedPawnCarrierValues =
       claim.boardCarriers
         .collect {
@@ -2834,6 +2843,7 @@ object MoveMeaningSurface:
         case ("long_diagonal_pressure", _) if bishopCarrier => "bishop diagonal pressure"
         case ("compensation", _) if materialSacrificeCompensationClaim(claim) => sacrificeCompensationLabel
         case ("passed_pawn_advance", _) => passedPawnAdvanceLabel
+        case ("outpost_attempt", _) => outpostLabel
         case ("piece_route", _) if routeLineUnlockClaim(claim) => opensLineLabel
         case ("piece_route", _) if initialDevelopmentRoute => developmentLabel
         case ("piece_route", label) if routeManeuverClaim(claim, label) => routeManeuverLabel
