@@ -2615,6 +2615,8 @@ object MoveMeaningSurface:
         case file :: Nil             => s"$file-pawn counterplay race"
         case files if files.nonEmpty => s"${files.mkString("/")}-pawn counterplay race"
         case _                       => "counterplay race"
+    val pawnSpaceAdvanceLabel =
+      currentMoveFile.map(file => s"$file-pawn space advance").getOrElse("space advance")
     val routeDestinationLabel =
       routeToSquares.toList.sorted match
         case square :: Nil             => s" to $square"
@@ -2791,7 +2793,7 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
         case ("target_pressure", "TargetFixation") => targetFixationLabel
         case ("target_pressure", _) if filePressureCarrier => "file pressure"
-        case ("target_pressure", _) if planPawnAdvanceClaim(claim) => "space advance"
+        case ("target_pressure", _) if planPawnAdvanceClaim(claim) => pawnSpaceAdvanceLabel
         case ("target_pressure", _)
             if claim.causeKinds.contains(RelativeCauseKind.TargetPressureGain) &&
               claim.targetFiles.isEmpty &&
