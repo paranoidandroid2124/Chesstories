@@ -3703,17 +3703,29 @@ object MoveMeaningClaim:
         other.sourceEvidenceIds.exists(_.contains(":strategic-mechanism:target-pressure:")) &&
         (other.targetSquares.nonEmpty || other.targetFiles.nonEmpty || other.targetPieces.nonEmpty) &&
         other.objectCarrierReady
+    def passedPawnAdvanceCarrier(claim: MoveMeaningClaim): Boolean =
+      claim.routeIdentityParts.exists(_.startsWith("subject:passed-pawn-")) ||
+        claim.boardCarriers.exists(carrier =>
+          carrier.role == "target" &&
+            carrier.kind == "PlanSubject" &&
+            (
+              carrier.value.startsWith("passed-pawn-advanced:") ||
+                carrier.value.startsWith("passed-pawn-breakthrough:") ||
+                carrier.value.startsWith("passed-pawn-created:")
+            )
+        )
     def targetPressureActivity(claim: MoveMeaningClaim): Boolean =
       claim.meaningKind == "PieceActivity" &&
         claim.surfaceLane == "current_move_function" &&
         claim.causeEvidenceIds.isEmpty &&
+        !passedPawnAdvanceCarrier(claim) &&
         claim.label.exists(label =>
           label == "weak-pawn-target" ||
             label == "target-pressure-gain" ||
             label == "TargetFixation"
         )
     (
-      claim.meaningKind == "PieceActivity" && claim.role == "ImprovesPieceActivity" ||
+      claim.meaningKind == "PieceActivity" && claim.role == "ImprovesPieceActivity" && !passedPawnAdvanceCarrier(claim) ||
         targetPressureActivity(claim) ||
         claim.meaningKind == "PlanContinuity" && claim.role == "ReferencePreservesPlan" ||
         claim.meaningKind == "PlanContinuity" && claim.role == "PreparesBreakOption" && claim.breakFiles.nonEmpty &&
