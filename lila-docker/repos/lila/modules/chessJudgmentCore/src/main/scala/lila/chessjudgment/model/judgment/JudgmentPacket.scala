@@ -2116,7 +2116,7 @@ object MoveMeaningSurface:
     (
       terminalIdeaRank(surface.idea.code),
       publicIdeaChainProofRank(surface.evidence.proofLevel),
-      publicIdeaChainIdeaRank(surface.idea.code),
+      publicIdeaChainIdeaRank(surface),
       surface.priority match
         case "main"       => 0
         case "supporting" => 1
@@ -2135,14 +2135,16 @@ object MoveMeaningSurface:
       case "technique"      => 3
       case _                => 4
 
-  private def publicIdeaChainIdeaRank(idea: String): Int =
-    idea match
+  private def publicIdeaChainIdeaRank(surface: MoveMeaningSurface): Int =
+    surface.idea.code match
       case "terminal_mate" | "promotion_race" | "promotion" | "draw_resource" | "material_gain" | "material_loss" =>
         0
       case "defensive_resource"    => 1
       case "passed_pawn_advance"   => 2
       case "pawn_break_timing"     => 3
       case "counterplay_race"      => 4
+      case "counterplay_control" if counterplayControlConcreteConsequence(surface) =>
+        5
       case "outpost_attempt"       => 5
       case "compensation"          => 6
       case "long_diagonal_pressure" => 7
@@ -2151,6 +2153,18 @@ object MoveMeaningSurface:
       case "piece_activity"         => 10
       case "plan_continuity"        => 11
       case _                        => 12
+
+  private def counterplayControlConcreteConsequence(surface: MoveMeaningSurface): Boolean =
+    surface.evidence.proofLevel == "owned_cause" &&
+      surface.evidence.boardCarriers.exists(carrier =>
+        carrier.role == "target" &&
+          carrier.kind == "PlanSubject" &&
+          (
+            carrier.value.startsWith("material-capture:") ||
+              carrier.value.startsWith("material-recapture:") ||
+              carrier.value.startsWith("passed-pawn:")
+          )
+      )
 
   private def surfaceOnlyStrategicMaterialEvent(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel == "surface_evidence" &&
