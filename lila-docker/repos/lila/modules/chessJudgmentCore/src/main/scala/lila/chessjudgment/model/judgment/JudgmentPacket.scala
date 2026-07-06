@@ -2592,8 +2592,11 @@ object MoveMeaningSurface:
               carrier.value.stripPrefix("break-file:")
           }
       ).map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
+    val counterplayRestrictionFiles =
+      (if counterplayBreakFiles.nonEmpty then counterplayBreakFiles else claim.targetFiles)
+        .map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
     val counterplayRestrictionLabel =
-      counterplayBreakFiles match
+      counterplayRestrictionFiles match
         case file :: Nil             => s"restrains $file-pawn break"
         case files if files.nonEmpty => s"restrains ${files.mkString("/")}-pawn breaks"
         case _                       => "restricts counterplay"
@@ -2807,7 +2810,7 @@ object MoveMeaningSurface:
           centralPressureLabel
         case ("target_pressure", _) if bishopCarrier && claim.targetSquares.nonEmpty => bishopPressureLabel
         case ("counterplay_race", _) => counterplayRaceLabel
-        case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => "counter-break control"
+        case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => counterplayRestrictionLabel
         case ("counterplay_control", "opponent-low-mobility") if counterplayBreakFiles.nonEmpty => counterplayRestrictionLabel
         case ("counterplay_control", "opponent-low-mobility") => "restricts counterplay"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => createsPawnTensionLabel
