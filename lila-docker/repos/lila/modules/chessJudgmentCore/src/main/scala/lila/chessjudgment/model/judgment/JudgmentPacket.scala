@@ -1957,9 +1957,11 @@ object MoveMeaningSurface:
       )
       if evidenceSurfaces.isEmpty || !allowedSubjects.contains(subject) then Nil
       else
-        val publicSemantics = chainSurfaces.distinctBy(surface =>
-          (surface.moveUci, surface.subject, surface.lineRole, surface.idea.code, surface.evidence.proofLevel)
-        ).sortBy(publicIdeaChainSemanticSortKey)
+        val publicSemantics = chainSurfaces
+          .sortBy(publicIdeaChainSemanticSortKey)
+          .distinctBy(surface =>
+            (surface.moveUci, surface.subject, surface.lineRole, surface.idea.code, surface.evidence.proofLevel)
+          )
         val semanticTargetCarriers =
           publicSemantics.flatMap(surface =>
             surface.evidence.boardCarriers
@@ -2152,6 +2154,8 @@ object MoveMeaningSurface:
           if surface.target.files.isEmpty &&
             surface.target.squares.nonEmpty &&
             moveDestination(surface.moveUci).exists(to => surface.target.squares.forall(_.equalsIgnoreCase(to))) =>
+        10
+      case "target_pressure" if surface.idea.label == "target pressure" =>
         10
       case "target_pressure"        => 8
       case "piece_route"            => 9
