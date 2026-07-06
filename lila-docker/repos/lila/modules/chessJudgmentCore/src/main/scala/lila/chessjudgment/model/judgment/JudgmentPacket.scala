@@ -2548,6 +2548,19 @@ object MoveMeaningSurface:
       .filter(_.matches("[a-h][1-8]"))
     val sacrificeCompensationLabel =
       materialSacrificeSquare.map(square => s"compensation for $square sacrifice").getOrElse("sacrifice compensation")
+    val weakPawnSquares = claim.boardCarriers
+      .collect {
+        case carrier if carrier.role == "target" && carrier.kind == "Pawn" && carrier.value.toLowerCase.startsWith("weak-pawn:") =>
+          carrier.value.toLowerCase.stripPrefix("weak-pawn:")
+      }
+      .filter(_.matches("[a-h][1-8]"))
+      .distinct
+      .sorted
+    val weakPawnTargetLabel =
+      weakPawnSquares match
+        case square :: Nil => s"weak $square pawn"
+        case squares if squares.nonEmpty => s"weak ${squares.mkString("/")} pawns"
+        case _ => "weak pawn target"
     val defensiveResourceLabel =
       defenderMoveActorPieces match
         case piece :: Nil => s"defends with $piece"
@@ -2555,11 +2568,11 @@ object MoveMeaningSurface:
     val ideaLabel =
       (idea, claim.label.map(_.trim).getOrElse("")) match
         case ("defensive_resource", _) => defensiveResourceLabel
-        case ("target_pressure", "weak-pawn-target") => "weak pawn target"
+        case ("target_pressure", "weak-pawn-target") => weakPawnTargetLabel
         case ("target_pressure", "king-safety-pressure") => "king safety pressure"
         case ("target_pressure", "target-pressure-release") => "pressure release"
         case ("target_pressure", _) if kingPressureCarrier => "king safety pressure"
-        case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => "weak pawn target"
+        case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => weakPawnTargetLabel
         case ("target_pressure", _) if checkingPressureClaim(claim) => "checking pressure"
         case ("target_pressure", _) if lineUnlockCarrier => opensLineLabel
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
