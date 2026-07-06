@@ -2417,6 +2417,7 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
         case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => "break preparation"
         case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => "line unlock"
+        case ("compensation", _) if materialSacrificeCompensationClaim(claim) => "sacrifice compensation"
         case ("piece_route", _) if routeLineUnlockClaim(claim) => "line unlock"
         case ("piece_route", label) if routeManeuverClaim(claim, label) => "piece maneuver"
         case ("piece_route", label) if routeDevelopmentLabel(label) => "piece development"
@@ -2533,11 +2534,7 @@ object MoveMeaningSurface:
             claim.unit != PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
             claim.unit != PositionPlanTechniqueUnit.CounterplayRace &&
             !MoveMeaningClaim.directBreakPlanClaim(claim) &&
-            claim.boardCarriers.exists(carrier =>
-              carrier.role == "target" &&
-                carrier.kind == "PlanSubject" &&
-                carrier.value.startsWith("material-sacrifice:")
-            ) &&
+            materialSacrificeCompensationClaim(claim) &&
             claim.causeKinds.exists(kind =>
               kind == RelativeCauseKind.ActivityGain ||
                 kind == RelativeCauseKind.TargetPressureGain ||
@@ -2660,6 +2657,13 @@ object MoveMeaningSurface:
               (claim.breakFiles.nonEmpty || claim.breakIdentityParts.exists(_.startsWith("breakFile:")))
           )
       )
+
+  private def materialSacrificeCompensationClaim(claim: MoveMeaningClaim): Boolean =
+    claim.boardCarriers.exists(carrier =>
+      carrier.role == "target" &&
+        carrier.kind == "PlanSubject" &&
+        carrier.value.startsWith("material-sacrifice:")
+    )
 
   private def planOptionIdeaType(claim: MoveMeaningClaim): String =
     if passedPawnAdvanceClaim(claim) then "passed_pawn_advance"
