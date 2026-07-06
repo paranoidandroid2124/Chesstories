@@ -3749,6 +3749,21 @@ object MoveMeaningClaim:
                 other.moveUci == claim.moveUci &&
                 other.lineRole == claim.lineRole &&
                 other.causeEvidenceIds.intersect(claim.causeEvidenceIds).nonEmpty
+            ) ||
+          claim.causeEvidenceIds.nonEmpty &&
+            claim.targetPieces.nonEmpty &&
+            claims.exists(other =>
+                other != claim &&
+                other.meaningKind == "PlanContinuity" &&
+                other.role == "PreparesBreakOption" &&
+                currentMoveSurfaceLane(other) &&
+                other.supportLevel == "owned_cause_linked" &&
+                other.publicHasCarrier &&
+                other.label.exists(_.contains("PieceActivation")) &&
+                other.moveUci == claim.moveUci &&
+                other.lineRole == claim.lineRole &&
+                other.causeEvidenceIds.intersect(claim.causeEvidenceIds).nonEmpty &&
+                other.targetPieces.intersect(claim.targetPieces).nonEmpty
             )
       )
 
@@ -4101,9 +4116,17 @@ object MoveMeaningClaim:
           best.terminalConsequenceKinds.nonEmpty ||
           best.endgameTechniquePattern.nonEmpty ||
           best.endgameTechniqueRookPattern.nonEmpty
+      val mergedTargetSquares = list.flatMap(_.targetSquares).distinct.sorted
+      val mergedTargetFiles = list.flatMap(_.targetFiles).distinct.sorted
+      val mergedTargetPieces = list.flatMap(_.targetPieces).distinct.sorted
+      val mergedTargetShapeReady =
+        best.meaningKind != "TargetPressure" ||
+          mergedTargetSquares.nonEmpty ||
+          mergedTargetFiles.nonEmpty
       val mergedPublicHasCarrier =
         mergedPublicDrawableCarrier &&
           mergedObjectCarrierReady &&
+          mergedTargetShapeReady &&
           (mergedCauseEvidenceIds.nonEmpty || mergedSourceEvidenceIds.nonEmpty) &&
           publicCarrierAllowed(best.unit, list.flatMap(_.causeKinds), mergedBoardCarriers)
       val mergedPublicProofLevel = list.map(_.publicProofLevel).sortBy(publicProofLevelRank).lastOption.getOrElse("none")
@@ -4119,18 +4142,19 @@ object MoveMeaningClaim:
         objectCarrierReady = mergedObjectCarrierReady,
         boardCarriers = mergedBoardCarriers,
         comparisonMoveRefs = list.flatMap(_.comparisonMoveRefs).distinct.sortBy(ref => (ref.role, ref.uci)).take(12),
-        targetSquares = list.flatMap(_.targetSquares).distinct.sorted,
-        targetFiles = list.flatMap(_.targetFiles).distinct.sorted,
-        targetPieces = list.flatMap(_.targetPieces).distinct.sorted,
+        targetSquares = mergedTargetSquares,
+        targetFiles = mergedTargetFiles,
+        targetPieces = mergedTargetPieces,
         routeIdentityParts = list.flatMap(_.routeIdentityParts).distinct.sorted,
         breakIdentityParts = list.flatMap(_.breakIdentityParts).distinct.sorted,
         breakFiles = list.flatMap(_.breakFiles).distinct.sorted,
         structuralMotifTags = list.flatMap(_.structuralMotifTags).distinct.sorted,
         publicHasCarrier = mergedPublicHasCarrier,
         publicProofLevel =
-          if mergedPublicHasCarrier && publicProofLevelRank(mergedPublicProofLevel) == 0 then "surface_evidence"
+          if !mergedPublicHasCarrier then "none"
+          else if publicProofLevelRank(mergedPublicProofLevel) == 0 then "surface_evidence"
           else mergedPublicProofLevel,
-        publicTargetBound = list.exists(_.publicTargetBound) || mergedBoardCarriers.exists(_.role == "target")
+        publicTargetBound = mergedPublicHasCarrier && (list.exists(_.publicTargetBound) || mergedBoardCarriers.exists(_.role == "target"))
       )
     )
 
@@ -4411,9 +4435,14 @@ object MoveMeaningClaim:
                   detail.terminalConsequenceKinds.nonEmpty ||
                   detail.endgameTechniquePattern.nonEmpty ||
                   detail.endgameTechniqueRookPattern.nonEmpty
+              val publicTargetShapeReady =
+                meaningKind != "TargetPressure" ||
+                  surfaceTarget.squares.nonEmpty ||
+                  surfaceTarget.files.nonEmpty
               val publicHasCarrier =
                 publicDrawableCarrier &&
                   objectCarrierReady &&
+                  publicTargetShapeReady &&
                   (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty) &&
                   publicCarrierAllowed(detail.unit, roleCompatibleCauseFrames.map(_.causeKind), claimBoardCarriers)
               val publicProofLevel =
