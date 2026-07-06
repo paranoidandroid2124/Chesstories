@@ -2433,7 +2433,7 @@ object MoveMeaningSurface:
         case PositionPlanTechniqueUnit.CounterplayRace =>
           "counterplay_race"
         case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
-          claim.publicIdeaType.getOrElse("counterplay_control")
+          claim.publicIdeaType.orElse(Option.when(claim.meaningKind == "CenterControl")("center_control")).getOrElse("counterplay_control")
         case PositionPlanTechniqueUnit.PieceRerouteRoute if claim.meaningKind == "PieceRoute" =>
           claim.publicIdeaType.orElse(Option.when(checkingRouteTargetPressureClaim(claim))("target_pressure")).getOrElse("piece_route")
         case PositionPlanTechniqueUnit.PieceRerouteRoute =>
@@ -2462,7 +2462,7 @@ object MoveMeaningSurface:
     claim.boardCarriers.exists(carrier =>
       carrier.role == "target" &&
         carrier.kind == "PlanSubject" &&
-        (carrier.value.startsWith("check:") || carrier.value.startsWith("line-unlock:"))
+        carrier.value.startsWith("check:")
     ) ||
       claim.objectBindingSignatures.exists(signature =>
         val normalized = signature.toLowerCase
