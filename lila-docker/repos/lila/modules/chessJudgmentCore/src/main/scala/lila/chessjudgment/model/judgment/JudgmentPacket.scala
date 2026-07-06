@@ -2408,6 +2408,13 @@ object MoveMeaningSurface:
     val centralTargetSquare =
       claim.targetFiles.isEmpty &&
         claim.targetSquares.exists(square => Set("d4", "d5", "e4", "e5")(square.toLowerCase))
+    val kingPressureCarrier =
+      claim.targetPieces.exists(_.equalsIgnoreCase("king")) ||
+        claim.objectBindingSignatures.exists(signature =>
+          val normalized = signature.toLowerCase
+          normalized.contains("mechanism=mechanism:kingsafetychanged") ||
+            normalized.contains("consequence=consequence:target:gain:king-safety-pressure")
+        )
     val bishopCarrier =
       claim.targetPieces.exists(_.equalsIgnoreCase("bishop")) ||
         evidence.boardCarriers.exists(carrier => carrier.kind == "Piece" && carrier.value.equalsIgnoreCase("bishop"))
@@ -2416,6 +2423,7 @@ object MoveMeaningSurface:
         case ("target_pressure", "TargetFixation") => "target fixation"
         case ("target_pressure", "weak-pawn-target") => "weak pawn target"
         case ("target_pressure", "king-safety-pressure") => "king safety pressure"
+        case ("target_pressure", _) if kingPressureCarrier => "king safety pressure"
         case ("target_pressure", _) if checkingPressureClaim(claim) => "checking pressure"
         case ("target_pressure", _) if planPawnAdvanceClaim(claim) => "space advance"
         case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => "weak pawn target"
