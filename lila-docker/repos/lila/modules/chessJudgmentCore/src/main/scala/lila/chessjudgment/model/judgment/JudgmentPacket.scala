@@ -2415,6 +2415,8 @@ object MoveMeaningSurface:
       EvidenceObjectBinding.signatureTokens(signatureList, "consequence=").map(_.stripPrefix("consequence=").toLowerCase)
     val planSubjects =
       EvidenceObjectBinding.signatureValues(signatureList, "target", "PlanSubject").map(_.toLowerCase).toSet
+    val carrierTargetFiles =
+      EvidenceObjectBinding.signatureValues(signatureList, "target", "File").map(_.trim.toLowerCase).filter(_.matches("[a-h]"))
     val kingPressureCarrier =
       mechanismTokens.contains("mechanism:kingsafetychanged") ||
         mechanismTokens.contains("mechanism:kingringpressure") ||
@@ -2488,6 +2490,8 @@ object MoveMeaningSurface:
             squares = (destination :: baseTarget.squares).distinct.sorted,
             files = List(destination.take(1))
           )
+        case _ if idea == "target_pressure" && filePressureCarrier && carrierTargetFiles.nonEmpty =>
+          baseTarget.copy(files = (baseTarget.files ++ carrierTargetFiles).distinct.sorted)
         case _ => baseTarget
     val technique = endgameTechnique(claim)
     MoveMeaningSurface(
