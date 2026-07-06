@@ -2458,6 +2458,7 @@ object MoveMeaningSurface:
       claim.breakFiles.distinct.sorted match
         case file :: Nil => s"prepares $file-pawn break"
         case _           => "prepares pawn break"
+    val routeManeuverLabel = routePiece.map(piece => s"$piece maneuver").getOrElse("piece maneuver")
     val ideaLabel =
       (idea, claim.label.map(_.trim).getOrElse("")) match
         case ("target_pressure", "weak-pawn-target") => "weak pawn target"
@@ -2494,7 +2495,7 @@ object MoveMeaningSurface:
         case ("compensation", _) if materialSacrificeCompensationClaim(claim) => "sacrifice compensation"
         case ("piece_route", _) if routeLineUnlockClaim(claim) => opensLineLabel
         case ("piece_route", _) if initialDevelopmentRoute => "piece development"
-        case ("piece_route", label) if routeManeuverClaim(claim, label) => "piece maneuver"
+        case ("piece_route", label) if routeManeuverClaim(claim, label) => routeManeuverLabel
         case ("piece_route", label) if routeDevelopmentLabel(label) => "piece development"
         case ("piece_activity", label) if routeManeuverClaim(claim, label) => "piece activity lost"
         case ("piece_activity", _) if initialDevelopmentRoute => "piece development"
