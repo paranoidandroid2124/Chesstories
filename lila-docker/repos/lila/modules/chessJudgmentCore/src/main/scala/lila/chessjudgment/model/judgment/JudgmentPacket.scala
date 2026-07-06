@@ -2406,6 +2406,7 @@ object MoveMeaningSurface:
         case ("target_pressure", "TargetFixation") => "target fixation"
         case ("target_pressure", "weak-pawn-target") => "weak pawn target"
         case ("target_pressure", "king-safety-pressure") => "king safety pressure"
+        case ("target_pressure", _) if checkingPressureClaim(claim) => "checking pressure"
         case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => "counter-break control"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => "creates pawn tension"
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => "resolves pawn tension"
