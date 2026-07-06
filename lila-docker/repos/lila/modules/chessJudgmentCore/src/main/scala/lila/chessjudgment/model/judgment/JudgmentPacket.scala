@@ -2454,6 +2454,10 @@ object MoveMeaningSurface:
         case (Some("knight"), Some(square)) => Set("b1", "g1", "b8", "g8")(square)
         case (Some("bishop"), Some(square)) => Set("c1", "f1", "c8", "f8")(square)
         case _ => false
+    val breakPreparationLabel =
+      claim.breakFiles.distinct.sorted match
+        case file :: Nil => s"prepares $file-pawn break"
+        case _           => "prepares pawn break"
     val ideaLabel =
       (idea, claim.label.map(_.trim).getOrElse("")) match
         case ("target_pressure", "weak-pawn-target") => "weak pawn target"
@@ -2483,7 +2487,7 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
         case ("pawn_break_timing", label) if label.contains("PieceActivation") && lineUnlockCarrier => opensLineLabel
         case ("pawn_break_timing", label) if label.contains("PieceActivation") && mobilityGainCarrier => "piece activation"
-        case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => "break preparation"
+        case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => breakPreparationLabel
         case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => "opens a diagonal"
         case ("long_diagonal_pressure", _) if centralTargetSquare => "central diagonal pressure"
         case ("long_diagonal_pressure", _) if bishopCarrier => "bishop diagonal pressure"
