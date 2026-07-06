@@ -2528,6 +2528,7 @@ object MoveMeaningSurface:
       )
       .orElse(Option.when(ownedDefenderMoveResourceClaim(claim))("defensive_resource"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
+      .orElse(Option.when(claim.meaningKind == "PieceActivity")("piece_activity"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.PieceRerouteRoute && longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
       .orElse(
         Option.when(
