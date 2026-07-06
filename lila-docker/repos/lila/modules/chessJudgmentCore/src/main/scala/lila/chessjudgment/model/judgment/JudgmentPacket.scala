@@ -2500,6 +2500,15 @@ object MoveMeaningSurface:
     val routePiece = claim.routeIdentityParts.collectFirst {
       case part if part.toLowerCase.startsWith("piece:") => part.drop("piece:".length).toLowerCase
     }
+    val openedLineSquare = claim.boardCarriers
+      .collectFirst {
+        case carrier
+            if carrier.role == "target" &&
+              carrier.kind == "PlanSubject" &&
+              carrier.value.toLowerCase.startsWith("opened-line:") =>
+          carrier.value.toLowerCase.stripPrefix("opened-line:")
+      }
+      .filter(_.matches("[a-h][1-8]"))
     val routeTargetSquare =
       routePiece
         .flatMap(piece =>
@@ -2512,6 +2521,7 @@ object MoveMeaningSurface:
           claim.routeIdentityParts
             .collectFirst { case part if part.toLowerCase.startsWith("target:") => part.drop("target:".length).toLowerCase }
         )
+        .orElse(openedLineSquare)
         .filter(_.matches("[a-h][1-8]"))
     val routeUnlockMoveFile = claim.routeIdentityParts
       .flatMap { part =>
@@ -2536,7 +2546,10 @@ object MoveMeaningSurface:
             case Some(file) => s"opens $file-file for $piece"
             case None       => routeTargetSquare.map(square => s"opens $piece line from $square").getOrElse(s"opens $piece line")
         case None if bishopCarrier => "opens bishop diagonal"
-        case None => lineUnlockFile.map(file => s"opens $file-file").getOrElse("opens a line")
+        case None =>
+          lineUnlockFile
+            .map(file => openedLineSquare.map(square => s"opens $file-file from $square").getOrElse(s"opens $file-file"))
+            .getOrElse("opens a line")
     val routeFrom = claim.routeIdentityParts.collectFirst {
       case part if part.toLowerCase.startsWith("from:") => part.drop("from:".length).toLowerCase
     }
@@ -2615,6 +2628,10 @@ object MoveMeaningSurface:
       claim.targetSquares.map(_.toLowerCase).distinct.sorted match
         case square :: Nil => s"bishop pressure on $square"
         case _             => "bishop pressure"
+    val targetFixationLabel =
+      claim.targetSquares.map(_.toLowerCase).distinct.sorted match
+        case square :: Nil => s"fixes target on $square"
+        case _             => "target fixation"
     val defensiveResourceLabel =
       defenderMoveActorPieces match
         case piece :: Nil => s"defends with $piece"
@@ -2630,7 +2647,7 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
         case ("target_pressure", _) if lineUnlockCarrier => opensLineLabel
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
-        case ("target_pressure", "TargetFixation") => "target fixation"
+        case ("target_pressure", "TargetFixation") => targetFixationLabel
         case ("target_pressure", _) if filePressureCarrier => "file pressure"
         case ("target_pressure", _) if planPawnAdvanceClaim(claim) => "space advance"
         case ("target_pressure", _)
