@@ -2553,6 +2553,9 @@ object MoveMeaningSurface:
     val routeFrom = claim.routeIdentityParts.collectFirst {
       case part if part.toLowerCase.startsWith("from:") => part.drop("from:".length).toLowerCase
     }
+    val routeToSquares = claim.routeIdentityParts.collect {
+      case part if part.toLowerCase.startsWith("to:") => part.drop("to:".length).toLowerCase
+    }.filter(_.matches("[a-h][1-8]")).toSet
     val initialDevelopmentRoute =
       (routePiece, routeFrom) match
         case (Some("knight"), Some(square)) => Set("b1", "g1", "b8", "g8")(square)
@@ -2578,8 +2581,16 @@ object MoveMeaningSurface:
         case _                       => "restricts counterplay"
     val routeManeuverLabel = routePiece.map(piece => s"$piece maneuver").getOrElse("piece maneuver")
     val developmentLabel = routePiece.map(piece => s"$piece development").getOrElse("piece development")
+    val developmentPressureTargets =
+      claim.targetSquares.map(_.toLowerCase).filter(_.matches("[a-h][1-8]")).filterNot(routeToSquares.contains).distinct.sorted
     val developmentPressureLabel =
-      routePiece.map(piece => s"$piece develops with pressure").getOrElse("develops with pressure")
+      routePiece match
+        case Some(piece) =>
+          developmentPressureTargets match
+            case square :: Nil             => s"$piece pressure on $square"
+            case squares if squares.nonEmpty => s"$piece pressure on ${squares.mkString("/")}"
+            case _                         => s"$piece develops with pressure"
+        case None => "develops with pressure"
     val materialSacrificeSquare = claim.boardCarriers
       .collectFirst {
         case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.startsWith("material-sacrifice:") =>
