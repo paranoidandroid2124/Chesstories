@@ -2658,8 +2658,6 @@ object MoveMeaningSurface:
         .filter(_.matches("[a-h][1-8]"))
         .map(square => s"wins material on $square")
         .getOrElse("material gain")
-    val sacrificeCompensationLabel =
-      materialSacrificeSquare.map(square => s"compensation for $square sacrifice").getOrElse("sacrifice compensation")
     val weakPawnSquares = claim.boardCarriers
       .collect {
         case carrier if carrier.role == "target" && carrier.kind == "Pawn" && carrier.value.toLowerCase.startsWith("weak-pawn:") =>
@@ -2673,6 +2671,23 @@ object MoveMeaningSurface:
         case square :: Nil => s"weak $square pawn"
         case squares if squares.nonEmpty => s"weak ${squares.mkString("/")} pawns"
         case _ => "weak pawn target"
+    val weakSquareTargets = claim.boardCarriers
+      .collect {
+        case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("weak-square:") =>
+          carrier.value.toLowerCase.stripPrefix("weak-square:")
+      }
+      .filter(_.matches("[a-h][1-8]"))
+      .distinct
+      .sorted
+    val sacrificeCompensationLabel =
+      weakPawnSquares match
+        case square :: Nil => s"compensation against $square pawn"
+        case squares if squares.nonEmpty && squares.size <= 3 => s"compensation against ${squares.mkString("/")} pawns"
+        case _ =>
+          weakSquareTargets match
+            case square :: Nil => s"compensation on weak $square"
+            case squares if squares.nonEmpty && squares.size <= 3 => s"compensation on weak ${squares.mkString("/")} squares"
+            case _ => materialSacrificeSquare.map(square => s"compensation for $square sacrifice").getOrElse("sacrifice compensation")
     val tensionEdge = (
       claim.breakIdentityParts.collect {
         case part if part.toLowerCase.startsWith("tensionedge:") => part.toLowerCase.stripPrefix("tensionedge:")
