@@ -88,6 +88,7 @@ object LineFactNormalizer:
                 moveUci = normalized,
                 plyOffset = index,
                 side = Some(position.color),
+                pieceRole = moverRole,
                 targetRole = Some(EvidencePieceRole(King.name)),
                 square = position.board.kingPosOf(position.color).map(square => EvidenceSquare(square.key))
               )
@@ -235,6 +236,7 @@ object LineFactNormalizer:
         val rootMove = PrincipalVariationEvidence.normalizeUci(root.uci)
         val rootTo = Option.when(rootMove.length >= 4)(rootMove.slice(2, 4))
         val rootSide = replay.headOption.flatMap(step => positionAfter(step.fenBefore).map(_.color))
+        val rootPieceRole = replay.headOption.flatMap(step => movingPieceRole(step.fenBefore, rootMove))
         val laterDefense = (replayEvents ++ materialEvents).collectFirst {
           case event
               if event.kind == LineEventKind.DefenderMove &&
@@ -247,8 +249,7 @@ object LineFactNormalizer:
             moveUci = rootMove,
             plyOffset = 0,
             side = rootSide.orElse(event.side),
-            pieceRole = None,
-            square = rootTo.map(EvidenceSquare.apply)
+            pieceRole = rootPieceRole.orElse(event.pieceRole)
           )
         )
       }

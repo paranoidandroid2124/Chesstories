@@ -1868,7 +1868,8 @@ case class MoveMeaningSurface(
     comparison: Option[MoveMeaningSurfaceComparison] = None,
     terminalConsequences: List[MoveMeaningSurfaceCode] = Nil,
     structureContext: List[String] = Nil,
-    evidence: MoveMeaningSurfaceEvidence = MoveMeaningSurfaceEvidence()
+    evidence: MoveMeaningSurfaceEvidence = MoveMeaningSurfaceEvidence(),
+    defenderActorPieces: List[String] = Nil
 )
 
 object MoveMeaningSurface:
@@ -1989,27 +1990,77 @@ object MoveMeaningSurface:
             carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
           ).take(1)
         val currentMoveActorCarrierCandidates = carrierPairs.filter((carrier, surface) =>
+          val defensiveActorPiece = surface.idea.code == "defensive_resource" && carrier.kind == "Piece"
           carrier.role == "actor" &&
             (carrier.kind == "Piece" ||
               subjectFrom.exists(from => carrier.kind == "Square" && carrier.value == from)) &&
             surface.evidence.boardCarriers.exists(carrier =>
-              carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
+                carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
             ) &&
-            subjectFrom.exists(from =>
+            (defensiveActorPiece || subjectFrom.exists(from =>
               surface.evidence.boardCarriers.exists(carrier =>
                 carrier.role == "actor" && carrier.kind == "Square" && carrier.value == from
               )
-            )
+            ))
         )
+        val defenderActorPieceCarriers =
+          publicSemantics
+            .filter(_.idea.code == "defensive_resource")
+            .flatMap(surface =>
+              surface.defenderActorPieces.flatMap(piece =>
+                surface.evidence.boardCarriers
+                  .filter(carrier =>
+                    carrier.role == "actor" &&
+                      carrier.kind == "Piece" &&
+                      carrier.value.trim.equalsIgnoreCase(piece)
+                  )
+                  .take(1)
+                  .map(carrier => carrier -> surface)
+              )
+            )
+        val terminalActorPieceCarriers =
+          publicSemantics
+            .filter(surface => surface.terminalConsequences.nonEmpty)
+            .flatMap(surface =>
+              surface.evidence.boardCarriers
+                .filter(carrier =>
+                  carrier.role == "actor" &&
+                    carrier.kind == "Piece" &&
+                    surface.evidence.boardCarriers.exists(carrier =>
+                      carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
+                    )
+                )
+                .take(1)
+                .map(carrier => carrier -> surface)
+            )
         val actorPieceValues =
           currentMoveActorCarrierCandidates
             .collect { case (carrier, _) if carrier.kind == "Piece" => carrier.value.trim.toLowerCase }
             .distinct
-        val currentMoveActorCarriers = currentMoveCarriers ++ currentMoveActorCarrierCandidates.filter((carrier, _) =>
-          carrier.kind != "Piece" ||
-            actorPieceValues.size <= 1 ||
-            actorPieceHint.contains(carrier.value.trim.toLowerCase)
-        ).take(2)
+        val preferredActorPieceCarriers =
+          defenderActorPieceCarriers.take(1) match
+            case Nil =>
+              terminalActorPieceCarriers.take(1) match
+                case Nil =>
+                  actorPieceHint.toList.flatMap(piece =>
+                    currentMoveActorCarrierCandidates.find((carrier, _) => carrier.value.trim.equalsIgnoreCase(piece))
+                  )
+                case carriers => carriers
+            case carriers => carriers
+        val orderedActorCarrierCandidates =
+          currentMoveActorCarrierCandidates.sortBy((carrier, _) =>
+            if carrier.kind == "Piece" then 0 else 1
+          )
+        val currentMoveActorCarriers = currentMoveCarriers ++
+          (preferredActorPieceCarriers ++ orderedActorCarrierCandidates.filter((carrier, _) =>
+            carrier.kind != "Piece" ||
+              (preferredActorPieceCarriers.isEmpty &&
+                (actorPieceValues.size <= 1 || actorPieceHint.contains(carrier.value.trim.toLowerCase)))
+          ))
+            .distinctBy((carrier, surface) =>
+              (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to)
+            )
+            .take(2)
         val carriers = currentMoveActorCarriers ++ consequenceCarriers
         List(
           Json.obj(
@@ -2428,6 +2479,12 @@ object MoveMeaningSurface:
     val mobilityGainCarrier =
       mechanismTokens.contains("mechanism:mobilitygain") ||
         consequenceTokens.contains("consequence:mobilitygain:gain")
+    val defenderMoveActorPieces =
+      signatureList
+        .filter(_.toLowerCase.contains("mechanism=mechanism:defendermove"))
+        .flatMap(signature => EvidenceObjectBinding.signatureValues(List(signature), "actor", "Piece"))
+        .map(_.toLowerCase)
+        .distinct
     val lineUnlockCarrier =
       signatureList.exists(signature =>
         val normalized = signature.toLowerCase
@@ -2459,8 +2516,13 @@ object MoveMeaningSurface:
         case file :: Nil => s"prepares $file-pawn break"
         case _           => "prepares pawn break"
     val routeManeuverLabel = routePiece.map(piece => s"$piece maneuver").getOrElse("piece maneuver")
+    val defensiveResourceLabel =
+      defenderMoveActorPieces match
+        case piece :: Nil => s"defends with $piece"
+        case _            => "defensive resource"
     val ideaLabel =
       (idea, claim.label.map(_.trim).getOrElse("")) match
+        case ("defensive_resource", _) => defensiveResourceLabel
         case ("target_pressure", "weak-pawn-target") => "weak pawn target"
         case ("target_pressure", "king-safety-pressure") => "king safety pressure"
         case ("target_pressure", "target-pressure-release") => "pressure release"
@@ -2563,7 +2625,8 @@ object MoveMeaningSurface:
           .flatten,
       terminalConsequences = terminal,
       structureContext = claim.structuralMotifTags,
-      evidence = evidence
+      evidence = evidence,
+      defenderActorPieces = defenderMoveActorPieces
     )
 
   private def publicEvidence(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
@@ -3995,10 +4058,18 @@ object MoveMeaningClaim:
               val checkIdentityCarriers =
                 if pressureIdentityCarriers.nonEmpty then Nil
                 else mechanismSquareIdentityCarriers(detail, "check", checkSignature)
+              val defenderMoveActorCarriers =
+                surfaceObjectSignatures
+                  .filter(_.toLowerCase.contains("mechanism=mechanism:defendermove"))
+                  .flatMap(signature => EvidenceObjectBinding.signatureValues(List(signature), "actor", "Piece"))
+                  .distinct
+                  .sorted
+                  .flatMap(piece => publicPieceCarrier("actor", piece))
               val spareIdentityCarriers =
                 lineUnlockIdentityCarriers(detail) ++
                   pressureIdentityCarriers ++
                   checkIdentityCarriers ++
+                  defenderMoveActorCarriers ++
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
                   passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
                   materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove, detail, verdict) ++
@@ -4007,6 +4078,7 @@ object MoveMeaningClaim:
               val claimBoardCarriers =
                 (
                   baseClaimBoardCarriers.filter(carrier => carrier.role == "actor" && carrier.kind == "Move") ++
+                    defenderMoveActorCarriers ++
                     breakFileIdentityCarriers ++
                     (baseClaimBoardCarriers ++ spareIdentityCarriers).distinct.sortBy(boardCarrierSortKey)
                 ).distinct
@@ -4145,7 +4217,13 @@ object MoveMeaningClaim:
                 (carryLineCapturePieces || event.plyOffset == 0 ||
                   JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove)
             )
-            .flatMap(event => event.targetRole.toList.flatMap(role => publicPieceCarrier("target", role.name)))
+            .flatMap(event => event.targetRole.toList.flatMap(role => publicPieceCarrier("target", role.name))) ++
+          line.lineEvents
+            .filter(event =>
+              event.kind == LineEventKind.DefenderMove &&
+                (event.plyOffset == 0 || JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove)
+            )
+            .flatMap(event => event.pieceRole.toList.flatMap(role => publicPieceCarrier("actor", role.name)))
       )
       .distinct
 
