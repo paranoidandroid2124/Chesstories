@@ -2632,6 +2632,31 @@ object MoveMeaningSurface:
       claim.targetSquares.map(_.toLowerCase).distinct.sorted match
         case square :: Nil => s"fixes target on $square"
         case _             => "target fixation"
+    val passedPawnCarrierValues =
+      claim.boardCarriers
+        .collect {
+          case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" => carrier.value.toLowerCase
+        }
+    val passedPawnAdvanceLabel =
+      passedPawnCarrierValues.collectFirst {
+        case value if value.startsWith("passed-pawn-breakthrough:") =>
+          s"passed pawn breakthrough ${value.stripPrefix("passed-pawn-breakthrough:").takeWhile(_ != ':')}"
+      }.orElse(
+        passedPawnCarrierValues.collectFirst {
+          case value if value.startsWith("passed-pawn-advanced:") =>
+            s"passed pawn advances ${value.stripPrefix("passed-pawn-advanced:").takeWhile(_ != ':')}"
+        }
+      ).orElse(
+        passedPawnCarrierValues.collectFirst {
+          case value if value.startsWith("passed-pawn-created:") =>
+            s"creates passed pawn on ${value.stripPrefix("passed-pawn-created:").takeWhile(_ != ':')}"
+        }
+      ).orElse(
+        passedPawnCarrierValues.collectFirst {
+          case value if value.startsWith("passed-pawn:") =>
+            s"passed pawn on ${value.stripPrefix("passed-pawn:").takeWhile(_ != ':')}"
+        }
+      ).getOrElse("passed pawn advance")
     val defensiveResourceLabel =
       defenderMoveActorPieces match
         case piece :: Nil => s"defends with $piece"
@@ -2671,6 +2696,7 @@ object MoveMeaningSurface:
         case ("long_diagonal_pressure", _) if centralTargetSquare => "central diagonal pressure"
         case ("long_diagonal_pressure", _) if bishopCarrier => "bishop diagonal pressure"
         case ("compensation", _) if materialSacrificeCompensationClaim(claim) => sacrificeCompensationLabel
+        case ("passed_pawn_advance", _) => passedPawnAdvanceLabel
         case ("piece_route", _) if routeLineUnlockClaim(claim) => opensLineLabel
         case ("piece_route", _) if initialDevelopmentRoute => developmentLabel
         case ("piece_route", label) if routeManeuverClaim(claim, label) => routeManeuverLabel
