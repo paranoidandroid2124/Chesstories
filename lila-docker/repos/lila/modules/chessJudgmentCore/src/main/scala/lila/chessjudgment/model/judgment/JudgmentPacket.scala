@@ -2720,6 +2720,11 @@ object MoveMeaningSurface:
         case square :: Nil => s"fixes target on $square"
         case squares if squares.nonEmpty && squares.size <= 4 => s"fixes targets on ${squares.mkString("/")}"
         case _             => "target fixation"
+    val targetPressureReleaseLabel =
+      claim.targetSquares.map(_.toLowerCase).distinct.sorted match
+        case square :: Nil => s"releases pressure on $square"
+        case squares if squares.nonEmpty && squares.size <= 4 => s"releases pressure on ${squares.mkString("/")}"
+        case _             => "pressure release"
     val passedPawnCarrierValues =
       claim.boardCarriers
         .collect {
@@ -2788,7 +2793,7 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => weakPawnTargetLabel
         case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
         case ("target_pressure", "king-safety-pressure") => kingPressureLabel
-        case ("target_pressure", "target-pressure-release") => "pressure release"
+        case ("target_pressure", "target-pressure-release") => targetPressureReleaseLabel
         case ("target_pressure", _) if kingPressureCarrier => kingPressureLabel
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
         case ("target_pressure", "TargetFixation") => targetFixationLabel
