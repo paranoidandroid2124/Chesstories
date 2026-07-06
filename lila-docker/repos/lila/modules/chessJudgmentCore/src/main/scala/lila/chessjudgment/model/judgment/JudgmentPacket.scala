@@ -2407,6 +2407,10 @@ object MoveMeaningSurface:
         case ("target_pressure", "weak-pawn-target") => "weak pawn target"
         case ("target_pressure", "king-safety-pressure") => "king safety pressure"
         case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => "counter-break control"
+        case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => "creates pawn tension"
+        case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => "resolves pawn tension"
+        case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
+        case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => "line unlock"
         case _ => ideaLabels.getOrElse(idea, "")
     val qualityOfIdea = ideaQuality(claim, claimSubject, badPlayedMove)
     val surfacePriority = priority(claim, claimSubject)
@@ -2605,10 +2609,7 @@ object MoveMeaningSurface:
       )
 
   private def longDiagonalPressureClaim(claim: MoveMeaningClaim): Boolean =
-    (
-      claim.routeIdentityParts.exists(_.equalsIgnoreCase("piece:bishop")) &&
-        claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":line-unlock:by:"))
-    ) ||
+    lineUnlockClaim(claim) ||
       claim.objectBindingSignatures.exists(signature =>
         val normalized = signature.toLowerCase
         normalized.contains("actor=piece:bishop") &&
@@ -2617,6 +2618,14 @@ object MoveMeaningSurface:
               normalized.contains("consequence=consequence:diagonalpressure")
           )
       )
+
+  private def lineUnlockClaim(claim: MoveMeaningClaim): Boolean =
+    claim.routeIdentityParts.exists(_.equalsIgnoreCase("piece:bishop")) &&
+      claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":line-unlock:by:"))
+
+  private def ownedTensionBreakClaim(claim: MoveMeaningClaim): Boolean =
+    claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
+      claim.publicProofLevel == "owned_cause"
 
   private def planOptionIdeaType(claim: MoveMeaningClaim): String =
     if passedPawnAdvanceClaim(claim) then "passed_pawn_advance"
