@@ -2494,6 +2494,10 @@ object MoveMeaningSurface:
       )
     val flankInfrastructurePawnMove =
       planSubjects.exists(Set("pawnstorm", "spaceadvantage")) && currentFlankPawnAdvanceDestination(claim.moveUci).nonEmpty
+    val flankPressurePawnMove =
+      currentFlankPawnAdvanceDestination(claim.moveUci).nonEmpty &&
+        kingPressureCarrier &&
+        claim.targetPieces.exists(_.equalsIgnoreCase("king"))
     val bishopCarrier =
       claim.targetPieces.exists(_.equalsIgnoreCase("bishop")) ||
         evidence.boardCarriers.exists(carrier => carrier.kind == "Piece" && carrier.value.equalsIgnoreCase("bishop"))
@@ -2676,11 +2680,32 @@ object MoveMeaningSurface:
         .collect {
           case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" => carrier.value.toLowerCase
         }
+    val moveDestinationSquare = moveDestination(claim.moveUci)
+    def carrierNamesDestination(value: String, prefix: String, destination: String): Boolean =
+      val named = value.stripPrefix(prefix).takeWhile(_ != ':')
+      named == destination || named.endsWith(s"-$destination")
+    val destinationPassedPawnLabel =
+      moveDestinationSquare.flatMap(destination =>
+        passedPawnCarrierValues.collectFirst {
+          case value if value.startsWith("passed-pawn-breakthrough:") &&
+              carrierNamesDestination(value, "passed-pawn-breakthrough:", destination) =>
+            s"passed pawn breakthrough ${value.stripPrefix("passed-pawn-breakthrough:").takeWhile(_ != ':')}"
+        }.orElse(passedPawnCarrierValues.collectFirst {
+          case value if value.startsWith("passed-pawn-advanced:") && carrierNamesDestination(value, "passed-pawn-advanced:", destination) =>
+            s"passed pawn advances ${value.stripPrefix("passed-pawn-advanced:").takeWhile(_ != ':')}"
+        }).orElse(passedPawnCarrierValues.collectFirst {
+          case value if value.startsWith("passed-pawn-created:") && carrierNamesDestination(value, "passed-pawn-created:", destination) =>
+            s"creates passed pawn on $destination"
+        }).orElse(passedPawnCarrierValues.collectFirst {
+          case value if value.startsWith("passed-pawn:") && carrierNamesDestination(value, "passed-pawn:", destination) =>
+            s"passed pawn on $destination"
+        })
+      )
     val passedPawnAdvanceLabel =
-      passedPawnCarrierValues.collectFirst {
+      destinationPassedPawnLabel.orElse(passedPawnCarrierValues.collectFirst {
         case value if value.startsWith("passed-pawn-breakthrough:") =>
           s"passed pawn breakthrough ${value.stripPrefix("passed-pawn-breakthrough:").takeWhile(_ != ':')}"
-      }.orElse(
+      }).orElse(
         passedPawnCarrierValues.collectFirst {
           case value if value.startsWith("passed-pawn-advanced:") =>
             s"passed pawn advances ${value.stripPrefix("passed-pawn-advanced:").takeWhile(_ != ':')}"
@@ -2696,6 +2721,15 @@ object MoveMeaningSurface:
             s"passed pawn on ${value.stripPrefix("passed-pawn:").takeWhile(_ != ':')}"
         }
       ).getOrElse("passed pawn advance")
+    val sameFilePassedPawnMove =
+      sameFilePawnAdvanceMove(claim.moveUci) &&
+        moveDestinationSquare.exists(destination =>
+          claim.targetSquares.exists(_.equalsIgnoreCase(destination)) &&
+          passedPawnCarrierValues.exists(value =>
+            value.startsWith("passed-pawn:") &&
+              value.stripPrefix("passed-pawn:").takeWhile(_ != ':') == destination
+          )
+        )
     val defensiveResourceLabel =
       defenderMoveActorPieces match
         case piece :: Nil => s"defends with $piece"
@@ -2703,6 +2737,8 @@ object MoveMeaningSurface:
     val ideaLabel =
       (idea, claim.label.map(_.trim).getOrElse("")) match
         case ("defensive_resource", _) => defensiveResourceLabel
+        case ("target_pressure", _) if sameFilePassedPawnMove => passedPawnAdvanceLabel
+        case ("target_pressure", _) if passedPawnAdvanceClaim(claim) => passedPawnAdvanceLabel
         case ("target_pressure", "weak-pawn-target") => weakPawnTargetLabel
         case ("target_pressure", "king-safety-pressure") => "king safety pressure"
         case ("target_pressure", "target-pressure-release") => "pressure release"
@@ -2726,7 +2762,7 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => createsPawnTensionLabel
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => resolvesPawnTensionLabel
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
-        case ("pawn_break_timing", _) if flankInfrastructurePawnMove => "flank pawn advance"
+        case ("pawn_break_timing", _) if flankInfrastructurePawnMove || flankPressurePawnMove => "flank pawn advance"
         case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
         case ("pawn_break_timing", label) if label.contains("PieceActivation") && mobilityGainCarrier => "piece activation"
         case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => breakPreparationLabel
