@@ -3341,20 +3341,17 @@ final case class LineFactEvidence(
   def maintainedWinningEndgameTechniqueHorizons: List[LineEndgameTechniqueHorizon] =
     endgameHorizons.filter(horizon =>
       LineEndgameTechniqueHorizon.winningPattern(horizon.pattern) &&
-        LineEndgameTechniqueHorizon.maintained(horizon.status) &&
-        !hasTerminalEndgameTechniqueOverride
+        LineEndgameTechniqueHorizon.maintained(horizon.status)
     )
   def failedWinningEndgameTechniqueHorizons: List[LineEndgameTechniqueHorizon] =
     endgameHorizons.filter(horizon =>
       LineEndgameTechniqueHorizon.winningPattern(horizon.pattern) &&
-        horizon.status == LineEndgameTechniqueHorizonStatus.Failed &&
-        !hasTerminalEndgameTechniqueOverride
+        horizon.status == LineEndgameTechniqueHorizonStatus.Failed
     )
   def maintainedDefensiveEndgameTechniqueHorizons: List[LineEndgameTechniqueHorizon] =
     endgameHorizons.filter(horizon =>
       LineEndgameTechniqueHorizon.defensivePattern(horizon.pattern) &&
-        LineEndgameTechniqueHorizon.maintained(horizon.status) &&
-        !hasTerminalEndgameTechniqueOverride
+        LineEndgameTechniqueHorizon.maintained(horizon.status)
     )
   def rootOwnedEndgameTechniqueHorizons(rootMoveUci: String, kind: RelativeCauseKind): List[LineEndgameTechniqueHorizon] =
     val normalizedRoot = normalizeUci(rootMoveUci)

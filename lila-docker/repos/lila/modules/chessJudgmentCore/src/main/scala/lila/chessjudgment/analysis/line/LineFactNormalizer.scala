@@ -411,8 +411,7 @@ object LineFactNormalizer:
       replay: List[LineReplayStep],
       consequences: List[LineConsequence]
   ): List[LineEndgameTechniqueHorizon] =
-    val terminalKinds = consequences.filter(_.proofSignal).map(_.kind).distinct.sortBy(_.toString)
-    EndgamePatternOracle.techniqueHorizons(startFen, replay, terminalKinds)
+    EndgamePatternOracle.techniqueHorizons(startFen, replay, consequences.filter(_.proofSignal))
 
   private def castlingEvent(moveUci: String, plyOffset: Int): Option[LineMoveEvent] =
     castlingSide(moveUci).map(side =>

@@ -4,7 +4,7 @@ import chess.*
 import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.model.judgment.{
-  LineConsequenceKind,
+  LineConsequence,
   LineEndgameTechniqueHorizon,
   LineEndgameTechniqueHorizonStatus,
   LineReplayStep
@@ -73,7 +73,7 @@ object EndgamePatternOracle:
   def techniqueHorizons(
       startFen: String,
       replay: List[LineReplayStep],
-      terminalKinds: List[LineConsequenceKind]
+      terminalConsequences: List[LineConsequence]
   ): List[LineEndgameTechniqueHorizon] =
     val snapshots =
       (techniqueSnapshots(startFen, -1, None) ++
@@ -81,8 +81,8 @@ object EndgamePatternOracle:
           techniqueSnapshots(step.fenAfter, index, Some(normalizeUci(step.moveUci)))
         }).sortBy(_.plyOffset)
     val finalPlyOffset = if replay.nonEmpty then replay.size - 1 else -1
-    val normalizedTerminalKinds = terminalKinds.distinct.sortBy(_.toString)
-    val terminalOverrideKinds = normalizedTerminalKinds.filter(LineEndgameTechniqueHorizon.terminalProofOverrides)
+    val terminalOverrideConsequences =
+      terminalConsequences.filter(consequence => LineEndgameTechniqueHorizon.terminalProofOverrides(consequence.kind))
     val replayMovesByPly =
       replay.zipWithIndex.map { case (step, index) =>
         index -> normalizeUci(step.moveUci)
@@ -98,8 +98,7 @@ object EndgamePatternOracle:
             snapshots,
             replayMovesByPly,
             finalPlyOffset,
-            normalizedTerminalKinds,
-            terminalOverrideKinds
+            terminalOverrideConsequences
           )
         )
       )
@@ -190,8 +189,7 @@ object EndgamePatternOracle:
       allSnapshots: List[EndgameTechniqueSnapshot],
       replayMovesByPly: Map[Int, String],
       finalPlyOffset: Int,
-      terminalKinds: List[LineConsequenceKind],
-      terminalOverrideKinds: List[LineConsequenceKind]
+      terminalOverrideConsequences: List[LineConsequence]
   ): LineEndgameTechniqueHorizon =
     val first = group.head
     val last = group.last
@@ -200,17 +198,6 @@ object EndgamePatternOracle:
     val maintainedSquares =
       if presentAtFinal then requiredSquares.intersect(last.requiredSquares).distinct.sorted
       else Nil
-    val baseStatus =
-      if terminalOverrideKinds.nonEmpty && LineEndgameTechniqueHorizon.defensivePattern(first.pattern) then
-        LineEndgameTechniqueHorizonStatus.ContradictedByTerminalProof
-      else if terminalOverrideKinds.nonEmpty then
-        LineEndgameTechniqueHorizonStatus.SupersededByTactic
-      else if first.plyOffset > -1 && presentAtFinal then
-        LineEndgameTechniqueHorizonStatus.Transitioned
-      else if presentAtFinal then
-        LineEndgameTechniqueHorizonStatus.Active
-      else
-        LineEndgameTechniqueHorizonStatus.Failed
     val missingAfterLastMove =
       replayMovesByPly.get(last.plyOffset + 1).orElse(
         allSnapshots
@@ -219,6 +206,25 @@ object EndgamePatternOracle:
           .find(snapshot => snapshot.key != first.key)
           .flatMap(_.moveUci)
       )
+    val horizonTerminalKinds = terminalOverrideConsequences
+      .filter(consequence =>
+        (first.moveUci.toList ++ missingAfterLastMove.toList)
+          .exists(move => consequence.eventMove.exists(eventMove => normalizeUci(eventMove) == normalizeUci(move)))
+      )
+      .map(_.kind)
+      .distinct
+      .sortBy(_.toString)
+    val baseStatus =
+      if horizonTerminalKinds.nonEmpty && LineEndgameTechniqueHorizon.defensivePattern(first.pattern) then
+        LineEndgameTechniqueHorizonStatus.ContradictedByTerminalProof
+      else if horizonTerminalKinds.nonEmpty then
+        LineEndgameTechniqueHorizonStatus.SupersededByTactic
+      else if first.plyOffset > -1 && presentAtFinal then
+        LineEndgameTechniqueHorizonStatus.Transitioned
+      else if presentAtFinal then
+        LineEndgameTechniqueHorizonStatus.Active
+      else
+        LineEndgameTechniqueHorizonStatus.Failed
     val triggerMove =
       if baseStatus == LineEndgameTechniqueHorizonStatus.Failed then missingAfterLastMove.orElse(first.moveUci)
       else if first.plyOffset > -1 then first.moveUci
@@ -235,7 +241,7 @@ object EndgamePatternOracle:
       requiredSquares = requiredSquares,
       maintainedSquares = maintainedSquares,
       brokenSquares = brokenSquares,
-      terminalConsequenceKinds = terminalKinds,
+      terminalConsequenceKinds = horizonTerminalKinds,
       failureReason =
         Option.when(baseStatus == LineEndgameTechniqueHorizonStatus.Failed)("technique-geometry-not-maintained")
           .orElse(Option.when(baseStatus == LineEndgameTechniqueHorizonStatus.ContradictedByTerminalProof)("terminal-proof-overrides-technique"))
