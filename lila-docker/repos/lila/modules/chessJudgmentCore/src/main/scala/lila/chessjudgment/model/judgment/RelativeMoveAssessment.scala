@@ -669,7 +669,7 @@ case class RelativeCauseProofSection(
     tacticalMechanisms.exists(_.hasConcreteProof) ||
       relationProofs.exists(proof => proof.hasConcreteProof && proof.hasLineProof) ||
       lineConsequences.exists(proof => LineConsequenceKind.tacticalDriver(proof.kind)) ||
-      threatEpisodes.nonEmpty
+      threatEpisodes.exists(_.driver == ThreatDriver.MateThreat)
 
   def kindLabels: List[String] =
     boardAnchors.map(proof => s"BoardAnchor:${proof.kind}") ++
