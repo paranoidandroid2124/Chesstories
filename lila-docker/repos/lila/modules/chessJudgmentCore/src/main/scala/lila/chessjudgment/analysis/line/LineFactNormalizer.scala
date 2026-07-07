@@ -390,18 +390,18 @@ object LineFactNormalizer:
       horizons: List[LineEndgameTechniqueHorizon]
   ): List[LineConsequence] =
     val lineMoves = facts.line.moves.map(move => PrincipalVariationEvidence.normalizeUci(move.uci))
-    val rootMove = lineMoves.headOption
     horizons
       .filter(horizon =>
         LineEndgameTechniqueHorizon.defensivePattern(horizon.pattern) &&
-          LineEndgameTechniqueHorizon.maintained(horizon.status)
+          LineEndgameTechniqueHorizon.maintained(horizon.status) &&
+          horizon.triggerMove.nonEmpty
       )
       .map(horizon =>
         LineConsequence(
           kind = LineConsequenceKind.DrawResource,
           lineMoves = lineMoves,
           proofSignal = true,
-          eventMove = horizon.triggerMove.orElse(rootMove)
+          eventMove = horizon.triggerMove
         )
       )
       .distinct
