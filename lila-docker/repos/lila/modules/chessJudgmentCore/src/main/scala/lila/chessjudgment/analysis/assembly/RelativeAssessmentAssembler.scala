@@ -1096,6 +1096,8 @@ object RelativeAssessmentAssembler:
       case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
           RelativeCauseKind.CandidateTacticalLiability =>
         payload.hasConcreteRelationProof
+      case RelativeCauseKind.WrongRecapturer | RelativeCauseKind.RecaptureRecoveryWindow =>
+        payload.hasConcreteRelationProof
       case RelativeCauseKind.WrongMoveOrder | RelativeCauseKind.TempoLoss =>
         payload.kind == RelationFactKind.Zwischenzug && payload.hasConcreteRelationProof
       case RelativeCauseKind.MaterialSwing =>
