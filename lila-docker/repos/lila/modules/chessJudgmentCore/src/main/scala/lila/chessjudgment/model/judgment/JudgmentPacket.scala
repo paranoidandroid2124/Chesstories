@@ -2194,6 +2194,7 @@ object MoveMeaningSurface:
         )
     }
     evidenceSurfaces.nonEmpty &&
+      strongProofSurface &&
       (!materialTacticalCarrier || strongProofSurface) &&
       (terminal.nonEmpty || technique.nonEmpty || directStructuralCarrier || ownedRouteCarrier || directPieceRouteCarrier || (pv.nonEmpty && concreteConsequence))
 
