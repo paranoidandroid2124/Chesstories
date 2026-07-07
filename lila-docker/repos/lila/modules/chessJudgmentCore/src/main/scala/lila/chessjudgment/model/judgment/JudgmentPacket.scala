@@ -3031,7 +3031,7 @@ object MoveMeaningSurface:
             claim.causeKinds.contains(RelativeCauseKind.OnlyDefenseNecessity)
         )("defensive_resource")
       )
-      .orElse(Option.when(claim.causeKinds.contains(RelativeCauseKind.MaterialSwing) && claim.proofRelationDetails.nonEmpty)("material_gain"))
+      .orElse(Option.when(materialGainClaim(claim))("material_gain"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.PieceRerouteRoute && longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
       .orElse(
@@ -3081,6 +3081,15 @@ object MoveMeaningSurface:
     else if codes.contains("material_gain") then Some("material_gain")
     else if codes.contains("material_loss") then Some("material_loss")
     else None
+
+  private def materialGainClaim(claim: MoveMeaningClaim): Boolean =
+    claim.causeKinds.contains(RelativeCauseKind.MaterialSwing) &&
+      claim.proofRelationDetails.nonEmpty &&
+      (
+        claim.terminalConsequenceKinds.contains("MaterialGain") ||
+          claim.proofThreatDrivers.exists(_.equalsIgnoreCase("MateThreat")) ||
+          claim.boardCarriers.exists(carrier => carrier.role == "target" && materialEventPlanSubjectCarrier(carrier))
+      )
 
   private def checkingRouteTargetPressureClaim(claim: MoveMeaningClaim): Boolean =
     checkingPressureClaim(claim)

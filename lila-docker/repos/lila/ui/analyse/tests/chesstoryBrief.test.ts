@@ -60,6 +60,7 @@ describe('chesstory brief scaffold', () => {
             { role: 'actor', kind: 'Move', value: 'f8e7', from: 'f8', to: 'e7' },
             { role: 'actor', kind: 'Piece', value: 'bishop' },
             { role: 'target', kind: 'File', value: 'e' },
+            { role: 'attacker', kind: 'Square', value: 'g4' },
           ],
           pv: ['c2c3', 'e8g8'],
           consequence_carriers: [{ role: 'target', kind: 'PlanSubject', value: 'break-file:e' }],
@@ -79,6 +80,7 @@ describe('chesstory brief scaffold', () => {
     assert.match(text, /pawn break timing/);
     assert.match(text, /bishop f8-e7/);
     assert.match(text, /e-file break/);
+    assert.match(text, /g4/);
     assert.match(text, /c2-c3/);
     assert.match(text, /owned cause/);
     assert.doesNotMatch(text, /This move handles|The position is asking|The comparison turns on/);

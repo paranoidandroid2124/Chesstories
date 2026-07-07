@@ -90,6 +90,8 @@ interface ChesstoryBoardCarrier {
   to?: string;
 }
 
+const relationCarrierRoles = new Set(['attacker', 'defender', 'blocker', 'beneficiary', 'king', 'mover', 'bait', 'lured']);
+
 export interface ChesstoryIdeaChain {
   key: 'current-move-chain';
   current_move?: string;
@@ -207,7 +209,12 @@ function carrierLabels(carriers: ChesstoryBoardCarrier[]): string[] {
   const actorPiece = actorRoutePiece(carriers);
   return conciseCarrierLabels(
     carriers
-      .filter(carrier => carrier.role === 'target' || (carrier.role === 'actor' && carrier.kind === 'Move'))
+      .filter(
+        carrier =>
+          carrier.role === 'target' ||
+          (carrier.role === 'actor' && carrier.kind === 'Move') ||
+          relationCarrierRoles.has(carrier.role || ''),
+      )
       .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
       .map(carrier => boardCarrierLabel(carrier, actorPiece)),
   );
@@ -215,10 +222,11 @@ function carrierLabels(carriers: ChesstoryBoardCarrier[]): string[] {
 
 function boardCarrierRank(carrier: ChesstoryBoardCarrier): number {
   if (carrier.role === 'actor' && carrier.kind === 'Move') return 0;
+  if (carrier.role === 'target' && carrier.kind === 'PlanSubject') return 1;
+  if (carrier.role === 'target' && (carrier.kind === 'File' || carrier.kind === 'Square' || carrier.kind === 'Pawn')) return 2;
+  if (relationCarrierRoles.has(carrier.role || '')) return 3;
+  if (carrier.role === 'target' && carrier.kind === 'Piece') return 3;
   if (carrier.role !== 'target') return 4;
-  if (carrier.kind === 'PlanSubject') return 1;
-  if (carrier.kind === 'File' || carrier.kind === 'Square' || carrier.kind === 'Pawn') return 2;
-  if (carrier.kind === 'Piece') return 3;
   return 4;
 }
 
