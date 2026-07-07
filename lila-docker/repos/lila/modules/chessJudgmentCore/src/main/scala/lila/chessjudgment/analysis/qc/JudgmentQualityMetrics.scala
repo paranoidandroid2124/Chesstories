@@ -10,7 +10,7 @@ import lila.chessjudgment.analysis.assembly.{
 }
 import lila.chessjudgment.analysis.evaluation.JudgmentThresholds
 import lila.chessjudgment.analysis.policy.ClaimTruthPolicy
-import lila.chessjudgment.analysis.singlePosition.{ PawnPlayDriver, ThreatDriver, ThreatSeverity }
+import lila.chessjudgment.analysis.singlePosition.{ PawnPlayDriver, ThreatDriver, ThreatEvidenceSource, ThreatSeverity }
 import lila.chessjudgment.analysis.tactical.TacticalMotifClassifier
 import lila.chessjudgment.model.{ Motif, ProbeAdmissionStatus, ProbePurpose, TransitionType }
 import lila.chessjudgment.model.structure.AlignmentBand
@@ -103,7 +103,13 @@ object ExpectedEvidenceLossPolicy:
         .flatMap(ref => packet.evidenceGraph.byId.get(ref.id))
         .exists {
           case EvidenceRecord(ref, payload: ThreatEpisodeEvidence, _) =>
-            ref.scope == EvidenceScope.ThreatLine || !payload.isProofSignalDefensivePressure
+            ref.scope == EvidenceScope.ThreatLine ||
+              !payload.isProofSignalDefensivePressure ||
+              (
+                payload.episode.evidenceSource == ThreatEvidenceSource.MotifPattern &&
+                  payload.episode.bestDefense.isEmpty &&
+                  payload.episode.lossIfIgnoredWinPercent.isEmpty
+              )
           case EvidenceRecord(ref, ThreatPressureEvidence(_, threats), _) =>
             !threats.isProofSignalDefensivePressure ||
               packet.evidenceGraph.records.exists {
@@ -161,6 +167,8 @@ object ExpectedEvidenceLossPolicy:
         .exists {
           case EvidenceRecord(ref, payload: StrategicMechanismEvidence, _) =>
             !strategicMechanismCanSeedJudgment(ref, payload)
+          case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
+            !StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(payload, packet.evidenceGraph.records)
           case _ =>
             false
         }
