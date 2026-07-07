@@ -450,14 +450,19 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
             RelativeCauseSignalProfile.currentMoveRelationPayoffRecords(profile.fact.candidateLine, profile.allRecords)
           val targetPressureRelationProofs =
             RelativeCauseSignalProfile.currentMoveTargetPressureRelationRecords(profile.fact.candidateLine, profile.allRecords)
+          val concreteTargetCarriers =
+            RelativeCauseSignalProfile.currentMoveConcreteTargetCarrierRecords(profile.fact.candidateLine, profile.allRecords)
           val causeKinds =
             currentMoveStrategicSupportCauseKinds(payload, profile.fact.candidateLine, profile.allRecords)
               .filter(kind =>
                 if kind == RelativeCauseKind.OpponentRestriction then
                   currentMoveConcreteCounterplayCanOwnValue(kind, payload, profile)
-                else if kind == RelativeCauseKind.TargetPressureGain || kind == RelativeCauseKind.PawnWeaknessTarget then
+                else if kind == RelativeCauseKind.TargetPressureGain then
                   profile.exactReferenceMove &&
-                    RelativeCauseSignalProfile.currentMoveConcreteTargetCarrierRecords(profile.fact.candidateLine, profile.allRecords).nonEmpty
+                    (concreteTargetCarriers.nonEmpty || targetPressureRelationProofs.nonEmpty)
+                else if kind == RelativeCauseKind.PawnWeaknessTarget then
+                  profile.exactReferenceMove &&
+                    (concreteTargetCarriers.nonEmpty || relationPayoffs.nonEmpty)
                 else
                   (
                     profile.exactReferenceMove &&
