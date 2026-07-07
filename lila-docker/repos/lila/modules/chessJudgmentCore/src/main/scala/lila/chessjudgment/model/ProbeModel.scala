@@ -6,6 +6,7 @@ import lila.chessjudgment.model.strategic.VariationLine
 import play.api.libs.json._
 
 enum ProbePurpose(val key: String):
+  // ReplyMultipv is the only purpose with an admitted branch-ingestion contract today.
   case ReplyMultipv extends ProbePurpose("reply_multipv")
   case DefenseReplyMultipv extends ProbePurpose("defense_reply_multipv")
   case ConvertReplyMultipv extends ProbePurpose("convert_reply_multipv")
@@ -29,7 +30,7 @@ object ProbePurpose:
 
 /**
  * Request for client-side engine probing.
- * Sent when the server detects a "Ghost Plan" that needs verification.
+ * The purpose identifies whether a returned probe result can enter a certified graph branch.
  */
 case class ProbeRequest(
   id: String,
