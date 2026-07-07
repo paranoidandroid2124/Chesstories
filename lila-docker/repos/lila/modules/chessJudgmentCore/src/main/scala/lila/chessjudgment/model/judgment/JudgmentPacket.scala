@@ -4633,10 +4633,10 @@ object MoveMeaningClaim:
               val pressureIdentityCarriers =
                 mechanismSquareIdentityCarriers(detail, "battery-pressure", batteryPressureSignature) ++
                   mechanismSquareIdentityCarriers(detail, "pin-pressure", pinPressureSignature)
+              val kingPressureIdentityCarrier =
+                surfaceObjectSignatures.exists(kingPressureObjectSignature)
               val checkIdentityCarriers =
-                if pressureIdentityCarriers.nonEmpty ||
-                    (detail.axisKey.toList ++ detail.label.toList).exists(_.toLowerCase.contains("king-safety-pressure"))
-                then Nil
+                if pressureIdentityCarriers.nonEmpty || kingPressureIdentityCarrier then Nil
                 else mechanismSquareIdentityCarriers(detail, "check", checkSignature)
               val defenderMoveActorCarriers =
                 surfaceObjectSignatures
@@ -6739,22 +6739,10 @@ object MoveMeaningClaim:
     val noMoveActorSignatures =
       objectSignatures.filter(signature => moveTokens(List(signature)).isEmpty)
     val directKingPressureSignatures =
-      currentMoveSignatures.filter(signature =>
-        val normalized = signature.toLowerCase
-        normalized.contains("target=piece:king") &&
-          (
-            normalized.contains("mechanism=mechanism:kingsafety") ||
-              normalized.contains("mechanism=mechanism:kingring") ||
-              normalized.contains("consequence=consequence:kingsafety") ||
-              normalized.contains("consequence=consequence:kingring") ||
-              normalized.contains("consequence=consequence:target:gain:king-safety-pressure")
-          )
-      )
+      currentMoveSignatures.filter(kingPressureObjectSignature)
     val surface =
       detail.unit match
-        case PositionPlanTechniqueUnit.StructuralTransformation
-            if directKingPressureSignatures.nonEmpty &&
-              (detail.axisKey.toList ++ detail.label.toList).exists(_.toLowerCase.contains("king-safety-pressure")) =>
+        case PositionPlanTechniqueUnit.StructuralTransformation if directKingPressureSignatures.nonEmpty =>
           directKingPressureSignatures
         case PositionPlanTechniqueUnit.PieceRerouteRoute =>
           val detailMoveOwnsClaim = detail.structuralRouteMove.exists(move => sameMove(move, claimMove))
@@ -6792,6 +6780,17 @@ object MoveMeaningClaim:
         detail.unit == PositionPlanTechniqueUnit.CounterplayRace
     then Nil
     else objectSignatures
+
+  private def kingPressureObjectSignature(signature: String): Boolean =
+    val normalized = signature.toLowerCase
+    normalized.contains("target=piece:king") &&
+      (
+        normalized.contains("mechanism=mechanism:kingsafety") ||
+          normalized.contains("mechanism=mechanism:kingring") ||
+          normalized.contains("consequence=consequence:kingsafety") ||
+          normalized.contains("consequence=consequence:kingring") ||
+          normalized.contains("consequence=consequence:target:gain:king-safety-pressure")
+      )
 
   private def causeFramePolarityCompatibleWithMeaning(
       frame: MoveJudgmentCauseFrame,
