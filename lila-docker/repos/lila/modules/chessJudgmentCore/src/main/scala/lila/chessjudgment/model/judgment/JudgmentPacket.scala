@@ -3144,7 +3144,7 @@ object MoveMeaningSurface:
 
   private def materialGainClaim(claim: MoveMeaningClaim): Boolean =
     claim.causeKinds.contains(RelativeCauseKind.MaterialSwing) &&
-      claim.proofRelationKinds.nonEmpty &&
+      (claim.proofRelationKinds.nonEmpty || claim.proofThreatDrivers.contains(ThreatDriver.MateThreat)) &&
       (
         claim.terminalConsequenceKinds.contains("MaterialGain") ||
           claim.proofLineConsequences.contains(LineConsequenceKind.MaterialGain)
