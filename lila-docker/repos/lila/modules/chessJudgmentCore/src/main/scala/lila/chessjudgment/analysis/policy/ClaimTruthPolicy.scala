@@ -78,10 +78,35 @@ object ClaimTruthPolicy:
         claimEvidenceIds.contains(child.ref.id) &&
           child.parents.exists(parent => parent.id == record.ref.id)
       )
+    val relativeCauseProofLinked =
+      relativeCauseProofSourceIds(claim, graph).contains(record.ref.id)
     val linkedBound =
       (parentLinked || childLinked) &&
         linkedRecordCompatible(claim, record, graph, samePositionLocal)
-    sameLine || sameSubjectMove || comparisonLineSupport || transitionDestinationLocal || samePositionLocal || linkedBound
+    sameLine || sameSubjectMove || comparisonLineSupport || transitionDestinationLocal || samePositionLocal || linkedBound ||
+      relativeCauseProofLinked
+
+  private def relativeCauseProofSourceIds(claim: ClaimSeed, graph: TypedEvidenceGraph): Set[String] =
+    claim.evidence
+      .flatMap(ref => graph.byId.get(ref.id))
+      .flatMap {
+        case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
+          relativeCauseProofSourceIds(cause)
+        case EvidenceRecord(_, MoveVerdictCertificationEvidence(certification), _) =>
+          certification.causes.flatMap(relativeCauseProofSourceIds)
+        case _ =>
+          Nil
+      }
+      .map(_.id)
+      .toSet
+
+  private def relativeCauseProofSourceIds(cause: RelativeCauseFact): List[EvidenceRef] =
+    cause.supportEvidence ++
+      cause.proof.toList.flatMap(proof =>
+        proof.directProof.sourceRefs ++
+          proof.contrastProof.sourceRefs ++
+          proof.contextSupport.sourceRefs
+      )
 
   private def linkedRecordCompatible(
       claim: ClaimSeed,
