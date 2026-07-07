@@ -146,15 +146,6 @@ object ProbeContractValidator:
     ProbePurpose.FreeTempoBranches
   )
 
-  def validate(result: ProbeResult): ValidationResult =
-    val required = result.purpose.fold(Set.empty[String])(purposeRequiredSignals)
-    val base = validateSignals(result, required)
-    base.copy(
-      certificateStatus =
-        if base.isValid then ProbeCertificateStatus.Valid
-        else ProbeCertificateStatus.Invalid
-    )
-
   def validateAgainstRequest(
       request: ProbeRequest,
       result: ProbeResult

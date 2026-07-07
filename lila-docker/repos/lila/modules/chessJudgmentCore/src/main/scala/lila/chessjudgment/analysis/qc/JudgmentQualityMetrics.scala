@@ -104,8 +104,14 @@ object ExpectedEvidenceLossPolicy:
         .exists {
           case EvidenceRecord(ref, payload: ThreatEpisodeEvidence, _) =>
             ref.scope == EvidenceScope.ThreatLine || !payload.isProofSignalDefensivePressure
-          case EvidenceRecord(_, ThreatPressureEvidence(_, threats), _) =>
-            !threats.isProofSignalDefensivePressure
+          case EvidenceRecord(ref, ThreatPressureEvidence(_, threats), _) =>
+            !threats.isProofSignalDefensivePressure ||
+              packet.evidenceGraph.records.exists {
+                case EvidenceRecord(_, _: ThreatEpisodeEvidence, parents) =>
+                  parents.exists(_.id == ref.id)
+                case _ =>
+                  false
+              }
           case _ =>
             false
         }
@@ -153,18 +159,21 @@ object ExpectedEvidenceLossPolicy:
       diagnostic.evidence
         .flatMap(ref => packet.evidenceGraph.byId.get(ref.id))
         .exists {
-          case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
-            !strategicMechanismCanSeedJudgment(payload)
+          case EvidenceRecord(ref, payload: StrategicMechanismEvidence, _) =>
+            !strategicMechanismCanSeedJudgment(ref, payload)
           case _ =>
             false
         }
 
-  private def strategicMechanismCanSeedJudgment(payload: StrategicMechanismEvidence): Boolean =
-    payload.canAnchorStrategicIdea ||
-      payload.canAnchorPawnStructureIdea ||
-      payload.canAnchorOpeningIdea ||
-      payload.canAnchorPlanIdea ||
-      payload.canSupportCompensation
+  private def strategicMechanismCanSeedJudgment(
+      ref: EvidenceRef,
+      payload: StrategicMechanismEvidence
+  ): Boolean =
+    payload.canAnchorOpeningIdea ||
+      (
+        ref.line.exists(_.role == LineNodeRole.Played) &&
+          (payload.canAnchorStrategicIdea || payload.canAnchorPawnStructureIdea || payload.canAnchorPlanIdea)
+      )
 
   private def isExpectedCandidateComparisonSupport(
       diagnostic: EvidenceLossDiagnostic,

@@ -4667,8 +4667,8 @@ object MoveMeaningClaim:
               MoveMeaningClaim(
                 meaningKind = meaningKind,
                 role = claimRole,
-                laneKey = laneKey(meaningKind, detail, surfaceObjectSignatures, boardCarriers),
-                conflictKey = conflictKey(meaningKind, detail, surfaceObjectSignatures, boardCarriers),
+                laneKey = laneKey(meaningKind, detail, surfaceObjectSignatures),
+                conflictKey = conflictKey(meaningKind, detail, surfaceObjectSignatures),
                 supportLevel = support,
                 visibility = visibility(support),
                 surfaceLane =
@@ -7502,47 +7502,40 @@ object MoveMeaningClaim:
   private def laneKey(
       meaningKind: String,
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String],
-      boardCarriers: List[MoveMeaningSurfaceBoardCarrier]
+      objectSignatures: List[String]
   ): String =
     List(
       s"kind=$meaningKind",
       detail.axisKey.map(value => s"axis=$value").getOrElse(s"axis=${detail.axisKind.map(_.toString).getOrElse("none")}"),
-      s"object=${semanticObjectKey(objectSignatures, boardCarriers)}"
+      s"object=${semanticObjectKey(objectSignatures)}"
     ).mkString("|")
 
   private def conflictKey(
       meaningKind: String,
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String],
-      boardCarriers: List[MoveMeaningSurfaceBoardCarrier]
+      objectSignatures: List[String]
   ): Option[String] =
     Option.when(meaningKind == "PlanContinuity" || meaningKind == "PawnBreakTiming")(
       List(
         s"kind=$meaningKind",
         detail.axisKey.map(value => s"axis=$value").getOrElse(s"axis=${detail.axisKind.map(_.toString).getOrElse("none")}"),
-        s"object=${semanticObjectKey(objectSignatures, boardCarriers)}"
+        s"object=${semanticObjectKey(objectSignatures)}"
       ).mkString("|")
     )
 
   private def semanticObjectKey(
-      objectSignatures: List[String],
-      boardCarriers: List[MoveMeaningSurfaceBoardCarrier]
+      objectSignatures: List[String]
   ): String =
-    val signatureKey =
-      objectSignatures
-        .flatMap(EvidenceObjectBinding.signatureParts)
-        .filter(part =>
-          val role = part.takeWhile(_ != '=').toLowerCase
-          role == "actor" || role == "target" || role == "mechanism" || role == "consequence"
-        )
-        .distinct
-        .sorted
-        .take(8)
-        .mkString(";")
-    val key =
-      if signatureKey.nonEmpty then signatureKey
-      else boardCarriers.map(carrier => s"${carrier.role}=${carrier.kind}:${carrier.value}").distinct.sorted.take(6).mkString(";")
+    val key = objectSignatures
+      .flatMap(EvidenceObjectBinding.signatureParts)
+      .filter(part =>
+        val role = part.takeWhile(_ != '=').toLowerCase
+        role == "actor" || role == "target" || role == "mechanism" || role == "consequence"
+      )
+      .distinct
+      .sorted
+      .take(8)
+      .mkString(";")
     key match
       case ""    => "none"
       case value => value
