@@ -4752,7 +4752,7 @@ object MoveMeaningClaim:
                   publicCarrierAllowed(detail.unit, roleCompatibleCauseFrames.map(_.causeKind), claimBoardCarriers)
               val publicProofLevel =
                 if !publicHasCarrier then "none"
-                else if detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) then "terminal_proof"
+                else if linkedCauseIds.nonEmpty && detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) then "terminal_proof"
                 else if linkedCauseIds.nonEmpty && support == "owned_cause_linked" then "owned_cause"
                 else if linkedCauseIds.nonEmpty then "cause_linked"
                 else "surface_evidence"
