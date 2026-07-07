@@ -2155,7 +2155,7 @@ object PositionPlanTechniqueProjection:
       else detail
 
     private def withStructuralPurpose(purpose: Option[PositionPlanTechniqueStructuralPurpose]): PositionPlanTechniqueSemanticDetail =
-      if positionPlanTechniqueStructuralPurposeApplies(detail) then
+      if positionPlanTechniqueStructuralPurposeApplies(detail, purpose.nonEmpty) then
         purpose.fold(detail)(structural =>
           val purposeSubjects =
             if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
@@ -2882,7 +2882,10 @@ object PositionPlanTechniqueProjection:
     detail.unit == PositionPlanTechniqueUnit.CounterplayRace ||
       detail.unit == PositionPlanTechniqueUnit.SpacePreventionResourceDenial
 
-  private def positionPlanTechniqueStructuralPurposeApplies(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+  private def positionPlanTechniqueStructuralPurposeApplies(
+      detail: PositionPlanTechniqueSemanticDetail,
+      hasStructuralPurpose: Boolean
+  ): Boolean =
     (detail.axisKey.nonEmpty && (
       detail.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute ||
         detail.unit == PositionPlanTechniqueUnit.StructuralTransformation ||
@@ -2898,7 +2901,8 @@ object PositionPlanTechniqueProjection:
           detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute) &&
         (
           detail.mechanismKinds.exists(positionPlanTechniqueStructuralPurposeMechanism) ||
-            positionPlanTechniqueStructuralPurposeAnchor(detail)
+            hasStructuralPurpose ||
+            detail.semanticAnchorKeys.exists(_.startsWith("StructuralDelta:"))
         )) ||
       (detail.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
         (
@@ -2917,10 +2921,6 @@ object PositionPlanTechniqueProjection:
         true
       case _ =>
         false
-
-  private def positionPlanTechniqueStructuralPurposeAnchor(detail: PositionPlanTechniqueSemanticDetail): Boolean =
-    detail.semanticAnchorKeys.exists(_.startsWith("StructuralDelta:")) ||
-      detail.sourceEvidenceIds.exists(_.toLowerCase.contains("structural-delta"))
 
   private def positionPlanTechniqueCounterplayRaceProof(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.unit == PositionPlanTechniqueUnit.CounterplayRace &&
@@ -2989,8 +2989,8 @@ object PositionPlanTechniqueProjection:
         detail.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute
     then
       val anchorKeys = detail.semanticAnchorKeys.map(_.toLowerCase)
-      val sourceIds = detail.sourceEvidenceIds.map(_.toLowerCase)
       val consequences = detail.structuralPurposeConsequences.map(_.toLowerCase)
+      val subjects = detail.structuralPurposeSubjects.map(_.toLowerCase)
       val hasOpenCenterRouteContext =
         positionPlanTechniqueOpenCenterContext(detail) &&
           positionPlanTechniqueDevelopmentRouteDetail(detail)
@@ -2998,8 +2998,8 @@ object PositionPlanTechniqueProjection:
         positionPlanTechniqueIqpContext(detail)
       val hasStructuralTransition =
         anchorKeys.exists(_.startsWith("structuraldelta:")) ||
-          sourceIds.exists(_.contains("structural-delta")) ||
-          consequences.nonEmpty
+          consequences.nonEmpty ||
+          subjects.nonEmpty
       val hasOpenSignal =
         anchorKeys.exists(key =>
           key.contains("lineunlock") ||
