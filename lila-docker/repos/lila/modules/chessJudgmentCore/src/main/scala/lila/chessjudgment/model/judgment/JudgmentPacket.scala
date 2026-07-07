@@ -4931,11 +4931,25 @@ object MoveMeaningClaim:
       evidenceGraph: TypedEvidenceGraph,
       frames: List[MoveJudgmentCauseFrame]
   ): List[MoveMeaningSurfaceBoardCarrier] =
+    def threatPayloads(record: EvidenceRecord, visited: Set[String]): List[ThreatEpisodeEvidence] =
+      if visited.contains(record.ref.id) then Nil
+      else
+        record.payload match
+          case payload: ThreatEpisodeEvidence =>
+            List(payload)
+          case payload: TacticalMechanismEvidence =>
+            payload.signals
+              .filter(_.kind == TacticalMechanismSignalKind.ThreatEpisode)
+              .flatMap(_.source)
+              .flatMap(source => evidenceGraph.byId.get(source.id).toList.flatMap(threatPayloads(_, visited + record.ref.id)))
+          case _ =>
+            Nil
+
     frames
       .flatMap(_.proofDirectSourceIds)
       .distinct
       .flatMap(id => evidenceGraph.byId.get(id))
-      .collect { case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) => payload }
+      .flatMap(threatPayloads(_, Set.empty))
       .flatMap(payload =>
         payload.episode.attackSquares.flatMap(square => publicSquareCarrier("target", square.key)) ++
           payload.episode.targetPieces.flatMap(role => publicPieceCarrier("target", role.name))
