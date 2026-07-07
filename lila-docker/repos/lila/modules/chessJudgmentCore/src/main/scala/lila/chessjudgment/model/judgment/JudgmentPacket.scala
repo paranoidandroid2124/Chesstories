@@ -2114,6 +2114,7 @@ object MoveMeaningSurface:
             "move_semantics" -> publicSemantics.map(publicIdeaChainMoveSemanticJson),
             "proof_levels" -> chainSurfaces.map(_.evidence.proofLevel).distinct,
             "relation_kinds" -> chainSurfaces.flatMap(_.evidence.proofRelationKinds).map(_.toString).distinct.sorted,
+            "relations" -> chainSurfaces.flatMap(_.evidence.proofRelationKinds).distinct.sortBy(_.toString).map(publicRelationCodeJson),
             "relation_details" -> chainSurfaces.flatMap(_.evidence.proofRelationDetails).distinct.sorted,
             "threat_drivers" -> chainSurfaces.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
             "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
@@ -2325,6 +2326,7 @@ object MoveMeaningSurface:
         "cause_ids" -> surface.evidence.causeIds,
         "source_ids" -> surface.evidence.sourceIds,
         "relation_kinds" -> surface.evidence.proofRelationKinds.map(_.toString).distinct.sorted,
+        "relations" -> surface.evidence.proofRelationKinds.distinct.sortBy(_.toString).map(publicRelationCodeJson),
         "relation_details" -> surface.evidence.proofRelationDetails.distinct.sorted,
         "threat_drivers" -> surface.evidence.proofThreatDrivers.distinct.sorted
       )
@@ -3645,6 +3647,10 @@ object MoveMeaningSurface:
     "center_control" -> "center control",
     "plan_continuity" -> "plan continuity"
   )
+
+  private def publicRelationCodeJson(kind: RelationFactKind): JsObject =
+    val code = RelationFactKind.id(kind)
+    publicCodeJson(MoveMeaningSurfaceCode(code, code.replace('_', ' ')))
 
   private val terminalConsequenceLabels: Map[String, String] = Map(
     "mate" -> "mate",

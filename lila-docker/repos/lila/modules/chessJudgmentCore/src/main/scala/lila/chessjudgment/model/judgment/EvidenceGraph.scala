@@ -1342,9 +1342,13 @@ object RelationFactKind:
       "stalemate_trap" -> StalemateTrap,
       "perpetual_check" -> PerpetualCheck
     )
+  private val ids: Map[RelationFactKind, String] =
+    byId.map((id, kind) => kind -> id)
 
   def fromId(raw: String): Option[RelationFactKind] =
     byId.get(Option(raw).getOrElse("").trim.toLowerCase)
+  def id(kind: RelationFactKind): String =
+    ids.getOrElse(kind, kind.toString)
 
 enum StrategicFactKind:
   case Outpost
