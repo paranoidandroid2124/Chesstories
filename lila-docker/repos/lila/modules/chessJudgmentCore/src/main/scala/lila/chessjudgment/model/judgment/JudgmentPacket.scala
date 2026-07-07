@@ -3008,6 +3008,7 @@ object MoveMeaningSurface:
   private def ideaType(claim: MoveMeaningClaim): String =
     terminalIdeaType(claim)
       .orElse(Option.when(concretePassedPawnAdvanceClaim(claim))("passed_pawn_advance"))
+      .orElse(Option.when(claim.causeKinds.contains(RelativeCauseKind.MaterialSwing) && claim.proofRelationDetails.nonEmpty)("material_gain"))
       .orElse(Option.when(claim.causeKinds.contains(RelativeCauseKind.DefensiveResource))("defensive_resource"))
       .orElse(
         Option.when(
