@@ -2082,6 +2082,7 @@ object MoveMeaningSurface:
             "move_semantics" -> publicSemantics.map(publicIdeaChainMoveSemanticJson),
             "proof_levels" -> chainSurfaces.map(_.evidence.proofLevel).distinct,
             "relation_kinds" -> chainSurfaces.flatMap(_.evidence.proofRelationKinds).map(_.toString).distinct.sorted,
+            "relation_details" -> chainSurfaces.flatMap(_.evidence.proofRelationDetails).distinct.sorted,
             "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "pv" -> pv,
             "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),

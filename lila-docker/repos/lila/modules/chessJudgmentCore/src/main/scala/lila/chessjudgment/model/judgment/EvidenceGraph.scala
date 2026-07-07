@@ -1118,6 +1118,147 @@ enum RelationWitnessDetail:
 
   def detailName: String =
     toString.takeWhile(_ != '(')
+  def detailSummary: String =
+    this match
+      case Empty =>
+        detailName
+      case DefenderTrade(defenderSquare, exchangeSquare, targetSquare) =>
+        detail("DefenderTrade", s"defender=${sq(defenderSquare)}", s"exchange=${sq(exchangeSquare)}", s"target=${sq(targetSquare)}")
+      case BadPieceLiquidation(badPieceSquare, exchangeSquare) =>
+        detail("BadPieceLiquidation", s"bad_piece=${sq(badPieceSquare)}", s"exchange=${sq(exchangeSquare)}")
+      case Overload(defenderSquare, targetSquares, attackerSquare) =>
+        detail("Overload", s"defender=${sq(defenderSquare)}", s"targets=${squares(targetSquares)}", s"attacker=${sq(attackerSquare)}")
+      case Deflection(defenderSquare, targetSquare, attackerSquare) =>
+        detail("Deflection", s"defender=${sq(defenderSquare)}", s"target=${sq(targetSquare)}", s"attacker=${sq(attackerSquare)}")
+      case DiscoveredAttack(attackerSquare, clearedSquare, targetSquare, attackerRole) =>
+        detail(
+          "DiscoveredAttack",
+          s"attacker=${pieceAt(attackerRole, attackerSquare)}",
+          s"cleared=${sq(clearedSquare)}",
+          s"target=${sq(targetSquare)}"
+        )
+      case DoubleCheck(kingSquare, checkerSquares, moverSquare, moverRole) =>
+        detail("DoubleCheck", s"king=${sq(kingSquare)}", s"checkers=${squares(checkerSquares)}", s"mover=${pieceAt(moverRole, moverSquare)}")
+      case MatePattern(relationKind, kingSquare, checkerSquares, matingMove, patternId) =>
+        detail(
+          "MatePattern",
+          s"relation=$relationKind",
+          s"king=${sq(kingSquare)}",
+          s"checkers=${squares(checkerSquares)}",
+          s"mating_move=$matingMove",
+          patternId.fold("")(id => s"pattern=$id")
+        )
+      case GreekGift(bishopSquare, targetSquare, entryMove, patternId) =>
+        detail("GreekGift", s"bishop=${sq(bishopSquare)}", s"target=${sq(targetSquare)}", s"entry_move=$entryMove", s"pattern=$patternId")
+      case Fork(attackerSquare, attackerRole, targets) =>
+        detail("Fork", s"attacker=${pieceAt(attackerRole, attackerSquare)}", s"targets=${targets.map(targetSummary).distinct.sorted.mkString("/")}")
+      case HangingPiece(attackerSquare, targetSquare, attackerRole, targetRole) =>
+        detail("HangingPiece", s"attacker=${pieceAt(attackerRole, attackerSquare)}", s"target=${pieceAt(targetRole, targetSquare)}")
+      case TrappedPiece(attackerSquare, targetSquare, attackerRole, targetRole) =>
+        detail("TrappedPiece", s"attacker=${pieceAt(attackerRole, attackerSquare)}", s"target=${pieceAt(targetRole, targetSquare)}")
+      case Domination(attackerSquare, targetSquare, attackerRole, targetRole, controlledEscapeSquares) =>
+        detail(
+          "Domination",
+          s"attacker=${pieceAt(attackerRole, attackerSquare)}",
+          s"target=${pieceAt(targetRole, targetSquare)}",
+          s"escape_squares=${squares(controlledEscapeSquares)}"
+        )
+      case Zwischenzug(intermediateMove, expectedRecaptureSquare, checkingPieceSquare, checkingPieceRole, checkedKingSquare, threatType) =>
+        detail(
+          "Zwischenzug",
+          s"intermediate_move=$intermediateMove",
+          s"expected_recapture=${sq(expectedRecaptureSquare)}",
+          s"checker=${pieceAt(checkingPieceRole, checkingPieceSquare)}",
+          s"king=${sq(checkedKingSquare)}",
+          s"threat=${threatType.toString}"
+        )
+      case Decoy(baitFromSquare, baitSquare, luredFromSquare, executionFromSquare, executionToSquare, baitRole, luredRole) =>
+        detail(
+          "Decoy",
+          s"bait=${pieceAt(baitRole, baitFromSquare)}",
+          s"bait_to=${sq(baitSquare)}",
+          s"lured=${pieceAt(luredRole, luredFromSquare)}",
+          s"execution=${sq(executionFromSquare)}-${sq(executionToSquare)}"
+        )
+      case XRay(attackerSquare, blockerSquare, targetSquare, attackerRole, blockerRole, targetRole) =>
+        detail(
+          "XRay",
+          s"attacker=${pieceAt(attackerRole, attackerSquare)}",
+          s"blocker=${pieceAt(blockerRole, blockerSquare)}",
+          s"target=${pieceAt(targetRole, targetSquare)}"
+        )
+      case Clearance(beneficiarySquare, clearedSquare, targetSquare, beneficiaryRole, clearingTo) =>
+        detail(
+          "Clearance",
+          s"beneficiary=${pieceAt(beneficiaryRole, beneficiarySquare)}",
+          s"cleared=${sq(clearedSquare)}",
+          s"clearing_to=${sq(clearingTo)}",
+          s"target=${sq(targetSquare)}"
+        )
+      case Battery(frontSquare, backSquare, targetSquare, frontRole, backRole, axis) =>
+        detail(
+          "Battery",
+          s"front=${pieceAt(frontRole, frontSquare)}",
+          s"back=${pieceAt(backRole, backSquare)}",
+          s"target=${sq(targetSquare)}",
+          s"axis=${axis.toString}"
+        )
+      case Interference(blockerSquare, defenderSquare, targetSquare, blockerRole, defenderRole, targetRole) =>
+        detail(
+          "Interference",
+          s"blocker=${pieceAt(blockerRole, blockerSquare)}",
+          s"defender=${pieceAt(defenderRole, defenderSquare)}",
+          s"target=${pieceAt(targetRole, targetSquare)}"
+        )
+      case Pin(attackerSquare, pinnedSquare, behindSquare, targetSquare, attackerRole, pinnedRole, behindRole, absolute) =>
+        detail(
+          "Pin",
+          s"attacker=${pieceAt(attackerRole, attackerSquare)}",
+          s"pinned=${pieceAt(pinnedRole, pinnedSquare)}",
+          s"behind=${pieceAt(behindRole, behindSquare)}",
+          s"target=${sq(targetSquare)}",
+          s"absolute=$absolute"
+        )
+      case Skewer(attackerSquare, frontSquare, backSquare, targetSquare, attackerRole, frontRole, backRole) =>
+        detail(
+          "Skewer",
+          s"attacker=${pieceAt(attackerRole, attackerSquare)}",
+          s"front=${pieceAt(frontRole, frontSquare)}",
+          s"back=${pieceAt(backRole, backSquare)}",
+          s"target=${sq(targetSquare)}"
+        )
+      case StalemateTrap(stalematedKingSquare, resourceSquare, entryMove, terminalMove, scoreCp) =>
+        detail(
+          "StalemateTrap",
+          s"king=${sq(stalematedKingSquare)}",
+          s"resource=${sq(resourceSquare)}",
+          s"entry_move=$entryMove",
+          s"terminal_move=$terminalMove",
+          scoreCp.fold("")(score => s"score_cp=$score")
+        )
+      case PerpetualCheck(checkedKingSquare, checkerSquares, checkingSide, entryMove, cycleStartMove, cycleReturnMove, _, scoreCp) =>
+        detail(
+          "PerpetualCheck",
+          s"king=${sq(checkedKingSquare)}",
+          s"checkers=${squares(checkerSquares)}",
+          s"side=$checkingSide",
+          s"entry_move=$entryMove",
+          s"cycle=$cycleStartMove-$cycleReturnMove",
+          scoreCp.fold("")(score => s"score_cp=$score")
+        )
+
+  private def detail(name: String, parts: String*): String =
+    parts.map(_.trim).filter(_.nonEmpty).mkString(s"$name(", ",", ")")
+  private def sq(square: EvidenceSquare): String =
+    square.key.trim.toLowerCase
+  private def piece(piece: EvidencePieceRole): String =
+    piece.name.trim.toLowerCase
+  private def pieceAt(pieceRole: EvidencePieceRole, square: EvidenceSquare): String =
+    s"${piece(pieceRole)}@${sq(square)}"
+  private def squares(values: List[EvidenceSquare]): String =
+    values.map(sq).filter(_.nonEmpty).distinct.sorted.mkString("/")
+  private def targetSummary(target: RelationWitnessTarget): String =
+    pieceAt(target.role, target.square)
 
 final case class RelationWitnessProof(
     sourceKind: String,
@@ -1134,6 +1275,8 @@ final case class RelationWitnessProof(
     proofAtoms.exists(_.role == RelationProofAtomRole.LineMove)
   def detailName: String =
     detail.detailName
+  def detailSummary: String =
+    detail.detailSummary
 
 object RelationWitnessProof:
   val empty: RelationWitnessProof =

@@ -768,7 +768,7 @@ case class RelativeCauseProof(
   def relationKinds: List[RelationFactKind] =
     relationProofs.map(_.kind).distinct
   def relationDetails: List[String] =
-    relationProofs.map(_.detailName).distinct
+    relationProofs.map(_.detailSummary).distinct
   def hasAnyEvidence: Boolean =
     sections.exists(_.hasAnyEvidence)
   def hasRawTypedDepth: Boolean =
@@ -825,6 +825,8 @@ case class RelationCauseProof(
 ):
   def detailName: String =
     proof.detailName
+  def detailSummary: String =
+    proof.detailSummary
   def hasLineProof: Boolean =
     proof.hasLineProof
   def hasConcreteProof: Boolean =
