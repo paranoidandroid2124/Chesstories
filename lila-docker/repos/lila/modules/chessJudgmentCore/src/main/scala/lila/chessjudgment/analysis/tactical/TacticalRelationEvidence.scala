@@ -628,7 +628,7 @@ private[chessjudgment] object TacticalRelationEvidence:
       movingSide = first.move.piece.color
       targetSet = relationTargetSquares(first.after.board, movingSide, targetHints).toSet
       witness <- clearanceAfterMove(first.before.board, first.after.board, movingSide, first.move.orig, first.move.dest, targetSet)
-    yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
+    yield witness.copy(lineMoves = relationPayoffUcis(replay, witness.targetSquare))
 
   def batteryWitness(
       replay: List[BoundedReplayStep],
@@ -706,7 +706,7 @@ private[chessjudgment] object TacticalRelationEvidence:
         blockerRole = first.move.piece.role,
         targetSet = targetSet
       )
-    yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
+    yield witness.copy(lineMoves = relationPayoffUcis(replay, witness.targetSquare))
 
   def decoyWitness(
       replay: List[BoundedReplayStep],
@@ -954,6 +954,26 @@ private[chessjudgment] object TacticalRelationEvidence:
 
   private def replayUcis(replay: List[BoundedReplayStep], fromPly: Int, maxPlies: Int): List[String] =
     replay.drop(fromPly).take(maxPlies).map(_.uci)
+
+  private def relationPayoffUcis(
+      replay: List[BoundedReplayStep],
+      targetSquare: Option[String],
+      maxPlies: Int = 3
+  ): List[String] =
+    val root = replayUcis(replay, 0, 1)
+    val movingSide = replay.headOption.map(_.move.piece.color)
+    val target = targetSquare.flatMap(squareFromKey)
+    replay
+      .take(maxPlies)
+      .zipWithIndex
+      .collectFirst {
+        case (step, index)
+            if index > 0 &&
+              movingSide.contains(step.move.piece.color) &&
+              (step.after.check.yes || target.exists(square => step.move.dest == square && step.move.captures)) =>
+          replayUcis(replay, 0, index + 1)
+      }
+      .getOrElse(root)
 
   def legalMove(position: Position, uci: String): Option[Move] =
     Uci(uci).collect { case move: Uci.Move => move }.flatMap(position.move(_).toOption)
