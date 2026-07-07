@@ -859,6 +859,10 @@ private[chessjudgment] object RelativeCauseSignalProfile:
     records.filter {
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
         payload.canAnchorDefensiveIdea
+      case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) =>
+        payload.isProofSignalDefensivePressure &&
+          payload.episode.bestDefense.nonEmpty &&
+          payload.onlyDefense.isEmpty
       case _ =>
         false
     }.distinctBy(_.ref.id)
