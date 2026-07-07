@@ -696,10 +696,9 @@ export default class AnalyseCtrl implements CevalHandler {
   private runChesstoryProbe(request: ChesstoryProbeRequest): Promise<ChesstoryProbeResult | undefined> {
     return new Promise(resolve => {
       let done = false;
-      let lastEval: Tree.LocalEval | undefined;
       const requiredPvs = Math.max(1, request.multiPv ?? 1);
       const depthFloor = Math.max(1, request.depthFloor ?? request.depth ?? 1);
-      const timeout = window.setTimeout(() => finish(lastEval), Math.min(12000, Math.max(4000, depthFloor * 700)));
+      const timeout = window.setTimeout(() => finish(), Math.min(12000, Math.max(4000, depthFloor * 700)));
       const finish = (ev?: Tree.LocalEval): void => {
         if (done) return;
         done = true;
@@ -722,7 +721,6 @@ export default class AnalyseCtrl implements CevalHandler {
         multiPv: requiredPvs,
         threatMode: false,
         emit: (ev: Tree.LocalEval) => {
-          lastEval = ev;
           if (ev.depth >= depthFloor && ev.pvs.filter(pv => pv.moves.length).length >= requiredPvs) finish(ev);
         },
       };
@@ -739,7 +737,7 @@ export default class AnalyseCtrl implements CevalHandler {
         mate: pv.mate,
         depth: pv.depth || ev.depth,
       }));
-    if (!replyLines.length) return;
+    if (ev.depth < (request.depthFloor ?? request.depth ?? 1) || replyLines.length < (request.multiPv ?? 1)) return;
     const evalCp = this.chesstoryEvalCp(ev);
     return {
       id: request.id,
