@@ -3008,20 +3008,13 @@ object MoveMeaningSurface:
   private def ideaType(claim: MoveMeaningClaim): String =
     terminalIdeaType(claim)
       .orElse(Option.when(concretePassedPawnAdvanceClaim(claim))("passed_pawn_advance"))
-      .orElse(Option.when(claim.causeKinds.contains(RelativeCauseKind.MaterialSwing) && claim.proofRelationDetails.nonEmpty)("material_gain"))
-      .orElse(Option.when(claim.causeKinds.contains(RelativeCauseKind.DefensiveResource))("defensive_resource"))
       .orElse(
         Option.when(
-          (claim.causeKinds.contains(RelativeCauseKind.RecaptureRecoveryWindow) ||
-            claim.unit == PositionPlanTechniqueUnit.EndgameTechniqueRecipe) &&
-            claim.boardCarriers.exists(carrier =>
-              carrier.role == "target" &&
-                carrier.kind == "PlanSubject" &&
-                carrier.value.startsWith("defender-move:")
-            )
+          claim.causeKinds.contains(RelativeCauseKind.DefensiveResource) ||
+            claim.causeKinds.contains(RelativeCauseKind.OnlyDefenseNecessity)
         )("defensive_resource")
       )
-      .orElse(Option.when(ownedDefenderMoveResourceClaim(claim))("defensive_resource"))
+      .orElse(Option.when(claim.causeKinds.contains(RelativeCauseKind.MaterialSwing) && claim.proofRelationDetails.nonEmpty)("material_gain"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.PieceRerouteRoute && longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
       .orElse(
@@ -3071,22 +3064,6 @@ object MoveMeaningSurface:
     else if codes.contains("material_gain") then Some("material_gain")
     else if codes.contains("material_loss") then Some("material_loss")
     else None
-
-  private def ownedDefenderMoveResourceClaim(claim: MoveMeaningClaim): Boolean =
-    claim.supportLevel == "owned_cause_linked" &&
-      claim.surfaceLane == "current_move_owned" &&
-      claim.causeEvidenceIds.nonEmpty &&
-      claim.publicHasCarrier &&
-      claim.boardCarriers.exists(carrier =>
-        carrier.role == "target" &&
-          carrier.kind == "PlanSubject" &&
-          carrier.value.startsWith("defender-move:")
-      ) &&
-      claim.boardCarriers.exists(carrier =>
-        carrier.role == "target" &&
-          carrier.kind == "PlanSubject" &&
-          carrier.value.startsWith("check:")
-      )
 
   private def checkingRouteTargetPressureClaim(claim: MoveMeaningClaim): Boolean =
     checkingPressureClaim(claim)

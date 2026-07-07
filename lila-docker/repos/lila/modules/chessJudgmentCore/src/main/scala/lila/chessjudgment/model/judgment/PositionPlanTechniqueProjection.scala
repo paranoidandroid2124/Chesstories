@@ -1476,6 +1476,7 @@ object PositionPlanTechniqueProjection:
         RelativeCauseKind.PlanImprovement,
         RelativeCauseKind.PlanContradiction,
         RelativeCauseKind.RecaptureRecoveryWindow,
+        RelativeCauseKind.DefensiveResource,
         RelativeCauseKind.KingForcing
       ).contains(kind)
 

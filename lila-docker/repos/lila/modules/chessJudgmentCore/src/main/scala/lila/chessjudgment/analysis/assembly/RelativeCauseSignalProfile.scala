@@ -186,7 +186,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       causeDraft(
         RelativeCauseKind.DefensiveResource,
         candidateDefensiveResource,
-        candidateDefensiveResource.nonEmpty && candidateBetter,
+        candidateDefensiveResource.nonEmpty && candidateProvedValue,
         Some(RelativeCauseSourceSide.Candidate)
       ),
       causeDraft(

@@ -971,7 +971,7 @@ object RelativeAssessmentAssembler:
           record.referencesLine(binding.eventLine) &&
             lineFactDirectlyOwnsCause(kind, payload, rootMove)
       case payload: TacticalMechanismEvidence =>
-        payload.canAnchorTacticalIdea &&
+        (if defensiveCause(kind) then payload.canAnchorDefensiveIdea else payload.canAnchorTacticalIdea) &&
           (
             threatBranchRecordOwnsRoot(record, rootMove, threatLineOwners) ||
               (record.referencesLine(binding.eventLine) && tacticalMechanismDirectlyOwnsRoot(graph, record, rootMove))

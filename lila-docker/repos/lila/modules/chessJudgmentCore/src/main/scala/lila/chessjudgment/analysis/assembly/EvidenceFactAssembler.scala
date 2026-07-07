@@ -592,7 +592,46 @@ object EvidenceFactAssembler:
             )
         }
       }
-    (baseEntries ++ relationConsequenceEntries ++ mateThreatMaterialEntries)
+    val defensiveResourceEntries =
+      records.collect { case record @ EvidenceRecord(_, payload: LineFactEvidence, _) =>
+        val rootMove = payload.rootMove.map(EvidenceRef.normalizeMove)
+        val rootTo = rootMove.filter(_.length >= 4).map(_.slice(2, 4))
+        val rootDefenderMove =
+          payload.lineEventsOf(LineEventKind.DefenderMove).exists(event =>
+            event.plyOffset == 0 &&
+              rootMove.exists(root => EvidenceRef.sameMove(root, event.moveUci))
+          )
+        val rootOwnedRecoveryKinds =
+          rootMove
+            .map(payload.rootOwnedProofSignalConsequences)
+            .getOrElse(Nil)
+            .filter(consequence =>
+              consequence.kind == LineConsequenceKind.RecaptureSequence ||
+                consequence.kind == LineConsequenceKind.RecoveryWindow
+            )
+        val carriedDefenseRecoveryKinds =
+          if payload.lineEventsOf(LineEventKind.DefenderMove).exists(event =>
+              event.plyOffset > 0 &&
+                rootTo.exists(to => EvidenceRef.normalizeMove(event.moveUci).take(2) == to)
+            )
+          then
+            payload.proofSignalConsequences.filter(consequence =>
+              consequence.kind == LineConsequenceKind.RecaptureSequence ||
+                consequence.kind == LineConsequenceKind.RecoveryWindow
+            )
+          else Nil
+        val recoveryKinds = (rootOwnedRecoveryKinds ++ carriedDefenseRecoveryKinds).distinct
+        Option.when(rootDefenderMove && recoveryKinds.nonEmpty)(
+          TacticalMechanismCandidate(
+            TacticalMechanismKind.DefensiveResource,
+            List(record),
+            recoveryKinds.map(consequence =>
+              TacticalMechanismSignal(TacticalMechanismSignalKind.LineConsequence, consequence.kind.toString, EvidenceLayer.Line, Some(record.ref))
+            )
+          )
+        )
+      }.flatten
+    (baseEntries ++ relationConsequenceEntries ++ mateThreatMaterialEntries ++ defensiveResourceEntries)
       .groupBy(_.kind)
       .toList
       .map { case (kind, grouped) =>

@@ -2919,7 +2919,13 @@ object LineEndgameTechniqueHorizon:
     pattern == "Lucena"
 
   def defensivePattern(pattern: String): Boolean =
-    !winningPattern(pattern)
+    pattern match
+      case "WrongRookPawnWrongBishopFortress" | "VancuraDefense" | "PhilidorDefense" | "ShortSideDefense" |
+          "OppositeColoredBishopsDraw" | "KnightBlockadeRookPawnDraw" | "TarraschDefenseActive" |
+          "PassiveRookDefense" | "RookAndBishopVsRookDraw" | "SameColoredBishopsBlockade" =>
+        true
+      case _ =>
+        false
 
   def terminalProofOverrides(kind: LineConsequenceKind): Boolean =
     kind match
@@ -4028,7 +4034,7 @@ final case class TacticalMechanismEvidence(
   def canAnchorTacticalIdea: Boolean =
     tactical && hasConcreteProof && hasEngineOrForcingProof
   def canAnchorDefensiveIdea: Boolean =
-    defensive && hasThreatProof
+    defensive && (hasThreatProof || hasLineProof)
 
 final case class StructuralDeltaEvidence(
     transition: StructuralTransitionBinding,
