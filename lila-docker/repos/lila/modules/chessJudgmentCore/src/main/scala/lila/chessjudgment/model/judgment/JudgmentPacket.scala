@@ -5,6 +5,7 @@ import java.security.MessageDigest
 
 import chess.{ Pawn, Square }
 import chess.format.Fen
+import lila.chessjudgment.analysis.singlePosition.ThreatDriver
 import lila.chessjudgment.model.{ ProbeAdmissionDiagnostic, ProbeRequest }
 import play.api.libs.json.*
 
@@ -1675,7 +1676,7 @@ case class MoveMeaningClaim(
     proofLineConsequences: List[LineConsequenceKind] = Nil,
     proofRelationKinds: List[RelationFactKind] = Nil,
     proofRelationDetails: List[String] = Nil,
-    proofThreatDrivers: List[String] = Nil,
+    proofThreatDrivers: List[ThreatDriver] = Nil,
     endgameTechniquePattern: Option[String] = None,
     endgameTechniqueRookPattern: Option[String] = None,
     endgameTechniqueSide: Option[String] = None,
@@ -3051,7 +3052,7 @@ object MoveMeaningSurface:
       sourceIds = claim.sourceEvidenceIds.take(6),
       proofRelationKinds = claim.proofRelationKinds,
       proofRelationDetails = claim.proofRelationDetails,
-      proofThreatDrivers = claim.proofThreatDrivers,
+      proofThreatDrivers = claim.proofThreatDrivers.map(_.toString),
       boardCarriers = claim.boardCarriers
     )
 
@@ -4373,7 +4374,7 @@ object MoveMeaningClaim:
       val mergedProofLineConsequences = list.flatMap(_.proofLineConsequences).distinct.sortBy(_.toString)
       val mergedProofRelationKinds = list.flatMap(_.proofRelationKinds).distinct.sortBy(_.toString)
       val mergedProofRelationDetails = list.flatMap(_.proofRelationDetails).distinct.sorted
-      val mergedProofThreatDrivers = list.flatMap(_.proofThreatDrivers).distinct.sorted
+      val mergedProofThreatDrivers = list.flatMap(_.proofThreatDrivers).distinct.sortBy(_.toString)
       val mergedObjectCarrierReady = list.exists(_.objectCarrierReady)
       val mergedBreakFileCarriers =
         list
@@ -5064,25 +5065,25 @@ object MoveMeaningClaim:
       )
       .distinct
 
-  private def proofThreatDriversFromEvidence(evidenceGraph: TypedEvidenceGraph, sourceEvidenceIds: List[String]): List[String] =
+  private def proofThreatDriversFromEvidence(evidenceGraph: TypedEvidenceGraph, sourceEvidenceIds: List[String]): List[ThreatDriver] =
     sourceEvidenceIds
       .flatMap(id => evidenceGraph.byId.get(id))
       .flatMap {
         case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) =>
-          List(payload.episode.driver.toString)
+          List(payload.episode.driver)
         case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
           payload.signals.flatMap {
             case signal if signal.kind == TacticalMechanismSignalKind.ThreatEpisode =>
               signal.source
                 .flatMap(source => evidenceGraph.byId.get(source.id))
-                .collect { case EvidenceRecord(_, threat: ThreatEpisodeEvidence, _) => threat.episode.driver.toString }
+                .collect { case EvidenceRecord(_, threat: ThreatEpisodeEvidence, _) => threat.episode.driver }
             case _ => None
           }
         case _ =>
           Nil
       }
       .distinct
-      .sorted
+      .sortBy(_.toString)
 
   private def publicBoardCarriers(
       detail: PositionPlanTechniqueSemanticDetail

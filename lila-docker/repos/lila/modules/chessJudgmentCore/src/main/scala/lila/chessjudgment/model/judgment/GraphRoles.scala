@@ -32,8 +32,8 @@ enum LineNodeRole:
     this match
       case Played        => IdeaSubject.PlayedMove
       case BestReference => IdeaSubject.ReferenceMove
-      case Alternative | Threat =>
-        IdeaSubject.CandidateLine
+      case Alternative   => IdeaSubject.CandidateLine
+      case Threat        => IdeaSubject.Threat
 
 object LineNodeRole:
 
@@ -75,7 +75,7 @@ enum TransitionEdgeRole:
       case Played      => IdeaSubject.PlayedMove
       case Reference   => IdeaSubject.ReferenceMove
       case Alternative => IdeaSubject.CandidateLine
-      case Threat      => IdeaSubject.CandidateLine
+      case Threat      => IdeaSubject.Threat
 
 enum EvidenceLayer:
   case Board

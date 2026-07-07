@@ -4137,7 +4137,8 @@ final case class TacticalMechanismSignal(
     kind: TacticalMechanismSignalKind,
     label: String,
     sourceLayer: EvidenceLayer,
-    source: Option[EvidenceRef] = None
+    source: Option[EvidenceRef] = None,
+    relationKind: Option[RelationFactKind] = None
 )
 
 final case class TacticalMechanismEvidence(
@@ -4167,7 +4168,7 @@ final case class TacticalMechanismEvidence(
         kind == TacticalMechanismSignalKind.ThreatEpisode
     ) ||
       (kind == TacticalMechanismKind.Tempo &&
-        signals.exists(signal => signal.kind == TacticalMechanismSignalKind.Relation && signal.label == RelationFactKind.Zwischenzug.toString))
+        signals.exists(signal => signal.kind == TacticalMechanismSignalKind.Relation && signal.relationKind.contains(RelationFactKind.Zwischenzug)))
   def tactical: Boolean =
     kind != TacticalMechanismKind.DefensiveResource &&
       kind != TacticalMechanismKind.DrawResource

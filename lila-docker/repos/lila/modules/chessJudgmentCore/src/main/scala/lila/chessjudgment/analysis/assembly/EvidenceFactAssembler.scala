@@ -493,7 +493,15 @@ object EvidenceFactAssembler:
               TacticalMechanismCandidate(
                 TacticalMechanismKind.fromRelation(payload.kind),
                 List(record),
-                List(TacticalMechanismSignal(TacticalMechanismSignalKind.Relation, payload.kind.toString, EvidenceLayer.Relation, Some(record.ref)))
+                List(
+                  TacticalMechanismSignal(
+                    TacticalMechanismSignalKind.Relation,
+                    payload.kind.toString,
+                    EvidenceLayer.Relation,
+                    Some(record.ref),
+                    relationKind = Some(payload.kind)
+                  )
+                )
               )
             )
           case payload: LineFactEvidence =>
@@ -579,7 +587,13 @@ object EvidenceFactAssembler:
               mechanismKind,
               List(relationRecord, lineRecord),
               List(
-                TacticalMechanismSignal(TacticalMechanismSignalKind.Relation, relation.kind.toString, EvidenceLayer.Relation, Some(relationRecord.ref)),
+                TacticalMechanismSignal(
+                  TacticalMechanismSignalKind.Relation,
+                  relation.kind.toString,
+                  EvidenceLayer.Relation,
+                  Some(relationRecord.ref),
+                  relationKind = Some(relation.kind)
+                ),
                 TacticalMechanismSignal(TacticalMechanismSignalKind.LineConsequence, consequence.kind.toString, EvidenceLayer.Line, Some(lineRecord.ref))
               )
             )
