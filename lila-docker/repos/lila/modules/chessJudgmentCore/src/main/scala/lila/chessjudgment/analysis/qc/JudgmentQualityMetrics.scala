@@ -760,7 +760,9 @@ final case class PublicMoveMeaningClaimDiagnostic(
     targetSquares: List[String] = Nil,
     targetFiles: List[String] = Nil,
     targetPieces: List[String] = Nil,
-    routeIdentityParts: List[String] = Nil
+    routeIdentityParts: List[String] = Nil,
+    proofRelationKinds: List[RelationFactKind] = Nil,
+    proofRelationDetails: List[String] = Nil
 )
 
 final case class CandidateComparisonDiagnostic(
@@ -1246,7 +1248,9 @@ object CandidateComparisonDiagnostic:
       targetSquares = claim.targetSquares.distinct.sorted,
       targetFiles = claim.targetFiles.distinct.sorted,
       targetPieces = claim.targetPieces.distinct.sorted,
-      routeIdentityParts = claim.routeIdentityParts.distinct.sorted
+      routeIdentityParts = claim.routeIdentityParts.distinct.sorted,
+      proofRelationKinds = claim.proofRelationKinds.distinct.sortBy(_.toString),
+      proofRelationDetails = claim.proofRelationDetails.distinct.sorted
     )
 
   private def comparisonPositionPlanTechniqueFrames(

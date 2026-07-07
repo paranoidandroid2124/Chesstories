@@ -1609,6 +1609,8 @@ case class MoveJudgmentCauseFrame(
     proofStrategicMechanismSignalSourceIds: List[String],
     supportEvidenceSourceIds: List[String],
     proofLineConsequences: List[LineConsequenceKind] = Nil,
+    proofRelationKinds: List[RelationFactKind] = Nil,
+    proofRelationDetails: List[String] = Nil,
     objectBindingSignatures: List[String],
     concreteObjectReady: Boolean,
     hasOwnedAdmissibleLongTermProof: Boolean = false,
@@ -1670,6 +1672,8 @@ case class MoveMeaningClaim(
     structuralMotifTags: List[String] = Nil,
     specificityTier: PositionPlanTechniqueSpecificityTier = PositionPlanTechniqueSpecificityTier.ContextOnly,
     terminalConsequenceKinds: List[String] = Nil,
+    proofRelationKinds: List[RelationFactKind] = Nil,
+    proofRelationDetails: List[String] = Nil,
     endgameTechniquePattern: Option[String] = None,
     endgameTechniqueRookPattern: Option[String] = None,
     endgameTechniqueSide: Option[String] = None,
@@ -1837,6 +1841,8 @@ case class MoveMeaningSurfaceEvidence(
     targetBound: Boolean = false,
     causeIds: List[String] = Nil,
     sourceIds: List[String] = Nil,
+    proofRelationKinds: List[RelationFactKind] = Nil,
+    proofRelationDetails: List[String] = Nil,
     boardCarriers: List[MoveMeaningSurfaceBoardCarrier] = Nil
 )
 
@@ -2071,6 +2077,7 @@ object MoveMeaningSurface:
             "subject" -> subject,
             "move_semantics" -> publicSemantics.map(publicIdeaChainMoveSemanticJson),
             "proof_levels" -> chainSurfaces.map(_.evidence.proofLevel).distinct,
+            "relation_kinds" -> chainSurfaces.flatMap(_.evidence.proofRelationKinds).map(_.toString).distinct.sorted,
             "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "pv" -> pv,
             "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
@@ -2272,7 +2279,9 @@ object MoveMeaningSurface:
         "proof_level" -> surface.evidence.proofLevel,
         "target_bound" -> surface.evidence.targetBound,
         "cause_ids" -> surface.evidence.causeIds,
-        "source_ids" -> surface.evidence.sourceIds
+        "source_ids" -> surface.evidence.sourceIds,
+        "relation_kinds" -> surface.evidence.proofRelationKinds.map(_.toString).distinct.sorted,
+        "relation_details" -> surface.evidence.proofRelationDetails.distinct.sorted
       )
     )
 
@@ -2958,6 +2967,8 @@ object MoveMeaningSurface:
       targetBound = claim.publicTargetBound,
       causeIds = claim.causeEvidenceIds.take(6),
       sourceIds = claim.sourceEvidenceIds.take(6),
+      proofRelationKinds = claim.proofRelationKinds,
+      proofRelationDetails = claim.proofRelationDetails,
       boardCarriers = claim.boardCarriers
     )
 
@@ -4217,6 +4228,8 @@ object MoveMeaningClaim:
       val mergedCauseEvidenceIds = list.flatMap(_.causeEvidenceIds).distinct.sorted
       val mergedSourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted
       val mergedObjectBindingSignatures = list.flatMap(_.objectBindingSignatures).distinct.sorted
+      val mergedProofRelationKinds = list.flatMap(_.proofRelationKinds).distinct.sortBy(_.toString)
+      val mergedProofRelationDetails = list.flatMap(_.proofRelationDetails).distinct.sorted
       val mergedObjectCarrierReady = list.exists(_.objectCarrierReady)
       val mergedBreakFileCarriers =
         list
@@ -4269,6 +4282,8 @@ object MoveMeaningClaim:
         breakIdentityParts = list.flatMap(_.breakIdentityParts).distinct.sorted,
         breakFiles = list.flatMap(_.breakFiles).distinct.sorted,
         structuralMotifTags = list.flatMap(_.structuralMotifTags).distinct.sorted,
+        proofRelationKinds = mergedProofRelationKinds,
+        proofRelationDetails = mergedProofRelationDetails,
         publicHasCarrier = mergedPublicHasCarrier,
         publicProofLevel =
           if !mergedPublicHasCarrier then "none"
@@ -4573,6 +4588,10 @@ object MoveMeaningClaim:
                 else if linkedCauseIds.nonEmpty && support == "owned_cause_linked" then "owned_cause"
                 else if linkedCauseIds.nonEmpty then "cause_linked"
                 else "surface_evidence"
+              val proofRelationKinds =
+                roleCompatibleCauseFrames.flatMap(_.proofRelationKinds).distinct.sortBy(_.toString)
+              val proofRelationDetails =
+                roleCompatibleCauseFrames.flatMap(_.proofRelationDetails).distinct.sorted
               MoveMeaningClaim(
                 meaningKind = meaningKind,
                 role = claimRole,
@@ -4623,6 +4642,8 @@ object MoveMeaningClaim:
                 structuralMotifTags = detail.structuralMotifTags.distinct.sorted,
                 specificityTier = detail.specificityTier,
                 terminalConsequenceKinds = detail.terminalConsequenceKinds.distinct.sorted,
+                proofRelationKinds = proofRelationKinds,
+                proofRelationDetails = proofRelationDetails,
                 endgameTechniquePattern = detail.endgameTechniquePattern,
                 endgameTechniqueRookPattern = detail.endgameTechniqueRookPattern,
                 endgameTechniqueSide = detail.endgameTechniqueSide,
@@ -7953,6 +7974,8 @@ object MoveJudgmentView:
       proofStrategicMechanismSignalSourceIds = strategicProof.signalSourceIds,
       supportEvidenceSourceIds = judgmentVisibleEvidenceIds(graph, cluster.causeProofs.flatMap(_.supportEvidenceSourceIds)),
       proofLineConsequences = cluster.proofLineConsequences.distinct.sortBy(_.toString),
+      proofRelationKinds = cluster.proofRelationKinds.distinct.sortBy(_.toString),
+      proofRelationDetails = cluster.proofRelationDetails.distinct.sorted,
       objectBindingSignatures = cluster.objectBindingSignatures,
       concreteObjectReady = EvidenceObjectBinding.playerFacingReadySignatures(cluster.objectBindingSignatures),
       hasOwnedTacticalProof = clusterHasOwnedTacticalProof(cluster),
@@ -8083,6 +8106,8 @@ object MoveJudgmentView:
       proofStrategicMechanismSignalSourceIds = strategicProof.signalSourceIds,
       supportEvidenceSourceIds = judgmentVisibleCauseEvidenceIds(cause.supportEvidence, cause),
       proofLineConsequences = proof.lineConsequences.distinct.sortBy(_.toString),
+      proofRelationKinds = proof.relationKinds.distinct.sortBy(_.toString),
+      proofRelationDetails = proof.relationDetails.distinct.sorted,
       objectBindingSignatures = EvidenceObjectBinding.objectSignatures(objectBindings),
       concreteObjectReady = EvidenceObjectBinding.playerFacingReady(objectBindings),
       hasOwnedAdmissibleLongTermProof = cause.hasOwnedAdmissibleLongTermProof,

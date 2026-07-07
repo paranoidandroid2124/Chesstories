@@ -1866,7 +1866,9 @@ object MoveReviewPhase3AuditRunner:
       "targetSquares" -> diagnostic.targetSquares,
       "targetFiles" -> diagnostic.targetFiles,
       "targetPieces" -> diagnostic.targetPieces,
-      "routeIdentityParts" -> diagnostic.routeIdentityParts
+      "routeIdentityParts" -> diagnostic.routeIdentityParts,
+      "proofRelationKinds" -> diagnostic.proofRelationKinds.map(_.toString),
+      "proofRelationDetails" -> diagnostic.proofRelationDetails
     )
 
   private def relativeCauseDiagnosticsJson(diagnostic: ComparisonRelativeCauseDiagnostics): JsObject =
@@ -3565,6 +3567,8 @@ object MoveReviewPhase3AuditRunner:
       "proofStrategicMechanismSourceIds" -> frame.proofStrategicMechanismSourceIds,
       "proofStrategicMechanismSignalSourceIds" -> frame.proofStrategicMechanismSignalSourceIds,
       "supportEvidenceSourceIds" -> frame.supportEvidenceSourceIds,
+      "proofRelationKinds" -> frame.proofRelationKinds.map(_.toString),
+      "proofRelationDetails" -> frame.proofRelationDetails,
       "hasOwnedAdmissibleLongTermProof" -> frame.hasOwnedAdmissibleLongTermProof,
       "rootArbitrationTier" -> frame.rootArbitrationTier.toString,
       "tacticalWitnessCauseEvidenceIds" -> frame.tacticalWitnessCauseEvidenceIds,
@@ -3629,6 +3633,8 @@ object MoveReviewPhase3AuditRunner:
         )
       ),
       "terminalConsequenceKinds" -> claim.terminalConsequenceKinds,
+      "proofRelationKinds" -> claim.proofRelationKinds.map(_.toString),
+      "proofRelationDetails" -> claim.proofRelationDetails,
       "endgameTechniquePattern" -> claim.endgameTechniquePattern,
       "endgameTechniqueRookPattern" -> claim.endgameTechniqueRookPattern,
       "endgameTechniqueSide" -> claim.endgameTechniqueSide,
