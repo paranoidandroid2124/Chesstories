@@ -2216,16 +2216,12 @@ object MoveMeaningSurface:
       case "outpost_attempt"       => 5
       case "compensation"          => 6
       case "long_diagonal_pressure" => 7
-      case "target_pressure" if surface.idea.label.startsWith("weak ") =>
+      case "target_pressure" if targetPressureWeakCarrier(surface) =>
         7
-      case "target_pressure" if surface.idea.label == "king safety pressure" =>
-        9
       case "target_pressure"
           if surface.target.files.isEmpty &&
             surface.target.squares.nonEmpty &&
             moveDestination(surface.moveUci).exists(to => surface.target.squares.forall(_.equalsIgnoreCase(to))) =>
-        10
-      case "target_pressure" if surface.idea.label == "target pressure" || surface.idea.label == "central pressure" =>
         10
       case "target_pressure"        => 8
       case "piece_route"            => 9
@@ -2244,6 +2240,15 @@ object MoveMeaningSurface:
               carrier.value.startsWith("passed-pawn:")
           )
       )
+
+  private def targetPressureWeakCarrier(surface: MoveMeaningSurface): Boolean =
+    surface.evidence.boardCarriers.exists(carrier =>
+      carrier.role == "target" &&
+        (
+          carrier.kind == "Pawn" && carrier.value.toLowerCase.startsWith("weak-pawn:") ||
+            carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("weak-square:")
+        )
+    )
 
   private def moveDestination(move: String): Option[String] =
     val normalized = JudgmentSubjectBinding.normalizeMove(move).toLowerCase
@@ -2892,8 +2897,8 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
         case ("pawn_break_timing", _) if flankInfrastructurePawnMove || flankPressurePawnMove => flankPawnAdvanceLabel
         case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
-        case ("pawn_break_timing", label) if breakPreparationPlanClaim(claim, label) => breakPreparationLabel
-        case ("pawn_break_timing", label) if label.contains("PieceActivation") && mobilityGainCarrier =>
+        case ("pawn_break_timing", _) if breakPreparationPlanClaim(claim) => breakPreparationLabel
+        case ("pawn_break_timing", _) if MoveMeaningClaim.planPieceActivationClaim(claim) && mobilityGainCarrier =>
           claim.targetPieces.map(_.toLowerCase).distinct.sorted match
             case piece :: Nil => s"activates $piece"
             case _            => "piece activation"
@@ -3151,14 +3156,14 @@ object MoveMeaningSurface:
     claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
       claim.publicProofLevel == "owned_cause"
 
-  private def breakPreparationPlanClaim(claim: MoveMeaningClaim, label: String): Boolean =
+  private def breakPreparationPlanClaim(claim: MoveMeaningClaim): Boolean =
     claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
       (
-        label.contains("PawnBreakPreparation") ||
+        claim.objectBindingSignatures.exists(_.toLowerCase.contains("pawnbreakpreparation")) ||
           (
             claim.role == "PreparesBreakOption" &&
-              (label.contains("OpeningDevelopment") || label.contains("PieceActivation")) &&
-              (claim.breakFiles.nonEmpty || claim.breakIdentityParts.exists(_.startsWith("breakFile:")))
+              MoveMeaningClaim.planPieceActivationClaim(claim) &&
+              MoveMeaningClaim.breakFileCarrierClaim(claim)
           )
       )
 
@@ -3872,7 +3877,7 @@ object MoveMeaningClaim:
                 currentMoveSurfaceLane(other) &&
                 other.supportLevel == "owned_cause_linked" &&
                 other.publicHasCarrier &&
-                other.label.exists(_.contains("PieceActivation")) &&
+                planPieceActivationClaim(other) &&
                 other.moveUci == claim.moveUci &&
                 other.lineRole == claim.lineRole &&
                 other.causeEvidenceIds.intersect(claim.causeEvidenceIds).nonEmpty &&
@@ -3892,7 +3897,7 @@ object MoveMeaningClaim:
           claim.causeEvidenceIds.isEmpty ||
           claim.role == "PreparesBreakOption" &&
             currentMoveSurfaceLane(claim) &&
-            claim.label.exists(_.contains("PieceActivation")) &&
+            planPieceActivationClaim(claim) &&
             claim.routeIdentityParts.exists(_.toLowerCase.contains(":line-unlock:by:"))
       )
 
@@ -3911,7 +3916,7 @@ object MoveMeaningClaim:
         claim.causeEvidenceIds.isEmpty &&
         (
           claim.meaningKind == "PawnBreakTiming" ||
-            claim.meaningKind == "PieceActivity" && claim.label.exists(_.startsWith("break-file-"))
+            claim.meaningKind == "PieceActivity" && breakFileCarrierClaim(claim)
         )
     (shadowablePlanBreak || shadowableSurfaceBreak) &&
       claims.exists(other =>
@@ -3950,11 +3955,7 @@ object MoveMeaningClaim:
         claim.surfaceLane == "current_move_function" &&
         claim.causeEvidenceIds.isEmpty &&
         !passedPawnAdvanceCarrier(claim) &&
-        claim.label.exists(label =>
-          label == "weak-pawn-target" ||
-            label == "target-pressure-gain" ||
-            label == "TargetFixation"
-        )
+        targetPressureSourceOrCarrier(claim)
     (
       claim.meaningKind == "PieceActivity" && claim.role == "ImprovesPieceActivity" && !passedPawnAdvanceCarrier(claim) ||
         targetPressureActivity(claim) ||
@@ -3989,8 +3990,7 @@ object MoveMeaningClaim:
         (other.meaningKind == "PieceActivity" && other.role == "ImprovesPieceActivity") ||
         (other.meaningKind == "PlanContinuity" && other.role == "PreparesBreakOption" && other.breakFiles.nonEmpty)
     val concreteCounterplayCarrier =
-      claim.breakFiles.nonEmpty ||
-        claim.label.exists(_.startsWith("defensive-counter-break-")) ||
+      counterplayBreakCarrierClaim(claim) ||
         claim.boardCarriers.exists(carrier =>
           carrier.role == "target" &&
             carrier.kind == "PlanSubject" &&
@@ -4024,6 +4024,23 @@ object MoveMeaningClaim:
     left.targetSquares.intersect(right.targetSquares).nonEmpty ||
       left.targetPieces.intersect(right.targetPieces).nonEmpty ||
       left.targetFiles.intersect(right.targetFiles).nonEmpty
+
+  private def targetPressureSourceOrCarrier(claim: MoveMeaningClaim): Boolean =
+    claim.sourceEvidenceIds.exists(_.contains(":strategic-mechanism:target-pressure:")) ||
+      claim.causeKinds.exists(kind =>
+        kind == RelativeCauseKind.TargetPressureGain ||
+          kind == RelativeCauseKind.TargetPressureRelease ||
+          kind == RelativeCauseKind.PawnWeaknessTarget
+      ) ||
+      claim.boardCarriers.exists(carrier =>
+        carrier.role == "target" &&
+          (
+            carrier.kind == "Pawn" && carrier.value.toLowerCase.startsWith("weak-pawn:") ||
+              carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("weak-square:")
+          )
+      ) ||
+      claim.targetSquares.nonEmpty ||
+      claim.targetFiles.nonEmpty
 
   private def ownedRouteClaimWithSameIdentity(
       claims: List[MoveMeaningClaim],
@@ -4176,7 +4193,7 @@ object MoveMeaningClaim:
         }
     claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
       claim.role == "PreparesBreakOption" &&
-      (!claim.label.exists(_.contains("PieceActivation")) || flankKingPressurePawnAdvance) &&
+      (!planPieceActivationClaim(claim) || flankKingPressurePawnAdvance) &&
       claim.publicHasCarrier &&
       claim.causeEvidenceIds.nonEmpty &&
       (claim.breakFiles.nonEmpty || claim.breakIdentityParts.nonEmpty) &&
@@ -4187,6 +4204,23 @@ object MoveMeaningClaim:
             toRank <- to.drop(1).toIntOption
           yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
       }
+
+  private[judgment] def planPieceActivationClaim(claim: MoveMeaningClaim): Boolean =
+    claim.objectBindingSignatures.exists(_.toLowerCase.contains("pieceactivation")) ||
+      claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":line-unlock:by:"))
+
+  private[judgment] def breakFileCarrierClaim(claim: MoveMeaningClaim): Boolean =
+    claim.breakFiles.nonEmpty ||
+      claim.breakIdentityParts.exists(_.startsWith("breakFile:")) ||
+      claim.boardCarriers.exists(carrier =>
+        carrier.role == "target" &&
+          carrier.kind == "PlanSubject" &&
+          carrier.value.startsWith("break-file:")
+      )
+
+  private def counterplayBreakCarrierClaim(claim: MoveMeaningClaim): Boolean =
+    breakFileCarrierClaim(claim) ||
+      claim.axisKey.exists(_.toLowerCase.startsWith("counterplay:restrain:defensive-counter-break-"))
 
   private def planContinuityClaimHasCurrentMovePlanSubject(claim: MoveMeaningClaim): Boolean =
     val normalizedMove = JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase
