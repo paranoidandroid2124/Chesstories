@@ -1674,6 +1674,7 @@ case class MoveMeaningClaim(
     terminalConsequenceKinds: List[String] = Nil,
     proofRelationKinds: List[RelationFactKind] = Nil,
     proofRelationDetails: List[String] = Nil,
+    proofThreatDrivers: List[String] = Nil,
     endgameTechniquePattern: Option[String] = None,
     endgameTechniqueRookPattern: Option[String] = None,
     endgameTechniqueSide: Option[String] = None,
@@ -1843,6 +1844,7 @@ case class MoveMeaningSurfaceEvidence(
     sourceIds: List[String] = Nil,
     proofRelationKinds: List[RelationFactKind] = Nil,
     proofRelationDetails: List[String] = Nil,
+    proofThreatDrivers: List[String] = Nil,
     boardCarriers: List[MoveMeaningSurfaceBoardCarrier] = Nil
 )
 
@@ -2083,6 +2085,7 @@ object MoveMeaningSurface:
             "proof_levels" -> chainSurfaces.map(_.evidence.proofLevel).distinct,
             "relation_kinds" -> chainSurfaces.flatMap(_.evidence.proofRelationKinds).map(_.toString).distinct.sorted,
             "relation_details" -> chainSurfaces.flatMap(_.evidence.proofRelationDetails).distinct.sorted,
+            "threat_drivers" -> chainSurfaces.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
             "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "pv" -> pv,
             "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
@@ -2286,7 +2289,8 @@ object MoveMeaningSurface:
         "cause_ids" -> surface.evidence.causeIds,
         "source_ids" -> surface.evidence.sourceIds,
         "relation_kinds" -> surface.evidence.proofRelationKinds.map(_.toString).distinct.sorted,
-        "relation_details" -> surface.evidence.proofRelationDetails.distinct.sorted
+        "relation_details" -> surface.evidence.proofRelationDetails.distinct.sorted,
+        "threat_drivers" -> surface.evidence.proofThreatDrivers.distinct.sorted
       )
     )
 
@@ -2985,6 +2989,7 @@ object MoveMeaningSurface:
       sourceIds = claim.sourceEvidenceIds.take(6),
       proofRelationKinds = claim.proofRelationKinds,
       proofRelationDetails = claim.proofRelationDetails,
+      proofThreatDrivers = claim.proofThreatDrivers,
       boardCarriers = claim.boardCarriers
     )
 
@@ -4224,6 +4229,7 @@ object MoveMeaningClaim:
       val mergedObjectBindingSignatures = list.flatMap(_.objectBindingSignatures).distinct.sorted
       val mergedProofRelationKinds = list.flatMap(_.proofRelationKinds).distinct.sortBy(_.toString)
       val mergedProofRelationDetails = list.flatMap(_.proofRelationDetails).distinct.sorted
+      val mergedProofThreatDrivers = list.flatMap(_.proofThreatDrivers).distinct.sorted
       val mergedObjectCarrierReady = list.exists(_.objectCarrierReady)
       val mergedBreakFileCarriers =
         list
@@ -4278,6 +4284,7 @@ object MoveMeaningClaim:
         structuralMotifTags = list.flatMap(_.structuralMotifTags).distinct.sorted,
         proofRelationKinds = mergedProofRelationKinds,
         proofRelationDetails = mergedProofRelationDetails,
+        proofThreatDrivers = mergedProofThreatDrivers,
         publicHasCarrier = mergedPublicHasCarrier,
         publicProofLevel =
           if !mergedPublicHasCarrier then "none"
@@ -4607,6 +4614,8 @@ object MoveMeaningClaim:
                 roleCompatibleCauseFrames.flatMap(_.proofRelationKinds).distinct.sortBy(_.toString)
               val proofRelationDetails =
                 roleCompatibleCauseFrames.flatMap(_.proofRelationDetails).distinct.sorted
+              val proofThreatDrivers =
+                proofThreatDriversFromEvidence(evidenceGraph, roleCompatibleCauseFrames.flatMap(_.proofDirectSourceIds))
               MoveMeaningClaim(
                 meaningKind = meaningKind,
                 role = claimRole,
@@ -4659,6 +4668,7 @@ object MoveMeaningClaim:
                 terminalConsequenceKinds = detail.terminalConsequenceKinds.distinct.sorted,
                 proofRelationKinds = proofRelationKinds,
                 proofRelationDetails = proofRelationDetails,
+                proofThreatDrivers = proofThreatDrivers,
                 endgameTechniquePattern = detail.endgameTechniquePattern,
                 endgameTechniqueRookPattern = detail.endgameTechniqueRookPattern,
                 endgameTechniqueSide = detail.endgameTechniqueSide,
@@ -4882,6 +4892,26 @@ object MoveMeaningClaim:
         currentCaptureCarriers ++ replyCapturesMovedPiece
       )
       .distinct
+
+  private def proofThreatDriversFromEvidence(evidenceGraph: TypedEvidenceGraph, sourceEvidenceIds: List[String]): List[String] =
+    sourceEvidenceIds
+      .flatMap(id => evidenceGraph.byId.get(id))
+      .flatMap {
+        case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) =>
+          List(payload.episode.driver.toString)
+        case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
+          payload.signals.flatMap {
+            case signal if signal.kind == TacticalMechanismSignalKind.ThreatEpisode =>
+              signal.source
+                .flatMap(source => evidenceGraph.byId.get(source.id))
+                .collect { case EvidenceRecord(_, threat: ThreatEpisodeEvidence, _) => threat.episode.driver.toString }
+            case _ => None
+          }
+        case _ =>
+          Nil
+      }
+      .distinct
+      .sorted
 
   private def publicBoardCarriers(
       detail: PositionPlanTechniqueSemanticDetail
