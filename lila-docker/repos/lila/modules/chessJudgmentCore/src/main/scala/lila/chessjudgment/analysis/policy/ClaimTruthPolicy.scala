@@ -493,6 +493,8 @@ object ClaimTruthPolicy:
       records.exists {
         case EvidenceRecord(_, payload: LineFactEvidence, _) =>
           materialLineProof(payload)
+        case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
+          payload.kind == TacticalMechanismKind.MaterialGain && payload.canAnchorTacticalIdea
         case _ =>
           false
       }
