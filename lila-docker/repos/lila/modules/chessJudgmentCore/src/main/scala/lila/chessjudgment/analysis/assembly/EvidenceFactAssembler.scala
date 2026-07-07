@@ -578,7 +578,7 @@ object EvidenceFactAssembler:
           case (lineRecord, consequence, mechanismKind, consequenceMoves, consequenceCaptureSquares)
               if relationRecord.ref.line.exists(lineRecord.referencesLine) &&
                 (
-                  consequenceMoves.exists(relation.mentionsLineMove) ||
+                  (relation.lineProofCount > 1 && consequenceMoves.exists(relation.mentionsLineMove)) ||
                     consequenceCaptureSquares.exists(square => relation.targetSquare.contains(square) || relation.focusSquares.contains(square)) ||
                     (mechanismKind == TacticalMechanismKind.KingForcing &&
                       TacticalMechanismKind.fromRelation(relation.kind) == TacticalMechanismKind.KingForcing)

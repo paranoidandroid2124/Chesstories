@@ -979,6 +979,7 @@ object RelativeAssessmentAssembler:
       case payload: RelationFactEvidence =>
         payload.hasConcreteRelationProof &&
           payload.hasLineProof &&
+          payload.lineProofCount > 1 &&
           (threatBranchRecordOwnsRoot(record, rootMove, threatLineOwners) || relationReferencesEventLine(record, payload, binding.eventLine)) &&
           relationCanDirectlyProveCause(kind, payload)
       case payload: ThreatEpisodeEvidence =>

@@ -573,7 +573,7 @@ private[chessjudgment] object TacticalRelationEvidence:
         targetSet = targetSet,
         targetHintSet = targetHintSet
       )
-    yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
+    yield witness.copy(lineMoves = relationPayoffUcis(replay, witnessTargetKeys(witness)))
 
   def trappedPieceWitness(
       replay: List[BoundedReplayStep],
@@ -686,7 +686,7 @@ private[chessjudgment] object TacticalRelationEvidence:
       movingSide = first.move.piece.color
       targetSet = relationTargetSquares(first.after.board, movingSide, targetHints).toSet
       witness <- skewerAfterMove(first.after.board, movingSide, first.move.dest, first.move.piece.role, targetSet)
-    yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
+    yield witness.copy(lineMoves = relationPayoffUcis(replay, witnessTargetKeys(witness)))
 
   def interferenceWitness(
       replay: List[BoundedReplayStep],
