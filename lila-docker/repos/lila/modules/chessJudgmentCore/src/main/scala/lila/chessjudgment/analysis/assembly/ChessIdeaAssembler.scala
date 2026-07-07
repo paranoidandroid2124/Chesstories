@@ -413,6 +413,9 @@ object ChessIdeaAssembler:
           ),
           Option.when(cause.hasOwnedAdmissibleLongTermProof && hasOpeningRelativeCauseSupport(supportRecords))(
             ChessIdeaFamily.Opening
+          ),
+          Option.when(relativeCauseHasTacticalProof(cause))(
+            ChessIdeaFamily.Tactical
           )
         ).flatten.distinct
       case _ =>
