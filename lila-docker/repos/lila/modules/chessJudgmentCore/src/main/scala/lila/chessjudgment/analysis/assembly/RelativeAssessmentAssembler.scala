@@ -597,11 +597,22 @@ object RelativeAssessmentAssembler:
       (support ++ comparisonProof.filter(record => supportIds.contains(record.ref.id)))
         .filter(record => directProofSource(graph, fact, kind, binding, record, threatLineOwners))
         .distinctBy(_.ref.id)
-    val directRecords =
+    val ownedDirectRecords =
       proofSectionRecords(graph, directSeed, Some(kind), Some(binding))
         .filter(record => directProofSource(graph, fact, kind, binding, record, threatLineOwners))
         .filter(record => supportIds.contains(record.ref.id))
         .distinctBy(_.ref.id)
+    val directRelationSupportRecords =
+      if !ownedDirectRecords.exists(relationSupportDirectProofCarrier) then Nil
+      else
+        support.collect {
+          case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)
+              if relation.hasConcreteRelationProof &&
+                relationCanDirectlyProveCause(kind, relation) &&
+                relationSupportOverlapsDirectProof(relation, ownedDirectRecords, binding.eventLine.rootMove) =>
+            record
+        }.distinctBy(_.ref.id)
+    val directRecords = (ownedDirectRecords ++ directRelationSupportRecords).distinctBy(_.ref.id)
     val directIds = directRecords.map(_.ref.id).toSet
     val contrastRecords =
       comparisonProof
@@ -750,6 +761,32 @@ object RelativeAssessmentAssembler:
       includeContextLayers: Boolean
   ): RelativeCauseProofSection =
     val proofRecords = records.distinctBy(_.ref.id)
+    val relationProofs =
+      (
+        proofRecords.collect {
+          case EvidenceRecord(ref, payload: RelationFactEvidence, _) if payload.hasConcreteRelationProof =>
+            RelationCauseProof(
+              source = ref,
+              kind = payload.kind,
+              proof = payload.witnessProof
+            )
+        } ++
+          proofRecords.collect { case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
+            payload.signals
+              .filter(_.kind == TacticalMechanismSignalKind.Relation)
+              .flatMap(_.source)
+              .flatMap(source => graph.byId.get(source.id))
+              .collect {
+                case EvidenceRecord(ref, relation: RelationFactEvidence, _)
+                    if relation.hasConcreteRelationProof && relationCanDirectlyProveCause(kind, relation) =>
+                  RelationCauseProof(
+                    source = ref,
+                    kind = relation.kind,
+                    proof = relation.witnessProof
+                  )
+              }
+          }.flatten
+      ).distinct
     val structuralProofSourceIds =
       proofRecords.collect {
         case EvidenceRecord(ref, structural: StructuralDeltaEvidence, _)
@@ -787,13 +824,7 @@ object RelativeAssessmentAssembler:
         case _ =>
           Nil
       }.distinct,
-      relationProofs = proofRecords.collect { case EvidenceRecord(ref, payload: RelationFactEvidence, _) if payload.hasConcreteRelationProof =>
-        RelationCauseProof(
-          source = ref,
-          kind = payload.kind,
-          proof = payload.witnessProof
-        )
-      }.distinct,
+      relationProofs = relationProofs,
       tacticalMechanisms = proofRecords.collect {
         case EvidenceRecord(ref, payload: TacticalMechanismEvidence, _) if payload.hasConcreteProof =>
           TacticalMechanismProof(
@@ -934,6 +965,49 @@ object RelativeAssessmentAssembler:
       .map(_.ref.id)
       .toSet
 
+  private def relationSupportDirectProofCarrier(record: EvidenceRecord): Boolean =
+    record.payload match
+      case payload: LineFactEvidence =>
+        payload.hasTacticalLineConsequence || payload.hasProofSignalMaterialEvent
+      case payload: TacticalMechanismEvidence =>
+        payload.hasConcreteProof && payload.tactical
+      case _ =>
+        false
+
+  private def relationSupportOverlapsDirectProof(
+      relation: RelationFactEvidence,
+      directRecords: List[EvidenceRecord],
+      rootMove: String
+  ): Boolean =
+    val normalizedRoot = normalizeMove(rootMove)
+    val rootDestination =
+      Option.when(normalizedRoot.length >= 4)(normalizedRoot.slice(2, 4)).toList
+    val relationSquares =
+      (
+        relation.focusSquares.map(_.key) ++
+          relation.targetSquare.map(_.key).toList ++
+          relation.participants.map(_.square.key)
+      ).map(_.toLowerCase).toSet
+    val proofSquares =
+      (
+        rootDestination ++
+          directRecords.flatMap {
+            case EvidenceRecord(_, line: LineFactEvidence, _) =>
+              line.rootOwnedLineEvents(rootMove).flatMap(_.square.map(_.key)) ++
+                line.materialCaptures
+                  .filter(capture => EvidenceRef.sameMove(capture.moveUci, rootMove))
+                  .map(_.square.key)
+            case EvidenceRecord(_, mechanism: TacticalMechanismEvidence, _) =>
+              mechanism.moveUci.toList.flatMap(move =>
+                val normalized = normalizeMove(move)
+                Option.when(normalized.length >= 4)(normalized.slice(2, 4))
+              )
+            case _ =>
+              Nil
+          }
+      ).map(_.toLowerCase).toSet
+    relationSquares.intersect(proofSquares).nonEmpty
+
   private def contextSupportRecord(
       fact: CandidateComparisonFact,
       record: EvidenceRecord
@@ -979,7 +1053,7 @@ object RelativeAssessmentAssembler:
       case payload: RelationFactEvidence =>
         payload.hasConcreteRelationProof &&
           payload.hasLineProof &&
-          payload.lineProofCount > 1 &&
+          (payload.lineProofCount > 1 || (payload.hasParticipantProof && payload.mentionsLineMove(rootMove))) &&
           (threatBranchRecordOwnsRoot(record, rootMove, threatLineOwners) || relationReferencesEventLine(record, payload, binding.eventLine)) &&
           relationCanDirectlyProveCause(kind, payload)
       case payload: ThreatEpisodeEvidence =>
