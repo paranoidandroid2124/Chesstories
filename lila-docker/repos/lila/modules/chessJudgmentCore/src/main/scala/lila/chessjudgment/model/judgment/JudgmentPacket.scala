@@ -4683,9 +4683,12 @@ object MoveMeaningClaim:
                 )
               val relationProofBoardCarriers =
                 relationProofBoardCarriersFromCauseFrames(evidenceGraph, roleCompatibleCauseFrames)
+              val threatProofBoardCarriers =
+                threatProofBoardCarriersFromCauseFrames(evidenceGraph, roleCompatibleCauseFrames)
               val baseClaimBoardCarriers =
                 (claimOwnedBoardCarriers ++
                   relationProofBoardCarriers ++
+                  threatProofBoardCarriers ++
                   lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove))
                   .distinct
                   .sortBy(boardCarrierSortKey)
@@ -4712,6 +4715,7 @@ object MoveMeaningClaim:
                 (
                   baseClaimBoardCarriers.filter(carrier => carrier.role == "actor" && carrier.kind == "Move") ++
                     relationProofBoardCarriers ++
+                    threatProofBoardCarriers ++
                     breakFileIdentityCarriers ++
                     (baseClaimBoardCarriers ++ spareIdentityCarriers).distinct.sortBy(boardCarrierSortKey)
                 ).distinct
@@ -4908,6 +4912,22 @@ object MoveMeaningClaim:
           publicSquareCarrier(role, participant.square.key) ++
             participant.role.toList.flatMap(piece => publicPieceCarrier(role, piece.name))
         )
+      )
+      .distinct
+      .take(8)
+
+  private def threatProofBoardCarriersFromCauseFrames(
+      evidenceGraph: TypedEvidenceGraph,
+      frames: List[MoveJudgmentCauseFrame]
+  ): List[MoveMeaningSurfaceBoardCarrier] =
+    frames
+      .flatMap(_.proofDirectSourceIds)
+      .distinct
+      .flatMap(id => evidenceGraph.byId.get(id))
+      .collect { case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) => payload }
+      .flatMap(payload =>
+        payload.episode.attackSquares.flatMap(square => publicSquareCarrier("target", square.key)) ++
+          payload.episode.targetPieces.flatMap(role => publicPieceCarrier("target", role.name))
       )
       .distinct
       .take(8)

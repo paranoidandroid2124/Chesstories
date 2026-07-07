@@ -983,13 +983,22 @@ object RelativeAssessmentAssembler:
           (threatBranchRecordOwnsRoot(record, rootMove, threatLineOwners) || relationReferencesEventLine(record, payload, binding.eventLine)) &&
           relationCanDirectlyProveCause(kind, payload)
       case payload: ThreatEpisodeEvidence =>
-        defensiveCause(kind) &&
-          payload.isProofSignalDefensivePressure &&
-          (
-            threatBranchRecordOwnsRoot(record, rootMove, threatLineOwners) ||
-              record.referencesLine(binding.eventLine) ||
-              threatEpisodeOwnsDefensiveCause(payload, kind, rootMove)
-          )
+        val ownsDefensiveCause =
+          defensiveCause(kind) &&
+            payload.isProofSignalDefensivePressure &&
+            (
+              threatBranchRecordOwnsRoot(record, rootMove, threatLineOwners) ||
+                record.referencesLine(binding.eventLine) ||
+                threatEpisodeOwnsDefensiveCause(payload, kind, rootMove)
+            )
+        val ownsMateThreat =
+          kind == RelativeCauseKind.KingForcing &&
+            RelativeCauseSignalProfile.currentMoveMateThreatRecord(record) &&
+            (
+              threatBranchRecordOwnsRoot(record, rootMove, threatLineOwners) ||
+                record.referencesLine(binding.eventLine)
+            )
+        ownsDefensiveCause || ownsMateThreat
       case payload: StructuralDeltaEvidence =>
         record.referencesLine(binding.eventLine) &&
           payload.line.contains(binding.eventLine) &&

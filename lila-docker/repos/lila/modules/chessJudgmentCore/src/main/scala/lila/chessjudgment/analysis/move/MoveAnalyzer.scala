@@ -720,10 +720,25 @@ object MoveAnalyzer:
       detectOpposition(board, pos.color, plyIndex),
       detectOpenFiles(board, plyIndex),
       detectWeakBackRank(pos, plyIndex),
+      detectMateInOneThreats(pos, plyIndex),
       detectSpaceAdvantage(board, plyIndex),
       detectBattery(board, plyIndex),
       detectImbalance(board, plyIndex) // Knight vs Bishop
     )
+
+  private def detectMateInOneThreats(pos: Position, plyIndex: Int): List[Motif] =
+    if pos.checkMate then Nil
+    else
+      List(White, Black).flatMap { color =>
+        val activePosition = if pos.color == color then pos else pos.withColor(color)
+        if activePosition.check.yes then None
+        else
+          activePosition.legalMoves.find(_.after.checkMate).flatMap { move =>
+            move.after.board.kingPosOf(!color).map { kingSq =>
+              Motif.Check(move.piece.role, kingSq, CheckType.Mate, color, plyIndex, Some(move.toUci.uci))
+            }
+          }
+      }
 
   private def detectPins(board: Board, plyIndex: Int): List[Motif] =
     // Static absolute pins (to king) for bishops, rooks, and queens.

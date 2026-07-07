@@ -1,6 +1,7 @@
 package lila.chessjudgment.analysis.assembly
 
 import lila.chessjudgment.analysis.evaluation.JudgmentThresholds
+import lila.chessjudgment.analysis.singlePosition.ThreatDriver
 import lila.chessjudgment.analysis.tactical.TacticalMotifClassifier
 import lila.chessjudgment.model.Motif
 import lila.chessjudgment.model.judgment.*
@@ -152,6 +153,13 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
           case _ =>
             false
         }
+    val exactCurrentMoveForcingResource =
+      exactReferenceMove &&
+        candidateForcingLineResource.exists(RelativeCauseSignalProfile.currentMoveMateThreatRecord)
+    val candidateForcingLineSupport =
+      if exactCurrentMoveForcingResource && !candidateBetter then
+        candidateForcingLineResource.filter(RelativeCauseSignalProfile.currentMoveMateThreatRecord)
+      else candidateForcingLineResource
     List(
       causeDraft(
         RelativeCauseKind.OnlyMoveNecessity,
@@ -228,8 +236,8 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       ),
       causeDraft(
         RelativeCauseKind.KingForcing,
-        candidateForcingLineResource,
-        candidateForcingLineResource.nonEmpty && candidateBetter,
+        candidateForcingLineSupport,
+        candidateForcingLineSupport.nonEmpty && (candidateBetter || exactCurrentMoveForcingResource),
         Some(RelativeCauseSourceSide.Candidate)
       ),
       causeDraft(RelativeCauseKind.ConversionMiss, referenceConversionWindow, referenceConversionWindow.nonEmpty && badLoss),
@@ -935,9 +943,20 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         mate.nonEmpty
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
         payload.kind == TacticalMechanismKind.KingForcing && payload.hasConcreteProof
+      case record if currentMoveMateThreatRecord(record) =>
+        true
       case _ =>
         false
     }.distinctBy(_.ref.id)
+
+  private[chessjudgment] def currentMoveMateThreatRecord(record: EvidenceRecord): Boolean =
+    record match
+      case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) =>
+        payload.episode.driver == ThreatDriver.MateThreat &&
+          payload.isProofSignalDefensivePressure &&
+          payload.episode.motifs.exists(_.plyIndex == 0)
+      case _ =>
+        false
 
   private[chessjudgment] def wrongRecapturerChoiceRecords(
       fact: CandidateComparisonFact,

@@ -193,7 +193,7 @@ object ThreatPressureAssessor:
   private def extractAttackSquares(motif: Motif): List[String] =
     motif match
       case m: Motif.Fork => List(m.square.key)
-      case m: Motif.Check => List(m.targetSquare.key)
+      case m: Motif.Check => m.move.filter(_.length >= 4).map(_.slice(2, 4)).toList :+ m.targetSquare.key
       case m: Motif.Capture => List(m.square.key)
       case m: Motif.Deflection => List(m.fromSquare.key)
       case m: Motif.Decoy => List(m.toSquare.key)
