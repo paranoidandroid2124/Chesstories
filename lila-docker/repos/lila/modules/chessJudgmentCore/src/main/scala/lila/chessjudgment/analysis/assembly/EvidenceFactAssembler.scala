@@ -420,9 +420,18 @@ object EvidenceFactAssembler:
       allocator: JudgmentProvenanceAllocator,
       line: CandidateLineNode
   ): List[EvidenceRecord] =
-    val records = context.evidenceGraph.recordsFor(line.ref)
+    val lineRecords = context.evidenceGraph.recordsFor(line.ref)
     val position =
-      records.headOption.map(_.ref.position).orElse(context.root)
+      lineRecords.headOption.map(_.ref.position).orElse(context.root)
+    val records =
+      position match
+        case Some(nodeRef) if line.role == LineNodeRole.Threat =>
+          (lineRecords ++ context.evidenceGraph.recordsFor(nodeRef).collect {
+            case record @ EvidenceRecord(ref, _: ThreatEpisodeEvidence, _) if ref.scope == EvidenceScope.ThreatLine =>
+              record
+          }).distinctBy(_.ref.id)
+        case _ =>
+          lineRecords
     position.toList.flatMap { nodeRef =>
       tacticalMechanismCandidates(records).flatMap { candidate =>
         tacticalMechanismRecord(
@@ -580,8 +589,21 @@ object EvidenceFactAssembler:
         lineConsequenceRecords.collect {
           case (lineRecord, consequence, TacticalMechanismKind.MaterialGain, consequenceMoves, consequenceCaptureSquares)
               if consequence.kind == LineConsequenceKind.MaterialGain &&
-                threatRecord.ref.line.exists(lineRecord.referencesLine) &&
-                mateThreatMaterialLinked(threat, consequenceMoves, consequenceCaptureSquares) =>
+                (
+                  threatRecord.ref.line.exists(lineRecord.referencesLine) ||
+                    (
+                      threatRecord.ref.scope == EvidenceScope.ThreatLine &&
+                        lineRecord.ref.scope == EvidenceScope.ThreatLine &&
+                        threatRecord.ref.position == lineRecord.ref.position
+                    )
+                ) &&
+                (
+                  mateThreatMaterialLinked(threat, consequenceMoves, consequenceCaptureSquares) ||
+                    threatRecord.ref.line.exists(threatLine =>
+                      threatLine.role == LineNodeRole.Threat &&
+                        lineRecord.ref.line.exists(line => line.role == LineNodeRole.Threat && line != threatLine)
+                    )
+                ) =>
             TacticalMechanismCandidate(
               TacticalMechanismKind.MaterialGain,
               List(threatRecord, lineRecord),
