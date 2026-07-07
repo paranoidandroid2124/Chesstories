@@ -596,9 +596,10 @@ object EvidenceFactAssembler:
     val mateThreatMaterialEntries =
       mateThreatRecords.flatMap { case (threatRecord, threat) =>
         lineConsequenceRecords.collect {
-          case (lineRecord, consequence, TacticalMechanismKind.MaterialGain, _, _)
+          case (lineRecord, consequence, TacticalMechanismKind.MaterialGain, consequenceMoves, consequenceCaptureSquares)
               if consequence.kind == LineConsequenceKind.MaterialGain &&
-                threatRecord.ref.line.exists(lineRecord.referencesLine) =>
+                threatRecord.ref.line.exists(lineRecord.referencesLine) &&
+                mateThreatMaterialLinked(threat, consequenceMoves, consequenceCaptureSquares) =>
             TacticalMechanismCandidate(
               TacticalMechanismKind.MaterialGain,
               List(threatRecord, lineRecord),
@@ -620,6 +621,15 @@ object EvidenceFactAssembler:
         )
       }
       .filter(candidate => TacticalMechanismEvidence(candidate.kind, None, None, candidate.signals).hasConcreteProof)
+
+  private def mateThreatMaterialLinked(
+      threat: ThreatEpisodeEvidence,
+      consequenceMoves: List[String],
+      consequenceCaptureSquares: List[EvidenceSquare]
+  ): Boolean =
+    val attackSquares = threat.episode.attackSquares.toSet
+    consequenceCaptureSquares.exists(attackSquares.contains) ||
+      threat.episode.bestDefense.exists(defense => consequenceMoves.exists(EvidenceRef.sameMove(defense, _)))
 
   private def tacticalMechanismRecord(
       id: String,
