@@ -973,7 +973,7 @@ object RelativeAssessmentAssembler:
           payload.isProofSignalDefensivePressure &&
           (
             record.referencesLine(binding.eventLine) ||
-              payload.onlyDefense.exists(move => normalizeMove(move) == normalizeMove(rootMove))
+              threatEpisodeOwnsDefensiveCause(payload, kind, rootMove)
           )
       case payload: StructuralDeltaEvidence =>
         record.referencesLine(binding.eventLine) &&
@@ -1069,12 +1069,27 @@ object RelativeAssessmentAssembler:
                   relation.mentionsLineMove(rootMove))
             case EvidenceRecord(_, threat: ThreatEpisodeEvidence, _) =>
               threat.isProofSignalDefensivePressure &&
-                threat.onlyDefense.exists(move => normalizeMove(move) == normalizeMove(rootMove))
+                threatEpisodeOwnsDefensiveCause(
+                  threat,
+                  TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss = false, playedCandidate = false),
+                  rootMove
+                )
             case _ =>
               false
           }
       case _ =>
         false
+
+  private def threatEpisodeOwnsDefensiveCause(
+      payload: ThreatEpisodeEvidence,
+      kind: RelativeCauseKind,
+      rootMove: String
+  ): Boolean =
+    payload.onlyDefense.exists(move => normalizeMove(move) == normalizeMove(rootMove)) ||
+      (
+        kind == RelativeCauseKind.DefensiveResource &&
+          payload.episode.bestDefense.exists(move => normalizeMove(move) == normalizeMove(rootMove))
+      )
 
   private def relationCanDirectlyProveCause(kind: RelativeCauseKind, payload: RelationFactEvidence): Boolean =
     kind match

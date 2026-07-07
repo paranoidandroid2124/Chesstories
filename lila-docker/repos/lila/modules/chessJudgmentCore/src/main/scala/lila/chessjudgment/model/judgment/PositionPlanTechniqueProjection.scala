@@ -606,7 +606,10 @@ object PositionPlanTechniqueProjection:
         units = units,
         position = ref.position,
         line = ref.line,
-        moveUci = payload.onlyDefense.orElse(ref.line.map(_.rootMove)).filter(_.nonEmpty),
+        moveUci = payload.onlyDefense
+          .orElse(payload.episode.bestDefense)
+          .orElse(ref.line.map(_.rootMove))
+          .filter(_.nonEmpty),
         scope = ref.scope,
         mechanismKinds = Nil,
         strategicAxisKeys = Nil,
