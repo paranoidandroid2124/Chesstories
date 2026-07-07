@@ -19,7 +19,7 @@ object RelationFactNormalizer:
       val focusSquares = witness.focusSquares.map(EvidenceSquare(_))
       val targetSquare = witness.targetSquare.map(EvidenceSquare(_))
       val lineMoves = witness.lineMoves
-      val relationParticipants = participants(detail)
+      val relationParticipants = participants(detail, focusSquares)
       val witnessProof =
         RelationWitnessProof(
           sourceKind = witness.kind,
@@ -224,7 +224,7 @@ object RelationFactNormalizer:
       targetSquare.toList.map(square => RelationProofAtom(role = RelationProofAtomRole.Target, square = Some(square)))
     (participantAtoms ++ lineMoveAtoms ++ focusAtoms ++ targetAtoms).distinct
 
-  private def participants(details: RelationDetails): List[RelationParticipant] =
+  private def participants(details: RelationDetails, focusSquares: List[EvidenceSquare]): List[RelationParticipant] =
     import RelationDetails.*
     details match
       case Empty => Nil
@@ -326,12 +326,15 @@ object RelationFactNormalizer:
           part(targetSquare, RelationParticipantRole.Target, Some(targetRole))
         )
       case Pin(attackerSquare, pinnedSquare, behindSquare, targetSquare, attackerRole, pinnedRole, behindRole, _) =>
-        List(
-          part(attackerSquare, RelationParticipantRole.Attacker, Some(attackerRole)),
-          part(pinnedSquare, RelationParticipantRole.Defender, Some(pinnedRole)),
-          part(behindSquare, RelationParticipantRole.Target, Some(behindRole)),
-          part(targetSquare, RelationParticipantRole.Target)
-        )
+        val base =
+          List(
+            part(attackerSquare, RelationParticipantRole.Attacker, Some(attackerRole)),
+            part(pinnedSquare, RelationParticipantRole.Defender, Some(pinnedRole)),
+            part(behindSquare, RelationParticipantRole.Target, Some(behindRole)),
+            part(targetSquare, RelationParticipantRole.Target)
+          )
+        val typedSquares = Set(attackerSquare, pinnedSquare, behindSquare, targetSquare)
+        base ++ focusSquares.map(_.key).filterNot(typedSquares).map(part(_, RelationParticipantRole.Attacker))
       case Skewer(attackerSquare, frontSquare, backSquare, targetSquare, attackerRole, frontRole, backRole) =>
         List(
           part(attackerSquare, RelationParticipantRole.Attacker, Some(attackerRole)),
