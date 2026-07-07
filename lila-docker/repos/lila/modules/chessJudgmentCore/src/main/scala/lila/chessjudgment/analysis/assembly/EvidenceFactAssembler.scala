@@ -246,7 +246,7 @@ object EvidenceFactAssembler:
             )
           }
         val record = StrategicFactNormalizer.fromPawnStructure(
-          id = allocator.evidenceId(s"pawn-structure:${allocator.key(node.role)}"),
+          id = allocator.evidenceId(s"pawn-structure:${allocator.positionKey(node.role, node.ref.fen, node.ref.ply)}"),
           profile = profile,
           alignment = None,
           pawnPlay = pawnPlay,

@@ -349,9 +349,6 @@ object Motif:
   ) extends Motif:
     val category = MotifCategory.Tactical
 
-  // NOTE: RemoveDefender was removed - Deflection covers the same concept
-  // (attacking a piece to force it away from defensive duties)
-
   /** Overloading - a piece is defending too many things at once */
   case class Overloading(
       overloadedPiece: Role,

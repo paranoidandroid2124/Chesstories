@@ -3144,7 +3144,7 @@ object MoveMeaningSurface:
 
   private def materialGainClaim(claim: MoveMeaningClaim): Boolean =
     claim.causeKinds.contains(RelativeCauseKind.MaterialSwing) &&
-      claim.proofRelationDetails.nonEmpty &&
+      claim.proofRelationKinds.nonEmpty &&
       (
         claim.terminalConsequenceKinds.contains("MaterialGain") ||
           claim.proofThreatDrivers.exists(_.equalsIgnoreCase("MateThreat")) ||
@@ -4860,11 +4860,24 @@ object MoveMeaningClaim:
       evidenceGraph: TypedEvidenceGraph,
       frames: List[MoveJudgmentCauseFrame]
   ): List[MoveMeaningSurfaceBoardCarrier] =
+    def relationPayloads(record: EvidenceRecord, visited: Set[String]): List[RelationFactEvidence] =
+      if visited.contains(record.ref.id) then Nil
+      else
+        record.payload match
+          case payload: RelationFactEvidence =>
+            List(payload)
+          case payload: TacticalMechanismEvidence =>
+            payload.signals.flatMap(_.source).flatMap(source =>
+              evidenceGraph.byId.get(source.id).toList.flatMap(relationPayloads(_, visited + record.ref.id))
+            )
+          case _ =>
+            Nil
+
     frames
       .flatMap(_.proofDirectSourceIds)
       .distinct
       .flatMap(id => evidenceGraph.byId.get(id))
-      .collect { case EvidenceRecord(_, payload: RelationFactEvidence, _) => payload }
+      .flatMap(relationPayloads(_, Set.empty))
       .flatMap(payload =>
         payload.participants.filterNot(_.participantRole == RelationParticipantRole.Other).flatMap(participant =>
           val role = relationParticipantCarrierRole(participant.participantRole)
