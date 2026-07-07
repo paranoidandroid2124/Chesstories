@@ -91,12 +91,7 @@ final case class NormalizedMoveReviewInput(
 object MoveReviewInputNormalizer:
 
   private val BranchReplyPurposes: Set[ProbePurpose] = Set(
-    ProbePurpose.ReplyMultipv,
-    ProbePurpose.DefenseReplyMultipv,
-    ProbePurpose.ConvertReplyMultipv,
-    ProbePurpose.RecaptureBranches,
-    ProbePurpose.KeepTensionBranches,
-    ProbePurpose.FreeTempoBranches
+    ProbePurpose.ReplyMultipv
   )
 
   def normalize(

@@ -138,12 +138,7 @@ object ProbeContractValidator:
   )
 
   private val branchPurposes = Set(
-    ProbePurpose.ReplyMultipv,
-    ProbePurpose.DefenseReplyMultipv,
-    ProbePurpose.ConvertReplyMultipv,
-    ProbePurpose.RecaptureBranches,
-    ProbePurpose.KeepTensionBranches,
-    ProbePurpose.FreeTempoBranches
+    ProbePurpose.ReplyMultipv
   )
 
   def validateAgainstRequest(

@@ -1418,9 +1418,8 @@ object JudgmentPacketValidator:
 
   private def branchReplyProbePurpose(purpose: ProbePurpose): Boolean =
     purpose match
-      case ProbePurpose.ReplyMultipv | ProbePurpose.DefenseReplyMultipv | ProbePurpose.ConvertReplyMultipv |
-          ProbePurpose.RecaptureBranches | ProbePurpose.KeepTensionBranches | ProbePurpose.FreeTempoBranches =>
-        true
+      case ProbePurpose.ReplyMultipv => true
+      case _                         => false
 
   private def validUciMove(raw: String): Boolean =
     Option(raw).map(_.trim.toLowerCase).exists(_.matches("""[a-h][1-8][a-h][1-8][nbrq]?"""))

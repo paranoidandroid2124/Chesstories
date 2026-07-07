@@ -1631,7 +1631,7 @@ object PositionPlanTechniqueProjection:
       case "PromotionRace" =>
         Set(RelativeCauseKind.ConversionMiss, RelativeCauseKind.ConversionSecured).contains(causeKind)
       case "DrawResource" =>
-        Set(RelativeCauseKind.DrawResource, RelativeCauseKind.DefensiveResource).contains(causeKind)
+        causeKind == RelativeCauseKind.DrawResource
       case _ =>
         false
 

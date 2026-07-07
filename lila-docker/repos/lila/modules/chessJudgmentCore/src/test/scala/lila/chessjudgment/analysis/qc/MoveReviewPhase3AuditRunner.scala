@@ -2859,9 +2859,8 @@ object MoveReviewPhase3AuditRunner:
 
   private def branchReplyProbePurpose(purpose: ProbePurpose): Boolean =
     purpose match
-      case ProbePurpose.ReplyMultipv | ProbePurpose.DefenseReplyMultipv | ProbePurpose.ConvertReplyMultipv |
-          ProbePurpose.RecaptureBranches | ProbePurpose.KeepTensionBranches | ProbePurpose.FreeTempoBranches =>
-        true
+      case ProbePurpose.ReplyMultipv => true
+      case _                         => false
 
   private def evidenceRefSummary(ref: EvidenceRef): JsObject =
     Json.obj(
