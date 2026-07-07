@@ -329,7 +329,7 @@ object RelationFactNormalizer:
         val base =
           List(
             part(attackerSquare, RelationParticipantRole.Attacker, Some(attackerRole)),
-            part(pinnedSquare, RelationParticipantRole.Defender, Some(pinnedRole)),
+            part(pinnedSquare, RelationParticipantRole.Blocker, Some(pinnedRole)),
             part(behindSquare, RelationParticipantRole.Target, Some(behindRole)),
             part(targetSquare, RelationParticipantRole.Target)
           )
