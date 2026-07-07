@@ -2434,7 +2434,7 @@ object PositionPlanTechniqueProjection:
       detail.axisKind match
         case Some(StrategicAxisKind.Counterplay)
             if detail.axisPolarity.contains(StrategicAxisPolarity.Restrain) &&
-              detail.label.exists(_.equalsIgnoreCase("opponent-diagonal-restriction")) =>
+              purpose.consequenceKinds.contains(TransitionConsequenceKind.OpponentMobilityRestriction) =>
           purpose.consequenceKinds.contains(TransitionConsequenceKind.OpponentMobilityRestriction) &&
             purpose.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
         case Some(StrategicAxisKind.PawnBreak) =>
@@ -2479,11 +2479,12 @@ object PositionPlanTechniqueProjection:
     kindMatches && polarityMatches
 
   private def positionPlanTechniquePawnTensionDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
-    val axisText = (detail.axisKey.toList ++ detail.label.toList).mkString(" ").toLowerCase
-    axisText.contains("created-tension") ||
-      axisText.contains("resolved-tension") ||
-      detail.tensionEdges.nonEmpty ||
-      detail.tensionSquares.nonEmpty
+    detail.tensionEdges.nonEmpty ||
+      detail.tensionSquares.nonEmpty ||
+      detail.structuralPurposeConsequences.exists(consequence =>
+        consequence.equalsIgnoreCase(TransitionConsequenceKind.PawnTensionGain.toString) ||
+          consequence.equalsIgnoreCase(TransitionConsequenceKind.PawnTensionResolution.toString)
+      )
 
   private def positionPlanTechniquePawnTensionConsequence(kind: TransitionConsequenceKind): Boolean =
     kind == TransitionConsequenceKind.PawnTensionGain ||

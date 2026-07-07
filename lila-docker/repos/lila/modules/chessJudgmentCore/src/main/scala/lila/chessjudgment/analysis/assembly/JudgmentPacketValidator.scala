@@ -992,35 +992,56 @@ object JudgmentPacketValidator:
       parents: List[EvidenceRecord],
       signal: TacticalMechanismSignal
   ): Boolean =
+    def sourceMatches(record: EvidenceRecord): Boolean =
+      signal.source.exists(source => source.id == record.ref.id && source.layer == record.ref.layer)
+    def sourceShapeMatches(record: EvidenceRecord): Boolean =
+      record.payload match
+        case _: MoveMotifEvidence =>
+          signal.kind == TacticalMechanismSignalKind.Motif
+        case payload: RelationFactEvidence =>
+          signal.kind == TacticalMechanismSignalKind.Relation &&
+            payload.hasConcreteRelationProof
+        case payload: LineFactEvidence =>
+          (signal.kind == TacticalMechanismSignalKind.LineConsequence && payload.proofSignalConsequenceKinds.nonEmpty) ||
+            (signal.kind == TacticalMechanismSignalKind.LineEvent && payload.lineEvents.nonEmpty)
+        case EvalFactEvidence(_, _, mate, _) =>
+          signal.kind == TacticalMechanismSignalKind.MateBranch &&
+            mate.nonEmpty
+        case payload: ThreatEpisodeEvidence =>
+          signal.kind == TacticalMechanismSignalKind.ThreatEpisode &&
+            payload.isProofSignalDefensivePressure
+        case _ =>
+          false
+    def labelMatches(record: EvidenceRecord): Boolean =
+      record.payload match
+        case payload: MoveMotifEvidence =>
+          signal.kind == TacticalMechanismSignalKind.Motif &&
+            payload.proof.kind == signal.label
+        case payload: RelationFactEvidence =>
+          signal.kind == TacticalMechanismSignalKind.Relation &&
+            payload.hasConcreteRelationProof &&
+            payload.kind.toString == signal.label
+        case payload: LineFactEvidence =>
+          (
+            signal.kind == TacticalMechanismSignalKind.LineConsequence &&
+              payload.proofSignalConsequenceKinds.exists(_.toString == signal.label)
+          ) ||
+            (
+              signal.kind == TacticalMechanismSignalKind.LineEvent &&
+                payload.lineEvents.exists(_.kind.toString == signal.label)
+            )
+        case EvalFactEvidence(_, _, mate, _) =>
+          signal.kind == TacticalMechanismSignalKind.MateBranch &&
+            mate.exists(_.toString == signal.label)
+        case payload: ThreatEpisodeEvidence =>
+          signal.kind == TacticalMechanismSignalKind.ThreatEpisode &&
+            payload.isProofSignalDefensivePressure &&
+            payload.episode.episodeId == signal.label
+        case _ =>
+          false
     parents.exists(record =>
       record.ref.layer == signal.sourceLayer &&
-        (record.payload match
-          case payload: MoveMotifEvidence =>
-            signal.kind == TacticalMechanismSignalKind.Motif &&
-              payload.proof.kind == signal.label
-          case payload: RelationFactEvidence =>
-            signal.kind == TacticalMechanismSignalKind.Relation &&
-              payload.hasConcreteRelationProof &&
-              payload.kind.toString == signal.label
-          case payload: LineFactEvidence =>
-            (
-              signal.kind == TacticalMechanismSignalKind.LineConsequence &&
-                payload.proofSignalConsequenceKinds.exists(_.toString == signal.label)
-            ) ||
-              (
-                signal.kind == TacticalMechanismSignalKind.LineEvent &&
-                  payload.lineEvents.exists(_.kind.toString == signal.label)
-              )
-          case EvalFactEvidence(_, _, mate, _) =>
-            signal.kind == TacticalMechanismSignalKind.MateBranch &&
-              mate.exists(_.toString == signal.label)
-          case payload: ThreatEpisodeEvidence =>
-            signal.kind == TacticalMechanismSignalKind.ThreatEpisode &&
-              payload.isProofSignalDefensivePressure &&
-              payload.episode.episodeId == signal.label
-          case _ =>
-            false
-        )
+        signal.source.fold(labelMatches(record))(_ => sourceMatches(record) && sourceShapeMatches(record))
     )
 
   private def hasMatchingTransitionParent(

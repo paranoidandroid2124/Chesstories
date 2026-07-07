@@ -4003,7 +4003,7 @@ object MoveMeaningClaim:
         )
     claim.meaningKind == "CounterplayControl" &&
       claim.role == "PreventsCounterplay" &&
-      claim.label.contains("opponent-low-mobility") &&
+      claim.axisKey.exists(_.equalsIgnoreCase("Counterplay:Restrain:opponent-low-mobility")) &&
       !concreteCounterplayCarrier &&
       currentMoveSurfaceLane(claim) &&
       (
