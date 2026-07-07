@@ -1125,7 +1125,8 @@ object RelativeAssessmentAssembler:
       case RelativeCauseKind.MaterialSwing =>
         payload.kind == RelationFactKind.HangingPiece ||
           payload.kind == RelationFactKind.TrappedPiece ||
-          payload.kind == RelationFactKind.Domination
+          payload.kind == RelationFactKind.Domination ||
+          RelativeCauseSignalProfile.relationMaterialPayoffKind(payload.kind)
       case RelativeCauseKind.ConversionMiss | RelativeCauseKind.ConversionSecured =>
         payload.kind == RelationFactKind.BadPieceLiquidation
       case _ =>

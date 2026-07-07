@@ -110,6 +110,8 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
     RelativeCauseSignalProfile.threatBranchTacticalMechanismRecords(candidateRecords)
   val materialSwingSupport: List[EvidenceRecord] =
     RelativeCauseSignalProfile.materialSwingSupportRecords(referenceRecords, candidateRecords)
+  val candidateRelationPayoffMaterial: List[EvidenceRecord] =
+    RelativeCauseSignalProfile.relationPayoffMaterialRecords(candidateRecords ++ sharedRecords)
   val materialDeteriorationSupport: List[EvidenceRecord] =
     RelativeCauseSignalProfile.materialDeteriorationSupportRecords(referenceRecords, candidateRecords)
   val materialLossSupport: List[EvidenceRecord] =
@@ -253,6 +255,13 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       causeDraft(RelativeCauseKind.ConversionMiss, referencePromotionResource, referencePromotionResource.nonEmpty && badLoss),
       causeDraft(RelativeCauseKind.ConversionSecured, candidatePromotionResource, candidatePromotionResource.nonEmpty && candidateProvedValue),
       causeDraft(RelativeCauseKind.MissedTacticalResource, referenceLooseMaterialExploit, referenceLooseMaterialExploit.nonEmpty && badLoss),
+      causeDraft(
+        RelativeCauseKind.MaterialSwing,
+        candidateRelationPayoffMaterial,
+        candidateRelationPayoffMaterial.nonEmpty && exactReferenceMove,
+        Some(RelativeCauseSourceSide.Candidate),
+        Some(CauseAttributionKind.CandidateCreatesValue)
+      ),
       causeDraft(
         if playedCandidateSideComparison then RelativeCauseKind.TacticalRefutationOfPlayed
         else RelativeCauseKind.CandidateTacticalLiability,
@@ -695,8 +704,8 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         hasShortTermCause || hasNonConcessionCause
       case RelativeCauseDraft(RelativeCauseKind.MissedStrategicImprovement, _, _, _) =>
         hasShortTermCause
-      case RelativeCauseDraft(RelativeCauseKind.MaterialSwing, _, _, _) =>
-        hasSpecificMaterialCause
+      case RelativeCauseDraft(RelativeCauseKind.MaterialSwing, support, _, _) =>
+        hasSpecificMaterialCause && !supportHasRelationPayoff(support)
       case RelativeCauseDraft(RelativeCauseKind.StructuralImprovement, _, _, _) =>
         hasNonPlanSpecificStructuralCause
       case draft @ RelativeCauseDraft(RelativeCauseKind.RecaptureRecoveryWindow, _, _, _) =>
@@ -709,6 +718,14 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
           other.kind == RelativeCauseKind.WrongMoveOrder &&
             supportOverlaps(draft.support, other.support)
         )
+      case _ =>
+        false
+    }
+
+  private def supportHasRelationPayoff(records: List[EvidenceRecord]): Boolean =
+    records.exists {
+      case EvidenceRecord(_, payload: RelationFactEvidence, _) =>
+        payload.hasConcreteRelationProof && RelativeCauseSignalProfile.relationMaterialPayoffKind(payload.kind)
       case _ =>
         false
     }
@@ -1003,6 +1020,28 @@ private[chessjudgment] object RelativeCauseSignalProfile:
           payload.kind == RelationFactKind.TrappedPiece ||
           payload.kind == RelationFactKind.Domination
       )
+
+  private[chessjudgment] def relationPayoffMaterialRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
+    val material = materialGainRecords(records)
+    val relation =
+      records.filter {
+        case EvidenceRecord(_, payload: RelationFactEvidence, _) =>
+          payload.hasConcreteRelationProof &&
+            relationMaterialPayoffKind(payload.kind)
+        case _ =>
+          false
+      }
+    Option.when(material.nonEmpty && relation.nonEmpty)(material ++ relation).getOrElse(Nil).distinctBy(_.ref.id)
+
+  private[chessjudgment] def relationMaterialPayoffKind(kind: RelationFactKind): Boolean =
+    kind match
+      case RelationFactKind.DefenderTrade | RelationFactKind.Overload | RelationFactKind.Deflection |
+          RelationFactKind.DiscoveredAttack | RelationFactKind.Fork | RelationFactKind.Decoy |
+          RelationFactKind.Interference | RelationFactKind.Clearance | RelationFactKind.XRay |
+          RelationFactKind.Battery | RelationFactKind.Pin | RelationFactKind.Skewer =>
+        true
+      case _ =>
+        false
 
   private def materialGainRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
