@@ -8,7 +8,7 @@ import { Autoplay, type AutoplayDelay } from './autoplay';
 import { makeTree, treePath, treeOps, type TreeWrapper } from 'lib/tree';
 import { compute as computeAutoShapes } from './autoShape';
 import type { Config as ChessgroundConfig } from '@lichess-org/chessground/config';
-import type { CevalHandler, EvalMeta, CevalOpts } from 'lib/ceval';
+import type { CevalHandler, EvalMeta, CevalOpts, Work } from 'lib/ceval';
 import { CevalCtrl, isEvalBetter } from 'lib/ceval';
 import { TreeView } from './treeView/treeView';
 import type { Prop, Toggle } from 'lib';
@@ -83,6 +83,47 @@ interface ChesstoryMoveMeaningRequest {
     family?: string;
   };
   movePrefixUci: Uci[];
+  probeResults?: ChesstoryProbeResult[];
+}
+
+interface ChesstoryProbeRequest {
+  id: string;
+  fen: FEN;
+  moves: Uci[];
+  depth: number;
+  purpose?: string;
+  multiPv?: number;
+  baselineEvalCp?: number;
+  candidateMove?: Uci;
+  depthFloor?: number;
+  variationHash?: string;
+  objective?: string;
+  seedId?: string;
+  requiredSignals?: string[];
+}
+
+interface ChesstoryProbeResult {
+  id: string;
+  fen: FEN;
+  evalCp: number;
+  replyLines?: Array<{
+    moves: Uci[];
+    scoreCp: number;
+    mate?: number;
+    depth: number;
+  }>;
+  deltaVsBaseline: number;
+  purpose?: string;
+  probedMove?: Uci;
+  mate?: number;
+  depth?: number;
+  objective?: string;
+  seedId?: string;
+  requiredSignals?: string[];
+  candidateMove?: Uci;
+  depthFloor?: number;
+  variationHash?: string;
+  generatedAtEpochMs?: number;
 }
 
 function loginHref(): string {
@@ -590,8 +631,26 @@ export default class AnalyseCtrl implements CevalHandler {
     })
       .then(ensureOk)
       .then(res => res.json())
-      .then(data => {
-        const review = Array.isArray(data.move_review) ? data.move_review[0] : data.move_review;
+      .then(async data => {
+        let review = Array.isArray(data.move_review) ? data.move_review[0] : data.move_review;
+        if (!review?.renderable) {
+          const probeResults = await this.chesstoryProbeResults(data.probe_requests);
+          if (probeResults.length) {
+            const probed = await fetch('/api/chess-judgment/move-meaning', {
+              ...defaultInit,
+              method: 'post',
+              headers: {
+                ...jsonHeader,
+                ...xhrHeader,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ ...request, probeResults }),
+            })
+              .then(ensureOk)
+              .then(res => res.json());
+            review = Array.isArray(probed.move_review) ? probed.move_review[0] : probed.move_review;
+          }
+        }
         this.chesstoryBriefPayload = review?.renderable ? review : undefined;
         this.chesstoryBriefUnavailable = !this.chesstoryBriefPayload;
       })
@@ -604,6 +663,112 @@ export default class AnalyseCtrl implements CevalHandler {
         this.chesstoryBriefLoading = false;
         this.redraw();
       });
+  }
+
+  private async chesstoryProbeResults(rawRequests: unknown): Promise<ChesstoryProbeResult[]> {
+    if (!this.isCevalAllowed() || !this.cevalEnabled() || !this.ceval.available()) return [];
+    const requests = Array.isArray(rawRequests)
+      ? rawRequests.filter((request): request is ChesstoryProbeRequest =>
+          !!request &&
+          typeof request === 'object' &&
+          (request as ChesstoryProbeRequest).purpose === 'reply_multipv' &&
+          Array.isArray((request as ChesstoryProbeRequest).moves) &&
+          (request as ChesstoryProbeRequest).moves.length === 0,
+        )
+      : [];
+    if (!requests.length) return [];
+
+    const wasEnabled = !!this.cevalEnabled();
+    const results: ChesstoryProbeResult[] = [];
+    this.ceval.stop();
+    try {
+      for (const request of requests.slice(0, 3)) {
+        const result = await this.runChesstoryProbe(request);
+        if (result) results.push(result);
+      }
+    } finally {
+      this.ceval.stop();
+      if (wasEnabled) this.startCeval();
+    }
+    return results;
+  }
+
+  private runChesstoryProbe(request: ChesstoryProbeRequest): Promise<ChesstoryProbeResult | undefined> {
+    return new Promise(resolve => {
+      let done = false;
+      let lastEval: Tree.LocalEval | undefined;
+      const requiredPvs = Math.max(1, request.multiPv ?? 1);
+      const depthFloor = Math.max(1, request.depthFloor ?? request.depth ?? 1);
+      const timeout = window.setTimeout(() => finish(lastEval), Math.min(12000, Math.max(4000, depthFloor * 700)));
+      const finish = (ev?: Tree.LocalEval): void => {
+        if (done) return;
+        done = true;
+        window.clearTimeout(timeout);
+        this.ceval.stop();
+        resolve(ev ? this.chesstoryProbeResult(request, ev) : undefined);
+      };
+      const work: Work = {
+        variant: this.data.game.variant.key,
+        threads: this.ceval.threads,
+        hashSize: this.ceval.hashSize,
+        gameId: undefined,
+        stopRequested: false,
+        initialFen: request.fen,
+        currentFen: request.fen,
+        moves: [],
+        path: `chesstory-probe:${request.id}`,
+        ply: this.plyFromFen(request.fen),
+        search: { depth: request.depth || depthFloor },
+        multiPv: requiredPvs,
+        threatMode: false,
+        emit: (ev: Tree.LocalEval) => {
+          lastEval = ev;
+          if (ev.depth >= depthFloor && ev.pvs.filter(pv => pv.moves.length).length >= requiredPvs) finish(ev);
+        },
+      };
+      this.ceval.resume(work);
+    });
+  }
+
+  private chesstoryProbeResult(request: ChesstoryProbeRequest, ev: Tree.LocalEval): ChesstoryProbeResult | undefined {
+    const replyLines = ev.pvs
+      .filter(pv => pv.moves.length)
+      .map(pv => ({
+        moves: pv.moves,
+        scoreCp: this.chesstoryEvalCp(pv),
+        mate: pv.mate,
+        depth: pv.depth || ev.depth,
+      }));
+    if (!replyLines.length) return;
+    const evalCp = this.chesstoryEvalCp(ev);
+    return {
+      id: request.id,
+      fen: request.fen,
+      evalCp,
+      replyLines,
+      deltaVsBaseline: evalCp - (request.baselineEvalCp ?? evalCp),
+      purpose: request.purpose,
+      probedMove: request.candidateMove,
+      mate: ev.mate,
+      depth: ev.depth,
+      objective: request.objective,
+      seedId: request.seedId,
+      requiredSignals: request.requiredSignals ?? [],
+      candidateMove: request.candidateMove,
+      depthFloor: request.depthFloor,
+      variationHash: request.variationHash,
+      generatedAtEpochMs: Date.now(),
+    };
+  }
+
+  private chesstoryEvalCp(score: { cp?: number; mate?: number }): number {
+    return score.cp ?? (score.mate ? (score.mate > 0 ? 10000 : -10000) : 0);
+  }
+
+  private plyFromFen(fen: FEN): Ply {
+    const parts = fen.split(/\s+/);
+    const fullmove = Math.max(1, Number(parts[5]) || 1);
+    return ((fullmove - 1) * 2 + (parts[1] === 'b' ? 1 : 0)) as Ply;
   }
 
   private chesstoryBriefRequest(): ChesstoryMoveMeaningRequest | undefined {
