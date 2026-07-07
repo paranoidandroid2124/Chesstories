@@ -5664,16 +5664,7 @@ object MoveMeaningClaim:
       .distinct
       .sorted
       .filter(id => evidenceGraph.byId.get(id).exists(JudgmentSubjectBinding.sourceRecordOwnsCurrentPlayedMove(_, claimMove)))
-    if graphOwnedSources.nonEmpty then graphOwnedSources
-    else if detail.unit == PositionPlanTechniqueUnit.StructuralTransformation && structuralCurrentMoveCarrier(detail) then
-      detail.sourceEvidenceIds.distinct.sorted.filter(currentMovePlayedSourceId(_, claimMove))
-    else Nil
-
-  private def currentMovePlayedSourceId(id: String, claimMove: String): Boolean =
-    val normalizedMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
-    val normalizedId = id.toLowerCase
-    normalizedId.contains(s":played:$normalizedMove") ||
-      normalizedId.contains(s":$normalizedMove:played-transition")
+    graphOwnedSources
 
   private def currentMoveStructureContextSourceEvidenceIds(
       evidenceGraph: TypedEvidenceGraph,
