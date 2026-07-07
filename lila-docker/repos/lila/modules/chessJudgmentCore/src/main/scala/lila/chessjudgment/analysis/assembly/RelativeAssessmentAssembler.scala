@@ -552,6 +552,8 @@ object RelativeAssessmentAssembler:
           )
           val retainedProof =
             Some(proof).filter(proof => (attribution.directProofEligible && proof.hasRawTypedDepth) || proof.hasRawContextSupport)
+          val causeSupportRefs =
+            (supportRefs ++ proofRecords.directProof.map(_.ref)).distinctBy(_.id)
           val cause =
             RelativeCauseFact(
               kind = kind,
@@ -561,7 +563,7 @@ object RelativeAssessmentAssembler:
               verdict = fact.comparison.verdict,
               winPercentLossForMover = fact.comparison.winPercentLossForMover,
               candidateWinPercentDeltaForMover = fact.comparison.candidateWinPercentDeltaForMover,
-              supportEvidence = supportRefs,
+              supportEvidence = causeSupportRefs,
               evidenceLines = binding.evidenceLines,
               role = binding.role,
               eventLine = binding.eventLine,
@@ -602,14 +604,22 @@ object RelativeAssessmentAssembler:
         .filter(record => directProofSource(graph, fact, kind, binding, record, threatLineOwners))
         .filter(record => supportIds.contains(record.ref.id))
         .distinctBy(_.ref.id)
+    val relationSupportRecords =
+      (
+        support ++ graph.records.collect {
+          case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)
+              if relation.hasConcreteRelationProof && relationReferencesEventLine(record, relation, binding.eventLine) =>
+            record
+        }
+      ).distinctBy(_.ref.id)
     val directRelationSupportRecords =
-      if !ownedDirectRecords.exists(relationSupportDirectProofCarrier) then Nil
+      if !ownedDirectRecords.exists(record => relationSupportDirectProofCarrier(kind, record)) then Nil
       else
-        support.collect {
+        relationSupportRecords.collect {
           case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)
               if relation.hasConcreteRelationProof &&
                 relationCanDirectlyProveCause(kind, relation) &&
-                relationSupportOverlapsDirectProof(relation, ownedDirectRecords, binding.eventLine.rootMove) =>
+                relationSupportOverlapsDirectProof(kind, relation, ownedDirectRecords, binding.eventLine.rootMove) =>
             record
         }.distinctBy(_.ref.id)
     val directRecords = (ownedDirectRecords ++ directRelationSupportRecords).distinctBy(_.ref.id)
@@ -965,16 +975,21 @@ object RelativeAssessmentAssembler:
       .map(_.ref.id)
       .toSet
 
-  private def relationSupportDirectProofCarrier(record: EvidenceRecord): Boolean =
+  private def relationSupportDirectProofCarrier(kind: RelativeCauseKind, record: EvidenceRecord): Boolean =
     record.payload match
       case payload: LineFactEvidence =>
         payload.hasTacticalLineConsequence || payload.hasProofSignalMaterialEvent
       case payload: TacticalMechanismEvidence =>
         payload.hasConcreteProof && payload.tactical
+      case payload: StrategicMechanismEvidence =>
+        relationSupportStrategicCause(kind) && payload.canSupportStrategicCause
+      case payload: StructuralDeltaEvidence =>
+        relationSupportStrategicCause(kind) && structuralConsequencesForCause(kind, payload).exists(consequenceHasConcreteStrategicTarget)
       case _ =>
         false
 
   private def relationSupportOverlapsDirectProof(
+      kind: RelativeCauseKind,
       relation: RelationFactEvidence,
       directRecords: List[EvidenceRecord],
       rootMove: String
@@ -1002,11 +1017,19 @@ object RelativeAssessmentAssembler:
                 val normalized = normalizeMove(move)
                 Option.when(normalized.length >= 4)(normalized.slice(2, 4))
               )
+            case EvidenceRecord(_, structural: StructuralDeltaEvidence, _) =>
+              structuralConsequencesForCause(kind, structural)
+                .flatMap(_.subjects)
+                .flatMap(subject => "[a-h][1-8]".r.findAllIn(Option(subject).getOrElse("").toLowerCase).toList)
             case _ =>
               Nil
           }
       ).map(_.toLowerCase).toSet
     relationSquares.intersect(proofSquares).nonEmpty
+
+  private def relationSupportStrategicCause(kind: RelativeCauseKind): Boolean =
+    kind == RelativeCauseKind.TargetPressureGain ||
+      kind == RelativeCauseKind.PawnWeaknessTarget
 
   private def contextSupportRecord(
       fact: CandidateComparisonFact,
