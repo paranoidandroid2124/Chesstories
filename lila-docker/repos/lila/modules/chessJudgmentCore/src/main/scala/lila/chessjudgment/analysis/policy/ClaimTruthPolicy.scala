@@ -392,12 +392,14 @@ object ClaimTruthPolicy:
         case EvidenceRecord(_, payload: RelationFactEvidence, _) =>
           payload.hasConcreteRelationProof
         case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-          (tacticalRelativeCause(cause.kind) || materialResultCause(cause.kind)) &&
-            relativeCauseHasTacticalProof(cause)
+          ((tacticalRelativeCause(cause.kind) || materialResultCause(cause.kind)) &&
+            relativeCauseHasTacticalProof(cause)) ||
+            relativeCauseHasOwnedRelationTacticalProof(cause)
         case EvidenceRecord(_, MoveVerdictCertificationEvidence(certification), _) =>
           certification.causes.exists(cause =>
-            (tacticalRelativeCause(cause.kind) || materialResultCause(cause.kind)) &&
-              relativeCauseHasTacticalProof(cause)
+            ((tacticalRelativeCause(cause.kind) || materialResultCause(cause.kind)) &&
+              relativeCauseHasTacticalProof(cause)) ||
+              relativeCauseHasOwnedRelationTacticalProof(cause)
           )
         case _ =>
           false
@@ -433,19 +435,29 @@ object ClaimTruthPolicy:
         case record @ EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
           recordEngineBacked(record) &&
             (
+              relativeCauseHasOwnedRelationTacticalProof(cause) ||
               cause.winPercentLossForMover >= JudgmentThresholds.SIGNIFICANT_THREAT_WP ||
                 cause.candidateWinPercentDeltaForMover >= JudgmentThresholds.PLAYABLE_LOSS_WP
             )
         case record @ EvidenceRecord(_, MoveVerdictCertificationEvidence(certification), _) =>
           recordEngineBacked(record) &&
             certification.causes.exists(cause =>
-              cause.winPercentLossForMover >= JudgmentThresholds.SIGNIFICANT_THREAT_WP ||
+              relativeCauseHasOwnedRelationTacticalProof(cause) ||
+                cause.winPercentLossForMover >= JudgmentThresholds.SIGNIFICANT_THREAT_WP ||
                 cause.candidateWinPercentDeltaForMover >= JudgmentThresholds.PLAYABLE_LOSS_WP
             )
         case _ =>
           false
       }
     hasTacticalAnchor && hasConcreteLine && hasEngineProof
+
+  private def relativeCauseHasOwnedRelationTacticalProof(cause: RelativeCauseFact): Boolean =
+    cause.attribution.directProofEligible &&
+      cause.proof.exists(proof =>
+        (proof.directProof.relationProofs ++ proof.contrastProof.relationProofs).exists(proof =>
+          proof.hasConcreteProof && proof.hasLineProof
+        )
+      )
 
   private def defensiveProof(claim: ClaimSeed, records: List[EvidenceRecord]): Boolean =
     records.exists {
