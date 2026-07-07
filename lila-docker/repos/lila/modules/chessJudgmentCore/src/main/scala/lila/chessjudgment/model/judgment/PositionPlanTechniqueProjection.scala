@@ -265,6 +265,8 @@ object PositionPlanTechniqueProjection:
           structuralDeltaPlanTechniqueFrame(record, ref, payload, parents, graph, ideas, claims, ideaVerdict).toList
         case EvidenceRecord(ref, payload: ThreatEpisodeEvidence, parents) =>
           threatEpisodePlanTechniqueFrame(ref, payload, parents, graph, ideas, claims, ideaVerdict).toList
+        case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) =>
+          tacticalCausePlanTechniqueFrame(ref, cause, graph, ideas, claims, ideaVerdict).toList
         case EvidenceRecord(ref, payload: BoardFactEvidence, _) if payload.endgameTechniqueAnchors.nonEmpty =>
           boardEndgameTechniqueFrame(ref, payload, graph, ideas, claims, ideaVerdict).toList
         case EvidenceRecord(ref, payload: LineFactEvidence, _) =>
@@ -634,6 +636,200 @@ object PositionPlanTechniqueProjection:
         salience = threatEpisodeSalience(payload) + units.size + ideaIds.size + claimIds.size + relativeCauseEvidenceIds.size
       )
     }
+
+  private def tacticalCausePlanTechniqueFrame(
+      ref: EvidenceRef,
+      cause: RelativeCauseFact,
+      graph: TypedEvidenceGraph,
+      ideas: List[ChessIdea],
+      claims: List[ClaimSeed],
+      ideaVerdict: Option[IdeaVerdictSplit]
+  ): Option[PositionPlanTechniqueFrame] =
+    if !tacticalCausePlanTechniqueEligible(cause) then None
+    else
+      val sourceRefs = tacticalCausePlanTechniqueSourceRefs(cause)
+      val evidenceIds = (ref.id :: sourceRefs.map(_.id)).distinct.sorted
+      val semanticDetails =
+        positionPlanTechniqueEnrichedDetails(
+          tacticalCausePlanTechniqueDetails(cause, graph, evidenceIds),
+          graph,
+          evidenceIds
+        )
+      val frameUnits = semanticDetails.map(_.unit).distinct.sortBy(_.toString)
+      Option.when(semanticDetails.nonEmpty) {
+        val relativeCauseEvidenceIds = (ref.id :: semanticDetails.flatMap(_.causeEvidenceIds)).distinct.sorted
+        val linkedEvidenceIds = (evidenceIds ++ relativeCauseEvidenceIds).toSet
+        val ideaIds = positionPlanTechniqueIdeaIds(ideas, linkedEvidenceIds)
+        val claimIds = positionPlanTechniqueClaimIds(claims, linkedEvidenceIds, ideaIds.toSet)
+        val objectBindings = EvidenceObjectBinding.fromRelativeCause(cause, graph)
+        PositionPlanTechniqueFrame(
+          id = s"position-plan-technique:${ref.id}:tactical-proof",
+          units = frameUnits,
+          position = ref.position,
+          line = Some(cause.eventLine),
+          moveUci = Some(cause.eventRootMove).filter(_.nonEmpty),
+          scope = ref.scope,
+          mechanismKinds = Nil,
+          strategicAxisKeys = Nil,
+          semanticAnchors = tacticalCauseSemanticAnchors(cause),
+          objectBindingSignatures = EvidenceObjectBinding.objectSignatures(objectBindings),
+          objectBindings = positionPlanTechniqueObjectBindings(objectBindings),
+          semanticDetails = semanticDetails,
+          evidenceIds = evidenceIds,
+          mechanismEvidenceIds = Nil,
+          sourceEvidenceIds = sourceRefs.map(_.id).distinct.sorted,
+          relativeCauseEvidenceIds = relativeCauseEvidenceIds,
+          ideaIds = ideaIds,
+          claimIds = claimIds,
+          planComparison = None,
+          relationToVerdict = positionPlanTechniqueRelation(ideaVerdict, ideaIds.toSet),
+          confidence = ref.confidence,
+          salience = semanticDetails.size * 3 + ideaIds.size + claimIds.size + relativeCauseEvidenceIds.size
+        )
+      }
+
+  private def tacticalCausePlanTechniqueEligible(cause: RelativeCauseFact): Boolean =
+    cause.attribution.rootMoveMatched &&
+      cause.hasOwnedTacticalProof &&
+      tacticalCausePlanTechniqueSections(cause).nonEmpty
+
+  private def tacticalCausePlanTechniqueSections(cause: RelativeCauseFact): List[RelativeCauseProofSection] =
+    cause.proof.toList
+      .flatMap(proof => List(proof.directProof, proof.contrastProof))
+      .filter(_.hasTacticalProof)
+
+  private def tacticalCausePlanTechniqueSourceRefs(cause: RelativeCauseFact): List[EvidenceRef] =
+    tacticalCausePlanTechniqueSections(cause)
+      .flatMap(section =>
+        section.sourceRefs ++
+          section.tacticalMechanisms.flatMap(_.signals.flatMap(_.source))
+      )
+      .distinctBy(_.id)
+
+  private def tacticalCausePlanTechniqueDetails(
+      cause: RelativeCauseFact,
+      graph: TypedEvidenceGraph,
+      evidenceIds: List[String]
+  ): List[PositionPlanTechniqueSemanticDetail] =
+    val sections = tacticalCausePlanTechniqueSections(cause)
+    val terminalDetails =
+      sections
+        .flatMap(_.lineConsequences)
+        .filter(proof => LineConsequenceKind.terminalResultProof(proof.kind))
+        .map(proof =>
+          PositionPlanTechniqueSemanticDetail(
+            unit = PositionPlanTechniqueUnit.StructuralTransformation,
+            label = Some("terminal-proof"),
+            semanticAnchorKeys = List(tacticalCauseLineConsequenceAnchor(proof).stableKey),
+            structuralRouteMove = Some(cause.eventRootMove),
+            structuralPurposeConsequences = List(proof.kind.toString),
+            structuralPurposeSubjects = tacticalCauseTargetSubjects(cause, graph, proof.eventMove.toList),
+            structuralPurposeCategories = List("TerminalProof"),
+            structuralPurposePolarities = List(lineTerminalProofPolarity(proof.kind)),
+            terminalConsequenceKinds = List(proof.kind.toString),
+            sourceEvidenceIds = evidenceIds
+          )
+        )
+    val defensiveDetails =
+      Option.when(tacticalCauseDefensive(cause))(
+        PositionPlanTechniqueSemanticDetail(
+          unit = PositionPlanTechniqueUnit.SpacePreventionResourceDenial,
+          label = Some("defensive-resource"),
+          structuralRouteMove = Some(cause.eventRootMove),
+          resourceContestSquares = tacticalCauseTargetSubjects(cause, graph, Nil).filter(_.matches("[a-h][1-8]")),
+          structuralPurposeConsequences = tacticalCauseConsequenceLabels(sections),
+          structuralPurposeSubjects = tacticalCauseTargetSubjects(cause, graph, Nil),
+          structuralPurposeCategories = List("DefensiveResource"),
+          structuralPurposePolarities = List("Preserve"),
+          sourceEvidenceIds = evidenceIds
+        )
+      ).toList
+    val relationDetail =
+      Option
+        .when(!tacticalCauseDefensive(cause) && tacticalCauseConsequenceLabels(sections).nonEmpty)(
+          PositionPlanTechniqueSemanticDetail(
+            unit = PositionPlanTechniqueUnit.StructuralTransformation,
+            axisKind = Some(StrategicAxisKind.Target),
+            axisPolarity = Some(tacticalCauseAxisPolarity(cause)),
+            label = Some("tactical-proof"),
+            structuralRouteMove = Some(cause.eventRootMove),
+            structuralPurposeConsequences = tacticalCauseConsequenceLabels(sections),
+            structuralPurposeSubjects = tacticalCauseTargetSubjects(cause, graph, Nil),
+            structuralPurposeCategories = List("TacticalProof"),
+            structuralPurposePolarities = List(tacticalCauseAxisPolarity(cause).toString),
+            sourceEvidenceIds = evidenceIds
+          )
+        )
+        .toList
+    (terminalDetails ++ defensiveDetails ++ relationDetail)
+      .filter(detail => detail.structuralPurposeSubjects.nonEmpty || detail.terminalConsequenceKinds.nonEmpty)
+      .distinctBy(detail => (detail.unit, detail.label, detail.terminalConsequenceKinds.mkString(","), detail.structuralPurposeSubjects.mkString(",")))
+
+  private def tacticalCauseDefensive(cause: RelativeCauseFact): Boolean =
+    Set(
+      RelativeCauseKind.OnlyDefenseNecessity,
+      RelativeCauseKind.DefensiveResource,
+      RelativeCauseKind.DrawResource
+    ).contains(cause.kind)
+
+  private def tacticalCauseAxisPolarity(cause: RelativeCauseFact): StrategicAxisPolarity =
+    cause.attribution.kind match
+      case CauseAttributionKind.CandidateAllowsLiability => StrategicAxisPolarity.Loss
+      case _ if tacticalCauseDefensive(cause)            => StrategicAxisPolarity.Preserve
+      case _                                             => StrategicAxisPolarity.Gain
+
+  private def tacticalCauseConsequenceLabels(sections: List[RelativeCauseProofSection]): List[String] =
+    (
+      sections.flatMap(_.lineConsequences.map(_.kind.toString)) ++
+        sections.flatMap(_.relationProofs.map(_.kind.toString)) ++
+        sections.flatMap(_.tacticalMechanisms.map(_.kind.toString)) ++
+        sections.flatMap(_.threatEpisodes.map(threat => s"${threat.driver}:${threat.kind}"))
+    ).distinct.sorted
+
+  private def tacticalCauseTargetSubjects(
+      cause: RelativeCauseFact,
+      graph: TypedEvidenceGraph,
+      moveHints: List[String]
+  ): List[String] =
+    val signatures = EvidenceObjectBinding.objectSignatures(EvidenceObjectBinding.fromRelativeCause(cause, graph))
+    val proofTargets =
+      EvidenceObjectBinding
+        .objectTokens(signatures, "target", Some(RelativeCauseProofRole.DirectProof))
+        .toList ++
+        EvidenceObjectBinding.objectTokens(signatures, "target", Some(RelativeCauseProofRole.ContrastProof)).toList
+    (
+      moveHints.flatMap(tacticalCauseMoveTargetSquare) ++
+        proofTargets.flatMap(tacticalCauseTargetSubject)
+    ).distinct.sorted
+
+  private def tacticalCauseTargetSubject(token: String): List[String] =
+    val normalized = token.trim
+    val lower = normalized.toLowerCase
+    if lower.startsWith("square:") then List(normalized.drop("Square:".length).toLowerCase)
+    else if lower.startsWith("file:") then List(normalized.drop("File:".length).toLowerCase)
+    else if lower.startsWith("plansubject:") then List(normalized.drop("PlanSubject:".length).toLowerCase)
+    else Nil
+
+  private def tacticalCauseMoveTargetSquare(move: String): Option[String] =
+    val normalized = JudgmentSubjectBinding.normalizeMove(move)
+    Option.when(normalized.length >= 4)(normalized.slice(2, 4))
+
+  private def tacticalCauseSemanticAnchors(cause: RelativeCauseFact): List[EvidenceSemanticAnchor] =
+    tacticalCausePlanTechniqueSections(cause)
+      .flatMap(section =>
+        section.lineConsequences.map(tacticalCauseLineConsequenceAnchor) ++
+          section.lineEvents.map(event => EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.LineEvent, event.kind.toString, event.moveUci.getOrElse("")))
+      )
+      .distinctBy(_.stableKey)
+      .sortBy(_.stableKey)
+
+  private def tacticalCauseLineConsequenceAnchor(proof: LineConsequenceProof): EvidenceSemanticAnchor =
+    EvidenceSemanticAnchor.of(
+      EvidenceSemanticAnchorKind.LineConsequence,
+      "TacticalProof",
+      proof.kind.toString,
+      proof.eventMove.getOrElse("")
+    )
 
   private def boardEndgameTechniqueFrame(
       ref: EvidenceRef,
@@ -1392,6 +1588,7 @@ object PositionPlanTechniqueProjection:
       positionPlanTechniqueConcreteCounterplayRaceCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteRouteCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteStructuralPlanCauseKind(detail, kind) ||
+      positionPlanTechniqueTacticalProofCauseKind(detail, kind) ||
       positionPlanTechniqueTerminalProofCauseKind(detail, kind)
 
   private def positionPlanTechniqueCauseKindMatchesUnitOnlyDetail(
@@ -1440,6 +1637,7 @@ object PositionPlanTechniqueProjection:
       positionPlanTechniqueConcreteCounterplayRaceCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteRouteCauseKind(detail, kind) ||
       positionPlanTechniqueConcreteStructuralPlanCauseKind(detail, kind) ||
+      positionPlanTechniqueTacticalProofCauseKind(detail, kind) ||
       positionPlanTechniqueTerminalProofCauseKind(detail, kind)
 
   private def positionPlanTechniqueDirectStructuralTransitionProof(
@@ -1601,6 +1799,25 @@ object PositionPlanTechniqueProjection:
     val concreteMotifs = Set("iqp", "isolated", "open", "space", "transition")
     detail.structuralRouteMove.nonEmpty &&
       detail.structuralMotifTags.exists(concreteMotifs)
+
+  private def positionPlanTechniqueTacticalProofCauseKind(
+      detail: PositionPlanTechniqueSemanticDetail,
+      kind: RelativeCauseKind
+  ): Boolean =
+    detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+      detail.label.contains("tactical-proof") &&
+      detail.structuralRouteMove.nonEmpty &&
+      detail.structuralPurposeSubjects.nonEmpty &&
+      Set(
+        RelativeCauseKind.MissedTacticalResource,
+        RelativeCauseKind.TacticalRefutationOfPlayed,
+        RelativeCauseKind.CandidateTacticalLiability,
+        RelativeCauseKind.KingForcing,
+        RelativeCauseKind.MaterialSwing,
+        RelativeCauseKind.RecaptureRecoveryWindow,
+        RelativeCauseKind.WrongRecapturer,
+        RelativeCauseKind.SacrificeCompensation
+      ).contains(kind)
 
   private def positionPlanTechniqueTerminalProofCauseKind(
       detail: PositionPlanTechniqueSemanticDetail,
