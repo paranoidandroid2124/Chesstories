@@ -4169,7 +4169,9 @@ final case class TacticalMechanismEvidence(
       kind == TacticalMechanismSignalKind.MateBranch ||
         kind == TacticalMechanismSignalKind.LineConsequence ||
         kind == TacticalMechanismSignalKind.ThreatEpisode
-    )
+    ) ||
+      (kind == TacticalMechanismKind.Tempo &&
+        signals.exists(signal => signal.kind == TacticalMechanismSignalKind.Relation && signal.label == RelationFactKind.Zwischenzug.toString))
   def tactical: Boolean =
     kind != TacticalMechanismKind.DefensiveResource &&
       kind != TacticalMechanismKind.DrawResource

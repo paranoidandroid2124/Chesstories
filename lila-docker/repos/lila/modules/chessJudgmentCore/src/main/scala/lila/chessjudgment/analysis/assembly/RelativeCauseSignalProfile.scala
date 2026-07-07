@@ -399,9 +399,12 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       then RelativeCauseSignalProfile.currentMoveConcreteTargetCarrierRecords(profile.fact.candidateLine, profile.allRecords)
       else Nil
     val sameRootRelationPayoffs =
-      if exactSameRootConcreteCarrierCause(payload, profile, kind, sourceSide) &&
-          (kind == RelativeCauseKind.TargetPressureGain || kind == RelativeCauseKind.PawnWeaknessTarget)
-      then RelativeCauseSignalProfile.currentMoveRelationPayoffRecords(profile.fact.candidateLine, profile.allRecords)
+      if exactSameRootConcreteCarrierCause(payload, profile, kind, sourceSide) then
+        if kind == RelativeCauseKind.TargetPressureGain then
+          RelativeCauseSignalProfile.currentMoveTargetPressureRelationRecords(profile.fact.candidateLine, profile.allRecords)
+        else if kind == RelativeCauseKind.PawnWeaknessTarget then
+          RelativeCauseSignalProfile.currentMoveRelationPayoffRecords(profile.fact.candidateLine, profile.allRecords)
+        else Nil
       else Nil
     val sameRootPlanCarriers =
       if sourceSide == RelativeCauseSourceSide.Candidate &&
@@ -445,6 +448,8 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         case record @ EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
           val relationPayoffs =
             RelativeCauseSignalProfile.currentMoveRelationPayoffRecords(profile.fact.candidateLine, profile.allRecords)
+          val targetPressureRelationProofs =
+            RelativeCauseSignalProfile.currentMoveTargetPressureRelationRecords(profile.fact.candidateLine, profile.allRecords)
           val causeKinds =
             currentMoveStrategicSupportCauseKinds(payload, profile.fact.candidateLine, profile.allRecords)
               .filter(kind =>
@@ -471,7 +476,8 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
               )
           causeKinds.map(kind =>
             val support =
-              if kind == RelativeCauseKind.TargetPressureGain || kind == RelativeCauseKind.PawnWeaknessTarget then record :: relationPayoffs
+              if kind == RelativeCauseKind.TargetPressureGain then record :: targetPressureRelationProofs
+              else if kind == RelativeCauseKind.PawnWeaknessTarget then record :: relationPayoffs
               else List(record)
             RelativeCauseDraft(
               kind,
@@ -1071,6 +1077,10 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       case _ =>
         false
 
+  private[chessjudgment] def relationTargetPressureProofKind(kind: RelationFactKind): Boolean =
+    relationMaterialPayoffKind(kind) ||
+      kind == RelationFactKind.Zwischenzug
+
   private def materialGainRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
@@ -1214,10 +1224,23 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       candidateLine: LineNodeRef,
       records: List[EvidenceRecord]
   ): List[EvidenceRecord] =
+    currentMoveRelationRecords(candidateLine, records, relationMaterialPayoffKind)
+
+  private[chessjudgment] def currentMoveTargetPressureRelationRecords(
+      candidateLine: LineNodeRef,
+      records: List[EvidenceRecord]
+  ): List[EvidenceRecord] =
+    currentMoveRelationRecords(candidateLine, records, relationTargetPressureProofKind)
+
+  private def currentMoveRelationRecords(
+      candidateLine: LineNodeRef,
+      records: List[EvidenceRecord],
+      kindAllowed: RelationFactKind => Boolean
+  ): List[EvidenceRecord] =
     records.filter {
       case record @ EvidenceRecord(_, payload: RelationFactEvidence, _) =>
         payload.hasConcreteRelationProof &&
-          relationMaterialPayoffKind(payload.kind) &&
+          kindAllowed(payload.kind) &&
           (
             record.referencesLine(candidateLine) ||
               record.ref.line.exists(line => EvidenceRef.sameMove(line.rootMove, candidateLine.rootMove)) ||
