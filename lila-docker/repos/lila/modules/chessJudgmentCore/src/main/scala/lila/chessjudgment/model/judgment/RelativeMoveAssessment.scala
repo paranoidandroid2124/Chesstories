@@ -501,13 +501,8 @@ case class LineConsequenceProof(
     lineMoves: List[String] = Nil
 ):
   def rootMoveMatched(rootMove: String): Boolean =
-    val normalizedRoot = LineConsequenceProof.normalizeUci(rootMove)
-    eventMove.exists(move => LineConsequenceProof.normalizeUci(move) == normalizedRoot) ||
-      lineMoves.exists(move => LineConsequenceProof.normalizeUci(move) == normalizedRoot)
-
-object LineConsequenceProof:
-  private def normalizeUci(raw: String): String =
-    Option(raw).getOrElse("").trim.toLowerCase
+    eventMove.exists(move => EvidenceRef.sameMove(move, rootMove)) ||
+      lineMoves.exists(move => EvidenceRef.sameMove(move, rootMove))
 
 case class ThreatEpisodeCauseProof(
     source: EvidenceRef,

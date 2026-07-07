@@ -2984,10 +2984,6 @@ final case class ThreatPressureEvidence(
     threats: ThreatAnalysis
 ) extends EvidencePayload:
   val layer: EvidenceLayer = EvidenceLayer.ThreatPressure
-  def episodes: List[ThreatEpisode] =
-    ThreatEpisode.fromAnalysis(sideUnderPressure, threats)
-  def hasProofSignalThreatEpisode: Boolean =
-    episodes.exists(_.hasConcreteThreatProof)
 
 final case class ThreatEpisodeEvidence(
     episode: ThreatEpisode,
@@ -3157,13 +3153,8 @@ final case class LineConsequence(
     eventMove: Option[String] = None
 ):
   def rootMoveMatched(rootMove: String): Boolean =
-    val normalizedRoot = LineConsequence.normalizeUci(rootMove)
-    eventMove.exists(move => LineConsequence.normalizeUci(move) == normalizedRoot) ||
-      lineMoves.exists(move => LineConsequence.normalizeUci(move) == normalizedRoot)
-
-object LineConsequence:
-  private def normalizeUci(raw: String): String =
-    Option(raw).getOrElse("").trim.toLowerCase
+    eventMove.exists(move => EvidenceRef.sameMove(move, rootMove)) ||
+      lineMoves.exists(move => EvidenceRef.sameMove(move, rootMove))
 
 final case class LineConsequenceProfile(
     proofSignalKinds: List[LineConsequenceKind],

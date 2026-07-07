@@ -221,35 +221,3 @@ object RelationKind:
   val GreekGift = "greek_gift"
   val StalemateTrap = "stalemate_trap"
   val PerpetualCheck = "perpetual_check"
-
-  val Implemented: List[String] =
-    List(
-      DefenderTrade,
-      BadPieceLiquidation,
-      Overload,
-      Deflection,
-      DiscoveredAttack,
-      DoubleCheck,
-      BackRankMate,
-      MateNet,
-      GreekGift,
-      Fork,
-      HangingPiece,
-      TrappedPiece,
-      Domination,
-      Zwischenzug,
-      XRay,
-      Clearance,
-      Battery,
-      Pin,
-      Skewer,
-      Interference,
-      Decoy,
-      StalemateTrap,
-      PerpetualCheck
-    )
-
-  val Deferred: List[String] = Nil
-
-  val All: List[String] =
-    Implemented ++ Deferred

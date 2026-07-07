@@ -1960,10 +1960,40 @@ object MoveMeaningSurface:
           technique.nonEmpty ||
           evidenceSurfaces.exists(surface => surface.evidence.proofLevel == "terminal_proof" || surface.evidence.proofLevel == "owned_cause")
       val semanticSurfaces = evidenceSurfaces.filter(surface => publicIdeaChainSemanticAllowed(surface, strongChainProof))
+      val purposeOwnedPawnMoves =
+        val purposeCodes = Set(
+          "terminal_mate",
+          "promotion_race",
+          "promotion",
+          "draw_resource",
+          "material_gain",
+          "material_loss",
+          "defensive_resource",
+          "passed_pawn_advance",
+          "pawn_break_timing",
+          "counterplay_race",
+          "counterplay_control",
+          "outpost_attempt",
+          "compensation",
+          "long_diagonal_pressure",
+          "target_pressure"
+        )
+        semanticSurfaces.collect {
+          case surface
+              if purposeCodes(surface.idea.code) &&
+                surface.evidence.proofLevel == "owned_cause" &&
+                sameFilePawnAdvanceMove(surface.moveUci) =>
+            JudgmentSubjectBinding.normalizeMove(surface.moveUci).toLowerCase
+        }.toSet
+      val chainCandidateSurfaces =
+        semanticSurfaces.filterNot(surface =>
+          surface.idea.code == "piece_route" &&
+            purposeOwnedPawnMoves.contains(JudgmentSubjectBinding.normalizeMove(surface.moveUci).toLowerCase)
+        )
       val chainSurfaces =
         if terminal.nonEmpty then
-          semanticSurfaces.filter(surface => surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
-        else semanticSurfaces
+          chainCandidateSurfaces.filter(surface => surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
+        else chainCandidateSurfaces
       val carrierPairs = publicIdeaChainCarrierPairs(chainSurfaces)
       val allConsequenceCarriers = carrierPairs.filter((carrier, _) =>
         publicIdeaChainConsequenceCarrierRole(carrier) && publicIdeaChainConsequenceCarrier(carrier)
