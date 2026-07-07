@@ -303,7 +303,11 @@ function renderChesstoryBrief(ctrl: AnalyseCtrl): VNode {
   const moveLabel = node.san
     ? `${plyToTurn(node.ply)}${node.ply % 2 === 1 ? '.' : '...'} ${node.san}`
     : 'Initial position';
-  const stateLabel = brief.loading ? 'Reading position' : brief.payload ? 'Ready' : 'Not filled yet';
+  const stateLabel = brief.loading
+    ? 'Reading position'
+    : brief.payload
+      ? 'Position explained'
+      : 'Choose a move';
 
   return hl('section.analyse__chesstory-brief', [
     hl('div.analyse__chesstory-brief-head', [
@@ -314,6 +318,11 @@ function renderChesstoryBrief(ctrl: AnalyseCtrl): VNode {
       hl('span.analyse__chesstory-brief-state', stateLabel),
     ]),
     hl('div.analyse__chesstory-brief-focus', [hl('span', 'Decision point'), hl('strong', moveLabel)]),
+    hl('div.analyse__chesstory-brief-access', [
+      hl('span', [hl('strong', 'Free'), ' Chesstory explains each move you review']),
+      hl('span', [hl('strong', 'Coach'), ' goes deeper on key moments']),
+      hl('a.button.button-empty', { attrs: { href: '/pricing' } }, 'Go deeper with Coach'),
+    ]),
     hl(
       'div.analyse__chesstory-brief-list',
       sections.map(section => renderChesstoryBriefSection(section)),
@@ -333,7 +342,7 @@ function renderChesstoryBriefSection(section: ChesstoryBriefSection): VNode {
     [
       hl('div.analyse__chesstory-brief-row-head', [
         hl('strong', section.title),
-        section.pending ? hl('span', 'Add note') : null,
+        section.pending ? hl('span', 'Reading') : null,
       ]),
       hl('p', section.body),
       section.items?.length

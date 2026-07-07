@@ -16,7 +16,7 @@ object terms:
             st.article(cls := "legal-content")(
               header(cls := "legal-header")(
                 h1("Terms of Service"),
-                p(cls := "legal-meta")("Effective Date: March 10, 2026 • Last Updated: June 29, 2026")
+                p(cls := "legal-meta")("Effective Date: March 10, 2026 • Last Updated: July 2, 2026")
               ),
 
               st.section(cls := "legal-section")(
@@ -106,7 +106,7 @@ object terms:
                   li("Do not submit sensitive personal information, confidential third-party material, or private non-chess information inside PGNs, notes, comments, or prompts"),
                   li("You are responsible for how you use any chess recommendations"),
                   li("Some analysis features may require sign-in and may be subject to rate limits, daily quotas, fair-use controls, or plan/tier limits"),
-                  li("Some features may send chess positions, move lists, PGNs, comments, notes, engine lines, and related chess context to analysis systems or model providers when needed to return the requested explanation"),
+                  li("Some features may send chess positions, move lists, PGNs, comments, notes, engine lines, and related chess context to Chesstory analysis systems or OpenAI API models when needed to return the requested explanation"),
                   li("Some features may fetch public chess data from third-party platforms at your request; do not use Chesstory to import private, restricted, or non-consensual data"),
                   li("Chesstory is not affiliated with or endorsed by Lichess, Chess.com, or other third-party platforms unless explicitly stated")
                 )

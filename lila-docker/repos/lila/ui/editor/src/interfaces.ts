@@ -24,7 +24,6 @@ export interface Config {
   baseUrl: string;
   fen?: string;
   options?: Options;
-  is3d: boolean;
   animation: {
     duration: number;
   };

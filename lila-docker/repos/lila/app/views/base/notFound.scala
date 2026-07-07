@@ -18,21 +18,6 @@ def notFound(msg: Option[String]) =
             a(href := routes.Main.contact.url)("Contact")
           )
         )
-      ),
-      div(cls := "game")(
-        iframe(
-          src := staticAssetUrl(s"vendor/ChessPursuit/bin-release/index.html"),
-          st.frameborder := 0,
-          widthA := 400,
-          heightA := 500,
-          attr("sandbox") := "allow-scripts",
-          frame.credentialless
-        ),
-        p(cls := "credits")(
-          a(href := "https://github.com/Saturnyn/ChessPursuit")("ChessPursuit"),
-          " courtesy of ",
-          a(href := "https://github.com/Saturnyn")("Saturnyn")
-        )
       )
     )
 

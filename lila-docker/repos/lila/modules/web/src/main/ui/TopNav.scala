@@ -34,6 +34,8 @@ case class TopNav(helpers: Helpers):
         item("/", "Home", ctx.req.path == "/", mobileOnly = true),
         item("/analysis", "Analysis", isOn("/analysis")),
         item("/study", "Study", isOn("/study")),
-        item("/import", "Import Games", isOn("/import"), Some("Import recent public games"))
+        item("/import", "Import Games", isOn("/import"), Some("Import recent public games")),
+        item("/help", "Help", isOn("/help")),
+        item("/journal", "Journal", isOn("/journal"))
       )
     )

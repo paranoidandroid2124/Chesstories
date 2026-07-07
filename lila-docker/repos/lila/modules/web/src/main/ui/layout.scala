@@ -162,8 +162,6 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
   val dataTheme = attr("data-theme")
   val dataBoard = attr("data-board")
   val dataPieceSet = attr("data-piece-set")
-  val dataBoard3d = attr("data-board3d")
-  val dataPieceSet3d = attr("data-piece-set3d")
   val dataAssetUrl = attr("data-asset-url") := netConfig.assetBaseUrl.value
   val dataAssetVersion = attr("data-asset-version")
 
@@ -262,11 +260,33 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
       div(cls := "site-footer__inner")(
         a(cls := "site-footer__home", href := siteHomeUrl)("Home"),
         div(cls := "site-footer__links")(
-          a(href := routes.Main.privacy.url)("Privacy"),
-          a(href := routes.Main.terms.url)("Terms"),
-          a(href := routes.Main.contact.url)("Contact"),
-          a(href := routes.Main.source.url)("Open Source"),
-          a(href := "#cookie-consent", cls := "js-cookie-consent-open")("Cookie settings")
+          div(cls := "site-footer__group")(
+            strong("Product"),
+            a(href := routes.UserAnalysis.index.url)("Analysis"),
+            a(href := "/study")("Study"),
+            a(href := routes.Importer.importGame.url)("Import")
+          ),
+          div(cls := "site-footer__group")(
+            strong("Resources"),
+            a(href := routes.Main.help.url)("Help"),
+            a(href := routes.Main.examples.url)("Examples"),
+            a(href := routes.Main.journal.url)("Journal"),
+            a(href := routes.Main.roadmap.url)("Roadmap")
+          ),
+          div(cls := "site-footer__group")(
+            strong("Trust"),
+            a(href := routes.Main.pricing.url)("Beta Access / Pricing"),
+            a(href := routes.Main.trust.url)("Trust"),
+            a(href := routes.Main.privacy.url)("Privacy"),
+            a(href := routes.Main.terms.url)("Terms"),
+            a(href := routes.Main.source.url)("Open Source")
+          ),
+          div(cls := "site-footer__group")(
+            strong("Contact"),
+            a(href := routes.Main.contact.url)("Contact"),
+            a(href := routes.Main.support.url)("Support"),
+            a(href := "#cookie-consent", cls := "js-cookie-consent-open")("Cookie settings")
+          )
         )
       )
     )

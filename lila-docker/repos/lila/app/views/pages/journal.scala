@@ -73,8 +73,8 @@ object journal:
                     p(cls := "journal-empty-copy")("No posts published yet.")
                 ),
                 div(cls := "journal-rail-card journal-rail-card--soft")(
-                  p(cls := "journal-card-label")("Next up"),
-                  p("Future posts can cover update logs, roadmap notes, and concrete examples of how strategic review notes should read.")
+                  p(cls := "journal-card-label")("Reading path"),
+                  p("Start with the founding note, then read how engine evidence, AI limits, and review studies shape the product.")
                 )
               ),
               selected.fold(

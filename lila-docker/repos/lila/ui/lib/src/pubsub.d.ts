@@ -2,7 +2,6 @@ export type PubsubEventKey = keyof PubsubEvents;
 export interface PubsubEvents {
     'analysis.closeAll': () => void;
     'analysis.change': (fen: FEN, path: string) => void;
-    'board.change': (is3d: boolean) => void;
     'content-loaded': (el?: HTMLElement) => void;
     jump: (ply: string) => void;
     ply: (ply: number, isMainline?: boolean) => void;

@@ -229,6 +229,33 @@
   }
 }
 
+.analyse__chesstory-brief-access {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+  padding: 0.65rem;
+  border: 1px solid rgba($c-secondary, 0.22);
+  border-radius: $box-radius-size;
+  background: rgba($c-secondary, 0.08);
+
+  span {
+    color: $c-font-dim;
+    font-size: 0.76rem;
+    line-height: 1.35;
+  }
+
+  strong {
+    color: $c-font-clear;
+  }
+
+  .button {
+    justify-self: start;
+    padding: 0.35rem 0.58rem;
+    font-size: 0.74rem;
+    line-height: 1.2;
+  }
+}
+
 .analyse__chesstory-brief-list {
   display: flex;
   flex-direction: column;

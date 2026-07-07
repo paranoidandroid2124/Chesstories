@@ -2,8 +2,7 @@ import type { CevalHandler } from '../types';
 import type CevalCtrl from '../ctrl';
 import { fewerCores } from '../util';
 import { isChrome } from '@/device';
-import { type VNode, onInsert, bind, dataIcon, hl, rangeConfig, confirm } from '@/view';
-import * as Licon from '@/licon';
+import { type VNode, onInsert, bind, hl, rangeConfig } from '@/view';
 import { onClickAway } from '@/index';
 import { clamp } from '@/algo';
 
@@ -14,7 +13,7 @@ export function renderCevalSettings(ctrl: CevalHandler): VNode | null {
     minThreads = ceval.engines.active?.minThreads ?? 1,
     maxThreads = ceval.maxThreads,
     engCtrl = ctrl.ceval.engines,
-    searchTicks = allSearchTicks.filter(x => x * 1000 <= ceval.engines.maxMovetime);
+    searchTicks = allSearchTicks;
 
   let observer: ResizeObserver;
 
@@ -104,7 +103,7 @@ export function renderCevalSettings(ctrl: CevalHandler): VNode | null {
               {
                 attrs: {
                   title:
-                    fewerCores() && !ceval.engines.external
+                    fewerCores()
                       ? 'More threads will use more battery for better analysis'
                       : "Set this below your CPU's thread count\nThe ticks mark a good safe choice",
                 },
@@ -138,7 +137,7 @@ export function renderCevalSettings(ctrl: CevalHandler): VNode | null {
                         destroy: () => observer?.disconnect(),
                       },
                     },
-                    !ceval.engines.external && [threadsTick('up'), threadsTick('down')],
+                    [threadsTick('up'), threadsTick('down')],
                   ),
                 ]),
                 hl('div.range_value', `${ceval.threads} / ${maxThreads}`),
@@ -194,8 +193,7 @@ function setupTick(v: VNode, ceval: CevalCtrl) {
 function engineSelection(ctrl: CevalHandler) {
   const ceval = ctrl.ceval,
     active = ceval.engines.active,
-    engines = ceval.engines.supporting(ceval.opts.variant.key),
-    external = ceval.engines.external;
+    engines = ceval.engines.supporting(ceval.opts.variant.key);
   return [
     hl('div.setting', [
       hl('label', { attrs: { for: 'select-engine' } }, 'Engine:'),
@@ -211,15 +209,6 @@ function engineSelection(ctrl: CevalHandler) {
           hl('option', { attrs: { value: engine.id, selected: active?.id === engine.id } }, engine.name),
         ),
       ),
-      external &&
-      hl('button.delete', {
-        attrs: { ...dataIcon(Licon.X), title: 'Delete external engine' },
-        hook: bind('click', async e => {
-          (e.currentTarget as HTMLElement).blur();
-          if (await confirm('Remove external engine?'))
-            ceval.engines.deleteExternal(external.id).then(ok => ok && ceval.opts.redraw());
-        }),
-      }),
     ]),
     hl('br'),
   ];

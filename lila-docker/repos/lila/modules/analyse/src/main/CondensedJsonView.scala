@@ -35,7 +35,6 @@ object CondensedJsonView:
       "pref" -> Json.obj(
         // AnalysePref (ui/analyse/src/interfaces.ts)
         "coords" -> pref.coords,
-        "is3d" -> pref.is3d,
         "highlight" -> pref.highlight,
         "destination" -> pref.destination,
         "rookCastle" -> (pref.rookCastle != 0),

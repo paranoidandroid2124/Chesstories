@@ -30,26 +30,4 @@
     }
   }
 
-  .game {
-    text-align: center;
-
-    iframe {
-      margin: 1em 0 2em 0;
-    }
-  }
-
-  .or-play,
-  .game {
-    display: none;
-
-    @media (hover: hover) {
-      @media (min-width: at-least($small)) {
-        display: inline-block;
-      }
-    }
-  }
-
-  .credits {
-    font-size: 0.9em;
-  }
 }

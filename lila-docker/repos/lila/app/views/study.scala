@@ -88,7 +88,7 @@ object study:
 
       Page(s"${study.name.value} • ${chapter.name.value}")
         .css("analyse.study")
-        .csp(analyseUi.bits.cspExternalEngine.compose(_.withExternalAnalysisApis))
+        .csp(analyseUi.bits.csp.compose(_.withExternalAnalysisApis))
         .js(PageModule("analyse.study", Json.obj("cfg" -> cfg)))
         .flag(_.zoom):
           div(cls := "notebook-shell")(

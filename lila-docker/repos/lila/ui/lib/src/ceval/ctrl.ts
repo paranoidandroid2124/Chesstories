@@ -82,7 +82,7 @@ export default class CevalCtrl {
     if (!this.lastStarted || this.isDeeper() || this.isInfinite || work.threatMode) return;
     const showingNode = this.lastStarted.steps[this.lastStarted.steps.length - 1];
     const byMovetime = 'movetime' in this.search.by && this.search.by.movetime;
-    if (byMovetime && showingNode.ceval?.cloud && ev.millis > 500 && !this.engines.external) {
+    if (byMovetime && showingNode.ceval?.cloud && ev.millis > 500) {
       const targetNodes = showingNode.ceval.nodes;
       const likelyNodes = Math.round((byMovetime * ev.nodes) / ev.millis);
 
@@ -185,12 +185,12 @@ export default class CevalCtrl {
           by:
             !this.opts.custom && (this.isDeeper() || this.isInfinite)
               ? { depth: 99 }
-              : { movetime: Math.min(this.storedMovetime(), custom ?? 30 * 1000, this.engines.maxMovetime) },
+              : { movetime: Math.min(this.storedMovetime(), custom ?? 30 * 1000) },
         };
   }
 
   get safeMovetime(): number {
-    return Math.min(this.storedMovetime(), this.engines.maxMovetime);
+    return this.storedMovetime();
   }
 
   get isInfinite(): boolean {
@@ -203,10 +203,6 @@ export default class CevalCtrl {
 
   get isComputing(): boolean {
     return this.state === CevalState.Computing;
-  }
-
-  get isCacheable(): boolean {
-    return !!this.engines.active?.cloudEval;
   }
 
   get isPaused(): boolean {
@@ -228,22 +224,16 @@ export default class CevalCtrl {
   }
 
   get recommendedThreads(): number {
-    return (
-      this.engines.external?.maxThreads ??
-      clamp(navigator.hardwareConcurrency - (navigator.hardwareConcurrency % 2 ? 0 : 1), {
-        min: this.engines.active?.minThreads ?? 1,
-        max: this.maxThreads,
-      })
-    );
+    return clamp(navigator.hardwareConcurrency - (navigator.hardwareConcurrency % 2 ? 0 : 1), {
+      min: this.engines.active?.minThreads ?? 1,
+      max: this.maxThreads,
+    });
   }
 
   get maxThreads(): number {
-    return (
-      this.engines.external?.maxThreads ??
-      (fewerCores()
-        ? Math.min(this.engines.active?.maxThreads ?? 32, navigator.hardwareConcurrency)
-        : (this.engines.active?.maxThreads ?? 32))
-    );
+    return fewerCores()
+      ? Math.min(this.engines.active?.maxThreads ?? 32, navigator.hardwareConcurrency)
+      : (this.engines.active?.maxThreads ?? 32);
   }
 
   setHashSize = (hash: number): void => storage.set('ceval.hash-size', hash.toString());

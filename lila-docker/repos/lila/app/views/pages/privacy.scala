@@ -16,7 +16,7 @@ object privacy:
             st.article(cls := "legal-content")(
               header(cls := "legal-header")(
                 h1("Privacy Policy"),
-                p(cls := "legal-meta")("Effective Date: March 10, 2026 • Last Updated: June 29, 2026")
+                p(cls := "legal-meta")("Effective Date: March 10, 2026 • Last Updated: July 2, 2026")
               ),
 
               st.section(cls := "legal-section")(
@@ -63,14 +63,14 @@ object privacy:
                 ul(
                   li("Hosting and infrastructure providers"),
                   li("Email delivery providers"),
-                  li("AI or model providers when needed to generate analysis features"),
+                  li("OpenAI API when needed to generate AI-assisted analysis features"),
                   li("Anti-abuse or captcha providers such as hCaptcha when enabled to protect the Service"),
                   li("Authorities or counterparties when required by law or reasonably necessary to protect rights, safety, or the Service")
                 ),
                 h3("AI and model processing"),
                 p(
-                  "Some Chesstory explanations may be generated with help from configured model providers, such as OpenAI, Together AI, or similar API providers. ",
-                  "Provider availability can change during beta, and providers with stricter age, privacy, or data-use requirements will not be enabled for public production unless Chesstory's access rules and notices are updated first."
+                  "Some Chesstory explanations may be generated with help from OpenAI API models. ",
+                  "Chesstory does not currently plan to use multiple AI model providers for public beta explanations."
                 ),
                 p("When you request an AI-assisted explanation, Chesstory may send only the information needed to produce that explanation, such as:"),
                 ul(
@@ -85,7 +85,12 @@ object privacy:
                 p(
                   "Generated explanations may be stored by Chesstory when you save them as part of a review study, note, import history, or analysis record. ",
                   "Temporary request logs may be retained for a limited period for reliability, security, abuse prevention, and debugging. ",
-                  "Model providers may also process prompts and outputs under their own API terms, privacy terms, data-processing settings, and retention policies."
+                  "OpenAI may process prompts and outputs under its API terms, privacy terms, data-processing settings, and retention policies. ",
+                  "OpenAI states that API data is not used to train or improve OpenAI models by default unless the customer opts in, but API abuse-monitoring logs may retain prompts, responses, and related metadata for up to 30 days unless a different approved retention control applies."
+                ),
+                p(
+                  "Chesstory does not currently promise Zero Data Retention or Modified Abuse Monitoring for OpenAI API requests. ",
+                  "If Chesstory receives approval for stricter OpenAI retention controls later, this policy will be updated before those controls are described as active."
                 ),
                 p(
                   "Chesstory does not use your private PGNs, notes, or saved review studies to train a general-purpose model. ",

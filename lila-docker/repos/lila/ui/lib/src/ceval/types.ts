@@ -38,21 +38,6 @@ export interface BaseEngineInfo {
   requires?: Feature[];
 }
 
-export interface ExternalEngineInfoFromServer extends BaseEngineInfo {
-  variants: VariantKey[];
-  maxHash: number;
-  maxThreads: number;
-  providerData?: string;
-  clientSecret: string;
-  officialStockfish?: boolean;
-  endpoint: string;
-}
-
-export interface ExternalEngineInfo extends ExternalEngineInfoFromServer {
-  tech: 'EXTERNAL';
-  cloudEval?: false;
-}
-
 export interface BrowserEngineInfo extends BaseEngineInfo {
   tech: 'HCE' | 'NNUE';
   short: string;
@@ -60,10 +45,9 @@ export interface BrowserEngineInfo extends BaseEngineInfo {
   assets: { root?: string; js?: string; wasm?: string; version?: string; nnue?: string[] };
   requires: Feature[];
   obsoletedBy?: Feature;
-  cloudEval?: boolean;
 }
 
-export type EngineInfo = BrowserEngineInfo | ExternalEngineInfo;
+export type EngineInfo = BrowserEngineInfo;
 
 export type EngineNotifier = (status?: {
   download?: { bytes: number; total: number };
@@ -107,7 +91,6 @@ export interface CevalOpts {
   onUciHover: (hovering: Hovering | null) => void;
   redraw: Redraw;
   onSelectEngine?: () => void;
-  externalEngines?: ExternalEngineInfoFromServer[];
   custom?: CustomCeval; // hides switch, threat, and go deeper buttons
 }
 
@@ -142,8 +125,6 @@ export interface CevalHandler {
   clearCeval: () => void;
   startCeval: () => void;
   cevalEnabled: (enable?: boolean) => boolean | 'force';
-  externalEngines?: () => ExternalEngineInfo[] | undefined;
-  showFishnetAnalysis?: () => boolean;
 }
 
 export interface NodeEvals {

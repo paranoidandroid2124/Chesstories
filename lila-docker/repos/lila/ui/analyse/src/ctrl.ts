@@ -1,15 +1,15 @@
-import { playable, playedTurns, fenToEpd, readDests, writeDests, validUci } from 'lib/game';
+import { playable, playedTurns, readDests, writeDests, validUci } from 'lib/game';
 import * as keyboard from './keyboard';
 import { treeReconstruct, plyColor } from './util';
 import { plural } from './view/util';
-import type { AnalyseOpts, AnalyseData, ServerEvalData, JustCaptured, StudyView } from './interfaces';
+import type { AnalyseOpts, AnalyseData, JustCaptured, StudyView } from './interfaces';
 import type { Api as ChessgroundApi } from '@lichess-org/chessground/api';
 import { Autoplay, type AutoplayDelay } from './autoplay';
 import { makeTree, treePath, treeOps, type TreeWrapper } from 'lib/tree';
 import { compute as computeAutoShapes } from './autoShape';
 import type { Config as ChessgroundConfig } from '@lichess-org/chessground/config';
 import type { CevalHandler, EvalMeta, CevalOpts } from 'lib/ceval';
-import { CevalCtrl, isEvalBetter, sanIrreversible } from 'lib/ceval';
+import { CevalCtrl, isEvalBetter } from 'lib/ceval';
 import { TreeView } from './treeView/treeView';
 import type { Prop, Toggle } from 'lib';
 import {
@@ -26,9 +26,7 @@ import { preferenceLocalStorage } from 'lib/cookieConsent';
 import { pubsub } from 'lib/pubsub';
 import type { DrawShape } from '@lichess-org/chessground/draw';
 import { scalachessCharPair } from 'chessops/compat';
-import EvalCache from './evalCache';
 import { ForkCtrl } from './fork';
-import type { Socket } from './socket';
 import { nextGlyphSymbol, add3or5FoldGlyphs } from './nodeFinder';
 import { opposite, parseUci, makeSquare, roleToChar } from 'chessops/util';
 import { type Outcome, isNormal } from 'chessops/types';
@@ -95,10 +93,8 @@ export default class AnalyseCtrl implements CevalHandler {
   data: AnalyseData;
   element: HTMLElement;
   tree: TreeWrapper;
-  socket: Socket;
   chessground: ChessgroundApi;
   ceval: CevalCtrl;
-  evalCache: EvalCache;
   idbTree: IdbTree = new IdbTree(this);
   actionMenu: Toggle = toggle(false);
   isEmbed: boolean;
@@ -196,9 +192,6 @@ export default class AnalyseCtrl implements CevalHandler {
       () => this.withCg(g => g.set(this.cgConfig)),
       this.redraw,
     );
-
-    this.instanciateEvalCache();
-
     if (opts.inlinePgn) this.data = this.changePgn(opts.inlinePgn, false) || this.data;
 
     this.initialize(this.data, false);
@@ -243,13 +236,6 @@ export default class AnalyseCtrl implements CevalHandler {
     pubsub.on('ply.trigger', () =>
       pubsub.emit('ply', this.node.ply, this.tree.lastMainlineNode(this.path).ply === this.node.ply),
     );
-    pubsub.on('board.change', (is3d: boolean) => {
-      if (this.chessground) {
-        this.chessground.state.addPieceZIndex = is3d;
-        this.chessground.redrawAll();
-        redraw();
-      }
-    });
     this.mergeIdbThenShowTreeView();
   }
 
@@ -505,8 +491,6 @@ export default class AnalyseCtrl implements CevalHandler {
     }
 
     this.autoplay = new Autoplay(this);
-    if (this.socket) this.socket.clearCache();
-    else this.socket = this.makeLocalSocket();
     if (this.explorer) this.explorer.destroy();
     this.explorer = new ExplorerCtrl(this, this.opts.explorer, this.explorer);
     this.gamePath = this.synthetic || this.ongoing ? undefined : treePath.fromNodeList(mainline);
@@ -858,7 +842,6 @@ export default class AnalyseCtrl implements CevalHandler {
     this.redirecting = false;
     this.setPath(treePath.root);
     this.initCeval();
-    this.instanciateEvalCache();
     this.cgVersion.js++;
     this.mergeIdbThenShowTreeView();
   }
@@ -876,7 +859,6 @@ export default class AnalyseCtrl implements CevalHandler {
         ...pgnImport(normalized),
         orientation: this.bottomColor(),
         pref: this.data.pref,
-        externalEngines: this.data.externalEngines,
       } as AnalyseData;
       if (andReload) {
         this.reloadData(data, false);
@@ -1012,17 +994,6 @@ export default class AnalyseCtrl implements CevalHandler {
     return setupPosition('chess', setup);
   }
 
-  private makeLocalSocket(): Socket {
-    return {
-      send: this.opts.socketSend,
-      receive: () => false,
-      sendAnaMove: () => {},
-      sendAnaDrop: () => {},
-      sendAnaDests: () => {},
-      clearCache: () => {},
-    };
-  }
-
   private applyUci(uci: Uci): void {
     const path = this.path;
     this.position(this.node).unwrap(
@@ -1088,7 +1059,7 @@ export default class AnalyseCtrl implements CevalHandler {
       if (isThreat) {
         const threat = ev as Tree.LocalEval;
         if (!node.threat || isEvalBetter(threat, node.threat)) node.threat = threat;
-      } else if ((!node.ceval || isEvalBetter(ev, node.ceval)) && !(ev.cloud && this.ceval.engines.external))
+      } else if (!node.ceval || isEvalBetter(ev, node.ceval))
         node.ceval = ev;
       else if (!ev.cloud) {
         if (node.ceval?.cloud && this.ceval.isDeeper()) node.ceval = ev;
@@ -1096,9 +1067,6 @@ export default class AnalyseCtrl implements CevalHandler {
 
       if (path === this.path) {
         this.setAutoShapes();
-        if (!isThreat) {
-          this.evalCache.onLocalCeval();
-        }
         this.redraw();
       }
     });
@@ -1111,11 +1079,6 @@ export default class AnalyseCtrl implements CevalHandler {
       emit: (ev: Tree.ClientEval, work: EvalMeta) => this.onNewCeval(ev, work.path, work.threatMode),
       onUciHover: this.setAutoShapes,
       redraw: this.redraw,
-      externalEngines:
-        this.data.externalEngines?.map(engine => ({
-          ...engine,
-          endpoint: this.opts.externalEngineEndpoint,
-        })) || [],
       onSelectEngine: () => {
         this.initCeval();
         this.redraw();
@@ -1151,12 +1114,10 @@ export default class AnalyseCtrl implements CevalHandler {
     if (!this.ceval.download) this.ceval.stop();
     if (this.node.threefold || !this.cevalEnabled() || this.outcome()) return;
     this.ceval.start(this.path, this.nodeList, undefined, this.threatMode());
-    this.evalCache.fetch(this.path, this.ceval.search.multiPv);
   };
 
   clearCeval(): void {
     this.tree.removeCeval();
-    this.evalCache.clear();
     this.startCeval();
   }
 
@@ -1336,55 +1297,6 @@ export default class AnalyseCtrl implements CevalHandler {
 
   withCg = <A>(f: (cg: ChessgroundApi) => A): A | undefined =>
     this.chessground && this.cgVersion.js === this.cgVersion.dom ? f(this.chessground) : undefined;
-
-  hasFullComputerAnalysis = (): boolean => {
-    return Object.keys(this.mainline[0].eval || {}).length > 0;
-  };
-
-  mergeAnalysisData(data: ServerEvalData) {
-    this.tree.merge(data.tree);
-    this.data.analysis = data.analysis;
-    if (data.analysis)
-      data.analysis.partial = !!treeOps.findInMainline(data.tree, this.partialAnalysisCallback);
-    this.redraw();
-  }
-
-  partialAnalysisCallback(n: Tree.Node) {
-    return !n.eval && !!n.children.length && n.ply <= 300 && n.ply > 0;
-  }
-
-  private canEvalGet = (): boolean => {
-    if (this.node.ply >= 15 && !this.opts.study) return false;
-
-    // cloud eval does not support threefold repetition
-    const fens = new Set();
-    for (let i = this.nodeList.length - 1; i >= 0; i--) {
-      const node = this.nodeList[i];
-      const epd = fenToEpd(node.fen);
-      if (fens.has(epd)) return false;
-      if (node.san && sanIrreversible(node.san)) return true;
-      fens.add(epd);
-    }
-    return true;
-  };
-
-  private instanciateEvalCache = () => {
-    this.evalCache = new EvalCache({
-      variant: this.data.game.variant.key,
-      canGet: this.canEvalGet,
-      canPut: () =>
-        !!(
-          this.ceval?.isCacheable &&
-          this.canEvalGet() &&
-          // if not in study, only put decent opening moves
-          (this.opts.study || (!this.node.ceval!.mate && Math.abs(this.node.ceval!.cp!) < 99))
-        ),
-      getNode: () => this.node,
-      send: this.opts.socketSend,
-      receive: this.onNewCeval,
-      upgradable: this.evalCache?.upgradable(),
-    });
-  };
 
   playUci = (uci: Uci, uciQueue?: Uci[]) => {
     this.pvUciQueue = uciQueue ?? [];

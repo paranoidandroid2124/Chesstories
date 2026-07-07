@@ -292,7 +292,7 @@ class WsSocket {
       case false:
         break;
       case 'resync':
-        setTimeout(() => site.reload('lila-ws resync'), 500);
+        setTimeout(() => site.reload('socket resync'), 500);
         break;
       case 'ack':
         this.ackable.onServerAck(m.d);

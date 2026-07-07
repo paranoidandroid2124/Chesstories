@@ -27,7 +27,7 @@ function makeConfig(ctrl: AnalyseCtrl): CgConfig {
     orientation: ctrl.bottomColor(),
     coordinates: labelConfig.coordinates,
     coordinatesOnSquares: labelConfig.coordinatesOnSquares,
-    addPieceZIndex: pref.is3d,
+    addPieceZIndex: false,
     addDimensionsCssVarsTo: document.body,
     touchIgnoreRadius: 0,
     viewOnly: false,

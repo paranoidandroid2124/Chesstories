@@ -2,8 +2,6 @@ import type { Player, Status } from 'lib/game';
 
 import type { ExplorerOpts } from './explorer/interfaces';
 
-import type { AnalyseSocketSend } from './socket';
-import type { ExternalEngineInfo } from 'lib/ceval';
 import type { Coords, MoveEvent } from 'lib/prefs';
 
 // similar, but not identical, to game/GameData
@@ -17,12 +15,10 @@ export interface AnalyseData {
   sidelines?: Tree.Node[][];
   treeParts: Tree.NodeOptionalChildren[];
   pref: AnalysePref;
-  externalEngines?: ExternalEngineInfo[];
 }
 
 export interface AnalysePref {
   coords: Coords;
-  is3d?: boolean;
   rookCastle?: boolean;
   destination?: boolean;
   highlight?: boolean;
@@ -79,20 +75,6 @@ export interface StudyView {
   visibility?: string;
 }
 
-export interface ServerEvalData {
-  ch: string;
-  analysis?: Analysis;
-  tree: Tree.Node;
-}
-
-export interface EvalHit {
-  fen: FEN;
-  knodes: number;
-  depth: number;
-  pvs: Tree.PvDataServer[];
-  path: string;
-}
-
 // similar, but not identical, to game/Game
 export interface Game {
   id: string;
@@ -135,28 +117,14 @@ export interface AnalyseOpts {
   userId?: string;
   hunter: boolean;
   explorer: ExplorerOpts;
-  socketSend: AnalyseSocketSend;
   study?: StudyView;
   inlinePgn?: string;
   importHistory?: ImportHistoryView;
-  externalEngineEndpoint: string;
   embed?: boolean;
 }
 
 export interface JustCaptured extends Piece {
   promoted?: boolean;
-}
-
-export interface EvalGetData {
-  fen: FEN;
-  path: string;
-  variant?: VariantKey;
-  mpv?: number;
-  up?: boolean;
-}
-
-export interface EvalPutData extends Tree.ServerEval {
-  variant?: VariantKey;
 }
 
 export type Conceal = false | 'conceal' | 'hide' | null;

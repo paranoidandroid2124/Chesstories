@@ -13,7 +13,6 @@ Disallow: /game/export/
 Disallow: /games/export/
 Disallow: /api/
 Disallow: /opening/config/
-Allow: /game/export/gif/thumbnail/
 """
 
   def manifest(net: NetConfig) =

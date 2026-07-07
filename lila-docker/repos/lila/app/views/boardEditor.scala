@@ -18,7 +18,6 @@ object boardEditor:
           Json.obj(
             "baseUrl" -> routes.Editor.index.url,
             "fen" -> fen.map(_.value),
-            "is3d" -> false,
             "animation" -> Json.obj("duration" -> ctx.pref.animationMillis),
             "embed" -> false,
             "options" -> Json.obj("coordinates" -> true)

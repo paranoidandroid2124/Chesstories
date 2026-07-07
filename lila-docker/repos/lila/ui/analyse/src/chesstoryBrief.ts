@@ -207,17 +207,15 @@ function placeholderSections(): ChesstoryBriefSection[] {
 
 function carrierLabels(carriers: ChesstoryBoardCarrier[]): string[] {
   const actorPiece = actorRoutePiece(carriers);
-  return conciseCarrierLabels(
-    carriers
-      .filter(
-        carrier =>
-          carrier.role === 'target' ||
-          (carrier.role === 'actor' && carrier.kind === 'Move') ||
-          relationCarrierRoles.has(carrier.role || ''),
-      )
-      .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
-      .map(carrier => boardCarrierLabel(carrier, actorPiece)),
-  );
+  const publicCarriers = carriers
+    .filter(
+      carrier =>
+        carrier.role === 'target' ||
+        (carrier.role === 'actor' && carrier.kind === 'Move') ||
+        relationCarrierRoles.has(carrier.role || ''),
+    )
+    .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b));
+  return conciseCarrierLabels(publicCarriers, actorPiece);
 }
 
 function boardCarrierRank(carrier: ChesstoryBoardCarrier): number {
@@ -245,6 +243,8 @@ function boardCarrierLabel(carrier: ChesstoryBoardCarrier, actorPiece?: string):
     const piece = actorPiece ? `${actorPiece} ` : '';
     return `${piece}${route}`;
   }
+  const square = squareValue(carrier.value);
+  if (carrier.kind === 'Square' && square) return `the ${square} square`;
   return [value, route].filter(Boolean).join(' ');
 }
 
@@ -324,73 +324,145 @@ function uniqueLabels(labels: string[]): string[] {
   return [...new Set(labels.map(label => label.trim()).filter(Boolean))];
 }
 
-function conciseCarrierLabels(labels: string[]): string[] {
-  const unique = uniqueLabels(labels);
-  const standaloneSquare = (label: string) => label.match(/^(?:the )?([a-h][1-8])(?: square)?$/)?.[1];
+function conciseCarrierLabels(carriers: ChesstoryBoardCarrier[], actorPiece?: string): string[] {
+  const unique = uniqueCarriers(carriers);
   const barePieces = new Set(['king', 'queen', 'rook', 'bishop', 'knight', 'pawn', 'piece']);
-  const hasConcrete = unique.some(label => !barePieces.has(label));
-  const coveredFiles = new Set(unique.flatMap(label => label.match(/^([a-h])-file break$/)?.[1] || []));
-  const captureSacrificeSquares = new Set(
-    unique.flatMap(label => {
-      const square = label.match(/^material capture on ([a-h][1-8])$/)?.[1];
-      return square && unique.includes(`material sacrifice on ${square}`) ? [square] : [];
-    }),
-  );
-  const pieceRoutes = new Set(
-    unique.flatMap(label => label.match(/^(?:king|queen|rook|bishop|knight) ([a-h][1-8]-[a-h][1-8])$/)?.slice(1) || []),
-  );
+  const hasConcrete = unique.some(carrier => !(carrier.kind === 'Piece' && barePieces.has(normalizedCarrierValue(carrier))));
+  const coveredFiles = new Set(unique.flatMap(breakFileFromCarrier));
+  const materialCaptureSquares = new Set(unique.flatMap(carrier => planSubjectSquare(carrier, 'material-capture')));
+  const materialSacrificeSquares = new Set(unique.flatMap(carrier => planSubjectSquare(carrier, 'material-sacrifice')));
+  const captureSacrificeSquares = new Set([...materialCaptureSquares].filter(square => materialSacrificeSquares.has(square)));
   const coveredRoutes = new Set(
-    unique.flatMap(label => label.match(/^(?:passed pawn advance|rook lift) ([a-h][1-8]-[a-h][1-8])$/)?.slice(1) || []),
+    unique.flatMap(carrier =>
+      carrier.kind === 'PlanSubject' ? planSubjectRoute(carrier.value) : [],
+    ),
   );
   const coveredSquares = new Set(
-    unique.flatMap(label => [
-      ...(label.match(/^(?:material capture|material sacrifice|capture and sacrifice|weak square|check|weak pawn) on ([a-h][1-8])$/)?.slice(1) || []),
-      ...(label.match(/^opens a line from ([a-h][1-8])$/)?.slice(1) || []),
-      ...(label.match(/^passed pawn on ([a-h][1-8])$/)?.slice(1) || []),
-      ...(
-        label.match(/^(?:passed pawn advance|rook lift|created tension|(?:battery|pin) pressure (?:on|along)) ([a-h][1-8])(?:-([a-h][1-8]))?$/)
-          ?.slice(1)
-          .filter(Boolean) || []
-      ),
-      ...(label.match(/^tension between ([a-h][1-8]) and ([a-h][1-8])$/)?.slice(1) || []),
-      ...(label.match(/^tension on ([a-h][1-8])$/)?.slice(1) || []),
-      ...(label.match(/^([a-h][1-8])-([a-h][1-8])$/)?.slice(1) || []),
-      ...(label.match(/^(?:king|queen|rook|bishop|knight) ([a-h][1-8])-([a-h][1-8])$/)?.slice(1) || []),
-    ]),
+    unique.filter(carrier => !standaloneSquareCarrier(carrier)).flatMap(carrierSquares),
   );
   const captureSacrificeUsed = new Set<string>();
   const concise = unique
-    .flatMap(label => {
-      const square = label.match(/^material (?:capture|sacrifice) on ([a-h][1-8])$/)?.[1];
-      if (!square || !captureSacrificeSquares.has(square)) return [label];
+    .flatMap(carrier => {
+      const square =
+        planSubjectSquare(carrier, 'material-capture')[0] ||
+        planSubjectSquare(carrier, 'material-sacrifice')[0];
+      if (!square || !captureSacrificeSquares.has(square)) return [carrier];
       if (captureSacrificeUsed.has(square)) return [];
       captureSacrificeUsed.add(square);
       return [`capture and sacrifice on ${square}`];
     })
-    .filter(label => !hasConcrete || !barePieces.has(label))
-    .filter(label => !label.match(/^[a-h][1-8]-[a-h][1-8]$/) || (!coveredRoutes.has(label) && !pieceRoutes.has(label)))
-    .filter(label => {
-      const route = label.match(/^(?:king|queen|rook|bishop|knight) ([a-h][1-8]-[a-h][1-8])$/)?.[1];
-      return !route || !coveredRoutes.has(route);
+    .filter((carrierOrLabel): carrierOrLabel is ChesstoryBoardCarrier | string => {
+      if (typeof carrierOrLabel === 'string') return true;
+      return !hasConcrete || !(carrierOrLabel.kind === 'Piece' && barePieces.has(normalizedCarrierValue(carrierOrLabel)));
     })
-    .filter(label => !label.match(/^([a-h])-file$/) || !coveredFiles.has(label[0]))
-    .filter(label => {
-      const square = standaloneSquare(label);
+    .filter(carrierOrLabel => {
+      if (typeof carrierOrLabel === 'string') return true;
+      const route = routeValue(carrierOrLabel);
+      return !route || carrierOrLabel.kind !== 'Move' || !coveredRoutes.has(route);
+    })
+    .filter(carrierOrLabel => {
+      if (typeof carrierOrLabel === 'string') return true;
+      const file = fileValue(carrierOrLabel);
+      return !file || carrierOrLabel.kind !== 'File' || !coveredFiles.has(file);
+    })
+    .filter(carrierOrLabel => {
+      if (typeof carrierOrLabel === 'string') return true;
+      const square = standaloneSquareCarrier(carrierOrLabel);
       return !square || !coveredSquares.has(square);
     })
-    .map(label => {
-      const square = standaloneSquare(label);
-      return square ? `the ${square} square` : label;
+    .map(carrierOrLabel => {
+      if (typeof carrierOrLabel === 'string') return carrierOrLabel;
+      return boardCarrierLabel(carrierOrLabel, actorPiece);
     });
-  const weakSquares = concise.flatMap(label => label.match(/^weak square on ([a-h][1-8])$/)?.slice(1) || []);
+  const weakSquares = unique.flatMap(carrier => planSubjectSquare(carrier, 'weak-square'));
   if (weakSquares.length < 2) return concise;
+  const weakSquareLabels = new Set(weakSquares.map(square => `weak square on ${square}`));
   let weakSquareGroupUsed = false;
   return concise.flatMap(label => {
-    if (!label.startsWith('weak square on ')) return [label];
+    if (!weakSquareLabels.has(label)) return [label];
     if (weakSquareGroupUsed) return [];
     weakSquareGroupUsed = true;
     return [`weak squares ${joinHuman(weakSquares)}`];
   });
+}
+
+function uniqueCarriers(carriers: ChesstoryBoardCarrier[]): ChesstoryBoardCarrier[] {
+  const seen = new Set<string>();
+  return carriers.filter(carrier => {
+    const key = [carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to].join('|');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function normalizedCarrierValue(carrier: ChesstoryBoardCarrier): string {
+  return (carrier.value || '').trim().toLowerCase();
+}
+
+function squareValue(value?: string): string | undefined {
+  const normalized = (value || '').trim().toLowerCase();
+  return normalized.match(/^[a-h][1-8]$/) ? normalized : undefined;
+}
+
+function fileValue(carrier: ChesstoryBoardCarrier): string | undefined {
+  const normalized = normalizedCarrierValue(carrier);
+  return carrier.kind === 'File' && normalized.match(/^[a-h]$/) ? normalized : undefined;
+}
+
+function routeValue(carrier: ChesstoryBoardCarrier): string | undefined {
+  const from = squareValue(carrier.from);
+  const to = squareValue(carrier.to);
+  return from && to ? `${from}-${to}` : undefined;
+}
+
+function standaloneSquareCarrier(carrier: ChesstoryBoardCarrier): string | undefined {
+  return carrier.kind === 'Square' ? squareValue(carrier.value) : undefined;
+}
+
+function breakFileFromCarrier(carrier: ChesstoryBoardCarrier): string[] {
+  const match = carrier.kind === 'PlanSubject' ? normalizedCarrierValue(carrier).match(/^break-file:([a-h])$/) : undefined;
+  return match ? [match[1]] : [];
+}
+
+function planSubjectSquare(carrier: ChesstoryBoardCarrier, prefix: string): string[] {
+  if (carrier.kind !== 'PlanSubject') return [];
+  return normalizedCarrierValue(carrier)
+    .split(',')
+    .flatMap(value => value.match(new RegExp(`^${prefix}:([a-h][1-8])$`))?.slice(1) || []);
+}
+
+function planSubjectRoute(value?: string): string[] {
+  return (value || '')
+    .trim()
+    .toLowerCase()
+    .split(',')
+    .flatMap(part => {
+      const route = part.match(/^(?:passed-pawn-advanced|rook-lift):([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
+      return route ? [`${route[1]}-${route[2]}`] : [];
+    });
+}
+
+function carrierSquares(carrier: ChesstoryBoardCarrier): string[] {
+  const route = routeValue(carrier)?.split('-') || [];
+  if (route.length) return route;
+  if (carrier.kind === 'Pawn') {
+    const weakPawn = normalizedCarrierValue(carrier).match(/^weak-pawn:([a-h][1-8])$/);
+    return weakPawn ? [weakPawn[1]] : [];
+  }
+  if (carrier.kind !== 'PlanSubject') return [];
+  return normalizedCarrierValue(carrier)
+    .split(',')
+    .flatMap(value => {
+      const singleSquare = value.match(
+        /^(?:material-sacrifice|material-capture|material-recapture|weak-square|check|defender-move|opened-line|line-unlock|passed-pawn):([a-h][1-8])$/,
+      );
+      if (singleSquare) return [singleSquare[1]];
+      const routeSubject = value.match(/^(?:passed-pawn-advanced|rook-lift):([a-h][1-8])-([a-h][1-8]):rank-\d+$/);
+      if (routeSubject) return routeSubject.slice(1, 3);
+      const pressure = value.match(/^(?:battery-pressure|pin-pressure|created-tension):([a-h][1-8])(?:-([a-h][1-8]))?$/);
+      return pressure ? pressure.slice(1).filter((square): square is string => Boolean(square)) : [];
+    });
 }
 
 function joinHuman(items: string[]): string {

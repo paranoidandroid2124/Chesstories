@@ -54,7 +54,6 @@ interface Site {
       name?: string; // either provide this or valid san
       san?: string;
       volume?: number;
-      filter?: 'music' | 'game';
     }): void;
     load(name: string, path?: string): Promise<any>;
     play(name: string, volume?: number): Promise<void>;

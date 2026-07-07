@@ -751,6 +751,355 @@ $landing-files: a, b, c, d, e, f, g, h;
     gap: 0.35rem;
   }
 
+  .landing-resources {
+    border-top: 1px solid rgba($landing-border, 0.64);
+    background:
+      linear-gradient(180deg, rgba($landing-surface-strong, 0.36), transparent),
+      rgba($landing-bg, 0.18);
+  }
+
+  .landing-resource-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: clamp(1.6rem, 3vw, 2.6rem);
+  }
+
+  .landing-resource-card {
+    display: grid;
+    gap: 0.75rem;
+    min-height: 14rem;
+    padding: 1.15rem;
+    border: 1px solid rgba($landing-border, 0.82);
+    border-radius: $landing-radius;
+    background:
+      linear-gradient(145deg, rgba($landing-primary, 0.08), transparent 52%),
+      rgba($landing-surface, 0.92);
+    color: inherit;
+    text-decoration: none;
+    box-shadow: 0 18px 46px rgba(0, 0, 0, 0.16);
+    transition:
+      transform 0.22s ease,
+      border-color 0.22s ease,
+      background-color 0.22s ease,
+      box-shadow 0.22s ease;
+
+    strong {
+      font-family: 'Merriweather', 'Georgia', serif;
+      font-size: 1.45rem;
+      line-height: 1.12;
+    }
+
+    p {
+      margin: 0;
+      color: $landing-muted;
+      line-height: 1.52;
+    }
+
+    &:hover,
+    &:focus-visible {
+      transform: translateY(-4px);
+      border-color: rgba($landing-primary-strong, 0.48);
+      background:
+        linear-gradient(145deg, rgba($landing-primary, 0.13), transparent 52%),
+        rgba($landing-surface, 0.98);
+      box-shadow: 0 24px 62px rgba(0, 0, 0, 0.24);
+    }
+  }
+
+  .landing-resource-card__label {
+    color: $landing-accent;
+    font-size: 0.76rem;
+    font-weight: 850;
+    text-transform: uppercase;
+  }
+
+  &.prelaunch-page {
+    .prelaunch-header .landing-header__inner {
+      grid-template-columns: auto auto;
+      justify-content: space-between;
+    }
+
+    .prelaunch-hero {
+      min-height: min(690px, calc(100vh - 8rem));
+    }
+
+    .landing-hero__copy h1 {
+      max-width: 15ch;
+    }
+
+    .prelaunch-form {
+      width: min(100%, 38rem);
+      display: grid;
+      gap: 0.55rem;
+      scroll-margin-top: 6rem;
+    }
+
+    .prelaunch-form__row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.6rem;
+    }
+
+    .prelaunch-form__input {
+      min-height: 2.9rem;
+      min-width: 0;
+      border: 1px solid rgba($landing-border, 0.9);
+      border-radius: 999px;
+      padding: 0.65rem 1rem;
+      background: rgba($landing-surface, 0.78);
+      color: $landing-ink;
+      font: inherit;
+
+      &::placeholder {
+        color: rgba($landing-muted, 0.76);
+      }
+
+      &:focus {
+        outline: 2px solid rgba($landing-primary-strong, 0.56);
+        outline-offset: 2px;
+      }
+    }
+
+    .prelaunch-form__button {
+      min-width: 8.2rem;
+      border: 0;
+    }
+
+    .prelaunch-form__note,
+    .prelaunch-form__success {
+      margin: 0;
+      color: $landing-muted;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .prelaunch-form__success {
+      border: 1px solid rgba($landing-primary-strong, 0.42);
+      border-radius: $landing-radius;
+      padding: 0.7rem 0.85rem;
+      background: rgba($landing-primary, 0.12);
+      color: $landing-primary-strong;
+      font-weight: 750;
+    }
+
+    .prelaunch-visual {
+      pointer-events: none;
+    }
+
+    .prelaunch-preview {
+      min-height: 32rem;
+    }
+
+    .prelaunch-modes {
+      border-bottom: 1px solid rgba($landing-border, 0.62);
+    }
+
+    .prelaunch-mode-demo {
+      display: grid;
+      gap: 1rem;
+      margin-top: clamp(1.6rem, 3vw, 2.6rem);
+
+      > input {
+        position: absolute;
+        inline-size: 1px;
+        block-size: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
+
+    .prelaunch-mode-tabs {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .prelaunch-mode-tab {
+      min-width: 7rem;
+      min-height: 2.5rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba($landing-border, 0.82);
+      border-radius: 999px;
+      padding: 0.55rem 0.9rem;
+      background: rgba($landing-surface, 0.72);
+      color: $landing-muted;
+      font-weight: 800;
+      cursor: pointer;
+      transition:
+        transform 0.18s ease,
+        border-color 0.18s ease,
+        background-color 0.18s ease,
+        color 0.18s ease;
+
+      &:hover,
+      &:focus-visible {
+        transform: translateY(-1px);
+        border-color: rgba($landing-primary-strong, 0.46);
+        color: $landing-ink;
+      }
+    }
+
+    #mode-blunder:checked ~ .prelaunch-mode-tabs label[for='mode-blunder'],
+    #mode-plan:checked ~ .prelaunch-mode-tabs label[for='mode-plan'],
+    #mode-endgame:checked ~ .prelaunch-mode-tabs label[for='mode-endgame'] {
+      border-color: rgba($landing-primary-strong, 0.56);
+      background: rgba($landing-primary, 0.16);
+      color: $landing-primary-strong;
+    }
+
+    #mode-blunder:focus-visible ~ .prelaunch-mode-tabs label[for='mode-blunder'],
+    #mode-plan:focus-visible ~ .prelaunch-mode-tabs label[for='mode-plan'],
+    #mode-endgame:focus-visible ~ .prelaunch-mode-tabs label[for='mode-endgame'] {
+      outline: 2px solid rgba($landing-primary-strong, 0.62);
+      outline-offset: 3px;
+    }
+
+    .prelaunch-mode-panels {
+      min-height: 34rem;
+      position: relative;
+      border: 1px solid rgba($landing-border, 0.78);
+      border-radius: $landing-radius;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba($landing-primary, 0.08), transparent 48%),
+        rgba($landing-bg, 0.72);
+      box-shadow: $landing-shadow;
+    }
+
+    .prelaunch-mode-panel {
+      display: none;
+      grid-template-columns: minmax(0, 0.78fr) minmax(20rem, 1.22fr);
+      gap: clamp(1rem, 3vw, 3rem);
+      align-items: center;
+      min-height: 34rem;
+      padding: clamp(1rem, 3vw, 2rem);
+    }
+
+    #mode-blunder:checked ~ .prelaunch-mode-panels .prelaunch-mode-panel--mode-blunder,
+    #mode-plan:checked ~ .prelaunch-mode-panels .prelaunch-mode-panel--mode-plan,
+    #mode-endgame:checked ~ .prelaunch-mode-panels .prelaunch-mode-panel--mode-endgame {
+      display: grid;
+    }
+
+    .prelaunch-mode-copy {
+      display: grid;
+      gap: 0.75rem;
+
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h3 {
+        font-family: 'Merriweather', 'Georgia', serif;
+        font-size: clamp(1.8rem, 3vw, 3rem);
+        line-height: 1.08;
+      }
+
+      p {
+        color: $landing-muted;
+        line-height: 1.58;
+      }
+    }
+
+    .prelaunch-mode-board {
+      position: relative;
+      min-height: min(34rem, 54vw);
+    }
+
+    .prelaunch-mode-board__board {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      width: min(31rem, 78%);
+      transform: translate(-50%, -50%) rotate(-1.5deg);
+    }
+
+    .prelaunch-mode-engine {
+      position: absolute;
+      right: 0;
+      bottom: 1rem;
+      z-index: 5;
+      display: grid;
+      gap: 0.45rem;
+      width: min(18rem, 48%);
+      border: 1px solid rgba($landing-border, 0.86);
+      border-radius: $landing-radius;
+      padding: 1rem;
+      background: rgba($landing-surface, 0.94);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.2);
+    }
+
+    .prelaunch-transform {
+      border-bottom: 1px solid rgba($landing-border, 0.62);
+    }
+
+    .prelaunch-compare {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.85rem;
+      border: 1px solid rgba($landing-border, 0.78);
+      border-radius: $landing-radius;
+      padding: 0.85rem;
+      background:
+        linear-gradient(90deg, rgba($landing-surface-strong, 0.82), rgba($landing-bg, 0.74)),
+        rgba($landing-bg, 0.74);
+      box-shadow: $landing-shadow;
+    }
+
+    .prelaunch-compare__panel {
+      display: grid;
+      align-content: center;
+      gap: 0.65rem;
+      min-height: 19rem;
+      border: 1px solid rgba($landing-border, 0.74);
+      border-radius: $landing-radius;
+      padding: 1.1rem;
+      background: rgba($landing-surface, 0.76);
+      transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+
+      strong {
+        font-family: 'Merriweather', 'Georgia', serif;
+        font-size: clamp(1.55rem, 2.4vw, 2.35rem);
+        line-height: 1.08;
+      }
+
+      p {
+        margin: 0;
+        color: $landing-muted;
+        line-height: 1.52;
+      }
+
+      &:hover {
+        transform: translateY(-3px);
+        border-color: rgba($landing-primary-strong, 0.44);
+        background: rgba($landing-surface, 0.94);
+      }
+    }
+
+    .prelaunch-compare__panel--after {
+      border-color: rgba($landing-primary-strong, 0.42);
+      background:
+        linear-gradient(145deg, rgba($landing-primary, 0.16), transparent 58%),
+        rgba($landing-surface, 0.88);
+    }
+
+    .prelaunch-card {
+      cursor: default;
+
+      &:hover,
+      &:focus-visible {
+        transform: none;
+      }
+    }
+  }
+
   .landing-footer {
     border-top: 1px solid rgba($landing-border, 0.72);
     padding-block: 1.4rem;
@@ -816,6 +1165,7 @@ $landing-files: a, b, c, d, e, f, g, h;
     .landing-hero__copy,
     .motion-demo,
     .section-heading,
+    .landing-resource-card,
     .study-artifact {
       animation: landing-rise-in 0.7s ease-out both;
     }
@@ -888,7 +1238,10 @@ $landing-files: a, b, c, d, e, f, g, h;
 
     .landing-hero__grid,
     .landing-cinema__grid,
-    .landing-study-payoff__grid {
+    .landing-study-payoff__grid,
+    .landing-resource-grid,
+    .prelaunch-mode-panel,
+    .prelaunch-compare {
       grid-template-columns: minmax(0, 1fr);
     }
 
@@ -929,6 +1282,27 @@ $landing-files: a, b, c, d, e, f, g, h;
       width: min(100%, 27rem);
       justify-self: center;
     }
+
+    .prelaunch-mode-panels,
+    .prelaunch-mode-panel {
+      min-height: auto;
+    }
+
+    .prelaunch-mode-board {
+      min-height: auto;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .prelaunch-mode-board__board,
+    .prelaunch-mode-engine {
+      position: relative;
+      inset: auto;
+      right: auto;
+      bottom: auto;
+      width: auto;
+      transform: none;
+    }
   }
 }
 
@@ -953,7 +1327,8 @@ $landing-files: a, b, c, d, e, f, g, h;
     }
 
     .hero-cta,
-    .landing-actions {
+    .landing-actions,
+    .prelaunch-form__row {
       width: 100%;
     }
 
@@ -966,6 +1341,14 @@ $landing-files: a, b, c, d, e, f, g, h;
         padding-inline: 0.62rem;
         font-size: 0.9rem;
       }
+    }
+
+    .prelaunch-form__row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .prelaunch-form__button {
+      width: 100%;
     }
 
     .hero-disclosure {
@@ -1014,6 +1397,10 @@ $landing-files: a, b, c, d, e, f, g, h;
     }
 
     .cinema-step {
+      min-height: auto;
+    }
+
+    .landing-resource-card {
       min-height: auto;
     }
 

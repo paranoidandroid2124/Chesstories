@@ -4,7 +4,6 @@ import { eventPosition, opposite } from '@lichess-org/chessground/util';
 import type EditorCtrl from './ctrl';
 import { storage } from 'lib/storage';
 import { Chessground as makeChessground } from '@lichess-org/chessground';
-import { pubsub } from 'lib/pubsub';
 
 export default function (ctrl: EditorCtrl): VNode {
   return h('div.cg-wrap', {
@@ -23,10 +22,6 @@ function bindEvents(el: HTMLElement, ctrl: EditorCtrl): void {
   const handler = onMouseEvent(ctrl);
   ['touchstart', 'touchmove', 'mousedown', 'mousemove', 'contextmenu'].forEach(function (ev) {
     el.addEventListener(ev, handler);
-  });
-  pubsub.on('board.change', (is3d: boolean) => {
-    ctrl.chessground!.state.addPieceZIndex = is3d;
-    ctrl.chessground!.redrawAll();
   });
 }
 
@@ -128,7 +123,7 @@ function makeConfig(ctrl: EditorCtrl): CgConfig {
     orientation: ctrl.options.orientation || 'white',
     coordinates: ctrl.options.coordinates !== false,
     autoCastle: false,
-    addPieceZIndex: ctrl.cfg.is3d,
+    addPieceZIndex: false,
     movable: {
       free: true,
       color: 'both',

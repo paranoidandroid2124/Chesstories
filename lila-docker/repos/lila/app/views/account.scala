@@ -2,7 +2,7 @@ package views
 
 import lila.app.UiEnv.{ *, given }
 import lila.core.user.UserDelete
-import lila.pref.{ PieceSet, PieceSet3d, Pref, Theme, Theme3d }
+import lila.pref.{ PieceSet, Pref, Theme }
 import scala.annotation.unused
 
 object account:
@@ -205,20 +205,6 @@ object account:
             select(id := "pieceSet", name := "pieceSet")(
               PieceSet.all.map: ps =>
                 option(value := ps.name, if ps.name == pref.pieceSet then selected := true else emptyFrag)(ps.name)
-            )
-          ),
-          div(cls := "form-group")(
-            label(attr("for") := "theme3d")("Board theme (3D)"),
-            select(id := "theme3d", name := "theme3d")(
-              Theme3d.all.map: t =>
-                option(value := t.name, if t.name == pref.theme3d then selected := true else emptyFrag)(t.name)
-            )
-          ),
-          div(cls := "form-group")(
-            label(attr("for") := "pieceSet3d")("Pieces (3D)"),
-            select(id := "pieceSet3d", name := "pieceSet3d")(
-              PieceSet3d.all.map: ps =>
-                option(value := ps.name, if ps.name == pref.pieceSet3d then selected := true else emptyFrag)(ps.name)
             )
           ),
           div(cls := "form-actions")(

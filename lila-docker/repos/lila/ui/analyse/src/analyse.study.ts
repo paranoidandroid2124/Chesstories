@@ -1,6 +1,5 @@
 import { patch } from './view/util';
 import makeStart from './start';
-import type { AnalyseSocketSend } from './socket';
 
 export { patch };
 
@@ -14,7 +13,6 @@ export async function initModule({ cfg }: { cfg: any }) {
   }
   const useExplorerProxy = document.body.dataset.brandExplorerProxy !== '0';
   if (useExplorerProxy && cfg?.explorer) cfg.explorer.endpoint = `${location.origin}/api/explorer`;
-  cfg.socketSend = ((_: any, ..._args: any[]) => {}) as AnalyseSocketSend;
   start(cfg);
 }
 

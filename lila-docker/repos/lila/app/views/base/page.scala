@@ -21,9 +21,7 @@ object page:
     raw(s"""<meta name="theme-color" content="${ctx.pref.themeColor}">""")
 
   private def boardPreload(using ctx: Context) = frag(
-    imagePreload(assetUrl(s"images/board/${ctx.pref.currentTheme.file}")),
-    ctx.pref.is3d.option:
-      imagePreload(assetUrl(s"images/staunton/board/${ctx.pref.currentTheme3d.file}"))
+    imagePreload(assetUrl(s"images/board/${ctx.pref.currentTheme.file}"))
   )
 
   def boardStyle(zoomable: Boolean)(using ctx: lila.api.Context) =
@@ -55,7 +53,6 @@ object page:
           ,
           cssTag("lib.theme.all"),
           cssTag("site"),
-          pref.is3d.option(cssTag("lib.board-3d")),
           ctx.blind.option(cssTag("bits.blind")),
           p.cssKeys.map(cssTag),
           meta(
@@ -113,8 +110,6 @@ object page:
           dataTheme := pref.currentBg,
           dataBoard := pref.currentTheme.name,
           dataPieceSet := pref.currentPieceSet.name,
-          dataBoard3d := pref.currentTheme3d.name,
-          dataPieceSet3d := pref.currentPieceSet3d.name,
           attr("data-shell-header-id") := ShellPrimitives.headerId,
           attr("data-shell-nav-id") := ShellPrimitives.navId,
           attr("data-shell-nav-toggle-id") := ShellPrimitives.navToggleId,
@@ -135,8 +130,7 @@ object page:
             id := "main-wrap",
             cls := List(
               "full-screen-force" -> p.flags(PageFlags.fullScreen),
-              "is2d" -> pref.is2d,
-              "is3d" -> pref.is3d
+              "is2d" -> true
             )
           )(p.transform(p.body)),
           Option.when(!p.flags(PageFlags.noHeader) && !p.flags(PageFlags.fullScreen))(ui.siteFooter),

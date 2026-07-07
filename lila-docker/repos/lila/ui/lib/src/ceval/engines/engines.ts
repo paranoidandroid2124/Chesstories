@@ -1,12 +1,10 @@
-import type { BrowserEngineInfo, ExternalEngineInfo, EngineInfo, CevalEngine } from '../types';
+import type { BrowserEngineInfo, EngineInfo, CevalEngine } from '../types';
 import type CevalCtrl from '../ctrl';
 import { SimpleEngine } from './simpleEngine';
 import { StockfishWebEngine } from './stockfishWebEngine';
 import { ThreadedEngine } from './threadedEngine';
-import { ExternalEngine } from './externalEngine';
 import { storedStringProp, type StoredProp } from '@/storage';
 import { isAndroid, isIos, isIPad, features as browserSupport } from '@/device';
-import { xhrHeader } from '@/xhr';
 
 import { log } from '@/permalog';
 
@@ -14,13 +12,11 @@ export class Engines {
   private activeEngine: EngineInfo | undefined = undefined;
   localEngines: BrowserEngineInfo[];
   localEngineMap: Map<string, WithMake>;
-  externalEngines: ExternalEngineInfo[];
   selectProp: StoredProp<string>;
 
   constructor(private ctrl: CevalCtrl) {
     this.localEngineMap = this.makeEngineMap();
     this.localEngines = [...this.localEngineMap.values()].map(e => e.info);
-    this.externalEngines = this.ctrl.opts.externalEngines?.map(e => ({ tech: 'EXTERNAL', ...e })) ?? [];
     this.selectProp = storedStringProp('ceval.engine', this.localEngines[0].id);
   }
 
@@ -43,7 +39,6 @@ export class Engines {
           tech: 'NNUE',
           requires: ['sharedMem', 'simd', 'dynamicImportFromWorker'],
           minMem: 1536,
-          cloudEval: true,
           assets: {
             root: 'npm/stockfish-web',
             nnue: ['nn-4ca89e4b3abf.nnue'],
@@ -60,7 +55,6 @@ export class Engines {
           tech: 'NNUE',
           requires: ['sharedMem', 'simd', 'dynamicImportFromWorker'],
           minMem: 2560,
-          cloudEval: true,
           assets: {
             root: 'npm/stockfish-web',
             nnue: ['nn-c288c895ea92.nnue', 'nn-37f18f62d772.nnue'],
@@ -166,42 +160,20 @@ export class Engines {
     this.activate();
   }
 
-  get external(): ExternalEngineInfo | undefined {
-    return this.active && this.isExternalEngineInfo(this.active) ? this.active : undefined;
-  }
-
-  get maxMovetime(): number {
-    return this.external ? 30 * 1000 : Number.POSITIVE_INFINITY; // broker timeouts prevent long search
-  }
-
-  async deleteExternal(id: string): Promise<boolean> {
-    if (this.externalEngines.every(e => e.id !== id)) return false;
-    const r = await fetch(`/api/external-engine/${id}`, { method: 'DELETE', headers: xhrHeader });
-    if (!r.ok) return false;
-    this.externalEngines = this.externalEngines.filter(e => e.id !== id);
-    this.activate();
-    return true;
-  }
-
   updateCevalCtrl(ctrl: CevalCtrl): void {
     this.ctrl = ctrl;
   }
 
   supporting(variant: VariantKey): EngineInfo[] {
-    return [
-      ...this.localEngines.filter(e => e.variants?.includes(variant)),
-      ...this.externalEngines.filter(e => externalEngineSupports(e, variant)),
-    ];
+    return this.localEngines.filter(e => e.variants?.includes(variant));
   }
 
   getEngine(selector?: { id?: string; variant?: VariantKey }): EngineInfo | undefined {
     const id = selector?.id || this.selectProp();
     const variant = selector?.variant || 'standard';
     return (
-      this.externalEngines.find(e => e.id === id && externalEngineSupports(e, variant)) ??
       this.localEngines.find(e => e.id === id && e.variants?.includes(variant)) ??
-      this.localEngines.find(e => e.variants?.includes(variant)) ??
-      this.externalEngines.find(e => externalEngineSupports(e, variant))
+      this.localEngines.find(e => e.variants?.includes(variant))
     );
   }
 
@@ -209,13 +181,7 @@ export class Engines {
     const e = (this.activeEngine = this.getEngine(selector));
     if (!e) throw Error(`Engine not found ${selector?.id ?? selector?.variant ?? this.selectProp()}}`);
 
-    return !this.isExternalEngineInfo(e)
-      ? this.localEngineMap.get(e.id)!.make(e)
-      : new ExternalEngine(e, this.status);
-  }
-
-  isExternalEngineInfo(e: EngineInfo): e is ExternalEngineInfo {
-    return e.tech === 'EXTERNAL';
+    return this.localEngineMap.get(e.id)!.make(e);
   }
 }
 
@@ -228,11 +194,6 @@ function maxHashMB() {
   return 512; // allocating 1024 often fails and offers little benefit over 512, or 16 for that matter
 }
 const maxHash = maxHashMB();
-
-function externalEngineSupports(e: ExternalEngineInfo, variant: VariantKey) {
-  const names = [variant.toLowerCase(), 'chess'];
-  return e.variants.some(name => names.includes(name.toLowerCase()));
-}
 
 const withDefaults = (engine: BrowserEngineInfo): BrowserEngineInfo => ({
   variants: ['standard', 'chess960', 'fromPosition'],

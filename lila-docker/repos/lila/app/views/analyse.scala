@@ -58,7 +58,7 @@ object analyse:
     val explorerAndCevalConfig = play.api.libs.json.Json.obj()
 
     object bits:
-      object cspExternalEngine:
+      object csp:
         def compose(@unused f: Any => Any) = lila.web.ContentSecurityPolicy.default
 
   object embed:
@@ -78,5 +78,5 @@ object analyse:
         title = "Analysis board and eval",
         cssKeys = List("analyse.workspace"),
         pageModule = Some(analyseUi.bits.analyseModule("userAnalysis", cfg)),
-        csp = analyseUi.bits.cspExternalEngine.compose(_.withExternalAnalysisApis)
+        csp = analyseUi.bits.csp.compose(_.withExternalAnalysisApis)
       )(analyseUi.bits.embedUserAnalysisBody)

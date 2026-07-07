@@ -6,9 +6,7 @@ type MoveSoundOpts = {
   name?: string;
   san?: string;
   volume?: number;
-  filter?: 'music' | 'game';
 };
-type MoveSound = (opts?: MoveSoundOpts) => void;
 type AudioWindow = Window & { readonly webkitAudioContext?: typeof AudioContext };
 
 const primerEvents = ['touchend', 'pointerup', 'pointerdown', 'mousedown', 'keydown'];
@@ -21,7 +19,6 @@ export default new (class {
   speechStorage = storage.boolean('speech.enabled');
   voiceStorage = storage.make('speech.voice');
   volumeStorage = storage.make('sound-volume');
-  music?: MoveSound;
   primer = () => {
     this.ctx?.resume().then(() => {
       setTimeout(() => $('#warn-no-autoplay').removeClass('shown'), 500);
@@ -64,7 +61,7 @@ export default new (class {
   resolvePath(name: string): string | undefined {
     if (this.theme === 'silent') return;
     let dir = this.theme;
-    if (this.theme === 'music' || this.speechStorage.get()) {
+    if (this.speechStorage.get()) {
       if (['move', 'capture', 'check', 'checkmate'].includes(name)) return;
       dir = 'standard';
     }
@@ -85,21 +82,16 @@ export default new (class {
 
   async move(o?: MoveSoundOpts) {
     const volume = o?.volume ?? 1;
-    if (o?.filter !== 'music' && this.theme !== 'music') {
-      if (o?.name) this.throttled(o.name, volume);
-      else {
-        if (o?.san?.includes('x')) this.throttled('capture', volume);
-        else this.throttled('move', volume);
-        if (o?.san?.includes('#')) {
-          this.throttled('checkmate', volume);
-        } else if (o?.san?.includes('+')) {
-          this.throttled('check', volume);
-        }
+    if (o?.name) this.throttled(o.name, volume);
+    else {
+      if (o?.san?.includes('x')) this.throttled('capture', volume);
+      else this.throttled('move', volume);
+      if (o?.san?.includes('#')) {
+        this.throttled('checkmate', volume);
+      } else if (o?.san?.includes('+')) {
+        this.throttled('check', volume);
       }
     }
-    if (o?.filter === 'game' || this.theme !== 'music') return;
-    this.music ??= await site.asset.loadEsm<MoveSound>('bits.soundMove');
-    this.music(o);
   }
 
   getVolume() {

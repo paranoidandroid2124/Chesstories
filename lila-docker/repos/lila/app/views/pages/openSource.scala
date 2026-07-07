@@ -25,7 +25,7 @@ object openSource:
                 ul(
                   li(
                     a(
-                      href := "https://github.com/paranoidandroid2124/CondensedChess",
+                      href := "https://github.com/paranoidandroid2124/chesstory",
                       target := "_blank",
                       rel := "noopener"
                     )("Chesstory Corresponding Source Code")
@@ -40,7 +40,7 @@ object openSource:
                   li(a(href := "https://lichess.org/source", target := "_blank", rel := "noopener")("Upstream Lichess Source & Licensing")),
                   li(
                     a(
-                      href := "https://raw.githubusercontent.com/paranoidandroid2124/CondensedChess/master/lila-docker/repos/lila/COPYING.md",
+                      href := "https://raw.githubusercontent.com/paranoidandroid2124/chesstory/master/lila-docker/repos/lila/COPYING.md",
                       target := "_blank",
                       rel := "noopener"
                     )("Chesstory COPYING (asset licenses and attributions)")

@@ -1,7 +1,7 @@
 # Copying Chesstory
 
 Any file in this project that does not state otherwise and is not listed as an
-exception below is part of Chesstory (a fork of lila) and copyright (c) 2012-2026
+exception below is part of Chesstory and copyright (c) 2012-2026
 the Chesstory and lila authors.
 
 For a list of the upstream lila authors see the commit log or
@@ -30,8 +30,6 @@ public/font/chesstory.woff2, public/font/chesstory-chess.woff2 | Chesstory fork 
 Noto Sans in public/font | [Google](https://fonts.google.com/specimen/Noto+Sans) | [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 Roboto in public/font | [Christian Robertson](https://fonts.google.com/specimen/Roboto) | [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 Segment7 in public/font | [Cedders](https://www.fontspace.com/cedders) | [SIL Open Font License](https://www.fontspace.com/help#license-17)
-public/images/staunton | [James Clarke](https://github.com/clarkerubber/Staunton-Pieces) | [MIT](https://github.com/clarkerubber/Staunton-Pieces/blob/master/LICENSE)
-public/images/staunton/piece/CubesAndPi | CubesAndPi | AGPLv3+
 public/flags | [Go Squared Ltd.](https://www.gosquared.com/resources/flag-icons/) | [MIT](https://github.com/gosquared/flags/blob/master/LICENSE.txt)
 public/images/board | the lila authors and [pirouetti](https://lichess.org/@/pirouetti) | AGPLv3+
 public/piece/mono | Thibault Duplessis and [Colin M.L. Burnett](https://en.wikipedia.org/wiki/User:Cburnett) | [GPLv2+](https://www.gnu.org/licenses/gpl-2.0.txt)

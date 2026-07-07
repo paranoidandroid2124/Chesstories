@@ -20,8 +20,7 @@ final class AnalyseUi(helpers: Helpers)(endpoints: AnalyseEndpoints):
         "endpoint" -> endpoints.explorer,
         "tablebaseEndpoint" -> endpoints.tablebase,
         "showRatings" -> ctx.pref.showRatings
-      ),
-      "externalEngineEndpoint" -> endpoints.externalEngine
+      )
     )
 
   def userAnalysis(
@@ -33,7 +32,7 @@ final class AnalyseUi(helpers: Helpers)(endpoints: AnalyseEndpoints):
   )(using ctx: Context): Page =
     Page("Analysis")
       .css("analyse.workspace")
-      .csp(bits.cspExternalEngine.compose(_.withExternalAnalysisApis))
+      .csp(bits.csp.compose(_.withExternalAnalysisApis))
       .js:
         bits.analyseModule(
           "userAnalysis",
@@ -112,10 +111,10 @@ final class AnalyseUi(helpers: Helpers)(endpoints: AnalyseEndpoints):
         .flag(_.zoom)
         .flag(_.noRobots)
         .csp:
-          cspExternalEngine.compose(_.withPeer.withInlineIconFont.withChessDbCn)
+          csp.compose(_.withPeer.withInlineIconFont.withChessDbCn)
 
-    def cspExternalEngine: Update[ContentSecurityPolicy] =
-      _.withWebAssembly.withExternalEngine(endpoints.externalEngine)
+    def csp: Update[ContentSecurityPolicy] =
+      _.withWebAssembly
 
     def analyseModule(mode: "userAnalysis" | "replay", json: JsObject) =
       PageModule("analyse.user", Json.obj("mode" -> mode, "cfg" -> json))

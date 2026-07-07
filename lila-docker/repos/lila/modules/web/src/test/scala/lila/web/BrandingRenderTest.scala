@@ -53,7 +53,7 @@ class BrandingRenderTest extends FunSuite {
     val mockAssetHelper = new AssetFullHelper with AssetHelper {
       override def netConfig = mockNetConfig
       override def manifest = new AssetManifest(mockGetFile)
-      override def analyseEndpoints = new lila.ui.AnalyseEndpoints("", "", "")
+      override def analyseEndpoints = new lila.ui.AnalyseEndpoints("", "")
       override def assetVersion = "test-version" 
 
       // Resolve conflicts

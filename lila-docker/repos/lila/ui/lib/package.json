@@ -20,7 +20,6 @@
       "/public/font/*.woff2",
       "/public/images/**",
       "/public/javascripts/**",
-      "/public/lifat/background/**/*.webp",
       "/public/npm/stockfish-web/*",
       "/public/npm/*",
       "/public/piece/**",

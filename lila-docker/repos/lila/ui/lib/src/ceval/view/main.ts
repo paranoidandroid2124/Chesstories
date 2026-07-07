@@ -90,13 +90,7 @@ function engineName(ctrl: CevalCtrl): VNode[] {
   return engine
     ? [
       hl('span', { attrs: { title: engine.name } }, engine.short ?? engine.name),
-      ctrl.engines.isExternalEngineInfo(engine)
-        ? hl(
-          'span.technology.good',
-          { attrs: { title: 'Engine running outside of the browser' } },
-          engine.tech,
-        )
-        : engine.requires.includes('simd')
+      engine.requires.includes('simd')
           ? hl(
             'span.technology.good',
             { attrs: { title: 'Multi-threaded WebAssembly with SIMD' } },
@@ -112,7 +106,7 @@ function engineName(ctrl: CevalCtrl): VNode[] {
 }
 
 export const getBestEval = (ctrl: CevalHandler): EvalScore | undefined => {
-  return ctrl.getNode().ceval ?? (ctrl.showFishnetAnalysis?.() ? ctrl.getNode().eval : undefined);
+  return ctrl.getNode().ceval ?? ctrl.getNode().eval;
 };
 
 let gaugeLast = 0;

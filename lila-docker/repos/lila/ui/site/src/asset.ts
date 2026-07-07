@@ -85,7 +85,6 @@ export const loadEsmPage = async (name: string) => {
 };
 
 export const loadPieces = new Promise<void>((resolve, reject) => {
-  if (document.getElementById('main-wrap')?.classList.contains('is3d')) return resolve();
   const style = window.getComputedStyle(document.body);
   const urls = ['white', 'black']
     .flatMap(c => ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king'].map(r => `---${c}-${r}`))
