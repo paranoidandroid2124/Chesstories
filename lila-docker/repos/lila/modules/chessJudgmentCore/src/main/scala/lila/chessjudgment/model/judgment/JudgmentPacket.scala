@@ -1609,6 +1609,7 @@ case class MoveJudgmentCauseFrame(
     proofStrategicMechanismSourceIds: List[String],
     proofStrategicMechanismSignalSourceIds: List[String],
     supportEvidenceSourceIds: List[String],
+    proofLineEvents: List[LineEventKind] = Nil,
     proofLineConsequences: List[LineConsequenceKind] = Nil,
     proofRelationKinds: List[RelationFactKind] = Nil,
     proofRelationDetails: List[String] = Nil,
@@ -1673,6 +1674,7 @@ case class MoveMeaningClaim(
     structuralMotifTags: List[String] = Nil,
     specificityTier: PositionPlanTechniqueSpecificityTier = PositionPlanTechniqueSpecificityTier.ContextOnly,
     terminalConsequenceKinds: List[String] = Nil,
+    proofLineEvents: List[LineEventKind] = Nil,
     proofLineConsequences: List[LineConsequenceKind] = Nil,
     proofRelationKinds: List[RelationFactKind] = Nil,
     proofRelationDetails: List[String] = Nil,
@@ -3155,13 +3157,9 @@ object MoveMeaningSurface:
     ) &&
       (
         claim.proofThreatDrivers.nonEmpty ||
+          claim.proofLineEvents.contains(LineEventKind.DefenderMove) ||
           claim.requiredSquares.nonEmpty ||
-          claim.maintainedSquares.nonEmpty ||
-          claim.boardCarriers.exists(carrier =>
-            carrier.role == "target" &&
-              carrier.kind == "PlanSubject" &&
-              carrier.value.toLowerCase.startsWith("defender-move:")
-          )
+          claim.maintainedSquares.nonEmpty
       )
 
   private def checkingRouteTargetPressureClaim(claim: MoveMeaningClaim): Boolean =
@@ -4370,6 +4368,7 @@ object MoveMeaningClaim:
       val mergedCauseEvidenceIds = list.flatMap(_.causeEvidenceIds).distinct.sorted
       val mergedSourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted
       val mergedObjectBindingSignatures = list.flatMap(_.objectBindingSignatures).distinct.sorted
+      val mergedProofLineEvents = list.flatMap(_.proofLineEvents).distinct.sortBy(_.toString)
       val mergedProofLineConsequences = list.flatMap(_.proofLineConsequences).distinct.sortBy(_.toString)
       val mergedProofRelationKinds = list.flatMap(_.proofRelationKinds).distinct.sortBy(_.toString)
       val mergedProofRelationDetails = list.flatMap(_.proofRelationDetails).distinct.sorted
@@ -4426,6 +4425,7 @@ object MoveMeaningClaim:
         breakIdentityParts = list.flatMap(_.breakIdentityParts).distinct.sorted,
         breakFiles = list.flatMap(_.breakFiles).distinct.sorted,
         structuralMotifTags = list.flatMap(_.structuralMotifTags).distinct.sorted,
+        proofLineEvents = mergedProofLineEvents,
         proofLineConsequences = mergedProofLineConsequences,
         proofRelationKinds = mergedProofRelationKinds,
         proofRelationDetails = mergedProofRelationDetails,
@@ -4743,6 +4743,8 @@ object MoveMeaningClaim:
                 else "surface_evidence"
               val proofRelationKinds =
                 roleCompatibleCauseFrames.flatMap(_.proofRelationKinds).distinct.sortBy(_.toString)
+              val proofLineEvents =
+                roleCompatibleCauseFrames.flatMap(_.proofLineEvents).distinct.sortBy(_.toString)
               val proofLineConsequences =
                 roleCompatibleCauseFrames.flatMap(_.proofLineConsequences).distinct.sortBy(_.toString)
               val proofRelationDetails =
@@ -4799,6 +4801,7 @@ object MoveMeaningClaim:
                 structuralMotifTags = detail.structuralMotifTags.distinct.sorted,
                 specificityTier = detail.specificityTier,
                 terminalConsequenceKinds = detail.terminalConsequenceKinds.distinct.sorted,
+                proofLineEvents = proofLineEvents,
                 proofLineConsequences = proofLineConsequences,
                 proofRelationKinds = proofRelationKinds,
                 proofRelationDetails = proofRelationDetails,
@@ -8206,6 +8209,7 @@ object MoveJudgmentView:
       proofStrategicMechanismSourceIds = strategicProof.mechanismSourceIds,
       proofStrategicMechanismSignalSourceIds = strategicProof.signalSourceIds,
       supportEvidenceSourceIds = judgmentVisibleEvidenceIds(graph, cluster.causeProofs.flatMap(_.supportEvidenceSourceIds)),
+      proofLineEvents = cluster.proofLineEvents.distinct.sortBy(_.toString),
       proofLineConsequences = cluster.proofLineConsequences.distinct.sortBy(_.toString),
       proofRelationKinds = cluster.proofRelationKinds.distinct.sortBy(_.toString),
       proofRelationDetails = cluster.proofRelationDetails.distinct.sorted,
@@ -8338,6 +8342,7 @@ object MoveJudgmentView:
       proofStrategicMechanismSourceIds = strategicProof.mechanismSourceIds,
       proofStrategicMechanismSignalSourceIds = strategicProof.signalSourceIds,
       supportEvidenceSourceIds = judgmentVisibleCauseEvidenceIds(cause.supportEvidence, cause),
+      proofLineEvents = proof.lineEvents.distinct.sortBy(_.toString),
       proofLineConsequences = proof.lineConsequences.distinct.sortBy(_.toString),
       proofRelationKinds = proof.relationKinds.distinct.sortBy(_.toString),
       proofRelationDetails = proof.relationDetails.distinct.sorted,
