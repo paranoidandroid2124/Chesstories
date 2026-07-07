@@ -1964,7 +1964,7 @@ object MoveMeaningSurface:
         else semanticSurfaces
       val carrierPairs = publicIdeaChainCarrierPairs(chainSurfaces)
       val allConsequenceCarriers = carrierPairs.filter((carrier, _) =>
-        carrier.role == "target" && publicIdeaChainConsequenceCarrier(carrier)
+        publicIdeaChainConsequenceCarrierRole(carrier) && publicIdeaChainConsequenceCarrier(carrier)
       )
       if evidenceSurfaces.isEmpty || !allowedSubjects.contains(subject) then Nil
       else
@@ -2121,7 +2121,7 @@ object MoveMeaningSurface:
     val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
     val carrierPairs = publicIdeaChainCarrierPairs(evidenceSurfaces)
     val allConsequenceCarriers = carrierPairs.filter((carrier, _) =>
-      carrier.role == "target" && publicIdeaChainConsequenceCarrier(carrier)
+      publicIdeaChainConsequenceCarrierRole(carrier) && publicIdeaChainConsequenceCarrier(carrier)
     )
     val materialTacticalCarrier = allConsequenceCarriers.exists((carrier, _) => materialEventPlanSubjectCarrier(carrier))
     val strongProofSurface =
@@ -2295,6 +2295,17 @@ object MoveMeaningSurface:
       case "PlanSubject" => !carrier.value.contains(",")
       case "Pawn" | "Square" | "File" => true
       case _                           => false
+
+  private def publicIdeaChainConsequenceCarrierRole(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
+    carrier.role == "target" ||
+      carrier.role == "attacker" ||
+      carrier.role == "defender" ||
+      carrier.role == "blocker" ||
+      carrier.role == "beneficiary" ||
+      carrier.role == "king" ||
+      carrier.role == "mover" ||
+      carrier.role == "bait" ||
+      carrier.role == "lured"
 
   private def publicIdeaChainConsequenceCarrierSortKey(carrier: MoveMeaningSurfaceBoardCarrier): (Int, String, String) =
     val value = carrier.value.toLowerCase
@@ -4518,8 +4529,12 @@ object MoveMeaningClaim:
                     carrier.kind == "Move" &&
                     !sameMove(carrier.value, claimMove)
                 )
+              val relationProofBoardCarriers =
+                relationProofBoardCarriersFromCauseFrames(evidenceGraph, roleCompatibleCauseFrames)
               val baseClaimBoardCarriers =
-                (claimOwnedBoardCarriers ++ lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove))
+                (claimOwnedBoardCarriers ++
+                  relationProofBoardCarriers ++
+                  lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove))
                   .distinct
                   .sortBy(boardCarrierSortKey)
               val currentPawnBreakFiles =
@@ -4558,6 +4573,7 @@ object MoveMeaningClaim:
                 (
                   baseClaimBoardCarriers.filter(carrier => carrier.role == "actor" && carrier.kind == "Move") ++
                     defenderMoveActorCarriers ++
+                    relationProofBoardCarriers ++
                     breakFileIdentityCarriers ++
                     (baseClaimBoardCarriers ++ spareIdentityCarriers).distinct.sortBy(boardCarrierSortKey)
                 ).distinct
@@ -4716,6 +4732,38 @@ object MoveMeaningClaim:
             .flatMap(event => event.pieceRole.toList.flatMap(role => publicPieceCarrier("actor", role.name)))
       )
       .distinct
+
+  private def relationProofBoardCarriersFromCauseFrames(
+      evidenceGraph: TypedEvidenceGraph,
+      frames: List[MoveJudgmentCauseFrame]
+  ): List[MoveMeaningSurfaceBoardCarrier] =
+    frames
+      .flatMap(_.proofDirectSourceIds)
+      .distinct
+      .flatMap(id => evidenceGraph.byId.get(id))
+      .collect { case EvidenceRecord(_, payload: RelationFactEvidence, _) => payload }
+      .flatMap(payload =>
+        payload.participants.filterNot(_.participantRole == RelationParticipantRole.Other).flatMap(participant =>
+          val role = relationParticipantCarrierRole(participant.participantRole)
+          publicSquareCarrier(role, participant.square.key) ++
+            participant.role.toList.flatMap(piece => publicPieceCarrier(role, piece.name))
+        )
+      )
+      .distinct
+      .take(8)
+
+  private def relationParticipantCarrierRole(role: RelationParticipantRole): String =
+    role match
+      case RelationParticipantRole.Attacker    => "attacker"
+      case RelationParticipantRole.Defender    => "defender"
+      case RelationParticipantRole.Target      => "target"
+      case RelationParticipantRole.Blocker     => "blocker"
+      case RelationParticipantRole.Beneficiary => "beneficiary"
+      case RelationParticipantRole.King        => "king"
+      case RelationParticipantRole.Mover       => "mover"
+      case RelationParticipantRole.Bait        => "bait"
+      case RelationParticipantRole.Lured       => "lured"
+      case RelationParticipantRole.Other       => "other"
 
   private def lineForkTargetCarriers(line: LineFactEvidence, normalizedClaimMove: String): List[MoveMeaningSurfaceBoardCarrier] =
     val hasCheck = line.hasLineEvent(LineEventKind.Check)
