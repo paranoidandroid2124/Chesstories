@@ -822,17 +822,12 @@ private[chessjudgment] object RelativeCauseSignalProfile:
   private[chessjudgment] def onlyDefenseRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
       case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) =>
-        payload.onlyDefense.nonEmpty && payload.isProofSignalDefensivePressure
+        payload.canAnchorDefensiveResource
       case _ => false
     }
 
   private[chessjudgment] def defensiveResourceRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
-      case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) =>
-        !payload.insufficientData &&
-          (payload.defenseRequired ||
-            payload.prophylaxisNeeded ||
-            payload.maxWinPercentLossIfIgnored.exists(_ >= JudgmentThresholds.SIGNIFICANT_THREAT_WP))
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
         payload.canAnchorDefensiveIdea
       case _ =>

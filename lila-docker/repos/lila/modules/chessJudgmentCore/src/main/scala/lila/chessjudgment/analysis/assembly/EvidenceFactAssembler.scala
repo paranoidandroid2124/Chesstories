@@ -413,21 +413,7 @@ object EvidenceFactAssembler:
       context.transitions
         .filter(edge => lineForTransition(context, edge).isEmpty)
         .flatMap(edge => tacticalMechanismRecordsForTransition(context, allocator, edge))
-    val unlinedThreatMechanisms =
-      context.evidenceGraph.records.collect {
-        case record @ EvidenceRecord(ref, _: ThreatEpisodeEvidence, _) if ref.line.isEmpty =>
-          tacticalMechanismRecord(
-            id = allocator.evidenceId(s"tactical-mechanism:threat:${allocator.key(ref.id)}"),
-            kind = TacticalMechanismKind.DefensiveResource,
-            position = ref.position,
-            line = None,
-            moveUci = None,
-            scope = ref.scope,
-            records = List(record),
-            signals = List(TacticalMechanismSignal(TacticalMechanismSignalKind.ThreatEpisode, ref.id, EvidenceLayer.ThreatPressure, Some(ref)))
-          )
-      }.flatten
-    (lineMechanisms ++ unlinedTransitionMechanisms ++ unlinedThreatMechanisms).distinctBy(_.ref.id)
+    (lineMechanisms ++ unlinedTransitionMechanisms).distinctBy(_.ref.id)
 
   private def tacticalMechanismRecordsForLine(
       context: JudgmentAssemblyContext,
@@ -516,14 +502,6 @@ object EvidenceFactAssembler:
                 TacticalMechanismKind.KingForcing,
                 List(record),
                 List(TacticalMechanismSignal(TacticalMechanismSignalKind.MateBranch, mate.map(_.toString).getOrElse("mate"), EvidenceLayer.Eval, Some(record.ref)))
-              )
-            )
-          case payload: ThreatEpisodeEvidence if payload.isProofSignalDefensivePressure =>
-            List(
-              TacticalMechanismCandidate(
-                TacticalMechanismKind.DefensiveResource,
-                List(record),
-                List(TacticalMechanismSignal(TacticalMechanismSignalKind.ThreatEpisode, payload.episode.episodeId, EvidenceLayer.ThreatPressure, Some(record.ref)))
               )
             )
           case _ =>

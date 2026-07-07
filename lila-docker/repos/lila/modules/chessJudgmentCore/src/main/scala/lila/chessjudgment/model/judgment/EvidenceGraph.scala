@@ -2871,6 +2871,8 @@ final case class ThreatEpisodeEvidence(
           episode.severity != ThreatSeverity.Low ||
           maxWinPercentLossIfIgnored.exists(_ >= JudgmentThresholds.SIGNIFICANT_THREAT_WP)
       )
+  def canAnchorDefensiveResource: Boolean =
+    isProofSignalDefensivePressure && onlyDefense.nonEmpty
 
 final case class ForcedLineThemeEvidence(
     id: String,

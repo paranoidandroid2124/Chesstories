@@ -71,7 +71,7 @@ object ExpectedEvidenceLossPolicy:
           if diagnostic.layer.exists(supportOnlyLayers.contains) =>
         EvidenceLossExpectation.Expected
       case EvidenceLossReason.EvidenceAvailableWithoutIdea
-          if packet.exists(packet => isNonProofSignalThreatSupport(diagnostic, packet)) =>
+          if packet.exists(packet => isThreatPressureSupportOnly(diagnostic, packet)) =>
         EvidenceLossExpectation.Expected
       case EvidenceLossReason.EvidenceAvailableWithoutIdea
           if packet.exists(packet => isStrategicSourceConsumedByMechanism(diagnostic, packet)) =>
@@ -94,7 +94,7 @@ object ExpectedEvidenceLossPolicy:
       case _ =>
         EvidenceLossExpectation.Unexpected
 
-  private def isNonProofSignalThreatSupport(
+  private def isThreatPressureSupportOnly(
       diagnostic: EvidenceLossDiagnostic,
       packet: EvidenceBackedJudgmentPacket
   ): Boolean =
@@ -102,8 +102,8 @@ object ExpectedEvidenceLossPolicy:
       diagnostic.evidence
         .flatMap(ref => packet.evidenceGraph.byId.get(ref.id))
         .exists {
-          case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) =>
-            !payload.isProofSignalDefensivePressure
+          case EvidenceRecord(ref, payload: ThreatEpisodeEvidence, _) =>
+            ref.scope == EvidenceScope.ThreatLine || !payload.isProofSignalDefensivePressure
           case EvidenceRecord(_, ThreatPressureEvidence(_, threats), _) =>
             !threats.isProofSignalDefensivePressure
           case _ =>

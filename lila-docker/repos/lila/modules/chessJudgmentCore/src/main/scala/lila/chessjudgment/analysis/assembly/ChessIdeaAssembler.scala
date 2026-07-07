@@ -192,7 +192,8 @@ object ChessIdeaAssembler:
     val threatEpisodeIdeas = context.evidenceGraph.records.collect {
       case EvidenceRecord(ref, payload: ThreatEpisodeEvidence, parents)
           if ref.position.sideToMove.forall(_ == payload.sideUnderPressure) &&
-            payload.isProofSignalDefensivePressure =>
+            ref.scope != EvidenceScope.ThreatLine &&
+            payload.canAnchorDefensiveResource =>
         val evidence =
           (ref :: parents ++
             ref.line.toList.flatMap(lineLayerRefs(context, _))).distinctBy(_.id)
