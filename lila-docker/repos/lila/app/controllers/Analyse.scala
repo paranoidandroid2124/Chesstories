@@ -56,6 +56,7 @@ final class Analyse(
           ): packet =>
             val validation = JudgmentPacketValidator.validate(packet)
             val moveReview = packet.moveJudgmentView.map(moveJudgmentViewMeaningJson)
+            val probeRequests = if validation.isValid then packet.probeRequests else Nil
             val renderable = validation.isValid && moveReview.exists(review =>
               (review \ "renderable").asOpt[Boolean].contains(true)
             )
@@ -65,6 +66,7 @@ final class Analyse(
                 "ok" -> true,
                 "status" -> status,
                 "availability" -> publicAvailabilityJson(validation.isValid, renderable),
+                "probe_requests" -> Json.toJson(probeRequests),
                 "move_review" -> moveReview
               )
             ).toFuccess

@@ -2502,8 +2502,7 @@ object MoveMeaningSurface:
         claim.causeEvidenceIds.nonEmpty &&
         (claim.breakFiles.nonEmpty || claim.targetFiles.nonEmpty || claim.targetSquares.nonEmpty)
     val directStructure =
-      claim.sourceEvidenceIds.exists(_.contains("structural-delta")) &&
-        claim.structuralMotifTags.nonEmpty
+      claim.structuralMotifTags.nonEmpty
     val compactTarget =
       (claim.targetSquares.size + claim.targetFiles.size + claim.targetPieces.size) <= 2
     if directTerminal then 0
@@ -3173,23 +3172,25 @@ object MoveMeaningSurface:
     val targetSquares = claim.targetSquares.flatMap(square).toSet
     if targetSquares.isEmpty then false
     else
+      val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase
+      val claimMoveCarrier =
+        claim.boardCarriers.exists(carrier =>
+          (carrier.role == "actor" || carrier.role == "witness") &&
+            carrier.kind == "Move" &&
+            JudgmentSubjectBinding.normalizeMove(carrier.value).toLowerCase == normalizedClaimMove
+        )
       val carrierCheckSquares =
-        claim.boardCarriers.collect {
-          case carrier
-              if carrier.role == "target" &&
-                carrier.kind == "PlanSubject" &&
-                carrier.value.toLowerCase.startsWith("check:") =>
-            carrier.value.toLowerCase.stripPrefix("check:")
-        }.flatMap(square)
+        if claimMoveCarrier then
+          claim.boardCarriers.collect {
+            case carrier
+                if carrier.role == "target" &&
+                  carrier.kind == "PlanSubject" &&
+                  carrier.value.toLowerCase.startsWith("check:") =>
+              carrier.value.toLowerCase.stripPrefix("check:")
+          }.flatMap(square)
+        else Nil
       val signatureCheckSquares =
-        claim.objectBindingSignatures
-          .filter(signature =>
-            val normalized = signature.toLowerCase
-            normalized.contains("mechanism=mechanism:check") ||
-              normalized.contains("consequence=consequence:check")
-          )
-          .flatMap(signature => EvidenceObjectBinding.signatureValues(List(signature), "target", "Square"))
-          .flatMap(square)
+        Nil
       (carrierCheckSquares ++ signatureCheckSquares).exists(targetSquares.contains)
 
   private def longDiagonalPressureClaim(claim: MoveMeaningClaim): Boolean =
@@ -4272,25 +4273,36 @@ object MoveMeaningClaim:
       )
 
   private[judgment] def directBreakPlanClaim(claim: MoveMeaningClaim): Boolean =
+    val moveBreakFile =
+      moveEndpoints(claim.moveUci).flatMap { case (from, to) =>
+        Option.when(
+          from.take(1) == to.take(1) &&
+            (for
+              fromRank <- from.drop(1).toIntOption
+              toRank <- to.drop(1).toIntOption
+            yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
+        )(from.take(1))
+      }
+    val ownsBreakFile =
+      moveBreakFile.exists(file =>
+        claim.breakFiles.exists(_.equalsIgnoreCase(file)) ||
+          claim.breakIdentityParts.exists(_.equalsIgnoreCase(s"breakFile:$file")) ||
+          claim.boardCarriers.exists(carrier =>
+            carrier.role == "target" &&
+              carrier.kind == "PlanSubject" &&
+              carrier.value.equalsIgnoreCase(s"break-file:$file")
+          )
+      )
     val flankKingPressurePawnAdvance =
       claim.targetPieces.exists(_.equalsIgnoreCase("king")) &&
-        moveEndpoints(claim.moveUci).exists { case (from, to) =>
-          from.take(1) == to.take(1) &&
-            Set("a", "b", "g", "h").contains(from.take(1))
-        }
+        moveBreakFile.exists(file => Set("a", "b", "g", "h").contains(file))
     claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
       claim.role == "PreparesBreakOption" &&
       (!planPieceActivationClaim(claim) || flankKingPressurePawnAdvance) &&
       claim.publicHasCarrier &&
       claim.causeEvidenceIds.nonEmpty &&
       (claim.breakFiles.nonEmpty || claim.breakIdentityParts.nonEmpty) &&
-      moveEndpoints(claim.moveUci).exists { case (from, to) =>
-        from.take(1) == to.take(1) &&
-          (for
-            fromRank <- from.drop(1).toIntOption
-            toRank <- to.drop(1).toIntOption
-          yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
-      }
+      ownsBreakFile
 
   private[judgment] def planPieceActivationClaim(claim: MoveMeaningClaim): Boolean =
     claim.objectBindingSignatures.exists(_.toLowerCase.contains("pieceactivation")) ||
@@ -4675,7 +4687,7 @@ object MoveMeaningClaim:
                   .distinct
                   .sortBy(boardCarrierSortKey)
               val currentPawnBreakFiles =
-                currentPawnAdvanceBreakFiles(detail, claimMove, sourceEvidenceIds)
+                currentPawnAdvanceBreakFiles(evidenceGraph, detail, claimMove, sourceEvidenceIds)
               val claimBreakFiles = (detail.breakFile.toList.flatMap(claimFile) ++ currentPawnBreakFiles).distinct.sorted
               val breakFileIdentityCarriers =
                 claimBreakFiles.map(file => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"break-file:$file"))
@@ -4688,7 +4700,7 @@ object MoveMeaningClaim:
                 surfaceObjectSignatures.exists(kingPressureObjectSignature)
               val checkIdentityCarriers =
                 if pressureIdentityCarriers.nonEmpty || kingPressureIdentityCarrier then Nil
-                else mechanismSquareIdentityCarriers(detail, "check", checkSignature)
+                else checkIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove)
               val defenderMoveActorCarriers =
                 surfaceObjectSignatures
                   .filter(_.toLowerCase.contains("mechanism=mechanism:defendermove"))
@@ -4810,7 +4822,7 @@ object MoveMeaningClaim:
                 requiredSquares = detail.requiredSquares.distinct.sorted,
                 maintainedSquares = detail.maintainedSquares.distinct.sorted,
                 brokenSquares = detail.brokenSquares.distinct.sorted,
-                publicIdeaType = publicIdeaType(detail, meaningKind, surfaceObjectSignatures),
+                publicIdeaType = publicIdeaType(detail, meaningKind),
                 publicHasCarrier = publicHasCarrier,
                 publicProofLevel = publicProofLevel,
                 publicTargetBound = claimBoardCarriers.exists(_.role == "target")
@@ -4930,6 +4942,24 @@ object MoveMeaningClaim:
         )
         .flatMap(event => event.square.toList.flatMap(square => publicSquareCarrier("target", square.key)))
 
+  private def checkIdentityCarriersFromLineEvidence(
+      evidenceGraph: TypedEvidenceGraph,
+      sourceEvidenceIds: List[String],
+      claimMove: String
+  ): List[MoveMeaningSurfaceBoardCarrier] =
+    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
+    sourceEvidenceIds
+      .flatMap(id => evidenceGraph.byId.get(id))
+      .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
+      .flatMap(_.lineEventsOf(LineEventKind.Check))
+      .filter(event =>
+        event.plyOffset == 0 ||
+          JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove
+      )
+      .flatMap(_.square.toList)
+      .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"check:${square.key}"))
+      .distinct
+
   private def defenderMoveIdentityCarriersFromLineEvidence(
       evidenceGraph: TypedEvidenceGraph,
       sourceEvidenceIds: List[String],
@@ -4961,11 +4991,12 @@ object MoveMeaningClaim:
       .distinct
 
   private def currentPawnAdvanceBreakFiles(
+      evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail,
       claimMove: String,
       sourceEvidenceIds: List[String]
   ): List[String] =
-    if !pawnBreakClaimDetail(detail) || !sourceEvidenceIds.exists(_.contains(":evidence:structural-delta:")) then Nil
+    if !pawnBreakClaimDetail(detail) || !sourceEvidenceIds.exists(structuralDeltaEvidenceId(evidenceGraph, _)) then Nil
     else
       moveEndpoints(claimMove).toList.flatMap { case (from, to) =>
         val file = from.take(1)
@@ -4977,10 +5008,15 @@ object MoveMeaningClaim:
           .toList
       }.distinct
 
+  private def structuralDeltaEvidenceId(evidenceGraph: TypedEvidenceGraph, id: String): Boolean =
+    evidenceGraph.byId.get(id).exists {
+      case EvidenceRecord(ref, _: StructuralDeltaEvidence, _) => ref.layer == EvidenceLayer.StructuralDelta
+      case EvidenceRecord(ref, _, _)                         => ref.layer == EvidenceLayer.StructuralDelta
+    }
+
   private def pawnBreakClaimDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.breakFile.nonEmpty ||
-      detail.axisKey.exists(_.toLowerCase.contains("pawnbreak")) ||
-      detail.label.exists(_.toLowerCase.contains("pawnbreak"))
+      detail.axisKind.contains(StrategicAxisKind.PawnBreak)
 
   private def pawnAdvanceRanks(from: String, to: String): Boolean =
     (for
@@ -5173,11 +5209,6 @@ object MoveMeaningClaim:
     normalized.contains("mechanism=mechanism:pinpressure") ||
       normalized.contains("consequence=consequence:pinpressure")
 
-  private def checkSignature(signature: String): Boolean =
-    val normalized = signature.toLowerCase
-    normalized.contains("mechanism=mechanism:check") ||
-      normalized.contains("consequence=consequence:check")
-
   private def sameFileMoveFile(move: String): Option[String] =
     moveEndpoints(move).collect { case (from, to) if from.take(1) == to.take(1) => from.take(1) }
 
@@ -5347,8 +5378,7 @@ object MoveMeaningClaim:
 
   private def publicIdeaType(
       detail: PositionPlanTechniqueSemanticDetail,
-      meaningKind: String,
-      objectSignatures: List[String]
+      meaningKind: String
   ): Option[String] =
     detail.unit match
       case PositionPlanTechniqueUnit.SpacePreventionResourceDenial if rayDenialDetail(detail) =>
@@ -5357,8 +5387,6 @@ object MoveMeaningClaim:
         Some("outpost_attempt")
       case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && longDiagonalRouteDetail(detail) =>
         Some("long_diagonal_pressure")
-      case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && checkingRouteTargetPressureDetail(objectSignatures) =>
-        Some("target_pressure")
       case _ =>
         None
 
@@ -5373,9 +5401,6 @@ object MoveMeaningClaim:
         case Some(StructuralPurposeSubject.Battery(axis, _, _, _)) => axis.equalsIgnoreCase("diagonal")
         case _                                                     => false
     )
-
-  private def checkingRouteTargetPressureDetail(objectSignatures: List[String]): Boolean =
-    objectSignatures.exists(checkSignature)
 
   private def rayDenialDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.structuralPurposeSubjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)

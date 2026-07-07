@@ -8,11 +8,6 @@ import play.api.libs.json._
 enum ProbePurpose(val key: String):
   // ReplyMultipv is the only purpose with an admitted branch-ingestion contract today.
   case ReplyMultipv extends ProbePurpose("reply_multipv")
-  case DefenseReplyMultipv extends ProbePurpose("defense_reply_multipv")
-  case ConvertReplyMultipv extends ProbePurpose("convert_reply_multipv")
-  case RecaptureBranches extends ProbePurpose("recapture_branches")
-  case KeepTensionBranches extends ProbePurpose("keep_tension_branches")
-  case FreeTempoBranches extends ProbePurpose("free_tempo_branches")
 
 object ProbePurpose:
   private val byKey = ProbePurpose.values.map(p => p.key -> p).toMap

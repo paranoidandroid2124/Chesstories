@@ -403,7 +403,7 @@ object MoveReviewPhase3AuditRunner:
       "terminal_only_defense" -> List(
         ExpectedSlotSpec(
           "terminal_only_defense_resource",
-          PositionPlanTechniqueUnit.EndgameTechniqueRecipe,
+          PositionPlanTechniqueUnit.PieceRerouteRoute,
           None,
           requiredSupportLevel = "owned_cause_linked"
         )
@@ -492,6 +492,8 @@ object MoveReviewPhase3AuditRunner:
           slot.copy(axisKey = Some("Target:Gain:target-pressure-gain"))
         case slot if slot.id == "b5_b_file_target_carrier" =>
           slot.copy(axisKey = None)
+        case slot if slot.id == "terminal_only_defense_resource" && slot.questionId.contains("terminal_only_defense") =>
+          slot.copy(unit = PositionPlanTechniqueUnit.PieceRerouteRoute)
         case slot => slot
       }
     )
