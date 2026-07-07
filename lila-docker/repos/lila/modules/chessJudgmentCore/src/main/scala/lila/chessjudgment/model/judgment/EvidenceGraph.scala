@@ -4135,6 +4135,7 @@ enum TacticalMechanismSignalKind:
   case Motif
   case Relation
   case LineConsequence
+  case LineEvent
   case MateBranch
   case ThreatEpisode
 
@@ -4157,6 +4158,7 @@ final case class TacticalMechanismEvidence(
   def hasLineProof: Boolean =
     signalKinds.exists(kind =>
       kind == TacticalMechanismSignalKind.LineConsequence ||
+        kind == TacticalMechanismSignalKind.LineEvent ||
         kind == TacticalMechanismSignalKind.Relation ||
         kind == TacticalMechanismSignalKind.MateBranch
     )

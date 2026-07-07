@@ -617,6 +617,12 @@ object EvidenceFactAssembler:
             event.plyOffset == 0 &&
               rootMove.exists(root => EvidenceRef.sameMove(root, event.moveUci))
           )
+        val rootCheckDefense =
+          payload.lineEventsOf(LineEventKind.DefenderMove).exists(event =>
+            event.plyOffset == 0 &&
+              rootMove.exists(root => EvidenceRef.sameMove(root, event.moveUci)) &&
+              event.targetRole.exists(_.name.equalsIgnoreCase("king"))
+          )
         val rootOwnedRecoveryKinds =
           rootMove
             .map(payload.rootOwnedProofSignalConsequences)
@@ -643,6 +649,16 @@ object EvidenceFactAssembler:
             List(record),
             recoveryKinds.map(consequence =>
               TacticalMechanismSignal(TacticalMechanismSignalKind.LineConsequence, consequence.kind.toString, EvidenceLayer.Line, Some(record.ref))
+            )
+          )
+        ).orElse(
+          Option.when(rootCheckDefense)(
+            TacticalMechanismCandidate(
+              TacticalMechanismKind.DefensiveResource,
+              List(record),
+              List(
+                TacticalMechanismSignal(TacticalMechanismSignalKind.LineEvent, LineEventKind.DefenderMove.toString, EvidenceLayer.Line, Some(record.ref))
+              )
             )
           )
         )
@@ -685,7 +701,11 @@ object EvidenceFactAssembler:
     Option.when(payload.hasConcreteProof) {
       val confidence =
         if signals.exists(_.kind == TacticalMechanismSignalKind.MateBranch) then EvidenceConfidence.EngineBacked
-        else if signals.exists(signal => signal.kind == TacticalMechanismSignalKind.Relation || signal.kind == TacticalMechanismSignalKind.LineConsequence)
+        else if signals.exists(signal =>
+            signal.kind == TacticalMechanismSignalKind.Relation ||
+              signal.kind == TacticalMechanismSignalKind.LineConsequence ||
+              signal.kind == TacticalMechanismSignalKind.LineEvent
+          )
         then EvidenceConfidence.LegalReplayVerified
         else EvidenceConfidence.Mixed
       EvidenceRecord(

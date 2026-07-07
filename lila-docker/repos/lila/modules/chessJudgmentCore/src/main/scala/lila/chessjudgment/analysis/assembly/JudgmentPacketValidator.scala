@@ -1003,8 +1003,14 @@ object JudgmentPacketValidator:
               payload.hasConcreteRelationProof &&
               payload.kind.toString == signal.label
           case payload: LineFactEvidence =>
-            signal.kind == TacticalMechanismSignalKind.LineConsequence &&
-              payload.proofSignalConsequenceKinds.exists(_.toString == signal.label)
+            (
+              signal.kind == TacticalMechanismSignalKind.LineConsequence &&
+                payload.proofSignalConsequenceKinds.exists(_.toString == signal.label)
+            ) ||
+              (
+                signal.kind == TacticalMechanismSignalKind.LineEvent &&
+                  payload.lineEvents.exists(_.kind.toString == signal.label)
+              )
           case EvalFactEvidence(_, _, mate, _) =>
             signal.kind == TacticalMechanismSignalKind.MateBranch &&
               mate.exists(_.toString == signal.label)

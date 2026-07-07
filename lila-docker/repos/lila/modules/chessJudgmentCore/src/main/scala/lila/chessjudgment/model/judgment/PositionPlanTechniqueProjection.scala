@@ -1332,7 +1332,7 @@ object PositionPlanTechniqueProjection:
             positionPlanTechniqueHasAdmissibleProofForEvidence(cause, evidenceIds)
         }
     val concreteRouteProofMatched =
-      if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute && positionPlanTechniqueConcretePieceRoute(detail) then
+      if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute then
         causeRecords.filter { case (_, cause) =>
           cause.attribution.directProofEligible &&
             cause.attribution.rootMoveMatched &&
@@ -1471,7 +1471,10 @@ object PositionPlanTechniqueProjection:
   ): Boolean =
     detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
       detail.axisKind.contains(StrategicAxisKind.Activity) &&
-      positionPlanTechniqueConcretePieceRoute(detail) &&
+      (
+        positionPlanTechniqueConcretePieceRoute(detail) ||
+          (kind == RelativeCauseKind.DefensiveResource && positionPlanTechniqueDefensiveKingRoute(detail))
+      ) &&
       Set(
         RelativeCauseKind.PlanImprovement,
         RelativeCauseKind.PlanContradiction,
@@ -1479,6 +1482,18 @@ object PositionPlanTechniqueProjection:
         RelativeCauseKind.DefensiveResource,
         RelativeCauseKind.KingForcing
       ).contains(kind)
+
+  private def positionPlanTechniqueDefensiveKingRoute(
+      detail: PositionPlanTechniqueSemanticDetail
+  ): Boolean =
+    detail.structuralRouteMove.nonEmpty &&
+      detail.structuralPurposeSubjects.exists(subject =>
+        StructuralPurposeSubject.parse(subject) match
+          case Some(StructuralPurposeSubject.PieceRoute(piece, _, _)) =>
+            piece.equalsIgnoreCase("king")
+          case _ =>
+            false
+      )
 
   private def positionPlanTechniqueConcreteCounterplayRaceCauseKind(
       detail: PositionPlanTechniqueSemanticDetail,
