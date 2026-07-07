@@ -3145,8 +3145,7 @@ object MoveMeaningSurface:
       claim.proofRelationKinds.nonEmpty &&
       (
         claim.terminalConsequenceKinds.contains("MaterialGain") ||
-          claim.proofLineConsequences.contains(LineConsequenceKind.MaterialGain) ||
-          claim.boardCarriers.exists(carrier => carrier.role == "target" && materialEventPlanSubjectCarrier(carrier))
+          claim.proofLineConsequences.contains(LineConsequenceKind.MaterialGain)
       )
 
   private def defensiveResourceClaim(claim: MoveMeaningClaim): Boolean =
