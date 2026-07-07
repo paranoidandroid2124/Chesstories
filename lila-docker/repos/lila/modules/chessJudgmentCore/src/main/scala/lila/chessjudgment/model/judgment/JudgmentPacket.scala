@@ -2749,6 +2749,9 @@ object MoveMeaningSurface:
       .filter(_.matches("[a-h][1-8]"))
       .distinct
       .sorted
+    val weakPawnTargetClaim =
+      weakPawnSquares.nonEmpty ||
+        claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget)
     val sacrificeCompensationLabel =
       weakPawnSquares match
         case square :: Nil => s"compensation against $square pawn"
@@ -2770,8 +2773,14 @@ object MoveMeaningSurface:
                   carrier.value.toLowerCase.startsWith("resolved-tension:")
               ) =>
           carrier.value.toLowerCase.dropWhile(_ != ':').drop(1)
-      }
+        }
     ).filter(_.matches("[a-h][1-8]-[a-h][1-8]")).distinct.headOption
+    val createdTensionCarrier = claim.boardCarriers.exists(carrier =>
+      carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("created-tension:")
+    )
+    val resolvedTensionCarrier = claim.boardCarriers.exists(carrier =>
+      carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("resolved-tension:")
+    )
     val createsPawnTensionLabel =
       tensionEdge.map(edge => s"creates $edge pawn tension").getOrElse("creates pawn tension")
     val resolvesPawnTensionLabel =
@@ -2828,6 +2837,20 @@ object MoveMeaningSurface:
         case square :: Nil => s"releases pressure on $square"
         case squares if squares.nonEmpty && squares.size <= 4 => s"releases pressure on ${squares.mkString("/")}"
         case _             => "pressure release"
+    val targetPressureReleaseClaim =
+      claim.causeKinds.contains(RelativeCauseKind.TargetPressureRelease) ||
+        (
+          claim.axisKind.contains(StrategicAxisKind.Target) &&
+            claim.axisPolarity.contains(StrategicAxisPolarity.Release)
+        )
+    val targetFixationClaim =
+      claim.axisKind.contains(StrategicAxisKind.Target) &&
+        claim.axisPolarity.contains(StrategicAxisPolarity.Support) &&
+        (
+          claim.axisKey.exists(_.toLowerCase.contains("targetfixation")) ||
+          claim.sourceEvidenceIds.exists(_.toLowerCase.contains("target-fixation")) ||
+            claim.objectBindingSignatures.exists(_.toLowerCase.contains("targetfixation"))
+        )
     val targetPressureLabel =
       claim.targetSquares.map(_.toLowerCase).distinct.sorted match
         case square :: Nil => s"pressure on $square"
@@ -2906,14 +2929,12 @@ object MoveMeaningSurface:
         case ("defensive_resource", _) => defensiveResourceLabel
         case ("target_pressure", _) if sameFilePassedPawnMove => passedPawnAdvanceLabel
         case ("target_pressure", _) if passedPawnAdvanceClaim(claim) => passedPawnAdvanceLabel
-        case ("target_pressure", "weak-pawn-target") => weakPawnTargetLabel
-        case ("target_pressure", _) if claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) => weakPawnTargetLabel
+        case ("target_pressure", _) if weakPawnTargetClaim => weakPawnTargetLabel
         case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
-        case ("target_pressure", "king-safety-pressure") => kingPressureLabel
-        case ("target_pressure", "target-pressure-release") => targetPressureReleaseLabel
+        case ("target_pressure", _) if targetPressureReleaseClaim => targetPressureReleaseLabel
         case ("target_pressure", _) if kingPressureCarrier => kingPressureLabel
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
-        case ("target_pressure", "TargetFixation") => targetFixationLabel
+        case ("target_pressure", _) if targetFixationClaim => targetFixationLabel
         case ("target_pressure", _) if filePressureCarrier => "file pressure"
         case ("target_pressure", _) if planPawnAdvanceClaim(claim) => pawnSpaceAdvanceLabel
         case ("target_pressure", _)
@@ -2925,12 +2946,10 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if bishopCarrier && claim.targetSquares.nonEmpty => bishopPressureLabel
         case ("target_pressure", _) if claim.targetSquares.nonEmpty => targetPressureLabel
         case ("counterplay_race", _) => counterplayRaceLabel
-        case ("counterplay_control", label) if label.startsWith("defensive-counter-break-") => counterplayRestrictionLabel
-        case ("counterplay_control", "opponent-low-mobility") if counterplayBreakFiles.nonEmpty => counterplayRestrictionLabel
-        case ("counterplay_control", "opponent-low-mobility") => "restricts counterplay"
-        case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("created-tension") => createsPawnTensionLabel
-        case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("resolved-tension") => resolvesPawnTensionLabel
-        case ("pawn_break_timing", label) if ownedTensionBreakClaim(claim) && label.contains("release-") => "releases pawn tension"
+        case ("counterplay_control", _) if claim.axisKind.contains(StrategicAxisKind.Counterplay) && claim.axisPolarity.contains(StrategicAxisPolarity.Restrain) =>
+          counterplayRestrictionLabel
+        case ("pawn_break_timing", _) if ownedTensionBreakClaim(claim) && createdTensionCarrier => createsPawnTensionLabel
+        case ("pawn_break_timing", _) if ownedTensionBreakClaim(claim) && (resolvedTensionCarrier || claim.role == "ReleasesPawnTension") => resolvesPawnTensionLabel
         case ("pawn_break_timing", _) if flankInfrastructurePawnMove || flankPressurePawnMove => flankPawnAdvanceLabel
         case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
         case ("pawn_break_timing", _) if breakPreparationPlanClaim(claim) => breakPreparationLabel
