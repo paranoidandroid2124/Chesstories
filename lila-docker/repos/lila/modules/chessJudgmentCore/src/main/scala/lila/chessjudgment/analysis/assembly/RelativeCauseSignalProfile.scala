@@ -974,7 +974,13 @@ private[chessjudgment] object RelativeCauseSignalProfile:
   private[chessjudgment] def drawResourceRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
-        payload.maintainedDefensiveEndgameTechniqueHorizons.nonEmpty
+        payload.maintainedDefensiveEndgameTechniqueHorizons.nonEmpty ||
+          payload.hasProofSignalConsequence(LineConsequenceKind.DrawResource)
+      case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
+        payload.kind == TacticalMechanismKind.DrawResource && payload.canAnchorDefensiveIdea
+      case EvidenceRecord(_, payload: RelationFactEvidence, _) =>
+        payload.hasConcreteRelationProof &&
+          (payload.kind == RelationFactKind.StalemateTrap || payload.kind == RelationFactKind.PerpetualCheck)
       case _ =>
         false
     }.distinctBy(_.ref.id)

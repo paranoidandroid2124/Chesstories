@@ -1131,6 +1131,9 @@ object RelativeAssessmentAssembler:
         RelativeCauseSignalProfile.relationMaterialPayoffKind(payload.kind)
       case RelativeCauseKind.ConversionMiss | RelativeCauseKind.ConversionSecured =>
         payload.kind == RelationFactKind.BadPieceLiquidation
+      case RelativeCauseKind.DrawResource =>
+        payload.kind == RelationFactKind.StalemateTrap ||
+          payload.kind == RelationFactKind.PerpetualCheck
       case _ =>
         false
 
@@ -1321,6 +1324,7 @@ object RelativeAssessmentAssembler:
   private def defensiveCause(kind: RelativeCauseKind): Boolean =
     kind == RelativeCauseKind.OnlyDefenseNecessity ||
       kind == RelativeCauseKind.DefensiveResource ||
+      kind == RelativeCauseKind.DrawResource ||
       kind == RelativeCauseKind.OnlyMoveNecessity
 
   private def tacticalCause(kind: RelativeCauseKind): Boolean =

@@ -4171,9 +4171,11 @@ final case class TacticalMechanismEvidence(
         kind == TacticalMechanismSignalKind.ThreatEpisode
     )
   def tactical: Boolean =
-    kind != TacticalMechanismKind.DefensiveResource
+    kind != TacticalMechanismKind.DefensiveResource &&
+      kind != TacticalMechanismKind.DrawResource
   def defensive: Boolean =
-    kind == TacticalMechanismKind.DefensiveResource
+    kind == TacticalMechanismKind.DefensiveResource ||
+      kind == TacticalMechanismKind.DrawResource
   def canAnchorTacticalIdea: Boolean =
     tactical && hasConcreteProof && hasEngineOrForcingProof
   def canAnchorDefensiveIdea: Boolean =
