@@ -2108,6 +2108,7 @@ object MoveMeaningSurface:
             )
             .take(2)
         val carriers = currentMoveActorCarriers ++ consequenceCarriers
+        val relationKinds = chainSurfaces.flatMap(publicSurfaceRelationKinds).distinct.sortBy(_.toString)
         List(
           Json.obj(
             "key" -> "current-move-chain",
@@ -2117,8 +2118,8 @@ object MoveMeaningSurface:
             "subject" -> subject,
             "move_semantics" -> publicSemantics.map(publicIdeaChainMoveSemanticJson),
             "proof_levels" -> chainSurfaces.map(_.evidence.proofLevel).distinct,
-            "relation_kinds" -> chainSurfaces.flatMap(_.evidence.proofRelationKinds).map(_.toString).distinct.sorted,
-            "relations" -> chainSurfaces.flatMap(_.evidence.proofRelationKinds).distinct.sortBy(_.toString).map(publicRelationCodeJson),
+            "relation_kinds" -> relationKinds.map(_.toString),
+            "relations" -> relationKinds.map(publicRelationCodeJson),
             "threat_drivers" -> chainSurfaces.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
             "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "pv" -> pv,
@@ -2326,11 +2327,28 @@ object MoveMeaningSurface:
         "target_bound" -> surface.evidence.targetBound,
         "cause_ids" -> surface.evidence.causeIds,
         "source_ids" -> surface.evidence.sourceIds,
-        "relation_kinds" -> surface.evidence.proofRelationKinds.map(_.toString).distinct.sorted,
-        "relations" -> surface.evidence.proofRelationKinds.distinct.sortBy(_.toString).map(publicRelationCodeJson),
+        "relation_kinds" -> publicSurfaceRelationKinds(surface).map(_.toString),
+        "relations" -> publicSurfaceRelationKinds(surface).map(publicRelationCodeJson),
         "threat_drivers" -> surface.evidence.proofThreatDrivers.distinct.sorted
       )
     )
+
+  private def publicSurfaceRelationKinds(surface: MoveMeaningSurface): List[RelationFactKind] =
+    surface.evidence.proofRelationKinds
+      .filter(kind => publicSurfaceRelationKind(surface, kind))
+      .distinct
+      .sortBy(_.toString)
+
+  private def publicSurfaceRelationKind(surface: MoveMeaningSurface, kind: RelationFactKind): Boolean =
+    kind match
+      case RelationFactKind.BadPieceLiquidation =>
+        false
+      case RelationFactKind.StalemateTrap | RelationFactKind.PerpetualCheck =>
+        surface.idea.code == "draw_resource" ||
+          surface.idea.code == "defensive_resource" ||
+          surface.terminalConsequences.exists(_.code == "draw_resource")
+      case _ =>
+        true
 
   private def publicIdeaChainConsequenceCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
     carrier.kind match
