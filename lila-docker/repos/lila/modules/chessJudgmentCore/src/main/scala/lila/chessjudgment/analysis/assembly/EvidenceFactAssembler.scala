@@ -589,15 +589,17 @@ object EvidenceFactAssembler:
         lineConsequenceRecords.collect {
           case (lineRecord, consequence, TacticalMechanismKind.MaterialGain, consequenceMoves, consequenceCaptureSquares)
               if consequence.kind == LineConsequenceKind.MaterialGain &&
-                (
-                  threatRecord.ref.line.exists(lineRecord.referencesLine) ||
-                    (
-                      threatRecord.ref.scope == EvidenceScope.ThreatLine &&
-                        lineRecord.ref.scope == EvidenceScope.ThreatLine &&
-                        threatRecord.ref.position == lineRecord.ref.position
-                    )
-                ) &&
-                mateThreatMaterialLinked(threat, consequenceMoves, consequenceCaptureSquares) =>
+                {
+                  val sameThreatBranchPosition =
+                    threatRecord.ref.scope == EvidenceScope.ThreatLine &&
+                      lineRecord.ref.scope == EvidenceScope.ThreatLine &&
+                      threatRecord.ref.position == lineRecord.ref.position
+                  (
+                    threatRecord.ref.line.exists(lineRecord.referencesLine) ||
+                      sameThreatBranchPosition
+                  ) &&
+                    mateThreatMaterialLinked(threat, consequenceMoves, consequenceCaptureSquares, sameThreatBranchPosition)
+                } =>
             TacticalMechanismCandidate(
               TacticalMechanismKind.MaterialGain,
               List(threatRecord, lineRecord),
@@ -681,11 +683,13 @@ object EvidenceFactAssembler:
   private def mateThreatMaterialLinked(
       threat: ThreatEpisodeEvidence,
       consequenceMoves: List[String],
-      consequenceCaptureSquares: List[EvidenceSquare]
+      consequenceCaptureSquares: List[EvidenceSquare],
+      sameThreatBranchPosition: Boolean
   ): Boolean =
     val attackSquares = threat.episode.attackSquares.toSet
     consequenceCaptureSquares.exists(attackSquares.contains) ||
-      threat.episode.bestDefense.exists(defense => consequenceMoves.exists(EvidenceRef.sameMove(defense, _)))
+      threat.episode.bestDefense.exists(defense => consequenceMoves.exists(EvidenceRef.sameMove(defense, _))) ||
+      (sameThreatBranchPosition && threat.defenseRequired && consequenceCaptureSquares.nonEmpty)
 
   private def tacticalMechanismRecord(
       id: String,
