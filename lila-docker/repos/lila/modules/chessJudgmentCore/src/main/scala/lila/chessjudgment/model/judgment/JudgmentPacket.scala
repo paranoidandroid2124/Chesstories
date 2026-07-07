@@ -2115,7 +2115,6 @@ object MoveMeaningSurface:
             "proof_levels" -> chainSurfaces.map(_.evidence.proofLevel).distinct,
             "relation_kinds" -> chainSurfaces.flatMap(_.evidence.proofRelationKinds).map(_.toString).distinct.sorted,
             "relations" -> chainSurfaces.flatMap(_.evidence.proofRelationKinds).distinct.sortBy(_.toString).map(publicRelationCodeJson),
-            "relation_details" -> chainSurfaces.flatMap(_.evidence.proofRelationDetails).distinct.sorted,
             "threat_drivers" -> chainSurfaces.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
             "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "pv" -> pv,
@@ -2327,7 +2326,6 @@ object MoveMeaningSurface:
         "source_ids" -> surface.evidence.sourceIds,
         "relation_kinds" -> surface.evidence.proofRelationKinds.map(_.toString).distinct.sorted,
         "relations" -> surface.evidence.proofRelationKinds.distinct.sortBy(_.toString).map(publicRelationCodeJson),
-        "relation_details" -> surface.evidence.proofRelationDetails.distinct.sorted,
         "threat_drivers" -> surface.evidence.proofThreatDrivers.distinct.sorted
       )
     )
