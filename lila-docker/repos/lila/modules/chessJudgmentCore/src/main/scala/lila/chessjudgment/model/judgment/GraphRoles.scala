@@ -35,42 +35,43 @@ enum LineNodeRole:
       case Alternative | Threat =>
         IdeaSubject.CandidateLine
 
+object LineNodeRole:
+
+  def fromMoveEvidenceScope(scope: EvidenceScope): Option[LineNodeRole] =
+    scope match
+      case EvidenceScope.PlayedTransition =>
+        Some(LineNodeRole.Played)
+      case EvidenceScope.ReferenceTransition =>
+        Some(LineNodeRole.BestReference)
+      case EvidenceScope.AlternativeTransition =>
+        Some(LineNodeRole.Alternative)
+      case EvidenceScope.ThreatLine =>
+        Some(LineNodeRole.Threat)
+      case _ =>
+        None
+
 enum TransitionEdgeRole:
   case Played
   case Reference
   case Alternative
-  case Threat
 
   def lineRole: LineNodeRole =
     this match
       case Played      => LineNodeRole.Played
       case Reference   => LineNodeRole.BestReference
       case Alternative => LineNodeRole.Alternative
-      case Threat      => LineNodeRole.Threat
 
   def scope: EvidenceScope =
     this match
       case Played      => EvidenceScope.PlayedTransition
       case Reference   => EvidenceScope.ReferenceTransition
       case Alternative => EvidenceScope.AlternativeTransition
-      case Threat      => EvidenceScope.ThreatLine
 
   def subject: IdeaSubject =
     this match
       case Played      => IdeaSubject.PlayedMove
       case Reference   => IdeaSubject.ReferenceMove
-      case Alternative | Threat =>
-        IdeaSubject.CandidateLine
-
-object TransitionEdgeRole:
-
-  def fromScope(scope: EvidenceScope): Option[TransitionEdgeRole] =
-    scope match
-      case EvidenceScope.PlayedTransition      => Some(TransitionEdgeRole.Played)
-      case EvidenceScope.ReferenceTransition   => Some(TransitionEdgeRole.Reference)
-      case EvidenceScope.AlternativeTransition => Some(TransitionEdgeRole.Alternative)
-      case EvidenceScope.ThreatLine            => Some(TransitionEdgeRole.Threat)
-      case _                                   => None
+      case Alternative => IdeaSubject.CandidateLine
 
 enum EvidenceLayer:
   case Board

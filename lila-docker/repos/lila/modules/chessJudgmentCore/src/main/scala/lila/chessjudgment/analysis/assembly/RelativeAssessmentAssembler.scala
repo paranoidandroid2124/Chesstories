@@ -1369,7 +1369,7 @@ object RelativeAssessmentAssembler:
     record.referencesLine(eventLine) ||
       (
         payload.mentionsLineMove(eventLine.rootMove) &&
-          TransitionEdgeRole.fromScope(record.ref.scope).exists(_.lineRole == eventLine.role)
+          LineNodeRole.fromMoveEvidenceScope(record.ref.scope).contains(eventLine.role)
       )
 
   private def threatBranchRecordOwnsRoot(

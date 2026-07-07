@@ -472,8 +472,3 @@ object NodeLineTransitionAssembler:
           }
         NodeLineTransitionAssembly(input, withTransitions)
     }
-
-object EvidenceGraphAssembler:
-
-  def fromRecords(records: List[EvidenceRecord]): TypedEvidenceGraph =
-    records.foldLeft(TypedEvidenceGraph.empty)((graph, record) => graph.add(record))

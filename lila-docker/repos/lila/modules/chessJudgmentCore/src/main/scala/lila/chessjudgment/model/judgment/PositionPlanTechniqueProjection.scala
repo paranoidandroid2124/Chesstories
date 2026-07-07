@@ -286,7 +286,7 @@ object PositionPlanTechniqueProjection:
       claims: List[ClaimSeed],
       ideaVerdict: Option[IdeaVerdictSplit]
   ): Option[PositionPlanTechniqueFrame] =
-    if !payload.hasTypedOutput || payload.role == TransitionEdgeRole.Threat || payload.moveUci.trim.isEmpty then None
+    if !payload.hasTypedOutput || payload.moveUci.trim.isEmpty then None
     else
       val refs = (ref :: parents).distinctBy(_.id)
       val anchors = semanticAnchorsFor(graph, record, refs)

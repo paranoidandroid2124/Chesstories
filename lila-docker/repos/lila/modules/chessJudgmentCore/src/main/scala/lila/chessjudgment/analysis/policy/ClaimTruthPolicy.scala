@@ -188,9 +188,7 @@ object ClaimTruthPolicy:
       case MoveTransitionEvidence(moveUci, _, _) =>
         moveUci == move &&
           claimLine.forall(line =>
-            TransitionEdgeRole.fromScope(record.ref.scope).exists(role =>
-              role.lineRole == line.role && line.rootMove == move
-            )
+            LineNodeRole.fromMoveEvidenceScope(record.ref.scope).contains(line.role) && line.rootMove == move
           )
       case payload: StructuralDeltaEvidence =>
         payload.moveUci == move &&
