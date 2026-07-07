@@ -3282,8 +3282,7 @@ object MoveMeaningSurface:
 
   private def planContinuityTargetPressureCarrier(claim: MoveMeaningClaim): Boolean =
     claim.meaningKind == "PlanContinuity" &&
-      claim.sourceEvidenceIds.exists(_.contains(":strategic-mechanism:target-pressure:")) &&
-      (claim.targetSquares.nonEmpty || claim.targetFiles.nonEmpty || claim.targetPieces.nonEmpty) &&
+      MoveMeaningClaim.targetPressureCarrier(claim) &&
       claim.objectCarrierReady
 
   private def passedPawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
@@ -4033,8 +4032,7 @@ object MoveMeaningClaim:
   ): Boolean =
     def concreteTargetPressurePlan(other: MoveMeaningClaim): Boolean =
       other.meaningKind == "PlanContinuity" &&
-        other.sourceEvidenceIds.exists(_.contains(":strategic-mechanism:target-pressure:")) &&
-        (other.targetSquares.nonEmpty || other.targetFiles.nonEmpty || other.targetPieces.nonEmpty) &&
+        targetPressureCarrier(other) &&
         other.objectCarrierReady
     def passedPawnAdvanceCarrier(claim: MoveMeaningClaim): Boolean =
       claim.routeIdentityParts.exists(_.startsWith("subject:passed-pawn-")) ||
@@ -4052,7 +4050,7 @@ object MoveMeaningClaim:
         claim.surfaceLane == "current_move_function" &&
         claim.causeEvidenceIds.isEmpty &&
         !passedPawnAdvanceCarrier(claim) &&
-        targetPressureSourceOrCarrier(claim)
+        targetPressureCarrier(claim)
     (
       claim.meaningKind == "PieceActivity" && claim.role == "ImprovesPieceActivity" && !passedPawnAdvanceCarrier(claim) ||
         targetPressureActivity(claim) ||
@@ -4123,9 +4121,8 @@ object MoveMeaningClaim:
       left.targetPieces.intersect(right.targetPieces).nonEmpty ||
       left.targetFiles.intersect(right.targetFiles).nonEmpty
 
-  private def targetPressureSourceOrCarrier(claim: MoveMeaningClaim): Boolean =
-    claim.sourceEvidenceIds.exists(_.contains(":strategic-mechanism:target-pressure:")) ||
-      claim.causeKinds.exists(kind =>
+  private[judgment] def targetPressureCarrier(claim: MoveMeaningClaim): Boolean =
+    claim.causeKinds.exists(kind =>
         kind == RelativeCauseKind.TargetPressureGain ||
           kind == RelativeCauseKind.TargetPressureRelease ||
           kind == RelativeCauseKind.PawnWeaknessTarget
