@@ -47,8 +47,16 @@ object ThreatPressureAssessor:
     sideToMove: Color
   ): ThreatAnalysis =
     val isWhiteToMove = sideToMove.white
+    val suppressStaticRelationThreats =
+      positionAssessment.gamePhase.isEndgame ||
+        positionAssessment.drawBias.insufficientMaterial ||
+        (
+          positionAssessment.simplifyBias.isEndgameNear &&
+            !positionAssessment.gamePhase.queensOnBoard &&
+            positionAssessment.gamePhase.minorPiecesCount <= 2
+        )
     
-    val opponentThreats = extractOpponentThreats(motifs, isWhiteToMove)
+    val opponentThreats = extractOpponentThreats(motifs, isWhiteToMove, suppressStaticRelationThreats)
     val correctedThreats = correctWithMultiPv(opponentThreats, multiPv, fen)
     val withDefenses = populateDefenseEvidence(correctedThreats, multiPv)
     val activeCounterThreat = activeCounterThreatAvailable(fen, motifs, multiPv, sideToMove)
@@ -59,12 +67,16 @@ object ThreatPressureAssessor:
    * We keep conservative base timing/loss estimates so positional pressure survives
    * even when MultiPV evidence is thin.
    */
-  private def extractOpponentThreats(motifs: List[Motif], isWhiteToMove: Boolean): List[Threat] =
+  private def extractOpponentThreats(
+      motifs: List[Motif],
+      isWhiteToMove: Boolean,
+      suppressStaticRelationThreats: Boolean
+  ): List[Threat] =
     val opponentColor = if isWhiteToMove then Color.Black else Color.White
 
     motifs.flatMap { motif =>
       if threateningColor(motif).contains(opponentColor) then
-        threatProfileFor(motif).map { profile =>
+        threatProfileFor(motif, suppressStaticRelationThreats).map { profile =>
           Threat(
             kind = profile.kind,
             lossIfIgnoredCp = profile.baseLossCp,
@@ -81,7 +93,7 @@ object ThreatPressureAssessor:
       else None
     }
 
-  private def threatProfileFor(motif: Motif): Option[ThreatProfile] =
+  private def threatProfileFor(motif: Motif, suppressStaticRelationThreats: Boolean): Option[ThreatProfile] =
     motif match
       case _: Motif.BackRankMate | _: Motif.MateNet | _: Motif.SmotheredMate =>
         Some(ThreatProfile(ThreatKind.Mate, 1, 0))
@@ -96,6 +108,8 @@ object ThreatPressureAssessor:
           case Motif.CaptureType.ExchangeSacrifice => 180
           case _ => 150
         Some(ThreatProfile(ThreatKind.Material, 1, baseLoss))
+      case (_: Motif.Pin | _: Motif.XRay) if suppressStaticRelationThreats =>
+        None
       case _: Motif.Fork | _: Motif.Pin | _: Motif.Skewer | _: Motif.DiscoveredAttack |
           _: Motif.Deflection | _: Motif.Decoy | _: Motif.Overloading | _: Motif.Interference |
           _: Motif.Clearance | _: Motif.Zwischenzug | _: Motif.RemovingTheDefender | _: Motif.XRay =>
