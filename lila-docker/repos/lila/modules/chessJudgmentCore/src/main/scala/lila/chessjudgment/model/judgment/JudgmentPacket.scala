@@ -5987,8 +5987,6 @@ object MoveMeaningClaim:
       detail.matchedPlanIds ++
         detail.referencePlanIds ++
         detail.candidatePlanIds ++
-        detail.label.toList ++
-        detail.axisKey.toList ++
         detail.semanticAnchorKeys
     )
     val frameTokens = planMeaningTokens(frame.proofStrategicAxisKeys ++ frame.objectBindingSignatures)
