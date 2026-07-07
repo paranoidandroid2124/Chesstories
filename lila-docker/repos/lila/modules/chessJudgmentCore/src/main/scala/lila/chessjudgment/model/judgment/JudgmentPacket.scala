@@ -3110,6 +3110,7 @@ object MoveMeaningSurface:
             )
         )("compensation")
       )
+      .orElse(Option.when(tacticalRelationPressureClaim(claim))("tactical_pressure"))
       .orElse(Option.when(claim.meaningKind == "PieceActivity")("piece_activity"))
       .getOrElse(claim.unit match
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
@@ -3148,6 +3149,15 @@ object MoveMeaningSurface:
       (
         claim.terminalConsequenceKinds.contains("MaterialGain") ||
           claim.proofLineConsequences.contains(LineConsequenceKind.MaterialGain)
+      )
+
+  private def tacticalRelationPressureClaim(claim: MoveMeaningClaim): Boolean =
+    claim.meaningKind == "TargetPressure" &&
+      claim.publicProofLevel == "owned_cause" &&
+      claim.proofRelationKinds.exists(kind =>
+        kind != RelationFactKind.BadPieceLiquidation &&
+          kind != RelationFactKind.StalemateTrap &&
+          kind != RelationFactKind.PerpetualCheck
       )
 
   private def defensiveResourceClaim(claim: MoveMeaningClaim): Boolean =
@@ -3643,6 +3653,7 @@ object MoveMeaningSurface:
     "endgame_technique" -> "endgame technique",
     "compensation" -> "compensation",
     "structure_shift" -> "structure shift",
+    "tactical_pressure" -> "tactical pressure",
     "target_pressure" -> "target pressure",
     "center_control" -> "center control",
     "plan_continuity" -> "plan continuity"
