@@ -146,18 +146,19 @@ object EvidenceFactAssembler:
       context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator
   ): List[EvidenceRecord] =
-    val root = context.position(PositionNodeRole.Before).map(_.ref)
-    root.toList.flatMap { rootRef =>
+    val root = context.position(PositionNodeRole.Before)
+    root.toList.flatMap { rootNode =>
+      val rootRef = rootNode.ref
       val continuationLines =
         context.lines
-          .filterNot(_.role == LineNodeRole.Threat)
           .flatMap(line => lineFactEvidence(context, line.ref).map(_.lineReplayMoves))
       val relationTargetHints = relationTargetHintsFromBoardFacts(context)
-      val lineBackedRecords = context.lines.filterNot(_.role == LineNodeRole.Threat).flatMap { line =>
+      val lineBackedRecords = context.lines.flatMap { line =>
         lineFactEvidence(context, line.ref)
           .flatMap(lineFacts => TacticalRelationEvidence.boundedReplayFromSteps(lineFacts.lineReplaySteps, maxPlies = 8))
           .toList
           .flatMap { replay =>
+            val position = startPositionForLine(input, context, rootNode, line).ref
             val witnesses =
               TacticalRelationEvidence
                 .relationWitnesses(
@@ -174,7 +175,7 @@ object EvidenceFactAssembler:
               RelationFactNormalizer.fromWitness(
                 id = allocator.evidenceId(s"relation:${allocator.key(line.role)}:${line.ref.rank}:$index:${witness.kind}"),
                 witness = witness,
-                position = rootRef,
+                position = position,
                 line = Some(line.ref),
                 scope = line.role.scope,
                 confidence = EvidenceConfidence.LegalReplayVerified

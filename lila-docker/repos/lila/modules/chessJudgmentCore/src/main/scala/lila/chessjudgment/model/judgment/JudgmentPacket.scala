@@ -1672,6 +1672,7 @@ case class MoveMeaningClaim(
     structuralMotifTags: List[String] = Nil,
     specificityTier: PositionPlanTechniqueSpecificityTier = PositionPlanTechniqueSpecificityTier.ContextOnly,
     terminalConsequenceKinds: List[String] = Nil,
+    proofLineConsequences: List[LineConsequenceKind] = Nil,
     proofRelationKinds: List[RelationFactKind] = Nil,
     proofRelationDetails: List[String] = Nil,
     proofThreatDrivers: List[String] = Nil,
@@ -3141,7 +3142,7 @@ object MoveMeaningSurface:
       claim.proofRelationKinds.nonEmpty &&
       (
         claim.terminalConsequenceKinds.contains("MaterialGain") ||
-          claim.proofThreatDrivers.exists(_.equalsIgnoreCase("MateThreat")) ||
+          claim.proofLineConsequences.contains(LineConsequenceKind.MaterialGain) ||
           claim.boardCarriers.exists(carrier => carrier.role == "target" && materialEventPlanSubjectCarrier(carrier))
       )
 
@@ -4367,6 +4368,7 @@ object MoveMeaningClaim:
       val mergedCauseEvidenceIds = list.flatMap(_.causeEvidenceIds).distinct.sorted
       val mergedSourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted
       val mergedObjectBindingSignatures = list.flatMap(_.objectBindingSignatures).distinct.sorted
+      val mergedProofLineConsequences = list.flatMap(_.proofLineConsequences).distinct.sortBy(_.toString)
       val mergedProofRelationKinds = list.flatMap(_.proofRelationKinds).distinct.sortBy(_.toString)
       val mergedProofRelationDetails = list.flatMap(_.proofRelationDetails).distinct.sorted
       val mergedProofThreatDrivers = list.flatMap(_.proofThreatDrivers).distinct.sorted
@@ -4422,6 +4424,7 @@ object MoveMeaningClaim:
         breakIdentityParts = list.flatMap(_.breakIdentityParts).distinct.sorted,
         breakFiles = list.flatMap(_.breakFiles).distinct.sorted,
         structuralMotifTags = list.flatMap(_.structuralMotifTags).distinct.sorted,
+        proofLineConsequences = mergedProofLineConsequences,
         proofRelationKinds = mergedProofRelationKinds,
         proofRelationDetails = mergedProofRelationDetails,
         proofThreatDrivers = mergedProofThreatDrivers,
@@ -4752,6 +4755,8 @@ object MoveMeaningClaim:
                 else "surface_evidence"
               val proofRelationKinds =
                 roleCompatibleCauseFrames.flatMap(_.proofRelationKinds).distinct.sortBy(_.toString)
+              val proofLineConsequences =
+                roleCompatibleCauseFrames.flatMap(_.proofLineConsequences).distinct.sortBy(_.toString)
               val proofRelationDetails =
                 roleCompatibleCauseFrames.flatMap(_.proofRelationDetails).distinct.sorted
               val proofThreatDrivers =
@@ -4806,6 +4811,7 @@ object MoveMeaningClaim:
                 structuralMotifTags = detail.structuralMotifTags.distinct.sorted,
                 specificityTier = detail.specificityTier,
                 terminalConsequenceKinds = detail.terminalConsequenceKinds.distinct.sorted,
+                proofLineConsequences = proofLineConsequences,
                 proofRelationKinds = proofRelationKinds,
                 proofRelationDetails = proofRelationDetails,
                 proofThreatDrivers = proofThreatDrivers,

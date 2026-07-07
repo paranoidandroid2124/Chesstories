@@ -457,6 +457,16 @@ object NodeLineTransitionAssembler:
               )
             }
           }
+        val threatTransitions =
+          afterThreats.map { case (branch, position) =>
+            TransitionEdgeAssembler.fromMove(
+              role = TransitionEdgeRole.Threat,
+              from = before.node,
+              moveUci = branch.probedMoveUci,
+              to = position.node,
+              allocator = allocator
+            )
+          }
         val context =
           (List(before, afterPlayed) ++ afterReference.toList ++ afterAlternatives.map(_._2) ++ afterThreats.map(_._2))
             .foldLeft(JudgmentAssemblyContext.empty().copy(probeDiagnostics = input.probeDiagnostics)) { (ctx, assembly) =>
@@ -467,7 +477,7 @@ object NodeLineTransitionAssembler:
             ctx.withLine(assembly.node).withEvidence(assembly.evidence)
           }
         val withTransitions =
-          (List(playedTransition) ++ referenceTransition.toList ++ alternativeTransitions).foldLeft(withLines) { (ctx, assembly) =>
+          (List(playedTransition) ++ referenceTransition.toList ++ alternativeTransitions ++ threatTransitions).foldLeft(withLines) { (ctx, assembly) =>
             ctx.withTransition(assembly.edge).withEvidence(assembly.evidence)
           }
         NodeLineTransitionAssembly(input, withTransitions)

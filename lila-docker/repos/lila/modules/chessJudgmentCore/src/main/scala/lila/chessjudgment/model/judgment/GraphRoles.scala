@@ -54,24 +54,28 @@ enum TransitionEdgeRole:
   case Played
   case Reference
   case Alternative
+  case Threat
 
   def lineRole: LineNodeRole =
     this match
       case Played      => LineNodeRole.Played
       case Reference   => LineNodeRole.BestReference
       case Alternative => LineNodeRole.Alternative
+      case Threat      => LineNodeRole.Threat
 
   def scope: EvidenceScope =
     this match
       case Played      => EvidenceScope.PlayedTransition
       case Reference   => EvidenceScope.ReferenceTransition
       case Alternative => EvidenceScope.AlternativeTransition
+      case Threat      => EvidenceScope.ThreatLine
 
   def subject: IdeaSubject =
     this match
       case Played      => IdeaSubject.PlayedMove
       case Reference   => IdeaSubject.ReferenceMove
       case Alternative => IdeaSubject.CandidateLine
+      case Threat      => IdeaSubject.CandidateLine
 
 enum EvidenceLayer:
   case Board
