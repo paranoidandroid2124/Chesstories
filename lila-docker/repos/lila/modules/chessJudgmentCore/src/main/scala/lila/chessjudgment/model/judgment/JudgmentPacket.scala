@@ -2174,24 +2174,22 @@ object MoveMeaningSurface:
         surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
     )
     val normalizedSubjectMove = JudgmentSubjectBinding.normalizeMove(subjectMove).toLowerCase
+    def surfaceHasSubjectMove(surface: MoveMeaningSurface): Boolean =
+      surface.evidence.boardCarriers.exists(carrier =>
+        carrier.role == "actor" &&
+          carrier.kind == "Move" &&
+          JudgmentSubjectBinding.normalizeMove(carrier.value).toLowerCase == normalizedSubjectMove
+      )
     val directPieceRouteCarrier = subject == "played_move" && evidenceSurfaces.exists { surface =>
       surface.idea.code == "piece_route" &&
         surface.evidence.proofLevel == "surface_evidence" &&
-        (
-          surface.evidence.sourceIds.exists(_.contains("structural-delta"))
-        ) &&
-        surface.evidence.boardCarriers.exists(carrier =>
-          carrier.role == "actor" &&
-            carrier.kind == "Move" &&
-            JudgmentSubjectBinding.normalizeMove(carrier.value).toLowerCase == normalizedSubjectMove
-        ) &&
+        surfaceHasSubjectMove(surface) &&
         surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Piece") &&
         surface.evidence.boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "Square")
     }
     val directStructuralCarrier = evidenceSurfaces.exists { surface =>
       val carriers = surface.evidence.boardCarriers
-      surface.evidence.sourceIds.exists(_.contains("structural-delta")) &&
-        carriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove) &&
+      surfaceHasSubjectMove(surface) &&
         carriers.exists(carrier =>
           carrier.role == "target" &&
             (carrier.kind == "Pawn" || (carrier.kind == "PlanSubject" && carrier.value.startsWith("passed-pawn")))
