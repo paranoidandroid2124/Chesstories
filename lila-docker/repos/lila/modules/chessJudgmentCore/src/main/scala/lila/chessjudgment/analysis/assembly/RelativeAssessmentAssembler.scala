@@ -911,7 +911,12 @@ object RelativeAssessmentAssembler:
             .flatMap(signal => graph.byId.get(signal.source.id))
             .collect { case record @ EvidenceRecord(_, _: StructuralDeltaEvidence, _) => record }
       }.flatten
-    (records ++ mechanismParents ++ strategicStructuralParents).distinctBy(_.ref.id)
+    val relationLineParents =
+      records.collect {
+        case record @ EvidenceRecord(_, payload: RelationFactEvidence, _) if payload.hasConcreteRelationProof =>
+          parentClosure(graph, record).filter(_.ref.layer == EvidenceLayer.Line)
+      }.flatten
+    (records ++ mechanismParents ++ strategicStructuralParents ++ relationLineParents).distinctBy(_.ref.id)
 
   private def proofSectionRecordIds(graph: TypedEvidenceGraph, records: List[EvidenceRecord]): Set[String] =
     proofSectionRecords(graph, records).map(_.ref.id).toSet
@@ -961,7 +966,7 @@ object RelativeAssessmentAssembler:
           tacticalMechanismDirectlyOwnsRoot(graph, record, rootMove)
       case payload: RelationFactEvidence =>
         payload.hasConcreteRelationProof &&
-          record.referencesLine(binding.eventLine) &&
+          relationReferencesEventLine(record, payload, binding.eventLine) &&
           relationCanDirectlyProveCause(kind, payload)
       case payload: ThreatEpisodeEvidence =>
         defensiveCause(kind) &&
@@ -1059,7 +1064,9 @@ object RelativeAssessmentAssembler:
             case EvidenceRecord(_, line: LineFactEvidence, _) =>
               lineFactDirectlyOwnsCause(TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss = false, playedCandidate = false), line, rootMove)
             case EvidenceRecord(_, relation: RelationFactEvidence, _) =>
-              relation.hasConcreteRelationProof && record.ref.line.exists(_.rootMove == rootMove)
+              relation.hasConcreteRelationProof &&
+                (record.ref.line.exists(line => normalizeMove(line.rootMove) == normalizeMove(rootMove)) ||
+                  relation.mentionsLineMove(rootMove))
             case EvidenceRecord(_, threat: ThreatEpisodeEvidence, _) =>
               threat.isProofSignalDefensivePressure &&
                 threat.onlyDefense.exists(move => normalizeMove(move) == normalizeMove(rootMove))
@@ -1289,12 +1296,26 @@ object RelativeAssessmentAssembler:
         payload.moveUci.exists(move => normalizeMove(move) == normalizeMove(rootMove))
       case payload: StructuralDeltaEvidence =>
         normalizeMove(payload.moveUci) == normalizeMove(rootMove)
-      case _: RelationFactEvidence | _: StrategicMechanismEvidence | _: StrategicMechanismContrastEvidence |
-          _: ThreatEpisodeEvidence =>
+      case payload: RelationFactEvidence =>
+        payload.mentionsLineMove(rootMove) ||
+          record.ref.line.exists(line => normalizeMove(line.rootMove) == normalizeMove(rootMove)) ||
+          record.payloadLineRefs.exists(line => normalizeMove(line.rootMove) == normalizeMove(rootMove))
+      case _: StrategicMechanismEvidence | _: StrategicMechanismContrastEvidence | _: ThreatEpisodeEvidence =>
         record.ref.line.exists(line => normalizeMove(line.rootMove) == normalizeMove(rootMove)) ||
           record.payloadLineRefs.exists(line => normalizeMove(line.rootMove) == normalizeMove(rootMove))
       case _ =>
         false
+
+  private def relationReferencesEventLine(
+      record: EvidenceRecord,
+      payload: RelationFactEvidence,
+      eventLine: LineNodeRef
+  ): Boolean =
+    record.referencesLine(eventLine) ||
+      (
+        payload.mentionsLineMove(eventLine.rootMove) &&
+          TransitionEdgeRole.fromScope(record.ref.scope).exists(_.lineRole == eventLine.role)
+      )
 
   private def normalizeMove(raw: String): String =
     Option(raw).getOrElse("").trim.toLowerCase

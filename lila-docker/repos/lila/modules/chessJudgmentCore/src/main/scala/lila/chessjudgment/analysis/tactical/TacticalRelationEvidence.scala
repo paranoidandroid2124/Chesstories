@@ -662,6 +662,17 @@ private[chessjudgment] object TacticalRelationEvidence:
       movingSide = first.move.piece.color
       targetSet = relationTargetSquares(first.after.board, movingSide, targetHints).toSet
       witness <- pinAfterMove(first.after.board, movingSide, first.move.dest, first.move.piece.role, targetSet)
+        .orElse(
+          attackedPinnedPieceAfterMove(
+            before = first.before.board,
+            after = first.after.board,
+            movingSide = movingSide,
+            movedFrom = first.move.orig,
+            movedTo = first.move.dest,
+            movedRole = first.move.piece.role,
+            targetSet = targetSet
+          )
+        )
     yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
 
   def skewerWitness(
@@ -1548,6 +1559,71 @@ private[chessjudgment] object TacticalRelationEvidence:
           )
       }.headOption
     }
+
+  private def attackedPinnedPieceAfterMove(
+      before: Board,
+      after: Board,
+      movingSide: Color,
+      movedFrom: Square,
+      movedTo: Square,
+      movedRole: Role,
+      targetSet: Set[Square]
+  ): Option[RelationWitness] =
+    val newTargets =
+      (roleAttacks(movedRole, movedTo, movingSide, after.occupied) & after.byColor(!movingSide)).squares.toList
+        .filter(targetSet.contains)
+        .filter(target =>
+          after.attackers(target, movingSide).exists(_ == movedTo) &&
+            !before.attackers(target, movingSide).exists(_ == movedFrom) &&
+            after.attackers(target, movingSide).count > before.attackers(target, movingSide).count &&
+            after.attackers(target, movingSide).count >= 2
+        )
+    newTargets.flatMap(target => existingPinOnTarget(after, movingSide, movedTo, target, targetSet)).headOption
+
+  private def existingPinOnTarget(
+      board: Board,
+      movingSide: Color,
+      pressureSquare: Square,
+      pinned: Square,
+      targetSet: Set[Square]
+  ): Option[RelationWitness] =
+    board.pieceAt(pinned).filter(piece => piece.color != movingSide && piece.role != King).toList.flatMap { pinnedPiece =>
+      board
+        .attackers(pinned, movingSide)
+        .squares
+        .toList
+        .filterNot(_ == pressureSquare)
+        .flatMap { pinner =>
+          board.roleAt(pinner).filter(isLongRangeRole).toList.flatMap { pinnerRole =>
+            rayStep(pinner, pinned).toList.flatMap { case (fileStep, rankStep) =>
+              for
+                behind <- firstOccupiedOnRay(board, pinned, fileStep, rankStep)
+                behindPiece <- board.pieceAt(behind)
+                if behindPiece.color == pinnedPiece.color
+                if behindPiece.role == King || MaterialValue.tacticalValueCp(behindPiece.role) > MaterialValue.tacticalValueCp(pinnedPiece.role)
+                if targetSet.contains(pinned) || targetSet.contains(behind)
+                target = if targetSet.contains(pinned) then pinned else behind
+              yield
+                RelationWitness(
+                  kind = RelationKind.Pin,
+                  focusSquares = List(pressureSquare.key, pinner.key, pinned.key, behind.key),
+                  lineMoves = Nil,
+                  targetSquare = Some(target.key),
+                  details = RelationDetails.Pin(
+                    attackerSquare = pinner.key,
+                    pinnedSquare = pinned.key,
+                    behindSquare = behind.key,
+                    targetSquare = target.key,
+                    attackerRole = pinnerRole.name,
+                    pinnedRole = pinnedPiece.role.name,
+                    behindRole = behindPiece.role.name,
+                    absolute = behindPiece.role == King
+                  )
+                )
+            }
+          }
+        }
+    }.headOption
 
   private def skewerAfterMove(
       board: Board,

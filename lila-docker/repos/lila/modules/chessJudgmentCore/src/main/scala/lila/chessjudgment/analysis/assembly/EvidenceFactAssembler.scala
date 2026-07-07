@@ -7,7 +7,7 @@ import lila.chessjudgment.analysis.evaluation.{ EvaluationPerspectivePolicy, Per
 import lila.chessjudgment.analysis.move.{ MoveAnalyzer, MoveMotifNormalizer }
 import lila.chessjudgment.analysis.opening.OpeningContextFactNormalizer
 import lila.chessjudgment.analysis.plan.{ PlanInteractionContext, PlanMatcher }
-import lila.chessjudgment.analysis.singlePosition.{ PawnPlayAssessor, PawnPlayDriver, PvLine, ThreatAnalysis, ThreatPressureAssessor }
+import lila.chessjudgment.analysis.singlePosition.{ PawnPlayAssessor, PawnPlayDriver, PvLine, ThreatAnalysis, ThreatDriver, ThreatPressureAssessor }
 import lila.chessjudgment.analysis.strategic.StrategicFactNormalizer
 import lila.chessjudgment.analysis.structure.{
   PawnStructureAssessor,
@@ -479,7 +479,7 @@ object EvidenceFactAssembler:
     }
 
   private def tacticalMechanismCandidates(records: List[EvidenceRecord]): List[TacticalMechanismCandidate] =
-    val entries =
+    val baseEntries =
       records.flatMap(record =>
         record.payload match
           case payload: MoveMotifEvidence =>
@@ -529,7 +529,87 @@ object EvidenceFactAssembler:
           case _ =>
             Nil
       )
-    entries
+    val relationDrivenConsequenceKinds = Set(
+      RelationFactKind.DefenderTrade,
+      RelationFactKind.Overload,
+      RelationFactKind.Deflection,
+      RelationFactKind.DiscoveredAttack,
+      RelationFactKind.DoubleCheck,
+      RelationFactKind.BackRankMate,
+      RelationFactKind.MateNet,
+      RelationFactKind.Fork,
+      RelationFactKind.Decoy,
+      RelationFactKind.Interference,
+      RelationFactKind.Clearance,
+      RelationFactKind.XRay,
+      RelationFactKind.Battery,
+      RelationFactKind.Pin,
+      RelationFactKind.Skewer,
+      RelationFactKind.GreekGift
+    )
+    val relationRecords = records.collect {
+      case record @ EvidenceRecord(_, payload: RelationFactEvidence, _)
+          if payload.hasConcreteRelationProof && payload.hasLineProof && relationDrivenConsequenceKinds.contains(payload.kind) =>
+        record -> payload
+    }
+    val lineConsequenceRecords = records.collect { case record @ EvidenceRecord(_, payload: LineFactEvidence, _) =>
+      payload.proofSignalConsequences.flatMap { consequence =>
+        val consequenceMoves = consequence.eventMove.toList ++ consequence.lineMoves
+        val consequenceCaptureSquares =
+          payload.materialCaptures
+            .filter(capture => consequenceMoves.exists(EvidenceRef.sameMove(_, capture.moveUci)))
+            .map(_.square)
+        TacticalMechanismKind
+          .fromLineConsequence(consequence.kind)
+          .filter(kind => kind == TacticalMechanismKind.KingForcing || kind == TacticalMechanismKind.MaterialGain)
+          .map(kind => (record, consequence, kind, consequenceMoves, consequenceCaptureSquares))
+      }
+    }.flatten
+    val mateThreatRecords = records.collect {
+      case record @ EvidenceRecord(_, payload: ThreatEpisodeEvidence, _)
+          if payload.episode.driver == ThreatDriver.MateThreat &&
+            payload.episode.hasConcreteThreatProof &&
+            (payload.defenseRequired || payload.episode.immediate) =>
+        record -> payload
+    }
+    val relationConsequenceEntries =
+      relationRecords.flatMap { case (relationRecord, relation) =>
+        lineConsequenceRecords.collect {
+          case (lineRecord, consequence, mechanismKind, consequenceMoves, consequenceCaptureSquares)
+              if relationRecord.ref.line.exists(lineRecord.referencesLine) &&
+                (
+                  consequenceMoves.exists(relation.mentionsLineMove) ||
+                    consequenceCaptureSquares.exists(square => relation.targetSquare.contains(square) || relation.focusSquares.contains(square)) ||
+                    (mechanismKind == TacticalMechanismKind.KingForcing &&
+                      TacticalMechanismKind.fromRelation(relation.kind) == TacticalMechanismKind.KingForcing)
+                ) =>
+            TacticalMechanismCandidate(
+              mechanismKind,
+              List(relationRecord, lineRecord),
+              List(
+                TacticalMechanismSignal(TacticalMechanismSignalKind.Relation, relation.kind.toString, EvidenceLayer.Relation, Some(relationRecord.ref)),
+                TacticalMechanismSignal(TacticalMechanismSignalKind.LineConsequence, consequence.kind.toString, EvidenceLayer.Line, Some(lineRecord.ref))
+              )
+            )
+        }
+      }
+    val mateThreatMaterialEntries =
+      mateThreatRecords.flatMap { case (threatRecord, threat) =>
+        lineConsequenceRecords.collect {
+          case (lineRecord, consequence, TacticalMechanismKind.MaterialGain, _, _)
+              if consequence.kind == LineConsequenceKind.MaterialGain &&
+                threatRecord.ref.line.exists(lineRecord.referencesLine) =>
+            TacticalMechanismCandidate(
+              TacticalMechanismKind.MaterialGain,
+              List(threatRecord, lineRecord),
+              List(
+                TacticalMechanismSignal(TacticalMechanismSignalKind.ThreatEpisode, threat.episode.episodeId, EvidenceLayer.ThreatPressure, Some(threatRecord.ref)),
+                TacticalMechanismSignal(TacticalMechanismSignalKind.LineConsequence, consequence.kind.toString, EvidenceLayer.Line, Some(lineRecord.ref))
+              )
+            )
+        }
+      }
+    (baseEntries ++ relationConsequenceEntries ++ mateThreatMaterialEntries)
       .groupBy(_.kind)
       .toList
       .map { case (kind, grouped) =>
