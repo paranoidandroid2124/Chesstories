@@ -716,6 +716,7 @@ object PositionPlanTechniqueProjection:
       sections
         .flatMap(_.lineConsequences)
         .filter(proof => LineConsequenceKind.terminalResultProof(proof.kind))
+        .filter(proof => tacticalCauseTerminalDetailAllowed(cause, proof.kind))
         .map(proof =>
           PositionPlanTechniqueSemanticDetail(
             unit = PositionPlanTechniqueUnit.StructuralTransformation,
@@ -771,6 +772,13 @@ object PositionPlanTechniqueProjection:
       RelativeCauseKind.DefensiveResource,
       RelativeCauseKind.DrawResource
     ).contains(cause.kind)
+
+  private def tacticalCauseTerminalDetailAllowed(
+      cause: RelativeCauseFact,
+      kind: LineConsequenceKind
+  ): Boolean =
+    kind != LineConsequenceKind.MaterialLoss ||
+      cause.attribution.kind == CauseAttributionKind.CandidateAllowsLiability
 
   private def tacticalCauseAxisPolarity(cause: RelativeCauseFact): StrategicAxisPolarity =
     cause.attribution.kind match
