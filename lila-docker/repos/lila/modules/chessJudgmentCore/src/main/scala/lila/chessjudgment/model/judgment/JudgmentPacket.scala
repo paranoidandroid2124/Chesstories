@@ -2554,9 +2554,11 @@ object MoveMeaningSurface:
       mechanismTokens.contains("mechanism:mobilitygain") ||
         consequenceTokens.contains("consequence:mobilitygain:gain")
     val defenderMoveActorPieces =
-      signatureList
-        .filter(_.toLowerCase.contains("mechanism=mechanism:defendermove"))
-        .flatMap(signature => EvidenceObjectBinding.signatureValues(List(signature), "actor", "Piece"))
+      Option
+        .when(idea == "defensive_resource")(claim.boardCarriers)
+        .toList
+        .flatten
+        .collect { case carrier if carrier.role == "actor" && carrier.kind == "Piece" => carrier.value }
         .map(_.toLowerCase)
         .distinct
     val lineUnlockSignatures =
@@ -4694,26 +4696,13 @@ object MoveMeaningClaim:
                 claimBreakFiles.map(file => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"break-file:$file"))
               val planPawnAdvanceCarriers =
                 planPawnAdvanceIdentityCarriers(detail, surfaceObjectSignatures, claimMove, frame.position.fen)
-              val pressureIdentityCarriers =
-                mechanismSquareIdentityCarriers(detail, "battery-pressure", batteryPressureSignature) ++
-                  mechanismSquareIdentityCarriers(detail, "pin-pressure", pinPressureSignature)
               val kingPressureIdentityCarrier =
                 surfaceObjectSignatures.exists(kingPressureObjectSignature)
               val checkIdentityCarriers =
-                if pressureIdentityCarriers.nonEmpty || kingPressureIdentityCarrier then Nil
+                if kingPressureIdentityCarrier then Nil
                 else checkIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove)
-              val defenderMoveActorCarriers =
-                surfaceObjectSignatures
-                  .filter(_.toLowerCase.contains("mechanism=mechanism:defendermove"))
-                  .flatMap(signature => EvidenceObjectBinding.signatureValues(List(signature), "actor", "Piece"))
-                  .distinct
-                  .sorted
-                  .flatMap(piece => publicPieceCarrier("actor", piece))
               val spareIdentityCarriers =
-                lineUnlockIdentityCarriers(detail) ++
-                  pressureIdentityCarriers ++
-                  checkIdentityCarriers ++
-                  defenderMoveActorCarriers ++
+                checkIdentityCarriers ++
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
                   passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
                   materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove, detail, verdict) ++
@@ -4722,7 +4711,6 @@ object MoveMeaningClaim:
               val claimBoardCarriers =
                 (
                   baseClaimBoardCarriers.filter(carrier => carrier.role == "actor" && carrier.kind == "Move") ++
-                    defenderMoveActorCarriers ++
                     relationProofBoardCarriers ++
                     breakFileIdentityCarriers ++
                     (baseClaimBoardCarriers ++ spareIdentityCarriers).distinct.sortBy(boardCarrierSortKey)
@@ -5164,54 +5152,8 @@ object MoveMeaningClaim:
         ((toValue > fromValue && toValue >= 4) || (toValue < fromValue && toValue <= 5))
     }
 
-  private def lineUnlockIdentityCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
-    detail.objectBindingSignatures
-      .filter(lineUnlockSignature)
-      .flatMap(signature => EvidenceObjectBinding.signatureTokens(List(signature), "target=Square:"))
-      .toList
-      .flatMap(token => claimSquare(token.stripPrefix("target=Square:")))
-      .distinct
-      .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"opened-line:$square"))
-
-  private def mechanismSquareIdentityCarriers(
-      detail: PositionPlanTechniqueSemanticDetail,
-      carrierPrefix: String,
-      signatureMatches: String => Boolean
-  ): List[MoveMeaningSurfaceBoardCarrier] =
-    detail.objectBindingSignatures
-      .filter(signatureMatches)
-      .flatMap { signature =>
-        val squares =
-          EvidenceObjectBinding
-            .signatureTokens(List(signature), "target=Square:")
-            .toList
-            .flatMap(token => claimSquare(token.stripPrefix("target=Square:")))
-            .distinct
-            .sorted
-        Option.when(squares.nonEmpty)(
-          MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"$carrierPrefix:${squares.mkString("-")}")
-        )
-      }
-      .distinct
-
   private def lineUnlockDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.objectBindingSignatures.exists(signature => signature.toLowerCase.contains("lineunlock") || signature.toLowerCase.contains("line-unlock"))
-
-  private def lineUnlockSignature(signature: String): Boolean =
-    val normalized = signature.toLowerCase
-    normalized.contains("mechanism=mechanism:lineunlock") ||
-      normalized.contains("mechanism=mechanism:line-unlock") ||
-      normalized.contains("consequence=consequence:lineunlock")
-
-  private def batteryPressureSignature(signature: String): Boolean =
-    val normalized = signature.toLowerCase
-    normalized.contains("mechanism=mechanism:batterypressure") ||
-      normalized.contains("consequence=consequence:batterypressure")
-
-  private def pinPressureSignature(signature: String): Boolean =
-    val normalized = signature.toLowerCase
-    normalized.contains("mechanism=mechanism:pinpressure") ||
-      normalized.contains("consequence=consequence:pinpressure")
 
   private def sameFileMoveFile(move: String): Option[String] =
     moveEndpoints(move).collect { case (from, to) if from.take(1) == to.take(1) => from.take(1) }
