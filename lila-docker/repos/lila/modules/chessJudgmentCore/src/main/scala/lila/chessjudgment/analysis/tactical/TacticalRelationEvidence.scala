@@ -325,7 +325,7 @@ private[chessjudgment] object TacticalRelationEvidence:
       movingSide = first.move.piece.color
       targetSquares = relationTargetSquares(first.after.board, movingSide, targetHints)
       witness <- overloadedDefender(first.before.board, first.after.board, movingSide, first.move.dest, targetSquares)
-    yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
+    yield witness.copy(lineMoves = relationPayoffUcis(replay, witnessTargetKeys(witness)))
 
   def deflectionWitness(
       replay: List[BoundedReplayStep],
@@ -348,11 +348,12 @@ private[chessjudgment] object TacticalRelationEvidence:
             !reply.after.board.attackers(target, defender.color).exists(_ == defenderSquare) &&
             reply.after.board.attackers(target, defender.color).count < first.before.board.attackers(target, defender.color).count
         )
+      payoffLine = relationPayoffUcis(replay, List(target.key, defenderSquare.key))
     yield
       RelationWitness(
         kind = RelationKind.Deflection,
         focusSquares = List(target.key, defenderSquare.key, first.move.dest.key),
-        lineMoves = replayUcis(replay, 0, 2),
+        lineMoves = if payoffLine.size > 1 then payoffLine else replayUcis(replay, 0, 2),
         targetSquare = Some(target.key),
         details = RelationDetails.Deflection(
           defenderSquare = defenderSquare.key,
@@ -628,7 +629,7 @@ private[chessjudgment] object TacticalRelationEvidence:
       movingSide = first.move.piece.color
       targetSet = relationTargetSquares(first.after.board, movingSide, targetHints).toSet
       witness <- clearanceAfterMove(first.before.board, first.after.board, movingSide, first.move.orig, first.move.dest, targetSet)
-    yield witness.copy(lineMoves = relationPayoffUcis(replay, witness.targetSquare))
+    yield witness.copy(lineMoves = relationPayoffUcis(replay, witness.targetSquare.toList))
 
   def batteryWitness(
       replay: List[BoundedReplayStep],
@@ -673,7 +674,7 @@ private[chessjudgment] object TacticalRelationEvidence:
             targetSet = targetSet
           )
         )
-    yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
+    yield witness.copy(lineMoves = relationPayoffUcis(replay, witnessTargetKeys(witness)))
 
   def skewerWitness(
       replay: List[BoundedReplayStep],
@@ -706,7 +707,7 @@ private[chessjudgment] object TacticalRelationEvidence:
         blockerRole = first.move.piece.role,
         targetSet = targetSet
       )
-    yield witness.copy(lineMoves = relationPayoffUcis(replay, witness.targetSquare))
+    yield witness.copy(lineMoves = relationPayoffUcis(replay, witness.targetSquare.toList))
 
   def decoyWitness(
       replay: List[BoundedReplayStep],
@@ -957,12 +958,12 @@ private[chessjudgment] object TacticalRelationEvidence:
 
   private def relationPayoffUcis(
       replay: List[BoundedReplayStep],
-      targetSquare: Option[String],
+      targetSquares: List[String],
       maxPlies: Int = 3
   ): List[String] =
     val root = replayUcis(replay, 0, 1)
     val movingSide = replay.headOption.map(_.move.piece.color)
-    val target = targetSquare.flatMap(squareFromKey)
+    val targets = targetSquares.flatMap(squareFromKey).toSet
     replay
       .take(maxPlies)
       .zipWithIndex
@@ -970,7 +971,7 @@ private[chessjudgment] object TacticalRelationEvidence:
         case (step, index)
             if index > 0 &&
               movingSide.contains(step.move.piece.color) &&
-              (step.after.check.yes || target.exists(square => step.move.dest == square && step.move.captures)) =>
+              (step.after.check.yes || (step.move.captures && targets.contains(step.move.dest))) =>
           replayUcis(replay, 0, index + 1)
       }
       .getOrElse(root)
