@@ -2316,7 +2316,7 @@ object MoveMeaningSurface:
       carrier.role == "bait" ||
       carrier.role == "lured"
 
-  private def publicIdeaChainConsequenceCarrierSortKey(carrier: MoveMeaningSurfaceBoardCarrier): (Int, String, String) =
+  private def publicIdeaChainConsequenceCarrierSortKey(carrier: MoveMeaningSurfaceBoardCarrier): (Int, Int, String, String) =
     val value = carrier.value.toLowerCase
     val rank =
       if carrier.kind == "PlanSubject" &&
@@ -2331,7 +2331,12 @@ object MoveMeaningSurface:
       else if carrier.kind == "Square" || carrier.kind == "File" then 2
       else if carrier.kind == "PlanSubject" then 3
       else 4
-    (rank, carrier.kind, carrier.value)
+    val roleRank =
+      carrier.role match
+        case "attacker" | "defender" | "blocker" | "beneficiary" | "king" | "mover" | "bait" | "lured" => 0
+        case "target"                                                                                   => 1
+        case _                                                                                          => 2
+    (rank, roleRank, carrier.kind, carrier.value)
 
   private def publicIdeaChainCarrierPairs(
       surfaces: List[MoveMeaningSurface]

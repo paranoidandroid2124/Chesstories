@@ -231,13 +231,13 @@ object RelationFactNormalizer:
       case DefenderTrade(defenderSquare, exchangeSquare, targetSquare) =>
         List(
           part(defenderSquare, RelationParticipantRole.Defender),
-          part(exchangeSquare, RelationParticipantRole.Other),
+          part(exchangeSquare, RelationParticipantRole.Mover),
           part(targetSquare, RelationParticipantRole.Target)
         )
       case BadPieceLiquidation(badPieceSquare, exchangeSquare) =>
         List(
           part(badPieceSquare, RelationParticipantRole.Target),
-          part(exchangeSquare, RelationParticipantRole.Other)
+          part(exchangeSquare, RelationParticipantRole.Mover)
         )
       case Overload(defenderSquare, targetSquares, attackerSquare) =>
         part(defenderSquare, RelationParticipantRole.Defender) ::
