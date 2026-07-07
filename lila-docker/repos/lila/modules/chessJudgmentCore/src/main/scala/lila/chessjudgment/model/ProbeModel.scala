@@ -17,6 +17,8 @@ object ProbePurpose:
   private val byKey = ProbePurpose.values.map(p => p.key -> p).toMap
   def fromKey(key: String): Option[ProbePurpose] =
     Option(key).map(_.trim).filter(_.nonEmpty).flatMap(byKey.get)
+  def isBranchReply(purpose: ProbePurpose): Boolean =
+    purpose == ProbePurpose.ReplyMultipv
 
   given Reads[ProbePurpose] = Reads:
     case JsString(raw) =>
@@ -137,10 +139,6 @@ object ProbeContractValidator:
       softReasonCodes: List[String] = Nil
   )
 
-  private val branchPurposes = Set(
-    ProbePurpose.ReplyMultipv
-  )
-
   def validateAgainstRequest(
       request: ProbeRequest,
       result: ProbeResult
@@ -205,7 +203,7 @@ object ProbeContractValidator:
     val scoredReplyLineCount =
       result.replyLines.map(_.count(line => line.moves.nonEmpty && line.depth > 0)).getOrElse(0)
     val replyMultiPvIncomplete =
-      request.purpose.exists(branchPurposes.contains) &&
+      request.purpose.exists(ProbePurpose.isBranchReply) &&
         request.multiPv.exists(required => scoredReplyLineCount < required)
     val hardReasonBuilder = List.newBuilder[String]
     if fenMissing then hardReasonBuilder += "FEN_UNVERIFIED"
@@ -276,7 +274,7 @@ object ProbeContractValidator:
       )
 
   private def purposeRequiredSignals(purpose: ProbePurpose): Set[String] =
-    if branchPurposes.contains(purpose) then Set("replyLines") else Set.empty[String]
+    if ProbePurpose.isBranchReply(purpose) then Set("replyLines") else Set.empty[String]
 
   private def hasSignal(signal: String, result: ProbeResult): Boolean =
     signal match

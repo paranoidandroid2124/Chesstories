@@ -1405,7 +1405,7 @@ object JudgmentPacketValidator:
     val requiredSignalsValid = request.requiredSignals.exists(_.trim.nonEmpty)
     val movesValid = request.moves.forall(validUciMove)
     val branchValid =
-      request.purpose.filter(branchReplyProbePurpose).forall(_ => validBranchReplyProbeRequest(request))
+      request.purpose.filter(ProbePurpose.isBranchReply).forall(_ => validBranchReplyProbeRequest(request))
     idValid && fenValid && depthValid && purposeValid && requiredSignalsValid && movesValid && branchValid
 
   private def validBranchReplyProbeRequest(request: ProbeRequest): Boolean =
@@ -1415,11 +1415,6 @@ object JudgmentPacketValidator:
       request.multiPv.exists(_ >= 2) &&
       request.depthFloor.exists(floor => floor > 0 && floor <= request.depth) &&
       request.variationHash.exists(_.trim.nonEmpty)
-
-  private def branchReplyProbePurpose(purpose: ProbePurpose): Boolean =
-    purpose match
-      case ProbePurpose.ReplyMultipv => true
-      case _                         => false
 
   private def validUciMove(raw: String): Boolean =
     Option(raw).map(_.trim.toLowerCase).exists(_.matches("""[a-h][1-8][a-h][1-8][nbrq]?"""))

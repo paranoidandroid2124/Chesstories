@@ -2841,7 +2841,7 @@ object MoveReviewPhase3AuditRunner:
       )
 
   private def branchReplyProbeLifecycle(result: MoveReviewJudgmentResult): JsObject =
-    val requests = result.packet.probeRequests.filter(request => request.purpose.exists(branchReplyProbePurpose))
+    val requests = result.packet.probeRequests.filter(request => request.purpose.exists(ProbePurpose.isBranchReply))
     val diagnostics = result.packet.probeDiagnostics
     val diagnosedIds = diagnostics.map(_.probeId).toSet
     val pending = requests.filterNot(request => diagnosedIds.contains(request.id))
@@ -2856,11 +2856,6 @@ object MoveReviewPhase3AuditRunner:
       "rejectedProbeIds" -> diagnostics.filter(_.status == lila.chessjudgment.model.ProbeAdmissionStatus.Rejected).map(_.probeId),
       "ignoredProbeIds" -> diagnostics.filter(_.status == lila.chessjudgment.model.ProbeAdmissionStatus.Ignored).map(_.probeId)
     )
-
-  private def branchReplyProbePurpose(purpose: ProbePurpose): Boolean =
-    purpose match
-      case ProbePurpose.ReplyMultipv => true
-      case _                         => false
 
   private def evidenceRefSummary(ref: EvidenceRef): JsObject =
     Json.obj(

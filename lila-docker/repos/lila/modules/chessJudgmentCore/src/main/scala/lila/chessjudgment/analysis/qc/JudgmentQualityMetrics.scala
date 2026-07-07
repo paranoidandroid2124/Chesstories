@@ -3602,7 +3602,7 @@ object SemanticCoverageMetrics:
     val secondaryContextWithoutPrimaryCoverageIds =
       if primaryPlayedCovered then Nil else secondaryContextIds
     val branchReplyProbeRequests =
-      packet.probeRequests.filter(request => request.purpose.exists(branchReplyProbePurpose))
+      packet.probeRequests.filter(request => request.purpose.exists(ProbePurpose.isBranchReply))
     val planTransitionWithoutSnapshotPairIds =
       packet.evidenceGraph.records.collect {
         case EvidenceRecord(ref, PlanTransitionEvidence(transition), _) if transition.transitionType == TransitionType.Opening =>
@@ -3746,11 +3746,6 @@ object SemanticCoverageMetrics:
         case _                                               => false
       }
     )
-
-  private def branchReplyProbePurpose(purpose: ProbePurpose): Boolean =
-    purpose match
-      case ProbePurpose.ReplyMultipv => true
-      case _                         => false
 
   private def countIdeas(packet: EvidenceBackedJudgmentPacket, family: ChessIdeaFamily): Int =
     packet.ideas.count(_.ref.family == family)

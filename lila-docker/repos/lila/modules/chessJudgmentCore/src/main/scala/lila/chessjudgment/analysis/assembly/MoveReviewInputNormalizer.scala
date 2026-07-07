@@ -90,10 +90,6 @@ final case class NormalizedMoveReviewInput(
 
 object MoveReviewInputNormalizer:
 
-  private val BranchReplyPurposes: Set[ProbePurpose] = Set(
-    ProbePurpose.ReplyMultipv
-  )
-
   def normalize(
       raw: RawMoveReviewInput,
       recognitionIndex: OpeningRecognitionIndex = OpeningRecognitionIndex.default,
@@ -297,7 +293,7 @@ object MoveReviewInputNormalizer:
       rootLines: List[NormalizedCandidateLine],
       probe: ProbeResult
   ): Either[ProbeAdmissionDiagnostic, ThreatBranchSeed] =
-    probe.purpose.filter(BranchReplyPurposes) match
+    probe.purpose.filter(ProbePurpose.isBranchReply) match
       case None =>
         Left(
           probeDiagnostic(
