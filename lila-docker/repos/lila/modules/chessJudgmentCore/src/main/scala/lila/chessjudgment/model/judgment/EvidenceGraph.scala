@@ -842,7 +842,6 @@ object EvidenceObjectBinding:
         }
       case None if cleaned.matches("[a-h][1-8]") => identityObject ++ objectOf(EvidenceObjectKind.Square, cleaned)
       case None if cleaned.matches("[a-h]")      => identityObject ++ objectOf(EvidenceObjectKind.File, cleaned)
-      case None if cleaned.contains("pawn")      => identityObject ++ objectOf(EvidenceObjectKind.Pawn, cleaned)
       case None                                  => identityObject ++ objectOf(EvidenceObjectKind.PlanSubject, cleaned)
 
   private def tensionEdgeObjects(raw: String): List[ConcreteChessObject] =
