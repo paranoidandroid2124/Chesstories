@@ -412,8 +412,7 @@ object MoveReviewInputNormalizer:
         horizon = Some("short"),
         candidateMove = Some(probedMove),
         depthFloor = Some(BranchReplyProbeBinding.DepthFloor),
-        variationHash = Some(expectedHash),
-        engineConfigFingerprint = probe.engineConfigFingerprint
+        variationHash = Some(expectedHash)
       )
     ProbeContractValidator.validateAgainstRequest(request, probe)
 

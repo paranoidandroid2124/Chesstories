@@ -124,7 +124,6 @@ object ProbeContractValidator:
     case Valid
     case WeaklyValid
     case Invalid
-    case StaleOrMismatched
 
   case class ValidationResult(
       isValid: Boolean,
