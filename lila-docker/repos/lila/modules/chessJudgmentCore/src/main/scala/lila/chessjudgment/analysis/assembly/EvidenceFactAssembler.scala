@@ -561,7 +561,11 @@ object EvidenceFactAssembler:
             .map(_.square)
         TacticalMechanismKind
           .fromLineConsequence(consequence.kind)
-          .filter(kind => kind == TacticalMechanismKind.KingForcing || kind == TacticalMechanismKind.MaterialGain)
+          .filter(kind =>
+            kind == TacticalMechanismKind.KingForcing ||
+              kind == TacticalMechanismKind.MaterialGain ||
+              kind == TacticalMechanismKind.RecaptureChoice
+          )
           .map(kind => (record, consequence, kind, consequenceMoves, consequenceCaptureSquares))
       }
     }.flatten
