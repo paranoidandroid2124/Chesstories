@@ -2966,11 +2966,11 @@ object MoveMeaningSurface:
         case ("outpost_attempt", _) => outpostLabel
         case ("piece_route", _) if routeLineUnlockClaim(claim) => opensLineLabel
         case ("piece_route", _) if initialDevelopmentRoute => developmentLabel
-        case ("piece_route", label) if routeManeuverClaim(claim, label) => routeManeuverLabel
-        case ("piece_route", label) if routeDevelopmentLabel(label) => routeManeuverLabel
-        case ("piece_activity", label) if routeManeuverClaim(claim, label) => "piece activity lost"
+        case ("piece_route", _) if routeManeuverClaim(claim) => routeManeuverLabel
+        case ("piece_route", _) if routeActivityGainClaim(claim) => routeManeuverLabel
+        case ("piece_activity", _) if routeManeuverClaim(claim) => "piece activity lost"
         case ("piece_activity", _) if initialDevelopmentRoute => developmentLabel
-        case ("piece_activity", label) if routeDevelopmentLabel(label) => "piece activation"
+        case ("piece_activity", _) if routeActivityGainClaim(claim) => "piece activation"
         case _ => ideaLabels.getOrElse(idea, "")
     val qualityOfIdea = ideaQuality(claim, claimSubject, badPlayedMove)
     val surfacePriority = priority(claim, claimSubject)
@@ -3197,15 +3197,29 @@ object MoveMeaningSurface:
   private def routeLineUnlockClaim(claim: MoveMeaningClaim): Boolean =
     claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":line-unlock:by:"))
 
-  private def routeManeuverClaim(claim: MoveMeaningClaim, label: String): Boolean =
-    val normalizedLabel = label.toLowerCase
-    normalizedLabel == "activity-loss" ||
-      normalizedLabel == "mobility-loss" ||
-      (normalizedLabel.isEmpty && claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":maneuver")))
+  private def routeManeuverClaim(claim: MoveMeaningClaim): Boolean =
+    claim.causeKinds.contains(RelativeCauseKind.ActivityLoss) ||
+      (claim.axisKind.contains(StrategicAxisKind.Activity) && claim.axisPolarity.contains(StrategicAxisPolarity.Loss)) ||
+      claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":maneuver")) ||
+      claim.objectBindingSignatures.exists { signature =>
+        val normalized = signature.toLowerCase
+        normalized.contains("mobilityloss") ||
+          normalized.contains("mobility-loss") ||
+          normalized.contains("activityloss") ||
+          normalized.contains("activity-loss")
+      }
 
-  private def routeDevelopmentLabel(label: String): Boolean =
-    val normalized = label.toLowerCase
-    normalized == "activity-gain" || normalized == "mobility-gain" || normalized == "activity"
+  private def routeActivityGainClaim(claim: MoveMeaningClaim): Boolean =
+    claim.causeKinds.contains(RelativeCauseKind.ActivityGain) ||
+      (claim.axisKind.contains(StrategicAxisKind.Activity) && claim.axisPolarity.contains(StrategicAxisPolarity.Gain)) ||
+      claim.objectBindingSignatures.exists { signature =>
+        val normalized = signature.toLowerCase
+        normalized.contains("mobilitygain") ||
+          normalized.contains("mobility-gain") ||
+          normalized.contains("activitygain") ||
+          normalized.contains("activity-gain") ||
+          normalized.contains("developmentmobilitygain")
+      }
 
   private def ownedTensionBreakClaim(claim: MoveMeaningClaim): Boolean =
     claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
