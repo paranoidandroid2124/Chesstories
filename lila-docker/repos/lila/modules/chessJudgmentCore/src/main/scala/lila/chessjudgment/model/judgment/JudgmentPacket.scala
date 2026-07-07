@@ -5722,7 +5722,6 @@ object MoveMeaningClaim:
 
   private def reasonGradeFrameProofReady(frame: MoveJudgmentCauseFrame): Boolean =
     frame.concreteObjectReady ||
-      EvidenceObjectBinding.directProofSpecificTargetReady(frame.objectBindingSignatures) ||
       frame.proofLineConsequences.exists(LineConsequenceKind.terminalResultProof)
 
   private def positiveCurrentMoveReasonRole(

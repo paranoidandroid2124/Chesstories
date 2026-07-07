@@ -207,7 +207,7 @@ object MoveJudgmentCauseNarrativeProjection:
     val lineOwned = frame.attributionDirectProofEligible && frame.attributionRootMoveMatched
     val fallbackKind = fallbackRootKind(frame.causeKind)
     val arbitrationObjectReady =
-      if broadObjectSensitiveRootKind(frame.causeKind) then directProofSpecificTargetReady(frame)
+      if broadObjectSensitiveRootKind(frame.causeKind) then frame.concreteObjectReady
       else rootArbitrationObjectReady(frame)
     val eventKind = tacticalWitnessFrame(frame) && eventRootSelectable(graph, frame)
     val tier =
@@ -226,10 +226,7 @@ object MoveJudgmentCauseNarrativeProjection:
     )
 
   private def rootArbitrationObjectReady(frame: MoveJudgmentCauseFrame): Boolean =
-    frame.concreteObjectReady || directProofSpecificTargetReady(frame)
-
-  private def directProofSpecificTargetReady(frame: MoveJudgmentCauseFrame): Boolean =
-    EvidenceObjectBinding.directProofSpecificTargetReady(frame.objectBindingSignatures)
+    frame.concreteObjectReady
 
   private def arbitrationManagedPrimaryFrame(frame: MoveJudgmentCauseFrame): Boolean =
     frame.role == MoveJudgmentCauseFrameRole.PrimaryCause &&
