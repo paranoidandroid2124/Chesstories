@@ -1127,6 +1127,8 @@ object RelativeAssessmentAssembler:
           payload.kind == RelationFactKind.TrappedPiece ||
           payload.kind == RelationFactKind.Domination ||
           RelativeCauseSignalProfile.relationMaterialPayoffKind(payload.kind)
+      case RelativeCauseKind.TargetPressureGain | RelativeCauseKind.PawnWeaknessTarget =>
+        RelativeCauseSignalProfile.relationMaterialPayoffKind(payload.kind)
       case RelativeCauseKind.ConversionMiss | RelativeCauseKind.ConversionSecured =>
         payload.kind == RelationFactKind.BadPieceLiquidation
       case _ =>

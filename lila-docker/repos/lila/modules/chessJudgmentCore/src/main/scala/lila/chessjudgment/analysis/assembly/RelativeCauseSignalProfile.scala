@@ -398,6 +398,11 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
           (kind == RelativeCauseKind.TargetPressureGain || kind == RelativeCauseKind.PawnWeaknessTarget)
       then RelativeCauseSignalProfile.currentMoveConcreteTargetCarrierRecords(profile.fact.candidateLine, profile.allRecords)
       else Nil
+    val sameRootRelationPayoffs =
+      if exactSameRootConcreteCarrierCause(payload, profile, kind, sourceSide) &&
+          (kind == RelativeCauseKind.TargetPressureGain || kind == RelativeCauseKind.PawnWeaknessTarget)
+      then RelativeCauseSignalProfile.currentMoveRelationPayoffRecords(profile.fact.candidateLine, profile.allRecords)
+      else Nil
     val sameRootPlanCarriers =
       if sourceSide == RelativeCauseSourceSide.Candidate &&
           profile.exactReferenceMove &&
@@ -405,7 +410,15 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
           payload.planComparison.exists(_.hasPlanDelta)
       then RelativeCauseSignalProfile.currentMoveConcretePlanCarrierRecords(profile.fact.candidateLine, profile.allRecords)
       else Nil
-    (record :: sameRootBreakCarriers ++ sameRootActivityCarriers ++ sameRootTargetCarriers ++ sameRootPlanCarriers).distinctBy(_.ref.id)
+    (
+      record ::
+        sameRootBreakCarriers ++
+        sameRootActivityCarriers ++
+        sameRootTargetCarriers ++
+        sameRootRelationPayoffs ++
+        sameRootPlanCarriers
+    )
+      .distinctBy(_.ref.id)
 
   private def exactSameRootConcreteCarrierCause(
       payload: StrategicMechanismContrastEvidence,
@@ -430,6 +443,8 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
     else
       profile.candidateCurrentMoveStrategicSupport.flatMap {
         case record @ EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
+          val relationPayoffs =
+            RelativeCauseSignalProfile.currentMoveRelationPayoffRecords(profile.fact.candidateLine, profile.allRecords)
           val causeKinds =
             currentMoveStrategicSupportCauseKinds(payload, profile.fact.candidateLine, profile.allRecords)
               .filter(kind =>
@@ -455,9 +470,12 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
                     )
               )
           causeKinds.map(kind =>
+            val support =
+              if kind == RelativeCauseKind.TargetPressureGain || kind == RelativeCauseKind.PawnWeaknessTarget then record :: relationPayoffs
+              else List(record)
             RelativeCauseDraft(
               kind,
-              List(record),
+              support,
               Some(RelativeCauseSourceSide.Candidate),
               defaultAttributionKind(kind, Some(RelativeCauseSourceSide.Candidate))
             )
@@ -1185,6 +1203,23 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       records: List[EvidenceRecord]
   ): List[EvidenceRecord] =
     StrategicMechanismContrastEvidence.currentMoveConcreteTargetCarrierRecords(candidateLine, records)
+
+  private[chessjudgment] def currentMoveRelationPayoffRecords(
+      candidateLine: LineNodeRef,
+      records: List[EvidenceRecord]
+  ): List[EvidenceRecord] =
+    records.filter {
+      case record @ EvidenceRecord(_, payload: RelationFactEvidence, _) =>
+        payload.hasConcreteRelationProof &&
+          relationMaterialPayoffKind(payload.kind) &&
+          (
+            record.referencesLine(candidateLine) ||
+              record.ref.line.exists(line => EvidenceRef.sameMove(line.rootMove, candidateLine.rootMove)) ||
+              payload.mentionsLineMove(candidateLine.rootMove)
+          )
+      case _ =>
+        false
+    }.distinctBy(_.ref.id)
 
   private[chessjudgment] def currentMoveConcretePlanCarrierRecords(
       candidateLine: LineNodeRef,
