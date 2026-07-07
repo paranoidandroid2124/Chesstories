@@ -3324,14 +3324,12 @@ object CandidateComparisonDiagnostic:
     records.exists {
       case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
         payload.hasPassedPawnResourceSignal
-      case EvidenceRecord(_, payload: MoveMotifEvidence, _) =>
-        payload.motif match
-          case _: Motif.PassedPawnPush | _: Motif.PassedPawn | _: Motif.PawnPromotion => true
-          case _                                                                      => false
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
         payload.hasProofSignalConsequence(LineConsequenceKind.PromotionRace) ||
           payload.materialOutcomeProfile.gainSignals.contains(LineMaterialOutcomeSignal.PromotionGain) ||
           payload.materialOutcomeProfile.lossSignals.contains(LineMaterialOutcomeSignal.PromotionLoss)
+      case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
+        payload.kind == TacticalMechanismKind.PawnPromotion && payload.canAnchorTacticalIdea
       case _ =>
         false
     }
