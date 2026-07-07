@@ -597,13 +597,7 @@ object EvidenceFactAssembler:
                         threatRecord.ref.position == lineRecord.ref.position
                     )
                 ) &&
-                (
-                  mateThreatMaterialLinked(threat, consequenceMoves, consequenceCaptureSquares) ||
-                    threatRecord.ref.line.exists(threatLine =>
-                      threatLine.role == LineNodeRole.Threat &&
-                        lineRecord.ref.line.exists(line => line.role == LineNodeRole.Threat && line != threatLine)
-                    )
-                ) =>
+                mateThreatMaterialLinked(threat, consequenceMoves, consequenceCaptureSquares) =>
             TacticalMechanismCandidate(
               TacticalMechanismKind.MaterialGain,
               List(threatRecord, lineRecord),
