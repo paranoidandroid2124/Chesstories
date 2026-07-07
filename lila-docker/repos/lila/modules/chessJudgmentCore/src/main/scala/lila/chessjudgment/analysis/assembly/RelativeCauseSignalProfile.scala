@@ -1102,8 +1102,6 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
         payload.materialOutcomeProfile.lossMagnitude != LineMaterialOutcomeMagnitude.None ||
           payload.hasProofSignalConsequence(LineConsequenceKind.MaterialLoss)
-      case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.kind == TacticalMechanismKind.MaterialGain && payload.canAnchorTacticalIdea
       case _ =>
         false
     }.distinctBy(_.ref.id)
