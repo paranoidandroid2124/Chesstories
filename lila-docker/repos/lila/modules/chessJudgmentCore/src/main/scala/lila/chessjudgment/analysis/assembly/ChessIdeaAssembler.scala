@@ -192,7 +192,6 @@ object ChessIdeaAssembler:
     val threatEpisodeIdeas = context.evidenceGraph.records.collect {
       case EvidenceRecord(ref, payload: ThreatEpisodeEvidence, parents)
           if ref.position.sideToMove.forall(_ == payload.sideUnderPressure) &&
-            ref.scope != EvidenceScope.ThreatLine &&
             payload.canAnchorDefensiveResource =>
         val evidence =
           (ref :: parents ++
