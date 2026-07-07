@@ -986,7 +986,8 @@ object RelativeAssessmentAssembler:
         defensiveCause(kind) &&
           payload.isProofSignalDefensivePressure &&
           (
-            record.referencesLine(binding.eventLine) ||
+            threatBranchRecordOwnsRoot(record, rootMove, threatLineOwners) ||
+              record.referencesLine(binding.eventLine) ||
               threatEpisodeOwnsDefensiveCause(payload, kind, rootMove)
           )
       case payload: StructuralDeltaEvidence =>
