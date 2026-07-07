@@ -88,7 +88,7 @@ object RelativeAssessmentAssembler:
           parents = parentsForLine(context, reference) ++ parentsForLine(context, candidate) ++ List(played.evidence)
         )
       val causeRecords =
-        comparisonRecords.flatMap(record => relativeCauseRecords(causeContext, root, allocator, record))
+        comparisonRecords.flatMap(record => relativeCauseRecords(input, causeContext, root, allocator, record))
       val playedMoveSet = Set(JudgmentSubjectBinding.normalizeMove(played.moveUci))
       val playedCauseRecords =
         causeRecords.filter(record =>
@@ -505,6 +505,7 @@ object RelativeAssessmentAssembler:
       .sortBy(_.ref.rank)
 
   private def relativeCauseRecords(
+      input: NormalizedMoveReviewInput,
       context: JudgmentAssemblyContext,
       root: PositionNodeRef,
       allocator: JudgmentProvenanceAllocator,
@@ -512,7 +513,8 @@ object RelativeAssessmentAssembler:
   ): List[EvidenceRecord] =
     comparisonRecord.payload match
       case CandidateComparisonEvidence(fact) =>
-        val neighborhood = comparisonNeighborhood(context, root, fact)
+        val threatLineOwners = threatBranchLineOwners(input, context)
+        val neighborhood = comparisonNeighborhood(context, root, fact, Some(input))
         val comparisonProof = comparisonProofRecords(neighborhood)
         val causes = mergeCauseCandidates(inferCauseCandidates(neighborhood, fact))
         causes.zipWithIndex.map { case (candidate, index) =>
@@ -529,9 +531,9 @@ object RelativeAssessmentAssembler:
               explicitSourceSide = candidate.sourceSide
             )
           val rawProofRecords =
-            relativeCauseProofRecords(context.evidenceGraph, fact, kind, binding, support, comparisonProof, neighborhood)
+            relativeCauseProofRecords(context.evidenceGraph, fact, kind, binding, support, comparisonProof, neighborhood, threatLineOwners)
           val attribution =
-            causeAttribution(candidate, binding, rawProofRecords, supportRefs)
+            causeAttribution(candidate, binding, rawProofRecords, supportRefs, threatLineOwners)
           val proofRecords =
             if attribution.directProofEligible then rawProofRecords
             else
@@ -587,16 +589,17 @@ object RelativeAssessmentAssembler:
       binding: RelativeCauseBinding,
       support: List[EvidenceRecord],
       comparisonProof: List[EvidenceRecord],
-      neighborhood: ComparisonEvidenceNeighborhood
+      neighborhood: ComparisonEvidenceNeighborhood,
+      threatLineOwners: Map[String, String]
   ): RelativeCauseProofRecords =
     val supportIds = supportClosureRecordIds(graph, support)
     val directSeed =
       (support ++ comparisonProof.filter(record => supportIds.contains(record.ref.id)))
-        .filter(record => directProofSource(graph, fact, kind, binding, record))
+        .filter(record => directProofSource(graph, fact, kind, binding, record, threatLineOwners))
         .distinctBy(_.ref.id)
     val directRecords =
       proofSectionRecords(graph, directSeed, Some(kind), Some(binding))
-        .filter(record => directProofSource(graph, fact, kind, binding, record))
+        .filter(record => directProofSource(graph, fact, kind, binding, record, threatLineOwners))
         .filter(record => supportIds.contains(record.ref.id))
         .distinctBy(_.ref.id)
     val directIds = directRecords.map(_.ref.id).toSet
@@ -628,13 +631,17 @@ object RelativeAssessmentAssembler:
       draft: RelativeCauseDraft,
       binding: RelativeCauseBinding,
       proofRecords: RelativeCauseProofRecords,
-      supportRefs: List[EvidenceRef]
+      supportRefs: List[EvidenceRef],
+      threatLineOwners: Map[String, String]
   ): CauseAttribution =
     val ownedRefs = proofRecords.directProof.map(_.ref).distinctBy(_.id)
     val contrastRefs = proofRecords.contrastProof.map(_.ref).distinctBy(_.id)
     val rootMatched =
       ownedRefs.nonEmpty &&
-        proofRecords.directProof.exists(record => recordMatchesEventRoot(record, binding.eventLine.rootMove))
+        proofRecords.directProof.exists(record =>
+          recordMatchesEventRoot(record, binding.eventLine.rootMove) ||
+            threatBranchRecordOwnsRoot(record, binding.eventLine.rootMove, threatLineOwners)
+        )
     val attributionKind = effectiveAttributionKind(draft, binding)
     val directEligible =
       ownedRefs.nonEmpty &&
@@ -953,20 +960,25 @@ object RelativeAssessmentAssembler:
       fact: CandidateComparisonFact,
       kind: RelativeCauseKind,
       binding: RelativeCauseBinding,
-      record: EvidenceRecord
+      record: EvidenceRecord,
+      threatLineOwners: Map[String, String]
   ): Boolean =
     val rootMove = binding.eventLine.rootMove
     record.payload match
       case payload: LineFactEvidence =>
-        record.referencesLine(binding.eventLine) &&
-          lineFactDirectlyOwnsCause(kind, payload, rootMove)
+        if threatBranchRecordOwnsRoot(record, rootMove, threatLineOwners) then threatBranchLineFactCanProveCause(kind, payload)
+        else
+          record.referencesLine(binding.eventLine) &&
+            lineFactDirectlyOwnsCause(kind, payload, rootMove)
       case payload: TacticalMechanismEvidence =>
         payload.canAnchorTacticalIdea &&
-          record.referencesLine(binding.eventLine) &&
-          tacticalMechanismDirectlyOwnsRoot(graph, record, rootMove)
+          (
+            threatBranchRecordOwnsRoot(record, rootMove, threatLineOwners) ||
+              (record.referencesLine(binding.eventLine) && tacticalMechanismDirectlyOwnsRoot(graph, record, rootMove))
+          )
       case payload: RelationFactEvidence =>
         payload.hasConcreteRelationProof &&
-          relationReferencesEventLine(record, payload, binding.eventLine) &&
+          (threatBranchRecordOwnsRoot(record, rootMove, threatLineOwners) || relationReferencesEventLine(record, payload, binding.eventLine)) &&
           relationCanDirectlyProveCause(kind, payload)
       case payload: ThreatEpisodeEvidence =>
         defensiveCause(kind) &&
@@ -1051,6 +1063,16 @@ object RelativeAssessmentAssembler:
           )
       case _ =>
         false
+
+  private def threatBranchLineFactCanProveCause(
+      kind: RelativeCauseKind,
+      payload: LineFactEvidence
+  ): Boolean =
+    payload.proofSignalConsequences.exists(consequence => lineConsequenceCanProveRelativeCause(kind, consequence.kind)) ||
+      (
+        tacticalCause(kind) &&
+          (payload.hasTacticalLineConsequence || payload.hasProofSignalMaterialEvent)
+      )
 
   private def tacticalMechanismDirectlyOwnsRoot(
       graph: TypedEvidenceGraph,
@@ -1298,6 +1320,13 @@ object RelativeAssessmentAssembler:
       kind == RelativeCauseKind.DefensiveResource ||
       kind == RelativeCauseKind.OnlyMoveNecessity
 
+  private def tacticalCause(kind: RelativeCauseKind): Boolean =
+    kind == RelativeCauseKind.MissedTacticalResource ||
+      kind == RelativeCauseKind.TacticalRefutationOfPlayed ||
+      kind == RelativeCauseKind.CandidateTacticalLiability ||
+      kind == RelativeCauseKind.KingForcing ||
+      kind == RelativeCauseKind.MaterialSwing
+
   private def strategicCause(kind: RelativeCauseKind): Boolean =
     RelativeCauseKind.strategicContrastBacked(kind)
 
@@ -1333,6 +1362,16 @@ object RelativeAssessmentAssembler:
         payload.mentionsLineMove(eventLine.rootMove) &&
           TransitionEdgeRole.fromScope(record.ref.scope).exists(_.lineRole == eventLine.role)
       )
+
+  private def threatBranchRecordOwnsRoot(
+      record: EvidenceRecord,
+      rootMove: String,
+      threatLineOwners: Map[String, String]
+  ): Boolean =
+    record.ref.line.exists(line =>
+      line.role == LineNodeRole.Threat &&
+        threatLineOwners.get(line.id).exists(ownerMove => normalizeMove(ownerMove) == normalizeMove(rootMove))
+    )
 
   private def normalizeMove(raw: String): String =
     Option(raw).getOrElse("").trim.toLowerCase
@@ -1489,6 +1528,7 @@ object RelativeAssessmentAssembler:
   private def comparisonProofRecords(neighborhood: ComparisonEvidenceNeighborhood): List[EvidenceRecord] =
     (neighborhood.referenceEndpoint ++ neighborhood.candidateEndpoint)
       .filter(record => record.ref.layer == EvidenceLayer.Line || record.ref.layer == EvidenceLayer.Eval)
+      .filterNot(_.ref.line.exists(_.role == LineNodeRole.Threat))
       .distinctBy(_.ref.id)
 
   private def inferCauseCandidates(
@@ -1513,14 +1553,21 @@ object RelativeAssessmentAssembler:
   private def comparisonNeighborhood(
       context: JudgmentAssemblyContext,
       root: PositionNodeRef,
-      fact: CandidateComparisonFact
+      fact: CandidateComparisonFact,
+      input: Option[NormalizedMoveReviewInput] = None
   ): ComparisonEvidenceNeighborhood =
     val referenceTransition = transitionForLine(context, fact.referenceLine)
     val candidateTransition = transitionForLine(context, fact.candidateLine)
+    val referenceEndpoint =
+      (recordsForLineEndpoint(context, fact.referenceLine) ++ input.toList.flatMap(recordsForThreatBranchRoot(_, context, fact.referenceLine.rootMove)))
+        .distinctBy(_.ref.id)
+    val candidateEndpoint =
+      (recordsForLineEndpoint(context, fact.candidateLine) ++ input.toList.flatMap(recordsForThreatBranchRoot(_, context, fact.candidateLine.rootMove)))
+        .distinctBy(_.ref.id)
     val baseRecords =
       (
-        recordsForLineEndpoint(context, fact.referenceLine) ++
-          recordsForLineEndpoint(context, fact.candidateLine) ++
+        referenceEndpoint ++
+          candidateEndpoint ++
           recordsForRootContext(context, root) ++
           recordsForTransition(context, referenceTransition) ++
           recordsForTransition(context, candidateTransition) ++
@@ -1530,8 +1577,8 @@ object RelativeAssessmentAssembler:
     val parentRecords =
       baseRecords.flatMap(record => record.parents.flatMap(parent => context.evidenceGraph.byId.get(parent.id)))
     ComparisonEvidenceNeighborhood(
-      referenceEndpoint = recordsForLineEndpoint(context, fact.referenceLine),
-      candidateEndpoint = recordsForLineEndpoint(context, fact.candidateLine),
+      referenceEndpoint = referenceEndpoint,
+      candidateEndpoint = candidateEndpoint,
       rootContext = recordsForRootContext(context, root),
       referenceTransition = recordsForTransition(context, referenceTransition),
       candidateTransition = recordsForTransition(context, candidateTransition),
@@ -1548,6 +1595,43 @@ object RelativeAssessmentAssembler:
       endpointLayer(record.ref.layer) &&
         record.referencesLine(line)
     )
+
+  private def recordsForThreatBranchRoot(
+      input: NormalizedMoveReviewInput,
+      context: JudgmentAssemblyContext,
+      rootMove: String
+  ): List[EvidenceRecord] =
+    val ownedThreatLineIds =
+      threatBranchLineOwners(input, context).collect {
+        case (lineId, ownerMove) if normalizeMove(ownerMove) == normalizeMove(rootMove) => lineId
+      }.toSet
+    if ownedThreatLineIds.isEmpty then Nil
+    else
+      context.evidenceGraph.records.filter(record =>
+        endpointLayer(record.ref.layer) &&
+          record.ref.line.exists(line => line.role == LineNodeRole.Threat && ownedThreatLineIds.contains(line.id))
+      )
+
+  private def threatBranchLineOwners(
+      input: NormalizedMoveReviewInput,
+      context: JudgmentAssemblyContext
+  ): Map[String, String] =
+    val lineByKey =
+      context.lines
+        .filter(_.role == LineNodeRole.Threat)
+        .map(line => (line.ref.rank, normalizeMove(line.ref.rootMove)) -> line.ref)
+        .toMap
+    input.threatBranches
+      .flatMap(branch =>
+        branch.lines.flatMap(line =>
+          line.rootMove.flatMap(rootMove =>
+            lineByKey
+              .get((line.rank, normalizeMove(rootMove)))
+              .map(ref => ref.id -> branch.probedMoveUci)
+          )
+        )
+      )
+      .toMap
 
   private def recordsForRootContext(
       context: JudgmentAssemblyContext,

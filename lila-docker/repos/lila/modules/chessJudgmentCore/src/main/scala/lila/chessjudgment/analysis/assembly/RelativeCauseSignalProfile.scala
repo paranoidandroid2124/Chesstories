@@ -106,6 +106,8 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
     RelativeCauseSignalProfile.tacticalMechanismRecords(referenceRecords)
   val candidateTacticalMechanism: List[EvidenceRecord] =
     RelativeCauseSignalProfile.tacticalMechanismRecords(candidateRecords)
+  val candidateThreatBranchTacticalMechanism: List[EvidenceRecord] =
+    RelativeCauseSignalProfile.threatBranchTacticalMechanismRecords(candidateRecords)
   val materialSwingSupport: List[EvidenceRecord] =
     RelativeCauseSignalProfile.materialSwingSupportRecords(referenceRecords, candidateRecords)
   val materialDeteriorationSupport: List[EvidenceRecord] =
@@ -315,30 +317,37 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
           )
         )
         .getOrElse(Nil)
-    val candidateBetterCauses =
+    val candidateValueMechanisms =
+      if profile.candidateBetter then profile.candidateTacticalMechanism
+      else if profile.exactReferenceMove then profile.candidateThreatBranchTacticalMechanism
+      else Nil
+    val candidateValueCauses =
       Option
-        .when(profile.candidateBetter)(
+        .when(candidateValueMechanisms.nonEmpty)(
           mechanismCauseKinds(
-            profile.candidateTacticalMechanism,
+            candidateValueMechanisms,
             badLoss = false,
+            candidateValue = true,
             sourceSide = RelativeCauseSourceSide.Candidate,
             attributionKind = CauseAttributionKind.CandidateCreatesValue
           )
         )
         .getOrElse(Nil)
-    referenceCauses ++ candidateBadCauses ++ candidateBetterCauses
+    referenceCauses ++ candidateBadCauses ++ candidateValueCauses
 
   private def mechanismCauseKinds(
       records: List[EvidenceRecord],
       badLoss: Boolean,
       playedCandidate: Boolean = false,
+      candidateValue: Boolean = false,
       sourceSide: RelativeCauseSourceSide,
       attributionKind: CauseAttributionKind
   ): List[RelativeCauseDraft] =
     records.collect {
       case record @ EvidenceRecord(_, payload: TacticalMechanismEvidence, _) if payload.canAnchorTacticalIdea =>
         RelativeCauseDraft(
-          TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss, playedCandidate),
+          if candidateValue && payload.kind == TacticalMechanismKind.MaterialGain then RelativeCauseKind.MaterialSwing
+          else TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss, playedCandidate),
           List(record),
           Some(sourceSide),
           attributionKind
@@ -797,6 +806,9 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       case _ =>
         false
     }
+
+  private[chessjudgment] def threatBranchTacticalMechanismRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
+    tacticalMechanismRecords(records).filter(_.ref.line.exists(_.role == LineNodeRole.Threat))
 
   private[chessjudgment] def strategicContrastRecords(
       fact: CandidateComparisonFact,

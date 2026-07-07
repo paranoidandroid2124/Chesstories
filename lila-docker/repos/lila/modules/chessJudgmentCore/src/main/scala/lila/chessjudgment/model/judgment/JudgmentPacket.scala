@@ -4436,15 +4436,15 @@ object MoveMeaningClaim:
       causeFramesById.values.flatten.toList
         .filter(frame => sameRootPlanOwnedCauseBridgeCandidate(frame, verdict, detail))
         .distinctBy(_.causeEvidenceIds)
-    val bridgedTacticalRelationCauseFrames =
+    val bridgedTacticalProofCauseFrames =
       causeFramesById.values.flatten.toList
-        .filter(frame => sameRootTacticalRelationOwnedCauseBridgeCandidate(frame, verdict, detail, objectSignatures))
+        .filter(frame => sameRootTacticalProofOwnedCauseBridgeCandidate(frame, verdict, detail, objectSignatures))
         .distinctBy(_.causeEvidenceIds)
     val linkedCauseFrames =
-      (directLinkedCauseFrames ++ bridgedRouteCauseFrames ++ bridgedPlanCauseFrames ++ bridgedTacticalRelationCauseFrames)
+      (directLinkedCauseFrames ++ bridgedRouteCauseFrames ++ bridgedPlanCauseFrames ++ bridgedTacticalProofCauseFrames)
         .distinctBy(_.causeEvidenceIds)
     val bridgedCauseIds =
-      (bridgedRouteCauseFrames ++ bridgedPlanCauseFrames ++ bridgedTacticalRelationCauseFrames).flatMap(_.causeEvidenceIds).toSet
+      (bridgedRouteCauseFrames ++ bridgedPlanCauseFrames ++ bridgedTacticalProofCauseFrames).flatMap(_.causeEvidenceIds).toSet
     kind(detail, objectSignatures, None).toList
       .filter(_ => detailMatchesLine(frame, detail, verdict, linkedCauseFrames))
       .flatMap { baseMeaningKind =>
@@ -4488,7 +4488,7 @@ object MoveMeaningClaim:
                     optionMove,
                     optionClaimRole
                   ) ||
-                  sameRootTacticalRelationOwnedCauseBridge(
+                  sameRootTacticalProofOwnedCauseBridge(
                     linkedFrame,
                     verdict,
                     detail,
@@ -5812,22 +5812,22 @@ object MoveMeaningClaim:
       planFallbackReasonFrame(detail, frame) &&
       planCauseFrameOverlapsDetail(frame, detail)
 
-  private def sameRootTacticalRelationOwnedCauseBridgeCandidate(
+  private def sameRootTacticalProofOwnedCauseBridgeCandidate(
       frame: MoveJudgmentCauseFrame,
       verdict: MoveJudgmentVerdictFrame,
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String]
   ): Boolean =
-    frame.proofRelationKinds.nonEmpty &&
+    (frame.proofRelationKinds.nonEmpty || frame.proofLineConsequences.exists(LineConsequenceKind.tacticalDriver)) &&
       frame.hasOwnedTacticalProof &&
       nonLossMeaningVerdict(verdict.verdict) &&
       reasonGradeCauseFrame(frame) &&
       crossComparisonOwnedRootTier(frame) &&
-      tacticalRelationDetailCanCarry(detail) &&
+      tacticalProofDetailCanCarry(detail) &&
       detailCanOwnCrossComparisonCause(detail) &&
-      causeFrameObjectOverlapsDetail(frame, objectSignatures)
+      (causeFrameObjectOverlapsDetail(frame, objectSignatures) || frame.proofLineConsequences.exists(LineConsequenceKind.tacticalDriver))
 
-  private def tacticalRelationDetailCanCarry(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+  private def tacticalProofDetailCanCarry(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute ||
       (
         detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
@@ -5860,7 +5860,7 @@ object MoveMeaningClaim:
       causeFrameLineOwnsClaimMove(frame, verdict, claimLineRole, claimMove) &&
       causeFramePolarityCompatibleWithMeaning(frame, verdict, detail, claimRole)
 
-  private def sameRootTacticalRelationOwnedCauseBridge(
+  private def sameRootTacticalProofOwnedCauseBridge(
       frame: MoveJudgmentCauseFrame,
       verdict: MoveJudgmentVerdictFrame,
       detail: PositionPlanTechniqueSemanticDetail,
@@ -5869,7 +5869,7 @@ object MoveMeaningClaim:
       claimMove: String,
       claimRole: String
   ): Boolean =
-    sameRootTacticalRelationOwnedCauseBridgeCandidate(frame, verdict, detail, objectSignatures) &&
+    sameRootTacticalProofOwnedCauseBridgeCandidate(frame, verdict, detail, objectSignatures) &&
       causeFrameLineOwnsClaimMove(frame, verdict, claimLineRole, claimMove) &&
       detailOwnsClaimMove(detail, objectSignatures, claimMove) &&
       causeFramePolarityCompatibleWithMeaning(frame, verdict, detail, claimRole)
