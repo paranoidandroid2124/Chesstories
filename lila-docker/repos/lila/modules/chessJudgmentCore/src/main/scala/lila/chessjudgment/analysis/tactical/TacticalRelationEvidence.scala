@@ -9,7 +9,6 @@ import lila.chessjudgment.analysis.evaluation.JudgmentThresholds
 import lila.chessjudgment.analysis.material.MaterialValue
 import lila.chessjudgment.analysis.tactical.TacticalPatternDetectors
 import lila.chessjudgment.analysis.structure.WeaknessTargetProfile
-import lila.chessjudgment.model.ProbeResult
 import lila.chessjudgment.model.judgment.{ EvidenceSquare, LineReplayStep }
 import lila.chessjudgment.model.strategic.VariationLine
 
@@ -904,54 +903,6 @@ private[chessjudgment] object TacticalRelationEvidence:
             first.move.piece.color != second.move.piece.color =>
         Some(first.move.dest.key)
       case _ => None
-
-  def branchKey(replay: List[BoundedReplayStep], plies: Int = 2): Option[String] =
-    branchKeyFromMoves(replayUcis(replay, 0, plies), plies)
-
-  def branchKeyFromMoves(moves: List[String], plies: Int = 2): Option[String] =
-    val normalized = normalizedBoundedMoves(moves, plies)
-    Option.when(plies > 0 && normalized.size == plies)(normalized.mkString("|"))
-
-  def probeStableBranchKey(result: ProbeResult, plies: Int = 2): Option[String] =
-    result.variationHash.flatMap(clean).map(_.toLowerCase)
-      .orElse(result.seedId.flatMap(clean).map(_.toLowerCase))
-      .orElse(probeReplyMoveLines(result).flatMap(probeReplyPrefixKeyFromMoves(_, plies)).headOption)
-
-  def probeFullReplyLineKey(result: ProbeResult): Option[String] =
-    probeReplyMoveLines(result).flatMap(probeFullReplyLineKeyFromMoves).headOption
-
-  def probeFullReplyLineMatches(result: ProbeResult, expectedBranchKey: String): Boolean =
-    probeFullReplyLineKey(result).contains(expectedBranchKey) ||
-      probeReplyMoveLines(result).exists(line =>
-        probeFullReplyLineKeyFromMoves(line).contains(expectedBranchKey)
-      )
-
-  def probeFirstReplyOrMoveKey(result: ProbeResult): Option[String] =
-    result.variationHash.flatMap(clean)
-      .orElse(result.seedId.flatMap(clean))
-      .orElse(probeReplyMoveLines(result).flatMap(probeFirstReplyKeyFromMoves).headOption)
-      .orElse(result.probedMove.flatMap(clean))
-      .orElse(result.candidateMove.flatMap(clean))
-
-  private def probeReplyMoveLines(result: ProbeResult): List[List[String]] =
-    result.replyLines.toList.flatten.map(_.moves).filter(_.nonEmpty)
-
-  def probeReplyPrefixKeyFromMoves(moves: List[String], plies: Int = 2): Option[String] =
-    val normalized = normalizedBoundedMoves(moves, plies)
-    Option.when(plies > 0 && normalized.size == plies)(normalized.mkString(" "))
-
-  def probeFullReplyLineKeyFromMoves(moves: List[String]): Option[String] =
-    Option.when(moves.nonEmpty)(moves.flatMap(clean).mkString(" "))
-
-  def probeFirstReplyKeyFromMoves(moves: List[String]): Option[String] =
-    moves.headOption.flatMap(clean)
-
-  def linePrefixKeyFromMoves(moves: List[String], maxPlies: Int = 2): Option[String] =
-    val normalized = normalizedBoundedMoves(moves, maxPlies)
-    Option.when(maxPlies > 0 && normalized.nonEmpty)(normalized.mkString("|"))
-
-  def branchFactFromMoves(moves: List[String], maxPlies: Int = 2): List[String] =
-    linePrefixKeyFromMoves(moves, maxPlies).map(key => s"branch:$key").toList
 
   private def replayUcis(replay: List[BoundedReplayStep], fromPly: Int, maxPlies: Int): List[String] =
     replay.drop(fromPly).take(maxPlies).map(_.uci)
