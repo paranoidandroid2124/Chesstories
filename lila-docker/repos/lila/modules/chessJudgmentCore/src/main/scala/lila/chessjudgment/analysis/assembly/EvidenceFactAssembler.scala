@@ -620,7 +620,10 @@ object EvidenceFactAssembler:
           signals = grouped.flatMap(_.signals).distinct
         )
       }
-      .filter(candidate => TacticalMechanismEvidence(candidate.kind, None, None, candidate.signals).hasConcreteProof)
+      .filter { candidate =>
+        val payload = TacticalMechanismEvidence(candidate.kind, None, None, candidate.signals)
+        payload.canAnchorTacticalIdea || payload.canAnchorDefensiveIdea
+      }
 
   private def mateThreatMaterialLinked(
       threat: ThreatEpisodeEvidence,
