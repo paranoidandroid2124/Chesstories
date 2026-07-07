@@ -1957,7 +1957,11 @@ object MoveMeaningSurface:
         terminal.nonEmpty ||
           technique.nonEmpty ||
           evidenceSurfaces.exists(surface => surface.evidence.proofLevel == "terminal_proof" || surface.evidence.proofLevel == "owned_cause")
-      val chainSurfaces = evidenceSurfaces.filter(surface => publicIdeaChainSemanticAllowed(surface, strongChainProof))
+      val semanticSurfaces = evidenceSurfaces.filter(surface => publicIdeaChainSemanticAllowed(surface, strongChainProof))
+      val chainSurfaces =
+        if terminal.nonEmpty then
+          semanticSurfaces.filter(surface => surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
+        else semanticSurfaces
       val carrierPairs = publicIdeaChainCarrierPairs(chainSurfaces)
       val allConsequenceCarriers = carrierPairs.filter((carrier, _) =>
         carrier.role == "target" && publicIdeaChainConsequenceCarrier(carrier)
