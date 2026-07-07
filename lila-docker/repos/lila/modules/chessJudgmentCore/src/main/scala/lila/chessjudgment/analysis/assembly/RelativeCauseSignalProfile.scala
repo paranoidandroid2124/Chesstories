@@ -1243,6 +1243,8 @@ private[chessjudgment] object RelativeCauseSignalProfile:
     records.filter {
       case record @ EvidenceRecord(_, payload: RelationFactEvidence, _) =>
         payload.hasConcreteRelationProof &&
+          payload.hasLineProof &&
+          payload.lineProofCount > 1 &&
           kindAllowed(payload.kind) &&
           (
             record.referencesLine(candidateLine) ||

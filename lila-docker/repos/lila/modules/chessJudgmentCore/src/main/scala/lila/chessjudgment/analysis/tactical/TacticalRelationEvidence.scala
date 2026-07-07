@@ -912,7 +912,6 @@ private[chessjudgment] object TacticalRelationEvidence:
       targetSquares: List[String],
       maxPlies: Int = 3
   ): List[String] =
-    val root = replayUcis(replay, 0, 1)
     val movingSide = replay.headOption.map(_.move.piece.color)
     val targets = targetSquares.flatMap(squareFromKey).toSet
     replay
@@ -925,7 +924,7 @@ private[chessjudgment] object TacticalRelationEvidence:
               (step.after.check.yes || (step.move.captures && targets.contains(step.move.dest))) =>
           replayUcis(replay, 0, index + 1)
       }
-      .getOrElse(root)
+      .getOrElse(Nil)
 
   def legalMove(position: Position, uci: String): Option[Move] =
     Uci(uci).collect { case move: Uci.Move => move }.flatMap(position.move(_).toOption)

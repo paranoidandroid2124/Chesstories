@@ -4151,7 +4151,6 @@ final case class TacticalMechanismEvidence(
     signalKinds.exists(kind =>
       kind == TacticalMechanismSignalKind.LineConsequence ||
         kind == TacticalMechanismSignalKind.LineEvent ||
-        kind == TacticalMechanismSignalKind.Relation ||
         kind == TacticalMechanismSignalKind.MateBranch
     )
   def hasThreatProof: Boolean =
