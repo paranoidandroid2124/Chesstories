@@ -2972,6 +2972,20 @@ object MoveMeaningSurface:
           claim.sourceEvidenceIds.exists(_.toLowerCase.contains("target-fixation")) ||
             claim.objectBindingSignatures.exists(_.toLowerCase.contains("targetfixation"))
         )
+    val broadPawnAdvanceTargetPressure =
+      idea == "target_pressure" &&
+        currentMoveIsPawnAdvance &&
+        sameFilePawnAdvanceMove(claim.moveUci) &&
+        publicTargetSquares.size > 4 &&
+        claim.proofRelationKinds.isEmpty &&
+        claim.proofThreatDrivers.isEmpty &&
+        !passedPawnAdvanceClaim(claim) &&
+        !weakPawnTargetClaim &&
+        !checkingPressureClaim(claim) &&
+        !targetPressureReleaseClaim &&
+        !targetFixationClaim &&
+        !kingPressureCarrier &&
+        !filePressureCarrier
     val targetPressureLabel =
       publicTargetSquares match
         case square :: Nil => s"pressure on $square"
@@ -3097,6 +3111,7 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if targetFixationClaim => targetFixationLabel
         case ("target_pressure", _) if filePressureCarrier => "file pressure"
         case ("target_pressure", _) if planPawnAdvanceClaim(claim) => pawnSpaceAdvanceLabel
+        case ("target_pressure", _) if broadPawnAdvanceTargetPressure => directBreakPlanLabel
         case ("target_pressure", _)
             if claim.causeKinds.contains(RelativeCauseKind.TargetPressureGain) &&
               claim.targetFiles.isEmpty &&
@@ -3169,6 +3184,8 @@ object MoveMeaningSurface:
           baseTarget.copy(squares = developmentPressureTargets)
         case _ if idea == "target_pressure" && filePressureCarrier && carrierTargetFiles.nonEmpty =>
           baseTarget.copy(files = (baseTarget.files ++ carrierTargetFiles).distinct.sorted)
+        case _ if idea == "target_pressure" && broadPawnAdvanceTargetPressure =>
+          baseTarget.copy(squares = moveDestinationSquare.toList, files = Nil, pieces = List("pawn"))
         case _ if idea == "piece_route" && routeToSquares.nonEmpty =>
           baseTarget.copy(squares = routeToSquares.toList.sorted, pieces = routePiece.toList)
         case _ => baseTarget
