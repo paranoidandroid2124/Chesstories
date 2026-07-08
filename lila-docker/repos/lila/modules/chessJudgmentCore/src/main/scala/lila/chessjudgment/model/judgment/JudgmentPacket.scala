@@ -4276,13 +4276,25 @@ object MoveMeaningClaim:
         )
         .flatMap(routeIdentityKey)
         .toSet
-    if ownedRouteKeys.isEmpty then claims
+    val ownedRouteCores =
+      claims
+        .filter(claim =>
+          claim.meaningKind == "PieceRoute" &&
+            claim.surfaceLane == "current_move_owned" &&
+            claim.supportLevel == "owned_cause_linked"
+        )
+        .flatMap(routeCoreIdentity)
+        .toSet
+    if ownedRouteKeys.isEmpty && ownedRouteCores.isEmpty then claims
     else
       claims.filterNot(claim =>
         claim.meaningKind == "PieceRoute" &&
           claim.surfaceLane == "current_move_function" &&
           claim.causeEvidenceIds.isEmpty &&
-          routeIdentityKey(claim).exists(ownedRouteKeys.contains)
+          (
+            routeIdentityKey(claim).exists(ownedRouteKeys.contains) ||
+              routeCoreIdentity(claim).exists(ownedRouteCores.contains)
+          )
       )
 
   private def routeIdentityKey(claim: MoveMeaningClaim): Option[(String, String, List[String])] =
