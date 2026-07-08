@@ -2023,7 +2023,12 @@ object MoveMeaningSurface:
               surface.terminalConsequences.isEmpty &&
               surface.endgameTechnique.isEmpty &&
               routeSiblings.exists(other =>
-                surface.evidence.causeIds.intersect(other.evidence.causeIds).nonEmpty &&
+                (
+                  surface.evidence.causeIds.intersect(other.evidence.causeIds).nonEmpty ||
+                    surface.evidence.causeIds.isEmpty &&
+                    other.evidence.causeIds.isEmpty &&
+                    surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty
+                ) &&
                   (
                     surface.target.squares.intersect(other.target.squares).nonEmpty ||
                       surface.target.files.intersect(other.target.files).nonEmpty ||
