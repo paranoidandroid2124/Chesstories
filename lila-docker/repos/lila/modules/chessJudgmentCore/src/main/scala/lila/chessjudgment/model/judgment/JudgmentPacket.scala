@@ -2010,18 +2010,18 @@ object MoveMeaningSurface:
         )
       val chainCandidateSurfaces =
         val surfacesByMove = preliminaryChainSurfaces.groupBy(surface => (surface.subject, surface.lineRole, surface.moveUci))
-        val sourceOnlyCompanionCodes = Set("center_control", "piece_route", "piece_activity", "target_pressure", "passed_pawn_advance")
+        val surfaceEvidenceDuplicateCodes = Set("center_control", "piece_route", "piece_activity", "target_pressure", "passed_pawn_advance")
         preliminaryChainSurfaces.filterNot { surface =>
           val siblings = surfacesByMove.getOrElse((surface.subject, surface.lineRole, surface.moveUci), Nil).filterNot(_ == surface)
           val routeSiblings = siblings.filter(_.idea.code == "piece_route")
           val hasRouteSibling = routeSiblings.nonEmpty
           val ownedSiblings = siblings.filter(_.evidence.proofLevel == "owned_cause")
-          val counterplaySiblingsWithCarrier =
-            siblings.filter(other => other.idea.code == "counterplay_control" && counterplayControlHasConcreteCarrier(other))
-          val sourceOnlyCompanionRestatesOwnedSibling =
+          val concreteCounterplaySiblings =
+            siblings.filter(other => other.idea.code == "counterplay_control" && counterplayRestrictionHasConcreteCarrier(other))
+          val surfaceEvidenceDuplicateOfOwnedClaim =
             surface.evidence.proofLevel == "surface_evidence" &&
               surface.evidence.causeIds.isEmpty &&
-              sourceOnlyCompanionCodes(surface.idea.code) &&
+              surfaceEvidenceDuplicateCodes(surface.idea.code) &&
               ownedSiblings.exists(other =>
                 other.idea.code == surface.idea.code ||
                   surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty ||
@@ -2029,7 +2029,7 @@ object MoveMeaningSurface:
                   surface.target.files.intersect(other.target.files).nonEmpty ||
                   surface.target.pieces.intersect(other.target.pieces).nonEmpty
               )
-          val tacticalCompanionRestatesOwnedSibling =
+          val genericTacticalDuplicateOfOwnedClaim =
             surface.idea.code == "tactical_pressure" &&
               Set("tactical pressure", "recapture recovery")(surface.idea.label) &&
               ownedSiblings.exists(other =>
@@ -2041,7 +2041,7 @@ object MoveMeaningSurface:
                       surface.target.pieces.intersect(other.target.pieces).nonEmpty
                   )
               )
-          val targetPressureRestatesRouteSibling =
+          val targetPressureDuplicatesRouteCarrier =
             surface.idea.code == "target_pressure" &&
               surface.evidence.proofRelationKinds.isEmpty &&
               surface.evidence.proofThreatDrivers.isEmpty &&
@@ -2063,27 +2063,27 @@ object MoveMeaningSurface:
                       surfaceSquares.isEmpty && surfaceFiles.nonEmpty && surfaceFiles.subsetOf(routeFiles)
                   )
               )
-          val hasSpecificSiblingCarrier =
+          val hasConcreteSiblingCarrier =
             siblings.exists(other =>
               other.idea.code == "piece_route" ||
                 other.idea.code == "target_pressure" && !unprovedBroadTargetPressure(other) ||
-                other.idea.code == "counterplay_control" && counterplayControlHasConcreteCarrier(other) ||
+                other.idea.code == "counterplay_control" && counterplayRestrictionHasConcreteCarrier(other) ||
                 other.idea.code == "long_diagonal_pressure" ||
                 other.idea.code == "material_gain" ||
                 other.idea.code == "defensive_resource"
             )
-          sourceOnlyCompanionRestatesOwnedSibling ||
-          tacticalCompanionRestatesOwnedSibling ||
-          surface.idea.code == "pawn_break_timing" && breakClaimWithoutMoveCarrier(surface) && hasSpecificSiblingCarrier ||
+          surfaceEvidenceDuplicateOfOwnedClaim ||
+          genericTacticalDuplicateOfOwnedClaim ||
+          surface.idea.code == "pawn_break_timing" && breakClaimWithoutMoveCarrier(surface) && hasConcreteSiblingCarrier ||
           surface.idea.code == "target_pressure" &&
             surface.evidence.proofRelationKinds.isEmpty &&
             surface.evidence.proofThreatDrivers.isEmpty &&
-            counterplaySiblingsWithCarrier.exists(other =>
+            concreteCounterplaySiblings.exists(other =>
               surface.target.squares.intersect(other.target.squares).nonEmpty ||
                 surface.target.pieces.intersect(other.target.pieces).nonEmpty ||
                 surface.target.files.intersect(other.target.files).nonEmpty
             ) ||
-          targetPressureRestatesRouteSibling ||
+          targetPressureDuplicatesRouteCarrier ||
           surface.idea.code == "target_pressure" && hasRouteSibling &&
             (targetPressureOnlyMarksMoveDestination(surface) || unprovedBroadTargetPressure(surface))
         }
@@ -2369,7 +2369,7 @@ object MoveMeaningSurface:
       case "passed_pawn_advance"   => 2
       case "pawn_break_timing"     => 3
       case "counterplay_race"      => 4
-      case "counterplay_control" if counterplayControlHasConcreteCarrier(surface) =>
+      case "counterplay_control" if counterplayRestrictionHasConcreteCarrier(surface) =>
         5
       case "outpost_attempt"       => 5
       case "compensation"          => 6
@@ -2422,7 +2422,7 @@ object MoveMeaningSurface:
     ((!sameFilePawnAdvanceMove(surface.moveUci) && surface.target.files.isEmpty) || mismatchedPawnAdvanceBreak) &&
       !concreteBreakCarrier
 
-  private def counterplayControlHasConcreteCarrier(surface: MoveMeaningSurface): Boolean =
+  private def counterplayRestrictionHasConcreteCarrier(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel == "owned_cause" &&
       (
         surface.evidence.boardCarriers.exists(carrier =>
@@ -3695,7 +3695,7 @@ object MoveMeaningSurface:
       claim.causeEvidenceIds.isEmpty && (selfBlockingRoute || mobilityLossPlan)
     claim.meaningKind == "PlanContinuity" &&
       !unprovedNegativePlan &&
-      MoveMeaningClaim.targetPressureCarrier(claim) &&
+      MoveMeaningClaim.targetPressureOrShapeCarrier(claim) &&
       claim.objectCarrierReady
 
   private def passedPawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
@@ -4237,13 +4237,13 @@ object MoveMeaningClaim:
   ): Boolean =
     publicSurfaceLaneAllowed(claim) &&
       !sameRootReferenceDuplicate(verdict, claim) &&
-      !terminalTechniqueRestatesTerminalResult(claims, claim) &&
-      !activityRestatesOwnedRoute(claims, claim) &&
-      !planPurposeRestatesOwnedRoute(claims, claim) &&
-      !genericOwnedPlanRestatesSpecificClaim(claims, claim) &&
-      !breakFunctionRestatesOwnedBreak(claims, claim) &&
-      !activityOrPlanRestatesOwnedPressure(claims, claim) &&
-      !counterplayControlLacksOwnCarrier(claims, claim) &&
+      !terminalTechniqueDuplicateOfTerminalResult(claims, claim) &&
+      !activityDuplicateOfOwnedRoute(claims, claim) &&
+      !planPurposeDuplicateOfOwnedRoute(claims, claim) &&
+      !planClaimDuplicateOfSpecificCurrentClaim(claims, claim) &&
+      !breakFunctionDuplicateOfOwnedBreak(claims, claim) &&
+      !activityOrPlanDuplicateOfOwnedPressure(claims, claim) &&
+      !counterplayRestrictionWithoutCarrier(claims, claim) &&
       planContinuityCarrierAllowed(claims, claim) &&
       !badMoveSuppressesCurrentMoveSurface(verdict, claim)
 
@@ -4273,7 +4273,7 @@ object MoveMeaningClaim:
           status == "ContradictedByTerminalProof"
       )
 
-  private def terminalTechniqueRestatesTerminalResult(
+  private def terminalTechniqueDuplicateOfTerminalResult(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4380,7 +4380,7 @@ object MoveMeaningClaim:
   private def routeIdentityKey(claim: MoveMeaningClaim): Option[(String, String, List[String])] =
     Option.when(claim.routeIdentityParts.nonEmpty)((claim.lineRole, claim.moveUci, claim.routeIdentityParts))
 
-  private def activityRestatesOwnedRoute(
+  private def activityDuplicateOfOwnedRoute(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4420,7 +4420,7 @@ object MoveMeaningClaim:
             )
       )
 
-  private def planPurposeRestatesOwnedRoute(
+  private def planPurposeDuplicateOfOwnedRoute(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4436,7 +4436,7 @@ object MoveMeaningClaim:
             claim.routeIdentityParts.exists(_.toLowerCase.contains(":line-unlock:by:"))
       )
 
-  private def breakFunctionRestatesOwnedBreak(
+  private def breakFunctionDuplicateOfOwnedBreak(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4465,13 +4465,13 @@ object MoveMeaningClaim:
           other.breakFiles.toSet.intersect(claim.breakFiles.toSet).nonEmpty
       )
 
-  private def activityOrPlanRestatesOwnedPressure(
+  private def activityOrPlanDuplicateOfOwnedPressure(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
     def specificTargetPressurePlan(other: MoveMeaningClaim): Boolean =
       other.meaningKind == "PlanContinuity" &&
-        targetPressureCarrier(other) &&
+        targetPressureOrShapeCarrier(other) &&
         other.objectCarrierReady
     def passedPawnAdvanceCarrier(claim: MoveMeaningClaim): Boolean =
       claim.routeIdentityParts.exists(_.startsWith("subject:passed-pawn-")) ||
@@ -4489,7 +4489,7 @@ object MoveMeaningClaim:
         claim.surfaceLane == "current_move_function" &&
         claim.causeEvidenceIds.isEmpty &&
         !passedPawnAdvanceCarrier(claim) &&
-        targetPressureCarrier(claim)
+        targetPressureOrShapeCarrier(claim)
     (
       claim.meaningKind == "PieceActivity" && claim.role == "ImprovesPieceActivity" && !passedPawnAdvanceCarrier(claim) ||
         targetPressureActivity(claim) ||
@@ -4513,7 +4513,7 @@ object MoveMeaningClaim:
         )
       )
 
-  private def counterplayControlLacksOwnCarrier(
+  private def counterplayRestrictionWithoutCarrier(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4561,7 +4561,7 @@ object MoveMeaningClaim:
       left.targetPieces.intersect(right.targetPieces).nonEmpty ||
       left.targetFiles.intersect(right.targetFiles).nonEmpty
 
-  private[judgment] def targetPressureCarrier(claim: MoveMeaningClaim): Boolean =
+  private[judgment] def targetPressureOrShapeCarrier(claim: MoveMeaningClaim): Boolean =
     claim.causeKinds.exists(kind =>
         kind == RelativeCauseKind.TargetPressureGain ||
           kind == RelativeCauseKind.TargetPressureRelease ||
@@ -4663,10 +4663,10 @@ object MoveMeaningClaim:
         claim.meaningKind == "PlanContinuity" &&
         claim.surfaceLane == "current_move_function" &&
         !currentMovePlanContinuityFunctionReady(claims, claim) &&
-        specificCurrentClaims.exists(specificClaimCoversPlanPurpose(claim, _))
+        specificCurrentClaims.exists(specificClaimCarriesPlanPurpose(claim, _))
     )
 
-  private def specificClaimCoversPlanPurpose(
+  private def specificClaimCarriesPlanPurpose(
       planClaim: MoveMeaningClaim,
       specificClaim: MoveMeaningClaim
   ): Boolean =
@@ -4690,7 +4690,7 @@ object MoveMeaningClaim:
             true
       )
 
-  private def genericOwnedPlanRestatesSpecificClaim(
+  private def planClaimDuplicateOfSpecificCurrentClaim(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4704,7 +4704,7 @@ object MoveMeaningClaim:
           currentMoveSurfaceLane(other) &&
           other.publicHasCarrier &&
           other.sourceEvidenceIds.nonEmpty &&
-          specificClaimCoversPlanPurpose(claim, other)
+          specificClaimCarriesPlanPurpose(claim, other)
       )
     val ownedPlanImprovement =
       claim.supportLevel == "owned_cause_linked" &&
@@ -4724,7 +4724,7 @@ object MoveMeaningClaim:
           currentMoveSurfaceLane(other) &&
           other.publicHasCarrier &&
           other.sourceEvidenceIds.nonEmpty &&
-          specificClaimCoversPlanPurpose(claim, other)
+          specificClaimCarriesPlanPurpose(claim, other)
       )
 
   private[judgment] def breakPreparationPlanClaim(claim: MoveMeaningClaim): Boolean =
