@@ -5150,9 +5150,11 @@ object MoveMeaningClaim:
                   publicTargetShapeReady &&
                   (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty) &&
                   publicCarrierAllowed(detail.unit, roleCompatibleCauseFrames.map(_.causeKind), claimBoardCarriers)
+              val terminalProofOwnsClaim =
+                terminalProofDetailOwnsClaimMove(detail, surfaceObjectSignatures, claimMove)
               val publicProofLevel =
                 if !publicHasCarrier then "none"
-                else if linkedCauseIds.nonEmpty && detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) then "terminal_proof"
+                else if terminalProofOwnsClaim then "terminal_proof"
                 else if linkedCauseIds.nonEmpty && support == "owned_cause_linked" then "owned_cause"
                 else if linkedCauseIds.nonEmpty then "cause_linked"
                 else "surface_evidence"
