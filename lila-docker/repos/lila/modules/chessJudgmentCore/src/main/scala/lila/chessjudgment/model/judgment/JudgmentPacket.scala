@@ -2029,6 +2029,18 @@ object MoveMeaningSurface:
                   surface.target.files.intersect(other.target.files).nonEmpty ||
                   surface.target.pieces.intersect(other.target.pieces).nonEmpty
               )
+          val genericTacticalDuplicate =
+            surface.idea.code == "tactical_pressure" &&
+              surface.idea.label == "tactical pressure" &&
+              ownedSiblings.exists(other =>
+                other.idea.code != "tactical_pressure" &&
+                  (
+                    surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty ||
+                      surface.target.squares.intersect(other.target.squares).nonEmpty ||
+                      surface.target.files.intersect(other.target.files).nonEmpty ||
+                      surface.target.pieces.intersect(other.target.pieces).nonEmpty
+                  )
+              )
           val targetPressureDuplicatesRouteCarrier =
             surface.idea.code == "target_pressure" &&
               surface.evidence.proofRelationKinds.isEmpty &&
@@ -2058,6 +2070,7 @@ object MoveMeaningSurface:
                 other.idea.code == "defensive_resource"
             )
           sourceOnlyGenericDuplicate ||
+          genericTacticalDuplicate ||
           surface.idea.code == "pawn_break_timing" && breakClaimLacksMoveCarrier(surface) && hasSpecificSibling ||
           surface.idea.code == "target_pressure" &&
             surface.evidence.proofRelationKinds.isEmpty &&
