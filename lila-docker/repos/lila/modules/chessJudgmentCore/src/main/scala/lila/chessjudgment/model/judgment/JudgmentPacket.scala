@@ -2881,6 +2881,7 @@ object MoveMeaningSurface:
     val moveOriginSquare =
       val normalized = JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase
       Option.when(normalized.matches("[a-h][1-8][a-h][1-8].*"))(normalized.take(2))
+    val moveDestinationSquare = moveDestination(claim.moveUci)
     def withoutMoveOrigin(squares: List[String]): List[String] =
       moveOriginSquare.fold(squares)(origin => if squares.size > 1 then squares.filterNot(_ == origin) else squares)
     val publicTargetSquares =
@@ -2960,8 +2961,12 @@ object MoveMeaningSurface:
       currentFlankPawnAdvanceDestination(claim.moveUci).map(destination => s"${destination.take(1)}-pawn advance").getOrElse("flank pawn advance")
     val pawnSpaceAdvanceLabel =
       currentMoveFile.map(file => s"$file-pawn space advance").getOrElse("space advance")
+    val routeSurfaceSquares =
+      if idea == "piece_route" && !routeLineUnlockClaim(claim) && routePiece.nonEmpty then
+        moveDestinationSquare.toSet
+      else routeToSquares
     val routeDestinationLabel =
-      routeToSquares.toList.sorted match
+      routeSurfaceSquares.toList.sorted match
         case square :: Nil             => s" to $square"
         case squares if squares.nonEmpty => s" to ${squares.mkString("/")}"
         case _                         => ""
@@ -3202,7 +3207,6 @@ object MoveMeaningSurface:
         .filter(_.matches("[a-h][1-8]"))
         .distinct
         .sorted
-    val moveDestinationSquare = moveDestination(claim.moveUci)
     val passedPawnSurfaceTargetSquares =
       (moveOriginSquare, moveDestinationSquare) match
         case (Some(from), Some(to)) if passedPawnTargetSquares.nonEmpty && sameFilePawnAdvanceMove(claim.moveUci) =>
@@ -3368,8 +3372,8 @@ object MoveMeaningSurface:
           baseTarget.copy(files = (baseTarget.files ++ carrierTargetFiles).distinct.sorted)
         case _ if idea == "target_pressure" && unprovedPawnAdvanceTargetPressure =>
           baseTarget.copy(squares = moveDestinationSquare.toList, files = Nil, pieces = List("pawn"))
-        case _ if idea == "piece_route" && routeToSquares.nonEmpty =>
-          baseTarget.copy(squares = routeToSquares.toList.sorted, pieces = routePiece.toList)
+        case _ if idea == "piece_route" && routeSurfaceSquares.nonEmpty =>
+          baseTarget.copy(squares = routeSurfaceSquares.toList.sorted, pieces = routePiece.toList)
         case _ => baseTarget
     val target =
       if idea == "target_pressure" then targetWithContext.copy(squares = withoutMoveOrigin(targetWithContext.squares))
