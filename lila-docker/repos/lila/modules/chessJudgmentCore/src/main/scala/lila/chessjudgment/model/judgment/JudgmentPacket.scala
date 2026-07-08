@@ -2302,9 +2302,17 @@ object MoveMeaningSurface:
           other.moveUci == surface.moveUci &&
           other.subject == surface.subject &&
           other.lineRole == surface.lineRole &&
-          other.idea.code == surface.idea.code &&
           other.evidence.proofLevel == surface.evidence.proofLevel &&
-          !other.sourceLabel.exists(_.equalsIgnoreCase("target-pressure-release"))
+          (
+            other.idea.code == surface.idea.code &&
+              !other.sourceLabel.exists(_.equalsIgnoreCase("target-pressure-release")) ||
+              other.idea.code == "pawn_break_timing" &&
+                (
+                  surface.target.squares.intersect(other.target.squares).nonEmpty ||
+                    surface.target.files.intersect(other.target.files).nonEmpty ||
+                    surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty
+                )
+          )
       )
 
   private def supplementalPressureLabelCoveredByCanonicalPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
@@ -2384,7 +2392,9 @@ object MoveMeaningSurface:
 
   private def passedPawnAdvanceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     val surfaceSquares = surface.target.squares.map(_.toLowerCase).toSet
+    val surfacePassedPawnSquares = passedPawnCarrierSquares(surface)
     surface.idea.code == "target_pressure" &&
+      !targetPressureWeakCarrier(surface) &&
       surface.evidence.proofRelationKinds.isEmpty &&
       surface.evidence.proofThreatDrivers.isEmpty &&
       surface.terminalConsequences.isEmpty &&
@@ -2396,8 +2406,24 @@ object MoveMeaningSurface:
           other.lineRole == surface.lineRole &&
           other.idea.code == "passed_pawn_advance" &&
           other.evidence.proofLevel == surface.evidence.proofLevel &&
-          surfaceSquares.intersect(other.target.squares.map(_.toLowerCase).toSet).nonEmpty
+          (
+            surfaceSquares.intersect(other.target.squares.map(_.toLowerCase).toSet).nonEmpty ||
+              surfacePassedPawnSquares.intersect(other.target.squares.map(_.toLowerCase).toSet).nonEmpty ||
+              moveDestination(surface.moveUci).exists(destination =>
+                surfacePassedPawnSquares(destination.toLowerCase) &&
+                  other.target.squares.exists(_.equalsIgnoreCase(destination))
+              )
+          )
       )
+
+  private def passedPawnCarrierSquares(surface: MoveMeaningSurface): Set[String] =
+    surface.evidence.boardCarriers
+      .collect {
+        case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" =>
+          "[a-h][1-8]".r.findAllIn(carrier.value.toLowerCase).toList
+      }
+      .flatten
+      .toSet
 
   private def pawnAdvanceSurfaceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     val surfaceFiles = surface.target.files.map(_.toLowerCase).toSet
