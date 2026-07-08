@@ -2845,6 +2845,10 @@ object MoveMeaningSurface:
     val directBreakPlanLabel =
       if currentMoveIsPawnAdvance then currentMoveFile.map(file => s"$file-pawn advance").getOrElse("pawn advance")
       else "pawn break timing"
+    val currentMoveDestinationFile = moveDestination(claim.moveUci).map(_.take(1))
+    val filePressureFiles =
+      val files = (claim.targetFiles ++ carrierTargetFiles).map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
+      currentMoveDestinationFile.filter(files.contains).fold(files)(List(_))
     val counterplayBreakFiles =
       (
         claim.breakFiles ++
@@ -2875,7 +2879,11 @@ object MoveMeaningSurface:
           counterplayRestrictionFiles match
             case file :: Nil             => s"restrains $file-pawn break"
             case files if files.nonEmpty => s"restrains ${files.mkString("/")}-pawn breaks"
-            case _                       => "restricts counterplay"
+            case _ =>
+              filePressureFiles match
+                case file :: Nil             => s"restrains $file-file counterplay"
+                case files if files.nonEmpty => s"restrains ${files.mkString("/")}-file counterplay"
+                case _                       => "restricts counterplay"
     val counterplayRaceFiles =
       currentMoveFile.filter(counterplayBreakFiles.contains).toList match
         case file :: Nil => List(file)
@@ -2894,6 +2902,40 @@ object MoveMeaningSurface:
         case square :: Nil             => s" to $square"
         case squares if squares.nonEmpty => s" to ${squares.mkString("/")}"
         case _                         => ""
+    val filePressureLabel =
+      filePressureFiles match
+        case file :: Nil             => s"$file-file pressure"
+        case files if files.nonEmpty => s"${files.mkString("/")}-file pressure"
+        case _                       => "file pressure"
+    val rookLiftDestination =
+      (
+        claim.routeIdentityParts ++
+          planSubjects.toList ++
+          claim.boardCarriers.collect {
+            case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" => carrier.value.toLowerCase
+          }
+      ).collectFirst {
+        case value if value.stripPrefix("subject:").startsWith("rook-lift:") =>
+          value.stripPrefix("subject:").stripPrefix("rook-lift:").takeWhile(_ != ':').split("-").lift(1)
+      }.flatten.filter(_.matches("[a-h][1-8]"))
+    val rookBackRankLiftDestination =
+      Option(JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase)
+        .filter(move => routePiece.contains("rook") && move.matches("[a-h][1-8][a-h][1-8].*"))
+        .flatMap(move =>
+          val from = move.take(2)
+          val to = move.slice(2, 4)
+          Option.when(
+            from.take(1) == to.take(1) &&
+              ((from.drop(1) == "1" && to.drop(1) == "2") || (from.drop(1) == "8" && to.drop(1) == "7"))
+          )(to)
+        )
+    val rookFileRouteLabel =
+      rookLiftDestination.orElse(rookBackRankLiftDestination).map(square => s"rook lift to $square").getOrElse(
+        filePressureFiles match
+          case file :: Nil             => s"rook to $file-file"
+          case files if files.nonEmpty => s"rook to ${files.mkString("/")}-files"
+          case _                       => routePiece.map(piece => s"$piece maneuver$routeDestinationLabel").getOrElse("piece maneuver")
+      )
     val routeManeuverLabel = routePiece.map(piece => s"$piece maneuver$routeDestinationLabel").getOrElse("piece maneuver")
     val developmentLabel = routePiece.map(piece => s"$piece development$routeDestinationLabel").getOrElse("piece development")
     val developmentPressureTargets =
@@ -3185,7 +3227,7 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if kingPressureCarrier => kingPressureLabel
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
         case ("target_pressure", _) if targetFixationClaim => targetFixationLabel
-        case ("target_pressure", _) if filePressureCarrier => "file pressure"
+        case ("target_pressure", _) if filePressureCarrier => filePressureLabel
         case ("target_pressure", _) if planPawnAdvanceClaim(claim) => pawnSpaceAdvanceLabel
         case ("target_pressure", _) if broadPawnAdvanceTargetPressure => directBreakPlanLabel
         case ("target_pressure", _)
@@ -3218,6 +3260,7 @@ object MoveMeaningSurface:
         case ("outpost_attempt", _) => outpostLabel
         case ("piece_route", _) if routeLineUnlockClaim(claim) => opensLineLabel
         case ("piece_route", _) if initialDevelopmentRoute => developmentLabel
+        case ("piece_route", _) if routePiece.contains("rook") && (rookLiftDestination.nonEmpty || rookBackRankLiftDestination.nonEmpty || filePressureFiles.nonEmpty) => rookFileRouteLabel
         case ("piece_route", _) if routePiece.nonEmpty && routeToSquares.nonEmpty => routeManeuverLabel
         case ("piece_route", _) if routeManeuverClaim(claim) => routeManeuverLabel
         case ("piece_route", _) if routeActivityGainClaim(claim) => routeManeuverLabel
