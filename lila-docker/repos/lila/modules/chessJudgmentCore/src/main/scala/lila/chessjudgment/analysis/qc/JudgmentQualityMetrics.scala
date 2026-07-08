@@ -80,6 +80,9 @@ object ExpectedEvidenceLossPolicy:
           if packet.exists(packet => isSupportOnlyStrategicMechanism(diagnostic, packet)) =>
         EvidenceLossExpectation.Expected
       case EvidenceLossReason.EvidenceAvailableWithoutIdea
+          if packet.exists(packet => isSameRootStrategicContrastCoveredByPublicSurface(diagnostic, packet)) =>
+        EvidenceLossExpectation.Expected
+      case EvidenceLossReason.EvidenceAvailableWithoutIdea
           if packet.exists(packet => isExpectedCandidateComparisonSupport(diagnostic, packet)) =>
         EvidenceLossExpectation.Expected
       case EvidenceLossReason.EvidenceAvailableWithoutIdea
@@ -169,6 +172,31 @@ object ExpectedEvidenceLossPolicy:
             !strategicMechanismCanSeedJudgment(ref, payload)
           case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
             !StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(payload, packet.evidenceGraph.records)
+          case _ =>
+            false
+        }
+
+  private def isSameRootStrategicContrastCoveredByPublicSurface(
+      diagnostic: EvidenceLossDiagnostic,
+      packet: EvidenceBackedJudgmentPacket
+  ): Boolean =
+    diagnostic.layer.contains(EvidenceLayer.StrategicMechanism) &&
+      diagnostic.evidence
+        .flatMap(ref => packet.evidenceGraph.byId.get(ref.id))
+        .exists {
+          case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
+            val rootMove = normalizeMove(payload.candidateLine.rootMove)
+            rootMove.nonEmpty &&
+              rootMove == normalizeMove(payload.referenceLine.rootMove) &&
+              StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(payload, packet.evidenceGraph.records) &&
+              packet.moveJudgmentView.exists(view =>
+                MoveMeaningSurface.publicClaimsWithEvidenceForSurface(view).exists { case (claim, evidence) =>
+                  normalizeMove(claim.moveUci) == rootMove &&
+                    claim.lineRole == "candidate" &&
+                    evidence.hasCarrier &&
+                    evidence.proofLevel != "none"
+                }
+              )
           case _ =>
             false
         }
