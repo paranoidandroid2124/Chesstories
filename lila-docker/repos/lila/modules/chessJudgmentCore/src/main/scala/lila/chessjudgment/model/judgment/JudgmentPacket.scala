@@ -1882,7 +1882,8 @@ case class MoveMeaningSurface(
     terminalConsequences: List[MoveMeaningSurfaceCode] = Nil,
     structureContext: List[String] = Nil,
     evidence: MoveMeaningSurfaceEvidence = MoveMeaningSurfaceEvidence(),
-    defenderActorPieces: List[String] = Nil
+    defenderActorPieces: List[String] = Nil,
+    sourceLabel: Option[String] = None
 )
 
 object MoveMeaningSurface:
@@ -2102,9 +2103,9 @@ object MoveMeaningSurface:
       else
         val publicSemantics = chainSurfaces
           .sortBy(publicIdeaChainSemanticSortKey)
-          .distinctBy(surface =>
-            (surface.moveUci, surface.subject, surface.lineRole, surface.idea.code, surface.evidence.proofLevel)
-          )
+          .filterNot(surface => genericSemanticDuplicateOfSpecific(surface, chainSurfaces))
+          .filterNot(surface => targetPressureReleaseDuplicateOfGain(surface, chainSurfaces))
+          .distinctBy(publicIdeaChainSemanticIdentity)
         val semanticTargetCarriers =
           publicSemantics.flatMap(surface =>
             surface.evidence.boardCarriers
@@ -2227,6 +2228,41 @@ object MoveMeaningSurface:
           )
         )
     }
+
+  private def publicIdeaChainSemanticIdentity(surface: MoveMeaningSurface) =
+    (
+      surface.moveUci,
+      surface.subject,
+      surface.lineRole,
+      surface.idea.code,
+      surface.idea.label,
+      surface.evidence.proofLevel
+    )
+
+  private def genericSemanticDuplicateOfSpecific(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+    surface.idea.label == ideaLabels.getOrElse(surface.idea.code, "") &&
+      surfaces.exists(other =>
+        other != surface &&
+          other.moveUci == surface.moveUci &&
+          other.subject == surface.subject &&
+          other.lineRole == surface.lineRole &&
+          other.idea.code == surface.idea.code &&
+          other.evidence.proofLevel == surface.evidence.proofLevel &&
+          other.idea.label != surface.idea.label
+      )
+
+  private def targetPressureReleaseDuplicateOfGain(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+    surface.idea.code == "target_pressure" &&
+      surface.sourceLabel.exists(_.equalsIgnoreCase("target-pressure-release")) &&
+      surfaces.exists(other =>
+        other != surface &&
+          other.moveUci == surface.moveUci &&
+          other.subject == surface.subject &&
+          other.lineRole == surface.lineRole &&
+          other.idea.code == surface.idea.code &&
+          other.evidence.proofLevel == surface.evidence.proofLevel &&
+          !other.sourceLabel.exists(_.equalsIgnoreCase("target-pressure-release"))
+      )
 
   private def publicIdeaChainSubjects(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[String] =
     val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
@@ -3444,7 +3480,8 @@ object MoveMeaningSurface:
       terminalConsequences = terminal,
       structureContext = claim.structuralMotifTags,
       evidence = evidence,
-      defenderActorPieces = defenderMoveActorPieces
+      defenderActorPieces = defenderMoveActorPieces,
+      sourceLabel = claim.label
     )
 
   private def publicEvidence(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
