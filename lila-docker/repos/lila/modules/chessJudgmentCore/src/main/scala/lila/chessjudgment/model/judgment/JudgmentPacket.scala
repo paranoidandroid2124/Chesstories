@@ -2213,7 +2213,7 @@ object MoveMeaningSurface:
     val directFunctionCarrier =
       subject == "played_move" &&
         evidenceSurfaces.exists(surface => publicIdeaChainDirectFunctionSurface(surface) && surfaceHasSubjectMove(surface))
-    val admissibleProof = strongProofSurface || directFunctionCarrier
+    val admissibleProof = strongProofSurface || directFunctionCarrier || directPieceRouteCarrier
     evidenceSurfaces.nonEmpty &&
       admissibleProof &&
       (!materialTacticalCarrier || strongProofSurface) &&
@@ -3033,6 +3033,7 @@ object MoveMeaningSurface:
         case ("outpost_attempt", _) => outpostLabel
         case ("piece_route", _) if routeLineUnlockClaim(claim) => opensLineLabel
         case ("piece_route", _) if initialDevelopmentRoute => developmentLabel
+        case ("piece_route", _) if routePiece.nonEmpty && routeToSquares.nonEmpty => routeManeuverLabel
         case ("piece_route", _) if routeManeuverClaim(claim) => routeManeuverLabel
         case ("piece_route", _) if routeActivityGainClaim(claim) => routeManeuverLabel
         case ("piece_activity", _) if routeManeuverClaim(claim) => "piece activity lost"
