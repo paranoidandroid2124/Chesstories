@@ -3338,7 +3338,7 @@ object MoveMeaningSurface:
       claim.objectCarrierReady
 
   private def passedPawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
-    currentMoveActorPiece(claim, "pawn") &&
+    currentMoveLikelyPawnAdvance(claim) &&
       (
         claim.routeIdentityParts.exists(_.startsWith("subject:passed-pawn-advanced:")) ||
           claim.boardCarriers.exists(carrier =>
@@ -3395,15 +3395,6 @@ object MoveMeaningSurface:
         normalized.head == normalized.charAt(2) &&
         sameFilePawnAdvanceMove(normalized)
     )(normalized.slice(2, 4))
-
-  private def currentMoveActorPiece(claim: MoveMeaningClaim, piece: String): Boolean =
-    (claim.moveUci.length > 4 && piece == "pawn") ||
-      claim.boardCarriers.exists(carrier =>
-        carrier.role == "actor" &&
-          carrier.kind == "Piece" &&
-          carrier.value.equalsIgnoreCase(piece)
-      ) ||
-      claim.routeIdentityParts.exists(_.equalsIgnoreCase(s"piece:$piece"))
 
   private def axisIdeaType(claim: MoveMeaningClaim): Option[String] =
     claim.axisKind.map {
