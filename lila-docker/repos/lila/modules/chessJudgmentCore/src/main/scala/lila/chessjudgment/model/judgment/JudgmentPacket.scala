@@ -2107,6 +2107,7 @@ object MoveMeaningSurface:
           .filterNot(surface => targetReleaseLabelCoveredByPressureGain(surface, chainSurfaces))
           .filterNot(surface => supplementalPressureLabelCoveredByCanonicalPressure(surface, chainSurfaces))
           .filterNot(surface => mixedPiecePressureLabelCoveredBySinglePiecePressure(surface, chainSurfaces))
+          .filterNot(surface => lineUnlockSurfaceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
           .distinctBy(publicIdeaChainSurfaceKey)
         val semanticTargetCarriers =
           publicSemantics.flatMap(surface =>
@@ -2298,6 +2299,43 @@ object MoveMeaningSurface:
           other.idea.label.contains(" pressure on ") &&
           other.target.squares == surface.target.squares &&
           other.target.files == surface.target.files
+      )
+
+  private def lineUnlockSurfaceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+    def lineUnlockSurface(other: MoveMeaningSurface): Boolean =
+      (other.idea.code == "piece_route" || other.idea.code == "long_diagonal_pressure") &&
+        other.idea.label.startsWith("opens ")
+    def sameSurfaceMove(other: MoveMeaningSurface): Boolean =
+      other != surface &&
+        other.moveUci == surface.moveUci &&
+        other.subject == surface.subject &&
+        other.lineRole == surface.lineRole
+    val surfaceSquares = surface.target.squares.map(_.toLowerCase).toSet
+    val surfaceFiles = surface.target.files.map(_.toLowerCase).toSet
+    val pawnAdvanceFallback =
+      surface.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+        sameFilePawnAdvanceMove(surface.moveUci) &&
+        surface.idea.label.endsWith("space advance")
+    val targetFixationFallback =
+      surface.sourceLabel.exists(_.equalsIgnoreCase("TargetFixation")) ||
+        surface.idea.label.startsWith("fixes target")
+    surface.idea.code == "target_pressure" &&
+      surface.evidence.proofRelationKinds.isEmpty &&
+      surface.evidence.proofThreatDrivers.isEmpty &&
+      surface.terminalConsequences.isEmpty &&
+      surface.endgameTechnique.isEmpty &&
+      (pawnAdvanceFallback || targetFixationFallback) &&
+      surfaces.exists(other =>
+        sameSurfaceMove(other) &&
+          lineUnlockSurface(other) &&
+          (
+            targetFixationFallback &&
+              surfaceSquares.nonEmpty &&
+              surfaceSquares.subsetOf(other.target.squares.map(_.toLowerCase).toSet) ||
+              pawnAdvanceFallback &&
+                surfaceFiles.nonEmpty &&
+                surfaceFiles.intersect(other.target.files.map(_.toLowerCase).toSet).nonEmpty
+          )
       )
 
   private def publicIdeaChainSubjects(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[String] =
