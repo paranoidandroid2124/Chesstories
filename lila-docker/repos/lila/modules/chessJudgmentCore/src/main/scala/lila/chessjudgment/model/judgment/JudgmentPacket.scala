@@ -2991,7 +2991,41 @@ object MoveMeaningSurface:
         .collect {
           case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" => carrier.value.toLowerCase
         }
+    val passedPawnTargetSquares =
+      passedPawnCarrierValues
+        .flatMap(value =>
+          List("passed-pawn-breakthrough:", "passed-pawn-advanced:", "passed-pawn-created:", "passed-pawn:")
+            .collectFirst {
+              case prefix if value.startsWith(prefix) => value.stripPrefix(prefix).takeWhile(_ != ':')
+            }
+        )
+        .filter(_.matches("[a-h][1-8]"))
+        .distinct
+        .sorted
     val moveDestinationSquare = moveDestination(claim.moveUci)
+    val passedPawnSurfaceTargetSquares =
+      (moveOriginSquare, moveDestinationSquare) match
+        case (Some(from), Some(to)) if passedPawnTargetSquares.nonEmpty && sameFilePawnAdvanceMove(claim.moveUci) =>
+          val forwardTargets =
+            (for
+              fromRank <- from.drop(1).toIntOption
+              toRank <- to.drop(1).toIntOption
+            yield
+              val direction = toRank.compare(fromRank)
+              passedPawnTargetSquares
+                .filter(square => square.take(1) == to.take(1))
+                .flatMap(square => square.drop(1).toIntOption.map(rank => square -> rank))
+                .filter((_, rank) => direction != 0 && rank.compare(toRank) == direction)
+                .sortBy((_, rank) => (rank - toRank).abs)
+                .map(_._1)
+            ).getOrElse(Nil)
+          if passedPawnTargetSquares.contains(to) then List(to)
+          else forwardTargets.take(1) match
+            case Nil     => passedPawnTargetSquares
+            case targets => targets
+        case _ if passedPawnTargetSquares.nonEmpty => passedPawnTargetSquares
+        case _ if sameFilePawnAdvanceMove(claim.moveUci) => moveDestinationSquare.toList
+        case _ => Nil
     def carrierNamesDestination(value: String, prefix: String, destination: String): Boolean =
       val named = value.stripPrefix(prefix).takeWhile(_ != ':')
       named == destination || named.endsWith(s"-$destination")
@@ -3105,7 +3139,7 @@ object MoveMeaningSurface:
     val flankDestination = currentFlankPawnAdvanceDestination(claim.moveUci)
     val targetWithContext =
       flankDestination match
-        case Some(destination) if flankInfrastructurePawnMove =>
+        case Some(destination) if flankInfrastructurePawnMove && !passedPawnAdvanceClaim(claim) =>
           baseTarget.copy(
             squares = List(destination),
             files = List(destination.take(1)),
@@ -3116,6 +3150,10 @@ object MoveMeaningSurface:
             squares = (destination :: baseTarget.squares).distinct.sorted,
             files = List(destination.take(1))
           )
+        case _ if (idea == "target_pressure" || idea == "passed_pawn_advance") &&
+            passedPawnAdvanceClaim(claim) &&
+            passedPawnSurfaceTargetSquares.nonEmpty =>
+          baseTarget.copy(squares = passedPawnSurfaceTargetSquares)
         case _ if idea == "target_pressure" && weakPawnTargetClaim && weakPawnSquares.nonEmpty =>
           baseTarget.copy(squares = weakPawnSquares)
         case _ if idea == "target_pressure" && checkingPressureClaim(claim) && checkSquares.nonEmpty =>
