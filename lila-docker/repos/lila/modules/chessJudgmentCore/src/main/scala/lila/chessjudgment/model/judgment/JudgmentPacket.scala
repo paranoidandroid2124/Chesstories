@@ -1985,8 +1985,7 @@ object MoveMeaningSurface:
           "counterplay_control",
           "outpost_attempt",
           "compensation",
-          "long_diagonal_pressure",
-          "target_pressure"
+          "long_diagonal_pressure"
         )
         semanticSurfaces.collect {
           case surface
@@ -5457,8 +5456,16 @@ object MoveMeaningClaim:
       (
         detail.breakFile.exists(_.trim.nonEmpty) ||
         detail.structuralPurposeSubjects.exists(pawnAdvancePurposeSubject) ||
-          detail.label.exists(pawnAdvancePurposeToken)
+          detail.label.exists(pawnAdvancePurposeToken) ||
+          flankKingPressurePawnAdvanceDetail(detail)
       )
+
+  private def flankKingPressurePawnAdvanceDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.structuralRouteMove.flatMap(flankPawnAdvanceDestination).nonEmpty &&
+      detail.label.exists(_.equalsIgnoreCase("king-safety-pressure")) &&
+      EvidenceObjectBinding
+        .signatureValues(detail.objectBindingSignatures, "target", "Piece")
+        .exists(_.equalsIgnoreCase("king"))
 
   private def sameFilePawnAdvanceMove(move: String): Boolean =
     moveEndpoints(move).exists { case (from, to) =>
