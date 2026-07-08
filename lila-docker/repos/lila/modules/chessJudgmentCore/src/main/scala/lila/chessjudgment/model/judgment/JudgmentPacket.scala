@@ -2030,8 +2030,10 @@ object MoveMeaningSurface:
           chainCandidateSurfaces.filter(surface => surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
         else chainCandidateSurfaces
       val carrierPairs = publicIdeaChainCarrierPairs(chainSurfaces)
-      val allConsequenceCarriers = carrierPairs.filter((carrier, _) =>
-        publicIdeaChainConsequenceCarrierRole(carrier) && publicIdeaChainConsequenceCarrier(carrier)
+      val allConsequenceCarriers = carrierPairs.filter((carrier, surface) =>
+        publicIdeaChainConsequenceCarrierRole(carrier) &&
+          publicIdeaChainConsequenceCarrier(carrier) &&
+          publicIdeaChainCarrierMatchesSurfaceTarget(carrier, surface)
       )
       if evidenceSurfaces.isEmpty || !allowedSubjects.contains(subject) then Nil
       else
@@ -2044,6 +2046,7 @@ object MoveMeaningSurface:
           publicSemantics.flatMap(surface =>
             surface.evidence.boardCarriers
               .filter(carrier => carrier.role == "target" && publicIdeaChainConsequenceCarrier(carrier))
+              .filter(publicIdeaChainCarrierMatchesSurfaceTarget(_, surface))
               .sortBy(publicIdeaChainConsequenceCarrierSortKey)
               .take(1)
               .map(carrier => carrier -> surface)
@@ -2189,8 +2192,10 @@ object MoveMeaningSurface:
     val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
     val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
     val carrierPairs = publicIdeaChainCarrierPairs(evidenceSurfaces)
-    val allConsequenceCarriers = carrierPairs.filter((carrier, _) =>
-      publicIdeaChainConsequenceCarrierRole(carrier) && publicIdeaChainConsequenceCarrier(carrier)
+    val allConsequenceCarriers = carrierPairs.filter((carrier, surface) =>
+      publicIdeaChainConsequenceCarrierRole(carrier) &&
+        publicIdeaChainConsequenceCarrier(carrier) &&
+        publicIdeaChainCarrierMatchesSurfaceTarget(carrier, surface)
     )
     val materialTacticalCarrier = allConsequenceCarriers.exists((carrier, _) => materialEventPlanSubjectCarrier(carrier))
     val strongProofSurface =
@@ -2439,6 +2444,28 @@ object MoveMeaningSurface:
       case "PlanSubject" => !carrier.value.contains(",")
       case "Pawn" | "Square" | "File" => true
       case _                           => false
+
+  private def publicIdeaChainCarrierMatchesSurfaceTarget(
+      carrier: MoveMeaningSurfaceBoardCarrier,
+      surface: MoveMeaningSurface
+  ): Boolean =
+    val narrowPawnAdvanceSurface =
+      surface.idea.code == "target_pressure" &&
+        sameFilePawnAdvanceMove(surface.moveUci) &&
+        surface.target.squares.size == 1 &&
+        surface.target.files.isEmpty &&
+        surface.target.pieces == List("pawn") &&
+        surface.evidence.boardCarriers.count(carrier => carrier.role == "target" && carrier.kind == "Square") > 4
+    if !narrowPawnAdvanceSurface then true
+    else
+      val targetSquares = surface.target.squares.map(_.toLowerCase).toSet
+      val value = carrier.value.toLowerCase
+      carrier.kind match
+        case "Square" => targetSquares(value)
+        case "Pawn" | "PlanSubject" =>
+          val valueSquares = "[a-h][1-8]".r.findAllIn(value).toSet
+          valueSquares.exists(targetSquares)
+        case _ => false
 
   private def publicIdeaChainConsequenceCarrierRole(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
     carrier.role == "target" ||
