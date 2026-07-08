@@ -2010,12 +2010,25 @@ object MoveMeaningSurface:
         )
       val chainCandidateSurfaces =
         val surfacesByMove = preliminaryChainSurfaces.groupBy(surface => (surface.subject, surface.lineRole, surface.moveUci))
+        val sourceOnlyGenericCodes = Set("center_control", "piece_route", "piece_activity", "target_pressure", "passed_pawn_advance")
         preliminaryChainSurfaces.filterNot { surface =>
           val siblings = surfacesByMove.getOrElse((surface.subject, surface.lineRole, surface.moveUci), Nil).filterNot(_ == surface)
           val routeSiblings = siblings.filter(_.idea.code == "piece_route")
           val hasRouteSibling = routeSiblings.nonEmpty
+          val ownedSiblings = siblings.filter(_.evidence.proofLevel == "owned_cause")
           val counterplaySiblingsWithCarrier =
             siblings.filter(other => other.idea.code == "counterplay_control" && counterplayControlHasConcreteCarrier(other))
+          val sourceOnlyGenericDuplicate =
+            surface.evidence.proofLevel == "surface_evidence" &&
+              surface.evidence.causeIds.isEmpty &&
+              sourceOnlyGenericCodes(surface.idea.code) &&
+              ownedSiblings.exists(other =>
+                other.idea.code == surface.idea.code ||
+                  surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty ||
+                  surface.target.squares.intersect(other.target.squares).nonEmpty ||
+                  surface.target.files.intersect(other.target.files).nonEmpty ||
+                  surface.target.pieces.intersect(other.target.pieces).nonEmpty
+              )
           val targetPressureDuplicatesRouteCarrier =
             surface.idea.code == "target_pressure" &&
               surface.evidence.proofRelationKinds.isEmpty &&
@@ -2044,6 +2057,7 @@ object MoveMeaningSurface:
                 other.idea.code == "material_gain" ||
                 other.idea.code == "defensive_resource"
             )
+          sourceOnlyGenericDuplicate ||
           surface.idea.code == "pawn_break_timing" && breakClaimLacksMoveCarrier(surface) && hasSpecificSibling ||
           surface.idea.code == "target_pressure" &&
             surface.evidence.proofRelationKinds.isEmpty &&
