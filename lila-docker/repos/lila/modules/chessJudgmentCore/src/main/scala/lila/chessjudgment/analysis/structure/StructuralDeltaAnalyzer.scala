@@ -486,7 +486,8 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         opponentMobilityRestrictions =
           (
             opponentDiagonalRestrictions(beforeBoard, afterBoard, after.features, side, moveUci) ++
-              opponentBishopColorSafePawns(beforeBoard, afterBoard, side, moveUci)
+              opponentBishopColorSafePawns(beforeBoard, afterBoard, side, moveUci) ++
+              restrictedOpponentPawnAdvanceSubjects(beforeBoard, afterBoard, side, moveUci)
           ).distinct.sorted,
         kingRingPressureDelta = kingRingPressureDelta(before.features, after.features, side)
       )
@@ -703,6 +704,46 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       board.byPiece(enemy, Queen).count == 0 &&
       board.byPiece(side, Queen).count == 0 &&
       board.byPiece(side, Knight).count == 0
+
+  private def restrictedOpponentPawnAdvanceSubjects(
+      beforeBoard: Board,
+      afterBoard: Board,
+      side: Color,
+      moveUci: Option[String]
+  ): List[String] =
+    moveUci.toList.flatMap { uci =>
+      val origin = squareAt(uci.take(2))
+      val dest = squareAt(uci.drop(2).take(2))
+      val movedPiece = origin.flatMap(beforeBoard.pieceAt)
+      (origin, dest, movedPiece) match
+        case (Some(from), Some(to), Some(piece))
+            if piece.color == side &&
+              piece.role == Pawn &&
+              from.file == to.file &&
+              afterBoard.pieceAt(to).exists(afterPiece => afterPiece.color == side && afterPiece.role == Pawn) =>
+          beforeBoard.byPiece(!side, Pawn).squares.toList.flatMap { enemyPawn =>
+            oneStepPawnAdvance(enemyPawn.key, !side).toList.flatMap { advance =>
+              val blockedByMove = advance == to.key
+              val newlyAttacked =
+                pawnAttacks(to.key, side).contains(advance) &&
+                  !sidePawnAttacksTarget(beforeBoard, side, advance) &&
+                  squareAt(advance).exists(square => afterBoard.pieceAt(square).isEmpty)
+              Option.when(blockedByMove || newlyAttacked)(
+                s"pawn:${enemyPawn.key}-${advance}:advance-restricted"
+              ).toList
+            }
+          }
+        case _ =>
+          Nil
+    }.distinct.sorted
+
+  private def oneStepPawnAdvance(square: String, side: Color): Option[String] =
+    for
+      file <- fileOf(square)
+      rank <- rankOf(square)
+      targetRank = rank + forwardDirection(side)
+      if targetRank >= 1 && targetRank <= 8
+    yield s"$file$targetRank"
 
   private def diagonalRestrictions(
       beforeBoard: Board,

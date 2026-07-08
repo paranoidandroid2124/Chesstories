@@ -942,6 +942,7 @@ private[judgment] object StructuralPurposeSubject:
         value.startsWith("resolved-tension:") ||
         value.startsWith("weak-square:") ||
         value.startsWith("rook-lift:") ||
+        value.matches("pawn:[a-h][1-8]-[a-h][1-8]:advance-restricted.*") ||
         value.startsWith("passed-pawn-")
     )(value)
 
@@ -2343,7 +2344,7 @@ object StrategicMechanismEvidence:
             )
           ),
           Option.when(payload.hasOpponentMobilityRestriction)(
-            StrategicMechanismKind.CenterControl -> signal(
+            StrategicMechanismKind.Activity -> signal(
               StrategicMechanismSignalKind.StructuralDelta,
               "opponent-mobility-restriction",
               record.ref,
@@ -4324,6 +4325,8 @@ object StructuralDeltaEvidence:
           after.toIntOption.exists(afterValue => before.toIntOption.exists(beforeValue => afterValue < beforeValue))
       case colorComplexSafeSubject(_) =>
         true
+      case restrictedPawnAdvanceSubject(_, _) =>
+        true
       case _ =>
         false
 
@@ -4340,6 +4343,8 @@ object StructuralDeltaEvidence:
     raw"bishop:([a-h][1-8]):diagonal-denial:blocked-by:([a-h][1-8]):locked-center:mobility-([0-9]+)-to-([0-9]+)".r
   private val colorComplexSafeSubject =
     raw"(?:bishop|pawn):([a-h][1-8](?:-[a-h][1-8])?):color-complex-safe".r
+  private val restrictedPawnAdvanceSubject =
+    raw"pawn:([a-h][1-8])-([a-h][1-8]):advance-restricted".r
 
   private lazy val consequenceCategories: Map[TransitionConsequenceKind, Set[TransitionConsequenceCategory]] =
     Map(

@@ -420,14 +420,14 @@ object JudgmentSubjectBinding:
   def playedRelated(binding: SubjectBindingClass): Boolean =
     binding != SubjectBindingClass.Other
 
-  def sourceRecordOwnsCurrentPlayedMove(record: EvidenceRecord, move: String): Boolean =
+  def sourceRecordCoversCurrentPlayedMove(record: EvidenceRecord, move: String): Boolean =
     recordMentionsMove(record, move) &&
       (
         record.ref.scope == EvidenceScope.PlayedTransition ||
           record.ref.line.exists(line => line.role == LineNodeRole.Played && sameMove(line.rootMove, move))
       )
 
-  def sourceRecordOwnsPawnBreakMove(record: EvidenceRecord, move: String): Boolean =
+  def sourceRecordCoversPawnBreakMove(record: EvidenceRecord, move: String): Boolean =
     recordMentionsMove(record, move) &&
       (
         record.ref.scope == EvidenceScope.PlayedTransition ||
@@ -1949,7 +1949,7 @@ object MoveMeaningSurface:
       if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
       else List(("played_move", verdict.playedMove, "played_pv_"))
     subjectSpecs.flatMap { (subject, subjectMove, pvRolePrefix) =>
-      val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && publicIdeaChainSurfaceHasCarrier(surface))
+      val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && publicIdeaChainSurfaceEligible(surface))
       val rootMoveRole = if subject == "reference_move" then "best_move" else "played_move"
       val pv = surfaces
         .filter(_.subject == subject)
@@ -2192,7 +2192,7 @@ object MoveMeaningSurface:
       pvRolePrefix: String,
       surfaces: List[MoveMeaningSurface]
   ): Boolean =
-    val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && publicIdeaChainSurfaceHasCarrier(surface))
+    val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && publicIdeaChainSurfaceEligible(surface))
     val rootMoveRole = if subject == "reference_move" then "best_move" else "played_move"
     val pv = surfaces
       .filter(_.subject == subject)
@@ -2260,7 +2260,7 @@ object MoveMeaningSurface:
           (pv.nonEmpty && concreteConsequence)
       )
 
-  private def publicIdeaChainSurfaceHasCarrier(surface: MoveMeaningSurface): Boolean =
+  private def publicIdeaChainSurfaceEligible(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel != "none" &&
       surface.evidence.hasCarrier &&
       (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty) &&
@@ -2375,12 +2375,15 @@ object MoveMeaningSurface:
     surface.evidence.proofLevel == "owned_cause" &&
       (
         surface.evidence.boardCarriers.exists(carrier =>
+          val value = carrier.value.toLowerCase
           carrier.role == "target" &&
             carrier.kind == "PlanSubject" &&
             (
-              carrier.value.startsWith("material-capture:") ||
-                carrier.value.startsWith("material-recapture:") ||
-                carrier.value.startsWith("passed-pawn:")
+              value.startsWith("material-capture:") ||
+                value.startsWith("material-recapture:") ||
+                value.startsWith("passed-pawn:") ||
+                value.contains(":advance-restricted") ||
+                value.contains(":color-complex-safe")
             )
         ) ||
           (
@@ -2852,11 +2855,27 @@ object MoveMeaningSurface:
       ).map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
     val counterplayRestrictionFiles =
       counterplayBreakFiles.map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
+    def restrictedPawnAdvance(value: String): Option[String] =
+      val normalized = value.trim.toLowerCase.stripPrefix("subject:")
+      Option.when(normalized.matches("pawn:[a-h][1-8]-[a-h][1-8]:advance-restricted.*"))(
+        normalized.stripPrefix("pawn:").takeWhile(_ != ':')
+      )
+    val counterplayRestrictedPawnAdvances =
+      (
+        claim.routeIdentityParts ++
+          claim.boardCarriers.collect {
+            case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" => carrier.value
+          }
+      ).flatMap(restrictedPawnAdvance).distinct.sorted
     val counterplayRestrictionLabel =
-      counterplayRestrictionFiles match
-        case file :: Nil             => s"restrains $file-pawn break"
-        case files if files.nonEmpty => s"restrains ${files.mkString("/")}-pawn breaks"
-        case _                       => "restricts counterplay"
+      counterplayRestrictedPawnAdvances match
+        case advance :: Nil                 => s"restrains $advance"
+        case advances if advances.nonEmpty => s"restrains ${advances.mkString("/")}"
+        case _ =>
+          counterplayRestrictionFiles match
+            case file :: Nil             => s"restrains $file-pawn break"
+            case files if files.nonEmpty => s"restrains ${files.mkString("/")}-pawn breaks"
+            case _                       => "restricts counterplay"
     val counterplayRaceFiles =
       currentMoveFile.filter(counterplayBreakFiles.contains).toList match
         case file :: Nil => List(file)
@@ -4034,11 +4053,11 @@ object MoveMeaningClaim:
         .values
         .flatMap(mergeMeaningClaims)
         .toList
-    val unshadowedClaims =
-      suppressShadowedPlanContinuity(
-        suppressShadowedRouteFunctionClaims(suppressShadowedCounterplayRacePawnBreak(claims))
+    val publicDedupedClaims =
+      dropPublicPlanContinuityDuplicates(
+        dropPublicRouteFunctionDuplicates(dropPublicCounterplayRacePawnBreakDuplicates(claims))
       )
-    withPublicSurfaceEligibility(view.verdict, unshadowedClaims)
+    withPublicSurfaceEligibility(view.verdict, publicDedupedClaims)
       .sortBy(claim =>
         (claim.meaningKind, claim.role, claim.lineRole, claim.laneKey, claim.frameId)
       )
@@ -4065,7 +4084,7 @@ object MoveMeaningClaim:
       !planContinuityShadowedByConcreteCurrentClaim(claims, claim) &&
       !breakFunctionShadowedByOwnedBreak(claims, claim) &&
       !genericActivityOrPlanShadowedByOwnedTargetPressure(claims, claim) &&
-      !counterplayWithoutCarrierShadowedByConcreteClaim(claims, claim) &&
+      !carrierlessCounterplaySuppressedByConcreteClaim(claims, claim) &&
       publicSpecificPlanContinuityClaim(claims, claim) &&
       !badMoveSuppressesCurrentMoveSurface(verdict, claim)
 
@@ -4168,7 +4187,7 @@ object MoveMeaningClaim:
       JudgmentSubjectBinding.normalizeMove(claim.moveUci) ==
       JudgmentSubjectBinding.normalizeMove(verdict.candidateLine.rootMove)
 
-  private def suppressShadowedRouteFunctionClaims(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
+  private def dropPublicRouteFunctionDuplicates(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
     val ownedRouteKeys =
       claims
         .filter(claim =>
@@ -4323,11 +4342,11 @@ object MoveMeaningClaim:
         )
       )
 
-  private def counterplayWithoutCarrierShadowedByConcreteClaim(
+  private def carrierlessCounterplaySuppressedByConcreteClaim(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
-    def claimCanCarryTheMoveInstead(other: MoveMeaningClaim): Boolean =
+    def concreteClaimCanRepresentCounterplayTarget(other: MoveMeaningClaim): Boolean =
       other.meaningKind == "TargetPressure" ||
         other.meaningKind == "PieceRoute" ||
         other.meaningKind == "PawnBreakTiming" ||
@@ -4361,7 +4380,7 @@ object MoveMeaningClaim:
               other.moveUci == claim.moveUci &&
               other.lineRole == claim.lineRole &&
               currentMoveSurfaceLane(other) &&
-              claimCanCarryTheMoveInstead(other) &&
+              concreteClaimCanRepresentCounterplayTarget(other) &&
               targetOverlap(other, claim)
           )
       )
@@ -4430,7 +4449,7 @@ object MoveMeaningClaim:
   private def routePart(claim: MoveMeaningClaim, prefix: String): Option[String] =
     claim.routeIdentityParts.collectFirst { case part if part.startsWith(prefix) => part.stripPrefix(prefix) }
 
-  private def suppressShadowedCounterplayRacePawnBreak(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
+  private def dropPublicCounterplayRacePawnBreakDuplicates(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
     val raceClaims =
       claims.filter(claim =>
           claim.meaningKind == "CounterplayRace" &&
@@ -4462,7 +4481,7 @@ object MoveMeaningClaim:
           raceClaim.causeEvidenceIds.intersect(pawnBreakClaim.causeEvidenceIds).nonEmpty
       )
 
-  private def suppressShadowedPlanContinuity(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
+  private def dropPublicPlanContinuityDuplicates(claims: List[MoveMeaningClaim]): List[MoveMeaningClaim] =
     val concreteCurrentClaims =
       claims
         .filter(claim =>
@@ -5988,7 +6007,7 @@ object MoveMeaningClaim:
       (detail.sourceEvidenceIds ++ detail.candidateEvidenceIds)
       .distinct
       .sorted
-      .filter(id => evidenceGraph.byId.get(id).exists(JudgmentSubjectBinding.sourceRecordOwnsCurrentPlayedMove(_, claimMove)))
+      .filter(id => evidenceGraph.byId.get(id).exists(JudgmentSubjectBinding.sourceRecordCoversCurrentPlayedMove(_, claimMove)))
     graphOwnedSources
 
   private def currentMoveStructureContextSourceEvidenceIds(
@@ -6716,7 +6735,7 @@ object MoveMeaningClaim:
     val sourceOwnsMove =
       currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove) ||
         detail.sourceEvidenceIds.exists(id =>
-          evidenceGraph.byId.get(id).exists(JudgmentSubjectBinding.sourceRecordOwnsPawnBreakMove(_, claimMove))
+          evidenceGraph.byId.get(id).exists(JudgmentSubjectBinding.sourceRecordCoversPawnBreakMove(_, claimMove))
         )
     sourceOwnsMove ||
       moveTokens(objectSignatures).contains(normalizedMove) ||
