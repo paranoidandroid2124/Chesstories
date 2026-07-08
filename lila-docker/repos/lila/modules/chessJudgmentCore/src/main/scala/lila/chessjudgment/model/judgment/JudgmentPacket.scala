@@ -3742,6 +3742,13 @@ object MoveMeaningSurface:
           else withoutMoveDestinationWhenMixed(targetSquaresWithoutOrigin)
         targetWithContext.copy(squares = targetSquares)
       else targetWithContext
+    val publicTarget =
+      if idea == "target_pressure" && !target.pieces.exists(_.equalsIgnoreCase("king")) then
+        val actorPieces = evidence.boardCarriers.collect {
+          case carrier if carrier.role == "actor" && carrier.kind == "Piece" => carrier.value.toLowerCase
+        }.toSet
+        target.copy(pieces = target.pieces.filterNot(piece => actorPieces(piece.toLowerCase)))
+      else target
     val technique = endgameTechnique(claim)
     MoveMeaningSurface(
       moveUci = claim.moveUci,
@@ -3767,7 +3774,7 @@ object MoveMeaningSurface:
       ),
       failureFamily = publicFailureFamily,
       problem = publicProblem,
-      target = target,
+      target = publicTarget,
       priority = surfacePriority,
       comparisonLossSides = comparisonLossSides(claim),
       comparisonLosses = comparisonLosses(claim),
