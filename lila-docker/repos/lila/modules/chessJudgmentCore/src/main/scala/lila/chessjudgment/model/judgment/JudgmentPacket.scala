@@ -3342,7 +3342,25 @@ object MoveMeaningSurface:
       claim.objectCarrierReady
 
   private def passedPawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
-    val destination = moveDestination(claim.moveUci)
+    val normalizedMove = JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase
+    val endpoints =
+      Option.when(normalizedMove.matches("[a-h][1-8][a-h][1-8].*"))(normalizedMove.take(2), normalizedMove.slice(2, 4))
+    val destination = endpoints.map(_._2)
+    def sameFileForwardPassedPawn(value: String): Boolean =
+      endpoints.exists { case (from, to) =>
+        val passedSquare = value.stripPrefix("passed-pawn:").takeWhile(_ != ':')
+        passedSquare.length == 2 &&
+          from.take(1) == to.take(1) &&
+          to.take(1) == passedSquare.take(1) &&
+          (for
+            fromRank <- from.drop(1).toIntOption
+            toRank <- to.drop(1).toIntOption
+            passedRank <- passedSquare.drop(1).toIntOption
+          yield
+            val direction = toRank.compare(fromRank)
+            direction != 0 && direction == passedRank.compare(toRank)
+          ).getOrElse(false)
+      }
     currentMoveLikelyPawnAdvance(claim) &&
       (
         claim.routeIdentityParts.exists(_.startsWith("subject:passed-pawn-advanced:")) ||
@@ -3350,7 +3368,8 @@ object MoveMeaningSurface:
             carrier.kind == "PlanSubject" &&
               (
                 carrier.value.startsWith("passed-pawn-advanced:") ||
-                  destination.exists(square => carrier.value.equalsIgnoreCase(s"passed-pawn:$square"))
+                  destination.exists(square => carrier.value.equalsIgnoreCase(s"passed-pawn:$square")) ||
+                  carrier.value.startsWith("passed-pawn:") && sameFileForwardPassedPawn(carrier.value.toLowerCase)
               )
           )
       )
