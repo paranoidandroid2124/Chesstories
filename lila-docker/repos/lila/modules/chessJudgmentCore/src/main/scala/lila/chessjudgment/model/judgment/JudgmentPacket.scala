@@ -2013,6 +2013,16 @@ object MoveMeaningSurface:
       val chainSurfacesAfterSameMovePruning =
         val surfacesByMove = chainSurfacesBeforeSameMovePruning.groupBy(surface => (surface.subject, surface.lineRole, surface.moveUci))
         val surfaceOnlyFallbackCodes = Set("center_control", "piece_route", "piece_activity", "target_pressure", "passed_pawn_advance")
+        val routeCoveringOwnedCodes = Set(
+          "terminal_mate",
+          "promotion_race",
+          "promotion",
+          "draw_resource",
+          "material_gain",
+          "material_loss",
+          "passed_pawn_advance",
+          "pawn_break_timing"
+        )
         chainSurfacesBeforeSameMovePruning.filterNot { surface =>
           val siblings = surfacesByMove.getOrElse((surface.subject, surface.lineRole, surface.moveUci), Nil).filterNot(_ == surface)
           val routeSiblings = siblings.filter(routeCarrierSurface)
@@ -2020,16 +2030,29 @@ object MoveMeaningSurface:
           val ownedSiblings = siblings.filter(_.evidence.proofLevel == "owned_cause")
           val concreteCounterplayControlSiblings =
             siblings.filter(other => other.idea.code == "counterplay_control" && counterplayControlHasConcreteCarrier(other))
+          val routeDestination = moveDestination(surface.moveUci)
+          val routeCoveredByOwnedSibling =
+            routeCarrierSurface(surface) &&
+              ownedSiblings.exists(other =>
+                other.idea.code == surface.idea.code ||
+                  routeCoveringOwnedCodes(other.idea.code) ||
+                  other.idea.code == "outpost_attempt" && (
+                    routeDestination.exists(destination => other.target.squares.exists(_.equalsIgnoreCase(destination)))
+                  )
+              )
           val surfaceOnlyFallbackCoveredByOwnedSibling =
             surface.evidence.proofLevel == "surface_evidence" &&
               surface.evidence.causeIds.isEmpty &&
               surfaceOnlyFallbackCodes(surface.idea.code) &&
-              ownedSiblings.exists(other =>
-                other.idea.code == surface.idea.code ||
-                  surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty ||
-                  surface.target.squares.intersect(other.target.squares).nonEmpty ||
-                  surface.target.files.intersect(other.target.files).nonEmpty ||
-                  surface.target.pieces.intersect(other.target.pieces).nonEmpty
+              (
+                routeCoveredByOwnedSibling ||
+                  !routeCarrierSurface(surface) && ownedSiblings.exists(other =>
+                    other.idea.code == surface.idea.code ||
+                      surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty ||
+                      surface.target.squares.intersect(other.target.squares).nonEmpty ||
+                      surface.target.files.intersect(other.target.files).nonEmpty ||
+                      surface.target.pieces.intersect(other.target.pieces).nonEmpty
+                  )
               )
           val genericTacticCoveredByOwnedSibling =
             surface.idea.code == "tactical_pressure" &&
