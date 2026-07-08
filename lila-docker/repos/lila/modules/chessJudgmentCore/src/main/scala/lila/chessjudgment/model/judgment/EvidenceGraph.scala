@@ -3319,6 +3319,12 @@ final case class LineFactEvidence(
     lineReplayMoves.drop(1)
   def materialCaptures: List[LineMaterialCapture] =
     material.toList.flatMap(_.captures)
+  def materialGainCapturesByMover: List[LineMaterialCapture] =
+    material.toList.flatMap { summary =>
+      val pawnGains =
+        if summary.hasUnrecoveredPawnGainForMover then summary.pawnCapturesByMover.filterNot(_.recapture) else Nil
+      (summary.nonPawnCapturesByMover.filterNot(_.recapture) ++ pawnGains).distinct
+    }
   def materialSacrificeCapture(capture: LineMaterialCapture): Boolean =
     !capture.recapture &&
       materialValue(capture.attackerRole) > materialValue(capture.capturedRole) &&

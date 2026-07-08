@@ -5353,11 +5353,20 @@ object MoveMeaningClaim:
               val checkIdentityCarriers =
                 if kingPressureIdentityCarrier then Nil
                 else checkIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove)
+              val proofLineConsequences =
+                roleCompatibleCauseFrames.flatMap(_.proofLineConsequences).distinct.sortBy(_.toString)
               val spareIdentityCarriers =
                 checkIdentityCarriers ++
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
                   passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
-                  materialCaptureIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove, detail, verdict) ++
+                  materialCaptureIdentityCarriersFromLineEvidence(
+                    evidenceGraph,
+                    sourceEvidenceIds,
+                    claimMove,
+                    detail,
+                    verdict,
+                    proofLineConsequences
+                  ) ++
                   planPawnAdvanceCarriers ++
                   breakFileIdentityCarriers
               val claimBoardCarriers =
@@ -5400,8 +5409,6 @@ object MoveMeaningClaim:
                 roleCompatibleCauseFrames.flatMap(_.proofRelationKinds).distinct.sortBy(_.toString)
               val proofLineEvents =
                 roleCompatibleCauseFrames.flatMap(_.proofLineEvents).distinct.sortBy(_.toString)
-              val proofLineConsequences =
-                roleCompatibleCauseFrames.flatMap(_.proofLineConsequences).distinct.sortBy(_.toString)
               val proofRelationDetails =
                 roleCompatibleCauseFrames.flatMap(_.proofRelationDetails).distinct.sorted
               val proofThreatDrivers =
@@ -5709,7 +5716,8 @@ object MoveMeaningClaim:
       sourceEvidenceIds: List[String],
       claimMove: String,
       detail: PositionPlanTechniqueSemanticDetail,
-      verdict: MoveJudgmentVerdictFrame
+      verdict: MoveJudgmentVerdictFrame,
+      proofLineConsequences: List[LineConsequenceKind]
   ): List[MoveMeaningSurfaceBoardCarrier] =
     val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
     val claimDestination = moveEndpoints(claimMove).map(_._2)
@@ -5732,9 +5740,19 @@ object MoveMeaningClaim:
               val sacrifice =
                 Option.when(line.materialSacrificeCapture(capture))(
                   MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"material-sacrifice:${capture.square.key}")
-                )
+              )
               base :: sacrifice.toList
             )
+        val futureMaterialGainCarriers =
+          if currentCaptureCarriers.nonEmpty || !proofLineConsequences.contains(LineConsequenceKind.MaterialGain) then Nil
+          else
+            line.materialGainCapturesByMover
+              .filter(_.plyOffset > 0)
+              .sortBy(capture => (capture.plyOffset, -capture.valueCp))
+              .take(2)
+              .map(capture =>
+                MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"material-capture:${capture.square.key}")
+              )
         val replyCapturesMovedPiece =
           if !currentMoveSacrificeAllowed then Nil
           else
@@ -5748,7 +5766,7 @@ object MoveMeaningClaim:
                 )
                 .map(capture => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"material-sacrifice:${capture.square.key}"))
             )
-        currentCaptureCarriers ++ replyCapturesMovedPiece
+        currentCaptureCarriers ++ futureMaterialGainCarriers ++ replyCapturesMovedPiece
       )
       .distinct
 
