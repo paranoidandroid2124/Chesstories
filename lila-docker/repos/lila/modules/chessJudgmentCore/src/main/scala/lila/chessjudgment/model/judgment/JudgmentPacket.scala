@@ -3681,7 +3681,20 @@ object MoveMeaningSurface:
       case _                      => "plan_continuity"
 
   private def planContinuityTargetPressureCarrier(claim: MoveMeaningClaim): Boolean =
+    val selfBlockingRoute =
+      claim.routeIdentityParts.exists(part =>
+        val normalized = part.toLowerCase
+        normalized.contains("diagonal-denial") || normalized.contains("self-block")
+      )
+    val mobilityLossPlan =
+      claim.label.exists(label =>
+        val normalized = label.toLowerCase
+        normalized == "mobility-loss" || normalized == "strategic-concession"
+      )
+    val unprovedNegativePlan =
+      claim.causeEvidenceIds.isEmpty && (selfBlockingRoute || mobilityLossPlan)
     claim.meaningKind == "PlanContinuity" &&
+      !unprovedNegativePlan &&
       MoveMeaningClaim.targetPressureCarrier(claim) &&
       claim.objectCarrierReady
 
