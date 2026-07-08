@@ -3170,7 +3170,7 @@ object MoveMeaningSurface:
         case _ if idea == "target_pressure" && filePressureCarrier && carrierTargetFiles.nonEmpty =>
           baseTarget.copy(files = (baseTarget.files ++ carrierTargetFiles).distinct.sorted)
         case _ if idea == "piece_route" && routeToSquares.nonEmpty =>
-          baseTarget.copy(squares = routeToSquares.toList.sorted)
+          baseTarget.copy(squares = routeToSquares.toList.sorted, pieces = routePiece.toList)
         case _ => baseTarget
     val target =
       if idea == "target_pressure" then targetWithContext.copy(squares = withoutMoveOrigin(targetWithContext.squares))
