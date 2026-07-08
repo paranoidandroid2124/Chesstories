@@ -2018,7 +2018,7 @@ object MoveMeaningSurface:
           val ownedSiblings = siblings.filter(_.evidence.proofLevel == "owned_cause")
           val counterplaySiblingsWithCarrier =
             siblings.filter(other => other.idea.code == "counterplay_control" && counterplayControlHasConcreteCarrier(other))
-          val dropSourceOnlyCompanionFromIdeaChain =
+          val sourceOnlyCompanionRestatesOwnedSibling =
             surface.evidence.proofLevel == "surface_evidence" &&
               surface.evidence.causeIds.isEmpty &&
               sourceOnlyCompanionCodes(surface.idea.code) &&
@@ -2029,7 +2029,7 @@ object MoveMeaningSurface:
                   surface.target.files.intersect(other.target.files).nonEmpty ||
                   surface.target.pieces.intersect(other.target.pieces).nonEmpty
               )
-          val dropTacticalFillerFromIdeaChain =
+          val genericTacticalPressureRestatesOwnedSibling =
             surface.idea.code == "tactical_pressure" &&
               surface.idea.label == "tactical pressure" &&
               ownedSiblings.exists(other =>
@@ -2041,7 +2041,7 @@ object MoveMeaningSurface:
                       surface.target.pieces.intersect(other.target.pieces).nonEmpty
                   )
               )
-          val dropTargetPressureCoveredByRoute =
+          val targetPressureRestatesRouteSibling =
             surface.idea.code == "target_pressure" &&
               surface.evidence.proofRelationKinds.isEmpty &&
               surface.evidence.proofThreatDrivers.isEmpty &&
@@ -2060,7 +2060,7 @@ object MoveMeaningSurface:
                       surface.target.pieces.intersect(other.target.pieces).nonEmpty
                   )
               )
-          val specificSiblingCanCarryChain =
+          val hasSpecificSiblingCarrier =
             siblings.exists(other =>
               other.idea.code == "piece_route" ||
                 other.idea.code == "target_pressure" && !unprovedBroadTargetPressure(other) ||
@@ -2069,9 +2069,9 @@ object MoveMeaningSurface:
                 other.idea.code == "material_gain" ||
                 other.idea.code == "defensive_resource"
             )
-          dropSourceOnlyCompanionFromIdeaChain ||
-          dropTacticalFillerFromIdeaChain ||
-          surface.idea.code == "pawn_break_timing" && breakClaimWithoutMoveCarrier(surface) && specificSiblingCanCarryChain ||
+          sourceOnlyCompanionRestatesOwnedSibling ||
+          genericTacticalPressureRestatesOwnedSibling ||
+          surface.idea.code == "pawn_break_timing" && breakClaimWithoutMoveCarrier(surface) && hasSpecificSiblingCarrier ||
           surface.idea.code == "target_pressure" &&
             surface.evidence.proofRelationKinds.isEmpty &&
             surface.evidence.proofThreatDrivers.isEmpty &&
@@ -2080,7 +2080,7 @@ object MoveMeaningSurface:
                 surface.target.pieces.intersect(other.target.pieces).nonEmpty ||
                 surface.target.files.intersect(other.target.files).nonEmpty
             ) ||
-          dropTargetPressureCoveredByRoute ||
+          targetPressureRestatesRouteSibling ||
           surface.idea.code == "target_pressure" && hasRouteSibling &&
             (targetPressureOnlyMarksMoveDestination(surface) || unprovedBroadTargetPressure(surface))
         }
@@ -3182,6 +3182,23 @@ object MoveMeaningSurface:
             case pieces if pieces.nonEmpty && pieces.size <= 3 => s"${pieces.mkString("/")} pressure"
             case _ => "target pressure"
         case _ => "target pressure"
+    val tacticalPressureLabel =
+      val relationLabels =
+        claim.proofRelationKinds
+          .filter(kind =>
+            kind != RelationFactKind.BadPieceLiquidation &&
+              kind != RelationFactKind.StalemateTrap &&
+              kind != RelationFactKind.PerpetualCheck
+          )
+          .map(kind => RelationFactKind.id(kind).replace('_', ' '))
+          .distinct
+          .sorted
+      relationLabels match
+        case label :: Nil => label
+        case labels if labels.nonEmpty && labels.size <= 2 => labels.mkString("/")
+        case _ if claim.causeKinds.contains(RelativeCauseKind.RecaptureRecoveryWindow) => "recapture recovery"
+        case _ if claim.proofThreatDrivers.contains(ThreatDriver.MateThreat)           => "mate threat"
+        case _                                                                         => "tactical pressure"
     val outpostLabel =
       val square = moveDestination(claim.moveUci).orElse(claim.targetSquares.map(_.toLowerCase).distinct.sorted.headOption)
       val piece =
@@ -3323,6 +3340,7 @@ object MoveMeaningSurface:
         case ("long_diagonal_pressure", _) if bishopMentioned => "bishop diagonal pressure"
         case ("material_gain", _) => materialGainLabel
         case ("compensation", _) if materialSacrificeCompensationClaim(claim) => sacrificeCompensationLabel
+        case ("tactical_pressure", _) => tacticalPressureLabel
         case ("passed_pawn_advance", _) => passedPawnAdvanceLabel
         case ("outpost_attempt", _) => outpostLabel
         case ("piece_route", _) if routeLineUnlockClaim(claim) => opensLineLabel
@@ -4202,18 +4220,18 @@ object MoveMeaningClaim:
       claim: MoveMeaningClaim
   ): Boolean =
     publicSurfaceLaneAllowed(claim) &&
-      !sameRootReferenceSurface(verdict, claim) &&
-      !terminalTechniqueCoveredByTerminalClaim(claims, claim) &&
-      !activityCoveredByOwnedRoute(claims, claim) &&
-      !planPurposeCoveredByOwnedRoute(claims, claim) &&
-      !ownedPlanCoveredBySpecificCurrentClaim(claims, claim) &&
-      !breakFunctionCoveredByOwnedBreak(claims, claim) &&
-      !activityOrPlanCoveredByOwnedPressure(claims, claim) &&
-      !counterplayControlWithoutOwnCarrier(claims, claim) &&
-      publicSpecificPlanContinuityClaim(claims, claim) &&
+      !sameRootReferenceDuplicate(verdict, claim) &&
+      !terminalTechniqueRestatesTerminalResult(claims, claim) &&
+      !activityRestatesOwnedRoute(claims, claim) &&
+      !planPurposeRestatesOwnedRoute(claims, claim) &&
+      !genericOwnedPlanRestatesSpecificClaim(claims, claim) &&
+      !breakFunctionRestatesOwnedBreak(claims, claim) &&
+      !activityOrPlanRestatesOwnedPressure(claims, claim) &&
+      !counterplayControlLacksOwnCarrier(claims, claim) &&
+      planContinuityCarrierAllowed(claims, claim) &&
       !badMoveSuppressesCurrentMoveSurface(verdict, claim)
 
-  private def sameRootReferenceSurface(
+  private def sameRootReferenceDuplicate(
       verdict: Option[MoveJudgmentVerdictFrame],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4239,7 +4257,7 @@ object MoveMeaningClaim:
           status == "ContradictedByTerminalProof"
       )
 
-  private def terminalTechniqueCoveredByTerminalClaim(
+  private def terminalTechniqueRestatesTerminalResult(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4258,7 +4276,7 @@ object MoveMeaningClaim:
   private def terminalConsequenceKinds(claim: MoveMeaningClaim): Set[String] =
     claim.terminalConsequenceKinds.filter(LineConsequenceKind.terminalResultProofName).toSet
 
-  private def publicSpecificPlanContinuityClaim(
+  private def planContinuityCarrierAllowed(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4346,7 +4364,7 @@ object MoveMeaningClaim:
   private def routeIdentityKey(claim: MoveMeaningClaim): Option[(String, String, List[String])] =
     Option.when(claim.routeIdentityParts.nonEmpty)((claim.lineRole, claim.moveUci, claim.routeIdentityParts))
 
-  private def activityCoveredByOwnedRoute(
+  private def activityRestatesOwnedRoute(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4386,7 +4404,7 @@ object MoveMeaningClaim:
             )
       )
 
-  private def planPurposeCoveredByOwnedRoute(
+  private def planPurposeRestatesOwnedRoute(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4402,7 +4420,7 @@ object MoveMeaningClaim:
             claim.routeIdentityParts.exists(_.toLowerCase.contains(":line-unlock:by:"))
       )
 
-  private def breakFunctionCoveredByOwnedBreak(
+  private def breakFunctionRestatesOwnedBreak(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4431,7 +4449,7 @@ object MoveMeaningClaim:
           other.breakFiles.toSet.intersect(claim.breakFiles.toSet).nonEmpty
       )
 
-  private def activityOrPlanCoveredByOwnedPressure(
+  private def activityOrPlanRestatesOwnedPressure(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4479,7 +4497,7 @@ object MoveMeaningClaim:
         )
       )
 
-  private def counterplayControlWithoutOwnCarrier(
+  private def counterplayControlLacksOwnCarrier(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -4656,7 +4674,7 @@ object MoveMeaningClaim:
             true
       )
 
-  private def ownedPlanCoveredBySpecificCurrentClaim(
+  private def genericOwnedPlanRestatesSpecificClaim(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
