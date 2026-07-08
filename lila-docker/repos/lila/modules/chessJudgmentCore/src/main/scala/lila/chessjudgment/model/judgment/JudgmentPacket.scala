@@ -1993,7 +1993,7 @@ object MoveMeaningSurface:
                 sameFilePawnAdvanceMove(surface.moveUci) =>
             JudgmentSubjectBinding.normalizeMove(surface.moveUci).toLowerCase
         }.toSet
-      val chainCandidateSurfaces =
+      val preliminaryChainSurfaces =
         semanticSurfaces.filterNot(surface =>
           surface.idea.code == "piece_route" &&
             purposeOwnedPawnMoves.contains(JudgmentSubjectBinding.normalizeMove(surface.moveUci).toLowerCase)
@@ -2008,6 +2008,23 @@ object MoveMeaningSurface:
                 other.evidence.sourceIds.intersect(surface.evidence.sourceIds).nonEmpty
             )
         )
+      val chainCandidateSurfaces =
+        val surfacesByMove = preliminaryChainSurfaces.groupBy(surface => (surface.subject, surface.lineRole, surface.moveUci))
+        preliminaryChainSurfaces.filterNot { surface =>
+          val siblings = surfacesByMove.getOrElse((surface.subject, surface.lineRole, surface.moveUci), Nil).filterNot(_ == surface)
+          val hasRouteSibling = siblings.exists(_.idea.code == "piece_route")
+          val hasConcreteSibling =
+            siblings.exists(other =>
+              other.idea.code == "piece_route" ||
+                other.idea.code == "target_pressure" && !publicIdeaChainBroadTargetPressure(other) ||
+                other.idea.code == "long_diagonal_pressure" ||
+                other.idea.code == "material_gain" ||
+                other.idea.code == "defensive_resource"
+            )
+          surface.idea.code == "pawn_break_timing" && publicIdeaChainGenericBreakPreparation(surface) && hasConcreteSibling ||
+          surface.idea.code == "target_pressure" && hasRouteSibling &&
+            (publicIdeaChainRouteOnlyTargetPressure(surface) || publicIdeaChainBroadTargetPressure(surface))
+        }
       val chainSurfaces =
         if terminal.nonEmpty then
           chainCandidateSurfaces.filter(surface => surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
@@ -2302,6 +2319,33 @@ object MoveMeaningSurface:
       case "piece_activity"         => 10
       case "plan_continuity"        => 11
       case _                        => 12
+
+  private def publicIdeaChainRouteOnlyTargetPressure(surface: MoveMeaningSurface): Boolean =
+    surface.target.files.isEmpty &&
+      surface.target.squares.nonEmpty &&
+      moveDestination(surface.moveUci).exists(to => surface.target.squares.forall(_.equalsIgnoreCase(to)))
+
+  private def publicIdeaChainBroadTargetPressure(surface: MoveMeaningSurface): Boolean =
+    surface.target.files.isEmpty &&
+      surface.target.squares.size > 4 &&
+      surface.evidence.proofRelationKinds.isEmpty &&
+      surface.evidence.proofThreatDrivers.isEmpty &&
+      surface.terminalConsequences.isEmpty &&
+      surface.endgameTechnique.isEmpty
+
+  private def publicIdeaChainGenericBreakPreparation(surface: MoveMeaningSurface): Boolean =
+    !sameFilePawnAdvanceMove(surface.moveUci) &&
+      surface.target.files.isEmpty &&
+      !surface.evidence.boardCarriers.exists(carrier =>
+        val value = carrier.value.toLowerCase
+        carrier.role == "target" &&
+          carrier.kind == "PlanSubject" &&
+          (
+            value.startsWith("break-file:") ||
+              value.startsWith("created-tension:") ||
+              value.startsWith("resolved-tension:")
+          )
+      )
 
   private def counterplayControlConcreteConsequence(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel == "owned_cause" &&
@@ -2719,6 +2763,15 @@ object MoveMeaningSurface:
         .take(1) match
           case file if file.matches("[a-h]") => Some(file)
           case _                             => None
+    val moveOriginSquare =
+      val normalized = JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase
+      Option.when(normalized.matches("[a-h][1-8][a-h][1-8].*"))(normalized.take(2))
+    def withoutMoveOrigin(squares: List[String]): List[String] =
+      moveOriginSquare.fold(squares)(origin => if squares.size > 1 then squares.filterNot(_ == origin) else squares)
+    val publicTargetSquares =
+      val squares = claim.targetSquares.map(_.toLowerCase).filter(_.matches("[a-h][1-8]")).distinct.sorted
+      withoutMoveOrigin(squares)
+    val currentMoveIsPawnAdvance = currentMoveLikelyPawnAdvance(claim)
     val breakPreparationFiles =
       val files = claim.breakFiles.map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
       currentMoveFile.filter(files.contains).fold(files)(_ => Nil)
@@ -2726,9 +2779,11 @@ object MoveMeaningSurface:
       breakPreparationFiles match
         case file :: Nil       => s"prepares $file-pawn break"
         case files if files.nonEmpty => s"prepares ${files.mkString("/")}-pawn breaks"
-        case _                 => currentMoveFile.map(file => s"$file-pawn advance").getOrElse("pawn advance")
+        case _ if currentMoveIsPawnAdvance => currentMoveFile.map(file => s"$file-pawn advance").getOrElse("pawn advance")
+        case _                 => "prepares pawn break"
     val directBreakPlanLabel =
-      currentMoveFile.map(file => s"$file-pawn advance").getOrElse("pawn advance")
+      if currentMoveIsPawnAdvance then currentMoveFile.map(file => s"$file-pawn advance").getOrElse("pawn advance")
+      else "pawn break timing"
     val counterplayBreakFiles =
       (
         claim.breakFiles ++
@@ -2765,7 +2820,7 @@ object MoveMeaningSurface:
     val routeManeuverLabel = routePiece.map(piece => s"$piece maneuver$routeDestinationLabel").getOrElse("piece maneuver")
     val developmentLabel = routePiece.map(piece => s"$piece development$routeDestinationLabel").getOrElse("piece development")
     val developmentPressureTargets =
-      claim.targetSquares.map(_.toLowerCase).filter(_.matches("[a-h][1-8]")).filterNot(routeToSquares.contains).distinct.sorted
+      publicTargetSquares.filterNot(routeToSquares.contains)
     val developmentPressureLabel =
       routePiece match
         case Some(piece) =>
@@ -2884,17 +2939,17 @@ object MoveMeaningSurface:
         case squares if squares.nonEmpty => s"pressure on ${squares.mkString("/")}"
         case _ => "central pressure"
     val bishopPressureLabel =
-      claim.targetSquares.map(_.toLowerCase).distinct.sorted match
+      publicTargetSquares match
         case square :: Nil => s"bishop pressure on $square"
         case squares if squares.nonEmpty && squares.size <= 4 => s"bishop pressure on ${squares.mkString("/")}"
         case _             => "bishop pressure"
     val targetFixationLabel =
-      claim.targetSquares.map(_.toLowerCase).distinct.sorted match
+      publicTargetSquares match
         case square :: Nil => s"fixes target on $square"
         case squares if squares.nonEmpty && squares.size <= 4 => s"fixes targets on ${squares.mkString("/")}"
         case _             => "target fixation"
     val targetPressureReleaseLabel =
-      claim.targetSquares.map(_.toLowerCase).distinct.sorted match
+      publicTargetSquares match
         case square :: Nil => s"releases pressure on $square"
         case squares if squares.nonEmpty && squares.size <= 4 => s"releases pressure on ${squares.mkString("/")}"
         case _             => "pressure release"
@@ -2913,7 +2968,7 @@ object MoveMeaningSurface:
             claim.objectBindingSignatures.exists(_.toLowerCase.contains("targetfixation"))
         )
     val targetPressureLabel =
-      claim.targetSquares.map(_.toLowerCase).distinct.sorted match
+      publicTargetSquares match
         case square :: Nil => s"pressure on $square"
         case squares if squares.nonEmpty && squares.size <= 4 => s"pressure on ${squares.mkString("/")}"
         case Nil =>
@@ -3048,7 +3103,7 @@ object MoveMeaningSurface:
     val terminal = terminalConsequences(claim)
     val baseTarget = MoveMeaningSurfaceTarget.fromClaim(claim)
     val flankDestination = currentFlankPawnAdvanceDestination(claim.moveUci)
-    val target =
+    val targetWithContext =
       flankDestination match
         case Some(destination) if flankInfrastructurePawnMove =>
           baseTarget.copy(
@@ -3061,11 +3116,22 @@ object MoveMeaningSurface:
             squares = (destination :: baseTarget.squares).distinct.sorted,
             files = List(destination.take(1))
           )
+        case _ if idea == "target_pressure" && weakPawnTargetClaim && weakPawnSquares.nonEmpty =>
+          baseTarget.copy(squares = weakPawnSquares)
         case _ if idea == "target_pressure" && checkingPressureClaim(claim) && checkSquares.nonEmpty =>
           baseTarget.copy(squares = (baseTarget.squares ++ checkSquares).distinct.sorted)
+        case _ if idea == "target_pressure" && kingPressureCarrier && kingPressureSquares.nonEmpty =>
+          baseTarget.copy(squares = kingPressureSquares)
+        case _ if idea == "target_pressure" && initialDevelopmentRoute && developmentPressureTargets.nonEmpty =>
+          baseTarget.copy(squares = developmentPressureTargets)
         case _ if idea == "target_pressure" && filePressureCarrier && carrierTargetFiles.nonEmpty =>
           baseTarget.copy(files = (baseTarget.files ++ carrierTargetFiles).distinct.sorted)
+        case _ if idea == "piece_route" && routeToSquares.nonEmpty =>
+          baseTarget.copy(squares = routeToSquares.toList.sorted)
         case _ => baseTarget
+    val target =
+      if idea == "target_pressure" then targetWithContext.copy(squares = withoutMoveOrigin(targetWithContext.squares))
+      else targetWithContext
     val technique = endgameTechnique(claim)
     MoveMeaningSurface(
       moveUci = claim.moveUci,
