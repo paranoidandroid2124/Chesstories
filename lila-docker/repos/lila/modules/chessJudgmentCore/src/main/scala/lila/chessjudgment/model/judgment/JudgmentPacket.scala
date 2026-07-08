@@ -2066,6 +2066,17 @@ object MoveMeaningSurface:
                       surface.target.pieces.intersect(other.target.pieces).nonEmpty
                   )
               )
+          val checkingPressureCoveredByTactic =
+            surface.idea.code == "target_pressure" &&
+              surface.idea.label.startsWith("checking pressure") &&
+              ownedSiblings.exists(other =>
+                other.idea.code == "tactical_pressure" &&
+                  (
+                    surface.evidence.proofRelationKinds.intersect(other.evidence.proofRelationKinds).nonEmpty ||
+                      surface.target.squares.intersect(other.target.squares).nonEmpty ||
+                      surface.target.files.intersect(other.target.files).nonEmpty
+                  )
+              )
           val destinationPressureCoveredByRoute =
             surface.idea.code == "target_pressure" &&
               surface.evidence.proofRelationKinds.isEmpty &&
@@ -2099,6 +2110,7 @@ object MoveMeaningSurface:
             )
           surfaceOnlyFallbackCoveredByOwnedSibling ||
           genericTacticCoveredByOwnedSibling ||
+          checkingPressureCoveredByTactic ||
           surface.idea.code == "pawn_break_timing" && breakClaimWithoutMoveCarrier(surface) && sameMoveConcreteCarrierExists ||
           surface.idea.code == "target_pressure" &&
             surface.idea.label.startsWith("fixes target") &&
