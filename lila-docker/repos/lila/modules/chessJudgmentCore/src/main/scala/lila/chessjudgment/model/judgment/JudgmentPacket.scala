@@ -1964,8 +1964,7 @@ object MoveMeaningSurface:
           technique.nonEmpty ||
           evidenceSurfaces.exists(surface => surface.evidence.proofLevel == "terminal_proof" || surface.evidence.proofLevel == "owned_cause")
       val directFunctionSemanticSurfaces =
-        if strongChainProof then Nil
-        else evidenceSurfaces.filter(publicIdeaChainDirectFunctionSurface)
+        evidenceSurfaces.filter(publicIdeaChainDirectFunctionSurface)
       val semanticSurfaces = evidenceSurfaces.filter(surface =>
         publicIdeaChainSemanticAllowed(surface, strongChainProof) ||
           directFunctionSemanticSurfaces.exists(_ == surface)
