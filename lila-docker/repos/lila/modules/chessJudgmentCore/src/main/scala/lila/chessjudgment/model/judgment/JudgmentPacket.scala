@@ -2826,23 +2826,23 @@ object MoveMeaningSurface:
       carrier: MoveMeaningSurfaceBoardCarrier,
       surface: MoveMeaningSurface
   ): Boolean =
-    val narrowPawnAdvanceSurface =
-      surface.idea.code == "target_pressure" &&
-        sameFilePawnAdvanceMove(surface.moveUci) &&
-        surface.target.squares.size == 1 &&
-        surface.target.files.isEmpty &&
-        surface.target.pieces == List("pawn") &&
-        surface.evidence.boardCarriers.count(carrier => carrier.role == "target" && carrier.kind == "Square") > 4
-    if !narrowPawnAdvanceSurface then true
+    val targetSquares = surface.target.squares.map(_.toLowerCase).toSet
+    val targetFiles = surface.target.files.map(_.toLowerCase).toSet
+    val targetPieces = surface.target.pieces.map(_.toLowerCase).toSet
+    if targetSquares.isEmpty && targetFiles.isEmpty && targetPieces.isEmpty then true
     else
-      val targetSquares = surface.target.squares.map(_.toLowerCase).toSet
       val value = carrier.value.toLowerCase
       carrier.kind match
         case "Square" => targetSquares(value)
+        case "File"   => targetFiles(value)
         case "Pawn" | "PlanSubject" =>
           val valueSquares = "[a-h][1-8]".r.findAllIn(value).toSet
-          valueSquares.exists(targetSquares)
-        case _ => false
+          val valueFiles =
+            if value.startsWith("break-file:") then Set(value.stripPrefix("break-file:").take(1))
+            else Set.empty[String]
+          valueSquares.exists(targetSquares) || valueFiles.exists(targetFiles)
+        case "Piece" => targetPieces(value)
+        case _       => false
 
   private def publicIdeaChainConsequenceCarrierRole(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
     carrier.role == "target" ||
@@ -3742,13 +3742,16 @@ object MoveMeaningSurface:
           else withoutMoveDestinationWhenMixed(targetSquaresWithoutOrigin)
         targetWithContext.copy(squares = targetSquares)
       else targetWithContext
+    val pressureTarget =
+      if idea == "target_pressure" && target.squares.nonEmpty && !filePressureCarrier then target.copy(files = Nil)
+      else target
     val publicTarget =
-      if idea == "target_pressure" && !target.pieces.exists(_.equalsIgnoreCase("king")) then
+      if idea == "target_pressure" && !pressureTarget.pieces.exists(_.equalsIgnoreCase("king")) then
         val actorPieces = evidence.boardCarriers.collect {
           case carrier if carrier.role == "actor" && carrier.kind == "Piece" => carrier.value.toLowerCase
         }.toSet
-        target.copy(pieces = target.pieces.filterNot(piece => actorPieces(piece.toLowerCase)))
-      else target
+        pressureTarget.copy(pieces = pressureTarget.pieces.filterNot(piece => actorPieces(piece.toLowerCase)))
+      else pressureTarget
     val technique = endgameTechnique(claim)
     MoveMeaningSurface(
       moveUci = claim.moveUci,
@@ -5032,18 +5035,25 @@ object MoveMeaningClaim:
       planClaim: MoveMeaningClaim,
       specificClaim: MoveMeaningClaim
   ): Boolean =
+    def sharesBreakCarrier =
+      planClaim.breakFiles.toSet.intersect(specificClaim.breakFiles.toSet).nonEmpty ||
+        planClaim.breakIdentityParts.toSet.intersect(specificClaim.breakIdentityParts.toSet).nonEmpty ||
+        planClaim.boardCarriers.exists(carrier =>
+          carrier.role == "target" &&
+            carrier.kind == "PlanSubject" &&
+            carrier.value.startsWith("break-file:") &&
+            specificClaim.boardCarriers.contains(carrier)
+        )
     planClaim.moveUci == specificClaim.moveUci &&
       (
         planClaim.role match
           case "PreparesBreakOption" =>
             if directBreakPlanClaim(planClaim) then specificClaim.meaningKind == "PawnBreakTiming"
-            else if breakPreparationPlanClaim(planClaim) &&
-              specificClaim.meaningKind == "TargetPressure" &&
-              specificClaim.label.exists(_.equalsIgnoreCase("tactical-proof")) &&
-              specificClaim.causeKinds.nonEmpty &&
-              specificClaim.causeKinds.forall(_ == RelativeCauseKind.RecaptureRecoveryWindow)
-            then false
-            else specificClaim.meaningKind != "PlanContinuity"
+            else if breakPreparationPlanClaim(planClaim) then
+              (sameFilePawnAdvanceFile(planClaim.moveUci).nonEmpty && specificClaim.meaningKind != "PlanContinuity") ||
+                (specificClaim.meaningKind == "PawnBreakTiming" || specificClaim.meaningKind == "CounterplayRace") &&
+                  sharesBreakCarrier
+            else false
           case "DevelopsPieceForPlan" =>
             specificClaim.meaningKind == "PieceRoute" ||
               specificClaim.meaningKind == "PieceActivity" ||
@@ -5092,7 +5102,7 @@ object MoveMeaningClaim:
   private[judgment] def breakPreparationPlanClaim(claim: MoveMeaningClaim): Boolean =
     val moveBreakFile = sameFilePawnAdvanceFile(claim.moveUci)
     val currentPawnMoveOwnsBreakFile =
-      moveBreakFile.forall(file =>
+      moveBreakFile.exists(file =>
         claim.breakFiles.exists(_.equalsIgnoreCase(file)) ||
           claim.breakIdentityParts.exists(_.equalsIgnoreCase(s"breakFile:$file")) ||
           claim.boardCarriers.exists(carrier =>
