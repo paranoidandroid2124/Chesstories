@@ -2582,14 +2582,11 @@ object MoveMeaningSurface:
       surface.endgameTechnique.isEmpty
 
   private def breakClaimWithoutMoveCarrier(surface: MoveMeaningSurface): Boolean =
-    val normalizedMove = JudgmentSubjectBinding.normalizeMove(surface.moveUci).toLowerCase
-    val moveFile = Option.when(normalizedMove.matches("[a-h][1-8][a-h][1-8].*"))(normalizedMove.take(1))
-    val moveToSquare = moveDestination(surface.moveUci)
+    val moveFile = MoveMeaningClaim.sameFilePawnAdvanceFile(surface.moveUci)
     val mismatchedPawnAdvanceBreak =
-      sameFilePawnAdvanceMove(surface.moveUci) &&
+      moveFile.nonEmpty &&
         surface.target.files.nonEmpty &&
-        moveFile.exists(file => !surface.target.files.exists(_.equalsIgnoreCase(file))) &&
-        !moveToSquare.exists(destination => surface.target.squares.exists(_.equalsIgnoreCase(destination)))
+        moveFile.exists(file => !surface.target.files.exists(_.equalsIgnoreCase(file)))
     val concreteBreakCarrier = surface.evidence.boardCarriers.exists(carrier =>
         val value = carrier.value.toLowerCase
         carrier.role == "target" &&
@@ -4971,6 +4968,17 @@ object MoveMeaningClaim:
       )
 
   private[judgment] def breakPreparationPlanClaim(claim: MoveMeaningClaim): Boolean =
+    val moveBreakFile = sameFilePawnAdvanceFile(claim.moveUci)
+    val currentPawnMoveOwnsBreakFile =
+      moveBreakFile.forall(file =>
+        claim.breakFiles.exists(_.equalsIgnoreCase(file)) ||
+          claim.breakIdentityParts.exists(_.equalsIgnoreCase(s"breakFile:$file")) ||
+          claim.boardCarriers.exists(carrier =>
+            carrier.role == "target" &&
+              carrier.kind == "PlanSubject" &&
+              carrier.value.equalsIgnoreCase(s"break-file:$file")
+          )
+      )
     val namedBreakPlan =
       claim.objectBindingSignatures.exists(_.toLowerCase.contains("pawnbreakpreparation")) ||
         claim.boardCarriers.exists(carrier =>
@@ -4981,19 +4989,11 @@ object MoveMeaningClaim:
         claim.role == "PreparesBreakOption" && planPieceActivationClaim(claim)
     claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
       namedBreakPlan &&
+      currentPawnMoveOwnsBreakFile &&
       breakFileCarrierClaim(claim)
 
   private[judgment] def directBreakPlanClaim(claim: MoveMeaningClaim): Boolean =
-    val moveBreakFile =
-      moveEndpoints(claim.moveUci).flatMap { case (from, to) =>
-        Option.when(
-          from.take(1) == to.take(1) &&
-            (for
-              fromRank <- from.drop(1).toIntOption
-              toRank <- to.drop(1).toIntOption
-            yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
-        )(from.take(1))
-      }
+    val moveBreakFile = sameFilePawnAdvanceFile(claim.moveUci)
     val ownsBreakFile =
       moveBreakFile.exists(file =>
         claim.breakFiles.exists(_.equalsIgnoreCase(file)) ||
@@ -7581,6 +7581,17 @@ object MoveMeaningClaim:
     Option.when(normalized.matches("[a-h][1-8][a-h][1-8].*"))(
       normalized.take(2) -> normalized.slice(2, 4)
     )
+
+  private[judgment] def sameFilePawnAdvanceFile(move: String): Option[String] =
+    moveEndpoints(move).flatMap { case (from, to) =>
+      Option.when(
+        from.take(1) == to.take(1) &&
+          (for
+            fromRank <- from.drop(1).toIntOption
+            toRank <- to.drop(1).toIntOption
+          yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
+      )(from.take(1))
+    }
 
   private def moveSide(positionFen: String, move: String): Option[String] =
     moveEndpoints(move).flatMap { case (from, _) =>
