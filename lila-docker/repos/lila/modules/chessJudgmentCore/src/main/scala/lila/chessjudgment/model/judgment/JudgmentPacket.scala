@@ -2964,9 +2964,12 @@ object MoveMeaningSurface:
     val moveDestinationSquare = moveDestination(claim.moveUci)
     def withoutMoveOrigin(squares: List[String]): List[String] =
       moveOriginSquare.fold(squares)(origin => if squares.size > 1 then squares.filterNot(_ == origin) else squares)
+    def withoutMoveDestinationWhenMixed(squares: List[String]): List[String] =
+      moveDestinationSquare.fold(squares)(destination => if squares.size > 1 then squares.filterNot(_ == destination) else squares)
     val publicTargetSquares =
       val squares = claim.targetSquares.map(_.toLowerCase).filter(_.matches("[a-h][1-8]")).distinct.sorted
       withoutMoveOrigin(squares)
+    val publicPressureTargetSquares = withoutMoveDestinationWhenMixed(publicTargetSquares)
     val currentMoveIsPawnAdvance = currentMoveLikelyPawnAdvance(claim)
     val breakPreparationFiles =
       val files = claim.breakFiles.map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
@@ -3206,12 +3209,12 @@ object MoveMeaningSurface:
         case squares if squares.nonEmpty => s"pressure on ${squares.mkString("/")}"
         case _ => "central pressure"
     val bishopPressureLabel =
-      publicTargetSquares match
+      publicPressureTargetSquares match
         case square :: Nil => s"bishop pressure on $square"
         case squares if squares.nonEmpty && squares.size <= 4 => s"bishop pressure on ${squares.mkString("/")}"
         case _             => "bishop pressure"
     val targetFixationLabel =
-      publicTargetSquares match
+      publicPressureTargetSquares match
         case square :: Nil => s"fixes target on $square"
         case squares if squares.nonEmpty && squares.size <= 4 => s"fixes targets on ${squares.mkString("/")}"
         case _             => "target fixation"
@@ -3250,7 +3253,7 @@ object MoveMeaningSurface:
         !filePressureCarrier
     val targetPressureLabel =
       val targetPieces = claim.targetPieces.map(_.toLowerCase).distinct.filterNot(piece => piece == "king" || piece == "pawn").sorted
-      (targetPieces, publicTargetSquares) match
+      (targetPieces, publicPressureTargetSquares) match
         case (piece :: Nil, square :: Nil) => s"$piece pressure on $square"
         case (piece :: Nil, squares) if squares.nonEmpty && squares.size <= 4 => s"$piece pressure on ${squares.mkString("/")}"
         case (pieces, square :: Nil) if pieces.nonEmpty && pieces.size <= 3 => s"${pieces.mkString("/")} pressure on $square"
@@ -3474,7 +3477,17 @@ object MoveMeaningSurface:
           baseTarget.copy(squares = routeSurfaceSquares.toList.sorted, pieces = routePiece.toList)
         case _ => baseTarget
     val target =
-      if idea == "target_pressure" then targetWithContext.copy(squares = withoutMoveOrigin(targetWithContext.squares))
+      if idea == "target_pressure" then
+        val targetSquaresWithoutOrigin = withoutMoveOrigin(targetWithContext.squares)
+        val destinationIsMeaningTarget =
+          sameFilePassedPawnMove ||
+            passedPawnAdvanceClaim(claim) ||
+            planPawnAdvanceClaim(claim) ||
+            unprovedPawnAdvanceTargetPressure
+        val targetSquares =
+          if destinationIsMeaningTarget then targetSquaresWithoutOrigin
+          else withoutMoveDestinationWhenMixed(targetSquaresWithoutOrigin)
+        targetWithContext.copy(squares = targetSquares)
       else targetWithContext
     val technique = endgameTechnique(claim)
     MoveMeaningSurface(
