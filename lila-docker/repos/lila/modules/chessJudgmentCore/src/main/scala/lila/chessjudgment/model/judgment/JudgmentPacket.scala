@@ -3454,7 +3454,7 @@ object MoveMeaningSurface:
             )
         )("compensation")
       )
-      .orElse(Option.when(tacticalRelationPressureClaim(claim))("tactical_pressure"))
+      .orElse(Option.when(tacticalProofPressureClaim(claim))("tactical_pressure"))
       .orElse(Option.when(claim.meaningKind == "PieceActivity")("piece_activity"))
       .getOrElse(claim.unit match
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
@@ -3495,13 +3495,23 @@ object MoveMeaningSurface:
           claim.proofLineConsequences.contains(LineConsequenceKind.MaterialGain)
       )
 
-  private def tacticalRelationPressureClaim(claim: MoveMeaningClaim): Boolean =
+  private def tacticalProofPressureClaim(claim: MoveMeaningClaim): Boolean =
+    def recaptureLineProof =
+      claim.label.exists(_.equalsIgnoreCase("tactical-proof")) &&
+        claim.causeKinds.contains(RelativeCauseKind.RecaptureRecoveryWindow) &&
+        claim.proofLineConsequences.exists(kind =>
+          kind == LineConsequenceKind.RecaptureSequence ||
+            kind == LineConsequenceKind.RecoveryWindow
+        )
     claim.meaningKind == "TargetPressure" &&
       claim.publicProofLevel == "owned_cause" &&
-      claim.proofRelationKinds.exists(kind =>
-        kind != RelationFactKind.BadPieceLiquidation &&
-          kind != RelationFactKind.StalemateTrap &&
-          kind != RelationFactKind.PerpetualCheck
+      (
+        claim.proofRelationKinds.exists(kind =>
+          kind != RelationFactKind.BadPieceLiquidation &&
+            kind != RelationFactKind.StalemateTrap &&
+            kind != RelationFactKind.PerpetualCheck
+        ) ||
+          recaptureLineProof
       )
 
   private def defensiveResourceClaim(claim: MoveMeaningClaim): Boolean =
