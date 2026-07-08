@@ -1963,7 +1963,13 @@ object MoveMeaningSurface:
         terminal.nonEmpty ||
           technique.nonEmpty ||
           evidenceSurfaces.exists(surface => surface.evidence.proofLevel == "terminal_proof" || surface.evidence.proofLevel == "owned_cause")
-      val semanticSurfaces = evidenceSurfaces.filter(surface => publicIdeaChainSemanticAllowed(surface, strongChainProof))
+      val directFunctionSemanticSurfaces =
+        if strongChainProof then Nil
+        else evidenceSurfaces.filter(publicIdeaChainDirectFunctionSurface)
+      val semanticSurfaces = evidenceSurfaces.filter(surface =>
+        publicIdeaChainSemanticAllowed(surface, strongChainProof) ||
+          directFunctionSemanticSurfaces.exists(_ == surface)
+      )
       val purposeOwnedPawnMoves =
         val purposeCodes = Set(
           "terminal_mate",
@@ -1993,6 +1999,16 @@ object MoveMeaningSurface:
         semanticSurfaces.filterNot(surface =>
           surface.idea.code == "piece_route" &&
             purposeOwnedPawnMoves.contains(JudgmentSubjectBinding.normalizeMove(surface.moveUci).toLowerCase)
+        ).filterNot(surface =>
+          surface.idea.code == "piece_activity" &&
+            semanticSurfaces.exists(other =>
+              other != surface &&
+                other.idea.code == "piece_route" &&
+                other.subject == surface.subject &&
+                other.lineRole == surface.lineRole &&
+                other.moveUci == surface.moveUci &&
+                other.evidence.sourceIds.intersect(surface.evidence.sourceIds).nonEmpty
+            )
         )
       val chainSurfaces =
         if terminal.nonEmpty then
@@ -2196,10 +2212,22 @@ object MoveMeaningSurface:
             (carrier.kind == "Pawn" || (carrier.kind == "PlanSubject" && carrier.value.startsWith("passed-pawn")))
         )
     }
+    val directFunctionCarrier =
+      subject == "played_move" &&
+        evidenceSurfaces.exists(surface => publicIdeaChainDirectFunctionSurface(surface) && surfaceHasSubjectMove(surface))
+    val admissibleProof = strongProofSurface || directFunctionCarrier
     evidenceSurfaces.nonEmpty &&
-      strongProofSurface &&
+      admissibleProof &&
       (!materialTacticalCarrier || strongProofSurface) &&
-      (terminal.nonEmpty || technique.nonEmpty || directStructuralCarrier || ownedRouteCarrier || directPieceRouteCarrier || (pv.nonEmpty && concreteConsequence))
+      (
+        terminal.nonEmpty ||
+          technique.nonEmpty ||
+          directStructuralCarrier ||
+          ownedRouteCarrier ||
+          directPieceRouteCarrier ||
+          directFunctionCarrier ||
+          (pv.nonEmpty && concreteConsequence)
+      )
 
   private def publicIdeaChainSurfaceHasCarrier(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel != "none" &&
@@ -2213,6 +2241,15 @@ object MoveMeaningSurface:
       surface.evidence.causeIds.nonEmpty ||
       surface.terminalConsequences.nonEmpty ||
       surface.endgameTechnique.nonEmpty
+
+  private def publicIdeaChainDirectFunctionSurface(surface: MoveMeaningSurface): Boolean =
+    val carriers = surface.evidence.boardCarriers
+    surface.evidence.proofLevel == "surface_evidence" &&
+      surface.assessment.localIdea &&
+      surface.moveQuality != "playable_loss" &&
+      carriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move") &&
+      carriers.exists(carrier => carrier.role == "actor" && (carrier.kind == "Piece" || carrier.kind == "Square")) &&
+      carriers.exists(carrier => publicIdeaChainConsequenceCarrierRole(carrier) && publicIdeaChainConsequenceCarrier(carrier))
 
   private def publicIdeaChainSemanticSortKey(surface: MoveMeaningSurface): (Int, Int, Int, Int, String, String) =
     (
@@ -3144,7 +3181,7 @@ object MoveMeaningSurface:
         case PositionPlanTechniqueUnit.CompensationSource =>
           "compensation"
         case PositionPlanTechniqueUnit.StructuralTransformation =>
-          axisIdeaType(claim).getOrElse("structure_shift")
+          claim.publicIdeaType.orElse(axisIdeaType(claim)).getOrElse("structure_shift")
         case PositionPlanTechniqueUnit.PlanOptionSet =>
           planOptionIdeaType(claim)
       )
@@ -5394,6 +5431,8 @@ object MoveMeaningClaim:
         Some("outpost_attempt")
       case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && longDiagonalRouteDetail(detail) =>
         Some("long_diagonal_pressure")
+      case PositionPlanTechniqueUnit.StructuralTransformation if meaningKind == "TargetPressure" && pawnAdvancePurposeDetail(detail) =>
+        Some("pawn_break_timing")
       case _ =>
         None
 
@@ -5411,6 +5450,36 @@ object MoveMeaningClaim:
 
   private def rayDenialDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.structuralPurposeSubjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
+
+  private def pawnAdvancePurposeDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    detail.structuralRouteMove.exists(sameFilePawnAdvanceMove) &&
+      !detail.structuralPurposePolarities.exists(negativeStructuralToken) &&
+      (
+        detail.breakFile.exists(_.trim.nonEmpty) ||
+        detail.structuralPurposeSubjects.exists(pawnAdvancePurposeSubject) ||
+          detail.label.exists(pawnAdvancePurposeToken)
+      )
+
+  private def sameFilePawnAdvanceMove(move: String): Boolean =
+    moveEndpoints(move).exists { case (from, to) =>
+      from.take(1) == to.take(1) &&
+        (for
+          fromRank <- from.drop(1).toIntOption
+          toRank <- to.drop(1).toIntOption
+        yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
+    }
+
+  private def pawnAdvancePurposeSubject(subject: String): Boolean =
+    val normalized = subject.toLowerCase
+    normalized.startsWith("break-file:") ||
+      normalized.startsWith("created-tension:") ||
+      normalized.startsWith("resolved-tension:") ||
+      normalized == "pawnstorm"
+
+  private def pawnAdvancePurposeToken(token: String): Boolean =
+    val normalized = token.toLowerCase
+    normalized.contains("pawnbreak") ||
+      normalized.contains("pawn-break")
 
   private def currentMoveRouteLineRole(
       detail: PositionPlanTechniqueSemanticDetail,

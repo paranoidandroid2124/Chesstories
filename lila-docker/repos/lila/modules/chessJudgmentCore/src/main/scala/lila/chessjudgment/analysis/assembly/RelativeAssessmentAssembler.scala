@@ -517,7 +517,7 @@ object RelativeAssessmentAssembler:
         val neighborhood = comparisonNeighborhood(context, root, fact, Some(input))
         val comparisonProof = comparisonProofRecords(neighborhood)
         val causes = mergeCauseCandidates(inferCauseCandidates(neighborhood, fact))
-        causes.zipWithIndex.map { case (candidate, index) =>
+        causes.zipWithIndex.flatMap { case (candidate, index) =>
           val kind = candidate.kind
           val support = candidate.support
           val supportRefs = support.map(_.ref).distinctBy(_.id)
@@ -554,33 +554,35 @@ object RelativeAssessmentAssembler:
             Some(proof).filter(proof => (attribution.directProofEligible && proof.hasRawTypedDepth) || proof.hasRawContextSupport)
           val causeSupportRefs =
             (supportRefs ++ proofRecords.directProof.map(_.ref)).distinctBy(_.id)
-          val cause =
-            RelativeCauseFact(
-              kind = kind,
-              comparisonKind = fact.kind,
-              referenceLine = fact.referenceLine,
-              candidateLine = fact.candidateLine,
-              verdict = fact.comparison.verdict,
-              winPercentLossForMover = fact.comparison.winPercentLossForMover,
-              candidateWinPercentDeltaForMover = fact.comparison.candidateWinPercentDeltaForMover,
-              supportEvidence = causeSupportRefs,
-              evidenceLines = binding.evidenceLines,
-              role = binding.role,
-              eventLine = binding.eventLine,
-              sourceSide = binding.sourceSide,
-              importance = binding.importance,
-              attribution = attribution
-            )(proof = retainedProof)
-          TransitionFactNormalizer.fromRelativeCause(
-            id = allocator.evidenceId(
-              s"relative-cause:${allocator.key(fact.kind)}:${allocator.key(kind)}:${allocator.key(fact.referenceLine.rootMove)}:${allocator.key(fact.candidateLine.rootMove)}:$index"
-            ),
-            cause = cause,
-            position = root,
-            scope = EvidenceScope.Counterfactual,
-            confidence = comparisonConfidence(context, fact),
-            parents = (comparisonRecord.ref :: proofRecords.all.map(_.ref)).distinctBy(_.id)
-          )
+          Option.when(!attribution.contextOnly || proof.hasRawDirectProof) {
+            val cause =
+              RelativeCauseFact(
+                kind = kind,
+                comparisonKind = fact.kind,
+                referenceLine = fact.referenceLine,
+                candidateLine = fact.candidateLine,
+                verdict = fact.comparison.verdict,
+                winPercentLossForMover = fact.comparison.winPercentLossForMover,
+                candidateWinPercentDeltaForMover = fact.comparison.candidateWinPercentDeltaForMover,
+                supportEvidence = causeSupportRefs,
+                evidenceLines = binding.evidenceLines,
+                role = binding.role,
+                eventLine = binding.eventLine,
+                sourceSide = binding.sourceSide,
+                importance = binding.importance,
+                attribution = attribution
+              )(proof = retainedProof)
+            TransitionFactNormalizer.fromRelativeCause(
+              id = allocator.evidenceId(
+                s"relative-cause:${allocator.key(fact.kind)}:${allocator.key(kind)}:${allocator.key(fact.referenceLine.rootMove)}:${allocator.key(fact.candidateLine.rootMove)}:$index"
+              ),
+              cause = cause,
+              position = root,
+              scope = EvidenceScope.Counterfactual,
+              confidence = comparisonConfidence(context, fact),
+              parents = (comparisonRecord.ref :: proofRecords.all.map(_.ref)).distinctBy(_.id)
+            )
+          }
         }
       case _ => Nil
 
