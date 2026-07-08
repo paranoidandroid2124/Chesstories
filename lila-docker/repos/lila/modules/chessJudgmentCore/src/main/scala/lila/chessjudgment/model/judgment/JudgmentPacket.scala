@@ -1865,6 +1865,7 @@ case class MoveMeaningSurface(
     subject: String,
     lineRole: String,
     moveQuality: String,
+    unit: PositionPlanTechniqueUnit,
     ideaType: String,
     idea: MoveMeaningSurfaceCode,
     ideaQuality: String,
@@ -1995,13 +1996,13 @@ object MoveMeaningSurface:
         }.toSet
       val preliminaryChainSurfaces =
         semanticSurfaces.filterNot(surface =>
-          surface.idea.code == "piece_route" &&
+          routeCarrierSurface(surface) &&
             purposeOwnedPawnMoves.contains(JudgmentSubjectBinding.normalizeMove(surface.moveUci).toLowerCase)
         ).filterNot(surface =>
           surface.idea.code == "piece_activity" &&
             semanticSurfaces.exists(other =>
               other != surface &&
-                other.idea.code == "piece_route" &&
+                routeCarrierSurface(other) &&
                 other.subject == surface.subject &&
                 other.lineRole == surface.lineRole &&
                 other.moveUci == surface.moveUci &&
@@ -2013,7 +2014,7 @@ object MoveMeaningSurface:
         val surfaceEvidenceDuplicateCodes = Set("center_control", "piece_route", "piece_activity", "target_pressure", "passed_pawn_advance")
         preliminaryChainSurfaces.filterNot { surface =>
           val siblings = surfacesByMove.getOrElse((surface.subject, surface.lineRole, surface.moveUci), Nil).filterNot(_ == surface)
-          val routeSiblings = siblings.filter(_.idea.code == "piece_route")
+          val routeSiblings = siblings.filter(routeCarrierSurface)
           val hasRouteSibling = routeSiblings.nonEmpty
           val ownedSiblings = siblings.filter(_.evidence.proofLevel == "owned_cause")
           val concreteCounterplaySiblings =
@@ -2065,7 +2066,7 @@ object MoveMeaningSurface:
               )
           val hasConcreteSiblingCarrier =
             siblings.exists(other =>
-              other.idea.code == "piece_route" ||
+              routeCarrierSurface(other) ||
                 other.idea.code == "target_pressure" && !unprovedBroadTargetPressure(other) ||
                 other.idea.code == "counterplay_control" && counterplayRestrictionHasConcreteCarrier(other) ||
                 other.idea.code == "long_diagonal_pressure" ||
@@ -2280,7 +2281,7 @@ object MoveMeaningSurface:
           JudgmentSubjectBinding.normalizeMove(carrier.value).toLowerCase == normalizedSubjectMove
       )
     val directPieceRouteCarrier = subject == "played_move" && evidenceSurfaces.exists { surface =>
-      surface.idea.code == "piece_route" &&
+      routeCarrierSurface(surface) &&
         surface.evidence.proofLevel == "surface_evidence" &&
         surfaceHasSubjectMove(surface) &&
         surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Piece") &&
@@ -2421,6 +2422,10 @@ object MoveMeaningSurface:
       )
     ((!sameFilePawnAdvanceMove(surface.moveUci) && surface.target.files.isEmpty) || mismatchedPawnAdvanceBreak) &&
       !concreteBreakCarrier
+
+  private def routeCarrierSurface(surface: MoveMeaningSurface): Boolean =
+    surface.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
+      surface.idea.code == "piece_route"
 
   private def counterplayRestrictionHasConcreteCarrier(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel == "owned_cause" &&
@@ -3405,6 +3410,7 @@ object MoveMeaningSurface:
       subject = claimSubject,
       lineRole = claim.lineRole,
       moveQuality = quality,
+      unit = claim.unit,
       ideaType = idea,
       idea = MoveMeaningSurfaceCode(idea, ideaLabel),
       ideaQuality = qualityOfIdea,
