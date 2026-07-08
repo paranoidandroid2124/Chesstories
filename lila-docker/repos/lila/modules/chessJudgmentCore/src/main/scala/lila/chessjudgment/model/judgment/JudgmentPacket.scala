@@ -2146,6 +2146,7 @@ object MoveMeaningSurface:
           .filterNot(surface => lineUnlockSurfaceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
           .filterNot(surface => passedPawnAdvanceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
           .filterNot(surface => pawnAdvanceSurfaceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
+          .filterNot(surface => genericRouteLabelCoveredBySpecificRouteLabel(surface, chainSurfaces))
           .distinctBy(publicIdeaChainSurfaceKey)
         val publicSemantics =
           candidatePublicSemantics.filterNot(surface => routeOnlyDeliversPublicMeaning(surface, candidatePublicSemantics))
@@ -2446,6 +2447,22 @@ object MoveMeaningSurface:
             surfaceFiles.nonEmpty && surfaceFiles.intersect(other.target.files.map(_.toLowerCase).toSet).nonEmpty ||
               surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty
           )
+      )
+
+  private def genericRouteLabelCoveredBySpecificRouteLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+    def genericRouteLabel(label: String): Boolean =
+      label.contains(" maneuver to ") || label.contains(" development to ")
+    surface.idea.code == "piece_route" &&
+      genericRouteLabel(surface.idea.label) &&
+      surfaces.exists(other =>
+        other != surface &&
+          other.moveUci == surface.moveUci &&
+          other.subject == surface.subject &&
+          other.lineRole == surface.lineRole &&
+          other.idea.code == "piece_route" &&
+          !genericRouteLabel(other.idea.label) &&
+          other.target.squares == surface.target.squares &&
+          other.target.pieces == surface.target.pieces
       )
 
   private def routeOnlyDeliversPublicMeaning(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
