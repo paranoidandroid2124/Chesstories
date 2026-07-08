@@ -2339,18 +2339,26 @@ object MoveMeaningSurface:
       surface.endgameTechnique.isEmpty
 
   private def publicIdeaChainGenericBreakPreparation(surface: MoveMeaningSurface): Boolean =
-    !sameFilePawnAdvanceMove(surface.moveUci) &&
-      surface.target.files.isEmpty &&
-      !surface.evidence.boardCarriers.exists(carrier =>
+    val normalizedMove = JudgmentSubjectBinding.normalizeMove(surface.moveUci).toLowerCase
+    val moveFile = Option.when(normalizedMove.matches("[a-h][1-8][a-h][1-8].*"))(normalizedMove.take(1))
+    val moveToSquare = moveDestination(surface.moveUci)
+    val mismatchedPawnAdvanceBreak =
+      sameFilePawnAdvanceMove(surface.moveUci) &&
+        surface.target.files.nonEmpty &&
+        moveFile.exists(file => !surface.target.files.exists(_.equalsIgnoreCase(file))) &&
+        !moveToSquare.exists(destination => surface.target.squares.exists(_.equalsIgnoreCase(destination)))
+    val concreteBreakCarrier = surface.evidence.boardCarriers.exists(carrier =>
         val value = carrier.value.toLowerCase
         carrier.role == "target" &&
           carrier.kind == "PlanSubject" &&
           (
-            value.startsWith("break-file:") ||
+            (value.startsWith("break-file:") && !mismatchedPawnAdvanceBreak) ||
               value.startsWith("created-tension:") ||
               value.startsWith("resolved-tension:")
           )
       )
+    ((!sameFilePawnAdvanceMove(surface.moveUci) && surface.target.files.isEmpty) || mismatchedPawnAdvanceBreak) &&
+      !concreteBreakCarrier
 
   private def counterplayControlConcreteConsequence(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel == "owned_cause" &&
