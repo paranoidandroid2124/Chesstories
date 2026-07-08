@@ -2728,6 +2728,8 @@ object MoveMeaningSurface:
         case file :: Nil       => s"prepares $file-pawn break"
         case files if files.nonEmpty => s"prepares ${files.mkString("/")}-pawn breaks"
         case _                 => "prepares pawn break"
+    val directBreakPlanLabel =
+      currentMoveFile.map(file => s"$file-pawn break").getOrElse("pawn break")
     val counterplayBreakFiles =
       (
         claim.breakFiles ++
@@ -2916,7 +2918,11 @@ object MoveMeaningSurface:
       claim.targetSquares.map(_.toLowerCase).distinct.sorted match
         case square :: Nil => s"pressure on $square"
         case squares if squares.nonEmpty && squares.size <= 4 => s"pressure on ${squares.mkString("/")}"
-        case _             => "target pressure"
+        case _ =>
+          claim.targetPieces.map(_.toLowerCase).distinct.filterNot(_ == "king").sorted match
+            case piece :: Nil => s"$piece pressure"
+            case pieces if pieces.nonEmpty && pieces.size <= 3 => s"${pieces.mkString("/")} pressure"
+            case _ => "target pressure"
     val outpostLabel =
       val square = moveDestination(claim.moveUci).orElse(claim.targetSquares.map(_.toLowerCase).distinct.sorted.headOption)
       val piece =
@@ -3013,7 +3019,8 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", _) if ownedTensionBreakClaim(claim) && (resolvedTensionCarrier || claim.role == "ReleasesPawnTension") => resolvesPawnTensionLabel
         case ("pawn_break_timing", _) if flankInfrastructurePawnMove || flankPressurePawnMove => flankPawnAdvanceLabel
         case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
-        case ("pawn_break_timing", _) if breakPreparationPlanClaim(claim) => breakPreparationLabel
+        case ("pawn_break_timing", _) if MoveMeaningClaim.breakPreparationPlanClaim(claim) => breakPreparationLabel
+        case ("pawn_break_timing", _) if MoveMeaningClaim.directBreakPlanClaim(claim) => directBreakPlanLabel
         case ("pawn_break_timing", _) if MoveMeaningClaim.planPieceActivationClaim(claim) && mobilityGainCarrier =>
           claim.targetPieces.map(_.toLowerCase).distinct.sorted match
             case piece :: Nil => s"activates $piece"
@@ -3304,17 +3311,6 @@ object MoveMeaningSurface:
     claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
       claim.publicProofLevel == "owned_cause"
 
-  private def breakPreparationPlanClaim(claim: MoveMeaningClaim): Boolean =
-    claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-      (
-        claim.objectBindingSignatures.exists(_.toLowerCase.contains("pawnbreakpreparation")) ||
-          (
-            claim.role == "PreparesBreakOption" &&
-              MoveMeaningClaim.planPieceActivationClaim(claim) &&
-              MoveMeaningClaim.breakFileCarrierClaim(claim)
-          )
-      )
-
   private def materialSacrificeCompensationClaim(claim: MoveMeaningClaim): Boolean =
     claim.boardCarriers.exists(carrier =>
       carrier.role == "target" &&
@@ -3324,7 +3320,7 @@ object MoveMeaningSurface:
 
   private def planOptionIdeaType(claim: MoveMeaningClaim): String =
     if passedPawnAdvanceClaim(claim) then "passed_pawn_advance"
-    else if MoveMeaningClaim.directBreakPlanClaim(claim) then "pawn_break_timing"
+    else if MoveMeaningClaim.directBreakPlanClaim(claim) || MoveMeaningClaim.breakPreparationPlanClaim(claim) then "pawn_break_timing"
     else if planContinuityTargetPressureCarrier(claim) then "target_pressure"
     else claim.role match
       case "DevelopsPieceForPlan"
@@ -4305,6 +4301,12 @@ object MoveMeaningClaim:
         planClaim.role match
           case "PreparesBreakOption" =>
             if directBreakPlanClaim(planClaim) then concreteClaim.meaningKind == "PawnBreakTiming"
+            else if breakPreparationPlanClaim(planClaim) &&
+              concreteClaim.meaningKind == "TargetPressure" &&
+              concreteClaim.label.exists(_.equalsIgnoreCase("tactical-proof")) &&
+              concreteClaim.causeKinds.nonEmpty &&
+              concreteClaim.causeKinds.forall(_ == RelativeCauseKind.RecaptureRecoveryWindow)
+            then false
             else concreteClaim.meaningKind != "PlanContinuity"
           case "DevelopsPieceForPlan" =>
             concreteClaim.meaningKind == "PieceRoute" ||
@@ -4326,7 +4328,8 @@ object MoveMeaningClaim:
           other.unit != PositionPlanTechniqueUnit.PlanOptionSet &&
           currentMoveSurfaceLane(other) &&
           other.publicHasCarrier &&
-          other.sourceEvidenceIds.nonEmpty
+          other.sourceEvidenceIds.nonEmpty &&
+          concreteClaimShadowsPlanContinuity(claim, other)
       )
     val ownedPlanImprovement =
       claim.supportLevel == "owned_cause_linked" &&
@@ -4347,6 +4350,20 @@ object MoveMeaningClaim:
           other.publicHasCarrier &&
           other.sourceEvidenceIds.nonEmpty &&
           concreteClaimShadowsPlanContinuity(claim, other)
+      )
+
+  private[judgment] def breakPreparationPlanClaim(claim: MoveMeaningClaim): Boolean =
+    claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+      (
+        claim.objectBindingSignatures.exists(_.toLowerCase.contains("pawnbreakpreparation")) ||
+          claim.boardCarriers.exists(carrier =>
+            carrier.role == "target" &&
+              carrier.kind == "PlanSubject" &&
+              carrier.value.equalsIgnoreCase("pawnbreakpreparation")
+          ) ||
+          claim.role == "PreparesBreakOption" &&
+            planPieceActivationClaim(claim) &&
+            breakFileCarrierClaim(claim)
       )
 
   private[judgment] def directBreakPlanClaim(claim: MoveMeaningClaim): Boolean =
