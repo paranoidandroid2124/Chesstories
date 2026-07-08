@@ -3040,11 +3040,15 @@ object MoveMeaningSurface:
         !kingPressureCarrier &&
         !filePressureCarrier
     val targetPressureLabel =
-      publicTargetSquares match
-        case square :: Nil => s"pressure on $square"
-        case squares if squares.nonEmpty && squares.size <= 4 => s"pressure on ${squares.mkString("/")}"
-        case Nil =>
-          claim.targetPieces.map(_.toLowerCase).distinct.filterNot(_ == "king").sorted match
+      val targetPieces = claim.targetPieces.map(_.toLowerCase).distinct.filterNot(piece => piece == "king" || piece == "pawn").sorted
+      (targetPieces, publicTargetSquares) match
+        case (piece :: Nil, square :: Nil) => s"$piece pressure on $square"
+        case (piece :: Nil, squares) if squares.nonEmpty && squares.size <= 4 => s"$piece pressure on ${squares.mkString("/")}"
+        case (pieces, square :: Nil) if pieces.nonEmpty && pieces.size <= 3 => s"${pieces.mkString("/")} pressure on $square"
+        case (_, square :: Nil) => s"pressure on $square"
+        case (_, squares) if squares.nonEmpty && squares.size <= 4 => s"pressure on ${squares.mkString("/")}"
+        case (_, Nil) =>
+          targetPieces match
             case piece :: Nil => s"$piece pressure"
             case pieces if pieces.nonEmpty && pieces.size <= 3 => s"${pieces.mkString("/")} pressure"
             case _ => "target pressure"
