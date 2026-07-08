@@ -2242,11 +2242,16 @@ object MoveMeaningSurface:
 
   private def publicIdeaChainDirectFunctionSurface(surface: MoveMeaningSurface): Boolean =
     val carriers = surface.evidence.boardCarriers
+    val directActor =
+      carriers.exists(carrier => carrier.role == "actor" && (carrier.kind == "Piece" || carrier.kind == "Square")) ||
+        (surface.idea.code == "center_control" &&
+          sameFilePawnAdvanceMove(surface.moveUci) &&
+          carriers.exists(carrier => carrier.role == "target" && carrier.kind == "Square"))
     surface.evidence.proofLevel == "surface_evidence" &&
       surface.assessment.localIdea &&
       surface.moveQuality != "playable_loss" &&
       carriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move") &&
-      carriers.exists(carrier => carrier.role == "actor" && (carrier.kind == "Piece" || carrier.kind == "Square")) &&
+      directActor &&
       carriers.exists(carrier => publicIdeaChainConsequenceCarrierRole(carrier) && publicIdeaChainConsequenceCarrier(carrier))
 
   private def publicIdeaChainSemanticSortKey(surface: MoveMeaningSurface): (Int, Int, Int, Int, String, String) =
