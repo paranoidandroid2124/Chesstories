@@ -2012,9 +2012,24 @@ object MoveMeaningSurface:
         val surfacesByMove = preliminaryChainSurfaces.groupBy(surface => (surface.subject, surface.lineRole, surface.moveUci))
         preliminaryChainSurfaces.filterNot { surface =>
           val siblings = surfacesByMove.getOrElse((surface.subject, surface.lineRole, surface.moveUci), Nil).filterNot(_ == surface)
-          val hasRouteSibling = siblings.exists(_.idea.code == "piece_route")
+          val routeSiblings = siblings.filter(_.idea.code == "piece_route")
+          val hasRouteSibling = routeSiblings.nonEmpty
           val counterplaySiblingsWithCarrier =
             siblings.filter(other => other.idea.code == "counterplay_control" && counterplayControlHasConcreteCarrier(other))
+          val routeCoversTargetPressure =
+            surface.idea.code == "target_pressure" &&
+              surface.evidence.proofRelationKinds.isEmpty &&
+              surface.evidence.proofThreatDrivers.isEmpty &&
+              surface.terminalConsequences.isEmpty &&
+              surface.endgameTechnique.isEmpty &&
+              routeSiblings.exists(other =>
+                surface.evidence.causeIds.intersect(other.evidence.causeIds).nonEmpty &&
+                  (
+                    surface.target.squares.intersect(other.target.squares).nonEmpty ||
+                      surface.target.files.intersect(other.target.files).nonEmpty ||
+                      surface.target.pieces.intersect(other.target.pieces).nonEmpty
+                  )
+              )
           val hasConcreteSibling =
             siblings.exists(other =>
               other.idea.code == "piece_route" ||
@@ -2033,6 +2048,7 @@ object MoveMeaningSurface:
                 surface.target.pieces.intersect(other.target.pieces).nonEmpty ||
                 surface.target.files.intersect(other.target.files).nonEmpty
             ) ||
+          routeCoversTargetPressure ||
           surface.idea.code == "target_pressure" && hasRouteSibling &&
             (targetPressureOnlyMarksMoveDestination(surface) || unprovedBroadTargetPressure(surface))
         }
