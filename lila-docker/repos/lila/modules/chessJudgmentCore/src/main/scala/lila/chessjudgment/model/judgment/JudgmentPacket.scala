@@ -2677,7 +2677,7 @@ object MoveMeaningSurface:
       currentFlankPawnAdvanceDestination(claim.moveUci).nonEmpty &&
         kingPressureCarrier &&
         claim.targetPieces.exists(_.equalsIgnoreCase("king"))
-    val bishopCarrier =
+    val bishopMentioned =
       claim.targetPieces.exists(_.equalsIgnoreCase("bishop")) ||
         evidence.boardCarriers.exists(carrier => carrier.kind == "Piece" && carrier.value.equalsIgnoreCase("bishop"))
     val routePiece = claim.routeIdentityParts.collectFirst {
@@ -2742,7 +2742,7 @@ object MoveMeaningSurface:
             case None =>
               lineUnlockFile
                 .map(file => s"opens $file-file")
-                .getOrElse(if bishopCarrier then "opens bishop diagonal" else "opens a line")
+                .getOrElse(if bishopMentioned then "opens bishop diagonal" else "opens a line")
     val routeFrom = claim.routeIdentityParts.collectFirst {
       case part if part.toLowerCase.startsWith("from:") => part.drop("from:".length).toLowerCase
     }
@@ -2754,6 +2754,11 @@ object MoveMeaningSurface:
         case (Some("knight"), Some(square)) => Set("b1", "g1", "b8", "g8")(square)
         case (Some("bishop"), Some(square)) => Set("c1", "f1", "c8", "f8")(square)
         case _ => false
+    val currentMoveBishopCarrier =
+      routePiece.contains("bishop") ||
+        evidence.boardCarriers.exists(carrier =>
+          carrier.role == "actor" && carrier.kind == "Piece" && carrier.value.equalsIgnoreCase("bishop")
+        )
     val currentMoveFile =
       JudgmentSubjectBinding
         .normalizeMove(claim.moveUci)
@@ -3098,7 +3103,7 @@ object MoveMeaningSurface:
               claim.targetSquares.nonEmpty &&
               claim.targetSquares.forall(square => Set("d4", "d5", "e4", "e5")(square.toLowerCase)) =>
           centralPressureLabel
-        case ("target_pressure", _) if bishopCarrier && claim.targetSquares.nonEmpty => bishopPressureLabel
+        case ("target_pressure", _) if currentMoveBishopCarrier && claim.targetSquares.nonEmpty => bishopPressureLabel
         case ("target_pressure", _) if claim.targetSquares.nonEmpty => targetPressureLabel
         case ("counterplay_race", _) => counterplayRaceLabel
         case ("counterplay_control", _) if claim.axisKind.contains(StrategicAxisKind.Counterplay) && claim.axisPolarity.contains(StrategicAxisPolarity.Restrain) =>
@@ -3115,7 +3120,7 @@ object MoveMeaningSurface:
             case _            => "piece activation"
         case ("long_diagonal_pressure", _) if lineUnlockClaim(claim) => opensLineLabel
         case ("long_diagonal_pressure", _) if centralTargetSquare => "central diagonal pressure"
-        case ("long_diagonal_pressure", _) if bishopCarrier => "bishop diagonal pressure"
+        case ("long_diagonal_pressure", _) if bishopMentioned => "bishop diagonal pressure"
         case ("material_gain", _) => materialGainLabel
         case ("compensation", _) if materialSacrificeCompensationClaim(claim) => sacrificeCompensationLabel
         case ("passed_pawn_advance", _) => passedPawnAdvanceLabel
