@@ -541,7 +541,8 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         signal.axis.exists(axis =>
             axis.kind == StrategicAxisKind.Counterplay &&
             axis.polarity == StrategicAxisPolarity.Restrain &&
-            (axis.label == "opponent-diagonal-restriction" || RelativeCauseSignalProfile.currentMoveCounterBreakAxis(axis))
+            (RelativeCauseSignalProfile.currentMoveOpponentMobilityRestrictionAxis(axis) ||
+              RelativeCauseSignalProfile.currentMoveCounterBreakAxis(axis))
         )
     )
 
@@ -1202,7 +1203,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         List(RelativeCauseKind.PlanImprovement)
       case StrategicAxisKind.Counterplay
           if axis.polarity == StrategicAxisPolarity.Restrain &&
-            (axis.label == "opponent-diagonal-restriction" || currentMoveCounterBreakAxis(axis)) =>
+            (currentMoveOpponentMobilityRestrictionAxis(axis) || currentMoveCounterBreakAxis(axis)) =>
         List(RelativeCauseKind.OpponentRestriction)
       case StrategicAxisKind.PawnBreak
           if currentMovePawnBreakAxis(axis) &&
@@ -1296,6 +1297,9 @@ private[chessjudgment] object RelativeCauseSignalProfile:
 
   private[chessjudgment] def currentMoveCounterBreakAxis(axis: StrategicAxisDetail): Boolean =
     StrategicMechanismContrastEvidence.currentMoveCounterBreakAxis(axis)
+
+  private[chessjudgment] def currentMoveOpponentMobilityRestrictionAxis(axis: StrategicAxisDetail): Boolean =
+    axis.label == "opponent-mobility-restriction" || axis.label == "opponent-diagonal-restriction"
 
   private[chessjudgment] def currentMoveSameRootBreakCarrier(
       candidateLine: LineNodeRef,

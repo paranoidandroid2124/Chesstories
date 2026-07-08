@@ -483,7 +483,11 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         rookLiftCreated = rookLiftLabels(moveMotifs, side),
         batteryCreated = batteryLines(afterFen, side).diff(batteryLines(beforeFen, side)).toList.sorted,
         blockedOwnRays = diagonalRestrictions(beforeBoard, afterBoard, after.features, side, side, moveUci),
-        opponentMobilityRestrictions = opponentDiagonalRestrictions(beforeBoard, afterBoard, after.features, side, moveUci),
+        opponentMobilityRestrictions =
+          (
+            opponentDiagonalRestrictions(beforeBoard, afterBoard, after.features, side, moveUci) ++
+              opponentBishopColorSafePawns(beforeBoard, afterBoard, side, moveUci)
+          ).distinct.sorted,
         kingRingPressureDelta = kingRingPressureDelta(before.features, after.features, side)
       )
     )
@@ -660,6 +664,45 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       moveUci: Option[String]
   ): List[String] =
     diagonalRestrictions(beforeBoard, afterBoard, afterFeatures, blockerSide = side, restrictedSide = !side, moveUci = moveUci)
+
+  private def opponentBishopColorSafePawns(
+      beforeBoard: Board,
+      afterBoard: Board,
+      side: Color,
+      moveUci: Option[String]
+  ): List[String] =
+    moveUci.toList.flatMap { uci =>
+      val origin = squareAt(uci.take(2))
+      val dest = squareAt(uci.drop(2).take(2))
+      val movedPiece = origin.flatMap(beforeBoard.pieceAt)
+      val enemyBishops = afterBoard.byPiece(!side, Bishop).squares.toList
+      (origin, dest, movedPiece, enemyBishops) match
+        case (Some(from), Some(to), Some(piece), bishop :: Nil)
+            if bishopColorSafetyEndgame(afterBoard, side) &&
+              piece.color == side &&
+              piece.role == Pawn &&
+              from.file == to.file &&
+              from.isLight == bishop.isLight &&
+              to.isLight != bishop.isLight &&
+              afterBoard.pieceAt(to).exists(afterPiece => afterPiece.color == side && afterPiece.role == Pawn) =>
+          val squareColor = if to.isLight then "light-square" else "dark-square"
+          List(
+            s"pawn:${from.key}-${to.key}:color-complex-safe",
+            s"bishop:${bishop.key}:color-complex-safe",
+            squareColor
+          )
+        case _ =>
+          Nil
+    }.distinct.sorted
+
+  private def bishopColorSafetyEndgame(board: Board, side: Color): Boolean =
+    val enemy = !side
+    board.byPiece(enemy, Bishop).count == 1 &&
+      board.byPiece(enemy, Knight).count == 0 &&
+      board.byPiece(enemy, Rook).count == 0 &&
+      board.byPiece(enemy, Queen).count == 0 &&
+      board.byPiece(side, Queen).count == 0 &&
+      board.byPiece(side, Knight).count == 0
 
   private def diagonalRestrictions(
       beforeBoard: Board,

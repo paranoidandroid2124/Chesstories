@@ -2065,17 +2065,18 @@ object PositionPlanTechniqueProjection:
         .map(unit =>
           val sourceIds = payload.signals.map(_.source.id).distinct.sorted
           val detailSourceIds = positionPlanTechniqueExpandedSourceIds(graph, sourceIds)
-          PositionPlanTechniqueSemanticDetail(
+          val detail = PositionPlanTechniqueSemanticDetail(
             unit = unit,
             mechanismKinds = List(payload.kind),
             semanticAnchorKeys = anchorKeys,
             sourceEvidenceIds = detailSourceIds
           )
+          detail
             .withPawnPlay(positionPlanTechniquePawnPlayForSources(sourceIds, pawnPlayBySourceId))
             .withPlanAlignment(positionPlanTechniquePlanAlignmentForSources(sourceIds, planAlignmentBySourceId))
             .withOpeningPrior(positionPlanTechniqueOpeningPriorForSources(sourceIds, openingPriorBySourceId))
             .withResourceContest(positionPlanTechniqueResourceContestForSources(sourceIds, resourceContestBySourceId))
-            .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForSources(sourceIds, structuralPurposeBySourceId))
+            .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForDetailSources(detail, sourceIds, structuralPurposeBySourceId))
             .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForSources(sourceIds, routePurposeBySourceId))
             .withThreatProjection(positionPlanTechniqueThreatForSources(sourceIds, threatBySourceId))
         )
@@ -2655,13 +2656,16 @@ object PositionPlanTechniqueProjection:
       detail: PositionPlanTechniqueSemanticDetail,
       purpose: PositionPlanTechniqueStructuralPurpose
   ): Boolean =
+    val opponentMobilityPurpose =
+      purpose.consequenceKinds.contains(TransitionConsequenceKind.OpponentMobilityRestriction)
     val kindMatches =
       detail.axisKind match
         case Some(StrategicAxisKind.Counterplay)
             if detail.axisPolarity.contains(StrategicAxisPolarity.Restrain) &&
-              purpose.consequenceKinds.contains(TransitionConsequenceKind.OpponentMobilityRestriction) =>
-          purpose.consequenceKinds.contains(TransitionConsequenceKind.OpponentMobilityRestriction) &&
-            purpose.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
+              opponentMobilityPurpose =>
+          purpose.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
+        case _ if opponentMobilityPurpose =>
+          false
         case Some(StrategicAxisKind.PawnBreak) =>
           if positionPlanTechniquePawnTensionDetail(detail) ||
             purpose.consequenceKinds.exists(positionPlanTechniquePawnTensionConsequence)
@@ -3207,7 +3211,7 @@ object PositionPlanTechniqueProjection:
     val planDetails =
       payload.planComparison.toList.filter(_.hasPlanDelta).map(plan =>
         val sourceIds = payload.sourceRefs.map(_.id).distinct.sorted
-        PositionPlanTechniqueSemanticDetail(
+        val detail = PositionPlanTechniqueSemanticDetail(
           unit = PositionPlanTechniqueUnit.PlanOptionSet,
           contrastOutcome = Some(plan.outcome),
           narrativeHorizon = Some(payload.sustainability.horizon),
@@ -3216,8 +3220,9 @@ object PositionPlanTechniqueProjection:
           candidatePlanIds = plan.candidatePlanIds.distinct.sorted,
           sourceEvidenceIds = sourceIds
         )
+        detail
           .withResourceContest(positionPlanTechniqueResourceContestForSources(sourceIds, resourceContestBySourceId))
-          .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForSources(sourceIds, structuralPurposeBySourceId))
+          .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForDetailSources(detail, sourceIds, structuralPurposeBySourceId))
           .withThreatProjection(positionPlanTechniqueThreatForSources(sourceIds, threatBySourceId))
       )
     positionPlanTechniqueWithPawnBreakRaceDetails(axisDetails ++ planDetails)

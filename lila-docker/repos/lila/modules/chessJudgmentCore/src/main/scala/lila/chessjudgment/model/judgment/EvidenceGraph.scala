@@ -2345,12 +2345,12 @@ object StrategicMechanismEvidence:
           Option.when(payload.hasOpponentMobilityRestriction)(
             StrategicMechanismKind.CenterControl -> signal(
               StrategicMechanismSignalKind.StructuralDelta,
-              "opponent-diagonal-restriction",
+              "opponent-mobility-restriction",
               record.ref,
               3,
               concreteAxis(
                 record,
-                structuralDeltaAxis(StrategicAxisKind.Counterplay, StrategicAxisPolarity.Restrain, "opponent-diagonal-restriction")
+                structuralDeltaAxis(StrategicAxisKind.Counterplay, StrategicAxisPolarity.Restrain, "opponent-mobility-restriction")
               )
             )
           ),
@@ -4322,6 +4322,8 @@ object StructuralDeltaEvidence:
         fianchettoBishopSquare(bishopSquare) &&
           centralDiagonalBlockerSquare(blockerSquare) &&
           after.toIntOption.exists(afterValue => before.toIntOption.exists(beforeValue => afterValue < beforeValue))
+      case colorComplexSafeSubject(_) =>
+        true
       case _ =>
         false
 
@@ -4336,6 +4338,8 @@ object StructuralDeltaEvidence:
 
   private val opponentMobilityRestrictionSubject =
     raw"bishop:([a-h][1-8]):diagonal-denial:blocked-by:([a-h][1-8]):locked-center:mobility-([0-9]+)-to-([0-9]+)".r
+  private val colorComplexSafeSubject =
+    raw"(?:bishop|pawn):([a-h][1-8](?:-[a-h][1-8])?):color-complex-safe".r
 
   private lazy val consequenceCategories: Map[TransitionConsequenceKind, Set[TransitionConsequenceCategory]] =
     Map(
