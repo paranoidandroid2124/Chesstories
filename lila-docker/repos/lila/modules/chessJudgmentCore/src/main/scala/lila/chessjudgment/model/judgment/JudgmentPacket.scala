@@ -2137,7 +2137,7 @@ object MoveMeaningSurface:
       )
       if evidenceSurfaces.isEmpty || !allowedSubjects.contains(subject) then Nil
       else
-        val publicSemantics = chainSurfaces
+        val candidatePublicSemantics = chainSurfaces
           .sortBy(publicIdeaChainSemanticSortKey)
           .filterNot(surface => fallbackLabelCoveredBySpecificLabel(surface, chainSurfaces))
           .filterNot(surface => targetReleaseLabelCoveredByPressureGain(surface, chainSurfaces))
@@ -2147,6 +2147,8 @@ object MoveMeaningSurface:
           .filterNot(surface => passedPawnAdvanceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
           .filterNot(surface => pawnAdvanceSurfaceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
           .distinctBy(publicIdeaChainSurfaceKey)
+        val publicSemantics =
+          candidatePublicSemantics.filterNot(surface => routeOnlyDeliversPublicConsequence(surface, candidatePublicSemantics))
         val semanticTargetCarriers =
           publicSemantics.flatMap(surface =>
             surface.evidence.boardCarriers
@@ -2419,6 +2421,32 @@ object MoveMeaningSurface:
               surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty
           )
       )
+
+  private def routeOnlyDeliversPublicConsequence(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+    def sameSurfaceMove(other: MoveMeaningSurface): Boolean =
+      other != surface &&
+        other.moveUci == surface.moveUci &&
+        other.subject == surface.subject &&
+        other.lineRole == surface.lineRole
+    def genericRouteLabel(label: String): Boolean =
+      label.contains(" maneuver to ") || label.contains(" development to ")
+    def sharedRouteProofOrTarget(other: MoveMeaningSurface): Boolean =
+      surface.evidence.proofRelationKinds.intersect(other.evidence.proofRelationKinds).nonEmpty ||
+        surface.target.squares.intersect(other.target.squares).nonEmpty ||
+        surface.target.files.intersect(other.target.files).nonEmpty
+    def publicConsequenceSurface(other: MoveMeaningSurface): Boolean =
+      other.idea.code match
+        case "terminal_mate" | "promotion_race" | "promotion" | "draw_resource" | "material_gain" | "material_loss" =>
+          true
+        case "outpost_attempt" =>
+          surface.target.squares.intersect(other.target.squares).nonEmpty
+        case "tactical_pressure" =>
+          other.evidence.proofRelationKinds.nonEmpty && sharedRouteProofOrTarget(other)
+        case _ =>
+          false
+    routeCarrierSurface(surface) &&
+      genericRouteLabel(surface.idea.label) &&
+      surfaces.exists(other => sameSurfaceMove(other) && publicConsequenceSurface(other))
 
   private def publicIdeaChainSubjects(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[String] =
     val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
