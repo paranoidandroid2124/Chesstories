@@ -3534,6 +3534,10 @@ object MoveMeaningSurface:
           kind == LineConsequenceKind.RecaptureSequence ||
             kind == LineConsequenceKind.RecoveryWindow
         )
+    def mateThreatProof =
+      claim.label.exists(_.equalsIgnoreCase("tactical-proof")) &&
+        claim.causeKinds.contains(RelativeCauseKind.KingForcing) &&
+        claim.proofThreatDrivers.contains(ThreatDriver.MateThreat)
     claim.meaningKind == "TargetPressure" &&
       claim.publicProofLevel == "owned_cause" &&
       (
@@ -3542,7 +3546,8 @@ object MoveMeaningSurface:
             kind != RelationFactKind.StalemateTrap &&
             kind != RelationFactKind.PerpetualCheck
         ) ||
-          recaptureLineProof
+          recaptureLineProof ||
+          mateThreatProof
       )
 
   private def defensiveResourceClaim(claim: MoveMeaningClaim): Boolean =
