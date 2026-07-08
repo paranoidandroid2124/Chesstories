@@ -2078,6 +2078,7 @@ object MoveMeaningSurface:
           genericTacticCoveredByOwnedSibling ||
           surface.idea.code == "pawn_break_timing" && breakClaimWithoutMoveCarrier(surface) && sameMoveConcreteCarrierExists ||
           surface.idea.code == "target_pressure" &&
+            surface.idea.label.startsWith("fixes target") &&
             surface.evidence.proofRelationKinds.isEmpty &&
             surface.evidence.proofThreatDrivers.isEmpty &&
             concreteCounterplayControlSiblings.exists(other =>
@@ -2108,6 +2109,7 @@ object MoveMeaningSurface:
           .filterNot(surface => supplementalPressureLabelCoveredByCanonicalPressure(surface, chainSurfaces))
           .filterNot(surface => mixedPiecePressureLabelCoveredBySinglePiecePressure(surface, chainSurfaces))
           .filterNot(surface => lineUnlockSurfaceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
+          .filterNot(surface => passedPawnAdvanceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
           .distinctBy(publicIdeaChainSurfaceKey)
         val semanticTargetCarriers =
           publicSemantics.flatMap(surface =>
@@ -2320,6 +2322,7 @@ object MoveMeaningSurface:
       surface.sourceLabel.exists(_.equalsIgnoreCase("TargetFixation")) ||
         surface.idea.label.startsWith("fixes target")
     surface.idea.code == "target_pressure" &&
+      !targetPressureWeakCarrier(surface) &&
       surface.evidence.proofRelationKinds.isEmpty &&
       surface.evidence.proofThreatDrivers.isEmpty &&
       surface.terminalConsequences.isEmpty &&
@@ -2332,10 +2335,30 @@ object MoveMeaningSurface:
             targetFixationFallback &&
               surfaceSquares.nonEmpty &&
               surfaceSquares.subsetOf(other.target.squares.map(_.toLowerCase).toSet) ||
+              targetFixationFallback &&
+                surfaceFiles.nonEmpty &&
+                surfaceFiles.intersect(other.target.files.map(_.toLowerCase).toSet).nonEmpty ||
               pawnAdvanceFallback &&
                 surfaceFiles.nonEmpty &&
                 surfaceFiles.intersect(other.target.files.map(_.toLowerCase).toSet).nonEmpty
           )
+      )
+
+  private def passedPawnAdvanceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+    val surfaceSquares = surface.target.squares.map(_.toLowerCase).toSet
+    surface.idea.code == "target_pressure" &&
+      surface.evidence.proofRelationKinds.isEmpty &&
+      surface.evidence.proofThreatDrivers.isEmpty &&
+      surface.terminalConsequences.isEmpty &&
+      surface.endgameTechnique.isEmpty &&
+      surfaces.exists(other =>
+        other != surface &&
+          other.moveUci == surface.moveUci &&
+          other.subject == surface.subject &&
+          other.lineRole == surface.lineRole &&
+          other.idea.code == "passed_pawn_advance" &&
+          other.evidence.proofLevel == surface.evidence.proofLevel &&
+          surfaceSquares.intersect(other.target.squares.map(_.toLowerCase).toSet).nonEmpty
       )
 
   private def publicIdeaChainSubjects(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[String] =
@@ -2552,6 +2575,15 @@ object MoveMeaningSurface:
                 value.contains(":color-complex-safe")
             )
         ) ||
+          (
+            surface.target.files.nonEmpty &&
+              surface.evidence.boardCarriers.exists(carrier =>
+                carrier.role == "target" &&
+                  carrier.kind == "File" &&
+                  surface.target.files.exists(_.equalsIgnoreCase(carrier.value))
+              ) &&
+              surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move")
+          ) ||
           (
             surface.target.squares.nonEmpty &&
               surface.target.pieces.nonEmpty &&
@@ -3408,6 +3440,11 @@ object MoveMeaningSurface:
             s"passed pawn on ${value.stripPrefix("passed-pawn:").takeWhile(_ != ':')}"
         }
       ).getOrElse("passed pawn advance")
+    val passedPawnPressureLabel =
+      passedPawnTargetSquares match
+        case square :: Nil => s"pressure on passed pawn $square"
+        case squares if squares.nonEmpty && squares.size <= 3 => s"pressure on passed pawns ${squares.mkString("/")}"
+        case _ => "passed pawn pressure"
     val sameFilePassedPawnMove =
       sameFilePawnAdvanceMove(claim.moveUci) &&
         moveDestinationSquare.exists(destination =>
@@ -3431,6 +3468,7 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if targetPressureReleaseClaim => targetPressureReleaseLabel
         case ("target_pressure", _) if kingPressureCarrier => kingPressureLabel
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
+        case ("target_pressure", _) if targetFixationClaim && passedPawnTargetSquares.nonEmpty => passedPawnPressureLabel
         case ("target_pressure", _) if targetFixationClaim => targetFixationLabel
         case ("target_pressure", _) if filePressureCarrier => filePressureLabel
         case ("target_pressure", _) if planPawnAdvanceClaim(claim) => pawnSpaceAdvanceLabel
