@@ -2148,7 +2148,7 @@ object MoveMeaningSurface:
           .filterNot(surface => pawnAdvanceSurfaceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
           .distinctBy(publicIdeaChainSurfaceKey)
         val publicSemantics =
-          candidatePublicSemantics.filterNot(surface => routeOnlyDeliversPublicConsequence(surface, candidatePublicSemantics))
+          candidatePublicSemantics.filterNot(surface => routeOnlyDeliversPublicMeaning(surface, candidatePublicSemantics))
         val semanticTargetCarriers =
           publicSemantics.flatMap(surface =>
             surface.evidence.boardCarriers
@@ -2422,7 +2422,7 @@ object MoveMeaningSurface:
           )
       )
 
-  private def routeOnlyDeliversPublicConsequence(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+  private def routeOnlyDeliversPublicMeaning(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     def sameSurfaceMove(other: MoveMeaningSurface): Boolean =
       other != surface &&
         other.moveUci == surface.moveUci &&
@@ -2430,23 +2430,40 @@ object MoveMeaningSurface:
         other.lineRole == surface.lineRole
     def genericRouteLabel(label: String): Boolean =
       label.contains(" maneuver to ") || label.contains(" development to ")
+    def fileRouteLabel(label: String): Boolean =
+      label.contains(" to ") && (label.endsWith("-file") || label.endsWith("-files"))
     def sharedRouteProofOrTarget(other: MoveMeaningSurface): Boolean =
       surface.evidence.proofRelationKinds.intersect(other.evidence.proofRelationKinds).nonEmpty ||
         surface.target.squares.intersect(other.target.squares).nonEmpty ||
         surface.target.files.intersect(other.target.files).nonEmpty
-    def publicConsequenceSurface(other: MoveMeaningSurface): Boolean =
+    def sharedSourceOrTarget(other: MoveMeaningSurface): Boolean =
+      sharedRouteProofOrTarget(other) ||
+        surface.evidence.causeIds.intersect(other.evidence.causeIds).nonEmpty ||
+        surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty
+    def concreteTargetPressureSurface(other: MoveMeaningSurface): Boolean =
+      other.idea.code == "target_pressure" &&
+        other.evidence.proofLevel == "owned_cause" &&
+        other.evidence.targetBound &&
+        !unprovedBroadTargetPressure(other) &&
+        (
+          genericRouteLabel(surface.idea.label) && sharedSourceOrTarget(other) ||
+            fileRouteLabel(surface.idea.label) && surface.target.files.intersect(other.target.files).nonEmpty
+        )
+    def publicMeaningSurface(other: MoveMeaningSurface): Boolean =
       other.idea.code match
         case "terminal_mate" | "promotion_race" | "promotion" | "draw_resource" | "material_gain" | "material_loss" =>
-          true
+          genericRouteLabel(surface.idea.label)
         case "outpost_attempt" =>
-          surface.target.squares.intersect(other.target.squares).nonEmpty
+          genericRouteLabel(surface.idea.label) && surface.target.squares.intersect(other.target.squares).nonEmpty
         case "tactical_pressure" =>
-          other.evidence.proofRelationKinds.nonEmpty && sharedRouteProofOrTarget(other)
+          genericRouteLabel(surface.idea.label) && other.evidence.proofRelationKinds.nonEmpty && sharedRouteProofOrTarget(other)
+        case "target_pressure" =>
+          concreteTargetPressureSurface(other)
         case _ =>
           false
     routeCarrierSurface(surface) &&
-      genericRouteLabel(surface.idea.label) &&
-      surfaces.exists(other => sameSurfaceMove(other) && publicConsequenceSurface(other))
+      (genericRouteLabel(surface.idea.label) || fileRouteLabel(surface.idea.label)) &&
+      surfaces.exists(other => sameSurfaceMove(other) && publicMeaningSurface(other))
 
   private def publicIdeaChainSubjects(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[String] =
     val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
@@ -3406,7 +3423,22 @@ object MoveMeaningSurface:
         !filePressureCarrier
     val targetPressureLabel =
       val targetPieces = claim.targetPieces.map(_.toLowerCase).distinct.filterNot(piece => piece == "king" || piece == "pawn").sorted
+      val pawnAttackTargets =
+        moveOriginSquare.toList.zip(moveDestinationSquare.toList).flatMap((from, to) =>
+          for
+            fromRank <- from.drop(1).toIntOption.toList
+            toRank <- to.drop(1).toIntOption.toList
+            direction = toRank.compare(fromRank)
+            if direction != 0 && from.take(1) == to.take(1)
+            targetRank = toRank + direction
+            if targetRank >= 1 && targetRank <= 8
+            file <- List(to.head - 1, to.head + 1).filter(file => file >= 'a' && file <= 'h')
+          yield s"${file.toChar}$targetRank"
+        ).toSet
+      val pawnAttackedTargets = publicPressureTargetSquares.filter(pawnAttackTargets)
       (targetPieces, publicPressureTargetSquares) match
+        case (piece :: Nil, square :: Nil) if currentMoveIsPawnAdvance && pawnAttackedTargets.contains(square) =>
+          s"pressure on $piece at $square"
         case (piece :: Nil, square :: Nil) => s"$piece pressure on $square"
         case (piece :: Nil, squares) if squares.nonEmpty && squares.size <= 4 => s"$piece pressure on ${squares.mkString("/")}"
         case (pieces, square :: Nil) if pieces.nonEmpty && pieces.size <= 3 => s"${pieces.mkString("/")} pressure on $square"
