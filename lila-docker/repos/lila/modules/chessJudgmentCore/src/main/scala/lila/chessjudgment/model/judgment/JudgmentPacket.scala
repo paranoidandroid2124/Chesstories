@@ -2721,15 +2721,14 @@ object MoveMeaningSurface:
           case _                             => None
     val breakPreparationFiles =
       val files = claim.breakFiles.map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
-      val withoutCurrent = currentMoveFile.fold(files)(file => files.filterNot(_ == file))
-      if withoutCurrent.nonEmpty then withoutCurrent else files
+      currentMoveFile.filter(files.contains).fold(files)(_ => Nil)
     val breakPreparationLabel =
       breakPreparationFiles match
         case file :: Nil       => s"prepares $file-pawn break"
         case files if files.nonEmpty => s"prepares ${files.mkString("/")}-pawn breaks"
-        case _                 => "prepares pawn break"
+        case _                 => currentMoveFile.map(file => s"$file-pawn advance").getOrElse("pawn advance")
     val directBreakPlanLabel =
-      currentMoveFile.map(file => s"$file-pawn break").getOrElse("pawn break")
+      currentMoveFile.map(file => s"$file-pawn advance").getOrElse("pawn advance")
     val counterplayBreakFiles =
       (
         claim.breakFiles ++
@@ -2739,8 +2738,7 @@ object MoveMeaningSurface:
           }
       ).map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
     val counterplayRestrictionFiles =
-      (if counterplayBreakFiles.nonEmpty then counterplayBreakFiles else claim.targetFiles)
-        .map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
+      counterplayBreakFiles.map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
     val counterplayRestrictionLabel =
       counterplayRestrictionFiles match
         case file :: Nil             => s"restrains $file-pawn break"
@@ -2918,11 +2916,12 @@ object MoveMeaningSurface:
       claim.targetSquares.map(_.toLowerCase).distinct.sorted match
         case square :: Nil => s"pressure on $square"
         case squares if squares.nonEmpty && squares.size <= 4 => s"pressure on ${squares.mkString("/")}"
-        case _ =>
+        case Nil =>
           claim.targetPieces.map(_.toLowerCase).distinct.filterNot(_ == "king").sorted match
             case piece :: Nil => s"$piece pressure"
             case pieces if pieces.nonEmpty && pieces.size <= 3 => s"${pieces.mkString("/")} pressure"
             case _ => "target pressure"
+        case _ => "target pressure"
     val outpostLabel =
       val square = moveDestination(claim.moveUci).orElse(claim.targetSquares.map(_.toLowerCase).distinct.sorted.headOption)
       val piece =
