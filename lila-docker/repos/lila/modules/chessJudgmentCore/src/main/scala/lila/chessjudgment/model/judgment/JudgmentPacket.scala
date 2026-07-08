@@ -3338,12 +3338,16 @@ object MoveMeaningSurface:
       claim.objectCarrierReady
 
   private def passedPawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
+    val destination = moveDestination(claim.moveUci)
     currentMoveLikelyPawnAdvance(claim) &&
       (
         claim.routeIdentityParts.exists(_.startsWith("subject:passed-pawn-advanced:")) ||
           claim.boardCarriers.exists(carrier =>
             carrier.kind == "PlanSubject" &&
-              (carrier.value.startsWith("passed-pawn:") || carrier.value.startsWith("passed-pawn-advanced:"))
+              (
+                carrier.value.startsWith("passed-pawn-advanced:") ||
+                  destination.exists(square => carrier.value.equalsIgnoreCase(s"passed-pawn:$square"))
+              )
           )
       )
 
@@ -4349,7 +4353,7 @@ object MoveMeaningClaim:
     claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
       claim.role == "PreparesBreakOption" &&
       (!planPieceActivationClaim(claim) || flankKingPressurePawnAdvance) &&
-      claim.publicHasCarrier &&
+      claim.objectCarrierReady &&
       claim.causeEvidenceIds.nonEmpty &&
       (claim.breakFiles.nonEmpty || claim.breakIdentityParts.nonEmpty) &&
       ownsBreakFile
