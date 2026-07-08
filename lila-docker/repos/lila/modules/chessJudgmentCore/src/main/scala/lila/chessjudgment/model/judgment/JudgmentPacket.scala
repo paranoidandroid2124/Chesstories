@@ -2029,9 +2029,9 @@ object MoveMeaningSurface:
                   surface.target.files.intersect(other.target.files).nonEmpty ||
                   surface.target.pieces.intersect(other.target.pieces).nonEmpty
               )
-          val genericTacticalPressureRestatesOwnedSibling =
+          val tacticalCompanionRestatesOwnedSibling =
             surface.idea.code == "tactical_pressure" &&
-              surface.idea.label == "tactical pressure" &&
+              Set("tactical pressure", "recapture recovery")(surface.idea.label) &&
               ownedSiblings.exists(other =>
                 other.idea.code != "tactical_pressure" &&
                   (
@@ -2048,6 +2048,10 @@ object MoveMeaningSurface:
               surface.terminalConsequences.isEmpty &&
               surface.endgameTechnique.isEmpty &&
               routeSiblings.exists(other =>
+                val surfaceSquares = surface.target.squares.map(_.toLowerCase).toSet
+                val routeSquares = other.target.squares.map(_.toLowerCase).toSet
+                val surfaceFiles = surface.target.files.map(_.toLowerCase).toSet
+                val routeFiles = other.target.files.map(_.toLowerCase).toSet
                 (
                   surface.evidence.causeIds.intersect(other.evidence.causeIds).nonEmpty ||
                     surface.evidence.causeIds.isEmpty &&
@@ -2055,9 +2059,8 @@ object MoveMeaningSurface:
                     surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty
                 ) &&
                   (
-                    surface.target.squares.intersect(other.target.squares).nonEmpty ||
-                      surface.target.files.intersect(other.target.files).nonEmpty ||
-                      surface.target.pieces.intersect(other.target.pieces).nonEmpty
+                    surfaceSquares.nonEmpty && surfaceSquares.subsetOf(routeSquares) ||
+                      surfaceSquares.isEmpty && surfaceFiles.nonEmpty && surfaceFiles.subsetOf(routeFiles)
                   )
               )
           val hasSpecificSiblingCarrier =
@@ -2070,7 +2073,7 @@ object MoveMeaningSurface:
                 other.idea.code == "defensive_resource"
             )
           sourceOnlyCompanionRestatesOwnedSibling ||
-          genericTacticalPressureRestatesOwnedSibling ||
+          tacticalCompanionRestatesOwnedSibling ||
           surface.idea.code == "pawn_break_timing" && breakClaimWithoutMoveCarrier(surface) && hasSpecificSiblingCarrier ||
           surface.idea.code == "target_pressure" &&
             surface.evidence.proofRelationKinds.isEmpty &&
