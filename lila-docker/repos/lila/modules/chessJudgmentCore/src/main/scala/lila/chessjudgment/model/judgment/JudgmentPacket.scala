@@ -2423,6 +2423,12 @@ object MoveMeaningSurface:
         )
     )
 
+  private[judgment] def colorComplexSubject(value: String): Option[String] =
+    value.trim.toLowerCase match
+      case "light-square" | "light-squares" => Some("light-square")
+      case "dark-square" | "dark-squares"   => Some("dark-square")
+      case _                                => None
+
   private def moveDestination(move: String): Option[String] =
     val normalized = JudgmentSubjectBinding.normalizeMove(move).toLowerCase
     Option.when(normalized.matches("[a-h][1-8][a-h][1-8].*"))(normalized.slice(2, 4))
@@ -2880,6 +2886,11 @@ object MoveMeaningSurface:
       ).map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
     val counterplayRestrictionFiles =
       counterplayBreakFiles.map(_.trim.toLowerCase).filter(_.matches("[a-h]")).distinct.sorted
+    val colorComplexTargets =
+      claim.boardCarriers.collect {
+        case carrier if carrier.role == "target" && carrier.kind == "PlanSubject" =>
+          colorComplexSubject(carrier.value)
+      }.flatten.distinct.sorted
     def restrictedPawnAdvance(value: String): Option[String] =
       val normalized = value.trim.toLowerCase.stripPrefix("subject:")
       Option.when(normalized.matches("pawn:[a-h][1-8]-[a-h][1-8]:advance-restricted.*"))(
@@ -2897,14 +2908,18 @@ object MoveMeaningSurface:
         case advance :: Nil                 => s"restrains $advance"
         case advances if advances.nonEmpty => s"restrains ${advances.mkString("/")}"
         case _ =>
-          counterplayRestrictionFiles match
-            case file :: Nil             => s"restrains $file-pawn break"
-            case files if files.nonEmpty => s"restrains ${files.mkString("/")}-pawn breaks"
+          colorComplexTargets match
+            case complex :: Nil                 => s"$complex restraint"
+            case complexes if complexes.nonEmpty => s"${complexes.mkString("/")}-square restraint"
             case _ =>
-              filePressureFiles match
-                case file :: Nil             => s"restrains $file-file counterplay"
-                case files if files.nonEmpty => s"restrains ${files.mkString("/")}-file counterplay"
-                case _                       => "restricts counterplay"
+              counterplayRestrictionFiles match
+                case file :: Nil             => s"restrains $file-pawn break"
+                case files if files.nonEmpty => s"restrains ${files.mkString("/")}-pawn breaks"
+                case _ =>
+                  filePressureFiles match
+                    case file :: Nil             => s"restrains $file-file counterplay"
+                    case files if files.nonEmpty => s"restrains ${files.mkString("/")}-file counterplay"
+                    case _                       => "restricts counterplay"
     val counterplayRaceFiles =
       currentMoveFile.filter(counterplayBreakFiles.contains).toList match
         case file :: Nil => List(file)
@@ -5510,6 +5525,7 @@ object MoveMeaningClaim:
         structuralRouteFileCarriers(detail) ++
         flankPawnAdvanceDestinationCarriers(detail) ++
         detail.structuralPurposeSubjects.flatMap(publicStructuralSubjectCarriers) ++
+        colorComplexSubjectCarriers(detail) ++
         publicPlanSubjectCarriers(detail) ++
         detail.breakFile.toList.flatMap(file => publicFileCarrier("target", file)) ++
         detail.counterBreakFiles.flatMap(file => publicFileCarrier("target", file)) ++
@@ -5622,6 +5638,13 @@ object MoveMeaningClaim:
         .filter(_.nonEmpty)
         .distinct
         .map(value => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", value))
+
+  private def colorComplexSubjectCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
+    EvidenceObjectBinding
+      .signatureValues(detail.objectBindingSignatures, "target", "PlanSubject")
+      .flatMap(MoveMeaningSurface.colorComplexSubject)
+      .distinct
+      .map(value => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", value))
 
   private def publicObjectCarrierReady(
       evidenceGraph: TypedEvidenceGraph,
