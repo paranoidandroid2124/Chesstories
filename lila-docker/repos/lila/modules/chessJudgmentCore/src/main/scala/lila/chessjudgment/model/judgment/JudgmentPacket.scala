@@ -2105,6 +2105,8 @@ object MoveMeaningSurface:
           .sortBy(publicIdeaChainSemanticSortKey)
           .filterNot(surface => genericSemanticDuplicateOfSpecific(surface, chainSurfaces))
           .filterNot(surface => targetPressureReleaseDuplicateOfGain(surface, chainSurfaces))
+          .filterNot(surface => targetPressureCompanionDuplicateOfSpecificPressure(surface, chainSurfaces))
+          .filterNot(surface => multiPiecePressureDuplicateOfSinglePiecePressure(surface, chainSurfaces))
           .distinctBy(publicIdeaChainSemanticIdentity)
         val semanticTargetCarriers =
           publicSemantics.flatMap(surface =>
@@ -2262,6 +2264,40 @@ object MoveMeaningSurface:
           other.idea.code == surface.idea.code &&
           other.evidence.proofLevel == surface.evidence.proofLevel &&
           !other.sourceLabel.exists(_.equalsIgnoreCase("target-pressure-release"))
+      )
+
+  private def targetPressureCompanionDuplicateOfSpecificPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+    val companionLabels = Set("targetfixation", "tactical-proof")
+    val sourceLabel = surface.sourceLabel.map(_.toLowerCase)
+    surface.idea.code == "target_pressure" &&
+      sourceLabel.exists(companionLabels) &&
+      surfaces.exists(other =>
+        other != surface &&
+          other.moveUci == surface.moveUci &&
+          other.subject == surface.subject &&
+          other.lineRole == surface.lineRole &&
+          other.idea.code == surface.idea.code &&
+          other.evidence.proofLevel == surface.evidence.proofLevel &&
+          !other.sourceLabel.map(_.toLowerCase).exists(companionLabels) &&
+          other.target.squares == surface.target.squares &&
+          other.target.files == surface.target.files
+      )
+
+  private def multiPiecePressureDuplicateOfSinglePiecePressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+    surface.idea.code == "target_pressure" &&
+      surface.idea.label.contains("/") &&
+      surface.idea.label.contains(" pressure on ") &&
+      surfaces.exists(other =>
+        other != surface &&
+          other.moveUci == surface.moveUci &&
+          other.subject == surface.subject &&
+          other.lineRole == surface.lineRole &&
+          other.idea.code == surface.idea.code &&
+          other.evidence.proofLevel == surface.evidence.proofLevel &&
+          !other.idea.label.contains("/") &&
+          other.idea.label.contains(" pressure on ") &&
+          other.target.squares == surface.target.squares &&
+          other.target.files == surface.target.files
       )
 
   private def publicIdeaChainSubjects(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[String] =
