@@ -318,7 +318,7 @@ object MoveJudgmentCauseNarrativeProjection:
     val sharedExactSignatures = rootSignatures.intersect(witnessSignatures)
     val sharedDirectExactSignatures = rootDirectSignatures.intersect(witnessDirectSignatures)
     val sharedExact = sharedExactSignatures.nonEmpty
-    val sharedSurfaceExact = EvidenceObjectBinding.playerFacingReadySignatures(sharedExactSignatures)
+    val sharedSurfaceExact = EvidenceObjectBinding.specificTargetMechanismReadySignatures(sharedExactSignatures)
     val sharedActor = sharedSpecificActorToken(root, witness)
     val sharedTarget = sharedConcreteTargetToken(root, witness)
     val sharedMechanism = sharedObjectToken(root, witness, "mechanism")

@@ -90,7 +90,7 @@ final case class EvidenceObjectBinding(
   def hasConcreteObject: Boolean =
     target.nonEmpty ||
       (actor.nonEmpty && (mechanism.nonEmpty || consequence.nonEmpty))
-  def playerFacingReady: Boolean =
+  def specificTargetMechanismReady: Boolean =
     target.exists(EvidenceObjectBinding.specificSurfaceTargetObject) &&
       mechanism.nonEmpty &&
       (consequence.nonEmpty || witness.nonEmpty) &&
@@ -202,10 +202,10 @@ object EvidenceObjectBinding:
   private[chessjudgment] def directProofSpecificTargetReady(signatures: Iterable[String]): Boolean =
     signaturesForProofRole(signatures, Some(RelativeCauseProofRole.DirectProof)).exists(specificTargetSurfaceReadySignature)
 
-  private[chessjudgment] def playerFacingReadySignatures(signatures: Iterable[String]): Boolean =
-    signatures.exists(playerFacingReadySignature)
+  private[chessjudgment] def specificTargetMechanismReadySignatures(signatures: Iterable[String]): Boolean =
+    signatures.exists(specificTargetMechanismReadySignature)
 
-  private def playerFacingReadySignature(signature: String): Boolean =
+  private def specificTargetMechanismReadySignature(signature: String): Boolean =
     specificTargetSurfaceReadySignature(signature) &&
       !signatureParts(signature).contains("proof=ContextSupport")
 
@@ -237,8 +237,8 @@ object EvidenceObjectBinding:
       case _ =>
         false
 
-  def playerFacingReady(bindings: List[EvidenceObjectBinding]): Boolean =
-    bindings.exists(_.playerFacingReady)
+  def specificTargetMechanismReady(bindings: List[EvidenceObjectBinding]): Boolean =
+    bindings.exists(_.specificTargetMechanismReady)
 
   def hasConcreteObject(bindings: List[EvidenceObjectBinding]): Boolean =
     bindings.exists(_.hasConcreteObject)

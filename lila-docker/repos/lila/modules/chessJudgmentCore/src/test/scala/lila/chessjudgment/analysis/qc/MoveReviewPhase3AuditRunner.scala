@@ -958,7 +958,7 @@ object MoveReviewPhase3AuditRunner:
     val claimWithoutConcreteObjectIds =
       packet.claims
         .filter(claim => PlayerFacingClaimPolicy.requiresConcreteObject(claim.family))
-        .filterNot(claim => EvidenceObjectBinding.playerFacingReady(EvidenceObjectBinding.fromClaim(claim, graph)))
+        .filterNot(claim => EvidenceObjectBinding.specificTargetMechanismReady(EvidenceObjectBinding.fromClaim(claim, graph)))
         .map(_.id)
         .distinct
         .sorted

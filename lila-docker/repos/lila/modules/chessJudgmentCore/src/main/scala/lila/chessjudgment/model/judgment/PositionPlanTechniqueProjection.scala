@@ -2017,7 +2017,7 @@ object PositionPlanTechniqueProjection:
     else PositionPlanTechniqueSpecificityTier.ContextOnly
 
   private def positionPlanTechniqueNonBroadObjectSignature(signature: String): Boolean =
-    EvidenceObjectBinding.playerFacingReadySignatures(List(signature))
+    EvidenceObjectBinding.specificTargetMechanismReadySignatures(List(signature))
 
   private def mechanismPlanTechniqueDetails(
       payload: StrategicMechanismEvidence,
