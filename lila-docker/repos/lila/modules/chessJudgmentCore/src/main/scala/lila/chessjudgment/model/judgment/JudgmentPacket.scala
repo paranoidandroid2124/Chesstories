@@ -1957,10 +1957,66 @@ object MoveMeaningSurface:
       "role" -> carrier.role,
       "kind" -> carrier.kind,
       "value" -> carrier.value,
+      "label" -> publicBoardCarrierLabel(carrier),
       "from" -> carrier.from,
       "to" -> carrier.to,
       "semantic_role" -> carrier.semanticRole
     )
+
+  private def publicBoardCarrierLabel(carrier: MoveMeaningSurfaceBoardCarrier): String =
+    val raw = carrier.value.trim.toLowerCase
+    val route = for
+      from <- carrier.from.map(_.trim.toLowerCase).filter(_.matches("[a-h][1-8]"))
+      to <- carrier.to.map(_.trim.toLowerCase).filter(_.matches("[a-h][1-8]"))
+    yield s"$from-$to"
+    carrier.kind match
+      case "Move" if route.nonEmpty => route.get
+      case "Square" if raw.matches("[a-h][1-8]") => s"the $raw square"
+      case "File" if raw.matches("[a-h]") => s"$raw-file"
+      case "Pawn" if raw.startsWith("weak-pawn:") => s"weak pawn on ${raw.stripPrefix("weak-pawn:")}"
+      case "PlanSubject" => publicPlanSubjectLabel(raw)
+      case _ => raw.replaceAll("[_-]+", " ")
+
+  private def publicPlanSubjectLabel(value: String): String =
+    val normalized = value.trim.toLowerCase
+    if normalized.contains(",") then publicJoinLabels(normalized.split(",").toList.map(publicPlanSubjectLabel))
+    else
+      val squareSubject = "^(material-sacrifice|material-capture|material-recapture|weak-square|check):([a-h][1-8])$".r
+      val passedRoute = "^passed-pawn-(advanced|breakthrough):([a-h][1-8])-([a-h][1-8]):rank-\\d+$".r
+      val passedCreated = "^passed-pawn-created:([a-h][1-8])".r
+      val passedPawn = "^passed-pawn:([a-h][1-8])$".r
+      val breakFile = "^break-file:([a-h])$".r
+      val pressure = "^(battery-pressure|pin-pressure):([a-h][1-8](?:-[a-h][1-8])?)$".r
+      val defenderMove = "^defender-move:([a-h][1-8])$".r
+      val tension = "^(created-tension|resolved-tension):([a-h][1-8])(?:-([a-h][1-8]))?$".r
+      val rookLift = "^rook-lift:([a-h][1-8])-([a-h][1-8]):rank-\\d+$".r
+      normalized match
+        case s if s.startsWith("opened-line:") || s.startsWith("line-unlock:") =>
+          val square = s.dropWhile(_ != ':').drop(1)
+          if square.matches("[a-h][1-8]") then s"opens a line from $square" else labelCode(s)
+        case squareSubject(kind, square) => s"${labelCode(kind)} on $square"
+        case passedRoute("advanced", from, to) => s"passed pawn advance $from-$to"
+        case passedRoute("breakthrough", from, to) => s"passed pawn breakthrough $from-$to"
+        case passedCreated(square) => s"creates passed pawn on $square"
+        case passedPawn(square) => s"passed pawn on $square"
+        case breakFile(file) => s"$file-file break"
+        case pressure(kind, target) => s"${labelCode(kind)} ${if target.contains("-") then "along" else "on"} $target"
+        case defenderMove(square) => s"defensive resource on $square"
+        case tension(kind, from, to) =>
+          val prefix = if kind == "created-tension" then "tension" else "resolved tension"
+          Option(to).filter(_.nonEmpty).fold(s"$prefix on $from")(target => s"$prefix between $from and $target")
+        case rookLift(from, to) => s"rook lift $from-$to"
+        case _ => labelCode(normalized)
+
+  private def publicJoinLabels(labels: List[String]): String =
+    labels.filter(_.nonEmpty) match
+      case Nil => ""
+      case one :: Nil => one
+      case first :: second :: Nil => s"$first and $second"
+      case many => s"${many.dropRight(1).mkString(", ")}, and ${many.last}"
+
+  private def labelCode(value: String): String =
+    value.replaceAll("[_-]+", " ").trim.toLowerCase
 
   private def publicIdeaChains(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[JsObject] =
     val allowedSubjects = publicIdeaChainSubjects(verdict, surfaces).toSet

@@ -63,7 +63,7 @@ describe('chesstory brief scaffold', () => {
             { role: 'attacker', kind: 'Square', value: 'g4' },
           ],
           pv: ['c2c3', 'e8g8'],
-          consequence_carriers: [{ role: 'target', kind: 'PlanSubject', value: 'break-file:e' }],
+          consequence_carriers: [{ role: 'target', kind: 'PlanSubject', value: 'break-file:e', label: 'e-file break' }],
           terminal_consequences: [],
           technique: [],
           player_facing_reason_allowed: true,
