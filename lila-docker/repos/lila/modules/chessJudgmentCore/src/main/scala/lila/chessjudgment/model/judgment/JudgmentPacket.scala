@@ -2790,13 +2790,6 @@ object MoveMeaningSurface:
           carrier.kind == "Move" &&
           JudgmentSubjectBinding.normalizeMove(carrier.value).toLowerCase == normalizedSubjectMove
       )
-    val directPieceRouteSurfaceEvidence = subject == "played_move" && evidenceSurfaces.exists { surface =>
-      routeCarrierSurface(surface) &&
-        surface.evidence.proofLevel == "surface_evidence" &&
-        surfaceHasSubjectMove(surface) &&
-        surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Piece") &&
-        surface.evidence.boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "Square")
-    }
     val directStructuralSurfaceEvidence = evidenceSurfaces.exists { surface =>
       val carriers = surface.evidence.boardCarriers
       surfaceHasSubjectMove(surface) &&
@@ -2808,7 +2801,7 @@ object MoveMeaningSurface:
     val directFunctionSurfaceEvidence =
       subject == "played_move" &&
         evidenceSurfaces.exists(surface => surfaceHasDirectFunctionCarrier(surface) && surfaceHasSubjectMove(surface))
-    val admissiblePublicReason = strongProofSurface || directFunctionSurfaceEvidence || directPieceRouteSurfaceEvidence
+    val admissiblePublicReason = strongProofSurface || directFunctionSurfaceEvidence
     evidenceSurfaces.nonEmpty &&
       admissiblePublicReason &&
       (!materialTacticalCarrier || strongProofSurface) &&
@@ -2817,7 +2810,6 @@ object MoveMeaningSurface:
           technique.nonEmpty ||
           directStructuralSurfaceEvidence ||
           ownedRouteCarrier ||
-          directPieceRouteSurfaceEvidence ||
           directFunctionSurfaceEvidence ||
           (pv.nonEmpty && concreteConsequence)
       )
