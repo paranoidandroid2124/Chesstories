@@ -2377,7 +2377,7 @@ object MoveMeaningSurface:
             technique.isEmpty
         if publicSemantics.isEmpty || routeOnlyPublicChain then Nil
         else
-          val relationKinds = chainSurfaces.flatMap(publicSurfaceRelationKinds).distinct.sortBy(_.toString)
+          val relationKinds = publicSemantics.flatMap(publicSurfaceRelationKinds).distinct.sortBy(_.toString)
           List(
             Json.obj(
               "key" -> "current-move-chain",
@@ -2386,10 +2386,10 @@ object MoveMeaningSurface:
               "move_quality" -> verdict.moveQuality,
               "subject" -> subject,
               "move_semantics" -> publicSemantics.map(publicIdeaChainMoveSemanticJson),
-              "proof_levels" -> chainSurfaces.map(_.evidence.proofLevel).distinct,
+              "proof_levels" -> publicSemantics.map(_.evidence.proofLevel).distinct,
               "relation_kinds" -> relationKinds.map(_.toString),
               "relations" -> relationKinds.map(publicRelationCodeJson),
-              "threat_drivers" -> chainSurfaces.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
+              "threat_drivers" -> publicSemantics.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
               "carriers" -> directCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "pv" -> pv,
               "function_carriers" -> purposeCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
