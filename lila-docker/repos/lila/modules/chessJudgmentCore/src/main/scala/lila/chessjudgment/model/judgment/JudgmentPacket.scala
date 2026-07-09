@@ -6762,12 +6762,27 @@ object MoveMeaningClaim:
       detail.structuralPurposeSubjects.exists(subject => subject.toLowerCase.startsWith("resolved-tension:"))
 
   private def pawnBreakTimingDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    val moveBreakFile = detail.structuralRouteMove.flatMap(sameFilePawnAdvanceFile)
+    val ownsBreakFile =
+      moveBreakFile.exists(file =>
+        detail.breakFile.exists(_.equalsIgnoreCase(file)) ||
+          detail.axisKey.exists(_.toLowerCase.contains(s"break-file-$file")) ||
+          detail.label.exists(_.toLowerCase.contains(s"break-file-$file")) ||
+          detail.structuralPurposeSubjects.exists(_.equalsIgnoreCase(s"break-file:$file"))
+      )
+    val ownsTension =
+      detail.tensionSquares.nonEmpty ||
+        detail.tensionEdges.nonEmpty ||
+        detail.structuralPurposeSubjects.exists(subject =>
+          val normalized = subject.toLowerCase
+          normalized.startsWith("created-tension:") ||
+            normalized.startsWith("resolved-tension:")
+        )
     pawnAdvanceDetail(detail) &&
       (
-        detail.breakFile.exists(_.trim.nonEmpty) ||
-          detail.axisKind.contains(StrategicAxisKind.PawnBreak) ||
-          detail.structuralPurposeSubjects.exists(pawnBreakPurposeSubject) ||
-          detail.label.exists(pawnAdvancePurposeToken)
+        ownsBreakFile ||
+          ownsTension ||
+          moveBreakFile.nonEmpty && detail.label.exists(pawnAdvancePurposeToken)
       )
 
   private def flankKingPressurePawnAdvanceDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
@@ -6785,10 +6800,6 @@ object MoveMeaningClaim:
           toRank <- to.drop(1).toIntOption
         yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
     }
-
-  private def pawnBreakPurposeSubject(subject: String): Boolean =
-    val normalized = subject.toLowerCase
-    normalized.startsWith("break-file:")
 
   private def pawnAdvancePurposeToken(token: String): Boolean =
     val normalized = token.toLowerCase
