@@ -4148,19 +4148,6 @@ object MoveMeaningSurface:
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.PieceRerouteRoute && longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
       .orElse(
         Option.when(
-          claim.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
-            routeLineUnlockClaim(claim) &&
-            sameFilePawnAdvanceMove(claim.moveUci) &&
-            !claim.routeIdentityParts.exists(_.toLowerCase.startsWith("subject:passed-pawn-")) &&
-            !claim.boardCarriers.exists(carrier =>
-              carrier.role == "target" &&
-                carrier.kind == "PlanSubject" &&
-                carrier.value.toLowerCase.startsWith("passed-pawn")
-            )
-        )("target_pressure")
-      )
-      .orElse(
-        Option.when(
           claim.unit != PositionPlanTechniqueUnit.SpacePreventionResourceDenial &&
             claim.unit != PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
             claim.unit != PositionPlanTechniqueUnit.CounterplayRace &&
