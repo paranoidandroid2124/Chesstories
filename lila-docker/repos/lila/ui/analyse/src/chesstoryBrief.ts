@@ -256,7 +256,7 @@ function carrierValueLabel(kind?: string, value?: string): string {
   const raw = value || '';
   if (kind === 'File' && raw) return `${raw}-file`;
   if (kind === 'Pawn' && raw.startsWith('weak-pawn:')) return `weak pawn on ${raw.slice('weak-pawn:'.length)}`;
-  return kind === 'PlanSubject' ? labelCode(raw) : raw;
+  return kind === 'PlanSubject' ? '' : raw;
 }
 
 function techniqueLabels(values: unknown[]): string[] {
