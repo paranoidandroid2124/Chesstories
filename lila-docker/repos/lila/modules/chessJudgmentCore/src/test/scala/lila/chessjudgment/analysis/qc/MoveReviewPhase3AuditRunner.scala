@@ -2845,7 +2845,7 @@ object MoveReviewPhase3AuditRunner:
 
   private def branchReplyProbeLifecycle(result: MoveReviewJudgmentResult): JsObject =
     val requests = result.packet.probeRequests.filter(request => request.purpose.exists(ProbePurpose.isBranchReply))
-    val diagnostics = result.packet.probeDiagnostics
+    val diagnostics = result.packet.probeDiagnostics.filter(_.purpose.exists(ProbePurpose.isBranchReply))
     val diagnosedIds = diagnostics.map(_.probeId).toSet
     val pending = requests.filterNot(request => diagnosedIds.contains(request.id))
     Json.obj(

@@ -3661,7 +3661,8 @@ object SemanticCoverageMetrics:
         case _ =>
           false
       }
-    val branchReplyProbeDiagnostics = packet.probeDiagnostics
+    val branchReplyProbeDiagnostics =
+      packet.probeDiagnostics.filter(_.purpose.exists(ProbePurpose.isBranchReply))
     val admittedProbeResults =
       branchReplyProbeDiagnostics.filter(_.status == ProbeAdmissionStatus.Admitted)
     val rejectedProbeResults =
