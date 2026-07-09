@@ -1999,6 +1999,9 @@ object MoveMeaningSurface:
           "defensive_resource",
           "passed_pawn_advance",
           "pawn_break_timing",
+          "pawn_tension_creation",
+          "pawn_tension_resolution",
+          "flank_pawn_pressure",
           "counterplay_race",
           "counterplay_control",
           "outpost_attempt",
@@ -2038,7 +2041,10 @@ object MoveMeaningSurface:
           "material_gain",
           "material_loss",
           "passed_pawn_advance",
-          "pawn_break_timing"
+          "pawn_break_timing",
+          "pawn_tension_creation",
+          "pawn_tension_resolution",
+          "flank_pawn_pressure"
         )
         chainSurfacesBeforeSameMovePruning.filterNot { surface =>
           val siblings = surfacesByMove.getOrElse((surface.subject, surface.lineRole, surface.moveUci), Nil).filterNot(_ == surface)
@@ -2129,7 +2135,7 @@ object MoveMeaningSurface:
           surfaceOnlyFallbackCoveredByOwnedSibling ||
           genericTacticCoveredByOwnedSibling ||
           checkingPressureCoveredByTactic ||
-          surface.idea.code == "pawn_break_timing" && breakClaimWithoutMoveCarrier(surface) && sameMoveConcreteCarrierExists ||
+          pawnStructureAdvanceIdea(surface.idea.code) && breakClaimWithoutMoveCarrier(surface) && sameMoveConcreteCarrierExists ||
           surface.idea.code == "target_pressure" &&
             surface.idea.label.startsWith("fixes target") &&
             surface.evidence.proofRelationKinds.isEmpty &&
@@ -2330,7 +2336,7 @@ object MoveMeaningSurface:
           (
             other.idea.code == surface.idea.code &&
               !other.sourceLabel.exists(_.equalsIgnoreCase("target-pressure-release")) ||
-              other.idea.code == "pawn_break_timing" &&
+              pawnStructureAdvanceIdea(other.idea.code) &&
                 (
                   surface.target.squares.intersect(other.target.squares).nonEmpty ||
                     surface.target.files.intersect(other.target.files).nonEmpty ||
@@ -2465,7 +2471,7 @@ object MoveMeaningSurface:
           other.moveUci == surface.moveUci &&
           other.subject == surface.subject &&
           other.lineRole == surface.lineRole &&
-          other.idea.code == "pawn_break_timing" &&
+          pawnStructureAdvanceIdea(other.idea.code) &&
           (
             surfaceFiles.nonEmpty && surfaceFiles.intersect(other.target.files.map(_.toLowerCase).toSet).nonEmpty ||
               surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty
@@ -2671,7 +2677,8 @@ object MoveMeaningSurface:
         0
       case "defensive_resource"    => 1
       case "passed_pawn_advance"   => 2
-      case "pawn_break_timing"     => 3
+      case "pawn_break_timing" | "pawn_tension_creation" | "pawn_tension_resolution" | "flank_pawn_pressure" =>
+        3
       case "counterplay_race"      => 4
       case "counterplay_control" if counterplayControlHasConcreteCarrier(surface) =>
         5
@@ -2690,6 +2697,12 @@ object MoveMeaningSurface:
       case "piece_activity"         => 10
       case "plan_continuity"        => 11
       case _                        => 12
+
+  private val pawnStructureAdvanceIdeaCodes =
+    Set("pawn_break_timing", "pawn_tension_creation", "pawn_tension_resolution", "flank_pawn_pressure")
+
+  private def pawnStructureAdvanceIdea(code: String): Boolean =
+    pawnStructureAdvanceIdeaCodes(code)
 
   private def targetPressureOnlyMarksMoveDestination(surface: MoveMeaningSurface): Boolean =
     surface.target.files.isEmpty &&
@@ -3397,12 +3410,8 @@ object MoveMeaningSurface:
           carrier.value.toLowerCase.dropWhile(_ != ':').drop(1)
         }
     ).filter(_.matches("[a-h][1-8]-[a-h][1-8]")).distinct.headOption
-    val createdTensionCarrier = claim.boardCarriers.exists(carrier =>
-      carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("created-tension:")
-    )
-    val resolvedTensionCarrier = claim.boardCarriers.exists(carrier =>
-      carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("resolved-tension:")
-    )
+    val createdTensionCarrier = createdPawnTensionClaim(claim)
+    val resolvedTensionCarrier = resolvedPawnTensionClaim(claim)
     val createsPawnTensionLabel =
       tensionEdge.map(edge => s"creates $edge pawn tension").getOrElse("creates pawn tension")
     val resolvesPawnTensionLabel =
@@ -3666,6 +3675,9 @@ object MoveMeaningSurface:
         case ("counterplay_race", _) => counterplayRaceLabel
         case ("counterplay_control", _) if claim.axisKind.contains(StrategicAxisKind.Counterplay) && claim.axisPolarity.contains(StrategicAxisPolarity.Restrain) =>
           counterplayRestrictionLabel
+        case ("pawn_tension_creation", _) => createsPawnTensionLabel
+        case ("pawn_tension_resolution", _) => resolvesPawnTensionLabel
+        case ("flank_pawn_pressure", _) => flankPawnAdvanceLabel
         case ("pawn_break_timing", _) if ownedTensionBreakClaim(claim) && createdTensionCarrier => createsPawnTensionLabel
         case ("pawn_break_timing", _) if ownedTensionBreakClaim(claim) && (resolvedTensionCarrier || claim.role == "ReleasesPawnTension") => resolvesPawnTensionLabel
         case ("pawn_break_timing", _) if flankPawnAdvanceSurface || flankPressurePawnMove => flankPawnAdvanceLabel
@@ -3707,8 +3719,9 @@ object MoveMeaningSurface:
         (createdTensionCarrier || resolvedTensionCarrier || claim.role == "ReleasesPawnTension")
     val breakPreparationOwnsCurrentMoveFile =
       currentMoveFile.exists(file => claim.breakFiles.exists(_.equalsIgnoreCase(file)))
+    val pawnStructureAdvanceSurfaceIdea = pawnStructureAdvanceIdeaCodes(idea)
     val directPawnAdvanceSurfaceTarget =
-      idea == "pawn_break_timing" &&
+      pawnStructureAdvanceSurfaceIdea &&
         sameFilePawnAdvanceMove(claim.moveUci) &&
         !pawnTensionLabelClaim &&
         (!MoveMeaningClaim.breakPreparationPlanClaim(claim) || breakPreparationOwnsCurrentMoveFile)
@@ -3728,7 +3741,7 @@ object MoveMeaningSurface:
             files = List(destination.take(1)),
             pieces = directPawnAdvancePieces
           )
-        case Some(destination) if idea == "pawn_break_timing" && kingPressureCarrier && !pawnTensionLabelClaim =>
+        case Some(destination) if pawnStructureAdvanceSurfaceIdea && kingPressureCarrier && !pawnTensionLabelClaim =>
           baseTarget.copy(
             squares = List(destination),
             files = List(destination.take(1))
@@ -3868,7 +3881,7 @@ object MoveMeaningSurface:
       .orElse(Option.when(claim.meaningKind == "TargetPressure" && checkingPressureClaim(claim))("target_pressure"))
       .orElse(Option.when(claim.meaningKind == "TargetPressure" && kingPressureClaim(claim) && !pinOrXRayPressureClaim(claim))("target_pressure"))
       .orElse(Option.when(materialGainClaim(claim))("material_gain"))
-      .orElse(Option.when(flankPawnAdvanceSurfaceClaim(claim))("pawn_break_timing"))
+      .orElse(Option.when(flankPawnAdvanceSurfaceClaim(claim))("flank_pawn_pressure"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.PieceRerouteRoute && longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
       .orElse(
@@ -3891,7 +3904,9 @@ object MoveMeaningSurface:
       .orElse(Option.when(claim.meaningKind == "PieceActivity")("piece_activity"))
       .getOrElse(claim.unit match
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
-          "pawn_break_timing"
+          if createdPawnTensionClaim(claim) then "pawn_tension_creation"
+          else if resolvedPawnTensionClaim(claim) then "pawn_tension_resolution"
+          else "pawn_break_timing"
         case PositionPlanTechniqueUnit.CounterplayRace =>
           "counterplay_race"
         case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
@@ -4054,6 +4069,17 @@ object MoveMeaningSurface:
     claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
       claim.publicProofLevel == "owned_cause"
 
+  private def createdPawnTensionClaim(claim: MoveMeaningClaim): Boolean =
+    claim.boardCarriers.exists(carrier =>
+      carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("created-tension:")
+    )
+
+  private def resolvedPawnTensionClaim(claim: MoveMeaningClaim): Boolean =
+    claim.role == "ReleasesPawnTension" ||
+      claim.boardCarriers.exists(carrier =>
+        carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("resolved-tension:")
+      )
+
   private def materialSacrificeCompensationClaim(claim: MoveMeaningClaim): Boolean =
     claim.boardCarriers.exists(carrier =>
       carrier.role == "target" &&
@@ -4063,6 +4089,7 @@ object MoveMeaningSurface:
 
   private def planOptionIdeaType(claim: MoveMeaningClaim): String =
     if passedPawnAdvanceClaim(claim) then "passed_pawn_advance"
+    else if flankKingPressurePawnAdvanceClaim(claim) then "flank_pawn_pressure"
     else if MoveMeaningClaim.directBreakPlanClaim(claim) || MoveMeaningClaim.breakPreparationPlanClaim(claim) then "pawn_break_timing"
     else if planContinuityTargetPressureCarrier(claim) then "target_pressure"
     else claim.role match
@@ -4145,6 +4172,10 @@ object MoveMeaningSurface:
 
   private def flankPawnAdvanceSurfaceClaim(claim: MoveMeaningClaim): Boolean =
     flankInfrastructurePawnAdvanceClaim(claim) || flankPawnTargetPressureClaim(claim)
+
+  private def flankKingPressurePawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
+    currentFlankPawnAdvanceDestination(claim.moveUci).nonEmpty &&
+      claim.targetPieces.exists(_.equalsIgnoreCase("king"))
 
   private def flankInfrastructurePawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
     claim.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
@@ -4477,6 +4508,9 @@ object MoveMeaningSurface:
     "material_gain" -> "material gain",
     "material_loss" -> "material loss",
     "pawn_break_timing" -> "pawn break timing",
+    "pawn_tension_creation" -> "pawn tension creation",
+    "pawn_tension_resolution" -> "pawn tension resolution",
+    "flank_pawn_pressure" -> "flank pawn pressure",
     "counterplay_race" -> "counterplay race",
     "ray_denial" -> "diagonal denial",
     "counterplay_control" -> "counterplay control",
@@ -4533,6 +4567,9 @@ object MoveMeaningSurface:
 
   private val failureFamilyLabels: Map[String, String] = Map(
     "pawn_break_timing" -> "pawn break timing",
+    "pawn_tension_creation" -> "pawn tension creation",
+    "pawn_tension_resolution" -> "pawn tension resolution",
+    "flank_pawn_pressure" -> "flank pawn pressure",
     "counterplay" -> "counterplay",
     "strategic" -> "strategic concession",
     "piece_activity" -> "piece activity",
