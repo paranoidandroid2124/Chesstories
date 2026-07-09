@@ -2295,28 +2295,40 @@ object MoveMeaningSurface:
               (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to, carrier.semanticRole)
             )
             .take(12)
-        val relationKinds = chainSurfaces.flatMap(publicSurfaceRelationKinds).distinct.sortBy(_.toString)
-        List(
-          Json.obj(
-            "key" -> "current-move-chain",
-            "current_move" -> verdict.playedMove,
-            "reference_move" -> verdict.referenceMove,
-            "move_quality" -> verdict.moveQuality,
-            "subject" -> subject,
-            "move_semantics" -> publicSemantics.map(publicIdeaChainMoveSemanticJson),
-            "proof_levels" -> chainSurfaces.map(_.evidence.proofLevel).distinct,
-            "relation_kinds" -> relationKinds.map(_.toString),
-            "relations" -> relationKinds.map(publicRelationCodeJson),
-            "threat_drivers" -> chainSurfaces.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
-            "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
-            "pv" -> pv,
-            "function_carriers" -> functionCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
-            "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
-            "terminal_consequences" -> terminal.map(publicCodeJson),
-            "technique" -> technique.map(publicEndgameTechniqueJson),
-            "player_facing_reason_allowed" -> true
+        val routeOnlyPublicChain =
+          publicSemantics.nonEmpty &&
+            publicSemantics.forall(surface =>
+              routeCarrierSurface(surface) &&
+                surface.evidence.proofLevel == "surface_evidence" &&
+                surface.evidence.causeIds.isEmpty
+            ) &&
+            consequenceCarriers.isEmpty &&
+            terminal.isEmpty &&
+            technique.isEmpty
+        if routeOnlyPublicChain then Nil
+        else
+          val relationKinds = chainSurfaces.flatMap(publicSurfaceRelationKinds).distinct.sortBy(_.toString)
+          List(
+            Json.obj(
+              "key" -> "current-move-chain",
+              "current_move" -> verdict.playedMove,
+              "reference_move" -> verdict.referenceMove,
+              "move_quality" -> verdict.moveQuality,
+              "subject" -> subject,
+              "move_semantics" -> publicSemantics.map(publicIdeaChainMoveSemanticJson),
+              "proof_levels" -> chainSurfaces.map(_.evidence.proofLevel).distinct,
+              "relation_kinds" -> relationKinds.map(_.toString),
+              "relations" -> relationKinds.map(publicRelationCodeJson),
+              "threat_drivers" -> chainSurfaces.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
+              "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
+              "pv" -> pv,
+              "function_carriers" -> functionCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
+              "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
+              "terminal_consequences" -> terminal.map(publicCodeJson),
+              "technique" -> technique.map(publicEndgameTechniqueJson),
+              "player_facing_reason_allowed" -> true
+            )
           )
-        )
     }
 
   private def publicIdeaChainSurfaceKey(surface: MoveMeaningSurface) =
@@ -3683,6 +3695,9 @@ object MoveMeaningSurface:
               value.stripPrefix("passed-pawn:").takeWhile(_ != ':') == destination
           )
         )
+    val sameFilePawnAdvanceWithPassedPawnCarrier =
+      sameFilePawnAdvanceMove(claim.moveUci) &&
+        passedPawnTargetSquares.nonEmpty
     val defensiveResourceLabel =
       defenderMoveActorPieces match
         case piece :: Nil => s"defends with $piece"
@@ -3691,6 +3706,7 @@ object MoveMeaningSurface:
       (idea, claim.label.map(_.trim).getOrElse("")) match
         case ("defensive_resource", _) => defensiveResourceLabel
         case ("target_pressure", _) if sameFilePassedPawnMove => passedPawnAdvanceLabel
+        case ("target_pressure", _) if sameFilePawnAdvanceWithPassedPawnCarrier => passedPawnAdvanceLabel
         case ("target_pressure", _) if passedPawnAdvanceClaim(claim) => passedPawnAdvanceLabel
         case ("target_pressure", _) if weakPawnTargetClaim => weakPawnTargetLabel
         case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
@@ -3799,6 +3815,8 @@ object MoveMeaningSurface:
           baseTarget.copy(squares = developmentPressureTargets)
         case _ if idea == "target_pressure" && filePressureCarrier && carrierTargetFiles.nonEmpty =>
           baseTarget.copy(files = (baseTarget.files ++ carrierTargetFiles).distinct.sorted)
+        case _ if idea == "target_pressure" && sameFilePawnAdvanceWithPassedPawnCarrier =>
+          baseTarget.copy(squares = passedPawnTargetSquares, pieces = (baseTarget.pieces :+ "pawn").distinct.sorted)
         case _ if idea == "target_pressure" && unprovedPawnAdvanceTargetPressure =>
           baseTarget.copy(squares = moveDestinationSquare.toList, files = Nil, pieces = List("pawn"))
         case _ if idea == "piece_route" && routeSurfaceSquares.nonEmpty =>
@@ -4142,20 +4160,8 @@ object MoveMeaningSurface:
       case _                      => "plan_continuity"
 
   private def planContinuityTargetPressureCarrier(claim: MoveMeaningClaim): Boolean =
-    val selfBlockingRoute =
-      claim.routeIdentityParts.exists(part =>
-        val normalized = part.toLowerCase
-        normalized.contains("diagonal-denial") || normalized.contains("self-block")
-      )
-    val mobilityLossPlan =
-      claim.label.exists(label =>
-        val normalized = label.toLowerCase
-        normalized == "mobility-loss" || normalized == "strategic-concession"
-      )
-    val unprovedNegativePlan =
-      claim.causeEvidenceIds.isEmpty && (selfBlockingRoute || mobilityLossPlan)
     claim.meaningKind == "PlanContinuity" &&
-      !unprovedNegativePlan &&
+      !MoveMeaningClaim.unprovedNegativePlanContinuity(claim) &&
       MoveMeaningClaim.targetPressureOrShapeCarrier(claim) &&
       claim.objectCarrierReady
 
@@ -4164,6 +4170,7 @@ object MoveMeaningSurface:
     val endpoints =
       Option.when(normalizedMove.matches("[a-h][1-8][a-h][1-8].*"))(normalizedMove.take(2), normalizedMove.slice(2, 4))
     val destination = endpoints.map(_._2)
+    val destinationFile = destination.map(_.take(1))
     currentMoveLikelyPawnAdvance(claim) &&
       (
         claim.routeIdentityParts.exists { part =>
@@ -4176,7 +4183,8 @@ object MoveMeaningSurface:
               (
                 carrier.value.startsWith("passed-pawn-advanced:") ||
                   carrier.value.startsWith("passed-pawn-breakthrough:") ||
-                  destination.exists(square => carrier.value.equalsIgnoreCase(s"passed-pawn:$square"))
+                  destination.exists(square => carrier.value.equalsIgnoreCase(s"passed-pawn:$square")) ||
+                  destinationFile.exists(file => carrier.value.toLowerCase.startsWith(s"passed-pawn:$file"))
               )
           )
       )
@@ -5314,10 +5322,32 @@ object MoveMeaningClaim:
       claim.boardCarriers.exists(boardCarrierMove(_, normalizedMove)) &&
       claim.boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "PlanSubject")
 
+  private[judgment] def unprovedNegativePlanContinuity(claim: MoveMeaningClaim): Boolean =
+    val selfBlockingRoute =
+      claim.routeIdentityParts.exists(part =>
+        val normalized = part.toLowerCase
+        normalized.contains("diagonal-denial") || normalized.contains("self-block")
+      )
+    val mobilityLossPlan =
+      claim.label.exists(label =>
+        val normalized = label.toLowerCase
+        normalized == "mobility-loss" || normalized == "strategic-concession"
+      )
+    val negativePlanSubject =
+      claim.boardCarriers.exists(carrier =>
+        carrier.role == "target" &&
+          carrier.kind == "PlanSubject" &&
+          negativeStructuralToken(carrier.value)
+      )
+    claim.meaningKind == "PlanContinuity" &&
+      claim.causeEvidenceIds.isEmpty &&
+      (selfBlockingRoute || mobilityLossPlan || negativePlanSubject)
+
   def currentMovePlanContinuityFunctionReady(claims: List[MoveMeaningClaim], claim: MoveMeaningClaim): Boolean =
     val hasProofCarrier = claim.sourceEvidenceIds.nonEmpty && claim.objectCarrierReady
     claim.supportLevel == "view_surfaced" &&
       hasProofCarrier &&
+      !unprovedNegativePlanContinuity(claim) &&
       (
         planContinuityClaimHasCurrentMovePlanSubject(claim) ||
           planContinuityClaimHasSeparateCurrentMoveCarrier(claims, claim)
