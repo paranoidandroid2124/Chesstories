@@ -4977,7 +4977,10 @@ object MoveMeaningClaim:
       claim.targetFiles.isEmpty &&
       claim.breakFiles.isEmpty &&
       !claim.publicIdeaType.exists(routeIdeaHasPublicPurpose) &&
-      !claim.routeIdentityParts.exists(part => part.toLowerCase.contains(":line-unlock:"))
+      !claim.routeIdentityParts.exists(part =>
+        val normalized = part.toLowerCase
+        normalized.contains(":line-unlock:") || normalized.contains("rook-lift")
+      )
 
   private def routeIdeaHasPublicPurpose(ideaType: String): Boolean =
     ideaType == "outpost_attempt" || ideaType == "long_diagonal_pressure"
