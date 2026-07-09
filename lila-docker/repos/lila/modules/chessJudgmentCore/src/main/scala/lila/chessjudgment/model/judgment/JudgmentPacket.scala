@@ -3712,6 +3712,12 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
         case ("target_pressure", _) if targetPressureReleaseClaim => targetPressureReleaseLabel
         case ("target_pressure", _) if kingPressureCarrier => kingPressureLabel
+        case ("target_pressure", _)
+            if claim.role == "PreparesBreakOption" &&
+              claim.targetSquares.isEmpty &&
+              claim.targetFiles.nonEmpty &&
+              MoveMeaningClaim.breakFileCarrierClaim(claim) =>
+          breakPreparationLabel
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
         case ("target_pressure", _) if targetFixationClaim && passedPawnTargetSquares.nonEmpty => passedPawnPressureLabel
         case ("target_pressure", _) if targetFixationClaim => targetFixationLabel
@@ -4924,6 +4930,10 @@ object MoveMeaningClaim:
         claim.role == "DevelopsPieceForPlan" &&
           claim.surfaceLane == "current_move_function" &&
           claim.causeEvidenceIds.isEmpty ||
+          claim.role == "DevelopsPieceForPlan" &&
+            claim.surfaceLane == "current_move_owned" &&
+            claim.routeIdentityParts.nonEmpty &&
+            claim.breakFiles.isEmpty ||
           claim.role == "PreparesBreakOption" &&
             currentMoveSurfaceLane(claim) &&
             planPieceActivationClaim(claim) &&
