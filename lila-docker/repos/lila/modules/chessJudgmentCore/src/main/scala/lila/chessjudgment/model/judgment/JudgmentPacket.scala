@@ -4190,15 +4190,13 @@ object MoveMeaningSurface:
 
   private def tacticalProofPressureClaim(claim: MoveMeaningClaim): Boolean =
     def recaptureLineProof =
-      claim.label.exists(_.equalsIgnoreCase("tactical-proof")) &&
-        claim.causeKinds.contains(RelativeCauseKind.RecaptureRecoveryWindow) &&
+      claim.causeKinds.contains(RelativeCauseKind.RecaptureRecoveryWindow) &&
         claim.proofLineConsequences.exists(kind =>
           kind == LineConsequenceKind.RecaptureSequence ||
             kind == LineConsequenceKind.RecoveryWindow
         )
     def mateThreatProof =
-      claim.label.exists(_.equalsIgnoreCase("tactical-proof")) &&
-        claim.causeKinds.contains(RelativeCauseKind.KingForcing) &&
+      claim.causeKinds.contains(RelativeCauseKind.KingForcing) &&
         claim.proofThreatDrivers.contains(ThreatDriver.MateThreat)
     claim.meaningKind == "TargetPressure" &&
       claim.publicProofLevel == "owned_cause" &&
