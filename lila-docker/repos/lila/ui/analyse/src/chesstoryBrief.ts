@@ -112,7 +112,7 @@ export interface ChesstoryIdeaChain {
   consequence_carriers: ChesstoryBoardCarrier[];
   terminal_consequences: ChesstoryCode[];
   technique: unknown[];
-  player_facing_reason_allowed: true;
+  player_facing_reason_allowed: boolean;
 }
 
 export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): ChesstoryBriefSection[] {
