@@ -471,7 +471,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
         .map(claim => semanticRubricSlotRow(diagnostic, claim, publicSurface = false))
     val publicRows =
       diagnostic.moveJudgmentView.publicMoveMeaningClaimDiagnostics
-        .filter(_.hasCarrier)
+        .filter(_.publicSurfaceAdmitted)
         .map(claim => semanticRubricSlotRow(diagnostic, claim, publicSurface = true))
     (claimRows ++ publicRows)
       .distinctBy(row => (row.publicSurface, row.comparisonId, row.unit, row.axisKey, row.lineRole, row.moveUci))

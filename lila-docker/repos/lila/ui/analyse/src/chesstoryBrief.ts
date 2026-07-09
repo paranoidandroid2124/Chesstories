@@ -87,6 +87,7 @@ interface ChesstoryBoardCarrier {
   role?: string;
   kind?: string;
   value?: string;
+  display_label?: string;
   label?: string;
   from?: string;
   to?: string;
@@ -104,6 +105,7 @@ export interface ChesstoryIdeaChain {
   move_semantics?: ChesstoryMoveSemantic[];
   proof_levels: string[];
   carriers: ChesstoryBoardCarrier[];
+  purpose_carriers?: ChesstoryBoardCarrier[];
   function_carriers?: ChesstoryBoardCarrier[];
   pv: string[];
   consequence_carriers: ChesstoryBoardCarrier[];
@@ -123,7 +125,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const proofLevels = uniqueLabels(chain.proof_levels.map(labelCode)).slice(0, 4);
   const ideas = uniqueLabels((chain.move_semantics || []).map(semantic => codeLabel(semantic.idea) || labelCode(semantic.idea_type))).slice(0, 5);
   const directCarriers = carrierDisplayLabels(chain.carriers || []).slice(0, 4);
-  const purposeCarrierLabels = carrierDisplayLabels(chain.function_carriers || []).slice(0, 6);
+  const purposeCarrierLabels = carrierDisplayLabels(chain.purpose_carriers || chain.function_carriers || []).slice(0, 6);
   const carriers = uniqueLabels([...directCarriers, ...purposeCarrierLabels]).slice(0, 6);
   const consequences = carrierDisplayLabels(chain.consequence_carriers).slice(0, 6);
   const terminal = uniqueLabels(chain.terminal_consequences.map(codeLabel)).slice(0, 4);
@@ -144,7 +146,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     },
     {
       key: 'middlegame-plan',
-      title: 'Board carriers',
+      title: 'Move / purpose carriers',
       body: carriers.length ? joinHuman(carriers) : 'No public board carrier in this chain.',
       pending: false,
       items: carriers,
@@ -244,7 +246,7 @@ function actorRoutePiece(carriers: ChesstoryBoardCarrier[]): string | undefined 
 
 function boardCarrierDisplayLabel(carrier: ChesstoryBoardCarrier, actorPiece?: string): string {
   const route = carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : '';
-  const value = carrier.label || (carrier.kind === 'Move' && route ? route : carrierValueDisplayLabel(carrier.kind, carrier.value));
+  const value = carrier.display_label || carrier.label || (carrier.kind === 'Move' && route ? route : carrierValueDisplayLabel(carrier.kind, carrier.value));
   if (carrier.kind === 'Move' && route) {
     const piece = actorPiece ? `${actorPiece} ` : '';
     return `${piece}${value || route}`;

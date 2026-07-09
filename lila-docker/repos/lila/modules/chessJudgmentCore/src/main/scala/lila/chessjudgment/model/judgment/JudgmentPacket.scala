@@ -1960,6 +1960,7 @@ object MoveMeaningSurface:
     )
 
   private def publicBoardCarrierJson(carrier: MoveMeaningSurfaceBoardCarrier, surface: MoveMeaningSurface): JsObject =
+    val displayLabel = publicBoardCarrierLabel(carrier)
     Json.obj(
       "subject" -> surface.subject,
       "line_role" -> surface.lineRole,
@@ -1967,7 +1968,8 @@ object MoveMeaningSurface:
       "role" -> carrier.role,
       "kind" -> carrier.kind,
       "value" -> carrier.value,
-      "label" -> publicBoardCarrierLabel(carrier),
+      "display_label" -> displayLabel,
+      "label" -> displayLabel,
       "from" -> carrier.from,
       "to" -> carrier.to,
       "semantic_role" -> carrier.semanticRole
@@ -2376,6 +2378,7 @@ object MoveMeaningSurface:
             .map(_.uci)
             .distinct
           val relationKinds = displaySemantics.flatMap(publicSurfaceRelationKinds).distinct.sortBy(_.toString)
+          val publicPurposeCarriers = purposeCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface))
           List(
             Json.obj(
               "key" -> "current-move-chain",
@@ -2390,7 +2393,8 @@ object MoveMeaningSurface:
               "threat_drivers" -> displaySemantics.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
               "carriers" -> directCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "pv" -> publicPv,
-              "function_carriers" -> purposeCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
+              "purpose_carriers" -> publicPurposeCarriers,
+              "function_carriers" -> publicPurposeCarriers,
               "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "terminal_consequences" -> publicTerminal.map(publicCodeJson),
               "technique" -> publicTechnique.map(publicEndgameTechniqueJson),

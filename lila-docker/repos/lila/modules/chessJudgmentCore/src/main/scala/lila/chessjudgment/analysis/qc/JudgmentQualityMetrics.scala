@@ -808,7 +808,8 @@ final case class PublicMoveMeaningClaimDiagnostic(
     routeIdentityParts: List[String] = Nil,
     proofRelationKinds: List[RelationFactKind] = Nil,
     proofRelationDetails: List[String] = Nil
-)
+):
+  def publicSurfaceAdmitted: Boolean = hasCarrier
 
 final case class CandidateComparisonDiagnostic(
     id: String,

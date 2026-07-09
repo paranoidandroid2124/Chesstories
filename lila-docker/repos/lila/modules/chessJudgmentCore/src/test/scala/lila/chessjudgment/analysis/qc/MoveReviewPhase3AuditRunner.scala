@@ -1459,7 +1459,7 @@ object MoveReviewPhase3AuditRunner:
         _.relativeCauseDiagnostics.objectLostBetweenCauseAndClaimIds.nonEmpty
       ).map(_.id),
       "public_move_meaning_without_carrier" -> diagnostics.filter(diagnostic =>
-        diagnostic.moveJudgmentView.publicMoveMeaningClaimDiagnostics.exists(!_.hasCarrier)
+        diagnostic.moveJudgmentView.publicMoveMeaningClaimDiagnostics.exists(!_.publicSurfaceAdmitted)
       ).map(_.id),
       "unboundEvidenceComparisonIds" -> diagnostics.filter(_.relativeCauseDiagnostics.unboundEvidenceIds.nonEmpty).map(_.id),
       "causeWithoutIdeaComparisonIds" -> diagnostics.filter(_.relativeCauseDiagnostics.causeWithoutIdeaIds.nonEmpty).map(_.id),
