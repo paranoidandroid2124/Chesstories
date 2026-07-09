@@ -2029,11 +2029,7 @@ object MoveMeaningSurface:
 
   private def publicIdeaChains(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[JsObject] =
     val allowedSubjects = publicIdeaChainSubjects(verdict, surfaces).toSet
-    val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
-    val subjectSpecs =
-      if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
-      else List(("played_move", verdict.playedMove, "played_pv_"))
-    subjectSpecs.flatMap { (subject, subjectMove, pvRolePrefix) =>
+    publicIdeaChainSubjectSpecs(verdict).flatMap { (subject, subjectMove, pvRolePrefix) =>
       val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && surfaceEligibleForPublicChain(surface))
       val rootMoveRole = if subject == "reference_move" then "best_move" else "played_move"
       val pv = surfaces
@@ -2743,14 +2739,15 @@ object MoveMeaningSurface:
       surfaces.exists(other => sameSurfaceMove(other) && publicMeaningSurface(other))
 
   private def publicIdeaChainSubjects(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[String] =
-    val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
-    val subjectSpecs =
-      if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
-      else List(("played_move", verdict.playedMove, "played_pv_"))
-    subjectSpecs.collect {
+    publicIdeaChainSubjectSpecs(verdict).collect {
       case (subject, subjectMove, pvRolePrefix) if publicIdeaChainSubjectAdmitted(subject, subjectMove, pvRolePrefix, surfaces) =>
         subject
     }
+
+  private def publicIdeaChainSubjectSpecs(verdict: MoveMeaningSurfaceVerdict): List[(String, String, String)] =
+    val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
+    if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
+    else List(("played_move", verdict.playedMove, "played_pv_"))
 
   private def publicIdeaChainSubjectAdmitted(
       subject: String,
