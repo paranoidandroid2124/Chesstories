@@ -2140,7 +2140,7 @@ object MoveMeaningSurface:
                   )
               )
           val genericTacticCoveredByOwnedSibling =
-            publicPruningWeakDuplicate(surface) &&
+            surfaceOnlyPublicPruningCandidate(surface) &&
               surface.idea.code == "tactical_pressure" &&
               Set("tactical pressure", "recapture recovery")(surface.idea.label) &&
               ownedSiblings.exists(other =>
@@ -2153,7 +2153,7 @@ object MoveMeaningSurface:
                   )
               )
           val checkingPressureCoveredByTactic =
-            publicPruningWeakDuplicate(surface) &&
+            surfaceOnlyPublicPruningCandidate(surface) &&
               surface.idea.code == "target_pressure" &&
               checkingPressureSurface(surface) &&
               !surface.evidence.boardCarriers.exists(_.semanticRole.exists(_ == "check")) &&
@@ -2166,7 +2166,7 @@ object MoveMeaningSurface:
                   )
               )
           val destinationPressureCoveredByRoute =
-            publicPruningWeakDuplicate(surface) &&
+            surfaceOnlyPublicPruningCandidate(surface) &&
               surface.idea.code == "target_pressure" &&
               surface.evidence.proofRelationKinds.isEmpty &&
               surface.evidence.proofThreatDrivers.isEmpty &&
@@ -2201,7 +2201,7 @@ object MoveMeaningSurface:
           genericTacticCoveredByOwnedSibling ||
           checkingPressureCoveredByTactic ||
           pawnStructureAdvanceIdea(surface.idea.code) && breakClaimWithoutMoveCarrier(surface) && sameMoveConcreteCarrierExists ||
-          publicPruningWeakDuplicate(surface) &&
+          surfaceOnlyPublicPruningCandidate(surface) &&
             surface.idea.code == "target_pressure" &&
             targetFixationSurface(surface) &&
             surface.evidence.proofRelationKinds.isEmpty &&
@@ -2212,7 +2212,7 @@ object MoveMeaningSurface:
                 surface.target.files.intersect(other.target.files).nonEmpty
             ) ||
           destinationPressureCoveredByRoute ||
-          publicPruningWeakDuplicate(surface) &&
+          surfaceOnlyPublicPruningCandidate(surface) &&
             surface.idea.code == "target_pressure" && hasRouteSibling &&
             (targetPressureOnlyMarksMoveDestination(surface) || unprovedBroadTargetPressure(surface))
         }
@@ -2406,7 +2406,7 @@ object MoveMeaningSurface:
     )
 
   private def fallbackLabelCoveredBySpecificLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
-    publicPruningWeakDuplicate(surface) &&
+    surfaceOnlyPublicPruningCandidate(surface) &&
       surface.idea.label == ideaLabels.getOrElse(surface.idea.code, "") &&
       surfaces.exists(other =>
         other != surface &&
@@ -2439,14 +2439,14 @@ object MoveMeaningSurface:
             carrier.kind == "PlanSubject" &&
             Set("openingdevelopment", "pieceactivation")(carrier.value.toLowerCase)
         )
-    publicPruningWeakDuplicate(surface) &&
+    surfaceOnlyPublicPruningCandidate(surface) &&
       publicGenericFallbackCodes(surface.idea.code) &&
       !provenPlanOptionPurpose &&
       surface.idea.label == ideaLabels.getOrElse(surface.idea.code, "") &&
       surfaces.exists(other => sameSurfaceMove(other) && concreteSurface(other))
 
   private def targetReleaseLabelCoveredByPressureGain(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
-    publicPruningWeakDuplicate(surface) &&
+    surfaceOnlyPublicPruningCandidate(surface) &&
       surface.idea.code == "target_pressure" &&
       surface.sourceLabel.exists(_.equalsIgnoreCase("target-pressure-release")) &&
       surfaces.exists(other =>
@@ -2470,7 +2470,7 @@ object MoveMeaningSurface:
   private def supplementalPressureLabelCoveredByCanonicalPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     val supplementalSourceLabels = Set("targetfixation", "tactical-proof")
     val sourceLabel = surface.sourceLabel.map(_.toLowerCase)
-    publicPruningWeakDuplicate(surface) &&
+    surfaceOnlyPublicPruningCandidate(surface) &&
       surface.idea.code == "target_pressure" &&
       sourceLabel.exists(supplementalSourceLabels) &&
       surfaces.exists(other =>
@@ -2486,7 +2486,7 @@ object MoveMeaningSurface:
       )
 
   private def slashPressureLabelCoveredByPlainPressureLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
-    publicPruningWeakDuplicate(surface) &&
+    surfaceOnlyPublicPruningCandidate(surface) &&
       surface.idea.code == "target_pressure" &&
       multiPieceTargetPressureSurface(surface) &&
       surfaces.exists(other =>
@@ -2539,7 +2539,7 @@ object MoveMeaningSurface:
   private[judgment] def publicMeaningTargetCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
     carrier.role == "target" && !publicFunctionCarrier(carrier)
 
-  private def publicPruningWeakDuplicate(surface: MoveMeaningSurface): Boolean =
+  private def surfaceOnlyPublicPruningCandidate(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel == "surface_evidence" &&
       surface.evidence.causeIds.isEmpty &&
       surface.evidence.proofRelationKinds.isEmpty &&
@@ -2548,7 +2548,7 @@ object MoveMeaningSurface:
       surface.endgameTechnique.isEmpty
 
   private def checkingPressureSurface(surface: MoveMeaningSurface): Boolean =
-    publicPruningWeakDuplicate(surface) &&
+    surfaceOnlyPublicPruningCandidate(surface) &&
       surface.idea.code == "target_pressure" &&
       (
         surfaceHasCarrierRole(surface, "check") ||
@@ -2602,7 +2602,7 @@ object MoveMeaningSurface:
             surfaceHasCarrierRole(surface, "flank_pawn_destination")
         )
     val targetFixationFallback = targetFixationSurface(surface)
-    publicPruningWeakDuplicate(surface) &&
+    surfaceOnlyPublicPruningCandidate(surface) &&
       surface.idea.code == "target_pressure" &&
       !targetPressureWeakCarrier(surface) &&
       surface.evidence.proofRelationKinds.isEmpty &&
@@ -2629,7 +2629,7 @@ object MoveMeaningSurface:
   private def passedPawnAdvanceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     val surfaceSquares = surface.target.squares.map(_.toLowerCase).toSet
     val surfacePassedPawnSquares = passedPawnCarrierSquares(surface)
-    publicPruningWeakDuplicate(surface) &&
+    surfaceOnlyPublicPruningCandidate(surface) &&
       surface.idea.code == "target_pressure" &&
       !targetPressureWeakCarrier(surface) &&
       surface.evidence.proofRelationKinds.isEmpty &&
@@ -2664,7 +2664,7 @@ object MoveMeaningSurface:
 
   private def pawnAdvanceSurfaceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     val surfaceFiles = surface.target.files.map(_.toLowerCase).toSet
-    publicPruningWeakDuplicate(surface) &&
+    surfaceOnlyPublicPruningCandidate(surface) &&
       surface.idea.code == "target_pressure" &&
       !targetPressureWeakCarrier(surface) &&
       !surface.target.pieces.exists(_.equalsIgnoreCase("king")) &&
@@ -2687,7 +2687,7 @@ object MoveMeaningSurface:
       )
 
   private def genericRouteLabelCoveredBySpecificRouteLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
-    publicPruningWeakDuplicate(surface) &&
+    surfaceOnlyPublicPruningCandidate(surface) &&
       genericRouteSurface(surface) &&
       surfaces.exists(other =>
         other != surface &&
