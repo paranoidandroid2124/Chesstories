@@ -2220,16 +2220,16 @@ object MoveMeaningSurface:
           .sortBy(publicIdeaChainSemanticSortKey)
           .filterNot(surface => displayFallbackLabelCoveredBySpecificLabel(surface, chainSurfaces))
           .filterNot(surface => displayGenericFallbackCoveredByConcreteSurface(surface, chainSurfaces))
-          .filterNot(surface => targetReleaseLabelCoveredByPressureGain(surface, chainSurfaces))
-          .filterNot(surface => supplementalPressureLabelCoveredByCanonicalPressure(surface, chainSurfaces))
-          .filterNot(surface => slashPressureLabelCoveredByPlainPressureLabel(surface, chainSurfaces))
-          .filterNot(surface => lineUnlockSurfaceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
-          .filterNot(surface => passedPawnAdvanceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
-          .filterNot(surface => pawnAdvanceSurfaceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
-          .filterNot(surface => genericRouteLabelCoveredBySpecificRouteLabel(surface, chainSurfaces))
+          .filterNot(surface => displayTargetReleaseLabelCoveredByPressureGain(surface, chainSurfaces))
+          .filterNot(surface => displaySupplementalPressureLabelCoveredByCanonicalPressure(surface, chainSurfaces))
+          .filterNot(surface => displaySlashPressureLabelCoveredByPlainPressureLabel(surface, chainSurfaces))
+          .filterNot(surface => displayLineUnlockSurfaceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
+          .filterNot(surface => displayPassedPawnAdvanceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
+          .filterNot(surface => displayPawnAdvanceSurfaceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
+          .filterNot(surface => displayGenericRouteLabelCoveredBySpecificRouteLabel(surface, chainSurfaces))
           .distinctBy(publicIdeaChainSurfaceKey)
         val publicSemantics =
-          candidatePublicSemantics.filterNot(surface => routeOnlyDeliversPublicMeaning(surface, candidatePublicSemantics))
+          candidatePublicSemantics.filterNot(surface => displayRouteOnlySurfaceCoveredByPublicMeaning(surface, candidatePublicSemantics))
         val publicTerminal = publicSemantics.flatMap(_.terminalConsequences).distinct
         val publicTechnique = publicSemantics.flatMap(_.endgameTechnique).distinct
         val publicCarrierPairs = publicIdeaChainCarrierPairs(publicSemantics)
@@ -2447,7 +2447,7 @@ object MoveMeaningSurface:
       surface.idea.label == ideaLabels.getOrElse(surface.idea.code, "") &&
       surfaces.exists(other => sameSurfaceMove(other) && concreteSurface(other))
 
-  private def targetReleaseLabelCoveredByPressureGain(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+  private def displayTargetReleaseLabelCoveredByPressureGain(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     surfaceEvidenceWithoutProofDetail(surface) &&
       surface.idea.code == "target_pressure" &&
       surface.sourceLabel.exists(_.equalsIgnoreCase("target-pressure-release")) &&
@@ -2469,7 +2469,7 @@ object MoveMeaningSurface:
           )
       )
 
-  private def supplementalPressureLabelCoveredByCanonicalPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+  private def displaySupplementalPressureLabelCoveredByCanonicalPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     val supplementalSourceLabels = Set("targetfixation", "tactical-proof")
     val sourceLabel = surface.sourceLabel.map(_.toLowerCase)
     surfaceEvidenceWithoutProofDetail(surface) &&
@@ -2487,7 +2487,7 @@ object MoveMeaningSurface:
           other.target.files == surface.target.files
       )
 
-  private def slashPressureLabelCoveredByPlainPressureLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+  private def displaySlashPressureLabelCoveredByPlainPressureLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     surfaceEvidenceWithoutProofDetail(surface) &&
       surface.idea.code == "target_pressure" &&
       multiPieceTargetPressureSurface(surface) &&
@@ -2588,7 +2588,7 @@ object MoveMeaningSurface:
           carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("opened-line:")
       )
 
-  private def lineUnlockSurfaceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+  private def displayLineUnlockSurfaceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     def sameSurfaceMove(other: MoveMeaningSurface): Boolean =
       other != surface &&
         other.moveUci == surface.moveUci &&
@@ -2628,7 +2628,7 @@ object MoveMeaningSurface:
           )
       )
 
-  private def passedPawnAdvanceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+  private def displayPassedPawnAdvanceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     val surfaceSquares = surface.target.squares.map(_.toLowerCase).toSet
     val surfacePassedPawnSquares = passedPawnCarrierSquares(surface)
     surfaceEvidenceWithoutProofDetail(surface) &&
@@ -2664,7 +2664,7 @@ object MoveMeaningSurface:
       .flatten
       .toSet
 
-  private def pawnAdvanceSurfaceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+  private def displayPawnAdvanceSurfaceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     val surfaceFiles = surface.target.files.map(_.toLowerCase).toSet
     surfaceEvidenceWithoutProofDetail(surface) &&
       surface.idea.code == "target_pressure" &&
@@ -2688,7 +2688,7 @@ object MoveMeaningSurface:
           )
       )
 
-  private def genericRouteLabelCoveredBySpecificRouteLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+  private def displayGenericRouteLabelCoveredBySpecificRouteLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     surfaceEvidenceWithoutProofDetail(surface) &&
       genericRouteSurface(surface) &&
       surfaces.exists(other =>
@@ -2702,7 +2702,7 @@ object MoveMeaningSurface:
           other.target.pieces == surface.target.pieces
       )
 
-  private def routeOnlyDeliversPublicMeaning(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+  private def displayRouteOnlySurfaceCoveredByPublicMeaning(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     def sameSurfaceMove(other: MoveMeaningSurface): Boolean =
       other != surface &&
         other.moveUci == surface.moveUci &&
