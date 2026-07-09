@@ -4908,7 +4908,7 @@ object MoveMeaningClaim:
       !planPurposeCoveredByOwnedRoute(claims, claim) &&
       !planCoveredBySpecificCurrentClaim(claims, claim) &&
       !breakFunctionCoveredByOwnedBreak(claims, claim) &&
-      !routeFunctionWithoutPublicPurpose(claim) &&
+      !surfaceOnlyRouteWithoutPurposeProof(claim) &&
       !genericActivityOrPlanCoveredByOwnedPressure(claims, claim) &&
       !counterplayControlWithoutConcreteCarrier(claims, claim) &&
       planContinuityCarrierAllowed(claims, claim) &&
@@ -5136,7 +5136,7 @@ object MoveMeaningClaim:
           other.breakFiles.toSet.intersect(claim.breakFiles.toSet).nonEmpty
       )
 
-  private def routeFunctionWithoutPublicPurpose(claim: MoveMeaningClaim): Boolean =
+  private def surfaceOnlyRouteWithoutPurposeProof(claim: MoveMeaningClaim): Boolean =
     claim.meaningKind == "PieceRoute" &&
       claim.surfaceLane == "current_move_function" &&
       claim.supportLevel == "view_surfaced" &&
