@@ -1728,6 +1728,7 @@ object MoveMeaningSurfaceTarget:
       .filterNot(carrier =>
         carrier.kind == "Square" &&
           routeDestinationSquares(carrier.value.toLowerCase) &&
+          carrier.semanticRole.forall(_ == "route_destination") &&
           detail.unit != PositionPlanTechniqueUnit.PieceRerouteRoute
       )
     val pawnTargets = targetCarriers.filter(_.kind == "Pawn").map(_.value)
@@ -2032,7 +2033,7 @@ object MoveMeaningSurface:
         )
       val chainSurfacesAfterSameMovePruning =
         val surfacesByMove = chainSurfacesBeforeSameMovePruning.groupBy(surface => (surface.subject, surface.lineRole, surface.moveUci))
-        val surfaceOnlyFallbackCodes = Set("center_control", "piece_route", "piece_activity", "target_pressure", "passed_pawn_advance")
+        val surfaceOnlyFallbackCodes = Set("center_control", "piece_route", "piece_activity", "target_pressure")
         val routeCoveringOwnedCodes = Set(
           "terminal_mate",
           "promotion_race",
@@ -2309,8 +2310,7 @@ object MoveMeaningSurface:
       surface.subject,
       surface.lineRole,
       surface.idea.code,
-      surface.idea.label,
-      surface.evidence.proofLevel
+      surface.idea.label
     )
 
   private def fallbackLabelCoveredBySpecificLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
@@ -5433,7 +5433,7 @@ object MoveMeaningClaim:
       else if claim.meaningKind == "PlanContinuity" && claim.routeIdentityParts.nonEmpty then
         (claim.routeIdentityParts ++ claim.breakIdentityParts).mkString("|")
       else if claim.meaningKind == "TargetPressure" && targetIdentityParts(claim).nonEmpty then
-        targetIdentityParts(claim).mkString("|")
+        (claim.axisKey.map(axis => s"axis:$axis").toList ++ targetIdentityParts(claim)).mkString("|")
       else claim.laneKey
     (claim.meaningKind, claim.role, claim.surfaceLane, claim.moveUci, objectKey)
 
