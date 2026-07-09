@@ -466,7 +466,7 @@ object PlayerFacingClaimPolicy:
         if claim.family == ClaimFamily.Evaluation &&
           evidenceRecords.exists(record => evaluationVerdictCarrierRecord(record, playedMoves))
         then
-          PlayerFacingClaimTier.Secondary
+          PlayerFacingClaimTier.Context
         else if evidenceRecords.exists(record => primaryEvidenceRecord(record, playedMoves)) then
           PlayerFacingClaimTier.Primary
         else if evidenceRecords.exists(record => contextEvidenceRecord(record, playedMoves)) then
@@ -2337,7 +2337,17 @@ object MoveMeaningSurface:
     def concreteSurface(other: MoveMeaningSurface): Boolean =
       other.idea.label != ideaLabels.getOrElse(other.idea.code, "") ||
         !publicGenericFallbackCodes(other.idea.code)
+    val provenPlanOptionPurpose =
+      surface.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+        surface.evidence.hasCarrier &&
+        surface.evidence.proofLevel != "surface_evidence" &&
+        surface.evidence.boardCarriers.exists(carrier =>
+          carrier.role == "target" &&
+            carrier.kind == "PlanSubject" &&
+            Set("openingdevelopment", "pieceactivation")(carrier.value.toLowerCase)
+        )
     publicGenericFallbackCodes(surface.idea.code) &&
+      !provenPlanOptionPurpose &&
       surface.idea.label == ideaLabels.getOrElse(surface.idea.code, "") &&
       surfaces.exists(other => sameSurfaceMove(other) && concreteSurface(other))
 
@@ -4108,7 +4118,6 @@ object MoveMeaningSurface:
     if passedPawnAdvanceClaim(claim) then "passed_pawn_advance"
     else if flankKingPressurePawnAdvanceClaim(claim) then "flank_pawn_pressure"
     else if MoveMeaningClaim.directBreakPlanClaim(claim) || MoveMeaningClaim.breakPreparationPlanClaim(claim) then "pawn_break_timing"
-    else if planContinuityTargetPressureCarrier(claim) then "target_pressure"
     else claim.role match
       case "DevelopsPieceForPlan"
           if claim.supportLevel == "owned_cause_linked" &&
@@ -4116,6 +4125,7 @@ object MoveMeaningSurface:
             claim.causeEvidenceIds.nonEmpty &&
             claim.objectCarrierReady =>
         "plan_continuity"
+      case _ if planContinuityTargetPressureCarrier(claim) => "target_pressure"
       case "DevelopsPieceForPlan" => "piece_activity"
       case _                      => "plan_continuity"
 
@@ -5125,6 +5135,7 @@ object MoveMeaningClaim:
     claims.filterNot(claim =>
         claim.meaningKind == "PlanContinuity" &&
         claim.surfaceLane == "current_move_function" &&
+        !planOptionRecognitionCarrierReady(claim) &&
         !currentMovePlanContinuityFunctionReady(claims, claim) &&
         specificCurrentClaims.exists(specificClaimCoversPlanPurpose(claim, _))
     )
@@ -5164,38 +5175,40 @@ object MoveMeaningClaim:
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
-    val hasSpecificNonPlanCurrentClaim =
-      claims.exists(other =>
-        other != claim &&
-          other.meaningKind != "PlanContinuity" &&
-          other.meaningKind != "PieceRoute" &&
-          other.meaningKind != "PieceActivity" &&
-          other.unit != PositionPlanTechniqueUnit.PlanOptionSet &&
-          currentMoveSurfaceLane(other) &&
-          other.publicHasCarrier &&
-          other.sourceEvidenceIds.nonEmpty &&
-          specificClaimCoversPlanPurpose(claim, other)
-      )
-    val ownedPlanImprovement =
-      claim.supportLevel == "owned_cause_linked" &&
-        claim.causeKinds.contains(RelativeCauseKind.PlanImprovement) &&
-        claim.causeEvidenceIds.nonEmpty &&
-        claim.objectCarrierReady &&
-        claim.publicHasCarrier &&
-        !hasSpecificNonPlanCurrentClaim
-    claim.meaningKind == "PlanContinuity" &&
-      claim.surfaceLane == "current_move_owned" &&
-      !directBreakPlanClaim(claim) &&
-      !ownedPlanImprovement &&
-      claims.exists(other =>
-        other != claim &&
-          other.meaningKind != "PlanContinuity" &&
-          other.unit != PositionPlanTechniqueUnit.PlanOptionSet &&
-          currentMoveSurfaceLane(other) &&
-          other.publicHasCarrier &&
-          other.sourceEvidenceIds.nonEmpty &&
-          specificClaimCoversPlanPurpose(claim, other)
-      )
+    if planOptionRecognitionCarrierReady(claim) then false
+    else
+      val hasSpecificNonPlanCurrentClaim =
+        claims.exists(other =>
+          other != claim &&
+            other.meaningKind != "PlanContinuity" &&
+            other.meaningKind != "PieceRoute" &&
+            other.meaningKind != "PieceActivity" &&
+            other.unit != PositionPlanTechniqueUnit.PlanOptionSet &&
+            currentMoveSurfaceLane(other) &&
+            other.publicHasCarrier &&
+            other.sourceEvidenceIds.nonEmpty &&
+            specificClaimCoversPlanPurpose(claim, other)
+        )
+      val ownedPlanImprovement =
+        claim.supportLevel == "owned_cause_linked" &&
+          claim.causeKinds.contains(RelativeCauseKind.PlanImprovement) &&
+          claim.causeEvidenceIds.nonEmpty &&
+          claim.objectCarrierReady &&
+          claim.publicHasCarrier &&
+          !hasSpecificNonPlanCurrentClaim
+      claim.meaningKind == "PlanContinuity" &&
+        claim.surfaceLane == "current_move_owned" &&
+        !directBreakPlanClaim(claim) &&
+        !ownedPlanImprovement &&
+        claims.exists(other =>
+          other != claim &&
+            other.meaningKind != "PlanContinuity" &&
+            other.unit != PositionPlanTechniqueUnit.PlanOptionSet &&
+            currentMoveSurfaceLane(other) &&
+            other.publicHasCarrier &&
+            other.sourceEvidenceIds.nonEmpty &&
+            specificClaimCoversPlanPurpose(claim, other)
+        )
 
   private[judgment] def breakPreparationPlanClaim(claim: MoveMeaningClaim): Boolean =
     val moveBreakFile = sameFilePawnAdvanceFile(claim.moveUci)
@@ -5278,6 +5291,14 @@ object MoveMeaningClaim:
     val normalizedMove = JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase
     claim.meaningKind == "PlanContinuity" &&
       claim.surfaceLane == "current_move_function" &&
+      claim.boardCarriers.exists(boardCarrierMove(_, normalizedMove)) &&
+      claim.boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "PlanSubject")
+
+  private def planOptionRecognitionCarrierReady(claim: MoveMeaningClaim): Boolean =
+    val normalizedMove = JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase
+    claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+      claim.role != "PreparesBreakOption" &&
+      claim.sourceEvidenceIds.nonEmpty &&
       claim.boardCarriers.exists(boardCarrierMove(_, normalizedMove)) &&
       claim.boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "PlanSubject")
 
@@ -5686,7 +5707,14 @@ object MoveMeaningClaim:
               val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, claimBoardCarriers)
               val objectCarrierReady =
                 publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames) ||
-                  planPawnAdvanceCarriers.nonEmpty
+                  planPawnAdvanceCarriers.nonEmpty ||
+                  (
+                    detail.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+                      claimRole != "PreparesBreakOption" &&
+                      sourceEvidenceIds.nonEmpty &&
+                      claimBoardCarriers.exists(boardCarrierMove(_, JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase)) &&
+                      claimBoardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "PlanSubject")
+                  )
               val publicDrawableCarrier =
                 claimBoardCarriers.nonEmpty ||
                   detail.terminalConsequenceKinds.nonEmpty ||
