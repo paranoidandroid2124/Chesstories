@@ -6414,10 +6414,22 @@ object MoveMeaningClaim:
           .signatureTokens(detail.objectBindingSignatures, "target=Square:")
           .flatMap(token => publicSquareCarrier("target", token.stripPrefix("target=Square:"), Some("terminal_target")))
       else Nil
+    val developmentRouteCarriers =
+      detail.objectBindingSignatures.flatMap { signature =>
+        val signatures = List(signature)
+        if EvidenceObjectBinding.signatureTokens(signatures, "mechanism=Mechanism:developmentchoice").isEmpty then Nil
+        else
+          val actorPieces = EvidenceObjectBinding.signatureValues(signatures, "actor", "Piece").filterNot(_.equalsIgnoreCase("pawn"))
+          if actorPieces.isEmpty then Nil
+          else actorPieces.flatMap(publicPieceCarrier("actor", _)) ++
+            EvidenceObjectBinding.signatureValues(signatures, "actor", "Square").flatMap(publicSquareCarrier("actor", _)) ++
+            EvidenceObjectBinding.signatureValues(signatures, "target", "Square").flatMap(publicSquareCarrier("target", _, Some("route_destination")))
+      }
     (
         detail.structuralRouteMove.toList.map(move => publicMoveCarrier("actor", move)) ++
         detail.defenseMove.toList.map(move => publicMoveCarrier("actor", move)) ++
         terminalTargetCarriers ++
+        developmentRouteCarriers ++
         structuralRouteFileCarriers(detail) ++
         flankPawnAdvanceDestinationCarriers(detail) ++
         detail.structuralPurposeSubjects.flatMap(publicStructuralSubjectCarriers) ++
