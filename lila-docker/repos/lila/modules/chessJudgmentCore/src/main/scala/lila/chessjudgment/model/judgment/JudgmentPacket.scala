@@ -2492,7 +2492,10 @@ object MoveMeaningSurface:
   private def lineUnlockSurfaceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     def lineUnlockSurface(other: MoveMeaningSurface): Boolean =
       (other.idea.code == "piece_route" || other.idea.code == "long_diagonal_pressure") &&
-        other.idea.label.startsWith("opens ")
+        other.evidence.boardCarriers.exists(carrier =>
+          carrier.semanticRole.exists(_.equalsIgnoreCase("line_unlock_file")) ||
+            carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("opened-line:")
+        )
     def sameSurfaceMove(other: MoveMeaningSurface): Boolean =
       other != surface &&
         other.moveUci == surface.moveUci &&
