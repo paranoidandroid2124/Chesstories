@@ -2354,12 +2354,12 @@ object MoveMeaningSurface:
               (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to, carrier.semanticRole)
             )
             .take(6)
-        val carriers =
-          (currentMoveActorCarriers ++ functionCarriers ++ consequenceCarriers)
+        val directCarriers =
+          currentMoveActorCarriers
             .distinctBy((carrier, surface) =>
               (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to, carrier.semanticRole)
             )
-            .take(12)
+            .take(4)
         val routeOnlyPublicChain =
           publicSemantics.nonEmpty &&
             publicSemantics.forall(surface =>
@@ -2385,7 +2385,7 @@ object MoveMeaningSurface:
               "relation_kinds" -> relationKinds.map(_.toString),
               "relations" -> relationKinds.map(publicRelationCodeJson),
               "threat_drivers" -> chainSurfaces.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
-              "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
+              "carriers" -> directCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "pv" -> pv,
               "function_carriers" -> functionCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),

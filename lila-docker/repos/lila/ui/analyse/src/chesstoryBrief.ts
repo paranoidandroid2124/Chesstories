@@ -122,7 +122,9 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const moveQuality = labelCode(chain.move_quality || payload?.verdict?.move_quality);
   const proofLevels = uniqueLabels(chain.proof_levels.map(labelCode)).slice(0, 4);
   const ideas = uniqueLabels((chain.move_semantics || []).map(semantic => codeLabel(semantic.idea) || labelCode(semantic.idea_type))).slice(0, 5);
-  const carriers = carrierLabels([...(chain.carriers || []), ...(chain.function_carriers || [])]).slice(0, 6);
+  const directCarriers = carrierLabels(chain.carriers || []).slice(0, 4);
+  const functionCarriers = carrierLabels(chain.function_carriers || []).slice(0, 6);
+  const carriers = uniqueLabels([...directCarriers, ...functionCarriers]).slice(0, 6);
   const consequences = carrierLabels(chain.consequence_carriers).slice(0, 6);
   const terminal = uniqueLabels(chain.terminal_consequences.map(codeLabel)).slice(0, 4);
   const technique = techniqueLabels(chain.technique).slice(0, 4);
