@@ -2035,17 +2035,18 @@ object MoveMeaningSurface:
     publicIdeaChainSubjectSpecs(verdict, surfaces).flatMap { (subject, subjectMove, pvRolePrefix) =>
       val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && surfaceEligibleForPublicChain(surface))
       val rootMoveRole = publicIdeaChainRootMoveRole(subject)
-      val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
+      val terminal = evidenceSurfaces.filter(terminalSurfaceControlsChain).flatMap(_.terminalConsequences).distinct
       val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
       val strongChainProof =
         terminal.nonEmpty ||
           technique.nonEmpty ||
-          evidenceSurfaces.exists(surface => surface.evidence.proofLevel == "terminal_proof" || surface.evidence.proofLevel == "owned_cause")
+          evidenceSurfaces.exists(surface => surface.evidence.proofLevel == "owned_cause")
       val directFunctionSemanticSurfaces =
         evidenceSurfaces.filter(surfaceHasDirectFunctionCarrier)
       val semanticSurfaces = evidenceSurfaces.filter(surface =>
-        semanticAllowedByChainProofGate(surface, strongChainProof) ||
-          directFunctionSemanticSurfaces.exists(_ == surface)
+        (surface.evidence.proofLevel != "terminal_proof" || terminalSurfaceControlsChain(surface)) &&
+          (semanticAllowedByChainProofGate(surface, strongChainProof) ||
+            directFunctionSemanticSurfaces.exists(_ == surface))
       )
       val purposeOwnedPawnMoves =
         val purposeCodes = Set(
@@ -2799,7 +2800,7 @@ object MoveMeaningSurface:
       .filter(move => move.uci.nonEmpty && (move.role == rootMoveRole || move.role.startsWith(pvRolePrefix)))
       .map(_.uci)
       .distinct
-    val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
+    val terminal = evidenceSurfaces.filter(terminalSurfaceControlsChain).flatMap(_.terminalConsequences).distinct
     val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
     val carrierPairs = publicIdeaChainCarrierPairs(evidenceSurfaces)
     val allConsequenceCarriers = carrierPairs.filter((carrier, surface) =>
@@ -2811,7 +2812,7 @@ object MoveMeaningSurface:
     val strongProofSurface =
       terminal.nonEmpty ||
         technique.nonEmpty ||
-        evidenceSurfaces.exists(surface => surface.evidence.proofLevel != "surface_evidence" || surface.evidence.causeIds.nonEmpty)
+        evidenceSurfaces.exists(surface => surface.evidence.proofLevel == "owned_cause" || surface.evidence.causeIds.nonEmpty)
     val concreteConsequence = allConsequenceCarriers.exists((carrier, _) =>
       carrier.kind == "Pawn" ||
         (carrier.kind == "PlanSubject" && !materialEventPlanSubjectCarrier(carrier))
@@ -2857,6 +2858,26 @@ object MoveMeaningSurface:
       (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty) &&
       !surfaceOnlyStrategicMaterialEvent(surface)
 
+  private def terminalSurfaceControlsChain(surface: MoveMeaningSurface): Boolean =
+    val terminalCodes = surface.terminalConsequences.map(_.code).toSet
+    val materialOnlyTerminal =
+      terminalCodes.nonEmpty && terminalCodes.subsetOf(Set("material_gain", "material_loss"))
+    val directMoveTerminalTarget =
+      moveDestination(surface.moveUci).exists(destination =>
+        surface.evidence.boardCarriers.exists(carrier =>
+          carrier.role == "target" &&
+            carrier.kind == "Square" &&
+            carrier.value.equalsIgnoreCase(destination) &&
+            carrier.semanticRole.exists(_.equalsIgnoreCase("terminal_target"))
+        )
+      )
+    terminalCodes.nonEmpty &&
+      (!materialOnlyTerminal ||
+        directMoveTerminalTarget ||
+        surface.evidence.causeIds.nonEmpty ||
+        publicSurfaceRelationKinds(surface).nonEmpty ||
+        surface.evidence.proofThreatDrivers.nonEmpty)
+
   private def semanticAllowedByChainProofGate(surface: MoveMeaningSurface, strongChainProof: Boolean): Boolean =
     !strongChainProof ||
       surface.evidence.proofLevel != "surface_evidence" ||
@@ -2880,13 +2901,27 @@ object MoveMeaningSurface:
           sameFilePawnAdvanceMove(surface.moveUci) &&
           carriers.exists(carrier => carrier.role == "target" && carrier.kind == "Square"))
     surface.evidence.proofLevel == "surface_evidence" &&
-      surface.assessment.localIdea &&
+      (surface.assessment.localIdea || surfaceRouteContinuesInPv(surface)) &&
       surface.moveQuality != "playable_loss" &&
       carriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move") &&
       directActor &&
       carriers.exists(carrier =>
         publicIdeaChainConsequenceCarrierRole(carrier) &&
           (publicIdeaChainConsequenceCarrier(carrier) || publicPurposeCarrier(carrier))
+      )
+
+  private def surfaceRouteContinuesInPv(surface: MoveMeaningSurface): Boolean =
+    val routeDestinations =
+      surface.evidence.boardCarriers.collect {
+        case carrier
+            if carrier.role == "target" &&
+              carrier.kind == "Square" &&
+              carrier.semanticRole.exists(_.equalsIgnoreCase("route_destination")) =>
+          carrier.value.toLowerCase
+      }.toSet
+    routeDestinations.nonEmpty &&
+      surface.comparison.toList.flatMap(_.moves).exists(ref =>
+        publicUciMove(ref.uci).exists(move => routeDestinations(move.take(2)))
       )
 
   private def publicIdeaChainSemanticSortKey(surface: MoveMeaningSurface): (Int, Int, Int, Int, String, String) =
@@ -3258,10 +3293,24 @@ object MoveMeaningSurface:
       case Some(frame) =>
         val verdict = MoveMeaningSurface.verdict(frame)
         val surfaces = candidates.map((claim, evidence) => (claim, evidence, fromClaim(view.verdict, claim, evidence)))
-        val admittedSubjects = publicIdeaChainAdmittedSubjects(verdict, surfaces.map(_._3)).toSet
+        val displaySurfaceKeys = publicIdeaChainOutputSurfaceKeys(publicIdeaChains(verdict, surfaces.map(_._3)))
         surfaces.collect {
-          case (claim, evidence, surface) if admittedSubjects.contains(surface.subject) => claim -> evidence
+          case (claim, evidence, surface) if displaySurfaceKeys(publicIdeaChainSurfaceKey(surface)) => claim -> evidence
         }
+
+  private def publicIdeaChainOutputSurfaceKeys(chains: List[JsObject]): Set[(String, String, String, String, String)] =
+    chains
+      .flatMap(chain => (chain \ "move_semantics").asOpt[List[JsObject]].toList.flatten)
+      .flatMap(semantic =>
+        for
+          move <- (semantic \ "move_uci").asOpt[String]
+          subject <- (semantic \ "subject").asOpt[String]
+          lineRole <- (semantic \ "line_role").asOpt[String]
+          ideaCode <- (semantic \ "idea" \ "code").asOpt[String]
+          ideaLabel <- (semantic \ "idea" \ "label").asOpt[String]
+        yield (move, subject, lineRole, ideaCode, ideaLabel)
+      )
+      .toSet
 
   private def publicSurfaceClaimCandidates(
       view: MoveJudgmentView
@@ -5200,6 +5249,17 @@ object MoveMeaningClaim:
       !claim.routeIdentityParts.exists(part =>
         val normalized = part.toLowerCase
         normalized.contains(":line-unlock:") || normalized.contains("rook-lift")
+      ) &&
+      !routeContinuesInPublicPv(claim)
+
+  private def routeContinuesInPublicPv(claim: MoveMeaningClaim): Boolean =
+    val routeDestinations =
+      claim.routeIdentityParts.collect {
+        case part if part.toLowerCase.startsWith("to:") => part.stripPrefix("to:").toLowerCase
+      }.toSet
+    routeDestinations.nonEmpty &&
+      claim.comparisonMoveRefs.exists(ref =>
+        moveEndpoints(ref.uci).exists { case (from, _) => routeDestinations(from) }
       )
 
   private def routeIdeaHasPublicPurpose(ideaType: String): Boolean =
@@ -6131,7 +6191,7 @@ object MoveMeaningClaim:
         prefix.toList.flatMap(role =>
           line.lineReplayContinuationMoves
             .flatMap(MoveMeaningSurface.publicUciMove)
-            .take(4)
+            .take(6)
             .zipWithIndex
             .map((move, index) => MoveMeaningSurfaceMoveRef(s"${role}_${index + 1}", move))
         )
@@ -7064,12 +7124,24 @@ object MoveMeaningClaim:
                 if ref.line.exists(line => signatureLineIds.contains(line.id) && signatureLineRole.forall(_ == line.role)) =>
               ref.id
           }
+      val routeLineSources =
+        if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
+            detail.structuralRouteMove.exists(sameMove(_, claimMove))
+        then
+          evidenceGraph.records.collect {
+            case EvidenceRecord(ref, payload: LineFactEvidence, _)
+                if payload.rootMove.exists(sameMove(_, claimMove)) &&
+                  ref.line.exists(line => signatureLineRole.forall(_ == line.role)) =>
+              ref.id
+          }
+        else Nil
       (
         currentMoveCarrierSourceEvidenceIds(evidenceGraph, detail, claimMove) ++
           planPawnAdvanceSources ++
           terminalProofSources ++
           currentMoveStructureContextSourceEvidenceIds(evidenceGraph, detail) ++
-          lineWitnessSources
+          lineWitnessSources ++
+          routeLineSources
       ).distinct.sorted
     else detail.sourceEvidenceIds.distinct.sorted
 
