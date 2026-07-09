@@ -1917,13 +1917,17 @@ object MoveMeaningSurface:
       referenceMove = frame.referenceLine.rootMove
     )
 
-  def from(view: MoveJudgmentView): List[MoveMeaningSurface] =
+  def publicSurfaces(view: MoveJudgmentView): List[MoveMeaningSurface] =
     publicClaimsWithEvidenceForSurface(view)
       .map((claim, evidence) => fromClaim(view.verdict, claim, evidence))
 
+  // publicSurfaces names the filtered contract; from stays for legacy internal callers.
+  def from(view: MoveJudgmentView): List[MoveMeaningSurface] =
+    publicSurfaces(view)
+
   def publicPayloadJson(view: MoveJudgmentView): JsObject =
     val verdict = view.verdict.map(frame => MoveMeaningSurface.verdict(frame))
-    val surfaces = MoveMeaningSurface.from(view)
+    val surfaces = MoveMeaningSurface.publicSurfaces(view)
     Json.obj(
       "verdict" -> verdict.map(publicVerdictJson),
       "idea_chains" -> verdict.toList.flatMap(publicIdeaChains(_, surfaces))
