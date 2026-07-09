@@ -122,10 +122,10 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const moveQuality = labelCode(chain.move_quality || payload?.verdict?.move_quality);
   const proofLevels = uniqueLabels(chain.proof_levels.map(labelCode)).slice(0, 4);
   const ideas = uniqueLabels((chain.move_semantics || []).map(semantic => codeLabel(semantic.idea) || labelCode(semantic.idea_type))).slice(0, 5);
-  const directCarriers = carrierLabels(chain.carriers || []).slice(0, 4);
-  const functionCarriers = carrierLabels(chain.function_carriers || []).slice(0, 6);
+  const directCarriers = carrierDisplayLabels(chain.carriers || []).slice(0, 4);
+  const functionCarriers = carrierDisplayLabels(chain.function_carriers || []).slice(0, 6);
   const carriers = uniqueLabels([...directCarriers, ...functionCarriers]).slice(0, 6);
-  const consequences = carrierLabels(chain.consequence_carriers).slice(0, 6);
+  const consequences = carrierDisplayLabels(chain.consequence_carriers).slice(0, 6);
   const terminal = uniqueLabels(chain.terminal_consequences.map(codeLabel)).slice(0, 4);
   const technique = techniqueLabels(chain.technique).slice(0, 4);
   const pv = uniqueLabels(chain.pv.map(moveLabel)).slice(0, 6);
@@ -211,7 +211,7 @@ function placeholderSections(): ChesstoryBriefSection[] {
   ];
 }
 
-function carrierLabels(carriers: ChesstoryBoardCarrier[]): string[] {
+function carrierDisplayLabels(carriers: ChesstoryBoardCarrier[]): string[] {
   const actorPiece = actorRoutePiece(carriers);
   return uniqueCarriers(carriers)
     .filter(
@@ -221,7 +221,7 @@ function carrierLabels(carriers: ChesstoryBoardCarrier[]): string[] {
         relationCarrierRoles.has(carrier.role || ''),
     )
     .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
-    .map(carrier => boardCarrierLabel(carrier, actorPiece));
+    .map(carrier => boardCarrierDisplayLabel(carrier, actorPiece));
 }
 
 function boardCarrierRank(carrier: ChesstoryBoardCarrier): number {
@@ -242,9 +242,9 @@ function actorRoutePiece(carriers: ChesstoryBoardCarrier[]): string | undefined 
   return piece && piece !== 'pawn' && piece !== 'piece' ? piece : undefined;
 }
 
-function boardCarrierLabel(carrier: ChesstoryBoardCarrier, actorPiece?: string): string {
+function boardCarrierDisplayLabel(carrier: ChesstoryBoardCarrier, actorPiece?: string): string {
   const route = carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : '';
-  const value = carrier.label || (carrier.kind === 'Move' && route ? route : carrierValueLabel(carrier.kind, carrier.value));
+  const value = carrier.label || (carrier.kind === 'Move' && route ? route : carrierValueDisplayLabel(carrier.kind, carrier.value));
   if (carrier.kind === 'Move' && route) {
     const piece = actorPiece ? `${actorPiece} ` : '';
     return `${piece}${value || route}`;
@@ -254,7 +254,7 @@ function boardCarrierLabel(carrier: ChesstoryBoardCarrier, actorPiece?: string):
   return [value, route].filter(Boolean).join(' ');
 }
 
-function carrierValueLabel(kind?: string, value?: string): string {
+function carrierValueDisplayLabel(kind?: string, value?: string): string {
   const raw = value || '';
   if (kind === 'File' && raw) return `${raw}-file`;
   if (kind === 'Pawn' && raw.startsWith('weak-pawn:')) return `weak pawn on ${raw.slice('weak-pawn:'.length)}`;
