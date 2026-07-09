@@ -2030,7 +2030,7 @@ object MoveMeaningSurface:
       if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
       else List(("played_move", verdict.playedMove, "played_pv_"))
     subjectSpecs.flatMap { (subject, subjectMove, pvRolePrefix) =>
-      val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && publicIdeaChainSurfaceEligible(surface))
+      val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && surfaceEligibleForPublicChain(surface))
       val rootMoveRole = if subject == "reference_move" then "best_move" else "played_move"
       val pv = surfaces
         .filter(_.subject == subject)
@@ -2045,9 +2045,9 @@ object MoveMeaningSurface:
           technique.nonEmpty ||
           evidenceSurfaces.exists(surface => surface.evidence.proofLevel == "terminal_proof" || surface.evidence.proofLevel == "owned_cause")
       val directFunctionSemanticSurfaces =
-        evidenceSurfaces.filter(publicIdeaChainDirectFunctionSurface)
+        evidenceSurfaces.filter(surfaceHasDirectFunctionCarrier)
       val semanticSurfaces = evidenceSurfaces.filter(surface =>
-        publicIdeaChainSemanticAllowed(surface, strongChainProof) ||
+        semanticAllowedByChainProofGate(surface, strongChainProof) ||
           directFunctionSemanticSurfaces.exists(_ == surface)
       )
       val purposeOwnedPawnMoves =
@@ -2367,7 +2367,7 @@ object MoveMeaningSurface:
                 surface.evidence.proofLevel == "surface_evidence" &&
                 surface.evidence.causeIds.isEmpty
             ) &&
-            !publicSemantics.exists(publicIdeaChainDirectFunctionSurface) &&
+            !publicSemantics.exists(surfaceHasDirectFunctionCarrier) &&
             consequenceCarriers.isEmpty &&
             terminal.isEmpty &&
             technique.isEmpty
@@ -2742,17 +2742,17 @@ object MoveMeaningSurface:
       if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
       else List(("played_move", verdict.playedMove, "played_pv_"))
     subjectSpecs.collect {
-      case (subject, subjectMove, pvRolePrefix) if publicIdeaChainAllowed(subject, subjectMove, pvRolePrefix, surfaces) =>
+      case (subject, subjectMove, pvRolePrefix) if publicIdeaChainSubjectAdmitted(subject, subjectMove, pvRolePrefix, surfaces) =>
         subject
     }
 
-  private def publicIdeaChainAllowed(
+  private def publicIdeaChainSubjectAdmitted(
       subject: String,
       subjectMove: String,
       pvRolePrefix: String,
       surfaces: List[MoveMeaningSurface]
   ): Boolean =
-    val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && publicIdeaChainSurfaceEligible(surface))
+    val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && surfaceEligibleForPublicChain(surface))
     val rootMoveRole = if subject == "reference_move" then "best_move" else "played_move"
     val pv = surfaces
       .filter(_.subject == subject)
@@ -2805,7 +2805,7 @@ object MoveMeaningSurface:
     }
     val directFunctionCarrier =
       subject == "played_move" &&
-        evidenceSurfaces.exists(surface => publicIdeaChainDirectFunctionSurface(surface) && surfaceHasSubjectMove(surface))
+        evidenceSurfaces.exists(surface => surfaceHasDirectFunctionCarrier(surface) && surfaceHasSubjectMove(surface))
     val admissibleProof = strongProofSurface || directFunctionCarrier || directPieceRouteCarrier
     evidenceSurfaces.nonEmpty &&
       admissibleProof &&
@@ -2820,20 +2820,20 @@ object MoveMeaningSurface:
           (pv.nonEmpty && concreteConsequence)
       )
 
-  private def publicIdeaChainSurfaceEligible(surface: MoveMeaningSurface): Boolean =
+  private def surfaceEligibleForPublicChain(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel != "none" &&
       surface.evidence.hasCarrier &&
       (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty) &&
       !surfaceOnlyStrategicMaterialEvent(surface)
 
-  private def publicIdeaChainSemanticAllowed(surface: MoveMeaningSurface, strongChainProof: Boolean): Boolean =
+  private def semanticAllowedByChainProofGate(surface: MoveMeaningSurface, strongChainProof: Boolean): Boolean =
     !strongChainProof ||
       surface.evidence.proofLevel != "surface_evidence" ||
       surface.evidence.causeIds.nonEmpty ||
       surface.terminalConsequences.nonEmpty ||
       surface.endgameTechnique.nonEmpty
 
-  private def publicIdeaChainDirectFunctionSurface(surface: MoveMeaningSurface): Boolean =
+  private def surfaceHasDirectFunctionCarrier(surface: MoveMeaningSurface): Boolean =
     val carriers = surface.evidence.boardCarriers
     val directFunctionTarget =
       surfaceHasCarrierRole(surface, "file_pressure") ||
@@ -4892,11 +4892,11 @@ object MoveMeaningClaim:
       claims: List[MoveMeaningClaim]
   ): List[MoveMeaningClaim] =
     claims.map { claim =>
-      if publicSurfaceCarrierAllowed(verdict, claims, claim) then claim
+      if claimAllowedOnPublicSurface(verdict, claims, claim) then claim
       else claim.copy(publicHasCarrier = false, publicProofLevel = "none", publicTargetBound = false)
     }
 
-  private def publicSurfaceCarrierAllowed(
+  private def claimAllowedOnPublicSurface(
       verdict: Option[MoveJudgmentVerdictFrame],
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
@@ -5617,7 +5617,7 @@ object MoveMeaningClaim:
           mergedObjectCarrierReady &&
           mergedTargetShapeReady &&
           (mergedCauseEvidenceIds.nonEmpty || mergedSourceEvidenceIds.nonEmpty) &&
-          publicCarrierAllowed(best.unit, list.flatMap(_.causeKinds), mergedBoardCarriers)
+          claimCarrierAdmittedByPublicContract(best.unit, list.flatMap(_.causeKinds), mergedBoardCarriers)
       val mergedPublicProofLevel = list.map(_.publicProofLevel).sortBy(publicProofLevelRank).lastOption.getOrElse("none")
       best.copy(
         causeKinds = list.flatMap(_.causeKinds).distinct.sortBy(_.toString),
@@ -5664,7 +5664,7 @@ object MoveMeaningClaim:
       case "technique"        => 1
       case _                  => 0
 
-  private def publicCarrierAllowed(
+  private def claimCarrierAdmittedByPublicContract(
       unit: PositionPlanTechniqueUnit,
       causeKinds: List[RelativeCauseKind],
       boardCarriers: List[MoveMeaningSurfaceBoardCarrier]
@@ -5967,7 +5967,7 @@ object MoveMeaningClaim:
                   objectCarrierReady &&
                   publicTargetShapeReady &&
                   (linkedCauseIds.nonEmpty || sourceEvidenceIds.nonEmpty) &&
-                  publicCarrierAllowed(detail.unit, roleCompatibleCauseFrames.map(_.causeKind), claimBoardCarriers)
+                  claimCarrierAdmittedByPublicContract(detail.unit, roleCompatibleCauseFrames.map(_.causeKind), claimBoardCarriers)
               val terminalProofOwnsClaim =
                 terminalProofDetailOwnsClaimMove(detail, surfaceObjectSignatures, claimMove)
               val publicProofLevel =
