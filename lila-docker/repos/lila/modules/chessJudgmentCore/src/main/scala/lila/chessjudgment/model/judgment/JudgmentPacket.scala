@@ -2228,8 +2228,8 @@ object MoveMeaningSurface:
       else
         val candidatePublicSemantics = chainSurfaces
           .sortBy(publicIdeaChainSemanticSortKey)
-          .filterNot(surface => fallbackLabelCoveredBySpecificLabel(surface, chainSurfaces))
-          .filterNot(surface => genericFallbackCoveredByConcreteSurface(surface, chainSurfaces))
+          .filterNot(surface => displayFallbackLabelCoveredBySpecificLabel(surface, chainSurfaces))
+          .filterNot(surface => displayGenericFallbackCoveredByConcreteSurface(surface, chainSurfaces))
           .filterNot(surface => targetReleaseLabelCoveredByPressureGain(surface, chainSurfaces))
           .filterNot(surface => supplementalPressureLabelCoveredByCanonicalPressure(surface, chainSurfaces))
           .filterNot(surface => slashPressureLabelCoveredByPlainPressureLabel(surface, chainSurfaces))
@@ -2410,7 +2410,7 @@ object MoveMeaningSurface:
       surface.idea.label
     )
 
-  private def fallbackLabelCoveredBySpecificLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+  private def displayFallbackLabelCoveredBySpecificLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     surfaceEvidenceWithoutProofDetail(surface) &&
       surface.idea.label == ideaLabels.getOrElse(surface.idea.code, "") &&
       surfaces.exists(other =>
@@ -2423,10 +2423,10 @@ object MoveMeaningSurface:
           other.idea.label != surface.idea.label
       )
 
-  private val publicGenericFallbackCodes =
+  private val displayGenericFallbackCodes =
     Set("plan_continuity", "piece_activity", "piece_route", "structure_shift", "target_pressure", "tactical_pressure", "center_control", "counterplay_control", "pawn_break_timing")
 
-  private def genericFallbackCoveredByConcreteSurface(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+  private def displayGenericFallbackCoveredByConcreteSurface(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     def sameSurfaceMove(other: MoveMeaningSurface): Boolean =
       other != surface &&
         other.moveUci == surface.moveUci &&
@@ -2434,7 +2434,7 @@ object MoveMeaningSurface:
         other.lineRole == surface.lineRole
     def concreteSurface(other: MoveMeaningSurface): Boolean =
       other.idea.label != ideaLabels.getOrElse(other.idea.code, "") ||
-        !publicGenericFallbackCodes(other.idea.code)
+        !displayGenericFallbackCodes(other.idea.code)
     val provenPlanOptionPurpose =
       surface.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
         surface.evidence.hasCarrier &&
@@ -2445,7 +2445,7 @@ object MoveMeaningSurface:
             Set("openingdevelopment", "pieceactivation")(carrier.value.toLowerCase)
         )
     surfaceEvidenceWithoutProofDetail(surface) &&
-      publicGenericFallbackCodes(surface.idea.code) &&
+      displayGenericFallbackCodes(surface.idea.code) &&
       !provenPlanOptionPurpose &&
       surface.idea.label == ideaLabels.getOrElse(surface.idea.code, "") &&
       surfaces.exists(other => sameSurfaceMove(other) && concreteSurface(other))
