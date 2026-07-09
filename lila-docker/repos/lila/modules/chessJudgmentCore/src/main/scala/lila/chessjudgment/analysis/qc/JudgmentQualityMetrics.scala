@@ -190,10 +190,10 @@ object ExpectedEvidenceLossPolicy:
               rootMove == normalizeMove(payload.referenceLine.rootMove) &&
               StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(payload, packet.evidenceGraph.records) &&
               packet.moveJudgmentView.exists(view =>
-                MoveMeaningSurface.publicClaimsWithEvidenceForSurface(view).exists { case (claim, evidence) =>
+                MoveMeaningSurface.publicIdeaChainSeedClaimsWithEvidence(view).exists { case (claim, evidence) =>
                   normalizeMove(claim.moveUci) == rootMove &&
                     claim.lineRole == "candidate" &&
-                    evidence.hasCarrier &&
+                    evidence.publicSurfaceAdmitted &&
                     evidence.proofLevel != "none"
                 }
               )
@@ -1182,7 +1182,7 @@ object CandidateComparisonDiagnostic:
         .distinct
     val publicMoveMeaningClaims =
       packet.moveJudgmentView.toList
-        .flatMap(MoveMeaningSurface.publicClaimsWithEvidenceForSurface)
+        .flatMap(MoveMeaningSurface.publicIdeaChainSeedClaimsWithEvidence)
         .filter((claim, _) => comparisonMoveMeaningClaimSet.contains(claim))
     val publicMoveMeaningClaimDiagnostics =
       publicMoveMeaningClaims
@@ -1286,7 +1286,7 @@ object CandidateComparisonDiagnostic:
       moveUci = claim.moveUci,
       causeEvidenceIds = evidence.causeIds.distinct.sorted,
       sourceEvidenceIds = evidence.sourceIds.distinct.sorted,
-      hasCarrier = evidence.hasCarrier,
+      hasCarrier = evidence.publicSurfaceAdmitted,
       hasBoardCarrier = evidence.boardCarriers.nonEmpty,
       proofLevel = evidence.proofLevel,
       boardCarriers = evidence.boardCarriers,
