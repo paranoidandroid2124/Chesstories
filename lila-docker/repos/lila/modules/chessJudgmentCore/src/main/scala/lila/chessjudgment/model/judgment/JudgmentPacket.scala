@@ -2550,17 +2550,13 @@ object MoveMeaningSurface:
       surface.evidence.proofRelationKinds.intersect(other.evidence.proofRelationKinds).nonEmpty ||
         surface.target.squares.intersect(other.target.squares).nonEmpty ||
         surface.target.files.intersect(other.target.files).nonEmpty
-    def sharedSourceOrTarget(other: MoveMeaningSurface): Boolean =
-      sharedRouteProofOrTarget(other) ||
-        surface.evidence.causeIds.intersect(other.evidence.causeIds).nonEmpty ||
-        surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty
     def concreteTargetPressureSurface(other: MoveMeaningSurface): Boolean =
       other.idea.code == "target_pressure" &&
         other.evidence.proofLevel == "owned_cause" &&
         other.evidence.targetBound &&
         !unprovedBroadTargetPressure(other) &&
         (
-          genericRouteLabel(surface.idea.label) && sharedSourceOrTarget(other) ||
+          genericRouteLabel(surface.idea.label) && sharedRouteProofOrTarget(other) ||
             fileRouteLabel(surface.idea.label) && surface.target.files.intersect(other.target.files).nonEmpty
         )
     def publicMeaningSurface(other: MoveMeaningSurface): Boolean =
