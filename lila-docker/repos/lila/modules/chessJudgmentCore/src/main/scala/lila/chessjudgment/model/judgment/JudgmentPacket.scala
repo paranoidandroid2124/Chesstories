@@ -2345,7 +2345,7 @@ object MoveMeaningSurface:
           publicSemantics
             .flatMap(surface =>
               surface.evidence.boardCarriers
-                .filter(carrier => carrier.role == "target" && publicFunctionCarrier(carrier))
+                .filter(carrier => carrier.role == "target" && publicFunctionCarrierForSurface(surface, carrier))
                 .sortBy(publicFunctionCarrierSortKey)
                 .take(2)
                 .map(carrier => carrier -> surface)
@@ -2524,6 +2524,17 @@ object MoveMeaningSurface:
 
   private[judgment] def publicFunctionCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
     carrier.semanticRole.exists(role => publicFunctionCarrierSemanticRoles(role.toLowerCase))
+
+  private def publicFunctionCarrierForSurface(surface: MoveMeaningSurface, carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
+    val role = carrier.semanticRole.map(_.toLowerCase).getOrElse("")
+    val breakContextRole = role == "break_file" || role == "counter_break_file" || role == "tension_square"
+    val breakContextSurface =
+      surface.idea.code match
+        case "pawn_break_timing" | "pawn_tension_creation" | "pawn_tension_resolution" | "counterplay_race" => true
+        case "plan_continuity" => surfaceHasCarrierRole(surface, "route_destination")
+        case _                 => false
+    publicFunctionCarrier(carrier) &&
+      (!breakContextRole || breakContextSurface)
 
   private[judgment] def publicMeaningTargetCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
     carrier.role == "target" && !publicFunctionCarrier(carrier)
