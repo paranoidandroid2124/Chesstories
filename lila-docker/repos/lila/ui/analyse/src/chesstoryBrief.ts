@@ -49,6 +49,7 @@ export interface ChesstoryMoveSemantic {
     has_carrier?: boolean;
     proof_level?: string;
     target_bound?: boolean;
+    board_carriers?: ChesstoryBoardCarrier[];
   };
   priority?: string;
   failure_family?: string;
@@ -102,6 +103,7 @@ export interface ChesstoryIdeaChain {
   move_semantics?: ChesstoryMoveSemantic[];
   proof_levels: string[];
   carriers: ChesstoryBoardCarrier[];
+  function_carriers?: ChesstoryBoardCarrier[];
   pv: string[];
   consequence_carriers: ChesstoryBoardCarrier[];
   terminal_consequences: ChesstoryCode[];
@@ -390,7 +392,7 @@ function conciseCarrierLabels(carriers: ChesstoryBoardCarrier[], actorPiece?: st
 function uniqueCarriers(carriers: ChesstoryBoardCarrier[]): ChesstoryBoardCarrier[] {
   const seen = new Set<string>();
   return carriers.filter(carrier => {
-    const key = [carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to].join('|');
+    const key = [carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to, carrier.semantic_role].join('|');
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

@@ -2275,8 +2275,22 @@ object MoveMeaningSurface:
               (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to, carrier.semanticRole)
             )
             .take(2)
+        val functionCarriers =
+          publicIdeaChainCarrierPairs(publicSemantics)
+            .filter((carrier, surface) =>
+              surface.evidence.boardCarriers.exists(carrier =>
+                carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
+              ) &&
+                carrier.role == "target" &&
+                carrier.kind == "Square" &&
+                carrier.semanticRole.contains("route_destination")
+            )
+            .distinctBy((carrier, surface) =>
+              (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to, carrier.semanticRole)
+            )
+            .take(2)
         val carriers =
-          (currentMoveActorCarriers ++ consequenceCarriers)
+          (currentMoveActorCarriers ++ functionCarriers ++ consequenceCarriers)
             .distinctBy((carrier, surface) =>
               (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to, carrier.semanticRole)
             )
@@ -2296,6 +2310,7 @@ object MoveMeaningSurface:
             "threat_drivers" -> chainSurfaces.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
             "carriers" -> carriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "pv" -> pv,
+            "function_carriers" -> functionCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
             "terminal_consequences" -> terminal.map(publicCodeJson),
             "technique" -> technique.map(publicEndgameTechniqueJson),
@@ -2858,7 +2873,8 @@ object MoveMeaningSurface:
         "source_ids" -> surface.evidence.sourceIds,
         "relation_kinds" -> publicSurfaceRelationKinds(surface).map(_.toString),
         "relations" -> publicSurfaceRelationKinds(surface).map(publicRelationCodeJson),
-        "threat_drivers" -> surface.evidence.proofThreatDrivers.distinct.sorted
+        "threat_drivers" -> surface.evidence.proofThreatDrivers.distinct.sorted,
+        "board_carriers" -> surface.evidence.boardCarriers.map(publicBoardCarrierJson(_, surface))
       )
     )
 
@@ -6410,7 +6426,13 @@ object MoveMeaningClaim:
         Some("outpost_attempt")
       case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && longDiagonalRouteDetail(detail) =>
         Some("long_diagonal_pressure")
-      case PositionPlanTechniqueUnit.StructuralTransformation if meaningKind == "TargetPressure" && pawnAdvancePurposeDetail(detail) =>
+      case PositionPlanTechniqueUnit.StructuralTransformation if meaningKind == "TargetPressure" && createdPawnTensionDetail(detail) =>
+        Some("pawn_tension_creation")
+      case PositionPlanTechniqueUnit.StructuralTransformation if meaningKind == "TargetPressure" && resolvedPawnTensionDetail(detail) =>
+        Some("pawn_tension_resolution")
+      case PositionPlanTechniqueUnit.StructuralTransformation if meaningKind == "TargetPressure" && flankKingPressurePawnAdvanceDetail(detail) =>
+        Some("flank_pawn_pressure")
+      case PositionPlanTechniqueUnit.StructuralTransformation if meaningKind == "TargetPressure" && pawnBreakTimingDetail(detail) =>
         Some("pawn_break_timing")
       case _ =>
         None
@@ -6430,14 +6452,25 @@ object MoveMeaningClaim:
   private def diagonalDenialDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.structuralPurposeSubjects.exists(subject => subject.toLowerCase.contains(":diagonal-denial:"))
 
-  private def pawnAdvancePurposeDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+  private def pawnAdvanceDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.structuralRouteMove.exists(sameFilePawnAdvanceMove) &&
-      !detail.structuralPurposePolarities.exists(negativeStructuralToken) &&
+      !detail.structuralPurposePolarities.exists(negativeStructuralToken)
+
+  private def createdPawnTensionDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    pawnAdvanceDetail(detail) &&
+      detail.structuralPurposeSubjects.exists(subject => subject.toLowerCase.startsWith("created-tension:"))
+
+  private def resolvedPawnTensionDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    pawnAdvanceDetail(detail) &&
+      detail.structuralPurposeSubjects.exists(subject => subject.toLowerCase.startsWith("resolved-tension:"))
+
+  private def pawnBreakTimingDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
+    pawnAdvanceDetail(detail) &&
       (
         detail.breakFile.exists(_.trim.nonEmpty) ||
-        detail.structuralPurposeSubjects.exists(pawnAdvancePurposeSubject) ||
-          detail.label.exists(pawnAdvancePurposeToken) ||
-          flankKingPressurePawnAdvanceDetail(detail)
+          detail.axisKind.contains(StrategicAxisKind.PawnBreak) ||
+          detail.structuralPurposeSubjects.exists(pawnBreakPurposeSubject) ||
+          detail.label.exists(pawnAdvancePurposeToken)
       )
 
   private def flankKingPressurePawnAdvanceDetail(detail: PositionPlanTechniqueSemanticDetail): Boolean =
@@ -6456,12 +6489,9 @@ object MoveMeaningClaim:
         yield fromRank != toRank && (fromRank - toRank).abs <= 2).getOrElse(false)
     }
 
-  private def pawnAdvancePurposeSubject(subject: String): Boolean =
+  private def pawnBreakPurposeSubject(subject: String): Boolean =
     val normalized = subject.toLowerCase
-    normalized.startsWith("break-file:") ||
-      normalized.startsWith("created-tension:") ||
-      normalized.startsWith("resolved-tension:") ||
-      normalized == "pawnstorm"
+    normalized.startsWith("break-file:")
 
   private def pawnAdvancePurposeToken(token: String): Boolean =
     val normalized = token.toLowerCase
