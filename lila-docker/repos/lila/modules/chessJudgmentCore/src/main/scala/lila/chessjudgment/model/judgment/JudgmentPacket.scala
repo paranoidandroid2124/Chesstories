@@ -1717,7 +1717,9 @@ object MoveMeaningSurfaceTarget:
     val routeDestinationSquares =
       detail.structuralPurposeSubjects
         .flatMap(subject =>
-          StructuralPurposeSubject.parse(subject).collect { case StructuralPurposeSubject.PieceRoute(_, _, to) => to }
+          StructuralPurposeSubject.parse(subject).collect {
+            case StructuralPurposeSubject.PieceRoute(piece, _, to) if !piece.equalsIgnoreCase("pawn") => to
+          }
         )
         .flatMap(cleanSquare)
         .toSet
@@ -2084,6 +2086,7 @@ object MoveMeaningSurface:
           val checkingPressureCoveredByTactic =
             surface.idea.code == "target_pressure" &&
               surface.idea.label.startsWith("checking pressure") &&
+              !surface.evidence.boardCarriers.exists(_.semanticRole.exists(_ == "check")) &&
               ownedSiblings.exists(other =>
                 other.idea.code == "tactical_pressure" &&
                   (
@@ -2837,10 +2840,12 @@ object MoveMeaningSurface:
         true
 
   private def publicIdeaChainConsequenceCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
-    carrier.kind match
-      case "PlanSubject" => !carrier.value.contains(",")
-      case "Pawn" | "Square" | "File" => true
-      case _                           => false
+    !carrier.semanticRole.exists(_ == "route_destination") &&
+      (carrier.kind match
+        case "PlanSubject" => !carrier.value.contains(",")
+        case "Pawn" | "Square" | "File" => true
+        case _                           => false
+      )
 
   private def publicIdeaChainCarrierMatchesSurfaceTarget(
       carrier: MoveMeaningSurfaceBoardCarrier,
@@ -3071,11 +3076,7 @@ object MoveMeaningSurface:
       EvidenceObjectBinding.signatureValues(signatureList, "target", "PlanSubject").map(_.toLowerCase).toSet
     val carrierTargetFiles =
       EvidenceObjectBinding.signatureValues(signatureList, "target", "File").map(_.trim.toLowerCase).filter(_.matches("[a-h]"))
-    val kingPressureCarrier =
-      mechanismTokens.contains("mechanism:kingsafetychanged") ||
-        mechanismTokens.contains("mechanism:kingringpressure") ||
-        consequenceTokens.contains("consequence:kingringpressure") ||
-        consequenceTokens.contains("consequence:target:gain:king-safety-pressure")
+    val kingPressureCarrier = kingPressureClaim(claim)
     val filePressureCarrier =
       mechanismTokens.contains("mechanism:fileoccupationgain") ||
         consequenceTokens.contains("consequence:fileoccupationgain:gain")
@@ -3864,6 +3865,8 @@ object MoveMeaningSurface:
     terminalIdeaType(claim)
       .orElse(Option.when(concretePassedPawnAdvanceClaim(claim))("passed_pawn_advance"))
       .orElse(Option.when(defensiveResourceClaim(claim))("defensive_resource"))
+      .orElse(Option.when(claim.meaningKind == "TargetPressure" && checkingPressureClaim(claim))("target_pressure"))
+      .orElse(Option.when(claim.meaningKind == "TargetPressure" && kingPressureClaim(claim) && !pinOrXRayPressureClaim(claim))("target_pressure"))
       .orElse(Option.when(materialGainClaim(claim))("material_gain"))
       .orElse(Option.when(flankPawnAdvanceSurfaceClaim(claim))("pawn_break_timing"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
@@ -3991,6 +3994,20 @@ object MoveMeaningSurface:
         Nil
       (carrierCheckSquares ++ signatureCheckSquares).exists(targetSquares.contains)
 
+  private def kingPressureClaim(claim: MoveMeaningClaim): Boolean =
+    val signatureList = claim.objectBindingSignatures
+    val mechanismTokens =
+      EvidenceObjectBinding.signatureTokens(signatureList, "mechanism=").map(_.stripPrefix("mechanism=").toLowerCase)
+    val consequenceTokens =
+      EvidenceObjectBinding.signatureTokens(signatureList, "consequence=").map(_.stripPrefix("consequence=").toLowerCase)
+    mechanismTokens.contains("mechanism:kingsafetychanged") ||
+      mechanismTokens.exists(_.startsWith("mechanism:kingringpressure")) ||
+      consequenceTokens.exists(_.startsWith("consequence:kingringpressure")) ||
+      consequenceTokens.contains("consequence:target:gain:king-safety-pressure")
+
+  private def pinOrXRayPressureClaim(claim: MoveMeaningClaim): Boolean =
+    claim.proofRelationKinds.exists(kind => kind == RelationFactKind.Pin || kind == RelationFactKind.XRay)
+
   private def longDiagonalPressureClaim(claim: MoveMeaningClaim): Boolean =
     lineUnlockClaim(claim) ||
       claim.objectBindingSignatures.exists(signature =>
@@ -4083,11 +4100,16 @@ object MoveMeaningSurface:
     val destination = endpoints.map(_._2)
     currentMoveLikelyPawnAdvance(claim) &&
       (
-        claim.routeIdentityParts.exists(_.startsWith("subject:passed-pawn-advanced:")) ||
+        claim.routeIdentityParts.exists { part =>
+          val normalized = part.toLowerCase
+          normalized.startsWith("subject:passed-pawn-advanced:") ||
+            normalized.startsWith("subject:passed-pawn-breakthrough:")
+        } ||
           claim.boardCarriers.exists(carrier =>
             carrier.kind == "PlanSubject" &&
               (
                 carrier.value.startsWith("passed-pawn-advanced:") ||
+                  carrier.value.startsWith("passed-pawn-breakthrough:") ||
                   destination.exists(square => carrier.value.equalsIgnoreCase(s"passed-pawn:$square"))
               )
           )
