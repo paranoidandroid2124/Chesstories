@@ -1691,7 +1691,7 @@ case class MoveMeaningClaim(
     maintainedSquares: List[String] = Nil,
     brokenSquares: List[String] = Nil,
     publicIdeaType: Option[String] = None,
-    publicHasCarrier: Boolean = false,
+    publicSurfaceAdmitted: Boolean = false,
     publicProofLevel: String = "none",
     publicTargetBound: Boolean = false
 )
@@ -3254,7 +3254,7 @@ object MoveMeaningSurface:
       terminalIdeaType(claim).nonEmpty
     val directPawnBreak =
       claim.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
-        claim.publicHasCarrier &&
+        claim.publicSurfaceAdmitted &&
         (claim.breakFiles.nonEmpty || claim.breakIdentityParts.nonEmpty)
     val directBreakPlan =
       MoveMeaningClaim.directBreakPlanClaim(claim)
@@ -3262,7 +3262,7 @@ object MoveMeaningSurface:
       concretePassedPawnAdvanceClaim(claim)
     val directCheckingPressure =
       claim.meaningKind == "TargetPressure" &&
-        claim.publicHasCarrier &&
+        claim.publicSurfaceAdmitted &&
         !currentMoveLikelyPawnAdvance(claim) &&
         checkingPressureClaim(claim)
     val concreteRoute =
@@ -4066,7 +4066,7 @@ object MoveMeaningSurface:
 
   private def publicEvidence(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
     MoveMeaningSurfaceEvidence(
-      hasCarrier = claim.publicHasCarrier,
+      hasCarrier = claim.publicSurfaceAdmitted,
       proofLevel = claim.publicProofLevel,
       targetBound = claim.publicTargetBound,
       causeIds = claim.causeEvidenceIds.take(6),
@@ -4367,7 +4367,7 @@ object MoveMeaningSurface:
       )
 
   private def concretePassedPawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
-    claim.publicHasCarrier &&
+    claim.publicSurfaceAdmitted &&
       claim.unit != PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
       claim.unit != PositionPlanTechniqueUnit.CounterplayRace &&
       passedPawnAdvanceClaim(claim)
@@ -4897,7 +4897,7 @@ object MoveMeaningClaim:
   ): List[MoveMeaningClaim] =
     claims.map { claim =>
       if claimAllowedOnPublicSurface(verdict, claims, claim) then claim
-      else claim.copy(publicHasCarrier = false, publicProofLevel = "none", publicTargetBound = false)
+      else claim.copy(publicSurfaceAdmitted = false, publicProofLevel = "none", publicTargetBound = false)
     }
 
   private def claimAllowedOnPublicSurface(
@@ -5069,7 +5069,7 @@ object MoveMeaningClaim:
                 other.meaningKind == "PieceRoute" &&
                 currentMoveSurfaceLane(other) &&
                 other.supportLevel == "owned_cause_linked" &&
-                other.publicHasCarrier &&
+                other.publicSurfaceAdmitted &&
                 other.moveUci == claim.moveUci &&
                 other.lineRole == claim.lineRole &&
                 other.causeEvidenceIds.intersect(claim.causeEvidenceIds).nonEmpty
@@ -5082,7 +5082,7 @@ object MoveMeaningClaim:
                 other.role == "PreparesBreakOption" &&
                 currentMoveSurfaceLane(other) &&
                 other.supportLevel == "owned_cause_linked" &&
-                other.publicHasCarrier &&
+                other.publicSurfaceAdmitted &&
                 planPieceActivationClaim(other) &&
                 other.moveUci == claim.moveUci &&
                 other.lineRole == claim.lineRole &&
@@ -5133,7 +5133,7 @@ object MoveMeaningClaim:
         other != claim &&
           (other.meaningKind == "PawnBreakTiming" || other.meaningKind == "CounterplayRace") &&
           other.supportLevel == "owned_cause_linked" &&
-          other.publicHasCarrier &&
+          other.publicSurfaceAdmitted &&
           other.moveUci == claim.moveUci &&
           other.lineRole == claim.lineRole &&
           currentMoveSurfaceLane(other) &&
@@ -5192,7 +5192,7 @@ object MoveMeaningClaim:
       claims.exists(other =>
         other != claim &&
           other.supportLevel == "owned_cause_linked" &&
-          other.publicHasCarrier &&
+          other.publicSurfaceAdmitted &&
           other.moveUci == claim.moveUci &&
           other.lineRole == claim.lineRole &&
           currentMoveSurfaceLane(other) &&
@@ -5240,7 +5240,7 @@ object MoveMeaningClaim:
           claims.exists(other =>
             other != claim &&
               other.supportLevel == "owned_cause_linked" &&
-              other.publicHasCarrier &&
+              other.publicSurfaceAdmitted &&
               other.moveUci == claim.moveUci &&
               other.lineRole == claim.lineRole &&
               currentMoveSurfaceLane(other) &&
@@ -5280,7 +5280,7 @@ object MoveMeaningClaim:
         other.meaningKind == "PieceRoute" &&
           other.surfaceLane == "current_move_owned" &&
           other.supportLevel == "owned_cause_linked" &&
-          other.publicHasCarrier &&
+          other.publicSurfaceAdmitted &&
           routeIdentityKey(other).contains(key)
       )
     )
@@ -5291,7 +5291,7 @@ object MoveMeaningClaim:
             other.meaningKind == "PieceRoute" &&
             other.surfaceLane == "current_move_owned" &&
             other.supportLevel == "owned_cause_linked" &&
-            other.publicHasCarrier &&
+            other.publicSurfaceAdmitted &&
             routeCoreIdentity(other).contains(key)
         )
       )
@@ -5405,7 +5405,7 @@ object MoveMeaningClaim:
             other.meaningKind != "PieceActivity" &&
             other.unit != PositionPlanTechniqueUnit.PlanOptionSet &&
             currentMoveSurfaceLane(other) &&
-            other.publicHasCarrier &&
+            other.publicSurfaceAdmitted &&
             other.sourceEvidenceIds.nonEmpty &&
             specificClaimCoversPlanPurpose(claim, other)
         )
@@ -5414,7 +5414,7 @@ object MoveMeaningClaim:
           claim.causeKinds.contains(RelativeCauseKind.PlanImprovement) &&
           claim.causeEvidenceIds.nonEmpty &&
           claim.objectCarrierReady &&
-          claim.publicHasCarrier &&
+          claim.publicSurfaceAdmitted &&
           !hasSpecificNonPlanCurrentClaim
       claim.meaningKind == "PlanContinuity" &&
         claim.surfaceLane == "current_move_owned" &&
@@ -5425,7 +5425,7 @@ object MoveMeaningClaim:
             other.meaningKind != "PlanContinuity" &&
             other.unit != PositionPlanTechniqueUnit.PlanOptionSet &&
             currentMoveSurfaceLane(other) &&
-            other.publicHasCarrier &&
+            other.publicSurfaceAdmitted &&
             other.sourceEvidenceIds.nonEmpty &&
             specificClaimCoversPlanPurpose(claim, other)
         )
@@ -5616,7 +5616,7 @@ object MoveMeaningClaim:
         best.meaningKind != "TargetPressure" ||
           mergedTargetSquares.nonEmpty ||
           mergedTargetFiles.nonEmpty
-      val mergedPublicHasCarrier =
+      val mergedPublicSurfaceAdmitted =
         mergedPublicDrawableCarrier &&
           mergedObjectCarrierReady &&
           mergedTargetShapeReady &&
@@ -5647,12 +5647,12 @@ object MoveMeaningClaim:
         proofRelationKinds = mergedProofRelationKinds,
         proofRelationDetails = mergedProofRelationDetails,
         proofThreatDrivers = mergedProofThreatDrivers,
-        publicHasCarrier = mergedPublicHasCarrier,
+        publicSurfaceAdmitted = mergedPublicSurfaceAdmitted,
         publicProofLevel =
-          if !mergedPublicHasCarrier then "none"
+          if !mergedPublicSurfaceAdmitted then "none"
           else if publicProofLevelRank(mergedPublicProofLevel) == 0 then "surface_evidence"
           else mergedPublicProofLevel,
-        publicTargetBound = mergedPublicHasCarrier && (list.exists(_.publicTargetBound) || mergedBoardCarriers.exists(MoveMeaningSurface.publicMeaningTargetCarrier))
+        publicTargetBound = mergedPublicSurfaceAdmitted && (list.exists(_.publicTargetBound) || mergedBoardCarriers.exists(MoveMeaningSurface.publicMeaningTargetCarrier))
       )
     )
 
@@ -5966,7 +5966,7 @@ object MoveMeaningClaim:
                 meaningKind != "TargetPressure" ||
                   surfaceTarget.squares.nonEmpty ||
                   surfaceTarget.files.nonEmpty
-              val publicHasCarrier =
+              val publicSurfaceAdmitted =
                 publicDrawableCarrier &&
                   objectCarrierReady &&
                   publicTargetShapeReady &&
@@ -5975,7 +5975,7 @@ object MoveMeaningClaim:
               val terminalProofOwnsClaim =
                 terminalProofDetailOwnsClaimMove(detail, surfaceObjectSignatures, claimMove)
               val publicProofLevel =
-                if !publicHasCarrier then "none"
+                if !publicSurfaceAdmitted then "none"
                 else if terminalProofOwnsClaim then "terminal_proof"
                 else if linkedCauseIds.nonEmpty && support == "owned_cause_linked" then "owned_cause"
                 else if linkedCauseIds.nonEmpty then "cause_linked"
@@ -6058,7 +6058,7 @@ object MoveMeaningClaim:
                 maintainedSquares = detail.maintainedSquares.distinct.sorted,
                 brokenSquares = detail.brokenSquares.distinct.sorted,
                 publicIdeaType = publicIdeaType(detail, meaningKind),
-                publicHasCarrier = publicHasCarrier,
+                publicSurfaceAdmitted = publicSurfaceAdmitted,
                 publicProofLevel = publicProofLevel,
                 publicTargetBound = claimBoardCarriers.exists(MoveMeaningSurface.publicMeaningTargetCarrier)
               )

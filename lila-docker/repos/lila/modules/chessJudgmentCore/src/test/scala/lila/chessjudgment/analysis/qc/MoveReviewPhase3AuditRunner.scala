@@ -3613,7 +3613,7 @@ object MoveReviewPhase3AuditRunner:
           "to" -> carrier.to
         )
       ),
-      "publicHasCarrier" -> claim.publicHasCarrier,
+      "publicHasCarrier" -> claim.publicSurfaceAdmitted,
       "publicProofLevel" -> claim.publicProofLevel,
       "publicTargetBound" -> claim.publicTargetBound,
       "targetSquares" -> claim.targetSquares,
