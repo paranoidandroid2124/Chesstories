@@ -4789,7 +4789,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       moveUci = moveUci,
       causeEvidenceIds = causeEvidenceIds,
       sourceEvidenceIds = sourceEvidenceIds,
-      hasCarrier = effectiveHasCarrier,
+      publicSurfaceAdmitted = effectiveHasCarrier,
       hasBoardCarrier = effectiveHasBoardCarrier,
       proofLevel = effectiveProofLevel
     )

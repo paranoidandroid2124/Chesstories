@@ -798,7 +798,7 @@ final case class PublicMoveMeaningClaimDiagnostic(
     moveUci: String,
     causeEvidenceIds: List[String],
     sourceEvidenceIds: List[String] = Nil,
-    hasCarrier: Boolean,
+    publicSurfaceAdmitted: Boolean,
     hasBoardCarrier: Boolean,
     proofLevel: String,
     boardCarriers: List[MoveMeaningSurfaceBoardCarrier] = Nil,
@@ -809,7 +809,7 @@ final case class PublicMoveMeaningClaimDiagnostic(
     proofRelationKinds: List[RelationFactKind] = Nil,
     proofRelationDetails: List[String] = Nil
 ):
-  def publicSurfaceAdmitted: Boolean = hasCarrier
+  def hasCarrier: Boolean = publicSurfaceAdmitted
 
 final case class CandidateComparisonDiagnostic(
     id: String,
@@ -1287,7 +1287,7 @@ object CandidateComparisonDiagnostic:
       moveUci = claim.moveUci,
       causeEvidenceIds = evidence.causeIds.distinct.sorted,
       sourceEvidenceIds = evidence.sourceIds.distinct.sorted,
-      hasCarrier = evidence.publicSurfaceAdmitted,
+      publicSurfaceAdmitted = evidence.publicSurfaceAdmitted,
       hasBoardCarrier = evidence.boardCarriers.nonEmpty,
       proofLevel = evidence.proofLevel,
       boardCarriers = evidence.boardCarriers,
