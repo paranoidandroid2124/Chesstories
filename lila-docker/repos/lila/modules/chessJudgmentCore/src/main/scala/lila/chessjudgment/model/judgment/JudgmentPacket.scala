@@ -1862,7 +1862,7 @@ case class MoveMeaningSurfaceComparison(
 )
 
 case class MoveMeaningSurfaceEvidence(
-    hasCarrier: Boolean = false,
+    publicSurfaceAdmitted: Boolean = false,
     proofLevel: String = "none",
     targetBound: Boolean = false,
     causeIds: List[String] = Nil,
@@ -1872,7 +1872,7 @@ case class MoveMeaningSurfaceEvidence(
     proofThreatDrivers: List[String] = Nil,
     boardCarriers: List[MoveMeaningSurfaceBoardCarrier] = Nil
 ):
-  def publicSurfaceAdmitted: Boolean = hasCarrier
+  def hasCarrier: Boolean = publicSurfaceAdmitted
 
 case class MoveMeaningSurfaceBoardCarrier(
     role: String,
@@ -4077,7 +4077,7 @@ object MoveMeaningSurface:
 
   private def publicEvidence(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
     MoveMeaningSurfaceEvidence(
-      hasCarrier = claim.publicSurfaceAdmitted,
+      publicSurfaceAdmitted = claim.publicSurfaceAdmitted,
       proofLevel = claim.publicProofLevel,
       targetBound = claim.publicTargetBound,
       causeIds = claim.causeEvidenceIds.take(6),
