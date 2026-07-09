@@ -2119,7 +2119,7 @@ object MoveMeaningSurface:
                     routeDestination.exists(destination => other.target.squares.exists(_.equalsIgnoreCase(destination)))
                   )
               )
-          val surfaceOnlyFallbackCoveredByOwnedSibling =
+          val displaySurfaceEvidenceCoveredByOwnedSibling =
             surface.evidence.proofLevel == "surface_evidence" &&
               surface.evidence.causeIds.isEmpty &&
               surfaceOnlyFallbackCodes(surface.idea.code) &&
@@ -2133,7 +2133,7 @@ object MoveMeaningSurface:
                       surface.target.pieces.intersect(other.target.pieces).nonEmpty
                   )
               )
-          val genericTacticCoveredByOwnedSibling =
+          val displayGenericTacticCoveredByOwnedSibling =
             surfaceEvidenceWithoutProofDetail(surface) &&
               surface.idea.code == "tactical_pressure" &&
               Set("tactical pressure", "recapture recovery")(surface.idea.label) &&
@@ -2146,7 +2146,7 @@ object MoveMeaningSurface:
                       surface.target.pieces.intersect(other.target.pieces).nonEmpty
                   )
               )
-          val checkingPressureCoveredByTactic =
+          val displayCheckingPressureCoveredByTactic =
             surfaceEvidenceWithoutProofDetail(surface) &&
               surface.idea.code == "target_pressure" &&
               checkingPressureSurface(surface) &&
@@ -2159,7 +2159,7 @@ object MoveMeaningSurface:
                       surface.target.files.intersect(other.target.files).nonEmpty
                   )
               )
-          val destinationPressureCoveredByRoute =
+          val displayDestinationPressureCoveredByRoute =
             surfaceEvidenceWithoutProofDetail(surface) &&
               surface.idea.code == "target_pressure" &&
               surface.evidence.proofRelationKinds.isEmpty &&
@@ -2191,9 +2191,9 @@ object MoveMeaningSurface:
                 other.idea.code == "material_gain" ||
                 other.idea.code == "defensive_resource"
             )
-          surfaceOnlyFallbackCoveredByOwnedSibling ||
-          genericTacticCoveredByOwnedSibling ||
-          checkingPressureCoveredByTactic ||
+          displaySurfaceEvidenceCoveredByOwnedSibling ||
+          displayGenericTacticCoveredByOwnedSibling ||
+          displayCheckingPressureCoveredByTactic ||
           pawnStructureAdvanceIdea(surface.idea.code) && breakClaimWithoutMoveCarrier(surface) && sameMoveConcreteCarrierExists ||
           surfaceEvidenceWithoutProofDetail(surface) &&
             surface.idea.code == "target_pressure" &&
@@ -2205,7 +2205,7 @@ object MoveMeaningSurface:
                 surface.target.pieces.intersect(other.target.pieces).nonEmpty ||
                 surface.target.files.intersect(other.target.files).nonEmpty
             ) ||
-          destinationPressureCoveredByRoute ||
+          displayDestinationPressureCoveredByRoute ||
           surfaceEvidenceWithoutProofDetail(surface) &&
             surface.idea.code == "target_pressure" && hasRouteSibling &&
             (targetPressureOnlyMarksMoveDestination(surface) || unprovedBroadTargetPressure(surface))
@@ -2356,7 +2356,7 @@ object MoveMeaningSurface:
               (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to, carrier.semanticRole)
             )
             .take(4)
-        val routeOnlyPublicChain =
+        val displayRouteOnlyChainWithoutPurpose =
           publicSemantics.nonEmpty &&
             publicSemantics.forall(surface =>
               routeCarrierSurface(surface) &&
@@ -2367,7 +2367,7 @@ object MoveMeaningSurface:
             consequenceCarriers.isEmpty &&
             publicTerminal.isEmpty &&
             publicTechnique.isEmpty
-        if publicSemantics.isEmpty || routeOnlyPublicChain then Nil
+        if publicSemantics.isEmpty || displayRouteOnlyChainWithoutPurpose then Nil
         else
           val publicPv = publicSemantics
             .flatMap(_.comparison.toList.flatMap(_.moves))
