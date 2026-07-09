@@ -1985,6 +1985,7 @@ object PositionPlanTechniqueProjection:
   ): List[RelativeCauseProofRole] =
     cause.proof.toList
       .flatMap(_.sections)
+      .filter(_.hasAnyEvidence)
       .map(_.role)
       .filter(positionPlanTechniqueAdmissibleDetailProofRole)
       .distinct

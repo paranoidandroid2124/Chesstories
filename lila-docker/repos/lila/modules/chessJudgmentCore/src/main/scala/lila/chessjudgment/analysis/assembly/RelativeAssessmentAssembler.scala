@@ -552,8 +552,7 @@ object RelativeAssessmentAssembler:
           )
           val retainedProof =
             Some(proof).filter(proof => (attribution.directProofEligible && proof.hasRawTypedDepth) || proof.hasRawContextSupport)
-          val causeSupportRefs =
-            (supportRefs ++ proofRecords.directProof.map(_.ref)).distinctBy(_.id)
+          val causeSupportRefs = supportRefs
           Option.when(!attribution.contextOnly || proof.hasRawDirectProof) {
             val cause =
               RelativeCauseFact(

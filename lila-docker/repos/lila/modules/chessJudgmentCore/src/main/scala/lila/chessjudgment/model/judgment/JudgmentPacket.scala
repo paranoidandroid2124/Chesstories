@@ -4191,7 +4191,9 @@ object MoveMeaningSurface:
   private def createdPawnTensionClaim(claim: MoveMeaningClaim): Boolean =
     claim.boardCarriers.exists(carrier =>
       carrier.role == "target" && carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("created-tension:")
-    )
+    ) ||
+      claim.role == "PreparesBreak" &&
+        claim.breakIdentityParts.exists(part => part.startsWith("tensionSquare:") || part.startsWith("tensionEdge:"))
 
   private def resolvedPawnTensionClaim(claim: MoveMeaningClaim): Boolean =
     claim.role == "ReleasesPawnTension" ||

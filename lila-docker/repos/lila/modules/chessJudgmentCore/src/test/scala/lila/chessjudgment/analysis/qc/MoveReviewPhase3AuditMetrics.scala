@@ -199,7 +199,9 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "rubricInputGapExpectedQuestionIds" -> rubricInputGapExpectedQuestionIds,
       "missingExpectedQuestionIds" -> missingExpectedQuestionIds,
       "missingExpectedQuestionIdCount" -> missingExpectedQuestionIds.size,
-      "expectedQuestionCoverageComplete" -> (missingExpectedQuestionIds.isEmpty && unmeasuredExpectedQuestionIds.isEmpty),
+      "expectedQuestionCoverageComplete" -> (
+        expectedQuestions.nonEmpty && missingExpectedQuestionIds.isEmpty && unmeasuredExpectedQuestionIds.isEmpty
+      ),
       "missingQuestionIdSlotCount" -> slotRows.count(row => (row \ "questionId").asOpt[String].isEmpty),
       "missingQuestionIdSlotIds" -> slotRows
         .filter(row => (row \ "questionId").asOpt[String].isEmpty)
@@ -274,7 +276,9 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "rubricInputGapExpectedQuestionIds" -> rubricInputGapExpectedQuestionIds,
       "missingExpectedQuestionIds" -> missingExpectedQuestionIds,
       "missingExpectedQuestionIdCount" -> missingExpectedQuestionIds.size,
-      "expectedQuestionCoverageComplete" -> (missingExpectedQuestionIds.isEmpty && unmeasuredExpectedQuestionIds.isEmpty),
+      "expectedQuestionCoverageComplete" -> (
+        expectedQuestions.nonEmpty && missingExpectedQuestionIds.isEmpty && unmeasuredExpectedQuestionIds.isEmpty
+      ),
       "missingQuestionIdSlotCount" -> slotRows.count(row => (row \ "questionId").asOpt[String].isEmpty),
       "missingQuestionIdSlotIds" -> slotRows
         .filter(row => (row \ "questionId").asOpt[String].isEmpty)
