@@ -190,7 +190,7 @@ object ExpectedEvidenceLossPolicy:
               rootMove == normalizeMove(payload.referenceLine.rootMove) &&
               StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(payload, packet.evidenceGraph.records) &&
               packet.moveJudgmentView.exists(view =>
-                MoveMeaningSurface.publicIdeaChainSeedClaimsWithEvidence(view).exists { case (claim, evidence) =>
+                MoveMeaningSurface.publicIdeaChainSurfaceClaimsWithEvidence(view).exists { case (claim, evidence) =>
                   normalizeMove(claim.moveUci) == rootMove &&
                     claim.lineRole == "candidate" &&
                     evidence.publicSurfaceAdmitted &&
@@ -1182,7 +1182,7 @@ object CandidateComparisonDiagnostic:
         .distinct
     val publicMoveMeaningClaims =
       packet.moveJudgmentView.toList
-        .flatMap(MoveMeaningSurface.publicIdeaChainSeedClaimsWithEvidence)
+        .flatMap(MoveMeaningSurface.publicIdeaChainSurfaceClaimsWithEvidence)
         .filter((claim, _) => comparisonMoveMeaningClaimSet.contains(claim))
     val publicMoveMeaningClaimDiagnostics =
       publicMoveMeaningClaims
