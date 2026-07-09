@@ -2361,7 +2361,7 @@ object MoveMeaningSurface:
             consequenceCarriers.isEmpty &&
             terminal.isEmpty &&
             technique.isEmpty
-        if routeOnlyPublicChain then Nil
+        if publicSemantics.isEmpty || routeOnlyPublicChain then Nil
         else
           val relationKinds = chainSurfaces.flatMap(publicSurfaceRelationKinds).distinct.sortBy(_.toString)
           List(
