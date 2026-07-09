@@ -122,7 +122,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const moveQuality = labelCode(chain.move_quality || payload?.verdict?.move_quality);
   const proofLevels = uniqueLabels(chain.proof_levels.map(labelCode)).slice(0, 4);
   const ideas = uniqueLabels((chain.move_semantics || []).map(semantic => codeLabel(semantic.idea) || labelCode(semantic.idea_type))).slice(0, 5);
-  const carriers = carrierLabels(chain.carriers).slice(0, 5);
+  const carriers = carrierLabels([...(chain.carriers || []), ...(chain.function_carriers || [])]).slice(0, 6);
   const consequences = carrierLabels(chain.consequence_carriers).slice(0, 6);
   const terminal = uniqueLabels(chain.terminal_consequences.map(codeLabel)).slice(0, 4);
   const technique = techniqueLabels(chain.technique).slice(0, 4);
@@ -135,7 +135,7 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
     {
       key: 'opening-idea',
       title: 'Idea chain',
-      body: chainItems.length ? joinHuman(chainItems) : ideas.length ? joinHuman(ideas) : [subjectLabel(chain.subject), currentMove].filter(Boolean).join(' / '),
+      body: chainItems.length ? joinHuman(chainItems) : [subjectLabel(chain.subject), currentMove].filter(Boolean).join(' / '),
       pending: false,
       items: [`Move quality: ${moveQuality || 'available'}`, ...proofLevels.map(level => `Proof: ${level}`), ...ideas.map(idea => `Idea: ${idea}`)],
       tone,
