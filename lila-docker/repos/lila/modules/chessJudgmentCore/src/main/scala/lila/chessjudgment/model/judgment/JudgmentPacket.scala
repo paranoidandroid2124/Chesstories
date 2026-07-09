@@ -2197,6 +2197,10 @@ object MoveMeaningSurface:
           displaySurfaceEvidenceCoveredByOwnedSibling ||
           displayGenericTacticCoveredByOwnedSibling ||
           displayCheckingPressureCoveredByTactic ||
+          displayOnlySurfaceEvidence(surface) &&
+            surface.idea.code == "target_pressure" &&
+            unprovedBroadTargetPressure(surface) &&
+            sameMoveConcreteCarrierExists ||
           pawnStructureAdvanceIdea(surface.idea.code) && breakClaimWithoutMoveCarrier(surface) && sameMoveConcreteCarrierExists ||
           displayOnlySurfaceEvidence(surface) &&
             surface.idea.code == "target_pressure" &&
@@ -2210,7 +2214,8 @@ object MoveMeaningSurface:
             ) ||
           displayDestinationPressureCoveredByRoute ||
           displayOnlySurfaceEvidence(surface) &&
-            surface.idea.code == "target_pressure" && hasRouteSibling &&
+            surface.idea.code == "target_pressure" &&
+            (hasRouteSibling || concreteCounterplayControlSiblings.nonEmpty) &&
             (targetPressureOnlyMarksMoveDestination(surface) || unprovedBroadTargetPressure(surface))
         }
       val chainSurfaces =
@@ -2549,6 +2554,7 @@ object MoveMeaningSurface:
     val breakContextSurface =
       surface.idea.code match
         case "pawn_break_timing" | "pawn_tension_creation" | "pawn_tension_resolution" | "counterplay_race" => true
+        case "counterplay_control" => true
         case "plan_continuity" => surfaceHasCarrierRole(surface, "route_destination")
         case _                 => false
     publicPurposeCarrier(carrier) &&
@@ -2863,7 +2869,10 @@ object MoveMeaningSurface:
     val directFunctionTarget =
       surfaceHasCarrierRole(surface, "file_pressure") ||
         surfaceHasCarrierRole(surface, "route_destination") ||
-        surfaceHasCarrierRole(surface, "line_unlock_file")
+        surfaceHasCarrierRole(surface, "line_unlock_file") ||
+        surfaceHasCarrierRole(surface, "counter_break_file") ||
+        surfaceHasCarrierRole(surface, "resource_contest_file") ||
+        surfaceHasCarrierRole(surface, "resource_contest_square")
     val directActor =
       carriers.exists(carrier => carrier.role == "actor" && (carrier.kind == "Piece" || carrier.kind == "Square")) ||
         directFunctionTarget ||
@@ -2973,35 +2982,47 @@ object MoveMeaningSurface:
       surface.idea.code == "piece_route"
 
   private def counterplayControlHasConcreteCarrier(surface: MoveMeaningSurface): Boolean =
-    surface.evidence.proofLevel == "owned_cause" &&
-      (
+    val concreteFileCarrier =
+      surface.evidence.proofLevel != "none" &&
         surface.evidence.boardCarriers.exists(carrier =>
-          val value = carrier.value.toLowerCase
           carrier.role == "target" &&
-            carrier.kind == "PlanSubject" &&
-            (
-              value.startsWith("material-capture:") ||
-                value.startsWith("material-recapture:") ||
-                value.startsWith("passed-pawn:") ||
-                value.contains(":advance-restricted") ||
-                value.contains(":color-complex-safe")
+            carrier.kind == "File" &&
+            carrier.semanticRole.exists(role =>
+              role.equalsIgnoreCase("counter_break_file") ||
+                role.equalsIgnoreCase("resource_contest_file")
             )
-        ) ||
-          (
-            surface.target.files.nonEmpty &&
-              surface.evidence.boardCarriers.exists(carrier =>
-                carrier.role == "target" &&
-                  carrier.kind == "File" &&
-                  surface.target.files.exists(_.equalsIgnoreCase(carrier.value))
-              ) &&
-              surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move")
+        ) &&
+        surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move")
+    concreteFileCarrier ||
+      surface.evidence.proofLevel == "owned_cause" &&
+        (
+          surface.evidence.boardCarriers.exists(carrier =>
+            val value = carrier.value.toLowerCase
+            carrier.role == "target" &&
+              carrier.kind == "PlanSubject" &&
+              (
+                value.startsWith("material-capture:") ||
+                  value.startsWith("material-recapture:") ||
+                  value.startsWith("passed-pawn:") ||
+                  value.contains(":advance-restricted") ||
+                  value.contains(":color-complex-safe")
+              )
           ) ||
+            (
+              surface.target.files.nonEmpty &&
+                surface.evidence.boardCarriers.exists(carrier =>
+                  carrier.role == "target" &&
+                    carrier.kind == "File" &&
+                    surface.target.files.exists(_.equalsIgnoreCase(carrier.value))
+                ) &&
+                surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move")
+            ) ||
           (
             surface.target.squares.nonEmpty &&
               surface.target.pieces.nonEmpty &&
               surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move")
           )
-      )
+        )
 
   private def targetPressureWeakCarrier(surface: MoveMeaningSurface): Boolean =
     surface.evidence.boardCarriers.exists(carrier =>
@@ -8002,6 +8023,7 @@ object MoveMeaningClaim:
   private def resourceDetailHasConcreteCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.resourceContestSquares.nonEmpty ||
       detail.resourceContestFiles.nonEmpty ||
+      detail.counterBreakFiles.exists(_.trim.nonEmpty) ||
       detail.structuralPurposeSubjects.exists(concreteSubject)
 
   private def counterplayRaceMeaningReady(

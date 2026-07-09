@@ -447,16 +447,19 @@ object PositionPlanTechniqueProjection:
       val units = positionPlanTechniqueUnits(payload, anchors)
       val objectBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, refs)
       val evidenceIds = refs.map(_.id).distinct.sorted
+      val claimCarrier = positionPlanTechniqueDirectClaimCarrier(ref.scope, evidenceIds.toSet, claims)
       val candidateRelativeCauseEvidenceIds =
         relativeCauseEvidenceIdsFor(
           graph,
           evidenceIds.toSet,
-          frameLine = ref.line,
+          frameLine = ref.line.orElse(claimCarrier.flatMap(_.line)),
           axisKeys = payload.axisDetails.map(_.stableKey).toSet
         )
       val semanticDetails =
         positionPlanTechniqueEnrichedDetails(
-          mechanismPlanTechniqueDetails(payload, units, anchors, graph, refs),
+          mechanismPlanTechniqueDetails(payload, units, anchors, graph, refs).map(
+            positionPlanTechniqueWithDirectClaimCarrier(_, claimCarrier)
+          ),
           graph,
           (evidenceIds ++ candidateRelativeCauseEvidenceIds).distinct.sorted
         )
@@ -470,8 +473,11 @@ object PositionPlanTechniqueProjection:
           id = s"position-plan-technique:${ref.id}",
           units = frameUnits,
           position = ref.position,
-          line = ref.line,
-          moveUci = ref.line.map(_.rootMove).filter(_.nonEmpty),
+          line = ref.line.orElse(claimCarrier.flatMap(_.line)),
+          moveUci = ref.line
+            .map(_.rootMove)
+            .orElse(claimCarrier.flatMap(_.move))
+            .filter(_.nonEmpty),
           scope = ref.scope,
           mechanismKinds = List(payload.kind),
           strategicAxisKeys = payload.axisDetails.map(_.stableKey).distinct.sorted,
@@ -3561,6 +3567,45 @@ object PositionPlanTechniqueProjection:
       .map(_.id)
       .distinct
       .sorted
+
+  private final case class PositionPlanTechniqueDirectClaimCarrier(
+      line: Option[LineNodeRef],
+      move: Option[String],
+      evidenceIds: List[String]
+  )
+
+  private def positionPlanTechniqueDirectClaimCarrier(
+      scope: EvidenceScope,
+      evidenceIds: Set[String],
+      claims: List[ClaimSeed]
+  ): Option[PositionPlanTechniqueDirectClaimCarrier] =
+    if scope != EvidenceScope.AfterPlayedPosition && scope != EvidenceScope.AfterReferencePosition then None
+    else
+      val matchingClaims = claims.filter(_.evidence.exists(ref => evidenceIds.contains(ref.id)))
+      val moves =
+        matchingClaims
+          .flatMap(claim => claim.subjectMove.orElse(claim.primaryLine.map(_.rootMove)))
+          .map(_.trim.toLowerCase)
+          .filter(_.nonEmpty)
+          .distinct
+      Option.when(moves.size == 1)(
+        PositionPlanTechniqueDirectClaimCarrier(
+          line = matchingClaims.flatMap(_.primaryLine).distinct.headOption,
+          move = moves.headOption,
+          evidenceIds = matchingClaims.flatMap(_.evidence.map(_.id)).distinct.sorted
+        )
+      )
+
+  private def positionPlanTechniqueWithDirectClaimCarrier(
+      detail: PositionPlanTechniqueSemanticDetail,
+      carrier: Option[PositionPlanTechniqueDirectClaimCarrier]
+  ): PositionPlanTechniqueSemanticDetail =
+    carrier.fold(detail)(claimCarrier =>
+      detail.copy(
+        structuralRouteMove = detail.structuralRouteMove.orElse(claimCarrier.move),
+        sourceEvidenceIds = (detail.sourceEvidenceIds ++ claimCarrier.evidenceIds).distinct.sorted
+      )
+    )
 
   private def positionPlanTechniqueRelation(
       ideaVerdict: Option[IdeaVerdictSplit],
