@@ -3948,7 +3948,6 @@ object MoveMeaningSurface:
         case ("pawn_break_timing", _) if ownedTensionBreakClaim(claim) && createdTensionCarrier => createsPawnTensionLabel
         case ("pawn_break_timing", _) if ownedTensionBreakClaim(claim) && (resolvedTensionCarrier || claim.role == "ReleasesPawnTension") => resolvesPawnTensionLabel
         case ("pawn_break_timing", _) if flankPawnAdvanceSurface || flankPressurePawnMove => flankPawnAdvanceLabel
-        case ("pawn_break_timing", _) if kingPressureCarrier => "king safety pressure"
         case ("pawn_break_timing", _) if MoveMeaningClaim.breakPreparationPlanClaim(claim) => breakPreparationLabel
         case ("pawn_break_timing", _) if MoveMeaningClaim.directBreakPlanClaim(claim) => directBreakPlanLabel
         case ("pawn_break_timing", _) if MoveMeaningClaim.planPieceActivationClaim(claim) && mobilityGainCarrier =>
