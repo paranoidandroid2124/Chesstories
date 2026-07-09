@@ -123,8 +123,8 @@ export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): C
   const proofLevels = uniqueLabels(chain.proof_levels.map(labelCode)).slice(0, 4);
   const ideas = uniqueLabels((chain.move_semantics || []).map(semantic => codeLabel(semantic.idea) || labelCode(semantic.idea_type))).slice(0, 5);
   const directCarriers = carrierDisplayLabels(chain.carriers || []).slice(0, 4);
-  const functionCarriers = carrierDisplayLabels(chain.function_carriers || []).slice(0, 6);
-  const carriers = uniqueLabels([...directCarriers, ...functionCarriers]).slice(0, 6);
+  const purposeCarrierLabels = carrierDisplayLabels(chain.function_carriers || []).slice(0, 6);
+  const carriers = uniqueLabels([...directCarriers, ...purposeCarrierLabels]).slice(0, 6);
   const consequences = carrierDisplayLabels(chain.consequence_carriers).slice(0, 6);
   const terminal = uniqueLabels(chain.terminal_consequences.map(codeLabel)).slice(0, 4);
   const technique = techniqueLabels(chain.technique).slice(0, 4);

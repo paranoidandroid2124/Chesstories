@@ -1706,7 +1706,7 @@ object MoveMeaningSurfaceTarget:
   def fromClaim(claim: MoveMeaningClaim): MoveMeaningSurfaceTarget =
     val targetCarriers = claim.boardCarriers.filter(MoveMeaningSurface.publicMeaningTargetCarrier)
     val structuredCarriers =
-      targetCarriers.nonEmpty || claim.boardCarriers.exists(MoveMeaningSurface.publicFunctionCarrier)
+      targetCarriers.nonEmpty || claim.boardCarriers.exists(MoveMeaningSurface.publicPurposeCarrier)
     MoveMeaningSurfaceTarget(
       squares =
         (if structuredCarriers then targetCarriers.filter(_.kind == "Square").map(_.value) else claim.targetSquares)
@@ -2345,12 +2345,12 @@ object MoveMeaningSurface:
               (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to, carrier.semanticRole)
             )
             .take(2)
-        val functionCarriers =
+        val purposeCarriers =
           publicSemantics
             .flatMap(surface =>
               surface.evidence.boardCarriers
-                .filter(carrier => carrier.role == "target" && publicFunctionCarrierForSurface(surface, carrier))
-                .sortBy(publicFunctionCarrierSortKey)
+                .filter(carrier => carrier.role == "target" && publicPurposeCarrierForSurface(surface, carrier))
+                .sortBy(publicPurposeCarrierSortKey)
                 .take(2)
                 .map(carrier => carrier -> surface)
             )
@@ -2392,7 +2392,7 @@ object MoveMeaningSurface:
               "threat_drivers" -> chainSurfaces.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
               "carriers" -> directCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "pv" -> pv,
-              "function_carriers" -> functionCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
+              "function_carriers" -> purposeCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "terminal_consequences" -> terminal.map(publicCodeJson),
               "technique" -> technique.map(publicEndgameTechniqueJson),
@@ -2509,7 +2509,7 @@ object MoveMeaningSurface:
   private def surfaceHasCarrierRole(surface: MoveMeaningSurface, role: String): Boolean =
     surface.evidence.boardCarriers.exists(_.semanticRole.exists(_.equalsIgnoreCase(role)))
 
-  private val publicFunctionCarrierSemanticRoles = Set(
+  private val publicPurposeCarrierSemanticRoles = Set(
     "route_destination",
     "pawn_advance_destination",
     "flank_pawn_destination",
@@ -2527,10 +2527,10 @@ object MoveMeaningSurface:
     "resource_contest_square"
   )
 
-  private[judgment] def publicFunctionCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
-    carrier.semanticRole.exists(role => publicFunctionCarrierSemanticRoles(role.toLowerCase))
+  private[judgment] def publicPurposeCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
+    carrier.semanticRole.exists(role => publicPurposeCarrierSemanticRoles(role.toLowerCase))
 
-  private def publicFunctionCarrierForSurface(surface: MoveMeaningSurface, carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
+  private def publicPurposeCarrierForSurface(surface: MoveMeaningSurface, carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
     val role = carrier.semanticRole.map(_.toLowerCase).getOrElse("")
     val breakContextRole = role == "break_file" || role == "counter_break_file" || role == "tension_square"
     val breakContextSurface =
@@ -2538,11 +2538,11 @@ object MoveMeaningSurface:
         case "pawn_break_timing" | "pawn_tension_creation" | "pawn_tension_resolution" | "counterplay_race" => true
         case "plan_continuity" => surfaceHasCarrierRole(surface, "route_destination")
         case _                 => false
-    publicFunctionCarrier(carrier) &&
+    publicPurposeCarrier(carrier) &&
       (!breakContextRole || breakContextSurface)
 
   private[judgment] def publicMeaningTargetCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
-    carrier.role == "target" && !publicFunctionCarrier(carrier)
+    carrier.role == "target" && !publicPurposeCarrier(carrier)
 
   private def surfaceEvidenceWithoutProofDetail(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel == "surface_evidence" &&
@@ -2856,7 +2856,7 @@ object MoveMeaningSurface:
       directActor &&
       carriers.exists(carrier =>
         publicIdeaChainConsequenceCarrierRole(carrier) &&
-          (publicIdeaChainConsequenceCarrier(carrier) || publicFunctionCarrier(carrier))
+          (publicIdeaChainConsequenceCarrier(carrier) || publicPurposeCarrier(carrier))
       )
 
   private def publicIdeaChainSemanticSortKey(surface: MoveMeaningSurface): (Int, Int, Int, Int, String, String) =
@@ -3065,7 +3065,7 @@ object MoveMeaningSurface:
         true
 
   private def publicIdeaChainConsequenceCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
-    !publicFunctionCarrier(carrier) &&
+    !publicPurposeCarrier(carrier) &&
       (carrier.kind match
         case "PlanSubject" => !carrier.value.contains(",")
         case "Pawn" | "Square" | "File" => true
@@ -3127,7 +3127,7 @@ object MoveMeaningSurface:
         case _                                                                                          => 2
     (rank, roleRank, carrier.kind, carrier.value)
 
-  private def publicFunctionCarrierSortKey(carrier: MoveMeaningSurfaceBoardCarrier): (Int, String, String) =
+  private def publicPurposeCarrierSortKey(carrier: MoveMeaningSurfaceBoardCarrier): (Int, String, String) =
     val semanticRole = carrier.semanticRole.map(_.toLowerCase).getOrElse("")
     val value = carrier.value.toLowerCase
     val rank =
@@ -7873,7 +7873,7 @@ object MoveMeaningClaim:
       claim.targetSquares.nonEmpty ||
         claim.boardCarriers.exists(carrier =>
           MoveMeaningSurface.publicMeaningTargetCarrier(carrier) ||
-            MoveMeaningSurface.publicFunctionCarrier(carrier)
+            MoveMeaningSurface.publicPurposeCarrier(carrier)
         )
     claim.unit == PositionPlanTechniqueUnit.SpacePreventionResourceDenial &&
       claim.causeKinds.contains(RelativeCauseKind.OpponentRestriction) &&
