@@ -2239,12 +2239,14 @@ object MoveMeaningSurface:
         val publicSemanticConsequenceCarriers = publicCarrierPairs.filter((carrier, surface) =>
           publicIdeaChainConsequenceCarrierRole(carrier) &&
             publicIdeaChainConsequenceCarrier(carrier) &&
+            !publicCarrierCoveredByPurpose(carrier, displaySemantics) &&
             publicIdeaChainCarrierMatchesSurfaceTarget(carrier, surface)
         )
         val semanticTargetCarriers =
           displaySemantics.flatMap(surface =>
             surface.evidence.boardCarriers
               .filter(carrier => publicMeaningTargetCarrier(carrier) && publicIdeaChainConsequenceCarrier(carrier))
+              .filterNot(publicCarrierCoveredByPurpose(_, displaySemantics))
               .filter(publicIdeaChainCarrierMatchesSurfaceTarget(_, surface))
               .sortBy(publicIdeaChainConsequenceCarrierSortKey)
               .take(1)
@@ -3091,6 +3093,15 @@ object MoveMeaningSurface:
         case "Pawn" | "Square" | "File" => true
         case _                           => false
       )
+
+  private def publicCarrierCoveredByPurpose(carrier: MoveMeaningSurfaceBoardCarrier, surfaces: List[MoveMeaningSurface]): Boolean =
+    surfaces.exists(surface =>
+      surface.evidence.boardCarriers.exists(other =>
+        publicPurposeCarrierForSurface(surface, other) &&
+          other.kind == carrier.kind &&
+          other.value.equalsIgnoreCase(carrier.value)
+      )
+    )
 
   private def publicIdeaChainCarrierMatchesSurfaceTarget(
       carrier: MoveMeaningSurfaceBoardCarrier,
@@ -6175,11 +6186,25 @@ object MoveMeaningClaim:
       .flatMap(id => evidenceGraph.byId.get(id))
       .flatMap(relationPayloads(_, Set.empty))
       .flatMap(payload =>
-        payload.participants.filterNot(_.participantRole == RelationParticipantRole.Other).flatMap(participant =>
-          val role = relationParticipantCarrierRole(participant.participantRole)
-          publicSquareCarrier(role, participant.square.key) ++
-            participant.role.toList.flatMap(piece => publicPieceCarrier(role, piece.name))
-        )
+        val targetAtoms = payload.proofAtoms.collect {
+          case atom if atom.role == RelationProofAtomRole.Target => atom.square
+        }.flatten
+        val focusAtoms = payload.proofAtoms.collect {
+          case atom if atom.role == RelationProofAtomRole.Focus => atom.square
+        }.flatten
+        val atomCarriers =
+          targetAtoms.flatMap(square => publicSquareCarrier("target", square.key, Some("relation_target"))) ++
+            (if targetAtoms.nonEmpty then Nil else focusAtoms.flatMap(square => publicSquareCarrier("target", square.key, Some("relation_focus"))))
+        val participantCarriers =
+          payload.participants
+            .filterNot(_.participantRole == RelationParticipantRole.Other)
+            .filter(participant => atomCarriers.isEmpty || participant.participantRole != RelationParticipantRole.Target)
+            .flatMap(participant =>
+              val role = relationParticipantCarrierRole(participant.participantRole)
+              publicSquareCarrier(role, participant.square.key) ++
+                participant.role.toList.flatMap(piece => publicPieceCarrier(role, piece.name))
+            )
+        atomCarriers ++ participantCarriers
       )
       .distinct
       .take(8)
