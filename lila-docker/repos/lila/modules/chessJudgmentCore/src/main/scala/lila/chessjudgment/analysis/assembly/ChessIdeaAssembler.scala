@@ -1,5 +1,7 @@
 package lila.chessjudgment.analysis.assembly
 
+import chess.Pawn
+import chess.format.{ Fen, Uci }
 import lila.chessjudgment.analysis.evaluation.JudgmentThresholds
 import lila.chessjudgment.analysis.policy.ClaimTruthPolicy
 import lila.chessjudgment.model.judgment.*
@@ -161,21 +163,23 @@ object ChessIdeaAssembler:
   ): List[ChessIdea] =
     context.evidenceGraph.records.flatMap {
       case EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents)
-          if payload.canAnchorPawnStructureIdea && lineBoundLongTermMechanism(ref) =>
+          if payload.canAnchorPawnStructureIdea =>
+        val primaryLine = pawnStructureMechanismPrimaryLine(context, ref)
         val evidence =
           longTermIdeaEvidence(
             ref :: parents ++
-              ref.line.toList.flatMap(lineLayerRefs(context, _)) ++
+              pawnStructureMechanismTransitionEvidence(context, ref) ++
+              primaryLine.toList.flatMap(lineLayerRefs(context, _)) ++
               recordsForPosition(context, EvidenceLayer.Board, ref.position)
           )
-        Option.when(evidence.nonEmpty) {
+        Option.when(primaryLine.nonEmpty && evidence.nonEmpty) {
           ChessIdeaBuilder.fromEvidence(
             id = allocator.evidenceId(s"idea:pawn-structure-mechanism:${allocator.key(ref.id)}"),
             family = ChessIdeaFamily.PawnStructure,
-            subject = ref.line.map(_.role.subject).getOrElse(IdeaSubject.Position),
+            subject = primaryLine.map(_.role.subject).getOrElse(IdeaSubject.Position),
             primaryPosition = ref.position,
-            primaryLine = ref.line,
-            moveUci = ref.line.map(_.rootMove),
+            primaryLine = primaryLine,
+            moveUci = primaryLine.map(_.rootMove),
             evidence = evidence,
             scope = ref.scope,
             confidence = ref.confidence
@@ -556,6 +560,42 @@ object ChessIdeaAssembler:
 
   private def lineBoundLongTermMechanism(ref: EvidenceRef): Boolean =
     ref.line.exists(_.role == LineNodeRole.Played)
+
+  private def pawnStructureMechanismPrimaryLine(
+      context: JudgmentAssemblyContext,
+      ref: EvidenceRef
+  ): Option[LineNodeRef] =
+    ref.line.filter(_.role == LineNodeRole.Played).orElse {
+      Option.when(playedPawnStructureTransition(context, ref).nonEmpty)(
+        context.line(LineNodeRole.Played).map(_.ref)
+      ).flatten
+    }
+
+  private def pawnStructureMechanismTransitionEvidence(
+      context: JudgmentAssemblyContext,
+      ref: EvidenceRef
+  ): List[EvidenceRef] =
+    playedPawnStructureTransition(context, ref).map(_.evidence).toList
+
+  private def playedPawnStructureTransition(
+      context: JudgmentAssemblyContext,
+      ref: EvidenceRef
+  ): Option[MoveTransitionEdge] =
+    context.playedTransition
+      .filter(edge =>
+        ref.scope == EvidenceScope.AfterPlayedPosition &&
+          edge.to == ref.position &&
+          playedMoveIsPawnMove(edge)
+      )
+
+  private def playedMoveIsPawnMove(edge: MoveTransitionEdge): Boolean =
+    Fen.read(chess.variant.Standard, Fen.Full(edge.from.fen))
+      .flatMap(position =>
+        Uci(edge.moveUci)
+          .collect { case move: Uci.Move => move }
+          .flatMap(move => position.board.roleAt(move.orig))
+      )
+      .contains(Pawn)
 
   private def openingIdeas(
       context: JudgmentAssemblyContext,
