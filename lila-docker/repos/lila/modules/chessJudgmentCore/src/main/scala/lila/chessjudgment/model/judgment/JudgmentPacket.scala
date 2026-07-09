@@ -3913,9 +3913,6 @@ object MoveMeaningSurface:
     val ideaLabel =
       (idea, claim.label.map(_.trim).getOrElse("")) match
         case ("defensive_resource", _) => defensiveResourceLabel
-        case ("target_pressure", _) if sameFilePassedPawnMove => passedPawnAdvanceLabel
-        case ("target_pressure", _) if sameFilePawnAdvanceWithPassedPawnCarrier => passedPawnAdvanceLabel
-        case ("target_pressure", _) if passedPawnAdvanceClaim(claim) => passedPawnAdvanceLabel
         case ("target_pressure", _) if weakPawnTargetClaim => weakPawnTargetLabel
         case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
         case ("target_pressure", _) if targetPressureReleaseClaim => targetPressureReleaseLabel
