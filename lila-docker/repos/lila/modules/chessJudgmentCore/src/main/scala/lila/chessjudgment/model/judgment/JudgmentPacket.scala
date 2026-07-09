@@ -2032,9 +2032,9 @@ object MoveMeaningSurface:
 
   private def publicIdeaChains(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[JsObject] =
     val admittedSubjects = publicIdeaChainAdmittedSubjects(verdict, surfaces).toSet
-    publicIdeaChainSubjectSpecs(verdict).flatMap { (subject, subjectMove, pvRolePrefix) =>
+    publicIdeaChainSubjectSpecs(verdict, surfaces).flatMap { (subject, subjectMove, pvRolePrefix) =>
       val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && surfaceEligibleForPublicChain(surface))
-      val rootMoveRole = if subject == "reference_move" then "best_move" else "played_move"
+      val rootMoveRole = publicIdeaChainRootMoveRole(subject)
       val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
       val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
       val strongChainProof =
@@ -2743,15 +2743,30 @@ object MoveMeaningSurface:
       surfaces.exists(other => sameSurfaceMove(other) && publicMeaningSurface(other))
 
   private def publicIdeaChainAdmittedSubjects(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[String] =
-    publicIdeaChainSubjectSpecs(verdict).collect {
+    publicIdeaChainSubjectSpecs(verdict, surfaces).collect {
       case (subject, subjectMove, pvRolePrefix) if publicIdeaChainSubjectAdmitted(subject, subjectMove, pvRolePrefix, surfaces) =>
         subject
     }
 
-  private def publicIdeaChainSubjectSpecs(verdict: MoveMeaningSurfaceVerdict): List[(String, String, String)] =
+  private def publicIdeaChainSubjectSpecs(
+      verdict: MoveMeaningSurfaceVerdict,
+      surfaces: List[MoveMeaningSurface]
+  ): List[(String, String, String)] =
     val problemMove = verdict.moveQuality == "bad" || verdict.verdictCode == "playable_loss"
-    if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
-    else List(("played_move", verdict.playedMove, "played_pv_"))
+    val rootSubjects =
+      if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
+      else List(("played_move", verdict.playedMove, "played_pv_"))
+    val threatBranchSubject =
+      Option.when(surfaces.exists(surface => surface.subject == "opponent_resource" && surfaceEligibleForPublicChain(surface)))(
+        ("opponent_resource", verdict.playedMove, "threat_pv_")
+      )
+    rootSubjects ++ threatBranchSubject.toList
+
+  private def publicIdeaChainRootMoveRole(subject: String): String =
+    subject match
+      case "reference_move"    => "best_move"
+      case "opponent_resource" => "threat_move"
+      case _                   => "played_move"
 
   private def publicIdeaChainSubjectAdmitted(
       subject: String,
@@ -2760,7 +2775,7 @@ object MoveMeaningSurface:
       surfaces: List[MoveMeaningSurface]
   ): Boolean =
     val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && surfaceEligibleForPublicChain(surface))
-    val rootMoveRole = if subject == "reference_move" then "best_move" else "played_move"
+    val rootMoveRole = publicIdeaChainRootMoveRole(subject)
     val pv = surfaces
       .filter(_.subject == subject)
       .flatMap(_.comparison.toList.flatMap(_.moves))
@@ -4049,7 +4064,7 @@ object MoveMeaningSurface:
       endgameTechnique = technique,
       comparison =
         Option
-          .when(claimSubject == "played_move" || claimSubject == "reference_move")(
+          .when(claimSubject == "played_move" || claimSubject == "reference_move" || claimSubject == "opponent_resource")(
             comparison(verdict, comparisonLossDetails, claim)
           )
           .flatten,
@@ -4077,7 +4092,9 @@ object MoveMeaningSurface:
     claim.surfaceLane match
       case "current_move_owned" | "current_move_function" => "played_move"
       case "reference_or_opponent_resource" =>
-        if claim.lineRole == "reference" then "reference_move" else "opponent_resource"
+        if claim.comparisonMoveRefs.exists(_.role.startsWith("threat_pv_")) then "opponent_resource"
+        else if claim.lineRole == "reference" then "reference_move"
+        else "opponent_resource"
       case "inherited_context" => "background"
       case _                   => "line_variation"
 
@@ -6074,7 +6091,7 @@ object MoveMeaningClaim:
             case LineNodeRole.Played        => Some("played_pv")
             case LineNodeRole.BestReference => Some("best_pv")
             case LineNodeRole.Alternative   => Some("alternative_pv")
-            case LineNodeRole.Threat        => None
+            case LineNodeRole.Threat        => Some("threat_pv")
         prefix.toList.flatMap(role =>
           line.lineReplayContinuationMoves
             .flatMap(MoveMeaningSurface.publicUciMove)
