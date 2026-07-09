@@ -1872,7 +1872,7 @@ case class MoveMeaningSurfaceEvidence(
     proofThreatDrivers: List[String] = Nil,
     boardCarriers: List[MoveMeaningSurfaceBoardCarrier] = Nil
 ):
-  def hasCarrier: Boolean = publicSurfaceAdmitted
+  def hasCarrier: Boolean = boardCarriers.nonEmpty
 
 case class MoveMeaningSurfaceBoardCarrier(
     role: String,
@@ -3113,7 +3113,7 @@ object MoveMeaningSurface:
       "structure_context" -> surface.structureContext,
       "evidence" -> Json.obj(
         "public_surface_admitted" -> surface.evidence.publicSurfaceAdmitted,
-        "has_carrier" -> surface.evidence.publicSurfaceAdmitted,
+        "has_carrier" -> surface.evidence.hasCarrier,
         "proof_level" -> surface.evidence.proofLevel,
         "target_bound" -> surface.evidence.targetBound,
         "cause_ids" -> surface.evidence.causeIds,

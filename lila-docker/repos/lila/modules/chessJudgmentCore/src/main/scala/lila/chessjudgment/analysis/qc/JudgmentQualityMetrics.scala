@@ -809,7 +809,7 @@ final case class PublicMoveMeaningClaimDiagnostic(
     proofRelationKinds: List[RelationFactKind] = Nil,
     proofRelationDetails: List[String] = Nil
 ):
-  def hasCarrier: Boolean = publicSurfaceAdmitted
+  def hasCarrier: Boolean = hasBoardCarrier
 
 final case class CandidateComparisonDiagnostic(
     id: String,
