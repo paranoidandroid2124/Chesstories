@@ -150,7 +150,8 @@ object ProbeContractValidator:
     val purposeContractMissing =
       requestPurpose.exists(_ => requestPurposeSignals.isEmpty) ||
         (fromRequest.isEmpty && requestPurpose.isEmpty && resultPurposeSignals.isEmpty)
-    val base = validateSignals(result, required)
+    val requiredReplyLineCount = request.multiPv.getOrElse(DefaultBranchReplyMultiPv)
+    val base = validateSignals(result, required, requiredReplyLineCount)
     val purposeMismatch =
       request.purpose.flatMap(rp => result.purpose.map(_ != rp)).contains(true)
     val idMismatch = request.id != result.id
@@ -199,7 +200,7 @@ object ProbeContractValidator:
       result.replyLines.map(_.count(line => line.moves.nonEmpty && line.depth > 0)).getOrElse(0)
     val replyMultiPvIncomplete =
       request.purpose.exists(ProbePurpose.isBranchReply) &&
-        request.multiPv.exists(required => scoredReplyLineCount < required)
+        scoredReplyLineCount < requiredReplyLineCount
     val hardReasonBuilder = List.newBuilder[String]
     if fenMissing then hardReasonBuilder += "FEN_UNVERIFIED"
     if requestFenInvalid then hardReasonBuilder += "REQUEST_FEN_INVALID"
@@ -246,7 +247,8 @@ object ProbeContractValidator:
 
   private def validateSignals(
       result: ProbeResult,
-      requiredSignals: Set[String]
+      requiredSignals: Set[String],
+      requiredReplyLineCount: Int
   ): ValidationResult =
     if requiredSignals.isEmpty then
       ValidationResult(
@@ -256,7 +258,7 @@ object ProbeContractValidator:
         hardReasonCodes = List("NO_REQUIRED_SIGNALS")
       )
     else
-      val missing = requiredSignals.filterNot(sig => hasSignal(sig, result)).toList.sorted
+      val missing = requiredSignals.filterNot(sig => hasSignal(sig, result, requiredReplyLineCount)).toList.sorted
       val hardReasons =
         if missing.isEmpty then Nil else List("MISSING_REQUIRED_SIGNALS") ++ missing
       ValidationResult(
@@ -271,10 +273,10 @@ object ProbeContractValidator:
   private def purposeRequiredSignals(purpose: ProbePurpose): Set[String] =
     if ProbePurpose.isBranchReply(purpose) then Set("replyLines") else Set.empty[String]
 
-  private def hasSignal(signal: String, result: ProbeResult): Boolean =
+  private def hasSignal(signal: String, result: ProbeResult, requiredReplyLineCount: Int): Boolean =
     signal match
       case "replyLines" =>
-        result.replyLines.exists(_.count(line => line.moves.nonEmpty && line.depth > 0) >= DefaultBranchReplyMultiPv)
+        result.replyLines.exists(_.count(line => line.moves.nonEmpty && line.depth > 0) >= requiredReplyLineCount)
       case "purpose" =>
         result.purpose.nonEmpty
       case "depth" =>

@@ -5887,7 +5887,9 @@ object MoveMeaningClaim:
                   claimMove,
                   frame.position.fen
                 )
-              val comparisonMoveRefs = comparisonMoveRefsFromLineEvidence(evidenceGraph, sourceEvidenceIds)
+              val proofSourceEvidenceIds =
+                (sourceEvidenceIds ++ proofCarrierSourceIds(roleCompatibleCauseFrames)).distinct.sorted
+              val comparisonMoveRefs = comparisonMoveRefsFromLineEvidence(evidenceGraph, proofSourceEvidenceIds)
               val claimOwnedBoardCarriers =
                 boardCarriers.filterNot(carrier =>
                   carrier.role == "actor" &&
@@ -5902,7 +5904,7 @@ object MoveMeaningClaim:
                 (claimOwnedBoardCarriers ++
                   relationProofBoardCarriers ++
                   threatProofBoardCarriers ++
-                  lineEventBoardCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove))
+                  lineEventBoardCarriersFromLineEvidence(evidenceGraph, proofSourceEvidenceIds, claimMove))
                   .distinct
                   .sortBy(boardCarrierSortKey)
               val currentPawnBreakFiles =
@@ -5916,16 +5918,16 @@ object MoveMeaningClaim:
                 surfaceObjectSignatures.exists(kingPressureObjectSignature)
               val checkIdentityCarriers =
                 if kingPressureIdentityCarrier then Nil
-                else checkIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove)
+                else checkIdentityCarriersFromLineEvidence(evidenceGraph, proofSourceEvidenceIds, claimMove)
               val proofLineConsequences =
                 roleCompatibleCauseFrames.flatMap(_.proofLineConsequences).distinct.sortBy(_.toString)
               val spareIdentityCarriers =
                 checkIdentityCarriers ++
-                  defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds, claimMove) ++
-                  passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, sourceEvidenceIds) ++
+                  defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, proofSourceEvidenceIds, claimMove) ++
+                  passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, proofSourceEvidenceIds) ++
                   materialCaptureIdentityCarriersFromLineEvidence(
                     evidenceGraph,
-                    sourceEvidenceIds,
+                    proofSourceEvidenceIds,
                     claimMove,
                     detail,
                     verdict,
@@ -5983,10 +5985,7 @@ object MoveMeaningClaim:
               val proofRelationDetails =
                 roleCompatibleCauseFrames.flatMap(_.proofRelationDetails).distinct.sorted
               val proofThreatDrivers =
-                (
-                  proofThreatDriversFromEvidence(evidenceGraph, roleCompatibleCauseFrames.flatMap(_.proofDirectSourceIds)) ++
-                    proofThreatDriversFromEvidence(evidenceGraph, sourceEvidenceIds)
-                ).distinct.sortBy(_.toString)
+                proofThreatDriversFromEvidence(evidenceGraph, proofSourceEvidenceIds)
               MoveMeaningClaim(
                 meaningKind = meaningKind,
                 role = claimRole,
@@ -6133,9 +6132,8 @@ object MoveMeaningClaim:
           case _ =>
             Nil
 
-    frames
-      .flatMap(_.proofDirectSourceIds)
-      .distinct
+    val proofSourceIds = proofCarrierSourceIds(frames)
+    proofSourceIds
       .flatMap(id => evidenceGraph.byId.get(id))
       .flatMap(relationPayloads(_, Set.empty))
       .flatMap(payload =>
@@ -6166,9 +6164,8 @@ object MoveMeaningClaim:
           case _ =>
             Nil
 
-    frames
-      .flatMap(_.proofDirectSourceIds)
-      .distinct
+    val proofSourceIds = proofCarrierSourceIds(frames)
+    proofSourceIds
       .flatMap(id => evidenceGraph.byId.get(id))
       .flatMap(threatPayloads(_, Set.empty))
       .flatMap(payload =>
@@ -6366,6 +6363,9 @@ object MoveMeaningClaim:
       }
       .distinct
       .sortBy(_.toString)
+
+  private def proofCarrierSourceIds(frames: List[MoveJudgmentCauseFrame]): List[String] =
+    frames.flatMap(frame => frame.proofDirectSourceIds ++ frame.proofContrastSourceIds).distinct.sorted
 
   private def publicBoardCarriers(
       detail: PositionPlanTechniqueSemanticDetail
