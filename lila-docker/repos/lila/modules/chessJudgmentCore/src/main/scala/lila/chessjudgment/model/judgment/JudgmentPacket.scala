@@ -2240,6 +2240,8 @@ object MoveMeaningSurface:
           .distinctBy(publicIdeaChainSurfaceKey)
         val publicSemantics =
           candidatePublicSemantics.filterNot(surface => routeOnlyDeliversPublicMeaning(surface, candidatePublicSemantics))
+        val publicTerminal = publicSemantics.flatMap(_.terminalConsequences).distinct
+        val publicTechnique = publicSemantics.flatMap(_.endgameTechnique).distinct
         val publicCarrierPairs = publicIdeaChainCarrierPairs(publicSemantics)
         val publicSemanticConsequenceCarriers = publicCarrierPairs.filter((carrier, surface) =>
           publicIdeaChainConsequenceCarrierRole(carrier) &&
@@ -2373,8 +2375,8 @@ object MoveMeaningSurface:
             ) &&
             !publicSemantics.exists(surfaceHasDirectFunctionCarrier) &&
             consequenceCarriers.isEmpty &&
-            terminal.isEmpty &&
-            technique.isEmpty
+            publicTerminal.isEmpty &&
+            publicTechnique.isEmpty
         if publicSemantics.isEmpty || routeOnlyPublicChain then Nil
         else
           val relationKinds = publicSemantics.flatMap(publicSurfaceRelationKinds).distinct.sortBy(_.toString)
@@ -2394,8 +2396,8 @@ object MoveMeaningSurface:
               "pv" -> pv,
               "function_carriers" -> purposeCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
-              "terminal_consequences" -> terminal.map(publicCodeJson),
-              "technique" -> technique.map(publicEndgameTechniqueJson),
+              "terminal_consequences" -> publicTerminal.map(publicCodeJson),
+              "technique" -> publicTechnique.map(publicEndgameTechniqueJson),
               "player_facing_reason_allowed" -> true
             )
           )
