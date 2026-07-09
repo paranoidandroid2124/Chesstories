@@ -2219,7 +2219,7 @@ object MoveMeaningSurface:
           .filterNot(surface => genericFallbackCoveredByConcreteSurface(surface, chainSurfaces))
           .filterNot(surface => targetReleaseLabelCoveredByPressureGain(surface, chainSurfaces))
           .filterNot(surface => supplementalPressureLabelCoveredByCanonicalPressure(surface, chainSurfaces))
-          .filterNot(surface => mixedPiecePressureLabelCoveredBySinglePiecePressure(surface, chainSurfaces))
+          .filterNot(surface => slashPressureLabelCoveredByPlainPressureLabel(surface, chainSurfaces))
           .filterNot(surface => lineUnlockSurfaceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
           .filterNot(surface => passedPawnAdvanceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
           .filterNot(surface => pawnAdvanceSurfaceCoversAuxiliaryTargetPressure(surface, chainSurfaces))
@@ -2472,7 +2472,7 @@ object MoveMeaningSurface:
           other.target.files == surface.target.files
       )
 
-  private def mixedPiecePressureLabelCoveredBySinglePiecePressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
+  private def slashPressureLabelCoveredByPlainPressureLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
     surface.idea.code == "target_pressure" &&
       surface.idea.label.contains("/") &&
       surface.idea.label.contains(" pressure on ") &&
