@@ -88,6 +88,7 @@ interface ChesstoryBoardCarrier {
   value?: string;
   from?: string;
   to?: string;
+  semantic_role?: string;
 }
 
 const relationCarrierRoles = new Set(['attacker', 'defender', 'blocker', 'beneficiary', 'king', 'mover', 'bait', 'lured']);
