@@ -2032,12 +2032,6 @@ object MoveMeaningSurface:
     publicIdeaChainSubjectSpecs(verdict).flatMap { (subject, subjectMove, pvRolePrefix) =>
       val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && surfaceEligibleForPublicChain(surface))
       val rootMoveRole = if subject == "reference_move" then "best_move" else "played_move"
-      val pv = surfaces
-        .filter(_.subject == subject)
-        .flatMap(_.comparison.toList.flatMap(_.moves))
-        .filter(move => move.uci.nonEmpty && (move.role == rootMoveRole || move.role.startsWith(pvRolePrefix)))
-        .map(_.uci)
-        .distinct
       val terminal = evidenceSurfaces.flatMap(_.terminalConsequences).distinct
       val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
       val strongChainProof =
@@ -2375,6 +2369,11 @@ object MoveMeaningSurface:
             publicTechnique.isEmpty
         if publicSemantics.isEmpty || routeOnlyPublicChain then Nil
         else
+          val publicPv = publicSemantics
+            .flatMap(_.comparison.toList.flatMap(_.moves))
+            .filter(move => move.uci.nonEmpty && (move.role == rootMoveRole || move.role.startsWith(pvRolePrefix)))
+            .map(_.uci)
+            .distinct
           val relationKinds = publicSemantics.flatMap(publicSurfaceRelationKinds).distinct.sortBy(_.toString)
           List(
             Json.obj(
@@ -2389,7 +2388,7 @@ object MoveMeaningSurface:
               "relations" -> relationKinds.map(publicRelationCodeJson),
               "threat_drivers" -> publicSemantics.flatMap(_.evidence.proofThreatDrivers).distinct.sorted,
               "carriers" -> directCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
-              "pv" -> pv,
+              "pv" -> publicPv,
               "function_carriers" -> purposeCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "terminal_consequences" -> publicTerminal.map(publicCodeJson),
