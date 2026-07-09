@@ -2379,6 +2379,15 @@ object MoveMeaningSurface:
             .distinct
           val relationKinds = displaySemantics.flatMap(publicSurfaceRelationKinds).distinct.sortBy(_.toString)
           val publicPurposeCarriers = purposeCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface))
+          val playerFacingReasonAllowed =
+            displaySemantics.exists(surface =>
+              surface.evidence.proofLevel != "surface_evidence" ||
+                surface.evidence.causeIds.nonEmpty ||
+                surface.evidence.proofRelationKinds.nonEmpty ||
+                surface.evidence.proofThreatDrivers.nonEmpty ||
+                surface.terminalConsequences.nonEmpty ||
+                surface.endgameTechnique.nonEmpty
+            )
           List(
             Json.obj(
               "key" -> "current-move-chain",
@@ -2398,7 +2407,7 @@ object MoveMeaningSurface:
               "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "terminal_consequences" -> publicTerminal.map(publicCodeJson),
               "technique" -> publicTechnique.map(publicEndgameTechniqueJson),
-              "player_facing_reason_allowed" -> true
+              "player_facing_reason_allowed" -> playerFacingReasonAllowed
             )
           )
     }
