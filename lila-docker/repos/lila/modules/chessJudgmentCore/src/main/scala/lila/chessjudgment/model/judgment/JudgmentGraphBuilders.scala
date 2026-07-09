@@ -324,6 +324,6 @@ object BranchReplyProbePlanner:
     val alternatives =
       rootLines.filter(_.role == LineNodeRole.Alternative).sortBy(_.ref.rank).take(1)
     (primary ++ alternatives)
-      .filter(line => line.line.moves.nonEmpty && line.depth > 0)
+      .filter(_.line.moves.nonEmpty)
       .distinctBy(_.ref.rootMove)
       .take(BranchReplyProbeBinding.ReplyMultiPv)
