@@ -2489,13 +2489,30 @@ object MoveMeaningSurface:
           other.target.files == surface.target.files
       )
 
+  private def surfaceHasCarrierRole(surface: MoveMeaningSurface, role: String): Boolean =
+    surface.evidence.boardCarriers.exists(_.semanticRole.exists(_.equalsIgnoreCase(role)))
+
+  private def genericRouteSurface(surface: MoveMeaningSurface): Boolean =
+    surface.idea.code == "piece_route" &&
+      surfaceHasCarrierRole(surface, "route_destination") &&
+      !surfaceHasCarrierRole(surface, "file_pressure") &&
+      !lineUnlockSurface(surface) &&
+      !surface.evidence.boardCarriers.exists(carrier =>
+        carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("rook-lift:")
+      )
+
+  private def fileRouteSurface(surface: MoveMeaningSurface): Boolean =
+    surface.idea.code == "piece_route" &&
+      surfaceHasCarrierRole(surface, "file_pressure")
+
+  private def lineUnlockSurface(surface: MoveMeaningSurface): Boolean =
+    (surface.idea.code == "piece_route" || surface.idea.code == "long_diagonal_pressure") &&
+      surface.evidence.boardCarriers.exists(carrier =>
+        carrier.semanticRole.exists(_.equalsIgnoreCase("line_unlock_file")) ||
+          carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("opened-line:")
+      )
+
   private def lineUnlockSurfaceCoversAuxiliaryTargetPressure(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
-    def lineUnlockSurface(other: MoveMeaningSurface): Boolean =
-      (other.idea.code == "piece_route" || other.idea.code == "long_diagonal_pressure") &&
-        other.evidence.boardCarriers.exists(carrier =>
-          carrier.semanticRole.exists(_.equalsIgnoreCase("line_unlock_file")) ||
-            carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("opened-line:")
-        )
     def sameSurfaceMove(other: MoveMeaningSurface): Boolean =
       other != surface &&
         other.moveUci == surface.moveUci &&
@@ -2592,17 +2609,14 @@ object MoveMeaningSurface:
       )
 
   private def genericRouteLabelCoveredBySpecificRouteLabel(surface: MoveMeaningSurface, surfaces: List[MoveMeaningSurface]): Boolean =
-    def genericRouteLabel(label: String): Boolean =
-      label.contains(" maneuver to ") || label.contains(" development to ")
-    surface.idea.code == "piece_route" &&
-      genericRouteLabel(surface.idea.label) &&
+    genericRouteSurface(surface) &&
       surfaces.exists(other =>
         other != surface &&
           other.moveUci == surface.moveUci &&
           other.subject == surface.subject &&
           other.lineRole == surface.lineRole &&
           other.idea.code == "piece_route" &&
-          !genericRouteLabel(other.idea.label) &&
+          !genericRouteSurface(other) &&
           other.target.squares == surface.target.squares &&
           other.target.pieces == surface.target.pieces
       )
@@ -2613,10 +2627,6 @@ object MoveMeaningSurface:
         other.moveUci == surface.moveUci &&
         other.subject == surface.subject &&
         other.lineRole == surface.lineRole
-    def genericRouteLabel(label: String): Boolean =
-      label.contains(" maneuver to ") || label.contains(" development to ")
-    def fileRouteLabel(label: String): Boolean =
-      label.contains(" to ") && (label.endsWith("-file") || label.endsWith("-files"))
     def sharedRouteProofOrTarget(other: MoveMeaningSurface): Boolean =
       surface.evidence.proofRelationKinds.intersect(other.evidence.proofRelationKinds).nonEmpty ||
         surface.target.squares.intersect(other.target.squares).nonEmpty ||
@@ -2627,23 +2637,23 @@ object MoveMeaningSurface:
         other.evidence.targetBound &&
         !unprovedBroadTargetPressure(other) &&
         (
-          genericRouteLabel(surface.idea.label) && sharedRouteProofOrTarget(other) ||
-            fileRouteLabel(surface.idea.label) && surface.target.files.intersect(other.target.files).nonEmpty
+          genericRouteSurface(surface) && sharedRouteProofOrTarget(other) ||
+            fileRouteSurface(surface) && surface.target.files.intersect(other.target.files).nonEmpty
         )
     def publicMeaningSurface(other: MoveMeaningSurface): Boolean =
       other.idea.code match
         case "terminal_mate" | "promotion_race" | "promotion" | "draw_resource" | "material_gain" | "material_loss" =>
-          genericRouteLabel(surface.idea.label)
+          genericRouteSurface(surface)
         case "outpost_attempt" =>
-          genericRouteLabel(surface.idea.label) && surface.target.squares.intersect(other.target.squares).nonEmpty
+          genericRouteSurface(surface) && surface.target.squares.intersect(other.target.squares).nonEmpty
         case "tactical_pressure" =>
-          genericRouteLabel(surface.idea.label) && other.evidence.proofRelationKinds.nonEmpty && sharedRouteProofOrTarget(other)
+          genericRouteSurface(surface) && other.evidence.proofRelationKinds.nonEmpty && sharedRouteProofOrTarget(other)
         case "target_pressure" =>
           concreteTargetPressureSurface(other)
         case _ =>
           false
     routeCarrierSurface(surface) &&
-      (genericRouteLabel(surface.idea.label) || fileRouteLabel(surface.idea.label)) &&
+      (genericRouteSurface(surface) || fileRouteSurface(surface)) &&
       surfaces.exists(other => sameSurfaceMove(other) && publicMeaningSurface(other))
 
   private def publicIdeaChainSubjects(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[String] =
