@@ -2834,8 +2834,13 @@ object MoveMeaningSurface:
 
   private def publicIdeaChainDirectFunctionSurface(surface: MoveMeaningSurface): Boolean =
     val carriers = surface.evidence.boardCarriers
+    val directFunctionTarget =
+      surfaceHasCarrierRole(surface, "file_pressure") ||
+        surfaceHasCarrierRole(surface, "route_destination") ||
+        surfaceHasCarrierRole(surface, "line_unlock_file")
     val directActor =
       carriers.exists(carrier => carrier.role == "actor" && (carrier.kind == "Piece" || carrier.kind == "Square")) ||
+        directFunctionTarget ||
         (surface.idea.code == "center_control" &&
           sameFilePawnAdvanceMove(surface.moveUci) &&
           carriers.exists(carrier => carrier.role == "target" && carrier.kind == "Square"))
