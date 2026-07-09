@@ -3900,6 +3900,7 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
         case ("target_pressure", _) if targetPressureReleaseClaim => targetPressureReleaseLabel
         case ("target_pressure", _) if kingPressureCarrier => kingPressureLabel
+        case ("target_pressure", _) if routeLineUnlockClaim(claim) => opensLineLabel
         case ("target_pressure", _)
             if claim.role == "PreparesBreakOption" &&
               claim.targetSquares.isEmpty &&
@@ -4129,6 +4130,19 @@ object MoveMeaningSurface:
       .orElse(Option.when(flankPawnAdvanceSurfaceClaim(claim))("flank_pawn_pressure"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.PieceRerouteRoute && longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
+      .orElse(
+        Option.when(
+          claim.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
+            routeLineUnlockClaim(claim) &&
+            sameFilePawnAdvanceMove(claim.moveUci) &&
+            !claim.routeIdentityParts.exists(_.toLowerCase.startsWith("subject:passed-pawn-")) &&
+            !claim.boardCarriers.exists(carrier =>
+              carrier.role == "target" &&
+                carrier.kind == "PlanSubject" &&
+                carrier.value.toLowerCase.startsWith("passed-pawn")
+            )
+        )("target_pressure")
+      )
       .orElse(
         Option.when(
           claim.unit != PositionPlanTechniqueUnit.SpacePreventionResourceDenial &&
