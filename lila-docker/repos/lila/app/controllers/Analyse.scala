@@ -57,15 +57,15 @@ final class Analyse(
             val validation = JudgmentPacketValidator.validate(packet)
             val moveReview = packet.moveJudgmentView.map(moveJudgmentViewMeaningJson)
             val probeRequests = if validation.isValid then packet.probeRequests else Nil
-            val renderable = validation.isValid && moveReview.exists(review =>
+            val hasPlayerFacingReason = validation.isValid && moveReview.exists(review =>
               (review \ "renderable").asOpt[Boolean].contains(true)
             )
-            val status = publicReviewStatus(renderable)
+            val status = publicReviewStatus(hasPlayerFacingReason)
             JsonOk(
               Json.obj(
                 "ok" -> true,
                 "status" -> status,
-                "availability" -> publicAvailabilityJson(validation.isValid, renderable),
+                "availability" -> publicAvailabilityJson(validation.isValid, hasPlayerFacingReason),
                 "probe_requests" -> Json.toJson(probeRequests),
                 "move_review" -> moveReview
               )
@@ -74,18 +74,18 @@ final class Analyse(
 
   private def moveJudgmentViewMeaningJson(view: MoveJudgmentView): JsObject =
     val payload = MoveMeaningSurface.publicPayloadJson(view)
-    val hasApprovedChain =
+    val hasPlayerFacingReason =
       (payload \ "idea_chains").asOpt[JsArray].exists(_.value.exists(chain => (chain \ "player_facing_reason_allowed").asOpt[Boolean].contains(true)))
-    Json.obj("renderable" -> hasApprovedChain) ++ payload
+    Json.obj("renderable" -> hasPlayerFacingReason) ++ payload
 
   private def publicReviewStatus(available: Boolean): String =
     if available then "ready" else "withheld"
 
-  private def publicAvailabilityJson(valid: Boolean, renderable: Boolean): JsObject =
+  private def publicAvailabilityJson(valid: Boolean, hasPlayerFacingReason: Boolean): JsObject =
     Json.obj(
-      "state" -> publicReviewStatus(renderable),
+      "state" -> publicReviewStatus(hasPlayerFacingReason),
       "reason" ->
         (if !valid then Some("validation_failed")
-         else if !renderable then Some("no_public_chain")
+         else if !hasPlayerFacingReason then Some("no_player_facing_reason")
          else None)
     )
