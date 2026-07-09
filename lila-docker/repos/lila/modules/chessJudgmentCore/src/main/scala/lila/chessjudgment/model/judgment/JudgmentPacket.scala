@@ -5,7 +5,7 @@ import java.security.MessageDigest
 
 import chess.{ Pawn, Square }
 import chess.format.Fen
-import lila.chessjudgment.analysis.singlePosition.ThreatDriver
+import lila.chessjudgment.analysis.singlePosition.{ ThreatDriver, ThreatKind }
 import lila.chessjudgment.model.{ ProbeAdmissionDiagnostic, ProbeRequest }
 import play.api.libs.json.*
 
@@ -5745,7 +5745,10 @@ object MoveMeaningClaim:
               val proofRelationDetails =
                 roleCompatibleCauseFrames.flatMap(_.proofRelationDetails).distinct.sorted
               val proofThreatDrivers =
-                proofThreatDriversFromEvidence(evidenceGraph, roleCompatibleCauseFrames.flatMap(_.proofDirectSourceIds))
+                (
+                  proofThreatDriversFromEvidence(evidenceGraph, roleCompatibleCauseFrames.flatMap(_.proofDirectSourceIds)) ++
+                    proofThreatDriversFromEvidence(evidenceGraph, sourceEvidenceIds)
+                ).distinct.sortBy(_.toString)
               MoveMeaningClaim(
                 meaningKind = meaningKind,
                 role = claimRole,
@@ -6137,6 +6140,7 @@ object MoveMeaningClaim:
       else Nil
     (
         detail.structuralRouteMove.toList.map(move => publicMoveCarrier("actor", move)) ++
+        detail.defenseMove.toList.map(move => publicMoveCarrier("actor", move)) ++
         terminalTargetCarriers ++
         structuralRouteFileCarriers(detail) ++
         flankPawnAdvanceDestinationCarriers(detail) ++
@@ -6399,6 +6403,9 @@ object MoveMeaningClaim:
     detail.unit match
       case PositionPlanTechniqueUnit.SpacePreventionResourceDenial if diagonalDenialDetail(detail) =>
         Some("ray_denial")
+      case PositionPlanTechniqueUnit.SpacePreventionResourceDenial
+          if detail.threatKind.contains(ThreatKind.Mate) && detail.defenseMove.nonEmpty =>
+        Some("defensive_resource")
       case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && outpostRouteDetail(detail) =>
         Some("outpost_attempt")
       case PositionPlanTechniqueUnit.PieceRerouteRoute if meaningKind == "PieceRoute" && longDiagonalRouteDetail(detail) =>
@@ -6616,7 +6623,10 @@ object MoveMeaningClaim:
             pawnBreakOwnsClaimMove(detail, claimMove) &&
             pawnBreakCurrentMoveFunctionalCarrier(detail)
         case PositionPlanTechniqueUnit.SpacePreventionResourceDenial =>
-          moveOwnedSource &&
+          val defenseMoveOwnsThreat =
+            detail.threatKind.contains(ThreatKind.Mate) &&
+              detail.defenseMove.exists(move => sameMove(move, claimMove))
+          (moveOwnedSource || defenseMoveOwnsThreat) &&
             resourceDetailOwnsClaimMove(detail, objectSignatures, claimMove) &&
             resourceDetailHasConcreteCarrier(detail)
         case PositionPlanTechniqueUnit.CounterplayRace =>

@@ -156,6 +156,19 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
     val exactCurrentMoveForcingResource =
       exactReferenceMove &&
         candidateForcingLineResource.exists(RelativeCauseSignalProfile.currentMoveMateThreatRecord)
+    val exactCurrentMoveOnlyDefense =
+      if exactReferenceMove then
+        (referenceOnlyDefense ++ referenceOnlyDefenseFunction).filter {
+          case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) =>
+            payload.onlyDefense.exists(move =>
+              EvidenceRef.normalizeMove(move) == EvidenceRef.normalizeMove(fact.candidateLine.rootMove)
+            )
+          case _ =>
+            false
+        }
+      else Nil
+    val candidateOnlyDefenseSupport =
+      (candidateOnlyDefense ++ exactCurrentMoveOnlyDefense).distinctBy(_.ref.id)
     val candidateForcingLineSupport =
       if exactCurrentMoveForcingResource && !candidateBetter then
         candidateForcingLineResource.filter(RelativeCauseSignalProfile.currentMoveMateThreatRecord)
@@ -175,8 +188,8 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       ),
       causeDraft(
         RelativeCauseKind.OnlyDefenseNecessity,
-        candidateOnlyDefense,
-        candidateOnlyDefense.nonEmpty && candidateBetter,
+        candidateOnlyDefenseSupport,
+        candidateOnlyDefenseSupport.nonEmpty && candidateProvedValue,
         Some(RelativeCauseSourceSide.Candidate)
       ),
       causeDraft(

@@ -2,6 +2,7 @@ package lila.chessjudgment.analysis.singlePosition
 
 import chess.{ Color, File }
 import lila.chessjudgment.analysis.evaluation.JudgmentThresholds
+import lila.chessjudgment.analysis.move.MoveAnalyzer
 import lila.chessjudgment.analysis.tactical.{ BoundedReplayStep, TacticalRelationEvidence }
 import lila.chessjudgment.model.Motif
 
@@ -58,7 +59,7 @@ object ThreatPressureAssessor:
     
     val opponentThreats = extractOpponentThreats(motifs, isWhiteToMove, suppressStaticRelationThreats)
     val correctedThreats = correctWithMultiPv(opponentThreats, multiPv, fen)
-    val withDefenses = populateDefenseEvidence(correctedThreats, multiPv)
+    val withDefenses = populateDefenseEvidence(correctedThreats, multiPv, fen)
     val activeCounterThreat = activeCounterThreatAvailable(fen, motifs, multiPv, sideToMove)
     computeAggregates(withDefenses, multiPv, positionAssessment, activeCounterThreat)
 
@@ -402,7 +403,8 @@ object ThreatPressureAssessor:
 
   private def populateDefenseEvidence(
     threats: List[Threat],
-    multiPv: List[PvLine]
+    multiPv: List[PvLine],
+    fen: String
   ): List[Threat] =
     if threats.isEmpty then threats
     else if multiPv.isEmpty then threats
@@ -412,7 +414,8 @@ object ThreatPressureAssessor:
       val adequateDefenses = multiPv.filter { pv =>
         bestLine.winPercentLossTo(pv) <= JudgmentThresholds.ONLY_DEFENSE_TOLERANCE_WP
       }
-      val defenseCount = adequateDefenses.size
+      val distinctDefenseRoots = adequateDefenses.flatMap(_.moves.headOption).map(normalizedMove).distinct
+      val defenseCount = distinctDefenseRoots.size.max(adequateDefenses.size.min(1))
       
       // Damp threat loss when the average MultiPV depth is below the reliability floor.
       val avgDepth = multiPv.map(_.depth).sum.toDouble / multiPv.size.max(1)
@@ -420,13 +423,41 @@ object ThreatPressureAssessor:
       
       threats.map { t =>
         val lineBacked = t.evidenceSource != ThreatEvidenceSource.MotifPattern
+        val urgentMateMotif =
+          t.evidenceSource == ThreatEvidenceSource.MotifPattern &&
+            t.kind == ThreatKind.Mate &&
+            bestLineDefusesMateThreat(fen, bestLine, t)
+        val canUseBestLineDefense = lineBacked || urgentMateMotif
         t.copy(
-          defenseCount = if lineBacked then defenseCount else t.defenseCount,
-          bestDefense = if lineBacked then multiPv.headOption.flatMap(_.moves.headOption) else t.bestDefense,
+          defenseCount = if canUseBestLineDefense then defenseCount else t.defenseCount,
+          bestDefense = if canUseBestLineDefense then multiPv.headOption.flatMap(_.moves.headOption) else t.bestDefense,
           lossIfIgnoredCp = (t.lossIfIgnoredCp * reliabilityFactor).toInt,
           lossIfIgnoredWinPercent = t.lossIfIgnoredWinPercent.map(_ * reliabilityFactor)
         )
       }
+
+  private def bestLineDefusesMateThreat(
+      fen: String,
+      bestLine: PvLine,
+      threat: Threat
+  ): Boolean =
+    val threateningSide = threat.motifs.flatMap(threateningColor).headOption
+    threateningSide.exists { side =>
+      firstLegalStep(fen, bestLine).exists { step =>
+        val afterMotifs = MoveAnalyzer.detectStateMotifs(step.move.after, 1)
+        activeForcingRoot(step) &&
+          !afterMotifs.exists(motif => threateningColor(motif).contains(side) && mateThreatMotif(motif))
+      }
+    }
+
+  private def mateThreatMotif(motif: Motif): Boolean =
+    motif match
+      case m: Motif.Check =>
+        m.checkType == Motif.CheckType.Mate || m.checkType == Motif.CheckType.Smothered
+      case _: Motif.BackRankMate | _: Motif.MateNet | _: Motif.SmotheredMate =>
+        true
+      case _ =>
+        false
 
   private def computeAggregates(
     threats: List[Threat],

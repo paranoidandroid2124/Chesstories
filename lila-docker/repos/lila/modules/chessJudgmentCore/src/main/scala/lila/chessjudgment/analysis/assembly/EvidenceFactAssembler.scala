@@ -272,10 +272,13 @@ object EvidenceFactAssembler:
     val beforeRecords = context.position(PositionNodeRole.Before).toList.flatMap { node =>
       node.assessment.toList.flatMap { assessment =>
         node.ref.sideToMove.toList.flatMap { sideUnderPressure =>
+          val threatMotifs =
+            (motifsForLineRole(context, LineNodeRole.BestReference) ++
+              urgentStateThreatMotifs(node.ref.fen, node.ref.ply)).distinct
           val threats =
             ThreatPressureAssessor.analyze(
               fen = input.beforeFen,
-              motifs = motifsForLineRole(context, LineNodeRole.BestReference),
+              motifs = threatMotifs,
               multiPv = EvaluationPerspectivePolicy.sideToMovePvLines(sideUnderPressure, input.lines.map(_.line)),
               positionAssessment = assessment,
               sideToMove = sideUnderPressure
@@ -1533,6 +1536,18 @@ object EvidenceFactAssembler:
       Some(context.evidenceGraph.records.collect {
         case EvidenceRecord(ref, payload: MoveMotifEvidence, _) if ref.line.contains(lineRef) => payload.motif
       })
+    }.getOrElse(Nil)
+
+  private def urgentStateThreatMotifs(fen: String, ply: Int): List[Motif] =
+    Fen.read(Standard, Fen.Full(fen)).map { position =>
+      MoveAnalyzer.detectStateMotifs(position, ply).filter {
+        case m: Motif.Check =>
+          m.checkType == Motif.CheckType.Mate || m.checkType == Motif.CheckType.Smothered
+        case _: Motif.BackRankMate | _: Motif.MateNet | _: Motif.SmotheredMate =>
+          true
+        case _ =>
+          false
+      }
     }.getOrElse(Nil)
 
   private def pawnPlayMotifsForPosition(context: JudgmentAssemblyContext, role: PositionNodeRole): List[Motif] =
