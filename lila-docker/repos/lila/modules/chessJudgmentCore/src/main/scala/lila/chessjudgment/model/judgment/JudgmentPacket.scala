@@ -2367,6 +2367,7 @@ object MoveMeaningSurface:
                 surface.evidence.proofLevel == "surface_evidence" &&
                 surface.evidence.causeIds.isEmpty
             ) &&
+            !publicSemantics.exists(publicIdeaChainDirectFunctionSurface) &&
             consequenceCarriers.isEmpty &&
             terminal.isEmpty &&
             technique.isEmpty
