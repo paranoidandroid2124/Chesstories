@@ -46,6 +46,7 @@ export interface ChesstoryMoveSemantic {
     pieces?: string[];
   };
   evidence?: {
+    public_surface_admitted?: boolean;
     has_carrier?: boolean;
     proof_level?: string;
     target_bound?: boolean;

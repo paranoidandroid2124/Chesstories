@@ -1853,6 +1853,7 @@ object MoveReviewPhase3AuditRunner:
       "moveUci" -> diagnostic.moveUci,
       "causeEvidenceIds" -> diagnostic.causeEvidenceIds,
       "sourceEvidenceIds" -> diagnostic.sourceEvidenceIds,
+      "publicSurfaceAdmitted" -> diagnostic.publicSurfaceAdmitted,
       "hasCarrier" -> diagnostic.hasCarrier,
       "hasBoardCarrier" -> diagnostic.hasBoardCarrier,
       "proofLevel" -> diagnostic.proofLevel,
@@ -3613,6 +3614,7 @@ object MoveReviewPhase3AuditRunner:
           "to" -> carrier.to
         )
       ),
+      "publicSurfaceAdmitted" -> claim.publicSurfaceAdmitted,
       "publicHasCarrier" -> claim.publicSurfaceAdmitted,
       "publicProofLevel" -> claim.publicProofLevel,
       "publicTargetBound" -> claim.publicTargetBound,

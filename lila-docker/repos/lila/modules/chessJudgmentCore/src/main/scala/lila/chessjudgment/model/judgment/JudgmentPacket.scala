@@ -3030,6 +3030,7 @@ object MoveMeaningSurface:
       "endgame_technique" -> surface.endgameTechnique.map(publicEndgameTechniqueJson),
       "structure_context" -> surface.structureContext,
       "evidence" -> Json.obj(
+        "public_surface_admitted" -> surface.evidence.publicSurfaceAdmitted,
         "has_carrier" -> surface.evidence.publicSurfaceAdmitted,
         "proof_level" -> surface.evidence.proofLevel,
         "target_bound" -> surface.evidence.targetBound,
