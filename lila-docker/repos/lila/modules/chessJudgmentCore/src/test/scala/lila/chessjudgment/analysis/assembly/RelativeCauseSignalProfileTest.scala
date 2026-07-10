@@ -174,11 +174,11 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
     assertEquals(delta.opponentMobilityRestrictions, Nil)
     assert(!StructuralDeltaContracts.consequences(delta).exists(_.kind == TransitionConsequenceKind.OpponentMobilityRestriction))
 
-  test("maps concrete opponent diagonal restriction to current move opponent restriction"):
+  test("maps concrete opponent diagonal restriction in a distinct-root comparison"):
     val root = PositionNodeRef("4k3/6b1/8/3p4/3PP3/8/8/4K3 w - - 0 1", 1, Some(Color.White), Some("root"))
     val after = PositionNodeRef("4k3/6b1/8/3pP3/3P4/8/8/4K3 b - - 0 1", 2, Some(Color.Black), Some("after"))
     val playedLine = LineNodeRef("played-line", "e4e5", 1, LineNodeRole.Played)
-    val referenceLine = LineNodeRef("reference-line", "e4e5", 1, LineNodeRole.BestReference)
+    val referenceLine = LineNodeRef("reference-line", "g1f3", 1, LineNodeRole.BestReference)
     val structuralRef = EvidenceRef(
       id = "structural-delta:played:e4e5:opponent-diagonal-restriction",
       producer = EvidenceProducer.StructuralDeltaProducer,
@@ -800,10 +800,11 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
     assert(signatures.exists(_.contains("target=Side:black")))
     assert(signatures.exists(_.contains("mechanism=Mechanism:opponentlowmobility")))
 
-  test("drafts current move target pressure from structural strategic support without eval gap"):
+  test("drafts distinct-root target pressure from structural strategic support without eval gap"):
     val root = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(Color.White), Some("root"))
+    val after = PositionNodeRef("8/8/8/8/8/1Q6/8/8 b - - 1 1", 2, Some(Color.Black), Some("after"))
     val playedLine = LineNodeRef("played-line", "d1b3", 1, LineNodeRole.Played)
-    val referenceLine = LineNodeRef("reference-line", "d1b3", 1, LineNodeRole.BestReference)
+    val referenceLine = LineNodeRef("reference-line", "g1f3", 1, LineNodeRole.BestReference)
     val structuralRef = EvidenceRef(
       id = "structural-delta:played:d1b3:target-b7",
       producer = EvidenceProducer.StructuralDeltaProducer,
@@ -812,6 +813,28 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
       line = Some(playedLine),
       scope = EvidenceScope.PlayedTransition,
       confidence = EvidenceConfidence.EngineBacked
+    )
+    val structuralRecord = EvidenceRecord(
+      structuralRef,
+      StructuralDeltaEvidence(
+        transition = StructuralTransitionBinding(
+          moveUci = "d1b3",
+          role = TransitionEdgeRole.Played,
+          from = root,
+          to = after,
+          line = Some(playedLine),
+          perspective = Color.White
+        ),
+        signals = Nil,
+        consequences = List(
+          TransitionConsequence(
+            TransitionConsequenceKind.TargetPressureGain,
+            StructuralSignalPolarity.Gain,
+            strength = 3,
+            subjects = List("b7")
+          )
+        )
+      )
     )
     val mechanismRecord = EvidenceRecord(
       ref = EvidenceRef(
@@ -835,19 +858,20 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
           )
         ),
         semanticAnchors = Nil
-      )
+      ),
+      parents = List(structuralRef)
     )
-    val profile = exactPlayedProfile(referenceLine, playedLine, List(mechanismRecord))
+    val profile = exactPlayedProfile(referenceLine, playedLine, List(structuralRecord, mechanismRecord))
 
     val drafts = RelativeCauseDraftPlanner.drafts(profile)
     assertEquals(drafts.map(_.kind), List(RelativeCauseKind.TargetPressureGain))
     assertEquals(drafts.map(_.sourceSide), List(Some(RelativeCauseSourceSide.Candidate)))
     assertEquals(drafts.map(_.attributionKind), List(CauseAttributionKind.CandidateCreatesValue))
 
-  test("drafts current move pawn break from structural tension gain without eval gap"):
+  test("drafts distinct-root pawn break from structural tension gain without eval gap"):
     val root = PositionNodeRef("8/8/8/3p4/8/8/4P3/8 w - - 0 1", 1, Some(Color.White), Some("root"))
     val playedLine = LineNodeRef("played-line", "e2e4", 1, LineNodeRole.Played)
-    val referenceLine = LineNodeRef("reference-line", "e2e4", 1, LineNodeRole.BestReference)
+    val referenceLine = LineNodeRef("reference-line", "d2d4", 1, LineNodeRole.BestReference)
     val structuralRef = EvidenceRef(
       id = "structural-delta:played:e2e4:tension",
       producer = EvidenceProducer.StructuralDeltaProducer,
@@ -1681,10 +1705,10 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
     assertEquals(drafts.map(_.kind), List(RelativeCauseKind.ActivityGain))
     assertEquals(drafts.map(_.sourceSide), List(Some(RelativeCauseSourceSide.Candidate)))
 
-  test("lets exact current move development support own activity value"):
+  test("lets current move development support activity value in a distinct-root comparison"):
     val root = PositionNodeRef("8/8/8/8/8/8/3P4/8 w - - 0 1", 1, Some(Color.White), Some("root"))
     val after = PositionNodeRef("8/8/8/8/8/4N3/3P4/8 b - - 1 1", 2, Some(Color.Black), Some("after"))
-    val referenceLine = LineNodeRef("reference-line", "f1e3", 1, LineNodeRole.BestReference)
+    val referenceLine = LineNodeRef("reference-line", "g1f3", 1, LineNodeRole.BestReference)
     val candidateLine = LineNodeRef("candidate-line", "f1e3", 2, LineNodeRole.Played)
     val structuralRef = EvidenceRef(
       id = "structural-delta:played:f1e3:development-route",
@@ -1988,7 +2012,7 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
 
     assertEquals(RelativeCauseDraftPlanner.drafts(profile).map(_.kind), Nil)
 
-  test("drafts same-root counter-break support only with a concrete break carrier"):
+  test("keeps counter-break causes for distinct roots and suppresses same-root variants"):
     val root = PositionNodeRef("8/8/8/3p4/3P4/8/8/8 w - - 0 1", 1, Some(Color.White), Some("root"))
     val after = PositionNodeRef("8/8/8/3P4/8/8/8/8 b - - 0 1", 2, Some(Color.Black), Some("after"))
     val referenceLine = LineNodeRef("reference-line", "g1f3", 1, LineNodeRole.BestReference)
@@ -2098,17 +2122,14 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
     val exactContrastRefProfile = exactPlayedProfile(exactReferenceLine, candidateLine, Nil, List(sharedContrastWithSupport))
     val malformedExactProfile = exactPlayedProfile(exactReferenceLine, candidateLine, Nil, List(malformedStructuralRecord, sharedContrastRecord))
 
-    val exactContrastDrafts = RelativeCauseDraftPlanner.drafts(exactContrastProfile)
-
     assertEquals(RelativeCauseDraftPlanner.drafts(profile).map(_.kind), List(RelativeCauseKind.OpponentRestriction))
     assertEquals(RelativeCauseDraftPlanner.drafts(candidateBetterProfile(referenceLine, candidateLine, List(mechanismRecord))).map(_.kind), Nil)
-    assertEquals(RelativeCauseDraftPlanner.drafts(exactProfile).map(_.kind), List(RelativeCauseKind.OpponentRestriction))
-    assertEquals(exactContrastDrafts.map(_.kind), List(RelativeCauseKind.OpponentRestriction))
-    assert(exactContrastDrafts.exists(_.support.exists(_.ref.id == structuralRef.id)), exactContrastDrafts)
+    assertEquals(RelativeCauseDraftPlanner.drafts(exactProfile).map(_.kind), Nil)
+    assertEquals(RelativeCauseDraftPlanner.drafts(exactContrastProfile).map(_.kind), Nil)
     assertEquals(RelativeCauseDraftPlanner.drafts(exactContrastRefProfile).map(_.kind), Nil)
     assertEquals(RelativeCauseDraftPlanner.drafts(malformedExactProfile).map(_.kind), Nil)
 
-  test("drafts exact same-root activity support only with a concrete route carrier"):
+  test("does not turn an exact same-root activity carrier into a comparative cause"):
     val root = PositionNodeRef("8/8/8/8/8/8/3P4/5B2 b - - 0 1", 1, Some(Color.Black), Some("root"))
     val after = PositionNodeRef("8/8/8/8/8/8/3Pb3/8 w - - 1 2", 2, Some(Color.White), Some("after"))
     val referenceLine = LineNodeRef("reference-line", "f8e7", 1, LineNodeRole.BestReference)
@@ -2174,11 +2195,7 @@ class RelativeCauseSignalProfileTest extends munit.FunSuite:
     val exactContrastProfile = exactPlayedProfile(referenceLine, candidateLine, Nil, List(structuralRecord, sharedContrastRecord))
     val malformedProfile = exactPlayedProfile(referenceLine, candidateLine, Nil, List(malformedStructuralRecord, sharedContrastRecord))
 
-    val drafts = RelativeCauseDraftPlanner.drafts(exactContrastProfile)
-
-    assertEquals(drafts.map(_.kind), List(RelativeCauseKind.ActivityGain))
-    assertEquals(drafts.map(_.sourceSide), List(Some(RelativeCauseSourceSide.Candidate)))
-    assert(drafts.exists(_.support.exists(_.ref.id == structuralRef.id)), drafts)
+    assertEquals(RelativeCauseDraftPlanner.drafts(exactContrastProfile).map(_.kind), Nil)
     assertEquals(RelativeCauseDraftPlanner.drafts(malformedProfile).map(_.kind), Nil)
 
   test("maps candidate positive counterplay restraint axis to opponent restriction"):

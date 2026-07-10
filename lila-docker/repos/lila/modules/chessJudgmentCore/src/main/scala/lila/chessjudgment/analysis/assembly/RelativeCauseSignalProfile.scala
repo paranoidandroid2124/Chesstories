@@ -129,7 +129,10 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
 
 private[chessjudgment] object RelativeCauseDraftPlanner:
   def drafts(profile: RelativeCauseSignalProfile): List[RelativeCauseDraft] =
-    suppressGenericCompanions(rawDrafts(profile))
+    if profile.fact.kind == CandidateComparisonKind.PlayedVsBest &&
+        EvidenceRef.sameMove(profile.fact.referenceLine.rootMove, profile.fact.candidateLine.rootMove)
+    then Nil
+    else suppressGenericCompanions(rawDrafts(profile))
 
   def producedCauseBindableRecords(profile: RelativeCauseSignalProfile): List[EvidenceRecord] =
     drafts(profile).flatMap(_.support).distinctBy(_.ref.id)
