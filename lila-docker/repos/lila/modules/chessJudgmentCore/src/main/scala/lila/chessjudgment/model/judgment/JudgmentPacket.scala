@@ -2387,17 +2387,6 @@ object MoveMeaningSurface:
             .distinct
           val relationKinds = displaySemantics.flatMap(publicSurfaceRelationKinds).distinct.sortBy(_.toString)
           val publicPurposeCarriers = purposeCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface))
-          val playerFacingReasonAllowed =
-            displaySemantics.exists(surface =>
-              (surfaceHasDirectFunctionCarrier(surface) &&
-                (genericRouteSurface(surface) || fileRouteSurface(surface) || lineUnlockSurface(surface))) ||
-                surface.evidence.proofLevel != "surface_evidence" ||
-                surface.evidence.causeIds.nonEmpty ||
-                surface.evidence.proofRelationKinds.nonEmpty ||
-                surface.evidence.proofThreatDrivers.nonEmpty ||
-                surface.terminalConsequences.nonEmpty ||
-                surface.endgameTechnique.nonEmpty
-            )
           List(
             Json.obj(
               "key" -> "current-move-chain",
@@ -2417,7 +2406,7 @@ object MoveMeaningSurface:
               "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "terminal_consequences" -> publicTerminal.map(publicCodeJson),
               "technique" -> publicTechnique.map(publicEndgameTechniqueJson),
-              "player_facing_reason_allowed" -> playerFacingReasonAllowed
+              "player_facing_reason_allowed" -> true
             )
           )
     }
@@ -5995,7 +5984,7 @@ object MoveMeaningClaim:
               val spareIdentityCarriers =
                 checkIdentityCarriers ++
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, proofSourceEvidenceIds, claimMove) ++
-                  passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, proofSourceEvidenceIds) ++
+                  passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, proofSourceEvidenceIds, claimMove) ++
                   materialCaptureIdentityCarriersFromLineEvidence(
                     evidenceGraph,
                     proofSourceEvidenceIds,
@@ -6161,27 +6150,24 @@ object MoveMeaningClaim:
       sourceEvidenceIds: List[String],
       claimMove: String
   ): List[MoveMeaningSurfaceBoardCarrier] =
-    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
     sourceEvidenceIds
       .flatMap(id => evidenceGraph.byId.get(id))
       .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
       .flatMap(line =>
         val carryLineCapturePieces = line.hasTacticalLineConsequence || line.hasProofSignalMaterialEvent
-        line.lineEventsOf(LineEventKind.PassedPawn)
+        val rootOwnedLineEvents = line.rootOwnedLineEvents(claimMove)
+        rootOwnedLineEvents
+          .filter(_.kind == LineEventKind.PassedPawn)
           .flatMap(event => event.square.toList.flatMap(square => publicSquareCarrier("target", square.key))) ++
-          lineForkTargetCarriers(line, normalizedClaimMove) ++
+          lineForkTargetCarriers(line, claimMove) ++
           line.lineEvents
             .filter(event =>
               (event.kind == LineEventKind.Capture || event.kind == LineEventKind.Recapture) &&
-                (carryLineCapturePieces || event.plyOffset == 0 ||
-                  JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove)
+                (carryLineCapturePieces || rootOwnedLineEvents.contains(event))
             )
             .flatMap(event => event.targetRole.toList.flatMap(role => publicPieceCarrier("target", role.name))) ++
-          line.lineEvents
-            .filter(event =>
-              event.kind == LineEventKind.DefenderMove &&
-                (event.plyOffset == 0 || JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove)
-            )
+          rootOwnedLineEvents
+            .filter(_.kind == LineEventKind.DefenderMove)
             .flatMap(event => event.pieceRole.toList.flatMap(role => publicPieceCarrier("actor", role.name)))
       )
       .distinct
@@ -6273,16 +6259,14 @@ object MoveMeaningClaim:
       case RelationParticipantRole.Lured       => "lured"
       case RelationParticipantRole.Other       => "other"
 
-  private def lineForkTargetCarriers(line: LineFactEvidence, normalizedClaimMove: String): List[MoveMeaningSurfaceBoardCarrier] =
-    val hasCheck = line.hasLineEvent(LineEventKind.Check)
-    val hasCapture = line.hasLineEvent(LineEventKind.Capture)
+  private def lineForkTargetCarriers(line: LineFactEvidence, claimMove: String): List[MoveMeaningSurfaceBoardCarrier] =
+    val events = line.rootOwnedLineEvents(claimMove)
+    val hasCheck = events.exists(_.kind == LineEventKind.Check)
+    val hasCapture = events.exists(_.kind == LineEventKind.Capture)
     if !hasCheck || !hasCapture then Nil
     else
-      line.lineEvents
-        .filter(event =>
-          (event.kind == LineEventKind.Check || event.kind == LineEventKind.Capture) &&
-            (event.plyOffset == 0 || JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove)
-        )
+      events
+        .filter(event => event.kind == LineEventKind.Check || event.kind == LineEventKind.Capture)
         .flatMap(event => event.square.toList.flatMap(square => publicSquareCarrier("target", square.key)))
 
   private def checkIdentityCarriersFromLineEvidence(
@@ -6290,15 +6274,11 @@ object MoveMeaningClaim:
       sourceEvidenceIds: List[String],
       claimMove: String
   ): List[MoveMeaningSurfaceBoardCarrier] =
-    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
     sourceEvidenceIds
       .flatMap(id => evidenceGraph.byId.get(id))
       .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
-      .flatMap(_.lineEventsOf(LineEventKind.Check))
-      .filter(event =>
-        event.plyOffset == 0 ||
-          JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove
-      )
+      .flatMap(_.rootOwnedLineEvents(claimMove))
+      .filter(_.kind == LineEventKind.Check)
       .flatMap(_.square.toList)
       .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"check:${square.key}", semanticRole = Some("check")))
       .distinct
@@ -6308,27 +6288,25 @@ object MoveMeaningClaim:
       sourceEvidenceIds: List[String],
       claimMove: String
   ): List[MoveMeaningSurfaceBoardCarrier] =
-    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
     sourceEvidenceIds
       .flatMap(id => evidenceGraph.byId.get(id))
       .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
-      .flatMap(_.lineEvents)
-      .filter(event =>
-        event.kind == LineEventKind.DefenderMove &&
-          (event.plyOffset == 0 || JudgmentSubjectBinding.normalizeMove(event.moveUci).toLowerCase == normalizedClaimMove)
-      )
+      .flatMap(_.rootOwnedLineEvents(claimMove))
+      .filter(_.kind == LineEventKind.DefenderMove)
       .flatMap(_.square.toList)
       .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"defender-move:${square.key}", semanticRole = Some("defender_move")))
       .distinct
 
   private def passedPawnIdentityCarriersFromLineEvidence(
       evidenceGraph: TypedEvidenceGraph,
-      sourceEvidenceIds: List[String]
+      sourceEvidenceIds: List[String],
+      claimMove: String
   ): List[MoveMeaningSurfaceBoardCarrier] =
     sourceEvidenceIds
       .flatMap(id => evidenceGraph.byId.get(id))
       .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
-      .flatMap(_.lineEventsOf(LineEventKind.PassedPawn))
+      .flatMap(_.rootOwnedLineEvents(claimMove))
+      .filter(_.kind == LineEventKind.PassedPawn)
       .flatMap(_.square.toList)
       .map(square => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"passed-pawn:${square.key}", semanticRole = Some("passed_pawn")))
       .distinct

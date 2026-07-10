@@ -36,6 +36,73 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assert(anchor.detail.flatMap(_.axis).contains(BoardAnchorAxis.Diagonal), anchor.detail)
     assert(anchor.semanticGroupingAnchor.stableKey.contains("axis:Diagonal"), anchor.semanticGroupingAnchor.stableKey)
 
+  test("does not stamp an after-position mechanism with its matching claim move"):
+    val root = PositionNodeRef("8/8/8/8/8/8/7P/4K3 w - - 0 1", 1, Some(Color.White), Some("root"))
+    val afterPlayed = PositionNodeRef("8/8/8/8/7P/8/8/4K3 b - - 0 1", 2, Some(Color.Black), Some("after-played"))
+    val playedLine = LineNodeRef("played-line", "h2h4", 1, LineNodeRole.Played)
+    val transitionRef = evidenceRef(
+      id = "move-transition:played:h2h4",
+      producer = EvidenceProducer.MoveTransitionProducer,
+      layer = EvidenceLayer.MoveTransition,
+      position = root,
+      line = Some(playedLine),
+      scope = EvidenceScope.PlayedTransition
+    )
+    val mechanismRef = evidenceRef(
+      id = "strategic-mechanism:after-played:counterplay",
+      producer = EvidenceProducer.StrategicMechanismProducer,
+      layer = EvidenceLayer.StrategicMechanism,
+      position = afterPlayed,
+      line = None,
+      scope = EvidenceScope.AfterPlayedPosition
+    )
+    val axis = StrategicAxisDetail(StrategicAxisKind.Counterplay, StrategicAxisPolarity.Restrain, "defensive-counter-break-c")
+    val mechanism = StrategicMechanismEvidence(
+      kind = StrategicMechanismKind.PawnStructure,
+      signals = List(
+        StrategicMechanismSignal(
+          kind = StrategicMechanismSignalKind.PawnStructure,
+          label = "defensive-counter-break-c",
+          source = transitionRef,
+          strength = 2,
+          axis = Some(axis)
+        )
+      ),
+      semanticAnchors = Nil
+    )
+    val claim = ClaimSeed(
+      id = "claim:after-played:counterplay",
+      family = ClaimFamily.Strategic,
+      idea = None,
+      subject = IdeaSubject.PlayedMove,
+      primaryPosition = root,
+      primaryLine = Some(playedLine),
+      subjectMove = Some("h2h4"),
+      evidence = List(transitionRef),
+      engineComparison = None,
+      scope = EvidenceScope.PlayedTransition,
+      confidence = EvidenceConfidence.EngineBacked
+    )
+
+    val frame = PositionPlanTechniqueProjection
+      .frames(
+        TypedEvidenceGraph(
+          List(
+            EvidenceRecord(transitionRef, MoveTransitionEvidence("h2h4", root, afterPlayed)),
+            EvidenceRecord(mechanismRef, mechanism, parents = List(transitionRef))
+          )
+        ),
+        Nil,
+        List(claim),
+        None
+      )
+      .find(_.mechanismEvidenceIds.contains(mechanismRef.id))
+      .get
+
+    assertEquals(frame.line, None)
+    assertEquals(frame.moveUci, None)
+    assertEquals(frame.semanticDetails.find(_.axisKey.contains(axis.stableKey)).flatMap(_.structuralRouteMove), None)
+
   test("links plan technique frames to ideas and claims through relative cause evidence"):
     val root = PositionNodeRef("8/8/8/8/8/8/2P5/8 w - - 0 1", 1, Some(Color.White), Some("root"))
     val referenceLine = LineNodeRef("reference-line", "c2c4", 1, LineNodeRole.BestReference)
@@ -617,6 +684,18 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       depth = 16,
       evidence = playedLineEvidence
     )
+    val playedLinePayload =
+      new LineFactEvidence(playedLine, Some("d1b3"), None, List("a2a3"), None, None)(
+        events = List(
+          LineMoveEvent(
+            kind = LineEventKind.PassedPawn,
+            moveUci = "a2a3",
+            plyOffset = 2,
+            side = Some(Color.White),
+            square = Some(EvidenceSquare("a3"))
+          )
+        )
+      )
     val assessment = RelativeMoveAssessment(
       played = played,
       referenceTransition = None,
@@ -712,7 +791,8 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     val graph = TypedEvidenceGraph(
       List(
         EvidenceRecord(structuralRef, structuralDelta),
-        EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef)),
+        EvidenceRecord(playedLineEvidence, playedLinePayload),
+        EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef, playedLineEvidence)),
         EvidenceRecord(causeRef, RelativeCauseFactEvidence(cause), parents = List(mechanismRef, structuralRef))
       )
     )
@@ -740,6 +820,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(claim.lineRole, "candidate")
     assertEquals(claim.causeEvidenceIds, List(causeRef.id))
     assert(claim.targetSquares.contains("b7"), claim.targetSquares)
+    assert(!claim.boardCarriers.exists(_.value == "passed-pawn:a3"), claim.boardCarriers)
 
     val surfaceOnlyView = MoveJudgmentView
       .from(
@@ -747,7 +828,8 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         evidenceGraph = TypedEvidenceGraph(
           List(
             EvidenceRecord(structuralRef, structuralDelta),
-            EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef))
+            EvidenceRecord(playedLineEvidence, playedLinePayload),
+            EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef, playedLineEvidence))
           )
         ),
         ideas = Nil,
