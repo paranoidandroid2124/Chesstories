@@ -975,7 +975,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(activeSummary.defense.counterIsBetter, true)
     assertEquals(quietSummary.counterThreatBetter, false)
 
-  test("plan transition carries a multi-ply forced pivot through graph evidence"):
+  test("plan transition carries typed context through graph evidence"):
     val previous = Plan.PieceActivation(Color.White)
     val current = Plan.Prophylaxis(Color.White)
     val currentMatch = PlanMatch(current, score = 1.0, evidence = Nil)

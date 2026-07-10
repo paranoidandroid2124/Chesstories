@@ -292,8 +292,8 @@ object EvidenceObjectBinding:
           List(fromThreatEpisode(record.ref, payload))
         case payload: PawnStructureFactEvidence =>
           fromPawnStructure(record.ref, payload)
-        case PlanPressureEvidence(_, activePlans) =>
-          fromActivePlans(record.ref, activePlans)
+        case payload: PlanPressureEvidence =>
+          fromPlanPressure(record.ref, payload)
         case PlanTransitionEvidence(transition) =>
           transition.primaryPlanId.toList.map(planId =>
             EvidenceObjectBinding(
@@ -697,8 +697,8 @@ object EvidenceObjectBinding:
       )
     (pawnPlayBindings ++ alignmentBindings).distinctBy(_.signature)
 
-  private def fromActivePlans(ref: EvidenceRef, activePlans: ActivePlans): List[EvidenceObjectBinding] =
-    (activePlans.primary :: activePlans.secondary.toList).map { plan =>
+  private def fromPlanPressure(ref: EvidenceRef, payload: PlanPressureEvidence): List[EvidenceObjectBinding] =
+    payload.rootBackedPlans(ref.line.map(_.rootMove)).map { plan =>
       val evidenceAtoms = plan.evidence
       val evidenceMoveWitnessObjects =
         evidenceAtoms
@@ -713,8 +713,7 @@ object EvidenceObjectBinding:
         target = objectOf(EvidenceObjectKind.PlanSubject, plan.plan.id.toString),
         mechanism = objectOf(EvidenceObjectKind.Mechanism, "plan-pressure"),
         consequence = objectOf(EvidenceObjectKind.Consequence, plan.plan.id.toString),
-        witness = evidenceAtoms.flatMap(evidence => objectOf(EvidenceObjectKind.PlanSubject, evidence.toString)) ++
-          evidenceMoveWitnessObjects,
+        witness = evidenceMoveWitnessObjects,
         line = ref.line
       )
     }.distinctBy(_.signature)

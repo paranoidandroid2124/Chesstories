@@ -1573,7 +1573,7 @@ object EvidenceFactAssembler:
         input,
         (plans.primary.plan :: plans.allPlans.filter(_.evidence.nonEmpty).map(_.plan)).distinctBy(_.id)
       )
-    val transitionRecords = context.transitions.flatMap { edge =>
+    val transitionsByPosition = context.transitions.flatMap { edge =>
       for
         (transitionContext, currentPlans, _, _) <- snapshots.get(edge.to).toList
         if transitionContext.rootMove.exists(rootMove =>
@@ -1582,7 +1582,6 @@ object EvidenceFactAssembler:
           )
         )
         (_, _, beforePressure, _) <- snapshots.get(edge.from).toList
-        (_, _, afterPressure, _) <- snapshots.get(edge.to).toList
         (planContinuity, previousPlan) <- continuity.toList
         if planContinuity.supportingMoves.nonEmpty
       yield
@@ -1592,19 +1591,22 @@ object EvidenceFactAssembler:
           continuity = planContinuity,
           ctx = transitionContext
         )
-        TransitionFactNormalizer.fromPlanTransition(
+        edge.to -> TransitionFactNormalizer.fromPlanTransition(
           id = allocator.evidenceId(s"plan-transition:${allocator.key(edge.role)}:${edge.moveUci}"),
           transition = transition,
           position = edge.from,
           line = lineForTransition(context, edge).map(_.ref),
           scope = edge.role.scope,
-          parents = List(edge.evidence, beforePressure.ref, afterPressure.ref)
+          parents = List(edge.evidence, beforePressure.ref)
         )
+    }.toMap
+    val snapshotRecords = snapshots.toList.flatMap { case (position, (_, _, pressure, alignedPawn)) =>
+      val linkedPressure = pressure.copy(
+        parents = (pressure.parents ++ transitionsByPosition.get(position).map(_.ref)).distinctBy(_.id)
+      )
+      linkedPressure :: alignedPawn.toList
     }
-    val snapshotRecords = snapshots.values.toList.flatMap { case (_, _, pressure, alignedPawn) =>
-      pressure :: alignedPawn.toList
-    }
-    snapshotRecords ++ transitionRecords
+    snapshotRecords ++ transitionsByPosition.values
 
   private def historicalPlanContinuity(
       input: NormalizedMoveReviewInput,

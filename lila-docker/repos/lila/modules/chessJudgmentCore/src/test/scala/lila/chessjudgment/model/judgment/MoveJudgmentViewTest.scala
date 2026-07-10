@@ -508,6 +508,11 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       0.8,
       List(EvidenceAtom(Motif.PawnAdvance(chess.File.B, 7, 5, Color.Black, 0, Some("b7b5")), 0.2))
     )
+    val unrelatedPlan = PlanMatch(
+      Plan.SpaceAdvantage(Color.Black),
+      0.7,
+      List(EvidenceAtom(Motif.PawnAdvance(chess.File.A, 7, 6, Color.Black, 0, Some("a7a6")), 0.2))
+    )
     val transition = StructuralTransitionBinding("b7b5", TransitionEdgeRole.Played, root, after, Some(line), Color.Black)
     val consequence = TransitionConsequence(
       TransitionConsequenceKind.TargetPressureGain,
@@ -527,8 +532,8 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         EvidenceRecord(
           pressureRef,
           PlanPressureEvidence(
-            PlanScoringResult(List(planMatch), 0.8, "opening"),
-            ActivePlans(planMatch, None, Nil, List(planMatch))
+            PlanScoringResult(List(planMatch, unrelatedPlan), 0.8, "opening"),
+            ActivePlans(planMatch, Some(unrelatedPlan), Nil, List(planMatch, unrelatedPlan))
           ),
           List(structuralRef)
         ),
@@ -543,6 +548,9 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(detail.structuralRouteMove, Some("b7b5"))
     assertEquals(detail.structuralConsequenceKinds, List(TransitionConsequenceKind.TargetPressureGain))
     assertEquals(detail.structuralPurposeSubjects, List("c4"))
+    assert(view.positionPlanTechniqueFrames.flatMap(_.objectBindingSignatures).exists(_.contains("target=PlanSubject:queensideattack")))
+    assert(!view.positionPlanTechniqueFrames.flatMap(_.objectBindingSignatures).exists(_.contains("spaceadvantage")))
+    assert(!view.positionPlanTechniqueFrames.flatMap(_.objectBindingSignatures).exists(_.contains("evidenceatom")))
 
   test("preserves concrete piece route object ownership on semantic details"):
     val root = PositionNodeRef("8/8/8/8/8/8/8/6N1 w - - 0 1", 1, Some(Color.White), Some("root"))
