@@ -133,11 +133,12 @@ object EvidenceFactAssembler:
       parents: List[EvidenceRef]
   ): List[EvidenceRecord] =
     MoveAnalyzer.tokenizePv(startFen, moves).flatMap { motifs =>
-      Option.when(motifs.nonEmpty) {
+      val rootMotifs = motifs.filter(TacticalMotifClassifier.isRootMoveMotif(moveUci, _))
+      Option.when(rootMotifs.nonEmpty) {
         MoveMotifNormalizer.fromMotifs(
           id = id,
           moveUci = moveUci,
-          motifs = motifs,
+          motifs = rootMotifs,
           position = position,
           line = line.map(_.ref),
           scope = scope,
