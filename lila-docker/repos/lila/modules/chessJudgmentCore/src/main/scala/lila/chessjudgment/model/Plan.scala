@@ -225,3 +225,7 @@ enum PlanId:
   case DefensiveConsolidation, Prophylaxis, Exchange, Counterplay
   // Transition
   case Simplification, QueenTrade
+
+object PlanId:
+  def fromString(raw: String): Option[PlanId] =
+    values.find(_.toString.equalsIgnoreCase(Option(raw).getOrElse("").trim))

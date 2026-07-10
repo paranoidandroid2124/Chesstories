@@ -42,19 +42,16 @@ object TransitionAnalyzer:
 
     val transType = prevPlanKey match
       case None => TransitionType.Opening
-      case Some(prev) if continuityMatches(prev, currPlan) => TransitionType.Continuation
+      case Some(prev) if prev == currPlan.id => TransitionType.Continuation
       case Some(_) => classifyShift(Some(previousPlan), currPlan, ctx)
     
     PlanSequenceSummary(
       transitionType = transType,
-      primaryPlanId = Some(currPlan.id.toString),
-      previousPlanId = Some(previousPlan.id.toString),
+      primaryPlanId = Some(currPlan.id),
+      previousPlanId = Some(previousPlan.id),
       continuity = Some(continuity)
     )
   }
-
-  private def continuityMatches(previousKey: String, currentPlan: Plan): Boolean =
-    previousKey.equalsIgnoreCase(currentPlan.id.toString)
 
   private def classifyShift(
     prevPlan: Option[Plan],

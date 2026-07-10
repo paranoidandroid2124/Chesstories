@@ -1,6 +1,7 @@
 package lila.chessjudgment.model.strategic
 
 import chess.{ Color, Rank, Role, Square }
+import lila.chessjudgment.model.PlanId
 
 case class PieceActivity(
     piece: Role,
@@ -109,7 +110,7 @@ enum PositionalTag:
   case Initiative(color: Color)
 
 case class PlanContinuity(
-  planId: Option[String],
+  planId: Option[PlanId],
   consecutivePlies: Int,
   startingPly: Int,
   supportingMoves: List[String] = Nil
@@ -118,7 +119,10 @@ object PlanContinuity:
   import play.api.libs.json.*
   given Reads[PlanContinuity] = Reads { js =>
     for
-      planId <- (js \ "planId").validateOpt[String]
+      rawPlanId <- (js \ "planId").validateOpt[String]
+      planId <- rawPlanId match
+        case None => JsSuccess(None)
+        case Some(raw) => PlanId.fromString(raw).map(id => JsSuccess(Some(id))).getOrElse(JsError("invalid planId"))
       consecutivePlies <- (js \ "consecutivePlies").validate[Int]
       startingPly <- (js \ "startingPly").validate[Int]
       supportingMoves <- (js \ "supportingMoves").validateOpt[List[String]]
@@ -131,7 +135,7 @@ object PlanContinuity:
   }
   given Writes[PlanContinuity] = Writes { c =>
     Json.obj(
-      "planId" -> c.planId,
+      "planId" -> c.planId.map(_.toString),
       "consecutivePlies" -> c.consecutivePlies,
       "startingPly" -> c.startingPly,
       "supportingMoves" -> c.supportingMoves

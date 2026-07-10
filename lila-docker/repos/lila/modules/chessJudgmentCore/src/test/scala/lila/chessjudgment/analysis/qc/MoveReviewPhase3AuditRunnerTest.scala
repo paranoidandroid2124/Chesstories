@@ -6,7 +6,7 @@ import lila.chessjudgment.analysis.position.{ FactExtractor, PositionAnalyzer, P
 import lila.chessjudgment.analysis.singlePosition.*
 import lila.chessjudgment.analysis.strategic.EndgamePatternOracle
 import lila.chessjudgment.analysis.transition.TransitionAnalyzer
-import lila.chessjudgment.model.{ ActivePlans, EvidenceAtom, Fact, FactScope, Motif, Plan, PlanMatch, TransitionType }
+import lila.chessjudgment.model.{ ActivePlans, EvidenceAtom, Fact, FactScope, Motif, Plan, PlanId, PlanMatch, TransitionType }
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.strategic.{ PlanContinuity, RookEndgameGeometry, RookEndgamePattern }
 import lila.chessjudgment.model.structure.*
@@ -999,7 +999,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       )
     val continuity =
       PlanContinuity(
-        planId = Some(previous.id.toString),
+        planId = Some(previous.id),
         consecutivePlies = 3,
         startingPly = 10,
         supportingMoves = List("g1f3")
@@ -1017,8 +1017,8 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       )
 
     assertEquals(summary.transitionType, TransitionType.ForcedPivot)
-    assertEquals(summary.previousPlanId, Some("PieceActivation"))
-    assertEquals(summary.primaryPlanId, Some("Prophylaxis"))
+    assertEquals(summary.previousPlanId, Some(PlanId.PieceActivation))
+    assertEquals(summary.primaryPlanId, Some(PlanId.Prophylaxis))
     assert(StrategicMechanismEvidence.planTransitionCanSupportPlan(summary))
 
     val root = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 13, Some(Color.White), Some("root"))
@@ -1078,7 +1078,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
           allPlans = List(primary, continuing)
         ),
         continuity = PlanContinuity(
-          planId = Some(previous.id.toString),
+          planId = Some(previous.id),
           consecutivePlies = 3,
           startingPly = 28,
           supportingMoves = List("h2h4")
@@ -1087,7 +1087,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       )
 
     assertEquals(summary.transitionType, TransitionType.Continuation)
-    assertEquals(summary.primaryPlanId, Some("KingsideAttack"))
+    assertEquals(summary.primaryPlanId, Some(PlanId.KingsideAttack))
 
   test("pawn play strategic axis label preserves break file tension policy and squares"):
     val position = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(chess.Color.White), Some("root"))

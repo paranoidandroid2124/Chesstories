@@ -1626,7 +1626,7 @@ object EvidenceFactAssembler:
           val startingPly = matching.last._1
           (
             PlanContinuity(
-              Some(currentPlan.id.toString),
+              Some(currentPlan.id),
               input.beforePly - startingPly + 1,
               startingPly,
               supportingMoves = matching.reverse.map(_._2)

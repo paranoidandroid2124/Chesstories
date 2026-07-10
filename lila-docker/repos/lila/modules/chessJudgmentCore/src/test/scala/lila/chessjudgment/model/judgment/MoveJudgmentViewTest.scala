@@ -2,7 +2,7 @@ package lila.chessjudgment.model.judgment
 
 import chess.Color
 import lila.chessjudgment.analysis.position.PositionFactNormalizer
-import lila.chessjudgment.model.{ Fact, FactScope, PlanSequenceSummary, TransitionType }
+import lila.chessjudgment.model.{ Fact, FactScope, PlanId, PlanSequenceSummary, TransitionType }
 import lila.chessjudgment.analysis.singlePosition.{
   DefenseAssessment,
   PassedPawnUrgency,
@@ -299,7 +299,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
               PlanTransitionEvidence(
                 PlanSequenceSummary(
                   transitionType = TransitionType.Continuation,
-                  primaryPlanId = Some("CentralBreakthrough")
+                  primaryPlanId = Some(PlanId.CentralBreakthrough)
                 )
               )
             ),

@@ -301,12 +301,12 @@ object EvidenceObjectBinding:
           transition.primaryPlanId.toList.map(planId =>
             EvidenceObjectBinding(
               source = record.ref,
-              actor = transition.previousPlanId.toList.flatMap(plan => objectOf(EvidenceObjectKind.PlanSubject, plan)),
-              target = objectOf(EvidenceObjectKind.PlanSubject, planId),
+              actor = transition.previousPlanId.toList.flatMap(plan => objectOf(EvidenceObjectKind.PlanSubject, plan.toString)),
+              target = objectOf(EvidenceObjectKind.PlanSubject, planId.toString),
               mechanism = objectOf(EvidenceObjectKind.Mechanism, "plan-transition"),
               consequence = objectOf(EvidenceObjectKind.Consequence, transition.transitionType.toString),
               witness = (
-                (transition.previousPlanId.toList :+ planId).flatMap(plan => objectOf(EvidenceObjectKind.PlanSubject, plan)) ++
+                (transition.previousPlanId.toList :+ planId).flatMap(plan => objectOf(EvidenceObjectKind.PlanSubject, plan.toString)) ++
                   transition.continuity.toList.flatMap(_.supportingMoves).flatMap(move => objectOf(EvidenceObjectKind.Move, move))
               ).distinctBy(_.signaturePart),
               line = record.ref.line,
@@ -2338,13 +2338,13 @@ object StrategicMechanismEvidence:
           case TransitionType.Opportunistic => StrategicAxisPolarity.Gain
           case TransitionType.Opening       => StrategicAxisPolarity.Support
         val axisLabel =
-          if transition.transitionType == TransitionType.Continuation then transition.primaryPlanId.getOrElse("")
-          else (transition.previousPlanId.toList ++ transition.primaryPlanId.toList).mkString("->")
+          if transition.transitionType == TransitionType.Continuation then transition.primaryPlanId.map(_.toString).getOrElse("")
+          else (transition.previousPlanId.toList ++ transition.primaryPlanId.toList).map(_.toString).mkString("->")
         transition.primaryPlanId.toList.map(planId =>
           StrategicMechanismKind.PlanPressure ->
             signal(
               StrategicMechanismSignalKind.PlanTransition,
-              planId,
+              planId.toString,
               record.ref,
               2,
               concreteAxis(record, Some(StrategicAxisDetail(StrategicAxisKind.PlanCoherence, polarity, axisLabel)))
@@ -2418,7 +2418,7 @@ object StrategicMechanismEvidence:
         transition.primaryPlanId.map(plan =>
           EvidenceSemanticAnchor.of(
             EvidenceSemanticAnchorKind.PlanTransition,
-            (transition.previousPlanId.toList ++ List(plan) ++
+            (transition.previousPlanId.toList.map(_.toString) ++ List(plan.toString) ++
               transition.continuity.toList.map(continuity => s"${continuity.consecutivePlies}-ply"))*
           )
         ).toList
