@@ -29,7 +29,6 @@ enum JudgmentPacketValidationIssueKind:
   case UnbackedClaimEventClusterProof
   case UnownedClaimEventCauseProof
   case MissingRelativeEvidence
-  case MismatchedEvidenceLayer
   case MismatchedLineEvidenceRef
   case MismatchedEvalEvidenceRef
   case MismatchedEvalWhitePov
@@ -698,16 +697,6 @@ object JudgmentPacketValidator:
   private def graphBindingInvariants(packet: EvidenceBackedJudgmentPacket): List[JudgmentPacketValidationIssue] =
     val candidateLinesByRef = packet.candidateLines.map(line => line.ref -> line).toMap
     packet.evidenceGraph.records.flatMap { record =>
-      val layerIssue =
-        Option
-          .when(record.ref.layer != record.payload.layer)(
-            JudgmentPacketValidationIssue(
-              JudgmentPacketValidationIssueKind.MismatchedEvidenceLayer,
-              record.ref.id,
-              Some(record.ref)
-            )
-          )
-          .toList
       val bindingIssues =
         record match
           case EvidenceRecord(ref, payload: LineFactEvidence, _) =>
@@ -856,7 +845,7 @@ object JudgmentPacketValidator:
             )
           case _ =>
             Nil
-      layerIssue ++ bindingIssues
+      bindingIssues
     }
 
   private def relativeCauseValidationIssues(

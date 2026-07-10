@@ -1369,8 +1369,7 @@ enum StrategicFactKind:
   case Practicality
   case PlanPressure
 
-sealed trait EvidencePayload:
-  def layer: EvidenceLayer
+sealed trait EvidencePayload
 
 final case class BoardFactEvidence(
     private val facts: List[Fact],
@@ -1379,7 +1378,6 @@ final case class BoardFactEvidence(
     private val attackDefense: List[BoardAttackDefenseEntry] = Nil,
     private val profile: Option[BoardPositionProfile] = None
 ) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.Board
   def boardAnchors: List[BoardAnchor] =
     anchors
   def boardAnchorCount: Int =
@@ -1674,15 +1672,13 @@ final case class BoardAnchor(
 
 final case class SinglePositionEvidence(
     assessment: SinglePositionAssessment
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.SinglePosition
+) extends EvidencePayload
 
 final case class PawnStructureFactEvidence(
     profile: StructureProfile,
     alignment: Option[PlanAlignment],
     pawnPlay: Option[PawnPlayAnalysis]
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.PawnStructure
+) extends EvidencePayload
 
 final case class StrategicFactEvidence(
     kind: StrategicFactKind,
@@ -1691,7 +1687,6 @@ final case class StrategicFactEvidence(
     confidence: Double
 )(val boardAnchors: List[BoardAnchor] = Nil
 ) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.Strategic
   def hasTypedSupport: Boolean =
     facts.nonEmpty || relatedPlans.nonEmpty || boardAnchors.nonEmpty
   def semanticGroupingAnchors: List[EvidenceSemanticAnchor] =
@@ -1778,7 +1773,6 @@ final case class StrategicMechanismEvidence(
     signals: List[StrategicMechanismSignal],
     semanticAnchors: List[EvidenceSemanticAnchor]
 ) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.StrategicMechanism
   def signalKinds: Set[StrategicMechanismSignalKind] =
     signals.map(_.kind).toSet
   def hasSignals: Boolean =
@@ -1938,7 +1932,6 @@ final case class StrategicMechanismContrastEvidence(
     sustainability: StrategicSustainabilityAssessment,
     support: StrategicContrastSupport
 ) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.StrategicMechanism
   def actionableComparisons: List[StrategicAxisComparison] =
     axisComparisons.filter(_.hasContrast)
   def hasActionableContrast: Boolean =
@@ -2865,18 +2858,15 @@ final case class OpeningContextEvidence(
     signals: List[OpeningContextSignal],
     recognition: Option[OpeningRecognition] = None,
     themePriorSelection: Option[OpeningThemePriorSelection] = None
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.OpeningContext
+) extends EvidencePayload
 
 final case class FeatureAnchorEvidence(
     anchor: FeatureAnchor
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.FeatureAnchor
+) extends EvidencePayload
 
 final case class ApplicabilityAssessmentEvidence(
     assessment: ApplicabilityAssessment
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.ApplicabilityAssessment
+) extends EvidencePayload
 
 final case class ThreatEpisode(
     episodeId: String,
@@ -2945,14 +2935,12 @@ object ThreatEpisode:
 final case class ThreatPressureEvidence(
     sideUnderPressure: Color,
     threats: ThreatAnalysis
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.ThreatPressure
+) extends EvidencePayload
 
 final case class ThreatEpisodeEvidence(
     episode: ThreatEpisode,
     summary: ThreatAnalysis
 ) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.ThreatPressure
   def sideUnderPressure: Color =
     episode.sideUnderPressure
   def defenseRequired: Boolean =
@@ -3260,7 +3248,6 @@ final case class LineFactEvidence(
     private val consequences: List[LineConsequence] = Nil,
     private val endgameHorizons: List[LineEndgameTechniqueHorizon] = Nil
 ) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.Line
   def rootMove: Option[String] =
     firstMove
   def reply: Option[String] =
@@ -3584,7 +3571,6 @@ final case class EvalFactEvidence(
     mate: Option[Int],
     depth: Int
 ) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.Eval
   def evalPoint: PerspectiveMath.EvalPoint =
     PerspectiveMath.EvalPoint(whitePovEvalCp, mate)
   def whiteWinPercent: Double =
@@ -3799,7 +3785,6 @@ object MoveMotifEvent:
 final case class MoveMotifEvidence(
     event: MoveMotifEvent
 ) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.MoveMotif
   def moveUci: String = event.rootMove
   def rootMove: String = event.rootMove
   def motif: Motif = event.motif
@@ -3826,8 +3811,7 @@ final case class MoveTransitionEvidence(
     moveUci: String,
     from: PositionNodeRef,
     to: PositionNodeRef
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.MoveTransition
+) extends EvidencePayload
 
 enum StructuralSignalPolarity:
   case Gain
@@ -3962,7 +3946,6 @@ final case class RelationFactEvidence(
     participants: List[RelationParticipant]
 )(val witnessProof: RelationWitnessProof = RelationWitnessProof.empty
 ) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.Relation
   def detail: RelationWitnessDetail =
     witnessProof.detail
   def hasTypedWitness: Boolean =
@@ -4108,7 +4091,6 @@ final case class TacticalMechanismEvidence(
     line: Option[LineNodeRef],
     signals: List[TacticalMechanismSignal]
 ) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.TacticalMechanism
   def signalKinds: Set[TacticalMechanismSignalKind] =
     signals.map(_.kind).toSet
   def hasLineProof: Boolean =
@@ -4146,7 +4128,6 @@ final case class StructuralDeltaEvidence(
     consequences: List[TransitionConsequence],
     developmentChoices: List[StructuralDevelopmentChoice] = Nil
 ) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.StructuralDelta
   import StructuralSignalKind.*
   import TransitionConsequenceKind.*
 
@@ -4355,51 +4336,42 @@ object StructuralDeltaEvidence:
 
 final case class PlanTransitionEvidence(
     transition: PlanSequenceSummary
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.PlanTransition
+) extends EvidencePayload
 
 final case class PlanPressureEvidence(
     scoring: PlanScoringResult,
     activePlans: ActivePlans
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.PlanPressure
+) extends EvidencePayload
 
 final case class CandidateComparisonEvidence(
     comparison: CandidateComparisonFact
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.CandidateComparison
+) extends EvidencePayload
 
 final case class CounterfactualFactEvidence(
     referenceLine: LineNodeRef,
     candidateLine: LineNodeRef,
     comparison: EvalComparison
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.Counterfactual
+) extends EvidencePayload
 
 final case class RelativeAssessmentEvidence(
     assessment: RelativeMoveAssessment
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.RelativeAssessment
+) extends EvidencePayload
 
 final case class RelativeCauseFactEvidence(
     cause: RelativeCauseFact
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.RelativeCause
+) extends EvidencePayload
 
 final case class MoveVerdictCertificationEvidence(
     certification: MoveVerdictCertification
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.MoveVerdictCertification
+) extends EvidencePayload
 
 final case class ChessIdeaEvidence(
     idea: ChessIdeaRef
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.ChessIdea
+) extends EvidencePayload
 
 final case class ClaimEvidence(
     claimId: String
-) extends EvidencePayload:
-  val layer: EvidenceLayer = EvidenceLayer.Claim
+) extends EvidencePayload
 
 final case class EvidenceRecord(
     ref: EvidenceRef,
@@ -4470,7 +4442,7 @@ final case class TypedEvidenceGraph(
     records.map(record => record.ref.id -> record).toMap
 
   def refs(layer: EvidenceLayer): List[EvidenceRef] =
-    records.collect { case record if record.payload.layer == layer => record.ref }
+    records.collect { case record if record.ref.layer == layer => record.ref }
 
   def recordsFor(position: PositionNodeRef): List[EvidenceRecord] =
     records.filter(_.ref.position == position)

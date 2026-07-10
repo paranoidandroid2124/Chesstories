@@ -1790,7 +1790,7 @@ object EvidenceFactAssembler:
   ): List[EvidenceRef] =
     context.evidenceGraph.records.collect {
       case record
-          if record.payload.layer == layer &&
+          if record.ref.layer == layer &&
             position.forall(_ == record.ref.position) &&
             line.forall(record.ref.line.contains) =>
         record.ref

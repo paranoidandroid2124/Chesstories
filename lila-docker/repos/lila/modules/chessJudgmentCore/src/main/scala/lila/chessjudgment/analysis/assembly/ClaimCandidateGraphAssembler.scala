@@ -490,7 +490,7 @@ object ClaimArbitrator:
     val scoringRecords = salienceRecordsForClaim(claim, records)
     val evidenceScore =
       scoringRecords
-        .groupBy(_.payload.layer)
+        .groupBy(_.ref.layer)
         .values
         .map(recordsForLayer => recordsForLayer.map(recordSalience).maxOption.getOrElse(0))
         .sum

@@ -3263,7 +3263,7 @@ object MoveReviewPhase3AuditRunner:
         )
       case EvidenceRecord(ref, payload, _) =>
         Json.obj(
-          "payload" -> payload.layer.toString,
+          "payload" -> ref.layer.toString,
           "evidenceId" -> ref.id
         )
     }
