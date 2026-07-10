@@ -3332,7 +3332,6 @@ object MoveMeaningSurface:
         )(claim -> evidence)
       }
       .sortBy((claim, _) => claimSurfaceSortKey(claim))
-      .take(12)
 
   private[chessjudgment] def evidenceForClaim(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
     publicEvidence(claim)
