@@ -19,7 +19,7 @@ import lila.chessjudgment.analysis.structure.{
 }
 import lila.chessjudgment.analysis.tactical.{ RelationFactNormalizer, TacticalMotifClassifier, TacticalRelationEvidence }
 import lila.chessjudgment.analysis.transition.{ TransitionAnalyzer, TransitionFactNormalizer }
-import lila.chessjudgment.model.{ CompatibilityAdjustment, Motif, PlanCategory }
+import lila.chessjudgment.model.{ CompatibilityAdjustment, Motif, Plan, PlanCategory }
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.strategic.PlanContinuity
 import lila.chessjudgment.model.structure.StructureId
@@ -1559,7 +1559,7 @@ object EvidenceFactAssembler:
       for
         before <- context.position(PositionNodeRole.Before)
         (_, plans, _, _) <- snapshots.get(before.ref)
-      yield historicalPlanContinuity(input, plans.primary.plan.id.toString, plans.primary.plan.color)
+      yield historicalPlanContinuity(input, plans.primary.plan)
     val transitions = context.transitions.map { edge =>
       val summary =
         for
@@ -1567,12 +1567,13 @@ object EvidenceFactAssembler:
           (transitionContext, currentPlans, _, _) <- snapshots.get(edge.to)
           if currentPlans.primary.evidence.nonEmpty
         yield
+          val (planContinuity, previousPlan) = continuity.getOrElse(
+            PlanContinuity(Some(previousPlans.primary.plan.id.toString), 1, edge.from.ply) -> previousPlans.primary.plan
+          )
           TransitionAnalyzer.analyze(
-            previousPlans = previousPlans,
+            previousPlan = previousPlan,
             currentPlans = currentPlans,
-            continuity = continuity.getOrElse(
-              PlanContinuity(Some(previousPlans.primary.plan.id.toString), 1, edge.from.ply)
-            ),
+            continuity = planContinuity,
             ctx = transitionContext
           )
       edge.copy(planTransition = summary)
@@ -1599,41 +1600,41 @@ object EvidenceFactAssembler:
 
   private def historicalPlanContinuity(
       input: NormalizedMoveReviewInput,
-      planId: String,
-      side: Color
-  ): PlanContinuity =
-    val matching =
+      fallbackPlan: Plan
+  ): (PlanContinuity, Plan) =
+    val history =
       PrincipalVariationEvidence
         .legalReplay(Standard.initialFen.value, input.movePrefixUci, 0)
         .filter(replay => replay.lastOption.exists(step => PrincipalVariationEvidence.sameBoardState(step._2.fenAfter, input.beforeFen)))
         .getOrElse(Nil)
         .reverseIterator
         .filter { case (fenBefore, _) =>
-          Fen.read(Standard, Fen.Full(fenBefore)).exists(_.color == side)
+          Fen.read(Standard, Fen.Full(fenBefore)).exists(_.color == fallbackPlan.color)
         }
         .filter(step => input.beforePly - (step._2.ply - 1) < 8)
         .map { case (fenBefore, move) =>
-          (move.ply - 1, move.uci, historicalPlanId(fenBefore, move, side))
+          (move.ply - 1, move.uci, historicalPlan(fenBefore, move, fallbackPlan.color))
         }
-        .takeWhile(_._3.contains(planId))
         .toList
-    matching.lastOption match
-      case Some(entry) =>
+    history.headOption.flatMap(_._3) match
+      case Some(previousPlan) =>
+        val matching = history.takeWhile(_._3.exists(_.id == previousPlan.id))
+        val entry = matching.last
         val startingPly = entry._1
         PlanContinuity(
-          Some(planId),
+          Some(previousPlan.id.toString),
           input.beforePly - startingPly + 1,
           startingPly,
           supportingMoves = matching.reverse.map(_._2)
-        )
+        ) -> previousPlan
       case None =>
-        PlanContinuity(Some(planId), 1, input.beforePly)
+        PlanContinuity(Some(fallbackPlan.id.toString), 1, input.beforePly) -> fallbackPlan
 
-  private def historicalPlanId(
+  private def historicalPlan(
       fenBefore: String,
       move: PrincipalVariationEvidence.LineMoveRef,
       side: Color
-  ): Option[String] =
+  ): Option[Plan] =
     for
       position <- Fen.read(Standard, Fen.Full(fenBefore))
       if position.color == side
@@ -1671,7 +1672,7 @@ object EvidenceFactAssembler:
       )
       active <- PlanMatcher.toActivePlans(scoring.topPlans, scoring.compatibilityEvents)
       if active.primary.evidence.nonEmpty
-    yield active.primary.plan.id.toString
+    yield active.primary.plan
 
   private def motifsForLineRole(context: JudgmentAssemblyContext, role: LineNodeRole): List[Motif] =
     context.line(role).map(_.ref).flatMap { lineRef =>
