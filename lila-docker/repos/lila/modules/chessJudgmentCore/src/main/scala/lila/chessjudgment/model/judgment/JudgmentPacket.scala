@@ -3020,7 +3020,13 @@ object MoveMeaningSurface:
             )
         ) &&
         surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move")
-    concreteFileCarrier ||
+    val exactRestrictionCarrier =
+      surface.evidence.boardCarriers.exists(carrier =>
+        carrier.role == "target" &&
+          carrier.kind == "PlanSubject" &&
+          StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject(carrier.value)
+      )
+    concreteFileCarrier || exactRestrictionCarrier ||
       surface.evidence.proofLevel == "owned_cause" &&
         (
           surface.evidence.boardCarriers.exists(carrier =>
@@ -3030,9 +3036,7 @@ object MoveMeaningSurface:
               (
                 value.startsWith("material-capture:") ||
                   value.startsWith("material-recapture:") ||
-                  value.startsWith("passed-pawn:") ||
-                  value.contains(":advance-restricted") ||
-                  value.contains(":color-complex-safe")
+                  value.startsWith("passed-pawn:")
               )
           ) ||
             (
@@ -5320,11 +5324,10 @@ object MoveMeaningClaim:
             carrier.kind == "PlanSubject" &&
             (
               carrier.value.startsWith("break-file:") ||
-                carrier.value.startsWith("material-capture:") ||
+              carrier.value.startsWith("material-capture:") ||
                 carrier.value.startsWith("material-recapture:") ||
                 carrier.value.startsWith("passed-pawn:") ||
-                carrier.value.contains(":advance-restricted") ||
-                carrier.value.contains(":color-complex-safe")
+                StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject(carrier.value)
             )
         )
     claim.meaningKind == "CounterplayControl" &&
