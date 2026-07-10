@@ -77,6 +77,78 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(proofRecords.count(_.payload.isInstanceOf[StructuralDeltaEvidence]), 1)
     assertEquals(proofRecords.count(_.payload.isInstanceOf[LineFactEvidence]), 1)
     assert(proofRecords.forall(_.ref.line.exists(_.role == LineNodeRole.Played)), proofRecords)
+    assertEquals(
+      proofRecords.collectFirst { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload.futureRootPawnAdvance() }.flatten,
+      None
+    )
+
+  test("Doknjas b5 plan carries its later b4 realization without another analysis pass"):
+    val result = MoveReviewJudgmentOrchestrator
+      .build(
+        RawMoveReviewInput(
+          fen = "r1b2rk1/pp2ppbp/5np1/q1nP4/4PB2/2N2P2/PP4PP/2RQKBNR b K - 0 10",
+          playedMoveUci = "b7b5",
+          variations = List(
+            VariationLine(
+              List("b7b5", "b2b4", "a5b4", "f4d2", "b4b2", "c1c2", "b2a3", "f1e2", "b5b4", "c3b5", "a3a5", "c2c5"),
+              scoreCp = 0,
+              depth = 12
+            )
+          ),
+          currentEvalCp = Some(0),
+          ply = Some(19),
+          openingContext = Some(RawOpeningContext(name = Some("Grunfeld / b5-b4 counterplay versus center"))),
+          movePrefixUci = List(
+            "d2d4", "g8f6", "c2c4", "g7g6", "b1c3", "d7d5", "c1f4", "f8g7", "e2e3", "c7c5",
+            "d4c5", "d8a5", "a1c1", "e8h8", "c4d5", "b8d7", "f2f3", "d7c5", "e3e4"
+          )
+        )
+      )
+      .getOrElse(fail("expected judgment result"))
+    val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
+    val claim = view.moveMeaningClaims
+      .find(claim =>
+        claim.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+          claim.lineRole == "candidate" &&
+          claim.moveUci == "b7b5" &&
+          claim.supportLevel == "owned_cause_linked" &&
+          claim.positiveFunctionalProofEvidenceIds.nonEmpty &&
+          claim.publicSurfaceAdmitted
+      )
+      .getOrElse(fail(view.moveMeaningClaims.toString))
+
+    assertEquals(claim.positiveFunctionalProofEvidenceIds.size, 3)
+    assertEquals(claim.publicProofLevel, "owned_function")
+    assertEquals(claim.principalPlanId, Some(lila.chessjudgment.model.PlanId.QueensideAttack))
+    assert(claim.targetSquares.contains("b4") && claim.targetFiles.contains("b"), claim)
+    assert(claim.objectBindingSignatures.exists(signature =>
+      signature.contains("actor=Move:b7b5") &&
+        signature.contains("target=Square:b4") &&
+        signature.contains("target=File:b") &&
+        signature.contains("witness=Move:b5b4") &&
+        signature.contains("horizon=ply:8")
+    ), claim.objectBindingSignatures)
+    val publicPlanClaim = view.moveMeaningClaims
+      .find(candidate =>
+        candidate.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+          candidate.moveUci == "b7b5" &&
+          candidate.publicSurfaceAdmitted &&
+          candidate.publicProofLevel == "owned_function" &&
+          candidate.targetSquares.contains("b4") &&
+          candidate.comparisonMoveRefs.exists(_.uci == "b5b4")
+      )
+      .getOrElse(fail(view.moveMeaningClaims.toString))
+    assertEquals(publicPlanClaim.principalPlanId, Some(lila.chessjudgment.model.PlanId.QueensideAttack))
+    val proofRecords = claim.positiveFunctionalProofEvidenceIds.flatMap(result.packet.evidenceGraph.byId.get)
+    assertEquals(proofRecords.count(_.payload.isInstanceOf[PlanPressureEvidence]), 1)
+    assertEquals(proofRecords.count(_.payload.isInstanceOf[StructuralDeltaEvidence]), 1)
+    assertEquals(proofRecords.count(_.payload.isInstanceOf[LineFactEvidence]), 1)
+    assertEquals(
+      proofRecords.collectFirst { case EvidenceRecord(_, payload: LineFactEvidence, _) =>
+        payload.futureRootPawnAdvance().map { case (step, offset) => step.moveUci -> offset }
+      }.flatten,
+      Some("b5b4" -> 8)
+    )
 
   test("structural transition proof can seed a strategic relative-cause idea"):
     val root = PositionNodeRef("8/8/8/8/8/8/3P4/8 w - - 0 1", 1, Some(Color.White), Some("root"))
