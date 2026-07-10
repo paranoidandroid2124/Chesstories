@@ -36,6 +36,10 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assert(anchor.detail.flatMap(_.axis).contains(BoardAnchorAxis.Diagonal), anchor.detail)
     assert(anchor.semanticGroupingAnchor.stableKey.contains("axis:Diagonal"), anchor.semanticGroupingAnchor.stableKey)
 
+  test("does not parse restriction carriers as piece routes"):
+    assertEquals(StructuralPurposeSubject.parse("pawn:b5-b4:advance-restricted"), None)
+    assertEquals(StructuralPurposeSubject.parse("pawn:a2-a4:color-complex-safe"), None)
+
   test("does not stamp an after-position mechanism with its matching claim move"):
     val root = PositionNodeRef("8/8/8/8/8/8/7P/4K3 w - - 0 1", 1, Some(Color.White), Some("root"))
     val afterPlayed = PositionNodeRef("8/8/8/8/7P/8/8/4K3 b - - 0 1", 2, Some(Color.Black), Some("after-played"))

@@ -902,6 +902,8 @@ private[judgment] object StructuralPurposeSubject:
 
   def parse(raw: String): Option[Parsed] =
     carrierToken(raw) match
+      case value if value.contains(":advance-restricted") || value.contains(":color-complex-safe") =>
+        None
       case outpost(piece, square) =>
         Some(Outpost(piece, square))
       case battery(axis, from, to, roles) =>
