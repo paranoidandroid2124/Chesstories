@@ -2501,9 +2501,8 @@ object PositionPlanTechniqueProjection:
   ): Boolean =
     purpose.routeMove.nonEmpty &&
       (
-        purpose.subjects.exists(positionPlanTechniquePieceRouteSubject) ||
-          purpose.consequenceKinds.exists(positionPlanTechniquePieceRouteConsequence) ||
-          purpose.categories.exists(positionPlanTechniqueDevelopmentRouteCategory)
+        purpose.transitionRouteSubject.exists(_.trim.nonEmpty) ||
+          purpose.subjects.exists(positionPlanTechniquePieceRouteSubject)
       )
 
   private def positionPlanTechniqueDevelopmentRouteDetail(
