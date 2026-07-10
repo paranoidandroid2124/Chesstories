@@ -2167,18 +2167,7 @@ object MoveMeaningSurface:
               (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to, carrier.semanticRole)
             )
             .take(4)
-        val displayRouteOnlyChainWithoutPurpose =
-          displaySemantics.nonEmpty &&
-            displaySemantics.forall(surface =>
-              routeCarrierSurface(surface) &&
-                surface.evidence.proofLevel == "surface_evidence" &&
-                surface.evidence.causeIds.isEmpty
-            ) &&
-            !displaySemantics.exists(surfaceHasDirectFunctionCarrier) &&
-            consequenceCarriers.isEmpty &&
-            publicTerminal.isEmpty &&
-            publicTechnique.isEmpty
-        if displaySemantics.isEmpty || displayRouteOnlyChainWithoutPurpose then Nil
+        if displaySemantics.isEmpty then Nil
         else
           val publicPv = displaySemantics
             .flatMap(_.comparison.toList.flatMap(_.moves))
@@ -2284,45 +2273,6 @@ object MoveMeaningSurface:
       surface.evidence.publicSurfaceAdmitted &&
       (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
 
-  private def surfaceHasDirectFunctionCarrier(surface: MoveMeaningSurface): Boolean =
-    val carriers = surface.evidence.boardCarriers
-    val directFunctionTarget =
-      surfaceHasCarrierRole(surface, "file_pressure") ||
-        surfaceHasCarrierRole(surface, "route_destination") ||
-        surfaceHasCarrierRole(surface, "line_unlock_file") ||
-        surfaceHasCarrierRole(surface, "counter_break_file") ||
-        surfaceHasCarrierRole(surface, "resource_contest_file") ||
-        surfaceHasCarrierRole(surface, "resource_contest_square")
-    val directActor =
-      carriers.exists(carrier => carrier.role == "actor" && (carrier.kind == "Piece" || carrier.kind == "Square")) ||
-        directFunctionTarget ||
-        (surface.idea.code == "center_control" &&
-          sameFilePawnAdvanceMove(surface.moveUci) &&
-          carriers.exists(carrier => carrier.role == "target" && carrier.kind == "Square"))
-    surface.evidence.proofLevel == "surface_evidence" &&
-      (surface.assessment.localIdea || surfaceRouteContinuesInPv(surface)) &&
-      surface.moveQuality != "playable_loss" &&
-      carriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move") &&
-      directActor &&
-      carriers.exists(carrier =>
-        publicIdeaChainConsequenceCarrierRole(carrier) &&
-          (publicIdeaChainConsequenceCarrier(carrier) || publicPurposeCarrier(carrier))
-      )
-
-  private def surfaceRouteContinuesInPv(surface: MoveMeaningSurface): Boolean =
-    val routeDestinations =
-      surface.evidence.boardCarriers.collect {
-        case carrier
-            if carrier.role == "target" &&
-              carrier.kind == "Square" &&
-              carrier.semanticRole.exists(_.equalsIgnoreCase("route_destination")) =>
-          carrier.value.toLowerCase
-      }.toSet
-    routeDestinations.nonEmpty &&
-      surface.comparison.toList.flatMap(_.moves).exists(ref =>
-        publicUciMove(ref.uci).exists(move => routeDestinations(move.take(2)))
-      )
-
   private def publicIdeaChainSemanticSortKey(surface: MoveMeaningSurface): (Int, Int, Int, Int, String, String) =
     (
       terminalIdeaRank(surface.idea.code),
@@ -2375,10 +2325,6 @@ object MoveMeaningSurface:
 
   private val pawnStructureAdvanceIdeaCodes =
     Set("pawn_break_timing", "pawn_tension_creation", "pawn_tension_resolution", "flank_pawn_pressure")
-
-  private def routeCarrierSurface(surface: MoveMeaningSurface): Boolean =
-    surface.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
-      surface.idea.code == "piece_route"
 
   private def counterplayControlHasConcreteCarrier(surface: MoveMeaningSurface): Boolean =
     val concreteFileCarrier =
