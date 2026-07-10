@@ -1191,24 +1191,24 @@ object RelativeAssessmentAssembler:
   ): Boolean =
     record.payload match
       case payload: TacticalMechanismEvidence =>
-        payload.moveUci.exists(move => normalizeMove(move) == normalizeMove(rootMove)) ||
-          parentClosure(graph, record).exists {
-            case EvidenceRecord(_, line: LineFactEvidence, _) =>
-              lineFactDirectlyOwnsCause(TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss = false, playedCandidate = false), line, rootMove)
-            case EvidenceRecord(_, relation: RelationFactEvidence, _) =>
-              relation.hasConcreteRelationProof &&
-                (record.ref.line.exists(line => normalizeMove(line.rootMove) == normalizeMove(rootMove)) ||
-                  relation.mentionsLineMove(rootMove))
-            case EvidenceRecord(_, threat: ThreatEpisodeEvidence, _) =>
-              threat.isProofSignalDefensivePressure &&
-                threatEpisodeOwnsDefensiveCause(
-                  threat,
-                  TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss = false, playedCandidate = false),
-                  rootMove
-                )
-            case _ =>
-              false
-          }
+        parentClosure(graph, record).exists {
+          case EvidenceRecord(ref, motif: MoveMotifEvidence, _) =>
+            motif.recordLineBound(ref) && normalizeMove(motif.moveUci) == normalizeMove(rootMove)
+          case EvidenceRecord(_, line: LineFactEvidence, _) =>
+            lineFactDirectlyOwnsCause(TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss = false, playedCandidate = false), line, rootMove)
+          case EvidenceRecord(_, relation: RelationFactEvidence, _) =>
+            relation.hasConcreteRelationProof &&
+              relation.mentionsLineMove(rootMove)
+          case EvidenceRecord(_, threat: ThreatEpisodeEvidence, _) =>
+            threat.isProofSignalDefensivePressure &&
+              threatEpisodeOwnsDefensiveCause(
+                threat,
+                TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss = false, playedCandidate = false),
+                rootMove
+              )
+          case _ =>
+            false
+        }
       case _ =>
         false
 

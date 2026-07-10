@@ -3157,8 +3157,7 @@ final case class LineConsequence(
     eventMove: Option[String] = None
 ):
   def rootMoveMatched(rootMove: String): Boolean =
-    eventMove.exists(move => EvidenceRef.sameMove(move, rootMove)) ||
-      lineMoves.exists(move => EvidenceRef.sameMove(move, rootMove))
+    eventMove.orElse(lineMoves.headOption).exists(move => EvidenceRef.sameMove(move, rootMove))
 
 final case class LineConsequenceProfile(
     proofSignalKinds: List[LineConsequenceKind],
