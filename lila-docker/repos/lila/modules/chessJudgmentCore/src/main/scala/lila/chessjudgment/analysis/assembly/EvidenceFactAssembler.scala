@@ -437,7 +437,7 @@ object EvidenceFactAssembler:
         case _ =>
           lineRecords
     position.toList.flatMap { nodeRef =>
-      tacticalMechanismCandidates(records).flatMap { candidate =>
+      tacticalMechanismCandidates(records, line.ref.rootMove).flatMap { candidate =>
         tacticalMechanismRecord(
           id = allocator.evidenceId(
             s"tactical-mechanism:line:${allocator.key(line.role)}:${line.ref.rank}:${line.ref.rootMove}:${allocator.key(candidate.kind)}"
@@ -464,7 +464,7 @@ object EvidenceFactAssembler:
           record.ref.position == edge.from &&
           transitionRecordMentionsMove(record, edge.moveUci)
       )
-    tacticalMechanismCandidates(records).flatMap { candidate =>
+    tacticalMechanismCandidates(records, edge.moveUci).flatMap { candidate =>
       tacticalMechanismRecord(
         id = allocator.evidenceId(s"tactical-mechanism:transition:${allocator.key(edge.role)}:${edge.moveUci}:${allocator.key(candidate.kind)}"),
         kind = candidate.kind,
@@ -477,12 +477,12 @@ object EvidenceFactAssembler:
       )
     }
 
-  private def tacticalMechanismCandidates(records: List[EvidenceRecord]): List[TacticalMechanismCandidate] =
+  private def tacticalMechanismCandidates(records: List[EvidenceRecord], rootMove: String): List[TacticalMechanismCandidate] =
     val baseEntries =
       records.flatMap(record =>
         record.payload match
           case payload: MoveMotifEvidence =>
-            TacticalMotifClassifier.rootMotif(payload).toList.flatMap { motif =>
+            TacticalMotifClassifier.rootMotif(payload).filter(_ => EvidenceRef.sameMove(payload.rootMove, rootMove)).toList.flatMap { motif =>
               TacticalMechanismKind.fromMotif(motif).map(kind =>
                 TacticalMechanismCandidate(
                   kind,
@@ -491,7 +491,8 @@ object EvidenceFactAssembler:
                 )
               )
             }
-          case payload: RelationFactEvidence if payload.hasConcreteRelationProof && payload.hasLineProof =>
+          case payload: RelationFactEvidence
+              if payload.hasConcreteRelationProof && payload.hasLineProof && payload.mentionsLineMove(rootMove) =>
             List(
               TacticalMechanismCandidate(
                 TacticalMechanismKind.fromRelation(payload.kind),
@@ -508,7 +509,7 @@ object EvidenceFactAssembler:
               )
             )
           case payload: LineFactEvidence =>
-            payload.tacticalLineConsequenceKinds.flatMap(kind =>
+            payload.rootOwnedProofSignalConsequences(rootMove).map(_.kind).distinct.flatMap(kind =>
               TacticalMechanismKind.fromLineConsequence(kind).map(mechanismKind =>
                 TacticalMechanismCandidate(
                   mechanismKind,
@@ -552,7 +553,7 @@ object EvidenceFactAssembler:
         record -> payload
     }
     val lineConsequenceRecords = records.collect { case record @ EvidenceRecord(_, payload: LineFactEvidence, _) =>
-      payload.proofSignalConsequences.flatMap { consequence =>
+      payload.rootOwnedProofSignalConsequences(rootMove).flatMap { consequence =>
         val consequenceMoves = consequence.eventMove.toList ++ consequence.lineMoves
         val consequenceCaptureSquares =
           payload.materialCaptures
