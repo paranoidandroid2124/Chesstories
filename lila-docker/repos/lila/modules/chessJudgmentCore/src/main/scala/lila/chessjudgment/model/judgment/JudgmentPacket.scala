@@ -2048,171 +2048,10 @@ object MoveMeaningSurface:
           (semanticAllowedByChainProofGate(surface, strongChainProof) ||
             directFunctionSemanticSurfaces.exists(_ == surface))
       )
-      val purposeOwnedPawnMoves =
-        val purposeCodes = Set(
-          "terminal_mate",
-          "promotion_race",
-          "promotion",
-          "draw_resource",
-          "material_gain",
-          "material_loss",
-          "defensive_resource",
-          "passed_pawn_advance",
-          "pawn_break_timing",
-          "pawn_tension_creation",
-          "pawn_tension_resolution",
-          "flank_pawn_pressure",
-          "counterplay_race",
-          "counterplay_control",
-          "outpost_attempt",
-          "compensation",
-          "long_diagonal_pressure"
-        )
-        semanticSurfaces.collect {
-          case surface
-              if purposeCodes(surface.idea.code) &&
-                surface.evidence.proofLevel == "owned_cause" &&
-                sameFilePawnAdvanceMove(surface.moveUci) =>
-            JudgmentSubjectBinding.normalizeMove(surface.moveUci).toLowerCase
-        }.toSet
-      val chainSurfacesBeforeSameMovePruning =
-        semanticSurfaces.filterNot(surface =>
-          routeCarrierSurface(surface) &&
-            purposeOwnedPawnMoves.contains(JudgmentSubjectBinding.normalizeMove(surface.moveUci).toLowerCase)
-        )
-      val sameMoveDisplayPrunedSurfaces =
-        val surfacesByMove = chainSurfacesBeforeSameMovePruning.groupBy(surface => (surface.subject, surface.lineRole, surface.moveUci))
-        val surfaceOnlyFallbackCodes = Set("center_control", "piece_route", "piece_activity", "target_pressure")
-        val routeCoveringOwnedCodes = Set(
-          "terminal_mate",
-          "promotion_race",
-          "promotion",
-          "draw_resource",
-          "material_gain",
-          "material_loss",
-          "passed_pawn_advance",
-          "pawn_break_timing",
-          "pawn_tension_creation",
-          "pawn_tension_resolution",
-          "flank_pawn_pressure"
-        )
-        chainSurfacesBeforeSameMovePruning.filterNot { surface =>
-          val siblings = surfacesByMove.getOrElse((surface.subject, surface.lineRole, surface.moveUci), Nil).filterNot(_ == surface)
-          val routeSiblings = siblings.filter(routeCarrierSurface)
-          val hasRouteSibling = routeSiblings.nonEmpty
-          val ownedSiblings = siblings.filter(_.evidence.proofLevel == "owned_cause")
-          val concreteCounterplayControlSiblings =
-            siblings.filter(other => other.idea.code == "counterplay_control" && counterplayControlHasConcreteCarrier(other))
-          val routeDestination = moveDestination(surface.moveUci)
-          val routeCoveredByOwnedSibling =
-            routeCarrierSurface(surface) &&
-              ownedSiblings.exists(other =>
-                other.idea.code == surface.idea.code ||
-                  routeCoveringOwnedCodes(other.idea.code) ||
-                  other.idea.code == "outpost_attempt" && (
-                    routeDestination.exists(destination => other.target.squares.exists(_.equalsIgnoreCase(destination)))
-                  )
-              )
-          val displaySurfaceEvidenceCoveredByOwnedSibling =
-            surface.evidence.proofLevel == "surface_evidence" &&
-              surface.evidence.causeIds.isEmpty &&
-              surfaceOnlyFallbackCodes(surface.idea.code) &&
-              (
-                routeCoveredByOwnedSibling ||
-                  !routeCarrierSurface(surface) && ownedSiblings.exists(other =>
-                    other.idea.code == surface.idea.code ||
-                      surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty ||
-                      surface.target.squares.intersect(other.target.squares).nonEmpty ||
-                      surface.target.files.intersect(other.target.files).nonEmpty ||
-                      surface.target.pieces.intersect(other.target.pieces).nonEmpty
-                  )
-              )
-          val displayGenericTacticCoveredByOwnedSibling =
-            displayOnlySurfaceEvidence(surface) &&
-              surface.idea.code == "tactical_pressure" &&
-              Set("tactical pressure", "recapture recovery")(surface.idea.label) &&
-              ownedSiblings.exists(other =>
-                other.idea.code != "tactical_pressure" &&
-                  (
-                    surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty ||
-                      surface.target.squares.intersect(other.target.squares).nonEmpty ||
-                      surface.target.files.intersect(other.target.files).nonEmpty ||
-                      surface.target.pieces.intersect(other.target.pieces).nonEmpty
-                  )
-              )
-          val displayCheckingPressureCoveredByTactic =
-            displayOnlySurfaceEvidence(surface) &&
-              surface.idea.code == "target_pressure" &&
-              checkingPressureSurface(surface) &&
-              !surface.evidence.boardCarriers.exists(_.semanticRole.exists(_ == "check")) &&
-              ownedSiblings.exists(other =>
-                other.idea.code == "tactical_pressure" &&
-                  (
-                    surface.evidence.proofRelationKinds.intersect(other.evidence.proofRelationKinds).nonEmpty ||
-                      surface.target.squares.intersect(other.target.squares).nonEmpty ||
-                      surface.target.files.intersect(other.target.files).nonEmpty
-                  )
-              )
-          val displayDestinationPressureCoveredByRoute =
-            displayOnlySurfaceEvidence(surface) &&
-              surface.idea.code == "target_pressure" &&
-              surface.evidence.proofRelationKinds.isEmpty &&
-              surface.evidence.proofThreatDrivers.isEmpty &&
-              surface.terminalConsequences.isEmpty &&
-              surface.endgameTechnique.isEmpty &&
-              routeSiblings.exists(other =>
-                val surfaceSquares = surface.target.squares.map(_.toLowerCase).toSet
-                val routeSquares = other.target.squares.map(_.toLowerCase).toSet
-                val surfaceFiles = surface.target.files.map(_.toLowerCase).toSet
-                val routeFiles = other.target.files.map(_.toLowerCase).toSet
-                (
-                  surface.evidence.causeIds.intersect(other.evidence.causeIds).nonEmpty ||
-                    surface.evidence.causeIds.isEmpty &&
-                    other.evidence.causeIds.isEmpty &&
-                    surface.evidence.sourceIds.intersect(other.evidence.sourceIds).nonEmpty
-                ) &&
-                  (
-                    surfaceSquares.nonEmpty && surfaceSquares.subsetOf(routeSquares) ||
-                      surfaceSquares.isEmpty && surfaceFiles.nonEmpty && surfaceFiles.subsetOf(routeFiles)
-                  )
-              )
-          val sameMoveConcreteCarrierExists =
-            siblings.exists(other =>
-              routeCarrierSurface(other) ||
-                other.idea.code == "target_pressure" && !unprovedBroadTargetPressure(other) ||
-                other.idea.code == "counterplay_control" && counterplayControlHasConcreteCarrier(other) ||
-                other.idea.code == "long_diagonal_pressure" ||
-                other.idea.code == "material_gain" ||
-                other.idea.code == "defensive_resource"
-            )
-          displaySurfaceEvidenceCoveredByOwnedSibling ||
-          displayGenericTacticCoveredByOwnedSibling ||
-          displayCheckingPressureCoveredByTactic ||
-          displayOnlySurfaceEvidence(surface) &&
-            surface.idea.code == "target_pressure" &&
-            unprovedBroadTargetPressure(surface) &&
-            sameMoveConcreteCarrierExists ||
-          pawnStructureAdvanceIdea(surface.idea.code) && breakClaimWithoutMoveCarrier(surface) && sameMoveConcreteCarrierExists ||
-          displayOnlySurfaceEvidence(surface) &&
-            surface.idea.code == "target_pressure" &&
-            targetFixationSurface(surface) &&
-            surface.evidence.proofRelationKinds.isEmpty &&
-            surface.evidence.proofThreatDrivers.isEmpty &&
-            concreteCounterplayControlSiblings.exists(other =>
-              surface.target.squares.intersect(other.target.squares).nonEmpty ||
-                surface.target.pieces.intersect(other.target.pieces).nonEmpty ||
-                surface.target.files.intersect(other.target.files).nonEmpty
-            ) ||
-          displayDestinationPressureCoveredByRoute ||
-          displayOnlySurfaceEvidence(surface) &&
-            surface.idea.code == "target_pressure" &&
-            (hasRouteSibling || concreteCounterplayControlSiblings.nonEmpty) &&
-            (targetPressureOnlyMarksMoveDestination(surface) || unprovedBroadTargetPressure(surface))
-        }
       val chainSurfaces =
         if terminal.nonEmpty then
-          sameMoveDisplayPrunedSurfaces.filter(surface => surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
-        else sameMoveDisplayPrunedSurfaces
+          semanticSurfaces.filter(surface => surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
+        else semanticSurfaces
       if evidenceSurfaces.isEmpty || !admittedSubjects.contains(subject) then Nil
       else
         val displaySemantics = chainSurfaces
@@ -2438,29 +2277,6 @@ object MoveMeaningSurface:
   private[judgment] def publicMeaningTargetCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
     carrier.role == "target" && !publicPurposeCarrier(carrier)
 
-  private def displayOnlySurfaceEvidence(surface: MoveMeaningSurface): Boolean =
-    surface.evidence.proofLevel == "surface_evidence" &&
-      surface.evidence.causeIds.isEmpty &&
-      surface.evidence.proofRelationKinds.isEmpty &&
-      surface.evidence.proofThreatDrivers.isEmpty &&
-      surface.terminalConsequences.isEmpty &&
-      surface.endgameTechnique.isEmpty
-
-  private def checkingPressureSurface(surface: MoveMeaningSurface): Boolean =
-    displayOnlySurfaceEvidence(surface) &&
-      surface.idea.code == "target_pressure" &&
-      (
-        surfaceHasCarrierRole(surface, "check") ||
-          surface.evidence.boardCarriers.exists(carrier =>
-            carrier.role == "target" &&
-              carrier.kind == "PlanSubject" &&
-              carrier.value.toLowerCase.startsWith("check:")
-          )
-      )
-
-  private def targetFixationSurface(surface: MoveMeaningSurface): Boolean =
-    surface.sourceLabel.exists(_.equalsIgnoreCase("TargetFixation"))
-
   private def publicIdeaChainAdmittedSubjects(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[String] =
     publicIdeaChainSubjectSpecs(verdict, surfaces).collect {
       case (subject, subjectMove, pvRolePrefix) if publicIdeaChainSubjectAdmitted(subject, subjectMove, pvRolePrefix, surfaces) =>
@@ -2679,41 +2495,6 @@ object MoveMeaningSurface:
 
   private val pawnStructureAdvanceIdeaCodes =
     Set("pawn_break_timing", "pawn_tension_creation", "pawn_tension_resolution", "flank_pawn_pressure")
-
-  private def pawnStructureAdvanceIdea(code: String): Boolean =
-    pawnStructureAdvanceIdeaCodes(code)
-
-  private def targetPressureOnlyMarksMoveDestination(surface: MoveMeaningSurface): Boolean =
-    surface.target.files.isEmpty &&
-      surface.target.squares.nonEmpty &&
-      moveDestination(surface.moveUci).exists(to => surface.target.squares.forall(_.equalsIgnoreCase(to)))
-
-  private def unprovedBroadTargetPressure(surface: MoveMeaningSurface): Boolean =
-    surface.target.files.isEmpty &&
-      surface.target.squares.size > 4 &&
-      surface.evidence.proofRelationKinds.isEmpty &&
-      surface.evidence.proofThreatDrivers.isEmpty &&
-      surface.terminalConsequences.isEmpty &&
-      surface.endgameTechnique.isEmpty
-
-  private def breakClaimWithoutMoveCarrier(surface: MoveMeaningSurface): Boolean =
-    val moveFile = MoveMeaningClaim.sameFilePawnAdvanceFile(surface.moveUci)
-    val mismatchedPawnAdvanceBreak =
-      moveFile.nonEmpty &&
-        surface.target.files.nonEmpty &&
-        moveFile.exists(file => !surface.target.files.exists(_.equalsIgnoreCase(file)))
-    val concreteBreakCarrier = surface.evidence.boardCarriers.exists(carrier =>
-        val value = carrier.value.toLowerCase
-        carrier.role == "target" &&
-          carrier.kind == "PlanSubject" &&
-          (
-            (value.startsWith("break-file:") && !mismatchedPawnAdvanceBreak) ||
-              value.startsWith("created-tension:") ||
-              value.startsWith("resolved-tension:")
-          )
-      )
-    ((!sameFilePawnAdvanceMove(surface.moveUci) && surface.target.files.isEmpty) || mismatchedPawnAdvanceBreak) &&
-      !concreteBreakCarrier
 
   private def routeCarrierSurface(surface: MoveMeaningSurface): Boolean =
     surface.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
