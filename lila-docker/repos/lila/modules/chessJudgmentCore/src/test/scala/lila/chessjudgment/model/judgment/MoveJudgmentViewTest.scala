@@ -1060,7 +1060,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assert(claim.routeIdentityParts.contains("from:f1"), claim.routeIdentityParts)
     assert(claim.routeIdentityParts.contains("to:e3"), claim.routeIdentityParts)
 
-  test("links exact good current move pawn break tension gain to owned move meaning"):
+  test("links exact good current move pawn break tension gain without borrowing line capture"):
     val root = PositionNodeRef("4k3/8/8/3p4/8/8/4P3/4K3 w - - 0 1", 1, Some(Color.White), Some("root"))
     val afterPlayed = PositionNodeRef("4k3/8/8/3p4/4P3/8/8/4K3 b - - 0 1", 2, Some(Color.Black), Some("after-played"))
     val referenceLine = LineNodeRef("reference-line", "e2e4", 1, LineNodeRole.BestReference)
@@ -1241,8 +1241,53 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         )
       )
     )
+    val playedLinePayload =
+      new LineFactEvidence(
+        playedLine,
+        Some("e2e4"),
+        None,
+        Nil,
+        None,
+        Some(
+          LineMaterialSummary(
+            sideToMove = Color.White,
+            captures = List(
+              LineMaterialCapture(
+                moveUci = "e2e4",
+                plyOffset = 0,
+                side = Color.White,
+                attackerRole = EvidencePieceRole("pawn"),
+                capturedRole = EvidencePieceRole("pawn"),
+                square = EvidenceSquare("e4"),
+                valueCp = 100,
+                recapture = false
+              )
+            ),
+            netCaptureCpForMover = 100,
+            maxGainCpForMover = 100,
+            maxLossCpForMover = 0,
+            hasRecaptureChain = false,
+            hasRecoveryWindow = false,
+            promotionGainCpForMover = 0,
+            materialWindowComplete = true
+          )
+        )
+      )(
+        events = List(
+          LineMoveEvent(
+            kind = LineEventKind.Capture,
+            moveUci = "e2e4",
+            plyOffset = 0,
+            side = Some(Color.White),
+            pieceRole = Some(EvidencePieceRole("pawn")),
+            targetRole = Some(EvidencePieceRole("pawn")),
+            square = Some(EvidenceSquare("e4"))
+          )
+        )
+      )
     val graph = TypedEvidenceGraph(
       List(
+        EvidenceRecord(playedLineEvidence, playedLinePayload),
         EvidenceRecord(structuralRef, structuralDelta),
         EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef)),
         EvidenceRecord(causeRef, RelativeCauseFactEvidence(cause), parents = List(mechanismRef, structuralRef))
@@ -1276,6 +1321,14 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assert(claim.targetFiles.contains("e"), claim.targetFiles)
     assert(claim.targetSquares.contains("e4"), claim.targetSquares)
     assert(claim.targetSquares.contains("d5"), claim.targetSquares)
+    assert(
+      !claim.boardCarriers.exists(carrier =>
+        carrier.kind == "PlanSubject" &&
+          (carrier.value.startsWith("material-capture:") || carrier.value.startsWith("material-recapture:"))
+      ),
+      claim.boardCarriers
+    )
+    assert(!claim.boardCarriers.exists(carrier => carrier.kind == "Piece" && carrier.value == "pawn"), claim.boardCarriers)
 
   test("links exact good current move diagonal restriction to owned counterplay meaning"):
     val root = PositionNodeRef("4k3/6b1/8/3p4/3PP3/8/8/4K3 w - - 0 1", 1, Some(Color.White), Some("root"))

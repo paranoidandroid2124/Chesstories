@@ -2799,14 +2799,17 @@ object MoveMeaningSurface:
         publicIdeaChainConsequenceCarrier(carrier) &&
         publicIdeaChainCarrierMatchesSurfaceTarget(carrier, surface)
     )
-    val materialTacticalCarrier = allConsequenceCarriers.exists((carrier, _) => materialEventPlanSubjectCarrier(carrier))
     val strongProofSurface =
       terminal.nonEmpty ||
         technique.nonEmpty ||
         evidenceSurfaces.exists(surface => surface.evidence.proofLevel == "owned_cause" || surface.evidence.causeIds.nonEmpty)
     val concreteConsequence = allConsequenceCarriers.exists((carrier, _) =>
       carrier.kind == "Pawn" ||
-        (carrier.kind == "PlanSubject" && !materialEventPlanSubjectCarrier(carrier))
+        (
+          carrier.kind == "PlanSubject" &&
+            !carrier.value.startsWith("material-capture:") &&
+            !carrier.value.startsWith("material-recapture:")
+        )
     )
     val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
       surface.evidence.proofLevel == "owned_cause" &&
@@ -2834,7 +2837,6 @@ object MoveMeaningSurface:
     val admissiblePublicReason = strongProofSurface || directStructuralSurfaceEvidence || directFunctionSurfaceEvidence
     evidenceSurfaces.nonEmpty &&
       admissiblePublicReason &&
-      (!materialTacticalCarrier || strongProofSurface) &&
       (
         terminal.nonEmpty ||
           technique.nonEmpty ||
@@ -2847,8 +2849,7 @@ object MoveMeaningSurface:
   private def surfaceEligibleForPublicChain(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel != "none" &&
       surface.evidence.publicSurfaceAdmitted &&
-      (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty) &&
-      !surfaceOnlyStrategicMaterialEvent(surface)
+      (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
 
   private def terminalSurfaceControlsChain(surface: MoveMeaningSurface): Boolean =
     val terminalCodes = surface.terminalConsequences.map(_.code).toSet
@@ -3073,21 +3074,6 @@ object MoveMeaningSurface:
   private def moveDestination(move: String): Option[String] =
     val normalized = JudgmentSubjectBinding.normalizeMove(move).toLowerCase
     Option.when(normalized.matches("[a-h][1-8][a-h][1-8].*"))(normalized.slice(2, 4))
-
-  private def surfaceOnlyStrategicMaterialEvent(surface: MoveMeaningSurface): Boolean =
-    surface.evidence.proofLevel == "surface_evidence" &&
-      surface.evidence.causeIds.isEmpty &&
-      surface.ideaType == "strategic" &&
-      surface.evidence.boardCarriers.exists(carrier =>
-        carrier.kind == "PlanSubject" && materialEventPlanSubjectCarrier(carrier)
-      )
-
-  private def materialEventPlanSubjectCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
-    carrier.kind == "PlanSubject" &&
-      (
-        carrier.value.startsWith("material-capture:") ||
-          carrier.value.startsWith("material-recapture:")
-      )
 
   private def publicIdeaChainMoveSemanticJson(surface: MoveMeaningSurface): JsObject =
     Json.obj(
@@ -5706,7 +5692,7 @@ object MoveMeaningClaim:
             mergedCarrierPool.distinct.sortBy(boardCarrierSortKey)
         ).distinct.take(12)
       val mergedPublicDrawableCarrier =
-        mergedBoardCarriers.nonEmpty ||
+        mergedBoardCarriers.exists(_.kind != "Move") ||
           best.terminalConsequenceKinds.nonEmpty ||
           best.endgameTechniquePattern.nonEmpty ||
           best.endgameTechniqueRookPattern.nonEmpty
@@ -5963,11 +5949,22 @@ object MoveMeaningClaim:
                 relationProofBoardCarriersFromCauseFrames(evidenceGraph, roleCompatibleCauseFrames)
               val threatProofBoardCarriers =
                 threatProofBoardCarriersFromCauseFrames(evidenceGraph, roleCompatibleCauseFrames)
+              val proofLineConsequences =
+                roleCompatibleCauseFrames.flatMap(_.proofLineConsequences).distinct.sortBy(_.toString)
+              val claimOwnsLineCapture =
+                detail.unit == PositionPlanTechniqueUnit.CompensationSource ||
+                  detail.terminalConsequenceKinds.exists(kind => kind == "MaterialGain" || kind == "MaterialLoss") ||
+                  proofLineConsequences.exists(LineConsequenceKind.tacticalDriver)
               val baseClaimBoardCarriers =
                 (claimOwnedBoardCarriers ++
                   relationProofBoardCarriers ++
                   threatProofBoardCarriers ++
-                  lineEventBoardCarriersFromLineEvidence(evidenceGraph, proofSourceEvidenceIds, claimMove))
+                  lineEventBoardCarriersFromLineEvidence(
+                    evidenceGraph,
+                    proofSourceEvidenceIds,
+                    claimMove,
+                    claimOwnsLineCapture
+                  ))
                   .distinct
                   .sortBy(boardCarrierSortKey)
               val currentPawnBreakFiles =
@@ -5982,20 +5979,20 @@ object MoveMeaningClaim:
               val checkIdentityCarriers =
                 if kingPressureIdentityCarrier then Nil
                 else checkIdentityCarriersFromLineEvidence(evidenceGraph, proofSourceEvidenceIds, claimMove)
-              val proofLineConsequences =
-                roleCompatibleCauseFrames.flatMap(_.proofLineConsequences).distinct.sortBy(_.toString)
               val spareIdentityCarriers =
                 checkIdentityCarriers ++
                   defenderMoveIdentityCarriersFromLineEvidence(evidenceGraph, proofSourceEvidenceIds, claimMove) ++
                   passedPawnIdentityCarriersFromLineEvidence(evidenceGraph, proofSourceEvidenceIds, claimMove) ++
-                  materialCaptureIdentityCarriersFromLineEvidence(
-                    evidenceGraph,
-                    proofSourceEvidenceIds,
-                    claimMove,
-                    detail,
-                    verdict,
-                    proofLineConsequences
-                  ) ++
+                  (if claimOwnsLineCapture then
+                     materialCaptureIdentityCarriersFromLineEvidence(
+                       evidenceGraph,
+                       proofSourceEvidenceIds,
+                       claimMove,
+                       detail,
+                       verdict,
+                       proofLineConsequences
+                     )
+                   else Nil) ++
                   planPawnAdvanceCarriers ++
                   breakFileIdentityCarriers
               val claimBoardCarriers =
@@ -6019,7 +6016,7 @@ object MoveMeaningClaim:
                       claimBoardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "PlanSubject")
                   )
               val publicDrawableCarrier =
-                claimBoardCarriers.nonEmpty ||
+                claimBoardCarriers.exists(_.kind != "Move") ||
                   detail.terminalConsequenceKinds.nonEmpty ||
                   detail.endgameTechniquePattern.nonEmpty ||
                   detail.endgameTechniqueRookPattern.nonEmpty
@@ -6151,13 +6148,13 @@ object MoveMeaningClaim:
   private def lineEventBoardCarriersFromLineEvidence(
       evidenceGraph: TypedEvidenceGraph,
       sourceEvidenceIds: List[String],
-      claimMove: String
+      claimMove: String,
+      claimOwnsLineCapture: Boolean
   ): List[MoveMeaningSurfaceBoardCarrier] =
     sourceEvidenceIds
       .flatMap(id => evidenceGraph.byId.get(id))
       .collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
       .flatMap(line =>
-        val carryLineCapturePieces = line.hasTacticalLineConsequence || line.hasProofSignalMaterialEvent
         val rootOwnedLineEvents = line.rootOwnedLineEvents(claimMove)
         rootOwnedLineEvents
           .filter(_.kind == LineEventKind.PassedPawn)
@@ -6165,8 +6162,8 @@ object MoveMeaningClaim:
           lineForkTargetCarriers(line, claimMove) ++
           line.lineEvents
             .filter(event =>
-              (event.kind == LineEventKind.Capture || event.kind == LineEventKind.Recapture) &&
-                (carryLineCapturePieces || rootOwnedLineEvents.contains(event))
+              claimOwnsLineCapture &&
+                (event.kind == LineEventKind.Capture || event.kind == LineEventKind.Recapture)
             )
             .flatMap(event => event.targetRole.toList.flatMap(role => publicPieceCarrier("target", role.name))) ++
           rootOwnedLineEvents
