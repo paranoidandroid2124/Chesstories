@@ -12,7 +12,7 @@ import lila.chessjudgment.analysis.evaluation.JudgmentThresholds
 import lila.chessjudgment.analysis.policy.ClaimTruthPolicy
 import lila.chessjudgment.analysis.singlePosition.{ PawnPlayDriver, ThreatDriver, ThreatEvidenceSource, ThreatSeverity }
 import lila.chessjudgment.analysis.tactical.TacticalMotifClassifier
-import lila.chessjudgment.model.{ Motif, ProbeAdmissionStatus, ProbePurpose, TransitionType }
+import lila.chessjudgment.model.{ Motif, ProbeAdmissionStatus, ProbePurpose }
 import lila.chessjudgment.model.structure.AlignmentBand
 import lila.chessjudgment.model.judgment.*
 
@@ -3592,9 +3592,17 @@ object SemanticCoverageMetrics:
     val branchReplyProbeRequests =
       packet.probeRequests.filter(request => request.purpose.exists(ProbePurpose.isBranchReply))
     val planTransitionWithoutSnapshotPairIds =
-      packet.evidenceGraph.records.collect {
-        case EvidenceRecord(ref, PlanTransitionEvidence(transition), _) if transition.transitionType == TransitionType.Opening =>
-          ref.id
+      packet.evidenceGraph.records.flatMap {
+        case record @ EvidenceRecord(ref, _: PlanTransitionEvidence, _) =>
+          val snapshotPositions = packet.evidenceGraph.parentClosure(record).collect {
+            case EvidenceRecord(parentRef, _: PlanPressureEvidence, _) => parentRef.position
+          }.toSet
+          val hasPair = packet.transitions
+            .find(edge => record.parents.exists(_.id == edge.evidence.id))
+            .exists(edge => snapshotPositions.contains(edge.from) && snapshotPositions.contains(edge.to))
+          Option.unless(hasPair)(ref.id)
+        case _ =>
+          None
       }.distinct.sorted
     val branchReplyThreatLines =
       packet.candidateLines.count(_.role == LineNodeRole.Threat)
