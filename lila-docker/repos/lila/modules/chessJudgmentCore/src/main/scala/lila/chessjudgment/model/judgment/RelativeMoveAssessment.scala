@@ -818,8 +818,6 @@ case class TacticalMechanismProof(
 ):
   def hasConcreteProof: Boolean =
     signals.nonEmpty
-  def signalLabels: List[String] =
-    signals.map(signal => s"${signal.kind}:${signal.label}").distinct
 
 case class RelationCauseProof(
     source: EvidenceRef,

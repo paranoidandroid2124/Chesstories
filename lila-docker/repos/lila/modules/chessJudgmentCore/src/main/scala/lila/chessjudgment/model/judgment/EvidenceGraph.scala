@@ -85,8 +85,6 @@ final case class EvidenceObjectBinding(
     horizon: Option[String] = None,
     proofRole: Option[RelativeCauseProofRole] = None
 ):
-  def concreteObjects: List[ConcreteChessObject] =
-    (actor ++ target ++ mechanism ++ consequence).distinctBy(_.signaturePart)
   def hasConcreteObject: Boolean =
     target.nonEmpty ||
       (actor.nonEmpty && (mechanism.nonEmpty || consequence.nonEmpty))
@@ -1434,10 +1432,6 @@ final case class BoardFactEvidence(
     features
   def factCount: Int =
     facts.size
-  def hasBoardProfile: Boolean =
-    profile.nonEmpty
-  def hasAttackDefenseEntries: Boolean =
-    attackDefense.nonEmpty
   def attackDefenseCount: Int =
     attackDefense.size
   def vulnerableAttackDefense: List[BoardAttackDefenseEntry] =
@@ -1828,21 +1822,9 @@ final case class StrategicMechanismEvidence(
   def hasCenterControlGainAxis: Boolean =
     kind == StrategicMechanismKind.CenterControl && canSupportStrategicCause &&
       hasAxis(StrategicAxisKind.SpaceCenter, Set(StrategicAxisPolarity.Gain))
-  def hasKingSafetyConcessionAxis: Boolean =
-    kind == StrategicMechanismKind.KingSafety && canSupportStrategicCause &&
-      hasAxis(StrategicAxisKind.Counterplay, Set(StrategicAxisPolarity.Concede))
-  def hasPawnWeaknessTargetAxis: Boolean =
-    kind == StrategicMechanismKind.PawnWeakness && canSupportStrategicCause &&
-      hasAxis(StrategicAxisKind.Target, Set(StrategicAxisPolarity.Gain))
   def hasActivityGainAxis: Boolean =
     kind == StrategicMechanismKind.Activity && canSupportStrategicCause &&
       hasAxis(StrategicAxisKind.Activity, Set(StrategicAxisPolarity.Gain))
-  def hasActivityLossAxis: Boolean =
-    kind == StrategicMechanismKind.Activity && canSupportStrategicCause &&
-      hasAxis(StrategicAxisKind.Activity, Set(StrategicAxisPolarity.Loss))
-  def hasPlanCoherenceAxis: Boolean =
-    kind == StrategicMechanismKind.PlanPressure && canAnchorPlanIdea &&
-      hasAxis(StrategicAxisKind.PlanCoherence)
   def hasStrategicConcessionAxis: Boolean =
     kind == StrategicMechanismKind.StrategicConcession && hasStrategicAxis
   def hasPassedPawnResourceSignal: Boolean =
@@ -3323,8 +3305,6 @@ final case class LineFactEvidence(
     replay.size
   def hasLineReplay: Boolean =
     replay.nonEmpty
-  def lineEventKinds: List[LineEventKind] =
-    events.map(_.kind)
   def lineEventsOf(kind: LineEventKind): List[LineMoveEvent] =
     events.filter(_.kind == kind)
   def hasLineEvent(kind: LineEventKind): Boolean =
@@ -3334,12 +3314,6 @@ final case class LineFactEvidence(
     events.filter(event =>
       normalizeUci(event.moveUci) == normalizedRoot || event.plyOffset == 0
     )
-  def hasLineEventAt(kind: LineEventKind, plyOffset: Int): Boolean =
-    lineEventsOf(kind).exists(_.plyOffset == plyOffset)
-  def hasTempoEventAt(plyOffset: Int): Boolean =
-    hasLineEventAt(LineEventKind.Tempo, plyOffset)
-  def lineEventMoves(kind: LineEventKind): List[String] =
-    lineEventsOf(kind).map(_.moveUci)
   def hasRootCaptureEvent(rootMoveUci: String): Boolean =
     val normalizedRoot = normalizeUci(rootMoveUci)
     events.exists(event =>
@@ -3490,19 +3464,6 @@ final case class LineFactEvidence(
       gainSignals = consequenceGainSignals ++ materialGainSignals,
       lossSignals = consequenceLossSignals ++ materialLossSignals
     )
-  def hasMaterialOutcomeSignals: Boolean =
-    val profile = materialOutcomeProfile
-    profile.gainSignals.nonEmpty || profile.lossSignals.nonEmpty
-  def materialOutcomeConsequenceKinds: List[LineConsequenceKind] =
-    val profile = materialOutcomeProfile
-    List(
-      Option.when(hasMaterialRecaptureChain)(LineConsequenceKind.RecaptureSequence),
-      Option.when(hasMaterialRecoveryWindow)(LineConsequenceKind.RecoveryWindow),
-      Option.when(profile.gainMagnitude != LineMaterialOutcomeMagnitude.None)(LineConsequenceKind.MaterialGain),
-      Option.when(profile.lossMagnitude != LineMaterialOutcomeMagnitude.None)(LineConsequenceKind.MaterialLoss)
-    ).flatten.distinct
-  def hasMaterialOutcomeConsequence(kind: LineConsequenceKind): Boolean =
-    materialOutcomeConsequenceKinds.contains(kind)
 
   private def materialValue(role: EvidencePieceRole): Int =
     role.name.toLowerCase match
@@ -4162,18 +4123,12 @@ final case class StructuralDeltaEvidence(
     )
   def hasMeaningfulConsequences: Boolean =
     meaningfulConsequences.nonEmpty
-  def hasPawnStructureImprovement: Boolean =
-    hasConsequenceCategory(TransitionConsequenceCategory.PawnStructure)
-  def hasMeaningfulPawnStructureDelta: Boolean =
-    hasPawnStructureImprovement
   def hasTargetPressureGain: Boolean =
     hasConsequence(TargetPressureGain)
   def hasTargetPressureRelease: Boolean =
     hasConsequence(TargetPressureRelease)
   def hasCenterControlGain: Boolean =
     hasConsequence(CenterControlGain)
-  def hasDevelopmentActivation: Boolean =
-    hasConsequenceCategory(TransitionConsequenceCategory.Development)
   def hasPieceActivityGain: Boolean =
     hasConsequenceCategory(TransitionConsequenceCategory.PieceActivity)
   def hasKingSafetyPressure: Boolean =
@@ -4182,32 +4137,20 @@ final case class StructuralDeltaEvidence(
     hasConsequence(PassedPawnProgress)
   def hasOutpostGain: Boolean =
     hasConsequence(OutpostGain)
-  def hasRookLiftActivation: Boolean =
-    hasConsequence(RookLiftActivation)
   def hasBatteryPressureGain: Boolean =
     hasConsequence(BatteryPressureGain)
   def hasOpponentMobilityRestriction: Boolean =
     consequencesOf(OpponentMobilityRestriction).exists(consequence =>
       consequence.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
     )
-  def hasKingRingPressureGain: Boolean =
-    hasConsequence(KingRingPressureGain)
   def hasStrategicConcession: Boolean =
     strategicConcessions.nonEmpty
   def strategicConcessions: List[TransitionConsequence] =
     negativeConsequences.filter(consequence =>
       StructuralDeltaEvidence.hasConsequenceCategory(consequence.kind, TransitionConsequenceCategory.StrategicSupport)
     )
-  def hasPawnStructureDelta: Boolean =
-    hasConsequenceCategory(TransitionConsequenceCategory.PawnStructureDelta)
-  def hasPawnTensionDelta: Boolean =
-    hasAnyConsequence(Set(PawnTensionGain, PawnTensionResolution))
   def hasStructuralAnchor: Boolean =
     hasConsequenceCategory(TransitionConsequenceCategory.StructuralAnchor)
-  def hasStrategicMoveDelta: Boolean =
-    hasConsequenceCategory(TransitionConsequenceCategory.StrategicMove)
-  def hasStrategicSupport: Boolean =
-    hasConsequenceCategory(TransitionConsequenceCategory.StrategicSupport)
   def hasPositivePlanAnchor: Boolean =
     positiveConsequences.exists(consequence =>
       StructuralDeltaEvidence.hasConsequenceCategory(consequence.kind, TransitionConsequenceCategory.PlanAnchor) ||
@@ -4234,18 +4177,6 @@ final case class StructuralDeltaEvidence(
 object StructuralDeltaEvidence:
   import TransitionConsequenceKind.*
   import TransitionConsequenceCategory.*
-
-  val pawnStructureImprovementConsequences: Set[TransitionConsequenceKind] =
-    consequenceKindsFor(PawnStructure)
-
-  val pawnStructureDeltaConsequences: Set[TransitionConsequenceKind] =
-    consequenceKindsFor(PawnStructureDelta)
-
-  val developmentActivationConsequences: Set[TransitionConsequenceKind] =
-    consequenceKindsFor(Development)
-
-  val pieceActivityGainConsequences: Set[TransitionConsequenceKind] =
-    consequenceKindsFor(PieceActivity)
 
   def structuralImprovementConsequenceKinds(records: Iterable[EvidenceRecord]): List[TransitionConsequenceKind] =
     records.collect { case EvidenceRecord(_, payload: StructuralDeltaEvidence, _) =>
@@ -4280,9 +4211,6 @@ object StructuralDeltaEvidence:
 
   private def centralDiagonalBlockerSquare(square: String): Boolean =
     square.toLowerCase.matches("[c-f][45]")
-
-  private def consequenceKindsFor(category: TransitionConsequenceCategory): Set[TransitionConsequenceKind] =
-    consequenceCategories.collect { case (kind, categories) if categories.contains(category) => kind }.toSet
 
   private val opponentMobilityRestrictionSubject =
     raw"bishop:([a-h][1-8]):diagonal-denial:blocked-by:([a-h][1-8]):locked-center:mobility-([0-9]+)-to-([0-9]+)".r
