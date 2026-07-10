@@ -4980,7 +4980,7 @@ object MoveMeaningClaim:
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
-    !terminalTechniqueCoveredByTerminalResult(claims, claim) &&
+    !terminalResultCoversClaim(claims, claim) &&
       !activityCoveredByRoute(claims, claim) &&
       !planPurposeCoveredByOwnedRoute(claims, claim) &&
       !planCoveredBySpecificCurrentClaim(claims, claim) &&
@@ -5004,21 +5004,35 @@ object MoveMeaningClaim:
           status == "ContradictedByTerminalProof"
       )
 
-  private def terminalTechniqueCoveredByTerminalResult(
+  private def terminalResultCoversClaim(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
     val terminalKinds = terminalConsequenceKinds(claim)
-    terminalOverriddenEndgameTechniqueClaim(claim) &&
-      terminalKinds.nonEmpty &&
-      claims.exists(other =>
-        other != claim &&
-          other.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
-          other.supportLevel != "contextual" &&
-          (other.surfaceLane == "current_move_owned" || other.surfaceLane == "current_move_function") &&
-          other.moveUci == claim.moveUci &&
-          terminalConsequenceKinds(other).intersect(terminalKinds).nonEmpty
-      )
+    claims.exists(other =>
+      val otherTerminalKinds = terminalConsequenceKinds(other)
+      other != claim &&
+        other.moveUci == claim.moveUci &&
+        otherTerminalKinds.nonEmpty &&
+        (
+          terminalOverriddenEndgameTechniqueClaim(claim) &&
+            terminalKinds.nonEmpty &&
+            other.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+            other.supportLevel != "contextual" &&
+            currentMoveSurfaceLane(other) &&
+            otherTerminalKinds.intersect(terminalKinds).nonEmpty ||
+            terminalKinds.isEmpty &&
+              claim.endgameTechniquePattern.isEmpty &&
+              claim.endgameTechniqueRookPattern.isEmpty &&
+              other.publicSurfaceAdmitted &&
+              other.publicProofLevel == "terminal_proof" &&
+              other.lineRole == claim.lineRole &&
+              (
+                currentMoveSurfaceLane(other) && currentMoveSurfaceLane(claim) ||
+                  other.surfaceLane == claim.surfaceLane
+              )
+        )
+    )
 
   private def terminalConsequenceKinds(claim: MoveMeaningClaim): Set[String] =
     claim.terminalConsequenceKinds.filter(LineConsequenceKind.terminalResultProofName).toSet
