@@ -17,8 +17,9 @@ import lila.chessjudgment.analysis.structure.{
 }
 import lila.chessjudgment.analysis.tactical.{ RelationFactNormalizer, TacticalMotifClassifier, TacticalRelationEvidence }
 import lila.chessjudgment.analysis.transition.{ TransitionAnalyzer, TransitionFactNormalizer }
-import lila.chessjudgment.model.{ CompatibilityAdjustment, Motif, PlanCategory, TransitionType }
+import lila.chessjudgment.model.{ CompatibilityAdjustment, Motif, PlanCategory }
 import lila.chessjudgment.model.judgment.*
+import lila.chessjudgment.model.strategic.PlanContinuity
 
 final case class EvidenceFactAssembly(
     input: NormalizedMoveReviewInput,
@@ -55,8 +56,9 @@ object EvidenceFactAssembler:
     val mechanismContext = baseContext.withEvidence(mechanismRecords)
     val strategicRecords = strategicFeatureRecords(mechanismContext, allocator)
     val strategicContext = mechanismContext.withEvidence(strategicRecords)
-    val planRecords = planPressureRecords(assembly.input, strategicContext, allocator)
-    val planContext = strategicContext.withEvidence(planRecords)
+    val (planRecords, planTransitions) = planPressureRecords(assembly.input, strategicContext, allocator)
+    val planContext =
+      planTransitions.foldLeft(strategicContext.withEvidence(planRecords))((ctx, edge) => ctx.withTransition(edge))
     val openingRecords = featureApplicabilityRecords(assembly.input, planContext, allocator)
     val openingContext = planContext.withEvidence(openingRecords)
     val strategicMechanismOutput = strategicMechanismRecords(openingContext, allocator)
@@ -1447,90 +1449,130 @@ object EvidenceFactAssembler:
       input: NormalizedMoveReviewInput,
       context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator
-  ): List[EvidenceRecord] =
-    context.position(PositionNodeRole.Before).toList.flatMap { node =>
-      val records = for
-        boardProfile <- boardFactEvidence(context, node.ref).flatMap(_.boardProfile)
-        assessment <- node.assessment
-        side <- node.ref.sideToMove.orElse(input.sideToMove)
-        initialPosition <- Fen.read(Standard, Fen.Full(node.ref.fen))
-      yield
-        val motifs = motifsForLineRole(context, LineNodeRole.BestReference)
-        val pawnStructureRecord = pawnStructureRecordFor(context, node.ref)
-        val pawnStructure = pawnStructureRecord.map(_._2)
-        val planContext =
-          PlanInteractionContext(
-            whitePovEvalCp = input.currentWhitePovEvalCp,
-            positionAssessment = Some(assessment),
-            pawnAnalysis = pawnStructure.flatMap(_.pawnPlay),
-            threatEpisodesToUs = threatEpisodes(context, node.ref, side),
-            threatEpisodesToThem = threatEpisodes(context, node.ref, !side),
-            isWhiteToMove = side.white,
-            positionKey = Some(node.ref.fen),
-            boardProfile = Some(boardProfile),
-            initialPos = Some(initialPosition),
-            structureProfile = pawnStructure.map(_.profile),
-            planAlignment = pawnStructure.flatMap(_.alignment)
-        )
-        val scoring = PlanMatcher.matchPlans(motifs, planContext, side)
-        val alignment =
-          for
-            pawn <- pawnStructure
-            entry <- StructuralPlaybook.lookup(pawn.profile.primary)
-          yield
-            PlanAlignmentScorer.score(
-              structureProfile = pawn.profile,
-              playbookEntry = entry,
-              topPlans = scoring.topPlans,
-              motifs = motifs,
-              pawnAnalysis = pawn.pawnPlay,
-              sideToMove = side
+  ): (List[EvidenceRecord], List[MoveTransitionEdge]) =
+    val mover = context.position(PositionNodeRole.Before).flatMap(_.ref.sideToMove).orElse(input.sideToMove)
+    val snapshots = mover.toList.flatMap { side =>
+      context.positions.flatMap { node =>
+        val incoming = context.transitions.find(_.to == node.ref)
+        val line =
+          if node.role == PositionNodeRole.Before then context.line(LineNodeRole.BestReference)
+          else incoming.flatMap(lineForTransition(context, _))
+        val motifs =
+          if node.role == PositionNodeRole.Before then motifsForLineRole(context, LineNodeRole.BestReference)
+          else
+            incoming.toList.flatMap { edge =>
+              context.evidenceGraph.records.collect {
+                case EvidenceRecord(ref, payload: MoveMotifEvidence, _)
+                    if payload.isRootEvent &&
+                      EvidenceRef.sameMove(payload.rootMove, edge.moveUci) &&
+                      line.forall(candidate => ref.line.contains(candidate.ref)) =>
+                  payload.motif
+              }
+            }.distinct
+        val whitePovEvalCp = line.map(_.whitePovEvalCp).getOrElse(input.currentWhitePovEvalCp)
+        val snapshot = for
+          boardProfile <- boardFactEvidence(context, node.ref).flatMap(_.boardProfile)
+          assessment <- node.assessment
+          initialPosition <- Fen.read(Standard, Fen.Full(node.ref.fen))
+        yield
+          val pawnStructureRecord = pawnStructureRecordFor(context, node.ref)
+          val pawnStructure = pawnStructureRecord.map(_._2)
+          val planContext =
+            PlanInteractionContext(
+              whitePovEvalCp = whitePovEvalCp,
+              positionAssessment = Some(assessment),
+              pawnAnalysis = pawnStructure.flatMap(_.pawnPlay).filter(_ => node.ref.sideToMove.contains(side)),
+              threatEpisodesToUs = threatEpisodes(context, node.ref, side),
+              threatEpisodesToThem = threatEpisodes(context, node.ref, !side),
+              isWhiteToMove = node.ref.sideToMove.exists(_.white),
+              positionKey = Some(node.ref.fen),
+              boardProfile = Some(boardProfile),
+              initialPos = Some(initialPosition),
+              structureProfile = pawnStructure.map(_.profile),
+              planAlignment = pawnStructure.flatMap(_.alignment)
             )
-        val alignedPlanContext = planContext.copy(planAlignment = alignment)
-        PlanMatcher.toActivePlans(scoring.topPlans, scoring.compatibilityEvents).toList.flatMap { activePlans =>
-          val planPressure =
-            StrategicFactNormalizer.fromPlanPressure(
-              id = allocator.evidenceId("plan-pressure:before"),
-              scoring = scoring,
-              activePlans = activePlans,
-              position = node.ref,
-              line = context.line(LineNodeRole.BestReference).map(_.ref),
-              scope = EvidenceScope.BeforePosition,
-              parents = evidenceRefs(context, EvidenceLayer.Board, Some(node.ref), None) ++
-                evidenceRefs(context, EvidenceLayer.SinglePosition, Some(node.ref), None) ++
-                evidenceRefs(context, EvidenceLayer.PawnStructure, Some(node.ref), None)
-            )
-          val alignedPawnStructure =
+          val scoring = PlanMatcher.matchPlans(motifs, planContext, side)
+          val alignment =
             for
-              (original, _) <- pawnStructureRecord
               pawn <- pawnStructure
-              planAlignment <- alignment
+              entry <- StructuralPlaybook.lookup(pawn.profile.primary)
             yield
-              StrategicFactNormalizer.fromPawnStructure(
-                id = original.ref.id,
-                profile = pawn.profile,
-                alignment = Some(planAlignment),
-                pawnPlay = pawn.pawnPlay,
-                position = node.ref,
-                scope = original.ref.scope,
-                parents = (original.parents :+ planPressure.ref).distinctBy(_.id)
+              PlanAlignmentScorer.score(
+                structureProfile = pawn.profile,
+                playbookEntry = entry,
+                topPlans = scoring.topPlans,
+                motifs = motifs,
+                pawnAnalysis = pawn.pawnPlay,
+                sideToMove = side
               )
-          val transition = TransitionAnalyzer.analyze(activePlans, None, alignedPlanContext)
-          val planTransition =
-            Option.when(transition.transitionType != TransitionType.Opening) {
-              TransitionFactNormalizer.fromPlanTransition(
-                id = allocator.evidenceId("plan-transition:before"),
-                transition = transition,
+          val alignedPlanContext = planContext.copy(planAlignment = alignment)
+          PlanMatcher.toActivePlans(scoring.topPlans, scoring.compatibilityEvents).map { activePlans =>
+            val planPressure =
+              StrategicFactNormalizer.fromPlanPressure(
+                id = allocator.evidenceId(s"plan-pressure:${allocator.positionKey(node.role, node.ref.fen, node.ref.ply)}"),
+                scoring = scoring,
+                activePlans = activePlans,
                 position = node.ref,
-                line = context.line(LineNodeRole.BestReference).map(_.ref),
-                scope = EvidenceScope.BeforePosition,
-                parents = planPressure.ref :: planPressure.parents
+                line = line.map(_.ref),
+                scope = node.role.scope,
+                parents = evidenceRefs(context, EvidenceLayer.Board, Some(node.ref), None) ++
+                  evidenceRefs(context, EvidenceLayer.SinglePosition, Some(node.ref), None) ++
+                  evidenceRefs(context, EvidenceLayer.PawnStructure, Some(node.ref), None)
               )
-            }
-          List(planPressure) ++ alignedPawnStructure.toList ++ planTransition.toList
-        }
-      records.getOrElse(Nil)
+            val alignedPawnStructure =
+              for
+                (original, _) <- pawnStructureRecord
+                pawn <- pawnStructure
+                planAlignment <- alignment
+              yield
+                StrategicFactNormalizer.fromPawnStructure(
+                  id = original.ref.id,
+                  profile = pawn.profile,
+                  alignment = Some(planAlignment),
+                  pawnPlay = pawn.pawnPlay,
+                  position = node.ref,
+                  scope = original.ref.scope,
+                  parents = (original.parents :+ planPressure.ref).distinctBy(_.id)
+                )
+            node.ref -> (alignedPlanContext, activePlans, planPressure, alignedPawnStructure)
+          }
+        snapshot.flatten
+      }
+    }.toMap
+    val transitions = context.transitions.map { edge =>
+      val summary =
+        for
+          (_, previousPlans, _, _) <- snapshots.get(edge.from)
+          (transitionContext, currentPlans, _, _) <- snapshots.get(edge.to)
+          if currentPlans.primary.evidence.nonEmpty
+        yield
+          TransitionAnalyzer.analyze(
+            previousPlans = previousPlans,
+            currentPlans = currentPlans,
+            continuity = PlanContinuity(Some(previousPlans.primary.plan.id.toString), 1, edge.from.ply),
+            ctx = transitionContext
+          )
+      edge.copy(planTransition = summary)
     }
+    val transitionRecords = transitions.flatMap { edge =>
+      for
+        transition <- edge.planTransition.toList
+        (_, _, beforePressure, _) <- snapshots.get(edge.from).toList
+        (_, _, afterPressure, _) <- snapshots.get(edge.to).toList
+      yield
+        TransitionFactNormalizer.fromPlanTransition(
+          id = allocator.evidenceId(s"plan-transition:${allocator.key(edge.role)}:${edge.moveUci}"),
+          transition = transition,
+          position = edge.from,
+          line = lineForTransition(context, edge).map(_.ref),
+          scope = edge.role.scope,
+          parents = List(edge.evidence, beforePressure.ref, afterPressure.ref)
+        )
+    }
+    val snapshotRecords = snapshots.values.toList.flatMap { case (_, _, pressure, alignedPawn) =>
+      pressure :: alignedPawn.toList
+    }
+    (snapshotRecords ++ transitionRecords, transitions)
 
   private def motifsForLineRole(context: JudgmentAssemblyContext, role: LineNodeRole): List[Motif] =
     context.line(role).map(_.ref).flatMap { lineRef =>

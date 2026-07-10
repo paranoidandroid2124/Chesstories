@@ -26,18 +26,20 @@ object TransitionAnalyzer:
    * Returns a transition assessment and momentum score.
    */
   def analyze(
+    previousPlans: ActivePlans,
     currentPlans: ActivePlans,
-    continuityOpt: Option[PlanContinuity],
+    continuity: PlanContinuity,
     ctx: PlanInteractionContext
   ): PlanSequenceSummary = {
+    val prevPlan = previousPlans.primary.plan
     val currPlan = currentPlans.primary.plan
-    val prevPlanKey = continuityOpt.flatMap(_.planId)
-    val prevMomentum = continuityOpt.map(c => 0.5 + (c.consecutivePlies * MOMENTUM_BOOST)).getOrElse(0.5)
+    val prevPlanKey = continuity.planId
+    val prevMomentum = 0.5 + (continuity.consecutivePlies * MOMENTUM_BOOST)
 
     val transType = prevPlanKey match
       case None => TransitionType.Opening
       case Some(prev) if continuityMatches(prev, currPlan) => TransitionType.Continuation
-      case Some(_) => classifyShift(None, currPlan, ctx)
+      case Some(_) => classifyShift(Some(prevPlan), currPlan, ctx)
     
     val momentum = calcMomentum(prevMomentum, transType)
 
