@@ -662,7 +662,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     )
     val played = MoveTransitionEdge(
       role = TransitionEdgeRole.Played,
-      id = "played-transition",
       from = root,
       moveUci = "d1b3",
       to = afterPlayed,
@@ -670,21 +669,13 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       evidence = playedTransitionEvidence
     )
     val reference = CandidateLineNode(
-      role = LineNodeRole.BestReference,
       ref = referenceLine,
       line = VariationLine(List("d1b3"), scoreCp = 30, depth = 16),
-      whitePovEvalCp = 30,
-      mate = None,
-      depth = 16,
       evidence = referenceLineEvidence
     )
     val candidate = CandidateLineNode(
-      role = LineNodeRole.Played,
       ref = playedLine,
       line = VariationLine(List("d1b3"), scoreCp = 30, depth = 16),
-      whitePovEvalCp = 30,
-      mate = None,
-      depth = 16,
       evidence = playedLineEvidence
     )
     val playedLinePayload =
@@ -913,7 +904,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     )
     val played = MoveTransitionEdge(
       role = TransitionEdgeRole.Played,
-      id = "played-transition:f1e3",
       from = root,
       moveUci = "f1e3",
       to = afterPlayed,
@@ -921,21 +911,13 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       evidence = playedTransitionEvidence
     )
     val reference = CandidateLineNode(
-      role = LineNodeRole.BestReference,
       ref = referenceLine,
       line = VariationLine(List("f1e3"), scoreCp = 20, depth = 16),
-      whitePovEvalCp = 20,
-      mate = None,
-      depth = 16,
       evidence = referenceLineEvidence
     )
     val candidate = CandidateLineNode(
-      role = LineNodeRole.Played,
       ref = playedLine,
       line = VariationLine(List("f1e3"), scoreCp = 20, depth = 16),
-      whitePovEvalCp = 20,
-      mate = None,
-      depth = 16,
       evidence = playedLineEvidence
     )
     val assessment = RelativeMoveAssessment(
@@ -1121,7 +1103,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     )
     val played = MoveTransitionEdge(
       role = TransitionEdgeRole.Played,
-      id = "played-transition:e2e4",
       from = root,
       moveUci = "e2e4",
       to = afterPlayed,
@@ -1129,21 +1110,13 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       evidence = playedTransitionEvidence
     )
     val reference = CandidateLineNode(
-      role = LineNodeRole.BestReference,
       ref = referenceLine,
       line = VariationLine(List("e2e4"), scoreCp = 30, depth = 16),
-      whitePovEvalCp = 30,
-      mate = None,
-      depth = 16,
       evidence = referenceLineEvidence
     )
     val candidate = CandidateLineNode(
-      role = LineNodeRole.Played,
       ref = playedLine,
       line = VariationLine(List("e2e4"), scoreCp = 30, depth = 16),
-      whitePovEvalCp = 30,
-      mate = None,
-      depth = 16,
       evidence = playedLineEvidence
     )
     val assessment = RelativeMoveAssessment(
@@ -1406,7 +1379,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     )
     val played = MoveTransitionEdge(
       role = TransitionEdgeRole.Played,
-      id = "played-transition:e4e5:diagonal-denial",
       from = root,
       moveUci = "e4e5",
       to = afterPlayed,
@@ -1414,21 +1386,13 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       evidence = playedTransitionEvidence
     )
     val reference = CandidateLineNode(
-      role = LineNodeRole.BestReference,
       ref = referenceLine,
       line = VariationLine(List("e4e5"), scoreCp = 30, depth = 16),
-      whitePovEvalCp = 30,
-      mate = None,
-      depth = 16,
       evidence = referenceLineEvidence
     )
     val candidate = CandidateLineNode(
-      role = LineNodeRole.Played,
       ref = playedLine,
       line = VariationLine(List("e4e5"), scoreCp = 30, depth = 16),
-      whitePovEvalCp = 30,
-      mate = None,
-      depth = 16,
       evidence = playedLineEvidence
     )
     val assessment = RelativeMoveAssessment(
@@ -2820,7 +2784,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
 
     val played = MoveTransitionEdge(
       role = TransitionEdgeRole.Played,
-      id = "played-transition",
       from = root,
       moveUci = "d2d4",
       to = afterPlayed,
@@ -2828,21 +2791,13 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       evidence = playedTransitionEvidence
     )
     val reference = CandidateLineNode(
-      role = LineNodeRole.BestReference,
       ref = referenceLine,
       line = VariationLine(List("g1f3"), scoreCp = 30, depth = 16),
-      whitePovEvalCp = 30,
-      mate = None,
-      depth = 16,
       evidence = referenceLineEvidence
     )
     val candidate = CandidateLineNode(
-      role = LineNodeRole.Played,
       ref = playedLine,
       line = VariationLine(List("d2d4"), scoreCp = 20, depth = 16),
-      whitePovEvalCp = 20,
-      mate = None,
-      depth = 16,
       evidence = playedLineEvidence
     )
     val assessment = RelativeMoveAssessment(
@@ -4476,7 +4431,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     )
     val played = MoveTransitionEdge(
       role = TransitionEdgeRole.Played,
-      id = "played-transition:h2h3",
       from = root,
       moveUci = "h2h3",
       to = root,
@@ -4484,21 +4438,13 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       evidence = playedTransitionEvidence
     )
     val reference = CandidateLineNode(
-      role = LineNodeRole.BestReference,
       ref = referenceLine,
       line = VariationLine(List("e2e4"), scoreCp = 30, depth = 16),
-      whitePovEvalCp = 30,
-      mate = None,
-      depth = 16,
       evidence = referenceLineEvidence
     )
     val candidate = CandidateLineNode(
-      role = LineNodeRole.Played,
       ref = playedLine,
       line = VariationLine(List("h2h3"), scoreCp = -50, depth = 16),
-      whitePovEvalCp = -50,
-      mate = None,
-      depth = 16,
       evidence = playedLineEvidence
     )
     val transition = StructuralTransitionBinding(
@@ -4960,7 +4906,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       )
     val played = MoveTransitionEdge(
       role = TransitionEdgeRole.Played,
-      id = "played-transition",
       from = root,
       moveUci = "d7d8q",
       to = afterPlayed,
@@ -4968,21 +4913,13 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       evidence = transitionEvidence
     )
     val reference = CandidateLineNode(
-      role = LineNodeRole.BestReference,
       ref = referenceLine,
       line = VariationLine(List("d7d8q"), scoreCp = 100, depth = 16),
-      whitePovEvalCp = 100,
-      mate = None,
-      depth = 16,
       evidence = lineEvidenceRef
     )
     val candidate = CandidateLineNode(
-      role = LineNodeRole.Played,
       ref = playedLine,
       line = VariationLine(List("d7d8q"), scoreCp = 100, depth = 16),
-      whitePovEvalCp = 100,
-      mate = None,
-      depth = 16,
       evidence = lineEvidenceRef
     )
     val assessment = RelativeMoveAssessment(

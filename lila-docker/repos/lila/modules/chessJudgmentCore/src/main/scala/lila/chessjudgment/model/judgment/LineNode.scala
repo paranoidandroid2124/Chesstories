@@ -10,11 +10,11 @@ case class LineNodeRef(
 )
 
 case class CandidateLineNode(
-    role: LineNodeRole,
     ref: LineNodeRef,
     line: VariationLine,
-    whitePovEvalCp: Int,
-    mate: Option[Int],
-    depth: Int,
     evidence: EvidenceRef
-)
+):
+  val role: LineNodeRole = ref.role
+  val whitePovEvalCp: Int = line.scoreCp
+  val mate: Option[Int] = line.mate
+  val depth: Int = line.depth

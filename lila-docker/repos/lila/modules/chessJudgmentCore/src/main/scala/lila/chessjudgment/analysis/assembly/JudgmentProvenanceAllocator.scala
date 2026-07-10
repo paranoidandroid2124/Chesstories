@@ -28,9 +28,6 @@ final case class JudgmentProvenanceAllocator(prefix: String):
       role = line.role
     )
 
-  def transitionId(role: TransitionEdgeRole, moveUci: String): String =
-    s"$prefix:transition:${key(role)}:${MoveReviewInputNormalizer.normalizeUci(moveUci)}"
-
   def evidenceId(suffix: String): String =
     s"$prefix:evidence:$suffix"
 

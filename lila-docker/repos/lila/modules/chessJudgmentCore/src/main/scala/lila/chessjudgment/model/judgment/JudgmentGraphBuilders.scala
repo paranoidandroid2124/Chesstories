@@ -19,28 +19,19 @@ object PositionNodeBuilder:
 
 object CandidateLineNodeBuilder:
   def fromEngineLine(
-      role: LineNodeRole,
       ref: LineNodeRef,
       line: VariationLine,
-      whitePovEvalCp: Int,
-      mate: Option[Int],
-      depth: Int,
       evidence: EvidenceRef
   ): CandidateLineNode =
     CandidateLineNode(
-      role = role,
       ref = ref,
       line = line,
-      whitePovEvalCp = whitePovEvalCp,
-      mate = mate,
-      depth = depth,
       evidence = evidence
     )
 
 object MoveTransitionEdgeBuilder:
   def fromMove(
       role: TransitionEdgeRole,
-      id: String,
       from: PositionNodeRef,
       moveUci: String,
       to: PositionNodeRef,
@@ -49,7 +40,6 @@ object MoveTransitionEdgeBuilder:
   ): MoveTransitionEdge =
     MoveTransitionEdge(
       role = role,
-      id = id,
       from = from,
       moveUci = moveUci,
       to = to,

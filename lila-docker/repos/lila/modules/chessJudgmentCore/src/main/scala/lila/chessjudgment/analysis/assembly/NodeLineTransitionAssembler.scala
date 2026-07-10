@@ -179,12 +179,8 @@ object CandidateLineAssembler:
         )
       val node =
         CandidateLineNodeBuilder.fromEngineLine(
-          role = line.role,
           ref = ref,
           line = line.line,
-          whitePovEvalCp = line.line.scoreCp,
-          mate = line.line.mate,
-          depth = line.line.depth,
           evidence = lineEvidence
         )
       val lineRecord =
@@ -320,7 +316,6 @@ object TransitionEdgeAssembler:
     val edge =
       MoveTransitionEdgeBuilder.fromMove(
         role = role,
-        id = allocator.transitionId(role, moveUci),
         from = from.ref,
         moveUci = MoveReviewInputNormalizer.normalizeUci(moveUci),
         to = to.ref,

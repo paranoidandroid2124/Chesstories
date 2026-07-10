@@ -4,7 +4,6 @@ import lila.chessjudgment.model.PlanSequenceSummary
 
 case class MoveTransitionEdge(
     role: TransitionEdgeRole,
-    id: String,
     from: PositionNodeRef,
     moveUci: String,
     to: PositionNodeRef,

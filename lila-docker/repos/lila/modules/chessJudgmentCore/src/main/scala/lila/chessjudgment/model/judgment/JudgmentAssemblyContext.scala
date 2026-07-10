@@ -38,7 +38,7 @@ final case class JudgmentAssemblyContext(
     copy(lines = replaceBy(lines, line)(_.ref))
 
   def withTransition(edge: MoveTransitionEdge): JudgmentAssemblyContext =
-    copy(transitions = replaceBy(transitions, edge)(_.id))
+    copy(transitions = replaceBy(transitions, edge)(_.evidence.id))
 
   def withRelativeAssessment(assessment: RelativeMoveAssessment): JudgmentAssemblyContext =
     copy(relativeAssessments = replaceBy(relativeAssessments, assessment)(_.evidence.id))
