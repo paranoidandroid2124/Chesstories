@@ -2389,7 +2389,8 @@ object MoveMeaningSurface:
           val publicPurposeCarriers = purposeCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface))
           val playerFacingReasonAllowed =
             displaySemantics.exists(surface =>
-              surfaceHasDirectFunctionCarrier(surface) ||
+              (surfaceHasDirectFunctionCarrier(surface) &&
+                (genericRouteSurface(surface) || fileRouteSurface(surface) || lineUnlockSurface(surface))) ||
                 surface.evidence.proofLevel != "surface_evidence" ||
                 surface.evidence.causeIds.nonEmpty ||
                 surface.evidence.proofRelationKinds.nonEmpty ||
@@ -5247,6 +5248,16 @@ object MoveMeaningClaim:
       claim.targetFiles.isEmpty &&
       claim.breakFiles.isEmpty &&
       !claim.publicIdeaType.exists(routeIdeaHasPublicPurpose) &&
+      !claim.objectBindingSignatures.exists { signature =>
+        val parts = EvidenceObjectBinding.signatureParts(signature).map(_.toLowerCase).toSet
+        Set(
+          s"actor=move:${JudgmentSubjectBinding.normalizeMove(claim.moveUci)}",
+          "actor=piece:king",
+          "actor=piece:rook",
+          "mechanism=motif:castling",
+          "horizon=ply:0"
+        ).subsetOf(parts)
+      } &&
       !claim.routeIdentityParts.exists(part =>
         val normalized = part.toLowerCase
         normalized.contains(":line-unlock:") || normalized.contains("rook-lift")
