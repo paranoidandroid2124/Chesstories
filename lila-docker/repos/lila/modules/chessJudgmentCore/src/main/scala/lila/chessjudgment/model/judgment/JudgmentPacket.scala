@@ -4985,7 +4985,7 @@ object MoveMeaningClaim:
       !planPurposeCoveredByOwnedRoute(claims, claim) &&
       !planCoveredBySpecificCurrentClaim(claims, claim) &&
       !breakFunctionCoveredByOwnedBreak(claims, claim) &&
-      !genericActivityOrPlanCoveredByOwnedPressure(claims, claim) &&
+      !genericFallbackCoveredBySpecificClaim(claims, claim) &&
       !counterplayControlWithoutConcreteCarrier(claims, claim) &&
       planContinuityCarrierAllowed(claims, claim)
 
@@ -5262,7 +5262,7 @@ object MoveMeaningClaim:
   private def routeIdeaHasPublicPurpose(ideaType: String): Boolean =
     ideaType == "outpost_attempt" || ideaType == "long_diagonal_pressure"
 
-  private def genericActivityOrPlanCoveredByOwnedPressure(
+  private def genericFallbackCoveredBySpecificClaim(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -5287,7 +5287,31 @@ object MoveMeaningClaim:
         claim.causeEvidenceIds.isEmpty &&
         !passedPawnAdvanceCarrier(claim) &&
         targetPressureOrShapeCarrier(claim)
-    (
+    val genericCenterCovered =
+      claim.meaningKind == "CenterControl" &&
+        claim.supportLevel == "view_surfaced" &&
+        claim.causeEvidenceIds.isEmpty &&
+        currentMoveSurfaceLane(claim) &&
+        claims.exists(other =>
+          other != claim &&
+            other.meaningKind == "TargetPressure" &&
+            other.publicSurfaceAdmitted &&
+            other.objectCarrierReady &&
+            other.moveUci == claim.moveUci &&
+            other.lineRole == claim.lineRole &&
+            currentMoveSurfaceLane(other) &&
+            (
+              other.targetPieces.exists(_.equalsIgnoreCase("king")) ||
+                other.boardCarriers.exists(carrier =>
+                  carrier.role == "target" &&
+                    (
+                      carrier.kind == "Pawn" && carrier.value.toLowerCase.startsWith("weak-pawn:") ||
+                        carrier.kind == "PlanSubject" && carrier.value.toLowerCase.startsWith("weak-square:")
+                    )
+                )
+            )
+        )
+    genericCenterCovered || (
       claim.meaningKind == "PieceActivity" && claim.role == "ImprovesPieceActivity" && !passedPawnAdvanceCarrier(claim) ||
         targetPressureActivity(claim) ||
         claim.meaningKind == "PlanContinuity" && claim.role == "ReferencePreservesPlan" ||
