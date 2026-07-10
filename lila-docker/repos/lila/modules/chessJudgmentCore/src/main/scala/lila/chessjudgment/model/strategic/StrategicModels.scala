@@ -2,21 +2,6 @@ package lila.chessjudgment.model.strategic
 
 import chess.{ Color, Rank, Role, Square }
 
-case class PreventedPlan(
-    planId: String, // e.g. "StopCheck", "PreventFork", "DenyBreak"
-    deniedSquares: List[Square], // Squares opponent stopped controlling/occupying
-    breakNeutralized: Option[String], // e.g. "f5"
-    mobilityDelta: Int, // Change in opponent's safe mobility
-    counterplayScoreDrop: Int, // Drop in opponent's positional eval
-    preventedThreatType: Option[String] = None, // "Check", "Fork", "Mate", "Material"
-    deniedResourceClass: Option[String] = None, // "break" | "entry_square" | "forcing_threat" | "piece_activity"
-    deniedEntryScope: Option[String] = None, // "single_square" | "file" | "sector"
-    breakNeutralizationStrength: Option[Int] = None, // 0-100
-    defensiveSufficiency: Option[Int] = None, // 0-100
-    sourceScope: lila.chessjudgment.model.FactScope = lila.chessjudgment.model.FactScope.Now,
-    sourceLine: Option[VariationLine] = None
-)
-
 case class PieceActivity(
     piece: Role,
     square: Square,
