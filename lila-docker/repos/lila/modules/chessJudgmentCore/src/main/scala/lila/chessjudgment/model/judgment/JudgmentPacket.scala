@@ -3259,30 +3259,7 @@ object MoveMeaningSurface:
   private[chessjudgment] def publicIdeaChainSurfaceClaimsWithEvidence(
       view: MoveJudgmentView
   ): List[(MoveMeaningClaim, MoveMeaningSurfaceEvidence)] =
-    val candidates = publicSurfaceClaimCandidates(view)
-    view.verdict match
-      case None => candidates
-      case Some(frame) =>
-        val verdict = MoveMeaningSurface.verdict(frame)
-        val surfaces = candidates.map((claim, evidence) => (claim, evidence, fromClaim(view.verdict, claim, evidence)))
-        val displaySurfaceKeys = publicIdeaChainOutputSurfaceKeys(publicIdeaChains(verdict, surfaces.map(_._3)))
-        surfaces.collect {
-          case (claim, evidence, surface) if displaySurfaceKeys(publicIdeaChainSurfaceKey(surface)) => claim -> evidence
-        }
-
-  private def publicIdeaChainOutputSurfaceKeys(chains: List[JsObject]): Set[(String, String, String, String, String)] =
-    chains
-      .flatMap(chain => (chain \ "move_semantics").asOpt[List[JsObject]].toList.flatten)
-      .flatMap(semantic =>
-        for
-          move <- (semantic \ "move_uci").asOpt[String]
-          subject <- (semantic \ "subject").asOpt[String]
-          lineRole <- (semantic \ "line_role").asOpt[String]
-          ideaCode <- (semantic \ "idea" \ "code").asOpt[String]
-          ideaLabel <- (semantic \ "idea" \ "label").asOpt[String]
-        yield (move, subject, lineRole, ideaCode, ideaLabel)
-      )
-      .toSet
+    publicSurfaceClaimCandidates(view)
 
   private def publicSurfaceClaimCandidates(
       view: MoveJudgmentView
