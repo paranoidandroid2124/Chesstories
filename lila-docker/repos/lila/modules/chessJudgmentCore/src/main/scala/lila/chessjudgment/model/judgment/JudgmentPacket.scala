@@ -6521,7 +6521,7 @@ object MoveMeaningClaim:
         developmentRouteCarriers ++
         structuralRouteFileCarriers(detail) ++
         flankPawnAdvanceDestinationCarriers(detail) ++
-        detail.structuralPurposeSubjects.flatMap(publicStructuralSubjectCarriers) ++
+        detail.structuralPurposeSubjects.flatMap(publicStructuralSubjectCarriers(_, detail.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute)) ++
         colorComplexSubjectCarriers(detail) ++
         publicPlanSubjectCarriers(detail) ++
         detail.breakFile.toList.flatMap(file => publicFileCarrier("target", file, Some("break_file"))) ++
@@ -6582,7 +6582,10 @@ object MoveMeaningClaim:
   private def sameFileMoveFile(move: String): Option[String] =
     moveEndpoints(move).collect { case (from, to) if from.take(1) == to.take(1) => from.take(1) }
 
-  private def publicStructuralSubjectCarriers(subject: String): List[MoveMeaningSurfaceBoardCarrier] =
+  private def publicStructuralSubjectCarriers(subject: String, tensionAsTarget: Boolean): List[MoveMeaningSurfaceBoardCarrier] =
+    val tensionRole = if tensionAsTarget then "pressure_target" else "tension_square"
+    val restrictionBlockerRole =
+      if strategicRayRestrictionToken(subject.toLowerCase) then "pressure_target" else "resource_contest_square"
     val identityCarriers =
       StructuralPurposeSubject.structuralIdentity(subject).toList.map { value =>
         MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", value, semanticRole = Some("plan_subject"))
@@ -6604,12 +6607,12 @@ object MoveMeaningClaim:
         publicPieceCarrier("actor", piece) ++ publicSquareCarrier("target", square, Some("pressure_target")) ++ publicSquareCarrier(
           "target",
           blocker,
-          Some("resource_contest_square")
+          Some(restrictionBlockerRole)
         )
       case Some(StructuralPurposeSubject.PieceSquare(piece, square)) =>
         publicPieceCarrier("actor", piece) ++ publicSquareCarrier("actor", square) ++ publicSquareCarrier("target", square, Some("plan_subject"))
       case Some(StructuralPurposeSubject.TensionEdge(from, to)) =>
-        publicSquareCarrier("target", from, Some("tension_square")) ++ publicSquareCarrier("target", to, Some("tension_square"))
+        publicSquareCarrier("target", from, Some(tensionRole)) ++ publicSquareCarrier("target", to, Some(tensionRole))
       case _ if weakPawnSquare.nonEmpty =>
         weakPawnSquare.toList.flatMap(square =>
           MoveMeaningSurfaceBoardCarrier("target", "Pawn", s"weak-pawn:$square", semanticRole = Some("weak_pawn")) ::
@@ -6623,7 +6626,7 @@ object MoveMeaningClaim:
         val carrierSubject = StructuralPurposeSubject.carrierToken(subject)
         val carriers = StructuralPurposeSubject.parse(carrierSubject) match
           case Some(StructuralPurposeSubject.TensionEdge(from, to)) =>
-            publicSquareCarrier("target", from, Some("tension_square")) ++ publicSquareCarrier("target", to, Some("tension_square"))
+            publicSquareCarrier("target", from, Some(tensionRole)) ++ publicSquareCarrier("target", to, Some(tensionRole))
           case _ =>
             publicSquareCarrier("target", carrierSubject) match
               case Nil if carrierSubject.matches("[a-h]") => publicFileCarrier("target", carrierSubject)
