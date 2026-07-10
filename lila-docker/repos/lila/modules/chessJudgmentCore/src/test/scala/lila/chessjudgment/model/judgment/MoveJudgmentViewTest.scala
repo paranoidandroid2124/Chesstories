@@ -503,6 +503,22 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       Some(line),
       EvidenceScope.AfterPlayedPosition
     )
+    val transitionRef = evidenceRef(
+      "plan-transition:after-played",
+      EvidenceProducer.PlanTransitionProducer,
+      EvidenceLayer.PlanTransition,
+      after,
+      Some(line),
+      EvidenceScope.AfterPlayedPosition
+    )
+    val transitionMechanismRef = evidenceRef(
+      "strategic-mechanism:plan-transition:after-played",
+      EvidenceProducer.StrategicMechanismProducer,
+      EvidenceLayer.StrategicMechanism,
+      after,
+      Some(line),
+      EvidenceScope.AfterPlayedPosition
+    )
     val planMatch = PlanMatch(
       Plan.QueensideAttack(Color.Black),
       0.8,
@@ -526,6 +542,24 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       List(StrategicMechanismSignal(StrategicMechanismSignalKind.PlanPressure, "QueensideAttack", pressureRef, 2, Some(axis))),
       List(EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.PlanPressure, "QueensideAttack"))
     )
+    val transitionSummary = PlanSequenceSummary(
+      TransitionType.ForcedPivot,
+      primaryPlanId = Some(PlanId.SpaceAdvantage),
+      previousPlanId = Some(PlanId.PieceActivation)
+    )
+    val transitionMechanism = StrategicMechanismEvidence(
+      StrategicMechanismKind.PlanPressure,
+      List(
+        StrategicMechanismSignal(
+          StrategicMechanismSignalKind.PlanTransition,
+          "PieceActivation->SpaceAdvantage",
+          transitionRef,
+          2,
+          Some(StrategicAxisDetail(StrategicAxisKind.PlanCoherence, StrategicAxisPolarity.Concede, "PieceActivation->SpaceAdvantage"))
+        )
+      ),
+      List(EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.PlanTransition, "PieceActivation:SpaceAdvantage"))
+    )
     val graph = TypedEvidenceGraph(
       List(
         EvidenceRecord(structuralRef, StructuralDeltaEvidence(transition, Nil, List(consequence))),
@@ -537,20 +571,30 @@ class MoveJudgmentViewTest extends munit.FunSuite:
           ),
           List(structuralRef)
         ),
-        EvidenceRecord(mechanismRef, mechanism, List(pressureRef))
+        EvidenceRecord(mechanismRef, mechanism, List(pressureRef)),
+        EvidenceRecord(transitionRef, PlanTransitionEvidence(transitionSummary)),
+        EvidenceRecord(transitionMechanismRef, transitionMechanism, List(transitionRef))
       )
     )
     val view = MoveJudgmentView.from(Nil, graph, Nil, Nil, Nil, None, Nil, Nil).get
     val planDetails = view.positionPlanTechniqueFrames.flatMap(_.semanticDetails).filter(_.unit == PositionPlanTechniqueUnit.PlanOptionSet)
     val detail = planDetails.find(_.activePlanIds.contains(PlanId.QueensideAttack)).getOrElse(fail(planDetails.toString))
 
+    assertEquals(detail.principalPlanId, Some(PlanId.QueensideAttack))
     assertEquals(detail.planMoveRole, Some(PlanMoveRole.Execution))
     assertEquals(detail.structuralRouteMove, Some("b7b5"))
     assertEquals(detail.structuralConsequenceKinds, List(TransitionConsequenceKind.TargetPressureGain))
     assertEquals(detail.structuralPurposeSubjects, List("c4"))
-    assert(view.positionPlanTechniqueFrames.flatMap(_.objectBindingSignatures).exists(_.contains("target=PlanSubject:queensideattack")))
-    assert(!view.positionPlanTechniqueFrames.flatMap(_.objectBindingSignatures).exists(_.contains("spaceadvantage")))
-    assert(!view.positionPlanTechniqueFrames.flatMap(_.objectBindingSignatures).exists(_.contains("evidenceatom")))
+    val transitionDetail = planDetails.find(_.sourceEvidenceIds.contains(transitionRef.id)).getOrElse(fail(planDetails.toString))
+    assertEquals(transitionDetail.principalPlanId, None)
+    assertEquals(transitionDetail.activePlanIds, Nil)
+    assertEquals(transitionDetail.previousPlanId, Some(PlanId.PieceActivation))
+    assertEquals(transitionDetail.planTransitionType, Some(TransitionType.ForcedPivot))
+    assertEquals(transitionDetail.planMoveRole, None)
+    val pressureBindings = EvidenceObjectBinding.objectSignatures(EvidenceObjectBinding.fromEvidenceRefs(graph, List(pressureRef)))
+    assert(pressureBindings.exists(_.contains("target=PlanSubject:queensideattack")))
+    assert(!pressureBindings.exists(_.contains("spaceadvantage")))
+    assert(!pressureBindings.exists(_.contains("evidenceatom")))
 
   test("preserves concrete piece route object ownership on semantic details"):
     val root = PositionNodeRef("8/8/8/8/8/8/8/6N1 w - - 0 1", 1, Some(Color.White), Some("root"))

@@ -14,13 +14,6 @@ enum PositionPlanTechniqueUnit:
   case StructuralTransformation
   case CompensationSource
 
-enum PlanMoveRole:
-  case Preparation
-  case Maintenance
-  case Execution
-  case Prevention
-  case Pivot
-
 enum PositionPlanTechniqueSpecificityTier:
   case ExactObjectAxis
   case ConcreteObjectAxis
@@ -47,6 +40,7 @@ case class PositionPlanTechniqueSemanticDetail(
     referencePlanIds: List[String] = Nil,
     candidatePlanIds: List[String] = Nil,
     activePlanIds: List[PlanId] = Nil,
+    principalPlanId: Option[PlanId] = None,
     previousPlanId: Option[PlanId] = None,
     planTransitionType: Option[TransitionType] = None,
     planMoveRole: Option[PlanMoveRole] = None,
@@ -1162,9 +1156,12 @@ object PositionPlanTechniqueProjection:
   )
 
   private final case class PositionPlanTechniquePlanEvidence(
+      principalPlanId: Option[PlanId],
       activePlanIds: List[PlanId],
       previousPlanId: Option[PlanId],
-      transitionType: Option[TransitionType]
+      transitionType: Option[TransitionType],
+      pressure: Option[PlanPressureEvidence],
+      rootMove: Option[String]
   )
 
   private def positionPlanTechniqueEnrichedDetails(
@@ -1202,9 +1199,8 @@ object PositionPlanTechniqueProjection:
           fallbackAnchorKeys
       )
       val taggedDetail = positionPlanTechniqueWithStructuralMotifs(routedDetail)
-      val roleDetail = positionPlanTechniqueWithPlanMoveRole(taggedDetail)
-      val causeLinkage = positionPlanTechniqueDetailCauseLinkage(roleDetail, graph, fallbackEvidenceIds)
-      roleDetail.copy(
+      val causeLinkage = positionPlanTechniqueDetailCauseLinkage(taggedDetail, graph, fallbackEvidenceIds)
+      taggedDetail.copy(
         causeEvidenceIds = causeLinkage.causeEvidenceIds,
         proofRoles = causeLinkage.proofRoles,
         contextCauseEvidenceIds = causeLinkage.contextCauseEvidenceIds,
@@ -1254,114 +1250,6 @@ object PositionPlanTechniqueProjection:
           )
         )
         .toList
-
-  private def positionPlanTechniqueWithPlanMoveRole(
-      detail: PositionPlanTechniqueSemanticDetail
-  ): PositionPlanTechniqueSemanticDetail =
-    val primaryPlan = detail.activePlanIds.headOption
-    val consequences = detail.structuralConsequenceKinds.toSet
-    val activityPlans = Set(
-      PlanId.PieceActivation,
-      PlanId.MinorPieceManeuver,
-      PlanId.RookActivation,
-      PlanId.FileControl,
-      PlanId.KingActivation,
-      PlanId.Opposition,
-      PlanId.Triangulation,
-      PlanId.Zugzwang
-    )
-    val attackPlans = Set(
-      PlanId.KingsideAttack,
-      PlanId.QueensideAttack,
-      PlanId.CentralBreakthrough,
-      PlanId.PawnStorm,
-      PlanId.PerpetualCheck,
-      PlanId.DirectMate,
-      PlanId.Sacrifice,
-      PlanId.Counterplay
-    )
-    val targetPlans = Set(PlanId.WeakPawnAttack, PlanId.MinorityAttack, PlanId.Blockade)
-    val spacePlans = Set(PlanId.CentralControl, PlanId.SpaceAdvantage, PlanId.PawnChain)
-    val passerPlans = Set(PlanId.PassedPawnCreation, PlanId.PassedPawnPush, PlanId.Promotion)
-    val realizesPrimaryPlan = primaryPlan.exists(plan =>
-      plan == PlanId.OpeningDevelopment && consequences.exists(
-        Set(
-          TransitionConsequenceKind.DevelopmentLagReduced,
-          TransitionConsequenceKind.DevelopmentPieceActivated,
-          TransitionConsequenceKind.DevelopmentMobilityGain,
-          TransitionConsequenceKind.DevelopmentCenterControlGain,
-          TransitionConsequenceKind.DevelopmentSafePlacement
-        )
-      ) ||
-        activityPlans(plan) && consequences.exists(
-          Set(
-            TransitionConsequenceKind.DevelopmentPieceActivated,
-            TransitionConsequenceKind.DevelopmentMobilityGain,
-            TransitionConsequenceKind.MobilityGain,
-            TransitionConsequenceKind.LineUnlockGain,
-            TransitionConsequenceKind.FileAccessGain,
-            TransitionConsequenceKind.FileOccupationGain,
-            TransitionConsequenceKind.RookLiftActivation,
-            TransitionConsequenceKind.BatteryPressureGain,
-            TransitionConsequenceKind.OutpostGain,
-            TransitionConsequenceKind.CenterControlGain
-          )
-        ) ||
-        attackPlans(plan) && consequences.exists(
-          Set(
-            TransitionConsequenceKind.TargetPressureGain,
-            TransitionConsequenceKind.KingSafetyPressure,
-            TransitionConsequenceKind.KingRingPressureGain,
-            TransitionConsequenceKind.PawnTensionGain,
-            TransitionConsequenceKind.LineUnlockGain
-          )
-        ) ||
-        targetPlans(plan) && consequences.exists(
-          Set(
-            TransitionConsequenceKind.WeakPawnTargetCreated,
-            TransitionConsequenceKind.WeakSquareTargetCreated,
-            TransitionConsequenceKind.TargetPressureGain,
-            TransitionConsequenceKind.PawnTensionGain
-          )
-        ) ||
-        spacePlans(plan) && consequences.exists(
-          Set(
-            TransitionConsequenceKind.CenterControlGain,
-            TransitionConsequenceKind.PawnTensionGain,
-            TransitionConsequenceKind.OpponentMobilityRestriction
-          )
-        ) ||
-        passerPlans(plan) && consequences.exists(
-          Set(TransitionConsequenceKind.PassedPawnProgress, TransitionConsequenceKind.PromotionPressureGain)
-        )
-    )
-    val defensivePlan =
-      primaryPlan.exists(plan =>
-        plan == PlanId.Prophylaxis || plan == PlanId.Counterplay || plan == PlanId.DefensiveConsolidation
-      )
-    val preparationPlan =
-      primaryPlan.exists(plan => attackPlans(plan) || targetPlans(plan) || spacePlans(plan) || activityPlans(plan))
-    val role =
-      if detail.unit == PositionPlanTechniqueUnit.PlanOptionSet && primaryPlan.nonEmpty then
-        detail.planTransitionType match
-          case Some(TransitionType.ForcedPivot) => Some(PlanMoveRole.Pivot)
-          case _
-              if defensivePlan &&
-                (primaryPlan.contains(PlanId.Prophylaxis) ||
-                  primaryPlan.contains(PlanId.DefensiveConsolidation) ||
-                  detail.prophylaxisNeeded.contains(true) ||
-                  consequences.contains(TransitionConsequenceKind.OpponentMobilityRestriction)) =>
-            Some(PlanMoveRole.Prevention)
-          case Some(TransitionType.Opportunistic) => Some(PlanMoveRole.Execution)
-          case _ if realizesPrimaryPlan            => Some(PlanMoveRole.Execution)
-          case _
-              if primaryPlan.contains(PlanId.PawnBreakPreparation) ||
-                preparationPlan && detail.structuralRouteMove.nonEmpty =>
-            Some(PlanMoveRole.Preparation)
-          case Some(TransitionType.Continuation) => Some(PlanMoveRole.Maintenance)
-          case _                                 => None
-      else None
-    detail.copy(planMoveRole = role)
 
   private def positionPlanTechniqueConcreteCompensationCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute ||
@@ -2167,12 +2055,12 @@ object PositionPlanTechniqueProjection:
           detail
             .withPawnPlay(positionPlanTechniquePawnPlayForSources(sourceIds, pawnPlayBySourceId))
             .withPlanAlignment(positionPlanTechniquePlanAlignmentForSources(sourceIds, planAlignmentBySourceId))
-            .withPlanEvidence(positionPlanTechniquePlanEvidenceForSources(graph, sourceIds))
             .withOpeningPrior(positionPlanTechniqueOpeningPriorForSources(sourceIds, openingPriorBySourceId))
             .withResourceContest(positionPlanTechniqueResourceContestForSources(sourceIds, resourceContestBySourceId))
             .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForDetailSources(detail, sourceIds, structuralPurposeBySourceId))
             .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForSources(sourceIds, routePurposeBySourceId))
             .withThreatProjection(positionPlanTechniqueThreatForSources(sourceIds, threatBySourceId))
+            .withPlanEvidence(positionPlanTechniquePlanEvidenceForSources(graph, sourceIds))
         )
       )
     val unitOnlyDetails =
@@ -2190,12 +2078,12 @@ object PositionPlanTechniqueProjection:
           detail
             .withPawnPlay(positionPlanTechniquePawnPlayForSources(sourceIds, pawnPlayBySourceId))
             .withPlanAlignment(positionPlanTechniquePlanAlignmentForSources(sourceIds, planAlignmentBySourceId))
-            .withPlanEvidence(positionPlanTechniquePlanEvidenceForSources(graph, sourceIds))
             .withOpeningPrior(positionPlanTechniqueOpeningPriorForSources(sourceIds, openingPriorBySourceId))
             .withResourceContest(positionPlanTechniqueResourceContestForSources(sourceIds, resourceContestBySourceId))
             .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForDetailSources(detail, sourceIds, structuralPurposeBySourceId))
             .withStructuralPurpose(positionPlanTechniqueStructuralPurposeForSources(sourceIds, routePurposeBySourceId))
             .withThreatProjection(positionPlanTechniqueThreatForSources(sourceIds, threatBySourceId))
+            .withPlanEvidence(positionPlanTechniquePlanEvidenceForSources(graph, sourceIds))
         )
     positionPlanTechniqueWithPawnBreakRaceDetails(axisDetails ++ unitOnlyDetails)
       .distinctBy(detail => (detail.unit, detail.axisKey, detail.sourceEvidenceIds.mkString(",")))
@@ -2239,8 +2127,21 @@ object PositionPlanTechniqueProjection:
     private def withPlanEvidence(plan: PositionPlanTechniquePlanEvidence): PositionPlanTechniqueSemanticDetail =
       detail.copy(
         activePlanIds = (detail.activePlanIds ++ plan.activePlanIds).distinct,
+        principalPlanId = detail.principalPlanId.orElse(plan.principalPlanId),
         previousPlanId = detail.previousPlanId.orElse(plan.previousPlanId),
-        planTransitionType = detail.planTransitionType.orElse(plan.transitionType)
+        planTransitionType = detail.planTransitionType.orElse(plan.transitionType),
+        planMoveRole =
+          if detail.unit == PositionPlanTechniqueUnit.PlanOptionSet then
+            plan.pressure.flatMap(
+              _.moveRole(
+                plan.rootMove,
+                plan.transitionType,
+                detail.structuralConsequenceKinds,
+                detail.prophylaxisNeeded.contains(true),
+                detail.structuralRouteMove.nonEmpty
+              )
+            )
+          else None
       )
 
     private def withOpeningPrior(selection: Option[OpeningThemePriorSelection]): PositionPlanTechniqueSemanticDetail =
@@ -2381,22 +2282,31 @@ object PositionPlanTechniqueProjection:
       graph: TypedEvidenceGraph,
       sourceIds: List[String]
   ): PositionPlanTechniquePlanEvidence =
+    val directRecords = sourceIds.flatMap(id => graph.byId.get(id))
     val records =
-      sourceIds
-        .flatMap(id => graph.byId.get(id).toList.flatMap(positionPlanTechniqueRecordLineage(graph, _, 2)))
+      directRecords
+        .flatMap(positionPlanTechniqueRecordLineage(graph, _, 2))
         .distinctBy(_.ref.id)
-    val rootBackedPlanIds =
-      records.flatMap {
-        case record @ EvidenceRecord(_, payload: PlanPressureEvidence, _) =>
-          payload.rootBackedPlans(record.ref.line.map(_.rootMove)).map(_.plan.id)
-        case _ => Nil
-      }.distinct
+    val pressureRecord =
+      directRecords.collectFirst { case record @ EvidenceRecord(_, _: PlanPressureEvidence, _) => record }
+    val pressure = pressureRecord.collect { case EvidenceRecord(_, payload: PlanPressureEvidence, _) => payload }
+    val rootMove = pressureRecord.flatMap(_.ref.line.map(_.rootMove))
+    val principalPlanId = pressure.flatMap(_.principalPlanId(rootMove))
     val transition =
-      records.collectFirst { case EvidenceRecord(_, PlanTransitionEvidence(summary), _) => summary }
+      principalPlanId match
+        case Some(planId) =>
+          records.collectFirst {
+            case EvidenceRecord(_, PlanTransitionEvidence(summary), _) if summary.primaryPlanId.contains(planId) => summary
+          }
+        case None =>
+          directRecords.collectFirst { case EvidenceRecord(_, PlanTransitionEvidence(summary), _) => summary }
     PositionPlanTechniquePlanEvidence(
-      activePlanIds = (transition.flatMap(_.primaryPlanId).toList ++ rootBackedPlanIds).distinct,
+      principalPlanId = principalPlanId,
+      activePlanIds = pressure.toList.flatMap(_.activePlanIds(rootMove)),
       previousPlanId = transition.flatMap(_.previousPlanId),
-      transitionType = transition.map(_.transitionType)
+      transitionType = transition.map(_.transitionType),
+      pressure = pressure,
+      rootMove = rootMove
     )
 
   private def positionPlanTechniquePawnPlayBySourceId(

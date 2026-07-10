@@ -15,7 +15,7 @@ import lila.chessjudgment.analysis.singlePosition.{
   TensionPolicy,
   ThreatSeverity
 }
-import lila.chessjudgment.model.{ ActivePlans, Fact, Motif, MotifCategory, PlanMatch, PlanScoringResult, PlanSequenceSummary, TransitionType }
+import lila.chessjudgment.model.{ ActivePlans, Fact, Motif, MotifCategory, PlanId, PlanMatch, PlanScoringResult, PlanSequenceSummary, TransitionType }
 import lila.chessjudgment.model.structure.{ AlignmentBand, PlanAlignment, StructureId, StructureProfile }
 
 final case class EvidenceSquare(key: String)
@@ -4260,6 +4260,13 @@ final case class PlanTransitionEvidence(
     transition: PlanSequenceSummary
 ) extends EvidencePayload
 
+enum PlanMoveRole:
+  case Preparation
+  case Maintenance
+  case Execution
+  case Prevention
+  case Pivot
+
 final case class PlanPressureEvidence(
     scoring: PlanScoringResult,
     activePlans: ActivePlans
@@ -4273,6 +4280,122 @@ final case class PlanPressureEvidence(
         _.evidence.exists(atom => atom.motif.move.exists(EvidenceRef.sameMove(_, move)))
       )
     )
+
+  def activePlanIds(rootMove: Option[String]): List[PlanId] =
+    rootBackedPlans(rootMove).map(_.plan.id)
+
+  def principalPlanId(rootMove: Option[String]): Option[PlanId] =
+    activePlanIds(rootMove).headOption
+
+  def moveRole(
+      rootMove: Option[String],
+      transitionType: Option[TransitionType],
+      consequenceKinds: List[TransitionConsequenceKind],
+      prophylaxisNeeded: Boolean,
+      structuralRoutePresent: Boolean
+  ): Option[PlanMoveRole] =
+    val primaryPlan = principalPlanId(rootMove)
+    val consequences = consequenceKinds.toSet
+    val activityPlans = Set(
+      PlanId.PieceActivation,
+      PlanId.MinorPieceManeuver,
+      PlanId.RookActivation,
+      PlanId.FileControl,
+      PlanId.KingActivation,
+      PlanId.Opposition,
+      PlanId.Triangulation,
+      PlanId.Zugzwang
+    )
+    val attackPlans = Set(
+      PlanId.KingsideAttack,
+      PlanId.QueensideAttack,
+      PlanId.CentralBreakthrough,
+      PlanId.PawnStorm,
+      PlanId.PerpetualCheck,
+      PlanId.DirectMate,
+      PlanId.Sacrifice,
+      PlanId.Counterplay
+    )
+    val targetPlans = Set(PlanId.WeakPawnAttack, PlanId.MinorityAttack, PlanId.Blockade)
+    val spacePlans = Set(PlanId.CentralControl, PlanId.SpaceAdvantage, PlanId.PawnChain)
+    val passerPlans = Set(PlanId.PassedPawnCreation, PlanId.PassedPawnPush, PlanId.Promotion)
+    val realizesPrimaryPlan = primaryPlan.exists(plan =>
+      plan == PlanId.OpeningDevelopment && consequences.exists(
+        Set(
+          TransitionConsequenceKind.DevelopmentLagReduced,
+          TransitionConsequenceKind.DevelopmentPieceActivated,
+          TransitionConsequenceKind.DevelopmentMobilityGain,
+          TransitionConsequenceKind.DevelopmentCenterControlGain,
+          TransitionConsequenceKind.DevelopmentSafePlacement
+        )
+      ) ||
+        activityPlans(plan) && consequences.exists(
+          Set(
+            TransitionConsequenceKind.DevelopmentPieceActivated,
+            TransitionConsequenceKind.DevelopmentMobilityGain,
+            TransitionConsequenceKind.MobilityGain,
+            TransitionConsequenceKind.LineUnlockGain,
+            TransitionConsequenceKind.FileAccessGain,
+            TransitionConsequenceKind.FileOccupationGain,
+            TransitionConsequenceKind.RookLiftActivation,
+            TransitionConsequenceKind.BatteryPressureGain,
+            TransitionConsequenceKind.OutpostGain,
+            TransitionConsequenceKind.CenterControlGain
+          )
+        ) ||
+        attackPlans(plan) && consequences.exists(
+          Set(
+            TransitionConsequenceKind.TargetPressureGain,
+            TransitionConsequenceKind.KingSafetyPressure,
+            TransitionConsequenceKind.KingRingPressureGain,
+            TransitionConsequenceKind.PawnTensionGain,
+            TransitionConsequenceKind.LineUnlockGain
+          )
+        ) ||
+        targetPlans(plan) && consequences.exists(
+          Set(
+            TransitionConsequenceKind.WeakPawnTargetCreated,
+            TransitionConsequenceKind.WeakSquareTargetCreated,
+            TransitionConsequenceKind.TargetPressureGain,
+            TransitionConsequenceKind.PawnTensionGain
+          )
+        ) ||
+        spacePlans(plan) && consequences.exists(
+          Set(
+            TransitionConsequenceKind.CenterControlGain,
+            TransitionConsequenceKind.PawnTensionGain,
+            TransitionConsequenceKind.OpponentMobilityRestriction
+          )
+        ) ||
+        passerPlans(plan) && consequences.exists(
+          Set(TransitionConsequenceKind.PassedPawnProgress, TransitionConsequenceKind.PromotionPressureGain)
+        )
+    )
+    val defensivePlan =
+      primaryPlan.exists(plan =>
+        plan == PlanId.Prophylaxis || plan == PlanId.Counterplay || plan == PlanId.DefensiveConsolidation
+      )
+    val preparationPlan =
+      primaryPlan.exists(plan => attackPlans(plan) || targetPlans(plan) || spacePlans(plan) || activityPlans(plan))
+    if primaryPlan.isEmpty then None
+    else
+      transitionType match
+        case Some(TransitionType.ForcedPivot) => Some(PlanMoveRole.Pivot)
+        case _
+            if defensivePlan &&
+              (primaryPlan.contains(PlanId.Prophylaxis) ||
+                primaryPlan.contains(PlanId.DefensiveConsolidation) ||
+                prophylaxisNeeded ||
+                consequences.contains(TransitionConsequenceKind.OpponentMobilityRestriction)) =>
+          Some(PlanMoveRole.Prevention)
+        case Some(TransitionType.Opportunistic) => Some(PlanMoveRole.Execution)
+        case _ if realizesPrimaryPlan            => Some(PlanMoveRole.Execution)
+        case _
+            if primaryPlan.contains(PlanId.PawnBreakPreparation) ||
+              preparationPlan && structuralRoutePresent =>
+          Some(PlanMoveRole.Preparation)
+        case Some(TransitionType.Continuation) => Some(PlanMoveRole.Maintenance)
+        case _                                 => None
 
 final case class CandidateComparisonEvidence(
     comparison: CandidateComparisonFact
