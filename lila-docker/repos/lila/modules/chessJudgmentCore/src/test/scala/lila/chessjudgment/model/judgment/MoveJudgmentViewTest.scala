@@ -1409,10 +1409,16 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       strength = 1,
       subjects = List("bishop:g7:diagonal-denial:blocked-by:e5:locked-center:mobility-3-to-2")
     )
+    val unrelatedLineUnlock = TransitionConsequence(
+      TransitionConsequenceKind.LineUnlockGain,
+      StructuralSignalPolarity.Gain,
+      strength = 1,
+      subjects = List("rook:h1:line-unlock:by:e4e5:mobility+1")
+    )
     val structuralDelta = StructuralDeltaEvidence(
       transition = transition,
       signals = Nil,
-      consequences = List(consequence)
+      consequences = List(consequence, unrelatedLineUnlock)
     )
     val axis = StrategicAxisDetail(StrategicAxisKind.Counterplay, StrategicAxisPolarity.Restrain, "opponent-diagonal-restriction")
     val mechanism = StrategicMechanismEvidence(
@@ -1500,6 +1506,11 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       .find(_.axisKey.contains(axis.stableKey))
       .getOrElse(fail(s"frames=${view.positionPlanTechniqueFrames}"))
     assertEquals(counterplayDetail.causeEvidenceIds, List(causeRef.id))
+    assertEquals(counterplayDetail.structuralPurposeConsequences, List("OpponentMobilityRestriction"))
+    assertEquals(
+      counterplayDetail.structuralPurposeSubjects,
+      List("bishop:g7:diagonal-denial:blocked-by:e5:locked-center:mobility-3-to-2")
+    )
     assert(!view.moveMeaningClaims.exists(_.causeEvidenceIds.contains(sameAxisKingSafetyCauseRef.id)), view.moveMeaningClaims)
 
     val claim = view.moveMeaningClaims
@@ -1516,6 +1527,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assert(claim.targetPieces.contains("bishop"), claim.targetPieces)
     assert(claim.targetSquares.contains("g7"), claim.targetSquares)
     assert(claim.targetSquares.contains("e5"), claim.targetSquares)
+    assert(!claim.routeIdentityParts.exists(_.contains("line-unlock")), claim.routeIdentityParts)
     val surface = MoveMeaningSurface.from(view).find(_.ideaType == "ray_denial").getOrElse(fail(MoveMeaningSurface.from(view).toString))
     assertEquals(surface.subject, "played_move")
     assertEquals(surface.priority, "main")

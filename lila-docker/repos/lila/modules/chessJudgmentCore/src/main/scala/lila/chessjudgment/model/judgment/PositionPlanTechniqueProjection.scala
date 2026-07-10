@@ -1305,14 +1305,21 @@ object PositionPlanTechniqueProjection:
           graph,
           evidenceIds.flatMap(id => graph.byId.get(id).map(_.ref))
         )
+    val structuralConsequenceKinds = detail.structuralPurposeConsequences.map(_.toLowerCase).toSet
+    val carrierOwnedBindings =
+      rawDetailBindings.filter(binding =>
+        structuralConsequenceKinds.isEmpty ||
+          binding.source.layer != EvidenceLayer.StructuralDelta ||
+          binding.mechanism.exists(obj => structuralConsequenceKinds(obj.key.toLowerCase))
+      )
     val detailBindings =
       if detail.unit == PositionPlanTechniqueUnit.CompensationSource then
-        rawDetailBindings.filter(binding =>
+        carrierOwnedBindings.filter(binding =>
           EvidenceObjectBinding
             .objectSignatures(List(binding))
             .exists(positionPlanTechniqueMaterialSacrificeSignature)
         )
-      else rawDetailBindings
+      else carrierOwnedBindings
     val objectBindingSignatures =
       (
         EvidenceObjectBinding.objectSignatures(detailBindings) ++
@@ -2646,6 +2653,8 @@ object PositionPlanTechniqueProjection:
               opponentMobilityPurpose =>
           purpose.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
         case _ if opponentMobilityPurpose =>
+          false
+        case Some(StrategicAxisKind.Counterplay) if detail.axisPolarity.contains(StrategicAxisPolarity.Restrain) =>
           false
         case Some(StrategicAxisKind.PawnBreak) =>
           if positionPlanTechniquePawnTensionDetail(detail) ||
