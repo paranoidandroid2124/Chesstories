@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
 import lila.chessjudgment.analysis.line.PrincipalVariationEvidence
-import lila.chessjudgment.model.{ CollapseAnalysis, PlanSequenceSummary, ProbePurpose, ProbeRequest }
+import lila.chessjudgment.model.{ PlanSequenceSummary, ProbePurpose, ProbeRequest }
 import lila.chessjudgment.model.strategic.VariationLine
 
 object PositionNodeBuilder:
@@ -54,7 +54,6 @@ object RelativeMoveAssessmentBuilder:
       reference: CandidateLineNode,
       candidate: CandidateLineNode,
       comparison: EvalComparison,
-      collapse: Option[CollapseAnalysis],
       confidence: EvidenceConfidence,
       evidence: EvidenceRef,
       counterfactualEvidence: List[EvidenceRef],
@@ -68,7 +67,6 @@ object RelativeMoveAssessmentBuilder:
       reference = reference,
       candidate = candidate,
       comparison = comparison,
-      collapse = collapse,
       confidence = confidence,
       evidence = evidence,
       counterfactualEvidence = counterfactualEvidence,

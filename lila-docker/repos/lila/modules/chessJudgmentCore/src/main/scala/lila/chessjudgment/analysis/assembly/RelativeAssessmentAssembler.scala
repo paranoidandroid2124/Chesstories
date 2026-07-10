@@ -141,7 +141,6 @@ object RelativeAssessmentAssembler:
           reference = reference,
           candidate = candidate,
           comparison = comparison,
-          collapse = None,
           confidence = primaryConfidence,
           evidence = relativeEvidence,
           counterfactualEvidence = List(counterfactual.ref),

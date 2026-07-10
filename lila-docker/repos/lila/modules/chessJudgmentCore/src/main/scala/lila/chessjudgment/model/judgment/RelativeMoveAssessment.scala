@@ -2,7 +2,6 @@ package lila.chessjudgment.model.judgment
 
 import chess.Color
 import lila.chessjudgment.analysis.singlePosition.{ ThreatDriver, ThreatKind, ThreatSeverity }
-import lila.chessjudgment.model.CollapseAnalysis
 
 enum MoveChoiceVerdict:
   case ImprovesOnReference
@@ -857,7 +856,6 @@ case class RelativeMoveAssessment(
     reference: CandidateLineNode,
     candidate: CandidateLineNode,
     comparison: EvalComparison,
-    collapse: Option[CollapseAnalysis],
     confidence: EvidenceConfidence,
     evidence: EvidenceRef,
     counterfactualEvidence: List[EvidenceRef],

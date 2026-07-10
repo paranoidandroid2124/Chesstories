@@ -705,7 +705,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 0.0,
         verdict = MoveChoiceVerdict.MatchesReference
       ),
-      collapse = None,
       confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
@@ -935,7 +934,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 0.0,
         verdict = MoveChoiceVerdict.MatchesReference
       ),
-      collapse = None,
       confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
@@ -1134,7 +1132,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 0.0,
         verdict = MoveChoiceVerdict.MatchesReference
       ),
-      collapse = None,
       confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
@@ -1410,7 +1407,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 0.0,
         verdict = MoveChoiceVerdict.MatchesReference
       ),
-      collapse = None,
       confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
@@ -2815,7 +2811,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 0.4,
         verdict = MoveChoiceVerdict.PlayableLoss
       ),
-      collapse = None,
       confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil
@@ -4547,7 +4542,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 8.0,
         verdict = MoveChoiceVerdict.Mistake
       ),
-      collapse = None,
       confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
@@ -4937,7 +4931,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 0.0,
         verdict = MoveChoiceVerdict.MatchesReference
       ),
-      collapse = None,
       confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
