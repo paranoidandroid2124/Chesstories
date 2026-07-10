@@ -1690,7 +1690,8 @@ case class MoveMeaningClaim(
     publicIdeaType: Option[String] = None,
     publicSurfaceAdmitted: Boolean = false,
     publicProofLevel: String = "none",
-    publicTargetBound: Boolean = false
+    publicTargetBound: Boolean = false,
+    principalPlanId: Option[PlanId] = None
 )
 
 case class MoveMeaningSurfaceTarget(
@@ -1903,7 +1904,8 @@ case class MoveMeaningSurface(
     structureContext: List[String] = Nil,
     evidence: MoveMeaningSurfaceEvidence = MoveMeaningSurfaceEvidence(),
     defenderActorPieces: List[String] = Nil,
-    sourceLabel: Option[String] = None
+    sourceLabel: Option[String] = None,
+    principalPlanId: Option[PlanId] = None
 )
 
 object MoveMeaningSurface:
@@ -2203,7 +2205,8 @@ object MoveMeaningSurface:
       surface.subject,
       surface.lineRole,
       surface.idea.code,
-      surface.idea.label
+      surface.idea.label,
+      surface.principalPlanId.map(_.toString).getOrElse("")
     )
 
   private def surfaceHasCarrierRole(surface: MoveMeaningSurface, role: String): Boolean =
@@ -2390,6 +2393,7 @@ object MoveMeaningSurface:
       "subject" -> surface.subject,
       "line_role" -> surface.lineRole,
       "move_quality" -> surface.moveQuality,
+      "principal_plan_id" -> surface.principalPlanId.map(_.toString),
       "idea_type" -> surface.ideaType,
       "idea" -> publicCodeJson(surface.idea),
       "idea_quality" -> surface.ideaQuality,
@@ -3426,7 +3430,8 @@ object MoveMeaningSurface:
       structureContext = claim.structuralMotifTags,
       evidence = evidence,
       defenderActorPieces = defenderMoveActorPieces,
-      sourceLabel = claim.label
+      sourceLabel = claim.label,
+      principalPlanId = claim.principalPlanId
     )
 
   private def publicEvidence(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
@@ -4239,7 +4244,7 @@ object MoveMeaningClaim:
               )
             )
         )
-        .groupBy(claim => (claim.laneKey, claim.role, claim.lineRole, claim.moveUci, provenanceKey(claim)))
+        .groupBy(claim => (claim.laneKey, claim.role, claim.lineRole, claim.moveUci, provenanceKey(claim), claim.principalPlanId))
         .values
         .flatMap(mergeMeaningClaims)
         .toList
@@ -5070,9 +5075,18 @@ object MoveMeaningClaim:
           .sorted
           .map(file => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"break-file:$file", semanticRole = Some("break_file")))
       val mergedCarrierPool = list.flatMap(_.boardCarriers)
+      val mergedPrincipalPlanCarriers =
+        list.flatMap(_.principalPlanId).distinct.flatMap(planId =>
+          mergedCarrierPool.filter(carrier =>
+            carrier.role == "target" &&
+              carrier.kind == "PlanSubject" &&
+              carrier.value.equalsIgnoreCase(planId.toString)
+          )
+        )
       val mergedBoardCarriers =
         (
           mergedCarrierPool.filter(carrier => carrier.role == "actor" && carrier.kind == "Move") ++
+            mergedPrincipalPlanCarriers ++
             mergedBreakFileCarriers ++
             mergedCarrierPool.distinct.sortBy(boardCarrierSortKey)
         ).distinct.take(12)
@@ -5119,6 +5133,7 @@ object MoveMeaningClaim:
         proofRelationKinds = mergedProofRelationKinds,
         proofRelationDetails = mergedProofRelationDetails,
         proofThreatDrivers = mergedProofThreatDrivers,
+        principalPlanId = best.principalPlanId.orElse(list.flatMap(_.principalPlanId).headOption),
         publicSurfaceAdmitted = mergedPublicSurfaceAdmitted,
         publicProofLevel =
           if !mergedPublicSurfaceAdmitted then "none"
@@ -5167,8 +5182,11 @@ object MoveMeaningClaim:
               case None => List(lineRole, moveUci, piece, from.getOrElse(""), to.getOrElse(""), target.getOrElse("")).mkString("|")
           )
           .getOrElse(claim.laneKey)
-      else if claim.meaningKind == "PlanContinuity" && claim.routeIdentityParts.nonEmpty then
-        (claim.routeIdentityParts ++ claim.breakIdentityParts).mkString("|")
+      else if claim.meaningKind == "PlanContinuity" then
+        claim.principalPlanId.fold(
+          if claim.routeIdentityParts.nonEmpty then (claim.routeIdentityParts ++ claim.breakIdentityParts).mkString("|")
+          else claim.laneKey
+        )(planId => s"plan:$planId")
       else if claim.meaningKind == "TargetPressure" && targetIdentityParts(claim).nonEmpty then
         (claim.axisKey.map(axis => s"axis:$axis").toList ++ targetIdentityParts(claim)).mkString("|")
       else claim.laneKey
@@ -5361,6 +5379,7 @@ object MoveMeaningClaim:
                 claimBreakFiles.map(file => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"break-file:$file", semanticRole = Some("break_file")))
               val planPawnAdvanceCarriers =
                 planPawnAdvanceIdentityCarriers(detail, claimMove, frame.position.fen)
+              val principalPlanCarriers = publicPlanSubjectCarriers(detail)
               val kingPressureIdentityCarrier =
                 surfaceObjectSignatures.exists(kingPressureObjectSignature)
               val checkIdentityCarriers =
@@ -5385,6 +5404,7 @@ object MoveMeaningClaim:
               val claimBoardCarriers =
                 (
                   baseClaimBoardCarriers.filter(carrier => carrier.role == "actor" && carrier.kind == "Move") ++
+                    principalPlanCarriers ++
                     relationProofBoardCarriers ++
                     threatProofBoardCarriers ++
                     breakFileIdentityCarriers ++
@@ -5393,7 +5413,8 @@ object MoveMeaningClaim:
                   .take(12)
               val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, claimBoardCarriers)
               val objectCarrierReady =
-                (detail.unit != PositionPlanTechniqueUnit.PlanOptionSet || detail.planMoveRole.nonEmpty) &&
+                (detail.unit != PositionPlanTechniqueUnit.PlanOptionSet ||
+                  (detail.principalPlanId.nonEmpty && detail.planMoveRole.nonEmpty)) &&
                   (
                     publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames) ||
                       planPawnAdvanceCarriers.nonEmpty ||
@@ -5465,6 +5486,7 @@ object MoveMeaningClaim:
                 causeEvidenceIds = linkedCauseIds,
                 sourceEvidenceIds = sourceEvidenceIds,
                 objectBindingSignatures = surfaceObjectSignatures,
+                principalPlanId = detail.principalPlanId,
                 reasonTokens = Nil,
                 comparisonLossSides =
                   PositionPlanTechniqueSemanticDetail
@@ -5973,12 +5995,8 @@ object MoveMeaningClaim:
   private def publicPlanSubjectCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
     if detail.unit != PositionPlanTechniqueUnit.PlanOptionSet then Nil
     else
-      (detail.activePlanIds.headOption.map(_.toString).toList ++
-        detail.matchedPlanIds ++ detail.referencePlanIds ++ detail.candidatePlanIds)
-        .flatMap(_.split(",").toList)
-        .map(_.trim.toLowerCase)
-        .filter(_.nonEmpty)
-        .distinct
+      detail.principalPlanId.toList
+        .map(_.toString.toLowerCase)
         .map(value => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", value, semanticRole = Some("plan_subject")))
 
   private def colorComplexSubjectCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
@@ -6667,10 +6685,7 @@ object MoveMeaningClaim:
     val ownsCurrentMoveSource =
       currentMoveClaim &&
         (currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove) || pawnAdvanceOption)
-    val planSignal =
-      detail.activePlanIds.nonEmpty ||
-        detail.previousPlanId.nonEmpty ||
-        detail.planTransitionType.nonEmpty
+    val planSignal = detail.principalPlanId.nonEmpty
     val concretePlanHook = detail.planMoveRole.nonEmpty
     ownsMove && ownsCurrentMoveSource && planSignal && concretePlanHook &&
       (!currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove) || pawnAdvanceOption)
@@ -8117,7 +8132,7 @@ object MoveMeaningClaim:
     meaningKind match
       case "PlanContinuity" =>
         detail.planMoveRole match
-          case Some(PlanMoveRole.Preparation) if detail.activePlanIds.contains(PlanId.PawnBreakPreparation) =>
+          case Some(PlanMoveRole.Preparation) if detail.principalPlanId.contains(PlanId.PawnBreakPreparation) =>
             "PreparesBreakOption"
           case Some(PlanMoveRole.Preparation)
               if detail.structuralConsequenceKinds.exists(kind =>

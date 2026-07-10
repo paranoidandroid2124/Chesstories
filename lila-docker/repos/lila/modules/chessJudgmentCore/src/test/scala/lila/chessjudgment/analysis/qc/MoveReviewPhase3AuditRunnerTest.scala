@@ -1884,6 +1884,59 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       false
     )
 
+  test("move meaning plan claims deduplicate by typed principal plan and preserve it publicly"):
+    val planPressureSignature =
+      "actor=Move:e2e3|actor=Square:e2|target=PlanSubject:queensideattack|mechanism=Mechanism:plan-pressure|consequence=Consequence:queensideattack|witness=Move:e2e3"
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PlanOptionSet,
+      axisKey = Some("PlanCoherence:Support:QueensideAttack"),
+      axisKind = Some(StrategicAxisKind.PlanCoherence),
+      axisPolarity = Some(StrategicAxisPolarity.Support),
+      label = Some("QueensideAttack"),
+      activePlanIds = List(PlanId.QueensideAttack),
+      principalPlanId = Some(PlanId.QueensideAttack),
+      planMoveRole = Some(PlanMoveRole.Preparation),
+      structuralRouteMove = Some(candidateLine.rootMove),
+      sourceEvidenceIds = List("plan-pressure:queenside-attack"),
+      objectBindingSignatures = List(planPressureSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = Nil,
+      details = List(
+        detail,
+        detail.copy(
+          axisKey = Some("PlanCoherence:Support:QueensideAttack:alternate-axis"),
+          label = Some("QueensideAttack alternate"),
+          sourceEvidenceIds = List("plan-pressure:queenside-attack:alternate")
+        )
+      )
+    )
+    val claims = view.moveMeaningClaims.filter(_.meaningKind == "PlanContinuity")
+    assertEquals(claims.size, 1)
+    assertEquals(claims.head.principalPlanId, Some(PlanId.QueensideAttack))
+    assert(claims.head.boardCarriers.exists(carrier => carrier.kind == "PlanSubject" && carrier.value == "queensideattack"))
+    val admittedClaim = claims.head.copy(
+      supportLevel = "view_surfaced",
+      visibility = "functional_explanation",
+      surfaceLane = "current_move_function",
+      publicSurfaceAdmitted = true,
+      publicProofLevel = "surface_evidence",
+      publicTargetBound = true
+    )
+    val publicView = view.copy(moveMeaningClaims = List(admittedClaim))
+    val surfaces =
+      MoveMeaningSurface
+        .publicSurfaces(publicView)
+        .filter(_.principalPlanId.contains(PlanId.QueensideAttack))
+    assertEquals(surfaces.size, 1)
+    assertEquals(surfaces.head.principalPlanId, Some(PlanId.QueensideAttack))
+    assert(
+      (MoveMeaningSurface.publicPayloadJson(publicView) \\ "principal_plan_id")
+        .exists(_.asOpt[String].contains("QueensideAttack"))
+    )
+
   test("move meaning claims do not surface generic structure shift from current-move route alone"):
     val routeSignature =
       "actor=Move:e2e3|actor=Piece:knight|actor=Square:e2|target=Square:e3|mechanism=Mechanism:developmentchoice|consequence=Consequence:developmentpieceactivated"

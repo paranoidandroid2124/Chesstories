@@ -3597,6 +3597,7 @@ object MoveReviewPhase3AuditRunner:
       "axisKind" -> claim.axisKind.map(_.toString),
       "axisPolarity" -> claim.axisPolarity.map(_.toString),
       "label" -> claim.label,
+      "principalPlanId" -> claim.principalPlanId.map(_.toString),
       "causeKinds" -> claim.causeKinds.map(_.toString),
       "causeSourceSides" -> claim.causeSourceSides.map(_.toString),
       "causeEvidenceIds" -> claim.causeEvidenceIds,

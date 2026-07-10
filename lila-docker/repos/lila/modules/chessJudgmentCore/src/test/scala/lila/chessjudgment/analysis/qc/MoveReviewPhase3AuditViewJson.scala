@@ -100,6 +100,7 @@ object MoveReviewPhase3AuditViewJson:
       "referencePlanIds" -> detail.referencePlanIds,
       "candidatePlanIds" -> detail.candidatePlanIds,
       "activePlanIds" -> detail.activePlanIds.map(_.toString),
+      "principalPlanId" -> detail.principalPlanId.map(_.toString),
       "previousPlanId" -> detail.previousPlanId.map(_.toString),
       "planTransitionType" -> detail.planTransitionType.map(_.toString),
       "planMoveRole" -> detail.planMoveRole.map(_.toString),
