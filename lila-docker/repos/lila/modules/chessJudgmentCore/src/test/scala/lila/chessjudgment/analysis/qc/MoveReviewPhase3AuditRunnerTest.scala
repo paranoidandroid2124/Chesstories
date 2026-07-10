@@ -668,6 +668,53 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals((coverage \ "slots" \ 0 \ "matched").as[Boolean], false)
     assertEquals((coverage \ "slots" \ 0 \ "supportLevel").as[String], "missing_semantic_slot")
 
+  test("semantic rubric measures an exact contextual plan transition frame"):
+    val axis = "PlanCoherence:Release:SpaceAdvantage->PieceActivation"
+    val detailTokens =
+      List(
+        "unit:PlanOptionSet",
+        s"axisKey:$axis",
+        "axisPolarity:Release",
+        "semanticAnchor:PlanTransition:SpaceAdvantage:PieceActivation:5-ply"
+      )
+    val diagnostic =
+      comparisonDiagnostic(
+        id = "cmp-plan-transition-frame",
+        referenceLeadAxes = Nil,
+        producedKinds = Nil,
+        flows = Nil,
+        primaryRootKinds = Nil,
+        primaryRootIds = Nil,
+        positionPlanTechniqueFrameIds = List("frame-plan-transition"),
+        positionPlanTechniqueUnits = List(PositionPlanTechniqueUnit.PlanOptionSet),
+        positionPlanTechniqueAxisKeys = List(axis),
+        positionPlanTechniqueSemanticDetailUnits = List(PositionPlanTechniqueUnit.PlanOptionSet),
+        positionPlanTechniqueSemanticDetailAxisKeys = List(axis),
+        positionPlanTechniqueSemanticDetailAnchorKeys = List("PlanTransition:SpaceAdvantage:PieceActivation:5-ply"),
+        positionPlanTechniqueSemanticDetailTokens = detailTokens,
+        positionPlanTechniqueSemanticDetailTokenGroups = List(detailTokens)
+      )
+    val slot =
+      MoveReviewPhase3AuditRunner.ExpectedSemanticSlot(
+        id = "plan-transition-frame",
+        unit = PositionPlanTechniqueUnit.PlanOptionSet,
+        axisKey = Some(axis),
+        requiredSupportLevel = Some("frame_surfaced"),
+        requiredSemanticDetailTokens = List(
+          "axisPolarity:Release",
+          "semanticAnchor:PlanTransition:SpaceAdvantage:PieceActivation:5-ply"
+        )
+      )
+
+    val coverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(List(slot), List(diagnostic))
+
+    assertEquals((coverage \ "matchedSlotCount").as[Int], 1)
+    assertEquals((coverage \ "slots" \ 0 \ "matched").as[Boolean], true)
+    assertEquals((coverage \ "slots" \ 0 \ "supportLevel").as[String], "frame_surfaced")
+    assertEquals((coverage \ "slots" \ 0 \ "publicSurfacePresent").as[Boolean], false)
+    assertEquals((coverage \ "slots" \ 0 \ "frameSurfacePresent").as[Boolean], true)
+    assertEquals((coverage \ "slots" \ 0 \ "frameIds").as[List[String]], List("frame-plan-transition"))
+
   test("recognition view slots require semantic details to reach public surface"):
     val detailTokens =
       List(

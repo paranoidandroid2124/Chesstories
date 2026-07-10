@@ -333,6 +333,10 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       )
     val publicMatches = unitEligibleRows.filter(_.publicSurface)
     val claimMatches = unitEligibleRows.filterNot(_.publicSurface)
+    val frameMatches =
+      diagnostics.filter(diagnostic => semanticDetailPresent(slot, List(diagnostic)))
+    val requiresFrame = slot.requiredSupportLevel.contains("frame_surfaced")
+    val frameMatched = requiresFrame && frameMatches.nonEmpty
     val best =
       slot.requiredSupportLevel
         .flatMap(required => publicMatches.find(row => supportLevelSatisfies(row.supportLevel, required)))
@@ -342,16 +346,19 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
         .flatMap(required => claimMatches.find(row => supportLevelSatisfies(row.supportLevel, required)))
         .orElse(claimMatches.headOption)
     val supportLevel =
-      if measured then best.map(_.supportLevel).getOrElse("missing_semantic_slot")
+      if frameMatched then "frame_surfaced"
+      else if measured then best.map(_.supportLevel).getOrElse("missing_semantic_slot")
       else "unmeasured_semantic_slot"
     val claimSupportLevel =
       if measured then bestClaim.map(_.supportLevel).getOrElse("missing_semantic_claim")
       else "unmeasured_semantic_slot"
     val supportLevelSatisfied =
-      measured && slot.requiredSupportLevel.forall(required => supportLevelSatisfies(supportLevel, required))
+      measured &&
+        (if requiresFrame then frameMatched
+         else slot.requiredSupportLevel.forall(required => supportLevelSatisfies(supportLevel, required)))
     val claimSupportLevelSatisfied =
       measured && slot.requiredSupportLevel.forall(required => supportLevelSatisfies(claimSupportLevel, required))
-    val matched = measured && best.nonEmpty && supportLevelSatisfied
+    val matched = measured && (if requiresFrame then frameMatched else best.nonEmpty) && supportLevelSatisfied
     val requiresOwnedCause =
       slot.requiredSupportLevel.exists(required => supportLevelSatisfies(required, "owned_cause_linked"))
     val ownedExpectationWithoutProof =
@@ -422,6 +429,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "claimSupportLevelSatisfied" -> claimSupportLevelSatisfied,
       "claimPresent" -> claimMatches.nonEmpty,
       "publicSurfacePresent" -> publicMatches.nonEmpty,
+      "frameSurfacePresent" -> frameMatches.nonEmpty,
       "requiresOwnedCause" -> requiresOwnedCause,
       "ownedExpectationWithoutProof" -> ownedExpectationWithoutProof,
       "shadowedByOwnedCarrier" -> shadowedByOwnedCarrier,
@@ -430,7 +438,9 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "survivalFailureClass" -> survivalFailureClass,
       "matchedComparisonIds" -> publicMatches.map(_.comparisonId).distinct.sorted,
       "claimComparisonIds" -> claimMatches.map(_.comparisonId).distinct.sorted,
-      "frameIds" -> publicMatches.flatMap(_.frameIds).distinct.sorted,
+      "frameIds" ->
+        (if frameMatched then frameMatches.flatMap(_.moveJudgmentView.positionPlanTechniqueFrameIds)
+         else publicMatches.flatMap(_.frameIds)).distinct.sorted,
       "sourceEvidenceIds" -> publicMatches.flatMap(_.sourceEvidenceIds).distinct.sorted,
       "primaryRootCauseEvidenceIds" -> publicMatches.flatMap(_.primaryRootCauseEvidenceIds).distinct.sorted,
       "causeIds" -> publicMatches.flatMap(_.causeIds).distinct.sorted,
