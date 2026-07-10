@@ -1492,6 +1492,10 @@ object EvidenceFactAssembler:
         yield
           val pawnStructureRecord = pawnStructureRecordFor(context, node.ref)
           val pawnStructure = pawnStructureRecord.map(_._2)
+          val rootPosition =
+            incoming
+              .flatMap(edge => Fen.read(Standard, Fen.Full(edge.from.fen)))
+              .getOrElse(initialPosition)
           val planContext =
             PlanInteractionContext(
               whitePovEvalCp = whitePovEvalCp,
@@ -1502,7 +1506,8 @@ object EvidenceFactAssembler:
               isWhiteToMove = node.ref.sideToMove.exists(_.white),
               positionKey = Some(node.ref.fen),
               boardProfile = Some(boardProfile),
-              initialPos = Some(initialPosition),
+              initialPos = Some(rootPosition),
+              rootMove = line.map(_.ref.rootMove),
               structureProfile = pawnStructure.map(_.profile),
               planAlignment = pawnStructure.flatMap(_.alignment)
             )
@@ -1558,18 +1563,23 @@ object EvidenceFactAssembler:
       for
         before <- context.position(PositionNodeRole.Before)
         (_, plans, _, _) <- snapshots.get(before.ref)
-      yield historicalPlanContinuity(input, plans.primary.plan)
+      yield historicalPlanContinuity(
+        input,
+        (plans.primary.plan :: plans.allPlans.filter(_.evidence.nonEmpty).map(_.plan)).distinctBy(_.id)
+      )
     val transitionRecords = context.transitions.flatMap { edge =>
       for
-        (_, previousPlans, _, _) <- snapshots.get(edge.from).toList
         (transitionContext, currentPlans, _, _) <- snapshots.get(edge.to).toList
-        if currentPlans.primary.evidence.nonEmpty
+        if transitionContext.rootMove.exists(rootMove =>
+          currentPlans.allPlans.exists(
+            _.evidence.exists(atom => atom.motif.move.exists(EvidenceRef.sameMove(_, rootMove)))
+          )
+        )
         (_, _, beforePressure, _) <- snapshots.get(edge.from).toList
         (_, _, afterPressure, _) <- snapshots.get(edge.to).toList
+        (planContinuity, previousPlan) <- continuity.toList
+        if planContinuity.supportingMoves.nonEmpty
       yield
-        val (planContinuity, previousPlan) = continuity.getOrElse(
-          PlanContinuity(Some(previousPlans.primary.plan.id.toString), 1, edge.from.ply) -> previousPlans.primary.plan
-        )
         val transition = TransitionAnalyzer.analyze(
           previousPlan = previousPlan,
           currentPlans = currentPlans,
@@ -1592,8 +1602,9 @@ object EvidenceFactAssembler:
 
   private def historicalPlanContinuity(
       input: NormalizedMoveReviewInput,
-      fallbackPlan: Plan
+      currentPlans: List[Plan]
   ): (PlanContinuity, Plan) =
+    val fallbackPlan = currentPlans.head
     val history =
       PrincipalVariationEvidence
         .legalReplay(Standard.initialFen.value, input.movePrefixUci, 0)
@@ -1605,33 +1616,41 @@ object EvidenceFactAssembler:
         }
         .filter(step => input.beforePly - (step._2.ply - 1) < 8)
         .map { case (fenBefore, move) =>
-          (move.ply - 1, move.uci, historicalPlan(fenBefore, move, fallbackPlan.color))
+          (move.ply - 1, move.uci, historicalPlans(fenBefore, move, fallbackPlan.color))
         }
         .toList
-    history.headOption.flatMap(_._3) match
-      case Some(previousPlan) =>
-        val matching = history.takeWhile(_._3.exists(_.id == previousPlan.id))
-        val entry = matching.last
-        val startingPly = entry._1
-        PlanContinuity(
-          Some(previousPlan.id.toString),
-          input.beforePly - startingPly + 1,
-          startingPly,
-          supportingMoves = matching.reverse.map(_._2)
-        ) -> previousPlan
-      case None =>
-        PlanContinuity(Some(fallbackPlan.id.toString), 1, input.beforePly) -> fallbackPlan
+    currentPlans.zipWithIndex
+      .flatMap { case (currentPlan, index) =>
+        Option.when(history.headOption.exists(_._3.exists(_.id == currentPlan.id))) {
+          val matching = history.takeWhile(_._3.exists(_.id == currentPlan.id))
+          val startingPly = matching.last._1
+          (
+            PlanContinuity(
+              Some(currentPlan.id.toString),
+              input.beforePly - startingPly + 1,
+              startingPly,
+              supportingMoves = matching.reverse.map(_._2)
+            ),
+            currentPlan,
+            index
+          )
+        }
+      }
+      .sortBy { case (continuity, _, index) => (index, -continuity.consecutivePlies) }
+      .headOption
+      .map { case (continuity, plan, _) => continuity -> plan }
+      .getOrElse(PlanContinuity(None, 1, input.beforePly) -> fallbackPlan)
 
-  private def historicalPlan(
+  private def historicalPlans(
       fenBefore: String,
       move: PrincipalVariationEvidence.LineMoveRef,
       side: Color
-  ): Option[Plan] =
+  ): List[Plan] =
     for
-      position <- Fen.read(Standard, Fen.Full(fenBefore))
+      position <- Fen.read(Standard, Fen.Full(fenBefore)).toList
       if position.color == side
-      features <- PositionAnalyzer.extractFeatures(fenBefore, move.ply - 1)
-      motifs <- MoveAnalyzer.tokenizePv(fenBefore, List(move.uci))
+      features <- PositionAnalyzer.extractFeatures(fenBefore, move.ply - 1).toList
+      motifs <- MoveAnalyzer.tokenizePv(fenBefore, List(move.uci)).toList
       boardRecord = PositionFactNormalizer.fromBoardFacts(
           id = "historical-plan",
           facts = Nil,
@@ -1639,9 +1658,10 @@ object EvidenceFactAssembler:
           position = PositionNodeRef(fenBefore, move.ply - 1, Some(side)),
           scope = EvidenceScope.CurrentPosition
         )
-      boardProfile <- boardRecord.payload match
+      boardProfile <- (boardRecord.payload match
         case payload: BoardFactEvidence => payload.boardProfile
         case _                          => None
+      ).toList
       assessment = SinglePositionAssessor.classify(
         features = features,
         multiPv = List(PvLine(List(move.uci), 0, None, 0)),
@@ -1658,13 +1678,17 @@ object EvidenceFactAssembler:
           positionKey = Some(fenBefore),
           boardProfile = Some(boardProfile),
           initialPos = Some(position),
+          rootMove = Some(move.uci),
           structureProfile = Option.when(structure.primary != StructureId.Unknown && structure.confidence >= 0.65)(structure)
         ),
         side
       )
-      active <- PlanMatcher.toActivePlans(scoring.topPlans, scoring.compatibilityEvents)
-      if active.primary.evidence.nonEmpty
-    yield active.primary.plan
+      active <- PlanMatcher.toActivePlans(scoring.topPlans, scoring.compatibilityEvents).toList
+      plan <- active.allPlans
+        .filter(_.evidence.exists(atom => atom.motif.move.exists(EvidenceRef.sameMove(_, move.uci))))
+        .map(_.plan)
+        .distinctBy(_.id)
+    yield plan
 
   private def motifsForLineRole(context: JudgmentAssemblyContext, role: LineNodeRole): List[Motif] =
     context.line(role).map(_.ref).flatMap { lineRef =>

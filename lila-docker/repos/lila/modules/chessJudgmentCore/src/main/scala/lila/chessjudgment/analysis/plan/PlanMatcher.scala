@@ -27,6 +27,7 @@ case class PlanInteractionContext(
     positionKey: Option[String] = None,
     boardProfile: Option[BoardPositionProfile] = None,
     initialPos: Option[Position] = None,
+    rootMove: Option[String] = None,
     structureProfile: Option[StructureProfile] = None,
     planAlignment: Option[PlanAlignment] = None
 ):
@@ -122,7 +123,7 @@ object PlanMatcher:
         openingRaw ++ List(
           restriction(motifs, ctx, side, s),
           redeployment(motifs, ctx, side, s),
-          spaceClamp(motifs, side, s),
+          spaceClamp(motifs, ctx, side, s),
           weaknessFixation(motifs, ctx, side, s),
           breakPrep(motifs, ctx, side, profile),
           favorableExchange(motifs, ctx, side),
@@ -137,7 +138,7 @@ object PlanMatcher:
           .map(pm => applySignalGate(pm, availableSignals))
           .filter(_.missingSignals.isEmpty)
       val annotated = signalGated.map(pm => annotateWithPlanThemeScore(pm, themePolicyScores.getOrElse(themeOf(pm), 0.0)))
-      val top = annotated.sortBy(p => -p.score).filter(_.score >= 0.18).take(5)
+      val top = annotated.sortBy(p => -p.score).filter(_.score >= 0.18)
       PlanScoringResult(top, top.headOption.map(_.score).getOrElse(0.0), ctx.phase, events)
     ).getOrElse(PlanScoringResult(Nil, 0.0, ctx.phase, Nil))
 
@@ -185,7 +186,7 @@ object PlanMatcher:
     var out = plans
     if ctx.underDefensivePressure then
       out = adjust(out, Theme.Restriction, 1.15, CompatibilityAdjustment.DefensivePressure)
-      out = adjust(out, Theme.FlankInfrastructure, 0.74, CompatibilityAdjustment.DefensivePressure)
+      out = adjust(out, Theme.FlankInfrastructure, 0.80, CompatibilityAdjustment.DefensivePressure)
       out = adjust(out, Theme.PawnBreakPreparation, 0.82, CompatibilityAdjustment.DefensivePressure)
     if ctx.positionAssessment.exists(_.simplifyBias.shouldSimplify) &&
         ctx.winPercentAdvantageFor(side) >= JudgmentThresholds.CONVERSION_EDGE_WP
@@ -195,7 +196,7 @@ object PlanMatcher:
     if ctx.boardProfile.exists(_.centerOpen) && kingExposure(ctx.boardProfile, side) >= 2 then
       out = adjust(out, Theme.FlankInfrastructure, 0.72, CompatibilityAdjustment.OpenCenterFlankRisk)
     if ctx.phaseEnumOpt.contains(GamePhaseType.Opening) then
-      out = adjust(out, Theme.FlankInfrastructure, 0.68, CompatibilityAdjustment.OpeningPhase)
+      out = adjust(out, Theme.FlankInfrastructure, 0.78, CompatibilityAdjustment.OpeningPhase)
       out = adjust(out, Theme.AdvantageTransformation, 0.78, CompatibilityAdjustment.OpeningPhase)
     (out, events.toList)
 
@@ -234,6 +235,8 @@ object PlanMatcher:
       case Domination(_, _, _, c, _, _) if c == side => true
       case Blockade(_, _, _, c, _, _) if c == side => true
       case OpenFileControl(_, c, _, _) if c == side => true
+      case PawnAdvance(file, _, _, c, _, _) if c == side && isFlank(file) &&
+          (ctx.underDefensivePressure || ctx.pawnAnalysis.exists(_.counterBreak) || opposedFlankAdvance(ctx, side, file)) => true
     }
     val score =
       0.28 +
@@ -250,18 +253,30 @@ object PlanMatcher:
       case Centralization(_, _, c, _, _) if c == side => true
       case Maneuver(_, _, c, _, _) if c == side => true
       case RookLift(_, _, _, c, _, _) if c == side => true
+      case OpenFileControl(_, c, _, _) if c == side => true
+      case SemiOpenFileControl(_, c, _, _) if c == side => true
+      case SeventhRankInvasion(c, _, _) if c == side => true
+      case RookBehindPassedPawn(_, c, _, _) if c == side => true
     }
     val prefersOutpost = s.entrenched > 0 || m.exists { case Outpost(_, _, c, _, _) if c == side => true; case _ => false }
+    val rootMoveIsRook =
+      for
+        position <- ctx.initialPos
+        move <- ctx.rootMove
+        origin <- Square.fromKey(move.trim.toLowerCase.take(2))
+      yield position.board.roleAt(origin).contains(Rook)
     val prefersRookFileTransfer =
-      !prefersOutpost && m.exists {
+      rootMoveIsRook.contains(true) && m.exists {
         case RookLift(_, _, _, c, _, _) if c == side => true
         case OpenFileControl(_, c, _, _) if c == side => true
         case SemiOpenFileControl(_, c, _, _) if c == side => true
+        case SeventhRankInvasion(c, _, _) if c == side => true
+        case RookBehindPassedPawn(_, c, _, _) if c == side => true
         case _ => false
       }
     val subplanId =
-      if prefersOutpost then Subplan.OutpostEntrenchment
-      else if prefersRookFileTransfer then Subplan.RookFileTransfer
+      if prefersRookFileTransfer then Subplan.RookFileTransfer
+      else if prefersOutpost then Subplan.OutpostEntrenchment
       else Subplan.Redeployment
     val score =
       0.28 +
@@ -270,12 +285,14 @@ object PlanMatcher:
         math.min(0.14, s.entrenched * 0.06) +
         math.min(0.14, ev.size * 0.04) -
         (if ctx.strategicThreatToUs then 0.07 else 0.0)
-    themed(Theme.Redeployment, Plan.PieceActivation(side), score, ev, Some(subplanId))
+    val plan = if prefersRookFileTransfer then Plan.RookActivation(side) else Plan.PieceActivation(side)
+    themed(Theme.Redeployment, plan, score, ev, Some(subplanId))
 
-  private def spaceClamp(m: List[Motif], side: Color, s: SideSnapshot): PlanMatch =
+  private def spaceClamp(m: List[Motif], ctx: PlanInteractionContext, side: Color, s: SideSnapshot): PlanMatch =
     val ev = evidence(m, 0.16) {
       case SpaceAdvantage(c, _, _, _) if c == side => true
-      case PawnAdvance(file, _, _, c, _, _) if c == side && isFlank(file) => true
+      case advance: PawnAdvance if advance.color == side && isFlank(advance.file) &&
+          advance.relativeTo >= 4 && !opposedFlankAdvance(ctx, side, advance.file) => true
     }
     val score =
       0.24 +
@@ -288,12 +305,37 @@ object PlanMatcher:
 
   private def weaknessFixation(m: List[Motif], ctx: PlanInteractionContext, side: Color, s: SideSnapshot): PlanMatch =
     val opp = !side
-    val ev = evidence(m, 0.17) {
+    val targetFiles =
+      m.collect {
+        case IsolatedPawn(file, _, c, _, _) if c == opp => file
+        case BackwardPawn(file, _, c, _, _) if c == opp => file
+        case DoubledPawns(file, c, _, _) if c == opp => file
+      }.distinct
+    val targetPawns =
+      ctx.initialPos.toList.flatMap(position =>
+        (position.board.pawns & position.board.byColor(opp)).squares.filter(square => targetFiles.contains(square.file))
+      )
+    val rootTargetingManeuver =
+      rootManeuverEvidence(ctx, side, 0.17)(destination =>
+        targetFiles.exists(target => (target.value - destination.file.value).abs <= 2)
+      )
+    val ev = (rootTargetingManeuver ++ evidence(m, 0.17) {
       case IsolatedPawn(_, _, c, _, _) if c == opp => true
       case BackwardPawn(_, _, c, _, _) if c == opp => true
       case DoubledPawns(_, c, _, _) if c == opp => true
       case Blockade(_, _, _, c, _, _) if c == side => true
-    }
+      case advance: PawnAdvance if advance.color == side &&
+          targetPawns.exists(target =>
+            (target.file.value - advance.file.value).abs <= 1 && {
+              val distance =
+                if side.white then target.rank.value + 1 - advance.toRank
+                else advance.toRank - target.rank.value - 1
+              distance >= 1 && distance <= 2
+            }
+          ) && !opposedFlankAdvance(ctx, side, advance.file) => true
+      case Maneuver(_, _, c, _, _) if c == side && targetFiles.nonEmpty => true
+      case Centralization(_, _, c, _, _) if c == side && targetFiles.nonEmpty => true
+    }).distinctBy(_.motif).take(4)
     val score =
       0.23 +
         math.min(0.24, s.oppWeakness * 0.05) +
@@ -342,11 +384,47 @@ object PlanMatcher:
     themed(Theme.FavorableExchange, Plan.Exchange(side), score, ev, Some(Subplan.FavorableExchange))
 
   private def flankInfrastructure(m: List[Motif], ctx: PlanInteractionContext, side: Color, s: SideSnapshot): PlanMatch =
-    val ev = evidence(m, 0.19) {
-      case PawnAdvance(file, _, _, c, _, _) if c == side && isFlank(file) => true
+    val existingAdvancedFlankFiles = advancedFlankFiles(ctx, side)
+    val advancedPawnFiles =
+      m.collect {
+        case advance: PawnAdvance if advance.color == side && isFlank(advance.file) && advance.relativeTo >= 4 =>
+          advance.file
+      }
+    val opponentAdvancedFlankFiles = advancedFlankFiles(ctx, !side)
+    val opponentKingsidePressure = opponentAdvancedFlankFiles.exists(file => file == File.G || file == File.H)
+    val opponentQueensidePressure = opponentAdvancedFlankFiles.exists(file => file == File.A || file == File.B)
+    val respondingToFlankPressure =
+      opponentKingsidePressure && advancedPawnFiles.exists(file => file == File.G || file == File.H) ||
+        opponentQueensidePressure && advancedPawnFiles.exists(file => file == File.A || file == File.B)
+    val kingsideAttack =
+      existingAdvancedFlankFiles.exists(file => file == File.G || file == File.H) ||
+        (!opponentKingsidePressure && advancedPawnFiles.exists(file => file == File.G || file == File.H))
+    val queensideAttack =
+      existingAdvancedFlankFiles.exists(file => file == File.A || file == File.B) ||
+        (!opponentQueensidePressure && advancedPawnFiles.exists(file => file == File.A || file == File.B))
+    def moveSupportsAttack(move: Option[String], kingside: Boolean): Boolean =
+      move.flatMap(_.trim.toLowerCase.lift(2)).exists(file =>
+        if kingside then file == 'g' || file == 'h'
+        else file == 'a' || file == 'b'
+      )
+    val rootFlankManeuver =
+      rootManeuverEvidence(ctx, side, 0.19)(destination =>
+        (kingsideAttack && destination.file.value >= File.G.value) ||
+          (queensideAttack && destination.file.value <= File.B.value)
+      )
+    val ev = (rootFlankManeuver ++ evidence(m, 0.19) {
+      case advance: PawnAdvance if advance.color == side && isFlank(advance.file) &&
+          (advance.relativeTo >= 4 || existingAdvancedFlankFiles.exists(sameFlank(_, advance.file))) &&
+          !opposedFlankAdvance(ctx, side, advance.file) => true
       case RookLift(_, _, _, c, _, _) if c == side => true
       case PawnChain(_, _, c, _, _) if c == side => true
-    }
+      case Outpost(_, square, c, _, _) if c == side &&
+          ((kingsideAttack && (square.file == File.G || square.file == File.H)) ||
+            (queensideAttack && (square.file == File.A || square.file == File.B))) => true
+      case Maneuver(_, _, c, _, move) if c == side &&
+          ((kingsideAttack && moveSupportsAttack(move, kingside = true)) ||
+            (queensideAttack && moveSupportsAttack(move, kingside = false))) => true
+    }).distinctBy(_.motif).take(4)
     val hasRookLiftSignal = m.exists { case RookLift(_, _, _, c, _, _) if c == side => true; case _ => false }
     val flankPawnAdvanceCount =
       m.count { case PawnAdvance(file, _, _, c, _, _) if c == side && isFlank(file) => true; case _ => false }
@@ -364,14 +442,19 @@ object PlanMatcher:
       else Subplan.FlankInfrastructure
     val score =
       0.16 +
+        (if kingsideAttack || queensideAttack then 0.20 else 0.0) +
         (if s.rookPawnReady then 0.12 else 0.0) +
         (if s.hookChance then 0.08 else 0.0) +
+        (if existingAdvancedFlankFiles.nonEmpty then 0.08 else 0.0) +
         math.min(0.25, ev.size * 0.10) -
         (if s.openCenter && s.kingExposure >= 2 then 0.12 else 0.0) -
         (if ctx.strategicThreatToUs then 0.08 else 0.0)
     val plan =
-      if (flankPawnAdvanceCount >= 2 || hasPawnChainSignal) && (s.hookChance || s.kingExposure > 0) then
-        Plan.PawnStorm(side)
+      if kingsideAttack && !queensideAttack then Plan.KingsideAttack(side)
+      else if queensideAttack && !kingsideAttack then Plan.QueensideAttack(side)
+      else if !respondingToFlankPressure && advancedPawnFiles.nonEmpty &&
+          (flankPawnAdvanceCount >= 2 || hasPawnChainSignal) && (s.hookChance || s.kingExposure > 0)
+      then Plan.PawnStorm(side)
       else Plan.SpaceAdvantage(side)
     themed(Theme.FlankInfrastructure, plan, score, ev, Some(subplanId))
 
@@ -491,6 +574,35 @@ object PlanMatcher:
 
   private def structureMatches(ctx: PlanInteractionContext, id: StructureId): Boolean =
     ctx.structureProfile.exists(_.primary == id)
+
+  private def advancedFlankFiles(ctx: PlanInteractionContext, side: Color): List[File] =
+    ctx.initialPos.toList.flatMap(position =>
+      (position.board.pawns & position.board.byColor(side)).squares.collect {
+        case square if isFlank(square.file) && Motif.relativeRank(square.rank.value + 1, side) >= 4 => square.file
+      }
+    )
+
+  private def rootManeuverEvidence(
+      ctx: PlanInteractionContext,
+      side: Color,
+      weight: Double
+  )(supports: Square => Boolean): List[EvidenceAtom] =
+    (for
+      position <- ctx.initialPos
+      move <- ctx.rootMove.map(_.trim.toLowerCase)
+      origin <- Square.fromKey(move.take(2))
+      destination <- Square.fromKey(move.slice(2, 4))
+      role <- position.board.roleAt(origin)
+      if role != Pawn && role != King
+      if position.board.roleAt(destination).isEmpty && supports(destination)
+    yield EvidenceAtom(Maneuver(role, ManeuverPurpose.ImprovingScope, side, 0, Some(move)), weight)).toList
+
+  private def opposedFlankAdvance(ctx: PlanInteractionContext, side: Color, file: File): Boolean =
+    advancedFlankFiles(ctx, !side).exists(sameFlank(_, file))
+
+  private def sameFlank(left: File, right: File): Boolean =
+    left.value <= File.B.value && right.value <= File.B.value ||
+      left.value >= File.G.value && right.value >= File.G.value
 
   private def kingExposure(profile: Option[BoardPositionProfile], side: Color): Int =
     profile.map(_.kingExposureFor(side)).getOrElse(0)

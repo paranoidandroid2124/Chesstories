@@ -23,7 +23,21 @@ object TransitionAnalyzer:
     continuity: PlanContinuity,
     ctx: PlanInteractionContext
   ): PlanSequenceSummary = {
-    val currPlan = currentPlans.primary.plan
+    val rootBackedPlans =
+      ctx.rootMove.toList.flatMap(rootMove =>
+        currentPlans.allPlans.filter(
+          _.evidence.exists(atom => atom.motif.move.exists(_.equalsIgnoreCase(rootMove)))
+        )
+      )
+    val supportedPlans =
+      if rootBackedPlans.nonEmpty then rootBackedPlans
+      else currentPlans.allPlans.filter(_.evidence.nonEmpty)
+    val currPlan =
+      supportedPlans
+        .find(_.plan.id == previousPlan.id)
+        .orElse(supportedPlans.headOption)
+        .map(_.plan)
+        .getOrElse(currentPlans.primary.plan)
     val prevPlanKey = continuity.planId
 
     val transType = prevPlanKey match

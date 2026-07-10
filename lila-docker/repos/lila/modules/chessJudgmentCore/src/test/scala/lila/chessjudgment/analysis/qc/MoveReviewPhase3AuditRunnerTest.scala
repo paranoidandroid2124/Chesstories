@@ -6,7 +6,7 @@ import lila.chessjudgment.analysis.position.{ FactExtractor, PositionAnalyzer, P
 import lila.chessjudgment.analysis.singlePosition.*
 import lila.chessjudgment.analysis.strategic.EndgamePatternOracle
 import lila.chessjudgment.analysis.transition.TransitionAnalyzer
-import lila.chessjudgment.model.{ ActivePlans, Fact, FactScope, Motif, Plan, PlanMatch, TransitionType }
+import lila.chessjudgment.model.{ ActivePlans, EvidenceAtom, Fact, FactScope, Motif, Plan, PlanMatch, TransitionType }
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.strategic.{ PlanContinuity, RookEndgameGeometry, RookEndgamePattern }
 import lila.chessjudgment.model.structure.*
@@ -1050,6 +1050,44 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         .sourceSemanticAnchors(record)
         .exists(_.stableKey == "PlanTransition:PieceActivation:Prophylaxis:3-ply")
     )
+
+  test("plan transition preserves an evidence-backed prior plan across rank jitter"):
+    val previous = Plan.KingsideAttack(Color.White)
+    val primary = PlanMatch(
+      Plan.PieceActivation(Color.White),
+      score = 0.51,
+      evidence = List(EvidenceAtom(Motif.SpaceAdvantage(Color.White, 1, 0, None), 0.16))
+    )
+    val continuing = PlanMatch(
+      previous,
+      score = 0.49,
+      evidence = List(
+        EvidenceAtom(
+          Motif.Maneuver(chess.Knight, Motif.ManeuverPurpose.Rerouting, Color.White, 0, Some("f3g5")),
+          0.19
+        )
+      )
+    )
+    val summary =
+      TransitionAnalyzer.analyze(
+        previousPlan = previous,
+        currentPlans = ActivePlans(
+          primary,
+          secondary = Some(continuing),
+          suppressed = Nil,
+          allPlans = List(primary, continuing)
+        ),
+        continuity = PlanContinuity(
+          planId = Some(previous.id.toString),
+          consecutivePlies = 3,
+          startingPly = 28,
+          supportingMoves = List("h2h4")
+        ),
+        ctx = PlanInteractionContext(whitePovEvalCp = 0, isWhiteToMove = true, rootMove = Some("f3g5"))
+      )
+
+    assertEquals(summary.transitionType, TransitionType.Continuation)
+    assertEquals(summary.primaryPlanId, Some("KingsideAttack"))
 
   test("pawn play strategic axis label preserves break file tension policy and squares"):
     val position = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(chess.Color.White), Some("root"))

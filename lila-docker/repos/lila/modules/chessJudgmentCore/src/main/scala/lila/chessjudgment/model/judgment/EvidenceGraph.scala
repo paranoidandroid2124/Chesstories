@@ -15,12 +15,15 @@ import lila.chessjudgment.analysis.singlePosition.{
   TensionPolicy,
   ThreatSeverity
 }
-import lila.chessjudgment.model.{ ActivePlans, Fact, Motif, MotifCategory, PlanScoringResult, PlanSequenceSummary, TransitionType }
+import lila.chessjudgment.model.{ ActivePlans, Fact, Motif, MotifCategory, PlanMatch, PlanScoringResult, PlanSequenceSummary, TransitionType }
 import lila.chessjudgment.model.structure.{ AlignmentBand, PlanAlignment, StructureId, StructureProfile }
 
 final case class EvidenceSquare(key: String)
 final case class EvidenceFile(key: String)
 final case class EvidencePieceRole(name: String)
+
+private def evidenceBackedPlans(activePlans: ActivePlans): List[PlanMatch] =
+  activePlans.allPlans.filter(_.evidence.nonEmpty).distinctBy(_.plan.id)
 
 enum EvidenceSemanticAnchorKind:
   case StrategicKind
@@ -2408,7 +2411,7 @@ object StrategicMechanismEvidence:
         assessment.supportedThemes.map(theme => EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.OpeningSupported, theme.toString)) ++
           assessment.observedThemes.map(theme => EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.OpeningObserved, theme.toString))
       case PlanPressureEvidence(_, activePlans) =>
-        (activePlans.primary :: activePlans.secondary.toList).map(plan =>
+        evidenceBackedPlans(activePlans).map(plan =>
           EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.PlanPressure, plan.plan.id.toString)
         )
       case PlanTransitionEvidence(transition) =>
@@ -2461,8 +2464,7 @@ object StrategicMechanismEvidence:
 
   def planPressureHasDirectEvidence(scoring: PlanScoringResult, activePlans: ActivePlans): Boolean =
     scoring.confidence >= 0.35 &&
-      (activePlans.primary :: activePlans.secondary.toList ++ scoring.topPlans)
-        .exists(_.evidence.nonEmpty)
+      evidenceBackedPlans(activePlans).nonEmpty
 
   def planTransitionCanSupportPlan(transition: PlanSequenceSummary): Boolean =
     transition.primaryPlanId.nonEmpty &&
@@ -2470,6 +2472,7 @@ object StrategicMechanismEvidence:
       transition.previousPlanId.exists(previous =>
         transition.continuity.exists(continuity =>
           continuity.planId.contains(previous) &&
+            continuity.supportingMoves.nonEmpty &&
             continuity.consecutivePlies == continuity.supportingMoves.size * 2 + 1 &&
             continuity.consecutivePlies <= 8
         )
