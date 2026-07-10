@@ -2389,7 +2389,8 @@ object MoveMeaningSurface:
           val publicPurposeCarriers = purposeCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface))
           val playerFacingReasonAllowed =
             displaySemantics.exists(surface =>
-              surface.evidence.proofLevel != "surface_evidence" ||
+              surfaceHasDirectFunctionCarrier(surface) ||
+                surface.evidence.proofLevel != "surface_evidence" ||
                 surface.evidence.causeIds.nonEmpty ||
                 surface.evidence.proofRelationKinds.nonEmpty ||
                 surface.evidence.proofThreatDrivers.nonEmpty ||
