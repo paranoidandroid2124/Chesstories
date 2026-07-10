@@ -4,6 +4,14 @@ import chess.Color
 import lila.chessjudgment.analysis.singlePosition.{ ThreatDriver, ThreatKind, ThreatSeverity }
 import lila.chessjudgment.model.CollapseAnalysis
 
+enum MoveChoiceVerdict:
+  case ImprovesOnReference
+  case MatchesReference
+  case PlayableLoss
+  case Inaccuracy
+  case Mistake
+  case Blunder
+
 case class CandidateSetComparison(
     secondLine: Option[LineNodeRef],
     rawBestToSecondCpGapForDiagnostics: Option[Int],
