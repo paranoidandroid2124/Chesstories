@@ -1191,7 +1191,6 @@ object JudgmentPacketValidator:
     val directIds = proof.directProof.sourceRefs.map(_.id).toSet
     val contrastIds = proof.contrastProof.sourceRefs.map(_.id).toSet
     val contextIds = proof.contextSupport.sourceRefs.map(_.id).toSet
-    val supportIds = supportClosureIds(graph, cause.supportEvidence)
     val ownedIds = cause.attribution.ownedEvidence.map(_.id).toSet
     val allSourceIds = directIds ++ contrastIds ++ contextIds
     directRole &&
@@ -1200,7 +1199,6 @@ object JudgmentPacketValidator:
       allSourceIds.subsetOf(parentIds) &&
       directIds == ownedIds &&
       (directIds.isEmpty || cause.attribution.directProofEligible) &&
-      (directIds.subsetOf(supportIds) || directIds.isEmpty) &&
       contrastIds.forall(id => graph.byId.get(id).exists(record => contrastProofSource(record, cause))) &&
       contextIds.forall(id => graph.byId.get(id).exists(record => contextSupportSource(record, cause))) &&
       (directIds intersect contrastIds).isEmpty &&
@@ -1232,13 +1230,6 @@ object JudgmentPacketValidator:
           record.ref.scope == EvidenceScope.CurrentPosition ||
           record.ref.line.nonEmpty
       ))
-
-  private def supportClosureIds(graph: TypedEvidenceGraph, supportEvidence: List[EvidenceRef]): Set[String] =
-    supportEvidence
-      .flatMap(ref => graph.byId.get(ref.id))
-      .flatMap(record => record :: parentClosure(graph, record))
-      .map(_.ref.id)
-      .toSet
 
   private def parentHasBoardAnchor(record: EvidenceRecord, proof: BoardAnchorProof): Boolean =
     record match
