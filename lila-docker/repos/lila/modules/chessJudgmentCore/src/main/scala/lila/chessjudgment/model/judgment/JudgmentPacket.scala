@@ -4177,7 +4177,7 @@ object MoveMeaningSurface:
       verdict == MoveChoiceVerdict.Mistake ||
       verdict == MoveChoiceVerdict.Blunder
 
-  private[judgment] def ideaType(claim: MoveMeaningClaim): String =
+  private def ideaType(claim: MoveMeaningClaim): String =
     terminalIdeaType(claim)
       .orElse(Option.when(concretePassedPawnAdvanceClaim(claim))("passed_pawn_advance"))
       .orElse(Option.when(defensiveResourceClaim(claim))("defensive_resource"))
@@ -5127,7 +5127,7 @@ object MoveMeaningClaim:
             other.publicSurfaceAdmitted &&
             other.publicProofLevel != "none" &&
             other.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
-            MoveMeaningSurface.ideaType(other) == "piece_route" &&
+            other.meaningKind == "PieceRoute" &&
             currentMoveSurfaceLane(other) &&
             other.lineRole == claim.lineRole &&
             other.moveUci == claim.moveUci &&
