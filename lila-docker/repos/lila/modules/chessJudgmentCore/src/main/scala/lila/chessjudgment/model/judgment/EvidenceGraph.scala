@@ -3529,8 +3529,6 @@ final case class EvalFactEvidence(
     mate: Option[Int],
     depth: Int
 ) extends EvidencePayload:
-  def evalPoint: PerspectiveMath.EvalPoint =
-    PerspectiveMath.EvalPoint(whitePovEvalCp, mate)
   def whiteWinPercent: Double =
     PerspectiveMath.winPercentFromWhiteEval(whitePovEvalCp, mate)
   def winPercentFor(mover: Color): Double =
