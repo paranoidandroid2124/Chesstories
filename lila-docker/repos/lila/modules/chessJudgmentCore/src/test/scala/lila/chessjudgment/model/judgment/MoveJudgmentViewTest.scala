@@ -518,7 +518,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(detail.structuralMotifTags, List("piece"))
     assertEquals(detail.causeEvidenceIds, Nil)
     assertEquals(detail.proofRoles, Nil)
-    assertEquals(detail.specificityTier, PositionPlanTechniqueSpecificityTier.BroadAxis)
+    assertEquals(detail.specificityTier, PositionPlanTechniqueSpecificityTier.ConcreteObjectAxis)
     assert(
       detail.objectBindingSignatures.exists(signature =>
         signature.contains("actor=Piece:knight") &&
@@ -1533,7 +1533,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       )
     )
 
-    val frame = PositionPlanTechniqueProjection
+    val details = PositionPlanTechniqueProjection
       .frames(
         TypedEvidenceGraph(
           List(
@@ -1546,8 +1546,8 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         Nil,
         None
       )
-      .head
-    val detail = frame.semanticDetails
+      .flatMap(_.semanticDetails)
+    val detail = details
       .find(detail =>
         detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
           detail.structuralRouteMove.contains("e6e5")
