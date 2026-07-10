@@ -74,6 +74,9 @@ object ExpectedEvidenceLossPolicy:
           if packet.exists(packet => isThreatPressureSupportOnly(diagnostic, packet)) =>
         EvidenceLossExpectation.Expected
       case EvidenceLossReason.EvidenceAvailableWithoutIdea
+          if packet.exists(packet => isPlanPressureSupportOnly(diagnostic, packet)) =>
+        EvidenceLossExpectation.Expected
+      case EvidenceLossReason.EvidenceAvailableWithoutIdea
           if packet.exists(packet => isStrategicSourceConsumedByMechanism(diagnostic, packet)) =>
         EvidenceLossExpectation.Expected
       case EvidenceLossReason.EvidenceAvailableWithoutIdea
@@ -118,6 +121,20 @@ object ExpectedEvidenceLossPolicy:
                 case _ =>
                   false
               }
+          case _ =>
+            false
+        }
+
+  private def isPlanPressureSupportOnly(
+      diagnostic: EvidenceLossDiagnostic,
+      packet: EvidenceBackedJudgmentPacket
+  ): Boolean =
+    diagnostic.layer.contains(EvidenceLayer.PlanPressure) &&
+      diagnostic.evidence
+        .flatMap(ref => packet.evidenceGraph.byId.get(ref.id))
+        .exists {
+          case record @ EvidenceRecord(_, _: PlanPressureEvidence, _) =>
+            StrategicMechanismEvidence.sourceMechanisms(record).isEmpty
           case _ =>
             false
         }

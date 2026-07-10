@@ -1786,6 +1786,8 @@ final case class StrategicMechanismEvidence(
       (kind match
         case StrategicMechanismKind.StructuralImprovement | StrategicMechanismKind.StrategicConcession =>
           hasStrategicAxis
+        case StrategicMechanismKind.PlanPressure =>
+          signalKinds.contains(StrategicMechanismSignalKind.PlanPressure)
         case _ =>
           true
       )
@@ -1796,10 +1798,7 @@ final case class StrategicMechanismEvidence(
       signalKinds.contains(StrategicMechanismSignalKind.OpeningApplicability)
   def canAnchorPlanIdea: Boolean =
     kind == StrategicMechanismKind.PlanPressure &&
-      (
-        hasCompositeSupport ||
-          signalKinds.contains(StrategicMechanismSignalKind.PlanTransition)
-      )
+      signalKinds.contains(StrategicMechanismSignalKind.PlanPressure)
   def canSupportCompensation: Boolean =
     kind == StrategicMechanismKind.Compensation && hasSignals
   def canSupportStrategicCause: Boolean =

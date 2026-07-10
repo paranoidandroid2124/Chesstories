@@ -576,6 +576,9 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         EvidenceRecord(transitionMechanismRef, transitionMechanism, List(transitionRef))
       )
     )
+    assert(mechanism.canAnchorPlanIdea)
+    assert(!transitionMechanism.canAnchorPlanIdea)
+    assert(!transitionMechanism.canAnchorStrategicIdea)
     val view = MoveJudgmentView.from(Nil, graph, Nil, Nil, Nil, None, Nil, Nil).get
     val planDetails = view.positionPlanTechniqueFrames.flatMap(_.semanticDetails).filter(_.unit == PositionPlanTechniqueUnit.PlanOptionSet)
     val detail = planDetails.find(_.activePlanIds.contains(PlanId.QueensideAttack)).getOrElse(fail(planDetails.toString))

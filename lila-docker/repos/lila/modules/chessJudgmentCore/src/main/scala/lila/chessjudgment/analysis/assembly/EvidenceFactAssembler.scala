@@ -1558,7 +1558,7 @@ object EvidenceFactAssembler:
                   pawnPlay = pawn.pawnPlay,
                   position = node.ref,
                   scope = original.ref.scope,
-                  parents = (original.parents :+ planPressure.ref).distinctBy(_.id)
+                  parents = original.parents
                 )
             node.ref -> (alignedPlanContext, activePlans, planPressure, alignedPawnStructure)
           }

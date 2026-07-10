@@ -1,9 +1,35 @@
 package lila.chessjudgment.analysis.assembly
 
 import chess.Color
+import lila.chessjudgment.model.strategic.VariationLine
 import lila.chessjudgment.model.judgment.*
 
 class ChessIdeaAssemblerTest extends munit.FunSuite:
+
+  test("assembled plan pressure and pawn structure evidence stays acyclic"):
+    val graph = EvidenceFactAssembler
+      .assemble(
+        RawMoveReviewInput(
+          fen = chess.variant.Standard.initialFen.value,
+          playedMoveUci = "d2d4",
+          variations = List(
+            VariationLine(List("e2e4", "e7e5", "g1f3"), scoreCp = 30, depth = 16),
+            VariationLine(List("d2d4", "d7d5", "g1f3"), scoreCp = 20, depth = 16)
+          ),
+          currentEvalCp = Some(20),
+          ply = Some(1)
+        )
+      )
+      .getOrElse(fail("expected assembled evidence graph"))
+      .context
+      .evidenceGraph
+
+    assert(graph.records.exists(_.payload.isInstanceOf[PlanPressureEvidence]))
+    assert(graph.records.exists(_.payload.isInstanceOf[PawnStructureFactEvidence]))
+    assertEquals(
+      graph.records.filter(record => graph.parentClosure(record).exists(_.ref.id == record.ref.id)).map(_.ref.id),
+      Nil
+    )
 
   test("structural transition proof can seed a strategic relative-cause idea"):
     val root = PositionNodeRef("8/8/8/8/8/8/3P4/8 w - - 0 1", 1, Some(Color.White), Some("root"))
