@@ -5007,7 +5007,6 @@ object MoveMeaningClaim:
       claim: MoveMeaningClaim
   ): Boolean =
     publicSurfaceProjectionLaneAllowed(claim) &&
-      !sameRootReferenceSurface(verdict, claim) &&
       !terminalTechniqueCoveredByTerminalResult(claims, claim) &&
       !activityCoveredByOwnedRoute(claims, claim) &&
       !planPurposeCoveredByOwnedRoute(claims, claim) &&
@@ -5018,17 +5017,6 @@ object MoveMeaningClaim:
       !counterplayControlWithoutConcreteCarrier(claims, claim) &&
       planContinuityCarrierAllowed(claims, claim) &&
       !badMoveSuppressesCurrentMoveSurface(verdict, claim)
-
-  private def sameRootReferenceSurface(
-      verdict: Option[MoveJudgmentVerdictFrame],
-      claim: MoveMeaningClaim
-  ): Boolean =
-    claim.surfaceLane == "reference_or_opponent_resource" &&
-      claim.lineRole == "reference" &&
-      verdict.exists(frame =>
-        sameMove(frame.candidateLine.rootMove, frame.referenceLine.rootMove) &&
-          sameMove(claim.moveUci, frame.candidateLine.rootMove)
-      )
 
   private def publicSurfaceProjectionLaneAllowed(claim: MoveMeaningClaim): Boolean =
     terminalOverriddenEndgameTechniqueClaim(claim) ||
@@ -8757,6 +8745,9 @@ object MoveMeaningClaim:
     val graphRoles =
       linkedCauseFrames.flatMap(frame => causeFrameLineRole(frame, verdict)).distinct
     if graphRoles.nonEmpty then graphRoles
+    else if sameMove(verdict.candidateLine.rootMove, verdict.referenceLine.rootMove) &&
+        (frame.line.contains(verdict.candidateLine) || frame.line.contains(verdict.referenceLine))
+    then List("candidate")
     else if frame.line.contains(verdict.candidateLine) then List("candidate")
     else if frame.line.contains(verdict.referenceLine) then List("reference")
     else if frame.scope == EvidenceScope.AfterPlayedPosition &&
