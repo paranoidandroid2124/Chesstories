@@ -1,12 +1,14 @@
 package lila.chessjudgment.analysis.qc
 
 import lila.chessjudgment.analysis.line.{ LineFactNormalizer, PrincipalVariationEvidence }
+import lila.chessjudgment.analysis.plan.PlanInteractionContext
 import lila.chessjudgment.analysis.position.{ FactExtractor, PositionAnalyzer, PositionFactNormalizer }
 import lila.chessjudgment.analysis.singlePosition.*
 import lila.chessjudgment.analysis.strategic.EndgamePatternOracle
-import lila.chessjudgment.model.{ Fact, FactScope, Motif }
+import lila.chessjudgment.analysis.transition.TransitionAnalyzer
+import lila.chessjudgment.model.{ ActivePlans, Fact, FactScope, Motif, Plan, PlanMatch, TransitionType }
 import lila.chessjudgment.model.judgment.*
-import lila.chessjudgment.model.strategic.{ RookEndgameGeometry, RookEndgamePattern }
+import lila.chessjudgment.model.strategic.{ PlanContinuity, RookEndgameGeometry, RookEndgamePattern }
 import lila.chessjudgment.model.structure.*
 import chess.{ Color, File }
 import chess.format.Fen
@@ -925,6 +927,82 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(activeSummary.counterThreatBetter, true)
     assertEquals(activeSummary.defense.counterIsBetter, true)
     assertEquals(quietSummary.counterThreatBetter, false)
+
+  test("plan transition carries a multi-ply forced pivot through graph evidence"):
+    val previous = Plan.PieceActivation(Color.White)
+    val current = Plan.Prophylaxis(Color.White)
+    val currentMatch = PlanMatch(current, score = 1.0, evidence = Nil)
+    val threat =
+      ThreatEpisode(
+        episodeId = "white:threat:0:Positional:3",
+        sourceThreatIndex = 0,
+        sideUnderPressure = Color.White,
+        kind = ThreatKind.Positional,
+        severity = ThreatSeverity.Important,
+        driver = ThreatDriver.PositionalThreat,
+        evidenceSource = ThreatEvidenceSource.CandidateLineValueDelta,
+        rawLossIfIgnoredCpForDiagnostics = 80,
+        lossIfIgnoredWinPercent = Some(4.0),
+        turnsToImpact = 3,
+        attackSquares = Nil,
+        targetPieces = Nil,
+        motifs = Nil,
+        bestDefense = Some("f2f3"),
+        defenseCount = 2
+      )
+    val continuity =
+      PlanContinuity(
+        planId = Some(previous.id.toString),
+        consecutivePlies = 3,
+        startingPly = 10,
+        supportingMoves = List("g1f3")
+      )
+    val summary =
+      TransitionAnalyzer.analyze(
+        previousPlan = previous,
+        currentPlans = ActivePlans(currentMatch, secondary = None, suppressed = Nil, allPlans = List(currentMatch)),
+        continuity = continuity,
+        ctx = PlanInteractionContext(
+          whitePovEvalCp = 0,
+          threatEpisodesToUs = List(threat),
+          isWhiteToMove = true
+        )
+      )
+
+    assertEquals(summary.transitionType, TransitionType.ForcedPivot)
+    assertEquals(summary.previousPlanId, Some("PieceActivation"))
+    assertEquals(summary.primaryPlanId, Some("Prophylaxis"))
+    assert(StrategicMechanismEvidence.planTransitionCanSupportPlan(summary))
+
+    val root = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 13, Some(Color.White), Some("root"))
+    val ref =
+      EvidenceRef(
+        id = "plan-transition:forced",
+        producer = EvidenceProducer.PlanTransitionProducer,
+        layer = EvidenceLayer.PlanTransition,
+        position = root,
+        line = None,
+        scope = EvidenceScope.PlayedTransition,
+        confidence = EvidenceConfidence.LegalReplayVerified
+      )
+    val record = EvidenceRecord(ref, PlanTransitionEvidence(summary))
+    val transitionAxis =
+      StrategicMechanismEvidence
+        .sourceMechanisms(record)
+        .collectFirst {
+          case (StrategicMechanismKind.PlanPressure, signal)
+              if signal.kind == StrategicMechanismSignalKind.PlanTransition =>
+            signal.axis
+        }
+        .flatten
+
+    assertEquals(transitionAxis.map(_.polarity), Some(StrategicAxisPolarity.Concede))
+    assertEquals(transitionAxis.map(_.label), Some("PieceActivation->Prophylaxis"))
+    assert(
+      StrategicMechanismEvidence
+        .sourceSemanticAnchors(record)
+        .exists(_.stableKey == "PlanTransition:PieceActivation:Prophylaxis:3-ply")
+    )
 
   test("pawn play strategic axis label preserves break file tension policy and squares"):
     val position = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(chess.Color.White), Some("root"))
