@@ -856,10 +856,10 @@ case class RelativeMoveAssessment(
     reference: CandidateLineNode,
     candidate: CandidateLineNode,
     comparison: EvalComparison,
-    confidence: EvidenceConfidence,
     evidence: EvidenceRef,
     counterfactualEvidence: List[EvidenceRef],
     candidateComparisonEvidence: List[EvidenceRef] = Nil,
     relativeCauseEvidence: List[EvidenceRef] = Nil,
     verdictCertificationEvidence: Option[EvidenceRef] = None
-)
+):
+  val confidence: EvidenceConfidence = evidence.confidence

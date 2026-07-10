@@ -705,7 +705,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 0.0,
         verdict = MoveChoiceVerdict.MatchesReference
       ),
-      confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
       relativeCauseEvidence = List(causeRef)
@@ -934,7 +933,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 0.0,
         verdict = MoveChoiceVerdict.MatchesReference
       ),
-      confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
       relativeCauseEvidence = List(causeRef)
@@ -1132,7 +1130,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 0.0,
         verdict = MoveChoiceVerdict.MatchesReference
       ),
-      confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
       relativeCauseEvidence = List(causeRef)
@@ -1407,7 +1404,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 0.0,
         verdict = MoveChoiceVerdict.MatchesReference
       ),
-      confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
       relativeCauseEvidence = List(causeRef, sameAxisKingSafetyCauseRef)
@@ -2811,7 +2807,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 0.4,
         verdict = MoveChoiceVerdict.PlayableLoss
       ),
-      confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil
     )
@@ -4542,7 +4537,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 8.0,
         verdict = MoveChoiceVerdict.Mistake
       ),
-      confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
       relativeCauseEvidence = List(causeRef)
@@ -4931,7 +4925,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         winPercentLossForMover = 0.0,
         verdict = MoveChoiceVerdict.MatchesReference
       ),
-      confidence = EvidenceConfidence.EngineBacked,
       evidence = relativeAssessmentEvidence,
       counterfactualEvidence = Nil,
       relativeCauseEvidence = List(causeRef)

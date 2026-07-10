@@ -141,7 +141,6 @@ object RelativeAssessmentAssembler:
           reference = reference,
           candidate = candidate,
           comparison = comparison,
-          confidence = primaryConfidence,
           evidence = relativeEvidence,
           counterfactualEvidence = List(counterfactual.ref),
           candidateComparisonEvidence = comparisonRecords.map(_.ref),
