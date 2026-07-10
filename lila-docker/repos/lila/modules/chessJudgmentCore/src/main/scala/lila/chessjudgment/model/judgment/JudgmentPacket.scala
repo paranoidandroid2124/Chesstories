@@ -6433,6 +6433,11 @@ object MoveMeaningClaim:
   private def publicBoardCarriers(
       detail: PositionPlanTechniqueSemanticDetail
   ): List[MoveMeaningSurfaceBoardCarrier] =
+    val resourceContestCarriers =
+      if detail.structuralPurposeSubjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject) then Nil
+      else
+        detail.resourceContestFiles.flatMap(file => publicFileCarrier("target", file, Some("resource_contest_file"))) ++
+          detail.resourceContestSquares.flatMap(square => publicSquareCarrier("target", square, Some("resource_contest_square")))
     val terminalTargetCarriers =
       if detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) then
         EvidenceObjectBinding
@@ -6462,10 +6467,9 @@ object MoveMeaningClaim:
         publicPlanSubjectCarriers(detail) ++
         detail.breakFile.toList.flatMap(file => publicFileCarrier("target", file, Some("break_file"))) ++
         detail.counterBreakFiles.flatMap(file => publicFileCarrier("target", file, Some("counter_break_file"))) ++
-        detail.resourceContestFiles.flatMap(file => publicFileCarrier("target", file, Some("resource_contest_file"))) ++
+        resourceContestCarriers ++
         detail.tensionSquares.flatMap(square => publicSquareCarrier("target", square, Some("tension_square"))) ++
         detail.blockadeSquare.toList.flatMap(square => publicSquareCarrier("target", square, Some("blockade_square"))) ++
-        detail.resourceContestSquares.flatMap(square => publicSquareCarrier("target", square, Some("resource_contest_square"))) ++
         detail.requiredSquares.flatMap(square => publicSquareCarrier("target", square, Some("required_square"))) ++
         detail.maintainedSquares.flatMap(square => publicSquareCarrier("target", square, Some("maintained_square"))) ++
         detail.brokenSquares.flatMap(square => publicSquareCarrier("target", square, Some("broken_square")))

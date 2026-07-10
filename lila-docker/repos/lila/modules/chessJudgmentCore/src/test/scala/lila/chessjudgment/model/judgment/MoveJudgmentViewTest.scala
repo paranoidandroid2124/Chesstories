@@ -1322,6 +1322,14 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       line = Some(playedLine),
       scope = EvidenceScope.PlayedTransition
     )
+    val contextualRestraintRef = evidenceRef(
+      id = "strategic-fact:contextual-counterplay-restraint",
+      producer = EvidenceProducer.StrategicFeatureProducer,
+      layer = EvidenceLayer.Strategic,
+      position = root,
+      line = Some(playedLine),
+      scope = EvidenceScope.PlayedTransition
+    )
     val mechanismRef = evidenceRef(
       id = "strategic-mechanism:counterplay:e4e5:opponent-diagonal-restriction",
       producer = EvidenceProducer.StrategicMechanismProducer,
@@ -1420,6 +1428,23 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       signals = Nil,
       consequences = List(consequence, unrelatedLineUnlock)
     )
+    val contextualRestraint = StrategicFactEvidence(
+      kind = StrategicFactKind.CounterplayRestraint,
+      facts = Nil,
+      relatedPlans = Nil,
+      confidence = 0.8
+    )(
+      boardAnchors = List(
+        BoardAnchor(
+          kind = BoardAnchorKind.CounterplayRestraint,
+          side = Color.White,
+          signal = BoardAnchorSignal.OpponentLowMobility,
+          magnitude = 2,
+          confidence = 0.8,
+          detail = Some(BoardAnchorDetail(subjectColor = Some(Color.Black), targetSquare = Some(EvidenceSquare("a1"))))
+        )
+      )
+    )
     val axis = StrategicAxisDetail(StrategicAxisKind.Counterplay, StrategicAxisPolarity.Restrain, "opponent-diagonal-restriction")
     val mechanism = StrategicMechanismEvidence(
       kind = StrategicMechanismKind.CenterControl,
@@ -1476,7 +1501,8 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       cause.copy(kind = RelativeCauseKind.KingSafetyConcession)(cause.proof)
     val graph = TypedEvidenceGraph(
       List(
-        EvidenceRecord(structuralRef, structuralDelta),
+        EvidenceRecord(contextualRestraintRef, contextualRestraint),
+        EvidenceRecord(structuralRef, structuralDelta, parents = List(contextualRestraintRef)),
         EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef)),
         EvidenceRecord(causeRef, RelativeCauseFactEvidence(cause), parents = List(mechanismRef, structuralRef)),
         EvidenceRecord(
@@ -1506,6 +1532,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       .find(_.axisKey.contains(axis.stableKey))
       .getOrElse(fail(s"frames=${view.positionPlanTechniqueFrames}"))
     assertEquals(counterplayDetail.causeEvidenceIds, List(causeRef.id))
+    assertEquals(counterplayDetail.resourceContestSquares, List("a1"))
     assertEquals(counterplayDetail.structuralPurposeConsequences, List("OpponentMobilityRestriction"))
     assertEquals(
       counterplayDetail.structuralPurposeSubjects,
