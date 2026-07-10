@@ -299,7 +299,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
               PlanTransitionEvidence(
                 PlanSequenceSummary(
                   transitionType = TransitionType.Continuation,
-                  momentum = 0.8,
                   primaryPlanId = Some("CentralBreakthrough")
                 )
               )

@@ -4,9 +4,7 @@ import lila.chessjudgment.model.strategic.PlanContinuity
 
 case class PlanSequenceSummary(
   transitionType: TransitionType,
-  momentum: Double,
   primaryPlanId: Option[String] = None,
-  secondaryPlanId: Option[String] = None,
   previousPlanId: Option[String] = None,
   continuity: Option[PlanContinuity] = None
 )
