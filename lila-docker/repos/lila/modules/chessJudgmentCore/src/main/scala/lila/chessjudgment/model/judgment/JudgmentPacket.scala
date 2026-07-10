@@ -2035,26 +2035,9 @@ object MoveMeaningSurface:
     publicIdeaChainSubjectSpecs(verdict, surfaces).flatMap { (subject, subjectMove, pvRolePrefix) =>
       val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && surfaceEligibleForPublicChain(surface))
       val rootMoveRole = publicIdeaChainRootMoveRole(subject)
-      val terminal = evidenceSurfaces.filter(terminalSurfaceControlsChain).flatMap(_.terminalConsequences).distinct
-      val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
-      val strongChainProof =
-        terminal.nonEmpty ||
-          technique.nonEmpty ||
-          evidenceSurfaces.exists(surface => surface.evidence.proofLevel == "owned_cause")
-      val directFunctionSemanticSurfaces =
-        evidenceSurfaces.filter(surfaceHasDirectFunctionCarrier)
-      val semanticSurfaces = evidenceSurfaces.filter(surface =>
-        (surface.evidence.proofLevel != "terminal_proof" || terminalSurfaceControlsChain(surface)) &&
-          (semanticAllowedByChainProofGate(surface, strongChainProof) ||
-            directFunctionSemanticSurfaces.exists(_ == surface))
-      )
-      val chainSurfaces =
-        if terminal.nonEmpty then
-          semanticSurfaces.filter(surface => surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
-        else semanticSurfaces
       if evidenceSurfaces.isEmpty || !admittedSubjects.contains(subject) then Nil
       else
-        val displaySemantics = chainSurfaces
+        val displaySemantics = evidenceSurfaces
           .sortBy(publicIdeaChainSemanticSortKey)
           .distinctBy(publicIdeaChainSurfaceKey)
         val publicTerminal = displaySemantics.flatMap(_.terminalConsequences).distinct
@@ -2396,13 +2379,6 @@ object MoveMeaningSurface:
         surface.evidence.causeIds.nonEmpty ||
         publicSurfaceRelationKinds(surface).nonEmpty ||
         surface.evidence.proofThreatDrivers.nonEmpty)
-
-  private def semanticAllowedByChainProofGate(surface: MoveMeaningSurface, strongChainProof: Boolean): Boolean =
-    !strongChainProof ||
-      surface.evidence.proofLevel != "surface_evidence" ||
-      surface.evidence.causeIds.nonEmpty ||
-      surface.terminalConsequences.nonEmpty ||
-      surface.endgameTechnique.nonEmpty
 
   private def surfaceHasDirectFunctionCarrier(surface: MoveMeaningSurface): Boolean =
     val carriers = surface.evidence.boardCarriers
