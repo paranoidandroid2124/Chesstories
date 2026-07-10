@@ -2032,7 +2032,7 @@ object MoveMeaningSurface:
 
   private def publicIdeaChains(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[JsObject] =
     publicIdeaChainSubjectSpecs(verdict, surfaces).flatMap { (subject, subjectMove, pvRolePrefix) =>
-      val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && surfaceEligibleForPublicChain(surface))
+      val evidenceSurfaces = surfaces.filter(_.subject == subject)
       val rootMoveRole = publicIdeaChainRootMoveRole(subject)
       if evidenceSurfaces.isEmpty then Nil
       else
@@ -2257,7 +2257,7 @@ object MoveMeaningSurface:
       if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
       else List(("played_move", verdict.playedMove, "played_pv_"))
     val threatBranchSubject =
-      Option.when(surfaces.exists(surface => surface.subject == "opponent_resource" && surfaceEligibleForPublicChain(surface)))(
+      Option.when(surfaces.exists(_.subject == "opponent_resource"))(
         ("opponent_resource", verdict.playedMove, "threat_pv_")
       )
     rootSubjects ++ threatBranchSubject.toList
@@ -2267,11 +2267,6 @@ object MoveMeaningSurface:
       case "reference_move"    => "best_move"
       case "opponent_resource" => "threat_move"
       case _                   => "played_move"
-
-  private def surfaceEligibleForPublicChain(surface: MoveMeaningSurface): Boolean =
-    surface.evidence.proofLevel != "none" &&
-      surface.evidence.publicSurfaceAdmitted &&
-      (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
 
   private def publicIdeaChainSemanticSortKey(surface: MoveMeaningSurface): (Int, Int, Int, Int, String, String) =
     (
