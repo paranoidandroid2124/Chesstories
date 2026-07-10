@@ -7476,47 +7476,24 @@ object MoveMeaningClaim:
       claimLineRole: String,
       claimMove: String
   ): Boolean =
-    val candidateMove = JudgmentSubjectBinding.normalizeMove(verdict.candidateLine.rootMove)
-    val referenceMove = JudgmentSubjectBinding.normalizeMove(verdict.referenceLine.rootMove)
-    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove)
     val frameRootMatches = sameMove(frame.eventRootMove, claimMove)
-    val exactSameMove = candidateMove == referenceMove && normalizedClaimMove == candidateMove
-    if exactSameMove then
-      claimLineRole match
-        case "candidate" =>
-          frame.causeSourceSide == RelativeCauseSourceSide.Candidate &&
-            (frame.eventLine == verdict.candidateLine || frame.eventLine == verdict.referenceLine) &&
-            frameRootMatches
-        case "reference" =>
-          frame.causeSourceSide == RelativeCauseSourceSide.Reference &&
-            (frame.eventLine == verdict.referenceLine || frame.eventLine == verdict.candidateLine) &&
-            frameRootMatches
-        case "contrast" =>
-          frameRootMatches &&
-            (
-              (frame.causeSourceSide == RelativeCauseSourceSide.Candidate && frame.eventLine == verdict.candidateLine) ||
-                (frame.causeSourceSide == RelativeCauseSourceSide.Reference && frame.eventLine == verdict.referenceLine)
-            )
-        case _ =>
-          false
-    else
-      claimLineRole match
-        case "candidate" =>
-          frame.causeSourceSide == RelativeCauseSourceSide.Candidate &&
-            frame.eventLine == verdict.candidateLine &&
-            frameRootMatches
-        case "reference" =>
-          frame.causeSourceSide == RelativeCauseSourceSide.Reference &&
-            frame.eventLine == verdict.referenceLine &&
-            frameRootMatches
-        case "contrast" =>
-          frameRootMatches &&
-            (
-              (frame.causeSourceSide == RelativeCauseSourceSide.Candidate && frame.eventLine == verdict.candidateLine) ||
-                (frame.causeSourceSide == RelativeCauseSourceSide.Reference && frame.eventLine == verdict.referenceLine)
-            )
-        case _ =>
-          false
+    claimLineRole match
+      case "candidate" =>
+        frame.causeSourceSide == RelativeCauseSourceSide.Candidate &&
+          frame.eventLine == verdict.candidateLine &&
+          frameRootMatches
+      case "reference" =>
+        frame.causeSourceSide == RelativeCauseSourceSide.Reference &&
+          frame.eventLine == verdict.referenceLine &&
+          frameRootMatches
+      case "contrast" =>
+        frameRootMatches &&
+          (
+            (frame.causeSourceSide == RelativeCauseSourceSide.Candidate && frame.eventLine == verdict.candidateLine) ||
+              (frame.causeSourceSide == RelativeCauseSourceSide.Reference && frame.eventLine == verdict.referenceLine)
+          )
+      case _ =>
+        false
 
   private def causeFrameMatchesMeaningDetail(
       frame: MoveJudgmentCauseFrame,
