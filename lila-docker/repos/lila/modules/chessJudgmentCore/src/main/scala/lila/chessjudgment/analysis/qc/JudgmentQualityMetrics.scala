@@ -786,6 +786,7 @@ final case class PublicMoveMeaningClaimDiagnostic(
     lineRole: String,
     moveUci: String,
     causeEvidenceIds: List[String],
+    positiveFunctionalProofEvidenceIds: List[String] = Nil,
     sourceEvidenceIds: List[String] = Nil,
     publicSurfaceAdmitted: Boolean,
     hasBoardCarrier: Boolean,
@@ -1275,6 +1276,7 @@ object CandidateComparisonDiagnostic:
       lineRole = claim.lineRole,
       moveUci = claim.moveUci,
       causeEvidenceIds = evidence.causeIds.distinct.sorted,
+      positiveFunctionalProofEvidenceIds = evidence.positiveFunctionalProofIds.distinct.sorted,
       sourceEvidenceIds = evidence.sourceIds.distinct.sorted,
       publicSurfaceAdmitted = evidence.publicSurfaceAdmitted,
       hasBoardCarrier = evidence.boardCarriers.nonEmpty,
@@ -1452,6 +1454,7 @@ object CandidateComparisonDiagnostic:
         detail.structuralPurposePolarities.map(value => s"structuralPurposePolarity:$value") ++
         detail.structuralMotifTags ++
         detail.structuralMotifTags.map(value => s"structuralMotif:$value") ++
+        detail.positiveFunctionalProofEvidenceIds.map(value => s"positiveFunctionalProofEvidenceId:$value") ++
         detail.causeEvidenceIds.map(value => s"causeEvidenceId:$value") ++
         detail.proofRoles.map(value => s"proofRole:$value") ++
         detail.contextCauseEvidenceIds.map(value => s"contextCauseEvidenceId:$value") ++

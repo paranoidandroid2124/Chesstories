@@ -479,6 +479,14 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     val root = PositionNodeRef("8/1p6/8/8/2P5/8/8/8 b - - 0 1", 1, Some(Color.Black), Some("root"))
     val after = PositionNodeRef("8/8/8/1p6/2P5/8/8/8 w - - 0 2", 2, Some(Color.White), Some("after-played"))
     val line = LineNodeRef("played-line", "b7b5", 1, LineNodeRole.Played)
+    val lineRef = evidenceRef(
+      "line:played:b7b5",
+      EvidenceProducer.LegalLineProducer,
+      EvidenceLayer.Line,
+      root,
+      Some(line),
+      EvidenceScope.PlayedLine
+    )
     val structuralRef = evidenceRef(
       "structural-delta:played:b7b5",
       EvidenceProducer.StructuralDeltaProducer,
@@ -536,6 +544,9 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       4,
       List("c4")
     )
+    val linePayload = new LineFactEvidence(line, Some("b7b5"), None, Nil, None, None)(
+      replay = List(LineReplayStep(root.ply, "b7b5", root.fen, after.fen))
+    )
     val axis = StrategicAxisDetail(StrategicAxisKind.PlanCoherence, StrategicAxisPolarity.Support, "QueensideAttack")
     val mechanism = StrategicMechanismEvidence(
       StrategicMechanismKind.PlanPressure,
@@ -562,6 +573,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     )
     val graph = TypedEvidenceGraph(
       List(
+        EvidenceRecord(lineRef, linePayload),
         EvidenceRecord(structuralRef, StructuralDeltaEvidence(transition, Nil, List(consequence))),
         EvidenceRecord(
           pressureRef,
@@ -588,6 +600,16 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(detail.structuralRouteMove, Some("b7b5"))
     assertEquals(detail.structuralConsequenceKinds, List(TransitionConsequenceKind.TargetPressureGain))
     assertEquals(detail.structuralPurposeSubjects, List("c4"))
+    assertEquals(
+      detail.positiveFunctionalProofEvidenceIds,
+      List(lineRef.id, pressureRef.id, structuralRef.id).sorted
+    )
+    assert(detail.objectBindingSignatures.exists(signature =>
+      signature.contains("target=PlanSubject:queensideattack") &&
+        signature.contains("target=Square:c4") &&
+        signature.contains("actor=Move:b7b5") &&
+        signature.contains(s"line=${line.id}")
+    ), detail.objectBindingSignatures)
     val transitionDetail = planDetails.find(_.sourceEvidenceIds.contains(transitionRef.id)).getOrElse(fail(planDetails.toString))
     assertEquals(transitionDetail.principalPlanId, None)
     assertEquals(transitionDetail.activePlanIds, Nil)

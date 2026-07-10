@@ -1656,6 +1656,7 @@ case class MoveMeaningClaim(
     causeEvidenceIds: List[String],
     sourceEvidenceIds: List[String],
     objectBindingSignatures: List[String],
+    positiveFunctionalProofEvidenceIds: List[String] = Nil,
     reasonTokens: List[String] = Nil,
     comparisonLossSides: List[String] = Nil,
     comparisonLossKinds: List[String] = Nil,
@@ -1864,6 +1865,7 @@ case class MoveMeaningSurfaceEvidence(
     proofLevel: String = "none",
     targetBound: Boolean = false,
     causeIds: List[String] = Nil,
+    positiveFunctionalProofIds: List[String] = Nil,
     sourceIds: List[String] = Nil,
     proofRelationKinds: List[RelationFactKind] = Nil,
     proofRelationDetails: List[String] = Nil,
@@ -3440,6 +3442,7 @@ object MoveMeaningSurface:
       proofLevel = claim.publicProofLevel,
       targetBound = claim.publicTargetBound,
       causeIds = claim.causeEvidenceIds.take(6),
+      positiveFunctionalProofIds = claim.positiveFunctionalProofEvidenceIds.take(6),
       sourceIds = claim.sourceEvidenceIds.take(6),
       proofRelationKinds = claim.proofRelationKinds,
       proofRelationDetails = claim.proofRelationDetails,
@@ -5060,6 +5063,7 @@ object MoveMeaningClaim:
     val list = claims.toList
     list.sortBy(sortKey).lastOption.map(best =>
       val mergedCauseEvidenceIds = list.flatMap(_.causeEvidenceIds).distinct.sorted
+      val mergedPositiveFunctionalProofEvidenceIds = best.positiveFunctionalProofEvidenceIds.distinct.sorted
       val mergedSourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted
       val mergedObjectBindingSignatures = list.flatMap(_.objectBindingSignatures).distinct.sorted
       val mergedProofLineEvents = list.flatMap(_.proofLineEvents).distinct.sortBy(_.toString)
@@ -5113,6 +5117,7 @@ object MoveMeaningClaim:
         causeKinds = list.flatMap(_.causeKinds).distinct.sortBy(_.toString),
         causeSourceSides = list.flatMap(_.causeSourceSides).distinct.sortBy(_.toString),
         causeEvidenceIds = mergedCauseEvidenceIds,
+        positiveFunctionalProofEvidenceIds = mergedPositiveFunctionalProofEvidenceIds,
         sourceEvidenceIds = mergedSourceEvidenceIds,
         objectBindingSignatures = mergedObjectBindingSignatures,
         reasonTokens = Nil,
@@ -5149,6 +5154,7 @@ object MoveMeaningClaim:
   private def publicProofStrengthRank(level: String): Int =
     level match
       case "terminal_proof"   => 5
+      case "owned_function"   => 4
       case "owned_cause"      => 4
       case "cause_linked"     => 3
       case "surface_evidence" => 2
@@ -5445,6 +5451,7 @@ object MoveMeaningClaim:
               val publicProofLevel =
                 if !publicSurfaceAdmitted then "none"
                 else if terminalProofOwnsClaim then "terminal_proof"
+                else if detail.positiveFunctionalProofEvidenceIds.nonEmpty && support == "owned_cause_linked" then "owned_function"
                 else if linkedCauseIds.nonEmpty && support == "owned_cause_linked" then "owned_cause"
                 else if linkedCauseIds.nonEmpty then "cause_linked"
                 else "surface_evidence"
@@ -5486,6 +5493,7 @@ object MoveMeaningClaim:
                 causeEvidenceIds = linkedCauseIds,
                 sourceEvidenceIds = sourceEvidenceIds,
                 objectBindingSignatures = surfaceObjectSignatures,
+                positiveFunctionalProofEvidenceIds = detail.positiveFunctionalProofEvidenceIds.distinct.sorted,
                 principalPlanId = detail.principalPlanId,
                 reasonTokens = Nil,
                 comparisonLossSides =
@@ -6267,6 +6275,10 @@ object MoveMeaningClaim:
     lazy val currentMoveFunctionalProof =
       directCurrentMoveCarrier &&
         currentMoveFunctionalDetailProof(evidenceGraph, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
+    lazy val ownedFunctionalProof =
+      currentMoveClaim &&
+        currentMoveFunctionalProof &&
+        positiveFunctionalProofReady(evidenceGraph, detail, objectSignatures, claimMove)
     lazy val currentMoveSurfaceProof =
       directCurrentMoveCarrier &&
         currentMoveSurfaceReady(evidenceGraph, meaningKind, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
@@ -6280,7 +6292,8 @@ object MoveMeaningClaim:
     val planOptionCurrentFunctionOnly =
       currentMoveClaim &&
         detail.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-        !ownedCandidateCauseOwnsCurrentMove
+        !ownedCandidateCauseOwnsCurrentMove &&
+        !ownedFunctionalProof
     val rejectedPositiveCause =
       allLinkedCauseFrames.nonEmpty &&
         roleCompatibleCauseFrames.isEmpty &&
@@ -6327,10 +6340,12 @@ object MoveMeaningClaim:
     val ownedLaneOwnershipReady =
       !currentMoveClaim ||
         ownedCandidateCauseOwnsCurrentMove ||
+        ownedFunctionalProof ||
         currentMoveSurfaceProof
     if terminalOverriddenEndgameTechniqueDetail(detail) && endgameTechniqueViewProof then
       Some("contextual")
-    else if reasonGradeCauseFrames.nonEmpty && ownedCause && ownedLaneOwnershipReady && ownedMeaningReady &&
+    else if ((reasonGradeCauseFrames.nonEmpty && ownedCause) || ownedFunctionalProof) &&
+        ownedLaneOwnershipReady && ownedMeaningReady &&
         !planOptionCurrentFunctionOnly && !badCurrentMovePositiveMeaning && !broadPlanContinuityCurrentMove
     then
       Some("owned_cause_linked")
@@ -6343,6 +6358,65 @@ object MoveMeaningClaim:
     else if hasDetailEvidence && contextualMeaningDetail(detail) then
       Some("contextual")
     else None
+
+  private def positiveFunctionalProofReady(
+      evidenceGraph: TypedEvidenceGraph,
+      detail: PositionPlanTechniqueSemanticDetail,
+      objectSignatures: List[String],
+      claimMove: String
+  ): Boolean =
+    val proofRecords = detail.positiveFunctionalProofEvidenceIds.flatMap(evidenceGraph.byId.get)
+    val pressureRecord = proofRecords.collectFirst {
+      case record @ EvidenceRecord(_, _: PlanPressureEvidence, _) => record
+    }
+    val structuralRecord = proofRecords.collectFirst {
+      case record @ EvidenceRecord(_, _: StructuralDeltaEvidence, _) => record
+    }
+    val lineRecord = proofRecords.collectFirst {
+      case record @ EvidenceRecord(_, _: LineFactEvidence, _) => record
+    }
+    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
+    val signatureOwnsEvent =
+      detail.principalPlanId.exists(planId =>
+        objectSignatures.exists(signature =>
+          EvidenceObjectBinding
+            .signatureValues(List(signature), "target", "PlanSubject")
+            .exists(_.equalsIgnoreCase(planId.toString)) &&
+            (
+              EvidenceObjectBinding.signatureTokens(List(signature), "actor=Move:") ++
+                EvidenceObjectBinding.signatureTokens(List(signature), "witness=Move:")
+            ).exists(token =>
+              JudgmentSubjectBinding
+                .normalizeMove(token.drop(token.indexOf("Move:") + "Move:".length))
+                .toLowerCase == normalizedClaimMove
+            ) &&
+            EvidenceObjectBinding
+              .signatureTokens(List(signature), "target=")
+              .exists(EvidenceObjectBinding.concreteTargetToken)
+        )
+      )
+    (for
+      pressureEvidence <- pressureRecord.collect { case EvidenceRecord(ref, payload: PlanPressureEvidence, parents) => (ref, payload, parents) }
+      structuralEvidence <- structuralRecord.collect { case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _) => (ref, payload) }
+      lineEvidence <- lineRecord.collect { case EvidenceRecord(ref, payload: LineFactEvidence, _) => (ref, payload) }
+      line <- pressureEvidence._1.line
+      planId <- detail.principalPlanId
+    yield
+      pressureEvidence._2.principalPlanId(Some(line.rootMove)).contains(planId) &&
+        EvidenceRef.sameMove(line.rootMove, claimMove) &&
+        pressureEvidence._3.exists(_.id == structuralEvidence._1.id) &&
+        structuralEvidence._2.line.contains(line) &&
+        EvidenceRef.sameMove(structuralEvidence._2.moveUci, claimMove) &&
+        structuralEvidence._2.consequences.exists(consequence =>
+          consequence.strength > 0 &&
+            consequence.polarity != StructuralSignalPolarity.Loss &&
+            (detail.structuralConsequenceKinds.isEmpty || detail.structuralConsequenceKinds.contains(consequence.kind))
+        ) &&
+        lineEvidence._1.line.contains(line) &&
+        lineEvidence._2.hasLineReplay &&
+        lineEvidence._2.rootMove.exists(EvidenceRef.sameMove(_, claimMove)) &&
+        signatureOwnsEvent
+    ).contains(true)
 
   private def currentMoveFunctionalDetailProof(
       evidenceGraph: TypedEvidenceGraph,
@@ -6492,6 +6566,7 @@ object MoveMeaningClaim:
         else Nil
       (
         currentMoveCarrierSourceEvidenceIds(evidenceGraph, detail, claimMove) ++
+          detail.positiveFunctionalProofEvidenceIds ++
           planPawnAdvanceSources ++
           terminalProofSources ++
           currentMoveStructureContextSourceEvidenceIds(evidenceGraph, detail) ++
@@ -6506,7 +6581,7 @@ object MoveMeaningClaim:
       claimMove: String
   ): List[String] =
     val graphOwnedSources =
-      (detail.sourceEvidenceIds ++ detail.candidateEvidenceIds)
+      (detail.sourceEvidenceIds ++ detail.candidateEvidenceIds ++ detail.positiveFunctionalProofEvidenceIds)
       .distinct
       .sorted
       .filter(id => evidenceGraph.byId.get(id).exists(JudgmentSubjectBinding.sourceRecordCoversCurrentPlayedMove(_, claimMove)))
@@ -7618,6 +7693,7 @@ object MoveMeaningClaim:
 
   private def detailHasAnyProofLink(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detailHasDirectOrContrastProof(detail) ||
+      detail.positiveFunctionalProofEvidenceIds.nonEmpty ||
       detail.contextProofRoles.nonEmpty ||
       detail.contrastOutcome.nonEmpty
 
@@ -7625,6 +7701,7 @@ object MoveMeaningClaim:
     detail.sourceEvidenceIds.nonEmpty ||
       detail.referenceEvidenceIds.nonEmpty ||
       detail.candidateEvidenceIds.nonEmpty ||
+      detail.positiveFunctionalProofEvidenceIds.nonEmpty ||
       detail.causeEvidenceIds.nonEmpty ||
       detail.contextCauseEvidenceIds.nonEmpty
 
@@ -8370,7 +8447,9 @@ object MoveMeaningClaim:
     val terminalProofOwned = terminalProofDetailOwnsClaimMove(detail, objectSignatures, claimMove)
     if claimLineRole == "reference" then
       "reference_or_opponent_resource"
-    else if supportLevel == "owned_cause_linked" && currentMove && (candidateOwnedCause || terminalProofOwned) then
+    else if supportLevel == "owned_cause_linked" && currentMove &&
+        (candidateOwnedCause || terminalProofOwned || detail.positiveFunctionalProofEvidenceIds.nonEmpty)
+    then
       "current_move_owned"
     else if supportLevel == "view_surfaced" && currentMove && claimLineRole == "candidate" then
       "current_move_function"

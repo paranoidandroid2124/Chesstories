@@ -135,6 +135,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       sourceEvidenceIds: List[String],
       primaryRootCauseEvidenceIds: List[String],
       causeIds: List[String],
+      positiveFunctionalProofIds: List[String],
       claimIds: List[String],
       publicSurface: Boolean
   )
@@ -364,7 +365,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
     val ownedExpectationWithoutProof =
       requiresOwnedCause &&
         unitEligibleRows.nonEmpty &&
-        unitEligibleRows.forall(_.causeIds.isEmpty)
+        unitEligibleRows.forall(row => row.causeIds.isEmpty && row.positiveFunctionalProofIds.isEmpty)
     val shadowedByOwnedCarrier =
       best.isEmpty &&
         claimSupportLevelSatisfied &&
@@ -375,7 +376,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
               row.lineRole == claim.lineRole &&
               JudgmentSubjectBinding.normalizeMove(row.moveUci) == JudgmentSubjectBinding.normalizeMove(claim.moveUci) &&
               supportLevelSatisfies(row.supportLevel, "owned_cause_linked") &&
-              row.causeIds.nonEmpty
+              (row.causeIds.nonEmpty || row.positiveFunctionalProofIds.nonEmpty)
           )
         )
     val requiredDetailTokenAbsent =
@@ -470,6 +471,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       "frameIds" -> row.frameIds,
       "sourceEvidenceIds" -> row.sourceEvidenceIds,
       "causeIds" -> row.causeIds,
+      "positiveFunctionalProofIds" -> row.positiveFunctionalProofIds,
       "claimIds" -> row.claimIds,
       "primaryRootCauseEvidenceIds" -> row.primaryRootCauseEvidenceIds,
       "publicSurface" -> row.publicSurface
@@ -515,6 +517,7 @@ private[qc] final class MoveReviewPhase3AuditFunnelMetrics:
       sourceEvidenceIds = claim.sourceEvidenceIds.distinct.sorted,
       primaryRootCauseEvidenceIds = claimPrimaryRootCauseIds,
       causeIds = claimCauseIds,
+      positiveFunctionalProofIds = claim.positiveFunctionalProofEvidenceIds.distinct.sorted,
       claimIds = frameCauseFlows.flatMap(_.claimIds).distinct.sorted,
       publicSurface = publicSurface
     )

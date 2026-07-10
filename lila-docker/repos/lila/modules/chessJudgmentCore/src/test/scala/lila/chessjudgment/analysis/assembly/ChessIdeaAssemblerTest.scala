@@ -31,6 +31,53 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       Nil
     )
 
+  test("same-root plan function reaches public surface with line-owned proof"):
+    val result = MoveReviewJudgmentOrchestrator
+      .build(
+        RawMoveReviewInput(
+          fen = "rnbqkb1r/pp1ppppp/5n2/2pP4/2P5/8/PP2PPPP/RNBQKBNR b KQkq - 0 3",
+          playedMoveUci = "b7b5",
+          variations = List(
+            VariationLine(
+              List("b7b5", "c4b5", "a7a6", "b5a6", "g7g6", "b1c3", "f8g7", "e2e4", "e8g8", "g1f3", "d7d6", "f1e2"),
+              scoreCp = 0,
+              depth = 12
+            )
+          ),
+          currentEvalCp = Some(0),
+          ply = Some(5),
+          openingContext = Some(RawOpeningContext(name = Some("Benko Gambit / queenside file pressure"))),
+          movePrefixUci = List("d2d4", "g8f6", "c2c4", "c7c5", "d4d5")
+        )
+      )
+      .getOrElse(fail("expected judgment result"))
+    val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
+    val claim = view.moveMeaningClaims
+      .find(claim =>
+        claim.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+          claim.lineRole == "candidate" &&
+          claim.moveUci == "b7b5" &&
+          claim.publicSurfaceAdmitted &&
+          claim.positiveFunctionalProofEvidenceIds.nonEmpty
+      )
+      .getOrElse(fail(view.moveMeaningClaims.toString))
+
+    assertEquals(claim.causeEvidenceIds, Nil)
+    assertEquals(claim.supportLevel, "owned_cause_linked")
+    assertEquals(claim.publicProofLevel, "owned_function")
+    assert(claim.publicSurfaceAdmitted)
+    assertEquals(claim.positiveFunctionalProofEvidenceIds.size, 3)
+    assert(claim.objectBindingSignatures.exists(signature =>
+      signature.contains("target=PlanSubject:queensideattack") &&
+        signature.contains("target=Square:c4") &&
+        signature.contains("actor=Move:b7b5")
+    ), claim.objectBindingSignatures)
+    val proofRecords = claim.positiveFunctionalProofEvidenceIds.flatMap(result.packet.evidenceGraph.byId.get)
+    assertEquals(proofRecords.count(_.payload.isInstanceOf[PlanPressureEvidence]), 1)
+    assertEquals(proofRecords.count(_.payload.isInstanceOf[StructuralDeltaEvidence]), 1)
+    assertEquals(proofRecords.count(_.payload.isInstanceOf[LineFactEvidence]), 1)
+    assert(proofRecords.forall(_.ref.line.exists(_.role == LineNodeRole.Played)), proofRecords)
+
   test("structural transition proof can seed a strategic relative-cause idea"):
     val root = PositionNodeRef("8/8/8/8/8/8/3P4/8 w - - 0 1", 1, Some(Color.White), Some("root"))
     val afterPlayed = PositionNodeRef("8/8/8/8/3P4/8/8/8 b - - 0 1", 2, Some(Color.Black), Some("after-played"))

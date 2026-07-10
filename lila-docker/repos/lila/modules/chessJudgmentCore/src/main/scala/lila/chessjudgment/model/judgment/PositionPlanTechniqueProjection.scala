@@ -122,6 +122,7 @@ case class PositionPlanTechniqueSemanticDetail(
     endgameTechniqueFailureReason: Option[String] = None,
     anchorMagnitude: Option[Int] = None,
     sourceEvidenceIds: List[String] = Nil,
+    positiveFunctionalProofEvidenceIds: List[String] = Nil,
     causeEvidenceIds: List[String] = Nil,
     proofRoles: List[RelativeCauseProofRole] = Nil,
     contextCauseEvidenceIds: List[String] = Nil,
@@ -1114,8 +1115,14 @@ object PositionPlanTechniqueProjection:
       proofRoles: List[RelativeCauseProofRole],
       contextCauseEvidenceIds: List[String],
       contextProofRoles: List[RelativeCauseProofRole],
+      positiveFunctionalProofEvidenceIds: List[String],
       objectBindingSignatures: List[String],
       specificityTier: PositionPlanTechniqueSpecificityTier
+  )
+
+  private final case class PositionPlanTechniquePositiveFunctionalProof(
+      evidenceIds: List[String],
+      bindings: List[EvidenceObjectBinding]
   )
 
   private final case class PositionPlanTechniqueResourceContest(
@@ -1205,6 +1212,7 @@ object PositionPlanTechniqueProjection:
         proofRoles = causeLinkage.proofRoles,
         contextCauseEvidenceIds = causeLinkage.contextCauseEvidenceIds,
         contextProofRoles = causeLinkage.contextProofRoles,
+        positiveFunctionalProofEvidenceIds = causeLinkage.positiveFunctionalProofEvidenceIds,
         objectBindingSignatures = causeLinkage.objectBindingSignatures,
         specificityTier = causeLinkage.specificityTier
       )
@@ -1313,8 +1321,14 @@ object PositionPlanTechniqueProjection:
         evidenceIdSet.contains(binding.source.id) &&
           binding.proofRole.exists(positionPlanTechniqueAdmissibleDetailProofRole)
       )
+    val positiveFunctionalProof =
+      positionPlanTechniquePositiveFunctionalProof(detail, graph, evidenceIds)
+    val principalPlanBindings =
+      positionPlanTechniquePrincipalPlanBindings(detail, graph, evidenceIds)
     val rawDetailBindings =
       if localCauseBindings.nonEmpty then localCauseBindings
+      else if positiveFunctionalProof.exists(_.bindings.nonEmpty) then positiveFunctionalProof.toList.flatMap(_.bindings)
+      else if detail.unit == PositionPlanTechniqueUnit.PlanOptionSet && principalPlanBindings.nonEmpty then principalPlanBindings
       else
         EvidenceObjectBinding.fromEvidenceRefs(
           graph,
@@ -1363,9 +1377,102 @@ object PositionPlanTechniqueProjection:
           }
           .distinct
           .sortBy(_.toString),
+      positiveFunctionalProofEvidenceIds = positiveFunctionalProof.toList.flatMap(_.evidenceIds).distinct.sorted,
       objectBindingSignatures = objectBindingSignatures,
       specificityTier = positionPlanTechniqueSpecificityTier(detail, causeRecords.map(_._2), objectBindingSignatures)
     )
+
+  private def positionPlanTechniquePrincipalPlanBindings(
+      detail: PositionPlanTechniqueSemanticDetail,
+      graph: TypedEvidenceGraph,
+      evidenceIds: List[String]
+  ): List[EvidenceObjectBinding] =
+    for
+      planId <- detail.principalPlanId.toList
+      pressureRecord <- positionPlanTechniquePressureRecordForSources(graph, evidenceIds).toList
+      binding <- EvidenceObjectBinding.fromEvidenceRefs(graph, List(pressureRecord.ref))
+      if binding.target.exists(obj =>
+        obj.kind == EvidenceObjectKind.PlanSubject && obj.key.equalsIgnoreCase(planId.toString)
+      )
+    yield binding
+
+  private def positionPlanTechniquePositiveFunctionalProof(
+      detail: PositionPlanTechniqueSemanticDetail,
+      graph: TypedEvidenceGraph,
+      evidenceIds: List[String]
+  ): Option[PositionPlanTechniquePositiveFunctionalProof] =
+    if !positionPlanTechniquePositiveFunctionalDetail(detail) then None
+    else
+      for
+        planId <- detail.principalPlanId
+        routeMove <- detail.structuralRouteMove
+        pressureRecord <- positionPlanTechniquePressureRecordForSources(graph, evidenceIds)
+        pressure <- pressureRecord.payload match
+          case payload: PlanPressureEvidence => Some(payload)
+          case _                             => None
+        line <- pressureRecord.ref.line
+        if pressure.principalPlanId(Some(line.rootMove)).contains(planId)
+        if EvidenceRef.sameMove(routeMove, line.rootMove)
+        lineRecordAndPayload <- graph.records.collectFirst {
+          case record @ EvidenceRecord(ref, payload: LineFactEvidence, _)
+              if ref.line.contains(line) &&
+                payload.hasLineReplay &&
+                payload.rootMove.exists(EvidenceRef.sameMove(_, routeMove)) =>
+            record -> payload
+        }
+        principalBinding <- positionPlanTechniquePrincipalPlanBindings(detail, graph, evidenceIds).headOption
+        lineBinding <- EvidenceObjectBinding
+          .fromEvidenceRefs(graph, List(lineRecordAndPayload._1.ref))
+          .find(_.actor.exists(obj => obj.kind == EvidenceObjectKind.Move && EvidenceRef.sameMove(obj.key, routeMove)))
+        structuralBindings = pressureRecord.parents.flatMap(parent => graph.byId.get(parent.id)).flatMap {
+          case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _)
+              if payload.line.contains(line) && EvidenceRef.sameMove(payload.moveUci, routeMove) =>
+            val detailKinds = detail.structuralConsequenceKinds.toSet
+            val positiveKinds = payload.consequences
+              .filter(consequence =>
+                consequence.strength > 0 &&
+                  consequence.polarity != StructuralSignalPolarity.Loss &&
+                  (detailKinds.isEmpty || detailKinds.contains(consequence.kind))
+              )
+              .map(_.kind.toString.toLowerCase)
+              .toSet
+            EvidenceObjectBinding
+              .fromEvidenceRefs(graph, List(record.ref))
+              .filter(binding =>
+                binding.target.exists(EvidenceObjectBinding.specificSurfaceTargetObject) &&
+                  binding.mechanism.exists(obj => positiveKinds.contains(obj.key.toLowerCase))
+              )
+          case _ =>
+            Nil
+        }
+        if structuralBindings.nonEmpty
+      yield
+        val bindings = structuralBindings.map(binding =>
+          binding.copy(
+            actor = (principalBinding.actor ++ binding.actor ++ lineBinding.actor).distinctBy(_.signaturePart),
+            target = (principalBinding.target ++ binding.target).distinctBy(_.signaturePart),
+            mechanism = (principalBinding.mechanism ++ binding.mechanism).distinctBy(_.signaturePart),
+            consequence = (principalBinding.consequence ++ binding.consequence).distinctBy(_.signaturePart),
+            witness = (principalBinding.witness ++ binding.witness ++ lineBinding.witness).distinctBy(_.signaturePart),
+            line = Some(line),
+            horizon = Some(s"replay:${lineRecordAndPayload._2.lineReplayCount}")
+          )
+        )
+        PositionPlanTechniquePositiveFunctionalProof(
+          evidenceIds =
+            (pressureRecord.ref.id :: lineRecordAndPayload._1.ref.id :: structuralBindings.map(_.source.id)).distinct.sorted,
+          bindings = bindings.distinctBy(_.signature)
+        )
+
+  private def positionPlanTechniquePositiveFunctionalDetail(
+      detail: PositionPlanTechniqueSemanticDetail
+  ): Boolean =
+    !detail.axisPolarity.exists(polarity =>
+      polarity == StrategicAxisPolarity.Loss ||
+        polarity == StrategicAxisPolarity.Release ||
+        polarity == StrategicAxisPolarity.Concede
+    ) &&
+      !detail.structuralPurposePolarities.exists(_.equalsIgnoreCase(StructuralSignalPolarity.Loss.toString))
 
   private def positionPlanTechniqueTerminalOverriddenEndgameTechnique(
       detail: PositionPlanTechniqueSemanticDetail
@@ -2287,8 +2394,7 @@ object PositionPlanTechniqueProjection:
       directRecords
         .flatMap(positionPlanTechniqueRecordLineage(graph, _, 2))
         .distinctBy(_.ref.id)
-    val pressureRecord =
-      directRecords.collectFirst { case record @ EvidenceRecord(_, _: PlanPressureEvidence, _) => record }
+    val pressureRecord = positionPlanTechniquePressureRecordForSources(graph, sourceIds)
     val pressure = pressureRecord.collect { case EvidenceRecord(_, payload: PlanPressureEvidence, _) => payload }
     val rootMove = pressureRecord.flatMap(_.ref.line.map(_.rootMove))
     val principalPlanId = pressure.flatMap(_.principalPlanId(rootMove))
@@ -2308,6 +2414,24 @@ object PositionPlanTechniqueProjection:
       pressure = pressure,
       rootMove = rootMove
     )
+
+  private def positionPlanTechniquePressureRecordForSources(
+      graph: TypedEvidenceGraph,
+      sourceIds: List[String]
+  ): Option[EvidenceRecord] =
+    val directRecords = sourceIds.flatMap(id => graph.byId.get(id))
+    directRecords
+      .collectFirst { case record @ EvidenceRecord(_, _: PlanPressureEvidence, _) => record }
+      .orElse {
+        val structuralIds = directRecords.collect {
+          case EvidenceRecord(ref, _: StructuralDeltaEvidence, _) => ref.id
+        }.toSet
+        graph.records.collectFirst {
+          case record @ EvidenceRecord(_, _: PlanPressureEvidence, parents)
+              if parents.exists(parent => structuralIds.contains(parent.id)) =>
+            record
+        }
+      }
 
   private def positionPlanTechniquePawnPlayBySourceId(
       graph: TypedEvidenceGraph,
