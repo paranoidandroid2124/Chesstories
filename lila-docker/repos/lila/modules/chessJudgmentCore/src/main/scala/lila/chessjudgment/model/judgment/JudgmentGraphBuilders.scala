@@ -4,74 +4,7 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
 import lila.chessjudgment.analysis.line.PrincipalVariationEvidence
-import lila.chessjudgment.model.{ PlanSequenceSummary, ProbePurpose, ProbeRequest }
-import lila.chessjudgment.model.strategic.VariationLine
-
-object PositionNodeBuilder:
-  def fromAnalysis(
-      role: PositionNodeRole,
-      ref: PositionNodeRef
-  ): PositionNode =
-    PositionNode(
-      role = role,
-      ref = ref
-    )
-
-object CandidateLineNodeBuilder:
-  def fromEngineLine(
-      ref: LineNodeRef,
-      line: VariationLine,
-      evidence: EvidenceRef
-  ): CandidateLineNode =
-    CandidateLineNode(
-      ref = ref,
-      line = line,
-      evidence = evidence
-    )
-
-object MoveTransitionEdgeBuilder:
-  def fromMove(
-      role: TransitionEdgeRole,
-      from: PositionNodeRef,
-      moveUci: String,
-      to: PositionNodeRef,
-      planTransition: Option[PlanSequenceSummary],
-      evidence: EvidenceRef
-  ): MoveTransitionEdge =
-    MoveTransitionEdge(
-      role = role,
-      from = from,
-      moveUci = moveUci,
-      to = to,
-      planTransition = planTransition,
-      evidence = evidence
-    )
-
-object RelativeMoveAssessmentBuilder:
-  def fromComparison(
-      played: MoveTransitionEdge,
-      referenceTransition: Option[MoveTransitionEdge],
-      reference: CandidateLineNode,
-      candidate: CandidateLineNode,
-      comparison: EvalComparison,
-      evidence: EvidenceRef,
-      counterfactualEvidence: List[EvidenceRef],
-      candidateComparisonEvidence: List[EvidenceRef] = Nil,
-      relativeCauseEvidence: List[EvidenceRef] = Nil,
-      verdictCertificationEvidence: Option[EvidenceRef] = None
-  ): RelativeMoveAssessment =
-    RelativeMoveAssessment(
-      played = played,
-      referenceTransition = referenceTransition,
-      reference = reference,
-      candidate = candidate,
-      comparison = comparison,
-      evidence = evidence,
-      counterfactualEvidence = counterfactualEvidence,
-      candidateComparisonEvidence = candidateComparisonEvidence,
-      relativeCauseEvidence = relativeCauseEvidence,
-      verdictCertificationEvidence = verdictCertificationEvidence
-    )
+import lila.chessjudgment.model.{ ProbePurpose, ProbeRequest }
 
 object ChessIdeaBuilder:
   def fromEvidence(

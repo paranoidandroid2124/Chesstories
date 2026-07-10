@@ -97,7 +97,7 @@ object PositionNodeAssembler:
           }
       val records = boardRecord :: assessmentRecord.toList
       val node =
-        PositionNodeBuilder.fromAnalysis(
+        PositionNode(
           role = role,
           ref = ref
         )
@@ -178,7 +178,7 @@ object CandidateLineAssembler:
           confidence = EvidenceConfidence.LegalReplayVerified
         )
       val node =
-        CandidateLineNodeBuilder.fromEngineLine(
+        CandidateLineNode(
           ref = ref,
           line = line.line,
           evidence = lineEvidence
@@ -314,7 +314,7 @@ object TransitionEdgeAssembler:
         confidence = EvidenceConfidence.LegalReplayVerified
       )
     val edge =
-      MoveTransitionEdgeBuilder.fromMove(
+      MoveTransitionEdge(
         role = role,
         from = from.ref,
         moveUci = MoveReviewInputNormalizer.normalizeUci(moveUci),

@@ -135,7 +135,7 @@ object RelativeAssessmentAssembler:
           confidence = primaryConfidence
         )
       val assessment =
-        RelativeMoveAssessmentBuilder.fromComparison(
+        RelativeMoveAssessment(
           played = played,
           referenceTransition = Some(referenceTransition),
           reference = reference,
