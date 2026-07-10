@@ -42,24 +42,6 @@ object TransitionAnalyzer:
   private def continuityMatches(previousKey: String, currentPlan: Plan): Boolean =
     previousKey.equalsIgnoreCase(currentPlan.id.toString)
 
-  /**
-   * Classify how the plan changed.
-   */
-  def classifyTransition(
-    prevPlan: Option[Plan],
-    currPlan: Plan,
-    ctx: PlanInteractionContext
-  ): TransitionType = prevPlan match {
-    case None => 
-      TransitionType.Opening
-      
-    case Some(prev) if prev.id == currPlan.id => 
-      TransitionType.Continuation
-      
-    case Some(prev) =>
-      classifyShift(Some(prev), currPlan, ctx)
-  }
-
   private def classifyShift(
     prevPlan: Option[Plan],
     currPlan: Plan,

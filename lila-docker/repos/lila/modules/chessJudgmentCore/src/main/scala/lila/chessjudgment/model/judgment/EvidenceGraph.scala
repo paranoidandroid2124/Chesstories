@@ -4441,9 +4441,6 @@ final case class TypedEvidenceGraph(
   lazy val byId: Map[String, EvidenceRecord] =
     records.map(record => record.ref.id -> record).toMap
 
-  def refs(layer: EvidenceLayer): List[EvidenceRef] =
-    records.collect { case record if record.ref.layer == layer => record.ref }
-
   def recordsFor(position: PositionNodeRef): List[EvidenceRecord] =
     records.filter(_.ref.position == position)
 

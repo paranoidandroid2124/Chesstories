@@ -128,9 +128,7 @@ case class PlanContinuity(
   consecutivePlies: Int,
   startingPly: Int,
   supportingMoves: List[String] = Nil
-):
-  lazy val build_fingerprint: String =
-    s"${planId.getOrElse("")}:$consecutivePlies:$startingPly:${supportingMoves.mkString(",")}"
+)
 object PlanContinuity:
   import play.api.libs.json.*
   given Reads[PlanContinuity] = Reads { js =>
@@ -154,28 +152,3 @@ object PlanContinuity:
       "supportingMoves" -> c.supportingMoves
     )
   }
-
-enum StrategicSalience:
-  case High, Low
-
-object StrategicSalience:
-  def calculate(
-      transitionType: lila.chessjudgment.model.TransitionType,
-      consecutivePlies: Int,
-      themeMaxShare: Double = 1.0
-  ): StrategicSalience =
-    import lila.chessjudgment.model.TransitionType.*
-    
-    // Low salience when no strategic theme dominates.
-    if themeMaxShare < 0.35 then return StrategicSalience.Low
-    
-    // Evaluate based on transition
-    transitionType match
-      case ForcedPivot | NaturalShift | Opportunistic => StrategicSalience.High
-      case Continuation =>
-        if consecutivePlies == 2 || consecutivePlies == 3 then StrategicSalience.High // Execution or Fruition
-        else StrategicSalience.Low // Standard development/maintenance
-      case Opening =>
-        // Opening can still carry stable strategic content when theme coherence is clear.
-        if (consecutivePlies >= 2 && themeMaxShare >= 0.55) || themeMaxShare >= 0.72 then StrategicSalience.High
-        else StrategicSalience.Low
