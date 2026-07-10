@@ -80,9 +80,6 @@ object ExpectedEvidenceLossPolicy:
           if packet.exists(packet => isSupportOnlyStrategicMechanism(diagnostic, packet)) =>
         EvidenceLossExpectation.Expected
       case EvidenceLossReason.EvidenceAvailableWithoutIdea
-          if packet.exists(packet => isSameRootStrategicContrastCoveredByPublicSurface(diagnostic, packet)) =>
-        EvidenceLossExpectation.Expected
-      case EvidenceLossReason.EvidenceAvailableWithoutIdea
           if packet.exists(packet => isExpectedCandidateComparisonSupport(diagnostic, packet)) =>
         EvidenceLossExpectation.Expected
       case EvidenceLossReason.EvidenceAvailableWithoutIdea
@@ -171,32 +168,7 @@ object ExpectedEvidenceLossPolicy:
           case EvidenceRecord(ref, payload: StrategicMechanismEvidence, _) =>
             !strategicMechanismCanSeedJudgment(ref, payload)
           case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-            !StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(payload, packet.evidenceGraph.records)
-          case _ =>
-            false
-        }
-
-  private def isSameRootStrategicContrastCoveredByPublicSurface(
-      diagnostic: EvidenceLossDiagnostic,
-      packet: EvidenceBackedJudgmentPacket
-  ): Boolean =
-    diagnostic.layer.contains(EvidenceLayer.StrategicMechanism) &&
-      diagnostic.evidence
-        .flatMap(ref => packet.evidenceGraph.byId.get(ref.id))
-        .exists {
-          case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-            val rootMove = normalizeMove(payload.candidateLine.rootMove)
-            rootMove.nonEmpty &&
-              rootMove == normalizeMove(payload.referenceLine.rootMove) &&
-              StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(payload, packet.evidenceGraph.records) &&
-              packet.moveJudgmentView.exists(view =>
-                MoveMeaningSurface.publicIdeaChainSurfaceClaimsWithEvidence(view).exists { case (claim, evidence) =>
-                  normalizeMove(claim.moveUci) == rootMove &&
-                    claim.lineRole == "candidate" &&
-                    evidence.publicSurfaceAdmitted &&
-                    evidence.proofLevel != "none"
-                }
-              )
+            !payload.hasActionableContrast
           case _ =>
             false
         }
@@ -1886,7 +1858,7 @@ object CandidateComparisonDiagnostic:
         case EvidenceRecord(_, MoveVerdictCertificationEvidence(certification), _) =>
           certification.causes.exists(_.hasOwnedAdmissibleLongTermProof)
         case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-          StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(payload, packet.evidenceGraph.records)
+          payload.hasActionableContrast
         case _ =>
           false
       }

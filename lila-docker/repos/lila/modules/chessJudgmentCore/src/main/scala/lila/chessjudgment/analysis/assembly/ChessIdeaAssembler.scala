@@ -464,7 +464,7 @@ object ChessIdeaAssembler:
     cause.proof.exists(_.directProof.transitionConsequences.nonEmpty) ||
     records.exists {
       case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-        StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(payload, records)
+        payload.hasActionableContrast
       case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
         payload.canSupportStrategicCause
       case _ =>

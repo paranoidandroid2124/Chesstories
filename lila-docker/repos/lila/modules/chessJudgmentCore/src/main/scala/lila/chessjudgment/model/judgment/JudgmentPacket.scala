@@ -2834,14 +2834,15 @@ object MoveMeaningSurface:
       val carriers = surface.evidence.boardCarriers
       surfaceHasSubjectMove(surface) &&
         carriers.exists(carrier =>
-          carrier.role == "target" &&
-            (carrier.kind == "Pawn" || (carrier.kind == "PlanSubject" && carrier.value.startsWith("passed-pawn")))
+          publicMeaningTargetCarrier(carrier) &&
+            publicIdeaChainConsequenceCarrier(carrier) &&
+            publicIdeaChainCarrierMatchesSurfaceTarget(carrier, surface)
         )
     }
     val directFunctionSurfaceEvidence =
       subject == "played_move" &&
         evidenceSurfaces.exists(surface => surfaceHasDirectFunctionCarrier(surface) && surfaceHasSubjectMove(surface))
-    val admissiblePublicReason = strongProofSurface || directFunctionSurfaceEvidence
+    val admissiblePublicReason = strongProofSurface || directStructuralSurfaceEvidence || directFunctionSurfaceEvidence
     evidenceSurfaces.nonEmpty &&
       admissiblePublicReason &&
       (!materialTacticalCarrier || strongProofSurface) &&
@@ -9073,7 +9074,6 @@ object MoveMeaningClaim:
     structuralOpenCenterDevelopmentRoute(detail) ||
       (
         detail.structuralRouteMove.nonEmpty &&
-          detailHasSpecificObjectAxis(detail) &&
           detail.axisKind.exists(kind =>
             kind == StrategicAxisKind.Target ||
               kind == StrategicAxisKind.SpaceCenter

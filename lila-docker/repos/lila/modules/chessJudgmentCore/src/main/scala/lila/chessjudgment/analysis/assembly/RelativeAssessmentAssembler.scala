@@ -316,11 +316,7 @@ object RelativeAssessmentAssembler:
         )
         Option
           .when(
-            StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(
-              fact,
-              payload,
-              context.evidenceGraph.records
-            )
+            fact.hasDistinctRootMoves && payload.hasActionableContrast
           ) {
             EvidenceRecord(
               ref = EvidenceRef(
@@ -543,7 +539,6 @@ object RelativeAssessmentAssembler:
               )
           val proof = relativeCauseProof(
             context.evidenceGraph,
-            fact,
             kind,
             binding.sourceSide,
             proofRecords.directProof,
@@ -721,7 +716,6 @@ object RelativeAssessmentAssembler:
 
   private def relativeCauseProof(
       graph: TypedEvidenceGraph,
-      fact: CandidateComparisonFact,
       kind: RelativeCauseKind,
       sourceSide: RelativeCauseSourceSide,
       directRecords: List[EvidenceRecord],
@@ -733,7 +727,6 @@ object RelativeAssessmentAssembler:
         role = RelativeCauseProofRole.DirectProof,
         strength = RelativeCauseProofStrength.Primary,
         kind = kind,
-        fact = fact,
         sourceSide = sourceSide,
         graph = graph,
         records = directRecords,
@@ -743,7 +736,6 @@ object RelativeAssessmentAssembler:
         role = RelativeCauseProofRole.ContrastProof,
         strength = RelativeCauseProofStrength.Supporting,
         kind = kind,
-        fact = fact,
         sourceSide = sourceSide,
         graph = graph,
         records = contrastRecords,
@@ -753,7 +745,6 @@ object RelativeAssessmentAssembler:
         role = RelativeCauseProofRole.ContextSupport,
         strength = RelativeCauseProofStrength.WeakHint,
         kind = kind,
-        fact = fact,
         sourceSide = sourceSide,
         graph = graph,
         records = contextRecords,
@@ -765,7 +756,6 @@ object RelativeAssessmentAssembler:
       role: RelativeCauseProofRole,
       strength: RelativeCauseProofStrength,
       kind: RelativeCauseKind,
-      fact: CandidateComparisonFact,
       sourceSide: RelativeCauseSourceSide,
       graph: TypedEvidenceGraph,
       records: List[EvidenceRecord],
@@ -855,7 +845,7 @@ object RelativeAssessmentAssembler:
       }.filter(_.signals.nonEmpty).distinct,
       strategicMechanismContrasts = proofRecords.collect {
         case EvidenceRecord(ref, payload: StrategicMechanismContrastEvidence, _)
-            if strategicContrastCanDirectlyProveCause(graph, fact, kind, payload, sourceSide) =>
+            if strategicContrastCanDirectlyProveCause(kind, payload, sourceSide) =>
           StrategicMechanismContrastProof(
             source = ref,
             comparisonKind = payload.comparisonKind,
@@ -1111,7 +1101,7 @@ object RelativeAssessmentAssembler:
           payload.comparisonKind == fact.kind &&
           payload.referenceLine == fact.referenceLine &&
           payload.candidateLine == fact.candidateLine &&
-          strategicContrastCanDirectlyProveCause(graph, fact, kind, payload, binding.sourceSide)
+          strategicContrastCanDirectlyProveCause(kind, payload, binding.sourceSide)
       case _ =>
         false
 
@@ -1373,23 +1363,11 @@ object RelativeAssessmentAssembler:
     )
 
   private def strategicContrastCanDirectlyProveCause(
-      graph: TypedEvidenceGraph,
-      fact: CandidateComparisonFact,
       kind: RelativeCauseKind,
       payload: StrategicMechanismContrastEvidence,
       sourceSide: RelativeCauseSourceSide
   ): Boolean =
-    payload.actionableComparisons.exists(axis => strategicAxisCanProveCause(kind, axis.axis, sourceSide)) ||
-      (
-        sourceSide == RelativeCauseSourceSide.Candidate &&
-          StrategicMechanismContrastEvidence.exactSameRootConcreteCarrierContrast(fact, payload, graph.records) &&
-          payload.axisComparisons.exists(comparison =>
-            comparison.outcome == StrategicAxisComparisonOutcome.SharedSustained &&
-              StrategicMechanismContrastEvidence
-                .exactSameRootConcreteCarrierCauseKindsForAxis(fact.candidateLine, graph.records, comparison.axis)
-                .contains(kind)
-          )
-      )
+    payload.actionableComparisons.exists(axis => strategicAxisCanProveCause(kind, axis.axis, sourceSide))
 
   private def strategicAxisCanProveCause(
       kind: RelativeCauseKind,

@@ -741,6 +741,30 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(claim.causeEvidenceIds, List(causeRef.id))
     assert(claim.targetSquares.contains("b7"), claim.targetSquares)
 
+    val surfaceOnlyView = MoveJudgmentView
+      .from(
+        relativeAssessments = List(assessment.copy(relativeCauseEvidence = Nil)),
+        evidenceGraph = TypedEvidenceGraph(
+          List(
+            EvidenceRecord(structuralRef, structuralDelta),
+            EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef))
+          )
+        ),
+        ideas = Nil,
+        claims = Nil,
+        claimLifecycle = Nil,
+        ideaVerdict = None,
+        claimSupportClusters = Nil,
+        claimEventClusters = Nil
+      )
+      .get
+    val surfaceOnlyClaim = surfaceOnlyView.moveMeaningClaims.find(_.meaningKind == "TargetPressure").get
+    assertEquals(surfaceOnlyClaim.supportLevel, "view_surfaced")
+    assertEquals(surfaceOnlyClaim.surfaceLane, "current_move_function")
+    assertEquals(surfaceOnlyClaim.causeEvidenceIds, Nil)
+    assert(surfaceOnlyClaim.targetSquares.contains("b7"), surfaceOnlyClaim.targetSquares)
+    assert(MoveMeaningSurface.from(surfaceOnlyView).exists(_.ideaType == "target_pressure"))
+
   test("links exact quiet piece route through root owned structural proof without axis identity"):
     val root = PositionNodeRef("8/8/8/8/8/8/8/4KN2 w - - 0 1", 1, Some(Color.White), Some("root"))
     val afterPlayed = PositionNodeRef("8/8/8/8/8/4N3/8/4K3 b - - 1 1", 2, Some(Color.Black), Some("after-played"))

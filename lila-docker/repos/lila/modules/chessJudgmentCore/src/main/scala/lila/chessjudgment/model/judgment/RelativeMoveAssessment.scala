@@ -195,7 +195,9 @@ case class CandidateComparisonFact(
     referenceLine: LineNodeRef,
     candidateLine: LineNodeRef,
     comparison: EvalComparison
-)
+):
+  def hasDistinctRootMoves: Boolean =
+    !EvidenceRef.sameMove(referenceLine.rootMove, candidateLine.rootMove)
 
 enum RelativeCauseKind:
   case MissedTacticalResource

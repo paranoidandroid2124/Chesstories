@@ -508,7 +508,7 @@ object PositionPlanTechniqueProjection:
       claims: List[ClaimSeed],
       ideaVerdict: Option[IdeaVerdictSplit]
   ): Option[PositionPlanTechniqueFrame] =
-    if !contrastCanProducePlanTechniqueFrame(payload, graph) then None
+    if !payload.hasActionableContrast then None
     else
       val refs = (ref :: parents ++ payload.sourceRefs).distinctBy(_.id)
       val anchors = semanticAnchorsFor(graph, record, refs)
@@ -565,28 +565,6 @@ object PositionPlanTechniqueProjection:
           salience = payload.actionableComparisons.size * 3 + frameUnits.size + ideaIds.size + claimIds.size + relativeCauseEvidenceIds.size
         )
       }
-
-  private def contrastCanProducePlanTechniqueFrame(
-      payload: StrategicMechanismContrastEvidence,
-      graph: TypedEvidenceGraph
-  ): Boolean =
-    StrategicMechanismContrastEvidence.hasActionableContrastOrSameRootCarrier(
-      contrastCandidateComparisonFact(payload, graph),
-      payload,
-      graph.records
-    )
-
-  private def contrastCandidateComparisonFact(
-      payload: StrategicMechanismContrastEvidence,
-      graph: TypedEvidenceGraph
-  ): Option[CandidateComparisonFact] =
-    graph.records.collectFirst {
-      case EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
-          if fact.kind == payload.comparisonKind &&
-            fact.referenceLine == payload.referenceLine &&
-            fact.candidateLine == payload.candidateLine =>
-        fact
-    }
 
   private def threatEpisodePlanTechniqueFrame(
       ref: EvidenceRef,
