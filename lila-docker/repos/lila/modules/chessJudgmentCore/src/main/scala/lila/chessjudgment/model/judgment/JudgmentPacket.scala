@@ -2031,11 +2031,10 @@ object MoveMeaningSurface:
     value.replaceAll("[_-]+", " ").trim.toLowerCase
 
   private def publicIdeaChains(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[JsObject] =
-    val admittedSubjects = publicIdeaChainAdmittedSubjects(verdict, surfaces).toSet
     publicIdeaChainSubjectSpecs(verdict, surfaces).flatMap { (subject, subjectMove, pvRolePrefix) =>
       val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && surfaceEligibleForPublicChain(surface))
       val rootMoveRole = publicIdeaChainRootMoveRole(subject)
-      if evidenceSurfaces.isEmpty || !admittedSubjects.contains(subject) then Nil
+      if evidenceSurfaces.isEmpty then Nil
       else
         val displaySemantics = evidenceSurfaces
           .sortBy(publicIdeaChainSemanticSortKey)
@@ -2260,12 +2259,6 @@ object MoveMeaningSurface:
   private[judgment] def publicMeaningTargetCarrier(carrier: MoveMeaningSurfaceBoardCarrier): Boolean =
     carrier.role == "target" && !publicPurposeCarrier(carrier)
 
-  private def publicIdeaChainAdmittedSubjects(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[String] =
-    publicIdeaChainSubjectSpecs(verdict, surfaces).collect {
-      case (subject, subjectMove, pvRolePrefix) if publicIdeaChainSubjectAdmitted(subject, subjectMove, pvRolePrefix, surfaces) =>
-        subject
-    }
-
   private def publicIdeaChainSubjectSpecs(
       verdict: MoveMeaningSurfaceVerdict,
       surfaces: List[MoveMeaningSurface]
@@ -2286,99 +2279,10 @@ object MoveMeaningSurface:
       case "opponent_resource" => "threat_move"
       case _                   => "played_move"
 
-  private def publicIdeaChainSubjectAdmitted(
-      subject: String,
-      subjectMove: String,
-      pvRolePrefix: String,
-      surfaces: List[MoveMeaningSurface]
-  ): Boolean =
-    val evidenceSurfaces = surfaces.filter(surface => surface.subject == subject && surfaceEligibleForPublicChain(surface))
-    val rootMoveRole = publicIdeaChainRootMoveRole(subject)
-    val pv = surfaces
-      .filter(_.subject == subject)
-      .flatMap(_.comparison.toList.flatMap(_.moves))
-      .filter(move => move.uci.nonEmpty && (move.role == rootMoveRole || move.role.startsWith(pvRolePrefix)))
-      .map(_.uci)
-      .distinct
-    val terminal = evidenceSurfaces.filter(terminalSurfaceControlsChain).flatMap(_.terminalConsequences).distinct
-    val technique = evidenceSurfaces.flatMap(_.endgameTechnique).distinct
-    val carrierPairs = publicIdeaChainCarrierPairs(evidenceSurfaces)
-    val allConsequenceCarriers = carrierPairs.filter((carrier, surface) =>
-      publicIdeaChainConsequenceCarrierRole(carrier) &&
-        publicIdeaChainConsequenceCarrier(carrier) &&
-        publicIdeaChainCarrierMatchesSurfaceTarget(carrier, surface)
-    )
-    val strongProofSurface =
-      terminal.nonEmpty ||
-        technique.nonEmpty ||
-        evidenceSurfaces.exists(surface => surface.evidence.proofLevel == "owned_cause" || surface.evidence.causeIds.nonEmpty)
-    val concreteConsequence = allConsequenceCarriers.exists((carrier, _) =>
-      carrier.kind == "Pawn" ||
-        (
-          carrier.kind == "PlanSubject" &&
-            !carrier.value.startsWith("material-capture:") &&
-            !carrier.value.startsWith("material-recapture:")
-        )
-    )
-    val ownedRouteCarrier = evidenceSurfaces.exists(surface =>
-      surface.evidence.proofLevel == "owned_cause" &&
-        surface.evidence.boardCarriers.exists(carrier => carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove)
-    )
-    val normalizedSubjectMove = JudgmentSubjectBinding.normalizeMove(subjectMove).toLowerCase
-    def surfaceHasSubjectMove(surface: MoveMeaningSurface): Boolean =
-      surface.evidence.boardCarriers.exists(carrier =>
-        carrier.role == "actor" &&
-          carrier.kind == "Move" &&
-          JudgmentSubjectBinding.normalizeMove(carrier.value).toLowerCase == normalizedSubjectMove
-      )
-    val directStructuralSurfaceEvidence = evidenceSurfaces.exists { surface =>
-      val carriers = surface.evidence.boardCarriers
-      surfaceHasSubjectMove(surface) &&
-        carriers.exists(carrier =>
-          publicMeaningTargetCarrier(carrier) &&
-            publicIdeaChainConsequenceCarrier(carrier) &&
-            publicIdeaChainCarrierMatchesSurfaceTarget(carrier, surface)
-        )
-    }
-    val directFunctionSurfaceEvidence =
-      subject == "played_move" &&
-        evidenceSurfaces.exists(surface => surfaceHasDirectFunctionCarrier(surface) && surfaceHasSubjectMove(surface))
-    val admissiblePublicReason = strongProofSurface || directStructuralSurfaceEvidence || directFunctionSurfaceEvidence
-    evidenceSurfaces.nonEmpty &&
-      admissiblePublicReason &&
-      (
-        terminal.nonEmpty ||
-          technique.nonEmpty ||
-          directStructuralSurfaceEvidence ||
-          ownedRouteCarrier ||
-          directFunctionSurfaceEvidence ||
-          (pv.nonEmpty && concreteConsequence)
-      )
-
   private def surfaceEligibleForPublicChain(surface: MoveMeaningSurface): Boolean =
     surface.evidence.proofLevel != "none" &&
       surface.evidence.publicSurfaceAdmitted &&
       (surface.evidence.boardCarriers.nonEmpty || surface.terminalConsequences.nonEmpty || surface.endgameTechnique.nonEmpty)
-
-  private def terminalSurfaceControlsChain(surface: MoveMeaningSurface): Boolean =
-    val terminalCodes = surface.terminalConsequences.map(_.code).toSet
-    val materialOnlyTerminal =
-      terminalCodes.nonEmpty && terminalCodes.subsetOf(Set("material_gain", "material_loss"))
-    val directMoveTerminalTarget =
-      moveDestination(surface.moveUci).exists(destination =>
-        surface.evidence.boardCarriers.exists(carrier =>
-          carrier.role == "target" &&
-            carrier.kind == "Square" &&
-            carrier.value.equalsIgnoreCase(destination) &&
-            carrier.semanticRole.exists(_.equalsIgnoreCase("terminal_target"))
-        )
-      )
-    terminalCodes.nonEmpty &&
-      (!materialOnlyTerminal ||
-        directMoveTerminalTarget ||
-        surface.evidence.causeIds.nonEmpty ||
-        publicSurfaceRelationKinds(surface).nonEmpty ||
-        surface.evidence.proofThreatDrivers.nonEmpty)
 
   private def surfaceHasDirectFunctionCarrier(surface: MoveMeaningSurface): Boolean =
     val carriers = surface.evidence.boardCarriers
