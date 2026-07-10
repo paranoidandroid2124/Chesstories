@@ -47,7 +47,9 @@ object TransitionAnalyzer:
       transitionType = transType,
       momentum = momentum,
       primaryPlanId = Some(currPlan.id.toString),
-      secondaryPlanId = currentPlans.secondary.map(_.plan.id.toString)
+      secondaryPlanId = currentPlans.secondary.map(_.plan.id.toString),
+      previousPlanId = Some(prevPlan.id.toString),
+      continuity = Some(continuity)
     )
   }
 

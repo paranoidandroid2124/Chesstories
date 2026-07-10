@@ -8141,7 +8141,8 @@ object MoveMeaningClaim:
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
           Some("PawnBreakTiming")
         case PositionPlanTechniqueUnit.PlanOptionSet =>
-          Some("PlanContinuity")
+          val transitionBacked = detail.sourceEvidenceIds.exists(_.contains(":plan-transition:"))
+          Option.when(!transitionBacked || detail.axisPolarity.contains(StrategicAxisPolarity.Preserve))("PlanContinuity")
         case PositionPlanTechniqueUnit.EndgameTechniqueRecipe =>
           Some("TechniqueConversion")
         case PositionPlanTechniqueUnit.CounterplayRace =>
