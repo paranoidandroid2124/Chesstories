@@ -2501,8 +2501,10 @@ object PositionPlanTechniqueProjection:
   ): Boolean =
     purpose.routeMove.nonEmpty &&
       (
-        purpose.transitionRouteSubject.exists(_.trim.nonEmpty) ||
-          purpose.subjects.exists(positionPlanTechniquePieceRouteSubject)
+        purpose.subjects.exists(positionPlanTechniquePieceRouteSubject) ||
+          purpose.consequenceKinds.exists(positionPlanTechniquePieceRouteConsequence) ||
+          purpose.categories.exists(positionPlanTechniqueDevelopmentRouteCategory) ||
+          purpose.consequenceKinds.isEmpty && purpose.transitionRouteSubject.exists(_.trim.nonEmpty)
       )
 
   private def positionPlanTechniqueDevelopmentRouteDetail(
@@ -2646,7 +2648,14 @@ object PositionPlanTechniqueProjection:
     val opponentMobilityPurpose =
       purpose.consequenceKinds.contains(TransitionConsequenceKind.OpponentMobilityRestriction)
     val kindMatches =
-      detail.axisKind match
+      if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute then
+        purpose.consequenceKinds.exists(positionPlanTechniquePieceRouteConsequence) ||
+          purpose.categories.exists(category =>
+            category == TransitionConsequenceCategory.PieceActivity.toString ||
+              category == TransitionConsequenceCategory.Development.toString ||
+              category == TransitionConsequenceCategory.OpeningDevelopment.toString
+          )
+      else detail.axisKind match
         case Some(StrategicAxisKind.Counterplay)
             if detail.axisPolarity.contains(StrategicAxisPolarity.Restrain) &&
               opponentMobilityPurpose =>
@@ -2670,20 +2679,28 @@ object PositionPlanTechniqueProjection:
             purpose.consequenceKinds.exists(acceptedKinds)
           else true
         case Some(StrategicAxisKind.Target) =>
-          purpose.consequenceKinds.exists(positionPlanTechniqueTargetConsequence) ||
-            purpose.categories.contains(TransitionConsequenceCategory.TargetPressure.toString)
+          detail.label.map(_.trim.toLowerCase) match
+            case Some("king-safety-pressure") =>
+              purpose.consequenceKinds.exists(kind =>
+                kind == TransitionConsequenceKind.KingSafetyPressure ||
+                  kind == TransitionConsequenceKind.KingRingPressureGain
+              )
+            case Some("weak-pawn-target") =>
+              purpose.consequenceKinds.contains(TransitionConsequenceKind.WeakPawnTargetCreated)
+            case Some("weak-square-target") =>
+              purpose.consequenceKinds.contains(TransitionConsequenceKind.WeakSquareTargetCreated)
+            case Some("target-pressure-gain") =>
+              purpose.consequenceKinds.contains(TransitionConsequenceKind.TargetPressureGain)
+            case Some("target-pressure-release") =>
+              purpose.consequenceKinds.contains(TransitionConsequenceKind.TargetPressureRelease)
+            case _ =>
+              purpose.consequenceKinds.exists(positionPlanTechniqueTargetConsequence) ||
+                purpose.categories.contains(TransitionConsequenceCategory.TargetPressure.toString)
         case Some(StrategicAxisKind.SpaceCenter) =>
           purpose.consequenceKinds.exists(positionPlanTechniqueCenterConsequence) ||
             purpose.categories.exists(category =>
               category == TransitionConsequenceCategory.CenterControl.toString ||
                 category == TransitionConsequenceCategory.OpeningCenterControl.toString
-            )
-        case Some(StrategicAxisKind.Activity) if detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute =>
-          purpose.consequenceKinds.exists(positionPlanTechniquePieceRouteConsequence) ||
-            purpose.categories.exists(category =>
-              category == TransitionConsequenceCategory.PieceActivity.toString ||
-                category == TransitionConsequenceCategory.Development.toString ||
-                category == TransitionConsequenceCategory.OpeningDevelopment.toString
             )
         case _ =>
           true

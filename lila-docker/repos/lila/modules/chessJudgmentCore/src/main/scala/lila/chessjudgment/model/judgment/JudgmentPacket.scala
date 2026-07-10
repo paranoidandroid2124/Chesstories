@@ -4283,7 +4283,7 @@ object MoveMeaningSurface:
   private def checkingRouteTargetPressureClaim(claim: MoveMeaningClaim): Boolean =
     checkingPressureClaim(claim)
 
-  private def checkingPressureClaim(claim: MoveMeaningClaim): Boolean =
+  private[judgment] def checkingPressureClaim(claim: MoveMeaningClaim): Boolean =
     def square(value: String): Option[String] =
       Option(value).map(_.trim.toLowerCase).filter(_.matches("[a-h][1-8]"))
     val targetSquares = claim.targetSquares.flatMap(square).toSet
@@ -5247,6 +5247,7 @@ object MoveMeaningClaim:
         val normalized = part.toLowerCase
         normalized.contains(":line-unlock:") || normalized.contains("rook-lift")
       ) &&
+      !initialMinorPieceDevelopmentRoute(claim) &&
       !routeContinuesInPublicPv(claim)
 
   private def routeContinuesInPublicPv(claim: MoveMeaningClaim): Boolean =
@@ -5311,7 +5312,38 @@ object MoveMeaningClaim:
                 )
             )
         )
-    genericCenterCovered || (
+    val genericTargetPressureCovered =
+      claim.meaningKind == "TargetPressure" &&
+        claim.label.exists(_.equalsIgnoreCase("target-pressure-gain")) &&
+        currentMoveSurfaceLane(claim) &&
+        claims.exists(other =>
+          other != claim &&
+            other.meaningKind == "TargetPressure" &&
+            other.label.exists(label => !label.equalsIgnoreCase("target-pressure-gain")) &&
+            other.publicSurfaceAdmitted &&
+            other.moveUci == claim.moveUci &&
+            other.lineRole == claim.lineRole &&
+            currentMoveSurfaceLane(other) &&
+            (
+              other.sourceEvidenceIds.intersect(claim.sourceEvidenceIds).nonEmpty ||
+                targetOverlap(other, claim)
+            )
+        )
+    val initialDevelopmentCoversKingPressure =
+      claim.meaningKind == "TargetPressure" &&
+        claim.label.exists(_.equalsIgnoreCase("king-safety-pressure")) &&
+        claim.publicProofLevel == "surface_evidence" &&
+        !MoveMeaningSurface.checkingPressureClaim(claim) &&
+        claims.exists(other =>
+          other != claim &&
+            other.meaningKind == "PieceRoute" &&
+            other.publicSurfaceAdmitted &&
+            initialMinorPieceDevelopmentRoute(other) &&
+            other.moveUci == claim.moveUci &&
+            other.lineRole == claim.lineRole &&
+            currentMoveSurfaceLane(other)
+        )
+    genericCenterCovered || genericTargetPressureCovered || initialDevelopmentCoversKingPressure || (
       claim.meaningKind == "PieceActivity" && claim.role == "ImprovesPieceActivity" && !passedPawnAdvanceCarrier(claim) ||
         targetPressureActivity(claim) ||
         claim.meaningKind == "PlanContinuity" && claim.role == "ReferencePreservesPlan" ||
@@ -5427,6 +5459,13 @@ object MoveMeaningClaim:
 
   private def currentMoveSurfaceLane(claim: MoveMeaningClaim): Boolean =
     claim.surfaceLane == "current_move_owned" || claim.surfaceLane == "current_move_function"
+
+  private def initialMinorPieceDevelopmentRoute(claim: MoveMeaningClaim): Boolean =
+    routeCoreIdentity(claim).exists { case (_, _, piece, from, _, _) =>
+      val origin = from.map(_.toLowerCase)
+      piece.equalsIgnoreCase("bishop") && origin.exists(Set("c1", "f1", "c8", "f8")) ||
+        piece.equalsIgnoreCase("knight") && origin.exists(Set("b1", "g1", "b8", "g8"))
+    }
 
   private def routeCoreIdentity(claim: MoveMeaningClaim): Option[(String, String, String, Option[String], Option[String], Option[String])] =
     val piece = routePart(claim, "piece:")
@@ -5819,7 +5858,9 @@ object MoveMeaningClaim:
       else if claim.meaningKind == "PieceRoute" then
         routeCoreIdentity(claim)
           .map((lineRole, moveUci, piece, from, to, target) =>
-            List(lineRole, moveUci, piece, from.getOrElse(""), to.getOrElse(""), target.getOrElse("")).mkString("|")
+            claim.publicIdeaType match
+              case Some(ideaType) => List(lineRole, moveUci, piece, target.getOrElse(""), ideaType).mkString("|")
+              case None => List(lineRole, moveUci, piece, from.getOrElse(""), to.getOrElse(""), target.getOrElse("")).mkString("|")
           )
           .getOrElse(claim.laneKey)
       else if claim.meaningKind == "PlanContinuity" && claim.routeIdentityParts.nonEmpty then
@@ -6504,7 +6545,7 @@ object MoveMeaningClaim:
         developmentRouteCarriers ++
         structuralRouteFileCarriers(detail) ++
         flankPawnAdvanceDestinationCarriers(detail) ++
-        detail.structuralPurposeSubjects.flatMap(publicStructuralSubjectCarriers(_, detail.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute)) ++
+        detail.structuralPurposeSubjects.flatMap(publicStructuralSubjectCarriers(_, detail)) ++
         colorComplexSubjectCarriers(detail) ++
         publicPlanSubjectCarriers(detail) ++
         detail.breakFile.toList.flatMap(file => publicFileCarrier("target", file, Some("break_file"))) ++
@@ -6564,8 +6605,11 @@ object MoveMeaningClaim:
   private def sameFileMoveFile(move: String): Option[String] =
     moveEndpoints(move).collect { case (from, to) if from.take(1) == to.take(1) => from.take(1) }
 
-  private def publicStructuralSubjectCarriers(subject: String, tensionAsTarget: Boolean): List[MoveMeaningSurfaceBoardCarrier] =
-    val tensionRole = if tensionAsTarget then "pressure_target" else "tension_square"
+  private def publicStructuralSubjectCarriers(
+      subject: String,
+      detail: PositionPlanTechniqueSemanticDetail
+  ): List[MoveMeaningSurfaceBoardCarrier] =
+    val tensionRole = if detail.unit == PositionPlanTechniqueUnit.TensionBreakPolicyRoute then "pressure_target" else "tension_square"
     val restrictionBlockerRole =
       if strategicRayRestrictionToken(subject.toLowerCase) then "pressure_target" else "resource_contest_square"
     val identityCarriers =
@@ -6591,6 +6635,8 @@ object MoveMeaningClaim:
           blocker,
           Some(restrictionBlockerRole)
         )
+      case Some(StructuralPurposeSubject.PieceSquare(piece, square)) if detail.axisKind.contains(StrategicAxisKind.Target) =>
+        publicPieceCarrier("target", piece) ++ publicSquareCarrier("target", square, Some("pressure_target"))
       case Some(StructuralPurposeSubject.PieceSquare(piece, square)) =>
         publicPieceCarrier("actor", piece) ++ publicSquareCarrier("actor", square) ++ publicSquareCarrier("target", square, Some("plan_subject"))
       case Some(StructuralPurposeSubject.TensionEdge(from, to)) =>
