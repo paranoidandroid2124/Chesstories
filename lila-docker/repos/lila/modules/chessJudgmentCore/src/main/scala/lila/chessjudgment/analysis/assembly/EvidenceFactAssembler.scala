@@ -1535,9 +1535,15 @@ object EvidenceFactAssembler:
                 position = node.ref,
                 line = line.map(_.ref),
                 scope = node.role.scope,
-                parents = evidenceRefs(context, EvidenceLayer.Board, Some(node.ref), None) ++
-                  evidenceRefs(context, EvidenceLayer.SinglePosition, Some(node.ref), None) ++
-                  evidenceRefs(context, EvidenceLayer.PawnStructure, Some(node.ref), None)
+                parents = (
+                  evidenceRefs(context, EvidenceLayer.Board, Some(node.ref), None) ++
+                    evidenceRefs(context, EvidenceLayer.SinglePosition, Some(node.ref), None) ++
+                    evidenceRefs(context, EvidenceLayer.PawnStructure, Some(node.ref), None) ++
+                    incoming.toList.flatMap(edge =>
+                      List(edge.evidence) ++
+                        evidenceRefs(context, EvidenceLayer.StructuralDelta, Some(edge.from), line.map(_.ref))
+                    )
+                ).distinctBy(_.id)
               )
             val alignedPawnStructure =
               for

@@ -22,9 +22,6 @@ final case class EvidenceSquare(key: String)
 final case class EvidenceFile(key: String)
 final case class EvidencePieceRole(name: String)
 
-private def evidenceBackedPlans(activePlans: ActivePlans): List[PlanMatch] =
-  activePlans.allPlans.filter(_.evidence.nonEmpty).distinctBy(_.plan.id)
-
 enum EvidenceSemanticAnchorKind:
   case StrategicKind
   case StrategicMechanism
@@ -2410,8 +2407,8 @@ object StrategicMechanismEvidence:
       case ApplicabilityAssessmentEvidence(assessment) =>
         assessment.supportedThemes.map(theme => EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.OpeningSupported, theme.toString)) ++
           assessment.observedThemes.map(theme => EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.OpeningObserved, theme.toString))
-      case PlanPressureEvidence(_, activePlans) =>
-        evidenceBackedPlans(activePlans).map(plan =>
+      case payload: PlanPressureEvidence =>
+        payload.evidenceBackedPlans.map(plan =>
           EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.PlanPressure, plan.plan.id.toString)
         )
       case PlanTransitionEvidence(transition) =>
@@ -2464,7 +2461,7 @@ object StrategicMechanismEvidence:
 
   def planPressureHasDirectEvidence(scoring: PlanScoringResult, activePlans: ActivePlans): Boolean =
     scoring.confidence >= 0.35 &&
-      evidenceBackedPlans(activePlans).nonEmpty
+      PlanPressureEvidence(scoring, activePlans).evidenceBackedPlans.nonEmpty
 
   def planTransitionCanSupportPlan(transition: PlanSequenceSummary): Boolean =
     transition.primaryPlanId.nonEmpty &&
@@ -4267,7 +4264,16 @@ final case class PlanTransitionEvidence(
 final case class PlanPressureEvidence(
     scoring: PlanScoringResult,
     activePlans: ActivePlans
-) extends EvidencePayload
+) extends EvidencePayload:
+  def evidenceBackedPlans: List[PlanMatch] =
+    activePlans.allPlans.filter(_.evidence.nonEmpty).distinctBy(_.plan.id)
+
+  def rootBackedPlans(rootMove: Option[String]): List[PlanMatch] =
+    rootMove.toList.flatMap(move =>
+      evidenceBackedPlans.filter(
+        _.evidence.exists(atom => atom.motif.move.exists(EvidenceRef.sameMove(_, move)))
+      )
+    )
 
 final case class CandidateComparisonEvidence(
     comparison: CandidateComparisonFact

@@ -2,7 +2,19 @@ package lila.chessjudgment.model.judgment
 
 import chess.Color
 import lila.chessjudgment.analysis.position.PositionFactNormalizer
-import lila.chessjudgment.model.{ Fact, FactScope, PlanId, PlanSequenceSummary, TransitionType }
+import lila.chessjudgment.model.{
+  ActivePlans,
+  EvidenceAtom,
+  Fact,
+  FactScope,
+  Motif,
+  Plan,
+  PlanId,
+  PlanMatch,
+  PlanScoringResult,
+  PlanSequenceSummary,
+  TransitionType
+}
 import lila.chessjudgment.analysis.singlePosition.{
   DefenseAssessment,
   PassedPawnUrgency,
@@ -462,6 +474,75 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assert(binding.target.contains("Square:e4"), binding)
     assert(binding.mechanism.exists(_.contains("pawnbreak")), binding)
     assert(binding.consequence.exists(_.contains("referencepreservesplan")), binding)
+
+  test("plan pressure composes its root move with structural purpose and role"):
+    val root = PositionNodeRef("8/1p6/8/8/2P5/8/8/8 b - - 0 1", 1, Some(Color.Black), Some("root"))
+    val after = PositionNodeRef("8/8/8/1p6/2P5/8/8/8 w - - 0 2", 2, Some(Color.White), Some("after-played"))
+    val line = LineNodeRef("played-line", "b7b5", 1, LineNodeRole.Played)
+    val structuralRef = evidenceRef(
+      "structural-delta:played:b7b5",
+      EvidenceProducer.StructuralDeltaProducer,
+      EvidenceLayer.StructuralDelta,
+      root,
+      Some(line),
+      EvidenceScope.PlayedTransition
+    )
+    val pressureRef = evidenceRef(
+      "plan-pressure:after-played",
+      EvidenceProducer.PlanPressureProducer,
+      EvidenceLayer.PlanPressure,
+      after,
+      Some(line),
+      EvidenceScope.AfterPlayedPosition
+    )
+    val mechanismRef = evidenceRef(
+      "strategic-mechanism:plan-pressure:after-played",
+      EvidenceProducer.StrategicMechanismProducer,
+      EvidenceLayer.StrategicMechanism,
+      after,
+      Some(line),
+      EvidenceScope.AfterPlayedPosition
+    )
+    val planMatch = PlanMatch(
+      Plan.QueensideAttack(Color.Black),
+      0.8,
+      List(EvidenceAtom(Motif.PawnAdvance(chess.File.B, 7, 5, Color.Black, 0, Some("b7b5")), 0.2))
+    )
+    val transition = StructuralTransitionBinding("b7b5", TransitionEdgeRole.Played, root, after, Some(line), Color.Black)
+    val consequence = TransitionConsequence(
+      TransitionConsequenceKind.TargetPressureGain,
+      StructuralSignalPolarity.Gain,
+      4,
+      List("c4")
+    )
+    val axis = StrategicAxisDetail(StrategicAxisKind.PlanCoherence, StrategicAxisPolarity.Support, "QueensideAttack")
+    val mechanism = StrategicMechanismEvidence(
+      StrategicMechanismKind.PlanPressure,
+      List(StrategicMechanismSignal(StrategicMechanismSignalKind.PlanPressure, "QueensideAttack", pressureRef, 2, Some(axis))),
+      List(EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.PlanPressure, "QueensideAttack"))
+    )
+    val graph = TypedEvidenceGraph(
+      List(
+        EvidenceRecord(structuralRef, StructuralDeltaEvidence(transition, Nil, List(consequence))),
+        EvidenceRecord(
+          pressureRef,
+          PlanPressureEvidence(
+            PlanScoringResult(List(planMatch), 0.8, "opening"),
+            ActivePlans(planMatch, None, Nil, List(planMatch))
+          ),
+          List(structuralRef)
+        ),
+        EvidenceRecord(mechanismRef, mechanism, List(pressureRef))
+      )
+    )
+    val view = MoveJudgmentView.from(Nil, graph, Nil, Nil, Nil, None, Nil, Nil).get
+    val planDetails = view.positionPlanTechniqueFrames.flatMap(_.semanticDetails).filter(_.unit == PositionPlanTechniqueUnit.PlanOptionSet)
+    val detail = planDetails.find(_.activePlanIds.contains(PlanId.QueensideAttack)).getOrElse(fail(planDetails.toString))
+
+    assertEquals(detail.planMoveRole, Some(PlanMoveRole.Execution))
+    assertEquals(detail.structuralRouteMove, Some("b7b5"))
+    assertEquals(detail.structuralConsequenceKinds, List(TransitionConsequenceKind.TargetPressureGain))
+    assertEquals(detail.structuralPurposeSubjects, List("c4"))
 
   test("preserves concrete piece route object ownership on semantic details"):
     val root = PositionNodeRef("8/8/8/8/8/8/8/6N1 w - - 0 1", 1, Some(Color.White), Some("root"))

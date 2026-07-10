@@ -6,7 +6,7 @@ import java.security.MessageDigest
 import chess.{ Pawn, Square }
 import chess.format.Fen
 import lila.chessjudgment.analysis.singlePosition.{ ThreatDriver, ThreatKind }
-import lila.chessjudgment.model.{ ProbeAdmissionDiagnostic, ProbeRequest }
+import lila.chessjudgment.model.{ PlanId, ProbeAdmissionDiagnostic, ProbeRequest }
 import play.api.libs.json.*
 
 enum ClaimFamily:
@@ -4981,7 +4981,15 @@ object MoveMeaningClaim:
   private def planOptionRecognitionCarrierReady(claim: MoveMeaningClaim): Boolean =
     val normalizedMove = JudgmentSubjectBinding.normalizeMove(claim.moveUci).toLowerCase
     claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-      claim.role != "PreparesBreakOption" &&
+      Set(
+        "DevelopsPieceForPlan",
+        "ExecutesCurrentPlan",
+        "PreparesBreakOption",
+        "PreparesCurrentPlan",
+        "PreventsCounterplay",
+        "PivotsPlan",
+        "SupportsCurrentPlan"
+      ).contains(claim.role) &&
       claim.sourceEvidenceIds.nonEmpty &&
       claim.boardCarriers.exists(boardCarrierMove(_, normalizedMove)) &&
       claim.boardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "PlanSubject")
@@ -5352,7 +5360,7 @@ object MoveMeaningClaim:
               val breakFileIdentityCarriers =
                 claimBreakFiles.map(file => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"break-file:$file", semanticRole = Some("break_file")))
               val planPawnAdvanceCarriers =
-                planPawnAdvanceIdentityCarriers(detail, surfaceObjectSignatures, claimMove, frame.position.fen)
+                planPawnAdvanceIdentityCarriers(detail, claimMove, frame.position.fen)
               val kingPressureIdentityCarrier =
                 surfaceObjectSignatures.exists(kingPressureObjectSignature)
               val checkIdentityCarriers =
@@ -5385,14 +5393,16 @@ object MoveMeaningClaim:
                   .take(12)
               val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, claimBoardCarriers)
               val objectCarrierReady =
-                publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames) ||
-                  planPawnAdvanceCarriers.nonEmpty ||
+                (detail.unit != PositionPlanTechniqueUnit.PlanOptionSet || detail.planMoveRole.nonEmpty) &&
                   (
-                    detail.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-                      claimRole != "PreparesBreakOption" &&
-                      sourceEvidenceIds.nonEmpty &&
-                      claimBoardCarriers.exists(boardCarrierMove(_, JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase)) &&
-                      claimBoardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "PlanSubject")
+                    publicObjectCarrierReady(evidenceGraph, detail, roleCompatibleCauseFrames) ||
+                      planPawnAdvanceCarriers.nonEmpty ||
+                      (
+                        detail.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+                          sourceEvidenceIds.nonEmpty &&
+                          claimBoardCarriers.exists(boardCarrierMove(_, JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase)) &&
+                          claimBoardCarriers.exists(carrier => carrier.role == "target" && carrier.kind == "PlanSubject")
+                      )
                   )
               val publicDrawableCarrier =
                 claimBoardCarriers.exists(_.kind != "Move") ||
@@ -5856,11 +5866,10 @@ object MoveMeaningClaim:
 
   private def planPawnAdvanceIdentityCarriers(
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String],
       claimMove: String,
       positionFen: String
   ): List[MoveMeaningSurfaceBoardCarrier] =
-    if !planContinuityCurrentMovePawnAdvanceOption(detail, objectSignatures, claimMove, positionFen) then Nil
+    if !planContinuityCurrentMovePawnAdvanceOption(detail, claimMove, positionFen) then Nil
     else
       publicMoveCarrier("actor", claimMove) ::
         moveEndpoints(claimMove).toList.flatMap((_, to) => publicSquareCarrier("target", to, Some("pawn_advance_destination")))
@@ -5964,7 +5973,8 @@ object MoveMeaningClaim:
   private def publicPlanSubjectCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
     if detail.unit != PositionPlanTechniqueUnit.PlanOptionSet then Nil
     else
-      (detail.matchedPlanIds ++ detail.referencePlanIds ++ detail.candidatePlanIds)
+      (detail.activePlanIds.headOption.map(_.toString).toList ++
+        detail.matchedPlanIds ++ detail.referencePlanIds ++ detail.candidatePlanIds)
         .flatMap(_.split(",").toList)
         .map(_.trim.toLowerCase)
         .filter(_.nonEmpty)
@@ -6229,7 +6239,7 @@ object MoveMeaningClaim:
   ): Option[String] =
     val currentMoveClaim = currentMoveMeaningClaim(verdict, claimLineRole, claimMove)
     val currentMovePlanPawnAdvance =
-      currentMoveClaim && planContinuityCurrentMovePawnAdvanceOption(detail, objectSignatures, claimMove, positionFen)
+      currentMoveClaim && planContinuityCurrentMovePawnAdvanceOption(detail, claimMove, positionFen)
     val hasConcreteObject = detailHasConcreteSurfaceObject(detail) || currentMovePlanPawnAdvance
     val specificObjectAxis = detailHasSpecificObjectAxis(detail)
     val hasDetailEvidence = detailHasEvidenceLink(detail)
@@ -6422,7 +6432,7 @@ object MoveMeaningClaim:
     if currentMoveMeaningClaim(verdict, claimLineRole, claimMove) then
       val planPawnAdvanceSources =
         Option
-          .when(planContinuityCurrentMovePawnAdvanceOption(detail, objectSignatures, claimMove, positionFen))(
+          .when(planContinuityCurrentMovePawnAdvanceOption(detail, claimMove, positionFen))(
             detail.sourceEvidenceIds
           )
           .getOrElse(Nil)
@@ -6649,7 +6659,7 @@ object MoveMeaningClaim:
       currentMoveClaim: Boolean
   ): Boolean =
     val pawnAdvanceOption =
-      planContinuityCurrentMovePawnAdvanceOption(detail, objectSignatures, claimMove, positionFen)
+      planContinuityCurrentMovePawnAdvanceOption(detail, claimMove, positionFen)
     val ownsMove =
       detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) ||
         detail.defenseMove.exists(move => sameMove(move, claimMove)) ||
@@ -6658,98 +6668,22 @@ object MoveMeaningClaim:
       currentMoveClaim &&
         (currentMoveCarrierSourceOwnsClaimMove(evidenceGraph, detail, claimMove) || pawnAdvanceOption)
     val planSignal =
-      detail.axisKind.contains(StrategicAxisKind.PlanCoherence) ||
-        detail.matchedPlanIds.nonEmpty ||
-        detail.referencePlanIds.nonEmpty ||
-        detail.candidatePlanIds.nonEmpty ||
-        detail.semanticAnchorKeys.exists(anchor =>
-          anchor.startsWith("Plan:") ||
-            anchor.startsWith("PlanPressure:")
-        )
-    val concretePlanHook =
-      (
-        detail.structuralPurposeSubjects.exists(concreteSubject) &&
-          detail.structuralRouteMove.exists(move => sameMove(move, claimMove))
-      ) ||
-        planContinuityCurrentMoveBreakOption(detail, claimMove, positionFen) ||
-        planContinuityCurrentMoveDevelopmentOption(detail, claimMove) ||
-        pawnAdvanceOption
+      detail.activePlanIds.nonEmpty ||
+        detail.previousPlanId.nonEmpty ||
+        detail.planTransitionType.nonEmpty
+    val concretePlanHook = detail.planMoveRole.nonEmpty
     ownsMove && ownsCurrentMoveSource && planSignal && concretePlanHook &&
       (!currentMoveNegativeStructuralHook(detail, objectSignatures, claimMove) || pawnAdvanceOption)
 
   private def planContinuityCurrentMovePawnAdvanceOption(
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String],
       claimMove: String,
       positionFen: String
   ): Boolean =
-    val normalizedMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
-    val destination = moveEndpoints(claimMove).map(_._2)
     detail.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-      pawnMoveFromPawn(positionFen, claimMove) &&
-      objectSignatures.exists { signature =>
-        val normalizedSignature = signature.toLowerCase
-        moveTokens(List(signature)).contains(normalizedMove) &&
-          normalizedSignature.contains("pawnadvance") &&
-          destination.exists(to =>
-            normalizedSignature.contains(s"target=square:$to") ||
-              normalizedSignature.contains(s"witness=square:$to")
-          )
-      }
-
-  private def planContinuityCurrentMoveBreakOption(
-      detail: PositionPlanTechniqueSemanticDetail,
-      claimMove: String,
-      positionFen: String
-  ): Boolean =
-    planContinuityBreakOptionDetail(detail) &&
-      pawnMoveFromPawn(positionFen, claimMove) &&
-      detail.structuralRouteMove.exists(move => sameMove(move, claimMove))
-
-  private def planContinuityCurrentMoveDevelopmentOption(
-      detail: PositionPlanTechniqueSemanticDetail,
-      claimMove: String
-  ): Boolean =
-    planContinuityDevelopmentOptionDetail(detail) &&
-      detail.structuralRouteMove.exists(move => sameMove(move, claimMove))
-
-  private def planContinuityBreakOptionDetail(
-      detail: PositionPlanTechniqueSemanticDetail
-  ): Boolean =
-    detail.breakFile.exists(_.trim.nonEmpty) &&
-      planContinuityTextTokens(detail).exists(token =>
-        token.contains("pawnbreakpreparation") ||
-          token.contains("pawn-break-preparation") ||
-          token.contains("breakpreparation") ||
-          token.contains("centerbreak") ||
-          token.contains("center-break")
-      )
-
-  private def planContinuityDevelopmentOptionDetail(
-      detail: PositionPlanTechniqueSemanticDetail
-  ): Boolean =
-    detail.structuralRouteMove.nonEmpty &&
-      detail.structuralPurposeSubjects.exists(subject =>
-        val normalized = subject.toLowerCase
-        normalized.contains("bishop") ||
-          normalized.contains("knight") ||
-          normalized.contains("rook") ||
-          normalized.contains("queen")
-      )
-
-  private def planContinuityTextTokens(
-      detail: PositionPlanTechniqueSemanticDetail
-  ): List[String] =
-    (
-      detail.semanticAnchorKeys ++
-        detail.referencePlanIds ++
-        detail.candidatePlanIds ++
-        detail.matchedPlanIds ++
-        detail.planAlignmentReasonCodes ++
-        detail.structuralPurposeSubjects ++
-        detail.structuralPurposeConsequences ++
-        detail.structuralPurposeCategories
-    ).map(_.toLowerCase)
+      detail.planMoveRole.nonEmpty &&
+      detail.structuralRouteMove.exists(move => sameMove(move, claimMove)) &&
+      pawnMoveFromPawn(positionFen, claimMove)
 
   private def currentMoveNegativeStructuralHook(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -7635,6 +7569,8 @@ object MoveMeaningClaim:
       role == "MaintainsTechnique" ||
       role == "ReachesTechnique" ||
       role == "SupportsCurrentPlan" ||
+      role == "ExecutesCurrentPlan" ||
+      role == "PreparesCurrentPlan" ||
       role == "KeepsAlternativeAvailable" ||
       role == "ReferencePreservesPlan" ||
       role == "SharedCompatiblePlan" ||
@@ -8138,8 +8074,12 @@ object MoveMeaningClaim:
         case PositionPlanTechniqueUnit.TensionBreakPolicyRoute =>
           Some("PawnBreakTiming")
         case PositionPlanTechniqueUnit.PlanOptionSet =>
-          val transitionBacked = detail.sourceEvidenceIds.exists(_.contains(":plan-transition:"))
-          Option.when(!transitionBacked || detail.axisPolarity.contains(StrategicAxisPolarity.Preserve))("PlanContinuity")
+          val transitionBacked = detail.planTransitionType.nonEmpty
+          Option.when(
+            detail.planMoveRole.nonEmpty ||
+              !transitionBacked ||
+              detail.axisPolarity.contains(StrategicAxisPolarity.Preserve)
+          )("PlanContinuity")
         case PositionPlanTechniqueUnit.EndgameTechniqueRecipe =>
           Some("TechniqueConversion")
         case PositionPlanTechniqueUnit.CounterplayRace =>
@@ -8176,19 +8116,32 @@ object MoveMeaningClaim:
   ): String =
     meaningKind match
       case "PlanContinuity" =>
-        if planContinuityBreakOptionDetail(detail) then "PreparesBreakOption"
-        else if planContinuityDevelopmentOptionDetail(detail) then "DevelopsPieceForPlan"
-        else
-          detail.contrastOutcome match
-            case Some(StrategicAxisComparisonOutcome.SharedSustained) =>
-              "SharedCompatiblePlan"
-            case Some(StrategicAxisComparisonOutcome.ReferenceOnly | StrategicAxisComparisonOutcome.ReferenceStronger |
-                StrategicAxisComparisonOutcome.ReferencePreservesPlan) =>
-              "ReferencePreservesPlan"
-            case _ if detail.missingPlanIds.nonEmpty =>
-              "KeepsAlternativeAvailable"
-            case _ =>
-              "SupportsCurrentPlan"
+        detail.planMoveRole match
+          case Some(PlanMoveRole.Preparation) if detail.activePlanIds.contains(PlanId.PawnBreakPreparation) =>
+            "PreparesBreakOption"
+          case Some(PlanMoveRole.Preparation)
+              if detail.structuralConsequenceKinds.exists(kind =>
+                kind == TransitionConsequenceKind.DevelopmentLagReduced ||
+                  kind == TransitionConsequenceKind.DevelopmentPieceActivated ||
+                  kind == TransitionConsequenceKind.DevelopmentMobilityGain
+              ) =>
+            "DevelopsPieceForPlan"
+          case Some(PlanMoveRole.Preparation) => "PreparesCurrentPlan"
+          case Some(PlanMoveRole.Execution)   => "ExecutesCurrentPlan"
+          case Some(PlanMoveRole.Prevention)  => "PreventsCounterplay"
+          case Some(PlanMoveRole.Pivot)       => "PivotsPlan"
+          case Some(PlanMoveRole.Maintenance) => "SupportsCurrentPlan"
+          case None =>
+            detail.contrastOutcome match
+              case Some(StrategicAxisComparisonOutcome.SharedSustained) =>
+                "SharedCompatiblePlan"
+              case Some(StrategicAxisComparisonOutcome.ReferenceOnly | StrategicAxisComparisonOutcome.ReferenceStronger |
+                  StrategicAxisComparisonOutcome.ReferencePreservesPlan) =>
+                "ReferencePreservesPlan"
+              case _ if detail.missingPlanIds.nonEmpty =>
+                "KeepsAlternativeAvailable"
+              case _ =>
+                "SupportsCurrentPlan"
       case "PawnBreakTiming" =>
         if pawnBreakResolutionDetail(detail)
         then "ReleasesPawnTension"
