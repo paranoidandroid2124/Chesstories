@@ -2079,16 +2079,6 @@ object MoveMeaningSurface:
         semanticSurfaces.filterNot(surface =>
           routeCarrierSurface(surface) &&
             purposeOwnedPawnMoves.contains(JudgmentSubjectBinding.normalizeMove(surface.moveUci).toLowerCase)
-        ).filterNot(surface =>
-          surface.idea.code == "piece_activity" &&
-            semanticSurfaces.exists(other =>
-              other != surface &&
-                routeCarrierSurface(other) &&
-                other.subject == surface.subject &&
-                other.lineRole == surface.lineRole &&
-                other.moveUci == surface.moveUci &&
-                other.evidence.sourceIds.intersect(surface.evidence.sourceIds).nonEmpty
-            )
         )
       val sameMoveDisplayPrunedSurfaces =
         val surfacesByMove = chainSurfacesBeforeSameMovePruning.groupBy(surface => (surface.subject, surface.lineRole, surface.moveUci))
@@ -4187,7 +4177,7 @@ object MoveMeaningSurface:
       verdict == MoveChoiceVerdict.Mistake ||
       verdict == MoveChoiceVerdict.Blunder
 
-  private def ideaType(claim: MoveMeaningClaim): String =
+  private[judgment] def ideaType(claim: MoveMeaningClaim): String =
     terminalIdeaType(claim)
       .orElse(Option.when(concretePassedPawnAdvanceClaim(claim))("passed_pawn_advance"))
       .orElse(Option.when(defensiveResourceClaim(claim))("defensive_resource"))
@@ -4974,27 +4964,30 @@ object MoveMeaningClaim:
       verdict: Option[MoveJudgmentVerdictFrame],
       claims: List[MoveMeaningClaim]
   ): List[MoveMeaningClaim] =
-    claims.map { claim =>
-      if claimAllowedInPublicSurfaceProjection(verdict, claims, claim) then claim
+    val intrinsicallyEligible = claims.map { claim =>
+      if publicSurfaceProjectionLaneAllowed(claim) &&
+          !surfaceOnlyRouteWithoutPurposeProof(claim) &&
+          !badMoveSuppressesCurrentMoveSurface(verdict, claim)
+      then claim
+      else claim.copy(publicSurfaceAdmitted = false, publicProofLevel = "none", publicTargetBound = false)
+    }
+    intrinsicallyEligible.map { claim =>
+      if claim.publicSurfaceAdmitted && claimAllowedInPublicSurfaceProjection(intrinsicallyEligible, claim) then claim
       else claim.copy(publicSurfaceAdmitted = false, publicProofLevel = "none", publicTargetBound = false)
     }
 
   private def claimAllowedInPublicSurfaceProjection(
-      verdict: Option[MoveJudgmentVerdictFrame],
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
-    publicSurfaceProjectionLaneAllowed(claim) &&
-      !terminalTechniqueCoveredByTerminalResult(claims, claim) &&
-      !activityCoveredByOwnedRoute(claims, claim) &&
+    !terminalTechniqueCoveredByTerminalResult(claims, claim) &&
+      !activityCoveredByRoute(claims, claim) &&
       !planPurposeCoveredByOwnedRoute(claims, claim) &&
       !planCoveredBySpecificCurrentClaim(claims, claim) &&
       !breakFunctionCoveredByOwnedBreak(claims, claim) &&
-      !surfaceOnlyRouteWithoutPurposeProof(claim) &&
       !genericActivityOrPlanCoveredByOwnedPressure(claims, claim) &&
       !counterplayControlWithoutConcreteCarrier(claims, claim) &&
-      planContinuityCarrierAllowed(claims, claim) &&
-      !badMoveSuppressesCurrentMoveSurface(verdict, claim)
+      planContinuityCarrierAllowed(claims, claim)
 
   private def publicSurfaceProjectionLaneAllowed(claim: MoveMeaningClaim): Boolean =
     terminalOverriddenEndgameTechniqueClaim(claim) ||
@@ -5118,7 +5111,7 @@ object MoveMeaningClaim:
   private def routeIdentityKey(claim: MoveMeaningClaim): Option[(String, String, List[String])] =
     Option.when(claim.routeIdentityParts.nonEmpty)((claim.lineRole, claim.moveUci, claim.routeIdentityParts))
 
-  private def activityCoveredByOwnedRoute(
+  private def activityCoveredByRoute(
       claims: List[MoveMeaningClaim],
       claim: MoveMeaningClaim
   ): Boolean =
@@ -5129,6 +5122,17 @@ object MoveMeaningClaim:
       ) &&
       currentMoveSurfaceLane(claim) &&
       (
+        claims.exists(other =>
+          other != claim &&
+            other.publicSurfaceAdmitted &&
+            other.publicProofLevel != "none" &&
+            other.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
+            MoveMeaningSurface.ideaType(other) == "piece_route" &&
+            currentMoveSurfaceLane(other) &&
+            other.lineRole == claim.lineRole &&
+            other.moveUci == claim.moveUci &&
+            other.sourceEvidenceIds.take(6).intersect(claim.sourceEvidenceIds.take(6)).nonEmpty
+        ) ||
         claim.routeIdentityParts.nonEmpty && ownedRouteClaimWithSameIdentity(claims, claim) ||
           claim.causeEvidenceIds.nonEmpty &&
             claims.exists(other =>
