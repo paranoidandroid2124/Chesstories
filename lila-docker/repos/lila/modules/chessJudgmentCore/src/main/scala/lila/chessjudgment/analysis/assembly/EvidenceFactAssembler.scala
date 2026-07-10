@@ -9,7 +9,7 @@ import lila.chessjudgment.analysis.move.{ MoveAnalyzer, MoveMotifNormalizer }
 import lila.chessjudgment.analysis.opening.OpeningContextFactNormalizer
 import lila.chessjudgment.analysis.plan.{ PlanInteractionContext, PlanMatcher }
 import lila.chessjudgment.analysis.position.{ PositionAnalyzer, PositionFactNormalizer }
-import lila.chessjudgment.analysis.singlePosition.{ PawnPlayAssessor, PawnPlayDriver, PvLine, SinglePositionAssessor, ThreatAnalysis, ThreatDriver, ThreatPressureAssessor }
+import lila.chessjudgment.analysis.singlePosition.{ PawnPlayAssessor, PawnPlayDriver, PvLine, SinglePositionAssessment, SinglePositionAssessor, ThreatAnalysis, ThreatDriver, ThreatPressureAssessor }
 import lila.chessjudgment.analysis.strategic.StrategicFactNormalizer
 import lila.chessjudgment.analysis.structure.{
   PawnStructureAssessor,
@@ -237,13 +237,13 @@ object EvidenceFactAssembler:
   ): List[EvidenceRecord] =
     context.positions.flatMap { node =>
       (for
-        features <- node.features
+        features <- boardFactEvidence(context, node.ref).flatMap(_.positionFeatures)
         position <- Fen.read(Standard, Fen.Full(node.ref.fen))
       yield
         val side = node.ref.sideToMove.getOrElse(position.color)
         val profile = PawnStructureAssessor.assess(features, position.board)
         val pawnPlay =
-          node.assessment.flatMap { assessment =>
+          positionAssessment(context, node.ref).flatMap { assessment =>
             PawnPlayAssessor.analyze(
               features = features,
               motifs = pawnPlayMotifsForPosition(context, node.role),
@@ -275,7 +275,7 @@ object EvidenceFactAssembler:
       allocator: JudgmentProvenanceAllocator
   ): List[EvidenceRecord] =
     val beforeRecords = context.position(PositionNodeRole.Before).toList.flatMap { node =>
-      node.assessment.toList.flatMap { assessment =>
+      positionAssessment(context, node.ref).toList.flatMap { assessment =>
         node.ref.sideToMove.toList.flatMap { sideUnderPressure =>
           val threatMotifs =
             (motifsForLineRole(context, LineNodeRole.BestReference) ++
@@ -310,7 +310,7 @@ object EvidenceFactAssembler:
           node <- context.positions.find(position =>
             position.role == PositionNodeRole.AfterThreat && position.ref.fen == branch.branchFen
           ).toList
-          assessment <- node.assessment.toList
+          assessment <- positionAssessment(context, node.ref).toList
           sideUnderPressure <- node.ref.sideToMove.toList
         yield
           val threats =
@@ -341,7 +341,7 @@ object EvidenceFactAssembler:
           line <- lineForTransition(context, edge).toList
           lineFacts <- lineFactEvidence(context, line.ref).toList
           node <- context.positions.find(_.ref == edge.to).toList
-          assessment <- node.assessment.toList
+          assessment <- positionAssessment(context, node.ref).toList
           sideUnderPressure <- node.ref.sideToMove.toList
           suffixMoves = lineFacts.lineReplayContinuationMoves
           if suffixMoves.nonEmpty
@@ -869,6 +869,15 @@ object EvidenceFactAssembler:
         payload
     }
 
+  private def positionAssessment(
+      context: JudgmentAssemblyContext,
+      position: PositionNodeRef
+  ): Option[SinglePositionAssessment] =
+    context.evidenceGraph.records.collectFirst {
+      case EvidenceRecord(ref, SinglePositionEvidence(assessment), _) if ref.position == position =>
+        assessment
+    }
+
   private def lineFactEvidence(context: JudgmentAssemblyContext, line: LineNodeRef): Option[LineFactEvidence] =
     context.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, payload: LineFactEvidence, _) if record.carriesLinePayload(line, EvidenceLayer.Line) =>
@@ -942,8 +951,8 @@ object EvidenceFactAssembler:
     val root = context.position(PositionNodeRole.Before)
     root.toList.flatMap { rootNode =>
       val openingPhase =
-        rootNode.assessment.exists(_.gamePhase.isOpening) ||
-          rootNode.features.exists(_.materialPhase.phase == "opening")
+        positionAssessment(context, rootNode.ref).exists(_.gamePhase.isOpening) ||
+          boardFactEvidence(context, rootNode.ref).flatMap(_.positionFeatures).exists(_.materialPhase.phase == "opening")
       val canAssessOpening =
         openingPhase || input.opening.nonEmpty || input.openingRecognition.nonEmpty
       val signals =
@@ -977,7 +986,7 @@ object EvidenceFactAssembler:
         contextRecord.collect { case EvidenceRecord(_, payload: OpeningContextEvidence, _) => payload }
       val applicabilityRecord =
         for
-          assessment <- assessApplicability(openingContextEvidence, input.beforePly, rootNode, anchors)
+          assessment <- assessApplicability(context, openingContextEvidence, input.beforePly, rootNode.ref, anchors)
           if assessment.canCertifyOpeningClaim
         yield
           applicabilityAssessmentRecord(
@@ -1190,9 +1199,10 @@ object EvidenceFactAssembler:
     )
 
   private def assessApplicability(
+      context: JudgmentAssemblyContext,
       contextEvidence: Option[OpeningContextEvidence],
       beforePly: Int,
-      node: PositionNode,
+      position: PositionNodeRef,
       anchors: List[FeatureAnchor]
   ): Option[ApplicabilityAssessment] =
     val observedThemes = anchors.map(_.theme).distinct
@@ -1205,7 +1215,7 @@ object EvidenceFactAssembler:
       val unverified = priorThemes.filterNot(supported.contains)
       val observedOnly = observedThemes.filterNot(priorThemes.contains)
       val ambiguousRecognition = contextEvidence.flatMap(_.recognition).exists(_.candidates.drop(1).nonEmpty)
-      val applicability = featureApplicability(contextEvidence, beforePly, node, anchors, supported)
+      val applicability = featureApplicability(context, contextEvidence, beforePly, position, anchors, supported)
       val status =
         if applicability == FeatureApplicability.Contraindicated then ApplicabilityStatus.Contradicted
         else if priorThemes.isEmpty then ApplicabilityStatus.InternalOnly
@@ -1228,14 +1238,16 @@ object EvidenceFactAssembler:
     anchor.canCorroborateOpeningPrior
 
   private def featureApplicability(
+      context: JudgmentAssemblyContext,
       contextEvidence: Option[OpeningContextEvidence],
       beforePly: Int,
-      node: PositionNode,
+      position: PositionNodeRef,
       anchors: List[FeatureAnchor],
       supportedThemes: List[OpeningTheme]
   ): FeatureApplicability =
-    val phase = node.assessment.map(_.gamePhase)
-    val featurePhase = node.features.map(_.materialPhase.phase)
+    val phase = positionAssessment(context, position).map(_.gamePhase)
+    val features = boardFactEvidence(context, position).flatMap(_.positionFeatures)
+    val featurePhase = features.map(_.materialPhase.phase)
     val openingPhase = phase.exists(_.isOpening) || featurePhase.contains("opening")
     val openingWindow = beforePly <= OpeningRelevanceMaxPly
     val middlegamePhase = phase.exists(_.isMiddlegame) || featurePhase.contains("middlegame")
@@ -1253,7 +1265,7 @@ object EvidenceFactAssembler:
       )
     val denseMaterial =
       phase.exists(result => result.queensOnBoard || result.minorPiecesCount >= 4) ||
-        node.features.exists(features => features.materialPhase.whiteMaterial + features.materialPhase.blackMaterial >= 48)
+        features.exists(features => features.materialPhase.whiteMaterial + features.materialPhase.blackMaterial >= 48)
     val openingSensitiveTheme =
       anchors.exists(anchor =>
         anchor.theme == OpeningTheme.Development ||
@@ -1475,7 +1487,7 @@ object EvidenceFactAssembler:
         val whitePovEvalCp = line.map(_.whitePovEvalCp).getOrElse(input.currentWhitePovEvalCp)
         val snapshot = for
           boardProfile <- boardFactEvidence(context, node.ref).flatMap(_.boardProfile)
-          assessment <- node.assessment
+          assessment <- positionAssessment(context, node.ref)
           initialPosition <- Fen.read(Standard, Fen.Full(node.ref.fen))
         yield
           val pawnStructureRecord = pawnStructureRecordFor(context, node.ref)

@@ -258,7 +258,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     val packet =
       EvidenceBackedJudgmentPacket(
         root = root,
-        positions = List(PositionNode(PositionNodeRole.Before, root, facts = Nil, features = None, assessment = None, evidence = Nil)),
+        positions = List(PositionNode(PositionNodeRole.Before, root)),
         candidateLines = Nil,
         transitions = Nil,
         relativeAssessments = Nil,

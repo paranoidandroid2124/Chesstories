@@ -12,7 +12,7 @@ import lila.chessjudgment.analysis.singlePosition.{ SinglePositionAssessor, Sing
 import lila.chessjudgment.analysis.strategic.EndgamePatternOracle
 import lila.chessjudgment.analysis.tactical.{ BoundedReplayStep, TacticalRelationEvidence }
 import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
-import lila.chessjudgment.model.{ Fact, FactScope }
+import lila.chessjudgment.model.FactScope
 import lila.chessjudgment.model.strategic.VariationLine
 import lila.chessjudgment.model.judgment.*
 
@@ -99,11 +99,7 @@ object PositionNodeAssembler:
       val node =
         PositionNodeBuilder.fromAnalysis(
           role = role,
-          ref = ref,
-          facts = facts,
-          features = features,
-          assessment = assessmentRecord.collect { case EvidenceRecord(_, SinglePositionEvidence(assessment), _) => assessment },
-          evidence = records.map(_.ref)
+          ref = ref
         )
       PositionNodeAssembly(node, records)
     }
@@ -328,14 +324,10 @@ object TransitionEdgeAssembler:
         from = from.ref,
         moveUci = MoveReviewInputNormalizer.normalizeUci(moveUci),
         to = to.ref,
-        changedFacts = changedFacts(from.facts, to.facts),
         planTransition = None,
         evidence = transitionEvidence
       )
     TransitionEdgeAssembly(edge, List(TransitionFactNormalizer.fromMoveTransition(edge)))
-
-  private def changedFacts(before: List[Fact], after: List[Fact]): List[Fact] =
-    after.filterNot(before.contains)
 
 object NodeLineTransitionAssembler:
 

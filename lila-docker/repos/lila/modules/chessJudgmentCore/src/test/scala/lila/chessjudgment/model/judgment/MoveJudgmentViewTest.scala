@@ -666,7 +666,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       from = root,
       moveUci = "d1b3",
       to = afterPlayed,
-      changedFacts = Nil,
       planTransition = None,
       evidence = playedTransitionEvidence
     )
@@ -918,7 +917,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       from = root,
       moveUci = "f1e3",
       to = afterPlayed,
-      changedFacts = Nil,
       planTransition = None,
       evidence = playedTransitionEvidence
     )
@@ -1127,7 +1125,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       from = root,
       moveUci = "e2e4",
       to = afterPlayed,
-      changedFacts = Nil,
       planTransition = None,
       evidence = playedTransitionEvidence
     )
@@ -1413,7 +1410,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       from = root,
       moveUci = "e4e5",
       to = afterPlayed,
-      changedFacts = Nil,
       planTransition = None,
       evidence = playedTransitionEvidence
     )
@@ -2828,7 +2824,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       from = root,
       moveUci = "d2d4",
       to = afterPlayed,
-      changedFacts = Nil,
       planTransition = None,
       evidence = playedTransitionEvidence
     )
@@ -4485,7 +4480,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       from = root,
       moveUci = "h2h3",
       to = root,
-      changedFacts = Nil,
       planTransition = None,
       evidence = playedTransitionEvidence
     )
@@ -4970,7 +4964,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       from = root,
       moveUci = "d7d8q",
       to = afterPlayed,
-      changedFacts = Nil,
       planTransition = None,
       evidence = transitionEvidence
     )

@@ -47,8 +47,7 @@ object EvidenceLossDiagnostics:
     val ideaEvidenceIds = ctx.ideas.flatMap(_.evidence.map(_.id)).toSet
     val claimEvidenceIds = ctx.claims.flatMap(_.evidence.map(_.id)).toSet
     val attachedRefs =
-        ctx.positions.flatMap(_.evidence) ++
-        ctx.lines.map(_.evidence) ++
+      ctx.lines.map(_.evidence) ++
         ctx.transitions.map(_.evidence) ++
         ctx.relativeAssessments.flatMap(assessment =>
           assessment.evidence ::

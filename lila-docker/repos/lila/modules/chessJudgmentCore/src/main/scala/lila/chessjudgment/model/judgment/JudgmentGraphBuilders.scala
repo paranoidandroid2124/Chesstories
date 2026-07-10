@@ -4,27 +4,17 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
 import lila.chessjudgment.analysis.line.PrincipalVariationEvidence
-import lila.chessjudgment.analysis.position.PositionFeatures
-import lila.chessjudgment.analysis.singlePosition.SinglePositionAssessment
-import lila.chessjudgment.model.{ CollapseAnalysis, Fact, PlanSequenceSummary, ProbePurpose, ProbeRequest }
+import lila.chessjudgment.model.{ CollapseAnalysis, PlanSequenceSummary, ProbePurpose, ProbeRequest }
 import lila.chessjudgment.model.strategic.VariationLine
 
 object PositionNodeBuilder:
   def fromAnalysis(
       role: PositionNodeRole,
-      ref: PositionNodeRef,
-      facts: List[Fact],
-      features: Option[PositionFeatures],
-      assessment: Option[SinglePositionAssessment],
-      evidence: List[EvidenceRef]
+      ref: PositionNodeRef
   ): PositionNode =
     PositionNode(
       role = role,
-      ref = ref,
-      facts = facts,
-      features = features,
-      assessment = assessment,
-      evidence = evidence
+      ref = ref
     )
 
 object CandidateLineNodeBuilder:
@@ -54,7 +44,6 @@ object MoveTransitionEdgeBuilder:
       from: PositionNodeRef,
       moveUci: String,
       to: PositionNodeRef,
-      changedFacts: List[Fact],
       planTransition: Option[PlanSequenceSummary],
       evidence: EvidenceRef
   ): MoveTransitionEdge =
@@ -64,7 +53,6 @@ object MoveTransitionEdgeBuilder:
       from = from,
       moveUci = moveUci,
       to = to,
-      changedFacts = changedFacts,
       planTransition = planTransition,
       evidence = evidence
     )

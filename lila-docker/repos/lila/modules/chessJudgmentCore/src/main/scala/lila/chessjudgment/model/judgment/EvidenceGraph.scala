@@ -1432,6 +1432,8 @@ final case class BoardFactEvidence(
     anchors.flatMap(_.focusSquares).distinct
   def boardProfile: Option[BoardPositionProfile] =
     profile
+  def positionFeatures: Option[PositionFeatures] =
+    features
   def factCount: Int =
     facts.size
   def hasBoardProfile: Boolean =

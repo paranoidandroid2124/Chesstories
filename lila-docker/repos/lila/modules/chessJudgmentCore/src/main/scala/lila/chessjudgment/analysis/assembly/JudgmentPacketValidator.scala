@@ -142,8 +142,7 @@ object JudgmentPacketValidator:
       graphIds: Set[String]
   ): List[JudgmentPacketValidationIssue] =
     val attached =
-      packet.positions.flatMap(_.evidence) ++
-        packet.candidateLines.map(_.evidence) ++
+      packet.candidateLines.map(_.evidence) ++
         packet.transitions.map(_.evidence)
     missing(attached, graphIds, JudgmentPacketValidationIssueKind.MissingAttachedEvidence)
 
