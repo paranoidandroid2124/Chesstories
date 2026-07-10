@@ -679,9 +679,6 @@ object ClaimSupportCluster:
       EvidenceLayer.ThreatPressure
     )
 
-  private[chessjudgment] def causeBoundLayer(layer: EvidenceLayer): Boolean =
-    causeBoundLayers.contains(layer)
-
   private[chessjudgment] def longTermSupportExcludedLayer(layer: EvidenceLayer): Boolean =
     longTermExcludedLayers.contains(layer) ||
       StrategicMechanismEvidence.rawStrategicSourceLayer(layer)

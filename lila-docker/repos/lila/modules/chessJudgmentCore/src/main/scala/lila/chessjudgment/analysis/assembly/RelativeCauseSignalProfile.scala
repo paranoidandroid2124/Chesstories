@@ -97,8 +97,6 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
     RelativeCauseSignalProfile.passedPawnResourceRecords(referenceRecords)
   val candidatePassedPawnResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.passedPawnResourceRecords(candidateRecords)
-  val candidatePassedPawnConcession: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.passedPawnConcessionRecords(candidateRecords)
   val referenceEndgameResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.endgameResourceRecords(referenceRecords)
   val candidateEndgameResource: List[EvidenceRecord] =
@@ -1083,14 +1081,6 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         false
     }.distinctBy(_.ref.id)
 
-  private[chessjudgment] def passedPawnConcessionRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
-    records.filter {
-      case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
-        payload.hasPassedPawnConcessionSignal
-      case _ =>
-        false
-    }.distinctBy(_.ref.id)
-
   private[chessjudgment] def endgameResourceRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     strategicMechanismRecords(records)(payload =>
       payload.kind == StrategicMechanismKind.Endgame && payload.canSupportStrategicCause
@@ -1267,14 +1257,6 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       case _ =>
         false
     }
-
-  private[chessjudgment] def candidateConcreteTacticalBridgeRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
-    records.filter {
-      case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.canAnchorTacticalIdea
-      case _ =>
-        false
-    }.distinctBy(_.ref.id)
 
   private[chessjudgment] def materialSwingSupportRecords(
       referenceRecords: List[EvidenceRecord],

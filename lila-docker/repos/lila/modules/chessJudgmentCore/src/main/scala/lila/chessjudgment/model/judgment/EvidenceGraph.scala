@@ -1831,9 +1831,6 @@ final case class StrategicMechanismEvidence(
     kind == StrategicMechanismKind.PawnStructure &&
       canAnchorPawnStructureIdea &&
       hasAnySignalLabel(Set("passed-pawn-progress", "promotion-pressure-gain"))
-  def hasPassedPawnConcessionSignal: Boolean =
-    kind == StrategicMechanismKind.StrategicConcession &&
-      hasAnySignalLabel(Set("passed-pawn-concession", "promotion-pressure-concession"))
   private def hasAnySignalLabel(labels: Set[String]): Boolean =
     signals.exists(signal => labels.contains(signal.label))
   def semanticGroupingAnchors: List[EvidenceSemanticAnchor] =

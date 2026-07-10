@@ -104,12 +104,6 @@ object ClaimDeduplicator:
       }
     (passthrough ++ aggregated).sortBy(_.index)
 
-  def deduplicate(
-      decisions: List[ClaimTruthDecision],
-      graph: TypedEvidenceGraph
-  ): List[ClaimTruthDecision] =
-    deduplicateWithDiagnostics(decisions, graph).winners
-
   def deduplicateWithDiagnostics(
       decisions: List[ClaimTruthDecision],
       graph: TypedEvidenceGraph

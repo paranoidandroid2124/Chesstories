@@ -10,7 +10,6 @@ final case class MoveReviewJudgmentResult(
     quality: JudgmentQualityReport
 ):
   def isValid: Boolean = validation.isValid
-  def isQualityClean: Boolean = quality.audit.isClean
 
 object MoveReviewJudgmentOrchestrator:
 
