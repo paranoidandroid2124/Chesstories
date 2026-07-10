@@ -2360,7 +2360,7 @@ object CandidateComparisonDiagnostic:
       packet.evidenceGraph.records.filter(record =>
         transitionLayer(record.ref.layer) &&
           record.ref.position == edge.from &&
-          recordMatchesTransition(record, edge)
+          edge.matches(record)
       )
     }
 
@@ -2383,27 +2383,6 @@ object CandidateComparisonDiagnostic:
       edge.moveUci == line.rootMove &&
         line.role == edge.role.lineRole
     )
-
-  private def recordMatchesTransition(record: EvidenceRecord, edge: MoveTransitionEdge): Boolean =
-    record.payload match
-      case MoveTransitionEvidence(moveUci, from, to) =>
-        record.ref.scope == edge.role.scope &&
-          moveUci == edge.moveUci &&
-          from == edge.from &&
-          to == edge.to
-      case payload: StructuralDeltaEvidence =>
-        payload.role == edge.role &&
-          payload.moveUci == edge.moveUci &&
-          payload.from == edge.from &&
-          payload.to == edge.to
-      case _: StrategicMechanismEvidence =>
-        record.ref.scope == edge.role.scope &&
-          (
-            record.ref.line.exists(line => line.rootMove == edge.moveUci && line.role == edge.role.lineRole) ||
-              record.parents.exists(_.id == edge.evidence.id)
-          )
-      case _ =>
-        false
 
   private def endpointLayer(layer: EvidenceLayer): Boolean =
     layer match

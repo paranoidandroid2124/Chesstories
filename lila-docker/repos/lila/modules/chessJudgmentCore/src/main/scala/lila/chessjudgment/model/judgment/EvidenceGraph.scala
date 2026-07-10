@@ -4449,6 +4449,14 @@ final case class TypedEvidenceGraph(
   def recordsFor(line: LineNodeRef): List[EvidenceRecord] =
     records.filter(_.ref.line.contains(line))
 
+  def parentClosure(record: EvidenceRecord): List[EvidenceRecord] =
+    def loop(refs: List[EvidenceRef], seen: Set[String]): List[EvidenceRecord] =
+      refs.flatMap { ref =>
+        if seen.contains(ref.id) then Nil
+        else byId.get(ref.id).toList.flatMap(parent => parent :: loop(parent.parents, seen + ref.id))
+      }
+    loop(record.parents, Set.empty).distinctBy(_.ref.id)
+
   def add(record: EvidenceRecord): TypedEvidenceGraph =
     copy(records = records.filterNot(_.ref.id == record.ref.id) :+ record)
 

@@ -934,7 +934,7 @@ object RelativeAssessmentAssembler:
     val mechanismParents =
       records.collect {
         case record @ EvidenceRecord(_, payload: TacticalMechanismEvidence, _) if payload.hasConcreteProof =>
-          parentClosure(graph, record).filter(record => proofSourceLayer(record.ref.layer))
+          graph.parentClosure(record).filter(record => proofSourceLayer(record.ref.layer))
       }.flatten
     val strategicStructuralParents =
       records.collect {
@@ -953,7 +953,7 @@ object RelativeAssessmentAssembler:
     val relationLineParents =
       records.collect {
         case record @ EvidenceRecord(_, payload: RelationFactEvidence, _) if payload.hasConcreteRelationProof =>
-          parentClosure(graph, record).filter(_.ref.layer == EvidenceLayer.Line)
+          graph.parentClosure(record).filter(_.ref.layer == EvidenceLayer.Line)
       }.flatten
     (records ++ mechanismParents ++ strategicStructuralParents ++ relationLineParents).distinctBy(_.ref.id)
 
@@ -962,7 +962,7 @@ object RelativeAssessmentAssembler:
 
   private def supportClosureRecordIds(graph: TypedEvidenceGraph, records: List[EvidenceRecord]): Set[String] =
     records
-      .flatMap(record => record :: parentClosure(graph, record))
+      .flatMap(record => record :: graph.parentClosure(record))
       .map(_.ref.id)
       .toSet
 
@@ -1181,7 +1181,7 @@ object RelativeAssessmentAssembler:
   ): Boolean =
     record.payload match
       case payload: TacticalMechanismEvidence =>
-        parentClosure(graph, record).exists {
+        graph.parentClosure(record).exists {
           case EvidenceRecord(ref, motif: MoveMotifEvidence, _) =>
             motif.recordLineBound(ref) && normalizeMove(motif.moveUci) == normalizeMove(rootMove)
           case EvidenceRecord(_, line: LineFactEvidence, _) =>
@@ -1473,17 +1473,6 @@ object RelativeAssessmentAssembler:
   private def normalizeMove(raw: String): String =
     Option(raw).getOrElse("").trim.toLowerCase
 
-  private def parentClosure(graph: TypedEvidenceGraph, record: EvidenceRecord): List[EvidenceRecord] =
-    def loop(refs: List[EvidenceRef], seen: Set[String]): List[EvidenceRecord] =
-      refs.flatMap { ref =>
-        if seen.contains(ref.id) then Nil
-        else
-          graph.byId.get(ref.id).toList.flatMap { parent =>
-            parent :: loop(parent.parents, seen + ref.id)
-          }
-      }
-    loop(record.parents, Set.empty).distinctBy(_.ref.id)
-
   private def structuralConsequencesForCause(
       kind: RelativeCauseKind,
       payload: StructuralDeltaEvidence
@@ -1748,7 +1737,7 @@ object RelativeAssessmentAssembler:
       context.evidenceGraph.records.filter(record =>
         transitionLayer(record.ref.layer) &&
           record.ref.position == edge.from &&
-          recordMatchesTransition(record, edge)
+          edge.matches(record)
       )
     }
 
@@ -1771,27 +1760,6 @@ object RelativeAssessmentAssembler:
       edge.moveUci == line.rootMove &&
         line.role == edge.role.lineRole
     )
-
-  private def recordMatchesTransition(record: EvidenceRecord, edge: MoveTransitionEdge): Boolean =
-    record.payload match
-      case MoveTransitionEvidence(moveUci, from, to) =>
-        record.ref.scope == edge.role.scope &&
-          moveUci == edge.moveUci &&
-          from == edge.from &&
-          to == edge.to
-      case payload: StructuralDeltaEvidence =>
-        payload.role == edge.role &&
-          payload.moveUci == edge.moveUci &&
-          payload.from == edge.from &&
-          payload.to == edge.to
-      case _: StrategicMechanismEvidence =>
-        record.ref.scope == edge.role.scope &&
-          (
-            record.ref.line.exists(line => line.rootMove == edge.moveUci && line.role == edge.role.lineRole) ||
-              record.parents.exists(_.id == edge.evidence.id)
-          )
-      case _ =>
-        false
 
   private def endpointLayer(layer: EvidenceLayer): Boolean =
     layer match

@@ -1090,7 +1090,7 @@ object JudgmentPacketValidator:
       line: LineNodeRef,
       layer: EvidenceLayer
   ): Boolean =
-    parentClosure(graph, record).exists(parent => parent.carriesLinePayload(line, layer))
+    graph.parentClosure(record).exists(parent => parent.carriesLinePayload(line, layer))
 
   private def relativeCauseEvidenceLinesConsistent(
       cause: RelativeCauseFact,
@@ -1105,7 +1105,7 @@ object JudgmentPacketValidator:
       record: EvidenceRecord,
       cause: RelativeCauseFact
   ): Boolean =
-    val parentIds = (record.parents ++ parentClosure(graph, record).map(_.ref)).map(_.id).toSet
+    val parentIds = (record.parents ++ graph.parentClosure(record).map(_.ref)).map(_.id).toSet
     cause.supportEvidence.forall(ref => parentIds.contains(ref.id))
 
   private def relativeCauseSupportRefsCanonical(
@@ -1113,7 +1113,7 @@ object JudgmentPacketValidator:
       record: EvidenceRecord,
       cause: RelativeCauseFact
   ): Boolean =
-    val parentRefs = (record.parents ++ parentClosure(graph, record).map(_.ref))
+    val parentRefs = (record.parents ++ graph.parentClosure(record).map(_.ref))
       .map(ref => ref.id -> ref)
       .toMap
     cause.supportEvidence.forall(ref =>
@@ -1125,7 +1125,7 @@ object JudgmentPacketValidator:
       record: EvidenceRecord,
       cause: RelativeCauseFact
   ): List[EvidenceRef] =
-    val parentRefs = (record.parents ++ parentClosure(graph, record).map(_.ref))
+    val parentRefs = (record.parents ++ graph.parentClosure(record).map(_.ref))
       .map(ref => ref.id -> ref)
       .toMap
     cause.supportEvidence.flatMap(ref => parentRefs.get(ref.id)).distinctBy(_.id)
@@ -1157,7 +1157,7 @@ object JudgmentPacketValidator:
       cause: RelativeCauseFact,
       proof: RelativeCauseProof
   ): Boolean =
-    val parents = parentClosure(graph, record)
+    val parents = graph.parentClosure(record)
     val parentIds = parents.map(_.ref.id).toSet
     relativeCauseProofShapeBacked(graph, cause, proof, parentIds) &&
       proof.boardAnchorProofs.forall(proof => parents.exists(parentHasBoardAnchor(_, proof))) &&
@@ -1333,17 +1333,6 @@ object JudgmentPacketValidator:
           payload.hasConcreteRelationProof
       case _ =>
         false
-
-  private def parentClosure(graph: TypedEvidenceGraph, record: EvidenceRecord): List[EvidenceRecord] =
-    def loop(refs: List[EvidenceRef], seen: Set[String]): List[EvidenceRecord] =
-      refs.flatMap { ref =>
-        if seen.contains(ref.id) then Nil
-        else
-          graph.byId.get(ref.id).toList.flatMap { parent =>
-            parent :: loop(parent.parents, seen + ref.id)
-          }
-      }
-    loop(record.parents, Set.empty).distinctBy(_.ref.id)
 
   private def hasMatchingPrimaryComparisonParent(
       graph: TypedEvidenceGraph,
