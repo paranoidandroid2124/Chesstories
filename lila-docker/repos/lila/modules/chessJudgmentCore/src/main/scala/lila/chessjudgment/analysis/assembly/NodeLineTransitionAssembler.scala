@@ -319,7 +319,6 @@ object TransitionEdgeAssembler:
         from = from.ref,
         moveUci = MoveReviewInputNormalizer.normalizeUci(moveUci),
         to = to.ref,
-        planTransition = None,
         evidence = transitionEvidence
       )
     TransitionEdgeAssembly(edge, List(TransitionFactNormalizer.fromMoveTransition(edge)))

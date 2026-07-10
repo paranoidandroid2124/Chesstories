@@ -59,9 +59,8 @@ object EvidenceFactAssembler:
     val mechanismContext = baseContext.withEvidence(mechanismRecords)
     val strategicRecords = strategicFeatureRecords(mechanismContext, allocator)
     val strategicContext = mechanismContext.withEvidence(strategicRecords)
-    val (planRecords, planTransitions) = planPressureRecords(assembly.input, strategicContext, allocator)
-    val planContext =
-      planTransitions.foldLeft(strategicContext.withEvidence(planRecords))((ctx, edge) => ctx.withTransition(edge))
+    val planRecords = planPressureRecords(assembly.input, strategicContext, allocator)
+    val planContext = strategicContext.withEvidence(planRecords)
     val openingRecords = featureApplicabilityRecords(assembly.input, planContext, allocator)
     val openingContext = planContext.withEvidence(openingRecords)
     val strategicMechanismOutput = strategicMechanismRecords(openingContext, allocator)
@@ -1465,7 +1464,7 @@ object EvidenceFactAssembler:
       input: NormalizedMoveReviewInput,
       context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator
-  ): (List[EvidenceRecord], List[MoveTransitionEdge]) =
+  ): List[EvidenceRecord] =
     val mover = context.position(PositionNodeRole.Before).flatMap(_.ref.sideToMove).orElse(input.sideToMove)
     val snapshots = mover.toList.flatMap { side =>
       context.positions.flatMap { node =>
@@ -1560,30 +1559,23 @@ object EvidenceFactAssembler:
         before <- context.position(PositionNodeRole.Before)
         (_, plans, _, _) <- snapshots.get(before.ref)
       yield historicalPlanContinuity(input, plans.primary.plan)
-    val transitions = context.transitions.map { edge =>
-      val summary =
-        for
-          (_, previousPlans, _, _) <- snapshots.get(edge.from)
-          (transitionContext, currentPlans, _, _) <- snapshots.get(edge.to)
-          if currentPlans.primary.evidence.nonEmpty
-        yield
-          val (planContinuity, previousPlan) = continuity.getOrElse(
-            PlanContinuity(Some(previousPlans.primary.plan.id.toString), 1, edge.from.ply) -> previousPlans.primary.plan
-          )
-          TransitionAnalyzer.analyze(
-            previousPlan = previousPlan,
-            currentPlans = currentPlans,
-            continuity = planContinuity,
-            ctx = transitionContext
-          )
-      edge.copy(planTransition = summary)
-    }
-    val transitionRecords = transitions.flatMap { edge =>
+    val transitionRecords = context.transitions.flatMap { edge =>
       for
-        transition <- edge.planTransition.toList
+        (_, previousPlans, _, _) <- snapshots.get(edge.from).toList
+        (transitionContext, currentPlans, _, _) <- snapshots.get(edge.to).toList
+        if currentPlans.primary.evidence.nonEmpty
         (_, _, beforePressure, _) <- snapshots.get(edge.from).toList
         (_, _, afterPressure, _) <- snapshots.get(edge.to).toList
       yield
+        val (planContinuity, previousPlan) = continuity.getOrElse(
+          PlanContinuity(Some(previousPlans.primary.plan.id.toString), 1, edge.from.ply) -> previousPlans.primary.plan
+        )
+        val transition = TransitionAnalyzer.analyze(
+          previousPlan = previousPlan,
+          currentPlans = currentPlans,
+          continuity = planContinuity,
+          ctx = transitionContext
+        )
         TransitionFactNormalizer.fromPlanTransition(
           id = allocator.evidenceId(s"plan-transition:${allocator.key(edge.role)}:${edge.moveUci}"),
           transition = transition,
@@ -1596,7 +1588,7 @@ object EvidenceFactAssembler:
     val snapshotRecords = snapshots.values.toList.flatMap { case (_, _, pressure, alignedPawn) =>
       pressure :: alignedPawn.toList
     }
-    (snapshotRecords ++ transitionRecords, transitions)
+    snapshotRecords ++ transitionRecords
 
   private def historicalPlanContinuity(
       input: NormalizedMoveReviewInput,

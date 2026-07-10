@@ -1,13 +1,10 @@
 package lila.chessjudgment.model.judgment
 
-import lila.chessjudgment.model.PlanSequenceSummary
-
 case class MoveTransitionEdge(
     role: TransitionEdgeRole,
     from: PositionNodeRef,
     moveUci: String,
     to: PositionNodeRef,
-    planTransition: Option[PlanSequenceSummary],
     evidence: EvidenceRef
 ):
   def matches(record: EvidenceRecord): Boolean =
