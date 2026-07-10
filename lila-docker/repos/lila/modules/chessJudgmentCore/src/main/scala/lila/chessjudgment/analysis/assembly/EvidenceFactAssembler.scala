@@ -4,10 +4,12 @@ import chess.Color
 import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.analysis.evaluation.{ EvaluationPerspectivePolicy, PerspectiveMath }
+import lila.chessjudgment.analysis.line.PrincipalVariationEvidence
 import lila.chessjudgment.analysis.move.{ MoveAnalyzer, MoveMotifNormalizer }
 import lila.chessjudgment.analysis.opening.OpeningContextFactNormalizer
 import lila.chessjudgment.analysis.plan.{ PlanInteractionContext, PlanMatcher }
-import lila.chessjudgment.analysis.singlePosition.{ PawnPlayAssessor, PawnPlayDriver, PvLine, ThreatAnalysis, ThreatDriver, ThreatPressureAssessor }
+import lila.chessjudgment.analysis.position.{ PositionAnalyzer, PositionFactNormalizer }
+import lila.chessjudgment.analysis.singlePosition.{ PawnPlayAssessor, PawnPlayDriver, PvLine, SinglePositionAssessor, ThreatAnalysis, ThreatDriver, ThreatPressureAssessor }
 import lila.chessjudgment.analysis.strategic.StrategicFactNormalizer
 import lila.chessjudgment.analysis.structure.{
   PawnStructureAssessor,
@@ -20,6 +22,7 @@ import lila.chessjudgment.analysis.transition.{ TransitionAnalyzer, TransitionFa
 import lila.chessjudgment.model.{ CompatibilityAdjustment, Motif, PlanCategory }
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.strategic.PlanContinuity
+import lila.chessjudgment.model.structure.StructureId
 
 final case class EvidenceFactAssembly(
     input: NormalizedMoveReviewInput,
@@ -1539,6 +1542,11 @@ object EvidenceFactAssembler:
         snapshot.flatten
       }
     }.toMap
+    val continuity =
+      for
+        before <- context.position(PositionNodeRole.Before)
+        (_, plans, _, _) <- snapshots.get(before.ref)
+      yield historicalPlanContinuity(input, plans.primary.plan.id.toString, plans.primary.plan.color)
     val transitions = context.transitions.map { edge =>
       val summary =
         for
@@ -1549,7 +1557,9 @@ object EvidenceFactAssembler:
           TransitionAnalyzer.analyze(
             previousPlans = previousPlans,
             currentPlans = currentPlans,
-            continuity = PlanContinuity(Some(previousPlans.primary.plan.id.toString), 1, edge.from.ply),
+            continuity = continuity.getOrElse(
+              PlanContinuity(Some(previousPlans.primary.plan.id.toString), 1, edge.from.ply)
+            ),
             ctx = transitionContext
           )
       edge.copy(planTransition = summary)
@@ -1573,6 +1583,82 @@ object EvidenceFactAssembler:
       pressure :: alignedPawn.toList
     }
     (snapshotRecords ++ transitionRecords, transitions)
+
+  private def historicalPlanContinuity(
+      input: NormalizedMoveReviewInput,
+      planId: String,
+      side: Color
+  ): PlanContinuity =
+    val matching =
+      PrincipalVariationEvidence
+        .legalReplay(Standard.initialFen.value, input.movePrefixUci, 0)
+        .filter(replay => replay.lastOption.exists(step => PrincipalVariationEvidence.sameBoardState(step._2.fenAfter, input.beforeFen)))
+        .getOrElse(Nil)
+        .reverseIterator
+        .filter { case (fenBefore, _) =>
+          Fen.read(Standard, Fen.Full(fenBefore)).exists(_.color == side)
+        }
+        .filter(step => input.beforePly - (step._2.ply - 1) < 8)
+        .map { case (fenBefore, move) =>
+          (move.ply - 1, move.uci, historicalPlanId(fenBefore, move, side))
+        }
+        .takeWhile(_._3.contains(planId))
+        .toList
+    matching.lastOption match
+      case Some(entry) =>
+        val startingPly = entry._1
+        PlanContinuity(
+          Some(planId),
+          input.beforePly - startingPly + 1,
+          startingPly,
+          supportingMoves = matching.reverse.map(_._2)
+        )
+      case None =>
+        PlanContinuity(Some(planId), 1, input.beforePly)
+
+  private def historicalPlanId(
+      fenBefore: String,
+      move: PrincipalVariationEvidence.LineMoveRef,
+      side: Color
+  ): Option[String] =
+    for
+      position <- Fen.read(Standard, Fen.Full(fenBefore))
+      if position.color == side
+      features <- PositionAnalyzer.extractFeatures(fenBefore, move.ply - 1)
+      motifs <- MoveAnalyzer.tokenizePv(fenBefore, List(move.uci))
+      boardRecord = PositionFactNormalizer.fromBoardFacts(
+          id = "historical-plan",
+          facts = Nil,
+          features = Some(features),
+          position = PositionNodeRef(fenBefore, move.ply - 1, Some(side)),
+          scope = EvidenceScope.CurrentPosition
+        )
+      boardProfile <- boardRecord.payload match
+        case payload: BoardFactEvidence => payload.boardProfile
+        case _                          => None
+      assessment = SinglePositionAssessor.classify(
+        features = features,
+        multiPv = List(PvLine(List(move.uci), 0, None, 0)),
+        currentWhitePovEvalCp = 0,
+        sideToMove = side
+      )
+      structure = PawnStructureAssessor.assess(features, position.board)
+      scoring = PlanMatcher.matchPlans(
+        motifs,
+        PlanInteractionContext(
+          whitePovEvalCp = 0,
+          positionAssessment = Some(assessment),
+          isWhiteToMove = side.white,
+          positionKey = Some(fenBefore),
+          boardProfile = Some(boardProfile),
+          initialPos = Some(position),
+          structureProfile = Option.when(structure.primary != StructureId.Unknown && structure.confidence >= 0.65)(structure)
+        ),
+        side
+      )
+      active <- PlanMatcher.toActivePlans(scoring.topPlans, scoring.compatibilityEvents)
+      if active.primary.evidence.nonEmpty
+    yield active.primary.plan.id.toString
 
   private def motifsForLineRole(context: JudgmentAssemblyContext, role: LineNodeRole): List[Motif] =
     context.line(role).map(_.ref).flatMap { lineRef =>

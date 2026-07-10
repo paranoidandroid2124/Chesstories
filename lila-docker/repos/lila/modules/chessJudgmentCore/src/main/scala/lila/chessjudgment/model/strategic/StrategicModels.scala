@@ -126,10 +126,11 @@ enum PositionalTag:
 case class PlanContinuity(
   planId: Option[String],
   consecutivePlies: Int,
-  startingPly: Int
+  startingPly: Int,
+  supportingMoves: List[String] = Nil
 ):
   lazy val build_fingerprint: String =
-    s"${planId.getOrElse("")}:$consecutivePlies:$startingPly"
+    s"${planId.getOrElse("")}:$consecutivePlies:$startingPly:${supportingMoves.mkString(",")}"
 object PlanContinuity:
   import play.api.libs.json.*
   given Reads[PlanContinuity] = Reads { js =>
@@ -137,17 +138,20 @@ object PlanContinuity:
       planId <- (js \ "planId").validateOpt[String]
       consecutivePlies <- (js \ "consecutivePlies").validate[Int]
       startingPly <- (js \ "startingPly").validate[Int]
+      supportingMoves <- (js \ "supportingMoves").validateOpt[List[String]]
     yield PlanContinuity(
       planId = planId,
       consecutivePlies = consecutivePlies,
-      startingPly = startingPly
+      startingPly = startingPly,
+      supportingMoves = supportingMoves.getOrElse(Nil)
     )
   }
   given Writes[PlanContinuity] = Writes { c =>
     Json.obj(
       "planId" -> c.planId,
       "consecutivePlies" -> c.consecutivePlies,
-      "startingPly" -> c.startingPly
+      "startingPly" -> c.startingPly,
+      "supportingMoves" -> c.supportingMoves
     )
   }
 

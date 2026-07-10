@@ -216,24 +216,11 @@ object CandidateLineAssembler:
       line: NormalizedCandidateLine,
       root: PositionNodeRef
   ): Option[ReplayedLineFacts] =
-    val refs = scala.collection.mutable.ListBuffer.empty[PrincipalVariationEvidence.LineMoveRef]
-    var currentFen = root.fen
-    var currentPly = root.ply
-    val iterator = line.line.moves.iterator
-    var legal = true
-    while iterator.hasNext && legal do
-      val move = PrincipalVariationEvidence.normalizeUci(iterator.next())
-      PrincipalVariationEvidence.legalFenAfter(currentFen, move) match
-        case Some(afterFen) =>
-          currentPly += 1
-          refs += PrincipalVariationEvidence.LineMoveRef(currentPly, move, afterFen)
-          currentFen = afterFen
-        case None =>
-          legal = false
-    val replayed = refs.toList
-    val replayedMoves = replayed.map(_.uci)
-    Option
-      .when(replayed.nonEmpty)(PrincipalVariationEvidence.LineVariationRef(replayed))
+    PrincipalVariationEvidence
+      .legalReplay(root.fen, line.line.moves, root.ply)
+      .map(_.map(_._2))
+      .filter(_.nonEmpty)
+      .map(PrincipalVariationEvidence.LineVariationRef.apply)
       .flatMap(PrincipalVariationEvidence.validatedLineFromStart(root.fen, _))
       .flatMap { validated =>
         validated.first.map { first =>
@@ -245,7 +232,7 @@ object CandidateLineAssembler:
               continuation = validated.continuation,
               continuationTail = validated.moves.drop(3).take(3)
             ),
-            materialSummary = lineMaterialSummary(replayedMoves, root.fen)
+            materialSummary = lineMaterialSummary(validated.moves.map(_.uci), root.fen)
           )
         }
       }

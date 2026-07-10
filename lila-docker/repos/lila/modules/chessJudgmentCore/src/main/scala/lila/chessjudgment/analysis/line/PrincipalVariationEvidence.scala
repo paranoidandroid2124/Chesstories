@@ -114,23 +114,37 @@ private[chessjudgment] object PrincipalVariationEvidence:
       }
     }
 
+  def legalReplay(startFen: String, moves: List[String], startPly: Int): Option[List[(String, LineMoveRef)]] =
+    val accepted = scala.collection.mutable.ListBuffer.empty[(String, LineMoveRef)]
+    var fen = normalizeFen(startFen)
+    var ply = startPly
+    var legal = true
+    moves.iterator.map(normalizeUci).foreach { move =>
+      if legal then
+        legalFenAfter(fen, move) match
+          case Some(after) =>
+            ply += 1
+            accepted += fen -> LineMoveRef(ply, move, after)
+            fen = after
+          case None =>
+            legal = false
+    }
+    Option.when(legal)(accepted.toList)
+
   def normalizeUci(uci: String): String =
     Option(uci).getOrElse("").trim.toLowerCase
 
+  def sameBoardState(left: String, right: String): Boolean =
+    boardStateFen(left) == boardStateFen(right)
+
   private def replay(startFen: String, moves: List[LineMoveRef]): Option[List[LineMoveRef]] =
-    val accepted = scala.collection.mutable.ListBuffer.empty[LineMoveRef]
-    var currentFen = normalizeFen(startFen)
-    var ok = true
-    val it = moves.iterator
-    while it.hasNext && ok do
-      val move = it.next()
-      legalFenAfter(currentFen, move.uci) match
-        case Some(actualFen) if boardStateFen(actualFen) == boardStateFen(move.fenAfter) =>
-          accepted += move
-          currentFen = actualFen
-        case _ =>
-          ok = false
-    Option.when(ok)(accepted.toList)
+    legalReplay(startFen, moves.map(_.uci), moves.headOption.map(_.ply - 1).getOrElse(0))
+      .map(_.map(_._2))
+      .filter(replayed =>
+        replayed.zip(moves).forall { case (actual, expected) =>
+          actual.ply == expected.ply && sameBoardState(actual.fenAfter, expected.fenAfter)
+        }
+      )
 
   private def strictlyOrdered(moves: List[LineMoveRef]): Boolean =
     moves.sliding(2).forall {

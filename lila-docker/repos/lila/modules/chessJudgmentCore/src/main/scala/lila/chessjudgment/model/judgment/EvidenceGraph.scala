@@ -304,7 +304,10 @@ object EvidenceObjectBinding:
               target = objectOf(EvidenceObjectKind.PlanSubject, planId),
               mechanism = objectOf(EvidenceObjectKind.Mechanism, "plan-transition"),
               consequence = objectOf(EvidenceObjectKind.Consequence, transition.transitionType.toString),
-              witness = (transition.previousPlanId.toList :+ planId).flatMap(plan => objectOf(EvidenceObjectKind.PlanSubject, plan)),
+              witness = (
+                (transition.previousPlanId.toList :+ planId).flatMap(plan => objectOf(EvidenceObjectKind.PlanSubject, plan)) ++
+                  transition.continuity.toList.flatMap(_.supportingMoves).flatMap(move => objectOf(EvidenceObjectKind.Move, move))
+              ).distinctBy(_.signaturePart),
               line = record.ref.line,
               horizon = transition.continuity.map(continuity => s"${continuity.consecutivePlies}-ply")
             )
@@ -2488,7 +2491,15 @@ object StrategicMechanismEvidence:
         .exists(_.evidence.nonEmpty)
 
   def planTransitionCanSupportPlan(transition: PlanSequenceSummary): Boolean =
-    transition.primaryPlanId.nonEmpty && transition.transitionType != TransitionType.Opening
+    transition.primaryPlanId.nonEmpty &&
+      transition.transitionType != TransitionType.Opening &&
+      transition.previousPlanId.exists(previous =>
+        transition.continuity.exists(continuity =>
+          continuity.planId.contains(previous) &&
+            continuity.consecutivePlies == continuity.supportingMoves.size * 2 + 1 &&
+            continuity.consecutivePlies <= 8
+        )
+      )
 
   def pawnStructureCanAnchorPlan(payload: PawnStructureFactEvidence): Boolean =
     payload.profile.primary != StructureId.Unknown && payload.profile.confidence >= 0.65 ||
