@@ -284,6 +284,14 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         .filter(node => (node \ "subject").asOpt[String].contains("played_move"))
         .filter(node => (node \ "principal_plan_event").asOpt[play.api.libs.json.JsObject].nonEmpty)
     assertEquals(playedEventSemantics.size, 1)
+    val publicEvent = (playedEventSemantics.head \ "principal_plan_event").as[play.api.libs.json.JsObject]
+    val targetLabels = (publicEvent \ "target_labels").as[List[String]]
+    val resultSubjectLabels = (publicEvent \\ "subject_labels").flatMap(_.as[List[String]])
+    assert(targetLabels.contains("bishop on c8"), targetLabels)
+    assert(targetLabels.contains("c3"), targetLabels)
+    assert(resultSubjectLabels.contains("bishop on c8"), resultSubjectLabels)
+    assert(resultSubjectLabels.contains("c3"), resultSubjectLabels)
+    assert((targetLabels ++ resultSubjectLabels).forall(label => !label.contains(":")))
     assert((publicJson \\ "goal").exists(node => (node \ "kind").asOpt[String].nonEmpty), publicJson)
     assert((publicJson \\ "move_role").exists(_.asOpt[String].contains("Execution")), publicJson)
     assert((publicJson \\ "opponent_responses").exists(_.as[List[play.api.libs.json.JsValue]].size == 3), publicJson)

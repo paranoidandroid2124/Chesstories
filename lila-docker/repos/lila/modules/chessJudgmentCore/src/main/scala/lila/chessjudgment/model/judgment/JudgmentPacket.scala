@@ -2240,6 +2240,7 @@ object MoveMeaningSurface:
         "transition_type" -> event.transitionType.map(_.toString)
       ),
       "target" -> event.targets,
+      "target_labels" -> publicPlanEventSubjectLabels(event.targets),
       "means" -> Json.obj(
         "root_move" -> event.rootMove,
         "actor" -> Json.obj(
@@ -2266,11 +2267,32 @@ object MoveMeaningSurface:
           "kind" -> result.kind.toString,
           "polarity" -> result.polarity.toString,
           "strength" -> result.strength,
-          "subjects" -> result.subjects
+          "subjects" -> result.subjects,
+          "subject_labels" -> publicPlanEventSubjectLabels(result.subjects)
         )
       ),
       "future_causality" -> event.futureCausality.map(publicCausalPlanJson)
     )
+
+  private def publicPlanEventSubjectLabels(subjects: List[String]): List[String] =
+    subjects.flatMap(publicPlanEventSubjectLabel).distinct
+
+  private def publicPlanEventSubjectLabel(subject: String): Option[String] =
+    val normalized = subject.trim.toLowerCase
+    normalized match
+      case square if square.matches("[a-h][1-8]") => Some(square)
+      case square if square.matches("square:[a-h][1-8]") => Some(square.stripPrefix("square:"))
+      case file if file.matches("(?:file|break-file):[a-h]") => Some(s"${file.takeRight(1)}-file")
+      case pawn if pawn.matches("weak-pawn:[a-h][1-8]") => Some(s"weak pawn on ${pawn.takeRight(2)}")
+      case composite =>
+        composite.split(":").toList match
+          case piece :: square :: _
+              if Set("pawn", "knight", "bishop", "rook", "queen", "king", "piece")(piece) &&
+                square.matches("[a-h][1-8]") =>
+            Some(s"$piece on $square")
+          case _ =>
+            val label = publicPlanSubjectLabel(composite)
+            Option.when(label.nonEmpty && !label.contains(":"))(label)
 
   private def surfaceHasCarrierRole(surface: MoveMeaningSurface, role: String): Boolean =
     surface.evidence.boardCarriers.exists(_.semanticRole.exists(_.equalsIgnoreCase(role)))
