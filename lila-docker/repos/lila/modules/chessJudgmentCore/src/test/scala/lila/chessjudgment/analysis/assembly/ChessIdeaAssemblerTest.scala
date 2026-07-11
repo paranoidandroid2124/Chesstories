@@ -230,6 +230,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         claim.futureCausalProof.exists(proof => proof.futureMove == "b5b4" && proof.targetSquare == "b4")
     ).getOrElse(fail(view.moveMeaningClaims.toString))
     assertEquals(publicClaim.unit, PositionPlanTechniqueUnit.PlanOptionSet)
+    assertEquals(publicClaim.publicProofLevel, "owned_function")
     assertEquals(
       view.moveMeaningClaims.count(claim =>
         claim.lineRole == "candidate" &&
@@ -262,12 +263,16 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(publicProof.equivalentReplies, 0)
     assertEquals(publicProof.testedReplies, 3)
     assertEquals(publicClaim.positiveFunctionalProofEvidenceIds.size, 1)
-    assert(result.packet.evidenceGraph.byId(publicClaim.positiveFunctionalProofEvidenceIds.head).payload.isInstanceOf[PlanCausalEventEvidence])
+    val publicProofRecord = result.packet.evidenceGraph.byId(publicClaim.positiveFunctionalProofEvidenceIds.head)
+    assert(publicProofRecord.payload.isInstanceOf[PlanCausalEventEvidence])
+    assertEquals(publicProofRecord.ref.line.map(_.role), Some(LineNodeRole.Played))
     val causalSurfaces = MoveMeaningSurface.publicSurfaces(view).filter(_.causalPlan.nonEmpty)
-    assertEquals(causalSurfaces.size, 1)
-    assertEquals(causalSurfaces.head.priority, "main")
-    assertEquals(causalSurfaces.head.principalPlanEvent, Some(principalEvent))
-    assert(causalSurfaces.exists(_.causalPlan.exists(plan =>
+    val playedCausalSurfaces = causalSurfaces.filter(_.subject == "played_move")
+    assertEquals(playedCausalSurfaces.size, 1, causalSurfaces)
+    assert(causalSurfaces.filter(_.lineRole == "reference").forall(_.subject == "reference_move"), causalSurfaces)
+    assertEquals(playedCausalSurfaces.head.priority, "main")
+    assertEquals(playedCausalSurfaces.head.principalPlanEvent, Some(principalEvent))
+    assert(playedCausalSurfaces.exists(_.causalPlan.exists(plan =>
       plan.futureMove == "b5b4" &&
         plan.robustness == PlanCausalRobustness.Robust &&
         plan.exactReplies == 3 &&

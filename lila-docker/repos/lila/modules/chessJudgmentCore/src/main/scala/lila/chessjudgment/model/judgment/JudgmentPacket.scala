@@ -2355,11 +2355,11 @@ object MoveMeaningSurface:
 
   private def publicIdeaChainProofSortRank(level: String): Int =
     level match
-      case "terminal_proof" => 0
-      case "owned_cause"    => 1
-      case "cause_linked"   => 2
-      case "technique"      => 3
-      case _                => 4
+      case "terminal_proof"                 => 0
+      case "owned_function" | "owned_cause" => 1
+      case "cause_linked"                    => 2
+      case "technique"                       => 3
+      case _                                 => 4
 
   private def publicIdeaChainIdeaRank(surface: MoveMeaningSurface): Int =
     surface.idea.code match
@@ -5227,7 +5227,7 @@ object MoveMeaningClaim:
         proofRelationDetails = mergedProofRelationDetails,
         proofThreatDrivers = mergedProofThreatDrivers,
         principalPlanId = best.principalPlanId.orElse(list.flatMap(_.principalPlanId).headOption),
-        principalPlanEvent = best.principalPlanEvent.orElse(list.flatMap(_.principalPlanEvent).headOption),
+        principalPlanEvent = best.principalPlanEvent,
         publicSurfaceAdmitted = mergedPublicSurfaceAdmitted,
         publicProofLevel =
           if !mergedPublicSurfaceAdmitted then "none"
@@ -6408,7 +6408,7 @@ object MoveMeaningClaim:
     lazy val ownedFunctionalProof =
       currentMoveClaim &&
         currentMoveFunctionalProof &&
-        positiveFunctionalProofReady(evidenceGraph, detail, objectSignatures, claimMove)
+        positiveFunctionalProofReady(evidenceGraph, detail, claimMove)
     lazy val currentMoveSurfaceProof =
       directCurrentMoveCarrier &&
         currentMoveSurfaceReady(evidenceGraph, meaningKind, detail, objectSignatures, claimMove, positionFen, currentMoveClaim)
@@ -6492,54 +6492,26 @@ object MoveMeaningClaim:
   private def positiveFunctionalProofReady(
       evidenceGraph: TypedEvidenceGraph,
       detail: PositionPlanTechniqueSemanticDetail,
-      objectSignatures: List[String],
       claimMove: String
   ): Boolean =
     val proofRecords = detail.positiveFunctionalProofEvidenceIds.flatMap(evidenceGraph.byId.get)
-    val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
-    val signatureOwnsEvent =
-      detail.principalPlanId.exists(planId =>
-        objectSignatures.exists(signature =>
-          EvidenceObjectBinding
-            .signatureValues(List(signature), "target", "PlanSubject")
-            .exists(_.equalsIgnoreCase(planId.toString)) &&
-            (
-              EvidenceObjectBinding.signatureTokens(List(signature), "actor=Move:") ++
-                EvidenceObjectBinding.signatureTokens(List(signature), "witness=Move:")
-            ).exists(token =>
-              JudgmentSubjectBinding
-                .normalizeMove(token.drop(token.indexOf("Move:") + "Move:".length))
-                .toLowerCase == normalizedClaimMove
-            ) &&
-            EvidenceObjectBinding
-              .signatureTokens(List(signature), "target=")
-              .exists(EvidenceObjectBinding.concreteTargetToken)
-          )
-      )
-    val futureLineTargetClaimed = objectSignatures.exists(signature =>
-      EvidenceObjectBinding.signatureParts(signature).exists(_.startsWith("horizon=ply:"))
-    )
     proofRecords match
       case List(EvidenceRecord(ref, event: PlanCausalEventEvidence, _)) =>
         val eventBindings = EvidenceObjectBinding.fromEvidenceRefs(evidenceGraph, List(ref))
-        val directTargetReady = eventBindings.exists(_.target.exists(EvidenceObjectBinding.specificSurfaceTargetObject))
-        val futureTargetReady = event.futureRealization.exists(realization =>
-          event.futurePublicProofReady &&
-            objectSignatures.exists(signature =>
-              EvidenceObjectBinding
-                .signatureValues(List(signature), "witness", "Move")
-                .exists(move => EvidenceRef.sameMove(move, realization.trajectory.futureStep.moveUci)) &&
-                EvidenceObjectBinding
-                  .signatureValues(List(signature), "target", "Square")
-                  .contains(realization.trajectory.futureTo.key) &&
-                EvidenceObjectBinding.signatureParts(signature).contains(s"horizon=ply:${realization.trajectory.plyOffset}")
-            )
+        val eventOwnsClaim = eventBindings.exists(binding =>
+          binding.line.contains(event.rootLine) &&
+            binding.target.exists(obj =>
+              obj.kind == EvidenceObjectKind.PlanSubject && obj.key.equalsIgnoreCase(event.planId.toString)
+            ) &&
+            (binding.actor ++ binding.witness).exists(obj =>
+              obj.kind == EvidenceObjectKind.Move && EvidenceRef.sameMove(obj.key, claimMove)
+            ) &&
+            binding.target.exists(EvidenceObjectBinding.specificSurfaceTargetObject)
         )
         ref.line.contains(event.rootLine) &&
           detail.principalPlanId.contains(event.planId) &&
-          EvidenceRef.sameMove(event.rootMove, normalizedClaimMove) &&
-          signatureOwnsEvent &&
-          (if futureLineTargetClaimed then futureTargetReady else directTargetReady)
+          EvidenceRef.sameMove(event.rootMove, claimMove) &&
+          eventOwnsClaim
       case _ =>
         false
 
@@ -8239,6 +8211,11 @@ object MoveMeaningClaim:
       verdict: MoveJudgmentVerdictFrame,
       linkedCauseFrames: List[MoveJudgmentCauseFrame]
   ): List[String] =
+    def directSourceLineRole(line: LineNodeRef): String =
+      if line.role == LineNodeRole.Played then "candidate"
+      else if line.role == LineNodeRole.BestReference then "reference"
+      else "contrast"
+
     val terminalSourceLine =
       Option.when(detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind))(
         detail.sourceEvidenceIds.flatMap(id => evidenceGraph.byId.get(id).flatMap(_.ref.line)).distinct
@@ -8246,14 +8223,23 @@ object MoveMeaningClaim:
     val directTerminalLineRole =
       terminalSourceLine
         .filter(line => line.role != LineNodeRole.Threat || detail.sourceEvidenceIds.toSet == frame.evidenceIds.toSet)
-        .map(line =>
-          if line.role == LineNodeRole.Played then "candidate"
-          else if line.role == LineNodeRole.BestReference then "reference"
-          else "contrast"
+        .map(directSourceLineRole)
+    val functionalSourceLine =
+      detail.positiveFunctionalProofEvidenceIds
+        .flatMap(id =>
+          evidenceGraph.byId.get(id).flatMap {
+            case EvidenceRecord(ref, _: PlanCausalEventEvidence, _) => ref.line
+            case _                                                  => None
+          }
         )
+        .distinct match
+        case line :: Nil => Some(line)
+        case _           => None
+    val directFunctionalLineRole = functionalSourceLine.map(directSourceLineRole)
     val graphRoles =
       linkedCauseFrames.flatMap(frame => causeFrameLineRole(frame, verdict)).distinct
     if directTerminalLineRole.nonEmpty then directTerminalLineRole.toList
+    else if directFunctionalLineRole.nonEmpty then directFunctionalLineRole.toList
     else if graphRoles.nonEmpty then graphRoles
     else if sameMove(verdict.candidateLine.rootMove, verdict.referenceLine.rootMove) &&
         (frame.line.contains(verdict.candidateLine) || frame.line.contains(verdict.referenceLine))
