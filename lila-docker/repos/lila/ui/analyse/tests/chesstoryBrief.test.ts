@@ -1,9 +1,6 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  chesstoryBriefSections,
-  type ChesstoryMoveMeaningPayload,
-} from '../src/chesstoryBrief';
+import { chesstoryBriefSections, type ChesstoryMoveMeaningPayload } from '../src/chesstoryBrief';
 
 describe('chesstory brief scaffold', () => {
   test('keeps the panel order stable while waiting for graph-approved payload', () => {
@@ -63,7 +60,9 @@ describe('chesstory brief scaffold', () => {
             { role: 'attacker', kind: 'Square', value: 'g4' },
           ],
           pv: ['c2c3', 'e8g8'],
-          consequence_carriers: [{ role: 'target', kind: 'PlanSubject', value: 'break-file:e', label: 'e-file break' }],
+          consequence_carriers: [
+            { role: 'target', kind: 'PlanSubject', value: 'break-file:e', label: 'e-file break' },
+          ],
           terminal_consequences: [],
           technique: [],
           player_facing_reason_allowed: true,
@@ -84,5 +83,105 @@ describe('chesstory brief scaffold', () => {
     assert.match(text, /c2-c3/);
     assert.match(text, /owned cause/);
     assert.doesNotMatch(text, /This move handles|The position is asking|The comparison turns on/);
+  });
+
+  test('renders the owned principal plan event as one causal commentary spine', () => {
+    const payload: ChesstoryMoveMeaningPayload = {
+      verdict: { move_quality: 'good', played_move: 'b7b5', reference_move: 'b7b5' },
+      idea_chains: [
+        {
+          key: 'current-move-chain',
+          current_move: 'b7b5',
+          reference_move: 'b7b5',
+          move_quality: 'good',
+          subject: 'played_move',
+          move_semantics: [
+            {
+              subject: 'played_move',
+              move_uci: 'b7b5',
+              idea: { code: 'long_diagonal_pressure', label: 'opens bishop diagonal from c8' },
+              priority: 'supporting',
+            },
+            {
+              subject: 'played_move',
+              move_uci: 'b7b5',
+              idea: { code: 'plan_continuity', label: 'continues the queenside plan' },
+              priority: 'main',
+              principal_plan_event: {
+                goal: { theme: 'flank_infrastructure', kind: 'hook_creation' },
+                state: { move_role: 'Execution' },
+                means: {
+                  root_move: 'b7b5',
+                  actor: { piece: 'pawn', from: 'b7', to: 'b5' },
+                  development_choices: [],
+                  future_move: 'b5b4',
+                },
+                opponent_responses: [
+                  { move: 'b2b4', outcome: 'Refuted' },
+                  {
+                    move: 'a2a3',
+                    outcome: 'Realized',
+                    realization_move: 'b5b4',
+                    realization_match: 'ExactMove',
+                  },
+                  {
+                    move: 'f4e3',
+                    outcome: 'Realized',
+                    realization_move: 'b5b4',
+                    realization_match: 'ExactMove',
+                  },
+                ],
+                results: [
+                  { stage: 'direct', kind: 'MobilityGain', subjects: [] },
+                  {
+                    stage: 'direct',
+                    kind: 'LineUnlockGain',
+                    subjects: ['bishop:c8:line-unlock:by:b7b5:mobility+2'],
+                    subject_labels: ['bishop on c8'],
+                  },
+                  {
+                    stage: 'future',
+                    kind: 'TargetPressureGain',
+                    subjects: ['c3'],
+                    subject_labels: ['c3'],
+                  },
+                ],
+                future_causality: {
+                  future_move: 'b5b4',
+                  target_square: 'b4',
+                  ply_offset: 8,
+                  robustness: 'Conditional',
+                  realized_replies: 2,
+                  exact_replies: 2,
+                  tested_replies: 3,
+                },
+              },
+            },
+          ],
+          proof_levels: ['surface_evidence', 'owned_function'],
+          carriers: [{ role: 'actor', kind: 'Move', value: 'b7b5', from: 'b7', to: 'b5' }],
+          purpose_carriers: [{ role: 'target', kind: 'File', value: 'b' }],
+          pv: ['b7b5', 'b2b4', 'a5b4', 'b5b4'],
+          consequence_carriers: [{ role: 'target', kind: 'Square', value: 'b4' }],
+          terminal_consequences: [],
+          technique: [],
+          player_facing_reason_allowed: true,
+        },
+      ],
+    };
+
+    const sections = chesstoryBriefSections(payload);
+    const text = JSON.stringify(sections);
+
+    assert.equal(sections[0].title, 'Main plan event');
+    assert.match(sections[0].body, /b7-b5 is the execution step for hook creation \(flank infrastructure\)/);
+    assert.match(sections[1].body, /pawn b7-b5.*b5-b4.*b4/);
+    assert.match(sections[2].body, /line unlock gain for bishop on c8/);
+    assert.match(sections[2].body, /target pressure gain for c3/);
+    assert.match(sections[3].body, /b2-b4: continuation refuted/);
+    assert.match(sections[3].body, /a2-a3: b5-b4 realized \(exact move\)/);
+    assert.match(JSON.stringify(sections[3].items), /Main line: b7-b5 b2-b4 a5-b4 b5-b4/);
+    assert.match(sections[4].body, /Realized replies: 2 of 3/);
+    assert.doesNotMatch(text, /bishop:c8:line-unlock|principal_plan_id|QueensideAttack/);
   });
 });
