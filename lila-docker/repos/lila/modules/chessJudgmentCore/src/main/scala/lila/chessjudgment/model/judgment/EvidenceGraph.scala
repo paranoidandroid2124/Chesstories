@@ -2953,6 +2953,59 @@ final case class LineReplayStep(
     fenAfter: String
 )
 
+final case class LineObjectTrajectory(
+    rootStep: LineReplayStep,
+    futureStep: LineReplayStep,
+    pieceRole: EvidencePieceRole,
+    color: Color,
+    rootFrom: EvidenceSquare,
+    rootTo: EvidenceSquare,
+    futureFrom: EvidenceSquare,
+    futureTo: EvidenceSquare,
+    plyOffset: Int
+)
+
+object LineObjectTrajectory:
+  def find(
+      rootStep: LineReplayStep,
+      continuation: List[LineReplayStep],
+      maxPlyOffset: Int = 8
+  ): Option[LineObjectTrajectory] =
+    val rootMove = EvidenceRef.normalizeMove(rootStep.moveUci)
+    for
+      rootFrom <- Square.fromKey(rootMove.take(2))
+      rootTo <- Square.fromKey(rootMove.slice(2, 4))
+      before <- _root_.chess.format.Fen.read(
+        _root_.chess.variant.Standard,
+        _root_.chess.format.Fen.Full(rootStep.fenBefore)
+      )
+      piece <- before.board.pieceAt(rootFrom)
+      if _root_.chess.format.Fen
+        .read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(rootStep.fenAfter))
+        .exists(_.board.pieceAt(rootTo).contains(piece))
+      (futureStep, index) <- continuation.zipWithIndex
+        .take(maxPlyOffset.max(0))
+        .takeWhile { case (step, _) =>
+          _root_.chess.format.Fen
+            .read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(step.fenBefore))
+            .exists(_.board.pieceAt(rootTo).contains(piece))
+        }
+        .find { case (step, _) =>
+          Square.fromKey(EvidenceRef.normalizeMove(step.moveUci).take(2)).contains(rootTo)
+        }
+      futureTo <- Square.fromKey(EvidenceRef.normalizeMove(futureStep.moveUci).slice(2, 4))
+    yield LineObjectTrajectory(
+      rootStep = rootStep,
+      futureStep = futureStep,
+      pieceRole = EvidencePieceRole(piece.role.toString),
+      color = piece.color,
+      rootFrom = EvidenceSquare(rootFrom.key),
+      rootTo = EvidenceSquare(rootTo.key),
+      futureFrom = EvidenceSquare(rootTo.key),
+      futureTo = EvidenceSquare(futureTo.key),
+      plyOffset = index + 1
+    )
+
 enum LineEndgameTechniqueHorizonStatus:
   case Active
   case Transitioned
@@ -3298,43 +3351,29 @@ final case class LineFactEvidence(
     )
   def lineReplayCount: Int =
     replay.size
+  def futureRootObjectMove(maxPlyOffset: Int = 8): Option[LineObjectTrajectory] =
+    if maxPlyOffset == 8 then defaultFutureRootObjectMove
+    else findFutureRootObjectMove(maxPlyOffset)
+
   def futureRootPawnAdvance(maxPlyOffset: Int = 8): Option[(LineReplayStep, Int)] =
-    if maxPlyOffset == 8 then defaultFutureRootPawnAdvance
-    else findFutureRootPawnAdvance(maxPlyOffset)
+    futureRootObjectMove(maxPlyOffset).collect {
+      case trajectory
+          if trajectory.pieceRole.name.equalsIgnoreCase("pawn") &&
+            sameFileForwardAdvance(trajectory.rootFrom, trajectory.rootTo, trajectory.color) &&
+            sameFileForwardAdvance(trajectory.futureFrom, trajectory.futureTo, trajectory.color) =>
+        trajectory.futureStep -> trajectory.plyOffset
+    }
 
   // ponytail: cache the bounded carrier scan on the existing line payload; widen only with pressure evidence.
-  private lazy val defaultFutureRootPawnAdvance: Option[(LineReplayStep, Int)] =
-    findFutureRootPawnAdvance(8)
+  private lazy val defaultFutureRootObjectMove: Option[LineObjectTrajectory] =
+    findFutureRootObjectMove(8)
 
-  private def findFutureRootPawnAdvance(maxPlyOffset: Int): Option[(LineReplayStep, Int)] =
+  private def findFutureRootObjectMove(maxPlyOffset: Int): Option[LineObjectTrajectory] =
     for
       rootStep <- replay.headOption
       if rootMove.exists(EvidenceRef.sameMove(_, rootStep.moveUci))
-      rootFrom <- Square.fromKey(normalizeUci(rootStep.moveUci).take(2))
-      rootTo <- Square.fromKey(normalizeUci(rootStep.moveUci).slice(2, 4))
-      rootPosition <- _root_.chess.format.Fen.read(
-        _root_.chess.variant.Standard,
-        _root_.chess.format.Fen.Full(rootStep.fenBefore)
-      )
-      rootPawn <- rootPosition.board.pieceAt(rootFrom)
-      if rootPawn.role == Pawn && sameFileForwardAdvance(rootFrom, rootTo, rootPawn.color)
-      if _root_.chess.format.Fen
-        .read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(rootStep.fenAfter))
-        .exists(_.board.pieceAt(rootTo).contains(rootPawn))
-      continuation <- replay.zipWithIndex
-        .drop(1)
-        .take(maxPlyOffset.max(0))
-        .takeWhile { case (step, _) =>
-          _root_.chess.format.Fen
-            .read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(step.fenBefore))
-            .exists(_.board.pieceAt(rootTo).contains(rootPawn))
-        }
-        .find { case (step, _) =>
-          val move = normalizeUci(step.moveUci)
-          Square.fromKey(move.take(2)).contains(rootTo) &&
-          Square.fromKey(move.slice(2, 4)).exists(sameFileForwardAdvance(rootTo, _, rootPawn.color))
-        }
-    yield continuation
+      trajectory <- LineObjectTrajectory.find(rootStep, replay.drop(1), maxPlyOffset)
+    yield trajectory
   def hasLineReplay: Boolean =
     replay.nonEmpty
   def lineEventsOf(kind: LineEventKind): List[LineMoveEvent] =
@@ -3455,9 +3494,11 @@ final case class LineFactEvidence(
   private def normalizeUci(raw: String): String =
     Option(raw).getOrElse("").trim.toLowerCase
 
-  private def sameFileForwardAdvance(from: Square, to: Square, color: Color): Boolean =
-    from.file == to.file &&
-      (if color.white then to.rank.value > from.rank.value else to.rank.value < from.rank.value)
+  private def sameFileForwardAdvance(from: EvidenceSquare, to: EvidenceSquare, color: Color): Boolean =
+    Square.fromKey(from.key).zip(Square.fromKey(to.key)).exists { case (fromSquare, toSquare) =>
+      fromSquare.file == toSquare.file &&
+        (if color.white then toSquare.rank.value > fromSquare.rank.value else toSquare.rank.value < fromSquare.rank.value)
+    }
   def materialOutcomeProfile: LineMaterialOutcomeProfile =
     val consequenceGainSignals =
       consequences.collect {

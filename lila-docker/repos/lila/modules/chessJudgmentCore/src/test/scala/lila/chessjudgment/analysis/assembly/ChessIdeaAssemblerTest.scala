@@ -81,6 +81,37 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       proofRecords.collectFirst { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload.futureRootPawnAdvance() }.flatten,
       None
     )
+    assertEquals(
+      proofRecords.collectFirst { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload.futureRootObjectMove() }.flatten,
+      None
+    )
+
+  test("line trajectory preserves the moved knight across future plies"):
+    val graph = EvidenceFactAssembler
+      .assemble(
+        RawMoveReviewInput(
+          fen = chess.variant.Standard.initialFen.value,
+          playedMoveUci = "g1f3",
+          variations = List(VariationLine(List("g1f3", "g8f6", "f3e5"), scoreCp = 0, depth = 12)),
+          currentEvalCp = Some(0),
+          ply = Some(1)
+        )
+      )
+      .getOrElse(fail("expected assembled evidence graph"))
+      .context
+      .evidenceGraph
+    val trajectory = graph.records.collectFirst {
+      case EvidenceRecord(ref, payload: LineFactEvidence, _)
+          if ref.line.exists(_.role == LineNodeRole.Played) =>
+        payload.futureRootObjectMove()
+    }.flatten.getOrElse(fail("expected future knight trajectory"))
+
+    assertEquals(trajectory.rootStep.moveUci, "g1f3")
+    assertEquals(trajectory.futureStep.moveUci, "f3e5")
+    assertEquals(trajectory.pieceRole.name.toLowerCase, "knight")
+    assertEquals(trajectory.rootFrom.key -> trajectory.rootTo.key, "g1" -> "f3")
+    assertEquals(trajectory.futureFrom.key -> trajectory.futureTo.key, "f3" -> "e5")
+    assertEquals(trajectory.plyOffset, 2)
 
   test("Doknjas b5 plan carries its later b4 realization without another analysis pass"):
     val result = MoveReviewJudgmentOrchestrator
