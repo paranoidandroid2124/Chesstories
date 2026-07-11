@@ -310,17 +310,10 @@ object PositionPlanTechniqueProjection:
           .map(_.stableKey)
           .distinct
           .sorted
-      val candidateRelativeCauseEvidenceIds =
-        relativeCauseEvidenceIdsFor(
-          graph,
-          evidenceIds.toSet,
-          frameLine = payload.line.orElse(ref.line)
-        )
       val semanticDetails =
         positionPlanTechniqueEnrichedDetails(
           structuralDeltaPlanTechniqueDetails(payload, anchors, evidenceIds, structureContextSourceIds, structureContextAnchorKeys),
-          graph,
-          (evidenceIds ++ candidateRelativeCauseEvidenceIds ++ structureContextSourceIds).distinct.sorted
+          graph
         )
       val relativeCauseEvidenceIds = semanticDetails.flatMap(_.causeEvidenceIds).distinct.sorted
       val linkedEvidenceIds = (evidenceIds ++ relativeCauseEvidenceIds).toSet
@@ -461,18 +454,10 @@ object PositionPlanTechniqueProjection:
       val units = positionPlanTechniqueUnits(payload)
       val objectBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, refs)
       val evidenceIds = refs.map(_.id).distinct.sorted
-      val candidateRelativeCauseEvidenceIds =
-        relativeCauseEvidenceIdsFor(
-          graph,
-          evidenceIds.toSet,
-          frameLine = ref.line,
-          axisKeys = payload.axisDetails.map(_.stableKey).toSet
-        )
       val semanticDetails =
         positionPlanTechniqueEnrichedDetails(
           mechanismPlanTechniqueDetails(payload, units, anchors, graph, refs),
-          graph,
-          (evidenceIds ++ candidateRelativeCauseEvidenceIds).distinct.sorted
+          graph
         )
       val relativeCauseEvidenceIds = semanticDetails.flatMap(_.causeEvidenceIds).distinct.sorted
       val linkedEvidenceIds = (evidenceIds ++ relativeCauseEvidenceIds).toSet
@@ -526,21 +511,10 @@ object PositionPlanTechniqueProjection:
           .sortBy(_.toString)
       val objectBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, refs)
       val evidenceIds = refs.map(_.id).distinct.sorted
-      val candidateRelativeCauseEvidenceIds =
-        relativeCauseEvidenceIdsFor(
-          graph,
-          evidenceIds.toSet,
-          comparisonKind = Some(payload.comparisonKind),
-          referenceLine = Some(payload.referenceLine),
-          candidateLine = Some(payload.candidateLine),
-          frameLine = Some(payload.candidateLine),
-          axisKeys = payload.axisKeys.toSet
-        )
       val semanticDetails =
         positionPlanTechniqueEnrichedDetails(
           contrastPlanTechniqueDetails(payload, anchors, graph, refs),
-          graph,
-          (evidenceIds ++ candidateRelativeCauseEvidenceIds).distinct.sorted
+          graph
         )
       val relativeCauseEvidenceIds = semanticDetails.flatMap(_.causeEvidenceIds).distinct.sorted
       val linkedEvidenceIds = (evidenceIds ++ relativeCauseEvidenceIds).toSet
@@ -613,8 +587,7 @@ object PositionPlanTechniqueProjection:
         semanticDetails = positionPlanTechniqueEnrichedDetails(
           threatEpisodePlanTechniqueDetails(payload, units, enrichmentSourceIds)
             .map(_.withResourceContest(resourceContest)),
-          graph,
-          evidenceIds
+          graph
         ),
         evidenceIds = evidenceIds,
         mechanismEvidenceIds = Nil,
@@ -644,8 +617,7 @@ object PositionPlanTechniqueProjection:
       val semanticDetails =
         positionPlanTechniqueEnrichedDetails(
           tacticalCausePlanTechniqueDetails(cause, graph, evidenceIds),
-          graph,
-          evidenceIds
+          graph
         )
       val frameUnits = semanticDetails.map(_.unit).distinct.sortBy(_.toString)
       Option.when(semanticDetails.nonEmpty) {
@@ -869,8 +841,7 @@ object PositionPlanTechniqueProjection:
         objectBindings = positionPlanTechniqueObjectBindings(objectBindings),
         semanticDetails = positionPlanTechniqueEnrichedDetails(
           endgameTechniquePlanDetails(anchors, evidenceIds),
-          graph,
-          (evidenceIds ++ relativeCauseEvidenceIds).distinct.sorted
+          graph
         ),
         evidenceIds = evidenceIds,
         mechanismEvidenceIds = Nil,
@@ -937,8 +908,7 @@ object PositionPlanTechniqueProjection:
           lineEndgameTechniquePlanDetails(horizons, evidenceIds) ++
             lineTerminalProofPlanDetails(terminalConsequences, evidenceIds) ++
             castlingContinuationDetails,
-          graph,
-          (evidenceIds ++ relativeCauseEvidenceIds).distinct.sorted
+          graph
         ),
         evidenceIds = evidenceIds,
         mechanismEvidenceIds = Nil,
@@ -1188,17 +1158,16 @@ object PositionPlanTechniqueProjection:
 
   private def positionPlanTechniqueEnrichedDetails(
       details: List[PositionPlanTechniqueSemanticDetail],
-      graph: TypedEvidenceGraph,
-      fallbackEvidenceIds: List[String]
+      graph: TypedEvidenceGraph
   ): List[PositionPlanTechniqueSemanticDetail] =
     val rawDetails =
       (
         details ++
-          details.flatMap(positionPlanTechniqueMaterialCompensationDetails(_, graph, fallbackEvidenceIds))
+          details.flatMap(positionPlanTechniqueMaterialCompensationDetails(_, graph))
       ).distinctBy(detail => (detail.unit, detail.axisKey, detail.label, detail.terminalConsequenceKinds.mkString(","), detail.sourceEvidenceIds.mkString(",")))
     rawDetails.map { detail =>
       val taggedDetail = positionPlanTechniqueWithStructuralMotifs(detail)
-      val causeLinkage = positionPlanTechniqueDetailCauseLinkage(taggedDetail, graph, fallbackEvidenceIds)
+      val causeLinkage = positionPlanTechniqueDetailCauseLinkage(taggedDetail, graph)
       taggedDetail.copy(
         principalPlanId = taggedDetail.principalPlanId.orElse(causeLinkage.positiveFunctionalPlanId),
         causeEvidenceIds = causeLinkage.causeEvidenceIds,
@@ -1220,8 +1189,7 @@ object PositionPlanTechniqueProjection:
 
   private def positionPlanTechniqueMaterialCompensationDetails(
       detail: PositionPlanTechniqueSemanticDetail,
-      graph: TypedEvidenceGraph,
-      fallbackEvidenceIds: List[String]
+      graph: TypedEvidenceGraph
   ): List[PositionPlanTechniqueSemanticDetail] =
     if detail.unit == PositionPlanTechniqueUnit.CompensationSource ||
       !positionPlanTechniqueConcreteCompensationCarrier(detail)
@@ -1233,10 +1201,8 @@ object PositionPlanTechniqueProjection:
             detail.referenceEvidenceIds ++
             detail.candidateEvidenceIds
         ).distinct.sorted
-      val evidenceIds =
-        if localEvidenceIds.nonEmpty then localEvidenceIds else fallbackEvidenceIds.distinct.sorted
       val sacrificeEvidenceIds =
-        evidenceIds.filter(id =>
+        localEvidenceIds.filter(id =>
           graph.byId
             .get(id)
             .exists(record =>
@@ -1286,8 +1252,7 @@ object PositionPlanTechniqueProjection:
 
   private def positionPlanTechniqueDetailCauseLinkage(
       detail: PositionPlanTechniqueSemanticDetail,
-      graph: TypedEvidenceGraph,
-      fallbackEvidenceIds: List[String]
+      graph: TypedEvidenceGraph
   ): PositionPlanTechniqueDetailCauseLinkage =
     val localEvidenceIds =
       (
@@ -1295,9 +1260,8 @@ object PositionPlanTechniqueProjection:
           detail.referenceEvidenceIds ++
           detail.candidateEvidenceIds
       ).distinct.sorted
-    val evidenceIds =
-      if localEvidenceIds.nonEmpty then localEvidenceIds else fallbackEvidenceIds.distinct.sorted
-    val evidenceIdSet = evidenceIds.toSet
+    val evidenceIds = localEvidenceIds
+    val evidenceIdSet = localEvidenceIds.toSet
     val linkedCauseRecords = positionPlanTechniqueRelativeCauseRecordsFor(graph, evidenceIdSet)
     val localCauseRecords = positionPlanTechniqueCauseRecordsForDetail(detail, linkedCauseRecords, evidenceIdSet)
     val causeRecords =
