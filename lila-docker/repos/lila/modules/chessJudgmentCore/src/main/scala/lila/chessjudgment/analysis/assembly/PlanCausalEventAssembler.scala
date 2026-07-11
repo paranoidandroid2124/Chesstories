@@ -217,13 +217,12 @@ private[assembly] object PlanEventIdentityBuilder:
       consequences: List[TransitionConsequence],
       developmentChoices: List[StructuralDevelopmentChoice]
   ): PlanEventIdentity =
+    val normalizedRootMove = Option(rootMove).getOrElse("").trim.toLowerCase
     val squareTargets =
-      (consequences.flatMap(_.subjects) ++ developmentChoices.flatMap(choice => List(choice.from, choice.to)))
+      (consequences.flatMap(_.subjects).map(_.toLowerCase.replace(normalizedRootMove, "")) ++ developmentChoices.map(_.to))
         .flatMap(value => "[a-h][1-8]".r.findAllIn(value.toLowerCase).map(square => s"square:$square"))
     val targets =
-      consequences.flatMap(_.subjects) ++
-        developmentChoices.map(choice => s"development:${choice.role.toLowerCase}:${choice.from.toLowerCase}-${choice.to.toLowerCase}") ++
-        squareTargets
+      consequences.flatMap(_.subjects) ++ squareTargets
     val results =
       consequences.flatMap(consequence =>
         s"kind:${consequence.kind.toString.toLowerCase}" ::

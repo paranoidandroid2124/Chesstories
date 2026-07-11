@@ -298,16 +298,22 @@ object EvidenceObjectBinding:
         case payload: PlanCausalEventEvidence =>
           fromPlanCausalEvent(record.ref, payload)
         case PlanTransitionEvidence(transition) =>
-          transition.primaryPlanId.toList.map(planId =>
+          transition.currentEvent.toList.map(current =>
             EvidenceObjectBinding(
               source = record.ref,
-              actor = transition.previousPlanId.toList.flatMap(plan => objectOf(EvidenceObjectKind.PlanSubject, plan.toString)),
-              target = objectOf(EvidenceObjectKind.PlanSubject, planId.toString),
+              actor = transition.previousEvent.toList.flatMap(previous =>
+                moveObjects(previous.rootMove) ++
+                  previous.actorRole.toList.flatMap(objectOf(EvidenceObjectKind.Piece, _))
+              ),
+              target = (
+                objectOf(EvidenceObjectKind.PlanSubject, current.goalKey) ++
+                  current.targets.flatMap(subjectObject)
+              ).distinctBy(_.signaturePart),
               mechanism = objectOf(EvidenceObjectKind.Mechanism, "plan-transition"),
               consequence = objectOf(EvidenceObjectKind.Consequence, transition.transitionType.toString),
               witness = (
-                (transition.previousPlanId.toList :+ planId).flatMap(plan => objectOf(EvidenceObjectKind.PlanSubject, plan.toString)) ++
-                  transition.continuity.toList.flatMap(_.supportingMoves).flatMap(move => objectOf(EvidenceObjectKind.Move, move))
+                transition.continuity.toList.flatMap(_.supportingMoves).flatMap(move => objectOf(EvidenceObjectKind.Move, move)) ++
+                  objectOf(EvidenceObjectKind.Move, current.rootMove)
               ).distinctBy(_.signaturePart),
               line = record.ref.line,
               horizon = transition.continuity.map(continuity => s"${continuity.consecutivePlies}-ply")
@@ -2430,11 +2436,11 @@ object StrategicMechanismEvidence:
               (transition.previousEvent.toList.map(_.goalKey) ++ transition.currentEvent.toList.map(_.goalKey)).mkString("->")
             case _ =>
               (transition.previousEvent.toList.map(_.goalKey) ++ transition.currentEvent.toList.map(_.goalKey)).mkString("->")
-        transition.primaryPlanId.toList.map(planId =>
+        transition.currentEvent.toList.map(current =>
           StrategicMechanismKind.PlanPressure ->
             signal(
               StrategicMechanismSignalKind.PlanTransition,
-              planId.toString,
+              current.goalKey,
               record.ref,
               2,
               concreteAxis(record, Some(StrategicAxisDetail(StrategicAxisKind.PlanCoherence, polarity, axisLabel)))
@@ -2559,8 +2565,7 @@ object StrategicMechanismEvidence:
       PlanPressureEvidence(scoring, activePlans).evidenceBackedPlans.nonEmpty
 
   def planTransitionCanSupportPlan(transition: PlanSequenceSummary): Boolean =
-    transition.primaryPlanId.nonEmpty &&
-      transition.transitionType != TransitionType.Opening &&
+    transition.transitionType != TransitionType.Opening &&
       transition.previousEvent.exists(previous =>
         transition.currentEvent.nonEmpty &&
           transition.continuity.exists(continuity =>
@@ -2619,7 +2624,7 @@ object StrategicMechanismEvidence:
       case PlanPressureEvidence(_, activePlans) =>
         (activePlans.primary :: activePlans.secondary.toList).nonEmpty
       case PlanTransitionEvidence(transition) =>
-        transition.primaryPlanId.nonEmpty
+        transition.currentEvent.exists(event => event.targets.nonEmpty || event.actorRole.nonEmpty)
       case payload: BoardFactEvidence =>
         payload.targetHintSquares.nonEmpty ||
           payload.anchorFocusSquares.nonEmpty ||
@@ -4633,6 +4638,85 @@ final case class PlanCausalPublicProof(
     equivalentReplies: Int,
     testedReplies: Int
 )
+
+final case class PlanEventPublicResult(
+    stage: String,
+    kind: TransitionConsequenceKind,
+    polarity: StructuralSignalPolarity,
+    strength: Int,
+    subjects: List[String]
+)
+
+final case class PlanEventPublicResponse(
+    move: String,
+    outcome: PlanCausalBranchOutcome,
+    realizationMove: Option[String],
+    realizationMatch: Option[PlanCausalRealizationMatch]
+)
+
+final case class PlanEventPublicProof(
+    goalTheme: String,
+    goalKind: Option[String],
+    moveRole: Option[PlanMoveRole],
+    transitionType: Option[TransitionType],
+    rootMove: String,
+    actorRole: Option[String],
+    actorFrom: Option[String],
+    actorTo: Option[String],
+    targets: List[String],
+    developmentChoices: List[StructuralDevelopmentChoice],
+    results: List[PlanEventPublicResult],
+    responses: List[PlanEventPublicResponse],
+    futureCausality: Option[PlanCausalPublicProof]
+)
+
+object PlanEventPublicProof:
+  def from(event: PlanCausalEventEvidence): PlanEventPublicProof =
+    val directResults = event.structuralConsequences.map(result("direct", _))
+    val futureResults = event.futureRealization.toList.flatMap(_.consequences.map(result("future", _)))
+    val futureSubjects = event.futureRealization.toList.flatMap(_.consequences.flatMap(_.subjects)).map(_.trim.toLowerCase).filter(_.nonEmpty)
+    val futureSquares = futureSubjects.flatMap(subject =>
+      "[a-h][1-8]".r.findAllIn(subject).map(square => s"square:$square")
+    )
+    val targets = (
+      event.identity.targets ++
+        futureSubjects ++
+        futureSquares ++
+        event.futureTarget.map(target => s"square:${target.key.toLowerCase}")
+    ).distinct.sorted
+    PlanEventPublicProof(
+      goalTheme = event.identity.goalTheme.id,
+      goalKind = event.identity.goalKind.map(_.id),
+      moveRole = None,
+      transitionType = None,
+      rootMove = event.rootMove,
+      actorRole = event.identity.actorRole,
+      actorFrom = event.identity.actorFrom,
+      actorTo = event.identity.actorTo,
+      targets = if targets.nonEmpty then targets else event.identity.actorTo.map(square => s"square:$square").toList,
+      developmentChoices = event.developmentChoices,
+      results = (directResults ++ futureResults).distinct,
+      responses = event.branchWitnesses
+        .map(witness =>
+          PlanEventPublicResponse(
+            move = witness.line.rootMove,
+            outcome = witness.outcome,
+            realizationMove = witness.observedTrajectory.map(_.futureStep.moveUci),
+            realizationMatch = witness.realizationMatch
+          )
+        )
+        .distinct,
+      futureCausality = PlanCausalPublicProof.from(event)
+    )
+
+  private def result(stage: String, consequence: TransitionConsequence): PlanEventPublicResult =
+    PlanEventPublicResult(
+      stage = stage,
+      kind = consequence.kind,
+      polarity = consequence.polarity,
+      strength = consequence.strength,
+      subjects = consequence.subjects
+    )
 
 object PlanCausalPublicProof:
   def from(event: PlanCausalEventEvidence): Option[PlanCausalPublicProof] =

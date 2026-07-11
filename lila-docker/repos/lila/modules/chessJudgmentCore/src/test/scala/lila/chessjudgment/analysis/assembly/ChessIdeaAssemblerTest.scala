@@ -1,8 +1,9 @@
 package lila.chessjudgment.analysis.assembly
 
 import chess.Color
-import lila.chessjudgment.model.ProbeResult
+import lila.chessjudgment.model.{ PlanEventIdentity, PlanId, ProbeResult }
 import lila.chessjudgment.model.strategic.VariationLine
+import lila.chessjudgment.model.strategic.PlanTaxonomy.{ PlanKind, PlanTheme }
 import lila.chessjudgment.model.judgment.*
 
 class ChessIdeaAssemblerTest extends munit.FunSuite:
@@ -70,6 +71,10 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(claim.publicProofLevel, "owned_function")
     assert(claim.publicSurfaceAdmitted)
     assertEquals(claim.positiveFunctionalProofEvidenceIds.size, 1)
+    val principalEvent = claim.principalPlanEvent.getOrElse(fail("expected direct principal event"))
+    assertEquals(principalEvent.rootMove, "b7b5")
+    assert(principalEvent.results.exists(_.stage == "direct"), principalEvent.results)
+    assertEquals(principalEvent.futureCausality, None)
     assertEquals(
       view.moveMeaningClaims.count(candidate =>
         candidate.lineRole == "candidate" &&
@@ -122,6 +127,41 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(trajectory.rootFrom.key -> trajectory.rootTo.key, "g1" -> "f3")
     assertEquals(trajectory.futureFrom.key -> trajectory.futureTo.key, "f3" -> "e5")
     assertEquals(trajectory.plyOffset, 2)
+
+  test("principal plan event keeps a concrete destination when a result has no named target"):
+    val root = PositionNodeRef("8/8/2N5/8/8/8/8/4K2k w - - 0 1", 1, Some(Color.White))
+    val after = PositionNodeRef("8/8/8/N7/8/8/8/4K2k b - - 1 1", 2, Some(Color.Black))
+    val line = LineNodeRef("played-c6a5", "c6a5", 1, LineNodeRole.Played)
+    val event = PlanCausalEventEvidence(
+      planId = PlanId.WeakPawnAttack,
+      identity = PlanEventIdentity(
+        rootMove = "c6a5",
+        goalTheme = PlanTheme.WeaknessFixation,
+        goalKind = Some(PlanKind.StaticWeaknessFixation),
+        actorRole = Some("knight"),
+        actorFrom = Some("c6"),
+        actorTo = Some("a5"),
+        targets = Nil,
+        results = List("kind:mobilitygain")
+      ),
+      rootLine = line,
+      rootTransition = StructuralTransitionBinding(
+        moveUci = "c6a5",
+        role = TransitionEdgeRole.Played,
+        from = root,
+        to = after,
+        line = Some(line),
+        perspective = Color.White
+      ),
+      structuralConsequences = List(
+        TransitionConsequence(TransitionConsequenceKind.MobilityGain, StructuralSignalPolarity.Gain, 1)
+      ),
+      developmentChoices = Nil,
+      futureRealization = None,
+      branchWitnesses = Nil
+    )
+
+    assertEquals(PlanEventPublicProof.from(event).targets, List("square:a5"))
 
   test("line trajectory does not transfer identity to a same-role replacement"):
     val graph = EvidenceFactAssembler
@@ -198,6 +238,21 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       ),
       1
     )
+    val principalEvent = publicClaim.principalPlanEvent.getOrElse(fail("expected principal plan event"))
+    assertEquals(principalEvent.rootMove, "b7b5")
+    assertEquals(principalEvent.actorRole, Some("pawn"))
+    assertEquals(principalEvent.actorFrom -> principalEvent.actorTo, Some("b7") -> Some("b5"))
+    assertEquals(principalEvent.moveRole, Some(PlanMoveRole.Execution))
+    assert(principalEvent.goalKind.nonEmpty)
+    assert(principalEvent.targets.contains("square:b4"), principalEvent.targets)
+    assert(principalEvent.targets.contains("square:c3"), principalEvent.targets)
+    assert(!principalEvent.targets.contains("square:b7"), principalEvent.targets)
+    assert(!principalEvent.targets.contains("square:b5"), principalEvent.targets)
+    assert(principalEvent.results.exists(result => result.stage == "direct" && result.strength > 0), principalEvent.results)
+    assert(principalEvent.results.exists(_.stage == "future"), principalEvent.results)
+    assertEquals(principalEvent.responses.size, 3)
+    assert(principalEvent.responses.forall(_.outcome == PlanCausalBranchOutcome.Realized), principalEvent.responses)
+    assert(principalEvent.futureCausality.nonEmpty)
     val publicProof = publicClaim.futureCausalProof.getOrElse(fail("expected public causal proof"))
     assertEquals(publicProof.dependencyKind, PlanCausalDependencyKind.ObjectStatePrecondition)
     assertEquals(publicProof.plyOffset, 8)
@@ -211,6 +266,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     val causalSurfaces = MoveMeaningSurface.publicSurfaces(view).filter(_.causalPlan.nonEmpty)
     assertEquals(causalSurfaces.size, 1)
     assertEquals(causalSurfaces.head.priority, "main")
+    assertEquals(causalSurfaces.head.principalPlanEvent, Some(principalEvent))
     assert(causalSurfaces.exists(_.causalPlan.exists(plan =>
       plan.futureMove == "b5b4" &&
         plan.robustness == PlanCausalRobustness.Robust &&
@@ -222,6 +278,16 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assert((publicJson \\ "future_move").exists(_.asOpt[String].contains("b5b4")), publicJson)
     assert((publicJson \\ "exact_replies").exists(_.asOpt[Int].contains(3)), publicJson)
     assert((publicJson \\ "equivalent_replies").exists(_.asOpt[Int].contains(0)), publicJson)
+    val playedEventSemantics =
+      (publicJson \\ "move_semantics")
+        .flatMap(_.as[List[play.api.libs.json.JsObject]])
+        .filter(node => (node \ "subject").asOpt[String].contains("played_move"))
+        .filter(node => (node \ "principal_plan_event").asOpt[play.api.libs.json.JsObject].nonEmpty)
+    assertEquals(playedEventSemantics.size, 1)
+    assert((publicJson \\ "goal").exists(node => (node \ "kind").asOpt[String].nonEmpty), publicJson)
+    assert((publicJson \\ "move_role").exists(_.asOpt[String].contains("Execution")), publicJson)
+    assert((publicJson \\ "opponent_responses").exists(_.as[List[play.api.libs.json.JsValue]].size == 3), publicJson)
+    assert((publicJson \\ "results").exists(_.as[List[play.api.libs.json.JsValue]].nonEmpty), publicJson)
 
   test("future realization accepts a different move only when typed function and subject agree"):
     val expected = TransitionConsequence(

@@ -123,6 +123,7 @@ case class PositionPlanTechniqueSemanticDetail(
     anchorMagnitude: Option[Int] = None,
     sourceEvidenceIds: List[String] = Nil,
     positiveFunctionalProofEvidenceIds: List[String] = Nil,
+    principalPlanEvent: Option[PlanEventPublicProof] = None,
     futureCausalProof: Option[PlanCausalPublicProof] = None,
     causeEvidenceIds: List[String] = Nil,
     proofRoles: List[RelativeCauseProofRole] = Nil,
@@ -1220,6 +1221,12 @@ object PositionPlanTechniqueProjection:
         contextCauseEvidenceIds = causeLinkage.contextCauseEvidenceIds,
         contextProofRoles = causeLinkage.contextProofRoles,
         positiveFunctionalProofEvidenceIds = causeLinkage.positiveFunctionalProofEvidenceIds,
+        principalPlanEvent = causeLinkage.positiveFunctionalCausalEvent.map(event =>
+          PlanEventPublicProof.from(event).copy(
+            moveRole = taggedDetail.planMoveRole,
+            transitionType = taggedDetail.planTransitionType
+          )
+        ),
         futureCausalProof = causeLinkage.positiveFunctionalCausalEvent.flatMap(PlanCausalPublicProof.from),
         objectBindingSignatures = causeLinkage.objectBindingSignatures,
         specificityTier = causeLinkage.specificityTier

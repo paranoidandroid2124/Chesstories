@@ -1693,6 +1693,7 @@ case class MoveMeaningClaim(
     publicProofLevel: String = "none",
     publicTargetBound: Boolean = false,
     principalPlanId: Option[PlanId] = None,
+    principalPlanEvent: Option[PlanEventPublicProof] = None,
     futureCausalProof: Option[PlanCausalPublicProof] = None
 )
 
@@ -1909,6 +1910,7 @@ case class MoveMeaningSurface(
     defenderActorPieces: List[String] = Nil,
     sourceLabel: Option[String] = None,
     principalPlanId: Option[PlanId] = None,
+    principalPlanEvent: Option[PlanEventPublicProof] = None,
     causalPlan: Option[PlanCausalPublicProof] = None
 )
 
@@ -2227,6 +2229,49 @@ object MoveMeaningSurface:
       "tested_replies" -> event.testedReplies
     )
 
+  private def publicPlanEventJson(event: PlanEventPublicProof): JsObject =
+    Json.obj(
+      "goal" -> Json.obj(
+        "theme" -> event.goalTheme,
+        "kind" -> event.goalKind
+      ),
+      "state" -> Json.obj(
+        "move_role" -> event.moveRole.map(_.toString),
+        "transition_type" -> event.transitionType.map(_.toString)
+      ),
+      "target" -> event.targets,
+      "means" -> Json.obj(
+        "root_move" -> event.rootMove,
+        "actor" -> Json.obj(
+          "piece" -> event.actorRole,
+          "from" -> event.actorFrom,
+          "to" -> event.actorTo
+        ),
+        "development_choices" -> event.developmentChoices.map(choice =>
+          Json.obj("piece" -> choice.role, "from" -> choice.from, "to" -> choice.to)
+        ),
+        "future_move" -> event.futureCausality.map(_.futureMove)
+      ),
+      "opponent_responses" -> event.responses.map(response =>
+        Json.obj(
+          "move" -> response.move,
+          "outcome" -> response.outcome.toString,
+          "realization_move" -> response.realizationMove,
+          "realization_match" -> response.realizationMatch.map(_.toString)
+        )
+      ),
+      "results" -> event.results.map(result =>
+        Json.obj(
+          "stage" -> result.stage,
+          "kind" -> result.kind.toString,
+          "polarity" -> result.polarity.toString,
+          "strength" -> result.strength,
+          "subjects" -> result.subjects
+        )
+      ),
+      "future_causality" -> event.futureCausality.map(publicCausalPlanJson)
+    )
+
   private def surfaceHasCarrierRole(surface: MoveMeaningSurface, role: String): Boolean =
     surface.evidence.boardCarriers.exists(_.semanticRole.exists(_.equalsIgnoreCase(role)))
 
@@ -2412,6 +2457,7 @@ object MoveMeaningSurface:
       "line_role" -> surface.lineRole,
       "move_quality" -> surface.moveQuality,
       "principal_plan_id" -> surface.principalPlanId.map(_.toString),
+      "principal_plan_event" -> surface.principalPlanEvent.map(publicPlanEventJson),
       "idea_type" -> surface.ideaType,
       "idea" -> publicCodeJson(surface.idea),
       "idea_quality" -> surface.ideaQuality,
@@ -3450,6 +3496,7 @@ object MoveMeaningSurface:
       defenderActorPieces = defenderMoveActorPieces,
       sourceLabel = claim.label,
       principalPlanId = claim.principalPlanId,
+      principalPlanEvent = claim.principalPlanEvent,
       causalPlan = claim.futureCausalProof
     )
 
@@ -5173,6 +5220,7 @@ object MoveMeaningClaim:
         proofRelationDetails = mergedProofRelationDetails,
         proofThreatDrivers = mergedProofThreatDrivers,
         principalPlanId = best.principalPlanId.orElse(list.flatMap(_.principalPlanId).headOption),
+        principalPlanEvent = best.principalPlanEvent.orElse(list.flatMap(_.principalPlanEvent).headOption),
         publicSurfaceAdmitted = mergedPublicSurfaceAdmitted,
         publicProofLevel =
           if !mergedPublicSurfaceAdmitted then "none"
@@ -5533,6 +5581,7 @@ object MoveMeaningClaim:
                 objectBindingSignatures = surfaceObjectSignatures,
                 positiveFunctionalProofEvidenceIds = detail.positiveFunctionalProofEvidenceIds.distinct.sorted,
                 principalPlanId = detail.principalPlanId,
+                principalPlanEvent = detail.principalPlanEvent,
                 futureCausalProof = detail.futureCausalProof,
                 reasonTokens = Nil,
                 comparisonLossSides =
