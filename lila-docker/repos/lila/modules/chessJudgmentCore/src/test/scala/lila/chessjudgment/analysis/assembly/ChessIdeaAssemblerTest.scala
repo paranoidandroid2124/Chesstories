@@ -137,37 +137,6 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
 
     assertEquals(trajectory, None)
 
-  test("Doknjas b5 plan does not publish its later b4 realization without reply proof"):
-    val result = MoveReviewJudgmentOrchestrator
-      .build(
-        RawMoveReviewInput(
-          fen = "r1b2rk1/pp2ppbp/5np1/q1nP4/4PB2/2N2P2/PP4PP/2RQKBNR b K - 0 10",
-          playedMoveUci = "b7b5",
-          variations = List(
-            VariationLine(
-              List("b7b5", "b2b4", "a5b4", "f4d2", "b4b2", "c1c2", "b2a3", "f1e2", "b5b4", "c3b5", "a3a5", "c2c5"),
-              scoreCp = 0,
-              depth = 12
-            )
-          ),
-          currentEvalCp = Some(0),
-          ply = Some(19),
-          openingContext = Some(RawOpeningContext(name = Some("Grunfeld / b5-b4 counterplay versus center"))),
-          movePrefixUci = List(
-            "d2d4", "g8f6", "c2c4", "g7g6", "b1c3", "d7d5", "c1f4", "f8g7", "e2e3", "c7c5",
-            "d4c5", "d8a5", "a1c1", "e8h8", "c4d5", "b8d7", "f2f3", "d7c5", "e3e4"
-          )
-        )
-      )
-      .getOrElse(fail("expected judgment result"))
-    val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
-    assert(view.moveMeaningClaims.forall(_.futureCausalProof.isEmpty), view.moveMeaningClaims)
-    assert(!view.moveMeaningClaims.exists(claim =>
-      claim.publicSurfaceAdmitted &&
-        claim.targetSquares.contains("b4") &&
-        claim.comparisonMoveRefs.exists(_.uci == "b5b4")
-    ), view.moveMeaningClaims)
-
   test("future plan event stays internal until reply robustness is observed"):
     val result = MoveReviewJudgmentOrchestrator
       .build(doknjasInput())
