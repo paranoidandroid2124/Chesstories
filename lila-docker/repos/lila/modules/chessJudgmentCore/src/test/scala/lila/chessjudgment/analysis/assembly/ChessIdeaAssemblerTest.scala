@@ -199,6 +199,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assert(result.isValid, result.validation.issues)
     assertEquals(event.branchWitnesses.size, 3)
     assert(event.branchWitnesses.forall(_.outcome == PlanCausalBranchOutcome.Realized), event.branchWitnesses)
+    assert(event.branchWitnesses.forall(_.realizationMatch.contains(PlanCausalRealizationMatch.ExactMove)), event.branchWitnesses)
     assertEquals(event.robustness, PlanCausalRobustness.Robust)
     assert(event.futurePublicProofReady)
     val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
@@ -212,12 +213,41 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(publicClaim.futureCausalPlyOffset, Some(8))
     assertEquals(publicClaim.futureCausalRobustness, Some(PlanCausalRobustness.Robust))
     assertEquals(publicClaim.futureCausalRealizedReplies, Some(3))
+    assertEquals(publicClaim.futureCausalExactReplies, Some(3))
+    assertEquals(publicClaim.futureCausalEquivalentReplies, Some(0))
     assertEquals(publicClaim.futureCausalTestedReplies, Some(3))
     assertEquals(publicClaim.positiveFunctionalProofEvidenceIds.size, 1)
     assert(result.packet.evidenceGraph.byId(publicClaim.positiveFunctionalProofEvidenceIds.head).payload.isInstanceOf[PlanCausalEventEvidence])
     assert(MoveMeaningSurface.publicSurfaces(view).exists(_.causalPlan.exists(plan =>
-      plan.futureMove == "b5b4" && plan.robustness == PlanCausalRobustness.Robust && plan.testedReplies == 3
+      plan.futureMove == "b5b4" &&
+        plan.robustness == PlanCausalRobustness.Robust &&
+        plan.exactReplies == 3 &&
+        plan.equivalentReplies == 0 &&
+        plan.testedReplies == 3
     )))
+    val publicJson = MoveMeaningSurface.publicPayloadJson(view)
+    assert((publicJson \\ "future_move").exists(_.asOpt[String].contains("b5b4")), publicJson)
+    assert((publicJson \\ "exact_replies").exists(_.asOpt[Int].contains(3)), publicJson)
+    assert((publicJson \\ "equivalent_replies").exists(_.asOpt[Int].contains(0)), publicJson)
+
+  test("future realization accepts a different move only when typed function and subject agree"):
+    val expected = TransitionConsequence(
+      TransitionConsequenceKind.TargetPressureGain,
+      StructuralSignalPolarity.Gain,
+      2,
+      List("weak-pawn:c4")
+    )
+    val equivalent = expected.copy(strength = 1)
+    val differentTarget = expected.copy(subjects = List("weak-pawn:f4"))
+
+    assertEquals(
+      PlanCausalFunctionalMatch.classify("b5b4", List(expected), "b5a4", List(equivalent)),
+      Some(PlanCausalRealizationMatch.EquivalentFunction)
+    )
+    assertEquals(
+      PlanCausalFunctionalMatch.classify("b5b4", List(expected), "b5a4", List(differentTarget)),
+      None
+    )
 
   test("reply probe preserves conditionality instead of treating an unfinished branch as refutation"):
     val input = doknjasInput()

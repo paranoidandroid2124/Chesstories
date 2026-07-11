@@ -129,6 +129,8 @@ case class PositionPlanTechniqueSemanticDetail(
     futureCausalPlyOffset: Option[Int] = None,
     futureCausalRobustness: Option[PlanCausalRobustness] = None,
     futureCausalRealizedReplies: Option[Int] = None,
+    futureCausalExactReplies: Option[Int] = None,
+    futureCausalEquivalentReplies: Option[Int] = None,
     futureCausalTestedReplies: Option[Int] = None,
     causeEvidenceIds: List[String] = Nil,
     proofRoles: List[RelativeCauseProofRole] = Nil,
@@ -1233,6 +1235,8 @@ object PositionPlanTechniqueProjection:
         futureCausalPlyOffset = publicFuture.map(_.trajectory.plyOffset),
         futureCausalRobustness = publicFutureEvent.map(_.robustness),
         futureCausalRealizedReplies = publicFutureEvent.map(_.realizedBranchWitnesses.size),
+        futureCausalExactReplies = publicFutureEvent.map(_.exactBranchWitnesses.size),
+        futureCausalEquivalentReplies = publicFutureEvent.map(_.equivalentBranchWitnesses.size),
         futureCausalTestedReplies = publicFutureEvent.map(_.branchWitnesses.size),
         objectBindingSignatures = causeLinkage.objectBindingSignatures,
         specificityTier = causeLinkage.specificityTier

@@ -724,12 +724,17 @@ object EvidenceObjectBinding:
   private def fromPlanCausalEvent(ref: EvidenceRef, payload: PlanCausalEventEvidence): List[EvidenceObjectBinding] =
     val planTarget = objectOf(EvidenceObjectKind.PlanSubject, payload.planId.toString)
     val rootActor = moveObjects(payload.rootMove) ++ objectOf(EvidenceObjectKind.Side, colorKey(payload.perspective))
+    val rootDestination =
+      moveTargetSquare(payload.rootMove) ++
+        Option(normalize(payload.rootMove).slice(2, 3)).filter(_.matches("[a-h]")).toList.flatMap(
+          objectOf(EvidenceObjectKind.File, _)
+        )
     val rootWitness = objectOf(EvidenceObjectKind.Move, payload.rootMove) ++ lineObject(payload.rootLine)
     val directBindings = payload.structuralConsequences.map { consequence =>
       EvidenceObjectBinding(
         source = ref,
         actor = rootActor,
-        target = (planTarget ++ consequence.subjects.flatMap(subjectObject)).distinctBy(_.signaturePart),
+        target = (planTarget ++ rootDestination ++ consequence.subjects.flatMap(subjectObject)).distinctBy(_.signaturePart),
         mechanism = objectOf(EvidenceObjectKind.Mechanism, consequence.kind.toString),
         consequence = objectOf(EvidenceObjectKind.Consequence, consequence.anchorKey),
         witness = rootWitness,
@@ -2176,7 +2181,7 @@ object StrategicMechanismEvidence:
   def rawStrategicSourceLayer(layer: EvidenceLayer): Boolean =
     layer match
       case EvidenceLayer.Strategic | EvidenceLayer.PawnStructure | EvidenceLayer.StructuralDelta |
-          EvidenceLayer.PlanPressure | EvidenceLayer.PlanTransition | EvidenceLayer.FeatureAnchor |
+          EvidenceLayer.PlanPressure | EvidenceLayer.PlanCausalEvent | EvidenceLayer.PlanTransition | EvidenceLayer.FeatureAnchor |
           EvidenceLayer.ApplicabilityAssessment | EvidenceLayer.OpeningContext =>
         true
       case _ =>
@@ -2390,6 +2395,26 @@ object StrategicMechanismEvidence:
               concreteAxis(record, Some(StrategicAxisDetail(StrategicAxisKind.PlanCoherence, StrategicAxisPolarity.Support, plans.map(_.plan.id.toString).mkString(","))))
             )
         )
+      case payload: PlanCausalEventEvidence =>
+        List(
+          StrategicMechanismKind.PlanPressure ->
+            signal(
+              StrategicMechanismSignalKind.PlanPressure,
+              payload.planId.toString,
+              record.ref,
+              2,
+              concreteAxis(
+                record,
+                Some(
+                  StrategicAxisDetail(
+                    StrategicAxisKind.PlanCoherence,
+                    StrategicAxisPolarity.Support,
+                    payload.planId.toString
+                  )
+                )
+              )
+            )
+        )
       case PlanTransitionEvidence(transition) if planTransitionCanSupportPlan(transition) =>
         val polarity = transition.transitionType match
           case TransitionType.Continuation  => StrategicAxisPolarity.Preserve
@@ -2474,6 +2499,8 @@ object StrategicMechanismEvidence:
         payload.evidenceBackedPlans.map(plan =>
           EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.PlanPressure, plan.plan.id.toString)
         )
+      case payload: PlanCausalEventEvidence =>
+        payload.semanticGroupingAnchors
       case PlanTransitionEvidence(transition) =>
         transition.primaryPlanId.map(plan =>
           EvidenceSemanticAnchor.of(
@@ -4461,6 +4488,10 @@ enum PlanCausalBranchOutcome:
   case Diverted
   case Refuted
 
+enum PlanCausalRealizationMatch:
+  case ExactMove
+  case EquivalentFunction
+
 enum PlanCausalRobustness:
   case Untested
   case Deferred
@@ -4472,40 +4503,44 @@ final case class PlanCausalBranchWitness(
     sourceProbeId: String,
     line: LineNodeRef,
     outcome: PlanCausalBranchOutcome,
-    observedTrajectory: Option[LineObjectTrajectory]
+    observedTrajectory: Option[LineObjectTrajectory],
+    observedConsequences: List[TransitionConsequence],
+    realizationMatch: Option[PlanCausalRealizationMatch]
 )
 
-object PlanCausalBranchWitness:
-  def derive(
-      sourceProbeId: String,
-      line: LineNodeRef,
-      linePayload: LineFactEvidence,
-      rootTransition: StructuralTransitionBinding,
-      principal: LineObjectTrajectory
-  ): PlanCausalBranchWitness =
-    val rootStep = LineReplayStep(
-      ply = rootTransition.to.ply,
-      moveUci = rootTransition.moveUci,
-      fenBefore = rootTransition.from.fen,
-      fenAfter = rootTransition.to.fen
+object PlanCausalFunctionalMatch:
+  def classify(
+      expectedMove: String,
+      expectedConsequences: List[TransitionConsequence],
+      observedMove: String,
+      observedConsequences: List[TransitionConsequence]
+  ): Option[PlanCausalRealizationMatch] =
+    if EvidenceRef.sameMove(expectedMove, observedMove) then Some(PlanCausalRealizationMatch.ExactMove)
+    else Option.when(functionallyEquivalent(expectedConsequences, observedConsequences))(
+      PlanCausalRealizationMatch.EquivalentFunction
     )
-    val observed = LineObjectTrajectory
-      .find(rootStep, linePayload.lineReplaySteps, linePayload.lineReplayCount.max(1))
-      .filter(trajectory => trajectory.pieceRole == principal.pieceRole && trajectory.color == principal.color)
-    val outcome = observed match
-      case Some(trajectory) if EvidenceRef.sameMove(trajectory.futureStep.moveUci, principal.futureStep.moveUci) =>
-        PlanCausalBranchOutcome.Realized
-      case Some(_) =>
-        PlanCausalBranchOutcome.Diverted
-      case None if LineObjectTrajectory.remainsAtRootDestination(principal, linePayload.lineReplaySteps) =>
-        PlanCausalBranchOutcome.Deferred
-      case None =>
-        PlanCausalBranchOutcome.Refuted
-    PlanCausalBranchWitness(sourceProbeId, line, outcome, observed)
+
+  private def functionallyEquivalent(
+      expected: List[TransitionConsequence],
+      observed: List[TransitionConsequence]
+  ): Boolean =
+    val expectedPositive = expected.filter(consequence => consequence.positive && consequence.strength > 0)
+    val observedPositive = observed.filter(consequence => consequence.positive && consequence.strength > 0)
+    expectedPositive.exists(left =>
+      observedPositive.exists(right =>
+        left.kind == right.kind && subjectsCompatible(left.subjects, right.subjects)
+      )
+    )
+
+  private def subjectsCompatible(expected: List[String], observed: List[String]): Boolean =
+    val left = expected.map(_.trim.toLowerCase).filter(_.nonEmpty).toSet
+    val right = observed.map(_.trim.toLowerCase).filter(_.nonEmpty).toSet
+    left.isEmpty || right.isEmpty || left.intersect(right).nonEmpty
 
 final case class PlanCausalFutureRealization(
     trajectory: LineObjectTrajectory,
-    dependencyKind: PlanCausalDependencyKind
+    dependencyKind: PlanCausalDependencyKind,
+    consequences: List[TransitionConsequence]
 ):
   def dependencyProven: Boolean =
     dependencyKind == PlanCausalDependencyKind.ObjectStatePrecondition &&
@@ -4527,6 +4562,10 @@ final case class PlanCausalEventEvidence(
   def counterfactualDependencyProven: Boolean = futureRealization.exists(_.dependencyProven)
   def realizedBranchWitnesses: List[PlanCausalBranchWitness] =
     branchWitnesses.filter(_.outcome == PlanCausalBranchOutcome.Realized)
+  def exactBranchWitnesses: List[PlanCausalBranchWitness] =
+    realizedBranchWitnesses.filter(_.realizationMatch.contains(PlanCausalRealizationMatch.ExactMove))
+  def equivalentBranchWitnesses: List[PlanCausalBranchWitness] =
+    realizedBranchWitnesses.filter(_.realizationMatch.contains(PlanCausalRealizationMatch.EquivalentFunction))
   def branchCoverageComplete: Boolean =
     branchWitnesses.size >= BranchReplyProbeBinding.ReplyMultiPv &&
       branchWitnesses.map(_.line).distinct.size == branchWitnesses.size &&

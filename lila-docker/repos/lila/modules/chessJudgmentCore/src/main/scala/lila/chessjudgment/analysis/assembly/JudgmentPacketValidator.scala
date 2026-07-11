@@ -894,6 +894,8 @@ object JudgmentPacketValidator:
     }
     val futureProofValid = payload.futureRealization.forall(realization =>
       realization.dependencyProven &&
+        realization.consequences ==
+          PlanCausalEventProof.positiveConsequences(realization.trajectory.futureStep, realization.trajectory.color) &&
         lineParent.exists(line =>
           line.futureRootObjectMove(line.lineReplayCount.max(1)).contains(realization.trajectory)
         )
@@ -906,12 +908,13 @@ object JudgmentPacketValidator:
             parents.collectFirst {
               case EvidenceRecord(parentRef, line: LineFactEvidence, _)
                   if parentRef.line.contains(witness.line) && witness.line.role == LineNodeRole.Threat =>
-                PlanCausalBranchWitness.derive(
+                PlanCausalEventProof.branchWitness(
                   sourceProbeId = witness.sourceProbeId,
                   line = witness.line,
                   linePayload = line,
                   rootTransition = payload.rootTransition,
-                  principal = realization.trajectory
+                  principal = realization.trajectory,
+                  principalConsequences = realization.consequences
                 )
             }.contains(witness)
           }

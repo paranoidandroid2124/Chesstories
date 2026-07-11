@@ -1699,6 +1699,8 @@ case class MoveMeaningClaim(
     futureCausalPlyOffset: Option[Int] = None,
     futureCausalRobustness: Option[PlanCausalRobustness] = None,
     futureCausalRealizedReplies: Option[Int] = None,
+    futureCausalExactReplies: Option[Int] = None,
+    futureCausalEquivalentReplies: Option[Int] = None,
     futureCausalTestedReplies: Option[Int] = None
 )
 
@@ -1897,6 +1899,8 @@ case class MoveMeaningSurfaceCausalPlan(
     plyOffset: Int,
     robustness: PlanCausalRobustness,
     realizedReplies: Int,
+    exactReplies: Int,
+    equivalentReplies: Int,
     testedReplies: Int
 )
 
@@ -2238,6 +2242,8 @@ object MoveMeaningSurface:
       "ply_offset" -> event.plyOffset,
       "robustness" -> event.robustness.toString,
       "realized_replies" -> event.realizedReplies,
+      "exact_replies" -> event.exactReplies,
+      "equivalent_replies" -> event.equivalentReplies,
       "tested_replies" -> event.testedReplies
     )
 
@@ -3472,6 +3478,8 @@ object MoveMeaningSurface:
           plyOffset <- claim.futureCausalPlyOffset
           robustness <- claim.futureCausalRobustness
           realizedReplies <- claim.futureCausalRealizedReplies
+          exactReplies <- claim.futureCausalExactReplies
+          equivalentReplies <- claim.futureCausalEquivalentReplies
           testedReplies <- claim.futureCausalTestedReplies
         yield MoveMeaningSurfaceCausalPlan(
           dependencyKind = dependencyKind,
@@ -3480,6 +3488,8 @@ object MoveMeaningSurface:
           plyOffset = plyOffset,
           robustness = robustness,
           realizedReplies = realizedReplies,
+          exactReplies = exactReplies,
+          equivalentReplies = equivalentReplies,
           testedReplies = testedReplies
         )
     )
@@ -4542,6 +4552,11 @@ object MoveMeaningClaim:
         robustness == PlanCausalRobustness.Robust || robustness == PlanCausalRobustness.Conditional
       ) &&
       claim.futureCausalRealizedReplies.exists(_ > 0) &&
+      (for
+        realized <- claim.futureCausalRealizedReplies
+        exact <- claim.futureCausalExactReplies
+        equivalent <- claim.futureCausalEquivalentReplies
+      yield realized == exact + equivalent).contains(true) &&
       claim.futureCausalTestedReplies.exists(_ >= BranchReplyProbeBinding.ReplyMultiPv)
 
   private def planPurposeCoveredByOwnedRoute(
@@ -5569,6 +5584,8 @@ object MoveMeaningClaim:
                 futureCausalPlyOffset = detail.futureCausalPlyOffset,
                 futureCausalRobustness = detail.futureCausalRobustness,
                 futureCausalRealizedReplies = detail.futureCausalRealizedReplies,
+                futureCausalExactReplies = detail.futureCausalExactReplies,
+                futureCausalEquivalentReplies = detail.futureCausalEquivalentReplies,
                 futureCausalTestedReplies = detail.futureCausalTestedReplies,
                 reasonTokens = Nil,
                 comparisonLossSides =
