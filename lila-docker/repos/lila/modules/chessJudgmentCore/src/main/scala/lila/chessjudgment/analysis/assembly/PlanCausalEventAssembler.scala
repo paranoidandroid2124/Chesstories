@@ -1,0 +1,111 @@
+package lila.chessjudgment.analysis.assembly
+
+import lila.chessjudgment.model.judgment.*
+
+object PlanCausalEventAssembler:
+
+  def fromAssembly(
+      input: NormalizedMoveReviewInput,
+      context: JudgmentAssemblyContext,
+      allocator: JudgmentProvenanceAllocator
+  ): List[EvidenceRecord] =
+    val graph = context.evidenceGraph
+    graph.records.flatMap {
+      case pressureRecord @ EvidenceRecord(pressureRef, pressure: PlanPressureEvidence, _)
+          if pressureRef.line.exists(_.role != LineNodeRole.Threat) =>
+        for
+          rootLine <- pressureRef.line.toList
+          planId <- pressure.principalPlanId(Some(rootLine.rootMove)).toList
+          transition <- context.transitions.filter(edge =>
+            edge.role.lineRole == rootLine.role && EvidenceRef.sameMove(edge.moveUci, rootLine.rootMove)
+          )
+          lineRecordAndPayload <- graph.records.collectFirst {
+            case record @ EvidenceRecord(ref, payload: LineFactEvidence, _) if ref.line.contains(rootLine) =>
+              record -> payload
+          }.toList
+          structuralRecordAndPayload <- pressureRecord.parents.flatMap(parent => graph.byId.get(parent.id)).collectFirst {
+            case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _)
+                if payload.line.contains(rootLine) && EvidenceRef.sameMove(payload.moveUci, rootLine.rootMove) =>
+              record -> payload
+          }.toList
+          (structuralRecord, structural) = structuralRecordAndPayload
+          positiveConsequences = structural.consequences.filter(consequence => consequence.positive && consequence.strength > 0)
+          if positiveConsequences.nonEmpty || structural.developmentChoices.nonEmpty
+        yield
+          val (_, linePayload) = lineRecordAndPayload
+          val futureRealization = linePayload
+            .futureRootObjectMove(linePayload.lineReplayCount.max(1))
+            .map(trajectory =>
+              PlanCausalFutureRealization(
+                trajectory = trajectory,
+                dependencyKind = PlanCausalDependencyKind.ObjectStatePrecondition
+              )
+            )
+            .filter(_.dependencyProven)
+          val branchWitnesses = futureRealization.toList.flatMap(realization =>
+            branchWitnessesFor(input, context, structural.transition, realization.trajectory)
+          )
+          val payload = PlanCausalEventEvidence(
+            planId = planId,
+            rootLine = rootLine,
+            rootTransition = structural.transition,
+            structuralConsequences = positiveConsequences,
+            developmentChoices = structural.developmentChoices,
+            futureRealization = futureRealization,
+            branchWitnesses = branchWitnesses
+          )
+          val futureKey = payload.futureMove.getOrElse("direct")
+          EvidenceRecord(
+            ref = allocator.evidenceRef(
+              suffix = s"plan-causal-event:${allocator.key(rootLine.role)}:${rootLine.rootMove}:${allocator.key(planId)}:$futureKey",
+              producer = EvidenceProducer.PlanCausalEventProducer,
+              layer = EvidenceLayer.PlanCausalEvent,
+              position = transition.from,
+              line = Some(rootLine),
+              scope = transition.role.scope,
+              confidence =
+                if payload.branchCoverageComplete then EvidenceConfidence.EngineBacked
+                else EvidenceConfidence.LegalReplayVerified
+            ),
+            payload = payload,
+            parents = (
+              List(pressureRecord.ref, structuralRecord.ref, lineRecordAndPayload._1.ref, transition.evidence) ++
+                branchWitnesses.flatMap(witness => graph.records.find(_.ref.line.contains(witness.line)).map(_.ref))
+            ).distinctBy(_.id)
+          )
+      case _ =>
+        Nil
+    }.distinctBy(_.ref.id)
+
+  private def branchWitnessesFor(
+      input: NormalizedMoveReviewInput,
+      context: JudgmentAssemblyContext,
+      transition: StructuralTransitionBinding,
+      principal: LineObjectTrajectory
+  ): List[PlanCausalBranchWitness] =
+    input.threatBranches
+      .filter(branch =>
+        EvidenceRef.sameMove(branch.probedMoveUci, transition.moveUci) && branch.branchFen == transition.to.fen
+      )
+      .flatMap(branch =>
+        branch.lines.flatMap { normalized =>
+          context.lines
+            .find(line => line.role == LineNodeRole.Threat && line.ref.rank == normalized.rank)
+            .flatMap(line => linePayload(context, line.ref).map(line -> _))
+            .map { case (line, payload) =>
+              PlanCausalBranchWitness.derive(
+                sourceProbeId = branch.sourceProbeId,
+                line = line.ref,
+                linePayload = payload,
+                rootTransition = transition,
+                principal = principal
+              )
+            }
+        }
+      )
+      .distinctBy(_.line)
+
+  private def linePayload(context: JudgmentAssemblyContext, line: LineNodeRef): Option[LineFactEvidence] =
+    context.evidenceGraph.records.collectFirst {
+      case EvidenceRecord(ref, payload: LineFactEvidence, _) if ref.line.contains(line) => payload
+    }

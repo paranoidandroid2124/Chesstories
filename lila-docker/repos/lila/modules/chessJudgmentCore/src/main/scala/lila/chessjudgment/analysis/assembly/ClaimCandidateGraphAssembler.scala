@@ -1077,6 +1077,8 @@ object ClaimArbitrator:
           certificationScoringCauses(certification).map(relativeCauseSalience).maxOption.getOrElse(0)
       case _: StructuralDeltaEvidence =>
         0
+      case _: PlanCausalEventEvidence =>
+        0
       case OpeningContextEvidence(_, _, _, _) =>
         0
       case FeatureAnchorEvidence(_) | ApplicabilityAssessmentEvidence(_) =>

@@ -36,6 +36,7 @@ enum EvidenceSemanticAnchorKind:
   case OpeningObserved
   case CandidateComparison
   case PlanPressure
+  case PlanCausalEvent
   case PlanTransition
   case LineEvent
   case LineConsequence
@@ -294,6 +295,8 @@ object EvidenceObjectBinding:
           fromPawnStructure(record.ref, payload)
         case payload: PlanPressureEvidence =>
           fromPlanPressure(record.ref, payload)
+        case payload: PlanCausalEventEvidence =>
+          fromPlanCausalEvent(record.ref, payload)
         case PlanTransitionEvidence(transition) =>
           transition.primaryPlanId.toList.map(planId =>
             EvidenceObjectBinding(
@@ -717,6 +720,68 @@ object EvidenceObjectBinding:
         line = ref.line
       )
     }.distinctBy(_.signature)
+
+  private def fromPlanCausalEvent(ref: EvidenceRef, payload: PlanCausalEventEvidence): List[EvidenceObjectBinding] =
+    val planTarget = objectOf(EvidenceObjectKind.PlanSubject, payload.planId.toString)
+    val rootActor = moveObjects(payload.rootMove) ++ objectOf(EvidenceObjectKind.Side, colorKey(payload.perspective))
+    val rootWitness = objectOf(EvidenceObjectKind.Move, payload.rootMove) ++ lineObject(payload.rootLine)
+    val directBindings = payload.structuralConsequences.map { consequence =>
+      EvidenceObjectBinding(
+        source = ref,
+        actor = rootActor,
+        target = (planTarget ++ consequence.subjects.flatMap(subjectObject)).distinctBy(_.signaturePart),
+        mechanism = objectOf(EvidenceObjectKind.Mechanism, consequence.kind.toString),
+        consequence = objectOf(EvidenceObjectKind.Consequence, consequence.anchorKey),
+        witness = rootWitness,
+        line = Some(payload.rootLine)
+      )
+    }
+    val developmentBindings = payload.developmentChoices.map { choice =>
+      EvidenceObjectBinding(
+        source = ref,
+        actor = (
+          rootActor ++
+            objectOf(EvidenceObjectKind.Piece, choice.role) ++
+            objectOf(EvidenceObjectKind.Square, choice.from)
+        ).distinctBy(_.signaturePart),
+        target = (planTarget ++ objectOf(EvidenceObjectKind.Square, choice.to)).distinctBy(_.signaturePart),
+        mechanism = objectOf(EvidenceObjectKind.Mechanism, StructuralSignalKind.DevelopmentChoice.toString),
+        consequence = objectOf(EvidenceObjectKind.Consequence, TransitionConsequenceKind.DevelopmentPieceActivated.toString),
+        witness = rootWitness,
+        line = Some(payload.rootLine)
+      )
+    }
+    val futureBinding = payload.futureRealization.filter(_ => payload.futurePublicProofReady).map { realization =>
+      val trajectory = realization.trajectory
+      val futureMove = normalize(trajectory.futureStep.moveUci)
+      val futureTarget = trajectory.futureTo.key.toLowerCase
+      EvidenceObjectBinding(
+        source = ref,
+        actor = (
+          rootActor ++
+            objectOf(EvidenceObjectKind.Piece, trajectory.pieceRole.name)
+        ).distinctBy(_.signaturePart),
+        target = (
+          planTarget ++
+            objectOf(EvidenceObjectKind.Square, futureTarget) ++
+            objectOf(EvidenceObjectKind.File, futureTarget.take(1))
+        ).distinctBy(_.signaturePart),
+        mechanism = objectOf(EvidenceObjectKind.Mechanism, realization.dependencyKind.toString),
+        consequence = (
+          objectOf(EvidenceObjectKind.Consequence, "FuturePlanRealization") ++
+            objectOf(EvidenceObjectKind.Consequence, payload.robustness.toString)
+        ).distinctBy(_.signaturePart),
+        witness = (
+          rootWitness ++
+            objectOf(EvidenceObjectKind.Move, futureMove) ++
+            objectOf(EvidenceObjectKind.Square, futureTarget) ++
+            payload.realizedBranchWitnesses.flatMap(witness => lineObject(witness.line))
+        ).distinctBy(_.signaturePart),
+        line = Some(payload.rootLine),
+        horizon = Some(s"ply:${trajectory.plyOffset}")
+      )
+    }
+    (directBindings ++ developmentBindings ++ futureBinding).distinctBy(_.signature)
 
   private def planEvidenceActorObjects(
       evidence: lila.chessjudgment.model.EvidenceAtom,
@@ -2966,10 +3031,56 @@ final case class LineObjectTrajectory(
 )
 
 object LineObjectTrajectory:
+  def remainsAtRootDestination(
+      trajectory: LineObjectTrajectory,
+      continuation: List[LineReplayStep]
+  ): Boolean =
+    def matchingPiece(fen: String): Boolean =
+      Square.fromKey(trajectory.rootTo.key).exists(square =>
+        _root_.chess.format.Fen
+          .read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(fen))
+          .flatMap(_.board.pieceAt(square))
+          .exists(piece =>
+            piece.color == trajectory.color && piece.role.toString.equalsIgnoreCase(trajectory.pieceRole.name)
+          )
+      )
+    matchingPiece(trajectory.rootStep.fenAfter) &&
+      continuation.forall(step => matchingPiece(step.fenBefore) && matchingPiece(step.fenAfter))
+
+  def provesObjectStatePrecondition(trajectory: LineObjectTrajectory): Boolean =
+    val rootMove = EvidenceRef.normalizeMove(trajectory.rootStep.moveUci)
+    val futureMove = EvidenceRef.normalizeMove(trajectory.futureStep.moveUci)
+    def pieceAt(fen: String, square: EvidenceSquare): Option[chess.Piece] =
+      Square.fromKey(square.key).flatMap(square =>
+        _root_.chess.format.Fen
+          .read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(fen))
+          .flatMap(_.board.pieceAt(square))
+      )
+    val before = pieceAt(trajectory.rootStep.fenBefore, trajectory.rootFrom)
+    val afterRoot = pieceAt(trajectory.rootStep.fenAfter, trajectory.rootTo)
+    val beforeFuture = pieceAt(trajectory.futureStep.fenBefore, trajectory.futureFrom)
+    val afterFuture = pieceAt(trajectory.futureStep.fenAfter, trajectory.futureTo)
+    before.exists(piece =>
+      rootMove.take(2) == trajectory.rootFrom.key &&
+        rootMove.slice(2, 4) == trajectory.rootTo.key &&
+        futureMove.take(2) == trajectory.futureFrom.key &&
+        futureMove.slice(2, 4) == trajectory.futureTo.key &&
+        trajectory.rootTo == trajectory.futureFrom &&
+        trajectory.plyOffset > 0 &&
+        piece.color == trajectory.color &&
+        piece.role.toString.equalsIgnoreCase(trajectory.pieceRole.name) &&
+        afterRoot.contains(piece) &&
+        beforeFuture.contains(piece) &&
+        afterFuture.exists(candidate =>
+          candidate.color == piece.color &&
+            (candidate.role == piece.role || futureMove.length == 5)
+        )
+    )
+
   def find(
       rootStep: LineReplayStep,
       continuation: List[LineReplayStep],
-      maxPlyOffset: Int = 8
+      maxPlyOffset: Int = Int.MaxValue
   ): Option[LineObjectTrajectory] =
     val rootMove = EvidenceRef.normalizeMove(rootStep.moveUci)
     for
@@ -2994,6 +3105,14 @@ object LineObjectTrajectory:
           Square.fromKey(EvidenceRef.normalizeMove(step.moveUci).take(2)).contains(rootTo)
         }
       futureTo <- Square.fromKey(EvidenceRef.normalizeMove(futureStep.moveUci).slice(2, 4))
+      if _root_.chess.format.Fen
+        .read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(futureStep.fenAfter))
+        .exists(position =>
+          position.board.pieceAt(futureTo).exists(afterPiece =>
+            afterPiece.color == piece.color &&
+              (afterPiece.role == piece.role || rootMove.length == 5 || EvidenceRef.normalizeMove(futureStep.moveUci).length == 5)
+          )
+        )
     yield LineObjectTrajectory(
       rootStep = rootStep,
       futureStep = futureStep,
@@ -3351,22 +3470,12 @@ final case class LineFactEvidence(
     )
   def lineReplayCount: Int =
     replay.size
-  def futureRootObjectMove(maxPlyOffset: Int = 8): Option[LineObjectTrajectory] =
-    if maxPlyOffset == 8 then defaultFutureRootObjectMove
+  def futureRootObjectMove(maxPlyOffset: Int = Int.MaxValue): Option[LineObjectTrajectory] =
+    if maxPlyOffset >= replay.size then completeFutureRootObjectMove
     else findFutureRootObjectMove(maxPlyOffset)
 
-  def futureRootPawnAdvance(maxPlyOffset: Int = 8): Option[(LineReplayStep, Int)] =
-    futureRootObjectMove(maxPlyOffset).collect {
-      case trajectory
-          if trajectory.pieceRole.name.equalsIgnoreCase("pawn") &&
-            sameFileForwardAdvance(trajectory.rootFrom, trajectory.rootTo, trajectory.color) &&
-            sameFileForwardAdvance(trajectory.futureFrom, trajectory.futureTo, trajectory.color) =>
-        trajectory.futureStep -> trajectory.plyOffset
-    }
-
-  // ponytail: cache the bounded carrier scan on the existing line payload; widen only with pressure evidence.
-  private lazy val defaultFutureRootObjectMove: Option[LineObjectTrajectory] =
-    findFutureRootObjectMove(8)
+  private lazy val completeFutureRootObjectMove: Option[LineObjectTrajectory] =
+    findFutureRootObjectMove(replay.size)
 
   private def findFutureRootObjectMove(maxPlyOffset: Int): Option[LineObjectTrajectory] =
     for
@@ -3494,11 +3603,6 @@ final case class LineFactEvidence(
   private def normalizeUci(raw: String): String =
     Option(raw).getOrElse("").trim.toLowerCase
 
-  private def sameFileForwardAdvance(from: EvidenceSquare, to: EvidenceSquare, color: Color): Boolean =
-    Square.fromKey(from.key).zip(Square.fromKey(to.key)).exists { case (fromSquare, toSquare) =>
-      fromSquare.file == toSquare.file &&
-        (if color.white then toSquare.rank.value > fromSquare.rank.value else toSquare.rank.value < fromSquare.rank.value)
-    }
   def materialOutcomeProfile: LineMaterialOutcomeProfile =
     val consequenceGainSignals =
       consequences.collect {
@@ -4348,6 +4452,106 @@ enum PlanMoveRole:
   case Prevention
   case Pivot
 
+enum PlanCausalDependencyKind:
+  case ObjectStatePrecondition
+
+enum PlanCausalBranchOutcome:
+  case Realized
+  case Deferred
+  case Diverted
+  case Refuted
+
+enum PlanCausalRobustness:
+  case Untested
+  case Deferred
+  case Refuted
+  case Conditional
+  case Robust
+
+final case class PlanCausalBranchWitness(
+    sourceProbeId: String,
+    line: LineNodeRef,
+    outcome: PlanCausalBranchOutcome,
+    observedTrajectory: Option[LineObjectTrajectory]
+)
+
+object PlanCausalBranchWitness:
+  def derive(
+      sourceProbeId: String,
+      line: LineNodeRef,
+      linePayload: LineFactEvidence,
+      rootTransition: StructuralTransitionBinding,
+      principal: LineObjectTrajectory
+  ): PlanCausalBranchWitness =
+    val rootStep = LineReplayStep(
+      ply = rootTransition.to.ply,
+      moveUci = rootTransition.moveUci,
+      fenBefore = rootTransition.from.fen,
+      fenAfter = rootTransition.to.fen
+    )
+    val observed = LineObjectTrajectory
+      .find(rootStep, linePayload.lineReplaySteps, linePayload.lineReplayCount.max(1))
+      .filter(trajectory => trajectory.pieceRole == principal.pieceRole && trajectory.color == principal.color)
+    val outcome = observed match
+      case Some(trajectory) if EvidenceRef.sameMove(trajectory.futureStep.moveUci, principal.futureStep.moveUci) =>
+        PlanCausalBranchOutcome.Realized
+      case Some(_) =>
+        PlanCausalBranchOutcome.Diverted
+      case None if LineObjectTrajectory.remainsAtRootDestination(principal, linePayload.lineReplaySteps) =>
+        PlanCausalBranchOutcome.Deferred
+      case None =>
+        PlanCausalBranchOutcome.Refuted
+    PlanCausalBranchWitness(sourceProbeId, line, outcome, observed)
+
+final case class PlanCausalFutureRealization(
+    trajectory: LineObjectTrajectory,
+    dependencyKind: PlanCausalDependencyKind
+):
+  def dependencyProven: Boolean =
+    dependencyKind == PlanCausalDependencyKind.ObjectStatePrecondition &&
+      LineObjectTrajectory.provesObjectStatePrecondition(trajectory)
+
+final case class PlanCausalEventEvidence(
+    planId: PlanId,
+    rootLine: LineNodeRef,
+    rootTransition: StructuralTransitionBinding,
+    structuralConsequences: List[TransitionConsequence],
+    developmentChoices: List[StructuralDevelopmentChoice],
+    futureRealization: Option[PlanCausalFutureRealization],
+    branchWitnesses: List[PlanCausalBranchWitness]
+) extends EvidencePayload:
+  def rootMove: String = rootTransition.moveUci
+  def perspective: Color = rootTransition.perspective
+  def futureMove: Option[String] = futureRealization.map(_.trajectory.futureStep.moveUci)
+  def futureTarget: Option[EvidenceSquare] = futureRealization.map(_.trajectory.futureTo)
+  def counterfactualDependencyProven: Boolean = futureRealization.exists(_.dependencyProven)
+  def realizedBranchWitnesses: List[PlanCausalBranchWitness] =
+    branchWitnesses.filter(_.outcome == PlanCausalBranchOutcome.Realized)
+  def branchCoverageComplete: Boolean =
+    branchWitnesses.size >= BranchReplyProbeBinding.ReplyMultiPv &&
+      branchWitnesses.map(_.line).distinct.size == branchWitnesses.size &&
+      branchWitnesses.map(_.sourceProbeId).distinct.size == 1
+  def robustness: PlanCausalRobustness =
+    if branchWitnesses.isEmpty then PlanCausalRobustness.Untested
+    else if realizedBranchWitnesses.size == branchWitnesses.size then PlanCausalRobustness.Robust
+    else if realizedBranchWitnesses.nonEmpty then PlanCausalRobustness.Conditional
+    else if branchWitnesses.exists(_.outcome == PlanCausalBranchOutcome.Deferred) then PlanCausalRobustness.Deferred
+    else PlanCausalRobustness.Refuted
+  def futurePublicProofReady: Boolean =
+    counterfactualDependencyProven &&
+      branchCoverageComplete &&
+      (robustness == PlanCausalRobustness.Robust || robustness == PlanCausalRobustness.Conditional)
+  def semanticGroupingAnchors: List[EvidenceSemanticAnchor] =
+    List(
+      EvidenceSemanticAnchor.of(
+        EvidenceSemanticAnchorKind.PlanCausalEvent,
+        planId.toString,
+        s"root:$rootMove",
+        s"future:${futureMove.getOrElse("none")}",
+        s"robustness:$robustness"
+      )
+    )
+
 final case class PlanPressureEvidence(
     scoring: PlanScoringResult,
     activePlans: ActivePlans
@@ -4517,6 +4721,8 @@ final case class EvidenceRecord(
     payload match
       case lineFact: LineFactEvidence =>
         List(lineFact.line)
+      case payload: PlanCausalEventEvidence =>
+        payload.rootLine :: payload.branchWitnesses.map(_.line)
       case EvalFactEvidence(payloadLine, _, _, _) =>
         List(payloadLine)
       case CandidateComparisonEvidence(fact) =>

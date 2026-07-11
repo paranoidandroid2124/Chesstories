@@ -61,8 +61,10 @@ object EvidenceFactAssembler:
     val strategicContext = mechanismContext.withEvidence(strategicRecords)
     val planRecords = planPressureRecords(assembly.input, strategicContext, allocator)
     val planContext = strategicContext.withEvidence(planRecords)
-    val openingRecords = featureApplicabilityRecords(assembly.input, planContext, allocator)
-    val openingContext = planContext.withEvidence(openingRecords)
+    val planCausalEventRecords = PlanCausalEventAssembler.fromAssembly(assembly.input, planContext, allocator)
+    val causalPlanContext = planContext.withEvidence(planCausalEventRecords)
+    val openingRecords = featureApplicabilityRecords(assembly.input, causalPlanContext, allocator)
+    val openingContext = causalPlanContext.withEvidence(openingRecords)
     val strategicMechanismOutput = strategicMechanismRecords(openingContext, allocator)
     EvidenceFactAssembly(assembly.input, openingContext.withEvidence(strategicMechanismOutput))
 

@@ -95,6 +95,7 @@ enum EvidenceLayer:
   case Relation
   case StructuralDelta
   case PlanPressure
+  case PlanCausalEvent
   case PlanTransition
   case CandidateComparison
   case Counterfactual

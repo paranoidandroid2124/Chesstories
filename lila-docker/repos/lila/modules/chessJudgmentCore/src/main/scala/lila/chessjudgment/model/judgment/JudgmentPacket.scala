@@ -1692,7 +1692,14 @@ case class MoveMeaningClaim(
     publicSurfaceAdmitted: Boolean = false,
     publicProofLevel: String = "none",
     publicTargetBound: Boolean = false,
-    principalPlanId: Option[PlanId] = None
+    principalPlanId: Option[PlanId] = None,
+    futureCausalDependencyKind: Option[PlanCausalDependencyKind] = None,
+    futureCausalMove: Option[String] = None,
+    futureCausalTarget: Option[String] = None,
+    futureCausalPlyOffset: Option[Int] = None,
+    futureCausalRobustness: Option[PlanCausalRobustness] = None,
+    futureCausalRealizedReplies: Option[Int] = None,
+    futureCausalTestedReplies: Option[Int] = None
 )
 
 case class MoveMeaningSurfaceTarget(
@@ -1883,6 +1890,16 @@ case class MoveMeaningSurfaceBoardCarrier(
     semanticRole: Option[String] = None
 )
 
+case class MoveMeaningSurfaceCausalPlan(
+    dependencyKind: PlanCausalDependencyKind,
+    futureMove: String,
+    targetSquare: String,
+    plyOffset: Int,
+    robustness: PlanCausalRobustness,
+    realizedReplies: Int,
+    testedReplies: Int
+)
+
 case class MoveMeaningSurface(
     moveUci: String,
     subject: String,
@@ -1907,7 +1924,8 @@ case class MoveMeaningSurface(
     evidence: MoveMeaningSurfaceEvidence = MoveMeaningSurfaceEvidence(),
     defenderActorPieces: List[String] = Nil,
     sourceLabel: Option[String] = None,
-    principalPlanId: Option[PlanId] = None
+    principalPlanId: Option[PlanId] = None,
+    causalPlan: Option[MoveMeaningSurfaceCausalPlan] = None
 )
 
 object MoveMeaningSurface:
@@ -2193,6 +2211,7 @@ object MoveMeaningSurface:
               "pv" -> publicPv,
               "purpose_carriers" -> publicPurposeCarriers,
               "function_carriers" -> publicPurposeCarriers,
+              "causal_plan_events" -> displaySemantics.flatMap(_.causalPlan).distinct.map(publicCausalPlanJson),
               "consequence_carriers" -> consequenceCarriers.map((carrier, surface) => publicBoardCarrierJson(carrier, surface)),
               "terminal_consequences" -> publicTerminal.map(publicCodeJson),
               "technique" -> publicTechnique.map(publicEndgameTechniqueJson),
@@ -2209,6 +2228,17 @@ object MoveMeaningSurface:
       surface.idea.code,
       surface.idea.label,
       surface.principalPlanId.map(_.toString).getOrElse("")
+    )
+
+  private def publicCausalPlanJson(event: MoveMeaningSurfaceCausalPlan): JsObject =
+    Json.obj(
+      "dependency_kind" -> event.dependencyKind.toString,
+      "future_move" -> event.futureMove,
+      "target_square" -> event.targetSquare,
+      "ply_offset" -> event.plyOffset,
+      "robustness" -> event.robustness.toString,
+      "realized_replies" -> event.realizedReplies,
+      "tested_replies" -> event.testedReplies
     )
 
   private def surfaceHasCarrierRole(surface: MoveMeaningSurface, role: String): Boolean =
@@ -3433,7 +3463,25 @@ object MoveMeaningSurface:
       evidence = evidence,
       defenderActorPieces = defenderMoveActorPieces,
       sourceLabel = claim.label,
-      principalPlanId = claim.principalPlanId
+      principalPlanId = claim.principalPlanId,
+      causalPlan =
+        for
+          dependencyKind <- claim.futureCausalDependencyKind
+          futureMove <- claim.futureCausalMove
+          targetSquare <- claim.futureCausalTarget
+          plyOffset <- claim.futureCausalPlyOffset
+          robustness <- claim.futureCausalRobustness
+          realizedReplies <- claim.futureCausalRealizedReplies
+          testedReplies <- claim.futureCausalTestedReplies
+        yield MoveMeaningSurfaceCausalPlan(
+          dependencyKind = dependencyKind,
+          futureMove = futureMove,
+          targetSquare = targetSquare,
+          plyOffset = plyOffset,
+          robustness = robustness,
+          realizedReplies = realizedReplies,
+          testedReplies = testedReplies
+        )
     )
 
   private def publicEvidence(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
@@ -4486,19 +4534,15 @@ object MoveMeaningClaim:
   private def futureCausalPlanRealizationClaim(claim: MoveMeaningClaim): Boolean =
     claim.positiveFunctionalProofEvidenceIds.nonEmpty &&
       claim.principalPlanId.nonEmpty &&
-      claim.objectBindingSignatures.exists(signature =>
-        EvidenceObjectBinding.signatureParts(signature).exists(_.startsWith("horizon=ply:")) &&
-          EvidenceObjectBinding
-            .signatureValues(List(signature), "mechanism", "Mechanism")
-            .exists(_.equalsIgnoreCase("LineContinuation")) &&
-          EvidenceObjectBinding.signatureValues(List(signature), "witness", "Move").exists(move =>
-            !EvidenceRef.sameMove(move, claim.moveUci)
-          ) &&
-          (
-            EvidenceObjectBinding.signatureValues(List(signature), "target", "Square").nonEmpty ||
-              EvidenceObjectBinding.signatureValues(List(signature), "target", "File").nonEmpty
-          )
-      )
+      claim.futureCausalDependencyKind.contains(PlanCausalDependencyKind.ObjectStatePrecondition) &&
+      claim.futureCausalMove.exists(move => !EvidenceRef.sameMove(move, claim.moveUci)) &&
+      claim.futureCausalTarget.nonEmpty &&
+      claim.futureCausalPlyOffset.exists(_ > 0) &&
+      claim.futureCausalRobustness.exists(robustness =>
+        robustness == PlanCausalRobustness.Robust || robustness == PlanCausalRobustness.Conditional
+      ) &&
+      claim.futureCausalRealizedReplies.exists(_ > 0) &&
+      claim.futureCausalTestedReplies.exists(_ >= BranchReplyProbeBinding.ReplyMultiPv)
 
   private def planPurposeCoveredByOwnedRoute(
       claims: List[MoveMeaningClaim],
@@ -5372,7 +5416,7 @@ object MoveMeaningClaim:
               val comparisonMoveRefs = comparisonMoveRefsFromLineEvidence(
                 evidenceGraph,
                 proofSourceEvidenceIds,
-                detail.positiveFunctionalProofEvidenceIds.nonEmpty
+                detail.futureCausalMove.zip(detail.futureCausalPlyOffset)
               )
               val claimOwnedBoardCarriers =
                 boardCarriers.filterNot(carrier =>
@@ -5519,6 +5563,13 @@ object MoveMeaningClaim:
                 objectBindingSignatures = surfaceObjectSignatures,
                 positiveFunctionalProofEvidenceIds = detail.positiveFunctionalProofEvidenceIds.distinct.sorted,
                 principalPlanId = detail.principalPlanId,
+                futureCausalDependencyKind = detail.futureCausalDependencyKind,
+                futureCausalMove = detail.futureCausalMove,
+                futureCausalTarget = detail.futureCausalTarget,
+                futureCausalPlyOffset = detail.futureCausalPlyOffset,
+                futureCausalRobustness = detail.futureCausalRobustness,
+                futureCausalRealizedReplies = detail.futureCausalRealizedReplies,
+                futureCausalTestedReplies = detail.futureCausalTestedReplies,
                 reasonTokens = Nil,
                 comparisonLossSides =
                   PositionPlanTechniqueSemanticDetail
@@ -5567,7 +5618,7 @@ object MoveMeaningClaim:
   private def comparisonMoveRefsFromLineEvidence(
       evidenceGraph: TypedEvidenceGraph,
       sourceEvidenceIds: List[String],
-      includeFutureRootPawnAdvance: Boolean
+      futureCausalMove: Option[(String, Int)]
   ): List[MoveMeaningSurfaceMoveRef] =
     sourceEvidenceIds
       .flatMap(id => evidenceGraph.byId.get(id))
@@ -5586,11 +5637,9 @@ object MoveMeaningClaim:
             .zipWithIndex
             .map((move, index) => MoveMeaningSurfaceMoveRef(s"${role}_${index + 1}", move))
           val futureRef =
-            Option
-              .when(includeFutureRootPawnAdvance)(line.futureRootPawnAdvance())
-              .flatten
-              .flatMap { case (step, plyOffset) =>
-                MoveMeaningSurface.publicUciMove(step.moveUci).map(move =>
+            futureCausalMove
+              .flatMap { case (futureMove, plyOffset) =>
+                MoveMeaningSurface.publicUciMove(futureMove).map(move =>
                   MoveMeaningSurfaceMoveRef(s"${role}_plan_$plyOffset", move)
                 )
               }
@@ -5911,28 +5960,28 @@ object MoveMeaningClaim:
             EvidenceObjectBinding.signatureValues(signatures, "target", "Square").flatMap(publicSquareCarrier("target", _, Some("route_destination")))
       }
     val futureCausalCarriers =
-      detail.principalPlanId.toList.flatMap(planId =>
-        detail.objectBindingSignatures.flatMap { signature =>
-          val signatures = List(signature)
-          val ownsPlan = EvidenceObjectBinding
-            .signatureValues(signatures, "target", "PlanSubject")
-            .exists(_.equalsIgnoreCase(planId.toString))
-          val ownsFuture =
-            EvidenceObjectBinding.signatureParts(signature).exists(_.startsWith("horizon=ply:")) &&
-              EvidenceObjectBinding
-                .signatureValues(signatures, "mechanism", "Mechanism")
-                .exists(_.equalsIgnoreCase("LineContinuation"))
-          if !ownsPlan || !ownsFuture then Nil
-          else
-            MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", planId.toString.toLowerCase, semanticRole = Some("plan_subject")) ::
-              (
-                EvidenceObjectBinding.signatureValues(signatures, "target", "Square")
-                  .flatMap(publicSquareCarrier("target", _, Some("future_plan_target"))) ++
-                  EvidenceObjectBinding.signatureValues(signatures, "target", "File")
-                    .flatMap(publicFileCarrier("target", _, Some("future_plan_file")))
-              )
-        }
-      )
+      for
+        planId <- detail.principalPlanId.toList
+        target <- detail.futureCausalTarget.toList
+        if detail.futureCausalDependencyKind.contains(PlanCausalDependencyKind.ObjectStatePrecondition)
+        if detail.futureCausalMove.nonEmpty && detail.futureCausalPlyOffset.exists(_ > 0)
+        if detail.futureCausalRobustness.exists(robustness =>
+          robustness == PlanCausalRobustness.Robust || robustness == PlanCausalRobustness.Conditional
+        )
+        carrier <-
+          MoveMeaningSurfaceBoardCarrier(
+            "target",
+            "PlanSubject",
+            planId.toString.toLowerCase,
+            semanticRole = Some("plan_subject")
+          ) ::
+            (
+              publicSquareCarrier("target", target, Some("future_plan_target")) ++
+                Option(target.take(1)).filter(_.nonEmpty).toList.flatMap(
+                  publicFileCarrier("target", _, Some("future_plan_file"))
+                )
+            )
+      yield carrier
     (
         detail.structuralRouteMove.toList.map(move => publicMoveCarrier("actor", move)) ++
         detail.defenseMove.toList.map(move => publicMoveCarrier("actor", move)) ++
@@ -6426,21 +6475,7 @@ object MoveMeaningClaim:
       claimMove: String
   ): Boolean =
     val proofRecords = detail.positiveFunctionalProofEvidenceIds.flatMap(evidenceGraph.byId.get)
-    val pressureRecord = proofRecords.collectFirst {
-      case record @ EvidenceRecord(_, _: PlanPressureEvidence, _) => record
-    }
-    val structuralRecord = proofRecords.collectFirst {
-      case record @ EvidenceRecord(_, _: StructuralDeltaEvidence, _) => record
-    }
-    val lineRecord = proofRecords.collectFirst {
-      case record @ EvidenceRecord(_, _: LineFactEvidence, _) => record
-    }
     val normalizedClaimMove = JudgmentSubjectBinding.normalizeMove(claimMove).toLowerCase
-    def signatureOwnsMove(signature: String, moveUci: String): Boolean =
-      (
-        EvidenceObjectBinding.signatureValues(List(signature), "actor", "Move") ++
-          EvidenceObjectBinding.signatureValues(List(signature), "witness", "Move")
-      ).exists(move => JudgmentSubjectBinding.normalizeMove(move).equalsIgnoreCase(moveUci))
     val signatureOwnsEvent =
       detail.principalPlanId.exists(planId =>
         objectSignatures.exists(signature =>
@@ -6460,59 +6495,32 @@ object MoveMeaningClaim:
               .exists(EvidenceObjectBinding.concreteTargetToken)
           )
       )
-    val directStructuralTargetReady = structuralRecord.exists(record =>
-      EvidenceObjectBinding
-        .fromEvidenceRefs(evidenceGraph, List(record.ref))
-        .exists(_.target.exists(EvidenceObjectBinding.specificSurfaceTargetObject))
-    )
     val futureLineTargetClaimed = objectSignatures.exists(signature =>
       EvidenceObjectBinding.signatureParts(signature).exists(_.startsWith("horizon=ply:"))
     )
-    val futureLineTargetReady =
-      (for
-        planId <- detail.principalPlanId
-        case EvidenceRecord(_, payload: LineFactEvidence, _) <- lineRecord
-        (step, plyOffset) <- payload.futureRootPawnAdvance()
-        futureMove = JudgmentSubjectBinding.normalizeMove(step.moveUci).toLowerCase
-        targetSquare = futureMove.slice(2, 4)
-        targetFile = targetSquare.take(1)
-      yield objectSignatures.exists(signature =>
-        EvidenceObjectBinding
-          .signatureValues(List(signature), "target", "PlanSubject")
-          .exists(_.equalsIgnoreCase(planId.toString)) &&
-          signatureOwnsMove(signature, normalizedClaimMove) &&
-          EvidenceObjectBinding
-            .signatureValues(List(signature), "witness", "Move")
-            .exists(move => JudgmentSubjectBinding.normalizeMove(move).equalsIgnoreCase(futureMove)) &&
-          (
-            EvidenceObjectBinding.signatureValues(List(signature), "target", "Square").contains(targetSquare) ||
-              EvidenceObjectBinding.signatureValues(List(signature), "target", "File").contains(targetFile)
-          ) &&
-          EvidenceObjectBinding.signatureParts(signature).contains(s"horizon=ply:$plyOffset")
-      )).contains(true)
-    (for
-      pressureEvidence <- pressureRecord.collect { case EvidenceRecord(ref, payload: PlanPressureEvidence, parents) => (ref, payload, parents) }
-      structuralEvidence <- structuralRecord.collect { case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _) => (ref, payload) }
-      lineEvidence <- lineRecord.collect { case EvidenceRecord(ref, payload: LineFactEvidence, _) => (ref, payload) }
-      line <- pressureEvidence._1.line
-      planId <- detail.principalPlanId
-    yield
-      pressureEvidence._2.principalPlanId(Some(line.rootMove)).contains(planId) &&
-        EvidenceRef.sameMove(line.rootMove, claimMove) &&
-        pressureEvidence._3.exists(_.id == structuralEvidence._1.id) &&
-        structuralEvidence._2.line.contains(line) &&
-        EvidenceRef.sameMove(structuralEvidence._2.moveUci, claimMove) &&
-        structuralEvidence._2.consequences.exists(consequence =>
-          consequence.strength > 0 &&
-            consequence.polarity != StructuralSignalPolarity.Loss &&
-            (detail.structuralConsequenceKinds.isEmpty || detail.structuralConsequenceKinds.contains(consequence.kind))
-        ) &&
-        lineEvidence._1.line.contains(line) &&
-        lineEvidence._2.hasLineReplay &&
-        lineEvidence._2.rootMove.exists(EvidenceRef.sameMove(_, claimMove)) &&
-        signatureOwnsEvent &&
-        (if futureLineTargetClaimed then futureLineTargetReady else directStructuralTargetReady)
-    ).contains(true)
+    proofRecords match
+      case List(EvidenceRecord(ref, event: PlanCausalEventEvidence, _)) =>
+        val eventBindings = EvidenceObjectBinding.fromEvidenceRefs(evidenceGraph, List(ref))
+        val directTargetReady = eventBindings.exists(_.target.exists(EvidenceObjectBinding.specificSurfaceTargetObject))
+        val futureTargetReady = event.futureRealization.exists(realization =>
+          event.futurePublicProofReady &&
+            objectSignatures.exists(signature =>
+              EvidenceObjectBinding
+                .signatureValues(List(signature), "witness", "Move")
+                .exists(move => EvidenceRef.sameMove(move, realization.trajectory.futureStep.moveUci)) &&
+                EvidenceObjectBinding
+                  .signatureValues(List(signature), "target", "Square")
+                  .contains(realization.trajectory.futureTo.key) &&
+                EvidenceObjectBinding.signatureParts(signature).contains(s"horizon=ply:${realization.trajectory.plyOffset}")
+            )
+        )
+        ref.line.contains(event.rootLine) &&
+          detail.principalPlanId.contains(event.planId) &&
+          EvidenceRef.sameMove(event.rootMove, normalizedClaimMove) &&
+          signatureOwnsEvent &&
+          (if futureLineTargetClaimed then futureTargetReady else directTargetReady)
+      case _ =>
+        false
 
   private def currentMoveFunctionalDetailProof(
       evidenceGraph: TypedEvidenceGraph,

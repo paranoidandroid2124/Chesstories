@@ -1,6 +1,7 @@
 package lila.chessjudgment.analysis.assembly
 
 import chess.Color
+import lila.chessjudgment.model.ProbeResult
 import lila.chessjudgment.model.strategic.VariationLine
 import lila.chessjudgment.model.judgment.*
 
@@ -66,21 +67,20 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(claim.supportLevel, "owned_cause_linked")
     assertEquals(claim.publicProofLevel, "owned_function")
     assert(claim.publicSurfaceAdmitted)
-    assertEquals(claim.positiveFunctionalProofEvidenceIds.size, 3)
+    assertEquals(claim.positiveFunctionalProofEvidenceIds.size, 1)
     assert(claim.objectBindingSignatures.exists(signature =>
       signature.contains("target=PlanSubject:queensideattack") &&
         signature.contains("target=Square:c4") &&
         signature.contains("actor=Move:b7b5")
     ), claim.objectBindingSignatures)
     val proofRecords = claim.positiveFunctionalProofEvidenceIds.flatMap(result.packet.evidenceGraph.byId.get)
-    assertEquals(proofRecords.count(_.payload.isInstanceOf[PlanPressureEvidence]), 1)
-    assertEquals(proofRecords.count(_.payload.isInstanceOf[StructuralDeltaEvidence]), 1)
-    assertEquals(proofRecords.count(_.payload.isInstanceOf[LineFactEvidence]), 1)
+    assertEquals(proofRecords.count(_.payload.isInstanceOf[PlanCausalEventEvidence]), 1)
     assert(proofRecords.forall(_.ref.line.exists(_.role == LineNodeRole.Played)), proofRecords)
-    assertEquals(
-      proofRecords.collectFirst { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload.futureRootPawnAdvance() }.flatten,
-      None
-    )
+    val eventParents = proofRecords.flatMap(_.parents).flatMap(parent => result.packet.evidenceGraph.byId.get(parent.id))
+    assert(eventParents.exists(_.payload.isInstanceOf[PlanPressureEvidence]))
+    assert(eventParents.exists(_.payload.isInstanceOf[StructuralDeltaEvidence]))
+    assert(eventParents.exists(_.payload.isInstanceOf[LineFactEvidence]))
+    assert(eventParents.exists(_.payload.isInstanceOf[MoveTransitionEvidence]))
     assertEquals(
       proofRecords.collectFirst { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload.futureRootObjectMove() }.flatten,
       None
@@ -113,7 +113,31 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(trajectory.futureFrom.key -> trajectory.futureTo.key, "f3" -> "e5")
     assertEquals(trajectory.plyOffset, 2)
 
-  test("Doknjas b5 plan carries its later b4 realization without another analysis pass"):
+  test("line trajectory does not transfer identity to a same-role replacement"):
+    val graph = EvidenceFactAssembler
+      .assemble(
+        RawMoveReviewInput(
+          fen = "4k3/8/8/8/6b1/8/3N4/4K1N1 w - - 0 1",
+          playedMoveUci = "g1f3",
+          variations = List(
+            VariationLine(List("g1f3", "g4f3", "d2f3", "e8e7", "f3e5"), scoreCp = 0, depth = 12)
+          ),
+          currentEvalCp = Some(0),
+          ply = Some(1)
+        )
+      )
+      .getOrElse(fail("expected assembled evidence graph"))
+      .context
+      .evidenceGraph
+    val trajectory = graph.records.collectFirst {
+      case EvidenceRecord(ref, payload: LineFactEvidence, _)
+          if ref.line.exists(_.role == LineNodeRole.Played) =>
+        payload.futureRootObjectMove(payload.lineReplayCount)
+    }.flatten
+
+    assertEquals(trajectory, None)
+
+  test("Doknjas b5 plan does not publish its later b4 realization without reply proof"):
     val result = MoveReviewJudgmentOrchestrator
       .build(
         RawMoveReviewInput(
@@ -137,49 +161,106 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       )
       .getOrElse(fail("expected judgment result"))
     val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
-    val claim = view.moveMeaningClaims
-      .find(claim =>
-        claim.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
-          claim.lineRole == "candidate" &&
-          claim.moveUci == "b7b5" &&
-          claim.supportLevel == "owned_cause_linked" &&
-          claim.positiveFunctionalProofEvidenceIds.nonEmpty &&
-          claim.publicSurfaceAdmitted
-      )
-      .getOrElse(fail(view.moveMeaningClaims.toString))
+    assert(view.moveMeaningClaims.forall(_.futureCausalMove.isEmpty), view.moveMeaningClaims)
+    assert(!view.moveMeaningClaims.exists(claim =>
+      claim.publicSurfaceAdmitted &&
+        claim.targetSquares.contains("b4") &&
+        claim.comparisonMoveRefs.exists(_.uci == "b5b4")
+    ), view.moveMeaningClaims)
 
-    assertEquals(claim.positiveFunctionalProofEvidenceIds.size, 3)
-    assertEquals(claim.publicProofLevel, "owned_function")
-    assertEquals(claim.principalPlanId, Some(lila.chessjudgment.model.PlanId.QueensideAttack))
-    assert(claim.targetSquares.contains("b4") && claim.targetFiles.contains("b"), claim)
-    assert(claim.objectBindingSignatures.exists(signature =>
-      signature.contains("actor=Move:b7b5") &&
-        signature.contains("target=Square:b4") &&
-        signature.contains("target=File:b") &&
-        signature.contains("witness=Move:b5b4") &&
-        signature.contains("horizon=ply:8")
-    ), claim.objectBindingSignatures)
-    val publicPlanClaim = view.moveMeaningClaims
-      .find(candidate =>
-        candidate.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-          candidate.moveUci == "b7b5" &&
-          candidate.publicSurfaceAdmitted &&
-          candidate.publicProofLevel == "owned_function" &&
-          candidate.targetSquares.contains("b4") &&
-          candidate.comparisonMoveRefs.exists(_.uci == "b5b4")
-      )
-      .getOrElse(fail(view.moveMeaningClaims.toString))
-    assertEquals(publicPlanClaim.principalPlanId, Some(lila.chessjudgment.model.PlanId.QueensideAttack))
-    val proofRecords = claim.positiveFunctionalProofEvidenceIds.flatMap(result.packet.evidenceGraph.byId.get)
-    assertEquals(proofRecords.count(_.payload.isInstanceOf[PlanPressureEvidence]), 1)
-    assertEquals(proofRecords.count(_.payload.isInstanceOf[StructuralDeltaEvidence]), 1)
-    assertEquals(proofRecords.count(_.payload.isInstanceOf[LineFactEvidence]), 1)
-    assertEquals(
-      proofRecords.collectFirst { case EvidenceRecord(_, payload: LineFactEvidence, _) =>
-        payload.futureRootPawnAdvance().map { case (step, offset) => step.moveUci -> offset }
-      }.flatten,
-      Some("b5b4" -> 8)
+  test("future plan event stays internal until reply robustness is observed"):
+    val result = MoveReviewJudgmentOrchestrator
+      .build(doknjasInput())
+      .getOrElse(fail("expected judgment result"))
+    val eventRecord = result.packet.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
+          if EvidenceRef.sameMove(payload.rootMove, "b7b5") && payload.futureMove.exists(EvidenceRef.sameMove(_, "b5b4")) =>
+        record -> payload
+    }.getOrElse(fail("expected causal event"))
+
+    assert(eventRecord._2.counterfactualDependencyProven)
+    assertEquals(eventRecord._2.robustness, PlanCausalRobustness.Untested)
+    assert(!eventRecord._2.futurePublicProofReady)
+    assert(!EvidenceObjectBinding.fromEvidenceRefs(result.packet.evidenceGraph, List(eventRecord._1.ref)).exists(binding =>
+      binding.witness.exists(obj => obj.kind == EvidenceObjectKind.Move && obj.key == "b5b4")
+    ))
+
+  test("reply probe certifies a robust future plan event without hard-coded position rules"):
+    val input = doknjasInput()
+    val result = MoveReviewJudgmentOrchestrator
+      .build(withReplyProbe(input, List(
+        VariationLine(List("b2b4", "a5b4", "f4d2", "b4b2", "c1c2", "b2a3", "f1e2", "b5b4"), 0, depth = 16),
+        VariationLine(List("f1e2", "b5b4"), 0, depth = 16),
+        VariationLine(List("h2h3", "b5b4"), 0, depth = 16)
+      )))
+      .getOrElse(fail("expected judgment result"))
+    val event = causalEvent(result, "b7b5", "b5b4")
+
+    assert(result.isValid, result.validation.issues)
+    assertEquals(event.branchWitnesses.size, 3)
+    assert(event.branchWitnesses.forall(_.outcome == PlanCausalBranchOutcome.Realized), event.branchWitnesses)
+    assertEquals(event.robustness, PlanCausalRobustness.Robust)
+    assert(event.futurePublicProofReady)
+    val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
+    val publicClaim = view.moveMeaningClaims.find(claim =>
+      claim.publicSurfaceAdmitted &&
+        claim.moveUci == "b7b5" &&
+        claim.futureCausalMove.contains("b5b4") &&
+        claim.futureCausalTarget.contains("b4")
+    ).getOrElse(fail(view.moveMeaningClaims.toString))
+    assertEquals(publicClaim.futureCausalDependencyKind, Some(PlanCausalDependencyKind.ObjectStatePrecondition))
+    assertEquals(publicClaim.futureCausalPlyOffset, Some(8))
+    assertEquals(publicClaim.futureCausalRobustness, Some(PlanCausalRobustness.Robust))
+    assertEquals(publicClaim.futureCausalRealizedReplies, Some(3))
+    assertEquals(publicClaim.futureCausalTestedReplies, Some(3))
+    assertEquals(publicClaim.positiveFunctionalProofEvidenceIds.size, 1)
+    assert(result.packet.evidenceGraph.byId(publicClaim.positiveFunctionalProofEvidenceIds.head).payload.isInstanceOf[PlanCausalEventEvidence])
+    assert(MoveMeaningSurface.publicSurfaces(view).exists(_.causalPlan.exists(plan =>
+      plan.futureMove == "b5b4" && plan.robustness == PlanCausalRobustness.Robust && plan.testedReplies == 3
+    )))
+
+  test("reply probe preserves conditionality instead of treating an unfinished branch as refutation"):
+    val input = doknjasInput()
+    val result = MoveReviewJudgmentOrchestrator
+      .build(withReplyProbe(input, List(
+        VariationLine(List("f1e2", "b5b4"), 0, depth = 16),
+        VariationLine(List("h2h3", "a7a6"), 0, depth = 16),
+        VariationLine(List("g1h3", "e7e6"), 0, depth = 16)
+      )))
+      .getOrElse(fail("expected judgment result"))
+    val event = causalEvent(result, "b7b5", "b5b4")
+
+    assert(result.isValid, result.validation.issues)
+    assertEquals(event.branchWitnesses.count(_.outcome == PlanCausalBranchOutcome.Realized), 1)
+    assertEquals(event.branchWitnesses.count(_.outcome == PlanCausalBranchOutcome.Deferred), 2)
+    assertEquals(event.robustness, PlanCausalRobustness.Conditional)
+    assert(event.futurePublicProofReady)
+
+  test("validator rejects a causal event whose branch outcome was re-labeled downstream"):
+    val result = MoveReviewJudgmentOrchestrator
+      .build(withReplyProbe(doknjasInput(), List(
+        VariationLine(List("b2b4", "a5b4", "f4d2", "b4b2", "c1c2", "b2a3", "f1e2", "b5b4"), 0, depth = 16),
+        VariationLine(List("f1e2", "b5b4"), 0, depth = 16),
+        VariationLine(List("h2h3", "b5b4"), 0, depth = 16)
+      )))
+      .getOrElse(fail("expected judgment result"))
+    val causalRecord = result.packet.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
+          if payload.futureMove.exists(EvidenceRef.sameMove(_, "b5b4")) =>
+        record -> payload
+    }.getOrElse(fail("expected causal record"))
+    val tamperedPayload = causalRecord._2.copy(
+      branchWitnesses = causalRecord._2.branchWitnesses match
+        case head :: tail => head.copy(outcome = PlanCausalBranchOutcome.Refuted) :: tail
+        case Nil          => fail("expected branch witnesses")
     )
+    val tamperedGraph = TypedEvidenceGraph(result.packet.evidenceGraph.records.map { record =>
+      if record.ref.id == causalRecord._1.ref.id then causalRecord._1.copy(payload = tamperedPayload)
+      else record
+    })
+    val validation = JudgmentPacketValidator.validate(result.packet.copy(evidenceGraph = tamperedGraph))
+
+    assert(validation.issues.exists(_.kind == JudgmentPacketValidationIssueKind.InvalidPlanCausalBranchProof), validation.issues)
 
   test("structural transition proof can seed a strategic relative-cause idea"):
     val root = PositionNodeRef("8/8/8/8/8/8/3P4/8 w - - 0 1", 1, Some(Color.White), Some("root"))
@@ -286,6 +367,64 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       currentWhitePovEvalCp = 0,
       opening = None
     )
+
+  private def doknjasInput(probeResults: List[ProbeResult] = Nil): RawMoveReviewInput =
+    RawMoveReviewInput(
+      fen = "r1b2rk1/pp2ppbp/5np1/q1nP4/4PB2/2N2P2/PP4PP/2RQKBNR b K - 0 10",
+      playedMoveUci = "b7b5",
+      variations = List(
+        VariationLine(
+          List("b7b5", "b2b4", "a5b4", "f4d2", "b4b2", "c1c2", "b2a3", "f1e2", "b5b4", "c3b5", "a3a5", "c2c5"),
+          scoreCp = 0,
+          depth = 16
+        )
+      ),
+      currentEvalCp = Some(0),
+      ply = Some(19),
+      openingContext = Some(RawOpeningContext(name = Some("Grunfeld / b5-b4 counterplay versus center"))),
+      movePrefixUci = List(
+        "d2d4", "g8f6", "c2c4", "g7g6", "b1c3", "d7d5", "c1f4", "f8g7", "e2e3", "c7c5",
+        "d4c5", "d8a5", "a1c1", "e8h8", "c4d5", "b8d7", "f2f3", "d7c5", "e3e4"
+      ),
+      probeResults = probeResults
+    )
+
+  private def withReplyProbe(input: RawMoveReviewInput, replyLines: List[VariationLine]): RawMoveReviewInput =
+    val request = MoveReviewJudgmentOrchestrator
+      .build(input)
+      .getOrElse(fail("expected initial probe request"))
+      .packet
+      .probeRequests
+      .find(_.candidateMove.exists(EvidenceRef.sameMove(_, "b7b5")))
+      .getOrElse(fail("expected b7b5 reply probe request"))
+    input.copy(probeResults = List(
+      ProbeResult(
+        id = request.id,
+        fen = Some(request.fen),
+        evalCp = 0,
+        replyLines = Some(replyLines),
+        deltaVsBaseline = 0,
+        purpose = request.purpose,
+        probedMove = request.candidateMove,
+        depth = Some(request.depth),
+        objective = request.objective,
+        requiredSignals = request.requiredSignals,
+        candidateMove = request.candidateMove,
+        depthFloor = request.depthFloor,
+        variationHash = request.variationHash
+      )
+    ))
+
+  private def causalEvent(
+      result: MoveReviewJudgmentResult,
+      rootMove: String,
+      futureMove: String
+  ): PlanCausalEventEvidence =
+    result.packet.evidenceGraph.records.collectFirst {
+      case EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
+          if EvidenceRef.sameMove(payload.rootMove, rootMove) && payload.futureMove.exists(EvidenceRef.sameMove(_, futureMove)) =>
+        payload
+    }.getOrElse(fail("expected causal event"))
 
   private def evidenceRef(
       id: String,

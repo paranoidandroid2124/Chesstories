@@ -35,6 +35,13 @@ enum JudgmentPacketValidationIssueKind:
   case MismatchedThreatPressureSideToMove
   case MismatchedStructuralDeltaTransitionBinding
   case MissingStructuralDeltaTransitionParent
+  case MismatchedPlanCausalEventBinding
+  case MissingPlanCausalPressureParent
+  case MissingPlanCausalStructuralParent
+  case MissingPlanCausalLineParent
+  case MissingPlanCausalTransitionParent
+  case InvalidPlanCausalFutureProof
+  case InvalidPlanCausalBranchProof
   case MissingTacticalMechanismParent
   case UnbackedTacticalMechanismSignal
   case MismatchedRelativeCauseEventLine
@@ -767,6 +774,8 @@ object JudgmentPacketValidator:
                 )
               )
             ).flatten
+          case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, _) =>
+            planCausalEventValidationIssues(packet.evidenceGraph, record, payload)
           case record @ EvidenceRecord(ref, payload: TacticalMechanismEvidence, _) =>
             val parents = record.parents.flatMap(parent => packet.evidenceGraph.byId.get(parent.id))
             List(
@@ -847,6 +856,100 @@ object JudgmentPacketValidator:
             Nil
       bindingIssues
     }
+
+  private def planCausalEventValidationIssues(
+      graph: TypedEvidenceGraph,
+      record: EvidenceRecord,
+      payload: PlanCausalEventEvidence
+  ): List[JudgmentPacketValidationIssue] =
+    val ref = record.ref
+    val parents = record.parents.flatMap(parent => graph.byId.get(parent.id))
+    val matchingPressure = parents.exists {
+      case EvidenceRecord(parentRef, pressure: PlanPressureEvidence, _) =>
+        parentRef.line.contains(payload.rootLine) &&
+          pressure.principalPlanId(Some(payload.rootMove)).contains(payload.planId)
+      case _ =>
+        false
+    }
+    val matchingStructural = parents.exists {
+      case EvidenceRecord(_, structural: StructuralDeltaEvidence, _) =>
+        structural.transition == payload.rootTransition &&
+          payload.structuralConsequences.forall(structural.consequences.contains) &&
+          payload.developmentChoices.forall(structural.developmentChoices.contains)
+      case _ =>
+        false
+    }
+    val lineParent = parents.collectFirst {
+      case EvidenceRecord(parentRef, line: LineFactEvidence, _) if parentRef.line.contains(payload.rootLine) =>
+        line
+    }
+    val matchingTransition = parents.exists {
+      case EvidenceRecord(parentRef, MoveTransitionEvidence(move, from, to), _) =>
+        parentRef.scope == payload.rootTransition.role.scope &&
+          EvidenceRef.sameMove(move, payload.rootMove) &&
+          from == payload.rootTransition.from &&
+          to == payload.rootTransition.to
+      case _ =>
+        false
+    }
+    val futureProofValid = payload.futureRealization.forall(realization =>
+      realization.dependencyProven &&
+        lineParent.exists(line =>
+          line.futureRootObjectMove(line.lineReplayCount.max(1)).contains(realization.trajectory)
+        )
+    )
+    val branchProofValid =
+      payload.futureRealization match
+        case None => payload.branchWitnesses.isEmpty
+        case Some(realization) =>
+          val witnessesValid = payload.branchWitnesses.forall { witness =>
+            parents.collectFirst {
+              case EvidenceRecord(parentRef, line: LineFactEvidence, _)
+                  if parentRef.line.contains(witness.line) && witness.line.role == LineNodeRole.Threat =>
+                PlanCausalBranchWitness.derive(
+                  sourceProbeId = witness.sourceProbeId,
+                  line = witness.line,
+                  linePayload = line,
+                  rootTransition = payload.rootTransition,
+                  principal = realization.trajectory
+                )
+            }.contains(witness)
+          }
+          witnessesValid &&
+            (payload.branchWitnesses.isEmpty || payload.branchCoverageComplete)
+    List(
+      Option.when(
+        ref.producer != EvidenceProducer.PlanCausalEventProducer ||
+          ref.layer != EvidenceLayer.PlanCausalEvent ||
+          ref.position != payload.rootTransition.from ||
+          ref.scope != payload.rootTransition.role.scope ||
+          !ref.line.contains(payload.rootLine) ||
+          !payload.rootTransition.line.contains(payload.rootLine) ||
+          payload.rootLine.role != payload.rootTransition.role.lineRole ||
+          !EvidenceRef.sameMove(payload.rootLine.rootMove, payload.rootMove) ||
+          payload.structuralConsequences.exists(consequence => !consequence.positive || consequence.strength <= 0)
+      )(
+        JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.MismatchedPlanCausalEventBinding, ref.id, Some(ref))
+      ),
+      Option.when(!matchingPressure)(
+        JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.MissingPlanCausalPressureParent, ref.id, Some(ref))
+      ),
+      Option.when(!matchingStructural)(
+        JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.MissingPlanCausalStructuralParent, ref.id, Some(ref))
+      ),
+      Option.when(lineParent.isEmpty)(
+        JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.MissingPlanCausalLineParent, ref.id, Some(ref))
+      ),
+      Option.when(!matchingTransition)(
+        JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.MissingPlanCausalTransitionParent, ref.id, Some(ref))
+      ),
+      Option.when(!futureProofValid)(
+        JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.InvalidPlanCausalFutureProof, ref.id, Some(ref))
+      ),
+      Option.when(!branchProofValid)(
+        JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.InvalidPlanCausalBranchProof, ref.id, Some(ref))
+      )
+    ).flatten
 
   private def relativeCauseValidationIssues(
       graph: TypedEvidenceGraph,

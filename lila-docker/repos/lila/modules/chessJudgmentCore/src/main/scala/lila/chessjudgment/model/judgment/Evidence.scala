@@ -42,6 +42,7 @@ enum EvidenceProducer:
   case MoveTransitionProducer
   case StructuralDeltaProducer
   case PlanPressureProducer
+  case PlanCausalEventProducer
   case PlanTransitionProducer
   case RelativeMoveProducer
   case ChessIdeaProducer

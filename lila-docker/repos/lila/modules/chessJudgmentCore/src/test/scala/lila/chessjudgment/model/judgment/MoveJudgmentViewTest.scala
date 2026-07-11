@@ -495,6 +495,14 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       Some(line),
       EvidenceScope.PlayedTransition
     )
+    val moveTransitionRef = evidenceRef(
+      "move-transition:played:b7b5",
+      EvidenceProducer.MoveTransitionProducer,
+      EvidenceLayer.MoveTransition,
+      root,
+      None,
+      EvidenceScope.PlayedTransition
+    )
     val pressureRef = evidenceRef(
       "plan-pressure:after-played",
       EvidenceProducer.PlanPressureProducer,
@@ -544,6 +552,14 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       4,
       List("c4")
     )
+    val causalEventRef = evidenceRef(
+      "plan-causal-event:played:b7b5",
+      EvidenceProducer.PlanCausalEventProducer,
+      EvidenceLayer.PlanCausalEvent,
+      root,
+      Some(line),
+      EvidenceScope.PlayedTransition
+    )
     val linePayload = new LineFactEvidence(line, Some("b7b5"), None, Nil, None, None)(
       replay = List(LineReplayStep(root.ply, "b7b5", root.fen, after.fen))
     )
@@ -574,6 +590,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     val graph = TypedEvidenceGraph(
       List(
         EvidenceRecord(lineRef, linePayload),
+        EvidenceRecord(moveTransitionRef, MoveTransitionEvidence("b7b5", root, after)),
         EvidenceRecord(structuralRef, StructuralDeltaEvidence(transition, Nil, List(consequence))),
         EvidenceRecord(
           pressureRef,
@@ -582,6 +599,19 @@ class MoveJudgmentViewTest extends munit.FunSuite:
             ActivePlans(planMatch, Some(unrelatedPlan), Nil, List(planMatch, unrelatedPlan))
           ),
           List(structuralRef)
+        ),
+        EvidenceRecord(
+          causalEventRef,
+          PlanCausalEventEvidence(
+            planId = PlanId.QueensideAttack,
+            rootLine = line,
+            rootTransition = transition,
+            structuralConsequences = List(consequence),
+            developmentChoices = Nil,
+            futureRealization = None,
+            branchWitnesses = Nil
+          ),
+          List(pressureRef, structuralRef, lineRef, moveTransitionRef)
         ),
         EvidenceRecord(mechanismRef, mechanism, List(pressureRef)),
         EvidenceRecord(transitionRef, PlanTransitionEvidence(transitionSummary)),
@@ -602,7 +632,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(detail.structuralPurposeSubjects, List("c4"))
     assertEquals(
       detail.positiveFunctionalProofEvidenceIds,
-      List(lineRef.id, pressureRef.id, structuralRef.id).sorted
+      List(causalEventRef.id)
     )
     assert(detail.objectBindingSignatures.exists(signature =>
       signature.contains("target=PlanSubject:queensideattack") &&
