@@ -1693,15 +1693,7 @@ case class MoveMeaningClaim(
     publicProofLevel: String = "none",
     publicTargetBound: Boolean = false,
     principalPlanId: Option[PlanId] = None,
-    futureCausalDependencyKind: Option[PlanCausalDependencyKind] = None,
-    futureCausalMove: Option[String] = None,
-    futureCausalTarget: Option[String] = None,
-    futureCausalPlyOffset: Option[Int] = None,
-    futureCausalRobustness: Option[PlanCausalRobustness] = None,
-    futureCausalRealizedReplies: Option[Int] = None,
-    futureCausalExactReplies: Option[Int] = None,
-    futureCausalEquivalentReplies: Option[Int] = None,
-    futureCausalTestedReplies: Option[Int] = None
+    futureCausalProof: Option[PlanCausalPublicProof] = None
 )
 
 case class MoveMeaningSurfaceTarget(
@@ -1892,18 +1884,6 @@ case class MoveMeaningSurfaceBoardCarrier(
     semanticRole: Option[String] = None
 )
 
-case class MoveMeaningSurfaceCausalPlan(
-    dependencyKind: PlanCausalDependencyKind,
-    futureMove: String,
-    targetSquare: String,
-    plyOffset: Int,
-    robustness: PlanCausalRobustness,
-    realizedReplies: Int,
-    exactReplies: Int,
-    equivalentReplies: Int,
-    testedReplies: Int
-)
-
 case class MoveMeaningSurface(
     moveUci: String,
     subject: String,
@@ -1929,7 +1909,7 @@ case class MoveMeaningSurface(
     defenderActorPieces: List[String] = Nil,
     sourceLabel: Option[String] = None,
     principalPlanId: Option[PlanId] = None,
-    causalPlan: Option[MoveMeaningSurfaceCausalPlan] = None
+    causalPlan: Option[PlanCausalPublicProof] = None
 )
 
 object MoveMeaningSurface:
@@ -2234,7 +2214,7 @@ object MoveMeaningSurface:
       surface.principalPlanId.map(_.toString).getOrElse("")
     )
 
-  private def publicCausalPlanJson(event: MoveMeaningSurfaceCausalPlan): JsObject =
+  private def publicCausalPlanJson(event: PlanCausalPublicProof): JsObject =
     Json.obj(
       "dependency_kind" -> event.dependencyKind.toString,
       "future_move" -> event.futureMove,
@@ -3470,28 +3450,7 @@ object MoveMeaningSurface:
       defenderActorPieces = defenderMoveActorPieces,
       sourceLabel = claim.label,
       principalPlanId = claim.principalPlanId,
-      causalPlan =
-        for
-          dependencyKind <- claim.futureCausalDependencyKind
-          futureMove <- claim.futureCausalMove
-          targetSquare <- claim.futureCausalTarget
-          plyOffset <- claim.futureCausalPlyOffset
-          robustness <- claim.futureCausalRobustness
-          realizedReplies <- claim.futureCausalRealizedReplies
-          exactReplies <- claim.futureCausalExactReplies
-          equivalentReplies <- claim.futureCausalEquivalentReplies
-          testedReplies <- claim.futureCausalTestedReplies
-        yield MoveMeaningSurfaceCausalPlan(
-          dependencyKind = dependencyKind,
-          futureMove = futureMove,
-          targetSquare = targetSquare,
-          plyOffset = plyOffset,
-          robustness = robustness,
-          realizedReplies = realizedReplies,
-          exactReplies = exactReplies,
-          equivalentReplies = equivalentReplies,
-          testedReplies = testedReplies
-        )
+      causalPlan = claim.futureCausalProof
     )
 
   private def publicEvidence(claim: MoveMeaningClaim): MoveMeaningSurfaceEvidence =
@@ -4544,20 +4503,16 @@ object MoveMeaningClaim:
   private def futureCausalPlanRealizationClaim(claim: MoveMeaningClaim): Boolean =
     claim.positiveFunctionalProofEvidenceIds.nonEmpty &&
       claim.principalPlanId.nonEmpty &&
-      claim.futureCausalDependencyKind.contains(PlanCausalDependencyKind.ObjectStatePrecondition) &&
-      claim.futureCausalMove.exists(move => !EvidenceRef.sameMove(move, claim.moveUci)) &&
-      claim.futureCausalTarget.nonEmpty &&
-      claim.futureCausalPlyOffset.exists(_ > 0) &&
-      claim.futureCausalRobustness.exists(robustness =>
-        robustness == PlanCausalRobustness.Robust || robustness == PlanCausalRobustness.Conditional
-      ) &&
-      claim.futureCausalRealizedReplies.exists(_ > 0) &&
-      (for
-        realized <- claim.futureCausalRealizedReplies
-        exact <- claim.futureCausalExactReplies
-        equivalent <- claim.futureCausalEquivalentReplies
-      yield realized == exact + equivalent).contains(true) &&
-      claim.futureCausalTestedReplies.exists(_ >= BranchReplyProbeBinding.ReplyMultiPv)
+      claim.futureCausalProof.exists(proof =>
+        proof.dependencyKind == PlanCausalDependencyKind.ObjectStatePrecondition &&
+          !EvidenceRef.sameMove(proof.futureMove, claim.moveUci) &&
+          proof.targetSquare.nonEmpty &&
+          proof.plyOffset > 0 &&
+          (proof.robustness == PlanCausalRobustness.Robust || proof.robustness == PlanCausalRobustness.Conditional) &&
+          proof.realizedReplies > 0 &&
+          proof.realizedReplies == proof.exactReplies + proof.equivalentReplies &&
+          proof.testedReplies >= BranchReplyProbeBinding.ReplyMultiPv
+      )
 
   private def planPurposeCoveredByOwnedRoute(
       claims: List[MoveMeaningClaim],
@@ -5431,7 +5386,7 @@ object MoveMeaningClaim:
               val comparisonMoveRefs = comparisonMoveRefsFromLineEvidence(
                 evidenceGraph,
                 proofSourceEvidenceIds,
-                detail.futureCausalMove.zip(detail.futureCausalPlyOffset)
+                detail.futureCausalProof.map(proof => proof.futureMove -> proof.plyOffset)
               )
               val claimOwnedBoardCarriers =
                 boardCarriers.filterNot(carrier =>
@@ -5578,15 +5533,7 @@ object MoveMeaningClaim:
                 objectBindingSignatures = surfaceObjectSignatures,
                 positiveFunctionalProofEvidenceIds = detail.positiveFunctionalProofEvidenceIds.distinct.sorted,
                 principalPlanId = detail.principalPlanId,
-                futureCausalDependencyKind = detail.futureCausalDependencyKind,
-                futureCausalMove = detail.futureCausalMove,
-                futureCausalTarget = detail.futureCausalTarget,
-                futureCausalPlyOffset = detail.futureCausalPlyOffset,
-                futureCausalRobustness = detail.futureCausalRobustness,
-                futureCausalRealizedReplies = detail.futureCausalRealizedReplies,
-                futureCausalExactReplies = detail.futureCausalExactReplies,
-                futureCausalEquivalentReplies = detail.futureCausalEquivalentReplies,
-                futureCausalTestedReplies = detail.futureCausalTestedReplies,
+                futureCausalProof = detail.futureCausalProof,
                 reasonTokens = Nil,
                 comparisonLossSides =
                   PositionPlanTechniqueSemanticDetail
@@ -5979,12 +5926,8 @@ object MoveMeaningClaim:
     val futureCausalCarriers =
       for
         planId <- detail.principalPlanId.toList
-        target <- detail.futureCausalTarget.toList
-        if detail.futureCausalDependencyKind.contains(PlanCausalDependencyKind.ObjectStatePrecondition)
-        if detail.futureCausalMove.nonEmpty && detail.futureCausalPlyOffset.exists(_ > 0)
-        if detail.futureCausalRobustness.exists(robustness =>
-          robustness == PlanCausalRobustness.Robust || robustness == PlanCausalRobustness.Conditional
-        )
+        proof <- detail.futureCausalProof.toList
+        target = proof.targetSquare
         carrier <-
           MoveMeaningSurfaceBoardCarrier(
             "target",
@@ -8459,21 +8402,25 @@ object MoveMeaningClaim:
       claimMove: String
   ): Boolean =
     detail.positiveFunctionalProofEvidenceIds.nonEmpty &&
-      detail.principalPlanId.exists(planId =>
-        objectSignatures.exists(signature =>
+      (for
+        planId <- detail.principalPlanId
+        proof <- detail.futureCausalProof
+      yield objectSignatures.exists(signature =>
+        EvidenceObjectBinding
+          .signatureValues(List(signature), "target", "PlanSubject")
+          .exists(_.equalsIgnoreCase(planId.toString)) &&
+          (
+            EvidenceObjectBinding.signatureValues(List(signature), "actor", "Move") ++
+              EvidenceObjectBinding.signatureValues(List(signature), "witness", "Move")
+          ).exists(EvidenceRef.sameMove(_, claimMove)) &&
           EvidenceObjectBinding
-            .signatureValues(List(signature), "target", "PlanSubject")
-            .exists(_.equalsIgnoreCase(planId.toString)) &&
-            (
-              EvidenceObjectBinding.signatureValues(List(signature), "actor", "Move") ++
-                EvidenceObjectBinding.signatureValues(List(signature), "witness", "Move")
-            ).exists(EvidenceRef.sameMove(_, claimMove)) &&
-            EvidenceObjectBinding.signatureValues(List(signature), "witness", "Move").exists(move =>
-              !EvidenceRef.sameMove(move, claimMove)
-            ) &&
-            EvidenceObjectBinding.signatureParts(signature).exists(_.startsWith("horizon=ply:"))
-        )
-      )
+            .signatureValues(List(signature), "witness", "Move")
+            .exists(EvidenceRef.sameMove(_, proof.futureMove)) &&
+          EvidenceObjectBinding
+            .signatureValues(List(signature), "target", "Square")
+            .contains(proof.targetSquare) &&
+          EvidenceObjectBinding.signatureParts(signature).contains(s"horizon=ply:${proof.plyOffset}")
+      )).contains(true)
 
   private def positiveStructuralCurrentMoveCarrier(detail: PositionPlanTechniqueSemanticDetail): Boolean =
     detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&

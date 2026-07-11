@@ -4591,6 +4591,35 @@ final case class PlanCausalEventEvidence(
       )
     )
 
+final case class PlanCausalPublicProof(
+    dependencyKind: PlanCausalDependencyKind,
+    futureMove: String,
+    targetSquare: String,
+    plyOffset: Int,
+    robustness: PlanCausalRobustness,
+    realizedReplies: Int,
+    exactReplies: Int,
+    equivalentReplies: Int,
+    testedReplies: Int
+)
+
+object PlanCausalPublicProof:
+  def from(event: PlanCausalEventEvidence): Option[PlanCausalPublicProof] =
+    for
+      realization <- event.futureRealization
+      if event.futurePublicProofReady
+    yield PlanCausalPublicProof(
+      dependencyKind = realization.dependencyKind,
+      futureMove = realization.trajectory.futureStep.moveUci,
+      targetSquare = realization.trajectory.futureTo.key,
+      plyOffset = realization.trajectory.plyOffset,
+      robustness = event.robustness,
+      realizedReplies = event.realizedBranchWitnesses.size,
+      exactReplies = event.exactBranchWitnesses.size,
+      equivalentReplies = event.equivalentBranchWitnesses.size,
+      testedReplies = event.branchWitnesses.size
+    )
+
 final case class PlanPressureEvidence(
     scoring: PlanScoringResult,
     activePlans: ActivePlans

@@ -123,15 +123,7 @@ case class PositionPlanTechniqueSemanticDetail(
     anchorMagnitude: Option[Int] = None,
     sourceEvidenceIds: List[String] = Nil,
     positiveFunctionalProofEvidenceIds: List[String] = Nil,
-    futureCausalDependencyKind: Option[PlanCausalDependencyKind] = None,
-    futureCausalMove: Option[String] = None,
-    futureCausalTarget: Option[String] = None,
-    futureCausalPlyOffset: Option[Int] = None,
-    futureCausalRobustness: Option[PlanCausalRobustness] = None,
-    futureCausalRealizedReplies: Option[Int] = None,
-    futureCausalExactReplies: Option[Int] = None,
-    futureCausalEquivalentReplies: Option[Int] = None,
-    futureCausalTestedReplies: Option[Int] = None,
+    futureCausalProof: Option[PlanCausalPublicProof] = None,
     causeEvidenceIds: List[String] = Nil,
     proofRoles: List[RelativeCauseProofRole] = Nil,
     contextCauseEvidenceIds: List[String] = Nil,
@@ -1220,8 +1212,6 @@ object PositionPlanTechniqueProjection:
       )
       val taggedDetail = positionPlanTechniqueWithStructuralMotifs(routedDetail)
       val causeLinkage = positionPlanTechniqueDetailCauseLinkage(taggedDetail, graph, fallbackEvidenceIds)
-      val publicFutureEvent = causeLinkage.positiveFunctionalCausalEvent.filter(_.futurePublicProofReady)
-      val publicFuture = publicFutureEvent.flatMap(_.futureRealization)
       taggedDetail.copy(
         principalPlanId = taggedDetail.principalPlanId.orElse(causeLinkage.positiveFunctionalPlanId),
         causeEvidenceIds = causeLinkage.causeEvidenceIds,
@@ -1229,15 +1219,7 @@ object PositionPlanTechniqueProjection:
         contextCauseEvidenceIds = causeLinkage.contextCauseEvidenceIds,
         contextProofRoles = causeLinkage.contextProofRoles,
         positiveFunctionalProofEvidenceIds = causeLinkage.positiveFunctionalProofEvidenceIds,
-        futureCausalDependencyKind = publicFuture.map(_.dependencyKind),
-        futureCausalMove = publicFuture.map(_.trajectory.futureStep.moveUci),
-        futureCausalTarget = publicFuture.map(_.trajectory.futureTo.key),
-        futureCausalPlyOffset = publicFuture.map(_.trajectory.plyOffset),
-        futureCausalRobustness = publicFutureEvent.map(_.robustness),
-        futureCausalRealizedReplies = publicFutureEvent.map(_.realizedBranchWitnesses.size),
-        futureCausalExactReplies = publicFutureEvent.map(_.exactBranchWitnesses.size),
-        futureCausalEquivalentReplies = publicFutureEvent.map(_.equivalentBranchWitnesses.size),
-        futureCausalTestedReplies = publicFutureEvent.map(_.branchWitnesses.size),
+        futureCausalProof = causeLinkage.positiveFunctionalCausalEvent.flatMap(PlanCausalPublicProof.from),
         objectBindingSignatures = causeLinkage.objectBindingSignatures,
         specificityTier = causeLinkage.specificityTier
       )

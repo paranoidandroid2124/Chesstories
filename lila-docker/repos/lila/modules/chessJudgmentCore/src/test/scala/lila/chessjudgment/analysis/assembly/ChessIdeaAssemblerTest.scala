@@ -161,7 +161,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       )
       .getOrElse(fail("expected judgment result"))
     val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
-    assert(view.moveMeaningClaims.forall(_.futureCausalMove.isEmpty), view.moveMeaningClaims)
+    assert(view.moveMeaningClaims.forall(_.futureCausalProof.isEmpty), view.moveMeaningClaims)
     assert(!view.moveMeaningClaims.exists(claim =>
       claim.publicSurfaceAdmitted &&
         claim.targetSquares.contains("b4") &&
@@ -206,16 +206,16 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     val publicClaim = view.moveMeaningClaims.find(claim =>
       claim.publicSurfaceAdmitted &&
         claim.moveUci == "b7b5" &&
-        claim.futureCausalMove.contains("b5b4") &&
-        claim.futureCausalTarget.contains("b4")
+        claim.futureCausalProof.exists(proof => proof.futureMove == "b5b4" && proof.targetSquare == "b4")
     ).getOrElse(fail(view.moveMeaningClaims.toString))
-    assertEquals(publicClaim.futureCausalDependencyKind, Some(PlanCausalDependencyKind.ObjectStatePrecondition))
-    assertEquals(publicClaim.futureCausalPlyOffset, Some(8))
-    assertEquals(publicClaim.futureCausalRobustness, Some(PlanCausalRobustness.Robust))
-    assertEquals(publicClaim.futureCausalRealizedReplies, Some(3))
-    assertEquals(publicClaim.futureCausalExactReplies, Some(3))
-    assertEquals(publicClaim.futureCausalEquivalentReplies, Some(0))
-    assertEquals(publicClaim.futureCausalTestedReplies, Some(3))
+    val publicProof = publicClaim.futureCausalProof.getOrElse(fail("expected public causal proof"))
+    assertEquals(publicProof.dependencyKind, PlanCausalDependencyKind.ObjectStatePrecondition)
+    assertEquals(publicProof.plyOffset, 8)
+    assertEquals(publicProof.robustness, PlanCausalRobustness.Robust)
+    assertEquals(publicProof.realizedReplies, 3)
+    assertEquals(publicProof.exactReplies, 3)
+    assertEquals(publicProof.equivalentReplies, 0)
+    assertEquals(publicProof.testedReplies, 3)
     assertEquals(publicClaim.positiveFunctionalProofEvidenceIds.size, 1)
     assert(result.packet.evidenceGraph.byId(publicClaim.positiveFunctionalProofEvidenceIds.head).payload.isInstanceOf[PlanCausalEventEvidence])
     assert(MoveMeaningSurface.publicSurfaces(view).exists(_.causalPlan.exists(plan =>
