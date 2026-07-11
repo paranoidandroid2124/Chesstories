@@ -56,7 +56,8 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
     val claim = view.moveMeaningClaims
       .find(claim =>
-        claim.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+        claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+          claim.meaningKind == "PlanContinuity" &&
           claim.lineRole == "candidate" &&
           claim.moveUci == "b7b5" &&
           claim.publicSurfaceAdmitted &&
@@ -69,6 +70,14 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(claim.publicProofLevel, "owned_function")
     assert(claim.publicSurfaceAdmitted)
     assertEquals(claim.positiveFunctionalProofEvidenceIds.size, 1)
+    assertEquals(
+      view.moveMeaningClaims.count(candidate =>
+        candidate.lineRole == "candidate" &&
+          candidate.moveUci == "b7b5" &&
+          candidate.positiveFunctionalProofEvidenceIds.nonEmpty
+      ),
+      1
+    )
     assert(claim.objectBindingSignatures.exists(signature =>
       signature.contains("target=PlanSubject:queensideattack") &&
         signature.contains("target=Square:c4") &&
@@ -180,6 +189,15 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         claim.moveUci == "b7b5" &&
         claim.futureCausalProof.exists(proof => proof.futureMove == "b5b4" && proof.targetSquare == "b4")
     ).getOrElse(fail(view.moveMeaningClaims.toString))
+    assertEquals(publicClaim.unit, PositionPlanTechniqueUnit.PlanOptionSet)
+    assertEquals(
+      view.moveMeaningClaims.count(claim =>
+        claim.lineRole == "candidate" &&
+          claim.moveUci == "b7b5" &&
+          claim.positiveFunctionalProofEvidenceIds.nonEmpty
+      ),
+      1
+    )
     val publicProof = publicClaim.futureCausalProof.getOrElse(fail("expected public causal proof"))
     assertEquals(publicProof.dependencyKind, PlanCausalDependencyKind.ObjectStatePrecondition)
     assertEquals(publicProof.plyOffset, 8)
@@ -190,7 +208,10 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(publicProof.testedReplies, 3)
     assertEquals(publicClaim.positiveFunctionalProofEvidenceIds.size, 1)
     assert(result.packet.evidenceGraph.byId(publicClaim.positiveFunctionalProofEvidenceIds.head).payload.isInstanceOf[PlanCausalEventEvidence])
-    assert(MoveMeaningSurface.publicSurfaces(view).exists(_.causalPlan.exists(plan =>
+    val causalSurfaces = MoveMeaningSurface.publicSurfaces(view).filter(_.causalPlan.nonEmpty)
+    assertEquals(causalSurfaces.size, 1)
+    assertEquals(causalSurfaces.head.priority, "main")
+    assert(causalSurfaces.exists(_.causalPlan.exists(plan =>
       plan.futureMove == "b5b4" &&
         plan.robustness == PlanCausalRobustness.Robust &&
         plan.exactReplies == 3 &&

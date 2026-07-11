@@ -1457,11 +1457,13 @@ object PositionPlanTechniqueProjection:
   private def positionPlanTechniquePositiveFunctionalDetail(
       detail: PositionPlanTechniqueSemanticDetail
   ): Boolean =
-    !detail.axisPolarity.exists(polarity =>
-      polarity == StrategicAxisPolarity.Loss ||
-        polarity == StrategicAxisPolarity.Release ||
-        polarity == StrategicAxisPolarity.Concede
-    ) &&
+    detail.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+      detail.planMoveRole.nonEmpty &&
+      !detail.axisPolarity.exists(polarity =>
+        polarity == StrategicAxisPolarity.Loss ||
+          polarity == StrategicAxisPolarity.Release ||
+          polarity == StrategicAxisPolarity.Concede
+      ) &&
       !detail.structuralPurposePolarities.exists(_.equalsIgnoreCase(StructuralSignalPolarity.Loss.toString))
 
   private def positionPlanTechniqueTerminalOverriddenEndgameTechnique(
