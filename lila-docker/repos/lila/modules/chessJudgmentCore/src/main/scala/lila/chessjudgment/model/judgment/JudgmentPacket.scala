@@ -2035,9 +2035,11 @@ object MoveMeaningSurface:
   private def labelCode(value: String): String =
     value.replaceAll("[_-]+", " ").trim.toLowerCase
 
-  private def publicIdeaChains(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[JsObject] =
+  private[chessjudgment] def publicIdeaChains(verdict: MoveMeaningSurfaceVerdict, surfaces: List[MoveMeaningSurface]): List[JsObject] =
     publicIdeaChainSubjectSpecs(verdict, surfaces).flatMap { (subject, subjectMove, pvRolePrefix) =>
-      val evidenceSurfaces = surfaces.filter(_.subject == subject)
+      val evidenceSurfaces = surfaces.filter(surface =>
+        surface.subject == subject && EvidenceRef.sameMove(surface.moveUci, subjectMove)
+      )
       val rootMoveRole = publicIdeaChainRootMoveRole(subject)
       if evidenceSurfaces.isEmpty then Nil
       else
@@ -2071,13 +2073,6 @@ object MoveMeaningSurface:
             )
             .take(6)
         val subjectFrom = Option.when(subjectMove.length >= 4)(subjectMove.take(2))
-        val semanticTargetPieces =
-          displaySemantics.flatMap(_.target.pieces).map(_.trim.toLowerCase).filter(_.nonEmpty).distinct
-        val actorPieceHint =
-          if subjectMove.length > 4 then Some("pawn")
-          else semanticTargetPieces match
-            case piece :: Nil => Some(piece)
-            case _            => None
         val currentMoveCarriers = publicCarrierPairs.filter((carrier, _) =>
             carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
           ).take(1)
@@ -2110,35 +2105,9 @@ object MoveMeaningSurface:
                   .map(carrier => carrier -> surface)
               )
             )
-        val terminalActorPieceCarriers =
-          displaySemantics
-            .filter(surface => surface.terminalConsequences.nonEmpty)
-            .flatMap(surface =>
-              surface.evidence.boardCarriers
-                .filter(carrier =>
-                  carrier.role == "actor" &&
-                    carrier.kind == "Piece" &&
-                    surface.evidence.boardCarriers.exists(carrier =>
-                      carrier.role == "actor" && carrier.kind == "Move" && carrier.value == subjectMove
-                    )
-                )
-                .take(1)
-                .map(carrier => carrier -> surface)
-            )
-        val actorPieceValues =
-          currentMoveActorCarrierCandidates
-            .collect { case (carrier, _) if carrier.kind == "Piece" => carrier.value.trim.toLowerCase }
-            .distinct
-        val preferredActorPieceCarriers =
-          defenderActorPieceCarriers.take(1) match
-            case Nil =>
-              terminalActorPieceCarriers.take(1) match
-                case Nil =>
-                  actorPieceHint.toList.flatMap(piece =>
-                    currentMoveActorCarrierCandidates.find((carrier, _) => carrier.value.trim.equalsIgnoreCase(piece))
-                  )
-                case carriers => carriers
-            case carriers => carriers
+        val actorPieceValues = currentMoveActorCarrierCandidates
+          .collect { case (carrier, _) if carrier.kind == "Piece" => carrier.value.trim.toLowerCase }.distinct
+        val preferredActorPieceCarriers = defenderActorPieceCarriers.take(1)
         val orderedActorCarrierCandidates =
           currentMoveActorCarrierCandidates.sortBy((carrier, _) =>
             if carrier.kind == "Piece" then 0 else 1
@@ -2147,7 +2116,7 @@ object MoveMeaningSurface:
           (preferredActorPieceCarriers ++ orderedActorCarrierCandidates.filter((carrier, _) =>
             carrier.kind != "Piece" ||
               (preferredActorPieceCarriers.isEmpty &&
-                (actorPieceValues.size <= 1 || actorPieceHint.contains(carrier.value.trim.toLowerCase)))
+                actorPieceValues.size <= 1)
           ))
             .distinctBy((carrier, surface) =>
               (surface.subject, surface.lineRole, surface.moveUci, carrier.role, carrier.kind, carrier.value, carrier.from, carrier.to, carrier.semanticRole)
@@ -2184,7 +2153,7 @@ object MoveMeaningSurface:
           List(
             Json.obj(
               "key" -> "current-move-chain",
-              "current_move" -> verdict.playedMove,
+              "current_move" -> subjectMove,
               "reference_move" -> verdict.referenceMove,
               "move_quality" -> verdict.moveQuality,
               "subject" -> subject,
@@ -2353,11 +2322,15 @@ object MoveMeaningSurface:
     val rootSubjects =
       if problemMove then List(("reference_move", verdict.referenceMove, "best_pv_"), ("played_move", verdict.playedMove, "played_pv_"))
       else List(("played_move", verdict.playedMove, "played_pv_"))
-    val threatBranchSubject =
-      Option.when(surfaces.exists(_.subject == "opponent_resource"))(
-        ("opponent_resource", verdict.playedMove, "threat_pv_")
-      )
-    rootSubjects ++ threatBranchSubject.toList
+    val threatBranchSubjects =
+      surfaces
+        .filter(_.subject == "opponent_resource")
+        .map(_.moveUci)
+        .filter(_.nonEmpty)
+        .distinct
+        .sorted
+        .map(move => ("opponent_resource", move, "threat_pv_"))
+    rootSubjects ++ threatBranchSubjects
 
   private def publicIdeaChainRootMoveRole(subject: String): String =
     subject match
@@ -5407,10 +5380,15 @@ object MoveMeaningClaim:
       .flatMap { baseMeaningKind =>
         val currentRouteLineRole =
           Option.when(
-            currentMoveRouteLineRole(detail, objectSignatures, verdict)
+            currentMoveRouteLineRole(detail, objectSignatures, verdict) &&
+              !detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) &&
+              (
+                linkedCauseFrames.isEmpty ||
+                  linkedCauseFrames.exists(frame => causeFrameLineRole(frame, verdict).contains("candidate"))
+              )
           )("candidate")
         val lineRoleOptions =
-          (currentRouteLineRole.toList ++ lineRoles(frame, detail, verdict, linkedCauseFrames)).distinct
+          (currentRouteLineRole.toList ++ lineRoles(evidenceGraph, frame, detail, verdict, linkedCauseFrames)).distinct
         val claimOptions =
           lineRoleOptions.map { optionLineRole =>
             val optionMove = moveUci(verdict, optionLineRole)
@@ -8255,14 +8233,28 @@ object MoveMeaningClaim:
     candidateMoveMatches || referenceMoveMatches || candidateRootMatches || referenceRootMatches || contrastDetail || causeRootMatches
 
   private def lineRoles(
+      evidenceGraph: TypedEvidenceGraph,
       frame: PositionPlanTechniqueFrame,
       detail: PositionPlanTechniqueSemanticDetail,
       verdict: MoveJudgmentVerdictFrame,
       linkedCauseFrames: List[MoveJudgmentCauseFrame]
   ): List[String] =
+    val terminalSourceLine =
+      Option.when(detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind))(
+        detail.sourceEvidenceIds.flatMap(id => evidenceGraph.byId.get(id).flatMap(_.ref.line)).distinct
+      ).collect { case line :: Nil => line }
+    val directTerminalLineRole =
+      terminalSourceLine
+        .filter(line => line.role != LineNodeRole.Threat || detail.sourceEvidenceIds.toSet == frame.evidenceIds.toSet)
+        .map(line =>
+          if line.role == LineNodeRole.Played then "candidate"
+          else if line.role == LineNodeRole.BestReference then "reference"
+          else "contrast"
+        )
     val graphRoles =
       linkedCauseFrames.flatMap(frame => causeFrameLineRole(frame, verdict)).distinct
-    if graphRoles.nonEmpty then graphRoles
+    if directTerminalLineRole.nonEmpty then directTerminalLineRole.toList
+    else if graphRoles.nonEmpty then graphRoles
     else if sameMove(verdict.candidateLine.rootMove, verdict.referenceLine.rootMove) &&
         (frame.line.contains(verdict.candidateLine) || frame.line.contains(verdict.referenceLine))
     then List("candidate")

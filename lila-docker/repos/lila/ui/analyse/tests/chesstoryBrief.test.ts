@@ -33,6 +33,30 @@ describe('chesstory brief scaffold', () => {
     assert.ok(sections.every(section => section.pending));
   });
 
+  test('does not present a reference chain as the played move', () => {
+    const sections = chesstoryBriefSections({
+      verdict: { move_quality: 'bad', played_move: 'b7b5', reference_move: 'e7e6' },
+      idea_chains: [
+        {
+          key: 'current-move-chain',
+          current_move: 'e7e6',
+          reference_move: 'e7e6',
+          move_quality: 'not_applicable',
+          subject: 'reference_move',
+          proof_levels: ['owned_cause'],
+          carriers: [{ role: 'actor', kind: 'Move', value: 'e7e6', from: 'e7', to: 'e6' }],
+          pv: ['e7e6'],
+          consequence_carriers: [],
+          terminal_consequences: [],
+          technique: [],
+          player_facing_reason_allowed: true,
+        },
+      ],
+    });
+
+    assert.ok(sections.every(section => section.pending));
+  });
+
   test('uses only graph-approved idea chains for filled cards', () => {
     const payload: ChesstoryMoveMeaningPayload = {
       verdict: { move_quality: 'good', played_move: 'f8e7', reference_move: 'f8e7' },

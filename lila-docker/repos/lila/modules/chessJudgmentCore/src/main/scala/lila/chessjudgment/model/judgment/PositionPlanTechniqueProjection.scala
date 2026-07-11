@@ -705,10 +705,18 @@ object PositionPlanTechniqueProjection:
   ): List[PositionPlanTechniqueSemanticDetail] =
     val sections = tacticalCausePlanTechniqueSections(cause)
     val terminalDetails =
-      sections
-        .flatMap(_.lineConsequences)
-        .filter(proof => LineConsequenceKind.terminalResultProof(proof.kind))
-        .filter(proof => tacticalCauseTerminalDetailAllowed(cause, proof.kind))
+      cause.proof.toList.flatMap { proof =>
+        val principalThreatRank = proof.directProof.sourceRefs.flatMap(_.line.collect {
+          case line if line.role == LineNodeRole.Threat => line.rank
+        }).minOption
+        proof.directProof.lineConsequences.filter(consequence =>
+          consequence.source.line.forall(line =>
+            (line == cause.eventLine || line.role == LineNodeRole.Threat) &&
+              (line.role != LineNodeRole.Threat || principalThreatRank.contains(line.rank))
+          )
+        )
+      }
+        .filter(proof => LineConsequenceKind.terminalResultProof(proof.kind) && tacticalCauseTerminalDetailAllowed(cause, proof.kind))
         .map(proof =>
           PositionPlanTechniqueSemanticDetail(
             unit = PositionPlanTechniqueUnit.StructuralTransformation,
@@ -720,7 +728,7 @@ object PositionPlanTechniqueProjection:
             structuralPurposeCategories = List("TerminalProof"),
             structuralPurposePolarities = List(lineTerminalProofPolarity(proof.kind)),
             terminalConsequenceKinds = List(proof.kind.toString),
-            sourceEvidenceIds = evidenceIds
+            sourceEvidenceIds = List(proof.source.id)
           )
         )
     val defensiveDetails =

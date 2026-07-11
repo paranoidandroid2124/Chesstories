@@ -170,7 +170,7 @@ export interface ChesstoryIdeaChain {
 
 export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): ChesstoryBriefSection[] {
   const chains = (payload?.idea_chains || []).filter(chain => chain.player_facing_reason_allowed === true);
-  const chain = chains.find(item => item.subject === 'played_move') || chains[0];
+  const chain = chains.find(item => item.subject === 'played_move');
   if (!chain) return placeholderSections();
 
   const principalEvent = ownedPrincipalPlanEvent(chain);

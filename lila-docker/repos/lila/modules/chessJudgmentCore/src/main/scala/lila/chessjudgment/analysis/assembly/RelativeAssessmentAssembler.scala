@@ -572,7 +572,7 @@ object RelativeAssessmentAssembler:
               position = root,
               scope = EvidenceScope.Counterfactual,
               confidence = comparisonConfidence(context, fact),
-              parents = (comparisonRecord.ref :: proofRecords.all.map(_.ref)).distinctBy(_.id)
+              parents = (comparisonRecord.ref :: (supportRefs ++ proofRecords.all.map(_.ref))).distinctBy(_.id)
             )
           }
         }

@@ -1646,6 +1646,22 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       List(("reference", referenceLine.rootMove, "owned_cause_linked", "reference_or_opponent_resource"))
     )
     assert(!view.moveMeaningClaims.exists(_.surfaceLane.startsWith("current_move")))
+    val chains = MoveMeaningSurface.publicIdeaChains(
+      MoveMeaningSurfaceVerdict(
+        verdictCode = "mistake",
+        moveQuality = "bad",
+        playedMove = candidateLine.rootMove,
+        referenceMove = referenceLine.rootMove
+      ),
+      MoveMeaningSurface.publicSurfaces(view)
+    )
+    assertEquals(chains.size, 1)
+    assertEquals((chains.head \ "subject").as[String], "reference_move")
+    assertEquals((chains.head \ "current_move").as[String], referenceLine.rootMove)
+    assertEquals(
+      (chains.head \ "move_semantics").as[List[play.api.libs.json.JsObject]].map(node => (node \ "move_uci").as[String]).distinct,
+      List(referenceLine.rootMove)
+    )
 
   private def lineRef(id: String, rootMove: String, rank: Int, role: LineNodeRole): LineNodeRef =
     LineNodeRef(id, rootMove, rank, role)
