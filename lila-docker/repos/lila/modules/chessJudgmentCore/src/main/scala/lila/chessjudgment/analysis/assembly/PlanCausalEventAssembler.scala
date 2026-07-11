@@ -4,6 +4,7 @@ import chess.Color
 import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.analysis.structure.{ StructuralDeltaAnalyzer, StructuralDeltaContracts }
+import lila.chessjudgment.model.{ PlanEventIdentity, PlanMatch }
 import lila.chessjudgment.model.judgment.*
 
 object PlanCausalEventAssembler:
@@ -19,7 +20,8 @@ object PlanCausalEventAssembler:
           if pressureRef.line.exists(_.role != LineNodeRole.Threat) =>
         for
           rootLine <- pressureRef.line.toList
-          planId <- pressure.principalPlanId(Some(rootLine.rootMove)).toList
+          principalPlan <- pressure.rootBackedPlans(Some(rootLine.rootMove)).headOption.toList
+          planId = principalPlan.plan.id
           transition <- context.transitions.filter(edge =>
             edge.role.lineRole == rootLine.role && EvidenceRef.sameMove(edge.moveUci, rootLine.rootMove)
           )
@@ -58,6 +60,13 @@ object PlanCausalEventAssembler:
           )
           val payload = PlanCausalEventEvidence(
             planId = planId,
+            identity = PlanEventIdentityBuilder.from(
+              rootMove = rootLine.rootMove,
+              beforeFen = structural.transition.from.fen,
+              plan = principalPlan,
+              consequences = positiveConsequences,
+              developmentChoices = structural.developmentChoices
+            ),
             rootLine = rootLine,
             rootTransition = structural.transition,
             structuralConsequences = positiveConsequences,
@@ -188,3 +197,53 @@ private[assembly] object PlanCausalEventProof:
       consequence <- StructuralDeltaContracts.consequences(delta)
       if consequence.positive && consequence.strength > 0
     yield consequence
+
+private[assembly] object PlanEventIdentityBuilder:
+  private val EventCategories = Set(
+    TransitionConsequenceCategory.PawnStructure,
+    TransitionConsequenceCategory.PawnStructureDelta,
+    TransitionConsequenceCategory.Development,
+    TransitionConsequenceCategory.PieceActivity,
+    TransitionConsequenceCategory.TargetPressure,
+    TransitionConsequenceCategory.CenterControl,
+    TransitionConsequenceCategory.OpeningCenterControl,
+    TransitionConsequenceCategory.OpeningDevelopment
+  )
+
+  def from(
+      rootMove: String,
+      beforeFen: String,
+      plan: PlanMatch,
+      consequences: List[TransitionConsequence],
+      developmentChoices: List[StructuralDevelopmentChoice]
+  ): PlanEventIdentity =
+    val squareTargets =
+      (consequences.flatMap(_.subjects) ++ developmentChoices.flatMap(choice => List(choice.from, choice.to)))
+        .flatMap(value => "[a-h][1-8]".r.findAllIn(value.toLowerCase).map(square => s"square:$square"))
+    val targets =
+      consequences.flatMap(_.subjects) ++
+        developmentChoices.map(choice => s"development:${choice.role.toLowerCase}:${choice.from.toLowerCase}-${choice.to.toLowerCase}") ++
+        squareTargets
+    val results =
+      consequences.flatMap(consequence =>
+        s"kind:${consequence.kind.toString.toLowerCase}" ::
+          EventCategories.toList.collect {
+            case category if StructuralDeltaEvidence.hasConsequenceCategory(consequence.kind, category) =>
+              s"category:${category.toString.toLowerCase}"
+          }
+      ) ++ Option.when(developmentChoices.nonEmpty)(
+        s"kind:${TransitionConsequenceKind.DevelopmentPieceActivated.toString.toLowerCase}"
+      )
+    PlanEventIdentity.from(
+      rootMove = rootMove,
+      support = plan.support,
+      actorRole = actorRole(beforeFen, rootMove),
+      targets = targets,
+      results = results
+    )
+
+  private def actorRole(fen: String, moveUci: String): Option[String] =
+    val origin = Option(moveUci).getOrElse("").trim.toLowerCase.take(2)
+    Fen.read(Standard, Fen.Full(fen)).flatMap(position =>
+      chess.Square.fromKey(origin).flatMap(position.board.roleAt).map(_.name.toLowerCase)
+    )

@@ -15,11 +15,12 @@ import lila.chessjudgment.analysis.structure.{
   PawnStructureAssessor,
   PlanAlignmentScorer,
   StructuralDeltaAnalyzer,
+  StructuralDeltaContracts,
   StructuralPlaybook
 }
 import lila.chessjudgment.analysis.tactical.{ RelationFactNormalizer, TacticalMotifClassifier, TacticalRelationEvidence }
 import lila.chessjudgment.analysis.transition.{ TransitionAnalyzer, TransitionFactNormalizer }
-import lila.chessjudgment.model.{ CompatibilityAdjustment, Motif, Plan, PlanCategory }
+import lila.chessjudgment.model.{ CompatibilityAdjustment, Motif, Plan, PlanCategory, PlanEventIdentity }
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.strategic.PlanContinuity
 import lila.chessjudgment.model.structure.StructureId
@@ -37,6 +38,12 @@ object EvidenceFactAssembler:
       kind: TacticalMechanismKind,
       records: List[EvidenceRecord],
       signals: List[TacticalMechanismSignal]
+  )
+
+  private final case class HistoricalPlanEvent(
+      ply: Int,
+      plan: Plan,
+      identity: PlanEventIdentity
   )
 
   def assemble(raw: RawMoveReviewInput): Option[EvidenceFactAssembly] =
@@ -1562,35 +1569,25 @@ object EvidenceFactAssembler:
                   scope = original.ref.scope,
                   parents = original.parents
                 )
-            node.ref -> (alignedPlanContext, activePlans, planPressure, alignedPawnStructure)
+            val principalEvent = incoming.flatMap(edge => principalPlanEvent(context, edge, planPressure))
+            node.ref -> (alignedPlanContext, activePlans, planPressure, alignedPawnStructure, principalEvent)
           }
         snapshot.flatten
       }
     }.toMap
-    val continuity =
-      for
-        before <- context.position(PositionNodeRole.Before)
-        (_, plans, _, _) <- snapshots.get(before.ref)
-      yield historicalPlanContinuity(
-        input,
-        (plans.primary.plan :: plans.allPlans.filter(_.evidence.nonEmpty).map(_.plan)).distinctBy(_.id)
-      )
     val transitionsByPosition = context.transitions.flatMap { edge =>
       for
-        (transitionContext, currentPlans, _, _) <- snapshots.get(edge.to).toList
-        if transitionContext.rootMove.exists(rootMove =>
-          currentPlans.allPlans.exists(
-            _.evidence.exists(atom => atom.motif.move.exists(EvidenceRef.sameMove(_, rootMove)))
-          )
-        )
-        (_, _, beforePressure, _) <- snapshots.get(edge.from).toList
-        (planContinuity, previousPlan) <- continuity.toList
+        (transitionContext, _, _, _, principalEvent) <- snapshots.get(edge.to).toList
+        (currentPlan, currentEvent) <- principalEvent.toList
+        (_, _, beforePressure, _, _) <- snapshots.get(edge.from).toList
+        (planContinuity, previousPlan) = historicalPlanContinuity(input, currentPlan)
         if planContinuity.supportingMoves.nonEmpty
       yield
         val transition = TransitionAnalyzer.analyze(
           previousPlan = previousPlan,
-          currentPlans = currentPlans,
+          currentPlan = currentPlan,
           continuity = planContinuity,
+          currentEvent = currentEvent,
           ctx = transitionContext
         )
         edge.to -> TransitionFactNormalizer.fromPlanTransition(
@@ -1602,7 +1599,7 @@ object EvidenceFactAssembler:
           parents = List(edge.evidence, beforePressure.ref)
         )
     }.toMap
-    val snapshotRecords = snapshots.toList.flatMap { case (position, (_, _, pressure, alignedPawn)) =>
+    val snapshotRecords = snapshots.toList.flatMap { case (position, (_, _, pressure, alignedPawn, _)) =>
       val linkedPressure = pressure.copy(
         parents = (pressure.parents ++ transitionsByPosition.get(position).map(_.ref)).distinctBy(_.id)
       )
@@ -1612,9 +1609,8 @@ object EvidenceFactAssembler:
 
   private def historicalPlanContinuity(
       input: NormalizedMoveReviewInput,
-      currentPlans: List[Plan]
+      currentPlan: Plan
   ): (PlanContinuity, Plan) =
-    val fallbackPlan = currentPlans.head
     val history =
       PrincipalVariationEvidence
         .legalReplay(Standard.initialFen.value, input.movePrefixUci, 0)
@@ -1622,42 +1618,47 @@ object EvidenceFactAssembler:
         .getOrElse(Nil)
         .reverseIterator
         .filter { case (fenBefore, _) =>
-          Fen.read(Standard, Fen.Full(fenBefore)).exists(_.color == fallbackPlan.color)
+          Fen.read(Standard, Fen.Full(fenBefore)).exists(_.color == currentPlan.color)
         }
         .filter(step => input.beforePly - (step._2.ply - 1) < 8)
-        .map { case (fenBefore, move) =>
-          (move.ply - 1, move.uci, historicalPlans(fenBefore, move, fallbackPlan.color))
+        .flatMap { case (fenBefore, move) =>
+          historicalPlanEvents(fenBefore, move, currentPlan.color).headOption.map { case (plan, identity) =>
+            HistoricalPlanEvent(move.ply - 1, plan, identity)
+          }
         }
         .toList
-    currentPlans.zipWithIndex
-      .flatMap { case (currentPlan, index) =>
-        Option.when(history.headOption.exists(_._3.exists(_.id == currentPlan.id))) {
-          val matching = history.takeWhile(_._3.exists(_.id == currentPlan.id))
-          val startingPly = matching.last._1
-          (
-            PlanContinuity(
-              Some(currentPlan.id),
-              input.beforePly - startingPly + 1,
-              startingPly,
-              supportingMoves = matching.reverse.map(_._2)
-            ),
-            currentPlan,
-            index
-          )
-        }
+    history.headOption
+      .map { latest =>
+        val connected = historicalEventChain(history.tail, latest.identity)
+        val chain = latest :: connected
+        val chronological = chain.reverse
+        PlanContinuity(
+          principalEvent = Some(latest.identity),
+          consecutivePlies = chain.size * 2 + 1,
+          startingPly = chain.last.ply,
+          supportingMoves = chronological.map(_.identity.rootMove),
+          supportingEvents = chronological.map(_.identity)
+        ) -> latest.plan
       }
-      .sortBy { case (continuity, _, index) => (index, -continuity.consecutivePlies) }
-      .headOption
-      .map { case (continuity, plan, _) => continuity -> plan }
-      .getOrElse(PlanContinuity(None, 1, input.beforePly) -> fallbackPlan)
+      .getOrElse(PlanContinuity(None, 1, input.beforePly) -> currentPlan)
 
-  private def historicalPlans(
+  private def historicalEventChain(
+      remaining: List[HistoricalPlanEvent],
+      later: PlanEventIdentity
+  ): List[HistoricalPlanEvent] =
+    remaining match
+      case head :: tail if head.identity.continuesInto(later) =>
+        head :: historicalEventChain(tail, head.identity)
+      case _ => Nil
+
+  private def historicalPlanEvents(
       fenBefore: String,
       move: PrincipalVariationEvidence.LineMoveRef,
       side: Color
-  ): List[Plan] =
+  ): List[(Plan, PlanEventIdentity)] =
     for
       position <- Fen.read(Standard, Fen.Full(fenBefore)).toList
+      after <- Fen.read(Standard, Fen.Full(move.fenAfter)).toList
       if position.color == side
       features <- PositionAnalyzer.extractFeatures(fenBefore, move.ply - 1).toList
       motifs <- MoveAnalyzer.tokenizePv(fenBefore, List(move.uci)).toList
@@ -1694,11 +1695,63 @@ object EvidenceFactAssembler:
         side
       )
       active <- PlanMatcher.toActivePlans(scoring.topPlans, scoring.compatibilityEvents).toList
-      plan <- active.allPlans
+      planMatch <- active.allPlans
         .filter(_.evidence.exists(atom => atom.motif.move.exists(EvidenceRef.sameMove(_, move.uci))))
-        .map(_.plan)
-        .distinctBy(_.id)
-    yield plan
+        .distinctBy(_.plan.id)
+      (files, targets, createdTensionFrom) = moveStructureInputs(move.uci)
+      delta <- StructuralDeltaAnalyzer.delta(
+        beforeFen = fenBefore,
+        beforeBoard = position.board,
+        afterFen = move.fenAfter,
+        afterBoard = after.board,
+        side = side,
+        files = files,
+        targets = targets,
+        createdTensionFrom = createdTensionFrom,
+        moveUci = Some(move.uci)
+      ).toList
+      consequences = StructuralDeltaContracts.consequences(delta).filter(consequence => consequence.positive && consequence.strength > 0)
+      developmentChoices = StructuralDeltaContracts.developmentChoices(delta)
+      if consequences.nonEmpty || developmentChoices.nonEmpty
+    yield
+      planMatch.plan -> PlanEventIdentityBuilder.from(
+        rootMove = move.uci,
+        beforeFen = fenBefore,
+        plan = planMatch,
+        consequences = consequences,
+        developmentChoices = developmentChoices
+      )
+
+  private def principalPlanEvent(
+      context: JudgmentAssemblyContext,
+      edge: MoveTransitionEdge,
+      pressureRecord: EvidenceRecord
+  ): Option[(Plan, PlanEventIdentity)] =
+    for
+      pressure <- pressureRecord.payload match
+        case payload: PlanPressureEvidence => Some(payload)
+        case _                             => None
+      line <- pressureRecord.ref.line
+      plan <- pressure.rootBackedPlans(Some(line.rootMove)).headOption
+      structural <- context.evidenceGraph.records.collectFirst {
+        case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _)
+            if EvidenceRef.sameMove(payload.moveUci, edge.moveUci) &&
+              payload.from == edge.from &&
+              payload.to == edge.to &&
+              payload.role == edge.role &&
+              ref.line.contains(line) =>
+          payload
+      }
+      positiveConsequences = structural.consequences.filter(consequence => consequence.positive && consequence.strength > 0)
+      if positiveConsequences.nonEmpty || structural.developmentChoices.nonEmpty
+    yield
+      plan.plan -> PlanEventIdentityBuilder.from(
+        rootMove = edge.moveUci,
+        beforeFen = edge.from.fen,
+        plan = plan,
+        consequences = positiveConsequences,
+        developmentChoices = structural.developmentChoices
+      )
 
   private def motifsForLineRole(context: JudgmentAssemblyContext, role: LineNodeRole): List[Motif] =
     context.line(role).map(_.ref).flatMap { lineRef =>

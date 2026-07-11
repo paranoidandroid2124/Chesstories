@@ -285,6 +285,24 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
 
     assert(validation.issues.exists(_.kind == JudgmentPacketValidationIssueKind.InvalidPlanCausalBranchProof), validation.issues)
 
+  test("validator rejects a causal event whose principal identity was re-labeled downstream"):
+    val result = MoveReviewJudgmentOrchestrator
+      .build(doknjasInput())
+      .getOrElse(fail("expected judgment result"))
+    val causalRecord = result.packet.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
+          if EvidenceRef.sameMove(payload.rootMove, "b7b5") =>
+        record -> payload
+    }.getOrElse(fail("expected causal record"))
+    val tamperedGraph = TypedEvidenceGraph(result.packet.evidenceGraph.records.map { record =>
+      if record.ref.id == causalRecord._1.ref.id then
+        causalRecord._1.copy(payload = causalRecord._2.copy(identity = causalRecord._2.identity.copy(targets = List("square:a1"))))
+      else record
+    })
+    val validation = JudgmentPacketValidator.validate(result.packet.copy(evidenceGraph = tamperedGraph))
+
+    assert(validation.issues.exists(_.kind == JudgmentPacketValidationIssueKind.MismatchedPlanCausalEventBinding), validation.issues)
+
   test("structural transition proof can seed a strategic relative-cause idea"):
     val root = PositionNodeRef("8/8/8/8/8/8/3P4/8 w - - 0 1", 1, Some(Color.White), Some("root"))
     val afterPlayed = PositionNodeRef("8/8/8/8/3P4/8/8/8 b - - 0 1", 2, Some(Color.Black), Some("after-played"))

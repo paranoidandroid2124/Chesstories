@@ -1172,6 +1172,7 @@ object PositionPlanTechniqueProjection:
       activePlanIds: List[PlanId],
       previousPlanId: Option[PlanId],
       transitionType: Option[TransitionType],
+      event: Option[PlanCausalEventEvidence],
       pressure: Option[PlanPressureEvidence],
       rootMove: Option[String]
   )
@@ -2231,13 +2232,10 @@ object PositionPlanTechniqueProjection:
         planTransitionType = detail.planTransitionType.orElse(plan.transitionType),
         planMoveRole =
           if detail.unit == PositionPlanTechniqueUnit.PlanOptionSet then
-            plan.pressure.flatMap(
+            plan.event.flatMap(
               _.moveRole(
-                plan.rootMove,
                 plan.transitionType,
-                detail.structuralConsequenceKinds,
-                detail.prophylaxisNeeded.contains(true),
-                detail.structuralRouteMove.nonEmpty
+                detail.prophylaxisNeeded.contains(true)
               )
             )
           else None
@@ -2390,19 +2388,35 @@ object PositionPlanTechniqueProjection:
     val pressure = pressureRecord.collect { case EvidenceRecord(_, payload: PlanPressureEvidence, _) => payload }
     val rootMove = pressureRecord.flatMap(_.ref.line.map(_.rootMove))
     val principalPlanId = pressure.flatMap(_.principalPlanId(rootMove))
+    val event =
+      for
+        owner <- pressureRecord
+        line <- owner.ref.line
+        planId <- principalPlanId
+        payload <- graph.records.collectFirst {
+          case EvidenceRecord(_, candidate: PlanCausalEventEvidence, parents)
+              if candidate.rootLine == line &&
+                candidate.planId == planId &&
+                parents.exists(_.id == owner.ref.id) =>
+            candidate
+        }
+      yield payload
     val transition =
-      principalPlanId match
-        case Some(planId) =>
+      event
+        .flatMap(principal =>
           records.collectFirst {
-            case EvidenceRecord(_, PlanTransitionEvidence(summary), _) if summary.primaryPlanId.contains(planId) => summary
+            case EvidenceRecord(_, PlanTransitionEvidence(summary), _)
+                if summary.currentEvent.exists(_.stableKey == principal.identity.stableKey) =>
+              summary
           }
-        case None =>
-          directRecords.collectFirst { case EvidenceRecord(_, PlanTransitionEvidence(summary), _) => summary }
+        )
+        .orElse(directRecords.collectFirst { case EvidenceRecord(_, PlanTransitionEvidence(summary), _) => summary })
     PositionPlanTechniquePlanEvidence(
       principalPlanId = principalPlanId,
       activePlanIds = pressure.toList.flatMap(_.activePlanIds(rootMove)),
       previousPlanId = transition.flatMap(_.previousPlanId),
       transitionType = transition.map(_.transitionType),
+      event = event,
       pressure = pressure,
       rootMove = rootMove
     )

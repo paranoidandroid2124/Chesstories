@@ -1,7 +1,7 @@
 package lila.chessjudgment.model.strategic
 
 import chess.{ Color, Rank, Role, Square }
-import lila.chessjudgment.model.PlanId
+import lila.chessjudgment.model.PlanEventIdentity
 
 case class PieceActivity(
     piece: Role,
@@ -110,34 +110,36 @@ enum PositionalTag:
   case Initiative(color: Color)
 
 case class PlanContinuity(
-  planId: Option[PlanId],
+  principalEvent: Option[PlanEventIdentity],
   consecutivePlies: Int,
   startingPly: Int,
-  supportingMoves: List[String] = Nil
+  supportingMoves: List[String] = Nil,
+  supportingEvents: List[PlanEventIdentity] = Nil
 )
 object PlanContinuity:
   import play.api.libs.json.*
+  import lila.chessjudgment.model.PlanEventIdentity.given
   given Reads[PlanContinuity] = Reads { js =>
     for
-      rawPlanId <- (js \ "planId").validateOpt[String]
-      planId <- rawPlanId match
-        case None => JsSuccess(None)
-        case Some(raw) => PlanId.fromString(raw).map(id => JsSuccess(Some(id))).getOrElse(JsError("invalid planId"))
+      principalEvent <- (js \ "principalEvent").validateOpt[PlanEventIdentity]
       consecutivePlies <- (js \ "consecutivePlies").validate[Int]
       startingPly <- (js \ "startingPly").validate[Int]
       supportingMoves <- (js \ "supportingMoves").validateOpt[List[String]]
+      supportingEvents <- (js \ "supportingEvents").validateOpt[List[PlanEventIdentity]]
     yield PlanContinuity(
-      planId = planId,
+      principalEvent = principalEvent,
       consecutivePlies = consecutivePlies,
       startingPly = startingPly,
-      supportingMoves = supportingMoves.getOrElse(Nil)
+      supportingMoves = supportingMoves.getOrElse(Nil),
+      supportingEvents = supportingEvents.getOrElse(Nil)
     )
   }
   given Writes[PlanContinuity] = Writes { c =>
     Json.obj(
-      "planId" -> c.planId.map(_.toString),
+      "principalEvent" -> c.principalEvent,
       "consecutivePlies" -> c.consecutivePlies,
       "startingPly" -> c.startingPly,
-      "supportingMoves" -> c.supportingMoves
+      "supportingMoves" -> c.supportingMoves,
+      "supportingEvents" -> c.supportingEvents
     )
   }

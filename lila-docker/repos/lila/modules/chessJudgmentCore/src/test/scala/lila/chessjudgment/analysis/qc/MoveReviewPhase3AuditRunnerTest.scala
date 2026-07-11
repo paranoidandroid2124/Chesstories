@@ -6,14 +6,34 @@ import lila.chessjudgment.analysis.position.{ FactExtractor, PositionAnalyzer, P
 import lila.chessjudgment.analysis.singlePosition.*
 import lila.chessjudgment.analysis.strategic.EndgamePatternOracle
 import lila.chessjudgment.analysis.transition.TransitionAnalyzer
-import lila.chessjudgment.model.{ ActivePlans, EvidenceAtom, Fact, FactScope, Motif, Plan, PlanId, PlanMatch, TransitionType }
+import lila.chessjudgment.model.{ Fact, FactScope, Motif, Plan, PlanEventIdentity, PlanId, TransitionType }
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.strategic.{ PlanContinuity, RookEndgameGeometry, RookEndgamePattern }
+import lila.chessjudgment.model.strategic.PlanTaxonomy.{ PlanKind, PlanTheme }
 import lila.chessjudgment.model.structure.*
 import chess.{ Color, File }
 import chess.format.Fen
 import chess.variant.Standard
 class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
+
+  private def planEvent(
+      move: String,
+      theme: PlanTheme,
+      kind: PlanKind,
+      actorRole: String,
+      targets: List[String],
+      results: List[String]
+  ): PlanEventIdentity =
+    PlanEventIdentity(
+      rootMove = move,
+      goalTheme = theme,
+      goalKind = Some(kind),
+      actorRole = Some(actorRole),
+      actorFrom = Some(move.take(2)),
+      actorTo = Some(move.slice(2, 4)),
+      targets = targets,
+      results = results
+    )
 
   test("semantic rubric marks expected questions without slots as unmeasured and incomplete"):
     val coverage = MoveReviewPhase3AuditRunner.semanticRubricExpectedSlotCoverageJson(
@@ -351,7 +371,22 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
   test("plan transition carries typed context through graph evidence"):
     val previous = Plan.PieceActivation(Color.White)
     val current = Plan.Prophylaxis(Color.White)
-    val currentMatch = PlanMatch(current, score = 1.0, evidence = Nil)
+    val previousEvent = planEvent(
+      "g1f3",
+      PlanTheme.PieceRedeployment,
+      PlanKind.WorstPieceImprovement,
+      "knight",
+      List("square:f3"),
+      List("category:pieceactivity")
+    )
+    val currentEvent = planEvent(
+      "f2f3",
+      PlanTheme.RestrictionProphylaxis,
+      PlanKind.ProphylaxisRestraint,
+      "pawn",
+      List("square:f3"),
+      List("kind:opponentmobilityrestriction")
+    )
     val threat =
       ThreatEpisode(
         episodeId = "white:threat:0:Positional:3",
@@ -372,16 +407,18 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       )
     val continuity =
       PlanContinuity(
-        planId = Some(previous.id),
+        principalEvent = Some(previousEvent),
         consecutivePlies = 3,
         startingPly = 10,
-        supportingMoves = List("g1f3")
+        supportingMoves = List("g1f3"),
+        supportingEvents = List(previousEvent)
       )
     val summary =
       TransitionAnalyzer.analyze(
         previousPlan = previous,
-        currentPlans = ActivePlans(currentMatch, secondary = None, suppressed = Nil, allPlans = List(currentMatch)),
+        currentPlan = current,
         continuity = continuity,
+        currentEvent = currentEvent,
         ctx = PlanInteractionContext(
           whitePovEvalCp = 0,
           threatEpisodesToUs = List(threat),
@@ -417,50 +454,85 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         .flatten
 
     assertEquals(transitionAxis.map(_.polarity), Some(StrategicAxisPolarity.Concede))
-    assertEquals(transitionAxis.map(_.label), Some("PieceActivation->Prophylaxis"))
+    assertEquals(transitionAxis.map(_.label), Some("worst_piece_improvement->prophylaxis_restraint"))
     assert(
       StrategicMechanismEvidence
         .sourceSemanticAnchors(record)
-        .exists(_.stableKey == "PlanTransition:PieceActivation:Prophylaxis:3-ply")
+        .exists(_.stableKey == "PlanTransition:worst_piece_improvement:prophylaxis_restraint:3-ply")
     )
 
-  test("plan transition preserves an evidence-backed prior plan across rank jitter"):
+  test("plan transition preserves an evidence-backed event across plan id rank jitter"):
     val previous = Plan.KingsideAttack(Color.White)
-    val primary = PlanMatch(
-      Plan.PieceActivation(Color.White),
-      score = 0.51,
-      evidence = List(EvidenceAtom(Motif.SpaceAdvantage(Color.White, 1, 0, None), 0.16))
+    val current = Plan.PieceActivation(Color.White)
+    val previousEvent = planEvent(
+      "h2h4",
+      PlanTheme.FlankInfrastructure,
+      PlanKind.HookCreation,
+      "pawn",
+      List("square:h5"),
+      List("category:targetpressure")
     )
-    val continuing = PlanMatch(
-      previous,
-      score = 0.49,
-      evidence = List(
-        EvidenceAtom(
-          Motif.Maneuver(chess.Knight, Motif.ManeuverPurpose.Rerouting, Color.White, 0, Some("f3g5")),
-          0.19
-        )
-      )
+    val currentEvent = planEvent(
+      "f3g5",
+      PlanTheme.FlankInfrastructure,
+      PlanKind.HookCreation,
+      "knight",
+      List("square:h7"),
+      List("category:targetpressure")
     )
     val summary =
       TransitionAnalyzer.analyze(
         previousPlan = previous,
-        currentPlans = ActivePlans(
-          primary,
-          secondary = Some(continuing),
-          suppressed = Nil,
-          allPlans = List(primary, continuing)
-        ),
+        currentPlan = current,
         continuity = PlanContinuity(
-          planId = Some(previous.id),
+          principalEvent = Some(previousEvent),
           consecutivePlies = 3,
           startingPly = 28,
-          supportingMoves = List("h2h4")
+          supportingMoves = List("h2h4"),
+          supportingEvents = List(previousEvent)
         ),
+        currentEvent = currentEvent,
         ctx = PlanInteractionContext(whitePovEvalCp = 0, isWhiteToMove = true, rootMove = Some("f3g5"))
       )
 
     assertEquals(summary.transitionType, TransitionType.Continuation)
-    assertEquals(summary.primaryPlanId, Some(PlanId.KingsideAttack))
+    assertEquals(summary.previousPlanId, Some(PlanId.KingsideAttack))
+    assertEquals(summary.primaryPlanId, Some(PlanId.PieceActivation))
+
+  test("plan transition marks a concrete same-object event completion"):
+    val previous = Plan.PieceActivation(Color.White)
+    val previousEvent = planEvent(
+      "g1f3",
+      PlanTheme.PieceRedeployment,
+      PlanKind.OutpostEntrenchment,
+      "knight",
+      List("square:f3"),
+      List("category:pieceactivity")
+    )
+    val currentEvent = planEvent(
+      "f3e5",
+      PlanTheme.PieceRedeployment,
+      PlanKind.OutpostEntrenchment,
+      "knight",
+      List("square:e5"),
+      List("category:pieceactivity", "kind:outpostgain")
+    )
+    val summary = TransitionAnalyzer.analyze(
+      previousPlan = previous,
+      currentPlan = previous,
+      continuity = PlanContinuity(
+        principalEvent = Some(previousEvent),
+        consecutivePlies = 3,
+        startingPly = 1,
+        supportingMoves = List("g1f3"),
+        supportingEvents = List(previousEvent)
+      ),
+      currentEvent = currentEvent,
+      ctx = PlanInteractionContext(whitePovEvalCp = 0, isWhiteToMove = true, rootMove = Some("f3e5"))
+    )
+
+    assertEquals(summary.transitionType, TransitionType.Completion)
+    assert(StrategicMechanismEvidence.planTransitionCanSupportPlan(summary))
 
   test("pawn play strategic axis label preserves break file tension policy and squares"):
     val position = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(chess.Color.White), Some("root"))

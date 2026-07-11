@@ -864,13 +864,20 @@ object JudgmentPacketValidator:
   ): List[JudgmentPacketValidationIssue] =
     val ref = record.ref
     val parents = record.parents.flatMap(parent => graph.byId.get(parent.id))
-    val matchingPressure = parents.exists {
+    val matchingPressurePlan = parents.flatMap {
       case EvidenceRecord(parentRef, pressure: PlanPressureEvidence, _) =>
-        parentRef.line.contains(payload.rootLine) &&
-          pressure.principalPlanId(Some(payload.rootMove)).contains(payload.planId)
+        Option
+          .when(parentRef.line.contains(payload.rootLine))(
+            pressure
+              .rootBackedPlans(Some(payload.rootMove))
+              .find(_.plan.id == payload.planId)
+          )
+          .flatten
+          .toList
       case _ =>
-        false
+        Nil
     }
+    val matchingPressure = matchingPressurePlan.nonEmpty
     val matchingStructural = parents.exists {
       case EvidenceRecord(_, structural: StructuralDeltaEvidence, _) =>
         structural.transition == payload.rootTransition &&
@@ -892,6 +899,15 @@ object JudgmentPacketValidator:
       case _ =>
         false
     }
+    val identityValid = matchingPressurePlan.exists(plan =>
+      payload.identity == PlanEventIdentityBuilder.from(
+        rootMove = payload.rootMove,
+        beforeFen = payload.rootTransition.from.fen,
+        plan = plan,
+        consequences = payload.structuralConsequences,
+        developmentChoices = payload.developmentChoices
+      )
+    )
     val futureProofValid = payload.futureRealization.forall(realization =>
       realization.dependencyProven &&
         realization.consequences ==
@@ -930,6 +946,7 @@ object JudgmentPacketValidator:
           !payload.rootTransition.line.contains(payload.rootLine) ||
           payload.rootLine.role != payload.rootTransition.role.lineRole ||
           !EvidenceRef.sameMove(payload.rootLine.rootMove, payload.rootMove) ||
+          !identityValid ||
           payload.structuralConsequences.exists(consequence => !consequence.positive || consequence.strength <= 0)
       )(
         JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.MismatchedPlanCausalEventBinding, ref.id, Some(ref))

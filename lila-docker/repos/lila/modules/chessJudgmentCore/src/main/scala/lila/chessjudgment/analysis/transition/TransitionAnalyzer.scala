@@ -4,6 +4,7 @@ import lila.chessjudgment.model.*
 import lila.chessjudgment.analysis.evaluation.JudgmentThresholds
 import lila.chessjudgment.analysis.plan.PlanInteractionContext
 import lila.chessjudgment.model.strategic.PlanContinuity
+import lila.chessjudgment.model.strategic.PlanTaxonomy.PlanTheme
 
 /**
  * Analyzes plan transitions across moves.
@@ -19,92 +20,71 @@ object TransitionAnalyzer:
    */
   def analyze(
     previousPlan: Plan,
-    currentPlans: ActivePlans,
+    currentPlan: Plan,
     continuity: PlanContinuity,
+    currentEvent: PlanEventIdentity,
     ctx: PlanInteractionContext
   ): PlanSequenceSummary = {
-    val rootBackedPlans =
-      ctx.rootMove.toList.flatMap(rootMove =>
-        currentPlans.allPlans.filter(
-          _.evidence.exists(atom => atom.motif.move.exists(_.equalsIgnoreCase(rootMove)))
-        )
-      )
-    val supportedPlans =
-      if rootBackedPlans.nonEmpty then rootBackedPlans
-      else currentPlans.allPlans.filter(_.evidence.nonEmpty)
-    val currPlan =
-      supportedPlans
-        .find(_.plan.id == previousPlan.id)
-        .orElse(supportedPlans.headOption)
-        .map(_.plan)
-        .getOrElse(currentPlans.primary.plan)
-    val prevPlanKey = continuity.planId
-
-    val transType = prevPlanKey match
+    val previousEvent = continuity.principalEvent
+    val transType = previousEvent match
       case None => TransitionType.Opening
-      case Some(prev) if prev == currPlan.id => TransitionType.Continuation
-      case Some(_) => classifyShift(Some(previousPlan), currPlan, ctx)
+      case Some(previous) if previous.completedBy(currentEvent) => TransitionType.Completion
+      case Some(previous) if previous.continuesInto(currentEvent) => TransitionType.Continuation
+      case Some(previous) => classifyShift(previous, currentEvent, currentPlan.color, ctx)
     
     PlanSequenceSummary(
       transitionType = transType,
-      primaryPlanId = Some(currPlan.id),
+      primaryPlanId = Some(currentPlan.id),
       previousPlanId = Some(previousPlan.id),
-      continuity = Some(continuity)
+      continuity = Some(continuity),
+      previousEvent = previousEvent,
+      currentEvent = Some(currentEvent)
     )
   }
 
   private def classifyShift(
-    prevPlan: Option[Plan],
-    currPlan: Plan,
+    previousEvent: PlanEventIdentity,
+    currentEvent: PlanEventIdentity,
+    currentColor: chess.Color,
     ctx: PlanInteractionContext
   ): TransitionType =
-    if isForcedPivot(prevPlan, currPlan, ctx) then TransitionType.ForcedPivot
-    else if isConversionShift(prevPlan, currPlan, ctx) then TransitionType.NaturalShift
-    else if isOpportunisticShift(prevPlan, currPlan, ctx) then TransitionType.Opportunistic
+    if isForcedPivot(previousEvent, currentEvent, ctx) then TransitionType.ForcedPivot
+    else if isConversionShift(currentEvent, currentColor, ctx) then TransitionType.NaturalShift
+    else if isOpportunisticShift(currentEvent, currentColor, ctx) then TransitionType.Opportunistic
     else TransitionType.NaturalShift
 
   private def isForcedPivot(
-    prevPlan: Option[Plan],
-    currPlan: Plan,
+    previousEvent: PlanEventIdentity,
+    currentEvent: PlanEventIdentity,
     ctx: PlanInteractionContext
   ): Boolean =
     ctx.underDefensivePressure &&
-      currPlan.category == PlanCategory.Defensive &&
-      prevPlan.forall(_.category != PlanCategory.Defensive)
+      currentEvent.goalTheme == PlanTheme.RestrictionProphylaxis &&
+      previousEvent.goalTheme != PlanTheme.RestrictionProphylaxis
 
   private def isConversionShift(
-    prevPlan: Option[Plan],
-    currPlan: Plan,
+    currentEvent: PlanEventIdentity,
+    currentColor: chess.Color,
     ctx: PlanInteractionContext
   ): Boolean =
     val winningWindow =
       ctx.positionAssessment.exists(_.simplifyBias.shouldSimplify) &&
-        ctx.winPercentAdvantageFor(currPlan.color) >= JudgmentThresholds.CONVERSION_EDGE_WP
+        ctx.winPercentAdvantageFor(currentColor) >= JudgmentThresholds.CONVERSION_EDGE_WP
     val phaseDrivenEndgame =
-      ctx.phaseEnumOpt.contains(lila.chessjudgment.analysis.singlePosition.GamePhaseType.Endgame) &&
-        (currPlan.category == PlanCategory.Endgame || currPlan.category == PlanCategory.Transition)
+      ctx.phaseEnumOpt.contains(lila.chessjudgment.analysis.singlePosition.GamePhaseType.Endgame)
     val currentConversion =
-      currPlan.category == PlanCategory.Transition ||
-        currPlan.category == PlanCategory.Endgame ||
-        currPlan.id == PlanId.Exchange ||
-        currPlan.id == PlanId.QueenTrade
-    val previousAttackOrRace =
-      prevPlan.exists(plan =>
-        plan.category == PlanCategory.Attack ||
-          plan.category == PlanCategory.Structural ||
-          isCounterplayPlan(plan)
-      )
+      currentEvent.goalTheme == PlanTheme.FavorableExchange ||
+        currentEvent.goalTheme == PlanTheme.AdvantageTransformation
 
-    currentConversion && (winningWindow || phaseDrivenEndgame || previousAttackOrRace)
+    currentConversion && (winningWindow || phaseDrivenEndgame)
 
   private def isOpportunisticShift(
-    prevPlan: Option[Plan],
-    currPlan: Plan,
+    currentEvent: PlanEventIdentity,
+    currentColor: chess.Color,
     ctx: PlanInteractionContext
   ): Boolean =
-    val currentAttack = currPlan.category == PlanCategory.Attack || isCounterplayPlan(currPlan)
+    val currentAttack =
+      currentEvent.goalTheme == PlanTheme.FlankInfrastructure ||
+        currentEvent.goalTheme == PlanTheme.WeaknessFixation
     val attackingWindow = ctx.strategicThreatToThem && currentAttack
-    attackingWindow && !isConversionShift(prevPlan, currPlan, ctx)
-
-  private def isCounterplayPlan(plan: Plan): Boolean =
-    plan.id == PlanId.Counterplay
+    attackingWindow && !isConversionShift(currentEvent, currentColor, ctx)

@@ -15,7 +15,7 @@ import lila.chessjudgment.analysis.singlePosition.{
   TensionPolicy,
   ThreatSeverity
 }
-import lila.chessjudgment.model.{ ActivePlans, Fact, Motif, MotifCategory, PlanId, PlanMatch, PlanScoringResult, PlanSequenceSummary, TransitionType }
+import lila.chessjudgment.model.{ ActivePlans, Fact, Motif, MotifCategory, PlanEventIdentity, PlanId, PlanMatch, PlanScoringResult, PlanSequenceSummary, TransitionType }
 import lila.chessjudgment.model.structure.{ AlignmentBand, PlanAlignment, StructureId, StructureProfile }
 
 final case class EvidenceSquare(key: String)
@@ -2418,13 +2418,18 @@ object StrategicMechanismEvidence:
       case PlanTransitionEvidence(transition) if planTransitionCanSupportPlan(transition) =>
         val polarity = transition.transitionType match
           case TransitionType.Continuation  => StrategicAxisPolarity.Preserve
+          case TransitionType.Completion    => StrategicAxisPolarity.Gain
           case TransitionType.NaturalShift  => StrategicAxisPolarity.Release
           case TransitionType.ForcedPivot   => StrategicAxisPolarity.Concede
           case TransitionType.Opportunistic => StrategicAxisPolarity.Gain
           case TransitionType.Opening       => StrategicAxisPolarity.Support
         val axisLabel =
-          if transition.transitionType == TransitionType.Continuation then transition.primaryPlanId.map(_.toString).getOrElse("")
-          else (transition.previousPlanId.toList ++ transition.primaryPlanId.toList).map(_.toString).mkString("->")
+          transition.transitionType match
+            case TransitionType.Continuation => transition.currentEvent.map(_.goalKey).getOrElse("")
+            case TransitionType.Completion =>
+              (transition.previousEvent.toList.map(_.goalKey) ++ transition.currentEvent.toList.map(_.goalKey)).mkString("->")
+            case _ =>
+              (transition.previousEvent.toList.map(_.goalKey) ++ transition.currentEvent.toList.map(_.goalKey)).mkString("->")
         transition.primaryPlanId.toList.map(planId =>
           StrategicMechanismKind.PlanPressure ->
             signal(
@@ -2502,10 +2507,10 @@ object StrategicMechanismEvidence:
       case payload: PlanCausalEventEvidence =>
         payload.semanticGroupingAnchors
       case PlanTransitionEvidence(transition) =>
-        transition.primaryPlanId.map(plan =>
+        transition.currentEvent.map(current =>
           EvidenceSemanticAnchor.of(
             EvidenceSemanticAnchorKind.PlanTransition,
-            (transition.previousPlanId.toList.map(_.toString) ++ List(plan.toString) ++
+            (transition.previousEvent.toList.map(_.goalKey) ++ List(current.goalKey) ++
               transition.continuity.toList.map(continuity => s"${continuity.consecutivePlies}-ply"))*
           )
         ).toList
@@ -2556,10 +2561,13 @@ object StrategicMechanismEvidence:
   def planTransitionCanSupportPlan(transition: PlanSequenceSummary): Boolean =
     transition.primaryPlanId.nonEmpty &&
       transition.transitionType != TransitionType.Opening &&
-      transition.previousPlanId.exists(previous =>
-        transition.continuity.exists(continuity =>
-          continuity.planId.contains(previous) &&
+      transition.previousEvent.exists(previous =>
+        transition.currentEvent.nonEmpty &&
+          transition.continuity.exists(continuity =>
+          continuity.principalEvent.exists(_.stableKey == previous.stableKey) &&
             continuity.supportingMoves.nonEmpty &&
+            continuity.supportingEvents.nonEmpty &&
+            continuity.supportingMoves.size == continuity.supportingEvents.size &&
             continuity.consecutivePlies == continuity.supportingMoves.size * 2 + 1 &&
             continuity.consecutivePlies <= 8
         )
@@ -4548,6 +4556,7 @@ final case class PlanCausalFutureRealization(
 
 final case class PlanCausalEventEvidence(
     planId: PlanId,
+    identity: PlanEventIdentity,
     rootLine: LineNodeRef,
     rootTransition: StructuralTransitionBinding,
     structuralConsequences: List[TransitionConsequence],
@@ -4580,12 +4589,34 @@ final case class PlanCausalEventEvidence(
     counterfactualDependencyProven &&
       branchCoverageComplete &&
       (robustness == PlanCausalRobustness.Robust || robustness == PlanCausalRobustness.Conditional)
+  def moveRole(
+      transitionType: Option[TransitionType],
+      prophylaxisNeeded: Boolean
+  ): Option[PlanMoveRole] =
+    val preventsCounterplay =
+      prophylaxisNeeded || structuralConsequences.exists(_.kind == TransitionConsequenceKind.OpponentMobilityRestriction)
+    val realizesDirectGoal =
+      developmentChoices.nonEmpty || structuralConsequences.exists(consequence =>
+        consequence.positive &&
+          StructuralDeltaEvidence.hasConsequenceCategory(consequence.kind, TransitionConsequenceCategory.PlanAnchor)
+      )
+    transitionType match
+      case Some(TransitionType.ForcedPivot) => Some(PlanMoveRole.Pivot)
+      case Some(TransitionType.Completion) | Some(TransitionType.Opportunistic) => Some(PlanMoveRole.Execution)
+      case _ if preventsCounterplay => Some(PlanMoveRole.Prevention)
+      case _ if realizesDirectGoal => Some(PlanMoveRole.Execution)
+      case _ if futureRealization.nonEmpty => Some(PlanMoveRole.Preparation)
+      case Some(TransitionType.Continuation) => Some(PlanMoveRole.Maintenance)
+      case _ => None
   def semanticGroupingAnchors: List[EvidenceSemanticAnchor] =
     List(
       EvidenceSemanticAnchor.of(
         EvidenceSemanticAnchorKind.PlanCausalEvent,
-        planId.toString,
+        identity.goalKey,
         s"root:$rootMove",
+        s"actor:${identity.actorRole.getOrElse("unknown")}",
+        s"targets:${identity.targets.mkString(",")}",
+        s"results:${identity.results.mkString(",")}",
         s"future:${futureMove.getOrElse("none")}",
         s"robustness:$robustness"
       )
@@ -4639,116 +4670,6 @@ final case class PlanPressureEvidence(
 
   def principalPlanId(rootMove: Option[String]): Option[PlanId] =
     activePlanIds(rootMove).headOption
-
-  def moveRole(
-      rootMove: Option[String],
-      transitionType: Option[TransitionType],
-      consequenceKinds: List[TransitionConsequenceKind],
-      prophylaxisNeeded: Boolean,
-      structuralRoutePresent: Boolean
-  ): Option[PlanMoveRole] =
-    val primaryPlan = principalPlanId(rootMove)
-    val consequences = consequenceKinds.toSet
-    val activityPlans = Set(
-      PlanId.PieceActivation,
-      PlanId.MinorPieceManeuver,
-      PlanId.RookActivation,
-      PlanId.FileControl,
-      PlanId.KingActivation,
-      PlanId.Opposition,
-      PlanId.Triangulation,
-      PlanId.Zugzwang
-    )
-    val attackPlans = Set(
-      PlanId.KingsideAttack,
-      PlanId.QueensideAttack,
-      PlanId.CentralBreakthrough,
-      PlanId.PawnStorm,
-      PlanId.PerpetualCheck,
-      PlanId.DirectMate,
-      PlanId.Sacrifice,
-      PlanId.Counterplay
-    )
-    val targetPlans = Set(PlanId.WeakPawnAttack, PlanId.MinorityAttack, PlanId.Blockade)
-    val spacePlans = Set(PlanId.CentralControl, PlanId.SpaceAdvantage, PlanId.PawnChain)
-    val passerPlans = Set(PlanId.PassedPawnCreation, PlanId.PassedPawnPush, PlanId.Promotion)
-    val realizesPrimaryPlan = primaryPlan.exists(plan =>
-      plan == PlanId.OpeningDevelopment && consequences.exists(
-        Set(
-          TransitionConsequenceKind.DevelopmentLagReduced,
-          TransitionConsequenceKind.DevelopmentPieceActivated,
-          TransitionConsequenceKind.DevelopmentMobilityGain,
-          TransitionConsequenceKind.DevelopmentCenterControlGain,
-          TransitionConsequenceKind.DevelopmentSafePlacement
-        )
-      ) ||
-        activityPlans(plan) && consequences.exists(
-          Set(
-            TransitionConsequenceKind.DevelopmentPieceActivated,
-            TransitionConsequenceKind.DevelopmentMobilityGain,
-            TransitionConsequenceKind.MobilityGain,
-            TransitionConsequenceKind.LineUnlockGain,
-            TransitionConsequenceKind.FileAccessGain,
-            TransitionConsequenceKind.FileOccupationGain,
-            TransitionConsequenceKind.RookLiftActivation,
-            TransitionConsequenceKind.BatteryPressureGain,
-            TransitionConsequenceKind.OutpostGain,
-            TransitionConsequenceKind.CenterControlGain
-          )
-        ) ||
-        attackPlans(plan) && consequences.exists(
-          Set(
-            TransitionConsequenceKind.TargetPressureGain,
-            TransitionConsequenceKind.KingSafetyPressure,
-            TransitionConsequenceKind.KingRingPressureGain,
-            TransitionConsequenceKind.PawnTensionGain,
-            TransitionConsequenceKind.LineUnlockGain
-          )
-        ) ||
-        targetPlans(plan) && consequences.exists(
-          Set(
-            TransitionConsequenceKind.WeakPawnTargetCreated,
-            TransitionConsequenceKind.WeakSquareTargetCreated,
-            TransitionConsequenceKind.TargetPressureGain,
-            TransitionConsequenceKind.PawnTensionGain
-          )
-        ) ||
-        spacePlans(plan) && consequences.exists(
-          Set(
-            TransitionConsequenceKind.CenterControlGain,
-            TransitionConsequenceKind.PawnTensionGain,
-            TransitionConsequenceKind.OpponentMobilityRestriction
-          )
-        ) ||
-        passerPlans(plan) && consequences.exists(
-          Set(TransitionConsequenceKind.PassedPawnProgress, TransitionConsequenceKind.PromotionPressureGain)
-        )
-    )
-    val defensivePlan =
-      primaryPlan.exists(plan =>
-        plan == PlanId.Prophylaxis || plan == PlanId.Counterplay || plan == PlanId.DefensiveConsolidation
-      )
-    val preparationPlan =
-      primaryPlan.exists(plan => attackPlans(plan) || targetPlans(plan) || spacePlans(plan) || activityPlans(plan))
-    if primaryPlan.isEmpty then None
-    else
-      transitionType match
-        case Some(TransitionType.ForcedPivot) => Some(PlanMoveRole.Pivot)
-        case _
-            if defensivePlan &&
-              (primaryPlan.contains(PlanId.Prophylaxis) ||
-                primaryPlan.contains(PlanId.DefensiveConsolidation) ||
-                prophylaxisNeeded ||
-                consequences.contains(TransitionConsequenceKind.OpponentMobilityRestriction)) =>
-          Some(PlanMoveRole.Prevention)
-        case Some(TransitionType.Opportunistic) => Some(PlanMoveRole.Execution)
-        case _ if realizesPrimaryPlan            => Some(PlanMoveRole.Execution)
-        case _
-            if primaryPlan.contains(PlanId.PawnBreakPreparation) ||
-              preparationPlan && structuralRoutePresent =>
-          Some(PlanMoveRole.Preparation)
-        case Some(TransitionType.Continuation) => Some(PlanMoveRole.Maintenance)
-        case _                                 => None
 
 final case class CandidateComparisonEvidence(
     comparison: CandidateComparisonFact
