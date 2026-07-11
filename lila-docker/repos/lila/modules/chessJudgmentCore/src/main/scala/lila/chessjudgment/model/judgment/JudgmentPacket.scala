@@ -2282,14 +2282,26 @@ object MoveMeaningSurface:
     normalized match
       case square if square.matches("[a-h][1-8]") => Some(square)
       case square if square.matches("square:[a-h][1-8]") => Some(square.stripPrefix("square:"))
-      case file if file.matches("(?:file|break-file):[a-h]") => Some(s"${file.takeRight(1)}-file")
       case pawn if pawn.matches("weak-pawn:[a-h][1-8]") => Some(s"weak pawn on ${pawn.takeRight(2)}")
       case composite =>
         composite.split(":").toList match
+          case fileKind :: file :: _
+              if Set("file", "break-file", "semi-open-file", "open-file")(fileKind) && file.matches("[a-h]") =>
+            Some(s"$file-file")
+          case piece :: route :: _
+              if Set("pawn", "knight", "bishop", "rook", "queen", "king", "piece")(piece) &&
+                route.matches("[a-h][1-8]-[a-h][1-8]") =>
+            Some(s"$piece $route")
           case piece :: square :: _
               if Set("pawn", "knight", "bishop", "rook", "queen", "king", "piece")(piece) &&
                 square.matches("[a-h][1-8]") =>
             Some(s"$piece on $square")
+          case "outpost" :: piece :: square :: _
+              if Set("pawn", "knight", "bishop", "rook", "queen", "king", "piece")(piece) &&
+                square.matches("[a-h][1-8]") =>
+            Some(s"$piece on $square")
+          case "battery" :: "file" :: route :: _ if route.matches("[a-h][1-8]-[a-h][1-8]") => Some(route)
+          case file :: square :: _ if file.matches("[a-h]") && square.matches(s"$file[1-8]") => Some(square)
           case _ =>
             val label = publicPlanSubjectLabel(composite)
             Option.when(label.nonEmpty && !label.contains(":"))(label)
