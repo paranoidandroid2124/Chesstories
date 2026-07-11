@@ -461,7 +461,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         .exists(_.stableKey == "PlanTransition:worst_piece_improvement:prophylaxis_restraint:3-ply")
     )
 
-  test("plan transition preserves an evidence-backed event across plan id rank jitter"):
+  test("plan transition does not infer continuity from a shared result category"):
     val previous = Plan.KingsideAttack(Color.White)
     val current = Plan.PieceActivation(Color.White)
     val previousEvent = planEvent(
@@ -495,7 +495,7 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
         ctx = PlanInteractionContext(whitePovEvalCp = 0, isWhiteToMove = true, rootMove = Some("f3g5"))
       )
 
-    assertEquals(summary.transitionType, TransitionType.Continuation)
+    assertEquals(summary.transitionType, TransitionType.NaturalShift)
     assertEquals(summary.previousPlanId, Some(PlanId.KingsideAttack))
     assertEquals(summary.primaryPlanId, Some(PlanId.PieceActivation))
 

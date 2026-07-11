@@ -4754,6 +4754,11 @@ final case class PlanPressureEvidence(
   def activePlanIds(rootMove: Option[String]): List[PlanId] =
     rootBackedPlans(rootMove).map(_.plan.id)
 
+  def uniqueRootBackedPlan(rootMove: Option[String]): Option[PlanMatch] =
+    rootBackedPlans(rootMove) match
+      case plan :: Nil => Some(plan)
+      case _           => None
+
   def principalPlanId(rootMove: Option[String]): Option[PlanId] =
     activePlanIds(rootMove).headOption
 

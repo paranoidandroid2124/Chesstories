@@ -59,6 +59,7 @@ object TransitionFactNormalizer:
       position: PositionNodeRef,
       line: Option[LineNodeRef],
       scope: EvidenceScope,
+      confidence: EvidenceConfidence,
       parents: List[EvidenceRef] = Nil
   ): EvidenceRecord =
     val ref =
@@ -69,7 +70,7 @@ object TransitionFactNormalizer:
         position = position,
         line = line,
         scope = scope,
-        confidence = EvidenceConfidence.Mixed
+        confidence = confidence
       )
     EvidenceRecord(
       ref = ref,

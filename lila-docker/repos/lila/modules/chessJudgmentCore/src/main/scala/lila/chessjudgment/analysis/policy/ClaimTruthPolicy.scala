@@ -382,8 +382,8 @@ object ClaimTruthPolicy:
   private[chessjudgment] def planClaimApplicable(packet: EvidenceBackedJudgmentPacket): Boolean =
     packet.claims.exists(_.family == ClaimFamily.Plan) ||
       packet.evidenceGraph.records.exists {
-        case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
-          payload.canAnchorPlanIdea
+        case EvidenceRecord(ref, payload: StrategicMechanismEvidence, _) =>
+          ref.confidence != EvidenceConfidence.Heuristic && payload.canAnchorPlanIdea
         case _ =>
           false
       }
@@ -400,8 +400,8 @@ object ClaimTruthPolicy:
         )
       case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
         payload.planComparison.exists(_.hasPlanDelta)
-      case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
-        payload.canAnchorPlanIdea
+      case EvidenceRecord(ref, payload: StrategicMechanismEvidence, _) =>
+        ref.confidence != EvidenceConfidence.Heuristic && payload.canAnchorPlanIdea
       case _ =>
         false
     }

@@ -39,11 +39,8 @@ case class PlanEventIdentity(
   def sharesTarget(other: PlanEventIdentity): Boolean =
     targets.toSet.intersect(other.targets.toSet).nonEmpty
 
-  def sharesResult(other: PlanEventIdentity): Boolean =
-    results.toSet.intersect(other.results.toSet).nonEmpty
-
   def continuesInto(other: PlanEventIdentity): Boolean =
-    sameGoal(other) && (actorContinuesInto(other) || sharesTarget(other) || sharesResult(other))
+    sameGoal(other) && (actorContinuesInto(other) || sharesTarget(other))
 
   def completedBy(other: PlanEventIdentity): Boolean =
     sameGoal(other) &&

@@ -1092,6 +1092,7 @@ object EvidenceFactAssembler:
   private def strategicMechanismConfidence(records: List[EvidenceRecord]): EvidenceConfidence =
     if records.exists(_.ref.confidence == EvidenceConfidence.EngineBacked) then EvidenceConfidence.Mixed
     else if records.forall(_.ref.confidence == EvidenceConfidence.BoardDerived) then EvidenceConfidence.BoardDerived
+    else if records.forall(_.ref.confidence == EvidenceConfidence.Heuristic) then EvidenceConfidence.Heuristic
     else EvidenceConfidence.Mixed
 
   private def openingContextParents(
@@ -1577,7 +1578,7 @@ object EvidenceFactAssembler:
     }.toMap
     val transitionsByPosition = context.transitions.flatMap { edge =>
       for
-        (transitionContext, _, _, _, principalEvent) <- snapshots.get(edge.to).toList
+        (transitionContext, _, currentPressure, _, principalEvent) <- snapshots.get(edge.to).toList
         (currentPlan, currentEvent) <- principalEvent.toList
         (_, _, beforePressure, _, _) <- snapshots.get(edge.from).toList
         (planContinuity, previousPlan) = historicalPlanContinuity(input, currentPlan)
@@ -1596,6 +1597,7 @@ object EvidenceFactAssembler:
           position = edge.from,
           line = lineForTransition(context, edge).map(_.ref),
           scope = edge.role.scope,
+          confidence = currentPressure.ref.confidence,
           parents = List(edge.evidence, beforePressure.ref)
         )
     }.toMap
@@ -1694,10 +1696,13 @@ object EvidenceFactAssembler:
         ),
         side
       )
+      if scoring.confidence >= 0.75
       active <- PlanMatcher.toActivePlans(scoring.topPlans, scoring.compatibilityEvents).toList
-      planMatch <- active.allPlans
+      planMatch <- (active.allPlans
         .filter(_.evidence.exists(atom => atom.motif.move.exists(EvidenceRef.sameMove(_, move.uci))))
-        .distinctBy(_.plan.id)
+        .distinctBy(_.plan.id) match
+        case plan :: Nil => List(plan)
+        case _           => Nil)
       (files, targets, createdTensionFrom) = moveStructureInputs(move.uci)
       delta <- StructuralDeltaAnalyzer.delta(
         beforeFen = fenBefore,
@@ -1731,8 +1736,9 @@ object EvidenceFactAssembler:
       pressure <- pressureRecord.payload match
         case payload: PlanPressureEvidence => Some(payload)
         case _                             => None
+      if pressureRecord.ref.confidence != EvidenceConfidence.Heuristic
       line <- pressureRecord.ref.line
-      plan <- pressure.rootBackedPlans(Some(line.rootMove)).headOption
+      plan <- pressure.uniqueRootBackedPlan(Some(line.rootMove))
       structural <- context.evidenceGraph.records.collectFirst {
         case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _)
             if EvidenceRef.sameMove(payload.moveUci, edge.moveUci) &&

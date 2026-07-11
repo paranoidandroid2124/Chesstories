@@ -1435,7 +1435,7 @@ object PositionPlanTechniqueProjection:
           case payload: PlanPressureEvidence => Some(payload)
           case _                             => None
         line <- pressureRecord.ref.line
-        planId <- pressure.principalPlanId(Some(line.rootMove))
+        planId <- pressure.uniqueRootBackedPlan(Some(line.rootMove)).map(_.plan.id)
         if detail.principalPlanId.forall(_ == planId)
         if EvidenceRef.sameMove(routeMove, line.rootMove)
         eventRecordAndPayload <- graph.records.collectFirst {
@@ -1447,6 +1447,7 @@ object PositionPlanTechniqueProjection:
             record -> payload
         }
         (eventRecord, event) = eventRecordAndPayload
+        if eventRecord.ref.confidence != EvidenceConfidence.Heuristic
         detailKinds = detail.structuralConsequenceKinds.map(_.toString.toLowerCase).toSet
         eventBindings = EvidenceObjectBinding
           .fromEvidenceRefs(graph, List(eventRecord.ref))
@@ -2403,11 +2404,12 @@ object PositionPlanTechniqueProjection:
     val pressure = pressureRecord.collect { case EvidenceRecord(_, payload: PlanPressureEvidence, _) => payload }
     val rootMove = pressureRecord.flatMap(_.ref.line.map(_.rootMove))
     val principalPlanId = pressure.flatMap(_.principalPlanId(rootMove))
+    val eventPlanId = pressure.flatMap(_.uniqueRootBackedPlan(rootMove).map(_.plan.id))
     val event =
       for
         owner <- pressureRecord
         line <- owner.ref.line
-        planId <- principalPlanId
+        planId <- eventPlanId
         payload <- graph.records.collectFirst {
           case EvidenceRecord(_, candidate: PlanCausalEventEvidence, parents)
               if candidate.rootLine == line &&

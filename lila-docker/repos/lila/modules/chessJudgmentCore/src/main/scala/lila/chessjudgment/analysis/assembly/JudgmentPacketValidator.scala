@@ -864,20 +864,25 @@ object JudgmentPacketValidator:
   ): List[JudgmentPacketValidationIssue] =
     val ref = record.ref
     val parents = record.parents.flatMap(parent => graph.byId.get(parent.id))
-    val matchingPressurePlan = parents.flatMap {
+    val matchingPressurePlans = parents.flatMap {
       case EvidenceRecord(parentRef, pressure: PlanPressureEvidence, _) =>
         Option
-          .when(parentRef.line.contains(payload.rootLine))(
-            pressure
-              .rootBackedPlans(Some(payload.rootMove))
-              .find(_.plan.id == payload.planId)
-          )
+          .when(parentRef.line.contains(payload.rootLine)) {
+            val rootPlans = pressure.rootBackedPlans(Some(payload.rootMove))
+            rootPlans.find(_.plan.id == payload.planId).map(plan => (plan, parentRef.confidence, rootPlans.size == 1))
+          }
           .flatten
           .toList
       case _ =>
         Nil
     }
-    val matchingPressure = matchingPressurePlan.nonEmpty
+    val matchingPressurePlan = matchingPressurePlans.map(_._1)
+    val matchingPressure = matchingPressurePlans.nonEmpty
+    val pressureConfidenceValid =
+      matchingPressurePlans.exists { case (_, parentConfidence, unique) =>
+        ref.confidence == EvidenceConfidence.Heuristic ||
+          (unique && parentConfidence == ref.confidence && parentConfidence != EvidenceConfidence.Heuristic)
+      }
     val matchingStructural = parents.exists {
       case EvidenceRecord(_, structural: StructuralDeltaEvidence, _) =>
         structural.transition == payload.rootTransition &&
@@ -947,6 +952,7 @@ object JudgmentPacketValidator:
           payload.rootLine.role != payload.rootTransition.role.lineRole ||
           !EvidenceRef.sameMove(payload.rootLine.rootMove, payload.rootMove) ||
           !identityValid ||
+          !pressureConfidenceValid ||
           payload.structuralConsequences.exists(consequence => !consequence.positive || consequence.strength <= 0)
       )(
         JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.MismatchedPlanCausalEventBinding, ref.id, Some(ref))

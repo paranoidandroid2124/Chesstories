@@ -208,12 +208,8 @@ object PlanMatcher:
   ): PlanMatch =
     val ev = evidence(m, 0.18) {
       case Centralization(piece, _, c, _, _) if c == side && (piece == Knight || piece == Bishop) => true
-      case PawnAdvance(file, _, _, c, _, _) if c == side && centralFile(file) => true
-      case PawnBreak(file, targetFile, c, _, _) if c == side && (centralFile(file) || centralFile(targetFile)) => true
       case Castling(_, c, _, _) if c == side => true
       case Fianchetto(_, c, _, _) if c == side => true
-      case OpenFileControl(file, c, _, _) if c == side && (file == File.D || file == File.E) => true
-      case SpaceAdvantage(c, pawnDelta, _, _) if c == side && pawnDelta > 0 => true
       case Maneuver(_, ManeuverPurpose.ImprovingScope, c, _, _) if c == side => true
     }
     val centerControlDiff = profile.centerControlEdgeFor(side)

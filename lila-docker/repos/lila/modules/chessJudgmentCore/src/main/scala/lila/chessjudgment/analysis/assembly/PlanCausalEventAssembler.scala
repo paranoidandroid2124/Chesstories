@@ -75,6 +75,9 @@ object PlanCausalEventAssembler:
             branchWitnesses = branchWitnesses
           )
           val futureKey = payload.futureMove.getOrElse("direct")
+          val authoritativePlan =
+            pressureRef.confidence != EvidenceConfidence.Heuristic &&
+              pressure.uniqueRootBackedPlan(Some(rootLine.rootMove)).contains(principalPlan)
           EvidenceRecord(
             ref = allocator.evidenceRef(
               suffix = s"plan-causal-event:${allocator.key(rootLine.role)}:${rootLine.rootMove}:${allocator.key(planId)}:$futureKey",
@@ -83,9 +86,7 @@ object PlanCausalEventAssembler:
               position = transition.from,
               line = Some(rootLine),
               scope = transition.role.scope,
-              confidence =
-                if payload.branchCoverageComplete then EvidenceConfidence.EngineBacked
-                else EvidenceConfidence.LegalReplayVerified
+              confidence = if authoritativePlan then pressureRef.confidence else EvidenceConfidence.Heuristic
             ),
             payload = payload,
             parents = (

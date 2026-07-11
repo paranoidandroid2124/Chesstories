@@ -28,12 +28,17 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
 
     assert(graph.records.exists(_.payload.isInstanceOf[PlanPressureEvidence]))
     assert(graph.records.exists(_.payload.isInstanceOf[PawnStructureFactEvidence]))
+    val playedPressure = graph.records.collectFirst {
+      case EvidenceRecord(ref, payload: PlanPressureEvidence, _)
+          if ref.line.exists(_.role == LineNodeRole.Played) => payload
+    }.getOrElse(fail("expected played plan pressure"))
+    assert(!playedPressure.activePlanIds(Some("d2d4")).contains(PlanId.OpeningDevelopment))
     assertEquals(
       graph.records.filter(record => graph.parentClosure(record).exists(_.ref.id == record.ref.id)).map(_.ref.id),
       Nil
     )
 
-  test("same-root plan function reaches public surface with line-owned proof"):
+  test("ambiguous same-root plan stays heuristic and cannot own public function"):
     val result = MoveReviewJudgmentOrchestrator
       .build(
         RawMoveReviewInput(
@@ -55,51 +60,22 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       .getOrElse(fail("expected judgment result"))
     assertEquals(result.packet.probeRequests, Nil)
     val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
-    val claim = view.moveMeaningClaims
-      .find(claim =>
-        claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-          claim.meaningKind == "PlanContinuity" &&
-          claim.lineRole == "candidate" &&
-          claim.moveUci == "b7b5" &&
-          claim.publicSurfaceAdmitted &&
-          claim.positiveFunctionalProofEvidenceIds.nonEmpty
-      )
-      .getOrElse(fail(view.moveMeaningClaims.toString))
-
-    assertEquals(claim.causeEvidenceIds, Nil)
-    assertEquals(claim.supportLevel, "owned_cause_linked")
-    assertEquals(claim.publicProofLevel, "owned_function")
-    assert(claim.publicSurfaceAdmitted)
-    assertEquals(claim.positiveFunctionalProofEvidenceIds.size, 1)
-    val principalEvent = claim.principalPlanEvent.getOrElse(fail("expected direct principal event"))
-    assertEquals(principalEvent.rootMove, "b7b5")
-    assert(principalEvent.results.exists(_.stage == "direct"), principalEvent.results)
-    assertEquals(principalEvent.futureCausality, None)
-    assertEquals(
-      view.moveMeaningClaims.count(candidate =>
-        candidate.lineRole == "candidate" &&
-          candidate.moveUci == "b7b5" &&
-          candidate.positiveFunctionalProofEvidenceIds.nonEmpty
-      ),
-      1
-    )
-    assert(claim.objectBindingSignatures.exists(signature =>
-      signature.contains("target=PlanSubject:queensideattack") &&
-        signature.contains("target=Square:c4") &&
-        signature.contains("actor=Move:b7b5")
-    ), claim.objectBindingSignatures)
-    val proofRecords = claim.positiveFunctionalProofEvidenceIds.flatMap(result.packet.evidenceGraph.byId.get)
-    assertEquals(proofRecords.count(_.payload.isInstanceOf[PlanCausalEventEvidence]), 1)
-    assert(proofRecords.forall(_.ref.line.exists(_.role == LineNodeRole.Played)), proofRecords)
-    val eventParents = proofRecords.flatMap(_.parents).flatMap(parent => result.packet.evidenceGraph.byId.get(parent.id))
-    assert(eventParents.exists(_.payload.isInstanceOf[PlanPressureEvidence]))
-    assert(eventParents.exists(_.payload.isInstanceOf[StructuralDeltaEvidence]))
-    assert(eventParents.exists(_.payload.isInstanceOf[LineFactEvidence]))
-    assert(eventParents.exists(_.payload.isInstanceOf[MoveTransitionEvidence]))
-    assertEquals(
-      proofRecords.collectFirst { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload.futureRootObjectMove() }.flatten,
-      None
-    )
+    val playedPressure = result.packet.evidenceGraph.records.collectFirst {
+      case EvidenceRecord(ref, payload: PlanPressureEvidence, _)
+          if ref.line.exists(line => line.role == LineNodeRole.Played && EvidenceRef.sameMove(line.rootMove, "b7b5")) =>
+        payload
+    }.getOrElse(fail("expected played plan pressure"))
+    assert(playedPressure.rootBackedPlans(Some("b7b5")).size > 1)
+    val eventRecord = result.packet.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
+          if payload.rootLine.role == LineNodeRole.Played && EvidenceRef.sameMove(payload.rootMove, "b7b5") =>
+        record
+    }.getOrElse(fail("expected internal causal event"))
+    assertEquals(eventRecord.ref.confidence, EvidenceConfidence.Heuristic)
+    assert(!view.moveMeaningClaims.exists(claim =>
+      claim.moveUci == "b7b5" &&
+        (claim.positiveFunctionalProofEvidenceIds.nonEmpty || claim.principalPlanEvent.nonEmpty)
+    ), view.moveMeaningClaims)
 
   test("line trajectory preserves the moved knight across future plies"):
     val graph = EvidenceFactAssembler
@@ -208,7 +184,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       binding.witness.exists(obj => obj.kind == EvidenceObjectKind.Move && obj.key == "b5b4")
     ))
 
-  test("reply probe certifies a robust future plan event without hard-coded position rules"):
+  test("reply probe certifies future trajectory without promoting an ambiguous plan"):
     val input = doknjasInput()
     val result = MoveReviewJudgmentOrchestrator
       .build(withReplyProbe(input, List(
@@ -227,83 +203,17 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assert(event.futurePublicProofReady)
     assertEquals(result.packet.probeRequests, Nil)
     val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
-    val publicClaim = view.moveMeaningClaims.find(claim =>
-      claim.publicSurfaceAdmitted &&
-        claim.moveUci == "b7b5" &&
-        claim.futureCausalProof.exists(proof => proof.futureMove == "b5b4" && proof.targetSquare == "b4")
-    ).getOrElse(fail(view.moveMeaningClaims.toString))
-    assertEquals(publicClaim.unit, PositionPlanTechniqueUnit.PlanOptionSet)
-    assertEquals(publicClaim.publicProofLevel, "owned_function")
-    assertEquals(
-      view.moveMeaningClaims.count(claim =>
-        claim.lineRole == "candidate" &&
-          claim.moveUci == "b7b5" &&
-          claim.positiveFunctionalProofEvidenceIds.nonEmpty
-      ),
-      1
-    )
-    val principalEvent = publicClaim.principalPlanEvent.getOrElse(fail("expected principal plan event"))
-    assertEquals(principalEvent.rootMove, "b7b5")
-    assertEquals(principalEvent.actorRole, Some("pawn"))
-    assertEquals(principalEvent.actorFrom -> principalEvent.actorTo, Some("b7") -> Some("b5"))
-    assertEquals(principalEvent.moveRole, Some(PlanMoveRole.Execution))
-    assert(principalEvent.goalKind.nonEmpty)
-    assert(principalEvent.targets.contains("square:b4"), principalEvent.targets)
-    assert(principalEvent.targets.contains("square:c3"), principalEvent.targets)
-    assert(!principalEvent.targets.contains("square:b7"), principalEvent.targets)
-    assert(!principalEvent.targets.contains("square:b5"), principalEvent.targets)
-    assert(principalEvent.results.exists(result => result.stage == "direct" && result.strength > 0), principalEvent.results)
-    assert(principalEvent.results.exists(_.stage == "future"), principalEvent.results)
-    assertEquals(principalEvent.responses.size, 3)
-    assert(principalEvent.responses.forall(_.outcome == PlanCausalBranchOutcome.Realized), principalEvent.responses)
-    assert(principalEvent.futureCausality.nonEmpty)
-    val publicProof = publicClaim.futureCausalProof.getOrElse(fail("expected public causal proof"))
-    assertEquals(publicProof.dependencyKind, PlanCausalDependencyKind.ObjectStatePrecondition)
-    assertEquals(publicProof.plyOffset, 8)
-    assertEquals(publicProof.robustness, PlanCausalRobustness.Robust)
-    assertEquals(publicProof.realizedReplies, 3)
-    assertEquals(publicProof.exactReplies, 3)
-    assertEquals(publicProof.equivalentReplies, 0)
-    assertEquals(publicProof.testedReplies, 3)
-    assertEquals(publicClaim.positiveFunctionalProofEvidenceIds.size, 1)
-    val publicProofRecord = result.packet.evidenceGraph.byId(publicClaim.positiveFunctionalProofEvidenceIds.head)
-    assert(publicProofRecord.payload.isInstanceOf[PlanCausalEventEvidence])
-    assertEquals(publicProofRecord.ref.line.map(_.role), Some(LineNodeRole.Played))
-    val causalSurfaces = MoveMeaningSurface.publicSurfaces(view).filter(_.causalPlan.nonEmpty)
-    val playedCausalSurfaces = causalSurfaces.filter(_.subject == "played_move")
-    assertEquals(playedCausalSurfaces.size, 1, causalSurfaces)
-    assert(causalSurfaces.filter(_.lineRole == "reference").forall(_.subject == "reference_move"), causalSurfaces)
-    assertEquals(playedCausalSurfaces.head.priority, "main")
-    assertEquals(playedCausalSurfaces.head.principalPlanEvent, Some(principalEvent))
-    assert(playedCausalSurfaces.exists(_.causalPlan.exists(plan =>
-      plan.futureMove == "b5b4" &&
-        plan.robustness == PlanCausalRobustness.Robust &&
-        plan.exactReplies == 3 &&
-        plan.equivalentReplies == 0 &&
-        plan.testedReplies == 3
-    )))
+    val eventRecord = result.packet.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
+          if payload.futureMove.exists(EvidenceRef.sameMove(_, "b5b4")) => record
+    }.getOrElse(fail("expected internal causal event"))
+    assertEquals(eventRecord.ref.confidence, EvidenceConfidence.Heuristic)
+    assert(!view.moveMeaningClaims.exists(claim =>
+      claim.moveUci == "b7b5" &&
+        (claim.positiveFunctionalProofEvidenceIds.nonEmpty || claim.futureCausalProof.nonEmpty)
+    ), view.moveMeaningClaims)
     val publicJson = MoveMeaningSurface.publicPayloadJson(view)
-    assert((publicJson \\ "future_move").exists(_.asOpt[String].contains("b5b4")), publicJson)
-    assert((publicJson \\ "exact_replies").exists(_.asOpt[Int].contains(3)), publicJson)
-    assert((publicJson \\ "equivalent_replies").exists(_.asOpt[Int].contains(0)), publicJson)
-    val playedEventSemantics =
-      (publicJson \\ "move_semantics")
-        .flatMap(_.as[List[play.api.libs.json.JsObject]])
-        .filter(node => (node \ "subject").asOpt[String].contains("played_move"))
-        .filter(node => (node \ "principal_plan_event").asOpt[play.api.libs.json.JsObject].nonEmpty)
-    assertEquals(playedEventSemantics.size, 1)
-    val publicEvent = (playedEventSemantics.head \ "principal_plan_event").as[play.api.libs.json.JsObject]
-    val targetLabels = (publicEvent \ "target_labels").as[List[String]]
-    val resultSubjectLabels = (publicEvent \\ "subject_labels").flatMap(_.as[List[String]])
-    assert(targetLabels.contains("bishop on c8"), targetLabels)
-    assert(targetLabels.contains("c3"), targetLabels)
-    assert(resultSubjectLabels.contains("bishop on c8"), resultSubjectLabels)
-    assert(resultSubjectLabels.contains("c3"), resultSubjectLabels)
-    assert((targetLabels ++ resultSubjectLabels).forall(label => !label.contains(":")))
-    assert((publicJson \\ "goal").exists(node => (node \ "kind").asOpt[String].nonEmpty), publicJson)
-    assert((publicJson \\ "move_role").exists(_.asOpt[String].contains("Execution")), publicJson)
-    assert((publicJson \\ "opponent_responses").exists(_.as[List[play.api.libs.json.JsValue]].size == 3), publicJson)
-    assert((publicJson \\ "results").exists(_.as[List[play.api.libs.json.JsValue]].nonEmpty), publicJson)
+    assert(!(publicJson \\ "future_move").exists(_.asOpt[String].contains("b5b4")), publicJson)
 
   test("future realization accepts a different move only when typed function and subject agree"):
     val expected = TransitionConsequence(
