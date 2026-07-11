@@ -390,7 +390,6 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       openFiles: Set[String],
       semiOpenFilesForSide: Set[String],
       weakPawnsForEnemy: Set[String],
-      weakSquaresForEnemy: Set[String],
       pawnTensions: Set[String],
       targetPressure: Map[String, Int],
       fileAccess: Int
@@ -415,7 +414,6 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
     val after = structureSnapshot(afterFen, afterBoard, side, normalizedFiles, normalizedTargets)
     val beforeAttacks = normalizedTargets.filter(target => sidePawnAttacksTarget(beforeBoard, side, target))
     val afterAttacks = normalizedTargets.filter(target => sidePawnAttacksTarget(afterBoard, side, target))
-    val newTargets = afterAttacks.diff(beforeAttacks).distinct
     val createdTension =
       createdTensionFrom.toList.flatMap { origin =>
         normalizedTargets
@@ -453,8 +451,8 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       TransitionStructuralDelta(
         openedFiles = after.openFiles.diff(before.openFiles).toList.sorted,
         semiOpenedFiles = after.semiOpenFilesForSide.diff(before.semiOpenFilesForSide).toList.sorted,
-        newWeakPawns = (after.weakPawnsForEnemy.diff(before.weakPawnsForEnemy) ++ newTargets).toList.sorted.distinct,
-        newWeakSquares = (after.weakSquaresForEnemy.diff(before.weakSquaresForEnemy) ++ newTargets).toList.sorted.distinct,
+        newWeakPawns = after.weakPawnsForEnemy.diff(before.weakPawnsForEnemy).toList.sorted,
+        newWeakSquares = Nil,
         createdTension = createdTension,
         resolvedTension = before.pawnTensions.diff(after.pawnTensions).toList.sorted,
         pawnTensionBefore = beforeAttacks.size,
@@ -1012,16 +1010,11 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         .map(_.targetSquare)
         .filter(square => targets.contains(square) || square.headOption.exists(files.contains))
         .toSet
-    val weakSquares =
-      weakPawns.flatMap(square => adjacentSquares(square) :+ square).filter(square =>
-        square.headOption.exists(files.contains)
-      )
     StructureSnapshot(
       features = features,
       openFiles = openFiles,
       semiOpenFilesForSide = semiOpenFiles,
       weakPawnsForEnemy = weakPawns,
-      weakSquaresForEnemy = weakSquares,
       pawnTensions = pawnTensionEdges(board, side, files),
       targetPressure = targets.map(target => target -> targetPressure(board, side, target)).toMap,
       fileAccess = openFiles.size * 2 + semiOpenFiles.size
@@ -1169,18 +1162,6 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       targetFile <- List((file - 1).toChar, (file + 1).toChar)
       if targetFile >= 'a' && targetFile <= 'h' && targetRank >= 1 && targetRank <= 8
     yield s"$targetFile$targetRank"
-
-  private def adjacentSquares(square: String): List[String] =
-    for
-      file <- fileOf(square).toList
-      rank <- rankOf(square).toList
-      df <- List(-1, 0, 1)
-      dr <- List(-1, 0, 1)
-      if df != 0 || dr != 0
-      nextFile = (file + df).toChar
-      nextRank = rank + dr
-      if nextFile >= 'a' && nextFile <= 'h' && nextRank >= 1 && nextRank <= 8
-    yield s"$nextFile$nextRank"
 
   private def squareAt(key: String): Option[Square] =
     Square.all.find(_.key == key)

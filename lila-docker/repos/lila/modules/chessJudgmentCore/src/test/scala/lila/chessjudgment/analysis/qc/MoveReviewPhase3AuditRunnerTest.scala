@@ -5,6 +5,7 @@ import lila.chessjudgment.analysis.plan.PlanInteractionContext
 import lila.chessjudgment.analysis.position.{ FactExtractor, PositionAnalyzer, PositionFactNormalizer }
 import lila.chessjudgment.analysis.singlePosition.*
 import lila.chessjudgment.analysis.strategic.EndgamePatternOracle
+import lila.chessjudgment.analysis.structure.StructuralDeltaAnalyzer
 import lila.chessjudgment.analysis.transition.TransitionAnalyzer
 import lila.chessjudgment.model.{ Fact, FactScope, Motif, Plan, PlanEventIdentity, PlanId, TransitionType }
 import lila.chessjudgment.model.judgment.*
@@ -754,6 +755,28 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(pawnPlay.counterBreak, true)
     assertEquals(pawnPlay.counterBreakFiles, List("c"))
     assertEquals(pawnPlay.primaryDriver, PawnPlayDriver.Defensive)
+
+  test("a newly attacked defended pawn does not become a weak pawn or adjacent weak squares"):
+    val beforeFen = "4k3/8/3p4/4p3/8/8/3P4/4K3 w - - 0 1"
+    val afterFen = "4k3/8/3p4/4p3/3P4/8/8/4K3 b - - 0 1"
+    val before = Fen.read(Standard, Fen.Full(beforeFen)).getOrElse(fail("expected before position"))
+    val after = Fen.read(Standard, Fen.Full(afterFen)).getOrElse(fail("expected after position"))
+    val delta = StructuralDeltaAnalyzer
+      .delta(
+        beforeFen = beforeFen,
+        beforeBoard = before.board,
+        afterFen = afterFen,
+        afterBoard = after.board,
+        side = Color.White,
+        files = ('a' to 'h').toList,
+        targets = List("e5"),
+        createdTensionFrom = Some("d4"),
+        moveUci = Some("d2d4")
+      )
+      .getOrElse(fail("expected structural delta"))
+
+    assertEquals(delta.newWeakPawns, Nil)
+    assertEquals(delta.newWeakSquares, Nil)
 
   test("board fact anchors preserve concrete target squares for outposts and weak squares"):
     val position = PositionNodeRef("8/8/8/8/8/8/8/8 w - - 0 1", 1, Some(chess.Color.White), Some("root"))
