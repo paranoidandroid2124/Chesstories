@@ -809,7 +809,7 @@ object EvidenceObjectBinding:
       payload.signals.map { signal =>
         EvidenceObjectBinding(
           source = ref,
-          actor = actor,
+          actor = (actor ++ structuralSubjectActors(signal.subjects)).distinctBy(_.signaturePart),
           target = signal.subjects.flatMap(subjectObject),
           mechanism = objectOf(EvidenceObjectKind.Mechanism, signal.kind.toString),
           consequence = objectOf(EvidenceObjectKind.Consequence, signal.polarity.toString),
@@ -821,7 +821,7 @@ object EvidenceObjectBinding:
       payload.consequences.map { consequence =>
         EvidenceObjectBinding(
           source = ref,
-          actor = actor,
+          actor = (actor ++ structuralSubjectActors(consequence.subjects)).distinctBy(_.signaturePart),
           target = consequence.subjects.flatMap(subjectObject),
           mechanism = objectOf(EvidenceObjectKind.Mechanism, consequence.kind.toString),
           consequence = objectOf(EvidenceObjectKind.Consequence, consequence.anchorKey),
@@ -844,6 +844,22 @@ object EvidenceObjectBinding:
         )
       }
     (signalBindings ++ consequenceBindings ++ developmentBindings).distinctBy(_.signature)
+
+  private def structuralSubjectActors(subjects: List[String]): List[ConcreteChessObject] =
+    subjects.flatMap(subject =>
+      StructuralPurposeSubject.parse(subject) match
+        case Some(StructuralPurposeSubject.PieceRoute(piece, from, _)) =>
+          objectOf(EvidenceObjectKind.Piece, piece) ++ objectOf(EvidenceObjectKind.Square, from)
+        case Some(StructuralPurposeSubject.Outpost(piece, _)) =>
+          objectOf(EvidenceObjectKind.Piece, piece)
+        case Some(StructuralPurposeSubject.PieceSquare(piece, square)) =>
+          objectOf(EvidenceObjectKind.Piece, piece) ++ objectOf(EvidenceObjectKind.Square, square)
+        case Some(StructuralPurposeSubject.Battery(_, from, _, roles)) =>
+          roles.flatMap(role => objectOf(EvidenceObjectKind.Piece, role)) ++
+            objectOf(EvidenceObjectKind.Square, from)
+        case _ =>
+          Nil
+    ).distinctBy(_.signaturePart)
 
   private def fromTacticalMechanism(ref: EvidenceRef, payload: TacticalMechanismEvidence): EvidenceObjectBinding =
     EvidenceObjectBinding(

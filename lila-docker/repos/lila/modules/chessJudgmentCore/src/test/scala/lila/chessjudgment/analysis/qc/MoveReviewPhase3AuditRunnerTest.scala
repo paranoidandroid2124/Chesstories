@@ -1603,6 +1603,73 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
     assertEquals(view.moveMeaningClaims.map(_.surfaceLane), List("reference_or_opponent_resource"))
     assert(!view.moveMeaningClaims.exists(_.surfaceLane.startsWith("current_move")))
 
+  test("same UCI does not turn a reference-owned frame into a candidate claim"):
+    val sameMoveReference = referenceLine.copy(rootMove = candidateLine.rootMove)
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Gain:reference-route"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      referenceEvidenceIds = List("reference-route"),
+      sourceEvidenceIds = List("reference-route"),
+      structuralRouteMove = Some(sameMoveReference.rootMove),
+      structuralPurposeSubjects = List("knight:g1-f3"),
+      objectBindingSignatures = List(
+        s"actor=Move:${sameMoveReference.rootMove}|actor=Piece:knight|target=Square:f3|mechanism=Mechanism:mobilitygain|consequence=Consequence:mobilitygain"
+      ),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ConcreteObjectAxis
+    )
+    val verdict = MoveJudgmentVerdictFrame(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      winPercentLossForMover = 0.0,
+      candidateWinPercentDeltaForMover = 0.0,
+      relativeAssessmentEvidenceId = "relative-assessment",
+      verdictCertificationEvidenceId = None,
+      comparisonKind = CandidateComparisonKind.PlayedVsBest,
+      referenceLine = sameMoveReference,
+      candidateLine = candidateLine
+    )
+    val frame = meaningClaimPlanTechniqueFrame(List(detail), sameMoveReference)
+
+    assertEquals(MoveMeaningClaim.lineRoles(TypedEvidenceGraph(Nil), frame, detail, verdict, Nil), List("reference"))
+
+  test("deduplication selects one owned claim without borrowing sibling proof"):
+    val owned = MoveMeaningClaim(
+      meaningKind = "TargetPressure",
+      role = "CreatesTargetPressure",
+      laneKey = "target-pressure:e4",
+      conflictKey = None,
+      supportLevel = "owned_cause_linked",
+      visibility = "reason_grade",
+      surfaceLane = "current_move_owned",
+      lineRole = "candidate",
+      moveUci = candidateLine.rootMove,
+      frameId = "owned-frame",
+      unit = PositionPlanTechniqueUnit.StructuralTransformation,
+      axisKey = Some("Target:Gain:e4"),
+      axisKind = Some(StrategicAxisKind.Target),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      label = Some("target-pressure"),
+      causeKinds = List(RelativeCauseKind.TargetPressureGain),
+      causeSourceSides = List(RelativeCauseSourceSide.Candidate),
+      causeEvidenceIds = List("owned-cause"),
+      sourceEvidenceIds = List("owned-source"),
+      objectBindingSignatures = List("actor=Move:e2e3|target=Square:e4|mechanism=Mechanism:targetpressure"),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis
+    )
+    val sibling = owned.copy(
+      supportLevel = "view_surfaced",
+      frameId = "sibling-frame",
+      causeKinds = Nil,
+      causeSourceSides = Nil,
+      causeEvidenceIds = Nil,
+      sourceEvidenceIds = List("sibling-source"),
+      objectBindingSignatures = List("actor=Move:e2e3|target=Square:h4|mechanism=Mechanism:targetpressure"),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ContextOnly
+    )
+
+    assertEquals(MoveMeaningClaim.selectMeaningClaim(List(sibling, owned)), Some(owned))
+
   test("move meaning claims let cross-comparison reference roots own reference resources"):
     val referenceAlternativeCause = causeFrame(
       causeId = "cause-cross-reference-break",

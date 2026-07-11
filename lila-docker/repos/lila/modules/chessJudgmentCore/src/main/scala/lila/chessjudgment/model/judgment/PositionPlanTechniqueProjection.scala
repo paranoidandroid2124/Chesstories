@@ -1196,31 +1196,8 @@ object PositionPlanTechniqueProjection:
         details ++
           details.flatMap(positionPlanTechniqueMaterialCompensationDetails(_, graph, fallbackEvidenceIds))
       ).distinctBy(detail => (detail.unit, detail.axisKey, detail.label, detail.terminalConsequenceKinds.mkString(","), detail.sourceEvidenceIds.mkString(",")))
-    val fallbackRefs = fallbackEvidenceIds.flatMap(id => graph.byId.get(id).map(_.ref))
-    val fallbackAnchorKeys =
-      fallbackRefs
-        .flatMap(ref => graph.byId.get(ref.id))
-        .flatMap(StrategicMechanismEvidence.sourceSemanticAnchors)
-        .map(_.stableKey)
-        .distinct
-        .sorted
-    val fallbackStructureRouteContext =
-      positionPlanTechniqueStructureRouteContextKeys(fallbackAnchorKeys, Nil)
-    val fallbackStructureRouteSourceIds =
-      positionPlanTechniqueStructureRouteContextSourceIds(graph, fallbackRefs)
-    val structuralPurposeBySourceId = positionPlanTechniqueStructuralPurposeBySourceId(graph, fallbackRefs)
-    val fallbackStructuralPurpose =
-      positionPlanTechniqueStructuralPurposeForSources(fallbackEvidenceIds, structuralPurposeBySourceId)
     rawDetails.map { detail =>
-      val routedDetail =
-        positionPlanTechniqueWithFallbackOpenCenterRoute(
-          detail,
-          fallbackStructuralPurpose,
-          fallbackStructureRouteContext,
-          fallbackStructureRouteSourceIds,
-          fallbackAnchorKeys
-      )
-      val taggedDetail = positionPlanTechniqueWithStructuralMotifs(routedDetail)
+      val taggedDetail = positionPlanTechniqueWithStructuralMotifs(detail)
       val causeLinkage = positionPlanTechniqueDetailCauseLinkage(taggedDetail, graph, fallbackEvidenceIds)
       taggedDetail.copy(
         principalPlanId = taggedDetail.principalPlanId.orElse(causeLinkage.positiveFunctionalPlanId),
@@ -1321,19 +1298,11 @@ object PositionPlanTechniqueProjection:
     val evidenceIds =
       if localEvidenceIds.nonEmpty then localEvidenceIds else fallbackEvidenceIds.distinct.sorted
     val evidenceIdSet = evidenceIds.toSet
-    val fallbackCauseRecords =
-      fallbackEvidenceIds.flatMap(id =>
-        graph.byId.get(id).collect { case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) =>
-          ref -> cause
-        }
-      )
     val linkedCauseRecords = positionPlanTechniqueRelativeCauseRecordsFor(graph, evidenceIdSet)
     val localCauseRecords = positionPlanTechniqueCauseRecordsForDetail(detail, linkedCauseRecords, evidenceIdSet)
-    val exactAxisFallbackCauseRecords =
-      positionPlanTechniqueExactAxisFallbackCauseRecords(detail, fallbackCauseRecords)
     val causeRecords =
       if positionPlanTechniqueTerminalOverriddenEndgameTechnique(detail) then Nil
-      else (localCauseRecords ++ exactAxisFallbackCauseRecords).distinctBy(_._1.id)
+      else localCauseRecords.distinctBy(_._1.id)
     val contextCauseRecords =
       if positionPlanTechniqueTerminalOverriddenEndgameTechnique(detail) then Nil
       else positionPlanTechniqueContextCauseRecordsForDetail(detail, linkedCauseRecords, evidenceIdSet)
@@ -1372,21 +1341,13 @@ object PositionPlanTechniqueProjection:
             .exists(positionPlanTechniqueMaterialSacrificeSignature)
         )
       else carrierOwnedBindings
-    val objectBindingSignatures =
-      (
-        EvidenceObjectBinding.objectSignatures(detailBindings) ++
-          positionPlanTechniqueRouteObjectSignatures(detail) ++
-          positionPlanTechniquePawnBreakObjectSignatures(detail)
-      ).distinct.sorted
+    val objectBindingSignatures = EvidenceObjectBinding.objectSignatures(detailBindings)
     val proofRoles =
       (
         localCauseBindings.flatMap(_.proofRole) ++
           causeRecords.flatMap { case (_, cause) =>
             positionPlanTechniqueProofRolesForEvidence(cause, evidenceIdSet)
               .filter(positionPlanTechniqueAdmissibleDetailProofRole)
-          } ++
-          exactAxisFallbackCauseRecords.flatMap { case (_, cause) =>
-            positionPlanTechniqueAdmissibleProofRoles(cause)
           }
       ).distinct.sortBy(_.toString)
     PositionPlanTechniqueDetailCauseLinkage(
@@ -1490,154 +1451,6 @@ object PositionPlanTechniqueProjection:
       detail.endgameTechniqueHorizonStatus.exists(status =>
         status == "SupersededByTactic" || status == "ContradictedByTerminalProof"
       )
-
-  private def positionPlanTechniqueRouteObjectSignatures(
-      detail: PositionPlanTechniqueSemanticDetail
-  ): List[String] =
-    if detail.unit != PositionPlanTechniqueUnit.PieceRerouteRoute &&
-        detail.unit != PositionPlanTechniqueUnit.PlanOptionSet &&
-        detail.unit != PositionPlanTechniqueUnit.StructuralTransformation
-    then Nil
-    else
-      detail.structuralPurposeSubjects.flatMap { subject =>
-        StructuralPurposeSubject.parse(subject) match
-          case Some(StructuralPurposeSubject.PieceRoute(piece, from, to)) =>
-            val longDiagonal =
-              positionPlanTechniqueLongDiagonalBishopRoute(piece, from, to)
-            List(
-              (
-                detail.structuralRouteMove.map(move => s"actor=Move:${move.toLowerCase}") ::
-                  List(
-                    Some(s"actor=Piece:${piece.toLowerCase}"),
-                    Some(s"actor=Square:${from.toLowerCase}"),
-                    Some(s"target=Square:${to.toLowerCase}"),
-                    Some("mechanism=Mechanism:developmentchoice"),
-                    Option.when(longDiagonal)("mechanism=Mechanism:bishop-long-diagonal"),
-                    Some("consequence=Consequence:developmentpieceactivated"),
-                    Option.when(longDiagonal)("consequence=Consequence:diagonalpressure")
-                  )
-              ).flatten.mkString("|")
-            )
-          case Some(StructuralPurposeSubject.Outpost(piece, square)) =>
-            List(
-              (
-                detail.structuralRouteMove.map(move => s"actor=Move:${move.toLowerCase}") ::
-                  List(
-                    Some(s"actor=Piece:${piece.toLowerCase}"),
-                    Some(s"target=Square:${square.toLowerCase}"),
-                    Some("mechanism=Mechanism:outpost"),
-                    Some("consequence=Consequence:outpost")
-                  )
-              ).flatten.mkString("|")
-            )
-          case Some(StructuralPurposeSubject.Battery(axis, from, to, roles)) =>
-            val roleActors = roles.map(role => Some(s"actor=Piece:${role.toLowerCase}"))
-            List(
-              (
-                detail.structuralRouteMove.map(move => s"actor=Move:${move.toLowerCase}") ::
-                  (roleActors ++ List(
-                    Some(s"target=Square:${from.toLowerCase}"),
-                    Some(s"target=Square:${to.toLowerCase}"),
-                    Some(s"mechanism=Mechanism:battery-${axis.toLowerCase}"),
-                    Some("consequence=Consequence:batteryline")
-                  ))
-              ).flatten.mkString("|")
-            )
-          case Some(StructuralPurposeSubject.PieceRestriction(piece, square, blocker))
-              if positionPlanTechniqueStrategicRayRestrictionSubject(subject) =>
-            List(
-              (
-                detail.structuralRouteMove.map(move => s"actor=Move:${move.toLowerCase}") ::
-                  List(
-                    Some(s"actor=Piece:${piece.toLowerCase}"),
-                    Some(s"target=Square:${square.toLowerCase}"),
-                    Some(s"target=Square:${blocker.toLowerCase}"),
-                    Some("mechanism=Mechanism:diagonal-denial"),
-                    Some("consequence=Consequence:mobilityloss")
-                  )
-              ).flatten.mkString("|")
-            )
-          case Some(StructuralPurposeSubject.PieceSquare(piece, square)) if positionPlanTechniqueLineUnlockRouteSubject(subject) =>
-            List(
-              (
-                detail.structuralRouteMove.map(move => s"actor=Move:${move.toLowerCase}") ::
-                  List(
-                    Some(s"actor=Piece:${piece.toLowerCase}"),
-                    Some(s"actor=Square:${square.toLowerCase}"),
-                    Some(s"target=Square:${square.toLowerCase}"),
-                    Some("mechanism=Mechanism:line-unlock"),
-                    Some("consequence=Consequence:lineunlockgain")
-                  )
-              ).flatten.mkString("|")
-            )
-          case _ =>
-            Nil
-      }.distinct.sorted
-
-  private def positionPlanTechniqueLongDiagonalBishopRoute(piece: String, from: String, to: String): Boolean =
-    piece.equalsIgnoreCase("bishop") &&
-      positionPlanTechniqueDiagonalDistance(from, to).exists(_ >= 3) &&
-      positionPlanTechniqueMainLongDiagonal(from) &&
-      positionPlanTechniqueMainLongDiagonal(to)
-
-  private def positionPlanTechniqueDiagonalDistance(from: String, to: String): Option[Int] =
-    for
-      fromFile <- from.headOption.map(_.toLower - 'a')
-      fromRank <- from.drop(1).headOption.map(_ - '1')
-      toFile <- to.headOption.map(_.toLower - 'a')
-      toRank <- to.drop(1).headOption.map(_ - '1')
-      fileDistance = (toFile - fromFile).abs
-      rankDistance = (toRank - fromRank).abs
-      if fileDistance == rankDistance && fileDistance > 0
-    yield fileDistance
-
-  private def positionPlanTechniqueMainLongDiagonal(square: String): Boolean =
-    (
-      for
-        file <- square.headOption.map(_.toLower - 'a')
-        rank <- square.drop(1).headOption.map(_ - '1')
-      yield file == rank || file + rank == 7
-    ).contains(true)
-
-  private def positionPlanTechniquePawnBreakObjectSignatures(
-      detail: PositionPlanTechniqueSemanticDetail
-  ): List[String] =
-    if detail.unit != PositionPlanTechniqueUnit.TensionBreakPolicyRoute &&
-        detail.unit != PositionPlanTechniqueUnit.CounterplayRace
-    then Nil
-    else
-      val targets =
-        (
-          detail.breakFile.map(file => s"target=File:${positionPlanTechniqueRaceToken(file)}").toList ++
-            detail.counterBreakFiles.map(file => s"target=File:${positionPlanTechniqueRaceToken(file)}") ++
-            detail.tensionSquares.map(square => s"target=Square:${positionPlanTechniqueRaceToken(square)}")
-        ).filterNot(_.endsWith(":")).distinct.sorted
-      val mechanisms =
-        List(
-          Some("mechanism=Mechanism:pawnbreak"),
-          Option.when(detail.unit == PositionPlanTechniqueUnit.CounterplayRace)("mechanism=Mechanism:counterplayrace")
-        ).flatten
-      val consequences =
-        List(
-          detail.breakFile.map(file => s"consequence=Consequence:break-file-${positionPlanTechniqueRaceToken(file)}"),
-          Option.when(detail.counterBreakFiles.nonEmpty)("consequence=Consequence:counterbreak-race")
-        ).flatten
-      val signature = (targets ++ mechanisms ++ consequences).mkString("|")
-      Option.when(targets.nonEmpty)(signature).toList
-
-  private def positionPlanTechniqueExactAxisFallbackCauseRecords(
-      detail: PositionPlanTechniqueSemanticDetail,
-      causeRecords: List[(EvidenceRef, RelativeCauseFact)]
-  ): List[(EvidenceRef, RelativeCauseFact)] =
-    detail.axisKey match
-      case Some(axisKey) =>
-        causeRecords.filter { case (_, cause) =>
-          cause.strategicProofIdentity.axisKeys.contains(axisKey) &&
-            positionPlanTechniqueCauseKindMatchesDetail(detail, cause.kind) &&
-            positionPlanTechniqueAdmissibleProofRoles(cause).nonEmpty
-        }
-      case None =>
-        Nil
 
   private def positionPlanTechniqueCauseRecordsForDetail(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -2100,17 +1913,6 @@ object PositionPlanTechniqueProjection:
         RelativeCauseProofRole.ContextSupport
       )
     ).flatten
-
-  private def positionPlanTechniqueAdmissibleProofRoles(
-      cause: RelativeCauseFact
-  ): List[RelativeCauseProofRole] =
-    cause.proof.toList
-      .flatMap(_.sections)
-      .filter(_.hasAnyEvidence)
-      .map(_.role)
-      .filter(positionPlanTechniqueAdmissibleDetailProofRole)
-      .distinct
-      .sortBy(_.toString)
 
   private def positionPlanTechniqueProofSectionEvidenceIds(section: RelativeCauseProofSection): List[String] =
     (
@@ -2617,29 +2419,6 @@ object PositionPlanTechniqueProjection:
         strength = Some(subjects.size)
       )
     )
-
-  private def positionPlanTechniqueWithFallbackOpenCenterRoute(
-      detail: PositionPlanTechniqueSemanticDetail,
-      fallbackPurpose: Option[PositionPlanTechniqueStructuralPurpose],
-      fallbackStructureRouteContext: Boolean,
-      fallbackStructureRouteSourceIds: List[String],
-      fallbackAnchorKeys: List[String]
-  ): PositionPlanTechniqueSemanticDetail =
-    val withPurpose = fallbackPurpose
-      .filter(purpose =>
-        detail.structuralRouteMove.isEmpty &&
-          (positionPlanTechniqueStructureRouteContext(detail) || fallbackStructureRouteContext) &&
-          positionPlanTechniqueDevelopmentRoutePurpose(purpose)
-      )
-      .fold(detail)(purpose => detail.withStructuralPurpose(Some(purpose)))
-    if (fallbackStructureRouteContext || positionPlanTechniqueStructureRouteContext(withPurpose)) &&
-        positionPlanTechniqueDevelopmentRouteDetail(withPurpose)
-    then
-      withPurpose.copy(
-        sourceEvidenceIds = (withPurpose.sourceEvidenceIds ++ fallbackStructureRouteSourceIds).distinct.sorted,
-        semanticAnchorKeys = (withPurpose.semanticAnchorKeys ++ fallbackAnchorKeys).distinct.sorted
-      )
-    else withPurpose
 
   private def positionPlanTechniqueStructureRouteContextSourceIds(
       graph: TypedEvidenceGraph,

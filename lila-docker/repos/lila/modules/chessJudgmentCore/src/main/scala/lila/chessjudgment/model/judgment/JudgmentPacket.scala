@@ -3700,15 +3700,14 @@ object MoveMeaningSurface:
     claim.proofRelationKinds.exists(kind => kind == RelationFactKind.Pin || kind == RelationFactKind.XRay)
 
   private def longDiagonalPressureClaim(claim: MoveMeaningClaim): Boolean =
-    lineUnlockClaim(claim) ||
-      claim.objectBindingSignatures.exists(signature =>
-        val normalized = signature.toLowerCase
-        normalized.contains("actor=piece:bishop") &&
-          (
-            normalized.contains("mechanism=mechanism:bishop-long-diagonal") ||
-              normalized.contains("consequence=consequence:diagonalpressure")
-          )
-      )
+    claim.objectBindingSignatures.exists(signature =>
+      val normalized = signature.toLowerCase
+      normalized.contains("actor=piece:bishop") &&
+        (
+          normalized.contains("mechanism=mechanism:bishop-long-diagonal") ||
+            normalized.contains("consequence=consequence:diagonalpressure")
+        )
+    )
 
   private def lineUnlockClaim(claim: MoveMeaningClaim): Boolean =
     claim.routeIdentityParts.exists(_.equalsIgnoreCase("piece:bishop")) &&
@@ -4320,11 +4319,11 @@ object MoveMeaningClaim:
         )
         .groupBy(claim => (claim.laneKey, claim.role, claim.lineRole, claim.moveUci, provenanceKey(claim), claim.principalPlanId))
         .values
-        .flatMap(mergeMeaningClaims)
+        .flatMap(selectMeaningClaim)
         .toList
         .groupBy(claim => duplicateMeaningKey(claim))
         .values
-        .flatMap(mergeMeaningClaims)
+        .flatMap(selectMeaningClaim)
         .toList
     val publicDedupedClaims =
       dropPlanFunctionFallbacks(
@@ -5147,108 +5146,11 @@ object MoveMeaningClaim:
       carrier.kind != "PlanSubject" &&
       (carrier.kind == "Square" || carrier.kind == "File" || carrier.kind == "Piece" || carrier.kind == "Pawn")
 
-  private def mergeMeaningClaims(claims: Iterable[MoveMeaningClaim]): Option[MoveMeaningClaim] =
-    val list = claims.toList
-    list.sortBy(sortKey).lastOption.map(best =>
-      val mergedCauseEvidenceIds = list.flatMap(_.causeEvidenceIds).distinct.sorted
-      val mergedPositiveFunctionalProofEvidenceIds = best.positiveFunctionalProofEvidenceIds.distinct.sorted
-      val mergedSourceEvidenceIds = list.flatMap(_.sourceEvidenceIds).distinct.sorted
-      val mergedObjectBindingSignatures = list.flatMap(_.objectBindingSignatures).distinct.sorted
-      val mergedProofLineEvents = list.flatMap(_.proofLineEvents).distinct.sortBy(_.toString)
-      val mergedProofLineConsequences = list.flatMap(_.proofLineConsequences).distinct.sortBy(_.toString)
-      val mergedProofRelationKinds = list.flatMap(_.proofRelationKinds).distinct.sortBy(_.toString)
-      val mergedProofRelationDetails = list.flatMap(_.proofRelationDetails).distinct.sorted
-      val mergedProofThreatDrivers = list.flatMap(_.proofThreatDrivers).distinct.sortBy(_.toString)
-      val mergedObjectCarrierReady = list.exists(_.objectCarrierReady)
-      val mergedBreakFileCarriers =
-        list
-          .flatMap(_.breakFiles)
-          .distinct
-          .sorted
-          .map(file => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", s"break-file:$file", semanticRole = Some("break_file")))
-      val mergedCarrierPool = list.flatMap(_.boardCarriers)
-      val mergedPrincipalPlanCarriers =
-        list.flatMap(_.principalPlanId).distinct.flatMap(planId =>
-          mergedCarrierPool.filter(carrier =>
-            carrier.role == "target" &&
-              carrier.kind == "PlanSubject" &&
-              carrier.value.equalsIgnoreCase(planId.toString)
-          )
-        )
-      val mergedBoardCarriers =
-        (
-          mergedCarrierPool.filter(carrier => carrier.role == "actor" && carrier.kind == "Move") ++
-            mergedPrincipalPlanCarriers ++
-            mergedBreakFileCarriers ++
-            mergedCarrierPool.distinct.sortBy(boardCarrierSortKey)
-        ).distinct.take(12)
-      val mergedPublicDrawableCarrier =
-        mergedBoardCarriers.exists(_.kind != "Move") ||
-          best.terminalConsequenceKinds.nonEmpty ||
-          best.endgameTechniquePattern.nonEmpty ||
-          best.endgameTechniqueRookPattern.nonEmpty
-      val mergedTargetSquares = list.flatMap(_.targetSquares).distinct.sorted
-      val mergedTargetFiles = list.flatMap(_.targetFiles).distinct.sorted
-      val mergedTargetPieces = list.flatMap(_.targetPieces).distinct.sorted
-      val mergedTargetShapeReady =
-        best.meaningKind != "TargetPressure" ||
-          mergedTargetSquares.nonEmpty ||
-          mergedTargetFiles.nonEmpty
-      val mergedPublicSurfaceAdmitted =
-        mergedPublicDrawableCarrier &&
-          mergedObjectCarrierReady &&
-          mergedTargetShapeReady &&
-          (mergedCauseEvidenceIds.nonEmpty || mergedSourceEvidenceIds.nonEmpty) &&
-          claimCarrierAdmittedByPublicContract(best.unit, list.flatMap(_.causeKinds), mergedBoardCarriers)
-      val mergedPublicProofLevel = list.map(_.publicProofLevel).sortBy(publicProofStrengthRank).lastOption.getOrElse("none")
-      best.copy(
-        causeKinds = list.flatMap(_.causeKinds).distinct.sortBy(_.toString),
-        causeSourceSides = list.flatMap(_.causeSourceSides).distinct.sortBy(_.toString),
-        causeEvidenceIds = mergedCauseEvidenceIds,
-        positiveFunctionalProofEvidenceIds = mergedPositiveFunctionalProofEvidenceIds,
-        sourceEvidenceIds = mergedSourceEvidenceIds,
-        objectBindingSignatures = mergedObjectBindingSignatures,
-        reasonTokens = Nil,
-        comparisonLossSides = list.flatMap(_.comparisonLossSides).distinct.sorted,
-        comparisonLossKinds = list.flatMap(_.comparisonLossKinds).distinct.sorted,
-        objectCarrierReady = mergedObjectCarrierReady,
-        boardCarriers = mergedBoardCarriers,
-        comparisonMoveRefs = list.flatMap(_.comparisonMoveRefs).distinct.sortBy(ref => (ref.role, ref.uci)).take(12),
-        targetSquares = mergedTargetSquares,
-        targetFiles = mergedTargetFiles,
-        targetPieces = mergedTargetPieces,
-        routeIdentityParts = list.flatMap(_.routeIdentityParts).distinct.sorted,
-        breakIdentityParts = list.flatMap(_.breakIdentityParts).distinct.sorted,
-        breakFiles = list.flatMap(_.breakFiles).distinct.sorted,
-        structuralMotifTags = list.flatMap(_.structuralMotifTags).distinct.sorted,
-        proofLineEvents = mergedProofLineEvents,
-        proofLineConsequences = mergedProofLineConsequences,
-        proofRelationKinds = mergedProofRelationKinds,
-        proofRelationDetails = mergedProofRelationDetails,
-        proofThreatDrivers = mergedProofThreatDrivers,
-        principalPlanId = best.principalPlanId.orElse(list.flatMap(_.principalPlanId).headOption),
-        principalPlanEvent = best.principalPlanEvent,
-        publicSurfaceAdmitted = mergedPublicSurfaceAdmitted,
-        publicProofLevel =
-          if !mergedPublicSurfaceAdmitted then "none"
-          else if publicProofStrengthRank(mergedPublicProofLevel) == 0 then "surface_evidence"
-          else mergedPublicProofLevel,
-        publicTargetBound = mergedPublicSurfaceAdmitted && (list.exists(_.publicTargetBound) || mergedBoardCarriers.exists(MoveMeaningSurface.publicMeaningTargetCarrier))
-      )
-    )
+  private[chessjudgment] def selectMeaningClaim(claims: Iterable[MoveMeaningClaim]): Option[MoveMeaningClaim] =
+    claims.toList.sortBy(sortKey).lastOption
 
   private def boardCarrierSortKey(carrier: MoveMeaningSurfaceBoardCarrier): (String, String, String, String, String, String) =
     (carrier.role, carrier.kind, carrier.value, carrier.from.getOrElse(""), carrier.to.getOrElse(""), carrier.semanticRole.getOrElse(""))
-
-  private def publicProofStrengthRank(level: String): Int =
-    level match
-      case "terminal_proof"   => 5
-      case "owned_function"   => 4
-      case "owned_cause"      => 4
-      case "cause_linked"     => 3
-      case "surface_evidence" => 2
-      case "technique"        => 1
-      case _                  => 0
 
   private def claimCarrierAdmittedByPublicContract(
       unit: PositionPlanTechniqueUnit,
@@ -5380,7 +5282,7 @@ object MoveMeaningClaim:
       .flatMap { baseMeaningKind =>
         val currentRouteLineRole =
           Option.when(
-            currentMoveRouteLineRole(detail, objectSignatures, verdict) &&
+            currentMoveRouteLineRole(frame, detail, objectSignatures, verdict) &&
               !detail.terminalConsequenceKinds.exists(terminalProofConsequenceKind) &&
               (
                 linkedCauseFrames.isEmpty ||
@@ -6364,19 +6266,23 @@ object MoveMeaningClaim:
       normalized.contains("pawn-break")
 
   private def currentMoveRouteLineRole(
+      frame: PositionPlanTechniqueFrame,
       detail: PositionPlanTechniqueSemanticDetail,
       objectSignatures: List[String],
       verdict: MoveJudgmentVerdictFrame
   ): Boolean =
-    terminalProofDetailOwnsClaimMove(detail, objectSignatures, verdict.candidateLine.rootMove) ||
-      detail.structuralRouteMove.exists(move => sameMove(move, verdict.candidateLine.rootMove)) &&
+    (frame.line.contains(verdict.candidateLine) || frame.scope == EvidenceScope.AfterPlayedPosition) &&
       (
-        detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
-          structuralCurrentMoveCarrier(detail) ||
-          detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
+        terminalProofDetailOwnsClaimMove(detail, objectSignatures, verdict.candidateLine.rootMove) ||
+          detail.structuralRouteMove.exists(move => sameMove(move, verdict.candidateLine.rootMove)) &&
             (
-              pieceRouteQualifiedCarrierForMove(detail, objectSignatures, verdict.candidateLine.rootMove) ||
-                structuralOpenCenterDevelopmentRoute(detail)
+              detail.unit == PositionPlanTechniqueUnit.StructuralTransformation &&
+                structuralCurrentMoveCarrier(detail) ||
+                detail.unit == PositionPlanTechniqueUnit.PieceRerouteRoute &&
+                  (
+                    pieceRouteQualifiedCarrierForMove(detail, objectSignatures, verdict.candidateLine.rootMove) ||
+                      structuralOpenCenterDevelopmentRoute(detail)
+                  )
             )
       )
 
@@ -8204,7 +8110,7 @@ object MoveMeaningClaim:
       )
     candidateMoveMatches || referenceMoveMatches || candidateRootMatches || referenceRootMatches || contrastDetail || causeRootMatches
 
-  private def lineRoles(
+  private[chessjudgment] def lineRoles(
       evidenceGraph: TypedEvidenceGraph,
       frame: PositionPlanTechniqueFrame,
       detail: PositionPlanTechniqueSemanticDetail,
@@ -8241,9 +8147,6 @@ object MoveMeaningClaim:
     if directTerminalLineRole.nonEmpty then directTerminalLineRole.toList
     else if directFunctionalLineRole.nonEmpty then directFunctionalLineRole.toList
     else if graphRoles.nonEmpty then graphRoles
-    else if sameMove(verdict.candidateLine.rootMove, verdict.referenceLine.rootMove) &&
-        (frame.line.contains(verdict.candidateLine) || frame.line.contains(verdict.referenceLine))
-    then List("candidate")
     else if frame.line.contains(verdict.candidateLine) then List("candidate")
     else if frame.line.contains(verdict.referenceLine) then List("reference")
     else if frame.scope == EvidenceScope.AfterPlayedPosition &&

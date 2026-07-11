@@ -614,7 +614,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
           signature.contains("actor=Piece:queen") &&
           signature.contains("target=Square:c1") &&
           signature.contains("target=Square:h6") &&
-          signature.contains("mechanism=Mechanism:battery-diagonal")
+          signature.contains("mechanism=Mechanism:batterypressuregain")
       ),
       detail.objectBindingSignatures
     )
