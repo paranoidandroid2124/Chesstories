@@ -281,7 +281,7 @@ function principalPlanEventSections(
   ]);
 
   const directResults = eventResults(event, 'direct');
-  const futureResults = eventResults(event, 'future');
+  const futureResults = event.future_causality ? eventResults(event, 'future') : [];
   const results = [
     directResults.length ? `Immediately: ${joinHuman(directResults)}.` : '',
     futureResults.length ? `Later: ${joinHuman(futureResults)}.` : '',

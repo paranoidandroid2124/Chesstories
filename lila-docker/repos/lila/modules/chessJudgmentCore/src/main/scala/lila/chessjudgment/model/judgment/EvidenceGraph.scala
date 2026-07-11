@@ -4673,8 +4673,9 @@ final case class PlanEventPublicProof(
 object PlanEventPublicProof:
   def from(event: PlanCausalEventEvidence): PlanEventPublicProof =
     val directResults = event.structuralConsequences.map(result("direct", _))
-    val futureResults = event.futureRealization.toList.flatMap(_.consequences.map(result("future", _)))
-    val futureSubjects = event.futureRealization.toList.flatMap(_.consequences.flatMap(_.subjects)).map(_.trim.toLowerCase).filter(_.nonEmpty)
+    val publicFuture = event.futureRealization.filter(_ => event.futurePublicProofReady)
+    val futureResults = publicFuture.toList.flatMap(_.consequences.map(result("future", _)))
+    val futureSubjects = publicFuture.toList.flatMap(_.consequences.flatMap(_.subjects)).map(_.trim.toLowerCase).filter(_.nonEmpty)
     val futureSquares = futureSubjects.flatMap(subject =>
       "[a-h][1-8]".r.findAllIn(subject).map(square => s"square:$square")
     )
@@ -4682,7 +4683,7 @@ object PlanEventPublicProof:
       event.identity.targets ++
         futureSubjects ++
         futureSquares ++
-        event.futureTarget.map(target => s"square:${target.key.toLowerCase}")
+        publicFuture.map(realization => s"square:${realization.trajectory.futureTo.key.toLowerCase}")
     ).distinct.sorted
     PlanEventPublicProof(
       goalTheme = event.identity.goalTheme.id,
@@ -4697,6 +4698,7 @@ object PlanEventPublicProof:
       developmentChoices = event.developmentChoices,
       results = (directResults ++ futureResults).distinct,
       responses = event.branchWitnesses
+        .filter(_ => event.futurePublicProofReady)
         .map(witness =>
           PlanEventPublicResponse(
             move = witness.line.rootMove,

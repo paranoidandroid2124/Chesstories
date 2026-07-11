@@ -200,6 +200,9 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assert(eventRecord._2.counterfactualDependencyProven)
     assertEquals(eventRecord._2.robustness, PlanCausalRobustness.Untested)
     assert(!eventRecord._2.futurePublicProofReady)
+    val publicEvent = PlanEventPublicProof.from(eventRecord._2)
+    assert(publicEvent.results.forall(_.stage == "direct"), publicEvent.results)
+    assertEquals(publicEvent.responses, Nil)
     assertEquals(result.packet.probeRequests.flatMap(_.candidateMove), List("b7b5"))
     assert(!EvidenceObjectBinding.fromEvidenceRefs(result.packet.evidenceGraph, List(eventRecord._1.ref)).exists(binding =>
       binding.witness.exists(obj => obj.kind == EvidenceObjectKind.Move && obj.key == "b5b4")

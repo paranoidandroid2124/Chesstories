@@ -208,4 +208,44 @@ describe('chesstory brief scaffold', () => {
     assert.match(sections[4].body, /Realized replies: 2 of 3/);
     assert.doesNotMatch(text, /bishop:c8:line-unlock|principal_plan_id|QueensideAttack/);
   });
+
+  test('does not render future results without public future causality', () => {
+    const payload: ChesstoryMoveMeaningPayload = {
+      verdict: { move_quality: 'good', played_move: 'b7b5', reference_move: 'b7b5' },
+      idea_chains: [
+        {
+          key: 'current-move-chain',
+          current_move: 'b7b5',
+          reference_move: 'b7b5',
+          move_quality: 'good',
+          subject: 'played_move',
+          move_semantics: [
+            {
+              move_uci: 'b7b5',
+              subject: 'played_move',
+              principal_plan_event: {
+                goal: { kind: 'hook_creation' },
+                means: { root_move: 'b7b5' },
+                results: [
+                  { stage: 'direct', kind: 'LineUnlockGain' },
+                  { stage: 'future', kind: 'TargetPressureGain', subject_labels: ['c3'] },
+                ],
+              },
+            },
+          ],
+          proof_levels: ['owned_function'],
+          carriers: [],
+          pv: [],
+          consequence_carriers: [],
+          terminal_consequences: [],
+          technique: [],
+          player_facing_reason_allowed: true,
+        },
+      ],
+    };
+
+    const text = JSON.stringify(chesstoryBriefSections(payload));
+    assert.match(text, /line unlock gain/);
+    assert.doesNotMatch(text, /target pressure gain|c3|Later:/);
+  });
 });
