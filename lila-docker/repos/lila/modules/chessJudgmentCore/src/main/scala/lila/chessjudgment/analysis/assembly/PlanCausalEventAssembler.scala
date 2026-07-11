@@ -35,11 +35,18 @@ object PlanCausalEventAssembler:
               record -> payload
           }.toList
           (structuralRecord, structural) = structuralRecordAndPayload
-          positiveConsequences = structural.consequences.filter(consequence => consequence.positive && consequence.strength > 0)
-          if positiveConsequences.nonEmpty || structural.developmentChoices.nonEmpty
-        yield
-          val (_, linePayload) = lineRecordAndPayload
-          val futureRealization = linePayload
+          planBindings = planObjectBindings(graph, pressureRecord, rootLine, principalPlan)
+          structuralBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, List(structuralRecord.ref))
+          positiveConsequences = structural.consequences.filter(consequence =>
+            consequence.positive &&
+              consequence.strength > 0 &&
+              consequenceOwnedByPlan(rootLine.rootMove, consequence, planBindings, structuralBindings)
+          )
+          developmentChoices = structural.developmentChoices.filter(choice =>
+            EvidenceRef.sameMove(s"${choice.from}${choice.to}", rootLine.rootMove)
+          )
+          (_, linePayload) = lineRecordAndPayload
+          futureRealization = linePayload
             .futureRootObjectMove(linePayload.lineReplayCount.max(1))
             .map(trajectory =>
               PlanCausalFutureRealization(
@@ -49,6 +56,8 @@ object PlanCausalEventAssembler:
               )
             )
             .filter(_.dependencyProven)
+          if positiveConsequences.nonEmpty || developmentChoices.nonEmpty || futureRealization.nonEmpty
+        yield
           val branchWitnesses = futureRealization.toList.flatMap(realization =>
             branchWitnessesFor(
               input,
@@ -65,12 +74,12 @@ object PlanCausalEventAssembler:
               beforeFen = structural.transition.from.fen,
               plan = principalPlan,
               consequences = positiveConsequences,
-              developmentChoices = structural.developmentChoices
+              developmentChoices = developmentChoices
             ),
             rootLine = rootLine,
             rootTransition = structural.transition,
             structuralConsequences = positiveConsequences,
-            developmentChoices = structural.developmentChoices,
+            developmentChoices = developmentChoices,
             futureRealization = futureRealization,
             branchWitnesses = branchWitnesses
           )
@@ -97,6 +106,52 @@ object PlanCausalEventAssembler:
       case _ =>
         Nil
     }.distinctBy(_.ref.id)
+
+  private def planObjectBindings(
+      graph: TypedEvidenceGraph,
+      pressureRecord: EvidenceRecord,
+      rootLine: LineNodeRef,
+      plan: PlanMatch
+  ): List[EvidenceObjectBinding] =
+    val motifRefs = pressureRecord.parents.flatMap(parent => graph.byId.get(parent.id)).collect {
+      case EvidenceRecord(ref, payload: MoveMotifEvidence, _)
+          if ref.line.contains(rootLine) &&
+            EvidenceRef.sameMove(payload.rootMove, rootLine.rootMove) &&
+            plan.evidence.exists(_.motif == payload.motif) =>
+        ref
+    }
+    EvidenceObjectBinding.fromEvidenceRefs(graph, motifRefs.distinctBy(_.id))
+
+  private def consequenceOwnedByPlan(
+      rootMove: String,
+      consequence: TransitionConsequence,
+      planBindings: List[EvidenceObjectBinding],
+      structuralBindings: List[EvidenceObjectBinding]
+  ): Boolean =
+    val normalizedKind = consequence.kind.toString.trim.toLowerCase
+    val consequenceBindings = structuralBindings.filter(binding =>
+      binding.mechanism.exists(obj =>
+        obj.kind == EvidenceObjectKind.Mechanism && obj.key.trim.toLowerCase == normalizedKind
+      )
+    )
+    val planObjects = planBindings.flatMap(binding => binding.actor ++ binding.target ++ binding.witness)
+    val rootDestination = EvidenceRef.normalizeMove(rootMove).slice(2, 4)
+    val planSquares =
+      planObjects.collect { case ConcreteChessObject(EvidenceObjectKind.Square, key) => key.trim.toLowerCase }.toSet ++
+        Option(rootDestination).filter(_.matches("[a-h][1-8]")).toSet
+    val consequenceSquares = consequenceBindings
+      .flatMap(_.target)
+      .collect { case ConcreteChessObject(EvidenceObjectKind.Square, key) => key.trim.toLowerCase }
+      .toSet
+    val planFiles =
+      planObjects.collect { case ConcreteChessObject(EvidenceObjectKind.File, key) => key.trim.toLowerCase }.toSet ++
+        Option(rootDestination.take(1)).filter(_.matches("[a-h]")).toSet
+    val consequenceFiles = consequenceBindings
+      .flatMap(_.target)
+      .collect { case ConcreteChessObject(EvidenceObjectKind.File, key) => key.trim.toLowerCase }
+      .toSet
+    consequenceSquares.intersect(planSquares).nonEmpty ||
+      (consequenceSquares.isEmpty && consequenceFiles.intersect(planFiles).nonEmpty)
 
   private def branchWitnessesFor(
       input: NormalizedMoveReviewInput,

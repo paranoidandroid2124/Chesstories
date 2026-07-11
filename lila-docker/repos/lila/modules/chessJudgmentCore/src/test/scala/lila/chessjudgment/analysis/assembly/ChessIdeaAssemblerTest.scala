@@ -66,12 +66,18 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         payload
     }.getOrElse(fail("expected played plan pressure"))
     assert(playedPressure.rootBackedPlans(Some("b7b5")).size > 1)
-    val eventRecord = result.packet.evidenceGraph.records.collectFirst {
+    val (eventRecord, event) = result.packet.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
           if payload.rootLine.role == LineNodeRole.Played && EvidenceRef.sameMove(payload.rootMove, "b7b5") =>
-        record
+        record -> payload
     }.getOrElse(fail("expected internal causal event"))
     assertEquals(eventRecord.ref.confidence, EvidenceConfidence.Heuristic)
+    val structural = eventRecord.parents.flatMap(parent => result.packet.evidenceGraph.byId.get(parent.id)).collectFirst {
+      case EvidenceRecord(_, payload: StructuralDeltaEvidence, _) => payload
+    }.getOrElse(fail("expected structural parent"))
+    val positiveStructural = structural.consequences.filter(consequence => consequence.positive && consequence.strength > 0)
+    assert(event.structuralConsequences.forall(_.subjects.nonEmpty), event.structuralConsequences)
+    assert(event.structuralConsequences.size < positiveStructural.size, event.structuralConsequences -> positiveStructural)
     assert(!view.moveMeaningClaims.exists(claim =>
       claim.moveUci == "b7b5" &&
         (claim.positiveFunctionalProofEvidenceIds.nonEmpty || claim.principalPlanEvent.nonEmpty)
@@ -231,6 +237,10 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     )
     assertEquals(
       PlanCausalFunctionalMatch.classify("b5b4", List(expected), "b5a4", List(differentTarget)),
+      None
+    )
+    assertEquals(
+      PlanCausalFunctionalMatch.classify("b5b4", List(expected.copy(subjects = Nil)), "b5a4", List(equivalent)),
       None
     )
 

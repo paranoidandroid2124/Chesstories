@@ -4548,7 +4548,7 @@ object PlanCausalFunctionalMatch:
   private def subjectsCompatible(expected: List[String], observed: List[String]): Boolean =
     val left = expected.map(_.trim.toLowerCase).filter(_.nonEmpty).toSet
     val right = observed.map(_.trim.toLowerCase).filter(_.nonEmpty).toSet
-    left.isEmpty || right.isEmpty || left.intersect(right).nonEmpty
+    left.nonEmpty && right.nonEmpty && left.intersect(right).nonEmpty
 
 final case class PlanCausalFutureRealization(
     trajectory: LineObjectTrajectory,
