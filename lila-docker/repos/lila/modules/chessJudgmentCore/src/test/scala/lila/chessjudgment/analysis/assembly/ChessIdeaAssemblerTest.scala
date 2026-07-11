@@ -91,6 +91,49 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         (claim.positiveFunctionalProofEvidenceIds.nonEmpty || claim.principalPlanEvent.nonEmpty)
     ), view.moveMeaningClaims)
 
+  test("principal plan event exports only its owned public carriers"):
+    val result = MoveReviewJudgmentOrchestrator
+      .build(
+        RawMoveReviewInput(
+          fen = "rnbqkb1r/p2ppppp/5n2/2pP4/2p1P3/8/PP1N1PPP/R1BQKBNR b KQkq - 0 5",
+          playedMoveUci = "e7e6",
+          variations = List(
+            VariationLine(
+              List("e7e6", "f1c4", "e6d5", "e4d5", "d7d6", "g1f3", "g7g6", "e1g1", "f8g7", "f1e1"),
+              scoreCp = 0,
+              depth = 12
+            )
+          ),
+          currentEvalCp = Some(0),
+          ply = Some(9),
+          openingContext = Some(RawOpeningContext(name = Some("Benko Gambit / ...bxc4 and ...e6 counterplay"))),
+          movePrefixUci = List("d2d4", "g8f6", "c2c4", "c7c5", "d4d5", "b7b5", "b1d2", "b5c4", "e2e4")
+        )
+      )
+      .getOrElse(fail("expected judgment result"))
+    val claims = result.packet.moveJudgmentView.toList.flatMap(_.moveMeaningClaims).filter(_.principalPlanEvent.nonEmpty)
+    val publicSurfaces = result.packet.moveJudgmentView.toList.flatMap(MoveMeaningSurface.publicSurfaces).filter(_.principalPlanEvent.nonEmpty)
+
+    assert(claims.nonEmpty)
+    assert(publicSurfaces.nonEmpty)
+    assert(publicSurfaces.forall(_.evidence.positiveFunctionalProofIds.nonEmpty), publicSurfaces)
+    assert(
+      result.packet.moveJudgmentView.exists(view =>
+        MoveMeaningSurface.publicPayloadJson(view).toString.contains("positive_functional_proof_ids")
+      )
+    )
+    claims.foreach { claim =>
+      val event = claim.principalPlanEvent.getOrElse(fail("expected principal plan event"))
+      assertEquals(claim.principalPlanId, Some(PlanId.PawnBreakPreparation))
+      assertEquals(event.rootMove, "e7e6")
+      assertEquals(event.results.map(_.kind), List(TransitionConsequenceKind.PawnTensionGain))
+      assert(claim.boardCarriers.exists(carrier => carrier.kind == "Move" && carrier.value == "e7e6"))
+      assertEquals(claim.boardCarriers.filter(_.kind == "File").map(_.value).distinct, List("e"))
+      assertEquals(claim.boardCarriers.filter(_.kind == "Piece").map(_.value).distinct, List("pawn"))
+      assert(!claim.boardCarriers.exists(_.semanticRole.contains("counter_break_file")), claim.boardCarriers)
+      assert(!claim.boardCarriers.exists(carrier => carrier.kind == "Square" && Set("c4", "d8", "f8")(carrier.value)), claim.boardCarriers)
+    }
+
   test("line trajectory preserves the moved knight across future plies"):
     val graph = EvidenceFactAssembler
       .assemble(

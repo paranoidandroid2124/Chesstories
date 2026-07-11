@@ -2483,6 +2483,7 @@ object MoveMeaningSurface:
         "proof_level" -> surface.evidence.proofLevel,
         "target_bound" -> surface.evidence.targetBound,
         "cause_ids" -> surface.evidence.causeIds,
+        "positive_functional_proof_ids" -> surface.evidence.positiveFunctionalProofIds,
         "source_ids" -> surface.evidence.sourceIds,
         "relation_kinds" -> publicSurfaceRelationKinds(surface).map(_.toString),
         "relations" -> publicSurfaceRelationKinds(surface).map(publicRelationCodeJson),
@@ -5396,7 +5397,7 @@ object MoveMeaningClaim:
                    else Nil) ++
                   planPawnAdvanceCarriers ++
                   breakFileIdentityCarriers
-              val claimBoardCarriers =
+              val candidateBoardCarriers =
                 (
                   baseClaimBoardCarriers.filter(carrier => carrier.role == "actor" && carrier.kind == "Move") ++
                     principalPlanCarriers ++
@@ -5405,7 +5406,10 @@ object MoveMeaningClaim:
                     breakFileIdentityCarriers ++
                     (baseClaimBoardCarriers ++ spareIdentityCarriers).distinct.sortBy(boardCarrierSortKey)
                 ).distinct
-                  .take(12)
+              val claimBoardCarriers =
+                detail.principalPlanEvent
+                  .map(publicPrincipalPlanEventCarriers(detail, _))
+                  .getOrElse(candidateBoardCarriers.take(12))
               val surfaceTarget = MoveMeaningSurfaceTarget.fromDetail(detail, claimBoardCarriers)
               val objectCarrierReady =
                 (detail.unit != PositionPlanTechniqueUnit.PlanOptionSet ||
@@ -6027,6 +6031,28 @@ object MoveMeaningClaim:
       detail.principalPlanId.toList
         .map(_.toString.toLowerCase)
         .map(value => MoveMeaningSurfaceBoardCarrier("target", "PlanSubject", value, semanticRole = Some("plan_subject")))
+
+  private def publicPrincipalPlanEventCarriers(
+      detail: PositionPlanTechniqueSemanticDetail,
+      event: PlanEventPublicProof
+  ): List[MoveMeaningSurfaceBoardCarrier] =
+    val eventSubjects = (event.targets ++ event.results.flatMap(_.subjects)).distinct
+    val developmentCarriers = event.developmentChoices.flatMap { choice =>
+      publicPieceCarrier("actor", choice.role) ++
+        publicSquareCarrier("actor", choice.from) ++
+        publicSquareCarrier("target", choice.to, Some("route_destination"))
+    }
+    (
+      publicMoveCarrier("actor", event.rootMove) ::
+        (
+          publicPlanSubjectCarriers(detail) ++
+            event.actorRole.toList.flatMap(publicPieceCarrier("actor", _)) ++
+            event.actorFrom.toList.flatMap(publicSquareCarrier("actor", _)) ++
+            event.actorTo.toList.flatMap(publicSquareCarrier("target", _, Some("event_destination"))) ++
+            eventSubjects.flatMap(publicStructuralSubjectCarriers(_, detail)) ++
+            developmentCarriers
+        )
+    ).distinct.take(12)
 
   private def colorComplexSubjectCarriers(detail: PositionPlanTechniqueSemanticDetail): List[MoveMeaningSurfaceBoardCarrier] =
     EvidenceObjectBinding

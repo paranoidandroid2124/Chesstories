@@ -51,6 +51,7 @@ export interface ChesstoryMoveSemantic {
     has_carrier?: boolean;
     proof_level?: string;
     target_bound?: boolean;
+    positive_functional_proof_ids?: string[];
     board_carriers?: ChesstoryBoardCarrier[];
   };
   priority?: string;
