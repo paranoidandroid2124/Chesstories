@@ -3561,7 +3561,6 @@ object MoveMeaningSurface:
       .orElse(Option.when(materialGainClaim(claim))("material_gain"))
       .orElse(Option.when(flankPawnAdvanceSurfaceClaim(claim))("flank_pawn_pressure"))
       .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.CounterplayRace)("counterplay_race"))
-      .orElse(Option.when(claim.unit == PositionPlanTechniqueUnit.PieceRerouteRoute && longDiagonalPressureClaim(claim))("long_diagonal_pressure"))
       .orElse(
         Option.when(
           claim.unit != PositionPlanTechniqueUnit.SpacePreventionResourceDenial &&
@@ -3698,16 +3697,6 @@ object MoveMeaningSurface:
 
   private def pinOrXRayPressureClaim(claim: MoveMeaningClaim): Boolean =
     claim.proofRelationKinds.exists(kind => kind == RelationFactKind.Pin || kind == RelationFactKind.XRay)
-
-  private def longDiagonalPressureClaim(claim: MoveMeaningClaim): Boolean =
-    claim.objectBindingSignatures.exists(signature =>
-      val normalized = signature.toLowerCase
-      normalized.contains("actor=piece:bishop") &&
-        (
-          normalized.contains("mechanism=mechanism:bishop-long-diagonal") ||
-            normalized.contains("consequence=consequence:diagonalpressure")
-        )
-    )
 
   private def lineUnlockClaim(claim: MoveMeaningClaim): Boolean =
     claim.routeIdentityParts.exists(_.equalsIgnoreCase("piece:bishop")) &&
@@ -7941,7 +7930,6 @@ object MoveMeaningClaim:
         normalized.contains("mechanism=mechanism:outpost") ||
         normalized.contains("mechanism=mechanism:battery") ||
           normalized.contains("mechanism=motif:kingstep") ||
-          normalized.contains("mechanism=mechanism:bishop-long-diagonal") ||
           normalized.contains("mechanism=mechanism:rerouting") ||
           normalized.contains("mechanism=mechanism:improvingscope") ||
           normalized.contains("mechanism=mechanism:maneuver") ||
@@ -7957,8 +7945,7 @@ object MoveMeaningClaim:
           normalized.contains("consequence=consequence:outpost") ||
           normalized.contains("consequence=consequence:batteryline") ||
           normalized.contains("consequence=consequence:lineunlockgain") ||
-          (normalized.contains("consequence=consequence:mobilityloss") && strategicRayRestrictionToken(normalized)) ||
-          normalized.contains("consequence=consequence:diagonalpressure")
+          (normalized.contains("consequence=consequence:mobilityloss") && strategicRayRestrictionToken(normalized))
       )
 
   private def routeWeakSquareObjectSignature(normalized: String): Boolean =
@@ -8007,9 +7994,7 @@ object MoveMeaningClaim:
       normalized.contains("maneuver") ||
       normalized.contains("mechanism=motif:kingstep") ||
       normalized.contains("battery") ||
-      normalized.contains("bishop-long-diagonal") ||
       strategicRayRestrictionToken(normalized) ||
-      normalized.contains("diagonalpressure") ||
       normalized.contains("line-unlock") ||
       (normalized.contains("mobilityloss") && strategicRayRestrictionToken(normalized)) ||
       routeWeakSquareObjectSignature(normalized)
