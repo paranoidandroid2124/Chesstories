@@ -200,7 +200,15 @@ object BranchReplyProbePlanner:
     ctx.root.toList.flatMap { root =>
       val coveredBranchFens =
         ctx.positions.filter(_.role == PositionNodeRole.AfterThreat).map(_.ref.fen).toSet
-      selectedRootLines(ctx.lines).flatMap { line =>
+      val unresolvedCausalRootMoves =
+        ctx.evidenceGraph.records.collect {
+          case EvidenceRecord(_, event: PlanCausalEventEvidence, _)
+              if event.counterfactualDependencyProven && event.branchWitnesses.isEmpty =>
+            EvidenceRef.normalizeMove(event.rootMove)
+        }.toSet
+      selectedRootLines(ctx.lines).filter(line =>
+        unresolvedCausalRootMoves.contains(EvidenceRef.normalizeMove(line.ref.rootMove))
+      ).flatMap { line =>
         PrincipalVariationEvidence.legalFenAfter(root.fen, line.ref.rootMove).filterNot(coveredBranchFens.contains).map { branchFen =>
           ProbeRequest(
             id = s"${line.ref.id}:reply-multipv",

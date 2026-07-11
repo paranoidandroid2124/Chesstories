@@ -633,23 +633,21 @@ export default class AnalyseCtrl implements CevalHandler {
       .then(res => res.json())
       .then(async data => {
         let review = Array.isArray(data.move_review) ? data.move_review[0] : data.move_review;
-        if (!review?.renderable) {
-          const probeResults = await this.chesstoryProbeResults(data.probe_requests);
-          if (probeResults.length) {
-            const probed = await fetch('/api/chess-judgment/move-meaning', {
-              ...defaultInit,
-              method: 'post',
-              headers: {
-                ...jsonHeader,
-                ...xhrHeader,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ ...request, probeResults }),
-            })
-              .then(ensureOk)
-              .then(res => res.json());
-            review = Array.isArray(probed.move_review) ? probed.move_review[0] : probed.move_review;
-          }
+        const probeResults = await this.chesstoryProbeResults(data.probe_requests);
+        if (probeResults.length) {
+          const probed = await fetch('/api/chess-judgment/move-meaning', {
+            ...defaultInit,
+            method: 'post',
+            headers: {
+              ...jsonHeader,
+              ...xhrHeader,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ...request, probeResults }),
+          })
+            .then(ensureOk)
+            .then(res => res.json());
+          review = Array.isArray(probed.move_review) ? probed.move_review[0] : probed.move_review;
         }
         this.chesstoryBriefPayload = review?.renderable ? review : undefined;
         this.chesstoryBriefUnavailable = !this.chesstoryBriefPayload;
@@ -735,7 +733,7 @@ export default class AnalyseCtrl implements CevalHandler {
         moves: pv.moves,
         scoreCp: this.chesstoryEvalCp(pv),
         mate: pv.mate,
-        depth: pv.depth || ev.depth,
+        depth: ev.depth,
       }));
     if (ev.depth < (request.depthFloor ?? request.depth ?? 1) || replyLines.length < (request.multiPv ?? 1)) return;
     const evalCp = this.chesstoryEvalCp(ev);

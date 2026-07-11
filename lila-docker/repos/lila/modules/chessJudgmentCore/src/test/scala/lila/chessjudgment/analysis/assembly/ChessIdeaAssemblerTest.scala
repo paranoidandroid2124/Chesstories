@@ -52,6 +52,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         )
       )
       .getOrElse(fail("expected judgment result"))
+    assertEquals(result.packet.probeRequests, Nil)
     val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
     val claim = view.moveMeaningClaims
       .find(claim =>
@@ -150,6 +151,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assert(eventRecord._2.counterfactualDependencyProven)
     assertEquals(eventRecord._2.robustness, PlanCausalRobustness.Untested)
     assert(!eventRecord._2.futurePublicProofReady)
+    assertEquals(result.packet.probeRequests.flatMap(_.candidateMove), List("b7b5"))
     assert(!EvidenceObjectBinding.fromEvidenceRefs(result.packet.evidenceGraph, List(eventRecord._1.ref)).exists(binding =>
       binding.witness.exists(obj => obj.kind == EvidenceObjectKind.Move && obj.key == "b5b4")
     ))
@@ -171,6 +173,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assert(event.branchWitnesses.forall(_.realizationMatch.contains(PlanCausalRealizationMatch.ExactMove)), event.branchWitnesses)
     assertEquals(event.robustness, PlanCausalRobustness.Robust)
     assert(event.futurePublicProofReady)
+    assertEquals(result.packet.probeRequests, Nil)
     val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
     val publicClaim = view.moveMeaningClaims.find(claim =>
       claim.publicSurfaceAdmitted &&
