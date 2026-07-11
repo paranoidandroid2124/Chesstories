@@ -1537,6 +1537,13 @@ object EvidenceFactAssembler:
               )
           val alignedPlanContext = planContext.copy(planAlignment = alignment)
           PlanMatcher.toActivePlans(scoring.topPlans, scoring.compatibilityEvents).map { activePlans =>
+            val planMotifs = activePlans.allPlans.flatMap(_.evidence.map(_.motif)).toSet
+            val planMotifParents = context.evidenceGraph.records.collect {
+              case EvidenceRecord(motifRef, payload: MoveMotifEvidence, _)
+                  if planMotifs(payload.motif) &&
+                    line.forall(candidate => motifRef.line.contains(candidate.ref)) =>
+                motifRef
+            }
             val planPressure =
               StrategicFactNormalizer.fromPlanPressure(
                 id = allocator.evidenceId(s"plan-pressure:${allocator.positionKey(node.role, node.ref.fen, node.ref.ply)}"),
@@ -1549,6 +1556,7 @@ object EvidenceFactAssembler:
                   evidenceRefs(context, EvidenceLayer.Board, Some(node.ref), None) ++
                     evidenceRefs(context, EvidenceLayer.SinglePosition, Some(node.ref), None) ++
                     evidenceRefs(context, EvidenceLayer.PawnStructure, Some(node.ref), None) ++
+                    planMotifParents ++
                     incoming.toList.flatMap(edge =>
                       List(edge.evidence) ++
                         evidenceRefs(context, EvidenceLayer.StructuralDelta, Some(edge.from), line.map(_.ref))

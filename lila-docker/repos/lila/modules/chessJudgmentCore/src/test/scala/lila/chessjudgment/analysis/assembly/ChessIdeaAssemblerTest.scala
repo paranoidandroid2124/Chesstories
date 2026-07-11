@@ -1,7 +1,7 @@
 package lila.chessjudgment.analysis.assembly
 
 import chess.Color
-import lila.chessjudgment.model.{ PlanEventIdentity, PlanId, ProbeResult }
+import lila.chessjudgment.model.{ Plan, PlanEventIdentity, PlanId, PlanMatch, PlanSupport, ProbeResult }
 import lila.chessjudgment.model.strategic.VariationLine
 import lila.chessjudgment.model.strategic.PlanTaxonomy.{ PlanKind, PlanTheme }
 import lila.chessjudgment.model.judgment.*
@@ -72,6 +72,14 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         record -> payload
     }.getOrElse(fail("expected internal causal event"))
     assertEquals(eventRecord.ref.confidence, EvidenceConfidence.Heuristic)
+    assert(eventRecord.parents.exists(parent =>
+      result.packet.evidenceGraph.byId.get(parent.id).exists {
+        case EvidenceRecord(_, motif: MoveMotifEvidence, _) =>
+          motif.isRootEvent && EvidenceRef.sameMove(motif.rootMove, event.rootMove)
+        case _ =>
+          false
+      }
+    ))
     val structural = eventRecord.parents.flatMap(parent => result.packet.evidenceGraph.byId.get(parent.id)).collectFirst {
       case EvidenceRecord(_, payload: StructuralDeltaEvidence, _) => payload
     }.getOrElse(fail("expected structural parent"))
@@ -243,6 +251,33 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       PlanCausalFunctionalMatch.classify("b5b4", List(expected.copy(subjects = Nil)), "b5a4", List(equivalent)),
       None
     )
+
+  test("plan event results must support the typed plan goal"):
+    val weaknessPlan = PlanMatch(
+      plan = Plan.WeakPawnAttack(Color.White),
+      score = 0.8,
+      evidence = Nil,
+      support = List(
+        PlanSupport.Theme(PlanTheme.WeaknessFixation),
+        PlanSupport.Subplan(PlanKind.StaticWeaknessFixation)
+      )
+    )
+    val mobility = TransitionConsequence(
+      TransitionConsequenceKind.MobilityGain,
+      StructuralSignalPolarity.Gain,
+      2,
+      List("bishop:c8-a6:mobility+2")
+    )
+    val pressure = TransitionConsequence(
+      TransitionConsequenceKind.TargetPressureGain,
+      StructuralSignalPolarity.Gain,
+      2,
+      List("weak-pawn:c5")
+    )
+
+    assert(!PlanCausalEventProof.consequenceSupportsPlan(weaknessPlan, mobility))
+    assert(PlanCausalEventProof.consequenceSupportsPlan(weaknessPlan, pressure))
+    assert(!PlanCausalEventProof.developmentSupportsPlan(weaknessPlan))
 
   test("reply probe preserves conditionality instead of treating an unfinished branch as refutation"):
     val input = doknjasInput()

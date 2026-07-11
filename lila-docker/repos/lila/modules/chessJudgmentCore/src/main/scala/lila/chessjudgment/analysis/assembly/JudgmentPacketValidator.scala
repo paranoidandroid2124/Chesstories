@@ -878,10 +878,20 @@ object JudgmentPacketValidator:
     }
     val matchingPressurePlan = matchingPressurePlans.map(_._1)
     val matchingPressure = matchingPressurePlans.nonEmpty
+    val matchingRootMotifProof = parents.exists {
+      case EvidenceRecord(motifRef, motif: MoveMotifEvidence, _) =>
+        motifRef.confidence != EvidenceConfidence.Heuristic &&
+          motifRef.line.contains(payload.rootLine) &&
+          motif.isRootEvent &&
+          EvidenceRef.sameMove(motif.rootMove, payload.rootMove) &&
+          matchingPressurePlan.exists(_.evidence.exists(_.motif == motif.motif))
+      case _ =>
+        false
+    }
     val pressureConfidenceValid =
-      matchingPressurePlans.exists { case (_, parentConfidence, unique) =>
+      matchingPressurePlans.exists { case (_, _, unique) =>
         ref.confidence == EvidenceConfidence.Heuristic ||
-          (unique && parentConfidence == ref.confidence && parentConfidence != EvidenceConfidence.Heuristic)
+          (unique && ref.confidence == EvidenceConfidence.Mixed && matchingRootMotifProof)
       }
     val matchingStructural = parents.exists {
       case EvidenceRecord(_, structural: StructuralDeltaEvidence, _) =>
@@ -913,10 +923,19 @@ object JudgmentPacketValidator:
         developmentChoices = payload.developmentChoices
       )
     )
+    val goalResultValid = matchingPressurePlan.exists(plan =>
+      payload.structuralConsequences.forall(PlanCausalEventProof.consequenceSupportsPlan(plan, _)) &&
+        (payload.developmentChoices.isEmpty || PlanCausalEventProof.developmentSupportsPlan(plan))
+    )
     val futureProofValid = payload.futureRealization.forall(realization =>
       realization.dependencyProven &&
-        realization.consequences ==
-          PlanCausalEventProof.positiveConsequences(realization.trajectory.futureStep, realization.trajectory.color) &&
+        realization.consequences.nonEmpty &&
+        matchingPressurePlan.exists(plan =>
+          realization.consequences ==
+            PlanCausalEventProof
+              .positiveConsequences(realization.trajectory.futureStep, realization.trajectory.color)
+              .filter(PlanCausalEventProof.consequenceSupportsPlan(plan, _))
+        ) &&
         lineParent.exists(line =>
           line.futureRootObjectMove(line.lineReplayCount.max(1)).contains(realization.trajectory)
         )
@@ -952,6 +971,7 @@ object JudgmentPacketValidator:
           payload.rootLine.role != payload.rootTransition.role.lineRole ||
           !EvidenceRef.sameMove(payload.rootLine.rootMove, payload.rootMove) ||
           !identityValid ||
+          !goalResultValid ||
           !pressureConfidenceValid ||
           payload.structuralConsequences.exists(consequence => !consequence.positive || consequence.strength <= 0)
       )(

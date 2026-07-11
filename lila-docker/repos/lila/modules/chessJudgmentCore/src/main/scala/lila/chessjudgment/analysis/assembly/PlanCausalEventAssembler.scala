@@ -4,7 +4,8 @@ import chess.Color
 import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.analysis.structure.{ StructuralDeltaAnalyzer, StructuralDeltaContracts }
-import lila.chessjudgment.model.{ PlanEventIdentity, PlanMatch }
+import lila.chessjudgment.model.{ PlanEventIdentity, PlanMatch, PlanSupport }
+import lila.chessjudgment.model.strategic.PlanTaxonomy.PlanTheme
 import lila.chessjudgment.model.judgment.*
 
 object PlanCausalEventAssembler:
@@ -35,15 +36,18 @@ object PlanCausalEventAssembler:
               record -> payload
           }.toList
           (structuralRecord, structural) = structuralRecordAndPayload
-          planBindings = planObjectBindings(graph, pressureRecord, rootLine, principalPlan)
+          planMotifRefs = rootPlanMotifRefs(graph, pressureRecord, rootLine, principalPlan)
+          planBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, planMotifRefs)
           structuralBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, List(structuralRecord.ref))
           positiveConsequences = structural.consequences.filter(consequence =>
-            consequence.positive &&
+              consequence.positive &&
               consequence.strength > 0 &&
+              PlanCausalEventProof.consequenceSupportsPlan(principalPlan, consequence) &&
               consequenceOwnedByPlan(rootLine.rootMove, consequence, planBindings, structuralBindings)
           )
           developmentChoices = structural.developmentChoices.filter(choice =>
-            EvidenceRef.sameMove(s"${choice.from}${choice.to}", rootLine.rootMove)
+            PlanCausalEventProof.developmentSupportsPlan(principalPlan) &&
+              EvidenceRef.sameMove(s"${choice.from}${choice.to}", rootLine.rootMove)
           )
           (_, linePayload) = lineRecordAndPayload
           futureRealization = linePayload
@@ -52,10 +56,12 @@ object PlanCausalEventAssembler:
               PlanCausalFutureRealization(
                 trajectory = trajectory,
                 dependencyKind = PlanCausalDependencyKind.ObjectStatePrecondition,
-                consequences = PlanCausalEventProof.positiveConsequences(trajectory.futureStep, trajectory.color)
+                consequences = PlanCausalEventProof
+                  .positiveConsequences(trajectory.futureStep, trajectory.color)
+                  .filter(PlanCausalEventProof.consequenceSupportsPlan(principalPlan, _))
               )
             )
-            .filter(_.dependencyProven)
+            .filter(realization => realization.dependencyProven && realization.consequences.nonEmpty)
           if positiveConsequences.nonEmpty || developmentChoices.nonEmpty || futureRealization.nonEmpty
         yield
           val branchWitnesses = futureRealization.toList.flatMap(realization =>
@@ -85,8 +91,9 @@ object PlanCausalEventAssembler:
           )
           val futureKey = payload.futureMove.getOrElse("direct")
           val authoritativePlan =
-            pressureRef.confidence != EvidenceConfidence.Heuristic &&
-              pressure.uniqueRootBackedPlan(Some(rootLine.rootMove)).contains(principalPlan)
+            pressure.uniqueRootBackedPlan(Some(rootLine.rootMove)).contains(principalPlan) &&
+              planMotifRefs.nonEmpty &&
+              planMotifRefs.forall(ref => ref.confidence != EvidenceConfidence.Heuristic)
           EvidenceRecord(
             ref = allocator.evidenceRef(
               suffix = s"plan-causal-event:${allocator.key(rootLine.role)}:${rootLine.rootMove}:${allocator.key(planId)}:$futureKey",
@@ -95,11 +102,12 @@ object PlanCausalEventAssembler:
               position = transition.from,
               line = Some(rootLine),
               scope = transition.role.scope,
-              confidence = if authoritativePlan then pressureRef.confidence else EvidenceConfidence.Heuristic
+              confidence = if authoritativePlan then EvidenceConfidence.Mixed else EvidenceConfidence.Heuristic
             ),
             payload = payload,
             parents = (
               List(pressureRecord.ref, structuralRecord.ref, lineRecordAndPayload._1.ref, transition.evidence) ++
+                planMotifRefs ++
                 branchWitnesses.flatMap(witness => graph.records.find(_.ref.line.contains(witness.line)).map(_.ref))
             ).distinctBy(_.id)
           )
@@ -107,20 +115,20 @@ object PlanCausalEventAssembler:
         Nil
     }.distinctBy(_.ref.id)
 
-  private def planObjectBindings(
+  private def rootPlanMotifRefs(
       graph: TypedEvidenceGraph,
       pressureRecord: EvidenceRecord,
       rootLine: LineNodeRef,
       plan: PlanMatch
-  ): List[EvidenceObjectBinding] =
-    val motifRefs = pressureRecord.parents.flatMap(parent => graph.byId.get(parent.id)).collect {
+  ): List[EvidenceRef] =
+    pressureRecord.parents.flatMap(parent => graph.byId.get(parent.id)).collect {
       case EvidenceRecord(ref, payload: MoveMotifEvidence, _)
           if ref.line.contains(rootLine) &&
+            payload.isRootEvent &&
             EvidenceRef.sameMove(payload.rootMove, rootLine.rootMove) &&
             plan.evidence.exists(_.motif == payload.motif) =>
         ref
-    }
-    EvidenceObjectBinding.fromEvidenceRefs(graph, motifRefs.distinctBy(_.id))
+    }.distinctBy(_.id)
 
   private def consequenceOwnedByPlan(
       rootMove: String,
@@ -189,6 +197,52 @@ object PlanCausalEventAssembler:
     }
 
 private[assembly] object PlanCausalEventProof:
+  def developmentSupportsPlan(plan: PlanMatch): Boolean =
+    planTheme(plan).exists(theme =>
+      theme == PlanTheme.OpeningPrinciples || theme == PlanTheme.PieceRedeployment
+    )
+
+  def consequenceSupportsPlan(plan: PlanMatch, consequence: TransitionConsequence): Boolean =
+    import TransitionConsequenceCategory.*
+    import TransitionConsequenceKind.*
+
+    def category(value: TransitionConsequenceCategory): Boolean =
+      StructuralDeltaEvidence.hasConsequenceCategory(consequence.kind, value)
+
+    planTheme(plan).exists {
+      case PlanTheme.OpeningPrinciples =>
+        category(OpeningDevelopment) || category(OpeningCenterControl)
+      case PlanTheme.RestrictionProphylaxis =>
+        consequence.kind == OpponentMobilityRestriction || category(TargetPressure) || category(CenterControl)
+      case PlanTheme.PieceRedeployment =>
+        category(PieceActivity) || category(Development) || consequence.kind == OutpostGain
+      case PlanTheme.SpaceClamp =>
+        category(CenterControl) || category(TargetPressure) ||
+          consequence.kind == OpponentMobilityRestriction || consequence.kind == PawnTensionGain
+      case PlanTheme.WeaknessFixation =>
+        category(TargetPressure) ||
+          Set(WeakPawnTargetCreated, WeakSquareTargetCreated, PawnTensionGain).contains(consequence.kind)
+      case PlanTheme.PawnBreakPreparation =>
+        category(PawnStructure) || category(PawnStructureDelta) || category(CenterControl)
+      case PlanTheme.FlankInfrastructure =>
+        category(PawnStructureDelta) || category(TargetPressure) || category(PieceActivity) ||
+          Set(KingRingPressureGain, RookLiftActivation, LineUnlockGain).contains(consequence.kind)
+      case PlanTheme.AdvantageTransformation =>
+        Set(
+          PassedPawnProgress,
+          PromotionPressureGain,
+          FileOccupationGain,
+          OpenFileGain,
+          SemiOpenFileGain,
+          TargetPressureGain
+        ).contains(consequence.kind)
+      case PlanTheme.FavorableExchange | PlanTheme.Unknown =>
+        false
+    }
+
+  private def planTheme(plan: PlanMatch): Option[PlanTheme] =
+    plan.support.collectFirst { case PlanSupport.Theme(theme) => theme }
+
   def branchWitness(
       sourceProbeId: String,
       line: LineNodeRef,
