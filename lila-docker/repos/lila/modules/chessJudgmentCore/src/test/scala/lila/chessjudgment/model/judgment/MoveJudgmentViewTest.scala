@@ -1147,6 +1147,8 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       line = Some(playedLine),
       scope = EvidenceScope.Counterfactual
     )
+    val (tacticalProof, tacticalProofRecord) =
+      ownedTacticalProof("line-bound-witness", root, playedLine)
     val tacticalCause = RelativeCauseFact(
       kind = RelativeCauseKind.TacticalRefutationOfPlayed,
       comparisonKind = CandidateComparisonKind.PlayedVsBest,
@@ -1166,7 +1168,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         rootMoveMatched = true,
         directProofEligible = true
       )
-    )(None)
+    )(Some(tacticalProof))
     val recaptureCauseRef = evidenceRef(
       id = "relative-cause:played-best:recapture",
       producer = EvidenceProducer.RelativeMoveProducer,
@@ -1222,6 +1224,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
           structuralRef,
           StructuralDeltaEvidence(transition = transition, signals = Nil, consequences = List(consequence))
         ),
+        tacticalProofRecord,
         EvidenceRecord(structuralCauseRef, RelativeCauseFactEvidence(structuralCause), parents = List(structuralRef)),
         EvidenceRecord(tacticalCauseRef, RelativeCauseFactEvidence(tacticalCause)),
         EvidenceRecord(recaptureCauseRef, RelativeCauseFactEvidence(recaptureCause)),
@@ -1639,6 +1642,8 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         directProofEligible = true
       )
     )(Some(broadProof))
+    val (tacticalProof, tacticalProofRecord) =
+      ownedTacticalProof("broad-structural-peer", root, playedLine)
     val tacticalCause = broadStructuralCause.copy(
       kind = RelativeCauseKind.TacticalRefutationOfPlayed,
       supportEvidence = Nil,
@@ -1647,7 +1652,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         rootMoveMatched = true,
         directProofEligible = true
       )
-    )(None)
+    )(Some(tacticalProof))
     val graph = TypedEvidenceGraph(
       List(
         EvidenceRecord(
@@ -1666,6 +1671,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
           RelativeCauseFactEvidence(broadStructuralCause),
           parents = List(structuralRef)
         ),
+        tacticalProofRecord,
         EvidenceRecord(
           evidenceRef(
             id = "relative-cause:played-best:concrete-tactical-root",
@@ -1933,6 +1939,8 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       polarity = StructuralSignalPolarity.Loss,
       strength = 1
     )
+    val (tacticalProof, tacticalProofRecord) =
+      ownedTacticalProof("plan-fallback-peer", root, playedLine)
     val baseCause = RelativeCauseFact(
       kind = RelativeCauseKind.TacticalRefutationOfPlayed,
       comparisonKind = CandidateComparisonKind.PlayedVsBest,
@@ -1952,7 +1960,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         rootMoveMatched = true,
         directProofEligible = true
       )
-    )(None)
+    )(Some(tacticalProof))
     val planCause = baseCause.copy(
       kind = RelativeCauseKind.PlanContradiction,
       supportEvidence = List(structuralRef),
@@ -1991,6 +1999,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
           structuralRef,
           StructuralDeltaEvidence(transition = transition, signals = Nil, consequences = List(planConsequence))
         ),
+        tacticalProofRecord,
         EvidenceRecord(
           evidenceRef(
             id = "relative-cause:played-best:event:tactical-refutation",
@@ -2481,7 +2490,7 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       )
     )
 
-  test("keeps pure tactical played blunder as root when no proved structural root exists"):
+  test("does not promote a tactical category without owned tactical proof"):
     val root = PositionNodeRef("8/8/8/8/8/8/3P4/8 w - - 0 1", 1, Some(Color.White), Some("root"))
     val playedLine = LineNodeRef("played-line", "d2d4", 2, LineNodeRole.Played)
     val referenceLine = LineNodeRef("reference-line", "g1f3", 1, LineNodeRole.BestReference)
@@ -2527,9 +2536,12 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       )
       .get
 
-    assertEquals(view.causeAudit.primary.map(_.causeKind), List(RelativeCauseKind.TacticalRefutationOfPlayed))
-    assertEquals(view.causeAudit.primary.head.narrativeRole, MoveJudgmentCauseNarrativeRole.RootCause)
-    assertEquals(view.causeAudit.primary.head.rootArbitrationTier, MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot)
+    assertEquals(view.causeAudit.primary, Nil)
+    assert(!view.causeAudit.all.exists(frame =>
+      frame.causeKind == RelativeCauseKind.TacticalRefutationOfPlayed &&
+        (frame.narrativeRole == MoveJudgmentCauseNarrativeRole.RootCause ||
+          frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot)
+    ), view.causeAudit)
 
   test("draw resource proof outranks exact long-term roots as a terminal result"):
     val playedLine = LineNodeRef("played-line", "h6a6", 2, LineNodeRole.Played)
@@ -2580,7 +2592,8 @@ class MoveJudgmentViewTest extends munit.FunSuite:
           s"actor=Move:${playedLine.rootMove}|target=Square:a6|mechanism=Mechanism:proof|consequence=Consequence:proof|proof=DirectProof"
         ),
         concreteObjectReady = true,
-        hasOwnedAdmissibleLongTermProof = hasLongTermProof
+        hasOwnedAdmissibleLongTermProof = hasLongTermProof,
+        hasOwnedTacticalProof = proofLineConsequences.exists(LineConsequenceKind.tacticalDriver)
       )
     val exactStructural = frame("exact-structural", RelativeCauseKind.StructuralImprovement, hasLongTermProof = true)
     val drawResource =
@@ -2660,6 +2673,8 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       line = Some(playedLine),
       scope = EvidenceScope.Counterfactual
     )
+    val (tacticalProof, tacticalProofRecord) =
+      ownedTacticalProof("weak-structural-peer", root, playedLine)
     val tacticalCause = structuralCause.copy(
       kind = RelativeCauseKind.TacticalRefutationOfPlayed,
       supportEvidence = Nil,
@@ -2668,13 +2683,14 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         rootMoveMatched = true,
         directProofEligible = true
       )
-    )(None)
+    )(Some(tacticalProof))
     val graph = TypedEvidenceGraph(
       List(
         EvidenceRecord(
           structuralRef,
           StructuralDeltaEvidence(transition = transition, signals = Nil, consequences = List(consequence))
         ),
+        tacticalProofRecord,
         EvidenceRecord(structuralCauseRef, RelativeCauseFactEvidence(structuralCause), parents = List(structuralRef)),
         EvidenceRecord(tacticalCauseRef, RelativeCauseFactEvidence(tacticalCause))
       )
@@ -2795,6 +2811,44 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         claim.copy(principalPlanEvent = Some(routeEvent.copy(results = routeEvent.results.map(_.copy(stage = "direct")))))
       ),
       Some("piece_route")
+    )
+
+  private def ownedTacticalProof(
+      id: String,
+      position: PositionNodeRef,
+      line: LineNodeRef
+  ): (RelativeCauseProof, EvidenceRecord) =
+    val ref = evidenceRef(
+      id = s"tactical-mechanism:$id",
+      producer = EvidenceProducer.TacticalMechanismProducer,
+      layer = EvidenceLayer.TacticalMechanism,
+      position = position,
+      line = Some(line),
+      scope = EvidenceScope.Counterfactual
+    )
+    val signal = TacticalMechanismSignal(
+      kind = TacticalMechanismSignalKind.LineConsequence,
+      label = "refutation-line",
+      sourceLayer = EvidenceLayer.TacticalMechanism,
+      source = Some(ref)
+    )
+    (
+      RelativeCauseProof(
+        directProof = RelativeCauseProofSection(
+          role = RelativeCauseProofRole.DirectProof,
+          strength = RelativeCauseProofStrength.Primary,
+          tacticalMechanisms = List(TacticalMechanismProof(ref, TacticalMechanismKind.Refutation, List(signal)))
+        )
+      ),
+      EvidenceRecord(
+        ref,
+        TacticalMechanismEvidence(
+          kind = TacticalMechanismKind.Refutation,
+          moveUci = Some(line.rootMove),
+          line = Some(line),
+          signals = List(signal)
+        )
+      )
     )
 
   private def evidenceRef(

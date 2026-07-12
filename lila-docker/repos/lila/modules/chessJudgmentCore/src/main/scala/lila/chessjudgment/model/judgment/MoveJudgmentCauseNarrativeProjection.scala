@@ -209,12 +209,14 @@ object MoveJudgmentCauseNarrativeProjection:
     val arbitrationObjectReady =
       if broadObjectSensitiveRootKind(frame.causeKind) then frame.concreteObjectReady
       else rootArbitrationObjectReady(frame)
-    val eventKind = tacticalWitnessFrame(frame) && eventRootSelectable(graph, frame)
+    val tacticalKind = tacticalWitnessFrame(frame)
+    val eventKind = tacticalKind && frame.hasOwnedTacticalProof && eventRootSelectable(graph, frame)
     val tier =
       if !lineOwned then MoveJudgmentCauseRootArbitrationTier.ContextOnly
       else if fallbackKind && fallbackRootProofReady(frame) then MoveJudgmentCauseRootArbitrationTier.FallbackRoot
       else if fallbackKind then MoveJudgmentCauseRootArbitrationTier.ContextOnly
       else if longTermRootFrame(frame) && arbitrationObjectReady then MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot
+      else if tacticalKind && !frame.hasOwnedTacticalProof then MoveJudgmentCauseRootArbitrationTier.ContextOnly
       else if eventKind then MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot
       else if arbitrationObjectReady then MoveJudgmentCauseRootArbitrationTier.ConcreteOwnedRoot
       else if longTermRootFrame(frame) then MoveJudgmentCauseRootArbitrationTier.BroadOwnedRoot
