@@ -768,9 +768,10 @@ object EvidenceObjectBinding:
     }
     val episodeBinding = payload.episode.filter(_ => payload.episodePublicProofReady).map { episode =>
       val futureMoves = episode.futureEvents.map(event => normalize(event.moveUci))
+      val rootOwnedFutureEvents = episode.rootOwnedFutureEvents
       val futureTargets = (
         episode.futureTarget.toList.map(_.key.toLowerCase) ++
-          episode.futureEvents.flatMap(event => PlanCausalEpisode.pressureTargetSquares(event))
+          rootOwnedFutureEvents.flatMap(event => PlanCausalEpisode.pressureTargetSquares(event))
       ).distinct
       EvidenceObjectBinding(
         source = ref,
@@ -796,7 +797,7 @@ object EvidenceObjectBinding:
             payload.realizedBranchWitnesses.flatMap(witness => lineObject(witness.line))
         ).distinctBy(_.signaturePart),
         line = Some(payload.rootLine),
-        horizon = Some(s"ply:${episode.spanPlies - 1}")
+        horizon = episode.futureEvent.map(event => s"ply:${event.step.ply - episode.root.step.ply}")
       )
     }
     (directBindings ++ developmentBindings ++ episodeBinding).distinctBy(_.signature)
@@ -4952,6 +4953,40 @@ final case class PlanCausalEventEvidence(
       )
     )
 
+final case class PlanEventPublicResult(
+    stage: String,
+    kind: TransitionConsequenceKind,
+    polarity: StructuralSignalPolarity,
+    strength: Int,
+    subjects: List[String]
+)
+
+object PlanEventPublicResult:
+  def from(stage: String, consequence: TransitionConsequence): PlanEventPublicResult =
+    PlanEventPublicResult(
+      stage = stage,
+      kind = consequence.kind,
+      polarity = consequence.polarity,
+      strength = consequence.strength,
+      subjects = consequence.subjects
+    )
+
+final case class PlanEventPublicStep(
+    move: String,
+    actorRole: Option[String],
+    actorFrom: Option[String],
+    actorTo: Option[String],
+    dependencyKinds: List[PlanCausalDependencyKind],
+    rootOwned: Boolean
+)
+
+final case class PlanEventPublicInducedResponse(
+    triggerMove: String,
+    move: String,
+    targetSquare: String,
+    plyOffset: Int
+)
+
 final case class PlanCausalPublicProof(
     dependencyKind: PlanCausalDependencyKind,
     futureMove: String,
@@ -4961,15 +4996,10 @@ final case class PlanCausalPublicProof(
     realizedReplies: Int,
     exactReplies: Int,
     equivalentReplies: Int,
-    testedReplies: Int
-)
-
-final case class PlanEventPublicResult(
-    stage: String,
-    kind: TransitionConsequenceKind,
-    polarity: StructuralSignalPolarity,
-    strength: Int,
-    subjects: List[String]
+    testedReplies: Int,
+    sequence: List[PlanEventPublicStep],
+    inducedResponses: List[PlanEventPublicInducedResponse],
+    representativeResult: Option[PlanEventPublicResult]
 )
 
 final case class PlanEventPublicResponse(
@@ -4997,11 +5027,13 @@ final case class PlanEventPublicProof(
 
 object PlanEventPublicProof:
   def from(event: PlanCausalEventEvidence): PlanEventPublicProof =
-    val directResults = event.structuralConsequences.map(result("direct", _))
-    val publicEpisode = event.episode.filter(_ => event.episodePublicProofReady)
-    val futureResults = publicEpisode.toList.flatMap(_.futureEvents.flatMap(_.structuralConsequences).map(result("future", _)))
-    val futureSubjects = publicEpisode.toList
-      .flatMap(_.futureEvents.flatMap(_.structuralConsequences.flatMap(_.subjects)))
+    val directResults = event.structuralConsequences.map(PlanEventPublicResult.from("direct", _))
+    val futureCausality = PlanCausalPublicProof.from(event)
+    val representativeResult = futureCausality.flatMap(_.representativeResult).orElse(
+      directResults.sortBy(result => (-PlanCausalEpisode.resultSalience(result.kind), -result.strength)).headOption
+    )
+    val futureSubjects = futureCausality.toList
+      .flatMap(_.representativeResult.toList.flatMap(_.subjects))
       .map(_.trim.toLowerCase)
       .filter(_.nonEmpty)
     val futureSquares = futureSubjects.flatMap(subject =>
@@ -5011,7 +5043,7 @@ object PlanEventPublicProof:
       event.identity.targets ++
         futureSubjects ++
         futureSquares ++
-        publicEpisode.flatMap(_.futureTarget).map(target => s"square:${target.key.toLowerCase}")
+        futureCausality.map(proof => s"square:${proof.targetSquare.toLowerCase}")
     ).distinct.sorted
     PlanEventPublicProof(
       goalTheme = event.identity.goalTheme.id,
@@ -5024,7 +5056,7 @@ object PlanEventPublicProof:
       actorTo = event.identity.actorTo,
       targets = if targets.nonEmpty then targets else event.identity.actorTo.map(square => s"square:$square").toList,
       developmentChoices = event.developmentChoices,
-      results = (directResults ++ futureResults).distinct,
+      results = representativeResult.toList,
       responses = event.branchWitnesses
         .filter(_ => event.episodePublicProofReady)
         .map(witness =>
@@ -5036,16 +5068,7 @@ object PlanEventPublicProof:
           )
         )
         .distinct,
-      futureCausality = PlanCausalPublicProof.from(event)
-    )
-
-  private def result(stage: String, consequence: TransitionConsequence): PlanEventPublicResult =
-    PlanEventPublicResult(
-      stage = stage,
-      kind = consequence.kind,
-      polarity = consequence.polarity,
-      strength = consequence.strength,
-      subjects = consequence.subjects
+      futureCausality = futureCausality
     )
 
 object PlanCausalPublicProof:
@@ -5056,7 +5079,11 @@ object PlanCausalPublicProof:
       future <- episode.futureEvent
       dependency <- episode.dependencies
         .filter(_.to == future)
-        .sortBy(dependency => (dependency.kind.toString, dependency.plyOffset))
+        .sortBy(dependency => (
+          if episode.rootOwnedEvents.contains(dependency.from) then 0 else 1,
+          dependencyPriority(dependency.kind),
+          dependency.plyOffset
+        ))
         .headOption
       target <- episode.futureTarget
     yield PlanCausalPublicProof(
@@ -5068,8 +5095,36 @@ object PlanCausalPublicProof:
       realizedReplies = event.realizedBranchWitnesses.size,
       exactReplies = event.exactBranchWitnesses.size,
       equivalentReplies = event.equivalentBranchWitnesses.size,
-      testedReplies = event.branchWitnesses.size
+      testedReplies = event.branchWitnesses.size,
+      sequence = episode.events.map(node =>
+        PlanEventPublicStep(
+          move = node.moveUci,
+          actorRole = node.identity.actorRole,
+          actorFrom = node.identity.actorFrom,
+          actorTo = node.identity.actorTo,
+          dependencyKinds = episode.dependencies.filter(_.to == node).map(_.kind).distinct,
+          rootOwned = episode.rootOwnedEvents.contains(node)
+        )
+      ),
+      inducedResponses = episode.responses.map(response =>
+        PlanEventPublicInducedResponse(
+          triggerMove = response.trigger.moveUci,
+          move = response.step.moveUci,
+          targetSquare = response.target.key,
+          plyOffset = response.plyOffset
+        )
+      ).distinct,
+      representativeResult = episode.representativeResult.map((_, consequence) =>
+        PlanEventPublicResult.from("future", consequence)
+      )
     )
+
+  private def dependencyPriority(kind: PlanCausalDependencyKind): Int =
+    kind match
+      case PlanCausalDependencyKind.ObjectStatePrecondition  => 0
+      case PlanCausalDependencyKind.LineAccessPrecondition   => 1
+      case PlanCausalDependencyKind.FlankAdvanceCoordination => 2
+      case PlanCausalDependencyKind.SharedTargetCoordination => 3
 
 final case class PlanPressureEvidence(
     scoring: PlanScoringResult,

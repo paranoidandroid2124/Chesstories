@@ -2195,7 +2195,10 @@ object MoveMeaningSurface:
       "realized_replies" -> event.realizedReplies,
       "exact_replies" -> event.exactReplies,
       "equivalent_replies" -> event.equivalentReplies,
-      "tested_replies" -> event.testedReplies
+      "tested_replies" -> event.testedReplies,
+      "sequence" -> event.sequence.map(publicPlanEventStepJson),
+      "induced_responses" -> event.inducedResponses.map(publicPlanEventInducedResponseJson),
+      "representative_result" -> event.representativeResult.map(publicPlanEventResultJson)
     )
 
   private def publicPlanEventJson(event: PlanEventPublicProof): JsObject =
@@ -2220,8 +2223,10 @@ object MoveMeaningSurface:
         "development_choices" -> event.developmentChoices.map(choice =>
           Json.obj("piece" -> choice.role, "from" -> choice.from, "to" -> choice.to)
         ),
-        "future_move" -> event.futureCausality.map(_.futureMove)
+        "future_move" -> event.futureCausality.map(_.futureMove),
+        "sequence" -> event.futureCausality.toList.flatMap(_.sequence).map(publicPlanEventStepJson)
       ),
+      "induced_responses" -> event.futureCausality.toList.flatMap(_.inducedResponses).map(publicPlanEventInducedResponseJson),
       "opponent_responses" -> event.responses.map(response =>
         Json.obj(
           "move" -> response.move,
@@ -2230,17 +2235,38 @@ object MoveMeaningSurface:
           "realization_match" -> response.realizationMatch.map(_.toString)
         )
       ),
-      "results" -> event.results.map(result =>
-        Json.obj(
-          "stage" -> result.stage,
-          "kind" -> result.kind.toString,
-          "polarity" -> result.polarity.toString,
-          "strength" -> result.strength,
-          "subjects" -> result.subjects,
-          "subject_labels" -> publicPlanEventSubjectLabels(result.subjects)
-        )
-      ),
+      "results" -> event.results.map(publicPlanEventResultJson),
       "future_causality" -> event.futureCausality.map(publicCausalPlanJson)
+    )
+
+  private def publicPlanEventStepJson(step: PlanEventPublicStep): JsObject =
+    Json.obj(
+      "move" -> step.move,
+      "actor" -> Json.obj(
+        "piece" -> step.actorRole,
+        "from" -> step.actorFrom,
+        "to" -> step.actorTo
+      ),
+      "dependency_kinds" -> step.dependencyKinds.map(_.toString),
+      "root_owned" -> step.rootOwned
+    )
+
+  private def publicPlanEventInducedResponseJson(response: PlanEventPublicInducedResponse): JsObject =
+    Json.obj(
+      "trigger_move" -> response.triggerMove,
+      "move" -> response.move,
+      "target_square" -> response.targetSquare,
+      "ply_offset" -> response.plyOffset
+    )
+
+  private def publicPlanEventResultJson(result: PlanEventPublicResult): JsObject =
+    Json.obj(
+      "stage" -> result.stage,
+      "kind" -> result.kind.toString,
+      "polarity" -> result.polarity.toString,
+      "strength" -> result.strength,
+      "subjects" -> result.subjects,
+      "subject_labels" -> publicPlanEventSubjectLabels(result.subjects)
     )
 
   private def publicPlanEventSubjectLabels(subjects: List[String]): List[String] =
@@ -4547,8 +4573,7 @@ object MoveMeaningClaim:
     claim.positiveFunctionalProofEvidenceIds.nonEmpty &&
       claim.principalPlanId.nonEmpty &&
       claim.futureCausalProof.exists(proof =>
-        proof.dependencyKind == PlanCausalDependencyKind.ObjectStatePrecondition &&
-          !EvidenceRef.sameMove(proof.futureMove, claim.moveUci) &&
+        !EvidenceRef.sameMove(proof.futureMove, claim.moveUci) &&
           proof.targetSquare.nonEmpty &&
           proof.plyOffset > 0 &&
           (proof.robustness == PlanCausalRobustness.Robust || proof.robustness == PlanCausalRobustness.Conditional) &&
@@ -6042,6 +6067,12 @@ object MoveMeaningClaim:
       event: PlanEventPublicProof
   ): List[MoveMeaningSurfaceBoardCarrier] =
     val eventSubjects = (event.targets ++ event.results.flatMap(_.subjects)).distinct
+    val futureWitnesses = event.futureCausality.toList.flatMap { proof =>
+      val ordered = proof.sequence.filter(step => EvidenceRef.sameMove(step.move, proof.futureMove)) ++
+        proof.sequence.filterNot(step => EvidenceRef.sameMove(step.move, event.rootMove) || EvidenceRef.sameMove(step.move, proof.futureMove))
+      ordered.map(step => publicMoveCarrier("witness", step.move)) ++
+        proof.inducedResponses.map(response => publicMoveCarrier("witness", response.move))
+    }
     val developmentCarriers = event.developmentChoices.flatMap { choice =>
       publicPieceCarrier("actor", choice.role) ++
         publicSquareCarrier("actor", choice.from) ++
@@ -6055,6 +6086,7 @@ object MoveMeaningClaim:
             event.actorFrom.toList.flatMap(publicSquareCarrier("actor", _)) ++
             event.actorTo.toList.flatMap(publicSquareCarrier("target", _, Some("event_destination"))) ++
             eventSubjects.flatMap(publicStructuralSubjectCarriers(_, detail)) ++
+            futureWitnesses ++
             developmentCarriers
         )
     ).distinct.take(12)

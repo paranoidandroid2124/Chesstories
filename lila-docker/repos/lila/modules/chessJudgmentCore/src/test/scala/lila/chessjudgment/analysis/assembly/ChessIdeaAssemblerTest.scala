@@ -378,6 +378,30 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         response.target == EvidenceSquare("h7")
     ), episode.responses)
 
+  test("flank episode exports multi-actor means and the induced reply after robust probing"):
+    val result = MoveReviewJudgmentOrchestrator
+      .build(withReplyProbeFor(gameChangerH4Input(), "h2h4", List(
+        VariationLine(List("a8c8", "f3g5", "h7h6", "g5h3"), 0, depth = 16),
+        VariationLine(List("d8d7", "f3g5", "h7h6", "g5h3"), 0, depth = 16),
+        VariationLine(List("g7g6", "f3g5", "h7h6", "g5h3"), 0, depth = 16)
+      )))
+      .getOrElse(fail("expected judgment result"))
+    val event = causalEvent(result, "h2h4", "f3g5")
+    val proof = PlanCausalPublicProof.from(event).getOrElse(fail("expected public flank episode"))
+
+    assert(result.isValid, result.validation.issues)
+    assertEquals(event.robustness, PlanCausalRobustness.Robust)
+    assertEquals(proof.dependencyKind, PlanCausalDependencyKind.FlankAdvanceCoordination)
+    assertEquals(proof.sequence.map(_.move), List("h2h4", "f3g5", "g5h3"))
+    assert(proof.sequence.find(step => EvidenceRef.sameMove(step.move, "f3g5")).exists(
+      _.dependencyKinds.contains(PlanCausalDependencyKind.FlankAdvanceCoordination)
+    ))
+    assert(proof.inducedResponses.exists(response =>
+      EvidenceRef.sameMove(response.triggerMove, "f3g5") &&
+        EvidenceRef.sameMove(response.move, "h7h6") &&
+        response.targetSquare == "h7"
+    ), proof.inducedResponses)
+
   test("principal plan event keeps a concrete destination when a result has no named target"):
     val root = PositionNodeRef("8/8/2N5/8/8/8/8/4K2k w - - 0 1", 1, Some(Color.White))
     val after = PositionNodeRef("8/8/8/N7/8/8/8/4K2k b - - 1 1", 2, Some(Color.Black))
@@ -480,6 +504,14 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(planSignals.map(_.source.layer).distinct, List(EvidenceLayer.PlanCausalEvent))
     assertEquals(planSignals.flatMap(_.axis.map(_.polarity)).distinct, List(StrategicAxisPolarity.Gain))
     assert(planRelativeCauses(result, "b7b5").contains(RelativeCauseKind.PlanImprovement))
+    val publicEvent = PlanEventPublicProof.from(event)
+    val causalProof = publicEvent.futureCausality.getOrElse(fail("expected public causal episode"))
+    assertEquals(causalProof.futureMove, "b5b4")
+    assertEquals(causalProof.dependencyKind, PlanCausalDependencyKind.ObjectStatePrecondition)
+    assertEquals(causalProof.sequence.filter(_.rootOwned).map(_.move), List("b7b5", "b5b4"))
+    assert(causalProof.sequence.exists(step => !step.rootOwned && step.actorRole.contains("queen")))
+    assertEquals(publicEvent.results, causalProof.representativeResult.toList)
+    assertEquals(publicEvent.results.map(_.stage), List("future"))
     assertEquals(result.packet.probeRequests, Nil)
     val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
     val eventRecord = result.packet.evidenceGraph.records.collectFirst {
@@ -487,6 +519,12 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
           if payload.episode.exists(_.events.exists(event => EvidenceRef.sameMove(event.moveUci, "b5b4"))) => record
     }.getOrElse(fail("expected internal causal event"))
     assertEquals(eventRecord.ref.confidence, EvidenceConfidence.Mixed)
+    val episodeBinding = EvidenceObjectBinding
+      .fromEvidenceRefs(result.packet.evidenceGraph, List(eventRecord.ref))
+      .find(binding => binding.horizon.contains(s"ply:${causalProof.plyOffset}"))
+      .getOrElse(fail("expected representative episode binding"))
+    assert(episodeBinding.witness.exists(obj => obj.kind == EvidenceObjectKind.Move && obj.key == causalProof.futureMove))
+    assert(episodeBinding.target.exists(obj => obj.kind == EvidenceObjectKind.Square && obj.key == causalProof.targetSquare))
     assert(view.moveMeaningClaims.exists(claim =>
       claim.moveUci == "b7b5" &&
         claim.positiveFunctionalProofEvidenceIds.exists(id =>
@@ -499,6 +537,26 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     ), view.moveMeaningClaims)
     val publicJson = MoveMeaningSurface.publicPayloadJson(view)
     assert((publicJson \\ "future_move").exists(_.asOpt[String].contains("b5b4")), publicJson)
+    val planEventJson = (publicJson \\ "principal_plan_event").collectFirst {
+      case value: play.api.libs.json.JsObject
+          if (value \ "means" \ "future_move").asOpt[String].contains("b5b4") =>
+        value
+    }.getOrElse(fail("expected public principal plan event"))
+    val sequenceMoves = (planEventJson \ "means" \ "sequence")
+      .asOpt[List[play.api.libs.json.JsObject]]
+      .getOrElse(Nil)
+      .flatMap(step => (step \ "move").asOpt[String])
+    assert(sequenceMoves.contains("b7b5") && sequenceMoves.contains("b5b4"), sequenceMoves)
+    assertEquals(
+      (planEventJson \ "results").asOpt[List[play.api.libs.json.JsObject]].getOrElse(Nil).size,
+      1
+    )
+    val semanticCodes = (publicJson \\ "move_semantics")
+      .flatMap(_.asOpt[List[play.api.libs.json.JsObject]].getOrElse(Nil))
+      .flatMap(semantic => (semantic \ "idea" \ "code").asOpt[String])
+    val planIndex = semanticCodes.indexOf("plan_continuity")
+    val specificIndex = semanticCodes.indexWhere(_ != "plan_continuity")
+    assert(specificIndex >= 0 && (planIndex < 0 || specificIndex < planIndex), semanticCodes)
 
   test("future realization accepts a different move only when typed function and subject agree"):
     val expected = TransitionConsequence(
@@ -968,13 +1026,20 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     )
 
   private def withReplyProbe(input: RawMoveReviewInput, replyLines: List[VariationLine]): RawMoveReviewInput =
+    withReplyProbeFor(input, "b7b5", replyLines)
+
+  private def withReplyProbeFor(
+      input: RawMoveReviewInput,
+      candidateMove: String,
+      replyLines: List[VariationLine]
+  ): RawMoveReviewInput =
     val request = MoveReviewJudgmentOrchestrator
       .build(input)
       .getOrElse(fail("expected initial probe request"))
       .packet
       .probeRequests
-      .find(_.candidateMove.exists(EvidenceRef.sameMove(_, "b7b5")))
-      .getOrElse(fail("expected b7b5 reply probe request"))
+      .find(_.candidateMove.exists(EvidenceRef.sameMove(_, candidateMove)))
+      .getOrElse(fail(s"expected $candidateMove reply probe request"))
     input.copy(probeResults = List(
       ProbeResult(
         id = request.id,
