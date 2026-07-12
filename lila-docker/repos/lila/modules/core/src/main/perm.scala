@@ -90,13 +90,11 @@ enum Permission(val key: String, val alsoGrants: List[Permission], val name: Str
   case ModMessage extends Permission("MOD_MESSAGE", "Send mod messages")
   case Impersonate extends Permission("IMPERSONATE", "Impersonate")
   case DisapproveCoachReview extends Permission("DISAPPROVE_COACH_REVIEW", "Disapprove coach review")
-  case PayPal extends Permission("PAYPAL", "PayPal")
   // Set the tier of own broadcasts, making them official. Group own broadcasts.
   case Relay extends Permission("RELAY", "Broadcast official")
   case FidePlayer extends Permission("FIDE_PLAYER", "Edit FIDE players")
   case Cli extends Permission("CLI", "Command line")
   case Settings extends Permission("SETTINGS", "Lila settings")
-  case Streamers extends Permission("STREAMERS", "Manage streamers")
   case Verified extends Permission("VERIFIED", "Verified badge")
   case Pages extends Permission("PAGES", "Site pages")
   case Feed extends Permission("DAILY_FEED", "Feed updates")
@@ -229,7 +227,6 @@ enum Permission(val key: String, val alsoGrants: List[Permission], val name: Str
           OpeningWiki,
           Presets,
           Pages,
-          Streamers,
           DisableTwoFactor,
           ChangePermission,
           StudyAdmin,
@@ -248,7 +245,6 @@ enum Permission(val key: String, val alsoGrants: List[Permission], val name: Str
           GdprErase,
           Impersonate,
           FullCommsExport,
-          PayPal,
           Cli,
           Settings,
           TitleRequest

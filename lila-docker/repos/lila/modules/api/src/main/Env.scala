@@ -13,7 +13,6 @@ final class Env(
     @unused prefApi: lila.pref.PrefApi,
     userEnv: lila.user.Env,
     @unused analyseEnv: lila.analyse.Env,
-    @unused picfitUrl: lila.memo.PicfitUrl,
     @unused cacheApi: lila.memo.CacheApi,
     webConfig: lila.web.WebConfig,
     manifest: lila.web.AssetManifest

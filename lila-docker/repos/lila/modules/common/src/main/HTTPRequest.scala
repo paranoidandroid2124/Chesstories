@@ -36,8 +36,6 @@ object HTTPRequest:
   def isApi(req: RequestHeader) = req.path.startsWith("/api/")
   def isApiOrApp(req: RequestHeader) = isApi(req) || appOrigin(req).isDefined
 
-  def isPrometheus(req: RequestHeader) = req.path.startsWith("/prometheus-metrics/")
-
   def isAssets(req: RequestHeader) = req.path.startsWith("/assets/")
 
   def userAgent(req: RequestHeader): UserAgent =
@@ -74,9 +72,7 @@ object HTTPRequest:
     private val pattern = rStr.r.pattern
     def apply(req: RequestHeader): Boolean = pattern.matcher(userAgent(req).value).find
 
-  def isFishnet(req: RequestHeader) = req.path.startsWith("/fishnet/")
-
-  def isHuman(req: RequestHeader) = isCrawler(req).no && !isFishnet(req)
+  def isHuman(req: RequestHeader) = isCrawler(req).no
 
   private val fileExtensionRegex = """\.(?<!^\.)[a-zA-Z0-9]{2,4}$""".r
 
@@ -97,7 +93,7 @@ object HTTPRequest:
     webXhrAccepts.contains(a) || a.startsWith("application/json") || startsWithVersionedApiAccept(a)
   def isEventSource(req: RequestHeader): Boolean = accepts(req) contains "text/event-stream"
   def isProgrammatic(req: RequestHeader) =
-    !isSynchronousHttp(req) || isFishnet(req) || isApi(req) || isPrometheus(req) ||
+    !isSynchronousHttp(req) || isApi(req) ||
       accepts(req).exists(startsWithVersionedApiAccept)
 
   def actionName(req: RequestHeader): String =

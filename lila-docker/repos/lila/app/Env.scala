@@ -39,16 +39,13 @@ final class Env(
   val mailer: lila.mailer.Env = wire[lila.mailer.Env]
   val security: lila.security.Env = wire[lila.security.Env]
   val pref: lila.pref.Env = wire[lila.pref.Env]
-  val evalCache: lila.evalCache.Env = wire[lila.evalCache.Env]
   val analyse: lila.analyse.Env = new lila.analyse.Env(
     db = mongo.mainDb,
-    cacheApi = memo.cacheApi,
     net = net
   )
 
   val study: lila.study.Env = new lila.study.Env(
     appConfig = config,
-    ws = summon[StandaloneWSClient],
     lightUserApi = user.lightUserApi,
     userApi = user.api,
     analyser = analyse.analyser,

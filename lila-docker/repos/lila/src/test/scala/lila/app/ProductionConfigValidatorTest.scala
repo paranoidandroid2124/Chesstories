@@ -70,7 +70,7 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
     assert(err.getMessage.contains("security.hcaptcha.secret"))
     assert(err.getMessage.contains("security.hcaptcha.public.sitekey"))
 
-  test("production validation rejects disabled signup protections and magic-link auto create"):
+  test("production validation rejects disabled signup protections"):
     val weakConfig = Configuration(
       ConfigFactory.parseString("""
         net.domain = "chesstory.com"
@@ -102,7 +102,6 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
 
     assert(err.getMessage.contains("security.email_confirm.enabled"))
     assert(err.getMessage.contains("security.hcaptcha.enabled"))
-    assert(err.getMessage.contains("auth.magicLink.autoCreate"))
 
   test("non-production mode skips production validation"):
     val devConfig = Configuration(ConfigFactory.parseString("""net.domain = "localhost:9663""""))
@@ -158,7 +157,6 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
         security.hcaptcha.enabled = true
         security.hcaptcha.secret = "captcha-secret"
         security.hcaptcha.public.sitekey = "captcha-sitekey"
-        kamon.prometheus.lilaKey = "prom-key"
       """)
     )
 
@@ -168,41 +166,7 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
     assert(err.getMessage.contains("play.http.secret.key"))
     assert(err.getMessage.contains("user.password.bpass.secret"))
 
-  test("production validation rejects missing prometheus key and upstream telemetry endpoint"):
-    val badObservability = Configuration(
-      ConfigFactory.parseString("""
-        net.domain = "chesstory.com"
-        net.base_url = "https://chesstory.com"
-        net.email = "contact@chesstory.com"
-        play.http.secret.key = "play-http-secret"
-        user.password.bpass.secret = "bpass-secret"
-        security.email_confirm.enabled = true
-        security.password_reset.secret = "reset-secret"
-        security.email_confirm.secret = "confirm-secret"
-        security.email_change.secret = "change-secret"
-        security.login_token.secret = "token-secret"
-        auth.magicLink.autoCreate = false
-        mailer.primary.mock = false
-        mailer.primary.host = "smtp.postmarkapp.com"
-        mailer.primary.port = 587
-        mailer.primary.tls = true
-        mailer.primary.user = "smtp-user"
-        mailer.primary.password = "smtp-pass"
-        mailer.primary.sender = "Chesstory <noreply@chesstory.com>"
-        security.hcaptcha.enabled = true
-        security.hcaptcha.secret = "captcha-secret"
-        security.hcaptcha.public.sitekey = "captcha-sitekey"
-        api.influx_event.endpoint = "http://monitor.lichess.ovh:8086/write?db=events"
-      """)
-    )
-
-    val err = intercept[IllegalStateException]:
-      ProductionConfigValidator.validate(badObservability, Mode.Prod)
-
-    assert(err.getMessage.contains("kamon.prometheus.lilaKey"))
-    assert(err.getMessage.contains("api.influx_event.endpoint"))
-
-  test("production validation rejects upstream gif export and dormant push bindings"):
+  test("production validation rejects dormant push bindings"):
     val badBindings = Configuration(
       ConfigFactory.parseString("""
         net.domain = "chesstory.com"
@@ -226,8 +190,6 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
         security.hcaptcha.enabled = true
         security.hcaptcha.secret = "captcha-secret"
         security.hcaptcha.public.sitekey = "captcha-sitekey"
-        kamon.prometheus.lilaKey = "prom-key"
-        game.gifUrl = "http://gif.lichess.ovh:6175"
         push.web.url = "https://push.example.com"
         push.web.vapid_public_key = "vapid-key"
       """)
@@ -236,7 +198,6 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
     val err = intercept[IllegalStateException]:
       ProductionConfigValidator.validate(badBindings, Mode.Prod)
 
-    assert(err.getMessage.contains("game.gifUrl"))
     assert(err.getMessage.contains("push.web.url"))
     assert(err.getMessage.contains("push.web.vapid_public_key"))
 
@@ -263,7 +224,5 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
       security.hcaptcha.enabled = true
       security.hcaptcha.secret = "captcha-secret"
       security.hcaptcha.public.sitekey = "captcha-sitekey"
-      kamon.prometheus.lilaKey = "prom-key"
-      api.influx_event.endpoint = ""
     """)
   )

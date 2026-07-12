@@ -48,8 +48,7 @@ object Permission:
       UserSearch,
       ModNote,
       ModLog,
-      ManageTeam,
-      Streamers
+      ManageTeam
     ),
     "Monitoring" -> List(
       MonitoredBoostMod,
@@ -79,8 +78,7 @@ object Permission:
       Settings,
       IpTiers,
       Impersonate,
-      ChangePermission,
-      PayPal
+      ChangePermission
     ),
     "Feature" -> List(
       Beta,

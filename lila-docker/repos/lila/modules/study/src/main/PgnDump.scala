@@ -10,7 +10,6 @@ import lila.tree.{ Analysis, Metas, NewBranch, NewRoot, NewTree, Root }
 
 final class PgnDump(
     chapterRepo: ChapterRepo,
-    analyser: lila.tree.Analyser,
     annotator: lila.tree.Annotator,
     lightUserApi: lila.core.user.LightUserApi,
     net: lila.core.config.NetConfig
@@ -30,9 +29,7 @@ final class PgnDump(
         ofChapter(study, flags)(chapter).map(some)
 
   def ofChapter(study: Study, flags: WithFlags)(chapter: Chapter): Fu[PgnStr] =
-    (flags.comments && chapter.serverEval.exists(_.done))
-      .so(analyser.byId(Analysis.Id(study.id, chapter.id)))
-      .map(ofChapter(study, flags)(chapter, _))
+    fuccess(ofChapter(study, flags)(chapter, none))
 
   private val fileR = """[\s,]""".r
   private val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd")

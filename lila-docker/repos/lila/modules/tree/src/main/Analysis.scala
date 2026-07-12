@@ -5,7 +5,6 @@ import chess.{ Color, Ply }
 import play.api.libs.json.JsObject
 
 case class AnalysisProgress(gameId: GameId, payload: () => JsObject)
-case class StudyAnalysisProgress(analysis: Analysis, complete: Boolean)
 
 trait Analyser:
   def byId(id: Analysis.Id): Fu[Option[Analysis]]
@@ -25,7 +24,7 @@ case class Analysis(
     infos: List[Info],
     startPly: Ply,
     date: Instant,
-    fk: Option[Analysis.FishnetKey],
+    fk: Option[String],
     nodesPerMove: Option[Int]
 ):
   lazy val infoAdvices: InfoAdvices =
@@ -81,5 +80,3 @@ object Analysis:
       def studyId: Option[StudyId] = id match
         case Study(studyId, _) => Some(studyId)
         case _ => None
-
-  type FishnetKey = String

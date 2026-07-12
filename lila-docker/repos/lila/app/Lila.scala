@@ -49,8 +49,7 @@ final class LilaComponents(
 
   import _root_.controllers.*
 
-  // we want to use the legacy session cookie baker
-  // for compatibility with lila-ws
+  // we want to use the legacy session cookie baker for existing sessions
   lazy val cookieBaker = LegacySessionCookieBaker(httpConfiguration.session, cookieSigner)
 
   override lazy val requestFactory: RequestFactory =

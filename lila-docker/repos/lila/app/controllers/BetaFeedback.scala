@@ -118,7 +118,7 @@ final class BetaFeedback(env: Env) extends LilaController(env):
                   renderPage(
                     inputForm.fill(input).withError(
                       "email",
-                      "Enter an email address or sign in with an account email to join the paid-plan waitlist."
+                      s"Enter an email address or sign in with an account email to get ${notificationSubject(submission.feature)}."
                     ),
                     accountEmail
                   )
@@ -127,7 +127,7 @@ final class BetaFeedback(env: Env) extends LilaController(env):
                 env.beta.api
                   .submit(ctx.me.map(_.userId), submission.copy(email = effectiveEmail))
                   .map: result =>
-                    htmlRedirect(input, result)
+                    htmlRedirect(input, result, submission.feature)
           )
       )
 
@@ -146,7 +146,7 @@ final class BetaFeedback(env: Env) extends LilaController(env):
                     Json.obj(
                       "ok" -> true,
                       "waitlist" -> result.waitlist.key,
-                      "message" -> successMessage(result),
+                      "message" -> successMessage(result, submission.feature),
                       "storedEmail" -> result.storedEmail.map(_.value)
                     )
                   )
@@ -209,7 +209,7 @@ final class BetaFeedback(env: Env) extends LilaController(env):
         if EmailAddress.isValid(value) then Right(EmailAddress(value).some)
         else Left("Invalid email address.")
 
-  private def htmlRedirect(input: FormInput, result: SubmitResult): Result =
+  private def htmlRedirect(input: FormInput, result: SubmitResult, feature: String): Result =
     val target =
       sanitizeReturnTo(input.returnTo)
         .getOrElse(
@@ -221,14 +221,19 @@ final class BetaFeedback(env: Env) extends LilaController(env):
             notify = input.notifyRequested
           ).url
         )
-    Redirect(target).flashing("success" -> successMessage(result))
+    Redirect(target).flashing("success" -> successMessage(result, feature))
 
-  private def successMessage(result: SubmitResult): String =
+  private def notificationSubject(feature: String): String =
+    if feature.trim.equalsIgnoreCase("launch_notice") then "launch updates"
+    else "paid-plan updates"
+
+  private def successMessage(result: SubmitResult, feature: String): String =
+    val subject = notificationSubject(feature)
     result.waitlist match
       case WaitlistState.Enrolled =>
         val target = result.storedEmail.map(_.value).getOrElse("your account email")
-        s"Thanks. We saved your beta feedback and will notify $target if paid plans open."
+        s"Thanks. We saved your interest and will notify $target about $subject."
       case WaitlistState.NeedsEmail =>
-        "Thanks. We saved your beta feedback, but we still need an email address to notify you about paid plans."
+        s"Thanks. We saved your interest, but we still need an email address to send $subject."
       case WaitlistState.NotRequested =>
-        "Thanks. We saved your beta feedback."
+        "Thanks. We saved your feedback."

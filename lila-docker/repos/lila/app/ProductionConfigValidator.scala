@@ -30,7 +30,6 @@ object ProductionConfigValidator:
 
       requireMailer(config, errors)
       requireSignupProtections(config, errors)
-      requireObservability(config, errors)
       requireOpenBetaBindings(config, errors)
 
       val problems = errors.toList
@@ -111,29 +110,10 @@ object ProductionConfigValidator:
       invalid = Set("10000000-ffff-ffff-ffff-000000000001", "f91a151d-73e5-4a95-9d4e-74bfa19bec9d")
     )
 
-  private def requireObservability(
-      config: Configuration,
-      errors: ListBuffer[String]
-  ): Unit =
-    requireNonPlaceholder(
-      config,
-      "kamon.prometheus.lilaKey",
-      errors,
-      invalid = Set("???")
-    )
-
-    val influxEndpoint = config.getOptional[String]("api.influx_event.endpoint").map(_.trim).getOrElse("")
-    if influxEndpoint.toLowerCase.contains("lichess.ovh") then
-      errors += "api.influx_event.endpoint must not point to the upstream lichess telemetry host in production."
-
   private def requireOpenBetaBindings(
       config: Configuration,
       errors: ListBuffer[String]
   ): Unit =
-    configuredString(config, "game.gifUrl").foreach: gifUrl =>
-      if pointsToLocalhost(gifUrl) || gifUrl.toLowerCase.contains("gif.lichess.ovh") then
-        errors += "game.gifUrl must point to a Chesstory-controlled GIF export endpoint or remain empty in production."
-
     if configuredString(config, "push.web.url").isDefined then
       errors += "push.web.url must remain empty in open-beta production."
     if configuredString(config, "push.web.vapid_public_key").isDefined then
@@ -169,7 +149,3 @@ object ProductionConfigValidator:
 
   private def configuredString(config: Configuration, path: String): Option[String] =
     config.getOptional[String](path).map(_.trim).filter(_.nonEmpty)
-
-  private def pointsToLocalhost(value: String): Boolean =
-    val normalized = value.trim.toLowerCase
-    normalized.contains("localhost") || normalized.contains("127.0.0.1")

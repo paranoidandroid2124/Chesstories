@@ -51,10 +51,3 @@ trait ResponseBuilder(using Executor)
       parser(rh).mapFuture:
         case Left(r) => fuccess(r)
         case Right(a) => handler(using Request(rh, a))
-
-  private val movedMap: Map[String, String] = Map(
-    "yt" -> "https://youtube.com/@chesstory",
-    "dmca" -> "https://docs.google.com/forms/d/e/1FAIpQLSdRVaJ6Wk2KHcrLcY0BxM7lTwYSQHDsY2DsGwbYoLUBo3ngfQ/viewform",
-    "help" -> "/contact"
-  )
-  def staticRedirect(key: String): Option[Fu[Result]] = movedMap.get(key).map { MovedPermanently(_) }

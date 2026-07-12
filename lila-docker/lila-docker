@@ -25,7 +25,6 @@ run_setup() {
 
         run_ui_build
 
-        setup_bbppairings
         setup_database
     fi
 
@@ -35,7 +34,7 @@ run_setup() {
         touch ran_as_gitpod_prebuild
         # wait for the services to be ready sleep for 5 seconds multiple times and check 8080 port if 502 status code is returned
         for i in {1..150}; do # 150 * 5 = 750 seconds
-            echo -n "Checking if lila is ready... "
+            echo -n "Checking if Chesstory is ready... "
             sleep 5
             status_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/)
             echo -n "status code: $status_code - "
@@ -53,7 +52,6 @@ add_services() {
 
     docker compose build
     docker compose up -d
-    setup_bbppairings
     setup_database
 }
 
@@ -133,30 +131,7 @@ setup_database() {
     docker compose exec mongodb mongosh --quiet lichess /lila/bin/mongodb/create-trophy-kinds.js
     echo " done"
 
-    if [[ $COMPOSE_PROFILES == *"search"* ]]; then
-        while ! docker compose exec elasticsearch curl -s -X GET "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=10s" > /dev/null 2>&1; do
-            echo "Waiting for elasticsearch to be ready..."
-            sleep 2
-        done
-
-        docker compose exec elasticsearch curl -X DELETE "localhost:9200/_all?pretty"
-        docker compose run --rm lila_search_ingestor_cli
-    fi
-
     docker compose run --rm python python /scripts/users.py
-}
-
-setup_bbppairings() {
-    if [ "$SETUP_BBPPAIRINGS" != "true" ]; then
-        return
-    fi
-
-    docker build -f docker/bbpPairings.Dockerfile . -t bbppairings
-    docker run --rm -v ./repos/bbpPairings:/mnt bbppairings make
-
-    ## verify it compiled
-    docker compose run --rm --entrypoint="/opt/bbpPairings/bbpPairings.exe" lila \
-        && echo "✅ bbpPairings compiled successfully"
 }
 
 reset_database() {
@@ -167,16 +142,14 @@ reset_database() {
 
 run_formatter() {
     docker compose run --rm -w /lila ui pnpm run format
-    docker compose exec chessground pnpm run format || echo "Skipping chessground"
-    docker compose exec pgn_viewer pnpm run format || echo "Skipping pgn-viewer"
-    docker compose exec lila sbt scalafmtAll || docker compose run --rm --entrypoint "sbt scalafmtAll" lila
+    docker compose exec chesstory sbt scalafmtAll || docker compose run --rm --entrypoint "sbt scalafmtAll" chesstory
 }
 
 run_hostname() {
     rust_cmd hostname
 
     if [ ! -z "$(docker compose ps -a --services | xargs)" ]; then
-        docker compose down lila lila_ws caddy mono
+        docker compose down chesstory caddy mono
         docker compose up -d
     fi
 }
@@ -237,11 +210,11 @@ show_help() {
     echo "  down          Stop the containers and remove their volumes"
     echo "  logs          Stream the logs of all the running containers"
     echo "  build         Pre-fetch and pre-build all the images necessary for the containers"
-    echo "  format        Run the code formatter to match Lichess code style"
+    echo "  format        Run the code formatter"
     echo "  hostname      Set the hostname to something different than the default localhost"
     echo "  db            Reset and re-seed the database with fresh fake data"
-    echo "  lila clean    Run 'sbt clean' in the lila container. Useful if there are compilation errors"
-    echo "  lila restart  Restart the lila container to apply changes to the codebase"
+    echo "  chesstory clean    Run 'sbt clean' in the Chesstory container. Useful if there are compilation errors"
+    echo "  chesstory restart  Restart the Chesstory container to apply changes to the codebase"
     echo "  gitpod public Make http port 8080 public on the Gitpod instance"
     echo "  ui            Compile the frontend code. Run with --watch to automatically recompile on changes"
     echo "  add-services  Add new services to the existing setup"
@@ -283,17 +256,17 @@ case "$1" in
     logs)
         COMPOSE_PROFILES=$(all_profiles) docker compose logs --follow
         ;;
-    lila)
+    chesstory)
         shift
         case "$1" in
             clean)
-                docker compose run --rm --entrypoint bash lila -c "rm .sbtopts || true; sbt clean"
+                docker compose run --rm --entrypoint bash chesstory -c "rm .sbtopts || true; sbt clean"
                 ;;
             restart)
-                docker compose restart lila
+                docker compose restart chesstory
                 ;;
             *)
-                echo "Unknown lila command: $1"
+                echo "Unknown Chesstory command: $1"
                 exit 1
                 ;;
         esac
@@ -321,7 +294,7 @@ case "$1" in
         if [ -n "$(docker compose ps -q  2>/dev/null)" ]; then
             docker compose ps
         else 
-            echo "No lila-docker services are running"
+            echo "No Chesstory services are running"
         fi
         echo "----------------------------"
         ./pull-all

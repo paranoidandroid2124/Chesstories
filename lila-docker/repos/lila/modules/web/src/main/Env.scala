@@ -2,7 +2,6 @@ package lila.web
 
 import com.softwaremill.macwire.*
 import play.api.libs.ws.StandaloneWSClient
-import scala.concurrent.duration.*
 
 @Module
 final class Env(
@@ -25,14 +24,6 @@ final class Env(
   val manifest = wire[AssetManifest]
 
   val referrerRedirect = wire[ReferrerRedirect]
-
-  private lazy val influxEvent = new InfluxEvent(
-    ws = ws,
-    endpoint = config.influxEventEndpoint,
-    env = config.influxEventEnv
-  )
-  if mode.isProd && config.influxEventEndpoint.trim.nonEmpty then
-    scheduler.scheduleOnce(5.seconds)(influxEvent.start())
 
   object settings:
     import lila.core.data.{ Strings, UserIds }

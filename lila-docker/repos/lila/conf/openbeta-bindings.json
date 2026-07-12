@@ -1,7 +1,7 @@
 {
     "bindings":  [
                      {
-                         "env":  "LILA_DOMAIN",
+                         "env":  "CHESSTORY_DOMAIN",
                          "configPath":  "net.domain",
                          "kind":  "plain",
                          "requiredMode":  "always",
@@ -10,7 +10,7 @@
                          "notes":  "Public hostname for the open-beta service."
                      },
                      {
-                         "env":  "LILA_BASE_URL",
+                         "env":  "CHESSTORY_BASE_URL",
                          "configPath":  "net.base_url",
                          "kind":  "plain",
                          "requiredMode":  "always",
@@ -172,15 +172,6 @@
                          "notes":  "hCaptcha secret."
                      },
                      {
-                         "env":  "PROMETHEUS_KEY",
-                         "configPath":  "kamon.prometheus.lilaKey",
-                         "kind":  "secret",
-                         "requiredMode":  "always",
-                         "readinessClass":  "core",
-                         "probe":  "config_only",
-                         "notes":  "Key used by machine metrics scrape and ops diagnostics."
-                     },
-                     {
                          "env":  "EXPLORER_API_BASE",
                          "configPath":  "explorer.endpoint",
                          "kind":  "plain",
@@ -229,24 +220,6 @@
                          "probe":  "config_only",
                          "notes":  "Chess.com public API base URL hardcoded in open-beta config.",
                          "cloudRunManaged":  false
-                     },
-                     {
-                         "env":  "EXTERNAL_ENGINE_ENDPOINT",
-                         "configPath":  "externalEngine.endpoint",
-                         "kind":  "plain",
-                         "requiredMode":  "always",
-                         "readinessClass":  "core",
-                         "probe":  "http",
-                         "notes":  "External engine endpoint for server-side evaluations."
-                     },
-                     {
-                         "env":  "GIF_EXPORT_URL",
-                         "configPath":  "game.gifUrl",
-                         "kind":  "plain",
-                         "requiredMode":  "soft_optional",
-                         "readinessClass":  "soft",
-                         "probe":  "http",
-                         "notes":  "Optional study GIF export service."
                      },
                      {
                          "env":  "LICHESS_EXPLORER_TOKEN",

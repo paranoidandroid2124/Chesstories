@@ -266,21 +266,6 @@ final class ChapterRepo(val coll: AsyncColl)(using Executor, akka.stream.Materia
                 id -> ~hash.get(id)
               .to(SeqMap)
 
-  def startServerEval(chapter: Chapter) =
-    coll:
-      _.updateField(
-        $id(chapter.id),
-        "serverEval",
-        Chapter.ServerEval(
-          path = chapter.root.mainlinePath,
-          done = false
-        )
-      )
-    .void
-
-  def completeServerEval(chapter: Chapter) =
-    coll(_.updateField($id(chapter.id), "serverEval.done", true)).void
-
   def countByStudyId(studyId: StudyId): Fu[Int] =
     coll(_.countSel($studyId(studyId)))
 

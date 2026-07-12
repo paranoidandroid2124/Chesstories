@@ -3,7 +3,6 @@ package lila
 import com.github.benmanes.caffeine.cache.Cache as CaffeineCache
 import kamon.metric.Timer
 import kamon.tag.TagSet
-import lila.core.userId.UserId
 
 object mon:
 
@@ -42,10 +41,6 @@ object mon:
           "hit" -> hit
         )
     def compute(name: String) = timer("mongocache.compute").withTag("name", name)
-  object evalCache:
-    private val r = counter("evalCache.request")
-    def request(ply: Int, isHit: Boolean) =
-      r.withTags(tags("ply" -> (if ply < 15 then ply.toString else "15+"), "hit" -> isHit))
   object asyncActor:
     def overflow(name: String) = counter("asyncActor.overflow").withTag("name", name)
     def queueSize(name: String) = histogram("asyncActor.queueSize").withTag("name", name)
@@ -66,9 +61,6 @@ object mon:
   object markdown:
     val time = timer("markdown.time").withoutTags()
     def pgnsFromText = future("markdown.pgnsFromText")
-  object picfit:
-    def uploadTime(user: UserId) = future("picfit.upload.time", tags("user" -> user))
-    def uploadSize(user: UserId) = histogram("picfit.upload.size").withTag("user", user)
   type TimerPath = lila.mon.type => Timer
 
   private def future(name: String) = (success: Boolean) => timer(name).withTag("success", successTag(success))
@@ -78,5 +70,4 @@ object mon:
   private def successTag(success: Boolean) = if success then "success" else "failure"
 
   import scala.language.implicitConversions
-  private given Conversion[UserId, String] = _.value
   private given Conversion[Map[String, Any], TagSet] = TagSet.from

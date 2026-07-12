@@ -59,7 +59,6 @@ final class JsonView(
             )
           )
           .add("description", chapter.description)
-          .add("serverEval", chapter.serverEval)
           .add("relayPath", relayPath)
           .pipe(addChapterMode(chapter))
       )
@@ -214,8 +213,5 @@ object JsonView:
       "path" -> r.path,
       "thinkTime" -> r.secondsSinceLastMove
     )
-
-  private[study] given Writes[Chapter.ServerEval] = Json.writes
-
   private[study] given OWrites[Who] = OWrites: w =>
     Json.obj("u" -> w.u)

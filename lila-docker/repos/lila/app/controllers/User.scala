@@ -13,6 +13,3 @@ final class User(
   def myself = Auth { _ ?=> me ?=>
     Redirect(routes.User.show(me.username))
   }
-
-  def redirect(path: String) = Open:
-    staticRedirect(path).getOrElse(notFound)

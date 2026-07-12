@@ -27,7 +27,10 @@ final class Main(
 
   def landing = Open:
     if ctx.isAuth then Redirect(routes.Main.home).toFuccess
-    else Ok.page(views.pages.landing())
+    else Redirect(routes.Main.prelaunch).toFuccess
+
+  def prelaunch = Open:
+    Ok.page(views.pages.landing.prelaunch())
 
   def home = Auth { ctx ?=> me ?=>
     for
@@ -74,6 +77,21 @@ final class Main(
 
   def plan = Open:
     Redirect(routes.Main.support, MOVED_PERMANENTLY).toFuccess
+
+  def help = Open:
+    Ok.page(views.pages.help())
+
+  def pricing = Open:
+    Ok.page(views.pages.pricing())
+
+  def trust = Open:
+    Ok.page(views.pages.trust(publicContactEmail))
+
+  def examples = Open:
+    Ok.page(views.pages.examples())
+
+  def roadmap = Open:
+    Ok.page(views.pages.roadmap())
 
   def privacy = Open:
     Ok.page(views.pages.privacy(publicContactEmail))
@@ -128,15 +146,6 @@ final class Main(
           "checks" -> checks.map(_.json)
         )
       )
-
-  def prometheusMetrics(key: String) = Anon:
-    if key == env.web.config.prometheusKey
-    then
-      lila.web.PrometheusReporter
-        .latestScrapeData()
-        .fold(NotFound("No metrics found")): data =>
-          Ok(data)
-    else NotFound("Invalid prometheus key")
 
   def devAsset(@scala.annotation.unused v: String, path: String, file: String) = assetsC.at(path, file)
 
@@ -237,12 +246,9 @@ object Main:
   private def healthCheckName(env: String) =
     env match
       case "REDIS_URI" => "redis"
-      case "PROMETHEUS_KEY" => "metrics"
       case "EXPLORER_API_BASE" => "explorer"
       case "TABLEBASE_API_BASE" => "tablebase"
       case "LICHESS_IMPORT_API_BASE" => "lichess_import_api"
       case "LICHESS_WEB_BASE" => "lichess_web"
       case "CHESSCOM_API_BASE" => "chesscom_api"
-      case "EXTERNAL_ENGINE_ENDPOINT" => "external_engine"
-      case "GIF_EXPORT_URL" => "gif_export"
       case other => other.toLowerCase

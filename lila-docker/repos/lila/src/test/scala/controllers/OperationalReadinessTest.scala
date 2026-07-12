@@ -30,13 +30,13 @@ class OperationalReadinessTest extends munit.FunSuite:
   test("binding health check treats soft bindings as informational only"):
     val softBinding = OpenBetaBindingStatus(
       spec = OpenBetaBindingSpec(
-        env = "GIF_EXPORT_URL",
-        configPath = "game.gifUrl",
+        env = "SUPPORT_PATREON_URL",
+        configPath = "support.links.patreon",
         kind = "plain",
         requiredMode = "soft_optional",
         readinessClass = "soft",
         probe = "http",
-        notes = "optional gif export"
+        notes = "optional support link"
       ),
       required = false,
       configured = false,
@@ -53,13 +53,13 @@ class OperationalReadinessTest extends munit.FunSuite:
   test("binding health check fails required configured endpoint when unreachable"):
     val requiredBinding = OpenBetaBindingStatus(
       spec = OpenBetaBindingSpec(
-        env = "EXTERNAL_ENGINE_ENDPOINT",
-        configPath = "externalEngine.endpoint",
+        env = "EXPLORER_API_BASE",
+        configPath = "explorer.endpoint",
         kind = "plain",
         requiredMode = "dispatch_only",
         readinessClass = "core",
         probe = "http",
-        notes = "external engine endpoint"
+        notes = "opening explorer endpoint"
       ),
       required = true,
       configured = true,

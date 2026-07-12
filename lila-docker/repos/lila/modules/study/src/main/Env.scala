@@ -2,7 +2,6 @@ package lila.study
 
 import com.softwaremill.macwire.*
 import play.api.Configuration
-import play.api.libs.ws.StandaloneWSClient
 import scala.annotation.unused
 
 import lila.core.config.*
@@ -10,7 +9,6 @@ import lila.core.config.*
 @Module
 final class Env(
     appConfig: Configuration,
-    ws: StandaloneWSClient,
     lightUserApi: lila.core.user.LightUserApi,
     userApi: lila.core.user.UserApi,
     analyser: lila.tree.Analyser,
@@ -50,11 +48,7 @@ final class Env(
 
   private lazy val studyInvite = wire[StudyInvite]
 
-  private lazy val serverEvalRequester = wire[ServerEval.Requester]
-
   private lazy val sequencer = wire[StudySequencer]
-
-  lazy val serverEvalMerger = wire[ServerEval.Merger]
 
   lazy val topicApi = wire[StudyTopicApi]
 
@@ -66,8 +60,6 @@ final class Env(
 
   lazy val pgnDump = wire[PgnDump]
 
-  lazy val gifExport = GifExport(ws, appConfig.get[String]("game.gifUrl"))
-
   def findConnectedUsersIn(@unused studyId: StudyId)(
       @unused filter: Iterable[UserId] => Fu[List[UserId]]
   ): Fu[List[UserId]] =
@@ -77,6 +69,3 @@ final class Env(
     case "study" :: "rank" :: "reset" :: Nil =>
       studyRepo.resetAllRanks.map: count =>
         s"$count done"
-
-  lila.common.Bus.sub[lila.tree.StudyAnalysisProgress]:
-    case lila.tree.StudyAnalysisProgress(analysis, complete) => serverEvalMerger(analysis, complete)

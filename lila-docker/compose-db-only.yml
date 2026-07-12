@@ -36,5 +36,5 @@ services:
 
 networks:
   default:
-    name: lila-network
+    name: chesstory-network
     driver: bridge

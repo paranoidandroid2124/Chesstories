@@ -1,6 +1,6 @@
 #!/bin/bash
 
-journalctl --user -fu lila -o cat | grep -vE fishnet &
+journalctl --user -fu lila -o cat &
 JOURNALCTL_PID=$!
 
 trap "kill $JOURNALCTL_PID" EXIT SIGINT SIGTERM

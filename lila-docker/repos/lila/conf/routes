@@ -3,6 +3,7 @@
 
 # Account
 GET   /                                controllers.Main.landing
+GET   /prelaunch                       controllers.Main.prelaunch
 GET   /home                            controllers.Main.home
 GET   /account/info                    controllers.Account.info
 GET   /api/account                     controllers.Account.apiMe
@@ -71,6 +72,11 @@ GET   /api/explorer/:db                controllers.ExplorerProxy.opening(db: Str
 POST  /api/chess-judgment/move-meaning controllers.Analyse.moveMeaning
 GET   /support                         controllers.Main.support
 GET   /plan                            controllers.Main.plan
+GET   /help                            controllers.Main.help
+GET   /pricing                         controllers.Main.pricing
+GET   /trust                           controllers.Main.trust
+GET   /examples                        controllers.Main.examples
+GET   /roadmap                         controllers.Main.roadmap
 GET   /beta-feedback                   controllers.BetaFeedback.formPage(surface: String ?= "general", feature: String ?= "", entrypoint: String ?= "", returnTo: String ?= "", notify: Boolean ?= false)
 POST  /beta-feedback                   controllers.BetaFeedback.submitForm
 POST  /api/beta-feedback               controllers.BetaFeedback.submitApi
@@ -110,13 +116,9 @@ GET   /manifest.json                   controllers.Main.manifest
 GET   /robots.txt                      controllers.Main.robots
 GET   /healthz                         controllers.Main.healthz
 GET   /livez                           controllers.Main.livez
-GET   /prometheus-metrics/:key         controllers.Main.prometheusMetrics(key)
 
 GET   /contact                         controllers.Main.contact
 GET   /privacy                         controllers.Main.privacy
 GET   /terms                           controllers.Main.terms
 GET   /source                          controllers.Main.source
 GET   /legal/open-source               controllers.Main.source
-
-# Catch-all
-GET   /*path                           controllers.User.redirect(path)

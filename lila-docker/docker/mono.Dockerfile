@@ -37,13 +37,6 @@ RUN mkdir /seeded \
     && mongosh --quiet lichess /lila/bin/mongodb/indexes.js
 
 ##################################################################################
-FROM sbtscala/scala-sbt:eclipse-temurin-alpine-25_36_1.11.6_3.7.3 AS lilawsbuilder
-
-COPY repos/lila-ws /lila-ws
-WORKDIR /lila-ws
-RUN sbt stage
-
-##################################################################################
 FROM sbtscala/scala-sbt:eclipse-temurin-alpine-25_36_1.11.6_3.7.3 AS lilabuilder
 
 COPY --from=node /lila /lila
@@ -61,15 +54,12 @@ RUN apt update \
     && apt install -y \
         caddy \
         curl \
-        python3-pip \
         redis \
         supervisor \
     && apt clean \
-    && pip3 install berserk pytest \
     && mkdir -p /var/log/supervisor
 
 COPY --from=dbbuilder /seeded /seeded
-COPY --from=lilawsbuilder /lila-ws/target /lila-ws/target
 COPY --from=lilabuilder /lila/target /lila/target
 COPY --from=lilabuilder /lila/public /lila/public
 COPY --from=lilabuilder /lila/conf   /lila/conf
@@ -85,7 +75,7 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 ENV LANG=C.utf8
 COPY --from=eclipse-temurin:25-jdk $JAVA_HOME $JAVA_HOME
 
-ENV LILA_DOMAIN=localhost:8080
-ENV LILA_URL=http://localhost:8080
+ENV CHESSTORY_DOMAIN=localhost:8080
+ENV CHESSTORY_URL=http://localhost:8080
 
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]

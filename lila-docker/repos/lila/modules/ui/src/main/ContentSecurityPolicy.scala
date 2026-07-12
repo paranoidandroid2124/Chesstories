@@ -22,8 +22,6 @@ case class ContentSecurityPolicy(
 
   def withLegacyUnsafeInlineScripts = copy(scriptSrc = "'unsafe-inline'" :: scriptSrc)
 
-  def withExternalEngine(url: String) = copy(connectSrc = url :: connectSrc)
-
   def withTwitter =
     copy(
       scriptSrc = "https://platform.twitter.com" :: "https://*.twimg.com" :: scriptSrc,

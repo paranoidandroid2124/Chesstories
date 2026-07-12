@@ -24,7 +24,6 @@ final class StudyApi(
     explorerGameHandler: ExplorerGameApi,
     topicApi: StudyTopicApi,
     lightUserApi: lila.core.user.LightUserApi,
-    serverEvalRequester: ServerEval.Requester,
     preview: ChapterPreviewApi,
     userApi: lila.core.user.UserApi
 )(using Executor, akka.stream.Materializer)
@@ -798,17 +797,6 @@ final class StudyApi(
     .map: liked =>
         studies.map: study =>
           Study.WithLiked(study, liked(study.id))
-
-  def analysisRequest(
-      studyId: StudyId,
-      chapterId: StudyChapterId,
-      userId: UserId,
-      official: Boolean = false
-  ): Funit =
-    sequenceStudyWithChapter(studyId, chapterId):
-      case Study.WithChapter(study, chapter) =>
-        Contribute(userId, study):
-          serverEvalRequester(study, chapter, userId, official)
 
   def deleteAllChapters(studyId: StudyId, by: User) =
     sequenceStudy(studyId): study =>

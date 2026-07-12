@@ -28,6 +28,3 @@ package mailer:
       gameId: GameId
   )
   case class CorrespondenceOpponents(userId: UserId, opponents: List[CorrespondenceOpponent])
-
-package analysis:
-  final class MyEnginesAsJson(val get: Option[Me] => Fu[play.api.libs.json.JsObject])

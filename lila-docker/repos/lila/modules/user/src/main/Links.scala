@@ -44,7 +44,6 @@ object Link:
     case Facebook extends Site("Facebook", List("facebook.com"))
     case Instagram extends Site("Instagram", List("instagram.com"))
     case YouTube extends Site("YouTube", List("youtube.com"))
-    case Twitch extends Site("Twitch", List("twitch.tv"))
     case GitHub extends Site("GitHub", List("github.com"))
     case VKontakte extends Site("VKontakte", List("vk.com"))
     case ChessCom extends Site("Chess.com", List("chess.com"))
@@ -60,7 +59,6 @@ object Link:
       Facebook,
       Instagram,
       YouTube,
-      Twitch,
       GitHub,
       VKontakte,
       ChessCom,

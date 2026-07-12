@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash -e
 
-# Starts a dev console to compile and run lichess.
+# Starts a dev console to compile and run Chesstory.
 
 # Usage:
 # ./lila.sh

@@ -14,6 +14,5 @@ type EsmList = List[Option[Esm]]
 
 final class AnalyseEndpoints(
     val explorer: String,
-    val tablebase: String,
-    val externalEngine: String
+    val tablebase: String
 )

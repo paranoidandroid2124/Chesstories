@@ -29,17 +29,13 @@ const DEFAULT_PASSWORD: &str = "password";
 struct Config {
     quick_setup: Option<bool>,
     compose_profiles: Option<Vec<String>>,
-    lila_ws_container: Option<String>,
     setup_database: Option<bool>,
-    setup_bbppairings: Option<bool>,
-    mock_email: Option<bool>,
-    enable_monitoring: Option<bool>,
     enable_rate_limiting: Option<bool>,
     su_password: Option<String>,
     password: Option<String>,
     setup_api_tokens: Option<bool>,
-    lila_domain: Option<String>,
-    lila_url: Option<String>,
+    chesstory_domain: Option<String>,
+    chesstory_url: Option<String>,
 }
 
 macro_rules! to_env {
@@ -78,17 +74,13 @@ impl Config {
         let Self {
             quick_setup,
             compose_profiles,
-            lila_ws_container,
             setup_database,
-            setup_bbppairings,
-            mock_email,
-            enable_monitoring,
             enable_rate_limiting,
             su_password,
             password,
             setup_api_tokens,
-            lila_domain,
-            lila_url,
+            chesstory_domain,
+            chesstory_url,
         } = self;
         let compose_profiles_string = compose_profiles
             .clone()
@@ -98,17 +90,13 @@ impl Config {
         vec![
             to_env!(quick_setup),
             to_env!(compose_profiles, compose_profiles_string),
-            to_env!(lila_ws_container),
             to_env!(setup_database),
-            to_env!(setup_bbppairings),
-            to_env!(mock_email),
-            to_env!(enable_monitoring),
             to_env!(enable_rate_limiting),
             to_env!(su_password),
             to_env!(password),
             to_env!(setup_api_tokens),
-            to_env!(lila_domain),
-            to_env!(lila_url),
+            to_env!(chesstory_domain),
+            to_env!(chesstory_url),
         ]
         .iter()
         .filter(|line| !line.is_empty())
@@ -252,7 +240,7 @@ fn setup(mut config: Config, first_setup: bool, noninteractive: bool) -> std::io
 
     info(
         [
-            "Your Lichess development site will include a basic instance of Lichess.",
+            "Your Chesstory development site will include the current app shell.",
             "You will be able to use the site, play games, and test most of the main functionality.",
             "If you want additional features, you can select them here.",
         ]
@@ -263,7 +251,7 @@ fn setup(mut config: Config, first_setup: bool, noninteractive: bool) -> std::io
             .item(
                 SetupMethod::Quick,
                 "Quick",
-                "If you just want a basic lila instance without making any code changes",
+                "If you just want a basic Chesstory instance without making any code changes",
             )
             .item(
                 SetupMethod::Advanced,
@@ -321,40 +309,11 @@ fn setup(mut config: Config, first_setup: bool, noninteractive: bool) -> std::io
         config.enable_rate_limiting = Some(options.contains(&Setting::EnableRateLimiting));
         config.su_password = Some(su_password);
         config.password = Some(password);
-
-        config.setup_bbppairings = Some(
-            services
-                .iter()
-                .any(|service| service.compose_profile == Some(vec!["swiss-pairings"])),
-        );
-
-        config.mock_email = Some(
-            !services
-                .iter()
-                .any(|service| service.compose_profile == Some(vec!["email"])),
-        );
-
-        config.enable_monitoring = Some(
-            services
-                .iter()
-                .any(|service| service.compose_profile == Some(vec!["monitoring"])),
-        );
-
-        config.lila_ws_container = Some(
-            if services
-                .iter()
-                .any(|service| service.compose_profile == Some(vec!["lila-ws-build"]))
-            {
-                "build".to_string()
-            } else {
-                "image".to_string()
-            },
-        );
     }
 
     if Gitpod::is_host()
         && !noninteractive
-        && confirm("By default, only this browser session can access your Lichess development site.\nWould you like it to be accessible to other clients?")
+        && confirm("By default, only this browser session can access your Chesstory development site.\nWould you like it to be accessible to other clients?")
             .initial_value(false)
             .interact()?
     {
@@ -384,8 +343,8 @@ fn setup(mut config: Config, first_setup: bool, noninteractive: bool) -> std::io
 
     if Gitpod::is_host() {
         let gitpod = Gitpod::load();
-        config.lila_domain = Some(gitpod.domain);
-        config.lila_url = Some(gitpod.url);
+        config.chesstory_domain = Some(gitpod.domain);
+        config.chesstory_url = Some(gitpod.url);
     }
 
     config.save()?;
@@ -450,18 +409,8 @@ fn create_placeholder_dirs() {
     // when the volumes are mounted and they may be owned by root
     [
         Repository::new("lichess-org", "lila"),
-        Repository::new("lichess-org", "lila-ws"),
         Repository::new("lichess-org", "lila-db-seed"),
-        Repository::new("lichess-org", "lila-fishnet"),
-        Repository::new("lichess-org", "lila-engine"),
-        Repository::new("lichess-org", "lila-gif"),
-        Repository::new("lichess-org", "lila-push"),
-        Repository::new("lichess-org", "api"),
-        Repository::new("lichess-org", "chessground"),
-        Repository::new("lichess-org", "pgn-viewer"),
         Repository::new("lichess-org", "scalachess"),
-        Repository::new("lichess-org", "berserk"),
-        Repository::new("cyanfish", "bbpPairings"),
     ]
     .iter()
     .map(Repository::clone_path)
@@ -474,14 +423,14 @@ fn gitpod_checkout_pr() -> std::io::Result<()> {
     let gitpod = Gitpod::load();
 
     let Some(pr_no) = gitpod.get_context_for("LILA_PR") else {
-        return step("No lila PR specified, using default branch");
+        return step("No upstream PR specified, using default branch");
     };
 
     let pr_url = format!("https://github.com/lichess-org/lila/pull/{pr_no}");
     let branch_name = format!("pr-{pr_no}");
 
     let progress = spinner();
-    progress.start(format!("Checking out lila PR #{pr_no}: {pr_url}..."));
+    progress.start(format!("Checking out upstream PR #{pr_no}: {pr_url}..."));
 
     let mut cmd = Command::new("git");
     cmd.current_dir("repos/lila")
@@ -521,139 +470,11 @@ fn prompt_for_services() -> Result<Vec<OptionalService<'static>>, Error> {
     .required(false)
     .item(
         OptionalService {
-            compose_profile: vec!["mongo-express"].into(),
-            repositories: None,
-        },
-        "Database admin interface",
-        "Mongo Express for viewing database structure and data",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["lila-ws-build"].into(),
-            repositories: vec![Repository::new("lichess-org", "lila-ws")].into(),
-        },
-        "Websocket source code",
-        "Only needed if you want to make changes, otherwise a prebuilt lila-ws image will be used",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["email"].into(),
-            repositories: None,
-        },
-        "Outbound email testing",
-        "for capturing and debugging outbound email",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["stockfish-play"].into(),
-            repositories: vec![Repository::new("lichess-org", "lila-fishnet")].into(),
-        },
-        "Stockfish Play",
-        "for playing against the computer",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["stockfish-analysis"].into(),
-            repositories: None,
-        },
-        "Stockfish Game Analysis",
-        "for requesting computer analysis of games",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["external-engine"].into(),
-            repositories: vec![Repository::new("lichess-org", "lila-engine")].into(),
-        },
-        "External Engine",
-        "for connecting a local chess engine to the analysis board",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["search"].into(),
-            repositories: None,
-        },
-        "Search",
-        "for searching games, forum posts, etc",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["gifs"].into(),
-            repositories: vec![Repository::new("lichess-org", "lila-gif")].into(),
-        },
-        "GIF + image generation",
-        "for generating animated GIFs and screenshots of games",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["push"].into(),
-            repositories: vec![Repository::new("lichess-org", "lila-push")].into(),
-        },
-        "Push server",
-        "for Lichess notifications",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["thumbnails"].into(),
-            repositories: None,
-        },
-        "Image uploads + thumbnails",
-        "for blog/coach/streamer images",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["api-docs"].into(),
-            repositories: vec![Repository::new("lichess-org", "api")].into(),
-        },
-        "API docs",
-        "standalone API documentation",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["chessground"].into(),
-            repositories: vec![Repository::new("lichess-org", "chessground")].into(),
-        },
-        "Chessground",
-        "standalone board UI",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["pgn-viewer"].into(),
-            repositories: vec![Repository::new("lichess-org", "pgn-viewer")].into(),
-        },
-        "PGN Viewer",
-        "standalone PGN viewer",
-    )
-    .item(
-        OptionalService {
-            compose_profile: None ,
+            compose_profile: None,
             repositories: vec![Repository::new("lichess-org", "scalachess")].into(),
         },
         "Scalachess",
         "standalone chess logic library",
-    )
-    .item(
-        OptionalService {
-            compose_profile: None,
-            repositories: vec![Repository::new("lichess-org", "berserk")].into(),
-        },
-        "Berserk",
-        "Python API client",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["monitoring"].into(),
-            repositories: None,
-        },
-        "Monitoring",
-        "Metric collection using InfluxDB",
-    )
-    .item(
-        OptionalService {
-            compose_profile: vec!["swiss-pairings"].into(),
-            repositories: vec![Repository::new("cyanfish", "bbpPairings")].into(),
-        },
-        "Swiss Pairings",
-        "bbpPairings tool",
     )
     .interact()
 }
@@ -693,7 +514,7 @@ fn hostname(mut config: Config) -> std::io::Result<()> {
         _ => "127.0.0.1".to_string(),
     };
 
-    let hostname: String = match select("Select a hostname to access your local Lichess instance:")
+    let hostname: String = match select("Select a hostname to access your local Chesstory instance:")
         .initial_value("localhost")
         .item("localhost", "localhost", "default")
         .item(
@@ -713,20 +534,20 @@ fn hostname(mut config: Config) -> std::io::Result<()> {
         selection => selection.to_string(),
     };
 
-    config.lila_domain = Some(format!("{hostname}:8080"));
-    config.lila_url = Some(format!("http://{hostname}:8080"));
+    config.chesstory_domain = Some(format!("{hostname}:8080"));
+    config.chesstory_url = Some(format!("http://{hostname}:8080"));
     config.save()?;
 
-    outro(format!("✔ Local Lichess URL set to http://{hostname}:8080"))
+    outro(format!("✔ Local Chesstory URL set to http://{hostname}:8080"))
 }
 
 fn welcome(config: Config) -> std::io::Result<()> {
-    intro("Your Lichess instance is starting!")?;
+    intro("Your Chesstory instance is starting!")?;
 
     note(
         "The site will be available at:",
         config
-            .lila_url
+            .chesstory_url
             .unwrap_or("http://localhost:8080".to_owned()),
     )?;
 
@@ -738,7 +559,7 @@ fn welcome(config: Config) -> std::io::Result<()> {
     } else {
         note(
             "For full documentation, see:",
-            "https://github.com/lichess-org/lila-docker",
+            "https://github.com/paranoidandroid2124/chesstory",
         )?;
     }
 
@@ -805,17 +626,13 @@ mod tests {
         let contents = Config {
             quick_setup: Some(true),
             compose_profiles: Some(vec!["foo".to_string(), "bar".to_string()]),
-            lila_ws_container: Some("image".to_string()),
             setup_database: Some(true),
-            setup_bbppairings: Some(false),
-            mock_email: Some(false),
-            enable_monitoring: Some(false),
             enable_rate_limiting: Some(true),
             su_password: Some("foo".to_string()),
             password: Some("bar".to_string()),
             setup_api_tokens: Some(false),
-            lila_domain: Some("baz:8080".to_string()),
-            lila_url: Some("http://baz:8080".to_string()),
+            chesstory_domain: Some("baz:8080".to_string()),
+            chesstory_url: Some("http://baz:8080".to_string()),
         }
         .to_env();
 
@@ -824,17 +641,13 @@ mod tests {
             vec![
                 "QUICK_SETUP=true",
                 "COMPOSE_PROFILES=foo,bar",
-                "LILA_WS_CONTAINER=image",
                 "SETUP_DATABASE=true",
-                "SETUP_BBPPAIRINGS=false",
-                "MOCK_EMAIL=false",
-                "ENABLE_MONITORING=false",
                 "ENABLE_RATE_LIMITING=true",
                 "SU_PASSWORD=foo",
                 "PASSWORD=bar",
                 "SETUP_API_TOKENS=false",
-                "LILA_DOMAIN=baz:8080",
-                "LILA_URL=http://baz:8080",
+                "CHESSTORY_DOMAIN=baz:8080",
+                "CHESSTORY_URL=http://baz:8080",
             ]
             .join("\n")
         );
@@ -845,17 +658,13 @@ mod tests {
         let contents = Config {
             quick_setup: None,
             compose_profiles: None,
-            lila_ws_container: None,
             setup_database: None,
-            setup_bbppairings: None,
-            mock_email: None,
-            enable_monitoring: None,
             enable_rate_limiting: None,
             su_password: None,
             password: None,
             setup_api_tokens: None,
-            lila_domain: Some("baz:8080".to_string()),
-            lila_url: Some("http://baz:8080".to_string()),
+            chesstory_domain: Some("baz:8080".to_string()),
+            chesstory_url: Some("http://baz:8080".to_string()),
         }
         .to_env();
 
@@ -863,39 +672,39 @@ mod tests {
             contents,
             vec![
                 "COMPOSE_PROFILES=",
-                "LILA_DOMAIN=baz:8080",
-                "LILA_URL=http://baz:8080"
+                "CHESSTORY_DOMAIN=baz:8080",
+                "CHESSTORY_URL=http://baz:8080"
             ]
             .join("\n")
         );
     }
 
     #[test]
-    fn test_gitpod_lila_url() {
+    fn test_gitpod_chesstory_url() {
         std::env::set_var(
             "GITPOD_WORKSPACE_URL",
-            "https://lichessorg-liladocker-abc123.ws-us123.gitpod.io",
+            "https://chesstory-abc123.ws-us123.gitpod.io",
         );
         std::env::set_var("GITPOD_WORKSPACE_CONTEXT", "{}");
 
         let gitpod = Gitpod::load();
         assert_eq!(
             gitpod.domain,
-            "8080-lichessorg-liladocker-abc123.ws-us123.gitpod.io"
+            "8080-chesstory-abc123.ws-us123.gitpod.io"
         );
         assert_eq!(
             gitpod.url,
-            "https://8080-lichessorg-liladocker-abc123.ws-us123.gitpod.io"
+            "https://8080-chesstory-abc123.ws-us123.gitpod.io"
         );
         assert_eq!(gitpod.workspace_context, GitpodWorkspaceContext::default());
         assert_eq!(gitpod.get_context_for("LILA_PR"), None);
     }
 
     #[test]
-    fn test_gitpod_lila_url_with_pr_context() {
+    fn test_gitpod_chesstory_url_with_pr_context() {
         std::env::set_var(
             "GITPOD_WORKSPACE_URL",
-            "https://lichessorg-liladocker-abc123.ws-us123.gitpod.io",
+            "https://chesstory-abc123.ws-us123.gitpod.io",
         );
         std::env::set_var(
             "GITPOD_WORKSPACE_CONTEXT",
@@ -918,10 +727,10 @@ mod tests {
     }
 
     #[test]
-    fn test_gitpod_lila_url_with_context_but_no_pr() {
+    fn test_gitpod_chesstory_url_with_context_but_no_pr() {
         std::env::set_var(
             "GITPOD_WORKSPACE_URL",
-            "https://lichessorg-liladocker-abc123.ws-us123.gitpod.io",
+            "https://chesstory-abc123.ws-us123.gitpod.io",
         );
         std::env::set_var(
             "GITPOD_WORKSPACE_CONTEXT",

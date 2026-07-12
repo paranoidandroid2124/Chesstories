@@ -51,7 +51,7 @@ Universal / sourceDirectory := baseDirectory.value / "dist"
 libraryDependencies ++= akka.bundle ++ playWs.bundle ++ macwire.bundle ++ scalalib.bundle ++ chess.bundle ++ Seq(
   play.json, play.logback, compression, hasher,
   reactivemongo.driver, maxmind, scalatags,
-  kamon.core, kamon.influxdb, kamon.metrics,
+  kamon.core, kamon.metrics,
   scaffeine, caffeine, uaparser, nettyTransport, reactivemongo.shaded, catsMtl
 ) ++ tests.bundle
 
@@ -66,7 +66,6 @@ lazy val modules = Seq(
   beta,
   security,
   chessJudgmentCore,
-  evalCache,
   web
 )
 
@@ -168,11 +167,6 @@ lazy val chessJudgmentCore = module("chessJudgmentCore",
   playWs.bundle ++ tests.bundle
 ).dependsOn(tree % "test->compile")
 
-lazy val evalCache = module("evalCache",
-  Seq(tree, memo),
-  Seq()
-)
-
 // ============================================================
 // Web Module
 // ============================================================
@@ -181,7 +175,6 @@ lazy val web = module("web",
   Seq(ui, memo),
   playWs.bundle ++ tests.bundle ++ Seq(
     play.logback, play.server, play.netty,
-    kamon.prometheus,
   )
 )
 
@@ -191,7 +184,7 @@ lazy val web = module("web",
 
 lazy val api = module("api",
   moduleCPDeps,
-  Seq(play.api, play.json, hasher, kamon.core, kamon.influxdb) ++ tests.bundle ++ flexmark.bundle
+  Seq(play.api, play.json, hasher, kamon.core) ++ tests.bundle ++ flexmark.bundle
 ).settings(
   Runtime / aggregate := false,
   Test / aggregate := true

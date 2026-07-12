@@ -24,7 +24,6 @@ case class Chapter(
     gamebook: Option[Boolean] = None,
     description: Option[String] = None,
     relay: Option[Chapter.Relay] = None,
-    serverEval: Option[Chapter.ServerEval] = None,
     denorm: Option[Chapter.LastPosDenorm] = None,
     createdAt: Instant
 ) extends Chapter.Like:
@@ -147,8 +146,6 @@ object Chapter:
   ):
     def secondsSinceLastMove: Option[Int] = lastMoveAt.map: at =>
       (nowSeconds - at.toSeconds).toInt
-
-  case class ServerEval(path: UciPath, done: Boolean)
 
   type BothClocks = ByColor[Option[Centis]]
 

@@ -28,7 +28,6 @@ object ContentSecurityPolicy:
         assetDomain.value,
         "www.youtube.com",
         "www.youtube-nocookie.com",
-        "player.twitch.tv",
         "player.vimeo.com"
       ),
       workerSrc = List("'self'", assetDomain.value, "blob:"),

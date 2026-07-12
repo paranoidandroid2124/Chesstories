@@ -1,9 +1,4 @@
 db.event.createIndex({ startsAt: 1 });
-db.picfit_image.createIndex({ refs: 1 });
-db.picfit_image.createIndex(
-  { 'automod.flagged': 1 },
-  { partialFilterExpression: { 'automod.flagged': { $exists: true } } },
-);
 db.tutor_report.createIndex({ at: -1 });
 db.swiss_pairing.createIndex({ s: 1, p: 1, r: 1 });
 db.swiss_pairing.createIndex({ t: 1 }, { partialFilterExpression: { t: true } });
@@ -143,21 +138,8 @@ db.challenge.createIndex(
 );
 db.cms_page.createIndex({ key: 1 });
 db.cms_page.createIndex({ key: 1, language: 1 }, { unique: true });
-db.donation.createIndex({ payPalTnx: 1 }, { unique: true, sparse: 1 });
-db.donation.createIndex({ userId: 1 });
-db.donation.createIndex({ date: -1 });
-db.donation.createIndex({ gross: -1 });
 db.player_assessment.createIndex({ userId: 1, date: -1 });
 db.player_assessment.createIndex({ date: 1 }, { expireAfterSeconds: 15552000 });
-db.fishnet_analysis.createIndex({ 'sender.system': 1, createdAt: 1 });
-db.fishnet_analysis.createIndex({ 'game.id': 1 });
-db.fishnet_analysis.createIndex({ 'sender.userId': 1 });
-db.fishnet_analysis.createIndex({ 'sender.ip': 1 });
-db.fishnet_analysis.createIndex({ 'sender.system': 1 });
-db.fishnet_analysis.createIndex(
-  { acquired: 1 },
-  { partialFilterExpression: { acquired: { $exists: true } } },
-);
 db.bookmark.createIndex({ g: 1 });
 db.bookmark.createIndex({ u: 1 });
 db.bookmark.createIndex({ u: 1, d: -1 });
@@ -177,16 +159,6 @@ db.swiss.createIndex(
 );
 db.coach_review.createIndex({ coachId: 1 });
 db.analysis_requester.createIndex({ total: -1 });
-db.plan_patron.createIndex(
-  { 'stripe.customerId': 1 },
-  { partialFilterExpression: { 'stripe.customerId': { $exists: true } } },
-);
-db.plan_patron.createIndex({ 'free.by': 1 }, { partialFilterExpression: { 'free.by': { $exists: true } } });
-db.plan_patron.createIndex({ expiresAt: 1 }, { partialFilterExpression: { expiresAt: { $exists: true } } });
-db.plan_patron.createIndex(
-  { 'payPalCheckout.subscriptionId': 1 },
-  { partialFilterExpression: { 'payPalCheckout.subscriptionId': { $exists: true } } },
-);
 db.notify_pref.createIndex(
   { correspondenceEmail: 1 },
   { partialFilterExpression: { correspondenceEmail: true } },
@@ -215,15 +187,6 @@ db.tournament_leaderboard.createIndex({ u: 1, w: 1 });
 db.coach.createIndex({ 'user.seenAt': -1 });
 db.coach.createIndex({ 'user.rating': -1 });
 db.coach.createIndex({ nvReviews: -1 });
-db.streamer.createIndex({ liveAt: -1 });
-db.streamer.createIndex(
-  { 'approval.granted': 1, listed: 1 },
-  { partialFilterExpression: { 'approval.granted': true, listed: true } },
-);
-db.streamer.createIndex(
-  { 'approval.requested': 1 },
-  { partialFilterExpression: { 'approval.requested': true, 'approval.ignored': false } },
-);
 db.relay.createIndex({ startsAt: 1 }, { partialFilterExpression: { startsAt: { $exists: 1 } } });
 db.relay.createIndex({ startedAt: 1 }, { partialFilterExpression: { startedAt: { $exists: 1 } } });
 db.relay.createIndex({ 'sync.until': 1 }, { partialFilterExpression: { 'sync.until': { $exists: 1 } } });
@@ -261,12 +224,6 @@ db.tournament_player.createIndex(
 db.tournament_player.createIndex({ tid: 1, uid: 1 }, { unique: true });
 db.push_device.createIndex({ userId: 1, seenAt: -1 });
 db.push_device.createIndex({ seenAt: 1 }, { expireAfterSeconds: 2592000 });
-db.plan_charge.createIndex({ userId: 1, date: -1 });
-db.plan_charge.createIndex({ date: -1 });
-db.plan_charge.createIndex(
-  { giftTo: 1, date: -1 },
-  { partialFilterExpression: { giftTo: { $exists: true } } },
-);
 db.f_post.createIndex({ topicId: 1, troll: 1 });
 db.f_post.createIndex({ createdAt: -1, troll: 1 });
 db.f_post.createIndex({ userId: 1 });

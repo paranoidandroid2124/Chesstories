@@ -38,5 +38,3 @@ object AnalyseBsonHandlers:
         "fk" -> a.fk,
         "npm" -> a.nodesPerMove
       )
-
-  given engineHandler: BSONDocumentHandler[ExternalEngine] = Macros.handler

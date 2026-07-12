@@ -7,10 +7,7 @@ import lila.core.config.*
 import lila.core.security.LilaCookie
 
 final class WebConfig(
-    val apiToken: Secret,
-    val influxEventEndpoint: String,
-    val influxEventEnv: String,
-    val prometheusKey: String
+    val apiToken: Secret
 )
 
 object WebConfig:
@@ -35,17 +32,13 @@ object WebConfig:
 
   def loadFrom(c: Configuration) =
     WebConfig(
-      c.get[Secret]("api.token"),
-      configuredOrEnv(c, "api.influx_event.endpoint", "INFLUX_EVENT_ENDPOINT"),
-      configuredOrEnv(c, "api.influx_event.env", "INFLUX_EVENT_ENV"),
-      configuredString(c, "kamon.prometheus.lilaKey").getOrElse("")
+      c.get[Secret]("api.token")
     )
 
   def analyseEndpoints(c: Configuration) =
     lila.ui.AnalyseEndpoints(
       explorer = configuredOrEnv(c, "explorer.endpoint", "EXPLORER_API_BASE"),
-      tablebase = configuredOrEnv(c, "explorer.tablebase_endpoint", "TABLEBASE_API_BASE"),
-      externalEngine = configuredString(c, "externalEngine.endpoint").getOrElse("")
+      tablebase = configuredOrEnv(c, "explorer.tablebase_endpoint", "TABLEBASE_API_BASE")
     )
 
   def netConfig(c: Configuration) = NetConfig(
