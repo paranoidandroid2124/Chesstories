@@ -307,6 +307,61 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(trajectory.futureFrom.key -> trajectory.futureTo.key, "f3" -> "e5")
     assertEquals(trajectory.plyOffset, 2)
 
+  test("plan event owns a multi-actor episode only through typed line and target dependencies"):
+    val result = MoveReviewJudgmentOrchestrator
+      .build(nimzoB6Input())
+      .getOrElse(fail("expected judgment result"))
+    val event = result.packet.evidenceGraph.records.collectFirst {
+      case EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
+          if payload.planId == PlanId.WeakPawnAttack && EvidenceRef.sameMove(payload.rootMove, "b7b6") =>
+        payload
+    }.getOrElse(fail("expected weak-pawn causal event"))
+    val episode = event.episode.getOrElse(fail("expected typed plan episode"))
+
+    assert(episode.dependencyProven, episode)
+    assertEquals(episode.events.map(_.moveUci), List("b7b6", "c6a5", "c8a6"))
+    assert(episode.dependencies.exists(dependency =>
+      dependency.kind == PlanCausalDependencyKind.LineAccessPrecondition &&
+        EvidenceRef.sameMove(dependency.from.moveUci, "b7b6") &&
+        EvidenceRef.sameMove(dependency.to.moveUci, "c8a6")
+    ), episode.dependencies)
+    assert(episode.dependencies.exists(dependency =>
+      dependency.kind == PlanCausalDependencyKind.SharedTargetCoordination &&
+        EvidenceRef.sameMove(dependency.from.moveUci, "c6a5") &&
+        EvidenceRef.sameMove(dependency.to.moveUci, "c8a6") &&
+        dependency.proof == PlanCausalDependencyProof.SharedTarget(List(EvidenceSquare("c4")))
+    ), episode.dependencies)
+    assertEquals(result.packet.probeRequests.flatMap(_.candidateMove), List("b7b6"))
+
+  test("flank episode preserves the inducing move opponent concession and same-actor maintenance"):
+    val result = MoveReviewJudgmentOrchestrator
+      .build(gameChangerH4Input())
+      .getOrElse(fail("expected judgment result"))
+    val event = result.packet.evidenceGraph.records.collectFirst {
+      case EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
+          if payload.planId == PlanId.KingsideAttack && EvidenceRef.sameMove(payload.rootMove, "h2h4") =>
+        payload
+    }.getOrElse(fail("expected kingside causal event"))
+    val episode = event.episode.getOrElse(fail("expected flank episode"))
+
+    assert(episode.dependencyProven, episode)
+    assertEquals(episode.events.map(_.moveUci), List("h2h4", "f3g5", "g5h3"))
+    assert(episode.dependencies.exists(dependency =>
+      dependency.kind == PlanCausalDependencyKind.FlankAdvanceCoordination &&
+        EvidenceRef.sameMove(dependency.from.moveUci, "h2h4") &&
+        EvidenceRef.sameMove(dependency.to.moveUci, "f3g5")
+    ), episode.dependencies)
+    assert(episode.dependencies.exists(dependency =>
+      dependency.kind == PlanCausalDependencyKind.ObjectStatePrecondition &&
+        EvidenceRef.sameMove(dependency.from.moveUci, "f3g5") &&
+        EvidenceRef.sameMove(dependency.to.moveUci, "g5h3")
+    ), episode.dependencies)
+    assert(episode.responses.exists(response =>
+      EvidenceRef.sameMove(response.trigger.moveUci, "f3g5") &&
+        EvidenceRef.sameMove(response.step.moveUci, "h7h6") &&
+        response.target == EvidenceSquare("h7")
+    ), episode.responses)
+
   test("principal plan event keeps a concrete destination when a result has no named target"):
     val root = PositionNodeRef("8/8/2N5/8/8/8/8/4K2k w - - 0 1", 1, Some(Color.White))
     val after = PositionNodeRef("8/8/8/N7/8/8/8/4K2k b - - 1 1", 2, Some(Color.Black))
@@ -790,6 +845,73 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         "c1e3",
         "b7b6",
         "f1d3"
+      )
+    )
+
+  private def nimzoB6Input(): RawMoveReviewInput =
+    RawMoveReviewInput(
+      fen = "r1bqk2r/pp3ppp/2nppn2/2p5/2PPP3/P1P1BP2/6PP/R2QKBNR b KQkq - 1 8",
+      playedMoveUci = "b7b6",
+      variations = List(
+        VariationLine(
+          List(
+            "b7b6",
+            "f1d3",
+            "c6a5",
+            "g1h3",
+            "c8a6",
+            "d1e2",
+            "d8d7",
+            "e4e5",
+            "d6e5",
+            "d4e5",
+            "f6g8",
+            "e1g1"
+          ),
+          scoreCp = 0,
+          depth = 12
+        )
+      ),
+      currentEvalCp = Some(0),
+      ply = Some(15),
+      openingContext = Some(RawOpeningContext(name = Some("Nimzo-Indian Saemisch / c4-pawn pressure"))),
+      movePrefixUci = List(
+        "d2d4",
+        "g8f6",
+        "c2c4",
+        "e7e6",
+        "b1c3",
+        "f8b4",
+        "a2a3",
+        "b4c3",
+        "b2c3",
+        "c7c5",
+        "f2f3",
+        "b8c6",
+        "e2e4",
+        "d7d6",
+        "c1e3"
+      )
+    )
+
+  private def gameChangerH4Input(): RawMoveReviewInput =
+    RawMoveReviewInput(
+      fen = "r2q1rk1/p3bppp/bpn1p3/3pP3/3P1B2/2P2NP1/P4PBP/R2QR1K1 w - - 3 15",
+      playedMoveUci = "h2h4",
+      variations = List(
+        VariationLine(
+          List("h2h4", "a8c8", "e1e3", "c8c7", "f3g5", "h7h6", "g5h3"),
+          scoreCp = 0,
+          depth = 12
+        )
+      ),
+      currentEvalCp = Some(0),
+      ply = Some(28),
+      openingContext = Some(RawOpeningContext(name = Some("AlphaZero / h4 and Ng5-h3 kingside concession extraction"))),
+      movePrefixUci = List(
+        "d2d4", "g8f6", "g1f3", "e7e6", "c2c4", "b7b6", "g2g3", "c8b7", "f1g2", "f8b4",
+        "c1d2", "b4e7", "b1c3", "c7c6", "d2f4", "e8h8", "e2e4", "d7d5", "e4e5", "f6e4",
+        "c4d5", "c6d5", "e1h1", "e4c3", "b2c3", "b7a6", "f1e1", "b8c6"
       )
     )
 

@@ -74,7 +74,24 @@ object PlanCausalEventAssembler:
               )
             )
             .filter(realization => realization.dependencyProven && realization.consequences.nonEmpty)
-          if positiveConsequences.nonEmpty || developmentChoices.nonEmpty || futureRealization.nonEmpty
+          rootIdentity = PlanEventIdentityBuilder.from(
+            rootMove = rootLine.rootMove,
+            beforeFen = structural.transition.from.fen,
+            plan = principalPlan,
+            consequences = positiveConsequences,
+            developmentChoices = developmentChoices
+          )
+          episode = PlanCausalEpisodeBuilder
+            .fromLine(
+              plan = principalPlan,
+              rootLine = rootLine,
+              rootTransition = structural.transition,
+              rootIdentity = rootIdentity,
+              rootConsequences = positiveConsequences,
+              rootDevelopmentChoices = developmentChoices,
+              line = linePayload
+            )
+          if positiveConsequences.nonEmpty || developmentChoices.nonEmpty || futureRealization.nonEmpty || episode.dependencyProven
         yield
           val branchWitnesses = futureRealization.toList.flatMap(realization =>
             branchWitnessesFor(
@@ -87,19 +104,14 @@ object PlanCausalEventAssembler:
           )
           val payload = PlanCausalEventEvidence(
             planId = planId,
-            identity = PlanEventIdentityBuilder.from(
-              rootMove = rootLine.rootMove,
-              beforeFen = structural.transition.from.fen,
-              plan = principalPlan,
-              consequences = positiveConsequences,
-              developmentChoices = developmentChoices
-            ),
+            identity = rootIdentity,
             rootLine = rootLine,
             rootTransition = structural.transition,
             structuralConsequences = positiveConsequences,
             developmentChoices = developmentChoices,
             futureRealization = futureRealization,
-            branchWitnesses = branchWitnesses
+            branchWitnesses = branchWitnesses,
+            episode = Option.when(episode.dependencyProven)(episode)
           )
           val futureKey = payload.futureMove.getOrElse("direct")
           EvidenceRecord(

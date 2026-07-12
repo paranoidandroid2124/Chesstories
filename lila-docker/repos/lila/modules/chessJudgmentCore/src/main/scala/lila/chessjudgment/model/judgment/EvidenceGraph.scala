@@ -3181,6 +3181,91 @@ object LineObjectTrajectory:
       plyOffset = index + 1
     )
 
+final case class LineAccessTrajectory(
+    enablingStep: LineReplayStep,
+    enabledStep: LineReplayStep,
+    interveningSteps: List[LineReplayStep],
+    enabledPieceRole: EvidencePieceRole,
+    color: Color,
+    vacatedSquare: EvidenceSquare,
+    enabledFrom: EvidenceSquare,
+    enabledTo: EvidenceSquare,
+    plyOffset: Int
+)
+
+object LineAccessTrajectory:
+  def find(
+      enablingStep: LineReplayStep,
+      enabledStep: LineReplayStep,
+      interveningSteps: List[LineReplayStep]
+  ): Option[LineAccessTrajectory] =
+    val enablingMove = EvidenceRef.normalizeMove(enablingStep.moveUci)
+    val enabledMove = EvidenceRef.normalizeMove(enabledStep.moveUci)
+    for
+      vacated <- Square.fromKey(enablingMove.take(2))
+      enabledFrom <- Square.fromKey(enabledMove.take(2))
+      enabledTo <- Square.fromKey(enabledMove.slice(2, 4))
+      beforeEnabling <- position(enablingStep.fenBefore)
+      afterEnabling <- position(enablingStep.fenAfter)
+      enablingPiece <- beforeEnabling.board.pieceAt(vacated)
+      enabledPiece <- beforeEnabling.board.pieceAt(enabledFrom)
+      if enablingPiece.color == enabledPiece.color
+      if afterEnabling.board.pieceAt(vacated).isEmpty
+      if afterEnabling.board.pieceAt(enabledFrom).contains(enabledPiece)
+      if slidingPath(enabledPiece.role.toString, enabledFrom.key, enabledTo.key).contains(vacated.key)
+      if interveningSteps.forall(step => pieceAt(step.fenBefore, enabledFrom.key).contains(enabledPiece))
+      if pieceAt(enabledStep.fenBefore, enabledFrom.key).contains(enabledPiece)
+      if pieceAt(enabledStep.fenAfter, enabledTo.key).exists(piece =>
+        piece.color == enabledPiece.color &&
+          (piece.role == enabledPiece.role || enabledMove.length == 5)
+      )
+    yield LineAccessTrajectory(
+      enablingStep = enablingStep,
+      enabledStep = enabledStep,
+      interveningSteps = interveningSteps,
+      enabledPieceRole = EvidencePieceRole(enabledPiece.role.toString),
+      color = enabledPiece.color,
+      vacatedSquare = EvidenceSquare(vacated.key),
+      enabledFrom = EvidenceSquare(enabledFrom.key),
+      enabledTo = EvidenceSquare(enabledTo.key),
+      plyOffset = interveningSteps.size + 1
+    )
+
+  def proves(trajectory: LineAccessTrajectory): Boolean =
+    find(trajectory.enablingStep, trajectory.enabledStep, trajectory.interveningSteps).contains(trajectory)
+
+  private def position(fen: String): Option[chess.Position] =
+    _root_.chess.format.Fen.read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(fen))
+
+  private def pieceAt(fen: String, square: String): Option[chess.Piece] =
+    for
+      position <- position(fen)
+      square <- Square.fromKey(square)
+      piece <- position.board.pieceAt(square)
+    yield piece
+
+  private def slidingPath(role: String, from: String, to: String): List[String] =
+    coordinates(from).zip(coordinates(to)).toList.flatMap { case ((fromFile, fromRank), (toFile, toRank)) =>
+      val fileDelta = toFile - fromFile
+      val rankDelta = toRank - fromRank
+      val diagonal = fileDelta.abs == rankDelta.abs && fileDelta != 0
+      val straight = (fileDelta == 0) != (rankDelta == 0)
+      val roleSupportsPath =
+        role.equalsIgnoreCase("queen") ||
+          role.equalsIgnoreCase("bishop") && diagonal ||
+          role.equalsIgnoreCase("rook") && straight
+      if !roleSupportsPath || (!diagonal && !straight) then Nil
+      else
+        val fileStep = Integer.signum(fileDelta)
+        val rankStep = Integer.signum(rankDelta)
+        (1 until math.max(fileDelta.abs, rankDelta.abs)).map(offset =>
+          s"${('a' + fromFile + fileStep * offset).toChar}${fromRank + rankStep * offset + 1}"
+        ).toList
+    }
+
+  private def coordinates(square: String): Option[(Int, Int)] =
+    Option.when(square.matches("[a-h][1-8]"))((square.head - 'a', square.last.asDigit - 1))
+
 enum LineEndgameTechniqueHorizonStatus:
   case Active
   case Transitioned
@@ -4515,6 +4600,190 @@ enum PlanMoveRole:
 
 enum PlanCausalDependencyKind:
   case ObjectStatePrecondition
+  case LineAccessPrecondition
+  case SharedTargetCoordination
+  case FlankAdvanceCoordination
+
+enum PlanCausalDependencyProof:
+  case ObjectState(trajectory: LineObjectTrajectory)
+  case LineAccess(trajectory: LineAccessTrajectory)
+  case SharedTarget(targets: List[EvidenceSquare])
+  case FlankAdvance(kingSquare: EvidenceSquare, targets: List[EvidenceSquare])
+
+final case class PlanCausalEventNode(
+    identity: PlanEventIdentity,
+    step: LineReplayStep,
+    perspective: Color,
+    structuralConsequences: List[TransitionConsequence],
+    developmentChoices: List[StructuralDevelopmentChoice]
+):
+  def moveUci: String = EvidenceRef.normalizeMove(step.moveUci)
+
+final case class PlanCausalEventDependency(
+    from: PlanCausalEventNode,
+    to: PlanCausalEventNode,
+    kind: PlanCausalDependencyKind,
+    proof: PlanCausalDependencyProof,
+    plyOffset: Int
+):
+  def dependencyProven: Boolean =
+    from.step.ply < to.step.ply &&
+      plyOffset == to.step.ply - from.step.ply &&
+      ((kind, proof) match
+        case (PlanCausalDependencyKind.ObjectStatePrecondition, PlanCausalDependencyProof.ObjectState(trajectory)) =>
+          trajectory.rootStep == from.step &&
+            trajectory.futureStep == to.step &&
+            trajectory.plyOffset == plyOffset &&
+            LineObjectTrajectory.provesObjectStatePrecondition(trajectory)
+        case (PlanCausalDependencyKind.LineAccessPrecondition, PlanCausalDependencyProof.LineAccess(trajectory)) =>
+          trajectory.enablingStep == from.step &&
+            trajectory.enabledStep == to.step &&
+            trajectory.plyOffset == plyOffset &&
+            LineAccessTrajectory.proves(trajectory)
+        case (PlanCausalDependencyKind.SharedTargetCoordination, PlanCausalDependencyProof.SharedTarget(targets)) =>
+          val shared = targets.map(_.key.toLowerCase).filter(_.matches("[a-h][1-8]")).toSet
+          shared.nonEmpty &&
+            shared.subsetOf(PlanCausalEpisode.pressureTargetSquares(from)) &&
+            shared.subsetOf(PlanCausalEpisode.pressureTargetSquares(to))
+        case (PlanCausalDependencyKind.FlankAdvanceCoordination, PlanCausalDependencyProof.FlankAdvance(king, targets)) =>
+          PlanCausalEpisode.flankAdvanceProof(from, to, king, targets)
+        case _ =>
+          false
+      )
+
+final case class PlanCausalResponse(
+    trigger: PlanCausalEventNode,
+    step: LineReplayStep,
+    target: EvidenceSquare,
+    plyOffset: Int
+):
+  def proven: Boolean =
+    val move = EvidenceRef.normalizeMove(step.moveUci)
+    val responseColor = _root_.chess.format.Fen
+      .read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(step.fenBefore))
+      .map(_.color)
+    step.ply > trigger.step.ply &&
+      plyOffset == step.ply - trigger.step.ply &&
+      responseColor.contains(!trigger.perspective) &&
+      move.take(2) == target.key.toLowerCase &&
+      PlanCausalEpisode.pressureTargetSquares(trigger).contains(target.key.toLowerCase)
+
+final case class PlanCausalEpisode(
+    root: PlanCausalEventNode,
+    continuations: List[PlanCausalEventNode],
+    dependencies: List[PlanCausalEventDependency],
+    responses: List[PlanCausalResponse]
+):
+  lazy val events: List[PlanCausalEventNode] =
+    (root :: continuations).distinct.sortBy(event => (event.step.ply, event.moveUci))
+  def spanPlies: Int =
+    events.lastOption.map(_.step.ply - root.step.ply + 1).getOrElse(1).max(1)
+  def dependencyProven: Boolean =
+    continuations.nonEmpty &&
+      dependencies.nonEmpty &&
+      dependencies.forall(dependency =>
+        events.contains(dependency.from) && events.contains(dependency.to) && dependency.dependencyProven
+      ) &&
+      responses.forall(response => events.contains(response.trigger) && response.proven) &&
+      connectedToRoot
+  def futureEvents: List[PlanCausalEventNode] = events.filterNot(_ == root)
+  def representativeResult: Option[(PlanCausalEventNode, TransitionConsequence)] =
+    events
+      .flatMap(event => event.structuralConsequences.map(event -> _))
+      .filter((_, consequence) => consequence.positive && consequence.strength > 0)
+      .sortBy((event, consequence) =>
+        (-PlanCausalEpisode.resultSalience(consequence.kind), -consequence.strength, -event.step.ply)
+      )
+      .headOption
+  def futureEvent: Option[PlanCausalEventNode] =
+    representativeResult.map(_._1).filterNot(_ == root).orElse(futureEvents.lastOption)
+  def futureMove: Option[String] = futureEvent.map(_.moveUci)
+  def futureTarget: Option[EvidenceSquare] =
+    representativeResult
+      .filterNot(_._1 == root)
+      .flatMap((_, consequence) => PlanCausalEpisode.consequenceSquares(consequence).headOption)
+      .orElse(futureEvent.flatMap(event =>
+        Option.when(event.moveUci.matches("[a-h][1-8][a-h][1-8].*"))(EvidenceSquare(event.moveUci.slice(2, 4)))
+      ))
+  def completionProven: Boolean =
+    representativeResult.exists(_._1 != root) || responses.nonEmpty
+
+  private def connectedToRoot: Boolean =
+    @annotation.tailrec
+    def expand(connected: Set[PlanCausalEventNode]): Set[PlanCausalEventNode] =
+      val next = connected ++ dependencies.flatMap { dependency =>
+        if connected(dependency.from) || connected(dependency.to) then List(dependency.from, dependency.to)
+        else Nil
+      }
+      if next == connected then connected else expand(next)
+    events.toSet.subsetOf(expand(Set(root)))
+
+object PlanCausalEpisode:
+  private val PressureKinds = Set(
+    TransitionConsequenceKind.WeakPawnTargetCreated,
+    TransitionConsequenceKind.WeakSquareTargetCreated,
+    TransitionConsequenceKind.TargetPressureGain,
+    TransitionConsequenceKind.KingSafetyPressure,
+    TransitionConsequenceKind.KingRingPressureGain,
+    TransitionConsequenceKind.BatteryPressureGain,
+    TransitionConsequenceKind.OpponentMobilityRestriction
+  )
+
+  def consequenceSquares(consequence: TransitionConsequence): List[EvidenceSquare] =
+    consequence.subjects
+      .flatMap(subject => "[a-h][1-8]".r.findAllIn(subject.toLowerCase).map(EvidenceSquare(_)))
+      .distinct
+
+  def pressureTargetSquares(event: PlanCausalEventNode): Set[String] =
+    event.structuralConsequences
+      .filter(consequence => PressureKinds(consequence.kind))
+      .flatMap(consequenceSquares)
+      .map(_.key.toLowerCase)
+      .toSet
+
+  def flankAdvanceProof(
+      from: PlanCausalEventNode,
+      to: PlanCausalEventNode,
+      king: EvidenceSquare,
+      targets: List[EvidenceSquare]
+  ): Boolean =
+    val move = from.moveUci
+    val fromSquare = move.take(2)
+    val toSquare = move.slice(2, 4)
+    val targetKeys = targets.map(_.key.toLowerCase).filter(_.matches("[a-h][1-8]")).toSet
+    val actualKing = _root_.chess.format.Fen
+      .read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(from.step.fenBefore))
+      .flatMap(_.board.kingPosOf(!from.perspective))
+      .map(_.key)
+    from.identity.actorRole.exists(_.equalsIgnoreCase("pawn")) &&
+      fromSquare.matches("[a-h][1-8]") &&
+      toSquare.matches("[a-h][1-8]") &&
+      fromSquare.head == toSquare.head &&
+      Set('a', 'b', 'g', 'h')(fromSquare.head) &&
+      to.identity.actorRole.exists(role => !role.equalsIgnoreCase("pawn")) &&
+      actualKing.contains(king.key.toLowerCase) &&
+      (king.key.head - fromSquare.head).abs <= 2 &&
+      targetKeys.nonEmpty &&
+      targetKeys.subsetOf(pressureTargetSquares(to)) &&
+      targetKeys.exists(square => kingDistance(square, king.key) <= 2)
+
+  private[judgment] def resultSalience(kind: TransitionConsequenceKind): Int =
+    kind match
+      case TransitionConsequenceKind.WeakPawnTargetCreated | TransitionConsequenceKind.WeakSquareTargetCreated |
+          TransitionConsequenceKind.TargetPressureGain | TransitionConsequenceKind.KingRingPressureGain |
+          TransitionConsequenceKind.PassedPawnProgress | TransitionConsequenceKind.PromotionPressureGain |
+          TransitionConsequenceKind.OutpostGain | TransitionConsequenceKind.BatteryPressureGain =>
+        3
+      case TransitionConsequenceKind.FileOccupationGain | TransitionConsequenceKind.OpenFileGain |
+          TransitionConsequenceKind.SemiOpenFileGain | TransitionConsequenceKind.OpponentMobilityRestriction |
+          TransitionConsequenceKind.KingSafetyPressure =>
+        2
+      case _ =>
+        1
+
+  private def kingDistance(square: String, king: String): Int =
+    if !square.matches("[a-h][1-8]") || !king.matches("[a-h][1-8]") then Int.MaxValue
+    else math.max((square.head - king.head).abs, (square.last.asDigit - king.last.asDigit).abs)
 
 enum PlanCausalBranchOutcome:
   case Realized
@@ -4588,13 +4857,15 @@ final case class PlanCausalEventEvidence(
     structuralConsequences: List[TransitionConsequence],
     developmentChoices: List[StructuralDevelopmentChoice],
     futureRealization: Option[PlanCausalFutureRealization],
-    branchWitnesses: List[PlanCausalBranchWitness]
+    branchWitnesses: List[PlanCausalBranchWitness],
+    episode: Option[PlanCausalEpisode] = None
 ) extends EvidencePayload:
   def rootMove: String = rootTransition.moveUci
   def perspective: Color = rootTransition.perspective
   def futureMove: Option[String] = futureRealization.map(_.trajectory.futureStep.moveUci)
   def futureTarget: Option[EvidenceSquare] = futureRealization.map(_.trajectory.futureTo)
-  def counterfactualDependencyProven: Boolean = futureRealization.exists(_.dependencyProven)
+  def counterfactualDependencyProven: Boolean =
+    futureRealization.exists(_.dependencyProven) || episode.exists(_.dependencyProven)
   def realizedBranchWitnesses: List[PlanCausalBranchWitness] =
     branchWitnesses.filter(_.outcome == PlanCausalBranchOutcome.Realized)
   def exactBranchWitnesses: List[PlanCausalBranchWitness] =
