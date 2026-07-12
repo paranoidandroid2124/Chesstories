@@ -65,7 +65,6 @@ lazy val modules = Seq(
   study,
   beta,
   security,
-  chessJudgmentCore,
   web
 )
 
@@ -157,15 +156,6 @@ lazy val beta = module("beta",
   Seq(db, user),
   tests.bundle
 )
-
-// ============================================================
-// Chess Judgment Core Module
-// ============================================================
-
-lazy val chessJudgmentCore = module("chessJudgmentCore",
-  Seq(common),
-  playWs.bundle ++ tests.bundle
-).dependsOn(tree % "test->compile")
 
 // ============================================================
 // Web Module

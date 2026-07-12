@@ -97,9 +97,6 @@ interface ChesstoryProbeRequest {
   candidateMove?: Uci;
   depthFloor?: number;
   variationHash?: string;
-  objective?: string;
-  seedId?: string;
-  requiredSignals?: string[];
 }
 
 interface ChesstoryProbeResult {
@@ -117,11 +114,7 @@ interface ChesstoryProbeResult {
   probedMove?: Uci;
   mate?: number;
   depth?: number;
-  objective?: string;
-  seedId?: string;
-  requiredSignals?: string[];
   candidateMove?: Uci;
-  depthFloor?: number;
   variationHash?: string;
   generatedAtEpochMs?: number;
 }
@@ -633,9 +626,17 @@ export default class AnalyseCtrl implements CevalHandler {
       .then(res => res.json())
       .then(async data => {
         let review = Array.isArray(data.move_review) ? data.move_review[0] : data.move_review;
-        const probeResults = await this.chesstoryProbeResults(data.probe_requests);
-        if (probeResults.length) {
-          const probed = await fetch('/api/chess-judgment/move-meaning', {
+        const probeResults: ChesstoryProbeResult[] = [];
+        const seenProbeIds = new Set<string>();
+        for (let round = 0; round < 3 && probeResults.length < 3; round++) {
+          const nextResults = await this.chesstoryProbeResults(
+            data.probe_requests,
+            seenProbeIds,
+            3 - probeResults.length,
+          );
+          if (!nextResults.length) break;
+          probeResults.push(...nextResults);
+          data = await fetch('/api/chess-judgment/move-meaning', {
             ...defaultInit,
             method: 'post',
             headers: {
@@ -647,7 +648,7 @@ export default class AnalyseCtrl implements CevalHandler {
           })
             .then(ensureOk)
             .then(res => res.json());
-          review = Array.isArray(probed.move_review) ? probed.move_review[0] : probed.move_review;
+          review = Array.isArray(data.move_review) ? data.move_review[0] : data.move_review;
         }
         this.chesstoryBriefPayload = review?.renderable ? review : undefined;
         this.chesstoryBriefUnavailable = !this.chesstoryBriefPayload;
@@ -663,15 +664,22 @@ export default class AnalyseCtrl implements CevalHandler {
       });
   }
 
-  private async chesstoryProbeResults(rawRequests: unknown): Promise<ChesstoryProbeResult[]> {
+  private async chesstoryProbeResults(
+    rawRequests: unknown,
+    seenProbeIds: Set<string>,
+    limit: number,
+  ): Promise<ChesstoryProbeResult[]> {
     if (!this.isCevalAllowed() || !this.cevalEnabled() || !this.ceval.available()) return [];
     const requests = Array.isArray(rawRequests)
-      ? rawRequests.filter((request): request is ChesstoryProbeRequest =>
-          !!request &&
-          typeof request === 'object' &&
-          (request as ChesstoryProbeRequest).purpose === 'reply_multipv' &&
-          Array.isArray((request as ChesstoryProbeRequest).moves) &&
-          (request as ChesstoryProbeRequest).moves.length === 0,
+      ? rawRequests.filter(
+          (request): request is ChesstoryProbeRequest =>
+            !!request &&
+            typeof request === 'object' &&
+            (request as ChesstoryProbeRequest).purpose === 'reply_multipv' &&
+            typeof (request as ChesstoryProbeRequest).id === 'string' &&
+            !seenProbeIds.has((request as ChesstoryProbeRequest).id) &&
+            Array.isArray((request as ChesstoryProbeRequest).moves) &&
+            (request as ChesstoryProbeRequest).moves.length === 0,
         )
       : [];
     if (!requests.length) return [];
@@ -680,7 +688,8 @@ export default class AnalyseCtrl implements CevalHandler {
     const results: ChesstoryProbeResult[] = [];
     this.ceval.stop();
     try {
-      for (const request of requests.slice(0, 3)) {
+      for (const request of requests.slice(0, limit)) {
+        seenProbeIds.add(request.id);
         const result = await this.runChesstoryProbe(request);
         if (result) results.push(result);
       }
@@ -719,14 +728,18 @@ export default class AnalyseCtrl implements CevalHandler {
         multiPv: requiredPvs,
         threatMode: false,
         emit: (ev: Tree.LocalEval) => {
-          if (ev.depth >= depthFloor && ev.pvs.filter(pv => pv.moves.length).length >= requiredPvs) finish(ev);
+          if (ev.depth >= depthFloor && ev.pvs.filter(pv => pv.moves.length).length >= requiredPvs)
+            finish(ev);
         },
       };
       this.ceval.resume(work);
     });
   }
 
-  private chesstoryProbeResult(request: ChesstoryProbeRequest, ev: Tree.LocalEval): ChesstoryProbeResult | undefined {
+  private chesstoryProbeResult(
+    request: ChesstoryProbeRequest,
+    ev: Tree.LocalEval,
+  ): ChesstoryProbeResult | undefined {
     const replyLines = ev.pvs
       .filter(pv => pv.moves.length)
       .map(pv => ({
@@ -735,7 +748,8 @@ export default class AnalyseCtrl implements CevalHandler {
         mate: pv.mate,
         depth: ev.depth,
       }));
-    if (ev.depth < (request.depthFloor ?? request.depth ?? 1) || replyLines.length < (request.multiPv ?? 1)) return;
+    if (ev.depth < (request.depthFloor ?? request.depth ?? 1) || replyLines.length < (request.multiPv ?? 1))
+      return;
     const evalCp = this.chesstoryEvalCp(ev);
     return {
       id: request.id,
@@ -747,11 +761,7 @@ export default class AnalyseCtrl implements CevalHandler {
       probedMove: request.candidateMove,
       mate: ev.mate,
       depth: ev.depth,
-      objective: request.objective,
-      seedId: request.seedId,
-      requiredSignals: request.requiredSignals ?? [],
       candidateMove: request.candidateMove,
-      depthFloor: request.depthFloor,
       variationHash: request.variationHash,
       generatedAtEpochMs: Date.now(),
     };

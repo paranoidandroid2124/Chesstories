@@ -19,6 +19,24 @@
                          "notes":  "Canonical HTTPS base URL for links and redirects."
                      },
                      {
+                         "env":  "CHESSTORY_RUNTIME_URL",
+                         "configPath":  "chesstory.runtime.url",
+                         "kind":  "plain",
+                         "requiredMode":  "always",
+                         "readinessClass":  "core",
+                         "probe":  "http",
+                         "notes":  "Independent Chesstory graph-judgment runtime base URL."
+                     },
+                     {
+                         "env":  "CHESSTORY_TOKEN",
+                         "configPath":  "chesstory.runtime.token",
+                         "kind":  "secret",
+                         "requiredMode":  "always",
+                         "readinessClass":  "core",
+                         "probe":  "config_only",
+                         "notes":  "Bearer token shared only with the independent Chesstory runtime."
+                     },
+                     {
                          "env":  "PUBLIC_CONTACT_EMAIL",
                          "configPath":  "net.email",
                          "kind":  "plain",
