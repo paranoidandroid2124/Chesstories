@@ -2866,6 +2866,19 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       ),
       Some("piece_route")
     )
+    val fileOpening = routeEvent.results.head.copy(kind = TransitionConsequenceKind.SemiOpenFileGain)
+    assertEquals(
+      MoveMeaningClaim.principalPlanFunctionType(
+        claim.copy(principalPlanEvent = Some(routeEvent.copy(results = List(fileOpening.copy(stage = "direct")))))
+      ),
+      Some("pawn_break_timing")
+    )
+    assertEquals(
+      MoveMeaningClaim.principalPlanFunctionType(
+        claim.copy(principalPlanEvent = Some(routeEvent.copy(results = List(fileOpening))))
+      ),
+      None
+    )
 
   private def ownedTacticalProof(
       id: String,

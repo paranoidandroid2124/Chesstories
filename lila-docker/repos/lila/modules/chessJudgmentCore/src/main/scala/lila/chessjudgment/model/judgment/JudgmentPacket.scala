@@ -1750,6 +1750,17 @@ object MoveMeaningSurfaceTarget:
           detail.unit != PositionPlanTechniqueUnit.PieceRerouteRoute
       )
     val pawnTargets = targetCarriers.filter(_.kind == "Pawn").map(_.value)
+    val eventTargetPieces = detail.principalPlanEvent.toList.flatMap(_.targets).flatMap { target =>
+      StructuralPurposeSubject.parse(target).toList.flatMap {
+        case StructuralPurposeSubject.Outpost(piece, _)             => List(piece)
+        case StructuralPurposeSubject.PieceRestriction(piece, _, _) => List(piece)
+        case StructuralPurposeSubject.PieceSquare(piece, _)         => List(piece)
+        case _                                                       => Nil
+      }
+    }
+    val boundTargetPieces =
+      if detail.principalPlanEvent.nonEmpty then eventTargetPieces
+      else EvidenceObjectBinding.signatureValues(detail.objectBindingSignatures, "target", "Piece")
     MoveMeaningSurfaceTarget(
       squares =
         (
@@ -1761,9 +1772,7 @@ object MoveMeaningSurfaceTarget:
       pieces =
         (
           targetCarriers.filter(_.kind == "Piece").map(_.value).flatMap(cleanPiece) ++
-            EvidenceObjectBinding
-              .signatureValues(detail.objectBindingSignatures, "target", "Piece")
-              .flatMap(cleanPiece) ++
+            boundTargetPieces.flatMap(cleanPiece) ++
             Option.when(pawnTargets.nonEmpty)("pawn").toList
         ).distinct.sorted
     )
@@ -4525,6 +4534,14 @@ object MoveMeaningClaim:
     claim.principalPlanEvent.toList.flatMap(_.results).collectFirst {
       case result if result.stage == "direct" && result.kind == TransitionConsequenceKind.OutpostGain =>
         "outpost_attempt"
+      case result
+          if result.stage == "direct" &&
+            (
+              result.kind == TransitionConsequenceKind.OpenFileGain ||
+                result.kind == TransitionConsequenceKind.SemiOpenFileGain ||
+                result.kind == TransitionConsequenceKind.PawnTensionGain
+            ) =>
+        "pawn_break_timing"
       case result if result.stage == "direct" && PlanCausalEpisode.routeResultKind(result.kind) =>
         "piece_route"
     }

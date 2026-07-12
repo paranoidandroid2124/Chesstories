@@ -4718,9 +4718,9 @@ final case class PlanCausalEpisode(
   def futureMove: Option[String] = futureEvent.map(_.moveUci)
   def futureTarget: Option[EvidenceSquare] =
     representativeResult
-      .filterNot((_, consequence) => PlanCausalEpisode.routeResultKind(consequence.kind))
-      .flatMap((_, consequence) =>
-        PlanCausalEpisode.consequenceSquares(consequence).distinct match
+      .filterNot((_, consequence) => PlanCausalEpisode.meansOnlyResultKind(consequence.kind))
+      .flatMap((event, consequence) =>
+        PlanCausalEpisode.consequenceTargetSquares(event.identity, consequence) match
           case target :: Nil => Some(target)
           case _             => None
       )
@@ -4757,13 +4757,43 @@ object PlanCausalEpisode:
     TransitionConsequenceKind.OpponentMobilityRestriction
   )
 
+  private val DestinationResultKinds = Set(
+    TransitionConsequenceKind.FileOccupationGain,
+    TransitionConsequenceKind.OutpostGain,
+    TransitionConsequenceKind.PassedPawnProgress,
+    TransitionConsequenceKind.PromotionPressureGain
+  )
+
+  private val MeansOnlyResultKinds = RouteResultKinds ++ Set(
+    TransitionConsequenceKind.DevelopmentCenterControlGain,
+    TransitionConsequenceKind.LineUnlockGain,
+    TransitionConsequenceKind.FileAccessGain
+  )
+
   def consequenceSquares(consequence: TransitionConsequence): List[EvidenceSquare] =
     consequence.subjects
       .flatMap(subject => "[a-h][1-8]".r.findAllIn(subject.toLowerCase).map(EvidenceSquare(_)))
       .distinct
 
+  def consequenceTargetSquares(
+      identity: PlanEventIdentity,
+      consequence: TransitionConsequence
+  ): List[EvidenceSquare] =
+    val routeSquares = (identity.actorFrom.toList ++ identity.actorTo.toList).map(_.toLowerCase).toSet
+    consequence.subjects.flatMap { subject =>
+      val normalized = subject.trim.toLowerCase
+      val explicitSquare = normalized.stripPrefix("square:").matches("[a-h][1-8]")
+      "[a-h][1-8]".r
+        .findAllIn(normalized)
+        .map(EvidenceSquare(_))
+        .filter(square => explicitSquare || DestinationResultKinds(consequence.kind) || !routeSquares(square.key))
+    }.distinct
+
   private[judgment] def routeResultKind(kind: TransitionConsequenceKind): Boolean =
     RouteResultKinds(kind)
+
+  private[judgment] def meansOnlyResultKind(kind: TransitionConsequenceKind): Boolean =
+    MeansOnlyResultKinds(kind)
 
   def pressureTargetSquares(event: PlanCausalEventNode): Set[String] =
     event.structuralConsequences
@@ -5037,59 +5067,45 @@ final case class PlanEventPublicProof(
 )
 
 object PlanEventPublicProof:
-  private def routeMeans(event: PlanCausalEventEvidence): List[(String, String, String)] =
-    (
-      (for
-        role <- event.identity.actorRole.toList
-        from <- event.identity.actorFrom.toList
-        to <- event.identity.actorTo.toList
-      yield (role, from, to)) ++
-        event.developmentChoices.map(choice => (choice.role, choice.from, choice.to))
-    ).map((role, from, to) => (role.toLowerCase, from.toLowerCase, to.toLowerCase)).distinct
-
-  private def namesRouteMeans(value: String, routes: List[(String, String, String)]): Boolean =
-    val normalized = value.trim.toLowerCase
-    val square = normalized.stripPrefix("square:")
-    routes.exists { case (role, from, to) =>
-      val route = s"$role:$from-$to"
-      square == from || square == to || normalized == route || normalized.startsWith(s"$route:")
-    }
-
-  private def consequenceTargetTokens(consequence: TransitionConsequence): Set[String] =
-    (
-      consequence.subjects.map(_.trim.toLowerCase) ++
-        PlanCausalEpisode.consequenceSquares(consequence).map(square => s"square:${square.key.toLowerCase}")
-    ).filter(_.nonEmpty).toSet
+  private def consequenceTargetTokens(
+      identity: PlanEventIdentity,
+      consequence: TransitionConsequence
+  ): Set[String] =
+    if consequence.kind == TransitionConsequenceKind.FileOccupationGain then
+      consequence.subjects
+        .flatMap(StructuralPurposeSubject.fileSquareTarget)
+        .map((file, _) => s"file:$file")
+        .toSet
+    else
+      (
+        consequence.subjects.map(_.trim.toLowerCase) ++
+          PlanCausalEpisode.consequenceTargetSquares(identity, consequence).map(square => s"square:${square.key.toLowerCase}")
+      ).filter(_.nonEmpty).toSet
 
   def from(event: PlanCausalEventEvidence): PlanEventPublicProof =
-    val directResults = event.structuralConsequences.map(PlanEventPublicResult.from("direct", _))
+    val directConsequences = event.structuralConsequences.sortBy(consequence =>
+      (-PlanCausalEpisode.resultSalience(consequence.kind), -consequence.strength)
+    )
     val futureCausality = PlanCausalPublicProof.from(event)
-    val representativeResult = futureCausality.flatMap(_.representativeResult).orElse(
-      directResults.sortBy(result => (-PlanCausalEpisode.resultSalience(result.kind), -result.strength)).headOption
-    )
-    val targetBearingFuture = futureCausality.filterNot(proof =>
-      proof.representativeResult.exists(result => PlanCausalEpisode.routeResultKind(result.kind))
-    )
-    val futureSubjects = targetBearingFuture.toList
-      .flatMap(_.representativeResult.toList.flatMap(_.subjects))
-      .map(_.trim.toLowerCase)
-      .filter(_.nonEmpty)
-    val futureSquares = futureSubjects.flatMap(subject =>
-      "[a-h][1-8]".r.findAllIn(subject).map(square => s"square:$square")
-    )
-    val means = routeMeans(event)
-    val directTargetTokens = event.structuralConsequences
-      .filterNot(consequence => PlanCausalEpisode.routeResultKind(consequence.kind))
-      .flatMap(consequenceTargetTokens)
-      .toSet
-    val targets = (
-      event.identity.targets.filter(value =>
-        !namesRouteMeans(value, means) || directTargetTokens(value.trim.toLowerCase)
-      ) ++
-        futureSubjects ++
-        futureSquares ++
-        targetBearingFuture.toList.flatMap(_.targetSquare).map(target => s"square:${target.toLowerCase}")
-    ).distinct.sorted
+    val futureRepresentative = event.episode
+      .filter(_ => event.episodePublicProofReady)
+      .flatMap(_.representativeResult)
+    val representativeResult = futureRepresentative
+      .map((_, consequence) => PlanEventPublicResult.from("future", consequence))
+      .orElse(directConsequences.headOption.map(PlanEventPublicResult.from("direct", _)))
+    val targets = futureRepresentative
+      .filterNot((_, consequence) => PlanCausalEpisode.meansOnlyResultKind(consequence.kind))
+      .map((futureEvent, consequence) => consequenceTargetTokens(futureEvent.identity, consequence).toList)
+      .orElse(
+        Option.when(futureRepresentative.isEmpty)(
+          event.structuralConsequences
+            .filterNot(consequence => PlanCausalEpisode.meansOnlyResultKind(consequence.kind))
+            .flatMap(consequence => consequenceTargetTokens(event.identity, consequence))
+        )
+      )
+      .getOrElse(Nil)
+      .distinct
+      .sorted
     val summary = event.planSequenceSummary
     PlanEventPublicProof(
       goalTheme = event.identity.goalTheme.id,

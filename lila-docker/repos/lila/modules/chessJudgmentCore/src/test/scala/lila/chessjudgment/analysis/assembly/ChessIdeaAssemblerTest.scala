@@ -161,6 +161,12 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
           }
         )
     ), view.moveMeaningClaims)
+    val queensideSurface = MoveMeaningSurface
+      .publicSurfaces(view)
+      .find(_.principalPlanId.contains(PlanId.QueensideAttack))
+      .getOrElse(fail("expected owned queenside surface"))
+    assertEquals(queensideSurface.target.squares, List("c4"))
+    assert(!queensideSurface.target.pieces.contains("bishop"), queensideSurface.target)
 
   test("principal plan event exports only its owned public carriers"):
     val result = MoveReviewJudgmentOrchestrator
@@ -496,6 +502,108 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       )
     )
     assertEquals(PlanEventPublicProof.from(pressureEvent).targets, List("a5", "square:a5"))
+
+  test("principal plan event targets belong to its owned results rather than its means"):
+    val root = PositionNodeRef("8/8/8/8/8/8/8/4K2k w - - 0 1", 1, Some(Color.White))
+    val after = PositionNodeRef("8/8/8/8/8/8/8/4K2k b - - 1 1", 2, Some(Color.Black))
+
+    def event(
+        move: String,
+        from: String,
+        to: String,
+        targets: List[String],
+        consequences: List[TransitionConsequence]
+    ): PlanCausalEventEvidence =
+      val line = LineNodeRef(s"played-$move", move, 1, LineNodeRole.Played)
+      PlanCausalEventEvidence(
+        planId = PlanId.WeakPawnAttack,
+        identity = PlanEventIdentity(
+          rootMove = move,
+          goalTheme = PlanTheme.WeaknessFixation,
+          goalKind = Some(PlanKind.StaticWeaknessFixation),
+          actorRole = Some(if move == "d1d4" then "rook" else "pawn"),
+          actorFrom = Some(from),
+          actorTo = Some(to),
+          targets = targets,
+          results = consequences.map(consequence => s"kind:${consequence.kind.toString.toLowerCase}")
+        ),
+        rootLine = line,
+        rootTransition = StructuralTransitionBinding(
+          moveUci = move,
+          role = TransitionEdgeRole.Played,
+          from = root,
+          to = after,
+          line = Some(line),
+          perspective = Color.White
+        ),
+        structuralConsequences = consequences,
+        developmentChoices = Nil,
+        branchWitnesses = Nil
+      )
+
+    val pressure = event(
+      move = "b5b4",
+      from = "b5",
+      to = "b4",
+      targets = List("a3", "b4", "c3", "created-tension:b4-a3", "square:a3", "square:b4", "square:c3"),
+      consequences = List(
+        TransitionConsequence(TransitionConsequenceKind.TargetPressureGain, StructuralSignalPolarity.Gain, 2, List("a3", "c3")),
+        TransitionConsequence(
+          TransitionConsequenceKind.PawnTensionGain,
+          StructuralSignalPolarity.Gain,
+          1,
+          List("created-tension:b4-a3", "break-file:b")
+        )
+      )
+    )
+    val tension = event(
+      move = "e7e6",
+      from = "e7",
+      to = "e6",
+      targets = List("break-file:e", "created-tension:e6-d5", "square:d5", "square:e6"),
+      consequences = List(
+        TransitionConsequence(
+          TransitionConsequenceKind.PawnTensionGain,
+          StructuralSignalPolarity.Gain,
+          1,
+          List("created-tension:e6-d5", "break-file:e")
+        )
+      )
+    )
+    val battery = event(
+      move = "d1d4",
+      from = "d1",
+      to = "d4",
+      targets = List("battery:file:d4-d5:rook-rook", "d:d4", "rook-lift:d1-d4:rank-4", "square:d4", "square:d5"),
+      consequences = List(
+        TransitionConsequence(
+          TransitionConsequenceKind.BatteryPressureGain,
+          StructuralSignalPolarity.Gain,
+          1,
+          List("battery:file:d4-d5:rook-rook")
+        ),
+        TransitionConsequence(TransitionConsequenceKind.FileOccupationGain, StructuralSignalPolarity.Gain, 1, List("d:d4")),
+        TransitionConsequence(
+          TransitionConsequenceKind.RookLiftActivation,
+          StructuralSignalPolarity.Gain,
+          1,
+          List("rook-lift:d1-d4:rank-4")
+        )
+      )
+    )
+
+    assertEquals(
+      PlanEventPublicProof.from(pressure).targets,
+      List("a3", "break-file:b", "c3", "created-tension:b4-a3", "square:a3", "square:c3")
+    )
+    assertEquals(
+      PlanEventPublicProof.from(tension).targets,
+      List("break-file:e", "created-tension:e6-d5", "square:d5")
+    )
+    assertEquals(
+      PlanEventPublicProof.from(battery).targets,
+      List("battery:file:d4-d5:rook-rook", "file:d", "square:d5")
+    )
 
   test("line trajectory does not transfer identity to a same-role replacement"):
     val graph = EvidenceFactAssembler
