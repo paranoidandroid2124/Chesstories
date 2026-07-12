@@ -3,7 +3,7 @@ package lila.chessjudgment.analysis.assembly
 import chess.Color
 import chess.format.Fen
 import chess.variant.Standard
-import lila.chessjudgment.analysis.structure.{ StructuralDeltaAnalyzer, StructuralDeltaContracts }
+import lila.chessjudgment.analysis.structure.{ StructuralDeltaAnalyzer, StructuralDeltaContracts, WeaknessTargetProfile }
 import lila.chessjudgment.model.{ PlanEventIdentity, PlanMatch, PlanSupport }
 import lila.chessjudgment.model.strategic.PlanTaxonomy.PlanTheme
 import lila.chessjudgment.model.judgment.*
@@ -19,9 +19,9 @@ object PlanCausalEventAssembler:
     graph.records.flatMap {
       case pressureRecord @ EvidenceRecord(pressureRef, pressure: PlanPressureEvidence, _)
           if pressureRef.line.exists(_.role != LineNodeRole.Threat) =>
-        for
+        val drafts = for
           rootLine <- pressureRef.line.toList
-          principalPlan <- pressure.rootBackedPlans(Some(rootLine.rootMove)).headOption.toList
+          principalPlan <- pressure.rootBackedPlans(Some(rootLine.rootMove)).distinctBy(_.plan.id)
           planId = principalPlan.plan.id
           transition <- context.transitions.filter(edge =>
             edge.role.lineRole == rootLine.role && EvidenceRef.sameMove(edge.moveUci, rootLine.rootMove)
@@ -39,12 +39,24 @@ object PlanCausalEventAssembler:
           planMotifRefs = rootPlanMotifRefs(graph, pressureRecord, rootLine, principalPlan)
           planBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, planMotifRefs)
           structuralBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, List(structuralRecord.ref))
-          positiveConsequences = structural.consequences.filter(consequence =>
-              consequence.positive &&
-              consequence.strength > 0 &&
-              PlanCausalEventProof.consequenceSupportsPlan(principalPlan, consequence) &&
-              consequenceOwnedByPlan(rootLine.rootMove, consequence, planBindings, structuralBindings)
-          )
+          positiveConsequences = structural.consequences.flatMap { consequence =>
+            Option
+              .when(
+                consequence.positive &&
+                  consequence.strength > 0 &&
+                  PlanCausalEventProof.consequenceSupportsPlan(principalPlan, consequence)
+              )(consequence)
+              .flatMap(PlanCausalEventProof.ownedConsequence(principalPlan, _, structural.transition))
+              .filter(consequence =>
+                PlanCausalEventProof.consequenceOwnedByRoot(
+                  rootLine,
+                  rootLine.rootMove,
+                  consequence,
+                  planBindings,
+                  structuralBindings
+                )
+              )
+          }
           developmentChoices = structural.developmentChoices.filter(choice =>
             PlanCausalEventProof.developmentSupportsPlan(principalPlan) &&
               EvidenceRef.sameMove(s"${choice.from}${choice.to}", rootLine.rootMove)
@@ -90,10 +102,6 @@ object PlanCausalEventAssembler:
             branchWitnesses = branchWitnesses
           )
           val futureKey = payload.futureMove.getOrElse("direct")
-          val authoritativePlan =
-            pressure.uniqueRootBackedPlan(Some(rootLine.rootMove)).contains(principalPlan) &&
-              planMotifRefs.nonEmpty &&
-              planMotifRefs.forall(ref => ref.confidence != EvidenceConfidence.Heuristic)
           EvidenceRecord(
             ref = allocator.evidenceRef(
               suffix = s"plan-causal-event:${allocator.key(rootLine.role)}:${rootLine.rootMove}:${allocator.key(planId)}:$futureKey",
@@ -102,15 +110,43 @@ object PlanCausalEventAssembler:
               position = transition.from,
               line = Some(rootLine),
               scope = transition.role.scope,
-              confidence = if authoritativePlan then EvidenceConfidence.Mixed else EvidenceConfidence.Heuristic
+              confidence = EvidenceConfidence.Heuristic
             ),
             payload = payload,
             parents = (
-              List(pressureRecord.ref, structuralRecord.ref, lineRecordAndPayload._1.ref, transition.evidence) ++
+              List(structuralRecord.ref, lineRecordAndPayload._1.ref, transition.evidence) ++
                 planMotifRefs ++
                 branchWitnesses.flatMap(witness => graph.records.find(_.ref.line.contains(witness.line)).map(_.ref))
             ).distinctBy(_.id)
           )
+        val authorityCandidates =
+          drafts.filter(record =>
+              record.parents.exists(parent =>
+                parent.layer == EvidenceLayer.MoveMotif && parent.confidence != EvidenceConfidence.Heuristic
+              ) &&
+                (record.payload match
+                  case event: PlanCausalEventEvidence =>
+                    event.structuralConsequences.nonEmpty ||
+                      event.developmentChoices.nonEmpty ||
+                      event.futurePublicProofReady
+                  case _ => false)
+            )
+        val decisiveCandidates = authorityCandidates.filter(record =>
+          record.payload match
+            case event: PlanCausalEventEvidence => PlanCausalEventProof.decisiveGoalProof(event)
+            case _                              => false
+        )
+        val ambiguousRootPlans =
+          pressure.rootBackedPlans(pressureRef.line.map(_.rootMove)).distinctBy(_.plan.id).size > 1
+        val authorityPool =
+          if authorityCandidates.size == 1 && !ambiguousRootPlans then authorityCandidates
+          else decisiveCandidates
+        val authoritativeIds = authorityPool.map(_.ref.id).toSet
+        drafts.map(record =>
+          if authoritativeIds(record.ref.id) then
+            record.copy(ref = record.ref.copy(confidence = EvidenceConfidence.Mixed))
+          else record
+        )
       case _ =>
         Nil
     }.distinctBy(_.ref.id)
@@ -129,37 +165,6 @@ object PlanCausalEventAssembler:
             plan.evidence.exists(_.motif == payload.motif) =>
         ref
     }.distinctBy(_.id)
-
-  private def consequenceOwnedByPlan(
-      rootMove: String,
-      consequence: TransitionConsequence,
-      planBindings: List[EvidenceObjectBinding],
-      structuralBindings: List[EvidenceObjectBinding]
-  ): Boolean =
-    val normalizedKind = consequence.kind.toString.trim.toLowerCase
-    val consequenceBindings = structuralBindings.filter(binding =>
-      binding.mechanism.exists(obj =>
-        obj.kind == EvidenceObjectKind.Mechanism && obj.key.trim.toLowerCase == normalizedKind
-      )
-    )
-    val planObjects = planBindings.flatMap(binding => binding.actor ++ binding.target ++ binding.witness)
-    val rootDestination = EvidenceRef.normalizeMove(rootMove).slice(2, 4)
-    val planSquares =
-      planObjects.collect { case ConcreteChessObject(EvidenceObjectKind.Square, key) => key.trim.toLowerCase }.toSet ++
-        Option(rootDestination).filter(_.matches("[a-h][1-8]")).toSet
-    val consequenceSquares = consequenceBindings
-      .flatMap(_.target)
-      .collect { case ConcreteChessObject(EvidenceObjectKind.Square, key) => key.trim.toLowerCase }
-      .toSet
-    val planFiles =
-      planObjects.collect { case ConcreteChessObject(EvidenceObjectKind.File, key) => key.trim.toLowerCase }.toSet ++
-        Option(rootDestination.take(1)).filter(_.matches("[a-h]")).toSet
-    val consequenceFiles = consequenceBindings
-      .flatMap(_.target)
-      .collect { case ConcreteChessObject(EvidenceObjectKind.File, key) => key.trim.toLowerCase }
-      .toSet
-    consequenceSquares.intersect(planSquares).nonEmpty ||
-      (consequenceSquares.isEmpty && consequenceFiles.intersect(planFiles).nonEmpty)
 
   private def branchWitnessesFor(
       input: NormalizedMoveReviewInput,
@@ -197,36 +202,131 @@ object PlanCausalEventAssembler:
     }
 
 private[assembly] object PlanCausalEventProof:
+  private val FlankInfrastructureConsequences = Set(
+    TransitionConsequenceKind.PawnTensionGain,
+    TransitionConsequenceKind.TargetPressureGain,
+    TransitionConsequenceKind.KingRingPressureGain,
+    TransitionConsequenceKind.RookLiftActivation,
+    TransitionConsequenceKind.LineUnlockGain,
+    TransitionConsequenceKind.BatteryPressureGain
+  )
+
   def developmentSupportsPlan(plan: PlanMatch): Boolean =
     planTheme(plan).exists(theme =>
       theme == PlanTheme.OpeningPrinciples || theme == PlanTheme.PieceRedeployment
     )
 
-  def consequenceSupportsPlan(plan: PlanMatch, consequence: TransitionConsequence): Boolean =
-    import TransitionConsequenceCategory.*
+  def decisiveGoalProof(event: PlanCausalEventEvidence): Boolean =
     import TransitionConsequenceKind.*
+    event.identity.goalTheme match
+      case PlanTheme.OpeningPrinciples =>
+        event.developmentChoices.nonEmpty || event.structuralConsequences.exists(consequence =>
+          Set(DevelopmentPieceActivated, DevelopmentMobilityGain, DevelopmentCenterControlGain, DevelopmentSafePlacement)(
+            consequence.kind
+          )
+        )
+      case PlanTheme.RestrictionProphylaxis =>
+        event.structuralConsequences.exists(_.kind == OpponentMobilityRestriction)
+      case PlanTheme.PieceRedeployment =>
+        event.structuralConsequences.exists(consequence =>
+          Set(FileOccupationGain, OutpostGain, RookLiftActivation, BatteryPressureGain)(consequence.kind)
+        )
+      case PlanTheme.WeaknessFixation =>
+        event.structuralConsequences.exists(consequence =>
+          Set(WeakPawnTargetCreated, WeakSquareTargetCreated)(consequence.kind) ||
+            consequence.kind == TargetPressureGain && weakTargetOwned(event.rootTransition, consequence.subjects)
+        )
+      case PlanTheme.PawnBreakPreparation =>
+        event.structuralConsequences.exists(_.kind == PawnTensionGain)
+      case PlanTheme.SpaceClamp =>
+        event.structuralConsequences.exists(consequence =>
+          Set(CenterControlGain, OpponentMobilityRestriction)(consequence.kind)
+        )
+      case PlanTheme.FlankInfrastructure =>
+        event.structuralConsequences.exists(consequence => FlankInfrastructureConsequences(consequence.kind))
+      case PlanTheme.AdvantageTransformation =>
+        event.structuralConsequences.exists(consequence =>
+          Set(PassedPawnProgress, PromotionPressureGain, FileOccupationGain)(consequence.kind)
+        )
+      case PlanTheme.FavorableExchange | PlanTheme.Unknown =>
+        false
 
-    def category(value: TransitionConsequenceCategory): Boolean =
-      StructuralDeltaEvidence.hasConsequenceCategory(consequence.kind, value)
+  def planOwnsConsequenceTarget(
+      plan: PlanMatch,
+      consequence: TransitionConsequence,
+      transition: StructuralTransitionBinding
+  ): Boolean =
+    ownedConsequence(plan, consequence, transition).contains(consequence)
+
+  def ownedConsequence(
+      plan: PlanMatch,
+      consequence: TransitionConsequence,
+      transition: StructuralTransitionBinding
+  ): Option[TransitionConsequence] =
+    planTheme(plan) match
+      case Some(PlanTheme.WeaknessFixation) if consequence.kind == TransitionConsequenceKind.TargetPressureGain =>
+        val ownedSubjects = weakTargetSubjects(transition, consequence.subjects)
+        Option.when(ownedSubjects.nonEmpty)(
+          consequence.copy(
+            strength = consequence.strength.min(ownedSubjects.size).max(1),
+            subjects = ownedSubjects
+          )
+        )
+      case _ =>
+        Some(consequence)
+
+  private def weakTargetOwned(
+      transition: StructuralTransitionBinding,
+      subjects: List[String]
+  ): Boolean =
+    weakTargetSubjects(transition, subjects).nonEmpty
+
+  private def weakTargetSubjects(
+      transition: StructuralTransitionBinding,
+      subjects: List[String]
+  ): List[String] =
+    Fen.read(Standard, Fen.Full(transition.from.fen)).toList.flatMap { position =>
+      val weakTargets =
+        WeaknessTargetProfile.targetsForPressure(position.board, transition.perspective).map(_.targetSquare).toSet
+      subjects.map(_.trim.toLowerCase).filter(weakTargets).distinct
+    }
+
+  def consequenceSupportsPlan(plan: PlanMatch, consequence: TransitionConsequence): Boolean =
+    import TransitionConsequenceKind.*
 
     planTheme(plan).exists {
       case PlanTheme.OpeningPrinciples =>
-        category(OpeningDevelopment) || category(OpeningCenterControl)
+        Set(
+          CenterControlGain,
+          DevelopmentLagReduced,
+          DevelopmentPieceActivated,
+          DevelopmentMobilityGain,
+          DevelopmentCenterControlGain,
+          DevelopmentSafePlacement
+        )(consequence.kind)
       case PlanTheme.RestrictionProphylaxis =>
-        consequence.kind == OpponentMobilityRestriction || category(TargetPressure) || category(CenterControl)
+        consequence.kind == OpponentMobilityRestriction
       case PlanTheme.PieceRedeployment =>
-        category(PieceActivity) || category(Development) || consequence.kind == OutpostGain
+        Set(
+          MobilityGain,
+          LineUnlockGain,
+          FileOccupationGain,
+          OutpostGain,
+          RookLiftActivation,
+          BatteryPressureGain,
+          DevelopmentPieceActivated,
+          DevelopmentMobilityGain,
+          DevelopmentCenterControlGain,
+          DevelopmentSafePlacement
+        )(consequence.kind)
       case PlanTheme.SpaceClamp =>
-        category(CenterControl) || category(TargetPressure) ||
-          consequence.kind == OpponentMobilityRestriction || consequence.kind == PawnTensionGain
+        Set(CenterControlGain, OpponentMobilityRestriction, PawnTensionGain)(consequence.kind)
       case PlanTheme.WeaknessFixation =>
-        category(TargetPressure) ||
-          Set(WeakPawnTargetCreated, WeakSquareTargetCreated, PawnTensionGain).contains(consequence.kind)
+        Set(TargetPressureGain, WeakPawnTargetCreated, WeakSquareTargetCreated, PawnTensionGain)(consequence.kind)
       case PlanTheme.PawnBreakPreparation =>
-        category(PawnStructure) || category(PawnStructureDelta) || category(CenterControl)
+        Set(OpenFileGain, SemiOpenFileGain, PawnTensionGain, CenterControlGain)(consequence.kind)
       case PlanTheme.FlankInfrastructure =>
-        category(PawnStructureDelta) || category(TargetPressure) || category(PieceActivity) ||
-          Set(KingRingPressureGain, RookLiftActivation, LineUnlockGain).contains(consequence.kind)
+        FlankInfrastructureConsequences(consequence.kind)
       case PlanTheme.AdvantageTransformation =>
         Set(
           PassedPawnProgress,
@@ -239,6 +339,61 @@ private[assembly] object PlanCausalEventProof:
       case PlanTheme.FavorableExchange | PlanTheme.Unknown =>
         false
     }
+
+  def consequenceOwnedByRoot(
+      rootLine: LineNodeRef,
+      rootMove: String,
+      consequence: TransitionConsequence,
+      planBindings: List[EvidenceObjectBinding],
+      structuralBindings: List[EvidenceObjectBinding]
+  ): Boolean =
+    val normalizedKind = consequence.kind.toString.trim.toLowerCase
+    def ownsRoot(binding: EvidenceObjectBinding): Boolean =
+      binding.line.contains(rootLine) &&
+        (binding.actor ++ binding.witness).exists(obj =>
+          obj.kind == EvidenceObjectKind.Move && EvidenceRef.sameMove(obj.key, rootMove)
+        )
+    val planOwnsRoot = planBindings.exists(ownsRoot)
+    val consequenceBindings = structuralBindings.filter(binding =>
+      ownsRoot(binding) &&
+        binding.mechanism.exists(obj =>
+          obj.kind == EvidenceObjectKind.Mechanism && obj.key.trim.toLowerCase == normalizedKind
+        )
+    )
+    val subjectSquares = consequence.subjects.flatMap(subject => "[a-h][1-8]".r.findAllIn(subject.toLowerCase)).toSet
+    val bindingOwnsSubjects =
+      consequence.kind != TransitionConsequenceKind.TargetPressureGain ||
+        subjectSquares.isEmpty ||
+        consequenceBindings.exists(binding =>
+          subjectSquares.subsetOf(
+            binding.target.collect {
+              case obj if obj.kind == EvidenceObjectKind.Square => obj.key.trim.toLowerCase
+            }.toSet
+          )
+        )
+    val concreteTargetRequired =
+      Set(
+        TransitionConsequenceKind.OpenFileGain,
+        TransitionConsequenceKind.SemiOpenFileGain,
+        TransitionConsequenceKind.FileOccupationGain,
+        TransitionConsequenceKind.WeakPawnTargetCreated,
+        TransitionConsequenceKind.WeakSquareTargetCreated,
+        TransitionConsequenceKind.PawnTensionGain,
+        TransitionConsequenceKind.TargetPressureGain,
+        TransitionConsequenceKind.CenterControlGain,
+        TransitionConsequenceKind.PassedPawnProgress,
+        TransitionConsequenceKind.PromotionPressureGain,
+        TransitionConsequenceKind.OutpostGain,
+        TransitionConsequenceKind.RookLiftActivation,
+        TransitionConsequenceKind.BatteryPressureGain,
+        TransitionConsequenceKind.OpponentMobilityRestriction,
+        TransitionConsequenceKind.KingRingPressureGain
+      )(consequence.kind)
+    planOwnsRoot && consequenceBindings.nonEmpty && bindingOwnsSubjects &&
+      (!concreteTargetRequired ||
+        consequence.subjects.nonEmpty && consequenceBindings.exists(
+          _.target.exists(EvidenceObjectBinding.specificSurfaceTargetObject)
+        ))
 
   private def planTheme(plan: PlanMatch): Option[PlanTheme] =
     plan.support.collectFirst { case PlanSupport.Theme(theme) => theme }

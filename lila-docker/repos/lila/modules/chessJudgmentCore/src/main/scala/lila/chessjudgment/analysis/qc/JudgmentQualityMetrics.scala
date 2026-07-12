@@ -77,6 +77,9 @@ object ExpectedEvidenceLossPolicy:
           if packet.exists(packet => isPlanPressureSupportOnly(diagnostic, packet)) =>
         EvidenceLossExpectation.Expected
       case EvidenceLossReason.EvidenceAvailableWithoutIdea
+          if packet.exists(packet => isHeuristicPlanCausalDraft(diagnostic, packet)) =>
+        EvidenceLossExpectation.Expected
+      case EvidenceLossReason.EvidenceAvailableWithoutIdea
           if packet.exists(packet => isStrategicSourceConsumedByMechanism(diagnostic, packet)) =>
         EvidenceLossExpectation.Expected
       case EvidenceLossReason.EvidenceAvailableWithoutIdea
@@ -135,6 +138,20 @@ object ExpectedEvidenceLossPolicy:
         .exists {
           case record @ EvidenceRecord(_, _: PlanPressureEvidence, _) =>
             StrategicMechanismEvidence.sourceMechanisms(record).isEmpty
+          case _ =>
+            false
+        }
+
+  private def isHeuristicPlanCausalDraft(
+      diagnostic: EvidenceLossDiagnostic,
+      packet: EvidenceBackedJudgmentPacket
+  ): Boolean =
+    diagnostic.layer.contains(EvidenceLayer.PlanCausalEvent) &&
+      diagnostic.evidence
+        .flatMap(ref => packet.evidenceGraph.byId.get(ref.id))
+        .exists {
+          case EvidenceRecord(ref, _: PlanCausalEventEvidence, _) =>
+            ref.confidence == EvidenceConfidence.Heuristic
           case _ =>
             false
         }
@@ -3613,14 +3630,22 @@ object SemanticCoverageMetrics:
       packet.probeRequests.filter(request => request.purpose.exists(ProbePurpose.isBranchReply))
     val planTransitionWithoutSnapshotPairIds =
       packet.evidenceGraph.records.flatMap {
-        case record @ EvidenceRecord(ref, _: PlanTransitionEvidence, _) =>
-          val snapshotPositions = packet.evidenceGraph.parentClosure(record).collect {
-            case EvidenceRecord(parentRef, _: PlanPressureEvidence, _) => parentRef.position
-          }.toSet
-          val hasPair = packet.transitions
-            .find(edge => record.parents.exists(_.id == edge.evidence.id))
-            .exists(edge => snapshotPositions.contains(edge.from) && snapshotPositions.contains(edge.to))
-          Option.unless(hasPair)(ref.id)
+        case EvidenceRecord(ref, PlanTransitionEvidence(summary), parents) =>
+          val ownedEvents = parents.flatMap(parent => packet.evidenceGraph.byId.get(parent.id)).collect {
+            case EvidenceRecord(eventRef, event: PlanCausalEventEvidence, _)
+                if eventRef.confidence != EvidenceConfidence.Heuristic =>
+              event
+          }
+          val requiredEventKeys = (summary.previousEvent.toList ++ summary.currentEvent.toList).map(_.stableKey).toSet
+          val ownedEventKeys = ownedEvents.map(_.identity.stableKey).toSet
+          val transitionsBound = ownedEvents.forall(event =>
+            packet.transitions.exists(edge =>
+              edge.from == event.rootTransition.from &&
+                edge.to == event.rootTransition.to &&
+                EvidenceRef.sameMove(edge.moveUci, event.rootMove)
+            )
+          )
+          Option.unless(requiredEventKeys.nonEmpty && ownedEventKeys == requiredEventKeys && transitionsBound)(ref.id)
         case _ =>
           None
       }.distinct.sorted

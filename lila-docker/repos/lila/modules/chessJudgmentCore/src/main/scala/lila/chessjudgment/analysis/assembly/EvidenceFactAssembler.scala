@@ -4,26 +4,40 @@ import chess.Color
 import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.analysis.evaluation.{ EvaluationPerspectivePolicy, PerspectiveMath }
-import lila.chessjudgment.analysis.line.PrincipalVariationEvidence
 import lila.chessjudgment.analysis.move.{ MoveAnalyzer, MoveMotifNormalizer }
 import lila.chessjudgment.analysis.opening.OpeningContextFactNormalizer
 import lila.chessjudgment.analysis.plan.{ PlanInteractionContext, PlanMatcher }
-import lila.chessjudgment.analysis.position.{ PositionAnalyzer, PositionFactNormalizer }
-import lila.chessjudgment.analysis.singlePosition.{ PawnPlayAssessor, PawnPlayDriver, PvLine, SinglePositionAssessment, SinglePositionAssessor, ThreatAnalysis, ThreatDriver, ThreatPressureAssessor }
+import lila.chessjudgment.analysis.singlePosition.{
+  PawnPlayAssessor,
+  PawnPlayDriver,
+  PvLine,
+  SinglePositionAssessment,
+  ThreatAnalysis,
+  ThreatDriver,
+  ThreatPressureAssessor
+}
 import lila.chessjudgment.analysis.strategic.StrategicFactNormalizer
 import lila.chessjudgment.analysis.structure.{
   PawnStructureAssessor,
   PlanAlignmentScorer,
   StructuralDeltaAnalyzer,
-  StructuralDeltaContracts,
   StructuralPlaybook
 }
-import lila.chessjudgment.analysis.tactical.{ RelationFactNormalizer, TacticalMotifClassifier, TacticalRelationEvidence }
-import lila.chessjudgment.analysis.transition.{ TransitionAnalyzer, TransitionFactNormalizer }
-import lila.chessjudgment.model.{ CompatibilityAdjustment, Motif, Plan, PlanCategory, PlanEventIdentity }
+import lila.chessjudgment.analysis.tactical.{
+  RelationFactNormalizer,
+  TacticalMotifClassifier,
+  TacticalRelationEvidence
+}
+import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
+import lila.chessjudgment.model.{
+  CompatibilityAdjustment,
+  Motif,
+  PlanCategory,
+  PlanSequenceSummary,
+  TransitionType
+}
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.strategic.PlanContinuity
-import lila.chessjudgment.model.structure.StructureId
 
 final case class EvidenceFactAssembly(
     input: NormalizedMoveReviewInput,
@@ -38,12 +52,6 @@ object EvidenceFactAssembler:
       kind: TacticalMechanismKind,
       records: List[EvidenceRecord],
       signals: List[TacticalMechanismSignal]
-  )
-
-  private final case class HistoricalPlanEvent(
-      ply: Int,
-      plan: Plan,
-      identity: PlanEventIdentity
   )
 
   def assemble(raw: RawMoveReviewInput): Option[EvidenceFactAssembly] =
@@ -70,8 +78,10 @@ object EvidenceFactAssembler:
     val planContext = strategicContext.withEvidence(planRecords)
     val planCausalEventRecords = PlanCausalEventAssembler.fromAssembly(assembly.input, planContext, allocator)
     val causalPlanContext = planContext.withEvidence(planCausalEventRecords)
-    val openingRecords = featureApplicabilityRecords(assembly.input, causalPlanContext, allocator)
-    val openingContext = causalPlanContext.withEvidence(openingRecords)
+    val transitionRecords = planTransitionRecords(causalPlanContext, allocator)
+    val planEventContext = causalPlanContext.withEvidence(transitionRecords)
+    val openingRecords = featureApplicabilityRecords(assembly.input, planEventContext, allocator)
+    val openingContext = planEventContext.withEvidence(openingRecords)
     val strategicMechanismOutput = strategicMechanismRecords(openingContext, allocator)
     EvidenceFactAssembly(assembly.input, openingContext.withEvidence(strategicMechanismOutput))
 
@@ -1034,6 +1044,7 @@ object EvidenceFactAssembler:
                   case record @ EvidenceRecord(ref, payload: MoveMotifEvidence, _)
                       if ref.position == edge.from &&
                         ref.scope == edge.role.scope &&
+                        line.forall(ref.line.contains) &&
                         transitionRecordMentionsMove(record, edge.moveUci) &&
                         payload.isRootEvent &&
                         (payload.motif.isInstanceOf[Motif.KingStep] || payload.motif.isInstanceOf[Motif.Castling]) =>
@@ -1041,42 +1052,51 @@ object EvidenceFactAssembler:
                 }
               )
               .distinctBy(_.ref.id)
-        val routeSignals =
-          routeRecords.map(record =>
-            StrategicMechanismSignal(
-              StrategicMechanismSignalKind.StrategicFact,
-              "current-move-route",
-              record.ref,
-              1,
-              Some(StrategicAxisDetail(StrategicAxisKind.Activity, StrategicAxisPolarity.Support, "current-move-route"))
+        val lineBoundRouteContexts = routeRecords
+          .groupBy(record => (record.ref.line, record.ref.scope))
+          .toList
+          .collect { case ((Some(routeLine), routeScope), records) => (Some(routeLine), routeScope, records) }
+        val routeContexts =
+          if line.nonEmpty || lineBoundRouteContexts.isEmpty then List((line, scope, routeRecords))
+          else lineBoundRouteContexts
+        routeContexts.flatMap { case (mechanismLine, mechanismScope, ownedRouteRecords) =>
+          val routeSignals =
+            ownedRouteRecords.map(record =>
+              StrategicMechanismSignal(
+                StrategicMechanismSignalKind.StrategicFact,
+                "current-move-route",
+                record.ref,
+                1,
+                Some(StrategicAxisDetail(StrategicAxisKind.Activity, StrategicAxisPolarity.Support, "current-move-route"))
+              )
             )
-          )
-        val sourceRecords = (grouped.map(_.source) ++ routeRecords).distinctBy(_.ref.id)
-        val signals = (grouped.map(_.signal) ++ routeSignals).distinct
-        val semanticAnchors =
-          (
-            EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.StrategicMechanism, kind.toString) ::
-              sourceRecords.flatMap(StrategicMechanismEvidence.sourceSemanticAnchors)
-          ).distinctBy(_.stableKey)
-        Option.when(signals.nonEmpty) {
-          val payload = StrategicMechanismEvidence(kind, signals, semanticAnchors)
-          val positionKey =
-            position.id.map(allocator.key).getOrElse(s"${position.ply}:${Integer.toHexString(position.fen.hashCode)}")
-          EvidenceRecord(
-            ref = EvidenceRef(
-              id = allocator.evidenceId(
-                s"strategic-mechanism:${allocator.key(kind)}:$positionKey:${line.map(line => allocator.key(line.rootMove)).getOrElse("position")}:${allocator.key(scope)}"
+          val sourceRecords = (grouped.map(_.source) ++ ownedRouteRecords).distinctBy(_.ref.id)
+          val signals = (grouped.map(_.signal) ++ routeSignals).distinct
+          val semanticAnchors =
+            (
+              EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.StrategicMechanism, kind.toString) ::
+                sourceRecords.flatMap(StrategicMechanismEvidence.sourceSemanticAnchors)
+            ).distinctBy(_.stableKey)
+          Option.when(signals.nonEmpty) {
+            val payload = StrategicMechanismEvidence(kind, signals, semanticAnchors)
+            val positionKey =
+              position.id.map(allocator.key).getOrElse(s"${position.ply}:${Integer.toHexString(position.fen.hashCode)}")
+            EvidenceRecord(
+              ref = EvidenceRef(
+                id = allocator.evidenceId(
+                  s"strategic-mechanism:${allocator.key(kind)}:$positionKey:${mechanismLine.map(line => allocator.key(line.rootMove)).getOrElse("position")}:${allocator.key(mechanismScope)}"
+                ),
+                producer = EvidenceProducer.StrategicMechanismProducer,
+                layer = EvidenceLayer.StrategicMechanism,
+                position = position,
+                line = mechanismLine,
+                scope = mechanismScope,
+                confidence = strategicMechanismConfidence(sourceRecords)
               ),
-              producer = EvidenceProducer.StrategicMechanismProducer,
-              layer = EvidenceLayer.StrategicMechanism,
-              position = position,
-              line = line,
-              scope = scope,
-              confidence = strategicMechanismConfidence(sourceRecords)
-            ),
-            payload = payload,
-            parents = sourceRecords.map(_.ref).distinctBy(_.id)
-          )
+              payload = payload,
+              parents = sourceRecords.map(_.ref).distinctBy(_.id)
+            )
+          }
         }
       }
 
@@ -1526,16 +1546,14 @@ object EvidenceFactAssembler:
             for
               pawn <- pawnStructure
               entry <- StructuralPlaybook.lookup(pawn.profile.primary)
-            yield
-              PlanAlignmentScorer.score(
-                structureProfile = pawn.profile,
-                playbookEntry = entry,
-                topPlans = scoring.topPlans,
-                motifs = motifs,
-                pawnAnalysis = pawn.pawnPlay,
-                sideToMove = side
-              )
-          val alignedPlanContext = planContext.copy(planAlignment = alignment)
+            yield PlanAlignmentScorer.score(
+              structureProfile = pawn.profile,
+              playbookEntry = entry,
+              topPlans = scoring.topPlans,
+              motifs = motifs,
+              pawnAnalysis = pawn.pawnPlay,
+              sideToMove = side
+            )
           PlanMatcher.toActivePlans(scoring.topPlans, scoring.compatibilityEvents).map { activePlans =>
             val planMotifs = activePlans.allPlans.flatMap(_.evidence.map(_.motif)).toSet
             val planMotifParents = context.evidenceGraph.records.collect {
@@ -1568,204 +1586,58 @@ object EvidenceFactAssembler:
                 (original, _) <- pawnStructureRecord
                 pawn <- pawnStructure
                 planAlignment <- alignment
-              yield
-                StrategicFactNormalizer.fromPawnStructure(
-                  id = original.ref.id,
-                  profile = pawn.profile,
-                  alignment = Some(planAlignment),
-                  pawnPlay = pawn.pawnPlay,
-                  position = node.ref,
-                  scope = original.ref.scope,
-                  parents = original.parents
-                )
-            val principalEvent = incoming.flatMap(edge => principalPlanEvent(context, edge, planPressure))
-            node.ref -> (alignedPlanContext, activePlans, planPressure, alignedPawnStructure, principalEvent)
+              yield StrategicFactNormalizer.fromPawnStructure(
+                id = original.ref.id,
+                profile = pawn.profile,
+                alignment = Some(planAlignment),
+                pawnPlay = pawn.pawnPlay,
+                position = node.ref,
+                scope = original.ref.scope,
+                parents = original.parents
+              )
+            node.ref -> (planPressure, alignedPawnStructure)
           }
         snapshot.flatten
       }
     }.toMap
-    val transitionsByPosition = context.transitions.flatMap { edge =>
-      for
-        (transitionContext, _, currentPressure, _, principalEvent) <- snapshots.get(edge.to).toList
-        (currentPlan, currentEvent) <- principalEvent.toList
-        (_, _, beforePressure, _, _) <- snapshots.get(edge.from).toList
-        (planContinuity, previousPlan) = historicalPlanContinuity(input, currentPlan)
-        if planContinuity.supportingMoves.nonEmpty
-      yield
-        val transition = TransitionAnalyzer.analyze(
-          previousPlan = previousPlan,
-          currentPlan = currentPlan,
-          continuity = planContinuity,
-          currentEvent = currentEvent,
-          ctx = transitionContext
-        )
-        edge.to -> TransitionFactNormalizer.fromPlanTransition(
-          id = allocator.evidenceId(s"plan-transition:${allocator.key(edge.role)}:${edge.moveUci}"),
-          transition = transition,
-          position = edge.from,
-          line = lineForTransition(context, edge).map(_.ref),
-          scope = edge.role.scope,
-          confidence = currentPressure.ref.confidence,
-          parents = List(edge.evidence, beforePressure.ref)
-        )
-    }.toMap
-    val snapshotRecords = snapshots.toList.flatMap { case (position, (_, _, pressure, alignedPawn, _)) =>
-      val linkedPressure = pressure.copy(
-        parents = (pressure.parents ++ transitionsByPosition.get(position).map(_.ref)).distinctBy(_.id)
-      )
-      linkedPressure :: alignedPawn.toList
+    snapshots.values.toList.flatMap { case (pressure, alignedPawn) =>
+      pressure :: alignedPawn.toList
     }
-    snapshotRecords ++ transitionsByPosition.values
 
-  private def historicalPlanContinuity(
-      input: NormalizedMoveReviewInput,
-      currentPlan: Plan
-  ): (PlanContinuity, Plan) =
-    val history =
-      PrincipalVariationEvidence
-        .legalReplay(Standard.initialFen.value, input.movePrefixUci, 0)
-        .filter(replay => replay.lastOption.exists(step => PrincipalVariationEvidence.sameBoardState(step._2.fenAfter, input.beforeFen)))
-        .getOrElse(Nil)
-        .reverseIterator
-        .filter { case (fenBefore, _) =>
-          Fen.read(Standard, Fen.Full(fenBefore)).exists(_.color == currentPlan.color)
-        }
-        .filter(step => input.beforePly - (step._2.ply - 1) < 8)
-        .flatMap { case (fenBefore, move) =>
-          historicalPlanEvents(fenBefore, move, currentPlan.color).headOption.map { case (plan, identity) =>
-            HistoricalPlanEvent(move.ply - 1, plan, identity)
-          }
-        }
-        .toList
-    history.headOption
-      .map { latest =>
-        val connected = historicalEventChain(history.tail, latest.identity)
-        val chain = latest :: connected
-        val chronological = chain.reverse
-        PlanContinuity(
-          principalEvent = Some(latest.identity),
-          consecutivePlies = chain.size * 2 + 1,
-          startingPly = chain.last.ply,
-          supportingMoves = chronological.map(_.identity.rootMove),
-          supportingEvents = chronological.map(_.identity)
-        ) -> latest.plan
-      }
-      .getOrElse(PlanContinuity(None, 1, input.beforePly) -> currentPlan)
-
-  private def historicalEventChain(
-      remaining: List[HistoricalPlanEvent],
-      later: PlanEventIdentity
-  ): List[HistoricalPlanEvent] =
-    remaining match
-      case head :: tail if head.identity.continuesInto(later) =>
-        head :: historicalEventChain(tail, head.identity)
-      case _ => Nil
-
-  private def historicalPlanEvents(
-      fenBefore: String,
-      move: PrincipalVariationEvidence.LineMoveRef,
-      side: Color
-  ): List[(Plan, PlanEventIdentity)] =
-    for
-      position <- Fen.read(Standard, Fen.Full(fenBefore)).toList
-      after <- Fen.read(Standard, Fen.Full(move.fenAfter)).toList
-      if position.color == side
-      features <- PositionAnalyzer.extractFeatures(fenBefore, move.ply - 1).toList
-      motifs <- MoveAnalyzer.tokenizePv(fenBefore, List(move.uci)).toList
-      boardRecord = PositionFactNormalizer.fromBoardFacts(
-          id = "historical-plan",
-          facts = Nil,
-          features = Some(features),
-          position = PositionNodeRef(fenBefore, move.ply - 1, Some(side)),
-          scope = EvidenceScope.CurrentPosition
-        )
-      boardProfile <- (boardRecord.payload match
-        case payload: BoardFactEvidence => payload.boardProfile
-        case _                          => None
-      ).toList
-      assessment = SinglePositionAssessor.classify(
-        features = features,
-        multiPv = List(PvLine(List(move.uci), 0, None, 0)),
-        currentWhitePovEvalCp = 0,
-        sideToMove = side
-      )
-      structure = PawnStructureAssessor.assess(features, position.board)
-      scoring = PlanMatcher.matchPlans(
-        motifs,
-        PlanInteractionContext(
-          whitePovEvalCp = 0,
-          positionAssessment = Some(assessment),
-          isWhiteToMove = side.white,
-          positionKey = Some(fenBefore),
-          boardProfile = Some(boardProfile),
-          initialPos = Some(position),
-          rootMove = Some(move.uci),
-          structureProfile = Option.when(structure.primary != StructureId.Unknown && structure.confidence >= 0.65)(structure)
-        ),
-        side
-      )
-      if scoring.confidence >= 0.75
-      active <- PlanMatcher.toActivePlans(scoring.topPlans, scoring.compatibilityEvents).toList
-      planMatch <- (active.allPlans
-        .filter(_.evidence.exists(atom => atom.motif.move.exists(EvidenceRef.sameMove(_, move.uci))))
-        .distinctBy(_.plan.id) match
-        case plan :: Nil => List(plan)
-        case _           => Nil)
-      (files, targets, createdTensionFrom) = moveStructureInputs(move.uci)
-      delta <- StructuralDeltaAnalyzer.delta(
-        beforeFen = fenBefore,
-        beforeBoard = position.board,
-        afterFen = move.fenAfter,
-        afterBoard = after.board,
-        side = side,
-        files = files,
-        targets = targets,
-        createdTensionFrom = createdTensionFrom,
-        moveUci = Some(move.uci)
-      ).toList
-      consequences = StructuralDeltaContracts.consequences(delta).filter(consequence => consequence.positive && consequence.strength > 0)
-      developmentChoices = StructuralDeltaContracts.developmentChoices(delta)
-      if consequences.nonEmpty || developmentChoices.nonEmpty
-    yield
-      planMatch.plan -> PlanEventIdentityBuilder.from(
-        rootMove = move.uci,
-        beforeFen = fenBefore,
-        plan = planMatch,
-        consequences = consequences,
-        developmentChoices = developmentChoices
-      )
-
-  private def principalPlanEvent(
+  private def planTransitionRecords(
       context: JudgmentAssemblyContext,
-      edge: MoveTransitionEdge,
-      pressureRecord: EvidenceRecord
-  ): Option[(Plan, PlanEventIdentity)] =
-    for
-      pressure <- pressureRecord.payload match
-        case payload: PlanPressureEvidence => Some(payload)
-        case _                             => None
-      if pressureRecord.ref.confidence != EvidenceConfidence.Heuristic
-      line <- pressureRecord.ref.line
-      plan <- pressure.uniqueRootBackedPlan(Some(line.rootMove))
-      structural <- context.evidenceGraph.records.collectFirst {
-        case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _)
-            if EvidenceRef.sameMove(payload.moveUci, edge.moveUci) &&
-              payload.from == edge.from &&
-              payload.to == edge.to &&
-              payload.role == edge.role &&
-              ref.line.contains(line) =>
-          payload
+      allocator: JudgmentProvenanceAllocator
+  ): List[EvidenceRecord] =
+    val graph = context.evidenceGraph
+    val authoritativeEvents = graph.records.collect {
+      case record @ EvidenceRecord(ref, event: PlanCausalEventEvidence, _)
+          if ref.confidence != EvidenceConfidence.Heuristic =>
+        record -> event
+    }
+    authoritativeEvents
+      .map { case (eventRecord, event) =>
+        val continuity = PlanContinuity(None, 1, event.rootTransition.from.ply)
+        val summary = PlanSequenceSummary(
+          transitionType = TransitionType.Opening,
+          primaryPlanId = Some(event.planId),
+          previousPlanId = None,
+          continuity = Some(continuity),
+          previousEvent = None,
+          currentEvent = Some(event.identity)
+        )
+        TransitionFactNormalizer.fromPlanTransition(
+          id = allocator.evidenceId(
+            s"plan-transition:${allocator.key(event.rootLine.role)}:${event.rootMove}:${allocator.key(event.planId)}"
+          ),
+          transition = summary,
+          position = event.rootTransition.from,
+          line = Some(event.rootLine),
+          scope = eventRecord.ref.scope,
+          confidence = eventRecord.ref.confidence,
+          parents = List(eventRecord.ref)
+        )
       }
-      positiveConsequences = structural.consequences.filter(consequence => consequence.positive && consequence.strength > 0)
-      if positiveConsequences.nonEmpty || structural.developmentChoices.nonEmpty
-    yield
-      plan.plan -> PlanEventIdentityBuilder.from(
-        rootMove = edge.moveUci,
-        beforeFen = edge.from.fen,
-        plan = plan,
-        consequences = positiveConsequences,
-        developmentChoices = structural.developmentChoices
-      )
+      .distinctBy(_.ref.id)
 
   private def motifsForLineRole(context: JudgmentAssemblyContext, role: LineNodeRole): List[Motif] =
     context.line(role).map(_.ref).flatMap { lineRef =>

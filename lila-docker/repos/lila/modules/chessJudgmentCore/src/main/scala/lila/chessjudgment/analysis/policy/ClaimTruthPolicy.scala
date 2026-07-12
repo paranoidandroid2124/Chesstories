@@ -1,7 +1,6 @@
 package lila.chessjudgment.analysis.policy
 
 import lila.chessjudgment.analysis.evaluation.JudgmentThresholds
-import lila.chessjudgment.model.{ ActivePlans, PlanScoringResult }
 import lila.chessjudgment.model.judgment.*
 
 enum ClaimTruthStatus:
@@ -615,9 +614,6 @@ object ClaimTruthPolicy:
   private def structuralConversionContext(payload: StructuralDeltaEvidence): Boolean =
     import TransitionConsequenceKind.*
     payload.hasAnyConsequence(Set(PassedPawnProgress, PromotionPressureGain))
-
-  private[chessjudgment] def planPressureHasDirectEvidence(scoring: PlanScoringResult, activePlans: ActivePlans): Boolean =
-    StrategicMechanismEvidence.planPressureHasDirectEvidence(scoring, activePlans)
 
   private def recordEngineBacked(record: EvidenceRecord): Boolean =
     record.ref.confidence == EvidenceConfidence.EngineBacked ||

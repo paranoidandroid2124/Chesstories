@@ -729,7 +729,10 @@ object EvidenceObjectBinding:
 
   private def fromPlanCausalEvent(ref: EvidenceRef, payload: PlanCausalEventEvidence): List[EvidenceObjectBinding] =
     val planTarget = objectOf(EvidenceObjectKind.PlanSubject, payload.planId.toString)
-    val rootActor = moveObjects(payload.rootMove) ++ objectOf(EvidenceObjectKind.Side, colorKey(payload.perspective))
+    val rootActor =
+      moveObjects(payload.rootMove) ++
+        payload.identity.actorRole.toList.flatMap(objectOf(EvidenceObjectKind.Piece, _)) ++
+        objectOf(EvidenceObjectKind.Side, colorKey(payload.perspective))
     val rootDestination =
       moveTargetSquare(payload.rootMove) ++
         Option(normalize(payload.rootMove).slice(2, 3)).filter(_.matches("[a-h]")).toList.flatMap(
@@ -1872,6 +1875,12 @@ final case class StrategicMechanismEvidence(
         kind == StrategicMechanismSignalKind.OpeningAnchor ||
         kind == StrategicMechanismSignalKind.EndgamePosition
     )
+  def hasOwnedPlanEvent: Boolean =
+    signals.exists(signal =>
+      signal.kind == StrategicMechanismSignalKind.PlanPressure &&
+        signal.sourceLayer == EvidenceLayer.PlanCausalEvent &&
+        signal.source.confidence != EvidenceConfidence.Heuristic
+    )
   def canAnchorStrategicIdea: Boolean =
     hasCompositeSupport &&
       kind != StrategicMechanismKind.OpeningAlignment &&
@@ -1879,7 +1888,7 @@ final case class StrategicMechanismEvidence(
         case StrategicMechanismKind.StructuralImprovement | StrategicMechanismKind.StrategicConcession =>
           hasStrategicAxis
         case StrategicMechanismKind.PlanPressure =>
-          signalKinds.contains(StrategicMechanismSignalKind.PlanPressure)
+          hasOwnedPlanEvent
         case _ =>
           true
       )
@@ -1890,7 +1899,7 @@ final case class StrategicMechanismEvidence(
       signalKinds.contains(StrategicMechanismSignalKind.OpeningApplicability)
   def canAnchorPlanIdea: Boolean =
     kind == StrategicMechanismKind.PlanPressure &&
-      signalKinds.contains(StrategicMechanismSignalKind.PlanPressure)
+      hasOwnedPlanEvent
   def canSupportCompensation: Boolean =
     kind == StrategicMechanismKind.Compensation && hasSignals
   def canSupportStrategicCause: Boolean =
@@ -2405,19 +2414,7 @@ object StrategicMechanismEvidence:
             )
           )
         ).flatten ++ structuralPawnBreakSignals(record, payload)
-      case PlanPressureEvidence(scoring, activePlans) if planPressureHasDirectEvidence(scoring, activePlans) =>
-        val plans = activePlans.primary :: activePlans.secondary.toList
-        List(
-          StrategicMechanismKind.PlanPressure ->
-            signal(
-              StrategicMechanismSignalKind.PlanPressure,
-              plans.map(_.plan.id.toString).mkString(","),
-              record.ref,
-              2,
-              concreteAxis(record, Some(StrategicAxisDetail(StrategicAxisKind.PlanCoherence, StrategicAxisPolarity.Support, plans.map(_.plan.id.toString).mkString(","))))
-            )
-        )
-      case payload: PlanCausalEventEvidence =>
+      case payload: PlanCausalEventEvidence if record.ref.confidence != EvidenceConfidence.Heuristic =>
         List(
           StrategicMechanismKind.PlanPressure ->
             signal(
@@ -2576,23 +2573,28 @@ object StrategicMechanismEvidence:
     EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.PawnPlay, play.primaryDriver.toString) ::
       (breakAnchors ++ tensionAnchors)
 
-  def planPressureHasDirectEvidence(scoring: PlanScoringResult, activePlans: ActivePlans): Boolean =
-    scoring.confidence >= 0.35 &&
-      PlanPressureEvidence(scoring, activePlans).evidenceBackedPlans.nonEmpty
-
   def planTransitionCanSupportPlan(transition: PlanSequenceSummary): Boolean =
-    transition.transitionType != TransitionType.Opening &&
-      transition.previousEvent.exists(previous =>
-        transition.currentEvent.nonEmpty &&
-          transition.continuity.exists(continuity =>
-          continuity.principalEvent.exists(_.stableKey == previous.stableKey) &&
-            continuity.supportingMoves.nonEmpty &&
-            continuity.supportingEvents.nonEmpty &&
-            continuity.supportingMoves.size == continuity.supportingEvents.size &&
-            continuity.consecutivePlies == continuity.supportingMoves.size * 2 + 1 &&
-            continuity.consecutivePlies <= 8
-        )
-      )
+    transition.currentEvent.nonEmpty &&
+      (if transition.transitionType == TransitionType.Opening then
+         transition.previousEvent.isEmpty &&
+           transition.previousPlanId.isEmpty &&
+           transition.continuity.exists(continuity =>
+             continuity.principalEvent.isEmpty &&
+               continuity.supportingMoves.isEmpty &&
+               continuity.supportingEvents.isEmpty &&
+               continuity.consecutivePlies == 1
+           )
+       else
+         transition.previousEvent.exists(previous =>
+           transition.continuity.exists(continuity =>
+             continuity.principalEvent.exists(_.stableKey == previous.stableKey) &&
+               continuity.supportingMoves.nonEmpty &&
+               continuity.supportingEvents.nonEmpty &&
+               continuity.supportingMoves.size == continuity.supportingEvents.size &&
+               continuity.consecutivePlies == continuity.supportingMoves.size * 2 + 1 &&
+               continuity.consecutivePlies <= 8
+           )
+         ))
 
   def pawnStructureCanAnchorPlan(payload: PawnStructureFactEvidence): Boolean =
     payload.profile.primary != StructureId.Unknown && payload.profile.confidence >= 0.65 ||
@@ -2637,8 +2639,6 @@ object StrategicMechanismEvidence:
         payload.signals.exists(_.subjects.exists(_.trim.nonEmpty)) ||
           payload.consequences.exists(_.subjects.exists(_.trim.nonEmpty)) ||
           payload.developmentChoices.nonEmpty
-      case PlanPressureEvidence(_, activePlans) =>
-        (activePlans.primary :: activePlans.secondary.toList).nonEmpty
       case PlanTransitionEvidence(transition) =>
         transition.currentEvent.exists(event => event.targets.nonEmpty || event.actorRole.nonEmpty)
       case payload: BoardFactEvidence =>
@@ -3862,6 +3862,11 @@ object MoveMotifEvent:
           (List(evidenceSquare(square)), targetSquares.map(evidenceSquare), Nil, attackingPiece :: targets)
         case Motif.Domination(dominatingPiece, dominatedPiece, square, _, _, _) =>
           (List(evidenceSquare(square)), Nil, Nil, List(dominatingPiece, dominatedPiece))
+        case Motif.Maneuver(piece, _, _, _, move) =>
+          val normalized = move.map(_.trim.toLowerCase).getOrElse("")
+          val from = Square.fromKey(normalized.take(2)).map(evidenceSquare).toList
+          val to = Square.fromKey(normalized.slice(2, 4)).map(evidenceSquare).toList
+          (from, to, Nil, List(piece))
         case Motif.Skewer(attackingPiece, frontPiece, backPiece, _, _, _, attackingSq, frontSq, backSq) =>
           (
             attackingSq.map(evidenceSquare).toList,
@@ -4631,6 +4636,7 @@ final case class PlanCausalEventEvidence(
       case _ => None
   def semanticGroupingAnchors: List[EvidenceSemanticAnchor] =
     List(
+      EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.PlanPressure, planId.toString),
       EvidenceSemanticAnchor.of(
         EvidenceSemanticAnchorKind.PlanCausalEvent,
         identity.goalKey,
@@ -4769,14 +4775,6 @@ final case class PlanPressureEvidence(
 
   def activePlanIds(rootMove: Option[String]): List[PlanId] =
     rootBackedPlans(rootMove).map(_.plan.id)
-
-  def uniqueRootBackedPlan(rootMove: Option[String]): Option[PlanMatch] =
-    rootBackedPlans(rootMove) match
-      case plan :: Nil => Some(plan)
-      case _           => None
-
-  def principalPlanId(rootMove: Option[String]): Option[PlanId] =
-    activePlanIds(rootMove).headOption
 
 final case class CandidateComparisonEvidence(
     comparison: CandidateComparisonFact
