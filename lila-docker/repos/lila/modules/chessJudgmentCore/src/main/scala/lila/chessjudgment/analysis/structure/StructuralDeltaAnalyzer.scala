@@ -161,19 +161,19 @@ private[chessjudgment] object StructuralDeltaContracts:
             pawnTensionSubjects("resolved", delta.resolvedTension)
           )
         ),
-        Option.when(delta.targetPressureGain > delta.targetPressureRelease || delta.targetPressureDelta > 0)(
+        Option.when(delta.createdTargetPressure.nonEmpty || delta.targetPressureDelta > 0)(
           TransitionConsequence(
             TargetPressureGain,
             Gain,
-            (delta.targetPressureGain - delta.targetPressureRelease).max(0) + delta.targetPressureDelta.max(0),
+            delta.targetPressureGain + delta.targetPressureDelta.max(0),
             delta.createdTargetPressure
           )
         ),
-        Option.when(delta.targetPressureRelease > delta.targetPressureGain || delta.targetPressureDelta < 0)(
+        Option.when(delta.releasedTargetPressure.nonEmpty || delta.targetPressureDelta < 0)(
           TransitionConsequence(
             TargetPressureRelease,
             Loss,
-            (delta.targetPressureRelease - delta.targetPressureGain).max(0) + (-delta.targetPressureDelta).max(0),
+            delta.targetPressureRelease + (-delta.targetPressureDelta).max(0),
             delta.releasedTargetPressure
           )
         ),
@@ -447,12 +447,14 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       moveUci.map(uci => flankPawnKingPressureDelta(beforeBoard, afterBoard, side, uci, targetKingFile)).getOrElse(0)
     val lineUnlock: (Int, List[String]) =
       moveUci.map(uci => lineUnlockDeltaAndSubjects(beforeBoard, afterBoard, side, uci)).getOrElse(0 -> Nil)
+    val newWeakSquares =
+      moveUci.map(uci => newWeakSquareTargets(beforeBoard, afterBoard, side, uci)).getOrElse(Nil)
     Some(
       TransitionStructuralDelta(
         openedFiles = after.openFiles.diff(before.openFiles).toList.sorted,
         semiOpenedFiles = after.semiOpenFilesForSide.diff(before.semiOpenFilesForSide).toList.sorted,
         newWeakPawns = after.weakPawnsForEnemy.diff(before.weakPawnsForEnemy).toList.sorted,
-        newWeakSquares = Nil,
+        newWeakSquares = newWeakSquares,
         createdTension = createdTension,
         resolvedTension = before.pawnTensions.diff(after.pawnTensions).toList.sorted,
         pawnTensionBefore = beforeAttacks.size,
@@ -822,6 +824,41 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       released: List[String],
       created: List[String]
   )
+
+  private def newWeakSquareTargets(
+      beforeBoard: Board,
+      afterBoard: Board,
+      side: Color,
+      moveUci: String
+  ): List[String] =
+    val origin = squareAt(moveUci.take(2))
+    val dest = squareAt(moveUci.drop(2).take(2))
+    val movedPiece = origin.flatMap(beforeBoard.pieceAt)
+    val capturedPawnSquare =
+      for
+        from <- origin
+        to <- dest
+        piece <- movedPiece
+        if piece.color == side && piece.role == Pawn && from.file != to.file
+        captured <- beforeBoard.pieceAt(to).filter(piece => piece.color == !side && piece.role == Pawn)
+          .map(_ => to)
+          .orElse(
+            squareAt(s"${to.key.take(1)}${from.rank.value + 1}")
+              .filter(square => beforeBoard.pieceAt(square).exists(piece => piece.color == !side && piece.role == Pawn))
+          )
+      yield captured
+    capturedPawnSquare.toList
+      .flatMap(square => pawnAttacks(square.key, !side))
+      .flatMap(squareAt)
+      .filter(square =>
+        Motif.relativeRank(square.rank.value + 1, side) >= 4 &&
+          afterBoard.pieceAt(square).isEmpty &&
+          !sidePawnAttacksTarget(afterBoard, !side, square.key) &&
+          afterBoard.attackers(square, side).nonEmpty
+      )
+      .map(_.key)
+      .distinct
+      .sorted
 
   private def pieceTargetPressureDelta(
       beforeBoard: Board,
