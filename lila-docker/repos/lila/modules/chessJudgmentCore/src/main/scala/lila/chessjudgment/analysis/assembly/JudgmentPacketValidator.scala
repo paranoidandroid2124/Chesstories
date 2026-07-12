@@ -40,7 +40,6 @@ enum JudgmentPacketValidationIssueKind:
   case MissingPlanCausalStructuralParent
   case MissingPlanCausalLineParent
   case MissingPlanCausalTransitionParent
-  case InvalidPlanCausalFutureProof
   case InvalidPlanCausalEpisodeProof
   case InvalidPlanCausalBranchProof
   case DuplicateAuthoritativePlanCausalEvent
@@ -922,7 +921,7 @@ object JudgmentPacketValidator:
     val eventConfidenceValid =
       ref.confidence == EvidenceConfidence.Heuristic ||
         ref.confidence == EvidenceConfidence.Mixed && matchingRootMotifProof &&
-        (payload.structuralConsequences.nonEmpty || payload.developmentChoices.nonEmpty || payload.futurePublicProofReady ||
+        (payload.structuralConsequences.nonEmpty || payload.developmentChoices.nonEmpty || payload.episodePublicProofReady ||
           payload.episode.exists(_.dependencyProven))
     val matchingStructuralRecord = parents.collectFirst {
       case record @ EvidenceRecord(_, structural: StructuralDeltaEvidence, _)
@@ -982,19 +981,6 @@ object JudgmentPacketValidator:
         )
       )
     }
-    val futureProofValid = payload.futureRealization.forall(realization =>
-      realization.dependencyProven &&
-        realization.consequences.nonEmpty &&
-        matchingPressurePlan.exists(plan =>
-          realization.consequences ==
-            PlanCausalEventProof
-              .positiveConsequences(realization.trajectory.futureStep, realization.trajectory.color)
-              .filter(PlanCausalEventProof.consequenceSupportsPlan(plan, _))
-        ) &&
-        lineParent.exists(line =>
-          line.futureRootObjectMove(line.lineReplayCount.max(1)).contains(realization.trajectory)
-        )
-    )
     val episodeProofValid =
       (for
         plan <- matchingPressurePlan
@@ -1012,23 +998,28 @@ object JudgmentPacketValidator:
         payload.episode == Option.when(episode.dependencyProven)(episode)
       ).contains(true)
     val branchProofValid =
-      payload.futureRealization match
+      payload.episode match
         case None => payload.branchWitnesses.isEmpty
-        case Some(realization) =>
-          val witnessesValid = payload.branchWitnesses.forall { witness =>
-            parents.collectFirst {
-              case EvidenceRecord(parentRef, line: LineFactEvidence, _)
-                  if parentRef.line.contains(witness.line) && witness.line.role == LineNodeRole.Threat =>
-                PlanCausalEventProof.branchWitness(
-                  sourceProbeId = witness.sourceProbeId,
-                  line = witness.line,
-                  linePayload = line,
-                  rootTransition = payload.rootTransition,
-                  principal = realization.trajectory,
-                  principalConsequences = realization.consequences
-                )
-            }.contains(witness)
-          }
+        case Some(principal) =>
+          val witnessesValid = matchingPressurePlan match
+            case plan :: Nil =>
+              payload.branchWitnesses.forall { witness =>
+                parents.collectFirst {
+                  case EvidenceRecord(parentRef, line: LineFactEvidence, _)
+                      if parentRef.line.contains(witness.line) && witness.line.role == LineNodeRole.Threat =>
+                    PlanCausalEventProof.branchWitness(
+                      sourceProbeId = witness.sourceProbeId,
+                      line = witness.line,
+                      linePayload = line,
+                      rootLine = payload.rootLine,
+                      rootTransition = payload.rootTransition,
+                      plan = plan,
+                      principal = principal
+                    )
+                }.contains(witness)
+              }
+            case _ =>
+              false
           witnessesValid &&
           (payload.branchWitnesses.isEmpty || payload.branchCoverageComplete)
     val recordBindingValid =
@@ -1072,9 +1063,6 @@ object JudgmentPacketValidator:
       ),
       Option.when(!matchingTransition)(
         JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.MissingPlanCausalTransitionParent, ref.id, Some(ref))
-      ),
-      Option.when(!futureProofValid)(
-        JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.InvalidPlanCausalFutureProof, ref.id, Some(ref))
       ),
       Option.when(!episodeProofValid)(
         JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.InvalidPlanCausalEpisodeProof, ref.id, Some(ref))

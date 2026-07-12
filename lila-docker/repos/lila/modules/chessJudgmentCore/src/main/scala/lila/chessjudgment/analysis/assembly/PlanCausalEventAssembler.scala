@@ -1,9 +1,8 @@
 package lila.chessjudgment.analysis.assembly
 
-import chess.Color
 import chess.format.Fen
 import chess.variant.Standard
-import lila.chessjudgment.analysis.structure.{ StructuralDeltaAnalyzer, StructuralDeltaContracts, WeaknessTargetProfile }
+import lila.chessjudgment.analysis.structure.WeaknessTargetProfile
 import lila.chessjudgment.model.{ PlanEventIdentity, PlanMatch, PlanSupport }
 import lila.chessjudgment.model.strategic.PlanTaxonomy.PlanTheme
 import lila.chessjudgment.model.judgment.*
@@ -62,18 +61,6 @@ object PlanCausalEventAssembler:
               EvidenceRef.sameMove(s"${choice.from}${choice.to}", rootLine.rootMove)
           )
           (_, linePayload) = lineRecordAndPayload
-          futureRealization = linePayload
-            .futureRootObjectMove(linePayload.lineReplayCount.max(1))
-            .map(trajectory =>
-              PlanCausalFutureRealization(
-                trajectory = trajectory,
-                dependencyKind = PlanCausalDependencyKind.ObjectStatePrecondition,
-                consequences = PlanCausalEventProof
-                  .positiveConsequences(trajectory.futureStep, trajectory.color)
-                  .filter(PlanCausalEventProof.consequenceSupportsPlan(principalPlan, _))
-              )
-            )
-            .filter(realization => realization.dependencyProven && realization.consequences.nonEmpty)
           rootIdentity = PlanEventIdentityBuilder.from(
             rootMove = rootLine.rootMove,
             beforeFen = structural.transition.from.fen,
@@ -91,15 +78,16 @@ object PlanCausalEventAssembler:
               rootDevelopmentChoices = developmentChoices,
               line = linePayload
             )
-          if positiveConsequences.nonEmpty || developmentChoices.nonEmpty || futureRealization.nonEmpty || episode.dependencyProven
+          if positiveConsequences.nonEmpty || developmentChoices.nonEmpty || episode.dependencyProven
         yield
-          val branchWitnesses = futureRealization.toList.flatMap(realization =>
+          val branchWitnesses = Option.when(episode.dependencyProven)(episode).toList.flatMap(principalEpisode =>
             branchWitnessesFor(
               input,
               context,
+              rootLine,
               structural.transition,
-              realization.trajectory,
-              realization.consequences
+              principalPlan,
+              principalEpisode
             )
           )
           val payload = PlanCausalEventEvidence(
@@ -109,7 +97,6 @@ object PlanCausalEventAssembler:
             rootTransition = structural.transition,
             structuralConsequences = positiveConsequences,
             developmentChoices = developmentChoices,
-            futureRealization = futureRealization,
             branchWitnesses = branchWitnesses,
             episode = Option.when(episode.dependencyProven)(episode)
           )
@@ -138,9 +125,9 @@ object PlanCausalEventAssembler:
               ) &&
                 (record.payload match
                   case event: PlanCausalEventEvidence =>
-                    event.structuralConsequences.nonEmpty ||
+                      event.structuralConsequences.nonEmpty ||
                       event.developmentChoices.nonEmpty ||
-                      event.futurePublicProofReady ||
+                      event.episodePublicProofReady ||
                       event.episode.exists(_.dependencyProven)
                   case _ => false)
             )
@@ -182,9 +169,10 @@ object PlanCausalEventAssembler:
   private def branchWitnessesFor(
       input: NormalizedMoveReviewInput,
       context: JudgmentAssemblyContext,
+      rootLine: LineNodeRef,
       transition: StructuralTransitionBinding,
-      principal: LineObjectTrajectory,
-      principalConsequences: List[TransitionConsequence]
+      plan: PlanMatch,
+      principal: PlanCausalEpisode
   ): List[PlanCausalBranchWitness] =
     input.threatBranches
       .filter(branch =>
@@ -200,9 +188,10 @@ object PlanCausalEventAssembler:
                 sourceProbeId = branch.sourceProbeId,
                 line = line.ref,
                 linePayload = payload,
+                rootLine = rootLine,
                 rootTransition = transition,
-                principal = principal,
-                principalConsequences = principalConsequences
+                plan = plan,
+                principal = principal
               )
             }
         }
@@ -423,36 +412,48 @@ private[assembly] object PlanCausalEventProof:
       sourceProbeId: String,
       line: LineNodeRef,
       linePayload: LineFactEvidence,
+      rootLine: LineNodeRef,
       rootTransition: StructuralTransitionBinding,
-      principal: LineObjectTrajectory,
-      principalConsequences: List[TransitionConsequence]
+      plan: PlanMatch,
+      principal: PlanCausalEpisode
   ): PlanCausalBranchWitness =
-    val rootStep = LineReplayStep(
-      ply = rootTransition.to.ply,
-      moveUci = rootTransition.moveUci,
-      fenBefore = rootTransition.from.fen,
-      fenAfter = rootTransition.to.fen
+    val observedCandidate = PlanCausalEpisodeBuilder.fromContinuation(
+      plan = plan,
+      rootLine = rootLine,
+      role = rootTransition.role,
+      root = principal.root,
+      continuation = linePayload.lineReplaySteps
     )
-    val observed = LineObjectTrajectory
-      .find(rootStep, linePayload.lineReplaySteps, linePayload.lineReplayCount.max(1))
-      .filter(trajectory => trajectory.pieceRole == principal.pieceRole && trajectory.color == principal.color)
-    val observedConsequences = observed.toList.flatMap(trajectory =>
-      positiveConsequences(trajectory.futureStep, trajectory.color)
+    val observed = Option.when(observedCandidate.dependencyProven)(observedCandidate)
+    val expectedConsequences = principal.futureEvent.toList.flatMap(_.structuralConsequences)
+    val observedConsequences = observed.toList.flatMap(_.futureEvent.toList.flatMap(_.structuralConsequences)).distinct
+    val exactMoves = observed.exists(episode =>
+      episode.events.map(_.moveUci) == principal.events.map(_.moveUci) &&
+        (
+          PlanCausalFunctionalMatch.functionallyEquivalent(expectedConsequences, observedConsequences) ||
+            principal.responses.map(_.target).toSet.intersect(episode.responses.map(_.target).toSet).nonEmpty
+        )
     )
-    val realizationMatch = observed.flatMap(trajectory =>
-      PlanCausalFunctionalMatch.classify(
-        expectedMove = principal.futureStep.moveUci,
-        expectedConsequences = principalConsequences,
-        observedMove = trajectory.futureStep.moveUci,
-        observedConsequences = observedConsequences
+    val realizationMatch =
+      Option.when(exactMoves)(PlanCausalRealizationMatch.ExactMove).orElse(
+        for
+          expectedMove <- principal.futureMove
+          observedEpisode <- observed
+          observedMove <- observedEpisode.futureMove
+          result <- PlanCausalFunctionalMatch.classify(
+            expectedMove = expectedMove,
+            expectedConsequences = expectedConsequences,
+            observedMove = observedMove,
+            observedConsequences = observedConsequences
+          )
+        yield result
       )
-    )
     val outcome = observed match
       case Some(_) if realizationMatch.nonEmpty =>
         PlanCausalBranchOutcome.Realized
       case Some(_) =>
         PlanCausalBranchOutcome.Diverted
-      case None if LineObjectTrajectory.remainsAtRootDestination(principal, linePayload.lineReplaySteps) =>
+      case None if linePayload.lineReplayCount < principal.futureEvent.fold(principal.spanPlies - 1)(_.step.ply - principal.root.step.ply) =>
         PlanCausalBranchOutcome.Deferred
       case None =>
         PlanCausalBranchOutcome.Refuted
@@ -460,29 +461,10 @@ private[assembly] object PlanCausalEventProof:
       sourceProbeId = sourceProbeId,
       line = line,
       outcome = outcome,
-      observedTrajectory = observed,
+      observedEpisode = observed,
       observedConsequences = observedConsequences,
       realizationMatch = realizationMatch
     )
-
-  def positiveConsequences(step: LineReplayStep, side: Color): List[TransitionConsequence] =
-    for
-      before <- Fen.read(Standard, Fen.Full(step.fenBefore)).toList
-      after <- Fen.read(Standard, Fen.Full(step.fenAfter)).toList
-      delta <- StructuralDeltaAnalyzer.delta(
-        beforeFen = step.fenBefore,
-        beforeBoard = before.board,
-        afterFen = step.fenAfter,
-        afterBoard = after.board,
-        side = side,
-        files = ('a' to 'h').toList,
-        targets = Nil,
-        createdTensionFrom = Option(EvidenceRef.normalizeMove(step.moveUci).slice(2, 4)).filter(_.matches("[a-h][1-8]")),
-        moveUci = Some(step.moveUci)
-      ).toList
-      consequence <- StructuralDeltaContracts.consequences(delta)
-      if consequence.positive && consequence.strength > 0
-    yield consequence
 
 private[assembly] object PlanEventIdentityBuilder:
   private val EventCategories = Set(

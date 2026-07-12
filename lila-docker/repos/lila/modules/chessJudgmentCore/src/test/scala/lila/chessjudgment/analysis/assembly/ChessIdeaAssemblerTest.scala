@@ -332,6 +332,8 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         EvidenceRef.sameMove(dependency.to.moveUci, "c8a6") &&
         dependency.proof == PlanCausalDependencyProof.SharedTarget(List(EvidenceSquare("c4")))
     ), episode.dependencies)
+    assertEquals(episode.rootOwnedFutureEvents.map(_.moveUci), List("c8a6"))
+    assertEquals(episode.futureMove, Some("c8a6"))
     val transition = result.packet.evidenceGraph.records.collectFirst {
       case EvidenceRecord(_, PlanTransitionEvidence(summary), _)
           if summary.primaryPlanId.contains(PlanId.WeakPawnAttack) =>
@@ -405,7 +407,6 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         TransitionConsequence(TransitionConsequenceKind.MobilityGain, StructuralSignalPolarity.Gain, 1)
       ),
       developmentChoices = Nil,
-      futureRealization = None,
       branchWitnesses = Nil
     )
 
@@ -441,13 +442,15 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       .getOrElse(fail("expected judgment result"))
     val eventRecord = result.packet.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
-          if EvidenceRef.sameMove(payload.rootMove, "b7b5") && payload.futureMove.exists(EvidenceRef.sameMove(_, "b5b4")) =>
+          if EvidenceRef.sameMove(payload.rootMove, "b7b5") && payload.episode.exists(
+            _.events.exists(event => EvidenceRef.sameMove(event.moveUci, "b5b4"))
+          ) =>
         record -> payload
     }.getOrElse(fail("expected causal event"))
 
     assert(eventRecord._2.counterfactualDependencyProven)
     assertEquals(eventRecord._2.robustness, PlanCausalRobustness.Untested)
-    assert(!eventRecord._2.futurePublicProofReady)
+    assert(!eventRecord._2.episodePublicProofReady)
     val publicEvent = PlanEventPublicProof.from(eventRecord._2)
     assert(publicEvent.results.forall(_.stage == "direct"), publicEvent.results)
     assertEquals(publicEvent.responses, Nil)
@@ -472,12 +475,12 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assert(event.branchWitnesses.forall(_.outcome == PlanCausalBranchOutcome.Realized), event.branchWitnesses)
     assert(event.branchWitnesses.forall(_.realizationMatch.contains(PlanCausalRealizationMatch.ExactMove)), event.branchWitnesses)
     assertEquals(event.robustness, PlanCausalRobustness.Robust)
-    assert(event.futurePublicProofReady)
+    assert(event.episodePublicProofReady)
     assertEquals(result.packet.probeRequests, Nil)
     val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
     val eventRecord = result.packet.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
-          if payload.futureMove.exists(EvidenceRef.sameMove(_, "b5b4")) => record
+          if payload.episode.exists(_.events.exists(event => EvidenceRef.sameMove(event.moveUci, "b5b4"))) => record
     }.getOrElse(fail("expected internal causal event"))
     assertEquals(eventRecord.ref.confidence, EvidenceConfidence.Mixed)
     assert(view.moveMeaningClaims.exists(claim =>
@@ -587,7 +590,24 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(event.branchWitnesses.count(_.outcome == PlanCausalBranchOutcome.Realized), 1)
     assertEquals(event.branchWitnesses.count(_.outcome == PlanCausalBranchOutcome.Deferred), 2)
     assertEquals(event.robustness, PlanCausalRobustness.Conditional)
-    assert(event.futurePublicProofReady)
+    assert(event.episodePublicProofReady)
+
+  test("reply probe refutes an unrealized episode after its representative horizon"):
+    val input = doknjasInput()
+    val result = MoveReviewJudgmentOrchestrator
+      .build(withReplyProbe(input, List(
+        VariationLine(List("f1e2", "a5a3", "b2b3", "a3a4", "a2a3", "a4a5", "a3a4", "a5a6"), 0, depth = 16),
+        VariationLine(List("h2h3", "a5a3", "b2b3", "a3a4", "a2a3", "a4a5", "a3a4", "a5a6"), 0, depth = 16),
+        VariationLine(List("g1h3", "a5a3", "b2b3", "a3a4", "a2a3", "a4a5", "a3a4", "a5a6"), 0, depth = 16)
+      )))
+      .getOrElse(fail("expected judgment result"))
+    val event = causalEvent(result, "b7b5", "b5b4")
+
+    assert(result.isValid, result.validation.issues)
+    assertEquals(event.branchWitnesses.map(_.outcome).distinct, List(PlanCausalBranchOutcome.Refuted))
+    assertEquals(event.robustness, PlanCausalRobustness.Refuted)
+    assert(!event.episodePublicProofReady)
+    assert(PlanEventPublicProof.from(event).results.forall(_.stage == "direct"))
 
   test("validator rejects a causal event whose branch outcome was re-labeled downstream"):
     val result = MoveReviewJudgmentOrchestrator
@@ -599,7 +619,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       .getOrElse(fail("expected judgment result"))
     val causalRecord = result.packet.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
-          if payload.futureMove.exists(EvidenceRef.sameMove(_, "b5b4")) =>
+          if payload.episode.exists(_.events.exists(event => EvidenceRef.sameMove(event.moveUci, "b5b4"))) =>
         record -> payload
     }.getOrElse(fail("expected causal record"))
     val tamperedPayload = causalRecord._2.copy(
@@ -962,7 +982,9 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
   ): PlanCausalEventEvidence =
     result.packet.evidenceGraph.records.collectFirst {
       case EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
-          if EvidenceRef.sameMove(payload.rootMove, rootMove) && payload.futureMove.exists(EvidenceRef.sameMove(_, futureMove)) =>
+          if EvidenceRef.sameMove(payload.rootMove, rootMove) && payload.episode.exists(
+            _.events.exists(event => EvidenceRef.sameMove(event.moveUci, futureMove))
+          ) =>
         payload
     }.getOrElse(fail("expected causal event"))
 

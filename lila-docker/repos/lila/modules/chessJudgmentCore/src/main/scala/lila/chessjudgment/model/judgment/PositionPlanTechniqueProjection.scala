@@ -1358,7 +1358,7 @@ object PositionPlanTechniqueProjection:
               (
                 detailKinds.isEmpty ||
                   binding.mechanism.exists(obj => detailKinds(obj.key.toLowerCase)) ||
-                  binding.horizon.nonEmpty && event.futurePublicProofReady
+                  binding.horizon.nonEmpty && event.episodePublicProofReady
               )
           )
         if eventBindings.nonEmpty

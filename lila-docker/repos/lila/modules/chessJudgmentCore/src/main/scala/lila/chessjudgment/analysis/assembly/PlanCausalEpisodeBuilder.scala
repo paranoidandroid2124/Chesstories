@@ -50,8 +50,11 @@ private[assembly] object PlanCausalEpisodeBuilder:
       root: PlanCausalEventNode,
       continuation: List[LineReplayStep]
   ): PlanCausalEpisode =
-    val replay = root.step :: continuation
-    val candidates = root :: continuation.flatMap(step => eventNode(plan, rootLine, role, root.perspective, step))
+    val rebasedContinuation = continuation.zipWithIndex.map { case (step, index) =>
+      step.copy(ply = root.step.ply + index + 1)
+    }
+    val replay = root.step :: rebasedContinuation
+    val candidates = root :: rebasedContinuation.flatMap(step => eventNode(plan, rootLine, role, root.perspective, step))
     val candidateResponses = candidates.flatMap(trigger => responsesFor(trigger, replay))
     val dependencies = candidates.zipWithIndex.flatMap { case (from, fromIndex) =>
       candidates.drop(fromIndex + 1).flatMap(to =>
