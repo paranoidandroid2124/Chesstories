@@ -1067,7 +1067,21 @@ object EvidenceFactAssembler:
                 Some(StrategicAxisDetail(StrategicAxisKind.Activity, StrategicAxisPolarity.Support, "current-move-route"))
               )
             )
-          val sourceRecords = (grouped.map(_.source) ++ ownedRouteRecords).distinctBy(_.ref.id)
+          val signalSourceRecords = (grouped.map(_.source) ++ ownedRouteRecords).distinctBy(_.ref.id)
+          val planEventSourceIds = grouped.collect {
+            case candidate if candidate.source.payload.isInstanceOf[PlanCausalEventEvidence] => candidate.source.ref.id
+          }.toSet
+          val transitionCarriers =
+            if kind != StrategicMechanismKind.PlanPressure || planEventSourceIds.isEmpty then Nil
+            else
+              context.evidenceGraph.records.collect {
+                case record @ EvidenceRecord(ref, _: PlanTransitionEvidence, parents)
+                    if ref.line == mechanismLine &&
+                      ref.scope == mechanismScope &&
+                      parents.exists(parent => planEventSourceIds(parent.id)) =>
+                  record
+              }
+          val sourceRecords = (signalSourceRecords ++ transitionCarriers).distinctBy(_.ref.id)
           val signals = (grouped.map(_.signal) ++ routeSignals).distinct
           val semanticAnchors =
             (

@@ -402,7 +402,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         response.targetSquare == "h7"
     ), proof.inducedResponses)
 
-  test("principal plan event keeps a concrete destination when a result has no named target"):
+  test("principal plan event keeps an actor destination in means without inventing a target"):
     val root = PositionNodeRef("8/8/2N5/8/8/8/8/4K2k w - - 0 1", 1, Some(Color.White))
     val after = PositionNodeRef("8/8/8/N7/8/8/8/4K2k b - - 1 1", 2, Some(Color.Black))
     val line = LineNodeRef("played-c6a5", "c6a5", 1, LineNodeRole.Played)
@@ -434,7 +434,9 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       branchWitnesses = Nil
     )
 
-    assertEquals(PlanEventPublicProof.from(event).targets, List("square:a5"))
+    val proof = PlanEventPublicProof.from(event)
+    assertEquals(proof.actorTo, Some("a5"))
+    assertEquals(proof.targets, Nil)
 
   test("line trajectory does not transfer identity to a same-role replacement"):
     val graph = EvidenceFactAssembler
@@ -867,6 +869,70 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     val relativeCauseIdeas = assembly.context.ideas.filter(_.evidence.exists(_.id == causeRef.id))
     assertEquals(relativeCauseIdeas.map(_.ref.family), List(ChessIdeaFamily.Strategic))
 
+  test("principal mobility event compresses its route without turning the destination into a target"):
+    val result = MoveReviewJudgmentOrchestrator
+      .build(marDelPlataKnightRouteInput())
+      .getOrElse(fail("expected judgment result"))
+    val event = result.packet.evidenceGraph.records.collectFirst {
+      case EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
+          if payload.planId == PlanId.PieceActivation && EvidenceRef.sameMove(payload.rootMove, "d3b4") =>
+        payload
+    }.getOrElse(fail("expected piece-activation event"))
+    val proof = PlanEventPublicProof.from(event)
+    val surfaces = result.packet.moveJudgmentView.toList.flatMap(MoveMeaningSurface.publicSurfaces)
+    val route = surfaces.filter(surface => surface.subject == "played_move" && surface.ideaType == "piece_route") match
+      case value :: Nil => value
+      case values       => fail(s"expected one compressed route, got $values")
+
+    assert(result.isValid, result.validation.issues)
+    assertEquals(proof.actorFrom -> proof.actorTo, Some("d3") -> Some("b4"))
+    assertEquals(proof.targets, Nil)
+    assertEquals(proof.results.map(_.kind), List(TransitionConsequenceKind.MobilityGain))
+    assertEquals(route.principalPlanId, Some(PlanId.PieceActivation))
+    assertEquals(route.idea.label, "knight maneuver to b4")
+    assertEquals(route.target.squares, Nil)
+    assert(!surfaces.exists(surface => surface.principalPlanId.contains(PlanId.PieceActivation) && surface.ideaType == "target_pressure"))
+    assert(surfaces.exists(surface => surface.principalPlanId.contains(PlanId.WeakPawnAttack) && surface.target.squares == List("a6")))
+
+  test("opening development does not probe a later capture as the same plan episode"):
+    val result = MoveReviewJudgmentOrchestrator
+      .build(morphyBishopDevelopmentInput())
+      .getOrElse(fail("expected judgment result"))
+    val event = result.packet.evidenceGraph.records.collectFirst {
+      case EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
+          if payload.planId == PlanId.OpeningDevelopment && EvidenceRef.sameMove(payload.rootMove, "c8g4") =>
+        payload
+    }.getOrElse(fail("expected opening-development event"))
+    val proof = PlanEventPublicProof.from(event)
+    val surfaces = result.packet.moveJudgmentView.toList.flatMap(MoveMeaningSurface.publicSurfaces)
+    val route = surfaces.filter(surface => surface.subject == "played_move" && surface.principalPlanId.contains(PlanId.OpeningDevelopment)) match
+      case value :: Nil => value
+      case values       => fail(s"expected one owned development route, got $values")
+
+    assert(result.isValid, result.validation.issues)
+    assertEquals(proof.targets, Nil)
+    assertEquals(proof.results.map(_.kind), List(TransitionConsequenceKind.DevelopmentMobilityGain))
+    assertEquals(proof.futureCausality, None)
+    assert(!result.packet.probeRequests.exists(_.candidateMove.exists(EvidenceRef.sameMove(_, "c8g4"))))
+    assertEquals(route.ideaType, "piece_route")
+    assertEquals(route.idea.label, "bishop development to g4")
+    assertEquals(route.target.squares, Nil)
+
+  test("owned weak-pawn event absorbs the same-target surface fallback"):
+    val result = MoveReviewJudgmentOrchestrator
+      .build(benoniC4FixationInput())
+      .getOrElse(fail("expected judgment result"))
+    val surfaces = result.packet.moveJudgmentView.toList
+      .flatMap(MoveMeaningSurface.publicSurfaces)
+      .filter(_.subject == "played_move")
+    val weakB2 = surfaces.filter(surface => surface.ideaType == "target_pressure" && surface.target.squares == List("b2"))
+
+    assert(result.isValid, result.validation.issues)
+    assertEquals(weakB2.size, 1)
+    assertEquals(weakB2.head.principalPlanId, Some(PlanId.WeakPawnAttack))
+    assertEquals(weakB2.head.idea.label, "weak b2 pawn")
+    assert(!weakB2.head.target.squares.contains("c4"))
+
   private def normalizedInput(
       root: PositionNodeRef,
       afterPlayed: PositionNodeRef
@@ -1022,6 +1088,59 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         "d2d4", "g8f6", "g1f3", "e7e6", "c2c4", "b7b6", "g2g3", "c8b7", "f1g2", "f8b4",
         "c1d2", "b4e7", "b1c3", "c7c6", "d2f4", "e8h8", "e2e4", "d7d5", "e4e5", "f6e4",
         "c4d5", "c6d5", "e1h1", "e4c3", "b2c3", "b7a6", "f1e1", "b8c6"
+      )
+    )
+
+  private def marDelPlataKnightRouteInput(): RawMoveReviewInput =
+    RawMoveReviewInput(
+      fen = "r1bqnbk1/p5r1/p2p2n1/3Pp1pp/4Pp2/2NN1P2/1P2BBPP/R2Q1R1K w - - 0 20",
+      playedMoveUci = "d3b4",
+      variations = List(VariationLine(List("d3b4", "e8c7", "b4c6", "d8f6"), scoreCp = 0, depth = 12)),
+      currentEvalCp = Some(0),
+      ply = Some(38),
+      openingContext = Some(RawOpeningContext(name = Some("Kings Indian Mar del Plata / opposite-wing breakthrough race"))),
+      movePrefixUci = List(
+        "d2d4", "g8f6", "c2c4", "g7g6", "b1c3", "f8g7", "e2e4", "d7d6", "g1f3", "e8h8",
+        "f1e2", "e7e5", "e1h1", "b8c6", "d4d5", "c6e7", "f3e1", "f6e8", "c1e3", "f7f5",
+        "f2f3", "f5f4", "e3f2", "g6g5", "c4c5", "e7g6", "a2a4", "f8f7", "e1d3", "g7f8",
+        "a4a5", "f7g7", "a5a6", "b7a6", "c5d6", "c7d6", "g1h1", "h7h5"
+      )
+    )
+
+  private def morphyBishopDevelopmentInput(): RawMoveReviewInput =
+    RawMoveReviewInput(
+      fen = "rnbqr1k1/ppp2ppp/5n2/3P4/5P2/2PP4/P1PBB1PP/R2QK1NR b KQ - 2 10",
+      playedMoveUci = "c8g4",
+      variations = List(VariationLine(
+        List("c8g4", "c3c4", "c7c6", "d5c6", "b8c6", "e1f1", "e8e2", "g1e2", "c6d4", "d1b1", "g4e2", "f1f2"),
+        scoreCp = 0,
+        depth = 12
+      )),
+      currentEvalCp = Some(0),
+      ply = Some(19),
+      openingContext = Some(RawOpeningContext(name = Some("Kings Gambit / positional pawn sacrifice to open files"))),
+      movePrefixUci = List(
+        "e2e4", "e7e5", "f2f4", "d7d5", "e4d5", "e5e4", "b1c3", "g8f6", "d2d3", "f8b4",
+        "c1d2", "e4e3", "d2e3", "e8h8", "e3d2", "b4c3", "b2c3", "f8e8", "f1e2"
+      )
+    )
+
+  private def benoniC4FixationInput(): RawMoveReviewInput =
+    RawMoveReviewInput(
+      fen = "r2qr1k1/1p1n1pbp/p2p1np1/2pP4/P3PP2/2N2Q2/1P1N2PP/R1B2RK1 b - - 2 14",
+      playedMoveUci = "c5c4",
+      variations = List(VariationLine(
+        List("c5c4", "d2c4", "a8c8", "c4d6", "d8b6", "g1h1", "b6d6", "e4e5", "d7e5", "f4e5", "d6e5", "c1f4"),
+        scoreCp = 0,
+        depth = 12
+      )),
+      currentEvalCp = Some(0),
+      ply = Some(27),
+      openingContext = Some(RawOpeningContext(name = Some("Modern Benoni / ...c4 pawn sacrifice"))),
+      movePrefixUci = List(
+        "d2d4", "g8f6", "c2c4", "c7c5", "d4d5", "e7e6", "b1c3", "e6d5", "c4d5", "d7d6",
+        "e2e4", "g7g6", "g1f3", "f8g7", "f1e2", "e8h8", "e1h1", "a7a6", "a2a4", "c8g4",
+        "f3d2", "g4e2", "d1e2", "b8d7", "f2f4", "f8e8", "e2f3"
       )
     )
 

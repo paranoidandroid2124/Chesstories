@@ -7,6 +7,7 @@ import chess.{ Pawn, Square }
 import chess.format.Fen
 import lila.chessjudgment.analysis.singlePosition.{ ThreatDriver, ThreatKind }
 import lila.chessjudgment.model.{ PlanId, ProbeAdmissionDiagnostic, ProbeRequest }
+import lila.chessjudgment.model.strategic.PlanTaxonomy.PlanTheme
 import play.api.libs.json.*
 
 enum ClaimFamily:
@@ -2305,6 +2306,7 @@ object MoveMeaningSurface:
     surface.evidence.boardCarriers.exists(_.semanticRole.exists(_.equalsIgnoreCase(role)))
 
   private val publicPurposeCarrierSemanticRoles = Set(
+    "event_destination",
     "route_destination",
     "pawn_advance_destination",
     "flank_pawn_destination",
@@ -2775,6 +2777,7 @@ object MoveMeaningSurface:
         claim.supportLevel == "owned_cause_linked"
     val quality = if played then verdict.map(frame => moveQuality(frame.verdict)).getOrElse("unknown") else "not_applicable"
     val idea = ideaType(claim)
+    val principalRoute = MoveMeaningClaim.principalPlanRouteKey(claim)
     val centralTargetSquare =
       claim.targetFiles.isEmpty &&
         claim.targetSquares.exists(square => Set("d4", "d5", "e4", "e5")(square.toLowerCase))
@@ -2829,7 +2832,7 @@ object MoveMeaningSurface:
         evidence.boardCarriers.exists(carrier => carrier.kind == "Piece" && carrier.value.equalsIgnoreCase("bishop"))
     val routePiece = claim.routeIdentityParts.collectFirst {
       case part if part.toLowerCase.startsWith("piece:") => part.drop("piece:".length).toLowerCase
-    }.orElse(
+    }.orElse(principalRoute.map(_._3)).orElse(
       lineUnlockSignatures
         .flatMap(signature => EvidenceObjectBinding.signatureValues(List(signature), "target", "Piece"))
         .map(_.toLowerCase)
@@ -2892,10 +2895,10 @@ object MoveMeaningSurface:
                 .getOrElse(if bishopMentioned then "clears bishop diagonal" else "clears a line")
     val routeFrom = claim.routeIdentityParts.collectFirst {
       case part if part.toLowerCase.startsWith("from:") => part.drop("from:".length).toLowerCase
-    }
-    val routeToSquares = claim.routeIdentityParts.collect {
+    }.orElse(principalRoute.map(_._4))
+    val routeToSquares = (claim.routeIdentityParts.collect {
       case part if part.toLowerCase.startsWith("to:") => part.drop("to:".length).toLowerCase
-    }.filter(_.matches("[a-h][1-8]")).toSet
+    } ++ principalRoute.map(_._5)).filter(_.matches("[a-h][1-8]")).toSet
     val initialDevelopmentRoute =
       (routePiece, routeFrom) match
         case (Some("knight"), Some(square)) => Set("b1", "g1", "b8", "g8")(square)
@@ -3711,7 +3714,7 @@ object MoveMeaningSurface:
         Nil
       (carrierCheckSquares ++ signatureCheckSquares).exists(targetSquares.contains)
 
-  private def kingPressureClaim(claim: MoveMeaningClaim): Boolean =
+  private[judgment] def kingPressureClaim(claim: MoveMeaningClaim): Boolean =
     val signatureList = claim.objectBindingSignatures
     val mechanismTokens =
       EvidenceObjectBinding.signatureTokens(signatureList, "mechanism=").map(_.stripPrefix("mechanism=").toLowerCase)
@@ -3784,16 +3787,19 @@ object MoveMeaningSurface:
     if passedPawnAdvanceClaim(claim) then "passed_pawn_advance"
     else if flankKingPressurePawnAdvanceClaim(claim) then "flank_pawn_pressure"
     else if MoveMeaningClaim.directBreakPlanClaim(claim) || MoveMeaningClaim.breakPreparationPlanClaim(claim) then "pawn_break_timing"
-    else claim.role match
-      case "DevelopsPieceForPlan"
-          if claim.supportLevel == "owned_cause_linked" &&
-            claim.causeKinds.contains(RelativeCauseKind.PlanImprovement) &&
-            claim.causeEvidenceIds.nonEmpty &&
-            claim.objectCarrierReady =>
-        "plan_continuity"
-      case _ if planContinuityTargetPressureCarrier(claim) => "target_pressure"
-      case "DevelopsPieceForPlan" => "piece_activity"
-      case _                      => "plan_continuity"
+    else
+      MoveMeaningClaim.principalPlanFunctionType(claim).getOrElse(
+        claim.role match
+          case "DevelopsPieceForPlan"
+              if claim.supportLevel == "owned_cause_linked" &&
+                claim.causeKinds.contains(RelativeCauseKind.PlanImprovement) &&
+                claim.causeEvidenceIds.nonEmpty &&
+                claim.objectCarrierReady =>
+            "plan_continuity"
+          case _ if planContinuityTargetPressureCarrier(claim) => "target_pressure"
+          case "DevelopsPieceForPlan" => "piece_activity"
+          case _                      => "plan_continuity"
+      )
 
   private def planContinuityTargetPressureCarrier(claim: MoveMeaningClaim): Boolean =
     claim.meaningKind == "PlanContinuity" &&
@@ -3844,13 +3850,23 @@ object MoveMeaningSurface:
 
   private def planPawnAdvanceClaim(claim: MoveMeaningClaim): Boolean =
     val destination = moveDestination(claim.moveUci)
-    claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+    val eventOwnsPawnAdvance = claim.principalPlanEvent.exists(event =>
+      event.actorRole.exists(_.equalsIgnoreCase("pawn")) &&
+        destination.exists(to => event.actorTo.exists(_.equalsIgnoreCase(to))) &&
+        EvidenceRef.sameMove(event.rootMove, claim.moveUci) &&
+        PlanTheme.fromId(event.goalTheme).exists(theme =>
+          Set(PlanTheme.OpeningPrinciples, PlanTheme.SpaceClamp, PlanTheme.FlankInfrastructure)(theme)
+        )
+    )
+    val legacyPlanTarget =
       destination.exists(to => claim.targetSquares.exists(_.equalsIgnoreCase(to))) &&
-      claim.boardCarriers.exists(carrier =>
-        carrier.role == "target" &&
-          carrier.kind == "PlanSubject" &&
-          Set("spaceadvantage", "pawnstorm", "openingdevelopment")(carrier.value.toLowerCase)
-      ) &&
+        claim.boardCarriers.exists(carrier =>
+          carrier.role == "target" &&
+            carrier.kind == "PlanSubject" &&
+            Set("spaceadvantage", "pawnstorm", "openingdevelopment")(carrier.value.toLowerCase)
+        )
+    claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
+      (eventOwnsPawnAdvance || legacyPlanTarget) &&
       sameFilePawnAdvanceMove(claim.moveUci)
 
   private def flankPawnAdvanceSurfaceClaim(claim: MoveMeaningClaim): Boolean =
@@ -4375,6 +4391,7 @@ object MoveMeaningClaim:
         futureCausalPlanRealizationClaim(claim) ||
           !activityCoveredByRoute(claims, claim) &&
             !planPurposeCoveredByOwnedRoute(claims, claim) &&
+            !routeFunctionCoveredByPrincipalPlanEvent(claims, claim) &&
             !planCoveredBySpecificCurrentClaim(claims, claim) &&
             !breakFunctionCoveredByOwnedBreak(claims, claim) &&
             !genericFallbackCoveredBySpecificClaim(claims, claim) &&
@@ -4513,6 +4530,59 @@ object MoveMeaningClaim:
             routeIdentityKey(claim).exists(ownedRouteKeys.contains) ||
               routeCoreIdentity(claim).exists(ownedRouteCores.contains)
           )
+      )
+
+  private[judgment] def principalPlanFunctionType(claim: MoveMeaningClaim): Option[String] =
+    claim.principalPlanEvent.toList.flatMap(_.results).collectFirst {
+      case result if result.kind == TransitionConsequenceKind.OutpostGain => "outpost_attempt"
+      case result if PlanEventPublicProof.routeResultKind(result.kind)     => "piece_route"
+    }
+
+  private[judgment] def principalPlanRouteKey(claim: MoveMeaningClaim): Option[(String, String, String, String, String)] =
+    for
+      event <- claim.principalPlanEvent
+      if claim.positiveFunctionalProofEvidenceIds.nonEmpty
+      if principalPlanFunctionType(claim).nonEmpty
+      role <- event.actorRole.map(_.toLowerCase).filterNot(_ == "pawn")
+      from <- event.actorFrom.map(_.toLowerCase).filter(_.matches("[a-h][1-8]"))
+      to <- event.actorTo.map(_.toLowerCase).filter(_.matches("[a-h][1-8]"))
+    yield (claim.lineRole, claim.moveUci, role, from, to)
+
+  private def routeFunctionCoveredByPrincipalPlanEvent(
+      claims: List[MoveMeaningClaim],
+      claim: MoveMeaningClaim
+  ): Boolean =
+    val fallbackFunction =
+      Option.when(claim.meaningKind == "PieceRoute" && claim.publicIdeaType.isEmpty)("piece_route").orElse(
+        claim.publicIdeaType.filter(_ == "outpost_attempt")
+      )
+    claim.principalPlanEvent.isEmpty &&
+      claim.surfaceLane == "current_move_function" &&
+      fallbackFunction.exists(function =>
+        routeCoreIdentity(claim).exists { case (lineRole, move, piece, from, to, _) =>
+          from.zip(to).exists { case (routeFrom, routeTo) =>
+            claims.exists(other =>
+              val principalFunction = principalPlanFunctionType(other)
+              val functionCovered =
+                principalFunction.contains(function) ||
+                  function == "piece_route" && principalFunction.contains("outpost_attempt")
+              other.publicSurfaceAdmitted &&
+                functionCovered &&
+                principalPlanRouteKey(other).contains((lineRole, move, piece, routeFrom, routeTo))
+            )
+          }
+        } ||
+          fallbackFunction.contains("outpost_attempt") &&
+            routeCoreIdentity(claim).exists { case (lineRole, move, piece, _, _, target) =>
+              target.exists(routeTarget =>
+                claims.exists(other =>
+                  principalPlanFunctionType(other).contains("outpost_attempt") &&
+                    principalPlanRouteKey(other).exists { case (otherLine, otherMove, otherPiece, _, otherTo) =>
+                      otherLine == lineRole && otherMove == move && otherPiece == piece && otherTo == routeTarget
+                    }
+                )
+              )
+            }
       )
 
   private def routeIdentityKey(claim: MoveMeaningClaim): Option[(String, String, List[String])] =
@@ -4696,6 +4766,16 @@ object MoveMeaningClaim:
         claim.causeEvidenceIds.isEmpty &&
         !passedPawnAdvanceCarrier(claim) &&
         targetPressureOrShapeCarrier(claim)
+    def weakPawnPressure(claim: MoveMeaningClaim): Boolean =
+      claim.causeKinds.contains(RelativeCauseKind.PawnWeaknessTarget) ||
+        claim.boardCarriers.exists(carrier =>
+          carrier.role == "target" &&
+            carrier.kind == "Pawn" &&
+            carrier.value.toLowerCase.startsWith("weak-pawn:")
+        )
+    def sameConcretePressureFunction(left: MoveMeaningClaim, right: MoveMeaningClaim): Boolean =
+      weakPawnPressure(left) && weakPawnPressure(right) ||
+        MoveMeaningSurface.kingPressureClaim(left) && MoveMeaningSurface.kingPressureClaim(right)
     val genericCenterCovered =
       claim.meaningKind == "CenterControl" &&
         claim.supportLevel == "view_surfaced" &&
@@ -4740,6 +4820,25 @@ object MoveMeaningClaim:
                 targetOverlap(other, claim)
             )
         )
+    val targetPressureCoveredByPlanEvent =
+      claim.meaningKind == "TargetPressure" &&
+        claim.principalPlanEvent.isEmpty &&
+        claim.positiveFunctionalProofEvidenceIds.isEmpty &&
+        claim.proofRelationKinds.isEmpty &&
+        claim.proofThreatDrivers.isEmpty &&
+        currentMoveSurfaceLane(claim) &&
+        claims.exists(other =>
+          other != claim &&
+            specificTargetPressurePlan(other) &&
+            other.supportLevel == "owned_cause_linked" &&
+            other.publicSurfaceAdmitted &&
+            strengthRank(other.supportLevel) >= strengthRank(claim.supportLevel) &&
+            other.moveUci == claim.moveUci &&
+            other.lineRole == claim.lineRole &&
+            currentMoveSurfaceLane(other) &&
+            sameConcretePressureFunction(other, claim) &&
+            targetOverlap(other, claim)
+        )
     val initialDevelopmentCoversKingPressure =
       claim.meaningKind == "TargetPressure" &&
         claim.label.exists(_.equalsIgnoreCase("king-safety-pressure")) &&
@@ -4754,7 +4853,7 @@ object MoveMeaningClaim:
             other.lineRole == claim.lineRole &&
             currentMoveSurfaceLane(other)
         )
-    genericCenterCovered || genericTargetPressureCovered || initialDevelopmentCoversKingPressure || (
+    genericCenterCovered || genericTargetPressureCovered || targetPressureCoveredByPlanEvent || initialDevelopmentCoversKingPressure || (
       claim.meaningKind == "PieceActivity" && claim.role == "ImprovesPieceActivity" && !passedPawnAdvanceCarrier(claim) ||
         targetPressureActivity(claim) ||
         claim.meaningKind == "PlanContinuity" && claim.role == "ReferencePreservesPlan" ||
@@ -4773,8 +4872,14 @@ object MoveMeaningClaim:
           (
             other.causeEvidenceIds.intersect(claim.causeEvidenceIds).nonEmpty ||
               targetOverlap(other, claim) ||
-              (claim.role == "PreparesBreakOption" && specificTargetPressurePlan(other))
-        )
+              (claim.role == "PreparesBreakOption" && specificTargetPressurePlan(other)) ||
+              claim.meaningKind == "PieceActivity" &&
+                claim.supportLevel == "view_surfaced" &&
+                claim.positiveFunctionalProofEvidenceIds.isEmpty &&
+                claim.proofRelationKinds.isEmpty &&
+                claim.proofThreatDrivers.isEmpty &&
+                specificTargetPressurePlan(other)
+          )
       )
 
   private def counterplayControlWithoutConcreteCarrier(
@@ -6066,7 +6171,7 @@ object MoveMeaningClaim:
       detail: PositionPlanTechniqueSemanticDetail,
       event: PlanEventPublicProof
   ): List[MoveMeaningSurfaceBoardCarrier] =
-    val eventSubjects = (event.targets ++ event.results.flatMap(_.subjects)).distinct
+    val eventSubjects = event.targets.distinct
     val futureWitnesses = event.futureCausality.toList.flatMap { proof =>
       val ordered = proof.sequence.filter(step => EvidenceRef.sameMove(step.move, proof.futureMove)) ++
         proof.sequence.filterNot(step => EvidenceRef.sameMove(step.move, event.rootMove) || EvidenceRef.sameMove(step.move, proof.futureMove))

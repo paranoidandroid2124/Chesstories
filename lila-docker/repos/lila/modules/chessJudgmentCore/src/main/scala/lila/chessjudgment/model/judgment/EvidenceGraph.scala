@@ -1884,7 +1884,8 @@ final case class StrategicMechanismEvidence(
     signals.exists(signal =>
       signal.kind == StrategicMechanismSignalKind.PlanPressure &&
         signal.sourceLayer == EvidenceLayer.PlanCausalEvent &&
-        signal.source.confidence != EvidenceConfidence.Heuristic
+        signal.source.confidence != EvidenceConfidence.Heuristic &&
+        signal.axis.exists(_.kind == StrategicAxisKind.PlanCoherence)
     )
   def canAnchorStrategicIdea: Boolean =
     hasCompositeSupport &&
@@ -2420,14 +2421,15 @@ object StrategicMechanismEvidence:
           )
         ).flatten ++ structuralPawnBreakSignals(record, payload)
       case payload: PlanCausalEventEvidence if record.ref.confidence != EvidenceConfidence.Heuristic =>
-        planCausalAxis(payload).toList.map(axis =>
+        val axis = planCausalAxis(payload).flatMap(axis => concreteAxis(record, Some(axis)))
+        List(
           StrategicMechanismKind.PlanPressure ->
             signal(
               StrategicMechanismSignalKind.PlanPressure,
               payload.planId.toString,
               record.ref,
-              if axis.polarity == StrategicAxisPolarity.Support then 2 else 3,
-              concreteAxis(record, Some(axis))
+              axis.fold(1)(axis => if axis.polarity == StrategicAxisPolarity.Support then 2 else 3),
+              axis
             )
         )
       case FeatureAnchorEvidence(anchor) if anchor.hasPositiveStrength && anchor.canCorroborateOpeningPrior =>
@@ -5026,24 +5028,58 @@ final case class PlanEventPublicProof(
 )
 
 object PlanEventPublicProof:
+  private val RouteResultKinds = Set(
+    TransitionConsequenceKind.MobilityGain,
+    TransitionConsequenceKind.DevelopmentLagReduced,
+    TransitionConsequenceKind.DevelopmentPieceActivated,
+    TransitionConsequenceKind.DevelopmentMobilityGain,
+    TransitionConsequenceKind.DevelopmentSafePlacement,
+    TransitionConsequenceKind.RookLiftActivation
+  )
+
+  private[judgment] def routeResultKind(kind: TransitionConsequenceKind): Boolean =
+    RouteResultKinds(kind)
+
+  private def routeMeans(event: PlanCausalEventEvidence): List[(String, String, String)] =
+    (
+      (for
+        role <- event.identity.actorRole.toList
+        from <- event.identity.actorFrom.toList
+        to <- event.identity.actorTo.toList
+      yield (role, from, to)) ++
+        event.developmentChoices.map(choice => (choice.role, choice.from, choice.to))
+    ).map((role, from, to) => (role.toLowerCase, from.toLowerCase, to.toLowerCase)).distinct
+
+  private def namesRouteMeans(value: String, routes: List[(String, String, String)]): Boolean =
+    val normalized = value.trim.toLowerCase
+    val square = normalized.stripPrefix("square:")
+    routes.exists { case (role, from, to) =>
+      val route = s"$role:$from-$to"
+      square == from || square == to || normalized == route || normalized.startsWith(s"$route:")
+    }
+
   def from(event: PlanCausalEventEvidence): PlanEventPublicProof =
     val directResults = event.structuralConsequences.map(PlanEventPublicResult.from("direct", _))
     val futureCausality = PlanCausalPublicProof.from(event)
     val representativeResult = futureCausality.flatMap(_.representativeResult).orElse(
       directResults.sortBy(result => (-PlanCausalEpisode.resultSalience(result.kind), -result.strength)).headOption
     )
-    val futureSubjects = futureCausality.toList
+    val targetBearingFuture = futureCausality.filterNot(proof =>
+      proof.representativeResult.exists(result => routeResultKind(result.kind))
+    )
+    val futureSubjects = targetBearingFuture.toList
       .flatMap(_.representativeResult.toList.flatMap(_.subjects))
       .map(_.trim.toLowerCase)
       .filter(_.nonEmpty)
     val futureSquares = futureSubjects.flatMap(subject =>
       "[a-h][1-8]".r.findAllIn(subject).map(square => s"square:$square")
     )
+    val means = routeMeans(event)
     val targets = (
-      event.identity.targets ++
+      event.identity.targets.filterNot(namesRouteMeans(_, means)) ++
         futureSubjects ++
         futureSquares ++
-        futureCausality.map(proof => s"square:${proof.targetSquare.toLowerCase}")
+        targetBearingFuture.map(proof => s"square:${proof.targetSquare.toLowerCase}")
     ).distinct.sorted
     PlanEventPublicProof(
       goalTheme = event.identity.goalTheme.id,
@@ -5054,7 +5090,7 @@ object PlanEventPublicProof:
       actorRole = event.identity.actorRole,
       actorFrom = event.identity.actorFrom,
       actorTo = event.identity.actorTo,
-      targets = if targets.nonEmpty then targets else event.identity.actorTo.map(square => s"square:$square").toList,
+      targets = targets,
       developmentChoices = event.developmentChoices,
       results = representativeResult.toList,
       responses = event.branchWitnesses
