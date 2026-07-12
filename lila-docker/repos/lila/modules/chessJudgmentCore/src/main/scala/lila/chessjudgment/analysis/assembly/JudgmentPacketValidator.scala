@@ -41,6 +41,7 @@ enum JudgmentPacketValidationIssueKind:
   case MissingPlanCausalLineParent
   case MissingPlanCausalTransitionParent
   case InvalidPlanCausalFutureProof
+  case InvalidPlanCausalEpisodeProof
   case InvalidPlanCausalBranchProof
   case DuplicateAuthoritativePlanCausalEvent
   case InvalidPlanTransitionOwnership
@@ -921,7 +922,8 @@ object JudgmentPacketValidator:
     val eventConfidenceValid =
       ref.confidence == EvidenceConfidence.Heuristic ||
         ref.confidence == EvidenceConfidence.Mixed && matchingRootMotifProof &&
-        (payload.structuralConsequences.nonEmpty || payload.developmentChoices.nonEmpty || payload.futurePublicProofReady)
+        (payload.structuralConsequences.nonEmpty || payload.developmentChoices.nonEmpty || payload.futurePublicProofReady ||
+          payload.episode.exists(_.dependencyProven))
     val matchingStructuralRecord = parents.collectFirst {
       case record @ EvidenceRecord(_, structural: StructuralDeltaEvidence, _)
           if structural.transition == payload.rootTransition &&
@@ -993,6 +995,22 @@ object JudgmentPacketValidator:
           line.futureRootObjectMove(line.lineReplayCount.max(1)).contains(realization.trajectory)
         )
     )
+    val episodeProofValid =
+      (for
+        plan <- matchingPressurePlan
+        line <- lineParent
+      yield
+        val episode = PlanCausalEpisodeBuilder.fromLine(
+          plan = plan,
+          rootLine = payload.rootLine,
+          rootTransition = payload.rootTransition,
+          rootIdentity = payload.identity,
+          rootConsequences = payload.structuralConsequences,
+          rootDevelopmentChoices = payload.developmentChoices,
+          line = line
+        )
+        payload.episode == Option.when(episode.dependencyProven)(episode)
+      ).contains(true)
     val branchProofValid =
       payload.futureRealization match
         case None => payload.branchWitnesses.isEmpty
@@ -1058,6 +1076,9 @@ object JudgmentPacketValidator:
       Option.when(!futureProofValid)(
         JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.InvalidPlanCausalFutureProof, ref.id, Some(ref))
       ),
+      Option.when(!episodeProofValid)(
+        JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.InvalidPlanCausalEpisodeProof, ref.id, Some(ref))
+      ),
       Option.when(!branchProofValid)(
         JudgmentPacketValidationIssue(JudgmentPacketValidationIssueKind.InvalidPlanCausalBranchProof, ref.id, Some(ref))
       )
@@ -1073,18 +1094,11 @@ object JudgmentPacketValidator:
           if ref.confidence != EvidenceConfidence.Heuristic =>
         parent -> event
     }
-    val currentOwner = summary.currentEvent.flatMap(current =>
-      eventParents.find { case (_, event) => event.identity.stableKey == current.stableKey }
-    )
-    val requiredEventKeys =
-      (summary.previousEvent.toList ++ summary.currentEvent.toList).map(_.stableKey).toSet
-    val parentEventKeys = eventParents.map(_._2.identity.stableKey).toSet
+    val currentOwner = eventParents.find { case (_, event) => event.planSequenceSummary == summary }
     val valid =
       currentOwner.exists { case (ownerRecord, event) =>
-        record.parents.size == eventParents.size &&
-        eventParents.size == requiredEventKeys.size &&
-        record.parents.map(_.id).toSet == eventParents.map(_._1.ref.id).toSet &&
-        parentEventKeys == requiredEventKeys &&
+        record.parents == List(ownerRecord.ref) &&
+        eventParents.size == 1 &&
         summary.primaryPlanId.contains(event.planId) &&
         record.ref.position == event.rootTransition.from &&
         record.ref.scope == event.rootTransition.role.scope &&

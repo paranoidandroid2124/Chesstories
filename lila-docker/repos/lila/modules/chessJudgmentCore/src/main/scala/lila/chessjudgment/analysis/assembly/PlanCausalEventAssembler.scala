@@ -140,7 +140,8 @@ object PlanCausalEventAssembler:
                   case event: PlanCausalEventEvidence =>
                     event.structuralConsequences.nonEmpty ||
                       event.developmentChoices.nonEmpty ||
-                      event.futurePublicProofReady
+                      event.futurePublicProofReady ||
+                      event.episode.exists(_.dependencyProven)
                   case _ => false)
             )
         val decisiveCandidates = authorityCandidates.filter(record =>
@@ -230,34 +231,42 @@ private[assembly] object PlanCausalEventProof:
 
   def decisiveGoalProof(event: PlanCausalEventEvidence): Boolean =
     import TransitionConsequenceKind.*
+    val consequences = (
+      event.structuralConsequences ++
+        event.episode.toList.flatMap(_.futureEvents.flatMap(_.structuralConsequences))
+    ).distinct
+    val developmentChoices = (
+      event.developmentChoices ++
+        event.episode.toList.flatMap(_.futureEvents.flatMap(_.developmentChoices))
+    ).distinct
     event.identity.goalTheme match
       case PlanTheme.OpeningPrinciples =>
-        event.developmentChoices.nonEmpty || event.structuralConsequences.exists(consequence =>
+        developmentChoices.nonEmpty || consequences.exists(consequence =>
           Set(DevelopmentPieceActivated, DevelopmentMobilityGain, DevelopmentCenterControlGain, DevelopmentSafePlacement)(
             consequence.kind
           )
         )
       case PlanTheme.RestrictionProphylaxis =>
-        event.structuralConsequences.exists(_.kind == OpponentMobilityRestriction)
+        consequences.exists(_.kind == OpponentMobilityRestriction)
       case PlanTheme.PieceRedeployment =>
-        event.structuralConsequences.exists(consequence =>
+        consequences.exists(consequence =>
           Set(FileOccupationGain, OutpostGain, RookLiftActivation, BatteryPressureGain)(consequence.kind)
         )
       case PlanTheme.WeaknessFixation =>
-        event.structuralConsequences.exists(consequence =>
+        consequences.exists(consequence =>
           Set(WeakPawnTargetCreated, WeakSquareTargetCreated)(consequence.kind) ||
             consequence.kind == TargetPressureGain && weakTargetOwned(event.rootTransition, consequence.subjects)
         )
       case PlanTheme.PawnBreakPreparation =>
-        event.structuralConsequences.exists(_.kind == PawnTensionGain)
+        consequences.exists(_.kind == PawnTensionGain)
       case PlanTheme.SpaceClamp =>
-        event.structuralConsequences.exists(consequence =>
+        consequences.exists(consequence =>
           Set(CenterControlGain, OpponentMobilityRestriction)(consequence.kind)
         )
       case PlanTheme.FlankInfrastructure =>
-        event.structuralConsequences.exists(consequence => FlankInfrastructureConsequences(consequence.kind))
+        consequences.exists(consequence => FlankInfrastructureConsequences(consequence.kind))
       case PlanTheme.AdvantageTransformation =>
-        event.structuralConsequences.exists(consequence =>
+        consequences.exists(consequence =>
           Set(PassedPawnProgress, PromotionPressureGain, FileOccupationGain)(consequence.kind)
         )
       case PlanTheme.FavorableExchange | PlanTheme.Unknown =>

@@ -17,6 +17,7 @@ import lila.chessjudgment.analysis.singlePosition.{
 }
 import lila.chessjudgment.model.{ ActivePlans, Fact, Motif, MotifCategory, PlanEventIdentity, PlanId, PlanMatch, PlanScoringResult, PlanSequenceSummary, TransitionType }
 import lila.chessjudgment.model.structure.{ AlignmentBand, PlanAlignment, StructureId, StructureProfile }
+import lila.chessjudgment.model.strategic.PlanContinuity
 
 final case class EvidenceSquare(key: String)
 final case class EvidenceFile(key: String)
@@ -2582,19 +2583,23 @@ object StrategicMechanismEvidence:
              continuity.principalEvent.isEmpty &&
                continuity.supportingMoves.isEmpty &&
                continuity.supportingEvents.isEmpty &&
-               continuity.consecutivePlies == 1
+               continuity.consecutivePlies == 1 &&
+               !continuity.completionProven
            )
        else
-         transition.previousEvent.exists(previous =>
-           transition.continuity.exists(continuity =>
-             continuity.principalEvent.exists(_.stableKey == previous.stableKey) &&
-               continuity.supportingMoves.nonEmpty &&
-               continuity.supportingEvents.nonEmpty &&
-               continuity.supportingMoves.size == continuity.supportingEvents.size &&
-               continuity.consecutivePlies == continuity.supportingMoves.size * 2 + 1 &&
-               continuity.consecutivePlies <= 8
-           )
-         ))
+         transition.previousPlanId == transition.primaryPlanId &&
+           transition.previousEvent.exists(previous =>
+             transition.continuity.exists(continuity =>
+               continuity.episodeTransitionType == transition.transitionType &&
+                 continuity.principalEvent == continuity.supportingEvents.headOption &&
+                 continuity.supportingEvents.lastOption.contains(previous) &&
+                 continuity.supportingMoves == continuity.supportingEvents.map(_.rootMove) &&
+                 continuity.supportingEvents.nonEmpty &&
+                 continuity.consecutivePlies >= continuity.supportingEvents.size + 1 &&
+                 continuity.startingPly >= 0 &&
+                 !continuity.supportingEvents.contains(transition.currentEvent.get)
+             )
+           ))
 
   def pawnStructureCanAnchorPlan(payload: PawnStructureFactEvidence): Boolean =
     payload.profile.primary != StructureId.Unknown && payload.profile.confidence >= 0.65 ||
@@ -4866,6 +4871,36 @@ final case class PlanCausalEventEvidence(
   def futureTarget: Option[EvidenceSquare] = futureRealization.map(_.trajectory.futureTo)
   def counterfactualDependencyProven: Boolean =
     futureRealization.exists(_.dependencyProven) || episode.exists(_.dependencyProven)
+  def planSequenceSummary: PlanSequenceSummary =
+    episode
+      .filter(_.dependencyProven)
+      .flatMap(episode =>
+        PlanContinuity
+          .fromEvents(
+            episode.events.map(event => event.identity -> event.step.ply),
+            completionProven = episode.completionProven
+          )
+          .map(continuity =>
+            PlanSequenceSummary(
+              transitionType = continuity.episodeTransitionType,
+              primaryPlanId = Some(planId),
+              previousPlanId = Some(planId),
+              continuity = Some(continuity),
+              previousEvent = continuity.supportingEvents.lastOption,
+              currentEvent = episode.events.lastOption.map(_.identity)
+            )
+          )
+      )
+      .getOrElse(
+        PlanSequenceSummary(
+          transitionType = TransitionType.Opening,
+          primaryPlanId = Some(planId),
+          previousPlanId = None,
+          continuity = Some(PlanContinuity(None, 1, rootTransition.from.ply)),
+          previousEvent = None,
+          currentEvent = Some(identity)
+        )
+      )
   def realizedBranchWitnesses: List[PlanCausalBranchWitness] =
     branchWitnesses.filter(_.outcome == PlanCausalBranchOutcome.Realized)
   def exactBranchWitnesses: List[PlanCausalBranchWitness] =

@@ -32,12 +32,9 @@ import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
 import lila.chessjudgment.model.{
   CompatibilityAdjustment,
   Motif,
-  PlanCategory,
-  PlanSequenceSummary,
-  TransitionType
+  PlanCategory
 }
 import lila.chessjudgment.model.judgment.*
-import lila.chessjudgment.model.strategic.PlanContinuity
 
 final case class EvidenceFactAssembly(
     input: NormalizedMoveReviewInput,
@@ -1616,15 +1613,7 @@ object EvidenceFactAssembler:
     }
     authoritativeEvents
       .map { case (eventRecord, event) =>
-        val continuity = PlanContinuity(None, 1, event.rootTransition.from.ply)
-        val summary = PlanSequenceSummary(
-          transitionType = TransitionType.Opening,
-          primaryPlanId = Some(event.planId),
-          previousPlanId = None,
-          continuity = Some(continuity),
-          previousEvent = None,
-          currentEvent = Some(event.identity)
-        )
+        val summary = event.planSequenceSummary
         TransitionFactNormalizer.fromPlanTransition(
           id = allocator.evidenceId(
             s"plan-transition:${allocator.key(event.rootLine.role)}:${event.rootMove}:${allocator.key(event.planId)}"

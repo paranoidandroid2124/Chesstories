@@ -25,28 +25,6 @@ case class PlanEventIdentity(
       results.distinct.sorted.mkString(",")
     ).mkString("|")
 
-  def sameGoal(other: PlanEventIdentity): Boolean =
-    (goalKind, other.goalKind) match
-      case (Some(left), Some(right)) => left == right
-      case _                         => goalTheme != PlanTheme.Unknown && goalTheme == other.goalTheme
-
-  def actorContinuesInto(other: PlanEventIdentity): Boolean =
-    actorRole.nonEmpty && actorRole == other.actorRole && actorTo.nonEmpty && actorTo == other.actorFrom
-
-  def targetEnables(other: PlanEventIdentity): Boolean =
-    other.actorFrom.exists(from => targets.contains(s"square:$from"))
-
-  def sharesTarget(other: PlanEventIdentity): Boolean =
-    targets.toSet.intersect(other.targets.toSet).nonEmpty
-
-  def continuesInto(other: PlanEventIdentity): Boolean =
-    sameGoal(other) && (actorContinuesInto(other) || sharesTarget(other))
-
-  def completedBy(other: PlanEventIdentity): Boolean =
-    sameGoal(other) &&
-      (actorContinuesInto(other) || targetEnables(other)) &&
-      other.results.toSet.diff(results.toSet).nonEmpty
-
 object PlanEventIdentity:
   def from(
       rootMove: String,

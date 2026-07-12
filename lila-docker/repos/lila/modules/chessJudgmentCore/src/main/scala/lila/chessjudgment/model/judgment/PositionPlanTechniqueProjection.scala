@@ -2200,7 +2200,7 @@ object PositionPlanTechniqueProjection:
         .flatMap(principal =>
           graph.records.collect {
             case EvidenceRecord(_, PlanTransitionEvidence(summary), _)
-                if summary.currentEvent.exists(_.stableKey == principal.identity.stableKey) =>
+                if summary == principal.planSequenceSummary =>
               summary
           }.distinct match
             case summary :: Nil => Some(summary)

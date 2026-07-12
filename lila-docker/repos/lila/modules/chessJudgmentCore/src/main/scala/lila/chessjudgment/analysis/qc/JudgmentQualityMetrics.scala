@@ -3636,8 +3636,6 @@ object SemanticCoverageMetrics:
                 if eventRef.confidence != EvidenceConfidence.Heuristic =>
               event
           }
-          val requiredEventKeys = (summary.previousEvent.toList ++ summary.currentEvent.toList).map(_.stableKey).toSet
-          val ownedEventKeys = ownedEvents.map(_.identity.stableKey).toSet
           val transitionsBound = ownedEvents.forall(event =>
             packet.transitions.exists(edge =>
               edge.from == event.rootTransition.from &&
@@ -3645,7 +3643,11 @@ object SemanticCoverageMetrics:
                 EvidenceRef.sameMove(edge.moveUci, event.rootMove)
             )
           )
-          Option.unless(requiredEventKeys.nonEmpty && ownedEventKeys == requiredEventKeys && transitionsBound)(ref.id)
+          Option.unless(
+            ownedEvents match
+              case event :: Nil => event.planSequenceSummary == summary && transitionsBound
+              case _            => false
+          )(ref.id)
         case _ =>
           None
       }.distinct.sorted

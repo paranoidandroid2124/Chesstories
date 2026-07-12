@@ -199,7 +199,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     val transitionRecord = result.packet.evidenceGraph.records
       .collectFirst {
         case record @ EvidenceRecord(_, PlanTransitionEvidence(summary), _)
-            if summary.currentEvent.exists(_.stableKey == playedEventRecord._2.identity.stableKey) =>
+            if summary == playedEventRecord._2.planSequenceSummary =>
           record -> summary
       }
       .getOrElse(fail("expected event-owned plan transition"))
@@ -213,7 +213,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assert(claims.nonEmpty)
     assert(publicSurfaces.nonEmpty)
     assert(!playedEventRecord._1.parents.exists(_.layer == EvidenceLayer.PlanPressure))
-    assertEquals(transitionRecord._2.transitionType, TransitionType.Opening)
+    assertEquals(transitionRecord._2, playedEventRecord._2.planSequenceSummary)
     assertEquals(transitionRecord._1.parents.map(_.id), List(playedEventRecord._1.ref.id))
     assert(planMechanism.canAnchorPlanIdea)
     assert(!planMechanism.signals.exists(_.source.layer == EvidenceLayer.PlanPressure))
@@ -311,6 +311,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     val result = MoveReviewJudgmentOrchestrator
       .build(nimzoB6Input())
       .getOrElse(fail("expected judgment result"))
+    assert(result.isValid, result.validation.issues)
     val event = result.packet.evidenceGraph.records.collectFirst {
       case EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
           if payload.planId == PlanId.WeakPawnAttack && EvidenceRef.sameMove(payload.rootMove, "b7b6") =>
@@ -331,12 +332,25 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
         EvidenceRef.sameMove(dependency.to.moveUci, "c8a6") &&
         dependency.proof == PlanCausalDependencyProof.SharedTarget(List(EvidenceSquare("c4")))
     ), episode.dependencies)
+    val transition = result.packet.evidenceGraph.records.collectFirst {
+      case EvidenceRecord(_, PlanTransitionEvidence(summary), _)
+          if summary.primaryPlanId.contains(PlanId.WeakPawnAttack) =>
+        summary
+    }.getOrElse(fail("expected episode transition"))
+    assertEquals(transition.transitionType, TransitionType.Completion)
+    assertEquals(transition.previousPlanId, Some(PlanId.WeakPawnAttack))
+    assertEquals(transition.previousEvent.map(_.rootMove), Some("c6a5"))
+    assertEquals(transition.currentEvent.map(_.rootMove), Some("c8a6"))
+    assertEquals(transition.continuity.flatMap(_.principalEvent).map(_.rootMove), Some("b7b6"))
+    assertEquals(transition.continuity.toList.flatMap(_.supportingMoves), List("b7b6", "c6a5"))
+    assertEquals(transition.continuity.map(_.consecutivePlies), Some(5))
     assertEquals(result.packet.probeRequests.flatMap(_.candidateMove), List("b7b6"))
 
   test("flank episode preserves the inducing move opponent concession and same-actor maintenance"):
     val result = MoveReviewJudgmentOrchestrator
       .build(gameChangerH4Input())
       .getOrElse(fail("expected judgment result"))
+    assert(result.isValid, result.validation.issues)
     val event = result.packet.evidenceGraph.records.collectFirst {
       case EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
           if payload.planId == PlanId.KingsideAttack && EvidenceRef.sameMove(payload.rootMove, "h2h4") =>
