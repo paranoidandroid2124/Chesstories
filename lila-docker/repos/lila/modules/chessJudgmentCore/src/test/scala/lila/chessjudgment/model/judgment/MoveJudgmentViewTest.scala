@@ -2741,6 +2741,62 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(JudgmentSubjectBinding.comparisonBinding(inaccuracyComparison, playedMoves), SubjectBindingClass.PrimaryPlayedCause)
     assertEquals(JudgmentSubjectBinding.relativeCauseBinding(playableCause, playedMoves), SubjectBindingClass.ContextPlayed)
 
+  test("future episode results do not redefine the root move function"):
+    val routeEvent = PlanEventPublicProof(
+      goalTheme = "PieceImprovement",
+      goalKind = None,
+      moveRole = None,
+      transitionType = None,
+      rootMove = "e2e3",
+      actorRole = Some("knight"),
+      actorFrom = Some("e2"),
+      actorTo = Some("e3"),
+      targets = Nil,
+      developmentChoices = Nil,
+      results = List(
+        PlanEventPublicResult(
+          stage = "future",
+          kind = TransitionConsequenceKind.MobilityGain,
+          polarity = StructuralSignalPolarity.Gain,
+          strength = 1,
+          subjects = Nil
+        )
+      ),
+      responses = Nil,
+      futureCausality = None
+    )
+    val claim = MoveMeaningClaim(
+      meaningKind = "PlanContinuity",
+      role = "DevelopsPieceForPlan",
+      laneKey = "plan-continuity",
+      conflictKey = None,
+      supportLevel = "owned_cause_linked",
+      visibility = "functional_explanation",
+      surfaceLane = "current_move_function",
+      lineRole = "candidate",
+      moveUci = "e2e3",
+      frameId = "plan-frame",
+      unit = PositionPlanTechniqueUnit.PlanOptionSet,
+      axisKey = None,
+      axisKind = None,
+      axisPolarity = None,
+      label = None,
+      causeKinds = Nil,
+      causeSourceSides = Nil,
+      causeEvidenceIds = Nil,
+      sourceEvidenceIds = Nil,
+      objectBindingSignatures = Nil,
+      principalPlanEvent = Some(routeEvent)
+    )
+
+    assertEquals(MoveMeaningClaim.principalPlanFunctionType(claim), None)
+    assertEquals(
+      MoveMeaningClaim.principalPlanFunctionType(
+        claim.copy(principalPlanEvent = Some(routeEvent.copy(results = routeEvent.results.map(_.copy(stage = "direct")))))
+      ),
+      Some("piece_route")
+    )
+
   private def evidenceRef(
       id: String,
       producer: EvidenceProducer,

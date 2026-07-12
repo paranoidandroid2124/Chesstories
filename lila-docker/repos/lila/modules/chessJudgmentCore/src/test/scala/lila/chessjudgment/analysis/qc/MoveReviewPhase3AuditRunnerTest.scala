@@ -1245,6 +1245,20 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       (MoveMeaningSurface.publicPayloadJson(publicView) \\ "principal_plan_id")
         .exists(_.asOpt[String].contains("QueensideAttack"))
     )
+    val targetDistinctSurfaces = List(
+      surfaces.head.copy(target = MoveMeaningSurfaceTarget(squares = List("e4"))),
+      surfaces.head.copy(target = MoveMeaningSurfaceTarget(squares = List("h4")))
+    )
+    val targetDistinctSemantics =
+      (MoveMeaningSurface
+        .publicIdeaChains(MoveMeaningSurface.verdict(publicView.verdict.get), targetDistinctSurfaces)
+        .head \ "move_semantics")
+        .as[List[play.api.libs.json.JsObject]]
+    assertEquals(targetDistinctSemantics.size, 2)
+    assertEquals(
+      targetDistinctSemantics.flatMap(semantic => (semantic \ "target" \ "squares").as[List[String]]).sorted,
+      List("e4", "h4")
+    )
 
   test("move meaning claims do not surface generic structure shift from current-move route alone"):
     val routeSignature =

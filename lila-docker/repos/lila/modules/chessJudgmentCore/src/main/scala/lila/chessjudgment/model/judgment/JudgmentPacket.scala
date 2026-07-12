@@ -2046,7 +2046,6 @@ object MoveMeaningSurface:
       else
         val displaySemantics = evidenceSurfaces
           .sortBy(publicIdeaChainSemanticSortKey)
-          .distinctBy(publicIdeaChainSurfaceKey)
         val publicTerminal = displaySemantics.flatMap(_.terminalConsequences).distinct
         val publicTechnique = displaySemantics.flatMap(_.endgameTechnique).distinct
         val publicCarrierPairs = publicIdeaChainCarrierPairs(displaySemantics)
@@ -2175,16 +2174,6 @@ object MoveMeaningSurface:
             )
           )
     }
-
-  private def publicIdeaChainSurfaceKey(surface: MoveMeaningSurface) =
-    (
-      surface.moveUci,
-      surface.subject,
-      surface.lineRole,
-      surface.idea.code,
-      surface.idea.label,
-      surface.principalPlanId.map(_.toString).getOrElse("")
-    )
 
   private def publicCausalPlanJson(event: PlanCausalPublicProof): JsObject =
     Json.obj(
@@ -4534,8 +4523,10 @@ object MoveMeaningClaim:
 
   private[judgment] def principalPlanFunctionType(claim: MoveMeaningClaim): Option[String] =
     claim.principalPlanEvent.toList.flatMap(_.results).collectFirst {
-      case result if result.kind == TransitionConsequenceKind.OutpostGain => "outpost_attempt"
-      case result if PlanEventPublicProof.routeResultKind(result.kind)     => "piece_route"
+      case result if result.stage == "direct" && result.kind == TransitionConsequenceKind.OutpostGain =>
+        "outpost_attempt"
+      case result if result.stage == "direct" && PlanEventPublicProof.routeResultKind(result.kind) =>
+        "piece_route"
     }
 
   private[judgment] def principalPlanRouteKey(claim: MoveMeaningClaim): Option[(String, String, String, String, String)] =
@@ -4576,7 +4567,8 @@ object MoveMeaningClaim:
             routeCoreIdentity(claim).exists { case (lineRole, move, piece, _, _, target) =>
               target.exists(routeTarget =>
                 claims.exists(other =>
-                  principalPlanFunctionType(other).contains("outpost_attempt") &&
+                  other.publicSurfaceAdmitted &&
+                    principalPlanFunctionType(other).contains("outpost_attempt") &&
                     principalPlanRouteKey(other).exists { case (otherLine, otherMove, otherPiece, _, otherTo) =>
                       otherLine == lineRole && otherMove == move && otherPiece == piece && otherTo == routeTarget
                     }
