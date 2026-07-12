@@ -306,6 +306,53 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(trajectory.rootFrom.key -> trajectory.rootTo.key, "g1" -> "f3")
     assertEquals(trajectory.futureFrom.key -> trajectory.futureTo.key, "f3" -> "e5")
     assertEquals(trajectory.plyOffset, 2)
+    val rootEvent = PlanCausalEventNode(
+      identity = PlanEventIdentity(
+        rootMove = "g1f3",
+        goalTheme = PlanTheme.PieceRedeployment,
+        goalKind = None,
+        actorRole = Some("knight"),
+        actorFrom = Some("g1"),
+        actorTo = Some("f3"),
+        targets = Nil,
+        results = List("kind:mobilitygain")
+      ),
+      step = trajectory.rootStep,
+      perspective = Color.White,
+      structuralConsequences = Nil,
+      developmentChoices = Nil
+    )
+    val futureEvent = PlanCausalEventNode(
+      identity = rootEvent.identity.copy(rootMove = "f3e5", actorFrom = Some("f3"), actorTo = Some("e5")),
+      step = trajectory.futureStep,
+      perspective = Color.White,
+      structuralConsequences = List(
+        TransitionConsequence(
+          TransitionConsequenceKind.MobilityGain,
+          StructuralSignalPolarity.Gain,
+          1,
+          List("knight:f3-e5:mobility+1")
+        )
+      ),
+      developmentChoices = Nil
+    )
+    val episode = PlanCausalEpisode(
+      root = rootEvent,
+      continuations = List(futureEvent),
+      dependencies = List(
+        PlanCausalEventDependency(
+          from = rootEvent,
+          to = futureEvent,
+          kind = PlanCausalDependencyKind.ObjectStatePrecondition,
+          proof = PlanCausalDependencyProof.ObjectState(trajectory),
+          plyOffset = trajectory.plyOffset
+        )
+      ),
+      responses = Nil
+    )
+    assert(episode.dependencyProven)
+    assertEquals(episode.futureMove, Some("f3e5"))
+    assertEquals(episode.futureTarget, None)
 
   test("plan event owns a multi-actor episode only through typed line and target dependencies"):
     val result = MoveReviewJudgmentOrchestrator
@@ -339,13 +386,13 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
           if summary.primaryPlanId.contains(PlanId.WeakPawnAttack) =>
         summary
     }.getOrElse(fail("expected episode transition"))
-    assertEquals(transition.transitionType, TransitionType.Completion)
-    assertEquals(transition.previousPlanId, Some(PlanId.WeakPawnAttack))
-    assertEquals(transition.previousEvent.map(_.rootMove), Some("c6a5"))
-    assertEquals(transition.currentEvent.map(_.rootMove), Some("c8a6"))
-    assertEquals(transition.continuity.flatMap(_.principalEvent).map(_.rootMove), Some("b7b6"))
-    assertEquals(transition.continuity.toList.flatMap(_.supportingMoves), List("b7b6", "c6a5"))
-    assertEquals(transition.continuity.map(_.consecutivePlies), Some(5))
+    assertEquals(transition.transitionType, TransitionType.Opening)
+    assertEquals(transition.previousPlanId, None)
+    assertEquals(transition.previousEvent, None)
+    assertEquals(transition.currentEvent.map(_.rootMove), Some("b7b6"))
+    assertEquals(transition.continuity.flatMap(_.principalEvent), None)
+    assertEquals(transition.continuity.toList.flatMap(_.supportingMoves), Nil)
+    assertEquals(transition.continuity.map(_.consecutivePlies), Some(1))
     assertEquals(result.packet.probeRequests.flatMap(_.candidateMove), List("b7b6"))
 
   test("flank episode preserves the inducing move opponent concession and same-actor maintenance"):
@@ -437,6 +484,18 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     val proof = PlanEventPublicProof.from(event)
     assertEquals(proof.actorTo, Some("a5"))
     assertEquals(proof.targets, Nil)
+    val pressureEvent = event.copy(
+      identity = event.identity.copy(targets = List("a5", "square:a5")),
+      structuralConsequences = List(
+        TransitionConsequence(
+          TransitionConsequenceKind.TargetPressureGain,
+          StructuralSignalPolarity.Gain,
+          1,
+          List("a5")
+        )
+      )
+    )
+    assertEquals(PlanEventPublicProof.from(pressureEvent).targets, List("a5", "square:a5"))
 
   test("line trajectory does not transfer identity to a same-role replacement"):
     val graph = EvidenceFactAssembler
@@ -478,6 +537,9 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(eventRecord._2.robustness, PlanCausalRobustness.Untested)
     assert(!eventRecord._2.episodePublicProofReady)
     val publicEvent = PlanEventPublicProof.from(eventRecord._2)
+    assertEquals(eventRecord._2.planSequenceSummary.transitionType, TransitionType.Opening)
+    assertEquals(publicEvent.transitionType, Some(TransitionType.Opening))
+    assertNotEquals(publicEvent.moveRole, Some(PlanMoveRole.Preparation))
     assert(publicEvent.results.forall(_.stage == "direct"), publicEvent.results)
     assertEquals(publicEvent.responses, Nil)
     assertEquals(result.packet.probeRequests.flatMap(_.candidateMove), List("b7b5"))
@@ -508,14 +570,24 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assert(planRelativeCauses(result, "b7b5").contains(RelativeCauseKind.PlanImprovement))
     val publicEvent = PlanEventPublicProof.from(event)
     val causalProof = publicEvent.futureCausality.getOrElse(fail("expected public causal episode"))
+    val target = causalProof.targetSquare.getOrElse(fail("expected public causal target"))
     assertEquals(causalProof.futureMove, "b5b4")
     assertEquals(causalProof.dependencyKind, PlanCausalDependencyKind.ObjectStatePrecondition)
+    assertEquals(publicEvent.transitionType, Some(TransitionType.Completion))
+    assertEquals(publicEvent.moveRole, Some(PlanMoveRole.Preparation))
     assertEquals(causalProof.sequence.filter(_.rootOwned).map(_.move), List("b7b5", "b5b4"))
     assert(causalProof.sequence.exists(step => !step.rootOwned && step.actorRole.contains("queen")))
     assertEquals(publicEvent.results, causalProof.representativeResult.toList)
     assertEquals(publicEvent.results.map(_.stage), List("future"))
     assertEquals(result.packet.probeRequests, Nil)
     val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
+    val nonOwnedMoves = causalProof.sequence.filterNot(_.rootOwned).map(_.move)
+    val eventClaim = view.moveMeaningClaims.find(_.principalPlanEvent.contains(publicEvent)).getOrElse(
+      fail("expected public claim owned by the causal event")
+    )
+    assert(!eventClaim.boardCarriers.exists(carrier =>
+      carrier.role == "witness" && nonOwnedMoves.exists(EvidenceRef.sameMove(_, carrier.value))
+    ), eventClaim.boardCarriers)
     val eventRecord = result.packet.evidenceGraph.records.collectFirst {
       case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, _)
           if payload.episode.exists(_.events.exists(event => EvidenceRef.sameMove(event.moveUci, "b5b4"))) => record
@@ -526,7 +598,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       .find(binding => binding.horizon.contains(s"ply:${causalProof.plyOffset}"))
       .getOrElse(fail("expected representative episode binding"))
     assert(episodeBinding.witness.exists(obj => obj.kind == EvidenceObjectKind.Move && obj.key == causalProof.futureMove))
-    assert(episodeBinding.target.exists(obj => obj.kind == EvidenceObjectKind.Square && obj.key == causalProof.targetSquare))
+    assert(episodeBinding.target.exists(obj => obj.kind == EvidenceObjectKind.Square && obj.key == target))
     assert(view.moveMeaningClaims.exists(claim =>
       claim.moveUci == "b7b5" &&
         claim.positiveFunctionalProofEvidenceIds.exists(id =>
@@ -675,7 +747,11 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(event.branchWitnesses.map(_.outcome).distinct, List(PlanCausalBranchOutcome.Refuted))
     assertEquals(event.robustness, PlanCausalRobustness.Refuted)
     assert(!event.episodePublicProofReady)
-    assert(PlanEventPublicProof.from(event).results.forall(_.stage == "direct"))
+    val publicEvent = PlanEventPublicProof.from(event)
+    assertEquals(event.planSequenceSummary.transitionType, TransitionType.Opening)
+    assertEquals(publicEvent.transitionType, Some(TransitionType.Opening))
+    assertNotEquals(publicEvent.moveRole, Some(PlanMoveRole.Preparation))
+    assert(publicEvent.results.forall(_.stage == "direct"))
     val planSignals = planCoherenceSignals(result, "b7b5")
     assertEquals(planSignals.map(_.source.layer).distinct, List(EvidenceLayer.PlanCausalEvent))
     assertEquals(planSignals.flatMap(_.axis.map(_.polarity)).distinct, List(StrategicAxisPolarity.Concede))
@@ -760,14 +836,19 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       .getOrElse(fail("expected judgment result"))
     val eventRecord = result.packet.evidenceGraph.records
       .collectFirst {
-        case record @ EvidenceRecord(ref, _: PlanCausalEventEvidence, _)
+        case record @ EvidenceRecord(ref, event: PlanCausalEventEvidence, _)
             if ref.line.exists(
               _.role == LineNodeRole.Played
             ) && ref.confidence != EvidenceConfidence.Heuristic =>
-          record
+          record -> event
       }
       .getOrElse(fail("expected authoritative plan event"))
-    val duplicate = eventRecord.copy(ref = eventRecord.ref.copy(id = s"${eventRecord.ref.id}:duplicate"))
+    val duplicate = eventRecord._1.copy(
+      ref = eventRecord._1.ref.copy(id = s"${eventRecord._1.ref.id}:duplicate"),
+      payload = eventRecord._2.copy(
+        identity = eventRecord._2.identity.copy(targets = eventRecord._2.identity.targets :+ "square:h1")
+      )
+    )
     val validation = JudgmentPacketValidator.validate(
       result.packet.copy(evidenceGraph = TypedEvidenceGraph(result.packet.evidenceGraph.records :+ duplicate))
     )

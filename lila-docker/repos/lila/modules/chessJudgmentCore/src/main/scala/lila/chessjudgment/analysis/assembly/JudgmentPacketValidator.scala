@@ -153,7 +153,7 @@ object JudgmentPacketValidator:
       .collect {
         case record @ EvidenceRecord(ref, event: PlanCausalEventEvidence, _)
             if ref.confidence != EvidenceConfidence.Heuristic =>
-          (event.rootLine.id, EvidenceRef.normalizeMove(event.rootMove), event.identity.stableKey) -> record
+          (event.rootLine.id, EvidenceRef.normalizeMove(event.rootMove), event.planId) -> record
       }
       .groupMap(_._1)(_._2)
       .values

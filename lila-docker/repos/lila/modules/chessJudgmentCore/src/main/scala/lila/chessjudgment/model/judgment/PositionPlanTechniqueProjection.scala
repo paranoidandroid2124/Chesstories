@@ -1173,12 +1173,7 @@ object PositionPlanTechniqueProjection:
         contextCauseEvidenceIds = causeLinkage.contextCauseEvidenceIds,
         contextProofRoles = causeLinkage.contextProofRoles,
         positiveFunctionalProofEvidenceIds = causeLinkage.positiveFunctionalProofEvidenceIds,
-        principalPlanEvent = causeLinkage.positiveFunctionalCausalEvent.map(event =>
-          PlanEventPublicProof.from(event).copy(
-            moveRole = taggedDetail.planMoveRole,
-            transitionType = taggedDetail.planTransitionType
-          )
-        ),
+        principalPlanEvent = causeLinkage.positiveFunctionalCausalEvent.map(PlanEventPublicProof.from),
         futureCausalProof = causeLinkage.positiveFunctionalCausalEvent.flatMap(PlanCausalPublicProof.from),
         objectBindingSignatures = causeLinkage.objectBindingSignatures,
         specificityTier = causeLinkage.specificityTier
@@ -2006,12 +2001,7 @@ object PositionPlanTechniqueProjection:
         planTransitionType = eventOwnedDetail.planTransitionType.orElse(plan.transitionType),
         planMoveRole =
           if eventOwnedDetail.unit == PositionPlanTechniqueUnit.PlanOptionSet then
-            plan.event.flatMap(
-              _.moveRole(
-                plan.transitionType,
-                eventOwnedDetail.prophylaxisNeeded.contains(true)
-              )
-            )
+            plan.event.flatMap(event => event.moveRole(Some(event.planSequenceSummary.transitionType)))
           else None
       )
 

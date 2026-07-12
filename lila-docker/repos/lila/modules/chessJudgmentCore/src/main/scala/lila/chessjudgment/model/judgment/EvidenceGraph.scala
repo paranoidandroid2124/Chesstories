@@ -767,8 +767,8 @@ object EvidenceObjectBinding:
       )
     }
     val episodeBinding = payload.episode.filter(_ => payload.episodePublicProofReady).map { episode =>
-      val futureMoves = episode.futureEvents.map(event => normalize(event.moveUci))
       val rootOwnedFutureEvents = episode.rootOwnedFutureEvents
+      val futureMoves = rootOwnedFutureEvents.map(event => normalize(event.moveUci))
       val futureTargets = (
         episode.futureTarget.toList.map(_.key.toLowerCase) ++
           rootOwnedFutureEvents.flatMap(event => PlanCausalEpisode.pressureTargetSquares(event))
@@ -777,7 +777,7 @@ object EvidenceObjectBinding:
         source = ref,
         actor = (
           rootActor ++
-            episode.futureEvents.flatMap(_.identity.actorRole).flatMap(objectOf(EvidenceObjectKind.Piece, _))
+            rootOwnedFutureEvents.flatMap(_.identity.actorRole).flatMap(objectOf(EvidenceObjectKind.Piece, _))
         ).distinctBy(_.signaturePart),
         target = (
           planTarget ++
@@ -792,7 +792,7 @@ object EvidenceObjectBinding:
         witness = (
           rootWitness ++
             futureMoves.flatMap(objectOf(EvidenceObjectKind.Move, _)) ++
-            episode.responses.map(response => normalize(response.step.moveUci)).flatMap(objectOf(EvidenceObjectKind.Move, _)) ++
+            episode.rootOwnedResponses.map(response => normalize(response.step.moveUci)).flatMap(objectOf(EvidenceObjectKind.Move, _)) ++
             futureTargets.flatMap(objectOf(EvidenceObjectKind.Square, _)) ++
             payload.realizedBranchWitnesses.flatMap(witness => lineObject(witness.line))
         ).distinctBy(_.signaturePart),
@@ -4703,6 +4703,8 @@ final case class PlanCausalEpisode(
       if next == owned then owned else expand(next)
     events.filter(expand(Set(root)))
   def rootOwnedFutureEvents: List[PlanCausalEventNode] = rootOwnedEvents.filterNot(_ == root)
+  def rootOwnedResponses: List[PlanCausalResponse] =
+    responses.filter(response => rootOwnedEvents.contains(response.trigger))
   def representativeResult: Option[(PlanCausalEventNode, TransitionConsequence)] =
     rootOwnedFutureEvents
       .flatMap(event => event.structuralConsequences.map(event -> _))
@@ -4716,13 +4718,14 @@ final case class PlanCausalEpisode(
   def futureMove: Option[String] = futureEvent.map(_.moveUci)
   def futureTarget: Option[EvidenceSquare] =
     representativeResult
-      .filterNot(_._1 == root)
-      .flatMap((_, consequence) => PlanCausalEpisode.consequenceSquares(consequence).headOption)
-      .orElse(futureEvent.flatMap(event =>
-        Option.when(event.moveUci.matches("[a-h][1-8][a-h][1-8].*"))(EvidenceSquare(event.moveUci.slice(2, 4)))
-      ))
+      .filterNot((_, consequence) => PlanCausalEpisode.routeResultKind(consequence.kind))
+      .flatMap((_, consequence) =>
+        PlanCausalEpisode.consequenceSquares(consequence).distinct match
+          case target :: Nil => Some(target)
+          case _             => None
+      )
   def completionProven: Boolean =
-    representativeResult.exists(_._1 != root) || responses.nonEmpty
+    representativeResult.exists(_._1 != root) || rootOwnedResponses.nonEmpty
 
   private def connectedToRoot: Boolean =
     @annotation.tailrec
@@ -4735,6 +4738,15 @@ final case class PlanCausalEpisode(
     events.toSet.subsetOf(expand(Set(root)))
 
 object PlanCausalEpisode:
+  private val RouteResultKinds = Set(
+    TransitionConsequenceKind.MobilityGain,
+    TransitionConsequenceKind.DevelopmentLagReduced,
+    TransitionConsequenceKind.DevelopmentPieceActivated,
+    TransitionConsequenceKind.DevelopmentMobilityGain,
+    TransitionConsequenceKind.DevelopmentSafePlacement,
+    TransitionConsequenceKind.RookLiftActivation
+  )
+
   private val PressureKinds = Set(
     TransitionConsequenceKind.WeakPawnTargetCreated,
     TransitionConsequenceKind.WeakSquareTargetCreated,
@@ -4749,6 +4761,9 @@ object PlanCausalEpisode:
     consequence.subjects
       .flatMap(subject => "[a-h][1-8]".r.findAllIn(subject.toLowerCase).map(EvidenceSquare(_)))
       .distinct
+
+  private[judgment] def routeResultKind(kind: TransitionConsequenceKind): Boolean =
+    RouteResultKinds(kind)
 
   def pressureTargetSquares(event: PlanCausalEventNode): Set[String] =
     event.structuralConsequences
@@ -4873,11 +4888,11 @@ final case class PlanCausalEventEvidence(
   def counterfactualDependencyProven: Boolean = episode.exists(_.dependencyProven)
   def planSequenceSummary: PlanSequenceSummary =
     episode
-      .filter(_.dependencyProven)
+      .filter(_ => episodePublicProofReady)
       .flatMap(episode =>
         PlanContinuity
           .fromEvents(
-            episode.events.map(event => event.identity -> event.step.ply),
+            episode.rootOwnedEvents.map(event => event.identity -> event.step.ply),
             completionProven = episode.completionProven
           )
           .map(continuity =>
@@ -4887,7 +4902,7 @@ final case class PlanCausalEventEvidence(
               previousPlanId = Some(planId),
               continuity = Some(continuity),
               previousEvent = continuity.supportingEvents.lastOption,
-              currentEvent = episode.events.lastOption.map(_.identity)
+              currentEvent = episode.rootOwnedEvents.lastOption.map(_.identity)
             )
           )
       )
@@ -4921,21 +4936,15 @@ final case class PlanCausalEventEvidence(
     counterfactualDependencyProven &&
       branchCoverageComplete &&
       (robustness == PlanCausalRobustness.Robust || robustness == PlanCausalRobustness.Conditional)
-  def moveRole(
-      transitionType: Option[TransitionType],
-      prophylaxisNeeded: Boolean
-  ): Option[PlanMoveRole] =
+  def moveRole(transitionType: Option[TransitionType]): Option[PlanMoveRole] =
     val preventsCounterplay =
-      prophylaxisNeeded || structuralConsequences.exists(_.kind == TransitionConsequenceKind.OpponentMobilityRestriction)
+      structuralConsequences.exists(_.kind == TransitionConsequenceKind.OpponentMobilityRestriction)
     val realizesDirectGoal =
-      developmentChoices.nonEmpty || structuralConsequences.exists(consequence =>
-        consequence.positive &&
-          StructuralDeltaEvidence.hasConsequenceCategory(consequence.kind, TransitionConsequenceCategory.PlanAnchor)
-      )
+      developmentChoices.nonEmpty || structuralConsequences.exists(_.positive)
     transitionType match
       case Some(TransitionType.ForcedPivot) => Some(PlanMoveRole.Pivot)
       case _ if preventsCounterplay => Some(PlanMoveRole.Prevention)
-      case _ if episode.exists(_.dependencyProven) => Some(PlanMoveRole.Preparation)
+      case _ if episodePublicProofReady => Some(PlanMoveRole.Preparation)
       case Some(TransitionType.Completion) | Some(TransitionType.Opportunistic) => Some(PlanMoveRole.Execution)
       case _ if realizesDirectGoal => Some(PlanMoveRole.Execution)
       case Some(TransitionType.Continuation) => Some(PlanMoveRole.Maintenance)
@@ -4992,7 +5001,7 @@ final case class PlanEventPublicInducedResponse(
 final case class PlanCausalPublicProof(
     dependencyKind: PlanCausalDependencyKind,
     futureMove: String,
-    targetSquare: String,
+    targetSquare: Option[String],
     plyOffset: Int,
     robustness: PlanCausalRobustness,
     realizedReplies: Int,
@@ -5028,18 +5037,6 @@ final case class PlanEventPublicProof(
 )
 
 object PlanEventPublicProof:
-  private val RouteResultKinds = Set(
-    TransitionConsequenceKind.MobilityGain,
-    TransitionConsequenceKind.DevelopmentLagReduced,
-    TransitionConsequenceKind.DevelopmentPieceActivated,
-    TransitionConsequenceKind.DevelopmentMobilityGain,
-    TransitionConsequenceKind.DevelopmentSafePlacement,
-    TransitionConsequenceKind.RookLiftActivation
-  )
-
-  private[judgment] def routeResultKind(kind: TransitionConsequenceKind): Boolean =
-    RouteResultKinds(kind)
-
   private def routeMeans(event: PlanCausalEventEvidence): List[(String, String, String)] =
     (
       (for
@@ -5058,6 +5055,12 @@ object PlanEventPublicProof:
       square == from || square == to || normalized == route || normalized.startsWith(s"$route:")
     }
 
+  private def consequenceTargetTokens(consequence: TransitionConsequence): Set[String] =
+    (
+      consequence.subjects.map(_.trim.toLowerCase) ++
+        PlanCausalEpisode.consequenceSquares(consequence).map(square => s"square:${square.key.toLowerCase}")
+    ).filter(_.nonEmpty).toSet
+
   def from(event: PlanCausalEventEvidence): PlanEventPublicProof =
     val directResults = event.structuralConsequences.map(PlanEventPublicResult.from("direct", _))
     val futureCausality = PlanCausalPublicProof.from(event)
@@ -5065,7 +5068,7 @@ object PlanEventPublicProof:
       directResults.sortBy(result => (-PlanCausalEpisode.resultSalience(result.kind), -result.strength)).headOption
     )
     val targetBearingFuture = futureCausality.filterNot(proof =>
-      proof.representativeResult.exists(result => routeResultKind(result.kind))
+      proof.representativeResult.exists(result => PlanCausalEpisode.routeResultKind(result.kind))
     )
     val futureSubjects = targetBearingFuture.toList
       .flatMap(_.representativeResult.toList.flatMap(_.subjects))
@@ -5075,17 +5078,24 @@ object PlanEventPublicProof:
       "[a-h][1-8]".r.findAllIn(subject).map(square => s"square:$square")
     )
     val means = routeMeans(event)
+    val directTargetTokens = event.structuralConsequences
+      .filterNot(consequence => PlanCausalEpisode.routeResultKind(consequence.kind))
+      .flatMap(consequenceTargetTokens)
+      .toSet
     val targets = (
-      event.identity.targets.filterNot(namesRouteMeans(_, means)) ++
+      event.identity.targets.filter(value =>
+        !namesRouteMeans(value, means) || directTargetTokens(value.trim.toLowerCase)
+      ) ++
         futureSubjects ++
         futureSquares ++
-        targetBearingFuture.map(proof => s"square:${proof.targetSquare.toLowerCase}")
+        targetBearingFuture.toList.flatMap(_.targetSquare).map(target => s"square:${target.toLowerCase}")
     ).distinct.sorted
+    val summary = event.planSequenceSummary
     PlanEventPublicProof(
       goalTheme = event.identity.goalTheme.id,
       goalKind = event.identity.goalKind.map(_.id),
-      moveRole = None,
-      transitionType = None,
+      moveRole = event.moveRole(Some(summary.transitionType)),
+      transitionType = Some(summary.transitionType),
       rootMove = event.rootMove,
       actorRole = event.identity.actorRole,
       actorFrom = event.identity.actorFrom,
@@ -5121,11 +5131,10 @@ object PlanCausalPublicProof:
           dependency.plyOffset
         ))
         .headOption
-      target <- episode.futureTarget
     yield PlanCausalPublicProof(
       dependencyKind = dependency.kind,
       futureMove = future.moveUci,
-      targetSquare = target.key,
+      targetSquare = episode.futureTarget.map(_.key),
       plyOffset = future.step.ply - episode.root.step.ply,
       robustness = event.robustness,
       realizedReplies = event.realizedBranchWitnesses.size,
@@ -5142,7 +5151,7 @@ object PlanCausalPublicProof:
           rootOwned = episode.rootOwnedEvents.contains(node)
         )
       ),
-      inducedResponses = episode.responses.map(response =>
+      inducedResponses = episode.rootOwnedResponses.map(response =>
         PlanEventPublicInducedResponse(
           triggerMove = response.trigger.moveUci,
           move = response.step.moveUci,

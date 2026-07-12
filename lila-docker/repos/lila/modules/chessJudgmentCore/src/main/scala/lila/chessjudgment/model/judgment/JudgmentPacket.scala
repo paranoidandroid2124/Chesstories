@@ -4525,7 +4525,7 @@ object MoveMeaningClaim:
     claim.principalPlanEvent.toList.flatMap(_.results).collectFirst {
       case result if result.stage == "direct" && result.kind == TransitionConsequenceKind.OutpostGain =>
         "outpost_attempt"
-      case result if result.stage == "direct" && PlanEventPublicProof.routeResultKind(result.kind) =>
+      case result if result.stage == "direct" && PlanCausalEpisode.routeResultKind(result.kind) =>
         "piece_route"
     }
 
@@ -6010,7 +6010,6 @@ object MoveMeaningClaim:
       for
         planId <- detail.principalPlanId.toList
         proof <- detail.futureCausalProof.toList
-        target = proof.targetSquare
         carrier <-
           MoveMeaningSurfaceBoardCarrier(
             "target",
@@ -6018,7 +6017,7 @@ object MoveMeaningClaim:
             planId.toString.toLowerCase,
             semanticRole = Some("plan_subject")
           ) ::
-            (
+            proof.targetSquare.toList.flatMap(target =>
               publicSquareCarrier("target", target, Some("future_plan_target")) ++
                 Option(target.take(1)).filter(_.nonEmpty).toList.flatMap(
                   publicFileCarrier("target", _, Some("future_plan_file"))
@@ -6165,8 +6164,9 @@ object MoveMeaningClaim:
   ): List[MoveMeaningSurfaceBoardCarrier] =
     val eventSubjects = event.targets.distinct
     val futureWitnesses = event.futureCausality.toList.flatMap { proof =>
-      val ordered = proof.sequence.filter(step => EvidenceRef.sameMove(step.move, proof.futureMove)) ++
-        proof.sequence.filterNot(step => EvidenceRef.sameMove(step.move, event.rootMove) || EvidenceRef.sameMove(step.move, proof.futureMove))
+      val ownedSequence = proof.sequence.filter(_.rootOwned)
+      val ordered = ownedSequence.filter(step => EvidenceRef.sameMove(step.move, proof.futureMove)) ++
+        ownedSequence.filterNot(step => EvidenceRef.sameMove(step.move, event.rootMove) || EvidenceRef.sameMove(step.move, proof.futureMove))
       ordered.map(step => publicMoveCarrier("witness", step.move)) ++
         proof.inducedResponses.map(response => publicMoveCarrier("witness", response.move))
     }
@@ -8527,7 +8527,7 @@ object MoveMeaningClaim:
             .exists(EvidenceRef.sameMove(_, proof.futureMove)) &&
           EvidenceObjectBinding
             .signatureValues(List(signature), "target", "Square")
-            .contains(proof.targetSquare) &&
+            .exists(target => proof.targetSquare.contains(target)) &&
           EvidenceObjectBinding.signatureParts(signature).contains(s"horizon=ply:${proof.plyOffset}")
       )).contains(true)
 

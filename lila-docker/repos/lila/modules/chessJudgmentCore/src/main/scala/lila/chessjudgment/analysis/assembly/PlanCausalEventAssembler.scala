@@ -220,13 +220,14 @@ private[assembly] object PlanCausalEventProof:
 
   def decisiveGoalProof(event: PlanCausalEventEvidence): Boolean =
     import TransitionConsequenceKind.*
+    val publicEpisode = event.episode.filter(_ => event.episodePublicProofReady)
     val consequences = (
       event.structuralConsequences ++
-        event.episode.toList.flatMap(_.futureEvents.flatMap(_.structuralConsequences))
+        publicEpisode.toList.flatMap(_.rootOwnedFutureEvents.flatMap(_.structuralConsequences))
     ).distinct
     val developmentChoices = (
       event.developmentChoices ++
-        event.episode.toList.flatMap(_.futureEvents.flatMap(_.developmentChoices))
+        publicEpisode.toList.flatMap(_.rootOwnedFutureEvents.flatMap(_.developmentChoices))
     ).distinct
     event.identity.goalTheme match
       case PlanTheme.OpeningPrinciples =>
@@ -239,7 +240,9 @@ private[assembly] object PlanCausalEventProof:
         consequences.exists(_.kind == OpponentMobilityRestriction)
       case PlanTheme.PieceRedeployment =>
         consequences.exists(consequence =>
-          Set(FileOccupationGain, OutpostGain, RookLiftActivation, BatteryPressureGain)(consequence.kind)
+          consequence.kind match
+            case MobilityGain => consequence.subjects.nonEmpty || consequence.strength > 1
+            case kind         => Set(FileOccupationGain, OutpostGain, RookLiftActivation, BatteryPressureGain)(kind)
         )
       case PlanTheme.WeaknessFixation =>
         consequences.exists(consequence =>
@@ -431,7 +434,7 @@ private[assembly] object PlanCausalEventProof:
       episode.events.map(_.moveUci) == principal.events.map(_.moveUci) &&
         (
           PlanCausalFunctionalMatch.functionallyEquivalent(expectedConsequences, observedConsequences) ||
-            principal.responses.map(_.target).toSet.intersect(episode.responses.map(_.target).toSet).nonEmpty
+            principal.rootOwnedResponses.map(_.target).toSet.intersect(episode.rootOwnedResponses.map(_.target).toSet).nonEmpty
         )
     )
     val realizationMatch =
