@@ -1594,6 +1594,64 @@ class MoveReviewPhase3AuditRunnerTest extends munit.FunSuite:
       List(referenceLine.rootMove)
     )
 
+  test("cross-comparison candidate causes cannot become the current played move"):
+    val alternativeLine = lineRef("second", "c2c4", 3, LineNodeRole.Alternative)
+    val routeSignature =
+      "actor=Move:c2c4|actor=Piece:knight|actor=Square:c2|target=Square:c4|mechanism=Mechanism:mobilitygain|proof=DirectProof"
+    val foreignCandidateCause = causeFrame(
+      causeId = "cause-cross-candidate-route",
+      axisKeys = List("Activity:Gain:cross-candidate-route"),
+      objectSignatures = List(routeSignature),
+      causeKind = RelativeCauseKind.ActivityGain,
+      rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.ExactOwnedRoot
+    ).copy(
+      comparisonKind = CandidateComparisonKind.BestVsSecond,
+      causeRole = RelativeCauseRole.CandidateSetConstraint,
+      causeSourceSide = RelativeCauseSourceSide.Candidate,
+      candidateLine = alternativeLine,
+      eventLine = alternativeLine,
+      eventRootMove = alternativeLine.rootMove,
+      hasOwnedAdmissibleLongTermProof = true,
+      attributionDirectProofEligible = true
+    )
+    val detail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PieceRerouteRoute,
+      axisKey = Some("Activity:Gain:cross-candidate-route"),
+      axisKind = Some(StrategicAxisKind.Activity),
+      axisPolarity = Some(StrategicAxisPolarity.Gain),
+      candidateEvidenceIds = List("played-transition"),
+      sourceEvidenceIds = List("played-transition"),
+      causeEvidenceIds = List("cause-cross-candidate-route"),
+      proofRoles = List(RelativeCauseProofRole.DirectProof),
+      objectBindingSignatures = List(routeSignature),
+      specificityTier = PositionPlanTechniqueSpecificityTier.ExactObjectAxis,
+      structuralRouteMove = Some(candidateLine.rootMove),
+      structuralPurposeSubjects = List("knight:e2-e3:maneuver"),
+      structuralPurposeConsequences = List("MobilityGain"),
+      structuralMotifTags = List("piece", "route")
+    )
+    val view = meaningClaimView(
+      verdict = MoveChoiceVerdict.MatchesReference,
+      auditCauses = List(foreignCandidateCause),
+      details = List(detail)
+    )
+
+    assertEquals(
+      MoveMeaningClaim.lineRoles(
+        TypedEvidenceGraph(Nil),
+        meaningClaimPlanTechniqueFrame(List(detail)),
+        detail,
+        view.verdict.get,
+        List(foreignCandidateCause)
+      ),
+      List("contrast")
+    )
+    assert(!view.moveMeaningClaims.exists(claim =>
+      claim.lineRole == "candidate" &&
+        claim.moveUci == candidateLine.rootMove &&
+        claim.causeEvidenceIds.contains("cause-cross-candidate-route")
+    ), view.moveMeaningClaims)
+
   private def lineRef(id: String, rootMove: String, rank: Int, role: LineNodeRole): LineNodeRef =
     LineNodeRef(id, rootMove, rank, role)
 

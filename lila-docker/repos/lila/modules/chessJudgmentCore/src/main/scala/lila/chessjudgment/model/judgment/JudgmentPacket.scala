@@ -8316,9 +8316,9 @@ object MoveMeaningClaim:
   private def causeFrameLineRole(frame: MoveJudgmentCauseFrame, verdict: MoveJudgmentVerdictFrame): Option[String] =
     frame.causeSourceSide match
       case RelativeCauseSourceSide.Candidate =>
-        Some("candidate")
+        Some(if frame.eventLine == verdict.candidateLine then "candidate" else "contrast")
       case RelativeCauseSourceSide.Reference =>
-        Some("reference")
+        Some(if frame.eventLine == verdict.referenceLine then "reference" else "contrast")
       case RelativeCauseSourceSide.Mixed | RelativeCauseSourceSide.Shared =>
         if frame.eventLine == verdict.candidateLine then Some("candidate")
         else if frame.eventLine == verdict.referenceLine then Some("reference")
@@ -8784,7 +8784,7 @@ object MoveJudgmentView:
         overriddenLocalIdeas = overriddenLocalIdeas(ideaVerdict, claims),
         preservedLocalIdeas = preservedLocalIdeas(claims, evidenceGraph, playedMoves)
       )
-    val moveMeaningClaims = MoveMeaningClaim.from(evidenceGraph, baseView, narratedCauseFrames)
+    val moveMeaningClaims = MoveMeaningClaim.from(evidenceGraph, baseView, causeAudit.all)
     val view =
       baseView.copy(
         moveMeaningClaims = moveMeaningClaims
