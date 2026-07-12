@@ -460,7 +460,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     ))
 
   test("reply probe certifies future trajectory under event-owned plan authority"):
-    val input = doknjasInput()
+    val input = doknjasComparisonInput()
     val result = MoveReviewJudgmentOrchestrator
       .build(withReplyProbe(input, List(
         VariationLine(List("b2b4", "a5b4", "f4d2", "b4b2", "c1c2", "b2a3", "f1e2", "b5b4"), 0, depth = 16),
@@ -476,6 +476,10 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assert(event.branchWitnesses.forall(_.realizationMatch.contains(PlanCausalRealizationMatch.ExactMove)), event.branchWitnesses)
     assertEquals(event.robustness, PlanCausalRobustness.Robust)
     assert(event.episodePublicProofReady)
+    val planSignals = planCoherenceSignals(result, "b7b5")
+    assertEquals(planSignals.map(_.source.layer).distinct, List(EvidenceLayer.PlanCausalEvent))
+    assertEquals(planSignals.flatMap(_.axis.map(_.polarity)).distinct, List(StrategicAxisPolarity.Gain))
+    assert(planRelativeCauses(result, "b7b5").contains(RelativeCauseKind.PlanImprovement))
     assertEquals(result.packet.probeRequests, Nil)
     val view = result.packet.moveJudgmentView.getOrElse(fail("expected move judgment view"))
     val eventRecord = result.packet.evidenceGraph.records.collectFirst {
@@ -576,7 +580,7 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(owned.strength, 2)
 
   test("reply probe preserves conditionality instead of treating an unfinished branch as refutation"):
-    val input = doknjasInput()
+    val input = doknjasComparisonInput()
     val result = MoveReviewJudgmentOrchestrator
       .build(withReplyProbe(input, List(
         VariationLine(List("f1e2", "b5b4"), 0, depth = 16),
@@ -591,9 +595,13 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(event.branchWitnesses.count(_.outcome == PlanCausalBranchOutcome.Deferred), 2)
     assertEquals(event.robustness, PlanCausalRobustness.Conditional)
     assert(event.episodePublicProofReady)
+    assertEquals(
+      planCoherenceSignals(result, "b7b5").flatMap(_.axis.map(_.polarity)).distinct,
+      List(StrategicAxisPolarity.Support)
+    )
 
   test("reply probe refutes an unrealized episode after its representative horizon"):
-    val input = doknjasInput()
+    val input = doknjasComparisonInput()
     val result = MoveReviewJudgmentOrchestrator
       .build(withReplyProbe(input, List(
         VariationLine(List("f1e2", "a5a3", "b2b3", "a3a4", "a2a3", "a4a5", "a3a4", "a5a6"), 0, depth = 16),
@@ -608,6 +616,10 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
     assertEquals(event.robustness, PlanCausalRobustness.Refuted)
     assert(!event.episodePublicProofReady)
     assert(PlanEventPublicProof.from(event).results.forall(_.stage == "direct"))
+    val planSignals = planCoherenceSignals(result, "b7b5")
+    assertEquals(planSignals.map(_.source.layer).distinct, List(EvidenceLayer.PlanCausalEvent))
+    assertEquals(planSignals.flatMap(_.axis.map(_.polarity)).distinct, List(StrategicAxisPolarity.Concede))
+    assert(planRelativeCauses(result, "b7b5").contains(RelativeCauseKind.PlanContradiction))
 
   test("validator rejects a causal event whose branch outcome was re-labeled downstream"):
     val result = MoveReviewJudgmentOrchestrator
@@ -834,6 +846,12 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
       probeResults = probeResults
     )
 
+  private def doknjasComparisonInput(): RawMoveReviewInput =
+    val base = doknjasInput()
+    base.copy(variations =
+      VariationLine(List("e7e6", "h2h3"), scoreCp = 0, depth = 16) :: base.variations
+    )
+
   private def weakPawnInput(): RawMoveReviewInput =
     RawMoveReviewInput(
       fen = "r1bqk2r/p4ppp/1pnppn2/2p5/2PPP3/P1PBBP2/6PP/R2QK1NR b KQkq - 1 9",
@@ -987,6 +1005,27 @@ class ChessIdeaAssemblerTest extends munit.FunSuite:
           ) =>
         payload
     }.getOrElse(fail("expected causal event"))
+
+  private def planCoherenceSignals(
+      result: MoveReviewJudgmentResult,
+      rootMove: String
+  ): List[StrategicMechanismSignal] =
+    result.packet.evidenceGraph.records.collect {
+      case EvidenceRecord(ref, payload: StrategicMechanismEvidence, _)
+          if ref.line.exists(line => EvidenceRef.sameMove(line.rootMove, rootMove)) &&
+            payload.kind == StrategicMechanismKind.PlanPressure =>
+        payload.signals.filter(_.axis.exists(_.kind == StrategicAxisKind.PlanCoherence))
+    }.flatten
+
+  private def planRelativeCauses(
+      result: MoveReviewJudgmentResult,
+      rootMove: String
+  ): List[RelativeCauseKind] =
+    result.packet.evidenceGraph.records.collect {
+      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
+          if EvidenceRef.sameMove(cause.candidateLine.rootMove, rootMove) =>
+        cause.kind
+    }.distinct
 
   private def evidenceRef(
       id: String,

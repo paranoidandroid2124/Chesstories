@@ -1872,7 +1872,7 @@ final case class StrategicMechanismEvidence(
   def directStrength: Int =
     signals.map(_.strength).sum
   def hasCompositeSupport: Boolean =
-    signals.size >= 2 || signalKinds.exists(kind =>
+    hasOwnedPlanEvent || signals.size >= 2 || signalKinds.exists(kind =>
       kind == StrategicMechanismSignalKind.StructuralDelta ||
         kind == StrategicMechanismSignalKind.PawnStructure ||
         kind == StrategicMechanismSignalKind.PlanTransition ||
@@ -2419,48 +2419,14 @@ object StrategicMechanismEvidence:
           )
         ).flatten ++ structuralPawnBreakSignals(record, payload)
       case payload: PlanCausalEventEvidence if record.ref.confidence != EvidenceConfidence.Heuristic =>
-        List(
+        planCausalAxis(payload).toList.map(axis =>
           StrategicMechanismKind.PlanPressure ->
             signal(
               StrategicMechanismSignalKind.PlanPressure,
               payload.planId.toString,
               record.ref,
-              2,
-              concreteAxis(
-                record,
-                Some(
-                  StrategicAxisDetail(
-                    StrategicAxisKind.PlanCoherence,
-                    StrategicAxisPolarity.Support,
-                    payload.planId.toString
-                  )
-                )
-              )
-            )
-        )
-      case PlanTransitionEvidence(transition) if planTransitionCanSupportPlan(transition) =>
-        val polarity = transition.transitionType match
-          case TransitionType.Continuation  => StrategicAxisPolarity.Preserve
-          case TransitionType.Completion    => StrategicAxisPolarity.Gain
-          case TransitionType.NaturalShift  => StrategicAxisPolarity.Release
-          case TransitionType.ForcedPivot   => StrategicAxisPolarity.Concede
-          case TransitionType.Opportunistic => StrategicAxisPolarity.Gain
-          case TransitionType.Opening       => StrategicAxisPolarity.Support
-        val axisLabel =
-          transition.transitionType match
-            case TransitionType.Continuation => transition.currentEvent.map(_.goalKey).getOrElse("")
-            case TransitionType.Completion =>
-              (transition.previousEvent.toList.map(_.goalKey) ++ transition.currentEvent.toList.map(_.goalKey)).mkString("->")
-            case _ =>
-              (transition.previousEvent.toList.map(_.goalKey) ++ transition.currentEvent.toList.map(_.goalKey)).mkString("->")
-        transition.currentEvent.toList.map(current =>
-          StrategicMechanismKind.PlanPressure ->
-            signal(
-              StrategicMechanismSignalKind.PlanTransition,
-              current.goalKey,
-              record.ref,
-              2,
-              concreteAxis(record, Some(StrategicAxisDetail(StrategicAxisKind.PlanCoherence, polarity, axisLabel)))
+              if axis.polarity == StrategicAxisPolarity.Support then 2 else 3,
+              concreteAxis(record, Some(axis))
             )
         )
       case FeatureAnchorEvidence(anchor) if anchor.hasPositiveStrength && anchor.canCorroborateOpeningPrior =>
@@ -2496,6 +2462,28 @@ object StrategicMechanismEvidence:
         List(StrategicMechanismKind.Endgame -> signal(StrategicMechanismSignalKind.EndgamePosition, "endgame-technique", record.ref, 2))
       case _ =>
         Nil
+
+  private def planCausalAxis(event: PlanCausalEventEvidence): Option[StrategicAxisDetail] =
+    val directProof = event.structuralConsequences.nonEmpty || event.developmentChoices.nonEmpty
+    val polarity = event.episode match
+      case None =>
+        Some(StrategicAxisPolarity.Support)
+      case Some(_) if !event.branchCoverageComplete =>
+        Option.when(directProof)(StrategicAxisPolarity.Support)
+      case Some(_) =>
+        event.robustness match
+          case PlanCausalRobustness.Robust =>
+            Some(
+              if event.planSequenceSummary.continuity.exists(_.completionProven) then StrategicAxisPolarity.Gain
+              else StrategicAxisPolarity.Preserve
+            )
+          case PlanCausalRobustness.Conditional =>
+            Some(StrategicAxisPolarity.Support)
+          case PlanCausalRobustness.Refuted =>
+            Some(StrategicAxisPolarity.Concede)
+          case PlanCausalRobustness.Untested | PlanCausalRobustness.Deferred =>
+            Option.when(directProof)(StrategicAxisPolarity.Support)
+    polarity.map(StrategicAxisDetail(StrategicAxisKind.PlanCoherence, _, event.planId.toString))
 
   def sourceSemanticAnchors(record: EvidenceRecord): List[EvidenceSemanticAnchor] =
     record.payload match
@@ -2647,6 +2635,14 @@ object StrategicMechanismEvidence:
         payload.signals.exists(_.subjects.exists(_.trim.nonEmpty)) ||
           payload.consequences.exists(_.subjects.exists(_.trim.nonEmpty)) ||
           payload.developmentChoices.nonEmpty
+      case payload: PlanCausalEventEvidence =>
+        payload.identity.actorRole.nonEmpty &&
+          (
+            payload.identity.targets.nonEmpty ||
+              payload.structuralConsequences.exists(_.subjects.exists(_.trim.nonEmpty)) ||
+              payload.developmentChoices.nonEmpty ||
+              payload.episode.exists(_.dependencyProven)
+          )
       case PlanTransitionEvidence(transition) =>
         transition.currentEvent.exists(event => event.targets.nonEmpty || event.actorRole.nonEmpty)
       case payload: BoardFactEvidence =>

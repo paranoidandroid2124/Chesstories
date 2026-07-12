@@ -402,7 +402,17 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
     val candidateCurrentMoveCanOwnValue =
       profile.playedCandidateSideComparison &&
         profile.candidateBetter
-    if !profile.exactReferenceMove && !candidateCurrentMoveCanOwnValue then Nil
+    val ownedEpisodeFailure = profile.candidateCurrentMoveStrategicSupport.exists {
+      case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
+        currentMoveOwnedPlanEpisodeCause(
+          RelativeCauseKind.PlanContradiction,
+          payload,
+          profile.fact.candidateLine
+        )
+      case _ =>
+        false
+    }
+    if !profile.exactReferenceMove && !candidateCurrentMoveCanOwnValue && !ownedEpisodeFailure then Nil
     else
       profile.candidateCurrentMoveStrategicSupport.flatMap {
         case record @ EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
@@ -423,6 +433,11 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
                 else if kind == RelativeCauseKind.PawnWeaknessTarget then
                   profile.exactReferenceMove &&
                     (concreteTargetCarriers.nonEmpty || relationPayoffs.nonEmpty)
+                else if kind == RelativeCauseKind.PlanImprovement then
+                  profile.candidateProvedValue &&
+                    currentMoveOwnedPlanEpisodeCause(kind, payload, profile.fact.candidateLine)
+                else if kind == RelativeCauseKind.PlanContradiction then
+                  currentMoveOwnedPlanEpisodeCause(kind, payload, profile.fact.candidateLine)
                 else
                   (
                     profile.exactReferenceMove &&
@@ -454,6 +469,28 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         case _ =>
           Nil
       }.distinctBy(draft => (draft.kind, draft.support.map(_.ref.id).sorted.mkString("|")))
+
+  private def currentMoveOwnedPlanEpisodeCause(
+      kind: RelativeCauseKind,
+      payload: StrategicMechanismEvidence,
+      candidateLine: LineNodeRef
+  ): Boolean =
+    payload.kind == StrategicMechanismKind.PlanPressure &&
+      payload.signals.exists(signal =>
+        signal.kind == StrategicMechanismSignalKind.PlanPressure &&
+          signal.source.layer == EvidenceLayer.PlanCausalEvent &&
+          signal.source.line.contains(candidateLine) &&
+          signal.axis.exists(axis =>
+            axis.kind == StrategicAxisKind.PlanCoherence &&
+              (kind match
+                case RelativeCauseKind.PlanImprovement =>
+                  StrategicMechanismContrastEvidence.currentMovePlanCoherenceAxis(axis)
+                case RelativeCauseKind.PlanContradiction =>
+                  axis.polarity == StrategicAxisPolarity.Concede
+                case _ =>
+                  false)
+          )
+      )
 
   private def currentMoveConcreteActivityCanOwnValue(
       kind: RelativeCauseKind,
@@ -1120,7 +1157,11 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       signal: StrategicMechanismSignal,
       candidateLine: LineNodeRef
   ): Boolean =
-    signal.kind == StrategicMechanismSignalKind.StructuralDelta &&
+    (
+      signal.kind == StrategicMechanismSignalKind.StructuralDelta ||
+        signal.kind == StrategicMechanismSignalKind.PlanPressure &&
+          signal.source.layer == EvidenceLayer.PlanCausalEvent
+    ) &&
       signal.source.scope == EvidenceScope.PlayedTransition &&
       signal.source.line.contains(candidateLine) &&
       signal.axis.exists(axis => currentMoveStrategicSupportCauseKindsForAxis(axis).nonEmpty)
@@ -1132,6 +1173,8 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         else List(RelativeCauseKind.TargetPressureGain)
       case StrategicAxisKind.Activity if currentMoveActivityValueAxis(axis) =>
         List(RelativeCauseKind.ActivityGain)
+      case StrategicAxisKind.PlanCoherence if axis.polarity == StrategicAxisPolarity.Concede =>
+        List(RelativeCauseKind.PlanContradiction)
       case StrategicAxisKind.PlanCoherence if StrategicMechanismContrastEvidence.currentMovePlanCoherenceAxis(axis) =>
         List(RelativeCauseKind.PlanImprovement)
       case StrategicAxisKind.Counterplay

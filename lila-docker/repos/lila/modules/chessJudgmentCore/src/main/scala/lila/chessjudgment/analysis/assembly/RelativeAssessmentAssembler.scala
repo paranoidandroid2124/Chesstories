@@ -1261,18 +1261,39 @@ object RelativeAssessmentAssembler:
       eventLine: Option[LineNodeRef]
   ): Boolean =
     val normalizedRoot = normalizeMove(rootMove)
-    signal.kind == StrategicMechanismSignalKind.StructuralDelta &&
-      signal.axis.exists(axis => strategicAxisCanProveCause(kind, axis, sourceSide)) &&
-      graph.byId.get(signal.source.id).exists {
-        case EvidenceRecord(sourceRef, structural: StructuralDeltaEvidence, _) =>
-          val provingConsequences = structuralConsequencesForCause(kind, structural, signal.axis)
-          eventLine.forall(line => sourceRef.line.contains(line) && structural.line.contains(line)) &&
-            normalizeMove(structural.moveUci) == normalizedRoot &&
-            provingConsequences.nonEmpty &&
-            strategicStructuralProofReady(kind, provingConsequences)
+    signal.axis.exists(axis => strategicAxisCanProveCause(kind, axis, sourceSide)) &&
+      (signal.kind match
+        case StrategicMechanismSignalKind.StructuralDelta =>
+          graph.byId.get(signal.source.id).exists {
+            case EvidenceRecord(sourceRef, structural: StructuralDeltaEvidence, _) =>
+              val provingConsequences = structuralConsequencesForCause(kind, structural, signal.axis)
+              eventLine.forall(line => sourceRef.line.contains(line) && structural.line.contains(line)) &&
+                normalizeMove(structural.moveUci) == normalizedRoot &&
+                provingConsequences.nonEmpty &&
+                strategicStructuralProofReady(kind, provingConsequences)
+            case _ =>
+              false
+          }
+        case StrategicMechanismSignalKind.PlanPressure =>
+          graph.byId.get(signal.source.id).exists {
+            case EvidenceRecord(sourceRef, event: PlanCausalEventEvidence, _)
+                if sourceRef.confidence != EvidenceConfidence.Heuristic =>
+              eventLine.forall(sourceRef.line.contains) &&
+                normalizeMove(event.rootMove) == normalizedRoot &&
+                (kind match
+                  case RelativeCauseKind.PlanImprovement =>
+                    event.episodePublicProofReady &&
+                      (event.robustness == PlanCausalRobustness.Robust ||
+                        event.robustness == PlanCausalRobustness.Conditional)
+                  case RelativeCauseKind.PlanContradiction =>
+                    event.branchCoverageComplete && event.robustness == PlanCausalRobustness.Refuted
+                  case _ =>
+                    false)
+            case _ =>
+              false
+          }
         case _ =>
-          false
-      }
+          false)
 
   private[chessjudgment] def strategicMechanismProofSignals(
       graph: TypedEvidenceGraph,
