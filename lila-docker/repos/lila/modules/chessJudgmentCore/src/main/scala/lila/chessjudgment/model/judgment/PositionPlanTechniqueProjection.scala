@@ -1151,9 +1151,7 @@ object PositionPlanTechniqueProjection:
       activePlanIds: List[PlanId],
       previousPlanId: Option[PlanId],
       transitionType: Option[TransitionType],
-      event: Option[PlanCausalEventEvidence],
-      pressure: Option[PlanPressureEvidence],
-      rootMove: Option[String]
+      event: Option[PlanCausalEventEvidence]
   )
 
   private def positionPlanTechniqueEnrichedDetails(
@@ -1279,12 +1277,9 @@ object PositionPlanTechniqueProjection:
       )
     val positiveFunctionalProof =
       positionPlanTechniquePositiveFunctionalProof(detail, graph, evidenceIds)
-    val principalPlanBindings =
-      positionPlanTechniquePrincipalPlanBindings(detail, graph, evidenceIds)
     val rawDetailBindings =
       if localCauseBindings.nonEmpty then localCauseBindings
       else if positiveFunctionalProof.exists(_.bindings.nonEmpty) then positiveFunctionalProof.toList.flatMap(_.bindings)
-      else if detail.unit == PositionPlanTechniqueUnit.PlanOptionSet && principalPlanBindings.nonEmpty then principalPlanBindings
       else
         EvidenceObjectBinding.fromEvidenceRefs(
           graph,
@@ -1332,20 +1327,6 @@ object PositionPlanTechniqueProjection:
       specificityTier = positionPlanTechniqueSpecificityTier(detail, causeRecords.map(_._2), objectBindingSignatures)
     )
 
-  private def positionPlanTechniquePrincipalPlanBindings(
-      detail: PositionPlanTechniqueSemanticDetail,
-      graph: TypedEvidenceGraph,
-      evidenceIds: List[String]
-  ): List[EvidenceObjectBinding] =
-    for
-      planId <- detail.principalPlanId.toList
-      pressureRecord <- positionPlanTechniquePressureRecordForSources(graph, evidenceIds).toList
-      binding <- EvidenceObjectBinding.fromEvidenceRefs(graph, List(pressureRecord.ref))
-      if binding.target.exists(obj =>
-        obj.kind == EvidenceObjectKind.PlanSubject && obj.key.equalsIgnoreCase(planId.toString)
-      )
-    yield binding
-
   private def positionPlanTechniquePositiveFunctionalProof(
       detail: PositionPlanTechniqueSemanticDetail,
       graph: TypedEvidenceGraph,
@@ -1355,24 +1336,17 @@ object PositionPlanTechniqueProjection:
     else
       for
         routeMove <- detail.structuralRouteMove
-        pressureRecord <- positionPlanTechniquePressureRecordForSources(graph, evidenceIds)
-        pressure <- pressureRecord.payload match
-          case payload: PlanPressureEvidence => Some(payload)
-          case _                             => None
-        line <- pressureRecord.ref.line
-        planId <- pressure.uniqueRootBackedPlan(Some(line.rootMove)).map(_.plan.id)
-        if detail.principalPlanId.forall(_ == planId)
-        if EvidenceRef.sameMove(routeMove, line.rootMove)
-        eventRecordAndPayload <- graph.records.collectFirst {
-          case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, parents)
-              if payload.rootLine == line &&
-                payload.planId == planId &&
+        planId <- detail.principalPlanId
+        eventRecordAndPayload <- evidenceIds.flatMap(graph.byId.get).collect {
+          case record @ EvidenceRecord(ref, payload: PlanCausalEventEvidence, _)
+              if payload.planId == planId &&
                 EvidenceRef.sameMove(payload.rootMove, routeMove) &&
-                parents.exists(_.id == pressureRecord.ref.id) =>
+                ref.confidence != EvidenceConfidence.Heuristic =>
             record -> payload
-        }
+        }.distinctBy(_._1.ref.id) match
+          case event :: Nil => Some(event)
+          case _            => None
         (eventRecord, event) = eventRecordAndPayload
-        if eventRecord.ref.confidence != EvidenceConfidence.Heuristic
         detailKinds = detail.structuralConsequenceKinds.map(_.toString.toLowerCase).toSet
         eventBindings = EvidenceObjectBinding
           .fromEvidenceRefs(graph, List(eventRecord.ref))
@@ -2007,17 +1981,35 @@ object PositionPlanTechniqueProjection:
       )
 
     private def withPlanEvidence(plan: PositionPlanTechniquePlanEvidence): PositionPlanTechniqueSemanticDetail =
-      detail.copy(
-        activePlanIds = (detail.activePlanIds ++ plan.activePlanIds).distinct,
-        principalPlanId = detail.principalPlanId.orElse(plan.principalPlanId),
-        previousPlanId = detail.previousPlanId.orElse(plan.previousPlanId),
-        planTransitionType = detail.planTransitionType.orElse(plan.transitionType),
+      val eventOwnedDetail =
+        if detail.unit == PositionPlanTechniqueUnit.PlanOptionSet then
+          plan.event.fold(detail) { event =>
+            val consequences = event.structuralConsequences
+            detail.copy(
+              structuralRouteMove = Some(event.rootMove),
+              structuralPurposeConsequences = consequences.map(_.kind.toString).distinct.sorted,
+              structuralConsequenceKinds = consequences.map(_.kind).distinct,
+              structuralPurposeSubjects = consequences.flatMap(_.subjects).distinct.sorted,
+              structuralPurposeCategories = consequences
+                .flatMap(consequence => positionPlanTechniqueStructuralPurposeCategories(consequence.kind))
+                .distinct
+                .sorted,
+              structuralPurposePolarities = consequences.map(_.polarity.toString).distinct.sorted,
+              structuralPurposeStrength = Option.when(consequences.nonEmpty)(consequences.map(_.strength).sum)
+            )
+          }
+        else detail
+      eventOwnedDetail.copy(
+        activePlanIds = (eventOwnedDetail.activePlanIds ++ plan.activePlanIds).distinct,
+        principalPlanId = eventOwnedDetail.principalPlanId.orElse(plan.principalPlanId),
+        previousPlanId = eventOwnedDetail.previousPlanId.orElse(plan.previousPlanId),
+        planTransitionType = eventOwnedDetail.planTransitionType.orElse(plan.transitionType),
         planMoveRole =
-          if detail.unit == PositionPlanTechniqueUnit.PlanOptionSet then
+          if eventOwnedDetail.unit == PositionPlanTechniqueUnit.PlanOptionSet then
             plan.event.flatMap(
               _.moveRole(
                 plan.transitionType,
-                detail.prophylaxisNeeded.contains(true)
+                eventOwnedDetail.prophylaxisNeeded.contains(true)
               )
             )
           else None
@@ -2166,42 +2158,60 @@ object PositionPlanTechniqueProjection:
       directRecords
         .flatMap(positionPlanTechniqueRecordLineage(graph, _, 2))
         .distinctBy(_.ref.id)
-    val pressureRecord = positionPlanTechniquePressureRecordForSources(graph, sourceIds)
-    val pressure = pressureRecord.collect { case EvidenceRecord(_, payload: PlanPressureEvidence, _) => payload }
-    val rootMove = pressureRecord.flatMap(_.ref.line.map(_.rootMove))
-    val principalPlanId = pressure.flatMap(_.principalPlanId(rootMove))
-    val eventPlanId = pressure.flatMap(_.uniqueRootBackedPlan(rootMove).map(_.plan.id))
-    val event =
+    val eventRecords = records.collect {
+      case record @ EvidenceRecord(ref, event: PlanCausalEventEvidence, _)
+          if ref.confidence != EvidenceConfidence.Heuristic =>
+        record -> event
+    }.distinctBy(_._1.ref.id)
+    val sharedEventLine = eventRecords.map(_._2.rootLine).distinct match
+      case line :: Nil => Some(line)
+      case _           => None
+    val sharedEventAfter = eventRecords.map(_._2.rootTransition.to).distinct match
+      case position :: Nil => Some(position)
+      case _               => None
+    val pressureRecord =
       for
-        owner <- pressureRecord
-        line <- owner.ref.line
-        planId <- eventPlanId
-        payload <- graph.records.collectFirst {
-          case EvidenceRecord(_, candidate: PlanCausalEventEvidence, parents)
-              if candidate.rootLine == line &&
-                candidate.planId == planId &&
-                parents.exists(_.id == owner.ref.id) =>
-            candidate
+        line <- sharedEventLine
+        after <- sharedEventAfter
+        record <- graph.records.collectFirst {
+          case record @ EvidenceRecord(ref, _: PlanPressureEvidence, _)
+              if ref.line.contains(line) && ref.position == after =>
+            record
         }
-      yield payload
+      yield record
+    val resolvedPressureRecord = pressureRecord.orElse(positionPlanTechniquePressureRecordForSources(graph, sourceIds))
+    val pressure = resolvedPressureRecord.collect { case EvidenceRecord(_, payload: PlanPressureEvidence, _) => payload }
+    val pressureRootMove = resolvedPressureRecord.flatMap(_.ref.line.map(_.rootMove)).orElse(sharedEventLine.map(_.rootMove))
+    def uniqueEvent(planId: PlanId): Option[(EvidenceRecord, PlanCausalEventEvidence)] =
+      eventRecords.filter(_._2.planId == planId) match
+        case event :: Nil => Some(event)
+        case _            => None
+    val eventRecord = eventRecords match
+      case event :: Nil => Some(event)
+      case _ =>
+        pressure.toList
+          .flatMap(_.activePlanIds(pressureRootMove))
+          .collectFirst(Function.unlift(uniqueEvent))
+    val event = eventRecord.map(_._2)
+    val rootMove = event.map(_.rootMove).orElse(pressureRootMove)
+    val principalPlanId = event.map(_.planId)
     val transition =
       event
         .flatMap(principal =>
-          records.collectFirst {
+          graph.records.collect {
             case EvidenceRecord(_, PlanTransitionEvidence(summary), _)
                 if summary.currentEvent.exists(_.stableKey == principal.identity.stableKey) =>
               summary
-          }
+          }.distinct match
+            case summary :: Nil => Some(summary)
+            case _              => None
         )
-        .orElse(directRecords.collectFirst { case EvidenceRecord(_, PlanTransitionEvidence(summary), _) => summary })
     PositionPlanTechniquePlanEvidence(
       principalPlanId = principalPlanId,
-      activePlanIds = pressure.toList.flatMap(_.activePlanIds(rootMove)),
+      activePlanIds = (event.map(_.planId).toList ++ pressure.toList.flatMap(_.activePlanIds(rootMove))).distinct,
       previousPlanId = transition.flatMap(_.previousPlanId),
       transitionType = transition.map(_.transitionType),
-      event = event,
-      pressure = pressure,
-      rootMove = rootMove
+      event = event
     )
 
   private def positionPlanTechniquePressureRecordForSources(

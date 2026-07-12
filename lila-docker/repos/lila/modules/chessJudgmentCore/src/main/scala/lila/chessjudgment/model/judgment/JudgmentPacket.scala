@@ -2753,6 +2753,16 @@ object MoveMeaningSurface:
       claim.targetFiles.isEmpty &&
         claim.targetSquares.exists(square => Set("d4", "d5", "e4", "e5")(square.toLowerCase))
     val signatureList = claim.objectBindingSignatures
+    val targetPressureGainSignatures = signatureList.filter { signature =>
+      val normalized = signature.toLowerCase
+      normalized.contains("mechanism=mechanism:targetpressuregain") ||
+      normalized.contains("consequence=consequence:targetpressuregain:gain")
+    }
+    val targetPressureActorPieces = EvidenceObjectBinding
+      .signatureValues(targetPressureGainSignatures, "actor", "Piece")
+      .map(_.toLowerCase)
+      .distinct
+      .sorted
     val mechanismTokens =
       EvidenceObjectBinding.signatureTokens(signatureList, "mechanism=").map(_.stripPrefix("mechanism=").toLowerCase)
     val consequenceTokens =
@@ -2840,20 +2850,20 @@ object MoveMeaningSurface:
       )
     val opensLineLabel =
       routePiece match
-        case Some("bishop") => routeTargetSquare.map(square => s"opens bishop diagonal from $square").getOrElse("opens bishop diagonal")
-        case Some("queen")  => routeTargetSquare.map(square => s"opens queen line from $square").getOrElse("opens queen line")
+        case Some("bishop") => routeTargetSquare.map(square => s"clears bishop diagonal from $square").getOrElse("clears bishop diagonal")
+        case Some("queen")  => routeTargetSquare.map(square => s"clears queen line from $square").getOrElse("clears queen line")
         case Some(piece) =>
           lineUnlockFile.filter(file => routeTargetSquare.exists(_.startsWith(file))) match
-            case Some(file) => s"opens $file-file for $piece"
-            case None       => routeTargetSquare.map(square => s"opens $piece line from $square").getOrElse(s"opens $piece line")
+            case Some(file) => s"clears $piece line on $file-file"
+            case None       => routeTargetSquare.map(square => s"clears $piece line from $square").getOrElse(s"clears $piece line")
         case None =>
           openedLineSquare match
-            case Some(square) if lineUnlockFile.contains(square.take(1)) => s"opens ${square.take(1)}-file from $square"
-            case Some(square)                                           => s"opens line from $square"
+            case Some(square) if lineUnlockFile.contains(square.take(1)) => s"clears ${square.take(1)}-file line from $square"
+            case Some(square)                                           => s"clears line from $square"
             case None =>
               lineUnlockFile
-                .map(file => s"opens $file-file")
-                .getOrElse(if bishopMentioned then "opens bishop diagonal" else "opens a line")
+                .map(file => s"clears line on $file-file")
+                .getOrElse(if bishopMentioned then "clears bishop diagonal" else "clears a line")
     val routeFrom = claim.routeIdentityParts.collectFirst {
       case part if part.toLowerCase.startsWith("from:") => part.drop("from:".length).toLowerCase
     }
@@ -2865,11 +2875,10 @@ object MoveMeaningSurface:
         case (Some("knight"), Some(square)) => Set("b1", "g1", "b8", "g8")(square)
         case (Some("bishop"), Some(square)) => Set("c1", "f1", "c8", "f8")(square)
         case _ => false
-    val currentMoveBishopCarrier =
-      routePiece.contains("bishop") ||
-        evidence.boardCarriers.exists(carrier =>
-          carrier.role == "actor" && carrier.kind == "Piece" && carrier.value.equalsIgnoreCase("bishop")
-        )
+    val principalDevelopmentPiece = claim.principalPlanEvent
+      .filter(_.developmentChoices.nonEmpty)
+      .flatMap(_.actorRole)
+      .map(_.toLowerCase)
     val currentMoveFile =
       JudgmentSubjectBinding
         .normalizeMove(claim.moveUci)
@@ -3125,11 +3134,6 @@ object MoveMeaningSurface:
         case square :: Nil => s"pressure on $square"
         case squares if squares.nonEmpty => s"pressure on ${squares.mkString("/")}"
         case _ => "central pressure"
-    val bishopPressureLabel =
-      publicPressureTargetSquares match
-        case square :: Nil => s"bishop pressure on $square"
-        case squares if squares.nonEmpty && squares.size <= 4 => s"bishop pressure on ${squares.mkString("/")}"
-        case _             => "bishop pressure"
     val targetFixationLabel =
       publicPressureTargetSquares match
         case square :: Nil => s"fixes target on $square"
@@ -3168,31 +3172,24 @@ object MoveMeaningSurface:
         !targetFixationClaim &&
         !kingPressureCarrier &&
         !filePressureCarrier
+    val targetPressureLabelSquares =
+      val ownedSquares = EvidenceObjectBinding
+        .signatureValues(targetPressureGainSignatures, "target", "Square")
+        .map(_.toLowerCase)
+        .filter(_.matches("[a-h][1-8]"))
+        .distinct
+        .sorted
+      if ownedSquares.nonEmpty then withoutMoveDestinationWhenMixed(withoutMoveOrigin(ownedSquares))
+      else publicPressureTargetSquares
     val targetPressureLabel =
-      val targetPieces = claim.targetPieces.map(_.toLowerCase).distinct.filterNot(piece => piece == "king" || piece == "pawn").sorted
-      val pawnAttackTargets =
-        moveOriginSquare.toList.zip(moveDestinationSquare.toList).flatMap((from, to) =>
-          for
-            fromRank <- from.drop(1).toIntOption.toList
-            toRank <- to.drop(1).toIntOption.toList
-            direction = toRank.compare(fromRank)
-            if direction != 0 && from.take(1) == to.take(1)
-            targetRank = toRank + direction
-            if targetRank >= 1 && targetRank <= 8
-            file <- List(to.head - 1, to.head + 1).filter(file => file >= 'a' && file <= 'h')
-          yield s"${file.toChar}$targetRank"
-        ).toSet
-      val pawnAttackedTargets = publicPressureTargetSquares.filter(pawnAttackTargets)
-      (targetPieces, publicPressureTargetSquares) match
-        case (piece :: Nil, square :: Nil) if currentMoveIsPawnAdvance && pawnAttackedTargets.contains(square) =>
-          s"pressure on $piece at $square"
+      (targetPressureActorPieces, targetPressureLabelSquares) match
         case (piece :: Nil, square :: Nil) => s"$piece pressure on $square"
         case (piece :: Nil, squares) if squares.nonEmpty && squares.size <= 4 => s"$piece pressure on ${squares.mkString("/")}"
         case (pieces, square :: Nil) if pieces.nonEmpty && pieces.size <= 3 => s"${pieces.mkString("/")} pressure on $square"
         case (_, square :: Nil) => s"pressure on $square"
         case (_, squares) if squares.nonEmpty && squares.size <= 4 => s"pressure on ${squares.mkString("/")}"
         case (_, Nil) =>
-          targetPieces match
+          targetPressureActorPieces match
             case piece :: Nil => s"$piece pressure"
             case pieces if pieces.nonEmpty && pieces.size <= 3 => s"${pieces.mkString("/")} pressure"
             case _ => "target pressure"
@@ -3330,6 +3327,8 @@ object MoveMeaningSurface:
         case ("target_pressure", _) if checkingPressureClaim(claim) => checkingPressureLabel
         case ("target_pressure", _) if targetPressureReleaseClaim => targetPressureReleaseLabel
         case ("target_pressure", _) if kingPressureCarrier => kingPressureLabel
+        case ("target_pressure", _) if targetPressureActorPieces.nonEmpty && targetPressureLabelSquares.nonEmpty =>
+          targetPressureLabel
         case ("target_pressure", _) if routeLineUnlockClaim(claim) => opensLineLabel
         case ("target_pressure", _)
             if claim.role == "PreparesBreakOption" &&
@@ -3337,6 +3336,8 @@ object MoveMeaningSurface:
               claim.targetFiles.nonEmpty &&
               MoveMeaningClaim.breakFileCarrierClaim(claim) =>
           breakPreparationLabel
+        case ("target_pressure", _) if principalDevelopmentPiece.nonEmpty =>
+          s"${principalDevelopmentPiece.get} develops with pressure"
         case ("target_pressure", _) if initialDevelopmentRoute => developmentPressureLabel
         case ("target_pressure", _) if targetFixationClaim && passedPawnTargetSquares.nonEmpty => passedPawnPressureLabel
         case ("target_pressure", _) if targetFixationClaim => targetFixationLabel
@@ -3350,7 +3351,6 @@ object MoveMeaningSurface:
               claim.targetSquares.nonEmpty &&
               claim.targetSquares.forall(square => Set("d4", "d5", "e4", "e5")(square.toLowerCase)) =>
           centralPressureLabel
-        case ("target_pressure", _) if currentMoveBishopCarrier && claim.targetSquares.nonEmpty => bishopPressureLabel
         case ("target_pressure", _) if claim.targetSquares.nonEmpty => targetPressureLabel
         case ("counterplay_race", _) => counterplayRaceLabel
         case ("counterplay_control", _) if claim.axisKind.contains(StrategicAxisKind.Counterplay) && claim.axisPolarity.contains(StrategicAxisPolarity.Restrain) =>
@@ -4650,6 +4650,8 @@ object MoveMeaningClaim:
   ): Boolean =
     def specificTargetPressurePlan(other: MoveMeaningClaim): Boolean =
       other.meaningKind == "PlanContinuity" &&
+        other.principalPlanEvent.nonEmpty &&
+        other.positiveFunctionalProofEvidenceIds.nonEmpty &&
         targetPressureOrShapeCarrier(other) &&
         other.objectCarrierReady
     def passedPawnAdvanceCarrier(claim: MoveMeaningClaim): Boolean =
@@ -4699,8 +4701,11 @@ object MoveMeaningClaim:
         currentMoveSurfaceLane(claim) &&
         claims.exists(other =>
           other != claim &&
-            other.meaningKind == "TargetPressure" &&
-            other.label.exists(label => !label.equalsIgnoreCase("target-pressure-gain")) &&
+            (
+              other.meaningKind == "TargetPressure" &&
+                other.label.exists(label => !label.equalsIgnoreCase("target-pressure-gain")) ||
+                specificTargetPressurePlan(other)
+            ) &&
             other.publicSurfaceAdmitted &&
             other.moveUci == claim.moveUci &&
             other.lineRole == claim.lineRole &&
