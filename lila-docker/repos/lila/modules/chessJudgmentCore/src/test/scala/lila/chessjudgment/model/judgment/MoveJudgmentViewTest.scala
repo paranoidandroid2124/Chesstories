@@ -193,15 +193,16 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       )
     )
 
+    val graph = TypedEvidenceGraph(
+      List(
+        EvidenceRecord(structuralRef, structuralDelta),
+        EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef)),
+        EvidenceRecord(causeRef, RelativeCauseFactEvidence(planCause), parents = List(mechanismRef))
+      )
+    )
     val frame = PositionPlanTechniqueProjection
       .frames(
-        TypedEvidenceGraph(
-          List(
-            EvidenceRecord(structuralRef, structuralDelta),
-            EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef)),
-            EvidenceRecord(causeRef, RelativeCauseFactEvidence(planCause), parents = List(mechanismRef))
-          )
-        ),
+        graph,
         Nil,
         Nil,
         None
@@ -585,15 +586,16 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       )
     )
 
+    val graph = TypedEvidenceGraph(
+      List(
+        EvidenceRecord(structuralRef, structuralDelta),
+        EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef)),
+        EvidenceRecord(causeRef, RelativeCauseFactEvidence(planCause), parents = List(mechanismRef))
+      )
+    )
     val frame = PositionPlanTechniqueProjection
       .frames(
-        TypedEvidenceGraph(
-          List(
-            EvidenceRecord(structuralRef, structuralDelta),
-            EvidenceRecord(mechanismRef, mechanism, parents = List(structuralRef)),
-            EvidenceRecord(causeRef, RelativeCauseFactEvidence(planCause), parents = List(mechanismRef))
-          )
-        ),
+        graph,
         Nil,
         Nil,
         None
@@ -618,6 +620,58 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       ),
       detail.objectBindingSignatures
     )
+    val causeFrame = MoveJudgmentCauseFrame(
+      role = MoveJudgmentCauseFrameRole.PrimaryCause,
+      clusterId = None,
+      framed = false,
+      causeEvidenceIds = List(causeRef.id),
+      causeKind = RelativeCauseKind.PlanImprovement,
+      comparisonKind = CandidateComparisonKind.PlayedVsBest,
+      causeRole = RelativeCauseRole.PrimaryPlayedCause,
+      causeSourceSide = RelativeCauseSourceSide.Candidate,
+      causeImportance = RelativeCauseImportance.Primary,
+      attributionKind = CauseAttributionKind.CandidateCreatesValue,
+      attributionRootMoveMatched = true,
+      attributionDirectProofEligible = true,
+      referenceLine = planCause.referenceLine,
+      candidateLine = playedLine,
+      eventLine = playedLine,
+      eventRootMove = playedLine.rootMove,
+      causeClaimIds = Nil,
+      evaluationClaimIds = Nil,
+      witnessClaimIds = Nil,
+      ideaIds = Nil,
+      supportIdeaIds = Nil,
+      claimCandidateIds = Nil,
+      finalClaimIds = Nil,
+      relatedSupportClusterIds = Nil,
+      evidenceIds = List(causeRef.id),
+      proofDirectSourceIds = List(mechanismRef.id),
+      proofContrastSourceIds = Nil,
+      proofContextSupportSourceIds = Nil,
+      proofStrategicAxisLineage = Nil,
+      proofStrategicAxisKeys = Nil,
+      proofStrategicMechanismKinds = List(StrategicMechanismKind.Activity),
+      proofStrategicMechanismSourceIds = List(mechanismRef.id),
+      proofStrategicMechanismSignalSourceIds = List(structuralRef.id),
+      supportEvidenceSourceIds = List(mechanismRef.id),
+      objectBindingSignatures = Nil,
+      concreteObjectReady = true,
+      hasOwnedAdmissibleLongTermProof = true,
+      rootArbitrationTier = MoveJudgmentCauseRootArbitrationTier.FallbackRoot
+    )
+    val planDetail = PositionPlanTechniqueSemanticDetail(
+      unit = PositionPlanTechniqueUnit.PlanOptionSet,
+      principalPlanId = Some(lila.chessjudgment.model.PlanId.QueensideAttack)
+    )
+    val exactPlanFrame = causeFrame.copy(
+      objectBindingSignatures = List("actor=Move:h1h6|target=PlanSubject:queensideattack|proof=DirectProof")
+    )
+    val wrongPlanFrame = exactPlanFrame.copy(
+      objectBindingSignatures = List("actor=Move:h1h6|target=PlanSubject:kingsideattack|proof=DirectProof")
+    )
+    assert(MoveMeaningClaim.planCauseFrameOwnsDetailPlan(exactPlanFrame, planDetail))
+    assert(!MoveMeaningClaim.planCauseFrameOwnsDetailPlan(wrongPlanFrame, planDetail))
 
   test("ordinary bishop development does not become main long-diagonal pressure"):
     val root = PositionNodeRef("8/8/8/8/8/8/8/4KB2 w - - 0 1", 1, Some(Color.White), Some("root"))

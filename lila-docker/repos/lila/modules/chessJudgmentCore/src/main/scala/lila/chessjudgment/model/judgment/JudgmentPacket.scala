@@ -6771,16 +6771,18 @@ object MoveMeaningClaim:
       frame: MoveJudgmentCauseFrame,
       meaningKind: Option[String]
   ): Boolean =
+    val exactPlanBinding = planCauseFrameOwnsDetailPlan(frame, detail)
     val concretePlanCarrier =
       meaningKind.forall(planFallbackMeaningKindAllowed) &&
         planImprovementConcreteCarrierDetail(detail, frame) &&
-        planCauseFrameOverlapsDetail(frame, detail)
+        exactPlanBinding
     frame.causeKind == RelativeCauseKind.PlanImprovement &&
       frame.rootArbitrationTier == MoveJudgmentCauseRootArbitrationTier.FallbackRoot &&
       frame.hasOwnedAdmissibleLongTermProof &&
       frame.attributionDirectProofEligible &&
       frame.attributionRootMoveMatched &&
       reasonGradeFrameProofReady(frame) &&
+      exactPlanBinding &&
       (
         detail.unit == PositionPlanTechniqueUnit.PlanOptionSet ||
           counterplayRestraintCarrierDetail(detail) ||
@@ -6986,32 +6988,24 @@ object MoveMeaningClaim:
       detailOwnsClaimMove(detail, objectSignatures, claimMove) &&
       causeFramePolarityCompatibleWithMeaning(frame, verdict, detail, claimRole)
 
-  private def planCauseFrameOverlapsDetail(
+  private[judgment] def planCauseFrameOwnsDetailPlan(
       frame: MoveJudgmentCauseFrame,
       detail: PositionPlanTechniqueSemanticDetail
   ): Boolean =
-    val detailTokens = planMeaningTokens(
-      detail.matchedPlanIds ++
+    val detailPlanIds = (
+      detail.principalPlanId.toList.map(_.toString) ++
+        detail.activePlanIds.map(_.toString) ++
+        detail.matchedPlanIds ++
         detail.referencePlanIds ++
-        detail.candidatePlanIds ++
-        detail.semanticAnchorKeys
+        detail.candidatePlanIds
     )
-    val frameTokens = planMeaningTokens(frame.proofStrategicAxisKeys ++ frame.objectBindingSignatures)
-    detailTokens.intersect(frameTokens).nonEmpty
-
-  private def planMeaningTokens(values: List[String]): Set[String] =
-    values
-      .flatMap(_.split("[^A-Za-z0-9]+").toList)
       .map(_.trim.toLowerCase)
-      .filter(token => token.length > 3)
-      .filterNot(token =>
-        token == "plan" ||
-          token == "support" ||
-          token == "plancoherence" ||
-          token == "planpressure" ||
-          token == "strategicaxis"
-      )
       .toSet
+    val framePlanIds = EvidenceObjectBinding
+      .signatureValues(frame.objectBindingSignatures, "target", "PlanSubject")
+      .map(_.trim.toLowerCase)
+      .toSet
+    detailPlanIds.nonEmpty && detailPlanIds.intersect(framePlanIds).nonEmpty
 
   private def causeFrameLineOwnsClaimMove(
       frame: MoveJudgmentCauseFrame,
