@@ -21,361 +21,331 @@ export interface ChesstoryMoveMeaningPayload {
     played_move?: string;
     reference_move?: string;
   };
-  idea_chains?: ChesstoryIdeaChain[];
+  explanations?: ChesstoryExplanation[];
+  tested_plan_limits?: unknown[];
 }
 
-export interface ChesstoryMoveSemantic {
-  move_uci?: string;
-  subject?: string;
-  line_role?: string;
+interface ChesstoryExplanation {
+  move?: string;
+  reference_move?: string;
   move_quality?: string;
-  principal_plan_event?: ChesstoryPlanEvent;
-  idea_type?: string;
-  idea?: ChesstoryCode;
-  assessment?: {
-    move_quality?: ChesstoryCode;
-    idea_quality?: ChesstoryCode;
-    priority?: ChesstoryCode;
-    is_verdict_reason?: boolean;
-    is_local_idea?: boolean;
-    failure_family?: ChesstoryCode;
-    problem?: ChesstoryCode;
-  };
-  target?: {
-    squares?: string[];
-    files?: string[];
-    pieces?: string[];
-  };
-  evidence?: {
-    public_surface_admitted?: boolean;
-    has_carrier?: boolean;
-    proof_level?: string;
-    target_bound?: boolean;
-    positive_functional_proof_ids?: string[];
-    board_carriers?: ChesstoryBoardCarrier[];
-  };
-  priority?: string;
-  failure_family?: string;
-  problem?: string;
-  comparison_loss?: ChesstoryComparisonLoss[];
-  terminal_consequences?: ChesstoryCode[];
-  endgame_technique?: {
-    pattern_info?: ChesstoryCode;
-    rook_geometry?: ChesstoryCode;
-    status_label?: string;
-    trigger_move?: string;
-    squares?: {
-      required?: string[];
-      maintained?: string[];
-      broken?: string[];
-    };
-    terminal_consequences?: ChesstoryCode[];
-    failure_reason?: ChesstoryCode;
-  };
-}
-
-interface ChesstoryCode {
-  code?: string;
-  label?: string;
-}
-
-interface ChesstoryComparisonLoss extends ChesstoryCode {
-  side?: string;
-}
-
-interface ChesstoryBoardCarrier {
-  subject?: string;
-  line_role?: string;
-  move_uci?: string;
   role?: string;
+  ideas?: ChesstoryIdea[];
+  verification?: string[];
+  chess_relations?: string[];
+  move_details?: string[];
+  purposes?: string[];
+  line?: string[];
+  results?: string[];
+  forced_results?: string[];
+  techniques?: ChesstoryTechnique[];
+  plan?: ChesstoryPlan;
+}
+
+interface ChesstoryIdea {
   kind?: string;
-  value?: string;
-  display_label?: string;
-  label?: string;
-  from?: string;
-  to?: string;
-  semantic_role?: string;
+  name?: string;
+  importance?: string;
+  move_quality?: string;
+  idea_quality?: string;
+  problem?: string;
+  failure?: string;
+  lost_by_comparison?: string[];
+  results?: string[];
 }
 
-interface ChesstoryPlanEvent {
-  goal?: { theme?: string; kind?: string };
-  state?: { move_role?: string };
-  target_labels?: string[];
-  means?: {
-    root_move?: string;
-    actor?: ChesstoryPlanRoute;
-    development_choices?: ChesstoryPlanRoute[];
-    future_move?: string;
-  };
-  opponent_responses?: ChesstoryPlanResponse[];
-  results?: ChesstoryPlanResult[];
-  future_causality?: {
-    future_move?: string;
-    target_square?: string;
-    ply_offset?: number;
-    robustness?: string;
-    realized_replies?: number;
-    exact_replies?: number;
-    tested_replies?: number;
-  };
+interface ChesstoryMoveReference {
+  uci?: string;
+  san?: string;
+  notation?: string;
+  turn?: { move_number?: number; side?: string; notation?: string };
 }
 
-interface ChesstoryPlanRoute {
+interface ChesstoryRoute {
   piece?: string;
   from?: string;
   to?: string;
 }
 
-interface ChesstoryPlanResponse {
-  move?: string;
-  outcome?: string;
-  realization_move?: string;
-  realization_match?: string;
+interface ChesstoryPlanStep {
+  move?: ChesstoryMoveReference;
+  actor?: ChesstoryRoute;
+  connections?: string[];
 }
 
 interface ChesstoryPlanResult {
-  stage?: string;
-  kind?: string;
+  when?: string;
+  change?: string;
+  direction?: string;
   subjects?: string[];
-  subject_labels?: string[];
+  move?: ChesstoryMoveReference;
+  tested_reply_status?: string;
 }
 
-const relationCarrierRoles = new Set([
-  'attacker',
-  'defender',
-  'blocker',
-  'beneficiary',
-  'king',
-  'mover',
-  'bait',
-  'lured',
-]);
+interface ChesstoryPlanReply {
+  reply?: ChesstoryMoveReference;
+  effect_on_plan?: string;
+  continuation?: ChesstoryMoveReference;
+  continuation_match?: string;
+  observed_through?: { notation?: string };
+  game_result?: string;
+  game_end?: ChesstoryMoveReference;
+}
 
-export interface ChesstoryIdeaChain {
-  key: 'current-move-chain';
-  current_move?: string;
-  reference_move?: string;
-  move_quality?: string;
-  subject: string;
-  move_semantics?: ChesstoryMoveSemantic[];
-  proof_levels: string[];
-  carriers: ChesstoryBoardCarrier[];
-  purpose_carriers?: ChesstoryBoardCarrier[];
-  function_carriers?: ChesstoryBoardCarrier[];
-  pv: string[];
-  consequence_carriers: ChesstoryBoardCarrier[];
-  terminal_consequences: ChesstoryCode[];
-  technique: unknown[];
-  player_facing_reason_allowed: boolean;
+interface ChesstoryPlanContinuation {
+  next_move?: ChesstoryMoveReference;
+  target?: string;
+  connection?: string;
+  tested_reply_status?: string;
+  successful_replies?: number;
+  same_move_replies?: number;
+  same_function_replies?: number;
+  tested_replies?: number;
+  expected_replies?: number;
+}
+
+interface ChesstoryPlan {
+  goal?: { theme?: string; kind?: string };
+  move_role?: string;
+  plan_change?: string;
+  targets?: string[];
+  method?: {
+    starting_move?: ChesstoryMoveReference;
+    actor?: ChesstoryRoute;
+    development?: ChesstoryRoute[];
+    sequence?: ChesstoryPlanStep[];
+  };
+  opponent_replies?: ChesstoryPlanReply[];
+  results?: ChesstoryPlanResult[];
+  continuation?: ChesstoryPlanContinuation;
+}
+
+interface ChesstoryTechnique {
+  pattern?: string;
+  rook_geometry?: string;
+  side?: string;
+  status?: string;
+  trigger_move?: ChesstoryMoveReference;
+  forced_results?: string[];
+  failure?: string;
 }
 
 export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): ChesstoryBriefSection[] {
-  const chains = (payload?.idea_chains || []).filter(chain => chain.player_facing_reason_allowed === true);
-  const chain = chains.find(item => item.subject === 'played_move');
-  if (!chain) return placeholderSections();
+  const explanation = (payload?.explanations || []).find(item => item.role === 'played move');
+  if (!explanation) return placeholderSections();
+  return explanation.plan
+    ? planSections(payload, explanation, explanation.plan)
+    : ideaSections(payload, explanation);
+}
 
-  const principalEvent = ownedPrincipalPlanEvent(chain);
-  if (principalEvent) return principalPlanEventSections(payload, chain, principalEvent);
-
-  const currentMove = moveLabel(chain.current_move || payload?.verdict?.played_move || '');
-  const referenceMove = moveLabel(chain.reference_move || payload?.verdict?.reference_move || '');
-  const moveQuality = labelCode(chain.move_quality || payload?.verdict?.move_quality);
-  const proofLevels = uniqueLabels(chain.proof_levels.map(labelCode)).slice(0, 4);
-  const ideas = uniqueLabels(
-    (chain.move_semantics || []).map(semantic => codeLabel(semantic.idea) || labelCode(semantic.idea_type)),
-  ).slice(0, 5);
-  const directCarriers = carrierDisplayLabels(chain.carriers || []).slice(0, 4);
-  const purposeCarrierLabels = carrierDisplayLabels(
-    chain.purpose_carriers || chain.function_carriers || [],
-  ).slice(0, 6);
-  const carriers = uniqueLabels([...directCarriers, ...purposeCarrierLabels]).slice(0, 6);
-  const consequences = carrierDisplayLabels(chain.consequence_carriers).slice(0, 6);
-  const terminal = uniqueLabels(chain.terminal_consequences.map(codeLabel)).slice(0, 4);
-  const technique = techniqueLabels(chain.technique).slice(0, 4);
-  const pv = uniqueLabels(chain.pv.map(moveLabel)).slice(0, 6);
-  const consequenceItems = uniqueLabels([...consequences, ...terminal, ...technique]).slice(0, 6);
-  const chainItems = uniqueLabels([...carriers, ...consequenceItems]).slice(0, 6);
-  const tone = moveQuality === 'bad' ? 'bad' : moveQuality ? 'good' : 'neutral';
+function ideaSections(
+  payload: ChesstoryMoveMeaningPayload | undefined,
+  explanation: ChesstoryExplanation,
+): ChesstoryBriefSection[] {
+  const move = moveLabel(explanation.move || payload?.verdict?.played_move || '');
+  const reference = moveLabel(explanation.reference_move || payload?.verdict?.reference_move || '');
+  const quality = labelCode(explanation.move_quality || payload?.verdict?.move_quality);
+  const ideas = uniqueLabels((explanation.ideas || []).map(idea => idea.name || labelCode(idea.kind))).slice(
+    0,
+    5,
+  );
+  const method = uniqueLabels([...(explanation.move_details || []), ...(explanation.purposes || [])]).slice(
+    0,
+    6,
+  );
+  const changes = explanationChanges(explanation).slice(0, 6);
+  const line = uniqueLabels((explanation.line || []).map(moveLabel)).slice(0, 8);
+  const verification = uniqueLabels(explanation.verification || []).slice(0, 4);
+  const relations = uniqueLabels((explanation.chess_relations || []).map(labelCode)).slice(0, 4);
+  const tone = quality === 'bad' ? 'bad' : quality ? 'good' : 'neutral';
 
   return [
     {
       key: 'opening-idea',
-      title: 'Idea chain',
-      body: chainItems.length
-        ? joinHuman(chainItems)
-        : [subjectLabel(chain.subject), currentMove].filter(Boolean).join(' / '),
+      title: 'Main idea',
+      body: ideas.length
+        ? `${move || 'The move'}: ${joinHuman(ideas)}.`
+        : `${move || 'The move'} has a verified board effect.`,
       pending: false,
-      items: [
-        `Move quality: ${moveQuality || 'available'}`,
-        ...proofLevels.map(level => `Proof: ${level}`),
-        ...ideas.map(idea => `Idea: ${idea}`),
-      ],
+      items: [`Move quality: ${quality || 'available'}`, ...relations],
       tone,
     },
     {
       key: 'middlegame-plan',
-      title: 'Move / purpose carriers',
-      body: carriers.length ? joinHuman(carriers) : 'No public board carrier in this chain.',
+      title: 'How the move works',
+      body: method.length ? joinHuman(method) : 'The move itself is the concrete mechanism.',
       pending: false,
-      items: carriers,
+      items: method,
       tone,
     },
     {
       key: 'current-decision',
-      title: 'Concrete consequences',
-      body: consequenceItems.length
-        ? joinHuman(consequenceItems)
-        : 'No public consequence carrier in this chain.',
+      title: 'What changes',
+      body: changes.length ? joinHuman(changes) : 'No further board change is established yet.',
       pending: false,
-      items: consequenceItems,
+      items: changes,
       tone,
     },
     {
       key: 'better-plan',
-      title: referenceMove && referenceMove !== currentMove ? 'Reference chain' : 'PV / forced line',
-      body: pv.length ? joinHuman(pv) : 'No public PV in this chain.',
+      title: reference && reference !== move ? 'Better choice and main line' : 'Main line',
+      body: line.length ? line.join(' ') : 'No further line is needed for this explanation.',
       pending: false,
-      items: referenceMove && referenceMove !== currentMove ? [`Reference: ${referenceMove}`, ...pv] : pv,
+      items: reference && reference !== move ? [`Better choice: ${reference}`, ...line] : line,
       tone: 'neutral',
     },
     {
       key: 'evidence',
-      title: 'Evidence',
-      body: proofLevels.length ? joinHuman(proofLevels) : 'Available',
+      title: 'Why this reading is justified',
+      body: verification.length ? joinHuman(verification) : 'The board effect is directly established.',
       pending: false,
-      items: proofLevels,
+      items: verification,
     },
   ];
 }
 
-function ownedPrincipalPlanEvent(chain: ChesstoryIdeaChain): ChesstoryPlanEvent | undefined {
-  const events = (chain.move_semantics || []).flatMap(semantic =>
-    semantic.principal_plan_event ? [semantic.principal_plan_event] : [],
-  );
-  return events.length === 1 ? events[0] : undefined;
-}
-
-function principalPlanEventSections(
+function planSections(
   payload: ChesstoryMoveMeaningPayload | undefined,
-  chain: ChesstoryIdeaChain,
-  event: ChesstoryPlanEvent,
+  explanation: ChesstoryExplanation,
+  plan: ChesstoryPlan,
 ): ChesstoryBriefSection[] {
-  const move = moveLabel(event.means?.root_move || chain.current_move || payload?.verdict?.played_move || '');
-  const quality = labelCode(chain.move_quality || payload?.verdict?.move_quality);
-  const role = labelCode(event.state?.move_role);
-  const goalKind = labelCode(event.goal?.kind) || 'the current plan';
-  const goalTheme = labelCode(event.goal?.theme);
+  const start =
+    moveNotation(plan.method?.starting_move) ||
+    moveLabel(explanation.move || payload?.verdict?.played_move || '');
+  const quality = labelCode(explanation.move_quality || payload?.verdict?.move_quality);
+  const goalKind = plan.goal?.kind || 'the current plan';
+  const goalTheme = plan.goal?.theme;
   const goal = goalTheme && goalTheme !== goalKind ? `${goalKind} (${goalTheme})` : goalKind;
-  const ideas = uniqueLabels(
-    (chain.move_semantics || []).map(semantic => codeLabel(semantic.idea) || labelCode(semantic.idea_type)),
-  ).slice(0, 4);
-
-  const actor = event.means?.actor;
-  const actorRoute = routeLabel(actor) || move;
-  const futureMove = moveLabel(event.means?.future_move || event.future_causality?.future_move || '');
-  const futureTarget = squareValue(event.future_causality?.target_square);
-  const development = uniqueLabels((event.means?.development_choices || []).map(routeLabel));
-  const means = uniqueLabels([
-    actorRoute,
+  const ideas = uniqueLabels((explanation.ideas || []).map(idea => idea.name || labelCode(idea.kind))).slice(
+    0,
+    4,
+  );
+  const actor = routeLabel(plan.method?.actor);
+  const development = (plan.method?.development || []).map(routeLabel);
+  const sequence = uniqueLabels((plan.method?.sequence || []).map(step => moveNotation(step.move)));
+  const purposes = uniqueLabels(explanation.purposes || []);
+  const method = uniqueLabels([
+    actor,
     ...development,
-    futureMove ? `tested continuation ${futureMove}${futureTarget ? ` toward ${futureTarget}` : ''}` : '',
-  ]);
-
-  const directResults = eventResults(event, 'direct');
-  const futureResults = event.future_causality ? eventResults(event, 'future') : [];
-  const results = [
-    directResults.length ? `Immediately: ${joinHuman(directResults)}.` : '',
-    futureResults.length ? `Later: ${joinHuman(futureResults)}.` : '',
-  ].filter(Boolean);
-
-  const responseItems = (event.opponent_responses || [])
-    .map(responseDisplayLabel)
-    .filter(Boolean)
-    .slice(0, 6);
-  const pv = uniqueLabels(chain.pv.map(moveLabel)).slice(0, 6);
-  const responseBody = responseItems.length
-    ? joinHuman(responseItems)
-    : pv.length
-      ? `Verified line: ${pv.join(' ')}`
-      : 'No tested opponent response is public yet.';
-
-  const proofLevels = uniqueLabels(chain.proof_levels.map(labelCode)).slice(0, 4);
-  const causality = event.future_causality;
-  const proofItems = uniqueLabels([
-    ...proofLevels,
-    causality?.robustness ? `Robustness: ${labelCode(causality.robustness)}` : '',
-    causality?.tested_replies !== undefined && causality.realized_replies !== undefined
-      ? `Realized replies: ${causality.realized_replies} of ${causality.tested_replies}`
-      : '',
-    causality?.exact_replies !== undefined ? `Exact replies: ${causality.exact_replies}` : '',
-    causality?.ply_offset !== undefined ? `Observed by ply offset ${causality.ply_offset}` : '',
+    ...purposes,
+    sequence.length ? `sequence ${sequence.join(' ')}` : '',
+  ]).slice(0, 7);
+  const results = uniqueLabels((plan.results || []).map(planResultLabel)).slice(0, 6);
+  const replies = uniqueLabels((plan.opponent_replies || []).map(planReplyLabel)).slice(0, 6);
+  const line = uniqueLabels((explanation.line || []).map(moveLabel)).slice(0, 8);
+  const continuation = plan.continuation;
+  const nextMove = moveNotation(continuation?.next_move);
+  const continuationFacts = uniqueLabels([
+    continuation?.tested_reply_status || '',
+    nextMove ? `next move ${nextMove}${continuation?.target ? ` toward ${continuation.target}` : ''}` : '',
+    replyCountLabel(continuation),
+    continuation?.connection || '',
+    ...(explanation.verification || []),
   ]).slice(0, 7);
   const tone = quality === 'bad' ? 'bad' : quality ? 'good' : 'neutral';
 
   return [
     {
       key: 'opening-idea',
-      title: 'Main plan event',
-      body: `${move || 'The move'} is the ${role ? `${role} step` : 'principal step'} for ${goal}.`,
+      title: 'Main plan',
+      body: plan.move_role
+        ? `${start || 'The move'} serves as ${plan.move_role} for ${goal}.`
+        : `${start || 'The move'} advances ${goal}.`,
       pending: false,
-      items: [`Move quality: ${quality || 'available'}`, ...ideas.map(idea => `Idea: ${idea}`)],
+      items: [`Move quality: ${quality || 'available'}`, ...ideas],
       tone,
     },
     {
       key: 'middlegame-plan',
-      title: 'How the move works',
-      body: means.length ? `Means: ${joinHuman(means)}.` : 'No public means carrier.',
+      title: 'How the plan works',
+      body: method.length ? joinHuman(method) : 'The starting move directly advances the plan.',
       pending: false,
+      items: method,
       tone,
     },
     {
       key: 'current-decision',
-      title: 'Verified results',
-      body: results.join(' ') || 'The event has no public result carrier.',
+      title: 'What the plan achieves',
+      body: results.length ? results.join(' ') : 'No further result is established yet.',
       pending: false,
+      items: results,
       tone,
     },
     {
       key: 'better-plan',
-      title: responseItems.length ? 'Opponent responses' : 'PV / forced line',
-      body: responseBody,
+      title: replies.length ? "Opponent's replies" : 'Main line',
+      body: replies.length
+        ? joinHuman(replies)
+        : line.length
+          ? line.join(' ')
+          : 'No tested reply is public yet.',
       pending: false,
-      items: pv.length ? [`Main line: ${pv.join(' ')}`] : undefined,
+      items: line.length ? [`Main line: ${line.join(' ')}`] : undefined,
       tone: 'neutral',
     },
     {
       key: 'evidence',
-      title: 'Causal proof',
-      body: proofItems.length ? joinHuman(proofItems) : 'Available',
+      title: 'When the plan works',
+      body: continuationFacts.length
+        ? joinHuman(continuationFacts)
+        : 'Only the immediate result is established.',
       pending: false,
+      items: continuationFacts,
     },
   ];
 }
 
-function eventResults(event: ChesstoryPlanEvent, stage: string): string[] {
-  return uniqueLabels(
-    (event.results || [])
-      .filter(result => result.stage === stage && result.kind)
-      .map(result => {
-        const subjects = uniqueLabels(result.subject_labels || []);
-        return `${labelCode(result.kind)}${subjects.length ? ` for ${joinHuman(subjects)}` : ''}`;
-      }),
-  );
+function explanationChanges(explanation: ChesstoryExplanation): string[] {
+  return uniqueLabels([
+    ...(explanation.results || []),
+    ...(explanation.forced_results || []),
+    ...(explanation.techniques || []).flatMap(techniqueLabels),
+  ]);
 }
 
-function responseDisplayLabel(response: ChesstoryPlanResponse): string {
-  const reply = moveLabel(response.move || '');
-  const outcome = labelCode(response.outcome);
-  const realization = moveLabel(response.realization_move || '');
-  const match = labelCode(response.realization_match);
-  if (!reply) return '';
-  if (realization) return `${reply}: ${realization} ${outcome || 'realized'}${match ? ` (${match})` : ''}`;
-  return `${reply}: continuation ${outcome || 'tested'}`;
+function planResultLabel(result: ChesstoryPlanResult): string {
+  const subjects = uniqueLabels(result.subjects || []);
+  const change = [result.change, subjects.length ? `for ${joinHuman(subjects)}` : '']
+    .filter(Boolean)
+    .join(' ');
+  const statement = [result.when, change].filter(Boolean).join(': ');
+  return [statement, result.tested_reply_status].filter(Boolean).join(' — ');
 }
 
-function routeLabel(route?: ChesstoryPlanRoute): string {
+function planReplyLabel(reply: ChesstoryPlanReply): string {
+  const move = moveNotation(reply.reply);
+  if (!move) return '';
+  const continuation = moveNotation(reply.continuation);
+  const follow = continuation
+    ? `; ${continuation} follows${reply.continuation_match ? ` with the ${reply.continuation_match}` : ''}`
+    : '';
+  const result = reply.game_result ? `; game result: ${reply.game_result}` : '';
+  return `${move}: ${reply.effect_on_plan || 'the plan is not yet resolved'}${follow}${result}`;
+}
+
+function replyCountLabel(continuation?: ChesstoryPlanContinuation): string {
+  if (continuation?.tested_replies === undefined || continuation.successful_replies === undefined) return '';
+  return `${continuation.successful_replies} of ${continuation.tested_replies} tested replies keep the plan working`;
+}
+
+function routeLabel(route?: ChesstoryRoute): string {
   const squares = route?.from && route.to ? moveLabel(`${route.from}${route.to}`) : '';
   return [labelCode(route?.piece), squares].filter(Boolean).join(' ');
+}
+
+function moveNotation(move?: ChesstoryMoveReference): string {
+  return move?.notation || move?.san || moveLabel(move?.uci || '');
+}
+
+function techniqueLabels(technique: ChesstoryTechnique): string[] {
+  return uniqueLabels([
+    technique.pattern || '',
+    technique.rook_geometry || '',
+    technique.status || '',
+    moveNotation(technique.trigger_move) ? `trigger ${moveNotation(technique.trigger_move)}` : '',
+    ...(technique.forced_results || []),
+    technique.failure || '',
+  ]);
 }
 
 function placeholderSections(): ChesstoryBriefSection[] {
@@ -413,97 +383,6 @@ function placeholderSections(): ChesstoryBriefSection[] {
   ];
 }
 
-function carrierDisplayLabels(carriers: ChesstoryBoardCarrier[]): string[] {
-  const actorPiece = actorRoutePiece(carriers);
-  return uniqueCarriers(carriers)
-    .filter(
-      carrier =>
-        carrier.role === 'target' ||
-        (carrier.role === 'actor' && carrier.kind === 'Move') ||
-        relationCarrierRoles.has(carrier.role || ''),
-    )
-    .sort((a, b) => boardCarrierRank(a) - boardCarrierRank(b))
-    .map(carrier => boardCarrierDisplayLabel(carrier, actorPiece));
-}
-
-function boardCarrierRank(carrier: ChesstoryBoardCarrier): number {
-  if (carrier.role === 'actor' && carrier.kind === 'Move') return 0;
-  if (carrier.role === 'target' && carrier.kind === 'PlanSubject') return 1;
-  if (
-    carrier.role === 'target' &&
-    (carrier.kind === 'File' || carrier.kind === 'Square' || carrier.kind === 'Pawn')
-  )
-    return 2;
-  if (relationCarrierRoles.has(carrier.role || '')) return 3;
-  if (carrier.role === 'target' && carrier.kind === 'Piece') return 3;
-  if (carrier.role !== 'target') return 4;
-  return 4;
-}
-
-function actorRoutePiece(carriers: ChesstoryBoardCarrier[]): string | undefined {
-  const moveFrom = carriers.find(
-    carrier => carrier.role === 'actor' && carrier.kind === 'Move' && carrier.from,
-  )?.from;
-  const actorSquare = carriers.find(carrier => carrier.role === 'actor' && carrier.kind === 'Square')?.value;
-  if (moveFrom && actorSquare && moveFrom !== actorSquare) return undefined;
-  const piece = carriers
-    .find(carrier => carrier.role === 'actor' && carrier.kind === 'Piece')
-    ?.value?.toLowerCase();
-  return piece && piece !== 'pawn' && piece !== 'piece' ? piece : undefined;
-}
-
-function boardCarrierDisplayLabel(carrier: ChesstoryBoardCarrier, actorPiece?: string): string {
-  const route = carrier.from && carrier.to ? `${carrier.from}-${carrier.to}` : '';
-  const value =
-    carrier.display_label ||
-    carrier.label ||
-    (carrier.kind === 'Move' && route ? route : carrierValueDisplayLabel(carrier.kind, carrier.value));
-  if (carrier.kind === 'Move' && route) {
-    const piece = actorPiece ? `${actorPiece} ` : '';
-    return `${piece}${value || route}`;
-  }
-  const square = squareValue(carrier.value);
-  if (carrier.kind === 'Square' && square) return `the ${square} square`;
-  return [value, route].filter(Boolean).join(' ');
-}
-
-function carrierValueDisplayLabel(kind?: string, value?: string): string {
-  const raw = value || '';
-  if (kind === 'File' && raw) return `${raw}-file`;
-  if (kind === 'Pawn' && raw.startsWith('weak-pawn:'))
-    return `weak pawn on ${raw.slice('weak-pawn:'.length)}`;
-  return kind === 'PlanSubject' ? '' : raw;
-}
-
-function techniqueLabels(values: unknown[]): string[] {
-  return uniqueLabels(
-    values.flatMap(value => {
-      if (!value || typeof value !== 'object') return [];
-      const record = value as Record<string, unknown>;
-      return [
-        nestedCodeLabel(record.pattern_info),
-        nestedCodeLabel(record.rook_geometry),
-        stringValue(record.status_label),
-        stringValue(record.trigger_move).map(move => `trigger ${moveLabel(move)}`),
-      ].flat();
-    }),
-  );
-}
-
-function nestedCodeLabel(value: unknown): string[] {
-  if (!value || typeof value !== 'object') return [];
-  const label = (value as Record<string, unknown>).label;
-  return typeof label === 'string' && label ? [label] : [];
-}
-
-function stringValue(value: unknown): string[] {
-  return typeof value === 'string' && value ? [value] : [];
-}
-
-function codeLabel(code?: ChesstoryCode): string {
-  return code?.label || labelCode(code?.code);
-}
-
 function labelCode(raw?: string): string {
   return (raw || '')
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -512,38 +391,12 @@ function labelCode(raw?: string): string {
     .toLowerCase();
 }
 
-function subjectLabel(raw: string): string {
-  return labelCode(raw) || 'move chain';
-}
-
 function moveLabel(uci: string): string {
   return uci.replace(/^([a-h][1-8])([a-h][1-8])([nbrq])?$/, '$1-$2$3');
 }
 
 function uniqueLabels(labels: string[]): string[] {
   return [...new Set(labels.map(label => label.trim()).filter(Boolean))];
-}
-
-function uniqueCarriers(carriers: ChesstoryBoardCarrier[]): ChesstoryBoardCarrier[] {
-  const seen = new Set<string>();
-  return carriers.filter(carrier => {
-    const key = [
-      carrier.role,
-      carrier.kind,
-      carrier.value,
-      carrier.from,
-      carrier.to,
-      carrier.semantic_role,
-    ].join('|');
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function squareValue(value?: string): string | undefined {
-  const normalized = (value || '').trim().toLowerCase();
-  return normalized.match(/^[a-h][1-8]$/) ? normalized : undefined;
 }
 
 function joinHuman(items: string[]): string {
