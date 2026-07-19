@@ -123,11 +123,11 @@ describe('chesstory brief scaffold', () => {
             opponent_replies: [
               {
                 reply: { uci: 'b2b4', san: 'b4', notation: '11.b4' },
-                effect_on_plan: 'the reply stops the plan',
+                effect_on_plan: 'the reply stops this continuation',
               },
               {
                 reply: { uci: 'a2a3', san: 'a3', notation: '11.a3' },
-                effect_on_plan: 'the plan works',
+                effect_on_plan: 'the planned continuation occurs',
                 continuation: { uci: 'b5b4', san: 'b4', notation: '11...b4' },
                 continuation_match: 'same move',
               },
@@ -138,14 +138,14 @@ describe('chesstory brief scaffold', () => {
                 when: 'later in the plan',
                 change: 'target pressure gain',
                 subjects: ['c3'],
-                tested_reply_status: 'works against some tested replies',
+                tested_reply_status: 'the continuation occurs against some tested replies',
               },
             ],
             continuation: {
               next_move: { uci: 'b5b4', san: 'b4', notation: '14...b4' },
               target: 'b4',
               connection: 'coordinated flank advance',
-              tested_reply_status: 'works against some tested replies',
+              tested_reply_status: 'the continuation occurs against some tested replies',
               successful_replies: 2,
               same_move_replies: 2,
               same_function_replies: 0,
@@ -167,7 +167,9 @@ describe('chesstory brief scaffold', () => {
     assert.match(text, /target pressure gain for c3/);
     assert.match(text, /11\.b4/);
     assert.match(text, /11\.a3/);
-    assert.match(text, /2 of 3 tested replies/);
+    assert.match(text, /When the continuation occurs/);
+    assert.match(text, /2 of 3 tested replies reach the continuation/);
+    assert.doesNotMatch(text, /When the plan works|keep the plan working|: the plan works/);
     assert.doesNotMatch(text, engineeringTerms);
   });
 

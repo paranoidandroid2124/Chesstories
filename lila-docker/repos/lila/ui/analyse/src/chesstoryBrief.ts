@@ -285,7 +285,7 @@ function planSections(
     },
     {
       key: 'evidence',
-      title: 'When the plan works',
+      title: 'When the continuation occurs',
       body: continuationFacts.length
         ? joinHuman(continuationFacts)
         : 'Only the immediate result is established.',
@@ -325,7 +325,7 @@ function planReplyLabel(reply: ChesstoryPlanReply): string {
 
 function replyCountLabel(continuation?: ChesstoryPlanContinuation): string {
   if (continuation?.tested_replies === undefined || continuation.successful_replies === undefined) return '';
-  return `${continuation.successful_replies} of ${continuation.tested_replies} tested replies keep the plan working`;
+  return `${continuation.successful_replies} of ${continuation.tested_replies} tested replies reach the continuation`;
 }
 
 function routeLabel(route?: ChesstoryRoute): string {
