@@ -95,7 +95,9 @@ interface ChesstoryProbeRequest {
   multiPv?: number;
   baselineEvalCp?: number;
   candidateMove?: Uci;
+  opponentResourceMove?: Uci;
   depthFloor?: number;
+  horizon?: string;
   variationHash?: string;
 }
 
@@ -115,6 +117,8 @@ interface ChesstoryProbeResult {
   mate?: number;
   depth?: number;
   candidateMove?: Uci;
+  opponentResourceMove?: Uci;
+  horizon?: string;
   variationHash?: string;
   generatedAtEpochMs?: number;
 }
@@ -677,9 +681,16 @@ export default class AnalyseCtrl implements CevalHandler {
             typeof request === 'object' &&
             (request as ChesstoryProbeRequest).purpose === 'reply_multipv' &&
             typeof (request as ChesstoryProbeRequest).id === 'string' &&
+            typeof (request as ChesstoryProbeRequest).fen === 'string' &&
             !seenProbeIds.has((request as ChesstoryProbeRequest).id) &&
             Array.isArray((request as ChesstoryProbeRequest).moves) &&
-            (request as ChesstoryProbeRequest).moves.length === 0,
+            (request as ChesstoryProbeRequest).moves.every(
+              move => typeof move === 'string' && validUci(move),
+            ) &&
+            ((request as ChesstoryProbeRequest).moves.length === 0 ||
+              ((request as ChesstoryProbeRequest).moves.length === 1 &&
+                (request as ChesstoryProbeRequest).moves[0] ===
+                  (request as ChesstoryProbeRequest).opponentResourceMove)),
         )
       : [];
     if (!requests.length) return [];
@@ -701,6 +712,22 @@ export default class AnalyseCtrl implements CevalHandler {
   }
 
   private runChesstoryProbe(request: ChesstoryProbeRequest): Promise<ChesstoryProbeResult | undefined> {
+    const currentFen = request.moves.length
+      ? parseFen(request.fen)
+          .chain(setup => setupPosition('chess', setup))
+          .unwrap(
+            pos => {
+              for (const uci of request.moves) {
+                const move = parseUci(uci);
+                if (!move || !pos.isLegal(move)) return;
+                pos.play(move);
+              }
+              return makeFen(pos.toSetup());
+            },
+            () => undefined,
+          )
+      : request.fen;
+    if (!currentFen) return Promise.resolve(undefined);
     return new Promise(resolve => {
       let done = false;
       const requiredPvs = Math.max(1, request.multiPv ?? 1);
@@ -720,10 +747,10 @@ export default class AnalyseCtrl implements CevalHandler {
         gameId: undefined,
         stopRequested: false,
         initialFen: request.fen,
-        currentFen: request.fen,
-        moves: [],
+        currentFen,
+        moves: request.moves,
         path: `chesstory-probe:${request.id}`,
-        ply: this.plyFromFen(request.fen),
+        ply: this.plyFromFen(currentFen),
         search: { depth: request.depth || depthFloor },
         multiPv: requiredPvs,
         threatMode: false,
@@ -743,7 +770,7 @@ export default class AnalyseCtrl implements CevalHandler {
     const replyLines = ev.pvs
       .filter(pv => pv.moves.length)
       .map(pv => ({
-        moves: pv.moves,
+        moves: [...request.moves, ...pv.moves],
         scoreCp: this.chesstoryEvalCp(pv),
         mate: pv.mate,
         depth: ev.depth,
@@ -762,6 +789,8 @@ export default class AnalyseCtrl implements CevalHandler {
       mate: ev.mate,
       depth: ev.depth,
       candidateMove: request.candidateMove,
+      opponentResourceMove: request.opponentResourceMove,
+      horizon: request.horizon,
       variationHash: request.variationHash,
       generatedAtEpochMs: Date.now(),
     };

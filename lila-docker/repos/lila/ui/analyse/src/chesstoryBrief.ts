@@ -36,7 +36,6 @@ interface ChesstoryExplanation {
   move_details?: string[];
   purposes?: string[];
   line?: string[];
-  results?: string[];
   forced_results?: string[];
   techniques?: ChesstoryTechnique[];
   plan?: ChesstoryPlan;
@@ -51,7 +50,7 @@ interface ChesstoryIdea {
   problem?: string;
   failure?: string;
   lost_by_comparison?: string[];
-  results?: string[];
+  target?: { squares?: string[]; files?: string[] };
 }
 
 interface ChesstoryMoveReference {
@@ -153,7 +152,8 @@ function ideaSections(
     0,
     6,
   );
-  const changes = explanationChanges(explanation).slice(0, 6);
+  const outcomes = explanationOutcomes(explanation).slice(0, 6);
+  const focus = outcomes.length ? outcomes : ideaTargetLabels(explanation).slice(0, 6);
   const line = uniqueLabels((explanation.line || []).map(moveLabel)).slice(0, 8);
   const verification = uniqueLabels(explanation.verification || []).slice(0, 4);
   const relations = uniqueLabels((explanation.chess_relations || []).map(labelCode)).slice(0, 4);
@@ -180,10 +180,10 @@ function ideaSections(
     },
     {
       key: 'current-decision',
-      title: 'What changes',
-      body: changes.length ? joinHuman(changes) : 'No further board change is established yet.',
+      title: outcomes.length ? 'What is established' : 'Where the idea applies',
+      body: focus.length ? joinHuman(focus) : 'No separate result or target is established yet.',
       pending: false,
-      items: changes,
+      items: focus,
       tone,
     },
     {
@@ -295,12 +295,20 @@ function planSections(
   ];
 }
 
-function explanationChanges(explanation: ChesstoryExplanation): string[] {
+function explanationOutcomes(explanation: ChesstoryExplanation): string[] {
   return uniqueLabels([
-    ...(explanation.results || []),
     ...(explanation.forced_results || []),
     ...(explanation.techniques || []).flatMap(techniqueLabels),
   ]);
+}
+
+function ideaTargetLabels(explanation: ChesstoryExplanation): string[] {
+  return uniqueLabels(
+    (explanation.ideas || []).flatMap(idea => [
+      ...(idea.target?.squares || []).map(square => `the ${square} square`),
+      ...(idea.target?.files || []).map(file => `${file}-file`),
+    ]),
+  );
 }
 
 function planResultLabel(result: ChesstoryPlanResult): string {
