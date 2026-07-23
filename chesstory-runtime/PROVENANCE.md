@@ -1,6 +1,7 @@
 # Provenance
 
-- Source snapshot: `CondensedChess` commit `1f7eef8ed5205e632cdc1cd03a1d3f389c435cf6`
+- Source snapshot: `Chesstories` (formerly `CondensedChess`) commit
+  `1f7eef8ed5205e632cdc1cd03a1d3f389c435cf6`
 - Extracted path: `lila-docker/repos/lila/modules/chessJudgmentCore`
 - Snapshot date: 2026-07-12
 - Consolidated path: `chesstory-runtime/`
