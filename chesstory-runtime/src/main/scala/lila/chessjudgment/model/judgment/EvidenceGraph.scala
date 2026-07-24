@@ -5702,10 +5702,10 @@ object TacticalMechanismKind:
           case Motif.CaptureType.Recapture =>
             List(TacticalMechanismKind.RecaptureChoice)
           case Motif.CaptureType.Exchange | Motif.CaptureType.ExchangeSacrifice =>
-            List(TacticalMechanismKind.MaterialGain, TacticalMechanismKind.Conversion)
-          case Motif.CaptureType.Winning | Motif.CaptureType.Sacrifice =>
+            List(TacticalMechanismKind.Conversion)
+          case Motif.CaptureType.Winning =>
             List(TacticalMechanismKind.MaterialGain)
-          case Motif.CaptureType.Normal =>
+          case Motif.CaptureType.Normal | Motif.CaptureType.Sacrifice =>
             Nil
       case _: Motif.Zwischenzug =>
         List(TacticalMechanismKind.Tempo, TacticalMechanismKind.RecaptureChoice)
@@ -5741,12 +5741,14 @@ object TacticalMechanismKind:
       case _ =>
         TacticalMechanismKind.RelationMechanism
 
-  def fromLineConsequence(kind: LineConsequenceKind): List[TacticalMechanismKind] =
+  def fromLineConsequence(kind: LineConsequenceKind, rootRecapture: Boolean): List[TacticalMechanismKind] =
     kind match
-      case LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss =>
+      case LineConsequenceKind.MaterialGain =>
         List(TacticalMechanismKind.MaterialGain)
+      case LineConsequenceKind.MaterialLoss =>
+        Nil
       case LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow =>
-        List(TacticalMechanismKind.RecaptureChoice)
+        Option.when(rootRecapture)(TacticalMechanismKind.RecaptureChoice).toList
       case LineConsequenceKind.ImmediateReplyCheck =>
         List(TacticalMechanismKind.Tempo)
       case LineConsequenceKind.Mate =>
@@ -8435,9 +8437,14 @@ object ResolvedPlanEvent:
     val directSource = event.episode
       .flatMap(episode => NumberedChessMove.fromStepAtOffset(episode.root.step, event.rootTransition.from.fen, 0))
       .orElse(NumberedChessMove.fromFen(event.rootTransition.from.fen, event.rootMove))
-    val resolvedFuture = Option
+    val canonicalFuture = event.canonicalPublicTailAssessment.toList
+    val branchResolvedFuture = Option
       .when(event.branchCoverageComplete)(event.resolvedGoalResultAssessments)
       .getOrElse(Nil)
+    val resolvedFuture = (
+      canonicalFuture ++
+        branchResolvedFuture
+    ).distinct
       .sortBy(assessment =>
         (assessment.sourcePlyOffset, -PlanCausalEpisode.resultSalience(assessment.consequence.kind), -assessment.consequence.strength)
       )
@@ -8523,11 +8530,6 @@ object ResolvedPlanEvent:
     val representativeResult = event.canonicalPublicTailAssessment
       .flatMap(assessment => publicResultFor(assessment.sourceEvent, assessment.consequence))
       .orElse(
-        event.representativeResult.flatMap { case (sourceEvent, consequence) =>
-          publicResultFor(sourceEvent, consequence)
-        }
-      )
-      .orElse(
         event.representativeDirectGoalConsequence.flatMap(consequence =>
           publicResults.find(result =>
             result.stage == "direct" &&
@@ -8558,7 +8560,7 @@ object ResolvedPlanEvent:
       .when(event.episodePublicProofReady)(event.canonicalPublicTailAssessment)
       .flatten
       .orElse(positiveFuture.headOption)
-      .orElse(resolvedFuture.headOption)
+      .orElse(branchResolvedFuture.headOption)
     val pathResponses = representativeAssessment.toList.flatMap { assessment =>
       event.episode.toList.flatMap { causalEpisode =>
         causalEpisode.enablingDependenciesTo(assessment.sourceEvent).flatMap {

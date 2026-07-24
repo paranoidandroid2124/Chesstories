@@ -77,7 +77,7 @@ object PlanCausalEventAssembler:
           ownedDeterrence = deterrenceDraft.filter(_.plan.plan.id == rootPlan.plan.id)
           rootAlreadyOwned = rootOwnedPlans.exists(_.plan.id == rootPlan.plan.id) || ownedDeterrence.nonEmpty
           planId = rootPlan.plan.id
-          directFunctionDurable = linePayload.rootActorSurvivesLine.getOrElse(true)
+          directFunctionDurable = linePayload.rootActorSurvivesLine.contains(true)
           directBlockadeProven = PlanCausalEventProof.directPawnBlockadeFunctionProven(
             pressure,
             rootPlan,
@@ -179,7 +179,7 @@ object PlanCausalEventAssembler:
               .getOrElse(Nil)
           rootDevelopmentChoices = structural.developmentChoices.filter(choice =>
             !rootMoveIsPromotion &&
-              linePayload.rootActorSurvivesReply.getOrElse(true) &&
+              linePayload.rootActorSurvivesReply.contains(true) &&
               PlanCausalEventProof.developmentSupportsPlan(rootPlan) &&
               EvidenceRef.sameMove(s"${choice.from}${choice.to}", rootLine.rootMove)
           )
@@ -375,92 +375,7 @@ object PlanCausalEventAssembler:
                         PlanCausalEventProof.decisiveGoalProof(event)
                   case _ => false)
             )
-        val decisiveCandidates = authorityCandidates.filter(record =>
-          record.payload match
-            case event: PlanCausalEventEvidence => PlanCausalEventProof.decisiveGoalProof(event)
-            case _                              => false
-        )
-        val testedEpisodeCandidates = authorityCandidates.filter(record =>
-          record.payload match
-            case event: PlanCausalEventEvidence =>
-              event.branchCoverageComplete && event.causalResultAssessments.nonEmpty
-            case _ => false
-        )
-        val rootOwnedPlanIds = (for
-          rootLine <- pressureRef.line.toList
-          structural <- pressureRecord.parents.flatMap(parent => graph.byId.get(parent.id)).collect {
-            case EvidenceRecord(_, payload: StructuralDeltaEvidence, _)
-                if payload.line.contains(rootLine) && EvidenceRef.sameMove(payload.moveUci, rootLine.rootMove) =>
-              payload
-          }
-          plan <- PlanCausalEventProof.rootOwnedPlans(pressure, rootLine, structural, linePayload(context, rootLine))
-        yield plan.plan.id).toSet
-        val rootOwnedAuthorityCandidates = authorityCandidates.filter(record =>
-          record.payload match
-            case event: PlanCausalEventEvidence =>
-              rootOwnedPlanIds(event.planId) || event.goalDependencyProofReady ||
-                event.episodePublicProofReady || event.ownedConditionalResponseProofReady
-            case _                              => false
-        )
-        val authoritySelectionCandidates =
-          if rootOwnedAuthorityCandidates.nonEmpty then rootOwnedAuthorityCandidates
-          else authorityCandidates
-        val pressurePlanOrder = pressure.activePlanIds(pressureRef.line.map(_.rootMove)).zipWithIndex.toMap
-        val principalPreparedGoalIds = authoritySelectionCandidates
-          .collect {
-            case record @ EvidenceRecord(_, event: PlanCausalEventEvidence, _)
-                if event.preparedPawnAdvanceFiles.nonEmpty =>
-              record -> event
-          }
-          .groupBy { case (_, event) =>
-            (
-              event.identity.goalTheme,
-              event.identity.actorRole,
-              event.identity.actorFrom,
-              event.identity.actorTo,
-              event.preparedPawnAdvanceFiles
-            )
-          }
-          .values
-          .flatMap(_.sortBy { case (_, event) =>
-            val (specificity, strength, depth, salience) = event.principalExplanationSortKey.getOrElse((0, 0, 0, 0))
-            (
-              -specificity,
-              -strength,
-              -depth,
-              -salience,
-              if rootOwnedPlanIds(event.planId) then 0 else 1,
-              pressurePlanOrder.getOrElse(event.planId, Int.MaxValue),
-              event.planId.toString
-            )
-          }.headOption.map(_._1.ref.id))
-          .toSet
-        val authoritySelectionPool = authoritySelectionCandidates.filter {
-          case EvidenceRecord(ref, event: PlanCausalEventEvidence, _) =>
-            event.preparedPawnAdvanceFiles.isEmpty || principalPreparedGoalIds(ref.id)
-          case _ => true
-        }
-        val selectionPoolIds = authoritySelectionPool.map(_.ref.id).toSet
-        val selectedDecisiveCandidates = decisiveCandidates.filter(record => selectionPoolIds(record.ref.id))
-        val selectedTestedEpisodeCandidates = testedEpisodeCandidates.filter(record => selectionPoolIds(record.ref.id))
-        val ambiguousRootPlans = authoritySelectionPool.collect {
-          case EvidenceRecord(_, event: PlanCausalEventEvidence, _) => event.planId
-        }.distinct.size > 1
-        val provisionalAuthorityPool =
-          if authoritySelectionPool.size == 1 && !ambiguousRootPlans then authoritySelectionPool
-          else (selectedDecisiveCandidates ++ selectedTestedEpisodeCandidates).distinctBy(_.ref.id)
-        val decisiveIds = decisiveCandidates.map(_.ref.id).toSet
-        val testedEpisodeIds = testedEpisodeCandidates.map(_.ref.id).toSet
-        val authorityPool = provisionalAuthorityPool.filterNot(record =>
-          record.payload match
-            case event: PlanCausalEventEvidence =>
-              event.structuralConsequences.nonEmpty &&
-                event.structuralConsequences.forall(_.kind == TransitionConsequenceKind.LineUnlockGain) &&
-                !decisiveIds(record.ref.id) &&
-                !testedEpisodeIds(record.ref.id)
-            case _ => false
-        )
-        val authoritativeIds = authorityPool.map(_.ref.id).toSet
+        val authoritativeIds = authorityCandidates.map(_.ref.id).toSet
         drafts.map(record =>
           if authoritativeIds(record.ref.id) then
             record.copy(ref = record.ref.copy(confidence = EvidenceConfidence.Mixed))
@@ -1151,40 +1066,10 @@ private[assembly] object PlanCausalEventProof:
       structural: StructuralDeltaEvidence,
       line: LineFactEvidence
   ): List[PlanMatch] =
-    val responseCreatedPlans =
-      Option
-        .when(line.rootCaptureIsRecaptured(rootLine.rootMove))(pressure.activePlans.allPlans)
-        .getOrElse(Nil)
-    val continuationBackedPiecePlans =
-      Option
-        .when(rootStartsFuturePieceRoute(rootLine, line))(
-          pressure.activePlans.allPlans.filter(planTheme(_).contains(PlanTheme.PieceRedeployment))
-        )
-        .getOrElse(Nil)
-    val continuationBackedPawnBreakPlans =
-      Option
-        .when(line.rootPreparesFuturePawnAdvance(rootLine.rootMove))(
-          pressure.activePlans.allPlans.filter(planTheme(_).contains(PlanTheme.PawnBreakPreparation))
-        )
-        .getOrElse(Nil)
     (
         rootOwnedPlans(pressure, rootLine, structural, Some(line)) ++
-        continuationBackedPiecePlans ++
-        continuationBackedPawnBreakPlans ++
-        pressure.evidenceBackedPlans ++
-        responseCreatedPlans
+        pressure.activePlans.allPlans
     ).distinctBy(_.plan.id)
-
-  private def rootStartsFuturePieceRoute(rootLine: LineNodeRef, line: LineFactEvidence): Boolean =
-    line.lineReplaySteps.headOption
-      .filter(step => EvidenceRef.sameMove(step.moveUci, rootLine.rootMove))
-      .exists { rootStep =>
-        val continuation = line.lineReplaySteps.drop(1)
-        LineObjectTrajectory.find(rootStep, continuation).nonEmpty ||
-          continuation.zipWithIndex.exists { case (futureStep, index) =>
-            LineAccessTrajectory.find(rootStep, futureStep, continuation.take(index)).nonEmpty
-          }
-      }
 
   def rootActorIsPawn(rootLine: LineNodeRef, structural: StructuralDeltaEvidence): Boolean =
     rootActor(rootLine, structural).exists(_._2.role == _root_.chess.Pawn)

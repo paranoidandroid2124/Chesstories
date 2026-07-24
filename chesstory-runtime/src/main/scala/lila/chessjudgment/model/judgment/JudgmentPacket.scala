@@ -2298,7 +2298,7 @@ object MoveMeaningSurface:
       case Some(response) if !firstThree.contains(response) && firstThree.nonEmpty =>
         firstThree.dropRight(1) :+ response
       case _ => firstThree
-    responseDiverse.sortBy(surface => publicIdeaChainDisplaySortKey(surface, multipleMainIdeas))
+    responseDiverse
 
   private[judgment] def retainOneRepresentativeSurfacePerPlan(
       surfaces: List[MoveMeaningSurface]
@@ -2320,8 +2320,8 @@ object MoveMeaningSurface:
   private[judgment] def publicIdeaChainSelectedPlanEvent(
       evidenceSurfaces: List[MoveMeaningSurface]
   ): Option[ResolvedPlanEvent] =
-    publicIdeaChainDisplaySemantics(evidenceSurfaces)
-      .headOption
+    evidenceSurfaces
+      .find(_.representativePlanEvent)
       .flatMap(principalSurface =>
         principalSurface.resolvedPlanEvent
           .filter(event => EvidenceRef.sameMove(event.rootMove, principalSurface.moveUci))
@@ -2377,25 +2377,6 @@ object MoveMeaningSurface:
           EvidenceRef.sameMove(carrier.value, surface.moveUci)
       ) &&
       (attackedPieceCarrier || exactStructuralTarget)
-
-  private def publicExactCurrentKingPressure(surface: MoveMeaningSurface): Boolean =
-    publicExactCurrentTargetPressure(surface) && surface.target.pieces.exists(_.equalsIgnoreCase("king"))
-
-  private def publicRootOwnedSacrificeCompensation(surface: MoveMeaningSurface): Boolean =
-    surface.idea.code == "compensation" &&
-      surface.evidence.boardCarriers.exists(carrier =>
-        carrier.role == "actor" &&
-          carrier.kind == "Move" &&
-          EvidenceRef.sameMove(carrier.value, surface.moveUci)
-      ) &&
-      moveDestination(surface.moveUci).exists(destination =>
-        surface.evidence.boardCarriers.exists(carrier =>
-          carrier.role == "target" &&
-            carrier.kind == "PlanSubject" &&
-            carrier.semanticRole.exists(_.equalsIgnoreCase("root_material_sacrifice")) &&
-            carrier.value.equalsIgnoreCase(s"material-sacrifice:$destination")
-        )
-      )
 
   private def publicPreparatoryRepresentativePlan(surface: MoveMeaningSurface): Boolean =
     surface.representativePlanEvent &&
@@ -2551,6 +2532,25 @@ object MoveMeaningSurface:
         result.stage == "future" && MoveMeaningClaim.publicPositivePlanResult(result)
       ))
       .orElse(event.testedContinuation.flatMap(_.representativeResult))
+    val futureResultLabel =
+      MoveMeaningClaim.publicPlanResultForEvent(event).flatMap { result =>
+        result.stage match
+          case "future" =>
+            for
+              source <- result.source
+              sourceSan <- Option(source.san.trim).filter(_.nonEmpty)
+              purpose <- publicPlanResultPurposeLabel(result)
+            yield
+              result.conditions
+                .flatMap(_.moveReference.map(_.san.trim).filter(_.nonEmpty))
+                .distinct match
+                case reply :: Nil =>
+                  s"prepares $sourceSan after $reply to $purpose"
+                case _ =>
+                  s"prepares $sourceSan to $purpose"
+          case _ =>
+            None
+      }
     publicConditionalResponse(event)
       .map((resource, response) => s"prepares $response after $resource")
       .orElse(
@@ -2559,6 +2559,7 @@ object MoveMeaningSurface:
           s"prepares $moves${purpose.fold("")(value => s" to $value")}"
         }
       )
+      .orElse(futureResultLabel)
 
   private def publicPlanResultPurposeLabel(result: PlanResult): Option[String] =
     import TransitionConsequenceKind.*
@@ -2924,25 +2925,8 @@ object MoveMeaningSurface:
       surface.moveUci
     )
 
-  private def publicIdeaChainDisplaySortKey(
-      surface: MoveMeaningSurface,
-      multipleMainIdeas: Boolean
-  ): (Int, Int, Int, Int, Int, Int, String, String) =
-    (
-      terminalIdeaRank(surface.idea.code),
-      publicIdeaChainPriorityRank(surface),
-      publicCausalOwnershipRank(surface),
-      if surface.representativePlanEvent then 0 else 1,
-      publicIdeaChainIdeaRank(surface, multipleMainIdeas),
-      publicIdeaChainProofSortRank(surface.evidence.proofLevel),
-      surface.idea.code,
-      surface.moveUci
-    )
-
   private def publicCausalOwnershipRank(surface: MoveMeaningSurface): Int =
-    if publicExactCurrentKingPressure(surface) then -1
-    else if publicExactCurrentTargetPressure(surface) ||
-        publicRootOwnedSacrificeCompensation(surface) ||
+    if publicExactCurrentTargetPressure(surface) ||
         publicRootOwnedDirectPlanFunction(surface) ||
         publicRootOwnedCurrentFunction(surface)
     then 0
@@ -2972,10 +2956,7 @@ object MoveMeaningSurface:
       case "comparison" => 2
       case "context"    => 3
       case _            => 4
-    if publicExactCurrentKingPressure(surface) then 0
-    else if conditionalResponseDerived(surface) ||
-        nonRobustReplyTestedRepresentative(surface) ||
-        nonRepresentativePlanWithoutRootFunction(surface)
+    if nonRepresentativePlanWithoutRootFunction(surface)
     then declaredRank.max(1)
     else declaredRank
 
@@ -2991,20 +2972,6 @@ object MoveMeaningSurface:
     surface.idea.code == "counterplay_control" &&
       publicCausallyDisplayablePlan(surface) &&
       surface.resolvedPlanEvent.exists(event => publicConditionalResponse(event).nonEmpty)
-
-  private def conditionalResponseDerived(surface: MoveMeaningSurface): Boolean =
-    surface.idea.code == "counterplay_control" &&
-      surface.resolvedPlanEvent.exists(_.results.exists(result =>
-        result.robustness.contains(PlanCausalRobustness.Conditional) && result.conditions.nonEmpty
-      ))
-
-  private def nonRobustReplyTestedRepresentative(surface: MoveMeaningSurface): Boolean =
-    surface.representativePlanEvent &&
-      surface.resolvedPlanEvent.exists(_.testedContinuation.exists(continuation =>
-        continuation.robustness == PlanCausalRobustness.Conditional &&
-          continuation.testedReplies > 0 &&
-          continuation.realizedReplies < continuation.testedReplies
-      ))
 
   private def nonRepresentativePlanWithoutRootFunction(surface: MoveMeaningSurface): Boolean =
     !surface.representativePlanEvent &&
@@ -4727,15 +4694,8 @@ object MoveMeaningSurface:
           Set(PlanTheme.OpeningPrinciples, PlanTheme.SpaceClamp, PlanTheme.WingPlay)(theme)
         )
     )
-    val legacyPlanTarget =
-      destination.exists(to => claim.targetSquares.exists(_.equalsIgnoreCase(to))) &&
-        claim.boardCarriers.exists(carrier =>
-          carrier.role == "target" &&
-            carrier.kind == "PlanSubject" &&
-            Set("spaceadvantage", "pawnstorm", "openingdevelopment")(carrier.value.toLowerCase)
-        )
     claim.unit == PositionPlanTechniqueUnit.PlanOptionSet &&
-      (planEventIncludesPawnAdvance || legacyPlanTarget) &&
+      planEventIncludesPawnAdvance &&
       sameFilePawnAdvanceMove(claim.moveUci)
 
   private def flankPawnAdvanceSurfaceClaim(claim: MoveMeaningClaim): Boolean =
@@ -6736,10 +6696,20 @@ object MoveMeaningClaim:
               val representativePlanResultCarriers =
                 detail.resolvedPlanEvent
                   .filter(_ => planResultDefinesTargets)
-                  .flatMap(_.representativeResult)
                   .toList
-                  .flatMap(_.subjects)
-                  .flatMap(publicStructuralSubjectCarriers(_, detail, goalTarget = true))
+                  .flatMap { event =>
+                    event.representativeResult.toList
+                      .flatMap(_.subjects)
+                      .flatMap(publicStructuralSubjectCarriers(_, detail, goalTarget = true)) ++
+                      event.results
+                        .filter(_.materialCounterplayPreventionProofReady)
+                        .flatMap(_ =>
+                          event.testedContinuation.toList
+                            .flatMap(_.targetSquare)
+                            .flatMap(publicSquareCarrier("target", _, Some("future_plan_target")))
+                        )
+                  }
+                  .distinct
               val claimTargetBeforeRelationProof =
                 MoveMeaningSurfaceTarget.fromDetail(
                   detail,

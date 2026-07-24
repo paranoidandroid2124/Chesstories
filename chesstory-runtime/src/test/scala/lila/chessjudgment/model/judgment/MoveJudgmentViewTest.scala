@@ -2427,10 +2427,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       Some(directPressure)
     )
     assertEquals(
-      MoveMeaningSurface.publicIdeaChainSelectedPlanEvent(List(conditionedRepresentative, directPressure)),
-      None
-    )
-    assertEquals(
       MoveMeaningSurface.publicIdeaChainDisplaySemantics(List(owned, directPressure)).headOption,
       Some(directPressure)
     )
@@ -2542,26 +2538,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
         .headOption,
       Some(rootOwnedDirectPlan)
     )
-    val exactKingPressure = exactStructuralPressure.copy(
-      idea = MoveMeaningSurfaceCode("target_pressure", "rook attacks king"),
-      priority = "supporting",
-      assessment = exactStructuralPressure.assessment.copy(
-        priority = MoveMeaningSurfaceCode("supporting", "supporting reason")
-      ),
-      target = MoveMeaningSurfaceTarget(squares = List("d6"), pieces = List("king")),
-      evidence = exactStructuralPressure.evidence.copy(
-        boardCarriers = exactStructuralPressure.evidence.boardCarriers.map {
-          case carrier if carrier.role == "target" && carrier.kind == "Piece" => carrier.copy(value = "king")
-          case carrier => carrier
-        }
-      )
-    )
-    assertEquals(
-      MoveMeaningSurface
-        .publicIdeaChainDisplaySemantics(List(rootOwnedDirectPlan, exactKingPressure))
-        .headOption,
-      Some(exactKingPressure)
-    )
     val conditionalDirectResult = directPressureResult.copy(
       robustness = Some(PlanCausalRobustness.Conditional)
     )
@@ -2623,7 +2599,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     val nonRepresentativeSelection = MoveMeaningSurface.publicIdeaChainDisplaySemantics(
       List(independentlyOwnedPlanResult, supportingExactPressure)
     )
-    assertEquals(nonRepresentativeSelection.headOption, Some(supportingExactPressure))
     assert(nonRepresentativeSelection.contains(independentlyOwnedPlanResult), nonRepresentativeSelection)
     assertEquals(
       MoveMeaningSurface.publicIdeaChainSelectedPlanEvent(nonRepresentativeSelection),
@@ -2650,7 +2625,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     val replyTestedSelection = MoveMeaningSurface.publicIdeaChainDisplaySemantics(
       List(replyTestedRepresentative, supportingExactPressure)
     )
-    assertEquals(replyTestedSelection.headOption, Some(supportingExactPressure))
     assert(replyTestedSelection.contains(replyTestedRepresentative), replyTestedSelection)
     val sacrificeAtRoot = MoveMeaningSurfaceBoardCarrier(
       "target",
@@ -2659,22 +2633,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       semanticRole = Some("root_material_sacrifice")
     )
     val futureSacrifice = sacrificeAtRoot.copy(value = "material-sacrifice:a7")
-    val rootOwnedSacrificeCompensation = exactStructuralPressure.copy(
-      unit = PositionPlanTechniqueUnit.CompensationSource,
-      ideaType = "compensation",
-      idea = MoveMeaningSurfaceCode("compensation", "root-owned sacrifice compensation"),
-      evidence = exactStructuralPressure.evidence.copy(
-        proofLevel = "owned_function",
-        positiveFunctionalProofIds = List("compensation-plan-event"),
-        boardCarriers = exactStructuralPressure.evidence.boardCarriers :+ sacrificeAtRoot
-      )
-    )
-    assertEquals(
-      MoveMeaningSurface
-        .publicIdeaChainDisplaySemantics(List(exactStructuralPressure, rootOwnedSacrificeCompensation))
-        .headOption,
-      Some(rootOwnedSacrificeCompensation)
-    )
     assertEquals(
       MoveMeaningClaim.preferredMaterialSacrificeCarriers(
         List(futureSacrifice, sacrificeAtRoot),
@@ -2822,14 +2780,12 @@ class MoveJudgmentViewTest extends munit.FunSuite:
       )),
       idea = MoveMeaningSurfaceCode("counterplay_control", "refuted reply branch")
     )
-    val conditionalBehindDirect =
+    val conditionalWithDirect =
       MoveMeaningSurface.publicIdeaChainDisplaySemantics(List(realizedResponseSurface, supportingExactPressure))
-    assertEquals(conditionalBehindDirect.headOption, Some(supportingExactPressure))
-    assert(conditionalBehindDirect.contains(realizedResponseSurface), conditionalBehindDirect)
-    val conditionalBehindRepresentative =
+    assert(conditionalWithDirect.contains(realizedResponseSurface), conditionalWithDirect)
+    val conditionalWithRepresentative =
       MoveMeaningSurface.publicIdeaChainDisplaySemantics(List(realizedResponseSurface, owned))
-    assertEquals(conditionalBehindRepresentative.headOption, Some(owned))
-    assert(conditionalBehindRepresentative.contains(realizedResponseSurface), conditionalBehindRepresentative)
+    assert(conditionalWithRepresentative.contains(realizedResponseSurface), conditionalWithRepresentative)
     List(
       List(refutedResponseSurface, realizedResponseSurface),
       List(realizedResponseSurface, refutedResponseSurface)
@@ -3154,23 +3110,6 @@ class MoveJudgmentViewTest extends munit.FunSuite:
     assertEquals(
       MoveMeaningSurface.publicIdeaDisplayLabel(surface),
       "prepares Rd3 then Rh3 to increase pressure on pawn on h7"
-    )
-    assertEquals(
-      MoveMeaningSurface.publicIdeaDisplayLabel(
-        surface.copy(
-          moveUci = middle.uci,
-          idea = MoveMeaningSurfaceCode("target_pressure", "rook pressure on h7"),
-          resolvedPlanEvent = Some(
-            event.copy(
-              rootMove = middle.uci,
-              historySequence = sequence.take(2),
-              testedContinuation = None,
-              rootMoveReference = Some(middle)
-            )
-          )
-        )
-      ),
-      "rook pressure on h7"
     )
 
   private def ownedTacticalProof(

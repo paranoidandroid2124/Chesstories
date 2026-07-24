@@ -757,7 +757,8 @@ object PositionPlanTechniqueProjection:
               if terminalTargets.nonEmpty then terminalTargets
               else tacticalCauseTargetSubjects(cause, graph, Nil),
             structuralPurposeCategories = List("TerminalProof"),
-            structuralPurposePolarities = List(lineTerminalProofPolarity(proof.kind, proof.rootSide, proof.beneficiary)),
+            structuralPurposePolarities =
+              List(lineTerminalProofPolarity(proof.kind, proof.rootSide, proof.beneficiary).fold("Neutral")(_.toString)),
             terminalConsequenceKinds = List(proof.kind.toString),
             sourceEvidenceIds = List(proof.source.id)
           )
@@ -1247,12 +1248,7 @@ object PositionPlanTechniqueProjection:
       details: List[PositionPlanTechniqueSemanticDetail],
       graph: TypedEvidenceGraph
   ): List[PositionPlanTechniqueSemanticDetail] =
-    val rawDetails =
-      (
-        details ++
-          details.flatMap(positionPlanTechniqueMaterialCompensationDetails(_, graph))
-      ).distinct
-    rawDetails.map { detail =>
+    def enrich(detail: PositionPlanTechniqueSemanticDetail): PositionPlanTechniqueSemanticDetail =
       val taggedDetail = positionPlanTechniqueWithStructuralMotifs(detail, graph)
       val planOwnedDetail = taggedDetail.withPlanEvidence(
         positionPlanTechniquePlanEvidenceForSources(graph, taggedDetail.sourceEvidenceIds, taggedDetail)
@@ -1269,7 +1265,13 @@ object PositionPlanTechniqueProjection:
         objectBindingSignatures = causeLinkage.objectBindingSignatures,
         specificityTier = causeLinkage.specificityTier
       )
-    }
+    val enrichedDetails = details.map(enrich)
+    val compensationDetails =
+      details.zip(enrichedDetails).flatMap { case (detail, enrichedDetail) =>
+        positionPlanTechniqueMaterialCompensationDetails(detail, graph)
+          .map(_.copy(mainExplanationCandidate = enrichedDetail.mainExplanationCandidate))
+      }
+    (enrichedDetails ++ compensationDetails.map(enrich)).distinct
 
   private def positionPlanTechniqueMaterialCompensationDetails(
       detail: PositionPlanTechniqueSemanticDetail,
@@ -1478,8 +1480,7 @@ object PositionPlanTechniqueProjection:
           case record @ EvidenceRecord(ref, payload: PlanCausalEventEvidence, _)
               if payload.planId == planId &&
                 EvidenceRef.sameMove(payload.rootMove, routeMove) &&
-                ref.confidence != EvidenceConfidence.Heuristic &&
-                payload.publicGoalProofReady =>
+                ref.confidence != EvidenceConfidence.Heuristic =>
             record -> payload
         }.distinctBy(_._1.ref.id) match
           case event :: Nil => Some(event)
@@ -2495,7 +2496,7 @@ object PositionPlanTechniqueProjection:
         .distinctBy(_.ref.id)
     val eventRecords = records.collect {
       case record @ EvidenceRecord(ref, event: PlanCausalEventEvidence, _)
-          if ref.confidence != EvidenceConfidence.Heuristic && event.publicGoalProofReady =>
+          if ref.confidence != EvidenceConfidence.Heuristic =>
         record -> event
     }.distinctBy(_._1.ref.id)
     val sharedEventLine = eventRecords.map(_._2.rootLine).distinct match
@@ -2538,7 +2539,6 @@ object PositionPlanTechniqueProjection:
       graph.records.collect {
         case record @ EvidenceRecord(ref, candidate: PlanCausalEventEvidence, _)
             if ref.confidence != EvidenceConfidence.Heuristic &&
-              candidate.publicGoalProofReady &&
               EvidenceRef.sameMove(candidate.rootMove, move) &&
               eventLine.forall(_ == candidate.rootLine) =>
           record -> candidate
@@ -2630,7 +2630,7 @@ object PositionPlanTechniqueProjection:
             case event :: Nil => Some(event)
             case _            => None
         )
-    val eventRecord = directEventRecord.orElse(inferredEventRecord)
+    val eventRecord = inferredEventRecord.orElse(directEventRecord)
     val event = eventRecord.map(_._2)
     val displayPlanId = event.map(_.planId)
     val transition =
@@ -3933,19 +3933,22 @@ object PositionPlanTechniqueProjection:
       .filter(lineTerminalProofConsequence)
       .flatMap { consequence =>
         consequence.rootMove.orElse(consequence.eventMove).map(_.trim.toLowerCase).map { routeMove =>
+          val polarity =
+            lineTerminalProofPolarity(consequence.kind, consequence.rootSide, consequence.beneficiary)
           val targetSquare =
             consequence.eventMove
               .flatMap(move => _root_.chess.Square.all.find(_.key == move.slice(2, 4)))
               .map(square => s"target:${square.key}")
           PositionPlanTechniqueSemanticDetail(
             unit = PositionPlanTechniqueUnit.StructuralTransformation,
+            axisPolarity = polarity,
             label = Some("terminal-proof"),
             semanticAnchorKeys = List(lineTerminalProofSemanticAnchor(consequence).stableKey),
             structuralRouteMove = Some(routeMove),
             structuralPurposeConsequences = List(consequence.kind.toString),
             structuralPurposeSubjects = targetSquare.toList,
             structuralPurposeCategories = List("TerminalProof"),
-            structuralPurposePolarities = List(lineTerminalProofPolarity(consequence.kind, consequence.rootSide, consequence.beneficiary)),
+            structuralPurposePolarities = List(polarity.fold("Neutral")(_.toString)),
             terminalConsequenceKinds = List(consequence.kind.toString),
             sourceEvidenceIds = evidenceIds
           )
@@ -3958,13 +3961,13 @@ object PositionPlanTechniqueProjection:
       kind: LineConsequenceKind,
       rootSide: Option[_root_.chess.Color] = None,
       beneficiary: Option[_root_.chess.Color] = None
-  ): String =
+  ): Option[StrategicAxisPolarity] =
     kind match
-      case LineConsequenceKind.MaterialLoss => "Loss"
-      case LineConsequenceKind.DrawResource => "Neutral"
-      case _ if rootSide.zip(beneficiary).exists((root, winner) => root != winner) => "Loss"
-      case _ if rootSide.zip(beneficiary).exists((root, winner) => root == winner) => "Gain"
-      case _ => "Neutral"
+      case LineConsequenceKind.MaterialLoss => Some(StrategicAxisPolarity.Loss)
+      case LineConsequenceKind.DrawResource => None
+      case _ if rootSide.zip(beneficiary).exists((root, winner) => root != winner) => Some(StrategicAxisPolarity.Loss)
+      case _ if rootSide.zip(beneficiary).exists((root, winner) => root == winner) => Some(StrategicAxisPolarity.Gain)
+      case _ => None
 
   private def lineTerminalProofSemanticAnchor(
       consequence: LineConsequence

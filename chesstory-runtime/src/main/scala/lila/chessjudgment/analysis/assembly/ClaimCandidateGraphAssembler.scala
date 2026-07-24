@@ -295,9 +295,6 @@ object ClaimArbitrator:
       .sortBy { case (decision, salience, exposureTier) =>
         (
           -PlayerFacingClaimPolicy.rankPriority(exposureTier),
-          -JudgmentSubjectBinding.bindingScore(
-            JudgmentSubjectBinding.claimBinding(decision.claim, graph.evidenceGraph, playedMoves)
-          ),
           -priority(decision, salience, graph.evidenceGraph)
         )
       }

@@ -531,7 +531,7 @@ object EvidenceFactAssembler:
             )
           case payload: LineFactEvidence =>
             payload.consequencesForRootMove(rootMove).map(_.kind).distinct.flatMap(kind =>
-              TacticalMechanismKind.fromLineConsequence(kind).map(mechanismKind =>
+              TacticalMechanismKind.fromLineConsequence(kind, payload.rootIsRecapture(rootMove)).map(mechanismKind =>
                 TacticalMechanismCandidate(
                   mechanismKind,
                   List(record),
@@ -581,7 +581,7 @@ object EvidenceFactAssembler:
             .filter(capture => consequenceMoves.exists(EvidenceRef.sameMove(_, capture.moveUci)))
             .map(_.square)
         TacticalMechanismKind
-          .fromLineConsequence(consequence.kind)
+          .fromLineConsequence(consequence.kind, payload.rootIsRecapture(rootMove))
           .filter(kind =>
             kind == TacticalMechanismKind.KingForcing ||
               kind == TacticalMechanismKind.MaterialGain ||
