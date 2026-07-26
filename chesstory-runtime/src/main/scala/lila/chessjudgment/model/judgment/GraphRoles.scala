@@ -28,12 +28,12 @@ enum LineNodeRole:
       case Alternative   => EvidenceScope.CandidateLine
       case Threat        => EvidenceScope.ThreatLine
 
-  def subject: IdeaSubject =
+  def subject: ClaimSubject =
     this match
-      case Played        => IdeaSubject.PlayedMove
-      case BestReference => IdeaSubject.ReferenceMove
-      case Alternative   => IdeaSubject.CandidateLine
-      case Threat        => IdeaSubject.Threat
+      case Played        => ClaimSubject.PlayedMove
+      case BestReference => ClaimSubject.ReferenceMove
+      case Alternative   => ClaimSubject.CandidateLine
+      case Threat        => ClaimSubject.Threat
 
 object LineNodeRole:
 
@@ -70,16 +70,15 @@ enum TransitionEdgeRole:
       case Alternative => EvidenceScope.AlternativeTransition
       case Threat      => EvidenceScope.ThreatLine
 
-  def subject: IdeaSubject =
+  def subject: ClaimSubject =
     this match
-      case Played      => IdeaSubject.PlayedMove
-      case Reference   => IdeaSubject.ReferenceMove
-      case Alternative => IdeaSubject.CandidateLine
-      case Threat      => IdeaSubject.Threat
+      case Played      => ClaimSubject.PlayedMove
+      case Reference   => ClaimSubject.ReferenceMove
+      case Alternative => ClaimSubject.CandidateLine
+      case Threat      => ClaimSubject.Threat
 
 enum EvidenceLayer:
   case Board
-  case SinglePosition
   case PawnStructure
   case Strategic
   case StrategicMechanism
@@ -98,24 +97,10 @@ enum EvidenceLayer:
   case PlanCausalEvent
   case PlanTransition
   case CandidateComparison
-  case Counterfactual
   case RelativeAssessment
   case RelativeCause
-  case MoveVerdictCertification
-  case ChessIdea
-  case Claim
 
-enum ChessIdeaFamily:
-  case Tactical
-  case Strategic
-  case PawnStructure
-  case Opening
-  case Defensive
-  case Conversion
-  case Material
-  case Evaluation
-
-enum IdeaSubject:
+enum ClaimSubject:
   case Position
   case PlayedMove
   case ReferenceMove

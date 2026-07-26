@@ -4,6 +4,10 @@ import java.util.Locale
 
 import chess.Color
 import lila.chessjudgment.model.judgment.*
+import lila.chessjudgment.model.judgment.{
+  NormalizedCandidateLine as CanonicalNormalizedCandidateLine,
+  NormalizedMoveReviewInput as CanonicalNormalizedMoveReviewInput
+}
 
 final case class JudgmentProvenanceAllocator(prefix: String):
 
@@ -20,7 +24,7 @@ final case class JudgmentProvenanceAllocator(prefix: String):
       id = Some(s"$prefix:position:${positionKey(role, fen, ply)}")
     )
 
-  def lineRef(line: NormalizedCandidateLine): LineNodeRef =
+  def lineRef(line: CanonicalNormalizedCandidateLine): LineNodeRef =
     LineNodeRef(
       id = s"$prefix:line:${key(line.role)}:${line.rank}:${line.rootMove.getOrElse("none")}",
       rootMove = line.rootMove.getOrElse("none"),
@@ -63,7 +67,7 @@ final case class JudgmentProvenanceAllocator(prefix: String):
 
 object JudgmentProvenanceAllocator:
 
-  def forInput(input: NormalizedMoveReviewInput): JudgmentProvenanceAllocator =
+  def forInput(input: CanonicalNormalizedMoveReviewInput): JudgmentProvenanceAllocator =
     JudgmentProvenanceAllocator(
       s"move-review:${input.beforePly}:${MoveReviewInputNormalizer.normalizeUci(input.playedMoveUci)}"
     )

@@ -4,6 +4,7 @@ import chess.{ Color, File, Role, Square }
 import lila.chessjudgment.analysis.material.MaterialValue
 import lila.chessjudgment.model.Fact
 import lila.chessjudgment.model.judgment.*
+import lila.chessjudgment.model.position.PositionFeatures
 import lila.chessjudgment.model.strategic.RookEndgameGeometry
 
 object PositionFactNormalizer:
@@ -29,11 +30,9 @@ object PositionFactNormalizer:
       ref = ref,
       payload = BoardFactEvidence(
         facts = facts,
-        features = features
-      )(
+        features = features,
         anchors = factAnchors(facts, features.map(_.sideToMove)) ++ features.toList.flatMap(featureAnchors),
-        attackDefense = attackDefenseEntries(facts),
-        profile = features.map(boardPositionProfile)
+        attackDefense = attackDefenseEntries(facts)
       )
     )
 
@@ -528,40 +527,6 @@ object PositionFactNormalizer:
         BoardAnchor(BoardAnchorKind.PawnStructure, side, BoardAnchorSignal.PawnStructureShape, 1, 0.68)
       )
     ).flatten
-
-  private def boardPositionProfile(features: PositionFeatures): BoardPositionProfile =
-    val strategicState = PositionAnalyzer.extractStrategicState(features.fen)
-    BoardPositionProfile(
-      centerLocked = features.centralSpace.lockedCenter,
-      centerOpen = features.centralSpace.openCenter,
-      pawnTensionCount = features.centralSpace.pawnTensionCount,
-      whiteCenterControl = features.centralSpace.whiteCenterControl,
-      blackCenterControl = features.centralSpace.blackCenterControl,
-      whiteCentralPawns = features.centralSpace.whiteCentralPawns,
-      blackCentralPawns = features.centralSpace.blackCentralPawns,
-      spaceDiff = features.centralSpace.spaceDiff,
-      whiteDevelopmentLag = features.activity.whiteDevelopmentLag,
-      blackDevelopmentLag = features.activity.blackDevelopmentLag,
-      whiteLowMobilityPieces = features.activity.whiteLowMobilityPieces,
-      blackLowMobilityPieces = features.activity.blackLowMobilityPieces,
-      whiteKingExposure = features.kingSafety.whiteKingExposedFiles,
-      blackKingExposure = features.kingSafety.blackKingExposedFiles,
-      whitePawnWeaknesses =
-        features.pawns.whiteIsolatedPawns + features.pawns.whiteBackwardPawns + features.pawns.whiteDoubledPawns,
-      blackPawnWeaknesses =
-        features.pawns.blackIsolatedPawns + features.pawns.blackBackwardPawns + features.pawns.blackDoubledPawns,
-      whitePassedPawns = features.pawns.whitePassedPawns,
-      blackPassedPawns = features.pawns.blackPassedPawns,
-      whiteEntrenchedPieces = strategicState.map(_.whiteEntrenchedPieces).getOrElse(0),
-      blackEntrenchedPieces = strategicState.map(_.blackEntrenchedPieces).getOrElse(0),
-      whiteRookPawnMarchReady = strategicState.exists(_.whiteRookPawnMarchReady),
-      blackRookPawnMarchReady = strategicState.exists(_.blackRookPawnMarchReady),
-      whiteHookCreationChance = strategicState.exists(_.whiteHookCreationChance),
-      blackHookCreationChance = strategicState.exists(_.blackHookCreationChance),
-      whiteColorComplexClamp = strategicState.exists(_.whiteColorComplexClamp),
-      blackColorComplexClamp = strategicState.exists(_.blackColorComplexClamp),
-      hasStrategicSnapshot = strategicState.nonEmpty
-    )
 
   private def developmentLead(features: PositionFeatures, side: chess.Color): Int =
     if side.white then features.activity.blackDevelopmentLag - features.activity.whiteDevelopmentLag

@@ -1,7 +1,7 @@
-package lila.chessjudgment.analysis.evaluation
+package lila.chessjudgment.model.evaluation
 
 import lila.chessjudgment.model.judgment.MoveChoiceVerdict
-import lila.chessjudgment.analysis.singlePosition.CandidateSetType
+import lila.chessjudgment.model.judgment.CandidateSetType
 
 object VerdictThresholdPolicy:
 

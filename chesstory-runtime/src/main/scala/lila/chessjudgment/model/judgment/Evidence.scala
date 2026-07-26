@@ -26,7 +26,6 @@ object EvidenceRef:
 
 enum EvidenceProducer:
   case BoardFactProducer
-  case SinglePositionProducer
   case LegalLineProducer
   case EngineEvalProducer
   case TacticalRelationProducer
@@ -45,8 +44,6 @@ enum EvidenceProducer:
   case PlanCausalEventProducer
   case PlanTransitionProducer
   case RelativeMoveProducer
-  case ChessIdeaProducer
-  case ClaimComposer
 
 enum EvidenceScope:
   case BeforePosition

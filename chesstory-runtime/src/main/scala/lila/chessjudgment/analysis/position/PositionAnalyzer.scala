@@ -2,188 +2,9 @@ package lila.chessjudgment.analysis.position
 
 import chess._
 import chess.format.Fen
-import lila.chessjudgment.model._
-
-final case class PawnStructureFeatures(
-    whitePawnCount: Int,
-    blackPawnCount: Int,
-    whiteIsolatedPawns: Int,
-    blackIsolatedPawns: Int,
-    whiteDoubledPawns: Int,
-    blackDoubledPawns: Int,
-    whitePassedPawns: Int,
-    blackPassedPawns: Int,
-    whiteIQP: Boolean,
-    blackIQP: Boolean,
-    whiteHangingPawns: Boolean,
-    blackHangingPawns: Boolean,
-    // Backward pawns - properly defined with semi-open file + empty stop square
-    whiteBackwardPawns: Int,
-    blackBackwardPawns: Int,
-    // Groups of connected pawns.
-    whitePawnIslands: Int,
-    blackPawnIslands: Int,
-    // Pawns protected by other pawns.
-    whiteConnectedPawns: Int,
-    blackConnectedPawns: Int,
-    // Passed pawn quality: max rank, where higher is more advanced.
-    whitePassedPawnRank: Int,
-    blackPassedPawnRank: Int,
-    // Passers defended by other pawns.
-    whiteProtectedPassedPawns: Int,
-    blackProtectedPassedPawns: Int
-)
-
-final case class ActivityFeatures(
-    whiteLegalMoves: Int,
-    blackLegalMoves: Int,
-    whiteMinorPieceMobility: Int,
-    blackMinorPieceMobility: Int,
-    // Board feature input: Raw mobility aggregates (no "Trapped" interpretation)
-    whitePseudoMobility: Int,       // Sum of pseudo-legal moves for all pieces
-    blackPseudoMobility: Int,
-    whiteLowMobilityPieces: Int,    // Pieces with mobility <= 2 (stat only)
-    blackLowMobilityPieces: Int,
-    whiteAttackedPieces: Int,       // Pieces currently attacked by enemy
-    blackAttackedPieces: Int,
-    // Minor pieces still on the back rank in the opening.
-    whiteDevelopmentLag: Int,
-    blackDevelopmentLag: Int,
-    whiteLowMobilitySquares: List[String] = Nil,
-    blackLowMobilitySquares: List[String] = Nil
-)
-
-final case class KingSafetyFeatures(
-    whiteCastlingRights: String,
-    blackCastlingRights: String,
-    whiteCastledSide: String, // "none", "short", "long"
-    blackCastledSide: String,
-    whiteKingShield: Int,
-    blackKingShield: Int,
-    whiteKingExposedFiles: Int,
-    blackKingExposedFiles: Int,
-    whiteBackRankWeakness: Boolean,
-    blackBackRankWeakness: Boolean,
-    // Enemy pieces attacking the king zone.
-    whiteAttackersCount: Int,
-    blackAttackersCount: Int,
-    // Safe squares for the king to flee.
-    whiteEscapeSquares: Int,
-    blackEscapeSquares: Int,
-    // Squares around the king under attack.
-    whiteKingRingAttacked: Int,
-    blackKingRingAttacked: Int
-)
-
-final case class MaterialPhaseFeatures(
-    whiteMaterial: Int,
-    blackMaterial: Int,
-    materialDiff: Int,
-    phase: String // "opening" | "middlegame" | "endgame"
-)
-
-// Line control features: open files and rook placement.
-final case class LineControlFeatures(
-    openFilesCount: Int,
-    whiteSemiOpenFiles: Int,
-    blackSemiOpenFiles: Int,
-    // Rook on the seventh rank.
-    whiteRookOn7th: Boolean,
-    blackRookOn7th: Boolean
-)
-
-// Material imbalance features: piece counts by type, excluding pawns.
-final case class MaterialImbalanceFeatures(
-    whiteKnights: Int,
-    blackKnights: Int,
-    whiteBishops: Int,
-    blackBishops: Int,
-    whiteRooks: Int,
-    blackRooks: Int,
-    whiteQueens: Int,
-    blackQueens: Int,
-    whiteBishopPair: Boolean,
-    blackBishopPair: Boolean
-):
-  def isImbalanced: Boolean =
-    whiteKnights != blackKnights ||
-      whiteBishops != blackBishops ||
-      whiteRooks != blackRooks ||
-      whiteQueens != blackQueens
-
-// Unified central space features - consolidates pawn structure, tension, and control
-final case class CentralSpaceFeatures(
-    // From PawnStructureFeatures: d/e file pawn counts
-    whiteCentralPawns: Int,
-    blackCentralPawns: Int,
-    // From ActivityFeatures: piece control of key squares
-    whiteCenterControl: Int,        // Pieces attacking d4/e4/d5/e5
-    blackCenterControl: Int,
-    // Space advantage and tension
-    spaceDiff: Int,                 // Advanced pawns (positive = white advantage)
-    pawnTensionCount: Int,          // Pawns that can capture each other
-    lockedCenter: Boolean,          // e4/d4 blocked by e5/d5
-    openCenter: Boolean             // No central pawns
-)
-
-final case class PositionFeatures(
-    fen: String,
-    sideToMove: Color,
-    plyCount: Int,
-    pawns: PawnStructureFeatures,
-    activity: ActivityFeatures,
-    kingSafety: KingSafetyFeatures,
-    materialPhase: MaterialPhaseFeatures,
-    lineControl: LineControlFeatures,
-    imbalance: MaterialImbalanceFeatures,
-    centralSpace: CentralSpaceFeatures,
-    nature: PositionNature
-)
-
-final case class StrategicStateFeatures(
-    whiteEntrenchedPieces: Int,
-    blackEntrenchedPieces: Int,
-    whiteRookPawnMarchReady: Boolean,
-    blackRookPawnMarchReady: Boolean,
-    whiteHookCreationChance: Boolean,
-    blackHookCreationChance: Boolean,
-    whiteColorComplexClamp: Boolean,
-    blackColorComplexClamp: Boolean
-)
-
-object PositionFeatures:
-  def empty: PositionFeatures = PositionFeatures(
-    fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-    sideToMove = Color.White,
-    plyCount = 0,
-    pawns = PawnStructureFeatures(0,0,0,0,0,0,0,0,false,false,false,false,0,0,0,0,0,0,0,0,0,0),
-    activity = ActivityFeatures(0,0,0,0,0,0,0,0,0,0,0,0),
-    kingSafety = KingSafetyFeatures("","","","",0,0,0,0,false,false,0,0,0,0,0,0),
-    materialPhase = MaterialPhaseFeatures(0,0,0,"opening"),
-    lineControl = LineControlFeatures(0,0,0,false,false),
-    imbalance = MaterialImbalanceFeatures(0,0,0,0,0,0,0,0,false,false),
-    centralSpace = CentralSpaceFeatures(0,0,0,0,0,0,false,false),
-    nature = PositionNature(NatureType.Static, 0.0, 1.0)
-  )
-
-object StrategicStateFeatures:
-  val empty: StrategicStateFeatures = StrategicStateFeatures(
-    whiteEntrenchedPieces = 0,
-    blackEntrenchedPieces = 0,
-    whiteRookPawnMarchReady = false,
-    blackRookPawnMarchReady = false,
-    whiteHookCreationChance = false,
-    blackHookCreationChance = false,
-    whiteColorComplexClamp = false,
-    blackColorComplexClamp = false
-  )
+import lila.chessjudgment.model.position.*
 
 object PositionAnalyzer:
-
-  def extractStrategicState(fen: String): Option[StrategicStateFeatures] =
-    cached(strategicStateCache, fen) {
-      computeStrategicState(fen)
-    }
 
   def extractFeatures(fen: String, plyCount: Int): Option[PositionFeatures] =
     cached(positionFeaturesCache, fen -> plyCount) {
@@ -191,8 +12,6 @@ object PositionAnalyzer:
     }
 
   private val CacheMaxEntries = 4096
-  private val strategicStateCache =
-    boundedCache[String, Option[StrategicStateFeatures]]
   private val positionFeaturesCache =
     boundedCache[(String, Int), Option[PositionFeatures]]
 
@@ -216,32 +35,10 @@ object PositionAnalyzer:
       }
     }
 
-  private def computeStrategicState(fen: String): Option[StrategicStateFeatures] =
-    Fen.read(chess.variant.Standard, Fen.Full(fen)).map { pos =>
-      val board = pos.board
-      StrategicStateFeatures(
-        whiteEntrenchedPieces = entrenchedPieceCount(board, Color.White),
-        blackEntrenchedPieces = entrenchedPieceCount(board, Color.Black),
-        whiteRookPawnMarchReady = rookPawnMarchReady(board, Color.White),
-        blackRookPawnMarchReady = rookPawnMarchReady(board, Color.Black),
-        whiteHookCreationChance = hookCreationChance(board, Color.White),
-        blackHookCreationChance = hookCreationChance(board, Color.Black),
-        whiteColorComplexClamp = colorComplexClamp(board, Color.White),
-        blackColorComplexClamp = colorComplexClamp(board, Color.Black)
-      )
-    }
-
   private def computeFeatures(fen: String, plyCount: Int): Option[PositionFeatures] =
     Fen.read(chess.variant.Standard, Fen.Full(fen)).map { position =>
       val board = position.board
       val imbalance = computeImbalance(board)
-      val nature =
-        PositionCharacterizer.characterize(
-          pos = position,
-          features = Nil,
-          whitePovEvalCp = None,
-          material = imbalance
-        )
 
       PositionFeatures(
         fen = fen,
@@ -254,9 +51,21 @@ object PositionAnalyzer:
         lineControl = computeLineControl(board),
         imbalance = imbalance,
         centralSpace = computeCentralSpace(board),
-        nature = nature
+        strategicState = computeStrategicState(board)
       )
     }
+
+  private def computeStrategicState(board: Board): StrategicStateFeatures =
+    StrategicStateFeatures(
+      whiteEntrenchedPieces = entrenchedPieceCount(board, Color.White),
+      blackEntrenchedPieces = entrenchedPieceCount(board, Color.Black),
+      whiteRookPawnMarchReady = rookPawnMarchReady(board, Color.White),
+      blackRookPawnMarchReady = rookPawnMarchReady(board, Color.Black),
+      whiteHookCreationChance = hookCreationChance(board, Color.White),
+      blackHookCreationChance = hookCreationChance(board, Color.Black),
+      whiteColorComplexClamp = colorComplexClamp(board, Color.White),
+      blackColorComplexClamp = colorComplexClamp(board, Color.Black)
+    )
 
   // --- Internal Calculation Logic ---
 
@@ -270,8 +79,8 @@ object PositionAnalyzer:
     val bIso = isolatedPawns(bPawns) // Added missing bIso
     val wDbl = doubledPawns(wPawns)
     val bDbl = doubledPawns(bPawns) // Added missing bDbl
-    val wPassed = passedPawns(Color.White, wPawns, bPawns)
-    val bPassed = passedPawns(Color.Black, bPawns, wPawns)
+    val wPassed = PawnTopology.passedPawns(Color.White, wPawns, bPawns)
+    val bPassed = PawnTopology.passedPawns(Color.Black, bPawns, wPawns)
 
     // IQP (Isolated Queen Pawn on d-file) with practical support-window handling.
     // We allow distant c/e pawns that are too far to immediately support d-pawn advances.
@@ -727,18 +536,6 @@ object PositionAnalyzer:
   def doubledPawns(pawns: Bitboard): List[Square] =
     pawns.squares.groupBy(_.file).filter(_._2.size > 1).values.flatten.toList
 
-  def passedPawns(color: Color, pawns: Bitboard, oppPawns: Bitboard): List[Square] =
-    pawns.squares.filter { pawn =>
-      val pawnFile = pawn.file.value
-      val pawnRank = pawn.rank.value
-      val blocking = oppPawns.squares.exists { opp =>
-        val fileOk = (opp.file.value - pawnFile).abs <= 1
-        val ahead = if color == Color.White then opp.rank.value > pawnRank else opp.rank.value < pawnRank
-        fileOk && ahead
-      }
-      !blocking
-    }.toList
-
   def analyzePassedPawns(color: Color, passed: List[Square], pawns: Bitboard): (Int, Int) =
     if passed.isEmpty then (0, 0)
     else
@@ -834,26 +631,6 @@ object PositionAnalyzer:
       val bSupport = hasImmediateSupport(File.B)
       val eSupport = hasImmediateSupport(File.E)
       if advanced && sameRankPair && !bSupport && !eSupport then cAndD else Nil
-
-  def trappedPieces(board: Board, color: Color): List[(Piece, Square, Int)] = {
-    val pieces = (board.knights | board.bishops | board.rooks | board.queens) & board.byColor(color)
-    val occupied = board.occupied
-    pieces.squares.flatMap { sq =>
-      board.pieceAt(sq).map { piece =>
-        val attacks = piece.role match {
-           case Knight => sq.knightAttacks
-           case Bishop => sq.bishopAttacks(occupied)
-           case Rook => sq.rookAttacks(occupied)
-           case Queen => sq.queenAttacks(occupied)
-           case King => sq.kingAttacks
-           case Pawn => Bitboard.empty
-        }
-        val moves = attacks & ~board.byColor(color)
-        val count = moves.count
-        if (count <= 1) Some((piece, sq, count)) else None
-      }
-    }.flatten.toList
-  }
 
   private def entrenchedPieceCount(board: Board, color: Color): Int =
     val pieces = ((board.knights | board.bishops) & board.byColor(color)).squares

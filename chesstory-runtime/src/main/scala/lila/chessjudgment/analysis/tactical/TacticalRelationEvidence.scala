@@ -1,134 +1,50 @@
 package lila.chessjudgment.analysis.tactical
 
-import _root_.chess.{ Bishop, Bitboard, Board, Color, King, Knight, Move, Pawn, Position, Queen, Role, Rook, Square }
-import _root_.chess.format.{ Fen, Uci }
-import _root_.chess.variant.Standard
+import _root_.chess.{ Bishop, Bitboard, Board, Color, King, Knight, Pawn, Position, Queen, Role, Rook, Square }
+import _root_.chess.format.Fen
 
-import lila.chessjudgment.analysis.line.PrincipalVariationEvidence
-import lila.chessjudgment.analysis.evaluation.JudgmentThresholds
+import lila.chessjudgment.model.line.{ LegalReplayStep, PrincipalVariationEvidence }
+import lila.chessjudgment.model.evaluation.JudgmentThresholds
 import lila.chessjudgment.analysis.material.MaterialValue
 import lila.chessjudgment.analysis.tactical.TacticalPatternDetectors
 import lila.chessjudgment.analysis.structure.WeaknessTargetProfile
 import lila.chessjudgment.model.judgment.{ EvidenceSquare, LineReplayStep }
-import lila.chessjudgment.model.strategic.VariationLine
 
 private[chessjudgment] object TacticalRelationEvidence:
 
-  def normalizedTopUciMoves(variations: List[VariationLine]): List[String] =
-    variations.headOption.toList.flatMap(normalizedLineMoves)
-
   private[chessjudgment] val DrawResourceRelationReplayMaxPlies = 12
-
-  def normalizedLineMoves(line: VariationLine): List[String] =
-    val rawUciMoves = normalizeAllUci(line.moves)
-    if rawUciMoves.exists(_.nonEmpty) then rawUciMoves.get
-    else
-      normalizeAllUci(line.parsedMoves.flatMap(move => clean(move.uci))).getOrElse(Nil)
-
-  def boundedTopReplay(
-      fen: String,
-      variations: List[VariationLine],
-      maxPlies: Int
-  ): Option[List[BoundedReplayStep]] =
-    boundedReplay(fen, normalizedTopUciMoves(variations), maxPlies)
-
-  def boundedTopReplayPrefix(
-      fen: String,
-      variations: List[VariationLine],
-      minPlies: Int,
-      maxPlies: Int
-  ): Option[List[BoundedReplayStep]] =
-    boundedReplayPrefix(fen, normalizedTopUciMoves(variations), minPlies, maxPlies)
 
   def boundedReplay(
       fen: String,
       moves: List[String],
       maxPlies: Int
-  ): Option[List[BoundedReplayStep]] =
+  ): Option[List[LegalReplayStep]] =
     val normalizedMoves = normalizedBoundedMoves(moves, maxPlies)
-    replayLegalPrefix(fen, normalizedMoves).filter(_.size == normalizedMoves.size)
+    Option
+      .when(normalizedMoves.nonEmpty)(normalizedMoves)
+      .flatMap(lineMoves => PrincipalVariationEvidence.legalMoveReplay(fen, lineMoves, startPly = 0))
 
   def boundedReplayFromSteps(
       steps: List[LineReplayStep],
       maxPlies: Int
-  ): Option[List[BoundedReplayStep]] =
+  ): Option[List[LegalReplayStep]] =
     val bounded = steps.take(maxPlies)
-    Option.when(bounded.nonEmpty)(()).flatMap { _ =>
-      val accepted = scala.collection.mutable.ListBuffer.empty[BoundedReplayStep]
-      var ok = true
-      val it = bounded.iterator
-      while it.hasNext && ok do
-        val step = it.next()
-        Fen.read(Standard, Fen.Full(step.fenBefore)).flatMap { before =>
-          val normalized = PrincipalVariationEvidence.normalizeUci(step.moveUci)
-          legalMove(before, normalized).filter { move =>
-            boardStateFen(Fen.write(move.after).value) == boardStateFen(step.fenAfter)
-          }.map { move =>
-            val capturedRole =
-              move.capture
-                .flatMap(before.board.roleAt)
-                .orElse(before.board.roleAt(move.dest))
-            BoundedReplayStep(
-              uci = normalized,
-              before = before,
-              move = move,
-              after = move.after,
-              capturedRole = capturedRole
-            )
-          }
-        } match
-          case Some(replayed) =>
-            accepted += replayed
-          case None =>
-            ok = false
-      Option.when(ok)(accepted.toList)
-    }
-
-  def boundedReplayPrefix(
-      fen: String,
-      moves: List[String],
-      minPlies: Int,
-      maxPlies: Int
-  ): Option[List[BoundedReplayStep]] =
-    val normalizedMoves = normalizedBoundedMoves(moves, maxPlies)
-    Option
-      .when(minPlies > 0 && maxPlies >= minPlies && normalizedMoves.size >= minPlies)(normalizedMoves)
-      .flatMap(replayLegalPrefix(fen, _))
-      .filter(_.size >= minPlies)
-
-  private def replayLegalPrefix(
-      fen: String,
-      normalizedMoves: List[String]
-  ): Option[List[BoundedReplayStep]] =
-    Option.when(normalizedMoves.nonEmpty)(()).flatMap { _ =>
-      val startOpt = Fen.read(Standard, Fen.Full(fen))
-
-      startOpt.flatMap { start =>
-        val accepted = scala.collection.mutable.ListBuffer.empty[BoundedReplayStep]
-        var current = start
-        var ok = true
-        val it = normalizedMoves.iterator
-        while it.hasNext && ok do
-          val uci = it.next()
-          legalMove(current, uci) match
-            case Some(move) =>
-              val capturedRole =
-                move.capture
-                  .flatMap(current.board.roleAt)
-                  .orElse(current.board.roleAt(move.dest))
-              accepted += BoundedReplayStep(
-                uci = uci,
-                before = current,
-                move = move,
-                after = move.after,
-                capturedRole = capturedRole
-              )
-              current = move.after
-            case None =>
-              ok = false
-        Option.when(ok)(accepted.toList)
-      }
-    }
+    bounded.headOption
+      .flatMap(first =>
+        PrincipalVariationEvidence.legalMoveReplay(
+          first.fenBefore,
+          bounded.map(_.moveUci),
+          startPly = first.ply - 1
+        )
+      )
+      .filter(_.size == bounded.size)
+      .filter(replayed =>
+        replayed.zip(bounded).forall { case (actual, declared) =>
+          actual.ply == declared.ply &&
+          PrincipalVariationEvidence.sameBoardState(Fen.write(actual.before).value, declared.fenBefore) &&
+          PrincipalVariationEvidence.sameBoardState(Fen.write(actual.after).value, declared.fenAfter)
+        }
+      )
 
   private def normalizedBoundedMoves(moves: List[String], maxPlies: Int): List[String] =
     normalizeAllUci(moves.take(maxPlies)).getOrElse(Nil)
@@ -138,7 +54,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     Option.when(normalized.forall(isUciMove))(normalized)
 
   def defenderTradeBranch(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[DefenderTradeBranch] =
@@ -177,11 +93,10 @@ private[chessjudgment] object TacticalRelationEvidence:
     )
 
   def relationWitnesses(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil,
       continuationLines: List[List[String]] = Nil,
-      engineScoreCp: Option[Int] = None,
       engineMate: Option[Int] = None,
       drawishWinPercent: Option[Double] = None,
       includeDrawResources: Boolean = true
@@ -190,8 +105,8 @@ private[chessjudgment] object TacticalRelationEvidence:
     val drawResourceWitnesses =
       if includeDrawResources then
         List(
-          stalemateTrapWitness(replay, playedMove, engineScoreCp, engineMate, drawishWinPercent),
-          perpetualCheckWitness(replay, playedMove, engineScoreCp, engineMate, drawishWinPercent)
+          stalemateTrapWitness(replay, playedMove, engineMate, drawishWinPercent),
+          perpetualCheckWitness(replay, playedMove, engineMate, drawishWinPercent)
         ).flatten
       else Nil
     val fork = forkWitness(replay, playedMove, targetHints)
@@ -224,69 +139,8 @@ private[chessjudgment] object TacticalRelationEvidence:
     ).flatten
     prioritizeTargetHintMatches(witnesses, targetHints)
 
-  def defenderTradeRelationWitness(
-      replay: List[BoundedReplayStep],
-      playedMove: String,
-      targetHints: List[EvidenceSquare] = Nil
-  ): Option[RelationWitness] =
-    defenderTradeBranch(replay, playedMove, targetHints).map(defenderTradeWitness)
-
-  def badPieceLiquidationRelationWitness(
-      replay: List[BoundedReplayStep],
-      playedMove: String
-  ): Option[RelationWitness] =
-    badPieceLiquidationBranch(replay, playedMove).map(badPieceLiquidationWitness)
-
   def typedDetailsFromWitness(witness: RelationWitness): Option[RelationDetails] =
-    witness.details match
-      case RelationDetails.Empty => None
-      case details: RelationDetails.DefenderTrade if witness.kind == RelationKind.DefenderTrade => Some(details)
-      case details: RelationDetails.BadPieceLiquidation if witness.kind == RelationKind.BadPieceLiquidation => Some(details)
-      case details: RelationDetails.Overload if witness.kind == RelationKind.Overload => Some(details)
-      case details: RelationDetails.Deflection if witness.kind == RelationKind.Deflection => Some(details)
-      case details: RelationDetails.DiscoveredAttack if witness.kind == RelationKind.DiscoveredAttack => Some(details)
-      case details: RelationDetails.DoubleCheck if witness.kind == RelationKind.DoubleCheck => Some(details)
-      case details: RelationDetails.MatePattern
-          if (witness.kind == RelationKind.BackRankMate || witness.kind == RelationKind.MateNet) &&
-            details.relationKind == witness.kind =>
-        Some(details)
-      case details: RelationDetails.GreekGift if witness.kind == RelationKind.GreekGift => Some(details)
-      case details: RelationDetails.Fork if witness.kind == RelationKind.Fork => Some(details)
-      case details: RelationDetails.HangingPiece if witness.kind == RelationKind.HangingPiece => Some(details)
-      case details: RelationDetails.TrappedPiece if witness.kind == RelationKind.TrappedPiece => Some(details)
-      case details: RelationDetails.Domination if witness.kind == RelationKind.Domination => Some(details)
-      case details: RelationDetails.Zwischenzug if witness.kind == RelationKind.Zwischenzug => Some(details)
-      case details: RelationDetails.Decoy if witness.kind == RelationKind.Decoy => Some(details)
-      case details: RelationDetails.XRay if witness.kind == RelationKind.XRay => Some(details)
-      case details: RelationDetails.Clearance if witness.kind == RelationKind.Clearance => Some(details)
-      case details: RelationDetails.Battery if witness.kind == RelationKind.Battery => Some(details)
-      case details: RelationDetails.Interference if witness.kind == RelationKind.Interference => Some(details)
-      case details: RelationDetails.Pin if witness.kind == RelationKind.Pin => Some(details)
-      case details: RelationDetails.Skewer if witness.kind == RelationKind.Skewer => Some(details)
-      case details: RelationDetails.StalemateTrap if witness.kind == RelationKind.StalemateTrap => Some(details)
-      case details: RelationDetails.PerpetualCheck if witness.kind == RelationKind.PerpetualCheck => Some(details)
-      case _ => None
-
-  def defenderTradeBranchFromWitness(witness: RelationWitness): Option[DefenderTradeBranch] =
-    typedDetailsFromWitness(witness).collect {
-      case details: RelationDetails.DefenderTrade =>
-        DefenderTradeBranch(
-          defenderSquare = details.defenderSquare,
-          exchangeSquare = details.exchangeSquare,
-          targetSquare = details.targetSquare,
-          lineMoves = witness.lineMoves
-        )
-    }
-
-  def badPieceLiquidationBranchFromWitness(witness: RelationWitness): Option[BadPieceLiquidationBranch] =
-    typedDetailsFromWitness(witness).collect {
-      case details: RelationDetails.BadPieceLiquidation =>
-        BadPieceLiquidationBranch(
-          badPieceSquare = details.badPieceSquare,
-          exchangeSquare = details.exchangeSquare,
-          lineMoves = witness.lineMoves
-        )
-    }
+    RelationDetails.kind(witness.details).map(_ => witness.details)
 
   def defenderTradeWitness(branch: DefenderTradeBranch): RelationWitness =
     RelationWitness(
@@ -314,7 +168,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     )
 
   def overloadWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -327,7 +181,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     yield witness.copy(lineMoves = relationPayoffUcis(replay, witnessTargetKeys(witness)))
 
   def deflectionWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -362,7 +216,7 @@ private[chessjudgment] object TacticalRelationEvidence:
       )
 
   def discoveredAttackWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -375,7 +229,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
 
   def xrayWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -388,7 +242,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
 
   def doubleCheckWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String
   ): Option[RelationWitness] =
     val normalizedPlayed = PrincipalVariationEvidence.normalizeUci(playedMove)
@@ -413,7 +267,7 @@ private[chessjudgment] object TacticalRelationEvidence:
       )
 
   def backRankMateWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String
   ): Option[RelationWitness] =
     val normalizedPlayed = PrincipalVariationEvidence.normalizeUci(playedMove)
@@ -440,7 +294,7 @@ private[chessjudgment] object TacticalRelationEvidence:
       )
 
   def mateNetWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String
   ): Option[RelationWitness] =
     val normalizedPlayed = PrincipalVariationEvidence.normalizeUci(playedMove)
@@ -466,7 +320,7 @@ private[chessjudgment] object TacticalRelationEvidence:
       )
 
   def greekGiftWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       continuationLines: List[List[String]] = Nil
   ): Option[RelationWitness] =
@@ -492,7 +346,7 @@ private[chessjudgment] object TacticalRelationEvidence:
       )
 
   def zwischenzugWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -541,7 +395,7 @@ private[chessjudgment] object TacticalRelationEvidence:
       )
 
   def forkWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -555,7 +409,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
 
   def hangingPieceWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -576,7 +430,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     yield witness.copy(lineMoves = relationPayoffUcis(replay, witnessTargetKeys(witness)))
 
   def trappedPieceWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -597,7 +451,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
 
   def dominationWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -618,7 +472,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
 
   def clearanceWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -631,7 +485,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     yield witness.copy(lineMoves = relationPayoffUcis(replay, witness.targetSquare.toList))
 
   def batteryWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -652,7 +506,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     yield witness.copy(lineMoves = replayUcis(replay, 0, 1))
 
   def pinWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -726,7 +580,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     }.headOption
 
   def skewerWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -739,7 +593,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     yield witness.copy(lineMoves = relationPayoffUcis(replay, witnessTargetKeys(witness)))
 
   def interferenceWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -759,7 +613,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     yield witness.copy(lineMoves = relationPayoffUcis(replay, witness.targetSquare.toList))
 
   def decoyWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
       targetHints: List[EvidenceSquare] = Nil
   ): Option[RelationWitness] =
@@ -797,9 +651,8 @@ private[chessjudgment] object TacticalRelationEvidence:
       )
 
   def stalemateTrapWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
-      engineScoreCp: Option[Int],
       engineMate: Option[Int],
       drawishWinPercent: Option[Double]
   ): Option[RelationWitness] =
@@ -821,15 +674,13 @@ private[chessjudgment] object TacticalRelationEvidence:
           stalematedKingSquare = king.key,
           resourceSquare = terminal.move.dest.key,
           entryMove = first.uci,
-          terminalMove = terminal.uci,
-          scoreCp = engineScoreCp
+          terminalMove = terminal.uci
         )
       )
 
   def perpetualCheckWitness(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String,
-      engineScoreCp: Option[Int],
       engineMate: Option[Int],
       drawishWinPercent: Option[Double]
   ): Option[RelationWitness] =
@@ -852,8 +703,7 @@ private[chessjudgment] object TacticalRelationEvidence:
           entryMove = first.uci,
           cycleStartMove = cycle.startMove,
           cycleReturnMove = cycle.returnMove,
-          repeatedPositionKey = cycle.positionKey,
-          scoreCp = engineScoreCp
+          repeatedPositionKey = cycle.positionKey
         )
       )
 
@@ -870,7 +720,7 @@ private[chessjudgment] object TacticalRelationEvidence:
   )
 
   private def repeatedCheckingCycle(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       checkingSide: Color
   ): Option[RepeatedCheckingCycle] =
     val checkingPositions =
@@ -911,7 +761,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     Fen.write(position).value.split("\\s+").take(4).mkString(" ")
 
   def badPieceLiquidationBranch(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       playedMove: String
   ): Option[BadPieceLiquidationBranch] =
     val normalizedPlayed = PrincipalVariationEvidence.normalizeUci(playedMove)
@@ -927,38 +777,11 @@ private[chessjudgment] object TacticalRelationEvidence:
         .orElse(sameBranchBadPieceLiquidation(replay, movingSide, badPieceSquare, firstDest))
     yield branch
 
-  def queenTradeShieldLine(replay: List[BoundedReplayStep]): Option[List[String]] =
-    replay.zipWithIndex.collectFirst {
-      case (step, index)
-          if step.move.piece.color == replay.head.before.color &&
-            step.move.piece.role == _root_.chess.Queen &&
-            step.move.captures &&
-            step.capturedRole.contains(_root_.chess.Queen) &&
-            replay.lift(index + 1).exists(reply =>
-              reply.move.piece.color != step.move.piece.color &&
-                reply.move.piece.role == _root_.chess.King &&
-                reply.move.dest == step.move.dest &&
-                reply.move.captures &&
-                reply.capturedRole.contains(_root_.chess.Queen)
-            ) =>
-        replayUcis(replay, 0, index + 2)
-    }
-
-  def immediateExchangeSquare(replay: List[BoundedReplayStep]): Option[String] =
-    (replay.headOption, replay.lift(1)) match
-      case (Some(first), Some(second))
-          if first.move.captures &&
-            second.move.captures &&
-            first.move.dest == second.move.dest &&
-            first.move.piece.color != second.move.piece.color =>
-        Some(first.move.dest.key)
-      case _ => None
-
-  private def replayUcis(replay: List[BoundedReplayStep], fromPly: Int, maxPlies: Int): List[String] =
+  private def replayUcis(replay: List[LegalReplayStep], fromPly: Int, maxPlies: Int): List[String] =
     replay.drop(fromPly).take(maxPlies).map(_.uci)
 
   private def relationPayoffUcis(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       targetSquares: List[String],
       maxPlies: Int = 3
   ): List[String] =
@@ -976,20 +799,11 @@ private[chessjudgment] object TacticalRelationEvidence:
       }
       .getOrElse(Nil)
 
-  def legalMove(position: Position, uci: String): Option[Move] =
-    Uci(uci).collect { case move: Uci.Move => move }.flatMap(position.move(_).toOption)
-
-  private def boardStateFen(fen: String): String =
-    Option(fen).getOrElse("").trim.split("\\s+").take(4).mkString(" ")
-
   def isUciMove(move: String): Boolean =
     move.matches("""[a-h][1-8][a-h][1-8][qrbn]?""")
 
   def squareFromKey(key: String): Option[Square] =
     Square.fromKey(Option(key).map(_.trim.toLowerCase).getOrElse(""))
-
-  def isConstrainedBadBishop(board: Board, color: Color, square: Square): Boolean =
-    isBadBishopOnCurrentBoard(board, color, square)
 
   private def defenderTradeTargetSquare(
       board: Board,
@@ -1710,7 +1524,7 @@ private[chessjudgment] object TacticalRelationEvidence:
 
   private def matePatternExcept(
       excludedId: String,
-      step: BoundedReplayStep
+      step: LegalReplayStep
   ) =
     TacticalPatternDetectors.ordered.find(detector =>
       detector.requiresMate &&
@@ -1761,12 +1575,12 @@ private[chessjudgment] object TacticalRelationEvidence:
           (left == Rook && right == Rook)
 
   private def sameBranchBadPieceLiquidation(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       movingSide: Color,
       originalSquare: Square,
       firstDest: Square
   ): Option[BadPieceLiquidationBranch] =
-    def loop(remaining: List[(BoundedReplayStep, Int)], bishopSquare: Square): Option[BadPieceLiquidationBranch] =
+    def loop(remaining: List[(LegalReplayStep, Int)], bishopSquare: Square): Option[BadPieceLiquidationBranch] =
       remaining match
         case Nil => None
         case (step, index) :: rest
@@ -1799,7 +1613,7 @@ private[chessjudgment] object TacticalRelationEvidence:
     loop(replay.zipWithIndex.drop(2), firstDest)
 
   private def immediateBadPieceLiquidation(
-      replay: List[BoundedReplayStep],
+      replay: List[LegalReplayStep],
       movingSide: Color,
       originalSquare: Square,
       firstDest: Square
@@ -1861,6 +1675,3 @@ private[chessjudgment] object TacticalRelationEvidence:
         case Some(next)                                => loop(next.file.value + fileStep, next.rank.value + rankStep)
         case None                                      => None
     loop(square.file.value + fileStep, square.rank.value + rankStep)
-
-  private def clean(raw: String): Option[String] =
-    Option(raw).map(_.trim).filter(_.nonEmpty)

@@ -43,6 +43,8 @@ export type TablebaseCategory =
 
 export interface TablebaseData extends ExplorerData {
   moves: TablebaseMoveStats[];
+  category: TablebaseCategory;
+  dtm?: number;
   checkmate?: boolean;
   stalemate?: boolean;
 }

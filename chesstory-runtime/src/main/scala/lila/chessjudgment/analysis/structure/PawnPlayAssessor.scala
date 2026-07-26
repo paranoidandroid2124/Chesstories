@@ -1,29 +1,24 @@
-package lila.chessjudgment.analysis.singlePosition
+package lila.chessjudgment.analysis.structure
 
 import chess._
 import chess.format.Fen
 import chess.variant.Standard
 import chess.Color
-import lila.chessjudgment.analysis.position.{ PositionAnalyzer, PositionFeatures }
+import lila.chessjudgment.model.position.{ PawnTopology, PositionFeatures }
 import lila.chessjudgment.model.Motif
+import lila.chessjudgment.model.judgment.*
 
 /**
  * Break & Pawn Play Analyzer
- * 
- * Analyzes pawn structure to extract 10 strategic concepts:
- * 1. pawnBreakReady - Is a break immediately available?
- * 2. breakFile - Which file has the break?
- * 3. breakImpact - Estimated cp gain from break
- * 4. advanceOrCapture - Must resolve tension now?
- * 5. passedPawnUrgency - How urgent is passed pawn push?
- * 6. passerBlockade - Is passed pawn blocked?
- * 7. pusherSupport - Does passer have rook/king support?
- * 8. minorityAttack - Is queenside minority attack ready?
- * 9. counterBreak - Does opponent have counter-break?
- * 10. tensionPolicy - Maintain/Release/Ignore?
+ *
+ * Extracts board-backed break, tension, blockade, minority-attack, and
+ * counter-break facts. Internal scores are used only to rank candidates.
  */
 object PawnPlayAssessor:
-  
+
+  private enum PassedPawnUrgency:
+    case Critical, Important, Background, Blocked
+
   private val HIGH_TENSION_THRESHOLD = 2      // Tension squares to force resolution
 
   private case class BreakCandidate(
@@ -34,48 +29,39 @@ object PawnPlayAssessor:
 
   /**
    * Analyze pawn play concepts from position features.
-   * 
+   *
    * @param features board feature inputs
    * @param motifs tactical motif inputs (for PawnBreak detection)
-   * @param positionAssessment position assessment context
    * @param sideToMove side to move
    * @return Complete pawn play analysis with 10 concepts
    */
   def analyze(
     features: PositionFeatures,
     motifs: List[Motif],
-    positionAssessment: SinglePositionAssessment,
     sideToMove: Color
   ): Option[PawnPlayAnalysis] =
     val isWhite = sideToMove.white
     Fen.read(Standard, Fen.Full(features.fen)).map { position =>
       val board = position.board
-      val (breakReady, breakFile, breakImpact) = analyzeBreaks(features, motifs, board, isWhite)
-      val advanceOrCapture = checkTensionResolution(features, positionAssessment)
-      val (urgency, blockade, blockadeSq, blockadeRole, support) = analyzePassedPawns(features, board, isWhite)
+      val breakFile = analyzeBreaks(features, motifs, board, isWhite)
+      val breakReady = breakFile.nonEmpty
+      val advanceOrCapture = checkTensionResolution(features)
+      val (urgency, blockadeSq, blockadeRole) = analyzePassedPawns(features, board, isWhite)
       val minorityAttack = checkMinorityAttack(board, isWhite)
       val counterBreakFiles = extractCounterBreakFiles(features, motifs, board, isWhite)
       val counterBreak = counterBreakFiles.nonEmpty
-      val tensionPolicy = computeTensionPolicy(features, positionAssessment, breakReady, advanceOrCapture)
-      val tensionSquares = extractTensionSquares(board)
+      val tensionPolicy = computeTensionPolicy(features, breakReady, advanceOrCapture)
       val tensionEdges = extractTensionEdges(board)
       val driver =
         computePrimaryDriver(breakReady, urgency, advanceOrCapture, features.centralSpace.pawnTensionCount, counterBreak)
 
       PawnPlayAnalysis(
-        pawnBreakReady = breakReady,
         breakFile = breakFile,
-        breakImpact = breakImpact,
         advanceOrCapture = advanceOrCapture,
-        passedPawnUrgency = urgency,
-        passerBlockade = blockade,
         blockadeSquare = blockadeSq,
         blockadeRole = blockadeRole,
-        pusherSupport = support,
         minorityAttack = minorityAttack,
-        counterBreak = counterBreak,
         tensionPolicy = tensionPolicy,
-        tensionSquares = tensionSquares,
         primaryDriver = driver,
         tensionEdges = tensionEdges,
         counterBreakFiles = counterBreakFiles
@@ -88,20 +74,18 @@ object PawnPlayAssessor:
     motifs: List[Motif],
     board: Board,
     isWhite: Boolean
-  ): (Boolean, Option[String], Int) =
-    
+  ): Option[String] =
+
     // Check for existing PawnBreak motifs from tactical motif inputs
     val pawnBreakMotifs = motifs.collect {
       case m: Motif.PawnBreak if colorMatches(m.color, isWhite) => m
     }
-    
+
     if pawnBreakMotifs.nonEmpty then
       val primaryBreak = pawnBreakMotifs.head
       // `chess.File.toString` is numeric in some contexts; use `.char` for file letter.
       val file = primaryBreak.file.char.toString.toLowerCase
-      val color = if isWhite then Color.White else Color.Black
-      val impact = estimateBreakImpact(features, board, file, color)
-      (true, Some(file), impact)
+      Some(file)
     else
       // Detect potential breaks from pawn structure
       detectPotentialBreak(features, board, isWhite)
@@ -110,10 +94,8 @@ object PawnPlayAssessor:
     features: PositionFeatures,
     board: Board,
     isWhite: Boolean
-  ): (Boolean, Option[String], Int) =
-    detectBoardBreak(features, board, isWhite)
-      .map(candidate => (true, Some(candidate.file), candidate.impact))
-      .getOrElse((false, None, 0))
+  ): Option[String] =
+    detectBoardBreak(features, board, isWhite).map(_.file)
 
   private def detectBoardBreak(
     features: PositionFeatures,
@@ -215,13 +197,13 @@ object PawnPlayAssessor:
   private def estimateBreakImpact(features: PositionFeatures, board: Board, file: String, color: Color): Int =
     // Base impact from opening a file
     val baseImpact = 80
-    
+
     // Bonus if we have rooks to use the file
     val rookBonus = if color.white then
       if features.imbalance.whiteRooks > 0 then 50 else 0
     else
       if features.imbalance.blackRooks > 0 then 50 else 0
-    
+
     val fileIndex = file.headOption.map(ch => ch.toLower - 'a')
     val kingAttackBonus =
       (for
@@ -231,48 +213,38 @@ object PawnPlayAssessor:
         val distance = (f - king.file.value).abs
         if distance <= 1 then 30 else if distance == 2 then 15 else 0
       ).getOrElse(0)
-    
+
     baseImpact + rookBonus + kingAttackBonus
 
-  private def checkTensionResolution(
-    features: PositionFeatures,
-    positionAssessment: SinglePositionAssessment
-  ): Boolean =
+  private def checkTensionResolution(features: PositionFeatures): Boolean =
     val tension = features.centralSpace.pawnTensionCount
-    
-    // Must resolve if:
-    // 1. High tension count AND critical moment
-    // 2. Forced sequence detected
-    val isCritical = positionAssessment.criticality.isCritical || positionAssessment.criticality.isForced
-    val highTension = tension >= HIGH_TENSION_THRESHOLD
-    
-    highTension && isCritical
+    tension >= HIGH_TENSION_THRESHOLD && !staticPosition(features)
   // CONCEPT 5-7: PASSED PAWN ANALYSIS
 
   private def analyzePassedPawns(
     features: PositionFeatures,
     board: Board,
     isWhite: Boolean
-  ): (PassedPawnUrgency, Boolean, Option[Square], Option[Role], Boolean) = {
+  ): (PassedPawnUrgency, Option[Square], Option[Role]) = {
     val pawns = features.pawns
-    
+
     val passedCount = if isWhite then pawns.whitePassedPawns else pawns.blackPassedPawns
     val passedRank = if isWhite then pawns.whitePassedPawnRank else pawns.blackPassedPawnRank
     val protectedPassed = if isWhite then pawns.whiteProtectedPassedPawns else pawns.blackProtectedPassedPawns
-    
+
     if passedCount == 0 then
-      (PassedPawnUrgency.Background, false, None, None, false)
+      (PassedPawnUrgency.Background, None, None)
     else
-      // Get actual passed pawn squares using PositionAnalyzer logic
+      // Read passed-pawn squares from the canonical pawn-topology primitive.
       val color = if isWhite then Color.White else Color.Black
       val myPawns = board.byPiece(color, Pawn)
       val oppPawns = board.byPiece(!color, Pawn)
-      val actualPassedPawns = PositionAnalyzer.passedPawns(color, myPawns, oppPawns)
-      
+      val actualPassedPawns = PawnTopology.passedPawns(color, myPawns, oppPawns)
+
       // Sort by advancement: most advanced first (White: highest rank, Black: lowest rank)
       val sortedPassers = if isWhite then actualPassedPawns.sortBy(-_.rank.value)
                           else actualPassedPawns.sortBy(_.rank.value)
-      
+
       // Find first blockaded passed pawn (prioritizing most advanced)
       val blockadeInfo = sortedPassers.view.flatMap { pSq =>
         val aheadRank = pSq.rank.value + (if isWhite then 1 else -1)
@@ -280,11 +252,11 @@ object PawnPlayAssessor:
           board.pieceAt(sq).filter(_.color != color).map(p => (sq, p.role))
         }
       }.headOption
-      
+
       val isBlocked = blockadeInfo.isDefined
-      
+
       // Concept 7: Support detection
-      val hasRookSupport = if isWhite then features.lineControl.whiteRookOn7th 
+      val hasRookSupport = if isWhite then features.lineControl.whiteRookOn7th
                           else features.lineControl.blackRookOn7th
       val detailedSupport = checkRookSupport(board, sortedPassers, color)
       val kingSupport = checkKingSupport(board, sortedPassers, color)
@@ -297,7 +269,7 @@ object PawnPlayAssessor:
         support
       )
 
-      (urgency, isBlocked, blockadeInfo.map(_._1), blockadeInfo.map(_._2), support)
+      (urgency, blockadeInfo.map(_._1), blockadeInfo.map(_._2))
     }
 
   private def checkRookSupport(board: Board, passedPawns: List[Square], color: Color): Boolean =
@@ -305,7 +277,7 @@ object PawnPlayAssessor:
     val myRooks = board.byPiece(color, Rook)
     passedPawns.exists { pSq =>
       myRooks.squares.exists { rSq =>
-        rSq.file == pSq.file && 
+        rSq.file == pSq.file &&
         (if color.white then rSq.rank.value < pSq.rank.value else rSq.rank.value > pSq.rank.value)
       }
     }
@@ -326,11 +298,11 @@ object PawnPlayAssessor:
     // CRITICAL DEPENDENCY WARNING:
     // This value 'rank' must be normalized by board feature extraction (PositionAnalyzer) to represent "advancement".
     // Contract: 0 = Promotion Square (Not possible for pawn), 1 = Start Rank, 7 = Promotion Rank.
-    // Board feature extraction verified: 
+    // Board feature extraction verified:
     //   White: rank.value.max (Index 1 to 7)
     //   Black: 7 - rank.value.min (Index 6->1 becomes 1; Index 1->6 becomes 6)
     // Thus, 'rank' is always 1 (start) to 7 (promotion).
-    
+
     rank match
       case r if r >= 6 => PassedPawnUrgency.Critical   // Rank 7 or 8 (Index 6/7)
       case r if r >= 4 => PassedPawnUrgency.Important  // Rank 5 or 6 (Index 4/5)
@@ -358,13 +330,13 @@ object PawnPlayAssessor:
   private def checkMinorityAttack(board: Board, isWhite: Boolean): Boolean =
     val whitePawns = board.byPiece(Color.White, Pawn)
     val blackPawns = board.byPiece(Color.Black, Pawn)
-    
+
     val myPawns = if isWhite then whitePawns else blackPawns
     val oppPawns = if isWhite then blackPawns else whitePawns
-    
+
     // Queenside files: a, b, c
     val qSideMask = Bitboard.file(File.A) | Bitboard.file(File.B) | Bitboard.file(File.C)
-    
+
     val myQSide = (myPawns & qSideMask).count
     val oppQSide = (oppPawns & qSideMask).count
 
@@ -388,37 +360,21 @@ object PawnPlayAssessor:
 
   private def computeTensionPolicy(
     features: PositionFeatures,
-    positionAssessment: SinglePositionAssessment,
     breakReady: Boolean,
     advanceOrCapture: Boolean
   ): TensionPolicy =
     val tension = features.centralSpace.pawnTensionCount
     if tension == 0 then
       TensionPolicy.Ignore
-    else if advanceOrCapture || (breakReady && positionAssessment.nature.isDynamic) then
+    else if advanceOrCapture || (breakReady && !staticPosition(features)) then
       TensionPolicy.Release
-    else if positionAssessment.nature.isStatic then
-      TensionPolicy.Maintain
     else
       TensionPolicy.Maintain
 
-  private def extractTensionSquares(board: Board): List[String] =
-    val whitePawns = board.byPiece(Color.White, Pawn)
-    val blackPawns = board.byPiece(Color.Black, Pawn)
-    
-    // Find white pawns that attack black pawns
-    val whiteAttacks = whitePawns.squares.flatMap { wSq =>
-      val attacks = wSq.pawnAttacks(Color.White)
-      (attacks & blackPawns).squares.map(_.key)
-    }
-    
-    // Find black pawns that attack white pawns
-    val blackAttacks = blackPawns.squares.flatMap { bSq =>
-      val attacks = bSq.pawnAttacks(Color.Black)
-      (attacks & whitePawns).squares.map(_.key)
-    }
-    
-    (whiteAttacks ++ blackAttacks).toList.distinct
+  private def staticPosition(features: PositionFeatures): Boolean =
+    features.centralSpace.lockedCenter &&
+      features.centralSpace.pawnTensionCount <= 3 &&
+      features.lineControl.openFilesCount <= 2
 
   private def extractTensionEdges(board: Board): List[String] =
     val whitePawns = board.byPiece(Color.White, Pawn)

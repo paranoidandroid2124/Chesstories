@@ -260,21 +260,6 @@ object OpeningThemePriorIndex:
   def fromEntries(entries: IterableOnce[OpeningThemePrior]): OpeningThemePriorIndex =
     OpeningThemePriorIndex(entries.iterator.toList)
 
-  def fromTsvLines(lines: IterableOnce[String]): OpeningThemePriorIndex =
-    fromEntries(parseRows(lines))
-
-  def tsvRow(entry: OpeningThemePrior): String =
-    List(
-      entry.lineage.getOrElse(""),
-      entry.family.map(_.toString).getOrElse(""),
-      entry.themes.map(_.toString).mkString("|"),
-      entry.typicalPawnStructures.mkString("|"),
-      entry.centerBreaks.mkString("|"),
-      entry.developmentPriorities.mkString("|"),
-      entry.gambitCompensation.toString,
-      entry.strategicPlanPriors.mkString("|")
-    ).mkString("\t")
-
   private def loadResourceRows(path: String): List[OpeningThemePrior] =
     Option(getClass.getClassLoader.getResourceAsStream(path)).toList.flatMap: stream =>
       Using.resource(Source.fromInputStream(stream, "UTF-8")): source =>

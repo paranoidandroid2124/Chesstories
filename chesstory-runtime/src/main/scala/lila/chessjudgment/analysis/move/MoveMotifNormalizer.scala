@@ -18,10 +18,7 @@ object MoveMotifNormalizer:
       val event =
         MoveMotifEvent.fromMotif(
           rootMove = moveUci,
-          motif = motif,
-          position = position,
-          line = line,
-          scope = scope
+          motif = motif
         )
       val ref =
         EvidenceRef(

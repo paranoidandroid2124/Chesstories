@@ -1,10 +1,12 @@
 package lila.chessjudgment.analysis.structure
 
 import _root_.chess.{ Bishop, Board, Color, King, Knight, Pawn, Position, Queen, Rank, Role, Rook, Square }
-import _root_.chess.format.{ Fen, Uci }
+import _root_.chess.format.Fen
 
 import lila.chessjudgment.analysis.move.MoveAnalyzer
-import lila.chessjudgment.analysis.position.{ PositionAnalyzer, PositionFeatures }
+import lila.chessjudgment.analysis.position.PositionAnalyzer
+import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.position.{ PawnTopology, PositionFeatures }
 import lila.chessjudgment.model.Motif
 import lila.chessjudgment.model.judgment.{
   StructuralDevelopmentChoice,
@@ -41,6 +43,8 @@ private[chessjudgment] final case class TransitionStructuralDelta(
     fileOccupation: List[String] = Nil,
     releasedTargetPressure: List[String] = Nil,
     createdTargetPressure: List[String] = Nil,
+    weakTargetPressureReleased: List[String] = Nil,
+    weakTargetPressureCreated: List[String] = Nil,
     passedPawnCreated: List[String] = Nil,
     passedPawnAdvanced: List[String] = Nil,
     passedPawnLost: List[String] = Nil,
@@ -193,18 +197,20 @@ private[chessjudgment] object StructuralDeltaContracts:
         ),
         Option.when(delta.createdTargetPressure.nonEmpty || delta.targetPressureDelta > 0)(
           TransitionConsequence(
-            TargetPressureGain,
-            Gain,
-            delta.targetPressureGain + delta.targetPressureDelta.max(0),
-            delta.createdTargetPressure
+            kind = TargetPressureGain,
+            polarity = Gain,
+            strength = delta.targetPressureGain + delta.targetPressureDelta.max(0),
+            subjects = delta.createdTargetPressure,
+            targetSubjects = delta.weakTargetPressureCreated
           )
         ),
         Option.when(delta.releasedTargetPressure.nonEmpty || delta.targetPressureDelta < 0)(
           TransitionConsequence(
-            TargetPressureRelease,
-            Loss,
-            delta.targetPressureRelease + (-delta.targetPressureDelta).max(0),
-            delta.releasedTargetPressure
+            kind = TargetPressureRelease,
+            polarity = Loss,
+            strength = delta.targetPressureRelease + (-delta.targetPressureDelta).max(0),
+            subjects = delta.releasedTargetPressure,
+            targetSubjects = delta.weakTargetPressureReleased
           )
         ),
         Option.when(delta.spaceDelta > 0)(
@@ -506,6 +512,22 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
     val pieceTargetPressure = moveUci
       .map(uci => pieceTargetPressureDelta(beforeBoard, afterBoard, side, uci))
       .getOrElse(PieceTargetPressureDelta(Nil, Nil))
+    val weakTargetPressureCreated =
+      normalizedTargets
+        .filter(target =>
+          after.weakPawnsForEnemy.contains(target) &&
+            after.targetPressure.getOrElse(target, 0) > before.targetPressure.getOrElse(target, 0)
+        )
+        .distinct
+        .sorted
+    val weakTargetPressureReleased =
+      normalizedTargets
+        .filter(target =>
+          before.weakPawnsForEnemy.contains(target) &&
+            after.targetPressure.getOrElse(target, 0) < before.targetPressure.getOrElse(target, 0)
+        )
+        .distinct
+        .sorted
     val passedPawnDelta = passedPawnDeltaFor(beforeBoard, afterBoard, side, moveUci)
     val moveMotifs = moveUci.toList.flatMap(uci => transitionMoveMotifs(beforeFen, uci))
     val outpostDelta = outpostDeltaFor(beforeFen, afterFen, moveMotifs, side)
@@ -566,6 +588,8 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         fileOccupation = moveUci.map(uci => fileOccupationGain(beforeBoard, afterBoard, after, side, uci)).getOrElse(Nil),
         releasedTargetPressure = pieceTargetPressure.released,
         createdTargetPressure = pieceTargetPressure.created,
+        weakTargetPressureReleased = weakTargetPressureReleased,
+        weakTargetPressureCreated = weakTargetPressureCreated,
         passedPawnCreated = passedPawnDelta.created,
         passedPawnAdvanced = passedPawnDelta.advanced,
         passedPawnLost = passedPawnDelta.lost,
@@ -755,7 +779,7 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
   private def passedPawnSquares(board: Board, side: Color): List[Square] =
     val ownPawns = if side.white then board.pawns & board.white else board.pawns & board.black
     val enemyPawns = if side.white then board.pawns & board.black else board.pawns & board.white
-    PositionAnalyzer.passedPawns(side, ownPawns, enemyPawns)
+    PawnTopology.passedPawns(side, ownPawns, enemyPawns)
 
   private final case class PassedPawnAdvance(
       from: String,
@@ -825,12 +849,11 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
     }.toSet
 
   private def transitionMoveMotifs(beforeFen: String, moveUci: String): List[Motif] =
-    Fen.read(_root_.chess.variant.Standard, Fen.Full(beforeFen)).toList.flatMap { position =>
-      Uci(moveUci).collect { case move: Uci.Move => move }
-        .flatMap(position.move(_).toOption)
-        .map(move => MoveAnalyzer.detectMoveMotifs(move, position, 0))
-        .getOrElse(Nil)
-    }
+    PrincipalVariationEvidence
+      .legalMoveReplay(beforeFen, List(moveUci), startPly = 0)
+      .flatMap(_.headOption)
+      .map(step => MoveAnalyzer.detectMoveMotifs(step.move, step.before, 0))
+      .getOrElse(Nil)
 
   private def rookLiftLabels(motifs: List[Motif], side: Color): List[String] =
     motifs.collect {

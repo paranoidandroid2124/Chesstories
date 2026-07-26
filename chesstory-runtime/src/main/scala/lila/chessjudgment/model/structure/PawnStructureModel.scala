@@ -1,6 +1,6 @@
 package lila.chessjudgment.model.structure
 
-import lila.chessjudgment.model.PlanId
+import lila.chessjudgment.model.strategic.PlanTaxonomy.PlanKind
 import play.api.libs.json.*
 
 enum StructureId:
@@ -112,9 +112,9 @@ object StructureProfile:
 
 case class StructuralPlaybookEntry(
     structureId: StructureId,
-    whitePlans: List[PlanId],
-    blackPlans: List[PlanId],
-    counterPlans: List[PlanId],
+    whitePlans: List[PlanKind],
+    blackPlans: List[PlanKind],
+    counterPlans: List[PlanKind],
     preconditions: List[StructurePrecondition] = Nil
 )
 

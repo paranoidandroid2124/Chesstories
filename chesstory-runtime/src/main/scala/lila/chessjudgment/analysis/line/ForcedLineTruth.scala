@@ -1,9 +1,10 @@
 package lila.chessjudgment.analysis.line
 
 import chess.*
-import chess.format.{ Fen, Uci }
+import chess.format.Fen
 import lila.chessjudgment.analysis.tactical.TacticalPatternDetectors
-import lila.chessjudgment.model.strategic.VariationLine
+import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.strategic.EngineLine
 
 /**
  * Truth Boundary (High-Precision Validation Layer)
@@ -20,13 +21,10 @@ object ForcedLineTruth:
     lineMoves: List[String] = Nil
   )
 
-  def isProofSignalThemeId(id: String): Boolean =
-    false
-
   def detect(
       fen: String,
       playedUci: String,
-      variations: List[VariationLine] = Nil
+      variations: List[EngineLine] = Nil
   ): Option[VerifiedTheme] =
     PrincipalVariationEvidence.legalFenAfter(fen, playedUci).flatMap { afterFen =>
       val posOpt = Fen.read(chess.variant.Standard, Fen.Full(afterFen))
@@ -40,7 +38,7 @@ object ForcedLineTruth:
       beforePos: Option[Position],
       pos: Position,
       playedUci: String,
-      variations: List[VariationLine]
+      variations: List[EngineLine]
   ): Option[VerifiedTheme] =
     val continuationLines = variations.map(_.moves.map(normalizeUci))
     TacticalPatternDetectors.ordered
@@ -53,7 +51,7 @@ object ForcedLineTruth:
   private def detectImmediateReplyCheck(
       fen: String,
       playedUci: String,
-      variations: List[VariationLine]
+      variations: List[EngineLine]
   ): Option[VerifiedTheme] =
     val played = normalizeUci(playedUci)
     variations.view
@@ -65,27 +63,10 @@ object ForcedLineTruth:
       .map(line => VerifiedTheme(ImmediateReplyCheckId, line))
 
   private def replyChecksMover(fen: String, line: List[String]): Boolean =
-    applyLineStrict(fen, line).exists(_.check.yes)
+    PrincipalVariationEvidence
+      .legalMoveReplay(fen, line, startPly = 0)
+      .flatMap(_.lastOption)
+      .exists(_.after.check.yes)
 
   private def normalizeUci(raw: String): String =
-    Option(raw).getOrElse("").trim.toLowerCase
-
-  private def applyLineStrict(startFen: String, uciLine: List[String]): Option[Position] =
-    Fen.read(chess.variant.Standard, Fen.Full(startFen)).flatMap { start =>
-      var pos = start
-      var ok = true
-      val it = uciLine.iterator
-      while (it.hasNext && ok) {
-        val u = it.next()
-        applyUci(pos, u) match
-          case None => ok = false
-          case Some(next) =>
-            pos = next
-      }
-      Option.when(ok)(pos)
-    }
-
-  private def applyUci(pos: Position, uciStr: String): Option[Position] =
-    Uci(uciStr).collect { case m: Uci.Move => m }.flatMap { u =>
-      pos.move(u).toOption.map(_.after)
-    }
+    PrincipalVariationEvidence.normalizeUci(raw)

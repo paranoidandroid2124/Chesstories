@@ -5,6 +5,7 @@ import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.analysis.structure.{ StructuralDeltaAnalyzer, StructuralDeltaContracts }
 import lila.chessjudgment.model.{ PlanMatch, PlanSupport }
+import lila.chessjudgment.model.line.PrincipalVariationEvidence
 import lila.chessjudgment.model.strategic.PlanTaxonomy.{ PlanKind, PlanTheme }
 import lila.chessjudgment.model.judgment.*
 
@@ -23,7 +24,7 @@ private[assembly] object PlanCausalEpisodeBuilder:
       .filter(step => EvidenceRef.sameMove(step.moveUci, rootTransition.moveUci))
       .getOrElse(
         LineReplayStep(
-          ply = rootTransition.from.ply,
+          ply = rootTransition.to.ply,
           moveUci = rootTransition.moveUci,
           fenBefore = rootTransition.from.fen,
           fenAfter = rootTransition.to.fen
@@ -53,7 +54,11 @@ private[assembly] object PlanCausalEpisodeBuilder:
       observedResultMove: Option[String] = None,
       observedReplyBranch: Boolean = false
   ): PlanCausalEpisode =
-    val rebasedContinuation = continuation.zipWithIndex.map { case (step, index) =>
+    val lineOnlyContinuation =
+      continuation match
+        case head :: tail if sameStructuralStep(head, root.step) => tail
+        case steps                                               => steps
+    val rebasedContinuation = lineOnlyContinuation.zipWithIndex.map { case (step, index) =>
       step.copy(ply = root.step.ply + index + 1)
     }
     val replay = root.step :: rebasedContinuation
@@ -193,6 +198,11 @@ private[assembly] object PlanCausalEpisodeBuilder:
       dependencies = connectedDependencies,
       responses = connectedResponses
     )
+
+  private def sameStructuralStep(left: LineReplayStep, right: LineReplayStep): Boolean =
+    EvidenceRef.sameMove(left.moveUci, right.moveUci) &&
+      PrincipalVariationEvidence.sameBoardState(left.fenBefore, right.fenBefore) &&
+      PrincipalVariationEvidence.sameBoardState(left.fenAfter, right.fenAfter)
 
   def withHistory(
       plan: PlanMatch,
@@ -368,8 +378,8 @@ private[assembly] object PlanCausalEpisodeBuilder:
       val transition = StructuralTransitionBinding(
         moveUci = step.moveUci,
         role = role,
-        from = PositionNodeRef(step.fenBefore, step.ply, Some(before.color)),
-        to = PositionNodeRef(step.fenAfter, step.ply + 1, Some(after.color)),
+        from = PositionNodeRef(step.fenBefore, step.ply - 1, Some(before.color)),
+        to = PositionNodeRef(step.fenAfter, step.ply, Some(after.color)),
         line = Some(rootLine),
         perspective = perspective
       )
@@ -1108,8 +1118,8 @@ private[assembly] object PlanCausalEpisodeBuilder:
     yield StructuralTransitionBinding(
       moveUci = event.step.moveUci,
       role = role,
-      from = PositionNodeRef(event.step.fenBefore, event.step.ply, Some(before.color)),
-      to = PositionNodeRef(event.step.fenAfter, event.step.ply + 1, Some(after.color)),
+      from = PositionNodeRef(event.step.fenBefore, event.step.ply - 1, Some(before.color)),
+      to = PositionNodeRef(event.step.fenAfter, event.step.ply, Some(after.color)),
       line = Some(rootLine),
       perspective = event.perspective
     )

@@ -1,5 +1,7 @@
 package lila.chessjudgment.model.strategic
 
+import lila.chessjudgment.model.PlanCategory
+
 object PlanTaxonomy:
 
   enum PlanTheme(val id: String):
@@ -64,12 +66,61 @@ object PlanTaxonomy:
     case WingExpansion extends PlanKind("wing_expansion", PlanTheme.WingPlay)
     case HookCreation extends PlanKind("hook_creation", PlanTheme.WingPlay)
     case RookLiftScaffold extends PlanKind("rook_lift_scaffold", PlanTheme.WingPlay)
+    case KingsideWingExpansion extends PlanKind("kingside_wing_expansion", PlanTheme.WingPlay)
+    case QueensideWingExpansion extends PlanKind("queenside_wing_expansion", PlanTheme.WingPlay)
 
     case SimplificationConversion extends PlanKind("simplification_conversion", PlanTheme.AdvantageTransformation)
     case PasserConversion extends PlanKind("passer_conversion", PlanTheme.AdvantageTransformation)
     case PassedPawnManufacture extends PlanKind("passed_pawn_manufacture", PlanTheme.AdvantageTransformation)
     case InvasionTransition extends PlanKind("invasion_transition", PlanTheme.AdvantageTransformation)
     case OppositeBishopsConversion extends PlanKind("opposite_bishops_conversion", PlanTheme.AdvantageTransformation)
+
+    def category: PlanCategory =
+      theme match
+        case PlanTheme.OpeningPrinciples       => PlanCategory.Opening
+        case PlanTheme.RestrictionProphylaxis  => PlanCategory.Defensive
+        case PlanTheme.PieceRedeployment       => PlanCategory.Positional
+        case PlanTheme.SpaceClamp              => PlanCategory.Positional
+        case PlanTheme.WeaknessFixation        => PlanCategory.Structural
+        case PlanTheme.PawnBreakPreparation    => PlanCategory.Structural
+        case PlanTheme.FavorableExchange       => PlanCategory.Transition
+        case PlanTheme.WingPlay                => PlanCategory.Attack
+        case PlanTheme.AdvantageTransformation => PlanCategory.Transition
+        case PlanTheme.Unknown                 => PlanCategory.Positional
+
+    /**
+     * Presentation-only label. Internal identities, keys and graph anchors must
+     * use the injective `id` value.
+     */
+    def publicLabel: String =
+      this match
+        case OpeningDevelopment                        => "OpeningDevelopment"
+        case ProphylaxisRestraint | BreakPrevention |
+            KeySquareDenial | MobilitySuppression     => "Prophylaxis"
+        case OutpostEntrenchment | WorstPieceImprovement |
+            InvasionTransition                        => "PieceActivation"
+        case RookFileTransfer                          => "RookActivation"
+        case BishopReanchor                            => "MinorPieceManeuver"
+        case OpenFilePressure                          => "FileControl"
+        case FlankClamp                                => "SpaceAdvantage"
+        case CentralSpaceBind                          => "CentralControl"
+        case StaticWeaknessFixation | BackwardPawnTargeting |
+            IQPInducement                              => "WeakPawnAttack"
+        case MinorityAttackFixation                    => "MinorityAttack"
+        case CentralBreakTiming | WingBreakTiming |
+            TensionMaintenance                         => "PawnBreakPreparation"
+        case SimplificationWindow | DefenderTrade |
+            BadPieceLiquidation                        => "Exchange"
+        case QueenTradeShield                          => "QueenTrade"
+        case WingExpansion                             => "WingExpansion"
+        case HookCreation                              => "PawnStorm"
+        case RookLiftScaffold                          => "RookActivation"
+        case KingsideWingExpansion                     => "KingsideAttack"
+        case QueensideWingExpansion                    => "QueensideAttack"
+        case SimplificationConversion |
+            OppositeBishopsConversion                  => "Simplification"
+        case PasserConversion                          => "PassedPawnPush"
+        case PassedPawnManufacture                     => "PassedPawnCreation"
 
   object PlanKind:
     private val byId: Map[String, PlanKind] =
@@ -203,6 +254,14 @@ object PlanTaxonomy:
         requiredSignals = List(CandidateLineSignal, StrategicSnapshotSignal),
         horizon = Medium
       ),
+      PlanKind.KingsideWingExpansion -> SubplanSpec(
+        requiredSignals = List(CandidateLineSignal, MoveMotifSignal),
+        horizon = Medium
+      ),
+      PlanKind.QueensideWingExpansion -> SubplanSpec(
+        requiredSignals = List(CandidateLineSignal, MoveMotifSignal),
+        horizon = Medium
+      ),
       PlanKind.SimplificationConversion -> SubplanSpec(
         requiredSignals = List(CandidateLineSignal, StrategicSnapshotSignal),
         horizon = Medium
@@ -224,9 +283,6 @@ object PlanTaxonomy:
         horizon = Long
       )
     )
-
-    def byTheme(theme: PlanTheme): List[(PlanKind, SubplanSpec)] =
-      specs.toList.filter((sid, _) => sid.theme == theme).sortBy(_._1.id)
 
   private def normalize(raw: String): String =
     Option(raw).getOrElse("").trim.toLowerCase

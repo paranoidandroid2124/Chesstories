@@ -3,6 +3,7 @@ package lila.chessjudgment.analysis.position
 import chess.{ Board, Square, Role, Color, Position }
 import lila.chessjudgment.analysis.material.MaterialValue
 import lila.chessjudgment.model._
+import lila.chessjudgment.model.position.PawnTopology
 import lila.chessjudgment.model.strategic.{
   EndgameFeature,
   EndgameOppositionType,
@@ -165,7 +166,8 @@ object FactExtractor {
     }
 
     if (endgame.ruleOfSquare != RuleOfSquareStatus.NA) {
-      val enemyPassers = board.byPiece(!color, chess.Pawn).squares.filter(isPassedPawn(board, _, !color))
+      val enemyPassers =
+        PawnTopology.passedPawns(!color, board.byPiece(!color, chess.Pawn), board.byPiece(color, chess.Pawn))
       val targetPawnOpt = enemyPassers.sortBy(p => if ((!color).white) -p.rank.value else p.rank.value).headOption
       targetPawnOpt.foreach { pawnSq =>
         val promoRank = if ((!color).white) 7 else 0
@@ -198,29 +200,15 @@ object FactExtractor {
       List(Color.White, Color.Black).flatMap(color => board.byPiece(color, chess.Rook).squares.toList)
     val passedPawnsWithColor =
       List(Color.White, Color.Black).flatMap(color =>
-        board.byPiece(color, chess.Pawn).squares.filter(pawn => isPassedPawn(board, pawn, color)).toList.map(_ -> color)
+        PawnTopology
+          .passedPawns(color, board.byPiece(color, chess.Pawn), board.byPiece(!color, chess.Pawn))
+          .map(_ -> color)
       )
     val promotionSquares =
       passedPawnsWithColor.flatMap { case (pawn, color) =>
         Square.at(pawn.file.value, if (color.white) 7 else 0)
       }
     (kings ++ rooks ++ passedPawnsWithColor.map(_._1) ++ promotionSquares).distinct
-  }
-
-  private def isPassedPawn(board: Board, pawnSq: Square, color: Color): Boolean = {
-    val oppPawnsByFile = board.byPiece(!color, chess.Pawn).squares.groupBy(_.file)
-    val fileValue = pawnSq.file.value
-    val filesToCheck = List(fileValue - 1, fileValue, fileValue + 1).filter(f => f >= 0 && f <= 7)
-    filesToCheck.forall { idx =>
-      chess.File.all.lift(idx).forall { f =>
-        oppPawnsByFile.get(f).forall { pawns =>
-          pawns.forall { oppPawn =>
-            if (color.white) oppPawn.rank.value <= pawnSq.rank.value
-            else oppPawn.rank.value >= pawnSq.rank.value
-          }
-        }
-      }
-    }
   }
 
   private def mapMotifToFact(motif: Motif, board: Board, scope: FactScope): Option[Fact] = {

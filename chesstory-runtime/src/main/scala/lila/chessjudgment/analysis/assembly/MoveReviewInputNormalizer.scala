@@ -4,10 +4,12 @@ import chess.Color
 import chess.format.Fen
 import chess.variant.Standard
 import play.api.libs.json.{ Json, OFormat, Reads }
-import lila.chessjudgment.analysis.evaluation.PerspectiveMath
+import lila.chessjudgment.model.evaluation.PerspectiveMath
 import lila.chessjudgment.analysis.opening.{ OpeningRecognitionIndex, OpeningThemePriorIndex }
-import lila.chessjudgment.analysis.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.line.PrincipalVariationEvidence
 import lila.chessjudgment.model.{
+  BranchReplyProbeBinding,
+  CounterResourceProbeBinding,
   ProbeAdmissionDiagnostic,
   ProbeAdmissionStatus,
   ProbeContractValidator,
@@ -15,12 +17,13 @@ import lila.chessjudgment.model.{
   ProbeRequest,
   ProbeResult
 }
-import lila.chessjudgment.model.strategic.VariationLine
+import lila.chessjudgment.model.strategic.EngineLine
 import lila.chessjudgment.model.judgment.{
-  BranchReplyProbeBinding,
-  CounterResourceProbeBinding,
   EvidenceRef,
   LineNodeRole,
+  NormalizedCandidateLine,
+  NormalizedMoveReviewInput,
+  NormalizedThreatBranch,
   OpeningContextSignal,
   OpeningFamily,
   OpeningIdentity,
@@ -41,8 +44,7 @@ object RawOpeningContext:
 final case class RawMoveReviewInput(
     fen: String,
     playedMoveUci: String,
-    variations: List[VariationLine],
-    currentEvalCp: Option[Int] = None, // External input contract; white POV centipawns.
+    variations: List[EngineLine],
     ply: Option[Int] = None,
     openingContext: Option[RawOpeningContext] = None,
     movePrefixUci: List[String] = Nil,
@@ -51,55 +53,6 @@ final case class RawMoveReviewInput(
 
 object RawMoveReviewInput:
   given Reads[RawMoveReviewInput] = Json.reads[RawMoveReviewInput]
-
-final case class NormalizedCandidateLine(
-    role: LineNodeRole,
-    rank: Int,
-    line: VariationLine
-):
-  def rootMove: Option[String] =
-    line.moves.headOption.map(MoveReviewInputNormalizer.normalizeUci)
-
-final case class NormalizedThreatBranch(
-    sourceProbeId: String,
-    probedMoveUci: String,
-    branchFen: String,
-    branchPly: Int,
-    opponentResourceMove: Option[String],
-    certifiedHorizonPlyOffset: Option[Int],
-    whitePovEvalCp: Int,
-    mate: Option[Int],
-    lines: List[NormalizedCandidateLine]
-):
-  def rankedUniqueLines: List[NormalizedCandidateLine] =
-    lines.sortBy(_.rank).distinctBy(_.rootMove)
-
-final case class NormalizedMoveReviewInput(
-    beforeFen: String,
-    playedMoveUci: String,
-    beforePly: Int,
-    sideToMove: Option[Color],
-    afterPlayedFen: String,
-    afterReferenceFen: Option[String],
-    lines: List[NormalizedCandidateLine],
-    currentWhitePovEvalCp: Int,
-    opening: Option[OpeningIdentity],
-    movePrefixUci: List[String] = Nil,
-    openingRecognition: Option[OpeningRecognition] = None,
-    openingThemePriorSelection: Option[OpeningThemePriorSelection] = None,
-    openingSignals: List[OpeningContextSignal] = Nil,
-    threatBranches: List[NormalizedThreatBranch] = Nil,
-    endgameTablebaseResults: List[ProbeResult] = Nil,
-    probeDiagnostics: List[ProbeAdmissionDiagnostic] = Nil
-):
-  def playedLine: Option[NormalizedCandidateLine] =
-    lines.find(_.role == LineNodeRole.Played)
-
-  def referenceLine: Option[NormalizedCandidateLine] =
-    lines.find(_.role == LineNodeRole.BestReference)
-
-  def rankedUniqueLines: List[NormalizedCandidateLine] =
-    lines.sortBy(_.rank).distinctBy(_.rootMove)
 
 object MoveReviewInputNormalizer:
 
@@ -140,6 +93,7 @@ object MoveReviewInputNormalizer:
         ranked
           .find { case (line, _) => line.moves.headOption.exists(move => sameRootMove(beforeFen, move, playedMove)) }
           .map { case (line, index) => NormalizedCandidateLine(LineNodeRole.Played, index + 1, normalizedLine(line)) }
+          .filter(line => line.line.moves.size >= 2 || positionHasNoLegalReply(afterPlayed))
       val alternatives =
         ranked
           .filterNot { case (_, index) =>
@@ -147,52 +101,53 @@ object MoveReviewInputNormalizer:
           }
           .map { case (line, index) => NormalizedCandidateLine(LineNodeRole.Alternative, index + 1, normalizedLine(line)) }
       val lines = (reference.toList ++ played.toList ++ alternatives).distinctBy(line => line.role -> line.rank)
-      raw.currentEvalCp.orElse(reference.map(_.line.scoreCp)).map { currentWhitePovEvalCp =>
-        val graphPlayedMove = played.flatMap(_.rootMove).getOrElse(playedMove)
-        val graphAfterPlayed =
-          PrincipalVariationEvidence.legalFenAfter(beforeFen, graphPlayedMove).getOrElse(afterPlayed)
-        val afterReference =
-          reference.flatMap(_.rootMove).flatMap(PrincipalVariationEvidence.legalFenAfter(beforeFen, _))
-        val threatBranchNormalization =
-          normalizeThreatBranches(
-            raw.probeResults.filterNot(_.purpose.exists(ProbePurpose.isEndgameTablebase)),
+      played.flatMap { playedLine =>
+        reference.map { _ =>
+          val graphPlayedMove = playedLine.rootMove.getOrElse(playedMove)
+          val graphAfterPlayed =
+            PrincipalVariationEvidence.legalFenAfter(beforeFen, graphPlayedMove).getOrElse(afterPlayed)
+          val afterReference =
+            reference.flatMap(_.rootMove).flatMap(PrincipalVariationEvidence.legalFenAfter(beforeFen, _))
+          val threatBranchNormalization =
+            normalizeThreatBranches(
+              raw.probeResults.filterNot(_.purpose.exists(ProbePurpose.isEndgameTablebase)),
+              beforeFen = beforeFen,
+              rootLines = lines,
+              firstThreatRank = lines.map(_.rank).maxOption.getOrElse(0) + 1
+            )
+          NormalizedMoveReviewInput(
             beforeFen = beforeFen,
-            rootLines = lines,
-            firstThreatRank = lines.map(_.rank).maxOption.getOrElse(0) + 1
+            playedMoveUci = graphPlayedMove,
+            beforePly = beforePly,
+            sideToMove = side,
+            afterPlayedFen = graphAfterPlayed,
+            afterReferenceFen = afterReference,
+            lines = lines,
+            opening = opening,
+            movePrefixUci = movePrefix,
+            openingRecognition = recognition,
+            openingThemePriorSelection = themePriorSelection,
+            openingSignals = openingSignals,
+            threatBranches = threatBranchNormalization.branches,
+            endgameTablebaseResults = raw.probeResults.filter(_.purpose.exists(ProbePurpose.isEndgameTablebase)),
+            probeDiagnostics = threatBranchNormalization.diagnostics
           )
-        NormalizedMoveReviewInput(
-          beforeFen = beforeFen,
-          playedMoveUci = graphPlayedMove,
-          beforePly = beforePly,
-          sideToMove = side,
-          afterPlayedFen = graphAfterPlayed,
-          afterReferenceFen = afterReference,
-          lines = lines,
-          currentWhitePovEvalCp = currentWhitePovEvalCp,
-          opening = opening,
-          movePrefixUci = movePrefix,
-          openingRecognition = recognition,
-          openingThemePriorSelection = themePriorSelection,
-          openingSignals = openingSignals,
-          threatBranches = threatBranchNormalization.branches,
-          endgameTablebaseResults = raw.probeResults.filter(_.purpose.exists(ProbePurpose.isEndgameTablebase)),
-          probeDiagnostics = threatBranchNormalization.diagnostics
-        )
+        }
       }
     }
 
   def normalizeUci(uci: String): String =
     PrincipalVariationEvidence.normalizeUci(uci)
 
-  private def normalizedLine(line: VariationLine): VariationLine =
+  private def normalizedLine(line: EngineLine): EngineLine =
     line.copy(moves = line.moves.map(normalizeUci))
 
   private def preferredRankedLines(
       startFen: String,
-      lines: List[(VariationLine, Int)],
+      lines: List[(EngineLine, Int)],
       sideToMove: Option[Color],
       requireTerminalScoreConsistency: Boolean = true
-  ): List[(VariationLine, Int)] =
+  ): List[(EngineLine, Int)] =
     val selectedLines = lines
       .groupBy { case (line, _) => line.moves.headOption.map(rootMoveKey(startFen, _)).getOrElse("") }
       .values
@@ -223,12 +178,10 @@ object MoveReviewInputNormalizer:
       probedMoveUci: String,
       branchFen: String,
       purpose: ProbePurpose,
-      lines: List[VariationLine],
+      lines: List[EngineLine],
       variationHash: Option[String],
       opponentResourceMove: Option[String],
-      certifiedHorizonPlyOffset: Option[Int],
-      whitePovEvalCp: Int,
-      mate: Option[Int]
+      certifiedHorizonPlyOffset: Option[Int]
   )
 
   private final case class ThreatBranchNormalization(
@@ -292,8 +245,6 @@ object MoveReviewInputNormalizer:
               branchPly = plyFromFen(seed.branchFen),
               opponentResourceMove = seed.opponentResourceMove,
               certifiedHorizonPlyOffset = seed.certifiedHorizonPlyOffset,
-              whitePovEvalCp = seed.whitePovEvalCp,
-              mate = seed.mate,
               lines = branchLines
             )
             diagnostics += probeDiagnostic(
@@ -436,9 +387,7 @@ object MoveReviewInputNormalizer:
                             lines = lines,
                             variationHash = probe.variationHash,
                             opponentResourceMove = opponentResourceMove,
-                            certifiedHorizonPlyOffset = certifiedHorizonPlyOffset,
-                            whitePovEvalCp = probe.evalCp,
-                            mate = probe.mate
+                            certifiedHorizonPlyOffset = certifiedHorizonPlyOffset
                           )
                         )
                       else
@@ -547,22 +496,25 @@ object MoveReviewInputNormalizer:
       variationHash = variationHash
     )
 
-  private def scoreForMover(side: Color, line: VariationLine): Double =
+  private def scoreForMover(side: Color, line: EngineLine): Double =
     val outcome = PerspectiveMath.winPercentForMover(side, line.scoreCp, line.mate)
     val mateTieBreak =
-      line.mate
-        .filter(mate => (side.white && mate > 0) || (side.black && mate < 0))
-        .map(mate => 1.0 / mate.abs.max(1).toDouble)
+      PerspectiveMath
+        .mateForMover(side, line.mate)
+        .map(mate => math.signum(mate).toDouble / mate.abs.max(1).toDouble)
         .getOrElse(0.0)
     outcome + mateTieBreak
 
-  private def legalLine(startFen: String, line: VariationLine): Boolean =
+  private def legalLine(startFen: String, line: EngineLine): Boolean =
     line.moves.nonEmpty &&
-      line.moves.foldLeft(Option(startFen)) { (fen, move) =>
-        fen.flatMap(PrincipalVariationEvidence.legalFenAfter(_, normalizeUci(move)))
-      }.nonEmpty
+      PrincipalVariationEvidence
+        .legalMoveReplay(startFen, line.moves.map(normalizeUci), startPly = 0)
+        .nonEmpty
 
-  private def terminalScoreConsistent(startFen: String, line: VariationLine): Boolean =
+  private def positionHasNoLegalReply(fen: String): Boolean =
+    Fen.read(Standard, Fen.Full(fen)).exists(_.legalMoves.isEmpty)
+
+  private def terminalScoreConsistent(startFen: String, line: EngineLine): Boolean =
     if line.mate.contains(0) then false
     else
       PrincipalVariationEvidence
@@ -572,7 +524,7 @@ object MoveReviewInputNormalizer:
         .forall { terminal =>
           if terminal.staleMate then line.mate.isEmpty && line.scoreCp.abs <= 1
           else if terminal.checkMate then
-            line.mate.forall(mate =>
+            line.mate.exists(mate =>
               val whiteWon = terminal.color.black
               (mate > 0) == whiteWon
             )

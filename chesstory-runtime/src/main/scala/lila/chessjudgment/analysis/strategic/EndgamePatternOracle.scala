@@ -3,6 +3,7 @@ package lila.chessjudgment.analysis.strategic
 import chess.*
 import chess.format.Fen
 import chess.variant.Standard
+import lila.chessjudgment.model.position.PawnTopology
 import lila.chessjudgment.model.judgment.{
   LineConsequence,
   LineEndgameTechniqueHorizon,
@@ -707,7 +708,7 @@ object EndgamePatternOracle:
         val pawn = ourPawns.head
         (board.kingPosOf(color), board.kingPosOf(!color)) match
           case (Some(ourKing), Some(theirKing)) =>
-            val pawnIsPassed = isPassedPawn(board, pawn, color)
+            val pawnIsPassed = passedPawns(board, color).contains(pawn)
             val advanced = relativeRank(pawn, color) >= 4
             val enemyFrontBlock =
               theirKing.file == pawn.file &&
@@ -1142,22 +1143,7 @@ object EndgamePatternOracle:
       .toList
 
   private def passedPawns(board: Board, color: Color): List[Square] =
-    board.byPiece(color, Pawn).squares.filter(isPassedPawn(board, _, color))
-
-  private def isPassedPawn(board: Board, pawnSq: Square, color: Color): Boolean =
-    val oppPawnsByFile = board.byPiece(!color, Pawn).squares.groupBy(_.file)
-    val fileValue = pawnSq.file.value
-    val filesToCheck = List(fileValue - 1, fileValue, fileValue + 1).filter(idx => idx >= 0 && idx <= 7)
-    filesToCheck.forall { idx =>
-      File.all.lift(idx).forall { f =>
-        oppPawnsByFile.get(f).forall { pawns =>
-          pawns.forall { oppPawn =>
-            if color.white then oppPawn.rank.value <= pawnSq.rank.value
-            else oppPawn.rank.value >= pawnSq.rank.value
-          }
-        }
-      }
-    }
+    PawnTopology.passedPawns(color, board.byPiece(color, Pawn), board.byPiece(!color, Pawn))
 
   private def relativeRank(square: Square, color: Color): Int =
     if color.white then square.rank.value + 1 else 8 - square.rank.value

@@ -1,7 +1,7 @@
 package lila.chessjudgment.analysis.assembly
 
-import lila.chessjudgment.analysis.evaluation.JudgmentThresholds
-import lila.chessjudgment.analysis.singlePosition.ThreatDriver
+import lila.chessjudgment.model.evaluation.JudgmentThresholds
+import lila.chessjudgment.model.judgment.ThreatDriver
 import lila.chessjudgment.analysis.tactical.TacticalMotifClassifier
 import lila.chessjudgment.model.Motif
 import lila.chessjudgment.model.judgment.*
@@ -15,6 +15,7 @@ private[chessjudgment] final case class RelativeCauseDraft(
 
 private[chessjudgment] final case class RelativeCauseSignalProfile(
     fact: CandidateComparisonFact,
+    candidateSet: Option[CandidateSetDescriptor],
     referenceRecords: List[EvidenceRecord],
     candidateRecords: List[EvidenceRecord],
     sharedRecords: List[EvidenceRecord]
@@ -142,9 +143,6 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
     if !profile.fact.hasDistinctRootMoves then Nil
     else suppressGenericCompanions(rawDrafts(profile))
 
-  def producedCauseBindableRecords(profile: RelativeCauseSignalProfile): List[EvidenceRecord] =
-    drafts(profile).flatMap(_.support).distinctBy(_.ref.id)
-
   def playedMoveCandidateSideComparison(kind: CandidateComparisonKind): Boolean =
     kind == CandidateComparisonKind.PlayedVsBest || kind == CandidateComparisonKind.PlayedVsAlternative
 
@@ -193,7 +191,9 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       causeDraft(
         RelativeCauseKind.OnlyMoveNecessity,
         Nil,
-        fact.comparison.candidateSet.exists(_.onlyMove) && badLoss,
+        fact.kind == CandidateComparisonKind.PlayedVsBest &&
+          candidateSet.exists(_.onlyMove) &&
+          badLoss,
         Some(RelativeCauseSourceSide.Reference)
       ),
       causeDraft(
@@ -405,7 +405,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       attributionKind: CauseAttributionKind
   ): List[RelativeCauseDraft] =
     records.collect {
-      case record @ EvidenceRecord(_, payload: TacticalMechanismEvidence, _) if payload.canAnchorTacticalIdea =>
+      case record @ EvidenceRecord(_, payload: TacticalMechanismEvidence, _) if payload.canAnchorTacticalClaim =>
         RelativeCauseDraft(
           if candidateValue && payload.kind == TacticalMechanismKind.MaterialGain then RelativeCauseKind.MaterialSwing
           else TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss, playedCandidate),
@@ -889,17 +889,19 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
     kind == RelativeCauseKind.PlanImprovement || kind == RelativeCauseKind.PlanContradiction
 
   private def shortTermCause(kind: RelativeCauseKind): Boolean =
-    kind != RelativeCauseKind.DrawResource && ClaimEventCluster.kindForCause(kind).nonEmpty
+    kind != RelativeCauseKind.DrawResource && ClaimFamily.fromCause(kind).nonEmpty
 
 private[chessjudgment] object RelativeCauseSignalProfile:
   def from(
       fact: CandidateComparisonFact,
+      candidateSet: Option[CandidateSetDescriptor],
       referenceRecords: List[EvidenceRecord],
       candidateRecords: List[EvidenceRecord],
       sharedRecords: List[EvidenceRecord]
   ): RelativeCauseSignalProfile =
     RelativeCauseSignalProfile(
       fact = fact,
+      candidateSet = candidateSet,
       referenceRecords = referenceRecords,
       candidateRecords = candidateRecords,
       sharedRecords = sharedRecords
@@ -930,7 +932,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
   private[chessjudgment] def tacticalMechanismRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.canAnchorTacticalIdea || payload.canAnchorDefensiveIdea
+        payload.canAnchorTacticalClaim || payload.canAnchorDefensiveClaim
       case _ =>
         false
     }
@@ -954,7 +956,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
   private[chessjudgment] def tacticalRiskRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.canAnchorTacticalIdea
+        payload.canAnchorTacticalClaim
       case _ =>
         false
     }
@@ -969,7 +971,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
   private[chessjudgment] def defensiveResourceRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.canAnchorDefensiveIdea
+        payload.canAnchorDefensiveClaim
       case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) =>
         payload.isProofSignalDefensivePressure &&
           payload.episode.bestDefense.nonEmpty &&
@@ -985,7 +987,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
           payload.hasMaterialRecaptureChain ||
           payload.hasMaterialRecoveryWindow
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.kind == TacticalMechanismKind.RecaptureChoice && payload.canAnchorTacticalIdea
+        payload.kind == TacticalMechanismKind.RecaptureChoice && payload.canAnchorTacticalClaim
       case _ =>
         false
     }.distinctBy(_.ref.id)
@@ -1002,7 +1004,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
         payload.hasProofSignalConsequence(LineConsequenceKind.ImmediateReplyCheck)
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.kind == TacticalMechanismKind.Tempo && payload.canAnchorTacticalIdea
+        payload.kind == TacticalMechanismKind.Tempo && payload.canAnchorTacticalClaim
       case _ =>
         false
     }.distinctBy(_.ref.id)
@@ -1080,7 +1082,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         payload.maintainedDefensiveEndgameTechniqueHorizons.nonEmpty ||
           payload.hasProofSignalConsequence(LineConsequenceKind.DrawResource)
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.kind == TacticalMechanismKind.DrawResource && payload.canAnchorDefensiveIdea
+        payload.kind == TacticalMechanismKind.DrawResource && payload.canAnchorDefensiveClaim
       case EvidenceRecord(_, payload: RelationFactEvidence, _) =>
         payload.hasConcreteRelationProof &&
           payload.kind == RelationFactKind.StalemateTrap
@@ -1096,7 +1098,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
           payload.materialOutcomeProfile.gainSignals.contains(LineMaterialOutcomeSignal.PromotionGain) ||
           payload.materialOutcomeProfile.lossSignals.contains(LineMaterialOutcomeSignal.PromotionLoss)
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.kind == TacticalMechanismKind.PawnPromotion && payload.canAnchorTacticalIdea
+        payload.kind == TacticalMechanismKind.PawnPromotion && payload.canAnchorTacticalClaim
       case _ =>
         false
     }.distinctBy(_.ref.id)
@@ -1225,7 +1227,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         payload.materialOutcomeProfile.gainMagnitude != LineMaterialOutcomeMagnitude.None ||
           payload.hasProofSignalConsequence(LineConsequenceKind.MaterialGain)
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.kind == TacticalMechanismKind.MaterialGain && payload.canAnchorTacticalIdea
+        payload.kind == TacticalMechanismKind.MaterialGain && payload.canAnchorTacticalClaim
       case _ =>
         false
     }.distinctBy(_.ref.id)
@@ -1249,7 +1251,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
           payload.materialOutcomeProfile.gainSignals.contains(LineMaterialOutcomeSignal.PromotionGain) ||
           payload.materialOutcomeProfile.lossSignals.contains(LineMaterialOutcomeSignal.PromotionLoss)
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.kind == TacticalMechanismKind.PawnPromotion && payload.canAnchorTacticalIdea
+        payload.kind == TacticalMechanismKind.PawnPromotion && payload.canAnchorTacticalClaim
       case _ =>
         false
     }.distinctBy(_.ref.id)
@@ -1434,8 +1436,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) =>
         !payload.insufficientData &&
           payload.onlyDefense.exists(move => normalizeMove(move) == normalizeMove(fact.referenceLine.rootMove)) &&
-          (payload.defenseRequired ||
-            payload.maxWinPercentLossIfIgnored.exists(_ >= JudgmentThresholds.MATERIAL_THREAT_WP))
+          payload.defenseRequired
       case _ =>
         false
     }
@@ -1487,7 +1488,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
 
   private def compensationAnchorRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     strategicMechanismRecords(records)(payload =>
-      payload.canSupportCompensation || payload.canAnchorPlanIdea || payload.canAnchorPawnStructureIdea
+      payload.canSupportCompensation || payload.canAnchorPlanClaim || payload.canAnchorPawnStructureClaim
     )
 
   private def proofSignalMaterialSummaryRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =

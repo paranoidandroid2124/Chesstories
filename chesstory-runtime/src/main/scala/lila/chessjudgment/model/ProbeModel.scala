@@ -1,8 +1,12 @@
 package lila.chessjudgment.model
 
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+
 import _root_.chess.format.Fen
 import _root_.chess.variant.Standard
-import lila.chessjudgment.model.strategic.VariationLine
+import lila.chessjudgment.model.judgment.{ CandidateLineNode, EvidenceRef, LineNodeRole, PositionNodeRef }
+import lila.chessjudgment.model.strategic.EngineLine
 import play.api.libs.json._
 
 enum ProbePurpose(val key: String):
@@ -102,13 +106,10 @@ object EndgameTablebaseEvidence:
 case class ProbeResult(
   id: String,
   fen: Option[String] = None, // Base FEN the probe was run from (critical when probing non-root branches)
-  evalCp: Int,               // White POV centipawns (same convention as PlanInteractionContext.whitePovEvalCp)
-  replyLines: Option[List[VariationLine]] = None,
-  deltaVsBaseline: Int,      // Probe white POV eval - baselineEvalCp. Negative = worse than baseline.
+  replyLines: Option[List[EngineLine]] = None,
   // Optional metadata that keeps branch probes self-describing.
   purpose: Option[ProbePurpose] = None,
   probedMove: Option[String] = None, // The probed candidate move (UCI)
-  mate: Option[Int] = None,          // Mate distance if applicable
   depth: Option[Int] = None,         // Depth reached by the client engine
   // Optional contract diagnostics.
   objective: Option[String] = None,
@@ -371,3 +372,135 @@ object ProbeContractValidator:
         result.tablebase.nonEmpty
       case _ =>
         false
+
+object BranchReplyProbeBinding:
+  val ReplyMultiPv = 3
+  val Depth = 16
+  val DepthFloor = 12
+  val Objective = "branch_reply_multipv"
+  val RequiredSignals: List[String] = List("replyLines", "depth", "purpose", "variationHash", "horizon")
+
+  def requiredReplyCount(branchFen: String): Int =
+    _root_.chess.format.Fen
+      .read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(branchFen))
+      .map(_.legalMoves.size.min(ReplyMultiPv))
+      .getOrElse(ReplyMultiPv)
+
+  def horizon(requiredPlyOffset: Int): String = ProbeHorizon.renderPlyOffset(requiredPlyOffset)
+
+  def horizonPlyOffset(value: String): Option[Int] =
+    ProbeHorizon.plyOffset(value)
+
+  def variationHash(
+      root: PositionNodeRef,
+      line: CandidateLineNode,
+      certifiedHorizonPlyOffset: Int
+  ): String =
+    variationHash(
+      rootFen = root.fen,
+      role = line.ref.role,
+      rootMove = line.ref.rootMove,
+      whitePovEvalCp = line.whitePovEvalCp,
+      mate = line.mate,
+      depth = line.depth,
+      moves = line.line.moves,
+      certifiedHorizonPlyOffset = certifiedHorizonPlyOffset
+    )
+
+  def variationHash(
+      rootFen: String,
+      role: LineNodeRole,
+      rootMove: String,
+      whitePovEvalCp: Int,
+      mate: Option[Int],
+      depth: Int,
+      moves: List[String],
+      certifiedHorizonPlyOffset: Int
+  ): String =
+    digest(variationFields(rootFen, role, rootMove, whitePovEvalCp, mate, depth, moves) :+
+      horizon(certifiedHorizonPlyOffset))
+
+  private[model] def variationBaseHash(
+      rootFen: String,
+      role: LineNodeRole,
+      rootMove: String,
+      whitePovEvalCp: Int,
+      mate: Option[Int],
+      depth: Int,
+      moves: List[String]
+  ): String =
+    digest(variationFields(rootFen, role, rootMove, whitePovEvalCp, mate, depth, moves))
+
+  private def variationFields(
+      rootFen: String,
+      role: LineNodeRole,
+      rootMove: String,
+      whitePovEvalCp: Int,
+      mate: Option[Int],
+      depth: Int,
+      moves: List[String]
+  ): List[String] =
+    List(
+      rootFen,
+      role.toString,
+      rootMove,
+      whitePovEvalCp.toString,
+      mate.map(_.toString).getOrElse(""),
+      depth.toString,
+      moves.mkString(",")
+    )
+
+  private def digest(fields: List[String]): String =
+    val raw = fields.mkString("||")
+    MessageDigest
+      .getInstance("SHA-256")
+      .digest(raw.getBytes(StandardCharsets.UTF_8))
+      .map(byte => f"${byte & 0xff}%02x")
+      .mkString
+
+object CounterResourceProbeBinding:
+  val Objective = "opponent_resource_reply"
+  val RequiredSignals: List[String] =
+    List("replyLines", "depth", "purpose", "variationHash", "opponentResourceMove")
+
+  def variationHash(root: PositionNodeRef, line: CandidateLineNode, opponentResourceMove: String): String =
+    variationHash(
+      rootFen = root.fen,
+      role = line.ref.role,
+      rootMove = line.ref.rootMove,
+      whitePovEvalCp = line.whitePovEvalCp,
+      mate = line.mate,
+      depth = line.depth,
+      moves = line.line.moves,
+      opponentResourceMove = opponentResourceMove
+    )
+
+  def variationHash(
+      rootFen: String,
+      role: LineNodeRole,
+      rootMove: String,
+      whitePovEvalCp: Int,
+      mate: Option[Int],
+      depth: Int,
+      moves: List[String],
+      opponentResourceMove: String
+  ): String =
+    val raw =
+      List(
+        BranchReplyProbeBinding.variationBaseHash(
+          rootFen,
+          role,
+          rootMove,
+          whitePovEvalCp,
+          mate,
+          depth,
+          moves
+        ),
+        EvidenceRef.normalizeMove(opponentResourceMove),
+        Objective
+      ).mkString("||")
+    MessageDigest
+      .getInstance("SHA-256")
+      .digest(raw.getBytes(StandardCharsets.UTF_8))
+      .map(byte => f"${byte & 0xff}%02x")
+      .mkString

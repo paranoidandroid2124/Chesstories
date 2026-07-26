@@ -77,36 +77,7 @@ case class EndgameFeature(
     rookEndgameGeometry: Option[RookEndgameGeometry] = None
 )
 
-// (VariationLine moved to Variation.scala)
-
-// StructureTag and PlanTag have been removed as they were obsolete dead code.
-
-enum PositionalTag:
-  case Outpost(square: Square, color: Color)
-  case OpenFile(file: chess.File, color: Color)
-  case WeakSquare(square: Square, color: Color)
-  case LoosePiece(square: Square, role: Role, color: Color)
-  case WeakBackRank(color: Color)
-  case BishopPairAdvantage(color: Color)
-  case BadBishop(color: Color)
-  case GoodBishop(color: Color)
-  // New additions
-  case RookOnSeventh(color: Color)
-  case StrongKnight(square: Square, color: Color)
-  case SpaceAdvantage(color: Color)
-  case OppositeColorBishops
-  case KingStuckCenter(color: Color)
-  case ConnectedRooks(color: Color)
-  case DoubledRooks(file: chess.File, color: Color)
-  case ColorComplexWeakness(color: Color, squareColor: String, squares: List[Square])  // "light" or "dark"
-  case PawnMajority(color: Color, flank: String, count: Int)  // "queenside" or "kingside"
-  case MinorityAttack(color: Color, flank: String)
-  // case QueenActivity(color: Color)
-  // case QueenManeuver(color: Color)
-  case MateNet(color: Color)
-  // case PerpetualCheck(color: Color)
-  case RemovingTheDefender(target: Role, color: Color)
-  case Initiative(color: Color)
+// EngineLine is the canonical engine-line model in EngineLine.scala.
 
 case class PlanContinuity(
   startingEvent: Option[PlanEventIdentity],

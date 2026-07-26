@@ -1,98 +1,65 @@
 package lila.chessjudgment.analysis.plan
 
 import chess.*
-import lila.chessjudgment.analysis.evaluation.{ JudgmentThresholds, PerspectiveMath }
-import lila.chessjudgment.analysis.singlePosition.{
-  GamePhaseType,
+import lila.chessjudgment.model.evaluation.{ JudgmentThresholds, PerspectiveMath }
+import lila.chessjudgment.model.judgment.{
   PawnPlayAnalysis,
-  SinglePositionAssessment,
   ThreatKind,
+  ThreatSeverity,
   TensionPolicy
 }
 import lila.chessjudgment.model.*
-import lila.chessjudgment.model.judgment.{ BoardPositionProfile, ThreatEpisode }
+import lila.chessjudgment.model.judgment.ThreatEpisode
+import lila.chessjudgment.model.position.PositionFeatures
 import lila.chessjudgment.model.Motif.*
-import lila.chessjudgment.model.structure.{ PlanAlignment, StructureId, StructureProfile }
+import lila.chessjudgment.model.structure.{ StructureId, StructureProfile }
 import lila.chessjudgment.model.strategic.PlanTaxonomy.{ PlanKind, PlanSignal, PlanTheme, SubplanCatalog }
 
 case class PlanInteractionContext(
     whitePovEvalCp: Int,
-    positionAssessment: Option[SinglePositionAssessment] = None,
+    positionFeatures: Option[PositionFeatures] = None,
+    candidateLineAvailable: Boolean = false,
     pawnAnalysis: Option[PawnPlayAnalysis] = None,
-    opponentPawnAnalysis: Option[PawnPlayAnalysis] = None,
     threatEpisodesToUs: List[ThreatEpisode] = Nil,
     threatEpisodesToThem: List[ThreatEpisode] = Nil,
-    openingName: Option[String] = None,
-    isWhiteToMove: Boolean,
-    positionKey: Option[String] = None,
-    boardProfile: Option[BoardPositionProfile] = None,
     initialPos: Option[Position] = None,
     rootMove: Option[String] = None,
-    structureProfile: Option[StructureProfile] = None,
-    planAlignment: Option[PlanAlignment] = None
+    structureProfile: Option[StructureProfile] = None
 ):
   def winPercentFor(color: Color): Double =
     PerspectiveMath.winPercentForMover(color, whitePovEvalCp)
   def winPercentAdvantageFor(color: Color): Double =
     PerspectiveMath.winPercentAdvantageFor(color, whitePovEvalCp)
   def phase: String = phaseEnumOpt match
-    case Some(GamePhaseType.Opening)    => "opening"
-    case Some(GamePhaseType.Middlegame) => "middlegame"
-    case Some(GamePhaseType.Endgame)    => "endgame"
-    case None                           => "unclassified"
-  def phaseEnumOpt: Option[GamePhaseType] =
-    positionAssessment.map(_.gamePhase.phaseType)
+    case Some(value) => value
+    case None        => "unclassified"
+  def phaseEnumOpt: Option[String] =
+    positionFeatures.map(_.materialPhase.phase)
+  def simplificationWindowFor(side: Color): Boolean =
+    positionFeatures.exists { features =>
+      val material = features.materialPhase
+      val endgameNear =
+        material.phase == "endgame" ||
+          material.whiteMaterial + material.blackMaterial <= 50
+      endgameNear && winPercentAdvantageFor(side) >= JudgmentThresholds.CONVERSION_EDGE_WP
+    }
   private def materialThreat(episode: ThreatEpisode): Boolean =
-    episode.kind == ThreatKind.Mate ||
-      episode.lossIfIgnoredWinPercent.exists(_ >= JudgmentThresholds.MATERIAL_THREAT_WP)
+    episode.kind == ThreatKind.Mate || episode.kind == ThreatKind.Material
   private def significantThreat(episode: ThreatEpisode): Boolean =
-    episode.kind == ThreatKind.Mate ||
-      episode.lossIfIgnoredWinPercent.exists(_ >= JudgmentThresholds.SIGNIFICANT_THREAT_WP)
+    episode.severity != ThreatSeverity.Low
   def tacticalThreatToUs: Boolean =
     threatEpisodesToUs.exists(t => t.turnsToImpact <= 2 && materialThreat(t))
   def strategicThreatToUs: Boolean =
     !tacticalThreatToUs &&
-      threatEpisodesToUs.exists(t => t.turnsToImpact <= 5 && significantThreat(t))
+      threatEpisodesToUs.exists(t => t.strategic && t.turnsToImpact <= 5 && significantThreat(t))
   def tacticalThreatToThem: Boolean =
     threatEpisodesToThem.exists(t => t.turnsToImpact <= 2 && materialThreat(t))
   def strategicThreatToThem: Boolean =
     !tacticalThreatToThem &&
-      threatEpisodesToThem.exists(t => t.turnsToImpact <= 5 && significantThreat(t))
+      threatEpisodesToThem.exists(t => t.strategic && t.turnsToImpact <= 5 && significantThreat(t))
   def underDefensivePressure: Boolean = strategicThreatToUs
 
 object PlanMatcher:
-  object Theme:
-    val Opening = PlanTheme.OpeningPrinciples
-    val Restriction = PlanTheme.RestrictionProphylaxis
-    val Redeployment = PlanTheme.PieceRedeployment
-    val SpaceClamp = PlanTheme.SpaceClamp
-    val WeaknessFixation = PlanTheme.WeaknessFixation
-    val PawnBreakPreparation = PlanTheme.PawnBreakPreparation
-    val FavorableExchange = PlanTheme.FavorableExchange
-    val WingPlay = PlanTheme.WingPlay
-    val AdvantageTransformation = PlanTheme.AdvantageTransformation
-
-  object Subplan:
-    val OpeningDevelopment = PlanKind.OpeningDevelopment
-    val Restriction = PlanKind.ProphylaxisRestraint
-    val Redeployment = PlanKind.WorstPieceImprovement
-    val OutpostEntrenchment = PlanKind.OutpostEntrenchment
-    val RookFileTransfer = PlanKind.RookFileTransfer
-    val SpaceClamp = PlanKind.FlankClamp
-    val WeaknessFixation = PlanKind.StaticWeaknessFixation
-    val MinorityAttackFixation = PlanKind.MinorityAttackFixation
-    val BackwardPawnTargeting = PlanKind.BackwardPawnTargeting
-    val IQPInducement = PlanKind.IQPInducement
-    val PawnBreakPreparation = PlanKind.CentralBreakTiming
-    val WingBreakTiming = PlanKind.WingBreakTiming
-    val TensionMaintenance = PlanKind.TensionMaintenance
-    val FavorableExchange = PlanKind.SimplificationWindow
-    val DefenderTrade = PlanKind.DefenderTrade
-    val WingExpansion = PlanKind.WingExpansion
-    val HookCreation = PlanKind.HookCreation
-    val RookLiftScaffold = PlanKind.RookLiftScaffold
-    val AdvantageTransformation = PlanKind.SimplificationConversion
-
   private case class SideSnapshot(
       lockedCenter: Boolean,
       openCenter: Boolean,
@@ -111,13 +78,13 @@ object PlanMatcher:
 
   def matchPlans(motifs: List[Motif], ctx: PlanInteractionContext, side: Color): PlanScoringResult =
     (for
-      s <- snapshot(ctx, side)
-      profile <- ctx.boardProfile
+      features <- ctx.positionFeatures
       phase <- ctx.phaseEnumOpt
     yield
+      val s = snapshot(features, side)
       val openingRaw =
-        Option.when(phase == GamePhaseType.Opening)(
-          openingDevelopment(motifs, side, profile, s)
+        Option.when(phase == "opening")(
+          openingDevelopment(motifs, side, features, s)
         ).toList
       val raw =
         openingRaw ++ List(
@@ -125,7 +92,7 @@ object PlanMatcher:
           redeployment(motifs, ctx, side, s),
           spaceClamp(motifs, ctx, side, s),
           weaknessFixation(motifs, ctx, side, s),
-          breakPrep(motifs, ctx, side, profile),
+          breakPrep(motifs, ctx, side, features),
           favorableExchange(motifs, ctx, side),
           wingPlay(motifs, ctx, side, s),
           advantageTransformation(motifs, ctx, side, s)
@@ -139,15 +106,11 @@ object PlanMatcher:
           .filter(_.missingSignals.isEmpty)
       val annotated = signalGated.map(pm => annotateWithPlanThemeScore(pm, themePolicyScores.getOrElse(themeOf(pm), 0.0)))
       val top = annotated.sortBy(p => -p.score).filter(_.score >= 0.18)
-      PlanScoringResult(top, top.headOption.map(_.score).getOrElse(0.0), ctx.phase, events)
-    ).getOrElse(PlanScoringResult(Nil, 0.0, ctx.phase, Nil))
+      PlanScoringResult(top, ctx.phase, events)
+    ).getOrElse(PlanScoringResult(Nil, ctx.phase, Nil))
 
   def toActivePlans(sortedPlans: List[PlanMatch], events: List[CompatibilityEvent] = Nil): Option[ActivePlans] =
-    sortedPlans.headOption.map { primary =>
-      val secondary = sortedPlans.lift(1)
-      val suppressed = sortedPlans.drop(2).filter(_.score < primary.score * 0.5)
-      ActivePlans(primary, secondary, suppressed, sortedPlans, events)
-    }
+    Option.when(sortedPlans.nonEmpty)(ActivePlans(sortedPlans, events))
 
   def applyCompatWithEvents(
       plans: List[PlanMatch],
@@ -157,8 +120,6 @@ object PlanMatcher:
     import scala.collection.mutable.ListBuffer
     val events = ListBuffer.empty[CompatibilityEvent]
 
-    def theme(pm: PlanMatch): PlanTheme = themeOf(pm)
-
     def adjust(
         list: List[PlanMatch],
         t: PlanTheme,
@@ -166,44 +127,37 @@ object PlanMatcher:
         adjustment: CompatibilityAdjustment
     ): List[PlanMatch] =
       list.map { p =>
-        if theme(p) != t then p
+        if p.plan.theme != t then p
         else
           val before = p.score
           val after = clamp(before * factor)
           if math.abs(after - before) > 1e-6 then
             events += CompatibilityEvent(
-              originalScore = before,
-              finalScore = after,
-              delta = after - before,
-              adjustment = adjustment,
-              adjustmentType =
-                if after > before then CompatibilityAdjustmentType.Boost
-                else CompatibilityAdjustmentType.Downweight
+              adjustment = adjustment
             )
           p.copy(score = after)
       }
 
     var out = plans
     if ctx.underDefensivePressure then
-      out = adjust(out, Theme.Restriction, 1.15, CompatibilityAdjustment.DefensivePressure)
-      out = adjust(out, Theme.WingPlay, 0.80, CompatibilityAdjustment.DefensivePressure)
-      out = adjust(out, Theme.PawnBreakPreparation, 0.82, CompatibilityAdjustment.DefensivePressure)
-    if ctx.positionAssessment.exists(_.simplifyBias.shouldSimplify) &&
-        ctx.winPercentAdvantageFor(side) >= JudgmentThresholds.CONVERSION_EDGE_WP
+      out = adjust(out, PlanTheme.RestrictionProphylaxis, 1.15, CompatibilityAdjustment.DefensivePressure)
+      out = adjust(out, PlanTheme.WingPlay, 0.80, CompatibilityAdjustment.DefensivePressure)
+      out = adjust(out, PlanTheme.PawnBreakPreparation, 0.82, CompatibilityAdjustment.DefensivePressure)
+    if ctx.simplificationWindowFor(side)
     then
-      out = adjust(out, Theme.FavorableExchange, 1.15, CompatibilityAdjustment.ConversionWindow)
-      out = adjust(out, Theme.AdvantageTransformation, 1.12, CompatibilityAdjustment.ConversionWindow)
-    if ctx.boardProfile.exists(_.centerOpen) && kingExposure(ctx.boardProfile, side) >= 2 then
-      out = adjust(out, Theme.WingPlay, 0.72, CompatibilityAdjustment.OpenCenterFlankRisk)
-    if ctx.phaseEnumOpt.contains(GamePhaseType.Opening) then
-      out = adjust(out, Theme.WingPlay, 0.78, CompatibilityAdjustment.OpeningPhase)
-      out = adjust(out, Theme.AdvantageTransformation, 0.78, CompatibilityAdjustment.OpeningPhase)
+      out = adjust(out, PlanTheme.FavorableExchange, 1.15, CompatibilityAdjustment.ConversionWindow)
+      out = adjust(out, PlanTheme.AdvantageTransformation, 1.12, CompatibilityAdjustment.ConversionWindow)
+    if ctx.positionFeatures.exists(_.centralSpace.openCenter) && kingExposure(ctx.positionFeatures, side) >= 2 then
+      out = adjust(out, PlanTheme.WingPlay, 0.72, CompatibilityAdjustment.OpenCenterFlankRisk)
+    if ctx.phaseEnumOpt.contains("opening") then
+      out = adjust(out, PlanTheme.WingPlay, 0.78, CompatibilityAdjustment.OpeningPhase)
+      out = adjust(out, PlanTheme.AdvantageTransformation, 0.78, CompatibilityAdjustment.OpeningPhase)
     (out, events.toList)
 
   private def openingDevelopment(
       m: List[Motif],
       side: Color,
-      profile: BoardPositionProfile,
+      features: PositionFeatures,
       s: SideSnapshot
   ): PlanMatch =
     val ev = evidence(m, 0.18) {
@@ -212,8 +166,11 @@ object PlanMatcher:
       case Fianchetto(_, c, _, _) if c == side => true
       case Maneuver(_, ManeuverPurpose.ImprovingScope, c, _, _) if c == side => true
     }
-    val centerControlDiff = profile.centerControlEdgeFor(side)
-    val ourCenterPawns = profile.centralPawnsFor(side)
+    val centerControlDiff =
+      if side.white then features.centralSpace.whiteCenterControl - features.centralSpace.blackCenterControl
+      else features.centralSpace.blackCenterControl - features.centralSpace.whiteCenterControl
+    val ourCenterPawns =
+      if side.white then features.centralSpace.whiteCentralPawns else features.centralSpace.blackCentralPawns
     val hasCastled = m.exists { case Castling(_, c, _, _) if c == side => true; case _ => false }
     val developmentNeed = s.devLag.max(0)
     val score =
@@ -224,7 +181,7 @@ object PlanMatcher:
         (if hasCastled then 0.05 else 0.0) +
         math.min(0.18, ev.size * 0.05) -
         (if developmentNeed == 0 && !hasCastled && ev.isEmpty then 0.08 else 0.0)
-    themed(Theme.Opening, Plan.OpeningDevelopment(side), score, ev, Some(Subplan.OpeningDevelopment))
+    matched(PlanKind.OpeningDevelopment, side, score, ev)
 
   private def restriction(m: List[Motif], ctx: PlanInteractionContext, side: Color, s: SideSnapshot): PlanMatch =
     val ev = evidence(m, 0.18) {
@@ -241,7 +198,7 @@ object PlanMatcher:
         (if s.lockedCenter then 0.06 else 0.0) +
         math.min(0.16, ev.size * 0.05) -
         (if ctx.strategicThreatToThem && !ctx.strategicThreatToUs then 0.08 else 0.0)
-    themed(Theme.Restriction, Plan.Prophylaxis(side), score, ev, Some(Subplan.Restriction))
+    matched(PlanKind.ProphylaxisRestraint, side, score, ev)
 
   private def redeployment(m: List[Motif], ctx: PlanInteractionContext, side: Color, s: SideSnapshot): PlanMatch =
     val ev = evidence(m, 0.17) {
@@ -271,9 +228,9 @@ object PlanMatcher:
         case _ => false
       }
     val subplanId =
-      if prefersRookFileTransfer then Subplan.RookFileTransfer
-      else if prefersOutpost then Subplan.OutpostEntrenchment
-      else Subplan.Redeployment
+      if prefersRookFileTransfer then PlanKind.RookFileTransfer
+      else if prefersOutpost then PlanKind.OutpostEntrenchment
+      else PlanKind.WorstPieceImprovement
     val score =
       0.28 +
         math.min(0.18, s.devLag * 0.05) +
@@ -281,8 +238,7 @@ object PlanMatcher:
         math.min(0.14, s.entrenched * 0.06) +
         math.min(0.14, ev.size * 0.04) -
         (if ctx.strategicThreatToUs then 0.07 else 0.0)
-    val plan = if prefersRookFileTransfer then Plan.RookActivation(side) else Plan.PieceActivation(side)
-    themed(Theme.Redeployment, plan, score, ev, Some(subplanId))
+    matched(subplanId, side, score, ev)
 
   private def spaceClamp(m: List[Motif], ctx: PlanInteractionContext, side: Color, s: SideSnapshot): PlanMatch =
     val ev = evidence(m, 0.16) {
@@ -297,7 +253,7 @@ object PlanMatcher:
         (if s.lockedCenter then 0.06 else 0.0) +
         math.min(0.14, ev.size * 0.04) -
         (if s.openCenter && s.kingExposure >= 2 then 0.10 else 0.0)
-    themed(Theme.SpaceClamp, Plan.SpaceAdvantage(side), score, ev, Some(Subplan.SpaceClamp))
+    matched(PlanKind.FlankClamp, side, score, ev)
 
   private def weaknessFixation(m: List[Motif], ctx: PlanInteractionContext, side: Color, s: SideSnapshot): PlanMatch =
     val opp = !side
@@ -338,9 +294,9 @@ object PlanMatcher:
         (if s.hookChance then 0.10 else 0.0) +
         math.min(0.16, ev.size * 0.05) -
         (if s.oppWeakness == 0 && ev.isEmpty then 0.05 else 0.0)
-    themed(Theme.WeaknessFixation, Plan.WeakPawnAttack(side), score, ev, Some(weaknessFixationSubplan(m, ctx, side, s)))
+    matched(weaknessFixationSubplan(m, ctx, side, s), side, score, ev)
 
-  private def breakPrep(m: List[Motif], ctx: PlanInteractionContext, side: Color, profile: BoardPositionProfile): PlanMatch =
+  private def breakPrep(m: List[Motif], ctx: PlanInteractionContext, side: Color, features: PositionFeatures): PlanMatch =
     val ev = evidence(m, 0.18) {
       case PawnBreak(_, _, c, _, _) if c == side => true
       case PawnAdvance(file, _, _, c, _, _) if c == side && centralFile(file) => true
@@ -348,18 +304,18 @@ object PlanMatcher:
     val pa = ctx.pawnAnalysis
     val breakFile = pa.flatMap(_.breakFile)
     val subplanId =
-      if pa.exists(_.tensionPolicy == TensionPolicy.Maintain) then Subplan.TensionMaintenance
-      else if breakFile.exists(isWingBreakFile) then Subplan.WingBreakTiming
-      else Subplan.PawnBreakPreparation
+      if pa.exists(_.tensionPolicy == TensionPolicy.Maintain) then PlanKind.TensionMaintenance
+      else if breakFile.exists(isWingBreakFile) then PlanKind.WingBreakTiming
+      else PlanKind.CentralBreakTiming
     val score =
       0.26 +
         (if pa.exists(_.pawnBreakReady) then 0.24 else 0.0) +
         (if pa.exists(_.tensionPolicy == TensionPolicy.Maintain) then 0.06 else 0.0) +
         (if pa.exists(_.tensionPolicy == TensionPolicy.Release) then 0.10 else 0.0) +
-        math.min(0.12, profile.pawnTensionCount * 0.03) +
+        math.min(0.12, features.centralSpace.pawnTensionCount * 0.03) +
         math.min(0.16, ev.size * 0.05) -
         (if ctx.strategicThreatToUs then 0.08 else 0.0)
-    themed(Theme.PawnBreakPreparation, Plan.PawnBreakPreparation(side), score, ev, Some(subplanId))
+    matched(subplanId, side, score, ev)
 
   private def favorableExchange(m: List[Motif], ctx: PlanInteractionContext, side: Color): PlanMatch =
     val ev = evidence(m, 0.17) {
@@ -369,7 +325,7 @@ object PlanMatcher:
     }
     val advantageEdge = ctx.winPercentAdvantageFor(side)
     val opponentAdvantageEdge = ctx.winPercentAdvantageFor(!side)
-    val simplifyWindow = ctx.positionAssessment.exists(_.simplifyBias.shouldSimplify)
+    val simplifyWindow = ctx.simplificationWindowFor(side)
     val score =
       0.20 +
         (if simplifyWindow then 0.20 else 0.0) +
@@ -377,7 +333,7 @@ object PlanMatcher:
          else if opponentAdvantageEdge >= JudgmentThresholds.CONVERSION_EDGE_WP then -0.08
          else 0.0) +
         math.min(0.15, ev.size * 0.05)
-    themed(Theme.FavorableExchange, Plan.Exchange(side), score, ev, Some(Subplan.FavorableExchange))
+    matched(PlanKind.SimplificationWindow, side, score, ev)
 
   private def wingPlay(m: List[Motif], ctx: PlanInteractionContext, side: Color, s: SideSnapshot): PlanMatch =
     val existingAdvancedFlankFiles = advancedFlankFiles(ctx, side)
@@ -389,9 +345,6 @@ object PlanMatcher:
     val opponentAdvancedFlankFiles = advancedFlankFiles(ctx, !side)
     val opponentKingsidePressure = opponentAdvancedFlankFiles.exists(file => file == File.G || file == File.H)
     val opponentQueensidePressure = opponentAdvancedFlankFiles.exists(file => file == File.A || file == File.B)
-    val respondingToFlankPressure =
-      opponentKingsidePressure && advancedPawnFiles.exists(file => file == File.G || file == File.H) ||
-        opponentQueensidePressure && advancedPawnFiles.exists(file => file == File.A || file == File.B)
     val kingsideAttack =
       existingAdvancedFlankFiles.exists(file => file == File.G || file == File.H) ||
         (!opponentKingsidePressure && advancedPawnFiles.exists(file => file == File.G || file == File.H))
@@ -409,9 +362,6 @@ object PlanMatcher:
             (queensideAttack && (square.file == File.A || square.file == File.B))) => true
     }.distinctBy(_.motif).take(4)
     val hasRookLiftSignal = m.exists { case RookLift(_, _, _, c, _, _) if c == side => true; case _ => false }
-    val flankPawnAdvanceCount =
-      m.count { case PawnAdvance(file, _, _, c, _, _) if c == side && isFlank(file) => true; case _ => false }
-    val hasPawnChainSignal = m.exists { case PawnChain(_, _, c, _, _) if c == side => true; case _ => false }
     val hasHookSignal =
       s.hookChance ||
         m.exists {
@@ -420,9 +370,11 @@ object PlanMatcher:
           case _ => false
         }
     val subplanId =
-      if hasRookLiftSignal then Subplan.RookLiftScaffold
-      else if hasHookSignal && (!s.rookPawnReady || ev.size <= 1) then Subplan.HookCreation
-      else Subplan.WingExpansion
+      if hasRookLiftSignal then PlanKind.RookLiftScaffold
+      else if hasHookSignal && (!s.rookPawnReady || ev.size <= 1) then PlanKind.HookCreation
+      else if kingsideAttack && !queensideAttack then PlanKind.KingsideWingExpansion
+      else if queensideAttack && !kingsideAttack then PlanKind.QueensideWingExpansion
+      else PlanKind.WingExpansion
     val score =
       0.16 +
         (if kingsideAttack || queensideAttack then 0.20 else 0.0) +
@@ -432,14 +384,7 @@ object PlanMatcher:
         math.min(0.25, ev.size * 0.10) -
         (if s.openCenter && s.kingExposure >= 2 then 0.12 else 0.0) -
         (if ctx.strategicThreatToUs then 0.08 else 0.0)
-    val plan =
-      if kingsideAttack && !queensideAttack then Plan.KingsideAttack(side)
-      else if queensideAttack && !kingsideAttack then Plan.QueensideAttack(side)
-      else if !respondingToFlankPressure && advancedPawnFiles.nonEmpty &&
-          (flankPawnAdvanceCount >= 2 || hasPawnChainSignal) && (s.hookChance || s.kingExposure > 0)
-      then Plan.PawnStorm(side)
-      else Plan.SpaceAdvantage(side)
-    themed(Theme.WingPlay, plan, score, ev, Some(subplanId))
+    matched(subplanId, side, score, ev)
 
   private def advantageTransformation(m: List[Motif], ctx: PlanInteractionContext, side: Color, s: SideSnapshot): PlanMatch =
     val ev = evidence(m, 0.17) {
@@ -452,43 +397,40 @@ object PlanMatcher:
       0.22 +
         (if advantageEdge >= JudgmentThresholds.CRITICAL_CANDIDATE_GAP_WP then 0.14 else 0.0) +
         (if s.ourPassers > s.oppPassers then 0.10 else 0.0) +
-        (if ctx.positionAssessment.exists(_.simplifyBias.shouldSimplify) then 0.10 else 0.0) +
+        (if ctx.simplificationWindowFor(side) then 0.10 else 0.0) +
         math.min(0.16, ev.size * 0.05)
-    themed(Theme.AdvantageTransformation, Plan.Simplification(side), score, ev, Some(Subplan.AdvantageTransformation))
+    matched(PlanKind.SimplificationConversion, side, score, ev)
 
-  private def themed(
-      theme: PlanTheme,
-      plan: Plan,
+  private def matched(
+      kind: PlanKind,
+      side: Color,
       score: Double,
-      evidence: List[EvidenceAtom],
-      subplan: Option[PlanKind]
+      evidence: List[EvidenceAtom]
   ): PlanMatch =
     PlanMatch(
-      plan = plan,
+      plan = Plan(kind, side),
       score = clamp(score),
-      evidence = evidence.take(4),
-      support = (List(PlanSupport.Theme(theme)) ++ subplan.map(PlanSupport.Subplan.apply)).distinct
+      evidence = evidence.take(4)
     )
 
   private def themeOf(pm: PlanMatch): PlanTheme =
-    pm.support.collectFirst { case PlanSupport.Theme(theme) => theme }.getOrElse(PlanTheme.Unknown)
-
-  private def subplanOf(pm: PlanMatch): Option[PlanKind] =
-    pm.support.collectFirst { case PlanSupport.Subplan(kind) => kind }
+    pm.plan.theme
 
   private def availablePlanSignals(ctx: PlanInteractionContext, motifs: List[Motif]): Set[PlanSignal] =
     import PlanSignal.*
+    val threatMotifs =
+      (ctx.threatEpisodesToUs ++ ctx.threatEpisodesToThem).flatMap(_.motifs)
     Set(
-      Option.when(motifs.exists(planMotif))(MoveMotifSignal),
-      Option.when(ctx.boardProfile.exists(_.hasStrategicSnapshot))(StrategicSnapshotSignal),
-      Option.when(ctx.positionAssessment.exists(_.candidateSet.bestLineSideRelativeEvalCp.nonEmpty))(CandidateLineSignal),
-      Option.when(ctx.structureProfile.nonEmpty || ctx.pawnAnalysis.nonEmpty || ctx.planAlignment.nonEmpty)(StructuralSignal)
+      Option.when((motifs ++ threatMotifs).exists(planMotif))(MoveMotifSignal),
+      Option.when(ctx.positionFeatures.nonEmpty)(StrategicSnapshotSignal),
+      Option.when(ctx.candidateLineAvailable)(CandidateLineSignal),
+      Option.when(ctx.structureProfile.nonEmpty || ctx.pawnAnalysis.nonEmpty)(StructuralSignal)
     ).flatten
 
   private def applySignalGate(pm: PlanMatch, availableSignals: Set[PlanSignal]): PlanMatch =
     val missing =
-      subplanOf(pm)
-        .flatMap(SubplanCatalog.specs.get)
+      SubplanCatalog.specs
+        .get(pm.plan.kind)
         .map(_.requiredSignals.filterNot(availableSignals.contains))
         .getOrElse(Nil)
     pm.copy(missingSignals = missing)
@@ -505,11 +447,7 @@ object PlanMatcher:
         .toMap
 
   private def annotateWithPlanThemeScore(pm: PlanMatch, themePolicyScore: Double): PlanMatch =
-    val cleaned = pm.support.filterNot {
-      case _: PlanSupport.ThemePolicyScore => true
-      case _                               => false
-    }
-    pm.copy(support = (cleaned :+ PlanSupport.ThemePolicyScore(themePolicyScore.max(0.0).min(1.0))).distinct)
+    pm.copy(themePolicyScore = Some(themePolicyScore.max(0.0).min(1.0)))
 
   private def evidence(
       motifs: List[Motif],
@@ -520,24 +458,47 @@ object PlanMatcher:
   private def planMotif(motif: Motif): Boolean =
     motif.category != MotifCategory.Tactical
 
-  private def snapshot(ctx: PlanInteractionContext, side: Color): Option[SideSnapshot] =
-    ctx.boardProfile.map { profile =>
-      SideSnapshot(
-        lockedCenter = profile.centerLocked,
-        openCenter = profile.centerOpen,
-        space = profile.spaceFor(side),
-        devLag = profile.developmentLagFor(side),
-        lowMobility = profile.lowMobilityFor(side),
-        kingExposure = profile.kingExposureFor(side),
-        oppWeakness = profile.opponentPawnWeaknessFor(side),
-        ourPassers = profile.passedPawnsFor(side),
-        oppPassers = profile.opponentPassedPawnsFor(side),
-        entrenched = profile.entrenchedPiecesFor(side),
-        rookPawnReady = profile.rookPawnReadyFor(side),
-        hookChance = profile.hookChanceFor(side),
-        clamp = profile.colorComplexClampFor(side)
-      )
-    }
+  private def snapshot(features: PositionFeatures, side: Color): SideSnapshot =
+    val opponent = !side
+    val strategic = features.strategicState
+    SideSnapshot(
+      lockedCenter = features.centralSpace.lockedCenter,
+      openCenter = features.centralSpace.openCenter,
+      space = if side.white then features.centralSpace.spaceDiff else -features.centralSpace.spaceDiff,
+      devLag =
+        if side.white then features.activity.whiteDevelopmentLag
+        else features.activity.blackDevelopmentLag,
+      lowMobility =
+        if side.white then features.activity.whiteLowMobilityPieces
+        else features.activity.blackLowMobilityPieces,
+      kingExposure =
+        if side.white then features.kingSafety.whiteKingExposedFiles
+        else features.kingSafety.blackKingExposedFiles,
+      oppWeakness =
+        pawnWeaknesses(features, opponent),
+      ourPassers =
+        if side.white then features.pawns.whitePassedPawns else features.pawns.blackPassedPawns,
+      oppPassers =
+        if side.white then features.pawns.blackPassedPawns else features.pawns.whitePassedPawns,
+      entrenched =
+        if side.white then strategic.whiteEntrenchedPieces else strategic.blackEntrenchedPieces,
+      rookPawnReady =
+        if side.white then strategic.whiteRookPawnMarchReady else strategic.blackRookPawnMarchReady,
+      hookChance =
+        if side.white then strategic.whiteHookCreationChance else strategic.blackHookCreationChance,
+      clamp =
+        if side.white then strategic.whiteColorComplexClamp else strategic.blackColorComplexClamp
+    )
+
+  private def pawnWeaknesses(features: PositionFeatures, side: Color): Int =
+    if side.white then
+      features.pawns.whiteIsolatedPawns +
+        features.pawns.whiteBackwardPawns +
+        features.pawns.whiteDoubledPawns
+    else
+      features.pawns.blackIsolatedPawns +
+        features.pawns.blackBackwardPawns +
+        features.pawns.blackDoubledPawns
 
   private def weaknessFixationSubplan(
       m: List[Motif],
@@ -550,10 +511,10 @@ object PlanMatcher:
     val isolatedPawnTarget = m.exists { case IsolatedPawn(_, _, c, _, _) if c == opp => true; case _ => false }
     val minorityAttackStructure = structureMatches(ctx, StructureId.Carlsbad)
     val iqpTargetStructure = if side.white then structureMatches(ctx, StructureId.IQPBlack) else structureMatches(ctx, StructureId.IQPWhite)
-    if minorityAttackStructure && (s.hookChance || s.oppWeakness > 0) then Subplan.MinorityAttackFixation
-    else if backwardPawnTarget then Subplan.BackwardPawnTargeting
-    else if iqpTargetStructure && isolatedPawnTarget then Subplan.IQPInducement
-    else Subplan.WeaknessFixation
+    if minorityAttackStructure && (s.hookChance || s.oppWeakness > 0) then PlanKind.MinorityAttackFixation
+    else if backwardPawnTarget then PlanKind.BackwardPawnTargeting
+    else if iqpTargetStructure && isolatedPawnTarget then PlanKind.IQPInducement
+    else PlanKind.StaticWeaknessFixation
 
   private def structureMatches(ctx: PlanInteractionContext, id: StructureId): Boolean =
     ctx.structureProfile.exists(_.primary == id)
@@ -587,8 +548,13 @@ object PlanMatcher:
     left.value <= File.B.value && right.value <= File.B.value ||
       left.value >= File.G.value && right.value >= File.G.value
 
-  private def kingExposure(profile: Option[BoardPositionProfile], side: Color): Int =
-    profile.map(_.kingExposureFor(side)).getOrElse(0)
+  private def kingExposure(features: Option[PositionFeatures], side: Color): Int =
+    features
+      .map(position =>
+        if side.white then position.kingSafety.whiteKingExposedFiles
+        else position.kingSafety.blackKingExposedFiles
+      )
+      .getOrElse(0)
 
   private def centralFile(file: File): Boolean =
     file == File.C || file == File.D || file == File.E || file == File.F

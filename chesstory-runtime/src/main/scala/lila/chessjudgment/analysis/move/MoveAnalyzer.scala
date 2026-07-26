@@ -3,10 +3,10 @@ package lila.chessjudgment.analysis.move
 import lila.chessjudgment.model.*
 import lila.chessjudgment.model.Motif.*
 import lila.chessjudgment.analysis.material.MaterialValue
-import lila.chessjudgment.analysis.position.PositionAnalyzer
+import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.position.PawnTopology
 
 import _root_.chess.*
-import _root_.chess.format.{ Fen, Uci }
 
 /**
  * Extracts typed motifs from legal move replay.
@@ -14,17 +14,17 @@ import _root_.chess.format.{ Fen, Uci }
 object MoveAnalyzer:
 
   private def replayMotifs(initialFen: String, pv: List[String]): Option[List[Motif]] =
-    Fen.read(chess.variant.Standard, Fen.Full(initialFen)).flatMap { initialPos =>
-      pv.zipWithIndex.foldLeft(Option((initialPos, Option.empty[Move], List.empty[Motif]))) {
-        case (Some((pos, lastMv, acc)), (uciStr, index)) =>
-          Uci(uciStr).collect { case m: Uci.Move => m }.flatMap(pos.move(_).toOption).map { mv =>
-            val moveMotifs = detectMoveMotifs(mv, pos, index, lastMv)
-            val stateMotifs = detectStateMotifs(mv.after, index)
-            (mv.after, Some(mv), acc ++ moveMotifs ++ stateMotifs)
-          }
-        case (None, _) => None
-      }.map(_._3)
-    }
+    PrincipalVariationEvidence
+      .legalMoveReplay(initialFen, pv, startPly = 0)
+      .map(_.zipWithIndex.foldLeft((Option.empty[Move], List.empty[Motif])) {
+        case ((lastMove, motifs), (step, index)) =>
+          (
+            Some(step.move),
+            motifs ++
+              detectMoveMotifs(step.move, step.before, index, lastMove) ++
+              detectStateMotifs(step.after, index)
+          )
+      }._2)
 
   /**
    * Translates a PV (list of UCI moves) into a list of Motifs.
@@ -62,8 +62,8 @@ object MoveAnalyzer:
       )
 
     val beforeBoard = _pos.board
-    val wPassed = PositionAnalyzer.passedPawns(Color.White, beforeBoard.pawns & beforeBoard.white, beforeBoard.pawns & beforeBoard.black)
-    val bPassed = PositionAnalyzer.passedPawns(Color.Black, beforeBoard.pawns & beforeBoard.black, beforeBoard.pawns & beforeBoard.white)
+    val wPassed = PawnTopology.passedPawns(Color.White, beforeBoard.pawns & beforeBoard.white, beforeBoard.pawns & beforeBoard.black)
+    val bPassed = PawnTopology.passedPawns(Color.Black, beforeBoard.pawns & beforeBoard.black, beforeBoard.pawns & beforeBoard.white)
     val passedSquares = if color == Color.White then wPassed else bPassed
 
     if (passedSquares.contains(mv.orig)) {
@@ -178,7 +178,7 @@ object MoveAnalyzer:
       val isMate = nextPos.checkMate
       val isDouble = checkers.count > 1
       val isDiscovered = checkers.exists(sq => sq != mv.dest)
-      
+
       val checkType = if (isMate) {
         if (isSmotheredPattern(nextPos, color)) CheckType.Smothered 
         else CheckType.Mate
@@ -351,10 +351,11 @@ object MoveAnalyzer:
     // 3. Rook Behind Passed Pawn (Tarrasch Rule)
     if (role == Rook) {
       val ourPawnsBitboard = nextPos.board.byPiece(color, Pawn)
-      val oppPawnsByFile = nextPos.board.byPiece(!color, Pawn).squares.groupBy(_.file)
+      val passedPawnSquares =
+        PawnTopology.passedPawns(color, ourPawnsBitboard, nextPos.board.byPiece(!color, Pawn)).toSet
        
       ourPawnsBitboard.squares.filter(pSq => pSq.file == mv.dest.file).foreach { pSq =>
-        if (isPassed(pSq, color, oppPawnsByFile)) {
+        if (passedPawnSquares(pSq)) {
           val isBehind = if (color.white) mv.dest.rank.value < pSq.rank.value else mv.dest.rank.value > pSq.rank.value
           if (isBehind) {
             motifs = motifs :+ Motif.RookBehindPassedPawn(mv.dest.file, color, plyIndex, Some(moveUci))
@@ -885,10 +886,11 @@ object MoveAnalyzer:
       val oppPawns = board.byPiece(!color, Pawn)
       val pawnsByFile = pawns.squares.groupBy(_.file)
       val oppPawnsByFile = oppPawns.squares.groupBy(_.file)
+      val passedPawnSquares = PawnTopology.passedPawns(color, pawns, oppPawns).toSet
       pawns.foreach { pawnSq =>
         if isIsolated(pawnSq, pawnsByFile) then 
           motifs = motifs :+ IsolatedPawn(pawnSq.file, pawnSq.rank.value + 1, color, plyIndex)
-        if isPassed(pawnSq, color, oppPawnsByFile) then 
+        if passedPawnSquares(pawnSq) then
           motifs = motifs :+ PassedPawn(pawnSq.file, pawnSq.rank.value + 1, color, isProtected = false, plyIndex)
         if isBackward(pawnSq, color, pawnsByFile, oppPawnsByFile) then
           motifs = motifs :+ BackwardPawn(pawnSq.file, pawnSq.rank.value + 1, color, plyIndex)
@@ -919,20 +921,6 @@ object MoveAnalyzer:
     val adjacentFiles = List(fileValue - 1, fileValue + 1).filter(f => f >= 0 && f <= 7)
     !adjacentFiles.exists { adjFileIdx => 
       File.all.lift(adjFileIdx).exists(pawnsByFile.contains)
-    }
-
-  private def isPassed(pawnSq: Square, color: Color, oppPawnsByFile: Map[File, List[Square]]): Boolean =
-    val fileValue = pawnSq.file.value
-    val filesToCheck = List(fileValue - 1, fileValue, fileValue + 1).filter(f => f >= 0 && f <= 7)
-    filesToCheck.forall { fIdx =>
-      File.all.lift(fIdx).forall { f =>
-        oppPawnsByFile.get(f).forall { oppPawns =>
-          oppPawns.forall { oppPawn =>
-            if color.white then oppPawn.rank.value <= pawnSq.rank.value
-            else oppPawn.rank.value >= pawnSq.rank.value
-          }
-        }
-      }
     }
 
   private def isBackward(
@@ -1049,9 +1037,10 @@ object MoveAnalyzer:
     }
 
     // 4. Passed pawn created or supported?
-    val ourPawns = board.byPiece(color, Pawn).squares
-    val enemyPawnsByFile = board.byPiece(!color, Pawn).squares.groupBy(_.file)
-    val hasPassedPawn = ourPawns.exists(p => isPassed(p, color, enemyPawnsByFile))
+    val hasPassedPawn =
+      PawnTopology
+        .passedPawns(color, board.byPiece(color, Pawn), board.byPiece(!color, Pawn))
+        .nonEmpty
     if (hasPassedPawn) {
       reasons = reasons :+ SacrificeReason.PassedPawn
       totalValue += 150
@@ -1147,28 +1136,24 @@ object MoveAnalyzer:
     val captureScenarios = nextPos.legalMoves.filter(m => m.captures && m.dest == mv.dest)
     
     captureScenarios.flatMap { oppCapture =>
-      val afterCaptureOpt = nextPos.move(oppCapture.toUci.asInstanceOf[Uci.Move]).toOption
-      
-      afterCaptureOpt.flatMap { afterCapture =>
-        val afterPos = afterCapture.after
-        val hasExecution = afterPos.legalMoves.exists { ourResponse =>
-          val givesMate = ourResponse.after.checkMate
-          val isWinningCapture =
-            ourResponse.captures &&
-              afterPos.board.roleAt(ourResponse.dest).exists(victim =>
-                MaterialValue.tacticalValueUnit(victim) > MaterialValue.tacticalValueUnit(ourResponse.piece.role)
-              )
-          val forkTargets = detectForkTargets(ourResponse, ourResponse.after, color)
-          val forkRoles = forkTargets.map(_._2)
-          val hasRealFork = (forkRoles.contains(King) && forkRoles.size >= 2) || (forkRoles.filter(_ != Pawn).size >= 2)
+      val afterPos = oppCapture.after
+      val hasExecution = afterPos.legalMoves.exists { ourResponse =>
+        val givesMate = ourResponse.after.checkMate
+        val isWinningCapture =
+          ourResponse.captures &&
+            afterPos.board.roleAt(ourResponse.dest).exists(victim =>
+              MaterialValue.tacticalValueUnit(victim) > MaterialValue.tacticalValueUnit(ourResponse.piece.role)
+            )
+        val forkTargets = detectForkTargets(ourResponse, ourResponse.after, color)
+        val forkRoles = forkTargets.map(_._2)
+        val hasRealFork = (forkRoles.contains(King) && forkRoles.size >= 2) || (forkRoles.filter(_ != Pawn).size >= 2)
 
-          givesMate || isWinningCapture || hasRealFork
-        }
-        
-        if (hasExecution) {
-          Some(Motif.Decoy(oppCapture.piece.role, mv.dest, !color, plyIndex, moveUci))
-        } else None
+        givesMate || isWinningCapture || hasRealFork
       }
+
+      if (hasExecution) {
+        Some(Motif.Decoy(oppCapture.piece.role, mv.dest, !color, plyIndex, moveUci))
+      } else None
     }.headOption
   }
 

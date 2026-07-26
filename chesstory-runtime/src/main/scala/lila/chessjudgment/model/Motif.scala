@@ -45,7 +45,6 @@ object Motif:
     val category = MotifCategory.Pawn
     def relativeFrom: Int = relativeRank(fromRank, color)
     def relativeTo: Int = relativeRank(toRank, color)
-    def isDoubleStep: Boolean = (relativeTo - relativeFrom).abs == 2
 
   /** Pawn break - pawn capture that opens a file or challenges pawn structure */
   case class PawnBreak(
@@ -66,7 +65,6 @@ object Motif:
       move: Option[String]
   ) extends Motif:
     val category = MotifCategory.Pawn
-    def isUnderpromotion: Boolean = promotedTo != Queen
 
   /** Pushing a passed pawn toward promotion */
   case class PassedPawnPush(
@@ -249,8 +247,6 @@ object Motif:
       move: Option[String]
   ) extends Motif:
     val category = MotifCategory.Tactical
-    def isRoyalFork: Boolean = targets.contains(King) && targets.contains(Queen)
-    def isDoubleAttack: Boolean = targets.size >= 2
     
   /** Domination - piece restricts an enemy piece's mobility significantly */
   case class Domination(
@@ -304,7 +300,6 @@ object Motif:
       targetSq: Option[Square] = None
   ) extends Motif:
     val category = MotifCategory.Tactical
-    def isDiscoveredCheck: Boolean = target == King
 
   /** Removing the Defender - capturing a piece that defended a critical target */
   case class RemovingTheDefender(
@@ -359,7 +354,6 @@ object Motif:
       move: Option[String]
   ) extends Motif:
     val category = MotifCategory.Tactical
-    def dutyCount: Int = duties.size
 
   /** Double Check - both the moving piece and revealed piece give check */
   case class DoubleCheck(

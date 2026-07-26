@@ -38,7 +38,6 @@ describe('chesstory brief scaffold', () => {
           move_quality: 'good',
           role: 'better choice',
           ideas: [{ kind: 'piece_activity', name: 'piece activity' }],
-          verification: ['verified cause'],
         },
       ],
     });
@@ -55,14 +54,23 @@ describe('chesstory brief scaffold', () => {
           reference_move: 'f8e7',
           move_quality: 'good',
           role: 'played move',
-          ideas: [{ kind: 'pawn_break_timing', name: 'pawn break timing', target: { squares: ['g4'] } }],
-          verification: ['verified cause'],
+          ideas: [
+            {
+              kind: 'pawn_break_timing',
+              name: 'pawn break timing',
+              subject: 'played_move',
+              scope: 'played_transition',
+              confidence: 'engine_backed',
+              target: { squares: ['g4'] },
+              evidence: {
+                layers: ['line'],
+                scopes: ['played_transition'],
+                causes: ['line_access'],
+              },
+            },
+          ],
           chess_relations: ['line access'],
-          move_details: ['bishop f8-e7'],
-          purposes: ['e-file break'],
           line: ['c2c3', 'e8g8'],
-          forced_results: [],
-          techniques: [],
         },
       ],
     };
@@ -72,11 +80,12 @@ describe('chesstory brief scaffold', () => {
 
     assert.ok(sections.every(section => !section.pending));
     assert.match(text, /pawn break timing/);
-    assert.match(text, /bishop f8-e7/);
-    assert.match(text, /e-file break/);
+    assert.match(text, /line access/);
+    assert.match(text, /engine backed/);
+    assert.match(text, /Evidence layer: line/);
+    assert.match(text, /Cause: line access/);
     assert.match(text, /g4/);
     assert.match(text, /c2-c3 e8-g8/);
-    assert.match(text, /verified cause/);
     assert.doesNotMatch(text, engineeringTerms);
   });
 
@@ -90,67 +99,51 @@ describe('chesstory brief scaffold', () => {
           move_quality: 'good',
           role: 'played move',
           ideas: [
-            { kind: 'long_diagonal_pressure', name: 'opens bishop diagonal from c8' },
-            { kind: 'plan_continuity', name: 'continues the queenside plan' },
-          ],
-          verification: ['observed board effect', 'verified move function'],
-          purposes: ['b-file advance', 'the b4 square'],
-          line: ['b7b5', 'b2b4', 'a5b4', 'b5b4'],
-          plan: {
-            goal: { theme: 'flank infrastructure', kind: 'hook creation' },
-            move_role: 'execution',
-            plan_change: 'starts the plan',
-            targets: ['b4', 'c3'],
-            method: {
-              starting_move: {
-                uci: 'b7b5',
-                san: 'b5',
-                notation: '10...b5',
-                turn: { move_number: 10, side: 'black', notation: '10...' },
-              },
-              actor: { piece: 'pawn', from: 'b7', to: 'b5' },
-              development: [],
-              sequence: [
-                { move: { uci: 'b7b5', san: 'b5', notation: '10...b5' }, connections: [] },
+            {
+              kind: 'long_diagonal_pressure',
+              name: 'opens bishop diagonal from c8',
+              plans: [
                 {
-                  move: { uci: 'b5b4', san: 'b4', notation: '14...b4' },
-                  connections: ['coordinated flank advance'],
+                  goal: { theme: 'flank infrastructure', kind: 'hook creation' },
+                  move: {
+                    uci: 'b7b5',
+                    san: 'b5',
+                    notation: '10...b5',
+                    turn: { move_number: 10, side: 'black', notation: '10...' },
+                  },
+                  move_role: 'execution',
+                  transition: 'initiation',
+                  actor: { piece: 'pawn', from: 'b7', to: 'b5' },
+                  targets: ['b4', 'c3'],
+                  results: [
+                    { stage: 'immediate', kind: 'line_unlock', direction: 'gain', subjects: ['bishop on c8'] },
+                    {
+                      stage: 'future',
+                      kind: 'target_pressure',
+                      direction: 'gain',
+                      subjects: ['c3'],
+                      tested_reply_status: 'the continuation occurs against some tested replies',
+                    },
+                  ],
+                  tested_continuation: {
+                    next_move: { uci: 'b5b4', san: 'b4', notation: '14...b4' },
+                    target: 'b4',
+                    connection: 'coordinated flank advance',
+                    status: 'the continuation occurs against some tested replies',
+                    successful_replies: 2,
+                    tested_replies: 3,
+                    expected_replies: 3,
+                  },
                 },
               ],
+              subject: 'played_move',
+              scope: 'played_transition',
+              confidence: 'engine_backed',
+              evidence: { layers: ['plan'], scopes: ['played_transition'], causes: ['plan_execution'] },
             },
-            opponent_replies: [
-              {
-                reply: { uci: 'b2b4', san: 'b4', notation: '11.b4' },
-                effect_on_plan: 'the reply stops this continuation',
-              },
-              {
-                reply: { uci: 'a2a3', san: 'a3', notation: '11.a3' },
-                effect_on_plan: 'the planned continuation occurs',
-                continuation: { uci: 'b5b4', san: 'b4', notation: '11...b4' },
-                continuation_match: 'same move',
-              },
-            ],
-            results: [
-              { when: 'after the move', change: 'line unlock gain', subjects: ['bishop on c8'] },
-              {
-                when: 'later in the plan',
-                change: 'target pressure gain',
-                subjects: ['c3'],
-                tested_reply_status: 'the continuation occurs against some tested replies',
-              },
-            ],
-            continuation: {
-              next_move: { uci: 'b5b4', san: 'b4', notation: '14...b4' },
-              target: 'b4',
-              connection: 'coordinated flank advance',
-              tested_reply_status: 'the continuation occurs against some tested replies',
-              successful_replies: 2,
-              same_move_replies: 2,
-              same_function_replies: 0,
-              tested_replies: 3,
-              expected_replies: 3,
-            },
-          },
+            { kind: 'plan_continuity', name: 'continues the queenside plan' },
+          ],
+          line: ['b7b5', 'b2b4', 'a5b4', 'b5b4'],
         },
       ],
     };
@@ -162,9 +155,8 @@ describe('chesstory brief scaffold', () => {
     assert.match(text, /10\.\.\.b5/);
     assert.match(text, /14\.\.\.b4/);
     assert.match(text, /bishop on c8/);
-    assert.match(text, /target pressure gain for c3/);
-    assert.match(text, /11\.b4/);
-    assert.match(text, /11\.a3/);
+    assert.match(text, /gain target pressure for c3/);
+    assert.match(text, /pawn b7-b5/);
     assert.match(text, /When the continuation occurs/);
     assert.match(text, /2 of 3 tested replies reach the continuation/);
     assert.doesNotMatch(text, /When the plan works|keep the plan working|: the plan works/);
@@ -179,10 +171,9 @@ describe('chesstory brief scaffold', () => {
           move: 'b7b5',
           role: 'played move',
           ideas: [{ kind: 'flank_pawn_pressure', name: 'flank pawn pressure' }],
-          verification: ['observed board effect'],
         },
       ],
-      tested_plan_limits: [{ plan: { results: [{ change: 'target pressure gain on c3' }] } }],
+      tested_plan_limits: [{ plan: { results: [{ kind: 'target_pressure', subjects: ['c3'] }] } }],
     };
 
     const text = JSON.stringify(chesstoryBriefSections(payload));

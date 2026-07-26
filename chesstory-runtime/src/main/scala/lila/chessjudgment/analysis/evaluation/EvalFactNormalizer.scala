@@ -1,5 +1,6 @@
 package lila.chessjudgment.analysis.evaluation
 
+import lila.chessjudgment.model.evaluation.JudgmentThresholds
 import lila.chessjudgment.model.judgment.*
 
 object EvalFactNormalizer:

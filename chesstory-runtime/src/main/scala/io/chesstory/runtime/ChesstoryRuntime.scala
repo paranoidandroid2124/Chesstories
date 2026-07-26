@@ -157,7 +157,6 @@ private[runtime] final class RunningRuntimeServer(
     stopping: AtomicBoolean
 ):
   def getAddress: InetSocketAddress = server.getAddress
-  private[runtime] def executorTerminated: Boolean = executor.isTerminated
 
   def stop(delaySeconds: Int): Unit =
     stopping.set(true)

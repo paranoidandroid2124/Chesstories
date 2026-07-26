@@ -5,9 +5,10 @@ import chess.format.Fen
 import chess.variant.Standard
 
 import lila.chessjudgment.analysis.material.MaterialValue
-import lila.chessjudgment.analysis.position.PositionAnalyzer
+import lila.chessjudgment.model.position.PawnTopology
 import lila.chessjudgment.analysis.strategic.EndgamePatternOracle
 import lila.chessjudgment.model.judgment.*
+import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 object LineFactNormalizer:
 
@@ -41,12 +42,8 @@ object LineFactNormalizer:
       ref = ref,
       payload = LineFactEvidence(
         line = lineRef,
-        firstMove = Some(facts.first.uci),
-        replyMove = facts.reply.map(_.uci),
-        continuationMoves = facts.continuation.toList.map(_.uci) ++ facts.continuationTail.map(_.uci),
         forcedTheme = forcedTheme,
-        material = materialSummary
-      )(
+        material = materialSummary,
         replay = replay,
         events = events,
         consequences = consequences,
@@ -292,7 +289,7 @@ object LineFactNormalizer:
     }
 
   private def passedPawnSquares(position: Position, color: Color): Set[String] =
-    PositionAnalyzer
+    PawnTopology
       .passedPawns(color, position.board.byPiece(color, Pawn), position.board.byPiece(!color, Pawn))
       .map(_.key)
       .toSet
@@ -343,7 +340,7 @@ object LineFactNormalizer:
             if theme.id == ForcedLineTruth.ImmediateReplyCheckId then LineConsequenceKind.ImmediateReplyCheck
             else LineConsequenceKind.ForcedTheme,
           lineMoves = theme.lineMoves,
-          proofSignal = ForcedLineTruth.isProofSignalThemeId(theme.id),
+          proofSignal = false,
           eventMove = theme.lineMoves.headOption,
           rootMove = rootMove,
           rootSide = rootSide

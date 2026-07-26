@@ -52,24 +52,5 @@ object TacticalMotifClassifier:
   def rootMotif(payload: MoveMotifEvidence): Option[Motif] =
     Option.when(isRootMoveMotif(payload))(payload.motif)
 
-  def isRootForcing(payload: MoveMotifEvidence): Boolean =
-    isRootMoveMotif(payload) && isForcing(payload.motif)
-
   def isRootCauseEligible(payload: MoveMotifEvidence): Boolean =
     isRootMoveMotif(payload) && isCauseEligible(payload.motif)
-
-  def isRootTactical(payload: MoveMotifEvidence): Boolean =
-    isRootMoveMotif(payload) && isTactical(payload.motif)
-
-  def isRiskRelation(kind: RelationFactKind): Boolean =
-    kind match
-      case RelationFactKind.DefenderTrade | RelationFactKind.Zwischenzug |
-          RelationFactKind.DoubleCheck | RelationFactKind.BackRankMate | RelationFactKind.MateNet |
-          RelationFactKind.GreekGift | RelationFactKind.Fork | RelationFactKind.Pin |
-          RelationFactKind.Skewer | RelationFactKind.Overload | RelationFactKind.Deflection |
-          RelationFactKind.DiscoveredAttack | RelationFactKind.Decoy | RelationFactKind.Interference |
-          RelationFactKind.Clearance | RelationFactKind.XRay | RelationFactKind.Battery |
-          RelationFactKind.HangingPiece | RelationFactKind.TrappedPiece | RelationFactKind.Domination =>
-        true
-      case _ =>
-        false

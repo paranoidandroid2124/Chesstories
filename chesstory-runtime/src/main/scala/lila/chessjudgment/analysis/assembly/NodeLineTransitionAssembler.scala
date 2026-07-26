@@ -1,19 +1,22 @@
 package lila.chessjudgment.analysis.assembly
 
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+
 import chess.{ Bishop, Knight, Pawn, Queen, Rook, Square }
 import chess.format.Fen
 import chess.variant.Standard
-import lila.chessjudgment.analysis.evaluation.{ EvalFactNormalizer, EvaluationPerspectivePolicy }
-import lila.chessjudgment.analysis.line.{ ForcedLineTruth, LineFactNormalizer, PrincipalVariationEvidence }
+import lila.chessjudgment.analysis.evaluation.EvalFactNormalizer
+import lila.chessjudgment.analysis.line.{ ForcedLineTruth, LineFactNormalizer }
 import lila.chessjudgment.analysis.material.MaterialValue
 import lila.chessjudgment.analysis.move.MoveAnalyzer
 import lila.chessjudgment.analysis.position.{ FactExtractor, PositionAnalyzer, PositionFactNormalizer }
-import lila.chessjudgment.analysis.singlePosition.{ SinglePositionAssessor, SinglePositionFactNormalizer }
 import lila.chessjudgment.analysis.strategic.EndgamePatternOracle
-import lila.chessjudgment.analysis.tactical.{ BoundedReplayStep, TacticalRelationEvidence }
+import lila.chessjudgment.analysis.tactical.TacticalRelationEvidence
 import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
-import lila.chessjudgment.model.FactScope
-import lila.chessjudgment.model.strategic.VariationLine
+import lila.chessjudgment.model.{ FactScope, ProbeContractValidator, ProbePurpose, ProbeRequest, ProbeResult }
+import lila.chessjudgment.model.line.{ LegalReplayStep, PrincipalVariationEvidence }
+import lila.chessjudgment.model.strategic.EngineLine
 import lila.chessjudgment.model.judgment.*
 
 final case class PositionNodeAssembly(
@@ -31,23 +34,14 @@ final case class TransitionEdgeAssembly(
     evidence: List[EvidenceRecord]
 )
 
-final case class NodeLineTransitionAssembly(
-    input: NormalizedMoveReviewInput,
-    context: JudgmentAssemblyContext
-)
-
 object PositionNodeAssembler:
 
   def fromFen(
-      input: NormalizedMoveReviewInput,
       role: PositionNodeRole,
       fen: String,
       ply: Int,
       allocator: JudgmentProvenanceAllocator,
-      scope: EvidenceScope,
-      includeAssessment: Boolean,
-      assessmentSourceLines: Option[List[VariationLine]] = None,
-      assessmentWhitePovEvalCp: Option[Int] = None
+      scope: EvidenceScope
   ): Option[PositionNodeAssembly] =
     Fen.read(Standard, Fen.Full(fen)).map { position =>
       val ref = allocator.positionRef(role, fen, ply, Some(position.color))
@@ -72,79 +66,12 @@ object PositionNodeAssembler:
           position = ref,
           scope = scope
         )
-      val assessmentRecord =
-        Option
-          .when(includeAssessment)(features)
-          .flatten
-          .flatMap { positionFeatures =>
-            val assessmentSide = ref.sideToMove.getOrElse(position.color)
-            assessmentWhitePovEval(input, role, assessmentWhitePovEvalCp).map { currentWhitePovEvalCp =>
-              val assessment =
-                SinglePositionAssessor.classify(
-                  features = positionFeatures,
-                  multiPv = assessmentLines(input, role, assessmentSide, assessmentSourceLines),
-                  currentWhitePovEvalCp = currentWhitePovEvalCp,
-                  sideToMove = assessmentSide
-                )
-              SinglePositionFactNormalizer.fromAssessment(
-                id = allocator.evidenceId(s"single-position:$nodeKey"),
-                assessment = assessment,
-                position = ref,
-                scope = scope,
-                parents = List(boardRecord.ref)
-              )
-            }
-          }
-      val records = boardRecord :: assessmentRecord.toList
       val node =
         PositionNode(
           role = role,
           ref = ref
         )
-      PositionNodeAssembly(node, records)
-    }
-
-  private def assessmentLines(
-      input: NormalizedMoveReviewInput,
-      role: PositionNodeRole,
-      sideToMove: chess.Color,
-      sourceLines: Option[List[VariationLine]]
-  ): List[lila.chessjudgment.analysis.singlePosition.PvLine] =
-    val lines =
-      sourceLines.getOrElse {
-        role match
-          case PositionNodeRole.Before =>
-            input.rankedUniqueLines.map(_.line)
-          case PositionNodeRole.AfterPlayed =>
-            input.playedLine.map(line => line.line.copy(moves = line.line.moves.drop(1))).toList
-          case PositionNodeRole.AfterReference =>
-            input.referenceLine.map(line => line.line.copy(moves = line.line.moves.drop(1))).toList
-          case PositionNodeRole.AfterAlternative =>
-            input.lines
-              .filter(_.role == LineNodeRole.Alternative)
-              .map(line => line.line.copy(moves = line.line.moves.drop(1)))
-          case PositionNodeRole.AfterThreat =>
-            Nil
-      }
-    EvaluationPerspectivePolicy.sideToMovePvLines(sideToMove, lines)
-
-  private def assessmentWhitePovEval(
-      input: NormalizedMoveReviewInput,
-      role: PositionNodeRole,
-      overrideWhitePovEval: Option[Int]
-  ): Option[Int] =
-    overrideWhitePovEval.orElse {
-      role match
-        case PositionNodeRole.Before =>
-          Some(input.currentWhitePovEvalCp)
-        case PositionNodeRole.AfterPlayed =>
-          input.playedLine.map(_.line.scoreCp)
-        case PositionNodeRole.AfterReference =>
-          input.referenceLine.map(_.line.scoreCp)
-        case PositionNodeRole.AfterAlternative =>
-          input.lines.find(_.role == LineNodeRole.Alternative).map(_.line.scoreCp)
-        case PositionNodeRole.AfterThreat =>
-          Some(input.currentWhitePovEvalCp)
+      PositionNodeAssembly(node, List(boardRecord))
     }
 
 object CandidateLineAssembler:
@@ -288,7 +215,7 @@ object CandidateLineAssembler:
       }
     }
 
-  private def promotionGainCp(step: BoundedReplayStep): Int =
+  private def promotionGainCp(step: LegalReplayStep): Int =
     Option.when(step.uci.length == 5) {
       val promotedValue = step.uci.last.toLower match
         case 'q' => MaterialValue.materialValueCp(Queen)
@@ -334,54 +261,43 @@ object NodeLineTransitionAssembler:
   private def previousCaptureSquare(input: NormalizedMoveReviewInput): Option[Square] =
     Option
       .when(input.movePrefixUci.nonEmpty && input.movePrefixUci.size == input.beforePly)(
-        PrincipalVariationEvidence.legalReplay(Standard.initialFen.value, input.movePrefixUci, 0)
+        PrincipalVariationEvidence.legalMoveReplay(Standard.initialFen.value, input.movePrefixUci, 0)
       )
       .flatten
-      .filter(_.lastOption.exists((_, move) =>
-        PrincipalVariationEvidence.sameBoardState(move.fenAfter, input.beforeFen)
+      .filter(_.lastOption.exists(step =>
+        PrincipalVariationEvidence.sameBoardState(Fen.write(step.after).value, input.beforeFen)
       ))
       .flatMap(_.lastOption)
-      .flatMap { case (fenBefore, move) =>
-        TacticalRelationEvidence
-          .boundedReplay(fenBefore, List(move.uci), maxPlies = 1)
-          .flatMap(_.headOption)
-          .filter(_.capturedRole.nonEmpty)
-          .map(_.move.dest)
-      }
+      .filter(_.capturedRole.nonEmpty)
+      .map(_.move.dest)
 
-  def assemble(raw: RawMoveReviewInput): Option[NodeLineTransitionAssembly] =
+  def assemble(raw: RawMoveReviewInput): Option[JudgmentAssemblyContext] =
     MoveReviewInputNormalizer.normalize(raw).flatMap { input =>
       val allocator = JudgmentProvenanceAllocator.forInput(input)
       for
         before <- PositionNodeAssembler.fromFen(
-          input = input,
           role = PositionNodeRole.Before,
           fen = input.beforeFen,
           ply = input.beforePly,
           allocator = allocator,
-          scope = EvidenceScope.BeforePosition,
-          includeAssessment = true
+          scope = EvidenceScope.BeforePosition
         )
         afterPlayed <- PositionNodeAssembler.fromFen(
-          input = input,
           role = PositionNodeRole.AfterPlayed,
           fen = input.afterPlayedFen,
           ply = input.beforePly + 1,
           allocator = allocator,
-          scope = EvidenceScope.AfterPlayedPosition,
-          includeAssessment = true
+          scope = EvidenceScope.AfterPlayedPosition
         )
       yield
         val afterReference =
           input.afterReferenceFen.flatMap { fen =>
             PositionNodeAssembler.fromFen(
-              input = input,
               role = PositionNodeRole.AfterReference,
               fen = fen,
               ply = input.beforePly + 1,
               allocator = allocator,
-              scope = EvidenceScope.AfterReferencePosition,
-              includeAssessment = true
+              scope = EvidenceScope.AfterReferencePosition
             )
           }
         val afterAlternatives =
@@ -390,30 +306,22 @@ object NodeLineTransitionAssembler:
               .flatMap(PrincipalVariationEvidence.legalFenAfter(input.beforeFen, _))
               .flatMap { fen =>
                 PositionNodeAssembler.fromFen(
-                  input = input,
                   role = PositionNodeRole.AfterAlternative,
                   fen = fen,
                   ply = input.beforePly + 1,
                   allocator = allocator,
-                  scope = EvidenceScope.AlternativeTransition,
-                  includeAssessment = true,
-                  assessmentSourceLines = Some(List(line.line.copy(moves = line.line.moves.drop(1)))),
-                  assessmentWhitePovEvalCp = Some(line.line.scoreCp)
+                  scope = EvidenceScope.AlternativeTransition
                 ).map(line -> _)
               }
           }
         val afterThreats =
           input.threatBranches.flatMap { branch =>
             PositionNodeAssembler.fromFen(
-              input = input,
               role = PositionNodeRole.AfterThreat,
               fen = branch.branchFen,
               ply = branch.branchPly,
               allocator = allocator,
-              scope = EvidenceScope.ThreatLine,
-              includeAssessment = true,
-              assessmentSourceLines = Some(branch.rankedUniqueLines.map(_.line)),
-              assessmentWhitePovEvalCp = branch.rankedUniqueLines.headOption.map(_.line.scoreCp)
+              scope = EvidenceScope.ThreatLine
             ).map(branch -> _)
           }
         val rootPreviousCaptureSquare = previousCaptureSquare(input)
@@ -483,7 +391,7 @@ object NodeLineTransitionAssembler:
           }
         val context =
           (List(before, afterPlayed) ++ afterReference.toList ++ afterAlternatives.map(_._2) ++ afterThreats.map(_._2))
-            .foldLeft(JudgmentAssemblyContext.empty().copy(probeDiagnostics = input.probeDiagnostics)) { (ctx, assembly) =>
+            .foldLeft(JudgmentAssemblyContext.empty(input)) { (ctx, assembly) =>
               ctx.withPosition(assembly.node).withEvidence(assembly.evidence)
             }
         val withLines =
@@ -494,5 +402,126 @@ object NodeLineTransitionAssembler:
           (List(playedTransition) ++ referenceTransition.toList ++ alternativeTransitions ++ threatTransitions).foldLeft(withLines) { (ctx, assembly) =>
             ctx.withTransition(assembly.edge).withEvidence(assembly.evidence)
           }
-        NodeLineTransitionAssembly(input, withTransitions)
+        withTransitions
     }
+
+private[assembly] object EndgameTablebaseProbeBinding:
+  val Objective = "endgame_tablebase"
+  val RequiredSignals: List[String] = List("tablebase", "purpose", "variationHash")
+
+  def requestFor(
+      line: CandidateLineNode,
+      lineFacts: LineFactEvidence,
+      horizon: LineEndgameTechniqueHorizon
+  ): Option[ProbeRequest] =
+    val replay = lineFacts.lineReplaySteps
+    for
+      trigger <- horizon.triggerMove.map(EvidenceRef.normalizeMove)
+      if horizon.pattern == "Triangulation"
+      if horizon.status == LineEndgameTechniqueHorizonStatus.Completed
+      if horizon.zugzwangProof.isEmpty
+      if horizon.entryPlyOffset == 0 && horizon.terminalPlyOffset == 4
+      if EvidenceRef.sameMove(trigger, line.ref.rootMove)
+      entry <- replay.lift(horizon.entryPlyOffset)
+      terminal <- replay.lift(horizon.terminalPlyOffset)
+      comparisonPosition <- position(entry.fenBefore)
+      terminalPosition <- position(terminal.fenAfter)
+      if comparisonPosition.color == horizon.techniqueSide
+      if terminalPosition.color == !horizon.techniqueSide
+      if sameBoardState(entry.fenBefore, terminal.fenAfter)
+      if terminalPosition.board.occupied.count <= 7
+      legalMoves = terminalPosition.legalMoves.map(_.toUci.uci).distinct.sorted
+      if legalMoves.nonEmpty
+      bindingHash = positionBindingHash(terminal.fenAfter, entry.fenBefore, legalMoves)
+    yield ProbeRequest(
+      id = s"endgame-tablebase:${bindingHash.take(24)}",
+      fen = terminal.fenAfter,
+      moves = legalMoves,
+      depth = 0,
+      purpose = Some(ProbePurpose.EndgameTablebase),
+      objective = Some(Objective),
+      requiredSignals = RequiredSignals,
+      variationHash = Some(bindingHash),
+      comparisonFen = Some(entry.fenBefore)
+    )
+
+  def admit(
+      line: CandidateLineNode,
+      lineFacts: LineFactEvidence,
+      results: List[ProbeResult]
+  ): LineFactEvidence =
+    lineFacts.endgameTechniqueHorizons.foldLeft(lineFacts) { (current, horizon) =>
+      val proofs = results.flatMap(exactProof(line, lineFacts, horizon, _)).distinct
+      proofs match
+        case proof :: Nil =>
+          current.withEndgameZugzwangProof(horizon.entryPlyOffset, horizon.terminalPlyOffset, proof)
+        case _ =>
+          current
+    }
+
+  private def exactProof(
+      line: CandidateLineNode,
+      lineFacts: LineFactEvidence,
+      horizon: LineEndgameTechniqueHorizon,
+      result: ProbeResult
+  ): Option[EndgameZugzwangProof] =
+    for
+      request <- requestFor(line, lineFacts, horizon)
+      if result.id == request.id
+      if result.purpose.contains(ProbePurpose.EndgameTablebase)
+      if result.variationHash == request.variationHash
+      if ProbeContractValidator.validateAgainstRequest(request, result).isValid
+      tablebase <- result.tablebase
+      comparisonFen <- request.comparisonFen
+      if normalizeFen(tablebase.terminal.fen) == normalizeFen(request.fen)
+      if normalizeFen(tablebase.comparison.fen) == normalizeFen(comparisonFen)
+      terminalPosition <- position(request.fen)
+      comparisonPosition <- position(comparisonFen)
+      if terminalPosition.color == !horizon.techniqueSide
+      if comparisonPosition.color == horizon.techniqueSide
+      if tablebase.terminal.wdl == -2 && tablebase.comparison.wdl == 2
+      terminalDtm <- tablebase.terminal.dtm.filter(_ < 0)
+      comparisonDtm <- tablebase.comparison.dtm.filter(_ > 0)
+      replies = tablebase.legalMoves.map(reply => reply.copy(moveUci = EvidenceRef.normalizeMove(reply.moveUci)))
+      expectedMoves = request.moves.map(EvidenceRef.normalizeMove).distinct.sorted
+      if replies.nonEmpty && replies.map(_.moveUci).distinct.size == replies.size
+      if replies.map(_.moveUci).sorted == expectedMoves
+      if replies.forall(_.resultingWdl == 2)
+      replyDtms <- Option.when(replies.forall(_.resultingDtm.exists(_ > 0)))(replies.flatMap(_.resultingDtm))
+      maxReplyDtm <- replyDtms.maxOption
+      if terminalDtm.toLong.abs == maxReplyDtm.toLong + 1L
+      if comparisonDtm > maxReplyDtm
+      proof <- EndgameZugzwangProof.verified(
+        constrainedSide = terminalPosition.color,
+        terminalFen = request.fen,
+        comparisonFen = comparisonFen,
+        terminalDtm = terminalDtm,
+        comparisonDtm = comparisonDtm,
+        legalReplies =
+          replies
+            .zip(replyDtms)
+            .map((reply, dtm) => EndgameZugzwangReplyProof(reply.moveUci, dtm))
+            .sortBy(_.moveUci),
+        horizon = horizon,
+        replay = lineFacts.lineReplaySteps
+      )
+    yield proof
+
+  private def positionBindingHash(terminalFen: String, comparisonFen: String, legalMoves: List[String]): String =
+    val raw = List(normalizeFen(terminalFen), normalizeFen(comparisonFen), legalMoves.sorted.mkString(",")).mkString("||")
+    MessageDigest
+      .getInstance("SHA-256")
+      .digest(raw.getBytes(StandardCharsets.UTF_8))
+      .map(byte => f"${byte & 0xff}%02x")
+      .mkString
+
+  private def position(fen: String): Option[_root_.chess.Position] =
+    _root_.chess.format.Fen.read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(fen))
+
+  private def sameBoardState(left: String, right: String): Boolean =
+    def state(fen: String): List[String] =
+      normalizeFen(fen).split("\\s+").toList.zipWithIndex.collect { case (field, index) if index == 0 || index == 2 || index == 3 => field }
+    state(left) == state(right)
+
+  private def normalizeFen(fen: String): String =
+    Option(fen).getOrElse("").trim.split("\\s+").filter(_.nonEmpty).mkString(" ")

@@ -37,6 +37,8 @@ import { makeUci } from 'chessops';
 import { storedBooleanProp, storedProp, tempStorage } from 'lib/storage';
 import { PromotionCtrl } from 'lib/game/promotion';
 import ExplorerCtrl from './explorer/explorerCtrl';
+import { tablebase as loadTablebase } from './explorer/explorerXhr';
+import type { TablebaseCategory } from './explorer/interfaces';
 import { uciToMove } from '@lichess-org/chessground/util';
 import { IdbTree } from './idbTree';
 import pgnImport from './pgnImport';
@@ -75,7 +77,6 @@ interface ChesstoryMoveMeaningRequest {
     mate?: number;
     depth: number;
   }>;
-  currentEvalCp?: number;
   ply: Ply;
   openingContext?: {
     eco?: string;
@@ -99,28 +100,36 @@ interface ChesstoryProbeRequest {
   depthFloor?: number;
   horizon?: string;
   variationHash?: string;
+  comparisonFen?: FEN;
 }
 
 interface ChesstoryProbeResult {
   id: string;
   fen: FEN;
-  evalCp: number;
   replyLines?: Array<{
     moves: Uci[];
     scoreCp: number;
     mate?: number;
     depth: number;
   }>;
-  deltaVsBaseline: number;
   purpose?: string;
   probedMove?: Uci;
-  mate?: number;
   depth?: number;
   candidateMove?: Uci;
   opponentResourceMove?: Uci;
   horizon?: string;
   variationHash?: string;
   generatedAtEpochMs?: number;
+  tablebase?: {
+    terminal: { fen: FEN; wdl: number; dtm?: number };
+    comparison: { fen: FEN; wdl: number; dtm?: number };
+    legalMoves: Array<{ moveUci: Uci; resultingWdl: number; resultingDtm?: number }>;
+  };
+}
+
+interface ChesstoryProbeBatch {
+  results: ChesstoryProbeResult[];
+  failed: boolean;
 }
 
 function loginHref(): string {
@@ -200,6 +209,12 @@ export default class AnalyseCtrl implements CevalHandler {
   private studyActionTimer?: number;
   private studyTransferCount = 0;
   private chesstoryBriefKey?: string;
+  private chesstoryBriefLoadingKey?: string;
+  private chesstoryBriefFailureKey?: string;
+  private chesstoryBriefRetryAfter = 0;
+  private chesstoryBriefGeneration = 0;
+  private chesstoryBriefAbort?: AbortController;
+  private chesstoryProbeCancel?: () => void;
   private chesstoryBriefPayload?: ChesstoryMoveMeaningPayload;
   private chesstoryBriefLoading = false;
   private chesstoryBriefUnavailable = false;
@@ -600,24 +615,51 @@ export default class AnalyseCtrl implements CevalHandler {
   requestChesstoryBrief(): void {
     const request = this.chesstoryBriefRequest();
     const key = request
-      ? `${request.fen}|${request.playedMoveUci}|${request.variations.map(v => v.moves[0]).join(',')}`
+      ? JSON.stringify({
+          request,
+          probeCapabilities: {
+            replyMultipv: this.isCevalAllowed() && this.cevalEnabled() && this.ceval.available(),
+            endgameTablebase: !!this.opts.explorer.tablebaseEndpoint,
+          },
+        })
       : '';
     if (!request) {
+      this.chesstoryBriefAbort?.abort();
+      this.chesstoryProbeCancel?.();
+      this.chesstoryBriefGeneration++;
       this.chesstoryBriefKey = undefined;
+      this.chesstoryBriefLoadingKey = undefined;
+      this.chesstoryBriefFailureKey = undefined;
+      this.chesstoryBriefAbort = undefined;
+      this.chesstoryProbeCancel = undefined;
       this.chesstoryBriefPayload = undefined;
+      this.chesstoryBriefLoading = false;
       this.chesstoryBriefUnavailable = true;
       return;
     }
-    if (key === this.chesstoryBriefKey || this.chesstoryBriefLoading) {
+    if (
+      key === this.chesstoryBriefKey ||
+      key === this.chesstoryBriefLoadingKey ||
+      (key === this.chesstoryBriefFailureKey && Date.now() < this.chesstoryBriefRetryAfter)
+    )
       return;
-    }
 
-    this.chesstoryBriefKey = key;
+    this.chesstoryBriefAbort?.abort();
+    this.chesstoryProbeCancel?.();
+    const abort = new AbortController();
+    const generation = ++this.chesstoryBriefGeneration;
+    const isActive = (): boolean =>
+      generation === this.chesstoryBriefGeneration && this.chesstoryBriefLoadingKey === key;
+    this.chesstoryBriefKey = undefined;
+    this.chesstoryBriefLoadingKey = key;
+    this.chesstoryBriefAbort = abort;
+    this.chesstoryBriefPayload = undefined;
     this.chesstoryBriefLoading = true;
     this.chesstoryBriefUnavailable = false;
 
     fetch('/api/chess-judgment/move-meaning', {
       ...defaultInit,
+      signal: abort.signal,
       method: 'post',
       headers: {
         ...jsonHeader,
@@ -629,19 +671,26 @@ export default class AnalyseCtrl implements CevalHandler {
       .then(ensureOk)
       .then(res => res.json())
       .then(async data => {
+        if (!isActive()) return;
         let review = Array.isArray(data.move_review) ? data.move_review[0] : data.move_review;
         const probeResults: ChesstoryProbeResult[] = [];
         const seenProbeIds = new Set<string>();
-        for (let round = 0; round < 3 && probeResults.length < 3; round++) {
-          const nextResults = await this.chesstoryProbeResults(
+        const probeBudget = 12;
+        let probeFailed = false;
+        for (let round = 0; round < 6 && probeResults.length < probeBudget; round++) {
+          const batch = await this.chesstoryProbeResults(
             data.probe_requests,
             seenProbeIds,
-            3 - probeResults.length,
+            probeBudget - probeResults.length,
+            isActive,
           );
-          if (!nextResults.length) break;
-          probeResults.push(...nextResults);
+          if (!isActive()) return;
+          probeFailed ||= batch.failed;
+          if (!batch.results.length) break;
+          probeResults.push(...batch.results);
           data = await fetch('/api/chess-judgment/move-meaning', {
             ...defaultInit,
+            signal: abort.signal,
             method: 'post',
             headers: {
               ...jsonHeader,
@@ -652,19 +701,35 @@ export default class AnalyseCtrl implements CevalHandler {
           })
             .then(ensureOk)
             .then(res => res.json());
+          if (!isActive()) return;
           review = Array.isArray(data.move_review) ? data.move_review[0] : data.move_review;
         }
+        if (!isActive()) return;
         this.chesstoryBriefPayload = review?.renderable ? review : undefined;
         this.chesstoryBriefUnavailable = !this.chesstoryBriefPayload;
+        if (probeFailed && !this.chesstoryBriefPayload) {
+          this.chesstoryBriefFailureKey = key;
+          this.chesstoryBriefRetryAfter = Date.now() + 3000;
+        } else {
+          this.chesstoryBriefKey = key;
+          this.chesstoryBriefFailureKey = undefined;
+        }
       })
       .catch(e => {
+        if (!isActive()) return;
         console.info('Chesstory brief unavailable', e);
         this.chesstoryBriefPayload = undefined;
         this.chesstoryBriefUnavailable = true;
+        this.chesstoryBriefFailureKey = key;
+        this.chesstoryBriefRetryAfter = Date.now() + 3000;
       })
       .finally(() => {
-        this.chesstoryBriefLoading = false;
-        this.redraw();
+        if (isActive()) {
+          this.chesstoryBriefLoadingKey = undefined;
+          this.chesstoryBriefAbort = undefined;
+          this.chesstoryBriefLoading = false;
+          this.redraw();
+        }
       });
   }
 
@@ -672,14 +737,15 @@ export default class AnalyseCtrl implements CevalHandler {
     rawRequests: unknown,
     seenProbeIds: Set<string>,
     limit: number,
-  ): Promise<ChesstoryProbeResult[]> {
-    if (!this.isCevalAllowed() || !this.cevalEnabled() || !this.ceval.available()) return [];
+    isActive: () => boolean,
+  ): Promise<ChesstoryProbeBatch> {
+    const canRunEngineProbe = this.isCevalAllowed() && this.cevalEnabled() && this.ceval.available();
+    const canRunTablebaseProbe = !!this.opts.explorer.tablebaseEndpoint;
     const requests = Array.isArray(rawRequests)
       ? rawRequests.filter(
           (request): request is ChesstoryProbeRequest =>
             !!request &&
             typeof request === 'object' &&
-            (request as ChesstoryProbeRequest).purpose === 'reply_multipv' &&
             typeof (request as ChesstoryProbeRequest).id === 'string' &&
             typeof (request as ChesstoryProbeRequest).fen === 'string' &&
             !seenProbeIds.has((request as ChesstoryProbeRequest).id) &&
@@ -687,31 +753,114 @@ export default class AnalyseCtrl implements CevalHandler {
             (request as ChesstoryProbeRequest).moves.every(
               move => typeof move === 'string' && validUci(move),
             ) &&
-            ((request as ChesstoryProbeRequest).moves.length === 0 ||
-              ((request as ChesstoryProbeRequest).moves.length === 1 &&
-                (request as ChesstoryProbeRequest).moves[0] ===
-                  (request as ChesstoryProbeRequest).opponentResourceMove)),
+            (((request as ChesstoryProbeRequest).purpose === 'reply_multipv' &&
+              canRunEngineProbe &&
+              ((request as ChesstoryProbeRequest).moves.length === 0 ||
+                ((request as ChesstoryProbeRequest).moves.length === 1 &&
+                  (request as ChesstoryProbeRequest).moves[0] ===
+                    (request as ChesstoryProbeRequest).opponentResourceMove))) ||
+              ((request as ChesstoryProbeRequest).purpose === 'endgame_tablebase' &&
+                canRunTablebaseProbe &&
+                (request as ChesstoryProbeRequest).moves.length > 0 &&
+                typeof (request as ChesstoryProbeRequest).comparisonFen === 'string')),
         )
       : [];
-    if (!requests.length) return [];
+    if (!requests.length) return { results: [], failed: false };
 
     const wasEnabled = !!this.cevalEnabled();
+    const hasEngineProbe = requests.some(request => request.purpose === 'reply_multipv');
     const results: ChesstoryProbeResult[] = [];
-    this.ceval.stop();
+    let failed = false;
+    if (hasEngineProbe) this.ceval.stop();
     try {
       for (const request of requests.slice(0, limit)) {
+        if (!isActive()) break;
         seenProbeIds.add(request.id);
-        const result = await this.runChesstoryProbe(request);
-        if (result) results.push(result);
+        const result =
+          request.purpose === 'endgame_tablebase'
+            ? await this.runChesstoryTablebaseProbe(request)
+            : await this.runChesstoryProbe(request, isActive);
+        if (result && isActive()) results.push(result);
+        else if (isActive()) failed = true;
       }
     } finally {
-      this.ceval.stop();
-      if (wasEnabled) this.startCeval();
+      if (hasEngineProbe) {
+        this.ceval.stop();
+        if (wasEnabled) this.startCeval();
+      }
     }
-    return results;
+    return { results, failed };
   }
 
-  private runChesstoryProbe(request: ChesstoryProbeRequest): Promise<ChesstoryProbeResult | undefined> {
+  private async runChesstoryTablebaseProbe(
+    request: ChesstoryProbeRequest,
+  ): Promise<ChesstoryProbeResult | undefined> {
+    if (!request.comparisonFen) return;
+    try {
+      const [terminal, comparison] = await Promise.all([
+        loadTablebase(this.opts.explorer.tablebaseEndpoint, request.fen),
+        loadTablebase(this.opts.explorer.tablebaseEndpoint, request.comparisonFen),
+      ]);
+      const terminalWdl = this.chesstoryTablebaseWdl(terminal.category);
+      const comparisonWdl = this.chesstoryTablebaseWdl(comparison.category);
+      if (
+        terminalWdl !== -2 ||
+        comparisonWdl !== 2 ||
+        terminal.dtm === undefined ||
+        comparison.dtm === undefined
+      )
+        return;
+      const legalMoves = request.moves.flatMap(move => {
+        const result = terminal.moves.find(candidate => candidate.uci === move);
+        const resultingWdl = result && this.chesstoryTablebaseWdl(result.category);
+        return result && resultingWdl !== undefined && result.dtm !== undefined
+          ? [{ moveUci: move, resultingWdl, resultingDtm: result.dtm }]
+          : [];
+      });
+      if (legalMoves.length !== request.moves.length) return;
+      return {
+        id: request.id,
+        fen: request.fen,
+        purpose: request.purpose,
+        variationHash: request.variationHash,
+        generatedAtEpochMs: Date.now(),
+        tablebase: {
+          terminal: { fen: request.fen, wdl: terminalWdl, dtm: terminal.dtm },
+          comparison: {
+            fen: request.comparisonFen,
+            wdl: comparisonWdl,
+            dtm: comparison.dtm,
+          },
+          legalMoves,
+        },
+      };
+    } catch (e) {
+      console.info('Chesstory tablebase probe unavailable', e);
+      return;
+    }
+  }
+
+  private chesstoryTablebaseWdl(category: TablebaseCategory): number | undefined {
+    switch (category) {
+      case 'win':
+        return 2;
+      case 'cursed-win':
+        return 1;
+      case 'draw':
+        return 0;
+      case 'blessed-loss':
+        return -1;
+      case 'loss':
+        return -2;
+      default:
+        return;
+    }
+  }
+
+  private runChesstoryProbe(
+    request: ChesstoryProbeRequest,
+    isActive: () => boolean,
+  ): Promise<ChesstoryProbeResult | undefined> {
     const currentFen = request.moves.length
       ? parseFen(request.fen)
           .chain(setup => setupPosition('chess', setup))
@@ -727,19 +876,22 @@ export default class AnalyseCtrl implements CevalHandler {
             () => undefined,
           )
       : request.fen;
-    if (!currentFen) return Promise.resolve(undefined);
+    if (!currentFen || !isActive()) return Promise.resolve(undefined);
     return new Promise(resolve => {
       let done = false;
       const requiredPvs = Math.max(1, request.multiPv ?? 1);
       const depthFloor = Math.max(1, request.depthFloor ?? request.depth ?? 1);
       const timeout = window.setTimeout(() => finish(), Math.min(12000, Math.max(4000, depthFloor * 700)));
+      const cancel = (): void => finish();
       const finish = (ev?: Tree.LocalEval): void => {
         if (done) return;
         done = true;
         window.clearTimeout(timeout);
-        this.ceval.stop();
-        resolve(ev ? this.chesstoryProbeResult(request, ev) : undefined);
+        if (this.chesstoryProbeCancel === cancel) this.chesstoryProbeCancel = undefined;
+        if (isActive()) this.ceval.stop();
+        resolve(ev && isActive() ? this.chesstoryProbeResult(request, ev) : undefined);
       };
+      this.chesstoryProbeCancel = cancel;
       const work: Work = {
         variant: this.data.game.variant.key,
         threads: this.ceval.threads,
@@ -755,7 +907,12 @@ export default class AnalyseCtrl implements CevalHandler {
         multiPv: requiredPvs,
         threatMode: false,
         emit: (ev: Tree.LocalEval) => {
-          if (ev.depth >= depthFloor && ev.pvs.filter(pv => pv.moves.length).length >= requiredPvs)
+          if (
+            isActive() &&
+            ev.depth >= depthFloor &&
+            ev.pvs.filter(pv => pv.moves.length && this.chesstoryEvalCp(pv) !== undefined).length >=
+              requiredPvs
+          )
             finish(ev);
         },
       };
@@ -768,25 +925,27 @@ export default class AnalyseCtrl implements CevalHandler {
     ev: Tree.LocalEval,
   ): ChesstoryProbeResult | undefined {
     const replyLines = ev.pvs
-      .filter(pv => pv.moves.length)
-      .map(pv => ({
-        moves: [...request.moves, ...pv.moves],
-        scoreCp: this.chesstoryEvalCp(pv),
-        mate: pv.mate,
-        depth: ev.depth,
-      }));
+      .flatMap(pv => {
+        const scoreCp = this.chesstoryEvalCp(pv);
+        return pv.moves.length && scoreCp !== undefined
+          ? [
+              {
+                moves: [...request.moves, ...pv.moves],
+                scoreCp,
+                mate: pv.mate,
+                depth: ev.depth,
+              },
+            ]
+          : [];
+      });
     if (ev.depth < (request.depthFloor ?? request.depth ?? 1) || replyLines.length < (request.multiPv ?? 1))
       return;
-    const evalCp = this.chesstoryEvalCp(ev);
     return {
       id: request.id,
       fen: request.fen,
-      evalCp,
       replyLines,
-      deltaVsBaseline: evalCp - (request.baselineEvalCp ?? evalCp),
       purpose: request.purpose,
       probedMove: request.candidateMove,
-      mate: ev.mate,
       depth: ev.depth,
       candidateMove: request.candidateMove,
       opponentResourceMove: request.opponentResourceMove,
@@ -796,8 +955,11 @@ export default class AnalyseCtrl implements CevalHandler {
     };
   }
 
-  private chesstoryEvalCp(score: { cp?: number; mate?: number }): number {
-    return score.cp ?? (score.mate ? (score.mate > 0 ? 10000 : -10000) : 0);
+  private chesstoryEvalCp(score: { cp?: number; mate?: number }): number | undefined {
+    if (typeof score.cp === 'number' && Number.isFinite(score.cp)) return score.cp;
+    if (typeof score.mate === 'number' && Number.isFinite(score.mate) && score.mate !== 0)
+      return score.mate > 0 ? 10000 : -10000;
+    return;
   }
 
   private plyFromFen(fen: FEN): Ply {
@@ -807,7 +969,12 @@ export default class AnalyseCtrl implements CevalHandler {
   }
 
   private chesstoryBriefRequest(): ChesstoryMoveMeaningRequest | undefined {
-    if (!this.isStudy() || this.nodeList.length < 2) return;
+    if (
+      !this.isStudy() ||
+      this.data.game.variant.key !== 'standard' ||
+      this.nodeList.length < 2
+    )
+      return;
     const played = this.node;
     const before = this.nodeList[this.nodeList.length - 2];
     if (!played.uci) return;
@@ -816,29 +983,53 @@ export default class AnalyseCtrl implements CevalHandler {
     if (!beforeEval?.pvs?.length) return;
 
     const variations = beforeEval.pvs
-      .map(pv => ({
-        moves: Array.isArray(pv.moves) ? pv.moves : pv.moves.split(' ').filter(Boolean),
-        scoreCp: pv.cp ?? (pv.mate ? (pv.mate > 0 ? 10000 : -10000) : 0),
-        mate: pv.mate,
-        depth: beforeEval.depth || 0,
-      }))
-      .filter(v => v.moves.length);
-
-    if (!variations.some(v => v.moves[0] === played.uci)) {
-      const playedEval = played.ceval || played.eval;
-      variations.push({
-        moves: [played.uci],
-        scoreCp: playedEval?.cp ?? beforeEval.cp ?? 0,
-        mate: playedEval?.mate,
-        depth: playedEval?.depth || beforeEval.depth || 0,
+      .flatMap(pv => {
+        const moves = Array.isArray(pv.moves) ? pv.moves : pv.moves.split(' ').filter(Boolean);
+        const scoreCp = this.chesstoryEvalCp(pv);
+        return moves.length && scoreCp !== undefined
+          ? [{ moves, scoreCp, mate: pv.mate, depth: beforeEval.depth || 0 }]
+          : [];
       });
+    if (!variations.length) return;
+    const playedVariationIndex = variations.findIndex(v => v.moves[0] === played.uci);
+    const playedVariation =
+      playedVariationIndex < 0 ? undefined : variations[playedVariationIndex];
+    const playedIsTerminal = parseFen(played.fen)
+      .chain(setup => setupPosition('chess', setup))
+      .unwrap(
+        pos => pos.isEnd(),
+        () => false,
+      );
+
+    if (!playedVariation || (playedVariation.moves.length < 2 && !playedIsTerminal)) {
+      const playedEval = played.ceval || played.eval;
+      if (!playedEval) return;
+      const playedPv = playedEval.pvs?.find(pv => {
+        const moves = Array.isArray(pv.moves) ? pv.moves : pv.moves.split(' ').filter(Boolean);
+        return moves.length > 0;
+      });
+      const suffix = playedPv
+        ? Array.isArray(playedPv.moves)
+          ? playedPv.moves
+          : playedPv.moves.split(' ').filter(Boolean)
+        : [];
+      const scoreCp = this.chesstoryEvalCp(playedPv || playedEval);
+      if (!suffix.length && !playedIsTerminal) return;
+      if (scoreCp === undefined) return;
+      const completePlayedVariation = {
+        moves: [played.uci, ...suffix],
+        scoreCp,
+        mate: playedPv?.mate ?? playedEval.mate,
+        depth: playedEval.depth || 0,
+      };
+      if (playedVariationIndex < 0) variations.push(completePlayedVariation);
+      else variations[playedVariationIndex] = completePlayedVariation;
     }
 
     return {
       fen: before.fen,
       playedMoveUci: played.uci,
       variations,
-      currentEvalCp: beforeEval.cp,
       ply: before.ply,
       openingContext: this.data.game.opening
         ? {
@@ -1259,8 +1450,7 @@ export default class AnalyseCtrl implements CevalHandler {
       if (isThreat) {
         const threat = ev as Tree.LocalEval;
         if (!node.threat || isEvalBetter(threat, node.threat)) node.threat = threat;
-      } else if (!node.ceval || isEvalBetter(ev, node.ceval))
-        node.ceval = ev;
+      } else if (!node.ceval || isEvalBetter(ev, node.ceval)) node.ceval = ev;
       else if (!ev.cloud) {
         if (node.ceval?.cloud && this.ceval.isDeeper()) node.ceval = ev;
       }

@@ -1,15 +1,10 @@
 package lila.chessjudgment.analysis.assembly
 
 import chess.Color
-import lila.chessjudgment.analysis.evaluation.{ JudgmentThresholds, PerspectiveMath, VerdictThresholdPolicy }
-import lila.chessjudgment.analysis.singlePosition.CandidateSetType
+import lila.chessjudgment.model.evaluation.{ JudgmentThresholds, PerspectiveMath }
+import lila.chessjudgment.model.judgment.CandidateSetType
 import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
 import lila.chessjudgment.model.judgment.*
-
-final case class RelativeAssessmentAssembly(
-    input: NormalizedMoveReviewInput,
-    context: JudgmentAssemblyContext
-)
 
 object RelativeAssessmentAssembler:
 
@@ -46,12 +41,11 @@ object RelativeAssessmentAssembler:
     def all: List[EvidenceRecord] =
       (directProof ++ contrastProof ++ contextSupport).distinctBy(_.ref.id)
 
-  def assemble(raw: RawMoveReviewInput): Option[RelativeAssessmentAssembly] =
+  def assemble(raw: RawMoveReviewInput): Option[JudgmentAssemblyContext] =
     EvidenceFactAssembler.assemble(raw).map(enrich)
 
-  def enrich(assembly: EvidenceFactAssembly): RelativeAssessmentAssembly =
-    val input = assembly.input
-    val context = assembly.context
+  def enrich(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
+    val input = context.input
     val relativeAssembly =
       for
         played <- context.playedTransition
@@ -62,9 +56,9 @@ object RelativeAssessmentAssembler:
         mover <- root.sideToMove.orElse(input.sideToMove)
       yield {
       val allocator = JudgmentProvenanceAllocator.forInput(input)
-      val candidateSetType = EvidenceFactAssembler.positionAssessment(context, root).map(_.candidateSet.candidateSetType)
+      val candidateSet = candidateSetDescriptor(mover, context.lines, reference)
       val comparison =
-        compare(mover, reference, candidate, candidateSetComparison(mover, context.lines, reference, candidateSetType))
+        compare(mover, reference, candidate, candidateSet.map(_.candidateSetType))
       val primaryConfidence = comparisonConfidence(reference, candidate)
       val comparisonRecords =
         candidateComparisonRecords(
@@ -73,59 +67,34 @@ object RelativeAssessmentAssembler:
           reference = reference,
           candidate = candidate,
           primaryComparison = comparison,
+          candidateSet = candidateSet,
           root = root,
           allocator = allocator
         )
+      val primaryComparisonRecord =
+        comparisonRecords
+          .find {
+            case EvidenceRecord(_, CandidateComparisonEvidence(fact), _) =>
+              fact.kind == CandidateComparisonKind.PlayedVsBest &&
+                fact.referenceLine == reference.ref &&
+                fact.candidateLine == candidate.ref
+            case _ =>
+              false
+          }
+          .getOrElse(
+            throw IllegalStateException("played-vs-best candidate comparison was not assembled")
+          )
       val strategicContrastRecords =
         comparisonRecords.flatMap(record => strategicMechanismContrastRecords(context, root, allocator, record))
-      val causeContext = context.withEvidence(strategicContrastRecords)
-      val counterfactual =
-        TransitionFactNormalizer.fromCounterfactual(
-          id = allocator.evidenceId(s"counterfactual:played-vs-reference:${candidate.ref.rootMove}"),
-          referenceLine = reference.ref,
-          candidateLine = candidate.ref,
-          comparison = comparison,
-          position = root,
-          scope = EvidenceScope.Counterfactual,
-          confidence = primaryConfidence,
-          parents = parentsForLine(context, reference) ++ parentsForLine(context, candidate) ++ List(played.evidence)
-        )
+      val causeContext = context.withEvidence(comparisonRecords ++ strategicContrastRecords)
       val causeRecords =
         comparisonRecords.flatMap(record => relativeCauseRecords(input, causeContext, root, allocator, record))
       val playedMoveSet = Set(JudgmentSubjectBinding.normalizeMove(played.moveUci))
       val playedCauseRecords =
         causeRecords.filter(record =>
-          JudgmentSubjectBinding.primaryPlayed(JudgmentSubjectBinding.recordBinding(record, playedMoveSet))
-        )
-      val playedVerdictCauses =
-        playedCauseRecords.collect {
-          case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) => cause
-        }
-      val certification =
-        MoveVerdictCertification(
-          playedMove = played.moveUci,
-          verdict = comparison.verdict,
-          primaryComparison = CandidateComparisonFact(
-            kind = CandidateComparisonKind.PlayedVsBest,
-            referenceLine = reference.ref,
-            candidateLine = candidate.ref,
-            comparison = comparison
-          ),
-          causes = playedVerdictCauses
-        )
-      val certificationRecord =
-        TransitionFactNormalizer.fromMoveVerdictCertification(
-          id = allocator.evidenceId(s"move-verdict:${candidate.ref.rootMove}"),
-          certification = certification,
-          position = root,
-          scope = EvidenceScope.Counterfactual,
-          confidence = primaryConfidence,
-          parents = (comparisonRecords
-            .filter(record =>
-              JudgmentSubjectBinding.primaryPlayed(JudgmentSubjectBinding.recordBinding(record, playedMoveSet))
-            )
-            .map(_.ref) ++
-            playedCauseRecords.map(_.ref) :+ counterfactual.ref).distinctBy(_.id)
+          JudgmentSubjectBinding.primaryPlayed(
+            JudgmentSubjectBinding.recordBinding(record, causeContext.evidenceGraph, playedMoveSet)
+          )
         )
       val relativeEvidence =
         allocator.evidenceRef(
@@ -143,100 +112,46 @@ object RelativeAssessmentAssembler:
           referenceTransition = Some(referenceTransition),
           reference = reference,
           candidate = candidate,
-          comparison = comparison,
           evidence = relativeEvidence,
-          counterfactualEvidence = List(counterfactual.ref),
-          candidateComparisonEvidence = comparisonRecords.map(_.ref),
-          relativeCauseEvidence = playedCauseRecords.map(_.ref),
-          verdictCertificationEvidence = Some(certificationRecord.ref)
+          primaryComparisonEvidence = primaryComparisonRecord.ref,
+          relatedComparisonEvidence = comparisonRecords.map(_.ref).filterNot(_.id == primaryComparisonRecord.ref.id),
+          relativeCauseEvidence = playedCauseRecords.map(_.ref)
         )
       val assessmentRecord = TransitionFactNormalizer.fromRelativeAssessment(assessment)
-      RelativeAssessmentAssembly(
-        input = input,
-        context = context
-          .withEvidence(comparisonRecords ++ strategicContrastRecords ++ List(counterfactual) ++ causeRecords ++ List(certificationRecord, assessmentRecord))
-          .withRelativeAssessment(assessment)
-      )
+      context
+        .withEvidence(comparisonRecords ++ strategicContrastRecords ++ causeRecords :+ assessmentRecord)
       }
-    relativeAssembly.getOrElse(RelativeAssessmentAssembly(input = input, context = context))
+    relativeAssembly.getOrElse(context)
 
   private def compare(
       mover: Color,
       reference: CandidateLineNode,
       candidate: CandidateLineNode,
-      candidateSet: Option[CandidateSetComparison]
+      candidateSetType: Option[CandidateSetType]
   ): EvalComparison =
-    val delta =
-      PerspectiveMath.compareForMover(
-        mover = mover,
-        reference = PerspectiveMath.EvalPoint(reference.whitePovEvalCp, reference.mate),
-        candidate = PerspectiveMath.EvalPoint(candidate.whitePovEvalCp, candidate.mate)
-      )
-    EvalComparison(
-      mover = mover,
-      referenceLine = reference.ref,
-      candidateLine = candidate.ref,
-      rawCandidateDeltaCpForDiagnostics = delta.rawCandidateDeltaCpForMover,
-      candidateWinPercentDeltaForMover = delta.candidateWinPercentDeltaForMover,
-      rawCpLossForDiagnostics = delta.rawCpLossForMover,
-      winPercentLossForMover = delta.winPercentLossForMover,
-      verdict = VerdictThresholdPolicy.verdictFromWinPercent(
-        delta.candidateWinPercentDeltaForMover,
-        delta.winPercentLossForMover,
-        delta.rawCpLossForMover,
-        delta.mateDistanceLossForMover,
-        candidateSet.flatMap(_.candidateSetType)
-      ),
-      candidateSet = candidateSet,
-      referenceMateForMover = delta.referenceMateForMover,
-      candidateMateForMover = delta.candidateMateForMover,
-      mateDistanceLossForMover = delta.mateDistanceLossForMover
-    )
+    EvalComparison.fromLines(mover, reference, candidate, candidateSetType)
 
-  private def candidateSetComparison(
+  private def candidateSetDescriptor(
       mover: Color,
       lines: List[CandidateLineNode],
-      reference: CandidateLineNode,
-      candidateSetType: Option[CandidateSetType]
-  ): Option[CandidateSetComparison] =
-    val ordered =
-      lines
-        .filterNot(_.role == LineNodeRole.Threat)
-        .sortBy(_.ref.rank)
-        .groupBy(_.ref.rootMove)
-        .values
-        .map(_.minBy(_.ref.rank))
-        .toList
-        .sortBy(_.ref.rank)
-    val second = ordered.find(_.ref.rootMove != reference.ref.rootMove)
-    val gap =
-      second.map(line =>
-        PerspectiveMath.compareForMover(
-          mover = mover,
-          reference = PerspectiveMath.EvalPoint(reference.whitePovEvalCp, reference.mate),
-          candidate = PerspectiveMath.EvalPoint(line.whitePovEvalCp, line.mate)
-        )
-      )
-    Option.when(ordered.nonEmpty)(
-      CandidateSetComparison(
-        secondLine = second.map(_.ref),
-        rawBestToSecondCpGapForDiagnostics = gap.map(_.rawCpLossForMover),
-        bestToSecondWinPercentGapForMover = gap.map(_.winPercentLossForMover),
-        candidateCount = ordered.size,
-        candidateSetType = candidateSetType
-      )
-    )
+      reference: CandidateLineNode
+  ): Option[CandidateSetDescriptor] =
+    CandidateSetDescriptor.fromLines(mover, lines, reference)
+
   private def candidateComparisonRecords(
       mover: Color,
       context: JudgmentAssemblyContext,
       reference: CandidateLineNode,
       candidate: CandidateLineNode,
       primaryComparison: EvalComparison,
+      candidateSet: Option[CandidateSetDescriptor],
       root: PositionNodeRef,
       allocator: JudgmentProvenanceAllocator
   ): List[EvidenceRecord] =
     val ordered = uniqueLines(context.lines)
     val second = ordered.find(_.ref.rootMove != reference.ref.rootMove)
+    val candidateIsSecond =
+      second.exists(line => EvidenceRef.sameMove(line.ref.rootMove, candidate.ref.rootMove))
     val alternatives =
       ordered.filter(line =>
         line.role == LineNodeRole.Alternative &&
@@ -245,13 +160,22 @@ object RelativeAssessmentAssembler:
       )
     val comparisons =
       List(
-        Some((CandidateComparisonKind.PlayedVsBest, reference, candidate, primaryComparison)),
-        second.map(line =>
+        Some(
+          (
+            CandidateComparisonKind.PlayedVsBest,
+            reference,
+            candidate,
+            primaryComparison,
+            Option.when(candidateIsSecond)(candidateSet).flatten
+          )
+        ),
+        second.filterNot(_ => candidateIsSecond).map(line =>
           (
             CandidateComparisonKind.BestVsSecond,
             reference,
             line,
-            compare(mover, reference, line, None)
+            compare(mover, reference, line, candidateSet.map(_.candidateSetType)),
+            candidateSet
           )
         )
       ).flatten ++
@@ -261,20 +185,28 @@ object RelativeAssessmentAssembler:
               CandidateComparisonKind.PlayedVsAlternative,
               alternative,
               candidate,
-              compare(mover, alternative, candidate, None)
+              compare(mover, alternative, candidate, None),
+              None
             ),
-            (
-              CandidateComparisonKind.ReferenceVsAlternative,
-              reference,
-              alternative,
-              compare(mover, reference, alternative, None)
-            )
-          )
+          ) ++
+            Option
+              .unless(second.exists(line => EvidenceRef.sameMove(line.ref.rootMove, alternative.ref.rootMove)))(
+                (
+                  CandidateComparisonKind.ReferenceVsAlternative,
+                  reference,
+                  alternative,
+                  compare(mover, reference, alternative, None),
+                  None
+                )
+              )
+              .toList
         }
-    comparisons
-      .distinctBy { case (kind, ref, cand, _) => (kind, ref.ref.id, cand.ref.id) }
+    val descriptorParents =
+      ordered.take(3).flatMap(parentsForLine(context, _)).distinctBy(_.id)
+    val records = comparisons
+      .distinctBy { case (kind, ref, cand, _, _) => (kind, ref.ref.id, cand.ref.id) }
       .zipWithIndex
-      .map { case ((kind, refLine, candLine, cmp), index) =>
+      .map { case ((kind, refLine, candLine, cmp, descriptor), index) =>
         TransitionFactNormalizer.fromCandidateComparison(
           id = allocator.evidenceId(
             s"candidate-comparison:${allocator.key(kind)}:${allocator.key(refLine.ref.rootMove)}:${allocator.key(candLine.ref.rootMove)}:$index"
@@ -283,14 +215,32 @@ object RelativeAssessmentAssembler:
             kind = kind,
             referenceLine = refLine.ref,
             candidateLine = candLine.ref,
-            comparison = cmp
+            comparison = cmp,
+            candidateSet = descriptor
           ),
           position = root,
           scope = EvidenceScope.Counterfactual,
           confidence = comparisonConfidence(refLine, candLine),
-          parents = (parentsForLine(context, refLine) ++ parentsForLine(context, candLine)).distinctBy(_.id)
+          parents = (
+            parentsForLine(context, refLine) ++
+              parentsForLine(context, candLine) ++
+              Option.when(descriptor.nonEmpty)(descriptorParents).toList.flatten
+          ).distinctBy(_.id)
         )
       }
+    val candidateSetParent =
+      records.collectFirst {
+        case EvidenceRecord(ref, CandidateComparisonEvidence(fact), _)
+            if fact.candidateSet.nonEmpty =>
+          ref
+      }
+    records.map {
+      case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), parents)
+          if fact.kind == CandidateComparisonKind.PlayedVsBest && fact.candidateSet.isEmpty =>
+        record.copy(parents = (parents ++ candidateSetParent).distinctBy(_.id))
+      case record =>
+        record
+    }
 
   private def strategicMechanismContrastRecords(
       context: JudgmentAssemblyContext,
@@ -499,14 +449,7 @@ object RelativeAssessmentAssembler:
     JudgmentThresholds.engineBackedByDepth(line.depth, line.mate)
 
   private def uniqueLines(lines: List[CandidateLineNode]): List[CandidateLineNode] =
-    lines
-      .filterNot(_.role == LineNodeRole.Threat)
-      .sortBy(_.ref.rank)
-      .groupBy(_.ref.rootMove)
-      .values
-      .map(_.minBy(_.ref.rank))
-      .toList
-      .sortBy(_.ref.rank)
+    CandidateSetDescriptor.uniqueLines(lines)
 
   private def relativeCauseRecords(
       input: NormalizedMoveReviewInput,
@@ -520,7 +463,10 @@ object RelativeAssessmentAssembler:
         val threatLineOwners = threatBranchLineOwners(input, context)
         val neighborhood = comparisonNeighborhood(context, root, fact, Some(input))
         val comparisonProof = comparisonProofRecords(neighborhood)
-        val causes = mergeCauseCandidates(inferCauseCandidates(neighborhood, fact))
+        val causes =
+          mergeCauseCandidates(
+            inferCauseCandidates(neighborhood, fact, context.evidenceGraph.candidateSetFor(fact))
+          )
         causes.zipWithIndex.flatMap { case (candidate, index) =>
           val kind = candidate.kind
           val support = candidate.support
@@ -537,7 +483,7 @@ object RelativeAssessmentAssembler:
           val rawProofRecords =
             relativeCauseProofRecords(context.evidenceGraph, fact, kind, binding, support, comparisonProof, neighborhood, threatLineOwners)
           val attribution =
-            causeAttribution(candidate, binding, rawProofRecords, supportRefs, threatLineOwners)
+            causeAttribution(candidate, binding, rawProofRecords, threatLineOwners)
           val proofRecords =
             if attribution.directProofEligible then rawProofRecords
             else
@@ -554,31 +500,27 @@ object RelativeAssessmentAssembler:
             proofRecords.contextSupport
           )
           val retainedProof =
-            Some(proof).filter(proof => (attribution.directProofEligible && proof.hasRawTypedDepth) || proof.hasRawContextSupport)
+            Some(proof).filter(proof =>
+              (attribution.directProofEligible && context.evidenceGraph.relativeCauseProofHasRawTypedDepth(kind, proof)) ||
+                context.evidenceGraph.relativeCauseProofHasRawContextSupport(kind, proof)
+            )
           val causeSupportRefs = supportRefs
-          Option.when(!attribution.contextOnly || proof.hasRawDirectProof) {
+          Option.when(!attribution.contextOnly || context.evidenceGraph.relativeCauseProofHasRawDirectProof(kind, proof)) {
             val cause =
               RelativeCauseFact(
                 kind = kind,
-                comparisonKind = fact.kind,
-                referenceLine = fact.referenceLine,
-                candidateLine = fact.candidateLine,
-                verdict = fact.comparison.verdict,
-                winPercentLossForMover = fact.comparison.winPercentLossForMover,
-                candidateWinPercentDeltaForMover = fact.comparison.candidateWinPercentDeltaForMover,
+                comparisonEvidence = comparisonRecord.ref,
                 supportEvidence = causeSupportRefs,
-                evidenceLines = binding.evidenceLines,
-                role = binding.role,
-                eventLine = binding.eventLine,
                 sourceSide = binding.sourceSide,
-                importance = binding.importance,
-                attribution = attribution
-              )(proof = retainedProof)
+                attribution = attribution,
+                proof = retainedProof
+              )
             TransitionFactNormalizer.fromRelativeCause(
               id = allocator.evidenceId(
                 s"relative-cause:${allocator.key(fact.kind)}:${allocator.key(kind)}:${allocator.key(fact.referenceLine.rootMove)}:${allocator.key(fact.candidateLine.rootMove)}:$index"
               ),
               cause = cause,
+              binding = binding,
               position = root,
               scope = EvidenceScope.Counterfactual,
               confidence = comparisonConfidence(context, fact),
@@ -656,11 +598,9 @@ object RelativeAssessmentAssembler:
       draft: RelativeCauseDraft,
       binding: RelativeCauseBinding,
       proofRecords: RelativeCauseProofRecords,
-      supportRefs: List[EvidenceRef],
       threatLineOwners: Map[String, String]
   ): CauseAttribution =
     val ownedRefs = proofRecords.directProof.map(_.ref).distinctBy(_.id)
-    val contrastRefs = proofRecords.contrastProof.map(_.ref).distinctBy(_.id)
     val rootMatched =
       ownedRefs.nonEmpty &&
         proofRecords.directProof.exists(record =>
@@ -678,18 +618,8 @@ object RelativeAssessmentAssembler:
       if directEligible then attributionKind
       else if attributionKind == CauseAttributionKind.Unattributed then CauseAttributionKind.Unattributed
       else CauseAttributionKind.ContextOnly
-    val attributedOwnedRefs = if directEligible then ownedRefs else Nil
-    val contextRefs =
-      (
-        supportRefs.filterNot(ref => attributedOwnedRefs.exists(_.id == ref.id) || contrastRefs.exists(_.id == ref.id)) ++
-          proofRecords.contextSupport.map(_.ref) ++
-          Option.when(!directEligible)(ownedRefs).toList.flatten
-      ).distinctBy(_.id)
     CauseAttribution(
       kind = finalKind,
-      ownedEvidence = attributedOwnedRefs,
-      contrastEvidence = contrastRefs,
-      contextEvidence = contextRefs,
       rootMoveMatched = rootMatched,
       directProofEligible = directEligible,
       reason =
@@ -770,153 +700,46 @@ object RelativeAssessmentAssembler:
       includeContextLayers: Boolean
   ): RelativeCauseProofSection =
     val proofRecords = records.distinctBy(_.ref.id)
-    val relationProofs = proofRecords.collect {
-      case EvidenceRecord(ref, payload: RelationFactEvidence, _) if payload.hasConcreteRelationProof =>
-        RelationCauseProof(
-          source = ref,
-          kind = payload.kind,
-          proof = payload.witnessProof
-        )
-    }.distinct
     val structuralProofSourceIds =
       proofRecords.collect {
         case EvidenceRecord(ref, structural: StructuralDeltaEvidence, _)
-            if structuralConsequencesForCause(kind, structural).nonEmpty &&
+            if RelativeCauseKind.structuralConsequences(kind, structural).nonEmpty &&
               strategicStructuralProofReady(kind, structural) =>
           ref.id
       }.toSet
+    val typedProofSources =
+      proofRecords.filter {
+        case EvidenceRecord(_, payload: BoardFactEvidence, _) =>
+          payload.proofSignalAnchorKinds.nonEmpty
+        case EvidenceRecord(_, payload: LineFactEvidence, _) =>
+          payload.lineEvents.nonEmpty ||
+            payload.proofSignalConsequences.exists(consequence =>
+              RelativeCauseKind.acceptsLineConsequence(kind, consequence.kind)
+            )
+        case EvidenceRecord(_, payload: RelationFactEvidence, _) =>
+          payload.hasConcreteRelationProof
+        case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
+          payload.hasConcreteProof
+        case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
+          payload.canSupportStrategicCause &&
+            strategicMechanismProofSignals(graph, kind, payload, sourceSide, structuralProofSourceIds).nonEmpty
+        case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
+          strategicContrastCanDirectlyProveCause(kind, payload, sourceSide, graph)
+        case EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) =>
+          payload.isProofSignalDefensivePressure
+        case EvidenceRecord(_, payload: StructuralDeltaEvidence, _) =>
+          RelativeCauseKind.structuralConsequences(kind, payload).nonEmpty
+        case _ =>
+          false
+      }
     RelativeCauseProofSection(
       role = role,
       strength = strength,
-      boardAnchors = proofRecords.flatMap {
-        case EvidenceRecord(ref, payload: BoardFactEvidence, _) =>
-          payload.proofSignalAnchorKinds.map(kind => BoardAnchorProof(ref, kind))
-        case _ =>
-          Nil
-      }.distinct,
-      lineEvents = proofRecords.flatMap {
-        case EvidenceRecord(ref, payload: LineFactEvidence, _) =>
-          payload.lineEvents.map(event =>
-            LineEventProof(
-              source = ref,
-              kind = event.kind,
-              moveUci = Some(event.moveUci),
-              plyOffset = Some(event.plyOffset),
-              side = event.side,
-              square = event.square
-            )
-          )
-        case _ =>
-          Nil
-      }.distinct,
-      lineConsequences = proofRecords.flatMap {
-        case EvidenceRecord(ref, payload: LineFactEvidence, _) =>
-          lineConsequenceProofsForCause(kind, ref, payload)
-        case _ =>
-          Nil
-      }.distinct,
-      relationProofs = relationProofs,
-      tacticalMechanisms = proofRecords.collect {
-        case EvidenceRecord(ref, payload: TacticalMechanismEvidence, _) if payload.hasConcreteProof =>
-          TacticalMechanismProof(
-            source = ref,
-            kind = payload.kind,
-            signals = payload.signals
-          )
-      }.distinct,
-      strategicMechanisms = proofRecords.collect {
-        case EvidenceRecord(ref, payload: StrategicMechanismEvidence, _) if payload.canSupportStrategicCause =>
-          val signals = strategicMechanismProofSignals(graph, kind, payload, sourceSide, structuralProofSourceIds)
-          StrategicMechanismProof(
-            source = ref,
-            kind = payload.kind,
-            signals = signals
-          )
-      }.filter(_.signals.nonEmpty).distinct,
-      strategicMechanismContrasts = proofRecords.collect {
-        case EvidenceRecord(ref, payload: StrategicMechanismContrastEvidence, _)
-            if strategicContrastCanDirectlyProveCause(kind, payload, sourceSide, graph) =>
-          StrategicMechanismContrastProof(
-            source = ref,
-            comparisonKind = payload.comparisonKind,
-            referenceLine = payload.referenceLine,
-            candidateLine = payload.candidateLine,
-            axisComparisons = payload.axisComparisons,
-            sustainability = payload.sustainability
-          )
-      }.distinct,
-      threatEpisodes = proofRecords.collect {
-        case EvidenceRecord(ref, payload: ThreatEpisodeEvidence, _) if payload.isProofSignalDefensivePressure =>
-          ThreatEpisodeCauseProof(
-            source = ref,
-            driver = payload.episode.driver,
-            kind = payload.episode.kind,
-            severity = payload.episode.severity
-          )
-      }.distinct,
-      transitionConsequences = proofRecords.flatMap {
-        case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _) =>
-          structuralConsequencesForCause(kind, payload).map(consequence =>
-            TransitionConsequenceProof(
-              source = ref,
-              transition = payload.transition,
-              consequence = consequence
-            )
-          )
-        case _ =>
-          Nil
-      }.distinct,
-      contextLayers = if includeContextLayers then proofRecords.map(_.ref.layer).distinct else Nil
+      sourceRefs =
+        (if includeContextLayers then proofRecords else typedProofSources)
+          .map(_.ref)
+          .distinctBy(_.id)
     )
-
-  private def lineConsequenceProofsForCause(
-      kind: RelativeCauseKind,
-      ref: EvidenceRef,
-      payload: LineFactEvidence
-  ): List[LineConsequenceProof] =
-    payload.proofSignalConsequences
-      .filter(consequence => lineConsequenceCanProveRelativeCause(kind, consequence.kind))
-      .map(consequence =>
-        LineConsequenceProof(
-          source = ref,
-          kind = consequence.kind,
-          eventMove = consequence.eventMove,
-          lineMoves = consequence.lineMoves,
-          rootMove = consequence.rootMove,
-          rootSide = consequence.rootSide,
-          beneficiary = consequence.beneficiary
-        )
-      )
-      .distinct
-
-  private def lineConsequenceCanProveRelativeCause(
-      kind: RelativeCauseKind,
-      consequenceKind: LineConsequenceKind
-  ): Boolean =
-    kind match
-      case RelativeCauseKind.WrongRecapturer | RelativeCauseKind.RecaptureRecoveryWindow =>
-        consequenceKind == LineConsequenceKind.RecaptureSequence ||
-          consequenceKind == LineConsequenceKind.RecoveryWindow
-      case RelativeCauseKind.WrongMoveOrder | RelativeCauseKind.TempoLoss =>
-        consequenceKind == LineConsequenceKind.ImmediateReplyCheck
-      case RelativeCauseKind.KingForcing =>
-        consequenceKind == LineConsequenceKind.Mate
-      case RelativeCauseKind.DrawResource =>
-        consequenceKind == LineConsequenceKind.DrawResource
-      case RelativeCauseKind.ConversionMiss | RelativeCauseKind.ConversionSecured =>
-        consequenceKind == LineConsequenceKind.RecaptureSequence ||
-          consequenceKind == LineConsequenceKind.RecoveryWindow ||
-          consequenceKind == LineConsequenceKind.Promotion ||
-          consequenceKind == LineConsequenceKind.PromotionRace
-      case RelativeCauseKind.MaterialSwing | RelativeCauseKind.SacrificeCompensation =>
-        consequenceKind == LineConsequenceKind.MaterialGain ||
-          consequenceKind == LineConsequenceKind.MaterialLoss ||
-          consequenceKind == LineConsequenceKind.Sacrifice
-      case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
-          RelativeCauseKind.CandidateTacticalLiability =>
-        LineConsequenceKind.tacticalDriver(consequenceKind)
-      case _ =>
-        false
 
   private def proofSectionRecords(
       graph: TypedEvidenceGraph,
@@ -968,7 +791,8 @@ object RelativeAssessmentAssembler:
       case payload: StrategicMechanismEvidence =>
         relationSupportStrategicCause(kind) && payload.canSupportStrategicCause
       case payload: StructuralDeltaEvidence =>
-        relationSupportStrategicCause(kind) && structuralConsequencesForCause(kind, payload).exists(consequenceHasConcreteStrategicTarget)
+        relationSupportStrategicCause(kind) &&
+          RelativeCauseKind.structuralConsequences(kind, payload).exists(consequenceHasConcreteStrategicTarget)
       case _ =>
         false
 
@@ -1002,7 +826,7 @@ object RelativeAssessmentAssembler:
                 Option.when(normalized.length >= 4)(normalized.slice(2, 4))
               )
             case EvidenceRecord(_, structural: StructuralDeltaEvidence, _) =>
-              structuralConsequencesForCause(kind, structural)
+              RelativeCauseKind.structuralConsequences(kind, structural)
                 .flatMap(_.subjects)
                 .flatMap(subject => "[a-h][1-8]".r.findAllIn(Option(subject).getOrElse("").toLowerCase).toList)
             case _ =>
@@ -1065,7 +889,7 @@ object RelativeAssessmentAssembler:
                   candidateLineAllowsOpponentPromotion(fact, kind, binding, payload)
               )
         case payload: TacticalMechanismEvidence =>
-          (if defensiveCause(kind) then payload.canAnchorDefensiveIdea else payload.canAnchorTacticalIdea) &&
+          (if defensiveCause(kind) then payload.canAnchorDefensiveClaim else payload.canAnchorTacticalClaim) &&
             (
               threatBranchRecordOwnsRoot(record, rootMove, threatLineOwners) ||
                 (record.referencesLine(binding.eventLine) && tacticalMechanismDirectlyOwnsRoot(graph, record, rootMove))
@@ -1097,7 +921,7 @@ object RelativeAssessmentAssembler:
           record.referencesLine(binding.eventLine) &&
             payload.line.contains(binding.eventLine) &&
             normalizeMove(payload.moveUci) == normalizeMove(rootMove) &&
-            structuralConsequencesForCause(kind, payload).nonEmpty
+            RelativeCauseKind.structuralConsequences(kind, payload).nonEmpty
         case _: StrategicMechanismEvidence =>
           strategicCause(kind) &&
             record.referencesLine(binding.eventLine) &&
@@ -1186,7 +1010,9 @@ object RelativeAssessmentAssembler:
       kind: RelativeCauseKind,
       payload: LineFactEvidence
   ): Boolean =
-    payload.proofSignalConsequences.exists(consequence => lineConsequenceCanProveRelativeCause(kind, consequence.kind)) ||
+    payload.proofSignalConsequences.exists(consequence =>
+      RelativeCauseKind.acceptsLineConsequence(kind, consequence.kind)
+    ) ||
       (
         tacticalCause(kind) &&
           (payload.hasTacticalLineConsequence || payload.hasProofSignalMaterialEvent)
@@ -1285,7 +1111,7 @@ object RelativeAssessmentAssembler:
         case StrategicMechanismSignalKind.StructuralDelta =>
           graph.byId.get(signal.source.id).exists {
             case EvidenceRecord(sourceRef, structural: StructuralDeltaEvidence, _) =>
-              val provingConsequences = structuralConsequencesForCause(kind, structural, signal.axis)
+              val provingConsequences = RelativeCauseKind.structuralConsequences(kind, structural, signal.axis)
               eventLine.forall(line => sourceRef.line.contains(line) && structural.line.contains(line)) &&
                 normalizeMove(structural.moveUci) == normalizedRoot &&
                 provingConsequences.nonEmpty &&
@@ -1329,7 +1155,7 @@ object RelativeAssessmentAssembler:
           (selectedStructuralSourceIds.isEmpty || selectedStructuralSourceIds.contains(signal.source.id)) &&
           graph.byId.get(signal.source.id).exists {
             case EvidenceRecord(_, structural: StructuralDeltaEvidence, _) =>
-              val provingConsequences = structuralConsequencesForCause(kind, structural, signal.axis)
+              val provingConsequences = RelativeCauseKind.structuralConsequences(kind, structural, signal.axis)
               provingConsequences.nonEmpty &&
                 strategicStructuralProofReady(kind, provingConsequences)
             case _ =>
@@ -1350,7 +1176,7 @@ object RelativeAssessmentAssembler:
       kind: RelativeCauseKind,
       structural: StructuralDeltaEvidence
   ): Boolean =
-    strategicStructuralProofReady(kind, structuralConsequencesForCause(kind, structural))
+    strategicStructuralProofReady(kind, RelativeCauseKind.structuralConsequences(kind, structural))
 
   private def strategicStructuralProofReady(
       kind: RelativeCauseKind,
@@ -1542,118 +1368,6 @@ object RelativeAssessmentAssembler:
   private def normalizeMove(raw: String): String =
     Option(raw).getOrElse("").trim.toLowerCase
 
-  private def structuralConsequencesForCause(
-      kind: RelativeCauseKind,
-      payload: StructuralDeltaEvidence
-  ): List[TransitionConsequence] =
-    import TransitionConsequenceKind.*
-    kind match
-      case RelativeCauseKind.TargetPressureGain =>
-        payload.consequencesOf(TargetPressureGain) ++
-          payload.consequencesOf(KingSafetyPressure) ++
-          payload.consequencesOf(KingRingPressureGain)
-      case RelativeCauseKind.TargetPressureRelease =>
-        payload.consequencesOf(TargetPressureRelease)
-      case RelativeCauseKind.CenterControlGain =>
-        payload.consequencesOf(CenterControlGain)
-      case RelativeCauseKind.OpponentRestriction =>
-        opponentRestrictionConsequences(payload) ++
-          counterBreakCarrierConsequences(payload)
-      case RelativeCauseKind.KingSafetyConcession =>
-        payload.consequencesOf(KingSafetyConcession) ++
-          payload.consequencesOf(KingRingPressureConcession)
-      case RelativeCauseKind.PawnWeaknessTarget =>
-        payload.consequencesOf(WeakPawnTargetCreated) ++
-          payload.consequencesOf(WeakSquareTargetCreated)
-      case RelativeCauseKind.PawnBreakOpportunity =>
-        payload.consequencesOf(PawnTensionGain) ++
-          payload.consequencesOf(PawnTensionResolution)
-      case RelativeCauseKind.ActivityGain =>
-        payload.consequencesOf(DevelopmentLagReduced) ++
-          payload.consequencesOf(DevelopmentPieceActivated) ++
-          payload.consequencesOf(DevelopmentMobilityGain) ++
-          payload.consequencesOf(DevelopmentCenterControlGain) ++
-          payload.consequencesOf(DevelopmentSafePlacement) ++
-          payload.consequencesOf(FileOccupationGain) ++
-          payload.consequencesOf(MobilityGain) ++
-          payload.consequencesOf(LineUnlockGain) ++
-          payload.consequencesOf(FileAccessGain) ++
-          payload.consequencesOf(BatteryPressureGain) ++
-          payload.consequencesOf(OutpostGain)
-      case RelativeCauseKind.ActivityLoss =>
-        payload.consequencesOf(DevelopmentLagIncreased) ++
-          payload.consequencesOf(DevelopmentPieceRetreated) ++
-          payload.consequencesOf(DevelopmentMobilityLoss) ++
-          payload.consequencesOf(DevelopmentCenterControlLoss) ++
-          payload.consequencesOf(DevelopmentUnsafePlacement) ++
-          payload.consequencesOf(MobilityLoss) ++
-          payload.consequencesOf(FileAccessLoss) ++
-          payload.consequencesOf(OutpostConcession)
-      case RelativeCauseKind.StructuralImprovement | RelativeCauseKind.MissedStrategicImprovement |
-          RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
-        payload.positiveConsequences.filter(consequence =>
-          StructuralDeltaEvidence.isStructuralAnchorConsequence(consequence.kind)
-        )
-      case RelativeCauseKind.ConversionMiss | RelativeCauseKind.ConversionSecured =>
-        payload.positiveConsequences.filter(consequence =>
-          consequence.kind == PromotionPressureGain ||
-            consequence.kind == PassedPawnProgress
-        )
-      case RelativeCauseKind.StrategicConcession =>
-        payload.negativeConsequences.filter(consequence =>
-          StructuralDeltaEvidence.isStrategicSupportConsequence(consequence.kind)
-        )
-      case _ =>
-        Nil
-
-  private def structuralConsequencesForCause(
-      kind: RelativeCauseKind,
-      payload: StructuralDeltaEvidence,
-      axis: Option[StrategicAxisDetail]
-  ): List[TransitionConsequence] =
-    import TransitionConsequenceKind.*
-    kind match
-      case RelativeCauseKind.PawnBreakOpportunity =>
-        axis match
-          case Some(detail) if detail.kind == StrategicAxisKind.PawnBreak && detail.polarity == StrategicAxisPolarity.Release =>
-            payload.consequencesOf(PawnTensionResolution)
-          case Some(detail)
-              if detail.kind == StrategicAxisKind.PawnBreak &&
-                (
-                  detail.polarity == StrategicAxisPolarity.Support ||
-                    detail.polarity == StrategicAxisPolarity.Preserve ||
-                    detail.polarity == StrategicAxisPolarity.Gain
-                ) =>
-            payload.consequencesOf(PawnTensionGain)
-          case Some(_) =>
-            Nil
-          case None =>
-            structuralConsequencesForCause(kind, payload)
-      case RelativeCauseKind.OpponentRestriction =>
-        opponentRestrictionConsequences(payload)
-      case _ =>
-        structuralConsequencesForCause(kind, payload)
-
-  private def opponentRestrictionConsequences(payload: StructuralDeltaEvidence): List[TransitionConsequence] =
-    payload.consequencesOf(TransitionConsequenceKind.OpponentMobilityRestriction).filter(consequence =>
-      consequence.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
-    )
-
-  private def counterBreakCarrierConsequences(payload: StructuralDeltaEvidence): List[TransitionConsequence] =
-    payload.consequences.filter(counterBreakCarrierConsequence)
-
-  private def counterBreakCarrierConsequence(consequence: TransitionConsequence): Boolean =
-    (
-      consequence.kind == TransitionConsequenceKind.PawnTensionGain ||
-        consequence.kind == TransitionConsequenceKind.PawnTensionResolution
-    ) &&
-      consequence.subjects.exists(subject =>
-        val normalized = Option(subject).getOrElse("").trim.toLowerCase
-        normalized.startsWith("break-file:") ||
-          normalized.startsWith("created-tension:") ||
-          normalized.startsWith("resolved-tension:")
-      )
-
   private def mergeCauseCandidates(candidates: List[RelativeCauseDraft]): List[RelativeCauseDraft] =
     candidates
       .groupBy(candidate => (candidate.kind, candidate.sourceSide, candidate.attributionKind, supportSignature(candidate.support)))
@@ -1677,11 +1391,13 @@ object RelativeAssessmentAssembler:
 
   private def inferCauseCandidates(
       neighborhood: ComparisonEvidenceNeighborhood,
-      fact: CandidateComparisonFact
+      fact: CandidateComparisonFact,
+      candidateSet: Option[CandidateSetDescriptor]
   ): List[RelativeCauseDraft] =
     val profile =
       RelativeCauseSignalProfile.from(
         fact = fact,
+        candidateSet = candidateSet,
         referenceRecords = neighborhood.referenceRecords,
         candidateRecords = neighborhood.candidateRecords,
         sharedRecords = neighborhood.sharedRecords
@@ -1692,7 +1408,14 @@ object RelativeAssessmentAssembler:
       context: JudgmentAssemblyContext,
       line: CandidateLineNode
   ): List[EvidenceRef] =
-    context.evidenceGraph.recordsFor(line.ref).map(_.ref)
+    context.evidenceGraph
+      .recordsFor(line.ref)
+      .collect {
+        case record
+            if record.ref.layer == EvidenceLayer.Line ||
+              record.ref.layer == EvidenceLayer.Eval =>
+          record.ref
+      }
 
   private def comparisonNeighborhood(
       context: JudgmentAssemblyContext,
@@ -1829,7 +1552,7 @@ object RelativeAssessmentAssembler:
 
   private def rootContextLayer(layer: EvidenceLayer): Boolean =
     layer match
-      case EvidenceLayer.Board | EvidenceLayer.SinglePosition | EvidenceLayer.ThreatPressure |
+      case EvidenceLayer.Board | EvidenceLayer.ThreatPressure |
           EvidenceLayer.StrategicMechanism =>
         true
       case _ =>
@@ -1844,7 +1567,7 @@ object RelativeAssessmentAssembler:
 
   private def afterPositionLayer(layer: EvidenceLayer): Boolean =
     layer match
-      case EvidenceLayer.Board | EvidenceLayer.SinglePosition | EvidenceLayer.ThreatPressure |
+      case EvidenceLayer.Board | EvidenceLayer.ThreatPressure |
           EvidenceLayer.StrategicMechanism =>
         true
       case _ =>

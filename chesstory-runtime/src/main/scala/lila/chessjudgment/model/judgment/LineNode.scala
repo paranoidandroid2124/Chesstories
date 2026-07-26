@@ -1,6 +1,6 @@
 package lila.chessjudgment.model.judgment
 
-import lila.chessjudgment.model.strategic.VariationLine
+import lila.chessjudgment.model.strategic.EngineLine
 
 case class LineNodeRef(
     id: String,
@@ -11,7 +11,7 @@ case class LineNodeRef(
 
 case class CandidateLineNode(
     ref: LineNodeRef,
-    line: VariationLine,
+    line: EngineLine,
     evidence: EvidenceRef
 ):
   val role: LineNodeRole = ref.role

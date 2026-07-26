@@ -1,7 +1,8 @@
 package lila.chessjudgment.analysis.tactical
 
 import chess.*
-import chess.format.Uci
+import chess.format.Fen
+import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 private[chessjudgment] object TacticalPatternDetectors:
 
@@ -142,20 +143,24 @@ private[chessjudgment] object TacticalPatternDetectors:
         continuations: List[List[String]]
     ): Boolean =
       before.exists { beforePos =>
-        Uci(lastUci).collect { case m: Uci.Move => m }.exists { move =>
-          val mover = beforePos.color
-          val targetKey = if mover.white then "h7" else "h2"
-          Square.fromKey(targetKey).exists { target =>
-            move.dest == target &&
-              after.check.yes &&
-              beforePos.board.pieceAt(target).exists(piece => piece.color == !mover && piece.role == Pawn) &&
-              after.board.pieceAt(target).exists(piece => piece.color == mover && piece.role == Bishop) &&
-              (
-                greekGiftKingsideSupport(after.board, mover, target) ||
-                  continuationBuildsGreekGiftSupport(after, mover, target, lastUci, continuations)
-              )
+        PrincipalVariationEvidence
+          .legalMoveReplay(Fen.write(beforePos).value, List(lastUci), startPly = 0)
+          .flatMap(_.headOption)
+          .exists { replayed =>
+            val move = replayed.move
+            val mover = beforePos.color
+            val targetKey = if mover.white then "h7" else "h2"
+            Square.fromKey(targetKey).exists { target =>
+              move.dest == target &&
+                after.check.yes &&
+                beforePos.board.pieceAt(target).exists(piece => piece.color == !mover && piece.role == Pawn) &&
+                after.board.pieceAt(target).exists(piece => piece.color == mover && piece.role == Bishop) &&
+                (
+                  greekGiftKingsideSupport(after.board, mover, target) ||
+                    continuationBuildsGreekGiftSupport(after, mover, target, lastUci, continuations)
+                )
+            }
           }
-        }
       }
 
   private def continuationBuildsGreekGiftSupport(
@@ -167,14 +172,9 @@ private[chessjudgment] object TacticalPatternDetectors:
   ): Boolean =
     continuations.exists { rawLine =>
       val line = stripPlayedPrefix(rawLine.map(normalizeUci).filter(isUciMove), normalizeUci(lastUci)).take(8)
-      var pos = Option(after)
-      var supported = false
-      val iterator = line.iterator
-      while iterator.hasNext && pos.nonEmpty && !supported do
-        val uci = iterator.next()
-        pos = pos.flatMap(applyUci(_, uci))
-        supported = pos.exists(next => greekGiftKingsideSupport(next.board, mover, target))
-      supported
+      PrincipalVariationEvidence
+        .legalMoveReplay(Fen.write(after).value, line, startPly = 0)
+        .exists(_.exists(step => greekGiftKingsideSupport(step.after.board, mover, target)))
     }
 
   private def stripPlayedPrefix(line: List[String], played: String): List[String] =
@@ -186,11 +186,8 @@ private[chessjudgment] object TacticalPatternDetectors:
         queen.queenAttacks(board.occupied).contains(target)
       }
 
-  private def applyUci(position: Position, raw: String): Option[Position] =
-    Uci(raw).collect { case move: Uci.Move => move }.flatMap(position.move(_).toOption.map(_.after))
-
   private def normalizeUci(raw: String): String =
-    Option(raw).getOrElse("").trim.toLowerCase
+    PrincipalVariationEvidence.normalizeUci(raw)
 
   private def isUciMove(raw: String): Boolean =
     raw.matches("""[a-h][1-8][a-h][1-8][qrbn]?""")

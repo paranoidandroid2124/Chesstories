@@ -6,15 +6,16 @@ import play.api.libs.json.*
 
 case class PlanEventIdentity(
     rootMove: String,
-    goalTheme: PlanTheme,
-    goalKind: Option[PlanKind],
+    kind: PlanKind,
     actorRole: Option[String],
     actorFrom: Option[String],
     actorTo: Option[String],
     targets: List[String],
     results: List[String]
 ):
-  def goalKey: String = goalKind.map(_.id).getOrElse(goalTheme.id)
+  def goalKind: Option[PlanKind] = Some(kind)
+  def goalTheme: PlanTheme = kind.theme
+  def goalKey: String = kind.id
   def stableKey: String =
     List(
       goalKey,
@@ -33,17 +34,17 @@ object PlanEventIdentity:
       targets: List[String],
       results: List[String]
   ): PlanEventIdentity =
-    val goalKind = support.collectFirst { case PlanSupport.Subplan(kind) => kind }
-    val goalTheme =
-      support
-        .collectFirst { case PlanSupport.Theme(theme) => theme }
-        .orElse(goalKind.map(_.theme))
-        .getOrElse(PlanTheme.Unknown)
+    val kind = support
+      .collectFirst { case PlanSupport.Subplan(value) => value }
+      .getOrElse(throw new IllegalArgumentException("plan event identity requires canonical plan kind"))
+    require(
+      support.collect { case PlanSupport.Theme(theme) => theme }.forall(_ == kind.theme),
+      "plan event theme must be derived from plan kind"
+    )
     val move = Option(rootMove).getOrElse("").trim.toLowerCase
     PlanEventIdentity(
       rootMove = move,
-      goalTheme = goalTheme,
-      goalKind = goalKind,
+      kind = kind,
       actorRole = actorRole.map(_.trim.toLowerCase).filter(_.nonEmpty),
       actorFrom = Option.when(move.length >= 4)(move.take(2)),
       actorTo = Option.when(move.length >= 4)(move.slice(2, 4)),
@@ -54,12 +55,17 @@ object PlanEventIdentity:
   given Reads[PlanEventIdentity] = Reads { js =>
     for
       rootMove <- (js \ "rootMove").validate[String]
-      rawTheme <- (js \ "goalTheme").validate[String]
-      goalTheme <- PlanTheme.fromId(rawTheme).map(JsSuccess(_)).getOrElse(JsError("invalid goalTheme"))
-      rawKind <- (js \ "goalKind").validateOpt[String]
-      goalKind <- rawKind match
-        case None      => JsSuccess(None)
-        case Some(raw) => PlanKind.fromId(raw).map(kind => JsSuccess(Some(kind))).getOrElse(JsError("invalid goalKind"))
+      rawKind <- (js \ "goalKind").validate[String]
+      kind <- PlanKind.fromId(rawKind).map(JsSuccess(_)).getOrElse(JsError("invalid goalKind"))
+      rawTheme <- (js \ "goalTheme").validateOpt[String]
+      _ <- rawTheme match
+        case None => JsSuccess(())
+        case Some(raw) =>
+          PlanTheme
+            .fromId(raw)
+            .filter(_ == kind.theme)
+            .map(_ => JsSuccess(()))
+            .getOrElse(JsError("goalTheme conflicts with goalKind"))
       actorRole <- (js \ "actorRole").validateOpt[String]
       actorFrom <- (js \ "actorFrom").validateOpt[String]
       actorTo <- (js \ "actorTo").validateOpt[String]
@@ -67,8 +73,7 @@ object PlanEventIdentity:
       results <- (js \ "results").validateOpt[List[String]]
     yield PlanEventIdentity(
       rootMove,
-      goalTheme,
-      goalKind,
+      kind,
       actorRole,
       actorFrom,
       actorTo,
@@ -81,7 +86,7 @@ object PlanEventIdentity:
     Json.obj(
       "rootMove" -> event.rootMove,
       "goalTheme" -> event.goalTheme.id,
-      "goalKind" -> event.goalKind.map(_.id),
+      "goalKind" -> event.kind.id,
       "actorRole" -> event.actorRole,
       "actorFrom" -> event.actorFrom,
       "actorTo" -> event.actorTo,
@@ -92,8 +97,8 @@ object PlanEventIdentity:
 
 case class PlanSequenceSummary(
   transitionType: TransitionType,
-  primaryPlanId: Option[PlanId] = None,
-  previousPlanId: Option[PlanId] = None,
+  primaryPlanId: Option[PlanKind] = None,
+  previousPlanId: Option[PlanKind] = None,
   continuity: Option[PlanContinuity] = None,
   previousEvent: Option[PlanEventIdentity] = None,
   currentEvent: Option[PlanEventIdentity] = None

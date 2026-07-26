@@ -1,7 +1,7 @@
 package lila.chessjudgment.analysis.structure
 
 import chess.Color
-import lila.chessjudgment.analysis.singlePosition.PawnPlayAnalysis
+import lila.chessjudgment.model.judgment.PawnPlayAnalysis
 import lila.chessjudgment.model.{ Motif, PlanMatch }
 import lila.chessjudgment.model.structure.{
   AlignmentBand,
@@ -32,7 +32,7 @@ object PlanAlignmentScorer:
     if structureProfile.primary == StructureId.Unknown then return unknown(topPlans)
 
     val expected = StructuralPlaybook.expectedPlans(playbookEntry, sideToMove)
-    val observed = topPlans.take(3).map(_.plan.id).distinct
+    val observed = topPlans.take(3).map(_.plan.kind).distinct
     val matched = expected.filter(observed.contains)
     val missing = expected.filterNot(matched.contains)
 
@@ -80,8 +80,8 @@ object PlanAlignmentScorer:
     PlanAlignment(
       score = raw,
       band = band,
-      matchedPlanIds = matched.map(_.toString),
-      missingPlanIds = missing.map(_.toString),
+      matchedPlanIds = matched.map(_.id),
+      missingPlanIds = missing.map(_.id),
       reasonCodes = reasons,
       reasonWeights = reasonWeights
     )
@@ -92,7 +92,7 @@ object PlanAlignmentScorer:
       band = AlignmentBand.Unknown,
       matchedPlanIds = Nil,
       missingPlanIds = Nil,
-      reasonCodes = List("LOW_CONF") ++ topPlans.headOption.map(p => s"TOP_${p.plan.id.toString}").toList,
+      reasonCodes = List("LOW_CONF") ++ topPlans.headOption.map(p => s"TOP_${p.plan.kind.id}").toList,
       reasonWeights = Map("LOW_CONF" -> 1.0)
     )
 

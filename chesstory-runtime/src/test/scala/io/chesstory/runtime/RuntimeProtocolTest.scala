@@ -15,7 +15,6 @@ class RuntimeProtocolTest extends munit.FunSuite:
       Json.obj("moves" -> Json.arr("e2e4", "e7e5", "g1f3"), "scoreCp" -> 30, "depth" -> 16),
       Json.obj("moves" -> Json.arr("d2d4", "d7d5", "g1f3"), "scoreCp" -> 20, "depth" -> 16)
     ),
-    "currentEvalCp" -> 20,
     "ply" -> 0,
     "movePrefixUci" -> Json.arr()
   )
@@ -118,7 +117,6 @@ class RuntimeProtocolTest extends munit.FunSuite:
         "scoreCp" -> 0,
         "depth" -> 16
       )),
-      "currentEvalCp" -> 0,
       "ply" -> 19,
       "openingContext" -> Json.obj("name" -> "Grunfeld / b5-b4 counterplay versus center"),
       "movePrefixUci" -> Json.arr(
@@ -138,9 +136,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
     val result = Json.obj(
       "id" -> (probe \ "id").as[String],
       "fen" -> (probe \ "fen").as[String],
-      "evalCp" -> 0,
       "replyLines" -> replyLines,
-      "deltaVsBaseline" -> 0,
       "purpose" -> (probe \ "purpose").as[String],
       "probedMove" -> (probe \ "candidateMove").as[String],
       "depth" -> (probe \ "depth").as[Int],
@@ -155,7 +151,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals(duplicate.httpStatus, 400)
     assertEquals((duplicate.body \ "error").as[String], "input_limits_exceeded")
 
-  test("public opponent resource probe closes without internal routing metadata"):
+  test("public opponent resource probe is admitted without inventing a complete explanation"):
     val baseInput = Json.obj(
       "fen" -> "r4rkb/4np1p/p1b1p1pP/1p2P3/3P4/3BBN2/P2K1PP1/1R5R w - - 1 20",
       "playedMoveUci" -> "f3g5",
@@ -164,7 +160,6 @@ class RuntimeProtocolTest extends munit.FunSuite:
         Json.obj("moves" -> Json.arr("f3h4", "f7f6"), "scoreCp" -> 23, "depth" -> 18),
         Json.obj("moves" -> Json.arr("d3c2", "f7f6"), "scoreCp" -> 21, "depth" -> 18)
       ),
-      "currentEvalCp" -> 77,
       "ply" -> 38
     )
     val initial = RuntimeProtocol.evaluate(request(body = baseInput))
@@ -179,11 +174,9 @@ class RuntimeProtocolTest extends munit.FunSuite:
     val result = Json.obj(
       "id" -> (probe \ "id").as[String],
       "fen" -> (probe \ "fen").as[String],
-      "evalCp" -> 193,
       "replyLines" -> Json.arr(
         Json.obj("moves" -> Json.arr("f7f6", "g5e6"), "scoreCp" -> 193, "depth" -> 16)
       ),
-      "deltaVsBaseline" -> 116,
       "purpose" -> (probe \ "purpose").as[String],
       "probedMove" -> (probe \ "candidateMove").as[String],
       "depth" -> 16,
@@ -193,9 +186,9 @@ class RuntimeProtocolTest extends munit.FunSuite:
     )
     val closed = RuntimeProtocol.evaluate(request(body = baseInput + ("probeResults" -> Json.arr(result))))
     assertEquals(closed.httpStatus, 200)
-    assertEquals((closed.body \ "status").as[String], "ready")
-    assertEquals((closed.body \ "availability" \ "reason").asOpt[String], None)
-    assert((closed.body \ "move_review" \ "renderable").as[Boolean], closed.body)
+    assertEquals((closed.body \ "status").as[String], "withheld")
+    assertEquals((closed.body \ "availability" \ "reason").asOpt[String], Some("no_player_facing_reason"))
+    assert(!(closed.body \ "move_review" \ "renderable").as[Boolean], closed.body)
     val pendingIds = (closed.body \ "probe_requests").as[JsArray].value.flatMap(value => (value \ "id").asOpt[String])
     assert(!pendingIds.contains((probe \ "id").as[String]), pendingIds)
 
@@ -215,7 +208,6 @@ class RuntimeProtocolTest extends munit.FunSuite:
           "depth" -> 18
         )
       ),
-      "currentEvalCp" -> 897,
       "ply" -> 0
     )
     val initial = RuntimeProtocol.evaluate(request(body = baseInput))
@@ -237,8 +229,6 @@ class RuntimeProtocolTest extends munit.FunSuite:
     val probeResult = Json.obj(
       "id" -> (probe \ "id").as[String],
       "fen" -> (probe \ "fen").as[String],
-      "evalCp" -> 0,
-      "deltaVsBaseline" -> 0,
       "purpose" -> (probe \ "purpose").as[String],
       "variationHash" -> (probe \ "variationHash").as[String],
       "tablebase" -> evidence
