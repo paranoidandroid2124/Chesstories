@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/v1/p.output.schema.json",
+  "title": "P output v1",
+  "$comment": "Direct public JSON projection preserving verdict, ranked claims, evidence, causes, bindings, observed lines, plan events, and exact-proof links.",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/stageDocument" },
+    {
+      "type": "object",
+      "properties": {
+        "stage": { "const": "P" },
+        "payload": { "$ref": "#/$defs/payload" }
+      }
+    }
+  ],
+  "$defs": {
+    "payload": { "$ref": "common.schema.json#/$defs/projection" }
+  }
+}

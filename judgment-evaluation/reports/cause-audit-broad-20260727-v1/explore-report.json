@@ -1,0 +1,556 @@
+{
+  "artifact_ledger_hash_before_report": "bbc281a7a616e07cf944efcd74f7d535778ec1d134ada4f34140271c5d53ca05",
+  "bindings": {
+    "cases_file_sha256": "afc8a9cf7e8e6139be1e515725d54ef46850fef7a90adbb4b19d13808ac02c21",
+    "freeze_manifest_sha256": "3cc0d5e84bdea36cdc2faa10cbb133c1ba0942b66aff0fee7bf97fac1d2b7d4c",
+    "oracle_file_sha256": "f2679df67b3efc3dd9a0311d278f9ca6d4e6e7a4d15a2a5cd968cf65bbc3dd44",
+    "runtime_run_sha256": "c9d69dc94ab04b8b4e8800d4e13b059c94fa9cdf4eabf0e68bcd2f69a4c0a83e"
+  },
+  "cause_kind_counts": {
+    "activity_gain": 2,
+    "candidate_tactical_liability": 2,
+    "conversion_miss": 11,
+    "conversion_secured": 3,
+    "defensive_resource": 21,
+    "material_swing": 44,
+    "missed_tactical_resource": 36,
+    "only_move_necessity": 1,
+    "opponent_restriction": 12,
+    "plan_contradiction": 52,
+    "plan_improvement": 5,
+    "tactical_refutation_of_played": 7
+  },
+  "counts": {
+    "answerable": 14,
+    "cases": 16,
+    "matched": 0,
+    "mismatch": 3,
+    "runtime_unavailable": 13,
+    "unanswerable": 0
+  },
+  "error_counts": {
+    "forbidden_cause_emitted": 3,
+    "generic_fallback_takeover": 3,
+    "priority_inversion": 3,
+    "runtime_unavailable": 13,
+    "wrong_cause_kind": 2,
+    "wrong_cause_source": 1
+  },
+  "evaluation_contract": {
+    "extra_cause_rule": "unlisted-extra-causes-are-not-false-unless-oracle-forbids-or-priority-inverts",
+    "object_rule": "typed-binding-presence-only-no-prose-similarity-invention",
+    "oracle_prose_semantic_match": "not-performed-requires-blind-human-proxy-adjudication",
+    "primary_label_rule": "match-any-allowed-kind-on-played-vs-acceptable-reference",
+    "sealed_label_disclosure": "hash-and-verdict-only",
+    "source_rule": "comparison-root-and-direct-attribution-only-no-color-prose-equivalence"
+  },
+  "first_failure_counts": {
+    "C": 16
+  },
+  "judgments": [
+    {
+      "actual_view_sha256": "02ffc1eec53f956bbe6504fba317ea06027d8ffc463b1d7fa66053054e4e6f95",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-cs-09",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 3,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "53d8fb4b53fd2183b1a8c11287394afce1debf5f10da88e3b091b168cb91894b",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    },
+    {
+      "actual_view_sha256": "03e827605bfcb96c5e9397a744c9e3f14424ab22016071f598c2681c0ec94d4d",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-dv-02",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 2,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "c82e837fcf1a10dded9c48889736cdcf18ad085c7853e4a095857ba67a062432",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    },
+    {
+      "actual_view_sha256": "051a54dc78540d9c319e26449012cfb227fbb11c3651f9db42a0efb3796e2de5",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-cs-05",
+      "cause_match": {
+        "competing_ranked_cause_count": 7,
+        "expected_kind_count": 3,
+        "forbidden_cause_count": 1,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 3
+      },
+      "errors": [
+        "forbidden_cause_emitted",
+        "generic_fallback_takeover",
+        "priority_inversion",
+        "wrong_cause_kind"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "df897ff904b79174a6f01f8f9f2faf691cfcf9f57aeb134219b6f0026d340cae",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "mismatch"
+    },
+    {
+      "actual_view_sha256": "07c00d3b499ffa412c7dd84f50cbd9c9fd2523044208eecb614554d516948f4a",
+      "answerable": false,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-cs-07",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 0,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "c4f6af03cb616ae391d31e5bcf5bcef67c09b4907fa2de876e9cac962e6a8a5a",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    },
+    {
+      "actual_view_sha256": "12428275504d6d2129feca6f7d02db933c88ce012542bb44edc4fe761862eac5",
+      "answerable": false,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-cs-01",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 0,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "e1442be7fe5e5f9bb4cd92db12389956bd081c42a0f7fc4c594cc42267223062",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    },
+    {
+      "actual_view_sha256": "4f8cecce4bcf4341866901c92547fb0018a8a7222222f78a7a15f665e7183c58",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-sw-05",
+      "cause_match": {
+        "competing_ranked_cause_count": 19,
+        "expected_kind_count": 3,
+        "forbidden_cause_count": 4,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 12
+      },
+      "errors": [
+        "forbidden_cause_emitted",
+        "generic_fallback_takeover",
+        "priority_inversion",
+        "wrong_cause_kind"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "52617aff2872475b72b1faea5df7ebf04599063f120d3efe4f427f3b1ec12f9f",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "mismatch"
+    },
+    {
+      "actual_view_sha256": "580773f6d32a5941ea8a0e2645c0331924e840e28b0f560f98937366af818893",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-dv-10",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 3,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "d760867e73b892e638a99af4dc2a6df0cc6858571b8e71e201a92818c7cde150",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    },
+    {
+      "actual_view_sha256": "63f5c6417f854d7296718b383e0a249b8231416f1c2f77a8c4f451588ba3a9d1",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-cs-06",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 3,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "ecc098291a0c0ba5853d2147cac289ae64936f075b855e0295b3a21a518ed581",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    },
+    {
+      "actual_view_sha256": "7bb9b1af697cf204c88dc6157f6c2eec4e5a6c82d014ca8dfc6c98698e65e135",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-sw-04",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 3,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "28b5ab06083b5e5a0b8793022085a578989dbc9de004524f82f1ad2c877a51d0",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    },
+    {
+      "actual_view_sha256": "8dbe5e5a14d98fa20764a7d1df1d113dd97e566ce0cc0fa223690c589c21a1af",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-cs-02",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 3,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "83f169ca04ef2a40054780c817ff61251446b2c484a0271837a077d2329ce22a",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    },
+    {
+      "actual_view_sha256": "ac3a11ef804b37281a111cce73b5c4ebbf7a5a8a6aa7deb8f5c1a88b174b5d2d",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-cs-12",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 3,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "a305513d48061df02150d0638025709e9b06535026606ff7d1bfbd7b7bfeaeac",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    },
+    {
+      "actual_view_sha256": "b509f7d7c33e8b5280069e21b30c84026d28d5e59452a2ce3fe8daf9dd070dba",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-sw-01",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 4,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "dce5ff021fc3f70a551a7be9378b72ee2a9afa39f27fdcab99fd178d242ed428",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    },
+    {
+      "actual_view_sha256": "d0e5f627ecdc1d3ae506f75aa4e6aea7b976abc5fed9864280f554e4844ae858",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-dv-03",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 3,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "f8f5f31b4295bd3d172718980359db8d64e2c892fb4f72103aa24a643bfccc6b",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    },
+    {
+      "actual_view_sha256": "e80b334e250ba69cc9c9ea876cfe49e2af2add6c7bab1f9af5915fe8167e17ca",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-cs-08",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 4,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "a07a0a40471576f5043ce36669b1a925ca961ba731c6638836810b9b9fcaace1",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    },
+    {
+      "actual_view_sha256": "e9197f6b95f1be5dfc91cc3a89fc626b45a4c8c9051ec57273a5b61fb1cc49e1",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-dv-05",
+      "cause_match": {
+        "competing_ranked_cause_count": 8,
+        "expected_kind_count": 4,
+        "forbidden_cause_count": 1,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 3
+      },
+      "errors": [
+        "forbidden_cause_emitted",
+        "generic_fallback_takeover",
+        "priority_inversion",
+        "wrong_cause_source"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "7a4d9eda4882133d0a0a2b1196f3fddb17ed9c6a1236001c0550092389c40a1b",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "mismatch"
+    },
+    {
+      "actual_view_sha256": "ec9d350006df52d5a41a09b2bf607d7d01bfc66e0691ab4a7ded21af0e3c9093",
+      "answerable": true,
+      "cascade": {
+        "c": 0,
+        "ja": 0,
+        "jp": 0,
+        "p": 0,
+        "packet": 0,
+        "r": 0
+      },
+      "case_id": "cause-audit-dv-06",
+      "cause_match": {
+        "competing_ranked_cause_count": 0,
+        "expected_kind_count": 3,
+        "forbidden_cause_count": 0,
+        "matched_cause_count": 0,
+        "matched_cause_record_ids": [],
+        "root_aligned_cause_count": 0
+      },
+      "errors": [
+        "runtime_unavailable"
+      ],
+      "first_failure_stage": "C",
+      "oracle_label_sha256": "b823ccb7941c56dd3f1da330e7ee1580fdd23051fb75a0ec38129c9604abd5d7",
+      "partition": "explore",
+      "runtime_status": "complete",
+      "schema_version": "chesstory.eval.cause-audit-judgment.v1",
+      "status": "runtime_unavailable"
+    }
+  ],
+  "mode": "blind-cause-backend-audit",
+  "partition": "explore",
+  "policy": {
+    "human_proxy_mode": "codex-plus-stockfish",
+    "machine_language": "en",
+    "production_bottleneck_claim": "engineering-diagnostic",
+    "production_modules_duplicated": false,
+    "release_eligible": false,
+    "test_files_added": false
+  },
+  "run_id": "cause-audit-broad-report-explore-20260727-v1",
+  "runtime_status_counts": {
+    "complete": 16
+  },
+  "schema_version": "chesstory.eval.cause-audit-report.v1"
+}

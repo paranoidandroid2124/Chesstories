@@ -339,9 +339,9 @@ object ClaimTruthPolicy:
       case ClaimFamily.Opening =>
         openingProof(records)
       case ClaimFamily.Plan =>
-        planProof(records, graph)
+        planProof(claim, records, graph)
       case ClaimFamily.Conversion =>
-        conversionProof(records, graph)
+        conversionProof(claim, records, graph)
       case ClaimFamily.Material =>
         materialProof(records, graph)
       case ClaimFamily.Evaluation =>
@@ -352,15 +352,17 @@ object ClaimTruthPolicy:
       records: List[EvidenceRecord],
       graph: TypedEvidenceGraph
   ): Boolean =
+    val relativeCauses = relativeCausesBoundToClaimEvidence(claim, records)
     val hasObservation = records.exists(strategicObservation)
     val hasCausalSupport = records.exists(longTermCausalSupport(claim, _, graph))
     val hasStrategicAnchor = records.exists {
       case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-        graph.comparisonFor(cause).nonEmpty && strategicRelativeCauseHasProof(cause, graph)
+        relativeCauses.contains(cause) &&
+          graph.comparisonFor(cause).nonEmpty && strategicRelativeCauseHasProof(cause, graph)
       case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-        payload.hasActionableContrast && payload.sustainability.hasSustainedPv
+        relativeCauses.isEmpty && payload.hasSustainedActionableContrast
       case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
-        payload.canAnchorStrategicClaim
+        relativeCauses.isEmpty && payload.canAnchorStrategicClaim
       case _ =>
         false
     }
@@ -371,18 +373,20 @@ object ClaimTruthPolicy:
       records: List[EvidenceRecord],
       graph: TypedEvidenceGraph
   ): Boolean =
+    val relativeCauses = relativeCausesBoundToClaimEvidence(claim, records)
     val hasObservation = records.exists(pawnStructureObservation)
     val hasCausalSupport = records.exists(longTermCausalSupport(claim, _, graph))
     val hasPawnAnchor = records.exists {
       case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-        graph.comparisonFor(cause).nonEmpty &&
+        relativeCauses.contains(cause) &&
+          graph.comparisonFor(cause).nonEmpty &&
           strategicRelativeCauseHasProof(cause, graph) &&
           pawnStructureCause(cause, graph)
       case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-        payload.sustainability.hasSustainedPv &&
-          payload.actionableComparisons.exists(_.axis.kind == StrategicAxisKind.PawnBreak)
+        relativeCauses.isEmpty &&
+          payload.sustainedActionableComparisons.exists(_.axis.kind == StrategicAxisKind.PawnBreak)
       case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
-        payload.canAnchorPawnStructureClaim
+        relativeCauses.isEmpty && payload.canAnchorPawnStructureClaim
       case _ =>
         false
     }
@@ -499,13 +503,22 @@ object ClaimTruthPolicy:
     cause.kind == RelativeCauseKind.PawnWeaknessTarget ||
       cause.kind == RelativeCauseKind.PawnBreakOpportunity ||
       cause.proof.exists(proof =>
-        graph
-          .relativeCauseStrategicMechanisms(proof.directProof)
-          .exists { case (_, payload) => payload.kind == StrategicMechanismKind.PawnStructure } ||
+          graph
+            .relativeCauseStrategicMechanisms(proof.directProof)
+            .exists { case (_, payload) =>
+              payload.signals.exists(signal =>
+                signal.axis.exists(axis =>
+                  axis.kind == StrategicAxisKind.PawnBreak &&
+                    RelativeCauseKind.strategicAxisCanProveCause(cause.kind, axis, cause.sourceSide)
+                )
+              )
+            } ||
           graph
             .relativeCauseStrategicContrasts(proof.directProof)
             .exists { case (_, payload) =>
-              payload.axisComparisons.exists(_.axis.kind == StrategicAxisKind.PawnBreak)
+              payload
+                .sustainedCauseComparisons(cause.kind, cause.sourceSide)
+                .exists(_.axis.kind == StrategicAxisKind.PawnBreak)
             } ||
           graph
             .relativeCauseTransitionConsequences(cause.kind, proof.directProof)
@@ -536,19 +549,37 @@ object ClaimTruthPolicy:
           false
       }
 
-  private def planProof(records: List[EvidenceRecord], graph: TypedEvidenceGraph): Boolean =
-    records.exists {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
+  private def planProof(
+      claim: JudgmentClaim,
+      records: List[EvidenceRecord],
+      graph: TypedEvidenceGraph
+  ): Boolean =
+    val relativeCauses = relativeCausesBoundToClaimEvidence(claim, records)
+    if relativeCauses.nonEmpty then
+      relativeCauses.exists(cause =>
         graph.comparisonFor(cause).nonEmpty &&
           strategicRelativeCauseHasProof(cause, graph) &&
           (cause.kind == RelativeCauseKind.PlanImprovement || cause.kind == RelativeCauseKind.PlanContradiction)
-      case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-        payload.planComparison.exists(_.hasPlanDelta)
-      case EvidenceRecord(ref, payload: StrategicMechanismEvidence, _) =>
-        ref.confidence != EvidenceConfidence.Heuristic && payload.canAnchorPlanClaim
-      case _ =>
-        false
-    }
+      )
+    else
+      records.exists {
+        case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
+          payload.planComparison.exists(_.hasPlanDelta)
+        case EvidenceRecord(ref, payload: StrategicMechanismEvidence, _) =>
+          ref.confidence != EvidenceConfidence.Heuristic && payload.canAnchorPlanClaim
+        case _ =>
+          false
+      }
+
+  private def relativeCausesBoundToClaimEvidence(
+      claim: JudgmentClaim,
+      records: List[EvidenceRecord]
+  ): List[RelativeCauseFact] =
+    val claimEvidenceIds = claim.evidence.map(_.id).toSet
+    records.collect {
+      case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) if claimEvidenceIds(ref.id) =>
+        cause
+    }.distinct
 
   private[chessjudgment] def pawnStructureCanAnchorPlan(payload: PawnStructureFactEvidence): Boolean =
     StrategicMechanismEvidence.pawnStructureCanAnchorPlan(payload)
@@ -684,15 +715,16 @@ object ClaimTruthPolicy:
       }
     hasMaterialCause && hasMaterialLine && hasComparison
 
-  private def conversionProof(records: List[EvidenceRecord], graph: TypedEvidenceGraph): Boolean =
-    val hasConversionCause =
-      records.exists {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-          graph.comparisonFor(cause).nonEmpty && conversionRelativeCauseHasProof(cause, graph)
-        case _ =>
-          false
-      }
-    val hasConversionContext = conversionContextCanSupportClaim(records)
+  private def conversionProof(
+      claim: JudgmentClaim,
+      records: List[EvidenceRecord],
+      graph: TypedEvidenceGraph
+  ): Boolean =
+    val conversionCauses = relativeCausesBoundToClaimEvidence(claim, records).filter(cause =>
+      graph.comparisonFor(cause).nonEmpty && conversionRelativeCauseHasProof(cause, graph)
+    )
+    val hasConversionCause = conversionCauses.nonEmpty
+    val hasConversionContext = conversionCauses.exists(cause => conversionContextCanSupportClaim(records, cause.kind))
     val hasComparison =
       records.exists {
         case record @ EvidenceRecord(_, CandidateComparisonEvidence(_), _) =>
@@ -718,24 +750,43 @@ object ClaimTruthPolicy:
     }
 
   private[chessjudgment] def conversionContextCanSupportClaim(records: List[EvidenceRecord]): Boolean =
-    records.exists(conversionContextRecord)
+    records.exists(record => conversionContextRecord(record, allowPassedPawnConcession = false))
 
-  private def conversionContextRecord(record: EvidenceRecord): Boolean =
+  private[chessjudgment] def conversionContextCanSupportClaim(
+      records: List[EvidenceRecord],
+      causeKind: RelativeCauseKind
+  ): Boolean =
+    records.exists(record =>
+      conversionContextRecord(
+        record,
+        allowPassedPawnConcession = causeKind == RelativeCauseKind.ConversionMiss
+      )
+    )
+
+  private def conversionContextRecord(
+      record: EvidenceRecord,
+      allowPassedPawnConcession: Boolean
+  ): Boolean =
     record match
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
         payload.hasConversionConsequence
       case EvidenceRecord(_, payload: BoardFactEvidence, _) =>
         payload.positionFeatures.exists(_.materialPhase.phase == "endgame")
       case EvidenceRecord(_, payload: StructuralDeltaEvidence, _) =>
-        structuralConversionContext(payload)
+        structuralConversionContext(payload, allowPassedPawnConcession)
       case EvidenceRecord(_, payload: RelationFactEvidence, _) =>
         payload.kind == RelationFactKind.BadPieceLiquidation && payload.hasConcreteRelationProof
       case _ =>
         false
 
-  private def structuralConversionContext(payload: StructuralDeltaEvidence): Boolean =
+  private def structuralConversionContext(
+      payload: StructuralDeltaEvidence,
+      allowPassedPawnConcession: Boolean
+  ): Boolean =
     import TransitionConsequenceKind.*
-    payload.hasAnyConsequence(Set(PassedPawnProgress, PromotionPressureGain))
+    payload.hasAnyConsequence(Set(PassedPawnProgress, PromotionPressureGain)) ||
+      (allowPassedPawnConcession &&
+        payload.hasAnyConsequence(Set(PassedPawnConcession, PromotionPressureConcession)))
 
   private def recordEngineBacked(record: EvidenceRecord): Boolean =
     record.ref.confidence == EvidenceConfidence.EngineBacked ||

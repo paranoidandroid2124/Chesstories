@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/v1/ja.output.schema.json",
+  "title": "Ja output v1",
+  "$comment": "Admission/rejection decisions retain each candidate, every proof-obligation result, policy confidence, and reason codes.",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/stageDocument" },
+    {
+      "type": "object",
+      "properties": {
+        "stage": { "const": "Ja" },
+        "payload": { "$ref": "#/$defs/payload" }
+      }
+    }
+  ],
+  "$defs": {
+    "payload": { "$ref": "common.schema.json#/$defs/admissionBundle" }
+  }
+}

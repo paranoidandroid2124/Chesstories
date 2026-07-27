@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/v1/q.output.schema.json",
+  "title": "Q output v1",
+  "$comment": "The engine evidence pack consumed by F. Depth, nodes, MultiPV order, repetition evaluations, provider provenance, probes/tablebases, and operational missingness are retained.",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/stageDocument" },
+    {
+      "type": "object",
+      "properties": {
+        "stage": { "const": "Q" },
+        "payload": { "$ref": "#/$defs/payload" }
+      }
+    }
+  ],
+  "$defs": {
+    "payload": { "$ref": "common.schema.json#/$defs/engineEvidencePack" }
+  }
+}

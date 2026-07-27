@@ -92,7 +92,24 @@ final case class ClaimStrategicAxisLineage(
 
 object ClaimStrategicAxisLineage:
   def fromClaim(claim: JudgmentClaim, graph: TypedEvidenceGraph): List[ClaimStrategicAxisLineage] =
-    fromRecords(claim.evidence.flatMap(ref => graph.record(ref)), graph)
+    val records = claim.evidence.flatMap(ref => graph.record(ref))
+    val causeRecords = records.collect {
+      case record @ EvidenceRecord(_, RelativeCauseFactEvidence(_), _) => record
+    }
+    if causeRecords.isEmpty then fromRecords(records, graph)
+    else
+      val causeOwnedEvidenceIds = causeRecords.flatMap {
+        case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
+          cause.supportEvidence ++ cause.proof.toList.flatMap(_.sections.flatMap(_.sourceRefs))
+        case _ =>
+          Nil
+      }.map(_.id).toSet
+      fromRecords(
+        causeRecords ++ records.filterNot(record =>
+          causeRecords.exists(_.ref.id == record.ref.id) || causeOwnedEvidenceIds.contains(record.ref.id)
+        ),
+        graph
+      )
 
   def fromRecords(records: List[EvidenceRecord], graph: TypedEvidenceGraph): List[ClaimStrategicAxisLineage] =
     val grouped =
@@ -125,8 +142,10 @@ object ClaimStrategicAxisLineage:
         graph.relativeCauseStrategicMechanisms(section).flatMap { case (source, payload) =>
           mechanismEntries(source.id, payload, Some(causeId))
         } ++
-          graph.relativeCauseStrategicContrasts(section).flatMap { case (source, payload) =>
-            contrastEntries(source.id, payload, Some(causeId))
+          graph.relativeCauseStrategicAxisComparisons(cause, section).flatMap { case (source, comparison) =>
+            graph
+              .strategicComparisonSourceRefs(comparison, cause.sourceSide)
+              .map(sourceRef => lineage(comparison.axis, source.id, sourceRef, Some(causeId)))
           }
       )
     )
@@ -398,10 +417,13 @@ enum PlayerFacingClaimTier:
   case Context
   case Diagnostic
 
-object PlayerFacingClaimPolicy:
+final case class PlayerFacingClaimDecision(
+    claimId: String,
+    tier: PlayerFacingClaimTier,
+    causeEvidenceIds: List[String]
+)
 
-  def tier(packet: EvidenceBackedJudgmentPacket, claim: JudgmentClaim): PlayerFacingClaimTier =
-    tier(claim, packet.evidenceGraph, JudgmentSubjectBinding.packetPlayedMoves(packet))
+object PlayerFacingClaimPolicy:
 
   def tier(
       claim: JudgmentClaim,
@@ -413,42 +435,169 @@ object PlayerFacingClaimPolicy:
       val evidenceRecords =
         claim.evidence
           .flatMap(ref => graph.byId.get(ref.id))
+      val hasContextEvidence =
+        evidenceRecords.exists(record => contextEvidenceRecord(record, graph, playedMoves))
+      val hasDirectPlayedEvidence =
+        JudgmentSubjectBinding.hasDirectPlayedEvidence(claim, graph, playedMoves)
+      val hasCertifiedContextCause =
+        evidenceRecords.exists(record =>
+          certifiedContextCause(claim, record, graph, playedMoves)
+        )
+      val relativeCauseRecords = evidenceRecords.collect {
+        case record @ EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) => record -> cause
+      }
+      val playerFacingCauses =
+        eligibleRelativeCauses(claim, evidenceRecords, graph, playedMoves)
+      val hasPrimaryPlayerFacingCause =
+        playerFacingCauses.exists { case (cause, _) =>
+          val binding = graph.requiredRelativeCauseBinding(cause)
+          binding.role == RelativeCauseRole.PrimaryPlayedCause &&
+            binding.importance == RelativeCauseImportance.Primary
+        }
+      val playerFacingCauseBindings =
+        playerFacingCauses.flatMap { case (cause, _) =>
+          EvidenceObjectBinding.fromRelativeCauseForProjection(cause, graph)
+        }
+      val objectBindings =
+        if relativeCauseRecords.nonEmpty then playerFacingCauseBindings
+        else EvidenceObjectBinding.fromClaim(claim, graph)
       val baseTier =
         if claim.family == ClaimFamily.Evaluation &&
           evidenceRecords.exists(record => evaluationVerdictCarrierRecord(record, graph, playedMoves))
         then
           PlayerFacingClaimTier.Context
-        else if evidenceRecords.exists(record => primaryEvidenceRecord(record, graph, playedMoves)) then
+        else if hasPrimaryPlayerFacingCause then
           PlayerFacingClaimTier.Primary
-        else if evidenceRecords.exists(record => contextEvidenceRecord(record, graph, playedMoves)) then
+        else if hasCertifiedContextCause then
+          PlayerFacingClaimTier.Secondary
+        else if !requiresRelativeCause(claim.family) && hasContextEvidence then
           PlayerFacingClaimTier.Context
-        else if JudgmentSubjectBinding.hasDirectPlayedEvidence(claim, graph, playedMoves) then
+        else if !requiresRelativeCause(claim.family) && relativeCauseRecords.isEmpty && hasDirectPlayedEvidence then
           PlayerFacingClaimTier.Secondary
         else
           PlayerFacingClaimTier.Diagnostic
       if promotedTier(baseTier) && requiresConcreteObject(claim.family) &&
-        !EvidenceObjectBinding.specificTargetMechanismReady(EvidenceObjectBinding.fromClaim(claim, graph))
+        !EvidenceObjectBinding.specificTargetMechanismReady(objectBindings)
       then PlayerFacingClaimTier.Diagnostic
       else baseTier
 
-  def requiresConcreteObject(family: ClaimFamily): Boolean =
-    family != ClaimFamily.Evaluation
-
-  private def promotedTier(tier: PlayerFacingClaimTier): Boolean =
-    tier == PlayerFacingClaimTier.Primary || tier == PlayerFacingClaimTier.Secondary
-
-  private def primaryEvidenceRecord(
+  def certifiedPlayedValueCause(
+      claim: JudgmentClaim,
       record: EvidenceRecord,
       graph: TypedEvidenceGraph,
       playedMoves: Set[String]
   ): Boolean =
     record.payload match
-      case CandidateComparisonEvidence(fact) =>
-        JudgmentSubjectBinding.comparisonBinding(fact, playedMoves) == SubjectBindingClass.PrimaryPlayedCause
       case RelativeCauseFactEvidence(cause) =>
-        JudgmentSubjectBinding.relativeCauseBinding(cause, graph, playedMoves) == SubjectBindingClass.PrimaryPlayedCause
-      case _ =>
-        false
+        val claimEvidenceIds = claim.evidence.map(_.id).toSet
+        val directProofRefs =
+          cause.proof.toList.flatMap(_.directProof.sourceRefs).distinctBy(_.id)
+        graph.relativeCauseBinding(cause).exists(binding =>
+          claimEvidenceIds.contains(record.ref.id) &&
+            binding.role == RelativeCauseRole.PlayedAlternativeContext &&
+            binding.importance == RelativeCauseImportance.Context &&
+            cause.sourceSide == RelativeCauseSourceSide.Candidate &&
+            cause.attribution.kind == CauseAttributionKind.CandidateCreatesValue &&
+            playedMoves.contains(JudgmentSubjectBinding.normalizeMove(binding.eventLine.rootMove)) &&
+            JudgmentSubjectBinding.relativeCauseBinding(cause, graph, playedMoves) ==
+              SubjectBindingClass.ContextPlayed &&
+            cause.hasOwnedAdmissibleLongTermProof(graph) &&
+            directProofRefs.nonEmpty &&
+            directProofRefs.exists(ref =>
+              claimEvidenceIds.contains(ref.id) &&
+                graph.byId.get(ref.id).exists(source =>
+                playedMoves.exists(move => JudgmentSubjectBinding.recordMentionsMove(source, move))
+              )
+            )
+        )
+      case _ => false
+
+  def certifiedAlternativeResourceCause(
+      claim: JudgmentClaim,
+      record: EvidenceRecord,
+      graph: TypedEvidenceGraph,
+      playedMoves: Set[String]
+  ): Boolean =
+    record.payload match
+      case RelativeCauseFactEvidence(cause) =>
+        val claimEvidenceIds = claim.evidence.map(_.id).toSet
+        val directProofRefs =
+          cause.proof.toList.flatMap(_.directProof.sourceRefs).distinctBy(_.id)
+        val hasOwnedDepth =
+          if cause.strategicCauseKind then cause.hasOwnedAdmissibleLongTermProof(graph)
+          else cause.hasOwnedTypedDepth(graph)
+        graph.comparisonFor(cause).exists(comparison =>
+          comparison.kind == CandidateComparisonKind.PlayedVsAlternative &&
+            playedMoves.contains(JudgmentSubjectBinding.normalizeMove(comparison.candidateLine.rootMove)) &&
+            graph.relativeCauseBinding(cause).exists(binding =>
+              claimEvidenceIds.contains(record.ref.id) &&
+                binding.role == RelativeCauseRole.PlayedAlternativeContext &&
+                binding.importance == RelativeCauseImportance.Context &&
+                binding.eventLine == comparison.referenceLine &&
+                cause.sourceSide == RelativeCauseSourceSide.Reference &&
+                cause.attribution.kind == CauseAttributionKind.ReferenceCreatesResource &&
+                JudgmentSubjectBinding.relativeCauseBinding(cause, graph, playedMoves) ==
+                  SubjectBindingClass.ContextPlayed &&
+                hasOwnedDepth &&
+                directProofRefs.nonEmpty &&
+                directProofRefs.exists(ref =>
+                  claimEvidenceIds.contains(ref.id) &&
+                    graph.byId.get(ref.id).exists(source =>
+                      JudgmentSubjectBinding.recordMentionsMove(source, binding.eventLine.rootMove)
+                    )
+                )
+            )
+        )
+      case _ => false
+
+  def certifiedContextCause(
+      claim: JudgmentClaim,
+      record: EvidenceRecord,
+      graph: TypedEvidenceGraph,
+      playedMoves: Set[String]
+  ): Boolean =
+    certifiedPlayedValueCause(claim, record, graph, playedMoves) ||
+      certifiedAlternativeResourceCause(claim, record, graph, playedMoves)
+
+  def eligibleRelativeCauses(
+      claim: JudgmentClaim,
+      records: List[EvidenceRecord],
+      graph: TypedEvidenceGraph,
+      playedMoves: Set[String]
+  ): List[(RelativeCauseFact, EvidenceRef)] =
+    records
+      .collect {
+        case record @ EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) =>
+          (record, ref, cause, graph.requiredRelativeCauseBinding(cause))
+      }
+      .filter { case (record, ref, cause, binding) =>
+        val directClaimEvidence = claim.evidence.exists(_.id == ref.id)
+        val subjectBinding = JudgmentSubjectBinding.relativeCauseBinding(cause, graph, playedMoves)
+        val primaryCause =
+          directClaimEvidence &&
+            binding.role == RelativeCauseRole.PrimaryPlayedCause &&
+            binding.importance == RelativeCauseImportance.Primary &&
+            subjectBinding == SubjectBindingClass.PrimaryPlayedCause
+        val authorized = primaryCause || certifiedContextCause(claim, record, graph, playedMoves)
+        val objectReady =
+          !requiresConcreteObject(claim.family) ||
+            EvidenceObjectBinding.specificTargetMechanismReady(
+              EvidenceObjectBinding.fromRelativeCauseForProjection(cause, graph)
+            )
+        authorized && objectReady
+      }
+      .map { case (_, ref, cause, _) => cause -> ref }
+      .distinctBy { case (cause, _) => RelativeCauseSemanticKey.from(cause, graph) }
+      .sortBy { case (cause, ref) => (cause.kind.toString, ref.id) }
+
+  def requiresConcreteObject(family: ClaimFamily): Boolean =
+    family != ClaimFamily.Evaluation
+
+  private def requiresRelativeCause(family: ClaimFamily): Boolean =
+    family != ClaimFamily.Evaluation && family != ClaimFamily.Opening
+
+  private def promotedTier(tier: PlayerFacingClaimTier): Boolean =
+    tier == PlayerFacingClaimTier.Primary || tier == PlayerFacingClaimTier.Secondary
 
   private def evaluationVerdictCarrierRecord(
       record: EvidenceRecord,
@@ -580,8 +729,12 @@ case class JudgmentClaim(
 
 final class EvidenceBackedJudgmentPacket private (
     val assembly: JudgmentAssemblyContext,
-    val probeRequests: List[ProbeRequest]
+    val probeRequests: List[ProbeRequest],
+    val playerFacingClaimDecisions: List[PlayerFacingClaimDecision]
 ):
+  private val playerFacingClaimDecisionsById: Map[String, PlayerFacingClaimDecision] =
+    playerFacingClaimDecisions.map(decision => decision.claimId -> decision).toMap
+
   def root: PositionNodeRef =
     assembly.root.get
 
@@ -599,6 +752,24 @@ final class EvidenceBackedJudgmentPacket private (
   def evidenceGraph: TypedEvidenceGraph = assembly.evidenceGraph
 
   def claims: List[JudgmentClaim] = assembly.claims
+
+  def playerFacingDecision(claim: JudgmentClaim): Option[PlayerFacingClaimDecision] =
+    playerFacingClaimDecisionsById.get(claim.id)
+
+  def playerFacingTier(claim: JudgmentClaim): PlayerFacingClaimTier =
+    playerFacingDecision(claim).map(_.tier).getOrElse(PlayerFacingClaimTier.Diagnostic)
+
+  def playerFacingRelativeCauses(claim: JudgmentClaim): List[(RelativeCauseFact, EvidenceRef)] =
+    val directClaimEvidenceIds = claim.evidence.map(_.id).toSet
+    playerFacingDecision(claim).toList
+      .flatMap(_.causeEvidenceIds)
+      .filter(directClaimEvidenceIds)
+      .flatMap(id =>
+        evidenceGraph.byId.get(id).collect {
+          case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) => cause -> ref
+        }
+      )
+      .distinctBy(_._2.id)
 
   def probeDiagnostics: List[ProbeAdmissionDiagnostic] = assembly.probeDiagnostics
 
@@ -635,11 +806,39 @@ final class EvidenceBackedJudgmentPacket private (
 object EvidenceBackedJudgmentPacket:
   private[chessjudgment] def fromAssembly(
       assembly: JudgmentAssemblyContext,
-      probeRequests: List[ProbeRequest]
+      probeRequests: List[ProbeRequest],
+      playerFacingClaimDecisions: List[PlayerFacingClaimDecision]
   ): Option[EvidenceBackedJudgmentPacket] =
-    Option.when(structurallyClosed(assembly) && probesClosed(assembly, probeRequests))(
-      new EvidenceBackedJudgmentPacket(assembly, probeRequests)
+    Option.when(
+      structurallyClosed(assembly) &&
+        probesClosed(assembly, probeRequests) &&
+        playerFacingClaimsClosed(assembly, playerFacingClaimDecisions)
+    )(
+      new EvidenceBackedJudgmentPacket(assembly, probeRequests, playerFacingClaimDecisions)
     )
+
+  private def playerFacingClaimsClosed(
+      assembly: JudgmentAssemblyContext,
+      decisions: List[PlayerFacingClaimDecision]
+  ): Boolean =
+    val claimsById = assembly.claims.map(claim => claim.id -> claim).toMap
+    val decisionIds = decisions.map(_.claimId)
+    decisionIds.distinct.size == decisionIds.size &&
+      decisionIds.toSet == claimsById.keySet &&
+      decisions.forall { decision =>
+        val causeIds = decision.causeEvidenceIds
+        claimsById.get(decision.claimId).exists { claim =>
+          val directClaimEvidenceIds = claim.evidence.map(_.id).toSet
+          causeIds.distinct.size == causeIds.size &&
+            causeIds.forall(id =>
+              directClaimEvidenceIds(id) &&
+                assembly.evidenceGraph.byId.get(id).exists {
+                  case EvidenceRecord(_, RelativeCauseFactEvidence(_), _) => true
+                  case _                                                  => false
+                }
+            )
+        }
+      }
 
   private def probesClosed(
       assembly: JudgmentAssemblyContext,

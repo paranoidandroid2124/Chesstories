@@ -1,0 +1,364 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/provisional-v1/report.schema.json",
+  "title": "Provisional full-chain model-proxy diagnostic report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "mode",
+    "qualification",
+    "evidence_tier",
+    "policy",
+    "binding",
+    "plan",
+    "cache",
+    "rows",
+    "context_endpoint_summary",
+    "descriptive_bottleneck",
+    "engineering_diagnosis",
+    "engineering_trajectory",
+    "inference",
+    "artifact_ledger_hash_before_report"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.eval.provisional-model-proxy-report.v1"},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$"},
+    "mode": {"const": "provisional-model-proxy-diagnostic"},
+    "qualification": {"const": "provisional"},
+    "evidence_tier": {"const": "model-proxy-nonhuman"},
+    "policy": {"$ref": "#/$defs/policy"},
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "corpus_version",
+        "split",
+        "split_sha256",
+        "preregistration_sha256",
+        "native_run_id",
+        "native_report_sha256",
+        "native_source_preregistration_sha256",
+        "native_source_plan_sha256",
+        "native_source_artifacts_verified",
+        "oracle_q_run_id",
+        "oracle_q_report_sha256",
+        "oracle_q_source_artifacts_verified",
+        "oracle_q_evidence_level",
+        "probe_completion_run_id",
+        "probe_completion_report_sha256",
+        "all_runtime_probes_closed",
+        "probe_completion_artifacts_verified",
+        "baseline_probe_completion_run_id",
+        "baseline_probe_completion_report_sha256",
+        "baseline_probe_completion_artifacts_verified",
+        "intermediate_probe_completion_run_id",
+        "intermediate_probe_completion_report_sha256",
+        "intermediate_probe_completion_artifacts_verified"
+      ],
+      "properties": {
+        "corpus_version": {"type": "string", "minLength": 1},
+        "split": {"const": "diagnostic-explore"},
+        "split_sha256": {"$ref": "#/$defs/sha256"},
+        "preregistration_sha256": {"$ref": "#/$defs/sha256"},
+        "native_run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$"},
+        "native_report_sha256": {"$ref": "#/$defs/sha256"},
+        "native_source_preregistration_sha256": {"$ref": "#/$defs/sha256"},
+        "native_source_plan_sha256": {"$ref": "#/$defs/sha256"},
+        "native_source_artifacts_verified": {"const": true},
+        "oracle_q_run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$"},
+        "oracle_q_report_sha256": {"$ref": "#/$defs/sha256"},
+        "oracle_q_source_artifacts_verified": {"const": true},
+        "oracle_q_evidence_level": {"enum": ["root-only-stable", "probe-complete", "mixed"]},
+        "probe_completion_run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$"},
+        "probe_completion_report_sha256": {"$ref": "#/$defs/sha256"},
+        "all_runtime_probes_closed": {"const": true},
+        "probe_completion_artifacts_verified": {"const": true},
+        "baseline_probe_completion_run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$"},
+        "baseline_probe_completion_report_sha256": {"$ref": "#/$defs/sha256"},
+        "baseline_probe_completion_artifacts_verified": {"const": true},
+        "intermediate_probe_completion_run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$"},
+        "intermediate_probe_completion_report_sha256": {"$ref": "#/$defs/sha256"},
+        "intermediate_probe_completion_artifacts_verified": {"const": true}
+      }
+    },
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interpretation", "registered_arm_count", "sample_count", "planned_row_count", "completed_row_count", "stage_capture_count", "stage_reference_count", "contexts"],
+      "properties": {
+        "interpretation": {"const": "descriptive-proxy-reachability-only"},
+        "registered_arm_count": {"const": 313},
+        "sample_count": {"const": 3},
+        "planned_row_count": {"const": 939},
+        "completed_row_count": {"const": 939},
+        "stage_capture_count": {"const": 357},
+        "stage_reference_count": {"const": 7512},
+        "contexts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 1}}
+      }
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key_version",
+        "key_fields",
+        "cache_semantics",
+        "unique_stage_execution_count",
+        "row_stage_reference_count",
+        "reused_stage_reference_count",
+        "unique_evaluation_execution_count"
+      ],
+      "properties": {
+        "key_version": {"const": "provisional-shared-prefix-cache.v1"},
+        "key_fields": {
+          "const": ["sample_id", "stage", "effective_source_prefix", "upstream_canonical_output_hashes"]
+        },
+        "cache_semantics": {"const": "meaning-equivalent-stage-executions-only"},
+        "unique_stage_execution_count": {"const": 357},
+        "row_stage_reference_count": {"const": 7512},
+        "reused_stage_reference_count": {"const": 7155},
+        "unique_evaluation_execution_count": {"const": 87}
+      }
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 939,
+      "maxItems": 939,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sample_id",
+          "atomic_cluster_id",
+          "arm_id",
+          "context",
+          "oracle_chain",
+          "focus_stage",
+          "sources",
+          "status",
+          "stage_artifacts",
+          "evaluation_artifact_sha256",
+          "evaluation"
+        ],
+        "properties": {
+          "sample_id": {"type": "string", "minLength": 1},
+          "atomic_cluster_id": {"type": "string", "minLength": 1},
+          "arm_id": {"type": "string", "pattern": "^arm-[0-9]{4}$"},
+          "context": {"type": "string", "minLength": 1},
+          "oracle_chain": {"type": ["string", "null"]},
+          "focus_stage": {"type": ["string", "null"]},
+          "sources": {"$ref": "#/$defs/sourceMap"},
+          "status": {"const": "completed"},
+          "stage_artifacts": {"$ref": "#/$defs/stageArtifacts"},
+          "evaluation_artifact_sha256": {"$ref": "#/$defs/sha256"},
+          "evaluation": {"$ref": "evaluation.schema.json"}
+        }
+      }
+    },
+    "context_endpoint_summary": {"type": "object"},
+    "descriptive_bottleneck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "candidate_stage", "reason", "one_stage_oracle_gain", "leave_one_actual_loss"],
+      "properties": {
+        "status": {"const": "provisional-engineering-candidate-only"},
+        "candidate_stage": {"type": ["string", "null"]},
+        "reason": {"type": "string", "minLength": 1},
+        "one_stage_oracle_gain": {"type": "object"},
+        "leave_one_actual_loss": {"type": "object"}
+      }
+    },
+    "engineering_diagnosis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "primary_locus", "cascade", "reason", "evidence"],
+      "properties": {
+        "status": {
+          "enum": [
+            "identified",
+            "implementation-boundary",
+            "resolved-through-V",
+            "foundation-limited",
+            "unresolved"
+          ]
+        },
+        "primary_locus": {"type": ["string", "null"]},
+        "cascade": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "reason": {"type": "string", "minLength": 1},
+        "evidence": {"type": "object"}
+      }
+    },
+    "engineering_trajectory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "qualification",
+        "matrix_interpretation",
+        "points",
+        "movement",
+        "production_bottleneck",
+        "reason"
+      ],
+      "properties": {
+        "status": {"const": "observed-engineering-movement"},
+        "qualification": {"const": "provisional-runtime-checkpoint-trajectory"},
+        "matrix_interpretation": {"const": "descriptive-proxy-reachability-only"},
+        "points": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "prefixItems": [
+            {"$ref": "#/$defs/trajectoryBaseline"},
+            {"$ref": "#/$defs/trajectoryIntermediate"},
+            {"$ref": "#/$defs/trajectoryCurrent"}
+          ],
+          "items": false
+        },
+        "movement": {"const": "C->C->V"},
+        "production_bottleneck": {"type": "null"},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "inference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "production_bottleneck", "reason", "independent_oracle_chain_count", "held_out_human_rater_count"],
+      "properties": {
+        "status": {"const": "indeterminate"},
+        "production_bottleneck": {"type": "null"},
+        "reason": {"type": "string", "minLength": 1},
+        "independent_oracle_chain_count": {"const": 0},
+        "held_out_human_rater_count": {"const": 0}
+      }
+    },
+    "artifact_ledger_hash_before_report": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "trajectoryBaseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "role", "run_id", "report_sha256", "all_runtime_probes_closed", "sample_ids", "first_missing_checkpoints", "diagnosis_status", "primary_locus"],
+      "properties": {
+        "sequence": {"const": 0},
+        "role": {"const": "pre-fix"},
+        "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$"},
+        "report_sha256": {"$ref": "#/$defs/sha256"},
+        "all_runtime_probes_closed": {"const": true},
+        "sample_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "first_missing_checkpoints": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "diagnosis_status": {"const": "identified"},
+        "primary_locus": {"const": "C"}
+      }
+    },
+    "trajectoryIntermediate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "role", "run_id", "report_sha256", "all_runtime_probes_closed", "sample_ids", "first_missing_checkpoints", "diagnosis_status", "primary_locus"],
+      "properties": {
+        "sequence": {"const": 1},
+        "role": {"const": "rank-projection-only"},
+        "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$"},
+        "report_sha256": {"$ref": "#/$defs/sha256"},
+        "all_runtime_probes_closed": {"const": true},
+        "sample_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "first_missing_checkpoints": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "diagnosis_status": {"const": "identified"},
+        "primary_locus": {"const": "C"}
+      }
+    },
+    "trajectoryCurrent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "role", "run_id", "report_sha256", "all_runtime_probes_closed", "sample_ids", "first_missing_checkpoints", "diagnosis_status", "primary_locus"],
+      "properties": {
+        "sequence": {"const": 2},
+        "role": {"const": "current-semantic-fix"},
+        "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$"},
+        "report_sha256": {"$ref": "#/$defs/sha256"},
+        "all_runtime_probes_closed": {"const": true},
+        "sample_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "first_missing_checkpoints": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "diagnosis_status": {"const": "implementation-boundary"},
+        "primary_locus": {"const": "V"}
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "formal_runner_eligible",
+        "human_gate_eligible",
+        "release_eligible",
+        "production_attribution_eligible",
+        "production_bottleneck",
+        "machine_language",
+        "mapping_claim",
+        "test_files_added",
+        "production_modules_duplicated"
+      ],
+      "properties": {
+        "formal_runner_eligible": {"const": false},
+        "human_gate_eligible": {"const": false},
+        "release_eligible": {"const": false},
+        "production_attribution_eligible": {"const": false},
+        "production_bottleneck": {"type": "null"},
+        "machine_language": {"const": "en"},
+        "mapping_claim": {"const": "provisional-lossy-not-semantic-equivalence"},
+        "test_files_added": {"const": false},
+        "production_modules_duplicated": {"const": false}
+      }
+    },
+    "sourceMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["Q", "F", "C", "Jp", "Ja", "R", "P", "V"],
+      "properties": {
+        "Q": {"enum": ["actual", "oracle", "format-control"]},
+        "F": {"enum": ["actual", "oracle", "format-control"]},
+        "C": {"enum": ["actual", "oracle", "format-control"]},
+        "Jp": {"enum": ["actual", "oracle", "format-control"]},
+        "Ja": {"enum": ["actual", "oracle", "format-control"]},
+        "R": {"enum": ["actual", "oracle", "format-control"]},
+        "P": {"enum": ["actual", "oracle", "format-control"]},
+        "V": {"enum": ["actual", "oracle", "format-control"]}
+      }
+    },
+    "stageArtifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["Q", "F", "C", "Jp", "Ja", "R", "P", "V"],
+      "properties": {
+        "Q": {"$ref": "#/$defs/artifactBinding"},
+        "F": {"$ref": "#/$defs/artifactBinding"},
+        "C": {"$ref": "#/$defs/artifactBinding"},
+        "Jp": {"$ref": "#/$defs/artifactBinding"},
+        "Ja": {"$ref": "#/$defs/artifactBinding"},
+        "R": {"$ref": "#/$defs/artifactBinding"},
+        "P": {"$ref": "#/$defs/artifactBinding"},
+        "V": {"$ref": "#/$defs/artifactBinding"}
+      }
+    },
+    "artifactBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shared_execution_id", "cache_key_sha256", "row_requested_source", "input_sha256", "validated_output_sha256", "canonical_output_sha256", "receipt_sha256"],
+      "properties": {
+        "shared_execution_id": {"type": "string", "pattern": "^shared-[0-9a-f]{16}$"},
+        "cache_key_sha256": {"$ref": "#/$defs/sha256"},
+        "row_requested_source": {"enum": ["actual", "oracle", "format-control"]},
+        "input_sha256": {"$ref": "#/$defs/sha256"},
+        "validated_output_sha256": {"$ref": "#/$defs/sha256"},
+        "canonical_output_sha256": {"$ref": "#/$defs/sha256"},
+        "receipt_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

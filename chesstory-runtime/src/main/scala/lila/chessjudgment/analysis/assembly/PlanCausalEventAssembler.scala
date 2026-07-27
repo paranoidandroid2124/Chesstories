@@ -416,7 +416,7 @@ object PlanCausalEventAssembler:
       responseStep <- continuation.lift(1)
         .filter(step => Fen.read(Standard, Fen.Full(step.fenBefore)).exists(_.color == transition.perspective))
         .toList
-      materialGain <- payload.materialGainCapturesFor(transition.perspective).sortBy(_.plyOffset)
+      materialGain <- payload.opponentResourcePunishmentCapturesFor(transition.perspective).sortBy(_.plyOffset)
       materialResultStep <- continuation.lift(materialGain.plyOffset)
         .filter(step => EvidenceRef.sameMove(step.moveUci, materialGain.moveUci))
         .toList

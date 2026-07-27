@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstory.local/schemas/model-proxy-v1/vote.schema.json",
+  "title": "Chesstory blind non-human model-proxy vote",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "evidence_tier",
+    "human_gate_eligible",
+    "blind_item_id",
+    "blind_payload_sha256",
+    "view_sha256",
+    "role",
+    "rater_id",
+    "abstained",
+    "grounded",
+    "fact_correct",
+    "unsupported_meaning_count",
+    "core_idea_score",
+    "usefulness_score",
+    "reason_codes",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.eval.blind-model-proxy-vote.v1"},
+    "evidence_tier": {"const": "model-proxy-nonhuman"},
+    "human_gate_eligible": {"const": false},
+    "blind_item_id": {"type": "string", "minLength": 1},
+    "blind_payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "view_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "role": {
+      "enum": ["grounding-auditor", "chess-meaning-rater", "usefulness-rater"]
+    },
+    "rater_id": {"type": "string", "minLength": 1},
+    "abstained": {"type": "boolean"},
+    "grounded": {"type": "boolean"},
+    "fact_correct": {"type": "boolean"},
+    "unsupported_meaning_count": {"type": "integer", "minimum": 0},
+    "core_idea_score": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+    "usefulness_score": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+    "reason_codes": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "notes": {"type": "string"}
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": "chesstory.eval.role-schedule.v1",
+  "version": "1.0.0",
+  "unit": "atomic_cluster_id",
+  "roles": [
+    "oracle-chain-author",
+    "base-label-author",
+    "held-out-human-explainer",
+    "out-of-set-adjudicator",
+    "final-usefulness-rater"
+  ],
+  "rule": "No person may perform a later role for an atomic cluster they observed in an earlier role.",
+  "cross_fit": {
+    "enabled": false,
+    "schedule": [],
+    "reason": "The current diagnostic reconstruction has no release-qualified human role roster."
+  },
+  "assignments": [],
+  "status": "must-be-populated-before-confirm"
+}

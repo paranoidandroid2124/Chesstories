@@ -1,0 +1,775 @@
+{
+  "artifact_ledger_hash_before_report": "2a642d66d5d5883d5df47cee9de1c9d41a79fbaff05b9e77de26624ff04aadec",
+  "atomic_cluster_count": 2,
+  "configuration": {
+    "depth": 20,
+    "hash_mb": 64,
+    "multipv": 4,
+    "repetitions": 3,
+    "stability_tolerance_cp": 15,
+    "threads": 1
+  },
+  "corpus_version": "judgment-boundary-v1.3.0",
+  "inference": {
+    "production_bottleneck": null,
+    "reason": "Q diagnostics do not identify a production stage; 2 clusters are below the preregistered minimum 30",
+    "status": "indeterminate"
+  },
+  "rows": [
+    {
+      "actual_q_coverage": {
+        "b7b5": true
+      },
+      "actual_q_scores": {
+        "b7b5": {
+          "centipawns": 0,
+          "perspective": "white"
+        }
+      },
+      "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+      "canonical_output_hash": "d25eafe7edfbe3c7d0605cd9cac6ce2aaecfd82df5e667ed469ec73b1b628fc1",
+      "capture_hashes": {
+        "canonical-output.json": "d25eafe7edfbe3c7d0605cd9cac6ce2aaecfd82df5e667ed469ec73b1b628fc1",
+        "metadata.json": "9fec6c132cc8e67a24438f70a2fd841558f4133ff26da80f114054c23e5feb35",
+        "raw-input.json": "ba5d1257603e3e991fa6ca1d2c0073ff0e59d74001681e9583aa0dbf651fa6cb",
+        "raw-output.json": "1add8a398e6fbab8690237ca01169e83f41de25bc3a84966f8cab5024cdfe370",
+        "raw-provider-io.json": "c8a7e8c05cfdf9ed3134f1dd07111d97a2920c43ced224ca926dd8e1d28756ed",
+        "validated-output.json": "fd852fed3e40bc34d0f7eb09baee8f08abef40b39ced498df1012f670e8c3250"
+      },
+      "requested_moves": [
+        "b7b5",
+        "b7b5"
+      ],
+      "sample_id": "explore-doknjas-grunfeld-b5",
+      "stable_q_coverage": {
+        "b7b5": true
+      },
+      "stable_q_diagnostics": {
+        "configured_multipv": 4,
+        "evaluation_variance": {
+          "by_root_move": {
+            "b7b5": {
+              "centipawn_max": -6,
+              "centipawn_mean": -6.0,
+              "centipawn_min": -6,
+              "centipawn_population_variance": 0.0,
+              "centipawn_range": 0,
+              "multipv_indices": [
+                1,
+                1,
+                1
+              ],
+              "observations": 3,
+              "present_in_every_repetition": true,
+              "repetition_indices": [
+                0,
+                1,
+                2
+              ],
+              "score_kinds": [
+                "cp"
+              ]
+            },
+            "c8d7": {
+              "centipawn_max": -77,
+              "centipawn_mean": -77.0,
+              "centipawn_min": -77,
+              "centipawn_population_variance": 0.0,
+              "centipawn_range": 0,
+              "multipv_indices": [
+                2,
+                2,
+                2
+              ],
+              "observations": 3,
+              "present_in_every_repetition": true,
+              "repetition_indices": [
+                0,
+                1,
+                2
+              ],
+              "score_kinds": [
+                "cp"
+              ]
+            },
+            "f6d7": {
+              "centipawn_max": -82,
+              "centipawn_mean": -82.0,
+              "centipawn_min": -82,
+              "centipawn_population_variance": 0.0,
+              "centipawn_range": 0,
+              "multipv_indices": [
+                3,
+                3,
+                3
+              ],
+              "observations": 3,
+              "present_in_every_repetition": true,
+              "repetition_indices": [
+                0,
+                1,
+                2
+              ],
+              "score_kinds": [
+                "cp"
+              ]
+            },
+            "f6e8": {
+              "centipawn_max": -92,
+              "centipawn_mean": -92.0,
+              "centipawn_min": -92,
+              "centipawn_population_variance": 0.0,
+              "centipawn_range": 0,
+              "multipv_indices": [
+                4,
+                4,
+                4
+              ],
+              "observations": 3,
+              "present_in_every_repetition": true,
+              "repetition_indices": [
+                0,
+                1,
+                2
+              ],
+              "score_kinds": [
+                "cp"
+              ]
+            }
+          },
+          "mate_reproducible": null,
+          "max_centipawn_population_variance": 0.0
+        },
+        "expected_top_k": 4,
+        "fixed_depth": 20,
+        "missing_evidence": {
+          "applicable_requirements": 5,
+          "rate": 0.2,
+          "status_counts": {
+            "failed": 0,
+            "missing": 0,
+            "not-applicable": 1,
+            "present": 4,
+            "unsupported": 1
+          },
+          "unavailable_requirements": 1
+        },
+        "nodes": {
+          "by_repetition": [
+            4311978,
+            4311978,
+            4311978
+          ],
+          "maximum": 4311978,
+          "mean": 4311978.0,
+          "minimum": 4311978
+        },
+        "repetitions": 3,
+        "score_perspective": "root-side-to-move",
+        "top_k_coverage": {
+          "coverage_rate": 1.0,
+          "covered_cells": 3,
+          "played_move_acquired_rate": 1.0,
+          "played_move_acquired_repetitions": 3,
+          "required_moves": {
+            "b7b5": {
+              "coverage_rate": 1.0,
+              "covered_repetitions": 3,
+              "total_repetitions": 3
+            }
+          },
+          "total_cells": 3
+        },
+        "top_k_stability": {
+          "max_centipawn_range": 0,
+          "mean_pairwise_set_jaccard": 1.0,
+          "modal_order_rate": 1.0,
+          "order_distribution": [
+            {
+              "moves_uci": [
+                "b7b5",
+                "c8d7",
+                "f6d7",
+                "f6e8"
+              ],
+              "repetitions": 3
+            }
+          ],
+          "order_stable": true,
+          "score_stable": true,
+          "set_stable": true,
+          "stability_tolerance_cp": 15,
+          "stable": true
+        }
+      },
+      "stable_q_forced_reference_scores": {},
+      "stable_q_ranked_coverage": {
+        "b7b5": true
+      },
+      "stable_q_ranked_scores": {
+        "b7b5": {
+          "centipawns": -6,
+          "perspective": "root-side"
+        },
+        "c8d7": {
+          "centipawns": -77,
+          "perspective": "root-side"
+        },
+        "f6d7": {
+          "centipawns": -82,
+          "perspective": "root-side"
+        },
+        "f6e8": {
+          "centipawns": -92,
+          "perspective": "root-side"
+        }
+      },
+      "stable_q_scores": {
+        "b7b5": {
+          "centipawns": -6,
+          "perspective": "root-side"
+        },
+        "c8d7": {
+          "centipawns": -77,
+          "perspective": "root-side"
+        },
+        "f6d7": {
+          "centipawns": -82,
+          "perspective": "root-side"
+        },
+        "f6e8": {
+          "centipawns": -92,
+          "perspective": "root-side"
+        }
+      }
+    },
+    {
+      "actual_q_coverage": {
+        "d3c2": true,
+        "f3g5": true,
+        "f3h4": true
+      },
+      "actual_q_scores": {
+        "d3c2": {
+          "centipawns": 21,
+          "perspective": "white"
+        },
+        "f3g5": {
+          "centipawns": 77,
+          "perspective": "white"
+        },
+        "f3h4": {
+          "centipawns": 23,
+          "perspective": "white"
+        }
+      },
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "canonical_output_hash": "c4fd715c9022e294d1912d6527fcfc914ccb0d0753ba75495954c9768aff2b60",
+      "capture_hashes": {
+        "canonical-output.json": "c4fd715c9022e294d1912d6527fcfc914ccb0d0753ba75495954c9768aff2b60",
+        "metadata.json": "3e12990f3f86a8ba4b41b4ece939e849bcbd2e44195dc1fcb78088639b012f14",
+        "raw-input.json": "b8b71ac257ab40e79f2d6310c1ae8701c468749f96a0fe45fe0f537b6822cfc3",
+        "raw-output.json": "ce169db5f7ac65ea0c9f407f2aded08618645595d1c0583ffb5623dbe467fa26",
+        "raw-provider-io.json": "bd98e6fc529f1f41d41b6463e51f2e0f77873fe819f353d5c8fdc6c0446f51b1",
+        "validated-output.json": "37dea111aa12134258275c512b04e3daf6238cd0aea08aa6f929d1007fd15bad"
+      },
+      "requested_moves": [
+        "f3g5",
+        "f3h4",
+        "d3c2"
+      ],
+      "sample_id": "explore-gamechanger-ng5",
+      "stable_q_coverage": {
+        "d3c2": true,
+        "f3g5": true,
+        "f3h4": true
+      },
+      "stable_q_diagnostics": {
+        "configured_multipv": 4,
+        "evaluation_variance": {
+          "by_root_move": {
+            "a2a4": {
+              "centipawn_max": 23,
+              "centipawn_mean": 23.0,
+              "centipawn_min": 23,
+              "centipawn_population_variance": 0.0,
+              "centipawn_range": 0,
+              "multipv_indices": [
+                4,
+                4,
+                4
+              ],
+              "observations": 3,
+              "present_in_every_repetition": true,
+              "repetition_indices": [
+                0,
+                1,
+                2
+              ],
+              "score_kinds": [
+                "cp"
+              ]
+            },
+            "f3g5": {
+              "centipawn_max": 61,
+              "centipawn_mean": 61.0,
+              "centipawn_min": 61,
+              "centipawn_population_variance": 0.0,
+              "centipawn_range": 0,
+              "multipv_indices": [
+                1,
+                1,
+                1
+              ],
+              "observations": 3,
+              "present_in_every_repetition": true,
+              "repetition_indices": [
+                0,
+                1,
+                2
+              ],
+              "score_kinds": [
+                "cp"
+              ]
+            },
+            "f3h4": {
+              "centipawn_max": 44,
+              "centipawn_mean": 44.0,
+              "centipawn_min": 44,
+              "centipawn_population_variance": 0.0,
+              "centipawn_range": 0,
+              "multipv_indices": [
+                2,
+                2,
+                2
+              ],
+              "observations": 3,
+              "present_in_every_repetition": true,
+              "repetition_indices": [
+                0,
+                1,
+                2
+              ],
+              "score_kinds": [
+                "cp"
+              ]
+            },
+            "h1c1": {
+              "centipawn_max": 33,
+              "centipawn_mean": 33.0,
+              "centipawn_min": 33,
+              "centipawn_population_variance": 0.0,
+              "centipawn_range": 0,
+              "multipv_indices": [
+                3,
+                3,
+                3
+              ],
+              "observations": 3,
+              "present_in_every_repetition": true,
+              "repetition_indices": [
+                0,
+                1,
+                2
+              ],
+              "score_kinds": [
+                "cp"
+              ]
+            }
+          },
+          "mate_reproducible": null,
+          "max_centipawn_population_variance": 0.0
+        },
+        "expected_top_k": 4,
+        "fixed_depth": 20,
+        "missing_evidence": {
+          "applicable_requirements": 6,
+          "rate": 0.16666666666666666,
+          "status_counts": {
+            "failed": 0,
+            "missing": 0,
+            "not-applicable": 1,
+            "present": 5,
+            "unsupported": 1
+          },
+          "unavailable_requirements": 1
+        },
+        "nodes": {
+          "by_repetition": [
+            4150217,
+            4150217,
+            4150217
+          ],
+          "maximum": 4150217,
+          "mean": 4150217.0,
+          "minimum": 4150217
+        },
+        "repetitions": 3,
+        "score_perspective": "root-side-to-move",
+        "top_k_coverage": {
+          "coverage_rate": 0.6666666666666666,
+          "covered_cells": 6,
+          "played_move_acquired_rate": 1.0,
+          "played_move_acquired_repetitions": 3,
+          "required_moves": {
+            "d3c2": {
+              "coverage_rate": 0.0,
+              "covered_repetitions": 0,
+              "total_repetitions": 3
+            },
+            "f3g5": {
+              "coverage_rate": 1.0,
+              "covered_repetitions": 3,
+              "total_repetitions": 3
+            },
+            "f3h4": {
+              "coverage_rate": 1.0,
+              "covered_repetitions": 3,
+              "total_repetitions": 3
+            }
+          },
+          "total_cells": 9
+        },
+        "top_k_stability": {
+          "max_centipawn_range": 0,
+          "mean_pairwise_set_jaccard": 1.0,
+          "modal_order_rate": 1.0,
+          "order_distribution": [
+            {
+              "moves_uci": [
+                "f3g5",
+                "f3h4",
+                "h1c1",
+                "a2a4"
+              ],
+              "repetitions": 3
+            }
+          ],
+          "order_stable": true,
+          "score_stable": true,
+          "set_stable": true,
+          "stability_tolerance_cp": 15,
+          "stable": true
+        }
+      },
+      "stable_q_forced_reference_scores": {
+        "d3c2": {
+          "centipawns": 17,
+          "perspective": "root-side"
+        }
+      },
+      "stable_q_ranked_coverage": {
+        "d3c2": false,
+        "f3g5": true,
+        "f3h4": true
+      },
+      "stable_q_ranked_scores": {
+        "a2a4": {
+          "centipawns": 23,
+          "perspective": "root-side"
+        },
+        "f3g5": {
+          "centipawns": 61,
+          "perspective": "root-side"
+        },
+        "f3h4": {
+          "centipawns": 44,
+          "perspective": "root-side"
+        },
+        "h1c1": {
+          "centipawns": 33,
+          "perspective": "root-side"
+        }
+      },
+      "stable_q_scores": {
+        "a2a4": {
+          "centipawns": 23,
+          "perspective": "root-side"
+        },
+        "d3c2": {
+          "centipawns": 17,
+          "perspective": "root-side"
+        },
+        "f3g5": {
+          "centipawns": 61,
+          "perspective": "root-side"
+        },
+        "f3h4": {
+          "centipawns": 44,
+          "perspective": "root-side"
+        },
+        "h1c1": {
+          "centipawns": 33,
+          "perspective": "root-side"
+        }
+      }
+    },
+    {
+      "actual_q_coverage": {
+        "d3c2": true,
+        "f3g5": true,
+        "f3h4": true
+      },
+      "actual_q_scores": {
+        "d3c2": {
+          "centipawns": 21,
+          "perspective": "white"
+        },
+        "f3g5": {
+          "centipawns": 77,
+          "perspective": "white"
+        },
+        "f3h4": {
+          "centipawns": 23,
+          "perspective": "white"
+        }
+      },
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "canonical_output_hash": "546b574e8690ef001c524331a30e333cb2dc2c27e33e356543b23f265c51db38",
+      "capture_hashes": {
+        "canonical-output.json": "546b574e8690ef001c524331a30e333cb2dc2c27e33e356543b23f265c51db38",
+        "metadata.json": "43bf7deeab7e19e9fd4f04c2259fd1aa0729938108452f614cbb48165098e773",
+        "raw-input.json": "99fc8af9df3b1800ba06286fe087b769c4da4f7a2a88eba434e0edcf22d3b0e1",
+        "raw-output.json": "48e8cf728a96a5bb788d354fa234ae3f25529fab9aad18c2c891986e9a2f4269",
+        "raw-provider-io.json": "75437b0da21becee711b9db9964da39c175ee05df925ebd8d75ad38b40cde0c4",
+        "validated-output.json": "e06eeb6c086dfc00f88e88606404e3182c91a06c1961202383d69968978a2da2"
+      },
+      "requested_moves": [
+        "f3h4",
+        "f3g5",
+        "d3c2"
+      ],
+      "sample_id": "explore-gamechanger-nh4-counterfactual",
+      "stable_q_coverage": {
+        "d3c2": true,
+        "f3g5": true,
+        "f3h4": true
+      },
+      "stable_q_diagnostics": {
+        "configured_multipv": 4,
+        "evaluation_variance": {
+          "by_root_move": {
+            "a2a4": {
+              "centipawn_max": 23,
+              "centipawn_mean": 23.0,
+              "centipawn_min": 23,
+              "centipawn_population_variance": 0.0,
+              "centipawn_range": 0,
+              "multipv_indices": [
+                4,
+                4,
+                4
+              ],
+              "observations": 3,
+              "present_in_every_repetition": true,
+              "repetition_indices": [
+                0,
+                1,
+                2
+              ],
+              "score_kinds": [
+                "cp"
+              ]
+            },
+            "f3g5": {
+              "centipawn_max": 61,
+              "centipawn_mean": 61.0,
+              "centipawn_min": 61,
+              "centipawn_population_variance": 0.0,
+              "centipawn_range": 0,
+              "multipv_indices": [
+                1,
+                1,
+                1
+              ],
+              "observations": 3,
+              "present_in_every_repetition": true,
+              "repetition_indices": [
+                0,
+                1,
+                2
+              ],
+              "score_kinds": [
+                "cp"
+              ]
+            },
+            "f3h4": {
+              "centipawn_max": 44,
+              "centipawn_mean": 44.0,
+              "centipawn_min": 44,
+              "centipawn_population_variance": 0.0,
+              "centipawn_range": 0,
+              "multipv_indices": [
+                2,
+                2,
+                2
+              ],
+              "observations": 3,
+              "present_in_every_repetition": true,
+              "repetition_indices": [
+                0,
+                1,
+                2
+              ],
+              "score_kinds": [
+                "cp"
+              ]
+            },
+            "h1c1": {
+              "centipawn_max": 33,
+              "centipawn_mean": 33.0,
+              "centipawn_min": 33,
+              "centipawn_population_variance": 0.0,
+              "centipawn_range": 0,
+              "multipv_indices": [
+                3,
+                3,
+                3
+              ],
+              "observations": 3,
+              "present_in_every_repetition": true,
+              "repetition_indices": [
+                0,
+                1,
+                2
+              ],
+              "score_kinds": [
+                "cp"
+              ]
+            }
+          },
+          "mate_reproducible": null,
+          "max_centipawn_population_variance": 0.0
+        },
+        "expected_top_k": 4,
+        "fixed_depth": 20,
+        "missing_evidence": {
+          "applicable_requirements": 6,
+          "rate": 0.16666666666666666,
+          "status_counts": {
+            "failed": 0,
+            "missing": 0,
+            "not-applicable": 1,
+            "present": 5,
+            "unsupported": 1
+          },
+          "unavailable_requirements": 1
+        },
+        "nodes": {
+          "by_repetition": [
+            4150217,
+            4150217,
+            4150217
+          ],
+          "maximum": 4150217,
+          "mean": 4150217.0,
+          "minimum": 4150217
+        },
+        "repetitions": 3,
+        "score_perspective": "root-side-to-move",
+        "top_k_coverage": {
+          "coverage_rate": 0.6666666666666666,
+          "covered_cells": 6,
+          "played_move_acquired_rate": 1.0,
+          "played_move_acquired_repetitions": 3,
+          "required_moves": {
+            "d3c2": {
+              "coverage_rate": 0.0,
+              "covered_repetitions": 0,
+              "total_repetitions": 3
+            },
+            "f3g5": {
+              "coverage_rate": 1.0,
+              "covered_repetitions": 3,
+              "total_repetitions": 3
+            },
+            "f3h4": {
+              "coverage_rate": 1.0,
+              "covered_repetitions": 3,
+              "total_repetitions": 3
+            }
+          },
+          "total_cells": 9
+        },
+        "top_k_stability": {
+          "max_centipawn_range": 0,
+          "mean_pairwise_set_jaccard": 1.0,
+          "modal_order_rate": 1.0,
+          "order_distribution": [
+            {
+              "moves_uci": [
+                "f3g5",
+                "f3h4",
+                "h1c1",
+                "a2a4"
+              ],
+              "repetitions": 3
+            }
+          ],
+          "order_stable": true,
+          "score_stable": true,
+          "set_stable": true,
+          "stability_tolerance_cp": 15,
+          "stable": true
+        }
+      },
+      "stable_q_forced_reference_scores": {
+        "d3c2": {
+          "centipawns": 17,
+          "perspective": "root-side"
+        }
+      },
+      "stable_q_ranked_coverage": {
+        "d3c2": false,
+        "f3g5": true,
+        "f3h4": true
+      },
+      "stable_q_ranked_scores": {
+        "a2a4": {
+          "centipawns": 23,
+          "perspective": "root-side"
+        },
+        "f3g5": {
+          "centipawns": 61,
+          "perspective": "root-side"
+        },
+        "f3h4": {
+          "centipawns": 44,
+          "perspective": "root-side"
+        },
+        "h1c1": {
+          "centipawns": 33,
+          "perspective": "root-side"
+        }
+      },
+      "stable_q_scores": {
+        "a2a4": {
+          "centipawns": 23,
+          "perspective": "root-side"
+        },
+        "d3c2": {
+          "centipawns": 17,
+          "perspective": "root-side"
+        },
+        "f3g5": {
+          "centipawns": 61,
+          "perspective": "root-side"
+        },
+        "f3h4": {
+          "centipawns": 44,
+          "perspective": "root-side"
+        },
+        "h1c1": {
+          "centipawns": 33,
+          "perspective": "root-side"
+        }
+      }
+    }
+  ],
+  "run_id": "q-stable-diagnostic-20260726-v11",
+  "sample_count": 3,
+  "schema_version": "chesstory.eval.q-diagnostic-report.v1",
+  "split": "diagnostic-explore",
+  "status": "diagnostic-only",
+  "stockfish_sha256": "5f95eaea0d4eb697381989187ce6eb4d6ad59283c34421765ecc73cdb09ba766"
+}

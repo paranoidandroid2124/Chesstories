@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/provisional-v1/bridge-receipt.schema.json",
+  "title": "Provisional native-v2 to frozen-v1 bridge receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "mode",
+    "qualification",
+    "evidence_tier",
+    "formal_runner_eligible",
+    "human_gate_eligible",
+    "release_eligible",
+    "production_attribution_eligible",
+    "production_bottleneck",
+    "shared_execution_id",
+    "cache_key_sha256",
+    "cache_semantics",
+    "cache_materialization",
+    "sample_id",
+    "arm_id",
+    "stage",
+    "executed_source",
+    "eligible_requested_sources",
+    "semantic_origin",
+    "conditioning",
+    "label_access",
+    "mapping_claim",
+    "native_stage",
+    "input_sha256",
+    "validated_output_sha256",
+    "canonical_output_sha256",
+    "perspective_binding"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.eval.provisional-bridge-receipt.v1"},
+    "mode": {"const": "provisional-model-proxy-diagnostic"},
+    "qualification": {"const": "provisional"},
+    "evidence_tier": {"const": "model-proxy-nonhuman"},
+    "formal_runner_eligible": {"const": false},
+    "human_gate_eligible": {"const": false},
+    "release_eligible": {"const": false},
+    "production_attribution_eligible": {"const": false},
+    "production_bottleneck": {"type": "null"},
+    "shared_execution_id": {"type": "string", "pattern": "^shared-[0-9a-f]{16}$"},
+    "cache_key_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "cache_semantics": {"const": "sample-stage-effective-source-prefix-and-upstream-canonical-hashes"},
+    "cache_materialization": {"const": "shared-prefix-execution"},
+    "sample_id": {"type": "string", "minLength": 1},
+    "arm_id": {"type": "string", "pattern": "^shared-[0-9a-f]{16}$"},
+    "stage": {"enum": ["Q", "F", "C", "Jp", "Ja", "R", "P", "V"]},
+    "executed_source": {"enum": ["actual", "oracle"]},
+    "eligible_requested_sources": {
+      "oneOf": [
+        {"const": ["actual", "format-control"]},
+        {"const": ["oracle"]}
+      ]
+    },
+    "semantic_origin": {
+      "enum": [
+        "actual-native-lossy-proxy",
+        "stable-stockfish-frozen-v1",
+        "probe-complete-stockfish-frozen-v1",
+        "atomic-label-free-fact-proxy",
+        "provisional-label-assisted-oracle",
+        "provisional-structural-oracle-proxy"
+      ]
+    },
+    "conditioning": {
+      "enum": [
+        "direct-input-recomputed-with-native-inventory",
+        "direct-input-stable-stockfish",
+        "direct-input-stable-stockfish-plus-runtime-probes",
+        "direct-input-atomic-fact-extraction",
+        "direct-input-label-assisted",
+        "direct-input-structural-projection"
+      ]
+    },
+    "label_access": {"type": "boolean"},
+    "mapping_claim": {"const": "provisional-lossy-not-semantic-equivalence"},
+    "native_stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "boundary_reached", "artifact_sha256", "v1_semantic_mapping_status"],
+      "properties": {
+        "status": {"enum": ["observed-native", "unavailable"]},
+        "boundary_reached": {"type": "boolean"},
+        "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "v1_semantic_mapping_status": {"const": "unavailable"}
+      }
+    },
+    "input_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "validated_output_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "canonical_output_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "perspective_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frozen_v1", "native_runtime", "black_to_move_cp_conversion"],
+      "properties": {
+        "frozen_v1": {"enum": ["root-side", "white", "mover", "mixed", "not-applicable"]},
+        "native_runtime": {"enum": ["white", "not-applicable"]},
+        "black_to_move_cp_conversion": {"enum": ["negate-root-side-to-white", "not-required", "not-applicable"]}
+      }
+    }
+  }
+}

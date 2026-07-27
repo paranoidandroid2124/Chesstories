@@ -3,6 +3,8 @@ package io.chesstory.runtime
 import scala.util.Try
 
 import lila.chessjudgment.analysis.assembly.{
+  JudgmentBoundaryExecution,
+  JudgmentBoundaryIntervention,
   MoveReviewJudgmentOrchestrator,
   RawMoveReviewInput,
   RawOpeningContext
@@ -19,6 +21,89 @@ object RuntimeProtocol:
   val ResponseSchema = "chesstory.move-meaning.response.v2"
 
   final case class Result(httpStatus: Int, body: JsObject)
+
+  enum ProjectionPayloadSource(val id: String):
+    case Full extends ProjectionPayloadSource("full")
+    case Exact extends ProjectionPayloadSource("exact")
+    case Empty extends ProjectionPayloadSource("empty")
+
+  enum ProjectionStatus(val id: String):
+    case Ready extends ProjectionStatus("ready")
+    case Withheld extends ProjectionStatus("withheld")
+
+  enum ProjectionWithheldReason(val id: String):
+    case InsufficientEngineDepth extends ProjectionWithheldReason("insufficient_engine_depth")
+    case NoPlayerFacingReason extends ProjectionWithheldReason("no_player_facing_reason")
+
+  enum VerbalizationStatus:
+    case Unavailable
+
+  final case class ProjectionDecision(
+      fullPayload: Option[JsObject],
+      exactPayload: JsObject,
+      selectedPayloadSource: ProjectionPayloadSource,
+      selectedPayload: JsObject,
+      renderable: Boolean,
+      status: ProjectionStatus,
+      reason: Option[ProjectionWithheldReason],
+      publicProbeRequests: List[JsObject]
+  )
+
+  final case class ProjectionBoundaryInput(
+      requestId: Option[String],
+      packet: EvidenceBackedJudgmentPacket
+  )
+
+  final case class ProjectionTrace(
+      input: ProjectionBoundaryInput,
+      primaryEngineBacked: Boolean,
+      fullPayload: Option[JsObject],
+      exactPayload: JsObject,
+      selectedPayloadSource: ProjectionPayloadSource,
+      selectedPayload: JsObject,
+      hasExplanation: Boolean,
+      hasEngineMateOutcome: Boolean,
+      hasExactProof: Boolean,
+      primaryRenderable: Boolean,
+      renderable: Boolean,
+      status: ProjectionStatus,
+      reason: Option[ProjectionWithheldReason],
+      probeRequests: List[ProbeRequest],
+      publicProbeRequests: List[JsObject],
+      moveReview: JsObject,
+      actualDecision: ProjectionDecision,
+      finalPublicResponse: Result
+  ):
+    def decision: ProjectionDecision =
+      ProjectionDecision(
+        fullPayload = fullPayload,
+        exactPayload = exactPayload,
+        selectedPayloadSource = selectedPayloadSource,
+        selectedPayload = selectedPayload,
+        renderable = renderable,
+        status = status,
+        reason = reason,
+        publicProbeRequests = publicProbeRequests
+      )
+
+  final case class RuntimeBoundaryIntervention(
+      judgment: JudgmentBoundaryIntervention = JudgmentBoundaryIntervention.identity,
+      p: Option[ProjectionBoundaryInput => ProjectionDecision] = None
+  )
+
+  object RuntimeBoundaryIntervention:
+    val identity: RuntimeBoundaryIntervention = RuntimeBoundaryIntervention()
+
+    def fromJudgment(intervention: JudgmentBoundaryIntervention): RuntimeBoundaryIntervention =
+      RuntimeBoundaryIntervention(judgment = intervention)
+
+  final case class BoundaryEvaluationTrace(
+      boundaryExecution: Option[JudgmentBoundaryExecution],
+      projection: Option[ProjectionTrace],
+      verbalization: VerbalizationStatus,
+      finalPublicResponse: Result
+  ):
+    def result: Result = finalPublicResponse
 
   private final case class WireVariation(
       moves: List[String],
@@ -88,24 +173,97 @@ object RuntimeProtocol:
     given Reads[WireInput] = Json.reads[WireInput]
 
   def evaluate(bytes: Array[Byte]): Result =
-    Try(Json.parse(bytes)).fold(_ => failure(None, 400, "invalid_json"), evaluate)
+    evaluateWithBoundary(bytes, JudgmentBoundaryIntervention.identity).result
 
   def evaluate(json: JsValue): Result =
+    evaluateWithBoundary(json, JudgmentBoundaryIntervention.identity).result
+
+  def evaluateWithBoundary(
+      bytes: Array[Byte],
+      intervention: JudgmentBoundaryIntervention
+  ): BoundaryEvaluationTrace =
+    evaluateWithBoundary(bytes, RuntimeBoundaryIntervention.fromJudgment(intervention))
+
+  def evaluateWithBoundary(
+      bytes: Array[Byte],
+      intervention: RuntimeBoundaryIntervention
+  ): BoundaryEvaluationTrace =
+    Try(Json.parse(bytes)).fold(
+      _ => unavailableTrace(failure(None, 400, "invalid_json")),
+      json => evaluateWithBoundary(json, intervention)
+    )
+
+  def evaluateWithBoundary(
+      json: JsValue,
+      intervention: JudgmentBoundaryIntervention
+  ): BoundaryEvaluationTrace =
+    evaluateWithBoundary(json, RuntimeBoundaryIntervention.fromJudgment(intervention))
+
+  def evaluateWithBoundary(
+      json: JsValue,
+      intervention: RuntimeBoundaryIntervention
+  ): BoundaryEvaluationTrace =
     json match
       case obj: JsObject =>
         (obj \ "request_id").validateOpt[String] match
-          case JsError(_) => failure(None, 400, "invalid_request_id")
+          case JsError(_) => unavailableTrace(failure(None, 400, "invalid_request_id"))
           case JsSuccess(requestId, _) if !requestId.forall(InputLimits.validRequestId) =>
-            failure(None, 400, "invalid_request_id")
+            unavailableTrace(failure(None, 400, "invalid_request_id"))
           case JsSuccess(requestId, _) =>
             if (obj \ "schema_version").asOpt[String] != Some(RequestSchema) then
-              failure(requestId, 400, "unsupported_schema_version")
+              unavailableTrace(failure(requestId, 400, "unsupported_schema_version"))
             else
               (obj \ "input").validate[WireInput] match
-                case JsError(_) => failure(requestId, 400, "invalid_move_review_input")
+                case JsError(_) => unavailableTrace(failure(requestId, 400, "invalid_move_review_input"))
                 case JsSuccess(input, _) =>
-                  evaluate(requestId, input.toCore)
-      case _ => failure(None, 400, "invalid_request")
+                  evaluateWithBoundary(requestId, input.toCore, intervention)
+      case _ => unavailableTrace(failure(None, 400, "invalid_request"))
+
+  def evaluateWithBoundary(
+      raw: RawMoveReviewInput,
+      intervention: JudgmentBoundaryIntervention
+  ): BoundaryEvaluationTrace =
+    evaluateWithBoundary(raw, RuntimeBoundaryIntervention.fromJudgment(intervention))
+
+  def evaluateWithBoundary(
+      raw: RawMoveReviewInput,
+      intervention: RuntimeBoundaryIntervention
+  ): BoundaryEvaluationTrace =
+    evaluateWithBoundary(None, raw, intervention)
+
+  def evaluateWithBoundary(
+      requestId: Option[String],
+      raw: RawMoveReviewInput,
+      intervention: JudgmentBoundaryIntervention
+  ): BoundaryEvaluationTrace =
+    evaluateWithBoundary(requestId, raw, RuntimeBoundaryIntervention.fromJudgment(intervention))
+
+  def evaluateWithBoundary(
+      requestId: Option[String],
+      raw: RawMoveReviewInput,
+      intervention: RuntimeBoundaryIntervention
+  ): BoundaryEvaluationTrace =
+    if !requestId.forall(InputLimits.validRequestId) then
+      unavailableTrace(failure(None, 400, "invalid_request_id"))
+    else if !InputLimits.accepts(raw) then
+      unavailableTrace(failure(requestId, 400, "input_limits_exceeded"))
+    else
+      MoveReviewJudgmentOrchestrator.execute(raw, intervention.judgment) match
+        case None =>
+          unavailableTrace(failure(requestId, 422, "move_review_not_buildable"))
+        case Some(execution) if !InputLimits.accepts(execution.q) =>
+          unavailableTrace(failure(requestId, 400, "input_limits_exceeded"))
+        case Some(execution) =>
+          execution.packet match
+            case None =>
+              BoundaryEvaluationTrace(
+                boundaryExecution = Some(execution),
+                projection = None,
+                verbalization = VerbalizationStatus.Unavailable,
+                finalPublicResponse = failure(requestId, 422, "move_review_not_buildable")
+              )
+            case Some(packet) =>
+              project(requestId, execution, packet, intervention.p)
 
   def publicProbeRequestJson(request: ProbeRequest): JsObject =
     Json.obj(
@@ -125,53 +283,235 @@ object RuntimeProtocol:
       .when(request.opponentResourceMove.nonEmpty)(Json.obj("opponentResourceMove" -> request.opponentResourceMove))
       .getOrElse(Json.obj())
 
-  private def evaluate(requestId: Option[String], raw: RawMoveReviewInput): Result =
-    if !InputLimits.accepts(raw) then failure(requestId, 400, "input_limits_exceeded")
-    else
-      MoveReviewJudgmentOrchestrator.packet(raw) match
-        case None => failure(requestId, 422, "move_review_not_buildable")
-        case Some(packet) =>
-          val primaryEngineBacked = MoveMeaningProjection.engineBacked(packet)
-          val fullPayload =
-            Option.when(primaryEngineBacked)(MoveMeaningProjection.publicPayloadJson(packet))
-          val exactPayload = MoveMeaningProjection.exactPayloadJson(packet)
-          val hasExactProof = (exactPayload \\ "exact_proof").nonEmpty
-          val hasExplanation =
-            fullPayload.exists(payload =>
-              (payload \ "explanations").asOpt[JsArray].exists(_.value.nonEmpty)
+  private def project(
+      requestId: Option[String],
+      execution: JudgmentBoundaryExecution,
+      packet: EvidenceBackedJudgmentPacket,
+      projectionIntervention: Option[ProjectionBoundaryInput => ProjectionDecision]
+  ): BoundaryEvaluationTrace =
+    val primaryEngineBacked = MoveMeaningProjection.engineBacked(packet)
+    val actualDecision = actualProjectionDecision(packet, primaryEngineBacked)
+    val projectionInput = ProjectionBoundaryInput(requestId = requestId, packet = packet)
+    val actualTrace =
+      assembleProjectionTrace(
+        input = projectionInput,
+        primaryEngineBacked = primaryEngineBacked,
+        actualDecision = actualDecision,
+        decision = actualDecision
+      )
+    val acceptedDecision =
+      projectionIntervention
+        .map(intervention =>
+          Try(intervention(projectionInput)).toOption
+            .flatMap(Option(_))
+        )
+        .getOrElse(Some(actualDecision))
+        .filter(projectionClosed(_, packet, actualDecision, primaryEngineBacked))
+    acceptedDecision match
+      case None =>
+        BoundaryEvaluationTrace(
+          boundaryExecution = Some(execution),
+          projection = None,
+          verbalization = VerbalizationStatus.Unavailable,
+          finalPublicResponse = failure(requestId, 422, "projection_intervention_rejected")
+        )
+      case Some(decision) =>
+        val projection =
+          if projectionIntervention.isEmpty then actualTrace
+          else
+            assembleProjectionTrace(
+              input = projectionInput,
+              primaryEngineBacked = primaryEngineBacked,
+              actualDecision = actualDecision,
+              decision = decision
             )
-          val hasEngineMateOutcome =
-            fullPayload.exists(payload =>
-              (payload \ "verdict" \ "outcome" \ "state").asOpt[String].exists(state =>
-                state == "forced_win" || state == "forced_loss"
-              )
-            )
-          val primaryRenderable =
-            primaryEngineBacked && (hasExplanation || hasEngineMateOutcome)
-          val renderable = primaryRenderable || hasExactProof
-          val payload =
-            if primaryRenderable then fullPayload.get
-            else if hasExactProof then exactPayload
-            else MoveMeaningProjection.emptyPayloadJson
-          val moveReview = Json.obj("renderable" -> renderable) ++ payload
-          val status = if renderable then "ready" else "withheld"
-          val reason =
-            if !primaryEngineBacked && !hasExactProof then Some("insufficient_engine_depth")
-            else if !renderable then Some("no_player_facing_reason")
-            else None
-          val probeRequests = packet.probeRequests.map(publicProbeRequestJson)
-          Result(
-            200,
-            Json.obj(
-              "schema_version" -> ResponseSchema,
-              "request_id" -> requestId,
-              "ok" -> true,
-              "status" -> status,
-              "availability" -> Json.obj("state" -> status, "reason" -> reason),
-              "probe_requests" -> probeRequests,
-              "move_review" -> moveReview
-            )
-          )
+        BoundaryEvaluationTrace(
+          boundaryExecution = Some(execution),
+          projection = Some(projection),
+          verbalization = VerbalizationStatus.Unavailable,
+          finalPublicResponse = projection.finalPublicResponse
+        )
+
+  private def actualProjectionDecision(
+      packet: EvidenceBackedJudgmentPacket,
+      primaryEngineBacked: Boolean
+  ): ProjectionDecision =
+    val fullPayload =
+      Option.when(primaryEngineBacked)(MoveMeaningProjection.publicPayloadJson(packet))
+    val exactPayload = MoveMeaningProjection.exactPayloadJson(packet)
+    val signals = projectionSignals(primaryEngineBacked, fullPayload, exactPayload)
+    val renderable = signals.primaryRenderable || signals.hasExactProof
+    val (selectedPayloadSource, selectedPayload) =
+      if signals.primaryRenderable then ProjectionPayloadSource.Full -> fullPayload.get
+      else if signals.hasExactProof then ProjectionPayloadSource.Exact -> exactPayload
+      else ProjectionPayloadSource.Empty -> MoveMeaningProjection.emptyPayloadJson
+    val status = if renderable then ProjectionStatus.Ready else ProjectionStatus.Withheld
+    val reason =
+      if !primaryEngineBacked && !signals.hasExactProof then
+        Some(ProjectionWithheldReason.InsufficientEngineDepth)
+      else if !renderable then Some(ProjectionWithheldReason.NoPlayerFacingReason)
+      else None
+    ProjectionDecision(
+      fullPayload = fullPayload,
+      exactPayload = exactPayload,
+      selectedPayloadSource = selectedPayloadSource,
+      selectedPayload = selectedPayload,
+      renderable = renderable,
+      status = status,
+      reason = reason,
+      publicProbeRequests = packet.probeRequests.map(publicProbeRequestJson)
+    )
+
+  private final case class ProjectionSignals(
+      hasExplanation: Boolean,
+      hasEngineMateOutcome: Boolean,
+      hasExactProof: Boolean,
+      primaryRenderable: Boolean
+  )
+
+  private def projectionSignals(
+      primaryEngineBacked: Boolean,
+      fullPayload: Option[JsObject],
+      exactPayload: JsObject
+  ): ProjectionSignals =
+    val hasExplanation =
+      fullPayload.exists(payload =>
+        (payload \ "explanations").asOpt[JsArray].exists(_.value.nonEmpty)
+      )
+    val hasEngineMateOutcome =
+      fullPayload.exists(payload =>
+        (payload \ "verdict" \ "outcome" \ "state").asOpt[String].exists(state =>
+          state == "forced_win" || state == "forced_loss"
+        )
+      )
+    val hasExactProof = (exactPayload \\ "exact_proof").nonEmpty
+    ProjectionSignals(
+      hasExplanation = hasExplanation,
+      hasEngineMateOutcome = hasEngineMateOutcome,
+      hasExactProof = hasExactProof,
+      primaryRenderable = primaryEngineBacked && (hasExplanation || hasEngineMateOutcome)
+    )
+
+  private def assembleProjectionTrace(
+      input: ProjectionBoundaryInput,
+      primaryEngineBacked: Boolean,
+      actualDecision: ProjectionDecision,
+      decision: ProjectionDecision
+  ): ProjectionTrace =
+    val requestId = input.requestId
+    val packet = input.packet
+    val signals = projectionSignals(primaryEngineBacked, decision.fullPayload, decision.exactPayload)
+    val moveReview = Json.obj("renderable" -> decision.renderable) ++ decision.selectedPayload
+    val finalPublicResponse =
+      Result(
+        200,
+        Json.obj(
+          "schema_version" -> ResponseSchema,
+          "request_id" -> requestId,
+          "ok" -> true,
+          "status" -> decision.status.id,
+          "availability" -> Json.obj("state" -> decision.status.id, "reason" -> decision.reason.map(_.id)),
+          "probe_requests" -> decision.publicProbeRequests,
+          "move_review" -> moveReview
+        )
+      )
+    ProjectionTrace(
+      input = input,
+      primaryEngineBacked = primaryEngineBacked,
+      fullPayload = decision.fullPayload,
+      exactPayload = decision.exactPayload,
+      selectedPayloadSource = decision.selectedPayloadSource,
+      selectedPayload = decision.selectedPayload,
+      hasExplanation = signals.hasExplanation,
+      hasEngineMateOutcome = signals.hasEngineMateOutcome,
+      hasExactProof = signals.hasExactProof,
+      primaryRenderable = signals.primaryRenderable,
+      renderable = decision.renderable,
+      status = decision.status,
+      reason = decision.reason,
+      probeRequests = packet.probeRequests,
+      publicProbeRequests = decision.publicProbeRequests,
+      moveReview = moveReview,
+      actualDecision = actualDecision,
+      finalPublicResponse = finalPublicResponse
+    )
+
+  private def projectionClosed(
+      decision: ProjectionDecision,
+      packet: EvidenceBackedJudgmentPacket,
+      actualDecision: ProjectionDecision,
+      primaryEngineBacked: Boolean
+  ): Boolean =
+    // An intervention may choose which already-certified packet projection to
+    // expose (or a probe subset), but it cannot manufacture a second public
+    // meaning DTO.  Full/exact payload bytes are derived once from the packet
+    // by the production projector and then used as the closure authority.
+    val packetPayloadsClosed =
+      decision.fullPayload == actualDecision.fullPayload &&
+        decision.exactPayload == actualDecision.exactPayload
+    val selectedPayloadClosed =
+      decision.selectedPayloadSource match
+        case ProjectionPayloadSource.Full =>
+          decision.fullPayload.contains(decision.selectedPayload)
+        case ProjectionPayloadSource.Exact =>
+          decision.selectedPayload == decision.exactPayload
+        case ProjectionPayloadSource.Empty =>
+          decision.selectedPayload == MoveMeaningProjection.emptyPayloadJson
+    val signals =
+      projectionSignals(primaryEngineBacked, decision.fullPayload, decision.exactPayload)
+    val selectedRenderable =
+      decision.selectedPayloadSource match
+        case ProjectionPayloadSource.Full  => signals.primaryRenderable
+        case ProjectionPayloadSource.Exact => signals.hasExactProof
+        case ProjectionPayloadSource.Empty => false
+    val expectedReason =
+      if selectedRenderable then None
+      else if !primaryEngineBacked && !signals.hasExactProof then
+        Some(ProjectionWithheldReason.InsufficientEngineDepth)
+      else Some(ProjectionWithheldReason.NoPlayerFacingReason)
+    val availabilityClosed =
+      decision.status match
+        case ProjectionStatus.Ready =>
+          decision.renderable && selectedRenderable && decision.reason.isEmpty &&
+            decision.selectedPayloadSource != ProjectionPayloadSource.Empty
+        case ProjectionStatus.Withheld =>
+          !decision.renderable && !signals.primaryRenderable && !signals.hasExactProof &&
+            decision.reason == expectedReason &&
+            decision.selectedPayloadSource == ProjectionPayloadSource.Empty
+    val payloadsClosed =
+      decision.fullPayload.forall(payload => !payload.keys.contains("renderable")) &&
+        !decision.exactPayload.keys.contains("renderable") &&
+        !decision.selectedPayload.keys.contains("renderable")
+    packetPayloadsClosed &&
+      selectedPayloadClosed &&
+      availabilityClosed &&
+      payloadsClosed &&
+      publicProbeProjectionClosed(packet.probeRequests, decision.publicProbeRequests)
+
+  private def publicProbeProjectionClosed(
+      nativeProbeRequests: List[ProbeRequest],
+      publicProbeRequests: List[JsObject]
+  ): Boolean =
+    val projectedIds = publicProbeRequests.flatMap(json => (json \ "id").asOpt[String])
+    val nativeIds = nativeProbeRequests.map(_.id)
+    val nativeById = nativeProbeRequests.map(request => request.id -> request).toMap
+    projectedIds.size == publicProbeRequests.size &&
+      projectedIds.distinct.size == projectedIds.size &&
+      projectedIds == nativeIds.filter(projectedIds.toSet) &&
+      publicProbeRequests.zip(projectedIds).forall { case (json, id) =>
+        nativeById.get(id).exists { request =>
+          val allowedProjection = publicProbeRequestJson(request)
+          json == allowedProjection
+        }
+      }
+
+  private def unavailableTrace(result: Result): BoundaryEvaluationTrace =
+    BoundaryEvaluationTrace(
+      boundaryExecution = None,
+      projection = None,
+      verbalization = VerbalizationStatus.Unavailable,
+      finalPublicResponse = result
+    )
 
   private[runtime] def failure(requestId: Option[String], httpStatus: Int, error: String): Result =
     Result(
@@ -218,17 +558,17 @@ object RuntimeProtocol:
         claims.flatMap(claim => registeredClosure(claim, graph).map(records => claim -> records))
       val playedClaims = registeredClaims
         .filter { case (claim, records) =>
-          val tier = PlayerFacingClaimPolicy.tier(packet, claim)
+          val tier = packet.playerFacingTier(claim)
           claim.family != ClaimFamily.Evaluation &&
           (tier == PlayerFacingClaimTier.Primary || tier == PlayerFacingClaimTier.Secondary) &&
-          explainsPlayedMove(claim, records, graph, playedMove)
+          explainsPlayedMove(claim, graph, playedMove)
         }
         .distinctBy(_._1.id)
       val ideas = playedClaims.map { case (claim, records) =>
-        ideaJson(claim, records, graph, playedMove, packet.candidateLines)
+        ideaJson(claim, records, graph, playedMove, packet)
       }
       val causeKinds = playedClaims
-        .flatMap { case (_, records) => causes(records, graph, playedMove).map(_._1.kind) }
+        .flatMap { case (claim, _) => packet.playerFacingRelativeCauses(claim).map(_._1.kind) }
         .distinct
         .map(value => code(value.toString))
       val line = playedLine
@@ -365,9 +705,10 @@ object RuntimeProtocol:
         records: List[EvidenceRecord],
         graph: TypedEvidenceGraph,
         playedMove: String,
-        lines: List[CandidateLineNode]
+        packet: EvidenceBackedJudgmentPacket
     ): JsObject =
-      val causeEntries = causes(records, graph, playedMove)
+      val lines = packet.candidateLines
+      val causeEntries = packet.playerFacingRelativeCauses(claim).map { case (cause, ref) => cause -> ref.id }
       val planEvidence = planEvents(claim, records, graph)
       val plans = planEvidence.map(event => ResolvedPlanEvent.from(event, lines, graph)).distinct
       val techniques = exactEndgameTechniques(records)
@@ -381,10 +722,13 @@ object RuntimeProtocol:
         semanticNames match
           case name :: Nil => name
           case _           => label(claim.family.toString)
+      val referenceMove =
+        lines.find(_.ref.role == LineNodeRole.BestReference).map(_.ref.rootMove).getOrElse("")
       Json.obj(
         "id" -> claim.id,
         "kind" -> code(claim.family.toString),
         "name" -> semanticName,
+        "comparison_role" -> ideaComparisonRole(claim, planEvidence, playedMove, referenceMove),
         "subject" -> code(claim.subject.toString),
         "scope" -> code(claim.scope.toString),
         "confidence" -> code(claim.confidence.toString),
@@ -394,7 +738,11 @@ object RuntimeProtocol:
           "scopes" -> records.map(record => code(record.ref.scope.toString)).distinct.sorted,
           "causes" -> causeEntries.map(entry => code(entry._1.kind.toString)).distinct
         ),
-        "plans" -> plans.map(planJson),
+        "plans" -> plans.map(plan =>
+          planJson(plan) ++ Json.obj(
+            "comparison_role" -> comparisonRole(plan.rootMove, playedMove, referenceMove)
+          )
+        ),
         "endgame_techniques" -> techniques
       )
 
@@ -409,51 +757,21 @@ object RuntimeProtocol:
 
     private def explainsPlayedMove(
         claim: JudgmentClaim,
-        records: List[EvidenceRecord],
         graph: TypedEvidenceGraph,
         playedMove: String
     ): Boolean =
-      playedMove.nonEmpty && (
-        claim.subject == ClaimSubject.PlayedMove ||
-          claim.subjectMove.exists(EvidenceRef.sameMove(_, playedMove)) ||
-          claim.primaryLine.exists(line =>
-            line.role == LineNodeRole.Played && EvidenceRef.sameMove(line.rootMove, playedMove)
-          ) ||
-          records.exists {
-            case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-              graph.comparisonFor(cause).exists(fact =>
-                EvidenceRef.sameMove(fact.candidateLine.rootMove, playedMove)
-              )
-            case EvidenceRecord(_, event: PlanCausalEventEvidence, _) =>
-              EvidenceRef.sameMove(event.rootMove, playedMove)
-            case _ =>
-              false
-          }
-      )
-
-    private def causes(
-        records: List[EvidenceRecord],
-        graph: TypedEvidenceGraph,
-        playedMove: String
-    ): List[(RelativeCauseFact, String)] =
-      val all = records.collect {
-        case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) =>
-          (cause, ref.id, graph.requiredRelativeCauseBinding(cause))
-      }.distinctBy { case (cause, _, binding) =>
-        (cause.kind, binding.role, cause.sourceSide, binding.eventLine.id)
-      }
       val playedMoves = Set(EvidenceRef.normalizeMove(playedMove)).filter(_.nonEmpty)
-      all
-        .filter { case (cause, _, binding) =>
-          binding.role == RelativeCauseRole.PrimaryPlayedCause &&
-          binding.importance == RelativeCauseImportance.Primary &&
-          JudgmentSubjectBinding.relativeCauseBinding(cause, graph, playedMoves) == SubjectBindingClass.PrimaryPlayedCause
-        }
-        .sortBy(_._1.kind.toString)
-        .map { case (cause, refId, _) => cause -> refId }
+      playedMoves.nonEmpty &&
+        JudgmentSubjectBinding.claimBinding(claim, graph, playedMoves) != SubjectBindingClass.Other
 
     private def targetJson(claim: JudgmentClaim, graph: TypedEvidenceGraph): JsObject =
-      val targets = EvidenceObjectBinding.fromClaim(claim, graph).flatMap(_.target)
+      val directCauses = directRelativeCauses(claim, graph)
+      val targets =
+        if directCauses.nonEmpty then
+          directCauses
+            .flatMap(cause => EvidenceObjectBinding.fromRelativeCauseForProjection(cause, graph).flatMap(_.target))
+            .distinctBy(_.signaturePart)
+        else EvidenceObjectBinding.fromClaim(claim, graph).flatMap(_.target)
       Json.obj(
         "squares" -> targets.collect {
           case ConcreteChessObject(EvidenceObjectKind.Square, key) => key
@@ -472,7 +790,25 @@ object RuntimeProtocol:
         records: List[EvidenceRecord],
         graph: TypedEvidenceGraph
     ): List[PlanCausalEventEvidence] =
-      val events = records.collect {
+      val directCauses = directRelativeCauses(claim, graph)
+      val causeEventRefs =
+        directCauses.flatMap { cause =>
+          val exactRestrictionRefs = graph.opponentResourceDeterrenceEventRefs(cause)
+          if exactRestrictionRefs.nonEmpty then exactRestrictionRefs
+          else graph.relativeCausePlanCausalEventRefs(cause)
+        }
+      val directEventRefs = claim.evidence.filter(ref =>
+        graph.byId.get(ref.id).exists(_.payload.isInstanceOf[PlanCausalEventEvidence])
+      )
+      val scopedEventRefs =
+        (if directCauses.nonEmpty then causeEventRefs else directEventRefs).distinctBy(_.id)
+      val eventRecords =
+        if directCauses.nonEmpty then
+          scopedEventRefs.flatMap(ref => graph.byId.get(ref.id))
+        else if scopedEventRefs.nonEmpty then
+          scopedEventRefs.flatMap(ref => graph.byId.get(ref.id))
+        else records
+      val events = eventRecords.collect {
         case EvidenceRecord(_, event: PlanCausalEventEvidence, _) =>
           event
       }
@@ -480,12 +816,10 @@ object RuntimeProtocol:
         (claim.subjectMove.toList ++ claim.primaryLine.map(_.rootMove).toList)
           .map(EvidenceRef.normalizeMove)
           .filter(_.nonEmpty)
-      val causeRoots = records.flatMap {
-        case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-          causeLinesForSubject(claim.subject, claim.primaryLine, cause, graph).map(_.rootMove)
-        case _ =>
-          Nil
-      }.map(EvidenceRef.normalizeMove).filter(_.nonEmpty)
+      val causeRoots = directRelativeCauses(claim, graph)
+        .flatMap(cause => causeLinesForSubject(claim.subject, claim.primaryLine, cause, graph).map(_.rootMove))
+        .map(EvidenceRef.normalizeMove)
+        .filter(_.nonEmpty)
       val boundRoots = (directRoots ++ causeRoots).distinct
       val admissibleRoots =
         if boundRoots.nonEmpty then boundRoots
@@ -495,6 +829,15 @@ object RuntimeProtocol:
       events
         .filter(event => admissibleRoots.exists(EvidenceRef.sameMove(_, event.rootMove)))
         .distinctBy(event => (event.planId.id, event.identity.stableKey, event.rootLine.id))
+
+    private def directRelativeCauses(
+        claim: JudgmentClaim,
+        graph: TypedEvidenceGraph
+    ): List[RelativeCauseFact] =
+      claim.evidence
+        .flatMap(ref => graph.byId.get(ref.id))
+        .collect { case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) => cause }
+        .distinct
 
     private def causeLinesForSubject(
         subject: ClaimSubject,
@@ -562,9 +905,32 @@ object RuntimeProtocol:
         event.results.exists(result => result.stage == "future" && result.robustness.nonEmpty)
 
     private def planRole(rootMove: String, playedMove: String, referenceMove: String): String =
-      if EvidenceRef.sameMove(rootMove, playedMove) then "played move"
-      else if EvidenceRef.sameMove(rootMove, referenceMove) then "better choice"
+      comparisonRole(rootMove, playedMove, referenceMove) match
+        case "played"        => "played move"
+        case "better_choice" => "better choice"
+        case _               => "variation"
+
+    private def comparisonRole(rootMove: String, playedMove: String, referenceMove: String): String =
+      if EvidenceRef.sameMove(rootMove, playedMove) then "played"
+      else if EvidenceRef.sameMove(rootMove, referenceMove) then "better_choice"
       else "variation"
+
+    private def ideaComparisonRole(
+        claim: JudgmentClaim,
+        events: List[PlanCausalEventEvidence],
+        playedMove: String,
+        referenceMove: String
+    ): String =
+      claim.subject match
+        case ClaimSubject.PlayedMove    => "played"
+        case ClaimSubject.ReferenceMove => "better_choice"
+        case _ =>
+          val rootMove =
+            claim.subjectMove
+              .orElse(claim.primaryLine.map(_.rootMove))
+              .orElse(events.headOption.map(_.rootMove))
+              .getOrElse("")
+          comparisonRole(rootMove, playedMove, referenceMove)
 
     private def exactEndgameTechniques(records: List[EvidenceRecord]): List[JsObject] =
       records.iterator

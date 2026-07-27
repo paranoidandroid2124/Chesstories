@@ -1,0 +1,100 @@
+{
+  "schema_version": "chesstory.eval.corpus-manifest.v1",
+  "corpus_version": "judgment-boundary-v1.3.0",
+  "created_at": "2026-07-26T00:00:00Z",
+  "qualification": "harness-and-diagnostic-explore-only",
+  "warning": "Diagnostic-confirm, fresh-confirm, and blind are distinct sealed reservations, not release-qualified annotated sets. Independent curators must replace them under a new corpus version before attribution, final-candidate, or blind inference.",
+  "splits": {
+    "diagnostic-explore": {
+      "path": "diagnostic-explore.jsonl",
+      "state": "open",
+      "sha256": "2c89aae238cb55212d729aa2d48fa985b94e440f83b251b2f2bc8ab8b7735c15",
+      "records": 3,
+      "purpose": "book-grounded reconstruction and harness diagnosis"
+    },
+    "diagnostic-confirm": {
+      "path": "sealed/diagnostic-confirm.jsonl",
+      "state": "sealed",
+      "sha256": "4d5fa46731951732b78cfb2e6888a4f4aafee39f991878da3527a21f9bc86652",
+      "records": 1,
+      "purpose": "reservation awaiting independent annotation",
+      "open_roles": ["independent-confirm-executor"],
+      "unlock_token_sha256": "76ec574f091e619379a8a6c9139dc9960b5059037387512c20d7f25b573353f3",
+      "open_once_per_candidate_manifest": true
+    },
+    "fresh-confirm": {
+      "path": "sealed/fresh-confirm.jsonl",
+      "state": "sealed",
+      "sha256": "df05fdc3288463ab044de73748752eca7de0b9ea01ce97796e2d3d37caa9c2a6",
+      "records": 1,
+      "purpose": "reservation for one execution of the final modified signed candidate",
+      "open_roles": ["independent-fresh-confirm-executor"],
+      "unlock_token_sha256": "afa19a5a94f5aa139c7ff025ac7cb3306f5815df985a581fc2918e6418c81cf4",
+      "open_once_per_candidate_manifest": true
+    },
+    "blind": {
+      "path": "sealed/blind.jsonl",
+      "state": "sealed",
+      "sha256": "87eed14da3c1734dd88cd72512ad3f1b1429c42ef496fb85834d5efc56804f0d",
+      "records": 1,
+      "purpose": "reservation awaiting an independent blind-set custodian",
+      "open_roles": ["independent-blind-executor"],
+      "unlock_token_sha256": "4d5afdd695ae681356d11da5b65c4670957da7eecaa08645487cd7d2ea44f0c7",
+      "open_once_per_candidate_manifest": true
+    }
+  },
+  "atomic_clusters": {
+    "diagnostic-explore": [
+      "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+      "cluster-gamechanger-h4-ng5"
+    ],
+    "diagnostic-confirm": ["cluster-confirm-endgame-reservation-001"],
+    "fresh-confirm": ["cluster-fresh-confirm-final-reservation-001"],
+    "blind": ["cluster-blind-opening-reservation-001"]
+  },
+  "cluster_relation_closure": [
+    "game",
+    "opening-lineage",
+    "tactical-archetype",
+    "counterfactual"
+  ],
+  "relation_key_sha256": {
+    "game": {
+      "diagnostic-explore": [],
+      "diagnostic-confirm": [],
+      "fresh-confirm": [],
+      "blind": []
+    },
+    "opening-lineage": {
+      "diagnostic-explore": [
+        "d5a5fb29051cc62bc609a8c02f5551befe2f0dfce2ef6142c3bb78b5d9218a64",
+        "78231377348d1fd876e250b070746df80090822cfd7042bcd088c8bd3b0c8545"
+      ],
+      "diagnostic-confirm": ["56af3d5093a229a4902adc03786f01f093a0ecbb1025a33e5170c424c8a3b38d"],
+      "fresh-confirm": ["ceed0c9146f47fd597c8c58326f4d1f90e593b3ce010daad584fea64d18a1fcc"],
+      "blind": ["7cf98b778a65a2ef4f11a61c54ee1a34117be9a394e9b994e7a89dc3a607dc13"]
+    },
+    "tactical-archetype": {
+      "diagnostic-explore": [
+        "d4d60e7b09e7e770142ecb21288713aa6d28ed1178b2f68ab68101d389fedd7d",
+        "f81e74e003fd6b53db4578b01aff8171fa295bc77287a4129459f64a291838f4"
+      ],
+      "diagnostic-confirm": ["0ab9d3309dd1bcc899cab679e23b6c918050b66f966a7a8bfe578a9cd6627103"],
+      "fresh-confirm": ["ac9063d843e17f7eef56939cbccbc038ae0c5590f6a9db5fb49c6068f803e2c2"],
+      "blind": ["f4d56388b27a73999a129bd89a0dcd4bb6c013e16be0b80b2d3cdefdf79a3118"]
+    },
+    "counterfactual": {
+      "diagnostic-explore": [
+        "b298c36a2547e6825268b38a57cb13236f4c723c0e5905420fc61be5c42dcb14",
+        "0c018463cbdca887b61d280eb22ea6570bde0dbb7d47608d000a1066289728e3"
+      ],
+      "diagnostic-confirm": [],
+      "fresh-confirm": [],
+      "blind": []
+    }
+  },
+  "reference_index": "../../references/source-index.json",
+  "preregistration": "preregistration.json",
+  "role_schedule": "role-schedule.json",
+  "access_policy": "access-policy.json"
+}

@@ -1,0 +1,1790 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/v1/common.schema.json",
+  "title": "Chesstories judgment evaluation common types v1",
+  "$comment": "The experiment source/arm is deliberately not part of a stage document. It belongs to runner/capture metadata so an adapter cannot leak assignment through the stage interface.",
+  "x-canonical-annotation-registry": {
+    "identity-definition": "Defines an ID in the named namespace. Canonical re-ID must update every matching reference.",
+    "identity-reference": "A scalar reference into the named identity namespace.",
+    "identity-reference-set": "An unordered array of references into the named identity namespace.",
+    "unordered-set": "Array order has no meaning. Values remain otherwise byte-for-byte significant.",
+    "null-equivalent-omission": "Only a JSON null at this annotated property is equivalent to omitting the property.",
+    "forbidden": "Confidence values, ranked-list order/rank values, and operational missingness have no canonicalization annotation."
+  },
+  "x-semantic-transition-registry": {
+    "version": "1.0.0",
+    "lineage_order": ["Q", "F", "C", "Jp", "Ja", "R", "P", "V"],
+    "envelope": "input payload/hash and the exact committed upstream artifact-hash set; output echoes the validated input envelope",
+    "reference_closure": "identity-definition and identity-reference annotations define all namespace closure; duplicate definitions and dangling references are forbidden",
+    "stage_relations": {
+      "Ja": "each decision is an unchanged member of Jp proposals",
+      "R": "each ranked claim is an unchanged admitted Ja decision and ranks are unique",
+      "P": "public claims and materialized support are unchanged subsets of the direct P input",
+      "V": "projection, claim, evidence, token and span references close over the direct V input"
+    },
+    "verbalization_grounding": {
+      "text_joiner": "\n",
+      "offset_unit": "unicode-code-point",
+      "authorized_span": "exact",
+      "unlicensed_prohibited_tokens": "reject"
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "stage": {
+      "type": "string",
+      "enum": ["Q", "F", "C", "Jp", "Ja", "R", "P", "V"]
+    },
+    "split": {
+      "type": "string",
+      "enum": ["diagnostic-explore", "diagnostic-confirm", "fresh-confirm", "blind"]
+    },
+    "stageContext": {
+      "type": "object",
+      "required": ["design"],
+      "properties": {
+        "design": {
+          "type": "string",
+          "enum": [
+            "baseline",
+            "all-oracle",
+            "one-stage",
+            "leave-one-actual",
+            "forward-substitution",
+            "backward-substitution",
+            "adjacent-factorial",
+            "wider-factorial",
+            "interface-policy-factorial",
+            "identity-control",
+            "null-control",
+            "format-control",
+            "ceiling",
+            "final-evaluation"
+          ]
+        },
+        "experiment_id": { "$ref": "#/$defs/nonEmptyString" },
+        "focus_stages": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/stage" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": "value"
+          }
+        },
+        "sequence_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "repetition_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "interface": {
+          "type": "object",
+          "required": ["upstream", "downstream"],
+          "properties": {
+            "upstream": { "$ref": "#/$defs/stage" },
+            "downstream": { "$ref": "#/$defs/stage" }
+          },
+          "additionalProperties": false
+        },
+        "display_label": {
+          "type": ["string", "null"],
+          "x-canonical": {
+            "mode": "null-equivalent-omission"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "producer": {
+      "type": "object",
+      "required": ["component", "version"],
+      "properties": {
+        "component": { "$ref": "#/$defs/nonEmptyString" },
+        "version": { "$ref": "#/$defs/nonEmptyString" },
+        "build_hash": { "$ref": "#/$defs/sha256" },
+        "configuration_hash": { "$ref": "#/$defs/sha256" },
+        "model_name": { "$ref": "#/$defs/nonEmptyString" },
+        "model_version": { "$ref": "#/$defs/nonEmptyString" },
+        "engine_name": { "$ref": "#/$defs/nonEmptyString" },
+        "engine_version": { "$ref": "#/$defs/nonEmptyString" },
+        "policy_version": { "$ref": "#/$defs/nonEmptyString" },
+        "prompt_hash": { "$ref": "#/$defs/sha256" },
+        "decoding_hash": { "$ref": "#/$defs/sha256" },
+        "dependency_versions": {
+          "type": "object",
+          "propertyNames": {
+            "allOf": [
+              { "minLength": 1 },
+              { "not": { "enum": ["source", "arm", "oracle_chain"] } }
+            ]
+          },
+          "additionalProperties": { "$ref": "#/$defs/nonEmptyString" }
+        },
+        "display_name": {
+          "type": ["string", "null"],
+          "x-canonical": {
+            "mode": "null-equivalent-omission"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "stageDocument": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "stage",
+        "sample_id",
+        "atomic_cluster_id",
+        "corpus_version",
+        "split",
+        "run_id",
+        "stage_context",
+        "seed",
+        "input_hash",
+        "upstream_artifact_hashes",
+        "producer",
+        "payload"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "stage": { "$ref": "#/$defs/stage" },
+        "sample_id": { "$ref": "#/$defs/nonEmptyString" },
+        "atomic_cluster_id": { "$ref": "#/$defs/nonEmptyString" },
+        "corpus_version": { "$ref": "#/$defs/nonEmptyString" },
+        "split": { "$ref": "#/$defs/split" },
+        "run_id": { "$ref": "#/$defs/nonEmptyString" },
+        "stage_context": { "$ref": "#/$defs/stageContext" },
+        "seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "input_hash": { "$ref": "#/$defs/sha256" },
+        "upstream_artifact_hashes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sha256" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": "value"
+          }
+        },
+        "producer": { "$ref": "#/$defs/producer" },
+        "payload": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "color": {
+      "type": "string",
+      "enum": ["white", "black"]
+    },
+    "pieceType": {
+      "type": "string",
+      "enum": ["king", "queen", "rook", "bishop", "knight", "pawn"]
+    },
+    "square": {
+      "type": "string",
+      "pattern": "^[a-h][1-8]$"
+    },
+    "uciMove": {
+      "type": "string",
+      "pattern": "^(?:[a-h][1-8][a-h][1-8][qrbn]?|0000)$"
+    },
+    "jsonScalar": {
+      "type": ["string", "number", "integer", "boolean"]
+    },
+
+    "positionIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "position" }
+    },
+    "positionIdReference": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-reference", "namespace": "position" }
+    },
+    "lineIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "line" }
+    },
+    "lineIdReference": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-reference", "namespace": "line" }
+    },
+    "providerIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "provider" }
+    },
+    "providerIdReference": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-reference", "namespace": "provider" }
+    },
+    "acquisitionIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "acquisition" }
+    },
+    "probeIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "probe" }
+    },
+    "tablebaseIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "tablebase" }
+    },
+    "evidenceIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "evidence" }
+    },
+    "evidenceIdReference": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-reference", "namespace": "evidence" }
+    },
+    "factIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "fact" }
+    },
+    "factIdReference": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-reference", "namespace": "fact" }
+    },
+    "bindingIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "binding" }
+    },
+    "bindingIdReference": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-reference", "namespace": "binding" }
+    },
+    "causeIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "cause" }
+    },
+    "causeIdReference": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-reference", "namespace": "cause" }
+    },
+    "claimIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "claim" }
+    },
+    "claimIdReference": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-reference", "namespace": "claim" }
+    },
+    "planEventIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "plan-event" }
+    },
+    "planEventIdReference": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-reference", "namespace": "plan-event" }
+    },
+    "proofIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "proof" }
+    },
+    "proofIdReference": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-reference", "namespace": "proof" }
+    },
+    "projectionIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "projection" }
+    },
+    "projectionIdReference": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-reference", "namespace": "projection" }
+    },
+    "sentenceIdDefinition": {
+      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
+      "x-canonical": { "mode": "identity-definition", "namespace": "sentence" }
+    },
+
+    "position": {
+      "type": "object",
+      "required": ["position_id", "fen", "side_to_move"],
+      "properties": {
+        "position_id": { "$ref": "#/$defs/positionIdDefinition" },
+        "fen": { "$ref": "#/$defs/nonEmptyString" },
+        "side_to_move": { "$ref": "#/$defs/color" }
+      },
+      "additionalProperties": false
+    },
+    "question": {
+      "type": "object",
+      "required": ["root_position", "played_move_uci"],
+      "properties": {
+        "root_position": { "$ref": "#/$defs/position" },
+        "played_move_uci": { "$ref": "#/$defs/uciMove" },
+        "move_history_uci": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/uciMove" }
+        },
+        "requested_reference_moves_uci": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/uciMove" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": "value"
+          }
+        },
+        "game_phase": {
+          "type": "string",
+          "enum": ["opening", "middlegame", "endgame"]
+        },
+        "family_tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["tactical", "strategic", "defensive", "conversion", "material", "evaluation"]
+          },
+          "uniqueItems": true,
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": "value"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "acquisitionConfig": {
+      "type": "object",
+      "required": ["depth", "multipv", "repetitions", "stability_tolerance_cp", "probe_kinds", "tablebase"],
+      "properties": {
+        "depth": { "type": "integer", "minimum": 1 },
+        "node_limit": { "type": "integer", "minimum": 1 },
+        "time_limit_ms": { "type": "integer", "minimum": 1 },
+        "multipv": { "type": "integer", "minimum": 1 },
+        "repetitions": { "type": "integer", "minimum": 1 },
+        "stability_tolerance_cp": { "type": "integer", "minimum": 0 },
+        "probe_kinds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": "value"
+          }
+        },
+        "tablebase": {
+          "type": "string",
+          "enum": ["required-when-applicable", "optional", "disabled"]
+        },
+        "engine_options": {
+          "type": "object",
+          "propertyNames": {
+            "allOf": [
+              { "minLength": 1 },
+              { "not": { "enum": ["source", "arm", "oracle_chain"] } }
+            ]
+          },
+          "additionalProperties": { "$ref": "#/$defs/jsonScalar" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "provider": {
+      "type": "object",
+      "required": ["provider_id", "kind", "name", "version"],
+      "properties": {
+        "provider_id": { "$ref": "#/$defs/providerIdDefinition" },
+        "kind": {
+          "type": "string",
+          "enum": ["engine", "probe", "tablebase", "board-library"]
+        },
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "version": { "$ref": "#/$defs/nonEmptyString" },
+        "configuration_hash": { "$ref": "#/$defs/sha256" },
+        "dataset_version": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "evaluation": {
+      "type": "object",
+      "required": ["perspective"],
+      "properties": {
+        "perspective": {
+          "type": "string",
+          "enum": ["mover", "root-side", "white"]
+        },
+        "centipawns": { "type": "integer" },
+        "mate_in": {
+          "$comment": "Signed plies from the declared perspective: positive means that side can force mate, negative means that side is being mated.",
+          "type": "integer"
+        },
+        "win_probability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "oneOf": [
+        { "required": ["centipawns"], "not": { "required": ["mate_in"] } },
+        { "required": ["mate_in"], "not": { "required": ["centipawns"] } }
+      ],
+      "additionalProperties": false
+    },
+    "legality": {
+      "type": "object",
+      "required": ["legal", "replayed_plies"],
+      "properties": {
+        "legal": { "type": "boolean" },
+        "replayed_plies": { "type": "integer", "minimum": 0 },
+        "illegal_at_ply": { "type": "integer", "minimum": 1 },
+        "final_fen": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "engineLine": {
+      "type": "object",
+      "required": [
+        "line_id",
+        "root_position_id",
+        "multipv_index",
+        "root_move_uci",
+        "moves_uci",
+        "depth",
+        "nodes",
+        "evaluation",
+        "legality"
+      ],
+      "properties": {
+        "line_id": { "$ref": "#/$defs/lineIdDefinition" },
+        "root_position_id": { "$ref": "#/$defs/positionIdReference" },
+        "multipv_index": { "type": "integer", "minimum": 1 },
+        "root_move_uci": { "$ref": "#/$defs/uciMove" },
+        "moves_uci": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/uciMove" }
+        },
+        "depth": { "type": "integer", "minimum": 0 },
+        "selective_depth": { "type": "integer", "minimum": 0 },
+        "nodes": { "type": "integer", "minimum": 0 },
+        "time_ms": { "type": "integer", "minimum": 0 },
+        "evaluation": { "$ref": "#/$defs/evaluation" },
+        "legality": { "$ref": "#/$defs/legality" }
+      },
+      "additionalProperties": false
+    },
+    "repetitionLine": {
+      "type": "object",
+      "required": ["multipv_index", "root_move_uci", "evaluation"],
+      "properties": {
+        "multipv_index": { "type": "integer", "minimum": 1 },
+        "root_move_uci": { "$ref": "#/$defs/uciMove" },
+        "evaluation": { "$ref": "#/$defs/evaluation" }
+      },
+      "additionalProperties": false
+    },
+    "acquisitionRepetition": {
+      "type": "object",
+      "required": ["acquisition_id", "repetition_index", "provider_id", "depth", "nodes", "lines"],
+      "properties": {
+        "acquisition_id": { "$ref": "#/$defs/acquisitionIdDefinition" },
+        "repetition_index": { "type": "integer", "minimum": 0 },
+        "provider_id": { "$ref": "#/$defs/providerIdReference" },
+        "depth": { "type": "integer", "minimum": 0 },
+        "nodes": { "type": "integer", "minimum": 0 },
+        "lines": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/repetitionLine" }
+        },
+        "forced_required_lines": {
+          "$comment": "These are independently forced searchmoves acquisitions, never ranked MultiPV cells.",
+          "type": "array",
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": ["root_move_uci"]
+          },
+          "items": {
+            "type": "object",
+            "required": ["root_move_uci", "evaluation", "search_kind"],
+            "properties": {
+              "root_move_uci": { "$ref": "#/$defs/uciMove" },
+              "evaluation": { "$ref": "#/$defs/evaluation" },
+              "search_kind": {
+                "type": "string",
+                "enum": [
+                  "required-played-move-searchmoves",
+                  "required-reference-move-searchmoves"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "attribute": {
+      "type": "object",
+      "required": ["key", "value"],
+      "properties": {
+        "key": { "$ref": "#/$defs/nonEmptyString" },
+        "value": { "$ref": "#/$defs/jsonScalar" }
+      },
+      "additionalProperties": false
+    },
+    "probeResult": {
+      "type": "object",
+      "required": ["probe_id", "kind", "provider_id", "status", "attributes"],
+      "properties": {
+        "probe_id": { "$ref": "#/$defs/probeIdDefinition" },
+        "kind": { "$ref": "#/$defs/nonEmptyString" },
+        "provider_id": { "$ref": "#/$defs/providerIdReference" },
+        "status": {
+          "type": "string",
+          "enum": ["present", "not-applicable", "missing", "failed", "unsupported"]
+        },
+        "attributes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/attribute" },
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": ["key"]
+          }
+        },
+        "failure_code": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "tablebaseResult": {
+      "type": "object",
+      "required": ["tablebase_id", "provider_id", "position_id", "status"],
+      "properties": {
+        "tablebase_id": { "$ref": "#/$defs/tablebaseIdDefinition" },
+        "provider_id": { "$ref": "#/$defs/providerIdReference" },
+        "position_id": { "$ref": "#/$defs/positionIdReference" },
+        "status": {
+          "type": "string",
+          "enum": ["present", "not-applicable", "missing", "failed", "unsupported"]
+        },
+        "wdl": {
+          "type": "string",
+          "enum": ["win", "draw", "loss", "cursed-win", "blessed-loss"]
+        },
+        "dtz": { "type": "integer" },
+        "dtm": { "type": "integer" },
+        "best_moves_uci": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/uciMove" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": "value"
+          }
+        },
+        "failure_code": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "missingEvidence": {
+      "type": "object",
+      "required": ["requirement", "status"],
+      "properties": {
+        "requirement": { "$ref": "#/$defs/nonEmptyString" },
+        "status": {
+          "type": "string",
+          "enum": ["present", "not-applicable", "missing", "failed", "unsupported"]
+        },
+        "reason_code": { "$ref": "#/$defs/nonEmptyString" },
+        "detail": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "evidenceRecord": {
+      "type": "object",
+      "required": ["evidence_id", "kind", "parent_evidence_ids", "attributes"],
+      "properties": {
+        "evidence_id": { "$ref": "#/$defs/evidenceIdDefinition" },
+        "kind": { "$ref": "#/$defs/nonEmptyString" },
+        "parent_evidence_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "evidence",
+            "sort_by": "canonical-id"
+          }
+        },
+        "position_id": { "$ref": "#/$defs/positionIdReference" },
+        "line_id": { "$ref": "#/$defs/lineIdReference" },
+        "attributes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/attribute" },
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": ["key"]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "engineEvidencePack": {
+      "type": "object",
+      "required": [
+        "question",
+        "acquisition_config",
+        "providers",
+        "candidate_lines",
+        "repetitions",
+        "probes",
+        "tablebase_results",
+        "evidence_records",
+        "missing_evidence"
+      ],
+      "properties": {
+        "question": { "$ref": "#/$defs/question" },
+        "acquisition_config": { "$ref": "#/$defs/acquisitionConfig" },
+        "providers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/provider" },
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": ["provider_id"]
+          }
+        },
+        "candidate_lines": {
+          "$comment": "Array order and multipv_index are ranking semantics and are intentionally not canonicalizable.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/engineLine" }
+        },
+        "forced_required_lines": {
+          "$comment": "Lines acquired with UCI searchmoves to cover a requested move. They carry no MultiPV rank semantics.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "line_id",
+              "root_position_id",
+              "root_move_uci",
+              "moves_uci",
+              "depth",
+              "nodes",
+              "evaluation",
+              "legality",
+              "search_kind"
+            ],
+            "properties": {
+              "line_id": { "$ref": "#/$defs/lineIdDefinition" },
+              "root_position_id": { "$ref": "#/$defs/positionIdReference" },
+              "root_move_uci": { "$ref": "#/$defs/uciMove" },
+              "moves_uci": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "$ref": "#/$defs/uciMove" }
+              },
+              "depth": { "type": "integer", "minimum": 0 },
+              "selective_depth": { "type": "integer", "minimum": 0 },
+              "nodes": { "type": "integer", "minimum": 0 },
+              "evaluation": { "$ref": "#/$defs/evaluation" },
+              "legality": { "$ref": "#/$defs/legality" },
+              "search_kind": {
+                "type": "string",
+                "enum": [
+                  "required-played-move-searchmoves",
+                  "required-reference-move-searchmoves"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": ["root_move_uci"]
+          }
+        },
+        "repetitions": {
+          "$comment": "Repetition order is retained because it participates in stability diagnostics.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/acquisitionRepetition" }
+        },
+        "probes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/probeResult" },
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": ["probe_id"]
+          }
+        },
+        "tablebase_results": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/tablebaseResult" },
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": ["tablebase_id"]
+          }
+        },
+        "evidence_records": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceRecord" },
+          "x-canonical": {
+            "mode": "unordered-set",
+            "sort_by": ["evidence_id"]
+          }
+        },
+        "missing_evidence": {
+          "$comment": "Operational missingness and its ordering are preserved exactly.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/missingEvidence" }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "objectBinding": {
+      "type": "object",
+      "required": ["binding_id", "kind", "value"],
+      "properties": {
+        "binding_id": { "$ref": "#/$defs/bindingIdDefinition" },
+        "kind": {
+          "type": "string",
+          "enum": ["piece", "square", "file", "rank", "diagonal", "move", "position", "line", "threat", "plan"]
+        },
+        "value": { "$ref": "#/$defs/nonEmptyString" },
+        "color": { "$ref": "#/$defs/color" },
+        "piece_type": { "$ref": "#/$defs/pieceType" },
+        "position_id": { "$ref": "#/$defs/positionIdReference" }
+      },
+      "additionalProperties": false
+    },
+    "boardFact": {
+      "type": "object",
+      "required": ["fact_id", "fact_type", "position_id", "predicate", "polarity", "binding_ids", "evidence_ids"],
+      "properties": {
+        "fact_id": { "$ref": "#/$defs/factIdDefinition" },
+        "fact_type": { "const": "board" },
+        "position_id": { "$ref": "#/$defs/positionIdReference" },
+        "predicate": { "$ref": "#/$defs/nonEmptyString" },
+        "polarity": { "type": "boolean" },
+        "binding_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/bindingIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "binding",
+            "sort_by": "canonical-id"
+          }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "evidence",
+            "sort_by": "canonical-id"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "legalReplayFact": {
+      "type": "object",
+      "required": ["fact_id", "fact_type", "line_id", "legal", "moves_uci", "evidence_ids"],
+      "properties": {
+        "fact_id": { "$ref": "#/$defs/factIdDefinition" },
+        "fact_type": { "const": "legal-replay" },
+        "line_id": { "$ref": "#/$defs/lineIdReference" },
+        "legal": { "type": "boolean" },
+        "moves_uci": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/uciMove" }
+        },
+        "final_position_id": { "$ref": "#/$defs/positionIdReference" },
+        "illegal_at_ply": { "type": "integer", "minimum": 1 },
+        "evidence_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "evidence",
+            "sort_by": "canonical-id"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "comparisonFact": {
+      "type": "object",
+      "required": [
+        "fact_id",
+        "fact_type",
+        "played_line_id",
+        "reference_line_id",
+        "played_evaluation",
+        "reference_evaluation",
+        "comparison_basis",
+        "verdict",
+        "evidence_ids"
+      ],
+      "properties": {
+        "fact_id": { "$ref": "#/$defs/factIdDefinition" },
+        "fact_type": { "const": "candidate-comparison" },
+        "played_line_id": { "$ref": "#/$defs/lineIdReference" },
+        "reference_line_id": { "$ref": "#/$defs/lineIdReference" },
+        "played_evaluation": { "$ref": "#/$defs/evaluation" },
+        "reference_evaluation": { "$ref": "#/$defs/evaluation" },
+        "comparison_basis": {
+          "type": "string",
+          "enum": [
+            "centipawn-delta",
+            "win-probability-delta",
+            "mate-distance",
+            "mate-vs-nonmate-order"
+          ]
+        },
+        "delta_centipawns": {
+          "$comment": "played_evaluation minus reference_evaluation in their identical declared perspective.",
+          "type": "integer"
+        },
+        "win_probability_change": {
+          "$comment": "played win probability minus reference win probability in their identical declared perspective.",
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "mate_change": {
+          "$comment": "reference mate_in minus played mate_in after confirming both use the identical declared perspective; positive favors the played line when both scores have the same sign.",
+          "type": "integer"
+        },
+        "verdict": {
+          "type": "string",
+          "enum": ["only-move", "best", "excellent", "good", "inaccuracy", "mistake", "blunder", "unknown"]
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "evidence",
+            "sort_by": "canonical-id"
+          }
+        }
+      },
+      "oneOf": [
+        {
+          "required": ["delta_centipawns"],
+          "properties": {
+            "comparison_basis": { "const": "centipawn-delta" },
+            "played_evaluation": { "required": ["centipawns"] },
+            "reference_evaluation": { "required": ["centipawns"] }
+          },
+          "not": {
+            "anyOf": [
+              { "required": ["win_probability_change"] },
+              { "required": ["mate_change"] }
+            ]
+          }
+        },
+        {
+          "required": ["win_probability_change"],
+          "properties": {
+            "comparison_basis": { "const": "win-probability-delta" },
+            "played_evaluation": { "required": ["win_probability"] },
+            "reference_evaluation": { "required": ["win_probability"] }
+          },
+          "not": {
+            "anyOf": [
+              { "required": ["delta_centipawns"] },
+              { "required": ["mate_change"] }
+            ]
+          }
+        },
+        {
+          "required": ["mate_change"],
+          "properties": {
+            "comparison_basis": { "const": "mate-distance" },
+            "played_evaluation": { "required": ["mate_in"] },
+            "reference_evaluation": { "required": ["mate_in"] }
+          },
+          "not": {
+            "anyOf": [
+              { "required": ["delta_centipawns"] },
+              { "required": ["win_probability_change"] }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "comparison_basis": { "const": "mate-vs-nonmate-order" }
+          },
+          "anyOf": [
+            {
+              "properties": {
+                "played_evaluation": { "required": ["mate_in"] },
+                "reference_evaluation": { "required": ["centipawns"] }
+              }
+            },
+            {
+              "properties": {
+                "played_evaluation": { "required": ["centipawns"] },
+                "reference_evaluation": { "required": ["mate_in"] }
+              }
+            }
+          ],
+          "not": {
+            "anyOf": [
+              { "required": ["delta_centipawns"] },
+              { "required": ["win_probability_change"] },
+              { "required": ["mate_change"] }
+            ]
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "candidateSetFact": {
+      "type": "object",
+      "required": ["fact_id", "fact_type", "ranked_line_ids", "best_line_id", "evidence_ids"],
+      "properties": {
+        "fact_id": { "$ref": "#/$defs/factIdDefinition" },
+        "fact_type": { "const": "candidate-set" },
+        "ranked_line_ids": {
+          "$comment": "Candidate rank is semantic and is deliberately not canonicalizable.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/lineIdReference" },
+          "uniqueItems": true
+        },
+        "best_line_id": { "$ref": "#/$defs/lineIdReference" },
+        "second_line_id": { "$ref": "#/$defs/lineIdReference" },
+        "evidence_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "evidence",
+            "sort_by": "canonical-id"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "exactFact": {
+      "type": "object",
+      "required": ["fact_id", "fact_type", "proof_id", "line_id", "claim_kind", "result", "evidence_ids"],
+      "properties": {
+        "fact_id": { "$ref": "#/$defs/factIdDefinition" },
+        "fact_type": { "const": "exact" },
+        "proof_id": { "$ref": "#/$defs/proofIdDefinition" },
+        "line_id": { "$ref": "#/$defs/lineIdReference" },
+        "claim_kind": {
+          "type": "string",
+          "enum": ["tablebase", "zugzwang", "forced-mate"]
+        },
+        "result": { "$ref": "#/$defs/nonEmptyString" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/evidenceIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "evidence",
+            "sort_by": "canonical-id"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "fact": {
+      "oneOf": [
+        { "$ref": "#/$defs/boardFact" },
+        { "$ref": "#/$defs/legalReplayFact" },
+        { "$ref": "#/$defs/comparisonFact" },
+        { "$ref": "#/$defs/candidateSetFact" },
+        { "$ref": "#/$defs/exactFact" }
+      ]
+    },
+    "factBundle": {
+      "type": "object",
+      "required": ["positions", "bindings", "evidence_records", "facts", "unresolved_requirements"],
+      "properties": {
+        "positions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/position" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["position_id"] }
+        },
+        "bindings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/objectBinding" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["binding_id"] }
+        },
+        "evidence_records": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceRecord" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["evidence_id"] }
+        },
+        "facts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/fact" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["fact_id"] }
+        },
+        "unresolved_requirements": {
+          "$comment": "This is operational missingness and is intentionally not canonicalizable.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/missingEvidence" }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "semanticTerm": {
+      "type": "object",
+      "required": ["concept", "binding_ids", "supporting_fact_ids"],
+      "properties": {
+        "concept": { "$ref": "#/$defs/nonEmptyString" },
+        "binding_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/bindingIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "binding",
+            "sort_by": "canonical-id"
+          }
+        },
+        "supporting_fact_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/factIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "fact",
+            "sort_by": "canonical-id"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cause": {
+      "type": "object",
+      "required": [
+        "cause_id",
+        "comparison_fact_id",
+        "direction",
+        "actor",
+        "target",
+        "mechanism",
+        "consequence",
+        "supporting_fact_ids",
+        "supporting_evidence_ids",
+        "confidence"
+      ],
+      "properties": {
+        "cause_id": { "$ref": "#/$defs/causeIdDefinition" },
+        "comparison_fact_id": { "$ref": "#/$defs/factIdReference" },
+        "direction": {
+          "type": "string",
+          "enum": ["played-to-reference", "reference-to-played", "benefits-mover", "harms-mover", "neutral", "conditional"]
+        },
+        "actor": { "$ref": "#/$defs/semanticTerm" },
+        "target": { "$ref": "#/$defs/semanticTerm" },
+        "mechanism": { "$ref": "#/$defs/semanticTerm" },
+        "consequence": { "$ref": "#/$defs/semanticTerm" },
+        "condition": { "$ref": "#/$defs/nonEmptyString" },
+        "supporting_fact_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/factIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "fact",
+            "sort_by": "canonical-id"
+          }
+        },
+        "supporting_evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/evidenceIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "evidence",
+            "sort_by": "canonical-id"
+          }
+        },
+        "confidence": {
+          "$comment": "Operational confidence; canonicalization must preserve it exactly.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "causeBundle": {
+      "type": "object",
+      "required": ["causes", "unresolved_comparison_fact_ids"],
+      "properties": {
+        "causes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/cause" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["cause_id"] }
+        },
+        "unresolved_comparison_fact_ids": {
+          "$comment": "An unresolved entry is operational missingness and is intentionally not canonicalizable.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/factIdReference" },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "claimSubject": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "position_id"],
+          "properties": {
+            "kind": { "const": "position" },
+            "position_id": { "$ref": "#/$defs/positionIdReference" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "line_id"],
+          "properties": {
+            "kind": { "enum": ["played-move", "reference-move", "candidate-line"] },
+            "line_id": { "$ref": "#/$defs/lineIdReference" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "binding_id"],
+          "properties": {
+            "kind": { "enum": ["threat", "transition"] },
+            "binding_id": { "$ref": "#/$defs/bindingIdReference" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "plan_event_id"],
+          "properties": {
+            "kind": { "const": "plan" },
+            "plan_event_id": { "$ref": "#/$defs/planEventIdReference" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "claimAssertion": {
+      "type": "object",
+      "required": ["statement_key", "relation", "polarity"],
+      "properties": {
+        "statement_key": { "$ref": "#/$defs/nonEmptyString" },
+        "relation": { "$ref": "#/$defs/nonEmptyString" },
+        "polarity": { "type": "boolean" },
+        "direction": {
+          "type": "string",
+          "enum": ["played-to-reference", "reference-to-played", "benefits-mover", "harms-mover", "neutral", "conditional"]
+        },
+        "actor": { "$ref": "#/$defs/semanticTerm" },
+        "target": { "$ref": "#/$defs/semanticTerm" },
+        "mechanism": { "$ref": "#/$defs/semanticTerm" },
+        "consequence": { "$ref": "#/$defs/semanticTerm" },
+        "condition": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "planEvent": {
+      "type": "object",
+      "required": ["plan_event_id", "action", "result", "conditional", "supporting_fact_ids", "observed_line_ids"],
+      "properties": {
+        "plan_event_id": { "$ref": "#/$defs/planEventIdDefinition" },
+        "action": { "$ref": "#/$defs/semanticTerm" },
+        "result": { "$ref": "#/$defs/semanticTerm" },
+        "conditional": { "type": "boolean" },
+        "condition": { "$ref": "#/$defs/nonEmptyString" },
+        "supporting_fact_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/factIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "fact",
+            "sort_by": "canonical-id"
+          }
+        },
+        "observed_line_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/lineIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "line",
+            "sort_by": "canonical-id"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "claim": {
+      "type": "object",
+      "required": [
+        "claim_id",
+        "family",
+        "subject",
+        "scope",
+        "assertion",
+        "confidence",
+        "supporting_fact_ids",
+        "supporting_cause_ids",
+        "supporting_evidence_ids",
+        "binding_ids",
+        "observed_line_ids",
+        "plan_event_ids"
+      ],
+      "properties": {
+        "claim_id": { "$ref": "#/$defs/claimIdDefinition" },
+        "family": {
+          "type": "string",
+          "enum": ["tactical", "strategic", "opening", "endgame", "judgment", "defensive", "conversion", "material", "evaluation", "plan"]
+        },
+        "subject": { "$ref": "#/$defs/claimSubject" },
+        "scope": {
+          "type": "string",
+          "enum": ["primary", "secondary", "context", "exact"]
+        },
+        "assertion": { "$ref": "#/$defs/claimAssertion" },
+        "confidence": {
+          "$comment": "Operational confidence; canonicalization must preserve it exactly.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "supporting_fact_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/factIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "fact",
+            "sort_by": "canonical-id"
+          }
+        },
+        "supporting_cause_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/causeIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "cause",
+            "sort_by": "canonical-id"
+          }
+        },
+        "supporting_evidence_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "evidence",
+            "sort_by": "canonical-id"
+          }
+        },
+        "binding_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/bindingIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "binding",
+            "sort_by": "canonical-id"
+          }
+        },
+        "observed_line_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/lineIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "line",
+            "sort_by": "canonical-id"
+          }
+        },
+        "plan_event_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/planEventIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "plan-event",
+            "sort_by": "canonical-id"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "proposalBundle": {
+      "type": "object",
+      "required": ["proposal_status", "plan_events", "proposals"],
+      "properties": {
+        "proposal_status": {
+          "type": "string",
+          "enum": ["complete", "abstained"]
+        },
+        "abstention_reason": { "$ref": "#/$defs/nonEmptyString" },
+        "plan_events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/planEvent" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["plan_event_id"] }
+        },
+        "proposals": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/claim" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["claim_id"] }
+        }
+      },
+      "additionalProperties": false
+    },
+    "obligationResult": {
+      "type": "object",
+      "required": ["obligation", "passed", "fact_ids", "evidence_ids"],
+      "properties": {
+        "obligation": {
+          "type": "string",
+          "enum": [
+            "legality",
+            "evaluation-perspective",
+            "evidence-closure",
+            "subject-binding",
+            "object-binding",
+            "tactical-causal-chain",
+            "strategic-sustainability",
+            "opening-theme-match",
+            "endgame-entry-and-line",
+            "relative-comparison",
+            "exact-proof"
+          ]
+        },
+        "passed": { "type": "boolean" },
+        "fact_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/factIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "fact",
+            "sort_by": "canonical-id"
+          }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "evidence",
+            "sort_by": "canonical-id"
+          }
+        },
+        "failure_code": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "admissionDecision": {
+      "type": "object",
+      "required": ["claim", "decision", "obligation_results", "policy_confidence", "reason_codes"],
+      "properties": {
+        "claim": { "$ref": "#/$defs/claim" },
+        "decision": {
+          "type": "string",
+          "enum": ["admitted", "rejected"]
+        },
+        "obligation_results": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/obligationResult" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["obligation"] }
+        },
+        "policy_confidence": {
+          "$comment": "Operational confidence; canonicalization must preserve it exactly.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" },
+          "uniqueItems": true,
+          "x-canonical": { "mode": "unordered-set", "sort_by": "value" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "admissionBundle": {
+      "type": "object",
+      "required": ["decisions"],
+      "properties": {
+        "decisions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/admissionDecision" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["claim", "claim_id"] }
+        }
+      },
+      "additionalProperties": false
+    },
+    "rankedClaim": {
+      "type": "object",
+      "required": ["claim", "rank", "salience_score", "reason_codes"],
+      "properties": {
+        "claim": { "$ref": "#/$defs/claim" },
+        "rank": {
+          "$comment": "Rank is operational meaning and must never be canonicalized.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "salience_score": { "type": "number" },
+        "reason_codes": {
+          "$comment": "Kept in producer order because it is part of the ranking explanation.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "suppressedDuplicate": {
+      "type": "object",
+      "required": ["claim_id", "kept_claim_id", "reason"],
+      "properties": {
+        "claim_id": { "$ref": "#/$defs/claimIdReference" },
+        "kept_claim_id": { "$ref": "#/$defs/claimIdReference" },
+        "reason": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "rankingBundle": {
+      "type": "object",
+      "required": ["ranked_claims", "suppressed_duplicates"],
+      "properties": {
+        "ranked_claims": {
+          "$comment": "Array order and each rank value are semantic and intentionally not canonicalizable.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/rankedClaim" }
+        },
+        "suppressed_duplicates": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/suppressedDuplicate" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["claim_id"] }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "publicClaim": {
+      "type": "object",
+      "required": [
+        "claim_id",
+        "rank",
+        "family",
+        "subject",
+        "scope",
+        "assertion",
+        "confidence",
+        "supporting_fact_ids",
+        "supporting_cause_ids",
+        "supporting_evidence_ids",
+        "binding_ids",
+        "observed_line_ids",
+        "plan_event_ids"
+      ],
+      "properties": {
+        "claim_id": {
+          "$comment": "The public projection materializes the admitted claim as a definition in this document; V sentence citations reference this namespace.",
+          "$ref": "#/$defs/claimIdDefinition"
+        },
+        "rank": {
+          "$comment": "Public rank is operational meaning and must never be canonicalized.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "family": {
+          "type": "string",
+          "enum": ["tactical", "strategic", "opening", "endgame", "judgment", "defensive", "conversion", "material", "evaluation", "plan"]
+        },
+        "subject": { "$ref": "#/$defs/claimSubject" },
+        "scope": {
+          "type": "string",
+          "enum": ["primary", "secondary", "context", "exact"]
+        },
+        "assertion": { "$ref": "#/$defs/claimAssertion" },
+        "confidence": {
+          "$comment": "Operational confidence; canonicalization must preserve it exactly.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "supporting_fact_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/factIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "fact",
+            "sort_by": "canonical-id"
+          }
+        },
+        "supporting_cause_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/causeIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "cause",
+            "sort_by": "canonical-id"
+          }
+        },
+        "supporting_evidence_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "evidence",
+            "sort_by": "canonical-id"
+          }
+        },
+        "binding_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/bindingIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "binding",
+            "sort_by": "canonical-id"
+          }
+        },
+        "observed_line_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/lineIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "line",
+            "sort_by": "canonical-id"
+          }
+        },
+        "plan_event_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/planEventIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "plan-event",
+            "sort_by": "canonical-id"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "publicVerdict": {
+      "type": "object",
+      "required": ["comparison_fact_id", "played_move_uci", "reference_move_uci", "verdict"],
+      "properties": {
+        "comparison_fact_id": { "$ref": "#/$defs/factIdReference" },
+        "played_move_uci": { "$ref": "#/$defs/uciMove" },
+        "reference_move_uci": { "$ref": "#/$defs/uciMove" },
+        "verdict": {
+          "type": "string",
+          "enum": ["only-move", "best", "excellent", "good", "inaccuracy", "mistake", "blunder", "unknown"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "projection": {
+      "type": "object",
+      "required": [
+        "projection_id",
+        "status",
+        "public_claims",
+        "evidence_records",
+        "relative_causes",
+        "bindings",
+        "observed_lines",
+        "plan_events",
+        "exact_results"
+      ],
+      "properties": {
+        "projection_id": { "$ref": "#/$defs/projectionIdDefinition" },
+        "status": {
+          "type": "string",
+          "enum": ["ready", "abstained"]
+        },
+        "omission_reason": { "$ref": "#/$defs/nonEmptyString" },
+        "verdict": { "$ref": "#/$defs/publicVerdict" },
+        "public_claims": {
+          "$comment": "Array order and rank are public semantics and intentionally not canonicalizable.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/publicClaim" }
+        },
+        "evidence_records": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceRecord" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["evidence_id"] }
+        },
+        "relative_causes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/cause" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["cause_id"] }
+        },
+        "bindings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/objectBinding" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["binding_id"] }
+        },
+        "observed_lines": {
+          "$comment": "Line order is retained because MultiPV/public ordering can be meaningful.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/engineLine" }
+        },
+        "plan_events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/planEvent" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["plan_event_id"] }
+        },
+        "exact_results": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/exactFact" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["proof_id"] }
+        }
+      },
+      "additionalProperties": false
+    },
+    "verbalizationPolicy": {
+      "type": "object",
+      "required": ["language", "max_sentences", "require_claim_citations", "allow_abstention", "prohibited_new_token_kinds"],
+      "properties": {
+        "language": { "const": "en" },
+        "max_sentences": { "type": "integer", "minimum": 1 },
+        "require_claim_citations": { "const": true },
+        "allow_abstention": { "type": "boolean" },
+        "prohibited_new_token_kinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["move", "square", "piece", "file", "rank"]
+          },
+          "uniqueItems": true,
+          "x-canonical": { "mode": "unordered-set", "sort_by": "value" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "sentence": {
+      "type": "object",
+      "required": ["sentence_id", "text", "claim_ids", "evidence_ids"],
+      "properties": {
+        "sentence_id": { "$ref": "#/$defs/sentenceIdDefinition" },
+        "text": { "$ref": "#/$defs/nonEmptyString" },
+        "claim_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/claimIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "claim",
+            "sort_by": "canonical-id"
+          }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "evidence",
+            "sort_by": "canonical-id"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "authorizedToken": {
+      "type": "object",
+      "required": ["kind", "token", "char_start", "char_end", "claim_ids", "evidence_ids"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["move", "square", "piece", "file", "rank"]
+        },
+        "token": { "$ref": "#/$defs/nonEmptyString" },
+        "char_start": { "type": "integer", "minimum": 0 },
+        "char_end": { "type": "integer", "minimum": 1 },
+        "claim_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/claimIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "claim",
+            "sort_by": "canonical-id"
+          }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidenceIdReference" },
+          "uniqueItems": true,
+          "x-canonical": {
+            "modes": ["unordered-set", "identity-reference-set"],
+            "namespace": "evidence",
+            "sort_by": "canonical-id"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "verbalizationResult": {
+      "type": "object",
+      "required": ["projection_id", "status", "language", "sentences", "authorized_tokens"],
+      "properties": {
+        "projection_id": { "$ref": "#/$defs/projectionIdReference" },
+        "status": {
+          "type": "string",
+          "enum": ["verbalized", "abstained", "rejected"]
+        },
+        "language": { "const": "en" },
+        "sentences": {
+          "$comment": "Sentence order is meaning-bearing and intentionally not canonicalizable.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/sentence" }
+        },
+        "authorized_tokens": {
+          "$comment": "Token order/offsets track the exact text and are intentionally not canonicalizable.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/authorizedToken" }
+        },
+        "withheld_reason": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "schema_version": "chesstory.eval.access-policy.v1",
+  "version": "1.0.0",
+  "append_only_log_required": true,
+  "logged_fields": ["role", "artifact_hash", "action", "reason", "occurred_at"],
+  "sealed_open_once_logged_fields": [
+    "candidate_manifest_hash",
+    "split_id",
+    "claim_sha256"
+  ],
+  "release_custodian_state_contract": {
+    "status": "must-be-bound-before-release",
+    "required_security_mode": "immutable-store-exclusive-acl-v1",
+    "required_storage_attestation_schema": "chesstory.eval.custodian-storage-attestation.v1",
+    "required_policy_binding_fields": [
+      "storage_attestation_path",
+      "storage_attestation_sha256"
+    ],
+    "required_attested_controls": [
+      "immutable_store",
+      "non_custodian_write_denied",
+      "non_custodian_delete_rename_denied",
+      "acl_evidence_sha256"
+    ],
+    "external_trust_assumption": "The custodian can administratively delete or restore the root and claims; non-deletion, durable retention, and ACL enforcement are external controls that the harness cannot prove."
+  },
+  "diagnostic-explore": {
+    "read_roles": ["developer", "oracle-chain-author", "base-label-author"],
+    "development_use": true
+  },
+  "diagnostic-confirm": {
+    "read_roles": ["independent-confirm-executor"],
+    "development_use": false,
+    "purpose": "one-time attribution-hypothesis confirmation before modification",
+    "must_not_be_reused_as_fresh_confirm": true,
+    "open_once_per_candidate_manifest": true
+  },
+  "fresh-confirm": {
+    "read_roles": ["independent-fresh-confirm-executor"],
+    "development_use": false,
+    "purpose": "one-time final-modification confirmation after signed candidate freeze",
+    "open_once_per_candidate_manifest": true
+  },
+  "blind": {
+    "read_roles": ["independent-blind-executor"],
+    "development_use": false,
+    "open_once_after_fresh_confirm": true
+  },
+  "out_of_set_view": {
+    "strip": ["style", "original wording", "provider", "arm", "raw id", "rank", "confidence"],
+    "retain": ["canonical atomic meaning", "legal replay", "board verification", "engine verification"]
+  }
+}

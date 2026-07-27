@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/v1/c.input.schema.json",
+  "title": "C input v1",
+  "$comment": "Cause attribution receives only the ranked acquired lines and the exact facts needed to explain their difference; the Q/F artifacts remain linked by the envelope hashes.",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/stageDocument" },
+    {
+      "type": "object",
+      "properties": {
+        "stage": { "const": "C" },
+        "payload": { "$ref": "#/$defs/payload" }
+      }
+    }
+  ],
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": ["candidate_lines", "fact_bundle"],
+      "properties": {
+        "candidate_lines": {
+          "$comment": "MultiPV order is ranking meaning and is intentionally not canonicalizable.",
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/engineLine" }
+        },
+        "fact_bundle": { "$ref": "common.schema.json#/$defs/factBundle" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

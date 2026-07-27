@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/cause-audit-v1/oracle-label.schema.json",
+  "title": "Blind source or engine cause oracle label",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "case_id",
+    "expected_reference_move_uci",
+    "expected_cause_kinds",
+    "atomic_cause_label",
+    "source_side",
+    "attribution",
+    "actor",
+    "target",
+    "mechanism",
+    "consequence",
+    "priority",
+    "forbidden_tempting_causes",
+    "short_source_rationale",
+    "required_pv",
+    "acceptable_alternatives",
+    "confidence",
+    "answerable"
+  ],
+  "properties": {
+    "schema_version": {"const": "cause-audit-curation-v1"},
+    "case_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+    "expected_reference_move_uci": {"$ref": "#/$defs/uciMove"},
+    "expected_cause_kinds": {
+      "type": "array",
+      "uniqueItems": true,
+      "x-canonical": {"mode": "unordered-set"},
+      "items": {"$ref": "#/$defs/causeKind"}
+    },
+    "atomic_cause_label": {"type": "string", "minLength": 1, "maxLength": 511},
+    "source_side": {"enum": ["white", "black"]},
+    "attribution": {"const": "played_move"},
+    "actor": {"type": "string", "minLength": 1, "maxLength": 511},
+    "target": {"type": "string", "minLength": 1, "maxLength": 511},
+    "mechanism": {"type": "string", "minLength": 1, "maxLength": 1023},
+    "consequence": {"type": "string", "minLength": 1, "maxLength": 1023},
+    "priority": {"const": "primary"},
+    "forbidden_tempting_causes": {
+      "type": "array",
+      "uniqueItems": true,
+      "x-canonical": {"mode": "unordered-set"},
+      "items": {"$ref": "#/$defs/causeKind"}
+    },
+    "short_source_rationale": {"type": "string", "minLength": 1, "maxLength": 2047},
+    "required_pv": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/uciMove"}
+    },
+    "acceptable_alternatives": {
+      "type": "array",
+      "uniqueItems": true,
+      "x-canonical": {"mode": "unordered-set"},
+      "items": {"$ref": "#/$defs/uciMove"}
+    },
+    "confidence": {"enum": ["high", "medium", "low"]},
+    "answerable": {"type": "boolean"}
+  },
+  "$defs": {
+    "uciMove": {
+      "type": "string",
+      "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"
+    },
+    "causeKind": {
+      "enum": [
+        "MissedTacticalResource",
+        "TacticalRefutationOfPlayed",
+        "CandidateTacticalLiability",
+        "WrongRecapturer",
+        "RecaptureRecoveryWindow",
+        "WrongMoveOrder",
+        "OnlyMoveNecessity",
+        "OnlyDefenseNecessity",
+        "TempoLoss",
+        "ConversionMiss",
+        "ConversionSecured",
+        "SacrificeCompensation",
+        "StructuralImprovement",
+        "TargetPressureGain",
+        "TargetPressureRelease",
+        "CenterControlGain",
+        "KingSafetyConcession",
+        "PawnWeaknessTarget",
+        "PawnBreakOpportunity",
+        "ActivityGain",
+        "ActivityLoss",
+        "OpponentRestriction",
+        "StrategicConcession",
+        "MissedStrategicImprovement",
+        "PlanImprovement",
+        "PlanContradiction",
+        "DefensiveResource",
+        "DrawResource",
+        "KingForcing",
+        "MaterialSwing"
+      ]
+    }
+  }
+}

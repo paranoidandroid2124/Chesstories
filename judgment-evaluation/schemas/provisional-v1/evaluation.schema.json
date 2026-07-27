@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/provisional-v1/evaluation.schema.json",
+  "title": "Provisional non-human engineering proxy endpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "mode",
+    "qualification",
+    "evidence_tier",
+    "evaluation_kind",
+    "independent_human_judgment",
+    "human_gate_eligible",
+    "release_eligible",
+    "production_attribution_eligible",
+    "production_bottleneck",
+    "status",
+    "engineering_proxy_E",
+    "conditions",
+    "diagnostics"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.eval.provisional-engineering-proxy-endpoint.v1"},
+    "mode": {"const": "provisional-model-proxy-diagnostic"},
+    "qualification": {"const": "provisional"},
+    "evidence_tier": {"const": "model-proxy-nonhuman"},
+    "evaluation_kind": {"const": "label-assisted-structural-engineering-proxy"},
+    "independent_human_judgment": {"const": false},
+    "human_gate_eligible": {"const": false},
+    "release_eligible": {"const": false},
+    "production_attribution_eligible": {"const": false},
+    "production_bottleneck": {"type": "null"},
+    "status": {"const": "complete"},
+    "engineering_proxy_E": {"type": "integer", "minimum": 0, "maximum": 1},
+    "conditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "non_abstention",
+        "schema_and_reference_closure",
+        "top_core_claim_allowed",
+        "claim_cause_semantic_match",
+        "required_atomic_facts_connected_at_C",
+        "probe_evidence_sufficient",
+        "citation_complete",
+        "usefulness_proxy"
+      ],
+      "properties": {
+        "non_abstention": {"type": "boolean"},
+        "schema_and_reference_closure": {"type": "boolean"},
+        "top_core_claim_allowed": {"type": "boolean"},
+        "claim_cause_semantic_match": {"type": "boolean"},
+        "required_atomic_facts_connected_at_C": {"type": "boolean"},
+        "probe_evidence_sufficient": {"type": "boolean"},
+        "citation_complete": {"type": "boolean"},
+        "usefulness_proxy": {"type": "boolean"}
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "top_statement_key",
+        "allowed_core_statement_keys",
+        "matched_cause_ids",
+        "required_fact_predicates",
+        "connected_fact_predicates",
+        "held_out_human_rater_count",
+        "circularity_warning"
+      ],
+      "properties": {
+        "top_statement_key": {"type": ["string", "null"]},
+        "allowed_core_statement_keys": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "matched_cause_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "required_fact_predicates": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "connected_fact_predicates": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "held_out_human_rater_count": {"const": 0},
+        "circularity_warning": {"const": "The explore labels define this engineering proxy endpoint and are not independent evaluation evidence."}
+      }
+    }
+  }
+}

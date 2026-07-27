@@ -67,13 +67,15 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
   val candidateDrawResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.drawResourceRecords(candidateRecords)
   val referenceRecaptureResource: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.recaptureResourceRecords(referenceRecords)
+    RelativeCauseSignalProfile.recaptureResourceRecords(referenceRecords, fact.referenceLine.rootMove)
   val candidateRecaptureResource: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.recaptureResourceRecords(candidateRecords)
+    RelativeCauseSignalProfile.recaptureResourceRecords(candidateRecords, fact.candidateLine.rootMove)
   val referenceMoveOrderResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.moveOrderResourceRecords(referenceRecords)
   val candidateMoveOrderResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.moveOrderResourceRecords(candidateRecords)
+  val candidateTempoLiability: List[EvidenceRecord] =
+    RelativeCauseSignalProfile.tempoLiabilityRecords(fact, candidateRecords)
   val referenceForcingLineResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.forcingLineResourceRecords(referenceRecords)
   val candidateForcingLineResource: List[EvidenceRecord] =
@@ -95,13 +97,23 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
   val candidatePromotionResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.promotionRaceRecords(candidateRecords)
   val referenceOpponentPromotionLiability: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.opponentPromotionLiabilityRecords(fact.comparison.mover, referenceRecords)
+    RelativeCauseSignalProfile.opponentPromotionLiabilityRecords(
+      fact,
+      RelativeCauseSourceSide.Reference,
+      referenceRecords
+    )
   val candidateOpponentPromotionLiability: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.opponentPromotionLiabilityRecords(fact.comparison.mover, candidateRecords)
+    RelativeCauseSignalProfile.opponentPromotionLiabilityRecords(
+      fact,
+      RelativeCauseSourceSide.Candidate,
+      candidateRecords
+    )
   val referencePassedPawnResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.passedPawnResourceRecords(referenceRecords)
   val candidatePassedPawnResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.passedPawnResourceRecords(candidateRecords)
+  val candidatePassedPawnConcession: List[EvidenceRecord] =
+    RelativeCauseSignalProfile.passedPawnConcessionRecords(candidateRecords)
   val referenceEndgameResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.endgameResourceRecords(referenceRecords)
   val candidateEndgameResource: List[EvidenceRecord] =
@@ -112,16 +124,15 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
     RelativeCauseSignalProfile.tacticalMechanismRecords(candidateRecords)
   val candidateThreatBranchTacticalMechanism: List[EvidenceRecord] =
     RelativeCauseSignalProfile.threatBranchTacticalMechanismRecords(candidateRecords)
-  val materialSwingSupport: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.materialSwingSupportRecords(referenceRecords, candidateRecords)
   val candidateRelationPayoffMaterial: List[EvidenceRecord] =
     RelativeCauseSignalProfile.relationPayoffMaterialRecords(candidateRecords ++ sharedRecords)
-  val materialDeteriorationSupport: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.materialDeteriorationSupportRecords(referenceRecords, candidateRecords)
-  val materialLossSupport: List[EvidenceRecord] =
-    (materialSwingSupport ++ materialDeteriorationSupport).distinctBy(_.ref.id)
+  val candidateMaterialLossLiability: List[EvidenceRecord] =
+    RelativeCauseSignalProfile.candidateMaterialLossLiabilityRecords(fact, candidateRecords)
   val sacrificeCompensationSupport: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.sacrificeCompensationSupportRecords(candidateRecords)
+    RelativeCauseSignalProfile.sacrificeCompensationSupportRecords(
+      candidateRecords,
+      fact.candidateLine.rootMove
+    )
   val candidateMoveHasSacrifice: Boolean =
     candidateRecords.exists {
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
@@ -206,7 +217,8 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         RelativeCauseKind.OnlyDefenseNecessity,
         candidateOnlyDefenseSupport,
         candidateOnlyDefenseSupport.nonEmpty && candidateProvedValue,
-        Some(RelativeCauseSourceSide.Candidate)
+        Some(RelativeCauseSourceSide.Candidate),
+        Some(CauseAttributionKind.CandidateCreatesValue)
       ),
       causeDraft(
         RelativeCauseKind.OnlyDefenseNecessity,
@@ -254,8 +266,10 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       ),
       causeDraft(
         RelativeCauseKind.TempoLoss,
-        candidateMoveOrderResource,
-        candidateMoveOrderResource.nonEmpty && (badLoss || candidateBetter)
+        candidateTempoLiability,
+        candidateTempoLiability.nonEmpty && badLoss,
+        Some(RelativeCauseSourceSide.Candidate),
+        Some(CauseAttributionKind.CandidateAllowsLiability)
       ),
       causeDraft(
         RelativeCauseKind.KingForcing,
@@ -267,9 +281,9 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         RelativeCauseKind.KingForcing,
         candidateForcingLineSupport,
         candidateForcingLineSupport.nonEmpty && (candidateBetter || exactCurrentMoveForcingResource),
-        Some(RelativeCauseSourceSide.Candidate)
+        Some(RelativeCauseSourceSide.Candidate),
+        Some(CauseAttributionKind.CandidateCreatesValue)
       ),
-      causeDraft(RelativeCauseKind.ConversionMiss, referenceConversionWindow, referenceConversionWindow.nonEmpty && badLoss),
       causeDraft(
         RelativeCauseKind.ConversionMiss,
         candidateConversionMissWindow,
@@ -289,8 +303,26 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         candidateDrawResource.nonEmpty && candidateProvedValue,
         Some(RelativeCauseSourceSide.Candidate)
       ),
-      causeDraft(RelativeCauseKind.ConversionMiss, referencePromotionResource, referencePromotionResource.nonEmpty && badLoss),
       causeDraft(RelativeCauseKind.ConversionSecured, candidatePromotionResource, candidatePromotionResource.nonEmpty && candidateProvedValue),
+      causeDraft(
+        RelativeCauseKind.ConversionSecured,
+        referencePassedPawnResource,
+        referencePassedPawnResource.nonEmpty && badLoss,
+        Some(RelativeCauseSourceSide.Reference)
+      ),
+      causeDraft(
+        RelativeCauseKind.ConversionSecured,
+        candidatePassedPawnResource,
+        candidatePassedPawnResource.nonEmpty && candidateProvedValue,
+        Some(RelativeCauseSourceSide.Candidate)
+      ),
+      causeDraft(
+        RelativeCauseKind.ConversionMiss,
+        candidatePassedPawnConcession,
+        candidatePassedPawnConcession.nonEmpty && badLoss,
+        Some(RelativeCauseSourceSide.Candidate),
+        Some(CauseAttributionKind.CandidateAllowsLiability)
+      ),
       causeDraft(
         if playedCandidateSideComparison then RelativeCauseKind.TacticalRefutationOfPlayed
         else RelativeCauseKind.CandidateTacticalLiability,
@@ -315,9 +347,11 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       ),
       causeDraft(
         RelativeCauseKind.MaterialSwing,
-        materialLossSupport,
+        candidateMaterialLossLiability,
         majorLoss &&
-          materialLossSupport.nonEmpty
+          candidateMaterialLossLiability.nonEmpty,
+        Some(RelativeCauseSourceSide.Candidate),
+        Some(CauseAttributionKind.CandidateAllowsLiability)
       ),
       causeDraft(
         RelativeCauseKind.SacrificeCompensation,
@@ -327,7 +361,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
           (
             primaryPlayedPositive ||
               candidateBetter ||
-              (playedCandidateSideComparison && !actionablePlayedLoss)
+              (playedCandidateSideComparison && !badLoss)
           ),
         Some(RelativeCauseSourceSide.Candidate),
         Some(CauseAttributionKind.CandidateCreatesValue)
@@ -346,7 +380,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         kind,
         support.distinctBy(_.ref.id),
         sourceSide,
-        attributionKind.getOrElse(defaultAttributionKind(kind, sourceSide))
+        attributionKind.getOrElse(RelativeCauseKind.defaultAttributionKind(kind, sourceSide))
       )
     )
 
@@ -359,7 +393,13 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       Option
         .when(actionableLoss && profile.tacticalLoss)(
           mechanismCauseKinds(
-            profile.referenceTacticalMechanism,
+            profile.referenceTacticalMechanism.filter {
+              case EvidenceRecord(_, payload: TacticalMechanismEvidence, _)
+                  if payload.kind == TacticalMechanismKind.Tempo =>
+                payload.hasMoverZwischenzug
+              case _ =>
+                true
+            },
             badLoss = false,
             sourceSide = RelativeCauseSourceSide.Reference,
             attributionKind = CauseAttributionKind.ReferenceCreatesResource
@@ -370,9 +410,12 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       Option
         .when(actionableLoss && profile.tacticalLoss)(
           mechanismCauseKinds(
-            profile.candidateTacticalMechanism,
+            profile.candidateTacticalMechanism.filter(
+              candidateBadMechanismCanProveLiability(_, profile)
+            ),
             badLoss = true,
             playedCandidate = profile.playedCandidateSideComparison,
+            wrongRecapturerProven = profile.candidateWrongRecapturerChoice.nonEmpty,
             sourceSide = RelativeCauseSourceSide.Candidate,
             attributionKind = CauseAttributionKind.CandidateAllowsLiability
           )
@@ -401,19 +444,85 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       badLoss: Boolean,
       playedCandidate: Boolean = false,
       candidateValue: Boolean = false,
+      wrongRecapturerProven: Boolean = false,
       sourceSide: RelativeCauseSourceSide,
       attributionKind: CauseAttributionKind
   ): List[RelativeCauseDraft] =
-    records.collect {
+    records.flatMap {
       case record @ EvidenceRecord(_, payload: TacticalMechanismEvidence, _) if payload.canAnchorTacticalClaim =>
-        RelativeCauseDraft(
-          if candidateValue && payload.kind == TacticalMechanismKind.MaterialGain then RelativeCauseKind.MaterialSwing
-          else TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss, playedCandidate),
-          List(record),
-          Some(sourceSide),
-          attributionKind
+        val skipWrongRecapturerCompanion =
+          badLoss && payload.kind == TacticalMechanismKind.RecaptureChoice && wrongRecapturerProven
+        val causeKind =
+          if candidateValue then candidateValueMechanismCauseKind(payload)
+          else Some(TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss, playedCandidate))
+        Option.unless(skipWrongRecapturerCompanion)(causeKind).flatten.map(kind =>
+          RelativeCauseDraft(
+            kind,
+            List(record),
+            Some(sourceSide),
+            attributionKind
+          )
         )
+      case _ =>
+        None
     }
+
+  private def candidateValueMechanismCauseKind(
+      payload: TacticalMechanismEvidence
+  ): Option[RelativeCauseKind] =
+    payload.kind match
+      case TacticalMechanismKind.MaterialGain =>
+        Some(RelativeCauseKind.MaterialSwing)
+      case TacticalMechanismKind.PawnPromotion =>
+        Some(RelativeCauseKind.ConversionSecured)
+      case TacticalMechanismKind.Tempo | TacticalMechanismKind.RelationMechanism |
+          TacticalMechanismKind.Refutation =>
+        None
+      case _ =>
+        Some(TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss = false, playedCandidate = false))
+
+  private def candidateBadMechanismCanProveLiability(
+      record: EvidenceRecord,
+      profile: RelativeCauseSignalProfile
+  ): Boolean =
+    record.payload match
+      case payload: TacticalMechanismEvidence =>
+        payload.kind match
+          case TacticalMechanismKind.RecaptureChoice =>
+            false
+          case TacticalMechanismKind.Tempo =>
+            candidateNegativeLineConsequences(record, profile).exists(
+              _.kind == LineConsequenceKind.ImmediateReplyCheck
+            )
+          case TacticalMechanismKind.KingForcing =>
+            candidateNegativeLineConsequences(record, profile).exists(
+              _.kind == LineConsequenceKind.Mate
+            )
+          case TacticalMechanismKind.Refutation | TacticalMechanismKind.RelationMechanism =>
+            false
+          case _ =>
+            false
+      case _ =>
+        false
+
+  private def candidateNegativeLineConsequences(
+      record: EvidenceRecord,
+      profile: RelativeCauseSignalProfile
+  ): List[LineConsequence] =
+    val sourceLabelsById = record.payload match
+      case payload: TacticalMechanismEvidence => payload.lineConsequenceSourceLabelsByEvidenceId
+      case _                                  => Map.empty[String, Set[String]]
+    if sourceLabelsById.isEmpty then Nil
+    else
+      TypedEvidenceGraph
+        .ownedLineConsequences(
+          profile.candidateRecords,
+          profile.fact,
+          RelativeCauseSourceSide.Candidate,
+          CauseAttributionKind.CandidateAllowsLiability,
+          sourceLabelsById
+        )
+        .map(_._2)
 
   private def strategicContrastDrafts(profile: RelativeCauseSignalProfile): List[RelativeCauseDraft] =
     profile.strategicContrasts.flatMap {
@@ -423,7 +532,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
             kind,
             List(record),
             Some(sourceSide),
-            defaultAttributionKind(kind, Some(sourceSide))
+            RelativeCauseKind.defaultAttributionKind(kind, Some(sourceSide))
           )
         }
       case _ =>
@@ -495,7 +604,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
               kind,
               support,
               Some(RelativeCauseSourceSide.Candidate),
-              defaultAttributionKind(kind, Some(RelativeCauseSourceSide.Candidate))
+              RelativeCauseKind.defaultAttributionKind(kind, Some(RelativeCauseSourceSide.Candidate))
             )
           )
         case _ =>
@@ -578,6 +687,14 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
             consequence.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
         )
         diagonalRestriction || RelativeCauseSignalProfile.currentMoveCounterBreakSupportSignal(signal, candidateLine, records)
+      case EvidenceRecord(ref, payload: PlanCausalEventEvidence, _)
+          if ref.id == signal.source.id &&
+            ref.line.contains(candidateLine) &&
+            payload.opponentResourceDeterrence.nonEmpty =>
+        payload.structuralConsequences.exists(consequence =>
+          consequence.kind == TransitionConsequenceKind.OpponentMobilityRestriction &&
+            consequence.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
+        )
       case _ =>
         RelativeCauseSignalProfile.currentMoveCounterBreakSupportSignal(signal, candidateLine, records)
     }
@@ -601,14 +718,10 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       profile: RelativeCauseSignalProfile
   ): List[(RelativeCauseKind, RelativeCauseSourceSide)] =
     val structuralLoss = profile.badLoss || profile.actionablePlayedLoss
-    val planComparisonHasDelta =
-      payload.planComparison.exists(_.hasPlanDelta)
     val axisCauses =
       payload.actionableComparisons.flatMap(axisComparison =>
         val axis = axisComparison.axis
-        if planComparisonHasDelta && axis.kind == StrategicAxisKind.PlanCoherence then
-          Nil
-        else if axisComparison.referenceLead && structuralLoss && referenceLeadCanExplainStructuralLoss(axis) then
+        if axisComparison.referenceLead && structuralLoss && referenceLeadCanExplainStructuralLoss(axis) then
           List(strategicReferenceLeadCause(axisComparison, profile.allRecords) -> RelativeCauseSourceSide.Reference)
         else if axisComparison.candidateNegative && structuralLoss then
           List(strategicCandidateNegativeCause(axisComparison, profile.allRecords) -> RelativeCauseSourceSide.Candidate)
@@ -617,27 +730,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
           List(strategicCandidatePositiveCause(axisComparison, profile.allRecords) -> RelativeCauseSourceSide.Candidate)
         else Nil
       )
-    val specificAxisCauses =
-      axisCauses.filter((kind, _) => specificStrategicAxisCause(kind))
-    val narrowedAxisCauses =
-      if specificAxisCauses.nonEmpty then axisCauses.filterNot((kind, _) => broadStrategicAxisFallback(kind))
-      else axisCauses
-    val currentMovePlanCarriers =
-      RelativeCauseSignalProfile.currentMoveConcretePlanCarrierRecords(profile.fact.candidateLine, profile.allRecords)
-    val equalEvalPlanCarrier =
-      profile.exactReferenceMove && currentMovePlanCarriers.nonEmpty
-    val planCauses =
-      if specificAxisCauses.nonEmpty && currentMovePlanCarriers.isEmpty then Nil
-      else payload.planComparison.toList.filter(_.hasPlanDelta).flatMap { plan =>
-        if structuralLoss && plan.outcome != StrategicAxisComparisonOutcome.CandidateOnly then
-          List(RelativeCauseKind.PlanContradiction -> RelativeCauseSourceSide.Candidate)
-        else if (profile.candidateBetter || equalEvalPlanCarrier) &&
-            (plan.outcome != StrategicAxisComparisonOutcome.ReferenceOnly || equalEvalPlanCarrier)
-        then
-          List(RelativeCauseKind.PlanImprovement -> RelativeCauseSourceSide.Candidate)
-        else Nil
-      }
-    (narrowedAxisCauses ++ planCauses).distinct
+    axisCauses.distinct
 
   private def strategicReferenceLeadCause(
       comparison: StrategicAxisComparison,
@@ -673,7 +766,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
             ) =>
         RelativeCauseKind.KingSafetyConcession
       case StrategicAxisKind.PlanCoherence =>
-        RelativeCauseKind.PlanContradiction
+        RelativeCauseKind.PlanImprovement
       case _ =>
         RelativeCauseKind.MissedStrategicImprovement
 
@@ -697,22 +790,12 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
   ): RelativeCauseKind =
     val axis = comparison.axis
     axis.kind match
-      case StrategicAxisKind.Target if axis.polarity == StrategicAxisPolarity.Release =>
-        RelativeCauseKind.TargetPressureRelease
-      case StrategicAxisKind.Target
-          if RelativeCauseSignalProfile.comparisonHasStructuralConsequence(
-            comparison,
-            RelativeCauseSourceSide.Candidate,
-            records,
-            Set(TransitionConsequenceKind.WeakPawnTargetCreated, TransitionConsequenceKind.WeakSquareTargetCreated)
-          ) =>
-        RelativeCauseKind.PawnWeaknessTarget
       case StrategicAxisKind.Target =>
-        RelativeCauseKind.TargetPressureGain
+        RelativeCauseKind.TargetPressureRelease
       case StrategicAxisKind.SpaceCenter =>
         RelativeCauseKind.CenterControlGain
       case StrategicAxisKind.PawnBreak =>
-        RelativeCauseKind.PawnBreakOpportunity
+        RelativeCauseKind.StrategicConcession
       case StrategicAxisKind.Activity =>
         RelativeCauseKind.ActivityLoss
       case StrategicAxisKind.Counterplay if axis.polarity == StrategicAxisPolarity.Restrain =>
@@ -760,136 +843,32 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       case _ =>
         RelativeCauseKind.StructuralImprovement
 
-  private def specificStrategicAxisCause(kind: RelativeCauseKind): Boolean =
-    kind match
-      case RelativeCauseKind.TargetPressureGain | RelativeCauseKind.TargetPressureRelease |
-          RelativeCauseKind.CenterControlGain |
-          RelativeCauseKind.PawnWeaknessTarget | RelativeCauseKind.PawnBreakOpportunity |
-          RelativeCauseKind.ActivityGain | RelativeCauseKind.ActivityLoss | RelativeCauseKind.OpponentRestriction |
-          RelativeCauseKind.KingSafetyConcession =>
-        true
-      case _ =>
-        false
-
-  private def broadStrategicAxisFallback(kind: RelativeCauseKind): Boolean =
-    kind match
-      case RelativeCauseKind.PlanContradiction | RelativeCauseKind.PlanImprovement |
-          RelativeCauseKind.MissedStrategicImprovement | RelativeCauseKind.StrategicConcession |
-          RelativeCauseKind.StructuralImprovement =>
-        true
-      case _ =>
-        false
-
   private def suppressGenericCompanions(
       drafts: List[RelativeCauseDraft]
   ): List[RelativeCauseDraft] =
-    val hasShortTermCause = drafts.exists(draft => shortTermCause(draft.kind))
-    val hasNonConcessionCause = drafts.exists(draft => draft.kind != RelativeCauseKind.StrategicConcession)
-    val hasSpecificMaterialCause = drafts.exists(draft => specificMaterialCause(draft.kind))
-    val hasNonPlanSpecificStructuralCause =
-      drafts.exists(draft => specificStructuralCause(draft.kind) && !planFallbackCause(draft.kind))
     drafts.filterNot {
-      case RelativeCauseDraft(RelativeCauseKind.StrategicConcession, _, _, _) =>
-        hasShortTermCause || hasNonConcessionCause
-      case RelativeCauseDraft(RelativeCauseKind.MissedStrategicImprovement, _, _, _) =>
-        hasShortTermCause
-      case RelativeCauseDraft(RelativeCauseKind.MaterialSwing, support, _, _) =>
-        hasSpecificMaterialCause && !supportHasRelationPayoff(support)
-      case RelativeCauseDraft(RelativeCauseKind.StructuralImprovement, _, _, _) =>
-        hasNonPlanSpecificStructuralCause
       case draft @ RelativeCauseDraft(RelativeCauseKind.RecaptureRecoveryWindow, _, _, _) =>
         drafts.exists(other =>
           other.kind == RelativeCauseKind.WrongRecapturer &&
+            sameDraftChannel(draft, other) &&
             supportOverlaps(draft.support, other.support)
         )
       case draft @ RelativeCauseDraft(RelativeCauseKind.TempoLoss, _, _, _) =>
         drafts.exists(other =>
           other.kind == RelativeCauseKind.WrongMoveOrder &&
+            sameDraftChannel(draft, other) &&
             supportOverlaps(draft.support, other.support)
         )
       case _ =>
         false
     }
 
-  private def supportHasRelationPayoff(records: List[EvidenceRecord]): Boolean =
-    records.exists {
-      case EvidenceRecord(_, payload: RelationFactEvidence, _) =>
-        payload.hasConcreteRelationProof && RelativeCauseSignalProfile.relationMaterialPayoffKind(payload.kind)
-      case _ =>
-        false
-    }
+  private def sameDraftChannel(left: RelativeCauseDraft, right: RelativeCauseDraft): Boolean =
+    left.sourceSide == right.sourceSide && left.attributionKind == right.attributionKind
 
   private def supportOverlaps(left: List[EvidenceRecord], right: List[EvidenceRecord]): Boolean =
     val leftIds = left.map(_.ref.id).toSet
     leftIds.nonEmpty && right.exists(record => leftIds.contains(record.ref.id))
-
-  private def defaultAttributionKind(
-      kind: RelativeCauseKind,
-      sourceSide: Option[RelativeCauseSourceSide]
-  ): CauseAttributionKind =
-    sourceSide match
-      case Some(RelativeCauseSourceSide.Reference) =>
-        CauseAttributionKind.ReferenceCreatesResource
-      case Some(RelativeCauseSourceSide.Candidate) =>
-        kind match
-          case RelativeCauseKind.RecaptureRecoveryWindow | RelativeCauseKind.ConversionSecured |
-              RelativeCauseKind.SacrificeCompensation | RelativeCauseKind.StructuralImprovement |
-              RelativeCauseKind.TargetPressureGain | RelativeCauseKind.CenterControlGain |
-              RelativeCauseKind.PawnWeaknessTarget | RelativeCauseKind.PawnBreakOpportunity |
-              RelativeCauseKind.ActivityGain |
-              RelativeCauseKind.OpponentRestriction |
-              RelativeCauseKind.PlanImprovement |
-              RelativeCauseKind.DefensiveResource | RelativeCauseKind.DrawResource =>
-            CauseAttributionKind.CandidateCreatesValue
-          case _ =>
-            CauseAttributionKind.CandidateAllowsLiability
-      case Some(RelativeCauseSourceSide.Shared) =>
-        CauseAttributionKind.SharedContext
-      case Some(RelativeCauseSourceSide.Mixed) | None =>
-        kind match
-          case RelativeCauseKind.OnlyMoveNecessity | RelativeCauseKind.OnlyDefenseNecessity |
-              RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.MissedStrategicImprovement |
-              RelativeCauseKind.ConversionMiss | RelativeCauseKind.KingForcing =>
-            CauseAttributionKind.ReferenceCreatesResource
-          case RelativeCauseKind.WrongRecapturer | RelativeCauseKind.WrongMoveOrder |
-              RelativeCauseKind.TempoLoss | RelativeCauseKind.TacticalRefutationOfPlayed |
-              RelativeCauseKind.CandidateTacticalLiability | RelativeCauseKind.MaterialSwing |
-              RelativeCauseKind.PlanContradiction | RelativeCauseKind.TargetPressureRelease |
-              RelativeCauseKind.ActivityLoss | RelativeCauseKind.OpponentRestriction |
-              RelativeCauseKind.StrategicConcession | RelativeCauseKind.KingSafetyConcession =>
-            CauseAttributionKind.CandidateAllowsLiability
-          case _ =>
-            CauseAttributionKind.Unattributed
-
-  private def specificMaterialCause(kind: RelativeCauseKind): Boolean =
-    kind match
-      case RelativeCauseKind.WrongRecapturer | RelativeCauseKind.RecaptureRecoveryWindow |
-          RelativeCauseKind.ConversionMiss | RelativeCauseKind.ConversionSecured |
-          RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
-          RelativeCauseKind.CandidateTacticalLiability =>
-        true
-      case _ =>
-        false
-
-  private def specificStructuralCause(kind: RelativeCauseKind): Boolean =
-    kind match
-      case RelativeCauseKind.TargetPressureGain | RelativeCauseKind.TargetPressureRelease |
-          RelativeCauseKind.CenterControlGain |
-          RelativeCauseKind.KingSafetyConcession | RelativeCauseKind.PawnWeaknessTarget |
-          RelativeCauseKind.PawnBreakOpportunity | RelativeCauseKind.ActivityGain | RelativeCauseKind.ActivityLoss |
-          RelativeCauseKind.OpponentRestriction |
-          RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction |
-          RelativeCauseKind.MissedStrategicImprovement | RelativeCauseKind.StrategicConcession |
-          RelativeCauseKind.ConversionMiss | RelativeCauseKind.ConversionSecured =>
-        true
-      case _ =>
-        false
-
-  private def planFallbackCause(kind: RelativeCauseKind): Boolean =
-    kind == RelativeCauseKind.PlanImprovement || kind == RelativeCauseKind.PlanContradiction
-
-  private def shortTermCause(kind: RelativeCauseKind): Boolean =
-    kind != RelativeCauseKind.DrawResource && ClaimFamily.fromCause(kind).nonEmpty
 
 private[chessjudgment] object RelativeCauseSignalProfile:
   def from(
@@ -915,6 +894,9 @@ private[chessjudgment] object RelativeCauseSignalProfile:
     records.collect {
       case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _) if sourceIds(ref.id) =>
         payload.consequences
+      case EvidenceRecord(ref, payload: PlanCausalEventEvidence, _)
+          if sourceIds(ref.id) && payload.opponentResourceDeterrence.nonEmpty =>
+        payload.structuralConsequences
     }.flatten
 
   private[chessjudgment] def comparisonHasStructuralConsequence(
@@ -923,11 +905,8 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       records: List[EvidenceRecord],
       kinds: Set[TransitionConsequenceKind]
   ): Boolean =
-    val sources = sourceSide match
-      case RelativeCauseSourceSide.Reference => comparison.referenceSources
-      case RelativeCauseSourceSide.Candidate => comparison.candidateSources
-      case RelativeCauseSourceSide.Shared | RelativeCauseSourceSide.Mixed => comparison.sources
-    structuralConsequencesForSources(sources, records).exists(consequence => kinds(consequence.kind))
+    structuralConsequencesForSources(comparison.sourcesFor(sourceSide), records)
+      .exists(consequence => kinds(consequence.kind))
 
   private[chessjudgment] def tacticalMechanismRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
@@ -980,14 +959,25 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         false
     }.distinctBy(_.ref.id)
 
-  private[chessjudgment] def recaptureResourceRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
+  private[chessjudgment] def recaptureResourceRecords(
+      records: List[EvidenceRecord],
+      rootMove: String
+  ): List[EvidenceRecord] =
     records.filter {
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
-        payload.hasRecaptureRecoveryConsequence ||
-          payload.hasMaterialRecaptureChain ||
-          payload.hasMaterialRecoveryWindow
+        payload.rootIsRecapture(rootMove) &&
+          (
+            payload.consequencesForRootMove(rootMove).exists(consequence =>
+              consequence.kind == LineConsequenceKind.RecaptureSequence ||
+                consequence.kind == LineConsequenceKind.RecoveryWindow
+            ) ||
+              payload.hasMaterialRecaptureChain ||
+              payload.hasMaterialRecoveryWindow
+          )
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.kind == TacticalMechanismKind.RecaptureChoice && payload.canAnchorTacticalClaim
+        payload.kind == TacticalMechanismKind.RecaptureChoice &&
+          payload.canAnchorTacticalClaim &&
+          payload.moveUci.exists(EvidenceRef.sameMove(_, rootMove))
       case _ =>
         false
     }.distinctBy(_.ref.id)
@@ -1001,10 +991,48 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         )
       case EvidenceRecord(_, payload: RelationFactEvidence, _) =>
         payload.kind == RelationFactKind.Zwischenzug && payload.hasConcreteRelationProof
-      case EvidenceRecord(_, payload: LineFactEvidence, _) =>
-        payload.hasProofSignalConsequence(LineConsequenceKind.ImmediateReplyCheck)
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.kind == TacticalMechanismKind.Tempo && payload.canAnchorTacticalClaim
+        payload.kind == TacticalMechanismKind.Tempo &&
+          payload.hasMoverZwischenzug &&
+          payload.canAnchorTacticalClaim
+      case _ =>
+        false
+    }.distinctBy(_.ref.id)
+
+  private[chessjudgment] def tempoLiabilityRecords(
+      fact: CandidateComparisonFact,
+      records: List[EvidenceRecord]
+  ): List[EvidenceRecord] =
+    def ownsImmediateReplyLiability(sourceLabels: Map[String, Set[String]]): Boolean =
+      sourceLabels.nonEmpty &&
+        TypedEvidenceGraph
+          .ownedLineConsequences(
+            records,
+            fact,
+            RelativeCauseSourceSide.Candidate,
+            CauseAttributionKind.CandidateAllowsLiability,
+            sourceLabels
+          )
+          .exists(_._2.kind == LineConsequenceKind.ImmediateReplyCheck)
+    val ownedLineIds =
+      TypedEvidenceGraph
+        .ownedLineConsequences(
+          records,
+          fact,
+          RelativeCauseSourceSide.Candidate,
+          CauseAttributionKind.CandidateAllowsLiability
+        )
+        .collect {
+          case (ref, consequence) if consequence.kind == LineConsequenceKind.ImmediateReplyCheck => ref.id
+        }
+        .toSet
+    records.filter {
+      case EvidenceRecord(ref, _: LineFactEvidence, _) =>
+        ownedLineIds.contains(ref.id)
+      case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
+        payload.kind == TacticalMechanismKind.Tempo &&
+          payload.canAnchorTacticalClaim &&
+          ownsImmediateReplyLiability(payload.lineConsequenceSourceLabelsByEvidenceId)
       case _ =>
         false
     }.distinctBy(_.ref.id)
@@ -1040,7 +1068,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
   ): List[EvidenceRecord] =
     val referenceMove = normalizeMove(fact.referenceLine.rootMove)
     val candidateMove = normalizeMove(fact.candidateLine.rootMove)
-    val referenceRecovery = recaptureResourceRecords(referenceRecords)
+    val referenceRecovery = recaptureResourceRecords(referenceRecords, referenceMove)
     val candidateLoss = materialLossRecords(candidateRecords)
     Option
       .when(
@@ -1054,7 +1082,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
           EvidenceRecord.rootCaptureRecords(candidateRecords, candidateMove) ++
           referenceRecovery ++
           candidateLoss ++
-          recaptureResourceRecords(candidateRecords)
+          recaptureResourceRecords(candidateRecords, candidateMove)
       )
       .getOrElse(Nil)
       .distinctBy(_.ref.id)
@@ -1083,9 +1111,16 @@ private[chessjudgment] object RelativeCauseSignalProfile:
           payload.hasProofSignalConsequence(LineConsequenceKind.DrawResource)
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
         payload.kind == TacticalMechanismKind.DrawResource && payload.canAnchorDefensiveClaim
-      case EvidenceRecord(_, payload: RelationFactEvidence, _) =>
+      case EvidenceRecord(ref, payload: RelationFactEvidence, _) =>
         payload.hasConcreteRelationProof &&
-          payload.kind == RelationFactKind.StalemateTrap
+          payload.hasLineProof &&
+          (
+            payload.kind == RelationFactKind.StalemateTrap ||
+              (
+                payload.kind == RelationFactKind.PerpetualCheck &&
+                  ref.confidence == EvidenceConfidence.LegalReplayVerified
+              )
+          )
       case _ =>
         false
     }.distinctBy(_.ref.id)
@@ -1144,30 +1179,26 @@ private[chessjudgment] object RelativeCauseSignalProfile:
     }.distinctBy(_.ref.id)
 
   private[chessjudgment] def opponentPromotionLiabilityRecords(
-      mover: chess.Color,
+      fact: CandidateComparisonFact,
+      sourceSide: RelativeCauseSourceSide,
       records: List[EvidenceRecord]
   ): List[EvidenceRecord] =
-    records.filter {
-      case EvidenceRecord(_, payload: LineFactEvidence, _) =>
-        opponentPromotionLiability(mover, payload)
-      case _ =>
-        false
-    }.distinctBy(_.ref.id)
-
-  private[chessjudgment] def opponentPromotionLiability(
-      mover: chess.Color,
-      payload: LineFactEvidence
-  ): Boolean =
-    payload.proofSignalConsequences.exists(consequence =>
-      (
-        consequence.kind == LineConsequenceKind.Promotion ||
-          consequence.kind == LineConsequenceKind.PromotionRace
-      ) &&
-        consequence.eventMove.nonEmpty &&
-        consequence.rootMove.isEmpty &&
-        consequence.rootSide.contains(mover) &&
-        consequence.beneficiary.contains(!mover)
-    )
+    val liabilityRecordIds =
+      TypedEvidenceGraph
+        .ownedLineConsequences(
+          records,
+          fact,
+          sourceSide,
+          CauseAttributionKind.CandidateAllowsLiability
+        )
+        .collect {
+          case (ref, consequence)
+              if consequence.kind == LineConsequenceKind.Promotion ||
+                consequence.kind == LineConsequenceKind.PromotionRace =>
+            ref.id
+        }
+        .toSet
+    records.filter(record => liabilityRecordIds.contains(record.ref.id)).distinctBy(_.ref.id)
 
   private def looseMaterialContextPresent(records: List[EvidenceRecord]): Boolean =
     records.exists {
@@ -1243,15 +1274,28 @@ private[chessjudgment] object RelativeCauseSignalProfile:
 
   private[chessjudgment] def passedPawnResourceRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
+      case EvidenceRecord(_, payload: StructuralDeltaEvidence, _) =>
+        payload.hasAnyConsequence(
+          Set(
+            TransitionConsequenceKind.PassedPawnProgress,
+            TransitionConsequenceKind.PromotionPressureGain
+          )
+        )
       case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
         payload.hasPassedPawnResourceSignal
-      case EvidenceRecord(_, payload: LineFactEvidence, _) =>
-        payload.hasProofSignalConsequence(LineConsequenceKind.Promotion) ||
-          payload.hasProofSignalConsequence(LineConsequenceKind.PromotionRace) ||
-          payload.materialOutcomeProfile.gainSignals.contains(LineMaterialOutcomeSignal.PromotionGain) ||
-          payload.materialOutcomeProfile.lossSignals.contains(LineMaterialOutcomeSignal.PromotionLoss)
-      case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.kind == TacticalMechanismKind.PawnPromotion && payload.canAnchorTacticalClaim
+      case _ =>
+        false
+    }.distinctBy(_.ref.id)
+
+  private[chessjudgment] def passedPawnConcessionRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
+    records.filter {
+      case EvidenceRecord(_, payload: StructuralDeltaEvidence, _) =>
+        payload.hasAnyConsequence(
+          Set(
+            TransitionConsequenceKind.PassedPawnConcession,
+            TransitionConsequenceKind.PromotionPressureConcession
+          )
+        )
       case _ =>
         false
     }.distinctBy(_.ref.id)
@@ -1415,12 +1459,44 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       candidateLine: LineNodeRef,
       records: List[EvidenceRecord]
   ): Boolean =
+    val restrainedFiles = records.collect {
+      case EvidenceRecord(ref, PawnStructureFactEvidence(_, Some(pawnPlay)), _)
+          if ref.id == signal.source.id =>
+        pawnPlay.counterBreakFiles.flatMap(normalizedFile)
+    }.flatten.toSet
+    val carrierFiles =
+      StrategicMechanismContrastEvidence
+        .currentMoveBreakCarrierRecords(candidateLine, records)
+        .flatMap {
+          case EvidenceRecord(_, payload: StructuralDeltaEvidence, _) =>
+            payload.consequences
+              .filter(consequence =>
+                consequence.kind == TransitionConsequenceKind.PawnTensionGain ||
+                  consequence.kind == TransitionConsequenceKind.PawnTensionResolution
+              )
+              .flatMap(_.subjects.flatMap(breakCarrierFiles))
+          case _ =>
+            Nil
+        }
+        .toSet
     signal.kind == StrategicMechanismSignalKind.PawnStructure &&
       signal.source.layer == EvidenceLayer.PawnStructure &&
       signal.axis.exists(axis =>
         axis.kind == StrategicAxisKind.Counterplay && axis.polarity == StrategicAxisPolarity.Restrain
       ) &&
-      StrategicMechanismContrastEvidence.currentMoveBreakCarrier(candidateLine, records)
+      restrainedFiles.nonEmpty &&
+      restrainedFiles.intersect(carrierFiles).nonEmpty
+
+  private def normalizedFile(raw: String): Option[String] =
+    "[a-h]".r.findFirstIn(Option(raw).getOrElse("").trim.toLowerCase)
+
+  private def breakCarrierFiles(subject: String): List[String] =
+    val normalized = Option(subject).getOrElse("").trim.toLowerCase
+    if normalized.startsWith("break-file:") then
+      normalizedFile(normalized.stripPrefix("break-file:")).toList
+    else if normalized.startsWith("created-tension:") || normalized.startsWith("resolved-tension:") then
+      "[a-h][1-8]".r.findAllIn(normalized).map(_.take(1)).toList.distinct
+    else Nil
 
   private[chessjudgment] def currentMoveCounterplayRestraintCarrier(
       candidateLine: LineNodeRef,
@@ -1441,82 +1517,47 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         false
     }
 
-  private[chessjudgment] def materialSwingSupportRecords(
-      referenceRecords: List[EvidenceRecord],
+  private[chessjudgment] def candidateMaterialLossLiabilityRecords(
+      fact: CandidateComparisonFact,
       candidateRecords: List[EvidenceRecord]
   ): List[EvidenceRecord] =
-    Option
-      .when(typedMaterialConsequenceSwing(referenceRecords, candidateRecords))(
-        (proofSignalMaterialSummaryRecords(referenceRecords) ++ proofSignalMaterialSummaryRecords(candidateRecords)).distinctBy(_.ref.id)
-      )
-      .getOrElse(Nil)
+    val ownedRecordIds =
+      TypedEvidenceGraph
+        .ownedLineConsequences(
+          candidateRecords,
+          fact,
+          RelativeCauseSourceSide.Candidate,
+          CauseAttributionKind.CandidateAllowsLiability
+        )
+        .collect {
+          case (ref, consequence) if consequence.kind == LineConsequenceKind.MaterialLoss => ref.id
+        }
+        .toSet
+    candidateRecords.filter(record => ownedRecordIds(record.ref.id)).distinctBy(_.ref.id)
 
-  private[chessjudgment] def materialDeteriorationSupportRecords(
-      referenceRecords: List[EvidenceRecord],
-      candidateRecords: List[EvidenceRecord]
+  private[chessjudgment] def sacrificeCompensationSupportRecords(
+      records: List[EvidenceRecord],
+      rootMove: String
   ): List[EvidenceRecord] =
-    Option
-      .when(materialDeteriorates(referenceRecords, candidateRecords))(
-        proofSignalMaterialSummaryRecords(referenceRecords) ++ proofSignalMaterialSummaryRecords(candidateRecords)
-      )
-      .getOrElse(Nil)
-      .distinctBy(_.ref.id)
-
-  private[chessjudgment] def sacrificeCompensationSupportRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
-    val material = sacrificeMaterialRecords(records)
+    val material = sacrificeMaterialRecords(records, rootMove)
     val compensation = compensationSupportRecords(records)
     Option
       .when(material.nonEmpty && compensation.nonEmpty)((material ++ compensation).distinctBy(_.ref.id))
       .getOrElse(Nil)
 
-  private def sacrificeMaterialRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
+  private def sacrificeMaterialRecords(records: List[EvidenceRecord], rootMove: String): List[EvidenceRecord] =
     records.filter {
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
-        payload.hasSacrificeConsequence
+        payload.consequencesForRootMove(rootMove).exists(_.kind == LineConsequenceKind.Sacrifice)
       case _ =>
         false
     }
 
   private def compensationSupportRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
-    (
-      strategicCompensationRecords(records) ++
-        compensationAnchorRecords(records)
-    ).distinctBy(_.ref.id)
+    strategicCompensationRecords(records)
 
   private def strategicCompensationRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     strategicMechanismRecords(records)(_.canSupportCompensation)
-
-  private def compensationAnchorRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
-    strategicMechanismRecords(records)(payload =>
-      payload.canSupportCompensation || payload.canAnchorPlanClaim || payload.canAnchorPawnStructureClaim
-    )
-
-  private def proofSignalMaterialSummaryRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
-    records.filter {
-      case EvidenceRecord(_, payload: LineFactEvidence, _) =>
-        payload.hasMaterialConsequence || payload.hasRecaptureRecoveryConsequence
-      case _ =>
-        false
-    }
-
-  private def typedMaterialConsequenceSwing(
-      referenceRecords: List[EvidenceRecord],
-      candidateRecords: List[EvidenceRecord]
-  ): Boolean =
-    materialGainMagnitude(referenceRecords).ordinal > materialGainMagnitude(candidateRecords).ordinal ||
-      materialLossMagnitude(candidateRecords).ordinal > materialLossMagnitude(referenceRecords).ordinal
-
-  private def materialDeteriorates(
-      referenceRecords: List[EvidenceRecord],
-      candidateRecords: List[EvidenceRecord]
-  ): Boolean =
-    typedMaterialConsequenceSwing(referenceRecords, candidateRecords)
-
-  private def materialGainMagnitude(records: List[EvidenceRecord]): LineMaterialOutcomeMagnitude =
-    LineFactEvidence.materialOutcomeProfile(records).gainMagnitude
-
-  private def materialLossMagnitude(records: List[EvidenceRecord]): LineMaterialOutcomeMagnitude =
-    LineFactEvidence.materialOutcomeProfile(records).lossMagnitude
 
   private def normalizeMove(raw: String): String =
     Option(raw).getOrElse("").trim.toLowerCase

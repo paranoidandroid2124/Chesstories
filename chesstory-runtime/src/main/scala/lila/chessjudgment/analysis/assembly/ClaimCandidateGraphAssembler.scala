@@ -17,6 +17,48 @@ final case class ClaimCandidateGraph(
   def rejected: List[ClaimAdmissionDecision] =
     decisions.filter(_.status == ClaimAdmissionStatus.Rejected)
 
+enum ClaimDeduplicationReason(val id: String):
+  case SemanticAggregation extends ClaimDeduplicationReason("semantic_aggregation")
+  case SameRankKeyLowerScore extends ClaimDeduplicationReason("same_rank_key_lower_score")
+
+final case class ClaimDeduplicationTrace(
+    order: Int,
+    originalClaimId: String,
+    keptClaimId: String,
+    reason: ClaimDeduplicationReason
+)
+
+final case class ClaimDeduplicationResult(
+    decisions: List[ClaimAdmissionDecision],
+    trace: List[ClaimDeduplicationTrace]
+)
+
+final case class RankedClaimDecision(
+    claim: JudgmentClaim,
+    exposureTier: PlayerFacingClaimTier,
+    exposurePriority: Int,
+    priority: Int,
+    salience: ClaimSalience,
+    playerFacingCauseEvidenceIds: List[String]
+)
+
+final case class ClaimRankingResult(
+    ranked: List[RankedClaimDecision],
+    deduplicationTrace: List[ClaimDeduplicationTrace],
+    causeDominanceDecisions: List[RelativeCauseDominanceDecision]
+):
+  def rankedClaims: List[JudgmentClaim] =
+    ranked.map(_.claim)
+
+  def playerFacingClaimDecisions: List[PlayerFacingClaimDecision] =
+    ranked.map(decision =>
+      PlayerFacingClaimDecision(
+        claimId = decision.claim.id,
+        tier = decision.exposureTier,
+        causeEvidenceIds = decision.playerFacingCauseEvidenceIds
+      )
+    )
+
 object ClaimCandidateGraphAssembler:
 
   def fromClaims(
@@ -123,7 +165,21 @@ object ClaimDeduplicator:
 
   private final case class AggregatedClaimDecision(
       index: Int,
-      decision: ClaimAdmissionDecision
+      decision: ClaimAdmissionDecision,
+      aggregationTrace: List[IndexedDeduplicationTrace]
+  )
+
+  private final case class RankKeySelection(
+      firstIndex: Int,
+      kept: AggregatedClaimDecision,
+      suppressed: List[AggregatedClaimDecision]
+  )
+
+  private final case class IndexedDeduplicationTrace(
+      index: Int,
+      originalClaimId: String,
+      keptClaimId: String,
+      reason: ClaimDeduplicationReason
   )
 
   private def aggregateCertified(
@@ -139,14 +195,26 @@ object ClaimDeduplicator:
     val aggregated =
       grouped.values.map { entries =>
         val decisionsInGroup = entries.map(_._2._1)
+        val mergedDecision = mergeDecisions(decisionsInGroup, graph)
         AggregatedClaimDecision(
           index = entries.map(_._2._2).min,
-          decision = mergeDecisions(decisionsInGroup, graph)
+          decision = mergedDecision,
+          aggregationTrace = entries
+            .map(_._2)
+            .collect {
+              case (decision, index) if decision.claim.id != mergedDecision.claim.id =>
+                IndexedDeduplicationTrace(
+                  index = index,
+                  originalClaimId = decision.claim.id,
+                  keptClaimId = mergedDecision.claim.id,
+                  reason = ClaimDeduplicationReason.SemanticAggregation
+                )
+            }
         )
       }.toList
     val passthrough =
       decisions.zipWithIndex.collect { case (decision, index) if !aggregationEligible(decision.claim, graph) =>
-        AggregatedClaimDecision(index, decision)
+        AggregatedClaimDecision(index, decision, Nil)
       }
     (passthrough ++ aggregated).sortBy(_.index)
 
@@ -154,20 +222,80 @@ object ClaimDeduplicator:
       decisions: List[ClaimAdmissionDecision],
       graph: TypedEvidenceGraph
   ): List[ClaimAdmissionDecision] =
-    val aggregated = aggregateCertified(decisions, graph)
-    aggregated
-      .groupBy(item => key(item.decision.claim))
-      .values
-      .map(_.maxBy(item => score(item.decision, graph)).decision)
-      .toList
+    deduplicateDetailed(decisions, graph).decisions
 
-  private def key(claim: JudgmentClaim): (ClaimFamily, ClaimSubject, Option[LineNodeRef], Option[String]) =
+  def deduplicateDetailed(
+      decisions: List[ClaimAdmissionDecision],
+      graph: TypedEvidenceGraph
+  ): ClaimDeduplicationResult =
+    val aggregated = aggregateCertified(decisions, graph)
+    val selections =
+      aggregated
+        .groupBy(item => key(item.decision.claim, graph))
+      .values
+      .map { items =>
+        val kept = items.maxBy(item => (score(item.decision, graph), -item.index))
+        RankKeySelection(
+          firstIndex = items.map(_.index).min,
+          kept = kept,
+          suppressed = items.filterNot(_.index == kept.index).sortBy(_.index)
+        )
+      }
+      .toList
+    val aggregationTrace =
+      aggregated
+        .flatMap(_.aggregationTrace)
+        .sortBy(item => (item.index, item.originalClaimId, item.keptClaimId))
+    val suppressionTrace =
+      selections
+        .sortBy(_.firstIndex)
+        .flatMap(selection =>
+          selection.suppressed.map(item =>
+            IndexedDeduplicationTrace(
+              index = item.index,
+              originalClaimId = item.decision.claim.id,
+              keptClaimId = selection.kept.decision.claim.id,
+              reason = ClaimDeduplicationReason.SameRankKeyLowerScore
+            )
+          )
+        )
+    val trace =
+      (aggregationTrace ++ suppressionTrace).zipWithIndex.map { case (item, order) =>
+        ClaimDeduplicationTrace(
+          order = order,
+          originalClaimId = item.originalClaimId,
+          keptClaimId = item.keptClaimId,
+          reason = item.reason
+        )
+      }
+    ClaimDeduplicationResult(
+      decisions = selections.sortBy(_.firstIndex).map(_.kept.decision),
+      trace = trace
+    )
+
+  private def key(
+      claim: JudgmentClaim,
+      graph: TypedEvidenceGraph
+  ): (ClaimFamily, ClaimSubject, Option[LineNodeRef], Option[String], List[String]) =
     (
       claim.family,
       claim.subject,
       claim.primaryLine,
-      claim.subjectMove
+      claim.subjectMove,
+      claim.evidence
+        .flatMap(ref => graph.byId.get(ref.id))
+        .collect { case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
+          relativeCauseRankSignature(cause, graph)
+        }
+        .distinct
+        .sorted
     )
+
+  private def relativeCauseRankSignature(
+      cause: RelativeCauseFact,
+      graph: TypedEvidenceGraph
+  ): String =
+    RelativeCauseSemanticKey.from(cause, graph).stableKey
 
   private final case class AggregationKey(
       family: ClaimFamily,
@@ -290,30 +418,78 @@ object ClaimArbitrator:
       graph: ClaimCandidateGraph,
       relativeAssessments: List[RelativeMoveAssessment]
   ): List[JudgmentClaim] =
+    rankDetailed(graph, relativeAssessments).rankedClaims
+
+  def rankDetailed(
+      graph: ClaimCandidateGraph,
+      relativeAssessments: List[RelativeMoveAssessment]
+  ): ClaimRankingResult =
     val playedMoves = relativeAssessments.map(assessment => normalizeMove(assessment.played.moveUci)).toSet
-    val certifiedDecisions = ClaimDeduplicator.deduplicate(graph.certified, graph.evidenceGraph)
+    val deduplication = ClaimDeduplicator.deduplicateDetailed(graph.certified, graph.evidenceGraph)
+    val certifiedDecisions = deduplication.decisions
     val claims = certifiedDecisions.map(_.claim)
-    certifiedDecisions
+    val eligibleCausesByClaim = claims.map { claim =>
+      val records = claim.evidence.flatMap(graph.evidenceGraph.record)
+      claim.id -> PlayerFacingClaimPolicy.eligibleRelativeCauses(
+        claim,
+        records,
+        graph.evidenceGraph,
+        playedMoves
+      )
+    }.toMap
+    val causeDominanceDecisions = RelativeCauseDominancePolicy.resolve(
+      eligibleCausesByClaim.values.flatten.toList.distinctBy(_._2.id),
+      graph.evidenceGraph
+    )
+    val retainedCauseEvidenceIds =
+      causeDominanceDecisions.filter(_.retained).map(_.causeEvidenceId).toSet
+    val playerFacingCauseEvidenceIdsByClaim = eligibleCausesByClaim.view.mapValues(causes =>
+      causes.map(_._2.id).filter(retainedCauseEvidenceIds).distinct.sorted
+    ).toMap
+    val exposureTiersByClaim = claims.map { claim =>
+      val baseTier = PlayerFacingClaimPolicy.tier(claim, graph.evidenceGraph, playedMoves)
+      val eligibleCauseIds = eligibleCausesByClaim.getOrElse(claim.id, Nil).map(_._2.id)
+      val retainedCauseIds = playerFacingCauseEvidenceIdsByClaim.getOrElse(claim.id, Nil)
+      val tier =
+        if eligibleCauseIds.nonEmpty && retainedCauseIds.isEmpty then PlayerFacingClaimTier.Diagnostic
+        else baseTier
+      claim.id -> tier
+    }.toMap
+    val interactionClaims = claims.filter(claim =>
+      exposureTiersByClaim.getOrElse(claim.id, PlayerFacingClaimTier.Diagnostic) !=
+        PlayerFacingClaimTier.Diagnostic
+    )
+    val ranked =
+      certifiedDecisions
       .map { decision =>
         val salience = claimSalience(decision.claim, graph.evidenceGraph)
-        val exposureTier = PlayerFacingClaimPolicy.tier(decision.claim, graph.evidenceGraph, playedMoves)
-        (
-          decision,
-          salience.copy(interactions = claimInteractions(decision.claim, claims, graph.evidenceGraph, playedMoves)),
-          exposureTier
+        val rankedSalience =
+          salience.copy(
+            interactions =
+              if exposureTiersByClaim(decision.claim.id) == PlayerFacingClaimTier.Diagnostic then Nil
+              else claimInteractions(decision.claim, interactionClaims, graph.evidenceGraph, playedMoves)
+          )
+        val exposureTier = exposureTiersByClaim(decision.claim.id)
+        val exposurePriority = PlayerFacingClaimPolicy.rankPriority(exposureTier)
+        val claimPriority = priority(decision, rankedSalience, graph.evidenceGraph)
+        RankedClaimDecision(
+          claim = decision.claim.copy(salience = Some(rankedSalience)),
+          exposureTier = exposureTier,
+          exposurePriority = exposurePriority,
+          priority = claimPriority,
+          salience = rankedSalience,
+          playerFacingCauseEvidenceIds =
+            playerFacingCauseEvidenceIdsByClaim.getOrElse(decision.claim.id, Nil)
         )
       }
-      .sortBy { case (decision, salience, exposureTier) =>
-        (
-          -PlayerFacingClaimPolicy.rankPriority(exposureTier),
-          -priority(decision, salience, graph.evidenceGraph)
-        )
+      .sortBy { decision =>
+        (-decision.exposurePriority, -decision.priority, decision.claim.id)
       }
-      .map { case (decision, salience, _) =>
-        decision.claim.copy(
-          salience = Some(salience)
-        )
-      }
+    ClaimRankingResult(
+      ranked = ranked,
+      deduplicationTrace = deduplication.trace,
+      causeDominanceDecisions = causeDominanceDecisions
+    )
 
   private def priority(
       decision: ClaimAdmissionDecision,
@@ -331,7 +507,22 @@ object ClaimArbitrator:
       familyBaseline(claim.family) * 50 +
       confidencePriority(claim.confidence) * 40 +
       decision.presentLayers.size * 10 +
-      claimEvidencePriority(claim, graph)
+      claimEvidencePriority(claim, graph) +
+      verifiedOpponentResourcePriority(claim, graph)
+
+  private def verifiedOpponentResourcePriority(
+      claim: JudgmentClaim,
+      graph: TypedEvidenceGraph
+  ): Int =
+    Option
+      .when(
+        relativeCauses(claim, graph).exists(cause =>
+          cause.kind == RelativeCauseKind.OpponentRestriction &&
+            cause.hasOwnedAdmissibleLongTermProof(graph) &&
+            graph.opponentResourceDeterrenceEventRefs(cause).nonEmpty
+        )
+      )(25)
+      .getOrElse(0)
 
   private def claimEvidencePriority(claim: JudgmentClaim, graph: TypedEvidenceGraph): Int =
     val weightedEvidence =

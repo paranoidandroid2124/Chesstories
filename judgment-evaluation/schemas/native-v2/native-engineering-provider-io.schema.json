@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/native-v2/native-engineering-provider-io.schema.json",
+  "title": "Chesstory diagnostic native provider I/O capture v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "provider_binding",
+    "invocation_sha256",
+    "raw_result_sha256",
+    "invocation",
+    "raw_result"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "chesstory.eval.native-engineering-provider-io.v1"
+    },
+    "provider_binding": {
+      "$ref": "native-engineering-report.schema.json#/$defs/providerBinding"
+    },
+    "invocation_sha256": { "$ref": "#/$defs/sha256" },
+    "raw_result_sha256": { "$ref": "#/$defs/sha256" },
+    "invocation": { "$ref": "native-engineering-invocation.schema.json" },
+    "raw_result": { "$ref": "native-engineering-result.schema.json" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

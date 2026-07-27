@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstory.local/schemas/model-proxy-v1/aggregate.schema.json",
+  "title": "Chesstory blind non-human model-proxy aggregate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "evidence_tier",
+    "human_gate_eligible",
+    "release_eligible",
+    "production_bottleneck",
+    "blind_item_id",
+    "blind_payload_sha256",
+    "status",
+    "engineering_proxy_E",
+    "conditions",
+    "thresholds",
+    "diagnostics",
+    "votes"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.eval.blind-model-proxy-aggregate.v1"},
+    "evidence_tier": {"const": "model-proxy-nonhuman"},
+    "human_gate_eligible": {"const": false},
+    "release_eligible": {"const": false},
+    "production_bottleneck": {"type": "null"},
+    "blind_item_id": {"type": "string", "minLength": 1},
+    "blind_payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {"enum": ["complete", "indeterminate"]},
+    "engineering_proxy_E": {"type": ["integer", "null"], "minimum": 0, "maximum": 1},
+    "conditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "no_abstention",
+        "unanimously_grounded",
+        "unanimously_fact_correct",
+        "zero_unsupported_meaning",
+        "core_idea_threshold",
+        "usefulness_threshold",
+        "agreement_tolerance"
+      ],
+      "properties": {
+        "no_abstention": {"type": "boolean"},
+        "unanimously_grounded": {"type": "boolean"},
+        "unanimously_fact_correct": {"type": "boolean"},
+        "zero_unsupported_meaning": {"type": "boolean"},
+        "core_idea_threshold": {"type": "boolean"},
+        "usefulness_threshold": {"type": "boolean"},
+        "agreement_tolerance": {"type": "boolean"}
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["usefulness", "core_idea", "maximum_score_range"],
+      "properties": {
+        "usefulness": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "core_idea": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "maximum_score_range": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "core_idea_mean",
+        "core_idea_range",
+        "usefulness_mean",
+        "usefulness_range",
+        "maximum_unsupported_meaning_count",
+        "rater_count",
+        "held_out_human_rater_count"
+      ],
+      "properties": {
+        "core_idea_mean": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "core_idea_range": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "usefulness_mean": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "usefulness_range": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "maximum_unsupported_meaning_count": {"type": "integer", "minimum": 0},
+        "rater_count": {"const": 3},
+        "held_out_human_rater_count": {"const": 0}
+      }
+    },
+    "votes": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"$ref": "vote.schema.json"}
+    }
+  }
+}

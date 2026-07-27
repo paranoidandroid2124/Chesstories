@@ -1,0 +1,79 @@
+{
+  "schema_version": "chesstory.eval.preregistration.v1",
+  "version": "1.1.0",
+  "registered_at": "2026-07-26T00:00:00Z",
+  "seed": 240731,
+  "oracle_chains": ["team-a", "team-b"],
+  "target_distribution": {
+    "game_phases": ["opening", "middlegame", "endgame"],
+    "families": ["tactical", "strategic", "defensive", "conversion", "material", "evaluation"],
+    "required_counterfactual_pairs": true,
+    "required_played_reference_swaps": true,
+    "split_unit": "transitive-atomic-cluster"
+  },
+  "primary_endpoint_E": {
+    "answerable": [
+      "non-abstention",
+      "all public meaning grounded and fact-correct",
+      "at least one top core claim in the pre-unblinding frozen run allowed set",
+      "source-blind usefulness consensus at or above threshold"
+    ],
+    "unanswerable": ["abstention", "zero unsupported public meaning"]
+  },
+  "secondary_diagnostics": {
+    "Q": ["candidate coverage", "top-k repeat stability", "evaluation variance", "mate/tablebase reproducibility", "missing-evidence rate"],
+    "F": ["legality", "perspective", "fact exact accuracy"],
+    "C": ["direction", "actor", "target", "mechanism", "consequence"],
+    "Jp": ["allowed-alternative candidate recall"],
+    "Ja": ["precision-constrained recall"],
+    "R": ["core claim top-1 agreement"],
+    "P": ["packet semantic-field preservation"],
+    "V": ["usefulness under zero grounding violations"]
+  },
+  "ceiling_min_success_rate": 0.8,
+  "usefulness_threshold": 0.67,
+  "claim_precision_floor": 0.97,
+  "coverage_floor": 0.95,
+  "abstention_excess_ceiling": 0.05,
+  "delta_endpoints": {
+    "proportion": 0.03,
+    "top_claim": 0.05,
+    "usefulness": 0.05
+  },
+  "epsilon_gain": {
+    "default_delta": 0.03,
+    "default_lambda": 0.03,
+    "default_gamma": 0.03,
+    "Q_stable": 0.02
+  },
+  "multiplicity": {
+    "method": "Holm",
+    "family_wise_alpha": 0.05,
+    "direction": "one-sided"
+  },
+  "bootstrap": {
+    "kind": "paired-atomic-cluster",
+    "iterations": 5000,
+    "confidence": 0.95,
+    "seed": 240731
+  },
+  "minimum_effective_counts": {
+    "atomic_clusters": 30,
+    "held_out_human_raters": 3,
+    "independent_oracle_chains": 2
+  },
+  "verbalization_policy": {
+    "language": "en",
+    "max_sentences": 4,
+    "require_claim_citations": true,
+    "allow_abstention": true,
+    "prohibited_new_token_kinds": ["move", "square", "piece", "file", "rank"]
+  },
+  "decision_rules": {
+    "attribution": "Both fixed oracle chains must pass ceiling and show the same preregistered effect direction after paired cluster inference and Holm control.",
+    "chain_disagreement": "indeterminate; do not select, average, or pool chains",
+    "no_actionable_gain": "Only a fresh-confirm Holm-adjusted one-sided upper bound at or below epsilon_gain supports equivalence; otherwise indeterminate.",
+    "ceiling_failure": "Run the foundation decision tree before naming a production bottleneck."
+  },
+  "current_corpus_power_status": "insufficient-for-inference"
+}

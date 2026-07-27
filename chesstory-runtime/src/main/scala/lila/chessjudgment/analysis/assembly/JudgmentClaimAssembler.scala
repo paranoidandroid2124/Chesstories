@@ -27,24 +27,38 @@ object JudgmentClaimAssembler:
   )
 
   def assemble(raw: RawMoveReviewInput): Option[JudgmentAssemblyContext] =
-    RelativeAssessmentAssembler.assemble(raw).map(enrich)
+    MoveReviewJudgmentOrchestrator.assemble(raw)
 
-  def enrich(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
+  private[assembly] def propose(context: JudgmentAssemblyContext): List[JudgmentClaim] =
     val allocator = JudgmentProvenanceAllocator.forInput(context.input)
-    val claimCandidates =
-      consistentClaimsById(
-        List.concat(
-          tacticalClaims(context, allocator),
-          pawnStructureClaims(context, allocator),
-          openingClaims(context, allocator),
-          defensiveClaims(context, allocator),
-          relativeCauseClaims(context, allocator),
-          evaluationClaims(context, allocator),
-          strategicClaims(context, allocator)
-        )
+    consistentClaimsById(
+      List.concat(
+        tacticalClaims(context, allocator),
+        pawnStructureClaims(context, allocator),
+        openingClaims(context, allocator),
+        defensiveClaims(context, allocator),
+        relativeCauseClaims(context, allocator),
+        evaluationClaims(context, allocator),
+        strategicClaims(context, allocator)
       )
-    val candidateGraph = ClaimCandidateGraphAssembler.fromClaims(claimCandidates, context.evidenceGraph)
-    val claims = ClaimArbitrator.rank(candidateGraph, context.relativeAssessments)
+    )
+
+  private[assembly] def admit(
+      context: JudgmentAssemblyContext,
+      claimCandidates: List[JudgmentClaim]
+  ): ClaimCandidateGraph =
+    ClaimCandidateGraphAssembler.fromClaims(claimCandidates, context.evidenceGraph)
+
+  private[assembly] def rankDetailed(
+      context: JudgmentAssemblyContext,
+      candidateGraph: ClaimCandidateGraph
+  ): ClaimRankingResult =
+    ClaimArbitrator.rankDetailed(candidateGraph, context.relativeAssessments)
+
+  private[assembly] def attach(
+      context: JudgmentAssemblyContext,
+      claims: List[JudgmentClaim]
+  ): JudgmentAssemblyContext =
     claims.foldLeft(context)((ctx, claim) => ctx.withClaim(claim))
 
   private def consistentClaimsById(claims: List[JudgmentClaim]): List[JudgmentClaim] =
@@ -325,7 +339,7 @@ object JudgmentClaimAssembler:
     val supportRefs = relativeCauseClaimSupportRefs(context, cause, parents)
     val depthProofRefs = relativeCauseClaimDepthProofRefs(cause)
     familiesForRelativeCause(context, ref, cause, supportRefs).map { family =>
-      val familyEvidence = relativeCauseClaimEvidence(context, ref, supportRefs, depthProofRefs, family)
+      val familyEvidence = relativeCauseClaimEvidence(context, ref, cause, supportRefs, depthProofRefs, family)
       judgmentClaimFromEvidence(
         id = relativeCauseClaimId(context.evidenceGraph, allocator, family, cause, subjectLine, ref),
         family = family,
@@ -380,6 +394,7 @@ object JudgmentClaimAssembler:
   private def relativeCauseClaimEvidence(
       context: JudgmentAssemblyContext,
       ref: EvidenceRef,
+      cause: RelativeCauseFact,
       supportRefs: List[EvidenceRef],
       depthProofRefs: List[EvidenceRef],
       family: ClaimFamily
@@ -390,7 +405,7 @@ object JudgmentClaimAssembler:
       case ClaimFamily.Tactical | ClaimFamily.Material | ClaimFamily.Defensive =>
         depthEvidence
       case ClaimFamily.Conversion =>
-        (depthEvidence ++ conversionContextEvidence(context, ref.position)).distinctBy(_.id)
+        (depthEvidence ++ conversionContextEvidence(context, ref.position, cause.kind)).distinctBy(_.id)
       case ClaimFamily.Strategic =>
         (ref :: longTermClaimEvidence(supportRefs)).distinctBy(_.id)
       case ClaimFamily.PawnStructure | ClaimFamily.Opening =>
@@ -410,18 +425,7 @@ object JudgmentClaimAssembler:
     val supportRecords = recordsForRefs(context, supportRefs)
     cause.kind match
       case RelativeCauseKind.MaterialSwing =>
-        val promoted =
-          List(
-            Option.when(cause.hasOwnedTypedDepth(context.evidenceGraph))(ClaimFamily.Material),
-            Option.when(
-              materialSwingHasTacticalProof(context.evidenceGraph, cause)
-            )(ClaimFamily.Tactical),
-            Option.when(
-              cause.hasOwnedTypedDepth(context.evidenceGraph) &&
-                hasConversionContext(context, ref.position, supportRefs)
-            )(ClaimFamily.Conversion)
-          ).flatten
-        promoted.distinct
+        Option.when(cause.hasOwnedTypedDepth(context.evidenceGraph))(ClaimFamily.Material).toList
       case RelativeCauseKind.SacrificeCompensation =>
         val promoted =
           List(
@@ -507,9 +511,13 @@ object JudgmentClaimAssembler:
     ) ||
     records.exists {
       case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-        payload.hasActionableContrast
+        payload.sustainedCauseComparisons(cause.kind, cause.sourceSide).nonEmpty
       case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
-        payload.canSupportStrategicCause
+        payload.signals.exists(signal =>
+          signal.axis.exists(axis =>
+            RelativeCauseKind.strategicAxisCanProveCause(cause.kind, axis, cause.sourceSide)
+          )
+        )
       case _ =>
         false
     }
@@ -530,9 +538,16 @@ object JudgmentClaimAssembler:
       ) ||
     records.exists {
       case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-        payload.actionableComparisons.exists(_.axis.kind == StrategicAxisKind.PawnBreak)
+        payload.sustainedCauseComparisons(cause.kind, cause.sourceSide).exists(comparison =>
+          comparison.axis.kind == StrategicAxisKind.PawnBreak
+        )
       case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
-        payload.canAnchorPawnStructureClaim
+        payload.signals.exists(signal =>
+          signal.axis.exists(axis =>
+            axis.kind == StrategicAxisKind.PawnBreak &&
+              RelativeCauseKind.strategicAxisCanProveCause(cause.kind, axis, cause.sourceSide)
+          )
+        )
       case _ =>
         false
     }
@@ -549,19 +564,25 @@ object JudgmentClaimAssembler:
 
   private def conversionContextEvidence(
       context: JudgmentAssemblyContext,
-      position: PositionNodeRef
+      position: PositionNodeRef,
+      causeKind: RelativeCauseKind
   ): List[EvidenceRef] =
-    conversionContextRecords(context, position, Nil).map(_.ref)
+    conversionContextRecords(context, position, Nil, Some(causeKind)).map(_.ref)
 
   private def conversionContextRecords(
       context: JudgmentAssemblyContext,
       position: PositionNodeRef,
-      parents: List[EvidenceRef]
+      parents: List[EvidenceRef],
+      causeKind: Option[RelativeCauseKind] = None
   ): List[EvidenceRecord] =
     val positionRecords = context.evidenceGraph.recordsFor(position)
     val parentRecords = parents.flatMap(parent => context.evidenceGraph.byId.get(parent.id))
     (positionRecords ++ parentRecords)
-      .filter(record => ClaimTruthPolicy.conversionContextCanSupportClaim(List(record)))
+      .filter(record =>
+        causeKind match
+          case Some(kind) => ClaimTruthPolicy.conversionContextCanSupportClaim(List(record), kind)
+          case None       => ClaimTruthPolicy.conversionContextCanSupportClaim(List(record))
+      )
       .distinctBy(_.ref.id)
 
   private def subjectForRelativeCause(cause: RelativeCauseFact, line: LineNodeRef): ClaimSubject =

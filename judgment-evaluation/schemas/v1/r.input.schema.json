@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/v1/r.input.schema.json",
+  "title": "R input v1",
+  "$comment": "Ranking receives admission decisions so rejected candidates cannot be silently promoted.",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/stageDocument" },
+    {
+      "type": "object",
+      "properties": {
+        "stage": { "const": "R" },
+        "payload": { "$ref": "#/$defs/payload" }
+      }
+    }
+  ],
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": ["admission_bundle"],
+      "properties": {
+        "admission_bundle": { "$ref": "common.schema.json#/$defs/admissionBundle" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

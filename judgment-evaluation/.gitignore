@@ -1,0 +1,10 @@
+/.venv/
+/artifacts/
+/reports/generated/
+/private-corpus/
+/tmp/
+__pycache__/
+*.py[cod]
+*.egg-info/
+/runtime-adapter/target/
+/runtime-adapter/project/target/

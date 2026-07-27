@@ -1,0 +1,792 @@
+{
+  "access_log_hash": null,
+  "all_oracle_ceiling": {
+    "chains": {
+      "team-a": {
+        "atomic_clusters": 0,
+        "bootstrap_iterations": 5000,
+        "completed": 0,
+        "confidence": 0.95,
+        "failures": [
+          {
+            "E": null,
+            "arm_id": "arm-0008",
+            "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+            "diagnostics": {},
+            "failure_artifact_hash": null,
+            "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+            "sample_id": "explore-doknjas-grunfeld-b5",
+            "stage": "Q",
+            "stage_artifacts": {},
+            "status": "unavailable"
+          },
+          {
+            "E": null,
+            "arm_id": "arm-0008",
+            "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+            "diagnostics": {},
+            "failure_artifact_hash": null,
+            "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+            "sample_id": "explore-gamechanger-ng5",
+            "stage": "Q",
+            "stage_artifacts": {},
+            "status": "unavailable"
+          },
+          {
+            "E": null,
+            "arm_id": "arm-0008",
+            "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+            "diagnostics": {},
+            "failure_artifact_hash": null,
+            "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+            "sample_id": "explore-gamechanger-nh4-counterfactual",
+            "stage": "Q",
+            "stage_artifacts": {},
+            "status": "unavailable"
+          }
+        ],
+        "minimum_held_out_human_raters": 0,
+        "one_sided_cluster_ci_lower": null,
+        "required_atomic_clusters": 30,
+        "required_held_out_human_raters": 3,
+        "required_success_rate": 0.8,
+        "status": "not-passed",
+        "success_rate": null,
+        "total": 3
+      },
+      "team-b": {
+        "atomic_clusters": 0,
+        "bootstrap_iterations": 5000,
+        "completed": 0,
+        "confidence": 0.95,
+        "failures": [
+          {
+            "E": null,
+            "arm_id": "arm-0009",
+            "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+            "diagnostics": {},
+            "failure_artifact_hash": null,
+            "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+            "sample_id": "explore-doknjas-grunfeld-b5",
+            "stage": "Q",
+            "stage_artifacts": {},
+            "status": "unavailable"
+          },
+          {
+            "E": null,
+            "arm_id": "arm-0009",
+            "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+            "diagnostics": {},
+            "failure_artifact_hash": null,
+            "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+            "sample_id": "explore-gamechanger-ng5",
+            "stage": "Q",
+            "stage_artifacts": {},
+            "status": "unavailable"
+          },
+          {
+            "E": null,
+            "arm_id": "arm-0009",
+            "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+            "diagnostics": {},
+            "failure_artifact_hash": null,
+            "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+            "sample_id": "explore-gamechanger-nh4-counterfactual",
+            "stage": "Q",
+            "stage_artifacts": {},
+            "status": "unavailable"
+          }
+        ],
+        "minimum_held_out_human_raters": 0,
+        "one_sided_cluster_ci_lower": null,
+        "required_atomic_clusters": 30,
+        "required_held_out_human_raters": 3,
+        "required_success_rate": 0.8,
+        "status": "not-passed",
+        "success_rate": null,
+        "total": 3
+      }
+    },
+    "status": "not-passed"
+  },
+  "artifact_ledger_hash_before_report": "eecfab335131fa7fc6bf883663b2652245aae3e8a13caab1a5305ce4865bfaed",
+  "atomic_cluster_count": 2,
+  "attribution": {
+    "production_bottleneck": null,
+    "reason": "actual chain is not fully executable under the frozen stage contract: F - native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured; no production stage attribution is valid",
+    "status": "indeterminate"
+  },
+  "candidate_manifest_hash": null,
+  "corpus_version": "judgment-boundary-v1.3.0",
+  "created_at": "2026-07-26T15:45:27.944487Z",
+  "endpoint_allowed_set_source": "unavailable-evaluator",
+  "endpoint_policy_hash": null,
+  "executed_arm_count": 9,
+  "expected_row_count": 939,
+  "foundation_controls": {
+    "baseline_completed": 0,
+    "baseline_total": 3,
+    "canonicalizer_idempotence": "not-passed",
+    "errors": [],
+    "external_control_evidence": {
+      "artifact_sha256": null,
+      "content_sha256": null,
+      "status": "not-run"
+    },
+    "external_controls": {
+      "identity_null_control": {
+        "derived_from_ledger_artifacts": false,
+        "evidence_hash": null,
+        "status": "not-run"
+      },
+      "same_seed_reproducibility": {
+        "derived_from_ledger_artifacts": false,
+        "evidence_hash": null,
+        "status": "not-run"
+      },
+      "sentinel_blind_duplicate": {
+        "derived_from_ledger_artifacts": false,
+        "evidence_hash": null,
+        "status": "not-run"
+      }
+    },
+    "schema_registry": "passed",
+    "status": "not-passed",
+    "unavailable": [
+      {
+        "E": null,
+        "arm_id": "arm-0001",
+        "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+        "diagnostics": {},
+        "failure_artifact_hash": null,
+        "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+        "sample_id": "explore-doknjas-grunfeld-b5",
+        "stage": "F",
+        "stage_artifacts": {
+          "Q": {
+            "canonical_output_hash": "d0f07e9059e2214e9eddf6a4e5b488a9ad34014e0a9aca5a21e71281895f7115",
+            "capture_hashes": {
+              "canonical-output.json": "d0f07e9059e2214e9eddf6a4e5b488a9ad34014e0a9aca5a21e71281895f7115",
+              "metadata.json": "fcbe4424dacf177e1b15d5fd75dcb4036ed3bd11c8813e2d23dad8f17ba55bf8",
+              "raw-input.json": "bed07d8e842a597b3b80b714bfd92a2c90052da862cdcab9358c7f9b50f796c2",
+              "raw-output.json": "6bbeb5f979145c74a9049cc8a3edd8b58d1a9051f48a9c0c60365817285734ae",
+              "validated-output.json": "5b92130896b20ba2319374c4c8151cc9beb59d833d1dcef7fecd022510975044"
+            },
+            "consumed_output_hash": "5b92130896b20ba2319374c4c8151cc9beb59d833d1dcef7fecd022510975044",
+            "input_hash": "60f60764934217151b6d02073cb525e99fde7e03a3f7af7ed233a9dbe5278309"
+          }
+        },
+        "status": "unavailable"
+      },
+      {
+        "E": null,
+        "arm_id": "arm-0001",
+        "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+        "diagnostics": {},
+        "failure_artifact_hash": null,
+        "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+        "sample_id": "explore-gamechanger-ng5",
+        "stage": "F",
+        "stage_artifacts": {
+          "Q": {
+            "canonical_output_hash": "8eb84c6d6285759a715aeeb2e4a8fee1f2b0fd1ff1dc05491e457587ac0df287",
+            "capture_hashes": {
+              "canonical-output.json": "8eb84c6d6285759a715aeeb2e4a8fee1f2b0fd1ff1dc05491e457587ac0df287",
+              "metadata.json": "575629c995f0d97a6a761782bd2d968073607c2aa8550d69f68ec70b0bfd97bb",
+              "raw-input.json": "490e754cbebfa2371fff2da842972fdf73f8bf01e4a51e2473479ebfa7bfe8f3",
+              "raw-output.json": "76fdc223bd823aa960a6879894a090c0a342aa2da96932ec17d06d64d3797915",
+              "validated-output.json": "0f66f85676a56de4c32eabfab8d7ac00b46806192246eca46a03b8bd21f8ff87"
+            },
+            "consumed_output_hash": "0f66f85676a56de4c32eabfab8d7ac00b46806192246eca46a03b8bd21f8ff87",
+            "input_hash": "3d873e54bb6696c45353ede6bd90ec6bc115a93b5f01e2291db5a74e7464b5ee"
+          }
+        },
+        "status": "unavailable"
+      },
+      {
+        "E": null,
+        "arm_id": "arm-0001",
+        "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+        "diagnostics": {},
+        "failure_artifact_hash": null,
+        "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+        "sample_id": "explore-gamechanger-nh4-counterfactual",
+        "stage": "F",
+        "stage_artifacts": {
+          "Q": {
+            "canonical_output_hash": "481ef9d5bc118ff24913f8b7e578dc74a7df067b5bda821341ef568ef39585ee",
+            "capture_hashes": {
+              "canonical-output.json": "481ef9d5bc118ff24913f8b7e578dc74a7df067b5bda821341ef568ef39585ee",
+              "metadata.json": "3ec0842aaa6742305fb6b69b18e57dd2e9bc767613224d97bb5f692afd4d0a20",
+              "raw-input.json": "c20dd74406d4fb330629eeba4136d83c98ffa7dcae273363834128f5f475024e",
+              "raw-output.json": "68830ac747db0fe8b258cf23b6154bd66bd6c4e83bab833e0b68473401abb24c",
+              "validated-output.json": "c6938117313cd01f239d1ecf4635bc67afab3d03a345b0f9748a6ebd91711462"
+            },
+            "consumed_output_hash": "c6938117313cd01f239d1ecf4635bc67afab3d03a345b0f9748a6ebd91711462",
+            "input_hash": "affed8238a0799a5199692f4f02b37e90d9910575d8795ba5e0317701a975d29"
+          }
+        },
+        "status": "unavailable"
+      }
+    ]
+  },
+  "fresh_confirm_equivalence": {
+    "binding": {
+      "candidate_manifest_sha256": null,
+      "corpus_version": "judgment-boundary-v1.3.0",
+      "endpoint_policy_sha256": null,
+      "epsilon_registry_sha256": "107b6e7461b3c6fd25c4f6130b6040eb6965890d9eee58e18ff6561c534686c3",
+      "plan_sha256": "bc6447d322f43162487be5b219dddfebea3c4d4847c0dd3c78a5dadd22eb9beb",
+      "preregistration_sha256": "c13294333d5889740f077c488de91f0c2eb4d5568d572620254ab739e98f5f75",
+      "registered_arm_count": 313,
+      "row_universe_sha256": "88f72f1b5cac0917b088d4def8866394c7487c76183ae81976eb7f01efadef39",
+      "run_id": "bottleneck-diagnostic-20260726-v7",
+      "sample_universe_sha256": "a7e2b13a1e7d6c457a7cf5d4a0c00ea15d7c99d6ca790aed2b87a4f8a56ebd7d",
+      "seed": 240731,
+      "split": "diagnostic-explore",
+      "split_sha256": "2c89aae238cb55212d729aa2d48fa985b94e440f83b251b2f2bc8ab8b7735c15"
+    },
+    "interpretation": "residual-gain equivalence is reserved for fresh-confirm",
+    "reason_codes": [
+      "split-is-not-fresh-confirm"
+    ],
+    "schema_version": "chesstory.eval.fresh-confirm-equivalence.v1",
+    "status": "not-applicable"
+  },
+  "fresh_confirm_equivalence_artifact": null,
+  "live_command_config": null,
+  "plan_hash": "bc6447d322f43162487be5b219dddfebea3c4d4847c0dd3c78a5dadd22eb9beb",
+  "pre_unblinding_execution_sha256": "1f39c5bdf86338de031c47f723ed7bedf2918cd3eed9867fdd6f01db6d9bba61",
+  "preregistration_hash": "c13294333d5889740f077c488de91f0c2eb4d5568d572620254ab739e98f5f75",
+  "registered_arm_count": 313,
+  "rows": [
+    {
+      "E": null,
+      "arm_id": "arm-0001",
+      "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-doknjas-grunfeld-b5",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "d0f07e9059e2214e9eddf6a4e5b488a9ad34014e0a9aca5a21e71281895f7115",
+          "capture_hashes": {
+            "canonical-output.json": "d0f07e9059e2214e9eddf6a4e5b488a9ad34014e0a9aca5a21e71281895f7115",
+            "metadata.json": "fcbe4424dacf177e1b15d5fd75dcb4036ed3bd11c8813e2d23dad8f17ba55bf8",
+            "raw-input.json": "bed07d8e842a597b3b80b714bfd92a2c90052da862cdcab9358c7f9b50f796c2",
+            "raw-output.json": "6bbeb5f979145c74a9049cc8a3edd8b58d1a9051f48a9c0c60365817285734ae",
+            "validated-output.json": "5b92130896b20ba2319374c4c8151cc9beb59d833d1dcef7fecd022510975044"
+          },
+          "consumed_output_hash": "5b92130896b20ba2319374c4c8151cc9beb59d833d1dcef7fecd022510975044",
+          "input_hash": "60f60764934217151b6d02073cb525e99fde7e03a3f7af7ed233a9dbe5278309"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0001",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-gamechanger-ng5",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "8eb84c6d6285759a715aeeb2e4a8fee1f2b0fd1ff1dc05491e457587ac0df287",
+          "capture_hashes": {
+            "canonical-output.json": "8eb84c6d6285759a715aeeb2e4a8fee1f2b0fd1ff1dc05491e457587ac0df287",
+            "metadata.json": "575629c995f0d97a6a761782bd2d968073607c2aa8550d69f68ec70b0bfd97bb",
+            "raw-input.json": "490e754cbebfa2371fff2da842972fdf73f8bf01e4a51e2473479ebfa7bfe8f3",
+            "raw-output.json": "76fdc223bd823aa960a6879894a090c0a342aa2da96932ec17d06d64d3797915",
+            "validated-output.json": "0f66f85676a56de4c32eabfab8d7ac00b46806192246eca46a03b8bd21f8ff87"
+          },
+          "consumed_output_hash": "0f66f85676a56de4c32eabfab8d7ac00b46806192246eca46a03b8bd21f8ff87",
+          "input_hash": "3d873e54bb6696c45353ede6bd90ec6bc115a93b5f01e2291db5a74e7464b5ee"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0001",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-gamechanger-nh4-counterfactual",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "481ef9d5bc118ff24913f8b7e578dc74a7df067b5bda821341ef568ef39585ee",
+          "capture_hashes": {
+            "canonical-output.json": "481ef9d5bc118ff24913f8b7e578dc74a7df067b5bda821341ef568ef39585ee",
+            "metadata.json": "3ec0842aaa6742305fb6b69b18e57dd2e9bc767613224d97bb5f692afd4d0a20",
+            "raw-input.json": "c20dd74406d4fb330629eeba4136d83c98ffa7dcae273363834128f5f475024e",
+            "raw-output.json": "68830ac747db0fe8b258cf23b6154bd66bd6c4e83bab833e0b68473401abb24c",
+            "validated-output.json": "c6938117313cd01f239d1ecf4635bc67afab3d03a345b0f9748a6ebd91711462"
+          },
+          "consumed_output_hash": "c6938117313cd01f239d1ecf4635bc67afab3d03a345b0f9748a6ebd91711462",
+          "input_hash": "affed8238a0799a5199692f4f02b37e90d9910575d8795ba5e0317701a975d29"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0002",
+      "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-doknjas-grunfeld-b5",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "b718080e9affcbee153eb14c2c76ce6cf7048a152c997d18461cd786da3dccd6",
+          "capture_hashes": {
+            "canonical-output.json": "b718080e9affcbee153eb14c2c76ce6cf7048a152c997d18461cd786da3dccd6",
+            "metadata.json": "a019d8f77d4a35f07f51f60fb285f00e6fd8444e44024804100b8a7ac53511ac",
+            "raw-input.json": "6acba112b4158f310e7344b68d9db694b74332d147a94b20510beb6c75c58c75",
+            "raw-output.json": "6bbeb5f979145c74a9049cc8a3edd8b58d1a9051f48a9c0c60365817285734ae",
+            "validated-output.json": "fad476f392cd273f43e5589a83951388ba77d38766509aac8b0c7809444e98c8"
+          },
+          "consumed_output_hash": "fad476f392cd273f43e5589a83951388ba77d38766509aac8b0c7809444e98c8",
+          "input_hash": "60f60764934217151b6d02073cb525e99fde7e03a3f7af7ed233a9dbe5278309"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0002",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-gamechanger-ng5",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "2d8d134cee2e44057f3a96aa1fb1f3f9c137a366f53adaf0544109e61cba4176",
+          "capture_hashes": {
+            "canonical-output.json": "2d8d134cee2e44057f3a96aa1fb1f3f9c137a366f53adaf0544109e61cba4176",
+            "metadata.json": "2e882bc0b9267097000e1b3a57185d6e0958c49d3ce886a2ac43206a7e5ca85b",
+            "raw-input.json": "f3f391aab12ddef5457dda5eecc1b884c7e32d984798a13a52f47dd527a17689",
+            "raw-output.json": "76fdc223bd823aa960a6879894a090c0a342aa2da96932ec17d06d64d3797915",
+            "validated-output.json": "16f9a10d211dd6acafb2326520a22c7b7db143c13300a6c74019757740bf89e2"
+          },
+          "consumed_output_hash": "16f9a10d211dd6acafb2326520a22c7b7db143c13300a6c74019757740bf89e2",
+          "input_hash": "3d873e54bb6696c45353ede6bd90ec6bc115a93b5f01e2291db5a74e7464b5ee"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0002",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-gamechanger-nh4-counterfactual",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "9c9e6cb2909eb0a6db2d5fa511a4ce68a769afc54358052d66a9677580cade0b",
+          "capture_hashes": {
+            "canonical-output.json": "9c9e6cb2909eb0a6db2d5fa511a4ce68a769afc54358052d66a9677580cade0b",
+            "metadata.json": "fd3e574482326c845fba0c9e987152ecb206d8e3ea4e7331071e6f4d2c587079",
+            "raw-input.json": "27fdf585aff0482a1149992c1760519e43dd61362bdcfee1960deda6165c2c2d",
+            "raw-output.json": "68830ac747db0fe8b258cf23b6154bd66bd6c4e83bab833e0b68473401abb24c",
+            "validated-output.json": "6eb1f07d938b95a06d8829a6dae907ffea666b5a8c6b1b0c86fcb527ae0f7f5c"
+          },
+          "consumed_output_hash": "6eb1f07d938b95a06d8829a6dae907ffea666b5a8c6b1b0c86fcb527ae0f7f5c",
+          "input_hash": "affed8238a0799a5199692f4f02b37e90d9910575d8795ba5e0317701a975d29"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0003",
+      "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-doknjas-grunfeld-b5",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "bb08914f47e0f9602f70843c8643218f0c2ba67281ba60ae696b1d75e8a63c66",
+          "capture_hashes": {
+            "canonical-output.json": "bb08914f47e0f9602f70843c8643218f0c2ba67281ba60ae696b1d75e8a63c66",
+            "metadata.json": "82ab9c113ad88766967d4ab85c9b7d2e55e615ca75dd0843d569670e158aaf44",
+            "raw-input.json": "e63b62f1e541e56213c04b9a2ffaee1246fae5aff0d278a3e7605168620fbfe2",
+            "raw-output.json": "6bbeb5f979145c74a9049cc8a3edd8b58d1a9051f48a9c0c60365817285734ae",
+            "validated-output.json": "4dba28d8c232eb9f71f77239f72896879d02d74f63534c9912dbe25a025c7787"
+          },
+          "consumed_output_hash": "bb08914f47e0f9602f70843c8643218f0c2ba67281ba60ae696b1d75e8a63c66",
+          "input_hash": "60f60764934217151b6d02073cb525e99fde7e03a3f7af7ed233a9dbe5278309"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0003",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-gamechanger-ng5",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "d405b7e1fe93beeab6d26670f95748711974110bf2725ed36afcd59617fde8b5",
+          "capture_hashes": {
+            "canonical-output.json": "d405b7e1fe93beeab6d26670f95748711974110bf2725ed36afcd59617fde8b5",
+            "metadata.json": "b2ee8ffff4996415f9ff248fdd0304f8126d6fed3326bee33a3c15d14afb673f",
+            "raw-input.json": "31695372f6ef13e8e033d0f0a8646d9a49cdaf743562cb04dd77ca15fdf983be",
+            "raw-output.json": "76fdc223bd823aa960a6879894a090c0a342aa2da96932ec17d06d64d3797915",
+            "validated-output.json": "e8a60f6414251505171d8993971125645382278b75bb7ab9a9166fa880ca1217"
+          },
+          "consumed_output_hash": "d405b7e1fe93beeab6d26670f95748711974110bf2725ed36afcd59617fde8b5",
+          "input_hash": "3d873e54bb6696c45353ede6bd90ec6bc115a93b5f01e2291db5a74e7464b5ee"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0003",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-gamechanger-nh4-counterfactual",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "3ea9f9f93a2fbc247d1152ae812af3b4ca4bcd3f8b43e356860c8d88562d102c",
+          "capture_hashes": {
+            "canonical-output.json": "3ea9f9f93a2fbc247d1152ae812af3b4ca4bcd3f8b43e356860c8d88562d102c",
+            "metadata.json": "9cd3f08393ec48492717f2429f0921c189a9dc700b69dd00b6a9747cece32663",
+            "raw-input.json": "c35a93cd3d14c26f82832dbb1f31c1cc9b31c3ff494a5f31fa4a07bc3dc2832d",
+            "raw-output.json": "68830ac747db0fe8b258cf23b6154bd66bd6c4e83bab833e0b68473401abb24c",
+            "validated-output.json": "c7e7e4371a37bca901f201513c78e082ba4a1d952de3aa4ab30f2b6715ce1e09"
+          },
+          "consumed_output_hash": "3ea9f9f93a2fbc247d1152ae812af3b4ca4bcd3f8b43e356860c8d88562d102c",
+          "input_hash": "affed8238a0799a5199692f4f02b37e90d9910575d8795ba5e0317701a975d29"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0004",
+      "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+      "sample_id": "explore-doknjas-grunfeld-b5",
+      "stage": "Q",
+      "stage_artifacts": {},
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0004",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+      "sample_id": "explore-gamechanger-ng5",
+      "stage": "Q",
+      "stage_artifacts": {},
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0004",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+      "sample_id": "explore-gamechanger-nh4-counterfactual",
+      "stage": "Q",
+      "stage_artifacts": {},
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0005",
+      "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-doknjas-grunfeld-b5",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "b718080e9affcbee153eb14c2c76ce6cf7048a152c997d18461cd786da3dccd6",
+          "capture_hashes": {
+            "canonical-output.json": "b718080e9affcbee153eb14c2c76ce6cf7048a152c997d18461cd786da3dccd6",
+            "metadata.json": "f7259c45b8d32698333bd841a918831fc89cbba1aa53e863a7253cc5aab528e3",
+            "raw-input.json": "6acba112b4158f310e7344b68d9db694b74332d147a94b20510beb6c75c58c75",
+            "raw-output.json": "6bbeb5f979145c74a9049cc8a3edd8b58d1a9051f48a9c0c60365817285734ae",
+            "validated-output.json": "fad476f392cd273f43e5589a83951388ba77d38766509aac8b0c7809444e98c8"
+          },
+          "consumed_output_hash": "fad476f392cd273f43e5589a83951388ba77d38766509aac8b0c7809444e98c8",
+          "input_hash": "60f60764934217151b6d02073cb525e99fde7e03a3f7af7ed233a9dbe5278309"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0005",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-gamechanger-ng5",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "2d8d134cee2e44057f3a96aa1fb1f3f9c137a366f53adaf0544109e61cba4176",
+          "capture_hashes": {
+            "canonical-output.json": "2d8d134cee2e44057f3a96aa1fb1f3f9c137a366f53adaf0544109e61cba4176",
+            "metadata.json": "7b613cbafb14824ae0833424bcb90cdafda8285223cdaae216737c2bb939c330",
+            "raw-input.json": "f3f391aab12ddef5457dda5eecc1b884c7e32d984798a13a52f47dd527a17689",
+            "raw-output.json": "76fdc223bd823aa960a6879894a090c0a342aa2da96932ec17d06d64d3797915",
+            "validated-output.json": "16f9a10d211dd6acafb2326520a22c7b7db143c13300a6c74019757740bf89e2"
+          },
+          "consumed_output_hash": "16f9a10d211dd6acafb2326520a22c7b7db143c13300a6c74019757740bf89e2",
+          "input_hash": "3d873e54bb6696c45353ede6bd90ec6bc115a93b5f01e2291db5a74e7464b5ee"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0005",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-gamechanger-nh4-counterfactual",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "9c9e6cb2909eb0a6db2d5fa511a4ce68a769afc54358052d66a9677580cade0b",
+          "capture_hashes": {
+            "canonical-output.json": "9c9e6cb2909eb0a6db2d5fa511a4ce68a769afc54358052d66a9677580cade0b",
+            "metadata.json": "8afc015e0db7692adbef17624e919998e76fb61820a7e34908fb3ae3b3fae521",
+            "raw-input.json": "27fdf585aff0482a1149992c1760519e43dd61362bdcfee1960deda6165c2c2d",
+            "raw-output.json": "68830ac747db0fe8b258cf23b6154bd66bd6c4e83bab833e0b68473401abb24c",
+            "validated-output.json": "6eb1f07d938b95a06d8829a6dae907ffea666b5a8c6b1b0c86fcb527ae0f7f5c"
+          },
+          "consumed_output_hash": "6eb1f07d938b95a06d8829a6dae907ffea666b5a8c6b1b0c86fcb527ae0f7f5c",
+          "input_hash": "affed8238a0799a5199692f4f02b37e90d9910575d8795ba5e0317701a975d29"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0006",
+      "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-doknjas-grunfeld-b5",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "bb08914f47e0f9602f70843c8643218f0c2ba67281ba60ae696b1d75e8a63c66",
+          "capture_hashes": {
+            "canonical-output.json": "bb08914f47e0f9602f70843c8643218f0c2ba67281ba60ae696b1d75e8a63c66",
+            "metadata.json": "4c951182e4067ef9023b0f07027986cd3fe5e8e07e028a890ffbec88250f7b5b",
+            "raw-input.json": "e63b62f1e541e56213c04b9a2ffaee1246fae5aff0d278a3e7605168620fbfe2",
+            "raw-output.json": "6bbeb5f979145c74a9049cc8a3edd8b58d1a9051f48a9c0c60365817285734ae",
+            "validated-output.json": "4dba28d8c232eb9f71f77239f72896879d02d74f63534c9912dbe25a025c7787"
+          },
+          "consumed_output_hash": "bb08914f47e0f9602f70843c8643218f0c2ba67281ba60ae696b1d75e8a63c66",
+          "input_hash": "60f60764934217151b6d02073cb525e99fde7e03a3f7af7ed233a9dbe5278309"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0006",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-gamechanger-ng5",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "d405b7e1fe93beeab6d26670f95748711974110bf2725ed36afcd59617fde8b5",
+          "capture_hashes": {
+            "canonical-output.json": "d405b7e1fe93beeab6d26670f95748711974110bf2725ed36afcd59617fde8b5",
+            "metadata.json": "0c409ba7c3b954a1aca117aa803c813e5b28e2a802bf1e0a38bb3b8e5d31f90a",
+            "raw-input.json": "31695372f6ef13e8e033d0f0a8646d9a49cdaf743562cb04dd77ca15fdf983be",
+            "raw-output.json": "76fdc223bd823aa960a6879894a090c0a342aa2da96932ec17d06d64d3797915",
+            "validated-output.json": "e8a60f6414251505171d8993971125645382278b75bb7ab9a9166fa880ca1217"
+          },
+          "consumed_output_hash": "d405b7e1fe93beeab6d26670f95748711974110bf2725ed36afcd59617fde8b5",
+          "input_hash": "3d873e54bb6696c45353ede6bd90ec6bc115a93b5f01e2291db5a74e7464b5ee"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0006",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "native F is captured, but no lossless frozen-v1 semantic mapping is defined; no explicit live route is configured",
+      "sample_id": "explore-gamechanger-nh4-counterfactual",
+      "stage": "F",
+      "stage_artifacts": {
+        "Q": {
+          "canonical_output_hash": "3ea9f9f93a2fbc247d1152ae812af3b4ca4bcd3f8b43e356860c8d88562d102c",
+          "capture_hashes": {
+            "canonical-output.json": "3ea9f9f93a2fbc247d1152ae812af3b4ca4bcd3f8b43e356860c8d88562d102c",
+            "metadata.json": "f3e03ed68d6107eb2745856f813057d502abb213c73fd6360e044b0547ef4922",
+            "raw-input.json": "c35a93cd3d14c26f82832dbb1f31c1cc9b31c3ff494a5f31fa4a07bc3dc2832d",
+            "raw-output.json": "68830ac747db0fe8b258cf23b6154bd66bd6c4e83bab833e0b68473401abb24c",
+            "validated-output.json": "c7e7e4371a37bca901f201513c78e082ba4a1d952de3aa4ab30f2b6715ce1e09"
+          },
+          "consumed_output_hash": "3ea9f9f93a2fbc247d1152ae812af3b4ca4bcd3f8b43e356860c8d88562d102c",
+          "input_hash": "affed8238a0799a5199692f4f02b37e90d9910575d8795ba5e0317701a975d29"
+        }
+      },
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0007",
+      "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+      "sample_id": "explore-doknjas-grunfeld-b5",
+      "stage": "Q",
+      "stage_artifacts": {},
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0007",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+      "sample_id": "explore-gamechanger-ng5",
+      "stage": "Q",
+      "stage_artifacts": {},
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0007",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+      "sample_id": "explore-gamechanger-nh4-counterfactual",
+      "stage": "Q",
+      "stage_artifacts": {},
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0008",
+      "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+      "sample_id": "explore-doknjas-grunfeld-b5",
+      "stage": "Q",
+      "stage_artifacts": {},
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0008",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+      "sample_id": "explore-gamechanger-ng5",
+      "stage": "Q",
+      "stage_artifacts": {},
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0008",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+      "sample_id": "explore-gamechanger-nh4-counterfactual",
+      "stage": "Q",
+      "stage_artifacts": {},
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0009",
+      "atomic_cluster_id": "cluster-doknjas-grunfeld-b-pawn-sacrifice",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+      "sample_id": "explore-doknjas-grunfeld-b5",
+      "stage": "Q",
+      "stage_artifacts": {},
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0009",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+      "sample_id": "explore-gamechanger-ng5",
+      "stage": "Q",
+      "stage_artifacts": {},
+      "status": "unavailable"
+    },
+    {
+      "E": null,
+      "arm_id": "arm-0009",
+      "atomic_cluster_id": "cluster-gamechanger-h4-ng5",
+      "diagnostics": {},
+      "failure_artifact_hash": null,
+      "reason": "embedded acquisition packs are actual-only; oracle Q must be independent",
+      "sample_id": "explore-gamechanger-nh4-counterfactual",
+      "stage": "Q",
+      "stage_artifacts": {},
+      "status": "unavailable"
+    }
+  ],
+  "run_id": "bottleneck-diagnostic-20260726-v7",
+  "sample_universe_sha256": "a7e2b13a1e7d6c457a7cf5d4a0c00ea15d7c99d6ca790aed2b87a4f8a56ebd7d",
+  "schema_version": "chesstory.eval.experiment-report.v1",
+  "seed": 240731,
+  "split": "diagnostic-explore",
+  "split_input_hash": "2c89aae238cb55212d729aa2d48fa985b94e440f83b251b2f2bc8ab8b7735c15",
+  "split_sample_count": 3,
+  "statistical_contrasts": [],
+  "status": "foundation-not-passed"
+}

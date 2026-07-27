@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/v1/r.output.schema.json",
+  "title": "R output v1",
+  "$comment": "A meaning-bearing ordered list of admitted claims plus explicit semantic-dedup suppression records.",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/stageDocument" },
+    {
+      "type": "object",
+      "properties": {
+        "stage": { "const": "R" },
+        "payload": { "$ref": "#/$defs/payload" }
+      }
+    }
+  ],
+  "$defs": {
+    "payload": { "$ref": "common.schema.json#/$defs/rankingBundle" }
+  }
+}

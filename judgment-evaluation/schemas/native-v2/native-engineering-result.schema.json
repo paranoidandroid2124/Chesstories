@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/native-v2/native-engineering-result.schema.json",
+  "title": "Chesstory diagnostic-only native intervention result v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "invocation_sha256",
+    "binding",
+    "status",
+    "production_attribution_eligible",
+    "inference_eligible",
+    "directive_receipts"
+  ],
+  "properties": {
+    "schema_version": { "const": "chesstory.runtime-native-engineering-result.v1" },
+    "invocation_sha256": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "binding": {
+      "oneOf": [{ "$ref": "#/$defs/binding" }, { "type": "null" }]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["completed", "typed-unavailable", "adapter-error"]
+    },
+    "realization": { "$ref": "#/$defs/resultRealization" },
+    "production_attribution_eligible": { "const": false },
+    "inference_eligible": { "const": false },
+    "directive_receipts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/receipt" }
+    },
+    "observation": { "$ref": "runtime-observation.schema.json" },
+    "baseline_observation": { "$ref": "runtime-observation.schema.json" },
+    "attempted_observation": { "$ref": "runtime-observation.schema.json" },
+    "unavailability_reason": { "$ref": "#/$defs/nonEmptyString" },
+    "adapter_error": { "$ref": "#/$defs/adapterError" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "completed" } } },
+      "then": {
+        "required": ["realization", "observation"],
+        "not": {
+          "anyOf": [
+            { "required": ["baseline_observation"] },
+            { "required": ["unavailability_reason"] },
+            { "required": ["adapter_error"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "typed-unavailable" } } },
+      "then": {
+        "required": ["realization", "baseline_observation", "unavailability_reason"],
+        "not": {
+          "anyOf": [{ "required": ["observation"] }, { "required": ["adapter_error"] }]
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "adapter-error" } } },
+      "then": {
+        "required": ["adapter_error"],
+        "not": {
+          "anyOf": [
+            { "required": ["observation"] },
+            { "required": ["unavailability_reason"] }
+          ]
+        }
+      }
+    }
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "binding": {
+      "type": "object",
+      "required": ["run_id", "sample_id", "atomic_cluster_id", "arm_id", "plan_sha256"],
+      "properties": {
+        "run_id": { "$ref": "#/$defs/nonEmptyString" },
+        "sample_id": { "$ref": "#/$defs/nonEmptyString" },
+        "atomic_cluster_id": { "$ref": "#/$defs/nonEmptyString" },
+        "arm_id": { "$ref": "#/$defs/nonEmptyString" },
+        "plan_sha256": { "$ref": "#/$defs/sha256" }
+      },
+      "additionalProperties": false
+    },
+    "resultRealization": {
+      "type": "object",
+      "required": ["kind", "directive_producer_tier", "frozen_source_semantics"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["identity", "native-selection"] },
+        "directive_producer_tier": {
+          "type": "string",
+          "enum": ["deterministic-engineering", "blind-model-proxy", "held-out-human-rater"]
+        },
+        "frozen_source_semantics": { "const": "not-claimed" }
+      },
+      "additionalProperties": false
+    },
+    "receipt": {
+      "type": "object",
+      "required": [
+        "stage",
+        "operation",
+        "collection",
+        "status",
+        "available_item_ids",
+        "selected_item_ids",
+        "candidate_inventory_sha256"
+      ],
+      "properties": {
+        "stage": { "type": "string", "enum": ["Q", "F", "C", "Jp", "R", "P"] },
+        "operation": { "const": "select-existing" },
+        "collection": {
+          "type": "string",
+          "enum": ["variations", "probe-results", "evidence-records", "claims", "ranked-claims", "probe-requests"]
+        },
+        "status": { "const": "applied" },
+        "available_item_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" },
+          "uniqueItems": true
+        },
+        "selected_item_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonEmptyString" },
+          "uniqueItems": true
+        },
+        "candidate_inventory_sha256": { "$ref": "#/$defs/sha256" }
+      },
+      "additionalProperties": false
+    },
+    "adapterError": {
+      "type": "object",
+      "required": ["kind", "class"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/nonEmptyString" },
+        "class": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

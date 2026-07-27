@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/cause-audit-v1/freeze-manifest.schema.json",
+  "title": "Cause audit corpus and oracle freeze manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "corpus_id",
+    "frozen_at",
+    "case_binding",
+    "split_assignment",
+    "partition_case_ids",
+    "label_bindings",
+    "canonicalization",
+    "policy"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.eval.cause-audit-freeze.v1"},
+    "corpus_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+    "frozen_at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T.*Z$"},
+    "case_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_count", "source_file_sha256", "canonical_cases_sha256", "case_ids_sha256"],
+      "properties": {
+        "case_count": {"type": "integer", "minimum": 1},
+        "source_file_sha256": {"$ref": "#/$defs/sha256"},
+        "canonical_cases_sha256": {"$ref": "#/$defs/sha256"},
+        "case_ids_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "split_assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "salt",
+        "input_format",
+        "unit",
+        "contamination_exclusions",
+        "family_count",
+        "cases_per_family",
+        "sealed_per_family",
+        "assignment_sha256",
+        "case_assignments"
+      ],
+      "properties": {
+        "algorithm": {"const": "minimum-sha256-per-cause-family-after-contamination-exclusions.v1"},
+        "salt": {"const": "cause-audit-v1-family-seal"},
+        "input_format": {"const": "{salt}|{cause_family}|{case_id}"},
+        "unit": {"const": "cause_family"},
+        "contamination_exclusions": {
+          "type": "array",
+          "uniqueItems": true,
+          "x-canonical": {"mode": "unordered-set"},
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["case_id", "reason"],
+            "properties": {
+              "case_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+              "reason": {"type": "string", "minLength": 1, "maxLength": 511}
+            }
+          }
+        },
+        "family_count": {"const": 8},
+        "cases_per_family": {"const": 3},
+        "sealed_per_family": {"const": 1},
+        "assignment_sha256": {"$ref": "#/$defs/sha256"},
+        "case_assignments": {
+          "type": "array",
+          "minItems": 24,
+          "maxItems": 24,
+          "uniqueItems": true,
+          "x-canonical": {"mode": "unordered-set"},
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "cause_family",
+              "embedded_partition",
+              "logical_partition",
+              "sealed_eligible",
+              "selection_sha256"
+            ],
+            "properties": {
+              "case_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+              "cause_family": {
+                "enum": [
+                  "activity_restriction",
+                  "conversion_control",
+                  "drawing_defense",
+                  "move_order_tempo",
+                  "pawn_breaks_center",
+                  "strategic_plan",
+                  "structure_targets",
+                  "tactical_resource"
+                ]
+              },
+              "embedded_partition": {"enum": ["explore", "sealed_confirm"]},
+              "logical_partition": {"enum": ["explore", "sealed_confirm"]},
+              "sealed_eligible": {"type": "boolean"},
+              "selection_sha256": {"$ref": "#/$defs/sha256"}
+            }
+          }
+        }
+      }
+    },
+    "partition_case_ids": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["explore", "sealed_confirm"],
+      "properties": {
+        "explore": {"$ref": "#/$defs/idSet"},
+        "sealed_confirm": {"$ref": "#/$defs/idSet"}
+      }
+    },
+    "label_bindings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-canonical": {"mode": "unordered-set"},
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "oracle_id",
+          "role",
+          "label_count",
+          "source_file_sha256",
+          "canonical_labels_sha256",
+          "case_ids_sha256"
+        ],
+        "properties": {
+          "oracle_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+          "role": {"enum": ["independent_oracle", "adjudicated_oracle"]},
+          "label_count": {"type": "integer", "minimum": 1},
+          "source_file_sha256": {"$ref": "#/$defs/sha256"},
+          "canonical_labels_sha256": {"$ref": "#/$defs/sha256"},
+          "case_ids_sha256": {"$ref": "#/$defs/sha256"}
+        }
+      }
+    },
+    "canonicalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract", "row_order", "unordered_arrays_from_schema", "ascii_only"],
+      "properties": {
+        "contract": {"const": "schema-authorized-canonical-json-sha256.v1"},
+        "row_order": {"const": "case_id_ascending"},
+        "unordered_arrays_from_schema": {"const": true},
+        "ascii_only": {"const": true}
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "machine_language",
+        "sealed_labels_disclosed",
+        "test_files_added",
+        "production_modules_duplicated"
+      ],
+      "properties": {
+        "machine_language": {"const": "en"},
+        "sealed_labels_disclosed": {"const": false},
+        "test_files_added": {"const": false},
+        "production_modules_duplicated": {"const": false}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "idSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "x-canonical": {"mode": "unordered-set"},
+      "items": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"}
+    }
+  }
+}

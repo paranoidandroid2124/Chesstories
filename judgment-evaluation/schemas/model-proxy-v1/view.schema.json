@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstory.local/schemas/model-proxy-v1/view.schema.json",
+  "title": "Chesstory blind non-human model-proxy view",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "evidence_tier",
+    "human_gate_eligible",
+    "blind_item_id",
+    "blind_payload_sha256",
+    "role",
+    "rubric",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.eval.blind-model-proxy-view.v1"},
+    "evidence_tier": {"const": "model-proxy-nonhuman"},
+    "human_gate_eligible": {"const": false},
+    "blind_item_id": {"type": "string", "minLength": 1},
+    "blind_payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "role": {
+      "enum": ["grounding-auditor", "chess-meaning-rater", "usefulness-rater"]
+    },
+    "rubric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required_vote_schema",
+        "score_range",
+        "must_check",
+        "do_not_infer",
+        "role",
+        "primary_focus"
+      ],
+      "properties": {
+        "required_vote_schema": {"const": "chesstory.eval.blind-model-proxy-vote.v1"},
+        "score_range": {
+          "type": "array",
+          "prefixItems": [{"const": 0.0}, {"const": 1.0}],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "must_check": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+        "do_not_infer": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+        "role": {
+          "enum": ["grounding-auditor", "chess-meaning-rater", "usefulness-rater"]
+        },
+        "primary_focus": {"type": "string", "minLength": 1}
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "evidence_tier",
+        "human_gate_eligible",
+        "blind_item_id",
+        "evaluation_nonce",
+        "candidate_output",
+        "stockfish_evidence"
+      ],
+      "properties": {
+        "schema_version": {"const": "chesstory.eval.blind-model-proxy-payload.v1"},
+        "evidence_tier": {"const": "model-proxy-nonhuman"},
+        "human_gate_eligible": {"const": false},
+        "blind_item_id": {"type": "string", "minLength": 1},
+        "evaluation_nonce": {"type": "string", "minLength": 1},
+        "candidate_output": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["language", "text", "claim_citations"],
+          "properties": {
+            "language": {"const": "en"},
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "not": {"pattern": "�"}
+            },
+            "claim_citations": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1},
+              "uniqueItems": true
+            }
+          }
+        },
+        "stockfish_evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "engine_name",
+            "engine_sha256",
+            "configuration",
+            "fen",
+            "side_to_move",
+            "legal_position",
+            "repetition_stable",
+            "candidate_lines",
+            "verified_variations"
+          ],
+          "properties": {
+            "engine_name": {"type": "string", "minLength": 1},
+            "engine_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "configuration": {"type": "object", "minProperties": 1},
+            "fen": {"type": "string", "minLength": 1},
+            "side_to_move": {"enum": ["white", "black"]},
+            "legal_position": {"const": true},
+            "repetition_stable": {"type": "boolean"},
+            "candidate_lines": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["rank", "root_move_uci", "score_cp", "depth", "nodes", "pv_uci"],
+                "properties": {
+                  "rank": {"type": "integer", "minimum": 1},
+                  "root_move_uci": {"type": "string", "minLength": 4},
+                  "score_cp": {"type": "integer"},
+                  "depth": {"type": "integer", "minimum": 1},
+                  "nodes": {"type": "integer", "minimum": 0},
+                  "pv_uci": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {"type": "string", "minLength": 4}
+                  }
+                }
+              }
+            },
+            "verified_variations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variation_id",
+                  "moves_uci",
+                  "legal",
+                  "score_cp",
+                  "score_perspective",
+                  "depth",
+                  "nodes",
+                  "purpose"
+                ],
+                "properties": {
+                  "variation_id": {"type": "string", "minLength": 1},
+                  "moves_uci": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {"type": "string", "minLength": 4}
+                  },
+                  "legal": {"const": true},
+                  "score_cp": {"type": "integer"},
+                  "score_perspective": {"const": "root-side"},
+                  "depth": {"type": "integer", "minimum": 1},
+                  "nodes": {"type": "integer", "minimum": 0},
+                  "purpose": {"type": "string", "minLength": 1}
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

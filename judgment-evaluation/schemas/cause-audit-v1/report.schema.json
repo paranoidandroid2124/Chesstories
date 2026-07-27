@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/cause-audit-v1/report.schema.json",
+  "title": "Broad blind cause audit report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "mode",
+    "partition",
+    "bindings",
+    "evaluation_contract",
+    "counts",
+    "runtime_status_counts",
+    "cause_kind_counts",
+    "error_counts",
+    "first_failure_counts",
+    "judgments",
+    "policy",
+    "artifact_ledger_hash_before_report"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.eval.cause-audit-report.v1"},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,179}$"},
+    "mode": {"const": "blind-cause-backend-audit"},
+    "partition": {"enum": ["explore", "sealed_confirm", "all"]},
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["freeze_manifest_sha256", "cases_file_sha256", "oracle_file_sha256", "runtime_run_sha256"],
+      "properties": {
+        "freeze_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "cases_file_sha256": {"$ref": "#/$defs/sha256"},
+        "oracle_file_sha256": {"$ref": "#/$defs/sha256"},
+        "runtime_run_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "evaluation_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary_label_rule",
+        "extra_cause_rule",
+        "object_rule",
+        "source_rule",
+        "oracle_prose_semantic_match",
+        "sealed_label_disclosure"
+      ],
+      "properties": {
+        "primary_label_rule": {"const": "match-any-allowed-kind-on-played-vs-acceptable-reference"},
+        "extra_cause_rule": {"const": "unlisted-extra-causes-are-not-false-unless-oracle-forbids-or-priority-inverts"},
+        "object_rule": {"const": "actor-target-mechanism-consequence-must-coexist-in-one-owned-direct-binding"},
+        "source_rule": {"const": "comparison-role-event-root-source-side-and-attribution-polarity-must-agree"},
+        "oracle_prose_semantic_match": {"const": "not-performed-requires-blind-human-proxy-adjudication"},
+        "sealed_label_disclosure": {"const": "hash-and-verdict-only"}
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cases", "answerable", "matched", "mismatch", "unanswerable", "runtime_unavailable"],
+      "properties": {
+        "cases": {"type": "integer", "minimum": 0},
+        "answerable": {"type": "integer", "minimum": 0},
+        "matched": {"type": "integer", "minimum": 0},
+        "mismatch": {"type": "integer", "minimum": 0},
+        "unanswerable": {"type": "integer", "minimum": 0},
+        "runtime_unavailable": {"type": "integer", "minimum": 0}
+      }
+    },
+    "runtime_status_counts": {"$ref": "#/$defs/countMap"},
+    "cause_kind_counts": {"$ref": "#/$defs/countMap"},
+    "error_counts": {"$ref": "#/$defs/countMap"},
+    "first_failure_counts": {"$ref": "#/$defs/countMap"},
+    "judgments": {
+      "type": "array",
+      "x-canonical": {"mode": "unordered-set"},
+      "items": {"$ref": "judgment.schema.json"}
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "machine_language",
+        "human_proxy_mode",
+        "release_eligible",
+        "production_bottleneck_claim",
+        "test_files_added",
+        "production_modules_duplicated"
+      ],
+      "properties": {
+        "machine_language": {"const": "en"},
+        "human_proxy_mode": {"const": "codex-plus-stockfish"},
+        "release_eligible": {"const": false},
+        "production_bottleneck_claim": {"const": "engineering-diagnostic"},
+        "test_files_added": {"const": false},
+        "production_modules_duplicated": {"const": false}
+      }
+    },
+    "artifact_ledger_hash_before_report": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "countMap": {
+      "type": "object",
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    }
+  }
+}

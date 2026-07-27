@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/native-v2/native-tree.schema.json",
+  "title": "Chesstory deterministic native value tree v2",
+  "$ref": "#/$defs/nativeNode",
+  "$defs": {
+    "nativeNode": {
+      "oneOf": [
+        { "$ref": "#/$defs/nullNode" },
+        { "$ref": "#/$defs/booleanNode" },
+        { "$ref": "#/$defs/stringNode" },
+        { "$ref": "#/$defs/charNode" },
+        { "$ref": "#/$defs/numberNode" },
+        { "$ref": "#/$defs/optionNode" },
+        { "$ref": "#/$defs/eitherNode" },
+        { "$ref": "#/$defs/arrayNode" },
+        { "$ref": "#/$defs/sequenceNode" },
+        { "$ref": "#/$defs/iterableNode" },
+        { "$ref": "#/$defs/setNode" },
+        { "$ref": "#/$defs/mapNode" },
+        { "$ref": "#/$defs/productNode" },
+        { "$ref": "#/$defs/javaEnumNode" },
+        { "$ref": "#/$defs/playJsonNullNode" },
+        { "$ref": "#/$defs/playJsonBooleanNode" },
+        { "$ref": "#/$defs/playJsonStringNode" },
+        { "$ref": "#/$defs/playJsonNumberNode" },
+        { "$ref": "#/$defs/playJsonArrayNode" },
+        { "$ref": "#/$defs/playJsonObjectNode" }
+      ]
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nullNode": {
+      "type": "object",
+      "required": ["node_kind"],
+      "properties": { "node_kind": { "const": "null" } },
+      "additionalProperties": false
+    },
+    "booleanNode": {
+      "type": "object",
+      "required": ["node_kind", "scala_type", "value"],
+      "properties": {
+        "node_kind": { "const": "boolean" },
+        "scala_type": { "const": "scala.Boolean" },
+        "value": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "stringNode": {
+      "type": "object",
+      "required": ["node_kind", "scala_type", "value"],
+      "properties": {
+        "node_kind": { "const": "string" },
+        "scala_type": { "const": "java.lang.String" },
+        "value": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "charNode": {
+      "type": "object",
+      "required": ["node_kind", "scala_type", "code_point", "value"],
+      "properties": {
+        "node_kind": { "const": "char" },
+        "scala_type": { "const": "scala.Char" },
+        "code_point": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "value": { "type": "string", "minLength": 1, "maxLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "numberNode": {
+      "type": "object",
+      "required": ["node_kind", "scala_type", "encoding", "value"],
+      "properties": {
+        "node_kind": { "const": "number" },
+        "scala_type": { "$ref": "#/$defs/nonEmptyString" },
+        "encoding": {
+          "type": "string",
+          "enum": ["base10", "ieee754-hex", "unscaled-base10-with-scale"]
+        },
+        "value": { "type": "string" },
+        "raw_bits": { "type": "string", "pattern": "^[0-9a-f]{8}(?:[0-9a-f]{8})?$" },
+        "unscaled_value": { "type": "string", "pattern": "^-?[0-9]+$" },
+        "scale": { "type": "integer" },
+        "precision": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "optionNode": {
+      "type": "object",
+      "required": ["node_kind", "scala_type", "variant"],
+      "properties": {
+        "node_kind": { "const": "option" },
+        "scala_type": { "const": "scala.Option" },
+        "variant": { "type": "string", "enum": ["Some", "None"] },
+        "value": { "$ref": "#/$defs/nativeNode" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "variant": { "const": "Some" } } },
+          "then": { "required": ["value"] },
+          "else": { "not": { "required": ["value"] } }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "eitherNode": {
+      "type": "object",
+      "required": ["node_kind", "scala_type", "variant", "value"],
+      "properties": {
+        "node_kind": { "const": "either" },
+        "scala_type": { "const": "scala.Either" },
+        "variant": { "type": "string", "enum": ["Left", "Right"] },
+        "value": { "$ref": "#/$defs/nativeNode" }
+      },
+      "additionalProperties": false
+    },
+    "arrayNode": {
+      "type": "object",
+      "required": ["node_kind", "collection_type", "values"],
+      "properties": {
+        "node_kind": { "const": "array" },
+        "collection_type": { "$ref": "#/$defs/nonEmptyString" },
+        "values": { "type": "array", "items": { "$ref": "#/$defs/nativeNode" } }
+      },
+      "additionalProperties": false
+    },
+    "sequenceNode": {
+      "type": "object",
+      "required": ["node_kind", "collection_type", "values"],
+      "properties": {
+        "node_kind": { "const": "sequence" },
+        "collection_type": { "$ref": "#/$defs/nonEmptyString" },
+        "values": { "type": "array", "items": { "$ref": "#/$defs/nativeNode" } }
+      },
+      "additionalProperties": false
+    },
+    "iterableNode": {
+      "type": "object",
+      "required": ["node_kind", "collection_type", "values"],
+      "properties": {
+        "node_kind": { "const": "iterable" },
+        "collection_type": { "$ref": "#/$defs/nonEmptyString" },
+        "values": { "type": "array", "items": { "$ref": "#/$defs/nativeNode" } }
+      },
+      "additionalProperties": false
+    },
+    "setNode": {
+      "type": "object",
+      "required": ["node_kind", "collection_type", "values"],
+      "properties": {
+        "node_kind": { "const": "set" },
+        "collection_type": { "$ref": "#/$defs/nonEmptyString" },
+        "values": { "type": "array", "items": { "$ref": "#/$defs/nativeNode" } }
+      },
+      "additionalProperties": false
+    },
+    "mapEntry": {
+      "type": "object",
+      "required": ["key", "value"],
+      "properties": {
+        "key": { "$ref": "#/$defs/nativeNode" },
+        "value": { "$ref": "#/$defs/nativeNode" }
+      },
+      "additionalProperties": false
+    },
+    "mapNode": {
+      "type": "object",
+      "required": ["node_kind", "collection_type", "entries"],
+      "properties": {
+        "node_kind": { "const": "map" },
+        "collection_type": { "$ref": "#/$defs/nonEmptyString" },
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/mapEntry" } }
+      },
+      "additionalProperties": false
+    },
+    "productField": {
+      "type": "object",
+      "required": ["index", "name", "value"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "name": { "type": "string" },
+        "value": { "$ref": "#/$defs/nativeNode" }
+      },
+      "additionalProperties": false
+    },
+    "productNode": {
+      "type": "object",
+      "required": ["node_kind", "scala_type", "constructor", "arity", "fields"],
+      "properties": {
+        "node_kind": { "const": "product" },
+        "scala_type": { "$ref": "#/$defs/nonEmptyString" },
+        "constructor": { "$ref": "#/$defs/nonEmptyString" },
+        "arity": { "type": "integer", "minimum": 0 },
+        "fields": { "type": "array", "items": { "$ref": "#/$defs/productField" } }
+      },
+      "additionalProperties": false
+    },
+    "javaEnumNode": {
+      "type": "object",
+      "required": ["node_kind", "scala_type", "constant"],
+      "properties": {
+        "node_kind": { "const": "java-enum" },
+        "scala_type": { "$ref": "#/$defs/nonEmptyString" },
+        "constant": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "additionalProperties": false
+    },
+    "playJsonNullNode": {
+      "type": "object",
+      "required": ["node_kind", "json_node_type"],
+      "properties": {
+        "node_kind": { "const": "play-json" },
+        "json_node_type": { "const": "null" }
+      },
+      "additionalProperties": false
+    },
+    "playJsonBooleanNode": {
+      "type": "object",
+      "required": ["node_kind", "json_node_type", "value"],
+      "properties": {
+        "node_kind": { "const": "play-json" },
+        "json_node_type": { "const": "boolean" },
+        "value": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "playJsonStringNode": {
+      "type": "object",
+      "required": ["node_kind", "json_node_type", "value"],
+      "properties": {
+        "node_kind": { "const": "play-json" },
+        "json_node_type": { "const": "string" },
+        "value": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "playJsonNumberNode": {
+      "type": "object",
+      "required": ["node_kind", "json_node_type", "value", "unscaled_value", "scale", "precision"],
+      "properties": {
+        "node_kind": { "const": "play-json" },
+        "json_node_type": { "const": "number" },
+        "value": { "type": "string" },
+        "unscaled_value": { "type": "string", "pattern": "^-?[0-9]+$" },
+        "scale": { "type": "integer" },
+        "precision": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "playJsonArrayNode": {
+      "type": "object",
+      "required": ["node_kind", "json_node_type", "values"],
+      "properties": {
+        "node_kind": { "const": "play-json" },
+        "json_node_type": { "const": "array" },
+        "values": { "type": "array", "items": { "$ref": "#/$defs/nativeNode" } }
+      },
+      "additionalProperties": false
+    },
+    "playJsonField": {
+      "type": "object",
+      "required": ["name", "value"],
+      "properties": {
+        "name": { "type": "string" },
+        "value": { "$ref": "#/$defs/nativeNode" }
+      },
+      "additionalProperties": false
+    },
+    "playJsonObjectNode": {
+      "type": "object",
+      "required": ["node_kind", "json_node_type", "fields"],
+      "properties": {
+        "node_kind": { "const": "play-json" },
+        "json_node_type": { "const": "object" },
+        "fields": { "type": "array", "items": { "$ref": "#/$defs/playJsonField" } }
+      },
+      "additionalProperties": false
+    }
+  }
+}

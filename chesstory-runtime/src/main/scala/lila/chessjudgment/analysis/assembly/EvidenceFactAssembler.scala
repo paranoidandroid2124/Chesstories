@@ -502,7 +502,10 @@ object EvidenceFactAssembler:
               )
             )
           case payload: LineFactEvidence =>
-            payload.consequencesForRootMove(rootMove).map(_.kind).distinct.flatMap(kind =>
+            (
+              payload.consequencesForRootMove(rootMove) ++
+                payload.immediateReplyCheckLiabilitiesForRootMove(rootMove)
+            ).map(_.kind).distinct.flatMap(kind =>
               TacticalMechanismKind.fromLineConsequence(kind, payload.rootIsRecapture(rootMove)).map(mechanismKind =>
                 TacticalMechanismCandidate(
                   mechanismKind,
@@ -546,7 +549,10 @@ object EvidenceFactAssembler:
         record -> payload
     }
     val lineConsequenceRecords = records.collect { case record @ EvidenceRecord(_, payload: LineFactEvidence, _) =>
-      payload.consequencesForRootMove(rootMove).flatMap { consequence =>
+      (
+        payload.consequencesForRootMove(rootMove) ++
+          payload.immediateReplyCheckLiabilitiesForRootMove(rootMove)
+      ).distinct.flatMap { consequence =>
         val consequenceMoves = consequence.eventMove.toList ++ consequence.lineMoves
         val consequenceCaptureSquares =
           payload.materialCaptures

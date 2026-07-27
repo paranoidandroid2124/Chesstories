@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/v1/p.input.schema.json",
+  "title": "P input v1",
+  "$comment": "Projection receives the ranked admitted claims and only the evidence/cause/binding/line/plan context required for a direct view. This is not a second judgment model.",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/stageDocument" },
+    {
+      "type": "object",
+      "properties": {
+        "stage": { "const": "P" },
+        "payload": { "$ref": "#/$defs/payload" }
+      }
+    }
+  ],
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": ["candidate_lines", "fact_bundle", "cause_bundle", "ranking_bundle", "plan_events"],
+      "properties": {
+        "candidate_lines": {
+          "$comment": "MultiPV order is ranking meaning and is intentionally not canonicalizable.",
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/engineLine" }
+        },
+        "fact_bundle": { "$ref": "common.schema.json#/$defs/factBundle" },
+        "cause_bundle": { "$ref": "common.schema.json#/$defs/causeBundle" },
+        "ranking_bundle": { "$ref": "common.schema.json#/$defs/rankingBundle" },
+        "plan_events": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/planEvent" },
+          "x-canonical": { "mode": "unordered-set", "sort_by": ["plan_event_id"] }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

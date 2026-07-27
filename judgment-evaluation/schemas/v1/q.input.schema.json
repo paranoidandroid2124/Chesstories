@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/v1/q.input.schema.json",
+  "title": "Q input v1",
+  "$comment": "Input/evidence acquisition request. It fixes the position/question and acquisition conditions before evidence is collected.",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/stageDocument" },
+    {
+      "type": "object",
+      "properties": {
+        "stage": { "const": "Q" },
+        "payload": { "$ref": "#/$defs/payload" }
+      }
+    }
+  ],
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": ["question", "acquisition_config"],
+      "properties": {
+        "question": { "$ref": "common.schema.json#/$defs/question" },
+        "acquisition_config": { "$ref": "common.schema.json#/$defs/acquisitionConfig" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

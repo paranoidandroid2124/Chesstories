@@ -1,4 +1,6 @@
 package lila.chessjudgment.analysis.assembly
+import scala.util.Try
+
 import lila.chessjudgment.model.{
   BranchReplyProbeBinding,
   CounterResourceProbeBinding,
@@ -16,32 +18,320 @@ object MoveReviewJudgmentOrchestrator:
 
   private final case class ProbeAuthorization(
       input: RawMoveReviewInput,
-      diagnostics: List[ProbeAdmissionDiagnostic]
+      diagnostics: List[ProbeAdmissionDiagnostic],
+      fulfilledRequests: List[ProbeRequest]
   )
 
   def assemble(raw: RawMoveReviewInput): Option[JudgmentAssemblyContext] =
-    val authorization = authorizeProbeResults(raw)
-    assembleUnchecked(authorization.input).map(context =>
-      context.copy(probeDiagnostics = context.probeDiagnostics ++ authorization.diagnostics)
-    )
+    runStages(raw, JudgmentBoundaryIntervention.identity, assemblePacket = false).map(_.context)
 
   def packet(raw: RawMoveReviewInput): Option[EvidenceBackedJudgmentPacket] =
-    assemble(raw).flatMap(context =>
-      EvidenceBackedJudgmentPacket.fromAssembly(context, plannedProbeRequests(context))
-    )
+    runStages(raw, JudgmentBoundaryIntervention.identity, assemblePacket = true).flatMap(_.packet)
 
-  private def assembleUnchecked(raw: RawMoveReviewInput): Option[JudgmentAssemblyContext] =
-    JudgmentClaimAssembler.assemble(raw)
+  def execute(
+      raw: RawMoveReviewInput,
+      intervention: JudgmentBoundaryIntervention
+  ): Option[JudgmentBoundaryExecution] =
+    runStages(raw, intervention, assemblePacket = true)
+
+  /** Sole execution authority for F -> C -> Jp -> Ja -> R.
+    * Native stages retain their exception behavior; only supplied boundary callbacks
+    * are isolated as fallible interventions.
+    */
+  private def runStages(
+      raw: RawMoveReviewInput,
+      intervention: JudgmentBoundaryIntervention,
+      assemblePacket: Boolean
+  ): Option[JudgmentBoundaryExecution] =
+    val identity = isIdentity(intervention)
+    for
+      qCandidate <- intervention.q match
+        case None => Some(raw)
+        case Some(provider) =>
+          Try(provider(JudgmentQuestionInput.fromRaw(raw))).toOption.flatMap(Option(_))
+      _ <- Option.when(identity || questionPreserved(raw, qCandidate))(())
+      authorization = authorizeProbeResults(qCandidate)
+      q = authorization.input
+      normalized <-
+        if identity then Some(Option.empty[NormalizedMoveReviewInput])
+        else MoveReviewInputNormalizer.normalize(q).map(Some(_))
+      fCandidate <- intervention.f match
+        case None => EvidenceFactAssembler.assemble(q).map(RelativeAssessmentAssembler.enrichFacts)
+        case Some(provider) => Try(provider(q)).toOption.flatMap(Option(_))
+      f <- Option.when(
+        identity || normalized.exists(expected =>
+          factStageContextClosed(expected, fCandidate) && factStagePayloadsClosed(fCandidate)
+        )
+      )(fCandidate)
+      cCandidate <- intervention.c match
+        case None => Some(RelativeAssessmentAssembler.enrichCauses(f))
+        case Some(provider) => Try(provider(f)).toOption.flatMap(Option(_))
+      c <- Option.when(
+        identity ||
+          (upstreamStagePreserved(f, cCandidate) &&
+            cCandidate.claims.isEmpty &&
+            evidenceClosed(cCandidate) &&
+            causeStageExtensionsClosed(f, cCandidate))
+      )(cCandidate)
+      jpCandidate <- intervention.jp match
+        case None => Some(JudgmentClaimAssembler.propose(c))
+        case Some(provider) => Try(provider(c)).toOption.flatMap(Option(_))
+      jp <- Option.when(
+        identity || jpCandidate.map(_.id).distinct.size == jpCandidate.size
+      )(jpCandidate)
+      jaCandidate <- intervention.ja match
+        case None => Some(JudgmentClaimAssembler.admit(c, jp))
+        case Some(provider) => Try(provider(c, jp)).toOption.flatMap(Option(_))
+      ja <- Option.when(identity || admissionClosed(c, jp, jaCandidate))(jaCandidate)
+      r <- intervention.r match
+        case None => Some(JudgmentClaimAssembler.rankDetailed(c, ja))
+        case Some(provider) => Try(provider(c, ja)).toOption.flatMap(Option(_))
+      rankedContext = JudgmentClaimAssembler.attach(c.copy(claims = Nil), r.rankedClaims)
+    yield
+      val context = rankedContext.copy(
+        probeDiagnostics = rankedContext.probeDiagnostics ++ authorization.diagnostics
+      )
+      val packet =
+        if !assemblePacket then None
+        else if identity then
+          EvidenceBackedJudgmentPacket.fromAssembly(
+            context,
+            plannedProbeRequests(context, authorization.fulfilledRequests),
+            r.playerFacingClaimDecisions
+          )
+        else
+          Option
+            .when(boundaryClosed(f, c, jp, ja, r))(context)
+            .flatMap(packetFromClosedAssembly(_, authorization.fulfilledRequests, r))
+      JudgmentBoundaryExecution(q, f, c, jp, ja, r, context, packet)
+
+  private def isIdentity(intervention: JudgmentBoundaryIntervention): Boolean =
+    intervention.q.isEmpty &&
+      intervention.f.isEmpty &&
+      intervention.c.isEmpty &&
+      intervention.jp.isEmpty &&
+      intervention.ja.isEmpty &&
+      intervention.r.isEmpty
+
+  private def packetFromClosedAssembly(
+      context: JudgmentAssemblyContext,
+      fulfilledRequests: List[ProbeRequest],
+      ranking: ClaimRankingResult
+  ): Option[EvidenceBackedJudgmentPacket] =
+    EvidenceBackedJudgmentPacket
+      .fromAssembly(context, Nil, ranking.playerFacingClaimDecisions)
+      .flatMap(_ =>
+        EvidenceBackedJudgmentPacket.fromAssembly(
+          context,
+          plannedProbeRequests(context, fulfilledRequests),
+          ranking.playerFacingClaimDecisions
+        )
+      )
+
+  private def boundaryClosed(
+      f: JudgmentAssemblyContext,
+      c: JudgmentAssemblyContext,
+      jp: List[JudgmentClaim],
+      ja: ClaimCandidateGraph,
+      r: ClaimRankingResult
+  ): Boolean =
+    val admittedClaims = ja.decisions.map(_.claim)
+    f.claims.isEmpty &&
+      upstreamStagePreserved(f, c) &&
+      c.claims.isEmpty &&
+      jp.map(_.id).distinct.size == jp.size &&
+      admittedClaims == jp &&
+      ja.evidenceGraph == c.evidenceGraph &&
+      rankingClosed(ja, r)
+
+  private def rankingClosed(
+      graph: ClaimCandidateGraph,
+      ranking: ClaimRankingResult
+  ): Boolean =
+    val certifiedClaimsById = graph.certified.map(decision => decision.claim.id -> decision.claim).toMap
+    val certifiedIds = certifiedClaimsById.keySet
+    val rankedIds = ranking.ranked.map(_.claim.id)
+    val rankedIdSet = rankedIds.toSet
+    val trace = ranking.deduplicationTrace
+    val traceOriginalIds = trace.map(_.originalClaimId)
+    val traceByOriginal = trace.map(item => item.originalClaimId -> item.keptClaimId).toMap
+    val lineageIds = certifiedIds ++ rankedIdSet
+    val causeDominance = ranking.causeDominanceDecisions
+    val causeDominanceById = causeDominance.map(decision => decision.causeEvidenceId -> decision).toMap
+    val retainedCauseIds = causeDominance.filter(_.retained).map(_.causeEvidenceId).toSet
+    val rankedFacingCauseIds = ranking.ranked.flatMap(_.playerFacingCauseEvidenceIds).toSet
+
+    def registeredRelativeCause(id: String): Boolean =
+      graph.evidenceGraph.byId.get(id).exists {
+        case EvidenceRecord(_, RelativeCauseFactEvidence(_), _) => true
+        case _                                                  => false
+      }
+
+    val causeDominanceClosed =
+      causeDominance.map(_.causeEvidenceId).distinct.size == causeDominance.size &&
+        causeDominance.forall { decision =>
+          val dominators = decision.dominatingCauseEvidenceIds
+          registeredRelativeCause(decision.causeEvidenceId) &&
+            dominators.distinct.size == dominators.size &&
+            !dominators.contains(decision.causeEvidenceId) &&
+            (
+              if decision.retained then dominators.isEmpty
+              else
+                dominators.nonEmpty && dominators.forall(id =>
+                  causeDominanceById.get(id).exists(_.retained)
+                )
+            )
+        } &&
+        rankedFacingCauseIds == retainedCauseIds
+
+    val rankedExposureClosed = ranking.ranked.forall { decision =>
+      val causeIds = decision.playerFacingCauseEvidenceIds
+      val directEvidenceIds = decision.claim.evidence.map(_.id).toSet
+      causeIds.distinct.size == causeIds.size &&
+        causeIds.forall(id =>
+          directEvidenceIds(id) && retainedCauseIds(id) && registeredRelativeCause(id)
+        )
+    }
+
+    def resolvesToRanked(claimId: String, visited: Set[String]): Boolean =
+      if rankedIdSet(claimId) then true
+      else if visited(claimId) then false
+      else
+        traceByOriginal
+          .get(claimId)
+          .exists(nextId => resolvesToRanked(nextId, visited + claimId))
+
+    rankedIds.distinct.size == rankedIds.size &&
+      rankedIdSet.subsetOf(certifiedIds) &&
+      causeDominanceClosed &&
+      rankedExposureClosed &&
+      ranking.ranked.forall(decision =>
+        certifiedClaimsById
+          .get(decision.claim.id)
+          .exists(certified => sameClaimWithoutSalience(decision.claim, certified)) &&
+          decision.claim.salience.contains(decision.salience)
+      ) &&
+      trace.map(_.order) == trace.indices.toList &&
+      traceOriginalIds.distinct.size == traceOriginalIds.size &&
+      trace.forall(item =>
+        item.originalClaimId != item.keptClaimId &&
+          lineageIds(item.originalClaimId) &&
+          lineageIds(item.keptClaimId)
+      ) &&
+      rankedIdSet.intersect(traceByOriginal.keySet).isEmpty &&
+      certifiedIds == rankedIdSet ++ traceByOriginal.keySet &&
+      certifiedIds.forall(claimId => resolvesToRanked(claimId, Set.empty))
+
+  private def factStageContextClosed(
+      expectedInput: NormalizedMoveReviewInput,
+      actual: JudgmentAssemblyContext
+  ): Boolean =
+    actual.input == expectedInput &&
+      actual.claims.isEmpty &&
+      evidenceClosed(actual)
+
+  private def questionPreserved(
+      expected: RawMoveReviewInput,
+      actual: RawMoveReviewInput
+  ): Boolean =
+    actual.fen == expected.fen &&
+      actual.playedMoveUci == expected.playedMoveUci &&
+      actual.ply == expected.ply &&
+      actual.openingContext == expected.openingContext &&
+      actual.movePrefixUci == expected.movePrefixUci
+
+  private def upstreamStagePreserved(
+      upstream: JudgmentAssemblyContext,
+      downstream: JudgmentAssemblyContext
+  ): Boolean =
+    sameStructuralFrame(upstream, downstream) &&
+      downstream.probeDiagnostics == upstream.probeDiagnostics &&
+      upstream.evidenceGraph.records.forall(record =>
+        downstream.evidenceGraph.byId.get(record.ref.id).contains(record)
+      )
+
+  private def factStagePayloadsClosed(context: JudgmentAssemblyContext): Boolean =
+    context.evidenceGraph.records.forall(record => !causeOwnedPayload(record.payload))
+
+  private def causeStageExtensionsClosed(
+      upstream: JudgmentAssemblyContext,
+      downstream: JudgmentAssemblyContext
+  ): Boolean =
+    val upstreamIds = upstream.evidenceGraph.byId.keySet
+    downstream.evidenceGraph.records
+      .filterNot(record => upstreamIds(record.ref.id))
+      .forall(record => causeOwnedPayload(record.payload))
+
+  private def causeOwnedPayload(payload: EvidencePayload): Boolean =
+    payload match
+      case _: StrategicMechanismContrastEvidence => true
+      case _: RelativeCauseFactEvidence          => true
+      case _: RelativeAssessmentEvidence         => true
+      case _                                     => false
+
+  private def evidenceClosed(context: JudgmentAssemblyContext): Boolean =
+    val records = context.evidenceGraph.records
+    val recordIds = records.map(_.ref.id)
+    val recordsById = records.map(record => record.ref.id -> record).toMap
+    val positionRefs = context.positions.map(_.ref).toSet
+    val lineRefs = context.lines.map(_.ref).toSet
+    def registered(ref: EvidenceRef): Boolean =
+      recordsById.get(ref.id).exists(_.ref == ref)
+    context.root.exists(root =>
+      root.fen == context.input.beforeFen && root.ply == context.input.beforePly
+    ) &&
+      records.nonEmpty &&
+      recordIds.distinct.size == recordIds.size &&
+      records.forall(record =>
+        positionRefs(record.ref.position) &&
+          record.ref.line.forall(lineRefs) &&
+          record.payloadLineRefs.forall(lineRefs) &&
+          record.parents.forall(registered)
+      ) &&
+      context.lines.forall(line => registered(line.evidence)) &&
+      context.transitions.forall(transition =>
+        positionRefs(transition.from) &&
+          positionRefs(transition.to) &&
+          registered(transition.evidence)
+      )
+
+  private def admissionClosed(
+      context: JudgmentAssemblyContext,
+      proposals: List[JudgmentClaim],
+      graph: ClaimCandidateGraph
+  ): Boolean =
+    graph.evidenceGraph == context.evidenceGraph &&
+      graph.decisions.map(_.claim) == proposals
+
+  private def sameStructuralFrame(
+      expected: JudgmentAssemblyContext,
+      actual: JudgmentAssemblyContext
+  ): Boolean =
+    actual.input == expected.input &&
+      actual.root == expected.root &&
+      actual.positions == expected.positions &&
+      actual.lines == expected.lines &&
+      actual.transitions == expected.transitions
+
+  private def sameClaimWithoutSalience(
+      left: JudgmentClaim,
+      right: JudgmentClaim
+  ): Boolean =
+    left.copy(salience = None) == right.copy(salience = None)
 
   private def probeRequestsUnchecked(raw: RawMoveReviewInput): List[ProbeRequest] =
-    EvidenceFactAssembler.assemble(raw).toList.flatMap(plannedProbeRequests)
+    EvidenceFactAssembler.assemble(raw).toList.flatMap(context => plannedProbeRequests(context))
 
-  private def plannedProbeRequests(context: JudgmentAssemblyContext): List[ProbeRequest] =
+  private def plannedProbeRequests(
+      context: JudgmentAssemblyContext,
+      fulfilledRequests: List[ProbeRequest] = Nil
+  ): List[ProbeRequest] =
+    val fulfilled = fulfilledRequests.toSet
     (
       BranchReplyProbePlanner.fromAssembly(context) ++
         CounterResourceProbePlanner.fromAssembly(context) ++
         EndgameTablebaseProbePlanner.fromAssembly(context)
-    ).distinctBy(_.id)
+    ).distinctBy(_.id).filterNot(fulfilled)
 
   /**
    * Replays the deterministic request/result exchange from an empty result set.
@@ -79,7 +369,7 @@ object MoveReviewJudgmentOrchestrator:
       validation.softReasonCodes.isEmpty
 
   private def authorizeProbeResults(raw: RawMoveReviewInput): ProbeAuthorization =
-    if raw.probeResults.isEmpty then ProbeAuthorization(raw, Nil)
+    if raw.probeResults.isEmpty then ProbeAuthorization(raw, Nil, Nil)
     else
       val duplicateIds = raw.probeResults.groupMapReduce(_.id)(_ => 1)(_ + _).collect {
         case (id, count) if count > 1 => id
@@ -88,6 +378,7 @@ object MoveReviewJudgmentOrchestrator:
       val issuedRequests = issuedProbeRequests(raw.copy(probeResults = eligible))
       val admitted = List.newBuilder[ProbeResult]
       val rejected = List.newBuilder[ProbeAdmissionDiagnostic]
+      val fulfilled = List.newBuilder[ProbeRequest]
 
       raw.probeResults.foreach { result =>
         if duplicateIds(result.id) then
@@ -96,6 +387,7 @@ object MoveReviewJudgmentOrchestrator:
           issuedRequests.find(_.id == result.id) match
             case Some(request) if exactIssuedResult(request, result) =>
               admitted += canonicalResult(request, result)
+              fulfilled += request
             case Some(request) =>
               rejected += rejectedDiagnostic(result, Some(request), contractFailureReasons(request, result))
             case None if result.purpose.nonEmpty =>
@@ -106,7 +398,8 @@ object MoveReviewJudgmentOrchestrator:
 
       ProbeAuthorization(
         raw.copy(probeResults = admitted.result()),
-        rejected.result().distinctBy(diagnostic => diagnostic.probeId -> diagnostic.reasonCodes)
+        rejected.result().distinctBy(diagnostic => diagnostic.probeId -> diagnostic.reasonCodes),
+        fulfilled.result().distinct
       )
 
   private def canonicalResult(request: ProbeRequest, result: ProbeResult): ProbeResult =
@@ -202,11 +495,6 @@ private[assembly] object BranchReplyProbePlanner:
       val requestedCausalHorizons =
         (unresolvedCausalHorizons.toList ++ discoveryHorizons.toList)
           .groupMapReduce(_._1)(_._2)(_.max(_))
-      val discoveryOnlyMoves = discoveryHorizons.keySet -- unresolvedCausalHorizons.keySet
-      val admittedProbeIds =
-        ctx.probeDiagnostics.collect {
-          case diagnostic if diagnostic.status == ProbeAdmissionStatus.Admitted => diagnostic.probeId
-        }.toSet
       selectedRootLines(ctx.lines).filter(line =>
         requestedCausalHorizons.contains(EvidenceRef.normalizeMove(line.ref.rootMove))
       ).flatMap { line =>
@@ -234,10 +522,7 @@ private[assembly] object BranchReplyProbePlanner:
             )
           )
         }
-      }.filterNot(request =>
-        admittedProbeIds(request.id) &&
-          request.candidateMove.exists(move => discoveryOnlyMoves(EvidenceRef.normalizeMove(move)))
-      )
+      }
     }.distinctBy(_.id)
 
   private def discoveryCausalHorizons(ctx: JudgmentAssemblyContext): Map[String, Int] =
@@ -319,9 +604,6 @@ private[assembly] object CounterResourceProbePlanner:
           (lineCandidates.map(_._2.priority).min, move)
         }
         .take(MaxResources)
-      val admittedIds = ctx.probeDiagnostics.collect {
-        case diagnostic if diagnostic.status == ProbeAdmissionStatus.Admitted => diagnostic.probeId
-      }.toSet
       shared.flatMap { case (resourceMove, lineCandidates) =>
         lineCandidates.map { case (line, _) =>
           val branchFen = PrincipalVariationEvidence.legalFenAfter(root.fen, line.ref.rootMove).get
@@ -345,7 +627,7 @@ private[assembly] object CounterResourceProbePlanner:
             variationHash = Some(bindingHash)
           )
         }
-      }.filterNot(request => admittedIds(request.id))
+      }
     }.distinctBy(_.id)
 
   private def counterBreakFiles(ctx: JudgmentAssemblyContext, root: PositionNodeRef): Set[String] =

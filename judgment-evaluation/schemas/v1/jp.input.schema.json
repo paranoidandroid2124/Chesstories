@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/v1/jp.input.schema.json",
+  "title": "Jp input v1",
+  "$comment": "Judgment proposal sees facts and structured causes, but no later admission/rank/final artifact.",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/stageDocument" },
+    {
+      "type": "object",
+      "properties": {
+        "stage": { "const": "Jp" },
+        "payload": { "$ref": "#/$defs/payload" }
+      }
+    }
+  ],
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": ["fact_bundle", "cause_bundle"],
+      "properties": {
+        "fact_bundle": { "$ref": "common.schema.json#/$defs/factBundle" },
+        "cause_bundle": { "$ref": "common.schema.json#/$defs/causeBundle" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

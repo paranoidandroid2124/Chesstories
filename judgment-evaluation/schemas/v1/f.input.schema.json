@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/v1/f.input.schema.json",
+  "title": "F input v1",
+  "$comment": "Fact extraction consumes exactly the Q engine evidence pack.",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/stageDocument" },
+    {
+      "type": "object",
+      "properties": {
+        "stage": { "const": "F" },
+        "payload": { "$ref": "#/$defs/payload" }
+      }
+    }
+  ],
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": ["engine_evidence_pack"],
+      "properties": {
+        "engine_evidence_pack": { "$ref": "common.schema.json#/$defs/engineEvidencePack" }
+      },
+      "additionalProperties": false
+    }
+  }
+}
