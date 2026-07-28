@@ -167,6 +167,8 @@ class _RuntimeExchange:
     response_jsonl_sha256: str
     diagnostic_line_sha256: tuple[str, ...]
     diagnostic_stream_sha256: str
+    request_sha256: str | None = None
+    hash_contract: str | None = None
 
 
 def _validate_runtime_observation(
@@ -175,6 +177,8 @@ def _validate_runtime_observation(
     expected_schema: str,
     registry: SchemaRegistry | None,
     schema_path: Path | None,
+    expected_request_sha256: str | None = None,
+    expected_hash_contract: str | None = None,
 ) -> dict[str, Any]:
     observation = _mapping(value, "runtime observation")
     if observation.get("schema_version") != expected_schema:
@@ -187,6 +191,13 @@ def _validate_runtime_observation(
             schema_path,
             label="runtime v3 observation",
         )
+    if (expected_request_sha256 is None) != (expected_hash_contract is None):
+        raise ContractError("runtime request hash validator binding is incomplete")
+    if expected_hash_contract is not None:
+        if observation.get("hash_contract") != expected_hash_contract:
+            raise ContractError("runtime adapter emitted an unsupported hash contract")
+        if observation.get("request_sha256") != expected_request_sha256:
+            raise IntegrityError("runtime adapter request hash mismatch")
     return observation
 
 
@@ -201,6 +212,7 @@ class _RuntimeJsonlSession:
         timeout_seconds: float,
         expected_schema: str = RUNTIME_OBSERVATION_SCHEMA,
         observation_schema_path: Path | None = None,
+        expected_hash_contract: str | None = None,
     ) -> None:
         if isinstance(command, (str, bytes)) or not command:
             raise ContractError("runtime command must be a non-empty argument array")
@@ -212,6 +224,11 @@ class _RuntimeJsonlSession:
             raise ContractError("runtime timeout must be from 0.001 through 3600 seconds")
         self.timeout_seconds = float(timeout_seconds)
         self.expected_schema = _safe_text(expected_schema, "runtime observation schema")
+        self.expected_hash_contract = (
+            _safe_text(expected_hash_contract, "runtime request hash contract")
+            if expected_hash_contract is not None
+            else None
+        )
         if observation_schema_path is None and self.expected_schema == RUNTIME_OBSERVATION_SCHEMA:
             observation_schema_path = self.cwd.parent / NATIVE_RUNTIME_SCHEMA_RELATIVE_PATH
         self.observation_schema_path = (
@@ -282,6 +299,11 @@ class _RuntimeJsonlSession:
         if process.stdin is None:
             raise ContractError("runtime stdin is unavailable")
         request_bytes = _canonical_line(request)
+        request_sha256 = (
+            sha256_bytes(request_bytes[:-1])
+            if self.expected_hash_contract is not None
+            else None
+        )
         try:
             process.stdin.write(request_bytes)
             process.stdin.flush()
@@ -319,6 +341,8 @@ class _RuntimeJsonlSession:
                 expected_schema=self.expected_schema,
                 registry=self.observation_schema_registry,
                 schema_path=self.observation_schema_path,
+                expected_request_sha256=request_sha256,
+                expected_hash_contract=self.expected_hash_contract,
             )
             diagnostic_stream = b"".join(diagnostics)
             return _RuntimeExchange(
@@ -327,6 +351,8 @@ class _RuntimeJsonlSession:
                 response_jsonl_sha256=sha256_bytes(value),
                 diagnostic_line_sha256=tuple(sha256_bytes(line) for line in diagnostics),
                 diagnostic_stream_sha256=sha256_bytes(diagnostic_stream),
+                request_sha256=request_sha256,
+                hash_contract=self.expected_hash_contract,
             )
 
     def close(self) -> None:

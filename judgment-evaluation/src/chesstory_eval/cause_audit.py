@@ -25,6 +25,7 @@ from .cause_semantics import (
 )
 from .hashing import json_bytes, read_json, read_jsonl, sha256_file, sha256_json
 from .model import ContractError, IntegrityError
+from .native_diagnostic import NATIVE_HASH_CONTRACT
 from .probe_completion import (
     MAX_RUNTIME_PROBE_RESULTS,
     _RuntimeJsonlSession,
@@ -2098,6 +2099,25 @@ def _actual_view(
     )
     if observation.get("schema_version") != expected_observation_schema:
         raise ContractError("cause adapter observation contract does not match its view")
+    verified_request_sha256: str | None = None
+    verified_hash_contract: str | None = None
+    if schema_version == TYPED_ACTUAL_VIEW_SCHEMA_VERSION:
+        if not transports:
+            raise ContractError("v3 cause adapter observation has no runtime transport")
+        final_transport = transports[-1]
+        verified_request_sha256 = final_transport.get("request_sha256")
+        verified_hash_contract = final_transport.get("hash_contract")
+        if (
+            not isinstance(verified_request_sha256, str)
+            or re.fullmatch(r"[0-9a-f]{64}", verified_request_sha256) is None
+        ):
+            raise ContractError("v3 cause adapter transport has no verified request hash")
+        if verified_hash_contract != NATIVE_HASH_CONTRACT:
+            raise ContractError("v3 cause adapter transport has no supported hash contract")
+        if observation.get("request_sha256") != verified_request_sha256:
+            raise IntegrityError("v3 cause adapter request hash changed before actual view")
+        if observation.get("hash_contract") != verified_hash_contract:
+            raise IntegrityError("v3 cause adapter hash contract changed before actual view")
     expected_runtime = {
         "adapter_name": CAUSE_ADAPTER_NAME,
         "request_schema": RUNTIME_REQUEST_SCHEMA,
@@ -2137,6 +2157,10 @@ def _actual_view(
         "causes": [dict(item) for item in causes],
     }
     if schema_version == TYPED_ACTUAL_VIEW_SCHEMA_VERSION:
+        assert verified_request_sha256 is not None
+        assert verified_hash_contract is not None
+        view["request_sha256"] = verified_request_sha256
+        view["hash_contract"] = verified_hash_contract
         verdict = observation.get("verdict")
         if not isinstance(verdict, Mapping):
             raise ContractError(
@@ -2258,6 +2282,12 @@ def _run_cause_audit_for_contract(
         if actual_schema_version == TYPED_ACTUAL_VIEW_SCHEMA_VERSION
         else RUNTIME_OBSERVATION_SCHEMA
     )
+    typed_contract = actual_schema_version == TYPED_ACTUAL_VIEW_SCHEMA_VERSION
+    observation_schema_path = (
+        _schema_path(root, "runtime-observation", actual_schema_version)
+        if typed_contract
+        else None
+    )
     command = _cause_adapter_command(sbt, actual_schema_version)
     case_by_id = {str(item["case_id"]): item for item in selected}
     views: list[dict[str, Any]] = []
@@ -2268,6 +2298,8 @@ def _run_cause_audit_for_contract(
         cwd=adapter_directory,
         timeout_seconds=provider_timeout_seconds,
         expected_schema=observation_schema,
+        observation_schema_path=observation_schema_path,
+        expected_hash_contract=NATIVE_HASH_CONTRACT if typed_contract else None,
     ) as session:
         for case_id in sorted(case_by_id):
             case = case_by_id[case_id]
@@ -2293,28 +2325,41 @@ def _run_cause_audit_for_contract(
                 final_request_hash = exchange.request_jsonl_sha256
                 observation = exchange.observation
                 final_observation = observation
-                transports.append(
-                    {
-                        "round": round_index,
-                        "request_jsonl_sha256": exchange.request_jsonl_sha256,
-                        "response_jsonl_sha256": exchange.response_jsonl_sha256,
-                        "diagnostic_line_sha256": sorted(
-                            set(exchange.diagnostic_line_sha256)
-                        ),
-                        "diagnostic_stream_sha256": exchange.diagnostic_stream_sha256,
-                    }
-                )
+                transport = {
+                    "round": round_index,
+                    "request_jsonl_sha256": exchange.request_jsonl_sha256,
+                    "response_jsonl_sha256": exchange.response_jsonl_sha256,
+                    "diagnostic_line_sha256": sorted(
+                        set(exchange.diagnostic_line_sha256)
+                    ),
+                    "diagnostic_stream_sha256": exchange.diagnostic_stream_sha256,
+                }
+                if typed_contract:
+                    if (
+                        exchange.request_sha256 is None
+                        or exchange.hash_contract != NATIVE_HASH_CONTRACT
+                    ):
+                        raise IntegrityError(
+                            "active cause adapter exchange lost its verified request binding"
+                        )
+                    adapter_request_sha256 = observation.get("request_sha256")
+                    if adapter_request_sha256 != exchange.request_sha256:
+                        raise IntegrityError(
+                            "active cause adapter exchange changed its request hash"
+                        )
+                    transport.update(
+                        {
+                            "request_sha256": exchange.request_sha256,
+                            "adapter_request_sha256": adapter_request_sha256,
+                            "hash_contract": exchange.hash_contract,
+                        }
+                    )
+                transports.append(transport)
                 runtime_round_io.append(
                     {
-                        "round": round_index,
                         "request": copy.deepcopy(request),
                         "observation": dict(observation),
-                        "request_jsonl_sha256": exchange.request_jsonl_sha256,
-                        "response_jsonl_sha256": exchange.response_jsonl_sha256,
-                        "diagnostic_line_sha256": sorted(
-                            set(exchange.diagnostic_line_sha256)
-                        ),
-                        "diagnostic_stream_sha256": exchange.diagnostic_stream_sha256,
+                        **transport,
                     }
                 )
                 raw_probes = observation.get("probe_requests", [])
@@ -2429,6 +2474,11 @@ def _run_cause_audit_for_contract(
                 document=view,
                 label=f"actual cause cascade {case_id}",
             )
+            if typed_contract:
+                _validate_typed_actual_transport_binding(
+                    canonical_view,
+                    label=f"actual cause cascade {case_id}",
+                )
             capture_hashes = store.capture_stage(
                 sample_id=case_id,
                 arm_id="cause-audit-actual",
@@ -2588,13 +2638,57 @@ def _strict_actual_view_for_contracts(
             f"unsupported actual cause cascade schema: {schema_version}"
         )
     registry, canonicalizer = _schema_tools(root, schema_version)
-    return _validate_and_canonicalize(
+    canonical = _validate_and_canonicalize(
         registry=registry,
         canonicalizer=canonicalizer,
         schema_path=_schema_path(root, "actual-cascade-view", schema_version),
         document=raw,
         label=f"actual cause cascade {raw.get('case_id')}",
     )
+    if schema_version == TYPED_ACTUAL_VIEW_SCHEMA_VERSION:
+        _validate_typed_actual_transport_binding(
+            canonical,
+            label=f"actual cause cascade {raw.get('case_id')}",
+        )
+    return canonical
+
+
+def _validate_typed_actual_transport_binding(
+    value: Mapping[str, Any], *, label: str
+) -> None:
+    probe_closure = value.get("probe_closure")
+    transports = (
+        probe_closure.get("runtime_transport")
+        if isinstance(probe_closure, Mapping)
+        else None
+    )
+    if (
+        not isinstance(transports, list)
+        or not transports
+        or not all(isinstance(item, Mapping) for item in transports)
+    ):
+        raise ContractError(f"{label} has no runtime transport binding")
+    first = transports[0]
+    final = transports[-1]
+    if value.get("initial_request_sha256") != first.get("request_jsonl_sha256"):
+        raise IntegrityError(f"{label} initial JSONL request hash mismatch")
+    if value.get("final_request_sha256") != final.get("request_jsonl_sha256"):
+        raise IntegrityError(f"{label} final JSONL request hash mismatch")
+    if value.get("request_sha256") != final.get("request_sha256"):
+        raise IntegrityError(f"{label} final canonical request hash mismatch")
+    if value.get("hash_contract") != NATIVE_HASH_CONTRACT:
+        raise ContractError(f"{label} has an unsupported hash contract")
+    for index, transport in enumerate(transports, 1):
+        if transport.get("hash_contract") != NATIVE_HASH_CONTRACT:
+            raise ContractError(
+                f"{label} runtime transport {index} has an unsupported hash contract"
+            )
+        if transport.get("adapter_request_sha256") != transport.get(
+            "request_sha256"
+        ):
+            raise IntegrityError(
+                f"{label} runtime transport {index} request hash mismatch"
+            )
 
 
 def _strict_actual_view(

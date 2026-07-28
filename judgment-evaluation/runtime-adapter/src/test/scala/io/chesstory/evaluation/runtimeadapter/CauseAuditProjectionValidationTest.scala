@@ -285,6 +285,16 @@ class CauseAuditProjectionValidationTest extends munit.FunSuite:
 
     assertEquals((v2 \ "schema_version").as[String], "chesstory.cause-audit-runtime-observation.v2")
     assertEquals((v3 \ "schema_version").as[String], "chesstory.cause-audit-runtime-observation.v3")
+    List(v2, v3).foreach { observation =>
+      assertEquals(
+        (observation \ "request_sha256").as[String],
+        NativeTreeEncoder.sha256Utf8(request)
+      )
+      assertEquals(
+        (observation \ "hash_contract").as[String],
+        NativeTreeEncoder.HashContract
+      )
+    }
     assert((v2 \ "r_native_cause_selections").toOption.isEmpty)
     assert((v2 \ "importance").toOption.isEmpty)
     assert((v2 \ "idea_units").toOption.isEmpty)

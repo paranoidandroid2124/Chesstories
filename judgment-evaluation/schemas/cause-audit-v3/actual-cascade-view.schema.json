@@ -11,6 +11,8 @@
     "status",
     "initial_request_sha256",
     "final_request_sha256",
+    "request_sha256",
+    "hash_contract",
     "runtime_observation_sha256",
     "runtime",
     "public_response",
@@ -52,6 +54,14 @@
     },
     "final_request_sha256": {
       "$ref": "#/$defs/sha256"
+    },
+    "request_sha256": {
+      "description": "SHA-256 of the final canonical runtime request, echoed by the adapter and independently verified before this view was constructed.",
+      "$ref": "#/$defs/sha256"
+    },
+    "hash_contract": {
+      "description": "Canonical request hash contract verified at the runtime transport boundary.",
+      "const": "chesstory.sorted-object-keys-json-sha256.v1"
     },
     "runtime_observation_sha256": {
       "$ref": "#/$defs/sha256"
@@ -145,6 +155,9 @@
             "required": [
               "round",
               "request_jsonl_sha256",
+              "request_sha256",
+              "adapter_request_sha256",
+              "hash_contract",
               "response_jsonl_sha256",
               "diagnostic_line_sha256",
               "diagnostic_stream_sha256"
@@ -156,6 +169,17 @@
               },
               "request_jsonl_sha256": {
                 "$ref": "#/$defs/sha256"
+              },
+              "request_sha256": {
+                "description": "Independently verified canonical request hash for this adapter round.",
+                "$ref": "#/$defs/sha256"
+              },
+              "adapter_request_sha256": {
+                "description": "Request hash echoed by the adapter and matched to the independently computed hash for this round.",
+                "$ref": "#/$defs/sha256"
+              },
+              "hash_contract": {
+                "const": "chesstory.sorted-object-keys-json-sha256.v1"
               },
               "response_jsonl_sha256": {
                 "$ref": "#/$defs/sha256"

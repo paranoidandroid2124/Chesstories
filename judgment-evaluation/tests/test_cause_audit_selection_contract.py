@@ -3194,7 +3194,7 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "central classification authority"):
             _importance_state(shortened_loss, typed_case())
 
-    def test_v3_schema_preserves_v2_transport_and_adds_only_typed_authority(self) -> None:
+    def test_v3_schema_preserves_v2_transport_and_adds_typed_binding(self) -> None:
         v2_registry, _ = _schema_tools(ROOT, ACTUAL_VIEW_SCHEMA_VERSION)
         v3_registry, _ = _schema_tools(ROOT, TYPED_ACTUAL_VIEW_SCHEMA_VERSION)
         v2_path = _schema_path(
@@ -3242,6 +3242,22 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         self.assertIn("cause_disposition_ledger", v3["required"])
         self.assertNotIn("verdict", v2["required"])
         self.assertIn("verdict", v3["required"])
+        self.assertNotIn("request_sha256", v2["required"])
+        self.assertIn("request_sha256", v3["required"])
+        self.assertNotIn("hash_contract", v2["required"])
+        self.assertIn("hash_contract", v3["required"])
+        v2_transport = v2["properties"]["probe_closure"]["properties"][
+            "runtime_transport"
+        ]["items"]
+        v3_transport = v3["properties"]["probe_closure"]["properties"][
+            "runtime_transport"
+        ]["items"]
+        self.assertNotIn("request_sha256", v2_transport["required"])
+        self.assertIn("request_sha256", v3_transport["required"])
+        self.assertNotIn("adapter_request_sha256", v2_transport["required"])
+        self.assertIn("adapter_request_sha256", v3_transport["required"])
+        self.assertNotIn("hash_contract", v2_transport["required"])
+        self.assertIn("hash_contract", v3_transport["required"])
         exact_verdict_schema = v3["$defs"]["exactPlayedVsBestVerdict"]
         self.assertEqual(
             v3_registry._branch_errors(

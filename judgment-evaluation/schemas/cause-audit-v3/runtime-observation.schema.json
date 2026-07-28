@@ -1,0 +1,498 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/cause-audit-v3/runtime-observation.schema.json",
+  "title": "Active Cause audit runtime observation v3",
+  "description": "Raw CauseAuditAdapterCli response validated before construction of an actual cascade view.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "request_sha256",
+    "hash_contract",
+    "runtime",
+    "public_response",
+    "verdict",
+    "r_native_cause_selections",
+    "importance",
+    "idea_units",
+    "idea_importance",
+    "cause_disposition_ledger",
+    "causes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "chesstory.cause-audit-runtime-observation.v3"
+    },
+    "status": {
+      "enum": ["complete", "unavailable", "adapter_error"]
+    },
+    "reason": {
+      "const": "runtime_boundary_execution_absent"
+    },
+    "request_sha256": {
+      "$ref": "actual-cascade-view.schema.json#/$defs/sha256"
+    },
+    "hash_contract": {
+      "const": "chesstory.sorted-object-keys-json-sha256.v1"
+    },
+    "runtime": {
+      "$ref": "#/$defs/runtime"
+    },
+    "public_response": {
+      "$ref": "#/$defs/publicResponse"
+    },
+    "boundary": {
+      "$ref": "#/$defs/boundary"
+    },
+    "projection": {
+      "$ref": "#/$defs/projection"
+    },
+    "probe_request_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "probe_requests": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/probeRequest"
+      }
+    },
+    "root_owned_causal_episode_inventory": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rootOwnedCausalEpisode"
+      }
+    },
+    "only_move_constraints": {
+      "$ref": "actual-cascade-view.schema.json#/properties/only_move_constraints"
+    },
+    "causes": {
+      "$ref": "actual-cascade-view.schema.json#/properties/causes"
+    },
+    "verdict": {
+      "$ref": "actual-cascade-view.schema.json#/properties/verdict"
+    },
+    "r_native_cause_selections": {
+      "$ref": "actual-cascade-view.schema.json#/properties/r_native_cause_selections"
+    },
+    "importance": {
+      "$ref": "actual-cascade-view.schema.json#/properties/importance"
+    },
+    "idea_units": {
+      "$ref": "actual-cascade-view.schema.json#/properties/idea_units"
+    },
+    "idea_importance": {
+      "$ref": "actual-cascade-view.schema.json#/properties/idea_importance"
+    },
+    "cause_disposition_ledger": {
+      "$ref": "actual-cascade-view.schema.json#/properties/cause_disposition_ledger"
+    },
+    "adapter_error": {
+      "$ref": "#/$defs/adapterError"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "boundary",
+        "projection",
+        "probe_request_count",
+        "probe_requests",
+        "root_owned_causal_episode_inventory",
+        "only_move_constraints"
+      ],
+      "properties": {
+        "status": {"const": "complete"},
+        "public_response": {"required": ["http_status"]},
+        "boundary": {"required": ["cause_kind_counts"]}
+      },
+      "not": {
+        "anyOf": [
+          {"required": ["reason"]},
+          {"required": ["adapter_error"]}
+        ]
+      }
+    },
+    {
+      "required": [
+        "reason",
+        "boundary",
+        "projection",
+        "probe_request_count",
+        "probe_requests"
+      ],
+      "properties": {
+        "status": {"const": "unavailable"},
+        "public_response": {
+          "required": ["http_status"],
+          "properties": {"status": {"const": "error"}}
+        }
+      },
+      "not": {
+        "anyOf": [
+          {"required": ["adapter_error"]},
+          {"required": ["root_owned_causal_episode_inventory"]},
+          {"required": ["only_move_constraints"]}
+        ]
+      }
+    },
+    {
+      "required": ["adapter_error"],
+      "properties": {
+        "status": {"const": "adapter_error"},
+        "public_response": {"not": {"required": ["http_status"]}}
+      },
+      "not": {
+        "anyOf": [
+          {"required": ["reason"]},
+          {"required": ["boundary"]},
+          {"required": ["projection"]},
+          {"required": ["probe_request_count"]},
+          {"required": ["probe_requests"]},
+          {"required": ["root_owned_causal_episode_inventory"]},
+          {"required": ["only_move_constraints"]}
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "adapter_name",
+        "adapter_version",
+        "request_schema",
+        "response_schema"
+      ],
+      "properties": {
+        "adapter_name": {
+          "const": "chesstory-cause-audit-runtime-adapter"
+        },
+        "adapter_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "request_schema": {
+          "const": "chesstory.move-meaning.request.v1"
+        },
+        "response_schema": {
+          "const": "chesstory.move-meaning.response.v3"
+        }
+      }
+    },
+    "publicResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "http_status",
+            "body_sha256",
+            "schema_version",
+            "request_id",
+            "ok",
+            "status",
+            "availability",
+            "error",
+            "primary_engine_backed",
+            "idea_status",
+            "idea_status_detail"
+          ],
+          "properties": {
+            "http_status": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 599
+            },
+            "body_sha256": {
+              "$ref": "actual-cascade-view.schema.json#/$defs/sha256"
+            },
+            "schema_version": {
+              "const": "chesstory.move-meaning.response.v3"
+            },
+            "request_id": {
+              "oneOf": [
+                {"type": "string", "minLength": 1},
+                {"type": "null"}
+              ]
+            },
+            "ok": {
+              "type": "boolean"
+            },
+            "status": {
+              "enum": ["ready", "withheld", "error"]
+            },
+            "availability": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["state", "reason"],
+                  "properties": {
+                    "state": {"enum": ["ready", "withheld"]},
+                    "reason": {
+                      "oneOf": [
+                        {"const": "insufficient_engine_depth"},
+                        {"type": "null"}
+                      ]
+                    }
+                  }
+                },
+                {"type": "null"}
+              ]
+            },
+            "error": {
+              "oneOf": [
+                {"type": "string", "minLength": 1},
+                {"type": "null"}
+              ]
+            },
+            "primary_engine_backed": {
+              "type": "boolean"
+            },
+            "idea_status": {
+              "enum": [
+                "certified",
+                "no_certified_differential_idea",
+                "unavailable"
+              ]
+            },
+            "idea_status_detail": {
+              "$ref": "actual-cascade-view.schema.json#/properties/public_response/properties/idea_status_detail"
+            }
+          },
+          "oneOf": [
+            {
+              "properties": {
+                "ok": {"const": true},
+                "status": {"const": "ready"},
+                "availability": {
+                  "type": "object",
+                  "required": ["state", "reason"],
+                  "properties": {
+                    "state": {"const": "ready"},
+                    "reason": {"type": "null"}
+                  }
+                },
+                "error": {"type": "null"}
+              }
+            },
+            {
+              "properties": {
+                "ok": {"const": true},
+                "status": {"const": "withheld"},
+                "availability": {
+                  "type": "object",
+                  "required": ["state", "reason"],
+                  "properties": {
+                    "state": {"const": "withheld"},
+                    "reason": {"const": "insufficient_engine_depth"}
+                  }
+                },
+                "error": {"type": "null"}
+              }
+            },
+            {
+              "properties": {
+                "ok": {"const": false},
+                "status": {"const": "error"},
+                "availability": {"type": "null"},
+                "error": {"type": "string", "minLength": 1}
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "primary_engine_backed",
+            "idea_status",
+            "idea_status_detail"
+          ],
+          "properties": {
+            "primary_engine_backed": {"const": false},
+            "idea_status": {"const": "unavailable"},
+            "idea_status_detail": {"type": "null"}
+          }
+        }
+      ]
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "c_reached",
+        "jp_reached",
+        "ja_reached",
+        "r_reached",
+        "packet_present",
+        "p_reached",
+        "cause_count"
+      ],
+      "properties": {
+        "c_reached": {"type": "boolean"},
+        "jp_reached": {"type": "boolean"},
+        "ja_reached": {"type": "boolean"},
+        "r_reached": {"type": "boolean"},
+        "packet_present": {"type": "boolean"},
+        "p_reached": {"type": "boolean"},
+        "cause_count": {"type": "integer", "minimum": 0},
+        "cause_kind_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "projection": {
+      "oneOf": [
+        {
+          "$ref": "actual-cascade-view.schema.json#/properties/projection"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["present", "packet_present"],
+          "properties": {
+            "present": {"const": false},
+            "packet_present": {"const": false}
+          }
+        }
+      ]
+    },
+    "probeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fen",
+        "moves",
+        "depth",
+        "purpose",
+        "multiPv",
+        "baselineEvalCp",
+        "horizon",
+        "candidateMove",
+        "depthFloor",
+        "variationHash",
+        "comparisonFen"
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "fen": {"type": "string", "minLength": 1},
+        "moves": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/uciMove"}
+        },
+        "depth": {"type": "integer", "minimum": 1, "maximum": 100},
+        "purpose": {"const": "reply_multipv"},
+        "multiPv": {"type": "integer", "minimum": 1, "maximum": 8},
+        "baselineEvalCp": {
+          "oneOf": [
+            {"type": "integer"},
+            {"type": "null"}
+          ]
+        },
+        "horizon": {
+          "oneOf": [
+            {"type": "string", "minLength": 1},
+            {"type": "null"}
+          ]
+        },
+        "candidateMove": {"$ref": "#/$defs/uciMove"},
+        "opponentResourceMove": {"$ref": "#/$defs/uciMove"},
+        "depthFloor": {"type": "integer", "minimum": 1, "maximum": 100},
+        "variationHash": {
+          "$ref": "actual-cascade-view.schema.json#/$defs/sha256"
+        },
+        "comparisonFen": {
+          "oneOf": [
+            {"type": "string", "minLength": 1},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "rootOwnedCausalEpisode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "line",
+        "actor",
+        "target",
+        "mechanisms",
+        "consequence",
+        "event_move",
+        "event_ply_offset",
+        "chain_moves",
+        "forcing_tactical_resource"
+      ],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "line": {
+          "$ref": "actual-cascade-view.schema.json#/$defs/runtimeLine"
+        },
+        "actor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["move", "role", "color", "from", "to"],
+          "properties": {
+            "move": {"$ref": "#/$defs/uciMove"},
+            "role": {"type": "string", "minLength": 1},
+            "color": {"enum": ["white", "black"]},
+            "from": {"$ref": "#/$defs/square"},
+            "to": {"$ref": "#/$defs/square"}
+          }
+        },
+        "target": {"type": "string", "minLength": 1},
+        "mechanisms": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "consequence": {"type": "string", "minLength": 1},
+        "event_move": {
+          "oneOf": [
+            {"$ref": "#/$defs/uciMove"},
+            {"type": "null"}
+          ]
+        },
+        "event_ply_offset": {"type": "integer", "minimum": 0},
+        "chain_moves": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/uciMove"}
+        },
+        "forcing_tactical_resource": {"type": "boolean"}
+      }
+    },
+    "adapterError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "class"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "source_record_hash_failed",
+            "cause_audit_observation_failed"
+          ]
+        },
+        "class": {"type": "string", "minLength": 1},
+        "native_type": {"type": "string", "minLength": 1}
+      }
+    },
+    "uciMove": {
+      "type": "string",
+      "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"
+    },
+    "square": {
+      "type": "string",
+      "pattern": "^[a-h][1-8]$"
+    }
+  }
+}
