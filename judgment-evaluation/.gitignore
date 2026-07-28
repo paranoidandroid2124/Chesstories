@@ -8,3 +8,4 @@ __pycache__/
 *.egg-info/
 /runtime-adapter/target/
 /runtime-adapter/project/target/
+/runtime-adapter/.scala-build/

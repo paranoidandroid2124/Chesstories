@@ -22,17 +22,11 @@ object MoveReviewJudgmentOrchestrator:
       fulfilledRequests: List[ProbeRequest]
   )
 
-  def assemble(raw: RawMoveReviewInput): Option[JudgmentAssemblyContext] =
-    runStages(raw, JudgmentBoundaryIntervention.identity, assemblePacket = false).map(_.context)
-
-  def packet(raw: RawMoveReviewInput): Option[EvidenceBackedJudgmentPacket] =
-    runStages(raw, JudgmentBoundaryIntervention.identity, assemblePacket = true).flatMap(_.packet)
-
   def execute(
       raw: RawMoveReviewInput,
       intervention: JudgmentBoundaryIntervention
   ): Option[JudgmentBoundaryExecution] =
-    runStages(raw, intervention, assemblePacket = true)
+    runStages(raw, intervention)
 
   /** Sole execution authority for F -> C -> Jp -> Ja -> R.
     * Native stages retain their exception behavior; only supplied boundary callbacks
@@ -40,8 +34,7 @@ object MoveReviewJudgmentOrchestrator:
     */
   private def runStages(
       raw: RawMoveReviewInput,
-      intervention: JudgmentBoundaryIntervention,
-      assemblePacket: Boolean
+      intervention: JudgmentBoundaryIntervention
   ): Option[JudgmentBoundaryExecution] =
     val identity = isIdentity(intervention)
     for
@@ -80,24 +73,26 @@ object MoveReviewJudgmentOrchestrator:
         identity || jpCandidate.map(_.id).distinct.size == jpCandidate.size
       )(jpCandidate)
       jaCandidate <- intervention.ja match
-        case None => Some(JudgmentClaimAssembler.admit(c, jp))
+        case None => Some(ClaimCandidateGraphAssembler.fromClaims(jp, c.evidenceGraph))
         case Some(provider) => Try(provider(c, jp)).toOption.flatMap(Option(_))
       ja <- Option.when(identity || admissionClosed(c, jp, jaCandidate))(jaCandidate)
       r <- intervention.r match
-        case None => Some(JudgmentClaimAssembler.rankDetailed(c, ja))
+        case None => Some(ClaimArbitrator.rankDetailed(ja, c.relativeAssessments))
         case Some(provider) => Try(provider(c, ja)).toOption.flatMap(Option(_))
-      rankedContext = JudgmentClaimAssembler.attach(c.copy(claims = Nil), r.rankedClaims)
+      rankedContext = r.rankedClaims.foldLeft(c.copy(claims = Nil))((context, claim) => context.withClaim(claim))
     yield
       val context = rankedContext.copy(
         probeDiagnostics = rankedContext.probeDiagnostics ++ authorization.diagnostics
       )
       val packet =
-        if !assemblePacket then None
-        else if identity then
+        if identity then
           EvidenceBackedJudgmentPacket.fromAssembly(
             context,
             plannedProbeRequests(context, authorization.fulfilledRequests),
-            r.playerFacingClaimDecisions
+            r.playerFacingClaimDecisions,
+            r.onlyMoveConstraintResolutions,
+            r.causeExposureResolution,
+            r.causeDispositionLedger
           )
         else
           Option
@@ -119,12 +114,22 @@ object MoveReviewJudgmentOrchestrator:
       ranking: ClaimRankingResult
   ): Option[EvidenceBackedJudgmentPacket] =
     EvidenceBackedJudgmentPacket
-      .fromAssembly(context, Nil, ranking.playerFacingClaimDecisions)
+      .fromAssembly(
+        context,
+        Nil,
+        ranking.playerFacingClaimDecisions,
+        ranking.onlyMoveConstraintResolutions,
+        ranking.causeExposureResolution,
+        ranking.causeDispositionLedger
+      )
       .flatMap(_ =>
         EvidenceBackedJudgmentPacket.fromAssembly(
           context,
           plannedProbeRequests(context, fulfilledRequests),
-          ranking.playerFacingClaimDecisions
+          ranking.playerFacingClaimDecisions,
+          ranking.onlyMoveConstraintResolutions,
+          ranking.causeExposureResolution,
+          ranking.causeDispositionLedger
         )
       )
 
@@ -148,17 +153,39 @@ object MoveReviewJudgmentOrchestrator:
       graph: ClaimCandidateGraph,
       ranking: ClaimRankingResult
   ): Boolean =
-    val certifiedClaimsById = graph.certified.map(decision => decision.claim.id -> decision.claim).toMap
-    val certifiedIds = certifiedClaimsById.keySet
+    val certifiedIds = graph.certified.map(_.claim.id).toSet
     val rankedIds = ranking.ranked.map(_.claim.id)
     val rankedIdSet = rankedIds.toSet
     val trace = ranking.deduplicationTrace
     val traceOriginalIds = trace.map(_.originalClaimId)
     val traceByOriginal = trace.map(item => item.originalClaimId -> item.keptClaimId).toMap
     val lineageIds = certifiedIds ++ rankedIdSet
+    val expectedDeduplication =
+      ClaimDeduplicator.deduplicateDetailed(graph.certified, graph.evidenceGraph)
+    val expectedPlayedMoves = graph.evidenceGraph.records.collect {
+      case EvidenceRecord(_, RelativeAssessmentEvidence(assessment), _) =>
+        JudgmentSubjectBinding.normalizeMove(assessment.played.moveUci)
+    }.filter(_.nonEmpty).toSet
+    val expectedExposure = PlayerFacingCauseExposurePipeline.resolve(
+      expectedDeduplication.decisions.map(_.claim),
+      graph.evidenceGraph,
+      expectedPlayedMoves
+    )
+    val expectedHostRows = ClaimArbitrator.canonicalHostRows(
+      expectedDeduplication.decisions.map(_.claim),
+      expectedExposure,
+      graph.evidenceGraph,
+      expectedPlayedMoves
+    )
+    val expectedCauseDispositionLedger =
+      CauseDispositionPolicy.resolve(graph, expectedDeduplication, expectedExposure)
     val causeDominance = ranking.causeDominanceDecisions
     val causeDominanceById = causeDominance.map(decision => decision.causeEvidenceId -> decision).toMap
-    val retainedCauseIds = causeDominance.filter(_.retained).map(_.causeEvidenceId).toSet
+    val retainedCauseIds = expectedExposure.retainedCauseEvidenceIds
+    val crossComparisonExposure = ranking.crossComparisonExposureDecisions
+    val crossComparisonExposureById =
+      crossComparisonExposure.map(decision => decision.causeEvidenceId -> decision).toMap
+    val selectedCauseIds = expectedExposure.selectedCauseEvidenceIds
     val rankedFacingCauseIds = ranking.ranked.flatMap(_.playerFacingCauseEvidenceIds).toSet
 
     def registeredRelativeCause(id: String): Boolean =
@@ -167,8 +194,14 @@ object MoveReviewJudgmentOrchestrator:
         case _                                                  => false
       }
 
+    val exposureResolutionClosed =
+      ranking.causeExposureResolution == expectedExposure &&
+        ranking.causeDominanceDecisions == expectedExposure.dominanceDecisions &&
+        ranking.crossComparisonExposureDecisions == expectedExposure.crossDecisions
+
     val causeDominanceClosed =
       causeDominance.map(_.causeEvidenceId).distinct.size == causeDominance.size &&
+        causeDominance == expectedExposure.dominanceDecisions &&
         causeDominance.forall { decision =>
           val dominators = decision.dominatingCauseEvidenceIds
           registeredRelativeCause(decision.causeEvidenceId) &&
@@ -181,15 +214,55 @@ object MoveReviewJudgmentOrchestrator:
                   causeDominanceById.get(id).exists(_.retained)
                 )
             )
+        }
+
+    val retainedCauses = expectedExposure.readyByClaim.values.flatten.toList
+      .distinctBy(_._2.id)
+      .filter { case (_, ref) => retainedCauseIds(ref.id) }
+    val crossComparisonExposureClosed =
+      crossComparisonExposure.map(_.causeEvidenceId).distinct.size == crossComparisonExposure.size &&
+        crossComparisonExposure.map(_.causeEvidenceId).toSet == retainedCauseIds &&
+        crossComparisonExposure == expectedExposure.crossDecisions &&
+        crossComparisonExposure.forall { decision =>
+          crossComparisonExposureById.get(decision.representativeCauseEvidenceId).exists { representative =>
+            if decision.selected then
+              representative.causeEvidenceId == decision.causeEvidenceId && representative.selected
+            else if decision.status == CrossComparisonExposureStatus.RedundantAcrossComparison then
+              representative.selected && representative.causeEvidenceId != decision.causeEvidenceId
+            else representative.causeEvidenceId == decision.causeEvidenceId
+          }
         } &&
-        rankedFacingCauseIds == retainedCauseIds
+        rankedFacingCauseIds == selectedCauseIds
+
+    val selectedCauseHostsClosed = selectedCauseIds.forall { causeId =>
+      val hosts = ranking.ranked.filter(_.playerFacingCauseEvidenceIds.contains(causeId))
+      hosts.size == 1 &&
+        expectedExposure.ownerClaimIdByCauseId.get(causeId).contains(hosts.head.claim.id)
+    } && expectedExposure.ownerClaimIdByCauseId.keySet == selectedCauseIds
+
+    val selectedCauses = retainedCauses.filter { case (_, ref) => selectedCauseIds(ref.id) }
+    val expectedOnlyMoveResolutions =
+      OnlyMoveConstraintPolicy.resolveAll(
+        graph.evidenceGraph,
+        selectedCauses,
+        expectedPlayedMoves
+      )
+    val onlyMoveClosed =
+      ranking.onlyMoveConstraintResolutions == expectedOnlyMoveResolutions &&
+        ranking.ranked.forall { decision =>
+          val expected = expectedOnlyMoveResolutions
+            .flatMap(_.qualifiers)
+            .filter(item => decision.playerFacingCauseEvidenceIds.contains(item.causeEvidence.id))
+            .distinctBy(item => (item.comparisonEvidence.id, item.causeEvidence.id))
+          decision.onlyMoveQualifiers == expected
+        }
 
     val rankedExposureClosed = ranking.ranked.forall { decision =>
       val causeIds = decision.playerFacingCauseEvidenceIds
       val directEvidenceIds = decision.claim.evidence.map(_.id).toSet
       causeIds.distinct.size == causeIds.size &&
         causeIds.forall(id =>
-          directEvidenceIds(id) && retainedCauseIds(id) && registeredRelativeCause(id)
+          directEvidenceIds(id) && selectedCauseIds(id) && registeredRelativeCause(id)
         )
     }
 
@@ -203,15 +276,16 @@ object MoveReviewJudgmentOrchestrator:
 
     rankedIds.distinct.size == rankedIds.size &&
       rankedIdSet.subsetOf(certifiedIds) &&
+      exposureResolutionClosed &&
+      ranking.causeDispositionLedger == expectedCauseDispositionLedger &&
       causeDominanceClosed &&
+      crossComparisonExposureClosed &&
+      selectedCauseHostsClosed &&
+      onlyMoveClosed &&
       rankedExposureClosed &&
-      ranking.ranked.forall(decision =>
-        certifiedClaimsById
-          .get(decision.claim.id)
-          .exists(certified => sameClaimWithoutSalience(decision.claim, certified)) &&
-          decision.claim.salience.contains(decision.salience)
-      ) &&
+      ranking.ranked == expectedHostRows &&
       trace.map(_.order) == trace.indices.toList &&
+      trace == expectedDeduplication.trace &&
       traceOriginalIds.distinct.size == traceOriginalIds.size &&
       trace.forall(item =>
         item.originalClaimId != item.keptClaimId &&
@@ -312,12 +386,6 @@ object MoveReviewJudgmentOrchestrator:
       actual.positions == expected.positions &&
       actual.lines == expected.lines &&
       actual.transitions == expected.transitions
-
-  private def sameClaimWithoutSalience(
-      left: JudgmentClaim,
-      right: JudgmentClaim
-  ): Boolean =
-    left.copy(salience = None) == right.copy(salience = None)
 
   private def probeRequestsUnchecked(raw: RawMoveReviewInput): List[ProbeRequest] =
     EvidenceFactAssembler.assemble(raw).toList.flatMap(context => plannedProbeRequests(context))

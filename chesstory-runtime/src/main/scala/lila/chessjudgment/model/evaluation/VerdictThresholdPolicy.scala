@@ -5,6 +5,11 @@ import lila.chessjudgment.model.judgment.CandidateSetType
 
 object VerdictThresholdPolicy:
 
+  /** Versioned authority for audit projections that compare a public verdict
+    * with a fresh classification from the registered comparison lines.
+    */
+  val PolicyVersion = "chesstory.verdict-threshold-policy.v1"
+
   def verdictFromWinPercent(
       candidateWinPercentDeltaForMover: Double,
       winPercentLossForMover: Double,

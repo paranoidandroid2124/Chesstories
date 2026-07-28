@@ -9,10 +9,10 @@ import io.chesstory.runtime.RuntimeProtocol
 import play.api.libs.json.{ JsNull, JsObject, JsValue, Json }
 
 object RuntimeAdapterCli:
-  private val ObservationSchema = "chesstory.runtime-observation.v2"
-  private val NativeContractVersion = "chesstory.runtime-native-boundary.v2"
+  private val ObservationSchema = "chesstory.runtime-observation.v3"
+  private val NativeContractVersion = "chesstory.runtime-native-boundary.v3"
   private val AdapterName = "chesstory-judgment-runtime-adapter"
-  private val AdapterVersion = "0.2.0"
+  private val AdapterVersion = "0.3.0"
 
   private final case class CapturedStage(document: JsObject, artifactSha256: Option[String])
 
@@ -240,7 +240,7 @@ object RuntimeAdapterCli:
       case "Ja" =>
         "native_certified_deferred_rejected_decisions_do_not_match_the_v1_admitted_rejected_contract"
       case "R" =>
-        "native_ranking_exposure_salience_and_deduplication_trace_do_not_have_an_exact_v1_mapping"
+          "native_claim_host_exposure_and_deduplication_trace_do_not_have_an_exact_v1_mapping"
       case "P" =>
         "native_packet_and_projection_trace_do_not_match_the_v1_projection_contract"
       case "V" =>

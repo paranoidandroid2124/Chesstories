@@ -503,7 +503,7 @@ object EvidenceFactAssembler:
             )
           case payload: LineFactEvidence =>
             (
-              payload.consequencesForRootMove(rootMove) ++
+              payload.rootOwnedCausalConsequences(rootMove) ++
                 payload.immediateReplyCheckLiabilitiesForRootMove(rootMove)
             ).map(_.kind).distinct.flatMap(kind =>
               TacticalMechanismKind.fromLineConsequence(kind, payload.rootIsRecapture(rootMove)).map(mechanismKind =>
@@ -550,6 +550,8 @@ object EvidenceFactAssembler:
     }
     val lineConsequenceRecords = records.collect { case record @ EvidenceRecord(_, payload: LineFactEvidence, _) =>
       (
+        // A relation/consequence pair is still assembled as a raw mechanism candidate here.
+        // Root ownership is decided once by RootOwnedCausePolicy after the typed relation is attached.
         payload.consequencesForRootMove(rootMove) ++
           payload.immediateReplyCheckLiabilitiesForRootMove(rootMove)
       ).distinct.flatMap { consequence =>

@@ -56,7 +56,11 @@ private[runtimeadapter] object RuntimeNativeViews:
               constructor = "EvidenceBackedJudgmentPacket",
               fields = List(
                 "assembly" -> packet.assembly,
-                "probeRequests" -> packet.probeRequests
+                "probeRequests" -> packet.probeRequests,
+                "playerFacingClaimDecisions" -> packet.playerFacingClaimDecisions,
+                "onlyMoveConstraintResolutions" -> packet.onlyMoveConstraintResolutions,
+                "causeExposureResolution" -> packet.causeExposureResolution,
+                "causeDispositionLedger" -> packet.causeDispositionLedger
               )
             )
           )

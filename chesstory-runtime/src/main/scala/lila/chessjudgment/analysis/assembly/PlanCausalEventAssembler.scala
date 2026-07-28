@@ -878,11 +878,7 @@ private[assembly] object PlanCausalEventProof:
       structural: StructuralDeltaEvidence,
       line: Option[LineFactEvidence]
   ): Boolean =
-    val directBlockade = structural
-      .consequencesOf(TransitionConsequenceKind.OpponentMobilityRestriction)
-      .exists(directPawnBlockade)
-    !directBlockade ||
-      (!rootActorIsDevelopingMinor(rootLine, structural) && line.flatMap(_.rootActorSurvivesReply).contains(true))
+    DirectOpponentRestrictionProof.directRestrictionSurvivesReply(rootLine, structural, line)
 
   def directPawnBlockadeFunctionProven(
       pressure: PlanPressureEvidence,
@@ -895,7 +891,7 @@ private[assembly] object PlanCausalEventProof:
       planTheme(plan).contains(PlanTheme.RestrictionProphylaxis) &&
         rootActorIsPawn(rootLine, structural) &&
         pressure.rootBackedPlans(Some(rootLine.rootMove)).exists(_.plan.id == plan.plan.id)
-    !rootActorIsDevelopingMinor(rootLine, structural) &&
+    !DirectOpponentRestrictionProof.rootActorIsDevelopingMinor(rootLine, structural) &&
       (line.rootActorSurvivesReply.contains(true) || explicitlyOwnedRestriction)
 
   def directPawnBlockade(consequence: TransitionConsequence): Boolean =
@@ -1037,22 +1033,7 @@ private[assembly] object PlanCausalEventProof:
       goalConsequenceForPlan(plan, consequence, structural.transition).nonEmpty
 
   def rootMoveDirectlyRestrictsOpponent(event: PlanCausalEventEvidence): Boolean =
-    val restrictedEntries = event.directGoalConsequences
-      .filter(_.kind == TransitionConsequenceKind.OpponentMobilityRestriction)
-      .flatMap(_.subjects.flatMap(StructuralDeltaEvidence.restrictedOpponentEntry))
-    val restrictionSubjects = event.directGoalConsequences
-      .filter(_.kind == TransitionConsequenceKind.OpponentMobilityRestriction)
-      .flatMap(_.subjects)
-    val actorRole = event.identity.actorRole.map(_.toLowerCase)
-    val kingMove = actorRole.contains("king")
-    val developingMinor =
-      actorRole.exists(Set("knight", "bishop")) &&
-        event.identity.actorFrom.exists(square => square.lastOption.exists(rank => rank == '1' || rank == '8'))
-    event.identity.goalTheme == PlanTheme.RestrictionProphylaxis &&
-      event.opponentResourceDeterrence.isEmpty &&
-      principalRestriction(restrictedEntries, restrictionSubjects) &&
-      !kingMove &&
-      !developingMinor
+    DirectOpponentRestrictionProof.rootMoveDirectlyRestrictsOpponent(event)
 
   def rootMovePreparesPawnAdvance(event: PlanCausalEventEvidence): Boolean =
     event.identity.goalTheme == PlanTheme.PawnBreakPreparation &&
@@ -1084,15 +1065,6 @@ private[assembly] object PlanCausalEventProof:
       from <- _root_.chess.Square.fromKey(EvidenceRef.normalizeMove(rootLine.rootMove).take(2))
       piece <- position.board.pieceAt(from)
     yield from -> piece)
-
-  private def rootActorIsDevelopingMinor(
-      rootLine: LineNodeRef,
-      structural: StructuralDeltaEvidence
-  ): Boolean =
-    rootActor(rootLine, structural).exists { case (from, piece) =>
-      Set(_root_.chess.Knight, _root_.chess.Bishop)(piece.role) &&
-        from.key.lastOption.contains(if piece.color == _root_.chess.Color.White then '1' else '8')
-    }
 
   def rootCandidateConsequenceForPlan(
       plan: PlanMatch,

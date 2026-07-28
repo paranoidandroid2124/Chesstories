@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/cause-audit-v3/report.schema.json",
+  "title": "Typed semantic Cause audit report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "mode",
+    "partition",
+    "bindings",
+    "evaluation_contract",
+    "counts",
+    "error_counts",
+    "first_failure_counts",
+    "judgments",
+    "policy",
+    "artifact_ledger_hash_before_report"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.eval.cause-audit-report.v3"},
+    "run_id": {"$ref": "#/$defs/id"},
+    "mode": {"const": "typed-semantic-cause-audit"},
+    "partition": {"enum": ["explore", "sealed_confirm"]},
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "freeze_manifest_sha256",
+        "cases_file_sha256",
+        "base_oracle_file_sha256",
+        "run_oracle_file_sha256",
+        "oracle_run_manifest_sha256",
+        "open_world_arm_inventory_sha256",
+        "open_world_candidate_set_sha256",
+        "open_world_adjudication_sha256",
+        "runtime_run_sha256"
+      ],
+      "properties": {
+        "freeze_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "cases_file_sha256": {"$ref": "#/$defs/sha256"},
+        "base_oracle_file_sha256": {"$ref": "#/$defs/sha256"},
+        "run_oracle_file_sha256": {"$ref": "#/$defs/sha256"},
+        "oracle_run_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "open_world_arm_inventory_sha256": {"$ref": "#/$defs/sha256"},
+        "open_world_candidate_set_sha256": {"$ref": "#/$defs/sha256"},
+        "open_world_adjudication_sha256": {"$ref": "#/$defs/sha256"},
+        "runtime_run_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "evaluation_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "c_rule",
+        "r_rule",
+        "p_rule",
+        "priority_rule",
+        "abstention_rule",
+        "open_world_rule",
+        "sealed_label_disclosure"
+      ],
+      "properties": {
+        "c_rule": {"const": "typed-exact-values-in-one-owned-direct-channel"},
+        "r_rule": {"const": "native-pre-packet-selection-and-partial-order"},
+        "p_rule": {"const": "exact-r-to-packet-to-public-semantic-multiset"},
+        "priority_rule": {"const": "ties-and-incomparability-are-not-serialization-order"},
+        "abstention_rule": {"const": "answerable-must-abstain-unresolved-are-distinct"},
+        "open_world_rule": {"const": "all-unmatched-c-source-blind-adjudication-exact-all-arm-merge-before-scoring"},
+      "sealed_label_disclosure": {"const": "disabled-until-redacted-projection"}
+      }
+    },
+    "counts": {"$ref": "#/$defs/countMap"},
+    "error_counts": {"$ref": "#/$defs/countMap"},
+    "first_failure_counts": {"$ref": "#/$defs/countMap"},
+    "judgments": {
+      "type": "array",
+      "x-canonical": {"mode": "unordered-set"},
+      "items": {"$ref": "judgment.schema.json"}
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "machine_language",
+        "release_eligible",
+        "production_bottleneck_claim",
+        "oracle_partition_scoped",
+        "pending_open_world_candidates"
+      ],
+      "properties": {
+        "machine_language": {"const": "en"},
+        "release_eligible": {"const": false},
+        "production_bottleneck_claim": {"const": "engineering-diagnostic"},
+        "oracle_partition_scoped": {"const": true},
+        "pending_open_world_candidates": {"const": 0}
+      }
+    },
+    "artifact_ledger_hash_before_report": {
+      "oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+    },
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "countMap": {
+      "type": "object",
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    }
+  }
+}

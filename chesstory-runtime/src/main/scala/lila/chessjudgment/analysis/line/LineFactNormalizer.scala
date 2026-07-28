@@ -363,9 +363,16 @@ object LineFactNormalizer:
           }
         )
         val materialEvents = materialOutcomeEvents(replay, summary)
-        val materialOutcomeEvent = lastingMaterialOutcomeEvent(materialEvents, summary)
+        val lastingMaterialOutcome = lastingMaterialOutcomeFor(materialEvents, summary)
+        val materialOutcomeEvent = lastingMaterialOutcome.map(_.event)
         val materialGainEvent = materialOutcomeEvent.filter(_.side == summary.sideToMove)
         val materialLossEvent = materialOutcomeEvent.filter(_.side != summary.sideToMove)
+        val materialGainOutcome = lastingMaterialOutcome
+          .filter(_.event.side == summary.sideToMove)
+          .flatMap(_.toRootOwnedOutcome)
+        val materialLossOutcome = lastingMaterialOutcome
+          .filter(_.event.side != summary.sideToMove)
+          .flatMap(_.toRootOwnedOutcome)
         val promotionEvent = Option
           .when(
             (summary.hasPromotionGainForMover && summary.netCaptureCpForMover > 0) ||
@@ -402,7 +409,8 @@ object LineFactNormalizer:
               eventMove = materialGainEventMove,
               rootMove = materialGainRootMove,
               rootSide = Some(summary.sideToMove),
-              beneficiary = Some(summary.sideToMove)
+              beneficiary = Some(summary.sideToMove),
+              materialOutcome = materialGainOutcome
             )
           ),
           Option.when(summary.hasProofSignalMaterialLoss || summary.hasUnrecoveredPawnLossForMover)(
@@ -413,7 +421,8 @@ object LineFactNormalizer:
               eventMove = materialLossEventMove,
               rootMove = materialLossRootMove,
               rootSide = Some(summary.sideToMove),
-              beneficiary = Some(!summary.sideToMove)
+              beneficiary = Some(!summary.sideToMove),
+              materialOutcome = materialLossOutcome
             )
           ),
           Option.when(summary.hasResolvedMaterialSequence)(
@@ -475,8 +484,24 @@ object LineFactNormalizer:
       balanceAfterForMover: Int,
       immediateAcceptanceBalancesForMover: List[Int],
       promotion: Boolean,
-      recapture: Boolean
+      recapture: Boolean,
+      capture: Option[LineMaterialCapture]
   )
+
+  private final case class LastingMaterialOutcome(
+      event: MaterialOutcomeEvent,
+      durableNetCp: Int
+  ):
+    def toRootOwnedOutcome: Option[RootOwnedMaterialOutcome] =
+      for
+        capture <- event.capture
+        if capture.side == event.side
+        salience <- RootOwnedMaterialEventSalience.from(capture)
+      yield RootOwnedMaterialOutcome(
+        event = salience,
+        beneficiary = event.side,
+        durableNetCp = durableNetCp
+      )
 
   private def materialOutcomeEvents(
       replay: List[LineReplayStep],
@@ -497,29 +522,38 @@ object LineFactNormalizer:
           signedDelta = afterBalance - beforeBalance
           if signedDelta != 0
           if (actor.color == summary.sideToMove) == (signedDelta > 0)
-        yield MaterialOutcomeEvent(
-          moveUci = moveUci,
-          plyOffset = plyOffset,
-          side = actor.color,
-          balanceAfterForMover = afterBalance,
-          immediateAcceptanceBalancesForMover = after.legalMoves
-            .filter(reply => reply.captures && reply.dest == destination)
-            .map(reply => materialBalanceCp(reply.after, summary.sideToMove) - initialBalance),
-          promotion = moveUci.length == 5,
-          recapture = summary.captures.exists(capture =>
-            capture.plyOffset == plyOffset && EvidenceRef.sameMove(capture.moveUci, moveUci) && capture.recapture
+        yield
+          val exactCaptures = summary.captures.filter(capture =>
+            capture.plyOffset == plyOffset && EvidenceRef.sameMove(capture.moveUci, moveUci)
           )
-        )
+          MaterialOutcomeEvent(
+            moveUci = moveUci,
+            plyOffset = plyOffset,
+            side = actor.color,
+            balanceAfterForMover = afterBalance,
+            immediateAcceptanceBalancesForMover = after.legalMoves
+              .filter(reply => reply.captures && reply.dest == destination)
+              .map(reply => materialBalanceCp(reply.after, summary.sideToMove) - initialBalance),
+            promotion = moveUci.length == 5,
+            recapture = exactCaptures.exists(_.recapture),
+            capture = exactCaptures match
+              case capture :: Nil => Some(capture)
+              case _              => None
+          )
       }
     }
 
-  private def lastingMaterialOutcomeEvent(
+  private def lastingMaterialOutcomeFor(
       events: List[MaterialOutcomeEvent],
       summary: LineMaterialSummary
-  ): Option[MaterialOutcomeEvent] =
+  ): Option[LastingMaterialOutcome] =
     val finalSign = Integer.signum(summary.netCaptureCpForMover)
     val observedNet = events.lastOption.map(_.balanceAfterForMover).getOrElse(0)
-    Option.when(finalSign != 0 && observedNet == summary.netCaptureCpForMover) {
+    Option.when(
+      summary.materialWindowComplete &&
+        finalSign != 0 &&
+        observedNet == summary.netCaptureCpForMover
+    ) {
       val beneficiary = if finalSign > 0 then summary.sideToMove else !summary.sideToMove
       def keepsFinalSign(balance: Int): Boolean = finalSign * balance > 0
       events.zipWithIndex.collectFirst {
@@ -529,9 +563,14 @@ object LineFactNormalizer:
               events.drop(index).forall(next => keepsFinalSign(next.balanceAfterForMover)) &&
               event.immediateAcceptanceBalancesForMover.forall(keepsFinalSign) &&
               !(event.plyOffset == 0 && event.recapture && !event.promotion) =>
-          event
+          val beneficiaryBalances =
+            (events.drop(index).map(_.balanceAfterForMover) ++
+              event.immediateAcceptanceBalancesForMover).map(finalSign * _)
+          beneficiaryBalances.minOption
+            .filter(_ > 0)
+            .map(durableNetCp => LastingMaterialOutcome(event, durableNetCp))
       }
-    }.flatten
+    }.flatten.flatten
 
   private def beneficiaryPromotionEvent(
       events: List[MaterialOutcomeEvent],

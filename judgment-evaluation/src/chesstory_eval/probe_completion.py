@@ -21,6 +21,7 @@ import chess
 from .hashing import json_bytes, sha256_bytes, sha256_file, sha256_json, slug
 from .model import ContractError, IntegrityError
 from .native_diagnostic import native_canonical_json
+from .schemas import SchemaRegistry
 from .stockfish import (
     StockfishAcquisitionError,
     _UciSession,
@@ -42,7 +43,11 @@ UCI_IO_SCHEMA = "chesstory.eval.runtime-probe-uci-io.v1"
 REPORT_SCHEMA = "chesstory.eval.runtime-probe-completion-report.v1"
 LEDGER_SCHEMA = "chesstory.eval.runtime-probe-artifact-ledger.v1"
 RUNTIME_REQUEST_SCHEMA = "chesstory.move-meaning.request.v1"
-RUNTIME_OBSERVATION_SCHEMA = "chesstory.runtime-observation.v2"
+RUNTIME_OBSERVATION_SCHEMA = "chesstory.runtime-observation.v3"
+RUNTIME_RESPONSE_SCHEMA = "chesstory.move-meaning.response.v3"
+NATIVE_RUNTIME_SCHEMA_RELATIVE_PATH = (
+    Path("schemas") / "native-v3" / "runtime-observation.schema.json"
+)
 REPLY_MULTIPV = "reply_multipv"
 MAX_RUNTIME_PROBE_RESULTS = 12
 _MOVE_RE = re.compile(r"^[a-h][1-8][a-h][1-8][qrbn]?")
@@ -164,6 +169,27 @@ class _RuntimeExchange:
     diagnostic_stream_sha256: str
 
 
+def _validate_runtime_observation(
+    value: Any,
+    *,
+    expected_schema: str,
+    registry: SchemaRegistry | None,
+    schema_path: Path | None,
+) -> dict[str, Any]:
+    observation = _mapping(value, "runtime observation")
+    if observation.get("schema_version") != expected_schema:
+        raise ContractError("runtime adapter emitted an unexpected observation schema")
+    if (registry is None) != (schema_path is None):
+        raise ContractError("runtime observation validator binding is incomplete")
+    if registry is not None and schema_path is not None:
+        registry.validate_document(
+            observation,
+            schema_path,
+            label="runtime v3 observation",
+        )
+    return observation
+
+
 class _RuntimeJsonlSession:
     """Persistent sbt JSONL process with byte-exact transport hashes."""
 
@@ -174,6 +200,7 @@ class _RuntimeJsonlSession:
         cwd: Path,
         timeout_seconds: float,
         expected_schema: str = RUNTIME_OBSERVATION_SCHEMA,
+        observation_schema_path: Path | None = None,
     ) -> None:
         if isinstance(command, (str, bytes)) or not command:
             raise ContractError("runtime command must be a non-empty argument array")
@@ -185,6 +212,18 @@ class _RuntimeJsonlSession:
             raise ContractError("runtime timeout must be from 0.001 through 3600 seconds")
         self.timeout_seconds = float(timeout_seconds)
         self.expected_schema = _safe_text(expected_schema, "runtime observation schema")
+        if observation_schema_path is None and self.expected_schema == RUNTIME_OBSERVATION_SCHEMA:
+            observation_schema_path = self.cwd.parent / NATIVE_RUNTIME_SCHEMA_RELATIVE_PATH
+        self.observation_schema_path = (
+            observation_schema_path.resolve(strict=True)
+            if observation_schema_path is not None
+            else None
+        )
+        self.observation_schema_registry = (
+            SchemaRegistry(self.observation_schema_path.parent)
+            if self.observation_schema_path is not None
+            else None
+        )
         self._process: subprocess.Popen[bytes] | None = None
         self._reader: threading.Thread | None = None
         self._output: queue.Queue[tuple[str, bytes | BaseException]] = queue.Queue()
@@ -275,9 +314,12 @@ class _RuntimeJsonlSession:
                 parsed = json.loads(stripped.decode("utf-8"))
             except (UnicodeError, json.JSONDecodeError) as error:
                 raise ContractError("runtime adapter emitted malformed UTF-8 JSON") from error
-            observation = _mapping(parsed, "runtime observation")
-            if observation.get("schema_version") != self.expected_schema:
-                raise ContractError("runtime adapter emitted an unexpected observation schema")
+            observation = _validate_runtime_observation(
+                parsed,
+                expected_schema=self.expected_schema,
+                registry=self.observation_schema_registry,
+                schema_path=self.observation_schema_path,
+            )
             diagnostic_stream = b"".join(diagnostics)
             return _RuntimeExchange(
                 observation=observation,
@@ -338,6 +380,13 @@ def _public_body(observation: Mapping[str, Any]) -> dict[str, Any]:
     if not isinstance(body, Mapping):
         raise ContractError("runtime public response has no body")
     return dict(body)
+
+
+def _public_status(observation: Mapping[str, Any]) -> str | None:
+    response = observation.get("public_response")
+    body = response.get("body") if isinstance(response, Mapping) else None
+    status = body.get("status") if isinstance(body, Mapping) else None
+    return status if isinstance(status, str) else None
 
 
 def _probe_requests(observation: Mapping[str, Any]) -> list[dict[str, Any]]:
@@ -692,8 +741,6 @@ def _semantic_checkpoints(observation: Mapping[str, Any]) -> dict[str, Any]:
             {
                 **(_claim_summary(claim) if isinstance(claim, Mapping) else {}),
                 "exposure_tier": _native_value(_field(item, "exposureTier")),
-                "exposure_priority": _native_value(_field(item, "exposurePriority")),
-                "priority": _native_value(_field(item, "priority")),
             }
         )
     deduplication = _products(r_tree, "ClaimDeduplicationTrace")
@@ -713,7 +760,9 @@ def _semantic_checkpoints(observation: Mapping[str, Any]) -> dict[str, Any]:
         {
             "selected_payload_source": _native_value(_field(projection, "selectedPayloadSource")),
             "has_explanation": _native_value(_field(projection, "hasExplanation")),
-            "has_exact_proof": _native_value(_field(projection, "hasExactProof")),
+            "has_engine_mate_outcome": _native_value(
+                _field(projection, "hasEngineMateOutcome")
+            ),
             "primary_renderable": _native_value(_field(projection, "primaryRenderable")),
             "renderable": _native_value(_field(projection, "renderable")),
             "status": _native_value(_field(projection, "status")),
@@ -904,7 +953,12 @@ def complete_runtime_probes(
             f"samples/{sample_slug}/runtime-round-{round_index:02d}.json",
             runtime_io,
         )
-        requests = _probe_requests(exchange.observation)
+        observation_status = exchange.observation.get("observation_status")
+        requests = (
+            _probe_requests(exchange.observation)
+            if observation_status == "complete"
+            else []
+        )
         round_records.append(
             {
                 "round_index": round_index,
@@ -912,9 +966,13 @@ def complete_runtime_probes(
                 "submitted_probe_result_count": len(results),
                 "issued_probe_request_count": len(requests),
                 "issued_probe_ids": [item["id"] for item in requests],
-                "public_status": _public_body(exchange.observation).get("status"),
+                "observation_status": observation_status,
+                "public_status": _public_status(exchange.observation),
             }
         )
+        if observation_status != "complete":
+            stop_reason = "runtime-observation-not-complete"
+            break
         if not requests:
             stop_reason = "all-runtime-probes-closed"
             break
@@ -975,6 +1033,15 @@ def complete_runtime_probes(
             )
 
     assert final_observation is not None
+    final_observation_status = final_observation.get("observation_status")
+    semantic_checkpoints = (
+        _semantic_checkpoints(final_observation)
+        if final_observation_status == "complete"
+        else {
+            "first_missing_checkpoint": "runtime-observation-not-complete",
+            "observation_status": final_observation_status,
+        }
+    )
     summary = {
         "schema_version": PROBE_COMPLETION_SCHEMA,
         "sample_id": sample_id,
@@ -993,7 +1060,7 @@ def complete_runtime_probes(
         "rounds": round_records,
         "probes": probe_records,
         "final_observation_sha256": sha256_json(final_observation),
-        "semantic_checkpoints": _semantic_checkpoints(final_observation),
+        "semantic_checkpoints": semantic_checkpoints,
     }
     summary_ref = capture.write(f"samples/{sample_slug}/completion.json", summary)
     return {**summary, "completion_artifact": summary_ref}
@@ -1024,6 +1091,9 @@ def run_probe_completion(
     if len(set(request_ids)) != len(request_ids):
         raise ContractError("runtime request ids must be unique")
     stockfish_sha256 = sha256_file(stockfish)
+    observation_schema_path = (
+        adapter_root.parent / NATIVE_RUNTIME_SCHEMA_RELATIVE_PATH
+    ).resolve(strict=True)
     command = [
         str(sbt),
         "-batch",
@@ -1036,6 +1106,9 @@ def run_probe_completion(
         "run_id": run_id,
         "runtime_command_argv_sha256": sha256_json(command),
         "runtime_adapter_root_sha256": sha256_bytes(str(adapter_root).encode("utf-8")),
+        "runtime_observation_schema": RUNTIME_OBSERVATION_SCHEMA,
+        "runtime_observation_schema_sha256": sha256_file(observation_schema_path),
+        "runtime_response_schema": RUNTIME_RESPONSE_SCHEMA,
         "stockfish_executable_sha256": stockfish_sha256,
         "engine": {"Threads": 1, "Hash": 16, "fixed_depth_from_each_request": True},
         "max_rounds": max_rounds,
@@ -1051,6 +1124,8 @@ def run_probe_completion(
         command,
         cwd=adapter_root,
         timeout_seconds=runtime_timeout_seconds,
+        expected_schema=RUNTIME_OBSERVATION_SCHEMA,
+        observation_schema_path=observation_schema_path,
     ) as runtime:
         samples = [
             complete_runtime_probes(

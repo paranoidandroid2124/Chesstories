@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/cause-audit-v3/oracle-run-manifest.schema.json",
+  "title": "Partition-scoped open-world Cause oracle run manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "partition",
+    "freeze_manifest_sha256",
+    "cases_file_sha256",
+    "base_oracle_file_sha256",
+    "run_oracle_file_sha256",
+    "case_ids_sha256",
+    "open_world"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.eval.cause-audit-oracle-run.v3"},
+    "partition": {"enum": ["explore", "sealed_confirm"]},
+    "freeze_manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "cases_file_sha256": {"$ref": "#/$defs/sha256"},
+    "base_oracle_file_sha256": {"$ref": "#/$defs/sha256"},
+    "run_oracle_file_sha256": {"$ref": "#/$defs/sha256"},
+    "case_ids_sha256": {"$ref": "#/$defs/sha256"},
+    "open_world": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "candidate_set_sha256",
+        "adjudication_sha256",
+        "arm_inventory_sha256",
+        "arm_inventory_semantic_sha256",
+        "arm_ids_sha256",
+        "arm_count",
+        "candidate_count",
+        "adjudication_count",
+        "accepted_count",
+        "rejected_count",
+        "case_judgment_count",
+        "case_judgments_sha256",
+        "pending_count",
+        "source_blind",
+        "statistics_unblinded",
+        "merge_scope",
+        "base_oracle_semantic_sha256",
+        "accepted_meanings_sha256",
+        "merged_oracle_semantic_sha256"
+      ],
+      "properties": {
+        "status": {"enum": ["pending", "frozen"]},
+        "candidate_set_sha256": {"$ref": "#/$defs/sha256"},
+        "adjudication_sha256": {"$ref": "#/$defs/sha256"},
+        "arm_inventory_sha256": {"$ref": "#/$defs/sha256"},
+        "arm_inventory_semantic_sha256": {"$ref": "#/$defs/sha256"},
+        "arm_ids_sha256": {"$ref": "#/$defs/sha256"},
+        "arm_count": {"type": "integer", "minimum": 1},
+        "candidate_count": {"type": "integer", "minimum": 0},
+        "adjudication_count": {"type": "integer", "minimum": 0},
+        "accepted_count": {"type": "integer", "minimum": 0},
+        "rejected_count": {"type": "integer", "minimum": 0},
+        "case_judgment_count": {"type": "integer", "minimum": 0},
+        "case_judgments_sha256": {"$ref": "#/$defs/sha256"},
+        "pending_count": {"type": "integer", "minimum": 0},
+        "source_blind": {"const": true},
+        "statistics_unblinded": {"const": false},
+        "merge_scope": {"const": "all_arms"},
+        "base_oracle_semantic_sha256": {"$ref": "#/$defs/sha256"},
+        "accepted_meanings_sha256": {"$ref": "#/$defs/sha256"},
+        "merged_oracle_semantic_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

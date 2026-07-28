@@ -107,7 +107,13 @@ private[chessjudgment] object PrincipalVariationEvidence:
     Option(uci).getOrElse("").trim.toLowerCase
 
   def sameBoardState(left: String, right: String): Boolean =
-    boardStateFen(left) == boardStateFen(right)
+    semanticBoardStateFen(left).zip(semanticBoardStateFen(right)).exists {
+      case (leftState, rightState) => leftState == rightState
+    }
+
+  def semanticBoardStateFen(fen: String): Option[String] =
+    val fields = normalizeFen(fen).split("\\s+").filter(_.nonEmpty).toList
+    Option.when(fields.size >= 4)(fields.take(4).mkString(" "))
 
   private def legalMove(position: Position, uci: String): Option[Move] =
     Option
@@ -132,6 +138,3 @@ private[chessjudgment] object PrincipalVariationEvidence:
 
   private def normalizeFen(fen: String): String =
     Option(fen).getOrElse("").trim.split("\\s+").filter(_.nonEmpty).mkString(" ")
-
-  private def boardStateFen(fen: String): String =
-    normalizeFen(fen).split("\\s+").take(4).mkString(" ")

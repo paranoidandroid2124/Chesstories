@@ -11,6 +11,11 @@ enum MoveChoiceVerdict:
   case Mistake
   case Blunder
 
+  def isActionableLoss: Boolean =
+    this match
+      case Inaccuracy | Mistake | Blunder => true
+      case _                              => false
+
 enum CandidateSetType:
   case OnlyMove
   case NarrowChoice
@@ -122,10 +127,7 @@ object RelativeCauseSourceSide:
       supportEvidence: List[EvidenceRef]
   ): Option[RelativeCauseSourceSide] =
     if supportEvidence.isEmpty then
-      Some(
-        if kind == RelativeCauseKind.OnlyMoveNecessity then RelativeCauseSourceSide.Reference
-        else RelativeCauseSourceSide.Shared
-      )
+      Some(RelativeCauseSourceSide.Shared)
     else
       combine(
         supportEvidence.flatMap(ref => evidenceRefSourceSide(ref, referenceLine, candidateLine))
@@ -174,7 +176,7 @@ object RelativeCauseSourceSide:
         Some(RelativeCauseSourceSide.Mixed)
       else concreteSides.headOption.orElse(Option.when(hasShared)(RelativeCauseSourceSide.Shared))
 
-enum RelativeCauseImportance:
+enum RelativeCauseBindingTier:
   case Primary
   case Supporting
   case Context
@@ -193,35 +195,29 @@ case class CauseAttribution(
     directProofEligible: Boolean = false,
     reason: Option[String] = None
 ):
-  def contextOnly: Boolean =
-    kind == CauseAttributionKind.ContextOnly
   def unattributed: Boolean =
     kind == CauseAttributionKind.Unattributed
-  def rootMismatch: Boolean =
-    reason.contains("root-mismatch")
 
 object CauseAttribution:
   val unattributed: CauseAttribution =
     CauseAttribution(CauseAttributionKind.Unattributed, reason = Some("no-cause-attribution"))
 
-object RelativeCauseImportance:
+object RelativeCauseBindingTier:
   def from(
       role: RelativeCauseRole,
       sourceSide: RelativeCauseSourceSide,
       kind: RelativeCauseKind
-  ): RelativeCauseImportance =
+  ): RelativeCauseBindingTier =
     role match
       case RelativeCauseRole.PrimaryPlayedCause
-          if sourceSide == RelativeCauseSourceSide.Shared && kind != RelativeCauseKind.OnlyMoveNecessity =>
-        RelativeCauseImportance.Supporting
+          if sourceSide == RelativeCauseSourceSide.Shared =>
+        RelativeCauseBindingTier.Supporting
       case RelativeCauseRole.PrimaryPlayedCause =>
-        RelativeCauseImportance.Primary
-      case RelativeCauseRole.CandidateSetConstraint if kind == RelativeCauseKind.OnlyMoveNecessity =>
-        RelativeCauseImportance.Primary
+        RelativeCauseBindingTier.Primary
       case RelativeCauseRole.CandidateSetConstraint =>
-        RelativeCauseImportance.Supporting
+        RelativeCauseBindingTier.Supporting
       case RelativeCauseRole.PlayedAlternativeContext | RelativeCauseRole.AlternativeDiagnostic =>
-        RelativeCauseImportance.Context
+        RelativeCauseBindingTier.Context
 
 final case class EvalComparison private[judgment] (
     mover: Color,
@@ -261,10 +257,66 @@ case class CandidateComparisonFact(
     referenceLine: LineNodeRef,
     candidateLine: LineNodeRef,
     comparison: EvalComparison,
-    candidateSet: Option[CandidateSetDescriptor] = None
+    candidateSet: Option[CandidateSetDescriptor] = None,
+    defensiveRecaptureResource: Option[PlayedVsBestDefensiveRecaptureResource] = None
 ):
   def hasDistinctRootMoves: Boolean =
     !EvidenceRef.sameMove(referenceLine.rootMove, candidateLine.rootMove)
+
+  def candidateSetType: Option[CandidateSetType] =
+    candidateSet.map(_.candidateSetType)
+
+  /** Reclassifies this exact comparison from its registered line nodes through
+    * the sole central verdict policy.
+    */
+  def recomputedComparison(
+      reference: CandidateLineNode,
+      candidate: CandidateLineNode
+  ): EvalComparison =
+    EvalComparison.fromLines(
+      mover = comparison.mover,
+      reference = reference,
+      candidate = candidate,
+      candidateSetType = candidateSetType
+    )
+
+/** Evidence-id-independent identity of one evaluated comparison relation.
+  * Both C canonicalization and cross-comparison exposure reuse this key.
+  */
+final case class CandidateComparisonSemanticKey(
+    kind: CandidateComparisonKind,
+    mover: Color,
+    referenceLine: SemanticLineKey,
+    candidateLine: SemanticLineKey,
+    candidateWinPercentDeltaForMover: Double,
+    verdict: MoveChoiceVerdict,
+    candidateSetType: Option[CandidateSetType],
+    defensiveRecaptureResource: Option[PlayedVsBestDefensiveRecaptureResource]
+):
+  def stableKey: String =
+    List(
+      kind.toString,
+      mover.toString,
+      referenceLine.stableKey,
+      candidateLine.stableKey,
+      java.lang.Double.toHexString(candidateWinPercentDeltaForMover),
+      verdict.toString,
+      candidateSetType.map(_.toString).getOrElse(""),
+      defensiveRecaptureResource.map(_.toString).getOrElse("")
+    ).mkString("|")
+
+object CandidateComparisonSemanticKey:
+  def from(comparison: CandidateComparisonFact): CandidateComparisonSemanticKey =
+    CandidateComparisonSemanticKey(
+      kind = comparison.kind,
+      mover = comparison.comparison.mover,
+      referenceLine = SemanticLineKey.from(comparison.referenceLine),
+      candidateLine = SemanticLineKey.from(comparison.candidateLine),
+      candidateWinPercentDeltaForMover = comparison.comparison.candidateWinPercentDeltaForMover,
+      verdict = comparison.comparison.verdict,
+      candidateSetType = comparison.candidateSet.map(_.candidateSetType),
+      defensiveRecaptureResource = comparison.defensiveRecaptureResource
+    )
 
 enum RelativeCauseKind:
   case MissedTacticalResource
@@ -273,7 +325,6 @@ enum RelativeCauseKind:
   case WrongRecapturer
   case RecaptureRecoveryWindow
   case WrongMoveOrder
-  case OnlyMoveNecessity
   case OnlyDefenseNecessity
   case TempoLoss
   case ConversionMiss
@@ -298,13 +349,30 @@ enum RelativeCauseKind:
   case KingForcing
   case MaterialSwing
 
+/** C owns an explicit, fail-closed selector for the direct effects it may
+  * expose. Raw proof projection deliberately ignores this value so assembly
+  * can resolve endpoint deltas before any Cause record is registered.
+  */
+enum DirectEffectAdmission:
+  case Unresolved
+  case Restricted(causalSignatures: Set[String])
+
+  def admittedCausalSignatures: Set[String] =
+    this match
+      case DirectEffectAdmission.Restricted(signatures) => signatures
+      case _                                             => Set.empty
+
+  def productionReady: Boolean =
+    admittedCausalSignatures.nonEmpty
+
 case class RelativeCauseFact(
     kind: RelativeCauseKind,
     comparisonEvidence: EvidenceRef,
     supportEvidence: List[EvidenceRef],
     sourceSide: RelativeCauseSourceSide,
     attribution: CauseAttribution = CauseAttribution.unattributed,
-    proof: Option[RelativeCauseProof] = None
+    proof: Option[RelativeCauseProof] = None,
+    directEffectAdmission: DirectEffectAdmission = DirectEffectAdmission.Unresolved
 ):
   def hasRawTypedDepth(graph: TypedEvidenceGraph): Boolean =
     graph.relativeCauseHasRawTypedDepth(this)
@@ -322,10 +390,12 @@ case class RelativeCauseFact(
     graph.relativeCauseHasOwnedTacticalProof(this)
   def strategicProofIdentity(graph: TypedEvidenceGraph): RelativeCauseStrategicProofIdentity =
     graph.relativeCauseStrategicProofIdentity(this)
-  def identityKey(graph: TypedEvidenceGraph): RelativeCauseIdentityKey =
-    RelativeCauseIdentityKey.from(this, graph)
 
 object RelativeCauseKind:
+  def requiresExactPlanResult(kind: RelativeCauseKind): Boolean =
+    kind == RelativeCauseKind.PlanImprovement ||
+      kind == RelativeCauseKind.PlanContradiction
+
   def defaultAttributionKind(
       kind: RelativeCauseKind,
       sourceSide: Option[RelativeCauseSourceSide]
@@ -345,8 +415,8 @@ object RelativeCauseKind:
             CauseAttributionKind.CandidateCreatesValue
           case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
               RelativeCauseKind.CandidateTacticalLiability | RelativeCauseKind.WrongRecapturer |
-              RelativeCauseKind.WrongMoveOrder | RelativeCauseKind.OnlyMoveNecessity |
-              RelativeCauseKind.OnlyDefenseNecessity | RelativeCauseKind.TempoLoss |
+              RelativeCauseKind.WrongMoveOrder | RelativeCauseKind.OnlyDefenseNecessity |
+              RelativeCauseKind.TempoLoss |
               RelativeCauseKind.ConversionMiss | RelativeCauseKind.TargetPressureRelease |
               RelativeCauseKind.KingSafetyConcession | RelativeCauseKind.ActivityLoss |
               RelativeCauseKind.StrategicConcession | RelativeCauseKind.MissedStrategicImprovement |
@@ -357,7 +427,7 @@ object RelativeCauseKind:
         CauseAttributionKind.SharedContext
       case Some(RelativeCauseSourceSide.Mixed) | None =>
         kind match
-          case RelativeCauseKind.OnlyMoveNecessity | RelativeCauseKind.OnlyDefenseNecessity |
+          case RelativeCauseKind.OnlyDefenseNecessity |
               RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.MissedStrategicImprovement |
               RelativeCauseKind.KingForcing =>
             CauseAttributionKind.ReferenceCreatesResource
@@ -478,14 +548,20 @@ object RelativeCauseKind:
   ): Boolean =
     kind match
       case RelativeCauseKind.PlanImprovement =>
-        event.allCausalResultsRobust
+        event.exactRobustPublicResultAssessment.nonEmpty
       case RelativeCauseKind.PlanContradiction =>
-        event.allCausalResultsRefuted
+        event.exactRefutedPublicResultAssessment.nonEmpty
       case RelativeCauseKind.OpponentRestriction =>
-        event.opponentResourceDeterrence.nonEmpty &&
-          event.structuralConsequences.exists(consequence =>
-            consequence.kind == TransitionConsequenceKind.OpponentMobilityRestriction &&
-              consequence.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
+        (
+          event.opponentResourceDeterrence.nonEmpty &&
+            event.structuralConsequences.exists(consequence =>
+              consequence.kind == TransitionConsequenceKind.OpponentMobilityRestriction &&
+                consequence.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
+            )
+        ) ||
+          (
+            DirectOpponentRestrictionProof.rootMoveDirectlyRestrictsOpponent(event) &&
+              DirectOpponentRestrictionProof.exactRootPawnBlockadeConsequences(event).nonEmpty
           )
       case _ =>
         false
@@ -495,7 +571,9 @@ object RelativeCauseKind:
       consequenceKind: LineConsequenceKind
   ): Boolean =
     kind match
-      case RelativeCauseKind.WrongRecapturer | RelativeCauseKind.RecaptureRecoveryWindow =>
+      case RelativeCauseKind.WrongRecapturer =>
+        consequenceKind == LineConsequenceKind.MaterialLoss
+      case RelativeCauseKind.RecaptureRecoveryWindow =>
         consequenceKind == LineConsequenceKind.RecaptureSequence ||
           consequenceKind == LineConsequenceKind.RecoveryWindow
       case RelativeCauseKind.WrongMoveOrder =>
@@ -582,11 +660,12 @@ object RelativeCauseKind:
           payload.consequencesOf(MobilityLoss) ++
           payload.consequencesOf(FileAccessLoss) ++
           payload.consequencesOf(OutpostConcession)
-      case RelativeCauseKind.StructuralImprovement | RelativeCauseKind.MissedStrategicImprovement |
-          RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
+      case RelativeCauseKind.StructuralImprovement | RelativeCauseKind.MissedStrategicImprovement =>
         payload.positiveConsequences.filter(consequence =>
           StructuralDeltaEvidence.isStructuralAnchorConsequence(consequence.kind)
         )
+      case RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
+        Nil
       case RelativeCauseKind.ConversionMiss =>
         payload.negativeConsequences.filter(consequence =>
           consequence.kind == PromotionPressureConcession ||
@@ -653,88 +732,83 @@ object RelativeCauseKind:
         )
     )
 
-case class RelativeCauseIdentityKey(
+/** Evidence-id-independent causal frame. Two Causes may be compared for
+  * semantic channel subsumption only when every field in this frame agrees.
+  */
+final case class RelativeCauseSemanticFrameKey(
     kind: RelativeCauseKind,
-    comparisonKind: CandidateComparisonKind,
-    referenceLine: LineNodeRef,
-    candidateLine: LineNodeRef,
-    eventLine: LineNodeRef,
+    comparison: CandidateComparisonSemanticKey,
+    eventLine: SemanticLineKey,
     role: RelativeCauseRole,
     sourceSide: RelativeCauseSourceSide,
-    importance: RelativeCauseImportance,
-    comparisonEvidenceId: String,
-    supportEvidenceIds: List[String],
-    evidenceLineIds: List[String],
-    proofDirectSourceIds: List[String],
-    proofContrastSourceIds: List[String],
-    proofContextSupportSourceIds: List[String],
-    proofStrategicAxisKeys: List[String],
-    proofStrategicMechanismKinds: List[StrategicMechanismKind],
-    proofStrategicMechanismSourceIds: List[String],
-    proofStrategicMechanismSignalSourceIds: List[String],
-    proofDirectKinds: List[String],
-    proofContrastKinds: List[String],
-    proofContextSupportKinds: List[String],
-    attributionKind: CauseAttributionKind,
-    attributionRootMoveMatched: Boolean,
-    attributionDirectProofEligible: Boolean
-)
-
-final case class RelativeCauseSemanticKey(
-    kind: RelativeCauseKind,
-    comparisonKind: CandidateComparisonKind,
-    referenceLineId: String,
-    candidateLineId: String,
-    eventLineId: String,
-    role: RelativeCauseRole,
-    sourceSide: RelativeCauseSourceSide,
-    importance: RelativeCauseImportance,
-    attributionKind: CauseAttributionKind,
-    directObjectSignatures: List[String],
-    directProofKindLabels: List[String]
+    attributionKind: CauseAttributionKind
 ):
   def stableKey: String =
     List(
       kind.toString,
-      comparisonKind.toString,
-      referenceLineId,
-      candidateLineId,
-      eventLineId,
+      comparison.stableKey,
+      eventLine.stableKey,
       role.toString,
       sourceSide.toString,
-      importance.toString,
-      attributionKind.toString,
-      directObjectSignatures.mkString(","),
-      directProofKindLabels.mkString(",")
+      attributionKind.toString
+    ).mkString("|")
+
+final case class RelativeCauseSemanticKey(
+    frame: RelativeCauseSemanticFrameKey,
+    directCausalSignatures: List[String],
+    unreadyCauseEvidenceId: Option[String]
+):
+  def kind: RelativeCauseKind = frame.kind
+  def comparisonKind: CandidateComparisonKind = frame.comparison.kind
+  def mover: Color = frame.comparison.mover
+  def referenceLine: SemanticLineKey = frame.comparison.referenceLine
+  def candidateLine: SemanticLineKey = frame.comparison.candidateLine
+  def eventLine: SemanticLineKey = frame.eventLine
+  def role: RelativeCauseRole = frame.role
+  def sourceSide: RelativeCauseSourceSide = frame.sourceSide
+  def attributionKind: CauseAttributionKind = frame.attributionKind
+
+  def sentenceReady: Boolean =
+    directCausalSignatures.nonEmpty && unreadyCauseEvidenceId.isEmpty
+
+  def stableKey: String =
+    List(
+      frame.stableKey,
+      directCausalSignatures.mkString(","),
+      unreadyCauseEvidenceId.getOrElse("")
     ).mkString("|")
 
 object RelativeCauseSemanticKey:
-  def from(cause: RelativeCauseFact, graph: TypedEvidenceGraph): RelativeCauseSemanticKey =
+  def from(
+      cause: RelativeCauseFact,
+      causeEvidenceId: String,
+      graph: TypedEvidenceGraph
+  ): RelativeCauseSemanticKey =
     val comparison = graph.comparisonFor(cause).getOrElse(
       throw IllegalArgumentException(
         s"relative cause '${cause.comparisonEvidence.id}' is not bound to a candidate comparison"
       )
     )
     val binding = graph.requiredRelativeCauseBinding(cause)
-    val directObjects = EvidenceObjectBinding.objectSignatures(
-      EvidenceObjectBinding.fromRelativeCauseForProjection(cause, graph)
-    )
-    val directProofKinds = cause.proof.toList
-      .flatMap(proof => graph.relativeCauseProofKindLabels(cause, proof.directProof))
+    val directChannels = RelativeCauseConstructionAdmission
+      .admittedDirectChannels(cause, graph)
+      .map(_.causalSignature)
       .distinct
       .sorted
-    RelativeCauseSemanticKey(
+    val frame = RelativeCauseSemanticFrameKey(
       kind = cause.kind,
-      comparisonKind = comparison.kind,
-      referenceLineId = comparison.referenceLine.id,
-      candidateLineId = comparison.candidateLine.id,
-      eventLineId = binding.eventLine.id,
+      comparison = CandidateComparisonSemanticKey.from(comparison),
+      eventLine = SemanticLineKey.from(binding.eventLine),
       role = binding.role,
       sourceSide = cause.sourceSide,
-      importance = binding.importance,
-      attributionKind = cause.attribution.kind,
-      directObjectSignatures = directObjects,
-      directProofKindLabels = directProofKinds
+      attributionKind = cause.attribution.kind
+    )
+    RelativeCauseSemanticKey(
+      frame = frame,
+      directCausalSignatures = directChannels,
+      unreadyCauseEvidenceId = Option.unless(
+        RelativeCauseConstructionAdmission.initiallyReady(cause, graph)
+      )(causeEvidenceId)
     )
 
 case class RelativeCauseBinding(
@@ -742,45 +816,8 @@ case class RelativeCauseBinding(
     sourceSide: RelativeCauseSourceSide,
     eventLine: LineNodeRef,
     evidenceLines: List[LineNodeRef],
-    importance: RelativeCauseImportance
+    bindingTier: RelativeCauseBindingTier
 )
-
-object RelativeCauseIdentityKey:
-  def from(cause: RelativeCauseFact, graph: TypedEvidenceGraph): RelativeCauseIdentityKey =
-    val comparison =
-      graph.comparisonFor(cause).getOrElse(
-        throw IllegalArgumentException(
-          s"relative cause '${cause.comparisonEvidence.id}' is not bound to a candidate comparison"
-        )
-      )
-    val binding = graph.requiredRelativeCauseBinding(cause)
-    val strategicProof = graph.relativeCauseStrategicProofIdentity(cause)
-    RelativeCauseIdentityKey(
-      kind = cause.kind,
-      comparisonKind = comparison.kind,
-      referenceLine = comparison.referenceLine,
-      candidateLine = comparison.candidateLine,
-      eventLine = binding.eventLine,
-      role = binding.role,
-      sourceSide = cause.sourceSide,
-      importance = binding.importance,
-      comparisonEvidenceId = cause.comparisonEvidence.id,
-      supportEvidenceIds = cause.supportEvidence.map(_.id).distinct.sorted,
-      evidenceLineIds = binding.evidenceLines.map(_.id).distinct.sorted,
-      proofDirectSourceIds = cause.proof.toList.flatMap(_.directProof.sourceRefs.map(_.id)).distinct.sorted,
-      proofContrastSourceIds = cause.proof.toList.flatMap(_.contrastProof.sourceRefs.map(_.id)).distinct.sorted,
-      proofContextSupportSourceIds = cause.proof.toList.flatMap(_.contextSupport.sourceRefs.map(_.id)).distinct.sorted,
-      proofStrategicAxisKeys = strategicProof.axisKeys,
-      proofStrategicMechanismKinds = strategicProof.mechanismKinds,
-      proofStrategicMechanismSourceIds = strategicProof.mechanismSourceIds,
-      proofStrategicMechanismSignalSourceIds = strategicProof.signalSourceIds,
-      proofDirectKinds = cause.proof.toList.flatMap(proof => graph.relativeCauseProofKindLabels(cause, proof.directProof)).distinct.sorted,
-      proofContrastKinds = cause.proof.toList.flatMap(proof => graph.relativeCauseProofKindLabels(cause, proof.contrastProof)).distinct.sorted,
-      proofContextSupportKinds = cause.proof.toList.flatMap(proof => graph.relativeCauseProofKindLabels(cause, proof.contextSupport)).distinct.sorted,
-      attributionKind = cause.attribution.kind,
-      attributionRootMoveMatched = cause.attribution.rootMoveMatched,
-      attributionDirectProofEligible = cause.attribution.directProofEligible
-    )
 
 object RelativeCauseFact:
   def binding(
@@ -816,15 +853,11 @@ object RelativeCauseFact:
       sourceSide = sourceSide,
       eventLine = eventLine,
       evidenceLines = evidenceLinesFor(referenceLine, candidateLine, supportEvidence, sourceSide),
-      importance = RelativeCauseImportance.from(role, sourceSide, kind)
+      bindingTier = RelativeCauseBindingTier.from(role, sourceSide, kind)
     )
 
   def defaultSourceSide(kind: RelativeCauseKind): RelativeCauseSourceSide =
-    kind match
-      case RelativeCauseKind.OnlyMoveNecessity =>
-        RelativeCauseSourceSide.Reference
-      case _ =>
-        RelativeCauseSourceSide.Shared
+    RelativeCauseSourceSide.Shared
 
   private def semanticSourceSide(
       kind: RelativeCauseKind,
@@ -889,9 +922,7 @@ case class RelativeCauseProofSection(
     role: RelativeCauseProofRole,
     strength: RelativeCauseProofStrength,
     sourceRefs: List[EvidenceRef] = Nil
-):
-  def hasReferences: Boolean =
-    sourceRefs.nonEmpty
+)
 
 object RelativeCauseProofSection:
   def merge(
@@ -921,16 +952,6 @@ case class RelativeCauseProof(
 ):
   def sections: List[RelativeCauseProofSection] =
     List(directProof, contrastProof, contextSupport)
-
-  def proofSections: List[RelativeCauseProofSection] =
-    sections.filter(_.hasReferences)
-  def hasAnyEvidence: Boolean =
-    sections.exists(_.hasReferences)
-  def depthProof: RelativeCauseProof =
-    RelativeCauseProof(
-      directProof = directProof,
-      contrastProof = contrastProof
-    )
 
 object RelativeCauseProof:
   def merge(proofs: List[RelativeCauseProof]): RelativeCauseProof =

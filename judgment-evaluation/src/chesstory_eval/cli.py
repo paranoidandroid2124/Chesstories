@@ -51,6 +51,113 @@ from .attestation import (
 )
 
 
+def _configure_cause_audit_parser(
+    parser: argparse.ArgumentParser,
+    *,
+    historical_v2: bool,
+) -> None:
+    _root_argument(parser)
+    parser.add_argument(
+        "--action",
+        required=True,
+        choices=("run", "compare")
+        if historical_v2
+        else ("freeze", "acquire", "bind-candidate", "run", "compare"),
+    )
+    parser.add_argument("--run-id", required=True)
+    parser.add_argument("--artifacts", type=Path)
+    parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--cases", required=True, type=Path)
+    parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--labels", type=Path)
+    parser.add_argument("--acquisition", type=Path)
+    parser.add_argument("--runtime-run", type=Path)
+    parser.add_argument(
+        "--case-id",
+        action="append",
+        default=[],
+        help="run only the named case; repeat for an affected-family rerun",
+    )
+    parser.add_argument(
+        "--candidate-binding",
+        type=Path,
+        help="post-fix immutable candidate file required before sealed production runtime",
+    )
+    parser.add_argument(
+        "--partition", choices=("explore", "sealed_confirm", "all"), default="all"
+    )
+    parser.add_argument("--stockfish", type=Path)
+    parser.add_argument("--sbt", type=Path)
+    parser.add_argument("--adapter-root", type=Path)
+    parser.add_argument("--cache", type=Path)
+    parser.add_argument("--timeout-seconds", type=float, default=180.0)
+    parser.add_argument("--provider-timeout-seconds", type=float, default=300.0)
+    parser.add_argument("--max-probe-rounds", type=int, default=6)
+    if historical_v2:
+        return
+
+    parser.add_argument(
+        "--oracle-label",
+        action="append",
+        default=[],
+        metavar="ORACLE_ID=PATH",
+        help="independent frozen oracle JSONL; repeat for each oracle",
+    )
+    parser.add_argument("--adjudicated-label", type=Path)
+    parser.add_argument(
+        "--contamination-exclusion",
+        action="append",
+        default=[],
+        metavar="CASE_ID=REASON",
+        help="pre-freeze case excluded from sealed selection with an auditable reason",
+    )
+    parser.add_argument("--corpus-id", default="cause-audit-v1")
+    parser.add_argument("--candidate-id")
+    parser.add_argument(
+        "--component",
+        action="append",
+        default=[],
+        type=Path,
+        help="candidate source file to bind; repeat for every in-scope production file",
+    )
+    parser.add_argument(
+        "--reference-labels",
+        type=Path,
+        help="optional manifest-bound labels used only to force reference engine lines",
+    )
+    parser.add_argument(
+        "--oracle-run-manifest",
+        type=Path,
+        help="partition-scoped typed oracle and frozen open-world binding",
+    )
+    parser.add_argument(
+        "--base-oracle",
+        type=Path,
+        help="base typed oracle artifact bound by the v3 run manifest",
+    )
+    parser.add_argument(
+        "--open-world-candidates",
+        type=Path,
+        help="source-blind out-of-set candidate artifact bound by the v3 run manifest",
+    )
+    parser.add_argument(
+        "--open-world-adjudication",
+        type=Path,
+        help="frozen open-world adjudication artifact bound by the v3 run manifest",
+    )
+    parser.add_argument(
+        "--open-world-arm-inventory",
+        type=Path,
+        help="frozen all-arm actual-cascade observation inventory bound by v3 candidates",
+    )
+    parser.add_argument("--depth", type=int, default=18)
+    parser.add_argument("--multipv", type=int, default=4)
+    parser.add_argument("--repetitions", type=int, default=1)
+    parser.add_argument("--stability-tolerance-cp", type=int, default=20)
+    parser.add_argument("--threads", type=int, default=1)
+    parser.add_argument("--hash-mb", type=int, default=64)
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="judgment-eval",
@@ -225,82 +332,15 @@ def _parser() -> argparse.ArgumentParser:
 
     cause_audit = subparsers.add_parser(
         "cause-audit",
-        help="freeze, acquire, run, or compare the broad blind C cause audit",
+        help="run the sole active v3 broad blind C cause audit contract",
     )
-    _root_argument(cause_audit)
-    cause_audit.add_argument(
-        "--action",
-        required=True,
-        choices=("freeze", "acquire", "bind-candidate", "run", "compare"),
+    _configure_cause_audit_parser(cause_audit, historical_v2=False)
+
+    historical_cause_audit = subparsers.add_parser(
+        "historical-cause-audit-v2",
+        help="explicitly replay or compare the archived v2 Cause contract",
     )
-    cause_audit.add_argument("--run-id", required=True)
-    cause_audit.add_argument("--artifacts", type=Path)
-    cause_audit.add_argument("--output", required=True, type=Path)
-    cause_audit.add_argument("--cases", required=True, type=Path)
-    cause_audit.add_argument("--manifest", type=Path)
-    cause_audit.add_argument(
-        "--oracle-label",
-        action="append",
-        default=[],
-        metavar="ORACLE_ID=PATH",
-        help="independent frozen oracle JSONL; repeat for each oracle",
-    )
-    cause_audit.add_argument("--adjudicated-label", type=Path)
-    cause_audit.add_argument(
-        "--contamination-exclusion",
-        action="append",
-        default=[],
-        metavar="CASE_ID=REASON",
-        help="pre-freeze case excluded from sealed selection with an auditable reason",
-    )
-    cause_audit.add_argument("--corpus-id", default="cause-audit-v1")
-    cause_audit.add_argument("--candidate-id")
-    cause_audit.add_argument(
-        "--component",
-        action="append",
-        default=[],
-        type=Path,
-        help="candidate source file to bind; repeat for every in-scope production file",
-    )
-    cause_audit.add_argument(
-        "--reference-labels",
-        type=Path,
-        help="optional manifest-bound labels used only to force reference engine lines",
-    )
-    cause_audit.add_argument(
-        "--labels", type=Path, help="manifest-bound oracle labels for compare"
-    )
-    cause_audit.add_argument("--acquisition", type=Path)
-    cause_audit.add_argument("--runtime-run", type=Path)
-    cause_audit.add_argument(
-        "--case-id",
-        action="append",
-        default=[],
-        help="run only the named case; repeat for an affected-family rerun",
-    )
-    cause_audit.add_argument(
-        "--candidate-binding",
-        type=Path,
-        help="post-fix immutable candidate file required before sealed production runtime",
-    )
-    cause_audit.add_argument(
-        "--partition", choices=("explore", "sealed_confirm", "all"), default="all"
-    )
-    cause_audit.add_argument("--stockfish", type=Path)
-    cause_audit.add_argument("--sbt", type=Path)
-    cause_audit.add_argument("--adapter-root", type=Path)
-    cause_audit.add_argument("--cache", type=Path)
-    cause_audit.add_argument("--depth", type=int, default=18)
-    cause_audit.add_argument("--multipv", type=int, default=4)
-    cause_audit.add_argument("--repetitions", type=int, default=1)
-    cause_audit.add_argument("--stability-tolerance-cp", type=int, default=20)
-    cause_audit.add_argument("--threads", type=int, default=1)
-    cause_audit.add_argument("--hash-mb", type=int, default=64)
-    cause_audit.add_argument("--timeout-seconds", type=float, default=180.0)
-    cause_audit.add_argument(
-        "--provider-timeout-seconds", type=float, default=300.0
-    )
-    cause_audit.add_argument("--max-probe-rounds", type=int, default=6)
+    _configure_cause_audit_parser(historical_cause_audit, historical_v2=True)
     return parser
 
 
@@ -1980,8 +2020,11 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
             )
             return 0
-        if arguments.command == "cause-audit":
-            from .cause_audit import execute_cause_audit_action
+        if arguments.command in {"cause-audit", "historical-cause-audit-v2"}:
+            from .cause_audit import (
+                execute_cause_audit_action,
+                execute_historical_cause_audit_v2_action,
+            )
 
             artifact_root = (arguments.artifacts or (root / "artifacts")).resolve()
             _require_output_outside_run_root(
@@ -1993,7 +2036,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 artifact_root=artifact_root, run_id=arguments.run_id
             )
             store = ArtifactStore(artifact_root, arguments.run_id)
-            report = execute_cause_audit_action(
+            executor = (
+                execute_historical_cause_audit_v2_action
+                if arguments.command == "historical-cause-audit-v2"
+                else execute_cause_audit_action
+            )
+            report = executor(
                 root=root, store=store, arguments=arguments
             )
             _write_json(arguments.output, report)

@@ -1,9 +1,10 @@
 package io.chesstory.runtime
 
 import chess.opening.OpeningDb
+import lila.chessjudgment.analysis.assembly.JudgmentBoundaryIntervention
 import lila.chessjudgment.analysis.opening.OpeningRecognitionIndex
 import lila.chessjudgment.model.{ PlanId, ProbePurpose, ProbeRequest }
-import lila.chessjudgment.model.judgment.OpeningRecognitionMatchKind
+import lila.chessjudgment.model.judgment.*
 import play.api.libs.json.*
 
 class RuntimeProtocolTest extends munit.FunSuite:
@@ -40,14 +41,45 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals(recognized.map(_.matchedBy), Some(OpeningRecognitionMatchKind.PositionTransposition))
     assertEquals(recognized.flatMap(_.bestIdentity.flatMap(_.name)), Some("Catalan Opening: Closed"))
 
-  test("v2 response exposes only chess meaning and the probe contract"):
+  test("v3 response exposes only Cause-owned chess meaning and the probe contract"):
     RuntimeResources.verify()
-    val result = RuntimeProtocol.evaluate(request())
+    val trace = RuntimeProtocol.evaluateWithBoundary(request(), JudgmentBoundaryIntervention.identity)
+    val result = trace.result
     assertEquals(result.httpStatus, 200)
+    val execution = trace.boundaryExecution.getOrElse(fail("expected a closed judgment execution"))
+    val packet = execution.packet.getOrElse(fail("expected a closed judgment packet"))
+    assertEquals(packet.causeExposureResolution, execution.r.causeExposureResolution)
+    assertEquals(packet.causeDispositionLedger, execution.r.causeDispositionLedger)
+    assertEquals(
+      packet.directCauseImportanceResolution,
+      execution.r.causeExposureResolution.importanceResolution
+    )
     assertEquals((result.body \ "schema_version").as[String], RuntimeProtocol.ResponseSchema)
     assert(Set("schema_version", "probe_requests", "move_review").subsetOf(result.body.keys), result.body.keys)
     (result.body \ "move_review").asOpt[JsObject].foreach: review =>
-      assert(Set("renderable", "explanations").subsetOf(review.keys), review.keys)
+      assert(Set("renderable", "idea_status", "idea_status_detail", "explanations").subsetOf(review.keys), review.keys)
+      val explanations = (review \ "explanations").asOpt[JsArray].toList.flatMap(_.value)
+      val publicCauseIds = explanations.flatMap(explanation =>
+        (explanation \ "ideas").asOpt[JsArray].toList.flatMap(_.value)
+      ).flatMap(idea => (idea \ "cause_evidence_id").asOpt[String])
+      assertEquals(publicCauseIds.distinct.size, publicCauseIds.size)
+      assertEquals(publicCauseIds.toSet, packet.causeDispositionLedger.selectedCauseEvidenceIds)
+      assertEquals(
+        (review \ "idea_status_detail").as[JsObject],
+        RuntimeProtocol.causeDispositionPublicJson(packet.causeDispositionLedger)
+      )
+      assertEquals(
+        (review \ "idea_status").as[String],
+        if publicCauseIds.nonEmpty then "certified" else "no_certified_differential_idea"
+      )
+      explanations.foreach: explanation =>
+        assert(!(explanation.as[JsObject].keys contains "line"), explanation)
+        (explanation \ "ideas").asOpt[JsArray].toList.flatMap(_.value).foreach: idea =>
+          assert((idea \ "comparison_exposure_rank").asOpt[Int].nonEmpty, idea)
+          assert((idea \ "priority_rank").toOption.isEmpty, idea)
+          (idea \ "channels").as[List[JsObject]].foreach: channel =>
+            assert((channel \ "proof_segment").toOption.nonEmpty, channel)
+            assert((channel \ "importance_effect").toOption.nonEmpty, channel)
     val serialized = Json.stringify(result.body)
     List(
       "evidenceGraph",
@@ -68,9 +100,343 @@ class RuntimeProtocolTest extends munit.FunSuite:
       "consequence_carriers",
       "principal_plan_event",
       "enabled_by_starting_move",
-      "ply_offset"
+      "tested_plan_limits",
+      "chess_relations",
+      "semantic_names",
+      "packet_linked_claim_ids",
+      "selected_public_idea_claim_ids",
+      "priority_rank",
+      "priority_rank_meaning"
     ).foreach: forbidden =>
       assert(!serialized.contains(s"\"$forbidden\""), clues(forbidden))
+
+  test("a request without a primary engine comparison is unavailable before projection"):
+    val noPlayedLine = input + ("variations" -> Json.arr(
+      Json.obj(
+        "moves" -> Json.arr("e2e4", "e7e5", "g1f3"),
+        "scoreCp" -> 30,
+        "depth" -> 16
+      )
+    ))
+    val trace = RuntimeProtocol.evaluateWithBoundary(
+      request(body = noPlayedLine),
+      JudgmentBoundaryIntervention.identity
+    )
+    assertEquals(trace.result.httpStatus, 422)
+    assertEquals((trace.result.body \ "error").as[String], "move_review_not_buildable")
+    assertEquals(trace.projection, None)
+
+  test("packet-selected Cause projection fails closed instead of omitting the idea"):
+    val expected = Json.obj("cause" -> "selected")
+    assertEquals(
+      RuntimeProtocol.requireSelectedCauseProjection("cause-1", Some(expected)),
+      expected
+    )
+    val error = intercept[IllegalStateException]:
+      RuntimeProtocol.requireSelectedCauseProjection[JsObject]("cause-1", None)
+    assert(error.getMessage.contains("cause-1"))
+
+    val host = "registered-host"
+    assertEquals(RuntimeProtocol.requireSelectedCauseHost("claim-1", Some(host)), host)
+    val hostError = intercept[IllegalStateException]:
+      RuntimeProtocol.requireSelectedCauseHost[String]("claim-1", None)
+    assert(hostError.getMessage.contains("claim-1"))
+
+  test("Cause disposition summary is canonical and exact public coverage fails closed"):
+    val position = PositionNodeRef(
+      chess.variant.Standard.initialFen.value,
+      0,
+      Some(chess.White)
+    )
+    def causeRef(id: String): EvidenceRef =
+      EvidenceRef(
+        id,
+        EvidenceProducer.RelativeMoveProducer,
+        EvidenceLayer.RelativeCause,
+        position,
+        None,
+        EvidenceScope.Counterfactual,
+        EvidenceConfidence.EngineBacked
+      )
+    val emptySummary = RuntimeProtocol.causeDispositionPublicJson(CauseDispositionLedger.empty)
+    assertEquals(
+      (emptySummary \ "authority").as[String],
+      RuntimeProtocol.CauseDispositionSummaryAuthority
+    )
+    assertEquals((emptySummary \ "total_cause_count").as[Int], 0)
+    assertEquals(
+      (emptySummary \ "abstention_codes").as[List[String]],
+      List("no_relative_cause_generated")
+    )
+    assertEquals(
+      (emptySummary \ "status_counts").as[JsObject].values.map(_.as[Int]).sum,
+      0
+    )
+    assertEquals(
+      (emptySummary \ "reason_counts").as[JsObject].values.map(_.as[Int]).sum,
+      0
+    )
+
+    val unready = CauseDisposition(
+      causeEvidence = causeRef("cause-unready"),
+      status = CauseDispositionStatus.ObjectUnready,
+      reason = CauseDispositionReason.ObjectReadinessFailed,
+      proposedClaimIds = Nil,
+      certifiedClaimIds = Nil,
+      rankEligibleClaimIds = Nil,
+      selectedOwnerClaimId = None,
+      relatedCauseEvidenceIds = Nil,
+      relatedClaimIds = Nil
+    )
+    val abstainingLedger = CauseDispositionLedger(List(unready))
+    val abstainingSummary = RuntimeProtocol.causeDispositionPublicJson(abstainingLedger)
+    assertEquals((abstainingSummary \ "total_cause_count").as[Int], 1)
+    assertEquals((abstainingSummary \ "selected_cause_ids").as[List[String]], Nil)
+    assertEquals(
+      (abstainingSummary \ "abstention_codes").as[List[String]],
+      List("object_readiness_failed")
+    )
+    assertEquals(
+      (abstainingSummary \ "status_counts" \ "object_unready").as[Int],
+      1
+    )
+    assertEquals(
+      (abstainingSummary \ "reason_counts" \ "object_readiness_failed").as[Int],
+      1
+    )
+
+    val selected = CauseDisposition(
+      causeEvidence = causeRef("cause-selected"),
+      status = CauseDispositionStatus.Selected,
+      reason = CauseDispositionReason.PlayerFacingSelection,
+      proposedClaimIds = List("claim-selected"),
+      certifiedClaimIds = List("claim-selected"),
+      rankEligibleClaimIds = List("claim-selected"),
+      selectedOwnerClaimId = Some("claim-selected"),
+      relatedCauseEvidenceIds = Nil,
+      relatedClaimIds = Nil
+    )
+    val selectedLedger = CauseDispositionLedger(List(selected))
+    val selectedSummary = RuntimeProtocol.causeDispositionPublicJson(selectedLedger)
+    assertEquals(
+      (selectedSummary \ "selected_cause_ids").as[List[String]],
+      List(selected.causeEvidence.id)
+    )
+    assertEquals((selectedSummary \ "abstention_codes").as[List[String]], Nil)
+    RuntimeProtocol.requirePublicIdeaCauseCoverage(
+      selectedLedger,
+      List(selected.causeEvidence.id)
+    )
+    intercept[IllegalStateException]:
+      RuntimeProtocol.requirePublicIdeaCauseCoverage(selectedLedger, Nil)
+    intercept[IllegalStateException]:
+      RuntimeProtocol.requirePublicIdeaCauseCoverage(
+        selectedLedger,
+        List(selected.causeEvidence.id, selected.causeEvidence.id)
+      )
+
+    val withheld = RuntimeProtocol.emptyMoveMeaningPayloadJson(
+      primaryEngineBacked = false,
+      ledger = selectedLedger
+    )
+    assertEquals((withheld \ "idea_status").as[String], "unavailable")
+    assertEquals((withheld \ "explanations").as[JsArray].value.toList, Nil)
+    assertEquals(
+      (withheld \ "idea_status_detail" \ "selected_cause_ids").as[List[String]],
+      List(selected.causeEvidence.id)
+    )
+
+  test("empty idea status keeps engine availability separate from ledger abstention"):
+    val ledger = CauseDispositionLedger.empty
+    val engineBacked = RuntimeProtocol.emptyMoveMeaningPayloadJson(
+      primaryEngineBacked = true,
+      ledger = ledger
+    )
+    val unavailable = RuntimeProtocol.emptyMoveMeaningPayloadJson(
+      primaryEngineBacked = false,
+      ledger = ledger
+    )
+
+    assertEquals(
+      (engineBacked \ "idea_status").as[String],
+      "no_certified_differential_idea"
+    )
+    assertEquals((unavailable \ "idea_status").as[String], "unavailable")
+    assertEquals(
+      (engineBacked \ "idea_status_detail").as[JsObject],
+      RuntimeProtocol.causeDispositionPublicJson(ledger)
+    )
+    assertEquals(
+      (unavailable \ "idea_status_detail").as[JsObject],
+      RuntimeProtocol.causeDispositionPublicJson(ledger)
+    )
+
+  test("proof segment public codec preserves only typed ordered move steps"):
+    val segment = DirectCauseProofSegment(
+      DirectCauseProofTerminalRelation.ProducesLineConsequence,
+      List(
+        DirectCauseProofStep(0, "e2e4", DirectCauseProofStepRole.RootAction),
+        DirectCauseProofStep(1, "e7e5", DirectCauseProofStepRole.CausalLink),
+        DirectCauseProofStep(2, "d1h5", DirectCauseProofStepRole.TerminalEvent)
+      )
+    )
+    assertEquals(
+      RuntimeProtocol.directCauseProofSegmentPublicJson(segment),
+      Json.obj(
+        "terminal_relation" -> "produces_line_consequence",
+        "steps" -> Json.arr(
+          Json.obj("ply_offset" -> 0, "move_uci" -> "e2e4", "role" -> "root_action"),
+          Json.obj("ply_offset" -> 1, "move_uci" -> "e7e5", "role" -> "causal_link"),
+          Json.obj("ply_offset" -> 2, "move_uci" -> "d1h5", "role" -> "terminal_event")
+        )
+      )
+    )
+
+  test("direct-effect admission exposes only fail-closed unresolved and restricted states"):
+    assertEquals(
+      RuntimeProtocol.directEffectAdmissionPublicJson(DirectEffectAdmission.Unresolved),
+      Json.obj("status" -> "unresolved", "causal_signatures" -> Json.arr())
+    )
+    assertEquals(
+      RuntimeProtocol.directEffectAdmissionPublicJson(
+        DirectEffectAdmission.Restricted(Set("owned-b", "owned-a"))
+      ),
+      Json.obj(
+        "status" -> "restricted",
+        "causal_signatures" -> Json.arr("owned-a", "owned-b")
+      )
+    )
+    assert(!DirectEffectAdmission.Unresolved.productionReady)
+    assert(!DirectEffectAdmission.Restricted(Set.empty).productionReady)
+    assert(DirectEffectAdmission.Restricted(Set("owned-a")).productionReady)
+
+  test("material outcome projection keeps event salience separate from durable value"):
+    val descriptor = RootOwnedEffectDescriptor(
+      identity = RootOwnedEffectIdentity(
+        RootOwnedEffectPrimitiveKind.LineEpisode,
+        List("outcome:material-transfer"),
+        Nil,
+        Nil
+      ),
+      magnitude = DirectEffectMagnitudeKnowledge.Exact(
+        DirectCauseImportanceMeasure.MaterialOutcome(
+          durableNetCp = 400,
+          onsetPlyOffset = 0
+        )
+      ),
+      materialEventSalience = Some(RootOwnedMaterialEventSalience(
+        moveUci = "d1d8",
+        plyOffset = 0,
+        capturedRole = EvidencePieceRole("queen"),
+        square = EvidenceSquare("d8"),
+        targetValueCp = 900
+      ))
+    )
+
+    assertEquals(
+      RuntimeProtocol.rootOwnedEffectDescriptorPublicJson(descriptor),
+      Json.obj(
+        "effect_scope" -> Json.obj(
+          "primitive_kind" -> "line_episode",
+          "target_signatures" -> Json.arr("outcome:material-transfer"),
+          "plan_ids" -> Json.arr(),
+          "strategic_axes" -> Json.arr()
+        ),
+        "magnitude_status" -> "exact",
+        "measure" -> Json.obj(
+          "kind" -> "material_outcome",
+          "durable_net_cp" -> 400,
+          "onset_ply_offset" -> 0
+        ),
+        "material_event_salience" -> Json.obj(
+          "move_uci" -> "d1d8",
+          "ply_offset" -> 0,
+          "captured_role" -> "queen",
+          "square" -> "d8",
+          "target_value_cp" -> 900
+        )
+      )
+    )
+
+  test("importance projection preserves every typed profile relation and decision"):
+    val relations = List(
+      DirectCauseImportanceRelationDecision(
+        "cause-a",
+        "channel-a1",
+        "cause-b",
+        "channel-b1",
+        DirectCauseImportanceRelation.Dominates,
+        Some("material:materialgain")
+      ),
+      DirectCauseImportanceRelationDecision(
+        "cause-a",
+        "channel-a2",
+        "cause-b",
+        "channel-b2",
+        DirectCauseImportanceRelation.Dominates,
+        Some("material:materialgain")
+      ),
+      DirectCauseImportanceRelationDecision(
+        "cause-a",
+        "channel-a1",
+        "cause-c",
+        "channel-c1",
+        DirectCauseImportanceRelation.Incomparable,
+        None
+      )
+    )
+    val decisions = List(
+      DirectCauseImportanceDecision("cause-a", List("channel-a1", "channel-a2"), Nil, Nil, false),
+      DirectCauseImportanceDecision("cause-b", List("channel-b1", "channel-b2"), Nil, List("cause-a"), true),
+      DirectCauseImportanceDecision("cause-c", Nil, List("channel-c1"), Nil, false)
+    )
+    val json = RuntimeProtocol.directCauseImportancePublicJson(
+      DirectCauseImportanceResolution(
+        selectedCauseEvidenceIds = List("cause-a", "cause-b", "cause-c"),
+        profiles = Nil,
+        relations = relations,
+        decisions = decisions
+      )
+    )
+    val projectedRelations = (json \ "relations").as[JsArray].value.map(_.as[JsObject])
+
+    assertEquals(
+      (json \ "comparison_exposure_rank_meaning").as[String],
+      "comparison_exposure_authority"
+    )
+    assert((json \ "priority_rank_meaning").toOption.isEmpty)
+    assertEquals((json \ "selected_cause_ids").as[List[String]], List("cause-a", "cause-b", "cause-c"))
+    assertEquals(projectedRelations.size, 3)
+    assertEquals(
+      projectedRelations.flatMap(item => (item \ "left_causal_signature").asOpt[String]).toSet,
+      Set("channel-a1", "channel-a2")
+    )
+    assert(projectedRelations.exists(item =>
+      (item \ "relation").asOpt[String].contains("incomparable") &&
+        (item \ "domain").toOption.contains(JsNull)
+    ))
+    assertEquals((json \ "relation_summary" \ "comparable_profile_pairs").as[Int], 2)
+    assertEquals((json \ "relation_summary" \ "incomparable_profile_pairs").as[Int], 1)
+    assertEquals((json \ "decisions").as[JsArray].value.size, 3)
+
+    val scope = RootOwnedEffectIdentity(
+      RootOwnedEffectPrimitiveKind.PlanResult,
+      List("plansubject:minority-attack", "square:b5"),
+      List("minority-attack"),
+      List(RootOwnedStrategicAxisIdentity(
+        StrategicAxisKind.PlanCoherence,
+        StrategicAxisPolarity.Gain,
+        "minority-attack",
+        Some(StrategicAxisComparisonOutcome.ReferenceOnly)
+      ))
+    )
+    val scopeJson = RuntimeProtocol.rootOwnedEffectIdentityJson(scope)
+    assertEquals((scopeJson \ "primitive_kind").as[String], "plan_result")
+    assertEquals((scopeJson \ "plan_ids").as[List[String]], List("minority-attack"))
+    assertEquals(
+      (scopeJson \ "strategic_axes" \ 0 \ "label").as[String],
+      "minority-attack"
+    )
 
   test("v1 rejects unknown schema and oversized PV bundles"):
     assertEquals(RuntimeProtocol.evaluate(request("v2")).httpStatus, 400)
@@ -78,6 +444,17 @@ class RuntimeProtocolTest extends munit.FunSuite:
     val result = RuntimeProtocol.evaluate(request(body = oversized))
     assertEquals(result.httpStatus, 400)
     assertEquals((result.body \ "error").as[String], "input_limits_exceeded")
+    val zeroMate = input + ("variations" -> Json.arr(
+      Json.obj(
+        "moves" -> Json.arr("e2e4", "e7e5"),
+        "scoreCp" -> 0,
+        "mate" -> 0,
+        "depth" -> 18
+      )
+    ))
+    val zeroMateResult = RuntimeProtocol.evaluate(request(body = zeroMate))
+    assertEquals(zeroMateResult.httpStatus, 400)
+    assertEquals((zeroMateResult.body \ "error").as[String], "input_limits_exceeded")
 
   test("public probe request omits internal graph metadata"):
     val json = RuntimeProtocol.publicProbeRequestJson(
@@ -151,7 +528,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals(duplicate.httpStatus, 400)
     assertEquals((duplicate.body \ "error").as[String], "input_limits_exceeded")
 
-  test("public opponent resource probe is admitted without inventing a complete explanation"):
+  test("engine-backed verdict remains public when no differential Cause is certified"):
     val baseInput = Json.obj(
       "fen" -> "r4rkb/4np1p/p1b1p1pP/1p2P3/3P4/3BBN2/P2K1PP1/1R5R w - - 1 20",
       "playedMoveUci" -> "f3g5",
@@ -184,15 +561,84 @@ class RuntimeProtocolTest extends munit.FunSuite:
       "opponentResourceMove" -> (probe \ "opponentResourceMove").as[String],
       "variationHash" -> (probe \ "variationHash").as[String]
     )
-    val closed = RuntimeProtocol.evaluate(request(body = baseInput + ("probeResults" -> Json.arr(result))))
+    val closedTrace = RuntimeProtocol.evaluateWithBoundary(
+      request(body = baseInput + ("probeResults" -> Json.arr(result))),
+      JudgmentBoundaryIntervention.identity
+    )
+    val closed = closedTrace.result
     assertEquals(closed.httpStatus, 200)
-    assertEquals((closed.body \ "status").as[String], "withheld")
-    assertEquals((closed.body \ "availability" \ "reason").asOpt[String], Some("no_player_facing_reason"))
-    assert(!(closed.body \ "move_review" \ "renderable").as[Boolean], closed.body)
+    assertEquals((closed.body \ "status").as[String], "ready")
+    assertEquals((closed.body \ "availability" \ "reason").asOpt[String], None)
+    assert((closed.body \ "move_review" \ "renderable").as[Boolean], closed.body)
+    val verdict = (closed.body \ "move_review" \ "verdict").as[JsObject]
+    val packet = closedTrace.boundaryExecution
+      .flatMap(_.packet)
+      .getOrElse(fail("expected a packet-backed exact verdict"))
+    assertEquals(
+      RuntimeProtocol.primaryEngineBackedVerdictPublicJson(packet),
+      Some(verdict)
+    )
+    assertEquals((verdict \ "comparison_kind").as[String], "played_vs_best")
+    assertEquals((verdict \ "mover").as[String], "white")
+    assertEquals((verdict \ "played_move").as[String], "f3g5")
+    assert((verdict \ "reference_move").asOpt[String].exists(_.nonEmpty), verdict)
+    val delta = (verdict \ "candidate_win_percent_delta_for_mover").as[Double]
+    val loss = (verdict \ "win_percent_loss_for_mover").as[Double]
+    assertEquals(loss, (-delta).max(0.0))
+    val classificationAuthority = RuntimeProtocol
+      .primaryEngineBackedVerdictClassificationAuthorityJson(packet)
+      .getOrElse(fail("expected central verdict classification authority"))
+    assertEquals(
+      (classificationAuthority \ "policy_version").as[String],
+      RuntimeProtocol.VerdictClassificationPolicyVersion
+    )
+    assertEquals(
+      (classificationAuthority \ "expected_verdict_code").as[String],
+      (verdict \ "verdict_code").as[String]
+    )
+    assertEquals(
+      (classificationAuthority \ "candidate_win_percent_delta_for_mover").as[Double],
+      delta
+    )
+    assertEquals(
+      (classificationAuthority \ "win_percent_loss_for_mover").as[Double],
+      loss
+    )
+    assertEquals(
+      (closed.body \ "move_review" \ "explanations").as[List[JsObject]],
+      Nil
+    )
+    assertEquals(
+      (closed.body \ "move_review" \ "idea_status").as[String],
+      "no_certified_differential_idea"
+    )
+    val dispositionDetail =
+      (closed.body \ "move_review" \ "idea_status_detail").as[JsObject]
+    assertEquals(packet.causeDispositionLedger.selectedCauseEvidenceIds, Set.empty[String])
+    assertEquals(
+      dispositionDetail,
+      RuntimeProtocol.causeDispositionPublicJson(packet.causeDispositionLedger)
+    )
+    val expectedAbstentionCodes =
+      if packet.causeDispositionLedger.dispositions.isEmpty then
+        List("no_relative_cause_generated")
+      else
+        packet.causeDispositionLedger.dispositions
+          .map(disposition =>
+            disposition.reason.toString
+              .replaceAll("([a-z0-9])([A-Z])", "$1_$2")
+              .toLowerCase
+          )
+          .distinct
+          .sorted
+    assertEquals(
+      (dispositionDetail \ "abstention_codes").as[List[String]],
+      expectedAbstentionCodes
+    )
     val pendingIds = (closed.body \ "probe_requests").as[JsArray].value.flatMap(value => (value \ "id").asOpt[String])
     assert(!pendingIds.contains((probe \ "id").as[String]), pendingIds)
 
-  test("client tablebase proof returns human chess moves and closes only its exact request"):
+  test("client tablebase proof closes its request without bypassing selected Cause exposure"):
     val baseInput = Json.obj(
       "fen" -> "8/1p1k4/1P6/2PK4/8/8/8/8 w - - 0 1",
       "playedMoveUci" -> "d5e5",
@@ -236,8 +682,5 @@ class RuntimeProtocolTest extends munit.FunSuite:
     val closed = RuntimeProtocol.evaluate(request(body = baseInput + ("probeResults" -> Json.arr(probeResult))))
     assertEquals(closed.httpStatus, 200)
     assert(!(closed.body \ "probe_requests").as[JsArray].value.exists(request => (request \ "id").asOpt[String].contains((probe \ "id").as[String])))
-    val exactProofs = (closed.body \\ "exact_proof").flatMap(_.asOpt[JsObject])
-    assert(exactProofs.exists(proof => (proof \ "kind").asOpt[String].contains("zugzwang")))
-    val replies = exactProofs.flatMap(proof => (proof \ "legal_replies").asOpt[List[JsObject]].getOrElse(Nil))
-    assertEquals(replies.flatMap(reply => (reply \ "uci").asOpt[String]).distinct.sorted, List("d7c8", "d7d8", "d7e7", "d7e8"))
-    assert(replies.forall(reply => (reply \ "san").asOpt[String].nonEmpty && (reply \ "notation").asOpt[String].exists(_.startsWith("3..."))))
+    assert((closed.body \\ "exact_proof").isEmpty)
+    assert((closed.body \\ "exact_endgame_techniques").isEmpty)

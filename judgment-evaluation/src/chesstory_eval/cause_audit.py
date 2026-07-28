@@ -15,6 +15,14 @@ import chess
 
 from .canonicalize import Canonicalizer
 from .capture import ArtifactStore, utc_now
+from .cause_semantics import (
+    canonical_open_world_cause_candidate,
+    canonical_open_world_cause_observation,
+    cause_matches_typed_oracle,
+    judge_typed_case,
+    open_world_meaning_matches_candidate,
+    validate_typed_oracle_label,
+)
 from .hashing import json_bytes, read_json, read_jsonl, sha256_file, sha256_json
 from .model import ContractError, IntegrityError
 from .probe_completion import (
@@ -30,24 +38,81 @@ from .stockfish import acquire_stockfish_evidence
 FREEZE_SCHEMA_VERSION = "chesstory.eval.cause-audit-freeze.v1"
 ACQUISITION_SCHEMA_VERSION = "chesstory.eval.cause-audit-acquisition.v1"
 RUNTIME_RUN_SCHEMA_VERSION = "chesstory.eval.cause-audit-runtime-run.v1"
-ACTUAL_VIEW_SCHEMA_VERSION = "chesstory.eval.cause-audit-actual-cascade.v1"
-JUDGMENT_SCHEMA_VERSION = "chesstory.eval.cause-audit-judgment.v1"
-REPORT_SCHEMA_VERSION = "chesstory.eval.cause-audit-report.v1"
+ACTUAL_VIEW_SCHEMA_VERSION = "chesstory.eval.cause-audit-actual-cascade.v2"
+JUDGMENT_SCHEMA_VERSION = "chesstory.eval.cause-audit-judgment.v2"
+REPORT_SCHEMA_VERSION = "chesstory.eval.cause-audit-report.v2"
+TYPED_ACTUAL_VIEW_SCHEMA_VERSION = "chesstory.eval.cause-audit-actual-cascade.v3"
+TYPED_JUDGMENT_SCHEMA_VERSION = "chesstory.eval.cause-audit-judgment.v3"
+TYPED_REPORT_SCHEMA_VERSION = "chesstory.eval.cause-audit-report.v3"
+TYPED_ORACLE_SCHEMA_VERSION = "chesstory.eval.cause-audit-oracle.v3"
+TYPED_ORACLE_RUN_SCHEMA_VERSION = "chesstory.eval.cause-audit-oracle-run.v3"
+TYPED_OPEN_WORLD_CANDIDATE_SCHEMA_VERSION = (
+    "chesstory.eval.cause-audit-open-world-candidates.v3"
+)
+TYPED_OPEN_WORLD_ADJUDICATION_SCHEMA_VERSION = (
+    "chesstory.eval.cause-audit-open-world-adjudication.v3"
+)
+TYPED_OPEN_WORLD_ARM_INVENTORY_SCHEMA_VERSION = (
+    "chesstory.eval.cause-audit-open-world-arm-inventory.v3"
+)
 RUNTIME_REQUEST_SCHEMA = "chesstory.move-meaning.request.v1"
-RUNTIME_OBSERVATION_SCHEMA = "chesstory.cause-audit-runtime-observation.v1"
+RUNTIME_OBSERVATION_SCHEMA = "chesstory.cause-audit-runtime-observation.v2"
+TYPED_RUNTIME_OBSERVATION_SCHEMA = "chesstory.cause-audit-runtime-observation.v3"
+HISTORICAL_ORACLE_SCHEMA_VERSION = "cause-audit-curation-v1"
+RUNTIME_RESPONSE_SCHEMA = "chesstory.move-meaning.response.v3"
+CAUSE_ADAPTER_NAME = "chesstory-cause-audit-runtime-adapter"
 CAUSE_ADAPTER_MAIN = (
     "io.chesstory.evaluation.runtimeadapter.CauseAuditAdapterCli"
 )
+ACTIVE_CAUSE_ADAPTER_ARGUMENT = "--observation-schema-version=3"
+HISTORICAL_CAUSE_ADAPTER_ARGUMENT = "--historical-observation-schema-version=2"
 PARTITIONS = ("explore", "sealed_confirm")
 SPLIT_SALT = "cause-audit-v1-family-seal"
+OBJECT_TUPLE_ASSESSMENT = "structural-completeness-only"
+ATTRIBUTION_SEMANTIC_ASSESSMENT = "not-performed-no-typed-oracle-polarity"
+TYPED_SEALED_PROJECTION_BLOCK = (
+    "typed sealed comparison is disabled until judgments and reports use a "
+    "redacted projection that cannot retain meaning_id"
+)
 
 
-def _schema_path(root: Path, name: str) -> Path:
-    return root / "schemas" / "cause-audit-v1" / f"{name}.schema.json"
+def _schema_series(schema_version: str | None) -> str:
+    if schema_version is None or schema_version.endswith(".v1"):
+        return "cause-audit-v1"
+    if schema_version.endswith(".v2"):
+        return "cause-audit-v2"
+    if schema_version.endswith(".v3"):
+        return "cause-audit-v3"
+    raise ContractError(f"unsupported cause audit schema version: {schema_version}")
 
 
-def _schema_tools(root: Path) -> tuple[SchemaRegistry, Canonicalizer]:
-    registry = SchemaRegistry(root / "schemas" / "cause-audit-v1")
+def _cause_adapter_command(sbt: Path, actual_schema_version: str) -> list[str]:
+    if actual_schema_version == TYPED_ACTUAL_VIEW_SCHEMA_VERSION:
+        adapter_argument = ACTIVE_CAUSE_ADAPTER_ARGUMENT
+    elif actual_schema_version == ACTUAL_VIEW_SCHEMA_VERSION:
+        adapter_argument = HISTORICAL_CAUSE_ADAPTER_ARGUMENT
+    else:
+        raise ContractError(
+            f"unsupported cause audit run contract: {actual_schema_version}"
+        )
+    return [
+        str(sbt),
+        "-batch",
+        "-error",
+        f"runMain {CAUSE_ADAPTER_MAIN} {adapter_argument}",
+    ]
+
+
+def _schema_path(
+    root: Path, name: str, schema_version: str | None = None
+) -> Path:
+    return root / "schemas" / _schema_series(schema_version) / f"{name}.schema.json"
+
+
+def _schema_tools(
+    root: Path, schema_version: str | None = None
+) -> tuple[SchemaRegistry, Canonicalizer]:
+    registry = SchemaRegistry(root / "schemas" / _schema_series(schema_version))
     return registry, Canonicalizer(registry)
 
 
@@ -260,6 +325,845 @@ def _load_labels(
     rows.sort(key=lambda item: str(item["case_id"]))
     canonical.sort(key=lambda item: str(item["case_id"]))
     return rows, canonical
+
+
+def _peek_label_schema_version(path: Path) -> str:
+    resolved = path.resolve(strict=True)
+    try:
+        with resolved.open("r", encoding="utf-8") as handle:
+            for raw_line in handle:
+                if not raw_line.strip():
+                    continue
+                value = json.loads(raw_line)
+                if not isinstance(value, Mapping) or not isinstance(
+                    value.get("schema_version"), str
+                ):
+                    raise ContractError("oracle label first row has no schema_version")
+                return str(value["schema_version"])
+    except (OSError, json.JSONDecodeError) as error:
+        raise ContractError(f"cannot inspect oracle labels: {error}") from error
+    raise ContractError("oracle label file is empty")
+
+
+def _load_typed_labels(
+    *,
+    root: Path,
+    path: Path,
+    partition_cases: Sequence[Mapping[str, Any]],
+    partition: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    if partition not in PARTITIONS:
+        raise ContractError("typed oracle loading requires one physical partition")
+    registry, canonicalizer = _schema_tools(root, TYPED_ORACLE_SCHEMA_VERSION)
+    try:
+        raw_rows = read_jsonl(path.resolve(strict=True))
+    except ValueError as error:
+        raise ContractError(str(error)) from error
+    case_by_id = {str(item["case_id"]): item for item in partition_cases}
+    rows: list[dict[str, Any]] = []
+    canonical: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    schema_path = _schema_path(
+        root, "oracle-label", TYPED_ORACLE_SCHEMA_VERSION
+    )
+    for index, raw in enumerate(raw_rows, 1):
+        row = _object(raw, f"typed oracle label row {index}")
+        if row.get("schema_version") != TYPED_ORACLE_SCHEMA_VERSION:
+            raise ContractError(
+                f"typed oracle row {index} has a mixed schema version"
+            )
+        if row.get("partition") != partition:
+            raise IntegrityError(
+                "typed oracle shard contains a row from another partition"
+            )
+        case_id = str(row.get("case_id", ""))
+        if case_id in seen:
+            raise ContractError(f"duplicate typed oracle case_id: {case_id}")
+        case = case_by_id.get(case_id)
+        if case is None:
+            raise IntegrityError(
+                "typed oracle shard contains a case outside its frozen partition"
+            )
+        item = _validate_and_canonicalize(
+            registry=registry,
+            canonicalizer=canonicalizer,
+            schema_path=schema_path,
+            document=row,
+            label=f"typed oracle label row {index}",
+        )
+        validate_typed_oracle_label(item, case)
+        _assert_ascii(item, f"typed oracle label {case_id}")
+        rows.append(item)
+        canonical.append(item)
+        seen.add(case_id)
+    if not rows:
+        raise ContractError("typed oracle shard has no labels")
+    if seen != set(case_by_id):
+        missing = sorted(set(case_by_id) - seen)
+        raise IntegrityError(
+            f"typed oracle shard does not cover its frozen partition: {missing[:5]}"
+        )
+    rows.sort(key=lambda item: str(item["case_id"]))
+    canonical.sort(key=lambda item: str(item["case_id"]))
+    return rows, canonical
+
+
+def _verify_typed_oracle_run_manifest(
+    *,
+    root: Path,
+    path: Path,
+    base_oracle_path: Path,
+    labels_path: Path,
+    arm_inventory_path: Path,
+    candidate_set_path: Path,
+    adjudication_path: Path,
+    labels: Sequence[Mapping[str, Any]],
+    partition_cases: Sequence[Mapping[str, Any]],
+    manifest_path: Path,
+    cases_path: Path,
+    partition: str,
+) -> dict[str, Any]:
+    registry, canonicalizer = _schema_tools(root, TYPED_ORACLE_RUN_SCHEMA_VERSION)
+    raw = _read_object(path, "typed oracle run manifest")
+    value = _validate_and_canonicalize(
+        registry=registry,
+        canonicalizer=canonicalizer,
+        schema_path=_schema_path(
+            root, "oracle-run-manifest", TYPED_ORACLE_RUN_SCHEMA_VERSION
+        ),
+        document=raw,
+        label="typed oracle run manifest",
+    )
+    if value.get("partition") != partition:
+        raise IntegrityError("typed oracle run manifest partition mismatch")
+    if value.get("freeze_manifest_sha256") != sha256_file(
+        manifest_path.resolve(strict=True)
+    ):
+        raise IntegrityError("typed oracle run manifest freeze binding failed")
+    if value.get("cases_file_sha256") != sha256_file(cases_path.resolve(strict=True)):
+        raise IntegrityError("typed oracle run manifest cases binding failed")
+    if value.get("run_oracle_file_sha256") != sha256_file(
+        labels_path.resolve(strict=True)
+    ):
+        raise IntegrityError("typed oracle run manifest label binding failed")
+    if value.get("base_oracle_file_sha256") != sha256_file(
+        base_oracle_path.resolve(strict=True)
+    ):
+        raise IntegrityError("typed oracle run manifest base-oracle binding failed")
+    if value.get("case_ids_sha256") != _ids_hash(labels):
+        raise IntegrityError("typed oracle run manifest case-ID binding failed")
+    open_world = _object(value.get("open_world"), "typed oracle open-world state")
+    if open_world.get("candidate_set_sha256") != sha256_file(
+        candidate_set_path.resolve(strict=True)
+    ):
+        raise IntegrityError("typed oracle candidate-set binding failed")
+    if open_world.get("adjudication_sha256") != sha256_file(
+        adjudication_path.resolve(strict=True)
+    ):
+        raise IntegrityError("typed oracle adjudication binding failed")
+    if open_world.get("status") != "frozen" or open_world.get("pending_count") != 0:
+        raise ContractError(
+            "typed oracle comparison requires a frozen open-world graph with no pending candidates"
+        )
+    if open_world.get("source_blind") is not True:
+        raise ContractError("typed oracle open-world adjudication was not source blind")
+    if open_world.get("statistics_unblinded") is not False:
+        raise ContractError("typed oracle was frozen after statistical unblinding")
+
+    base_labels, _ = _load_typed_labels(
+        root=root,
+        path=base_oracle_path,
+        partition_cases=partition_cases,
+        partition=partition,
+    )
+    arm_inventory = _load_open_world_arm_inventory(
+        root=root,
+        path=arm_inventory_path,
+        base_oracle_path=base_oracle_path,
+        manifest_path=manifest_path,
+        cases_path=cases_path,
+        labels=base_labels,
+        partition=partition,
+    )
+    candidate_set = _load_open_world_candidate_set(
+        root=root,
+        path=candidate_set_path,
+        base_oracle_path=base_oracle_path,
+        arm_inventory_path=arm_inventory_path,
+        arm_inventory=arm_inventory,
+        labels=base_labels,
+        partition=partition,
+    )
+    adjudication = _load_open_world_adjudication(
+        root=root,
+        path=adjudication_path,
+        candidate_set_path=candidate_set_path,
+        candidate_set=candidate_set,
+        partition=partition,
+    )
+    accepted = [
+        item
+        for item in adjudication["decisions"]
+        if item["decision"] == "accepted"
+    ]
+    merged = _merge_open_world_labels(
+        root=root,
+        base_labels=base_labels,
+        accepted_decisions=accepted,
+        case_judgments=list(adjudication["case_judgments"]),
+        candidate_set=candidate_set,
+        partition_cases=partition_cases,
+    )
+    canonical_run = sorted(
+        (_object(item, "typed run-oracle label") for item in labels),
+        key=lambda item: str(item["case_id"]),
+    )
+    if merged != canonical_run:
+        raise IntegrityError(
+            "typed run oracle is not the exact base-plus-accepted all-arm merge"
+        )
+
+    candidates = list(candidate_set["candidates"])
+    decisions = list(adjudication["decisions"])
+    rejected_count = sum(item["decision"] == "rejected" for item in decisions)
+    accepted_rows = _accepted_meaning_rows(accepted, candidate_set)
+    expected_open_world = {
+        "arm_inventory_sha256": sha256_file(
+            arm_inventory_path.resolve(strict=True)
+        ),
+        "arm_inventory_semantic_sha256": sha256_json(arm_inventory),
+        "arm_ids_sha256": _arm_ids_hash(arm_inventory),
+        "arm_count": len(arm_inventory["arms"]),
+        "candidate_count": len(candidates),
+        "adjudication_count": len(decisions),
+        "accepted_count": len(accepted),
+        "rejected_count": rejected_count,
+        "case_judgment_count": len(adjudication["case_judgments"]),
+        "case_judgments_sha256": sha256_json(adjudication["case_judgments"]),
+        "base_oracle_semantic_sha256": sha256_json(base_labels),
+        "accepted_meanings_sha256": sha256_json(accepted_rows),
+        "merged_oracle_semantic_sha256": sha256_json(merged),
+        "merge_scope": "all_arms",
+    }
+    for field, expected in expected_open_world.items():
+        if open_world.get(field) != expected:
+            raise IntegrityError(
+                f"typed oracle open-world {field} binding failed"
+            )
+    if open_world.get("pending_count") != 0:
+        raise ContractError("typed open-world adjudication has pending candidates")
+    return {
+        "manifest": value,
+        "base_labels": base_labels,
+        "candidate_set": candidate_set,
+        "adjudication": adjudication,
+        "arm_inventory": arm_inventory,
+    }
+
+
+def _arm_ids_hash(inventory: Mapping[str, Any]) -> str:
+    return sha256_json(sorted(str(item["arm_id"]) for item in inventory["arms"]))
+
+
+def _candidate_row(case_id: str, payload: Mapping[str, Any]) -> dict[str, Any]:
+    canonical_payload = _object(payload, "open-world candidate payload")
+    c_semantics_sha256 = sha256_json(canonical_payload["c_semantics"])
+    return {
+        "candidate_id": "ow:"
+        + sha256_json(
+            {
+                "case_id": case_id,
+                "c_semantics_sha256": c_semantics_sha256,
+            }
+        ),
+        "case_id": case_id,
+        "c_semantics_sha256": c_semantics_sha256,
+        "payload_sha256": sha256_json(canonical_payload),
+        "payload": canonical_payload,
+    }
+
+
+def _merge_candidate_payloads(
+    payloads: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    if not payloads:
+        raise ContractError("cannot merge an empty open-world observation set")
+    semantics = [
+        _object(item["c_semantics"], "open-world observation C semantics")
+        for item in payloads
+    ]
+    if any(item != semantics[0] for item in semantics[1:]):
+        raise IntegrityError("open-world observations merge different C semantics")
+    stages = sorted(
+        {
+            str(stage)
+            for payload in payloads
+            for stage in payload["observed_stages"]
+        }
+    )
+    variants = {
+        json_bytes(variant): _object(variant, "open-world selection variant")
+        for payload in payloads
+        for variant in payload["selection_variants"]
+    }
+    merged = {
+        "observed_stages": stages,
+        "c_semantics": semantics[0],
+        "selection_variants": [variants[key] for key in sorted(variants)],
+    }
+    _validate_open_world_candidate_stages(merged)
+    return merged
+
+
+def _inventory_expected_candidates(
+    inventory: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    by_key: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for arm in inventory["arms"]:
+        for cascade in arm["actual_cascades"]:
+            case_id = str(cascade["case_id"])
+            for observation in cascade["unmatched_cause_observations"]:
+                key = (case_id, str(observation["c_semantics_sha256"]))
+                by_key.setdefault(key, []).append(
+                    _object(observation["payload"], "arm Cause observation payload")
+                )
+    candidates = [
+        _candidate_row(
+            case_id,
+            {"c_semantics": _merge_candidate_payloads(payloads)["c_semantics"]},
+        )
+        for (case_id, _), payloads in by_key.items()
+    ]
+    return sorted(candidates, key=json_bytes)
+
+
+def _load_open_world_arm_inventory(
+    *,
+    root: Path,
+    path: Path,
+    base_oracle_path: Path,
+    manifest_path: Path,
+    cases_path: Path,
+    labels: Sequence[Mapping[str, Any]],
+    partition: str,
+) -> dict[str, Any]:
+    registry, canonicalizer = _schema_tools(root, TYPED_ORACLE_SCHEMA_VERSION)
+    value = _validate_and_canonicalize(
+        registry=registry,
+        canonicalizer=canonicalizer,
+        schema_path=_schema_path(
+            root, "open-world-arm-inventory", TYPED_ORACLE_SCHEMA_VERSION
+        ),
+        document=_read_object(path, "typed open-world arm inventory"),
+        label="typed open-world arm inventory",
+    )
+    if value.get("schema_version") != TYPED_OPEN_WORLD_ARM_INVENTORY_SCHEMA_VERSION:
+        raise ContractError("unsupported typed open-world arm inventory schema")
+    expected_bindings = {
+        "partition": partition,
+        "freeze_manifest_sha256": sha256_file(manifest_path.resolve(strict=True)),
+        "cases_file_sha256": sha256_file(cases_path.resolve(strict=True)),
+        "base_oracle_file_sha256": sha256_file(base_oracle_path.resolve(strict=True)),
+        "case_ids_sha256": _ids_hash(labels),
+    }
+    for field, expected in expected_bindings.items():
+        if value.get(field) != expected:
+            raise IntegrityError(f"typed open-world arm inventory {field} mismatch")
+
+    known_cases = {str(item["case_id"]) for item in labels}
+    arm_ids: set[str] = set()
+    runtime_hashes: set[str] = set()
+    for arm in value["arms"]:
+        arm_id = str(arm["arm_id"])
+        runtime_hash = str(arm["runtime_run_file_sha256"])
+        if arm_id in arm_ids or runtime_hash in runtime_hashes:
+            raise ContractError("typed open-world arm inventory has duplicate arms")
+        producer = _object(arm["producer_contract"], "arm producer contract")
+        if arm["producer_contract_sha256"] != sha256_json(producer):
+            raise IntegrityError("typed open-world arm producer hash mismatch")
+        cascades = list(arm["actual_cascades"])
+        cascade_ids = [str(item["case_id"]) for item in cascades]
+        if len(cascade_ids) != len(set(cascade_ids)):
+            raise ContractError("typed open-world arm repeats a case cascade")
+        if set(cascade_ids) != known_cases:
+            raise IntegrityError(
+                "each typed open-world arm must cover the exact frozen case set"
+            )
+        if (
+            arm["case_ids_sha256"] != value["case_ids_sha256"]
+            or arm["case_ids_sha256"] != sha256_json(sorted(cascade_ids))
+        ):
+            raise IntegrityError("typed open-world arm case-ID hash mismatch")
+        if arm["actual_cascades_sha256"] != sha256_json(cascades):
+            raise IntegrityError("typed open-world arm cascade-set hash mismatch")
+        for cascade in cascades:
+            observations = list(cascade["unmatched_cause_observations"])
+            if cascade["observation_count"] != len(observations):
+                raise IntegrityError("typed open-world cascade observation count mismatch")
+            semantic_ids: set[str] = set()
+            for observation in observations:
+                payload = _object(observation["payload"], "arm Cause observation")
+                c_hash = sha256_json(payload["c_semantics"])
+                if observation["c_semantics_sha256"] != c_hash:
+                    raise IntegrityError("arm Cause observation C-semantics hash mismatch")
+                if observation["payload_sha256"] != sha256_json(payload):
+                    raise IntegrityError("arm Cause observation payload hash mismatch")
+                if c_hash in semantic_ids:
+                    raise ContractError(
+                        "one arm cascade splits identical C semantics into duplicates"
+                    )
+                _validate_open_world_candidate_stages(payload)
+                semantic_ids.add(c_hash)
+        arm_ids.add(arm_id)
+        runtime_hashes.add(runtime_hash)
+    return value
+
+
+def _load_open_world_candidate_set(
+    *,
+    root: Path,
+    path: Path,
+    base_oracle_path: Path,
+    arm_inventory_path: Path,
+    arm_inventory: Mapping[str, Any],
+    labels: Sequence[Mapping[str, Any]],
+    partition: str,
+) -> dict[str, Any]:
+    registry, canonicalizer = _schema_tools(root, TYPED_ORACLE_SCHEMA_VERSION)
+    value = _validate_and_canonicalize(
+        registry=registry,
+        canonicalizer=canonicalizer,
+        schema_path=_schema_path(
+            root, "open-world-candidate-set", TYPED_ORACLE_SCHEMA_VERSION
+        ),
+        document=_read_object(path, "typed open-world candidate set"),
+        label="typed open-world candidate set",
+    )
+    if value.get("schema_version") != TYPED_OPEN_WORLD_CANDIDATE_SCHEMA_VERSION:
+        raise ContractError("unsupported typed open-world candidate schema")
+    if value.get("partition") != partition:
+        raise IntegrityError("typed open-world candidate partition mismatch")
+    if value.get("arm_scope") != "all_arms":
+        raise ContractError("typed open-world candidates must cover all arms")
+    expected_inventory_bindings = {
+        "arm_inventory_sha256": sha256_file(
+            arm_inventory_path.resolve(strict=True)
+        ),
+        "arm_inventory_semantic_sha256": sha256_json(arm_inventory),
+        "arm_ids_sha256": _arm_ids_hash(arm_inventory),
+    }
+    for field, expected in expected_inventory_bindings.items():
+        if value.get(field) != expected:
+            raise IntegrityError(
+                f"typed open-world candidate {field} binding failed"
+            )
+    if value.get("base_oracle_file_sha256") != sha256_file(
+        base_oracle_path.resolve(strict=True)
+    ):
+        raise IntegrityError("typed open-world candidate base-oracle binding failed")
+    if value.get("case_ids_sha256") != _ids_hash(labels):
+        raise IntegrityError("typed open-world candidate case-ID binding failed")
+
+    label_ids = {str(item["case_id"]) for item in labels}
+    candidate_ids: set[str] = set()
+    semantic_keys: set[tuple[str, str]] = set()
+    for candidate in value["candidates"]:
+        candidate_id = str(candidate["candidate_id"])
+        case_id = str(candidate["case_id"])
+        payload = _object(candidate["payload"], "typed open-world candidate payload")
+        c_semantics = _object(
+            payload["c_semantics"], "typed open-world candidate C semantics"
+        )
+        if case_id not in label_ids:
+            raise IntegrityError(
+                "typed open-world candidate references a case outside its partition"
+            )
+        c_semantics_sha256 = sha256_json(c_semantics)
+        expected_id = "ow:" + sha256_json(
+            {"case_id": case_id, "c_semantics_sha256": c_semantics_sha256}
+        )
+        if candidate["c_semantics_sha256"] != c_semantics_sha256:
+            raise IntegrityError("typed open-world candidate C-semantics hash mismatch")
+        if candidate["payload_sha256"] != sha256_json(payload):
+            raise IntegrityError("typed open-world candidate payload hash mismatch")
+        if candidate_id != expected_id:
+            raise IntegrityError("typed open-world candidate identity mismatch")
+        if candidate_id in candidate_ids:
+            raise ContractError("duplicate typed open-world candidate_id")
+        semantic_key = (case_id, c_semantics_sha256)
+        if semantic_key in semantic_keys:
+            raise ContractError(
+                "typed open-world C semantics were split into multiple candidates"
+            )
+        candidate_ids.add(candidate_id)
+        semantic_keys.add(semantic_key)
+    if list(value["candidates"]) != _inventory_expected_candidates(arm_inventory):
+        raise IntegrityError(
+            "typed open-world candidates are not the exact all-arm unmatched-C union"
+        )
+    return value
+
+
+def _validate_open_world_candidate_stages(payload: Mapping[str, Any]) -> None:
+    stages = set(str(item) for item in payload["observed_stages"])
+    variants = list(payload["selection_variants"])
+    if "c_generated" not in stages:
+        raise ContractError("typed open-world candidate was not observed at C")
+    if ("r_selected" in stages) != bool(variants):
+        raise ContractError(
+            "typed open-world candidate R stage and selection variants disagree"
+        )
+    prerequisite = {
+        "ja_admitted": "jp_direct",
+        "r_selected": "ja_admitted",
+        "packet_selected": "r_selected",
+        "public_selected": "packet_selected",
+    }
+    for stage, required in prerequisite.items():
+        if stage in stages and required not in stages:
+            raise ContractError(
+                f"typed open-world candidate {stage} lacks {required}"
+            )
+
+
+def _load_open_world_adjudication(
+    *,
+    root: Path,
+    path: Path,
+    candidate_set_path: Path,
+    candidate_set: Mapping[str, Any],
+    partition: str,
+) -> dict[str, Any]:
+    registry, canonicalizer = _schema_tools(root, TYPED_ORACLE_SCHEMA_VERSION)
+    value = _validate_and_canonicalize(
+        registry=registry,
+        canonicalizer=canonicalizer,
+        schema_path=_schema_path(
+            root, "open-world-adjudication", TYPED_ORACLE_SCHEMA_VERSION
+        ),
+        document=_read_object(path, "typed open-world adjudication"),
+        label="typed open-world adjudication",
+    )
+    if value.get("schema_version") != TYPED_OPEN_WORLD_ADJUDICATION_SCHEMA_VERSION:
+        raise ContractError("unsupported typed open-world adjudication schema")
+    if value.get("partition") != partition:
+        raise IntegrityError("typed open-world adjudication partition mismatch")
+    if value.get("arm_scope") != "all_arms":
+        raise ContractError("typed open-world adjudication must cover all arms")
+    if value.get("candidate_set_sha256") != sha256_file(
+        candidate_set_path.resolve(strict=True)
+    ):
+        raise IntegrityError("typed open-world adjudication candidate-set binding failed")
+    if value.get("source_blind") is not True:
+        raise ContractError("typed open-world adjudication was not source blind")
+    if value.get("statistics_unblinded") is not False:
+        raise ContractError(
+            "typed open-world adjudication occurred after statistical unblinding"
+        )
+
+    candidate_by_id = {
+        str(item["candidate_id"]): item for item in candidate_set["candidates"]
+    }
+    decision_ids: list[str] = []
+    for decision in value["decisions"]:
+        candidate_id = str(decision["candidate_id"])
+        candidate = candidate_by_id.get(candidate_id)
+        if candidate is None:
+            raise IntegrityError(
+                "typed open-world adjudication references an unknown candidate"
+            )
+        if decision["candidate_sha256"] != sha256_json(candidate):
+            raise IntegrityError(
+                "typed open-world adjudication candidate hash mismatch"
+            )
+        if decision["decision"] == "accepted":
+            meaning = _object(
+                decision["verified_meaning"], "accepted open-world meaning"
+            )
+            if decision["verified_meaning_sha256"] != sha256_json(meaning):
+                raise IntegrityError("accepted open-world meaning hash mismatch")
+            if not open_world_meaning_matches_candidate(
+                meaning, _object(candidate["payload"], "candidate payload")
+            ):
+                raise ContractError(
+                    "accepted open-world meaning does not exactly verify its candidate"
+                )
+        decision_ids.append(candidate_id)
+    if len(decision_ids) != len(set(decision_ids)):
+        raise ContractError("duplicate typed open-world adjudication decision")
+    if set(decision_ids) != set(candidate_by_id):
+        raise ContractError(
+            "typed open-world adjudication has missing or extra candidate decisions"
+        )
+    case_ids: set[str] = set()
+    for judgment in value["case_judgments"]:
+        case_id = str(judgment["case_id"])
+        if case_id in case_ids:
+            raise ContractError("duplicate typed open-world case judgment")
+        policy = _object(judgment["policy"], "open-world final case policy")
+        if judgment["policy_sha256"] != sha256_json(policy):
+            raise IntegrityError("typed open-world final case policy hash mismatch")
+        meaning_ids = [str(item) for item in policy["meaning_ids"]]
+        if policy["meaning_ids_sha256"] != sha256_json(sorted(meaning_ids)):
+            raise IntegrityError("typed open-world final meaning-ID hash mismatch")
+        candidate_ids = [
+            str(item) for item in judgment["accepted_public_candidate_ids"]
+        ]
+        if any(item not in candidate_by_id for item in candidate_ids):
+            raise IntegrityError(
+                "typed open-world case judgment references an unknown candidate"
+            )
+        if any(
+            candidate_by_id[item]["case_id"] != case_id for item in candidate_ids
+        ):
+            raise IntegrityError(
+                "typed open-world case judgment crosses candidate cases"
+            )
+        case_ids.add(case_id)
+    return value
+
+
+def _accepted_meaning_rows(
+    accepted_decisions: Sequence[Mapping[str, Any]],
+    candidate_set: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    candidate_by_id = {
+        str(item["candidate_id"]): item for item in candidate_set["candidates"]
+    }
+    return sorted(
+        (
+            {
+                "candidate_id": str(decision["candidate_id"]),
+                "case_id": str(
+                    candidate_by_id[str(decision["candidate_id"])]["case_id"]
+                ),
+                "verified_meaning": _object(
+                    decision["verified_meaning"], "accepted open-world meaning"
+                ),
+            }
+            for decision in accepted_decisions
+        ),
+        key=lambda item: str(item["candidate_id"]),
+    )
+
+
+def _merge_open_world_labels(
+    *,
+    root: Path,
+    base_labels: Sequence[Mapping[str, Any]],
+    accepted_decisions: Sequence[Mapping[str, Any]],
+    case_judgments: Sequence[Mapping[str, Any]],
+    candidate_set: Mapping[str, Any],
+    partition_cases: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    candidate_by_id = {
+        str(item["candidate_id"]): item for item in candidate_set["candidates"]
+    }
+    case_by_id = {str(item["case_id"]): item for item in partition_cases}
+    merged_by_id = {
+        str(item["case_id"]): copy.deepcopy(dict(item)) for item in base_labels
+    }
+    public_candidates_by_case: dict[str, set[str]] = {}
+    for decision in accepted_decisions:
+        candidate = candidate_by_id[str(decision["candidate_id"])]
+        case_id = str(candidate["case_id"])
+        merged_by_id[case_id]["meanings"].append(
+            copy.deepcopy(decision["verified_meaning"])
+        )
+        if decision["verified_meaning"]["exposure_policy"] in {
+            "primary",
+            "complementary",
+            "fallback_only",
+        }:
+            public_candidates_by_case.setdefault(case_id, set()).add(
+                str(candidate["candidate_id"])
+            )
+
+    judgment_by_case = {
+        str(item["case_id"]): item for item in case_judgments
+    }
+    if set(judgment_by_case) != set(public_candidates_by_case):
+        raise ContractError(
+            "accepted public-capable candidates require exactly one final case judgment"
+        )
+    for case_id, expected_candidate_ids in public_candidates_by_case.items():
+        judgment = judgment_by_case[case_id]
+        if set(judgment["accepted_public_candidate_ids"]) != expected_candidate_ids:
+            raise ContractError(
+                "final case judgment does not cover exactly its accepted public candidates"
+            )
+        policy = _object(judgment["policy"], "open-world final case policy")
+        exact_meaning_ids = sorted(
+            str(item["meaning_id"]) for item in merged_by_id[case_id]["meanings"]
+        )
+        if list(policy["meaning_ids"]) != exact_meaning_ids:
+            raise IntegrityError(
+                "final case policy does not own the exact post-merge meaning set"
+            )
+        merged_by_id[case_id]["disposition"] = policy["disposition"]
+        merged_by_id[case_id]["priority"] = copy.deepcopy(policy["priority"])
+        accepted_by_id = {
+            str(decision["candidate_id"]): decision
+            for decision in accepted_decisions
+        }
+        top = set(str(item) for item in policy["priority"]["required_top_one_of"])
+        for candidate_id in expected_candidate_ids:
+            meaning = accepted_by_id[candidate_id]["verified_meaning"]
+            meaning_id = str(meaning["meaning_id"])
+            if meaning_id in top:
+                if (
+                    meaning.get("generation_policy") != "required"
+                    or meaning.get("exposure_policy") != "primary"
+                ):
+                    raise ContractError(
+                        "accepted top candidate must be a required primary meaning"
+                    )
+            elif meaning.get("generation_policy") != "allowed":
+                raise ContractError(
+                    "accepted non-top public candidate must remain an allowed meaning"
+                )
+
+    registry, canonicalizer = _schema_tools(root, TYPED_ORACLE_SCHEMA_VERSION)
+    schema_path = _schema_path(root, "oracle-label", TYPED_ORACLE_SCHEMA_VERSION)
+    merged: list[dict[str, Any]] = []
+    for case_id in sorted(merged_by_id):
+        canonical = _validate_and_canonicalize(
+            registry=registry,
+            canonicalizer=canonicalizer,
+            schema_path=schema_path,
+            document=merged_by_id[case_id],
+            label=f"merged typed oracle label {case_id}",
+        )
+        validate_typed_oracle_label(canonical, case_by_id[case_id])
+        merged.append(canonical)
+    return merged
+
+
+def _verify_open_world_candidate_coverage(
+    *,
+    candidate_set: Mapping[str, Any],
+    base_labels: Sequence[Mapping[str, Any]],
+    views: Mapping[str, Mapping[str, Any]],
+) -> None:
+    base_by_id = {str(item["case_id"]): item for item in base_labels}
+    candidate_by_key = {
+        (str(item["case_id"]), str(item["c_semantics_sha256"])): item
+        for item in candidate_set["candidates"]
+    }
+    for case_id, view in sorted(views.items()):
+        base_label = base_by_id.get(case_id)
+        if base_label is None:
+            raise IntegrityError(
+                "typed runtime view has no partition-scoped base oracle label"
+            )
+        for cause in view["causes"]:
+            if cause_matches_typed_oracle(cause, base_label):
+                continue
+            payload = canonical_open_world_cause_candidate(cause)
+            c_semantics = _object(
+                payload["c_semantics"], "generated open-world C semantics"
+            )
+            key = (case_id, sha256_json(c_semantics))
+            candidate = candidate_by_key.get(key)
+            if candidate is None:
+                raise ContractError(
+                    "unmatched generated C Cause has no source-blind open-world candidate"
+                )
+            frozen_payload = _object(
+                candidate["payload"], "frozen open-world candidate payload"
+            )
+            if frozen_payload["c_semantics"] != c_semantics:
+                raise IntegrityError(
+                    "open-world candidate C semantics differ from the generated Cause"
+                )
+            if frozen_payload != payload:
+                raise IntegrityError(
+                    "source-blind candidate contains behavior beyond exact C semantics"
+                )
+
+
+def _unmatched_observations_for_view(
+    *,
+    base_label: Mapping[str, Any],
+    view: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    payloads_by_hash: dict[str, list[dict[str, Any]]] = {}
+    for cause in view["causes"]:
+        if cause_matches_typed_oracle(cause, base_label):
+            continue
+        payload = canonical_open_world_cause_observation(cause)
+        c_hash = sha256_json(payload["c_semantics"])
+        payloads_by_hash.setdefault(c_hash, []).append(payload)
+    observations = []
+    for c_hash, payloads in payloads_by_hash.items():
+        payload = _merge_candidate_payloads(payloads)
+        observations.append(
+            {
+                "c_semantics_sha256": c_hash,
+                "payload_sha256": sha256_json(payload),
+                "payload": payload,
+            }
+        )
+    return sorted(observations, key=json_bytes)
+
+
+def _runtime_producer_contract(runtime_run: Mapping[str, Any]) -> dict[str, Any]:
+    adapter = _object(runtime_run.get("adapter"), "runtime producer adapter")
+    return {
+        "runtime_run_schema_version": runtime_run.get("schema_version"),
+        "runtime_observation_schema": adapter.get("runtime_observation_schema"),
+        "adapter_main_class": adapter.get("main_class"),
+        "adapter_launcher_sha256": adapter.get("sbt_sha256"),
+        "engine_sha256": runtime_run.get("engine_sha256"),
+        "candidate_binding_sha256": runtime_run.get("candidate_binding_sha256"),
+    }
+
+
+def _verify_runtime_against_arm_inventory(
+    *,
+    runtime_run_path: Path,
+    runtime_run: Mapping[str, Any],
+    arm_inventory: Mapping[str, Any],
+    base_labels: Sequence[Mapping[str, Any]],
+    views: Mapping[str, Mapping[str, Any]],
+) -> None:
+    runtime_hash = sha256_file(runtime_run_path.resolve(strict=True))
+    matching = [
+        item
+        for item in arm_inventory["arms"]
+        if item["runtime_run_file_sha256"] == runtime_hash
+    ]
+    if len(matching) != 1:
+        raise IntegrityError(
+            "typed runtime run is not exactly one frozen open-world inventory arm"
+        )
+    arm = matching[0]
+    if arm["arm_id"] != runtime_run.get("run_id"):
+        raise IntegrityError("typed runtime run ID differs from its inventory arm ID")
+    producer = _runtime_producer_contract(runtime_run)
+    if arm["producer_contract"] != producer or arm[
+        "producer_contract_sha256"
+    ] != sha256_json(producer):
+        raise IntegrityError("typed runtime producer contract differs from inventory")
+    cascade_by_id = {
+        str(item["case_id"]): item for item in arm["actual_cascades"]
+    }
+    if set(cascade_by_id) != set(views):
+        raise IntegrityError("typed runtime case scope differs from its inventory arm")
+    base_by_id = {str(item["case_id"]): item for item in base_labels}
+    for case_id, view in views.items():
+        cascade = cascade_by_id[case_id]
+        if cascade["actual_cascade_sha256"] != sha256_json(view):
+            raise IntegrityError(
+                "typed runtime actual cascade differs from its frozen arm hash"
+            )
+        observations = _unmatched_observations_for_view(
+            base_label=base_by_id[case_id], view=view
+        )
+        if cascade["unmatched_cause_observations"] != observations:
+            raise IntegrityError(
+                "typed runtime unmatched-C observations differ from its frozen arm"
+            )
 
 
 def _ids_hash(rows: Sequence[Mapping[str, Any]]) -> str:
@@ -1152,12 +2056,18 @@ def _actual_view(
     result_hashes: set[str],
     issued_probe_count: int,
     stop_reason: str,
+    schema_version: str,
 ) -> dict[str, Any]:
     causes = observation.get("causes", [])
     if not isinstance(causes, list) or not all(
         isinstance(item, Mapping) for item in causes
     ):
         raise ContractError("cause adapter observation has no cause array")
+    only_move_constraints = observation.get("only_move_constraints", [])
+    if not isinstance(only_move_constraints, list) or not all(
+        isinstance(item, Mapping) for item in only_move_constraints
+    ):
+        raise ContractError("cause adapter observation has invalid only-move constraints")
     status = observation.get("status")
     if status not in {"complete", "unavailable", "adapter_error"}:
         raise ContractError("cause adapter observation status is invalid")
@@ -1176,8 +2086,32 @@ def _actual_view(
     remaining = observation.get("probe_requests", [])
     if not isinstance(remaining, list):
         raise ContractError("cause adapter observation probe_requests is not an array")
-    return {
-        "schema_version": ACTUAL_VIEW_SCHEMA_VERSION,
+    if schema_version not in {
+        ACTUAL_VIEW_SCHEMA_VERSION,
+        TYPED_ACTUAL_VIEW_SCHEMA_VERSION,
+    }:
+        raise ContractError(f"unsupported actual cause cascade schema: {schema_version}")
+    expected_observation_schema = (
+        TYPED_RUNTIME_OBSERVATION_SCHEMA
+        if schema_version == TYPED_ACTUAL_VIEW_SCHEMA_VERSION
+        else RUNTIME_OBSERVATION_SCHEMA
+    )
+    if observation.get("schema_version") != expected_observation_schema:
+        raise ContractError("cause adapter observation contract does not match its view")
+    expected_runtime = {
+        "adapter_name": CAUSE_ADAPTER_NAME,
+        "request_schema": RUNTIME_REQUEST_SCHEMA,
+    }
+    if schema_version == TYPED_ACTUAL_VIEW_SCHEMA_VERSION:
+        expected_runtime["response_schema"] = RUNTIME_RESPONSE_SCHEMA
+    if any(runtime.get(key) != expected for key, expected in expected_runtime.items()):
+        raise ContractError("cause adapter runtime contract is not the active contract")
+    if not isinstance(runtime.get("adapter_version"), str) or not runtime[
+        "adapter_version"
+    ]:
+        raise ContractError("cause adapter runtime contract has no adapter version")
+    view = {
+        "schema_version": schema_version,
         "case_id": str(case["case_id"]),
         "partition": str(case["partition"]),
         "status": status,
@@ -1199,11 +2133,52 @@ def _actual_view(
             "runtime_transport": [dict(item) for item in transports],
         },
         "cause_count": len(causes),
+        "only_move_constraints": [dict(item) for item in only_move_constraints],
         "causes": [dict(item) for item in causes],
     }
+    if schema_version == TYPED_ACTUAL_VIEW_SCHEMA_VERSION:
+        verdict = observation.get("verdict")
+        if not isinstance(verdict, Mapping):
+            raise ContractError(
+                "v3 cause adapter observation has no exact verdict observation"
+            )
+        view["verdict"] = dict(verdict)
+        native_r = observation.get("r_native_cause_selections")
+        if not isinstance(native_r, list) or not all(
+            isinstance(item, Mapping) for item in native_r
+        ):
+            raise ContractError(
+                "v3 cause adapter observation has no native R selection array"
+            )
+        view["r_native_cause_selections"] = [dict(item) for item in native_r]
+        importance = observation.get("importance")
+        if not isinstance(importance, Mapping):
+            raise ContractError(
+                "v3 cause adapter observation has no typed importance observation"
+            )
+        view["importance"] = dict(importance)
+        idea_units = observation.get("idea_units")
+        if not isinstance(idea_units, Mapping):
+            raise ContractError(
+                "v3 cause adapter observation has no typed idea-unit observation"
+            )
+        view["idea_units"] = dict(idea_units)
+        idea_importance = observation.get("idea_importance")
+        if not isinstance(idea_importance, Mapping):
+            raise ContractError(
+                "v3 cause adapter observation has no typed idea-importance observation"
+            )
+        view["idea_importance"] = dict(idea_importance)
+        cause_disposition_ledger = observation.get("cause_disposition_ledger")
+        if not isinstance(cause_disposition_ledger, Mapping):
+            raise ContractError(
+                "v3 cause adapter observation has no typed Cause disposition ledger"
+            )
+        view["cause_disposition_ledger"] = dict(cause_disposition_ledger)
+    return view
 
 
-def run_cause_audit(
+def _run_cause_audit_for_contract(
     *,
     root: Path,
     store: ArtifactStore,
@@ -1220,8 +2195,19 @@ def run_cause_audit(
     max_probe_rounds: int,
     candidate_binding_path: Path | None,
     requested_case_ids: Sequence[str],
+    actual_schema_version: str,
 ) -> dict[str, Any]:
     registry, canonicalizer = _schema_tools(root)
+    if actual_schema_version not in {
+        ACTUAL_VIEW_SCHEMA_VERSION,
+        TYPED_ACTUAL_VIEW_SCHEMA_VERSION,
+    }:
+        raise ContractError(
+            f"unsupported cause audit run contract: {actual_schema_version}"
+        )
+    actual_registry, actual_canonicalizer = _schema_tools(
+        root, actual_schema_version
+    )
     manifest, cases = _verify_manifest(
         root=root,
         manifest_path=manifest_path,
@@ -1267,12 +2253,12 @@ def run_cause_audit(
         raise ContractError("cause audit adapter root is not a directory")
     if isinstance(max_probe_rounds, bool) or not 1 <= max_probe_rounds <= 12:
         raise ContractError("max probe rounds must be from 1 through 12")
-    command = [
-        str(sbt),
-        "-batch",
-        "-error",
-        f"runMain {CAUSE_ADAPTER_MAIN}",
-    ]
+    observation_schema = (
+        TYPED_RUNTIME_OBSERVATION_SCHEMA
+        if actual_schema_version == TYPED_ACTUAL_VIEW_SCHEMA_VERSION
+        else RUNTIME_OBSERVATION_SCHEMA
+    )
+    command = _cause_adapter_command(sbt, actual_schema_version)
     case_by_id = {str(item["case_id"]): item for item in selected}
     views: list[dict[str, Any]] = []
     probe_cache_hits = 0
@@ -1281,7 +2267,7 @@ def run_cause_audit(
         command,
         cwd=adapter_directory,
         timeout_seconds=provider_timeout_seconds,
-        expected_schema=RUNTIME_OBSERVATION_SCHEMA,
+        expected_schema=observation_schema,
     ) as session:
         for case_id in sorted(case_by_id):
             case = case_by_id[case_id]
@@ -1432,11 +2418,14 @@ def run_cause_audit(
                 result_hashes=result_hashes,
                 issued_probe_count=issued_probe_count,
                 stop_reason=stop_reason,
+                schema_version=actual_schema_version,
             )
             canonical_view = _validate_and_canonicalize(
-                registry=registry,
-                canonicalizer=canonicalizer,
-                schema_path=_schema_path(root, "actual-cascade-view"),
+                registry=actual_registry,
+                canonicalizer=actual_canonicalizer,
+                schema_path=_schema_path(
+                    root, "actual-cascade-view", actual_schema_version
+                ),
                 document=view,
                 label=f"actual cause cascade {case_id}",
             )
@@ -1479,7 +2468,7 @@ def run_cause_audit(
         "adapter": {
             "main_class": CAUSE_ADAPTER_MAIN,
             "sbt_sha256": sha256_file(sbt),
-            "runtime_observation_schema": RUNTIME_OBSERVATION_SCHEMA,
+            "runtime_observation_schema": observation_schema,
         },
         "case_count": len(views),
         "cache": {
@@ -1505,20 +2494,131 @@ def run_cause_audit(
     return document
 
 
-def _strict_actual_view(
+def run_cause_audit(
+    *,
+    root: Path,
+    store: ArtifactStore,
+    manifest_path: Path,
+    cases_path: Path,
+    acquisition_path: Path,
+    stockfish_path: Path,
+    sbt_path: Path,
+    adapter_root: Path,
+    cache_root: Path,
+    partition: str,
+    timeout_seconds: float,
+    provider_timeout_seconds: float,
+    max_probe_rounds: int,
+    candidate_binding_path: Path | None,
+    requested_case_ids: Sequence[str],
+) -> dict[str, Any]:
+    """Run the sole active Cause contract."""
+
+    return _run_cause_audit_for_contract(
+        root=root,
+        store=store,
+        manifest_path=manifest_path,
+        cases_path=cases_path,
+        acquisition_path=acquisition_path,
+        stockfish_path=stockfish_path,
+        sbt_path=sbt_path,
+        adapter_root=adapter_root,
+        cache_root=cache_root,
+        partition=partition,
+        timeout_seconds=timeout_seconds,
+        provider_timeout_seconds=provider_timeout_seconds,
+        max_probe_rounds=max_probe_rounds,
+        candidate_binding_path=candidate_binding_path,
+        requested_case_ids=requested_case_ids,
+        actual_schema_version=TYPED_ACTUAL_VIEW_SCHEMA_VERSION,
+    )
+
+
+def run_historical_cause_audit_v2(
+    *,
+    root: Path,
+    store: ArtifactStore,
+    manifest_path: Path,
+    cases_path: Path,
+    acquisition_path: Path,
+    stockfish_path: Path,
+    sbt_path: Path,
+    adapter_root: Path,
+    cache_root: Path,
+    partition: str,
+    timeout_seconds: float,
+    provider_timeout_seconds: float,
+    max_probe_rounds: int,
+    candidate_binding_path: Path | None,
+    requested_case_ids: Sequence[str],
+) -> dict[str, Any]:
+    """Replay the archived v2 Cause contract through an explicit boundary."""
+
+    return _run_cause_audit_for_contract(
+        root=root,
+        store=store,
+        manifest_path=manifest_path,
+        cases_path=cases_path,
+        acquisition_path=acquisition_path,
+        stockfish_path=stockfish_path,
+        sbt_path=sbt_path,
+        adapter_root=adapter_root,
+        cache_root=cache_root,
+        partition=partition,
+        timeout_seconds=timeout_seconds,
+        provider_timeout_seconds=provider_timeout_seconds,
+        max_probe_rounds=max_probe_rounds,
+        candidate_binding_path=candidate_binding_path,
+        requested_case_ids=requested_case_ids,
+        actual_schema_version=ACTUAL_VIEW_SCHEMA_VERSION,
+    )
+
+
+def _strict_actual_view_for_contracts(
     root: Path,
     value: Mapping[str, Any],
-    registry: SchemaRegistry,
-    canonicalizer: Canonicalizer,
+    *,
+    supported: set[str],
 ) -> dict[str, Any]:
     raw = _object(value, "actual cause cascade")
     raw.pop("artifact_capture", None)
+    schema_version = raw.get("schema_version")
+    if not isinstance(schema_version, str) or schema_version not in supported:
+        raise ContractError(
+            f"unsupported actual cause cascade schema: {schema_version}"
+        )
+    registry, canonicalizer = _schema_tools(root, schema_version)
     return _validate_and_canonicalize(
         registry=registry,
         canonicalizer=canonicalizer,
-        schema_path=_schema_path(root, "actual-cascade-view"),
+        schema_path=_schema_path(root, "actual-cascade-view", schema_version),
         document=raw,
         label=f"actual cause cascade {raw.get('case_id')}",
+    )
+
+
+def _strict_actual_view(
+    root: Path,
+    value: Mapping[str, Any],
+) -> dict[str, Any]:
+    return _strict_actual_view_for_contracts(
+        root,
+        value,
+        supported={TYPED_ACTUAL_VIEW_SCHEMA_VERSION},
+    )
+
+
+def _strict_historical_actual_view(
+    root: Path,
+    value: Mapping[str, Any],
+) -> dict[str, Any]:
+    return _strict_actual_view_for_contracts(
+        root,
+        value,
+        supported={
+            "chesstory.eval.cause-audit-actual-cascade.v1",
+            ACTUAL_VIEW_SCHEMA_VERSION,
+        },
     )
 
 
@@ -1582,7 +2682,7 @@ def _root_aligned(
     return False
 
 
-def _attribution_owned(
+def _has_structurally_compatible_attribution(
     cause: Mapping[str, Any], *, expected_source_side: str
 ) -> bool:
     c, comparison = _cause_parts(cause)
@@ -1627,17 +2727,28 @@ def _attribution_owned(
     return False
 
 
-def _rank_indices(cause: Mapping[str, Any]) -> list[int]:
+def _selected_rank_projection(cause: Mapping[str, Any]) -> list[tuple[str, int]]:
     rank = cause.get("r")
-    if not isinstance(rank, Mapping) or not isinstance(rank.get("ranked"), list):
+    if not isinstance(rank, Mapping):
         return []
-    return [
-        int(item["rank_index"])
-        for item in rank["ranked"]
-        if isinstance(item, Mapping)
-        and isinstance(item.get("rank_index"), int)
-        and not isinstance(item.get("rank_index"), bool)
-    ]
+    cross_exposure = rank.get("cross_comparison_exposure")
+    if not isinstance(cross_exposure, Mapping) or cross_exposure.get("selected") is not True:
+        return []
+    cause_id = _cause_id(cause)
+    priority_rank = cross_exposure.get("priority_rank")
+    if (
+        not isinstance(priority_rank, int)
+        or isinstance(priority_rank, bool)
+        or priority_rank < 0
+    ):
+        return []
+    # Native R priority excludes both host-claim rank and the stable-ID
+    # serialization tie-break. Packet loss must not be reclassified as R loss.
+    return [(cause_id, priority_rank)]
+
+
+def _rank_indices(cause: Mapping[str, Any]) -> list[int]:
+    return [rank_index for _, rank_index in _selected_rank_projection(cause)]
 
 
 def _owned_object_bindings(cause: Mapping[str, Any]) -> list[Mapping[str, Any]]:
@@ -1671,6 +2782,125 @@ def _closest_binding_fields(causes: Sequence[Mapping[str, Any]]) -> set[str]:
     return max(fields, key=lambda item: (len(item), sorted(item)), default=set())
 
 
+def _packet_public_selection_matches(cause: Mapping[str, Any]) -> bool:
+    p_value = cause.get("p")
+    if not isinstance(p_value, Mapping) or p_value.get("packet_selected") is not True:
+        return False
+    cause_id = p_value.get("cause_evidence_id")
+    packet = p_value.get("packet_selection")
+    public = p_value.get("public_selection")
+    public_ids = p_value.get("selected_public_cause_evidence_ids")
+    if (
+        not isinstance(cause_id, str)
+        or p_value.get("public_selection_count") != 1
+        or not isinstance(packet, Mapping)
+        or not isinstance(public, Mapping)
+        or not isinstance(public_ids, list)
+        or cause_id not in public_ids
+        or packet.get("cause_evidence_id") != cause_id
+        or public.get("cause_evidence_id") != cause_id
+    ):
+        return False
+    return dict(public) == dict(packet)
+
+
+def _global_packet_public_projection_matches(actual: Mapping[str, Any]) -> bool:
+    causes = actual.get("causes")
+    projection = actual.get("projection")
+    if not isinstance(causes, list) or not isinstance(projection, Mapping):
+        return False
+    if projection.get("present") is not True:
+        return False
+    raw_public_ids = projection.get("selected_public_cause_evidence_ids")
+    typed_public = projection.get("selected_public_cause_selections")
+    raw_idea_count = projection.get("raw_public_idea_count")
+    parsed_idea_count = projection.get("parsed_public_idea_count")
+    parse_diagnostics_present = any(
+        field in projection
+        for field in (
+            "raw_public_idea_count",
+            "parsed_public_idea_count",
+            "public_ideas_parse_closed",
+        )
+    )
+    if (
+        (
+            parse_diagnostics_present
+            and (
+                projection.get("public_ideas_parse_closed") is not True
+                or not isinstance(raw_idea_count, int)
+                or isinstance(raw_idea_count, bool)
+                or raw_idea_count < 0
+                or not isinstance(parsed_idea_count, int)
+                or isinstance(parsed_idea_count, bool)
+                or parsed_idea_count < 0
+                or raw_idea_count != parsed_idea_count
+            )
+        )
+        or not isinstance(raw_public_ids, list)
+        or not all(isinstance(item, str) and item for item in raw_public_ids)
+        or len(raw_public_ids) != len(set(raw_public_ids))
+        or not isinstance(typed_public, list)
+        or not all(isinstance(item, Mapping) for item in typed_public)
+        or (
+            parse_diagnostics_present
+            and parsed_idea_count != len(typed_public)
+        )
+    ):
+        return False
+    typed_public_ids = [item.get("cause_evidence_id") for item in typed_public]
+    if not all(isinstance(item, str) and item for item in typed_public_ids):
+        return False
+    packet_selections: list[Mapping[str, Any]] = []
+    registered_ids: list[str] = []
+    raw_occurrence_counter: Counter[str] = Counter()
+    for cause in causes:
+        if not isinstance(cause, Mapping):
+            return False
+        cause_id = _cause_id(cause)
+        registered_ids.append(cause_id)
+        p_value = cause.get("p")
+        if not isinstance(p_value, Mapping):
+            return False
+        if p_value.get("cause_evidence_id") != cause_id:
+            return False
+        public_count = p_value.get("public_selection_count")
+        selected_ids = p_value.get("selected_public_cause_evidence_ids")
+        if (
+            not isinstance(public_count, int)
+            or isinstance(public_count, bool)
+            or public_count < 0
+            or not isinstance(selected_ids, list)
+            or not all(isinstance(item, str) for item in selected_ids)
+        ):
+            return False
+        expected_selected_ids = [cause_id] if public_count > 0 else []
+        if selected_ids != expected_selected_ids:
+            return False
+        if public_count > 0:
+            raw_occurrence_counter[cause_id] = public_count
+        if p_value.get("packet_selected") is True:
+            selection = p_value.get("packet_selection")
+            if not isinstance(selection, Mapping):
+                return False
+            packet_selections.append(selection)
+    if len(registered_ids) != len(set(registered_ids)):
+        return False
+    # The projection exposes a distinct raw-ID set, while each registered
+    # Cause preserves its raw occurrence count. Their union must close, and
+    # every raw occurrence must parse to exactly one typed selection.
+    if set(raw_public_ids) != set(raw_occurrence_counter):
+        return False
+    if raw_occurrence_counter != Counter(typed_public_ids):
+        return False
+    # Selection order in the observation is serialization only. Compare exact
+    # typed objects as multisets so no extra, missing, or mutated public Cause
+    # can hide behind one correctly preserved oracle-matched Cause.
+    packet_multiset = Counter(sha256_json(dict(item)) for item in packet_selections)
+    public_multiset = Counter(sha256_json(dict(item)) for item in typed_public)
+    return packet_multiset == public_multiset
+
+
 def _cascade_counts(causes: Sequence[Mapping[str, Any]]) -> dict[str, int]:
     jp = 0
     ja = 0
@@ -1693,15 +2923,15 @@ def _cascade_counts(causes: Sequence[Mapping[str, Any]]) -> dict[str, int]:
                 if isinstance(item, Mapping)
                 and item.get("status") in {"certified", "admitted"}
             )
-        ranked += len(_rank_indices(cause))
+        selected_ranks = _selected_rank_projection(cause)
+        ranked += len(selected_ranks)
         p_value = cause.get("p")
         if isinstance(p_value, Mapping):
-            raw_packet = p_value.get("packet_linked_claim_ids")
-            raw_public = p_value.get("selected_public_idea_claim_ids")
-            if isinstance(raw_packet, list):
-                packet_ids.update(str(item) for item in raw_packet)
-            if isinstance(raw_public, list):
-                public_ids.update(str(item) for item in raw_public)
+            cause_id = p_value.get("cause_evidence_id")
+            if p_value.get("packet_selected") is True and isinstance(cause_id, str):
+                packet_ids.add(cause_id)
+            if isinstance(cause_id, str) and _packet_public_selection_matches(cause):
+                public_ids.add(cause_id)
     return {
         "c": len(causes),
         "jp": jp,
@@ -1716,8 +2946,16 @@ def _publicly_selected(cause: Mapping[str, Any]) -> bool:
     p_value = cause.get("p")
     if not isinstance(p_value, Mapping):
         return False
-    selected_ids = p_value.get("selected_public_idea_claim_ids")
-    return isinstance(selected_ids, list) and bool(selected_ids)
+    cause_id = p_value.get("cause_evidence_id")
+    public_ids = p_value.get("selected_public_cause_evidence_ids")
+    return bool(
+        isinstance(cause_id, str)
+        and isinstance(public_ids, list)
+        and cause_id in public_ids
+        and isinstance(p_value.get("public_selection_count"), int)
+        and not isinstance(p_value.get("public_selection_count"), bool)
+        and int(p_value["public_selection_count"]) > 0
+    )
 
 
 def _judge_case(
@@ -1755,6 +2993,8 @@ def _judge_case(
                 "matched_cause_record_ids": [],
                 "forbidden_cause_count": 0,
                 "competing_ranked_cause_count": 0,
+                "object_tuple_assessment": OBJECT_TUPLE_ASSESSMENT,
+                "attribution_semantic_assessment": ATTRIBUTION_SEMANTIC_ASSESSMENT,
             },
             "cascade": {"c": 0, "jp": 0, "ja": 0, "r": 0, "packet": 0, "p": 0},
             "errors": ["runtime_unavailable"],
@@ -1777,6 +3017,8 @@ def _judge_case(
                 "matched_cause_record_ids": [],
                 "forbidden_cause_count": 0,
                 "competing_ranked_cause_count": 0,
+                "object_tuple_assessment": OBJECT_TUPLE_ASSESSMENT,
+                "attribution_semantic_assessment": ATTRIBUTION_SEMANTIC_ASSESSMENT,
             },
             "cascade": {"c": 0, "jp": 0, "ja": 0, "r": 0, "packet": 0, "p": 0},
             "errors": [],
@@ -1808,12 +3050,18 @@ def _judge_case(
         for cause in root_aligned
         if _cause_parts(cause)[0].get("kind") in expected_kinds
     ]
-    attribution_owned = [
+    attribution_compatible = [
         cause
         for cause in kind_and_root
-        if _attribution_owned(cause, expected_source_side=str(label["source_side"]))
+        if _has_structurally_compatible_attribution(
+            cause, expected_source_side=str(label["source_side"])
+        )
     ]
-    matched = [cause for cause in attribution_owned if _has_complete_cause_tuple(cause)]
+    matched = [
+        cause
+        for cause in attribution_compatible
+        if _has_complete_cause_tuple(cause)
+    ]
     forbidden = [
         cause
         for cause in root_aligned
@@ -1821,9 +3069,12 @@ def _judge_case(
     ]
     competing = [cause for cause in root_aligned if cause not in matched]
     errors: set[str] = set()
+    global_projection_matches = _global_packet_public_projection_matches(actual)
+    if not global_projection_matches:
+        errors.add("projection_set_mismatch")
     if not matched:
-        if attribution_owned:
-            closest_fields = _closest_binding_fields(attribution_owned)
+        if attribution_compatible:
+            closest_fields = _closest_binding_fields(attribution_compatible)
             for field, error in (
                 ("actor", "missing_actor_binding"),
                 ("target", "missing_target_binding"),
@@ -1842,7 +3093,7 @@ def _judge_case(
             errors.add("missing_cause")
     if forbidden:
         errors.add("forbidden_cause_emitted")
-        if not matched and any(_publicly_selected(cause) for cause in forbidden):
+        if any(_publicly_selected(cause) for cause in forbidden):
             errors.add("generic_fallback_takeover")
     matched_ranks = [rank for cause in matched for rank in _rank_indices(cause)]
     competing_ranks = [
@@ -1856,7 +3107,7 @@ def _judge_case(
         errors.add("priority_inversion")
     cascade = _cascade_counts(matched)
     first_failure: str | None = None
-    if not matched:
+    if forbidden or not matched:
         first_failure = "C"
     elif cascade["jp"] == 0:
         errors.add("jp_loss")
@@ -1864,11 +3115,15 @@ def _judge_case(
     elif cascade["ja"] == 0:
         errors.add("ja_loss")
         first_failure = "Ja"
+    elif "priority_inversion" in errors:
+        first_failure = "R"
     elif cascade["r"] == 0:
         errors.add("r_loss")
         first_failure = "R"
     elif cascade["packet"] == 0:
         errors.add("packet_loss")
+        first_failure = "P"
+    elif not global_projection_matches:
         first_failure = "P"
     elif cascade["p"] == 0:
         errors.add("p_loss")
@@ -1889,11 +3144,261 @@ def _judge_case(
             "matched_cause_record_ids": sorted(_cause_id(item) for item in matched),
             "forbidden_cause_count": len(forbidden),
             "competing_ranked_cause_count": len(competing_ranks),
+            "object_tuple_assessment": OBJECT_TUPLE_ASSESSMENT,
+            "attribution_semantic_assessment": ATTRIBUTION_SEMANTIC_ASSESSMENT,
         },
         "cascade": cascade,
         "errors": sorted(errors),
         "first_failure_stage": first_failure,
     }
+
+
+def _compare_typed_cause_audit(
+    *,
+    root: Path,
+    store: ArtifactStore,
+    manifest_path: Path,
+    cases_path: Path,
+    base_oracle_path: Path,
+    labels_path: Path,
+    oracle_run_manifest_path: Path,
+    candidate_set_path: Path,
+    adjudication_path: Path,
+    arm_inventory_path: Path,
+    runtime_run_path: Path,
+    partition: str,
+    requested_case_ids: Sequence[str],
+) -> dict[str, Any]:
+    if partition == "sealed_confirm":
+        raise ContractError(TYPED_SEALED_PROJECTION_BLOCK)
+    if partition not in PARTITIONS:
+        raise ContractError(
+            "typed Cause comparison must load one physical partition at a time"
+        )
+    registry, canonicalizer = _schema_tools(root)
+    manifest, cases = _verify_manifest(
+        root=root,
+        manifest_path=manifest_path,
+        cases_path=cases_path,
+        registry=registry,
+        canonicalizer=canonicalizer,
+    )
+    partition_cases = _selected_cases(cases, manifest, partition)
+    labels, _ = _load_typed_labels(
+        root=root,
+        path=labels_path,
+        partition_cases=partition_cases,
+        partition=partition,
+    )
+    oracle_verification = _verify_typed_oracle_run_manifest(
+        root=root,
+        path=oracle_run_manifest_path,
+        base_oracle_path=base_oracle_path,
+        labels_path=labels_path,
+        arm_inventory_path=arm_inventory_path,
+        candidate_set_path=candidate_set_path,
+        adjudication_path=adjudication_path,
+        labels=labels,
+        partition_cases=partition_cases,
+        manifest_path=manifest_path,
+        cases_path=cases_path,
+        partition=partition,
+    )
+    oracle_run = _object(
+        oracle_verification["manifest"], "typed oracle run manifest"
+    )
+    selected = _selected_cases(cases, manifest, partition, requested_case_ids)
+    selected_ids = {str(item["case_id"]) for item in selected}
+    case_by_id = {str(item["case_id"]): item for item in selected}
+    label_by_id = {str(item["case_id"]): item for item in labels}
+    if not selected_ids.issubset(label_by_id):
+        raise IntegrityError("typed run oracle does not cover the requested cases")
+
+    runtime_run = _read_object(runtime_run_path, "typed cause audit runtime run")
+    if runtime_run.get("schema_version") != RUNTIME_RUN_SCHEMA_VERSION:
+        raise ContractError("unsupported cause audit runtime run schema")
+    if runtime_run.get("partition") != partition:
+        raise IntegrityError("typed runtime run partition mismatch")
+    if runtime_run.get("freeze_manifest_sha256") != sha256_file(
+        manifest_path.resolve(strict=True)
+    ):
+        raise IntegrityError("runtime run freeze manifest binding failed")
+    if runtime_run.get("cases_file_sha256") != sha256_file(
+        cases_path.resolve(strict=True)
+    ):
+        raise IntegrityError("runtime run cases binding failed")
+    adapter = _object(runtime_run.get("adapter"), "typed runtime adapter binding")
+    if adapter.get("main_class") != CAUSE_ADAPTER_MAIN:
+        raise IntegrityError("typed runtime run used a non-Cause adapter")
+    if adapter.get("runtime_observation_schema") != TYPED_RUNTIME_OBSERVATION_SCHEMA:
+        raise IntegrityError("typed runtime run did not use the v3 observation contract")
+    raw_views = runtime_run.get("views")
+    if not isinstance(raw_views, list):
+        raise ContractError("typed cause audit runtime run has no views")
+    if runtime_run.get("case_count") != len(raw_views):
+        raise IntegrityError("typed runtime run case count does not match its views")
+    partition_case_ids = {str(item["case_id"]) for item in partition_cases}
+    views: dict[str, dict[str, Any]] = {}
+    for raw in raw_views:
+        if not isinstance(raw, Mapping):
+            raise ContractError("typed runtime run contains a non-object view")
+        view = _strict_actual_view(root, raw)
+        if view.get("schema_version") != TYPED_ACTUAL_VIEW_SCHEMA_VERSION:
+            raise ContractError("typed comparison requires v3 actual Cause views")
+        case_id = str(view["case_id"])
+        if case_id in views:
+            raise ContractError(f"duplicate typed actual Cause cascade: {case_id}")
+        if case_id not in partition_case_ids or view.get("partition") != partition:
+            raise IntegrityError("typed runtime run crosses its physical partition")
+        causes = view.get("causes")
+        if not isinstance(causes, list) or view.get("cause_count") != len(causes):
+            raise IntegrityError(f"typed actual Cause count mismatch: {case_id}")
+        views[case_id] = view
+    if not selected_ids.issubset(views):
+        raise ContractError(
+            f"runtime run is missing selected cases: {sorted(selected_ids - set(views))[:5]}"
+        )
+    _verify_open_world_candidate_coverage(
+        candidate_set=_object(
+            oracle_verification["candidate_set"], "typed open-world candidate set"
+        ),
+        base_labels=list(oracle_verification["base_labels"]),
+        views=views,
+    )
+    _verify_runtime_against_arm_inventory(
+        runtime_run_path=runtime_run_path,
+        runtime_run=runtime_run,
+        arm_inventory=_object(
+            oracle_verification["arm_inventory"], "typed open-world arm inventory"
+        ),
+        base_labels=list(oracle_verification["base_labels"]),
+        views=views,
+    )
+
+    judgment_registry, judgment_canonicalizer = _schema_tools(
+        root, TYPED_JUDGMENT_SCHEMA_VERSION
+    )
+    judgments: list[dict[str, Any]] = []
+    for case_id in sorted(selected_ids):
+        label = label_by_id[case_id]
+        view = views[case_id]
+        judgment = judge_typed_case(
+            case=case_by_id[case_id],
+            label=label,
+            actual=view,
+            oracle_label_sha256=sha256_json(label),
+            actual_view_sha256=sha256_json(view),
+        )
+        canonical_judgment = _validate_and_canonicalize(
+            registry=judgment_registry,
+            canonicalizer=judgment_canonicalizer,
+            schema_path=_schema_path(
+                root, "judgment", TYPED_JUDGMENT_SCHEMA_VERSION
+            ),
+            document=judgment,
+            label=f"typed Cause audit judgment {case_id}",
+        )
+        store.capture_run_document(
+            f"cause-audit-judgment-{case_id}", canonical_judgment
+        )
+        judgments.append(canonical_judgment)
+
+    status_counts = Counter(str(item["status"]) for item in judgments)
+    disposition_counts = Counter(str(item["disposition"]) for item in judgments)
+    endpoint_counts = Counter(str(item["endpoint_status"]) for item in judgments)
+    error_counts = Counter(
+        str(error["code"])
+        for item in judgments
+        for error in item["errors"]
+        if isinstance(error, Mapping)
+    )
+    failure_counts = Counter(
+        "none"
+        if item["first_failure_stage"] is None
+        else str(item["first_failure_stage"])
+        for item in judgments
+    )
+    selected_views = [views[case_id] for case_id in sorted(selected_ids)]
+    open_world = _object(oracle_run["open_world"], "typed open-world binding")
+    report = {
+        "schema_version": TYPED_REPORT_SCHEMA_VERSION,
+        "run_id": store.run_id,
+        "mode": "typed-semantic-cause-audit",
+        "partition": partition,
+        "bindings": {
+            "freeze_manifest_sha256": sha256_file(
+                manifest_path.resolve(strict=True)
+            ),
+            "cases_file_sha256": sha256_file(cases_path.resolve(strict=True)),
+            "base_oracle_file_sha256": sha256_file(
+                base_oracle_path.resolve(strict=True)
+            ),
+            "run_oracle_file_sha256": sha256_file(
+                labels_path.resolve(strict=True)
+            ),
+            "oracle_run_manifest_sha256": sha256_file(
+                oracle_run_manifest_path.resolve(strict=True)
+            ),
+            "open_world_candidate_set_sha256": sha256_file(
+                candidate_set_path.resolve(strict=True)
+            ),
+            "open_world_arm_inventory_sha256": sha256_file(
+                arm_inventory_path.resolve(strict=True)
+            ),
+            "open_world_adjudication_sha256": sha256_file(
+                adjudication_path.resolve(strict=True)
+            ),
+            "runtime_run_sha256": sha256_file(
+                runtime_run_path.resolve(strict=True)
+            ),
+        },
+        "evaluation_contract": {
+            "c_rule": "typed-exact-values-in-one-owned-direct-channel",
+            "r_rule": "native-pre-packet-selection-and-partial-order",
+            "p_rule": "exact-r-to-packet-to-public-semantic-multiset",
+            "priority_rule": "ties-and-incomparability-are-not-serialization-order",
+            "abstention_rule": "answerable-must-abstain-unresolved-are-distinct",
+            "open_world_rule": "all-unmatched-c-source-blind-adjudication-exact-all-arm-merge-before-scoring",
+            "sealed_label_disclosure": "disabled-until-redacted-projection",
+        },
+        "counts": {
+            "cases": len(judgments),
+            **{f"disposition_{key}": value for key, value in disposition_counts.items()},
+            **{f"status_{key}": value for key, value in status_counts.items()},
+            **{f"endpoint_{key}": value for key, value in endpoint_counts.items()},
+            "generated_causes": sum(
+                len(item["causes"]) for item in selected_views
+            ),
+            "native_r_selections": sum(
+                len(item["r_native_cause_selections"])
+                for item in selected_views
+            ),
+        },
+        "error_counts": dict(sorted(error_counts.items())),
+        "first_failure_counts": dict(sorted(failure_counts.items())),
+        "judgments": judgments,
+        "policy": {
+            "machine_language": "en",
+            "release_eligible": False,
+            "production_bottleneck_claim": "engineering-diagnostic",
+            "oracle_partition_scoped": True,
+            "pending_open_world_candidates": int(open_world["pending_count"]),
+        },
+        "artifact_ledger_hash_before_report": store.ledger_hash(),
+    }
+    report_registry, report_canonicalizer = _schema_tools(
+        root, TYPED_REPORT_SCHEMA_VERSION
+    )
+    canonical_report = _validate_and_canonicalize(
+        registry=report_registry,
+        canonicalizer=report_canonicalizer,
+        schema_path=_schema_path(root, "report", TYPED_REPORT_SCHEMA_VERSION),
+        document=report,
+        label="typed Cause audit report",
+    )
+    store.capture_run_document("cause-audit-report", canonical_report)
+    store.verify()
+    return canonical_report
 
 
 def compare_cause_audit(
@@ -1906,7 +3411,75 @@ def compare_cause_audit(
     runtime_run_path: Path,
     partition: str,
     requested_case_ids: Sequence[str],
+    oracle_run_manifest_path: Path | None = None,
+    base_oracle_path: Path | None = None,
+    candidate_set_path: Path | None = None,
+    adjudication_path: Path | None = None,
+    arm_inventory_path: Path | None = None,
 ) -> dict[str, Any]:
+    """Compare only the active v3 contract; never infer a legacy route."""
+
+    if partition == "sealed_confirm" and any(
+        value is not None
+        for value in (
+            oracle_run_manifest_path,
+            base_oracle_path,
+            candidate_set_path,
+            adjudication_path,
+            arm_inventory_path,
+        )
+    ):
+        raise ContractError(TYPED_SEALED_PROJECTION_BLOCK)
+    required_paths = {
+        "oracle-run-manifest": oracle_run_manifest_path,
+        "base-oracle": base_oracle_path,
+        "open-world-candidates": candidate_set_path,
+        "open-world-adjudication": adjudication_path,
+        "open-world-arm-inventory": arm_inventory_path,
+    }
+    missing = [name for name, value in required_paths.items() if value is None]
+    if missing:
+        raise ContractError(
+            "active v3 Cause comparison requires "
+            + ", ".join(f"--{name}" for name in missing)
+        )
+    assert oracle_run_manifest_path is not None
+    assert base_oracle_path is not None
+    assert candidate_set_path is not None
+    assert adjudication_path is not None
+    assert arm_inventory_path is not None
+    return _compare_typed_cause_audit(
+        root=root,
+        store=store,
+        manifest_path=manifest_path,
+        cases_path=cases_path,
+        base_oracle_path=base_oracle_path,
+        labels_path=labels_path,
+        oracle_run_manifest_path=oracle_run_manifest_path,
+        candidate_set_path=candidate_set_path,
+        adjudication_path=adjudication_path,
+        arm_inventory_path=arm_inventory_path,
+        runtime_run_path=runtime_run_path,
+        partition=partition,
+        requested_case_ids=requested_case_ids,
+    )
+
+
+def compare_historical_cause_audit_v2(
+    *,
+    root: Path,
+    store: ArtifactStore,
+    manifest_path: Path,
+    cases_path: Path,
+    labels_path: Path,
+    runtime_run_path: Path,
+    partition: str,
+    requested_case_ids: Sequence[str],
+) -> dict[str, Any]:
+    """Compare archived v2 views only through an explicitly named boundary."""
+
+    if _peek_label_schema_version(labels_path) != HISTORICAL_ORACLE_SCHEMA_VERSION:
+        raise ContractError("historical v2 comparison requires v1 curation labels")
     registry, canonicalizer = _schema_tools(root)
     manifest, cases = _verify_manifest(
         root=root,
@@ -1949,7 +3522,7 @@ def compare_cause_audit(
     for raw in raw_views:
         if not isinstance(raw, Mapping):
             raise ContractError("cause audit runtime run contains a non-object view")
-        view = _strict_actual_view(root, raw, registry, canonicalizer)
+        view = _strict_historical_actual_view(root, raw)
         case_id = str(view["case_id"])
         if case_id in views:
             raise ContractError(f"duplicate actual cause cascade: {case_id}")
@@ -1959,6 +3532,9 @@ def compare_cause_audit(
             f"runtime run is missing selected cases: {sorted(selected_ids - set(views))[:5]}"
         )
     judgments: list[dict[str, Any]] = []
+    judgment_registry, judgment_canonicalizer = _schema_tools(
+        root, JUDGMENT_SCHEMA_VERSION
+    )
     for case_id in sorted(selected_ids):
         judgment = _judge_case(
             case=case_by_id[case_id],
@@ -1966,9 +3542,9 @@ def compare_cause_audit(
             actual=views[case_id],
         )
         canonical_judgment = _validate_and_canonicalize(
-            registry=registry,
-            canonicalizer=canonicalizer,
-            schema_path=_schema_path(root, "judgment"),
+            registry=judgment_registry,
+            canonicalizer=judgment_canonicalizer,
+            schema_path=_schema_path(root, "judgment", JUDGMENT_SCHEMA_VERSION),
             document=judgment,
             label=f"cause audit judgment {case_id}",
         )
@@ -2009,6 +3585,8 @@ def compare_cause_audit(
             "object_rule": "actor-target-mechanism-consequence-must-coexist-in-one-owned-direct-binding",
             "source_rule": "comparison-role-event-root-source-side-and-attribution-polarity-must-agree",
             "oracle_prose_semantic_match": "not-performed-requires-blind-human-proxy-adjudication",
+            "object_tuple_assessment": "structural-completeness-only-no-value-equivalence",
+            "attribution_semantic_assessment": "not-performed-no-typed-oracle-polarity",
             "sealed_label_disclosure": "hash-and-verdict-only",
         },
         "counts": {
@@ -2034,10 +3612,13 @@ def compare_cause_audit(
         },
         "artifact_ledger_hash_before_report": store.ledger_hash(),
     }
+    report_registry, report_canonicalizer = _schema_tools(
+        root, REPORT_SCHEMA_VERSION
+    )
     canonical_report = _validate_and_canonicalize(
-        registry=registry,
-        canonicalizer=canonicalizer,
-        schema_path=_schema_path(root, "report"),
+        registry=report_registry,
+        canonicalizer=report_canonicalizer,
+        schema_path=_schema_path(root, "report", REPORT_SCHEMA_VERSION),
         document=report,
         label="cause audit report",
     )
@@ -2049,7 +3630,37 @@ def compare_cause_audit(
 def execute_cause_audit_action(
     *, root: Path, store: ArtifactStore, arguments: Any
 ) -> dict[str, Any]:
+    return _execute_cause_audit_action(
+        root=root,
+        store=store,
+        arguments=arguments,
+        historical_v2=False,
+    )
+
+
+def execute_historical_cause_audit_v2_action(
+    *, root: Path, store: ArtifactStore, arguments: Any
+) -> dict[str, Any]:
+    return _execute_cause_audit_action(
+        root=root,
+        store=store,
+        arguments=arguments,
+        historical_v2=True,
+    )
+
+
+def _execute_cause_audit_action(
+    *,
+    root: Path,
+    store: ArtifactStore,
+    arguments: Any,
+    historical_v2: bool,
+) -> dict[str, Any]:
     action = str(arguments.action)
+    if historical_v2 and action not in {"run", "compare"}:
+        raise ContractError(
+            "historical-cause-audit-v2 supports only run and compare"
+        )
     cases = arguments.cases
     if cases is None:
         raise ContractError("cause-audit requires --cases")
@@ -2095,7 +3706,8 @@ def execute_cause_audit_action(
         for name in ("acquisition", "stockfish", "sbt"):
             if getattr(arguments, name) is None:
                 raise ContractError(f"cause-audit run requires --{name}")
-        return run_cause_audit(
+        runner = run_historical_cause_audit_v2 if historical_v2 else run_cause_audit
+        return runner(
             root=root,
             store=store,
             manifest_path=manifest,
@@ -2117,6 +3729,17 @@ def execute_cause_audit_action(
             raise ContractError(
                 "cause-audit compare requires --labels and --runtime-run"
             )
+        if historical_v2:
+            return compare_historical_cause_audit_v2(
+                root=root,
+                store=store,
+                manifest_path=manifest,
+                cases_path=cases,
+                labels_path=arguments.labels,
+                runtime_run_path=arguments.runtime_run,
+                partition=arguments.partition,
+                requested_case_ids=arguments.case_id,
+            )
         return compare_cause_audit(
             root=root,
             store=store,
@@ -2126,15 +3749,23 @@ def execute_cause_audit_action(
             runtime_run_path=arguments.runtime_run,
             partition=arguments.partition,
             requested_case_ids=arguments.case_id,
+            oracle_run_manifest_path=arguments.oracle_run_manifest,
+            base_oracle_path=arguments.base_oracle,
+            candidate_set_path=arguments.open_world_candidates,
+            adjudication_path=arguments.open_world_adjudication,
+            arm_inventory_path=arguments.open_world_arm_inventory,
         )
     raise ContractError(f"unsupported cause-audit action: {action}")
 
 
 __all__ = [
     "execute_cause_audit_action",
+    "execute_historical_cause_audit_v2_action",
     "freeze_cause_audit",
     "acquire_cause_audit",
     "run_cause_audit",
+    "run_historical_cause_audit_v2",
     "compare_cause_audit",
+    "compare_historical_cause_audit_v2",
     "freeze_candidate_binding",
 ]

@@ -38,7 +38,6 @@ case class Threat(
   defenseCount: Int             // Number of adequate defenses
 ):
   def sideUnderPressure: Color = !threatActor
-  def isImmediate: Boolean = turnsToImpact <= 2
   def isStrategic: Boolean = turnsToImpact >= 3
   def severity: ThreatSeverity =
     kind match
