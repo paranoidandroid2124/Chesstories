@@ -20,7 +20,7 @@ import chess
 
 from .hashing import json_bytes, sha256_bytes, sha256_file, sha256_json, slug
 from .model import ContractError, IntegrityError
-from .native_diagnostic import native_canonical_json
+from .native_diagnostic import NATIVE_HASH_CONTRACT, native_canonical_json
 from .schemas import SchemaRegistry
 from .stockfish import (
     StockfishAcquisitionError,
@@ -224,6 +224,11 @@ class _RuntimeJsonlSession:
             raise ContractError("runtime timeout must be from 0.001 through 3600 seconds")
         self.timeout_seconds = float(timeout_seconds)
         self.expected_schema = _safe_text(expected_schema, "runtime observation schema")
+        if (
+            expected_hash_contract is None
+            and self.expected_schema == RUNTIME_OBSERVATION_SCHEMA
+        ):
+            expected_hash_contract = NATIVE_HASH_CONTRACT
         self.expected_hash_contract = (
             _safe_text(expected_hash_contract, "runtime request hash contract")
             if expected_hash_contract is not None
@@ -241,6 +246,12 @@ class _RuntimeJsonlSession:
             if self.observation_schema_path is not None
             else None
         )
+        if (self.observation_schema_path is None) != (
+            self.expected_hash_contract is None
+        ):
+            raise ContractError(
+                "runtime observation schema and request hash contract must be bound together"
+            )
         self._process: subprocess.Popen[bytes] | None = None
         self._reader: threading.Thread | None = None
         self._output: queue.Queue[tuple[str, bytes | BaseException]] = queue.Queue()

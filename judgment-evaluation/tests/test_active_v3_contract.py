@@ -613,6 +613,29 @@ class ActiveProbeCompletionContractTest(unittest.TestCase):
         )
         self.assertEqual(session.expected_schema, RUNTIME_OBSERVATION_SCHEMA)
         self.assertEqual(session.observation_schema_path, NATIVE_V3_SCHEMA.resolve())
+        self.assertEqual(session.expected_hash_contract, NATIVE_HASH_CONTRACT)
+
+    def test_runtime_session_rejects_partial_schema_hash_binding(self) -> None:
+        with self.assertRaisesRegex(
+            ContractError, "schema and request hash contract must be bound together"
+        ):
+            _RuntimeJsonlSession(
+                ["not-started"],
+                cwd=ROOT / "runtime-adapter",
+                timeout_seconds=1.0,
+                expected_schema="chesstory.custom-runtime-observation.v3",
+                observation_schema_path=CAUSE_V3_SCHEMA,
+            )
+        with self.assertRaisesRegex(
+            ContractError, "schema and request hash contract must be bound together"
+        ):
+            _RuntimeJsonlSession(
+                ["not-started"],
+                cwd=ROOT / "runtime-adapter",
+                timeout_seconds=1.0,
+                expected_schema="chesstory.custom-runtime-observation.v3",
+                expected_hash_contract=NATIVE_HASH_CONTRACT,
+            )
 
     def test_active_cause_session_binds_dedicated_schema_and_hash_contract(self) -> None:
         session = _RuntimeJsonlSession(
