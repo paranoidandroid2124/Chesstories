@@ -36,6 +36,8 @@ from chesstory_eval.cause_semantics import (
     _importance_state,
     canonical_open_world_cause_candidate,
     canonical_open_world_cause_observation,
+    cause_matches_typed_oracle,
+    comparison_endpoint_snapshot_index,
     judge_typed_case,
     open_world_meaning_matches_candidate,
 )
@@ -573,6 +575,17 @@ def typed_cause(
         "c": {
             "kind": cause_kind,
             "source_side": "reference",
+            "comparison_evidence": {
+                "id": "comparison-1",
+                "producer": "runtime",
+                "layer": "comparison",
+                "scope": "comparison",
+                "confidence": "high",
+                "line": None,
+                "record_registered": True,
+                "record_payload_type": "CandidateComparisonEvidence",
+                "record_sha256": "2" * 64,
+            },
             "comparison": {
                 "kind": "played_vs_best",
                 "reference_line": {"id": "reference-line", "role": "best_reference", "rank": 1, "root_move": "e2e4"},
@@ -1310,11 +1323,122 @@ def typed_cause_disposition_observation(
     return observation, summary
 
 
+def typed_endpoint_snapshots(
+    causes: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    by_comparison: dict[str, dict[str, object]] = {}
+    witnessed: dict[str, set[bytes]] = {}
+    for cause in causes:
+        c_value = cause["c"]
+        assert isinstance(c_value, dict)
+        comparison_evidence = c_value["comparison_evidence"]
+        comparison = c_value["comparison"]
+        assert isinstance(comparison_evidence, dict) and isinstance(comparison, dict)
+        comparison_id = str(comparison_evidence["id"])
+        snapshot = by_comparison.get(comparison_id)
+        if snapshot is None:
+            snapshot = {
+                "comparison_evidence": copy.deepcopy(comparison_evidence),
+                "comparison": copy.deepcopy(comparison),
+                "reference": {
+                    "source_side": "reference",
+                    "line": {
+                        "line_id": comparison["reference_line"]["id"],
+                        "role": comparison["reference_line"]["role"],
+                        "rank": comparison["reference_line"]["rank"],
+                        "root_move": comparison["reference_line"]["root_move"],
+                    },
+                    "witnesses": [],
+                },
+                "candidate": {
+                    "source_side": "candidate",
+                    "line": {
+                        "line_id": comparison["candidate_line"]["id"],
+                        "role": comparison["candidate_line"]["role"],
+                        "rank": comparison["candidate_line"]["rank"],
+                        "root_move": comparison["candidate_line"]["root_move"],
+                    },
+                    "witnesses": [],
+                },
+            }
+            by_comparison[comparison_id] = snapshot
+            witnessed[comparison_id] = set()
+        else:
+            assert snapshot["comparison"] == comparison
+            assert snapshot["comparison_evidence"] == comparison_evidence
+
+        objects = c_value["objects"]
+        assert isinstance(objects, dict)
+        raw_channels = objects["raw_owned_bindings"]
+        assert isinstance(raw_channels, list)
+        source_side = str(c_value["source_side"])
+        if source_side not in {"reference", "candidate"}:
+            continue
+        side = snapshot[source_side]
+        assert isinstance(side, dict)
+        witnesses = side["witnesses"]
+        assert isinstance(witnesses, list)
+        for channel in raw_channels:
+            assert isinstance(channel, dict)
+            if not all(
+                isinstance(channel.get(name), value_type)
+                for name, value_type in (
+                    ("carrier", dict),
+                    ("provenance", list),
+                    ("carrier_ancestor_source_ids", list),
+                    ("primitive_proof_source", dict),
+                    ("line", dict),
+                    ("actor", list),
+                    ("target", list),
+                    ("mechanism", list),
+                    ("consequence", list),
+                    ("witness", list),
+                    ("proof_segment", dict),
+                    ("effect_descriptor", dict),
+                )
+            ):
+                continue
+            witness = {
+                "source_side": source_side,
+                "line": copy.deepcopy(channel["line"]),
+                "carrier": copy.deepcopy(channel["carrier"]),
+                "provenance": copy.deepcopy(channel["provenance"]),
+                "carrier_ancestor_source_ids": copy.deepcopy(
+                    channel["carrier_ancestor_source_ids"]
+                ),
+                "primitive_proof_source": copy.deepcopy(
+                    channel["primitive_proof_source"]
+                ),
+                "actor": copy.deepcopy(channel["actor"]),
+                "target": copy.deepcopy(channel["target"]),
+                "mechanism": copy.deepcopy(channel["mechanism"]),
+                "consequence": copy.deepcopy(channel["consequence"]),
+                "witness": copy.deepcopy(channel["witness"]),
+                "horizon": channel.get("horizon"),
+                "proof_segment": copy.deepcopy(channel["proof_segment"]),
+                "effect_descriptor": copy.deepcopy(channel["effect_descriptor"]),
+            }
+            key = json.dumps(witness, sort_keys=True, separators=(",", ":")).encode()
+            if key not in witnessed[comparison_id]:
+                witnessed[comparison_id].add(key)
+                witnesses.append(witness)
+    return list(by_comparison.values())
+
+
+def typed_snapshot_index(
+    causes: list[dict[str, object]],
+) -> dict[str, dict[str, object]]:
+    return comparison_endpoint_snapshot_index(
+        {"comparison_endpoint_evidence_snapshots": typed_endpoint_snapshots(causes)}
+    )
+
+
 def typed_actual(
     causes: list[dict[str, object]],
     *,
     importance: dict[str, object] | None = None,
     primary_engine_backed: bool = True,
+    endpoint_snapshots: list[dict[str, object]] | None = None,
 ) -> dict[str, object]:
     initial_native: list[dict[str, object]] = []
     for item in causes:
@@ -1391,6 +1515,11 @@ def typed_actual(
         },
         "verdict": typed_verdict_observation(primary_engine_backed),
         "probe_closure": {"all_closed": True},
+        "comparison_endpoint_evidence_snapshots": copy.deepcopy(
+            endpoint_snapshots
+            if endpoint_snapshots is not None
+            else typed_endpoint_snapshots(causes)
+        ),
         "causes": causes,
         "r_native_cause_selections": native_values,
         "importance": importance_value,
@@ -1466,7 +1595,9 @@ def pair_typed_idea_unit(
 def open_world_candidate(
     cause_value: dict[str, object], case_id: str = "case-1"
 ) -> dict[str, object]:
-    payload = canonical_open_world_cause_candidate(cause_value)
+    payload = canonical_open_world_cause_candidate(
+        cause_value, typed_snapshot_index([cause_value])
+    )
     c_semantics_sha256 = sha256_json(payload["c_semantics"])
     return {
         "candidate_id": "ow:"
@@ -1572,7 +1703,9 @@ def write_open_world_contract(
         partition="explore",
     )
     candidates = [candidate] if include_candidate else []
-    observation_payload = canonical_open_world_cause_observation(cause_value)
+    observation_payload = canonical_open_world_cause_observation(
+        cause_value, typed_snapshot_index([cause_value])
+    )
     observation = {
         "c_semantics_sha256": sha256_json(observation_payload["c_semantics"]),
         "payload_sha256": sha256_json(observation_payload),
@@ -2020,11 +2153,16 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         causes: list[dict[str, object]],
         *,
         importance: dict[str, object] | None = None,
+        endpoint_snapshots: list[dict[str, object]] | None = None,
     ) -> dict[str, object]:
         return judge_typed_case(
             case=typed_case(),
             label=label,
-            actual=typed_actual(causes, importance=importance),
+            actual=typed_actual(
+                causes,
+                importance=importance,
+                endpoint_snapshots=endpoint_snapshots,
+            ),
         )
 
     def test_exact_same_channel_meaning_survives_c_through_public_p(self) -> None:
@@ -2044,10 +2182,6 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
             item["c"]["objects"][layer][0]["effect_descriptor"]["effect_scope"]["target_signatures"] = ["square:d5"]
         judgment = self.judge(typed_label(), [item])
         self.assertEqual(judgment["first_failure_stage"], "C")
-        self.assertIn(
-            "missing_required_meaning",
-            [error["code"] for error in judgment["errors"]],
-        )
 
     def test_oracle_channels_are_a_conjunction_not_a_cross_channel_union(self) -> None:
         second = typed_channel(
@@ -2133,12 +2267,8 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
             selection_value["direct_effect_admission"]["causal_signatures"].append(
                 "invalid-channel"
             )
-        judgment = self.judge(typed_label(), [item])
-        self.assertEqual(judgment["first_failure_stage"], "C")
-        self.assertIn(
-            "missing_required_meaning",
-            [error["code"] for error in judgment["errors"]],
-        )
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [item])
 
     def test_r_selection_must_preserve_c_admission_and_channel_lineage(self) -> None:
         admission_drift = typed_cause()
@@ -2219,12 +2349,8 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
             }],
         }
         refresh_c_source_identity_digests(context_borrowing)
-        judgment = self.judge(typed_label(), [context_borrowing])
-        self.assertEqual(judgment["first_failure_stage"], "C")
-        self.assertIn(
-            "missing_required_meaning",
-            [error["code"] for error in judgment["errors"]],
-        )
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [context_borrowing])
 
     def test_c_comparison_and_line_identity_swaps_are_integrity_errors(self) -> None:
         mutations = (
@@ -2250,7 +2376,7 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         judgment = self.judge(typed_label(), [no_direct])
         self.assertEqual(judgment["first_failure_stage"], "C")
         self.assertIn(
-            "missing_required_meaning",
+            "cause_admission_dropped",
             [error["code"] for error in judgment["errors"]],
         )
 
@@ -2265,6 +2391,220 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         self.assertEqual(item["c"]["attribution"]["kind"], "reference_creates_resource")
         self.assertEqual(self.judge(typed_label(), [item])["status"], "matched")
 
+    def test_c_failure_reasons_distinguish_generation_and_admission(self) -> None:
+        seed = typed_cause()
+        snapshots = typed_endpoint_snapshots([seed])
+
+        no_cause = self.judge(
+            typed_label(), [], endpoint_snapshots=copy.deepcopy(snapshots)
+        )
+        self.assertIn(
+            "cause_not_generated", {item["code"] for item in no_cause["errors"]}
+        )
+
+        admission_dropped = typed_cause()
+        admission_dropped["c"]["objects"]["owned_bindings"] = []
+        admission_dropped["c"]["direct_effect_admission"] = {
+            "status": "restricted",
+            "causal_signatures": [],
+        }
+        dropped = self.judge(
+            typed_label(),
+            [admission_dropped],
+            endpoint_snapshots=copy.deepcopy(snapshots),
+        )
+        self.assertIn(
+            "cause_admission_dropped",
+            {item["code"] for item in dropped["errors"]},
+        )
+
+        no_direct_evidence = typed_cause()
+        no_direct_evidence["c"]["objects"]["raw_owned_bindings"] = []
+        no_direct_evidence["c"]["objects"]["pre_admission_owned_bindings"] = []
+        no_direct_evidence["c"]["objects"]["owned_bindings"] = []
+        no_direct_evidence["c"]["direct_effect_admission"] = {
+            "status": "restricted",
+            "causal_signatures": [],
+        }
+        missing = self.judge(
+            typed_label(),
+            [no_direct_evidence],
+            endpoint_snapshots=copy.deepcopy(snapshots),
+        )
+        self.assertIn(
+            "missing_required_meaning",
+            {item["code"] for item in missing["errors"]},
+        )
+
+    def test_neutral_snapshot_rejects_coordinated_c_rewrite(self) -> None:
+        item = typed_cause()
+        snapshots = typed_endpoint_snapshots([item])
+        for layer in (
+            "raw_owned_bindings",
+            "pre_admission_owned_bindings",
+            "owned_bindings",
+        ):
+            channel = item["c"]["objects"][layer][0]
+            channel["carrier"]["producer"] = "forged_producer"
+            channel["provenance"][0]["producer"] = "forged_producer"
+            channel["primitive_proof_source"]["producer"] = "forged_producer"
+            channel["actor"][2] = {"kind": "piece", "key": "knight"}
+            channel["target"] = [{"kind": "square", "key": "d5"}]
+            channel["mechanism"] = [{"kind": "mechanism", "key": "space"}]
+            channel["consequence"] = [
+                {"kind": "consequence", "key": "center_control"}
+            ]
+            channel["effect_descriptor"]["effect_scope"][
+                "target_signatures"
+            ] = ["square:d5"]
+        item["c"]["proof"]["direct"]["sources"][0][
+            "producer"
+        ] = "forged_producer"
+        refresh_c_source_identity_digests(item)
+        with self.assertRaisesRegex(IntegrityError, "neutral endpoint witness"):
+            self.judge(
+                typed_label(), [item], endpoint_snapshots=copy.deepcopy(snapshots)
+            )
+
+    def test_neutral_snapshot_rejects_coordinated_source_polarity_rewrite(self) -> None:
+        item = typed_cause()
+        snapshots = typed_endpoint_snapshots([item])
+        c_value = item["c"]
+        candidate_line = copy.deepcopy(c_value["comparison"]["candidate_line"])
+        c_value["source_side"] = "candidate"
+        c_value["attribution"]["kind"] = "candidate_allows_liability"
+        c_value["binding"]["source_side"] = "candidate"
+        c_value["binding"]["event_line"] = copy.deepcopy(candidate_line)
+        c_value["binding"]["evidence_lines"] = [copy.deepcopy(candidate_line)]
+        c_value["proof"]["direct"]["sources"][0]["line"] = copy.deepcopy(
+            candidate_line
+        )
+        for layer in (
+            "raw_owned_bindings",
+            "pre_admission_owned_bindings",
+            "owned_bindings",
+        ):
+            channel = c_value["objects"][layer][0]
+            channel["line_id"] = "candidate-line"
+            channel["line"] = {
+                "line_id": "candidate-line",
+                "role": "played",
+                "rank": 1,
+                "root_move": "e2e3",
+            }
+            channel["actor"] = [
+                {"kind": "move", "key": "e2e3"},
+                {"kind": "side", "key": "white"},
+                {"kind": "piece", "key": "pawn"},
+                {"kind": "square", "key": "e2"},
+                {"kind": "square", "key": "e3"},
+            ]
+            channel["proof_segment"]["steps"][0]["move_uci"] = "e2e3"
+            for ref_name in ("carrier", "primitive_proof_source"):
+                channel[ref_name]["line"] = copy.deepcopy(candidate_line)
+            channel["provenance"][0]["line"] = copy.deepcopy(candidate_line)
+        refresh_c_source_identity_digests(item)
+
+        with self.assertRaisesRegex(IntegrityError, "neutral endpoint witness"):
+            self.judge(
+                typed_label(), [item], endpoint_snapshots=copy.deepcopy(snapshots)
+            )
+
+    def test_neutral_snapshot_documentary_closure_and_uniqueness(self) -> None:
+        item = typed_cause()
+        outside_ancestry = typed_endpoint_snapshots([item])
+        outside_ancestry[0]["reference"]["witnesses"][0][
+            "carrier_ancestor_source_ids"
+        ] = []
+        with self.assertRaisesRegex(IntegrityError, "outside carrier ancestry"):
+            self.judge(
+                typed_label(), [item], endpoint_snapshots=outside_ancestry
+            )
+
+        duplicate = typed_endpoint_snapshots([item])
+        alias = copy.deepcopy(duplicate[0]["reference"]["witnesses"][0])
+        alias["actor"].reverse()
+        duplicate[0]["reference"]["witnesses"].append(alias)
+        with self.assertRaisesRegex(IntegrityError, "ambiguous duplicate witness"):
+            self.judge(typed_label(), [item], endpoint_snapshots=duplicate)
+
+    def test_candidate_owned_conversion_changes_keep_neutral_witness(self) -> None:
+        for cause_kind, attribution_kind, direct_change in (
+            ("conversion_miss", "candidate_allows_liability", "missed"),
+            ("conversion_secured", "candidate_creates_value", "occurred"),
+        ):
+            with self.subTest(cause_kind=cause_kind):
+                item = typed_cause(cause_kind=cause_kind, native=False)
+                c_value = item["c"]
+                c_value["source_side"] = "candidate"
+                c_value["attribution"]["kind"] = attribution_kind
+                c_value["binding"]["source_side"] = "candidate"
+                c_value["binding"]["event_line"] = copy.deepcopy(
+                    c_value["comparison"]["candidate_line"]
+                )
+                c_value["binding"]["evidence_lines"] = [
+                    copy.deepcopy(c_value["comparison"]["candidate_line"])
+                ]
+                c_value["proof"]["direct"]["sources"][0]["line"] = copy.deepcopy(
+                    c_value["comparison"]["candidate_line"]
+                )
+                for layer in (
+                    "raw_owned_bindings",
+                    "pre_admission_owned_bindings",
+                    "owned_bindings",
+                ):
+                    channel = c_value["objects"][layer][0]
+                    channel["direct_change"] = direct_change
+                    channel["line_id"] = "candidate-line"
+                    channel["line"] = {
+                        "line_id": "candidate-line",
+                        "role": "played",
+                        "rank": 1,
+                        "root_move": "e2e3",
+                    }
+                    channel["actor"] = [
+                        {"kind": "move", "key": "e2e3"},
+                        {"kind": "side", "key": "white"},
+                        {"kind": "piece", "key": "pawn"},
+                        {"kind": "square", "key": "e2"},
+                        {"kind": "square", "key": "e3"},
+                    ]
+                    channel["proof_segment"]["steps"][0]["move_uci"] = "e2e3"
+                    for ref_name in ("carrier", "primitive_proof_source"):
+                        channel[ref_name]["line"] = copy.deepcopy(
+                            c_value["comparison"]["candidate_line"]
+                        )
+                    channel["provenance"][0]["line"] = copy.deepcopy(
+                        c_value["comparison"]["candidate_line"]
+                    )
+                refresh_c_source_identity_digests(item)
+                label = typed_label(
+                    [typed_meaning("conversion", cause_kind, exposure="diagnostic_only")],
+                    disposition="diagnostic_only",
+                    top=[],
+                )
+                realization = label["meanings"][0]["realizations"][0]
+                realization["source_side"] = "candidate"
+                realization["attribution_kind"] = attribution_kind
+                realization["comparison"]["event_role"] = "played"
+                realization["comparison"]["event_root_move"] = "e2e3"
+                realization["channels"][0]["direct_change"] = direct_change
+                realization["channels"][0]["actor"] = {
+                    "move": "e2e3",
+                    "side": "white",
+                    "piece": "pawn",
+                    "from": "e2",
+                    "to": "e3",
+                }
+                realization["channels"][0]["line"] = {
+                    "role": "played",
+                    "root_move": "e2e3",
+                }
+                snapshot_index = typed_snapshot_index([item])
+                self.assertTrue(
+                    cause_matches_typed_oracle(item, label, snapshot_index)
+                )
+
     def test_defensive_resource_reference_creates_resource_has_no_kind_filter(self) -> None:
         label = typed_label([typed_meaning("defense", "defensive_resource")], top=["defense"])
         self.assertEqual(
@@ -2276,8 +2616,8 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         actor_mismatch = typed_cause()
         for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
             actor_mismatch["c"]["objects"][layer][0]["actor"][0]["key"] = "e2e3"
-        judgment = self.judge(typed_label(), [actor_mismatch])
-        self.assertEqual(judgment["first_failure_stage"], "C")
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [actor_mismatch])
 
         for field, mutate in (
             (
@@ -2298,11 +2638,8 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
 
     def test_r_rejects_importance_and_diagnostic_drift_from_verified_c(self) -> None:
         item = typed_cause()
-        owned = item["c"]["objects"]["owned_bindings"][0]
-        owned["witness"] = [{"kind": "square", "key": "d5"}]
-        owned["specific_target_mechanism_ready"] = False
-        owned["importance_effect"] = {"diagnostic": "ignored-by-c"}
-        owned["importance_descriptor_ambiguous"] = True
+        selected = item["r"]["native_selection"]["channels"][0]
+        selected["carrier"]["id"] = "sibling-source"
         judgment = self.judge(typed_label(), [item])
         self.assertEqual(judgment["first_failure_stage"], "R")
         self.assertIn("wrong_r_semantics", [error["code"] for error in judgment["errors"]])
@@ -2315,10 +2652,15 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
             self.judge(typed_label(), [provenance_forged])
 
         terminal_forged = typed_cause()
+        endpoint_snapshots = typed_endpoint_snapshots([terminal_forged])
         for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
             terminal_forged["c"]["objects"][layer][0]["proof_segment"]["terminal_relation"] = "creates_threat"
         with self.assertRaises(IntegrityError):
-            self.judge(typed_label(), [terminal_forged])
+            self.judge(
+                typed_label(),
+                [terminal_forged],
+                endpoint_snapshots=endpoint_snapshots,
+            )
 
         source_line_forged = typed_cause()
         source_line_forged["c"]["proof"]["direct"]["sources"][0]["line"]["root_move"] = "e2e3"
@@ -2328,8 +2670,8 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         descriptor_absent = typed_cause()
         for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
             descriptor_absent["c"]["objects"][layer][0]["effect_descriptor"] = None
-        judgment = self.judge(typed_label(), [descriptor_absent])
-        self.assertEqual(judgment["first_failure_stage"], "C")
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [descriptor_absent])
 
     def test_c_coordinated_source_metadata_rewrites_keep_no_authority(self) -> None:
         provenance_rewrite = typed_cause()
@@ -2384,9 +2726,15 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
                 forged = typed_cause()
                 for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
                     forged["c"]["objects"][layer][0]["proof_segment"]["steps"] = copy.deepcopy(steps)
+                endpoint_snapshots = typed_endpoint_snapshots([forged])
+                for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
                     forged["c"]["objects"][layer][0]["proof_segment"]["steps"][1][field] = value
                 with self.assertRaises(IntegrityError):
-                    self.judge(typed_label(), [forged])
+                    self.judge(
+                        typed_label(),
+                        [forged],
+                        endpoint_snapshots=endpoint_snapshots,
+                    )
 
     def test_c_ten_non_defensive_proof_terminal_families_match(self) -> None:
         families = (
@@ -2421,6 +2769,7 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
                 self.assertEqual(self.judge(typed_label(), [item])["status"], "matched")
 
         forged = typed_cause()
+        endpoint_snapshots = typed_endpoint_snapshots([forged])
         for layer in (
             "raw_owned_bindings",
             "pre_admission_owned_bindings",
@@ -2432,7 +2781,11 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
             )
             channel["proof_segment"]["terminal_relation"] = "creates_threat"
         with self.assertRaises(IntegrityError):
-            self.judge(typed_label(), [forged])
+            self.judge(
+                typed_label(),
+                [forged],
+                endpoint_snapshots=endpoint_snapshots,
+            )
 
     def test_c_defensive_recapture_resource_keeps_its_reference_root(self) -> None:
         item = typed_cause("cause-defensive", "defensive_resource")
@@ -2525,8 +2878,8 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
             carrier["record_payload_type"] = None
             carrier["record_sha256"] = None
         refresh_c_source_identity_digests(unregistered)
-        judgment = self.judge(typed_label(), [unregistered])
-        self.assertEqual(judgment["first_failure_stage"], "C")
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [unregistered])
 
         for field, value in (("record_payload_type", "LineFactEvidence"), ("record_sha256", "0" * 64)):
             with self.subTest(unregistered_field=field):
@@ -2544,6 +2897,11 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
     def test_c_context_only_preserves_mismatch_but_not_document_contradiction(self) -> None:
         coherent = typed_cause()
         coherent["c"]["attribution"]["kind"] = "context_only"
+        coherent["c"]["objects"]["owned_bindings"] = []
+        coherent["c"]["direct_effect_admission"] = {
+            "status": "restricted",
+            "causal_signatures": [],
+        }
         judgment = self.judge(typed_label(), [coherent])
         self.assertEqual(judgment["first_failure_stage"], "C")
 
@@ -2625,12 +2983,10 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
                 "primitive_proof_source"
             ] = copy.deepcopy(provenance)
         refresh_c_source_identity_digests(unregistered)
-        self.assertEqual(
-            self.judge(typed_label(), [unregistered])["first_failure_stage"],
-            "C",
-        )
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [unregistered])
 
-    def test_c_rejects_candidate_direct_source_viewpoint_and_raw_semantic_alias(self) -> None:
+    def test_c_rejects_candidate_direct_source_viewpoint_but_allows_raw_aliases(self) -> None:
         candidate_source = typed_cause()
         second = copy.deepcopy(candidate_source["c"]["proof"]["direct"]["sources"][0])
         second["id"] = "proof-candidate"
@@ -2647,17 +3003,16 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         duplicate = copy.deepcopy(alias["c"]["objects"]["raw_owned_bindings"][0])
         duplicate["causal_signature"] = "raw-semantic-alias"
         alias["c"]["objects"]["raw_owned_bindings"].append(duplicate)
-        with self.assertRaises(IntegrityError):
-            self.judge(typed_label(), [alias])
+        self.assertEqual(self.judge(typed_label(), [alias])["status"], "matched")
 
         sparse_alias = typed_cause()
         duplicate = copy.deepcopy(sparse_alias["c"]["objects"]["raw_owned_bindings"][0])
         duplicate["causal_signature"] = "raw-sparse-semantic-alias"
         duplicate["effect_descriptor"] = None
-        sparse_alias["c"]["objects"]["raw_owned_bindings"][0]["effect_descriptor"] = None
         sparse_alias["c"]["objects"]["raw_owned_bindings"].append(duplicate)
-        with self.assertRaises(IntegrityError):
-            self.judge(typed_label(), [sparse_alias])
+        self.assertEqual(
+            self.judge(typed_label(), [sparse_alias])["status"], "matched"
+        )
 
     def test_c_direct_witness_rejects_swapped_roots_and_duplicate_signatures(self) -> None:
         mutations = (
@@ -4693,8 +5048,11 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         cause_value = typed_cause(
             "cause-diagnostic", "tempo_loss", native=False, packet=False, public=False
         )
-        payload = canonical_open_world_cause_candidate(cause_value)
-        observation = canonical_open_world_cause_observation(cause_value)
+        snapshot_index = typed_snapshot_index([cause_value])
+        payload = canonical_open_world_cause_candidate(cause_value, snapshot_index)
+        observation = canonical_open_world_cause_observation(
+            cause_value, snapshot_index
+        )
         self.assertEqual(set(payload), {"c_semantics"})
         self.assertEqual(observation["selection_variants"], [])
         self.assertIn("c_generated", observation["observed_stages"])
@@ -4736,14 +5094,23 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         forged_runtime_flags = copy.deepcopy(original)
         forged_runtime_flags["c"]["attribution"]["root_move_matched"] = False
         forged_runtime_flags["c"]["attribution"]["direct_proof_eligible"] = False
+        snapshot_index = typed_snapshot_index([original])
         self.assertEqual(
-            canonical_open_world_cause_candidate(original),
-            canonical_open_world_cause_candidate(forged_runtime_flags),
+            canonical_open_world_cause_candidate(original, snapshot_index),
+            canonical_open_world_cause_candidate(
+                forged_runtime_flags, snapshot_index
+            ),
         )
         self.assertEqual(
-            sha256_json(canonical_open_world_cause_candidate(original)["c_semantics"]),
             sha256_json(
-                canonical_open_world_cause_candidate(forged_runtime_flags)["c_semantics"]
+                canonical_open_world_cause_candidate(original, snapshot_index)[
+                    "c_semantics"
+                ]
+            ),
+            sha256_json(
+                canonical_open_world_cause_candidate(
+                    forged_runtime_flags, snapshot_index
+                )["c_semantics"]
             ),
         )
 
@@ -4753,7 +5120,9 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
             "sibling-source"
         )
         with self.assertRaisesRegex(ContractError, "not bound"):
-            canonical_open_world_cause_observation(borrowed)
+            canonical_open_world_cause_observation(
+                borrowed, typed_snapshot_index([borrowed])
+            )
 
     def test_source_blind_artifacts_exclude_arm_and_runtime_behavior(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -4789,7 +5158,9 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         )
 
         def observation_row(value: dict[str, object]) -> dict[str, object]:
-            payload = canonical_open_world_cause_observation(value)
+            payload = canonical_open_world_cause_observation(
+                value, typed_snapshot_index([value])
+            )
             return {
                 "c_semantics_sha256": sha256_json(payload["c_semantics"]),
                 "payload_sha256": sha256_json(payload),
@@ -4824,7 +5195,9 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         self.assertEqual(len(candidates), 1)
         self.assertEqual(
             candidates[0]["payload"],
-            canonical_open_world_cause_candidate(primary),
+            canonical_open_world_cause_candidate(
+                primary, typed_snapshot_index([primary])
+            ),
         )
         self.assertNotIn("selection_variants", candidates[0]["payload"])
 
@@ -4931,12 +5304,18 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         )
         merged_observation = _merge_candidate_payloads(
             [
-                canonical_open_world_cause_observation(primary),
-                canonical_open_world_cause_observation(complementary),
+                canonical_open_world_cause_observation(
+                    primary, typed_snapshot_index([primary])
+                ),
+                canonical_open_world_cause_observation(
+                    complementary, typed_snapshot_index([complementary])
+                ),
             ]
         )
         self.assertEqual(len(merged_observation["selection_variants"]), 2)
-        candidate = canonical_open_world_cause_candidate(primary)
+        candidate = canonical_open_world_cause_candidate(
+            primary, typed_snapshot_index([primary])
+        )
         verified = typed_meaning(
             "open-world-tempo",
             "tempo_loss",
@@ -4950,7 +5329,9 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         cause_value = typed_cause("cause-best-vs-second", "tempo_loss")
         cause_value["c"]["comparison"]["kind"] = "best_vs_second"
         cause_value["c"]["binding"]["role"] = "candidate_set_constraint"
-        candidate = canonical_open_world_cause_candidate(cause_value)
+        candidate = canonical_open_world_cause_candidate(
+            cause_value, typed_snapshot_index([cause_value])
+        )
         verified = typed_meaning(
             "best-keeps-resource",
             "tempo_loss",
@@ -4980,7 +5361,9 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         )
         cause_value["c"]["comparison"]["kind"] = "reference_vs_alternative"
         cause_value["c"]["binding"]["role"] = "alternative_diagnostic"
-        candidate = canonical_open_world_cause_candidate(cause_value)
+        candidate = canonical_open_world_cause_candidate(
+            cause_value, typed_snapshot_index([cause_value])
+        )
 
         verified = typed_meaning(
             "diagnostic-reference-vs-alternative",
@@ -5035,8 +5418,9 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
                 )
 
     def test_open_world_acceptance_cannot_smuggle_an_extra_realization(self) -> None:
+        cause_value = typed_cause("cause-open-world", "tempo_loss")
         payload = canonical_open_world_cause_candidate(
-            typed_cause("cause-open-world", "tempo_loss")
+            cause_value, typed_snapshot_index([cause_value])
         )
         verified = typed_meaning(
             "open-world-tempo", "tempo_loss", generation="allowed"

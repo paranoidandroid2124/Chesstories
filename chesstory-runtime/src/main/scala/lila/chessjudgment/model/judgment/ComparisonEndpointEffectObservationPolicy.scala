@@ -16,6 +16,96 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
     case RightStrictlyStronger
     case Incomparable
 
+  /** Common fail-closed membership gate for every retained and differential
+    * admission branch. Membership is necessary but never sufficient: it
+    * cannot itself admit a channel.
+    */
+  def uniqueNeutralWitnessFor(
+      snapshot: ComparisonEndpointEvidenceSnapshot,
+      sourceSide: RelativeCauseSourceSide,
+      channel: DirectCauseChannel,
+      graph: TypedEvidenceGraph
+  ): Option[ComparisonEndpointEvidenceWitness] =
+    val expectedLine = sourceSide match
+      case RelativeCauseSourceSide.Reference => Some(snapshot.comparison.referenceLine)
+      case RelativeCauseSourceSide.Candidate => Some(snapshot.comparison.candidateLine)
+      case RelativeCauseSourceSide.Shared | RelativeCauseSourceSide.Mixed => None
+    snapshot
+      .forSide(sourceSide)
+      .toList
+      .filter(side =>
+        side.sourceSide == sourceSide &&
+          expectedLine.exists(line => sameSemanticLine(Some(side.line), Some(line)))
+      )
+      .flatMap(side =>
+        side.witnesses.filter(witness =>
+          witness.sourceSide == sourceSide &&
+            sameSemanticLine(Some(side.line), Some(witness.line))
+        )
+      )
+      .filter(neutralWitnessMatchesChannel(_, channel, graph)) match
+        case exact :: Nil => Some(exact)
+        case _            => None
+
+  private def neutralWitnessMatchesChannel(
+      witness: ComparisonEndpointEvidenceWitness,
+      channel: DirectCauseChannel,
+      graph: TypedEvidenceGraph
+  ): Boolean =
+    channel.rootOwnedProof.exists { proof =>
+      val binding = channel.binding
+      proof == witness.rootOwnedProof &&
+        proof.primitiveSource == witness.primitiveProofSource &&
+        carrierAndProvenanceMatch(witness, channel, graph) &&
+        sameSemanticLine(binding.line, Some(witness.line)) &&
+        sameObjects(binding.actor, witness.binding.actor) &&
+        sameObjects(binding.target, witness.binding.target) &&
+        sameObjects(binding.mechanism, witness.binding.mechanism) &&
+        sameObjects(binding.consequence, witness.binding.consequence) &&
+        sameObjects(binding.witness, witness.binding.witness) &&
+        normalized(binding.horizon) == normalized(witness.binding.horizon) &&
+        channel.proofSegment.contains(witness.proofSegment) &&
+        channel.rootOwnedEffectDescriptor.contains(witness.effectDescriptor)
+    }
+
+  private def carrierAndProvenanceMatch(
+      witness: ComparisonEndpointEvidenceWitness,
+      channel: DirectCauseChannel,
+      graph: TypedEvidenceGraph
+  ): Boolean =
+    val actual = channel.binding
+    val expected = witness.binding
+    actual.source == expected.source &&
+      actual.provenance == expected.provenance &&
+      graph
+        .record(actual.source)
+        .toList
+        .flatMap(graph.parentClosure)
+        .map(_.ref.id)
+        .distinct
+        .sorted == witness.carrierAncestorSourceIds
+
+  private def sameSemanticLine(
+      left: Option[LineNodeRef],
+      right: Option[LineNodeRef]
+  ): Boolean =
+    (left, right) match
+      case (Some(leftLine), Some(rightLine)) =>
+        leftLine.role == rightLine.role &&
+          leftLine.rank == rightLine.rank &&
+          EvidenceRef.sameMove(leftLine.rootMove, rightLine.rootMove)
+      case (None, None) => true
+      case _            => false
+
+  private def sameObjects(
+      left: List[ConcreteChessObject],
+      right: List[ConcreteChessObject]
+  ): Boolean =
+    left.map(_.signaturePart).sorted == right.map(_.signaturePart).sorted
+
+  private def normalized(value: Option[String]): Option[String] =
+    value.map(normalize).filter(_.nonEmpty)
+
   /** Public admission needs exactly one fact for a queried scope. Multiple
     * distinct magnitudes are not averaged or selected by evidence order.
     */

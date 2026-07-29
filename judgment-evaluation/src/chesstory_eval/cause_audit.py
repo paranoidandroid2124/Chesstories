@@ -19,6 +19,7 @@ from .cause_semantics import (
     canonical_open_world_cause_candidate,
     canonical_open_world_cause_observation,
     cause_matches_typed_oracle,
+    comparison_endpoint_snapshot_index,
     judge_typed_case,
     open_world_meaning_matches_candidate,
     validate_typed_oracle_label,
@@ -1052,15 +1053,16 @@ def _verify_open_world_candidate_coverage(
         for item in candidate_set["candidates"]
     }
     for case_id, view in sorted(views.items()):
+        snapshot_index = comparison_endpoint_snapshot_index(view)
         base_label = base_by_id.get(case_id)
         if base_label is None:
             raise IntegrityError(
                 "typed runtime view has no partition-scoped base oracle label"
             )
         for cause in view["causes"]:
-            if cause_matches_typed_oracle(cause, base_label):
+            if cause_matches_typed_oracle(cause, base_label, snapshot_index):
                 continue
-            payload = canonical_open_world_cause_candidate(cause)
+            payload = canonical_open_world_cause_candidate(cause, snapshot_index)
             c_semantics = _object(
                 payload["c_semantics"], "generated open-world C semantics"
             )
@@ -1088,11 +1090,12 @@ def _unmatched_observations_for_view(
     base_label: Mapping[str, Any],
     view: Mapping[str, Any],
 ) -> list[dict[str, Any]]:
+    snapshot_index = comparison_endpoint_snapshot_index(view)
     payloads_by_hash: dict[str, list[dict[str, Any]]] = {}
     for cause in view["causes"]:
-        if cause_matches_typed_oracle(cause, base_label):
+        if cause_matches_typed_oracle(cause, base_label, snapshot_index):
             continue
-        payload = canonical_open_world_cause_observation(cause)
+        payload = canonical_open_world_cause_observation(cause, snapshot_index)
         c_hash = sha256_json(payload["c_semantics"])
         payloads_by_hash.setdefault(c_hash, []).append(payload)
     observations = []
@@ -2161,6 +2164,18 @@ def _actual_view(
         assert verified_hash_contract is not None
         view["request_sha256"] = verified_request_sha256
         view["hash_contract"] = verified_hash_contract
+        endpoint_snapshots = observation.get(
+            "comparison_endpoint_evidence_snapshots"
+        )
+        if not isinstance(endpoint_snapshots, list) or not all(
+            isinstance(item, Mapping) for item in endpoint_snapshots
+        ):
+            raise ContractError(
+                "v3 cause adapter observation has no comparison endpoint evidence snapshot array"
+            )
+        view["comparison_endpoint_evidence_snapshots"] = copy.deepcopy(
+            endpoint_snapshots
+        )
         verdict = observation.get("verdict")
         if not isinstance(verdict, Mapping):
             raise ContractError(

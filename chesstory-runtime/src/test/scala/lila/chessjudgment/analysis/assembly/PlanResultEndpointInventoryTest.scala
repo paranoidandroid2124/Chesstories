@@ -211,11 +211,8 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       incompletePlanIds = Set(event.planId.id),
       extractionReady = true
     )
-    val cause = RelativeCauseFact(
-      RelativeCauseKind.PlanImprovement,
-      fixture.robustEvent.ref,
-      List(fixture.robustEvent.ref),
-      RelativeCauseSourceSide.Candidate
+    val sourceObservation = source.observations.headOption.getOrElse(
+      fail("expected exact source observation")
     )
 
     assertEquals(
@@ -226,12 +223,10 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       RootOwnedEffectPolicy.exactPlanResultPrimitive(wrapper.rootOwnedProof.get),
       None
     )
-    assert(!RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admittedChannel(
+    assert(!RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
       source,
       incompleteCounterpart,
-      cause,
-      wrapper,
-      TypedEvidenceGraph.empty
+      sourceObservation
     ))
 
   test("PVB retains an exact played plan refutation without counterpart plan enumeration"):

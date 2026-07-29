@@ -338,10 +338,9 @@ object MoveReviewJudgmentOrchestrator:
 
   private def causeOwnedPayload(payload: EvidencePayload): Boolean =
     payload match
-      case _: StrategicMechanismContrastEvidence => true
-      case _: RelativeCauseFactEvidence          => true
-      case _: RelativeAssessmentEvidence         => true
-      case _                                     => false
+      case _: RelativeCauseFactEvidence  => true
+      case _: RelativeAssessmentEvidence => true
+      case _                             => false
 
   private def evidenceClosed(context: JudgmentAssemblyContext): Boolean =
     val records = context.evidenceGraph.records

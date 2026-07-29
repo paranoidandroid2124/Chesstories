@@ -12,7 +12,8 @@ import lila.chessjudgment.analysis.assembly.{
   ClaimCandidateGraph,
   ClaimDeduplicationTrace,
   ClaimRankingResult,
-  JudgmentBoundaryExecution
+  JudgmentBoundaryExecution,
+  RelativeAssessmentAssembler
 }
 import lila.chessjudgment.analysis.policy.ClaimAdmissionDecision
 import lila.chessjudgment.model.judgment.*
@@ -375,6 +376,14 @@ object CauseAuditAdapterCli:
   ): JsObject =
     val graph = execution.c.evidenceGraph
     val recordHashes = RecordHashes(graph)
+    val fGraph = execution.f.evidenceGraph
+    val fRecordHashes = RecordHashes(fGraph)
+    val comparisonEndpointEvidenceSnapshots =
+      if contract.capturesNativeRSelections then
+        RelativeAssessmentAssembler
+          .comparisonEndpointEvidenceSnapshots(execution.f)
+          .map(comparisonEndpointEvidenceSnapshotJson(_, fGraph, fRecordHashes))
+      else Nil
     val projectionJson = projectionSummary(trace, graph, contract)
     val verdictObservation =
       Option.when(contract.capturesNativeRSelections)(
@@ -520,7 +529,8 @@ object CauseAuditAdapterCli:
         "importance" -> importanceObservation,
         "idea_units" -> ideaUnitObservation,
         "idea_importance" -> ideaImportanceObservation,
-        "cause_disposition_ledger" -> causeDispositionLedgerObservation
+        "cause_disposition_ledger" -> causeDispositionLedgerObservation,
+        "comparison_endpoint_evidence_snapshots" -> comparisonEndpointEvidenceSnapshots
       )
     else observation
 
@@ -1175,6 +1185,72 @@ object CauseAuditAdapterCli:
       "win_percent_loss_for_mover" -> fact.comparison.winPercentLossForMover,
       "verdict" -> code(fact.comparison.verdict),
       "candidate_set_type" -> fact.candidateSet.map(item => code(item.candidateSetType))
+    )
+
+  private def comparisonEndpointEvidenceSnapshotJson(
+      snapshot: ComparisonEndpointEvidenceSnapshot,
+      graph: TypedEvidenceGraph,
+      recordHashes: RecordHashes
+  ): JsObject =
+    Json.obj(
+      "comparison_evidence" -> sourceRefJson(snapshot.comparisonEvidence, graph, recordHashes),
+      "comparison" -> comparisonJson(snapshot.comparison),
+      "reference" -> comparisonEndpointEvidenceSideJson(
+        snapshot.reference,
+        graph,
+        recordHashes
+      ),
+      "candidate" -> comparisonEndpointEvidenceSideJson(
+        snapshot.candidate,
+        graph,
+        recordHashes
+      )
+    )
+
+  private def comparisonEndpointEvidenceSideJson(
+      side: ComparisonEndpointEvidenceSideSnapshot,
+      graph: TypedEvidenceGraph,
+      recordHashes: RecordHashes
+  ): JsObject =
+    Json.obj(
+      "source_side" -> code(side.sourceSide),
+      "line" -> projectedSemanticLine(side.line).json,
+      "witnesses" -> side.witnesses.map(
+        comparisonEndpointEvidenceWitnessJson(_, graph, recordHashes)
+      )
+    )
+
+  private def comparisonEndpointEvidenceWitnessJson(
+      witness: ComparisonEndpointEvidenceWitness,
+      graph: TypedEvidenceGraph,
+      recordHashes: RecordHashes
+  ): JsObject =
+    Json.obj(
+      "source_side" -> code(witness.sourceSide),
+      "line" -> projectedSemanticLine(witness.line).json,
+      "carrier" -> sourceRefJson(witness.carrier, graph, recordHashes),
+      "provenance" -> witness.provenance
+        .distinctBy(_.id)
+        .sortBy(_.id)
+        .map(sourceRefJson(_, graph, recordHashes)),
+      "carrier_ancestor_source_ids" -> witness.carrierAncestorSourceIds.distinct.sorted,
+      "primitive_proof_source" -> sourceRefJson(
+        witness.primitiveProofSource,
+        graph,
+        recordHashes
+      ),
+      "actor" -> aggregateObjects(witness.binding.actor),
+      "target" -> aggregateObjects(witness.binding.target),
+      "mechanism" -> aggregateObjects(witness.binding.mechanism),
+      "consequence" -> aggregateObjects(witness.binding.consequence),
+      "witness" -> aggregateObjects(witness.binding.witness),
+      "horizon" -> witness.binding.horizon,
+      "proof_segment" -> RuntimeProtocol.directCauseProofSegmentPublicJson(
+        witness.proofSegment
+      ),
+      "effect_descriptor" -> RuntimeProtocol.rootOwnedEffectDescriptorPublicJson(
+        witness.effectDescriptor
+      )
     )
 
   private def onlyMoveConstraintJson(
@@ -2188,7 +2264,8 @@ object CauseAuditAdapterCli:
           None,
           None
         ),
-        "cause_disposition_ledger" -> emptyCauseDispositionLedgerObservation
+        "cause_disposition_ledger" -> emptyCauseDispositionLedgerObservation,
+        "comparison_endpoint_evidence_snapshots" -> Json.arr()
       )
     else observation
 
@@ -2236,7 +2313,8 @@ object CauseAuditAdapterCli:
           None,
           None
         ),
-        "cause_disposition_ledger" -> emptyCauseDispositionLedgerObservation
+        "cause_disposition_ledger" -> emptyCauseDispositionLedgerObservation,
+        "comparison_endpoint_evidence_snapshots" -> Json.arr()
       )
     else observation
 

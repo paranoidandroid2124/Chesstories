@@ -26,6 +26,7 @@
     "idea_units",
     "idea_importance",
     "cause_disposition_ledger",
+    "comparison_endpoint_evidence_snapshots",
     "causes"
   ],
   "properties": {
@@ -206,6 +207,17 @@
       },
       "items": {
         "$ref": "#/$defs/onlyMoveConstraint"
+      }
+    },
+    "comparison_endpoint_evidence_snapshots": {
+      "description": "Cause-neutral endpoint evidence snapshots assembled once per comparison before Cause construction or admission.",
+      "type": "array",
+      "uniqueItems": true,
+      "x-canonical": {
+        "mode": "unordered-set"
+      },
+      "items": {
+        "$ref": "#/$defs/comparisonEndpointEvidenceSnapshot"
       }
     },
     "causes": {
@@ -1688,6 +1700,201 @@
             },
             {
               "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "comparisonEndpointEvidenceWitness": {
+      "description": "A Cause-neutral direct-effect witness observed at one comparison endpoint.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_side",
+        "line",
+        "carrier",
+        "provenance",
+        "carrier_ancestor_source_ids",
+        "primitive_proof_source",
+        "actor",
+        "target",
+        "mechanism",
+        "consequence",
+        "witness",
+        "horizon",
+        "proof_segment",
+        "effect_descriptor"
+      ],
+      "properties": {
+        "source_side": {
+          "enum": ["reference", "candidate"]
+        },
+        "line": {
+          "$ref": "#/$defs/semanticLine"
+        },
+        "carrier": {
+          "$ref": "#/$defs/sourceRef"
+        },
+        "provenance": {
+          "type": "array",
+          "uniqueItems": true,
+          "x-canonical": {
+            "mode": "unordered-set"
+          },
+          "items": {
+            "$ref": "#/$defs/sourceRef"
+          }
+        },
+        "carrier_ancestor_source_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "x-canonical": {
+            "mode": "unordered-set"
+          },
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "primitive_proof_source": {
+          "$ref": "#/$defs/sourceRef"
+        },
+        "actor": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/projectedChessObject"
+          }
+        },
+        "target": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/projectedChessObject"
+          }
+        },
+        "mechanism": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/projectedChessObject"
+          }
+        },
+        "consequence": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/projectedChessObject"
+          }
+        },
+        "witness": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/projectedChessObject"
+          }
+        },
+        "horizon": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "minLength": 1}
+          ]
+        },
+        "proof_segment": {
+          "$ref": "#/$defs/directCauseProofSegment"
+        },
+        "effect_descriptor": {
+          "$ref": "#/$defs/rootOwnedEffectDescriptor"
+        }
+      }
+    },
+    "comparisonEndpointEvidenceSnapshotSide": {
+      "description": "The complete Cause-neutral witness inventory for one comparison endpoint.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_side", "line", "witnesses"],
+      "properties": {
+        "source_side": {
+          "enum": ["reference", "candidate"]
+        },
+        "line": {
+          "$ref": "#/$defs/semanticLine"
+        },
+        "witnesses": {
+          "type": "array",
+          "uniqueItems": true,
+          "x-canonical": {
+            "mode": "unordered-set"
+          },
+          "items": {
+            "$ref": "#/$defs/comparisonEndpointEvidenceWitness"
+          }
+        }
+      }
+    },
+    "comparisonEndpointEvidenceSnapshot": {
+      "description": "The Cause-neutral reference and candidate endpoint evidence for exactly one comparison.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comparison_evidence",
+        "comparison",
+        "reference",
+        "candidate"
+      ],
+      "properties": {
+        "comparison_evidence": {
+          "$ref": "#/$defs/sourceRef"
+        },
+        "comparison": {
+          "$ref": "#/$defs/cComparison"
+        },
+        "reference": {
+          "allOf": [
+            {"$ref": "#/$defs/comparisonEndpointEvidenceSnapshotSide"},
+            {
+              "properties": {
+                "source_side": {"const": "reference"},
+                "witnesses": {
+                  "items": {
+                    "allOf": [
+                      {"$ref": "#/$defs/comparisonEndpointEvidenceWitness"},
+                      {
+                        "properties": {
+                          "source_side": {"const": "reference"}
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "candidate": {
+          "allOf": [
+            {"$ref": "#/$defs/comparisonEndpointEvidenceSnapshotSide"},
+            {
+              "properties": {
+                "source_side": {"const": "candidate"},
+                "witnesses": {
+                  "items": {
+                    "allOf": [
+                      {"$ref": "#/$defs/comparisonEndpointEvidenceWitness"},
+                      {
+                        "properties": {
+                          "source_side": {"const": "candidate"}
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
             }
           ]
         }

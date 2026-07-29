@@ -158,6 +158,8 @@
           "enum": [
             "runtime_unavailable",
             "missing_required_meaning",
+            "cause_not_generated",
+            "cause_admission_dropped",
             "forbidden_generated_meaning",
             "unmapped_generated_cause",
             "jp_loss",

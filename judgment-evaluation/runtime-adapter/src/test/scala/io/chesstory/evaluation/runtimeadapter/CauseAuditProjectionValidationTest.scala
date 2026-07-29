@@ -322,12 +322,45 @@ class CauseAuditProjectionValidationTest extends munit.FunSuite:
     assert((v2 \ "idea_units").toOption.isEmpty)
     assert((v2 \ "idea_importance").toOption.isEmpty)
     assert((v2 \ "cause_disposition_ledger").toOption.isEmpty)
+    assert((v2 \ "comparison_endpoint_evidence_snapshots").toOption.isEmpty)
     assert((v2 \ "verdict").toOption.isEmpty)
     assert((v2 \ "public_response" \ "idea_status").toOption.isEmpty)
     assert((v2 \ "public_response" \ "primary_engine_backed").toOption.isEmpty)
     assert((v3 \ "public_response" \ "idea_status").asOpt[String].nonEmpty)
     assert((v3 \ "public_response" \ "primary_engine_backed").asOpt[Boolean].nonEmpty)
     assert((v3 \ "public_response" \ "idea_status_detail").asOpt[JsObject].nonEmpty)
+    val endpointSnapshots =
+      (v3 \ "comparison_endpoint_evidence_snapshots").as[List[JsObject]]
+    assert(endpointSnapshots.nonEmpty)
+    val comparisonEvidenceIds = endpointSnapshots.map(snapshot =>
+      (snapshot \ "comparison_evidence" \ "id").as[String]
+    )
+    assertEquals(comparisonEvidenceIds.distinct.size, comparisonEvidenceIds.size)
+    val generatedCauseComparisonIds = (v3 \ "causes").as[List[JsObject]].map(cause =>
+      (cause \ "c" \ "comparison_evidence" \ "id").as[String]
+    ).distinct
+    assert(generatedCauseComparisonIds.forall(comparisonEvidenceIds.contains))
+    endpointSnapshots.foreach { snapshot =>
+      List("reference", "candidate").foreach { sideName =>
+        val side = (snapshot \ sideName).as[JsObject]
+        assertEquals((side \ "source_side").as[String], sideName)
+        (side \ "witnesses").as[List[JsObject]].foreach { witness =>
+          assertEquals((witness \ "source_side").as[String], sideName)
+          List(
+            "carrier",
+            "provenance",
+            "carrier_ancestor_source_ids",
+            "primitive_proof_source",
+            "actor",
+            "target",
+            "mechanism",
+            "consequence",
+            "proof_segment",
+            "effect_descriptor"
+          ).foreach(field => assert((witness \ field).toOption.nonEmpty))
+        }
+      }
+    }
     val verdictObservation = (v3 \ "verdict").as[JsObject]
     val packetVerdict = (verdictObservation \ "packet_canonical").as[JsObject]
     val selectedVerdict = (verdictObservation \ "selected_projection").as[JsObject]

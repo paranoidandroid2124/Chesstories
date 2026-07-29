@@ -102,19 +102,6 @@ object RelativeAssessmentAssembler:
           policy.compareMagnitude(sourceObservation.magnitude, counterpartObservation.magnitude) ==
             policy.MagnitudeRelation.LeftStrictlyStronger).getOrElse(false)
 
-    def admittedChannel(
-        sourceInventory: PlanResultEndpointInventory,
-        counterpartInventory: PlanResultEndpointInventory,
-        cause: RelativeCauseFact,
-        channel: DirectCauseChannel,
-        graph: TypedEvidenceGraph
-    ): Boolean =
-      (for
-        proof <- channel.rootOwnedProof
-        _ <- RootOwnedEffectPolicy.exactPlanResultPrimitive(proof)
-        sourceObservation <- ComparisonEndpointEffectObservationPolicy.fromChannel(cause, channel, graph)
-      yield admitted(sourceInventory, counterpartInventory, sourceObservation)).getOrElse(false)
-
   private final case class PlanResultEndpointInventoryPair(
       reference: PlanResultEndpointInventory,
       candidate: PlanResultEndpointInventory
@@ -197,7 +184,16 @@ object RelativeAssessmentAssembler:
             allocator = inputs.allocator
           )
         requiredPrimaryComparisonRecord(comparisonRecords, inputs.reference, inputs.candidate)
-        context.withEvidence(comparisonRecords)
+        val factContext = context.withEvidence(comparisonRecords)
+        val strategicContrastRecords = comparisonRecords.flatMap(record =>
+          strategicMechanismContrastRecords(
+            factContext,
+            inputs.root,
+            inputs.allocator,
+            record
+          )
+        )
+        factContext.withEvidence(strategicContrastRecords)
       }
       .getOrElse(context)
 
@@ -207,21 +203,28 @@ object RelativeAssessmentAssembler:
         val comparisonRecords = assembledComparisonRecords(context, inputs.root)
         val primaryComparisonRecord =
           requiredPrimaryComparisonRecord(comparisonRecords, inputs.reference, inputs.candidate)
-        val strategicContrastRecords =
-          comparisonRecords.flatMap(record =>
-            strategicMechanismContrastRecords(context, inputs.root, inputs.allocator, record)
-          )
-        val causeContext = context.withEvidence(strategicContrastRecords)
+        val snapshotsByComparisonId = comparisonEndpointEvidenceSnapshots(context)
+          .map(snapshot => snapshot.comparisonEvidence.id -> snapshot)
+          .toMap
         val rawCauseRecords =
           comparisonRecords.flatMap(record =>
-            relativeCauseRecords(inputs.input, causeContext, inputs.root, inputs.allocator, record)
+            snapshotsByComparisonId.get(record.ref.id).toList.flatMap(snapshot =>
+              relativeCauseRecords(
+                inputs.input,
+                context,
+                inputs.root,
+                inputs.allocator,
+                record,
+                snapshot
+              )
+            )
           )
-        val causeRecords = canonicalizeRelativeCauseRecords(rawCauseRecords, causeContext.evidenceGraph)
+        val causeRecords = canonicalizeRelativeCauseRecords(rawCauseRecords, context.evidenceGraph)
         val playedMoveSet = Set(JudgmentSubjectBinding.normalizeMove(inputs.played.moveUci))
         val playedCauseRecords =
           causeRecords.filter(record =>
             JudgmentSubjectBinding.primaryPlayed(
-              JudgmentSubjectBinding.recordBinding(record, causeContext.evidenceGraph, playedMoveSet)
+              JudgmentSubjectBinding.recordBinding(record, context.evidenceGraph, playedMoveSet)
             )
           )
         val relativeEvidence =
@@ -246,9 +249,109 @@ object RelativeAssessmentAssembler:
             relativeCauseEvidence = playedCauseRecords.map(_.ref)
           )
         val assessmentRecord = TransitionFactNormalizer.fromRelativeAssessment(assessment)
-        causeContext.withEvidence(causeRecords :+ assessmentRecord)
+        context.withEvidence(causeRecords :+ assessmentRecord)
       }
       .getOrElse(context)
+
+  /** Public read-only reconstruction used identically by C admission and the
+    * runtime adapter. Every snapshot is derived from the F graph before any
+    * provisional Cause exists.
+    */
+  def comparisonEndpointEvidenceSnapshots(
+      context: JudgmentAssemblyContext
+  ): List[ComparisonEndpointEvidenceSnapshot] =
+    relativeAssemblyInputs(context).toList.flatMap { inputs =>
+      assembledComparisonRecords(context, inputs.root).flatMap { record =>
+        record.payload match
+          case CandidateComparisonEvidence(comparison) =>
+            val neighborhood = comparisonNeighborhood(
+              context,
+              inputs.root,
+              comparison,
+              Some(inputs.input)
+            )
+            val carrierRecords = context.evidenceGraph.records.filter {
+              case EvidenceRecord(ref, payload: StrategicMechanismContrastEvidence, _) =>
+                carrierAtComparisonRoot(ref, inputs.root) &&
+                  payload.comparisonKind == comparison.kind &&
+                  payload.referenceLine == comparison.referenceLine &&
+                  payload.candidateLine == comparison.candidateLine
+              case EvidenceRecord(ref, _: TacticalMechanismEvidence | _: StrategicMechanismEvidence, _) =>
+                carrierAtComparisonRoot(ref, inputs.root) &&
+                  (ref.line.contains(comparison.referenceLine) ||
+                    ref.line.contains(comparison.candidateLine))
+              case _ => false
+            }
+            val involvedRecords =
+              (neighborhood.involvedRecords ++ carrierRecords).distinctBy(_.ref.id)
+            Some(ComparisonEndpointEvidenceSnapshot(
+              comparisonEvidence = record.ref,
+              comparison = comparison,
+              reference = ComparisonEndpointEvidenceSideSnapshot(
+                sourceSide = RelativeCauseSourceSide.Reference,
+                line = comparison.referenceLine,
+                witnesses = EvidenceObjectBinding.comparisonEndpointEvidenceWitnesses(
+                  RelativeCauseSourceSide.Reference,
+                  comparison.referenceLine,
+                  inputs.root,
+                  record.ref,
+                  comparison,
+                  canonicalEndpointEvidenceRecords(
+                    neighborhood.referenceRecords,
+                    comparison.referenceLine,
+                    comparison.comparison.mover,
+                    inputs.root,
+                    context.evidenceGraph
+                  ),
+                  involvedRecords,
+                  context.evidenceGraph
+                )
+              ),
+              candidate = ComparisonEndpointEvidenceSideSnapshot(
+                sourceSide = RelativeCauseSourceSide.Candidate,
+                line = comparison.candidateLine,
+                witnesses = EvidenceObjectBinding.comparisonEndpointEvidenceWitnesses(
+                  RelativeCauseSourceSide.Candidate,
+                  comparison.candidateLine,
+                  inputs.root,
+                  record.ref,
+                  comparison,
+                  canonicalEndpointEvidenceRecords(
+                    neighborhood.candidateRecords,
+                    comparison.candidateLine,
+                    comparison.comparison.mover,
+                    inputs.root,
+                    context.evidenceGraph
+                  ),
+                  involvedRecords,
+                  context.evidenceGraph
+                )
+              )
+            ))
+          case _ => None
+      }
+    }
+
+  private def canonicalEndpointEvidenceRecords(
+      records: List[EvidenceRecord],
+      line: LineNodeRef,
+      mover: Color,
+      rootPosition: PositionNodeRef,
+      graph: TypedEvidenceGraph
+  ): List[EvidenceRecord] =
+    val endpointRecords = (
+      records ++ graph.records.filter(record =>
+        carrierAtComparisonRoot(record.ref, rootPosition) && record.referencesLine(line)
+      )
+    ).distinctBy(_.ref.id)
+    val canonicalLineRef = exactLegalLine(endpointRecords, line, rootPosition).map(_._1.id)
+    val canonicalStructuralRef =
+      exactRootStructuralDelta(endpointRecords, line, mover, rootPosition).map(_._1.id)
+    endpointRecords.filter {
+      case EvidenceRecord(ref, _: LineFactEvidence, _) => canonicalLineRef.contains(ref.id)
+      case EvidenceRecord(ref, _: StructuralDeltaEvidence, _) => canonicalStructuralRef.contains(ref.id)
+      case _ => true
+    }
 
   private def relativeAssemblyInputs(context: JudgmentAssemblyContext): Option[RelativeAssemblyInputs] =
     val input = context.input
@@ -736,7 +839,8 @@ object RelativeAssessmentAssembler:
       context: JudgmentAssemblyContext,
       root: PositionNodeRef,
       allocator: JudgmentProvenanceAllocator,
-      comparisonRecord: EvidenceRecord
+      comparisonRecord: EvidenceRecord,
+      endpointSnapshot: ComparisonEndpointEvidenceSnapshot
   ): List[EvidenceRecord] =
     comparisonRecord.payload match
       case CandidateComparisonEvidence(fact) =>
@@ -842,7 +946,8 @@ object RelativeAssessmentAssembler:
           neighborhood,
           fact,
           comparisonRecord.ref.position,
-          context.evidenceGraph
+          context.evidenceGraph,
+          endpointSnapshot
         ).filter(item => RelativeCauseConstructionAdmission.initiallyReady(item.cause, context.evidenceGraph))
           .map(_.record)
       case _ => Nil
@@ -852,7 +957,8 @@ object RelativeAssessmentAssembler:
       neighborhood: ComparisonEvidenceNeighborhood,
       comparison: CandidateComparisonFact,
       rootPosition: PositionNodeRef,
-      graph: TypedEvidenceGraph
+      graph: TypedEvidenceGraph,
+      endpointSnapshot: ComparisonEndpointEvidenceSnapshot
   ): List[ProvisionalRelativeCauseRecord] =
     val inventories = comparisonEndpointEffectInventories(
       neighborhood,
@@ -866,25 +972,40 @@ object RelativeAssessmentAssembler:
 
     provisional.zip(rawChannels).map { case (item, channels) =>
       val admittedSignatures = channels.filter { channel =>
-        val ownsStrategicAuthority =
-          !item.cause.strategicCauseKind ||
-            graph.relativeCauseStrategicChannelHasOwnedLongTermProof(item.cause, channel)
-        ownsStrategicAuthority &&
-          (
-            ComparisonEndpointEffectObservationPolicy.retainedPlayedValueReady(
-              item.cause,
-              channel,
-              comparison,
-              graph
-            ) ||
-              ComparisonEndpointEffectObservationPolicy.retainedPlayedLiabilityReady(
-                item.cause,
-                channel,
-                comparison,
-                graph
-              ) ||
-              differentialEndpointEffectAdmitted(item.cause, channel, inventories, graph)
+        ComparisonEndpointEffectObservationPolicy
+          .uniqueNeutralWitnessFor(
+            endpointSnapshot,
+            item.cause.sourceSide,
+            channel,
+            graph
           )
+          .exists { neutralWitness =>
+            val ownsStrategicAuthority =
+              !item.cause.strategicCauseKind ||
+                graph.relativeCauseStrategicChannelHasOwnedLongTermProof(item.cause, channel)
+            ownsStrategicAuthority &&
+              (
+                ComparisonEndpointEffectObservationPolicy.retainedPlayedValueReady(
+                  item.cause,
+                  channel,
+                  comparison,
+                  graph
+                ) ||
+                  ComparisonEndpointEffectObservationPolicy.retainedPlayedLiabilityReady(
+                    item.cause,
+                    channel,
+                    comparison,
+                    graph
+                  ) ||
+                  differentialEndpointEffectAdmitted(
+                    item.cause,
+                    channel,
+                    neutralWitness,
+                    inventories,
+                    graph
+                  )
+              )
+          }
       }.map(_.causalSignature).toSet
       val restrictedCause = item.cause.copy(
         directEffectAdmission = DirectEffectAdmission.Restricted(admittedSignatures)
@@ -902,6 +1023,7 @@ object RelativeAssessmentAssembler:
   private def differentialEndpointEffectAdmitted(
       cause: RelativeCauseFact,
       channel: DirectCauseChannel,
+      neutralWitness: ComparisonEndpointEvidenceWitness,
       inventories: ComparisonEndpointEffectInventories,
       graph: TypedEvidenceGraph
   ): Boolean =
@@ -911,39 +1033,27 @@ object RelativeAssessmentAssembler:
           if descriptor.identity.primitiveKind == RootOwnedEffectPrimitiveKind.PlanResult =>
         (for
           (sourceInventory, counterpartInventory) <- inventories.planResult.forSide(cause.sourceSide)
-        yield PlanResultDifferentialPolicy.admittedChannel(
+          sourceObservation <- neutralWitness.observation
+        yield PlanResultDifferentialPolicy.admitted(
           sourceInventory,
           counterpartInventory,
-          cause,
-          channel,
-          graph
+          sourceObservation
         )).getOrElse(false)
       case _ =>
         (for
           pair <- inventories.forChannel(channel)
           (sourceInventory, counterpartInventory) <- pair.forSide(cause.sourceSide)
-          scope <- policy.scopeFromChannel(cause, channel, graph)
+          neutralObservation <- neutralWitness.observation
+          scope = neutralObservation.scope
           sourceLookup <- policy.uniqueObservationFor(sourceInventory, scope)
           sourceObservation <- sourceLookup
           counterpartLookup <- policy.uniqueObservationFor(counterpartInventory, scope)
-          if channelObservationMatchesInventory(cause, channel, sourceObservation, graph)
+          if neutralObservation == sourceObservation
         yield counterpartLookup match
           case None => true
           case Some(counterpartObservation) =>
             policy.compareMagnitude(sourceObservation.magnitude, counterpartObservation.magnitude) ==
               policy.MagnitudeRelation.LeftStrictlyStronger).getOrElse(false)
-
-  private def channelObservationMatchesInventory(
-      cause: RelativeCauseFact,
-      channel: DirectCauseChannel,
-      sourceObservation: ComparisonEndpointEffectObservation,
-      graph: TypedEvidenceGraph
-  ): Boolean =
-    if channel.rootOwnedEffectDescriptor.exists(_.identity.strategicAxes.nonEmpty) then true
-    else
-      ComparisonEndpointEffectObservationPolicy
-        .fromChannel(cause, channel, graph)
-        .contains(sourceObservation)
 
   private def comparisonEndpointEffectInventories(
       neighborhood: ComparisonEvidenceNeighborhood,

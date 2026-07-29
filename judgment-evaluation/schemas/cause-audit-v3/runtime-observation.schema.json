@@ -18,6 +18,7 @@
     "idea_units",
     "idea_importance",
     "cause_disposition_ledger",
+    "comparison_endpoint_evidence_snapshots",
     "causes"
   ],
   "properties": {
@@ -66,6 +67,9 @@
     },
     "only_move_constraints": {
       "$ref": "actual-cascade-view.schema.json#/properties/only_move_constraints"
+    },
+    "comparison_endpoint_evidence_snapshots": {
+      "$ref": "actual-cascade-view.schema.json#/properties/comparison_endpoint_evidence_snapshots"
     },
     "causes": {
       "$ref": "actual-cascade-view.schema.json#/properties/causes"

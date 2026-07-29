@@ -241,6 +241,7 @@ def _valid_active_cause_observation(
         "projection": {"present": False, "packet_present": False},
         "probe_request_count": 0,
         "probe_requests": [],
+        "comparison_endpoint_evidence_snapshots": [],
         "causes": [],
         "verdict": {
             "packet_canonical": None,
@@ -308,6 +309,150 @@ def _valid_complete_active_cause_observation(
     ]
     observation["only_move_constraints"] = []
     return observation
+
+
+def _valid_comparison_endpoint_snapshot() -> dict[str, object]:
+    reference_runtime_line = {
+        "id": "reference-line",
+        "root_move": "e2e4",
+        "rank": 1,
+        "role": "best_reference",
+    }
+    candidate_runtime_line = {
+        "id": "candidate-line",
+        "root_move": "e2e3",
+        "rank": 0,
+        "role": "played",
+    }
+    return {
+        "comparison_evidence": {
+            "id": "comparison-1",
+            "producer": "runtime",
+            "layer": "comparison",
+            "scope": "root",
+            "confidence": "high",
+            "line": None,
+            "record_registered": True,
+            "record_payload_type": "CandidateComparisonEvidence",
+            "record_sha256": "4" * 64,
+        },
+        "comparison": {
+            "kind": "played_vs_best",
+            "reference_line": reference_runtime_line,
+            "candidate_line": candidate_runtime_line,
+            "reference_root_move": "e2e4",
+            "candidate_root_move": "e2e3",
+            "mover": "white",
+            "candidate_win_percent_delta_for_mover": -10.0,
+            "win_percent_loss_for_mover": 10.0,
+            "verdict": "mistake",
+            "candidate_set_type": None,
+        },
+        "reference": {
+            "source_side": "reference",
+            "line": {
+                "line_id": "reference-line",
+                "root_move": "e2e4",
+                "rank": 1,
+                "role": "best_reference",
+            },
+            "witnesses": [
+                {
+                    "source_side": "reference",
+                    "line": {
+                        "line_id": "reference-line",
+                        "root_move": "e2e4",
+                        "rank": 1,
+                        "role": "best_reference",
+                    },
+                    "carrier": {
+                        "id": "carrier-1",
+                        "producer": "runtime",
+                        "layer": "causal",
+                        "scope": "direct",
+                        "confidence": "high",
+                        "line": reference_runtime_line,
+                        "record_registered": True,
+                        "record_payload_type": "TacticalMechanismEvidence",
+                        "record_sha256": "6" * 64,
+                    },
+                    "provenance": [
+                        {
+                            "id": "primitive-1",
+                            "producer": "runtime",
+                            "layer": "primitive",
+                            "scope": "context",
+                            "confidence": "high",
+                            "line": reference_runtime_line,
+                            "record_registered": True,
+                            "record_payload_type": "StructuralDeltaEvidence",
+                            "record_sha256": "5" * 64,
+                        }
+                    ],
+                    "carrier_ancestor_source_ids": ["primitive-1"],
+                    "primitive_proof_source": {
+                        "id": "primitive-1",
+                        "producer": "runtime",
+                        "layer": "primitive",
+                        "scope": "context",
+                        "confidence": "high",
+                        "line": reference_runtime_line,
+                        "record_registered": True,
+                        "record_payload_type": "StructuralDeltaEvidence",
+                        "record_sha256": "5" * 64,
+                    },
+                    "actor": [
+                        {"kind": "move", "key": "e2e4"},
+                        {"kind": "side", "key": "white"},
+                        {"kind": "piece", "key": "pawn"},
+                        {"kind": "square", "key": "e2"},
+                        {"kind": "square", "key": "e4"},
+                    ],
+                    "target": [{"kind": "square", "key": "e5"}],
+                    "mechanism": [{"kind": "mechanism", "key": "tempo"}],
+                    "consequence": [
+                        {"kind": "consequence", "key": "initiative"}
+                    ],
+                    "witness": [{"kind": "move", "key": "g8f6"}],
+                    "horizon": "ply:1",
+                    "proof_segment": {
+                        "terminal_relation": "makes_structural_transition",
+                        "steps": [
+                            {
+                                "ply_offset": 0,
+                                "move_uci": "e2e4",
+                                "role": "root_action",
+                            }
+                        ],
+                    },
+                    "effect_descriptor": {
+                        "effect_scope": {
+                            "primitive_kind": "structural_transition",
+                            "target_signatures": ["square:e5"],
+                            "plan_ids": [],
+                            "strategic_axes": [],
+                        },
+                        "magnitude_status": "exact",
+                        "measure": {
+                            "kind": "structural_strength",
+                            "units": 1,
+                        },
+                        "material_event_salience": None,
+                    },
+                }
+            ],
+        },
+        "candidate": {
+            "source_side": "candidate",
+            "line": {
+                "line_id": "candidate-line",
+                "root_move": "e2e3",
+                "rank": 0,
+                "role": "played",
+            },
+            "witnesses": [],
+        },
+    }
 
 
 def _validate_active_cause_observation(
@@ -548,6 +693,7 @@ class ActiveCauseContractTest(unittest.TestCase):
         canonical = _strict_actual_view(ROOT, view)
         self.assertEqual(canonical["request_sha256"], request_sha256)
         self.assertEqual(canonical["hash_contract"], NATIVE_HASH_CONTRACT)
+        self.assertEqual(canonical["comparison_endpoint_evidence_snapshots"], [])
         self.assertEqual(
             canonical["probe_closure"]["runtime_transport"][0]["request_sha256"],
             request_sha256,
@@ -569,6 +715,82 @@ class ActiveCauseContractTest(unittest.TestCase):
         ] = "e" * 64
         with self.assertRaisesRegex(IntegrityError, "transport 1 request hash mismatch"):
             _strict_actual_view(ROOT, changed_intermediate)
+
+    def test_active_actual_view_requires_and_copies_endpoint_snapshots(self) -> None:
+        request = {
+            "schema_version": "chesstory.move-meaning.request.v1",
+            "request_id": "active-cause-snapshots",
+            "input": {},
+        }
+        observation = _valid_complete_active_cause_observation(request)
+        observation["comparison_endpoint_evidence_snapshots"] = [
+            _valid_comparison_endpoint_snapshot()
+        ]
+        _validate_active_cause_observation(request, observation)
+        transport = {
+            "round": 1,
+            "request_jsonl_sha256": "1" * 64,
+            "request_sha256": native_sha256_json(request),
+            "adapter_request_sha256": native_sha256_json(request),
+            "hash_contract": NATIVE_HASH_CONTRACT,
+            "response_jsonl_sha256": "2" * 64,
+            "diagnostic_line_sha256": [],
+            "diagnostic_stream_sha256": "3" * 64,
+        }
+        view = _actual_view(
+            case={"case_id": "active-cause-snapshots", "partition": "explore"},
+            initial_request_sha256="1" * 64,
+            final_request_sha256="1" * 64,
+            observation=observation,
+            transports=[transport],
+            issued_probe_hashes=set(),
+            result_hashes=set(),
+            issued_probe_count=0,
+            stop_reason="all_runtime_probes_closed",
+            schema_version=TYPED_ACTUAL_VIEW_SCHEMA_VERSION,
+        )
+        self.assertIsNot(
+            view["comparison_endpoint_evidence_snapshots"],
+            observation["comparison_endpoint_evidence_snapshots"],
+        )
+        observation["comparison_endpoint_evidence_snapshots"][0]["candidate"][
+            "line"
+        ]["line_id"] = "mutated-line"
+        self.assertEqual(
+            view["comparison_endpoint_evidence_snapshots"][0]["candidate"]["line"][
+                "line_id"
+            ],
+            "candidate-line",
+        )
+        self.assertEqual(
+            _strict_actual_view(ROOT, view)[
+                "comparison_endpoint_evidence_snapshots"
+            ],
+            [_valid_comparison_endpoint_snapshot()],
+        )
+
+        for invalid in (None, {}, [None]):
+            with self.subTest(invalid=invalid):
+                malformed = copy.deepcopy(observation)
+                malformed["comparison_endpoint_evidence_snapshots"] = invalid
+                with self.assertRaisesRegex(
+                    ContractError, "comparison endpoint evidence snapshot array"
+                ):
+                    _actual_view(
+                        case={
+                            "case_id": "active-cause-snapshots",
+                            "partition": "explore",
+                        },
+                        initial_request_sha256="1" * 64,
+                        final_request_sha256="1" * 64,
+                        observation=malformed,
+                        transports=[transport],
+                        issued_probe_hashes=set(),
+                        result_hashes=set(),
+                        issued_probe_count=0,
+                        stop_reason="all_runtime_probes_closed",
+                        schema_version=TYPED_ACTUAL_VIEW_SCHEMA_VERSION,
+                    )
 
     def test_active_actual_view_rejects_raw_hash_changed_after_validation(self) -> None:
         request = {
@@ -753,10 +975,12 @@ class ActiveProbeCompletionContractTest(unittest.TestCase):
             "request_id": "active-cause-missing-typed",
             "input": {},
         }
-        observation = _valid_active_cause_observation(request)
-        observation.pop("importance")
-        with self.assertRaisesRegex(ContractError, "schema validation failed"):
-            _validate_active_cause_observation(request, observation)
+        for field in ("importance", "comparison_endpoint_evidence_snapshots"):
+            with self.subTest(field=field):
+                observation = _valid_active_cause_observation(request)
+                observation.pop(field)
+                with self.assertRaisesRegex(ContractError, "schema validation failed"):
+                    _validate_active_cause_observation(request, observation)
 
     def test_active_cause_observation_rejects_wrong_type_and_extra_field(self) -> None:
         request = {
@@ -766,6 +990,12 @@ class ActiveProbeCompletionContractTest(unittest.TestCase):
         }
         for name, mutate in (
             ("wrong-type", lambda value: value.update(importance=[])),
+            (
+                "wrong-snapshot-type",
+                lambda value: value.update(
+                    comparison_endpoint_evidence_snapshots={}
+                ),
+            ),
             ("extra-field", lambda value: value.update(unexpected=True)),
         ):
             observation = _valid_active_cause_observation(request)
@@ -774,6 +1004,19 @@ class ActiveProbeCompletionContractTest(unittest.TestCase):
                 ContractError, "schema validation failed"
             ):
                 _validate_active_cause_observation(request, observation)
+
+    def test_active_cause_observation_rejects_snapshot_witness_polarity(self) -> None:
+        request = {
+            "schema_version": "chesstory.move-meaning.request.v1",
+            "request_id": "active-cause-snapshot-polarity",
+            "input": {},
+        }
+        observation = _valid_complete_active_cause_observation(request)
+        snapshot = _valid_comparison_endpoint_snapshot()
+        snapshot["reference"]["witnesses"][0]["source_side"] = "candidate"
+        observation["comparison_endpoint_evidence_snapshots"] = [snapshot]
+        with self.assertRaisesRegex(ContractError, "schema validation failed"):
+            _validate_active_cause_observation(request, observation)
 
     def test_active_cause_observation_rejects_another_request_hash(self) -> None:
         request = {

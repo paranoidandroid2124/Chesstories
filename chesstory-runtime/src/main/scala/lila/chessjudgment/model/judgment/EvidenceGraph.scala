@@ -300,6 +300,45 @@ final case class ComparisonEndpointEffectObservation(
     magnitude: ComparisonEndpointEffectMagnitude
 )
 
+/** Cause-neutral F-stage witness for one exact root-owned endpoint effect.
+  * Admission booleans and Cause-specific change labels are deliberately
+  * absent. A strategic wrapper remains a distinct proof because it changes
+  * the effect descriptor; tactical carriers may resolve to the bare primitive.
+  */
+final case class ComparisonEndpointEvidenceWitness(
+    sourceSide: RelativeCauseSourceSide,
+    line: LineNodeRef,
+    binding: EvidenceObjectBinding,
+    rootOwnedProof: RootOwnedEffectProof,
+    proofSegment: DirectCauseProofSegment,
+    effectDescriptor: RootOwnedEffectDescriptor,
+    carrierAncestorSourceIds: List[String],
+    observation: Option[ComparisonEndpointEffectObservation]
+):
+  def primitiveProofSource: EvidenceRef = rootOwnedProof.primitiveSource
+  def carrier: EvidenceRef = binding.source
+  def provenance: List[EvidenceRef] = binding.provenance
+
+final case class ComparisonEndpointEvidenceSideSnapshot(
+    sourceSide: RelativeCauseSourceSide,
+    line: LineNodeRef,
+    witnesses: List[ComparisonEndpointEvidenceWitness]
+)
+
+final case class ComparisonEndpointEvidenceSnapshot(
+    comparisonEvidence: EvidenceRef,
+    comparison: CandidateComparisonFact,
+    reference: ComparisonEndpointEvidenceSideSnapshot,
+    candidate: ComparisonEndpointEvidenceSideSnapshot
+):
+  def forSide(
+      sourceSide: RelativeCauseSourceSide
+  ): Option[ComparisonEndpointEvidenceSideSnapshot] =
+    sourceSide match
+      case RelativeCauseSourceSide.Reference => Some(reference)
+      case RelativeCauseSourceSide.Candidate => Some(candidate)
+      case RelativeCauseSourceSide.Shared | RelativeCauseSourceSide.Mixed => None
+
 enum ComparisonEndpointEffectInventory:
   case Complete(observations: Set[ComparisonEndpointEffectObservation])
   case Incomplete
@@ -852,6 +891,48 @@ object EvidenceObjectBinding:
       payload: LineFactEvidence,
       rootPosition: PositionNodeRef
   ): ComparisonEndpointLineEffectInventories =
+    comparisonEndpointLineProjections(source, payload, rootPosition).fold(
+      ComparisonEndpointLineEffectInventories.incomplete
+    ) { projected =>
+      ComparisonEndpointLineEffectInventories(
+        material = completeEndpointInventory(
+          projected.collect {
+            case item if item.family == ComparisonEndpointLineFamily.Material => item.observation
+          }
+        ),
+        mate = completeEndpointInventory(
+          projected.collect {
+            case item if item.family == ComparisonEndpointLineFamily.Mate => item.observation
+          }
+        ),
+        qualitative = completeEndpointInventory(
+          projected.collect {
+            case item if item.family == ComparisonEndpointLineFamily.Qualitative => item.observation
+          }
+        )
+      )
+    }
+
+  private enum ComparisonEndpointLineFamily:
+    case Material
+    case Mate
+    case Qualitative
+
+  private final case class ComparisonEndpointLineProjection(
+      family: ComparisonEndpointLineFamily,
+      binding: EvidenceObjectBinding,
+      proof: RootOwnedEffectProof,
+      observation: Option[ComparisonEndpointEffectObservation]
+  )
+
+  /** Single eligibility authority shared by endpoint magnitude inventory and
+    * neutral witness enumeration.
+    */
+  private def comparisonEndpointLineProjections(
+      source: EvidenceRef,
+      payload: LineFactEvidence,
+      rootPosition: PositionNodeRef
+  ): Option[List[ComparisonEndpointLineProjection]] =
     val rootEpisodes = payload
       .rootOwnedCausalEpisodes(payload.line.rootMove)
       .filter(episode =>
@@ -867,15 +948,25 @@ object EvidenceObjectBinding:
           LineConsequenceKind.PromotionRace
         )(episode.consequence.kind)
       )
-    val episodeProjected = rootEpisodes
-      .map { episode =>
+    val episodeProjected = rootEpisodes.map { episode =>
         val proof = RootOwnedEffectProof.LineEpisode(source, payload, episode)
-        episode.consequence.kind -> ComparisonEndpointEffectObservationPolicy.fromLineEpisode(
-          rootPosition = rootPosition,
-          eventLine = payload.line,
-          binding = rootOwnedEpisodeBinding(source, payload, episode),
-          proof = proof,
-          episode = episode
+        val binding = rootOwnedEpisodeBinding(source, payload, episode)
+        val family = episode.consequence.kind match
+          case LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss =>
+            ComparisonEndpointLineFamily.Material
+          case LineConsequenceKind.Mate => ComparisonEndpointLineFamily.Mate
+          case _                        => ComparisonEndpointLineFamily.Qualitative
+        ComparisonEndpointLineProjection(
+          family,
+          binding,
+          proof,
+          ComparisonEndpointEffectObservationPolicy.fromLineEpisode(
+            rootPosition = rootPosition,
+            eventLine = payload.line,
+            binding = binding,
+            proof = proof,
+            episode = episode
+          )
         )
       }
     val actor = RootCausalActor.fromPosition(rootPosition, payload.line.rootMove)
@@ -908,11 +999,15 @@ object EvidenceObjectBinding:
         )
         .map { event =>
           val binding = rootLocalEventBinding(source, payload, rootActor, event)
-          event.kind -> (
+          val proof = RootOwnedEffectProof.RootLineEvent(source, payload, event)
+          ComparisonEndpointLineProjection(
+            if event.kind == LineEventKind.Mate then ComparisonEndpointLineFamily.Mate
+            else ComparisonEndpointLineFamily.Qualitative,
+            binding,
+            proof,
             Option
               .when(binding.specificTargetMechanismReady)(())
               .flatMap { _ =>
-                val proof = RootOwnedEffectProof.RootLineEvent(source, payload, event)
                 ComparisonEndpointEffectObservationPolicy.fromRootLineEvent(
                   rootPosition,
                   payload.line,
@@ -929,10 +1024,12 @@ object EvidenceObjectBinding:
         .rootTriggeredEndgameHorizonsForComparison(payload.line.rootMove)
         .map { horizon =>
           val binding = rootTriggeredEndgameBinding(source, payload, rootActor, horizon)
-          Option
-            .when(binding.specificTargetMechanismReady)(())
-            .flatMap { _ =>
-              val proof = RootOwnedEffectProof.EndgameHorizon(source, payload, horizon)
+          val proof = RootOwnedEffectProof.EndgameHorizon(source, payload, horizon)
+          ComparisonEndpointLineProjection(
+            ComparisonEndpointLineFamily.Qualitative,
+            binding,
+            proof,
+            Option.when(binding.specificTargetMechanismReady)(()).flatMap { _ =>
               ComparisonEndpointEffectObservationPolicy.fromEndgameHorizon(
                 rootPosition,
                 payload.line,
@@ -941,62 +1038,417 @@ object EvidenceObjectBinding:
                 horizon
               )
             }
+          )
         }
     }
-    actor.fold(ComparisonEndpointLineEffectInventories.incomplete) { _ =>
-      val materialProjected = episodeProjected.collect {
-        case (LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss, observation) =>
-          observation
-      }
-      val mateProjected = episodeProjected.collect {
-        case (LineConsequenceKind.Mate, observation) => observation
-      } ++ eventProjected.collect {
-        case (LineEventKind.Mate, observation) => observation
-      }
-      val qualitativeEpisodeProjected = episodeProjected.collect {
-        case (kind, observation)
-            if kind != LineConsequenceKind.MaterialGain &&
-              kind != LineConsequenceKind.MaterialLoss &&
-              kind != LineConsequenceKind.Mate =>
-          observation
-      }
-      ComparisonEndpointLineEffectInventories(
-        material = completeEndpointInventory(materialProjected),
-        mate = completeEndpointInventory(mateProjected),
-        qualitative = completeEndpointInventory(
-          qualitativeEpisodeProjected ++
-            eventProjected.collect {
-              case (kind, observation) if kind != LineEventKind.Mate => observation
-            } ++
-            horizonProjected
-        )
-      )
-    }
+    actor.map(_ => episodeProjected ++ eventProjected ++ horizonProjected)
 
   /** Cause-neutral endpoint inventory for one exact root structural
     * transition. All meaningful consequences participate, including adverse
     * ones for which no Cause draft was produced.
     */
+  private final case class ComparisonEndpointStructuralProjection(
+      binding: EvidenceObjectBinding,
+      proof: RootOwnedEffectProof,
+      observation: Option[ComparisonEndpointEffectObservation]
+  )
+
+  private def comparisonEndpointStructuralProjections(
+      source: EvidenceRef,
+      payload: StructuralDeltaEvidence,
+      rootPosition: PositionNodeRef,
+      eventLine: LineNodeRef
+  ): Option[List[ComparisonEndpointStructuralProjection]] =
+    RootCausalActor.fromPosition(rootPosition, eventLine.rootMove).map { actor =>
+      payload.meaningfulConsequences.map { consequence =>
+        val proof = RootOwnedEffectProof.StructuralTransition(source, payload, consequence)
+        val binding =
+          rootStructuralConsequenceBinding(source, payload, actor, consequence, eventLine)
+        ComparisonEndpointStructuralProjection(
+          binding,
+          proof,
+          ComparisonEndpointEffectObservationPolicy.fromStructuralConsequence(
+            rootPosition = rootPosition,
+            eventLine = eventLine,
+            binding = binding,
+            proof = proof,
+            consequence = consequence
+          )
+        )
+      }
+    }
+
   private[chessjudgment] def comparisonEndpointStructuralObservations(
       source: EvidenceRef,
       payload: StructuralDeltaEvidence,
       rootPosition: PositionNodeRef,
       eventLine: LineNodeRef
   ): Option[Set[ComparisonEndpointEffectObservation]] =
-    RootCausalActor.fromPosition(rootPosition, eventLine.rootMove).flatMap { actor =>
-      completeEndpointObservations(
-        payload.meaningfulConsequences.map { consequence =>
-          val proof = RootOwnedEffectProof.StructuralTransition(source, payload, consequence)
-          ComparisonEndpointEffectObservationPolicy.fromStructuralConsequence(
-            rootPosition = rootPosition,
-            eventLine = eventLine,
-            binding = rootStructuralConsequenceBinding(source, payload, actor, consequence, eventLine),
-            proof = proof,
-            consequence = consequence
-          )
-        }
+    comparisonEndpointStructuralProjections(source, payload, rootPosition, eventLine)
+      .flatMap(projected => completeEndpointObservations(projected.map(_.observation)))
+
+  /** Enumerates neutral F-stage witnesses for one comparison endpoint. The
+    * supplied records are the assembler's exact endpoint neighborhood; this
+    * method never broadens ownership by scanning an unrelated graph branch.
+    */
+  private[chessjudgment] def comparisonEndpointEvidenceWitnesses(
+      sourceSide: RelativeCauseSourceSide,
+      eventLine: LineNodeRef,
+      rootPosition: PositionNodeRef,
+      comparisonEvidence: EvidenceRef,
+      comparison: CandidateComparisonFact,
+      endpointRecords: List[EvidenceRecord],
+      involvedRecords: List[EvidenceRecord],
+      graph: TypedEvidenceGraph
+  ): List[ComparisonEndpointEvidenceWitness] =
+    val actor = RootCausalActor.fromPosition(rootPosition, eventLine.rootMove)
+
+    def observationFromOwnedProof(
+        binding: EvidenceObjectBinding,
+        proof: RootOwnedEffectProof,
+        change: DirectCausalChange
+    ): Option[ComparisonEndpointEffectObservation] =
+      for
+        rootActor <- actor
+        stake <- RootOwnedEffectPolicy.effectStake(proof, rootActor)
+        observation <- ComparisonEndpointEffectObservationPolicy.fromOwnedProof(
+          rootPosition,
+          eventLine,
+          binding,
+          proof,
+          change,
+          stake
+        )
+      yield observation
+
+    def witness(
+        binding: EvidenceObjectBinding,
+        proof: RootOwnedEffectProof,
+        observation: Option[ComparisonEndpointEffectObservation]
+    ): Option[ComparisonEndpointEvidenceWitness] =
+      for
+        line <- binding.line
+        if sameSemanticLine(line, eventLine)
+        if binding.actor.nonEmpty && binding.target.nonEmpty &&
+          binding.mechanism.nonEmpty && binding.consequence.nonEmpty
+        segment <- DirectCauseProofSegment.from(proof)
+      yield ComparisonEndpointEvidenceWitness(
+        sourceSide = sourceSide,
+        line = eventLine,
+        binding = binding.copy(line = Some(eventLine), proofRole = None),
+        rootOwnedProof = proof,
+        proofSegment = segment,
+        effectDescriptor = RootOwnedEffectDescriptorPolicy.describe(binding, proof),
+        carrierAncestorSourceIds = graph
+          .record(binding.source)
+          .toList
+          .flatMap(graph.parentClosure)
+          .map(_.ref.id)
+          .distinct
+          .sorted,
+        observation = observation
       )
+
+    val primitiveWitnesses = endpointRecords.flatMap {
+      case EvidenceRecord(ref, payload: LineFactEvidence, _)
+          if payload.line == eventLine &&
+            RootOwnedEffectPolicy.sameCausalRootOccurrence(ref.position, rootPosition) =>
+        comparisonEndpointLineProjections(ref, payload, rootPosition)
+          .toList
+          .flatten
+          .flatMap(item => witness(item.binding, item.proof, item.observation))
+
+      case EvidenceRecord(ref, payload: StructuralDeltaEvidence, _)
+          if ref.line.contains(eventLine) && payload.line.contains(eventLine) &&
+            EvidenceRef.sameMove(payload.moveUci, eventLine.rootMove) &&
+            actor.exists(_.color == payload.perspective) &&
+            PrincipalVariationEvidence.sameBoardState(payload.from.fen, rootPosition.fen) =>
+        comparisonEndpointStructuralProjections(ref, payload, rootPosition, eventLine)
+          .toList
+          .flatten
+          .flatMap(projected =>
+            witness(projected.binding, projected.proof, projected.observation)
+          )
+
+      case EvidenceRecord(ref, payload: MoveMotifEvidence, _)
+          if RootOwnedEffectPolicy.motifRecordOwnsEventRoot(ref, payload, eventLine) =>
+        actor.toList.flatMap { exactActor =>
+          val proof = RootOwnedEffectProof.RootMoveMotif(ref, payload)
+          val binding = rootMoveMotifBinding(ref, payload, exactActor, eventLine)
+          witness(binding, proof, observationFromOwnedProof(binding, proof, DirectCausalChange.Occurred))
+        }
+
+      case EvidenceRecord(ref, payload: RelationFactEvidence, _)
+          if RootOwnedEffectPolicy.relationRecordOwnsEventRoot(ref, payload, eventLine) =>
+        actor.toList.flatMap { exactActor =>
+          val proof = RootOwnedEffectProof.RootRelation(ref, payload)
+          val binding = rootRelationBinding(ref, payload, exactActor, eventLine)
+          witness(binding, proof, observationFromOwnedProof(binding, proof, DirectCausalChange.Occurred))
+        }
+
+      case EvidenceRecord(ref, payload: ThreatEpisodeEvidence, _)
+          if ref.line.contains(eventLine) =>
+        actor.toList.flatMap { exactActor =>
+          val creation = Option
+            .when(
+              payload.episode.hasConcreteThreatProof &&
+                payload.episode.threatActor == exactActor.color &&
+                payload.episode.motifs.exists(motif =>
+                  motif.plyIndex == 0 && motif.color == exactActor.color &&
+                    motif.move.exists(EvidenceRef.sameMove(_, eventLine.rootMove))
+                )
+            )(RootOwnedEffectProof.ThreatCreation(ref, payload))
+          val defenses = List(false, true).flatMap { onlyDefense =>
+            Option.when(
+              payload.episode.hasConcreteThreatProof &&
+                payload.episode.sideUnderPressure == exactActor.color &&
+                (if onlyDefense then payload.onlyDefense else payload.episode.bestDefense)
+                  .exists(EvidenceRef.sameMove(_, eventLine.rootMove))
+            )(RootOwnedEffectProof.ThreatDefense(ref, payload, onlyDefense))
+          }
+          (creation.toList ++ defenses).flatMap { proof =>
+            val binding = rootThreatBinding(ref, payload, exactActor, eventLine, proof)
+            val change = proof match
+              case _: RootOwnedEffectProof.ThreatCreation => DirectCausalChange.Occurred
+              case _                                      => DirectCausalChange.Prevented
+            witness(binding, proof, observationFromOwnedProof(binding, proof, change))
+          }
+        }
+
+      case EvidenceRecord(ref, payload: PlanCausalEventEvidence, _)
+          if actor.exists(rootActor =>
+            RootOwnedEffectPolicy.planEventOwnsRoot(ref, payload, eventLine, rootActor.color)
+          ) =>
+        actor.toList.flatMap { exactActor =>
+          val resultWitnesses = List(
+            payload.exactRobustPublicResultAssessment,
+            payload.exactRefutedPublicResultAssessment
+          ).flatten.distinct.flatMap { assessment =>
+            val proof = RootOwnedEffectProof.PlanResult(ref, payload, assessment)
+            val binding = planAssessmentBinding(ref, payload, exactActor, assessment, eventLine)
+            witness(
+              binding,
+              proof,
+              ComparisonEndpointEffectObservationPolicy.fromExactPlanResult(
+                rootPosition,
+                eventLine,
+                ref,
+                payload,
+                assessment
+              )
+            )
+          }
+          val restrictionWitnesses = RootOwnedEffectPolicy
+            .planRestrictionProofs(ref, payload, graph)
+            .flatMap { case (consequence, proof) =>
+              val binding = planDirectConsequenceBinding(
+                ref,
+                payload,
+                exactActor,
+                consequence,
+                eventLine
+              )
+              witness(
+                binding,
+                proof,
+                observationFromOwnedProof(binding, proof, DirectCausalChange.Prevented)
+              )
+            }
+          val directRootBlockadeWitnesses =
+            DirectOpponentRestrictionProof
+              .exactRootPawnBlockadePrimitives(ref, payload, graph)
+              .flatMap { case (structuralRef, structural, lineRef, _, consequence) =>
+                val proof = RootOwnedEffectProof.StructuralTransition(
+                  structuralRef,
+                  structural,
+                  consequence
+                )
+                val binding = planDirectConsequenceBinding(
+                  ref,
+                  payload,
+                  exactActor,
+                  consequence,
+                  eventLine
+                ).copy(provenance = List(structuralRef, lineRef))
+                witness(
+                  binding,
+                  proof,
+                  observationFromOwnedProof(binding, proof, DirectCausalChange.Prevented)
+                )
+              }
+          resultWitnesses ++ restrictionWitnesses ++ directRootBlockadeWitnesses
+        }
+
+      case _ => Nil
     }
+
+    val defensiveWitnesses =
+      if sourceSide != RelativeCauseSourceSide.Reference || comparisonEvidence.id.isEmpty then Nil
+      else
+        for
+          _ <- Option.when(
+            comparison.kind == CandidateComparisonKind.PlayedVsBest &&
+              comparison.comparison.verdict.isActionableLoss &&
+              comparison.referenceLine == eventLine
+          )(()).toList
+          resource <- comparison.defensiveRecaptureResource.toList
+          comparisonRecord <- graph.record(comparisonEvidence).toList
+          candidateLineRecord <- comparisonRecord.parents.flatMap(graph.record).collect {
+            case EvidenceRecord(lineRef, line: LineFactEvidence, _)
+                if line.line == comparison.candidateLine => lineRef -> line
+          } match
+            case exact :: Nil => List(exact)
+            case _            => Nil
+          (candidateLineRef, candidateLine) = candidateLineRecord
+          if PlayedVsBestDefensiveRecaptureResource.proves(
+            comparison,
+            rootPosition,
+            candidateLine,
+            resource
+          )
+          exactActor <- actor.toList
+          proof = RootOwnedEffectProof.DefensiveRecaptureResource(
+            comparisonEvidence,
+            comparison,
+            resource
+          )
+          binding = defensiveRecaptureBinding(
+            comparisonEvidence,
+            comparison,
+            resource,
+            candidateLineRef,
+            exactActor
+          )
+          exact <- witness(
+            binding,
+            proof,
+            observationFromOwnedProof(binding, proof, DirectCausalChange.Occurred)
+          ).toList
+        yield exact
+
+    val baseWitnesses = primitiveWitnesses ++ defensiveWitnesses
+    val baseBySource = baseWitnesses.groupBy(_.binding.source.id)
+    val involvedById = involvedRecords.map(record => record.ref.id -> record).toMap
+
+    def witnessesThroughCarrier(
+        source: EvidenceRef,
+        visited: Set[String]
+    ): List[ComparisonEndpointEvidenceWitness] =
+      if visited(source.id) then Nil
+      else
+        val direct = baseBySource.getOrElse(source.id, Nil)
+        val carried = involvedById.get(source.id).toList.flatMap {
+          case EvidenceRecord(carrier, payload: TacticalMechanismEvidence, _)
+              if RootOwnedEffectPolicy.tacticalCarrierOwnsEventRoot(carrier, payload, eventLine) =>
+            actor.toList.flatMap { exactActor =>
+              payload.signals.flatMap { signal =>
+                signal.source.toList.flatMap { primitiveSource =>
+                  graph.record(primitiveSource).toList
+                    .filter(record => tacticalSignalMatchesPayload(signal, record.payload))
+                    .flatMap(_ => witnessesThroughCarrier(primitiveSource, visited + source.id))
+                    .flatMap { primitive =>
+                      val binding = primitive.binding.copy(
+                        source = carrier,
+                        provenance = (primitive.binding.source :: primitive.binding.provenance)
+                          .distinctBy(_.id),
+                        actor = rootActorObjects(exactActor),
+                        line = Some(eventLine)
+                      )
+                      witness(binding, primitive.rootOwnedProof, primitive.observation)
+                    }
+                }
+              }
+            }
+          case EvidenceRecord(carrier, payload: StrategicMechanismEvidence, _)
+              if carrier.line.contains(eventLine) =>
+            actor.toList.flatMap { exactActor =>
+              payload.signals.flatMap(signal =>
+                signal.axis.toList.flatMap { axis =>
+                  witnessesThroughCarrier(signal.source, visited + source.id).flatMap { primitive =>
+                    RootOwnedEffectPolicy
+                      .strategicProof(primitive.rootOwnedProof, axis)
+                      .toList
+                      .flatMap { proof =>
+                        val binding = strategicAxisBinding(
+                          carrier,
+                          primitive.binding,
+                          exactActor,
+                          eventLine,
+                          axis,
+                          None
+                        )
+                        witness(
+                          binding,
+                          proof,
+                          ComparisonEndpointEffectObservationPolicy.fromStrategicAxis(
+                            rootPosition,
+                            eventLine,
+                            axis,
+                            signal.strength
+                          )
+                        )
+                      }
+                  }
+                }
+              )
+            }
+          case EvidenceRecord(carrier, payload: StrategicMechanismContrastEvidence, _)
+              if payload.comparisonKind == comparison.kind &&
+                payload.referenceLine == comparison.referenceLine &&
+                payload.candidateLine == comparison.candidateLine =>
+            actor.toList.flatMap { exactActor =>
+              payload.sustainedActionableComparisonsFor(sourceSide).flatMap { axisComparison =>
+                val strength = sourceSide match
+                  case RelativeCauseSourceSide.Reference => axisComparison.referenceStrength
+                  case RelativeCauseSourceSide.Candidate => axisComparison.candidateStrength
+                  case RelativeCauseSourceSide.Shared | RelativeCauseSourceSide.Mixed => 0
+                graph.strategicComparisonSourceRefs(axisComparison, sourceSide).flatMap { primitiveSource =>
+                  witnessesThroughCarrier(primitiveSource, visited + source.id).flatMap { primitive =>
+                    RootOwnedEffectPolicy
+                      .strategicProof(
+                        primitive.rootOwnedProof,
+                        axisComparison.axis,
+                        Some(axisComparison.outcome)
+                      )
+                      .toList
+                      .flatMap { proof =>
+                        val binding = strategicAxisBinding(
+                          carrier,
+                          primitive.binding,
+                          exactActor,
+                          eventLine,
+                          axisComparison.axis,
+                          Some(axisComparison.outcome)
+                        )
+                        witness(
+                          binding,
+                          proof,
+                          ComparisonEndpointEffectObservationPolicy.fromStrategicAxis(
+                            rootPosition,
+                            eventLine,
+                            axisComparison.axis,
+                            strength
+                          )
+                        )
+                      }
+                  }
+                }
+              }
+            }
+          case _ => Nil
+        }
+        direct ++ carried
+
+    val carrierWitnesses = involvedRecords.flatMap(record =>
+      witnessesThroughCarrier(record.ref, Set.empty)
+    )
+    (baseWitnesses ++ carrierWitnesses).distinct.sortBy(witness =>
+      (
+        witness.rootOwnedProof.toString,
+        witness.binding.signature,
+        witness.primitiveProofSource.id
+      )
+    )
 
   /** Reconstruct the primitive endpoint observation from the exact owned
     * proof. Cause-specific tactical/strategic carrier refinements stay on the
@@ -1564,36 +2016,51 @@ object EvidenceObjectBinding:
         case exact :: Nil => Some(exact)
         case _            => None
       actor <- RootCausalActor.fromPosition(ref.position, comparison.referenceLine.rootMove)
-      binding = EvidenceObjectBinding(
-        source = ref,
-        actor = rootActorObjects(actor),
-        target = (
-          objectOf(EvidenceObjectKind.Square, resource.target.key) ++
-            objectOf(EvidenceObjectKind.Piece, resource.removedOccupantRole.name)
-        ).distinctBy(_.signaturePart),
-        mechanism = List(
-          "CreatesLegalDefensiveRecapture",
-          "PreservesImportantDefender"
-        ).flatMap(objectOf(EvidenceObjectKind.Mechanism, _)),
-        consequence = objectOf(
-          EvidenceObjectKind.Consequence,
-          "LegalDefensiveRecaptureResourceCreated"
-        ),
-        witness = (
-          resource.referenceProofMoves.flatMap(objectOf(EvidenceObjectKind.Move, _)) ++
-            List(
-              resource.referenceDefenderRole,
-              resource.preservedDefenderRole
-            ).flatMap(role => objectOf(EvidenceObjectKind.Piece, role.name)) ++
-            lineObject(comparison.referenceLine)
-        ).distinctBy(_.signaturePart),
-        line = Some(comparison.referenceLine),
-        horizon = Some("ply:2"),
-        provenance = List(candidateLineRef)
+      binding = defensiveRecaptureBinding(
+        ref,
+        comparison,
+        resource,
+        candidateLineRef,
+        actor
       )
       proof = RootOwnedEffectProof.DefensiveRecaptureResource(ref, comparison, resource)
       certified <- RootOwnedEffectPolicy.certify(cause, graph, binding, proof)
     yield certified
+
+  private def defensiveRecaptureBinding(
+      source: EvidenceRef,
+      comparison: CandidateComparisonFact,
+      resource: PlayedVsBestDefensiveRecaptureResource,
+      candidateLineRef: EvidenceRef,
+      actor: RootCausalActor
+  ): EvidenceObjectBinding =
+    EvidenceObjectBinding(
+      source = source,
+      actor = rootActorObjects(actor),
+      target = (
+        objectOf(EvidenceObjectKind.Square, resource.target.key) ++
+          objectOf(EvidenceObjectKind.Piece, resource.removedOccupantRole.name)
+      ).distinctBy(_.signaturePart),
+      mechanism = List(
+        "CreatesLegalDefensiveRecapture",
+        "PreservesImportantDefender"
+      ).flatMap(objectOf(EvidenceObjectKind.Mechanism, _)),
+      consequence = objectOf(
+        EvidenceObjectKind.Consequence,
+        "LegalDefensiveRecaptureResourceCreated"
+      ),
+      witness = (
+        resource.referenceProofMoves.flatMap(objectOf(EvidenceObjectKind.Move, _)) ++
+          List(
+            resource.referenceDefenderRole,
+            resource.preservedDefenderRole
+          ).flatMap(role => objectOf(EvidenceObjectKind.Piece, role.name)) ++
+          lineObject(comparison.referenceLine)
+      ).distinctBy(_.signaturePart),
+      line = Some(comparison.referenceLine),
+      horizon = Some("ply:2"),
+      provenance = List(candidateLineRef)
+    )
 
   private final case class CauseProjectionRoot(
       binding: RelativeCauseBinding,
@@ -1655,30 +2122,38 @@ object EvidenceObjectBinding:
       graph: TypedEvidenceGraph
   ): Option[DirectCauseChannel] =
     causeProjectionRoot(ref, cause, graph).flatMap { root =>
-      val geometry = payload.geometry
       RootOwnedEffectPolicy.certify(
         cause,
         graph,
-        EvidenceObjectBinding(
-          source = ref,
-          actor = rootActorObjects(root.actor),
-          target = geometry.targetSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)),
-          mechanism = objectOf(EvidenceObjectKind.Motif, payload.kind) ++
-            objectOf(EvidenceObjectKind.Mechanism, payload.category.toString),
-          consequence = objectOf(EvidenceObjectKind.Consequence, payload.category.toString),
-          witness = (
-            geometry.subjectSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
-              geometry.relatedSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
-              geometry.relatedFiles.flatMap(file => objectOf(EvidenceObjectKind.File, file.key)) ++
-              geometry.roles.flatMap(role => objectOf(EvidenceObjectKind.Piece, role.name)) ++
-              lineObject(root.binding.eventLine)
-          ).distinctBy(_.signaturePart),
-          line = Some(root.binding.eventLine),
-          horizon = Some("ply:0")
-        ),
+        rootMoveMotifBinding(ref, payload, root.actor, root.binding.eventLine),
         RootOwnedEffectProof.RootMoveMotif(ref, payload)
       )
     }
+
+  private def rootMoveMotifBinding(
+      source: EvidenceRef,
+      payload: MoveMotifEvidence,
+      actor: RootCausalActor,
+      eventLine: LineNodeRef
+  ): EvidenceObjectBinding =
+    val geometry = payload.geometry
+    EvidenceObjectBinding(
+      source = source,
+      actor = rootActorObjects(actor),
+      target = geometry.targetSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)),
+      mechanism = objectOf(EvidenceObjectKind.Motif, payload.kind) ++
+        objectOf(EvidenceObjectKind.Mechanism, payload.category.toString),
+      consequence = objectOf(EvidenceObjectKind.Consequence, payload.category.toString),
+      witness = (
+        geometry.subjectSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
+          geometry.relatedSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
+          geometry.relatedFiles.flatMap(file => objectOf(EvidenceObjectKind.File, file.key)) ++
+          geometry.roles.flatMap(role => objectOf(EvidenceObjectKind.Piece, role.name)) ++
+          lineObject(eventLine)
+      ).distinctBy(_.signaturePart),
+      line = Some(eventLine),
+      horizon = Some("ply:0")
+    )
 
   private def fromRelationForCauseProjection(
       ref: EvidenceRef,
@@ -1687,40 +2162,48 @@ object EvidenceObjectBinding:
       graph: TypedEvidenceGraph
   ): Option[DirectCauseChannel] =
     causeProjectionRoot(ref, cause, graph).flatMap { root =>
-      val targetParticipants = payload.participants.filter(participant =>
-        Set(
-          RelationParticipantRole.Target,
-          RelationParticipantRole.Defender,
-          RelationParticipantRole.King,
-          RelationParticipantRole.Blocker,
-          RelationParticipantRole.Lured,
-          RelationParticipantRole.Bait
-        )(participant.participantRole)
-      )
       RootOwnedEffectPolicy.certify(
         cause,
         graph,
-        EvidenceObjectBinding(
-          source = ref,
-          actor = rootActorObjects(root.actor),
-          target = (
-            payload.targetSquare.toList.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
-              targetParticipants.flatMap(participantObjects)
-          ).distinctBy(_.signaturePart),
-          mechanism = objectOf(EvidenceObjectKind.Relation, payload.kind.toString) ++
-            objectOf(EvidenceObjectKind.Mechanism, payload.detail.detailName),
-          consequence = objectOf(EvidenceObjectKind.Consequence, payload.kind.toString),
-          witness = (
-            payload.participants.flatMap(participantObjects) ++
-              payload.focusSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
-              payload.lineMoves.flatMap(move => objectOf(EvidenceObjectKind.Move, move)) ++
-              lineObject(root.binding.eventLine)
-          ).distinctBy(_.signaturePart),
-          line = Some(root.binding.eventLine)
-        ),
+        rootRelationBinding(ref, payload, root.actor, root.binding.eventLine),
         RootOwnedEffectProof.RootRelation(ref, payload)
       )
     }
+
+  private def rootRelationBinding(
+      source: EvidenceRef,
+      payload: RelationFactEvidence,
+      actor: RootCausalActor,
+      eventLine: LineNodeRef
+  ): EvidenceObjectBinding =
+    val targetParticipants = payload.participants.filter(participant =>
+      Set(
+        RelationParticipantRole.Target,
+        RelationParticipantRole.Defender,
+        RelationParticipantRole.King,
+        RelationParticipantRole.Blocker,
+        RelationParticipantRole.Lured,
+        RelationParticipantRole.Bait
+      )(participant.participantRole)
+    )
+    EvidenceObjectBinding(
+      source = source,
+      actor = rootActorObjects(actor),
+      target = (
+        payload.targetSquare.toList.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
+          targetParticipants.flatMap(participantObjects)
+      ).distinctBy(_.signaturePart),
+      mechanism = objectOf(EvidenceObjectKind.Relation, payload.kind.toString) ++
+        objectOf(EvidenceObjectKind.Mechanism, payload.detail.detailName),
+      consequence = objectOf(EvidenceObjectKind.Consequence, payload.kind.toString),
+      witness = (
+        payload.participants.flatMap(participantObjects) ++
+          payload.focusSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
+          payload.lineMoves.flatMap(move => objectOf(EvidenceObjectKind.Move, move)) ++
+          lineObject(eventLine)
+      ).distinctBy(_.signaturePart),
+      line = Some(eventLine)
+    )
 
   private def fromThreatEpisodeForCauseProjection(
       ref: EvidenceRef,
@@ -1729,50 +2212,58 @@ object EvidenceObjectBinding:
       graph: TypedEvidenceGraph
   ): Option[DirectCauseChannel] =
     causeProjectionRoot(ref, cause, graph).flatMap { root =>
-      val rootMove = root.binding.eventLine.rootMove
-      val episode = payload.episode
       val proof = RootOwnedEffectPolicy.threatProof(cause.kind, ref, payload)
       proof.flatMap { exactProof =>
-        val kingTarget = Option
-          .when(episode.kind == ThreatKind.Mate)(
-            kingObjectsAfterRoot(ref.position.fen, rootMove, episode.sideUnderPressure)
-          )
-          .toList
-          .flatten
-        val threatTargets = (
-          episode.attackSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
-            episode.targetPieces.flatMap(role => objectOf(EvidenceObjectKind.Piece, role.name)) ++
-            kingTarget
-        ).distinctBy(_.signaturePart)
-        val result =
-          if cause.kind == RelativeCauseKind.OnlyDefenseNecessity then "OnlyAdequateDefense"
-          else if cause.kind == RelativeCauseKind.DefensiveResource then "ThreatPrevented"
-          else s"ThreatCreated:${episode.severity}"
         RootOwnedEffectPolicy.certify(
           cause,
           graph,
-          EvidenceObjectBinding(
-            source = ref,
-            actor = rootActorObjects(root.actor),
-            target = threatTargets,
-            mechanism = objectOf(EvidenceObjectKind.Mechanism, episode.driver.toString),
-            consequence = objectOf(EvidenceObjectKind.Consequence, result),
-            witness = (
-              objectOf(EvidenceObjectKind.Side, colorKey(episode.threatActor)) ++
-                episode.bestDefense.toList.flatMap(move => objectOf(EvidenceObjectKind.Move, move)) ++
-                episode.motifs.flatMap(motif =>
-                  objectOf(EvidenceObjectKind.Motif, motif.getClass.getSimpleName.stripSuffix("$")) ++
-                    motif.move.toList.flatMap(move => objectOf(EvidenceObjectKind.Move, move))
-                ) ++
-                lineObject(root.binding.eventLine)
-            ).distinctBy(_.signaturePart),
-            line = Some(root.binding.eventLine),
-            horizon = Some(s"turns:${episode.turnsToImpact}")
-          ),
+          rootThreatBinding(ref, payload, root.actor, root.binding.eventLine, exactProof),
           exactProof
         )
       }
     }
+
+  private def rootThreatBinding(
+      source: EvidenceRef,
+      payload: ThreatEpisodeEvidence,
+      actor: RootCausalActor,
+      eventLine: LineNodeRef,
+      proof: RootOwnedEffectProof
+  ): EvidenceObjectBinding =
+    val episode = payload.episode
+    val kingTarget = Option
+      .when(episode.kind == ThreatKind.Mate)(
+        kingObjectsAfterRoot(source.position.fen, eventLine.rootMove, episode.sideUnderPressure)
+      )
+      .toList
+      .flatten
+    val threatTargets = (
+      episode.attackSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
+        episode.targetPieces.flatMap(role => objectOf(EvidenceObjectKind.Piece, role.name)) ++
+        kingTarget
+    ).distinctBy(_.signaturePart)
+    val result = proof match
+      case RootOwnedEffectProof.ThreatDefense(_, _, true)  => "OnlyAdequateDefense"
+      case RootOwnedEffectProof.ThreatDefense(_, _, false) => "ThreatPrevented"
+      case _                                              => s"ThreatCreated:${episode.severity}"
+    EvidenceObjectBinding(
+      source = source,
+      actor = rootActorObjects(actor),
+      target = threatTargets,
+      mechanism = objectOf(EvidenceObjectKind.Mechanism, episode.driver.toString),
+      consequence = objectOf(EvidenceObjectKind.Consequence, result),
+      witness = (
+        objectOf(EvidenceObjectKind.Side, colorKey(episode.threatActor)) ++
+          episode.bestDefense.toList.flatMap(move => objectOf(EvidenceObjectKind.Move, move)) ++
+          episode.motifs.flatMap(motif =>
+            objectOf(EvidenceObjectKind.Motif, motif.getClass.getSimpleName.stripSuffix("$")) ++
+              motif.move.toList.flatMap(move => objectOf(EvidenceObjectKind.Move, move))
+          ) ++
+          lineObject(eventLine)
+      ).distinctBy(_.signaturePart),
+      line = Some(eventLine),
+      horizon = Some(s"turns:${episode.turnsToImpact}")
+    )
 
   private def kingObjectsAfterRoot(
       fen: String,
@@ -2128,15 +2619,26 @@ object EvidenceObjectBinding:
       carried <- RootOwnedEffectPolicy.certify(
         cause,
         graph,
-        binding.copy(
-          source = carrier,
-          provenance = (binding.source :: binding.provenance).distinctBy(_.id),
-          actor = rootActorObjects(actor),
-          mechanism = (binding.mechanism ++ semanticMechanism).distinctBy(_.signaturePart),
-          consequence = (binding.consequence ++ semanticConsequence).distinctBy(_.signaturePart),
-          witness = binding.witness,
-          line = Some(line),
-          horizon = binding.horizon
+        strategicAxis.fold(
+          binding.copy(
+            source = carrier,
+            provenance = (binding.source :: binding.provenance).distinctBy(_.id),
+            actor = rootActorObjects(actor),
+            mechanism = (binding.mechanism ++ semanticMechanism).distinctBy(_.signaturePart),
+            consequence = (binding.consequence ++ semanticConsequence).distinctBy(_.signaturePart),
+            witness = binding.witness,
+            line = Some(line),
+            horizon = binding.horizon
+          )
+        )(axis =>
+          strategicAxisBinding(
+            carrier,
+            binding,
+            actor,
+            line,
+            axis,
+            strategicOutcome
+          )
         ),
         proof,
         channel.primitiveCausalSignature.orElse(Some(channel.causalSignature))
@@ -2144,6 +2646,33 @@ object EvidenceObjectBinding:
     yield carried.copy(
       importanceDescriptorAmbiguous = channel.importanceDescriptorAmbiguous,
       proofSegmentAmbiguous = channel.proofSegmentAmbiguous
+    )
+
+  private def strategicAxisBinding(
+      carrier: EvidenceRef,
+      primitive: EvidenceObjectBinding,
+      actor: RootCausalActor,
+      line: LineNodeRef,
+      axis: StrategicAxisDetail,
+      outcome: Option[StrategicAxisComparisonOutcome]
+  ): EvidenceObjectBinding =
+    primitive.copy(
+      source = carrier,
+      provenance = (primitive.source :: primitive.provenance).distinctBy(_.id),
+      actor = rootActorObjects(actor),
+      mechanism = (
+        primitive.mechanism ++ objectOf(EvidenceObjectKind.Mechanism, axis.kind.toString)
+      ).distinctBy(_.signaturePart),
+      consequence = (
+        primitive.consequence ++
+          objectOf(EvidenceObjectKind.Consequence, axis.stableKey) ++
+          outcome.toList.flatMap(value =>
+            objectOf(EvidenceObjectKind.Consequence, value.toString)
+          )
+      ).distinctBy(_.signaturePart),
+      witness = primitive.witness,
+      line = Some(line),
+      horizon = primitive.horizon
     )
 
   private def rootOwnedEpisodeBinding(

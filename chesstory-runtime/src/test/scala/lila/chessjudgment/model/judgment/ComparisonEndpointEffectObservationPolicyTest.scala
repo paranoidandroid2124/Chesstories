@@ -474,6 +474,113 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
     assertEquals(RootOwnedEffectPolicy.strategicAxisStake(generic), None)
     assertEquals(RootOwnedEffectPolicy.strategicAxisChange(generic), None)
 
+  test("neutral snapshot membership is exact, unique, and independent of directChange"):
+    val fixture = retainedValueFixture()
+    val channel = EvidenceObjectBinding
+      .directCauseChannelsForProjection(fixture.cause, fixture.graph)
+      .headOption
+      .getOrElse(fail("expected a candidate-owned relation channel"))
+    val proof = channel.rootOwnedProof.getOrElse(fail("expected root-owned proof"))
+    val segment = channel.proofSegment.getOrElse(fail("expected proof segment"))
+    val descriptor = channel.rootOwnedEffectDescriptor.getOrElse(fail("expected descriptor"))
+    val witness = ComparisonEndpointEvidenceWitness(
+      sourceSide = RelativeCauseSourceSide.Candidate,
+      line = candidate,
+      binding = channel.binding.copy(proofRole = None),
+      rootOwnedProof = proof,
+      proofSegment = segment,
+      effectDescriptor = descriptor,
+      carrierAncestorSourceIds = fixture.graph
+        .record(channel.binding.source)
+        .toList
+        .flatMap(fixture.graph.parentClosure)
+        .map(_.ref.id)
+        .distinct
+        .sorted,
+      observation = ComparisonEndpointEffectObservationPolicy.fromChannel(
+        fixture.cause,
+        channel,
+        fixture.graph
+      )
+    )
+    val snapshot = ComparisonEndpointEvidenceSnapshot(
+      comparisonEvidence = fixture.cause.comparisonEvidence,
+      comparison = fixture.comparison,
+      reference = ComparisonEndpointEvidenceSideSnapshot(
+        RelativeCauseSourceSide.Reference,
+        reference,
+        Nil
+      ),
+      candidate = ComparisonEndpointEvidenceSideSnapshot(
+        RelativeCauseSourceSide.Candidate,
+        candidate,
+        List(witness)
+      )
+    )
+
+    def matched(candidateChannel: DirectCauseChannel): Boolean =
+      ComparisonEndpointEffectObservationPolicy
+        .uniqueNeutralWitnessFor(
+          snapshot,
+          RelativeCauseSourceSide.Candidate,
+          candidateChannel,
+          fixture.graph
+        )
+        .contains(witness)
+
+    assert(matched(channel))
+    assert(matched(channel.copy(directChange = DirectCausalChange.Prevented)))
+    assert(!matched(channel.copy(binding = channel.binding.copy(line = Some(reference)))))
+    assert(!matched(channel.copy(binding = channel.binding.copy(
+      provenance = List(fixture.cause.comparisonEvidence)
+    ))))
+    assert(!matched(channel.copy(binding = channel.binding.copy(
+      actor = channel.binding.actor.map(_.copy(key = "forged-actor"))
+    ))))
+    assert(!matched(channel.copy(binding = channel.binding.copy(
+      target = channel.binding.target.map(_.copy(key = "forged-target"))
+    ))))
+    assert(!matched(channel.copy(binding = channel.binding.copy(
+      mechanism = channel.binding.mechanism.map(_.copy(key = "forged-mechanism"))
+    ))))
+    assert(!matched(channel.copy(binding = channel.binding.copy(
+      consequence = channel.binding.consequence.map(_.copy(key = "forged-consequence"))
+    ))))
+    assert(!matched(channel.copy(proofSegmentAmbiguous = true)))
+    assert(!matched(channel.copy(importanceDescriptorAmbiguous = true)))
+    def matchFrom(candidateSnapshot: ComparisonEndpointEvidenceSnapshot): Boolean =
+      ComparisonEndpointEffectObservationPolicy
+        .uniqueNeutralWitnessFor(
+          candidateSnapshot,
+          RelativeCauseSourceSide.Candidate,
+          channel,
+          fixture.graph
+        )
+        .nonEmpty
+
+    assert(!matchFrom(snapshot.copy(candidate = snapshot.candidate.copy(
+      sourceSide = RelativeCauseSourceSide.Reference
+    ))))
+    assert(!matchFrom(snapshot.copy(candidate = snapshot.candidate.copy(line = reference))))
+    assert(!matchFrom(snapshot.copy(candidate = snapshot.candidate.copy(
+      witnesses = List(witness.copy(sourceSide = RelativeCauseSourceSide.Reference))
+    ))))
+    assert(!matchFrom(snapshot.copy(candidate = snapshot.candidate.copy(
+      witnesses = List(witness.copy(line = reference))
+    ))))
+    assert(!matchFrom(snapshot.copy(
+      comparison = snapshot.comparison.copy(candidateLine = reference)
+    )))
+    assertEquals(
+      ComparisonEndpointEffectObservationPolicy.uniqueNeutralWitnessFor(
+        snapshot.copy(candidate = snapshot.candidate.copy(witnesses = List(witness, witness))),
+        RelativeCauseSourceSide.Candidate,
+        channel,
+        fixture.graph
+      ),
+      None
+    )
+
   private final case class RetainedFixture(
       cause: RelativeCauseFact,
       comparison: CandidateComparisonFact,
