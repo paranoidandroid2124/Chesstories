@@ -142,6 +142,22 @@ enum RootOwnedEffectProof:
       comparisonOutcome: Option[StrategicAxisComparisonOutcome]
   )
 
+  /** Evidence record that owns the primitive effect, beneath any strategic wrapper. */
+  final def primitiveSource: EvidenceRef =
+    this match
+      case RootOwnedEffectProof.LineEpisode(source, _, _)                 => source
+      case RootOwnedEffectProof.RootLineEvent(source, _, _)               => source
+      case RootOwnedEffectProof.EndgameHorizon(source, _, _)              => source
+      case RootOwnedEffectProof.StructuralTransition(source, _, _)        => source
+      case RootOwnedEffectProof.RootMoveMotif(source, _)                   => source
+      case RootOwnedEffectProof.RootRelation(source, _)                    => source
+      case RootOwnedEffectProof.ThreatCreation(source, _)                  => source
+      case RootOwnedEffectProof.ThreatDefense(source, _, _)                => source
+      case RootOwnedEffectProof.PlanResult(source, _, _)                   => source
+      case RootOwnedEffectProof.PlanRestriction(source, _, _, _)           => source
+      case RootOwnedEffectProof.DefensiveRecaptureResource(source, _, _)   => source
+      case RootOwnedEffectProof.StrategicAxis(primitive, _, _)             => primitive.primitiveSource
+
 /** Primitive family of the exact effect owned by one public Cause channel.
   * This is deliberately independent of evidence ids and carrier wrappers.
   */
@@ -12952,7 +12968,7 @@ final class TypedEvidenceGraph private (
               cause.strategicCauseKind &&
               channel.binding.line.contains(line) &&
               RelativeCauseKind.strategicAxisCanProveCause(cause.kind, axis, cause.sourceSide) =>
-          val primitiveSource = rootOwnedEffectProofSource(primitive)
+          val primitiveSource = primitive.primitiveSource
           relativeCauseStrategicAxisComparisons(cause, section).exists {
             case (carrier, comparison) =>
               carrier.id == channel.binding.source.id &&
@@ -13011,22 +13027,6 @@ final class TypedEvidenceGraph private (
             case _ => false
             }
       }
-
-  private def rootOwnedEffectProofSource(proof: RootOwnedEffectProof): EvidenceRef =
-    proof match
-      case RootOwnedEffectProof.LineEpisode(source, _, _)              => source
-      case RootOwnedEffectProof.RootLineEvent(source, _, _)            => source
-      case RootOwnedEffectProof.EndgameHorizon(source, _, _)           => source
-      case RootOwnedEffectProof.StructuralTransition(source, _, _)     => source
-      case RootOwnedEffectProof.RootMoveMotif(source, _)                => source
-      case RootOwnedEffectProof.RootRelation(source, _)                 => source
-      case RootOwnedEffectProof.ThreatCreation(source, _)               => source
-      case RootOwnedEffectProof.ThreatDefense(source, _, _)             => source
-      case RootOwnedEffectProof.PlanResult(source, _, _)                => source
-      case RootOwnedEffectProof.PlanRestriction(source, _, _, _)        => source
-      case RootOwnedEffectProof.DefensiveRecaptureResource(source, _, _) => source
-      case RootOwnedEffectProof.StrategicAxis(primitive, _, _)          =>
-        rootOwnedEffectProofSource(primitive)
 
   def relativeCauseHasOwnedTacticalProof(cause: RelativeCauseFact): Boolean =
     cause.attribution.directProofEligible &&

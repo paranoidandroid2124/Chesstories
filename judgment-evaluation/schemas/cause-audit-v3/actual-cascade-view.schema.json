@@ -897,7 +897,8 @@
             "threat_creation",
             "threat_defense",
             "plan_result",
-            "plan_restriction"
+            "plan_restriction",
+            "defensive_recapture_resource"
           ]
         },
         "target_signatures": {
@@ -2485,7 +2486,8 @@
             "creates_threat",
             "defends_threat",
             "realizes_plan_result",
-            "restricts_opponent_resource"
+            "restricts_opponent_resource",
+            "creates_defensive_recapture_resource"
           ]
         },
         "steps": {
@@ -3016,6 +3018,11 @@
         "direct_change",
         "source_id",
         "provenance_source_ids",
+        "carrier",
+        "carrier_ancestor_source_ids",
+        "provenance",
+        "primitive_proof_source",
+        "evidence_identity_sha256",
         "proof_role",
         "line_id",
         "actor",
@@ -3066,6 +3073,27 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "carrier": {
+          "$ref": "#/$defs/sourceRef"
+        },
+        "carrier_ancestor_source_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "provenance": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/sourceRef"
+          }
+        },
+        "primitive_proof_source": {
+          "$ref": "#/$defs/sourceRef"
+        },
+        "evidence_identity_sha256": {
+          "$ref": "#/$defs/sha256"
         },
         "proof_role": {
           "oneOf": [

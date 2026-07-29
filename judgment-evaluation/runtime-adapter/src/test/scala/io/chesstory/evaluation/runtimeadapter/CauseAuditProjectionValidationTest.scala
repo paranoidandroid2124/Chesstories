@@ -54,6 +54,13 @@ class CauseAuditProjectionValidationTest extends munit.FunSuite:
     Some(reference),
     EvidenceConfidence.LegalReplayVerified
   )
+  private val wrapperRef = ref(
+    "tactical-carrier",
+    EvidenceProducer.TacticalMechanismProducer,
+    EvidenceLayer.TacticalMechanism,
+    Some(reference),
+    EvidenceConfidence.LegalReplayVerified
+  )
   private val causeRef = ref(
     "cause",
     EvidenceProducer.RelativeMoveProducer,
@@ -120,6 +127,18 @@ class CauseAuditProjectionValidationTest extends munit.FunSuite:
       List(reference.rootMove)
     )
     .getOrElse(fail("synthetic relation must be typed"))
+  private val carrier = TacticalMechanismEvidence(
+    TacticalMechanismKind.Tempo,
+    Some(reference.rootMove),
+    Some(reference),
+    List(TacticalMechanismSignal(
+      TacticalMechanismSignalKind.Relation,
+      "zwischenzug",
+      EvidenceLayer.Relation,
+      Some(proofRef),
+      Some(RelationFactKind.Zwischenzug)
+    ))
+  )
   private val preAdmissionGraph = List(
     EvidenceRecord(comparisonRef, CandidateComparisonEvidence(comparison)),
     EvidenceRecord(proofRef, proof)
@@ -134,6 +153,9 @@ class CauseAuditProjectionValidationTest extends munit.FunSuite:
   )
   private val graph = preAdmissionGraph.add(
     EvidenceRecord(causeRef, RelativeCauseFactEvidence(cause))
+  )
+  private val wrapperGraph = graph.add(
+    EvidenceRecord(wrapperRef, carrier, parents = List(proofRef))
   )
   private val channel = RelativeCauseConstructionAdmission
     .admittedDirectChannels(cause, graph)
@@ -553,13 +575,22 @@ class CauseAuditProjectionValidationTest extends munit.FunSuite:
     )
     assert((rChannel \ "importance_effect").toOption.nonEmpty)
 
-    val v2Channel = CauseAuditAdapterCli.projectedCOwnedChannelDocument(channel, 2)
-    val v3Channel = CauseAuditAdapterCli.projectedCOwnedChannelDocument(channel, 3)
+    val wrappedChannel = channel.copy(binding = channel.binding.copy(
+      source = wrapperRef,
+      provenance = List(proofRef)
+    ))
+    val v2Channel = CauseAuditAdapterCli.projectedCOwnedChannelDocument(wrappedChannel, 2, wrapperGraph)
+    val v3Channel = CauseAuditAdapterCli.projectedCOwnedChannelDocument(wrappedChannel, 3, wrapperGraph)
     assert((v2Channel \ "line").toOption.isEmpty)
     assert((v2Channel \ "horizon").toOption.isEmpty)
     assert((v2Channel \ "proof_segment").toOption.isEmpty)
     assert((v2Channel \ "effect_descriptor").toOption.isEmpty)
     assert((v2Channel \ "importance_effect").toOption.isEmpty)
+    assert((v2Channel \ "carrier").toOption.isEmpty)
+    assert((v2Channel \ "provenance").toOption.isEmpty)
+    assert((v2Channel \ "carrier_ancestor_source_ids").toOption.isEmpty)
+    assert((v2Channel \ "primitive_proof_source").toOption.isEmpty)
+    assert((v2Channel \ "evidence_identity_sha256").toOption.isEmpty)
     assertEquals(
       (v3Channel \ "line").as[JsObject].keys,
       Set("line_id", "role", "rank", "root_move")
@@ -571,6 +602,53 @@ class CauseAuditProjectionValidationTest extends munit.FunSuite:
     )
     assert((v3Channel \ "effect_descriptor" \ "effect_scope").asOpt[JsObject].nonEmpty)
     assert((v3Channel \ "importance_effect").toOption.nonEmpty)
+    val carrierJson = (v3Channel \ "carrier").as[JsObject]
+    assertEquals(
+      carrierJson.keys,
+      Set(
+        "id",
+        "producer",
+        "layer",
+        "scope",
+        "confidence",
+        "line",
+        "record_registered",
+        "record_payload_type",
+        "record_sha256"
+      )
+    )
+    assertEquals((carrierJson \ "record_registered").as[Boolean], true)
+    assertEquals(
+      (carrierJson \ "record_payload_type").as[String],
+      "TacticalMechanismEvidence"
+    )
+    assert((carrierJson \ "record_sha256").as[String].matches("[0-9a-f]{64}"))
+    val provenanceJson = (v3Channel \ "provenance").as[List[JsObject]]
+    assertEquals(provenanceJson.size, 1)
+    assertEquals(provenanceJson.head.keys, carrierJson.keys)
+    assertEquals((provenanceJson.head \ "id").as[String], proofRef.id)
+    assertEquals((provenanceJson.head \ "record_registered").as[Boolean], true)
+    assertEquals(
+      (provenanceJson.head \ "record_payload_type").as[String],
+      "RelationFactEvidence"
+    )
+    assert((provenanceJson.head \ "record_sha256").as[String].matches("[0-9a-f]{64}"))
+    assertEquals(
+      (v3Channel \ "carrier_ancestor_source_ids").as[List[String]],
+      List(proofRef.id)
+    )
+    assertEquals(
+      (v3Channel \ "primitive_proof_source").as[JsObject],
+      provenanceJson.head
+    )
+    assertEquals(
+      (v3Channel \ "evidence_identity_sha256").as[String],
+      NativeTreeEncoder.sha256Canonical(Json.obj(
+        "carrier" -> carrierJson,
+        "provenance" -> provenanceJson,
+        "primitive_proof_source" -> provenanceJson.head
+      ))
+    )
     assertEquals((v3Channel \ "importance_descriptor_ambiguous").as[Boolean], false)
     assertEquals((v3Channel \ "proof_segment_ambiguous").as[Boolean], false)
 

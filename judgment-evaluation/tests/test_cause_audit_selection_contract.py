@@ -41,9 +41,26 @@ from chesstory_eval.cause_semantics import (
 )
 from chesstory_eval.hashing import sha256_file, sha256_json
 from chesstory_eval.model import ContractError, IntegrityError
+from chesstory_eval.native_diagnostic import native_sha256_json
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def refresh_c_source_identity_digests(item: dict[str, object]) -> None:
+    for layer in (
+        "raw_owned_bindings",
+        "pre_admission_owned_bindings",
+        "owned_bindings",
+    ):
+        channel = item["c"]["objects"][layer][0]
+        channel["evidence_identity_sha256"] = native_sha256_json(
+            {
+                "carrier": channel["carrier"],
+                "provenance": channel["provenance"],
+                "primitive_proof_source": channel["primitive_proof_source"],
+            }
+        )
 
 
 def selection(
@@ -435,6 +452,83 @@ def typed_cause(
         {"kind": "square", "key": actor["from"]},
         {"kind": "square", "key": actor["to"]},
     ]
+    owned_channel = {
+        "signature": "binding-owned-channel",
+        "causal_signature": "owned-channel",
+        "primitive_signature": "primitive-owned-channel",
+        "source_id": f"proof-{cause_id}",
+        "provenance_source_ids": [f"primitive-{cause_id}"],
+        "carrier": {
+            "id": f"proof-{cause_id}",
+            "producer": "runtime",
+            "layer": "causal",
+            "scope": "direct",
+            "confidence": "high",
+            "line": {"id": "reference-line", "role": "best_reference", "rank": 1, "root_move": "e2e4"},
+            "record_registered": True,
+            "record_payload_type": "TacticalMechanismEvidence",
+            "record_sha256": "0" * 64,
+        },
+        "carrier_ancestor_source_ids": [f"primitive-{cause_id}"],
+        "provenance": [{
+            "id": f"primitive-{cause_id}",
+            "producer": "runtime",
+            "layer": "primitive",
+            "scope": "context",
+            "confidence": "high",
+            "line": {"id": "reference-line", "role": "best_reference", "rank": 1, "root_move": "e2e4"},
+            "record_registered": True,
+            "record_payload_type": "RelationFactEvidence",
+            "record_sha256": "1" * 64,
+        }],
+        "primitive_proof_source": {
+            "id": f"primitive-{cause_id}",
+            "producer": "runtime",
+            "layer": "primitive",
+            "scope": "context",
+            "confidence": "high",
+            "line": {"id": "reference-line", "role": "best_reference", "rank": 1, "root_move": "e2e4"},
+            "record_registered": True,
+            "record_payload_type": "RelationFactEvidence",
+            "record_sha256": "1" * 64,
+        },
+        "proof_role": "direct_proof",
+        "line_id": "reference-line",
+        "proof_segment": {
+            "terminal_relation": "instantiates_relation",
+            "steps": [{"role": "root_action", "ply_offset": 0, "move_uci": "e2e4"}],
+        },
+        "effect_descriptor": {
+            "effect_scope": {
+                "primitive_kind": "root_relation",
+                "target_signatures": ["square:e5"],
+                "plan_ids": [],
+                "strategic_axes": [],
+            },
+            "magnitude_status": "not_applicable",
+            "measure": None,
+            "material_event_salience": None,
+        },
+        "importance_effect": None,
+        "importance_descriptor_ambiguous": False,
+        "proof_segment_ambiguous": False,
+        "specific_target_mechanism_ready": True,
+        "direct_change": "occurred",
+        "actor": c_actor,
+        "target": [{"kind": "square", "key": "e5"}],
+        "mechanism": [{"kind": "mechanism", "key": "tempo"}],
+        "consequence": [{"kind": "consequence", "key": "initiative"}],
+        "witness": [],
+        "line": {"line_id": "reference-line", "role": "best_reference", "rank": 1, "root_move": "e2e4"},
+        "horizon": "ply:1",
+    }
+    owned_channel["evidence_identity_sha256"] = native_sha256_json(
+        {
+            "carrier": owned_channel["carrier"],
+            "provenance": owned_channel["provenance"],
+            "primitive_proof_source": owned_channel["primitive_proof_source"],
+        }
+    )
     return {
         "cause_record": {"id": cause_id},
         "c": {
@@ -442,6 +536,8 @@ def typed_cause(
             "source_side": "reference",
             "comparison": {
                 "kind": "played_vs_best",
+                "reference_line": {"id": "reference-line", "role": "best_reference", "rank": 1, "root_move": "e2e4"},
+                "candidate_line": {"id": "candidate-line", "role": "played", "rank": 1, "root_move": "e2e3"},
                 "reference_root_move": "e2e4",
                 "candidate_root_move": "e2e3",
                 "mover": "white",
@@ -450,39 +546,71 @@ def typed_cause(
                 "kind": "reference_creates_resource",
                 "root_move_matched": True,
                 "direct_proof_eligible": True,
+                "reason": None,
+            },
+            "direct_effect_admission": {
+                "status": "restricted",
+                "causal_signatures": ["owned-channel"],
             },
             "binding": {
                 "role": "primary_played_cause",
                 "source_side": "reference",
                 "binding_tier": "primary",
                 "event_line": {
+                    "id": "reference-line",
                     "role": "best_reference",
+                    "rank": 1,
                     "root_move": "e2e4",
                 },
+                "evidence_lines": [{"id": "reference-line", "role": "best_reference", "rank": 1, "root_move": "e2e4"}],
             },
-            "objects": {
-                "owned_bindings": [
-                    {
-                        "causal_signature": "owned-channel",
-                        "proof_segment": None,
-                        "direct_change": "occurred",
-                        "actor": c_actor,
-                        "target": [{"kind": "square", "key": "e5"}],
-                        "mechanism": [
-                            {"kind": "mechanism", "key": "tempo"}
-                        ],
-                        "consequence": [
-                            {"kind": "consequence", "key": "initiative"}
-                        ],
+            "proof": {
+                "present": True,
+                "direct": {
+                    "role": "direct_proof",
+                    "strength": "primary",
+                    "proof_kind_labels": ["direct"],
+                    "sources": [{
+                        "id": f"proof-{cause_id}",
+                        "producer": "runtime",
+                        "layer": "causal",
+                        "scope": "direct",
+                        "confidence": "high",
                         "line": {
-                            "line_id": "reference-line",
+                            "id": "reference-line",
                             "role": "best_reference",
                             "rank": 1,
                             "root_move": "e2e4",
                         },
-                        "horizon": "ply:1",
-                    }
-                ]
+                        "record_registered": True,
+                        "record_payload_type": "TacticalMechanismEvidence",
+                        "record_sha256": "0" * 64,
+                        "proof_kind_labels": ["direct"],
+                    }],
+                },
+                "contrast": {
+                    "role": "contrast_proof",
+                    "strength": "supporting",
+                    "proof_kind_labels": [],
+                    "sources": [],
+                },
+                "context": {
+                    "role": "context_support",
+                    "strength": "weak_hint",
+                    "proof_kind_labels": [],
+                    "sources": [{"id": f"context-{cause_id}"}],
+                },
+                "strategic_identity": {
+                    "axis_keys": [],
+                    "mechanism_kinds": [],
+                    "mechanism_source_ids": [],
+                    "signal_source_ids": [],
+                },
+            },
+            "objects": {
+                "raw_owned_bindings": [copy.deepcopy(owned_channel)],
+                "pre_admission_owned_bindings": [copy.deepcopy(owned_channel)],
+                "owned_bindings": [copy.deepcopy(owned_channel)],
             },
         },
         "jp": {
@@ -1866,9 +1994,9 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
 
     def test_same_kind_with_wrong_target_is_a_c_failure(self) -> None:
         item = typed_cause()
-        item["c"]["objects"]["owned_bindings"][0]["target"] = [
-            {"kind": "square", "key": "d5"}
-        ]
+        for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
+            item["c"]["objects"][layer][0]["target"] = [{"kind": "square", "key": "d5"}]
+            item["c"]["objects"][layer][0]["effect_descriptor"]["effect_scope"]["target_signatures"] = ["square:d5"]
         judgment = self.judge(typed_label(), [item])
         self.assertEqual(judgment["first_failure_stage"], "C")
         self.assertIn(
@@ -1890,14 +2018,540 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
             ]
         )
         item = typed_cause()
-        owned = item["c"]["objects"]["owned_bindings"][0]
-        owned["target"].append({"kind": "square", "key": "d5"})
-        owned["mechanism"].append({"kind": "mechanism", "key": "space"})
-        owned["consequence"].append(
-            {"kind": "consequence", "key": "center_control"}
-        )
+        for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
+            owned = item["c"]["objects"][layer][0]
+            owned["target"].append({"kind": "square", "key": "d5"})
+            owned["mechanism"].append({"kind": "mechanism", "key": "space"})
+            owned["consequence"].append({"kind": "consequence", "key": "center_control"})
+            owned["effect_descriptor"]["effect_scope"]["target_signatures"] = ["square:e5", "square:d5"]
         judgment = self.judge(label, [item])
         self.assertEqual(judgment["first_failure_stage"], "C")
+
+    def test_c_admission_lineage_rejects_owned_only_forgery(self) -> None:
+        def owned(item: dict[str, object]) -> dict[str, object]:
+            return item["c"]["objects"]["owned_bindings"][0]
+
+        mutations = (
+            lambda channel: channel.__setitem__("source_id", "sibling-cause"),
+            lambda channel: channel.__setitem__("provenance_source_ids", ["sibling-cause"]),
+            lambda channel: channel["actor"].__setitem__(2, {"kind": "piece", "key": "knight"}),
+            lambda channel: channel.__setitem__("target", [{"kind": "square", "key": "d5"}]),
+            lambda channel: channel.__setitem__("mechanism", [{"kind": "mechanism", "key": "space"}]),
+            lambda channel: channel.__setitem__("consequence", [{"kind": "consequence", "key": "center_control"}]),
+            lambda channel: channel["proof_segment"].__setitem__("terminal_relation", "creates_threat"),
+            lambda channel: channel["effect_descriptor"]["effect_scope"].__setitem__("target_signatures", ["square:d5"]),
+        )
+        for mutate in mutations:
+            with self.subTest(mutate=mutate):
+                item = typed_cause()
+                mutate(owned(item))
+                with self.assertRaises(IntegrityError):
+                    self.judge(typed_label(), [item])
+
+    def test_c_admitted_only_is_integrity_error_and_context_borrowing_is_c_mismatch(self) -> None:
+        admitted_only = typed_cause()
+        forged = copy.deepcopy(admitted_only["c"]["objects"]["owned_bindings"][0])
+        forged["causal_signature"] = "admitted-only-forgery"
+        admitted_only["c"]["objects"]["owned_bindings"].append(forged)
+        admitted_only["c"]["direct_effect_admission"]["causal_signatures"].append(
+            "admitted-only-forgery"
+        )
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [admitted_only])
+
+        context_borrowing = typed_cause()
+        for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
+            channel = context_borrowing["c"]["objects"][layer][0]
+            channel["source_id"] = "context-source"
+            channel["carrier"]["id"] = "context-source"
+        context_borrowing["c"]["proof"]["context"] = {
+            "role": "context_support",
+            "strength": "weak_hint",
+            "proof_kind_labels": [],
+            "sources": [{
+                "id": "context-source",
+                "producer": "runtime",
+                "layer": "causal",
+                "scope": "direct",
+                "confidence": "high",
+                "line": {
+                    "id": "reference-line",
+                    "role": "best_reference",
+                    "rank": 1,
+                    "root_move": "e2e4",
+                },
+                "record_registered": True,
+                "record_payload_type": "LineFactEvidence",
+                "record_sha256": "0" * 64,
+                "proof_kind_labels": ["context"],
+            }],
+        }
+        refresh_c_source_identity_digests(context_borrowing)
+        judgment = self.judge(typed_label(), [context_borrowing])
+        self.assertEqual(judgment["first_failure_stage"], "C")
+        self.assertIn(
+            "missing_required_meaning",
+            [error["code"] for error in judgment["errors"]],
+        )
+
+    def test_c_comparison_and_line_identity_swaps_are_integrity_errors(self) -> None:
+        mutations = (
+            lambda item: item["c"]["comparison"]["reference_line"].__setitem__("id", "candidate-line"),
+            lambda item: item["c"]["comparison"]["candidate_line"].__setitem__("root_move", "e2e4"),
+            lambda item: item["c"]["binding"]["event_line"].__setitem__("id", "candidate-line"),
+            lambda item: item["c"]["objects"]["owned_bindings"][0].__setitem__("line_id", "candidate-line"),
+        )
+        for mutate in mutations:
+            with self.subTest(mutation=mutate):
+                item = typed_cause()
+                mutate(item)
+                with self.assertRaises(IntegrityError):
+                    self.judge(typed_label(), [item])
+
+    def test_c_empty_owned_is_valid_inventory_and_booleans_are_not_truth(self) -> None:
+        no_direct = typed_cause()
+        no_direct["c"]["objects"]["owned_bindings"] = []
+        judgment = self.judge(typed_label(), [no_direct])
+        self.assertEqual(judgment["first_failure_stage"], "C")
+        self.assertIn(
+            "missing_required_meaning",
+            [error["code"] for error in judgment["errors"]],
+        )
+
+        booleans_forged = typed_cause()
+        booleans_forged["c"]["attribution"]["root_move_matched"] = False
+        booleans_forged["c"]["attribution"]["direct_proof_eligible"] = False
+        matched = self.judge(typed_label(), [booleans_forged])
+        self.assertEqual(matched["status"], "matched")
+
+    def test_reference_creates_resource_normal_c_match_is_preserved(self) -> None:
+        item = typed_cause()
+        self.assertEqual(item["c"]["attribution"]["kind"], "reference_creates_resource")
+        self.assertEqual(self.judge(typed_label(), [item])["status"], "matched")
+
+    def test_defensive_resource_reference_creates_resource_has_no_kind_filter(self) -> None:
+        label = typed_label([typed_meaning("defense", "defensive_resource")], top=["defense"])
+        self.assertEqual(
+            self.judge(label, [typed_cause(cause_kind="defensive_resource")])["status"],
+            "matched",
+        )
+
+    def test_coherent_direct_channel_failures_are_c_mismatches(self) -> None:
+        actor_mismatch = typed_cause()
+        for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
+            actor_mismatch["c"]["objects"][layer][0]["actor"][0]["key"] = "e2e3"
+        judgment = self.judge(typed_label(), [actor_mismatch])
+        self.assertEqual(judgment["first_failure_stage"], "C")
+
+        for field, mutate in (
+            (
+                "proof_root",
+                lambda channel: channel["proof_segment"]["steps"][0].__setitem__("move_uci", "e2e3"),
+            ),
+            (
+                "descriptor_targets",
+                lambda channel: channel["effect_descriptor"]["effect_scope"].__setitem__("target_signatures", ["square:d5"]),
+            ),
+        ):
+            with self.subTest(field=field):
+                item = typed_cause()
+                for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
+                    mutate(item["c"]["objects"][layer][0])
+                with self.assertRaises(IntegrityError):
+                    self.judge(typed_label(), [item])
+
+    def test_c_lineage_ignores_r_importance_and_diagnostic_drift(self) -> None:
+        item = typed_cause()
+        owned = item["c"]["objects"]["owned_bindings"][0]
+        owned["witness"] = [{"kind": "square", "key": "d5"}]
+        owned["specific_target_mechanism_ready"] = False
+        owned["importance_effect"] = {"diagnostic": "ignored-by-c"}
+        owned["importance_descriptor_ambiguous"] = True
+        self.assertEqual(self.judge(typed_label(), [item])["status"], "matched")
+
+    def test_c_carrier_provenance_and_neutral_projection_repros_are_rejected(self) -> None:
+        provenance_forged = typed_cause()
+        for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
+            provenance_forged["c"]["objects"][layer][0]["provenance_source_ids"] = ["forged"]
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [provenance_forged])
+
+        terminal_forged = typed_cause()
+        for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
+            terminal_forged["c"]["objects"][layer][0]["proof_segment"]["terminal_relation"] = "creates_threat"
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [terminal_forged])
+
+        source_line_forged = typed_cause()
+        source_line_forged["c"]["proof"]["direct"]["sources"][0]["line"]["root_move"] = "e2e3"
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [source_line_forged])
+
+        descriptor_absent = typed_cause()
+        for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
+            descriptor_absent["c"]["objects"][layer][0]["effect_descriptor"] = None
+        judgment = self.judge(typed_label(), [descriptor_absent])
+        self.assertEqual(judgment["first_failure_stage"], "C")
+
+    def test_c_coordinated_source_metadata_rewrites_keep_no_authority(self) -> None:
+        provenance_rewrite = typed_cause()
+        for layer in (
+            "raw_owned_bindings",
+            "pre_admission_owned_bindings",
+            "owned_bindings",
+        ):
+            channel = provenance_rewrite["c"]["objects"][layer][0]
+            channel["provenance"][0]["producer"] = "forged_producer"
+            channel["primitive_proof_source"]["producer"] = "forged_producer"
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [provenance_rewrite])
+
+        carrier_rewrite = typed_cause()
+        for layer in (
+            "raw_owned_bindings",
+            "pre_admission_owned_bindings",
+            "owned_bindings",
+        ):
+            carrier_rewrite["c"]["objects"][layer][0]["carrier"][
+                "producer"
+            ] = "forged_producer"
+        carrier_rewrite["c"]["proof"]["direct"]["sources"][0][
+            "producer"
+        ] = "forged_producer"
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [carrier_rewrite])
+
+    def test_c_descriptor_target_signatures_normalize_case(self) -> None:
+        item = typed_cause()
+        for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
+            item["c"]["objects"][layer][0]["effect_descriptor"]["effect_scope"]["target_signatures"] = [" Square:E5 "]
+        self.assertEqual(self.judge(typed_label(), [item])["status"], "matched")
+
+    def test_c_multistep_proof_is_ordered_and_role_closed(self) -> None:
+        item = typed_cause()
+        steps = [
+            {"role": "root_action", "ply_offset": 0, "move_uci": "e2e4"},
+            {"role": "causal_link", "ply_offset": 1, "move_uci": "e7e5"},
+            {"role": "terminal_event", "ply_offset": 2, "move_uci": "g1f3"},
+        ]
+        for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
+            item["c"]["objects"][layer][0]["proof_segment"]["steps"] = copy.deepcopy(steps)
+        self.assertEqual(self.judge(typed_label(), [item])["status"], "matched")
+
+        for field, value in (("role", "terminal_event"), ("ply_offset", 0)):
+            with self.subTest(field=field):
+                forged = typed_cause()
+                for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
+                    forged["c"]["objects"][layer][0]["proof_segment"]["steps"] = copy.deepcopy(steps)
+                    forged["c"]["objects"][layer][0]["proof_segment"]["steps"][1][field] = value
+                with self.assertRaises(IntegrityError):
+                    self.judge(typed_label(), [forged])
+
+    def test_c_ten_non_defensive_proof_terminal_families_match(self) -> None:
+        families = (
+            ("line_episode", "produces_line_consequence", "LineFactEvidence"),
+            ("root_line_event", "is_root_line_event", "LineFactEvidence"),
+            ("endgame_horizon", "triggers_endgame_horizon", "LineFactEvidence"),
+            ("structural_transition", "makes_structural_transition", "StructuralDeltaEvidence"),
+            ("root_move_motif", "instantiates_motif", "MoveMotifEvidence"),
+            ("root_relation", "instantiates_relation", "RelationFactEvidence"),
+            ("threat_creation", "creates_threat", "ThreatEpisodeEvidence"),
+            ("threat_defense", "defends_threat", "ThreatEpisodeEvidence"),
+            ("plan_result", "realizes_plan_result", "PlanCausalEventEvidence"),
+            ("plan_restriction", "restricts_opponent_resource", "PlanCausalEventEvidence"),
+        )
+        for primitive, terminal, payload_type in families:
+            with self.subTest(primitive=primitive):
+                item = typed_cause()
+                for layer in (
+                    "raw_owned_bindings",
+                    "pre_admission_owned_bindings",
+                    "owned_bindings",
+                ):
+                    descriptor = item["c"]["objects"][layer][0]["effect_descriptor"]
+                    descriptor["effect_scope"]["primitive_kind"] = primitive
+                    item["c"]["objects"][layer][0]["proof_segment"]["terminal_relation"] = terminal
+                    channel = item["c"]["objects"][layer][0]
+                    channel["provenance"][0]["record_payload_type"] = payload_type
+                    channel["primitive_proof_source"]["record_payload_type"] = payload_type
+                refresh_c_source_identity_digests(item)
+                self.assertEqual(self.judge(typed_label(), [item])["status"], "matched")
+
+        forged = typed_cause()
+        for layer in (
+            "raw_owned_bindings",
+            "pre_admission_owned_bindings",
+            "owned_bindings",
+        ):
+            channel = forged["c"]["objects"][layer][0]
+            channel["effect_descriptor"]["effect_scope"]["primitive_kind"] = (
+                "threat_creation"
+            )
+            channel["proof_segment"]["terminal_relation"] = "creates_threat"
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [forged])
+
+    def test_c_defensive_recapture_resource_keeps_its_reference_root(self) -> None:
+        item = typed_cause("cause-defensive", "defensive_resource")
+        candidate_line = {
+            "id": "candidate-line",
+            "role": "played",
+            "rank": 1,
+            "root_move": "e2e3",
+        }
+        primitive = {
+            "id": "proof-cause-defensive",
+            "producer": "runtime",
+            "layer": "causal",
+            "scope": "direct",
+            "confidence": "high",
+            "line": copy.deepcopy(candidate_line),
+            "record_registered": True,
+            "record_payload_type": "CandidateComparisonEvidence",
+            "record_sha256": "0" * 64,
+        }
+        provenance = {
+            "id": "primitive-cause-defensive",
+            "producer": "runtime",
+            "layer": "primitive",
+            "scope": "context",
+            "confidence": "high",
+            "line": copy.deepcopy(candidate_line),
+            "record_registered": True,
+            "record_payload_type": "LineFactEvidence",
+            "record_sha256": "1" * 64,
+        }
+        direct_source = copy.deepcopy(primitive)
+        direct_source["proof_kind_labels"] = ["direct"]
+        item["c"]["proof"]["direct"]["sources"] = [direct_source]
+        for layer in (
+            "raw_owned_bindings",
+            "pre_admission_owned_bindings",
+            "owned_bindings",
+        ):
+            channel = item["c"]["objects"][layer][0]
+            channel["carrier"] = copy.deepcopy(primitive)
+            channel["primitive_proof_source"] = copy.deepcopy(primitive)
+            channel["provenance"] = [copy.deepcopy(provenance)]
+            channel["provenance_source_ids"] = [provenance["id"]]
+            channel["carrier_ancestor_source_ids"] = [provenance["id"]]
+            channel["effect_descriptor"]["effect_scope"]["primitive_kind"] = (
+                "defensive_recapture_resource"
+            )
+            channel["proof_segment"]["terminal_relation"] = (
+                "creates_defensive_recapture_resource"
+            )
+        refresh_c_source_identity_digests(item)
+        label = typed_label(
+            [typed_meaning("main", "defensive_resource")]
+        )
+        self.assertEqual(self.judge(label, [item])["status"], "matched")
+
+        registry, _ = _schema_tools(ROOT, TYPED_ACTUAL_VIEW_SCHEMA_VERSION)
+        schema_path = _schema_path(
+            ROOT, "actual-cascade-view", TYPED_ACTUAL_VIEW_SCHEMA_VERSION
+        )
+        schema = registry.load(schema_path)
+        self.assertEqual(
+            registry._branch_errors(
+                item["c"]["objects"]["owned_bindings"][0],
+                schema["$defs"]["ownedDirectCauseChannelV3"],
+                schema_path,
+                "$",
+            ),
+            [],
+        )
+
+    def test_c_direct_source_record_registration_triples(self) -> None:
+        unregistered = typed_cause()
+        source = unregistered["c"]["proof"]["direct"]["sources"][0]
+        source["record_registered"] = False
+        source["record_payload_type"] = None
+        source["record_sha256"] = None
+        for layer in (
+            "raw_owned_bindings",
+            "pre_admission_owned_bindings",
+            "owned_bindings",
+        ):
+            carrier = unregistered["c"]["objects"][layer][0]["carrier"]
+            carrier["record_registered"] = False
+            carrier["record_payload_type"] = None
+            carrier["record_sha256"] = None
+        refresh_c_source_identity_digests(unregistered)
+        judgment = self.judge(typed_label(), [unregistered])
+        self.assertEqual(judgment["first_failure_stage"], "C")
+
+        for field, value in (("record_payload_type", "LineFactEvidence"), ("record_sha256", "0" * 64)):
+            with self.subTest(unregistered_field=field):
+                forged = typed_cause()
+                source = forged["c"]["proof"]["direct"]["sources"][0]
+                source["record_registered"] = False
+                source[field] = value
+                with self.assertRaises(IntegrityError):
+                    self.judge(typed_label(), [forged])
+        registered = typed_cause()
+        registered["c"]["proof"]["direct"]["sources"][0]["record_sha256"] = "bad"
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [registered])
+
+    def test_c_context_only_preserves_mismatch_but_not_document_contradiction(self) -> None:
+        coherent = typed_cause()
+        coherent["c"]["attribution"]["kind"] = "context_only"
+        judgment = self.judge(typed_label(), [coherent])
+        self.assertEqual(judgment["first_failure_stage"], "C")
+
+        contradictory = typed_cause()
+        contradictory["c"]["attribution"]["kind"] = "context_only"
+        for layer in (
+            "raw_owned_bindings",
+            "pre_admission_owned_bindings",
+            "owned_bindings",
+        ):
+            contradictory["c"]["objects"][layer][0]["carrier"]["id"] = "forged-carrier"
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [contradictory])
+
+        duplicate_source = typed_cause()
+        duplicate_source["c"]["attribution"]["kind"] = "context_only"
+        duplicate_source["c"]["proof"]["direct"]["sources"].append(
+            copy.deepcopy(
+                duplicate_source["c"]["proof"]["direct"]["sources"][0]
+            )
+        )
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [duplicate_source])
+
+    def test_c_context_only_still_rejects_proof_and_descriptor_contradictions(self) -> None:
+        for name, mutate in (
+            (
+                "descriptor_terminal",
+                lambda channel: channel["proof_segment"].__setitem__(
+                    "terminal_relation", "creates_threat"
+                ),
+            ),
+            (
+                "context_proof_role_target",
+                lambda channel: (
+                    channel.__setitem__("proof_role", "context_support"),
+                    channel["effect_descriptor"]["effect_scope"].__setitem__(
+                        "target_signatures", ["square:d5"]
+                    ),
+                ),
+            ),
+        ):
+            with self.subTest(name=name):
+                item = typed_cause()
+                item["c"]["attribution"]["kind"] = "context_only"
+                for layer in (
+                    "raw_owned_bindings",
+                    "pre_admission_owned_bindings",
+                    "owned_bindings",
+                ):
+                    mutate(item["c"]["objects"][layer][0])
+                with self.assertRaises(IntegrityError):
+                    self.judge(typed_label(), [item])
+
+    def test_c_provenance_ancestry_and_registration_gate(self) -> None:
+        forged = typed_cause()
+        for layer in (
+            "raw_owned_bindings",
+            "pre_admission_owned_bindings",
+            "owned_bindings",
+        ):
+            channel = forged["c"]["objects"][layer][0]
+            channel["provenance_source_ids"] = ["forged-provenance"]
+            channel["provenance"][0]["id"] = "forged-provenance"
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [forged])
+
+        unregistered = typed_cause()
+        for layer in (
+            "raw_owned_bindings",
+            "pre_admission_owned_bindings",
+            "owned_bindings",
+        ):
+            provenance = unregistered["c"]["objects"][layer][0]["provenance"][0]
+            provenance["record_registered"] = False
+            provenance["record_payload_type"] = None
+            provenance["record_sha256"] = None
+            unregistered["c"]["objects"][layer][0][
+                "primitive_proof_source"
+            ] = copy.deepcopy(provenance)
+        refresh_c_source_identity_digests(unregistered)
+        self.assertEqual(
+            self.judge(typed_label(), [unregistered])["first_failure_stage"],
+            "C",
+        )
+
+    def test_c_rejects_candidate_direct_source_viewpoint_and_raw_semantic_alias(self) -> None:
+        candidate_source = typed_cause()
+        second = copy.deepcopy(candidate_source["c"]["proof"]["direct"]["sources"][0])
+        second["id"] = "proof-candidate"
+        candidate_source["c"]["proof"]["direct"]["sources"].append(second)
+        for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
+            channel = candidate_source["c"]["objects"][layer][0]
+            channel["source_id"] = "proof-candidate"
+            channel["carrier"]["id"] = "proof-candidate"
+            channel["carrier"]["line"] = {"line_id": "candidate-line", "role": "played", "rank": 1, "root_move": "e2e3"}
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [candidate_source])
+
+        alias = typed_cause()
+        duplicate = copy.deepcopy(alias["c"]["objects"]["raw_owned_bindings"][0])
+        duplicate["causal_signature"] = "raw-semantic-alias"
+        alias["c"]["objects"]["raw_owned_bindings"].append(duplicate)
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [alias])
+
+        sparse_alias = typed_cause()
+        duplicate = copy.deepcopy(sparse_alias["c"]["objects"]["raw_owned_bindings"][0])
+        duplicate["causal_signature"] = "raw-sparse-semantic-alias"
+        duplicate["effect_descriptor"] = None
+        sparse_alias["c"]["objects"]["raw_owned_bindings"][0]["effect_descriptor"] = None
+        sparse_alias["c"]["objects"]["raw_owned_bindings"].append(duplicate)
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [sparse_alias])
+
+    def test_c_direct_witness_rejects_swapped_roots_and_duplicate_signatures(self) -> None:
+        mutations = (
+            lambda item: item["c"]["comparison"].__setitem__("reference_root_move", "e2e3"),
+            lambda item: item["c"]["binding"]["event_line"].__setitem__("root_move", "e2e3"),
+            lambda item: item["c"]["objects"]["owned_bindings"][0]["line"].__setitem__("root_move", "e2e3"),
+            lambda item: item["c"]["objects"]["owned_bindings"].append(copy.deepcopy(item["c"]["objects"]["owned_bindings"][0])),
+        )
+        for mutate in mutations:
+            with self.subTest(mutate=mutate):
+                item = typed_cause()
+                mutate(item)
+                with self.assertRaises(IntegrityError):
+                    self.judge(typed_label(), [item])
+
+    def test_c_raw_or_pre_duplicate_signature_and_role_mismatch_are_integrity_errors(self) -> None:
+        for layer in ("raw_owned_bindings", "pre_admission_owned_bindings"):
+            with self.subTest(layer=layer):
+                item = typed_cause()
+                duplicate = copy.deepcopy(item["c"]["objects"][layer][0])
+                duplicate["source_id"] = f"ambiguous-{layer}"
+                item["c"]["objects"][layer].append(duplicate)
+                with self.assertRaises(IntegrityError):
+                    self.judge(typed_label(), [item])
+        item = typed_cause()
+        item["c"]["binding"]["role"] = "alternative_diagnostic"
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [item])
+
+    def test_c_proof_presence_and_evidence_endpoint_closure_are_integrity_errors(self) -> None:
+        proof_absent = typed_cause()
+        proof_absent["c"]["proof"]["present"] = False
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [proof_absent])
+
+        sibling_evidence = typed_cause()
+        sibling_evidence["c"]["binding"]["evidence_lines"].append(
+            {"id": "sibling-line", "role": "threat", "rank": 1, "root_move": "d2d4"}
+        )
+        with self.assertRaises(IntegrityError):
+            self.judge(typed_label(), [sibling_evidence])
 
     def test_r_semantics_reject_played_change_or_source_mutation(self) -> None:
         for field, value in (
@@ -3206,6 +3860,31 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         v2 = v2_registry.load(v2_path)
         v3 = v3_registry.load(v3_path)
 
+        self.assertEqual(
+            v3_registry._branch_errors(
+                typed_cause()["c"]["objects"]["owned_bindings"][0],
+                v3["$defs"]["ownedDirectCauseChannelV3"],
+                v3_path,
+                "$",
+            ),
+            [],
+        )
+        for primitive_source in (None, Ellipsis):
+            with self.subTest(primitive_source=primitive_source):
+                channel = typed_cause()["c"]["objects"]["owned_bindings"][0]
+                if primitive_source is Ellipsis:
+                    channel.pop("primitive_proof_source")
+                else:
+                    channel["primitive_proof_source"] = primitive_source
+                self.assertTrue(
+                    v3_registry._branch_errors(
+                        channel,
+                        v3["$defs"]["ownedDirectCauseChannelV3"],
+                        v3_path,
+                        "$",
+                    )
+                )
+
         for kind, field in (
             ("threat_horizon", "turns_to_impact"),
             ("structural_strength", "units"),
@@ -4093,6 +4772,7 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
     def test_best_vs_second_reference_resource_is_played_value(self) -> None:
         cause_value = typed_cause("cause-best-vs-second", "tempo_loss")
         cause_value["c"]["comparison"]["kind"] = "best_vs_second"
+        cause_value["c"]["binding"]["role"] = "candidate_set_constraint"
         candidate = canonical_open_world_cause_candidate(cause_value)
         verified = typed_meaning(
             "best-keeps-resource",
@@ -4122,6 +4802,7 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
             "cause-reference-vs-alternative", "tempo_loss", native=False
         )
         cause_value["c"]["comparison"]["kind"] = "reference_vs_alternative"
+        cause_value["c"]["binding"]["role"] = "alternative_diagnostic"
         candidate = canonical_open_world_cause_candidate(cause_value)
 
         verified = typed_meaning(

@@ -1338,8 +1338,8 @@ object CauseAuditAdapterCli:
         "consequence" -> aggregateObjects(bindings.flatMap(_.consequence)),
         "witness" -> aggregateObjects(bindings.flatMap(_.witness))
       ),
-      "owned_bindings" -> channels.map(directCauseChannelJson(_, contract)),
-      "raw_owned_bindings" -> rawChannels.map(directCauseChannelJson(_, contract)),
+      "owned_bindings" -> channels.map(directCauseChannelJson(_, contract, graph, recordHashes)),
+      "raw_owned_bindings" -> rawChannels.map(directCauseChannelJson(_, contract, graph, recordHashes)),
       "relative_cause_targets" -> relativeTargets.map(concreteObjectJson),
       "opponent_restriction_event_sources" -> deterrenceRefs.map(sourceRefJson(_, graph, recordHashes)),
       "opponent_restriction_targets" -> restrictionTargets.map(concreteObjectJson)
@@ -1347,14 +1347,16 @@ object CauseAuditAdapterCli:
     if contract.capturesNativeRSelections then
       base + (
         "pre_admission_owned_bindings" -> JsArray(
-          preAdmissionChannels.map(directCauseChannelJson(_, contract))
+          preAdmissionChannels.map(directCauseChannelJson(_, contract, graph, recordHashes))
         )
       )
     else base
 
   private def directCauseChannelJson(
       channel: DirectCauseChannel,
-      contract: ObservationContract
+      contract: ObservationContract,
+      graph: TypedEvidenceGraph,
+      recordHashes: RecordHashes
   ): JsObject =
     val binding = channel.binding
     val projected = Json.obj(
@@ -1374,7 +1376,30 @@ object CauseAuditAdapterCli:
       "specific_target_mechanism_ready" -> binding.specificTargetMechanismReady
     )
     if contract.capturesNativeRSelections then
+      val carrier = sourceRefJson(binding.source, graph, recordHashes)
+      val provenance = binding.provenance
+        .map(sourceRefJson(_, graph, recordHashes))
+        .distinct
+        .sortBy(item => (item \ "id").as[String])
+      val primitiveProofSource = channel.rootOwnedProof
+        .map(_.primitiveSource)
+        .map(sourceRefJson(_, graph, recordHashes))
       projected ++ Json.obj(
+        "carrier" -> carrier,
+        "carrier_ancestor_source_ids" -> graph
+          .record(binding.source)
+          .toList
+          .flatMap(graph.parentClosure)
+          .map(_.ref.id)
+          .distinct
+          .sorted,
+        "provenance" -> provenance,
+        "primitive_proof_source" -> primitiveProofSource,
+        "evidence_identity_sha256" -> NativeTreeEncoder.sha256Canonical(Json.obj(
+          "carrier" -> carrier,
+          "provenance" -> provenance,
+          "primitive_proof_source" -> primitiveProofSource
+        )),
         "line" -> binding.line.map(line => projectedSemanticLine(line).json),
         "horizon" -> binding.horizon,
         "proof_segment" -> channel.proofSegment.map(RuntimeProtocol.directCauseProofSegmentPublicJson),
@@ -1389,14 +1414,15 @@ object CauseAuditAdapterCli:
 
   private[runtimeadapter] def projectedCOwnedChannelDocument(
       channel: DirectCauseChannel,
-      schemaVersion: Int
+      schemaVersion: Int,
+      graph: TypedEvidenceGraph
   ): JsObject =
     val contract = schemaVersion match
       case 2 => ObservationContract.V2
       case 3 => ObservationContract.V3
       case unsupported =>
         throw IllegalArgumentException(s"unsupported Cause audit observation version: $unsupported")
-    directCauseChannelJson(channel, contract)
+    directCauseChannelJson(channel, contract, graph, RecordHashes(graph))
 
   private def aggregateObjects(values: List[ConcreteChessObject]): List[JsObject] =
     values.distinctBy(_.signaturePart).sortBy(_.signaturePart).map(concreteObjectJson)

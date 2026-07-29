@@ -8,7 +8,8 @@ from typing import Any
 import chess
 
 from .hashing import json_bytes, sha256_json
-from .model import ContractError
+from .model import ContractError, IntegrityError
+from .native_diagnostic import native_sha256_json
 
 
 STAGE_ORDER = {"C": 0, "Jp": 1, "Ja": 2, "R": 3, "P": 4}
@@ -79,36 +80,18 @@ def _line_root(value: Any) -> tuple[str | None, str | None]:
     )
 
 
+def _line_identity(value: Mapping[str, Any]) -> tuple[Any, Any, Any, str | None]:
+    """Normalize runtime ``id`` and semantic ``line_id`` without conflating them."""
+    ids = [value.get(name) for name in ("id", "line_id") if value.get(name) is not None]
+    if len(ids) != 1 or not isinstance(ids[0], str) or not ids[0]:
+        raise IntegrityError("actual C line has no unambiguous identity")
+    return (ids[0], value.get("role"), value.get("rank"), _line_root(value)[0])
+
+
 def _line_matches(actual: Any, expected: Mapping[str, Any]) -> bool:
     return _line_root(actual) == (
         str(expected["root_move"]).strip().lower(),
         str(expected["role"]).strip().lower(),
-    )
-
-
-def _c_comparison_matches(cause: Mapping[str, Any], realization: Mapping[str, Any]) -> bool:
-    actual = cause.get("comparison")
-    binding = cause.get("binding")
-    if not isinstance(actual, Mapping) or not isinstance(binding, Mapping):
-        return False
-    expected = _object(realization.get("comparison"), "oracle comparison")
-    if actual.get("kind") != expected.get("kind") or actual.get("mover") != expected.get("mover"):
-        return False
-    if str(actual.get("reference_root_move", "")).lower() != str(
-        expected.get("reference_root_move", "")
-    ).lower():
-        return False
-    if str(actual.get("candidate_root_move", "")).lower() != str(
-        expected.get("candidate_root_move", "")
-    ).lower():
-        return False
-    event = binding.get("event_line")
-    return _line_matches(
-        event,
-        {
-            "role": expected.get("event_role"),
-            "root_move": expected.get("event_root_move"),
-        },
     )
 
 
@@ -226,40 +209,513 @@ def _cause_id(cause: Mapping[str, Any]) -> str:
     return str(record["id"])
 
 
-def _owned_channels(cause: Mapping[str, Any]) -> list[dict[str, Any]]:
-    c_value = cause.get("c")
-    objects = c_value.get("objects") if isinstance(c_value, Mapping) else None
-    raw = objects.get("owned_bindings") if isinstance(objects, Mapping) else None
-    if not isinstance(raw, list):
+def _c_channel_projection(channel: Mapping[str, Any]) -> dict[str, Any]:
+    """Neutral observation fields carried through the C lineage."""
+    return {
+        name: channel.get(name)
+        for name in (
+            "causal_signature",
+            "primitive_signature",
+            "direct_change",
+            "source_id",
+            "provenance_source_ids",
+            "carrier",
+            "carrier_ancestor_source_ids",
+            "provenance",
+            "primitive_proof_source",
+            "evidence_identity_sha256",
+            "proof_role",
+            "line_id",
+            "actor",
+            "target",
+            "mechanism",
+            "consequence",
+            "line",
+            "horizon",
+            "proof_segment",
+            "effect_descriptor",
+            "proof_segment_ambiguous",
+        )
+    }
+
+
+_PRIMITIVE_PAYLOAD_TYPES = {
+    "line_episode": "LineFactEvidence",
+    "root_line_event": "LineFactEvidence",
+    "endgame_horizon": "LineFactEvidence",
+    "structural_transition": "StructuralDeltaEvidence",
+    "root_move_motif": "MoveMotifEvidence",
+    "root_relation": "RelationFactEvidence",
+    "threat_creation": "ThreatEpisodeEvidence",
+    "threat_defense": "ThreatEpisodeEvidence",
+    "plan_result": "PlanCausalEventEvidence",
+    "plan_restriction": "PlanCausalEventEvidence",
+    "defensive_recapture_resource": "CandidateComparisonEvidence",
+}
+
+_PRIMITIVE_TERMINALS = {
+    "line_episode": "produces_line_consequence",
+    "root_line_event": "is_root_line_event",
+    "endgame_horizon": "triggers_endgame_horizon",
+    "structural_transition": "makes_structural_transition",
+    "root_move_motif": "instantiates_motif",
+    "root_relation": "instantiates_relation",
+    "threat_creation": "creates_threat",
+    "threat_defense": "defends_threat",
+    "plan_result": "realizes_plan_result",
+    "plan_restriction": "restricts_opponent_resource",
+    "defensive_recapture_resource": "creates_defensive_recapture_resource",
+}
+
+
+def _verified_owned_channels(cause: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Return the only channels which may carry C truth.
+
+    The three projections are a cross-checked admission chain, rather than
+    three alternative sources of truth.  In particular, never trust the
+    runtime's eligibility booleans: verify the direct witness here.
+    """
+    c_value = _object(cause.get("c"), "actual Cause C state")
+    objects = _object(c_value.get("objects"), "actual Cause C objects")
+
+    def layer(name: str) -> dict[str, dict[str, Any]]:
+        values = _objects(objects.get(name), f"actual C {name}")
+        result: dict[str, dict[str, Any]] = {}
+        for value in values:
+            signature = value.get("causal_signature")
+            if not isinstance(signature, str) or not signature:
+                raise IntegrityError(f"actual C {name} has invalid causal_signature")
+            if signature in result:
+                raise IntegrityError(f"actual C {name} has duplicate causal_signature")
+            result[signature] = value
+        return result
+
+    raw, pre, owned = (
+        layer(name)
+        for name in (
+            "raw_owned_bindings",
+            "pre_admission_owned_bindings",
+            "owned_bindings",
+        )
+    )
+    for signature, channel in pre.items():
+        if (
+            signature not in raw
+            or json_bytes(_c_channel_projection(raw[signature]))
+            != json_bytes(_c_channel_projection(channel))
+        ):
+            raise IntegrityError("actual C pre-admission channel is not an exact raw channel")
+    for signature, channel in owned.items():
+        if (
+            signature not in pre
+            or signature not in raw
+            or json_bytes(_c_channel_projection(pre[signature]))
+            != json_bytes(_c_channel_projection(channel))
+            or json_bytes(_c_channel_projection(raw[signature]))
+            != json_bytes(_c_channel_projection(channel))
+        ):
+            raise IntegrityError("actual C owned channel is not an exact admitted raw channel")
+    canonical_raw: set[bytes] = set()
+    for channel in raw.values():
+        if not all(
+            channel.get(name)
+            for name in ("actor", "target", "mechanism", "consequence", "line")
+        ):
+            continue
+        canonical = json_bytes(_canonical_candidate_channel(channel))
+        if canonical in canonical_raw:
+            raise IntegrityError("actual C raw channels have a semantic alias")
+        canonical_raw.add(canonical)
+    comparison = _object(c_value.get("comparison"), "actual C comparison")
+    binding = _object(c_value.get("binding"), "actual C binding")
+    expected_binding_roles = {
+        "played_vs_best": "primary_played_cause",
+        "played_vs_alternative": "played_alternative_context",
+        "best_vs_second": "candidate_set_constraint",
+        "reference_vs_alternative": "alternative_diagnostic",
+    }
+    if binding.get("role") != expected_binding_roles.get(comparison.get("kind")):
+        raise IntegrityError(
+            "actual C binding role disagrees with comparison kind"
+        )
+    reference_root = str(comparison.get("reference_root_move", "")).lower()
+    candidate_root = str(comparison.get("candidate_root_move", "")).lower()
+    reference_line = _object(
+        comparison.get("reference_line"), "actual C reference line"
+    )
+    candidate_line = _object(
+        comparison.get("candidate_line"), "actual C candidate line"
+    )
+    reference_identity = _line_identity(reference_line)
+    candidate_identity = _line_identity(candidate_line)
+    if reference_identity[3] != reference_root or candidate_identity[3] != candidate_root:
+        raise IntegrityError("actual C comparison lines disagree with root aliases")
+    source_side = c_value.get("source_side")
+    attribution = _object(c_value.get("attribution"), "actual C attribution")
+    expected_root = reference_root if source_side == "reference" else candidate_root
+    event = _object(binding.get("event_line"), "actual C event line")
+    evidence = _objects(binding.get("evidence_lines"), "actual C evidence lines")
+    event_identity = _line_identity(event)
+    if source_side == "reference":
+        source_identity = reference_identity
+    elif source_side == "candidate":
+        source_identity = candidate_identity
+    else:
+        source_identity = None
+    endpoint_identities = {reference_identity, candidate_identity}
+    if any(_line_identity(line) not in endpoint_identities for line in evidence):
+        raise IntegrityError("actual C evidence line is outside comparison endpoints")
+    evidence_matches_event = any(_line_identity(line) == event_identity for line in evidence)
+    if (
+        not evidence_matches_event
+    ):
+        raise IntegrityError("actual C binding does not contain its event evidence")
+    if (
+        binding.get("source_side") != source_side
+        or event_identity not in endpoint_identities
+    ):
+        raise IntegrityError("actual C binding has invalid source or event endpoint")
+    # A context-only Cause may truthfully have no owned direct channel. It is
+    # retained in inventory but cannot match an exact C realization.
+    if not owned:
         return []
-    return [dict(item) for item in raw if isinstance(item, Mapping)]
+    proof = _object(c_value.get("proof"), "actual C proof")
+    if proof.get("present") is not True:
+        raise IntegrityError("actual C owned direct channels require present proof")
+    direct = _object(proof.get("direct"), "actual C direct proof")
+    sources = _objects(direct.get("sources"), "actual C direct proof sources")
+    source_ids = [source.get("id") for source in sources]
+    if (
+        any(not isinstance(source_id, str) or not source_id for source_id in source_ids)
+        or len(source_ids) != len(set(source_ids))
+    ):
+        raise IntegrityError("actual C direct proof source IDs are ambiguous")
+    sources_by_id = {str(source["id"]): source for source in sources}
+    for source in sources:
+        registered = source.get("record_registered")
+        payload_type = source.get("record_payload_type")
+        record_hash = source.get("record_sha256")
+        if registered is True:
+            if (
+                not isinstance(payload_type, str)
+                or not payload_type
+                or not isinstance(record_hash, str)
+                or len(record_hash) != 64
+                or any(char not in "0123456789abcdef" for char in record_hash)
+            ):
+                raise IntegrityError("actual C registered direct source metadata is invalid")
+        elif registered is False:
+            if payload_type is not None or record_hash is not None:
+                raise IntegrityError("actual C unregistered direct source has record metadata")
+    # Documentary consistency is independent of whether this Cause is direct.
+    # Check it before attribution/direct-proof eligibility can discard the C.
+    channel_state: dict[str, tuple[Any, ...]] = {}
+    for signature, channel in owned.items():
+        source_id = channel.get("source_id")
+        carrier = _object(channel.get("carrier"), "actual C owned channel carrier")
+        provenance = _objects(
+            channel.get("provenance"), "actual C owned channel provenance"
+        )
+        primitive_source = _object(
+            channel.get("primitive_proof_source"),
+            "actual C owned channel primitive proof source",
+        )
+        evidence_identity = {
+            "carrier": carrier,
+            "provenance": provenance,
+            "primitive_proof_source": primitive_source,
+        }
+        if channel.get("evidence_identity_sha256") != native_sha256_json(
+            evidence_identity
+        ):
+            raise IntegrityError("actual C evidence identity digest is invalid")
+        if carrier.get("id") != source_id:
+            raise IntegrityError("actual C carrier does not identify its source")
+        provenance_ids = channel.get("provenance_source_ids")
+        ancestor_ids = channel.get("carrier_ancestor_source_ids")
+        if (
+            not isinstance(ancestor_ids, list)
+            or len(ancestor_ids) != len(set(ancestor_ids))
+            or not set(provenance_ids if isinstance(provenance_ids, list) else []).issubset(ancestor_ids)
+        ):
+            raise IntegrityError("actual C provenance is outside carrier ancestry")
+        for evidence_ref in [carrier, *provenance, primitive_source]:
+            registered = evidence_ref.get("record_registered")
+            payload_type = evidence_ref.get("record_payload_type")
+            record_hash = evidence_ref.get("record_sha256")
+            if registered is True and (
+                not isinstance(payload_type, str)
+                or not payload_type
+                or not isinstance(record_hash, str)
+                or len(record_hash) != 64
+                or any(char not in "0123456789abcdef" for char in record_hash)
+            ):
+                raise IntegrityError("actual C registered evidence metadata is invalid")
+            if registered is False and (
+                payload_type is not None or record_hash is not None
+            ):
+                raise IntegrityError("actual C unregistered evidence has record metadata")
+        carried_refs = [carrier, *provenance]
+        exact_primitive_refs = [
+            evidence_ref
+            for evidence_ref in carried_refs
+            if json_bytes(evidence_ref) == json_bytes(primitive_source)
+        ]
+        if len(exact_primitive_refs) != 1:
+            raise IntegrityError(
+                "actual C primitive proof source is not one exact carried source"
+            )
+        projected_ids = [item.get("id") for item in provenance]
+        if (
+            not isinstance(provenance_ids, list)
+            or len(provenance_ids) != len(set(provenance_ids))
+            or len(projected_ids) != len(set(projected_ids))
+            or set(projected_ids) != set(provenance_ids)
+        ):
+            raise IntegrityError("actual C provenance projection disagrees with IDs")
+        matching_source = sources_by_id.get(str(source_id))
+        if matching_source is not None:
+            carrier_projection = {
+                name: carrier.get(name)
+                for name in (
+                    "id",
+                    "producer",
+                    "layer",
+                    "scope",
+                    "confidence",
+                    "line",
+                    "record_registered",
+                    "record_payload_type",
+                    "record_sha256",
+                )
+            }
+            source_projection = {
+                name: matching_source.get(name) for name in carrier_projection
+            }
+            if json_bytes(carrier_projection) != json_bytes(source_projection):
+                raise IntegrityError(
+                    "actual C carrier metadata disagrees with direct source"
+                )
+        line = _object(channel.get("line"), "actual C owned channel line")
+        if channel.get("line_id") != line.get("line_id"):
+            raise IntegrityError("actual C owned channel line ID is contradictory")
+        line_identity = _line_identity(line)
+        if line_identity not in endpoint_identities:
+            raise IntegrityError("actual C owned channel line is outside comparison endpoints")
+        for evidence_ref in [carrier, *provenance, primitive_source]:
+            evidence_line = evidence_ref.get("line")
+            if (
+                evidence_line is not None
+                and _line_identity(_object(evidence_line, "actual C evidence line"))
+                not in endpoint_identities
+            ):
+                raise IntegrityError("actual C evidence line is outside comparison endpoints")
+        segment = channel.get("proof_segment")
+        descriptor = channel.get("effect_descriptor")
+        descriptor_scope: dict[str, Any] | None = None
+        primitive_payload_supported = False
+        if segment is not None:
+            steps = _objects(
+                _object(segment, "actual C proof segment").get("steps"),
+                "actual C proof steps",
+            )
+            offsets = [step.get("ply_offset") for step in steps]
+            if (
+                not steps
+                or steps[0].get("role") != "root_action"
+                or steps[0].get("ply_offset") != 0
+                or str(steps[0].get("move_uci", "")).lower()
+                != event_identity[3]
+                or offsets != sorted(offsets)
+                or len(offsets) != len(set(offsets))
+                or (
+                    len(steps) > 1
+                    and (
+                        any(
+                            step.get("role") != "causal_link"
+                            for step in steps[1:-1]
+                        )
+                        or steps[-1].get("role") != "terminal_event"
+                    )
+                )
+            ):
+                raise IntegrityError("actual C proof segment is structurally invalid")
+        if descriptor is not None:
+            descriptor_scope = _object(
+                _object(descriptor, "actual C effect descriptor").get(
+                    "effect_scope"
+                ),
+                "actual C effect scope",
+            )
+            target_signatures = sorted(
+                str(value).strip().lower()
+                for value in descriptor_scope.get("target_signatures", [])
+            )
+            channel_targets = sorted(
+                f"{item.get('kind')}:{item.get('key')}".lower()
+                for item in _objects(
+                    channel.get("target"), "actual C channel targets"
+                )
+            )
+            if target_signatures != channel_targets:
+                raise IntegrityError("actual C effect descriptor targets disagree with channel")
+            if segment is not None:
+                if segment.get("terminal_relation") != _PRIMITIVE_TERMINALS.get(
+                    descriptor_scope.get("primitive_kind")
+                ):
+                    raise IntegrityError(
+                        "actual C proof segment disagrees with effect primitive"
+                    )
+            primitive_kind = descriptor_scope.get("primitive_kind")
+            expected_payload_type = _PRIMITIVE_PAYLOAD_TYPES.get(primitive_kind)
+            payload_type = primitive_source.get("record_payload_type")
+            if (
+                primitive_source.get("record_registered") is True
+                and expected_payload_type is not None
+                and payload_type != expected_payload_type
+            ):
+                raise IntegrityError(
+                    "actual C primitive proof payload disagrees with effect primitive"
+                )
+            primitive_payload_supported = bool(
+                primitive_source.get("record_registered") is True
+                and expected_payload_type is not None
+                and payload_type == expected_payload_type
+            )
+        channel_state[signature] = (
+            carrier,
+            provenance,
+            matching_source,
+            primitive_source,
+            line_identity,
+            descriptor_scope,
+            primitive_payload_supported,
+        )
+    if attribution.get("kind") == "reference_creates_resource":
+        attribution_is_direct = source_side == "reference"
+    elif str(attribution.get("kind", "")).startswith("candidate_"):
+        attribution_is_direct = source_side == "candidate"
+    else:
+        attribution_is_direct = False
+    if not attribution_is_direct or event_identity != source_identity:
+        return []
+    if direct.get("role") != "direct_proof":
+        return []
+    mover = comparison.get("mover")
+    required_actor = {
+        ("move", expected_root),
+        ("side", mover),
+        ("square", expected_root[:2]),
+        ("square", expected_root[2:4]),
+    }
+    verified: list[dict[str, Any]] = []
+    for signature, channel in owned.items():
+        (
+            carrier,
+            provenance,
+            source,
+            primitive_source,
+            line_identity,
+            descriptor_scope,
+            primitive_payload_supported,
+        ) = channel_state[signature]
+        if channel.get("proof_role") != "direct_proof":
+            continue
+        if source is None or source.get("record_registered") is not True:
+            continue
+        if (
+            carrier.get("record_registered") is not True
+            or any(item.get("record_registered") is not True for item in provenance)
+            or primitive_source.get("record_registered") is not True
+        ):
+            continue
+        if line_identity != event_identity:
+            continue
+        actor = _objects(channel.get("actor"), "actual C owned channel actor")
+        actor_pairs = {(item.get("kind"), item.get("key")) for item in actor}
+        if (
+            not required_actor <= actor_pairs
+            or sum(item.get("kind") == "piece" for item in actor) != 1
+        ):
+            continue
+        if any(
+            not _objects(channel.get(name), f"actual C owned channel {name}")
+            for name in ("target", "mechanism", "consequence")
+        ):
+            continue
+        if descriptor_scope is None or not primitive_payload_supported:
+            continue
+        verified.append(channel)
+    return verified
 
 
-def _cause_realization_matches_c(
-    cause: Mapping[str, Any], realization: Mapping[str, Any]
+def _c_semantics_matches_realization(
+    c_semantics: Mapping[str, Any],
+    verified_channels: Sequence[Mapping[str, Any]],
+    realization: Mapping[str, Any],
 ) -> bool:
-    c_value = cause.get("c")
-    if not isinstance(c_value, Mapping):
-        return False
-    attribution = c_value.get("attribution")
+    attribution = c_semantics.get("attribution")
+    comparison = c_semantics.get("comparison")
     if not isinstance(attribution, Mapping):
         return False
-    if c_value.get("kind") != realization.get("cause_kind"):
+    if not isinstance(comparison, Mapping):
         return False
-    if c_value.get("source_side") != realization.get("source_side"):
+    if c_semantics.get("cause_kind") != realization.get("cause_kind"):
+        return False
+    if c_semantics.get("source_side") != realization.get("source_side"):
         return False
     if attribution.get("kind") != realization.get("attribution_kind"):
         return False
-    if attribution.get("root_move_matched") is not True:
-        return False
-    if attribution.get("direct_proof_eligible") is not True:
-        return False
-    if not _c_comparison_matches(c_value, realization):
+    expected = _object(realization.get("comparison"), "oracle comparison")
+    if (
+        comparison.get("kind") != expected.get("kind")
+        or comparison.get("mover") != expected.get("mover")
+        or str(comparison.get("reference_root_move", "")).lower()
+        != str(expected.get("reference_root_move", "")).lower()
+        or str(comparison.get("candidate_root_move", "")).lower()
+        != str(expected.get("candidate_root_move", "")).lower()
+        or str(comparison.get("event_role", "")).lower()
+        != str(expected.get("event_role", "")).lower()
+        or str(comparison.get("event_root_move", "")).lower()
+        != str(expected.get("event_root_move", "")).lower()
+    ):
         return False
     return _channels_exact_match(
-        _owned_channels(cause),
+        verified_channels,
         _objects(realization.get("channels"), "oracle channels"),
         require_played_change=False,
+    )
+
+
+def _c_value_matches_realization(
+    c_value: Mapping[str, Any],
+    verified_channels: Sequence[Mapping[str, Any]],
+    realization: Mapping[str, Any],
+) -> bool:
+    attribution = c_value.get("attribution")
+    comparison = c_value.get("comparison")
+    binding = c_value.get("binding")
+    if not all(isinstance(value, Mapping) for value in (attribution, comparison, binding)):
+        return False
+    event = binding.get("event_line")
+    if not isinstance(event, Mapping):
+        return False
+    return _c_semantics_matches_realization(
+        {
+            "cause_kind": c_value.get("kind"),
+            "source_side": c_value.get("source_side"),
+            "attribution": {"kind": attribution.get("kind")},
+            "comparison": {
+                "kind": comparison.get("kind"),
+                "mover": comparison.get("mover"),
+                "reference_root_move": comparison.get("reference_root_move"),
+                "candidate_root_move": comparison.get("candidate_root_move"),
+                "event_role": event.get("role"),
+                "event_root_move": event.get("root_move"),
+            },
+        },
+        verified_channels,
+        realization,
     )
 
 
@@ -293,7 +749,9 @@ def _selection_realization_matches(
 
 
 def _meaning_edges(
-    meanings: Sequence[Mapping[str, Any]], causes: Sequence[Mapping[str, Any]]
+    meanings: Sequence[Mapping[str, Any]],
+    causes: Sequence[Mapping[str, Any]],
+    verified: Mapping[str, Sequence[Mapping[str, Any]]],
 ) -> tuple[dict[str, list[str]], dict[tuple[str, str], list[dict[str, Any]]]]:
     edges: dict[str, list[str]] = {}
     realizations: dict[tuple[str, str], list[dict[str, Any]]] = {}
@@ -305,7 +763,7 @@ def _meaning_edges(
             matching = [
                 dict(realization)
                 for realization in _objects(meaning.get("realizations"), "oracle realizations")
-                if _cause_realization_matches_c(cause, realization)
+                if _c_value_matches_realization(cause["c"], verified[cause_id], realization)
             ]
             if matching:
                 matches.append(cause_id)
@@ -2701,8 +3159,9 @@ def judge_typed_case(
 ) -> dict[str, Any]:
     """Judge one v3 Cause cascade without using prose or support identity.
 
-    C is matched against one owned direct channel. R is judged from the native
-    pre-packet selection. P is only an exact-copy boundary.
+    C is matched only against independently verified owned direct channels.
+    R is judged from the native pre-packet selection. P is only an exact-copy
+    boundary.
     """
 
     validate_typed_oracle_label(label, case)
@@ -2737,6 +3196,13 @@ def judge_typed_case(
             "errors": [{"code": "runtime_unavailable", "stage": "C"}],
             "first_failure_stage": "C",
         }
+    causes = [dict(item) for item in _objects(actual.get("causes"), "actual Causes")]
+    cause_by_id = {_cause_id(item): item for item in causes}
+    if len(cause_by_id) != len(causes):
+        raise ContractError("actual view has duplicate Cause IDs")
+    verified_channels = {
+        _cause_id(item): _verified_owned_channels(item) for item in causes
+    }
     if disposition == "unresolved":
         return {
             **base,
@@ -2751,17 +3217,13 @@ def judge_typed_case(
             "first_failure_stage": None,
         }
 
-    causes = [dict(item) for item in _objects(actual.get("causes"), "actual Causes")]
-    cause_by_id = {_cause_id(item): item for item in causes}
-    if len(cause_by_id) != len(causes):
-        raise ContractError("actual view has duplicate Cause IDs")
     importance = _importance_state(actual, case)
     idea_units = _idea_unit_state(actual, importance)
     cause_disposition = _cause_disposition_ledger_state(actual, causes)
     meanings = _objects(label.get("meanings"), "oracle meanings")
     positive = [item for item in meanings if item.get("generation_policy") != "forbidden"]
     forbidden = [item for item in meanings if item.get("generation_policy") == "forbidden"]
-    edges, matching_realizations = _meaning_edges(positive, causes)
+    edges, matching_realizations = _meaning_edges(positive, causes, verified_channels)
     ordered_meanings = sorted(
         (str(item["meaning_id"]) for item in positive),
         key=lambda meaning_id: (
@@ -2802,11 +3264,11 @@ def judge_typed_case(
     for meaning in forbidden:
         meaning_id = str(meaning["meaning_id"])
         for cause in causes:
+            cause_id = _cause_id(cause)
             if any(
-                _cause_realization_matches_c(cause, realization)
+                _c_value_matches_realization(cause["c"], verified_channels[cause_id], realization)
                 for realization in _objects(meaning.get("realizations"), "oracle realizations")
             ):
-                cause_id = _cause_id(cause)
                 forbidden_cause_ids.add(cause_id)
                 _add_error(
                     errors,
@@ -3356,7 +3818,7 @@ def canonical_open_world_cause_observation(
     binding = _object(c_value.get("binding"), "actual C binding")
     event = _object(binding.get("event_line"), "actual C event line")
     attribution = _object(c_value.get("attribution"), "actual C attribution")
-    owned = _owned_channels(cause)
+    owned = _verified_owned_channels(cause)
     c_channels = [_canonical_candidate_channel(item) for item in owned]
     c_channels.sort(key=json_bytes)
     c_semantics = {
@@ -3440,8 +3902,10 @@ def canonical_open_world_cause_candidate(
 def cause_matches_typed_oracle(
     cause: Mapping[str, Any], label: Mapping[str, Any]
 ) -> bool:
+    c_value = _object(cause.get("c"), "actual Cause C state")
+    channels = _verified_owned_channels(cause)
     return any(
-        _cause_realization_matches_c(cause, realization)
+        _c_value_matches_realization(c_value, channels, realization)
         for meaning in _objects(label.get("meanings"), "oracle meanings")
         for realization in _objects(meaning.get("realizations"), "oracle realizations")
     )
@@ -3468,31 +3932,13 @@ def open_world_meaning_matches_candidate(
     # promoted into C truth merely to make it adjudicable.
     if not candidate_channels:
         return False
-    fake_cause = {
-        "c": {
-            "kind": c_semantics.get("cause_kind"),
-            "source_side": c_semantics.get("source_side"),
-            "attribution": attribution,
-            "comparison": {
-                "kind": comparison.get("kind"),
-                "mover": comparison.get("mover"),
-                "reference_root_move": comparison.get("reference_root_move"),
-                "candidate_root_move": comparison.get("candidate_root_move"),
-            },
-            "binding": {
-                "event_line": {
-                    "role": comparison.get("event_role"),
-                    "root_move": comparison.get("event_root_move"),
-                }
-            },
-            "objects": {"owned_bindings": candidate_channels},
-        }
-    }
     realizations = _objects(meaning.get("realizations"), "verified realizations")
     c_matching = [
         realization
         for realization in realizations
-        if _cause_realization_matches_c(fake_cause, realization)
+        if _c_semantics_matches_realization(
+            c_semantics, candidate_channels, realization
+        )
     ]
     if not c_matching or len(c_matching) != len(realizations):
         return False

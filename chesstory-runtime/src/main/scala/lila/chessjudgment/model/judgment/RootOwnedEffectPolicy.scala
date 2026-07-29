@@ -408,7 +408,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
               specificTargetReady(effect.binding.target) &&
               effect.binding.mechanism.nonEmpty &&
               effect.binding.consequence.nonEmpty &&
-              proofSourceCarried(effect.binding, primitiveSource(proof)) &&
+              proofSourceCarried(effect.binding, proof.primitiveSource) &&
               primitiveSourceRegistered(graph, proof) &&
               proofOwnsEventRoot(proof, eventLine, actor, cause, graph, effect.binding) &&
               attributionOwnsEffect(cause, proof, actor)
@@ -556,28 +556,13 @@ private[chessjudgment] object RootOwnedEffectPolicy:
       case _ =>
         false
 
-  private def primitiveSource(proof: RootOwnedEffectProof): EvidenceRef =
-    proof match
-      case RootOwnedEffectProof.LineEpisode(source, _, _)                  => source
-      case RootOwnedEffectProof.RootLineEvent(source, _, _)                => source
-      case RootOwnedEffectProof.EndgameHorizon(source, _, _)               => source
-      case RootOwnedEffectProof.StructuralTransition(source, _, _)         => source
-      case RootOwnedEffectProof.RootMoveMotif(source, _)                    => source
-      case RootOwnedEffectProof.RootRelation(source, _)                     => source
-      case RootOwnedEffectProof.ThreatCreation(source, _)                   => source
-      case RootOwnedEffectProof.ThreatDefense(source, _, _)                 => source
-      case RootOwnedEffectProof.PlanResult(source, _, _)                    => source
-      case RootOwnedEffectProof.PlanRestriction(source, _, _, _)            => source
-      case RootOwnedEffectProof.DefensiveRecaptureResource(source, _, _) => source
-      case RootOwnedEffectProof.StrategicAxis(primitive, _, _)              => primitiveSource(primitive)
-
   private def sameCausalRootBoard(
       cause: RelativeCauseFact,
       binding: EvidenceObjectBinding,
       proof: RootOwnedEffectProof
   ): Boolean =
     val rootPosition = cause.comparisonEvidence.position
-    (binding.source :: (binding.provenance :+ primitiveSource(proof))).forall(ref =>
+    (binding.source :: (binding.provenance :+ proof.primitiveSource)).forall(ref =>
       sameCausalRootOccurrence(ref.position, rootPosition)
     )
 
