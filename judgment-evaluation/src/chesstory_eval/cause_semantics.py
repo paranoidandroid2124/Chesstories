@@ -268,6 +268,25 @@ _PRIMITIVE_TERMINALS = {
 }
 
 
+def _normalized_direct_effect_admission(
+    value: Any, label: str
+) -> tuple[str, frozenset[str]]:
+    admission = _object(value, label)
+    status = admission.get("status")
+    signatures = admission.get("causal_signatures")
+    if status not in {"unresolved", "restricted"}:
+        raise IntegrityError(f"{label} has an invalid status")
+    if not isinstance(signatures, list) or any(
+        not isinstance(signature, str) or not signature for signature in signatures
+    ):
+        raise IntegrityError(f"{label} has invalid causal signatures")
+    if len(signatures) != len(set(signatures)):
+        raise IntegrityError(f"{label} has duplicate causal signatures")
+    if status == "unresolved" and signatures:
+        raise IntegrityError(f"{label} unresolved state admits causal signatures")
+    return status, frozenset(signatures)
+
+
 def _verified_owned_channels(cause: Mapping[str, Any]) -> list[dict[str, Any]]:
     """Return the only channels which may carry C truth.
 
@@ -315,6 +334,13 @@ def _verified_owned_channels(cause: Mapping[str, Any]) -> list[dict[str, Any]]:
             != json_bytes(_c_channel_projection(channel))
         ):
             raise IntegrityError("actual C owned channel is not an exact admitted raw channel")
+    admission_state = _normalized_direct_effect_admission(
+        c_value.get("direct_effect_admission"), "actual C direct-effect admission"
+    )
+    if admission_state[1] != frozenset(owned):
+        raise IntegrityError(
+            "actual C direct-effect admission disagrees with owned channels"
+        )
     canonical_raw: set[bytes] = set()
     for channel in raw.values():
         if not all(
@@ -646,6 +672,12 @@ def _verified_owned_channels(cause: Mapping[str, Any]) -> list[dict[str, Any]]:
         if descriptor_scope is None or not primitive_payload_supported:
             continue
         verified.append(channel)
+    # Admission is Cause-level authority. Silently keeping only its valid
+    # subset would let one malformed public effect hide beside a good one.
+    if {
+        str(channel.get("causal_signature")) for channel in verified
+    } != admission_state[1]:
+        return []
     return verified
 
 
@@ -720,7 +752,10 @@ def _c_value_matches_realization(
 
 
 def _selection_realization_matches(
-    selection: Mapping[str, Any], realization: Mapping[str, Any]
+    selection: Mapping[str, Any],
+    realization: Mapping[str, Any],
+    c_value: Mapping[str, Any],
+    verified_channels: Sequence[Mapping[str, Any]],
 ) -> bool:
     attribution = selection.get("attribution")
     if not isinstance(attribution, Mapping):
@@ -739,6 +774,10 @@ def _selection_realization_matches(
         return False
     if not _selection_comparison_matches(selection, realization):
         return False
+    if not _selection_is_bound_to_verified_c(
+        selection, c_value, verified_channels
+    ):
+        return False
     actual_channels = _objects(selection.get("channels"), "R-native channels")
     expected_channels = _objects(realization.get("channels"), "oracle channels")
     return _channels_exact_match(
@@ -746,6 +785,109 @@ def _selection_realization_matches(
         expected_channels,
         require_played_change=True,
     )
+
+
+def _selection_evidence_ref_projection(value: Any, label: str) -> dict[str, Any]:
+    evidence_ref = _object(value, label)
+    line = evidence_ref.get("line")
+    projected_line: dict[str, Any] | None
+    if line is None:
+        projected_line = None
+    else:
+        exact_line = _object(line, f"{label} line")
+        projected_line = {
+            "line_id": exact_line.get("line_id", exact_line.get("id")),
+            "role": exact_line.get("role"),
+            "rank": exact_line.get("rank"),
+            "root_move": exact_line.get("root_move"),
+        }
+    return {
+        "id": evidence_ref.get("id"),
+        "producer": evidence_ref.get("producer"),
+        "layer": evidence_ref.get("layer"),
+        "scope": evidence_ref.get("scope"),
+        "line": projected_line,
+    }
+
+
+def _sorted_object_projection(value: Any, label: str) -> list[dict[str, Any]]:
+    result = [dict(item) for item in _objects(value, label)]
+    result.sort(key=json_bytes)
+    return result
+
+
+def _channel_selection_projection(
+    channel: Mapping[str, Any], *, c_stage: bool
+) -> dict[str, Any]:
+    label = "verified C" if c_stage else "R-native"
+    provenance = [
+        _selection_evidence_ref_projection(item, f"{label} channel provenance")
+        for item in _objects(channel.get("provenance"), f"{label} channel provenance")
+    ]
+    provenance.sort(key=json_bytes)
+    result = {
+        "carrier": _selection_evidence_ref_projection(
+            channel.get("carrier"), f"{label} channel carrier"
+        ),
+        "provenance": provenance,
+        "causal_signature": channel.get("causal_signature"),
+        "direct_change": channel.get("direct_change"),
+        "line": channel.get("line"),
+        "horizon": channel.get("horizon"),
+        "proof_segment": channel.get("proof_segment"),
+        "effect_descriptor": channel.get("effect_descriptor"),
+        "importance_effect": channel.get("importance_effect"),
+        "descriptor_ambiguous": channel.get(
+            "importance_descriptor_ambiguous" if c_stage else "descriptor_ambiguous"
+        ),
+        "proof_segment_ambiguous": channel.get("proof_segment_ambiguous"),
+    }
+    for c_name, selection_name in (
+        ("actor", "actor"),
+        ("target", "targets"),
+        ("mechanism", "mechanisms"),
+        ("consequence", "consequences"),
+        ("witness", "witnesses"),
+    ):
+        source_name = c_name if c_stage else selection_name
+        result[selection_name] = _sorted_object_projection(
+            channel.get(source_name), f"{label} {selection_name}"
+        )
+    return result
+
+
+def _selection_is_bound_to_verified_c(
+    selection: Mapping[str, Any],
+    c_value: Mapping[str, Any],
+    verified_channels: Sequence[Mapping[str, Any]],
+) -> bool:
+    if _normalized_direct_effect_admission(
+        selection.get("direct_effect_admission"), "R direct-effect admission"
+    ) != _normalized_direct_effect_admission(
+        c_value.get("direct_effect_admission"), "actual C direct-effect admission"
+    ):
+        return False
+    by_signature: dict[str, Mapping[str, Any]] = {}
+    for channel in verified_channels:
+        signature = channel.get("causal_signature")
+        if not isinstance(signature, str) or not signature or signature in by_signature:
+            return False
+        by_signature[signature] = channel
+    selected_channels = _objects(selection.get("channels"), "R-native channels")
+    consumed: set[str] = set()
+    for selected in selected_channels:
+        signature = selected.get("causal_signature")
+        if not isinstance(signature, str) or signature in consumed:
+            return False
+        owned = by_signature.get(signature)
+        if owned is None or json_bytes(
+            _channel_selection_projection(selected, c_stage=False)
+        ) != json_bytes(
+            _channel_selection_projection(owned, c_stage=True)
+        ):
+            return False
+        consumed.add(signature)
+    return bool(consumed)
 
 
 def _meaning_edges(
@@ -3304,7 +3446,12 @@ def judge_typed_case(
                 native.get("cause_evidence_id") == cause_id
                 and _selection_uses_admitted_host(native, cause)
                 and any(
-                    _selection_realization_matches(native, realization)
+                    _selection_realization_matches(
+                        native,
+                        realization,
+                        cause["c"],
+                        verified_channels[cause_id],
+                    )
                     for realization in matching_realizations[(meaning_id, cause_id)]
                 )
             )
@@ -3826,8 +3973,6 @@ def canonical_open_world_cause_observation(
         "source_side": c_value.get("source_side"),
         "attribution": {
             "kind": attribution.get("kind"),
-            "root_move_matched": attribution.get("root_move_matched"),
-            "direct_proof_eligible": attribution.get("direct_proof_eligible"),
         },
         "comparison": {
             "kind": comparison.get("kind"),
@@ -3842,6 +3987,10 @@ def canonical_open_world_cause_observation(
     native = _r_selection(cause)
     selection_variants: list[dict[str, Any]] = []
     if native is not None:
+        if not _selection_is_bound_to_verified_c(native, c_value, owned):
+            raise ContractError(
+                "open-world R selection is not bound to its verified C channels"
+            )
         selected_channels = _objects(
             native.get("channels"), "open-world selected channels"
         )

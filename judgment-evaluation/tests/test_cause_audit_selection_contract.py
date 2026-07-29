@@ -63,6 +63,57 @@ def refresh_c_source_identity_digests(item: dict[str, object]) -> None:
         )
 
 
+def refresh_selection_lineage_from_c(item: dict[str, object]) -> None:
+    channel = item["c"]["objects"]["owned_bindings"][0]
+
+    def projected_ref(value: dict[str, object]) -> dict[str, object]:
+        line = value.get("line")
+        projected_line = None
+        if isinstance(line, dict):
+            projected_line = {
+                "line_id": line.get("line_id", line.get("id")),
+                "role": line.get("role"),
+                "rank": line.get("rank"),
+                "root_move": line.get("root_move"),
+            }
+        return {
+            "id": value.get("id"),
+            "producer": value.get("producer"),
+            "layer": value.get("layer"),
+            "scope": value.get("scope"),
+            "line": projected_line,
+        }
+
+    shared = {
+        "carrier": projected_ref(channel["carrier"]),
+        "provenance": [projected_ref(value) for value in channel["provenance"]],
+        "causal_signature": channel["causal_signature"],
+        "direct_change": channel["direct_change"],
+        "actor": copy.deepcopy(channel["actor"]),
+        "targets": copy.deepcopy(channel["target"]),
+        "mechanisms": copy.deepcopy(channel["mechanism"]),
+        "consequences": copy.deepcopy(channel["consequence"]),
+        "witnesses": copy.deepcopy(channel["witness"]),
+        "line": copy.deepcopy(channel["line"]),
+        "horizon": channel["horizon"],
+        "proof_segment": copy.deepcopy(channel["proof_segment"]),
+        "effect_descriptor": copy.deepcopy(channel["effect_descriptor"]),
+        "importance_effect": copy.deepcopy(channel["importance_effect"]),
+        "descriptor_ambiguous": channel["importance_descriptor_ambiguous"],
+        "proof_segment_ambiguous": channel["proof_segment_ambiguous"],
+    }
+    selections = (
+        item["r"].get("native_selection"),
+        item["p"].get("packet_selection"),
+        item["p"].get("public_selection"),
+    )
+    for selection_value in selections:
+        if isinstance(selection_value, dict):
+            played_change = selection_value["channels"][0]["played_change"]
+            selection_value["channels"][0] = copy.deepcopy(shared)
+            selection_value["channels"][0]["played_change"] = played_change
+
+
 def selection(
     cause_id: str = "cause-1",
     cause_kind: str = "wrong_move_order",
@@ -437,8 +488,6 @@ def typed_cause(
     )
     exact["comparison_exposure_rank"] = comparison_exposure_rank
     exact["exposure"] = exposure
-    for selected_channel in exact["channels"]:
-        selected_channel["proof_segment"] = None
     claim_id = f"claim-{cause_id}"
     packet = native if packet is None else packet
     public = packet if public is None else public
@@ -478,7 +527,7 @@ def typed_cause(
             "confidence": "high",
             "line": {"id": "reference-line", "role": "best_reference", "rank": 1, "root_move": "e2e4"},
             "record_registered": True,
-            "record_payload_type": "RelationFactEvidence",
+            "record_payload_type": "StructuralDeltaEvidence",
             "record_sha256": "1" * 64,
         }],
         "primitive_proof_source": {
@@ -489,36 +538,26 @@ def typed_cause(
             "confidence": "high",
             "line": {"id": "reference-line", "role": "best_reference", "rank": 1, "root_move": "e2e4"},
             "record_registered": True,
-            "record_payload_type": "RelationFactEvidence",
+            "record_payload_type": "StructuralDeltaEvidence",
             "record_sha256": "1" * 64,
         },
         "proof_role": "direct_proof",
         "line_id": "reference-line",
         "proof_segment": {
-            "terminal_relation": "instantiates_relation",
+            "terminal_relation": "makes_structural_transition",
             "steps": [{"role": "root_action", "ply_offset": 0, "move_uci": "e2e4"}],
         },
-        "effect_descriptor": {
-            "effect_scope": {
-                "primitive_kind": "root_relation",
-                "target_signatures": ["square:e5"],
-                "plan_ids": [],
-                "strategic_axes": [],
-            },
-            "magnitude_status": "not_applicable",
-            "measure": None,
-            "material_event_salience": None,
-        },
-        "importance_effect": None,
+        "effect_descriptor": copy.deepcopy(exact["channels"][0]["effect_descriptor"]),
+        "importance_effect": copy.deepcopy(exact["channels"][0]["importance_effect"]),
         "importance_descriptor_ambiguous": False,
         "proof_segment_ambiguous": False,
         "specific_target_mechanism_ready": True,
         "direct_change": "occurred",
         "actor": c_actor,
-        "target": [{"kind": "square", "key": "e5"}],
+        "target": [{"kind": "square", "key": importance_target}],
         "mechanism": [{"kind": "mechanism", "key": "tempo"}],
         "consequence": [{"kind": "consequence", "key": "initiative"}],
-        "witness": [],
+        "witness": copy.deepcopy(exact["channels"][0]["witnesses"]),
         "line": {"line_id": "reference-line", "role": "best_reference", "rank": 1, "root_move": "e2e4"},
         "horizon": "ply:1",
     }
@@ -529,7 +568,7 @@ def typed_cause(
             "primitive_proof_source": owned_channel["primitive_proof_source"],
         }
     )
-    return {
+    item = {
         "cause_record": {"id": cause_id},
         "c": {
             "kind": cause_kind,
@@ -667,6 +706,8 @@ def typed_cause(
             "selected_public_cause_evidence_ids": [cause_id] if public else [],
         },
     }
+    refresh_selection_lineage_from_c(item)
+    return item
 
 
 def material_outcome_cause(
@@ -1477,6 +1518,10 @@ def write_open_world_contract(
         objects = cause_value["c"]["objects"]
         objects["raw_owned_bindings"] = copy.deepcopy(objects["owned_bindings"])
         objects["owned_bindings"] = []
+        cause_value["c"]["direct_effect_admission"] = {
+            "status": "restricted",
+            "causal_signatures": [],
+        }
     candidate = open_world_candidate(cause_value)
     base = typed_label()
     exposure = adjudicated_exposure or (
@@ -2048,6 +2093,93 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
                 with self.assertRaises(IntegrityError):
                     self.judge(typed_label(), [item])
 
+    def test_c_admission_state_is_exactly_bound_to_owned_signatures(self) -> None:
+        wrong_signature = typed_cause()
+        wrong_signature["c"]["direct_effect_admission"]["causal_signatures"] = [
+            "sibling-channel"
+        ]
+        with self.assertRaisesRegex(IntegrityError, "admission disagrees"):
+            self.judge(typed_label(), [wrong_signature])
+
+        unresolved_owned = typed_cause()
+        unresolved_owned["c"]["direct_effect_admission"] = {
+            "status": "unresolved",
+            "causal_signatures": [],
+        }
+        with self.assertRaisesRegex(IntegrityError, "admission disagrees"):
+            self.judge(typed_label(), [unresolved_owned])
+
+    def test_c_rejects_a_partially_verified_admitted_channel_set(self) -> None:
+        item = typed_cause()
+        for layer in (
+            "raw_owned_bindings",
+            "pre_admission_owned_bindings",
+            "owned_bindings",
+        ):
+            invalid = copy.deepcopy(item["c"]["objects"][layer][0])
+            invalid["signature"] = "binding-invalid-channel"
+            invalid["causal_signature"] = "invalid-channel"
+            invalid["primitive_signature"] = "primitive-invalid-channel"
+            invalid["actor"][0]["key"] = "e2e3"
+            item["c"]["objects"][layer].append(invalid)
+        item["c"]["direct_effect_admission"]["causal_signatures"].append(
+            "invalid-channel"
+        )
+        for selection_value in (
+            item["r"]["native_selection"],
+            item["p"]["packet_selection"],
+            item["p"]["public_selection"],
+        ):
+            selection_value["direct_effect_admission"]["causal_signatures"].append(
+                "invalid-channel"
+            )
+        judgment = self.judge(typed_label(), [item])
+        self.assertEqual(judgment["first_failure_stage"], "C")
+        self.assertIn(
+            "missing_required_meaning",
+            [error["code"] for error in judgment["errors"]],
+        )
+
+    def test_r_selection_must_preserve_c_admission_and_channel_lineage(self) -> None:
+        admission_drift = typed_cause()
+        admission_drift["r"]["native_selection"]["direct_effect_admission"][
+            "causal_signatures"
+        ] = ["sibling-channel"]
+        judgment = self.judge(typed_label(), [admission_drift])
+        self.assertEqual(judgment["first_failure_stage"], "R")
+        self.assertIn("wrong_r_semantics", [error["code"] for error in judgment["errors"]])
+
+        for field, mutate in (
+            (
+                "carrier",
+                lambda channel: channel["carrier"].__setitem__("id", "sibling-source"),
+            ),
+            (
+                "provenance",
+                lambda channel: channel.__setitem__("provenance", []),
+            ),
+            (
+                "effect_descriptor",
+                lambda channel: (
+                    channel["effect_descriptor"]["effect_scope"].__setitem__(
+                        "plan_ids", ["borrowed-plan"]
+                    ),
+                    channel["importance_effect"]["effect_scope"].__setitem__(
+                        "plan_ids", ["borrowed-plan"]
+                    ),
+                ),
+            ),
+        ):
+            with self.subTest(field=field):
+                item = typed_cause()
+                mutate(item["r"]["native_selection"]["channels"][0])
+                judgment = self.judge(typed_label(), [item])
+                self.assertEqual(judgment["first_failure_stage"], "R")
+                self.assertIn(
+                    "wrong_r_semantics",
+                    [error["code"] for error in judgment["errors"]],
+                )
+
     def test_c_admitted_only_is_integrity_error_and_context_borrowing_is_c_mismatch(self) -> None:
         admitted_only = typed_cause()
         forged = copy.deepcopy(admitted_only["c"]["objects"]["owned_bindings"][0])
@@ -2111,6 +2243,10 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
     def test_c_empty_owned_is_valid_inventory_and_booleans_are_not_truth(self) -> None:
         no_direct = typed_cause()
         no_direct["c"]["objects"]["owned_bindings"] = []
+        no_direct["c"]["direct_effect_admission"] = {
+            "status": "restricted",
+            "causal_signatures": [],
+        }
         judgment = self.judge(typed_label(), [no_direct])
         self.assertEqual(judgment["first_failure_stage"], "C")
         self.assertIn(
@@ -2160,14 +2296,16 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
                 with self.assertRaises(IntegrityError):
                     self.judge(typed_label(), [item])
 
-    def test_c_lineage_ignores_r_importance_and_diagnostic_drift(self) -> None:
+    def test_r_rejects_importance_and_diagnostic_drift_from_verified_c(self) -> None:
         item = typed_cause()
         owned = item["c"]["objects"]["owned_bindings"][0]
         owned["witness"] = [{"kind": "square", "key": "d5"}]
         owned["specific_target_mechanism_ready"] = False
         owned["importance_effect"] = {"diagnostic": "ignored-by-c"}
         owned["importance_descriptor_ambiguous"] = True
-        self.assertEqual(self.judge(typed_label(), [item])["status"], "matched")
+        judgment = self.judge(typed_label(), [item])
+        self.assertEqual(judgment["first_failure_stage"], "R")
+        self.assertIn("wrong_r_semantics", [error["code"] for error in judgment["errors"]])
 
     def test_c_carrier_provenance_and_neutral_projection_repros_are_rejected(self) -> None:
         provenance_forged = typed_cause()
@@ -2225,6 +2363,8 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         item = typed_cause()
         for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
             item["c"]["objects"][layer][0]["effect_descriptor"]["effect_scope"]["target_signatures"] = [" Square:E5 "]
+            item["c"]["objects"][layer][0]["importance_effect"]["effect_scope"]["target_signatures"] = [" Square:E5 "]
+        refresh_selection_lineage_from_c(item)
         self.assertEqual(self.judge(typed_label(), [item])["status"], "matched")
 
     def test_c_multistep_proof_is_ordered_and_role_closed(self) -> None:
@@ -2236,6 +2376,7 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         ]
         for layer in ("raw_owned_bindings", "pre_admission_owned_bindings", "owned_bindings"):
             item["c"]["objects"][layer][0]["proof_segment"]["steps"] = copy.deepcopy(steps)
+        refresh_selection_lineage_from_c(item)
         self.assertEqual(self.judge(typed_label(), [item])["status"], "matched")
 
         for field, value in (("role", "terminal_event"), ("ply_offset", 0)):
@@ -2272,9 +2413,11 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
                     descriptor["effect_scope"]["primitive_kind"] = primitive
                     item["c"]["objects"][layer][0]["proof_segment"]["terminal_relation"] = terminal
                     channel = item["c"]["objects"][layer][0]
+                    channel["importance_effect"]["effect_scope"]["primitive_kind"] = primitive
                     channel["provenance"][0]["record_payload_type"] = payload_type
                     channel["primitive_proof_source"]["record_payload_type"] = payload_type
                 refresh_c_source_identity_digests(item)
+                refresh_selection_lineage_from_c(item)
                 self.assertEqual(self.judge(typed_label(), [item])["status"], "matched")
 
         forged = typed_cause()
@@ -2338,10 +2481,14 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
             channel["effect_descriptor"]["effect_scope"]["primitive_kind"] = (
                 "defensive_recapture_resource"
             )
+            channel["importance_effect"]["effect_scope"]["primitive_kind"] = (
+                "defensive_recapture_resource"
+            )
             channel["proof_segment"]["terminal_relation"] = (
                 "creates_defensive_recapture_resource"
             )
         refresh_c_source_identity_digests(item)
+        refresh_selection_lineage_from_c(item)
         label = typed_label(
             [typed_meaning("main", "defensive_resource")]
         )
@@ -2990,7 +3137,11 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         label = typed_label(
             [
                 typed_meaning("main", "wrong_move_order"),
-                typed_meaning("peer", "material_swing"),
+                typed_meaning(
+                    "peer",
+                    "material_swing",
+                    channels=[typed_channel(target="d5")],
+                ),
             ]
         )
         native = [
@@ -4577,6 +4728,32 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
                 accepted["verified_meaning"]["exposure_policy"],
                 "diagnostic_only",
             )
+
+    def test_open_world_c_identity_excludes_runtime_attribution_booleans(self) -> None:
+        original = typed_cause(
+            "cause-diagnostic", "tempo_loss", native=False, packet=False, public=False
+        )
+        forged_runtime_flags = copy.deepcopy(original)
+        forged_runtime_flags["c"]["attribution"]["root_move_matched"] = False
+        forged_runtime_flags["c"]["attribution"]["direct_proof_eligible"] = False
+        self.assertEqual(
+            canonical_open_world_cause_candidate(original),
+            canonical_open_world_cause_candidate(forged_runtime_flags),
+        )
+        self.assertEqual(
+            sha256_json(canonical_open_world_cause_candidate(original)["c_semantics"]),
+            sha256_json(
+                canonical_open_world_cause_candidate(forged_runtime_flags)["c_semantics"]
+            ),
+        )
+
+    def test_open_world_inventory_rejects_r_channel_borrowing(self) -> None:
+        borrowed = typed_cause("cause-borrowed", "tempo_loss")
+        borrowed["r"]["native_selection"]["channels"][0]["carrier"]["id"] = (
+            "sibling-source"
+        )
+        with self.assertRaisesRegex(ContractError, "not bound"):
+            canonical_open_world_cause_observation(borrowed)
 
     def test_source_blind_artifacts_exclude_arm_and_runtime_behavior(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

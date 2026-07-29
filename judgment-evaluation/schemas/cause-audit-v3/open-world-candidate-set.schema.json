@@ -118,7 +118,7 @@
         "attribution": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "root_move_matched", "direct_proof_eligible"],
+          "required": ["kind"],
           "properties": {
             "kind": {
               "enum": [
@@ -129,9 +129,7 @@
                 "context_only",
                 "unattributed"
               ]
-            },
-            "root_move_matched": {"type": "boolean"},
-            "direct_proof_eligible": {"type": "boolean"}
+            }
           }
         },
         "comparison": {
