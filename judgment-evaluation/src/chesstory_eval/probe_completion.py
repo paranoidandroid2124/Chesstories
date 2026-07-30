@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import copy
 import hashlib
 import json
@@ -20,7 +21,11 @@ import chess
 
 from .hashing import json_bytes, sha256_bytes, sha256_file, sha256_json, slug
 from .model import ContractError, IntegrityError
-from .native_diagnostic import NATIVE_HASH_CONTRACT, native_canonical_json
+from .native_diagnostic import (
+    NATIVE_HASH_CONTRACT,
+    native_canonical_json,
+    native_sha256_json,
+)
 from .schemas import SchemaRegistry
 from .stockfish import (
     StockfishAcquisitionError,
@@ -165,10 +170,26 @@ class _RuntimeExchange:
     observation: Mapping[str, Any]
     request_jsonl_sha256: str
     response_jsonl_sha256: str
+    response_jsonl_base64: str
     diagnostic_line_sha256: tuple[str, ...]
     diagnostic_stream_sha256: str
     request_sha256: str | None = None
     hash_contract: str | None = None
+
+
+def _verified_response_jsonl_bytes(
+    response_jsonl_base64: Any,
+    response_jsonl_sha256: Any,
+) -> bytes:
+    if not isinstance(response_jsonl_base64, str):
+        raise ContractError("runtime response JSONL capture must be base64 text")
+    try:
+        response_bytes = base64.b64decode(response_jsonl_base64, validate=True)
+    except ValueError as error:
+        raise ContractError("runtime response JSONL capture is invalid base64") from error
+    if sha256_bytes(response_bytes) != response_jsonl_sha256:
+        raise IntegrityError("runtime response JSONL capture hash mismatch")
+    return response_bytes
 
 
 def _validate_runtime_observation(
@@ -191,6 +212,25 @@ def _validate_runtime_observation(
             schema_path,
             label="runtime v3 observation",
         )
+    if expected_schema == RUNTIME_OBSERVATION_SCHEMA:
+        public_response_value = observation.get("public_response")
+        if public_response_value is not None:
+            public_response = _mapping(
+                public_response_value,
+                "runtime observation public response",
+            )
+            if observation.get("public_response_sha256") != native_sha256_json(
+                public_response
+            ):
+                raise IntegrityError("runtime observation public response hash mismatch")
+        if observation.get("observation_status") == "complete":
+            runtime = _mapping(observation.get("runtime"), "runtime observation metadata")
+            public_response = _mapping(
+                public_response_value,
+                "runtime observation public response",
+            )
+            if runtime.get("http_status") != public_response.get("http_status"):
+                raise IntegrityError("runtime observation HTTP status copies disagree")
     if (expected_request_sha256 is None) != (expected_hash_contract is None):
         raise ContractError("runtime request hash validator binding is incomplete")
     if expected_hash_contract is not None:
@@ -241,9 +281,17 @@ class _RuntimeJsonlSession:
             if observation_schema_path is not None
             else None
         )
-        self.observation_schema_registry = (
-            SchemaRegistry(self.observation_schema_path.parent)
+        schema_registry_root = (
+            self.observation_schema_path.parents[1]
             if self.observation_schema_path is not None
+            and self.expected_schema == RUNTIME_OBSERVATION_SCHEMA
+            else self.observation_schema_path.parent
+            if self.observation_schema_path is not None
+            else None
+        )
+        self.observation_schema_registry = (
+            SchemaRegistry(schema_registry_root)
+            if schema_registry_root is not None
             else None
         )
         if (self.observation_schema_path is None) != (
@@ -360,6 +408,7 @@ class _RuntimeJsonlSession:
                 observation=observation,
                 request_jsonl_sha256=sha256_bytes(request_bytes),
                 response_jsonl_sha256=sha256_bytes(value),
+                response_jsonl_base64=base64.b64encode(value).decode("ascii"),
                 diagnostic_line_sha256=tuple(sha256_bytes(line) for line in diagnostics),
                 diagnostic_stream_sha256=sha256_bytes(diagnostic_stream),
                 request_sha256=request_sha256,
@@ -813,14 +862,18 @@ def _semantic_checkpoints(observation: Mapping[str, Any]) -> dict[str, Any]:
     explanations = move_review.get("explanations") if isinstance(move_review, Mapping) else None
     public_causes = sorted(
         {
-            cause
+            kind
             for explanation in (explanations if isinstance(explanations, list) else [])
-            for cause in (
-                explanation.get("chess_relations", [])
+            for idea in (
+                explanation.get("ideas", [])
                 if isinstance(explanation, Mapping)
                 else []
             )
-            if isinstance(cause, str)
+            if isinstance(idea, Mapping)
+            for cause in [idea.get("cause")]
+            if isinstance(cause, Mapping)
+            for kind in [cause.get("kind")]
+            if isinstance(kind, str)
         }
     )
     stages = observation.get("stages")
@@ -923,7 +976,7 @@ def _runtime_io_document(
     command: Sequence[str],
     round_index: int,
 ) -> dict[str, Any]:
-    return {
+    document = {
         "schema_version": RUNTIME_IO_SCHEMA,
         "round_index": round_index,
         "transport": "canonical-jsonl-utf8-stdio",
@@ -939,6 +992,13 @@ def _runtime_io_document(
         "diagnostic_line_sha256": list(exchange.diagnostic_line_sha256),
         "diagnostic_stream_sha256": exchange.diagnostic_stream_sha256,
     }
+    if exchange.observation.get("schema_version") == RUNTIME_OBSERVATION_SCHEMA:
+        _verified_response_jsonl_bytes(
+            exchange.response_jsonl_base64,
+            exchange.response_jsonl_sha256,
+        )
+        document["response_jsonl_base64"] = exchange.response_jsonl_base64
+    return document
 
 
 def complete_runtime_probes(

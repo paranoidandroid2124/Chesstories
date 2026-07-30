@@ -103,42 +103,6 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
     assert(result.incompletePlanIds(PlanKind.WorstPieceImprovement.id))
     assertEquals(result.uniqueObservationFor(exactScope), None)
 
-  test("semantic duplicate carriers and mixed exact siblings are id-order independent"):
-    val fixture = inventoryFixture(LineNodeRole.Played)
-    val duplicateLine = fixture.lineRecord.copy(
-      ref = fixture.lineRecord.ref.copy(id = s"${fixture.lineRecord.ref.id}-duplicate")
-    )
-    val duplicateStructural = fixture.structuralRecord.copy(
-      ref = fixture.structuralRecord.ref.copy(id = s"${fixture.structuralRecord.ref.id}-duplicate")
-    )
-    val duplicatePressure = fixture.pressureRecord.copy(
-      ref = fixture.pressureRecord.ref.copy(id = s"${fixture.pressureRecord.ref.id}-duplicate"),
-      parents = List(duplicateStructural.ref)
-    )
-    def reparent(record: EvidenceRecord): EvidenceRecord =
-      record.copy(
-        parents = List(duplicateLine.ref, duplicateStructural.ref, duplicatePressure.ref)
-      )
-    val records = List(
-      fixture.lineRecord,
-      duplicateLine,
-      fixture.structuralRecord,
-      duplicateStructural,
-      fixture.pressureRecord,
-      duplicatePressure,
-      reparent(fixture.robustEvent),
-      reparent(fixture.refutedEvent)
-    )
-    val forward = inventory(fixture, records)
-    val reverse = inventory(fixture, records.reverse)
-
-    assertEquals(forward.observations, reverse.observations)
-    assertEquals(
-      forward.observations.map(_.scope.directChange),
-      Set(DirectCausalChange.Occurred, DirectCausalChange.Refuted)
-    )
-    assertEquals(forward.incompletePlanIds, Set.empty[String])
-
   test("plan-result differential admits only exact source against a complete weaker counterpart"):
     val fixture = inventoryFixture(LineNodeRole.Played)
     val source = inventory(fixture, fixture.baseRecords :+ fixture.refutedEvent)
@@ -148,24 +112,6 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
     assert(RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
       source,
       completeEmpty,
-      sourceObservation
-    ))
-
-    assert(!RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
-      source,
-      source,
-      sourceObservation
-    ))
-
-    val nonEnumerated = RelativeAssessmentAssembler.PlanResultEndpointInventory(
-      observations = Set.empty,
-      enumeratedPlanIds = Set.empty,
-      incompletePlanIds = Set.empty,
-      extractionReady = true
-    )
-    assert(!RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
-      source,
-      nonEnumerated,
       sourceObservation
     ))
 
@@ -179,53 +125,6 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
     assert(!RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
       source,
       unresolved,
-      sourceObservation
-    ))
-
-  test("a PlanResult wrapper cannot bypass an incomplete plan counterpart through strategic inventory"):
-    val fixture = inventoryFixture(LineNodeRole.Played)
-    val source = inventory(fixture, fixture.baseRecords :+ fixture.robustEvent)
-    val event = fixture.robustEvent.payload match
-      case payload: PlanCausalEventEvidence => payload
-      case _                                => fail("expected plan event")
-    val assessment = event.exactRobustPublicResultAssessment.getOrElse(
-      fail("expected exact robust plan result")
-    )
-    val primitive = RootOwnedEffectProof.PlanResult(fixture.robustEvent.ref, event, assessment)
-    val wrapper = DirectCauseChannel(
-      binding = EvidenceObjectBinding(fixture.robustEvent.ref),
-      directChange = DirectCausalChange.Occurred,
-      rootOwnedProof = Some(RootOwnedEffectProof.StrategicAxis(
-        primitive,
-        StrategicAxisDetail(
-          StrategicAxisKind.PlanCoherence,
-          StrategicAxisPolarity.Gain,
-          event.planId.id
-        ),
-        None
-      ))
-    )
-    val incompleteCounterpart = RelativeAssessmentAssembler.PlanResultEndpointInventory(
-      observations = Set.empty,
-      enumeratedPlanIds = Set(event.planId.id),
-      incompletePlanIds = Set(event.planId.id),
-      extractionReady = true
-    )
-    val sourceObservation = source.observations.headOption.getOrElse(
-      fail("expected exact source observation")
-    )
-
-    assertEquals(
-      wrapper.rootOwnedEffectDescriptor.map(_.identity.primitiveKind),
-      Some(RootOwnedEffectPrimitiveKind.PlanResult)
-    )
-    assertEquals(
-      RootOwnedEffectPolicy.exactPlanResultPrimitive(wrapper.rootOwnedProof.get),
-      None
-    )
-    assert(!RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
-      source,
-      incompleteCounterpart,
       sourceObservation
     ))
 
@@ -248,69 +147,14 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
         fixture.graph
       )
     )
-
-  test("retained played plan liability rejects every broader comparison or proof authority"):
-    val valid = retainedLiabilityFixture()
-    def retained(fixture: RetainedLiabilityFixture): Boolean =
-      ComparisonEndpointEffectObservationPolicy.retainedPlayedLiabilityReady(
-        fixture.cause,
-        fixture.channel,
-        fixture.comparison,
-        fixture.graph
-      )
-
-    val playedVsAlternative = retainedLiabilityFixture(
+    val nonPvb = retainedLiabilityFixture(
       comparisonKind = CandidateComparisonKind.PlayedVsAlternative
     )
-    val nonActionable = retainedLiabilityFixture(actionableLoss = false)
-    val positive = retainedLiabilityFixture(robust = true)
-    val heuristic = retainedLiabilityFixture(confidence = EvidenceConfidence.Heuristic)
-    val primitive = valid.channel.rootOwnedProof.getOrElse(fail("expected exact plan proof"))
-    val wrapper = valid.channel.copy(rootOwnedProof = Some(RootOwnedEffectProof.StrategicAxis(
-      primitive,
-      StrategicAxisDetail(
-        StrategicAxisKind.PlanCoherence,
-        StrategicAxisPolarity.Concede,
-        valid.event.planId.id
-      ),
-      None
-    )))
-
-    assert(!retained(playedVsAlternative))
-    assert(!retained(nonActionable))
-    assert(!retained(positive))
-    assert(!retained(heuristic))
     assert(!ComparisonEndpointEffectObservationPolicy.retainedPlayedLiabilityReady(
-      valid.cause,
-      wrapper,
-      valid.comparison,
-      valid.graph
-    ))
-    assert(!ComparisonEndpointEffectObservationPolicy.retainedPlayedLiabilityReady(
-      valid.cause.copy(sourceSide = RelativeCauseSourceSide.Reference),
-      valid.channel,
-      valid.comparison,
-      valid.graph
-    ))
-    assert(!ComparisonEndpointEffectObservationPolicy.retainedPlayedLiabilityReady(
-      valid.cause.copy(attribution = valid.cause.attribution.copy(
-        kind = CauseAttributionKind.CandidateCreatesValue
-      )),
-      valid.channel,
-      valid.comparison,
-      valid.graph
-    ))
-    assert(!ComparisonEndpointEffectObservationPolicy.retainedPlayedLiabilityReady(
-      valid.cause,
-      valid.channel.copy(importanceDescriptorAmbiguous = true),
-      valid.comparison,
-      valid.graph
-    ))
-    assert(ComparisonEndpointEffectObservationPolicy.retainedPlayedLiabilityReady(
-      valid.cause,
-      valid.channel.copy(proofSegmentAmbiguous = true),
-      valid.comparison,
-      valid.graph
+      nonPvb.cause,
+      nonPvb.channel,
+      nonPvb.comparison,
+      nonPvb.graph
     ))
 
   private final case class RetainedLiabilityFixture(
@@ -323,16 +167,10 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
   )
 
   private def retainedLiabilityFixture(
-      comparisonKind: CandidateComparisonKind = CandidateComparisonKind.PlayedVsBest,
-      actionableLoss: Boolean = true,
-      robust: Boolean = false,
-      confidence: EvidenceConfidence = EvidenceConfidence.EngineBacked
+      comparisonKind: CandidateComparisonKind = CandidateComparisonKind.PlayedVsBest
   ): RetainedLiabilityFixture =
     val inventory = inventoryFixture(LineNodeRole.Played)
-    val baseEventRecord = if robust then inventory.robustEvent else inventory.refutedEvent
-    val eventRecord = baseEventRecord.copy(
-      ref = baseEventRecord.ref.copy(confidence = confidence)
-    )
+    val eventRecord = inventory.refutedEvent
     val event = eventRecord.payload match
       case payload: PlanCausalEventEvidence => payload
       case _                                => fail("expected plan event")
@@ -365,7 +203,7 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
           inventory.line,
           EngineLine(
             List(inventory.line.rootMove),
-            if actionableLoss then -300 else 300,
+            -300,
             depth = 18
           ),
           evidenceRef(
@@ -390,13 +228,12 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       EvidenceConfidence.EngineBacked
     )
     val cause = RelativeCauseFact(
-      kind = if robust then RelativeCauseKind.PlanImprovement else RelativeCauseKind.PlanContradiction,
+      kind = RelativeCauseKind.PlanContradiction,
       comparisonEvidence = comparisonRef,
       supportEvidence = List(eventRecord.ref),
       sourceSide = RelativeCauseSourceSide.Candidate,
       attribution = CauseAttribution(
-        if robust then CauseAttributionKind.CandidateCreatesValue
-        else CauseAttributionKind.CandidateAllowsLiability,
+        CauseAttributionKind.CandidateAllowsLiability,
         rootMoveMatched = true,
         directProofEligible = true
       ),

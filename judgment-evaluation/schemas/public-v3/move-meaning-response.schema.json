@@ -1,0 +1,1768 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/public-v3/move-meaning-response.schema.json",
+  "title": "Chesstory public move-meaning response v3",
+  "description": "Canonical public wire contract emitted by RuntimeProtocol for response.v3.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "request_id", "ok", "status"],
+  "properties": {
+    "schema_version": {"const": "chesstory.move-meaning.response.v3"},
+    "request_id": {"$ref": "#/$defs/requestId"},
+    "ok": {"type": "boolean"},
+    "status": {"enum": ["ready", "withheld", "error"]},
+    "availability": {"$ref": "#/$defs/availability"},
+    "probe_requests": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/probeRequest"}
+    },
+    "move_review": {"$ref": "#/$defs/moveReview"},
+    "error": {
+      "enum": [
+        "invalid_json",
+        "invalid_request_id",
+        "unsupported_schema_version",
+        "invalid_move_review_input",
+        "invalid_request",
+        "input_limits_exceeded",
+        "move_review_not_buildable",
+        "projection_intervention_rejected",
+        "runtime_busy",
+        "unauthorized",
+        "content_type_must_be_json",
+        "request_too_large",
+        "internal_error",
+        "method_not_allowed"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "required": ["availability", "probe_requests", "move_review"],
+      "properties": {
+        "ok": {"const": true},
+        "status": {"const": "ready"},
+        "availability": {"$ref": "#/$defs/readyAvailability"},
+        "move_review": {"$ref": "#/$defs/readyMoveReview"}
+      },
+      "not": {"required": ["error"]}
+    },
+    {
+      "required": ["availability", "probe_requests", "move_review"],
+      "properties": {
+        "ok": {"const": true},
+        "status": {"const": "withheld"},
+        "availability": {"$ref": "#/$defs/withheldAvailability"},
+        "move_review": {"$ref": "#/$defs/withheldMoveReview"}
+      },
+      "not": {"required": ["error"]}
+    },
+    {
+      "required": ["error"],
+      "properties": {
+        "ok": {"const": false},
+        "status": {"const": "error"}
+      },
+      "not": {
+        "anyOf": [
+          {"required": ["availability"]},
+          {"required": ["probe_requests"]},
+          {"required": ["move_review"]}
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "nullableNonEmptyString": {
+      "oneOf": [
+        {"type": "string", "minLength": 1},
+        {"type": "null"}
+      ]
+    },
+    "requestId": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+        },
+        {"type": "null"}
+      ]
+    },
+    "uciMove": {
+      "type": "string",
+      "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"
+    },
+    "square": {
+      "type": "string",
+      "pattern": "^[a-h][1-8]$"
+    },
+    "readyAvailability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "reason"],
+      "properties": {
+        "state": {"const": "ready"},
+        "reason": {"type": "null"}
+      }
+    },
+    "withheldAvailability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "reason"],
+      "properties": {
+        "state": {"const": "withheld"},
+        "reason": {"const": "insufficient_engine_depth"}
+      }
+    },
+    "availability": {
+      "oneOf": [
+        {"$ref": "#/$defs/readyAvailability"},
+        {"$ref": "#/$defs/withheldAvailability"}
+      ]
+    },
+    "probeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fen",
+        "moves",
+        "depth",
+        "purpose",
+        "multiPv",
+        "baselineEvalCp",
+        "horizon",
+        "candidateMove",
+        "depthFloor",
+        "variationHash",
+        "comparisonFen"
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "fen": {"type": "string", "minLength": 1},
+        "moves": {"type": "array", "items": {"$ref": "#/$defs/uciMove"}},
+        "depth": {"type": "integer", "minimum": 0},
+        "purpose": {
+          "oneOf": [
+            {"enum": ["reply_multipv", "endgame_tablebase"]},
+            {"type": "null"}
+          ]
+        },
+        "multiPv": {
+          "oneOf": [
+            {"type": "integer", "minimum": 1},
+            {"type": "null"}
+          ]
+        },
+        "baselineEvalCp": {
+          "oneOf": [{"type": "integer"}, {"type": "null"}]
+        },
+        "horizon": {"$ref": "#/$defs/nullableNonEmptyString"},
+        "candidateMove": {
+          "oneOf": [{"$ref": "#/$defs/uciMove"}, {"type": "null"}]
+        },
+        "opponentResourceMove": {"$ref": "#/$defs/uciMove"},
+        "depthFloor": {
+          "oneOf": [
+            {"type": "integer", "minimum": 1},
+            {"type": "null"}
+          ]
+        },
+        "variationHash": {"$ref": "#/$defs/nullableNonEmptyString"},
+        "comparisonFen": {"$ref": "#/$defs/nullableNonEmptyString"}
+      }
+    },
+    "moveReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["renderable", "verdict", "idea_status", "idea_status_detail", "explanations"],
+      "properties": {
+        "renderable": {"type": "boolean"},
+        "verdict": {
+          "oneOf": [{"$ref": "#/$defs/verdict"}, {"type": "null"}]
+        },
+        "idea_status": {
+          "enum": ["certified", "no_certified_differential_idea", "unavailable"]
+        },
+        "idea_status_detail": {"$ref": "#/$defs/causeDispositionSummary"},
+        "explanations": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/explanation"},
+          "maxItems": 1
+        }
+      }
+    },
+    "readyMoveReview": {
+      "allOf": [
+        {"$ref": "#/$defs/moveReview"},
+        {
+          "properties": {
+            "renderable": {"const": true},
+            "verdict": {"$ref": "#/$defs/verdict"},
+            "idea_status": {"enum": ["certified", "no_certified_differential_idea"]}
+          },
+          "allOf": [
+            {
+              "oneOf": [
+                {
+                  "properties": {
+                    "idea_status": {"const": "certified"},
+                    "explanations": {"minItems": 1, "maxItems": 1}
+                  }
+                },
+                {
+                  "properties": {
+                    "idea_status": {"const": "no_certified_differential_idea"},
+                    "explanations": {"maxItems": 0}
+                  }
+                }
+              ]
+            },
+            {
+              "oneOf": [
+                {
+                  "properties": {
+                    "verdict": {"properties": {"move_quality": {"const": "good"}}},
+                    "explanations": {
+                      "items": {"properties": {"move_quality": {"const": "good"}}}
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "verdict": {"properties": {"move_quality": {"const": "playable"}}},
+                    "explanations": {
+                      "items": {"properties": {"move_quality": {"const": "playable"}}}
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "verdict": {"properties": {"move_quality": {"const": "bad"}}},
+                    "explanations": {
+                      "items": {"properties": {"move_quality": {"const": "bad"}}}
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "withheldMoveReview": {
+      "allOf": [
+        {"$ref": "#/$defs/moveReview"},
+        {
+          "properties": {
+            "renderable": {"const": false},
+            "verdict": {"type": "null"},
+            "idea_status": {"const": "unavailable"},
+            "explanations": {"maxItems": 0}
+          }
+        }
+      ]
+    },
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comparison_kind",
+        "mover",
+        "verdict_code",
+        "move_quality",
+        "played_move",
+        "reference_move",
+        "candidate_win_percent_delta_for_mover",
+        "win_percent_loss_for_mover",
+        "outcome",
+        "mate"
+      ],
+      "properties": {
+        "comparison_kind": {"const": "played_vs_best"},
+        "mover": {"enum": ["white", "black"]},
+        "verdict_code": {"$ref": "#/$defs/verdictCode"},
+        "move_quality": {"enum": ["good", "playable", "bad"]},
+        "played_move": {"$ref": "#/$defs/uciMove"},
+        "reference_move": {"$ref": "#/$defs/uciMove"},
+        "candidate_win_percent_delta_for_mover": {
+          "type": "number",
+          "minimum": -100,
+          "maximum": 100
+        },
+        "win_percent_loss_for_mover": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "outcome": {
+          "oneOf": [{"$ref": "#/$defs/verdictOutcome"}, {"type": "null"}]
+        },
+        "mate": {
+          "oneOf": [{"$ref": "#/$defs/verdictMate"}, {"type": "null"}]
+        }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "verdict_code": {
+                  "enum": ["improves_on_reference", "matches_reference"]
+                },
+                "move_quality": {"const": "good"}
+              }
+            },
+            {
+              "properties": {
+                "verdict_code": {"const": "playable_loss"},
+                "move_quality": {"const": "playable"}
+              }
+            },
+            {
+              "properties": {
+                "verdict_code": {"enum": ["inaccuracy", "mistake", "blunder"]},
+                "move_quality": {"const": "bad"}
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "outcome": {"type": "null"},
+                "mate": {"type": "null"}
+              }
+            },
+            {
+              "properties": {
+                "outcome": {"type": "null"},
+                "mate": {
+                  "type": "object",
+                  "properties": {
+                    "reference_for_mover": {
+                      "oneOf": [
+                        {"type": "integer", "maximum": -1},
+                        {"type": "integer", "minimum": 1}
+                      ]
+                    },
+                    "played_for_mover": {"type": "null"}
+                  }
+                }
+              }
+            },
+            {
+              "properties": {
+                "outcome": {
+                  "type": "object",
+                  "properties": {
+                    "state": {"const": "forced_win"},
+                    "resistance": {"type": "null"}
+                  }
+                },
+                "mate": {
+                  "type": "object",
+                  "properties": {"played_for_mover": {"type": "integer", "minimum": 1}}
+                }
+              }
+            },
+            {
+              "properties": {
+                "outcome": {
+                  "type": "object",
+                  "properties": {"state": {"const": "forced_loss"}}
+                },
+                "mate": {
+                  "type": "object",
+                  "properties": {"played_for_mover": {"type": "integer", "maximum": -1}}
+                }
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {"outcome": {"type": "null"}}
+            },
+            {
+              "properties": {
+                "outcome": {
+                  "type": "object",
+                  "properties": {"reference_state": {"type": "null"}}
+                },
+                "mate": {
+                  "type": "object",
+                  "properties": {"reference_for_mover": {"type": "null"}}
+                }
+              }
+            },
+            {
+              "properties": {
+                "outcome": {
+                  "type": "object",
+                  "properties": {"reference_state": {"const": "forced_win"}}
+                },
+                "mate": {
+                  "type": "object",
+                  "properties": {
+                    "reference_for_mover": {"type": "integer", "minimum": 1}
+                  }
+                }
+              }
+            },
+            {
+              "properties": {
+                "outcome": {
+                  "type": "object",
+                  "properties": {"reference_state": {"const": "forced_loss"}}
+                },
+                "mate": {
+                  "type": "object",
+                  "properties": {
+                    "reference_for_mover": {"type": "integer", "maximum": -1}
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "verdictCode": {
+      "enum": [
+        "improves_on_reference",
+        "matches_reference",
+        "playable_loss",
+        "inaccuracy",
+        "mistake",
+        "blunder"
+      ]
+    },
+    "nullableNonZeroMate": {
+      "oneOf": [
+        {"type": "integer", "maximum": -1},
+        {"type": "integer", "minimum": 1},
+        {"type": "null"}
+      ]
+    },
+    "verdictOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "certainty", "reference_state", "resistance"],
+      "properties": {
+        "state": {"enum": ["forced_win", "forced_loss"]},
+        "certainty": {"const": "engine_mate_score"},
+        "reference_state": {
+          "oneOf": [
+            {"enum": ["forced_win", "forced_loss"]},
+            {"type": "null"}
+          ]
+        },
+        "resistance": {
+          "oneOf": [
+            {"enum": ["shortened", "extended", "held"]},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "verdictMate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference_for_mover", "played_for_mover", "distance_loss"],
+      "properties": {
+        "reference_for_mover": {"$ref": "#/$defs/nullableNonZeroMate"},
+        "played_for_mover": {"$ref": "#/$defs/nullableNonZeroMate"},
+        "distance_loss": {
+          "oneOf": [
+            {"type": "integer", "minimum": 1},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "causeDispositionSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority",
+        "total_cause_count",
+        "selected_cause_ids",
+        "status_counts",
+        "reason_counts",
+        "abstention_codes"
+      ],
+      "properties": {
+        "authority": {"const": "cause_disposition_ledger.v1"},
+        "total_cause_count": {"type": "integer", "minimum": 0},
+        "selected_cause_ids": {"$ref": "#/$defs/stringSet"},
+        "status_counts": {"$ref": "#/$defs/dispositionStatusCounts"},
+        "reason_counts": {"$ref": "#/$defs/dispositionReasonCounts"},
+        "abstention_codes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/abstentionCode"}
+        }
+      }
+    },
+    "dispositionStatusCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selected",
+        "dominated",
+        "redundant",
+        "diagnostic",
+        "inferior",
+        "admission_deferred",
+        "rejected",
+        "unproposed",
+        "object_unready"
+      ],
+      "properties": {
+        "selected": {"type": "integer", "minimum": 0},
+        "dominated": {"type": "integer", "minimum": 0},
+        "redundant": {"type": "integer", "minimum": 0},
+        "diagnostic": {"type": "integer", "minimum": 0},
+        "inferior": {"type": "integer", "minimum": 0},
+        "admission_deferred": {"type": "integer", "minimum": 0},
+        "rejected": {"type": "integer", "minimum": 0},
+        "unproposed": {"type": "integer", "minimum": 0},
+        "object_unready": {"type": "integer", "minimum": 0}
+      }
+    },
+    "dispositionReasonCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "player_facing_selection",
+        "dominated_fallback",
+        "cross_comparison_redundancy",
+        "certified_claim_deduplicated",
+        "diagnostic_comparison",
+        "inferior_alternative",
+        "claim_admission_deferred",
+        "claim_admission_rejected",
+        "no_claim_proposal",
+        "object_readiness_failed"
+      ],
+      "properties": {
+        "player_facing_selection": {"type": "integer", "minimum": 0},
+        "dominated_fallback": {"type": "integer", "minimum": 0},
+        "cross_comparison_redundancy": {"type": "integer", "minimum": 0},
+        "certified_claim_deduplicated": {"type": "integer", "minimum": 0},
+        "diagnostic_comparison": {"type": "integer", "minimum": 0},
+        "inferior_alternative": {"type": "integer", "minimum": 0},
+        "claim_admission_deferred": {"type": "integer", "minimum": 0},
+        "claim_admission_rejected": {"type": "integer", "minimum": 0},
+        "no_claim_proposal": {"type": "integer", "minimum": 0},
+        "object_readiness_failed": {"type": "integer", "minimum": 0}
+      }
+    },
+    "abstentionCode": {
+      "enum": [
+        "no_relative_cause_generated",
+        "player_facing_selection",
+        "dominated_fallback",
+        "cross_comparison_redundancy",
+        "certified_claim_deduplicated",
+        "diagnostic_comparison",
+        "inferior_alternative",
+        "claim_admission_deferred",
+        "claim_admission_rejected",
+        "no_claim_proposal",
+        "object_readiness_failed"
+      ]
+    },
+    "explanation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "move",
+        "reference_move",
+        "move_quality",
+        "ideas",
+        "idea_units",
+        "idea_importance",
+        "importance"
+      ],
+      "properties": {
+        "role": {"const": "played move"},
+        "move": {"$ref": "#/$defs/uciMove"},
+        "reference_move": {"$ref": "#/$defs/uciMove"},
+        "move_quality": {"enum": ["good", "playable", "bad"]},
+        "ideas": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/causeIdea"}
+        },
+        "idea_units": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/ideaUnit"}
+        },
+        "idea_importance": {"$ref": "#/$defs/importanceProjection"},
+        "importance": {"$ref": "#/$defs/importanceProjection"}
+      }
+    },
+    "causeIdea": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cause_evidence_id",
+        "item_role",
+        "idea_unit_id",
+        "comparison_exposure_rank",
+        "selection_order",
+        "host",
+        "cause",
+        "comparison",
+        "channels",
+        "only_move"
+      ],
+      "properties": {
+        "cause_evidence_id": {"type": "string", "minLength": 1},
+        "item_role": {"const": "cause_facet"},
+        "idea_unit_id": {"type": "string", "minLength": 1},
+        "comparison_exposure_rank": {"type": "integer", "minimum": 0},
+        "selection_order": {"type": "integer", "minimum": 0},
+        "host": {"$ref": "#/$defs/claimHost"},
+        "cause": {"$ref": "#/$defs/causeSummary"},
+        "comparison": {"$ref": "#/$defs/comparison"},
+        "channels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/channel"}
+        },
+        "only_move": {
+          "oneOf": [{"$ref": "#/$defs/onlyMove"}, {"type": "null"}]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "cause": {
+              "properties": {"effect_mode": {"const": "alternative_resource"}}
+            },
+            "channels": {
+              "items": {
+                "properties": {
+                  "direct_change": {
+                    "enum": ["occurred", "prevented", "maintained"]
+                  },
+                  "played_change": {"const": "missed"}
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "cause": {
+              "properties": {"effect_mode": {"const": "played_liability"}}
+            },
+            "channels": {
+              "items": {
+                "oneOf": [
+                  {
+                    "properties": {
+                      "direct_change": {"const": "occurred"},
+                      "played_change": {"const": "occurred"}
+                    }
+                  },
+                  {
+                    "properties": {
+                      "direct_change": {"const": "lost"},
+                      "played_change": {"const": "lost"}
+                    }
+                  },
+                  {
+                    "properties": {
+                      "direct_change": {"const": "refuted"},
+                      "played_change": {"const": "refuted"}
+                    }
+                  },
+                  {
+                    "properties": {
+                      "direct_change": {"const": "missed"},
+                      "played_change": {"const": "missed"}
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "cause": {
+              "properties": {"effect_mode": {"const": "played_value"}}
+            },
+            "channels": {
+              "items": {
+                "oneOf": [
+                  {
+                    "properties": {
+                      "direct_change": {"const": "occurred"},
+                      "played_change": {"const": "occurred"}
+                    }
+                  },
+                  {
+                    "properties": {
+                      "direct_change": {"const": "prevented"},
+                      "played_change": {"const": "prevented"}
+                    }
+                  },
+                  {
+                    "properties": {
+                      "direct_change": {"const": "maintained"},
+                      "played_change": {"const": "maintained"}
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "claimHost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "family", "tier"],
+      "properties": {
+        "claim_id": {"type": "string", "minLength": 1},
+        "family": {
+          "enum": [
+            "tactical",
+            "strategic",
+            "pawn_structure",
+            "opening",
+            "plan",
+            "defensive",
+            "conversion",
+            "material",
+            "evaluation"
+          ]
+        },
+        "tier": {"enum": ["primary", "secondary"]}
+      }
+    },
+    "causeSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "effect_mode",
+        "exposure",
+        "source_side",
+        "direct_effect_admission",
+        "attribution"
+      ],
+      "properties": {
+        "kind": {"$ref": "#/$defs/causeKind"},
+        "effect_mode": {
+          "enum": ["played_liability", "alternative_resource", "played_value"]
+        },
+        "exposure": {"enum": ["primary", "complementary"]},
+        "source_side": {"enum": ["reference", "candidate"]},
+        "direct_effect_admission": {"$ref": "#/$defs/publicDirectEffectAdmission"},
+        "attribution": {"$ref": "#/$defs/attribution"}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "source_side": {"const": "reference"},
+            "attribution": {
+              "properties": {"kind": {"const": "reference_creates_resource"}}
+            }
+          }
+        },
+        {
+          "properties": {
+            "source_side": {"const": "candidate"},
+            "attribution": {
+              "properties": {
+                "kind": {
+                  "enum": ["candidate_allows_liability", "candidate_creates_value"]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "causeKind": {
+      "enum": [
+        "missed_tactical_resource",
+        "tactical_refutation_of_played",
+        "candidate_tactical_liability",
+        "wrong_recapturer",
+        "recapture_recovery_window",
+        "wrong_move_order",
+        "only_defense_necessity",
+        "tempo_loss",
+        "conversion_miss",
+        "conversion_secured",
+        "sacrifice_compensation",
+        "structural_improvement",
+        "target_pressure_gain",
+        "target_pressure_release",
+        "center_control_gain",
+        "king_safety_concession",
+        "pawn_weakness_target",
+        "pawn_break_opportunity",
+        "activity_gain",
+        "activity_loss",
+        "opponent_restriction",
+        "strategic_concession",
+        "missed_strategic_improvement",
+        "plan_improvement",
+        "plan_contradiction",
+        "defensive_resource",
+        "draw_resource",
+        "king_forcing",
+        "material_swing"
+      ]
+    },
+    "publicDirectEffectAdmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "causal_signatures"],
+      "properties": {
+        "status": {"const": "restricted"},
+        "causal_signatures": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "root_move_matched", "direct_proof_eligible"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "reference_creates_resource",
+            "candidate_allows_liability",
+            "candidate_creates_value"
+          ]
+        },
+        "root_move_matched": {"const": true},
+        "direct_proof_eligible": {"const": true}
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "kind",
+        "reference",
+        "candidate",
+        "event",
+        "compared_move",
+        "verdict",
+        "mover",
+        "delta"
+      ],
+      "properties": {
+        "evidence_id": {"type": "string", "minLength": 1},
+        "kind": {
+          "enum": [
+            "played_vs_best",
+            "played_vs_alternative",
+            "best_vs_second",
+            "reference_vs_alternative"
+          ]
+        },
+        "reference": {"$ref": "#/$defs/lineRef"},
+        "candidate": {"$ref": "#/$defs/lineRef"},
+        "event": {"$ref": "#/$defs/lineRef"},
+        "compared_move": {"$ref": "#/$defs/uciMove"},
+        "verdict": {"$ref": "#/$defs/verdictCode"},
+        "mover": {"enum": ["white", "black"]},
+        "delta": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "candidate_win_percent_delta_for_mover",
+            "win_percent_loss_for_mover"
+          ],
+          "properties": {
+            "candidate_win_percent_delta_for_mover": {
+              "type": "number",
+              "minimum": -100,
+              "maximum": 100
+            },
+            "win_percent_loss_for_mover": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        }
+      }
+    },
+    "lineRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "root_move", "role", "rank"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "root_move": {"$ref": "#/$defs/uciMove"},
+        "role": {"enum": ["played", "best_reference", "alternative", "threat"]},
+        "rank": {"type": "integer", "minimum": 0}
+      }
+    },
+    "channel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "causal_signature",
+        "direct_change",
+        "played_change",
+        "carrier",
+        "provenance",
+        "actor",
+        "targets",
+        "mechanisms",
+        "consequences",
+        "witnesses",
+        "line",
+        "horizon",
+        "proof_segment",
+        "effect_descriptor",
+        "importance_effect",
+        "descriptor_ambiguous",
+        "proof_segment_ambiguous"
+      ],
+      "properties": {
+        "causal_signature": {"type": "string", "minLength": 1},
+        "direct_change": {"$ref": "#/$defs/change"},
+        "played_change": {"$ref": "#/$defs/change"},
+        "carrier": {"$ref": "#/$defs/evidenceRef"},
+        "provenance": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/evidenceRef"}
+        },
+        "actor": {"$ref": "#/$defs/rootActor"},
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/chessObject"}
+        },
+        "mechanisms": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/chessObject"}
+        },
+        "consequences": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/chessObject"}
+        },
+        "witnesses": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/chessObject"}
+        },
+        "line": {"$ref": "#/$defs/lineRef"},
+        "horizon": {"$ref": "#/$defs/nullableNonEmptyString"},
+        "proof_segment": {
+          "oneOf": [{"$ref": "#/$defs/proofSegment"}, {"type": "null"}]
+        },
+        "effect_descriptor": {"$ref": "#/$defs/effectDescriptor"},
+        "importance_effect": {
+          "oneOf": [{"$ref": "#/$defs/measuredEffect"}, {"type": "null"}]
+        },
+        "descriptor_ambiguous": {"type": "boolean"},
+        "proof_segment_ambiguous": {"type": "boolean"}
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "descriptor_ambiguous": {"const": true},
+                "effect_descriptor": {
+                  "properties": {"magnitude_status": {"const": "ambiguous"}}
+                },
+                "importance_effect": {"type": "null"}
+              }
+            },
+            {
+              "properties": {
+                "descriptor_ambiguous": {"const": false},
+                "effect_descriptor": {
+                  "properties": {
+                    "magnitude_status": {
+                      "enum": ["not_applicable", "exact", "expected_but_missing"]
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "proof_segment_ambiguous": {"const": true},
+                "proof_segment": {"type": "null"}
+              }
+            },
+            {
+              "properties": {
+                "proof_segment_ambiguous": {"const": false}
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "effect_descriptor": {
+                  "properties": {"magnitude_status": {"const": "exact"}}
+                }
+              }
+            },
+            {
+              "properties": {
+                "effect_descriptor": {
+                  "properties": {
+                    "magnitude_status": {
+                      "enum": ["not_applicable", "expected_but_missing", "ambiguous"]
+                    }
+                  }
+                },
+                "importance_effect": {"type": "null"}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "change": {
+      "enum": ["occurred", "prevented", "maintained", "lost", "refuted", "missed"]
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "producer", "layer", "scope", "line"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "producer": {"$ref": "#/$defs/evidenceProducer"},
+        "layer": {"$ref": "#/$defs/evidenceLayer"},
+        "scope": {"$ref": "#/$defs/evidenceScope"},
+        "line": {
+          "oneOf": [{"$ref": "#/$defs/lineRef"}, {"type": "null"}]
+        }
+      }
+    },
+    "evidenceProducer": {
+      "enum": [
+        "board_fact_producer",
+        "legal_line_producer",
+        "engine_eval_producer",
+        "tactical_relation_producer",
+        "pawn_structure_producer",
+        "strategic_feature_producer",
+        "strategic_mechanism_producer",
+        "opening_context_producer",
+        "feature_anchor_producer",
+        "applicability_assessment_producer",
+        "threat_pressure_producer",
+        "move_motif_producer",
+        "tactical_mechanism_producer",
+        "move_transition_producer",
+        "structural_delta_producer",
+        "plan_pressure_producer",
+        "plan_causal_event_producer",
+        "plan_transition_producer",
+        "relative_move_producer"
+      ]
+    },
+    "evidenceLayer": {
+      "enum": [
+        "board",
+        "pawn_structure",
+        "strategic",
+        "strategic_mechanism",
+        "opening_context",
+        "feature_anchor",
+        "applicability_assessment",
+        "threat_pressure",
+        "line",
+        "eval",
+        "move_motif",
+        "tactical_mechanism",
+        "move_transition",
+        "relation",
+        "structural_delta",
+        "plan_pressure",
+        "plan_causal_event",
+        "plan_transition",
+        "candidate_comparison",
+        "relative_assessment",
+        "relative_cause"
+      ]
+    },
+    "evidenceScope": {
+      "enum": [
+        "before_position",
+        "after_played_position",
+        "after_reference_position",
+        "current_position",
+        "played_transition",
+        "reference_transition",
+        "alternative_transition",
+        "best_line",
+        "played_line",
+        "candidate_line",
+        "threat_line",
+        "counterfactual"
+      ]
+    },
+    "rootActor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["move", "side", "piece", "from", "to"],
+      "properties": {
+        "move": {"$ref": "#/$defs/uciMove"},
+        "side": {"enum": ["white", "black"]},
+        "piece": {"enum": ["pawn", "knight", "bishop", "rook", "queen", "king"]},
+        "from": {"$ref": "#/$defs/square"},
+        "to": {"$ref": "#/$defs/square"}
+      }
+    },
+    "chessObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "key"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "move",
+            "piece",
+            "side",
+            "square",
+            "file",
+            "pawn",
+            "plan_subject",
+            "relation",
+            "motif",
+            "line",
+            "mechanism",
+            "consequence",
+            "horizon"
+          ]
+        },
+        "key": {"type": "string", "minLength": 1}
+      }
+    },
+    "proofSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["terminal_relation", "steps"],
+      "properties": {
+        "terminal_relation": {
+          "enum": [
+            "produces_line_consequence",
+            "is_root_line_event",
+            "triggers_endgame_horizon",
+            "makes_structural_transition",
+            "instantiates_motif",
+            "instantiates_relation",
+            "creates_threat",
+            "defends_threat",
+            "realizes_plan_result",
+            "restricts_opponent_resource",
+            "creates_defensive_recapture_resource"
+          ]
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "prefixItems": [
+            {
+              "allOf": [
+                {"$ref": "#/$defs/proofStep"},
+                {
+                  "properties": {
+                    "ply_offset": {"const": 0},
+                    "role": {"const": "root_action"}
+                  }
+                }
+              ]
+            }
+          ],
+          "items": {"$ref": "#/$defs/proofStep"}
+        }
+      }
+    },
+    "proofStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ply_offset", "move_uci", "role"],
+      "properties": {
+        "ply_offset": {"type": "integer", "minimum": 0},
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "role": {"enum": ["root_action", "causal_link", "terminal_event"]}
+      }
+    },
+    "effectDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["effect_scope", "magnitude_status", "measure", "material_event_salience"],
+      "properties": {
+        "effect_scope": {"$ref": "#/$defs/effectScope"},
+        "magnitude_status": {
+          "enum": ["not_applicable", "exact", "expected_but_missing", "ambiguous"]
+        },
+        "measure": {
+          "oneOf": [{"$ref": "#/$defs/importanceMeasure"}, {"type": "null"}]
+        },
+        "material_event_salience": {
+          "oneOf": [{"$ref": "#/$defs/materialEventSalience"}, {"type": "null"}]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "magnitude_status": {"const": "exact"},
+            "measure": {"$ref": "#/$defs/materialOutcomeMeasure"},
+            "material_event_salience": {"$ref": "#/$defs/materialEventSalience"}
+          }
+        },
+        {
+          "properties": {
+            "magnitude_status": {"const": "exact"},
+            "measure": {
+              "oneOf": [
+                {"$ref": "#/$defs/mateArrivalMeasure"},
+                {"$ref": "#/$defs/threatHorizonMeasure"},
+                {"$ref": "#/$defs/structuralStrengthMeasure"},
+                {"$ref": "#/$defs/strategicStrengthMeasure"}
+              ]
+            },
+            "material_event_salience": {"type": "null"}
+          }
+        },
+        {
+          "properties": {
+            "magnitude_status": {
+              "enum": ["not_applicable", "expected_but_missing", "ambiguous"]
+            },
+            "measure": {"type": "null"},
+            "material_event_salience": {"type": "null"}
+          }
+        }
+      ]
+    },
+    "effectScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primitive_kind", "target_signatures", "plan_ids", "strategic_axes"],
+      "properties": {
+        "primitive_kind": {
+          "enum": [
+            "line_episode",
+            "root_line_event",
+            "endgame_horizon",
+            "structural_transition",
+            "root_move_motif",
+            "root_relation",
+            "threat_creation",
+            "threat_defense",
+            "plan_result",
+            "plan_restriction",
+            "defensive_recapture_resource"
+          ]
+        },
+        "target_signatures": {"$ref": "#/$defs/stringSet"},
+        "plan_ids": {"$ref": "#/$defs/stringSet"},
+        "strategic_axes": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/strategicAxis"}
+        }
+      }
+    },
+    "strategicAxis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "polarity", "label", "comparison_outcome"],
+      "properties": {
+        "kind": {
+          "enum": ["target", "space_center", "pawn_break", "counterplay", "activity", "plan_coherence"]
+        },
+        "polarity": {
+          "enum": ["gain", "loss", "preserve", "release", "concede", "restrain", "support"]
+        },
+        "label": {"type": "string"},
+        "comparison_outcome": {
+          "oneOf": [
+            {
+              "enum": [
+                "reference_only",
+                "candidate_only",
+                "reference_stronger",
+                "candidate_stronger",
+                "shared_sustained",
+                "candidate_concession",
+                "reference_preserves_plan"
+              ]
+            },
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "mateArrivalMeasure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "ply_offset"],
+      "properties": {
+        "kind": {"const": "mate_arrival"},
+        "ply_offset": {"type": "integer", "minimum": 0}
+      }
+    },
+    "materialOutcomeMeasure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "durable_net_cp", "onset_ply_offset"],
+      "properties": {
+        "kind": {"const": "material_outcome"},
+        "durable_net_cp": {"type": "integer", "minimum": 1},
+        "onset_ply_offset": {"type": "integer", "minimum": 0}
+      }
+    },
+    "threatHorizonMeasure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "turns_to_impact"],
+      "properties": {
+        "kind": {"const": "threat_horizon"},
+        "turns_to_impact": {"type": "integer", "minimum": 1}
+      }
+    },
+    "structuralStrengthMeasure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "units"],
+      "properties": {
+        "kind": {"const": "structural_strength"},
+        "units": {"type": "integer", "minimum": 1}
+      }
+    },
+    "strategicStrengthMeasure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "units"],
+      "properties": {
+        "kind": {"const": "strategic_strength"},
+        "units": {"type": "integer", "minimum": 1}
+      }
+    },
+    "importanceMeasure": {
+      "oneOf": [
+        {"$ref": "#/$defs/mateArrivalMeasure"},
+        {"$ref": "#/$defs/materialOutcomeMeasure"},
+        {"$ref": "#/$defs/threatHorizonMeasure"},
+        {"$ref": "#/$defs/structuralStrengthMeasure"},
+        {"$ref": "#/$defs/strategicStrengthMeasure"}
+      ]
+    },
+    "importanceComparableMeasure": {
+      "allOf": [
+        {"$ref": "#/$defs/importanceMeasure"},
+        {
+          "not": {
+            "type": "object",
+            "required": ["kind"],
+            "properties": {"kind": {"const": "strategic_strength"}}
+          }
+        }
+      ]
+    },
+    "effectStake": {
+      "enum": [
+        "benefits:white",
+        "benefits:black",
+        "harms:white",
+        "harms:black",
+        "preserves:white",
+        "preserves:black"
+      ]
+    },
+    "measuredEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stake", "domain_kind", "domain", "measure", "effect_scope"],
+      "properties": {
+        "stake": {"$ref": "#/$defs/effectStake"},
+        "domain_kind": {"enum": ["board_mate", "material", "threat", "structural"]},
+        "domain": {"type": "string", "minLength": 1},
+        "measure": {"$ref": "#/$defs/importanceComparableMeasure"},
+        "effect_scope": {"$ref": "#/$defs/effectScope"}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "domain_kind": {"const": "board_mate"},
+            "measure": {"$ref": "#/$defs/mateArrivalMeasure"}
+          }
+        },
+        {
+          "properties": {
+            "domain_kind": {"const": "material"},
+            "measure": {"$ref": "#/$defs/materialOutcomeMeasure"}
+          }
+        },
+        {
+          "properties": {
+            "domain_kind": {"const": "threat"},
+            "measure": {"$ref": "#/$defs/threatHorizonMeasure"}
+          }
+        },
+        {
+          "properties": {
+            "domain_kind": {"const": "structural"},
+            "measure": {"$ref": "#/$defs/structuralStrengthMeasure"}
+          }
+        }
+      ]
+    },
+    "materialEventSalience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["move_uci", "ply_offset", "captured_role", "square", "target_value_cp"],
+      "properties": {
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "ply_offset": {"type": "integer", "minimum": 0},
+        "captured_role": {
+          "enum": ["pawn", "knight", "bishop", "rook", "queen", "king"]
+        },
+        "square": {"$ref": "#/$defs/square"},
+        "target_value_cp": {"type": "integer", "minimum": 1}
+      }
+    },
+    "importanceProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority",
+        "relation_policy_version",
+        "ordering_policy_version",
+        "comparison_exposure_rank_meaning",
+        "selected_cause_ids",
+        "frontier_cause_ids",
+        "dominated_within_domain_cause_ids",
+        "unique_top",
+        "profile_summary",
+        "profiles",
+        "relations",
+        "decisions",
+        "relation_summary",
+        "unmeasured"
+      ],
+      "properties": {
+        "authority": {"const": "root_owned_effect_partial_order"},
+        "relation_policy_version": {"const": "chesstory.direct-cause-importance.relation.v3"},
+        "ordering_policy_version": {
+          "const": "chesstory.player-facing-idea-ordering.dominance-layers.v1"
+        },
+        "comparison_exposure_rank_meaning": {"const": "comparison_exposure_authority"},
+        "selected_cause_ids": {"$ref": "#/$defs/stringSet"},
+        "frontier_cause_ids": {"$ref": "#/$defs/stringSet"},
+        "dominated_within_domain_cause_ids": {"$ref": "#/$defs/stringSet"},
+        "unique_top": {"$ref": "#/$defs/nullableNonEmptyString"},
+        "profile_summary": {"$ref": "#/$defs/importanceProfileSummary"},
+        "profiles": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/importanceProfile"}
+        },
+        "relations": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/importanceRelation"}
+        },
+        "decisions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/importanceDecision"}
+        },
+        "relation_summary": {"$ref": "#/$defs/importanceRelationSummary"},
+        "unmeasured": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/unmeasuredCause"}
+        }
+      }
+    },
+    "importanceProfileSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measured_channels", "measured_causes", "fully_measured_causes", "unmeasured_causes"],
+      "properties": {
+        "measured_channels": {"type": "integer", "minimum": 0},
+        "measured_causes": {"type": "integer", "minimum": 0},
+        "fully_measured_causes": {"type": "integer", "minimum": 0},
+        "unmeasured_causes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "importanceProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cause_evidence_id",
+        "causal_signature",
+        "universe",
+        "domain_kind",
+        "domain",
+        "stake",
+        "event_line",
+        "effect_mode",
+        "direct_change",
+        "played_change",
+        "measure",
+        "effect_scope"
+      ],
+      "properties": {
+        "cause_evidence_id": {"type": "string", "minLength": 1},
+        "causal_signature": {"type": "string", "minLength": 1},
+        "universe": {"$ref": "#/$defs/importanceUniverse"},
+        "domain_kind": {"enum": ["board_mate", "material", "threat", "structural"]},
+        "domain": {"type": "string", "minLength": 1},
+        "stake": {"$ref": "#/$defs/effectStake"},
+        "event_line": {"type": "string", "minLength": 1},
+        "effect_mode": {
+          "enum": ["played_liability", "alternative_resource", "played_value"]
+        },
+        "direct_change": {"$ref": "#/$defs/change"},
+        "played_change": {"$ref": "#/$defs/change"},
+        "measure": {"$ref": "#/$defs/importanceComparableMeasure"},
+        "effect_scope": {"$ref": "#/$defs/effectScope"}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "domain_kind": {"const": "board_mate"},
+            "measure": {"$ref": "#/$defs/mateArrivalMeasure"}
+          }
+        },
+        {
+          "properties": {
+            "domain_kind": {"const": "material"},
+            "measure": {"$ref": "#/$defs/materialOutcomeMeasure"}
+          }
+        },
+        {
+          "properties": {
+            "domain_kind": {"const": "threat"},
+            "measure": {"$ref": "#/$defs/threatHorizonMeasure"}
+          }
+        },
+        {
+          "properties": {
+            "domain_kind": {"const": "structural"},
+            "measure": {"$ref": "#/$defs/structuralStrengthMeasure"}
+          }
+        }
+      ]
+    },
+    "importanceUniverse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root_board_state", "impact"],
+      "properties": {
+        "root_board_state": {"type": "string", "minLength": 1},
+        "impact": {
+          "enum": [
+            "harms-reviewed-mover:white",
+            "harms-reviewed-mover:black",
+            "benefits-reviewed-mover:white",
+            "benefits-reviewed-mover:black",
+            "preserves-reviewed-mover:white",
+            "preserves-reviewed-mover:black"
+          ]
+        }
+      }
+    },
+    "importanceRelation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "left_cause_id",
+        "left_causal_signature",
+        "right_cause_id",
+        "right_causal_signature",
+        "relation",
+        "domain"
+      ],
+      "properties": {
+        "left_cause_id": {"type": "string", "minLength": 1},
+        "left_causal_signature": {"type": "string", "minLength": 1},
+        "right_cause_id": {"type": "string", "minLength": 1},
+        "right_causal_signature": {"type": "string", "minLength": 1},
+        "relation": {"enum": ["dominates", "dominated_by", "tied", "incomparable"]},
+        "domain": {"$ref": "#/$defs/nullableNonEmptyString"}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "relation": {"const": "incomparable"},
+            "domain": {"type": "null"}
+          }
+        },
+        {
+          "properties": {
+            "relation": {"enum": ["dominates", "dominated_by", "tied"]},
+            "domain": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    },
+    "importanceDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cause_evidence_id",
+        "measured_channel_signatures",
+        "unmeasured_channel_signatures",
+        "dominating_cause_ids",
+        "dominated_within_domain",
+        "fully_measured"
+      ],
+      "properties": {
+        "cause_evidence_id": {"type": "string", "minLength": 1},
+        "measured_channel_signatures": {"$ref": "#/$defs/stringSet"},
+        "unmeasured_channel_signatures": {"$ref": "#/$defs/stringSet"},
+        "dominating_cause_ids": {"$ref": "#/$defs/stringSet"},
+        "dominated_within_domain": {"type": "boolean"},
+        "fully_measured": {"type": "boolean"}
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "fully_measured": {"const": true},
+                "measured_channel_signatures": {"minItems": 1},
+                "unmeasured_channel_signatures": {"maxItems": 0}
+              }
+            },
+            {
+              "properties": {
+                "fully_measured": {"const": false},
+                "unmeasured_channel_signatures": {"minItems": 1}
+              }
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "dominated_within_domain": {"const": true},
+                "fully_measured": {"const": true},
+                "dominating_cause_ids": {"minItems": 1}
+              }
+            },
+            {
+              "properties": {
+                "dominated_within_domain": {"const": false}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "importanceRelationSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["comparable_profile_pairs", "incomparable_profile_pairs"],
+      "properties": {
+        "comparable_profile_pairs": {"type": "integer", "minimum": 0},
+        "incomparable_profile_pairs": {"type": "integer", "minimum": 0}
+      }
+    },
+    "unmeasuredCause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cause_evidence_id", "channel_count"],
+      "properties": {
+        "cause_evidence_id": {"type": "string", "minLength": 1},
+        "channel_count": {"type": "integer", "minimum": 1}
+      }
+    },
+    "ideaUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "idea_id",
+        "kind",
+        "lead_cause_evidence_id",
+        "member_cause_evidence_ids",
+        "importance_layer",
+        "priority_status",
+        "serialization_order"
+      ],
+      "properties": {
+        "idea_id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["single_cause", "exact_pvb_responsibility"]},
+        "lead_cause_evidence_id": {"type": "string", "minLength": 1},
+        "member_cause_evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "importance_layer": {"type": "integer", "minimum": 0},
+        "priority_status": {"enum": ["unique_top", "frontier", "dominated", "unmeasured"]},
+        "serialization_order": {"type": "integer", "minimum": 0}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {"const": "single_cause"},
+            "member_cause_evidence_ids": {"maxItems": 1}
+          }
+        },
+        {
+          "properties": {
+            "kind": {"const": "exact_pvb_responsibility"},
+            "member_cause_evidence_ids": {"minItems": 2}
+          }
+        }
+      ]
+    },
+    "onlyMove": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comparison_evidence_id",
+        "cause_evidence_id",
+        "reference",
+        "relation",
+        "licenses_causal_because"
+      ],
+      "properties": {
+        "comparison_evidence_id": {"type": "string", "minLength": 1},
+        "cause_evidence_id": {"type": "string", "minLength": 1},
+        "reference": {"$ref": "#/$defs/lineRef"},
+        "relation": {"const": "same_channel_association"},
+        "licenses_causal_because": {"const": false}
+      }
+    },
+    "stringSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

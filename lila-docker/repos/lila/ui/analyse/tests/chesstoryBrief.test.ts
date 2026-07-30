@@ -1,183 +1,613 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chesstoryBriefSections, type ChesstoryMoveMeaningPayload } from '../src/chesstoryBrief';
+import {
+  chesstoryBriefSections,
+  decodeChesstoryMoveMeaningResponse,
+} from '../src/chesstoryBrief';
 
-const engineeringTerms =
-  /ownership|membership|carrier|principal|causal proof|robustness|ply offset|owned cause|proof:/i;
+const statusCounts = {
+  selected: 0,
+  dominated: 0,
+  redundant: 0,
+  diagnostic: 0,
+  inferior: 0,
+  admission_deferred: 0,
+  rejected: 0,
+  unproposed: 0,
+  object_unready: 0,
+};
 
-describe('chesstory brief scaffold', () => {
-  test('keeps an empty response pending', () => {
-    const sections = chesstoryBriefSections();
+const reasonCounts = {
+  player_facing_selection: 0,
+  dominated_fallback: 0,
+  cross_comparison_redundancy: 0,
+  certified_claim_deduplicated: 0,
+  diagnostic_comparison: 0,
+  inferior_alternative: 0,
+  claim_admission_deferred: 0,
+  claim_admission_rejected: 0,
+  no_claim_proposal: 0,
+  object_readiness_failed: 0,
+};
 
-    assert.ok(sections.every(section => section.pending));
-  });
+const verdict = {
+  comparison_kind: 'played_vs_best',
+  mover: 'white',
+  verdict_code: 'mistake',
+  move_quality: 'bad',
+  played_move: 'f3g5',
+  reference_move: 'f3h4',
+  candidate_win_percent_delta_for_mover: -18.5,
+  win_percent_loss_for_mover: 18.5,
+  outcome: null,
+  mate: null,
+};
 
-  test('does not turn the retired evidence-shaped payload into player-facing prose', () => {
-    const oldPayload = {
-      verdict: { move_quality: 'good', played_move: 'c4c5', reference_move: 'c4c5' },
-      idea_chains: [
-        {
-          subject: 'played_move',
-          move_semantics: [{ idea: { code: 'pawn_break_timing' } }],
-          proof_levels: ['owned_cause'],
-        },
-      ],
-    };
+function line(id: string, rootMove: string, role: string, rank: number) {
+  return { id, root_move: rootMove, role, rank };
+}
 
-    const sections = chesstoryBriefSections(oldPayload as ChesstoryMoveMeaningPayload);
-    assert.ok(sections.every(section => section.pending));
-  });
+function channel(
+  signature: string,
+  actor: { move: string; side: string; piece: string; from: string; to: string },
+  target: { kind: string; key: string },
+  mechanism: { kind: string; key: string },
+  consequence: { kind: string; key: string },
+  proof: string[] | null,
+) {
+  const eventLine = line(`line-${signature}`, actor.move, 'played', 0);
+  return {
+    causal_signature: signature,
+    direct_change: 'occurred',
+    played_change: signature === 'channel-a' ? 'lost' : 'refuted',
+    carrier: {
+      id: `carrier-${signature}`,
+      producer: 'legal_line_producer',
+      layer: 'line',
+      scope: 'played_transition',
+      line: eventLine,
+    },
+    provenance: [],
+    actor,
+    targets: [target],
+    mechanisms: [mechanism],
+    consequences: [consequence],
+    witnesses: [],
+    line: eventLine,
+    horizon: null,
+    proof_segment:
+      proof === null
+        ? null
+        : {
+            terminal_relation: 'realizes_plan_result',
+            steps: proof.map((move, ply_offset) => ({
+              ply_offset,
+              move_uci: move,
+              role:
+                ply_offset === 0
+                  ? 'root_action'
+                  : ply_offset === proof.length - 1
+                    ? 'terminal_event'
+                    : 'causal_link',
+            })),
+          },
+    effect_descriptor: {
+      effect_scope: {
+        primitive_kind: 'plan_result',
+        target_signatures: [`${target.kind}:${target.key}`],
+        plan_ids: [],
+        strategic_axes: [],
+      },
+      magnitude_status: 'not_applicable',
+      measure: null,
+      material_event_salience: null,
+    },
+    importance_effect: null,
+    descriptor_ambiguous: false,
+    proof_segment_ambiguous: false,
+  };
+}
 
-  test('does not present the better choice as the played move', () => {
-    const sections = chesstoryBriefSections({
-      verdict: { move_quality: 'bad', played_move: 'b7b5', reference_move: 'e7e6' },
-      explanations: [
-        {
-          move: 'e7e6',
-          reference_move: 'e7e6',
-          move_quality: 'good',
-          role: 'better choice',
-          ideas: [{ kind: 'piece_activity', name: 'piece activity' }],
-        },
-      ],
-    });
+function facet(id: string, ideaUnitId: string, kind: string, selectionOrder: number, channels: any[]) {
+  const reference = line(`reference-${id}`, 'f3h4', 'best_reference', 0);
+  const candidate = line(`candidate-${id}`, 'f3g5', 'played', 0);
+  return {
+    cause_evidence_id: id,
+    item_role: 'cause_facet',
+    idea_unit_id: ideaUnitId,
+    comparison_exposure_rank: 0,
+    selection_order: selectionOrder,
+    host: { claim_id: `claim-${id}`, family: 'evaluation', tier: 'primary' },
+    cause: {
+      kind,
+      effect_mode: kind === 'defensive_resource' ? 'alternative_resource' : 'played_liability',
+      exposure: 'primary',
+      source_side: kind === 'defensive_resource' ? 'reference' : 'candidate',
+      direct_effect_admission: {
+        status: 'restricted',
+        causal_signatures: channels.map(item => item.causal_signature),
+      },
+      attribution: {
+        kind: kind === 'defensive_resource' ? 'reference_creates_resource' : 'candidate_allows_liability',
+        root_move_matched: true,
+        direct_proof_eligible: true,
+      },
+    },
+    comparison: {
+      evidence_id: `comparison-${id}`,
+      kind: 'played_vs_best',
+      reference,
+      candidate,
+      event: candidate,
+      compared_move: 'f3h4',
+      verdict: 'mistake',
+      mover: 'white',
+      delta: {
+        candidate_win_percent_delta_for_mover: -18.5,
+        win_percent_loss_for_mover: 18.5,
+      },
+    },
+    channels,
+    only_move: null,
+  };
+}
 
-    assert.ok(sections.every(section => section.pending));
-  });
-
-  test('renders a core-selected chess explanation without reconstructing evidence', () => {
-    const payload: ChesstoryMoveMeaningPayload = {
-      verdict: { move_quality: 'good', played_move: 'f8e7', reference_move: 'f8e7' },
-      explanations: [
-        {
-          move: 'f8e7',
-          reference_move: 'f8e7',
-          move_quality: 'good',
-          role: 'played move',
-          ideas: [
-            {
-              kind: 'pawn_break_timing',
-              name: 'pawn break timing',
-              subject: 'played_move',
-              scope: 'played_transition',
-              confidence: 'engine_backed',
-              target: { squares: ['g4'] },
-              evidence: {
-                layers: ['line'],
-                scopes: ['played_transition'],
-                causes: ['line_access'],
+function importance(
+  selectedIds: string[],
+  uniqueTop: string | null,
+  facets: any[],
+  fullyMeasured: boolean,
+) {
+  const selectedFacets = facets.filter(item => selectedIds.includes(item.cause_evidence_id));
+  const profiles = fullyMeasured
+    ? selectedFacets.flatMap(item => {
+        const alternativeResource = item.cause.effect_mode === 'alternative_resource';
+        return item.channels.map((entry: any) => {
+          const measure = { kind: 'structural_strength', units: 1 };
+          const effectScope = {
+            ...entry.effect_descriptor.effect_scope,
+            primitive_kind: 'structural_transition',
+          };
+          const stake = alternativeResource ? 'benefits:white' : 'harms:white';
+          const domain = `structural:roottransition:activity:${alternativeResource ? 'gain' : 'loss'}:none`;
+          entry.direct_change = alternativeResource ? 'occurred' : 'lost';
+          entry.played_change = alternativeResource ? 'missed' : 'lost';
+          entry.proof_segment = {
+            terminal_relation: 'makes_structural_transition',
+            steps: [
+              {
+                ply_offset: 0,
+                move_uci: entry.actor.move,
+                role: 'root_action',
               },
+            ],
+          };
+          entry.effect_descriptor = {
+            effect_scope: effectScope,
+            magnitude_status: 'exact',
+            measure,
+            material_event_salience: null,
+          };
+          entry.importance_effect = {
+            stake,
+            domain_kind: 'structural',
+            domain,
+            measure,
+            effect_scope: effectScope,
+          };
+          const role = entry.line.role === 'best_reference' ? 'BestReference' : 'Played';
+          return {
+            cause_evidence_id: item.cause_evidence_id,
+            causal_signature: entry.causal_signature,
+            universe: {
+              root_board_state: '6k1/5p2/8/8/8/5N2/8/6K1 w - -',
+              impact: 'harms-reviewed-mover:white',
             },
-          ],
-          chess_relations: ['line access'],
-          line: ['c2c3', 'e8g8'],
-        },
-      ],
-    };
-
-    const sections = chesstoryBriefSections(payload);
-    const text = JSON.stringify(sections);
-
-    assert.ok(sections.every(section => !section.pending));
-    assert.match(text, /pawn break timing/);
-    assert.match(text, /line access/);
-    assert.match(text, /engine backed/);
-    assert.match(text, /Evidence layer: line/);
-    assert.match(text, /Cause: line access/);
-    assert.match(text, /g4/);
-    assert.match(text, /c2-c3 e8-g8/);
-    assert.doesNotMatch(text, engineeringTerms);
-  });
-
-  test('renders the one core-selected multi-move plan in human move notation', () => {
-    const payload: ChesstoryMoveMeaningPayload = {
-      verdict: { move_quality: 'good', played_move: 'b7b5', reference_move: 'b7b5' },
-      explanations: [
-        {
-          move: 'b7b5',
-          reference_move: 'b7b5',
-          move_quality: 'good',
-          role: 'played move',
-          ideas: [
+            domain_kind: 'structural',
+            domain,
+            stake,
+            event_line: `${role}:${entry.line.rank}:${entry.line.root_move}`,
+            effect_mode: item.cause.effect_mode,
+            direct_change: entry.direct_change,
+            played_change: entry.played_change,
+            measure,
+            effect_scope: effectScope,
+          };
+        });
+      })
+    : [];
+  const relations = profiles.flatMap((left: any, index: number) =>
+    profiles.slice(index + 1).flatMap((right: any) =>
+      left.cause_evidence_id === right.cause_evidence_id
+        ? []
+        : [
             {
-              kind: 'long_diagonal_pressure',
-              name: 'opens bishop diagonal from c8',
-              plans: [
-                {
-                  goal: { theme: 'flank infrastructure', kind: 'hook creation' },
-                  move: {
-                    uci: 'b7b5',
-                    san: 'b5',
-                    notation: '10...b5',
-                    turn: { move_number: 10, side: 'black', notation: '10...' },
-                  },
-                  move_role: 'execution',
-                  transition: 'initiation',
-                  actor: { piece: 'pawn', from: 'b7', to: 'b5' },
-                  targets: ['b4', 'c3'],
-                  results: [
-                    { stage: 'immediate', kind: 'line_unlock', direction: 'gain', subjects: ['bishop on c8'] },
-                    {
-                      stage: 'future',
-                      kind: 'target_pressure',
-                      direction: 'gain',
-                      subjects: ['c3'],
-                      tested_reply_status: 'the continuation occurs against some tested replies',
-                    },
-                  ],
-                  tested_continuation: {
-                    next_move: { uci: 'b5b4', san: 'b4', notation: '14...b4' },
-                    target: 'b4',
-                    connection: 'coordinated flank advance',
-                    status: 'the continuation occurs against some tested replies',
-                    successful_replies: 2,
-                    tested_replies: 3,
-                    expected_replies: 3,
-                  },
-                },
-              ],
-              subject: 'played_move',
-              scope: 'played_transition',
-              confidence: 'engine_backed',
-              evidence: { layers: ['plan'], scopes: ['played_transition'], causes: ['plan_execution'] },
+              left_cause_id: left.cause_evidence_id,
+              left_causal_signature: left.causal_signature,
+              right_cause_id: right.cause_evidence_id,
+              right_causal_signature: right.causal_signature,
+              relation: 'incomparable',
+              domain: null,
             },
-            { kind: 'plan_continuity', name: 'continues the queenside plan' },
           ],
-          line: ['b7b5', 'b2b4', 'a5b4', 'b5b4'],
-        },
-      ],
-    };
+    ),
+  );
+  return {
+    authority: 'root_owned_effect_partial_order',
+    relation_policy_version: 'chesstory.direct-cause-importance.relation.v3',
+    ordering_policy_version: 'chesstory.player-facing-idea-ordering.dominance-layers.v1',
+    comparison_exposure_rank_meaning: 'comparison_exposure_authority',
+    selected_cause_ids: selectedIds,
+    frontier_cause_ids: selectedIds,
+    dominated_within_domain_cause_ids: [],
+    unique_top: uniqueTop,
+    profile_summary: {
+      measured_channels: profiles.length,
+      measured_causes: fullyMeasured ? selectedIds.length : 0,
+      fully_measured_causes: fullyMeasured ? selectedIds.length : 0,
+      unmeasured_causes: fullyMeasured ? 0 : selectedIds.length,
+    },
+    profiles,
+    relations,
+    decisions: selectedFacets.map(item => ({
+      cause_evidence_id: item.cause_evidence_id,
+      measured_channel_signatures: fullyMeasured
+        ? item.channels.map((entry: any) => entry.causal_signature)
+        : [],
+      unmeasured_channel_signatures: fullyMeasured
+        ? []
+        : item.channels.map((entry: any) => entry.causal_signature),
+      dominating_cause_ids: [],
+      dominated_within_domain: false,
+      fully_measured: fullyMeasured,
+    })),
+    relation_summary: {
+      comparable_profile_pairs: 0,
+      incomparable_profile_pairs: relations.length,
+    },
+    unmeasured: fullyMeasured
+      ? []
+      : selectedFacets.map(item => ({
+          cause_evidence_id: item.cause_evidence_id,
+          channel_count: item.channels.length,
+        })),
+  };
+}
 
-    const sections = chesstoryBriefSections(payload);
-    const text = JSON.stringify(sections);
-
-    assert.match(text, /hook creation/);
-    assert.match(text, /10\.\.\.b5/);
-    assert.match(text, /14\.\.\.b4/);
-    assert.match(text, /bishop on c8/);
-    assert.match(text, /gain target pressure for c3/);
-    assert.match(text, /pawn b7-b5/);
-    assert.match(text, /When the continuation occurs/);
-    assert.match(text, /2 of 3 tested replies reach the continuation/);
-    assert.doesNotMatch(text, /When the plan works|keep the plan working|: the plan works/);
-    assert.doesNotMatch(text, engineeringTerms);
-  });
-
-  test('does not promote a separate tested-plan limit into the main explanation', () => {
-    const payload: ChesstoryMoveMeaningPayload = {
-      verdict: { move_quality: 'good', played_move: 'b7b5', reference_move: 'b7b5' },
+function certifiedEnvelope(
+  facets: any[],
+  units: any[],
+  uniqueTop: string | null,
+  fullyMeasured = true,
+) {
+  const selectedIds = facets.map(item => item.cause_evidence_id);
+  const leadIds = units.map(unit => unit.lead_cause_evidence_id);
+  return {
+    schema_version: 'chesstory.move-meaning.response.v3',
+    request_id: 'ui-contract-test',
+    ok: true,
+    status: 'ready',
+    availability: { state: 'ready', reason: null },
+    probe_requests: [],
+    move_review: {
+      renderable: true,
+      verdict,
+      idea_status: 'certified',
+      idea_status_detail: {
+        authority: 'cause_disposition_ledger.v1',
+        total_cause_count: selectedIds.length,
+        selected_cause_ids: selectedIds,
+        status_counts: { ...statusCounts, selected: selectedIds.length },
+        reason_counts: { ...reasonCounts, player_facing_selection: selectedIds.length },
+        abstention_codes: [],
+      },
       explanations: [
         {
-          move: 'b7b5',
           role: 'played move',
-          ideas: [{ kind: 'flank_pawn_pressure', name: 'flank pawn pressure' }],
+          move: 'f3g5',
+          reference_move: 'f3h4',
+          move_quality: 'bad',
+          ideas: facets,
+          idea_units: units,
+          idea_importance: importance(
+            leadIds,
+            uniqueTop,
+            facets.filter(item => leadIds.includes(item.cause_evidence_id)),
+            fullyMeasured,
+          ),
+          importance: importance(selectedIds, uniqueTop, facets, fullyMeasured),
         },
       ],
-      tested_plan_limits: [{ plan: { results: [{ kind: 'target_pressure', subjects: ['c3'] }] } }],
-    };
+    },
+  };
+}
 
-    const text = JSON.stringify(chesstoryBriefSections(payload));
-    assert.match(text, /flank pawn pressure/);
-    assert.doesNotMatch(text, /target pressure gain|c3/);
+function decodeSuccess(raw: unknown) {
+  const decoded = decodeChesstoryMoveMeaningResponse(raw);
+  assert.ok(decoded?.ok);
+  return decoded;
+}
+
+describe('active V3 Chesstory brief contract', () => {
+  test('keeps missing and withheld payloads pending while preserving a valid withheld envelope', () => {
+    assert.ok(chesstoryBriefSections().every(section => section.pending));
+    const withheld = {
+      schema_version: 'chesstory.move-meaning.response.v3',
+      request_id: null,
+      ok: true,
+      status: 'withheld',
+      availability: { state: 'withheld', reason: 'insufficient_engine_depth' },
+      probe_requests: [],
+      move_review: {
+        renderable: false,
+        verdict: null,
+        idea_status: 'unavailable',
+        idea_status_detail: {
+          authority: 'cause_disposition_ledger.v1',
+          total_cause_count: 0,
+          selected_cause_ids: [],
+          status_counts: statusCounts,
+          reason_counts: reasonCounts,
+          abstention_codes: ['no_relative_cause_generated'],
+        },
+        explanations: [],
+      },
+    };
+    const decoded = decodeSuccess(withheld);
+    assert.ok(chesstoryBriefSections(decoded.move_review).every(section => section.pending));
+  });
+
+  test('preserves a ready verdict when no differential Cause is certified', () => {
+    const response = {
+      schema_version: 'chesstory.move-meaning.response.v3',
+      request_id: 'verdict-only',
+      ok: true,
+      status: 'ready',
+      availability: { state: 'ready', reason: null },
+      probe_requests: [],
+      move_review: {
+        renderable: true,
+        verdict,
+        idea_status: 'no_certified_differential_idea',
+        idea_status_detail: {
+          authority: 'cause_disposition_ledger.v1',
+          total_cause_count: 0,
+          selected_cause_ids: [],
+          status_counts: statusCounts,
+          reason_counts: reasonCounts,
+          abstention_codes: ['no_relative_cause_generated'],
+        },
+        explanations: [],
+      },
+    };
+    const decoded = decodeSuccess(response);
+    const sections = chesstoryBriefSections(decoded.move_review);
+    assert.ok(sections.every(section => !section.pending));
+    assert.match(JSON.stringify(sections), /f3-g5 is classified as mistake/);
+    assert.match(JSON.stringify(sections), /f3-h4 is the verified reference move/);
+  });
+
+  test('renders every channel as one indivisible actor-target-mechanism-consequence tuple', () => {
+    const channels = [
+      channel(
+        'channel-a',
+        { move: 'f3g5', side: 'white', piece: 'knight', from: 'f3', to: 'g5' },
+        { kind: 'piece', key: 'black king' },
+        { kind: 'relation', key: 'fork access' },
+        { kind: 'consequence', key: 'black queen loss' },
+        ['f3g5', 'g8h8'],
+      ),
+      channel(
+        'channel-b',
+        { move: 'f7f6', side: 'black', piece: 'pawn', from: 'f7', to: 'f6' },
+        { kind: 'piece', key: 'white knight' },
+        { kind: 'relation', key: 'pawn attack' },
+        { kind: 'square', key: 'e6 retreat' },
+        null,
+      ),
+    ];
+    const idea = facet('cause-a', 'unit-a', 'candidate_tactical_liability', 0, channels);
+    const unit = {
+      idea_id: 'unit-a',
+      kind: 'single_cause',
+      lead_cause_evidence_id: 'cause-a',
+      member_cause_evidence_ids: ['cause-a'],
+      importance_layer: 0,
+      priority_status: 'unmeasured',
+      serialization_order: 0,
+    };
+    const decoded = decodeSuccess(certifiedEnvelope([idea], [unit], null, false));
+    const channelSection = chesstoryBriefSections(decoded.move_review).find(
+      section => section.title === 'How each certified channel works',
+    );
+    assert.equal(channelSection?.items?.length, 2);
+    const [first, second] = channelSection?.items || [];
+    assert.match(first, /white knight f3-g5/);
+    assert.match(first, /black king/);
+    assert.match(first, /fork access/);
+    assert.match(first, /black queen loss/);
+    assert.doesNotMatch(first, /black pawn|piece white knight|pawn attack|e6 retreat/);
+    assert.match(second, /black pawn f7-f6/);
+    assert.match(second, /white knight/);
+    assert.match(second, /pawn attack/);
+    assert.match(second, /e6 retreat/);
+    assert.doesNotMatch(second, /white knight f3-g5|black king|fork access|black queen loss/);
+  });
+
+  test('uses unit serialization order and never promotes the first item when unique_top is null', () => {
+    const a = facet('cause-a', 'unit-a', 'candidate_tactical_liability', 1, [
+      channel(
+        'a-only',
+        { move: 'f3g5', side: 'white', piece: 'knight', from: 'f3', to: 'g5' },
+        { kind: 'square', key: 'g5' },
+        { kind: 'relation', key: 'overextension' },
+        { kind: 'consequence', key: 'lost tempo' },
+        null,
+      ),
+    ]);
+    const b = facet('cause-b', 'unit-b', 'defensive_resource', 0, [
+      channel(
+        'b-only',
+        { move: 'f3h4', side: 'white', piece: 'knight', from: 'f3', to: 'h4' },
+        { kind: 'square', key: 'h4' },
+        { kind: 'relation', key: 'preserves route' },
+        { kind: 'consequence', key: 'defensive resource' },
+        null,
+      ),
+    ]);
+    const units = [
+      {
+        idea_id: 'unit-a',
+        kind: 'single_cause',
+        lead_cause_evidence_id: 'cause-a',
+        member_cause_evidence_ids: ['cause-a'],
+        importance_layer: 0,
+        priority_status: 'frontier',
+        serialization_order: 1,
+      },
+      {
+        idea_id: 'unit-b',
+        kind: 'single_cause',
+        lead_cause_evidence_id: 'cause-b',
+        member_cause_evidence_ids: ['cause-b'],
+        importance_layer: 0,
+        priority_status: 'frontier',
+        serialization_order: 0,
+      },
+    ];
+    const decoded = decodeSuccess(certifiedEnvelope([a, b], units, null));
+    const opening = chesstoryBriefSections(decoded.move_review)[0];
+    assert.equal(opening.title, 'Certified differential ideas');
+    assert.match(opening.body, /No single top idea was certified/);
+    assert.doesNotMatch(JSON.stringify(opening), /Top —/);
+    assert.match(opening.items?.[1] || '', /defensive resource/);
+    assert.match(opening.items?.[2] || '', /candidate tactical liability/);
+  });
+
+  test('rejects unknown schemas, array move_review, and all additional retired fields', () => {
+    const idea = facet('cause-a', 'unit-a', 'candidate_tactical_liability', 0, [
+      channel(
+        'channel-a',
+        { move: 'f3g5', side: 'white', piece: 'knight', from: 'f3', to: 'g5' },
+        { kind: 'square', key: 'g5' },
+        { kind: 'relation', key: 'overextension' },
+        { kind: 'consequence', key: 'lost tempo' },
+        null,
+      ),
+    ]);
+    const unit = {
+      idea_id: 'unit-a',
+      kind: 'single_cause',
+      lead_cause_evidence_id: 'cause-a',
+      member_cause_evidence_ids: ['cause-a'],
+      importance_layer: 0,
+      priority_status: 'unique_top',
+      serialization_order: 0,
+    };
+    const valid = certifiedEnvelope([idea], [unit], 'cause-a');
+
+    const wrongSchema = structuredClone(valid);
+    wrongSchema.schema_version = 'chesstory.move-meaning.response.v2';
+    assert.equal(decodeChesstoryMoveMeaningResponse(wrongSchema), undefined);
+
+    const arrayReview = structuredClone(valid) as any;
+    arrayReview.move_review = [arrayReview.move_review];
+    assert.equal(decodeChesstoryMoveMeaningResponse(arrayReview), undefined);
+
+    const retiredPlan = structuredClone(valid) as any;
+    retiredPlan.move_review.tested_plan_limits = [];
+    assert.equal(decodeChesstoryMoveMeaningResponse(retiredPlan), undefined);
+
+    const retiredName = structuredClone(valid) as any;
+    retiredName.move_review.explanations[0].ideas[0].name = 'borrowed semantic name';
+    assert.equal(decodeChesstoryMoveMeaningResponse(retiredName), undefined);
+  });
+
+  test('rejects forged unit membership and a top status without idea_importance.unique_top', () => {
+    const idea = facet('cause-a', 'unit-a', 'candidate_tactical_liability', 0, [
+      channel(
+        'channel-a',
+        { move: 'f3g5', side: 'white', piece: 'knight', from: 'f3', to: 'g5' },
+        { kind: 'square', key: 'g5' },
+        { kind: 'relation', key: 'overextension' },
+        { kind: 'consequence', key: 'lost tempo' },
+        null,
+      ),
+    ]);
+    const unit = {
+      idea_id: 'unit-a',
+      kind: 'single_cause',
+      lead_cause_evidence_id: 'cause-a',
+      member_cause_evidence_ids: ['cause-a'],
+      importance_layer: 0,
+      priority_status: 'unique_top',
+      serialization_order: 0,
+    };
+    const valid = certifiedEnvelope([idea], [unit], 'cause-a');
+    const forgedMembership = structuredClone(valid) as any;
+    forgedMembership.move_review.explanations[0].idea_units[0].member_cause_evidence_ids = ['cause-b'];
+    assert.equal(decodeChesstoryMoveMeaningResponse(forgedMembership), undefined);
+
+    const missingTop = structuredClone(valid) as any;
+    missingTop.move_review.explanations[0].idea_importance.unique_top = null;
+    assert.equal(decodeChesstoryMoveMeaningResponse(missingTop), undefined);
+  });
+
+  test('rejects active V3 channels missing guaranteed direct evidence fields', () => {
+    const idea = facet('cause-a', 'unit-a', 'candidate_tactical_liability', 0, [
+      channel(
+        'channel-a',
+        { move: 'f3g5', side: 'white', piece: 'knight', from: 'f3', to: 'g5' },
+        { kind: 'square', key: 'g5' },
+        { kind: 'relation', key: 'overextension' },
+        { kind: 'consequence', key: 'lost tempo' },
+        null,
+      ),
+    ]);
+    const unit = {
+      idea_id: 'unit-a',
+      kind: 'single_cause',
+      lead_cause_evidence_id: 'cause-a',
+      member_cause_evidence_ids: ['cause-a'],
+      importance_layer: 0,
+      priority_status: 'unique_top',
+      serialization_order: 0,
+    };
+    const valid = certifiedEnvelope([idea], [unit], 'cause-a');
+
+    const missingDescriptor = structuredClone(valid) as any;
+    delete missingDescriptor.move_review.explanations[0].ideas[0].channels[0].effect_descriptor;
+    assert.equal(decodeChesstoryMoveMeaningResponse(missingDescriptor), undefined);
+
+    const nullDescriptor = structuredClone(valid) as any;
+    nullDescriptor.move_review.explanations[0].ideas[0].channels[0].effect_descriptor = null;
+    assert.equal(decodeChesstoryMoveMeaningResponse(nullDescriptor), undefined);
+
+    const missingRootActor = structuredClone(valid) as any;
+    missingRootActor.move_review.explanations[0].ideas[0].channels[0].actor.side = null;
+    assert.equal(decodeChesstoryMoveMeaningResponse(missingRootActor), undefined);
+
+    const missingChannelLine = structuredClone(valid) as any;
+    missingChannelLine.move_review.explanations[0].ideas[0].channels[0].line = null;
+    assert.equal(decodeChesstoryMoveMeaningResponse(missingChannelLine), undefined);
+
+    const unresolvedAdmission = structuredClone(valid) as any;
+    unresolvedAdmission.move_review.explanations[0].ideas[0].cause.direct_effect_admission.status =
+      'unresolved';
+    assert.equal(decodeChesstoryMoveMeaningResponse(unresolvedAdmission), undefined);
+  });
+
+  test('recognizes the exact V3 error envelope without exposing a move review', () => {
+    const error: unknown = {
+      schema_version: 'chesstory.move-meaning.response.v3',
+      request_id: 'failed-request',
+      ok: false,
+      status: 'error',
+      error: 'move_review_not_buildable',
+    };
+    const decoded = decodeChesstoryMoveMeaningResponse(error);
+    assert.ok(decoded);
+    if (decoded.ok) assert.fail('expected a V3 error response');
+    assert.equal(decoded.error, 'move_review_not_buildable');
   });
 });

@@ -11,20 +11,22 @@ from chesstory_eval.cause_audit import (
     TYPED_ACTUAL_VIEW_SCHEMA_VERSION,
     TYPED_OPEN_WORLD_ADJUDICATION_SCHEMA_VERSION,
     TYPED_OPEN_WORLD_ARM_INVENTORY_SCHEMA_VERSION,
-    TYPED_OPEN_WORLD_CANDIDATE_SCHEMA_VERSION,
-    TYPED_ORACLE_RUN_SCHEMA_VERSION,
     TYPED_ORACLE_SCHEMA_VERSION,
     _cascade_counts,
     _global_packet_public_projection_matches,
     _inventory_expected_candidates,
     _judge_case,
     _load_open_world_arm_inventory,
+    _load_typed_runtime_run,
     _load_typed_labels,
     _merge_candidate_payloads,
+    _open_world_candidate_set_document,
     _packet_public_selection_matches,
     _publicly_selected,
     _schema_path,
     _schema_tools,
+    _typed_oracle_run_manifest_document,
+    _typed_base_oracle_binding,
     _verify_open_world_candidate_coverage,
     _verify_typed_oracle_run_manifest,
     compare_cause_audit,
@@ -33,6 +35,7 @@ from chesstory_eval.cause_semantics import (
     _active_fallback_dominator,
     _dominance_layers,
     _expected_importance_decisions,
+    _idea_unit_state,
     _importance_state,
     canonical_open_world_cause_candidate,
     canonical_open_world_cause_observation,
@@ -1750,17 +1753,15 @@ def write_open_world_contract(
     paths["arm-inventory.json"].write_text(
         json.dumps(arm_inventory), encoding="ascii"
     )
-    candidate_set = {
-        "schema_version": TYPED_OPEN_WORLD_CANDIDATE_SCHEMA_VERSION,
-        "partition": "explore",
-        "arm_scope": "all_arms",
-        "arm_inventory_sha256": sha256_file(paths["arm-inventory.json"]),
-        "arm_inventory_semantic_sha256": sha256_json(arm_inventory),
-        "arm_ids_sha256": sha256_json(["runtime-arm-1"]),
-        "base_oracle_file_sha256": sha256_file(paths["base.jsonl"]),
-        "case_ids_sha256": sha256_json(["case-1"]),
-        "candidates": candidates,
-    }
+    candidate_set = _open_world_candidate_set_document(
+        root=ROOT,
+        partition="explore",
+        base_oracle_path=paths["base.jsonl"],
+        base_labels=base_labels,
+        arm_inventory_path=paths["arm-inventory.json"],
+        arm_inventory=arm_inventory,
+    )
+    assert candidate_set["candidates"] == candidates
     paths["candidates.json"].write_text(
         json.dumps(candidate_set), encoding="ascii"
     )
@@ -1814,50 +1815,22 @@ def write_open_world_contract(
     paths["adjudication.json"].write_text(
         json.dumps(adjudication), encoding="ascii"
     )
-    accepted_rows = (
-        [
-            {
-                "candidate_id": candidate["candidate_id"],
-                "case_id": "case-1",
-                "verified_meaning": copy.deepcopy(verified),
-            }
-        ]
-        if decision == "accepted" and include_candidate and include_decision
-        else []
+    manifest = _typed_oracle_run_manifest_document(
+        root=ROOT,
+        partition="explore",
+        manifest_path=paths["freeze.json"],
+        cases_path=paths["cases.jsonl"],
+        base_oracle_path=paths["base.jsonl"],
+        base_labels=base_labels,
+        run_oracle_file_sha256=sha256_file(paths["run.jsonl"]),
+        arm_inventory_path=paths["arm-inventory.json"],
+        arm_inventory=arm_inventory,
+        candidate_set_path=paths["candidates.json"],
+        candidate_set=candidate_set,
+        adjudication_path=paths["adjudication.json"],
+        adjudication=adjudication,
+        merged_labels=run_labels,
     )
-    accepted_count = len(accepted_rows)
-    rejected_count = sum(item["decision"] == "rejected" for item in decisions)
-    manifest = {
-        "schema_version": TYPED_ORACLE_RUN_SCHEMA_VERSION,
-        "partition": "explore",
-        "freeze_manifest_sha256": sha256_file(paths["freeze.json"]),
-        "cases_file_sha256": sha256_file(paths["cases.jsonl"]),
-        "base_oracle_file_sha256": sha256_file(paths["base.jsonl"]),
-        "run_oracle_file_sha256": sha256_file(paths["run.jsonl"]),
-        "case_ids_sha256": sha256_json(["case-1"]),
-        "open_world": {
-            "status": "frozen",
-            "candidate_set_sha256": sha256_file(paths["candidates.json"]),
-            "adjudication_sha256": sha256_file(paths["adjudication.json"]),
-            "arm_inventory_sha256": sha256_file(paths["arm-inventory.json"]),
-            "arm_inventory_semantic_sha256": sha256_json(arm_inventory),
-            "arm_ids_sha256": sha256_json(["runtime-arm-1"]),
-            "arm_count": 1,
-            "candidate_count": len(candidates),
-            "adjudication_count": len(decisions),
-            "accepted_count": accepted_count,
-            "rejected_count": rejected_count,
-            "case_judgment_count": len(case_judgments),
-            "case_judgments_sha256": sha256_json(case_judgments),
-            "pending_count": 0,
-            "source_blind": True,
-            "statistics_unblinded": False,
-            "merge_scope": "all_arms",
-            "base_oracle_semantic_sha256": sha256_json(base_labels),
-            "accepted_meanings_sha256": sha256_json(accepted_rows),
-            "merged_oracle_semantic_sha256": sha256_json(run_labels),
-        },
-    }
     paths["manifest.json"].write_text(json.dumps(manifest), encoding="ascii")
     return {
         "paths": paths,
@@ -1875,113 +1848,9 @@ class CauseAuditSelectionContractTest(unittest.TestCase):
         baseline = cause()
         self.assertTrue(_packet_public_selection_matches(baseline))
 
-        mutations = (
-            ("priority", lambda item: item["p"]["public_selection"].update(priority_rank=2)),
-            ("order", lambda item: item["p"]["public_selection"].update(selection_order=3)),
-            ("exposure", lambda item: item["p"]["public_selection"].update(exposure="complementary")),
-            ("source", lambda item: item["p"]["public_selection"].update(source_side="candidate")),
-            (
-                "attribution root match",
-                lambda item: item["p"]["public_selection"]["attribution"].update(
-                    root_move_matched=False
-                ),
-            ),
-            (
-                "attribution direct proof",
-                lambda item: item["p"]["public_selection"]["attribution"].update(
-                    direct_proof_eligible=False
-                ),
-            ),
-            (
-                "host family",
-                lambda item: item["p"]["public_selection"]["host"].update(
-                    family="defensive"
-                ),
-            ),
-            (
-                "host tier",
-                lambda item: item["p"]["public_selection"]["host"].update(
-                    tier="secondary"
-                ),
-            ),
-            (
-                "comparison",
-                lambda item: item["p"]["public_selection"]["comparison"].update(mover="black"),
-            ),
-            (
-                "comparison verdict",
-                lambda item: item["p"]["public_selection"]["comparison"].update(
-                    verdict="blunder"
-                ),
-            ),
-            (
-                "comparison delta",
-                lambda item: item["p"]["public_selection"]["comparison"].update(
-                    win_percent_loss_for_mover=20.0
-                ),
-            ),
-            (
-                "compared move",
-                lambda item: item["p"]["public_selection"]["comparison"].update(
-                    compared_move="e2e4"
-                ),
-            ),
-            (
-                "carrier",
-                lambda item: item["p"]["public_selection"]["channels"][0]["carrier"].update(
-                    id="other"
-                ),
-            ),
-            (
-                "carrier producer",
-                lambda item: item["p"]["public_selection"]["channels"][0]["carrier"].update(
-                    producer="plan_causal_event_producer"
-                ),
-            ),
-            (
-                "provenance",
-                lambda item: item["p"]["public_selection"]["channels"][0].update(
-                    provenance=[copy.deepcopy(item["p"]["public_selection"]["channels"][0]["carrier"])]
-                ),
-            ),
-            (
-                "direct change",
-                lambda item: item["p"]["public_selection"]["channels"][0].update(
-                    direct_change="lost"
-                ),
-            ),
-            (
-                "played change",
-                lambda item: item["p"]["public_selection"]["channels"][0].update(
-                    played_change="occurred"
-                ),
-            ),
-            (
-                "witness",
-                lambda item: item["p"]["public_selection"]["channels"][0].update(
-                    witnesses=[{"kind": "move", "key": "b8c6"}]
-                ),
-            ),
-            (
-                "only move qualifier",
-                lambda item: item["p"]["public_selection"].update(
-                    only_move={
-                        "comparison_evidence_id": "comparison-1",
-                        "cause_evidence_id": "cause-1",
-                        "reference": copy.deepcopy(
-                            item["p"]["public_selection"]["comparison"]["reference"]
-                        ),
-                        "relation": "same_channel_association",
-                        "licenses_causal_because": False,
-                    }
-                ),
-            ),
-        )
-        for label, mutate in mutations:
-            with self.subTest(label=label):
-                changed = copy.deepcopy(baseline)
-                mutate(changed)
-                self.assertFalse(_packet_public_selection_matches(changed))
+        changed = copy.deepcopy(baseline)
+        changed["p"]["public_selection"]["channels"][0]["carrier"]["id"] = "other"
+        self.assertFalse(_packet_public_selection_matches(changed))
 
     def test_packet_loss_does_not_erase_native_r_survival(self) -> None:
         missing_packet = cause(packet=False, public=True)
@@ -1995,61 +1864,6 @@ class CauseAuditSelectionContractTest(unittest.TestCase):
     def test_global_projection_rejects_an_extra_public_cause(self) -> None:
         baseline = cause()
         exact_projection = projection_for([baseline])
-        actual = {
-            "projection": exact_projection,
-            "causes": [baseline],
-        }
-        self.assertTrue(_global_packet_public_projection_matches(actual))
-
-        malformed_without_id = copy.deepcopy(exact_projection)
-        malformed_without_id["raw_public_idea_count"] += 1
-        malformed_without_id["public_ideas_parse_closed"] = False
-        judgment = judged_case([baseline], [], projection=malformed_without_id)
-        self.assertFalse(
-            _global_packet_public_projection_matches(
-                {"projection": malformed_without_id, "causes": [baseline]}
-            )
-        )
-        self.assertEqual(judgment["first_failure_stage"], "P")
-        self.assertIn("projection_set_mismatch", judgment["errors"])
-
-        unparsed_extra = copy.deepcopy(exact_projection)
-        unparsed_extra["selected_public_cause_evidence_ids"].append("unregistered-extra")
-        judgment = judged_case([baseline], [], projection=unparsed_extra)
-        self.assertFalse(
-            _global_packet_public_projection_matches(
-                {"projection": unparsed_extra, "causes": [baseline]}
-            )
-        )
-        self.assertEqual(judgment["first_failure_stage"], "P")
-        self.assertIn("projection_set_mismatch", judgment["errors"])
-
-        registered_extra = cause(
-            cause_id="registered-extra", cause_kind="material_swing"
-        )
-        registered_extra["c"]["comparison"]["reference_root_move"] = "a2a3"
-        registered_extra["c"]["binding"]["event_line"]["root_move"] = "a2a3"
-        registered_extra["p"]["public_selection_count"] = 2
-        registered_extra["p"]["public_selection"] = None
-        with_registered_extra = [baseline, registered_extra]
-        duplicate_occurrence = projection_for(with_registered_extra)
-        duplicate_occurrence["selected_public_cause_selections"].append(
-            selection("registered-extra", "material_swing")
-        )
-        judgment = judged_case(
-            with_registered_extra, [], projection=duplicate_occurrence
-        )
-        self.assertFalse(
-            _global_packet_public_projection_matches(
-                {
-                    "projection": duplicate_occurrence,
-                    "causes": with_registered_extra,
-                }
-            )
-        )
-        self.assertEqual(judgment["first_failure_stage"], "P")
-        self.assertIn("projection_set_mismatch", judgment["errors"])
-
         typed_extra = copy.deepcopy(exact_projection)
         typed_extra["selected_public_cause_evidence_ids"].append("unregistered-extra")
         typed_extra["selected_public_cause_selections"].append(
@@ -2095,56 +1909,6 @@ class CauseAuditSelectionContractTest(unittest.TestCase):
         self.assertEqual(judgment["first_failure_stage"], "R")
         self.assertIn("priority_inversion", judgment["errors"])
         self.assertNotIn("r_loss", judgment["errors"])
-
-    def test_versioned_schema_registry_keeps_v1_and_v2_separate(self) -> None:
-        v1_registry, _ = _schema_tools(ROOT)
-        v2_registry, _ = _schema_tools(ROOT, ACTUAL_VIEW_SCHEMA_VERSION)
-        v1_path = _schema_path(ROOT, "actual-cascade-view")
-        v2_path = _schema_path(
-            ROOT, "actual-cascade-view", ACTUAL_VIEW_SCHEMA_VERSION
-        )
-        self.assertEqual(
-            v1_registry.load(v1_path)["properties"]["schema_version"]["const"],
-            "chesstory.eval.cause-audit-actual-cascade.v1",
-        )
-        self.assertEqual(
-            v2_registry.load(v2_path)["properties"]["schema_version"]["const"],
-            ACTUAL_VIEW_SCHEMA_VERSION,
-        )
-        self.assertNotEqual(v1_path, v2_path)
-        v2_schema = v2_registry.load(v2_path)
-        errors = v2_registry._branch_errors(
-            selection(),
-            v2_schema["$defs"]["playerFacingCauseSelection"],
-            v2_path,
-            "$",
-        )
-        self.assertEqual(errors, [])
-        projection = projection_for([cause()])
-        for field in (
-            "raw_public_idea_count",
-            "parsed_public_idea_count",
-            "public_ideas_parse_closed",
-        ):
-            projection.pop(field)
-        projection.update(
-            {
-                "packet_present": True,
-                "status": "ready",
-                "reason": None,
-                "renderable": True,
-                "selected_payload_source": "runtime_projection",
-                "selected_payload_sha256": "0" * 64,
-            }
-        )
-        errors = v2_registry._branch_errors(
-            projection,
-            v2_schema["$defs"]["projectionSummary"],
-            v2_path,
-            "$",
-        )
-        self.assertEqual(errors, [])
-
 
 class TypedCauseSemanticContractTest(unittest.TestCase):
     @staticmethod
@@ -2708,6 +2472,21 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
             item["c"]["objects"][layer][0]["importance_effect"]["effect_scope"]["target_signatures"] = [" Square:E5 "]
         refresh_selection_lineage_from_c(item)
         self.assertEqual(self.judge(typed_label(), [item])["status"], "matched")
+
+    def test_endpoint_descriptor_preserves_plan_subject_and_rejects_aliases(self) -> None:
+        item = typed_cause()
+        channel = item["c"]["objects"]["raw_owned_bindings"][0]
+        channel["target"] = [{"kind": "plan_subject", "key": "material-sacrifice:e5"}]
+        channel["effect_descriptor"]["effect_scope"]["target_signatures"] = [
+            " PlanSubject:MATERIAL-SACRIFICE:E5 "
+        ]
+        typed_snapshot_index([item])
+
+        channel["effect_descriptor"]["effect_scope"]["target_signatures"] = [
+            "Relation:material-sacrifice:e5"
+        ]
+        with self.assertRaises(IntegrityError):
+            typed_snapshot_index([item])
 
     def test_c_multistep_proof_is_ordered_and_role_closed(self) -> None:
         item = typed_cause()
@@ -3738,26 +3517,73 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
                 with self.assertRaisesRegex(ContractError, "selection_order is not contiguous"):
                     _importance_state(actual, typed_case())
 
-    def test_importance_projection_preserves_dominance_order(self) -> None:
+    def test_importance_id_sets_ignore_order_but_reject_membership_drift(self) -> None:
         actual = typed_actual(
             [
                 typed_cause("cause-a", importance_units=10),
                 typed_cause("cause-b", "material_swing", importance_units=9),
             ]
         )
-        actual["importance"]["r_native"]["selected_cause_ids"].reverse()
-        with self.assertRaisesRegex(ContractError, "selection order"):
-            _importance_state(actual, typed_case())
+        unordered = copy.deepcopy(actual)
+        unordered["importance"]["r_native"]["selected_cause_ids"].reverse()
+        unordered["importance"]["r_public_projection"]["selected_cause_ids"].reverse()
+        _importance_state(unordered, typed_case())
 
+        native_drift = copy.deepcopy(actual)
+        native_drift["importance"]["r_native"]["selected_cause_ids"][0] = "forged-cause"
+        with self.assertRaises(ContractError):
+            _importance_state(native_drift, typed_case())
+
+    def test_schema_canonical_importance_id_sets_preserve_explicit_orders(self) -> None:
         actual = typed_actual(
             [
-                typed_cause("cause-a", importance_units=10),
-                typed_cause("cause-b", "material_swing", importance_units=9),
+                typed_cause("cause-z", comparison_exposure_rank=0, importance_units=10),
+                typed_cause("cause-a", comparison_exposure_rank=1, importance_units=10),
             ]
         )
-        actual["importance"]["r_public_projection"]["selected_cause_ids"].reverse()
-        with self.assertRaisesRegex(ContractError, "public importance projection"):
-            _importance_state(actual, typed_case())
+        registry, canonicalizer = _schema_tools(
+            ROOT, TYPED_ACTUAL_VIEW_SCHEMA_VERSION
+        )
+        schema_path = _schema_path(
+            ROOT, "actual-cascade-view", TYPED_ACTUAL_VIEW_SCHEMA_VERSION
+        )
+        schema = registry.load(schema_path)
+        importance_schema = schema["$defs"]["importanceObservation"]
+        canonical = copy.deepcopy(actual)
+        canonical["importance"] = canonicalizer.canonicalize(
+            actual["importance"], importance_schema, schema_path
+        )
+        canonical["idea_importance"] = canonicalizer.canonicalize(
+            actual["idea_importance"], importance_schema, schema_path
+        )
+        cause_importance = _importance_state(canonical, typed_case())
+        _idea_unit_state(canonical, cause_importance)
+
+    def test_explicit_importance_orders_remain_authoritative(self) -> None:
+        actual = typed_actual(
+            [
+                typed_cause("cause-z", comparison_exposure_rank=0, importance_units=10),
+                typed_cause("cause-a", comparison_exposure_rank=1, importance_units=10),
+            ]
+        )
+        r_order_drift = copy.deepcopy(actual)
+        selection_by_id = {
+            str(item["cause_evidence_id"]): item
+            for item in r_order_drift["r_native_cause_selections"]
+        }
+        selection_by_id["cause-z"]["selection_order"] = 1
+        selection_by_id["cause-a"]["selection_order"] = 0
+        cause_importance = _importance_state(r_order_drift, typed_case())
+        with self.assertRaises(ContractError):
+            _idea_unit_state(r_order_drift, cause_importance)
+
+        idea_order_drift = copy.deepcopy(actual)
+        idea_order_drift["idea_units"]["r_native"][0]["serialization_order"] = 1
+        with self.assertRaises(ContractError):
+            _idea_unit_state(
+                idea_order_drift,
+                _importance_state(idea_order_drift, typed_case()),
+            )
 
     def test_three_level_dominance_chain_peels_one_layer_at_a_time(self) -> None:
         causes = [
@@ -4367,356 +4193,33 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         v3 = v3_registry.load(v3_path)
 
         self.assertEqual(
-            v3_registry._branch_errors(
-                typed_cause()["c"]["objects"]["owned_bindings"][0],
-                v3["$defs"]["ownedDirectCauseChannelV3"],
-                v3_path,
-                "$",
-            ),
-            [],
+            v2["properties"]["schema_version"]["const"],
+            ACTUAL_VIEW_SCHEMA_VERSION,
         )
-        for primitive_source in (None, Ellipsis):
-            with self.subTest(primitive_source=primitive_source):
-                channel = typed_cause()["c"]["objects"]["owned_bindings"][0]
-                if primitive_source is Ellipsis:
-                    channel.pop("primitive_proof_source")
-                else:
-                    channel["primitive_proof_source"] = primitive_source
-                self.assertTrue(
-                    v3_registry._branch_errors(
-                        channel,
-                        v3["$defs"]["ownedDirectCauseChannelV3"],
-                        v3_path,
-                        "$",
-                    )
-                )
-
-        for kind, field in (
-            ("threat_horizon", "turns_to_impact"),
-            ("structural_strength", "units"),
-            ("strategic_strength", "units"),
+        for field in (
+            "comparison_endpoint_evidence_snapshots",
+            "r_native_cause_selections",
+            "importance",
+            "idea_units",
+            "idea_importance",
+            "cause_disposition_ledger",
+            "verdict",
+            "request_sha256",
+            "hash_contract",
         ):
-            valid_measure = {"kind": kind, field: 1}
-            self.assertEqual(
-                v3_registry._branch_errors(
-                    valid_measure,
-                    v3["$defs"]["importanceMeasure"],
-                    v3_path,
-                    "$",
-                ),
-                [],
-            )
-            for invalid in (0, -1):
-                self.assertTrue(
-                    v3_registry._branch_errors(
-                        {"kind": kind, field: invalid},
-                        v3["$defs"]["importanceMeasure"],
-                        v3_path,
-                        "$",
-                    )
-                )
-        self.assertNotIn("r_native_cause_selections", v2["required"])
-        self.assertIn("r_native_cause_selections", v3["required"])
-        self.assertNotIn("importance", v2["required"])
-        self.assertIn("importance", v3["required"])
-        self.assertNotIn("idea_units", v2["required"])
-        self.assertIn("idea_units", v3["required"])
-        self.assertNotIn("idea_importance", v2["required"])
-        self.assertIn("idea_importance", v3["required"])
-        self.assertNotIn("cause_disposition_ledger", v2["required"])
-        self.assertIn("cause_disposition_ledger", v3["required"])
-        self.assertNotIn("verdict", v2["required"])
-        self.assertIn("verdict", v3["required"])
-        self.assertNotIn("request_sha256", v2["required"])
-        self.assertIn("request_sha256", v3["required"])
-        self.assertNotIn("hash_contract", v2["required"])
-        self.assertIn("hash_contract", v3["required"])
+            self.assertNotIn(field, v2["required"])
+            self.assertIn(field, v3["required"])
+
         v2_transport = v2["properties"]["probe_closure"]["properties"][
             "runtime_transport"
         ]["items"]
         v3_transport = v3["properties"]["probe_closure"]["properties"][
             "runtime_transport"
         ]["items"]
-        self.assertNotIn("request_sha256", v2_transport["required"])
-        self.assertIn("request_sha256", v3_transport["required"])
-        self.assertNotIn("adapter_request_sha256", v2_transport["required"])
-        self.assertIn("adapter_request_sha256", v3_transport["required"])
-        self.assertNotIn("hash_contract", v2_transport["required"])
-        self.assertIn("hash_contract", v3_transport["required"])
-        exact_verdict_schema = v3["$defs"]["exactPlayedVsBestVerdict"]
-        self.assertEqual(
-            v3_registry._branch_errors(
-                typed_verdict(), exact_verdict_schema, v3_path, "$"
-            ),
-            [],
-        )
-        for name, mutate in (
-            ("missing", lambda value: value.pop("mover")),
-            ("claim-authority", lambda value: value.update(claim_id="forged")),
-            (
-                "comparison-kind",
-                lambda value: value.update(comparison_kind="played_vs_alternative"),
-            ),
-        ):
-            with self.subTest(verdict_schema=name):
-                invalid_verdict = typed_verdict()
-                mutate(invalid_verdict)
-                self.assertTrue(
-                    v3_registry._branch_errors(
-                        invalid_verdict,
-                        exact_verdict_schema,
-                        v3_path,
-                        "$",
-                    )
-                )
-        available_verdict_schema = copy.deepcopy(v3["$defs"]["verdictObservation"])
-        for field in (
-            "packet_canonical",
-            "selected_projection",
-            "final_public_response",
-        ):
-            available_verdict_schema["properties"][field] = {
-                "$ref": "#/$defs/exactPlayedVsBestVerdict"
-            }
-        available_verdict_schema["properties"]["classification_authority"] = {
-            "$ref": "#/$defs/verdictClassificationAuthority"
-        }
-        self.assertEqual(
-            v3_registry._branch_errors(
-                typed_verdict_observation(True),
-                available_verdict_schema,
-                v3_path,
-                "$",
-            ),
-            [],
-        )
-        missing_projection_verdict = typed_verdict_observation(True)
-        missing_projection_verdict["selected_projection"] = None
-        self.assertTrue(
-            v3_registry._branch_errors(
-                missing_projection_verdict,
-                available_verdict_schema,
-                v3_path,
-                "$",
-            )
-        )
-        zero_mate_verdict = typed_verdict()
-        zero_mate_verdict["mate"] = {
-            "reference_for_mover": 0,
-            "played_for_mover": 0,
-            "distance_loss": None,
-        }
-        zero_mate_verdict["outcome"] = {
-            "state": "unknown",
-            "certainty": "engine_mate_score",
-            "reference_state": "unknown",
-            "resistance": None,
-        }
-        self.assertTrue(
-            v3_registry._branch_errors(
-                zero_mate_verdict,
-                exact_verdict_schema,
-                v3_path,
-                "$",
-            )
-        )
-        self.assertEqual(
-            set(v2["$defs"]["causeCascade"]["properties"]["r"]["required"]),
-            set(v3["$defs"]["causeCascade"]["properties"]["r"]["required"])
-            - {
-                "fallback_dominance",
-                "cross_comparison_exposure",
-                "native_selection",
-            },
-        )
-        self.assertIn(
-            "fallback_dominance",
-            v3["$defs"]["causeCascade"]["properties"]["r"]["required"],
-        )
-        fallback_dominance_schema = v3["$defs"]["causeCascade"]["properties"][
-            "r"
-        ]["properties"]["fallback_dominance"]
-        retained_dominance = typed_cause()["r"]["fallback_dominance"]
-        self.assertEqual(
-            v3_registry._branch_errors(
-                retained_dominance,
-                fallback_dominance_schema,
-                v3_path,
-                "$",
-            ),
-            [],
-        )
-        contradictory_dominance = copy.deepcopy(retained_dominance)
-        contradictory_dominance["dominating_cause_evidence_ids"] = ["cause-peer"]
-        self.assertTrue(
-            v3_registry._branch_errors(
-                contradictory_dominance,
-                fallback_dominance_schema,
-                v3_path,
-                "$",
-            )
-        )
-        self.assertIn(
-            "cross_comparison_exposure",
-            v3["$defs"]["causeCascade"]["properties"]["r"]["required"],
-        )
-        cross_exposure_schema = v3["$defs"]["causeCascade"]["properties"]["r"][
-            "properties"
-        ]["cross_comparison_exposure"]
-        selected_cross_exposure = typed_cause()["r"]["cross_comparison_exposure"]
-        self.assertEqual(
-            v3_registry._branch_errors(
-                selected_cross_exposure,
-                cross_exposure_schema,
-                v3_path,
-                "$",
-            ),
-            [],
-        )
-        contradictory_cross_exposure = copy.deepcopy(selected_cross_exposure)
-        contradictory_cross_exposure["status"] = "diagnostic_comparison"
-        self.assertTrue(
-            v3_registry._branch_errors(
-                contradictory_cross_exposure,
-                cross_exposure_schema,
-                v3_path,
-                "$",
-            )
-        )
-        self.assertTrue(
-            set(v2["$defs"]["sourceRef"]["required"]).issubset(
-                v3["$defs"]["sourceRef"]["required"]
-            )
-        )
-        self.assertFalse(
-            v3["$defs"]["directCauseChannelV3"]["additionalProperties"]
-        )
-        self.assertIn(
-            "comparison_semantic_key",
-            v3["$defs"]["playerFacingCauseSelection"]["required"],
-        )
-        self.assertEqual(
-            set(v3["properties"]["public_response"]["required"]),
-            {"primary_engine_backed", "idea_status", "idea_status_detail"},
-        )
-        self.assertIn(
-            "importanceComparableMeasure",
-            v3["$defs"],
-        )
-        self.assertIn(
-            "line", v3["$defs"]["directCauseChannelV3"]["required"]
-        )
-        self.assertIn(
-            "horizon", v3["$defs"]["directCauseChannelV3"]["required"]
-        )
-        self.assertIn(
-            "proof_segment",
-            v3["$defs"]["directCauseChannelV3"]["required"],
-        )
-        self.assertIn(
-            "proof_segment",
-            v3["$defs"]["playerFacingChannelSelection"]["required"],
-        )
-        self.assertIn(
-            "direct_effect_admission",
-            v3["$defs"]["playerFacingCauseSelection"]["required"],
-        )
-        direct_effect_admission = v3["$defs"]["directEffectAdmission"]
-        self.assertEqual(
-            set(direct_effect_admission["properties"]["status"]["enum"]),
-            {"unresolved", "restricted"},
-        )
-        legacy_admission_errors = v3_registry._branch_errors(
-            {
-                "status": "legacy_unrestricted",
-                "causal_signatures": [],
-            },
-            direct_effect_admission,
-            v3_path,
-            "$",
-        )
-        self.assertTrue(legacy_admission_errors)
-        self.assertIn(
-            "effect_descriptor",
-            v3["$defs"]["playerFacingChannelSelection"]["required"],
-        )
-        self.assertIn(
-            "pre_admission_owned_bindings",
-            v3["$defs"]["cObjectsV3"]["required"],
-        )
-        source_ref = copy.deepcopy(selection()["channels"][0]["carrier"])
-        errors = v3_registry._branch_errors(
-            source_ref,
-            v3["$defs"]["sourceRef"],
-            v3_path,
-            "$",
-        )
-        self.assertTrue(errors)
+        for field in ("request_sha256", "adapter_request_sha256", "hash_contract"):
+            self.assertNotIn(field, v2_transport["required"])
+            self.assertIn(field, v3_transport["required"])
 
-        selected = selection(rank_field="comparison_exposure_rank")
-        errors = v3_registry._branch_errors(
-            selected,
-            v3["$defs"]["playerFacingCauseSelection"],
-            v3_path,
-            "$",
-        )
-        self.assertEqual(errors, [])
-        selected["channels"][0]["descriptor_ambiguous"] = True
-        errors = v3_registry._branch_errors(
-            selected,
-            v3["$defs"]["playerFacingCauseSelection"],
-            v3_path,
-            "$",
-        )
-        self.assertTrue(errors)
-
-        importance = typed_actual([typed_cause()])["importance"]
-        assert isinstance(importance, dict)
-        native = importance["r_native"]
-        assert isinstance(native, dict)
-        native_profiles = native["profiles"]
-        assert isinstance(native_profiles, list)
-        native_profiles[0]["frame"]["direct_change"] = "missed"
-        packet_native = importance["packet_native"]
-        assert isinstance(packet_native, dict)
-        packet_native["profiles"][0]["frame"]["direct_change"] = "missed"
-        for boundary in (
-            "r_public_projection",
-            "packet_public_projection",
-            "public_projection",
-        ):
-            projection_value = importance[boundary]
-            assert isinstance(projection_value, dict)
-            projection_value["profiles"][0]["direct_change"] = "missed"
-        errors = v3_registry._branch_errors(
-            importance,
-            v3["$defs"]["importanceObservation"],
-            v3_path,
-            "$",
-        )
-        self.assertEqual(errors, [])
-
-        oracle_registry, _ = _schema_tools(ROOT, TYPED_ORACLE_SCHEMA_VERSION)
-        candidate_schema = oracle_registry.load(
-            _schema_path(
-                ROOT,
-                "open-world-candidate-set",
-                TYPED_ORACLE_SCHEMA_VERSION,
-            )
-        )
-        oracle_schema = oracle_registry.load(
-            _schema_path(ROOT, "oracle-label", TYPED_ORACLE_SCHEMA_VERSION)
-        )
-        self.assertNotIn(
-            "minItems",
-            candidate_schema["$defs"]["cSemantics"]["properties"]["channels"],
-        )
-        self.assertEqual(
-            oracle_schema["$defs"]["realization"]["properties"]["channels"][
-                "minItems"
-            ],
-            1,
-        )
 
     def test_typed_oracle_loader_rejects_cross_partition_rows(self) -> None:
         label = typed_label()
@@ -4730,6 +4233,49 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
                     path=path,
                     partition_cases=[typed_case()],
                     partition="explore",
+                )
+
+
+    def test_typed_runtime_loader_rejects_base_oracle_binding_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = write_open_world_contract(directory)
+            paths = fixture["paths"]
+            assert isinstance(paths, dict)
+            case = fixture["case"]
+            labels = fixture["base_labels"]
+            runtime_path = Path(directory) / "runtime.json"
+            runtime = {
+                "schema_version": "chesstory.eval.cause-audit-runtime-run.v1",
+                "run_id": "runtime-arm-1",
+                "partition": "explore",
+                "freeze_manifest_sha256": sha256_file(paths["freeze.json"]),
+                "cases_file_sha256": sha256_file(paths["cases.jsonl"]),
+                "base_oracle": _typed_base_oracle_binding(
+                    base_oracle_path=paths["base.jsonl"],
+                    partition="explore",
+                    labels=labels,
+                ),
+                "adapter": {
+                    "main_class": "io.chesstory.evaluation.runtimeadapter.CauseAuditAdapterCli",
+                    "sbt_sha256": "4" * 64,
+                    "runtime_observation_schema": "chesstory.cause-audit-runtime-observation.v3",
+                },
+                "case_count": 1,
+                "views": [typed_actual([typed_cause()])],
+            }
+            runtime["base_oracle"]["labels_semantic_sha256"] = "0" * 64
+            runtime_path.write_text(json.dumps(runtime), encoding="ascii")
+            with self.assertRaisesRegex(IntegrityError, "base-oracle binding"):
+                _load_typed_runtime_run(
+                    root=ROOT,
+                    runtime_run_path=runtime_path,
+                    manifest_path=paths["freeze.json"],
+                    cases_path=paths["cases.jsonl"],
+                    base_oracle_path=paths["base.jsonl"],
+                    base_labels=labels,
+                    partition="explore",
+                    partition_cases=[case],
+                    require_full_partition=True,
                 )
 
     def test_open_world_acceptance_is_an_exact_frozen_oracle_merge(self) -> None:

@@ -1435,6 +1435,9 @@ object CauseAuditAdapterCli:
       recordHashes: RecordHashes
   ): JsObject =
     val binding = channel.binding
+    def bindingObjects(values: List[ConcreteChessObject]): List[JsObject] =
+      if contract.capturesNativeRSelections then aggregateObjects(values)
+      else values.map(concreteObjectJson)
     val projected = Json.obj(
       "signature" -> binding.signature,
       "causal_signature" -> channel.causalSignature,
@@ -1444,11 +1447,11 @@ object CauseAuditAdapterCli:
       "provenance_source_ids" -> binding.provenance.map(_.id).distinct,
       "proof_role" -> binding.proofRole.map(value => code(value.toString)),
       "line_id" -> binding.line.map(_.id),
-      "actor" -> binding.actor.map(concreteObjectJson),
-      "target" -> binding.target.map(concreteObjectJson),
-      "mechanism" -> binding.mechanism.map(concreteObjectJson),
-      "consequence" -> binding.consequence.map(concreteObjectJson),
-      "witness" -> binding.witness.map(concreteObjectJson),
+      "actor" -> bindingObjects(binding.actor),
+      "target" -> bindingObjects(binding.target),
+      "mechanism" -> bindingObjects(binding.mechanism),
+      "consequence" -> bindingObjects(binding.consequence),
+      "witness" -> bindingObjects(binding.witness),
       "specific_target_mechanism_ready" -> binding.specificTargetMechanismReady
     )
     if contract.capturesNativeRSelections then

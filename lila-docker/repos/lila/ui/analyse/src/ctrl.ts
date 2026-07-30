@@ -45,7 +45,7 @@ import pgnImport from './pgnImport';
 import * as pgnExport from './pgnExport';
 import { emptyPgnError, normalizeInlinePgn, submitPgnToImportPipeline } from './pgnPipeline';
 import * as studyApi from './studyApi';
-import type { ChesstoryMoveMeaningPayload } from './chesstoryBrief';
+import { decodeChesstoryMoveMeaningResponse, type ChesstoryMoveMeaningPayload } from './chesstoryBrief';
 import { defaultInit, jsonHeader, xhrHeader, ensureOk } from 'lib/xhr';
 
 import type { PgnError } from 'chessops/pgn';
@@ -669,10 +669,13 @@ export default class AnalyseCtrl implements CevalHandler {
       body: JSON.stringify(request),
     })
       .then(ensureOk)
-      .then(res => res.json())
-      .then(async data => {
+      .then(res => res.json() as Promise<unknown>)
+      .then(async raw => {
         if (!isActive()) return;
-        let review = Array.isArray(data.move_review) ? data.move_review[0] : data.move_review;
+        const decoded = decodeChesstoryMoveMeaningResponse(raw);
+        if (!decoded?.ok) throw new Error('Invalid Chesstory response contract');
+        let data = decoded;
+        let review = data.move_review;
         const probeResults: ChesstoryProbeResult[] = [];
         const seenProbeIds = new Set<string>();
         const probeBudget = 12;
@@ -688,7 +691,7 @@ export default class AnalyseCtrl implements CevalHandler {
           probeFailed ||= batch.failed;
           if (!batch.results.length) break;
           probeResults.push(...batch.results);
-          data = await fetch('/api/chess-judgment/move-meaning', {
+          const nextRaw = await fetch('/api/chess-judgment/move-meaning', {
             ...defaultInit,
             signal: abort.signal,
             method: 'post',
@@ -700,9 +703,12 @@ export default class AnalyseCtrl implements CevalHandler {
             body: JSON.stringify({ ...request, probeResults }),
           })
             .then(ensureOk)
-            .then(res => res.json());
+            .then(res => res.json() as Promise<unknown>);
           if (!isActive()) return;
-          review = Array.isArray(data.move_review) ? data.move_review[0] : data.move_review;
+          const next = decodeChesstoryMoveMeaningResponse(nextRaw);
+          if (!next?.ok) throw new Error('Invalid Chesstory response contract');
+          data = next;
+          review = data.move_review;
         }
         if (!isActive()) return;
         this.chesstoryBriefPayload = review?.renderable ? review : undefined;

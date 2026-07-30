@@ -28,14 +28,53 @@
     "adapter_error": { "$ref": "#/$defs/adapterError" },
     "stages": { "$ref": "#/$defs/stages" }
   },
-  "allOf": [
+  "oneOf": [
     {
-      "if": { "properties": { "observation_status": { "const": "complete" } } },
-      "then": {
-        "required": ["public_response", "public_response_sha256"],
-        "not": { "required": ["adapter_error"] }
+      "properties": {
+        "observation_status": { "const": "complete" },
+        "runtime": { "required": ["http_status"] }
       },
-      "else": { "required": ["adapter_error"] }
+      "required": ["public_response", "public_response_sha256"],
+      "not": { "required": ["adapter_error"] },
+      "oneOf": [
+        {
+          "properties": {
+            "runtime": {
+              "properties": {
+                "http_status": { "const": 200 },
+                "boundary_execution_present": { "const": true },
+                "projection_present": { "const": true }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "runtime": {
+              "properties": { "http_status": { "enum": [400, 422] } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "properties": {
+        "observation_status": { "const": "adapter-error" },
+        "runtime": { "not": { "required": ["http_status"] } },
+        "artifact_chain_head_sha256": { "type": "null" }
+      },
+      "required": ["adapter_error"],
+      "oneOf": [
+        { "required": ["public_response", "public_response_sha256"] },
+        {
+          "not": {
+            "anyOf": [
+              { "required": ["public_response"] },
+              { "required": ["public_response_sha256"] }
+            ]
+          }
+        }
+      ]
     }
   ],
   "additionalProperties": false,
@@ -74,33 +113,53 @@
       "required": ["http_status", "body"],
       "properties": {
         "http_status": { "type": "integer", "minimum": 100, "maximum": 599 },
-        "body": { "type": "object" }
+        "body": { "$ref": "../public-v3/move-meaning-response.schema.json" }
       },
-      "allOf": [
+      "oneOf": [
         {
-          "if": {
-            "properties": {"http_status": {"const": 200}},
-            "required": ["http_status"]
-          },
-          "then": {
-            "properties": {
-              "body": {
-                "type": "object",
-                "required": ["move_review"],
-                "properties": {
-                  "move_review": {
-                    "type": "object",
-                    "required": ["idea_status"],
-                    "properties": {
-                      "idea_status": {
-                        "enum": [
-                          "certified",
-                          "no_certified_differential_idea",
-                          "unavailable"
-                        ]
-                      }
-                    }
-                  }
+          "properties": {
+            "http_status": {"const": 200},
+            "body": {
+              "properties": {
+                "ok": {"const": true},
+                "status": {"enum": ["ready", "withheld"]}
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "http_status": {"const": 400},
+            "body": {
+              "properties": {
+                "ok": {"const": false},
+                "status": {"const": "error"},
+                "error": {
+                  "enum": [
+                    "invalid_json",
+                    "invalid_request_id",
+                    "unsupported_schema_version",
+                    "invalid_move_review_input",
+                    "invalid_request",
+                    "input_limits_exceeded"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "http_status": {"const": 422},
+            "body": {
+              "properties": {
+                "ok": {"const": false},
+                "status": {"const": "error"},
+                "error": {
+                  "enum": [
+                    "move_review_not_buildable",
+                    "projection_intervention_rejected"
+                  ]
                 }
               }
             }

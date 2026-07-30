@@ -214,15 +214,20 @@ python -m chesstory_eval cause-audit --root . --action freeze --run-id CAUSE_FRE
 
 python -m chesstory_eval cause-audit --root . --action acquire --run-id CAUSE_Q_RUN --cases CASES.jsonl --manifest CAUSE_FREEZE.json --reference-labels ADJUDICATED.jsonl --partition explore --stockfish STOCKFISH_EXECUTABLE --output CAUSE_Q.json
 
-python -m chesstory_eval cause-audit --root . --action run --run-id CAUSE_RUNTIME_RUN --cases CASES.jsonl --manifest CAUSE_FREEZE.json --acquisition CAUSE_Q.json --partition explore --stockfish STOCKFISH_EXECUTABLE --sbt SBT_EXECUTABLE --adapter-root runtime-adapter --output CAUSE_RUNTIME.json
-
-python -m chesstory_eval cause-audit --root . --action compare --run-id CAUSE_COMPARE_RUN --cases CASES.jsonl --manifest CAUSE_FREEZE.json --labels ADJUDICATED.jsonl --runtime-run CAUSE_RUNTIME.json --partition explore --output CAUSE_REPORT.json
+python -m chesstory_eval cause-audit --root . --action run --run-id CAUSE_RUNTIME_RUN --cases CASES.jsonl --manifest CAUSE_FREEZE.json --base-oracle BASE_ORACLE_V3.jsonl --acquisition CAUSE_Q.json --partition explore --stockfish STOCKFISH_EXECUTABLE --sbt SBT_EXECUTABLE --adapter-root runtime-adapter --output CAUSE_RUNTIME.json
 ```
 
-`cause-audit`는 의미값을 직접 판정하는 유일한 active V3 계약이다. 별도의 contract-version opt-in은 없으며, `run`은 항상 C의 동일 owned channel과 packet 이전 R-native selection을 기록한다. `compare`는 첫 oracle row의 V3 schema를 확인한 뒤에만 typed matcher로 dispatch한다. 보관된 V2 실행·비교는 별도 명령 `historical-cause-audit-v2`로만 허용된다.
+`cause-audit`는 의미값을 직접 판정하는 유일한 active V3 계약이다. 별도의 contract-version opt-in은 없으며, `run`은 adapter를 시작하기 전에 전체 partition의 독립 typed base oracle을 검증·canonicalize하고 그 물리·의미·case-set hash를 runtime run에 결속한다. `compare`와 open-world inventory 생성은 같은 결속을 다시 계산해 일치하는 active V3 runtime만 받는다. 보관된 V2 실행·비교는 별도 명령 `historical-cause-audit-v2`로만 허용되며 이 base-oracle 결속과 open-world 생산 action을 사용하지 않는다.
 
 ```text
-python -m chesstory_eval cause-audit --root . --action run --run-id CAUSE_RUNTIME_V3 --cases CASES.jsonl --manifest CAUSE_FREEZE.json --acquisition CAUSE_Q.json --partition explore --stockfish STOCKFISH_EXECUTABLE --sbt SBT_EXECUTABLE --adapter-root runtime-adapter --output CAUSE_RUNTIME_V3.json
+python -m chesstory_eval cause-audit --root . --action run --run-id CAUSE_RUNTIME_V3 --cases CASES.jsonl --manifest CAUSE_FREEZE.json --base-oracle BASE_ORACLE_V3.jsonl --acquisition CAUSE_Q.json --partition explore --stockfish STOCKFISH_EXECUTABLE --sbt SBT_EXECUTABLE --adapter-root runtime-adapter --output CAUSE_RUNTIME_V3.json
+
+python -m chesstory_eval cause-audit --root . --action freeze-open-world-inventory --run-id CAUSE_INVENTORY_V3 --cases CASES.jsonl --manifest CAUSE_FREEZE.json --base-oracle BASE_ORACLE_V3.jsonl --runtime-arm CAUSE_RUNTIME_V3.json --partition explore --output FROZEN_ARM_INVENTORY.json
+
+python -m chesstory_eval cause-audit --root . --action freeze-open-world-candidates --run-id CAUSE_CANDIDATES_V3 --cases CASES.jsonl --manifest CAUSE_FREEZE.json --base-oracle BASE_ORACLE_V3.jsonl --open-world-arm-inventory FROZEN_ARM_INVENTORY.json --partition explore --output SOURCE_BLIND_CANDIDATES.json
+
+# FROZEN_ADJUDICATION.json is supplied by an external source-blind adjudicator.
+python -m chesstory_eval cause-audit --root . --action finalize-open-world-oracle --run-id CAUSE_ORACLE_FINALIZE_V3 --cases CASES.jsonl --manifest CAUSE_FREEZE.json --base-oracle BASE_ORACLE_V3.jsonl --open-world-arm-inventory FROZEN_ARM_INVENTORY.json --open-world-candidates SOURCE_BLIND_CANDIDATES.json --open-world-adjudication FROZEN_ADJUDICATION.json --run-oracle-output RUN_ORACLE_V3.jsonl --partition explore --output ORACLE_RUN_MANIFEST_V3.json
 
 python -m chesstory_eval cause-audit --root . --action compare --run-id CAUSE_COMPARE_V3 --cases CASES.jsonl --manifest CAUSE_FREEZE.json --labels RUN_ORACLE_V3.jsonl --oracle-run-manifest ORACLE_RUN_MANIFEST_V3.json --base-oracle BASE_ORACLE_V3.jsonl --open-world-arm-inventory FROZEN_ARM_INVENTORY.json --open-world-candidates SOURCE_BLIND_CANDIDATES.json --open-world-adjudication FROZEN_ADJUDICATION.json --runtime-run CAUSE_RUNTIME_V3.json --partition explore --output CAUSE_REPORT_V3.json
 

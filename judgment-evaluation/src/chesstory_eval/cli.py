@@ -62,7 +62,16 @@ def _configure_cause_audit_parser(
         required=True,
         choices=("run", "compare")
         if historical_v2
-        else ("freeze", "acquire", "bind-candidate", "run", "compare"),
+        else (
+            "freeze",
+            "acquire",
+            "bind-candidate",
+            "run",
+            "freeze-open-world-inventory",
+            "freeze-open-world-candidates",
+            "finalize-open-world-oracle",
+            "compare",
+        ),
     )
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--artifacts", type=Path)
@@ -133,7 +142,14 @@ def _configure_cause_audit_parser(
     parser.add_argument(
         "--base-oracle",
         type=Path,
-        help="base typed oracle artifact bound by the v3 run manifest",
+        help="independent base typed oracle bound before v3 runtime and by its oracle manifest",
+    )
+    parser.add_argument(
+        "--runtime-arm",
+        action="append",
+        default=[],
+        type=Path,
+        help="complete active v3 runtime run to freeze; repeat for every arm",
     )
     parser.add_argument(
         "--open-world-candidates",
@@ -149,6 +165,11 @@ def _configure_cause_audit_parser(
         "--open-world-arm-inventory",
         type=Path,
         help="frozen all-arm actual-cascade observation inventory bound by v3 candidates",
+    )
+    parser.add_argument(
+        "--run-oracle-output",
+        type=Path,
+        help="immutable canonical JSONL output for the finalized typed run oracle",
     )
     parser.add_argument("--depth", type=int, default=18)
     parser.add_argument("--multipv", type=int, default=4)
@@ -2032,6 +2053,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                 artifact_root=artifact_root,
                 run_id=arguments.run_id,
             )
+            if (
+                arguments.command == "cause-audit"
+                and arguments.action == "finalize-open-world-oracle"
+                and arguments.run_oracle_output is not None
+            ):
+                _require_output_outside_run_root(
+                    arguments.run_oracle_output,
+                    artifact_root=artifact_root,
+                    run_id=arguments.run_id,
+                )
             _reserve_new_run_root(
                 artifact_root=artifact_root, run_id=arguments.run_id
             )
@@ -2044,7 +2075,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             report = executor(
                 root=root, store=store, arguments=arguments
             )
-            _write_json(arguments.output, report)
+            if arguments.action != "finalize-open-world-oracle":
+                _write_json(arguments.output, report)
             summary = {
                 "action": arguments.action,
                 "run_id": arguments.run_id,

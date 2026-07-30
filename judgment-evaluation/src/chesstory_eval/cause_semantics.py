@@ -454,12 +454,30 @@ def comparison_endpoint_snapshot_index(
                     projection["effect_descriptor"].get("effect_scope"),
                     "comparison endpoint witness effect scope",
                 )
-                descriptor_targets = sorted(
-                    str(value).strip().lower()
-                    for value in effect_scope.get("target_signatures", [])
-                )
+                raw_descriptor_targets = effect_scope.get("target_signatures")
+                if not isinstance(raw_descriptor_targets, list):
+                    raise IntegrityError(
+                        "comparison endpoint witness descriptor has malformed target signature"
+                    )
+                descriptor_targets: list[tuple[str, str]] = []
+                for value in raw_descriptor_targets:
+                    if not isinstance(value, str):
+                        raise IntegrityError(
+                            "comparison endpoint witness descriptor has malformed target signature"
+                        )
+                    kind, separator, key = value.strip().partition(":")
+                    normalized_kind = kind.strip().lower()
+                    normalized_key = key.strip().lower()
+                    if separator != ":" or not normalized_kind or not normalized_key:
+                        raise IntegrityError(
+                            "comparison endpoint witness descriptor has malformed target signature"
+                        )
+                    descriptor_targets.append((normalized_kind, normalized_key))
+                descriptor_targets.sort()
+                # Scala signatures use EvidenceObjectKind.toString; projected kinds use snake_case.
                 witness_targets = sorted(
-                    f"{kind}:{key}" for kind, key in projection["target"]
+                    (kind.replace("_", ""), key)
+                    for kind, key in projection["target"]
                 )
                 if descriptor_targets != witness_targets:
                     raise IntegrityError(
@@ -2041,8 +2059,10 @@ def _canonical_public_importance(value: Mapping[str, Any]) -> dict[str, Any]:
         "frontier_cause_ids",
         "dominated_within_domain_cause_ids",
     ):
-        projected[field] = _unique_nonempty_strings(
-            projected.get(field), f"public importance {field}"
+        projected[field] = sorted(
+            _unique_nonempty_strings(
+                projected.get(field), f"public importance {field}"
+            )
         )
     projected["profiles"] = sorted(
         _objects(projected.get("profiles"), "public importance profiles"),
@@ -2598,8 +2618,9 @@ def _importance_state(
     ordered_ids = [str(item["cause_evidence_id"]) for item in ordered_selections]
     frontier = [cause_id for cause_id in ordered_ids if cause_id in frontier_set]
     dominated = [cause_id for cause_id in ordered_ids if cause_id in dominated_set]
-    if selected != ordered_ids or native_frontier != frontier or native_dominated != dominated:
-        raise ContractError("R-native importance order differs from public idea selection order")
+    # The three native ID arrays are schema-declared unordered sets.  Their
+    # membership is closed above; only the selections' explicit order field
+    # owns serialization order.
     expected_public = _expected_public_importance(
         ordered_ids,
         profiles,
@@ -2839,6 +2860,10 @@ def _idea_unit_state(
     )
 
     lead_set = set(lead_ids)
+    if set(idea_selected) != lead_set:
+        raise ContractError(
+            "R-native idea-importance selected lead set is inconsistent"
+        )
     expected_profiles = [
         dict(item)
         for item in cause_importance["profiles"]
@@ -2915,10 +2940,6 @@ def _idea_unit_state(
     expected_lead_ids = [
         str(unit["lead_cause_evidence_id"]) for unit in expected_unit_order
     ]
-    if idea_selected != expected_lead_ids:
-        raise ContractError(
-            "R-native idea-importance order differs from idea-unit ordering"
-        )
     native_frontier = _unique_nonempty_strings(
         native_importance.get("frontier_cause_ids"),
         "R-native idea-importance frontier lead IDs",
@@ -2933,8 +2954,14 @@ def _idea_unit_state(
     expected_dominated = [
         lead for lead in expected_lead_ids if lead in dominated_set
     ]
-    if native_frontier != expected_frontier or native_dominated != expected_dominated:
-        raise ContractError("R-native idea-importance frontier order is inconsistent")
+    if set(native_frontier) != frontier_set:
+        raise ContractError(
+            "R-native idea-importance frontier lead set is inconsistent"
+        )
+    if set(native_dominated) != dominated_set:
+        raise ContractError(
+            "R-native idea-importance dominated lead set is inconsistent"
+        )
 
     expected_unit_ids = [str(unit["idea_id"]) for unit in expected_unit_order]
     if [str(unit["idea_id"]) for unit in r_units] != expected_unit_ids:
@@ -3065,7 +3092,7 @@ def _idea_unit_state(
         ),
         "importance": {
             "native": native_importance,
-            "selected": idea_selected,
+            "selected": expected_lead_ids,
             "profiles": expected_profiles,
             "relations": expected_relations,
             "decisions": expected_decisions,

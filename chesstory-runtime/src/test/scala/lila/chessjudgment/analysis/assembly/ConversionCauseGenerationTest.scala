@@ -139,7 +139,7 @@ class ConversionCauseGenerationTest extends munit.FunSuite:
       List(verified.ref.id)
     )
 
-  test("Cause-neutral draft planning preserves candidate-owned conversion miss and secured"):
+  test("Cause-neutral endpoint witnesses preserve candidate-owned conversion miss and secured"):
     val endgameFen = "8/1p1k4/1P6/2PK4/8/8/8/8 w - - 0 1"
     val endgamePosition = PositionNodeRef(endgameFen, 0, Some(White))
     val missedLine = LineNodeRef("missed-played", "d5d4", 2, LineNodeRole.Played)
@@ -163,25 +163,10 @@ class ConversionCauseGenerationTest extends munit.FunSuite:
       horizons = List(failed)
     )
     val missedFact = comparison(endgamePosition, missedReference, missedLine)
-    val missedComparisonRecord = ExplicitCauseAdmissionTestSupport.comparisonRecord(
-      "candidate-miss-comparison",
-      endgamePosition,
-      missedFact
-    )
-    val missedDrafts = RelativeCauseDraftPlanner.drafts(
-      RelativeCauseSignalProfile.from(missedFact, Nil, List(missedRecord), Nil),
-      missedComparisonRecord
-    )
-    val missedDraft = missedDrafts.find(draft =>
-      draft.kind == RelativeCauseKind.ConversionMiss &&
-        draft.sourceSide.contains(RelativeCauseSourceSide.Candidate)
-    ).getOrElse(fail("expected candidate ConversionMiss"))
-    assertCandidateNeutralWitness(
-      missedDraft,
-      missedFact,
-      missedComparisonRecord,
-      missedRecord,
-      endgamePosition
+    assert(
+      candidatePrimitiveKinds(endgamePosition, missedFact, missedRecord)(
+        RootOwnedEffectPrimitiveKind.EndgameHorizon
+      )
     )
 
     val promotionFen = "4k3/P7/8/8/8/8/8/4K3 w - - 0 1"
@@ -210,54 +195,24 @@ class ConversionCauseGenerationTest extends munit.FunSuite:
       referenceScore = 0,
       candidateScore = 900
     )
-    val securedComparisonRecord = ExplicitCauseAdmissionTestSupport.comparisonRecord(
-      "candidate-secured-comparison",
-      promotionPosition,
-      securedFact
-    )
-    val securedDrafts = RelativeCauseDraftPlanner.drafts(
-      RelativeCauseSignalProfile.from(securedFact, Nil, List(securedRecord), Nil),
-      securedComparisonRecord
-    )
-    val securedDraft = securedDrafts.find(draft =>
-      draft.kind == RelativeCauseKind.ConversionSecured &&
-        draft.sourceSide.contains(RelativeCauseSourceSide.Candidate)
-    ).getOrElse(fail("expected candidate ConversionSecured"))
-    assertCandidateNeutralWitness(
-      securedDraft,
-      securedFact,
-      securedComparisonRecord,
-      securedRecord,
-      promotionPosition
+    assert(
+      candidatePrimitiveKinds(promotionPosition, securedFact, securedRecord)(
+        RootOwnedEffectPrimitiveKind.LineEpisode
+      )
     )
 
-  private def assertCandidateNeutralWitness(
-      draft: RelativeCauseDraft,
+  private def candidatePrimitiveKinds(
+      position: PositionNodeRef,
       fact: CandidateComparisonFact,
-      comparisonRecord: EvidenceRecord,
-      support: EvidenceRecord,
-      position: PositionNodeRef
-  ): Unit =
-    val cause = RelativeCauseFact(
-      kind = draft.kind,
-      comparisonEvidence = comparisonRecord.ref,
-      supportEvidence = List(support.ref),
-      sourceSide = RelativeCauseSourceSide.Candidate,
-      attribution = CauseAttribution(
-        draft.attributionKind,
-        rootMoveMatched = true,
-        directProofEligible = true
-      ),
-      proof = Some(RelativeCauseProof(
-        directProof = RelativeCauseProofSection(
-          RelativeCauseProofRole.DirectProof,
-          RelativeCauseProofStrength.Primary,
-          List(support.ref)
-        )
-      ))
+      support: EvidenceRecord
+  ): Set[RootOwnedEffectPrimitiveKind] =
+    val comparisonRecord = ExplicitCauseAdmissionTestSupport.comparisonRecord(
+      s"${support.ref.id}-comparison",
+      position,
+      fact
     )
     val graph = ExplicitCauseAdmissionTestSupport.graph(List(comparisonRecord, support))
-    val witnesses = EvidenceObjectBinding.comparisonEndpointEvidenceWitnesses(
+    EvidenceObjectBinding.comparisonEndpointEvidenceWitnesses(
       RelativeCauseSourceSide.Candidate,
       fact.candidateLine,
       position,
@@ -266,33 +221,7 @@ class ConversionCauseGenerationTest extends munit.FunSuite:
       List(support),
       List(support),
       graph
-    )
-    val snapshot = ComparisonEndpointEvidenceSnapshot(
-      comparisonRecord.ref,
-      fact,
-      ComparisonEndpointEvidenceSideSnapshot(
-        RelativeCauseSourceSide.Reference,
-        fact.referenceLine,
-        Nil
-      ),
-      ComparisonEndpointEvidenceSideSnapshot(
-        RelativeCauseSourceSide.Candidate,
-        fact.candidateLine,
-        witnesses
-      )
-    )
-    val channels = EvidenceObjectBinding.rawDirectSentenceChannelsForProjection(cause, graph)
-    assert(channels.nonEmpty, s"expected a direct channel for ${draft.kind}")
-    assert(channels.exists(channel =>
-      ComparisonEndpointEffectObservationPolicy
-        .uniqueNeutralWitnessFor(
-          snapshot,
-          RelativeCauseSourceSide.Candidate,
-          channel,
-          graph
-        )
-        .nonEmpty
-    ), s"expected a neutral admission witness for ${draft.kind}")
+    ).map(_.effectDescriptor.identity.primitiveKind).toSet
 
   private def completedRecord(
       id: String,

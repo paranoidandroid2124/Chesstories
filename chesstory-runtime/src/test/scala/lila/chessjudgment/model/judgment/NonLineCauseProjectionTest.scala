@@ -187,155 +187,147 @@ class NonLineCauseProjectionTest extends munit.FunSuite:
     )
     assertEquals(projection(RelativeCauseKind.MissedTacticalResource, repeatedRecord), Nil)
 
-  test("comparison endpoint evidence enumerates every primitive family and keeps strategic wrappers distinct"):
-    def witnesses(
-        record: EvidenceRecord,
+  test("neutral endpoint enumeration covers every primitive family"):
+    def record(
+        id: String,
+        producer: EvidenceProducer,
+        layer: EvidenceLayer,
         position: PositionNodeRef,
         line: LineNodeRef,
-        candidateRoot: String,
-        extraRecords: List[EvidenceRecord] = Nil
-    ): List[ComparisonEndpointEvidenceWitness] =
-      val candidateLine = LineNodeRef(
-        s"${line.id}-all-family-candidate",
-        candidateRoot,
-        2,
-        LineNodeRole.Played
-      )
-      val comparisonRef = evidenceRef(
-        s"${record.ref.id}-all-family-comparison",
-        EvidenceProducer.RelativeMoveProducer,
-        EvidenceLayer.CandidateComparison,
-        position,
-        Some(candidateLine),
-        EvidenceScope.Counterfactual,
-        EvidenceConfidence.EngineBacked
-      )
-      val comparison = CandidateComparisonFact(
-        CandidateComparisonKind.PlayedVsBest,
-        line,
-        candidateLine,
-        EvalComparison.fromLines(
-          White,
-          CandidateLineNode(
-            line,
-            EngineLine(List(line.rootMove), 300, depth = 18),
-            evalRef(s"${record.ref.id}-all-family-reference-eval", position, line)
-          ),
-          CandidateLineNode(
-            candidateLine,
-            EngineLine(List(candidateLine.rootMove), -300, depth = 18),
-            evalRef(s"${record.ref.id}-all-family-candidate-eval", position, candidateLine)
-          )
-        )
-      )
-      val endpointRecords = record :: extraRecords
-      val graph = (EvidenceRecord(
-        comparisonRef,
-        CandidateComparisonEvidence(comparison),
-        parents = endpointRecords.map(_.ref)
-      ) :: endpointRecords)
-        .foldLeft(TypedEvidenceGraph.empty)((current, evidence) => current.add(evidence))
-      EvidenceObjectBinding.comparisonEndpointEvidenceWitnesses(
-        RelativeCauseSourceSide.Reference,
-        line,
-        position,
-        comparisonRef,
-        comparison,
-        endpointRecords,
-        endpointRecords,
-        graph
+        scope: EvidenceScope,
+        payload: EvidencePayload,
+        parents: List[EvidenceRef] = Nil
+    ): EvidenceRecord =
+      EvidenceRecord(
+        evidenceRef(id, producer, layer, position, Some(line), scope),
+        payload,
+        parents
       )
 
-    def legalReplay(fen: String, moves: List[String]): List[LineReplayStep] =
+    def replay(fen: String, moves: List[String]): List[LineReplayStep] =
       moves.zipWithIndex.foldLeft(fen -> List.empty[LineReplayStep]) {
-        case ((before, steps), (move, index)) =>
-          val step = legalStep(before, move, index)
+        case ((before, steps), (move, ply)) =>
+          val step = legalStep(before, move, ply)
           step.fenAfter -> (steps :+ step)
       }._2
 
+    def endpointCandidate(id: String, rootMove: String): LineNodeRef =
+      LineNodeRef(s"$id-candidate", rootMove, 2, LineNodeRole.Played)
+
+    def witnesses(
+        id: String,
+        position: PositionNodeRef,
+        reference: LineNodeRef,
+        candidateRoot: String,
+        records: List[EvidenceRecord],
+        update: CandidateComparisonFact => CandidateComparisonFact = comparison => comparison
+    ): List[ComparisonEndpointEvidenceWitness] =
+      val candidate = endpointCandidate(id, candidateRoot)
+      val comparison = update(CandidateComparisonFact(
+        CandidateComparisonKind.PlayedVsBest,
+        reference,
+        candidate,
+        EvalComparison.fromLines(
+          White,
+          CandidateLineNode(
+            reference,
+            EngineLine(List(reference.rootMove), 300, depth = 18),
+            evalRef(s"$id-reference-eval", position, reference)
+          ),
+          CandidateLineNode(
+            candidate,
+            EngineLine(List(candidate.rootMove), -300, depth = 18),
+            evalRef(s"$id-candidate-eval", position, candidate)
+          )
+        )
+      ))
+      val comparisonRef = evidenceRef(
+        s"$id-comparison",
+        EvidenceProducer.RelativeMoveProducer,
+        EvidenceLayer.CandidateComparison,
+        position,
+        Some(candidate),
+        EvidenceScope.Counterfactual,
+        EvidenceConfidence.EngineBacked
+      )
+      val comparisonRecord =
+        EvidenceRecord(comparisonRef, CandidateComparisonEvidence(comparison), records.map(_.ref))
+      val graph = ExplicitCauseAdmissionTestSupport.graph(comparisonRecord :: records)
+      EvidenceObjectBinding.comparisonEndpointEvidenceWitnesses(
+        RelativeCauseSourceSide.Reference,
+        reference,
+        position,
+        comparisonRef,
+        comparison,
+        records,
+        records,
+        graph
+      )
+
     val mateFen = "7k/8/5KQ1/8/8/8/8/8 w - - 0 1"
     val matePosition = PositionNodeRef(mateFen, 0, Some(White))
-    val mateLine = LineNodeRef("all-family-mate", "g6g7", 1, LineNodeRole.BestReference)
-    val mateConsequence = LineConsequence(
-      LineConsequenceKind.Mate,
-      List(mateLine.rootMove),
-      proofSignal = true,
-      eventMove = Some(mateLine.rootMove),
-      rootMove = Some(mateLine.rootMove),
-      rootSide = Some(White),
-      beneficiary = Some(White)
-    )
-    val mateRecord = EvidenceRecord(
-      evidenceRef(
-        "all-family-mate-record",
-        EvidenceProducer.LegalLineProducer,
-        EvidenceLayer.Line,
-        matePosition,
-        Some(mateLine),
-        EvidenceScope.BestLine
-      ),
+    val mateLine = LineNodeRef("neutral-mate", "g6g7", 1, LineNodeRole.BestReference)
+    val mateRecord = record(
+      "neutral-mate",
+      EvidenceProducer.LegalLineProducer,
+      EvidenceLayer.Line,
+      matePosition,
+      mateLine,
+      EvidenceScope.BestLine,
       LineFactEvidence(
-        line = mateLine,
-        replay = legalReplay(mateFen, List(mateLine.rootMove)),
-        events = List(
-          LineMoveEvent(
-            LineEventKind.Check,
-            mateLine.rootMove,
-            0,
-            Some(White),
-            Some(EvidencePieceRole(Queen.name)),
-            Some(EvidencePieceRole("king")),
-            Some(EvidenceSquare("h8"))
-          ),
-          LineMoveEvent(
-            LineEventKind.Mate,
-            mateLine.rootMove,
-            0,
-            Some(White),
-            Some(EvidencePieceRole(Queen.name)),
-            Some(EvidencePieceRole("king")),
-            Some(EvidenceSquare("h8"))
-          )
-        ),
-        consequences = List(mateConsequence)
-      )
-    )
-
-    val conversionFen = "8/1p1k4/1P6/2PK4/8/8/8/8 w - - 0 1"
-    val conversionPosition = PositionNodeRef(conversionFen, 0, Some(White))
-    val conversionLine = LineNodeRef(
-      "all-family-conversion",
-      "d5d4",
-      1,
-      LineNodeRole.BestReference
-    )
-    val conversionRecord = EvidenceRecord(
-      evidenceRef(
-        "all-family-conversion-record",
-        EvidenceProducer.LegalLineProducer,
-        EvidenceLayer.Line,
-        conversionPosition,
-        Some(conversionLine),
-        EvidenceScope.BestLine
-      ),
-      LineFactEvidence(
-        line = conversionLine,
-        replay = legalReplay(
-          conversionFen,
-          List("d5d4", "d7d8", "d4e5", "d8d7", "e5d5")
-        ),
-        endgameHorizons = List(LineEndgameTechniqueHorizon(
-          pattern = "Lucena",
-          rookPattern = Some("Lucena"),
-          techniqueSide = White,
-          entryPlyOffset = 0,
-          terminalPlyOffset = 4,
-          status = LineEndgameTechniqueHorizonStatus.Completed,
-          triggerMove = Some(conversionLine.rootMove),
-          requiredSquares = List("d4", "d5", "e5")
+        mateLine,
+        replay = replay(mateFen, List(mateLine.rootMove)),
+        events = List(LineMoveEvent(
+          LineEventKind.Check,
+          mateLine.rootMove,
+          0,
+          Some(White),
+          Some(EvidencePieceRole(Queen.name)),
+          Some(EvidencePieceRole("king")),
+          Some(EvidenceSquare("h8"))
+        )),
+        consequences = List(LineConsequence(
+          LineConsequenceKind.Mate,
+          List(mateLine.rootMove),
+          proofSignal = true,
+          eventMove = Some(mateLine.rootMove),
+          rootMove = Some(mateLine.rootMove),
+          rootSide = Some(White),
+          beneficiary = Some(White)
         ))
       )
     )
+    val lineWitnesses =
+      witnesses("neutral-line", matePosition, mateLine, "f6e5", List(mateRecord))
+
+    val conversionFen = "8/1p1k4/1P6/2PK4/8/8/8/8 w - - 0 1"
+    val conversionPosition = PositionNodeRef(conversionFen, 0, Some(White))
+    val conversionLine =
+      LineNodeRef("neutral-conversion", "d5d4", 1, LineNodeRole.BestReference)
+    val conversionRecord = record(
+      "neutral-conversion",
+      EvidenceProducer.LegalLineProducer,
+      EvidenceLayer.Line,
+      conversionPosition,
+      conversionLine,
+      EvidenceScope.BestLine,
+      LineFactEvidence(
+        conversionLine,
+        replay = replay(conversionFen, List("d5d4", "d7d8", "d4e5", "d8d7", "e5d5")),
+        endgameHorizons = List(LineEndgameTechniqueHorizon(
+          "Lucena",
+          Some("Lucena"),
+          White,
+          0,
+          4,
+          LineEndgameTechniqueHorizonStatus.Completed,
+          Some(conversionLine.rootMove),
+          List("d4", "d5", "e5")
+        ))
+      )
+    )
+    val conversionWitnesses =
+      witnesses("neutral-conversion", conversionPosition, conversionLine, "d5e5", List(conversionRecord))
 
     val queenAfter = PositionNodeRef(
       PrincipalVariationEvidence
@@ -347,19 +339,16 @@ class NonLineCauseProjectionTest extends munit.FunSuite:
     val structuralConsequence = TransitionConsequence(
       TransitionConsequenceKind.TargetPressureGain,
       StructuralSignalPolarity.Gain,
-      strength = 3,
-      subjects = List("king:e8")
+      3,
+      List("king:e8")
     )
-    val structuralRef = evidenceRef(
-      "all-family-structural",
+    val structuralRecord = record(
+      "neutral-structural",
       EvidenceProducer.StructuralDeltaProducer,
       EvidenceLayer.StructuralDelta,
       queenPosition,
-      Some(queenLine),
-      EvidenceScope.ReferenceTransition
-    )
-    val structuralRecord = EvidenceRecord(
-      structuralRef,
+      queenLine,
+      EvidenceScope.ReferenceTransition,
       StructuralDeltaEvidence(
         StructuralTransitionBinding(
           queenLine.rootMove,
@@ -369,48 +358,39 @@ class NonLineCauseProjectionTest extends munit.FunSuite:
           Some(queenLine),
           White
         ),
-        signals = Nil,
-        consequences = List(structuralConsequence)
+        Nil,
+        List(structuralConsequence)
       )
     )
-    val axis = StrategicAxisDetail(
-      StrategicAxisKind.Target,
-      StrategicAxisPolarity.Gain,
-      "target-pressure-gain"
-    )
-    val carrierRef = evidenceRef(
-      "all-family-strategic-carrier",
+    val axis =
+      StrategicAxisDetail(StrategicAxisKind.Target, StrategicAxisPolarity.Gain, "target-pressure-gain")
+    val carrierRecord = record(
+      "neutral-strategic",
       EvidenceProducer.StrategicMechanismProducer,
       EvidenceLayer.StrategicMechanism,
       queenPosition,
-      Some(queenLine),
-      EvidenceScope.ReferenceTransition
-    )
-    val carrierRecord = EvidenceRecord(
-      carrierRef,
+      queenLine,
+      EvidenceScope.ReferenceTransition,
       StrategicMechanismEvidence(
         StrategicMechanismKind.TargetPressure,
         List(StrategicMechanismSignal(
           StrategicMechanismSignalKind.StructuralDelta,
-          "target-pressure-gain",
-          structuralRef,
+          axis.label,
+          structuralRecord.ref,
           3,
           Some(axis)
         )),
         Nil
       ),
-      parents = List(structuralRef)
+      List(structuralRecord.ref)
     )
-
-    val motifRecord = EvidenceRecord(
-      evidenceRef(
-        "all-family-motif",
-        EvidenceProducer.MoveMotifProducer,
-        EvidenceLayer.MoveMotif,
-        queenPosition,
-        Some(queenLine),
-        EvidenceScope.ReferenceTransition
-      ),
+    val motifRecord = record(
+      "neutral-motif",
+      EvidenceProducer.MoveMotifProducer,
+      EvidenceLayer.MoveMotif,
+      queenPosition,
+      queenLine,
+      EvidenceScope.ReferenceTransition,
       MoveMotifEvidence(MoveMotifEvent.fromMotif(
         queenLine.rootMove,
         Motif.Check(
@@ -423,8 +403,8 @@ class NonLineCauseProjectionTest extends munit.FunSuite:
         )
       ))
     )
-    val exactRelation = relationRecord(
-      "all-family-relation",
+    val relation = relationRecord(
+      "neutral-relation",
       queenLine,
       RelationWitnessDetail.HangingPiece(
         EvidenceSquare("h5"),
@@ -434,226 +414,149 @@ class NonLineCauseProjectionTest extends munit.FunSuite:
       ),
       List(queenLine.rootMove)
     )
-    val creationThreat = Threat(
-      threatActor = White,
-      kind = ThreatKind.Mate,
-      turnsToImpact = 1,
-      motifs = List(Motif.Check(
-        Queen,
-        chess.Square.fromKey("e8").getOrElse(fail("expected e8")),
-        Motif.CheckType.Normal,
-        White,
-        0,
-        Some(queenLine.rootMove)
-      )),
-      attackSquares = List("e8"),
-      targetPieces = List("king"),
-      bestDefense = None,
-      defenseCount = 0
-    )
-    val creationRecord = EvidenceRecord(
-      evidenceRef(
-        "all-family-threat-creation",
+
+    def threatRecord(
+        id: String,
+        position: PositionNodeRef,
+        line: LineNodeRef,
+        threatActor: chess.Color,
+        target: String,
+        threatMove: String,
+        bestDefense: Option[String]
+    ): EvidenceRecord =
+      val threat = Threat(
+        threatActor,
+        ThreatKind.Mate,
+        1,
+        List(Motif.Check(
+          Queen,
+          chess.Square.fromKey(target).getOrElse(fail(s"expected $target")),
+          Motif.CheckType.Normal,
+          threatActor,
+          0,
+          Some(threatMove)
+        )),
+        List(target),
+        List("king"),
+        bestDefense,
+        if bestDefense.nonEmpty then 1 else 0
+      )
+      record(
+        id,
         EvidenceProducer.ThreatPressureProducer,
         EvidenceLayer.ThreatPressure,
-        queenPosition,
-        Some(queenLine),
-        EvidenceScope.ReferenceTransition
-      ),
-      ThreatEpisodeEvidence(ThreatEpisode.fromThreat(creationThreat, 0))
+        position,
+        line,
+        EvidenceScope.ReferenceTransition,
+        ThreatEpisodeEvidence(ThreatEpisode.fromThreat(threat, 0))
+      )
+
+    val creationRecord =
+      threatRecord("neutral-creation", queenPosition, queenLine, White, "e8", queenLine.rootMove, None)
+    val queenWitnesses = witnesses(
+      "neutral-queen",
+      queenPosition,
+      queenLine,
+      "e1f1",
+      List(structuralRecord, carrierRecord, motifRecord, relation, creationRecord)
     )
 
     val defenseFen = "4k3/8/8/8/7q/8/6P1/4K3 w - - 0 1"
     val defensePosition = PositionNodeRef(defenseFen, 0, Some(White))
-    val defenseLine = LineNodeRef("all-family-defense", "g2g3", 1, LineNodeRole.BestReference)
-    val defenseThreat = Threat(
-      threatActor = Black,
-      kind = ThreatKind.Mate,
-      turnsToImpact = 1,
-      motifs = List(Motif.Check(
-        Queen,
-        chess.Square.fromKey("e1").getOrElse(fail("expected e1")),
-        Motif.CheckType.Normal,
-        Black,
-        0,
-        Some("d8h4")
-      )),
-      attackSquares = List("e1"),
-      targetPieces = List("king"),
-      bestDefense = Some(defenseLine.rootMove),
-      defenseCount = 1
-    )
-    val defenseRecord = EvidenceRecord(
-      evidenceRef(
-        "all-family-threat-defense",
-        EvidenceProducer.ThreatPressureProducer,
-        EvidenceLayer.ThreatPressure,
-        defensePosition,
-        Some(defenseLine),
-        EvidenceScope.ReferenceTransition
-      ),
-      ThreatEpisodeEvidence(ThreatEpisode.fromThreat(defenseThreat, 0))
-    )
+    val defenseLine =
+      LineNodeRef("neutral-defense", "g2g3", 1, LineNodeRole.BestReference)
+    val defenseRecord =
+      threatRecord("neutral-defense", defensePosition, defenseLine, Black, "e1", "d8h4", Some(defenseLine.rootMove))
+    val defenseWitnesses =
+      witnesses("neutral-defense", defensePosition, defenseLine, "e1f1", List(defenseRecord))
 
-    val planResult = planEventRecord("all-family-plan-result", robust = true)
-    val planRestriction = planRestrictionRecord(
-      "all-family-plan-restriction",
-      includeCanonical = true
+    val planResult = planEventRecord("neutral-plan-result", robust = true)
+    val planResultWitnesses = witnesses(
+      "neutral-plan-result",
+      planResult.position,
+      planResult.line,
+      "a2a3",
+      List(planResult.record)
+    )
+    val planRestriction = planRestrictionRecord("neutral-plan-restriction", includeCanonical = true)
+    val planRestrictionWitnesses = witnesses(
+      "neutral-plan-restriction",
+      planRestriction.position,
+      planRestriction.line,
+      "e1d1",
+      planRestriction.record :: planRestriction.extraRecords
     )
 
     val recaptureFen = "kr6/8/8/4p3/3P4/8/7Q/K2R4 w - - 0 1"
     val recapturePosition = PositionNodeRef(recaptureFen, 0, Some(White))
-    val recaptureReference = LineNodeRef(
-      "all-family-recapture-reference",
-      "h2h4",
-      1,
-      LineNodeRole.BestReference
-    )
-    val recaptureCandidate = LineNodeRef(
-      "all-family-recapture-candidate",
-      "a1a2",
-      2,
-      LineNodeRole.Played
-    )
-    val recaptureReplay = legalReplay(
-      recaptureFen,
-      List("a1a2", "e5d4", "d1d4", "b8d8", "d4e4")
-    )
-    val recaptureLineRef = evidenceRef(
-      "all-family-recapture-line",
+    val recaptureReference =
+      LineNodeRef("neutral-recapture-reference", "h2h4", 1, LineNodeRole.BestReference)
+    val recaptureCandidate = endpointCandidate("neutral-recapture", "a1a2")
+    val recaptureReplay =
+      replay(recaptureFen, List("a1a2", "e5d4", "d1d4", "b8d8", "d4e4"))
+    val recaptureRecord = record(
+      "neutral-recapture-line",
       EvidenceProducer.LegalLineProducer,
       EvidenceLayer.Line,
       recapturePosition,
-      Some(recaptureCandidate),
-      recaptureCandidate.role.scope
-    )
-    val recaptureLineRecord = EvidenceRecord(
-      recaptureLineRef,
-      LineFactEvidence(line = recaptureCandidate, replay = recaptureReplay)
-    )
-    val recaptureBaseComparison = CandidateComparisonFact(
-      CandidateComparisonKind.PlayedVsBest,
-      recaptureReference,
       recaptureCandidate,
-      EvalComparison.fromLines(
-        White,
-        CandidateLineNode(
-          recaptureReference,
-          EngineLine(List(recaptureReference.rootMove), 300, depth = 18),
-          evalRef("all-family-recapture-reference-eval", recapturePosition, recaptureReference)
-        ),
-        CandidateLineNode(
-          recaptureCandidate,
-          EngineLine(recaptureReplay.map(_.moveUci), -300, depth = 18),
-          evalRef("all-family-recapture-candidate-eval", recapturePosition, recaptureCandidate)
-        )
-      )
+      recaptureCandidate.role.scope,
+      LineFactEvidence(recaptureCandidate, replay = recaptureReplay)
     )
-    val recaptureResource = PlayedVsBestDefensiveRecaptureResource
-      .derive(recaptureBaseComparison, recapturePosition, recaptureLineRecord.payload match
-        case line: LineFactEvidence => line
-        case _ => fail("expected candidate line")
-      )
-      .getOrElse(fail("expected exact defensive recapture resource"))
-    val recaptureComparison = recaptureBaseComparison.copy(
-      defensiveRecaptureResource = Some(recaptureResource)
-    )
-    val recaptureComparisonRef = evidenceRef(
-      "all-family-recapture-comparison",
-      EvidenceProducer.RelativeMoveProducer,
-      EvidenceLayer.CandidateComparison,
+    val recaptureWitnesses = witnesses(
+      "neutral-recapture",
       recapturePosition,
-      Some(recaptureCandidate),
-      EvidenceScope.Counterfactual,
-      EvidenceConfidence.EngineBacked
-    )
-    val recaptureComparisonRecord = EvidenceRecord(
-      recaptureComparisonRef,
-      CandidateComparisonEvidence(recaptureComparison),
-      parents = List(recaptureLineRef)
-    )
-    val recaptureGraph = List(recaptureLineRecord, recaptureComparisonRecord)
-      .foldLeft(TypedEvidenceGraph.empty)((graph, record) => graph.add(record))
-    val recaptureWitnesses = EvidenceObjectBinding.comparisonEndpointEvidenceWitnesses(
-      RelativeCauseSourceSide.Reference,
       recaptureReference,
-      recapturePosition,
-      recaptureComparisonRef,
-      recaptureComparison,
-      Nil,
-      List(recaptureLineRecord),
-      recaptureGraph
+      recaptureCandidate.rootMove,
+      List(recaptureRecord),
+      comparison =>
+        comparison.copy(defensiveRecaptureResource =
+          PlayedVsBestDefensiveRecaptureResource.derive(
+            comparison,
+            recapturePosition,
+            recaptureRecord.payload match
+              case line: LineFactEvidence => line
+              case _                      => fail("expected candidate line")
+          )
+        )
     )
 
-    val strategicWitnesses = witnesses(
-      carrierRecord,
-      queenPosition,
-      queenLine,
-      candidateRoot = "e1f1",
-      extraRecords = List(structuralRecord)
+    val coverage = List(
+      ("line", lineWitnesses, Set(
+        RootOwnedEffectPrimitiveKind.LineEpisode,
+        RootOwnedEffectPrimitiveKind.RootLineEvent
+      )),
+      ("endgame", conversionWitnesses, Set(RootOwnedEffectPrimitiveKind.EndgameHorizon)),
+      ("queen", queenWitnesses, Set(
+        RootOwnedEffectPrimitiveKind.StructuralTransition,
+        RootOwnedEffectPrimitiveKind.RootMoveMotif,
+        RootOwnedEffectPrimitiveKind.RootRelation,
+        RootOwnedEffectPrimitiveKind.ThreatCreation
+      )),
+      ("defense", defenseWitnesses, Set(RootOwnedEffectPrimitiveKind.ThreatDefense)),
+      ("plan result", planResultWitnesses, Set(RootOwnedEffectPrimitiveKind.PlanResult)),
+      ("plan restriction", planRestrictionWitnesses, Set(RootOwnedEffectPrimitiveKind.PlanRestriction)),
+      ("recapture", recaptureWitnesses, Set(RootOwnedEffectPrimitiveKind.DefensiveRecaptureResource))
     )
-    val allWitnesses =
-      witnesses(mateRecord, matePosition, mateLine, candidateRoot = "f6e5") ++
-        witnesses(
-          conversionRecord,
-          conversionPosition,
-          conversionLine,
-          candidateRoot = "d5e5"
-        ) ++
-        strategicWitnesses ++
-        witnesses(motifRecord, queenPosition, queenLine, candidateRoot = "e1f1") ++
-        witnesses(exactRelation, queenPosition, queenLine, candidateRoot = "e1f1") ++
-        witnesses(creationRecord, queenPosition, queenLine, candidateRoot = "e1f1") ++
-        witnesses(
-          defenseRecord,
-          defensePosition,
-          defenseLine,
-          candidateRoot = "e1f1"
-        ) ++
-        witnesses(
-          planResult.record,
-          planResult.position,
-          planResult.line,
-          candidateRoot = "a2a3"
-        ) ++
-        witnesses(
-          planRestriction.record,
-          planRestriction.position,
-          planRestriction.line,
-          candidateRoot = "e1d1",
-          extraRecords = planRestriction.extraRecords
-        ) ++
-        recaptureWitnesses
+    assertEquals(
+      coverage.flatMap(_._3).toSet,
+      RootOwnedEffectPrimitiveKind.values.toSet - RootOwnedEffectPrimitiveKind.Unspecified
+    )
+    coverage.foreach { case (label, actual, expected) =>
+      val observed = actual.map(_.effectDescriptor.identity.primitiveKind).toSet
+      expected.foreach(kind => assert(observed(kind), s"$label must expose $kind"))
+    }
 
-    val expectedPrimitiveKinds = RootOwnedEffectPrimitiveKind.values.toSet -
-      RootOwnedEffectPrimitiveKind.Unspecified
-    assertEquals(
-      allWitnesses.map(_.effectDescriptor.identity.primitiveKind).toSet,
-      expectedPrimitiveKinds
-    )
-
-    val structuralPrimitive = strategicWitnesses.find(witness =>
-      witness.binding.source == structuralRef &&
-        witness.rootOwnedProof.isInstanceOf[RootOwnedEffectProof.StructuralTransition]
-    ).getOrElse(fail("expected bare structural witness"))
-    val strategicWrapper = strategicWitnesses.find(witness =>
-      witness.binding.source == carrierRef &&
-        witness.rootOwnedProof.isInstanceOf[RootOwnedEffectProof.StrategicAxis]
-    ).getOrElse(fail("expected distinct strategic wrapper witness"))
-    assertEquals(
-      strategicWrapper.effectDescriptor.identity.primitiveKind,
-      structuralPrimitive.effectDescriptor.identity.primitiveKind
-    )
-    assertEquals(
-      strategicWrapper.effectDescriptor.identity.strategicAxes,
-      List(RootOwnedStrategicAxisIdentity(
-        axis.kind,
-        axis.polarity,
-        axis.label,
-        comparisonOutcome = None
-      ))
-    )
-    assertEquals(structuralPrimitive.effectDescriptor.identity.strategicAxes, Nil)
+    val structuralIdentity = queenWitnesses
+      .find(_.rootOwnedProof.isInstanceOf[RootOwnedEffectProof.StructuralTransition])
+      .map(_.effectDescriptor.identity)
+      .getOrElse(fail("expected structural primitive"))
+    val strategicIdentity = queenWitnesses
+      .find(_.rootOwnedProof.isInstanceOf[RootOwnedEffectProof.StrategicAxis])
+      .map(_.effectDescriptor.identity)
+      .getOrElse(fail("expected strategic wrapper"))
+    assertEquals(strategicIdentity.primitiveKind, structuralIdentity.primitiveKind)
+    assert(strategicIdentity != structuralIdentity)
 
   test("plan-event root ownership rejects a repeated board occurrence at another ply"):
     val fixture = planEventRecord("plan-root-occurrence", robust = true)

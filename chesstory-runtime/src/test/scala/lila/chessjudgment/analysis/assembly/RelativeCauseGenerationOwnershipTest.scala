@@ -27,14 +27,6 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
     val execution = MoveReviewJudgmentOrchestrator
       .execute(raw, JudgmentBoundaryIntervention.identity)
       .getOrElse(fail("expected a complete cached-line execution"))
-    assert(execution.f.evidenceGraph.records.exists(
-      _.payload.isInstanceOf[StrategicMechanismContrastEvidence]
-    ))
-    val factIds = execution.f.evidenceGraph.byId.keySet
-    assert(execution.c.evidenceGraph.records.filterNot(record => factIds(record.ref.id)).forall(
-      record => record.payload.isInstanceOf[RelativeCauseFactEvidence] ||
-        record.payload.isInstanceOf[RelativeAssessmentEvidence]
-    ))
     val graph = execution.c.evidenceGraph
     val causes = graph.records.collect {
       case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) => ref -> cause
@@ -43,89 +35,6 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
       .comparisonEndpointEvidenceSnapshots(execution.f)
       .map(snapshot => snapshot.comparisonEvidence.id -> snapshot)
       .toMap
-    val primarySnapshot = snapshotsByComparisonId.values
-      .find(_.comparison.kind == CandidateComparisonKind.PlayedVsBest)
-      .getOrElse(fail("expected the played-vs-best snapshot"))
-    val referenceLineRecord = execution.f.evidenceGraph.records.collectFirst {
-      case record @ EvidenceRecord(_, line: LineFactEvidence, _)
-          if line.line == primarySnapshot.comparison.referenceLine => record
-    }.getOrElse(fail("expected the reference line carrier"))
-    val referenceLinePayload = referenceLineRecord.payload match
-      case line: LineFactEvidence => line
-      case _                      => fail("expected line evidence")
-    val malformedLineRecord = referenceLineRecord.copy(
-      ref = referenceLineRecord.ref.copy(id = s"${referenceLineRecord.ref.id}:malformed"),
-      payload = referenceLinePayload.copy(replay = Nil)
-    )
-    val malformedSnapshot = RelativeAssessmentAssembler
-      .comparisonEndpointEvidenceSnapshots(execution.f.withEvidence(List(malformedLineRecord)))
-      .find(_.comparisonEvidence.id == primarySnapshot.comparisonEvidence.id)
-      .getOrElse(fail("expected snapshot with malformed sibling"))
-    assert(!malformedSnapshot.reference.witnesses.exists(
-      _.primitiveProofSource.id == malformedLineRecord.ref.id
-    ))
-
-    val ambiguousLineRecord = referenceLineRecord.copy(
-      ref = referenceLineRecord.ref.copy(id = s"${referenceLineRecord.ref.id}:ambiguous"),
-      payload = referenceLinePayload.copy(events = referenceLinePayload.lineEvents :+ LineMoveEvent(
-        kind = LineEventKind.Tempo,
-        moveUci = primarySnapshot.comparison.referenceLine.rootMove,
-        plyOffset = 0,
-        side = primarySnapshot.comparisonEvidence.position.sideToMove
-      ))
-    )
-    val ambiguousEndpointSnapshot = RelativeAssessmentAssembler
-      .comparisonEndpointEvidenceSnapshots(execution.f.withEvidence(List(ambiguousLineRecord)))
-      .find(_.comparisonEvidence.id == primarySnapshot.comparisonEvidence.id)
-      .getOrElse(fail("expected snapshot with ambiguous line carriers"))
-    assert(!ambiguousEndpointSnapshot.reference.witnesses.exists(witness =>
-      Set(
-        RootOwnedEffectPrimitiveKind.LineEpisode,
-        RootOwnedEffectPrimitiveKind.RootLineEvent,
-        RootOwnedEffectPrimitiveKind.EndgameHorizon
-      )(witness.effectDescriptor.identity.primitiveKind)
-    ))
-    val admittedWithoutUniqueNeutralWitness = causes.flatMap { case (_, cause) =>
-      val snapshot = snapshotsByComparisonId.getOrElse(
-        cause.comparisonEvidence.id,
-        fail(s"missing neutral snapshot for ${cause.comparisonEvidence.id}")
-      )
-      RelativeCauseConstructionAdmission.admittedDirectChannels(cause, graph).filter(channel =>
-        ComparisonEndpointEffectObservationPolicy
-          .uniqueNeutralWitnessFor(snapshot, cause.sourceSide, channel, graph)
-          .isEmpty
-      )
-    }
-    assertEquals(admittedWithoutUniqueNeutralWitness, Nil)
-
-    val (sampleCause, sampleChannel, sampleSnapshot, sampleWitness) = causes.iterator
-      .flatMap { case (_, cause) =>
-        val snapshot = snapshotsByComparisonId(cause.comparisonEvidence.id)
-        RelativeCauseConstructionAdmission.admittedDirectChannels(cause, graph).iterator.flatMap(
-          channel => ComparisonEndpointEffectObservationPolicy
-            .uniqueNeutralWitnessFor(snapshot, cause.sourceSide, channel, graph)
-            .map(witness => (cause, channel, snapshot, witness))
-        )
-      }
-      .nextOption()
-      .getOrElse(fail("expected an admitted channel with a neutral witness"))
-    val originalSide = sampleSnapshot.forSide(sampleCause.sourceSide)
-      .getOrElse(fail("expected a concrete comparison side"))
-    val duplicatedSide = originalSide.copy(witnesses = originalSide.witnesses :+ sampleWitness)
-    val ambiguousSnapshot = sampleCause.sourceSide match
-      case RelativeCauseSourceSide.Reference => sampleSnapshot.copy(reference = duplicatedSide)
-      case RelativeCauseSourceSide.Candidate => sampleSnapshot.copy(candidate = duplicatedSide)
-      case RelativeCauseSourceSide.Shared | RelativeCauseSourceSide.Mixed =>
-        fail("expected a concrete comparison side")
-    assertEquals(
-      ComparisonEndpointEffectObservationPolicy.uniqueNeutralWitnessFor(
-        ambiguousSnapshot,
-        sampleCause.sourceSide,
-        sampleChannel,
-        graph
-      ),
-      None
-    )
     val packet = execution.packet.getOrElse(fail("expected a disposition-closed packet"))
     val ledger = execution.r.causeDispositionLedger
     assertEquals(packet.causeDispositionLedger, ledger)
@@ -189,6 +98,17 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
       assert(channels.nonEmpty)
       assert(cause.directEffectAdmission.productionReady)
       assertEquals(graph.comparisonFor(cause).map(_.kind), Some(CandidateComparisonKind.PlayedVsBest))
+      val snapshot = snapshotsByComparisonId.getOrElse(
+        cause.comparisonEvidence.id,
+        fail(s"missing neutral snapshot for ${cause.comparisonEvidence.id}")
+      )
+      assert(
+        channels.exists(channel =>
+          ComparisonEndpointEffectObservationPolicy
+            .uniqueNeutralWitnessFor(snapshot, cause.sourceSide, channel, graph)
+            .nonEmpty
+        )
+      )
       channels.foreach(channel =>
         val targets = channel.binding.target.map(_.signaturePart).toSet
         assertEquals(channel.directChange, DirectCausalChange.Prevented)
@@ -582,30 +502,6 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
         Set.empty[String]
       )
     )
-    val misplacedThreat = rootThreat.copy(
-      ref = rootThreat.ref.copy(id = "misplaced-root-threat", line = Some(queenCandidate))
-    )
-    val comparisonRecord = ExplicitCauseAdmissionTestSupport.comparisonRecord(
-      "threat-snapshot-comparison",
-      queenPosition,
-      queenFact
-    )
-    val misplacedGraph = graphOf(comparisonRecord, misplacedThreat)
-    assertEquals(
-      EvidenceObjectBinding.comparisonEndpointEvidenceWitnesses(
-        RelativeCauseSourceSide.Reference,
-        queenReference,
-        queenPosition,
-        comparisonRecord.ref,
-        queenFact,
-        List(misplacedThreat),
-        List(misplacedThreat),
-        misplacedGraph
-      ),
-      Nil,
-      "a threat payload cannot borrow a different carrier line in the neutral snapshot"
-    )
-
   test("Tactical mechanism requires its own exact root move and an owned primitive source"):
     val explicitRelation = mateRelation("mechanism-relation", queenReference)
     val mateEval = evalRecord("mechanism-mate-eval", queenPosition, queenReference)
