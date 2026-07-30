@@ -1,6 +1,7 @@
 package lila.chessjudgment.analysis.assembly
 
 import chess.{ Bishop, Black, Color, King, Knight, Pawn, Queen, Rook, Square, White }
+import lila.chessjudgment.analysis.line.LineFactNormalizer
 import lila.chessjudgment.model.Motif
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
@@ -224,6 +225,64 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
       )
     }
 
+  test("normalization keeps the root-to-event proof prefix for a delayed durable material result"):
+    val fen = "k7/7b/2p5/8/1r2r3/8/4QNB1/K1R5 w - - 0 1"
+    val moves = List("e2e4", "b4e4", "g2e4", "h7e4", "f2e4", "a8b8", "c1c6")
+    val replay = legalReplay(fen, moves)
+    val moveRefs = replay.map(step =>
+      PrincipalVariationEvidence.LineMoveRef(step.ply, step.moveUci, step.fenAfter)
+    )
+    val first = moveRefs.head
+    val lineRef = LineNodeRef("normalized-delayed-material", first.uci, 1, LineNodeRole.BestReference)
+    val facts = PrincipalVariationEvidence.LineFacts(
+      line = PrincipalVariationEvidence.LineVariationRef(moveRefs),
+      first = first,
+      reply = moveRefs.lift(1),
+      continuation = moveRefs.lift(2),
+      continuationTail = moveRefs.drop(3)
+    )
+    val materialSummary = CandidateLineAssembler
+      .lineMaterialSummary(moves, fen, previousCaptureSquare = None)
+      .getOrElse(fail("expected a complete material summary"))
+    val line = LineFactNormalizer
+      .fromValidatedLine(
+        id = "normalized-delayed-material-evidence",
+        lineRef = lineRef,
+        facts = facts,
+        position = PositionNodeRef(fen, 0, Some(White)),
+        scope = lineRef.role.scope,
+        materialSummary = Some(materialSummary)
+      )
+      .payload match
+      case payload: LineFactEvidence => payload
+      case _                         => fail("expected normalized line evidence")
+    val consequence = line.lineConsequences
+      .find(_.kind == LineConsequenceKind.MaterialGain)
+      .getOrElse(fail("expected a durable material gain"))
+
+    assertEquals(consequence.eventMove, Some("f2e4"))
+    assertEquals(consequence.lineMoves, moves.take(5))
+    assert(!consequence.lineMoves.contains("c1c6"))
+    val episode = line
+      .rootOwnedCausalEpisodes(line.line.rootMove)
+      .find(_.consequence == consequence)
+      .getOrElse(fail("expected a root-owned delayed material episode"))
+    assertEquals(episode.eventPlyOffset, 4)
+    assertEquals(episode.chainMoves, moves.take(5))
+    assert(episode.links.exists(_.kind == RootCausalLinkKind.ForcedCaptureResponse))
+    assert(episode.links.exists(_.kind == RootCausalLinkKind.MaterialCaptureResponse))
+    val recoveryConsequence = line.lineConsequences
+      .find(_.kind == LineConsequenceKind.RecoveryWindow)
+      .getOrElse(fail("expected a durable recovery window"))
+    assertEquals(recoveryConsequence.eventMove, Some("f2e4"))
+    assertEquals(recoveryConsequence.lineMoves, moves.take(5))
+    val recoveryEpisode = line
+      .rootOwnedCausalEpisodes(line.line.rootMove)
+      .find(_.consequence == recoveryConsequence)
+      .getOrElse(fail("expected a root-owned durable recovery episode"))
+    assertEquals(recoveryEpisode.eventPlyOffset, 4)
+    assert(RootOwnedEffectPolicy.admitsLineEpisode(line, recoveryEpisode))
+
   test("broad continuation geometry cannot seed a root-owned material result"):
     val unrelatedCheck = unrelatedCheckFollowUpMaterialLine()
     val checkSteps = unrelatedCheck.lineReplaySteps
@@ -265,6 +324,7 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
   test("delayed root-owned causal episode truth table"):
     val clearance = clearanceLine()
     val recoveryChain = recoveryChainLine()
+    val immediateRecapture = immediateRecaptureLine()
     val unrelated = unrelatedFollowUpLine()
     val pawnLoss = actorLossLine(
       id = "pawn-loss",
@@ -282,6 +342,7 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     val rows = List(
       ("continuous clearance", clearance, true, Some(RootCausalLinkKind.ContinuousLineAccess)),
       ("continuous material recovery chain", recoveryChain, true, Some(RootCausalLinkKind.MaterialCaptureResponse)),
+      ("immediate typed recapture", immediateRecapture, true, Some(RootCausalLinkKind.RootActorCaptured)),
       ("unrelated later tactic", unrelated, false, None),
       ("pawn root actor captured", pawnLoss, true, Some(RootCausalLinkKind.RootActorCaptured)),
       ("knight root actor captured", knightLoss, true, Some(RootCausalLinkKind.RootActorCaptured))
@@ -298,7 +359,32 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     val recoveryEpisodes = recoveryChain.rootOwnedCausalEpisodes(recoveryChain.line.rootMove)
     assert(recoveryEpisodes.exists(_.links.exists(_.kind == RootCausalLinkKind.ContinuousLineAccess)))
     assert(recoveryEpisodes.exists(_.links.exists(_.kind == RootCausalLinkKind.MaterialActorContinuation)))
-    assert(recoveryEpisodes.exists(_.forcingTacticalResource(recoveryChain)))
+    val recoveryConsequence = recoveryChain.lineConsequences
+      .find(_.kind == LineConsequenceKind.RecoveryWindow)
+      .getOrElse(fail("expected the durable recovery event"))
+    assertEquals(recoveryChain.durableRecoveryCaptureForMover.map(_.moveUci), Some("a7b6"))
+    assertEquals(recoveryConsequence.eventMove, Some("a7b6"))
+    assertEquals(recoveryConsequence.lineMoves.lastOption, Some("a7b6"))
+    val recaptureEpisode = immediateRecapture
+      .rootOwnedCausalEpisodes(immediateRecapture.line.rootMove)
+      .find(_.consequence.kind == LineConsequenceKind.RecaptureSequence)
+      .getOrElse(fail("expected the exact b1d2 recapture"))
+    assertEquals(recaptureEpisode.consequence.eventMove, Some("b1d2"))
+    assertEquals(recaptureEpisode.consequence.beneficiary, Some(White))
+    assertEquals(recaptureEpisode.eventPlyOffset, 1)
+    assert(RootOwnedEffectPolicy.admitsLineEpisode(immediateRecapture, recaptureEpisode))
+    val recaptureRecord = lineRecord("cs07-immediate-recapture", immediateRecapture)
+    EvidenceObjectBinding
+      .comparisonEndpointLineObservations(
+        recaptureRecord.ref,
+        immediateRecapture,
+        recaptureRecord.ref.position
+      )
+      .qualitative match
+      case ComparisonEndpointEffectInventory.Complete(observations) =>
+        assert(observations.nonEmpty)
+      case ComparisonEndpointEffectInventory.Incomplete =>
+        fail("an exact admitted recapture must keep a complete qualitative inventory")
     assertEquals(pawnLoss.rootOwnedCausalConsequences(pawnLoss.line.rootMove).map(_.kind), List(LineConsequenceKind.MaterialLoss))
     assertEquals(knightLoss.rootOwnedCausalConsequences(knightLoss.line.rootMove).map(_.kind), List(LineConsequenceKind.MaterialLoss))
     List("pawn" -> pawnLoss, "knight" -> knightLoss).foreach { case (label, line) =>
@@ -620,30 +706,64 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
 
   private def recoveryChainLine(): LineFactEvidence =
     val fen = "r1b1k2r/p1q1bpp1/1pp1pn1p/8/3P1B1Q/3B1N2/PPP2PPP/R4RK1 b kq - 3 14"
-    val moves = List("f6d5", "f4c7", "e7h4", "c7b6", "h4f2", "f1f2")
-    val captures = List(
-      capture("f4c7", 1, White, Bishop.name, Queen.name, "c7", 900),
-      capture("e7h4", 2, Black, Bishop.name, Queen.name, "h4", 900),
-      capture("c7b6", 3, White, Bishop.name, Pawn.name, "b6", 100),
-      capture("h4f2", 4, Black, Bishop.name, Pawn.name, "f2", 100),
-      capture("f1f2", 5, White, "Rook", Bishop.name, "f2", 300, recapture = true)
+    val moves = List(
+      "f6d5", "f4c7", "e7h4", "c7b6", "h4f2", "f1f2", "a7b6"
     )
-    materialLine(
+    normalizedMaterialLine(
       id = "recovery-reference",
       fen = fen,
       moves = moves,
       sideToMove = Black,
-      captures = captures,
-      consequence = LineConsequence(
-        kind = LineConsequenceKind.RecoveryWindow,
-        lineMoves = captures.map(_.moveUci),
-        proofSignal = true,
-        eventMove = None,
-        rootMove = Some("f6d5"),
-        rootSide = Some(Black),
-        beneficiary = Some(Black)
-      )
+      role = LineNodeRole.BestReference,
+      rank = 1
     )
+
+  private def immediateRecaptureLine(): LineFactEvidence =
+    normalizedMaterialLine(
+      id = "cs07-played-recapture",
+      fen = "r1b2rk1/5ppp/1qp2n2/p2p4/1b6/4P1P1/PPQB1PBP/RNR3K1 b - - 1 13",
+      moves = List("b4d2", "b1d2"),
+      sideToMove = Black,
+      role = LineNodeRole.Played,
+      rank = 2
+    )
+
+  private def normalizedMaterialLine(
+      id: String,
+      fen: String,
+      moves: List[String],
+      sideToMove: Color,
+      role: LineNodeRole,
+      rank: Int
+  ): LineFactEvidence =
+    val replay = legalReplay(fen, moves)
+    val moveRefs = replay.map(step =>
+      PrincipalVariationEvidence.LineMoveRef(step.ply, step.moveUci, step.fenAfter)
+    )
+    val first = moveRefs.head
+    val line = LineNodeRef(id, first.uci, rank, role)
+    val facts = PrincipalVariationEvidence.LineFacts(
+      line = PrincipalVariationEvidence.LineVariationRef(moveRefs),
+      first = first,
+      reply = moveRefs.lift(1),
+      continuation = moveRefs.lift(2),
+      continuationTail = moveRefs.drop(3)
+    )
+    val materialSummary = CandidateLineAssembler
+      .lineMaterialSummary(moves, fen, previousCaptureSquare = None)
+      .getOrElse(fail("expected a complete material summary"))
+    LineFactNormalizer
+      .fromValidatedLine(
+        id = s"$id-evidence",
+        lineRef = line,
+        facts = facts,
+        position = PositionNodeRef(fen, 0, Some(sideToMove)),
+        scope = role.scope,
+        materialSummary = Some(materialSummary)
+      )
+      .payload match
+      case payload: LineFactEvidence => payload
+      case _                         => fail("expected normalized line evidence")
 
   private def actorLossLine(
       id: String,

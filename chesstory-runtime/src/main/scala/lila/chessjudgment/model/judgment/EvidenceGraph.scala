@@ -7604,6 +7604,31 @@ final case class LineMaterialSummary(
   def hasResolvedMaterialSequence: Boolean =
     materialWindowComplete && (hasRecaptureChain || hasRecoveryWindow)
 
+  private[chessjudgment] def durableRecoveryCaptureForMover: Option[LineMaterialCapture] =
+    val orderedCaptures = captures.sortBy(_.plyOffset)
+    val runningBalances = orderedCaptures
+      .scanLeft(0)((balance, capture) =>
+        balance + (if capture.side == sideToMove then capture.valueCp else -capture.valueCp)
+      )
+      .tail
+    Option
+      .when(
+        materialWindowComplete &&
+          hasRecoveryWindow &&
+          promotionGainCpForMover == 0 &&
+          runningBalances.lastOption.getOrElse(0) == netCaptureCpForMover
+      )(
+        orderedCaptures.zip(runningBalances).zipWithIndex.collectFirst {
+          case ((capture, balance), index)
+              if capture.side == sideToMove &&
+                runningBalances.take(index).exists(_ < 0) &&
+                balance >= 0 &&
+                runningBalances.drop(index).forall(_ >= 0) =>
+            capture
+        }
+      )
+      .flatten
+
   def hasProofSignalMaterialGain: Boolean =
     materialWindowComplete && netCaptureCpForMover > 0 && (nonPawnCapturesByMover.nonEmpty || hasPromotionGainForMover)
 
@@ -7861,6 +7886,8 @@ final case class LineFactEvidence private[chessjudgment] (
     rootActorSurvivesThrough(replay)
   def materialCaptures: List[LineMaterialCapture] =
     material.toList.flatMap(_.captures)
+  private[chessjudgment] def durableRecoveryCaptureForMover: Option[LineMaterialCapture] =
+    material.flatMap(_.durableRecoveryCaptureForMover)
   def rootMaterialCapture(rootMoveUci: String): Option[LineMaterialCapture] =
     val normalizedRoot = normalizeUci(rootMoveUci)
     materialCaptures.find(capture =>
@@ -8338,8 +8365,23 @@ object RootOwnedCausalEpisode:
         capture.exists(captured =>
           consequence.beneficiary.contains(captured.side) && captured.side != rootColor
         )
-      case LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow =>
-        capture.exists(_.recapture)
+      case LineConsequenceKind.RecaptureSequence =>
+        capture.exists(actual =>
+          actual.recapture &&
+            consequence.eventMove.exists(EvidenceRef.sameMove(_, actual.moveUci)) &&
+            consequence.rootSide.contains(rootColor) &&
+            consequence.beneficiary.contains(actual.side)
+        )
+      case LineConsequenceKind.RecoveryWindow =>
+        (line.durableRecoveryCaptureForMover, capture) match
+          case (Some(expected), Some(actual)) =>
+            expected == actual &&
+              expected.side == rootColor &&
+              consequence.eventMove.exists(EvidenceRef.sameMove(_, expected.moveUci)) &&
+              consequence.rootSide.contains(rootColor) &&
+              consequence.beneficiary.contains(rootColor)
+          case _ =>
+            false
       case LineConsequenceKind.ImmediateReplyCheck =>
         eventPlyOffset == 1 && mover.exists(_.color != rootColor) && after.exists(_.check.yes)
       case LineConsequenceKind.Mate =>

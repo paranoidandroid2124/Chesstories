@@ -390,17 +390,17 @@ object LineFactNormalizer:
           rootMove.filter(_ => materialGainEvent.exists(_.plyOffset == 0))
         val materialLossRootMove =
           rootMove.filter(_ => materialLossEvent.exists(_.plyOffset == 0) || selectedRootMovedOffer.nonEmpty)
+        def proofMovesThrough(plyOffset: Int): List[String] =
+          indexedProofMoves.takeWhile(_._1 <= plyOffset).map(_._2).distinct
         def proofMovesFrom(event: Option[MaterialOutcomeEvent]): List[String] =
           event
-            .map(materialEvent =>
-              indexedProofMoves.dropWhile(_._1 < materialEvent.plyOffset).map(_._2).distinct
-            )
+            .map(materialEvent => proofMovesThrough(materialEvent.plyOffset))
             .getOrElse(Nil)
         val materialGainProofMoves = proofMovesFrom(materialGainEvent)
         val materialLossProofMoves = materialLossEvent
           .map(event => (selectedRootMovedOffer.map(_._1).toList ++ proofMovesFrom(Some(event))).distinct)
           .getOrElse(Nil)
-        List(
+        val materialResultConsequences = List(
           Option.when(summary.hasProofSignalMaterialGain || summary.hasUnrecoveredPawnGainForMover)(
             LineConsequence(
               LineConsequenceKind.MaterialGain,
@@ -424,21 +424,31 @@ object LineFactNormalizer:
               beneficiary = Some(!summary.sideToMove),
               materialOutcome = materialLossOutcome
             )
-          ),
-          Option.when(summary.hasResolvedMaterialSequence)(
-            LineConsequence(
-              LineConsequenceKind.RecaptureSequence,
-              summary.captures.map(_.moveUci),
-              proofSignal = true,
-              rootMove = rootMove,
-              rootSide = Some(summary.sideToMove)
+          )
+        ).flatten
+        val recaptureConsequences =
+          Option
+            .when(summary.materialWindowComplete)(summary.captures.filter(_.recapture))
+            .toList
+            .flatten
+            .map(capture =>
+              LineConsequence(
+                LineConsequenceKind.RecaptureSequence,
+                proofMovesThrough(capture.plyOffset),
+                proofSignal = true,
+                eventMove = Some(capture.moveUci),
+                rootMove = rootMove,
+                rootSide = Some(summary.sideToMove),
+                beneficiary = Some(capture.side)
+              )
             )
-          ),
-          Option.when(summary.hasRecoveryWindow)(
+        val remainingMaterialConsequences = List(
+          summary.durableRecoveryCaptureForMover.map(capture =>
             LineConsequence(
               LineConsequenceKind.RecoveryWindow,
-              summary.captures.map(_.moveUci),
+              proofMovesThrough(capture.plyOffset),
               proofSignal = true,
+              eventMove = Some(capture.moveUci),
               rootMove = rootMove,
               rootSide = Some(summary.sideToMove),
               beneficiary = Some(summary.sideToMove)
@@ -468,6 +478,7 @@ object LineFactNormalizer:
             )
           )
         ).flatten
+        materialResultConsequences ++ recaptureConsequences ++ remainingMaterialConsequences
       }
     (outcome ++ forced ++ material).distinct
 
