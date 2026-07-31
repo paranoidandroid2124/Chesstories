@@ -90,28 +90,77 @@ object RelativeAssessmentAssembler:
         case _ =>
           None
 
+    /** Projected lookup is complete only when every enumerated carrier is
+      * resolved and every exact PlanResult can be projected without losing a
+      * magnitude conflict. Equal duplicate observations are one fact. A real
+      * semantic match may cross taxonomy; certified absence still requires
+      * enumeration of the source taxonomy on this endpoint.
+      */
+    def uniqueComparisonMagnitudeFor(
+        key: ComparisonEndpointEffectObservationPolicy.PlanResultComparisonKey,
+        requiredAbsentPlanId: String
+    ): Option[Option[ComparisonEndpointEffectMagnitude]] =
+      if !extractionReady || incompletePlanIds.nonEmpty then None
+      else
+        val projected = observations.toList.map(observation =>
+          ComparisonEndpointEffectObservationPolicy
+            .planResultComparisonKey(observation)
+            .map(_ -> observation.magnitude)
+        )
+        if projected.exists(_.isEmpty) then None
+        else
+          val byKey = projected.flatten.groupBy(_._1)
+          if byKey.values.exists(_.map(_._2).distinct.size != 1) then None
+          else
+            byKey.get(key).flatMap(_.headOption).map(_._2) match
+              case Some(magnitude) => Some(Some(magnitude))
+              case None if enumeratedPlanIds(requiredAbsentPlanId) => Some(None)
+              case None => None
+
   /** Typed PlanResult comparison is admissible only when the source owns the
-    * exact observation and the counterpart inventory is complete for that
-    * same plan/result scope. Missing enumeration and unresolved carriers fail
-    * closed; complete absence is a real differential.
+    * exact observation and the counterpart inventory is complete for the
+    * relevant comparison scope. Missing enumeration and unresolved carriers
+    * fail closed; complete absence is a real differential. The source-keyed
+    * neutral mapping alone selects projected comparison; an absent mapping
+    * retains the generic exact-scope path and a mismatched mapping is invalid.
     */
   private[analysis] object PlanResultDifferentialPolicy:
     def admitted(
         sourceInventory: PlanResultEndpointInventory,
         counterpartInventory: PlanResultEndpointInventory,
+        source: EvidenceRef,
         sourceObservation: ComparisonEndpointEffectObservation
     ): Boolean =
       val policy = ComparisonEndpointEffectObservationPolicy
-      (for
-        sourceLookup <- sourceInventory.uniqueObservationFor(sourceObservation.scope)
-        observedSource <- sourceLookup
-        if observedSource == sourceObservation
-        counterpartLookup <- counterpartInventory.uniqueObservationFor(sourceObservation.scope)
-      yield counterpartLookup match
-        case None => true
-        case Some(counterpartObservation) =>
-          policy.compareMagnitude(sourceObservation.magnitude, counterpartObservation.magnitude) ==
-            policy.MagnitudeRelation.LeftStrictlyStronger).getOrElse(false)
+      sourceInventory.exactInducedResponseObservationFor(source) match
+        case Some(mappedObservation) if mappedObservation == sourceObservation =>
+          (for
+            sourcePlanId <- sourceObservation.scope.effectIdentity.planIds.distinct match
+              case exact :: Nil => Some(exact)
+              case _            => None
+            key <- policy.planResultComparisonKey(sourceObservation)
+            sourceLookup <- sourceInventory.uniqueComparisonMagnitudeFor(key, sourcePlanId)
+            observedSourceMagnitude <- sourceLookup
+            if observedSourceMagnitude == sourceObservation.magnitude
+            counterpartLookup <- counterpartInventory.uniqueComparisonMagnitudeFor(key, sourcePlanId)
+          yield counterpartLookup match
+            case None => true
+            case Some(counterpartMagnitude) =>
+              policy.compareMagnitude(sourceObservation.magnitude, counterpartMagnitude) ==
+                policy.MagnitudeRelation.LeftStrictlyStronger).getOrElse(false)
+        case Some(_) =>
+          false
+        case None =>
+          (for
+            sourceLookup <- sourceInventory.uniqueObservationFor(sourceObservation.scope)
+            observedSource <- sourceLookup
+            if observedSource == sourceObservation
+            counterpartLookup <- counterpartInventory.uniqueObservationFor(sourceObservation.scope)
+          yield counterpartLookup match
+            case None => true
+            case Some(counterpartObservation) =>
+              policy.compareMagnitude(sourceObservation.magnitude, counterpartObservation.magnitude) ==
+                policy.MagnitudeRelation.LeftStrictlyStronger).getOrElse(false)
 
   private[analysis] final case class PlanResultEndpointInventoryPair(
       reference: PlanResultEndpointInventory,
@@ -1083,6 +1132,7 @@ object RelativeAssessmentAssembler:
         yield PlanResultDifferentialPolicy.admitted(
           sourceInventory,
           counterpartInventory,
+          neutralWitness.primitiveProofSource,
           sourceObservation
         )).getOrElse(false)
       case _ =>

@@ -113,6 +113,7 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
     assert(RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
       source,
       completeEmpty,
+      fixture.refutedEvent.ref,
       sourceObservation
     ))
 
@@ -126,8 +127,258 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
     assert(!RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
       source,
       unresolved,
+      fixture.refutedEvent.ref,
       sourceObservation
     ))
+
+  test("move-order differential compares endpoint-neutral PlanResults while preserving exact ownership"):
+    val reference = distinctRootMoveOrderFixture(LineNodeRole.BestReference, strength = 3)
+
+    def endpointFacts(
+        candidate: InventoryFixture,
+        candidateEvent: EvidenceRecord
+    ): (
+        JudgmentAssemblyContext,
+        CandidateComparisonFact,
+        RelativeAssessmentAssembler.PlanResultEndpointInventoryPair
+    ) =
+      val facts = RelativeAssessmentAssembler.enrichFacts(
+        comparisonContext(
+          reference,
+          candidate,
+          referenceEvents = List(reference.robustEvent),
+          candidateEvents = List(candidateEvent)
+        )
+      )
+      val comparison = facts.evidenceGraph.records.collect {
+        case EvidenceRecord(_, CandidateComparisonEvidence(comparison), _)
+            if comparison.kind == CandidateComparisonKind.PlayedVsBest => comparison
+      } match
+        case exact :: Nil => exact
+        case _            => fail("expected one PlayedVsBest comparison")
+      val inventories = RelativeAssessmentAssembler.planResultEndpointInventories(
+        facts.evidenceGraph,
+        comparison,
+        reference.root
+      )
+      (facts, comparison, inventories)
+
+    def sourceObservation(
+        inventories: RelativeAssessmentAssembler.PlanResultEndpointInventoryPair
+    ): ComparisonEndpointEffectObservation =
+      inventories.reference
+        .exactInducedResponseObservationFor(reference.robustEvent.ref)
+        .getOrElse(fail("expected source-keyed reference move-order observation"))
+
+    def candidateObservation(
+        inventories: RelativeAssessmentAssembler.PlanResultEndpointInventoryPair
+    ): ComparisonEndpointEffectObservation =
+      inventories.candidate.observations.toList match
+        case exact :: Nil => exact
+        case _            => fail("expected one ordinary candidate PlanResult")
+
+    def differential(
+        inventories: RelativeAssessmentAssembler.PlanResultEndpointInventoryPair
+    ): Boolean =
+      RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
+        inventories.reference,
+        inventories.candidate,
+        reference.robustEvent.ref,
+        sourceObservation(inventories)
+      )
+
+    val equalCandidate = distinctRootMoveOrderFixture(LineNodeRole.Played, strength = 3)
+    val (equalFacts, equalComparison, equalInventories) =
+      endpointFacts(equalCandidate, equalCandidate.robustEvent)
+    val exactSource = sourceObservation(equalInventories)
+    val exactCounterpart = candidateObservation(equalInventories)
+    val sourceIdentity = exactSource.scope.effectIdentity.planResult
+      .getOrElse(fail("expected exact source PlanResult identity"))
+    val counterpartIdentity = exactCounterpart.scope.effectIdentity.planResult
+      .getOrElse(fail("expected exact counterpart PlanResult identity"))
+    assertNotEquals(exactSource.scope, exactCounterpart.scope)
+    assertEquals(sourceIdentity.source.moveUci, "e4e5")
+    assertEquals(counterpartIdentity.source.moveUci, "d5d6")
+    assertEquals(
+      sourceIdentity.causalRoute.map(route => route.fromMoveUci -> route.toMoveUci),
+      List("f2f4" -> "e4e5")
+    )
+    assertEquals(
+      counterpartIdentity.causalRoute.map(route => route.fromMoveUci -> route.toMoveUci),
+      List("e4e5" -> "d5d6")
+    )
+    assert(exactSource.scope.consequenceSignatures.contains("Move:e4e5"))
+    assert(!exactCounterpart.scope.consequenceSignatures.exists(_.startsWith("Move:")))
+    val sourceKey = ComparisonEndpointEffectObservationPolicy
+      .planResultComparisonKey(exactSource)
+      .getOrElse(fail("expected source comparison key"))
+    assertEquals(
+      ComparisonEndpointEffectObservationPolicy.planResultComparisonKey(exactCounterpart),
+      Some(sourceKey)
+    )
+    assert(!differential(equalInventories))
+    val ordinarySource = equalInventories.reference.observations.filterNot(_ == exactSource).toList match
+      case exact :: Nil => exact
+      case _            => fail("expected one ordinary source PlanResult")
+    assert(!RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
+      equalInventories.reference,
+      equalInventories.candidate,
+      reference.robustEvent.ref,
+      ordinarySource
+    ))
+
+    val weakerCandidate = distinctRootMoveOrderFixture(LineNodeRole.Played, strength = 2)
+    val (weakerFacts, _, weakerInventories) =
+      endpointFacts(weakerCandidate, weakerCandidate.robustEvent)
+    assertEquals(
+      ComparisonEndpointEffectObservationPolicy
+        .planResultComparisonKey(candidateObservation(weakerInventories)),
+      Some(sourceKey)
+    )
+    assert(differential(weakerInventories))
+
+    val strongerCandidate = distinctRootMoveOrderFixture(LineNodeRole.Played, strength = 4)
+    val (_, _, strongerInventories) =
+      endpointFacts(strongerCandidate, strongerCandidate.robustEvent)
+    val strongerSource = sourceObservation(strongerInventories)
+    val strongerCounterpart = candidateObservation(strongerInventories)
+    assert(
+      List(strongerInventories.reference, strongerInventories.candidate)
+        .forall(inventory => inventory.extractionReady && inventory.incompletePlanIds.isEmpty)
+    )
+    assertEquals(
+      ComparisonEndpointEffectObservationPolicy.planResultComparisonKey(strongerCounterpart),
+      ComparisonEndpointEffectObservationPolicy.planResultComparisonKey(strongerSource)
+    )
+    assertEquals(
+      ComparisonEndpointEffectObservationPolicy.compareMagnitude(
+        strongerSource.magnitude,
+        strongerCounterpart.magnitude
+      ),
+      ComparisonEndpointEffectObservationPolicy.MagnitudeRelation.RightStrictlyStronger
+    )
+    assert(!differential(strongerInventories))
+
+    val incompleteGraph = equalFacts.evidenceGraph.records
+      .filterNot(_.ref.id == equalCandidate.pressureRecord.ref.id)
+      .foldLeft(TypedEvidenceGraph.empty)((graph, record) => graph.add(record))
+    val incompleteInventories = RelativeAssessmentAssembler.planResultEndpointInventories(
+      incompleteGraph,
+      equalComparison,
+      reference.root
+    )
+    assert(!incompleteInventories.candidate.extractionReady)
+    assert(!differential(incompleteInventories))
+
+    val unrelatedCandidate = distinctRootMoveOrderFixture(
+      LineNodeRole.Played,
+      strength = 3,
+      consequenceKind = TransitionConsequenceKind.CenterControlGain
+    )
+    val (unrelatedFacts, _, unrelatedInventories) =
+      endpointFacts(unrelatedCandidate, unrelatedCandidate.robustEvent)
+    assert(
+      List(unrelatedInventories.reference, unrelatedInventories.candidate)
+        .forall(inventory => inventory.extractionReady && inventory.incompletePlanIds.isEmpty)
+    )
+    assertNotEquals(
+      ComparisonEndpointEffectObservationPolicy
+        .planResultComparisonKey(candidateObservation(unrelatedInventories)),
+      Some(sourceKey)
+    )
+    val sourcePlanId = exactSource.scope.effectIdentity.planIds match
+      case exact :: Nil => exact
+      case _            => fail("expected one source plan id")
+    assert(unrelatedInventories.candidate.enumeratedPlanIds(sourcePlanId))
+    assertEquals(
+      unrelatedInventories.candidate.uniqueComparisonMagnitudeFor(sourceKey, sourcePlanId),
+      Some(None)
+    )
+    assert(differential(unrelatedInventories))
+
+    val fieldBoundaryMismatches = List(
+      exactCounterpart.copy(scope = exactCounterpart.scope.copy(directChange = DirectCausalChange.Lost)),
+      exactCounterpart.copy(scope = exactCounterpart.scope.copy(stake = RootOwnedEffectStake.ActorLiability))
+    )
+    assert(fieldBoundaryMismatches.forall(observation =>
+      ComparisonEndpointEffectObservationPolicy.planResultComparisonKey(observation) != Some(sourceKey)
+    ))
+
+    val production = RelativeAssessmentAssembler.enrichCauses(weakerFacts)
+    val (causeRef, cause) = production.evidenceGraph.records.collect {
+      case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _)
+          if cause.kind == RelativeCauseKind.WrongMoveOrder => ref -> cause
+    } match
+      case exact :: Nil => exact
+      case _            => fail("expected one stronger-source WrongMoveOrder")
+    val admittedChannel = RelativeCauseConstructionAdmission
+      .admittedDirectChannels(cause, production.evidenceGraph)
+      .find(_.binding.source == reference.robustEvent.ref)
+      .getOrElse(fail("expected admitted exact reference carrier"))
+    assertEquals(
+      admittedChannel.rootOwnedEffectDescriptor.map(_.identity),
+      Some(sourceObservation(weakerInventories).scope.effectIdentity)
+    )
+    val exactProof = admittedChannel.rootOwnedProof.getOrElse(fail("expected exact PlanResult proof"))
+    exactProof match
+      case RootOwnedEffectProof.PlanResult(source, event, assessment) =>
+        assertEquals(source, reference.robustEvent.ref)
+        assertEquals(event, reference.robustEvent.payload)
+        assertEquals(assessment.consequence.strength, 3)
+      case _ => fail("expected PlanResult primitive")
+    assertEquals(admittedChannel.proofSegment, DirectCauseProofSegment.from(exactProof))
+    assert(admittedChannel.binding.consequence.exists(_.signaturePart == "Move:e4e5"))
+
+    val snapshotWitness = RelativeAssessmentAssembler
+      .comparisonEndpointEvidenceSnapshots(weakerFacts)
+      .flatMap(_.reference.witnesses)
+      .find(witness =>
+        witness.primitiveProofSource == reference.robustEvent.ref &&
+          witness.observation.contains(sourceObservation(weakerInventories))
+    )
+      .getOrElse(fail("expected exact snapshot witness"))
+    assertEquals(snapshotWitness.effectDescriptor.identity, exactSource.scope.effectIdentity)
+    assertEquals(admittedChannel.rootOwnedEffectDescriptor, Some(snapshotWitness.effectDescriptor))
+    assertEquals(
+      admittedChannel.binding,
+      snapshotWitness.binding.copy(proofRole = Some(RelativeCauseProofRole.DirectProof))
+    )
+    assertEquals(snapshotWitness.rootOwnedProof, exactProof)
+
+    val claim = JudgmentClaimAssembler
+      .propose(production)
+      .find(claim => claim.family == ClaimFamily.Tactical && claim.evidence.contains(causeRef))
+      .getOrElse(fail("expected tactical WMO claim"))
+    assertEquals(
+      ClaimTruthPolicy.evaluate(claim, production.evidenceGraph).status,
+      ClaimAdmissionStatus.Certified
+    )
+    assert(!RelativeAssessmentAssembler.enrichCauses(equalFacts).evidenceGraph.records.exists {
+      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
+        cause.kind == RelativeCauseKind.WrongMoveOrder
+      case _ => false
+    })
+    val unrelatedProduction = RelativeAssessmentAssembler.enrichCauses(unrelatedFacts)
+    assert(unrelatedProduction.evidenceGraph.records.exists {
+      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
+          if cause.kind == RelativeCauseKind.WrongMoveOrder =>
+        RelativeCauseConstructionAdmission
+          .admittedDirectChannels(cause, unrelatedProduction.evidenceGraph)
+          .nonEmpty
+      case _ => false
+    })
+
+    val equalMutationGraph = production.evidenceGraph.records
+      .map(record =>
+        if record.ref.id == weakerCandidate.robustEvent.ref.id then equalCandidate.robustEvent
+        else record
+      )
+      .foldLeft(TypedEvidenceGraph.empty)((graph, record) => graph.add(record))
+    assert(RelativeCauseConstructionAdmission.admittedDirectChannels(cause, equalMutationGraph).nonEmpty)
+    assertEquals(
+      ClaimTruthPolicy.evaluate(claim, equalMutationGraph).status,
+      ClaimAdmissionStatus.Deferred
+    )
 
   test("PVB retains an exact played plan refutation without counterpart plan enumeration"):
     val fixture = retainedLiabilityFixture()
@@ -330,74 +581,12 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       inducedMoveOrder = true,
       rootMove = "e2e4"
     )
-    val referenceAfter = fixture.structuralRecord.payload match
-      case StructuralDeltaEvidence(transition, _, _, _) => transition.to
-      case _                                            => fail("expected reference structural transition")
-    val candidateAfter = candidateFixture.structuralRecord.payload match
-      case StructuralDeltaEvidence(transition, _, _, _) => transition.to
-      case _                                            => fail("expected candidate structural transition")
-    val referenceNode = CandidateLineNode(
-      fixture.line,
-      EngineLine(List("b1c3", "d5d4", "e2e4"), 300, depth = 18),
-      fixture.lineRecord.ref
+    val sourceContext = comparisonContext(
+      fixture,
+      candidateFixture,
+      referenceEvents = List(eventRecord)
     )
-    val candidateNode = CandidateLineNode(
-      candidateFixture.line,
-      EngineLine(List("e2e4", "d5d4", "e4e5"), -300, depth = 18),
-      candidateFixture.lineRecord.ref
-    )
-    val assembledInput = NormalizedMoveReviewInput(
-      beforeFen = fixture.root.fen,
-      playedMoveUci = candidateFixture.line.rootMove,
-      beforePly = fixture.root.ply,
-      sideToMove = Some(White),
-      afterPlayedFen = candidateAfter.fen,
-      afterReferenceFen = Some(referenceAfter.fen),
-      lines = List(
-        NormalizedCandidateLine(LineNodeRole.BestReference, fixture.line.rank, referenceNode.line),
-        NormalizedCandidateLine(LineNodeRole.Played, candidateFixture.line.rank, candidateNode.line)
-      ),
-      opening = None
-    )
-    def transitionEvidence(id: String, scope: EvidenceScope): EvidenceRef =
-      EvidenceRef(
-        id,
-        EvidenceProducer.MoveTransitionProducer,
-        EvidenceLayer.MoveTransition,
-        fixture.root,
-        None,
-        scope,
-        EvidenceConfidence.LegalReplayVerified
-      )
-    val sourceGraph = (fixture.baseRecords ++ List(eventRecord) ++ candidateFixture.baseRecords)
-      .foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
-    val sourceContext = JudgmentAssemblyContext(
-      input = assembledInput,
-      positions = List(
-        PositionNode(PositionNodeRole.Before, fixture.root),
-        PositionNode(PositionNodeRole.AfterPlayed, candidateAfter),
-        PositionNode(PositionNodeRole.AfterReference, referenceAfter)
-      ),
-      lines = List(referenceNode, candidateNode),
-      transitions = List(
-        MoveTransitionEdge(
-          TransitionEdgeRole.Played,
-          fixture.root,
-          candidateFixture.line.rootMove,
-          candidateAfter,
-          transitionEvidence("induced-response-played-transition", EvidenceScope.PlayedTransition)
-        ),
-        MoveTransitionEdge(
-          TransitionEdgeRole.Reference,
-          fixture.root,
-          fixture.line.rootMove,
-          referenceAfter,
-          transitionEvidence("induced-response-reference-transition", EvidenceScope.ReferenceTransition)
-        )
-      ),
-      evidenceGraph = sourceGraph,
-      claims = Nil
-    )
+    val sourceGraph = sourceContext.evidenceGraph
     val cContext = RelativeAssessmentAssembler.enrichCauses(
       RelativeAssessmentAssembler.enrichFacts(sourceContext)
     )
@@ -638,6 +827,122 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       fixture.root
     )
 
+  private def comparisonContext(
+      reference: InventoryFixture,
+      candidate: InventoryFixture,
+      referenceEvents: List[EvidenceRecord] = Nil,
+      candidateEvents: List[EvidenceRecord] = Nil
+  ): JudgmentAssemblyContext =
+    assertEquals(candidate.root, reference.root)
+    def afterRoot(fixture: InventoryFixture): PositionNodeRef =
+      fixture.structuralRecord.payload match
+        case StructuralDeltaEvidence(transition, _, _, _) => transition.to
+        case _                                            => fail("expected structural transition")
+    def lineMoves(fixture: InventoryFixture): List[String] =
+      fixture.lineRecord.payload match
+        case line: LineFactEvidence => line.lineReplayMoves
+        case _                      => fail("expected legal line")
+    def transitionEvidence(id: String, scope: EvidenceScope): EvidenceRef =
+      EvidenceRef(
+        id,
+        EvidenceProducer.MoveTransitionProducer,
+        EvidenceLayer.MoveTransition,
+        reference.root,
+        None,
+        scope,
+        EvidenceConfidence.LegalReplayVerified
+      )
+
+    val referenceAfter = afterRoot(reference)
+    val candidateAfter = afterRoot(candidate)
+    val referenceNode = CandidateLineNode(
+      reference.line,
+      EngineLine(lineMoves(reference), 300, depth = 18),
+      reference.lineRecord.ref
+    )
+    val candidateNode = CandidateLineNode(
+      candidate.line,
+      EngineLine(lineMoves(candidate), -300, depth = 18),
+      candidate.lineRecord.ref
+    )
+    val input = NormalizedMoveReviewInput(
+      beforeFen = reference.root.fen,
+      playedMoveUci = candidate.line.rootMove,
+      beforePly = reference.root.ply,
+      sideToMove = Some(White),
+      afterPlayedFen = candidateAfter.fen,
+      afterReferenceFen = Some(referenceAfter.fen),
+      lines = List(
+        NormalizedCandidateLine(LineNodeRole.BestReference, reference.line.rank, referenceNode.line),
+        NormalizedCandidateLine(LineNodeRole.Played, candidate.line.rank, candidateNode.line)
+      ),
+      opening = None
+    )
+    val graph = (
+      reference.baseRecords ++ referenceEvents ++
+        candidate.baseRecords ++ candidateEvents
+    ).foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
+    JudgmentAssemblyContext(
+      input = input,
+      positions = List(
+        PositionNode(PositionNodeRole.Before, reference.root),
+        PositionNode(PositionNodeRole.AfterPlayed, candidateAfter),
+        PositionNode(PositionNodeRole.AfterReference, referenceAfter)
+      ),
+      lines = List(referenceNode, candidateNode),
+      transitions = List(
+        MoveTransitionEdge(
+          TransitionEdgeRole.Played,
+          reference.root,
+          candidate.line.rootMove,
+          candidateAfter,
+          transitionEvidence(
+            s"${candidate.line.id}-transition",
+            EvidenceScope.PlayedTransition
+          )
+        ),
+        MoveTransitionEdge(
+          TransitionEdgeRole.Reference,
+          reference.root,
+          reference.line.rootMove,
+          referenceAfter,
+          transitionEvidence(
+            s"${reference.line.id}-transition",
+            EvidenceScope.ReferenceTransition
+          )
+        )
+      ),
+      evidenceGraph = graph,
+      claims = Nil
+    )
+
+  private val DistinctRootMoveOrderFen =
+    "4k3/8/6p1/3P4/4P3/8/5P2/4K3 w - - 0 1"
+
+  private def distinctRootMoveOrderFixture(
+      role: LineNodeRole,
+      strength: Int,
+      consequenceKind: TransitionConsequenceKind = TransitionConsequenceKind.SpaceGain
+  ): InventoryFixture =
+    val (rootMove, resultMove, induced) = role match
+      case LineNodeRole.BestReference => ("f2f4", "e4e5", true)
+      case LineNodeRole.Played        => ("e4e5", "d5d6", false)
+      case unsupported                => fail(s"unsupported move-order endpoint $unsupported")
+    inventoryFixture(
+      role,
+      inducedMoveOrder = induced,
+      rootMove = rootMove,
+      planKind = PlanKind.CentralSpaceBind,
+      resultConsequenceKind = consequenceKind,
+      resultLabel = consequenceKind.toString,
+      rootFen = Some(DistinctRootMoveOrderFen),
+      replyMove = Some("g6g5"),
+      resultMove = Some(resultMove),
+      resultStrength = strength,
+      resultGoalTargets = List("square:d6"),
+      dependencyKind = Some(PlanCausalDependencyKind.PawnAdvanceSupport)
+    )
+
   private def inventoryFixture(
       role: LineNodeRole,
       inducedMoveOrder: Boolean = false,
@@ -646,23 +951,32 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       additionalPlanKinds: List[PlanKind] = Nil,
       resultConsequenceKind: TransitionConsequenceKind = TransitionConsequenceKind.MobilityGain,
       resultLabel: String = "mobility-gain",
-      eventRecordIdSuffix: String = ""
+      eventRecordIdSuffix: String = "",
+      rootFen: Option[String] = None,
+      replyMove: Option[String] = None,
+      resultMove: Option[String] = None,
+      resultStrength: Int = 2,
+      resultGoalTargets: List[String] = Nil,
+      dependencyKind: Option[PlanCausalDependencyKind] = None
   ): InventoryFixture =
     val id = role.toString.toLowerCase
-    val fen =
+    val fen = rootFen.getOrElse(
       if inducedMoveOrder then "4k3/8/8/1p1p4/8/8/4P3/1N2K3 w - - 0 1"
       else "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    )
     val rootStep = legalStep(fen, rootMove, 1)
     val replyStep = legalStep(
       rootStep.fenAfter,
-      if inducedMoveOrder then "d5d4" else "a7a6",
+      replyMove.getOrElse(if inducedMoveOrder then "d5d4" else "a7a6"),
       2
     )
     val resultStep = legalStep(
       replyStep.fenAfter,
-      if inducedMoveOrder && rootMove == "b1c3" then "e2e4"
-      else if rootMove == "e2e4" then "e4e5"
-      else "c3d5",
+      resultMove.getOrElse(
+        if inducedMoveOrder && rootMove == "b1c3" then "e2e4"
+        else if rootMove == "e2e4" then "e4e5"
+        else "c3d5"
+      ),
       3
     )
     val root = PositionNodeRef(fen, 0, Some(White))
@@ -744,8 +1058,9 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       val consequence = TransitionConsequence(
         resultConsequenceKind,
         StructuralSignalPolarity.Gain,
-        strength = 2,
-        subjects = List(resultSubject)
+        strength = resultStrength,
+        subjects = List(resultSubject),
+        targetSubjects = resultGoalTargets
       )
       val rootNode = PlanCausalEventNode(
         PlanEventIdentity(
@@ -777,8 +1092,12 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
         List(consequence),
         Nil
       )
-      val dependency =
+      val dependency = dependencyKind.getOrElse(
         if inducedMoveOrder && rootMove == "b1c3" then
+          PlanCausalDependencyKind.PawnAdvanceSupport
+        else PlanCausalDependencyKind.ObjectStatePrecondition
+      ) match
+        case PlanCausalDependencyKind.PawnAdvanceSupport =>
           val trajectory = PawnAdvanceSupportTrajectory
             .find(rootStep, resultStep, List(replyStep))
             .getOrElse(fail("expected exact pawn-advance support"))
@@ -789,7 +1108,7 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
             PlanCausalDependencyProof.PawnAdvanceSupport(trajectory),
             plyOffset = 2
           )
-        else
+        case PlanCausalDependencyKind.ObjectStatePrecondition =>
           val trajectory = LineObjectTrajectory
             .find(rootStep, List(replyStep, resultStep), maxPlyOffset = 2)
             .getOrElse(fail("expected the root knight trajectory"))
@@ -800,6 +1119,8 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
             PlanCausalDependencyProof.ObjectState(trajectory),
             plyOffset = 2
           )
+        case unsupported =>
+          fail(s"unsupported inventory dependency $unsupported")
       val episode = PlanCausalEpisode(
         rootNode,
         List(resultNode),

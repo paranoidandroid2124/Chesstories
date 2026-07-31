@@ -16,6 +16,33 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
     case RightStrictlyStronger
     case Incomparable
 
+  /** Comparison-only projection for exact PlanResults. Ownership keeps the
+    * complete descriptor (including endpoint-local moves and causal route),
+    * while a Played-vs-Best comparison matches the endpoint-neutral result
+    * semantics here and compares strength only as magnitude.
+    */
+  private[chessjudgment] final case class PlanResultComparisonKey(
+      rootBoardState: String,
+      mover: ComparisonEndpointMoverIdentity,
+      consequenceKind: TransitionConsequenceKind,
+      polarity: StructuralSignalPolarity,
+      goalTargetSubjects: List[String],
+      robustness: PlanCausalRobustness,
+      branchSemantics: List[(
+          PlanCausalBranchOutcome,
+          Int,
+          Option[Int],
+          Option[PlanCausalTerminalOutcome],
+          Option[Int]
+      )],
+      causalRouteSemantics: List[(PlanCausalDependencyKind, String, Int, List[String])],
+      mechanismSignatures: List[String],
+      consequenceSignatures: List[String],
+      horizon: Option[String],
+      directChange: DirectCausalChange,
+      stake: RootOwnedEffectStake
+  )
+
   /** Common fail-closed membership gate for every retained and differential
     * admission branch. Membership is necessary but never sufficient: it
     * cannot itself admit a channel.
@@ -120,6 +147,85 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
           case Nil          => Some(None)
           case exact :: Nil => Some(Some(exact))
           case _            => None
+
+  /** Removes endpoint-local source/target identity, Plan taxonomy, concrete
+    * branch and route moves/squares, and the comparison magnitude from an
+    * exact PlanResult. Endpoint-neutral goal, mechanism, response outcome and
+    * timing semantics remain. Projection is unavailable unless the exact
+    * ownership identity and its StructuralStrength magnitude agree.
+    */
+  private[chessjudgment] def planResultComparisonKey(
+      observation: ComparisonEndpointEffectObservation
+  ): Option[PlanResultComparisonKey] =
+    val scope = observation.scope
+    for
+      identity <- scope.effectIdentity.planResult
+      _ <- Option.when(
+        scope.effectIdentity.primitiveKind == RootOwnedEffectPrimitiveKind.PlanResult &&
+          scope.effectIdentity.strategicAxes.isEmpty
+      )(())
+      strength <- observation.magnitude match
+        case ComparisonEndpointEffectMagnitude.Exact(
+              DirectCauseImportanceMeasure.StructuralStrength(units)
+            ) if units > 0 => Some(units)
+        case _ => None
+      if identity.strength == strength
+      goalTargets <- normalizedRequiredSignatures(identity.goalTargetSubjects)
+      mechanisms <- normalizedRequiredSignatures(scope.mechanismSignatures)
+      baseConsequences <- normalizedRequiredSignatures(
+        scope.consequenceSignatures.filterNot(signature =>
+          normalize(signature).startsWith(s"${EvidenceObjectKind.Move.toString.toLowerCase}:")
+        )
+      )
+    yield PlanResultComparisonKey(
+      rootBoardState = scope.rootBoardState,
+      mover = scope.mover,
+      consequenceKind = identity.consequenceKind,
+      polarity = identity.polarity,
+      goalTargetSubjects = goalTargets,
+      robustness = identity.robustness,
+      branchSemantics = identity.branches
+        .map(branch =>
+          (
+            branch.outcome,
+            branch.observedThroughPlyOffset,
+            branch.realizationPlyOffset,
+            branch.terminalOutcome,
+            branch.terminalPlyOffset
+          )
+        )
+        .sortBy { case (outcome, observedThrough, realization, terminal, terminalPly) =>
+          List(
+            outcome.toString.toLowerCase,
+            observedThrough.toString,
+            realization.map(_.toString).getOrElse("none"),
+            terminal.map(_.toString.toLowerCase).getOrElse("none"),
+            terminalPly.map(_.toString).getOrElse("none")
+          ).mkString("|")
+        },
+      causalRouteSemantics = identity.causalRoute
+        .map(route =>
+          (
+            route.dependencyKind,
+            normalize(route.proofKind),
+            route.plyOffset,
+            route.proofPieceRoles.map(normalize).filter(_.nonEmpty).distinct.sorted
+          )
+        )
+        .sortBy { case (kind, proofKind, plyOffset, proofRoles) =>
+          List(
+            kind.toString.toLowerCase,
+            proofKind,
+            plyOffset.toString,
+            proofRoles.mkString("[", ",", "]")
+          ).mkString("|")
+        },
+      mechanismSignatures = mechanisms,
+      consequenceSignatures = baseConsequences,
+      horizon = scope.horizon.map(normalize).filter(_.nonEmpty),
+      directChange = scope.directChange,
+      stake = scope.stake
+    )
 
   def compareMagnitude(
       left: ComparisonEndpointEffectMagnitude,
@@ -799,6 +905,12 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
       objects: List[ConcreteChessObject]
   ): Option[List[String]] =
     Option.when(objects.nonEmpty)(objects.map(_.signaturePart).distinct.sorted)
+
+  private def normalizedRequiredSignatures(
+      signatures: List[String]
+  ): Option[List[String]] =
+    val normalized = signatures.map(normalize).filter(_.nonEmpty).distinct.sorted
+    Option.when(normalized.nonEmpty)(normalized)
 
   private def normalize(value: String): String =
     Option(value).getOrElse("").trim.toLowerCase

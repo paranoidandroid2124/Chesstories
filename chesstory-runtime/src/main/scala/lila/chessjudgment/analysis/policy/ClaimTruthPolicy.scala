@@ -969,10 +969,11 @@ object ClaimTruthPolicy:
             resolved.size == sources.size &&
             resolved.map(_._1).distinct.size == sources.size
         sourceIdentityPreserved &&
-          resolved.filter { case (source, _) => admittedSources(source) }.exists { case (_, observation) =>
+          resolved.filter { case (source, _) => admittedSources(source) }.exists { case (source, observation) =>
             RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
               sourceInventory,
               counterpartInventory,
+              source,
               observation
             )
           }
