@@ -293,7 +293,8 @@ class RelativeCauseRecordConflictTest extends munit.FunSuite:
 
     val canonical = RelativeAssessmentAssembler.canonicalizeRelativeCauseRecords(
       List(first, superset, disjoint),
-      graph
+      graph,
+      endpointSnapshots(graph)
     )
 
     assertEquals(canonical.map(_.ref.id), List("z-first-carrier", "m-disjoint"))
@@ -311,33 +312,132 @@ class RelativeCauseRecordConflictTest extends munit.FunSuite:
     assert(channels.forall(channel => !channel.importanceDescriptorAmbiguous))
     assertEquals(causeOf(canonical(1)).supportEvidence.map(_.id), List("long-response"))
 
-  test("C keeps proof-segment disagreement on one exact channel as null"):
+  test("C drops only a proof-segment conflict and preserves an exact sibling"):
     val firstLine = materialLine("segment-b4", List("e2e4", "b4e4", "g2e4"), 100)
     val secondLine = materialLine("segment-h4", List("e2e4", "h4e4", "g2e4"), 100)
+    val exactSibling = materialLine(
+      "segment-exact-sibling",
+      List("e2e4", "b4e4", "g2e4", "h7e4", "f2e4"),
+      100
+    )
     val graph = graphOf(
       EvidenceRecord(comparisonRef, CandidateComparisonEvidence(comparison)),
       firstLine,
-      secondLine
+      secondLine,
+      exactSibling
     )
-    val first = admit(causeRecord("segment-first", List(firstLine.ref), List(firstLine.ref)), graph)
+    val first = admit(
+      causeRecord(
+        "segment-first",
+        List(firstLine.ref, exactSibling.ref),
+        List(firstLine.ref, exactSibling.ref)
+      ),
+      graph
+    )
     val second = admit(causeRecord("segment-second", List(secondLine.ref), List(secondLine.ref)), graph)
+    assertEquals(RelativeCauseConstructionAdmission.admittedDirectChannels(causeOf(first), graph).size, 2)
+    assertEquals(RelativeCauseConstructionAdmission.admittedDirectChannels(causeOf(second), graph).size, 1)
 
     val canonical = RelativeAssessmentAssembler.canonicalizeRelativeCauseRecords(
       List(first, second),
-      graph
+      graph,
+      endpointSnapshots(graph)
     )
 
     assertEquals(canonical.size, 1)
     val mergedCause = causeOf(canonical.head)
-    assertEquals(mergedCause.supportEvidence.map(_.id), List("segment-b4", "segment-h4"))
+    assertEquals(
+      mergedCause.supportEvidence.map(_.id),
+      List("segment-b4", "segment-exact-sibling", "segment-h4")
+    )
+    val rawChannels = EvidenceObjectBinding.rawDirectSentenceChannelsForProjection(mergedCause, graph)
     val channels = RelativeCauseConstructionAdmission.admittedDirectChannels(mergedCause, graph)
+    assertEquals(rawChannels.size, 2)
+    assertEquals(rawChannels.count(_.proofSegmentAmbiguous), 1)
+    assert(rawChannels.find(_.proofSegmentAmbiguous).exists(_.proofSegment.isEmpty))
     assertEquals(channels.size, 1)
-    assert(!channels.head.importanceDescriptorAmbiguous)
-    assert(channels.head.proofSegmentAmbiguous)
-    assertEquals(channels.head.proofSegment, None)
+    assert(channels.forall(channel => !channel.proofSegmentAmbiguous && channel.proofSegment.nonEmpty))
     assert(RelativeCauseConstructionAdmission.initiallyReady(mergedCause, graph))
 
-  test("descriptor-only conflict loses public admission while segment conflict does not"):
+  test("C preserves duplicate carriers with the same exact proof segment"):
+    val firstLine = materialLine("same-segment-z", List("e2e4", "b4e4", "g2e4"), 100)
+    val duplicateLine = firstLine.copy(ref = firstLine.ref.copy(id = "same-segment-a"))
+    val graph = graphOf(
+      EvidenceRecord(comparisonRef, CandidateComparisonEvidence(comparison)),
+      firstLine,
+      duplicateLine
+    )
+    val canonical = RelativeAssessmentAssembler.canonicalizeRelativeCauseRecords(
+      List(
+        admit(causeRecord("same-segment-first", List(firstLine.ref), List(firstLine.ref)), graph),
+        admit(causeRecord("same-segment-second", List(duplicateLine.ref), List(duplicateLine.ref)), graph)
+      ),
+      graph,
+      endpointSnapshots(graph)
+    )
+
+    assertEquals(canonical.size, 1)
+    val merged = causeOf(canonical.head)
+    val channels = RelativeCauseConstructionAdmission.admittedDirectChannels(merged, graph)
+    assertEquals(channels.size, 1)
+    assert(channels.head.proofSegment.nonEmpty)
+    assert(!channels.head.proofSegmentAmbiguous)
+
+  test("C cannot launder a stale admission signature through merged proof"):
+    val xLine = materialLine("stale-x", List("e2e4", "b4e4", "g2e4"), 100)
+    val yLine = materialLine(
+      "stale-y",
+      List("e2e4", "b4e4", "g2e4", "h7e4", "f2e4"),
+      100
+    )
+    val graph = graphOf(
+      EvidenceRecord(comparisonRef, CandidateComparisonEvidence(comparison)),
+      xLine,
+      yLine
+    )
+    val rawA = causeRecord("stale-a", List(xLine.ref), List(xLine.ref))
+    val rawB = causeRecord("stale-b", List(xLine.ref, yLine.ref), List(xLine.ref, yLine.ref))
+    val bChannels = EvidenceObjectBinding.rawDirectSentenceChannelsForProjection(causeOf(rawB), graph)
+    val xSignature = bChannels.find(_.binding.source == xLine.ref).map(_.causalSignature).getOrElse(
+      fail("expected the X channel")
+    )
+    val ySignature = bChannels.find(_.binding.source == yLine.ref).map(_.causalSignature).getOrElse(
+      fail("expected the Y channel")
+    )
+    val a = restrict(rawA, Set(xSignature, ySignature))
+    val b = restrict(rawB, Set(xSignature))
+    val actuallyAdmittedBeforeMerge = List(a, b)
+      .flatMap(record => RelativeCauseConstructionAdmission.admittedDirectChannels(causeOf(record), graph))
+      .map(_.causalSignature)
+      .toSet
+    assertEquals(actuallyAdmittedBeforeMerge, Set(xSignature))
+
+    val snapshots = endpointSnapshots(graph)
+    val canonical = RelativeAssessmentAssembler.canonicalizeRelativeCauseRecords(
+      List(a, b),
+      graph,
+      snapshots
+    )
+    val merged = causeOf(canonical.head)
+    val mergedRaw = EvidenceObjectBinding.rawDirectSentenceChannelsForProjection(merged, graph)
+    val mergedY = mergedRaw.find(_.causalSignature == ySignature).getOrElse(fail("expected merged raw Y"))
+    assert(
+      ComparisonEndpointEffectObservationPolicy
+        .uniqueNeutralWitnessFor(
+          snapshots(comparisonRef.id),
+          RelativeCauseSourceSide.Reference,
+          mergedY,
+          graph
+        )
+        .nonEmpty
+    )
+    assertEquals(
+      RelativeCauseConstructionAdmission.admittedDirectChannels(merged, graph).map(_.causalSignature).toSet,
+      Set(xSignature)
+    )
+    assert(RelativeCauseConstructionAdmission.initiallyReady(merged, graph))
+
+  test("descriptor conflict loses public admission"):
     val weak = materialLine("isolated-weak", List("e2e4"), 100)
     val strong = materialLine("isolated-strong", List("e2e4"), 500)
     val graph = graphOf(
@@ -350,7 +450,8 @@ class RelativeCauseRecordConflictTest extends munit.FunSuite:
         admit(causeRecord("isolated-a", List(weak.ref), List(weak.ref)), graph),
         admit(causeRecord("isolated-b", List(strong.ref), List(strong.ref)), graph)
       ),
-      graph
+      graph,
+      endpointSnapshots(graph)
     )
     assertEquals(canonical.size, 1)
     val merged = causeOf(canonical.head)
@@ -366,6 +467,39 @@ class RelativeCauseRecordConflictTest extends munit.FunSuite:
     )
     assertEquals(RelativeCauseConstructionAdmission.admittedDirectChannels(merged, graph), Nil)
     assert(!RelativeCauseConstructionAdmission.initiallyReady(merged, graph))
+
+  private def endpointSnapshots(
+      graph: TypedEvidenceGraph
+  ): Map[String, ComparisonEndpointEvidenceSnapshot] =
+    val endpointRecords = graph.records.filter(record =>
+      record.ref.line.contains(reference) && record.payload.isInstanceOf[LineFactEvidence]
+    )
+    val involvedRecords = graph.records
+    Map(
+      comparisonRef.id -> ComparisonEndpointEvidenceSnapshot(
+        comparisonEvidence = comparisonRef,
+        comparison = comparison,
+        reference = ComparisonEndpointEvidenceSideSnapshot(
+          sourceSide = RelativeCauseSourceSide.Reference,
+          line = reference,
+          witnesses = EvidenceObjectBinding.comparisonEndpointEvidenceWitnesses(
+            RelativeCauseSourceSide.Reference,
+            reference,
+            position,
+            comparisonRef,
+            comparison,
+            endpointRecords,
+            involvedRecords,
+            graph
+          )
+        ),
+        candidate = ComparisonEndpointEvidenceSideSnapshot(
+          sourceSide = RelativeCauseSourceSide.Candidate,
+          line = played,
+          witnesses = Nil
+        )
+      )
+    )
 
   private def causeRecord(
       id: String,
@@ -408,9 +542,12 @@ class RelativeCauseRecordConflictTest extends munit.FunSuite:
       .rawDirectSentenceChannelsForProjection(cause, graph)
       .map(_.causalSignature)
       .toSet
+    restrict(record, signatures)
+
+  private def restrict(record: EvidenceRecord, signatures: Set[String]): EvidenceRecord =
     record.copy(
       payload = RelativeCauseFactEvidence(
-        cause.copy(directEffectAdmission = DirectEffectAdmission.Restricted(signatures))
+        causeOf(record).copy(directEffectAdmission = DirectEffectAdmission.Restricted(signatures))
       )
     )
 

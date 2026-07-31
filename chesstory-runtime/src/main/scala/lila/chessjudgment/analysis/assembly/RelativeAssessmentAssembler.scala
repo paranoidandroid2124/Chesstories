@@ -308,7 +308,11 @@ object RelativeAssessmentAssembler:
               )
             )
           )
-        val causeRecords = canonicalizeRelativeCauseRecords(rawCauseRecords, context.evidenceGraph)
+        val causeRecords = canonicalizeRelativeCauseRecords(
+          rawCauseRecords,
+          context.evidenceGraph,
+          snapshotsByComparisonId
+        )
         val playedMoveSet = Set(JudgmentSubjectBinding.normalizeMove(inputs.played.moveUci))
         val playedCauseRecords =
           causeRecords.filter(record =>
@@ -2701,7 +2705,8 @@ object RelativeAssessmentAssembler:
 
   private[assembly] def canonicalizeRelativeCauseRecords(
       records: List[EvidenceRecord],
-      graph: TypedEvidenceGraph
+      graph: TypedEvidenceGraph,
+      snapshotsByComparisonId: Map[String, ComparisonEndpointEvidenceSnapshot]
   ): List[EvidenceRecord] =
     val causeEntries = records.zipWithIndex.flatMap { case (record, index) =>
       relativeCauseFromRecord(record).map { cause =>
@@ -2722,7 +2727,13 @@ object RelativeAssessmentAssembler:
       .values
       .toList
       .flatMap(overlappingCauseComponents)
-      .map(component => component.map(_.inputIndex).min -> mergeCauseComponent(component, graph))
+      .map(component =>
+        component.map(_.inputIndex).min -> mergeCauseComponent(
+          component,
+          graph,
+          snapshotsByComparisonId
+        )
+      )
     val preservedUnready = unready.map(entry => entry.inputIndex -> entry.record)
     (passThrough ++ preservedUnready ++ mergedReady).sortBy(_._1).map(_._2)
 
@@ -2759,7 +2770,8 @@ object RelativeAssessmentAssembler:
 
   private def mergeCauseComponent(
       component: List[CanonicalRelativeCauseEntry],
-      graph: TypedEvidenceGraph
+      graph: TypedEvidenceGraph,
+      snapshotsByComparisonId: Map[String, ComparisonEndpointEvidenceSnapshot]
   ): EvidenceRecord =
     val ordered = component.sortBy(_.inputIndex)
     val carrier = ordered.head
@@ -2769,23 +2781,39 @@ object RelativeAssessmentAssembler:
     )
     val causes = ordered.map(_.cause)
     val mergedProofs = causes.flatMap(_.proof)
-    val admittedBeforeMerge = causes.flatMap(
-      _.directEffectAdmission.admittedCausalSignatures
-    ).toSet
+    val admittedBeforeMerge = ordered.flatMap(_.truthView.causalSignatures).toSet
     val mergedBeforeAdmissionValidation = carrier.cause.copy(
       supportEvidence = causes.flatMap(_.supportEvidence).distinctBy(_.id),
       proof = Option.when(mergedProofs.nonEmpty)(RelativeCauseProof.merge(mergedProofs)),
-      directEffectAdmission = DirectEffectAdmission.Unresolved
+      directEffectAdmission = DirectEffectAdmission.Restricted(admittedBeforeMerge)
     )
     val mergedPubliclyAdmissibleSignatures =
-      EvidenceObjectBinding
-        .rawDirectSentenceChannelsForProjection(mergedBeforeAdmissionValidation, graph)
-        .filter(channel => !channel.importanceDescriptorAmbiguous)
+      snapshotsByComparisonId
+        .get(mergedBeforeAdmissionValidation.comparisonEvidence.id)
+        .filter(snapshot =>
+          snapshot.comparisonEvidence == mergedBeforeAdmissionValidation.comparisonEvidence &&
+            graph.comparisonFor(mergedBeforeAdmissionValidation).contains(snapshot.comparison)
+        )
+        .toList
+        .flatMap(snapshot =>
+          RelativeCauseConstructionAdmission
+            .admittedDirectChannels(mergedBeforeAdmissionValidation, graph)
+            .filter(channel =>
+              ComparisonEndpointEffectObservationPolicy
+                .uniqueNeutralWitnessFor(
+                  snapshot,
+                  mergedBeforeAdmissionValidation.sourceSide,
+                  channel,
+                  graph
+                )
+                .nonEmpty
+            )
+        )
         .map(_.causalSignature)
         .toSet
     val mergedCause = mergedBeforeAdmissionValidation.copy(
       directEffectAdmission = DirectEffectAdmission.Restricted(
-        admittedBeforeMerge.intersect(mergedPubliclyAdmissibleSignatures)
+        mergedPubliclyAdmissibleSignatures
       )
     )
     carrier.record.copy(
