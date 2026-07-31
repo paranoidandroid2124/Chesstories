@@ -1,6 +1,7 @@
 package lila.chessjudgment.analysis.assembly
 
-import chess.{ Knight, White }
+import chess.White
+import lila.chessjudgment.analysis.policy.{ ClaimAdmissionStatus, ClaimTruthPolicy }
 import lila.chessjudgment.model.{ ActivePlans, Plan, PlanEventIdentity, PlanMatch }
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
@@ -158,7 +159,11 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
     ))
 
   test("comparison inventory exposes one exact induced-response move-order witness"):
-    val fixture = inventoryFixture(LineNodeRole.BestReference, inducedMoveOrder = true)
+    val fixture = inventoryFixture(
+      LineNodeRole.BestReference,
+      inducedMoveOrder = true,
+      additionalPlanKinds = List(PlanKind.OpeningDevelopment)
+    )
     val eventRecord = fixture.robustEvent
     val event = eventRecord.payload match
       case payload: PlanCausalEventEvidence => payload
@@ -320,6 +325,205 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       None
     )
 
+    val candidateFixture = inventoryFixture(
+      LineNodeRole.Played,
+      inducedMoveOrder = true,
+      rootMove = "e2e4"
+    )
+    val referenceAfter = fixture.structuralRecord.payload match
+      case StructuralDeltaEvidence(transition, _, _, _) => transition.to
+      case _                                            => fail("expected reference structural transition")
+    val candidateAfter = candidateFixture.structuralRecord.payload match
+      case StructuralDeltaEvidence(transition, _, _, _) => transition.to
+      case _                                            => fail("expected candidate structural transition")
+    val referenceNode = CandidateLineNode(
+      fixture.line,
+      EngineLine(List("b1c3", "d5d4", "e2e4"), 300, depth = 18),
+      fixture.lineRecord.ref
+    )
+    val candidateNode = CandidateLineNode(
+      candidateFixture.line,
+      EngineLine(List("e2e4", "d5d4", "e4e5"), -300, depth = 18),
+      candidateFixture.lineRecord.ref
+    )
+    val assembledInput = NormalizedMoveReviewInput(
+      beforeFen = fixture.root.fen,
+      playedMoveUci = candidateFixture.line.rootMove,
+      beforePly = fixture.root.ply,
+      sideToMove = Some(White),
+      afterPlayedFen = candidateAfter.fen,
+      afterReferenceFen = Some(referenceAfter.fen),
+      lines = List(
+        NormalizedCandidateLine(LineNodeRole.BestReference, fixture.line.rank, referenceNode.line),
+        NormalizedCandidateLine(LineNodeRole.Played, candidateFixture.line.rank, candidateNode.line)
+      ),
+      opening = None
+    )
+    def transitionEvidence(id: String, scope: EvidenceScope): EvidenceRef =
+      EvidenceRef(
+        id,
+        EvidenceProducer.MoveTransitionProducer,
+        EvidenceLayer.MoveTransition,
+        fixture.root,
+        None,
+        scope,
+        EvidenceConfidence.LegalReplayVerified
+      )
+    val sourceGraph = (fixture.baseRecords ++ List(eventRecord) ++ candidateFixture.baseRecords)
+      .foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
+    val sourceContext = JudgmentAssemblyContext(
+      input = assembledInput,
+      positions = List(
+        PositionNode(PositionNodeRole.Before, fixture.root),
+        PositionNode(PositionNodeRole.AfterPlayed, candidateAfter),
+        PositionNode(PositionNodeRole.AfterReference, referenceAfter)
+      ),
+      lines = List(referenceNode, candidateNode),
+      transitions = List(
+        MoveTransitionEdge(
+          TransitionEdgeRole.Played,
+          fixture.root,
+          candidateFixture.line.rootMove,
+          candidateAfter,
+          transitionEvidence("induced-response-played-transition", EvidenceScope.PlayedTransition)
+        ),
+        MoveTransitionEdge(
+          TransitionEdgeRole.Reference,
+          fixture.root,
+          fixture.line.rootMove,
+          referenceAfter,
+          transitionEvidence("induced-response-reference-transition", EvidenceScope.ReferenceTransition)
+        )
+      ),
+      evidenceGraph = sourceGraph,
+      claims = Nil
+    )
+    val cContext = RelativeAssessmentAssembler.enrichCauses(
+      RelativeAssessmentAssembler.enrichFacts(sourceContext)
+    )
+    val (causeRef, exactCause) = cContext.evidenceGraph.records.collect {
+      case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _)
+          if cause.kind == RelativeCauseKind.WrongMoveOrder => ref -> cause
+    } match
+      case exact :: Nil => exact
+      case _            => fail("expected one C-generated exact WrongMoveOrder")
+    assert(exactCause.directEffectAdmission.productionReady)
+    val exactClaim = JudgmentClaimAssembler
+      .propose(cContext)
+      .find(claim => claim.family == ClaimFamily.Tactical && claim.evidence.contains(causeRef))
+      .getOrElse(fail("expected Jp tactical host for C-generated WrongMoveOrder"))
+    assertEquals(ClaimTruthPolicy.evaluate(exactClaim, cContext.evidenceGraph).status, ClaimAdmissionStatus.Certified)
+
+    val incompleteCandidateGraph = cContext.evidenceGraph.records
+      .filterNot(_.ref.id == candidateFixture.pressureRecord.ref.id)
+      .foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
+    assert(RelativeCauseConstructionAdmission.admittedDirectChannels(exactCause, incompleteCandidateGraph).nonEmpty)
+    assertEquals(
+      ClaimTruthPolicy.evaluate(exactClaim, incompleteCandidateGraph).status,
+      ClaimAdmissionStatus.Deferred
+    )
+
+    val genericPlanOnly = exactClaim.copy(
+      id = s"${exactClaim.id}-generic-plan-only",
+      subject = ClaimSubject.PlayedMove,
+      primaryLine = Some(candidateFixture.line),
+      subjectMove = Some(candidateFixture.line.rootMove),
+      evidence = List(candidateFixture.robustEvent.ref, exactCause.comparisonEvidence),
+      scope = EvidenceScope.PlayedLine
+    )
+    assertEquals(
+      ClaimTruthPolicy.evaluate(genericPlanOnly, cContext.evidenceGraph.add(candidateFixture.robustEvent)).status,
+      ClaimAdmissionStatus.Deferred
+    )
+
+    val openingDevelopmentRecord = inventoryFixture(
+      LineNodeRole.BestReference,
+      inducedMoveOrder = true,
+      planKind = PlanKind.OpeningDevelopment,
+      resultConsequenceKind = TransitionConsequenceKind.DevelopmentMobilityGain,
+      resultLabel = "development-mobility-gain",
+      eventRecordIdSuffix = "-opening-development"
+    ).robustEvent
+    val multiSourceContext = RelativeAssessmentAssembler.enrichCauses(
+      RelativeAssessmentAssembler.enrichFacts(
+        sourceContext.copy(evidenceGraph = sourceGraph.add(openingDevelopmentRecord))
+      )
+    )
+    val (multiSourceCauseRef, multiSourceCause) = multiSourceContext.evidenceGraph.records.collect {
+      case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _)
+          if cause.kind == RelativeCauseKind.WrongMoveOrder => ref -> cause
+    } match
+      case exact :: Nil => exact
+      case _            => fail("expected one two-source C-generated WrongMoveOrder")
+    assertEquals(
+      multiSourceCause.proof.map(_.directProof.sourceRefs.map(_.id).toSet),
+      Some(Set(eventRecord.ref.id, openingDevelopmentRecord.ref.id))
+    )
+    assertEquals(
+      RelativeCauseConstructionAdmission
+        .admittedDirectChannels(multiSourceCause, multiSourceContext.evidenceGraph)
+        .map(_.binding.source.id)
+        .toSet,
+      Set(eventRecord.ref.id)
+    )
+    val multiSourceClaim = JudgmentClaimAssembler
+      .propose(multiSourceContext)
+      .find(claim => claim.family == ClaimFamily.Tactical && claim.evidence.contains(multiSourceCauseRef))
+      .getOrElse(fail("expected Jp tactical host for two-source WrongMoveOrder"))
+    assertEquals(
+      ClaimTruthPolicy.evaluate(multiSourceClaim, multiSourceContext.evidenceGraph).status,
+      ClaimAdmissionStatus.Certified
+    )
+
+    def withAddedDirectSource(source: EvidenceRef): RelativeCauseFact =
+      exactCause.copy(
+        supportEvidence = exactCause.supportEvidence :+ source,
+        proof = exactCause.proof.map(proof =>
+          proof.copy(directProof = proof.directProof.copy(
+            sourceRefs = proof.directProof.sourceRefs :+ source
+          ))
+        )
+      )
+    val missingSource = eventRecord.ref.copy(id = s"${eventRecord.ref.id}-missing")
+    val malformedCauses = List(
+      ("missing-direct-source", withAddedDirectSource(missingSource), None),
+      (
+        "foreign-direct-source",
+        withAddedDirectSource(candidateFixture.robustEvent.ref),
+        Some(candidateFixture.robustEvent)
+      ),
+      ("duplicate-direct-source", exactCause.copy(
+        proof = exactCause.proof.map(proof =>
+          proof.copy(directProof = proof.directProof.copy(
+            sourceRefs = proof.directProof.sourceRefs ++ proof.directProof.sourceRefs.headOption
+          ))
+        )
+      ), None)
+    )
+    malformedCauses.foreach { case (suffix, malformedCause, foreignRecord) =>
+      val malformedCauseRecord = cContext.evidenceGraph
+        .record(causeRef)
+        .getOrElse(fail("expected C-generated WrongMoveOrder record"))
+        .copy(
+          ref = causeRef.copy(id = s"${causeRef.id}-$suffix"),
+          payload = RelativeCauseFactEvidence(malformedCause)
+        )
+      val malformedGraph = foreignRecord
+        .fold(cContext.evidenceGraph)(record => cContext.evidenceGraph.add(record))
+        .add(malformedCauseRecord)
+      assert(RelativeCauseConstructionAdmission.admittedDirectChannels(malformedCause, malformedGraph).nonEmpty)
+      val malformedClaim = exactClaim.copy(
+        id = s"${exactClaim.id}-$suffix",
+        evidence = exactClaim.evidence.map(ref =>
+          if ref == causeRef then malformedCauseRecord.ref else ref
+        )
+      )
+      assertEquals(
+        ClaimTruthPolicy.evaluate(malformedClaim, malformedGraph).status,
+        ClaimAdmissionStatus.Deferred
+      )
+    }
+
   private final case class RetainedLiabilityFixture(
       root: PositionNodeRef,
       cause: RelativeCauseFact,
@@ -436,13 +640,19 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
 
   private def inventoryFixture(
       role: LineNodeRole,
-      inducedMoveOrder: Boolean = false
+      inducedMoveOrder: Boolean = false,
+      rootMove: String = "b1c3",
+      planKind: PlanKind = PlanKind.WorstPieceImprovement,
+      additionalPlanKinds: List[PlanKind] = Nil,
+      resultConsequenceKind: TransitionConsequenceKind = TransitionConsequenceKind.MobilityGain,
+      resultLabel: String = "mobility-gain",
+      eventRecordIdSuffix: String = ""
   ): InventoryFixture =
     val id = role.toString.toLowerCase
     val fen =
       if inducedMoveOrder then "4k3/8/8/1p1p4/8/8/4P3/1N2K3 w - - 0 1"
       else "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-    val rootStep = legalStep(fen, "b1c3", 1)
+    val rootStep = legalStep(fen, rootMove, 1)
     val replyStep = legalStep(
       rootStep.fenAfter,
       if inducedMoveOrder then "d5d4" else "a7a6",
@@ -450,7 +660,9 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
     )
     val resultStep = legalStep(
       replyStep.fenAfter,
-      if inducedMoveOrder then "e2e4" else "c3d5",
+      if inducedMoveOrder && rootMove == "b1c3" then "e2e4"
+      else if rootMove == "e2e4" then "e4e5"
+      else "c3d5",
       3
     )
     val root = PositionNodeRef(fen, 0, Some(White))
@@ -508,32 +720,40 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
     val pressureRecord = EvidenceRecord(
       pressureRef,
       PlanPressureEvidence(
-        ActivePlans(List(PlanMatch(
-          plan = Plan(PlanKind.WorstPieceImprovement, White),
-          score = 1.0,
-          evidence = Nil
-        ))),
+        ActivePlans((planKind :: additionalPlanKinds).distinct.map(kind =>
+          PlanMatch(
+            plan = Plan(kind, White),
+            score = 1.0,
+            evidence = Nil
+          )
+        )),
         alignment = None
       ),
       parents = List(structuralRef)
     )
 
     def eventRecord(robust: Boolean): EvidenceRecord =
+      def actorFor(step: LineReplayStep): RootCausalActor =
+        RootCausalActor
+          .fromPosition(PositionNodeRef(step.fenBefore, step.ply - 1), step.moveUci)
+          .getOrElse(fail(s"expected legal actor for ${step.moveUci}"))
+      val rootActor = actorFor(rootStep)
+      val resultActor = actorFor(resultStep)
+      val resultSubject =
+        s"${resultActor.role.name.toLowerCase}:${resultActor.from.key}-${resultActor.to.key}"
       val consequence = TransitionConsequence(
-        TransitionConsequenceKind.MobilityGain,
+        resultConsequenceKind,
         StructuralSignalPolarity.Gain,
         strength = 2,
-        subjects = List(
-          if inducedMoveOrder then "pawn:e2-e4" else "knight:c3-d5"
-        )
+        subjects = List(resultSubject)
       )
       val rootNode = PlanCausalEventNode(
         PlanEventIdentity(
           rootStep.moveUci,
-          PlanKind.WorstPieceImprovement,
-          Some(Knight.name),
-          Some("b1"),
-          Some("c3"),
+          planKind,
+          Some(rootActor.role.name),
+          Some(rootStep.moveUci.take(2)),
+          Some(rootStep.moveUci.slice(2, 4)),
           Nil,
           Nil
         ),
@@ -545,12 +765,12 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       val resultNode = PlanCausalEventNode(
         PlanEventIdentity(
           resultStep.moveUci,
-          PlanKind.WorstPieceImprovement,
-          Some(if inducedMoveOrder then chess.Pawn.name else Knight.name),
-          Some(if inducedMoveOrder then "e2" else "c3"),
-          Some(if inducedMoveOrder then "e4" else "d5"),
-          List(if inducedMoveOrder then "pawn:e2-e4" else "knight:c3-d5"),
-          List("mobility-gain")
+          planKind,
+          Some(resultActor.role.name),
+          Some(resultStep.moveUci.take(2)),
+          Some(resultStep.moveUci.slice(2, 4)),
+          List(resultSubject),
+          List(resultLabel)
         ),
         resultStep,
         White,
@@ -558,7 +778,7 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
         Nil
       )
       val dependency =
-        if inducedMoveOrder then
+        if inducedMoveOrder && rootMove == "b1c3" then
           val trajectory = PawnAdvanceSupportTrajectory
             .find(rootStep, resultStep, List(replyStep))
             .getOrElse(fail("expected exact pawn-advance support"))
@@ -611,7 +831,7 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       val suffix = if robust then "robust" else "refuted"
       EvidenceRecord(
         evidenceRef(
-          s"plan-inventory-$id-$suffix-event",
+          s"plan-inventory-$id-$suffix-event$eventRecordIdSuffix",
           EvidenceProducer.PlanCausalEventProducer,
           EvidenceLayer.PlanCausalEvent,
           root,

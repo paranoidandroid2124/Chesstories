@@ -1,5 +1,6 @@
 package lila.chessjudgment.analysis.policy
 
+import lila.chessjudgment.analysis.assembly.RelativeAssessmentAssembler
 import lila.chessjudgment.model.evaluation.JudgmentThresholds
 import lila.chessjudgment.model.judgment.*
 
@@ -312,7 +313,13 @@ object ClaimTruthPolicy:
       case ClaimFamily.Tactical =>
         List(
           Set(EvidenceLayer.TacticalMechanism, EvidenceLayer.RelativeCause, EvidenceLayer.Relation, EvidenceLayer.Line),
-          Set(EvidenceLayer.Line, EvidenceLayer.Relation, EvidenceLayer.TacticalMechanism, EvidenceLayer.Eval),
+          Set(
+            EvidenceLayer.Line,
+            EvidenceLayer.Relation,
+            EvidenceLayer.TacticalMechanism,
+            EvidenceLayer.PlanCausalEvent,
+            EvidenceLayer.Eval
+          ),
           Set(EvidenceLayer.Eval, EvidenceLayer.CandidateComparison)
         )
       case ClaimFamily.Strategic =>
@@ -642,8 +649,13 @@ object ClaimTruthPolicy:
       records: List[EvidenceRecord],
       graph: TypedEvidenceGraph
   ): Boolean =
+    val relativeCauses = relativeCausesBoundToClaimEvidence(claim, records)
+    // The exact root -> induced response -> PlanResult sequence is deliberately
+    // both the WrongMoveOrder tactical anchor and its concrete tactical line.
+    val exactMoveOrderTacticalCauses =
+      relativeCauses.filter(exactMoveOrderPlanResultTacticalProof(_, graph))
     val hasMaterialSwingCauseCarrier =
-      relativeCausesBoundToClaimEvidence(claim, records).exists(_.kind == RelativeCauseKind.MaterialSwing)
+      relativeCauses.exists(_.kind == RelativeCauseKind.MaterialSwing)
     val hasTacticalAnchor =
       records.exists {
         case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
@@ -653,7 +665,7 @@ object ClaimTruthPolicy:
         case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
           graph.comparisonFor(cause).nonEmpty &&
             tacticalRelativeCause(cause.kind) &&
-            relativeCauseHasTacticalProof(cause, graph)
+            (cause.hasOwnedTacticalProof(graph) || exactMoveOrderTacticalCauses.contains(cause))
         case _ =>
           false
       }
@@ -669,7 +681,7 @@ object ClaimTruthPolicy:
           mate.nonEmpty
         case _ =>
           false
-      }
+      } || exactMoveOrderTacticalCauses.nonEmpty
     val hasEngineProof =
       records.exists {
         case EvidenceRecord(_, EvalFactEvidence(_, _, mate, _), _) =>
@@ -686,7 +698,8 @@ object ClaimTruthPolicy:
           engineBackedComparison(graph, cause.comparisonEvidence).exists(fact =>
             engineComparisonProvesTactic(fact) &&
               (
-              relativeCauseHasTacticalProof(cause, graph) ||
+              cause.hasOwnedTacticalProof(graph) ||
+                exactMoveOrderTacticalCauses.contains(cause) ||
                 fact.comparison.winPercentLossForMover >= JudgmentThresholds.SIGNIFICANT_THREAT_WP ||
                 fact.comparison.candidateWinPercentDeltaForMover >= JudgmentThresholds.PLAYABLE_LOSS_WP
             )
@@ -843,8 +856,128 @@ object ClaimTruthPolicy:
   private def strategicRelativeCauseHasProof(cause: RelativeCauseFact, graph: TypedEvidenceGraph): Boolean =
     cause.hasOwnedAdmissibleLongTermProof(graph)
 
-  private def relativeCauseHasTacticalProof(cause: RelativeCauseFact, graph: TypedEvidenceGraph): Boolean =
-    cause.hasOwnedTacticalProof(graph)
+  /** The only PlanResult-only Tactical path replays the direct WrongMoveOrder
+    * evidence from F. C selects public carriers but is not truth-sufficient:
+    * every declared direct source is rebuilt from graph facts before an
+    * admitted carrier's endpoint differential can prove the claim.
+    */
+  private def exactMoveOrderPlanResultTacticalProof(
+      cause: RelativeCauseFact,
+      graph: TypedEvidenceGraph
+  ): Boolean =
+    val directSection = cause.proof.map(_.directProof)
+    val comparisonAndBinding = for
+      section <- directSection
+      _ <- Option.when(
+        cause.kind == RelativeCauseKind.WrongMoveOrder &&
+          cause.sourceSide == RelativeCauseSourceSide.Reference &&
+          cause.attribution.kind == CauseAttributionKind.ReferenceCreatesResource &&
+          cause.attribution.directProofEligible &&
+          cause.attribution.rootMoveMatched &&
+          section.role == RelativeCauseProofRole.DirectProof &&
+          section.strength == RelativeCauseProofStrength.Primary &&
+          RelativeCauseKind.sourceAttributionCompatible(
+            cause.kind,
+            cause.sourceSide,
+            cause.attribution.kind
+          )
+      )(())
+      comparisonRecord <- graph.candidateComparisonRecord(cause.comparisonEvidence)
+      comparison <- comparisonRecord.payload match
+        case CandidateComparisonEvidence(value) => Some(value)
+        case _                                  => None
+      if comparisonRecord.ref == cause.comparisonEvidence &&
+        comparisonRecord.ref.confidence == EvidenceConfidence.EngineBacked &&
+        comparison.hasDistinctRootMoves &&
+        comparison.comparison.verdict.isActionableLoss &&
+        comparison.comparison.winPercentLossForMover >= JudgmentThresholds.INACCURACY_WP
+      binding <- graph.relativeCauseBinding(cause)
+      if binding.eventLine == comparison.referenceLine
+    yield (section, comparison, binding)
+
+    comparisonAndBinding.exists { case (section, comparison, causeBinding) =>
+      val inventories = RelativeAssessmentAssembler.planResultEndpointInventories(
+        graph,
+        comparison,
+        cause.comparisonEvidence.position
+      )
+      inventories.forSide(cause.sourceSide).exists { case (sourceInventory, counterpartInventory) =>
+        val sources = section.sourceRefs
+        val sourceRefsUnique =
+          sources.nonEmpty &&
+            sources.distinct.size == sources.size &&
+            sources.map(_.id).distinct.size == sources.size
+        val sourceObservations = Option.when(sourceRefsUnique)(sources.map { source =>
+          graph.record(source) match
+            case Some(EvidenceRecord(ref, event: PlanCausalEventEvidence, _))
+                if ref == source =>
+              for
+                _ <- Option.when(
+                  cause.supportEvidence.contains(source) &&
+                    RootOwnedEffectPolicy.sameCausalRootOccurrence(
+                      source.position,
+                      cause.comparisonEvidence.position
+                    ) &&
+                    RootOwnedEffectPolicy.planEventOwnsRoot(
+                      source,
+                      event,
+                      causeBinding.eventLine,
+                      comparison.comparison.mover
+                    )
+                )(())
+                (assessment, response) <-
+                  ComparisonEndpointEffectObservationPolicy
+                    .exactInducedResponseMoveOrder(comparison, cause.sourceSide, source, event)
+                actor <- RootCausalActor.fromPosition(
+                  cause.comparisonEvidence.position,
+                  causeBinding.eventLine.rootMove
+                )
+                exactBinding <- EvidenceObjectBinding.inducedResponseMoveOrderBinding(
+                  comparison,
+                  cause.sourceSide,
+                  source,
+                  event,
+                  actor,
+                  assessment,
+                  response,
+                  causeBinding.eventLine
+                )
+                directBinding = exactBinding.copy(proofRole = Some(RelativeCauseProofRole.DirectProof))
+                if directBinding.source == source &&
+                  directBinding.provenance.isEmpty &&
+                  directBinding.proofRole.contains(RelativeCauseProofRole.DirectProof)
+                observation <- ComparisonEndpointEffectObservationPolicy.fromExactPlanResult(
+                  cause.comparisonEvidence.position,
+                  causeBinding.eventLine,
+                  source,
+                  event,
+                  assessment,
+                  Some(directBinding)
+                )
+                inventoryObservation <- sourceInventory.exactInducedResponseObservationFor(source)
+                if inventoryObservation == observation
+              yield source -> observation
+            case _ => None
+        }).getOrElse(Nil)
+        val resolved = sourceObservations.flatten
+        val admittedSources = RelativeCauseConstructionAdmission
+          .admittedDirectChannels(cause, graph)
+          .map(_.binding.source)
+          .toSet
+        val sourceIdentityPreserved =
+          sourceRefsUnique &&
+            resolved.size == sources.size &&
+            resolved.map(_._1).distinct.size == sources.size
+        sourceIdentityPreserved &&
+          resolved.filter { case (source, _) => admittedSources(source) }.exists { case (_, observation) =>
+            RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
+              sourceInventory,
+              counterpartInventory,
+              observation
+            )
+          }
+      }
+    }
 
   private def lineHasTacticalProof(payload: LineFactEvidence): Boolean =
     payload.rootMove.exists(rootMove =>

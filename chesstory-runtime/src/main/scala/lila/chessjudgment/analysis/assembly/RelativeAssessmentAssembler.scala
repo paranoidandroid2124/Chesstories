@@ -60,12 +60,23 @@ object RelativeAssessmentAssembler:
         case RelativeCauseSourceSide.Candidate => Some(candidate -> reference)
         case RelativeCauseSourceSide.Shared | RelativeCauseSourceSide.Mixed => None
 
-  private[assembly] final case class PlanResultEndpointInventory(
+  private[analysis] final case class PlanResultEndpointInventory(
       observations: Set[ComparisonEndpointEffectObservation],
       enumeratedPlanIds: Set[String],
       incompletePlanIds: Set[String],
-      extractionReady: Boolean
+      extractionReady: Boolean,
+      exactInducedResponseObservations: Map[EvidenceRef, ComparisonEndpointEffectObservation] = Map.empty
   ):
+    /** Preserves the F-stage PlanCausal carrier that produced an exact
+      * comparison-induced observation. Observation values omit the carrier
+      * EvidenceRef, so consumers needing direct-proof identity must use this
+      * mapping instead of set membership.
+      */
+    def exactInducedResponseObservationFor(
+        source: EvidenceRef
+    ): Option[ComparisonEndpointEffectObservation] =
+      exactInducedResponseObservations.get(source)
+
     def uniqueObservationFor(
         scope: ComparisonEndpointEffectScopeKey
     ): Option[Option[ComparisonEndpointEffectObservation]] =
@@ -84,7 +95,7 @@ object RelativeAssessmentAssembler:
     * same plan/result scope. Missing enumeration and unresolved carriers fail
     * closed; complete absence is a real differential.
     */
-  private[assembly] object PlanResultDifferentialPolicy:
+  private[analysis] object PlanResultDifferentialPolicy:
     def admitted(
         sourceInventory: PlanResultEndpointInventory,
         counterpartInventory: PlanResultEndpointInventory,
@@ -102,7 +113,7 @@ object RelativeAssessmentAssembler:
           policy.compareMagnitude(sourceObservation.magnitude, counterpartObservation.magnitude) ==
             policy.MagnitudeRelation.LeftStrictlyStronger).getOrElse(false)
 
-  private final case class PlanResultEndpointInventoryPair(
+  private[analysis] final case class PlanResultEndpointInventoryPair(
       reference: PlanResultEndpointInventory,
       candidate: PlanResultEndpointInventory
   ):
@@ -113,6 +124,35 @@ object RelativeAssessmentAssembler:
         case RelativeCauseSourceSide.Reference => Some(reference -> candidate)
         case RelativeCauseSourceSide.Candidate => Some(candidate -> reference)
         case RelativeCauseSourceSide.Shared | RelativeCauseSourceSide.Mixed => None
+
+  /** Reuses the F-stage PlanResult endpoint inventory for a complete exact
+    * comparison. Both sides are assembled before any Cause admission, so
+    * consumers can test a differential without treating a Cause channel as
+    * an absence oracle.
+    */
+  private[analysis] def planResultEndpointInventories(
+      graph: TypedEvidenceGraph,
+      comparison: CandidateComparisonFact,
+      rootPosition: PositionNodeRef
+  ): PlanResultEndpointInventoryPair =
+    PlanResultEndpointInventoryPair(
+      reference = planResultEndpointInventory(
+        graph,
+        comparison.referenceLine,
+        comparison.comparison.mover,
+        rootPosition,
+        Some(comparison),
+        Some(RelativeCauseSourceSide.Reference)
+      ),
+      candidate = planResultEndpointInventory(
+        graph,
+        comparison.candidateLine,
+        comparison.comparison.mover,
+        rootPosition,
+        Some(comparison),
+        Some(RelativeCauseSourceSide.Candidate)
+      )
+    )
 
   private final case class ComparisonEndpointEffectInventories(
       lineMaterial: ComparisonEndpointEffectInventoryPair,
@@ -1109,23 +1149,10 @@ object RelativeAssessmentAssembler:
         comparison,
         comparisonRecordPosition
       ),
-      planResult = PlanResultEndpointInventoryPair(
-        reference = planResultEndpointInventory(
-          graph,
-          comparison.referenceLine,
-          comparison.comparison.mover,
-          comparisonRecordPosition,
-          Some(comparison),
-          Some(RelativeCauseSourceSide.Reference)
-        ),
-        candidate = planResultEndpointInventory(
-          graph,
-          comparison.candidateLine,
-          comparison.comparison.mover,
-          comparisonRecordPosition,
-          Some(comparison),
-          Some(RelativeCauseSourceSide.Candidate)
-        )
+      planResult = planResultEndpointInventories(
+        graph,
+        comparison,
+        comparisonRecordPosition
       )
     )
 
@@ -1392,7 +1419,7 @@ object RelativeAssessmentAssembler:
         }
         val evaluated = eventRecords.groupBy(_._2.planId.id).toList.map {
           case (planId, records) =>
-            val projections = records.flatMap { case (record, event) =>
+            val projections = records.map { case (record, event) =>
               val exactAssessments = List(
                 event.exactRobustPublicResultAssessment,
                 event.exactRefutedPublicResultAssessment
@@ -1449,22 +1476,30 @@ object RelativeAssessmentAssembler:
                     assessment,
                     Some(binding)
                   )
-                ordinary ++ inducedResponseMoveOrder
-              else List(None)
+                val exactInducedResponseObservation = inducedResponseMoveOrder.flatten match
+                  case observation :: Nil => Some(observation)
+                  case _                  => None
+                record.ref -> (ordinary ++ inducedResponseMoveOrder, exactInducedResponseObservation)
+              else record.ref -> (List(None), None)
             }
-            val successful = projections.flatten.toSet
+            val successful = projections.flatMap(_._2._1).flatten.toSet
             val complete =
-              projections.forall(_.nonEmpty) &&
+              projections.forall(_._2._1.forall(_.nonEmpty)) &&
                 successful
                   .groupBy(_.scope)
                   .forall(_._2.map(_.magnitude).size == 1)
-            (planId, successful, complete)
+            val exactInducedResponseObservations = projections.flatMap {
+              case (source, (_, Some(observation))) => Some(source -> observation)
+              case _                                 => None
+            }.toMap
+            (planId, successful, complete, exactInducedResponseObservations)
         }
         PlanResultEndpointInventory(
           observations = evaluated.flatMap(_._2).toSet,
           enumeratedPlanIds = enumeratedPlanIds,
-          incompletePlanIds = evaluated.collect { case (planId, _, false) => planId }.toSet,
-          extractionReady = true
+          incompletePlanIds = evaluated.collect { case (planId, _, false, _) => planId }.toSet,
+          extractionReady = true,
+          exactInducedResponseObservations = evaluated.flatMap(_._4).toMap
         )
 
   private def strategicEndpointInventories(
