@@ -457,7 +457,7 @@ object DirectCauseMeasuredEffect:
           None,
           descriptor = descriptor
         )
-      case RootOwnedEffectProof.PlanResult(_, event, assessment) =>
+      case RootOwnedEffectProof.PlanResult(_, event, assessment, _) =>
         structuralEffect(
           DirectCauseStructuralOrigin.PlanResult,
           event.perspective,

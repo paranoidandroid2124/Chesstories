@@ -1506,7 +1506,8 @@ object RelativeAssessmentAssembler:
                           exactComparison,
                           exactSourceSide,
                           record.ref,
-                          event
+                          event,
+                          graph
                         )
                         .toList
                     if exactAssessments.contains(assessment)
@@ -1528,7 +1529,8 @@ object RelativeAssessmentAssembler:
                     record.ref,
                     event,
                     assessment,
-                    Some(binding)
+                    Some(binding),
+                    selectedInducedResponse = Some(response)
                   )
                 val exactInducedResponseObservation = inducedResponseMoveOrder.flatten match
                   case observation :: Nil => Some(observation)
@@ -2186,7 +2188,8 @@ object RelativeAssessmentAssembler:
               fact,
               binding.sourceSide,
               record.ref,
-              event
+              event,
+              graph
             )
             .nonEmpty
         else RelativeCauseKind.planCausalEventCanProveCause(kind, event)

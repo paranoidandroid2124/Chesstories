@@ -35,6 +35,7 @@ from chesstory_eval.cause_semantics import (
     _active_fallback_dominator,
     _dominance_layers,
     _expected_importance_decisions,
+    _importance_relation,
     _idea_unit_state,
     _importance_state,
     canonical_open_world_cause_candidate,
@@ -211,6 +212,7 @@ def selection(
                         "primitive_kind": "structural_transition",
                         "target_signatures": [f"square:{importance_target}"],
                         "plan_ids": [],
+                        "plan_result_semantic_key": None,
                         "strategic_axes": [],
                     },
                     "magnitude_status": "exact",
@@ -232,6 +234,7 @@ def selection(
                         "primitive_kind": "structural_transition",
                         "target_signatures": [f"square:{importance_target}"],
                         "plan_ids": [],
+                        "plan_result_semantic_key": None,
                         "strategic_axes": [],
                     },
                 },
@@ -764,6 +767,18 @@ def material_outcome_cause(
     return item
 
 
+def fixture_effect_scope_key(scope: dict[str, object]) -> str:
+    assert scope["strategic_axes"] == []
+    semantic_key = scope["plan_result_semantic_key"]
+    plans = [] if semantic_key is not None else scope["plan_ids"]
+    return (
+        f"{str(scope['primitive_kind']).replace('_', '')}|"
+        f"[{','.join(str(item) for item in scope['target_signatures'])}]|"
+        f"[{','.join(str(item) for item in plans)}]|[]|"
+        f"{semantic_key if semantic_key is not None else 'none'}"
+    )
+
+
 def typed_importance(
     native_values: list[dict[str, object]],
     *,
@@ -825,18 +840,6 @@ def typed_importance(
         )
     )
 
-    def scope_key(scope: dict[str, object]) -> str:
-        targets = scope["target_signatures"]
-        plans = scope["plan_ids"]
-        axes = scope["strategic_axes"]
-        assert isinstance(targets, list) and isinstance(plans, list)
-        assert isinstance(axes, list)
-        primitive = str(scope["primitive_kind"]).replace("_", "")
-        return (
-            f"{primitive}|[{','.join(str(value) for value in targets)}]|"
-            f"[{','.join(str(value) for value in plans)}]|[]"
-        )
-
     relations: list[dict[str, object]] = []
     for index, left in enumerate(profiles):
         for right in profiles[index + 1 :]:
@@ -849,16 +852,21 @@ def typed_importance(
             assert isinstance(left_measure, dict) and isinstance(right_measure, dict)
             left_kind = left_measure["kind"]
             right_kind = right_measure["kind"]
+            left_scope = left["effect_scope"]
+            right_scope = right["effect_scope"]
+            assert isinstance(left_scope, dict) and isinstance(right_scope, dict)
+            left_scope_key = fixture_effect_scope_key(left_scope)
             structural_scope_ready = (
                 left["domain_kind"] != "structural"
                 or (
-                    left["effect_scope"] == right["effect_scope"]
-                    and left["effect_scope"]
+                    left_scope == right_scope
+                    and left_scope
                     != {
                         "primitive_kind": "unspecified",
                         "target_signatures": [],
                         "plan_ids": [],
                         "strategic_axes": [],
+                        "plan_result_semantic_key": None,
                     }
                 )
             )
@@ -891,10 +899,8 @@ def typed_importance(
                         if left_units < right_units
                         else "tied"
                     )
-                scope = left["effect_scope"]
-                assert isinstance(scope, dict)
                 domain: str | None = (
-                    f"{left['domain']}|effect:{scope_key(scope)}"
+                    f"{left['domain']}|effect:{left_scope_key}"
                     if left["domain_kind"] == "structural"
                     else str(left["domain"])
                 )
@@ -3303,6 +3309,39 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         judgment = self.judge(label, causes, importance=unmeasured)
         self.assertEqual(judgment["status"], "unresolved")
         self.assertEqual(judgment["priority"]["status"], "not_scored")
+
+    def test_plan_result_importance_uses_the_central_semantic_key(self) -> None:
+        native = [
+            cause["r"]["native_selection"]
+            for cause in (typed_cause(), typed_cause("cause-peer", "wrong_move_order"))
+        ]
+        profiles = typed_importance(
+            native,
+            unique_top=None,
+        )["r_native"]["profiles"]
+        left, right = copy.deepcopy(profiles[0]), copy.deepcopy(profiles[1])
+        for profile in (left, right):
+            scope = profile["effect_scope"]
+            self.assertIsInstance(scope, dict)
+            scope.update(
+                primitive_kind="plan_result",
+                plan_ids=["plan-a"],
+                plan_result_semantic_key="exact-plan-result-a",
+            )
+
+        relation, domain = _importance_relation(left, right)
+        self.assertEqual(relation, "tied")
+        self.assertIn("planresult|[square:e5]|[]|[]|exact-plan-result-a", domain)
+
+        different_plan = copy.deepcopy(right)
+        different_plan["effect_scope"]["plan_ids"] = ["plan-b"]
+        self.assertEqual(_importance_relation(left, different_plan), ("incomparable", None))
+
+        changed = copy.deepcopy(right)
+        changed["effect_scope"]["plan_result_semantic_key"] = (
+            "exact-plan-result-selected-response-b"
+        )
+        self.assertEqual(_importance_relation(left, changed), ("incomparable", None))
 
     def test_typed_importance_overrides_the_opposite_exposure_rank_order(self) -> None:
         causes = [

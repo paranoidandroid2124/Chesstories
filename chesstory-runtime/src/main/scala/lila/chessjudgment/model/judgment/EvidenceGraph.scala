@@ -123,7 +123,8 @@ enum RootOwnedEffectProof:
   case PlanResult(
       source: EvidenceRef,
       event: PlanCausalEventEvidence,
-      assessment: PlanCausalResultAssessment
+      assessment: PlanCausalResultAssessment,
+      selectedInducedResponse: Option[PlanCausalResponse] = None
   )
   case PlanRestriction(
       source: EvidenceRef,
@@ -153,7 +154,7 @@ enum RootOwnedEffectProof:
       case RootOwnedEffectProof.RootRelation(source, _)                    => source
       case RootOwnedEffectProof.ThreatCreation(source, _)                  => source
       case RootOwnedEffectProof.ThreatDefense(source, _, _)                => source
-      case RootOwnedEffectProof.PlanResult(source, _, _)                   => source
+      case RootOwnedEffectProof.PlanResult(source, _, _, _)                => source
       case RootOwnedEffectProof.PlanRestriction(source, _, _, _)           => source
       case RootOwnedEffectProof.DefensiveRecaptureResource(source, _, _)   => source
       case RootOwnedEffectProof.StrategicAxis(primitive, _, _)             => primitive.primitiveSource
@@ -449,8 +450,8 @@ object DirectCauseProofSegment:
           defense <- (if onlyDefense then threat.onlyDefense else threat.episode.bestDefense).flatMap(exactMove)
           if EvidenceRef.sameMove(move, defense)
         yield rootOnly(DirectCauseProofTerminalRelation.DefendsThreat, move)
-      case RootOwnedEffectProof.PlanResult(_, event, assessment) =>
-        planResult(event, assessment)
+      case RootOwnedEffectProof.PlanResult(_, event, assessment, selectedInducedResponse) =>
+        planResult(event, assessment, selectedInducedResponse)
       case RootOwnedEffectProof.PlanRestriction(_, event, _, _) =>
         exactMove(event.rootTransition.moveUci)
           .map(rootOnly(DirectCauseProofTerminalRelation.RestrictsOpponentResource, _))
@@ -517,16 +518,53 @@ object DirectCauseProofSegment:
 
   private def planResult(
       event: PlanCausalEventEvidence,
-      assessment: PlanCausalResultAssessment
+      assessment: PlanCausalResultAssessment,
+      selectedInducedResponse: Option[PlanCausalResponse]
   ): Option[DirectCauseProofSegment] =
     event.causalEpisode.enablingPathTo(assessment.sourceEvent).flatMap { path =>
       val rootPly = event.causalEpisode.root.step.ply
-      val extracted = path.flatMap(node =>
+      val extractedPath = path.flatMap(node =>
         exactMove(node.moveUci).map(move => (node.step.ply - rootPly) -> move)
       )
+      val exactSelectedResponse = selectedInducedResponse.flatMap { response =>
+        val rawEligibleResponses = event.causalEpisode.responses.filter(candidate =>
+          candidate.trigger == event.causalEpisode.root &&
+            candidate.proven &&
+            candidate.plyOffset == 1 &&
+            PrincipalVariationEvidence.sameBoardState(
+              event.causalEpisode.root.step.fenAfter,
+              candidate.step.fenBefore
+            )
+        )
+        val plyOffset = response.step.ply - rootPly
+        for
+          move <- exactMove(response.step.moveUci)
+          replayedResponseAfter <- PrincipalVariationEvidence.legalFenAfter(
+            response.step.fenBefore,
+            response.step.moveUci
+          )
+          if rawEligibleResponses == List(response)
+          if response.trigger == event.causalEpisode.root
+          if response.proven
+          if response.plyOffset == 1 && plyOffset == 1
+          if assessment.sourcePlyOffset == 2
+          if assessment.sourceEvent.step.ply == response.step.ply + 1
+          if PrincipalVariationEvidence.sameBoardState(
+            replayedResponseAfter,
+            response.step.fenAfter
+          )
+          if PrincipalVariationEvidence.sameBoardState(
+            response.step.fenAfter,
+            assessment.sourceEvent.step.fenBefore
+          )
+        yield plyOffset -> move
+      }
+      val responseIdentityReady = selectedInducedResponse.isEmpty || exactSelectedResponse.nonEmpty
+      val extracted = (extractedPath ++ exactSelectedResponse).sortBy(_._1)
       Option.when(
         path.nonEmpty &&
-          extracted.size == path.size &&
+          extractedPath.size == path.size &&
+          responseIdentityReady &&
           path.head == event.causalEpisode.root &&
           path.last == assessment.sourceEvent &&
           assessment.sourcePlyOffset == assessment.sourceEvent.step.ply - rootPly &&
@@ -1240,7 +1278,7 @@ object EvidenceObjectBinding:
           }
           val inducedResponseMoveOrderWitnesses =
             ComparisonEndpointEffectObservationPolicy
-              .exactInducedResponseMoveOrder(comparison, sourceSide, ref, payload)
+              .exactInducedResponseMoveOrder(comparison, sourceSide, ref, payload, graph)
               .toList
               .flatMap { case (assessment, response) =>
                 inducedResponseMoveOrderBinding(
@@ -1253,7 +1291,12 @@ object EvidenceObjectBinding:
                   response,
                   eventLine
                 ).toList.flatMap { binding =>
-                  val proof = RootOwnedEffectProof.PlanResult(ref, payload, assessment)
+                  val proof = RootOwnedEffectProof.PlanResult(
+                    ref,
+                    payload,
+                    assessment,
+                    selectedInducedResponse = Some(response)
+                  )
                   witness(
                     binding,
                     proof,
@@ -1263,7 +1306,8 @@ object EvidenceObjectBinding:
                       ref,
                       payload,
                       assessment,
-                      Some(binding)
+                      Some(binding),
+                      selectedInducedResponse = Some(response)
                     )
                   )
                 }
@@ -1556,7 +1600,7 @@ object EvidenceObjectBinding:
           )
         case proof =>
           RootOwnedEffectPolicy.exactPlanResultPrimitive(proof).flatMap {
-            case (source, event, assessment) =>
+            case (source, event, assessment, selectedInducedResponse) =>
               ComparisonEndpointEffectObservationPolicy.fromExactPlanResult(
                 rootPosition = cause.comparisonEvidence.position,
                 eventLine = eventLine,
@@ -1565,7 +1609,8 @@ object EvidenceObjectBinding:
                 assessment = assessment,
                 exactBinding = Option.when(cause.kind == RelativeCauseKind.WrongMoveOrder)(
                   channel.binding
-                )
+                ),
+                selectedInducedResponse = selectedInducedResponse
               )
           }
     yield observation
@@ -2343,7 +2388,8 @@ object EvidenceObjectBinding:
                   comparison,
                   cause.sourceSide,
                   ref,
-                  payload
+                  payload,
+                  graph
                 )
                 .toList
                 .flatMap { case (exact, response) =>
@@ -2362,7 +2408,12 @@ object EvidenceObjectBinding:
                         cause,
                         graph,
                         binding,
-                        RootOwnedEffectProof.PlanResult(ref, payload, exact)
+                        RootOwnedEffectProof.PlanResult(
+                          ref,
+                          payload,
+                          exact,
+                          selectedInducedResponse = Some(response)
+                        )
                       )
                       .toList
                   }
@@ -11005,6 +11056,7 @@ final case class PlanResultBranchIdentity(
   */
 final case class PlanResultSemanticIdentity(
     source: PlanResultSourceOccurrence,
+    selectedInducedResponse: Option[PlanResultSourceOccurrence],
     consequenceKind: TransitionConsequenceKind,
     polarity: StructuralSignalPolarity,
     goalTargetSubjects: List[String],
@@ -11014,8 +11066,8 @@ final case class PlanResultSemanticIdentity(
     causalRoute: List[PlanResultCausalRouteIdentity]
 ):
   def stableKey: String =
-    List(
-      source.stableKey,
+    (List(source.stableKey) ++
+      selectedInducedResponse.toList.map(response => s"induced-response:${response.stableKey}") ++ List(
       consequenceKind.toString.toLowerCase,
       polarity.toString.toLowerCase,
       goalTargetSubjects.mkString("[", ",", "]"),
@@ -11023,7 +11075,7 @@ final case class PlanResultSemanticIdentity(
       robustness.toString.toLowerCase,
       branches.map(_.stableKey).mkString("[", ",", "]"),
       causalRoute.map(_.stableKey).mkString("[", ",", "]")
-    ).mkString("|")
+    )).mkString("|")
 
 private[judgment] final case class LogicalPlanResultKey(
     stage: String,
@@ -11036,12 +11088,19 @@ private[judgment] final case class LogicalPlanResultKey(
 object PlanResultSemanticIdentity:
   def from(
       event: PlanCausalEventEvidence,
-      assessment: PlanCausalResultAssessment
+      assessment: PlanCausalResultAssessment,
+      selectedInducedResponse: Option[PlanCausalResponse] = None
   ): PlanResultSemanticIdentity =
     PlanResultSemanticIdentity(
       source = PlanResultSourceOccurrence(
         EvidenceRef.normalizeMove(assessment.sourceEvent.moveUci),
         assessment.sourcePlyOffset
+      ),
+      selectedInducedResponse = selectedInducedResponse.map(response =>
+        PlanResultSourceOccurrence(
+          EvidenceRef.normalizeMove(response.step.moveUci),
+          response.step.ply - event.causalEpisode.root.step.ply
+        )
       ),
       consequenceKind = assessment.consequence.kind,
       polarity = assessment.consequence.polarity,
@@ -13639,9 +13698,10 @@ final class TypedEvidenceGraph private (
         RootOwnedEffectPolicy.admits(cause, this, channel)
     val exactPlanResultAuthority =
       (directSection, eventLine, channel.rootOwnedProof.flatMap(RootOwnedEffectPolicy.exactPlanResultPrimitive)) match
-        case (Some(section), Some(line), Some((source, event, assessment))) =>
+        case (Some(section), Some(line), Some((source, event, assessment, selectedInducedResponse))) =>
           cause.attribution.directProofEligible &&
             cause.strategicCauseKind &&
+            selectedInducedResponse.isEmpty &&
             channel.binding.line.contains(line) &&
             section.sourceRefs.exists(_.id == source.id) &&
             channel.binding.source == source &&

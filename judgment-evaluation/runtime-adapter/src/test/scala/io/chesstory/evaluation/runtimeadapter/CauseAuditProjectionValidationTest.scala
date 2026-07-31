@@ -281,6 +281,8 @@ class CauseAuditProjectionValidationTest extends munit.FunSuite:
       (v3Channel \ "evidence_identity_sha256").as[String].matches("[0-9a-f]{64}"),
       v3Channel
     )
+    val descriptorScope = (v3Channel \ "effect_descriptor" \ "effect_scope").as[JsObject]
+    assertEquals((descriptorScope \ "plan_result_semantic_key").toOption, Some(play.api.libs.json.JsNull))
 
   test("v3 canonicalizes duplicate witnesses without changing historical v2"):
     val first = ConcreteChessObject(EvidenceObjectKind.Square, "a1")

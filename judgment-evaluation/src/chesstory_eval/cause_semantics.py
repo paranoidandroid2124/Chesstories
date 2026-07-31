@@ -1784,6 +1784,15 @@ def _effect_scope_stable_key(scope: Mapping[str, Any]) -> str:
         scope.get("target_signatures"), "importance effect target signatures"
     )
     plans = _unique_nonempty_strings(scope.get("plan_ids"), "importance effect plan ids")
+    if "plan_result_semantic_key" not in scope:
+        raise ContractError("importance effect scope has no plan result semantic key")
+    plan_result_semantic_key = scope.get("plan_result_semantic_key")
+    if plan_result_semantic_key is not None and (
+        not isinstance(plan_result_semantic_key, str) or not plan_result_semantic_key
+    ):
+        raise ContractError("importance effect scope has an invalid plan result semantic key")
+    if plan_result_semantic_key is not None:
+        plans = []
     axes = _objects(scope.get("strategic_axes"), "importance strategic axes")
     axis_keys: list[str] = []
     for axis in axes:
@@ -1802,7 +1811,8 @@ def _effect_scope_stable_key(scope: Mapping[str, Any]) -> str:
         )
     return (
         f"{primitive}|[{','.join(targets)}]|[{','.join(plans)}]|"
-        f"[{','.join(axis_keys)}]"
+        f"[{','.join(axis_keys)}]|"
+        f"{plan_result_semantic_key if plan_result_semantic_key is not None else 'none'}"
     )
 
 
@@ -1833,13 +1843,20 @@ def _importance_relation(
     left_scope = _object(left.get("effect_scope"), "left importance effect scope")
     right_scope = _object(right.get("effect_scope"), "right importance effect scope")
     if left.get("domain_kind") == "structural":
+        left_scope_key = _effect_scope_stable_key(left_scope)
+        right_scope_key = _effect_scope_stable_key(right_scope)
         unscoped = {
             "primitive_kind": "unspecified",
             "target_signatures": [],
             "plan_ids": [],
             "strategic_axes": [],
+            "plan_result_semantic_key": None,
         }
-        if left_scope == unscoped or right_scope == unscoped or left_scope != right_scope:
+        if (
+            left_scope == unscoped
+            or right_scope == unscoped
+            or left_scope != right_scope
+        ):
             return "incomparable", None
     left_kind = left_measure.get("kind")
     right_kind = right_measure.get("kind")
@@ -1875,7 +1892,7 @@ def _importance_relation(
         return "incomparable", None
     domain = str(left["domain"])
     if left.get("domain_kind") == "structural":
-        domain = f"{domain}|effect:{_effect_scope_stable_key(left_scope)}"
+        domain = f"{domain}|effect:{left_scope_key}"
     return relation, domain
 
 

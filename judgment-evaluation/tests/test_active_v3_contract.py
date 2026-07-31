@@ -251,6 +251,46 @@ def _validate_active_cause_observation(
 
 
 class ActiveCauseContractTest(unittest.TestCase):
+    def test_v3_effect_scope_requires_the_plan_result_semantic_key_contract(self) -> None:
+        definitions = (
+            (
+                ROOT / "schemas" / "public-v3" / "move-meaning-response.schema.json",
+                "effectScope",
+            ),
+            (
+                ROOT / "schemas" / "cause-audit-v3" / "actual-cascade-view.schema.json",
+                "importanceEffectScope",
+            ),
+        )
+        non_plan = {
+            "primitive_kind": "structural_transition",
+            "target_signatures": ["square:e5"],
+            "plan_ids": [],
+            "plan_result_semantic_key": None,
+            "strategic_axes": [],
+        }
+        plan_result = {
+            **non_plan,
+            "primitive_kind": "plan_result",
+            "plan_ids": ["plan-annotation"],
+            "plan_result_semantic_key": "exact-plan-result",
+        }
+        invalid = (
+            {key: value for key, value in non_plan.items() if key != "plan_result_semantic_key"},
+            {**non_plan, "plan_result_semantic_key": 7},
+            {**plan_result, "plan_result_semantic_key": ""},
+            {**non_plan, "plan_result_semantic_key": "exact-plan-result"},
+            {**plan_result, "plan_result_semantic_key": None},
+        )
+        for schema_path, definition_name in definitions:
+            registry = SchemaRegistry(schema_path.parent)
+            definition = registry.load(schema_path)["$defs"][definition_name]
+            with self.subTest(schema=definition_name):
+                self.assertEqual(registry._branch_errors(non_plan, definition, schema_path, "$"), [])
+                self.assertEqual(registry._branch_errors(plan_result, definition, schema_path, "$"), [])
+                for malformed in invalid:
+                    self.assertTrue(registry._branch_errors(malformed, definition, schema_path, "$"))
+
     def test_production_run_binds_active_v3_schema_and_hash_contract(self) -> None:
         existing_file = ROOT / "pyproject.toml"
         acquisition = {
@@ -334,20 +374,23 @@ class ActiveCauseContractTest(unittest.TestCase):
             "diagnostic_line_sha256": [],
             "diagnostic_stream_sha256": "3" * 64,
         }
+        def actual_view(value: dict[str, object]) -> dict[str, object]:
+            return _actual_view(
+                case={"case_id": "active-cause-view", "partition": "explore"},
+                initial_request_sha256="1" * 64,
+                final_request_sha256="1" * 64,
+                observation=value,
+                transports=[transport],
+                issued_probe_hashes=set(),
+                result_hashes=set(),
+                issued_probe_count=0,
+                stop_reason="all_runtime_probes_closed",
+                schema_version=TYPED_ACTUAL_VIEW_SCHEMA_VERSION,
+            )
+
         observation = _valid_complete_active_cause_observation(request)
         _validate_active_cause_observation(request, observation)
-        view = _actual_view(
-            case={"case_id": "active-cause-view", "partition": "explore"},
-            initial_request_sha256="1" * 64,
-            final_request_sha256="1" * 64,
-            observation=observation,
-            transports=[transport],
-            issued_probe_hashes=set(),
-            result_hashes=set(),
-            issued_probe_count=0,
-            stop_reason="all_runtime_probes_closed",
-            schema_version=TYPED_ACTUAL_VIEW_SCHEMA_VERSION,
-        )
+        view = actual_view(observation)
 
         canonical = _strict_actual_view(ROOT, view)
         self.assertEqual(canonical["request_sha256"], request_sha256)
@@ -355,6 +398,19 @@ class ActiveCauseContractTest(unittest.TestCase):
         self.assertEqual(
             canonical["probe_closure"]["runtime_transport"][0]["request_sha256"],
             request_sha256,
+        )
+
+        semantic_key = "exact-plan-result-from-runtime"
+        marked_observation = copy.deepcopy(observation)
+        marked_observation["importance"]["r_native"]["profiles"] = [  # type: ignore[index]
+            {"effect_scope": {"plan_result_semantic_key": semantic_key}}
+        ]
+        copied = actual_view(marked_observation)
+        self.assertEqual(
+            copied["importance"]["r_native"]["profiles"][0]["effect_scope"][  # type: ignore[index]
+                "plan_result_semantic_key"
+            ],
+            semantic_key,
         )
 
         changed = copy.deepcopy(view)
@@ -372,18 +428,7 @@ class ActiveCauseContractTest(unittest.TestCase):
         changed_observation = copy.deepcopy(observation)
         changed_observation["request_sha256"] = "f" * 64
         with self.assertRaises(IntegrityError):
-            _actual_view(
-                case={"case_id": "active-cause-view", "partition": "explore"},
-                initial_request_sha256="1" * 64,
-                final_request_sha256="1" * 64,
-                observation=changed_observation,
-                transports=[transport],
-                issued_probe_hashes=set(),
-                result_hashes=set(),
-                issued_probe_count=0,
-                stop_reason="all_runtime_probes_closed",
-                schema_version=TYPED_ACTUAL_VIEW_SCHEMA_VERSION,
-            )
+            actual_view(changed_observation)
 
 
 class ActiveProbeCompletionContractTest(unittest.TestCase):

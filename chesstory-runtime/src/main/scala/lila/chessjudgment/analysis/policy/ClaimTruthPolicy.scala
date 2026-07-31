@@ -927,7 +927,13 @@ object ClaimTruthPolicy:
                 )(())
                 (assessment, response) <-
                   ComparisonEndpointEffectObservationPolicy
-                    .exactInducedResponseMoveOrder(comparison, cause.sourceSide, source, event)
+                    .exactInducedResponseMoveOrder(
+                      comparison,
+                      cause.sourceSide,
+                      source,
+                      event,
+                      graph
+                    )
                 actor <- RootCausalActor.fromPosition(
                   cause.comparisonEvidence.position,
                   causeBinding.eventLine.rootMove
@@ -952,7 +958,8 @@ object ClaimTruthPolicy:
                   source,
                   event,
                   assessment,
-                  Some(directBinding)
+                  Some(directBinding),
+                  selectedInducedResponse = Some(response)
                 )
                 inventoryObservation <- sourceInventory.exactInducedResponseObservationFor(source)
                 if inventoryObservation == observation

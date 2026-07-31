@@ -54,6 +54,47 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assert((review \ "idea_status").asOpt[String].nonEmpty, review)
     assert((review \ "explanations").asOpt[JsArray].nonEmpty, review)
 
+  test("v3 effect scope exposes the central PlanResult semantic key"):
+    val planResult = PlanResultSemanticIdentity(
+      source = PlanResultSourceOccurrence("e4e5", 2),
+      selectedInducedResponse = Some(PlanResultSourceOccurrence("g6g5", 1)),
+      consequenceKind = TransitionConsequenceKind.SpaceGain,
+      polarity = StructuralSignalPolarity.Gain,
+      goalTargetSubjects = List("center"),
+      strength = 3,
+      robustness = PlanCausalRobustness.Robust,
+      branches = List(PlanResultBranchIdentity(
+        replyMoveUci = "g6g5",
+        outcome = PlanCausalBranchOutcome.Realized,
+        observedThroughPlyOffset = 2,
+        realizationMoveUci = Some("e4e5"),
+        realizationPlyOffset = Some(2),
+        terminalOutcome = Some(PlanCausalTerminalOutcome.Victory),
+        terminalPlyOffset = Some(2),
+        terminalMoveUci = Some("e4e5")
+      )),
+      causalRoute = Nil
+    )
+    def scope(result: PlanResultSemanticIdentity): JsObject =
+      RuntimeProtocol.rootOwnedEffectIdentityJson(RootOwnedEffectIdentity(
+        RootOwnedEffectPrimitiveKind.PlanResult,
+        List("square:e5"),
+        List("plan-annotation"),
+        Nil,
+        Some(result)
+      ))
+    val scoped = scope(planResult)
+    assertEquals((scoped \ "plan_result_semantic_key").as[String], planResult.stableKey)
+    assertEquals((scoped \ "plan_ids").as[List[String]], List("plan-annotation"))
+    val alternateResponse = planResult.copy(
+      selectedInducedResponse = Some(PlanResultSourceOccurrence("b5b4", 1))
+    )
+    val alternateTerminal = planResult.copy(
+      branches = planResult.branches.map(_.copy(terminalOutcome = Some(PlanCausalTerminalOutcome.Draw)))
+    )
+    List(alternateResponse, alternateTerminal).foreach: different =>
+      assertNotEquals(different.stableKey, planResult.stableKey)
+      assertEquals((scope(different) \ "plan_result_semantic_key").as[String], different.stableKey)
   test("a request without a primary engine comparison is unavailable before projection"):
     val noPlayedLine = input + ("variations" -> Json.arr(
       Json.obj(

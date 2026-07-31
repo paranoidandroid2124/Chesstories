@@ -53,11 +53,13 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
         IdentityParts(RootOwnedEffectPrimitiveKind.ThreatCreation)
       case _: RootOwnedEffectProof.ThreatDefense =>
         IdentityParts(RootOwnedEffectPrimitiveKind.ThreatDefense)
-      case RootOwnedEffectProof.PlanResult(_, event, assessment) =>
+      case RootOwnedEffectProof.PlanResult(_, event, assessment, selectedInducedResponse) =>
         IdentityParts(
           RootOwnedEffectPrimitiveKind.PlanResult,
           planIds = List(event.planId.id),
-          planResult = Some(PlanResultSemanticIdentity.from(event, assessment))
+          planResult = Some(
+            PlanResultSemanticIdentity.from(event, assessment, selectedInducedResponse)
+          )
         )
       case RootOwnedEffectProof.PlanRestriction(_, event, _, _) =>
         IdentityParts(
@@ -113,7 +115,7 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
         expectedMagnitude(threatMagnitude(threat, binding))
       case RootOwnedEffectProof.StructuralTransition(_, _, consequence) =>
         expectedMagnitude(structuralMagnitude(consequence))
-      case RootOwnedEffectProof.PlanResult(_, _, assessment) =>
+      case RootOwnedEffectProof.PlanResult(_, _, assessment, _) =>
         expectedMagnitude(structuralMagnitude(assessment.consequence))
       case RootOwnedEffectProof.PlanRestriction(_, _, consequence, _) =>
         expectedMagnitude(structuralMagnitude(consequence))
@@ -465,10 +467,15 @@ private[chessjudgment] object RootOwnedEffectPolicy:
     */
   private[chessjudgment] def exactPlanResultPrimitive(
       proof: RootOwnedEffectProof
-  ): Option[(EvidenceRef, PlanCausalEventEvidence, PlanCausalResultAssessment)] =
+  ): Option[(
+      EvidenceRef,
+      PlanCausalEventEvidence,
+      PlanCausalResultAssessment,
+      Option[PlanCausalResponse]
+  )] =
     proof match
-      case RootOwnedEffectProof.PlanResult(source, event, assessment) =>
-        Some((source, event, assessment))
+      case RootOwnedEffectProof.PlanResult(source, event, assessment, selectedInducedResponse) =>
+        Some((source, event, assessment, selectedInducedResponse))
       case _ =>
         None
 
@@ -478,18 +485,29 @@ private[chessjudgment] object RootOwnedEffectPolicy:
       proof: RootOwnedEffectProof
   ): Boolean =
     exactPlanResultPrimitive(proof) match
-      case Some((source, event, assessment))
+      case Some((source, event, assessment, Some(selectedInducedResponse)))
           if cause.kind == RelativeCauseKind.WrongMoveOrder =>
         graph
           .comparisonFor(cause)
-          .flatMap(
+          .flatMap(comparison =>
             ComparisonEndpointEffectObservationPolicy
-              .exactInducedResponseMoveOrder(_, cause.sourceSide, source, event)
+              .exactInducedResponseMoveOrder(
+                comparison,
+                cause.sourceSide,
+                source,
+                event,
+                graph
+              )
           )
-          .exists(_._1 == assessment)
+          .contains(assessment -> selectedInducedResponse)
+      case Some((_, _, _, None)) if cause.kind == RelativeCauseKind.WrongMoveOrder =>
+        false
+      case Some((_, _, _, Some(_))) =>
+        false
       case exactPlanResult =>
         !RelativeCauseKind.requiresExactPlanResult(cause.kind) ||
-          exactPlanResult.exists { case (_, event, assessment) =>
+          exactPlanResult.exists { case (_, event, assessment, selectedInducedResponse) =>
+            selectedInducedResponse.isEmpty &&
             exactPlanAssessment(cause.kind, event).contains(assessment)
           }
 
@@ -628,7 +646,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
           RootOwnedEffectProof.ThreatCreation(_, _) |
           RootOwnedEffectProof.ThreatDefense(_, _, _) =>
         Some(RootOwnedEffectStake.ActorValue)
-      case RootOwnedEffectProof.PlanResult(_, _, assessment) =>
+      case RootOwnedEffectProof.PlanResult(_, _, assessment, _) =>
         assessment.robustness match
           case PlanCausalRobustness.Refuted => Some(RootOwnedEffectStake.ActorLiability)
           case PlanCausalRobustness.Robust | PlanCausalRobustness.Conditional =>
@@ -699,7 +717,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
         StrategicMechanismEvidence
           .structuralAxesForConsequence(delta, consequence)
           .exists(_.stableKey == axis.stableKey)
-      case RootOwnedEffectProof.PlanResult(_, event, assessment) =>
+      case RootOwnedEffectProof.PlanResult(_, event, assessment, _) =>
         val expectedPolarity =
           if event.exactRobustPublicResultAssessment.contains(assessment) then
             Some(StrategicAxisPolarity.Gain)
@@ -746,7 +764,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
         graph.record(source).exists(_.payload == threat)
       case RootOwnedEffectProof.ThreatDefense(source, threat, _) =>
         graph.record(source).exists(_.payload == threat)
-      case RootOwnedEffectProof.PlanResult(source, event, _) =>
+      case RootOwnedEffectProof.PlanResult(source, event, _, _) =>
         graph.record(source).exists(_.payload == event)
       case RootOwnedEffectProof.PlanRestriction(source, event, _, _) =>
         graph.record(source).exists(_.payload == event)
@@ -800,7 +818,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
           threat.episode.hasConcreteThreatProof &&
           threat.episode.sideUnderPressure == actor.color &&
           rootDefendsThreat(threat, eventLine.rootMove, onlyDefense)
-      case RootOwnedEffectProof.PlanResult(source, event, _) =>
+      case RootOwnedEffectProof.PlanResult(source, event, _, _) =>
         planEventOwnsRoot(source, event, eventLine, actor.color)
       case RootOwnedEffectProof.PlanRestriction(source, event, consequence, deterrence) =>
         source.line.contains(eventLine) &&
@@ -912,7 +930,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
         Option.when(threatDefenseCauseCompatible(cause.kind, onlyDefense))(
           normalizeCauseChange(cause, DirectCausalChange.Prevented)
         )
-      case RootOwnedEffectProof.PlanResult(_, event, assessment) =>
+      case RootOwnedEffectProof.PlanResult(_, event, assessment, _) =>
         val exactAssessment =
           if cause.kind == RelativeCauseKind.WrongMoveOrder then
             event.exactRobustPublicResultAssessment

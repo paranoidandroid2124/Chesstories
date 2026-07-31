@@ -798,6 +798,7 @@ object RuntimeProtocol:
       "primitive_kind" -> importanceCode(identity.primitiveKind.toString),
       "target_signatures" -> identity.targetSignatures,
       "plan_ids" -> identity.planIds,
+      "plan_result_semantic_key" -> identity.planResult.map(_.stableKey),
       "strategic_axes" -> identity.strategicAxes.map(axis =>
         Json.obj(
           "kind" -> importanceCode(axis.kind.toString),

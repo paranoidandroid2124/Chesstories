@@ -395,7 +395,8 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
       source: EvidenceRef,
       event: PlanCausalEventEvidence,
       assessment: PlanCausalResultAssessment,
-      exactBinding: Option[EvidenceObjectBinding] = None
+      exactBinding: Option[EvidenceObjectBinding] = None,
+      selectedInducedResponse: Option[PlanCausalResponse] = None
   ): Option[ComparisonEndpointEffectObservation] =
     val exactChange =
       if event.exactRefutedPublicResultAssessment.contains(assessment) then
@@ -415,7 +416,12 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
           case _ =>
             None
       else None
-    val proof = RootOwnedEffectProof.PlanResult(source, event, assessment)
+    val proof = RootOwnedEffectProof.PlanResult(
+      source,
+      event,
+      assessment,
+      selectedInducedResponse
+    )
     for
       _ <- Option.when(source.confidence != EvidenceConfidence.Heuristic)(())
       actor <- RootCausalActor.fromPosition(rootPosition, eventLine.rootMove)
@@ -442,7 +448,8 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
       comparison: CandidateComparisonFact,
       sourceSide: RelativeCauseSourceSide,
       source: EvidenceRef,
-      event: PlanCausalEventEvidence
+      event: PlanCausalEventEvidence,
+      graph: TypedEvidenceGraph
   ): Option[(PlanCausalResultAssessment, PlanCausalResponse)] =
     val endpointLines = sourceSide match
       case RelativeCauseSourceSide.Reference =>
@@ -453,6 +460,24 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
         None
     for
       (sourceLine, oppositeLine) <- endpointLines
+      sourceRecord <- graph.record(source)
+      if sourceRecord.payload == event
+      canonicalLineParent <- sourceRecord.parents.filter(parentRef =>
+        parentRef.producer == EvidenceProducer.LegalLineProducer &&
+          parentRef.layer == EvidenceLayer.Line &&
+          parentRef.position == source.position &&
+          parentRef.line.contains(event.rootLine) &&
+          parentRef.scope == event.rootLine.role.scope &&
+          parentRef.confidence != EvidenceConfidence.Heuristic
+      ) match
+        case exact :: Nil => Some(exact)
+        case _            => None
+      canonicalLineRecord <- graph.record(canonicalLineParent)
+      canonicalLine <- canonicalLineRecord match
+        case EvidenceRecord(parentRef, payload: LineFactEvidence, _)
+            if parentRef == canonicalLineParent && payload.line == event.rootLine =>
+          Some(payload)
+        case _ => None
       if !EvidenceRef.sameMove(sourceLine.rootMove, oppositeLine.rootMove)
       if sameSemanticLine(source.line, Some(sourceLine))
       if sameSemanticLine(Some(event.rootLine), Some(sourceLine))
@@ -466,6 +491,7 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
       assessment <- event.exactRobustPublicResultAssessment
       episode <- event.episode
       if assessment.sourceEvent != episode.root
+      if assessment.sourcePlyOffset == 2
       if EvidenceRef.sameMove(assessment.sourceEvent.moveUci, oppositeLine.rootMove)
       path <- episode.enablingPathTo(assessment.sourceEvent)
       dependencies = episode.enablingDependenciesTo(assessment.sourceEvent)
@@ -479,30 +505,47 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
               dependency.planConnectionProven &&
               dependency.enablesContinuation
         }
-      exactResponses = episode.responses
+      rawEligibleResponses = episode.responses
         .filter(response =>
           response.trigger == episode.root &&
             response.proven &&
             response.plyOffset == 1 &&
-            response.step.ply < assessment.sourceEvent.step.ply &&
             PrincipalVariationEvidence.sameBoardState(
               episode.root.step.fenAfter,
               response.step.fenBefore
             )
         )
-        .distinctBy(response =>
-          (
-            response.trigger.moveUci,
-            response.step.moveUci,
-            response.step.ply,
-            response.step.fenBefore,
-            response.step.fenAfter,
-            response.plyOffset
-          )
-        )
-      response <- exactResponses match
+      response <- rawEligibleResponses match
         case exact :: Nil => Some(exact)
         case _            => None
+      if assessment.sourceEvent.step.ply == response.step.ply + 1
+      replayedResponseAfter <- PrincipalVariationEvidence.legalFenAfter(
+        response.step.fenBefore,
+        response.step.moveUci
+      )
+      if PrincipalVariationEvidence.sameBoardState(
+        replayedResponseAfter,
+        response.step.fenAfter
+      )
+      if PrincipalVariationEvidence.sameBoardState(
+        response.step.fenAfter,
+        assessment.sourceEvent.step.fenBefore
+      )
+      canonicalOccurrences <- canonicalLine.lineReplaySteps.take(3) match
+        case root :: induced :: result :: Nil => Some((root, induced, result))
+        case _                                => None
+      (canonicalRoot, canonicalResponse, canonicalResult) = canonicalOccurrences
+      exactOccurrences = List(
+        canonicalRoot -> episode.root.step,
+        canonicalResponse -> response.step,
+        canonicalResult -> assessment.sourceEvent.step
+      )
+      if exactOccurrences.forall { case (canonical, selected) =>
+        EvidenceRef.normalizeMove(canonical.moveUci) == EvidenceRef.normalizeMove(selected.moveUci) &&
+        canonical.ply == selected.ply &&
+        PrincipalVariationEvidence.sameBoardState(canonical.fenBefore, selected.fenBefore) &&
+        PrincipalVariationEvidence.sameBoardState(canonical.fenAfter, selected.fenAfter)
+      }
     yield assessment -> response
 
   /** Resolves only the comparison-specific neutral witness assembled by the
@@ -533,16 +576,18 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
       )
       .flatMap { witness =>
         RootOwnedEffectPolicy.exactPlanResultPrimitive(witness.rootOwnedProof).toList.flatMap {
-          case (source, event, assessment) =>
+          case (source, event, assessment, selectedInducedResponse) =>
             for
               (selectedAssessment, response) <-
                 exactInducedResponseMoveOrder(
                   snapshot.comparison,
                   sourceSide,
                   source,
-                  event
+                  event,
+                  graph
                 ).toList
               if selectedAssessment == assessment
+              if selectedInducedResponse.contains(response)
               if RootOwnedEffectPolicy.sameCausalRootOccurrence(
                 source.position,
                 snapshot.comparisonEvidence.position
@@ -563,7 +608,12 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
                 )
                 .toList
               if witness.binding == expectedBinding
-              expectedProof = RootOwnedEffectProof.PlanResult(source, event, assessment)
+              expectedProof = RootOwnedEffectProof.PlanResult(
+                source,
+                event,
+                assessment,
+                selectedInducedResponse = Some(response)
+              )
               expectedSegment <- DirectCauseProofSegment.from(expectedProof).toList
               if witness.proofSegment == expectedSegment
               if witness.effectDescriptor ==
@@ -574,7 +624,8 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
                 source,
                 event,
                 assessment,
-                Some(expectedBinding)
+                Some(expectedBinding),
+                selectedInducedResponse = Some(response)
               )
               if witness.observation == expectedObservation
               record <- graph.record(source).toList
@@ -653,8 +704,9 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
         )
         stake <- RootOwnedEffectPolicy.effectStake(proof, actor)
         if proof match
-          case RootOwnedEffectProof.PlanResult(source, event, assessment) =>
+          case RootOwnedEffectProof.PlanResult(source, event, assessment, selectedInducedResponse) =>
             source.confidence != EvidenceConfidence.Heuristic &&
+              selectedInducedResponse.isEmpty &&
               event.exactRefutedPublicResultAssessment.contains(assessment) &&
               RootOwnedEffectPolicy.planEventOwnsRoot(
                 source,

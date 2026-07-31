@@ -895,7 +895,13 @@
     "importanceEffectScope": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["primitive_kind", "target_signatures", "plan_ids", "strategic_axes"],
+      "required": [
+        "primitive_kind",
+        "target_signatures",
+        "plan_ids",
+        "plan_result_semantic_key",
+        "strategic_axes"
+      ],
       "properties": {
         "primitive_kind": {
           "enum": [
@@ -922,6 +928,12 @@
           "type": "array",
           "uniqueItems": true,
           "items": {"type": "string", "minLength": 1}
+        },
+        "plan_result_semantic_key": {
+          "oneOf": [
+            {"type": "string", "minLength": 1},
+            {"type": "null"}
+          ]
         },
         "strategic_axes": {
           "type": "array",
@@ -957,7 +969,23 @@
             }
           }
         }
-      }
+      },
+      "oneOf": [
+        {
+          "required": ["primitive_kind", "plan_result_semantic_key"],
+          "properties": {
+            "primitive_kind": {"const": "plan_result"},
+            "plan_result_semantic_key": {"type": "string", "minLength": 1}
+          }
+        },
+        {
+          "required": ["primitive_kind", "plan_result_semantic_key"],
+          "properties": {
+            "primitive_kind": {"not": {"const": "plan_result"}},
+            "plan_result_semantic_key": {"type": "null"}
+          }
+        }
+      ]
     },
     "importanceUniverse": {
       "type": "object",

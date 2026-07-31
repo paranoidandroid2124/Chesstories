@@ -200,6 +200,11 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
     assertEquals(sourceIdentity.source.moveUci, "e4e5")
     assertEquals(counterpartIdentity.source.moveUci, "d5d6")
     assertEquals(
+      sourceIdentity.selectedInducedResponse,
+      Some(PlanResultSourceOccurrence("g6g5", 1))
+    )
+    assertEquals(counterpartIdentity.selectedInducedResponse, None)
+    assertEquals(
       sourceIdentity.causalRoute.map(route => route.fromMoveUci -> route.toMoveUci),
       List("f2f4" -> "e4e5")
     )
@@ -321,12 +326,17 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
     )
     val exactProof = admittedChannel.rootOwnedProof.getOrElse(fail("expected exact PlanResult proof"))
     exactProof match
-      case RootOwnedEffectProof.PlanResult(source, event, assessment) =>
+      case RootOwnedEffectProof.PlanResult(source, event, assessment, Some(selectedResponse)) =>
         assertEquals(source, reference.robustEvent.ref)
         assertEquals(event, reference.robustEvent.payload)
         assertEquals(assessment.consequence.strength, 3)
+        assertEquals(selectedResponse.step.moveUci, "g6g5")
       case _ => fail("expected PlanResult primitive")
     assertEquals(admittedChannel.proofSegment, DirectCauseProofSegment.from(exactProof))
+    assertEquals(
+      admittedChannel.proofSegment.map(_.steps.map(step => step.plyOffset -> step.moveUci)),
+      Some(List(0 -> "f2f4", 1 -> "g6g5", 2 -> "e4e5"))
+    )
     assert(admittedChannel.binding.consequence.exists(_.signaturePart == "Move:e4e5"))
 
     val snapshotWitness = RelativeAssessmentAssembler
@@ -460,13 +470,52 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
     )
     val records = fixture.baseRecords ++ List(eventRecord, comparisonRecord)
     val graph = records.foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
+    def graphWithEvent(
+        payload: PlanCausalEventEvidence,
+        parents: List[EvidenceRef] = eventRecord.parents
+    ): TypedEvidenceGraph =
+      records
+        .map(record =>
+          if record.ref == eventRecord.ref then record.copy(payload = payload, parents = parents)
+          else record
+        )
+        .foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
+    def snapshotFor(
+        sourceRecord: EvidenceRecord,
+        sourceGraph: TypedEvidenceGraph
+    ): ComparisonEndpointEvidenceSnapshot =
+      val endpointWitnesses = EvidenceObjectBinding.comparisonEndpointEvidenceWitnesses(
+        RelativeCauseSourceSide.Reference,
+        fixture.line,
+        fixture.root,
+        comparisonRef,
+        comparison,
+        fixture.baseRecords :+ sourceRecord,
+        sourceGraph.records,
+        sourceGraph
+      )
+      ComparisonEndpointEvidenceSnapshot(
+        comparisonRef,
+        comparison,
+        ComparisonEndpointEvidenceSideSnapshot(
+          RelativeCauseSourceSide.Reference,
+          fixture.line,
+          endpointWitnesses
+        ),
+        ComparisonEndpointEvidenceSideSnapshot(
+          RelativeCauseSourceSide.Candidate,
+          candidateLine,
+          Nil
+        )
+      )
 
     val selected = ComparisonEndpointEffectObservationPolicy
       .exactInducedResponseMoveOrder(
         comparison,
         RelativeCauseSourceSide.Reference,
         eventRecord.ref,
-        event
+        event,
+        graph
       )
       .getOrElse(fail("expected exact induced response"))
     assertEquals(selected._2.step.moveUci, "d5d4")
@@ -484,30 +533,7 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
         observation.scope.consequenceSignatures.contains("Move:e2e4")
     ))
 
-    val witnesses = EvidenceObjectBinding.comparisonEndpointEvidenceWitnesses(
-      RelativeCauseSourceSide.Reference,
-      fixture.line,
-      fixture.root,
-      comparisonRef,
-      comparison,
-      fixture.baseRecords :+ eventRecord,
-      records,
-      graph
-    )
-    val snapshot = ComparisonEndpointEvidenceSnapshot(
-      comparisonRef,
-      comparison,
-      ComparisonEndpointEvidenceSideSnapshot(
-        RelativeCauseSourceSide.Reference,
-        fixture.line,
-        witnesses
-      ),
-      ComparisonEndpointEvidenceSideSnapshot(
-        RelativeCauseSourceSide.Candidate,
-        candidateLine,
-        Nil
-      )
-    )
+    val snapshot = snapshotFor(eventRecord, graph)
     val moveOrderRecords =
       ComparisonEndpointEffectObservationPolicy.exactInducedResponseMoveOrderRecords(
         snapshot,
@@ -538,7 +564,8 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
         comparison,
         RelativeCauseSourceSide.Reference,
         eventRecord.ref,
-        noResponse
+        noResponse,
+        graphWithEvent(noResponse)
       ),
       None
     )
@@ -550,7 +577,8 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
         differentEndpoint,
         RelativeCauseSourceSide.Reference,
         eventRecord.ref,
-        event
+        event,
+        graph
       ),
       None
     )
@@ -566,12 +594,114 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
           )
       )
     )
+    val alternateResponse = ambiguous.causalEpisode.responses.last
+    val replacementEvent = event.copy(
+      causalEpisode = event.causalEpisode.copy(responses = List(alternateResponse))
+    )
+    val coordinatedEvent = inventoryFixture(
+      LineNodeRole.BestReference,
+      inducedMoveOrder = true,
+      additionalPlanKinds = List(PlanKind.OpeningDevelopment),
+      replyMove = Some("b5b4")
+    ).robustEvent.payload match
+      case payload: PlanCausalEventEvidence => payload
+      case _                                => fail("expected coordinated plan event")
+    val coordinatedRecord = eventRecord.copy(payload = coordinatedEvent)
+    val coordinatedGraph = graphWithEvent(coordinatedEvent)
+    val coordinatedSnapshot = snapshotFor(coordinatedRecord, coordinatedGraph)
+    assertEquals(
+      ComparisonEndpointEffectObservationPolicy.exactInducedResponseMoveOrderRecords(
+        coordinatedSnapshot,
+        RelativeCauseSourceSide.Reference,
+        coordinatedGraph
+      ),
+      Nil
+    )
+    val forgedAfterResponse = alternateResponse.copy(
+      step = alternateResponse.step.copy(fenAfter = selected._1.sourceEvent.step.fenBefore)
+    )
+    val forgedAfterEvent = event.copy(
+      causalEpisode = event.causalEpisode.copy(responses = List(forgedAfterResponse))
+    )
+    val alternateProof = RootOwnedEffectProof.PlanResult(
+      eventRecord.ref,
+      ambiguous,
+      selected._1,
+      selectedInducedResponse = Some(alternateResponse)
+    )
+    val duplicateResponseEvents = List(
+      event.copy(causalEpisode = event.causalEpisode.copy(
+        responses = List(selected._2, selected._2)
+      )),
+      event.copy(causalEpisode = event.causalEpisode.copy(
+        responses = List(
+          selected._2,
+          selected._2.copy(structuralConsequences = List(
+            selected._1.consequence.copy(strength = 0)
+          ))
+        )
+      ))
+    )
+    def assertResponseRejected(
+        rejectedEvent: PlanCausalEventEvidence,
+        selectedResponse: PlanCausalResponse
+    ): Unit =
+      assertEquals(
+        ComparisonEndpointEffectObservationPolicy.exactInducedResponseMoveOrder(
+          comparison,
+          RelativeCauseSourceSide.Reference,
+          eventRecord.ref,
+          rejectedEvent,
+          graphWithEvent(rejectedEvent)
+        ),
+        None
+      )
+      assertEquals(
+        DirectCauseProofSegment.from(RootOwnedEffectProof.PlanResult(
+          eventRecord.ref,
+          rejectedEvent,
+          selected._1,
+          selectedInducedResponse = Some(selectedResponse)
+        )),
+        None
+      )
+    assertResponseRejected(ambiguous, alternateResponse)
+    assertResponseRejected(replacementEvent, alternateResponse)
+    assertResponseRejected(forgedAfterEvent, forgedAfterResponse)
+    duplicateResponseEvents.foreach(assertResponseRejected(_, selected._2))
     assertEquals(
       ComparisonEndpointEffectObservationPolicy.exactInducedResponseMoveOrder(
         comparison,
         RelativeCauseSourceSide.Reference,
         eventRecord.ref,
-        ambiguous
+        coordinatedEvent,
+        graphWithEvent(coordinatedEvent)
+      ),
+      None
+    )
+    List(
+      eventRecord.parents.filterNot(_ == fixture.lineRecord.ref),
+      fixture.lineRecord.ref :: eventRecord.parents
+    ).foreach(parents =>
+      assertEquals(
+        ComparisonEndpointEffectObservationPolicy.exactInducedResponseMoveOrder(
+          comparison,
+          RelativeCauseSourceSide.Reference,
+          eventRecord.ref,
+          event,
+          graphWithEvent(event, parents)
+        ),
+        None
+      )
+    )
+    assertEquals(
+      DirectCauseProofSegment.from(
+        RootOwnedEffectProof.PlanResult(
+          eventRecord.ref,
+          event,
+          selected._1,
+          selectedInducedResponse = Some(alternateResponse)
+        )
       ),
       None
     )
@@ -597,6 +727,40 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       case exact :: Nil => exact
       case _            => fail("expected one C-generated exact WrongMoveOrder")
     assert(exactCause.directEffectAdmission.productionReady)
+    val exactChannel = RelativeCauseConstructionAdmission
+      .admittedDirectChannels(exactCause, cContext.evidenceGraph)
+      .find(_.binding.source == eventRecord.ref)
+      .getOrElse(fail("expected the exact selected-response channel"))
+    val borrowedSiblingProof = RootOwnedEffectProof.PlanResult(
+      eventRecord.ref,
+      event,
+      selected._1,
+      selectedInducedResponse = Some(alternateResponse)
+    )
+    val borrowedSiblingChannel = exactChannel.copy(rootOwnedProof = Some(borrowedSiblingProof))
+    assert(!RootOwnedEffectPolicy.admits(
+      exactCause,
+      cContext.evidenceGraph,
+      borrowedSiblingChannel
+    ))
+    val coordinatedAdmissionGraph = cContext.evidenceGraph.records
+      .map(record =>
+        if record.ref == eventRecord.ref then record.copy(payload = coordinatedEvent)
+        else record
+      )
+      .foldLeft(TypedEvidenceGraph.empty)((graph, record) => graph.add(record))
+    assertEquals(
+      RelativeCauseConstructionAdmission.admittedDirectChannels(exactCause, coordinatedAdmissionGraph),
+      Nil
+    )
+    val responseCollision = RootOwnedEffectTruthView.from(
+      List(exactChannel, exactChannel.copy(rootOwnedProof = Some(alternateProof)))
+    )
+    assertEquals(responseCollision.channels.map(_.proofSegmentAmbiguous), List(true))
+    assertEquals(
+      responseCollision.channels.map(_.proofSegment),
+      List(Option.empty[DirectCauseProofSegment])
+    )
     val exactClaim = JudgmentClaimAssembler
       .propose(cContext)
       .find(claim => claim.family == ClaimFamily.Tactical && claim.evidence.contains(causeRef))
