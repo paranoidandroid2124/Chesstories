@@ -288,7 +288,8 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
       eventLine: LineNodeRef,
       source: EvidenceRef,
       event: PlanCausalEventEvidence,
-      assessment: PlanCausalResultAssessment
+      assessment: PlanCausalResultAssessment,
+      exactBinding: Option[EvidenceObjectBinding] = None
   ): Option[ComparisonEndpointEffectObservation] =
     val exactChange =
       if event.exactRefutedPublicResultAssessment.contains(assessment) then
@@ -318,12 +319,169 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
       observation <- fromOwnedProof(
         rootPosition,
         eventLine,
-        EvidenceObjectBinding.planAssessmentBinding(source, event, actor, assessment, eventLine),
+        exactBinding.getOrElse(
+          EvidenceObjectBinding.planAssessmentBinding(source, event, actor, assessment, eventLine)
+        ),
         proof,
         change,
         stake
       )
     yield observation
+
+  /** Selects an exact root -> induced reply -> opposite endpoint realization
+    * already proved by one F-stage plan episode. This observes comparison
+    * order only; it neither constructs nor admits a Cause.
+    */
+  private[chessjudgment] def exactInducedResponseMoveOrder(
+      comparison: CandidateComparisonFact,
+      sourceSide: RelativeCauseSourceSide,
+      source: EvidenceRef,
+      event: PlanCausalEventEvidence
+  ): Option[(PlanCausalResultAssessment, PlanCausalResponse)] =
+    val endpointLines = sourceSide match
+      case RelativeCauseSourceSide.Reference =>
+        Some(comparison.referenceLine -> comparison.candidateLine)
+      case RelativeCauseSourceSide.Candidate =>
+        Some(comparison.candidateLine -> comparison.referenceLine)
+      case RelativeCauseSourceSide.Shared | RelativeCauseSourceSide.Mixed =>
+        None
+    for
+      (sourceLine, oppositeLine) <- endpointLines
+      if !EvidenceRef.sameMove(sourceLine.rootMove, oppositeLine.rootMove)
+      if sameSemanticLine(source.line, Some(sourceLine))
+      if sameSemanticLine(Some(event.rootLine), Some(sourceLine))
+      if source.confidence != EvidenceConfidence.Heuristic
+      if RootOwnedEffectPolicy.planEventOwnsRoot(
+        source,
+        event,
+        sourceLine,
+        comparison.comparison.mover
+      )
+      assessment <- event.exactRobustPublicResultAssessment
+      episode <- event.episode
+      if assessment.sourceEvent != episode.root
+      if EvidenceRef.sameMove(assessment.sourceEvent.moveUci, oppositeLine.rootMove)
+      path <- episode.enablingPathTo(assessment.sourceEvent)
+      dependencies = episode.enablingDependenciesTo(assessment.sourceEvent)
+      if path.headOption.contains(episode.root) &&
+        path.lastOption.contains(assessment.sourceEvent) &&
+        dependencies.size == path.size - 1 &&
+        dependencies.zip(path.zip(path.drop(1))).forall {
+          case (dependency, (from, to)) =>
+            dependency.from == from &&
+              dependency.to == to &&
+              dependency.planConnectionProven &&
+              dependency.enablesContinuation
+        }
+      exactResponses = episode.responses
+        .filter(response =>
+          response.trigger == episode.root &&
+            response.proven &&
+            response.plyOffset == 1 &&
+            response.step.ply < assessment.sourceEvent.step.ply &&
+            PrincipalVariationEvidence.sameBoardState(
+              episode.root.step.fenAfter,
+              response.step.fenBefore
+            )
+        )
+        .distinctBy(response =>
+          (
+            response.trigger.moveUci,
+            response.step.moveUci,
+            response.step.ply,
+            response.step.fenBefore,
+            response.step.fenAfter,
+            response.plyOffset
+          )
+        )
+      response <- exactResponses match
+        case exact :: Nil => Some(exact)
+        case _            => None
+    yield assessment -> response
+
+  /** Resolves only the comparison-specific neutral witness assembled by the
+    * endpoint snapshot. A generic PlanResult witness cannot become a
+    * move-order producer input merely by sharing its primitive source.
+    */
+  private[chessjudgment] def exactInducedResponseMoveOrderRecords(
+      snapshot: ComparisonEndpointEvidenceSnapshot,
+      sourceSide: RelativeCauseSourceSide,
+      graph: TypedEvidenceGraph
+  ): List[EvidenceRecord] =
+    val expectedLine = sourceSide match
+      case RelativeCauseSourceSide.Reference => Some(snapshot.comparison.referenceLine)
+      case RelativeCauseSourceSide.Candidate => Some(snapshot.comparison.candidateLine)
+      case RelativeCauseSourceSide.Shared | RelativeCauseSourceSide.Mixed => None
+    snapshot
+      .forSide(sourceSide)
+      .toList
+      .filter(side =>
+        side.sourceSide == sourceSide &&
+          expectedLine.exists(line => sameSemanticLine(Some(side.line), Some(line)))
+      )
+      .flatMap(side =>
+        side.witnesses.filter(witness =>
+          witness.sourceSide == sourceSide &&
+            sameSemanticLine(Some(witness.line), Some(side.line))
+        )
+      )
+      .flatMap { witness =>
+        RootOwnedEffectPolicy.exactPlanResultPrimitive(witness.rootOwnedProof).toList.flatMap {
+          case (source, event, assessment) =>
+            for
+              (selectedAssessment, response) <-
+                exactInducedResponseMoveOrder(
+                  snapshot.comparison,
+                  sourceSide,
+                  source,
+                  event
+                ).toList
+              if selectedAssessment == assessment
+              if RootOwnedEffectPolicy.sameCausalRootOccurrence(
+                source.position,
+                snapshot.comparisonEvidence.position
+              )
+              actor <- RootCausalActor
+                .fromPosition(source.position, witness.line.rootMove)
+                .toList
+              expectedBinding <- EvidenceObjectBinding
+                .inducedResponseMoveOrderBinding(
+                  snapshot.comparison,
+                  sourceSide,
+                  source,
+                  event,
+                  actor,
+                  assessment,
+                  response,
+                  witness.line
+                )
+                .toList
+              if witness.binding == expectedBinding
+              expectedProof = RootOwnedEffectProof.PlanResult(source, event, assessment)
+              expectedSegment <- DirectCauseProofSegment.from(expectedProof).toList
+              if witness.proofSegment == expectedSegment
+              if witness.effectDescriptor ==
+                RootOwnedEffectDescriptorPolicy.describe(expectedBinding, expectedProof)
+              expectedObservation = fromExactPlanResult(
+                source.position,
+                witness.line,
+                source,
+                event,
+                assessment,
+                Some(expectedBinding)
+              )
+              if witness.observation == expectedObservation
+              record <- graph.record(source).toList
+              if record.ref == source && record.payload == event
+              if graph
+                .parentClosure(record)
+                .map(_.ref.id)
+                .distinct
+                .sorted == witness.carrierAncestorSourceIds
+            yield record
+        }
+      }
+      .distinctBy(_.ref.id)
 
   def retainedPlayedValueReady(
       cause: RelativeCauseFact,

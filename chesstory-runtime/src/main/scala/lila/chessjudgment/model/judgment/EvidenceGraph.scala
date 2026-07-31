@@ -1238,6 +1238,36 @@ object EvidenceObjectBinding:
               )
             )
           }
+          val inducedResponseMoveOrderWitnesses =
+            ComparisonEndpointEffectObservationPolicy
+              .exactInducedResponseMoveOrder(comparison, sourceSide, ref, payload)
+              .toList
+              .flatMap { case (assessment, response) =>
+                inducedResponseMoveOrderBinding(
+                  comparison,
+                  sourceSide,
+                  ref,
+                  payload,
+                  exactActor,
+                  assessment,
+                  response,
+                  eventLine
+                ).toList.flatMap { binding =>
+                  val proof = RootOwnedEffectProof.PlanResult(ref, payload, assessment)
+                  witness(
+                    binding,
+                    proof,
+                    ComparisonEndpointEffectObservationPolicy.fromExactPlanResult(
+                      rootPosition,
+                      eventLine,
+                      ref,
+                      payload,
+                      assessment,
+                      Some(binding)
+                    )
+                  )
+                }
+              }
           val restrictionWitnesses = RootOwnedEffectPolicy
             .planRestrictionProofs(ref, payload, graph)
             .flatMap { case (consequence, proof) =>
@@ -1276,7 +1306,8 @@ object EvidenceObjectBinding:
                   observationFromOwnedProof(binding, proof, DirectCausalChange.Prevented)
                 )
               }
-          resultWitnesses ++ restrictionWitnesses ++ directRootBlockadeWitnesses
+          resultWitnesses ++ inducedResponseMoveOrderWitnesses ++
+            restrictionWitnesses ++ directRootBlockadeWitnesses
         }
 
       case _ => Nil
@@ -1531,7 +1562,10 @@ object EvidenceObjectBinding:
                 eventLine = eventLine,
                 source = source,
                 event = event,
-                assessment = assessment
+                assessment = assessment,
+                exactBinding = Option.when(cause.kind == RelativeCauseKind.WrongMoveOrder)(
+                  channel.binding
+                )
               )
           }
     yield observation
@@ -2302,6 +2336,38 @@ object EvidenceObjectBinding:
                   )
                   .toList
             }
+          case RelativeCauseKind.WrongMoveOrder =>
+            graph.comparisonFor(cause).toList.flatMap { comparison =>
+              ComparisonEndpointEffectObservationPolicy
+                .exactInducedResponseMoveOrder(
+                  comparison,
+                  cause.sourceSide,
+                  ref,
+                  payload
+                )
+                .toList
+                .flatMap { case (exact, response) =>
+                  inducedResponseMoveOrderBinding(
+                    comparison,
+                    cause.sourceSide,
+                    ref,
+                    payload,
+                    root.actor,
+                    exact,
+                    response,
+                    eventLine
+                  ).toList.flatMap { binding =>
+                    RootOwnedEffectPolicy
+                      .certify(
+                        cause,
+                        graph,
+                        binding,
+                        RootOwnedEffectProof.PlanResult(ref, payload, exact)
+                      )
+                      .toList
+                  }
+                }
+            }
           case RelativeCauseKind.OpponentRestriction =>
             val deterrenceChannels = RootOwnedEffectPolicy.planRestrictionProofs(ref, payload, graph).flatMap {
               case (consequence, proof) =>
@@ -2376,6 +2442,52 @@ object EvidenceObjectBinding:
       ).distinctBy(_.signaturePart),
       line = Some(eventLine),
       horizon = Some(s"ply:${assessment.sourcePlyOffset}")
+    )
+
+  /** Comparison-specific rendering of an already selected F-stage plan
+    * result. It preserves the exact induced responder as the target while the
+    * underlying dependency and consequence remain the PlanResult primitive.
+    */
+  private[chessjudgment] def inducedResponseMoveOrderBinding(
+      comparison: CandidateComparisonFact,
+      sourceSide: RelativeCauseSourceSide,
+      ref: EvidenceRef,
+      payload: PlanCausalEventEvidence,
+      actor: RootCausalActor,
+      assessment: PlanCausalResultAssessment,
+      response: PlanCausalResponse,
+      eventLine: LineNodeRef
+  ): Option[EvidenceObjectBinding] =
+    val endpointLines = sourceSide match
+      case RelativeCauseSourceSide.Reference =>
+        Some(comparison.referenceLine -> comparison.candidateLine)
+      case RelativeCauseSourceSide.Candidate =>
+        Some(comparison.candidateLine -> comparison.referenceLine)
+      case RelativeCauseSourceSide.Shared | RelativeCauseSourceSide.Mixed =>
+        None
+    for
+      (sourceLine, delayedLine) <- endpointLines
+      if sameSemanticLine(sourceLine, eventLine)
+      responseActor <- RootCausalActor.fromPosition(
+        PositionNodeRef(response.step.fenBefore, response.step.ply - 1),
+        response.step.moveUci
+      )
+      if responseActor.color == !actor.color
+      base = planAssessmentBinding(ref, payload, actor, assessment, eventLine)
+    yield base.copy(
+      target = rootActorObjects(responseActor),
+      mechanism = base.mechanism,
+      consequence = (
+        base.consequence ++ objectOf(EvidenceObjectKind.Move, delayedLine.rootMove)
+      ).distinctBy(_.signaturePart),
+      witness = (
+        base.witness ++
+          lineObject(sourceLine) ++
+          lineObject(delayedLine) ++
+          objectOf(EvidenceObjectKind.Move, payload.rootMove) ++
+          objectOf(EvidenceObjectKind.Move, response.step.moveUci) ++
+          objectOf(EvidenceObjectKind.Move, assessment.sourceEvent.moveUci)
+      ).distinctBy(_.signaturePart)
     )
 
   private def planDirectConsequenceBinding(
@@ -13433,6 +13545,15 @@ final class TypedEvidenceGraph private (
       kind: RelativeCauseKind,
       section: RelativeCauseProofSection
   ): Boolean =
+    val selectedMoveOrderPlanResult =
+      section.role == RelativeCauseProofRole.DirectProof &&
+        kind == RelativeCauseKind.WrongMoveOrder &&
+        relativeCauseProofRecords(section).exists {
+          case EvidenceRecord(_, event: PlanCausalEventEvidence, _) =>
+            event.exactRobustPublicResultAssessment.nonEmpty
+          case _ =>
+            false
+        }
     relativeCauseBoardAnchorKinds(section).nonEmpty ||
       relativeCauseLineConsequences(kind, section).nonEmpty ||
       relativeCauseRelations(section).nonEmpty ||
@@ -13441,7 +13562,8 @@ final class TypedEvidenceGraph private (
       relativeCauseStrategicContrasts(section).nonEmpty ||
       relativeCauseThreatEpisodes(section).nonEmpty ||
       relativeCauseTransitionConsequences(kind, section).nonEmpty ||
-      relativeCauseDefensiveRecaptureResources(kind, section).nonEmpty
+      relativeCauseDefensiveRecaptureResources(kind, section).nonEmpty ||
+      selectedMoveOrderPlanResult
 
   def relativeCauseProofHasRawTypedDepth(kind: RelativeCauseKind, proof: RelativeCauseProof): Boolean =
     relativeCauseProofHasRawDirectProof(kind, proof) ||

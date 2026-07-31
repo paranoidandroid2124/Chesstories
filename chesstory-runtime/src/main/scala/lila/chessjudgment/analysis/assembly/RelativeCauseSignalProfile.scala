@@ -71,7 +71,9 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
     fact: CandidateComparisonFact,
     referenceRecords: List[EvidenceRecord],
     candidateRecords: List[EvidenceRecord],
-    sharedRecords: List[EvidenceRecord]
+    sharedRecords: List[EvidenceRecord],
+    referenceEndpointMoveOrderRecords: List[EvidenceRecord] = Nil,
+    candidateEndpointMoveOrderRecords: List[EvidenceRecord] = Nil
 ):
   val involvedRecords: List[EvidenceRecord] =
     (referenceRecords ++ candidateRecords).distinctBy(_.ref.id)
@@ -129,9 +131,15 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
   val candidateRecaptureResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.recaptureResourceRecords(candidateRecords, fact.candidateLine.rootMove)
   val referenceMoveOrderResource: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.moveOrderResourceRecords(referenceRecords)
+    (
+      RelativeCauseSignalProfile.moveOrderResourceRecords(referenceRecords) ++
+        referenceEndpointMoveOrderRecords
+    ).distinctBy(_.ref.id)
   val candidateMoveOrderResource: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.moveOrderResourceRecords(candidateRecords)
+    (
+      RelativeCauseSignalProfile.moveOrderResourceRecords(candidateRecords) ++
+        candidateEndpointMoveOrderRecords
+    ).distinctBy(_.ref.id)
   val candidateTempoLiability: List[EvidenceRecord] =
     RelativeCauseSignalProfile.tempoLiabilityRecords(fact, candidateRecords)
   val referenceForcingLineResource: List[EvidenceRecord] =
@@ -484,7 +492,9 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       causeDraft(
         RelativeCauseKind.WrongMoveOrder,
         referenceMoveOrderResource,
-        referenceMoveOrderResource.nonEmpty && candidateMoveOrderResource.isEmpty && badLoss
+        referenceMoveOrderResource.nonEmpty && candidateMoveOrderResource.isEmpty && badLoss,
+        Some(RelativeCauseSourceSide.Reference),
+        Some(CauseAttributionKind.ReferenceCreatesResource)
       ),
       causeDraft(
         RelativeCauseKind.TempoLoss,
@@ -1103,13 +1113,17 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       fact: CandidateComparisonFact,
       referenceRecords: List[EvidenceRecord],
       candidateRecords: List[EvidenceRecord],
-      sharedRecords: List[EvidenceRecord]
+      sharedRecords: List[EvidenceRecord],
+      referenceEndpointMoveOrderRecords: List[EvidenceRecord] = Nil,
+      candidateEndpointMoveOrderRecords: List[EvidenceRecord] = Nil
   ): RelativeCauseSignalProfile =
     RelativeCauseSignalProfile(
       fact = fact,
       referenceRecords = referenceRecords,
       candidateRecords = candidateRecords,
-      sharedRecords = sharedRecords
+      sharedRecords = sharedRecords,
+      referenceEndpointMoveOrderRecords = referenceEndpointMoveOrderRecords,
+      candidateEndpointMoveOrderRecords = candidateEndpointMoveOrderRecords
     )
 
   private[chessjudgment] def structuralConsequencesForSources(

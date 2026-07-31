@@ -400,7 +400,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
               cause.sourceSide,
               cause.attribution.kind
             ) &&
-              requiredExactPlanResultAuthority(cause, proof) &&
+              requiredExactPlanResultAuthority(cause, graph, proof) &&
               sameCausalRootBoard(cause, effect.binding, proof) &&
               expectedDirectChange(cause, proof).contains(effect.directChange) &&
               effect.binding.line.contains(eventLine) &&
@@ -474,12 +474,24 @@ private[chessjudgment] object RootOwnedEffectPolicy:
 
   private def requiredExactPlanResultAuthority(
       cause: RelativeCauseFact,
+      graph: TypedEvidenceGraph,
       proof: RootOwnedEffectProof
   ): Boolean =
-    !RelativeCauseKind.requiresExactPlanResult(cause.kind) ||
-      exactPlanResultPrimitive(proof).exists { case (_, event, assessment) =>
-        exactPlanAssessment(cause.kind, event).contains(assessment)
-      }
+    exactPlanResultPrimitive(proof) match
+      case Some((source, event, assessment))
+          if cause.kind == RelativeCauseKind.WrongMoveOrder =>
+        graph
+          .comparisonFor(cause)
+          .flatMap(
+            ComparisonEndpointEffectObservationPolicy
+              .exactInducedResponseMoveOrder(_, cause.sourceSide, source, event)
+          )
+          .exists(_._1 == assessment)
+      case exactPlanResult =>
+        !RelativeCauseKind.requiresExactPlanResult(cause.kind) ||
+          exactPlanResult.exists { case (_, event, assessment) =>
+            exactPlanAssessment(cause.kind, event).contains(assessment)
+          }
 
   /** Common root-ownership predicates shared by Cause generation and public
     * projection. Callers may add kind-specific semantics, but may not weaken
@@ -901,11 +913,16 @@ private[chessjudgment] object RootOwnedEffectPolicy:
           normalizeCauseChange(cause, DirectCausalChange.Prevented)
         )
       case RootOwnedEffectProof.PlanResult(_, event, assessment) =>
-        exactPlanAssessment(cause.kind, event)
+        val exactAssessment =
+          if cause.kind == RelativeCauseKind.WrongMoveOrder then
+            event.exactRobustPublicResultAssessment
+          else exactPlanAssessment(cause.kind, event)
+        exactAssessment
           .filter(_ == assessment)
           .flatMap { exact =>
             cause.kind match
-              case RelativeCauseKind.PlanImprovement => transitionConsequenceChange(cause, exact.consequence)
+              case RelativeCauseKind.PlanImprovement | RelativeCauseKind.WrongMoveOrder =>
+                transitionConsequenceChange(cause, exact.consequence)
               case RelativeCauseKind.PlanContradiction => Some(DirectCausalChange.Refuted)
               case _ => None
           }

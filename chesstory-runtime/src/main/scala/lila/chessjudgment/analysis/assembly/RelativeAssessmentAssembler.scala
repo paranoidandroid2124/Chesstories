@@ -848,7 +848,13 @@ object RelativeAssessmentAssembler:
         val comparisonProof = comparisonProofRecords(neighborhood)
         val causes =
           mergeCauseCandidates(
-            inferCauseCandidates(neighborhood, fact, comparisonRecord)
+            inferCauseCandidates(
+              neighborhood,
+              fact,
+              comparisonRecord,
+              endpointSnapshot,
+              context.evidenceGraph
+            )
           )
         val provisional = causes.zipWithIndex.map { case (candidate, index) =>
           val kind = candidate.kind
@@ -1108,13 +1114,17 @@ object RelativeAssessmentAssembler:
           graph,
           comparison.referenceLine,
           comparison.comparison.mover,
-          comparisonRecordPosition
+          comparisonRecordPosition,
+          Some(comparison),
+          Some(RelativeCauseSourceSide.Reference)
         ),
         candidate = planResultEndpointInventory(
           graph,
           comparison.candidateLine,
           comparison.comparison.mover,
-          comparisonRecordPosition
+          comparisonRecordPosition,
+          Some(comparison),
+          Some(RelativeCauseSourceSide.Candidate)
         )
       )
     )
@@ -1314,7 +1324,9 @@ object RelativeAssessmentAssembler:
       graph: TypedEvidenceGraph,
       line: LineNodeRef,
       mover: Color,
-      rootPosition: PositionNodeRef
+      rootPosition: PositionNodeRef,
+      comparison: Option[CandidateComparisonFact] = None,
+      sourceSide: Option[RelativeCauseSourceSide] = None
   ): PlanResultEndpointInventory =
     val endpointRecords = graph.records.filter(_.referencesLine(line))
     val exactAfterRoot = PrincipalVariationEvidence.legalFenAfter(rootPosition.fen, line.rootMove)
@@ -1393,7 +1405,7 @@ object RelativeAssessmentAssembler:
                   record.parents.exists(parent => lineRefIds(parent.id)) &&
                   exactAssessments.nonEmpty
               if carrierReady then
-                exactAssessments.map(assessment =>
+                val ordinary = exactAssessments.map(assessment =>
                   ComparisonEndpointEffectObservationPolicy.fromExactPlanResult(
                     rootPosition,
                     line,
@@ -1402,6 +1414,42 @@ object RelativeAssessmentAssembler:
                     assessment
                   )
                 )
+                val inducedResponseMoveOrder =
+                  for
+                    exactComparison <- comparison.toList
+                    exactSourceSide <- sourceSide.toList
+                    rootActor <- RootCausalActor.fromPosition(rootPosition, line.rootMove).toList
+                    (assessment, response) <-
+                      ComparisonEndpointEffectObservationPolicy
+                        .exactInducedResponseMoveOrder(
+                          exactComparison,
+                          exactSourceSide,
+                          record.ref,
+                          event
+                        )
+                        .toList
+                    if exactAssessments.contains(assessment)
+                    binding <- EvidenceObjectBinding
+                      .inducedResponseMoveOrderBinding(
+                        exactComparison,
+                        exactSourceSide,
+                        record.ref,
+                        event,
+                        rootActor,
+                        assessment,
+                        response,
+                        line
+                      )
+                      .toList
+                  yield ComparisonEndpointEffectObservationPolicy.fromExactPlanResult(
+                    rootPosition,
+                    line,
+                    record.ref,
+                    event,
+                    assessment,
+                    Some(binding)
+                  )
+                ordinary ++ inducedResponseMoveOrder
               else List(None)
             }
             val successful = projections.flatten.toSet
@@ -2042,7 +2090,18 @@ object RelativeAssessmentAssembler:
         binding.eventLine,
         fact.comparison.mover
       ) &&
-      RelativeCauseKind.planCausalEventCanProveCause(kind, event)
+      (
+        if kind == RelativeCauseKind.WrongMoveOrder then
+          ComparisonEndpointEffectObservationPolicy
+            .exactInducedResponseMoveOrder(
+              fact,
+              binding.sourceSide,
+              record.ref,
+              event
+            )
+            .nonEmpty
+        else RelativeCauseKind.planCausalEventCanProveCause(kind, event)
+      )
 
   private def lineFactDirectlyOwnsCause(
       graph: TypedEvidenceGraph,
@@ -2698,14 +2757,46 @@ object RelativeAssessmentAssembler:
   private def inferCauseCandidates(
       neighborhood: ComparisonEvidenceNeighborhood,
       fact: CandidateComparisonFact,
-      comparisonRecord: EvidenceRecord
+      comparisonRecord: EvidenceRecord,
+      endpointSnapshot: ComparisonEndpointEvidenceSnapshot,
+      graph: TypedEvidenceGraph
   ): List[RelativeCauseDraft] =
+    val endpointMoveOrderRecords =
+      Option
+        .when(
+          endpointSnapshot.comparison == fact &&
+            endpointSnapshot.comparisonEvidence == comparisonRecord.ref
+        )(endpointSnapshot)
+        .toList
+        .flatMap(snapshot =>
+          List(
+            RelativeCauseSourceSide.Reference ->
+              ComparisonEndpointEffectObservationPolicy
+                .exactInducedResponseMoveOrderRecords(
+                  snapshot,
+                  RelativeCauseSourceSide.Reference,
+                  graph
+                ),
+            RelativeCauseSourceSide.Candidate ->
+              ComparisonEndpointEffectObservationPolicy
+                .exactInducedResponseMoveOrderRecords(
+                  snapshot,
+                  RelativeCauseSourceSide.Candidate,
+                  graph
+                )
+          )
+        )
+        .toMap
     val profile =
       RelativeCauseSignalProfile.from(
         fact = fact,
         referenceRecords = neighborhood.referenceRecords,
         candidateRecords = neighborhood.candidateRecords,
-        sharedRecords = neighborhood.sharedRecords
+        sharedRecords = neighborhood.sharedRecords,
+        referenceEndpointMoveOrderRecords =
+          endpointMoveOrderRecords.getOrElse(RelativeCauseSourceSide.Reference, Nil),
+        candidateEndpointMoveOrderRecords =
+          endpointMoveOrderRecords.getOrElse(RelativeCauseSourceSide.Candidate, Nil)
       )
     RelativeCauseDraftPlanner.drafts(profile, comparisonRecord)
 
