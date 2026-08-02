@@ -189,6 +189,11 @@
           "type": "array",
           "items": {"$ref": "#/$defs/explanation"},
           "maxItems": 1
+        },
+        "observations": {
+          "description": "Optional additive public V3 observation carrier. Old V3 artifacts may omit it; active producers always emit the selected observations in P order.",
+          "type": "array",
+          "items": {"$ref": "#/$defs/observation"}
         }
       }
     },
@@ -258,10 +263,245 @@
             "renderable": {"const": false},
             "verdict": {"type": "null"},
             "idea_status": {"const": "unavailable"},
-            "explanations": {"maxItems": 0}
+            "explanations": {"maxItems": 0},
+            "observations": {"maxItems": 0}
           }
         }
       ]
+    },
+    "observation": {
+      "oneOf": [
+        {"$ref": "#/$defs/candidateComparisonObservation"},
+        {"$ref": "#/$defs/strategicMechanismObservation"}
+      ]
+    },
+    "candidateComparisonObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "carrier", "parents", "kind", "comparison"],
+      "properties": {
+        "claim_id": {"type": "string", "minLength": 1},
+        "carrier": {"$ref": "#/$defs/evidenceRef"},
+        "parents": {
+          "description": "The carrier EvidenceRecord's exact direct F parents, retained in registered order without filtering or deduplication.",
+          "type": "array",
+          "items": {"$ref": "#/$defs/evidenceRef"}
+        },
+        "kind": {"const": "candidate_comparison"},
+        "comparison": {"$ref": "#/$defs/candidateComparisonObservationContent"}
+      }
+    },
+    "candidateComparisonObservationContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "mover",
+        "reference",
+        "candidate",
+        "candidate_win_percent_delta_for_mover",
+        "verdict",
+        "candidate_set_type",
+        "recapture_resource"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "played_vs_best",
+            "best_vs_second",
+            "played_vs_alternative",
+            "reference_vs_alternative"
+          ]
+        },
+        "mover": {"enum": ["white", "black"]},
+        "reference": {"$ref": "#/$defs/comparisonLine"},
+        "candidate": {"$ref": "#/$defs/comparisonLine"},
+        "candidate_win_percent_delta_for_mover": {"type": "number"},
+        "verdict": {"$ref": "#/$defs/verdictCode"},
+        "candidate_set_type": {
+          "oneOf": [
+            {"enum": ["only_move", "narrow_choice", "style_choice"]},
+            {"type": "null"}
+          ]
+        },
+        "recapture_resource": {
+          "oneOf": [
+            {"$ref": "#/$defs/recaptureResource"},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "comparisonLine": {
+      "description": "Evidence-id-independent comparison-line identity copied from the certified CandidateComparisonSemanticKey.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root_move", "role", "rank"],
+      "properties": {
+        "root_move": {"$ref": "#/$defs/uciMove"},
+        "role": {"$ref": "#/$defs/lineRole"},
+        "rank": {"type": "integer", "minimum": 0}
+      }
+    },
+    "lineRole": {
+      "enum": ["played", "best_reference", "alternative", "threat"]
+    },
+    "recaptureResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "removed_occupant_role",
+        "reference_defender_role",
+        "preserved_defender_role",
+        "reference_root_move",
+        "opponent_capture_move",
+        "reference_recapture_move"
+      ],
+      "properties": {
+        "target": {"$ref": "#/$defs/square"},
+        "removed_occupant_role": {"$ref": "#/$defs/pieceRole"},
+        "reference_defender_role": {"$ref": "#/$defs/pieceRole"},
+        "preserved_defender_role": {"$ref": "#/$defs/pieceRole"},
+        "reference_root_move": {"$ref": "#/$defs/uciMove"},
+        "opponent_capture_move": {"$ref": "#/$defs/uciMove"},
+        "reference_recapture_move": {"$ref": "#/$defs/uciMove"}
+      }
+    },
+    "pieceRole": {
+      "enum": ["pawn", "knight", "bishop", "rook", "queen", "king"]
+    },
+    "strategicMechanismObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "carrier", "parents", "kind", "mechanism"],
+      "properties": {
+        "claim_id": {"type": "string", "minLength": 1},
+        "carrier": {"$ref": "#/$defs/evidenceRef"},
+        "parents": {
+          "description": "The carrier EvidenceRecord's exact direct F parents, retained in registered order without filtering or deduplication.",
+          "type": "array",
+          "items": {"$ref": "#/$defs/evidenceRef"}
+        },
+        "kind": {"const": "strategic_mechanism"},
+        "mechanism": {"$ref": "#/$defs/strategicMechanismObservationContent"}
+      }
+    },
+    "strategicMechanismObservationContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "signals", "semantic_keys"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "structural_improvement",
+            "target_pressure",
+            "center_control",
+            "king_safety",
+            "pawn_weakness",
+            "activity",
+            "pawn_structure",
+            "plan_pressure",
+            "compensation",
+            "endgame",
+            "strategic_concession",
+            "opening_alignment"
+          ]
+        },
+        "signals": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/strategicMechanismSignalContent"}
+        },
+        "semantic_keys": {
+          "description": "Opaque machine semantic identity only; values are never presentation copy, display text, geometry, or prose.",
+          "type": "array",
+          "items": {"$ref": "#/$defs/semanticKey"}
+        }
+      }
+    },
+    "strategicMechanismSignalContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "key", "source", "strength", "axis"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "strategic_fact",
+            "pawn_structure",
+            "structural_delta",
+            "plan_pressure",
+            "plan_transition",
+            "opening_anchor",
+            "opening_applicability",
+            "endgame_position"
+          ]
+        },
+        "key": {
+          "description": "Opaque machine semantic identity copied from the registered signal label; never presentation copy, display text, geometry, or prose.",
+          "type": "string"
+        },
+        "source": {"$ref": "#/$defs/evidenceRef"},
+        "strength": {"type": "integer"},
+        "axis": {
+          "oneOf": [
+            {"$ref": "#/$defs/strategicAxisContent"},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "strategicAxisContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "polarity", "key"],
+      "properties": {
+        "kind": {"$ref": "#/$defs/strategicAxisKind"},
+        "polarity": {"$ref": "#/$defs/strategicAxisPolarity"},
+        "key": {
+          "description": "Opaque machine semantic identity copied from the registered axis label; never presentation copy, display text, geometry, or prose.",
+          "type": "string"
+        }
+      }
+    },
+    "strategicAxisKind": {
+      "enum": ["target", "space_center", "pawn_break", "counterplay", "activity", "plan_coherence"]
+    },
+    "strategicAxisPolarity": {
+      "enum": ["gain", "loss", "preserve", "release", "concede", "restrain", "support"]
+    },
+    "semanticKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "values"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "strategic_kind",
+            "strategic_mechanism",
+            "strategic_axis",
+            "plan",
+            "board_anchor",
+            "pawn_structure",
+            "structure_plan",
+            "pawn_play",
+            "opening_anchor",
+            "opening_supported",
+            "opening_observed",
+            "candidate_comparison",
+            "plan_pressure",
+            "plan_causal_event",
+            "plan_transition",
+            "line_event",
+            "line_consequence",
+            "structural_delta"
+          ]
+        },
+        "values": {
+          "description": "Opaque machine semantic identity values; never presentation copy, display text, geometry, or prose.",
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
     },
     "verdict": {
       "type": "object",
@@ -917,7 +1157,7 @@
       "properties": {
         "id": {"type": "string", "minLength": 1},
         "root_move": {"$ref": "#/$defs/uciMove"},
-        "role": {"enum": ["played", "best_reference", "alternative", "threat"]},
+        "role": {"$ref": "#/$defs/lineRole"},
         "rank": {"type": "integer", "minimum": 0}
       }
     },
@@ -1138,7 +1378,7 @@
       "properties": {
         "move": {"$ref": "#/$defs/uciMove"},
         "side": {"enum": ["white", "black"]},
-        "piece": {"enum": ["pawn", "knight", "bishop", "rook", "queen", "king"]},
+        "piece": {"$ref": "#/$defs/pieceRole"},
         "from": {"$ref": "#/$defs/square"},
         "to": {"$ref": "#/$defs/square"}
       }
@@ -1328,12 +1568,8 @@
       "additionalProperties": false,
       "required": ["kind", "polarity", "label", "comparison_outcome"],
       "properties": {
-        "kind": {
-          "enum": ["target", "space_center", "pawn_break", "counterplay", "activity", "plan_coherence"]
-        },
-        "polarity": {
-          "enum": ["gain", "loss", "preserve", "release", "concede", "restrain", "support"]
-        },
+        "kind": {"$ref": "#/$defs/strategicAxisKind"},
+        "polarity": {"$ref": "#/$defs/strategicAxisPolarity"},
         "label": {"type": "string"},
         "comparison_outcome": {
           "oneOf": [

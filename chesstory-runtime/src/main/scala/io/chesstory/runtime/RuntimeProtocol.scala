@@ -897,6 +897,8 @@ object RuntimeProtocol:
 
     def publicPayloadJson(packet: EvidenceBackedJudgmentPacket): JsObject =
       val claims = packet.claims
+      val claimsById = claims.map(claim => claim.id -> claim).toMap
+      val observations = selectedObservationsJson(packet, claimsById)
       val primary = engineBackedPrimaryComparison(packet)
       val assessment = primary.map(_.assessment)
       val playedLine = packet.candidateLine(LineNodeRole.Played)
@@ -906,7 +908,6 @@ object RuntimeProtocol:
       val referenceMove =
         assessment.map(_.reference.ref.rootMove).orElse(referenceLine.map(_.ref.rootMove)).getOrElse("")
       val moveQuality = primary.map(value => quality(value.fact.comparison.verdict)).getOrElse("unknown")
-      val claimsById = claims.map(claim => claim.id -> claim).toMap
       val ideaUnits = packet.causeExposureResolution.ideaUnits.sortBy(_.serializationOrder)
       val ideaUnitByCauseId = ideaUnits.flatMap(unit =>
         unit.memberCauseEvidenceIds.map(_ -> unit)
@@ -952,7 +953,8 @@ object RuntimeProtocol:
           else "no_certified_differential_idea"
         ),
         "idea_status_detail" -> dispositionSummary,
-        "explanations" -> explanation.toList
+        "explanations" -> explanation.toList,
+        "observations" -> observations
       )
 
     def emptyPayloadJson(
@@ -973,7 +975,115 @@ object RuntimeProtocol:
           else "unavailable"
         ),
         "idea_status_detail" -> causeDispositionPublicJson(ledger),
-        "explanations" -> Json.arr()
+        "explanations" -> Json.arr(),
+        "observations" -> Json.arr()
+      )
+
+    /** P has already selected these exact observations. This is a
+      * mechanical public carrier: it reads only each selected claim, its F
+      * carrier record, and that record's direct parents.
+      */
+    private def selectedObservationsJson(
+        packet: EvidenceBackedJudgmentPacket,
+        claimsById: Map[String, JudgmentClaim]
+    ): List[JsObject] =
+      packet.selectedContentClaimIds.map { claimId =>
+        val claim = claimsById(claimId)
+        claim.content match
+          case Some(JudgmentClaimContent.CandidateComparison(carrier, comparison)) =>
+            packet.evidenceGraph.record(carrier) match
+              case Some(EvidenceRecord(ref, CandidateComparisonEvidence(_), parents)) =>
+                Json.obj(
+                  "claim_id" -> claimId,
+                  "carrier" -> evidenceRefJson(ref),
+                  "parents" -> parents.map(evidenceRefJson),
+                  "kind" -> "candidate_comparison",
+                  "comparison" -> candidateComparisonObservationJson(comparison)
+                )
+              case _ =>
+                throw IllegalStateException(
+                  s"packet-selected candidate comparison observation has no registered F carrier: $claimId"
+                )
+          case Some(JudgmentClaimContent.StrategicMechanism(carrier)) =>
+            packet.evidenceGraph.record(carrier) match
+              case Some(EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents)) =>
+                Json.obj(
+                  "claim_id" -> claimId,
+                  "carrier" -> evidenceRefJson(ref),
+                  "parents" -> parents.map(evidenceRefJson),
+                  "kind" -> "strategic_mechanism",
+                  "mechanism" -> strategicMechanismObservationJson(payload)
+                )
+              case _ =>
+                throw IllegalStateException(
+                  s"packet-selected strategic mechanism observation has no registered F carrier: $claimId"
+                )
+          case None =>
+            throw IllegalStateException(
+              s"packet-selected observation has no registered content: $claimId"
+            )
+      }
+
+    private def candidateComparisonObservationJson(
+        comparison: CandidateComparisonSemanticKey
+    ): JsObject =
+      Json.obj(
+        "kind" -> code(comparison.kind.toString),
+        "mover" -> (if comparison.mover.white then "white" else "black"),
+        "reference" -> comparisonLineJson(comparison.referenceLine),
+        "candidate" -> comparisonLineJson(comparison.candidateLine),
+        "candidate_win_percent_delta_for_mover" -> comparison.candidateWinPercentDeltaForMover,
+        "verdict" -> code(comparison.verdict.toString),
+        "candidate_set_type" -> comparison.candidateSetType.map(value => code(value.toString)),
+        "recapture_resource" -> comparison.defensiveRecaptureResource.map(
+          defensiveRecaptureResourceJson
+        )
+      )
+
+    private def comparisonLineJson(line: SemanticLineKey): JsObject =
+      Json.obj(
+        "root_move" -> line.rootMove,
+        "role" -> code(line.role.toString),
+        "rank" -> line.rank
+      )
+
+    private def strategicMechanismObservationJson(payload: StrategicMechanismEvidence): JsObject =
+      Json.obj(
+        "kind" -> code(payload.kind.toString),
+        "signals" -> payload.signals.map(signal =>
+          Json.obj(
+            "kind" -> code(signal.kind.toString),
+            "key" -> signal.label,
+            "source" -> evidenceRefJson(signal.source),
+            "strength" -> signal.strength,
+            "axis" -> signal.axis.map(axis =>
+              Json.obj(
+                "kind" -> code(axis.kind.toString),
+                "polarity" -> code(axis.polarity.toString),
+                "key" -> axis.label
+              )
+            )
+          )
+        ),
+        "semantic_keys" -> payload.semanticAnchors.map(anchor =>
+          Json.obj(
+            "kind" -> code(anchor.kind.toString),
+            "values" -> anchor.values
+          )
+        )
+      )
+
+    private def defensiveRecaptureResourceJson(
+        resource: PlayedVsBestDefensiveRecaptureResource
+    ): JsObject =
+      Json.obj(
+        "target" -> resource.target.key,
+        "removed_occupant_role" -> resource.removedOccupantRole.name,
+        "reference_defender_role" -> resource.referenceDefenderRole.name,
+        "preserved_defender_role" -> resource.preservedDefenderRole.name,
+        "reference_root_move" -> EvidenceRef.normalizeMove(resource.referenceRootMove),
+        "opponent_capture_move" -> EvidenceRef.normalizeMove(resource.opponentCaptureMove),
+        "reference_recapture_move" -> EvidenceRef.normalizeMove(resource.referenceRecaptureMove)
       )
 
     private def primaryComparison(

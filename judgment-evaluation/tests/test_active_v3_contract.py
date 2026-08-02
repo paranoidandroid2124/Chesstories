@@ -293,6 +293,79 @@ class ActiveCauseContractTest(unittest.TestCase):
                 for malformed in invalid:
                     self.assertTrue(registry._branch_errors(malformed, definition, schema_path, "$"))
 
+    def test_v3_observations_schema_accepts_old_and_active_contracts(self) -> None:
+        schema = ROOT / "schemas" / "public-v3" / "move-meaning-response.schema.json"
+        registry = SchemaRegistry(schema.parent)
+        definitions = registry.load(schema)["$defs"]
+
+        def ref(
+            identifier: str, producer: str, layer: str, line: object = None,
+            scope: str = "current_position",
+        ) -> dict[str, object]:
+            return {"id": identifier, "producer": producer, "layer": layer, "scope": scope, "line": line}
+
+        line = {"id": "line:played", "root_move": "d2d4", "role": "played", "rank": 0}
+        source = ref("source:strategic", "strategic_feature_producer", "strategic")
+        candidate_carrier = ref(
+            "carrier:candidate", "relative_move_producer", "candidate_comparison", line, "counterfactual"
+        )
+        candidate_line = {"root_move": "d2d4", "role": "played", "rank": 0}
+        reference_line = {"root_move": "e2e4", "role": "best_reference", "rank": 0}
+        candidate_observation = {
+            "claim_id": "claim:candidate", "carrier": candidate_carrier, "parents": [source],
+            "kind": "candidate_comparison",
+            "comparison": {
+                "kind": "played_vs_best", "mover": "white", "reference": reference_line,
+                "candidate": candidate_line, "candidate_win_percent_delta_for_mover": -12.5,
+                "verdict": "inaccuracy", "candidate_set_type": "narrow_choice",
+                "recapture_resource": None,
+            },
+        }
+        strategic_carrier = ref("carrier:strategic", "strategic_mechanism_producer", "strategic_mechanism", line)
+        strategic_observation = {
+            "claim_id": "claim:strategic", "carrier": strategic_carrier,
+            "parents": [source, candidate_carrier], "kind": "strategic_mechanism",
+            "mechanism": {
+                "kind": "target_pressure",
+                "signals": [
+                    {
+                        "kind": "strategic_fact", "key": "target:e5", "source": source,
+                        "strength": 2,
+                        "axis": {"kind": "target", "polarity": "gain", "key": "target:e5"},
+                    }
+                ],
+                "semantic_keys": [{"kind": "strategic_kind", "values": ["target_pressure"]}],
+            },
+        }
+        detail = _empty_cause_disposition_observation()["r_public_summary"]
+        old_review = {
+            "renderable": False, "verdict": None, "idea_status": "unavailable",
+            "idea_status_detail": detail, "explanations": [],
+        }
+        active_empty = {**old_review, "observations": []}
+        active_nonempty = {
+            **old_review, "renderable": True,
+            "verdict": {
+                "comparison_kind": "played_vs_best", "mover": "white",
+                "verdict_code": "inaccuracy", "move_quality": "bad",
+                "played_move": "d2d4", "reference_move": "e2e4",
+                "candidate_win_percent_delta_for_mover": -12.5, "win_percent_loss_for_mover": 12.5,
+                "outcome": None, "mate": None,
+            },
+            "idea_status": "no_certified_differential_idea",
+            "observations": [candidate_observation, strategic_observation],
+        }
+        for name, review, definition in (
+            ("old absent", old_review, definitions["withheldMoveReview"]),
+            ("active empty", active_empty, definitions["withheldMoveReview"]),
+            ("active nonempty", active_nonempty, definitions["readyMoveReview"]),
+        ):
+            with self.subTest(observations=name):
+                self.assertEqual(registry._branch_errors(review, definition, schema, "$"), [])
+        malformed_observations = copy.deepcopy(active_nonempty)
+        malformed_observations["observations"][0]["unexpected"] = True
+        self.assertTrue(registry._branch_errors(malformed_observations, definitions["readyMoveReview"], schema, "$"))
+
     def test_production_run_binds_active_v3_schema_and_hash_contract(self) -> None:
         existing_file = ROOT / "pyproject.toml"
         acquisition = {

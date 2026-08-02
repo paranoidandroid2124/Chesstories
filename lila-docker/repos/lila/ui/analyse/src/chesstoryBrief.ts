@@ -5,6 +5,90 @@ type ChesstoryBriefSectionKey =
   | 'better-plan'
   | 'evidence';
 
+const lineRoles = ['played', 'best_reference', 'alternative', 'threat'] as const;
+const colors = ['white', 'black'] as const;
+// prettier-ignore
+const evidenceProducers = [
+  'board_fact_producer', 'legal_line_producer', 'engine_eval_producer', 'tactical_relation_producer',
+  'pawn_structure_producer', 'strategic_feature_producer', 'strategic_mechanism_producer', 'opening_context_producer',
+  'feature_anchor_producer', 'applicability_assessment_producer', 'threat_pressure_producer', 'move_motif_producer',
+  'tactical_mechanism_producer', 'move_transition_producer', 'structural_delta_producer', 'plan_pressure_producer',
+  'plan_causal_event_producer', 'plan_transition_producer', 'relative_move_producer',
+] as const;
+// prettier-ignore
+const evidenceLayers = [
+  'board', 'pawn_structure', 'strategic', 'strategic_mechanism', 'opening_context', 'feature_anchor',
+  'applicability_assessment', 'threat_pressure', 'line', 'eval', 'move_motif', 'tactical_mechanism',
+  'move_transition', 'relation', 'structural_delta', 'plan_pressure', 'plan_causal_event', 'plan_transition',
+  'candidate_comparison', 'relative_assessment', 'relative_cause',
+] as const;
+// prettier-ignore
+const evidenceScopes = [
+  'before_position', 'after_played_position', 'after_reference_position', 'current_position', 'played_transition',
+  'reference_transition', 'alternative_transition', 'best_line', 'played_line', 'candidate_line', 'threat_line',
+  'counterfactual',
+] as const;
+// prettier-ignore
+const candidateComparisonKinds = [
+  'played_vs_best', 'best_vs_second', 'played_vs_alternative', 'reference_vs_alternative',
+] as const;
+const verdictComparisonKinds = ['played_vs_best'] as const;
+// prettier-ignore
+const verdictCodes = [
+  'improves_on_reference', 'matches_reference', 'playable_loss', 'inaccuracy', 'mistake', 'blunder',
+] as const;
+const candidateSetTypes = ['only_move', 'narrow_choice', 'style_choice'] as const;
+const pieceRoles = ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king'] as const;
+// prettier-ignore
+const strategicMechanismKinds = [
+  'structural_improvement', 'target_pressure', 'center_control', 'king_safety', 'pawn_weakness', 'activity',
+  'pawn_structure', 'plan_pressure', 'compensation', 'endgame', 'strategic_concession', 'opening_alignment',
+] as const;
+// prettier-ignore
+const strategicMechanismSignalKinds = [
+  'strategic_fact', 'pawn_structure', 'structural_delta', 'plan_pressure', 'plan_transition', 'opening_anchor',
+  'opening_applicability', 'endgame_position',
+] as const;
+const strategicAxisKinds = [
+  'target',
+  'space_center',
+  'pawn_break',
+  'counterplay',
+  'activity',
+  'plan_coherence',
+] as const;
+const strategicAxisPolarities = [
+  'gain',
+  'loss',
+  'preserve',
+  'release',
+  'concede',
+  'restrain',
+  'support',
+] as const;
+// prettier-ignore
+const semanticKeyKinds = [
+  'strategic_kind', 'strategic_mechanism', 'strategic_axis', 'plan', 'board_anchor', 'pawn_structure',
+  'structure_plan', 'pawn_play', 'opening_anchor', 'opening_supported', 'opening_observed', 'candidate_comparison',
+  'plan_pressure', 'plan_causal_event', 'plan_transition', 'line_event', 'line_consequence', 'structural_delta',
+] as const;
+
+type ChesstoryLineRole = (typeof lineRoles)[number];
+type ChesstoryColor = (typeof colors)[number];
+type ChesstoryEvidenceProducer = (typeof evidenceProducers)[number];
+type ChesstoryEvidenceLayer = (typeof evidenceLayers)[number];
+type ChesstoryEvidenceScope = (typeof evidenceScopes)[number];
+type ChesstoryCandidateComparisonKind = (typeof candidateComparisonKinds)[number];
+type ChesstoryVerdictComparisonKind = (typeof verdictComparisonKinds)[number];
+type ChesstoryVerdictCode = (typeof verdictCodes)[number];
+type ChesstoryCandidateSetType = (typeof candidateSetTypes)[number];
+type ChesstoryPieceRole = (typeof pieceRoles)[number];
+type ChesstoryStrategicMechanismKind = (typeof strategicMechanismKinds)[number];
+type ChesstoryStrategicMechanismSignalKind = (typeof strategicMechanismSignalKinds)[number];
+type ChesstoryStrategicAxisKind = (typeof strategicAxisKinds)[number];
+type ChesstoryStrategicAxisPolarity = (typeof strategicAxisPolarities)[number];
+type ChesstorySemanticKeyKind = (typeof semanticKeyKinds)[number];
+
 export interface ChesstoryBriefSection {
   key: ChesstoryBriefSectionKey;
   title: string;
@@ -17,17 +101,90 @@ export interface ChesstoryBriefSection {
 interface ChesstoryLineRef {
   id: string;
   root_move: string;
-  role: string;
+  role: ChesstoryLineRole;
+  rank: number;
+}
+
+interface ComparisonLine {
+  root_move: string;
+  role: ChesstoryLineRole;
   rank: number;
 }
 
 interface ChesstoryEvidenceRef {
   id: string;
-  producer: string;
-  layer: string;
-  scope: string;
+  producer: ChesstoryEvidenceProducer;
+  layer: ChesstoryEvidenceLayer;
+  scope: ChesstoryEvidenceScope;
   line: ChesstoryLineRef | null;
 }
+
+interface RecaptureResource {
+  target: string;
+  removed_occupant_role: ChesstoryPieceRole;
+  reference_defender_role: ChesstoryPieceRole;
+  preserved_defender_role: ChesstoryPieceRole;
+  reference_root_move: string;
+  opponent_capture_move: string;
+  reference_recapture_move: string;
+}
+
+interface CandidateComparison {
+  kind: ChesstoryCandidateComparisonKind;
+  mover: ChesstoryColor;
+  reference: ComparisonLine;
+  candidate: ComparisonLine;
+  candidate_win_percent_delta_for_mover: number;
+  verdict: ChesstoryVerdictCode;
+  candidate_set_type: ChesstoryCandidateSetType | null;
+  recapture_resource: RecaptureResource | null;
+}
+
+interface CandidateComparisonObservation {
+  claim_id: string;
+  carrier: ChesstoryEvidenceRef;
+  parents: ChesstoryEvidenceRef[];
+  kind: 'candidate_comparison';
+  comparison: CandidateComparison;
+}
+
+interface StrategicAxis {
+  kind: ChesstoryStrategicAxisKind;
+  polarity: ChesstoryStrategicAxisPolarity;
+  /** Opaque machine semantic identity, never presentation copy. */
+  key: string;
+}
+
+interface StrategicSignal {
+  kind: ChesstoryStrategicMechanismSignalKind;
+  /** Opaque machine semantic identity, never presentation copy. */
+  key: string;
+  source: ChesstoryEvidenceRef;
+  strength: number;
+  axis: StrategicAxis | null;
+}
+
+interface SemanticKey {
+  kind: ChesstorySemanticKeyKind;
+  /** Opaque machine semantic identities, never display text, geometry, or prose. */
+  values: string[];
+}
+
+interface StrategicMechanism {
+  kind: ChesstoryStrategicMechanismKind;
+  signals: StrategicSignal[];
+  semantic_keys: SemanticKey[];
+}
+
+interface StrategicMechanismObservation {
+  claim_id: string;
+  carrier: ChesstoryEvidenceRef;
+  parents: ChesstoryEvidenceRef[];
+  kind: 'strategic_mechanism';
+  mechanism: StrategicMechanism;
+}
+
+type Observation = CandidateComparisonObservation | StrategicMechanismObservation;
 
 interface ChesstoryObjectRef {
   kind: string;
@@ -165,9 +322,9 @@ interface ChesstoryExplanation {
 }
 
 interface ChesstoryVerdict {
-  comparison_kind: string;
-  mover: string;
-  verdict_code: string;
+  comparison_kind: ChesstoryVerdictComparisonKind;
+  mover: ChesstoryColor;
+  verdict_code: ChesstoryVerdictCode;
   move_quality: string;
   played_move: string;
   reference_move: string;
@@ -201,6 +358,8 @@ export interface ChesstoryMoveMeaningPayload {
   idea_status: 'certified' | 'no_certified_differential_idea' | 'unavailable';
   idea_status_detail: ChesstoryCauseDispositionSummary;
   explanations: ChesstoryExplanation[];
+  /** Optional only for old V3 artifacts; active V3 always carries the array. */
+  observations?: Observation[];
 }
 
 export type ChesstoryBriefState =
@@ -288,20 +447,37 @@ export function decodeChesstoryMoveMeaningResponse(raw: unknown): ChesstoryMoveM
 }
 
 function isMoveMeaningPayload(value: unknown): value is ChesstoryMoveMeaningPayload {
+  const selectedObservations = isObject(value) ? value.observations : undefined;
   if (
     !isObject(value) ||
-    !hasExactKeys(value, ['renderable', 'verdict', 'idea_status', 'idea_status_detail', 'explanations']) ||
+    !hasExactKeys(
+      value,
+      ['renderable', 'verdict', 'idea_status', 'idea_status_detail', 'explanations'],
+      ['observations'],
+    ) ||
     typeof value.renderable !== 'boolean' ||
     !(value.verdict === null || isVerdict(value.verdict)) ||
     !['certified', 'no_certified_differential_idea', 'unavailable'].includes(String(value.idea_status)) ||
     !isCauseDispositionSummary(value.idea_status_detail) ||
     !Array.isArray(value.explanations) ||
     !value.explanations.every(isExplanation) ||
-    value.explanations.length > 1
+    value.explanations.length > 1 ||
+    !(
+      selectedObservations === undefined ||
+      (Array.isArray(selectedObservations) &&
+        selectedObservations.every(isObservation) &&
+        new Set(selectedObservations.map(observation => observation.claim_id)).size ===
+          selectedObservations.length)
+    )
   )
     return false;
   if (!value.renderable)
-    return value.verdict === null && value.idea_status === 'unavailable' && value.explanations.length === 0;
+    return (
+      value.verdict === null &&
+      value.idea_status === 'unavailable' &&
+      value.explanations.length === 0 &&
+      (selectedObservations === undefined || selectedObservations.length === 0)
+    );
   if (value.verdict === null || value.idea_status === 'unavailable') return false;
   if (value.idea_status === 'no_certified_differential_idea')
     return value.explanations.length === 0 && value.idea_status_detail.selected_cause_ids.length === 0;
@@ -310,6 +486,127 @@ function isMoveMeaningPayload(value: unknown): value is ChesstoryMoveMeaningPayl
   return sameStringSet(
     value.idea_status_detail.selected_cause_ids,
     value.explanations[0].ideas.map(idea => idea.cause_evidence_id),
+  );
+}
+
+function isObservation(value: unknown): value is Observation {
+  if (!isObject(value)) return false;
+  if (value.kind === 'candidate_comparison') return isCandidateComparisonObservation(value);
+  if (value.kind === 'strategic_mechanism') return isStrategicMechanismObservation(value);
+  return false;
+}
+
+function isCandidateComparisonObservation(value: unknown): value is CandidateComparisonObservation {
+  return (
+    isObject(value) &&
+    hasExactKeys(value, ['claim_id', 'carrier', 'parents', 'kind', 'comparison']) &&
+    isNonEmptyString(value.claim_id) &&
+    isEvidenceRef(value.carrier) &&
+    Array.isArray(value.parents) &&
+    value.parents.every(isEvidenceRef) &&
+    value.kind === 'candidate_comparison' &&
+    isCandidateComparison(value.comparison)
+  );
+}
+
+function isCandidateComparison(value: unknown): value is CandidateComparison {
+  return (
+    isObject(value) &&
+    hasExactKeys(value, [
+      'kind',
+      'mover',
+      'reference',
+      'candidate',
+      'candidate_win_percent_delta_for_mover',
+      'verdict',
+      'candidate_set_type',
+      'recapture_resource',
+    ]) &&
+    isOneOf(value.kind, candidateComparisonKinds) &&
+    isOneOf(value.mover, colors) &&
+    isComparisonLine(value.reference) &&
+    isComparisonLine(value.candidate) &&
+    isFiniteNumber(value.candidate_win_percent_delta_for_mover) &&
+    isOneOf(value.verdict, verdictCodes) &&
+    (value.candidate_set_type === null || isOneOf(value.candidate_set_type, candidateSetTypes)) &&
+    (value.recapture_resource === null || isRecaptureResource(value.recapture_resource))
+  );
+}
+
+function isRecaptureResource(value: unknown): value is RecaptureResource {
+  return (
+    isObject(value) &&
+    hasExactKeys(value, [
+      'target',
+      'removed_occupant_role',
+      'reference_defender_role',
+      'preserved_defender_role',
+      'reference_root_move',
+      'opponent_capture_move',
+      'reference_recapture_move',
+    ]) &&
+    isSquare(value.target) &&
+    [value.removed_occupant_role, value.reference_defender_role, value.preserved_defender_role].every(
+      isPieceRole,
+    ) &&
+    [value.reference_root_move, value.opponent_capture_move, value.reference_recapture_move].every(isUciMove)
+  );
+}
+
+function isStrategicMechanismObservation(value: unknown): value is StrategicMechanismObservation {
+  return (
+    isObject(value) &&
+    hasExactKeys(value, ['claim_id', 'carrier', 'parents', 'kind', 'mechanism']) &&
+    isNonEmptyString(value.claim_id) &&
+    isEvidenceRef(value.carrier) &&
+    Array.isArray(value.parents) &&
+    value.parents.every(isEvidenceRef) &&
+    value.kind === 'strategic_mechanism' &&
+    isStrategicMechanism(value.mechanism)
+  );
+}
+
+function isStrategicMechanism(value: unknown): value is StrategicMechanism {
+  return (
+    isObject(value) &&
+    hasExactKeys(value, ['kind', 'signals', 'semantic_keys']) &&
+    isOneOf(value.kind, strategicMechanismKinds) &&
+    Array.isArray(value.signals) &&
+    value.signals.every(isStrategicSignal) &&
+    Array.isArray(value.semantic_keys) &&
+    value.semantic_keys.every(isSemanticKey)
+  );
+}
+
+function isStrategicSignal(value: unknown): value is StrategicSignal {
+  return (
+    isObject(value) &&
+    hasExactKeys(value, ['kind', 'key', 'source', 'strength', 'axis']) &&
+    isOneOf(value.kind, strategicMechanismSignalKinds) &&
+    typeof value.key === 'string' &&
+    isEvidenceRef(value.source) &&
+    Number.isInteger(value.strength) &&
+    (value.axis === null || isStrategicAxis(value.axis))
+  );
+}
+
+function isStrategicAxis(value: unknown): value is StrategicAxis {
+  return (
+    isObject(value) &&
+    hasExactKeys(value, ['kind', 'polarity', 'key']) &&
+    isOneOf(value.kind, strategicAxisKinds) &&
+    isOneOf(value.polarity, strategicAxisPolarities) &&
+    typeof value.key === 'string'
+  );
+}
+
+function isSemanticKey(value: unknown): value is SemanticKey {
+  return (
+    isObject(value) &&
+    hasExactKeys(value, ['kind', 'values']) &&
+    isOneOf(value.kind, semanticKeyKinds) &&
+    Array.isArray(value.values) &&
+    value.values.every(item => typeof item === 'string')
   );
 }
 
@@ -328,14 +625,10 @@ function isVerdict(value: unknown): value is ChesstoryVerdict {
       'outcome',
       'mate',
     ]) ||
-    ![
-      value.comparison_kind,
-      value.mover,
-      value.verdict_code,
-      value.move_quality,
-      value.played_move,
-      value.reference_move,
-    ].every(isNonEmptyString) ||
+    !isOneOf(value.comparison_kind, verdictComparisonKinds) ||
+    !isOneOf(value.mover, colors) ||
+    !isOneOf(value.verdict_code, verdictCodes) ||
+    ![value.move_quality, value.played_move, value.reference_move].every(isNonEmptyString) ||
     !isFiniteNumber(value.candidate_win_percent_delta_for_mover) ||
     !isFiniteNumber(value.win_percent_loss_for_mover)
   )
@@ -579,7 +872,10 @@ function isEvidenceRef(value: unknown): value is ChesstoryEvidenceRef {
   return (
     isObject(value) &&
     hasExactKeys(value, ['id', 'producer', 'layer', 'scope', 'line']) &&
-    [value.id, value.producer, value.layer, value.scope].every(isNonEmptyString) &&
+    isNonEmptyString(value.id) &&
+    isOneOf(value.producer, evidenceProducers) &&
+    isOneOf(value.layer, evidenceLayers) &&
+    isOneOf(value.scope, evidenceScopes) &&
     (value.line === null || isLineRef(value.line))
   );
 }
@@ -588,7 +884,19 @@ function isLineRef(value: unknown): value is ChesstoryLineRef {
   return (
     isObject(value) &&
     hasExactKeys(value, ['id', 'root_move', 'role', 'rank']) &&
-    [value.id, value.root_move, value.role].every(isNonEmptyString) &&
+    isNonEmptyString(value.id) &&
+    isUciMove(value.root_move) &&
+    isOneOf(value.role, lineRoles) &&
+    isNonNegativeInteger(value.rank)
+  );
+}
+
+function isComparisonLine(value: unknown): value is ComparisonLine {
+  return (
+    isObject(value) &&
+    hasExactKeys(value, ['root_move', 'role', 'rank']) &&
+    isUciMove(value.root_move) &&
+    isOneOf(value.role, lineRoles) &&
     isNonNegativeInteger(value.rank)
   );
 }
@@ -1086,6 +1394,22 @@ function hasExactKeys(
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isOneOf<T extends readonly string[]>(value: unknown, choices: T): value is T[number] {
+  return typeof value === 'string' && choices.includes(value as T[number]);
+}
+
+function isUciMove(value: unknown): value is string {
+  return typeof value === 'string' && /^[a-h][1-8][a-h][1-8][qrbn]?$/.test(value);
+}
+
+function isSquare(value: unknown): value is string {
+  return typeof value === 'string' && /^[a-h][1-8]$/.test(value);
+}
+
+function isPieceRole(value: unknown): value is string {
+  return isOneOf(value, pieceRoles);
 }
 
 function isNullableString(value: unknown): value is string | null {

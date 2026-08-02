@@ -43,7 +43,8 @@ class RuntimeProtocolTest extends munit.FunSuite:
 
   test("v3 response exposes the ready public envelope"):
     RuntimeResources.verify()
-    val result = RuntimeProtocol.evaluate(request())
+    val trace = RuntimeProtocol.evaluateWithBoundary(request(), JudgmentBoundaryIntervention.identity)
+    val result = trace.result
     assertEquals(result.httpStatus, 200)
     assertEquals((result.body \ "schema_version").as[String], RuntimeProtocol.ResponseSchema)
     assertEquals((result.body \ "request_id").as[String], "test-1")
@@ -53,6 +54,50 @@ class RuntimeProtocolTest extends munit.FunSuite:
     val review = (result.body \ "move_review").as[JsObject]
     assert((review \ "idea_status").asOpt[String].nonEmpty, review)
     assert((review \ "explanations").asOpt[JsArray].nonEmpty, review)
+    val packet = trace.boundaryExecution.flatMap(_.packet).getOrElse(fail("expected P packet"))
+    val observations = (review \ "observations").as[List[JsObject]]
+    assert(packet.selectedContentClaimIds.nonEmpty, packet.selectedContentClaimIds)
+    val observationKinds = observations.map(value => (value \ "kind").as[String])
+    assert(observationKinds.contains("candidate_comparison"), observationKinds)
+    assert(observationKinds.contains("strategic_mechanism"), observationKinds)
+    assertEquals(observations.map(value => (value \ "claim_id").as[String]), packet.selectedContentClaimIds)
+    def assertExactCarrier(value: JsObject, carrier: EvidenceRef): Unit =
+      packet.evidenceGraph.record(carrier) match
+        case Some(EvidenceRecord(ref, _, parents)) =>
+          assertEquals((value \ "carrier" \ "id").as[String], ref.id)
+          assertEquals((value \ "parents").as[List[JsObject]].map(value => (value \ "id").as[String]), parents.map(_.id))
+        case _ => fail(s"expected registered carrier: ${carrier.id}")
+    observations.zip(packet.selectedContentClaimIds).foreach: (value, claimId) =>
+      packet.claims.filter(_.id == claimId) match
+        case claim :: Nil =>
+          claim.content match
+            case Some(JudgmentClaimContent.CandidateComparison(carrier, comparison)) =>
+              assertEquals((value \ "kind").as[String], "candidate_comparison")
+              assertExactCarrier(value, carrier)
+              val emitted = (value \ "comparison").as[JsObject]
+              def roleCode(role: LineNodeRole): String = role match
+                case LineNodeRole.Played        => "played"
+                case LineNodeRole.BestReference => "best_reference"
+                case LineNodeRole.Alternative   => "alternative"
+                case LineNodeRole.Threat        => "threat"
+              def assertComparisonLine(actual: JsObject, line: SemanticLineKey): Unit =
+                assertEquals(actual.keys, Set("root_move", "role", "rank"))
+                assertEquals((actual \ "root_move").as[String], line.rootMove)
+                assertEquals((actual \ "role").as[String], roleCode(line.role))
+                assertEquals((actual \ "rank").as[Int], line.rank)
+              assertComparisonLine(
+                (emitted \ "reference").as[JsObject],
+                comparison.referenceLine
+              )
+              assertComparisonLine(
+                (emitted \ "candidate").as[JsObject],
+                comparison.candidateLine
+              )
+            case Some(JudgmentClaimContent.StrategicMechanism(carrier)) =>
+              assertEquals((value \ "kind").as[String], "strategic_mechanism")
+              assertExactCarrier(value, carrier)
+            case _ => fail(s"expected selected content: $claimId")
+        case _ => fail(s"expected unique selected claim: $claimId")
 
   test("v3 effect scope exposes the central PlanResult semantic key"):
     val planResult = PlanResultSemanticIdentity(
@@ -159,6 +204,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
     val review = (result.body \ "move_review").as[JsObject]
     assertEquals((review \ "renderable").as[Boolean], false)
     assertEquals((review \ "explanations").as[List[JsObject]], Nil)
+    assertEquals((review \ "observations").as[List[JsObject]], Nil)
 
   test("v1 rejects unknown schema and oversized PV bundles"):
     val unsupported = RuntimeProtocol.evaluate(request("v2"))

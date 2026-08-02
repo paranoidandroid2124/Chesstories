@@ -45,8 +45,83 @@ const verdict = {
   mate: null,
 };
 
+function observations() {
+  const carrierLine = line('line:played', 'f3g5', 'played', 0);
+  const candidate = comparisonLine('f3g5', 'played', 0);
+  const reference = comparisonLine('f3h4', 'best_reference', 0);
+  const source = {
+    id: 'source:strategic',
+    producer: 'strategic_feature_producer',
+    layer: 'strategic',
+    scope: 'current_position',
+    line: null,
+  };
+  const candidateCarrier = {
+    id: 'carrier:candidate',
+    producer: 'relative_move_producer',
+    layer: 'candidate_comparison',
+    scope: 'counterfactual',
+    line: carrierLine,
+  };
+  return [
+    {
+      claim_id: 'claim:candidate',
+      carrier: candidateCarrier,
+      parents: [source],
+      kind: 'candidate_comparison',
+      comparison: {
+        kind: 'played_vs_best',
+        mover: 'white',
+        reference,
+        candidate,
+        candidate_win_percent_delta_for_mover: -18.5,
+        verdict: 'mistake',
+        candidate_set_type: 'narrow_choice',
+        recapture_resource: {
+          target: 'e5',
+          removed_occupant_role: 'pawn',
+          reference_defender_role: 'rook',
+          preserved_defender_role: 'queen',
+          reference_root_move: 'f3h4',
+          opponent_capture_move: 'e6e5',
+          reference_recapture_move: 'f3e5',
+        },
+      },
+    },
+    {
+      claim_id: 'claim:strategic',
+      carrier: {
+        id: 'carrier:strategic',
+        producer: 'strategic_mechanism_producer',
+        layer: 'strategic_mechanism',
+        scope: 'current_position',
+        line: carrierLine,
+      },
+      parents: [source, candidateCarrier],
+      kind: 'strategic_mechanism',
+      mechanism: {
+        kind: 'target_pressure',
+        signals: [
+          {
+            kind: 'strategic_fact',
+            key: 'target:e5',
+            source,
+            strength: 2,
+            axis: { kind: 'target', polarity: 'gain', key: 'target:e5' },
+          },
+        ],
+        semantic_keys: [{ kind: 'strategic_kind', values: ['target_pressure'] }],
+      },
+    },
+  ];
+}
+
 function line(id: string, rootMove: string, role: string, rank: number) {
   return { id, root_move: rootMove, role, rank };
+}
+
+function comparisonLine(rootMove: string, role: string, rank: number) {
+  return { root_move: rootMove, role, rank };
 }
 
 function channel(
@@ -179,7 +254,7 @@ function importance(selectedIds: string[], uniqueTop: string | null) {
   };
 }
 
-function certifiedEnvelope(facets: any[], units: any[], uniqueTop: string | null) {
+function certifiedEnvelope(facets: any[], units: any[], uniqueTop: string | null, observations?: unknown[]) {
   const selectedIds = facets.map(item => item.cause_evidence_id);
   const leadIds = units.map(unit => unit.lead_cause_evidence_id);
   return {
@@ -201,6 +276,7 @@ function certifiedEnvelope(facets: any[], units: any[], uniqueTop: string | null
         reason_counts: { ...reasonCounts, player_facing_selection: selectedIds.length },
         abstention_codes: [],
       },
+      ...(observations === undefined ? {} : { observations }),
       explanations: [
         {
           role: 'played move',
@@ -238,6 +314,7 @@ function verdictOnlyEnvelope(requestId = 'verdict-only') {
         abstention_codes: ['no_relative_cause_generated'],
       },
       explanations: [],
+      observations: [],
     },
   };
 }
@@ -281,6 +358,7 @@ describe('active V3 Chesstory brief contract', () => {
           abstention_codes: ['no_relative_cause_generated'],
         },
         explanations: [],
+        observations: [],
       },
     };
     const decoded = decodeSuccess(withheld);
@@ -417,7 +495,12 @@ describe('active V3 Chesstory brief contract', () => {
       priority_status: 'unique_top',
       serialization_order: 0,
     };
-    const valid = certifiedEnvelope([idea], [unit], 'cause-a');
+    const valid = certifiedEnvelope([idea], [unit], 'cause-a', observations());
+    const decoded = decodeSuccess(valid);
+    assert.deepEqual(
+      decoded.move_review.observations?.map(observation => observation.claim_id),
+      ['claim:candidate', 'claim:strategic'],
+    );
     const malformed = [
       () => {
         const value = structuredClone(valid) as any;
@@ -457,6 +540,26 @@ describe('active V3 Chesstory brief contract', () => {
       () => {
         const value = structuredClone(valid) as any;
         value.move_review.explanations[0].ideas[0].cause.direct_effect_admission.status = 'unresolved';
+        return value;
+      },
+      () => {
+        const value = structuredClone(valid) as any;
+        value.move_review.observations[0].unexpected = true;
+        return value;
+      },
+      () => {
+        const value = structuredClone(valid) as any;
+        value.move_review.observations[1].mechanism.signals[0].strength = '2';
+        return value;
+      },
+      () => {
+        const value = structuredClone(valid) as any;
+        value.move_review.observations[0].carrier.producer = 'unknown_producer';
+        return value;
+      },
+      () => {
+        const value = structuredClone(valid) as any;
+        value.move_review.observations[0].comparison.reference.root_move = 'not-uci';
         return value;
       },
     ];
