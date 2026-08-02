@@ -3,6 +3,7 @@ package lila.app
 import java.net.InetSocketAddress
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.util.concurrent.atomic.AtomicInteger
 
 import scala.concurrent.Future
 
@@ -73,6 +74,21 @@ class OpenBetaBindingsTest extends munit.FunSuite:
         assertEquals(status.readyOk, true)
     }
 
+  test("readiness snapshots coalesce concurrent and rapid probes"):
+    val requests = new AtomicInteger(0)
+    withServer(_ =>
+      requests.incrementAndGet()
+      200 -> "{}"
+    ) { base =>
+      withBindings(genericHttpManifest, s"explorer.endpoint = \"$base\"") { bindings =>
+        Future
+          .traverse(List.fill(8)(()))(_ => bindings.snapshot)
+          .flatMap(_ => bindings.snapshot)
+          .map: _ =>
+            assertEquals(requests.get(), 1)
+      }
+    }
+
   private def runtimeStatus(base: String): Future[OpenBetaBindingStatus] =
     bindingStatus(
       runtimeManifest,
@@ -86,6 +102,12 @@ class OpenBetaBindingsTest extends munit.FunSuite:
     )
 
   private def bindingStatus(manifest: String, config: String): Future[OpenBetaBindingStatus] =
+    withBindings(manifest, config)(_.snapshot.map(_.head))
+
+  private def withBindings[A](
+      manifest: String,
+      config: String
+  )(run: OpenBetaBindings => Future[A]): Future[A] =
     val manifestFile = Files.createTempFile("openbeta-bindings", ".json")
     Files.writeString(manifestFile, manifest, StandardCharsets.UTF_8)
     val bindings = new OpenBetaBindings(
@@ -93,7 +115,7 @@ class OpenBetaBindingsTest extends munit.FunSuite:
       GetRelativeFile(_ => manifestFile.toFile),
       ws
     )
-    bindings.snapshot.map(_.head).andThen { case _ => Files.deleteIfExists(manifestFile) }
+    run(bindings).andThen { case _ => Files.deleteIfExists(manifestFile) }
 
   private def withServer(
       response: String => (Int, String)

@@ -2,6 +2,7 @@ package controllers
 
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
+import play.api.libs.json.Json
 import lila.app.{ OpenBetaBindingSpec, OpenBetaBindingStatus }
 
 class OperationalReadinessTest extends munit.FunSuite:
@@ -72,3 +73,11 @@ class OperationalReadinessTest extends munit.FunSuite:
     assertEquals(check.required, true)
     assertEquals(check.ok, false)
     assert(check.detail.contains("unreachable"))
+
+  test("public health JSON excludes diagnostic detail"):
+    val diagnostic = "unreachable:rediss://health-user:top-secret@redis.internal:6380"
+    val json = Main.HealthCheck("redis", ok = false, required = true, detail = diagnostic).json
+    val rendered = Json.stringify(json)
+
+    assert(!rendered.contains("redis.internal"))
+    assert(!rendered.contains("top-secret"))

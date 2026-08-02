@@ -206,8 +206,7 @@ object Main:
       Json.obj(
         "name" -> name,
         "ok" -> ok,
-        "required" -> required,
-        "detail" -> detail
+        "required" -> required
       )
 
   def isReady(checks: Iterable[HealthCheck]): Boolean =

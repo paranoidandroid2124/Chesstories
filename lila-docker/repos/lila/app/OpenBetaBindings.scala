@@ -78,11 +78,35 @@ final class OpenBetaBindings(
 )(using Executor):
 
   private val requestTimeout = 2.seconds
+  private val snapshotFreshness = 1.second
+  private val snapshotLock = new AnyRef
+  private var cachedSnapshot = Option.empty[(Long, List[OpenBetaBindingStatus])]
+  private var snapshotRefresh = Option.empty[Fu[List[OpenBetaBindingStatus]]]
 
   lazy val manifest: OpenBetaBindingsManifest = loadManifest()
 
   def snapshot: Fu[List[OpenBetaBindingStatus]] =
-    Future.traverse(manifest.bindings)(statusOf)
+    snapshotLock.synchronized:
+      val now = System.nanoTime()
+      cachedSnapshot
+        .filter(snapshot => now - snapshot._1 <= snapshotFreshness.toNanos)
+        .map(_._2)
+        .fold(refreshSnapshot())(fuccess)
+
+  private def refreshSnapshot(): Fu[List[OpenBetaBindingStatus]] =
+    snapshotRefresh.getOrElse:
+      val refresh = Future.traverse(manifest.bindings)(statusOf)
+      snapshotRefresh = Some(refresh)
+      refresh.onComplete:
+        case scala.util.Success(statuses) =>
+          snapshotLock.synchronized:
+            if snapshotRefresh.contains(refresh) then
+              cachedSnapshot = Some(System.nanoTime() -> statuses)
+              snapshotRefresh = None
+        case scala.util.Failure(_) =>
+          snapshotLock.synchronized:
+            if snapshotRefresh.contains(refresh) then snapshotRefresh = None
+      refresh
 
   private def loadManifest(): OpenBetaBindingsManifest =
     val path = getFile.exec("conf/openbeta-bindings.json").toPath
