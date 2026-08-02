@@ -24,7 +24,12 @@
                          "kind":  "plain",
                          "requiredMode":  "always",
                          "readinessClass":  "core",
-                         "probe":  "http",
+                         "probe":  "http_json",
+                         "probePath":  "/health",
+                         "probeResponse":  {
+                                               "ok":  true,
+                                               "schema_version":  "chesstory.move-meaning.response.v3"
+                                           },
                          "notes":  "Independent Chesstory graph-judgment runtime base URL."
                      },
                      {

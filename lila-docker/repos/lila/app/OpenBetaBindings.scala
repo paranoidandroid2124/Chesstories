@@ -25,7 +25,9 @@ final case class OpenBetaBindingSpec(
     readinessClass: String,
     probe: String,
     notes: String,
-    cloudRunManaged: Boolean = true
+    cloudRunManaged: Boolean = true,
+    probePath: Option[String] = None,
+    probeResponse: Option[JsObject] = None
 ):
   def displayConfigPath = if configPath.nonEmpty then configPath else "env-only"
 
@@ -44,7 +46,9 @@ object OpenBetaBindingsManifest:
         (__ \ "readinessClass").read[String] and
         (__ \ "probe").read[String] and
         (__ \ "notes").read[String] and
-        (__ \ "cloudRunManaged").readWithDefault[Boolean](true)
+        (__ \ "cloudRunManaged").readWithDefault[Boolean](true) and
+        (__ \ "probePath").readNullable[String] and
+        (__ \ "probeResponse").readNullable[JsObject]
     )(OpenBetaBindingSpec.apply)
   given Reads[OpenBetaBindingsManifest] =
     (
@@ -109,6 +113,15 @@ final class OpenBetaBindings(
                 reachable = Some(reachable),
                 detail = if reachable then "reachable" else s"unreachable:$value"
               )
+          case "http_json" =>
+            probeHttpJsonReachable(value, spec.probePath, spec.probeResponse).map: reachable =>
+              OpenBetaBindingStatus(
+                spec = spec,
+                required = required,
+                configured = true,
+                reachable = Some(reachable),
+                detail = if reachable then "reachable" else s"unreachable:$value"
+              )
           case "redis" =>
             probeRedisReachable(value).map: reachable =>
               OpenBetaBindingStatus(
@@ -163,6 +176,22 @@ final class OpenBetaBindings(
       .get()
       .map(res => res.status < 500)
       .recover { case NonFatal(_) => false }
+
+  private def probeHttpJsonReachable(
+      url: String,
+      path: Option[String],
+      expectedResponse: Option[JsObject]
+  ): Fu[Boolean] =
+    (path.filter(_.nonEmpty), expectedResponse) match
+      case (Some(path), Some(expected)) =>
+        ws.url(s"${url.stripSuffix("/")}/${path.stripPrefix("/")}")
+          .withRequestTimeout(requestTimeout)
+          .get()
+          .map: res =>
+            res.status >= 200 && res.status < 300 &&
+              Json.parse(res.body).validate[JsObject].asOpt.contains(expected)
+          .recover { case NonFatal(_) => false }
+      case _ => fuccess(false)
 
   private def probeRedisReachable(uriValue: String): Fu[Boolean] =
     Future:
