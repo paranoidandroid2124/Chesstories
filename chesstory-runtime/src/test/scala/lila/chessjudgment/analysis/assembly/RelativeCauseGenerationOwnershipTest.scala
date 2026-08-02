@@ -39,7 +39,7 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
           }
       }.getOrElse(false)
     }.getOrElse(fail("expected a root PlanCausalEvent strategic content claim"))
-    assertEquals(ClaimTruthPolicy.evaluate(rootPlanContent, graph).status, ClaimAdmissionStatus.Certified)
+    assertEquals(ClaimTruthPolicy.evaluate(rootPlanContent, execution.c).status, ClaimAdmissionStatus.Certified)
     val causes = graph.records.collect {
       case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) => ref -> cause
     }

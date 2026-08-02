@@ -310,85 +310,68 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
     ))
 
     val production = RelativeAssessmentAssembler.enrichCauses(weakerFacts)
+    val (planTransitionWrapper, planTransitionMechanism) = EvidenceFactAssembler
+      .exactStrategicMechanisms(weakerFacts).flatMap(_.collectFirst {
+        case record @ EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents)
+            if payload.kind == StrategicMechanismKind.PlanPressure && parents.exists(parent =>
+              weakerFacts.evidenceGraph.record(parent).exists(_.payload.isInstanceOf[PlanTransitionEvidence])
+            ) && ref.line.contains(weakerCandidate.line) => record -> payload
+      }).getOrElse(fail("expected exact PlanTransition-backed strategic reconstruction"))
+    val planTransitionParents = planTransitionWrapper.parents.filter(parent =>
+      weakerFacts.evidenceGraph.record(parent).exists(_.payload.isInstanceOf[PlanTransitionEvidence])
+    )
+    assert(planTransitionParents.nonEmpty)
+    assert(!planTransitionParents.exists(planTransitionMechanism.signals.map(_.source).contains))
+    val planTransitionClaim = JudgmentClaimAssembler.propose(production)
+      .find(_.content.contains(JudgmentClaimContent.StrategicMechanism(planTransitionWrapper.ref)))
+      .getOrElse(fail("expected exact PlanTransition wrapper claim"))
+    assert(planTransitionParents.forall(planTransitionClaim.evidence.contains))
+    assertEquals(ClaimTruthPolicy.evaluate(planTransitionClaim, production).status, ClaimAdmissionStatus.Certified)
     val (causeRef, cause) = production.evidenceGraph.records.collect {
-      case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.WrongMoveOrder => ref -> cause
+      case EvidenceRecord(ref, RelativeCauseFactEvidence(value), _) if value.kind == RelativeCauseKind.WrongMoveOrder => ref -> value
     } match
       case exact :: Nil => exact
-      case _            => fail("expected one stronger-source WrongMoveOrder")
-    val admittedChannel = RelativeCauseConstructionAdmission
-      .admittedDirectChannels(cause, production.evidenceGraph)
-      .find(_.binding.source == reference.robustEvent.ref)
-      .getOrElse(fail("expected admitted exact reference carrier"))
-    assertEquals(
-      admittedChannel.rootOwnedEffectDescriptor.map(_.identity),
-      Some(sourceObservation(weakerInventories).scope.effectIdentity)
-    )
-    val exactProof = admittedChannel.rootOwnedProof.getOrElse(fail("expected exact PlanResult proof"))
-    exactProof match
-      case RootOwnedEffectProof.PlanResult(source, event, assessment, Some(selectedResponse)) =>
+      case _            => fail("expected one C-generated WrongMoveOrder")
+    val channel = RelativeCauseConstructionAdmission.admittedDirectChannels(cause, production.evidenceGraph)
+      .find(_.binding.source == reference.robustEvent.ref).getOrElse(fail("expected exact PlanResult channel"))
+    val proof = channel.rootOwnedProof.getOrElse(fail("expected PlanResult proof"))
+    val witness = RelativeAssessmentAssembler.comparisonEndpointEvidenceSnapshots(weakerFacts)
+      .flatMap(_.reference.witnesses).find(value =>
+        value.primitiveProofSource == reference.robustEvent.ref && value.observation.contains(sourceObservation(weakerInventories))
+      )
+      .getOrElse(fail("expected PlanResult snapshot witness"))
+    assert(cause.directEffectAdmission.productionReady)
+    proof match
+      case RootOwnedEffectProof.PlanResult(source, event, assessment, Some(response)) =>
         assertEquals(source, reference.robustEvent.ref)
         assertEquals(event, reference.robustEvent.payload)
         assertEquals(assessment.consequence.strength, 3)
-        assertEquals(selectedResponse.step.moveUci, "g6g5")
-      case _ => fail("expected PlanResult primitive")
-    assertEquals(admittedChannel.proofSegment, DirectCauseProofSegment.from(exactProof))
-    assertEquals(
-      admittedChannel.proofSegment.map(_.steps.map(step => step.plyOffset -> step.moveUci)),
-      Some(List(0 -> "f2f4", 1 -> "g6g5", 2 -> "e4e5"))
-    )
-    assert(admittedChannel.binding.consequence.exists(_.signaturePart == "Move:e4e5"))
-
-    val snapshotWitness = RelativeAssessmentAssembler
-      .comparisonEndpointEvidenceSnapshots(weakerFacts)
-      .flatMap(_.reference.witnesses)
-      .find(witness =>
-        witness.primitiveProofSource == reference.robustEvent.ref &&
-          witness.observation.contains(sourceObservation(weakerInventories))
-    )
-      .getOrElse(fail("expected exact snapshot witness"))
-    assertEquals(snapshotWitness.effectDescriptor.identity, exactSource.scope.effectIdentity)
-    assertEquals(admittedChannel.rootOwnedEffectDescriptor, Some(snapshotWitness.effectDescriptor))
-    assertEquals(
-      admittedChannel.binding,
-      snapshotWitness.binding.copy(proofRole = Some(RelativeCauseProofRole.DirectProof))
-    )
-    assertEquals(snapshotWitness.rootOwnedProof, exactProof)
-
-    val claim = JudgmentClaimAssembler
-      .propose(production)
-      .find(claim => claim.family == ClaimFamily.Tactical && claim.evidence.contains(causeRef))
-      .getOrElse(fail("expected tactical WMO claim"))
-    assertEquals(
-      ClaimTruthPolicy.evaluate(claim, production.evidenceGraph).status,
-      ClaimAdmissionStatus.Certified
-    )
-    assert(!RelativeAssessmentAssembler.enrichCauses(equalFacts).evidenceGraph.records.exists {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-        cause.kind == RelativeCauseKind.WrongMoveOrder
-      case _ => false
-    })
-    val unrelatedProduction = RelativeAssessmentAssembler.enrichCauses(unrelatedFacts)
-    assert(unrelatedProduction.evidenceGraph.records.exists {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.WrongMoveOrder =>
-        RelativeCauseConstructionAdmission
-          .admittedDirectChannels(cause, unrelatedProduction.evidenceGraph)
-          .nonEmpty
-      case _ => false
-    })
-
-    val equalMutationGraph = production.evidenceGraph.records
-      .map(record =>
-        if record.ref.id == weakerCandidate.robustEvent.ref.id then equalCandidate.robustEvent
-        else record
-      )
-      .foldLeft(TypedEvidenceGraph.empty)((graph, record) => graph.add(record))
-    assert(RelativeCauseConstructionAdmission.admittedDirectChannels(cause, equalMutationGraph).nonEmpty)
-    assertEquals(
-      ClaimTruthPolicy.evaluate(claim, equalMutationGraph).status,
-      ClaimAdmissionStatus.Deferred
-    )
+        assertEquals(response.step.moveUci, "g6g5")
+      case _ => fail("expected exact PlanResult primitive")
+    assertEquals(channel.rootOwnedEffectDescriptor.map(_.identity), Some(sourceObservation(weakerInventories).scope.effectIdentity))
+    assertEquals(channel.proofSegment, DirectCauseProofSegment.from(proof))
+    assertEquals(channel.proofSegment.map(_.steps.map(step => step.plyOffset -> step.moveUci)), Some(List(0 -> "f2f4", 1 -> "g6g5", 2 -> "e4e5")))
+    assert(channel.binding.consequence.exists(_.signaturePart == "Move:e4e5"))
+    assertEquals(witness.rootOwnedProof, proof)
+    assertEquals(witness.effectDescriptor.identity, exactSource.scope.effectIdentity)
+    assertEquals(channel.rootOwnedEffectDescriptor, Some(witness.effectDescriptor))
+    assertEquals(witness.binding.copy(proofRole = Some(RelativeCauseProofRole.DirectProof)), channel.binding)
+    val claim = JudgmentClaimAssembler.propose(production)
+      .find(value => value.family == ClaimFamily.Tactical && value.evidence.contains(causeRef)).getOrElse(fail("expected WMO claim"))
+    assertEquals(ClaimTruthPolicy.evaluate(claim, production).status, ClaimAdmissionStatus.Certified)
+    List(("equal", equalFacts, false), ("unrelated", unrelatedFacts, true)).foreach { case (name, facts, expected) =>
+      val output = RelativeAssessmentAssembler.enrichCauses(facts)
+      val retained = output.evidenceGraph.records.collect {
+        case EvidenceRecord(_, RelativeCauseFactEvidence(value), _) if value.kind == RelativeCauseKind.WrongMoveOrder => value
+      }
+      assertEquals(retained.nonEmpty, expected, name)
+      if expected then assert(retained.exists(value => RelativeCauseConstructionAdmission.admittedDirectChannels(value, output.evidenceGraph).nonEmpty), name)
+    }
+    val sourceMutation = production.evidenceGraph.records.map(record =>
+      if record.ref.id == weakerCandidate.robustEvent.ref.id then equalCandidate.robustEvent else record
+    ).foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
+    assert(RelativeCauseConstructionAdmission.admittedDirectChannels(cause, sourceMutation).nonEmpty)
+    assertEquals(ClaimTruthPolicy.evaluate(claim, production.copy(evidenceGraph = sourceMutation)).status, ClaimAdmissionStatus.Deferred)
 
   test("PVB retains an exact played plan refutation without counterpart plan enumeration"):
     val fixture = retainedLiabilityFixture()
@@ -716,66 +699,53 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       candidateFixture,
       referenceEvents = List(eventRecord)
     )
-    val sourceGraph = sourceContext.evidenceGraph
     val cContext = RelativeAssessmentAssembler.enrichCauses(
       RelativeAssessmentAssembler.enrichFacts(sourceContext)
     )
-    val (causeRef, exactCause) = cContext.evidenceGraph.records.collect {
-      case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.WrongMoveOrder => ref -> cause
-    } match
-      case exact :: Nil => exact
-      case _            => fail("expected one C-generated exact WrongMoveOrder")
-    assert(exactCause.directEffectAdmission.productionReady)
+    def exactMoveOrder(context: JudgmentAssemblyContext): (EvidenceRef, RelativeCauseFact) =
+      context.evidenceGraph.records.collect {
+        case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _)
+            if cause.kind == RelativeCauseKind.WrongMoveOrder => ref -> cause
+      } match
+        case exact :: Nil => exact
+        case _            => fail("expected one C-generated WrongMoveOrder")
+    def tacticalHost(context: JudgmentAssemblyContext, causeRef: EvidenceRef): JudgmentClaim =
+      JudgmentClaimAssembler.propose(context)
+        .find(claim => claim.family == ClaimFamily.Tactical && claim.evidence.contains(causeRef))
+        .getOrElse(fail("expected Jp tactical host for C-generated WrongMoveOrder"))
+
+    val (causeRef, exactCause) = exactMoveOrder(cContext)
     val exactChannel = RelativeCauseConstructionAdmission
       .admittedDirectChannels(exactCause, cContext.evidenceGraph)
       .find(_.binding.source == eventRecord.ref)
       .getOrElse(fail("expected the exact selected-response channel"))
-    val borrowedSiblingProof = RootOwnedEffectProof.PlanResult(
+    val exactClaim = tacticalHost(cContext, causeRef)
+    val borrowedSibling = exactChannel.copy(rootOwnedProof = Some(RootOwnedEffectProof.PlanResult(
       eventRecord.ref,
       event,
       selected._1,
       selectedInducedResponse = Some(alternateResponse)
-    )
-    val borrowedSiblingChannel = exactChannel.copy(rootOwnedProof = Some(borrowedSiblingProof))
-    assert(!RootOwnedEffectPolicy.admits(
-      exactCause,
-      cContext.evidenceGraph,
-      borrowedSiblingChannel
-    ))
-    val coordinatedAdmissionGraph = cContext.evidenceGraph.records
-      .map(record =>
-        if record.ref == eventRecord.ref then record.copy(payload = coordinatedEvent)
-        else record
-      )
-      .foldLeft(TypedEvidenceGraph.empty)((graph, record) => graph.add(record))
-    assertEquals(
-      RelativeCauseConstructionAdmission.admittedDirectChannels(exactCause, coordinatedAdmissionGraph),
-      Nil
-    )
-    val responseCollision = RootOwnedEffectTruthView.from(
-      List(exactChannel, exactChannel.copy(rootOwnedProof = Some(alternateProof)))
-    )
-    assertEquals(responseCollision.channels.map(_.proofSegmentAmbiguous), List(true))
-    assertEquals(
-      responseCollision.channels.map(_.proofSegment),
-      List(Option.empty[DirectCauseProofSegment])
-    )
-    val exactClaim = JudgmentClaimAssembler
-      .propose(cContext)
-      .find(claim => claim.family == ClaimFamily.Tactical && claim.evidence.contains(causeRef))
-      .getOrElse(fail("expected Jp tactical host for C-generated WrongMoveOrder"))
-    assertEquals(ClaimTruthPolicy.evaluate(exactClaim, cContext.evidenceGraph).status, ClaimAdmissionStatus.Certified)
+    )))
+    assert(!RootOwnedEffectPolicy.admits(exactCause, cContext.evidenceGraph, borrowedSibling))
+    val coordinatedAdmissionGraph = cContext.evidenceGraph.records.map(record =>
+      if record.ref == eventRecord.ref then record.copy(payload = coordinatedEvent) else record
+    ).foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
+    assertEquals(RelativeCauseConstructionAdmission.admittedDirectChannels(exactCause, coordinatedAdmissionGraph), Nil)
+    val collision = RootOwnedEffectTruthView.from(List(
+      exactChannel,
+      exactChannel.copy(rootOwnedProof = Some(alternateProof))
+    )).channels
+    assertEquals(collision.map(channel => channel.proofSegmentAmbiguous -> channel.proofSegment), List(true -> None))
+    assertEquals(ClaimTruthPolicy.evaluate(exactClaim, cContext).status, ClaimAdmissionStatus.Certified)
 
-    val incompleteCandidateGraph = cContext.evidenceGraph.records
+    val incomplete = cContext.evidenceGraph.records
       .filterNot(_.ref.id == candidateFixture.pressureRecord.ref.id)
       .foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
-    assert(RelativeCauseConstructionAdmission.admittedDirectChannels(exactCause, incompleteCandidateGraph).nonEmpty)
+    assert(RelativeCauseConstructionAdmission.admittedDirectChannels(exactCause, incomplete).nonEmpty)
     assertEquals(
-      ClaimTruthPolicy.evaluate(exactClaim, incompleteCandidateGraph).status,
+      ClaimTruthPolicy.evaluate(exactClaim, cContext.copy(evidenceGraph = incomplete)).status,
       ClaimAdmissionStatus.Deferred
     )
-
     val genericPlanOnly = exactClaim.copy(
       id = s"${exactClaim.id}-generic-plan-only",
       subject = ClaimSubject.PlayedMove,
@@ -785,7 +755,10 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       scope = EvidenceScope.PlayedLine
     )
     assertEquals(
-      ClaimTruthPolicy.evaluate(genericPlanOnly, cContext.evidenceGraph.add(candidateFixture.robustEvent)).status,
+      ClaimTruthPolicy.evaluate(
+        genericPlanOnly,
+        cContext.copy(evidenceGraph = cContext.evidenceGraph.add(candidateFixture.robustEvent))
+      ).status,
       ClaimAdmissionStatus.Deferred
     )
 
@@ -797,83 +770,65 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       resultLabel = "development-mobility-gain",
       eventRecordIdSuffix = "-opening-development"
     ).robustEvent
-    val multiSourceContext = RelativeAssessmentAssembler.enrichCauses(
-      RelativeAssessmentAssembler.enrichFacts(
-        sourceContext.copy(evidenceGraph = sourceGraph.add(openingDevelopmentRecord))
-      )
+    val multiSource = RelativeAssessmentAssembler.enrichCauses(
+      RelativeAssessmentAssembler.enrichFacts(comparisonContext(
+        fixture,
+        candidateFixture,
+        referenceEvents = List(eventRecord, openingDevelopmentRecord)
+      ))
     )
-    val (multiSourceCauseRef, multiSourceCause) = multiSourceContext.evidenceGraph.records.collect {
-      case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _)
-          if cause.kind == RelativeCauseKind.WrongMoveOrder => ref -> cause
-    } match
-      case exact :: Nil => exact
-      case _            => fail("expected one two-source C-generated WrongMoveOrder")
+    val (multiSourceCauseRef, multiSourceCause) = exactMoveOrder(multiSource)
     assertEquals(
       multiSourceCause.proof.map(_.directProof.sourceRefs.map(_.id).toSet),
       Some(Set(eventRecord.ref.id, openingDevelopmentRecord.ref.id))
     )
     assertEquals(
       RelativeCauseConstructionAdmission
-        .admittedDirectChannels(multiSourceCause, multiSourceContext.evidenceGraph)
+        .admittedDirectChannels(multiSourceCause, multiSource.evidenceGraph)
         .map(_.binding.source.id)
         .toSet,
       Set(eventRecord.ref.id)
     )
-    val multiSourceClaim = JudgmentClaimAssembler
-      .propose(multiSourceContext)
-      .find(claim => claim.family == ClaimFamily.Tactical && claim.evidence.contains(multiSourceCauseRef))
-      .getOrElse(fail("expected Jp tactical host for two-source WrongMoveOrder"))
     assertEquals(
-      ClaimTruthPolicy.evaluate(multiSourceClaim, multiSourceContext.evidenceGraph).status,
+      ClaimTruthPolicy.evaluate(tacticalHost(multiSource, multiSourceCauseRef), multiSource).status,
       ClaimAdmissionStatus.Certified
     )
 
-    def withAddedDirectSource(source: EvidenceRef): RelativeCauseFact =
+    def withDirectSource(source: EvidenceRef): RelativeCauseFact =
       exactCause.copy(
         supportEvidence = exactCause.supportEvidence :+ source,
-        proof = exactCause.proof.map(proof =>
-          proof.copy(directProof = proof.directProof.copy(
-            sourceRefs = proof.directProof.sourceRefs :+ source
-          ))
-        )
+        proof = exactCause.proof.map(proof => proof.copy(
+          directProof = proof.directProof.copy(sourceRefs = proof.directProof.sourceRefs :+ source)
+        ))
       )
-    val missingSource = eventRecord.ref.copy(id = s"${eventRecord.ref.id}-missing")
-    val malformedCauses = List(
-      ("missing-direct-source", withAddedDirectSource(missingSource), None),
-      (
-        "foreign-direct-source",
-        withAddedDirectSource(candidateFixture.robustEvent.ref),
-        Some(candidateFixture.robustEvent)
-      ),
-      ("duplicate-direct-source", exactCause.copy(
-        proof = exactCause.proof.map(proof =>
-          proof.copy(directProof = proof.directProof.copy(
-            sourceRefs = proof.directProof.sourceRefs ++ proof.directProof.sourceRefs.headOption
-          ))
+    val malformed = List(
+      "missing" -> withDirectSource(eventRecord.ref.copy(id = s"${eventRecord.ref.id}-missing")),
+      "foreign" -> withDirectSource(candidateFixture.robustEvent.ref),
+      "duplicate" -> exactCause.copy(proof = exactCause.proof.map(proof => proof.copy(
+        directProof = proof.directProof.copy(
+          sourceRefs = proof.directProof.sourceRefs ++ proof.directProof.sourceRefs.headOption
         )
-      ), None)
+      )))
     )
-    malformedCauses.foreach { case (suffix, malformedCause, foreignRecord) =>
-      val malformedCauseRecord = cContext.evidenceGraph
-        .record(causeRef)
+    malformed.foreach { case (name, cause) =>
+      val record = cContext.evidenceGraph.record(causeRef)
         .getOrElse(fail("expected C-generated WrongMoveOrder record"))
         .copy(
-          ref = causeRef.copy(id = s"${causeRef.id}-$suffix"),
-          payload = RelativeCauseFactEvidence(malformedCause)
+          ref = causeRef.copy(id = s"${causeRef.id}-$name"),
+          payload = RelativeCauseFactEvidence(cause)
         )
-      val malformedGraph = foreignRecord
-        .fold(cContext.evidenceGraph)(record => cContext.evidenceGraph.add(record))
-        .add(malformedCauseRecord)
-      assert(RelativeCauseConstructionAdmission.admittedDirectChannels(malformedCause, malformedGraph).nonEmpty)
-      val malformedClaim = exactClaim.copy(
-        id = s"${exactClaim.id}-$suffix",
-        evidence = exactClaim.evidence.map(ref =>
-          if ref == causeRef then malformedCauseRecord.ref else ref
-        )
+      val graph = Option.when(name == "foreign")(candidateFixture.robustEvent)
+        .fold(cContext.evidenceGraph)(cContext.evidenceGraph.add)
+        .add(record)
+      assert(RelativeCauseConstructionAdmission.admittedDirectChannels(cause, graph).nonEmpty, name)
+      val claim = exactClaim.copy(
+        id = s"${exactClaim.id}-$name",
+        evidence = exactClaim.evidence.map(ref => if ref == causeRef then record.ref else ref)
       )
       assertEquals(
-        ClaimTruthPolicy.evaluate(malformedClaim, malformedGraph).status,
-        ClaimAdmissionStatus.Deferred
+        ClaimTruthPolicy.evaluate(claim, cContext.copy(evidenceGraph = graph)).status,
+        ClaimAdmissionStatus.Deferred,
+        name
       )
     }
 
@@ -1042,11 +997,49 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
       ),
       opening = None
     )
+    val playedTransition = MoveTransitionEdge(
+      TransitionEdgeRole.Played,
+      reference.root,
+      candidate.line.rootMove,
+      candidateAfter,
+      transitionEvidence(
+        s"${candidate.line.id}-transition",
+        EvidenceScope.PlayedTransition
+      )
+    )
+    val referenceTransition = MoveTransitionEdge(
+      TransitionEdgeRole.Reference,
+      reference.root,
+      reference.line.rootMove,
+      referenceAfter,
+      transitionEvidence(
+        s"${reference.line.id}-transition",
+        EvidenceScope.ReferenceTransition
+      )
+    )
+    def evalRecord(fixture: InventoryFixture, score: Int): EvidenceRecord =
+      EvidenceRecord(
+        evidenceRef(
+          s"${fixture.line.id}-eval",
+          EvidenceProducer.EngineEvalProducer,
+          EvidenceLayer.Eval,
+          fixture.root,
+          fixture.line,
+          fixture.line.role.scope,
+          EvidenceConfidence.EngineBacked
+        ),
+        EvalFactEvidence(fixture.line, score, mate = None, depth = 18),
+        parents = List(fixture.lineRecord.ref)
+      )
+    val evalRecords = List(evalRecord(reference, 300), evalRecord(candidate, -300))
+    val transitionRecords = List(playedTransition, referenceTransition).map(edge =>
+      EvidenceRecord(edge.evidence, MoveTransitionEvidence(edge.moveUci, edge.from, edge.to))
+    )
     val graph = (
       reference.baseRecords ++ referenceEvents ++
-        candidate.baseRecords ++ candidateEvents
+        candidate.baseRecords ++ candidateEvents ++ evalRecords ++ transitionRecords
     ).foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
-    JudgmentAssemblyContext(
+    val context = JudgmentAssemblyContext(
       input = input,
       positions = List(
         PositionNode(PositionNodeRole.Before, reference.root),
@@ -1054,31 +1047,21 @@ class PlanResultEndpointInventoryTest extends munit.FunSuite:
         PositionNode(PositionNodeRole.AfterReference, referenceAfter)
       ),
       lines = List(referenceNode, candidateNode),
-      transitions = List(
-        MoveTransitionEdge(
-          TransitionEdgeRole.Played,
-          reference.root,
-          candidate.line.rootMove,
-          candidateAfter,
-          transitionEvidence(
-            s"${candidate.line.id}-transition",
-            EvidenceScope.PlayedTransition
-          )
-        ),
-        MoveTransitionEdge(
-          TransitionEdgeRole.Reference,
-          reference.root,
-          reference.line.rootMove,
-          referenceAfter,
-          transitionEvidence(
-            s"${reference.line.id}-transition",
-            EvidenceScope.ReferenceTransition
-          )
-        )
-      ),
+      transitions = List(playedTransition, referenceTransition),
       evidenceGraph = graph,
       claims = Nil
     )
+    val wrapperSource = context.copy(
+      evidenceGraph = context.evidenceGraph.records
+        .filterNot(_.payload.isInstanceOf[PlanPressureEvidence])
+        .foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
+    )
+    val enriched = EvidenceFactAssembler.enrich(wrapperSource)
+    context.withEvidence(enriched.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, _: PlanTransitionEvidence, _) => record
+      case record @ EvidenceRecord(_, mechanism: StrategicMechanismEvidence, _)
+          if mechanism.kind == StrategicMechanismKind.PlanPressure => record
+    })
 
   private val DistinctRootMoveOrderFen =
     "4k3/8/6p1/3P4/4P3/8/5P2/4K3 w - - 0 1"

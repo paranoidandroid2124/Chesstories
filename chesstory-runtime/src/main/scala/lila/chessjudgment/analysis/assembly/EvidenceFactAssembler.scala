@@ -72,6 +72,56 @@ object EvidenceFactAssembler:
     val strategicMechanismOutput = strategicMechanismRecords(openingContext, allocator)
     openingContext.withEvidence(strategicMechanismOutput)
 
+  private[analysis] def exactStrategicMechanisms(
+      context: JudgmentAssemblyContext
+  ): Option[List[EvidenceRecord]] =
+    val actual = context.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, _: StrategicMechanismEvidence, _) => record
+    }
+    val sourceContext = context.copy(
+      evidenceGraph = graphWithoutMechanismPayloads(context.evidenceGraph)
+    )
+    val expected = strategicMechanismRecords(
+      sourceContext,
+      JudgmentProvenanceAllocator.forInput(context.input)
+    )
+    Option.when(
+      exactRecordInventory(actual, expected) &&
+        sourcesPrecedeMechanisms(context, expected)
+    )(actual)
+
+  private def graphWithoutMechanismPayloads(graph: TypedEvidenceGraph): TypedEvidenceGraph =
+    graph.records
+      .filterNot(record =>
+        record.payload.isInstanceOf[StrategicMechanismEvidence] ||
+          record.payload.isInstanceOf[StrategicMechanismContrastEvidence]
+      )
+      .foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
+
+  private def sourcesPrecedeMechanisms(
+      context: JudgmentAssemblyContext,
+      expected: List[EvidenceRecord]
+  ): Boolean =
+    expected.flatMap(_.parents).distinctBy(_.id).forall(source =>
+      context.evidenceGraph.record(source).exists(record =>
+        context.evidenceGraph.parentClosure(record).forall { parent =>
+          !parent.payload.isInstanceOf[StrategicMechanismEvidence] &&
+            !parent.payload.isInstanceOf[StrategicMechanismContrastEvidence]
+        }
+      )
+    )
+
+  private[assembly] def exactRecordInventory(
+      actual: List[EvidenceRecord],
+      expected: List[EvidenceRecord]
+  ): Boolean =
+    val actualById = actual.map(record => record.ref.id -> record)
+    val expectedById = expected.map(record => record.ref.id -> record)
+    actualById.map(_._1).distinct.size == actual.size &&
+      expectedById.map(_._1).distinct.size == expected.size &&
+      actual.size == expected.size &&
+      actualById.toMap == expectedById.toMap
+
   private def moveMotifRecords(
       input: NormalizedMoveReviewInput,
       context: JudgmentAssemblyContext,

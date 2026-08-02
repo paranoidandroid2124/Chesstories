@@ -52,9 +52,11 @@ object MoveReviewJudgmentOrchestrator:
         case None => EvidenceFactAssembler.assemble(q).map(RelativeAssessmentAssembler.enrichFacts)
         case Some(provider) => Try(provider(q)).toOption.flatMap(Option(_))
       f <- Option.when(
-        identity || normalized.exists(expected =>
-          factStageContextClosed(expected, fCandidate) && factStagePayloadsClosed(fCandidate)
-        )
+        (if identity then evidenceClosed(fCandidate)
+         else normalized.exists(expected => factStageContextClosed(expected, fCandidate))) &&
+          factStagePayloadsClosed(fCandidate) &&
+          EvidenceFactAssembler.exactStrategicMechanisms(fCandidate).nonEmpty &&
+          RelativeAssessmentAssembler.exactStrategicContrasts(fCandidate).nonEmpty
       )(fCandidate)
       cCandidate <- intervention.c match
         case None => Some(RelativeAssessmentAssembler.enrichCauses(f))
@@ -73,7 +75,7 @@ object MoveReviewJudgmentOrchestrator:
         identity || jpCandidate.map(_.id).distinct.size == jpCandidate.size
       )(jpCandidate)
       jaCandidate <- intervention.ja match
-        case None => Some(ClaimCandidateGraphAssembler.fromClaims(jp, c.evidenceGraph))
+        case None => Some(ClaimCandidateGraphAssembler.fromClaims(jp, c))
         case Some(provider) => Try(provider(c, jp)).toOption.flatMap(Option(_))
       ja <- Option.when(identity || admissionClosed(c, jp, jaCandidate))(jaCandidate)
       r <- intervention.r match

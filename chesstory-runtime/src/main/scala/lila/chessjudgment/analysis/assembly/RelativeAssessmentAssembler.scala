@@ -274,14 +274,17 @@ object RelativeAssessmentAssembler:
           )
         requiredPrimaryComparisonRecord(comparisonRecords, inputs.reference, inputs.candidate)
         val factContext = context.withEvidence(comparisonRecords)
-        val strategicContrastRecords = comparisonRecords.flatMap(record =>
-          strategicMechanismContrastRecords(
-            factContext,
-            inputs.root,
-            inputs.allocator,
-            record
-          )
-        )
+        val strategicContrastRecords =
+          EvidenceFactAssembler.exactStrategicMechanisms(factContext).toList.flatMap { _ =>
+            comparisonRecords.flatMap { record =>
+              strategicMechanismContrastRecords(
+                factContext,
+                inputs.root,
+                inputs.allocator,
+                record
+              )
+            }
+          }
         factContext.withEvidence(strategicContrastRecords)
       }
       .getOrElse(context)
@@ -346,6 +349,53 @@ object RelativeAssessmentAssembler:
       }
       .getOrElse(context)
 
+  private[assembly] def exactStrategicContrasts(
+      context: JudgmentAssemblyContext
+  ): Option[List[EvidenceRecord]] =
+    EvidenceFactAssembler.exactStrategicMechanisms(context).flatMap { _ =>
+      val actual = context.evidenceGraph.records.collect {
+        case record @ EvidenceRecord(_, _: StrategicMechanismContrastEvidence, _) => record
+      }
+      relativeAssemblyInputs(context) match
+        case Some(inputs) =>
+          val nonContrastContext = context.copy(
+            evidenceGraph = graphWithoutContrasts(context.evidenceGraph)
+          )
+          val expected = assembledComparisonRecords(nonContrastContext, inputs.root).flatMap(record =>
+            strategicMechanismContrastRecords(
+              nonContrastContext,
+              inputs.root,
+              inputs.allocator,
+              record
+            )
+          )
+          Option.when(
+            EvidenceFactAssembler.exactRecordInventory(actual, expected) &&
+              sourcesPrecedeContrasts(context, expected)
+          )(actual)
+        case None =>
+          Option.when(actual.isEmpty)(Nil)
+    }
+
+  private def graphWithoutContrasts(
+      graph: TypedEvidenceGraph
+  ): TypedEvidenceGraph =
+    graph.records
+      .filterNot(_.payload.isInstanceOf[StrategicMechanismContrastEvidence])
+      .foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
+
+  private def sourcesPrecedeContrasts(
+      context: JudgmentAssemblyContext,
+      expected: List[EvidenceRecord]
+  ): Boolean =
+    expected.flatMap(_.parents).distinctBy(_.id).forall(source =>
+      context.evidenceGraph.record(source).exists(record =>
+        context.evidenceGraph.parentClosure(record).forall { parent =>
+          !parent.payload.isInstanceOf[StrategicMechanismContrastEvidence]
+        }
+      )
+    )
+
   /** Public read-only reconstruction used identically by C admission and the
     * runtime adapter. Every snapshot is derived from the F graph before any
     * provisional Cause exists.
@@ -353,7 +403,11 @@ object RelativeAssessmentAssembler:
   def comparisonEndpointEvidenceSnapshots(
       context: JudgmentAssemblyContext
   ): List[ComparisonEndpointEvidenceSnapshot] =
-    relativeAssemblyInputs(context).toList.flatMap { inputs =>
+    (for
+      wrappers <- EvidenceFactAssembler.exactStrategicMechanisms(context).toList
+      contrasts <- exactStrategicContrasts(context).toList
+      inputs <- relativeAssemblyInputs(context).toList
+    yield
       assembledComparisonRecords(context, inputs.root).flatMap { record =>
         record.payload match
           case CandidateComparisonEvidence(comparison) =>
@@ -363,18 +417,31 @@ object RelativeAssessmentAssembler:
               comparison,
               Some(inputs.input)
             )
-            val carrierRecords = context.evidenceGraph.records.filter {
-              case EvidenceRecord(ref, payload: StrategicMechanismContrastEvidence, _) =>
-                carrierAtComparisonRoot(ref, inputs.root) &&
-                  payload.comparisonKind == comparison.kind &&
-                  payload.referenceLine == comparison.referenceLine &&
-                  payload.candidateLine == comparison.candidateLine
-              case EvidenceRecord(ref, _: TacticalMechanismEvidence | _: StrategicMechanismEvidence, _) =>
-                carrierAtComparisonRoot(ref, inputs.root) &&
-                  (ref.line.contains(comparison.referenceLine) ||
-                    ref.line.contains(comparison.candidateLine))
-              case _ => false
+            val tacticalCarrierRecords = context.evidenceGraph.records.collect {
+              case record @ EvidenceRecord(ref, _: TacticalMechanismEvidence, _)
+                  if carrierAtComparisonRoot(ref, inputs.root) &&
+                    (ref.line.contains(comparison.referenceLine) ||
+                      ref.line.contains(comparison.candidateLine)) =>
+                record
             }
+            val strategicCarrierRecords =
+              (
+                contrasts.filter {
+                  case EvidenceRecord(ref, payload: StrategicMechanismContrastEvidence, _) =>
+                    carrierAtComparisonRoot(ref, inputs.root) &&
+                      payload.comparisonKind == comparison.kind &&
+                      payload.referenceLine == comparison.referenceLine &&
+                      payload.candidateLine == comparison.candidateLine
+                  case _ => false
+                } ++
+                  wrappers.filter { record =>
+                    carrierAtComparisonRoot(record.ref, inputs.root) &&
+                      (record.ref.line.contains(comparison.referenceLine) ||
+                        record.ref.line.contains(comparison.candidateLine))
+                  }
+              ).distinctBy(_.ref.id)
+            val carrierRecords =
+              (tacticalCarrierRecords ++ strategicCarrierRecords).distinctBy(_.ref.id)
             val involvedRecords =
               (neighborhood.involvedRecords ++ carrierRecords).distinctBy(_.ref.id)
             Some(ComparisonEndpointEvidenceSnapshot(
@@ -423,7 +490,7 @@ object RelativeAssessmentAssembler:
             ))
           case _ => None
       }
-    }
+    ).flatten
 
   private def canonicalEndpointEvidenceRecords(
       records: List[EvidenceRecord],

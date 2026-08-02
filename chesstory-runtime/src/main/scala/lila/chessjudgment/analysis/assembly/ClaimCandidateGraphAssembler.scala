@@ -62,10 +62,11 @@ object ClaimCandidateGraphAssembler:
 
   def fromClaims(
       claims: List[JudgmentClaim],
-      graph: TypedEvidenceGraph
+      context: JudgmentAssemblyContext
   ): ClaimCandidateGraph =
+    val graph = context.evidenceGraph
     claims.foreach(claim => comparisonForClaim(claim, graph))
-    ClaimCandidateGraph(claims.map(ClaimTruthPolicy.evaluate(_, graph)), graph)
+    ClaimCandidateGraph(claims.map(ClaimTruthPolicy.evaluate(_, context)), graph)
 
   private[assembly] def comparisonForClaim(
       claim: JudgmentClaim,

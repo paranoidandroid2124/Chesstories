@@ -1,6 +1,6 @@
 package lila.chessjudgment.analysis.policy
 
-import lila.chessjudgment.analysis.assembly.RelativeAssessmentAssembler
+import lila.chessjudgment.analysis.assembly.{ EvidenceFactAssembler, RelativeAssessmentAssembler }
 import lila.chessjudgment.model.evaluation.JudgmentThresholds
 import lila.chessjudgment.model.judgment.*
 
@@ -19,7 +19,8 @@ final case class ClaimAdmissionDecision(
 
 object ClaimTruthPolicy:
 
-  def evaluate(claim: JudgmentClaim, graph: TypedEvidenceGraph): ClaimAdmissionDecision =
+  def evaluate(claim: JudgmentClaim, context: JudgmentAssemblyContext): ClaimAdmissionDecision =
+    val graph = context.evidenceGraph
     val contentCarrierRefs = claim.content.toList.map(_.carrierRef)
     val missingEvidence =
       (claim.evidence ++ contentCarrierRefs).distinct.filter(ref => graph.record(ref).isEmpty)
@@ -73,7 +74,7 @@ object ClaimTruthPolicy:
       else if claimBoundRecords.isEmpty then ClaimAdmissionStatus.Rejected
       else if missingGroups.nonEmpty || !hasFamilyProof then ClaimAdmissionStatus.Deferred
       else ClaimAdmissionStatus.Certified
-    val contentProofClosed = claim.content.isEmpty || exactContentCertified(claim, graph)
+    val contentProofClosed = claim.content.isEmpty || exactContentCertified(claim, context)
     val status =
       if claim.content.nonEmpty && baselineStatus == ClaimAdmissionStatus.Certified && !contentProofClosed then
         ClaimAdmissionStatus.Deferred
@@ -91,12 +92,13 @@ object ClaimTruthPolicy:
     * branch reopens the carrier named by the claim and checks the exact closure
     * that Jp was allowed to attach.
     */
-  private def exactContentCertified(claim: JudgmentClaim, graph: TypedEvidenceGraph): Boolean =
+  private def exactContentCertified(claim: JudgmentClaim, context: JudgmentAssemblyContext): Boolean =
+    val graph = context.evidenceGraph
     claim.content.exists {
       case JudgmentClaimContent.CandidateComparison(carrier, identity) =>
         exactCandidateComparisonContent(claim, carrier, identity, graph)
       case JudgmentClaimContent.StrategicMechanism(carrier) =>
-        exactStrategicMechanismContent(claim, carrier, graph)
+        exactStrategicMechanismContent(claim, carrier, context)
     }
 
   private def contentRequiredLayerGroups(claim: JudgmentClaim): Option[List[Set[EvidenceLayer]]] =
@@ -147,90 +149,59 @@ object ClaimTruthPolicy:
   private def exactStrategicMechanismContent(
       claim: JudgmentClaim,
       carrier: EvidenceRef,
-      graph: TypedEvidenceGraph
+      context: JudgmentAssemblyContext
   ): Boolean =
-    graph.record(carrier).exists {
-      case EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents) =>
-        exactPlayedTransition(graph).exists { case (_, transition) =>
-          claim.primaryLine.exists { line =>
-            val lineRecords = graph.records.collect {
-              case record @ EvidenceRecord(lineRef, lineFacts: LineFactEvidence, _)
-                  if lineRef.producer == EvidenceProducer.LegalLineProducer &&
-                    lineRef.layer == EvidenceLayer.Line &&
-                    lineRef.position == transition.from &&
-                    lineRef.scope == line.role.scope &&
-                    lineRef.line.contains(line) &&
-                    lineFacts.line == line =>
-                record
+    val graph = context.evidenceGraph
+    EvidenceFactAssembler.exactStrategicMechanisms(context).exists { wrappers =>
+      graph.record(carrier).exists {
+        case record @ EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents) =>
+          exactPlayedTransition(graph).exists { case (_, transition) =>
+            claim.primaryLine.exists { line =>
+              val lineRecords = graph.records.collect {
+                case lineRecord @ EvidenceRecord(lineRef, lineFacts: LineFactEvidence, _)
+                    if lineRef.producer == EvidenceProducer.LegalLineProducer &&
+                      lineRef.layer == EvidenceLayer.Line &&
+                      lineRef.position == transition.from &&
+                      lineRef.scope == line.role.scope &&
+                      lineRef.line.contains(line) &&
+                      lineFacts.line == line =>
+                  lineRecord
+              }
+              lineRecords match
+                case EvidenceRecord(lineRef, _, _) :: Nil =>
+                  val evalRecords = graph.records.collect {
+                    case evalRecord @ EvidenceRecord(evalRef, EvalFactEvidence(payloadLine, _, _, _), evalParents)
+                        if evalRef.producer == EvidenceProducer.EngineEvalProducer &&
+                          evalRef.layer == EvidenceLayer.Eval &&
+                          evalRef.position == lineRef.position &&
+                          evalRef.scope == line.role.scope &&
+                          evalRef.line.contains(line) &&
+                          payloadLine == line &&
+                          evalParents == List(lineRef) =>
+                      evalRecord
+                  }
+                  val expectedEvidence =
+                    evalRecords match
+                      case EvidenceRecord(evalRef, _, _) :: Nil =>
+                        (ref :: parents ++ payload.signals.map(_.source) ++ List(lineRef, evalRef)).distinct
+                      case _ => Nil
+                  wrappers.contains(record) &&
+                    ref.layer == EvidenceLayer.StrategicMechanism &&
+                    ref.line.contains(line) &&
+                    line.role == LineNodeRole.Played &&
+                    EvidenceRef.sameMove(line.rootMove, transition.moveUci) &&
+                    claim.primaryPosition == ref.position &&
+                    claim.scope == ref.scope &&
+                    claim.confidence == ref.confidence &&
+                    claim.subjectMove.exists(move => EvidenceRef.sameMove(move, transition.moveUci)) &&
+                    (claim.subject == line.role.subject || claim.subject == ClaimSubject.Plan) &&
+                    exactRefs(claim.evidence, expectedEvidence)
+                case _ => false
             }
-            lineRecords match
-              case EvidenceRecord(lineRef, _, _) :: Nil =>
-                val evalRecords = graph.records.collect {
-                  case record @ EvidenceRecord(evalRef, EvalFactEvidence(payloadLine, _, _, _), evalParents)
-                      if evalRef.producer == EvidenceProducer.EngineEvalProducer &&
-                        evalRef.layer == EvidenceLayer.Eval &&
-                        evalRef.position == lineRef.position &&
-                        evalRef.scope == line.role.scope &&
-                        evalRef.line.contains(line) &&
-                        payloadLine == line &&
-                        evalParents == List(lineRef) =>
-                    record
-                }
-                val signalSources = payload.signals.map(_.source)
-                val expectedEvidence =
-                  evalRecords match
-                    case EvidenceRecord(evalRef, _, _) :: Nil =>
-                      val closure = ref :: parents ++ signalSources ++ List(lineRef, evalRef)
-                      Option.when(exactReferencesPerId(closure))(closure.distinct).getOrElse(Nil)
-                    case _ => Nil
-                ref.producer == EvidenceProducer.StrategicMechanismProducer &&
-                  ref.layer == EvidenceLayer.StrategicMechanism &&
-                  ref.line.contains(line) &&
-                  line.role == LineNodeRole.Played &&
-                  EvidenceRef.sameMove(line.rootMove, transition.moveUci) &&
-                  strategicWrapperBoundToPlayedTransition(ref, payload, parents, line, transition, graph) &&
-                  claim.primaryPosition == ref.position &&
-                  claim.scope == ref.scope &&
-                  claim.confidence == ref.confidence &&
-                  claim.subjectMove.exists(move => EvidenceRef.sameMove(move, transition.moveUci)) &&
-                  (claim.subject == line.role.subject || claim.subject == ClaimSubject.Plan) &&
-                  payload.signals.nonEmpty &&
-                  parents.map(_.id).distinct.size == parents.size &&
-                  parents.forall(parent => graph.record(parent).nonEmpty) &&
-                  signalSources.forall(source => parents.contains(source) && graph.record(source).nonEmpty) &&
-                  exactRefs(claim.evidence, expectedEvidence)
-              case _ => false
           }
-        }
-      case _ => false
+        case _ => false
+      }
     }
-
-  /** A content-eligible played-line wrapper is either rooted at the played
-    * transition or route-lifted to its destination by an exact root motif.
-   */
-  private def strategicWrapperBoundToPlayedTransition(
-      ref: EvidenceRef,
-      mechanism: StrategicMechanismEvidence,
-      parents: List[EvidenceRef],
-      line: LineNodeRef,
-      transition: MoveTransitionEvidence,
-      graph: TypedEvidenceGraph
-  ): Boolean =
-    (ref.position == transition.from && ref.scope == TransitionEdgeRole.Played.scope) ||
-      (ref.position == transition.to &&
-        ref.scope == TransitionEdgeRole.Played.scope &&
-        parents.exists(parent =>
-          graph.record(parent).exists {
-            case EvidenceRecord(routeRef, motif: MoveMotifEvidence, _) =>
-              routeRef.position == transition.from &&
-                routeRef.scope == TransitionEdgeRole.Played.scope &&
-                routeRef.line.contains(line) &&
-                motif.isRootEvent &&
-                EvidenceRef.sameMove(motif.moveUci, transition.moveUci) &&
-                mechanism.signals.exists(_.source == routeRef)
-            case _ => false
-          }
-        ))
 
   private def exactPlayedTransition(
       graph: TypedEvidenceGraph
@@ -254,9 +225,6 @@ object ClaimTruthPolicy:
       actual.size == expected.size &&
       actual.forall(ref => expected.contains(ref)) &&
       expected.forall(ref => actual.contains(ref))
-
-  private def exactReferencesPerId(refs: List[EvidenceRef]): Boolean =
-    refs.groupBy(_.id).values.forall(_.distinct.size == 1)
 
   /** A RelativeCause directly named by a claim is a Cause host, not a license
     * to traverse every parent attached to the Cause record. Cause parents also
