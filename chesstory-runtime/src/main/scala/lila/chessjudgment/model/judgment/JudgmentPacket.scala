@@ -194,7 +194,7 @@ object PlayerFacingClaimDecision:
       PlayerFacingClaimTier.Primary
     else if selections.exists(_.exposure == PlayerFacingCauseExposureTier.Complementary) then
       PlayerFacingClaimTier.Secondary
-    else PlayerFacingClaimPolicy.causeFreeTier(claim, graph, playedMoves)
+    else PlayerFacingClaimPolicy.tierForNonCauseClaim(claim, graph, playedMoves)
 
   def fromExposure(
       claims: List[JudgmentClaim],
@@ -212,7 +212,7 @@ object PlayerFacingClaimDecision:
 
 object PlayerFacingClaimPolicy:
 
-  def causeFreeTier(
+  def tierForNonCauseClaim(
       claim: JudgmentClaim,
       graph: TypedEvidenceGraph,
       playedMoves: Set[String]
