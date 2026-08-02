@@ -77,7 +77,7 @@ export async function domDialog(o: DomDialogOpts): Promise<Dialog> {
 
   (o.parent ?? document.body).appendChild(dialog);
 
-  const wrapper = new DialogWrapper(dialog, view, o, false);
+  const wrapper = new DialogController(dialog, view, o, false);
   if (o.show) return wrapper.show();
 
   return wrapper;
@@ -116,7 +116,7 @@ export function snabDialog(o: SnabDialogOpts): VNode {
             hook: onInsert(async view => {
               const [html] = await ass;
               if (!o.vnodes && html) view.innerHTML = html;
-              const dlg = new DialogWrapper(dialog, view, o, true);
+              const dlg = new DialogController(dialog, view, o, true);
               if (o.onInsert) o.onInsert(dlg);
               else dlg.show();
             }),
@@ -130,7 +130,7 @@ export function snabDialog(o: SnabDialogOpts): VNode {
   return hl('div.snab-modal-mask' + (o.onInsert ? '.none' : ''), dialogVNode);
 }
 
-class DialogWrapper implements Dialog {
+class DialogController implements Dialog {
   private dialogEvents = new Janitor();
   private actionEvents = new Janitor();
   private resolve?: (dialog: Dialog) => void;

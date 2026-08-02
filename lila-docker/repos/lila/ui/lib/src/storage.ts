@@ -3,8 +3,8 @@
 import { defined, notNull, type Prop, withEffect } from './common';
 import { preferenceLocalStorage, preferenceSessionStorage } from './cookieConsent';
 
-export const storage: ChesstoryStorageHelper = builder(() => preferenceLocalStorage());
-export const tempStorage: ChesstoryStorageHelper = builder(() => preferenceSessionStorage());
+export const storage: ChesstoryStorageHelper = makeStorage(() => preferenceLocalStorage());
+export const tempStorage: ChesstoryStorageHelper = makeStorage(() => preferenceSessionStorage());
 
 export interface StoredProp<V> extends Prop<V> {
   (replacement?: V): V;
@@ -107,7 +107,7 @@ interface ChesstoryStorageEvent {
   value?: string;
 }
 
-function builder(storageGetter: () => Storage | null): ChesstoryStorageHelper {
+function makeStorage(storageGetter: () => Storage | null): ChesstoryStorageHelper {
   const api = {
     get: (k: string): string | null => storageGetter()?.getItem(k) ?? null,
     set: (k: string, v: string): void => storageGetter()?.setItem(k, v),
