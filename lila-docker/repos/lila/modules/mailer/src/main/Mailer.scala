@@ -137,11 +137,6 @@ $serviceNote"""
       span(itemprop := "name")("chesstory.com/contact")
     )
 
-    private val noteLink = a(
-      itemprop := "url",
-      href := "https://chesstory.com/"
-    )(span(itemprop := "name")("chesstory.com"))
-
     def serviceNote =
       publisher(
         small(

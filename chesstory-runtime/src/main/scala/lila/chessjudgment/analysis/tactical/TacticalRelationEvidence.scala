@@ -12,8 +12,6 @@ import lila.chessjudgment.model.judgment.{ EvidenceSquare, LineReplayStep }
 
 private[chessjudgment] object TacticalRelationEvidence:
 
-  private[chessjudgment] val DrawResourceRelationReplayMaxPlies = 12
-
   def boundedReplay(
       fen: String,
       moves: List[String],

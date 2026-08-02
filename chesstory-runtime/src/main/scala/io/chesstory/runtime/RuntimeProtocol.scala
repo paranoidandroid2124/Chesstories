@@ -651,7 +651,7 @@ object RuntimeProtocol:
           "left_causal_signature" -> relation.leftCausalSignature,
           "right_cause_id" -> relation.rightCauseEvidenceId,
           "right_causal_signature" -> relation.rightCausalSignature,
-          "relation" -> importanceCode(relation.relation.toString),
+          "relation" -> code(relation.relation.toString),
           "domain" -> relation.domainKey
         )
       },
@@ -690,9 +690,9 @@ object RuntimeProtocol:
       "domain" -> profile.domain.stableKey,
       "stake" -> profile.frame.stake.stableKey,
       "event_line" -> profile.frame.eventLine.stableKey,
-      "effect_mode" -> importanceCode(profile.frame.effectMode.toString),
-      "direct_change" -> importanceCode(profile.frame.directChange.toString),
-      "played_change" -> importanceCode(profile.frame.playedChange.toString),
+      "effect_mode" -> code(profile.frame.effectMode.toString),
+      "direct_change" -> code(profile.frame.directChange.toString),
+      "played_change" -> code(profile.frame.playedChange.toString),
       "measure" -> directCauseImportanceMeasureJson(profile.measure),
       "effect_scope" -> rootOwnedEffectIdentityJson(profile.effectIdentity)
     )
@@ -795,28 +795,19 @@ object RuntimeProtocol:
       identity: RootOwnedEffectIdentity
   ): JsObject =
     Json.obj(
-      "primitive_kind" -> importanceCode(identity.primitiveKind.toString),
+      "primitive_kind" -> code(identity.primitiveKind.toString),
       "target_signatures" -> identity.targetSignatures,
       "plan_ids" -> identity.planIds,
       "plan_result_semantic_key" -> identity.planResult.map(_.stableKey),
       "strategic_axes" -> identity.strategicAxes.map(axis =>
         Json.obj(
-          "kind" -> importanceCode(axis.kind.toString),
-          "polarity" -> importanceCode(axis.polarity.toString),
+          "kind" -> code(axis.kind.toString),
+          "polarity" -> code(axis.polarity.toString),
           "label" -> axis.label,
-          "comparison_outcome" -> axis.comparisonOutcome.map(value => importanceCode(value.toString))
+          "comparison_outcome" -> axis.comparisonOutcome.map(value => code(value.toString))
         )
       )
     )
-
-  private def importanceCode(value: String): String =
-    value.trim
-      .replaceAll("([a-z0-9])([A-Z])", "$1_$2")
-      .replaceAll("[^A-Za-z0-9]+", "_")
-      .replaceAll("_+", "_")
-      .stripPrefix("_")
-      .stripSuffix("_")
-      .toLowerCase
 
   /** The exact engine-backed PlayedVsBest verdict is a comparison DTO. It is
     * intentionally independent of Cause generation, claim hosting, and public

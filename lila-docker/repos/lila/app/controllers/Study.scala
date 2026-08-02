@@ -1,9 +1,7 @@
 package controllers
 
 import chess.format.pgn.PgnStr
-import chess.ErrorStr
-import chess.format.{ Fen, Uci, UciCharPair, UciPath }
-import chess.opening.OpeningDb
+import chess.format.UciPath
 import play.api.data.Form
 import play.api.data.Forms.*
 import play.api.libs.json.*
@@ -12,7 +10,6 @@ import lila.app.{ *, given }
 import lila.analyse.CondensedJsonView
 import lila.core.game.Pov
 import lila.study.StudyForm
-import lila.tree.Branch
 
 object Study:
   private[controllers] def canonicalChapterRedirect(
@@ -30,84 +27,6 @@ final class Study(
 
   private def mineLanding(page: Int = 1) =
     routes.Study.mine(lila.study.Orders.default, page)
-
-  private def branchFromUci(
-      variant: chess.variant.Variant,
-      fen: Fen.Full,
-      uciStr: String
-  ): Either[ErrorStr, Branch] =
-    Uci(uciStr) match
-      case Some(m: Uci.Move) =>
-        chess
-          .Game(variant.some, fen.some)(m.orig, m.dest, m.promotion)
-          .map: (game, move) =>
-            val uci = Uci(move)
-            val movable = game.position.playable(false)
-            val newFen = chess.format.Fen.write(game)
-            Branch(
-              id = UciCharPair(uci),
-              ply = game.ply,
-              move = Uci.WithSan(uci, move.toSanStr),
-              fen = newFen,
-              check = game.position.check,
-              dests = Some(movable.so(game.position.destinations)),
-              opening = (game.ply <= 30 && chess.variant.Variant.list.openingSensibleVariants(variant)).so(
-                OpeningDb.findByFullFen(newFen)
-              ),
-              drops = if movable then game.position.drops else Some(Nil),
-              crazyData = game.position.crazyData
-            )
-      case Some(d: Uci.Drop) =>
-        chess
-          .Game(variant.some, fen.some)
-          .drop(d.role, d.square)
-          .map: (game, drop) =>
-            val uci = Uci(drop)
-            val movable = !game.position.end
-            val newFen = chess.format.Fen.write(game)
-            Branch(
-              id = UciCharPair(uci),
-              ply = game.ply,
-              move = Uci.WithSan(uci, drop.toSanStr),
-              fen = newFen,
-              check = game.position.check,
-              dests = Some(movable.so(game.position.destinations)),
-              opening = OpeningDb.findByFullFen(newFen),
-              drops = if movable then game.position.drops else Some(Nil),
-              crazyData = game.position.crazyData
-            )
-      case _ => Left(ErrorStr(s"Bad UCI: $uciStr"))
-
-  private def insertPvLine(
-      studyId: StudyId,
-      chapter: lila.study.Chapter,
-      startPath: UciPath,
-      startFen: Fen.Full,
-      moves: List[String],
-      opts: lila.study.MoveOpts
-  )(using who: lila.study.Who): Funit =
-    if moves.isEmpty then funit
-    else
-      val variant = chapter.setup.variant
-      moves
-        .foldLeft(fuccess((startPath, startFen))) { (acc, uciStr) =>
-          acc.flatMap { (path, fen) =>
-            branchFromUci(variant, fen, uciStr) match
-              case Left(_) => fuccess((path, fen))
-              case Right(branch) =>
-                env.study.api
-                  .addNode(
-                    lila.study.AddNode(
-                      studyId = studyId,
-                      positionRef = lila.study.Position(chapter, path).ref,
-                      node = branch,
-                      opts = opts
-                    )
-                  )
-                  .inject((path + branch.id, branch.fen))
-          }
-        }
-        .inject(())
 
   def show(id: StudyId) = Open:
     env.study.api

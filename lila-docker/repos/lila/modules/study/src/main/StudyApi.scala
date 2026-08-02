@@ -822,5 +822,3 @@ final class StudyApi(
 
   private def Contribute[A: Zero](userId: UserId, study: Study)(f: => A): A =
     study.canContribute(userId).so(f)
-
-  private def sendTo(studyId: StudyId)(f: Any): Unit = ()

@@ -1839,7 +1839,7 @@ def _assess_fresh_confirm_release(
         ):
             raise ContractError("epsilon registry entries are invalid")
 
-    hypothesis = _fresh_confirm_hypothesis_registration(
+    hypothesis = normalize_selected_attribution_hypothesis(
         preregistration, [str(chain) for chain in chains]
     )
     bootstrap = preregistration.get("bootstrap")
@@ -1859,10 +1859,10 @@ def _assess_fresh_confirm_release(
         recomputed_contrasts,
         [str(chain) for chain in chains],
     )
-    selected_contrasts = _selected_fresh_confirm_contrasts(
+    selected_contrasts = select_attribution_contrasts(
         hypothesis=hypothesis,
         contrasts=recomputed_contrasts,
-        chains=[str(chain) for chain in chains],
+        oracle_chains=[str(chain) for chain in chains],
     )
 
     row_universe_hash = _row_universe_sha256(rows)
@@ -2112,26 +2112,6 @@ def _row_universe_sha256(rows: Sequence[Mapping[str, Any]]) -> str:
             }
         )
     return sha256_json(bindings)
-
-
-def _fresh_confirm_hypothesis_registration(
-    preregistration: Mapping[str, Any], chains: Sequence[str]
-) -> dict[str, Any]:
-    """Require the one effect claim allowed to survive fresh-confirm unblinding."""
-    return normalize_selected_attribution_hypothesis(preregistration, chains)
-
-
-def _selected_fresh_confirm_contrasts(
-    *,
-    hypothesis: Mapping[str, Any],
-    contrasts: Sequence[Mapping[str, Any]],
-    chains: Sequence[str],
-) -> dict[str, Mapping[str, Any]]:
-    return select_attribution_contrasts(
-        hypothesis=hypothesis,
-        contrasts=contrasts,
-        oracle_chains=chains,
-    )
 
 
 def _require_exact_derived_document(
