@@ -22,21 +22,7 @@ object String:
     try play.utils.UriEncoding.decodePathSegment(input, "UTF-8").some
     catch case _: play.utils.InvalidUriEncodingException => None
 
-  def isShouting(text: String) =
-    text.lengthIs >= 5 && {
-      import java.lang.Character.*
-      // true if >1/2 of the latin letters are uppercase
-      text.take(80).replace("O-O", "o-o").foldLeft(0) { (i, c) =>
-        getType(c) match
-          case UPPERCASE_LETTER => i + 1
-          case LOWERCASE_LETTER => i - 1
-          case _ => i
-      } > 0
-    }
-  def noShouting(str: String): String = if isShouting(str) then str.toLowerCase else str
-
   val atUsernameRegex = RawHtml.atUsernameRegex
-  val forumPostPathRegex = """(?:(?<= )|^)\b([\w-]+/[\w-]+)\b(?:(?= )|$)""".r
 
   object html:
 

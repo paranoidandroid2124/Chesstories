@@ -36,9 +36,6 @@ object email:
       def nameAndDomain: Option[(String, Domain)] = domain.map: d =>
         e.takeWhile(_ != '@') -> d
 
-      def similarTo(other: EmailAddress) =
-        e.normalize.eliminateDomainAlias == other.normalize.eliminateDomainAlias
-
       def isNoReply = e.startsWith("noreply.") && e.endsWith("@chesstory.com")
       def isBlank = e.startsWith("noreply.blanked.")
       def isSendable = !e.isNoReply && !e.isBlank
@@ -49,23 +46,12 @@ object email:
           dots >= 3 || (dots == 2 && """\d\.\d""".r.unanchored.matches(e.username))
         }
 
-      def eliminateDomainAlias: EmailAddress =
-        e.nameAndDomain.fold(e): (name, domain) =>
-          val newDomain =
-            if yandexDomains.contains(domain.lower) then "yandex.com"
-            else if gmailDomains.contains(domain.lower) then "gmail.com"
-            else domain
-          s"$name@$newDomain"
-
     private val regex =
       """(?i)^[a-z0-9.!#$&'*+/=?^_`{|}~\-]+@[a-z0-9](?:[a-z0-9-]{0,62}+(?<!-))?(?:\.[a-z0-9](?:[a-z0-9-]{0,62}+(?<!-))?)*$""".r
 
     val maxLength = 320
 
     val gmailDomains: Set[Domain.Lower] = Domain.Lower.from(Set("gmail.com", "googlemail.com"))
-    val yandexDomains: Set[Domain.Lower] =
-      Domain.Lower.from(Set("yandex.com", "yandex.ru", "ya.ru", "yandex.ua", "yandex.kz", "yandex.by"))
-
     // adding normalized domains requires database migration!
     private val gmailLikeNormalizedDomains =
       gmailDomains ++ Set("protonmail.com", "protonmail.ch", "pm.me", "proton.me")

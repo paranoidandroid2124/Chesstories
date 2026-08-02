@@ -18,11 +18,7 @@ class FormTest extends munit.FunSuite:
       ),
       single("t" -> lila.common.Form.ISODate.mapping).unbind(date.date) -> Map("t" -> "2023-04-12"),
       single("t" -> lila.common.Form.PrettyDateTime.mapping).unbind(date) -> Map("t" -> "2023-04-12 11:01"),
-      single("t" -> lila.common.Form.Timestamp.mapping).unbind(date.instant) -> Map("t" -> "1681297275337"),
-      single("t" -> lila.common.Form.ISOInstantOrTimestamp.mapping).unbind(date.instant) -> Map(
-        "t" -> "2023-04-12T11:01:15.337Z"
-      ),
-      single("t" -> lila.common.Form.ISODateOrTimestamp.mapping).unbind(date.date) -> Map("t" -> "2023-04-12")
+      single("t" -> lila.common.Form.Timestamp.mapping).unbind(date.instant) -> Map("t" -> "1681297275337")
     ).foreach { case (actual, expected) => assertEquals(actual, expected) }
 
   test("parse date mappings"):
@@ -47,27 +43,7 @@ class FormTest extends munit.FunSuite:
       single("t" -> lila.common.Form.Timestamp.mapping).bind(Map("t" -> "2017-01-01 23:11")).isLeft,
       single("t" -> lila.common.Form.Timestamp.mapping).bind(Map("t" -> "2023-04-25T10:00:00.000Z")).isLeft,
       single("t" -> lila.common.Form.Timestamp.mapping).bind(Map("t" -> "2017-01-01T12:34:56Z")).isLeft,
-      single("t" -> lila.common.Form.Timestamp.mapping).bind(Map("t" -> "2017-01-01")).isLeft,
-      single("t" -> lila.common.Form.ISOInstantOrTimestamp.mapping).bind(Map("t" -> "1483228800000")).isRight,
-      single("t" -> lila.common.Form.ISOInstantOrTimestamp.mapping)
-        .bind(Map("t" -> "2023-04-25T10:00:00.000Z"))
-        .isRight,
-      single("t" -> lila.common.Form.ISOInstantOrTimestamp.mapping)
-        .bind(Map("t" -> "2017-01-01 23:11"))
-        .isLeft,
-      single("t" -> lila.common.Form.ISOInstantOrTimestamp.mapping)
-        .bind(Map("t" -> "2017-01-01T12:34:56Z"))
-        .isRight,
-      single("t" -> lila.common.Form.ISOInstantOrTimestamp.mapping).bind(Map("t" -> "2017-01-01")).isLeft,
-      single("t" -> lila.common.Form.ISODateOrTimestamp.mapping).bind(Map("t" -> "1483228800000")).isRight,
-      single("t" -> lila.common.Form.ISODateOrTimestamp.mapping).bind(Map("t" -> "2017-01-01")).isRight,
-      single("t" -> lila.common.Form.ISODateOrTimestamp.mapping)
-        .bind(Map("t" -> "2023-04-25T10:00:00.000Z"))
-        .isLeft,
-      single("t" -> lila.common.Form.ISODateOrTimestamp.mapping).bind(Map("t" -> "2017-01-01 23:11")).isLeft,
-      single("t" -> lila.common.Form.ISODateOrTimestamp.mapping)
-        .bind(Map("t" -> "2017-01-01T12:34:56Z"))
-        .isLeft
+      single("t" -> lila.common.Form.Timestamp.mapping).bind(Map("t" -> "2017-01-01")).isLeft
     ).foreach { value => assert(value) }
 
   test("trim before validation"):

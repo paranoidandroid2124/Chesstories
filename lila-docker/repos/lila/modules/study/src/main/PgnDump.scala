@@ -114,7 +114,6 @@ object PgnDump:
       updateTags: Update[Tags] = identity
   )
   val fullFlags = WithFlags(true, true, true, true)
-  val withoutOrientation = fullFlags.copy(orientation = false)
 
   def rootToPgn(root: Root, tags: Tags, comments: InitialComments)(using WithFlags): Pgn =
     rootToPgn(NewRoot(root), tags, comments)

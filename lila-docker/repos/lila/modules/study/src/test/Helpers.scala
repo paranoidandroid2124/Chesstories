@@ -29,11 +29,11 @@ trait EitherAssertions extends munit.Assertions:
 object Helpers:
 
   def rootToPgn(root: Root): PgnStr = PgnDump
-    .rootToPgn(root, Tags.empty)(using PgnDump.withoutOrientation)
+    .rootToPgn(root, Tags.empty)(using PgnDump.fullFlags.copy(orientation = false))
     .render
 
   def rootToPgn(root: NewRoot): PgnStr = PgnDump
-    .rootToPgn(root, Tags.empty)(using PgnDump.withoutOrientation)
+    .rootToPgn(root, Tags.empty)(using PgnDump.fullFlags.copy(orientation = false))
     .render
 
   extension (root: Root)

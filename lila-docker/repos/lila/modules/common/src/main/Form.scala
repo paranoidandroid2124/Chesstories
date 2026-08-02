@@ -349,9 +349,6 @@ object Form:
         parsing(localDateTimeParse, "error.localDateTime", Nil)(key, data)
       def unbind(key: String, value: LocalDateTime) = Map(key -> formatter.print(value))
     val mapping: Mapping[LocalDateTime] = of[LocalDateTime](using format)
-  private object ISOInstant:
-    val format: Formatter[Instant] = ISODateTime.format.transform(_.instant, _.dateTime)
-    val mapping: Mapping[Instant] = of[Instant](using format)
   object PrettyDateTime:
     val pattern = "yyyy-MM-dd HH:mm"
     val format: Formatter[LocalDateTime] = localDateTimeFormat(pattern, utcZone)
@@ -366,18 +363,6 @@ object Form:
         yield instant
       }.left.map(_ => Seq(FormError(key, "Invalid timestamp", Nil)))
       def unbind(key: String, value: Instant) = stringFormat.unbind(key, value.toMillis.toString)
-    val mapping: Mapping[Instant] = of[Instant](using format)
-  object ISODateOrTimestamp:
-    val format: Formatter[LocalDate] = new:
-      def bind(key: String, data: Map[String, String]) =
-        ISODate.format.bind(key, data).orElse(Timestamp.format.bind(key, data).map(_.date))
-      def unbind(key: String, value: LocalDate) = ISODate.format.unbind(key, value)
-    val mapping = of[LocalDate](using format)
-  object ISOInstantOrTimestamp:
-    val format: Formatter[Instant] = new:
-      def bind(key: String, data: Map[String, String]) =
-        ISOInstant.format.bind(key, data).orElse(Timestamp.format.bind(key, data))
-      def unbind(key: String, value: Instant) = ISOInstant.format.unbind(key, value)
     val mapping: Mapping[Instant] = of[Instant](using format)
   final class LocalDateTimeOrTimestamp(zone: ZoneId):
     val localFormatter = java.time.format.DateTimeFormatter.ofPattern(PrettyDateTime.pattern)
