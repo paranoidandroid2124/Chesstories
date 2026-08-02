@@ -26,7 +26,9 @@ from chesstory_eval.native_diagnostic import (
 from chesstory_eval.probe_completion import (
     _RuntimeExchange,
     _RuntimeJsonlSession,
+    _claim_content_trace,
     _runtime_io_document,
+    _semantic_checkpoints,
     _validate_runtime_observation,
     _verified_response_jsonl_bytes,
 )
@@ -596,6 +598,189 @@ class ActiveProbeCompletionContractTest(unittest.TestCase):
         self.assertNotIn("response_jsonl_base64", document)
         self.assertEqual(document["response_jsonl_sha256"], sha256_bytes(response_bytes))
 
+
+class NativeContentTraceContractTest(unittest.TestCase):
+    def test_v3_content_trace_links_are_exact_and_fail_closed(self) -> None:
+        schema = ROOT / "schemas" / "native-v3" / "runtime-observation.schema.json"
+
+        def s(value: str) -> dict[str, object]:
+            return {"node_kind": "string", "scala_type": "java.lang.String", "value": value}
+
+        def q(*values: object) -> dict[str, object]:
+            return {"node_kind": "sequence", "collection_type": "scala.collection.immutable.List", "values": copy.deepcopy(list(values))}
+
+        def o(value: object) -> dict[str, object]:
+            return {"node_kind": "option", "scala_type": "scala.Option", "variant": "Some", "value": copy.deepcopy(value)}
+
+        def e(value: str) -> dict[str, object]:
+            return {"node_kind": "java-enum", "scala_type": "test.Status", "constant": value}
+
+        def p(name: str, **fields: object) -> dict[str, object]:
+            return {"node_kind": "product", "scala_type": f"test.{name}", "constructor": name, "arity": len(fields),
+                    "fields": [{"index": index, "name": key, "value": copy.deepcopy(value)} for index, (key, value) in enumerate(fields.items())]}
+
+        def field(product: dict[str, object], name: str) -> object:
+            return next(item["value"] for item in product["fields"] if item["name"] == name)  # type: ignore[index]
+
+        def build(kinds: tuple[str, ...] = (), p_observed: bool = True) -> tuple[dict[str, object], dict[str, object]]:
+            request = {"schema_version": "chesstory.move-meaning.request.v1", "request_id": "native-content-trace", "input": {}}
+            refs = [p("EvidenceRef", id=s(f"carrier:{index}")) for index in range(len(kinds))]
+            claims = [p("JudgmentClaim", id=s(f"content:{index}"), content=o(p(kind, carrier=ref)))
+                      for index, (kind, ref) in enumerate(zip(kinds, refs))]
+            ids = [f"content:{index}" for index in range(len(claims))]
+            packet = p("EvidenceBackedJudgmentPacket",
+                       assembly=p("JudgmentAssemblyContext", claims=q(*claims)),
+                       selectedContentClaimIds=q(*(s(item) for item in ids)))
+            trees = {
+                "Q": p("Q"), "F": p("F", records=q(*(p("EvidenceRecord", ref=ref) for ref in refs))),
+                "C": p("C"), "Jp": q(*claims),
+                "Ja": p("Ja", decisions=q(*(p("ClaimAdmissionDecision", claim=claim, status=e("Certified")) for claim in claims))),
+                "R": p("ClaimRankingResult", ranked=q(*(p("RankedClaimDecision", claim=claim) for claim in claims)),
+                       selectedContentClaimIds=q(*(s(item) for item in ids))),
+                "P": p("P", packet=packet), "V": p("V"),
+            }
+            stages: dict[str, object] = {}
+            upstream: str | None = None
+            for stage in ("Q", "F", "C", "Jp", "Ja", "R", "P", "V"):
+                observed = stage != "V" and (stage != "P" or p_observed)
+                record: dict[str, object] = {
+                    "stage_id": stage, "status": "observed-native" if observed else "unavailable",
+                    "boundary_reached": observed, "reason": "captured" if observed else "unavailable",
+                    "native_contract_version": "chesstory.runtime-native-boundary.v3",
+                    "v1_semantic_mapping_status": "unavailable", "v1_semantic_mapping_reason": "unavailable",
+                    "upstream_artifact_sha256": upstream, "artifact_sha256": None,
+                }
+                if observed or stage == "V":
+                    role = "typed-unavailability" if stage == "V" else "observed-native-input-output" if stage == "P" else "observed-native-output"
+                    artifact = {"native_contract_version": "chesstory.runtime-native-boundary.v3",
+                                "native_tree_contract_version": "chesstory.runtime-native-tree.v2",
+                                "stage": stage, "capture_role": role, "upstream_artifact_sha256": upstream, "native_tree": trees[stage]}
+                    upstream = native_sha256_json(artifact)
+                    record.update({"artifact_role": role, "artifact": artifact, "artifact_sha256": upstream})
+                stages[stage] = record
+            detail = {"authority": "cause_disposition_ledger.v1", "total_cause_count": 0, "selected_cause_ids": [],
+                      "status_counts": dict.fromkeys(("selected", "dominated", "redundant", "diagnostic", "inferior", "admission_deferred", "rejected", "unproposed", "object_unready"), 0),
+                      "reason_counts": dict.fromkeys(("player_facing_selection", "dominated_fallback", "cross_comparison_redundancy", "certified_claim_deduplicated", "diagnostic_comparison", "inferior_alternative", "claim_admission_deferred", "claim_admission_rejected", "no_claim_proposal", "object_readiness_failed"), 0), "abstention_codes": []}
+            response = ({"http_status": 200, "body": {"schema_version": "chesstory.move-meaning.response.v3", "request_id": request["request_id"], "ok": True, "status": "withheld",
+                         "availability": {"state": "withheld", "reason": "insufficient_engine_depth"}, "probe_requests": [], "move_review": {"renderable": False, "verdict": None, "idea_status": "unavailable", "idea_status_detail": detail, "explanations": []}}}
+                        if p_observed else {"http_status": 400, "body": {"schema_version": "chesstory.move-meaning.response.v3", "request_id": request["request_id"], "ok": False, "status": "error", "error": "invalid_request"}})
+            return {
+                "schema_version": "chesstory.runtime-observation.v3", "native_contract_version": "chesstory.runtime-native-boundary.v3",
+                "observation_status": "complete", "request_sha256": native_sha256_json(request),
+                "runtime": {"adapter_name": "chesstory-judgment-runtime-adapter", "adapter_version": "0.3.0",
+                            "request_schema": "chesstory.move-meaning.request.v1", "response_schema": "chesstory.move-meaning.response.v3",
+                            "http_status": 200 if p_observed else 400, "boundary_execution_present": True, "projection_present": p_observed},
+                "public_response": response, "public_response_sha256": native_sha256_json(response),
+                "hash_contract": NATIVE_HASH_CONTRACT, "artifact_chain_head_sha256": upstream, "stages": stages,
+            }, request
+
+        def tree(observation: dict[str, object], stage: str) -> dict[str, object]:
+            return observation["stages"][stage]["artifact"]["native_tree"]  # type: ignore[index]
+
+        def rechain(observation: dict[str, object]) -> None:
+            upstream: str | None = None
+            for stage in ("Q", "F", "C", "Jp", "Ja", "R", "P", "V"):
+                record = observation["stages"][stage]  # type: ignore[index]
+                record["upstream_artifact_sha256"] = upstream  # type: ignore[index]
+                artifact = record.get("artifact")  # type: ignore[union-attr]
+                if artifact is None:
+                    record["artifact_sha256"] = None  # type: ignore[index]
+                else:
+                    artifact["upstream_artifact_sha256"] = upstream  # type: ignore[index]
+                    upstream = native_sha256_json(artifact)
+                    record["artifact_sha256"] = upstream  # type: ignore[index]
+            observation["artifact_chain_head_sha256"] = upstream
+
+        def mutate(observation: dict[str, object], action: str) -> None:
+            if action == "artifact":
+                tree(observation, "F")["constructor"] = "changed"
+            elif action == "missing":
+                claim = tree(observation, "Jp")["values"][0]  # type: ignore[index]
+                fields = claim["fields"]  # type: ignore[index]
+                fields[:] = [item for item in fields if item["name"] != "content"]  # type: ignore[index]
+                for index, item in enumerate(fields): item["index"] = index  # type: ignore[index]
+                claim["arity"] = len(fields)  # type: ignore[index]
+            elif action == "foreign":
+                field(field(field(tree(observation, "F"), "records")["values"][0], "ref"), "id")["value"] = "foreign"  # type: ignore[index]
+            elif action == "ambiguous":
+                values = field(tree(observation, "F"), "records")["values"]  # type: ignore[index]
+                values.append(copy.deepcopy(values[0]))  # type: ignore[union-attr,index]
+            elif action == "ja":
+                field(field(field(tree(observation, "Ja"), "decisions")["values"][0], "claim"), "id")["value"] = "changed"  # type: ignore[index]
+            elif action == "duplicate-claim":
+                field(tree(observation, "Jp")["values"][1], "id")["value"] = "content:0"  # type: ignore[index]
+                field(field(field(tree(observation, "Ja"), "decisions")["values"][1], "claim"), "id")["value"] = "content:0"  # type: ignore[index]
+            elif action in {"duplicate", "unknown"}:
+                values = field(tree(observation, "R"), "selectedContentClaimIds")["values"]  # type: ignore[index]
+                values.append(copy.deepcopy(values[0])) if action == "duplicate" else values[0].update({"value": "unknown"})  # type: ignore[union-attr,index]
+            elif action == "deferred":
+                field(field(tree(observation, "Ja"), "decisions")["values"][0], "status")["constant"] = "Deferred"  # type: ignore[index]
+            else:
+                packet = field(tree(observation, "P"), "packet")
+                if action == "p-order":
+                    field(packet, "selectedContentClaimIds")["values"].reverse()  # type: ignore[index]
+                elif action == "p-hash":
+                    field(field(field(packet, "assembly"), "claims")["values"][0], "id")["value"] = "changed"  # type: ignore[index]
+                else:
+                    raise AssertionError(action)
+
+        def validate(request: dict[str, object], observation: dict[str, object], schema_bound: bool = False) -> dict[str, object]:
+            return _validate_runtime_observation(
+                observation, expected_schema="chesstory.runtime-observation.v3",
+                registry=SchemaRegistry(schema.parents[1]) if schema_bound else None,
+                schema_path=schema if schema_bound else None,
+                expected_request_sha256=native_sha256_json(request), expected_hash_contract=NATIVE_HASH_CONTRACT,
+            )
+
+        schema_observation, schema_request = build(("CandidateComparison",), True)
+        self.assertEqual(_semantic_checkpoints(validate(schema_request, schema_observation, True))["claim_content_trace"]["state"], "observed")
+
+        rows = (
+            ("observed empty", (), True, None, "ok"),
+            ("candidate and strategic", ("CandidateComparison", "StrategicMechanism"), True, None, "ok"),
+            ("missing content", ("CandidateComparison",), True, "missing", "trace-error"),
+            ("foreign carrier", ("CandidateComparison",), True, "foreign", "trace-error"),
+            ("ambiguous carrier", ("CandidateComparison",), True, "ambiguous", "trace-error"),
+            ("Jp to Ja mutation", ("CandidateComparison",), True, "ja", "trace-error"),
+            ("duplicate Jp claim ID", ("CandidateComparison", "StrategicMechanism"), True, "duplicate-claim", "trace-error"),
+            ("duplicate R ID", ("CandidateComparison",), True, "duplicate", "trace-error"),
+            ("unknown R ID", ("CandidateComparison",), True, "unknown", "trace-error"),
+            ("non-certified selected", ("CandidateComparison",), True, "deferred", "ok"),
+            ("P unavailable", ("CandidateComparison",), False, None, "ok"),
+            ("R to P order", ("CandidateComparison", "StrategicMechanism"), True, "p-order", "trace-error"),
+            ("R to P hash", ("CandidateComparison",), True, "p-hash", "trace-error"),
+            ("artifact hash", ("CandidateComparison",), True, "artifact", "validation-error"),
+        )
+        for name, kinds, p_observed, action, expected in rows:
+            with self.subTest(case=name):
+                observation, request = build(kinds, p_observed)
+                if action:
+                    mutate(observation, action)
+                    if action != "artifact":
+                        rechain(observation)
+                if expected == "validation-error":
+                    with self.assertRaises(IntegrityError):
+                        validate(request, observation)
+                    continue
+                validated = validate(request, observation)
+                if expected == "trace-error":
+                    with self.assertRaises((ContractError, IntegrityError)):
+                        _claim_content_trace(validated)
+                    continue
+                trace = _claim_content_trace(validated)
+                if name == "observed empty":
+                    self.assertEqual((trace["claim_links"], trace["r_selected_content_claim_ids"]), ([], []))
+                elif name == "P unavailable":
+                    self.assertEqual(trace["P"], {"state": "unavailable", "reason": "unavailable"})
+                else:
+                    self.assertEqual(trace["r_selected_content_claim_ids"], ["content:0"] if name == "non-certified selected" else ["content:0", "content:1"])
+                    self.assertEqual(trace["P"]["state"], "observed")  # type: ignore[index]
+                    self.assertRegex(trace["P"]["packet_sha256"], r"^[0-9a-f]{64}$")  # type: ignore[index]
+                    self.assertTrue(all(item["jp_claim_sha256"] == item["ja_claim_sha256"] == item["r_claim_sha256"] == item["p_claim_sha256"] for item in trace["claim_links"]))  # type: ignore[index]
+                    if name == "non-certified selected":
+                        self.assertEqual(trace["claim_links"][0]["ja_status"], "Deferred")  # type: ignore[index]
+                    else:
+                        self.assertEqual({item["kind"] for item in trace["claim_links"]}, {"CandidateComparison", "StrategicMechanism"})  # type: ignore[index]
 
 if __name__ == "__main__":
     unittest.main()

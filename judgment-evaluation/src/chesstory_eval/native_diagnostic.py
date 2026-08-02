@@ -439,19 +439,21 @@ def native_projection_evaluation_view(
     }
 
 
-def validate_native_observation(
+def _validate_native_observation_contract(
     observation: Mapping[str, Any],
     *,
+    expected_schema: str,
+    expected_native_contract_version: str,
+    expected_adapter_version: str,
+    expected_response_schema: str,
     expected_runtime_request: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Validate native-v2 structural artifacts and their exact hash lineage."""
+    """Validate one native observation contract and its exact artifact lineage."""
 
     document = _finite_json_object(observation, "native runtime observation")
-    if document.get("schema_version") != NATIVE_OBSERVATION_SCHEMA:
+    if document.get("schema_version") != expected_schema:
         raise ContractError("unsupported native runtime observation schema")
-    if document.get("native_contract_version") != (
-        "chesstory.runtime-native-boundary.v2"
-    ):
+    if document.get("native_contract_version") != expected_native_contract_version:
         raise ContractError("unsupported native boundary contract")
     if document.get("hash_contract") != NATIVE_HASH_CONTRACT:
         raise ContractError("unsupported native hash contract")
@@ -502,9 +504,9 @@ def validate_native_observation(
         raise ContractError("native runtime metadata fields are not exact")
     if (
         runtime.get("adapter_name") != "chesstory-judgment-runtime-adapter"
-        or runtime.get("adapter_version") != "0.2.0"
+        or runtime.get("adapter_version") != expected_adapter_version
         or runtime.get("request_schema") != "chesstory.move-meaning.request.v1"
-        or runtime.get("response_schema") != "chesstory.move-meaning.response.v2"
+        or runtime.get("response_schema") != expected_response_schema
     ):
         raise ContractError("native runtime producer identity changed")
     for field in ("boundary_execution_present", "projection_present"):
@@ -559,9 +561,7 @@ def validate_native_observation(
             raise ContractError(f"native {stage} record fields are not exact")
         if record.get("stage_id") != stage:
             raise IntegrityError(f"native {stage} stage identity mismatch")
-        if record.get("native_contract_version") != (
-            "chesstory.runtime-native-boundary.v2"
-        ):
+        if record.get("native_contract_version") != expected_native_contract_version:
             raise ContractError(f"native {stage} contract version changed")
         if record.get("v1_semantic_mapping_status") != "unavailable":
             raise ContractError(f"native {stage} must not claim frozen-v1 mapping")
@@ -596,7 +596,7 @@ def validate_native_observation(
                 raise ContractError(f"native {stage} artifact fields are not exact")
             if (
                 artifact.get("native_contract_version")
-                != "chesstory.runtime-native-boundary.v2"
+                != expected_native_contract_version
                 or artifact.get("native_tree_contract_version")
                 != "chesstory.runtime-native-tree.v2"
                 or artifact.get("stage") != stage
@@ -675,6 +675,23 @@ def validate_native_observation(
         "artifact_chain_head_sha256": chain_head,
         "stages": stage_summaries,
     }
+
+
+def validate_native_observation(
+    observation: Mapping[str, Any],
+    *,
+    expected_runtime_request: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Validate native-v2 structural artifacts and their exact hash lineage."""
+
+    return _validate_native_observation_contract(
+        observation,
+        expected_schema=NATIVE_OBSERVATION_SCHEMA,
+        expected_native_contract_version="chesstory.runtime-native-boundary.v2",
+        expected_adapter_version="0.2.0",
+        expected_response_schema="chesstory.move-meaning.response.v2",
+        expected_runtime_request=expected_runtime_request,
+    )
 
 
 def validate_native_engineering_result(

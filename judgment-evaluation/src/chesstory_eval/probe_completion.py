@@ -23,6 +23,7 @@ from .hashing import json_bytes, sha256_bytes, sha256_file, sha256_json, slug
 from .model import ContractError, IntegrityError
 from .native_diagnostic import (
     NATIVE_HASH_CONTRACT,
+    _validate_native_observation_contract,
     native_canonical_json,
     native_sha256_json,
 )
@@ -213,20 +214,17 @@ def _validate_runtime_observation(
             label="runtime v3 observation",
         )
     if expected_schema == RUNTIME_OBSERVATION_SCHEMA:
-        public_response_value = observation.get("public_response")
-        if public_response_value is not None:
-            public_response = _mapping(
-                public_response_value,
-                "runtime observation public response",
-            )
-            if observation.get("public_response_sha256") != native_sha256_json(
-                public_response
-            ):
-                raise IntegrityError("runtime observation public response hash mismatch")
+        _validate_native_observation_contract(
+            observation,
+            expected_schema=RUNTIME_OBSERVATION_SCHEMA,
+            expected_native_contract_version="chesstory.runtime-native-boundary.v3",
+            expected_adapter_version="0.3.0",
+            expected_response_schema=RUNTIME_RESPONSE_SCHEMA,
+        )
         if observation.get("observation_status") == "complete":
             runtime = _mapping(observation.get("runtime"), "runtime observation metadata")
             public_response = _mapping(
-                public_response_value,
+                observation.get("public_response"),
                 "runtime observation public response",
             )
             if runtime.get("http_status") != public_response.get("http_status"):
@@ -781,6 +779,174 @@ def _stage_tree(observation: Mapping[str, Any], stage: str) -> Any:
     return artifact.get("native_tree") if isinstance(artifact, Mapping) else None
 
 
+def _trace_required(node: Any, kind: str, label: str, constructor: str | None = None) -> Any:
+    if not isinstance(node, Mapping) or node.get("node_kind") != kind or (
+        constructor is not None and node.get("constructor") != constructor
+    ):
+        raise ContractError(f"claim content trace requires {label} {constructor or kind}")
+    if kind == "product":
+        return node
+    if kind == "option":
+        if node.get("variant") == "None":
+            return None
+        if node.get("variant") == "Some" and "value" in node:
+            return node["value"]
+    value = node.get("values" if kind == "sequence" else "value")
+    if (kind == "sequence" and isinstance(value, list)) or (
+        kind == "string" and isinstance(value, str) and value
+    ):
+        return value
+    raise ContractError(f"claim content trace has malformed {label}")
+
+
+def _trace_field(product: Mapping[str, Any], name: str, label: str) -> Any:
+    fields = product.get("fields")
+    matches = [
+        item for item in fields
+        if isinstance(item, Mapping) and item.get("name") == name and "value" in item
+    ] if isinstance(fields, list) else []
+    if len(matches) != 1:
+        raise ContractError(f"claim content trace requires one {label}.{name}")
+    return matches[0]["value"]
+
+
+def _trace_content(node: Any, label: str) -> tuple[str, str, str, str, str] | None:
+    claim = _trace_required(node, "product", label, "JudgmentClaim")
+    claim_id = _trace_required(_trace_field(claim, "id", label), "string", f"{label}.id")
+    content = _trace_required(_trace_field(claim, "content", label), "option", f"{label}.content")
+    if content is None:
+        return None
+    content = _trace_required(content, "product", f"{label}.content")
+    kind = content.get("constructor")
+    if kind not in {"CandidateComparison", "StrategicMechanism"}:
+        raise ContractError(f"claim content trace has unsupported {label}.content")
+    carrier = _trace_required(
+        _trace_field(content, "carrier", f"{label}.content"),
+        "product", f"{label}.content.carrier", "EvidenceRef",
+    )
+    carrier_id = _trace_required(
+        _trace_field(carrier, "id", f"{label}.content.carrier"),
+        "string", f"{label}.content.carrier.id",
+    )
+    return claim_id, native_sha256_json(claim), kind, carrier_id, native_sha256_json(carrier)
+
+
+def _claim_content_trace(observation: Mapping[str, Any]) -> dict[str, Any]:
+    """Describe exact native content linkage; do not re-evaluate its semantics."""
+    names, stages = ("F", "Jp", "Ja", "R", "P"), observation.get("stages")
+    records = {name: stages.get(name) for name in names} if isinstance(stages, Mapping) else {}
+    if len(records) != len(names) or not all(isinstance(item, Mapping) for item in records.values()):
+        raise ContractError("claim content trace has missing stage records")
+    p_record = records["P"]
+    reason = p_record.get("reason")
+    if not isinstance(reason, str) or not reason:
+        raise ContractError("claim content trace P has no reason")
+    p_trace: dict[str, Any] = (
+        {"state": "unavailable", "reason": reason}
+        if p_record.get("status") != "observed-native" else {"state": "observed"}
+    )
+    if any(records[name].get("status") != "observed-native" for name in names[:-1]):
+        return {"state": "unavailable", "reason": "required content stages unavailable", "P": p_trace}
+    trees = {name: _stage_tree(observation, name) for name in names[:-1]}
+    if any(tree is None for tree in trees.values()):
+        raise ContractError("claim content trace has missing native tree")
+
+    f_by_ref: dict[str, int] = {}
+    for index, node in enumerate(_products(trees["F"], "EvidenceRecord")):
+        record = _trace_required(node, "product", f"F record {index}", "EvidenceRecord")
+        ref = _trace_required(
+            _trace_field(record, "ref", f"F record {index}"),
+            "product", f"F record {index}.ref", "EvidenceRef",
+        )
+        ref_hash = native_sha256_json(ref)
+        f_by_ref[ref_hash] = f_by_ref.get(ref_hash, 0) + 1
+    jp_items = [
+        item for index, node in enumerate(_products(trees["Jp"], "JudgmentClaim"))
+        if (item := _trace_content(node, f"Jp claim {index}")) is not None
+    ]
+    if len({item[0] for item in jp_items}) != len(jp_items):
+        raise IntegrityError("claim content trace Jp content claim IDs are not unique")
+    if len({item[1] for item in jp_items}) != len(jp_items):
+        raise IntegrityError("claim content trace Jp content claims are not unique")
+    jp = {item[1]: item for item in jp_items}
+    ja: dict[str, list[tuple[str, str]]] = {}
+    ja_by_id: dict[str, list[tuple[str, str]]] = {}
+    for index, node in enumerate(_products(trees["Ja"], "ClaimAdmissionDecision")):
+        decision = _trace_required(node, "product", f"Ja decision {index}", "ClaimAdmissionDecision")
+        item = _trace_content(_trace_field(decision, "claim", f"Ja decision {index}"), f"Ja decision {index}.claim")
+        if item is not None:
+            status_node = _trace_field(decision, "status", f"Ja decision {index}")
+            status = _native_value(status_node)
+            if status is None and isinstance(status_node, Mapping):
+                status = status_node.get("constant")
+            if not isinstance(status, str) or not status:
+                raise ContractError("claim content trace has malformed Ja status")
+            ja.setdefault(item[1], []).append((item[0], status))
+            ja_by_id.setdefault(item[0], []).append((item[1], status))
+    if set(ja) != set(jp) or any(len(items) != 1 for items in ja.values()):
+        raise IntegrityError("claim content trace Ja claims do not exactly match Jp")
+
+    links: list[dict[str, Any]] = []
+    links_by_hash: dict[str, dict[str, Any]] = {}
+    for claim_id, claim_hash, kind, carrier_id, carrier_hash in jp.values():
+        if f_by_ref.get(carrier_hash) != 1:
+            raise IntegrityError("claim content trace Jp carrier does not map to one F record")
+        link = {
+            "claim_id": claim_id, "kind": kind, "carrier_id": carrier_id,
+            "carrier_ref_sha256": carrier_hash, "jp_claim_sha256": claim_hash,
+            "ja_status": ja[claim_hash][0][1], "ja_claim_sha256": claim_hash,
+            "r_selected": False, "r_claim_sha256": None, "p_claim_sha256": None,
+        }
+        links.append(link)
+        links_by_hash[claim_hash] = link
+
+    rankings = _products(trees["R"], "ClaimRankingResult")
+    if len(rankings) != 1:
+        raise ContractError("claim content trace requires one R ranking result")
+    selected_ids = [
+        _trace_required(item, "string", f"R selected ID {index}")
+        for index, item in enumerate(_trace_required(
+            _trace_field(rankings[0], "selectedContentClaimIds", "R ranking"), "sequence", "R selected IDs"))
+    ]
+    if len(selected_ids) != len(set(selected_ids)):
+        raise IntegrityError("claim content trace R selected IDs are not unique")
+    ranked_by_id: dict[str, list[str]] = {}
+    for index, node in enumerate(_products(trees["R"], "RankedClaimDecision")):
+        decision = _trace_required(node, "product", f"R decision {index}", "RankedClaimDecision")
+        item = _trace_content(_trace_field(decision, "claim", f"R decision {index}"), f"R decision {index}.claim")
+        if item is not None:
+            ranked_by_id.setdefault(item[0], []).append(item[1])
+    for claim_id in selected_ids:
+        ja_matches, r_matches = ja_by_id.get(claim_id, []), ranked_by_id.get(claim_id, [])
+        if len(ja_matches) != 1 or len(r_matches) != 1 or ja_matches[0][0] != r_matches[0]:
+            raise IntegrityError("claim content trace R selected ID has no unique exact Ja/R link")
+        link = links_by_hash[ja_matches[0][0]]
+        link["r_selected"], link["r_claim_sha256"] = True, r_matches[0]
+
+    if p_record.get("status") == "observed-native":
+        p_tree = _stage_tree(observation, "P")
+        packets = _products(p_tree, "EvidenceBackedJudgmentPacket")
+        if p_tree is None or len(packets) != 1:
+            raise ContractError("claim content trace requires one P packet")
+        packet = packets[0]
+        packet_ids = [_trace_required(item, "string", f"P selected ID {index}") for index, item in enumerate(
+            _trace_required(_trace_field(packet, "selectedContentClaimIds", "P packet"), "sequence", "P selected IDs"))]
+        if packet_ids != selected_ids:
+            raise IntegrityError("claim content trace P selected IDs differ from R")
+        assembly = _trace_required(_trace_field(packet, "assembly", "P packet"), "product", "P packet assembly", "JudgmentAssemblyContext")
+        packet_by_id: dict[str, list[str]] = {}
+        for index, node in enumerate(_trace_required(_trace_field(assembly, "claims", "P assembly"), "sequence", "P claims")):
+            item = _trace_content(node, f"P claim {index}")
+            if item is not None:
+                packet_by_id.setdefault(item[0], []).append(item[1])
+        for claim_id in selected_ids:
+            link, matches = links_by_hash[ja_by_id[claim_id][0][0]], packet_by_id.get(claim_id, [])
+            if len(matches) != 1 or matches[0] != link["r_claim_sha256"]:
+                raise IntegrityError("claim content trace P claim hash differs from R")
+            link["p_claim_sha256"] = matches[0]
+        p_trace = {"state": "observed", "packet_sha256": native_sha256_json(packet)}
+    return {"state": "observed", "r_selected_content_claim_ids": selected_ids, "claim_links": links, "P": p_trace}
+
 def _claim_summary(product: Mapping[str, Any]) -> dict[str, Any]:
     claim_id = _native_value(_field(product, "id"))
     claim_text = claim_id if isinstance(claim_id, str) else ""
@@ -798,6 +964,7 @@ def _claim_summary(product: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _semantic_checkpoints(observation: Mapping[str, Any]) -> dict[str, Any]:
+    claim_content_trace = _claim_content_trace(observation)
     f_tree = _stage_tree(observation, "F")
     c_tree = _stage_tree(observation, "C")
     jp_tree = _stage_tree(observation, "Jp")
@@ -905,6 +1072,7 @@ def _semantic_checkpoints(observation: Mapping[str, Any]) -> dict[str, Any]:
         first_missing = "none-through-P"
     return {
         "first_missing_checkpoint": first_missing,
+        "claim_content_trace": claim_content_trace,
         "F": {
             "unique_probe_diagnostic_count": len(diagnostics_by_id),
             "admission_status_counts": _counts(admission_statuses),
