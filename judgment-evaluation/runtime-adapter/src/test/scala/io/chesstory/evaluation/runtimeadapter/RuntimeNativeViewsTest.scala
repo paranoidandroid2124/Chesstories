@@ -76,7 +76,12 @@ class RuntimeNativeViewsTest extends munit.FunSuite:
       ),
       "onlyMoveConstraintResolutions" -> packetWith(packet, "onlyMoveConstraintResolutions", Nil),
       "causeExposureResolution" -> packetWith(packet, "causeExposureResolution", changedExposure),
-      "causeDispositionLedger" -> packetWith(packet, "causeDispositionLedger", changedLedger)
+      "causeDispositionLedger" -> packetWith(packet, "causeDispositionLedger", changedLedger),
+      "selectedContentClaimIds" -> packetWith(
+        packet,
+        "selectedContentClaimIds",
+        "synthetic-content-claim" :: packet.selectedContentClaimIds
+      )
     )
     val encoded = encode(packet)
     val canonicalHash = hash(packet)
@@ -138,7 +143,8 @@ class RuntimeNativeViewsTest extends munit.FunSuite:
       "playerFacingClaimDecisions" -> packet.playerFacingClaimDecisions,
       "onlyMoveConstraintResolutions" -> packet.onlyMoveConstraintResolutions,
       "causeExposureResolution" -> packet.causeExposureResolution,
-      "causeDispositionLedger" -> packet.causeDispositionLedger
+      "causeDispositionLedger" -> packet.causeDispositionLedger,
+      "selectedContentClaimIds" -> packet.selectedContentClaimIds
     )
     val constructor = classOf[EvidenceBackedJudgmentPacket].getDeclaredConstructors.head
     constructor.setAccessible(true)

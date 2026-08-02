@@ -60,7 +60,8 @@ private[runtimeadapter] object RuntimeNativeViews:
                 "playerFacingClaimDecisions" -> packet.playerFacingClaimDecisions,
                 "onlyMoveConstraintResolutions" -> packet.onlyMoveConstraintResolutions,
                 "causeExposureResolution" -> packet.causeExposureResolution,
-                "causeDispositionLedger" -> packet.causeDispositionLedger
+                "causeDispositionLedger" -> packet.causeDispositionLedger,
+                "selectedContentClaimIds" -> packet.selectedContentClaimIds
               )
             )
           )
