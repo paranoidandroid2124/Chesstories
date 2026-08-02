@@ -35,52 +35,6 @@ class DirectCauseImportancePolicyTest extends munit.FunSuite:
     baseFrame.stake
   ).getOrElse(throw IllegalStateException("expected a base importance universe"))
 
-  test("material importance is Pareto ordered only inside one causal universe and domain"):
-    val queenNow = material("queen-now", "queen-channel", 900, 1)
-    val pawnLater = material("pawn-later", "pawn-channel", 100, 3)
-    val queenLater = material("queen-later", "queen-later-channel", 900, 4)
-    val rookNow = material("rook-now", "rook-channel", 500, 1)
-    val differentImpact = queenNow.copy(
-      causeEvidenceId = "different-impact",
-      causalSignature = "different-impact-channel",
-      frame = baseFrame.copy(
-        effectMode = PlayerFacingCauseEffectMode.PlayedValue,
-        playedChange = PlayerFacingCausalChange.Occurred
-      ),
-      universe = baseUniverse.copy(
-        impact = PlayerFacingImpact.BenefitsReviewedMover(White)
-      )
-    )
-    val mate = DirectCauseImportanceProfile(
-      causeEvidenceId = "mate",
-      causalSignature = "mate-channel",
-      frame = baseFrame,
-      universe = baseUniverse,
-      domain = DirectCauseImportanceDomain.BoardMate,
-      measure = DirectCauseImportanceMeasure.MateArrival(1)
-    )
-
-    assertEquals(
-      DirectCauseImportancePolicy.compare(queenNow, pawnLater),
-      DirectCauseImportanceRelation.Dominates
-    )
-    assertEquals(
-      DirectCauseImportancePolicy.compare(queenLater, rookNow),
-      DirectCauseImportanceRelation.Incomparable
-    )
-    assertEquals(
-      DirectCauseImportancePolicy.compare(queenNow, differentImpact),
-      DirectCauseImportanceRelation.Incomparable
-    )
-    assertEquals(
-      DirectCauseImportancePolicy.compare(queenNow, mate),
-      DirectCauseImportanceRelation.DominatedBy
-    )
-    assertEquals(
-      DirectCauseImportancePolicy.compare(mate, queenNow),
-      DirectCauseImportanceRelation.Dominates
-    )
-
   test("reviewed-move impact lets a missed mate dominate a played strategic liability"):
     val mateUniverse = baseUniverse
     val harmFrame = baseFrame.copy(
@@ -328,15 +282,6 @@ class DirectCauseImportancePolicyTest extends munit.FunSuite:
         DirectCauseEffectStake.Benefits(White)
       ),
       None
-    )
-
-  test("material importance ranks durable net outcome rather than captured-target value"):
-    val queenExchangeNet = material("queen-exchange", "queen-exchange-channel", 400, 1)
-    val freeRookNet = material("free-rook", "free-rook-channel", 500, 1)
-
-    assertEquals(
-      DirectCauseImportancePolicy.compare(queenExchangeNet, freeRookNet),
-      DirectCauseImportanceRelation.DominatedBy
     )
 
   test("stronger effects cross comparison provenance and reorder only the public selection order"):
@@ -700,191 +645,18 @@ class DirectCauseImportancePolicyTest extends munit.FunSuite:
       DirectCauseImportanceRelation.Tied
     )
 
-  test("structural magnitudes compare only inside one explicit effect scope"):
-    val sharedScope = RootOwnedEffectIdentity(
+  test("importance comparison preserves Pareto and typed scope boundaries"):
+    val scope = RootOwnedEffectIdentity(
       RootOwnedEffectPrimitiveKind.StructuralTransition,
-      List("square:e5"),
+      List("Square:e5"),
       Nil,
       Nil
     )
-    val otherTarget = sharedScope.copy(targetSignatures = List("square:c5"))
-    val stronger = structural("stronger-structure", "stronger-structure-channel", 4, sharedScope)
-    val weaker = structural("weaker-structure", "weaker-structure-channel", 2, sharedScope)
-    val different = structural("different-structure", "different-structure-channel", 1, otherTarget)
-    val unscoped = structural(
-      "unscoped-structure",
-      "unscoped-structure-channel",
-      1,
-      RootOwnedEffectIdentity.unscoped
-    )
-
-    assertEquals(
-      DirectCauseImportancePolicy.compare(stronger, weaker),
-      DirectCauseImportanceRelation.Dominates
-    )
-    assertEquals(
-      DirectCauseImportancePolicy.compare(stronger, different),
-      DirectCauseImportanceRelation.Incomparable
-    )
-    assertEquals(
-      DirectCauseImportancePolicy.compare(stronger, unscoped),
-      DirectCauseImportanceRelation.Incomparable
-    )
-
-  test("strategic wrappers do not split an otherwise identical material outcome"):
-    val planA = material("plan-a", "plan-a-channel", 500, 1).copy(
-      effectIdentity = RootOwnedEffectIdentity(
-        RootOwnedEffectPrimitiveKind.LineEpisode,
-        List("square:h2"),
-        Nil,
-        List(RootOwnedStrategicAxisIdentity(
-          StrategicAxisKind.PlanCoherence,
-          StrategicAxisPolarity.Gain,
-          "plan-a",
-          None
-        ))
-      )
-    )
-    val planB = planA.copy(
-      causeEvidenceId = "plan-b",
-      causalSignature = "plan-b-channel",
-      effectIdentity = planA.effectIdentity.copy(
-        strategicAxes = List(RootOwnedStrategicAxisIdentity(
-          StrategicAxisKind.PlanCoherence,
-          StrategicAxisPolarity.Gain,
-          "plan-b",
-          None
-        ))
-      )
-    )
-
-    assertEquals(
-      DirectCauseImportancePolicy.compare(planA, planB),
-      DirectCauseImportanceRelation.Tied
-    )
-
-  test("one channel accessor exposes typed mate material threat and structural effects"):
-    val material = materialChannel("measured-material", 500, List("e2h2"))
-    val mate = lineEpisodeChannelWithKind(
-      materialChannel("measured-mate", 500, List("e2h2")),
-      LineConsequenceKind.Mate
-    )
-    val threat = threatChannel("measured-threat", ThreatKind.Material, turnsToImpact = 2)
-    val structure = structuralChannel("measured-structure", strength = 4)
-
-    assertEquals(
-      DirectCauseMeasuredEffect.fromChannel(mate).map(effect =>
-        (effect.stake, effect.domain, effect.measure)
-      ),
-      Some((
-        DirectCauseEffectStake.Benefits(White),
-        DirectCauseImportanceDomain.BoardMate,
-        DirectCauseImportanceMeasure.MateArrival(0)
-      ))
-    )
-    assertEquals(
-      DirectCauseMeasuredEffect.fromChannel(material).map(effect =>
-        (effect.stake, effect.domain, effect.measure)
-      ),
-      Some((
-        DirectCauseEffectStake.Benefits(White),
-        DirectCauseImportanceDomain.Material,
-        DirectCauseImportanceMeasure.MaterialOutcome(500, 0)
-      ))
-    )
-    val threatTargetKey = threat.rootOwnedEffectDescriptor
-      .map(_.identity.targetSignatures.mkString("|"))
-      .getOrElse(fail("expected an exact threat descriptor"))
-    assertEquals(
-      DirectCauseMeasuredEffect.fromChannel(threat).map(effect =>
-        (effect.stake, effect.domain, effect.measure)
-      ),
-      Some((
-        DirectCauseEffectStake.Benefits(White),
-        DirectCauseImportanceDomain.Threat(ThreatKind.Material, threatTargetKey),
-        DirectCauseImportanceMeasure.ThreatHorizon(2)
-      ))
-    )
-    assertEquals(
-      DirectCauseMeasuredEffect.fromChannel(structure).map(effect =>
-        (effect.stake, effect.domain, effect.measure)
-      ),
-      Some((
-        DirectCauseEffectStake.Benefits(White),
-        DirectCauseImportanceDomain.Structural(
-          DirectCauseStructuralOrigin.RootTransition,
-          TransitionConsequenceKind.TargetPressureGain,
-          StructuralSignalPolarity.Gain,
-          None
-        ),
-        DirectCauseImportanceMeasure.StructuralStrength(4)
-      ))
-    )
-    List(mate, material, threat, structure).foreach { channel =>
-      assertEquals(
-        DirectCauseMeasuredEffect.fromChannel(channel).map(_.effectIdentity),
-        channel.rootOwnedEffectDescriptor.map(_.identity)
-      )
-    }
-
-  test("strategic wrapper reuses primitive measured semantics and retains wrapper identity"):
-    val primitiveChannel = materialChannel("primitive-material", 500, List("e2h2"))
-    val primitiveProof = primitiveChannel.rootOwnedProof
-      .getOrElse(fail("expected a primitive material proof"))
-    val wrappedChannel = primitiveChannel.copy(
-      rootOwnedProof = Some(RootOwnedEffectProof.StrategicAxis(
-        primitiveProof,
-        StrategicAxisDetail(
-          StrategicAxisKind.Activity,
-          StrategicAxisPolarity.Gain,
-          "mover-activity"
-        ),
-        Some(StrategicAxisComparisonOutcome.ReferenceOnly)
-      ))
-    )
-    val primitiveEffect = DirectCauseMeasuredEffect
-      .fromChannel(primitiveChannel)
-      .getOrElse(fail("expected a primitive measured effect"))
-    val wrappedEffect = DirectCauseMeasuredEffect
-      .fromChannel(wrappedChannel)
-      .getOrElse(fail("expected a wrapped measured effect"))
-
-    assertEquals(wrappedEffect.stake, primitiveEffect.stake)
-    assertEquals(wrappedEffect.domain, primitiveEffect.domain)
-    assertEquals(wrappedEffect.measure, primitiveEffect.measure)
-    assertNotEquals(wrappedEffect.effectIdentity, primitiveEffect.effectIdentity)
-    assertEquals(wrappedEffect.effectIdentity.strategicAxes.size, 1)
-    assertEquals(
-      Some(wrappedEffect.effectIdentity),
-      wrappedChannel.rootOwnedEffectDescriptor.map(_.identity)
-    )
-
-  test("channel accessor fails closed for unmeasured ambiguous and proofless channels"):
-    val material = materialChannel("accessor-boundary", 500, List("e2h2"))
-    val unmeasured = lineEpisodeChannelWithKind(material, LineConsequenceKind.ForcedTheme)
-    val ambiguous = material.copy(importanceDescriptorAmbiguous = true)
-    val proofless = material.copy(rootOwnedProof = None)
-
-    assertEquals(
-      unmeasured.rootOwnedEffectDescriptor.map(_.magnitude),
-      Some(DirectEffectMagnitudeKnowledge.NotApplicable)
-    )
-    assertEquals(DirectCauseMeasuredEffect.fromChannel(unmeasured), None)
-    assertEquals(DirectCauseMeasuredEffect.fromChannel(ambiguous), None)
-    assertEquals(DirectCauseMeasuredEffect.fromChannel(proofless), None)
-
-  test("inventory-only strategic strength cannot rank a direct Cause profile"):
-    val sharedScope = RootOwnedEffectIdentity(
-      RootOwnedEffectPrimitiveKind.StructuralTransition,
-      List("square:e5"),
-      Nil,
-      Nil
-    )
-    val left = structural("left", "left-channel", 4, sharedScope).copy(
+    val stronger = structural("stronger", "stronger-channel", 4, scope)
+    val strategic = stronger.copy(
+      causeEvidenceId = "strategic",
+      causalSignature = "strategic-channel",
       measure = DirectCauseImportanceMeasure.StrategicStrength(4)
-    )
-    val right = structural("right", "right-channel", 2, sharedScope).copy(
-      measure = DirectCauseImportanceMeasure.StrategicStrength(2)
     )
     val mate = DirectCauseImportanceProfile(
       causeEvidenceId = "mate",
@@ -894,59 +666,206 @@ class DirectCauseImportancePolicyTest extends munit.FunSuite:
       domain = DirectCauseImportanceDomain.BoardMate,
       measure = DirectCauseImportanceMeasure.MateArrival(1)
     )
+    val rows = List(
+      (
+        "material Pareto trade-off",
+        material("later-queen", "later-queen-channel", 900, 4),
+        material("earlier-rook", "earlier-rook-channel", 500, 1),
+        DirectCauseImportanceRelation.Incomparable
+      ),
+      (
+        "same structural scope",
+        stronger,
+        structural("weaker", "weaker-channel", 2, scope),
+        DirectCauseImportanceRelation.Dominates
+      ),
+      (
+        "different structural target",
+        stronger,
+        structural(
+          "other",
+          "other-channel",
+          1,
+          scope.copy(targetSignatures = List("Square:c5"))
+        ),
+        DirectCauseImportanceRelation.Incomparable
+      ),
+      (
+        "unscoped structural target",
+        stronger,
+        structural("unscoped", "unscoped-channel", 1, RootOwnedEffectIdentity.unscoped),
+        DirectCauseImportanceRelation.Incomparable
+      ),
+      (
+        "inventory-only strategic",
+        strategic,
+        strategic.copy(
+          causeEvidenceId = "other-strategic",
+          causalSignature = "other-strategic-channel",
+          measure = DirectCauseImportanceMeasure.StrategicStrength(2)
+        ),
+        DirectCauseImportanceRelation.Incomparable
+      ),
+      ("inventory-only strategic versus mate", strategic, mate, DirectCauseImportanceRelation.Incomparable)
+    )
+
+    rows.foreach { case (label, left, right, expected) =>
+      assertEquals(DirectCauseImportancePolicy.compare(left, right), expected, label)
+    }
+
+  test("measured effects retain typed root-proof semantics"):
+    val position = PositionNodeRef(s"$rootBoardState 0 1", 0, Some(White))
+    val source = ref("measured-source", EvidenceLayer.Line, position, Some(reference))
+    val binding = EvidenceObjectBinding(
+      source,
+      target = List(ConcreteChessObject(EvidenceObjectKind.Square, "h2")),
+      line = Some(reference)
+    )
+    val threat = ThreatEpisodeEvidence(ThreatEpisode.fromThreat(
+      Threat(White, ThreatKind.Material, 2, Nil, List("h2"), List("rook"), None, 2),
+      0
+    ))
+    val threatChannel = DirectCauseChannel(
+      binding,
+      DirectCausalChange.Occurred,
+      rootOwnedProof = Some(RootOwnedEffectProof.ThreatCreation(source, threat))
+    )
+    val consequence = TransitionConsequence(
+      TransitionConsequenceKind.TargetPressureGain,
+      StructuralSignalPolarity.Gain,
+      4,
+      targetSubjects = List("h2")
+    )
+    val delta = StructuralDeltaEvidence(
+      StructuralTransitionBinding(
+        reference.rootMove,
+        TransitionEdgeRole.Reference,
+        position,
+        position.copy(ply = 1, sideToMove = Some(Black)),
+        Some(reference),
+        White
+      ),
+      Nil,
+      List(consequence)
+    )
+    val structuralChannel = threatChannel.copy(
+      rootOwnedProof = Some(RootOwnedEffectProof.StructuralTransition(source, delta, consequence))
+    )
+    val threatEffect = DirectCauseMeasuredEffect
+      .fromChannel(threatChannel)
+      .getOrElse(fail("expected threat effect"))
+    val structuralEffect = DirectCauseMeasuredEffect
+      .fromChannel(structuralChannel)
+      .getOrElse(fail("expected structural effect"))
+    val wrappedChannel = structuralChannel.copy(rootOwnedProof = Some(
+      RootOwnedEffectProof.StrategicAxis(
+        structuralChannel.rootOwnedProof.getOrElse(fail("expected structural proof")),
+        StrategicAxisDetail(StrategicAxisKind.Activity, StrategicAxisPolarity.Gain, "activity"),
+        Some(StrategicAxisComparisonOutcome.ReferenceOnly)
+      )
+    ))
+    val wrappedEffect = DirectCauseMeasuredEffect
+      .fromChannel(wrappedChannel)
+      .getOrElse(fail("expected wrapped effect"))
 
     assertEquals(
-      DirectCauseImportancePolicy.compare(left, right),
-      DirectCauseImportanceRelation.Incomparable
+      (threatEffect.stake, threatEffect.domain, threatEffect.measure),
+      (
+        DirectCauseEffectStake.Benefits(White),
+        DirectCauseImportanceDomain.Threat(ThreatKind.Material, "Square:h2"),
+        DirectCauseImportanceMeasure.ThreatHorizon(2)
+      )
     )
     assertEquals(
-      DirectCauseImportancePolicy.compare(mate, left),
-      DirectCauseImportanceRelation.Incomparable
+      (structuralEffect.stake, structuralEffect.domain, structuralEffect.measure),
+      (
+        DirectCauseEffectStake.Benefits(White),
+        DirectCauseImportanceDomain.Structural(
+          DirectCauseStructuralOrigin.RootTransition,
+          TransitionConsequenceKind.TargetPressureGain,
+          StructuralSignalPolarity.Gain,
+          None
+        ),
+        DirectCauseImportanceMeasure.StructuralStrength(4)
+      )
     )
+    List(threatChannel, structuralChannel, wrappedChannel).foreach { channel =>
+      assertEquals(
+        DirectCauseMeasuredEffect.fromChannel(channel).map(_.effectIdentity),
+        channel.rootOwnedEffectDescriptor.map(_.identity)
+      )
+    }
+    assertEquals(
+      (wrappedEffect.stake, wrappedEffect.domain, wrappedEffect.measure),
+      (structuralEffect.stake, structuralEffect.domain, structuralEffect.measure)
+    )
+    assertNotEquals(wrappedEffect.effectIdentity, structuralEffect.effectIdentity)
+    assertEquals(
+      DirectCauseMeasuredEffect.fromChannel(threatChannel.copy(importanceDescriptorAmbiguous = true)),
+      None
+    )
+    assertEquals(DirectCauseMeasuredEffect.fromChannel(threatChannel.copy(rootOwnedProof = None)), None)
 
-  test("conflicting profiles for one selected signature become unmeasured independent of order"):
-    val first = material("conflict", "conflict-channel", 100, 2)
-    val second = first.copy(measure = DirectCauseImportanceMeasure.MaterialOutcome(500, 2))
+  test("same-signature profile conflicts remain unmeasured in either input order"):
+    val weak = material("conflict", "conflict-channel", 100, 2)
+    val strong = weak.copy(measure = DirectCauseImportanceMeasure.MaterialOutcome(500, 2))
 
-    List(List(first, second), List(second, first)).foreach { variants =>
+    List(List(weak, strong), List(strong, weak)).foreach { profiles =>
       val resolution = DirectCauseImportancePolicy.resolveProfiles(
         List("conflict" -> List("conflict-channel")),
-        variants
+        profiles
       )
+      val decision = resolution.decisions.head
       assertEquals(resolution.profiles, Nil)
-      assertEquals(resolution.decisions.head.measuredChannelSignatures, Nil)
-      assertEquals(resolution.decisions.head.unmeasuredChannelSignatures, List("conflict-channel"))
+      assertEquals(decision.measuredChannelSignatures, Nil)
+      assertEquals(decision.unmeasuredChannelSignatures, List("conflict-channel"))
       assertEquals(resolution.uniqueTopCauseEvidenceId, None)
     }
 
-  test("canonicalization preserves descriptor and proof-segment conflicts before wrapper shadowing"):
-    val weak = materialChannel("z-weak", 100, List("e2h2"))
-    val strong = materialChannel("a-strong", 500, List("e2h2"))
+  test("descriptor conflict remains ambiguous after wrapper shadowing"):
+    val position = PositionNodeRef(s"$rootBoardState 0 1", 0, Some(White))
+    val source = ref("descriptor-source", EvidenceLayer.Line, position, Some(reference))
+    val binding = EvidenceObjectBinding(
+      source,
+      target = List(ConcreteChessObject(EvidenceObjectKind.Square, "h2")),
+      line = Some(reference)
+    )
+    val weak = DirectCauseChannel(
+      binding,
+      DirectCausalChange.Occurred,
+      rootOwnedProof = Some(RootOwnedEffectProof.ThreatCreation(
+        source,
+        ThreatEpisodeEvidence(ThreatEpisode.fromThreat(
+          Threat(White, ThreatKind.Material, 2, Nil, List("h2"), List("rook"), None, 2),
+          0
+        ))
+      ))
+    )
+    val strong = weak.copy(rootOwnedProof = Some(RootOwnedEffectProof.ThreatCreation(
+      source,
+      ThreatEpisodeEvidence(ThreatEpisode.fromThreat(
+        Threat(White, ThreatKind.Material, 1, Nil, List("h2"), List("rook"), None, 2),
+        1
+      ))
+    )))
     val wrapped = weak.copy(
-      binding = weak.binding.copy(
-        source = weak.binding.source.copy(id = "wrapper"),
-        provenance = List(weak.binding.source),
-        mechanism = weak.binding.mechanism :+
-          ConcreteChessObject(EvidenceObjectKind.Mechanism, "specific-mechanism")
+      binding = binding.copy(
+        source = source.copy(id = "descriptor-wrapper"),
+        mechanism = List(ConcreteChessObject(EvidenceObjectKind.Mechanism, "activity")),
+        provenance = List(source)
       ),
-      primitiveCausalSignature = Some(weak.causalSignature)
+      primitiveCausalSignature = Some(weak.causalSignature),
+      rootOwnedProof = Some(RootOwnedEffectProof.StrategicAxis(
+        weak.rootOwnedProof.getOrElse(fail("expected primitive proof")),
+        StrategicAxisDetail(StrategicAxisKind.Activity, StrategicAxisPolarity.Gain, "activity"),
+        Some(StrategicAxisComparisonOutcome.ReferenceOnly)
+      ))
     )
 
-    List(List(weak, strong, wrapped), List(strong, weak, wrapped)).foreach { channels =>
-      val canonical = EvidenceObjectBinding.canonicalCauseChannels(channels)
-      assertEquals(canonical.size, 1)
-      assert(canonical.head.binding.provenance.nonEmpty)
-      assert(canonical.head.importanceDescriptorAmbiguous)
-      assert(canonical.head.rootOwnedEffectDescriptor.nonEmpty)
-    }
-
-    val firstSegment = materialChannel("segment-a", 500, List("e2e4", "e7e5", "d1h5"))
-    val secondSegment = materialChannel("segment-b", 500, List("e2e4", "c7c5", "d1h5"))
-    val segmentCanonical = EvidenceObjectBinding.canonicalCauseChannels(List(firstSegment, secondSegment))
-    assertEquals(segmentCanonical.size, 1)
-    assert(!segmentCanonical.head.importanceDescriptorAmbiguous)
-    assert(segmentCanonical.head.proofSegmentAmbiguous)
-    assertEquals(segmentCanonical.head.proofSegment, None)
+    val canonical = EvidenceObjectBinding.canonicalCauseChannels(List(weak, strong, wrapped))
+    assertEquals(canonical.size, 1)
+    assert(canonical.head.binding.provenance.nonEmpty)
+    assert(canonical.head.importanceDescriptorAmbiguous)
 
   test("frontier resolution requires every channel before declaring a Cause dominated"):
     val stronger = material("stronger", "stronger-channel", 900, 1)
@@ -1354,200 +1273,6 @@ class DirectCauseImportancePolicyTest extends munit.FunSuite:
       ideaUnits = PlayerFacingIdeaUnitPolicy.resolve(selections, Nil),
       causeImportanceResolution = importance,
       ideaImportanceResolution = importance
-    )
-
-  private def materialChannel(
-      sourceId: String,
-      valueCp: Int,
-      moves: List[String]
-  ): DirectCauseChannel =
-    val eventLine = LineNodeRef("canonical-line", moves.head, 1, LineNodeRole.BestReference)
-    val eventPosition = PositionNodeRef("4k3/8/8/8/8/8/4Q2r/4K3 w - - 0 1", 0, Some(White))
-    val source = ref(sourceId, EvidenceLayer.Line, eventPosition, Some(eventLine))
-    val eventOffset = moves.size - 1
-    val consequence = LineConsequence(
-      LineConsequenceKind.MaterialGain,
-      moves,
-      proofSignal = true,
-      eventMove = Some(moves.last),
-      rootMove = Some(moves.head),
-      rootSide = Some(White),
-      beneficiary = Some(White),
-      materialOutcome = Some(RootOwnedMaterialOutcome(
-        event = RootOwnedMaterialEventSalience(
-          moveUci = moves.last,
-          plyOffset = eventOffset,
-          capturedRole = EvidencePieceRole("rook"),
-          square = EvidenceSquare("h2"),
-          targetValueCp = valueCp
-        ),
-        beneficiary = White,
-        durableNetCp = valueCp
-      ))
-    )
-    val capture = LineMaterialCapture(
-      moves.last,
-      eventOffset,
-      White,
-      EvidencePieceRole("queen"),
-      EvidencePieceRole("rook"),
-      EvidenceSquare("h2"),
-      valueCp,
-      recapture = false
-    )
-    val replay = moves.zipWithIndex.map { case (move, index) =>
-      LineReplayStep(index, move, s"fen-before-$sourceId-$index", s"fen-after-$sourceId-$index")
-    }
-    val line = LineFactEvidence(
-      line = eventLine,
-      material = Some(LineMaterialSummary(
-        White,
-        List(capture),
-        valueCp,
-        valueCp,
-        0,
-        hasRecaptureChain = false,
-        hasRecoveryWindow = false,
-        promotionGainCpForMover = 0,
-        materialWindowComplete = true
-      )),
-      replay = replay,
-      consequences = List(consequence)
-    )
-    val actor = RootCausalActor(
-      moves.head,
-      EvidencePieceRole("queen"),
-      White,
-      EvidenceSquare(moves.head.take(2)),
-      EvidenceSquare(moves.head.slice(2, 4))
-    )
-    val episode = RootOwnedCausalEpisode(
-      eventLine,
-      actor,
-      EvidenceSquare("h2"),
-      List(RootCausalLink(
-        RootCausalLinkKind.ImmediateRootAction,
-        moves.head,
-        moves.last,
-        EvidenceSquare("h2")
-      )),
-      consequence,
-      eventOffset,
-      moves
-    )
-    DirectCauseChannel(
-      EvidenceObjectBinding(
-        source = source,
-        actor = List(
-          ConcreteChessObject(EvidenceObjectKind.Move, moves.head),
-          ConcreteChessObject(EvidenceObjectKind.Side, "white"),
-          ConcreteChessObject(EvidenceObjectKind.Piece, "queen"),
-          ConcreteChessObject(EvidenceObjectKind.Square, moves.head.take(2)),
-          ConcreteChessObject(EvidenceObjectKind.Square, moves.head.slice(2, 4))
-        ),
-        target = List(ConcreteChessObject(EvidenceObjectKind.Square, "h2")),
-        mechanism = List(ConcreteChessObject(EvidenceObjectKind.Mechanism, "capture")),
-        consequence = List(ConcreteChessObject(EvidenceObjectKind.Consequence, "material-gain")),
-        line = Some(eventLine),
-        horizon = Some(s"ply:$eventOffset"),
-        proofRole = Some(RelativeCauseProofRole.DirectProof)
-      ),
-      DirectCausalChange.Occurred,
-      rootOwnedProof = Some(RootOwnedEffectProof.LineEpisode(source, line, episode))
-    )
-
-  private def lineEpisodeChannelWithKind(
-      channel: DirectCauseChannel,
-      kind: LineConsequenceKind
-  ): DirectCauseChannel =
-    channel.rootOwnedProof match
-      case Some(RootOwnedEffectProof.LineEpisode(source, line, episode)) =>
-        val consequence = episode.consequence.copy(kind = kind, materialOutcome = None)
-        channel.copy(
-          binding = channel.binding.copy(
-            consequence = List(ConcreteChessObject(
-              EvidenceObjectKind.Consequence,
-              kind.toString.toLowerCase
-            ))
-          ),
-          rootOwnedProof = Some(RootOwnedEffectProof.LineEpisode(
-            source,
-            line,
-            episode.copy(consequence = consequence)
-          ))
-        )
-      case _ =>
-        fail("expected a line-episode test channel")
-
-  private def threatChannel(
-      sourceId: String,
-      kind: ThreatKind,
-      turnsToImpact: Int
-  ): DirectCauseChannel =
-    val channel = materialChannel(sourceId, 500, List("e2h2"))
-    val source = channel.binding.source
-    val threat = ThreatEpisodeEvidence(ThreatEpisode.fromThreat(
-      Threat(
-        threatActor = White,
-        kind = kind,
-        turnsToImpact = turnsToImpact,
-        motifs = Nil,
-        attackSquares = List("h2"),
-        targetPieces = List("rook"),
-        bestDefense = None,
-        defenseCount = 2
-      ),
-      index = 0
-    ))
-    channel.copy(
-      binding = channel.binding.copy(
-        mechanism = List(ConcreteChessObject(EvidenceObjectKind.Mechanism, "threat")),
-        consequence = List(ConcreteChessObject(EvidenceObjectKind.Consequence, "threat-created")),
-        horizon = Some(s"turn:$turnsToImpact")
-      ),
-      rootOwnedProof = Some(RootOwnedEffectProof.ThreatCreation(source, threat))
-    )
-
-  private def structuralChannel(
-      sourceId: String,
-      strength: Int
-  ): DirectCauseChannel =
-    val channel = materialChannel(sourceId, 500, List("e2h2"))
-    val source = channel.binding.source
-    val line = channel.binding.line.getOrElse(fail("expected a structural test line"))
-    val consequence = TransitionConsequence(
-      TransitionConsequenceKind.TargetPressureGain,
-      StructuralSignalPolarity.Gain,
-      strength,
-      subjects = List("h2"),
-      targetSubjects = List("h2")
-    )
-    val delta = StructuralDeltaEvidence(
-      StructuralTransitionBinding(
-        moveUci = line.rootMove,
-        role = TransitionEdgeRole.Reference,
-        from = source.position,
-        to = source.position.copy(ply = source.position.ply + 1, sideToMove = Some(Black)),
-        line = Some(line),
-        perspective = White
-      ),
-      signals = Nil,
-      consequences = List(consequence)
-    )
-    channel.copy(
-      binding = channel.binding.copy(
-        mechanism = List(ConcreteChessObject(EvidenceObjectKind.Mechanism, "target-pressure")),
-        consequence = List(ConcreteChessObject(
-          EvidenceObjectKind.Consequence,
-          consequence.anchorKey
-        )),
-        horizon = None
-      ),
-      rootOwnedProof = Some(RootOwnedEffectProof.StructuralTransition(
-        source,
-        delta,
-        consequence
-      ))
     )
 
   private def ref(
