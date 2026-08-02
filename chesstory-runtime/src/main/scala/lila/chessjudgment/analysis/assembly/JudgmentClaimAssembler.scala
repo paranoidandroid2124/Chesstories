@@ -61,7 +61,8 @@ object JudgmentClaimAssembler:
       moveUci: Option[String],
       evidence: List[EvidenceRef],
       scope: EvidenceScope,
-      confidence: EvidenceConfidence
+      confidence: EvidenceConfidence,
+      content: Option[JudgmentClaimContent] = None
   ): JudgmentClaim =
     val canonicalFamily =
       if subject == ClaimSubject.Plan then ClaimFamily.Plan
@@ -75,7 +76,8 @@ object JudgmentClaimAssembler:
       subjectMove = moveUci,
       evidence = evidence,
       scope = scope,
-      confidence = confidence
+      confidence = confidence,
+      content = content
     )
 
   private def tacticalClaims(
@@ -188,14 +190,16 @@ object JudgmentClaimAssembler:
     context.evidenceGraph.records.flatMap {
       case EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents)
           if payload.canAnchorPawnStructureClaim =>
-        val primaryLine = pawnStructureMechanismPrimaryLine(context, ref)
-        val evidence =
+        val contentRoute = strategicMechanismContentEvidence(context, EvidenceRecord(ref, payload, parents))
+        val primaryLine = contentRoute.map(_._1).orElse(pawnStructureMechanismPrimaryLine(context, ref))
+        val evidence = contentRoute.map(_._2).getOrElse(
           longTermClaimEvidence(
             ref :: parents ++
               pawnStructureMechanismTransitionEvidence(context, ref) ++
               primaryLine.toList.flatMap(lineLayerRefs(context, _)) ++
               recordsForPosition(context, EvidenceLayer.Board, ref.position)
           )
+        )
         Option.when(primaryLine.nonEmpty && evidence.nonEmpty) {
           judgmentClaimFromEvidence(
             id = allocator.evidenceId(s"claim:pawn-structure-mechanism:${allocator.key(ref.id)}"),
@@ -206,7 +210,8 @@ object JudgmentClaimAssembler:
             moveUci = primaryLine.map(_.rootMove),
             evidence = evidence,
             scope = ref.scope,
-            confidence = ref.confidence
+            confidence = ref.confidence,
+            content = contentRoute.map(_ => JudgmentClaimContent.StrategicMechanism(ref))
           )
         }
       case _ =>
@@ -259,41 +264,37 @@ object JudgmentClaimAssembler:
       context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator
   ): List[JudgmentClaim] =
-    context.relativeAssessments.map { assessment =>
-      val evidence =
-        (assessment.evidence ::
-          primaryCandidateComparisonEvidence(context, assessment) ++
-          lineLayerRefs(context, assessment.reference.ref) ++
-          lineLayerRefs(context, assessment.candidate.ref)).distinctBy(_.id)
-      judgmentClaimFromEvidence(
-        id = allocator.evidenceId(s"claim:evaluation:${allocator.key(assessment.evidence.id)}"),
-        family = ClaimFamily.Evaluation,
-        subject = ClaimSubject.PlayedMove,
-        primaryPosition = assessment.played.from,
-        primaryLine = Some(assessment.candidate.ref),
-        moveUci = Some(assessment.played.moveUci),
-        evidence = evidence,
-        scope = assessment.evidence.scope,
-        confidence = assessment.confidence
-      )
-    }
-
-  private def primaryCandidateComparisonEvidence(
-      context: JudgmentAssemblyContext,
-      assessment: RelativeMoveAssessment
-  ): List[EvidenceRef] =
-    context.evidenceGraph
-      .candidateComparisonRecord(assessment.primaryComparisonEvidence)
-      .filter {
-        case EvidenceRecord(_, CandidateComparisonEvidence(fact), _) =>
-          fact.kind == CandidateComparisonKind.PlayedVsBest &&
-            fact.referenceLine == assessment.reference.ref &&
-            fact.candidateLine == assessment.candidate.ref
+    context.playedTransition.toList.flatMap { played =>
+      val playedMove = JudgmentSubjectBinding.normalizeMove(played.moveUci)
+      val playedMoves = Set(playedMove).filter(_.nonEmpty)
+      context.evidenceGraph.records.flatMap {
+        case EvidenceRecord(ref, CandidateComparisonEvidence(fact), _)
+            if ref.producer == EvidenceProducer.RelativeMoveProducer &&
+              ref.layer == EvidenceLayer.CandidateComparison &&
+              ref.position == played.from &&
+              playedMoves.nonEmpty &&
+              JudgmentSubjectBinding.comparisonBinding(fact, playedMoves) != SubjectBindingClass.Other =>
+          JudgmentSubjectBinding.uniquePlayedEndpoint(fact, playedMoves).map { endpoint =>
+            val identity = CandidateComparisonSemanticKey.from(fact)
+            judgmentClaimFromEvidence(
+              id = allocator.evidenceId(
+                s"claim:evaluation:comparison:${allocator.key(ref.id)}"
+              ),
+              family = ClaimFamily.Evaluation,
+              subject = ClaimSubject.PlayedMove,
+              primaryPosition = ref.position,
+              primaryLine = Some(endpoint),
+              moveUci = Some(played.moveUci),
+              evidence = List(ref),
+              scope = ref.scope,
+              confidence = ref.confidence,
+              content = Some(JudgmentClaimContent.CandidateComparison(ref, identity))
+            )
+          }
         case _ =>
-          false
+          None
       }
-      .map(_.ref)
-      .toList
+    }
 
   private def relativeCauseClaims(
       context: JudgmentAssemblyContext,
@@ -530,34 +531,57 @@ object JudgmentClaimAssembler:
     context.evidenceGraph.records.flatMap {
       case EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents)
           if lineBoundLongTermMechanism(ref) && (payload.canAnchorStrategicClaim || payload.canAnchorPlanClaim) =>
-        val subject =
-          if payload.kind == StrategicMechanismKind.PlanPressure && payload.canAnchorPlanClaim then ClaimSubject.Plan
-          else ref.line.map(_.role.subject).getOrElse(ClaimSubject.Position)
-        val evidence =
-          longTermClaimEvidence(
-              ref :: parents ++
-              ref.line.toList.flatMap(lineLayerRefs(context, _)) ++
-              recordsForPosition(context, EvidenceLayer.Board, ref.position)
+        val contentRoute = strategicMechanismContentEvidence(context, EvidenceRecord(ref, payload, parents))
+        if contentRoute.nonEmpty && payload.canAnchorPawnStructureClaim then None
+        else
+          val subject =
+            if payload.kind == StrategicMechanismKind.PlanPressure && payload.canAnchorPlanClaim then ClaimSubject.Plan
+            else ref.line.map(_.role.subject).getOrElse(ClaimSubject.Position)
+          val evidence = contentRoute.map(_._2).getOrElse(
+            longTermClaimEvidence(
+                ref :: parents ++
+                ref.line.toList.flatMap(lineLayerRefs(context, _)) ++
+                recordsForPosition(context, EvidenceLayer.Board, ref.position)
+            )
           )
-        Option.when(evidence.nonEmpty) {
-          judgmentClaimFromEvidence(
-            id = allocator.evidenceId(s"claim:strategic-mechanism:${allocator.key(ref.id)}"),
-            family = ClaimFamily.Strategic,
-            subject = subject,
-            primaryPosition = ref.position,
-            primaryLine = ref.line,
-            moveUci = ref.line.map(_.rootMove),
-            evidence = evidence,
-            scope = ref.scope,
-            confidence = ref.confidence
-          )
-        }
+          Option.when(evidence.nonEmpty) {
+            judgmentClaimFromEvidence(
+              id = allocator.evidenceId(s"claim:strategic-mechanism:${allocator.key(ref.id)}"),
+              family = ClaimFamily.Strategic,
+              subject = subject,
+              primaryPosition = ref.position,
+              primaryLine = ref.line,
+              moveUci = ref.line.map(_.rootMove),
+              evidence = evidence,
+              scope = ref.scope,
+              confidence = ref.confidence,
+              content = contentRoute.map(_ => JudgmentClaimContent.StrategicMechanism(ref))
+            )
+          }
       case _ =>
         None
     }
 
   private def lineBoundLongTermMechanism(ref: EvidenceRef): Boolean =
     ref.line.exists(_.role == LineNodeRole.Played)
+
+  /** A line-bound wrapper proposes only its direct, currently registered
+    * closure. Ja decides whether that closure is complete; Jp never falls
+    * back to same-position Board or opening siblings for content.
+    */
+  private def strategicMechanismContentEvidence(
+      context: JudgmentAssemblyContext,
+      wrapper: EvidenceRecord
+  ): Option[(LineNodeRef, List[EvidenceRef])] =
+    wrapper match
+      case EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents)
+          if ref.producer == EvidenceProducer.StrategicMechanismProducer &&
+            ref.layer == EvidenceLayer.StrategicMechanism =>
+        ref.line.filter(_.role == LineNodeRole.Played).map { line =>
+          line -> (ref :: parents ++ payload.signals.map(_.source) ++ lineLayerRefs(context, line)).distinct
+        }
+      case _ =>
+        None
 
   private def pawnStructureMechanismPrimaryLine(
       context: JudgmentAssemblyContext,

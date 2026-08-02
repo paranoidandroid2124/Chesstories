@@ -43,7 +43,8 @@ final case class ClaimRankingResult(
     causeDispositionLedger: CauseDispositionLedger,
     causeDominanceDecisions: List[RelativeCauseDominanceDecision],
     crossComparisonExposureDecisions: List[CrossComparisonExposureDecision],
-    onlyMoveConstraintResolutions: List[OnlyMoveConstraintResolution]
+    onlyMoveConstraintResolutions: List[OnlyMoveConstraintResolution],
+    selectedContentClaimIds: List[String]
 ):
   def rankedClaims: List[JudgmentClaim] =
     ranked.map(_.claim)
@@ -79,8 +80,7 @@ object ClaimCandidateGraphAssembler:
               graph.comparisonFor(assessment).map(_.comparison).toList
             case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
               graph.comparisonFor(cause).map(_.comparison).toList
-            case EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
-                if fact.kind == CandidateComparisonKind.PlayedVsBest =>
+            case EvidenceRecord(_, CandidateComparisonEvidence(fact), _) =>
               List(fact.comparison)
             case _ =>
               Nil
@@ -228,7 +228,8 @@ object ClaimDeduplicator:
       primaryPosition: SemanticPositionKey,
       primaryLine: Option[SemanticLineKey],
       subjectMove: Option[String],
-      evidence: RankEvidenceKey
+      evidence: RankEvidenceKey,
+      contentIdentity: Option[JudgmentClaimContent]
   )
 
   private def key(
@@ -257,7 +258,8 @@ object ClaimDeduplicator:
       primaryPosition = semanticPositionKey(claim.primaryPosition),
       primaryLine = claim.primaryLine.map(semanticLineKey),
       subjectMove = semanticMove(claim.subjectMove),
-      evidence = evidenceKey
+      evidence = evidenceKey,
+      contentIdentity = claim.content
     )
 
   private def relativeCauseRankSignature(
@@ -295,6 +297,7 @@ object ClaimDeduplicator:
       graph: TypedEvidenceGraph
   ): Boolean =
     claim.family.isLongTerm &&
+      claim.content.isEmpty &&
       ClaimCandidateGraphAssembler.comparisonForClaim(claim, graph).isEmpty &&
       claim.evidence.nonEmpty &&
       !claim.evidence.exists(ref => ClaimEvidenceSemantics.longTermSupportExcludedLayer(ref.layer)) &&
@@ -323,7 +326,7 @@ object ClaimDeduplicator:
     val mergedClaim = mergeClaims(list.map(_.claim), graph)
     val mergedPresentLayers = list.flatMap(_.presentLayers).toSet
     val mergedMissingLayerGroups = list.flatMap(_.missingLayerGroups).distinct
-    val mergedMissingEvidence = list.flatMap(_.missingEvidence).distinctBy(_.id)
+    val mergedMissingEvidence = list.flatMap(_.missingEvidence).distinct
     list.maxBy(decision => score(decision, graph)).copy(
       claim = mergedClaim,
       presentLayers = mergedPresentLayers,
@@ -394,6 +397,38 @@ object ClaimDeduplicator:
 
 object ClaimArbitrator:
 
+  /** Content selection is intentionally separate from Cause exposure and host
+    * tiering. Ja has already certified the exact F binding; R emits one claim
+    * id per semantic identity in deterministic serialization order.
+    */
+  private[assembly] def contentClaimIds(
+    decisions: List[ClaimAdmissionDecision]
+  ): List[String] =
+    val eligible = decisions.flatMap {
+      case ClaimAdmissionDecision(claim, ClaimAdmissionStatus.Certified, _, _, _) =>
+        claim.content.map(claim -> _)
+      case _ => None
+    }
+    eligible
+      .groupBy { case (_, content) => selectionIdentity(content) }
+      .values
+      .collect { case entry :: Nil => entry }
+      .toList
+      .sortBy { case (claim, content) => (contentOrderKey(content), claim.id) }
+      .map(_._1.id)
+
+  private def selectionIdentity(
+      content: JudgmentClaimContent
+  ): Either[CandidateComparisonSemanticKey, EvidenceRef] =
+    content match
+      case JudgmentClaimContent.CandidateComparison(_, comparison) => Left(comparison)
+      case JudgmentClaimContent.StrategicMechanism(carrier) => Right(carrier)
+
+  private def contentOrderKey(content: JudgmentClaimContent): (Int, String) =
+    content match
+      case JudgmentClaimContent.CandidateComparison(_, comparison) => 0 -> comparison.stableKey
+      case JudgmentClaimContent.StrategicMechanism(carrier) => 1 -> carrier.id
+
   private[assembly] def canonicalHostRows(
       claims: List[JudgmentClaim],
       exposure: PlayerFacingCauseExposureResolution,
@@ -436,5 +471,6 @@ object ClaimArbitrator:
         CauseDispositionPolicy.resolve(graph, deduplication, exposure),
       causeDominanceDecisions = exposure.dominanceDecisions,
       crossComparisonExposureDecisions = exposure.crossDecisions,
-      onlyMoveConstraintResolutions = exposure.onlyMoveConstraintResolutions
+      onlyMoveConstraintResolutions = exposure.onlyMoveConstraintResolutions,
+      selectedContentClaimIds = contentClaimIds(deduplication.decisions)
     )

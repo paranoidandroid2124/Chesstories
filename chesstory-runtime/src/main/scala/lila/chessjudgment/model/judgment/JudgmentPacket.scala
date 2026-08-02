@@ -84,6 +84,16 @@ object JudgmentSubjectBinding:
       case _ =>
         SubjectBindingClass.Other
 
+  private[chessjudgment] def uniquePlayedEndpoint(
+      fact: CandidateComparisonFact,
+      playedMoves: Set[String]
+  ): Option[LineNodeRef] =
+    List(fact.referenceLine, fact.candidateLine)
+      .filter(line => playedMoves.contains(normalizeMove(line.rootMove)))
+      .distinct match
+      case line :: Nil => Some(line)
+      case _           => None
+
   def relativeCauseBinding(
       cause: RelativeCauseFact,
       graph: TypedEvidenceGraph,
@@ -336,6 +346,23 @@ object ClaimEvidenceSemantics:
     else if gap >= 5.0 then "5+"
     else "small"
 
+/** Closed, typed explanatory content candidate owned by one JudgmentClaim. The graph
+  * remains the canonical source for every carrier and its payload; this value
+  * only names the exact F carrier and, for comparisons, the evaluated relation
+  * it must still resolve to.
+  */
+enum JudgmentClaimContent:
+  case CandidateComparison(
+      carrier: EvidenceRef,
+      comparison: CandidateComparisonSemanticKey
+  )
+  case StrategicMechanism(carrier: EvidenceRef)
+
+  def carrierRef: EvidenceRef =
+    this match
+      case CandidateComparison(value, _)       => value
+      case StrategicMechanism(value)  => value
+
 case class JudgmentClaim(
     id: String,
     family: ClaimFamily,
@@ -345,7 +372,8 @@ case class JudgmentClaim(
     subjectMove: Option[String],
     evidence: List[EvidenceRef],
     scope: EvidenceScope,
-    confidence: EvidenceConfidence
+    confidence: EvidenceConfidence,
+    content: Option[JudgmentClaimContent] = None
 )
 
 final class EvidenceBackedJudgmentPacket private (
@@ -354,7 +382,8 @@ final class EvidenceBackedJudgmentPacket private (
     val playerFacingClaimDecisions: List[PlayerFacingClaimDecision],
     val onlyMoveConstraintResolutions: List[OnlyMoveConstraintResolution],
     val causeExposureResolution: PlayerFacingCauseExposureResolution,
-    val causeDispositionLedger: CauseDispositionLedger
+    val causeDispositionLedger: CauseDispositionLedger,
+    val selectedContentClaimIds: List[String]
 ):
   def root: PositionNodeRef =
     assembly.root.get
@@ -438,7 +467,8 @@ object EvidenceBackedJudgmentPacket:
       playerFacingClaimDecisions: List[PlayerFacingClaimDecision],
       onlyMoveConstraintResolutions: List[OnlyMoveConstraintResolution],
       causeExposureResolution: PlayerFacingCauseExposureResolution,
-      causeDispositionLedger: CauseDispositionLedger
+      causeDispositionLedger: CauseDispositionLedger,
+      selectedContentClaimIds: List[String]
   ): Option[EvidenceBackedJudgmentPacket] =
     Option.when(
       structurallyClosed(assembly) &&
@@ -449,7 +479,8 @@ object EvidenceBackedJudgmentPacket:
           onlyMoveConstraintResolutions,
           causeExposureResolution,
           causeDispositionLedger
-        )
+        ) &&
+        contentClaimsClosed(assembly, selectedContentClaimIds)
     )(
       new EvidenceBackedJudgmentPacket(
         assembly,
@@ -457,7 +488,8 @@ object EvidenceBackedJudgmentPacket:
         playerFacingClaimDecisions,
         onlyMoveConstraintResolutions,
         causeExposureResolution,
-        causeDispositionLedger
+        causeDispositionLedger,
+        selectedContentClaimIds
       )
     )
 
@@ -490,6 +522,38 @@ object EvidenceBackedJudgmentPacket:
         assembly.evidenceGraph,
         expectedExposure,
         assembly.claims.map(_.id).toSet
+      )
+
+  /** P keeps R's selection opaque: it only validates each selected claim's
+    * registered typed content and carrier.
+    */
+  private def contentClaimsClosed(
+      assembly: JudgmentAssemblyContext,
+      claimIds: List[String]
+  ): Boolean =
+    val graph = assembly.evidenceGraph
+    val claimsById = assembly.claims.map(claim => claim.id -> claim).toMap
+
+    def registeredCarrier(content: JudgmentClaimContent): Boolean =
+      content match
+        case JudgmentClaimContent.CandidateComparison(carrier, _) =>
+          graph.record(carrier).exists {
+            case EvidenceRecord(_, CandidateComparisonEvidence(_), _) => true
+            case _                                                     => false
+          }
+        case JudgmentClaimContent.StrategicMechanism(carrier) =>
+          graph.record(carrier).exists {
+            case EvidenceRecord(_, _: StrategicMechanismEvidence, _) => true
+            case _                                                   => false
+          }
+
+    claimIds.distinct.size == claimIds.size &&
+      claimIds.forall(claimId =>
+        claimsById.get(claimId).exists { claim =>
+          claim.content.exists(content =>
+            claim.evidence.contains(content.carrierRef) && registeredCarrier(content)
+          )
+        }
       )
 
   private def probesClosed(

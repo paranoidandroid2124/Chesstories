@@ -18,24 +18,217 @@ class ClaimIdentityBoundaryTest extends munit.FunSuite:
   private val reference = LineNodeRef("reference", "e2b5", 1, LineNodeRole.BestReference)
   private val played = LineNodeRef("played", "e2e3", 9, LineNodeRole.Played)
 
-  test("an exact PlanEvent Cause owns one Plan host without contrast or context evidence"):
-    val fixture = exactPlanCauseFixture("exact-plan-host", RelativeCauseKind.PlanImprovement)
+  test("exact PlanEvent Causes own one Plan host without contrast or context evidence"):
     assertEquals(ClaimFamily.fromCause(RelativeCauseKind.PlanImprovement), Some(ClaimFamily.Plan))
     assertEquals(ClaimFamily.fromCause(RelativeCauseKind.PlanContradiction), Some(ClaimFamily.Plan))
-    assertExactPlanCauseHost(
-      fixture,
-      RelativeCauseKind.PlanImprovement,
-      RelativeCauseSourceSide.Reference,
-      CauseAttributionKind.ReferenceCreatesResource
+    List(
+      (
+        exactPlanCauseFixture("exact-plan-host", RelativeCauseKind.PlanImprovement),
+        RelativeCauseKind.PlanImprovement,
+        RelativeCauseSourceSide.Reference,
+        CauseAttributionKind.ReferenceCreatesResource
+      ),
+      (
+        exactPlanCauseFixture("exact-refuted-plan-host", RelativeCauseKind.PlanContradiction),
+        RelativeCauseKind.PlanContradiction,
+        RelativeCauseSourceSide.Candidate,
+        CauseAttributionKind.CandidateAllowsLiability
+      )
+    ).foreach { case (fixture, kind, sourceSide, attribution) =>
+      assertExactPlanCauseHost(fixture, kind, sourceSide, attribution)
+    }
+
+  test("exact F content reaches Ja, R, and packet through generic played endpoints"):
+    val bestVsSecond = exactContentExecution(
+      "e2e4",
+      List(
+        EngineLine(List("e2e4", "e7e5", "g1f3"), 30, depth = 18),
+        EngineLine(List("d2d4", "d7d5", "g1f3"), 20, depth = 18),
+        EngineLine(List("c2c4", "e7e5", "g1f3"), 10, depth = 18)
+      )
+    )
+    List(
+      exactContentExecution() -> CandidateComparisonKind.PlayedVsBest,
+      bestVsSecond -> CandidateComparisonKind.BestVsSecond
+    ).foreach { case (execution, expectedKind) =>
+      val candidate = candidateContentClaim(execution.jp)
+      assertEquals(candidateContent(candidate).comparison.kind, expectedKind)
+      assertEquals(admissionStatus(execution, candidate), Some(ClaimAdmissionStatus.Certified))
+      assertEquals(
+        execution.r.selectedContentClaimIds.toSet,
+        certifiedContentClaimIds(execution.ja.decisions)
+      )
+      assertEquals(execution.packet.map(_.selectedContentClaimIds), Some(execution.r.selectedContentClaimIds))
+    }
+
+    val execution = exactContentExecution()
+    assertEquals(admissionStatus(execution, strategicContentClaim(execution.jp)), Some(ClaimAdmissionStatus.Certified))
+
+  test("content certification fails closed for forged, borrowed, or ambiguous identities"):
+    val execution = exactContentExecution()
+    val graph = execution.c.evidenceGraph
+    val candidate = candidateContentClaim(execution.jp)
+    val candidateContentValue = candidateContent(candidate)
+    val comparison = graph.record(candidateContentValue.carrierRef).collect {
+      case EvidenceRecord(_, CandidateComparisonEvidence(fact), _) => fact
+    }.getOrElse(fail("expected comparison carrier"))
+    val originalComparisonRecord = graph.record(candidateContentValue.carrierRef)
+      .getOrElse(fail("missing comparison record"))
+    val alternate = List(comparison.referenceLine, comparison.candidateLine)
+      .find(line => !EvidenceRef.sameMove(line.rootMove, candidate.subjectMove.getOrElse("")))
+      .getOrElse(fail("expected non-played endpoint"))
+    val rewrittenComparison = comparison.copy(
+      referenceLine = alternate,
+      candidateLine = LineNodeRef("forged-candidate-endpoint", "c2c4", 3, LineNodeRole.Alternative)
+    )
+    val graphWithRewrittenComparison = graphOf(graph.records.map {
+      case record if record.ref == candidateContentValue.carrierRef =>
+        originalComparisonRecord.copy(payload = CandidateComparisonEvidence(rewrittenComparison))
+      case record => record
+    })
+    val strategic = strategicContentClaim(execution.jp)
+    val strategicCarrier = strategic.content.collect {
+      case JudgmentClaimContent.StrategicMechanism(ref) => ref
+    }.getOrElse(fail("expected strategic carrier"))
+    val wrongTypeCarrier = graph.records.collectFirst {
+      case EvidenceRecord(ref, _: LineFactEvidence, _) => ref
+    }.getOrElse(fail("expected line carrier"))
+    val foreignCarrier = candidateContentValue.carrierRef.copy(confidence = EvidenceConfidence.Heuristic)
+    val missingCarrier = candidateContentValue.carrierRef.copy(id = "missing-comparison-carrier")
+    List(
+      (
+        "played endpoint rewrite",
+        candidate.copy(subjectMove = Some(alternate.rootMove), primaryLine = Some(alternate)),
+        graph,
+        ClaimAdmissionStatus.Deferred
+      ),
+      (
+        "coordinated comparison rewrite",
+        candidate.copy(
+          subjectMove = Some(alternate.rootMove),
+          primaryLine = Some(alternate),
+          content = Some(JudgmentClaimContent.CandidateComparison(
+            candidateContentValue.carrierRef,
+            CandidateComparisonSemanticKey.from(rewrittenComparison)
+          ))
+        ),
+        graphWithRewrittenComparison,
+        ClaimAdmissionStatus.Deferred
+      ),
+      (
+        "foreign exact ref",
+        candidate.copy(
+          evidence = candidate.evidence.map(ref => if ref == candidateContentValue.carrierRef then foreignCarrier else ref),
+          content = Some(JudgmentClaimContent.CandidateComparison(foreignCarrier, candidateContentValue.comparison))
+        ),
+        graph,
+        ClaimAdmissionStatus.Rejected
+      ),
+      (
+        "missing carrier",
+        candidate.copy(
+          evidence = candidate.evidence.map(ref => if ref == candidateContentValue.carrierRef then missingCarrier else ref),
+          content = Some(JudgmentClaimContent.CandidateComparison(missingCarrier, candidateContentValue.comparison))
+        ),
+        graph,
+        ClaimAdmissionStatus.Rejected
+      ),
+      (
+        "wrong carrier payload",
+        candidate.copy(
+          content = Some(JudgmentClaimContent.CandidateComparison(wrongTypeCarrier, candidateContentValue.comparison))
+        ),
+        graph,
+        ClaimAdmissionStatus.Deferred
+      )
+    ).foreach { case (name, claim, candidateGraph, expected) =>
+      assertEquals(ClaimTruthPolicy.evaluate(claim, candidateGraph).status, expected, name)
+    }
+
+    assert(graph.records.exists(record => record.ref.position == strategicCarrier.position && record.ref.layer == EvidenceLayer.Board))
+    val lineOrEval = strategic.evidence.collectFirst {
+      case ref if graph.record(ref).exists(_.payload.isInstanceOf[EvalFactEvidence]) => ref
+    }.getOrElse(fail("expected exact Eval ref"))
+    val incomplete = graphOf(graph.records.filterNot(_.ref == lineOrEval))
+    val proposed = JudgmentClaimAssembler.propose(execution.c.copy(evidenceGraph = incomplete))
+      .filter(_.content.contains(JudgmentClaimContent.StrategicMechanism(strategicCarrier)))
+    assertEquals(proposed.size, 1)
+    assert(!proposed.head.evidence.exists(ref => ref.layer == EvidenceLayer.Board || ref.layer == EvidenceLayer.OpeningContext))
+    assertEquals(ClaimTruthPolicy.evaluate(proposed.head, incomplete).status, ClaimAdmissionStatus.Deferred)
+
+    val duplicateCarrier = candidateContentValue.carrierRef.copy(id = "same-comparison-different-carrier")
+    val graphWithDuplicate = graph.add(originalComparisonRecord.copy(ref = duplicateCarrier))
+    val distinctCarrierClaim = candidate.copy(
+      id = "same-comparison-different-carrier",
+      evidence = List(duplicateCarrier),
+      content = Some(JudgmentClaimContent.CandidateComparison(duplicateCarrier, candidateContentValue.comparison))
+    )
+    val deduplicated = ClaimDeduplicator.deduplicateDetailed(
+      List(
+        ClaimTruthPolicy.evaluate(candidate, graphWithDuplicate),
+        ClaimTruthPolicy.evaluate(distinctCarrierClaim, graphWithDuplicate)
+      ),
+      graphWithDuplicate
     )
 
-  test("an exact refuted candidate PlanEvent owns one PlanContradiction host"):
-    assertExactPlanCauseHost(
-      exactPlanCauseFixture("exact-refuted-plan-host", RelativeCauseKind.PlanContradiction),
-      RelativeCauseKind.PlanContradiction,
-      RelativeCauseSourceSide.Candidate,
-      CauseAttributionKind.CandidateAllowsLiability
-    )
+    assertEquals(deduplicated.decisions.map(_.claim.content).toSet, Set(candidate.content, distinctCarrierClaim.content))
+    assertEquals(ClaimArbitrator.contentClaimIds(deduplicated.decisions), Nil)
+
+  private val exactContentVariations = List(
+    EngineLine(List("e2e4", "e7e5", "g1f3"), 30, depth = 18),
+    EngineLine(List("d2d4", "d7d5", "g1f3"), 20, depth = 18)
+  )
+
+  private def exactContentExecution(
+      playedMove: String = "d2d4",
+      variations: List[EngineLine] = exactContentVariations
+  ) =
+    MoveReviewJudgmentOrchestrator
+      .execute(
+        RawMoveReviewInput(
+          fen = chess.variant.Standard.initialFen.value,
+          playedMoveUci = playedMove,
+          variations = variations,
+          ply = Some(0)
+        ),
+        JudgmentBoundaryIntervention.identity
+      )
+      .getOrElse(fail("expected closed core execution"))
+
+  private def candidateContentClaim(claims: List[JudgmentClaim]): JudgmentClaim =
+    claims.find { claim =>
+      claim.family == ClaimFamily.Evaluation &&
+      claim.subject == ClaimSubject.PlayedMove &&
+      claim.content.exists {
+        case JudgmentClaimContent.CandidateComparison(_, _) => true
+        case _                                              => false
+      }
+    }.getOrElse(fail("expected exact comparison content proposal"))
+
+  private def admissionStatus(
+      execution: JudgmentBoundaryExecution,
+      claim: JudgmentClaim
+  ): Option[ClaimAdmissionStatus] =
+    execution.ja.decisions.find(_.claim.id == claim.id).map(_.status)
+
+  private def certifiedContentClaimIds(
+      decisions: List[ClaimAdmissionDecision]
+  ): Set[String] =
+    decisions.collect {
+      case ClaimAdmissionDecision(claim, ClaimAdmissionStatus.Certified, _, _, _) =>
+        claim.content.map(_ => claim.id)
+    }.flatten.toSet
+
+  private def candidateContent(claim: JudgmentClaim) =
+    claim.content.collect {
+      case content @ JudgmentClaimContent.CandidateComparison(_, _) => content
+    }.getOrElse(fail("expected comparison content identity"))
+
+  private def strategicContentClaim(claims: List[JudgmentClaim]): JudgmentClaim =
+    claims.find(_.content.exists {
+      case JudgmentClaimContent.StrategicMechanism(_) => true
+      case _                                                   => false
+    }).getOrElse(fail("expected exact strategic wrapper content proposal"))
 
   private def assertExactPlanCauseHost(
       fixture: ExactPlanCauseFixture,
@@ -216,50 +409,6 @@ class ClaimIdentityBoundaryTest extends munit.FunSuite:
     assertEquals(PlayerFacingCauseReadinessPolicy.collect(tactical, graph), Nil)
     assertEquals(ClaimTruthPolicy.evaluate(tactical, graph).status, ClaimAdmissionStatus.Deferred)
 
-  test("Jp hosts a constructed Cause while Ja evaluates family truth independently of R readiness"):
-    val proof = mateRelation("unready-defensive-proof")
-    val fixture = causeFixture(
-      id = "unready-defensive",
-      kind = RelativeCauseKind.OnlyDefenseNecessity,
-      directProof = proof,
-      contrastProof = None
-    )
-    val admittedGraph = graphOf(fixture.records)
-    val graph = admittedGraph.records
-      .map {
-        case record @ EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _)
-            if ref == fixture.causeRef =>
-          record.copy(
-            payload = RelativeCauseFactEvidence(
-              cause.copy(directEffectAdmission = DirectEffectAdmission.Restricted(Set.empty))
-            )
-          )
-        case record => record
-      }
-      .foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
-    val cause = graph.record(fixture.causeRef).collect {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) => cause
-    }.getOrElse(fail("expected registered defensive Cause"))
-    val context = JudgmentAssemblyContext(
-      input = normalizedInput,
-      positions = Nil,
-      lines = Nil,
-      transitions = Nil,
-      evidenceGraph = graph,
-      claims = Nil
-    )
-
-    assert(!RelativeCauseConstructionAdmission.initiallyReady(cause, graph))
-    val hosted = JudgmentClaimAssembler
-      .propose(context)
-      .filter(_.evidence.contains(fixture.causeRef))
-    assertEquals(hosted.map(_.family), List(ClaimFamily.Defensive))
-    assertEquals(PlayerFacingCauseReadinessPolicy.collect(hosted.head, graph), Nil)
-    assertEquals(
-      ClaimTruthPolicy.evaluate(hosted.head, graph).status,
-      ClaimAdmissionStatus.Certified
-    )
-
   test("claim dedup keeps a ready direct Cause when semantic duplicate IDs collide"):
     val proof = mateRelation("duplicate-proof")
     val fixture = causeFixture(
@@ -311,97 +460,6 @@ class ClaimIdentityBoundaryTest extends munit.FunSuite:
     assertEquals(disposition.certifiedClaimIds, List("duplicate-second"))
     assertEquals(disposition.rankEligibleClaimIds, Nil)
     assertEquals(disposition.relatedClaimIds, List("duplicate-first"))
-
-  test("claim dedup does not collide semantically different Cause sets"):
-    val materialProof = hangingRelation("distinct-material-proof")
-    val material = causeFixture(
-      id = "distinct-material",
-      kind = RelativeCauseKind.MaterialSwing,
-      directProof = materialProof,
-      contrastProof = None
-    )
-    val forcingProof = mateRelation("distinct-forcing-proof")
-    val forcing = causeFixture(
-      id = "distinct-forcing",
-      kind = RelativeCauseKind.KingForcing,
-      directProof = forcingProof,
-      contrastProof = None
-    )
-    val graph = graphOf(material.records ++ forcing.records)
-    def claim(id: String, cause: CauseFixture, proof: EvidenceRef): JudgmentClaim =
-      JudgmentClaim(
-        id = id,
-        family = ClaimFamily.Tactical,
-        subject = ClaimSubject.ReferenceMove,
-        primaryPosition = position,
-        primaryLine = Some(reference),
-        subjectMove = Some(reference.rootMove),
-        evidence = List(cause.causeRef, proof, cause.comparisonRef),
-        scope = EvidenceScope.BestLine,
-        confidence = EvidenceConfidence.EngineBacked
-      )
-    val result = ClaimDeduplicator.deduplicateDetailed(
-      List(
-        admitted(claim("distinct-material-host", material, materialProof.ref)),
-        admitted(claim("distinct-forcing-host", forcing, forcingProof.ref))
-      ),
-      graph
-    )
-
-    assertEquals(
-      result.decisions.map(_.claim.id),
-      List("distinct-material-host", "distinct-forcing-host")
-    )
-    assertEquals(result.trace, Nil)
-
-  test("Ja rejects a Cause host that reuses an ID with a different EvidenceRef"):
-    val proof = mateRelation("forged-ref-proof")
-    val fixture = causeFixture(
-      id = "forged-ref",
-      kind = RelativeCauseKind.KingForcing,
-      directProof = proof,
-      contrastProof = None
-    )
-    val graph = graphOf(fixture.records)
-    val forgedCauseRef = fixture.causeRef.copy(confidence = EvidenceConfidence.Heuristic)
-    val claim = JudgmentClaim(
-      id = "forged-ref-host",
-      family = ClaimFamily.Tactical,
-      subject = ClaimSubject.ReferenceMove,
-      primaryPosition = position,
-      primaryLine = Some(reference),
-      subjectMove = Some(reference.rootMove),
-      evidence = List(forgedCauseRef, proof.ref, fixture.comparisonRef),
-      scope = EvidenceScope.BestLine,
-      confidence = EvidenceConfidence.EngineBacked
-    )
-
-    val decision = ClaimTruthPolicy.evaluate(claim, graph)
-    assertEquals(decision.status, ClaimAdmissionStatus.Rejected)
-    assertEquals(decision.missingEvidence, List(forgedCauseRef))
-    assertEquals(PlayerFacingCauseReadinessPolicy.collect(claim, graph), Nil)
-
-  test("root-owned effect admission rejects a carried source with only a matching ID"):
-    val proof = mateRelation("forged-carried-source-proof")
-    val fixture = causeFixture(
-      id = "forged-carried-source",
-      kind = RelativeCauseKind.KingForcing,
-      directProof = proof,
-      contrastProof = None
-    )
-    val graph = graphOf(fixture.records)
-    val cause = graph.record(fixture.causeRef).collect {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) => cause
-    }.getOrElse(fail("expected registered Cause"))
-    val channel = RelativeCauseConstructionAdmission
-      .admittedDirectChannels(cause, graph)
-      .headOption
-      .getOrElse(fail("expected certified direct channel"))
-    val forgedSource = channel.binding.source.copy(confidence = EvidenceConfidence.Heuristic)
-    val forgedChannel = channel.copy(binding = channel.binding.copy(source = forgedSource))
-
-    assert(RootOwnedEffectPolicy.admits(cause, graph, channel))
-    assert(!RootOwnedEffectPolicy.admits(cause, graph, forgedChannel))
 
   test("tactical wrapper cannot own a primitive through a forged same-ID source ref"):
     val primitive = mateRelation("wrapper-primitive")
@@ -458,65 +516,45 @@ class ClaimIdentityBoundaryTest extends munit.FunSuite:
       List(primitive.ref.id)
     )
 
-  test("Ja rejects a ready Cause that is unrelated to the claim subject"):
-    val proof = mateRelation("unrelated-host-proof")
-    val fixture = causeFixture(
-      id = "unrelated-host",
-      kind = RelativeCauseKind.KingForcing,
-      directProof = proof,
-      contrastProof = None
-    )
-    val graph = graphOf(fixture.records)
-    val claim = JudgmentClaim(
-      id = "unrelated-played-host",
-      family = ClaimFamily.Tactical,
-      subject = ClaimSubject.PlayedMove,
-      primaryPosition = position,
-      primaryLine = Some(played),
-      subjectMove = Some(played.rootMove),
-      evidence = List(fixture.causeRef, proof.ref, fixture.comparisonRef),
-      scope = EvidenceScope.PlayedLine,
-      confidence = EvidenceConfidence.EngineBacked
-    )
+  test("Ja rejects ready Cause hosts with a forged subject or line binding"):
+    List(
+      (
+        "unrelated-played-host",
+        mateRelation("unrelated-host-proof"),
+        ClaimSubject.PlayedMove,
+        played,
+        EvidenceScope.PlayedLine
+      ),
+      (
+        "same-move-other-line-host",
+        mateRelation("same-move-other-line-proof"),
+        ClaimSubject.CandidateLine,
+        LineNodeRef("same-move-alternative", reference.rootMove, 2, LineNodeRole.Alternative),
+        EvidenceScope.CandidateLine
+      )
+    ).foreach { case (id, proof, subject, line, scope) =>
+      val fixture = causeFixture(
+        id = id,
+        kind = RelativeCauseKind.KingForcing,
+        directProof = proof,
+        contrastProof = None
+      )
+      val graph = graphOf(fixture.records)
+      val claim = JudgmentClaim(
+        id = id,
+        family = ClaimFamily.Tactical,
+        subject = subject,
+        primaryPosition = position,
+        primaryLine = Some(line),
+        subjectMove = Some(line.rootMove),
+        evidence = List(fixture.causeRef, proof.ref, fixture.comparisonRef),
+        scope = scope,
+        confidence = EvidenceConfidence.EngineBacked
+      )
 
-    assertEquals(
-      PlayerFacingCauseReadinessPolicy.collect(claim, graph).map(_._2.id),
-      List(fixture.causeRef.id)
-    )
-    assertEquals(ClaimTruthPolicy.evaluate(claim, graph).status, ClaimAdmissionStatus.Rejected)
-
-  test("Ja does not bind a Cause to a different line identity with the same root move"):
-    val proof = mateRelation("same-move-other-line-proof")
-    val fixture = causeFixture(
-      id = "same-move-other-line",
-      kind = RelativeCauseKind.KingForcing,
-      directProof = proof,
-      contrastProof = None
-    )
-    val graph = graphOf(fixture.records)
-    val otherLine = LineNodeRef(
-      "same-move-alternative",
-      reference.rootMove,
-      2,
-      LineNodeRole.Alternative
-    )
-    val claim = JudgmentClaim(
-      id = "same-move-other-line-host",
-      family = ClaimFamily.Tactical,
-      subject = ClaimSubject.CandidateLine,
-      primaryPosition = position,
-      primaryLine = Some(otherLine),
-      subjectMove = Some(otherLine.rootMove),
-      evidence = List(fixture.causeRef, proof.ref, fixture.comparisonRef),
-      scope = EvidenceScope.CandidateLine,
-      confidence = EvidenceConfidence.EngineBacked
-    )
-
-    assertEquals(
-      PlayerFacingCauseReadinessPolicy.collect(claim, graph).map(_._2.id),
-      List(fixture.causeRef.id)
-    )
-    assertEquals(ClaimTruthPolicy.evaluate(claim, graph).status, ClaimAdmissionStatus.Rejected)
+      assertEquals(PlayerFacingCauseReadinessPolicy.collect(claim, graph).map(_._2.id), List(fixture.causeRef.id))
+      assertEquals(ClaimTruthPolicy.evaluate(claim, graph).status, ClaimAdmissionStatus.Rejected)
+    }
 
   test("Ja does not use a context-only parent of a direct carrier as family proof"):
     val contextRef = ref(

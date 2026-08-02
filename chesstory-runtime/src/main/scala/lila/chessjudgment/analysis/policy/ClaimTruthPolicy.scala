@@ -20,7 +20,9 @@ final case class ClaimAdmissionDecision(
 object ClaimTruthPolicy:
 
   def evaluate(claim: JudgmentClaim, graph: TypedEvidenceGraph): ClaimAdmissionDecision =
-    val missingEvidence = claim.evidence.filter(ref => graph.record(ref).isEmpty)
+    val contentCarrierRefs = claim.content.toList.map(_.carrierRef)
+    val missingEvidence =
+      (claim.evidence ++ contentCarrierRefs).distinct.filter(ref => graph.record(ref).isEmpty)
     val claimBoundRecords =
       claim.evidence
         .flatMap(ref => graph.record(ref))
@@ -33,38 +35,49 @@ object ClaimTruthPolicy:
       directlyNamedCauses.size == directlyHostedCauses.size
     val causeHostProofGroups =
       directlyHostedCauses.map(record => directCauseHostProofRecords(record, graph))
+    val useCauseHostProof =
+      claim.content.isEmpty && causeHostProofGroups.nonEmpty
     val proofRecords =
-      if causeHostProofGroups.nonEmpty then
+      if useCauseHostProof then
         causeHostProofGroups.flatten.distinctBy(_.ref.id)
       else
-        (claimBoundRecords ++ claimBoundRecords.flatMap(graph.parentClosure)).distinctBy(_.ref.id)
+        val directRecords =
+          if claim.content.nonEmpty then claimBoundRecords
+          else claimBoundRecords ++ claimBoundRecords.flatMap(graph.parentClosure)
+        directRecords.distinctBy(_.ref.id)
     val claimBoundLayers =
       proofRecords
         .map(_.ref.layer)
         .toSet
+    val requiredGroups = contentRequiredLayerGroups(claim).getOrElse(requiredLayerGroups(claim.family))
     val missingGroups =
-      if causeHostProofGroups.nonEmpty then
+      if useCauseHostProof then
         causeHostProofGroups
           .flatMap(records =>
             val layers = records.map(_.ref.layer).toSet
-            requiredLayerGroups(claim.family).filterNot(group => group.exists(layers.contains))
+            requiredGroups.filterNot(group => group.exists(layers.contains))
           )
           .distinct
       else
-        requiredLayerGroups(claim.family).filterNot(group => group.exists(claimBoundLayers.contains))
+        requiredGroups.filterNot(group => group.exists(claimBoundLayers.contains))
     val hasFamilyProof =
       allNamedCausesBound &&
         (
-          if causeHostProofGroups.nonEmpty then
+          if useCauseHostProof then
             causeHostProofGroups.forall(records => familySpecificProof(claim, records, graph))
           else familySpecificProof(claim, proofRecords, graph)
         )
-    val status =
+    val baselineStatus =
       if claim.evidence.isEmpty || missingEvidence.nonEmpty then ClaimAdmissionStatus.Rejected
       else if !allNamedCausesBound then ClaimAdmissionStatus.Rejected
       else if claimBoundRecords.isEmpty then ClaimAdmissionStatus.Rejected
       else if missingGroups.nonEmpty || !hasFamilyProof then ClaimAdmissionStatus.Deferred
       else ClaimAdmissionStatus.Certified
+    val contentProofClosed = claim.content.isEmpty || exactContentCertified(claim, graph)
+    val status =
+      if claim.content.nonEmpty && baselineStatus == ClaimAdmissionStatus.Certified && !contentProofClosed then
+        ClaimAdmissionStatus.Deferred
+      else baselineStatus
     ClaimAdmissionDecision(
       claim = claim,
       status = status,
@@ -72,6 +85,178 @@ object ClaimTruthPolicy:
       missingLayerGroups = missingGroups,
       missingEvidence = missingEvidence
     )
+
+  /** Content uses the same Ja authority as the surrounding claim, but carries
+    * a narrower F proof obligation. Nothing is copied out of the graph: each
+    * branch reopens the carrier named by the claim and checks the exact closure
+    * that Jp was allowed to attach.
+    */
+  private def exactContentCertified(claim: JudgmentClaim, graph: TypedEvidenceGraph): Boolean =
+    claim.content.exists {
+      case JudgmentClaimContent.CandidateComparison(carrier, identity) =>
+        exactCandidateComparisonContent(claim, carrier, identity, graph)
+      case JudgmentClaimContent.StrategicMechanism(carrier) =>
+        exactStrategicMechanismContent(claim, carrier, graph)
+    }
+
+  private def contentRequiredLayerGroups(claim: JudgmentClaim): Option[List[Set[EvidenceLayer]]] =
+    claim.content.map {
+      case JudgmentClaimContent.CandidateComparison(_, _) =>
+        List(Set(EvidenceLayer.CandidateComparison))
+      case JudgmentClaimContent.StrategicMechanism(_) =>
+        List(
+          Set(EvidenceLayer.StrategicMechanism),
+          Set(EvidenceLayer.Line),
+          Set(EvidenceLayer.Eval)
+        )
+    }
+
+  private def exactCandidateComparisonContent(
+      claim: JudgmentClaim,
+      carrier: EvidenceRef,
+      identity: CandidateComparisonSemanticKey,
+      graph: TypedEvidenceGraph
+  ): Boolean =
+    graph.record(carrier).exists {
+      case EvidenceRecord(_, CandidateComparisonEvidence(fact), _) =>
+        exactPlayedTransition(graph).exists { case (_, transition) =>
+          val playedMove = JudgmentSubjectBinding.normalizeMove(transition.moveUci)
+          val playedMoves = Set(playedMove).filter(_.nonEmpty)
+          JudgmentSubjectBinding.uniquePlayedEndpoint(fact, playedMoves).exists { line =>
+                carrier.producer == EvidenceProducer.RelativeMoveProducer &&
+                carrier.layer == EvidenceLayer.CandidateComparison &&
+                carrier.scope == EvidenceScope.Counterfactual &&
+                carrier.line == Some(fact.candidateLine) &&
+                CandidateComparisonSemanticKey.from(fact) == identity &&
+                claim.family == ClaimFamily.Evaluation &&
+                claim.subject == ClaimSubject.PlayedMove &&
+                claim.subjectMove.exists(move => EvidenceRef.sameMove(move, transition.moveUci)) &&
+                claim.primaryLine.contains(line) &&
+                claim.primaryPosition == transition.from &&
+                carrier.position == transition.from &&
+                claim.scope == carrier.scope &&
+                claim.confidence == carrier.confidence &&
+                playedMoves.nonEmpty &&
+                JudgmentSubjectBinding.comparisonBinding(fact, playedMoves) != SubjectBindingClass.Other &&
+                exactRefs(claim.evidence, List(carrier))
+          }
+        }
+      case _ => false
+    }
+
+  private def exactStrategicMechanismContent(
+      claim: JudgmentClaim,
+      carrier: EvidenceRef,
+      graph: TypedEvidenceGraph
+  ): Boolean =
+    graph.record(carrier).exists {
+      case EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents) =>
+        exactPlayedTransition(graph).exists { case (_, transition) =>
+          claim.primaryLine.exists { line =>
+            val lineRecords = graph.records.collect {
+              case record @ EvidenceRecord(lineRef, lineFacts: LineFactEvidence, _)
+                  if lineRef.producer == EvidenceProducer.LegalLineProducer &&
+                    lineRef.layer == EvidenceLayer.Line &&
+                    lineRef.position == transition.from &&
+                    lineRef.scope == line.role.scope &&
+                    lineRef.line.contains(line) &&
+                    lineFacts.line == line =>
+                record
+            }
+            lineRecords match
+              case EvidenceRecord(lineRef, _, _) :: Nil =>
+                val evalRecords = graph.records.collect {
+                  case record @ EvidenceRecord(evalRef, EvalFactEvidence(payloadLine, _, _, _), evalParents)
+                      if evalRef.producer == EvidenceProducer.EngineEvalProducer &&
+                        evalRef.layer == EvidenceLayer.Eval &&
+                        evalRef.position == lineRef.position &&
+                        evalRef.scope == line.role.scope &&
+                        evalRef.line.contains(line) &&
+                        payloadLine == line &&
+                        evalParents == List(lineRef) =>
+                    record
+                }
+                val signalSources = payload.signals.map(_.source)
+                val expectedEvidence =
+                  evalRecords match
+                    case EvidenceRecord(evalRef, _, _) :: Nil =>
+                      val closure = ref :: parents ++ signalSources ++ List(lineRef, evalRef)
+                      Option.when(exactReferencesPerId(closure))(closure.distinct).getOrElse(Nil)
+                    case _ => Nil
+                ref.producer == EvidenceProducer.StrategicMechanismProducer &&
+                  ref.layer == EvidenceLayer.StrategicMechanism &&
+                  ref.line.contains(line) &&
+                  line.role == LineNodeRole.Played &&
+                  EvidenceRef.sameMove(line.rootMove, transition.moveUci) &&
+                  strategicWrapperBoundToPlayedTransition(ref, payload, parents, line, transition, graph) &&
+                  claim.primaryPosition == ref.position &&
+                  claim.scope == ref.scope &&
+                  claim.confidence == ref.confidence &&
+                  claim.subjectMove.exists(move => EvidenceRef.sameMove(move, transition.moveUci)) &&
+                  (claim.subject == line.role.subject || claim.subject == ClaimSubject.Plan) &&
+                  payload.signals.nonEmpty &&
+                  parents.map(_.id).distinct.size == parents.size &&
+                  parents.forall(parent => graph.record(parent).nonEmpty) &&
+                  signalSources.forall(source => parents.contains(source) && graph.record(source).nonEmpty) &&
+                  exactRefs(claim.evidence, expectedEvidence)
+              case _ => false
+          }
+        }
+      case _ => false
+    }
+
+  /** A content-eligible played-line wrapper is either rooted at the played
+    * transition or route-lifted to its destination by an exact root motif.
+   */
+  private def strategicWrapperBoundToPlayedTransition(
+      ref: EvidenceRef,
+      mechanism: StrategicMechanismEvidence,
+      parents: List[EvidenceRef],
+      line: LineNodeRef,
+      transition: MoveTransitionEvidence,
+      graph: TypedEvidenceGraph
+  ): Boolean =
+    (ref.position == transition.from && ref.scope == TransitionEdgeRole.Played.scope) ||
+      (ref.position == transition.to &&
+        ref.scope == TransitionEdgeRole.Played.scope &&
+        parents.exists(parent =>
+          graph.record(parent).exists {
+            case EvidenceRecord(routeRef, motif: MoveMotifEvidence, _) =>
+              routeRef.position == transition.from &&
+                routeRef.scope == TransitionEdgeRole.Played.scope &&
+                routeRef.line.contains(line) &&
+                motif.isRootEvent &&
+                EvidenceRef.sameMove(motif.moveUci, transition.moveUci) &&
+                mechanism.signals.exists(_.source == routeRef)
+            case _ => false
+          }
+        ))
+
+  private def exactPlayedTransition(
+      graph: TypedEvidenceGraph
+  ): Option[(EvidenceRef, MoveTransitionEvidence)] =
+    graph.records.collect {
+      case EvidenceRecord(ref, payload @ MoveTransitionEvidence(_, from, _), _)
+          if ref.producer == EvidenceProducer.MoveTransitionProducer &&
+            ref.layer == EvidenceLayer.MoveTransition &&
+            ref.scope == EvidenceScope.PlayedTransition &&
+            ref.position == from &&
+            ref.line.isEmpty &&
+            ref.confidence == EvidenceConfidence.LegalReplayVerified =>
+        ref -> payload
+    } match
+      case transition :: Nil => Some(transition)
+      case _                 => None
+
+  private def exactRefs(actual: List[EvidenceRef], expected: List[EvidenceRef]): Boolean =
+    actual.map(_.id).distinct.size == actual.size &&
+      expected.map(_.id).distinct.size == expected.size &&
+      actual.size == expected.size &&
+      actual.forall(ref => expected.contains(ref)) &&
+      expected.forall(ref => actual.contains(ref))
+
+  private def exactReferencesPerId(refs: List[EvidenceRef]): Boolean =
+    refs.groupBy(_.id).values.forall(_.distinct.size == 1)
 
   /** A RelativeCause directly named by a claim is a Cause host, not a license
     * to traverse every parent attached to the Cause record. Cause parents also
@@ -416,7 +601,7 @@ object ClaimTruthPolicy:
       case ClaimFamily.Material =>
         materialProof(records, graph)
       case ClaimFamily.Evaluation =>
-        evaluationProof(records, graph)
+        evaluationProof(claim, records, graph)
 
   private def strategicProof(
       claim: JudgmentClaim,
@@ -424,7 +609,16 @@ object ClaimTruthPolicy:
       graph: TypedEvidenceGraph
   ): Boolean =
     val relativeCauses = relativeCausesBoundToClaimEvidence(claim, records)
-    val hasObservation = records.exists(strategicObservation)
+    val hasObservation =
+      records.exists(strategicObservation) ||
+        claim.content.exists {
+          case JudgmentClaimContent.StrategicMechanism(_) =>
+            records.exists {
+              case EvidenceRecord(_, _: PlanCausalEventEvidence, _) => true
+              case _                                                => false
+            }
+          case _ => false
+        }
     val hasCausalSupport = records.exists(longTermCausalSupport(claim, _, graph))
     val hasStrategicAnchor = records.exists {
       case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
@@ -785,9 +979,22 @@ object ClaimTruthPolicy:
       }
     hasConversionCause && hasConversionContext && hasComparison
 
-  private def evaluationProof(records: List[EvidenceRecord], graph: TypedEvidenceGraph): Boolean =
+  private def evaluationProof(
+      claim: JudgmentClaim,
+      records: List[EvidenceRecord],
+      graph: TypedEvidenceGraph
+  ): Boolean =
     val recordIds = records.map(_.ref.id).toSet
     records.exists {
+      case record @ EvidenceRecord(ref, CandidateComparisonEvidence(fact), _) =>
+        claim.content.exists {
+          case JudgmentClaimContent.CandidateComparison(carrier, identity) =>
+            carrier == ref &&
+              CandidateComparisonSemanticKey.from(fact) == identity &&
+              recordIds(ref.id) &&
+              recordEngineBacked(record)
+          case _ => false
+        }
       case EvidenceRecord(_, RelativeAssessmentEvidence(assessment), _) =>
         graph
           .candidateComparisonRecord(assessment.primaryComparisonEvidence)

@@ -92,7 +92,8 @@ object MoveReviewJudgmentOrchestrator:
             r.playerFacingClaimDecisions,
             r.onlyMoveConstraintResolutions,
             r.causeExposureResolution,
-            r.causeDispositionLedger
+            r.causeDispositionLedger,
+            r.selectedContentClaimIds
           )
         else
           Option
@@ -120,7 +121,8 @@ object MoveReviewJudgmentOrchestrator:
         ranking.playerFacingClaimDecisions,
         ranking.onlyMoveConstraintResolutions,
         ranking.causeExposureResolution,
-        ranking.causeDispositionLedger
+        ranking.causeDispositionLedger,
+        ranking.selectedContentClaimIds
       )
       .flatMap(_ =>
         EvidenceBackedJudgmentPacket.fromAssembly(
@@ -129,7 +131,8 @@ object MoveReviewJudgmentOrchestrator:
           ranking.playerFacingClaimDecisions,
           ranking.onlyMoveConstraintResolutions,
           ranking.causeExposureResolution,
-          ranking.causeDispositionLedger
+          ranking.causeDispositionLedger,
+          ranking.selectedContentClaimIds
         )
       )
 
@@ -179,6 +182,8 @@ object MoveReviewJudgmentOrchestrator:
     )
     val expectedCauseDispositionLedger =
       CauseDispositionPolicy.resolve(graph, expectedDeduplication, expectedExposure)
+    val expectedContentClaimIds =
+      ClaimArbitrator.contentClaimIds(expectedDeduplication.decisions)
     val causeDominance = ranking.causeDominanceDecisions
     val causeDominanceById = causeDominance.map(decision => decision.causeEvidenceId -> decision).toMap
     val retainedCauseIds = expectedExposure.retainedCauseEvidenceIds
@@ -278,6 +283,7 @@ object MoveReviewJudgmentOrchestrator:
       rankedIdSet.subsetOf(certifiedIds) &&
       exposureResolutionClosed &&
       ranking.causeDispositionLedger == expectedCauseDispositionLedger &&
+      ranking.selectedContentClaimIds == expectedContentClaimIds &&
       causeDominanceClosed &&
       crossComparisonExposureClosed &&
       selectedCauseHostsClosed &&

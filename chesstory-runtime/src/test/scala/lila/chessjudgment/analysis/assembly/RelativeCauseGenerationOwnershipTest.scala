@@ -1,6 +1,7 @@
 package lila.chessjudgment.analysis.assembly
 
 import chess.{ Black, Queen, White }
+import lila.chessjudgment.analysis.policy.{ ClaimAdmissionStatus, ClaimTruthPolicy }
 import lila.chessjudgment.model.Motif
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
@@ -28,6 +29,17 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
       .execute(raw, JudgmentBoundaryIntervention.identity)
       .getOrElse(fail("expected a complete cached-line execution"))
     val graph = execution.c.evidenceGraph
+    val rootPlanContent = JudgmentClaimAssembler.propose(execution.c).find { claim =>
+      claim.content.collect { case JudgmentClaimContent.StrategicMechanism(carrier) =>
+        carrier.position == execution.c.playedTransition.map(_.from).getOrElse(carrier.position) &&
+          graph.record(carrier).exists {
+            case EvidenceRecord(_, mechanism: StrategicMechanismEvidence, _) =>
+              mechanism.signals.exists(signal => graph.record(signal.source).exists(_.payload.isInstanceOf[PlanCausalEventEvidence]))
+            case _ => false
+          }
+      }.getOrElse(false)
+    }.getOrElse(fail("expected a root PlanCausalEvent strategic content claim"))
+    assertEquals(ClaimTruthPolicy.evaluate(rootPlanContent, graph).status, ClaimAdmissionStatus.Certified)
     val causes = graph.records.collect {
       case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) => ref -> cause
     }
@@ -54,7 +66,8 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
         execution.r.playerFacingClaimDecisions,
         execution.r.onlyMoveConstraintResolutions,
         execution.r.causeExposureResolution,
-        incompleteLedger
+        incompleteLedger,
+        execution.r.selectedContentClaimIds
       ),
       None
     )
@@ -79,7 +92,8 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
         execution.r.playerFacingClaimDecisions,
         execution.r.onlyMoveConstraintResolutions,
         execution.r.causeExposureResolution,
-        inconsistentLedger
+        inconsistentLedger,
+        execution.r.selectedContentClaimIds
       ),
       None
     )
