@@ -578,134 +578,7 @@ $label-width: 5ch;
   }
 }
 
-.action-menu__workspace-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.action-menu__workspace-head {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-
-  h4,
-  p {
-    margin: 0;
-  }
-
-  h4 {
-    color: $c-font-dim;
-  }
-
-  p {
-    color: $c-font-dim;
-    line-height: 1.45;
-  }
-}
-
-.action-menu__workspace-grid {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-}
-
-.action-menu__workspace-card,
-.action-menu__workspace-action {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.95rem 1rem;
-  border: 1px solid rgba($c-border, 0.8);
-  border-radius: $box-radius-size;
-  background: rgba($c-bg-box, 0.92);
-  color: $c-font;
-  text-align: left;
-
-  &.is-active,
-  &.active {
-    border-color: rgba($c-primary, 0.5);
-    background: rgba($c-bg-low, 0.96);
-    box-shadow: 0 0 0 1px rgba($c-primary, 0.16);
-  }
-
-  &.disabled {
-    opacity: 1;
-    cursor: default;
-    border-color: rgba($c-border, 0.55);
-    background: rgba($c-bg-low, 0.72);
-    color: $c-font-dim;
-  }
-}
-
-.action-menu__workspace-card--stacked {
-  flex-direction: column;
-}
-
-.action-menu__workspace-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-
-  strong {
-    font-size: 0.98rem;
-  }
-
-  span {
-    color: $c-font-dim;
-    line-height: 1.4;
-  }
-}
-
-.action-menu__workspace-pill {
-  flex: 0 0 auto;
-  min-width: 3rem;
-  padding: 0.3rem 0.6rem;
-  border: 1px solid rgba($c-border, 0.8);
-  border-radius: 999px;
-  background: rgba($c-border, 0.32);
-  color: $c-font;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-align: center;
-}
-
-.action-menu__workspace-card.is-active .action-menu__workspace-pill {
-  border-color: rgba($c-good, 0.35);
-  background: rgba($c-good, 0.14);
-  color: $c-good;
-}
-
-.action-menu__workspace-choices {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.action-menu__workspace-choice {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid rgba($c-border, 0.8);
-  border-radius: 999px;
-  background: rgba($c-bg-low, 0.92);
-  color: $c-font-dim;
-  font-weight: 600;
-
-  &:hover {
-    border-color: rgba($c-primary, 0.5);
-    color: $c-primary;
-    background: rgba($c-primary, 0.08);
-  }
-
-  &.active {
-    border-color: rgba($c-primary, 0.5);
-    background: rgba($c-primary, 0.12);
-    color: $c-primary;
-  }
-}
-
-.action-menu__workspace-range {
+.action-menu__range {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
@@ -718,33 +591,6 @@ $label-width: 5ch;
   input[type='range'] {
     width: 100%;
     accent-color: $c-primary;
-  }
-}
-
-.action-menu__workspace-actions {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-}
-
-.action-menu__workspace-action {
-  position: relative;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding-inline-start: 2.8rem;
-
-  &::before {
-    position: absolute;
-    inset-inline-start: 1rem;
-    top: 1rem;
-    font-size: 1rem;
-    color: $c-primary;
-  }
-
-  span {
-    color: $c-font-dim;
-    line-height: 1.4;
   }
 }
 
@@ -901,11 +747,6 @@ $label-width: 5ch;
 
   .copyables__study-cover {
     max-width: 8rem;
-  }
-
-  .action-menu__workspace-card,
-  .action-menu__workspace-action {
-    flex-direction: column;
   }
 
   .copyables__study-modal-head,
