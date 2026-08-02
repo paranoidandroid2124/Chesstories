@@ -471,7 +471,7 @@ class PlayedVsAlternativeLiabilityExposureTest extends munit.FunSuite:
         .getOrElse(fail(s"expected registered Cause ${item.causeRef.id}")) -> item.causeRef
     )
     val channels = registered.map { case (cause, causeRef) =>
-      causeRef.id -> PlayerFacingCauseReadinessPolicy.directSentenceChannels(cause, graph)
+      causeRef.id -> RelativeCauseConstructionAdmission.admittedDirectChannels(cause, graph)
     }.toMap
     val eligibility = CrossComparisonCauseExposurePolicy.resolveEligibilityForDominance(
       registered,

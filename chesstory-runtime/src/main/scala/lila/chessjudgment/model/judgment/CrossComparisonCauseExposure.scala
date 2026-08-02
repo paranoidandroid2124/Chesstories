@@ -245,12 +245,6 @@ object PlayerFacingCauseReadinessPolicy:
     }
     registeredCause && RelativeCauseConstructionAdmission.initiallyReady(cause, graph)
 
-  private[chessjudgment] def directSentenceChannels(
-      cause: RelativeCauseFact,
-      graph: TypedEvidenceGraph
-  ): List[DirectCauseChannel] =
-    RelativeCauseConstructionAdmission.admittedDirectChannels(cause, graph)
-
 final case class PlayerFacingCauseExposureResolution(
     readyByClaim: Map[String, List[(RelativeCauseFact, EvidenceRef)]],
     dominanceDecisions: List[RelativeCauseDominanceDecision],
@@ -285,7 +279,7 @@ object PlayerFacingCauseExposurePipeline:
     ).toMap
     val allReady = readyByClaim.values.flatten.toList.distinctBy(_._2.id)
     val directChannelsByCauseId = allReady.map { case (cause, ref) =>
-      ref.id -> PlayerFacingCauseReadinessPolicy.directSentenceChannels(cause, graph)
+      ref.id -> RelativeCauseConstructionAdmission.admittedDirectChannels(cause, graph)
     }.toMap
     val dominanceEligibilityDecisions =
       CrossComparisonCauseExposurePolicy.resolveEligibilityForDominance(
@@ -777,7 +771,7 @@ object CrossComparisonCauseExposurePolicy:
         s"relative cause '${ref.id}' is not bound to a candidate comparison"
       )
     )
-    val channels = PlayerFacingCauseReadinessPolicy.directSentenceChannels(cause, graph)
+    val channels = RelativeCauseConstructionAdmission.admittedDirectChannels(cause, graph)
     val (initialStatus, initialReason, effectMode, improvement) =
       provisionalDecision(cause, comparison, channels, graph, playedMoves)
     val compatibleChannels = effectMode.toList.flatMap(mode =>

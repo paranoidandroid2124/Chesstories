@@ -398,12 +398,12 @@ class CrossComparisonCauseExposurePolicyTest extends munit.FunSuite:
     )
     val preliminaryById = preliminary.map(decision => decision.causeEvidenceId -> decision).toMap
     val decisions = resolve(all, graph)
-    val liabilityChannel = PlayerFacingCauseReadinessPolicy
-      .directSentenceChannels(registeredLiability, graph)
+    val liabilityChannel = RelativeCauseConstructionAdmission
+      .admittedDirectChannels(registeredLiability, graph)
       .headOption
       .getOrElse(fail("expected exact liability channel"))
-    val resourceChannel = PlayerFacingCauseReadinessPolicy
-      .directSentenceChannels(registeredResource, graph)
+    val resourceChannel = RelativeCauseConstructionAdmission
+      .admittedDirectChannels(registeredResource, graph)
       .headOption
       .getOrElse(fail("expected exact resource channel"))
 
@@ -943,7 +943,7 @@ class CrossComparisonCauseExposurePolicyTest extends munit.FunSuite:
         val registered = ExplicitCauseAdmissionTestSupport
           .registeredCause(item.causeRef, graph)
           .getOrElse(fail(s"expected registered Cause ${item.causeRef.id}"))
-        PlayerFacingCauseReadinessPolicy.directSentenceChannels(registered, graph)
+        RelativeCauseConstructionAdmission.admittedDirectChannels(registered, graph)
       )
     )
     assertEquals(canonicalChannels.size, 1)

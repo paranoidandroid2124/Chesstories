@@ -773,7 +773,7 @@ class CrossComparisonFallbackSpecificityTest extends munit.FunSuite:
     ).flatMap(_.records))
     val channelFixture = graph.records.collectFirst {
       case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) => cause
-    }.toList.flatMap(cause => PlayerFacingCauseReadinessPolicy.directSentenceChannels(cause, graph)).head
+    }.toList.flatMap(cause => RelativeCauseConstructionAdmission.admittedDirectChannels(cause, graph)).head
     val preliminary = List(fallback, plan).zipWithIndex.map { case (item, rank) =>
       CrossComparisonExposureDecision(
         causeEvidenceId = item.causeRef.id,
@@ -938,7 +938,7 @@ class CrossComparisonFallbackSpecificityTest extends munit.FunSuite:
     )
 
   private def channels(causeCase: CauseCase, graph: TypedEvidenceGraph): List[DirectCauseChannel] =
-    PlayerFacingCauseReadinessPolicy.directSentenceChannels(causeCase.cause, graph)
+    RelativeCauseConstructionAdmission.admittedDirectChannels(causeCase.cause, graph)
 
   private def hostClaim(item: CauseCase): JudgmentClaim =
     val line = item.causeRef.line.getOrElse(fail("expected Cause event line"))
@@ -960,7 +960,7 @@ class CrossComparisonFallbackSpecificityTest extends munit.FunSuite:
   ): Resolved =
     val causePairs = causes.map(item => item.cause -> item.causeRef)
     val directChannels = causes.map(item =>
-      item.causeRef.id -> PlayerFacingCauseReadinessPolicy.directSentenceChannels(item.cause, graph)
+      item.causeRef.id -> RelativeCauseConstructionAdmission.admittedDirectChannels(item.cause, graph)
     ).toMap
     val eligibility = CrossComparisonCauseExposurePolicy
       .resolveEligibilityForDominance(causePairs, graph, Set(played.rootMove))
