@@ -10,8 +10,6 @@ class PgnDumpTest extends munit.FunSuite:
 
   given Conversion[Int, Ply] = Ply(_)
 
-  val P = PgnDump
-
   def node(ply: Ply, uci: String, san: String, children: Branches = Branches.empty) =
     Branch(
       id = UciCharPair(Uci(uci).get),

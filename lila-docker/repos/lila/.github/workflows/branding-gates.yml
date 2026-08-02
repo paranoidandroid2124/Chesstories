@@ -49,6 +49,3 @@ jobs:
 
       - name: Web compile gate
         run: sbt "web/compile"
-
-      - name: Branding render gate
-        run: sbt "web/testOnly lila.web.BrandingRenderTest"

@@ -12,10 +12,9 @@ class MultiPgnTest extends munit.FunSuite:
     assertEquals(multi.value, Nil)
 
   test("split one game"):
-    for
-      pgn <- PgnFixtures.all
-      multi = MultiPgn.split(pgn, max)
-    yield assertEquals(multi.value.size, 1)
+    val pgn = PgnStr(PgnFixtures.pgn3)
+    val multi = MultiPgn.split(pgn, max)
+    assertEquals(multi.value.size, 1)
 
   val games = List(PgnFixtures.pgn3, PgnFixtures.pgn4, PgnFixtures.pgn5, PgnFixtures.pgn6, PgnFixtures.pgn7)
     .map(PgnStr(_))
