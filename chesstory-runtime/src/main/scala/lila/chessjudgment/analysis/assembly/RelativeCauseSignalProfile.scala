@@ -778,7 +778,10 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
           val targetPressureRelationProofs =
             RelativeCauseSignalProfile.currentMoveTargetPressureRelationRecords(profile.fact.candidateLine, profile.allRecords)
           val concreteTargetCarriers =
-            RelativeCauseSignalProfile.currentMoveConcreteTargetCarrierRecords(profile.fact.candidateLine, profile.allRecords)
+            StrategicMechanismContrastEvidence.currentMoveConcreteTargetCarrierRecords(
+              profile.fact.candidateLine,
+              profile.allRecords
+            )
           val causeKinds =
             currentMoveStrategicSupportCauseKinds(payload, profile.fact.candidateLine, profile.allRecords)
               .filter(kind =>
@@ -892,7 +895,10 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
   ): Boolean =
     kind == RelativeCauseKind.ActivityGain &&
       currentMoveConcreteActivitySignals(payload, profile.fact.candidateLine, profile.allRecords)
-        .exists(signal => RelativeCauseSignalProfile.currentMoveConcreteActivitySource(signal.source, profile.allRecords))
+        .exists(signal =>
+          StrategicMechanismContrastEvidence
+            .currentMoveConcreteActivitySource(signal.source, profile.allRecords)
+        )
 
   private def currentMoveConcreteActivitySignals(
       payload: StrategicMechanismEvidence,
@@ -902,7 +908,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
     payload.signals.filter(signal =>
       RelativeCauseSignalProfile.currentMoveStrategicSupportSignal(signal, candidateLine, records) &&
         signal.axis.exists(axis =>
-          RelativeCauseSignalProfile.currentMoveActivityValueAxis(axis)
+          StrategicMechanismContrastEvidence.currentMoveActivityValueAxis(axis)
         )
     )
 
@@ -1627,7 +1633,8 @@ private[chessjudgment] object RelativeCauseSignalProfile:
             )
           then List(RelativeCauseKind.TargetPressureGain)
           else Nil
-        case StrategicAxisKind.Activity if currentMoveActivityValueAxis(axis) =>
+        case StrategicAxisKind.Activity
+            if StrategicMechanismContrastEvidence.currentMoveActivityValueAxis(axis) =>
           List(RelativeCauseKind.ActivityGain)
         case StrategicAxisKind.PlanCoherence if axis.polarity == StrategicAxisPolarity.Concede =>
           List(RelativeCauseKind.PlanContradiction)
@@ -1652,21 +1659,6 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         case _ =>
           Nil
     }
-
-  private[chessjudgment] def currentMoveActivityValueAxis(axis: StrategicAxisDetail): Boolean =
-    StrategicMechanismContrastEvidence.currentMoveActivityValueAxis(axis)
-
-  private[chessjudgment] def currentMoveConcreteActivityCarrierRecords(
-      candidateLine: LineNodeRef,
-      records: List[EvidenceRecord]
-  ): List[EvidenceRecord] =
-    StrategicMechanismContrastEvidence.currentMoveConcreteActivityCarrierRecords(candidateLine, records)
-
-  private[chessjudgment] def currentMoveConcreteTargetCarrierRecords(
-      candidateLine: LineNodeRef,
-      records: List[EvidenceRecord]
-  ): List[EvidenceRecord] =
-    StrategicMechanismContrastEvidence.currentMoveConcreteTargetCarrierRecords(candidateLine, records)
 
   private[chessjudgment] def currentMoveRelationPayoffRecords(
       candidateLine: LineNodeRef,
@@ -1699,18 +1691,6 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       case _ =>
         false
     }.distinctBy(_.ref.id)
-
-  private[chessjudgment] def currentMoveConcretePlanCarrierRecords(
-      candidateLine: LineNodeRef,
-      records: List[EvidenceRecord]
-  ): List[EvidenceRecord] =
-    StrategicMechanismContrastEvidence.currentMoveConcretePlanCarrierRecords(candidateLine, records)
-
-  private[chessjudgment] def currentMoveConcreteActivitySource(
-      source: EvidenceRef,
-      records: List[EvidenceRecord]
-  ): Boolean =
-    StrategicMechanismContrastEvidence.currentMoveConcreteActivitySource(source, records)
 
   private[chessjudgment] def currentMoveCounterBreakSupportSignal(
       signal: StrategicMechanismSignal,
@@ -1755,12 +1735,6 @@ private[chessjudgment] object RelativeCauseSignalProfile:
     else if normalized.startsWith("created-tension:") || normalized.startsWith("resolved-tension:") then
       "[a-h][1-8]".r.findAllIn(normalized).map(_.take(1)).toList.distinct
     else Nil
-
-  private[chessjudgment] def currentMoveCounterplayRestraintCarrier(
-      candidateLine: LineNodeRef,
-      records: List[EvidenceRecord]
-  ): Boolean =
-    StrategicMechanismContrastEvidence.currentMoveCounterplayRestraintCarrier(candidateLine, records)
 
   private[chessjudgment] def referenceOnlyDefenseFunctionRecords(
       fact: CandidateComparisonFact,

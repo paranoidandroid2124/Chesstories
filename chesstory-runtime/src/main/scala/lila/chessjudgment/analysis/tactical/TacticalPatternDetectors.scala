@@ -171,7 +171,11 @@ private[chessjudgment] object TacticalPatternDetectors:
       continuations: List[List[String]]
   ): Boolean =
     continuations.exists { rawLine =>
-      val line = stripPlayedPrefix(rawLine.map(normalizeUci).filter(isUciMove), normalizeUci(lastUci)).take(8)
+      val line =
+        stripPlayedPrefix(
+          rawLine.map(PrincipalVariationEvidence.normalizeUci).filter(isUciMove),
+          PrincipalVariationEvidence.normalizeUci(lastUci)
+        ).take(8)
       PrincipalVariationEvidence
         .legalMoveReplay(Fen.write(after).value, line, startPly = 0)
         .exists(_.exists(step => greekGiftKingsideSupport(step.after.board, mover, target)))
@@ -185,9 +189,6 @@ private[chessjudgment] object TacticalPatternDetectors:
       board.byPiece(mover, Queen).squares.exists { queen =>
         queen.queenAttacks(board.occupied).contains(target)
       }
-
-  private def normalizeUci(raw: String): String =
-    PrincipalVariationEvidence.normalizeUci(raw)
 
   private def isUciMove(raw: String): Boolean =
     raw.matches("""[a-h][1-8][a-h][1-8][qrbn]?""")

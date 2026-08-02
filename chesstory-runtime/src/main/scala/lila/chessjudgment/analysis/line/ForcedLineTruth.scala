@@ -40,7 +40,7 @@ object ForcedLineTruth:
       playedUci: String,
       variations: List[EngineLine]
   ): Option[VerifiedTheme] =
-    val continuationLines = variations.map(_.moves.map(normalizeUci))
+    val continuationLines = variations.map(_.moves.map(PrincipalVariationEvidence.normalizeUci))
     TacticalPatternDetectors.ordered
       .find(detector =>
         (!detector.requiresMate || pos.checkMate) &&
@@ -53,10 +53,10 @@ object ForcedLineTruth:
       playedUci: String,
       variations: List[EngineLine]
   ): Option[VerifiedTheme] =
-    val played = normalizeUci(playedUci)
+    val played = PrincipalVariationEvidence.normalizeUci(playedUci)
     variations.view
       .flatMap { variation =>
-        val moves = variation.moves.map(normalizeUci).filter(_.nonEmpty)
+        val moves = variation.moves.map(PrincipalVariationEvidence.normalizeUci).filter(_.nonEmpty)
         Option.when(moves.headOption.contains(played) && moves.size >= 2)(moves.take(2))
       }
       .find(replyChecksMover(fen, _))
@@ -67,6 +67,3 @@ object ForcedLineTruth:
       .legalMoveReplay(fen, line, startPly = 0)
       .flatMap(_.lastOption)
       .exists(_.after.check.yes)
-
-  private def normalizeUci(raw: String): String =
-    PrincipalVariationEvidence.normalizeUci(raw)
