@@ -28,6 +28,33 @@ object Importer:
       pgn64: String
   )
 
+  private val chessComArchiveHost = "api.chess.com"
+  private val chessComArchivePath =
+    "^/pub/player/[A-Za-z0-9][A-Za-z0-9_-]{0,29}/games/[0-9]{4}/(?:0[1-9]|1[0-2])$".r
+
+  private[controllers] def chessComArchiveFetchUrls(archiveListBody: String): List[String] =
+    (Json.parse(archiveListBody) \ "archives")
+      .asOpt[List[String]]
+      .getOrElse(Nil)
+      .flatMap(approvedChessComArchiveUrl)
+
+  private def approvedChessComArchiveUrl(raw: String): Option[String] =
+    Option(raw).filter(_.nonEmpty).flatMap: value =>
+      try
+        val uri = URI.create(value)
+        val rawPath = Option(uri.getRawPath)
+        Option.when(
+          Option(uri.getScheme).exists(_.equalsIgnoreCase("https")) &&
+            Option(uri.getHost).exists(_.equalsIgnoreCase(chessComArchiveHost)) &&
+            (uri.getPort == -1 || uri.getPort == 443) &&
+            uri.getRawUserInfo == null &&
+            uri.getRawQuery == null &&
+            uri.getRawFragment == null &&
+            rawPath.exists(path => chessComArchivePath.pattern.matcher(path).matches)
+        )(uri.toString)
+      catch
+        case NonFatal(_) => None
+
 final class Importer(
     env: Env,
     ws: StandaloneWSClient
@@ -275,9 +302,8 @@ final class Importer(
       .flatMap { res =>
         if res.status == 200 then
           val archives =
-            (Json.parse(res.body[String]) \ "archives")
-              .asOpt[List[String]]
-              .getOrElse(Nil)
+            Importer
+              .chessComArchiveFetchUrls(res.body[String])
               .reverse
               .take(chessComArchiveScanLimit)
           collectChessComGames(archives, acc = Nil)
@@ -300,6 +326,7 @@ final class Importer(
       val head = archives.head
       val tail = archives.tail
       ws.url(head)
+        .withFollowRedirects(false)
         .withRequestTimeout(requestTimeout)
         .get()
         .flatMap { res =>
