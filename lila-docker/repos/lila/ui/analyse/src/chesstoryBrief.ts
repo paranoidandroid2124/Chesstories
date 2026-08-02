@@ -51,6 +51,7 @@ interface ChesstoryEffectScope {
   primitive_kind: string;
   target_signatures: string[];
   plan_ids: string[];
+  plan_result_semantic_key: string | null;
   strategic_axes: unknown[];
 }
 
@@ -621,10 +622,17 @@ function isProofSegment(value: unknown): value is ChesstoryProofSegment {
 function isEffectScope(value: unknown): value is ChesstoryEffectScope {
   return (
     isObject(value) &&
-    hasExactKeys(value, ['primitive_kind', 'target_signatures', 'plan_ids', 'strategic_axes']) &&
+    hasExactKeys(value, [
+      'primitive_kind',
+      'target_signatures',
+      'plan_ids',
+      'plan_result_semantic_key',
+      'strategic_axes',
+    ]) &&
     isNonEmptyString(value.primitive_kind) &&
     isStringSet(value.target_signatures) &&
     isStringSet(value.plan_ids) &&
+    isNullableString(value.plan_result_semantic_key) &&
     Array.isArray(value.strategic_axes)
   );
 }

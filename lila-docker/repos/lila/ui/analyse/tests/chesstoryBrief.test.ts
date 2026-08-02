@@ -96,6 +96,7 @@ function channel(
         primitive_kind: 'plan_result',
         target_signatures: [`${target.kind}:${target.key}`],
         plan_ids: [],
+        plan_result_semantic_key: `plan-result:${signature}`,
         strategic_axes: [],
       },
       magnitude_status: 'not_applicable',
@@ -167,6 +168,7 @@ function importance(
           const effectScope = {
             ...entry.effect_descriptor.effect_scope,
             primitive_kind: 'structural_transition',
+            plan_result_semantic_key: null,
           };
           const stake = alternativeResource ? 'benefits:white' : 'harms:white';
           const domain = `structural:roottransition:activity:${alternativeResource ? 'gain' : 'loss'}:none`;
