@@ -203,6 +203,24 @@ export interface ChesstoryMoveMeaningPayload {
   explanations: ChesstoryExplanation[];
 }
 
+export type ChesstoryBriefState =
+  | { kind: 'no-input' }
+  | { kind: 'requesting'; key: string }
+  | { kind: 'probing'; key: string }
+  | { kind: 'ready-certified'; key: string; payload: ChesstoryMoveMeaningPayload }
+  | { kind: 'ready-verdict-only'; key: string; payload: ChesstoryMoveMeaningPayload }
+  | { kind: 'withheld'; key: string }
+  | { kind: 'fault'; key: string };
+
+export function chesstoryBriefRequestIsActive(
+  state: ChesstoryBriefState,
+  generation: number,
+  activeGeneration: number,
+  key: string,
+): boolean {
+  return generation === activeGeneration && state.kind !== 'no-input' && state.key === key;
+}
+
 interface ChesstoryMoveMeaningSuccess {
   schema_version: 'chesstory.move-meaning.response.v3';
   request_id: string | null;
@@ -760,11 +778,15 @@ function isAvailability(value: unknown): value is ChesstoryMoveMeaningSuccess['a
   );
 }
 
-export function chesstoryBriefSections(payload?: ChesstoryMoveMeaningPayload): ChesstoryBriefSection[] {
-  if (!payload?.renderable) return placeholderSections();
+export function chesstoryBriefSections(state: ChesstoryBriefState): ChesstoryBriefSection[] {
+  if (state.kind === 'requesting' || state.kind === 'probing') return placeholderSections();
+  if (state.kind === 'no-input' || state.kind === 'withheld' || state.kind === 'fault')
+    return unavailableSections(state.kind);
+  const payload = state.payload;
+  if (!payload.renderable) return unavailableSections('fault');
   const explanation = payload.explanations[0];
   if (explanation) return causeSections(payload, explanation);
-  return payload.verdict ? verdictSections(payload) : placeholderSections();
+  return payload.verdict ? verdictSections(payload) : unavailableSections('fault');
 }
 
 function causeSections(
@@ -1025,6 +1047,27 @@ function placeholderSections(): ChesstoryBriefSection[] {
       pending: true,
     },
   ];
+}
+
+function unavailableSections(kind: 'no-input' | 'withheld' | 'fault'): ChesstoryBriefSection[] {
+  const state =
+    kind === 'no-input'
+      ? {
+          title: 'Choose a move',
+          body: 'Select a played move with available engine analysis to review it.',
+        }
+      : kind === 'withheld'
+        ? {
+            title: 'Review withheld',
+            body: 'No review is shown for this move.',
+          }
+        : {
+            title: 'Review unavailable',
+            body: 'The review could not be loaded for this move.',
+          };
+  return placeholderSections().map((section, index) =>
+    index === 2 ? { ...section, ...state, pending: false } : { ...section, pending: false },
+  );
 }
 
 function isObject(value: unknown): value is Record<string, any> {

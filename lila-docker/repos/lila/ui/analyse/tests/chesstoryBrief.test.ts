@@ -1,6 +1,11 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chesstoryBriefSections, decodeChesstoryMoveMeaningResponse } from '../src/chesstoryBrief';
+import {
+  chesstoryBriefRequestIsActive,
+  chesstoryBriefSections,
+  decodeChesstoryMoveMeaningResponse,
+  type ChesstoryBriefState,
+} from '../src/chesstoryBrief';
 
 const statusCounts = {
   selected: 0,
@@ -150,82 +155,7 @@ function facet(id: string, ideaUnitId: string, kind: string, selectionOrder: num
   };
 }
 
-function importance(selectedIds: string[], uniqueTop: string | null, facets: any[], fullyMeasured: boolean) {
-  const selectedFacets = facets.filter(item => selectedIds.includes(item.cause_evidence_id));
-  const profiles = fullyMeasured
-    ? selectedFacets.flatMap(item => {
-        const alternativeResource = item.cause.effect_mode === 'alternative_resource';
-        return item.channels.map((entry: any) => {
-          const measure = { kind: 'structural_strength', units: 1 };
-          const effectScope = {
-            ...entry.effect_descriptor.effect_scope,
-            primitive_kind: 'structural_transition',
-            plan_result_semantic_key: null,
-          };
-          const stake = alternativeResource ? 'benefits:white' : 'harms:white';
-          const domain = `structural:roottransition:activity:${alternativeResource ? 'gain' : 'loss'}:none`;
-          entry.direct_change = alternativeResource ? 'occurred' : 'lost';
-          entry.played_change = alternativeResource ? 'missed' : 'lost';
-          entry.proof_segment = {
-            terminal_relation: 'makes_structural_transition',
-            steps: [
-              {
-                ply_offset: 0,
-                move_uci: entry.actor.move,
-                role: 'root_action',
-              },
-            ],
-          };
-          entry.effect_descriptor = {
-            effect_scope: effectScope,
-            magnitude_status: 'exact',
-            measure,
-            material_event_salience: null,
-          };
-          entry.importance_effect = {
-            stake,
-            domain_kind: 'structural',
-            domain,
-            measure,
-            effect_scope: effectScope,
-          };
-          const role = entry.line.role === 'best_reference' ? 'BestReference' : 'Played';
-          return {
-            cause_evidence_id: item.cause_evidence_id,
-            causal_signature: entry.causal_signature,
-            universe: {
-              root_board_state: '6k1/5p2/8/8/8/5N2/8/6K1 w - -',
-              impact: 'harms-reviewed-mover:white',
-            },
-            domain_kind: 'structural',
-            domain,
-            stake,
-            event_line: `${role}:${entry.line.rank}:${entry.line.root_move}`,
-            effect_mode: item.cause.effect_mode,
-            direct_change: entry.direct_change,
-            played_change: entry.played_change,
-            measure,
-            effect_scope: effectScope,
-          };
-        });
-      })
-    : [];
-  const relations = profiles.flatMap((left: any, index: number) =>
-    profiles.slice(index + 1).flatMap((right: any) =>
-      left.cause_evidence_id === right.cause_evidence_id
-        ? []
-        : [
-            {
-              left_cause_id: left.cause_evidence_id,
-              left_causal_signature: left.causal_signature,
-              right_cause_id: right.cause_evidence_id,
-              right_causal_signature: right.causal_signature,
-              relation: 'incomparable',
-              domain: null,
-            },
-          ],
-    ),
-  );
+function importance(selectedIds: string[], uniqueTop: string | null) {
   return {
     authority: 'root_owned_effect_partial_order',
     relation_policy_version: 'chesstory.direct-cause-importance.relation.v3',
@@ -236,39 +166,20 @@ function importance(selectedIds: string[], uniqueTop: string | null, facets: any
     dominated_within_domain_cause_ids: [],
     unique_top: uniqueTop,
     profile_summary: {
-      measured_channels: profiles.length,
-      measured_causes: fullyMeasured ? selectedIds.length : 0,
-      fully_measured_causes: fullyMeasured ? selectedIds.length : 0,
-      unmeasured_causes: fullyMeasured ? 0 : selectedIds.length,
+      measured_channels: 0,
+      measured_causes: 0,
+      fully_measured_causes: 0,
+      unmeasured_causes: selectedIds.length,
     },
-    profiles,
-    relations,
-    decisions: selectedFacets.map(item => ({
-      cause_evidence_id: item.cause_evidence_id,
-      measured_channel_signatures: fullyMeasured
-        ? item.channels.map((entry: any) => entry.causal_signature)
-        : [],
-      unmeasured_channel_signatures: fullyMeasured
-        ? []
-        : item.channels.map((entry: any) => entry.causal_signature),
-      dominating_cause_ids: [],
-      dominated_within_domain: false,
-      fully_measured: fullyMeasured,
-    })),
-    relation_summary: {
-      comparable_profile_pairs: 0,
-      incomparable_profile_pairs: relations.length,
-    },
-    unmeasured: fullyMeasured
-      ? []
-      : selectedFacets.map(item => ({
-          cause_evidence_id: item.cause_evidence_id,
-          channel_count: item.channels.length,
-        })),
+    profiles: [],
+    relations: [],
+    decisions: [],
+    relation_summary: { comparable_profile_pairs: 0, incomparable_profile_pairs: 0 },
+    unmeasured: [],
   };
 }
 
-function certifiedEnvelope(facets: any[], units: any[], uniqueTop: string | null, fullyMeasured = true) {
+function certifiedEnvelope(facets: any[], units: any[], uniqueTop: string | null) {
   const selectedIds = facets.map(item => item.cause_evidence_id);
   const leadIds = units.map(unit => unit.lead_cause_evidence_id);
   return {
@@ -298,15 +209,35 @@ function certifiedEnvelope(facets: any[], units: any[], uniqueTop: string | null
           move_quality: 'bad',
           ideas: facets,
           idea_units: units,
-          idea_importance: importance(
-            leadIds,
-            uniqueTop,
-            facets.filter(item => leadIds.includes(item.cause_evidence_id)),
-            fullyMeasured,
-          ),
-          importance: importance(selectedIds, uniqueTop, facets, fullyMeasured),
+          idea_importance: importance(leadIds, uniqueTop),
+          importance: importance(selectedIds, uniqueTop),
         },
       ],
+    },
+  };
+}
+
+function verdictOnlyEnvelope(requestId = 'verdict-only') {
+  return {
+    schema_version: 'chesstory.move-meaning.response.v3',
+    request_id: requestId,
+    ok: true,
+    status: 'ready',
+    availability: { state: 'ready', reason: null },
+    probe_requests: [],
+    move_review: {
+      renderable: true,
+      verdict,
+      idea_status: 'no_certified_differential_idea',
+      idea_status_detail: {
+        authority: 'cause_disposition_ledger.v1',
+        total_cause_count: 0,
+        selected_cause_ids: [],
+        status_counts: statusCounts,
+        reason_counts: reasonCounts,
+        abstention_codes: ['no_relative_cause_generated'],
+      },
+      explanations: [],
     },
   };
 }
@@ -317,16 +248,26 @@ function decodeSuccess(raw: unknown) {
   return decoded;
 }
 
+function readyState(payload: any): ChesstoryBriefState {
+  return {
+    kind: payload.idea_status === 'certified' ? 'ready-certified' : 'ready-verdict-only',
+    key: 'test',
+    payload,
+  };
+}
+
 describe('active V3 Chesstory brief contract', () => {
-  test('keeps missing and withheld payloads pending while preserving a valid withheld envelope', () => {
-    assert.ok(chesstoryBriefSections().every(section => section.pending));
+  test('keeps in-flight reviews pending, preserves actionable withheld probes, and exposes unavailable states', () => {
+    assert.ok(chesstoryBriefSections({ kind: 'requesting', key: 'test' }).every(section => section.pending));
+    assert.ok(chesstoryBriefSections({ kind: 'probing', key: 'test' }).every(section => section.pending));
+    assert.equal(chesstoryBriefSections({ kind: 'no-input' })[2].title, 'Choose a move');
     const withheld = {
       schema_version: 'chesstory.move-meaning.response.v3',
       request_id: null,
       ok: true,
       status: 'withheld',
       availability: { state: 'withheld', reason: 'insufficient_engine_depth' },
-      probe_requests: [],
+      probe_requests: [{ id: 'still-actionable' }],
       move_review: {
         renderable: false,
         verdict: null,
@@ -343,34 +284,17 @@ describe('active V3 Chesstory brief contract', () => {
       },
     };
     const decoded = decodeSuccess(withheld);
-    assert.ok(chesstoryBriefSections(decoded.move_review).every(section => section.pending));
+    const withheldSections = chesstoryBriefSections({ kind: 'withheld', key: 'test' });
+    assert.ok(withheldSections.every(section => !section.pending));
+    assert.equal(withheldSections[2].title, 'Review withheld');
+    assert.equal(chesstoryBriefSections({ kind: 'fault', key: 'test' })[2].title, 'Review unavailable');
+    assert.equal(decoded.status, 'withheld');
+    assert.equal(decoded.probe_requests.length, 1);
   });
 
   test('preserves a ready verdict when no differential Cause is certified', () => {
-    const response = {
-      schema_version: 'chesstory.move-meaning.response.v3',
-      request_id: 'verdict-only',
-      ok: true,
-      status: 'ready',
-      availability: { state: 'ready', reason: null },
-      probe_requests: [],
-      move_review: {
-        renderable: true,
-        verdict,
-        idea_status: 'no_certified_differential_idea',
-        idea_status_detail: {
-          authority: 'cause_disposition_ledger.v1',
-          total_cause_count: 0,
-          selected_cause_ids: [],
-          status_counts: statusCounts,
-          reason_counts: reasonCounts,
-          abstention_codes: ['no_relative_cause_generated'],
-        },
-        explanations: [],
-      },
-    };
-    const decoded = decodeSuccess(response);
-    const sections = chesstoryBriefSections(decoded.move_review);
+    const decoded = decodeSuccess(verdictOnlyEnvelope());
+    const sections = chesstoryBriefSections(readyState(decoded.move_review));
     assert.ok(sections.every(section => !section.pending));
     assert.match(JSON.stringify(sections), /f3-g5 is classified as mistake/);
     assert.match(JSON.stringify(sections), /f3-h4 is the verified reference move/);
@@ -405,8 +329,8 @@ describe('active V3 Chesstory brief contract', () => {
       priority_status: 'unmeasured',
       serialization_order: 0,
     };
-    const decoded = decodeSuccess(certifiedEnvelope([idea], [unit], null, false));
-    const channelSection = chesstoryBriefSections(decoded.move_review).find(
+    const decoded = decodeSuccess(certifiedEnvelope([idea], [unit], null));
+    const channelSection = chesstoryBriefSections(readyState(decoded.move_review)).find(
       section => section.title === 'How each certified channel works',
     );
     assert.equal(channelSection?.items?.length, 2);
@@ -465,7 +389,7 @@ describe('active V3 Chesstory brief contract', () => {
       },
     ];
     const decoded = decodeSuccess(certifiedEnvelope([a, b], units, null));
-    const opening = chesstoryBriefSections(decoded.move_review)[0];
+    const opening = chesstoryBriefSections(readyState(decoded.move_review))[0];
     assert.equal(opening.title, 'Certified differential ideas');
     assert.match(opening.body, /No single top idea was certified/);
     assert.doesNotMatch(JSON.stringify(opening), /Top —/);
@@ -540,7 +464,7 @@ describe('active V3 Chesstory brief contract', () => {
     malformed.forEach(build => assert.equal(decodeChesstoryMoveMeaningResponse(build()), undefined));
   });
 
-  test('recognizes the exact V3 error envelope without exposing a move review', () => {
+  test('recognizes the exact V3 error envelope and discards a stale response', () => {
     const error: unknown = {
       schema_version: 'chesstory.move-meaning.response.v3',
       request_id: 'failed-request',
@@ -552,5 +476,19 @@ describe('active V3 Chesstory brief contract', () => {
     assert.ok(decoded);
     if (decoded.ok) assert.fail('expected a V3 error response');
     assert.equal(decoded.error, 'move_review_not_buildable');
+
+    const current: ChesstoryBriefState = { kind: 'requesting', key: 'new-request' };
+    const stale: ChesstoryBriefState = {
+      kind: 'ready-verdict-only',
+      key: 'old-request',
+      payload: verdictOnlyEnvelope('old-response').move_review as any,
+    };
+    const shown = chesstoryBriefRequestIsActive(current, 1, 2, stale.key) ? stale : current;
+    assert.equal(shown.kind, 'requesting');
+
+    const ready = chesstoryBriefRequestIsActive(current, 2, 2, current.key)
+      ? { ...stale, key: current.key }
+      : current;
+    assert.equal(ready.kind, 'ready-verdict-only');
   });
 });

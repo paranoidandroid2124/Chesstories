@@ -45,7 +45,11 @@ import pgnImport from './pgnImport';
 import * as pgnExport from './pgnExport';
 import { emptyPgnError, normalizeInlinePgn, submitPgnToImportPipeline } from './pgnPipeline';
 import * as studyApi from './studyApi';
-import { decodeChesstoryMoveMeaningResponse, type ChesstoryMoveMeaningPayload } from './chesstoryBrief';
+import {
+  chesstoryBriefRequestIsActive,
+  decodeChesstoryMoveMeaningResponse,
+  type ChesstoryBriefState,
+} from './chesstoryBrief';
 import { defaultInit, jsonHeader, xhrHeader, ensureOk } from 'lib/xhr';
 
 import type { PgnError } from 'chessops/pgn';
@@ -129,7 +133,6 @@ interface ChesstoryProbeResult {
 
 interface ChesstoryProbeBatch {
   results: ChesstoryProbeResult[];
-  failed: boolean;
 }
 
 function loginHref(): string {
@@ -208,16 +211,10 @@ export default class AnalyseCtrl implements CevalHandler {
   private studyActionTone: 'info' | 'success' | 'error' = 'info';
   private studyActionTimer?: number;
   private studyTransferCount = 0;
-  private chesstoryBriefKey?: string;
-  private chesstoryBriefLoadingKey?: string;
-  private chesstoryBriefFailureKey?: string;
-  private chesstoryBriefRetryAfter = 0;
+  private chesstoryBriefState: ChesstoryBriefState = { kind: 'no-input' };
   private chesstoryBriefGeneration = 0;
   private chesstoryBriefAbort?: AbortController;
   private chesstoryProbeCancel?: () => void;
-  private chesstoryBriefPayload?: ChesstoryMoveMeaningPayload;
-  private chesstoryBriefLoading = false;
-  private chesstoryBriefUnavailable = false;
 
   // other paths
   initialPath: Tree.Path;
@@ -264,6 +261,7 @@ export default class AnalyseCtrl implements CevalHandler {
 
     if (location.hash === '#menu') requestIdleCallback(this.actionMenu.toggle, 500);
     this.startCeval();
+    this.refreshChesstoryBrief();
     keyboard.bind(this);
     this.installHistoryNavigation();
 
@@ -604,62 +602,52 @@ export default class AnalyseCtrl implements CevalHandler {
     return this.node;
   }
 
-  chesstoryBrief(): { payload?: ChesstoryMoveMeaningPayload; loading: boolean; unavailable: boolean } {
-    return {
-      payload: this.chesstoryBriefPayload,
-      loading: this.chesstoryBriefLoading,
-      unavailable: this.chesstoryBriefUnavailable,
-    };
+  chesstoryBrief(): ChesstoryBriefState {
+    return this.chesstoryBriefState;
   }
 
-  requestChesstoryBrief(): void {
-    const request = this.chesstoryBriefRequest();
-    const key = request
-      ? JSON.stringify({
-          request,
-          probeCapabilities: {
-            replyMultipv: this.isCevalAllowed() && this.cevalEnabled() && this.ceval.available(),
-            endgameTablebase: !!this.opts.explorer.tablebaseEndpoint,
-          },
-        })
-      : '';
+  private refreshChesstoryBrief(): void {
+    const request = this.makeChesstoryBriefRequest();
     if (!request) {
-      this.chesstoryBriefAbort?.abort();
-      this.chesstoryProbeCancel?.();
-      this.chesstoryBriefGeneration++;
-      this.chesstoryBriefKey = undefined;
-      this.chesstoryBriefLoadingKey = undefined;
-      this.chesstoryBriefFailureKey = undefined;
-      this.chesstoryBriefAbort = undefined;
-      this.chesstoryProbeCancel = undefined;
-      this.chesstoryBriefPayload = undefined;
-      this.chesstoryBriefLoading = false;
-      this.chesstoryBriefUnavailable = true;
+      if (this.chesstoryBriefState.kind === 'no-input') return;
+      this.cancelChesstoryBrief();
+      this.setChesstoryBriefState({ kind: 'no-input' });
       return;
     }
-    if (
-      key === this.chesstoryBriefKey ||
-      key === this.chesstoryBriefLoadingKey ||
-      (key === this.chesstoryBriefFailureKey && Date.now() < this.chesstoryBriefRetryAfter)
-    )
-      return;
+    const key = JSON.stringify({
+      request,
+      probeCapabilities: {
+        replyMultipv: this.isCevalAllowed() && this.cevalEnabled() && this.ceval.available(),
+        endgameTablebase: !!this.opts.explorer.tablebaseEndpoint,
+      },
+    });
+    if (this.chesstoryBriefState.kind !== 'no-input' && key === this.chesstoryBriefState.key) return;
 
-    this.chesstoryBriefAbort?.abort();
-    this.chesstoryProbeCancel?.();
+    this.cancelChesstoryBrief();
     const abort = new AbortController();
     const generation = ++this.chesstoryBriefGeneration;
-    const isActive = (): boolean =>
-      generation === this.chesstoryBriefGeneration && this.chesstoryBriefLoadingKey === key;
-    this.chesstoryBriefKey = undefined;
-    this.chesstoryBriefLoadingKey = key;
     this.chesstoryBriefAbort = abort;
-    this.chesstoryBriefPayload = undefined;
-    this.chesstoryBriefLoading = true;
-    this.chesstoryBriefUnavailable = false;
+    this.setChesstoryBriefState({ kind: 'requesting', key });
+    void this.loadChesstoryBrief(request, key, abort, generation);
+  }
 
-    fetch('/api/chess-judgment/move-meaning', {
+  private cancelChesstoryBrief(): void {
+    this.chesstoryBriefAbort?.abort();
+    this.chesstoryProbeCancel?.();
+    this.chesstoryBriefGeneration++;
+    this.chesstoryBriefAbort = undefined;
+    this.chesstoryProbeCancel = undefined;
+  }
+
+  private setChesstoryBriefState(state: ChesstoryBriefState): void {
+    this.chesstoryBriefState = state;
+    this.redraw();
+  }
+
+  private postChesstoryBrief(request: ChesstoryMoveMeaningRequest, signal: AbortSignal): Promise<unknown> {
+    return fetch('/api/chess-judgment/move-meaning', {
       ...defaultInit,
-      signal: abort.signal,
+      signal,
       method: 'post',
       headers: {
         ...jsonHeader,
@@ -669,74 +657,66 @@ export default class AnalyseCtrl implements CevalHandler {
       body: JSON.stringify(request),
     })
       .then(ensureOk)
-      .then(res => res.json() as Promise<unknown>)
-      .then(async raw => {
+      .then(res => res.json() as Promise<unknown>);
+  }
+
+  private async loadChesstoryBrief(
+    request: ChesstoryMoveMeaningRequest,
+    key: string,
+    abort: AbortController,
+    generation: number,
+  ): Promise<void> {
+    const isActive = (): boolean =>
+      chesstoryBriefRequestIsActive(this.chesstoryBriefState, generation, this.chesstoryBriefGeneration, key);
+    try {
+      const raw = await this.postChesstoryBrief(request, abort.signal);
+      if (!isActive()) return;
+      let data = decodeChesstoryMoveMeaningResponse(raw);
+      if (!data?.ok) throw new Error('Invalid Chesstory response contract');
+
+      const probeResults: ChesstoryProbeResult[] = [];
+      const seenProbeIds = new Set<string>();
+      const probeBudget = 12;
+      for (let round = 0; round < 6 && probeResults.length < probeBudget; round++) {
+        if (!data.probe_requests.length) break;
+        this.setChesstoryBriefState({ kind: 'probing', key });
+        const batch = await this.chesstoryProbeResults(
+          data.probe_requests,
+          seenProbeIds,
+          probeBudget - probeResults.length,
+          isActive,
+          abort.signal,
+        );
         if (!isActive()) return;
-        const decoded = decodeChesstoryMoveMeaningResponse(raw);
-        if (!decoded?.ok) throw new Error('Invalid Chesstory response contract');
-        let data = decoded;
-        let review = data.move_review;
-        const probeResults: ChesstoryProbeResult[] = [];
-        const seenProbeIds = new Set<string>();
-        const probeBudget = 12;
-        let probeFailed = false;
-        for (let round = 0; round < 6 && probeResults.length < probeBudget; round++) {
-          const batch = await this.chesstoryProbeResults(
-            data.probe_requests,
-            seenProbeIds,
-            probeBudget - probeResults.length,
-            isActive,
-          );
-          if (!isActive()) return;
-          probeFailed ||= batch.failed;
-          if (!batch.results.length) break;
-          probeResults.push(...batch.results);
-          const nextRaw = await fetch('/api/chess-judgment/move-meaning', {
-            ...defaultInit,
-            signal: abort.signal,
-            method: 'post',
-            headers: {
-              ...jsonHeader,
-              ...xhrHeader,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ ...request, probeResults }),
-          })
-            .then(ensureOk)
-            .then(res => res.json() as Promise<unknown>);
-          if (!isActive()) return;
-          const next = decodeChesstoryMoveMeaningResponse(nextRaw);
-          if (!next?.ok) throw new Error('Invalid Chesstory response contract');
-          data = next;
-          review = data.move_review;
-        }
+        if (!batch.results.length) break;
+        probeResults.push(...batch.results);
+        const nextRaw = await this.postChesstoryBrief({ ...request, probeResults }, abort.signal);
         if (!isActive()) return;
-        this.chesstoryBriefPayload = review?.renderable ? review : undefined;
-        this.chesstoryBriefUnavailable = !this.chesstoryBriefPayload;
-        if (probeFailed && !this.chesstoryBriefPayload) {
-          this.chesstoryBriefFailureKey = key;
-          this.chesstoryBriefRetryAfter = Date.now() + 3000;
-        } else {
-          this.chesstoryBriefKey = key;
-          this.chesstoryBriefFailureKey = undefined;
-        }
-      })
-      .catch(e => {
-        if (!isActive()) return;
-        console.info('Chesstory brief unavailable', e);
-        this.chesstoryBriefPayload = undefined;
-        this.chesstoryBriefUnavailable = true;
-        this.chesstoryBriefFailureKey = key;
-        this.chesstoryBriefRetryAfter = Date.now() + 3000;
-      })
-      .finally(() => {
-        if (isActive()) {
-          this.chesstoryBriefLoadingKey = undefined;
-          this.chesstoryBriefAbort = undefined;
-          this.chesstoryBriefLoading = false;
-          this.redraw();
-        }
-      });
+        data = decodeChesstoryMoveMeaningResponse(nextRaw);
+        if (!data?.ok) throw new Error('Invalid Chesstory response contract');
+      }
+      if (!isActive()) return;
+      if (data.status === 'withheld') {
+        this.setChesstoryBriefState({ kind: 'withheld', key });
+        return;
+      }
+      const review = data.move_review;
+      if (review.idea_status === 'certified')
+        this.setChesstoryBriefState({ kind: 'ready-certified', key, payload: review });
+      else if (review.idea_status === 'no_certified_differential_idea')
+        this.setChesstoryBriefState({ kind: 'ready-verdict-only', key, payload: review });
+      else throw new Error('Invalid Chesstory response contract');
+    } catch (e) {
+      if (!isActive() || abort.signal.aborted) return;
+      console.info('Chesstory brief unavailable', e);
+      this.setChesstoryBriefState({ kind: 'fault', key });
+    } finally {
+      if (isActive()) {
+        this.chesstoryBriefAbort = undefined;
+        this.chesstoryProbeCancel = undefined;
+        this.redraw();
+      }
+    }
   }
 
   private async chesstoryProbeResults(
@@ -744,6 +724,7 @@ export default class AnalyseCtrl implements CevalHandler {
     seenProbeIds: Set<string>,
     limit: number,
     isActive: () => boolean,
+    signal: AbortSignal,
   ): Promise<ChesstoryProbeBatch> {
     const canRunEngineProbe = this.isCevalAllowed() && this.cevalEnabled() && this.ceval.available();
     const canRunTablebaseProbe = !!this.opts.explorer.tablebaseEndpoint;
@@ -771,12 +752,11 @@ export default class AnalyseCtrl implements CevalHandler {
                 typeof (request as ChesstoryProbeRequest).comparisonFen === 'string')),
         )
       : [];
-    if (!requests.length) return { results: [], failed: false };
+    if (!requests.length) return { results: [] };
 
     const wasEnabled = !!this.cevalEnabled();
     const hasEngineProbe = requests.some(request => request.purpose === 'reply_multipv');
     const results: ChesstoryProbeResult[] = [];
-    let failed = false;
     if (hasEngineProbe) this.ceval.stop();
     try {
       for (const request of requests.slice(0, limit)) {
@@ -784,10 +764,9 @@ export default class AnalyseCtrl implements CevalHandler {
         seenProbeIds.add(request.id);
         const result =
           request.purpose === 'endgame_tablebase'
-            ? await this.runChesstoryTablebaseProbe(request)
-            : await this.runChesstoryProbe(request, isActive);
+            ? await this.runChesstoryTablebaseProbe(request, signal)
+            : await this.runChesstoryProbe(request, isActive, signal);
         if (result && isActive()) results.push(result);
-        else if (isActive()) failed = true;
       }
     } finally {
       if (hasEngineProbe) {
@@ -795,17 +774,18 @@ export default class AnalyseCtrl implements CevalHandler {
         if (wasEnabled) this.startCeval();
       }
     }
-    return { results, failed };
+    return { results };
   }
 
   private async runChesstoryTablebaseProbe(
     request: ChesstoryProbeRequest,
+    signal: AbortSignal,
   ): Promise<ChesstoryProbeResult | undefined> {
     if (!request.comparisonFen) return;
     try {
       const [terminal, comparison] = await Promise.all([
-        loadTablebase(this.opts.explorer.tablebaseEndpoint, request.fen),
-        loadTablebase(this.opts.explorer.tablebaseEndpoint, request.comparisonFen),
+        loadTablebase(this.opts.explorer.tablebaseEndpoint, request.fen, signal),
+        loadTablebase(this.opts.explorer.tablebaseEndpoint, request.comparisonFen, signal),
       ]);
       const terminalWdl = this.chesstoryTablebaseWdl(terminal.category);
       const comparisonWdl = this.chesstoryTablebaseWdl(comparison.category);
@@ -841,7 +821,7 @@ export default class AnalyseCtrl implements CevalHandler {
         },
       };
     } catch (e) {
-      console.info('Chesstory tablebase probe unavailable', e);
+      if (!signal.aborted) console.info('Chesstory tablebase probe unavailable', e);
       return;
     }
   }
@@ -866,6 +846,7 @@ export default class AnalyseCtrl implements CevalHandler {
   private runChesstoryProbe(
     request: ChesstoryProbeRequest,
     isActive: () => boolean,
+    signal: AbortSignal,
   ): Promise<ChesstoryProbeResult | undefined> {
     const currentFen = request.moves.length
       ? parseFen(request.fen)
@@ -882,7 +863,7 @@ export default class AnalyseCtrl implements CevalHandler {
             () => undefined,
           )
       : request.fen;
-    if (!currentFen || !isActive()) return Promise.resolve(undefined);
+    if (!currentFen || !isActive() || signal.aborted) return Promise.resolve(undefined);
     return new Promise(resolve => {
       let done = false;
       const requiredPvs = Math.max(1, request.multiPv ?? 1);
@@ -893,11 +874,13 @@ export default class AnalyseCtrl implements CevalHandler {
         if (done) return;
         done = true;
         window.clearTimeout(timeout);
+        signal.removeEventListener('abort', cancel);
         if (this.chesstoryProbeCancel === cancel) this.chesstoryProbeCancel = undefined;
         if (isActive()) this.ceval.stop();
         resolve(ev && isActive() ? this.chesstoryProbeResult(request, ev) : undefined);
       };
       this.chesstoryProbeCancel = cancel;
+      signal.addEventListener('abort', cancel, { once: true });
       const work: Work = {
         variant: this.data.game.variant.key,
         threads: this.ceval.threads,
@@ -930,20 +913,19 @@ export default class AnalyseCtrl implements CevalHandler {
     request: ChesstoryProbeRequest,
     ev: Tree.LocalEval,
   ): ChesstoryProbeResult | undefined {
-    const replyLines = ev.pvs
-      .flatMap(pv => {
-        const scoreCp = this.chesstoryEvalCp(pv);
-        return pv.moves.length && scoreCp !== undefined
-          ? [
-              {
-                moves: [...request.moves, ...pv.moves],
-                scoreCp,
-                mate: pv.mate,
-                depth: ev.depth,
-              },
-            ]
-          : [];
-      });
+    const replyLines = ev.pvs.flatMap(pv => {
+      const scoreCp = this.chesstoryEvalCp(pv);
+      return pv.moves.length && scoreCp !== undefined
+        ? [
+            {
+              moves: [...request.moves, ...pv.moves],
+              scoreCp,
+              mate: pv.mate,
+              depth: ev.depth,
+            },
+          ]
+        : [];
+    });
     if (ev.depth < (request.depthFloor ?? request.depth ?? 1) || replyLines.length < (request.multiPv ?? 1))
       return;
     return {
@@ -974,13 +956,8 @@ export default class AnalyseCtrl implements CevalHandler {
     return ((fullmove - 1) * 2 + (parts[1] === 'b' ? 1 : 0)) as Ply;
   }
 
-  private chesstoryBriefRequest(): ChesstoryMoveMeaningRequest | undefined {
-    if (
-      !this.isStudy() ||
-      this.data.game.variant.key !== 'standard' ||
-      this.nodeList.length < 2
-    )
-      return;
+  private makeChesstoryBriefRequest(): ChesstoryMoveMeaningRequest | undefined {
+    if (!this.isStudy() || this.data.game.variant.key !== 'standard' || this.nodeList.length < 2) return;
     const played = this.node;
     const before = this.nodeList[this.nodeList.length - 2];
     if (!played.uci) return;
@@ -988,18 +965,16 @@ export default class AnalyseCtrl implements CevalHandler {
     const beforeEval = before.ceval || before.eval;
     if (!beforeEval?.pvs?.length) return;
 
-    const variations = beforeEval.pvs
-      .flatMap(pv => {
-        const moves = Array.isArray(pv.moves) ? pv.moves : pv.moves.split(' ').filter(Boolean);
-        const scoreCp = this.chesstoryEvalCp(pv);
-        return moves.length && scoreCp !== undefined
-          ? [{ moves, scoreCp, mate: pv.mate, depth: beforeEval.depth || 0 }]
-          : [];
-      });
+    const variations = beforeEval.pvs.flatMap(pv => {
+      const moves = Array.isArray(pv.moves) ? pv.moves : pv.moves.split(' ').filter(Boolean);
+      const scoreCp = this.chesstoryEvalCp(pv);
+      return moves.length && scoreCp !== undefined
+        ? [{ moves, scoreCp, mate: pv.mate, depth: beforeEval.depth || 0 }]
+        : [];
+    });
     if (!variations.length) return;
     const playedVariationIndex = variations.findIndex(v => v.moves[0] === played.uci);
-    const playedVariation =
-      playedVariationIndex < 0 ? undefined : variations[playedVariationIndex];
+    const playedVariation = playedVariationIndex < 0 ? undefined : variations[playedVariationIndex];
     const playedIsTerminal = parseFen(played.fen)
       .chain(setup => setupPosition('chess', setup))
       .unwrap(
@@ -1187,6 +1162,7 @@ export default class AnalyseCtrl implements CevalHandler {
       this.startCeval();
       site.sound.saySan(this.node.san, true);
     }
+    this.refreshChesstoryBrief();
     this.justPlayed = this.justCaptured = undefined;
     this.explorer.setNode();
     this.syncHref(historyMode);
@@ -1239,6 +1215,7 @@ export default class AnalyseCtrl implements CevalHandler {
     this.redirecting = false;
     this.setPath(treePath.root);
     this.initCeval();
+    this.refreshChesstoryBrief();
     this.cgVersion.js++;
     this.mergeIdbThenShowTreeView();
   }
@@ -1450,15 +1427,21 @@ export default class AnalyseCtrl implements CevalHandler {
   };
 
   private onNewCeval = (ev: Tree.ClientEval, path: Tree.Path, isThreat?: boolean): void => {
+    let updated = false;
     this.tree.updateAt(path, (node: Tree.Node) => {
       if (node.fen !== ev.fen && !isThreat) return;
 
       if (isThreat) {
         const threat = ev as Tree.LocalEval;
         if (!node.threat || isEvalBetter(threat, node.threat)) node.threat = threat;
-      } else if (!node.ceval || isEvalBetter(ev, node.ceval)) node.ceval = ev;
-      else if (!ev.cloud) {
-        if (node.ceval?.cloud && this.ceval.isDeeper()) node.ceval = ev;
+      } else if (!node.ceval || isEvalBetter(ev, node.ceval)) {
+        node.ceval = ev;
+        updated = true;
+      } else if (!ev.cloud) {
+        if (node.ceval?.cloud && this.ceval.isDeeper()) {
+          node.ceval = ev;
+          updated = true;
+        }
       }
 
       if (path === this.path) {
@@ -1466,6 +1449,8 @@ export default class AnalyseCtrl implements CevalHandler {
         this.redraw();
       }
     });
+    if (!isThreat && updated && (path === this.path || path === this.path.slice(0, -2)))
+      this.refreshChesstoryBrief();
   };
 
   private initCeval(): void {
@@ -1477,6 +1462,7 @@ export default class AnalyseCtrl implements CevalHandler {
       redraw: this.redraw,
       onSelectEngine: () => {
         this.initCeval();
+        this.refreshChesstoryBrief();
         this.redraw();
       },
     };
@@ -1503,6 +1489,7 @@ export default class AnalyseCtrl implements CevalHandler {
       this.ceval.showEnginePrefs(false);
       this.redraw();
     }
+    this.refreshChesstoryBrief();
     return enable;
   };
 
@@ -1515,6 +1502,7 @@ export default class AnalyseCtrl implements CevalHandler {
   clearCeval(): void {
     this.tree.removeCeval();
     this.startCeval();
+    this.refreshChesstoryBrief();
   }
 
   showVariationArrows() {

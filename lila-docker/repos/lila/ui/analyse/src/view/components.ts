@@ -297,17 +297,25 @@ export function renderTools({ ctrl, concealOf, allowVideo }: ViewContext, embedd
 
 function renderChesstoryBrief(ctrl: AnalyseCtrl): VNode {
   const node = ctrl.getNode();
-  ctrl.requestChesstoryBrief();
   const brief = ctrl.chesstoryBrief();
-  const sections = chesstoryBriefSections(brief.payload);
+  const sections = chesstoryBriefSections(brief);
   const moveLabel = node.san
     ? `${plyToTurn(node.ply)}${node.ply % 2 === 1 ? '.' : '...'} ${node.san}`
     : 'Initial position';
-  const stateLabel = brief.loading
-    ? 'Reading position'
-    : brief.payload
-      ? 'Position explained'
-      : 'Choose a move';
+  const stateLabel =
+    brief.kind === 'requesting'
+      ? 'Reading position'
+      : brief.kind === 'probing'
+        ? 'Checking position'
+        : brief.kind === 'ready-certified'
+          ? 'Position explained'
+          : brief.kind === 'ready-verdict-only'
+            ? 'Move verdict ready'
+            : brief.kind === 'withheld'
+              ? 'Review withheld'
+              : brief.kind === 'fault'
+                ? 'Review unavailable'
+                : 'Choose a move';
 
   return hl('section.analyse__chesstory-brief', [
     hl('div.analyse__chesstory-brief-head', [
@@ -626,7 +634,7 @@ function renderStudyWorkspacePanel(ctrl: AnalyseCtrl): VNode | null {
     ]),
     hl(
       'div.copyables__study-thread',
-      chesstoryBriefSections(ctrl.chesstoryBrief().payload)
+      chesstoryBriefSections(ctrl.chesstoryBrief())
         .slice(0, 3)
         .map(section =>
           hl('div.copyables__study-thread-card', [
