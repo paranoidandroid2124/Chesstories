@@ -19,7 +19,7 @@ object PlanCausalEventAssembler:
       episode: PlanCausalEpisode
   )
 
-  private final case class OpponentResourceDeterrenceDraft(
+  private final case class ResourceDeterrenceDraft(
       rootLine: LineNodeRef,
       proof: OpponentResourceDeterrenceProof,
       continuation: List[LineReplayStep],
@@ -40,11 +40,6 @@ object PlanCausalEventAssembler:
 
     def consequence: TransitionConsequence =
       OpponentResourceDeterrenceProof.consequence(resourceMove)
-
-    def improvementWinPercent(lines: List[CandidateLineNode]): Double =
-      proof
-        .rootResourceImprovementWinPercent(perspective, rootLine, lines)
-        .getOrElse(Double.NegativeInfinity)
 
     def comparisonContrastWinPercent(lines: List[CandidateLineNode]): Double =
       proof
@@ -77,7 +72,7 @@ object PlanCausalEventAssembler:
           }.toList
           (structuralRecord, structural) = structuralRecordAndPayload
           (_, linePayload) = lineRecordAndPayload
-          deterrenceDraft = opponentResourceDeterrenceDraft(input, context, rootLine, structural.transition)
+          deterrenceDraft = resourceDeterrenceDraft(input, context, rootLine, structural.transition)
           rootOwnedPlans = PlanCausalEventProof.rootOwnedPlans(pressure, rootLine, structural, Some(linePayload))
           rootPlan <- (
             PlanCausalEventProof.eventCandidatePlans(pressure, rootLine, structural, linePayload) ++
@@ -390,12 +385,12 @@ object PlanCausalEventAssembler:
         Nil
     }.distinctBy(_.ref.id)
 
-  private def opponentResourceDeterrenceDraft(
+  private def resourceDeterrenceDraft(
       input: CanonicalNormalizedMoveReviewInput,
       context: JudgmentAssemblyContext,
       rootLine: LineNodeRef,
       transition: StructuralTransitionBinding
-  ): Option[OpponentResourceDeterrenceDraft] =
+  ): Option[ResourceDeterrenceDraft] =
     val rootCandidate = context.lines.find(_.ref == rootLine)
     val rootBranches = input.threatBranches.filter(branch =>
       branch.opponentResourceMove.nonEmpty && EvidenceRef.sameMove(branch.probedMoveUci, rootLine.rootMove)
@@ -442,7 +437,7 @@ object PlanCausalEventAssembler:
         comparisons = comparisons,
         materialGainPlyOffset = materialGain.plyOffset
       )
-      draft = OpponentResourceDeterrenceDraft(
+      draft = ResourceDeterrenceDraft(
         rootLine = rootLine,
         proof = proof,
         continuation = continuation,
@@ -464,7 +459,9 @@ object PlanCausalEventAssembler:
     }.sortBy(draft =>
       (
         -draft.comparisonContrastWinPercent(context.lines),
-        -draft.improvementWinPercent(context.lines),
+        -draft.proof
+          .rootResourceImprovementWinPercent(draft.perspective, draft.rootLine, context.lines)
+          .getOrElse(Double.NegativeInfinity),
         draft.materialGain.plyOffset
       )
     ).headOption
@@ -482,7 +479,7 @@ object PlanCausalEventAssembler:
     )
 
   private def deterrenceEpisode(
-      draft: OpponentResourceDeterrenceDraft,
+      draft: ResourceDeterrenceDraft,
       transition: StructuralTransitionBinding,
       identity: lila.chessjudgment.model.PlanEventIdentity
   ): PlanCausalEpisode =
