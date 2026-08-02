@@ -13,8 +13,8 @@ from chesstory_eval.cause_audit import (
     TYPED_ACTUAL_VIEW_SCHEMA_VERSION,
     TYPED_RUNTIME_OBSERVATION_SCHEMA,
     _actual_view,
-    _run_cause_audit_for_contract,
     _strict_actual_view,
+    run_cause_audit,
 )
 from chesstory_eval.hashing import sha256_bytes, sha256_json
 from chesstory_eval.model import ContractError, IntegrityError
@@ -321,7 +321,7 @@ class ActiveCauseContractTest(unittest.TestCase):
             ) as session,
             self.assertRaises(RuntimeError),
         ):
-            _run_cause_audit_for_contract(
+            run_cause_audit(
                 root=ROOT,
                 store=_BindingCapture(),  # type: ignore[arg-type]
                 manifest_path=existing_file,
@@ -337,7 +337,6 @@ class ActiveCauseContractTest(unittest.TestCase):
                 max_probe_rounds=1,
                 candidate_binding_path=None,
                 requested_case_ids=[],
-                actual_schema_version=TYPED_ACTUAL_VIEW_SCHEMA_VERSION,
                 base_oracle_path=existing_file,
             )
 
