@@ -92,7 +92,7 @@ lazy val db = module("db",
 
 lazy val memo = module("memo",
   Seq(db),
-  Seq(scaffeine) ++ playWs.bundle
+  Seq(scaffeine) ++ playWs.bundle ++ tests.bundle
 )
 
 

@@ -4,8 +4,7 @@ import alleycats.Zero
 
 import lila.core.config.RateLimit as Enforce
 
-/** Throttler that allows X operations per Y unit of time Not thread safe
-  */
+/** Throttler that allows X operations per Y unit of time. */
 final class RateLimit[K](
     credits: Int,
     duration: FiniteDuration,
@@ -19,10 +18,31 @@ final class RateLimit[K](
     .expireAfterWrite(duration)
     .build[K, (Cost, ClearAt)]()
 
+  private val concurrentStorage = storage.underlying.asMap
+
   private inline def makeClearAt = nowMillis + duration.toMillis
 
   private val logger = RateLimit.logger.branch(key)
   private val monitor = lila.mon.security.rateLimit(key)
+
+  private def reserve(k: K, cost: Cost): LimitResult =
+    var result = LimitResult.Limited
+    concurrentStorage.compute(
+      k,
+      (_, current) =>
+        Option(current) match
+          case None =>
+            result = LimitResult.Through
+            cost -> makeClearAt
+          case Some((_, clearAt)) if nowMillis > clearAt =>
+            result = LimitResult.Through
+            cost -> makeClearAt
+          case Some((spent, clearAt)) if spent < credits =>
+            result = LimitResult.Through
+            (spent + cost) -> clearAt
+          case Some(current) => current
+    )
+    result
 
   def chargeable[A](k: K, default: => A, cost: Cost = 1, msg: => String = "")(
       op: ChargeWith => A
@@ -33,22 +53,13 @@ final class RateLimit[K](
   def apply[A](k: K, default: => A, cost: Cost = 1, msg: => String = "")(op: => A): A =
     if cost < 1 then op
     else
-      storage.getIfPresent(k) match
-        case None =>
-          storage.put(k, cost -> makeClearAt)
-          op
-        case Some(a, clearAt) if a < credits =>
-          storage.put(k, (a + cost) -> clearAt)
-          op
-        case Some(_, clearAt) if nowMillis > clearAt =>
-          storage.put(k, cost -> makeClearAt)
-          op
-        case _ if enforce.yes =>
+      reserve(k, cost) match
+        case LimitResult.Through => op
+        case LimitResult.Limited if enforce.yes =>
           if log then logger.info(s"$credits/$duration $k cost: $cost $msg")
           monitor.increment()
           default
-        case _ =>
-          op
+        case LimitResult.Limited => op
 
   def zero[A](k: K, cost: Cost = 1, msg: => String = "")(op: => A)(using default: Zero[A]): A =
     apply[A](k, default.zero, cost, msg)(op)
