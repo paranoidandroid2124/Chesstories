@@ -164,36 +164,7 @@ class BrandingRenderTest extends FunSuite {
 
     val fontCss = layout.chesstoryFontFaceCss.toString
 
-    // 5. Write to file first for debugging
-    val fullHtml = s"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-      ${layout.charset}
-      ${layout.viewport}
-      <title>Chesstory Render Test</title>
-      <meta charset="utf-8">
-      $fontCss
-      <style>body { font-family: 'chesstory', sans-serif; background: #2e2a24; color: #bababa; } </style>
-    </head>
-    <body>
-      $headerHtml
-      <div style="padding: 20px;">
-        <h1>Frontend Verification Success</h1>
-        <p>This page was rendered by the Scala template engine without a DB connection.</p>
-        <p>Font loaded: <span style="font-family: 'chesstory'">Chesstory Font Check</span></p>
-      </div>
-    </body>
-    </html>
-    """
-    
-    val outputPath = Files.createTempFile("chesstory-branding-render", ".html")
-    Files.write(outputPath, fullHtml.getBytes(StandardCharsets.UTF_8))
-    println(s"Rendered header to ${outputPath.toString}")
-    println(s"Header content: $headerHtml")
-
-    // 6. Verify Header
-    // Relaxed check
+    // 5. Verify Header
     assert(headerHtml.toLowerCase.contains("chesstory"), "Header should contain 'chesstory' (case-insensitive)")
     assert(headerHtml.contains("""class="cs-wordmark""""))
     assert(headerHtml.contains("""class="cs-brandbar""""))
@@ -214,7 +185,7 @@ class BrandingRenderTest extends FunSuite {
     assert(!headerHtml.contains("topnav-toggle"), "Legacy topnav-toggle class should be removed")
     assert(!headerHtml.contains("""class="hbg""""), "Legacy burger class should be removed")
 
-    // 7. Verify Fonts
+    // 6. Verify Fonts
     assert(fontCss.contains("chesstory.woff2"), "CSS should contain chesstory.woff2")
     assert(fontCss.contains("font-family: 'chesstory'"), "CSS should set font-family to chesstory")
     

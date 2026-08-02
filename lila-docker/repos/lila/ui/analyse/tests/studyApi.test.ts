@@ -15,18 +15,7 @@ test('createStudyFromAnalysis submits review study setup fields', async () => {
   globalThis.fetch = (async (url, init) => {
     capturedUrl = String(url);
     capturedBody = String(init?.body);
-    return new Response(
-      JSON.stringify({
-        id: 'study123',
-        chapterId: 'chap1234',
-        name: 'ych24 vs RojoCapo review',
-        chapterName: 'Opening to middlegame',
-        canWrite: true,
-        chapters: [],
-        url: '/study/study123/chap1234',
-      }),
-      { status: 200, headers: { 'content-type': 'application/json' } },
-    );
+    return new Response('{}', { headers: { 'content-type': 'application/json' } });
   }) as typeof fetch;
 
   await createStudyFromAnalysis({

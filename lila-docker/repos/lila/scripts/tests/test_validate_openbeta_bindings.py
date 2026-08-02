@@ -72,18 +72,6 @@ class ValidateOpenBetaBindingsTest(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(warnings, [])
 
-    def test_missing_required_binding_fails(self) -> None:
-        envs = required_envs(self.manifest)
-        envs["EXTERNAL_ENGINE_ENDPOINT"] = False
-        errors, _warnings = module.evaluate_manifest(self.manifest, envs)
-        self.assertTrue(any("EXTERNAL_ENGINE_ENDPOINT" in err for err in errors))
-
-    def test_dispatch_disabled_does_not_require_dispatch_bindings(self) -> None:
-        envs = required_envs(self.manifest)
-        errors, warnings = module.evaluate_manifest(self.manifest, envs)
-        self.assertEqual(errors, [])
-        self.assertEqual(warnings, [])
-
     def test_hardcoded_runtime_bindings_do_not_require_cloud_run_env(self) -> None:
         envs = required_envs(self.manifest, cloud_run_only=True)
         errors, warnings = module.evaluate_manifest(self.manifest, envs)

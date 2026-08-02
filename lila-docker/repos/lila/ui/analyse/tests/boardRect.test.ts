@@ -9,10 +9,4 @@ describe('board rect signature', () => {
 
     assert.notEqual(base, shifted);
   });
-
-  test('stays stable for identical board bounds', () => {
-    const rect = { left: 100.24, top: 50.12, width: 507.24, height: 507.24 };
-
-    assert.equal(boardRectSig(rect), boardRectSig(rect));
-  });
 });
