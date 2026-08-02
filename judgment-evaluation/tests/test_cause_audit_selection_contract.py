@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 import copy
 import json
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 
@@ -12,6 +14,7 @@ from chesstory_eval.cause_audit import (
     TYPED_OPEN_WORLD_ADJUDICATION_SCHEMA_VERSION,
     TYPED_OPEN_WORLD_ARM_INVENTORY_SCHEMA_VERSION,
     TYPED_ORACLE_SCHEMA_VERSION,
+    _atomic_cache_write,
     _inventory_expected_candidates,
     _judge_case,
     _load_open_world_arm_inventory,
@@ -41,7 +44,7 @@ from chesstory_eval.cause_semantics import (
     judge_typed_case,
     open_world_meaning_matches_candidate,
 )
-from chesstory_eval.hashing import sha256_file, sha256_json
+from chesstory_eval.hashing import json_bytes, sha256_file, sha256_json
 from chesstory_eval.model import ContractError, IntegrityError
 from chesstory_eval.native_diagnostic import native_sha256_json
 
@@ -4963,6 +4966,33 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
                 candidate_set_path=missing,
                 adjudication_path=missing,
             )
+
+
+class CauseAuditCacheContractTest(unittest.TestCase):
+    def test_concurrent_conflicting_writes_preserve_one_canonical_document(self) -> None:
+        documents = (
+            {"cache_key_sha256": "a" * 64, "writer": "left"},
+            {"cache_key_sha256": "a" * 64, "writer": "right"},
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "entry.json"
+            barrier = threading.Barrier(len(documents))
+
+            def write(document: dict[str, str]) -> IntegrityError | None:
+                barrier.wait()
+                try:
+                    _atomic_cache_write(path, document)
+                except IntegrityError as error:
+                    return error
+                return None
+
+            with ThreadPoolExecutor(max_workers=len(documents)) as executor:
+                outcomes = tuple(executor.map(write, documents))
+
+            self.assertEqual(outcomes.count(None), 1)
+            self.assertIsInstance(next(error for error in outcomes if error), IntegrityError)
+            self.assertIn(path.read_bytes(), {json_bytes(document) for document in documents})
+            self.assertEqual(list(path.parent.iterdir()), [path])
 
 
 if __name__ == "__main__":

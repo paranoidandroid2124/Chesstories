@@ -2294,30 +2294,23 @@ def _acquisition_config(arguments: Any) -> dict[str, Any]:
 def _atomic_cache_write(path: Path, document: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = json_bytes(document)
-    if path.exists():
-        existing = path.read_bytes()
-        if existing != payload:
-            raise IntegrityError(f"cache key collision at {path}")
-        return
     temporary_name: str | None = None
     try:
         with tempfile.NamedTemporaryFile(
             mode="wb", dir=path.parent, prefix=f".{path.name}.", delete=False
         ) as handle:
+            temporary_name = handle.name
             handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
-            temporary_name = handle.name
         try:
-            os.replace(temporary_name, path)
-        except OSError:
-            if not path.exists() or path.read_bytes() != payload:
-                raise
+            os.link(temporary_name, path)
+        except FileExistsError:
+            if path.read_bytes() != payload:
+                raise IntegrityError(f"cache key collision at {path}")
     finally:
         if temporary_name is not None:
-            temporary = Path(temporary_name)
-            if temporary.exists():
-                temporary.unlink()
+            Path(temporary_name).unlink(missing_ok=True)
 
 
 def _cache_object(path: Path, expected_key: str, label: str) -> dict[str, Any]:
