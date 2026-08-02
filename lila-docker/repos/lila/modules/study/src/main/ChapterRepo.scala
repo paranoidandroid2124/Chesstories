@@ -186,24 +186,6 @@ final class ChapterRepo(val coll: AsyncColl)(using Executor, akka.stream.Materia
         value
       ).void
 
-  private[study] def setNodeValues(
-      chapter: Chapter,
-      path: UciPath,
-      values: List[(String, Option[BSONValue])]
-  ): Funit =
-    values.collect { case (field, Some(v)) =>
-      pathToField(path, field) -> v
-    } match
-      case Nil => funit
-      case sets =>
-        coll:
-          _.update
-            .one(
-              $id(chapter.id) ++ $doc(path.toDbField.$exists(true)),
-              $set($doc(sets))
-            )
-            .void
-
   // root.path.subField
   private def pathToField(path: UciPath, subField: String): String = s"${path.toDbField}.$subField"
 
