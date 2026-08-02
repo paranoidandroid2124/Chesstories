@@ -211,6 +211,7 @@ final class Auth(env: Env) extends LilaController(env):
               case _ =>
                 env.security.authenticator
                   .setPassword(userId, clear)
+                  .flatMap(_ => env.security.sessionStore.closeAllSessionsOf(userId))
                   .inject(Redirect(routes.Auth.login).flashing("success" -> "Password updated. Please log in."))
         )
 
