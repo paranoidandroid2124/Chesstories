@@ -1216,9 +1216,6 @@ object RuntimeProtocol:
           "held"
       }
 
-    private def label(value: String): String =
-      code(value).replace('_', ' ')
-
   private object InputLimits:
     private val MaxFenLength = 128
     private val MaxVariations = 16

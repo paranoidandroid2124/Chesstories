@@ -695,12 +695,6 @@ object CauseAuditAdapterCli:
       )
     }.sortBy(item => (item.selectionOrder, item.causeEvidenceId))
 
-  private[runtimeadapter] def projectedRSelectionDocuments(
-      ranking: ClaimRankingResult,
-      graph: TypedEvidenceGraph
-  ): List[JsObject] =
-    projectedRSelections(ranking, graph).map(_.json(ObservationContract.V3))
-
   /** Captures the typed importance authority without consulting exposure rank.
     * `r_native` retains every relation, including explicit incomparability.
     * The other three fields use the exact public projection shape so the
@@ -952,20 +946,6 @@ object CauseAuditAdapterCli:
       "public_item_links" -> publicItems.itemLinks.map(_.json),
       "public_item_membership_closed" -> membershipClosed
     ) ++ public.getOrElse(ProjectedPublicIdeaUnitParse.absent).diagnosticJson
-
-  private[runtimeadapter] def projectedIdeaUnitValidation(
-      payload: JsObject,
-      graph: TypedEvidenceGraph
-  ): (Int, Int, Boolean, Boolean) =
-    val items = projectedPublicIdeaParse(payload, graph)
-    val units = projectedPublicIdeaUnitParse(payload)
-    val observation = projectedIdeaUnitObservation(Nil, None, Some(units), items)
-    (
-      units.rawUnitCount,
-      units.units.size,
-      units.parseClosed,
-      (observation \ "public_item_membership_closed").as[Boolean]
-    )
 
   private def projectedPublicImportance(
       payload: JsObject,
@@ -1524,15 +1504,6 @@ object CauseAuditAdapterCli:
   private def claimDirectlyOwnsCause(claim: JudgmentClaim, causeRef: EvidenceRef): Boolean =
     claim.evidence.exists(_.id == causeRef.id)
 
-  private def registeredClosure(
-      claim: JudgmentClaim,
-      graph: TypedEvidenceGraph
-  ): Option[List[EvidenceRecord]] =
-    val roots = claim.evidence.flatMap(ref => graph.byId.get(ref.id))
-    Option.when(claim.evidence.nonEmpty && roots.size == claim.evidence.size)(
-      (roots ++ roots.flatMap(graph.parentClosure)).distinctBy(_.ref.id)
-    )
-
   private def claimJson(claim: JudgmentClaim): JsObject =
     Json.obj(
       "id" -> claim.id,
@@ -1825,20 +1796,6 @@ object CauseAuditAdapterCli:
       ideaUnitId <- (value \ "idea_unit_id").asOpt[String]
       if causeEvidenceId.nonEmpty && itemRole == "cause_facet" && ideaUnitId.nonEmpty
     yield ProjectedPublicIdeaItemLink(causeEvidenceId, itemRole, ideaUnitId)
-
-  private[runtimeadapter] def projectedSelectionValidation(
-      payload: JsObject,
-      graph: TypedEvidenceGraph
-  ): (List[String], Int) =
-    val parsed = projectedPublicIdeaParse(payload, graph)
-    parsed.causeEvidenceIdOccurrences -> parsed.selections.size
-
-  private[runtimeadapter] def projectedIdeaParseValidation(
-      payload: JsObject,
-      graph: TypedEvidenceGraph
-  ): (Int, Int, Boolean) =
-    val parsed = projectedPublicIdeaParse(payload, graph)
-    (parsed.rawIdeaCount, parsed.selections.size, parsed.parseClosed)
 
   private def parseProjectedCauseSelection(
       value: JsValue,
