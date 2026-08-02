@@ -34,7 +34,7 @@ final class HttpFilter(
       val reqTime = nowMillis - startTime
       val statusCode = result.header.status
       val client = HTTPRequest.clientName(req)
-      logger.info(s"$statusCode $client $req $actionName ${reqTime}ms")
+      logger.info(s"$statusCode $client ${req.method} $actionName ${reqTime}ms")
     result
 
   private def serveAssets(res: Fu[Result]) =
