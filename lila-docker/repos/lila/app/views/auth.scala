@@ -297,6 +297,20 @@ object auth:
         )
       )
 
+  def confirmEmail(formAction: String)(using ctx: Context): Page =
+    authPage("Confirm Email - Chesstory"):
+      div(cls := "text-center")(
+        div(cls := "auth-icon auth-success-icon")("✓"),
+        h1(cls := "auth-title")("Confirm your email"),
+        p(cls := "auth-message")("Press confirm to continue."),
+        form(cls := "auth-form", method := "post", action := formAction)(
+          button(cls := "auth-submit", tpe := "submit")(
+            "Confirm email",
+            span(cls := "arrow")(" ->")
+          )
+        )
+      )
+
   def loginError(message: String)(using ctx: Context): Page =
     authPage("Login Error - Chesstory"):
       div(cls := "text-center")(

@@ -13,6 +13,7 @@ GET   /account/passwd                  controllers.Account.passwd
 POST  /account/passwd                  controllers.Account.passwdApply
 POST  /account/email                   controllers.Account.emailApply
 GET   /account/email-confirm/:token    controllers.Account.emailConfirm(token)
+POST  /account/email-confirm/:token    controllers.Account.emailConfirmApply(token)
 GET   /account/username                controllers.Account.username
 POST  /account/username                controllers.Account.usernameApply
 GET   /account/close                   controllers.Account.close
@@ -35,6 +36,7 @@ POST  /auth/fix-email                  controllers.Auth.fixEmail
 GET   /auth/password-reset/:token      controllers.Auth.passwordResetToken(token)
 POST  /auth/password-reset/:token      controllers.Auth.passwordResetTokenApply(token)
 GET   /auth/signup-confirm/:token      controllers.Auth.signupConfirmToken(token)
+POST  /auth/signup-confirm/:token      controllers.Auth.signupConfirmTokenApply(token)
 
 # Analysis and Study
 GET   /analysis                        controllers.UserAnalysis.index

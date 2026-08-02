@@ -234,20 +234,29 @@ final class Account(
     )
   }
 
-  def emailConfirm(token: String) = Open { ctx ?=>
+  private def withEmailChange(token: String)(
+      f: (UserModel, EmailAddress) => Fu[Result]
+  )(using Context): Fu[Result] =
     env.security.emailChangeToken.read(token).fold(
       Ok.page(views.auth.loginError("Invalid or expired email change link."))
     ): (userId, email) =>
       env.user.repo.byId(userId).flatMap:
         case None =>
           Ok.page(views.auth.loginError("Invalid or expired email change link."))
-        case Some(_) =>
+        case Some(user) =>
           env.user.repo.byEmail(email).flatMap:
             case Some(existing) if existing.id != userId =>
               Ok.page(views.auth.loginError("This email address is already in use."))
             case _ =>
-              env.user.repo.updateEmail(userId, email).inject:
-                val redirect =
-                  if ctx.me.exists(_.id == userId) then routes.Account.passwd else routes.Auth.login
-                Redirect(redirect).flashing("success" -> "Email address updated.")
-  }
+              f(user, email)
+
+  def emailConfirm(token: String) = Open:
+    withEmailChange(token): (_, _) =>
+      Ok.page(views.auth.confirmEmail(routes.Account.emailConfirmApply(token).url))
+
+  def emailConfirmApply(token: String) = OpenBody:
+    withEmailChange(token): (user, email) =>
+      env.user.repo.updateEmail(user.id, email).inject:
+        val redirect =
+          if ctx.me.exists(_.id == user.id) then routes.Account.passwd else routes.Auth.login
+        Redirect(redirect).flashing("success" -> "Email address updated.")

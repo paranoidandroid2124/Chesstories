@@ -260,19 +260,11 @@ final class Auth(env: Env) extends LilaController(env):
                     Redirect(routes.Auth.signup).toFuccess
       )
 
-  def signupConfirmToken(token: String) = Open:
+  private def withSignupConfirmation(token: String)(
+      f: (UserModel, EmailAddress) => Fu[Result]
+  )(using Context): Fu[Result] =
     env.security.loginToken.read(token).fold(Ok.page(views.auth.loginError("Invalid or expired confirmation link."))): email =>
       val normalized = EmailAddress(email.normalize.value)
-      val loginExistingUser = (user: UserModel) =>
-        val enableF = if user.enabled.no then env.user.repo.enable(user.id) else funit
-        val activeUser = if user.enabled.yes then user else user.copy(enabled = UserEnabled(true))
-        val welcomeF =
-          if user.enabled.no then env.mailer.automaticEmail.welcomeEmail(activeUser, normalized)(using Lang.defaultLang)
-          else funit
-        given Context = ctx
-        (enableF >> welcomeF >> authenticateUser(activeUser, remember = true)).map:
-          _.discardingCookies(EmailConfirm.cookie.clear)
-
       env.user.repo.byEmail(normalized).flatMap:
         case Some(user) =>
           env.user.deleteRequestRepo.isPending(user.id).flatMap:
@@ -281,8 +273,23 @@ final class Auth(env: Env) extends LilaController(env):
                 views.auth.loginError("This account has a pending deletion request and cannot be reopened online.")
               )
             case false =>
-              loginExistingUser(user)
+              f(user, normalized)
         case None =>
           Ok.page(
             views.auth.loginError("No account exists for this confirmation link. Create an account first.")
           )
+
+  def signupConfirmToken(token: String) = Open:
+    withSignupConfirmation(token): (_, _) =>
+      Ok.page(views.auth.confirmEmail(routes.Auth.signupConfirmTokenApply(token).url))
+
+  def signupConfirmTokenApply(token: String) = OpenBody:
+    withSignupConfirmation(token): (user, normalized) =>
+      val enableF = if user.enabled.no then env.user.repo.enable(user.id) else funit
+      val activeUser = if user.enabled.yes then user else user.copy(enabled = UserEnabled(true))
+      val welcomeF =
+        if user.enabled.no then env.mailer.automaticEmail.welcomeEmail(activeUser, normalized)(using Lang.defaultLang)
+        else funit
+      given Context = ctx
+      (enableF >> welcomeF >> authenticateUser(activeUser, remember = true)).map:
+        _.discardingCookies(EmailConfirm.cookie.clear)
