@@ -56,14 +56,8 @@ import type { PgnError } from 'chessops/pgn';
 
 import { confirm } from 'lib/view';
 import { displayColumns } from 'lib/device';
-import { dispatchChessgroundResize } from 'lib/chessgroundResize';
 import * as Prefs from 'lib/prefs';
-import {
-  applyBoardLabelMode,
-  boardLabelModeFromCoords,
-  boardLabelModeToCoords,
-  type BoardLabelMode,
-} from './boardWorkspace';
+import { boardLabelModeFromCoords, boardLabelModeToCoords, type BoardLabelMode } from './boardWorkspace';
 
 const recentImportStorageKey = 'analyse.import-recents.v1';
 const boardLabelModes = new Set<BoardLabelMode>(['off', 'inside', 'rim', 'full']);
@@ -1530,43 +1524,9 @@ export default class AnalyseCtrl implements CevalHandler {
     );
   }
 
-  boardLabelMode = (): BoardLabelMode => this.boardLabelModeProp();
-
   boardCoords = (): Prefs.Coords => boardLabelModeToCoords(this.boardLabelModeProp());
 
-  setBoardLabelMode = (mode: BoardLabelMode): void => {
-    if (!boardLabelModes.has(mode)) return;
-    this.boardLabelModeProp(mode);
-    this.syncWorkspacePrefs();
-    applyBoardLabelMode(this.chessground, mode);
-    requestAnimationFrame(dispatchChessgroundResize);
-    this.redraw();
-  };
-
   showCapturedMaterial = (): boolean => this.showCapturedProp();
-
-  setShowCapturedMaterial = (show: boolean): void => {
-    this.showCapturedProp(show);
-    this.syncWorkspacePrefs();
-    requestAnimationFrame(dispatchChessgroundResize);
-    this.redraw();
-  };
-
-  setShowEvalGauge = (show: boolean): void => {
-    this.showGauge(show);
-    requestAnimationFrame(dispatchChessgroundResize);
-    this.redraw();
-  };
-
-  resetOrientation = (): void => {
-    if (!this.flipped) return;
-    this.flipped = false;
-    this.chessground?.set({
-      orientation: this.bottomColor(),
-    });
-    this.onChange();
-    this.redraw();
-  };
 
   showCeval = (show?: boolean) => {
     const barMode = this.activeControlMode();
@@ -1625,12 +1585,6 @@ export default class AnalyseCtrl implements CevalHandler {
     this.threatMode(v);
     this.setAutoShapes();
     this.startCeval();
-    this.redraw();
-  };
-
-  togglePossiblyShowMoveAnnotationsOnBoard = (v: boolean): void => {
-    this.possiblyShowMoveAnnotationsOnBoard(v);
-    this.resetAutoShapes();
     this.redraw();
   };
 

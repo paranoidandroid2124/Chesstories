@@ -6,11 +6,6 @@ export type BoardLabelViewConfig = {
   coordinatesOnSquares: boolean;
 };
 
-type BoardLabelTarget = {
-  set(config: BoardLabelViewConfig): void;
-  redrawAll(): void;
-};
-
 export function boardLabelModeFromCoords(coords: number): BoardLabelMode {
   if (coords === Prefs.Coords.Hidden) return 'off';
   if (coords === Prefs.Coords.Inside) return 'inside';
@@ -30,14 +25,4 @@ export function boardCoordsToViewConfig(coords: Prefs.Coords): BoardLabelViewCon
     coordinates: coords !== Prefs.Coords.Hidden,
     coordinatesOnSquares: coords === Prefs.Coords.All,
   };
-}
-
-export function boardLabelModeToViewConfig(mode: BoardLabelMode): BoardLabelViewConfig {
-  return boardCoordsToViewConfig(boardLabelModeToCoords(mode));
-}
-
-export function applyBoardLabelMode(target: BoardLabelTarget | undefined, mode: BoardLabelMode): void {
-  if (!target) return;
-  target.set(boardLabelModeToViewConfig(mode));
-  target.redrawAll();
 }

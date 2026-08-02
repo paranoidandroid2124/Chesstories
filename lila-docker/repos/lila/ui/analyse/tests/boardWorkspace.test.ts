@@ -2,7 +2,6 @@ import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Prefs from 'lib/prefs';
 import {
-  applyBoardLabelMode,
   boardCoordsToViewConfig,
   boardLabelModeFromCoords,
   boardLabelModeToCoords,
@@ -34,24 +33,5 @@ describe('board workspace label modes', () => {
       coordinates: true,
       coordinatesOnSquares: true,
     });
-  });
-
-  test('forces a chessground redraw when board labels change', () => {
-    const calls: Array<['set', { coordinates: boolean; coordinatesOnSquares: boolean }] | ['redrawAll']> = [];
-    const target = {
-      set(config: { coordinates: boolean; coordinatesOnSquares: boolean }) {
-        calls.push(['set', config]);
-      },
-      redrawAll() {
-        calls.push(['redrawAll']);
-      },
-    };
-
-    applyBoardLabelMode(target, 'full');
-
-    assert.deepEqual(calls, [
-      ['set', { coordinates: true, coordinatesOnSquares: true }],
-      ['redrawAll'],
-    ]);
   });
 });
