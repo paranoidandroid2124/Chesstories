@@ -1,83 +1,26 @@
 package io.chesstory.evaluation.runtimeadapter
 
 import io.chesstory.runtime.RuntimeProtocol
-import lila.chessjudgment.model.judgment.{
-  EvidenceBackedJudgmentPacket,
-  CauseDisposition,
-  CauseDispositionLedger,
-  CauseDispositionReason,
-  CauseDispositionStatus,
-  DirectCauseImportanceDecision,
-  DirectCauseImportanceResolution,
-  EvidenceConfidence,
-  EvidenceLayer,
-  EvidenceProducer,
-  EvidenceRef,
-  EvidenceScope,
-  OnlyMoveConstraintResolution,
-  PlayerFacingCauseExposureResolution,
-  PlayerFacingClaimDecision,
-  PlayerFacingClaimTier
-}
+import lila.chessjudgment.model.ProbeRequest
+import lila.chessjudgment.model.judgment.*
 import play.api.libs.json.*
 
 class RuntimeNativeViewsTest extends munit.FunSuite:
 
-  test("packet structural view exposes every constructor field"):
-    val encoded = encode(packetFixture())
-    assertEquals(
-      fieldNames(encoded),
-      List(
-        "assembly",
-        "probeRequests",
-        "playerFacingClaimDecisions",
-        "onlyMoveConstraintResolutions",
-        "causeExposureResolution",
-        "causeDispositionLedger"
-      )
+  test("packet audit fields remain native-tree and hash sensitive"):
+    val packet = packetFixture()
+    val firstClaim = packet.assembly.claims.headOption.getOrElse(
+      fail("fixture must produce an assembly claim")
     )
-    assertEquals((encoded \ "arity").as[Int], 6)
-
-  test("packet canonical hash changes when only player-facing decisions change"):
-    val original = packetFixture()
-    val first = original.playerFacingClaimDecisions.headOption.getOrElse(
+    val firstDecision = packet.playerFacingClaimDecisions.headOption.getOrElse(
       fail("fixture must produce a player-facing claim decision")
     )
-    val replacementTier =
-      if first.tier == PlayerFacingClaimTier.Primary then PlayerFacingClaimTier.Secondary
+    assert(packet.onlyMoveConstraintResolutions.nonEmpty, "fixture must produce an OnlyMove resolution")
+
+    val changedTier =
+      if firstDecision.tier == PlayerFacingClaimTier.Primary then PlayerFacingClaimTier.Secondary
       else PlayerFacingClaimTier.Primary
-    val changed = serializationOnlyCopy(
-      original,
-      decisions = Some(first.copy(tier = replacementTier) :: original.playerFacingClaimDecisions.tail)
-    )
-
-    assertEquals(changed.assembly, original.assembly)
-    assertEquals(changed.probeRequests, original.probeRequests)
-    assertEquals(changed.onlyMoveConstraintResolutions, original.onlyMoveConstraintResolutions)
-    assertNotEquals(changed.playerFacingClaimDecisions, original.playerFacingClaimDecisions)
-    assertNotEquals(hash(changed), hash(original))
-
-  test("packet canonical hash changes when only OnlyMove resolutions change"):
-    val original = packetFixture()
-    assert(original.onlyMoveConstraintResolutions.nonEmpty, "fixture must produce an OnlyMove resolution")
-    assert(
-      original.onlyMoveConstraintResolutions.forall(_.qualifiers.isEmpty),
-      "fixture needs diagnostic-only resolutions so the legitimate factory can omit them"
-    )
-    val changed = serializationOnlyCopy(
-      original,
-      onlyMoveResolutions = Some(Nil)
-    )
-
-    assertEquals(changed.assembly, original.assembly)
-    assertEquals(changed.probeRequests, original.probeRequests)
-    assertEquals(changed.playerFacingClaimDecisions, original.playerFacingClaimDecisions)
-    assertNotEquals(changed.onlyMoveConstraintResolutions, original.onlyMoveConstraintResolutions)
-    assertNotEquals(hash(changed), hash(original))
-
-  test("packet canonical hash changes when only typed importance authority changes"):
-    val original = packetFixture()
-    val changedExposure = original.causeExposureResolution.copy(
+    val changedExposure = packet.causeExposureResolution.copy(
       importanceResolution = DirectCauseImportanceResolution(
         selectedCauseEvidenceIds = List("synthetic-cause"),
         profiles = Nil,
@@ -93,23 +36,12 @@ class RuntimeNativeViewsTest extends munit.FunSuite:
         )
       )
     )
-    val changed = serializationOnlyCopy(original, exposure = Some(changedExposure))
-
-    assertEquals(changed.assembly, original.assembly)
-    assertEquals(changed.probeRequests, original.probeRequests)
-    assertEquals(changed.playerFacingClaimDecisions, original.playerFacingClaimDecisions)
-    assertEquals(changed.onlyMoveConstraintResolutions, original.onlyMoveConstraintResolutions)
-    assertNotEquals(changed.causeExposureResolution, original.causeExposureResolution)
-    assertNotEquals(hash(changed), hash(original))
-
-  test("packet canonical hash changes when only the Cause disposition ledger changes"):
-    val original = packetFixture()
     val syntheticDisposition = CauseDisposition(
       causeEvidence = EvidenceRef(
         id = "synthetic-relative-cause",
         producer = EvidenceProducer.RelativeMoveProducer,
         layer = EvidenceLayer.RelativeCause,
-        position = original.root,
+        position = packet.root,
         line = None,
         scope = EvidenceScope.CurrentPosition,
         confidence = EvidenceConfidence.BoardDerived
@@ -123,18 +55,39 @@ class RuntimeNativeViewsTest extends munit.FunSuite:
       relatedCauseEvidenceIds = Nil,
       relatedClaimIds = Nil
     )
-    val replacement =
-      if original.causeDispositionLedger.dispositions.nonEmpty then CauseDispositionLedger.empty
+    val changedLedger =
+      if packet.causeDispositionLedger.dispositions.nonEmpty then CauseDispositionLedger.empty
       else CauseDispositionLedger(List(syntheticDisposition))
-    val changed = serializationOnlyCopy(
-      original,
-      dispositionLedger = Some(replacement)
+    val variants = List(
+      "assembly" -> packetWith(
+        packet,
+        "assembly",
+        packet.assembly.copy(claims = firstClaim.copy(id = s"${firstClaim.id}-native") :: packet.assembly.claims.tail)
+      ),
+      "probeRequests" -> packetWith(
+        packet,
+        "probeRequests",
+        ProbeRequest("native-view-probe", chess.variant.Standard.initialFen.value, List("e2e4"), 1) :: packet.probeRequests
+      ),
+      "playerFacingClaimDecisions" -> packetWith(
+        packet,
+        "playerFacingClaimDecisions",
+        firstDecision.copy(tier = changedTier) :: packet.playerFacingClaimDecisions.tail
+      ),
+      "onlyMoveConstraintResolutions" -> packetWith(packet, "onlyMoveConstraintResolutions", Nil),
+      "causeExposureResolution" -> packetWith(packet, "causeExposureResolution", changedExposure),
+      "causeDispositionLedger" -> packetWith(packet, "causeDispositionLedger", changedLedger)
     )
+    val encoded = encode(packet)
+    val canonicalHash = hash(packet)
 
-    assertEquals(changed.assembly, original.assembly)
-    assertEquals(changed.causeExposureResolution, original.causeExposureResolution)
-    assertNotEquals(changed.causeDispositionLedger, original.causeDispositionLedger)
-    assertNotEquals(hash(changed), hash(original))
+    variants.foreach { case (field, changed) =>
+      assert(
+        nativeField(encode(changed), field) != nativeField(encoded, field),
+        s"$field must remain in the native tree"
+      )
+      assert(hash(changed) != canonicalHash, s"$field must influence the canonical hash")
+    }
 
   private def packetFixture(): EvidenceBackedJudgmentPacket =
     val request = Json.obj(
@@ -164,33 +117,31 @@ class RuntimeNativeViewsTest extends munit.FunSuite:
   private def hash(packet: EvidenceBackedJudgmentPacket): String =
     NativeTreeEncoder.sha256Canonical(encode(packet))
 
-  private def fieldNames(encoded: JsObject): List[String] =
-    (encoded \ "fields")
+  private def nativeField(tree: JsObject, name: String): JsValue =
+    (tree \ "fields")
       .as[List[JsObject]]
-      .flatMap(field => (field \ "name").asOpt[String])
+      .find(field => (field \ "name").as[String] == name)
+      .flatMap(field => (field \ "value").toOption)
+      .getOrElse(fail(s"native tree has no $name field"))
 
-  /** Constructs no production packet. This deliberately bypasses packet closure
-    * only to prove that the structural serializer is sensitive to each private
-    * constructor field in isolation. Runtime behavior tests must use the factory.
+  /** The packet factory is intentionally inaccessible from this adapter package.
+    * Reflection is limited to serialization sensitivity; runtime fixtures still use the factory.
     */
-  private def serializationOnlyCopy(
+  private def packetWith(
       packet: EvidenceBackedJudgmentPacket,
-      decisions: Option[List[PlayerFacingClaimDecision]] = None,
-      onlyMoveResolutions: Option[List[OnlyMoveConstraintResolution]] = None,
-      exposure: Option[PlayerFacingCauseExposureResolution] = None,
-      dispositionLedger: Option[CauseDispositionLedger] = None
+      field: String,
+      replacement: Any
   ): EvidenceBackedJudgmentPacket =
-    val constructor = classOf[EvidenceBackedJudgmentPacket].getDeclaredConstructors
-      .find(_.getParameterCount == 6)
-      .getOrElse(fail("expected the six-field packet constructor"))
+    val fields = List(
+      "assembly" -> packet.assembly,
+      "probeRequests" -> packet.probeRequests,
+      "playerFacingClaimDecisions" -> packet.playerFacingClaimDecisions,
+      "onlyMoveConstraintResolutions" -> packet.onlyMoveConstraintResolutions,
+      "causeExposureResolution" -> packet.causeExposureResolution,
+      "causeDispositionLedger" -> packet.causeDispositionLedger
+    )
+    val constructor = classOf[EvidenceBackedJudgmentPacket].getDeclaredConstructors.head
     constructor.setAccessible(true)
     constructor
-      .newInstance(
-        packet.assembly,
-        packet.probeRequests,
-        decisions.getOrElse(packet.playerFacingClaimDecisions),
-        onlyMoveResolutions.getOrElse(packet.onlyMoveConstraintResolutions),
-        exposure.getOrElse(packet.causeExposureResolution),
-        dispositionLedger.getOrElse(packet.causeDispositionLedger)
-      )
+      .newInstance(fields.map { case (name, value) => if name == field then replacement else value }.map(_.asInstanceOf[AnyRef])* )
       .asInstanceOf[EvidenceBackedJudgmentPacket]

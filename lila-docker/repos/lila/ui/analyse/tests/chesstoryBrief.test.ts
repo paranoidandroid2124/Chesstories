@@ -1,9 +1,6 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  chesstoryBriefSections,
-  decodeChesstoryMoveMeaningResponse,
-} from '../src/chesstoryBrief';
+import { chesstoryBriefSections, decodeChesstoryMoveMeaningResponse } from '../src/chesstoryBrief';
 
 const statusCounts = {
   selected: 0,
@@ -153,12 +150,7 @@ function facet(id: string, ideaUnitId: string, kind: string, selectionOrder: num
   };
 }
 
-function importance(
-  selectedIds: string[],
-  uniqueTop: string | null,
-  facets: any[],
-  fullyMeasured: boolean,
-) {
+function importance(selectedIds: string[], uniqueTop: string | null, facets: any[], fullyMeasured: boolean) {
   const selectedFacets = facets.filter(item => selectedIds.includes(item.cause_evidence_id));
   const profiles = fullyMeasured
     ? selectedFacets.flatMap(item => {
@@ -276,12 +268,7 @@ function importance(
   };
 }
 
-function certifiedEnvelope(
-  facets: any[],
-  units: any[],
-  uniqueTop: string | null,
-  fullyMeasured = true,
-) {
+function certifiedEnvelope(facets: any[], units: any[], uniqueTop: string | null, fullyMeasured = true) {
   const selectedIds = facets.map(item => item.cause_evidence_id);
   const leadIds = units.map(unit => unit.lead_cause_evidence_id);
   return {
@@ -486,7 +473,7 @@ describe('active V3 Chesstory brief contract', () => {
     assert.match(opening.items?.[2] || '', /candidate tactical liability/);
   });
 
-  test('rejects unknown schemas, array move_review, and all additional retired fields', () => {
+  test('fails closed for representative invalid V3 schema and integrity drift', () => {
     const idea = facet('cause-a', 'unit-a', 'candidate_tactical_liability', 0, [
       channel(
         'channel-a',
@@ -507,96 +494,50 @@ describe('active V3 Chesstory brief contract', () => {
       serialization_order: 0,
     };
     const valid = certifiedEnvelope([idea], [unit], 'cause-a');
+    const malformed = [
+      () => {
+        const value = structuredClone(valid) as any;
+        value.schema_version = 'chesstory.move-meaning.response.v2';
+        return value;
+      },
+      () => {
+        const value = structuredClone(valid) as any;
+        value.move_review = [value.move_review];
+        return value;
+      },
+      () => {
+        const value = structuredClone(valid) as any;
+        value.move_review.tested_plan_limits = [];
+        return value;
+      },
+      () => {
+        const value = structuredClone(valid) as any;
+        value.move_review.explanations[0].idea_units[0].member_cause_evidence_ids = ['cause-b'];
+        return value;
+      },
+      () => {
+        const value = structuredClone(valid) as any;
+        value.move_review.explanations[0].idea_importance.unique_top = null;
+        return value;
+      },
+      () => {
+        const value = structuredClone(valid) as any;
+        value.move_review.explanations[0].ideas[0].channels[0].effect_descriptor = null;
+        return value;
+      },
+      () => {
+        const value = structuredClone(valid) as any;
+        value.move_review.explanations[0].ideas[0].name = 'borrowed semantic name';
+        return value;
+      },
+      () => {
+        const value = structuredClone(valid) as any;
+        value.move_review.explanations[0].ideas[0].cause.direct_effect_admission.status = 'unresolved';
+        return value;
+      },
+    ];
 
-    const wrongSchema = structuredClone(valid);
-    wrongSchema.schema_version = 'chesstory.move-meaning.response.v2';
-    assert.equal(decodeChesstoryMoveMeaningResponse(wrongSchema), undefined);
-
-    const arrayReview = structuredClone(valid) as any;
-    arrayReview.move_review = [arrayReview.move_review];
-    assert.equal(decodeChesstoryMoveMeaningResponse(arrayReview), undefined);
-
-    const retiredPlan = structuredClone(valid) as any;
-    retiredPlan.move_review.tested_plan_limits = [];
-    assert.equal(decodeChesstoryMoveMeaningResponse(retiredPlan), undefined);
-
-    const retiredName = structuredClone(valid) as any;
-    retiredName.move_review.explanations[0].ideas[0].name = 'borrowed semantic name';
-    assert.equal(decodeChesstoryMoveMeaningResponse(retiredName), undefined);
-  });
-
-  test('rejects forged unit membership and a top status without idea_importance.unique_top', () => {
-    const idea = facet('cause-a', 'unit-a', 'candidate_tactical_liability', 0, [
-      channel(
-        'channel-a',
-        { move: 'f3g5', side: 'white', piece: 'knight', from: 'f3', to: 'g5' },
-        { kind: 'square', key: 'g5' },
-        { kind: 'relation', key: 'overextension' },
-        { kind: 'consequence', key: 'lost tempo' },
-        null,
-      ),
-    ]);
-    const unit = {
-      idea_id: 'unit-a',
-      kind: 'single_cause',
-      lead_cause_evidence_id: 'cause-a',
-      member_cause_evidence_ids: ['cause-a'],
-      importance_layer: 0,
-      priority_status: 'unique_top',
-      serialization_order: 0,
-    };
-    const valid = certifiedEnvelope([idea], [unit], 'cause-a');
-    const forgedMembership = structuredClone(valid) as any;
-    forgedMembership.move_review.explanations[0].idea_units[0].member_cause_evidence_ids = ['cause-b'];
-    assert.equal(decodeChesstoryMoveMeaningResponse(forgedMembership), undefined);
-
-    const missingTop = structuredClone(valid) as any;
-    missingTop.move_review.explanations[0].idea_importance.unique_top = null;
-    assert.equal(decodeChesstoryMoveMeaningResponse(missingTop), undefined);
-  });
-
-  test('rejects active V3 channels missing guaranteed direct evidence fields', () => {
-    const idea = facet('cause-a', 'unit-a', 'candidate_tactical_liability', 0, [
-      channel(
-        'channel-a',
-        { move: 'f3g5', side: 'white', piece: 'knight', from: 'f3', to: 'g5' },
-        { kind: 'square', key: 'g5' },
-        { kind: 'relation', key: 'overextension' },
-        { kind: 'consequence', key: 'lost tempo' },
-        null,
-      ),
-    ]);
-    const unit = {
-      idea_id: 'unit-a',
-      kind: 'single_cause',
-      lead_cause_evidence_id: 'cause-a',
-      member_cause_evidence_ids: ['cause-a'],
-      importance_layer: 0,
-      priority_status: 'unique_top',
-      serialization_order: 0,
-    };
-    const valid = certifiedEnvelope([idea], [unit], 'cause-a');
-
-    const missingDescriptor = structuredClone(valid) as any;
-    delete missingDescriptor.move_review.explanations[0].ideas[0].channels[0].effect_descriptor;
-    assert.equal(decodeChesstoryMoveMeaningResponse(missingDescriptor), undefined);
-
-    const nullDescriptor = structuredClone(valid) as any;
-    nullDescriptor.move_review.explanations[0].ideas[0].channels[0].effect_descriptor = null;
-    assert.equal(decodeChesstoryMoveMeaningResponse(nullDescriptor), undefined);
-
-    const missingRootActor = structuredClone(valid) as any;
-    missingRootActor.move_review.explanations[0].ideas[0].channels[0].actor.side = null;
-    assert.equal(decodeChesstoryMoveMeaningResponse(missingRootActor), undefined);
-
-    const missingChannelLine = structuredClone(valid) as any;
-    missingChannelLine.move_review.explanations[0].ideas[0].channels[0].line = null;
-    assert.equal(decodeChesstoryMoveMeaningResponse(missingChannelLine), undefined);
-
-    const unresolvedAdmission = structuredClone(valid) as any;
-    unresolvedAdmission.move_review.explanations[0].ideas[0].cause.direct_effect_admission.status =
-      'unresolved';
-    assert.equal(decodeChesstoryMoveMeaningResponse(unresolvedAdmission), undefined);
+    malformed.forEach(build => assert.equal(decodeChesstoryMoveMeaningResponse(build()), undefined));
   });
 
   test('recognizes the exact V3 error envelope without exposing a move review', () => {

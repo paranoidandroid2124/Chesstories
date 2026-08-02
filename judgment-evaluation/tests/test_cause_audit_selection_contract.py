@@ -12,8 +12,6 @@ from chesstory_eval.cause_audit import (
     TYPED_OPEN_WORLD_ADJUDICATION_SCHEMA_VERSION,
     TYPED_OPEN_WORLD_ARM_INVENTORY_SCHEMA_VERSION,
     TYPED_ORACLE_SCHEMA_VERSION,
-    _cascade_counts,
-    _global_packet_public_projection_matches,
     _inventory_expected_candidates,
     _judge_case,
     _load_open_world_arm_inventory,
@@ -21,8 +19,6 @@ from chesstory_eval.cause_audit import (
     _load_typed_labels,
     _merge_candidate_payloads,
     _open_world_candidate_set_document,
-    _packet_public_selection_matches,
-    _publicly_selected,
     _schema_path,
     _schema_tools,
     _typed_oracle_run_manifest_document,
@@ -254,121 +250,6 @@ def selection(
             channel.pop("descriptor_ambiguous")
             channel.pop("proof_segment_ambiguous")
     return value
-
-
-def cause(
-    *,
-    cause_id: str = "cause-1",
-    cause_kind: str = "wrong_move_order",
-    priority_rank: int = 0,
-    packet: bool = True,
-    public: bool = True,
-) -> dict[str, object]:
-    exact = selection(cause_id, cause_kind)
-    exact["priority_rank"] = priority_rank
-    return {
-        "cause_record": {"id": cause_id},
-        "c": {
-            "kind": cause_kind,
-            "source_side": "reference",
-            "direct_effect_admission": {
-                "status": "restricted",
-                "causal_signatures": ["owned-channel"],
-            },
-            "comparison": {
-                "kind": "played_vs_best",
-                "reference_root_move": "e2e4",
-                "candidate_root_move": "e2e3",
-                "mover": "white",
-            },
-            "attribution": {
-                "kind": "reference_creates_resource",
-                "root_move_matched": True,
-                "direct_proof_eligible": True,
-            },
-            "binding": {
-                "role": "primary_played_cause",
-                "event_line": {"root_move": "e2e4"},
-            },
-            "objects": {
-                "owned_bindings": [
-                    {
-                        "actor": [{}],
-                        "target": [{}],
-                        "mechanism": [{}],
-                        "consequence": [{}],
-                    }
-                ]
-            },
-        },
-        "jp": {"linked_claims": [{"claim_id": f"claim-{cause_id}"}]},
-        "ja": {"linked_decisions": [{"status": "certified"}]},
-        "r": {
-            "cross_comparison_exposure": {
-                "selected": True,
-                "priority_rank": priority_rank,
-            }
-        },
-        "p": {
-            "packet_present": packet,
-            "cause_evidence_id": cause_id,
-            "packet_selected": packet,
-            "packet_selection": copy.deepcopy(exact) if packet else None,
-            "public_selection_count": 1 if public else 0,
-            "public_selection": copy.deepcopy(exact) if public else None,
-            "selected_public_cause_evidence_ids": [cause_id] if public else [],
-        },
-    }
-
-
-def projection_for(causes: list[dict[str, object]]) -> dict[str, object]:
-    raw_ids: list[str] = []
-    typed: list[dict[str, object]] = []
-    for item in causes:
-        p_value = item["p"]
-        assert isinstance(p_value, dict)
-        selected_ids = p_value["selected_public_cause_evidence_ids"]
-        assert isinstance(selected_ids, list)
-        raw_ids.extend(value for value in selected_ids if isinstance(value, str))
-        public = p_value["public_selection"]
-        if isinstance(public, dict):
-            typed.append(copy.deepcopy(public))
-    return {
-        "present": True,
-        "raw_public_idea_count": len(typed),
-        "parsed_public_idea_count": len(typed),
-        "public_ideas_parse_closed": True,
-        "selected_public_cause_evidence_ids": raw_ids,
-        "selected_public_cause_selections": typed,
-    }
-
-
-def judged_case(
-    causes: list[dict[str, object]],
-    forbidden: list[str],
-    projection: dict[str, object] | None = None,
-) -> dict[str, object]:
-    return _judge_case(
-        case={
-            "case_id": "case-1",
-            "partition": "explore",
-            "played_move_uci": "e2e3",
-        },
-        label={
-            "answerable": True,
-            "expected_cause_kinds": ["WrongMoveOrder"],
-            "forbidden_tempting_causes": forbidden,
-            "expected_reference_move_uci": "e2e4",
-            "acceptable_alternatives": [],
-            "source_side": "white",
-        },
-        actual={
-            "status": "complete",
-            "probe_closure": {"all_closed": True},
-            "projection": copy.deepcopy(projection or projection_for(causes)),
-            "causes": causes,
-        },
-    )
 
 
 def typed_case() -> dict[str, object]:
@@ -1849,72 +1730,105 @@ def write_open_world_contract(
     }
 
 
-class CauseAuditSelectionContractTest(unittest.TestCase):
-    def test_public_selection_must_equal_packet_selection_at_every_typed_boundary(self) -> None:
-        baseline = cause()
-        self.assertTrue(_packet_public_selection_matches(baseline))
+class HistoricalV2CauseAuditBoundaryTest(unittest.TestCase):
+    def test_historical_v2_c_r_p_boundaries(self) -> None:
+        def cause(
+            cause_id: str = "cause-1",
+            kind: str = "wrong_move_order",
+            rank: int = 0,
+            *,
+            packet: bool = True,
+        ) -> dict[str, object]:
+            selected = {"cause_evidence_id": cause_id, "priority_rank": rank}
+            return {
+                "cause_record": {"id": cause_id},
+                "c": {
+                    "kind": kind,
+                    "source_side": "reference",
+                    "comparison": {
+                        "kind": "played_vs_best",
+                        "reference_root_move": "e2e4",
+                        "candidate_root_move": "e2e3",
+                        "mover": "white",
+                    },
+                    "attribution": {
+                        "kind": "reference_creates_resource",
+                        "root_move_matched": True,
+                        "direct_proof_eligible": True,
+                    },
+                    "binding": {"role": "primary_played_cause", "event_line": {"root_move": "e2e4"}},
+                    "objects": {
+                        "owned_bindings": [
+                            {field: [{}] for field in ("actor", "target", "mechanism", "consequence")}
+                        ]
+                    },
+                },
+                "jp": {"linked_claims": [{}]},
+                "ja": {"linked_decisions": [{"status": "certified"}]},
+                "r": {"cross_comparison_exposure": {"selected": True, "priority_rank": rank}},
+                "p": {
+                    "cause_evidence_id": cause_id,
+                    "packet_selected": packet,
+                    "packet_selection": copy.deepcopy(selected) if packet else None,
+                    "public_selection_count": 1,
+                    "public_selection": copy.deepcopy(selected),
+                    "selected_public_cause_evidence_ids": [cause_id],
+                },
+            }
 
-        changed = copy.deepcopy(baseline)
-        changed["p"]["public_selection"]["channels"][0]["carrier"]["id"] = "other"
-        self.assertFalse(_packet_public_selection_matches(changed))
-
-    def test_packet_loss_does_not_erase_native_r_survival(self) -> None:
-        missing_packet = cause(packet=False, public=True)
-        counts = _cascade_counts([missing_packet])
-        self.assertEqual(counts["r"], 1)
-        self.assertEqual(counts["packet"], 0)
-        self.assertEqual(counts["p"], 0)
-        self.assertTrue(_publicly_selected(missing_packet))
-        self.assertFalse(_packet_public_selection_matches(missing_packet))
-
-    def test_global_projection_rejects_an_extra_public_cause(self) -> None:
-        baseline = cause()
-        exact_projection = projection_for([baseline])
-        typed_extra = copy.deepcopy(exact_projection)
-        typed_extra["selected_public_cause_evidence_ids"].append("unregistered-extra")
-        typed_extra["selected_public_cause_selections"].append(
-            selection("unregistered-extra")
-        )
-        judgment = judged_case([baseline], [], projection=typed_extra)
-        self.assertFalse(
-            _global_packet_public_projection_matches(
-                {"projection": typed_extra, "causes": [baseline]}
+        def judge(
+            causes: list[dict[str, object]],
+            forbidden: list[str],
+            projection: dict[str, object] | None = None,
+        ) -> dict[str, object]:
+            selections = [copy.deepcopy(cause["p"]["public_selection"]) for cause in causes]
+            projection = projection or {
+                "present": True,
+                "raw_public_idea_count": len(selections),
+                "parsed_public_idea_count": len(selections),
+                "public_ideas_parse_closed": True,
+                "selected_public_cause_evidence_ids": [item["cause_evidence_id"] for item in selections],
+                "selected_public_cause_selections": selections,
+            }
+            return _judge_case(
+                case={"case_id": "case-1", "partition": "explore", "played_move_uci": "e2e3"},
+                label={
+                    "answerable": True,
+                    "expected_cause_kinds": ["WrongMoveOrder"],
+                    "forbidden_tempting_causes": forbidden,
+                    "expected_reference_move_uci": "e2e4",
+                    "acceptable_alternatives": [],
+                    "source_side": "white",
+                },
+                actual={"status": "complete", "probe_closure": {"all_closed": True}, "projection": projection, "causes": causes},
             )
-        )
-        self.assertEqual(judgment["first_failure_stage"], "P")
-        self.assertIn("projection_set_mismatch", judgment["errors"])
 
-    def test_forbidden_public_cause_is_c_failure_even_when_expected_cause_exists(self) -> None:
-        judgment = judged_case(
-            [
-                cause(cause_id="expected", cause_kind="wrong_move_order"),
-                cause(cause_id="forbidden", cause_kind="tempo_loss"),
-            ],
-            ["TempoLoss"],
+        mismatch = cause()
+        mismatch["p"]["public_selection"] = {"cause_evidence_id": "cause-1", "altered": True}
+        baseline = cause()
+        extra_projection = {
+            "present": True,
+            "raw_public_idea_count": 2,
+            "parsed_public_idea_count": 2,
+            "public_ideas_parse_closed": True,
+            "selected_public_cause_evidence_ids": ["cause-1", "unregistered-extra"],
+            "selected_public_cause_selections": [copy.deepcopy(baseline["p"]["public_selection"]), {"cause_evidence_id": "unregistered-extra"}],
+        }
+        cases = (
+            ("R survives packet loss", [cause(packet=False)], [], None, "P", {"packet_loss"}, {"r": 1, "packet": 0, "p": 0}),
+            ("packet/public exact mismatch", [mismatch], [], None, "P", {"projection_set_mismatch"}, None),
+            ("extra unregistered public cause", [baseline], [], extra_projection, "P", {"projection_set_mismatch"}, None),
+            ("forbidden public cause", [cause(), cause("forbidden", "tempo_loss")], ["TempoLoss"], None, "C", {"forbidden_cause_emitted", "generic_fallback_takeover"}, None),
+            ("priority inversion", [cause("expected", rank=1), cause("competing", "material_swing")], [], None, "R", {"priority_inversion"}, None),
         )
-        self.assertEqual(judgment["first_failure_stage"], "C")
-        self.assertIn("forbidden_cause_emitted", judgment["errors"])
-        self.assertIn("generic_fallback_takeover", judgment["errors"])
+        for name, causes, forbidden, projection, stage, errors, cascade in cases:
+            with self.subTest(name=name):
+                judgment = judge(causes, forbidden, projection)
+                self.assertEqual(judgment["first_failure_stage"], stage)
+                self.assertTrue(errors.issubset(judgment["errors"]))
+                if cascade:
+                    self.assertEqual({field: judgment["cascade"][field] for field in cascade}, cascade)
 
-    def test_priority_inversion_is_attributed_to_r_not_p(self) -> None:
-        judgment = judged_case(
-            [
-                cause(
-                    cause_id="expected",
-                    cause_kind="wrong_move_order",
-                    priority_rank=1,
-                ),
-                cause(
-                    cause_id="competing",
-                    cause_kind="material_swing",
-                    priority_rank=0,
-                ),
-            ],
-            [],
-        )
-        self.assertEqual(judgment["first_failure_stage"], "R")
-        self.assertIn("priority_inversion", judgment["errors"])
-        self.assertNotIn("r_loss", judgment["errors"])
 
 class TypedCauseSemanticContractTest(unittest.TestCase):
     @staticmethod
@@ -4258,6 +4172,23 @@ class TypedCauseSemanticContractTest(unittest.TestCase):
         for field in ("request_sha256", "adapter_request_sha256", "hash_contract"):
             self.assertNotIn(field, v2_transport["required"])
             self.assertIn(field, v3_transport["required"])
+
+        runtime_reasons = {
+            "better_alternative_exposes_exact_played_liability",
+            "conflicting_root_owned_effect_truth",
+        }
+        for version, schema in ((2, v2), (3, v3)):
+            exposure = schema["$defs"]["causeCascade"]["properties"]["r"][
+                "properties"
+            ]["cross_comparison_exposure"]
+            reason_values = next(
+                branch["properties"]["reason"]["enum"]
+                for branch in exposure["oneOf"]
+                if branch.get("type") == "object"
+            )
+            self.assertTrue(runtime_reasons.issubset(reason_values), version)
+            if version == 2:
+                self.assertIn("more_specific_equivalent_cause", reason_values)
 
 
     def test_typed_oracle_loader_rejects_cross_partition_rows(self) -> None:
