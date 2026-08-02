@@ -8,35 +8,6 @@ RUN corepack enable \
     && /lila/ui/build --clean --debug
 
 ##################################################################################
-FROM mongo:7-jammy AS dbbuilder
-
-RUN apt update \
-    && apt install -y \
-        curl \
-        python3-pip \
-        python3-venv \
-    && apt clean
-
-ENV JAVA_HOME=/opt/java/openjdk
-COPY --from=eclipse-temurin:25-jdk $JAVA_HOME $JAVA_HOME
-ENV PATH="${JAVA_HOME}/bin:${PATH}"
-
-COPY repos/lila /lila
-COPY repos/lila-db-seed /lila-db-seed
-WORKDIR /lila-db-seed
-
-RUN mkdir /seeded \
-    && mongod --fork --logpath /var/log/mongodb/mongod.log --dbpath /seeded \
-    && ./spamdb/spamdb.py \
-        --drop-db \
-        --password=password \
-        --su-password=password \
-        --streamers \
-        --coaches \
-        --tokens \
-    && mongosh --quiet lichess /lila/bin/mongodb/indexes.js
-
-##################################################################################
 FROM sbtscala/scala-sbt:eclipse-temurin-alpine-25_36_1.11.6_3.7.3 AS lilabuilder
 
 COPY --from=node /lila /lila
@@ -57,9 +28,8 @@ RUN apt update \
         redis \
         supervisor \
     && apt clean \
-    && mkdir -p /var/log/supervisor
+    && mkdir -p /seeded /var/log/supervisor
 
-COPY --from=dbbuilder /seeded /seeded
 COPY --from=lilabuilder /lila/target /lila/target
 COPY --from=lilabuilder /lila/public /lila/public
 COPY --from=lilabuilder /lila/conf   /lila/conf
