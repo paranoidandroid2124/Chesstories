@@ -53,7 +53,6 @@ class UserTest extends munit.FunSuite:
     assert(!canSignup("a_-a"))
     assert(!canSignup("_-a"))
     assert(!canSignup("a__a"))
-    assert(!canSignup("a_-a"))
     assert(!canSignup("a--a"))
     assert(!canSignup("a--_"))
     assert(couldBeUsername("a--a"))

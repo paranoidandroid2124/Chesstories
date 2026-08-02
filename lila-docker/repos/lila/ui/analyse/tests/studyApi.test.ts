@@ -28,10 +28,13 @@ test('createStudyFromAnalysis submits review study setup fields', async () => {
 
   const form = new URLSearchParams(capturedBody);
   assert.equal(capturedUrl, '/study');
-  assert.equal(form.get('pgn'), '1. e4 e5 *');
-  assert.equal(form.get('as'), 'study');
-  assert.equal(form.get('orientation'), 'white');
-  assert.equal(form.get('name'), 'ych24 vs RojoCapo review');
-  assert.equal(form.get('chapterName'), 'Opening to middlegame');
-  assert.equal(form.get('visibility'), 'private');
+  for (const [field, value] of [
+    ['pgn', '1. e4 e5 *'],
+    ['as', 'study'],
+    ['orientation', 'white'],
+    ['name', 'ych24 vs RojoCapo review'],
+    ['chapterName', 'Opening to middlegame'],
+    ['visibility', 'private'],
+  ])
+    assert.equal(form.get(field), value);
 });
