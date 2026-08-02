@@ -4533,7 +4533,7 @@ def open_world_meaning_matches_candidate(
         realization.get("effect_mode") == effect_mode
         and all(
             channel.get("played_change")
-            == _source_blind_played_change(
+            == _expected_played_change(
                 effect_mode, str(channel.get("direct_change"))
             )
             for channel in _objects(realization.get("channels"), "verified channels")
@@ -4580,18 +4580,6 @@ def _source_blind_effect_mode(c_semantics: Mapping[str, Any]) -> str | None:
     # ReferenceVsAlternative, shared/mixed sources, and non-owning
     # attributions have diagnostic value only.  They cannot authorize a
     # player-facing effect mode without observing runtime behavior.
-    return None
-
-
-def _source_blind_played_change(
-    effect_mode: str, direct_change: str
-) -> str | None:
-    if effect_mode == "alternative_resource":
-        return "missed" if direct_change in {"occurred", "prevented", "maintained"} else None
-    if effect_mode == "played_liability":
-        return direct_change if direct_change in {"occurred", "lost", "refuted", "missed"} else None
-    if effect_mode == "played_value":
-        return direct_change if direct_change in {"occurred", "prevented", "maintained"} else None
     return None
 
 
