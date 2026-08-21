@@ -1,6 +1,6 @@
 {
   "schema_version": "chesstory.eval.preregistration.v1",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "registered_at": "2026-07-26T00:00:00Z",
   "seed": 240731,
   "oracle_chains": ["team-a", "team-b"],
@@ -27,8 +27,7 @@
     "Jp": ["allowed-alternative candidate recall"],
     "Ja": ["precision-constrained recall"],
     "R": ["core claim top-1 agreement"],
-    "P": ["packet semantic-field preservation"],
-    "V": ["usefulness under zero grounding violations"]
+    "P": ["packet semantic-field preservation"]
   },
   "ceiling_min_success_rate": 0.8,
   "usefulness_threshold": 0.67,
@@ -61,13 +60,6 @@
     "atomic_clusters": 30,
     "held_out_human_raters": 3,
     "independent_oracle_chains": 2
-  },
-  "verbalization_policy": {
-    "language": "en",
-    "max_sentences": 4,
-    "require_claim_citations": true,
-    "allow_abstention": true,
-    "prohibited_new_token_kinds": ["move", "square", "piece", "file", "rank"]
   },
   "decision_rules": {
     "attribution": "Both fixed oracle chains must pass ceiling and show the same preregistered effect direction after paired cluster inference and Holm control.",

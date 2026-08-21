@@ -4,6 +4,7 @@ import chess.Color
 import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.model.evaluation.PerspectiveMath
+import lila.chessjudgment.model.line.CandidateLineEvaluation
 import lila.chessjudgment.analysis.move.{ MoveAnalyzer, MoveMotifNormalizer }
 import lila.chessjudgment.analysis.opening.OpeningContextFactNormalizer
 import lila.chessjudgment.analysis.plan.{ PlanInteractionContext, PlanMatcher }
@@ -220,6 +221,7 @@ object EvidenceFactAssembler:
           .toList
           .flatMap { replay =>
             val position = startPositionForLine(input, context, rootNode, line).ref
+            val engineLine = line.evaluation.engineLine
             val witnesses =
               TacticalRelationEvidence
                 .relationWitnesses(
@@ -227,8 +229,10 @@ object EvidenceFactAssembler:
                   playedMove = line.ref.rootMove,
                   targetHints = relationTargetHints,
                   continuationLines = continuationLines,
-                  engineMate = line.mate,
-                  drawishWinPercent = Some(PerspectiveMath.winPercentFromWhiteEval(line.whitePovEvalCp, line.mate))
+                  engineMate = engineLine.flatMap(_.mate),
+                  drawishWinPercent = engineLine.map(value =>
+                    PerspectiveMath.winPercentFromWhiteEval(value.scoreCp, value.mate)
+                  )
                 )
                 .distinctBy(witness => (witness.kind, witness.focusSquares, witness.targetSquare, witness.lineMoves))
             witnesses.zipWithIndex.flatMap { case (witness, index) =>
@@ -334,7 +338,7 @@ object EvidenceFactAssembler:
             ThreatPressureAssessor.analyze(
               fen = input.beforeFen,
               motifs = threatMotifs,
-              multiPv = input.rankedUniqueLines.map(_.line),
+              multiPv = input.rankedUniqueLines.flatMap(_.evaluation.engineLine),
               features = features,
               sideUnderPressure = sideUnderPressure
             )
@@ -367,7 +371,7 @@ object EvidenceFactAssembler:
             ThreatPressureAssessor.analyze(
               fen = branch.branchFen,
               motifs = lineNodes.flatMap(motifsForLineNode(context, _)).distinct,
-              multiPv = branch.rankedUniqueLines.map(_.line),
+              multiPv = branch.rankedUniqueLines.flatMap(_.evaluation.engineLine),
               features = features,
               sideUnderPressure = sideUnderPressure
             )
@@ -389,6 +393,7 @@ object EvidenceFactAssembler:
         (for
           line <- lineForTransition(context, edge).toList
           lineFacts <- lineFactEvidence(context, line.ref).toList
+          engineLine <- line.evaluation.engineLine.toList
           node <- context.positions.find(_.ref == edge.to).toList
           features <- positionFeatures(context, node.ref).toList
           threatActor <- node.ref.sideToMove.toList
@@ -397,9 +402,9 @@ object EvidenceFactAssembler:
           sideUnderPressure = !threatActor
           continuationPv = EngineLine(
             moves = suffixMoves,
-            scoreCp = line.whitePovEvalCp,
-            mate = line.mate,
-            depth = line.depth
+            scoreCp = engineLine.scoreCp,
+            mate = engineLine.mate,
+            depth = engineLine.depth
           )
           threats = ThreatPressureAssessor.analyze(
             fen = edge.to.fen,
@@ -564,12 +569,12 @@ object EvidenceFactAssembler:
                 )
               )
             )
-          case EvalFactEvidence(_, _, mate, _) if mate.nonEmpty =>
+          case CandidateLineEvaluationEvidence(_, CandidateLineEvaluation.EngineSearch(line)) if line.mate.nonEmpty =>
             List(
               TacticalMechanismCandidate(
                 TacticalMechanismKind.KingForcing,
                 List(record),
-                List(TacticalMechanismSignal(TacticalMechanismSignalKind.MateBranch, mate.map(_.toString).getOrElse("mate"), EvidenceLayer.Eval, Some(record.ref)))
+                List(TacticalMechanismSignal(TacticalMechanismSignalKind.MateBranch, line.mate.map(_.toString).getOrElse("mate"), EvidenceLayer.Eval, Some(record.ref)))
               )
             )
           case _ =>
@@ -998,29 +1003,30 @@ object EvidenceFactAssembler:
     root.toList.flatMap { rootNode =>
       val openingPhase =
         positionFeatures(context, rootNode.ref).exists(_.materialPhase.phase == "opening")
+      val openingContext = input.openingContext
       val canAssessOpening =
-        openingPhase || input.opening.nonEmpty || input.openingRecognition.nonEmpty
+        openingPhase || openingContext.identity.nonEmpty || openingContext.recognition.nonEmpty
       val signals =
-        input.openingSignals ++ List(
+        openingContext.signals ++ List(
           Option.when(openingPhase)(OpeningContextSignal.OpeningPhase)
         ).flatten
       val contextRecord = Option.when(
         signals.nonEmpty ||
-          input.opening.nonEmpty ||
-          input.openingRecognition.nonEmpty ||
-          input.openingThemePriorSelection.nonEmpty ||
+          openingContext.identity.nonEmpty ||
+          openingContext.recognition.nonEmpty ||
+          openingContext.themePriorSelection.nonEmpty ||
           canAssessOpening
       ) {
         OpeningContextFactNormalizer.fromContext(
           id = allocator.evidenceId("opening-context:before"),
-          identity = input.opening,
+          identity = openingContext.identity,
           signals = signals,
-          recognition = input.openingRecognition,
-          themePriorSelection = input.openingThemePriorSelection,
+          recognition = openingContext.recognition,
+          themePriorSelection = openingContext.themePriorSelection,
           position = rootNode.ref,
           line = None,
           scope = EvidenceScope.BeforePosition,
-          confidence = openingContextConfidence(input.opening, input.openingRecognition, openingPhase),
+          confidence = openingContextConfidence(openingContext.identity, openingContext.recognition, openingPhase),
           parents = openingContextParents(context, rootNode.ref)
         )
       }
@@ -1558,6 +1564,7 @@ object EvidenceFactAssembler:
             }.distinct
         val snapshot = for
           candidateLine <- line
+          engineLine <- candidateLine.evaluation.engineLine
           features <- positionFeatures(context, node.ref)
           initialPosition <- Fen.read(Standard, Fen.Full(node.ref.fen))
         yield
@@ -1577,7 +1584,7 @@ object EvidenceFactAssembler:
               .getOrElse(initialPosition)
           val planContext =
             PlanInteractionContext(
-              whitePovEvalCp = candidateLine.whitePovEvalCp,
+              whitePovEvalCp = engineLine.scoreCp,
               positionFeatures = Some(features),
               candidateLineAvailable = true,
               pawnAnalysis = pawnStructure.flatMap(_.pawnPlay).filter(_ => node.ref.sideToMove.contains(side)),

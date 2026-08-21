@@ -8,39 +8,39 @@
   @return mix(#000, $color, $weight);
 }
 
-$site-hue: 86;
+$site-hue: 204;
 
 // top level $c-variables must be valid css format (rgba, hsla, hex) to be mixable by ui/build
 
-$c-bg: #151713;
-$c-bg-page: #12140f;
-$c-bg-low: #1f221c;
-$c-bg-zebra: #24281f;
-$c-bg-zebra2: #292d24;
-$c-bg-popup: #23261f;
-$c-bg-opaque: #151713;
-$c-body-gradient: #181b15;
-$c-border: #34392f;
-$c-font: #f2f0e8;
-$c-font-muted: #b8bcad;
+$c-bg: #141c22;
+$c-bg-page: #0e1419;
+$c-bg-low: #1a242c;
+$c-bg-zebra: #202c35;
+$c-bg-zebra2: #26333d;
+$c-bg-popup: #1b252d;
+$c-bg-opaque: #141c22;
+$c-body-gradient: #11181e;
+$c-border: #34434e;
+$c-font: #edf1f3;
+$c-font-muted: #a8b3bb;
 
-// Chesstory quiet tool accents
-$c-primary: #a7c98c;
-$c-primary-strong: #d9e6cc;
-$c-secondary: #8fae99;
-$c-good: #91bd83;
-$c-accent: #d6a85d;
-$c-bad: #d8766f;
-$c-brag: #b8955a;
+// Chesstory ink desk: terracotta annotations, blue-gray references.
+$c-primary: #e07a5f;
+$c-primary-strong: #f3a38d;
+$c-secondary: #7fa6b2;
+$c-good: #78b899;
+$c-accent: #d7a55f;
+$c-bad: #e27870;
+$c-brag: #c99b59;
 
-$c-clas: #8fae99;
-$c-shade: #303427;
+$c-clas: #7fa6b2;
+$c-shade: #26343e;
 
-$c-inaccuracy: #8fae99;
-$c-mistake: #d6a85d;
-$c-blunder: #d8766f;
-$c-brilliant: #a7c98c;
-$c-interesting: #d9e6cc;
+$c-inaccuracy: #6fa0b0;
+$c-mistake: #d7a55f;
+$c-blunder: #e27870;
+$c-brilliant: #78b899;
+$c-interesting: #b39acb;
 
 $c-paper: hsl(220, 10%, 90%);
 $c-dark: #1a1c22;

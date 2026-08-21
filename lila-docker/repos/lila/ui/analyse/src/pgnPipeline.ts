@@ -3,6 +3,13 @@ const base64ChunkSize = 0x2000;
 
 export const emptyPgnError = 'Paste a game before opening the board.';
 
+export const pgnInputError = (rawPgn: string | undefined | null): string => {
+  const trimmed = rawPgn?.trim();
+  return trimmed && trimmed.length > maxInlinePgnChars
+    ? `PGN must be ${maxInlinePgnChars.toLocaleString()} characters or fewer.`
+    : emptyPgnError;
+};
+
 export type PgnDraftStatus = 'empty' | 'current' | 'ready' | 'invalid';
 
 export type ReviewStudyCreateGate = {
@@ -50,8 +57,7 @@ export const reviewStudyCreateGate = (status: PgnDraftStatus): ReviewStudyCreate
 
 export const normalizeInlinePgn = (rawPgn: string | undefined | null): string | undefined => {
   const trimmed = rawPgn?.trim();
-  if (!trimmed) return;
-  return trimmed.length > maxInlinePgnChars ? trimmed.slice(0, maxInlinePgnChars) : trimmed;
+  return trimmed && trimmed.length <= maxInlinePgnChars ? trimmed : undefined;
 };
 
 const encodePgn64 = (pgn: string): string => {
@@ -78,13 +84,7 @@ export const submitPgnToImportPipeline = (rawPgn: string): boolean => {
     pgn64.name = 'pgn64';
     pgn64.value = encodePgn64(normalized);
 
-    const sourceType = document.createElement('input');
-    sourceType.type = 'hidden';
-    sourceType.name = 'sourceType';
-    sourceType.value = 'manual';
-
     form.appendChild(pgn64);
-    form.appendChild(sourceType);
     document.body.appendChild(form);
     form.submit();
     return true;

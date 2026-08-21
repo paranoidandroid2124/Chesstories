@@ -1,9 +1,6 @@
 package lila.chessjudgment.analysis.assembly
 
-import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
-
-import chess.{ Bishop, Knight, Pawn, Queen, Rook, Square }
+import chess.{ Bishop, Knight, Pawn, Queen, Rook }
 import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.analysis.evaluation.EvalFactNormalizer
@@ -12,10 +9,15 @@ import lila.chessjudgment.analysis.material.MaterialValue
 import lila.chessjudgment.analysis.move.MoveAnalyzer
 import lila.chessjudgment.analysis.position.{ FactExtractor, PositionAnalyzer, PositionFactNormalizer }
 import lila.chessjudgment.analysis.strategic.EndgamePatternOracle
-import lila.chessjudgment.analysis.tactical.TacticalRelationEvidence
 import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
-import lila.chessjudgment.model.{ FactScope, ProbeContractValidator, ProbePurpose, ProbeRequest, ProbeResult }
-import lila.chessjudgment.model.line.{ LegalReplayStep, PrincipalVariationEvidence }
+import lila.chessjudgment.model.FactScope
+import lila.chessjudgment.model.line.{
+  CandidateLineEvaluation,
+  CanonicalPositionHistory,
+  CanonicalPositionHistoryStep,
+  PreInitialHistoryKnowledge,
+  PrincipalVariationEvidence
+}
 import lila.chessjudgment.model.strategic.EngineLine
 import lila.chessjudgment.model.judgment.*
 
@@ -84,17 +86,19 @@ object CandidateLineAssembler:
   def fromLine(
       line: NormalizedCandidateLine,
       root: PositionNodeRef,
-      allocator: JudgmentProvenanceAllocator,
-      previousCaptureSquare: Option[Square] = None
+      positionHistory: CanonicalPositionHistory,
+      allocator: JudgmentProvenanceAllocator
   ): Option[CandidateLineAssembly] =
     val scope = line.role.scope
     val ref = allocator.lineRef(line)
-    replayFacts(line, root, previousCaptureSquare).map { replayed =>
+    Option.when(line.evaluation.comparisonReady)(line).flatMap(replayFacts(_, root, positionHistory)).map { replayed =>
       val facts = replayed.facts
       val forcedTheme =
-        ForcedLineTruth
-          .detect(root.fen, ref.rootMove, List(line.line))
-          .map(LineFactNormalizer.fromForcedTheme)
+        line.evaluation.engineLine.flatMap(engineLine =>
+          ForcedLineTruth
+            .detect(root.fen, ref.rootMove, List(engineLine))
+            .map(LineFactNormalizer.fromForcedTheme)
+        )
       val lineEvidence =
         allocator.evidenceRef(
           suffix = s"line:${allocator.key(line.role)}:${line.rank}",
@@ -108,7 +112,7 @@ object CandidateLineAssembler:
       val node =
         CandidateLineNode(
           ref = ref,
-          line = line.line,
+          evaluation = line.evaluation,
           evidence = lineEvidence
         )
       val lineRecord =
@@ -120,7 +124,7 @@ object CandidateLineAssembler:
           scope = scope,
           forcedTheme = forcedTheme,
           materialSummary = replayed.materialSummary,
-          whitePovMate = line.line.mate
+          whitePovMate = line.evaluation.engineLine.flatMap(_.mate)
         )
       val evalRecord =
         EvalFactNormalizer.fromCandidateLine(
@@ -136,41 +140,58 @@ object CandidateLineAssembler:
   private def replayFacts(
       line: NormalizedCandidateLine,
       root: PositionNodeRef,
-      previousCaptureSquare: Option[Square]
+      positionHistory: CanonicalPositionHistory
   ): Option[ReplayedLineFacts] =
-    PrincipalVariationEvidence
-      .legalReplay(root.fen, line.line.moves, root.ply)
-      .map(_.map(_._2))
-      .filter(_.nonEmpty)
-      .map(PrincipalVariationEvidence.LineVariationRef.apply)
-      .flatMap(PrincipalVariationEvidence.validatedLineFromStart(root.fen, _))
-      .flatMap { validated =>
-        validated.first.map { first =>
+    positionHistory.extend(line.evaluation.moves).toOption.flatMap { lineHistory =>
+      val prefixSize = positionHistory.segmentReplaySteps.size
+      val replaySteps = lineHistory.segmentReplaySteps.drop(prefixSize)
+      val expectedMoves = line.evaluation.moves.map(PrincipalVariationEvidence.normalizeUci)
+      Option
+        .when(
+          lineHistory.segmentReplaySteps.take(prefixSize) == positionHistory.segmentReplaySteps &&
+            positionHistory.currentFen == root.fen &&
+            positionHistory.currentPly == root.ply &&
+            replaySteps.nonEmpty &&
+            replaySteps.map(_.uci) == expectedMoves
+        )(replaySteps)
+        .map { steps =>
+          val moves = steps.map(step => PrincipalVariationEvidence.LineMoveRef(step.ply, step.uci, step.afterFen))
+          val first = moves.head
           ReplayedLineFacts(
             facts = PrincipalVariationEvidence.LineFacts(
-              line = validated.line,
+              line = PrincipalVariationEvidence.LineVariationRef(moves),
               first = first,
-              reply = validated.reply,
-              continuation = validated.continuation,
-              continuationTail = validated.moves.drop(3).take(3)
+              reply = moves.lift(1),
+              continuation = moves.lift(2),
+              continuationTail = moves.drop(3).take(3)
             ),
-            materialSummary = lineMaterialSummary(validated.moves.map(_.uci), root.fen, previousCaptureSquare)
+            materialSummary = lineMaterialSummary(positionHistory, lineHistory)
           )
         }
-      }
+    }
 
   private[assembly] def lineMaterialSummary(
-      moves: List[String],
-      rootFen: String,
-      previousCaptureSquare: Option[Square]
+      positionHistory: CanonicalPositionHistory,
+      lineHistory: CanonicalPositionHistory
   ): Option[LineMaterialSummary] =
-    TacticalRelationEvidence.boundedReplay(rootFen, moves, maxPlies = moves.size).flatMap { replay =>
+    val prefixSize = positionHistory.segmentReplaySteps.size
+    val replay = lineHistory.segmentReplaySteps.drop(prefixSize)
+    val belongsToPositionHistory =
+      lineHistory.segmentReplaySteps.take(prefixSize) == positionHistory.segmentReplaySteps
+    if !belongsToPositionHistory || replay.isEmpty ||
+      (replay.head.capturedRole.nonEmpty &&
+        positionHistory.segmentReplaySteps.isEmpty &&
+        positionHistory.preInitialHistoryKnowledge == PreInitialHistoryKnowledge.Unknown)
+    then None
+    else
       val sideToMove = replay.headOption.map(_.move.piece.color)
       sideToMove.flatMap { mover =>
         val captures = replay.zipWithIndex.flatMap { case (step, index) =>
-          if LineFactNormalizer.castlingSide(PrincipalVariationEvidence.normalizeUci(step.uci)).nonEmpty then None
+          if step.castle.nonEmpty then None
           else step.capturedRole.map { captured =>
-            val previous = replay.lift(index - 1)
+            val previous =
+              if index == 0 then positionHistory.segmentReplaySteps.lastOption
+              else replay.lift(index - 1)
             LineMaterialCapture(
               moveUci = step.uci,
               plyOffset = index,
@@ -180,12 +201,11 @@ object CandidateLineAssembler:
               square = EvidenceSquare(step.move.dest.key),
               valueCp = MaterialValue.materialValueCp(captured),
               recapture =
-                (index == 0 && previousCaptureSquare.contains(step.move.dest)) ||
-                  previous.exists(prev =>
-                    prev.capturedRole.nonEmpty &&
-                      prev.move.dest == step.move.dest &&
-                      prev.move.piece.color != step.move.piece.color
-                  )
+                previous.exists(prev =>
+                  prev.capturedRole.nonEmpty &&
+                    prev.move.dest == step.move.dest &&
+                    prev.move.piece.color != step.move.piece.color
+                )
             )
           }
         }
@@ -209,13 +229,12 @@ object CandidateLineAssembler:
             hasRecaptureChain = captures.exists(_.recapture),
             hasRecoveryWindow = running.exists(_ < 0) && running.exists(_ >= 0) && net >= 0,
             promotionGainCpForMover = promotionGain,
-            materialWindowComplete = replay.size == moves.size
+            materialWindowComplete = replay.size == lineHistory.segmentReplaySteps.size - prefixSize
           )
         )
       }
-    }
 
-  private def promotionGainCp(step: LegalReplayStep): Int =
+  private def promotionGainCp(step: CanonicalPositionHistoryStep): Int =
     Option.when(step.uci.length == 5) {
       val promotedValue = step.uci.last.toLower match
         case 'q' => MaterialValue.materialValueCp(Queen)
@@ -257,271 +276,129 @@ object TransitionEdgeAssembler:
     TransitionEdgeAssembly(edge, List(TransitionFactNormalizer.fromMoveTransition(edge)))
 
 object NodeLineTransitionAssembler:
-
-  private def previousCaptureSquare(input: NormalizedMoveReviewInput): Option[Square] =
-    Option
-      .when(input.movePrefixUci.nonEmpty && input.movePrefixUci.size == input.beforePly)(
-        PrincipalVariationEvidence.legalMoveReplay(Standard.initialFen.value, input.movePrefixUci, 0)
-      )
-      .flatten
-      .filter(_.lastOption.exists(step =>
-        PrincipalVariationEvidence.sameBoardState(Fen.write(step.after).value, input.beforeFen)
-      ))
-      .flatMap(_.lastOption)
-      .filter(_.capturedRole.nonEmpty)
-      .map(_.move.dest)
-
   def assemble(raw: RawMoveReviewInput): Option[JudgmentAssemblyContext] =
-    MoveReviewInputNormalizer.normalize(raw).flatMap { input =>
-      val allocator = JudgmentProvenanceAllocator.forInput(input)
-      for
-        before <- PositionNodeAssembler.fromFen(
-          role = PositionNodeRole.Before,
-          fen = input.beforeFen,
-          ply = input.beforePly,
-          allocator = allocator,
-          scope = EvidenceScope.BeforePosition
-        )
-        afterPlayed <- PositionNodeAssembler.fromFen(
-          role = PositionNodeRole.AfterPlayed,
-          fen = input.afterPlayedFen,
-          ply = input.beforePly + 1,
-          allocator = allocator,
-          scope = EvidenceScope.AfterPlayedPosition
-        )
-      yield
-        val afterReference =
-          input.afterReferenceFen.flatMap { fen =>
-            PositionNodeAssembler.fromFen(
-              role = PositionNodeRole.AfterReference,
-              fen = fen,
-              ply = input.beforePly + 1,
-              allocator = allocator,
-              scope = EvidenceScope.AfterReferencePosition
-            )
-          }
-        val afterAlternatives =
-          input.lines.filter(_.role == LineNodeRole.Alternative).flatMap { line =>
-            line.rootMove
-              .flatMap(PrincipalVariationEvidence.legalFenAfter(input.beforeFen, _))
-              .flatMap { fen =>
-                PositionNodeAssembler.fromFen(
-                  role = PositionNodeRole.AfterAlternative,
-                  fen = fen,
-                  ply = input.beforePly + 1,
-                  allocator = allocator,
-                  scope = EvidenceScope.AlternativeTransition
-                ).map(line -> _)
-              }
-          }
-        val afterThreats =
-          input.threatBranches.flatMap { branch =>
-            PositionNodeAssembler.fromFen(
-              role = PositionNodeRole.AfterThreat,
-              fen = branch.branchFen,
-              ply = branch.branchPly,
-              allocator = allocator,
-              scope = EvidenceScope.ThreatLine
-            ).map(branch -> _)
-          }
-        val rootPreviousCaptureSquare = previousCaptureSquare(input)
-        val rootLines = input.lines
-          .flatMap(CandidateLineAssembler.fromLine(_, before.node.ref, allocator, rootPreviousCaptureSquare))
-          .map { assembly =>
-            val evidence = assembly.evidence.map {
-              case record @ EvidenceRecord(_, lineFacts: LineFactEvidence, _) =>
-                record.copy(
-                  payload = EndgameTablebaseProbeBinding.admit(
-                    assembly.node,
-                    lineFacts,
-                    input.endgameTablebaseResults
-                  )
-                )
-              case record =>
-                record
+    MoveReviewInputNormalizer.normalize(raw).flatMap(assemble)
+
+  /** The sole node/line/transition assembly implementation for normalized input. */
+  def assemble(input: NormalizedMoveReviewInput): Option[JudgmentAssemblyContext] =
+    val allocator = JudgmentProvenanceAllocator.forInput(input)
+    for
+      before <- PositionNodeAssembler.fromFen(
+        role = PositionNodeRole.Before,
+        fen = input.beforeFen,
+        ply = input.beforePly,
+        allocator = allocator,
+        scope = EvidenceScope.BeforePosition
+      )
+      afterPlayed <- PositionNodeAssembler.fromFen(
+        role = PositionNodeRole.AfterPlayed,
+        fen = input.afterPlayedFen,
+        ply = input.beforePly + 1,
+        allocator = allocator,
+        scope = EvidenceScope.AfterPlayedPosition
+      )
+    yield
+      val afterReference =
+        input.afterReferenceFen.flatMap { fen =>
+          PositionNodeAssembler.fromFen(
+            role = PositionNodeRole.AfterReference,
+            fen = fen,
+            ply = input.beforePly + 1,
+            allocator = allocator,
+            scope = EvidenceScope.AfterReferencePosition
+          )
+        }
+      val afterAlternatives =
+        input.lines.filter(_.role == LineNodeRole.Alternative).flatMap { line =>
+          line.rootMove
+            .flatMap(PrincipalVariationEvidence.legalFenAfter(input.beforeFen, _))
+            .flatMap { fen =>
+              PositionNodeAssembler.fromFen(
+                role = PositionNodeRole.AfterAlternative,
+                fen = fen,
+                ply = input.beforePly + 1,
+                allocator = allocator,
+                scope = EvidenceScope.AlternativeTransition
+              ).map(line -> _)
             }
-            assembly.copy(evidence = evidence)
-          }
-        val threatLines =
-          afterThreats.flatMap { case (branch, position) =>
-            branch.lines.flatMap(CandidateLineAssembler.fromLine(_, position.node.ref, allocator))
-          }
-        val lines = rootLines ++ threatLines
-        val playedTransition =
+        }
+      val afterThreats =
+        input.threatBranches.flatMap { branch =>
+          PositionNodeAssembler.fromFen(
+            role = PositionNodeRole.AfterThreat,
+            fen = branch.branchFen,
+            ply = branch.branchPly,
+            allocator = allocator,
+            scope = EvidenceScope.ThreatLine
+          ).map(branch -> _)
+        }
+      val rootLines = input.lines
+        .flatMap(CandidateLineAssembler.fromLine(_, before.node.ref, input.positionHistory, allocator))
+      val threatLines =
+        afterThreats.flatMap { case (branch, position) =>
+          input.positionHistory
+            .extend(List(branch.probedMoveUci))
+            .toOption
+            .filter(history => history.currentFen == branch.branchFen && history.currentPly == branch.branchPly)
+            .toList
+            .flatMap(history =>
+              branch.lines.flatMap(CandidateLineAssembler.fromLine(_, position.node.ref, history, allocator))
+            )
+        }
+      val lines = rootLines ++ threatLines
+      val playedTransition =
+        TransitionEdgeAssembler.fromMove(
+          role = TransitionEdgeRole.Played,
+          from = before.node,
+          moveUci = input.playedMoveUci,
+          to = afterPlayed.node,
+          allocator = allocator
+        )
+      val referenceTransition =
+        for
+          referencePosition <- afterReference
+          referenceMove <- input.referenceLine.flatMap(_.rootMove)
+        yield
           TransitionEdgeAssembler.fromMove(
-            role = TransitionEdgeRole.Played,
+            role = TransitionEdgeRole.Reference,
             from = before.node,
-            moveUci = input.playedMoveUci,
-            to = afterPlayed.node,
+            moveUci = referenceMove,
+            to = referencePosition.node,
             allocator = allocator
           )
-        val referenceTransition =
-          for
-            referencePosition <- afterReference
-            referenceMove <- input.referenceLine.flatMap(_.rootMove)
-          yield
+      val alternativeTransitions =
+        afterAlternatives.flatMap { case (line, position) =>
+          line.rootMove.map { move =>
             TransitionEdgeAssembler.fromMove(
-              role = TransitionEdgeRole.Reference,
+              role = TransitionEdgeRole.Alternative,
               from = before.node,
-              moveUci = referenceMove,
-              to = referencePosition.node,
-              allocator = allocator
-            )
-        val alternativeTransitions =
-          afterAlternatives.flatMap { case (line, position) =>
-            line.rootMove.map { move =>
-              TransitionEdgeAssembler.fromMove(
-                role = TransitionEdgeRole.Alternative,
-                from = before.node,
-                moveUci = move,
-                to = position.node,
-                allocator = allocator
-              )
-            }
-          }
-        val threatTransitions =
-          afterThreats.map { case (branch, position) =>
-            TransitionEdgeAssembler.fromMove(
-              role = TransitionEdgeRole.Threat,
-              from = before.node,
-              moveUci = branch.probedMoveUci,
+              moveUci = move,
               to = position.node,
               allocator = allocator
             )
           }
-        val context =
-          (List(before, afterPlayed) ++ afterReference.toList ++ afterAlternatives.map(_._2) ++ afterThreats.map(_._2))
-            .foldLeft(JudgmentAssemblyContext.empty(input)) { (ctx, assembly) =>
-              ctx.withPosition(assembly.node).withEvidence(assembly.evidence)
-            }
-        val withLines =
-          lines.foldLeft(context) { (ctx, assembly) =>
-            ctx.withLine(assembly.node).withEvidence(assembly.evidence)
+        }
+      val threatTransitions =
+        afterThreats.map { case (branch, position) =>
+          TransitionEdgeAssembler.fromMove(
+            role = TransitionEdgeRole.Threat,
+            from = before.node,
+            moveUci = branch.probedMoveUci,
+            to = position.node,
+            allocator = allocator
+          )
+        }
+      val context =
+        (List(before, afterPlayed) ++ afterReference.toList ++ afterAlternatives.map(_._2) ++ afterThreats.map(_._2))
+          .foldLeft(JudgmentAssemblyContext.empty(input)) { (ctx, assembly) =>
+            ctx.withPosition(assembly.node).withEvidence(assembly.evidence)
           }
-        val withTransitions =
-          (List(playedTransition) ++ referenceTransition.toList ++ alternativeTransitions ++ threatTransitions).foldLeft(withLines) { (ctx, assembly) =>
-            ctx.withTransition(assembly.edge).withEvidence(assembly.evidence)
-          }
-        withTransitions
-    }
-
-private[assembly] object EndgameTablebaseProbeBinding:
-  val Objective = "endgame_tablebase"
-  val RequiredSignals: List[String] = List("tablebase", "purpose", "variationHash")
-
-  def requestFor(
-      line: CandidateLineNode,
-      lineFacts: LineFactEvidence,
-      horizon: LineEndgameTechniqueHorizon
-  ): Option[ProbeRequest] =
-    val replay = lineFacts.lineReplaySteps
-    for
-      trigger <- horizon.triggerMove.map(EvidenceRef.normalizeMove)
-      if horizon.pattern == "Triangulation"
-      if horizon.status == LineEndgameTechniqueHorizonStatus.Completed
-      if horizon.zugzwangProof.isEmpty
-      if horizon.entryPlyOffset == 0 && horizon.terminalPlyOffset == 4
-      if EvidenceRef.sameMove(trigger, line.ref.rootMove)
-      entry <- replay.lift(horizon.entryPlyOffset)
-      terminal <- replay.lift(horizon.terminalPlyOffset)
-      comparisonPosition <- position(entry.fenBefore)
-      terminalPosition <- position(terminal.fenAfter)
-      if comparisonPosition.color == horizon.techniqueSide
-      if terminalPosition.color == !horizon.techniqueSide
-      if sameBoardState(entry.fenBefore, terminal.fenAfter)
-      if terminalPosition.board.occupied.count <= 7
-      legalMoves = terminalPosition.legalMoves.map(_.toUci.uci).distinct.sorted
-      if legalMoves.nonEmpty
-      bindingHash = positionBindingHash(terminal.fenAfter, entry.fenBefore, legalMoves)
-    yield ProbeRequest(
-      id = s"endgame-tablebase:${bindingHash.take(24)}",
-      fen = terminal.fenAfter,
-      moves = legalMoves,
-      depth = 0,
-      purpose = Some(ProbePurpose.EndgameTablebase),
-      objective = Some(Objective),
-      requiredSignals = RequiredSignals,
-      variationHash = Some(bindingHash),
-      comparisonFen = Some(entry.fenBefore)
-    )
-
-  def admit(
-      line: CandidateLineNode,
-      lineFacts: LineFactEvidence,
-      results: List[ProbeResult]
-  ): LineFactEvidence =
-    lineFacts.endgameTechniqueHorizons.foldLeft(lineFacts) { (current, horizon) =>
-      val proofs = results.flatMap(exactProof(line, lineFacts, horizon, _)).distinct
-      proofs match
-        case proof :: Nil =>
-          current.withEndgameZugzwangProof(horizon.entryPlyOffset, horizon.terminalPlyOffset, proof)
-        case _ =>
-          current
-    }
-
-  private def exactProof(
-      line: CandidateLineNode,
-      lineFacts: LineFactEvidence,
-      horizon: LineEndgameTechniqueHorizon,
-      result: ProbeResult
-  ): Option[EndgameZugzwangProof] =
-    for
-      request <- requestFor(line, lineFacts, horizon)
-      if result.id == request.id
-      if result.purpose.contains(ProbePurpose.EndgameTablebase)
-      if result.variationHash == request.variationHash
-      if ProbeContractValidator.validateAgainstRequest(request, result).isValid
-      tablebase <- result.tablebase
-      comparisonFen <- request.comparisonFen
-      if normalizeFen(tablebase.terminal.fen) == normalizeFen(request.fen)
-      if normalizeFen(tablebase.comparison.fen) == normalizeFen(comparisonFen)
-      terminalPosition <- position(request.fen)
-      comparisonPosition <- position(comparisonFen)
-      if terminalPosition.color == !horizon.techniqueSide
-      if comparisonPosition.color == horizon.techniqueSide
-      if tablebase.terminal.wdl == -2 && tablebase.comparison.wdl == 2
-      terminalDtm <- tablebase.terminal.dtm.filter(_ < 0)
-      comparisonDtm <- tablebase.comparison.dtm.filter(_ > 0)
-      replies = tablebase.legalMoves.map(reply => reply.copy(moveUci = EvidenceRef.normalizeMove(reply.moveUci)))
-      expectedMoves = request.moves.map(EvidenceRef.normalizeMove).distinct.sorted
-      if replies.nonEmpty && replies.map(_.moveUci).distinct.size == replies.size
-      if replies.map(_.moveUci).sorted == expectedMoves
-      if replies.forall(_.resultingWdl == 2)
-      replyDtms <- Option.when(replies.forall(_.resultingDtm.exists(_ > 0)))(replies.flatMap(_.resultingDtm))
-      maxReplyDtm <- replyDtms.maxOption
-      if terminalDtm.toLong.abs == maxReplyDtm.toLong + 1L
-      if comparisonDtm > maxReplyDtm
-      proof <- EndgameZugzwangProof.verified(
-        constrainedSide = terminalPosition.color,
-        terminalFen = request.fen,
-        comparisonFen = comparisonFen,
-        terminalDtm = terminalDtm,
-        comparisonDtm = comparisonDtm,
-        legalReplies =
-          replies
-            .zip(replyDtms)
-            .map((reply, dtm) => EndgameZugzwangReplyProof(reply.moveUci, dtm))
-            .sortBy(_.moveUci),
-        horizon = horizon,
-        replay = lineFacts.lineReplaySteps
-      )
-    yield proof
-
-  private def positionBindingHash(terminalFen: String, comparisonFen: String, legalMoves: List[String]): String =
-    val raw = List(normalizeFen(terminalFen), normalizeFen(comparisonFen), legalMoves.sorted.mkString(",")).mkString("||")
-    MessageDigest
-      .getInstance("SHA-256")
-      .digest(raw.getBytes(StandardCharsets.UTF_8))
-      .map(byte => f"${byte & 0xff}%02x")
-      .mkString
-
-  private def position(fen: String): Option[_root_.chess.Position] =
-    _root_.chess.format.Fen.read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(fen))
-
-  private def sameBoardState(left: String, right: String): Boolean =
-    def state(fen: String): List[String] =
-      normalizeFen(fen).split("\\s+").toList.zipWithIndex.collect { case (field, index) if index == 0 || index == 2 || index == 3 => field }
-    state(left) == state(right)
-
-  private def normalizeFen(fen: String): String =
-    Option(fen).getOrElse("").trim.split("\\s+").filter(_.nonEmpty).mkString(" ")
+      val withLines =
+        lines.foldLeft(context) { (ctx, assembly) =>
+          ctx.withLine(assembly.node).withEvidence(assembly.evidence)
+        }
+      val withTransitions =
+        (List(playedTransition) ++ referenceTransition.toList ++ alternativeTransitions ++ threatTransitions).foldLeft(withLines) { (ctx, assembly) =>
+          ctx.withTransition(assembly.edge).withEvidence(assembly.evidence)
+        }
+      withTransitions

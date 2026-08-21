@@ -17,11 +17,8 @@ lazy val root = (project in file("."))
   .dependsOn(chesstoryRuntime)
   .settings(
     name := "chesstory-judgment-runtime-adapter",
-    libraryDependencies ++= Seq(
-      "org.playframework" %% "play-json" % "3.0.6",
-      "org.scalameta" %% "munit" % "1.2.1" % Test
-    ),
-    Compile / mainClass := Some("io.chesstory.evaluation.runtimeadapter.RuntimeAdapterCli"),
+    libraryDependencies += "org.playframework" %% "play-json" % "3.0.6",
+    Compile / mainClass := Some("io.chesstory.evaluation.runtimeadapter.RuntimePublicResponseCli"),
     Compile / run / fork := true,
     Compile / run / connectInput := true,
     publish / skip := true

@@ -295,7 +295,7 @@ class CommandEvaluationUnavailable(StageUnavailable):
     """A live evaluator command failed while retaining provider I/O evidence."""
 
     def __init__(self, reason: str, *, provider_io: Mapping[str, Any]) -> None:
-        super().__init__("V", reason)
+        super().__init__("E", reason)
         self.provider_io = dict(provider_io)
 
 
@@ -351,7 +351,7 @@ def _endpoint_from_evaluator_row(
         raise ContractError(f"sample {sample.sample_id} has no frozen answerable label")
     payload = evaluation_view.get("payload")
     if not isinstance(payload, Mapping):
-        raise ContractError("V output payload is missing")
+        raise ContractError("P output payload is missing")
     status = payload.get("status")
     unsupported = row.get("unsupported_meaning_count")
     if (
@@ -388,7 +388,7 @@ def _endpoint_from_evaluator_row(
     ):
         raise ContractError("evaluator usefulness_consensus must be finite numeric")
     useful = float(consensus) >= usefulness_threshold
-    abstained = status in {"abstained", "rejected"}
+    abstained = status == "abstained"
 
     if answerable:
         conditions = {
@@ -505,7 +505,7 @@ class ReplayEvaluationAdapter(EvaluationAdapter):
         row = self.records.get((sample.sample_id, output_hash))
         if row is None:
             raise StageUnavailable(
-                "V",
+                "E",
                 f"no source-blind evaluator artifact for canonical output {output_hash}",
             )
         return _endpoint_from_evaluator_row(
@@ -852,7 +852,7 @@ class CommandEvaluationAdapter(EvaluationAdapter):
         }:
             raise ContractError("evaluator stdin must be exactly source_blind_evaluation_view")
         if evaluation_view.get("schema_version") != (
-            "chesstory.eval.source-blind-view.v1"
+            "chesstory.eval.source-blind-p-view.v1"
         ) or not isinstance(evaluation_view.get("payload"), Mapping):
             raise ContractError("evaluator stdin has an invalid source-blind view schema")
 
@@ -917,22 +917,22 @@ class UnavailableEvaluator(EvaluationAdapter):
         sample: Sample,
         evaluation_view: Mapping[str, Any],
     ) -> EndpointResult:
-        raise StageUnavailable("V", self.reason)
+        raise StageUnavailable("E", self.reason)
 
 
-def source_blind_evaluation_view(canonical_v: Mapping[str, Any]) -> dict[str, Any]:
+def source_blind_evaluation_view(canonical_p: Mapping[str, Any]) -> dict[str, Any]:
     """Return the only document a final evaluator may observe.
 
     Run IDs, producer metadata, stage context, artifact lineage, oracle chain,
-    and arm assignment are deliberately excluded.  The view contains only the
-    canonical public verbalization meaning that a human evaluator must judge.
+    and arm assignment are deliberately excluded. The view contains an exact
+    shallow copy of the canonical structured P payload.
     """
 
-    payload = canonical_v.get("payload")
+    payload = canonical_p.get("payload")
     if not isinstance(payload, Mapping):
-        raise ContractError("canonical V output has no payload for blind evaluation")
+        raise ContractError("canonical P output has no payload for blind evaluation")
     return {
-        "schema_version": "chesstory.eval.source-blind-view.v1",
+        "schema_version": "chesstory.eval.source-blind-p-view.v1",
         "payload": dict(payload),
     }
 

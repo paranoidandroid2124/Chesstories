@@ -1,43 +1,24 @@
-import {
-  initMiniBoards,
-  toggleBoxInit,
-  alert,
-} from 'lib/view';
-import { isIos, isWebkit, prefersLightThemeQuery } from 'lib/device';
+import { initMiniBoards, toggleBoxInit } from 'lib/view';
+import { prefersLightThemeQuery } from 'lib/device';
 import { scrollToInnerSelector, requestIdleCallback } from 'lib';
 import { dispatchChessgroundResize } from 'lib/chessgroundResize';
 import { addDomHandlers } from './domHandlers';
 import { updateTimeAgo, renderTimeAgo } from './renderTimeAgo';
 import { pubsub } from 'lib/pubsub';
-import { once } from 'lib/storage';
 import { addExceptionListeners } from './unhandledError';
+import { clearLegacyClientStorage } from 'lib/legacyStorageCleanup';
 
 const retireDormantServiceWorkers = () => {
   if (!('serviceWorker' in navigator)) return;
 
-  void navigator.serviceWorker.getRegistrations().then(async regs => {
-    if (!regs.length) return;
-
-    let unregistered = false;
-    for (const reg of regs) {
-      unregistered = (await reg.unregister()) || unregistered;
-    }
-
-    if (!unregistered) return;
-
-    const reloadKey = 'chesstory-sw-retired';
-    if (navigator.serviceWorker.controller && !sessionStorage.getItem(reloadKey)) {
-      sessionStorage.setItem(reloadKey, '1');
-      window.location.reload();
-    } else if (!navigator.serviceWorker.controller) {
-      sessionStorage.removeItem(reloadKey);
-    }
-  });
+  void navigator.serviceWorker
+    .getRegistrations()
+    .then(registrations => Promise.all(registrations.map(registration => registration.unregister())));
 };
 
 export function boot() {
+  void clearLegacyClientStorage();
   addExceptionListeners();
-  $('#user_tag').removeAttr('href');
   const setBlind = location.hash === '#blind';
   const showDebug = location.hash.startsWith('#debug');
 
@@ -57,12 +38,6 @@ export function boot() {
 
     addDomHandlers();
 
-    // prevent zoom when keyboard shows on iOS
-    if (isIos() && !('MSStream' in window)) {
-      const el = document.querySelector('meta[name=viewport]') as HTMLElement;
-      el.setAttribute('content', el.getAttribute('content') + ',maximum-scale=1.0');
-    }
-
     toggleBoxInit();
 
     window.addEventListener('resize', dispatchChessgroundResize);
@@ -73,17 +48,6 @@ export function boot() {
 
     console.info('Chesstory is open source.');
 
-    if (isUnsupportedBrowser() && once('upgrade.nag', { days: 14 })) {
-      pubsub
-        .after('polyfill.dialog')
-        .then(() => alert('Your browser is out of date.\nChesstory may not work properly.'));
-    }
-
-    // socket default receive handlers
-    pubsub.on('socket.in.redirect', (d: RedirectTo) => {
-      site.unload.expected = true;
-      site.redirect(d);
-    });
     const mql = prefersLightThemeQuery();
     if (typeof mql.addEventListener === 'function')
       mql.addEventListener('change', e => {
@@ -92,5 +56,3 @@ export function boot() {
       });
   }, 800);
 }
-
-const isUnsupportedBrowser = () => isWebkit({ below: '15.4' });

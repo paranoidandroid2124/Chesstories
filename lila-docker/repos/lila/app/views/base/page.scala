@@ -4,7 +4,6 @@ import scalalib.StringUtils.escapeHtmlRaw
 
 import lila.app.UiEnv.{ *, given }
 import lila.common.String.html.safeJsonValue
-import lila.common.CookieConsent
 import lila.ui.{ RenderedPage, PageFlags }
 import lila.web.ui.ShellPrimitives
 
@@ -34,7 +33,6 @@ object page:
     import ctx.pref
     val allModules: EsmList = p.modules ++
       p.pageModule.fold(Nil)(module => esmPage(module.name))
-    val cookieConsent = CookieConsent.fromRequest(ctx.req)
     val pageFrag = frag(
       doctype,
       page.ui.htmlTag(
@@ -100,9 +98,6 @@ object page:
           dataUser := ctx.userId,
           dataUsername := ctx.username,
           dataSoundSet := pref.currentSoundSet.toString,
-          attr("data-cookie-consent-decided") := (if cookieConsent.decided then "1" else "0"),
-          attr("data-cookie-consent-prefs") := (if cookieConsent.preferencesAllowed then "1" else "0"),
-          attr("data-cookie-consent-version") := CookieConsent.cookieVersion,
           attr("data-socket-domains") := netConfig.socketDomains.mkString(","),
           dataAssetUrl := netConfig.assetBaseUrl.value,
           dataAssetVersion := assetVersion,
@@ -119,6 +114,7 @@ object page:
           attr("data-brand-explorer-proxy") := "1",
           style := boardStyle(p.flags(PageFlags.zoom))
         )(
+          a(cls := "skip-link", href := "#main-wrap")("Skip to main content"),
           Option.unless(p.flags(PageFlags.noHeader)):
             ui.siteHeader(
               isAppealUser = ctx.isAppealUser,
@@ -128,6 +124,7 @@ object page:
           ,
           div(
             id := "main-wrap",
+            tabindex := -1,
             cls := List(
               "full-screen-force" -> p.flags(PageFlags.fullScreen),
               "is2d" -> true

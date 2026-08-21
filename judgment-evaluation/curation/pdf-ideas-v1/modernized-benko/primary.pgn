@@ -1,0 +1,65 @@
+[Event "Book analysis fragment"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[SourceDocument "ref-edf868ccf0a3425488f55ef6b4b08acf"]
+[SourcePDFPages "59-62"]
+[Fragment "true"]
+
+1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. e3 axb5 6. Bxb5 Qa5+ 7. Nc3 Bb7 8. Bd2 Qb6 9. Nf3 Nxd5 10. Nxd5 Bxd5 11. a4 e6 12. Bc3 Be7 13. O-O O-O 14. Ne5 d6 15. Nc4 Bxc4 16. Qg4 g6 17. Qxc4 *
+
+[Event "Berlin"]
+[Site "?"]
+[Date "2015.??.??"]
+[Round "?"]
+[White "Dreev, A"]
+[Black "Perunovic, M"]
+[Result "*"]
+[SourceDocument "ref-edf868ccf0a3425488f55ef6b4b08acf"]
+[SourcePDFPages "44-46"]
+[Fragment "true"]
+
+1. d4 Nf6 2. c4 c5 3. d5 b5 4. Qc2 bxc4 5. e4 d6 6. Bxc4 g6 7. Nf3 Bg7 8. O-O O-O 9. h3 Nbd7 10. Nc3 Rb8 11. Re1 Nh5 12. Be2 Ne5 13. Nxe5 Bxe5 14. Bxh5 gxh5 15. Bh6 Re8 *
+
+[Event "Yerevan"]
+[Site "?"]
+[Date "2014.??.??"]
+[Round "?"]
+[White "Tomashevsky, V"]
+[Black "Perunovic, M"]
+[Result "*"]
+[SourceDocument "ref-edf868ccf0a3425488f55ef6b4b08acf"]
+[SourcePDFPages "180-189"]
+[Fragment "true"]
+
+1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 g6 6. Nc3 Bg7 7. Nf3 O-O 8. g3 d6 9. Bg2 Nbd7 10. O-O Nb6 11. Re1 Bxa6 12. Rb1 Bc4 13. e4 Bxa2 14. Nxa2 Rxa2 15. b4 c4 16. Nd4 Ng4 17. Rf1 Na4 *
+
+[Event "Book analysis fragment"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[SourceDocument "ref-edf868ccf0a3425488f55ef6b4b08acf"]
+[SourcePDFPages "130-137"]
+[Fragment "true"]
+
+1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. Nc3 axb5 6. e4 b4 7. Nb5 d6 8. Bc4 Nbd7 9. Nf3 Nb6 10. Bd3 g6 11. b3 Nxe4 12. Bxe4 Bg7 13. Bd2 Ba6 14. Bd3 Bxa1 15. Qxa1 f6 16. Qd1 Qd7 17. Qe2 O-O 18. h4 Kh8 19. h5 g5 20. O-O Nxd5 21. a4 bxa3 22. Nxa3 Bxd3 23. Qxd3 Nf4 24. Bxf4 gxf4 *
+
+[Event "Zurich"]
+[Site "?"]
+[Date "2014.??.??"]
+[Round "?"]
+[White "Gelfand, B"]
+[Black "Carlsen, M"]
+[Result "*"]
+[SourceDocument "ref-edf868ccf0a3425488f55ef6b4b08acf"]
+[SourcePDFPages "194-196"]
+[Fragment "true"]
+
+1. d4 Nf6 2. c4 c5 3. d5 b5 4. cxb5 a6 5. bxa6 g6 6. Nc3 Bg7 7. Nf3 O-O 8. e4 Qa5 9. Bd3 Nxd5 10. exd5 Bxc3+ 11. bxc3 Qxc3+ 12. Qd2 Qxa1 13. O-O Bxa6 14. Bb2 Qxa2 15. Ra1 Qb3 *
+

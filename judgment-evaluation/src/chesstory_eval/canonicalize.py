@@ -569,7 +569,7 @@ class Canonicalizer:
 
 
 class CanonicalizationSession:
-    """Canonical meaning state for one complete Q→V arm lineage."""
+    """Canonical meaning state for one complete Q→P arm lineage."""
 
     def __init__(self, canonicalizer: Canonicalizer) -> None:
         self.canonicalizer = canonicalizer
@@ -651,8 +651,8 @@ class CanonicalizationSession:
         )
 
         # Prove idempotence against the now-complete lineage mapping.  This is
-        # stronger than the old stage-local check because upstream-only refs
-        # (notably V.projection_id) participate.
+        # stronger than the old stage-local check because upstream-only
+        # references participate.
         repeated, _ = self.canonicalizer._canonicalize_with_mapping(
             canonical,
             schema,

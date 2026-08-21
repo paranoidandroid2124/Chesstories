@@ -2,7 +2,7 @@ import { view as cevalView, renderEval as normalizeEval } from 'lib/ceval';
 import { parseFen } from 'chessops/fen';
 import { defined } from 'lib';
 import * as licon from 'lib/licon';
-import { type VNode, type LooseVNode, type LooseVNodes, bind, onInsert, icon, hl } from 'lib/view';
+import { type VNode, type LooseVNodes, bind, onInsert, icon, hl } from 'lib/view';
 import { displayColumns, isMobile } from 'lib/device';
 import * as materialView from 'lib/game/view/material';
 
@@ -13,12 +13,7 @@ import renderClocks from './clocks';
 import * as control from '../control';
 import * as chessground from '../ground';
 import type AnalyseCtrl from '../ctrl';
-import type {
-  ConcealOf,
-  ImportHistoryAccount,
-  ImportHistoryAnalysis,
-  ImportHistoryView,
-} from '../interfaces';
+import type { ConcealOf } from '../interfaces';
 import * as pgnExport from '../pgnExport';
 import { spinnerVdom as spinner, stepwiseScroll } from 'lib/view';
 import * as Prefs from 'lib/prefs';
@@ -26,16 +21,18 @@ import statusView from 'lib/game/view/status';
 import { plyToTurn } from 'lib/game/chess';
 import { dispatchChessgroundResize } from 'lib/chessgroundResize';
 import pgnImport, { renderPgnError } from '../pgnImport';
-import { normalizeInlinePgn, reviewStudyCreateGate, type PgnDraftStatus } from '../pgnPipeline';
+import {
+  normalizeInlinePgn,
+  pgnInputError,
+  reviewStudyCreateGate,
+  type PgnDraftStatus,
+} from '../pgnPipeline';
 import { storage } from 'lib/storage';
-import { chesstoryBriefSections, type ChesstoryBriefSection } from '../chesstoryBrief';
+import { renderMoveReview } from './moveReview';
 
 interface ViewContext {
   ctrl: AnalyseCtrl;
-  allowVideo?: boolean;
   concealOf?: ConcealOf;
-  showCevalPvs: boolean;
-  gamebookPlayView?: VNode;
   playerBars: VNode[] | undefined;
   playerStrips: [VNode, VNode] | undefined;
   gaugeOn: boolean;
@@ -48,8 +45,6 @@ export function viewContext(ctrl: AnalyseCtrl): ViewContext {
   return {
     ctrl,
     concealOf: makeConcealOf(ctrl),
-    showCevalPvs: true,
-    gamebookPlayView: undefined,
     playerBars,
     playerStrips: renderPlayerStrips(ctrl),
     gaugeOn,
@@ -58,7 +53,7 @@ export function viewContext(ctrl: AnalyseCtrl): ViewContext {
 }
 
 export function renderMain(ctx: ViewContext, ...kids: LooseVNodes[]): VNode {
-  const { ctrl, playerBars, gaugeOn, gamebookPlayView, needsInnerCoords } = ctx;
+  const { ctrl, playerBars, gaugeOn, needsInnerCoords } = ctx;
   return hl(
     'main.analyse.variant-' + ctrl.data.game.variant.key,
     {
@@ -81,41 +76,16 @@ export function renderMain(ctx: ViewContext, ...kids: LooseVNodes[]): VNode {
       class: {
         'gauge-on': gaugeOn,
         'has-players': !!playerBars,
-        'gamebook-play': !!gamebookPlayView,
         'analyse-hunter': ctrl.opts.hunter,
         'analyse--notebook': ctrl.isStudy(),
       },
     },
-    [renderSidebar(ctrl), ...kids],
-  );
-}
-
-function renderSidebar(ctrl: AnalyseCtrl): VNode | undefined {
-  return hl(
-    'div.analyse__sidebar',
-    workspaceTools(ctrl).map(tool =>
-      hl(
-        'button.fbt',
-        {
-          key: tool.id,
-          attrs: {
-            title: tool.summary,
-            'data-act': tool.id,
-          },
-          hook: bind('click', tool.open, ctrl.redraw),
-          class: {
-            active: tool.active,
-            busy: !!tool.busy,
-          },
-        },
-        [renderWorkspaceToolIcon(ctrl, tool), hl('span.label', tool.label)],
-      ),
-    ),
+    kids,
   );
 }
 
 type WorkspaceToolId = 'opening-explorer' | 'action-menu';
-type NotebookGlyphKind = 'notebook' | 'bookmark' | 'page' | 'section';
+type NotebookGlyphKind = 'bookmark' | 'page' | 'section';
 
 type WorkspaceTool = {
   id: WorkspaceToolId;
@@ -123,7 +93,6 @@ type WorkspaceTool = {
   summary: string;
   icon: string;
   active: boolean;
-  busy?: boolean;
   open: () => void;
 };
 
@@ -152,19 +121,6 @@ function notebookGlyphNodes(kind: NotebookGlyphKind): VNode[] {
         hl('path', { attrs: { d: 'M13 15h7' } }),
         hl('path', { attrs: { d: 'M13 18.5h7' } }),
         hl('path', { attrs: { d: 'M13 22h4.5' } }),
-      ];
-    default:
-      return [
-        hl('path', {
-          attrs: {
-            d: 'M8.5 7.5a2 2 0 0 1 2-2h10.5a3 3 0 0 1 3 3v15.5a2 2 0 0 1-2 2H11a2.5 2.5 0 0 1-2.5-2.5V7.5Z',
-          },
-        }),
-        hl('path', { attrs: { d: 'M12 5.5v21' } }),
-        hl('path', { attrs: { d: 'M15 11.5h6' } }),
-        hl('path', { attrs: { d: 'M15 15h6' } }),
-        hl('path', { attrs: { d: 'M15 18.5h4.5' } }),
-        hl('path', { attrs: { d: 'M12 23.5c.7-1 1.7-1.5 3-1.5h9' } }),
       ];
   }
 }
@@ -202,7 +158,7 @@ function notebookGlyphForTool(tool: WorkspaceTool): NotebookGlyphKind {
   switch (tool.id) {
     case 'opening-explorer':
       return 'bookmark';
-    default:
+    case 'action-menu':
       return 'section';
   }
 }
@@ -237,130 +193,70 @@ function workspaceTools(ctrl: AnalyseCtrl): WorkspaceTool[] {
   return tools;
 }
 
+function workspaceToolControls(ctrl: AnalyseCtrl, tool: WorkspaceTool): string | undefined {
+  if (!tool.active) return;
+  if (tool.id === 'opening-explorer') return ctrl.explorer.allowed() ? 'analyse-opening-explorer' : undefined;
+  return ctrl.actionMenu() ? 'analyse-action-menu' : undefined;
+}
+
 function renderWorkspaceDock(ctrl: AnalyseCtrl): VNode {
   const activeTool = ctrl.activeControlBarTool();
   const tools = workspaceTools(ctrl);
   return hl(`section.analyse__workspace-dock${activeTool ? '' : '.is-idle'}`, [
     hl('div.analyse__workspace-dock-head', [
-      hl('strong', activeTool ? 'Choose what to study' : 'Keep the board in sight'),
+      hl('h2', 'Reference desk'),
       hl(
         'span',
         activeTool
-          ? 'Move between openings, candidate lines, and board view without losing the current move.'
-          : 'Open a study view while the board and moves stay anchored.',
+          ? 'The current position stays fixed while you inspect another source.'
+          : 'Opening records and board settings stay attached to this position.',
       ),
     ]),
     hl(
       'div.analyse__workspace-dock-grid',
-      tools.map(tool =>
-        hl(
-          'button.analyse__workspace-card',
+      tools.map(tool => {
+        const controls = workspaceToolControls(ctrl, tool);
+        return hl(
+          'button.analyse__workspace-tool',
           {
             key: tool.id,
             attrs: {
               type: 'button',
               title: tool.summary,
+              'aria-label': `${tool.active ? 'Close' : 'Open'} ${tool.label}`,
               'data-tool-id': tool.id,
+              'aria-pressed': tool.active ? 'true' : 'false',
+              'aria-expanded': tool.active ? 'true' : 'false',
+              ...(controls ? { 'aria-controls': controls } : {}),
             },
             hook: bind('click', tool.open, ctrl.redraw),
             class: {
               active: tool.active,
-              busy: !!tool.busy,
             },
           },
           [
-            hl('span.analyse__workspace-card-icon', [renderWorkspaceToolIcon(ctrl, tool)]),
-            hl('span.analyse__workspace-card-copy', [hl('strong', tool.label), hl('span', tool.summary)]),
-            tool.busy ? hl('span.analyse__workspace-card-state', 'Working') : null,
+            hl('span.analyse__workspace-tool-icon', [renderWorkspaceToolIcon(ctrl, tool)]),
+            hl('span.analyse__workspace-tool-copy', [hl('strong', tool.label), hl('span', tool.summary)]),
           ],
-        ),
-      ),
+        );
+      }),
     ),
   ]);
 }
 
-export function renderTools({ ctrl, concealOf, allowVideo }: ViewContext, embeddedVideo?: LooseVNode) {
+export function renderTools({ ctrl, concealOf }: ViewContext) {
   const showCeval = ctrl.isCevalAllowed() && ctrl.showCeval();
   const activeTool = explorerView(ctrl);
   return hl('div.analyse__tools', [
-    allowVideo && embeddedVideo,
     showCeval && cevalView.renderCeval(ctrl),
     showCeval && cevalView.renderPvs(ctrl),
-    ctrl.isStudy() && renderChesstoryBrief(ctrl),
+    ctrl.moveReviewAvailable() && renderMoveReview(ctrl.moveReviewPanelProps()),
     renderMoveList(ctrl, concealOf),
     forkView(ctrl, concealOf),
     displayColumns() > 1 && renderWorkspaceDock(ctrl),
     activeTool,
     ctrl.actionMenu() && actionMenu(ctrl),
   ]);
-}
-
-function renderChesstoryBrief(ctrl: AnalyseCtrl): VNode {
-  const node = ctrl.getNode();
-  const brief = ctrl.chesstoryBrief();
-  const sections = chesstoryBriefSections(brief);
-  const moveLabel = node.san
-    ? `${plyToTurn(node.ply)}${node.ply % 2 === 1 ? '.' : '...'} ${node.san}`
-    : 'Initial position';
-  const stateLabel =
-    brief.kind === 'requesting'
-      ? 'Reading position'
-      : brief.kind === 'probing'
-        ? 'Checking position'
-        : brief.kind === 'ready-certified'
-          ? 'Position explained'
-          : brief.kind === 'ready-verdict-only'
-            ? 'Move verdict ready'
-            : brief.kind === 'withheld'
-              ? 'Review withheld'
-              : brief.kind === 'fault'
-                ? 'Review unavailable'
-                : 'Choose a move';
-
-  return hl('section.analyse__chesstory-brief', [
-    hl('div.analyse__chesstory-brief-head', [
-      hl('div.analyse__chesstory-brief-title', [
-        hl('span', 'Chesstory review'),
-        hl('strong', 'Opening to middlegame'),
-      ]),
-      hl('span.analyse__chesstory-brief-state', stateLabel),
-    ]),
-    hl('div.analyse__chesstory-brief-focus', [hl('span', 'Decision point'), hl('strong', moveLabel)]),
-    hl('div.analyse__chesstory-brief-access', [
-      hl('span', [hl('strong', 'Free'), ' Chesstory explains each move you review']),
-      hl('span', [hl('strong', 'Coach'), ' goes deeper on key moments']),
-      hl('a.button.button-empty', { attrs: { href: '/pricing' } }, 'Go deeper with Coach'),
-    ]),
-    hl(
-      'div.analyse__chesstory-brief-list',
-      sections.map(section => renderChesstoryBriefSection(section)),
-    ),
-  ]);
-}
-
-function renderChesstoryBriefSection(section: ChesstoryBriefSection): VNode {
-  return hl(
-    'div.analyse__chesstory-brief-row',
-    {
-      class: {
-        'is-good': section.tone === 'good',
-        'is-bad': section.tone === 'bad',
-      },
-    },
-    [
-      hl('div.analyse__chesstory-brief-row-head', [
-        hl('strong', section.title),
-        section.pending ? hl('span', 'Reading') : null,
-      ]),
-      hl('p', section.body),
-      section.items?.length
-        ? hl(
-            'ul',
-            section.items.map(item => hl('li', item)),
-          )
-        : null,
-    ],
-  );
 }
 
 export function renderBoard({ ctrl, playerBars, playerStrips, gaugeOn }: ViewContext, skipInfo = false) {
@@ -424,10 +320,6 @@ function renderInputs(ctrl: AnalyseCtrl): VNode | undefined {
     defined(ctrl.fenInput) ? ctrl.fenInput : ctrl.node.fen,
     ctrl.node.fen,
   );
-  const recentDrafts = ctrl
-    .recentImportDrafts()
-    .filter(draft => draft !== pgnInspection.normalized && draft !== currentInspection.normalized);
-  const serverHistory = ctrl.opts.importHistory;
   const submitPgnDraft = () => {
     if (pgnInspection.status !== 'ready') return;
     const draft = defined(ctrl.pgnInput) ? ctrl.pgnInput : pgnExport.renderFullTxt(ctrl);
@@ -435,12 +327,12 @@ function renderInputs(ctrl: AnalyseCtrl): VNode | undefined {
   };
   return hl('div.copyables.copyables--workspace', [
     hl('div.analyse-review__summary-grid.copyables__summary', [
-      compactSummaryCard(pgnInspection.headline, 'game text'),
-      compactSummaryCard(
+      summaryFact(pgnInspection.headline, 'game text'),
+      summaryFact(
         pgnDraftReplaySize(pgnInspection),
         pgnInspection.preview ? 'moves to replay' : 'score text',
       ),
-      compactSummaryCard(fenInspection.headline, 'board position'),
+      summaryFact(fenInspection.headline, 'board position'),
     ]),
     renderStudyLaunchPanel(ctrl, pgnInspection.status),
     hl('div.copyables__panel', [
@@ -547,28 +439,6 @@ function renderInputs(ctrl: AnalyseCtrl): VNode | undefined {
         [icon(licon.CautionTriangle as any), renderPgnError(ctrl.pgnError || pgnInspection.error)],
       ),
       renderImportPreview(currentInspection, pgnInspection),
-      recentDrafts.length ? renderRecentImportDrafts(ctrl, recentDrafts) : null,
-      serverHistory ? renderServerImportHistory(serverHistory) : null,
-    ]),
-  ]);
-}
-
-function renderNotebookPanelCover(title: string, subtitle: string, detail: string): VNode {
-  return hl('div.copyables__study-cover', [
-    hl('div.copyables__study-cover-spine'),
-    hl('div.copyables__study-cover-pages', [
-      hl('span.copyables__study-cover-page'),
-      hl('span.copyables__study-cover-page.copyables__study-cover-page--mid'),
-      hl('span.copyables__study-cover-page.copyables__study-cover-page--inner'),
-    ]),
-    hl('div.copyables__study-cover-face', [
-      hl('div.copyables__study-cover-seal', [
-        renderNotebookGlyph('notebook', 'copyables__study-cover-glyph'),
-      ]),
-      hl('span.copyables__study-cover-eyebrow', 'Review study'),
-      hl('strong.copyables__study-cover-title', title),
-      hl('span.copyables__study-cover-subtitle', subtitle),
-      hl('span.copyables__study-cover-detail', detail),
     ]),
   ]);
 }
@@ -577,10 +447,6 @@ function renderStudyWorkspacePanel(ctrl: AnalyseCtrl): VNode | null {
   const study = ctrl.studyData();
   if (!study) return null;
 
-  const node = ctrl.getNode();
-  const moveLabel = node.san
-    ? `${plyToTurn(node.ply)}${node.ply % 2 === 1 ? '.' : '...'} ${node.san}`
-    : 'Initial position';
   const currentUrl = ctrl.studyUrl();
   const studyTarget =
     currentUrl && typeof window !== 'undefined' ? new URL(currentUrl, window.location.origin) : null;
@@ -592,26 +458,20 @@ function renderStudyWorkspacePanel(ctrl: AnalyseCtrl): VNode | null {
   const actionMessage = ctrl.studyActionMessageText();
   const syncTone = ctrl.studyWriteError ? 'error' : ctrl.isStudyWriting() ? 'info' : 'success';
   const syncMessage = actionMessage || ctrl.studyStatusText();
-  const privateStudy = study.visibility === 'private';
-  const copyLabel = privateStudy ? ' Copy private study link' : ' Copy review study link';
-  const sharePill = privateStudy ? 'Only collaborators can open the link' : 'Share the exact section link';
+  const access =
+    study.visibility === 'private' ? 'Private' : study.visibility === 'unlisted' ? 'Link sharing' : 'Public';
 
   return hl('section.copyables__study.copyables__study--current', [
     hl('div.copyables__study-head', [
-      renderNotebookPanelCover(study.name, 'Opening to middlegame', `${study.chapterName} review`),
       hl('div.copyables__study-copy', [
-        hl('span.copyables__study-eyebrow', 'Review study'),
-        hl('strong', study.name),
-        hl(
-          'span.copyables__study-subline',
-          `Explain how ${study.chapterName} turns opening choices into middlegame plans.`,
-        ),
+        hl('h2', study.name),
+        hl('span.copyables__study-subline', study.chapterName),
       ]),
       hl('div.copyables__study-actions', [
         studyUrl
           ? hl('a.button.button-thin.copyables__study-button', { attrs: { href: studyUrl } }, [
               renderNotebookGlyph('page', 'copyables__study-button-glyph'),
-              ' Open review study',
+              ' Open study',
             ])
           : null,
         hl(
@@ -622,39 +482,16 @@ function renderStudyWorkspacePanel(ctrl: AnalyseCtrl): VNode | null {
               void ctrl.copyStudyShareLink();
             }),
           },
-          [renderNotebookGlyph('bookmark', 'copyables__study-button-glyph'), copyLabel],
+          [renderNotebookGlyph('bookmark', 'copyables__study-button-glyph'), ' Copy study link'],
         ),
       ]),
     ]),
-    hl('div.analyse-review__summary-grid.copyables__study-summary', [
-      compactSummaryCard('Review record', 'mode'),
-      compactSummaryCard('Opening plan', 'thread'),
-      compactSummaryCard(`${study.chapters.length}`, 'sections'),
-      compactSummaryCard(ctrl.isStudyWriting() ? 'Saving' : 'Ready', 'sync'),
+    hl('dl.copyables__study-meta-grid', [
+      hl('div', [hl('dt', 'Chapter'), hl('dd', study.chapterName)]),
+      hl('div', [hl('dt', 'Chapters'), hl('dd', `${study.chapters.length}`)]),
+      hl('div', [hl('dt', 'Access'), hl('dd', access)]),
     ]),
-    hl(
-      'div.copyables__study-thread',
-      chesstoryBriefSections(ctrl.chesstoryBrief())
-        .slice(0, 3)
-        .map(section =>
-          hl('div.copyables__study-thread-card', [
-            hl('span', section.title),
-            hl('strong', section.key === 'current-decision' ? moveLabel : section.body),
-            hl(
-              'p',
-              section.key === 'current-decision'
-                ? 'Attach notes and supporting lines to this move when it changes the plan.'
-                : 'Use this slot before adding deeper variations.',
-            ),
-          ]),
-        ),
-    ),
-    renderStudyStatusCard(syncMessage, actionMessage ? ctrl.studyActionToneValue() : syncTone),
-    hl('div.copyables__study-pills', [
-      studyFeaturePill('page', 'Moments, not move dumps'),
-      studyFeaturePill('section', 'Opening to middlegame'),
-      studyFeaturePill('bookmark', sharePill),
-    ]),
+    renderStudyStatus(syncMessage, actionMessage ? ctrl.studyActionToneValue() : syncTone),
   ]);
 }
 
@@ -662,142 +499,135 @@ const studyVisibilityChoices = [
   {
     value: 'unlisted',
     title: 'Link sharing',
-    help: 'Anyone with the link can review it.',
+    help: 'Anyone with the link can open it.',
   },
   {
     value: 'private',
     title: 'Private',
-    help: 'Only you can open this review study.',
+    help: 'Only you can open it.',
   },
   {
     value: 'public',
     title: 'Public',
-    help: 'Visible in public review study lists.',
+    help: 'Visible in public study lists.',
   },
 ] as const;
 
-function renderStudySetupModal(ctrl: AnalyseCtrl): VNode | null {
+function closeStudyCreateSetup(ctrl: AnalyseCtrl): void {
+  ctrl.closeStudyCreateSetup();
+  requestAnimationFrame(() => document.getElementById('study-create-launch')?.focus());
+}
+
+function renderStudySetupForm(ctrl: AnalyseCtrl): VNode | null {
   if (!ctrl.studyCreateSetupVisible()) return null;
   const setup = ctrl.studyCreateSetupValues();
   const busy = ctrl.studyCreateBusy();
 
   return hl(
-    'div.copyables__study-modal-mask',
+    'form.copyables__study-setup',
     {
-      hook: bind('click', e => {
-        if (e.target === e.currentTarget) ctrl.closeStudyCreateSetup();
+      attrs: { id: 'study-create-setup', 'aria-labelledby': 'study-create-setup-heading' },
+      hook: onInsert((el: HTMLFormElement) => {
+        el.querySelector<HTMLInputElement>('input')?.focus();
+        el.addEventListener('keydown', e => {
+          if (e.key === 'Escape' && !ctrl.studyCreateBusy()) {
+            e.preventDefault();
+            closeStudyCreateSetup(ctrl);
+          }
+        });
+        el.addEventListener('submit', e => {
+          e.preventDefault();
+          void ctrl.submitStudyCreateSetup();
+        });
       }),
     },
     [
-      hl(
-        'form.copyables__study-modal',
-        {
-          hook: bind('submit', e => {
-            e.preventDefault();
-            void ctrl.submitStudyCreateSetup();
+      hl('div.copyables__study-setup-head', [
+        hl('h3', { attrs: { id: 'study-create-setup-heading' } }, 'Create study'),
+        hl('span.copyables__study-subline', 'Save the loaded game with a first chapter and access setting.'),
+      ]),
+      hl('label.copyables__study-field', [
+        hl('span', 'Study title'),
+        hl('input', {
+          attrs: {
+            type: 'text',
+            maxlength: 100,
+            required: true,
+            autocomplete: 'off',
+            disabled: busy,
+          },
+          props: { value: setup.name },
+          hook: bind('input', e => {
+            ctrl.updateStudyCreateSetup({ name: (e.target as HTMLInputElement).value });
           }),
-        },
-        [
-          hl('div.copyables__study-modal-head', [
-            renderNotebookPanelCover('Review study', 'Opening to middlegame', 'Save the analysis'),
-            hl('div.copyables__study-modal-copy', [
-              hl('span.copyables__study-eyebrow', 'Review study setup'),
-              hl('strong', 'Name this review study'),
-              hl(
-                'span.copyables__study-subline',
-                'Save the loaded game as a study with playable lines and a section link. Add explanation notes after it opens.',
-              ),
-            ]),
-          ]),
-          hl('label.copyables__study-field', [
-            hl('span', 'Study title'),
-            hl('input', {
-              attrs: {
-                type: 'text',
-                maxlength: 100,
-                required: true,
-                autocomplete: 'off',
-                disabled: busy,
-              },
-              props: { value: setup.name },
-              hook: bind('input', e => {
-                ctrl.updateStudyCreateSetup({ name: (e.target as HTMLInputElement).value });
-              }),
-            }),
-          ]),
-          hl('label.copyables__study-field', [
-            hl('span', 'First section'),
-            hl('input', {
-              attrs: {
-                type: 'text',
-                maxlength: 80,
-                required: true,
-                autocomplete: 'off',
-                disabled: busy,
-              },
-              props: { value: setup.chapterName },
-              hook: bind('input', e => {
-                ctrl.updateStudyCreateSetup({ chapterName: (e.target as HTMLInputElement).value });
-              }),
-            }),
-          ]),
-          hl('fieldset.copyables__study-access', [
-            hl('legend', 'Sharing'),
+        }),
+      ]),
+      hl('label.copyables__study-field', [
+        hl('span', 'First chapter'),
+        hl('input', {
+          attrs: {
+            type: 'text',
+            maxlength: 80,
+            required: true,
+            autocomplete: 'off',
+            disabled: busy,
+          },
+          props: { value: setup.chapterName },
+          hook: bind('input', e => {
+            ctrl.updateStudyCreateSetup({ chapterName: (e.target as HTMLInputElement).value });
+          }),
+        }),
+      ]),
+      hl('fieldset.copyables__study-access', [
+        hl('legend', 'Sharing'),
+        hl(
+          'div.copyables__study-access-options',
+          studyVisibilityChoices.map(choice =>
             hl(
-              'div.copyables__study-access-options',
-              studyVisibilityChoices.map(choice =>
-                hl(
-                  'label.copyables__study-access-option',
-                  {
-                    class: { 'is-selected': setup.visibility === choice.value },
-                  },
-                  [
-                    hl('input', {
-                      attrs: {
-                        type: 'radio',
-                        name: 'study-visibility',
-                        value: choice.value,
-                        disabled: busy,
-                      },
-                      props: { checked: setup.visibility === choice.value },
-                      hook: bind('change', () => {
-                        ctrl.updateStudyCreateSetup({ visibility: choice.value });
-                      }),
-                    }),
-                    hl('span.copyables__study-access-copy', [
-                      hl('strong', choice.title),
-                      hl('span', choice.help),
-                    ]),
-                  ],
-                ),
-              ),
-            ),
-          ]),
-          ctrl.studyCreateErrorText() ? renderStudyStatusCard(ctrl.studyCreateErrorText()!, 'error') : null,
-          hl('div.copyables__study-modal-actions', [
-            hl(
-              'button.button.button-metal.copyables__study-button',
+              'label.copyables__study-access-option',
               {
-                attrs: { type: 'button', disabled: busy },
-                hook: bind('click', () => {
-                  ctrl.closeStudyCreateSetup();
-                }),
-              },
-              'Cancel',
-            ),
-            hl(
-              'button.button.copyables__study-button',
-              {
-                attrs: { type: 'submit', disabled: busy },
+                class: { 'is-selected': setup.visibility === choice.value },
               },
               [
-                renderNotebookGlyph('notebook', 'copyables__study-button-glyph'),
-                busy ? ' Creating...' : ' Create review study',
+                hl('input', {
+                  attrs: {
+                    type: 'radio',
+                    name: 'study-visibility',
+                    value: choice.value,
+                    disabled: busy,
+                  },
+                  props: { checked: setup.visibility === choice.value },
+                  hook: bind('change', () => {
+                    ctrl.updateStudyCreateSetup({ visibility: choice.value });
+                  }),
+                }),
+                hl('span.copyables__study-access-copy', [
+                  hl('strong', choice.title),
+                  hl('span', choice.help),
+                ]),
               ],
             ),
-          ]),
-        ],
-      ),
+          ),
+        ),
+      ]),
+      ctrl.studyCreateErrorText() ? renderStudyStatus(ctrl.studyCreateErrorText()!, 'error') : null,
+      hl('div.copyables__study-setup-actions', [
+        hl(
+          'button.button.button-metal.copyables__study-button',
+          {
+            attrs: { type: 'button', disabled: busy },
+            hook: bind('click', () => closeStudyCreateSetup(ctrl)),
+          },
+          'Cancel',
+        ),
+        hl(
+          'button.button.copyables__study-button',
+          {
+            attrs: { type: 'submit', disabled: busy },
+          },
+          busy ? 'Creating...' : 'Create study',
+        ),
+      ]),
     ],
   );
 }
@@ -813,14 +643,9 @@ function renderStudyLaunchPanel(ctrl: AnalyseCtrl, pgnStatus: PgnDraftStatus): V
 
   return hl('section.copyables__study.copyables__study--launch', [
     hl('div.copyables__study-head', [
-      renderNotebookPanelCover('Review study', 'Opening to middlegame', 'Make the game explainable'),
       hl('div.copyables__study-copy', [
-        hl('span.copyables__study-eyebrow', 'Review study'),
-        hl('strong', 'Turn this game into a review study'),
-        hl(
-          'span.copyables__study-subline',
-          'Keep the game, key moves, and notes together so the opening can explain the middlegame.',
-        ),
+        hl('h2', 'Save this game as a study'),
+        hl('span.copyables__study-subline', 'Keep the game, chapters, and notes together.'),
       ]),
       hl('div.copyables__study-actions', [
         createGate.disabled
@@ -829,7 +654,7 @@ function renderStudyLaunchPanel(ctrl: AnalyseCtrl, pgnStatus: PgnDraftStatus): V
               {
                 attrs: { type: 'button', disabled: true },
               },
-              [renderNotebookGlyph('notebook', 'copyables__study-button-glyph'), createGate.buttonLabel],
+              createGate.buttonLabel,
             )
           : needsAuth
             ? hl('a.button.copyables__study-button', { attrs: { href: ctrl.studyLoginHref() } }, [
@@ -839,41 +664,35 @@ function renderStudyLaunchPanel(ctrl: AnalyseCtrl, pgnStatus: PgnDraftStatus): V
             : hl(
                 'button.button.copyables__study-button',
                 {
-                  attrs: createDisabled ? { type: 'button', disabled: true } : { type: 'button' },
+                  attrs: createDisabled
+                    ? { type: 'button', disabled: true }
+                    : {
+                        id: 'study-create-launch',
+                        type: 'button',
+                        'aria-expanded': setupOpen ? 'true' : 'false',
+                        ...(setupOpen ? { 'aria-controls': 'study-create-setup' } : {}),
+                      },
                   hook: createDisabled
                     ? undefined
                     : bind('click', () => {
                         ctrl.openStudyCreateSetup();
                       }),
                 },
-                [
-                  renderNotebookGlyph('notebook', 'copyables__study-button-glyph'),
-                  busy ? ' Creating review...' : ` ${createGate.buttonLabel}`,
-                ],
+                busy ? 'Creating...' : createGate.buttonLabel,
               ),
       ]),
     ]),
-    hl('div.analyse-review__summary-grid.copyables__study-summary', [
-      compactSummaryCard('Opening idea', 'start'),
-      compactSummaryCard('Plan thread', 'middle'),
-      compactSummaryCard('Board cues', 'evidence'),
-    ]),
-    renderStudyStatusCard(
+    renderStudyStatus(
       busy
         ? transferCount > 0
-          ? `Creating the review study and carrying over ${transferCount} saved line${transferCount === 1 ? '' : 's'}.`
-          : 'Creating the review study from the current game.'
+          ? `Creating the study and carrying over ${transferCount} saved line${transferCount === 1 ? '' : 's'}.`
+          : 'Creating the study from the current game.'
         : createGate.message,
       busy ? 'info' : createGate.tone,
       busy ? undefined : createGate.title,
     ),
-    error && !setupOpen ? renderStudyStatusCard(error, 'error') : null,
-    hl('div.copyables__study-pills', [
-      studyFeaturePill('page', 'Opening-to-plan notes'),
-      studyFeaturePill('section', 'Playable lines'),
-      studyFeaturePill('bookmark', 'Shareable section link'),
-    ]),
-    renderStudySetupModal(ctrl),
+    error && !setupOpen ? renderStudyStatus(error, 'error') : null,
+    renderStudySetupForm(ctrl),
   ]);
 }
 
@@ -926,16 +745,16 @@ function inspectFenDraft(draft: string, currentFen: string): FenDraftInspection 
 function inspectPgnDraft(draft: string, currentPgn: string): PgnDraftInspection {
   if (lastPgnInspection?.draft === draft && lastPgnInspection.current === currentPgn)
     return lastPgnInspection.result;
+  const chars = draft.trim().length;
+  const lines = draft ? draft.split(/\r?\n/).length : 0;
   const normalized = normalizeInlinePgn(draft);
   const normalizedCurrent = normalizeInlinePgn(currentPgn);
-  const lines = draft ? draft.split(/\r?\n/).length : 0;
-  const chars = draft.trim().length;
   let result: PgnDraftInspection;
   if (!normalized) {
     result = {
-      status: 'empty',
-      headline: 'Draft empty',
-      message: 'Paste a game to load another game on this board.',
+      status: chars ? 'invalid' : 'empty',
+      headline: chars ? 'Game text too long' : 'Draft empty',
+      message: chars ? pgnInputError(draft) : 'Paste a game to load another game on this board.',
       chars,
       lines,
     };
@@ -992,8 +811,8 @@ function renderInlineStatus(headline: string, message: string, error = false): V
   ]);
 }
 
-function compactSummaryCard(value: string, label: string): VNode {
-  return hl('div.analyse-review__summary-card', [hl('strong', value), hl('span', label)]);
+function summaryFact(value: string, label: string): VNode {
+  return hl('div.analyse-review__summary-fact', [hl('strong', value), hl('span', label)]);
 }
 
 function pgnDraftReplaySize(inspection: PgnDraftInspection): string {
@@ -1020,38 +839,35 @@ function gameTextLineLabel(lines: number): string {
   return `${count} game text line${count === 1 ? '' : 's'}`;
 }
 
-function renderStudyStatusCard(message: string, tone: 'info' | 'success' | 'error', title?: string): VNode {
-  return hl(`div.copyables__study-status.copyables__study-status--${tone}`, [
-    hl(
-      'strong',
-      title ||
-        (tone === 'error'
-          ? 'Review study issue'
-          : tone === 'info'
-            ? 'Review study in progress'
-            : 'Review study ready'),
-    ),
-    hl('span', message),
-  ]);
-}
+function renderStudyStatus(message: string, tone: 'info' | 'success' | 'error', title?: string): VNode {
+  const statusAttrs: Record<string, string> =
+    tone === 'error'
+      ? { role: 'alert', 'aria-atomic': 'true' }
+      : { role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' };
 
-function studyFeaturePill(kind: NotebookGlyphKind, label: string): VNode | null {
-  return label
-    ? hl('span.copyables__study-pill', [
-        renderNotebookGlyph(kind, 'copyables__study-pill-glyph'),
-        hl('span', label),
-      ])
-    : null;
+  return hl(
+    `div.copyables__study-status.copyables__study-status--${tone}`,
+    {
+      attrs: statusAttrs,
+    },
+    [
+      hl(
+        'strong',
+        title || (tone === 'error' ? 'Study issue' : tone === 'info' ? 'Study in progress' : 'Study ready'),
+      ),
+      hl('span', message),
+    ],
+  );
 }
 
 function renderImportPreview(current: PgnDraftInspection, incoming: PgnDraftInspection): VNode {
   return hl('div.copyables__preview', [
-    hl('div.copyables__preview-card', [
+    hl('div.copyables__preview-item', [
       hl('span.copyables__preview-label', 'On the board'),
       hl('strong', current.preview?.opening || current.preview?.variant || 'Current board'),
       hl('span', pgnDraftPlayerDetail(current)),
     ]),
-    hl('div.copyables__preview-card', [
+    hl('div.copyables__preview-item', [
       hl('span.copyables__preview-label', 'Ready to load'),
       hl(
         'strong',
@@ -1062,218 +878,6 @@ function renderImportPreview(current: PgnDraftInspection, incoming: PgnDraftInsp
       hl('span', pgnDraftPlayerDetail(incoming)),
     ]),
   ]);
-}
-
-function renderRecentImportDrafts(ctrl: AnalyseCtrl, drafts: string[]): VNode {
-  return hl('div.copyables__recent', [
-    hl('div.copyables__recent-head', [
-      hl('strong', 'Recent game drafts'),
-      hl('span', 'Games you loaded in this session.'),
-    ]),
-    hl(
-      'div.copyables__recent-list',
-      drafts.map((draft, index) => {
-        const inspection = inspectPgnDraft(draft, '');
-        return hl(
-          'button.copyables__recent-item',
-          {
-            key: draft.slice(0, 40) + index,
-            attrs: { type: 'button' },
-            hook: bind('click', () => ctrl.useImportDraft(draft)),
-          },
-          [
-            hl('strong', inspection.preview?.opening || inspection.preview?.variant || `Draft ${index + 1}`),
-            hl('span', pgnDraftPlayerDetail(inspection)),
-          ],
-        );
-      }),
-    ),
-  ]);
-}
-
-function renderServerImportHistory(history: ImportHistoryView): VNode | undefined {
-  const hasAnalyses = !!history.recentAnalyses?.length;
-  const hasAccounts = !!history.recentAccounts?.length;
-  if (!hasAnalyses && !hasAccounts) return renderEmptySavedHistory();
-  const blocks: VNode[] = [];
-  if (hasAnalyses) {
-    blocks.push(
-      hl('div.copyables__recent', [
-        hl('div.copyables__recent-head', [
-          hl('strong', 'Recent games'),
-          hl('span', 'Games you can reopen from any signed-in device.'),
-        ]),
-        hl(
-          'div.copyables__recent-list',
-          history.recentAnalyses.map((entry, index) =>
-            renderSavedAnalysisEntry(entry, history.currentAnalysisId === entry.id, index === 0),
-          ),
-        ),
-      ]),
-    );
-  }
-  if (hasAccounts) {
-    blocks.push(
-      hl('div.copyables__recent', [
-        hl('div.copyables__recent-head', [
-          hl('strong', 'Recent players'),
-          hl('span', 'Jump back into saved player game lists without retyping usernames.'),
-        ]),
-        hl(
-          'div.copyables__recent-list',
-          history.recentAccounts.map((entry, index) => renderSavedAccountEntry(entry, index === 0)),
-        ),
-      ]),
-    );
-  }
-  return blocks.length ? hl('div.copyables__history-stack', blocks) : undefined;
-}
-
-function renderEmptySavedHistory(): VNode {
-  return hl('div.copyables__recent.copyables__recent--empty', [
-    hl('div.copyables__recent-head', [
-      hl('strong', 'No saved games yet'),
-      hl(
-        'span',
-        'Load a pasted game or player game once, and it will stay here for quick reopen on any signed-in device.',
-      ),
-    ]),
-    hl('div.copyables__empty-actions', [
-      hl('a.copyables__recent-link', { attrs: { href: '/import' } }, 'Open recent games'),
-      hl('span.copyables__recent-link-note', 'or paste a game below to start your saved game list.'),
-    ]),
-  ]);
-}
-
-function renderSavedAnalysisEntry(entry: ImportHistoryAnalysis, current: boolean, priority: boolean): VNode {
-  const supportLine = analysisSupportLine(entry);
-  return hl(
-    'a.copyables__recent-item',
-    {
-      key: entry.id,
-      attrs: { href: entry.href },
-      class: { 'is-current': current, 'is-priority': priority },
-    },
-    [
-      hl('div.copyables__recent-kicker', [
-        entry.providerLabel
-          ? renderHistoryBadge(
-              entry.providerLabel,
-              'copyables__badge--provider',
-              providerToneClass(entry.provider),
-            )
-          : null,
-        renderHistoryBadge(
-          sourceTypeLabel(entry.sourceType),
-          `copyables__badge--${sourceTypeTone(entry.sourceType)}`,
-        ),
-        current
-          ? renderHistoryBadge('Current', 'copyables__badge--current')
-          : priority
-            ? renderHistoryBadge('Latest', 'copyables__badge--priority')
-            : null,
-      ]),
-      hl('div.copyables__recent-body', [
-        hl('div.copyables__recent-title-row', [
-          hl('strong', current ? `${entry.title} (Current)` : entry.title),
-          hl('span.copyables__recent-cta', current ? 'On board' : priority ? 'Open latest' : 'Open'),
-        ]),
-        hl('span.copyables__recent-subline', analysisMetaLine(entry)),
-        supportLine ? hl('span.copyables__recent-foot', supportLine) : null,
-        hl(
-          'span.copyables__meta',
-          `${current ? 'Opened and active' : 'Opened'} ${formatImportTimestamp(entry.openedAt)}`,
-        ),
-      ]),
-    ],
-  );
-}
-
-function renderSavedAccountEntry(entry: ImportHistoryAccount, priority: boolean): VNode {
-  return hl(
-    'a.copyables__recent-item',
-    {
-      key: `${entry.provider}:${entry.username}`,
-      attrs: { href: entry.href },
-      class: { 'is-priority': priority },
-    },
-    [
-      hl('div.copyables__recent-kicker', [
-        renderHistoryBadge(
-          entry.providerLabel,
-          'copyables__badge--provider',
-          providerToneClass(entry.provider),
-        ),
-        priority ? renderHistoryBadge('Latest', 'copyables__badge--priority') : null,
-        entry.lastAnalysedAt ? renderHistoryBadge('Studied', 'copyables__badge--activity') : null,
-      ]),
-      hl('div.copyables__recent-body', [
-        hl('div.copyables__recent-title-row', [
-          hl('strong', `@${entry.username}`),
-          hl('span.copyables__recent-cta', priority ? 'Open latest' : 'Open'),
-        ]),
-        hl('span.copyables__recent-subline', `${entry.analysisCount} saved games`),
-        hl(
-          'span.copyables__recent-foot',
-          priority
-            ? 'Fastest way back to your most recently loaded player games.'
-            : 'Reopen this player game list without retyping the username.',
-        ),
-        hl('span.copyables__meta', `Active ${formatImportTimestamp(entry.activityAt)}`),
-      ]),
-    ],
-  );
-}
-
-function analysisMetaLine(entry: ImportHistoryAnalysis): string {
-  const line = [
-    entry.username ? `@${entry.username}` : undefined,
-    entry.playedAtLabel && entry.playedAtLabel !== '-' ? entry.playedAtLabel : undefined,
-    entry.result,
-    entry.speed && entry.speed !== '-' ? entry.speed : undefined,
-  ]
-    .filter(Boolean)
-    .join(' • ');
-  return line || 'Saved game ready to reopen.';
-}
-
-function analysisSupportLine(entry: ImportHistoryAnalysis): string | undefined {
-  const line = [
-    entry.opening,
-    entry.variant && entry.variant !== entry.opening ? entry.variant : undefined,
-    entry.sourceType === 'manual' ? 'Pasted game' : 'Imported game',
-  ]
-    .filter(Boolean)
-    .join(' • ');
-  return line || undefined;
-}
-
-function formatImportTimestamp(value: string | undefined): string {
-  if (!value) return 'recently';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
-}
-
-function renderHistoryBadge(label: string, ...classes: string[]): VNode {
-  const suffix = classes
-    .filter(Boolean)
-    .map(cls => `.${cls}`)
-    .join('');
-  return hl(`span.copyables__badge${suffix}`, label);
-}
-
-function providerToneClass(provider: string | undefined): string {
-  if (provider === 'chesscom') return 'copyables__badge--chesscom';
-  if (provider === 'lichess') return 'copyables__badge--lichess';
-  return '';
-}
-
-function sourceTypeLabel(sourceType: string): string {
-  return sourceType === 'manual' ? 'Pasted game' : 'Imported game';
-}
-
-function sourceTypeTone(sourceType: string): string {
-  return sourceType === 'manual' ? 'manual' : 'imported';
 }
 
 function renderResult(ctrl: AnalyseCtrl): VNode[] {

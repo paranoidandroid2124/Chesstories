@@ -1,9 +1,8 @@
 import * as xhr from './xhr';
-import { idleTimer, browserTaskQueueMonitor } from './event';
-import { storage, once, type ChesstoryStorage } from './storage';
+import { browserTaskQueueMonitor } from './event';
+import { storage, type ChesstoryStorage } from './storage';
 import { pubsub, type PubsubEventKey } from './pubsub';
 import { defined, myUserId } from './index';
-import { log } from './permalog';
 
 let siteSocket: WsSocket | undefined;
 
@@ -105,7 +104,6 @@ class WsSocket {
   private pongCount = 0;
   private tryOtherUrl = false;
   private storage: ChesstoryStorage = storage.make('surl18', 30 * 60 * 1000);
-  private _sign?: string;
   private resendWhenOpen: [string, Payload, Partial<SocketSendOpts>][] = [];
   private baseUrls = document.body.dataset.socketDomains!.split(',');
 
@@ -142,7 +140,6 @@ class WsSocket {
   }
 
   sign = (s: string): void => {
-    this._sign = s;
     this.ackable.sign(s);
   };
 
@@ -195,22 +192,6 @@ class WsSocket {
     }
 
     const message = JSON.stringify(msg);
-    if (t === 'racerScore' && o.sign !== this._sign) return;
-    if (t === 'move' && o.sign !== this._sign) {
-      let stack: string;
-      try {
-        stack = new Error().stack!.split('\n').join(' / ').replace(/\s+/g, ' ');
-      } catch (e: any) {
-        stack = `${e.message} ${navigator.userAgent}`;
-      }
-      if (!stack.includes('round.nvui')) {
-        setTimeout(() => {
-          if (once(`socket.rep.${Math.round(Date.now() / 1000 / 3600 / 3)}`))
-            this.send('rep', { n: `soc: ${message} ${stack}` });
-          else wsDestroy();
-        }, 10000);
-      }
-    }
     this.debug('send ' + message);
     if (!this.ws || this.ws.readyState === WebSocket.CONNECTING) {
       if (!noRetry) this.resendWhenOpen.push([t, msg.d, o]);
@@ -269,25 +250,7 @@ class WsSocket {
 
   };
 
-  private handle = (m: MsgIn, retries: number = 10): void => {
-    if (m.v && this.version !== false) {
-      if (m.v <= this.version) {
-        this.debug('already has event ' + m.v);
-        return;
-      }
-      // it's impossible but according to previous logging, it happens nonetheless
-      if (m.v > this.version + 1) {
-        if (retries > 0) {
-          console.debug('version gap, retrying', m.v, this.version, retries);
-          setTimeout(() => this.handle(m, retries - 1), 200);
-        } else {
-          log(`${window.location.pathname}: version incoming ${m.v} vs current ${this.version}`);
-          site.reload();
-        }
-        return;
-      }
-      this.version = m.v;
-    }
+  private handle = (m: MsgIn): void => {
     switch (m.t || false) {
       case false:
         break;
@@ -352,19 +315,6 @@ class WsSocket {
     if (pubsub.past('socket.hasConnected')) return;
 
     pubsub.complete('socket.hasConnected');
-    let disconnectTimeout: Timeout | undefined;
-    idleTimer(
-      10 * 60 * 1000,
-      () => {
-        this.options.idle = true;
-        disconnectTimeout = setTimeout(this.destroy, 2 * 60 * 60 * 1000);
-      },
-      () => {
-        this.options.idle = false;
-        if (this.ws) clearTimeout(disconnectTimeout);
-        else if (this.options.reloadOnResume) location.reload();
-      },
-    );
   };
 
   private onSuspended() {

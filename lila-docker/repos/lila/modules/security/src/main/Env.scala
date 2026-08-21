@@ -26,8 +26,6 @@ final class Env(
   
   import settings.*
 
-  EmailConfirm.configure(settings.emailConfirm.secret, settings.emailConfirm.cookie, mode == play.api.Mode.Prod)
-
   lazy val securityColl = db.mainDb(collection.security)
   lazy val firewallColl = db.mainDb(collection.firewall)
 
@@ -37,7 +35,7 @@ final class Env(
   lazy val authenticator = new Authenticator(passwordHasher, userEnv.repo)
   lazy val pwnedApi = new PwnedApi(summon[StandaloneWSClient], settings.pwnedRangeUrl)
 
-  lazy val api = new SecurityApi(userEnv.repo, sessionStore, authenticator, pwnedApi)
+  lazy val api = new SecurityApi(userEnv.repo, sessionStore, authenticator)
 
   lazy val loginToken = new LoginToken(settings.loginTokenSecret)
   lazy val emailChangeToken = new EmailChangeToken(settings.emailChangeSecret)
@@ -54,23 +52,6 @@ final class Env(
   lazy val forms = new SecurityForm(userEnv.repo, authenticator, lameNameCheck)
   lazy val spam = new Spam(() => lila.core.data.Strings(Nil))
   lazy val signup = new Signup(userEnv.repo, authenticator, forms, hcaptcha, pwnedApi)
-
-  lazy val lilaCookie: lila.core.security.LilaCookie = new lila.core.security.LilaCookie:
-    def cookie(
-        name: String,
-        value: String,
-        maxAge: Option[Int] = None,
-        httpOnly: Option[Boolean] = None
-    ): play.api.mvc.Cookie =
-      play.api.mvc.Cookie(
-        name = name,
-        value = value,
-        maxAge = maxAge,
-        path = "/",
-        secure = mode == play.api.Mode.Prod,
-        httpOnly = httpOnly.getOrElse(true),
-        sameSite = play.api.mvc.Cookie.SameSite.Lax.some
-      )
 
   lazy val firewallApi = firewall
   

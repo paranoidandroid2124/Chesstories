@@ -16,7 +16,7 @@ object terms:
             st.article(cls := "legal-content")(
               header(cls := "legal-header")(
                 h1("Terms of Service"),
-                p(cls := "legal-meta")("Effective Date: March 10, 2026 • Last Updated: July 2, 2026")
+                p(cls := "legal-meta")("Effective Date: March 10, 2026 • Last Updated: August 12, 2026")
               ),
 
               st.section(cls := "legal-section")(
@@ -58,8 +58,9 @@ object terms:
                   "Chesstory may use passwords, email confirmation links, and password reset emails as part of account security."
                 ),
                 p(
-                  "Chesstory may also store settings, analysis drafts, or performance caches in your browser when those features are enabled. ",
-                  "Optional browser-side storage is controlled through Cookie Settings and described in the ",
+                  "Chesstory sets one strictly necessary first-party cookie, ",
+                  code("sid"),
+                  ", to maintain a signed-in session. Anti-abuse screens may load hCaptcha, which may use separate third-party cookies or browser storage. These technologies are described in the ",
                   a(href := routes.Main.privacy.url)("Privacy Policy"),
                   "."
                 )
@@ -82,7 +83,10 @@ object terms:
                 h2("5. Your Content and Service Content"),
                 p(
                   "You retain ownership of PGNs, studies, chess inputs, and other content you submit to Chesstory. ",
-                  "You grant Chesstory a limited license to host, process, and display that content as needed to operate the Service for you."
+                  "You grant Chesstory a limited license to process ordinary analysis inputs transiently to return the requested result, and to host and display only the Study content you explicitly choose to save."
+                ),
+                p(
+                  "Chesstory does not add an ordinary analysis or import request to a durable history. A Study persists only when you explicitly save it and remains subject to its visibility setting and the deletion terms below."
                 ),
                 p(
                   "Study visibility matters. Public studies may be listed publicly, link-shareable studies can be opened by anyone with the link, and private studies are limited to you or approved collaborators."
@@ -106,6 +110,7 @@ object terms:
                   li("Do not submit sensitive personal information, confidential third-party material, or private non-chess information inside PGNs, notes, comments, or prompts"),
                   li("You are responsible for how you use any chess recommendations"),
                   li("Some analysis features may require sign-in and may be subject to rate limits, daily quotas, fair-use controls, or plan/tier limits"),
+                  li("Ordinary analysis and import requests are processed transiently and are not added to a durable history; only a Study you explicitly save persists as account content"),
                   li("Some features may send chess positions, move lists, PGNs, comments, notes, engine lines, and related chess context to Chesstory analysis systems or OpenAI API models when needed to return the requested explanation"),
                   li("Some features may fetch public chess data from third-party platforms at your request; do not use Chesstory to import private, restricted, or non-consensual data"),
                   li("Chesstory is not affiliated with or endorsed by Lichess, Chess.com, or other third-party platforms unless explicitly stated")
@@ -171,8 +176,6 @@ object terms:
 
               footer(cls := "legal-footer")(
                 a(href := routes.Main.privacy.url, cls := "legal-link")("Privacy Policy"),
-                span(" • "),
-                a(href := "#cookie-consent", cls := "legal-link js-cookie-consent-open")("Cookie settings"),
                 span(" • "),
                 a(href := routes.Main.contact.url, cls := "legal-link")("Contact"),
                 span(" • "),

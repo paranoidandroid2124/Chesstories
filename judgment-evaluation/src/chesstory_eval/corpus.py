@@ -20,7 +20,6 @@ _RELATION_TYPES: tuple[str, ...] = (
 _RELEASE_ROLES: tuple[str, ...] = (
     "oracle-chain-author",
     "base-label-author",
-    "held-out-human-explainer",
     "out-of-set-adjudicator",
     "final-usefulness-rater",
 )
@@ -321,7 +320,7 @@ class Corpus:
             ) != "held-out-human":
                 raise ContractError(
                     "release final-usefulness-rater must carry evidence_tier="
-                    "'held-out-human'; model-proxy votes never satisfy the human gate"
+                    "'held-out-human'; the human gate requires held-out-human evidence"
                 )
             oracle_chain = assignment.get("oracle_chain")
             role_key = role
@@ -360,7 +359,6 @@ class Corpus:
             raters = roles.get("final-usefulness-rater", set())
             adjudicators = roles.get("out-of-set-adjudicator", set())
             base_label_authors = roles.get("base-label-author", set())
-            human_explainers = roles.get("held-out-human-explainer", set())
             oracle_authors_by_chain = {
                 chain: roles.get(f"oracle-chain-author:{chain}", set())
                 for chain in oracle_chains
@@ -374,8 +372,6 @@ class Corpus:
                 raise ContractError(f"cluster {cluster!r} has no out-of-set adjudicator")
             if not base_label_authors:
                 raise ContractError(f"cluster {cluster!r} has no base-label author")
-            if not human_explainers:
-                raise ContractError(f"cluster {cluster!r} has no held-out human explainer")
             if any(not people for people in oracle_authors_by_chain.values()):
                 raise ContractError(
                     f"cluster {cluster!r} has no author for every frozen oracle chain"
@@ -383,7 +379,6 @@ class Corpus:
             identity_groups = [
                 *oracle_authors_by_chain.values(),
                 base_label_authors,
-                human_explainers,
                 adjudicators,
                 raters,
             ]
@@ -400,7 +395,6 @@ class Corpus:
                     for person in sorted(oracle_authors_by_chain[chain])
                 ),
                 "base_label_author_ids": tuple(sorted(base_label_authors)),
-                "held_out_human_explainer_ids": tuple(sorted(human_explainers)),
                 "held_out_rater_ids": tuple(sorted(raters)),
                 "adjudicator_ids": tuple(sorted(adjudicators)),
             }
@@ -500,8 +494,6 @@ class Corpus:
             "required_pv",
             "claims",
             "confidence_and_alternatives",
-            "language",
-            "natural_language",
         ]
         present = [key for key in order if key in labels]
         if present and list(labels.keys())[: len(present)] != present:

@@ -1,6 +1,6 @@
 import { repeater, myUserId } from 'lib';
 import * as licon from 'lib/licon';
-import { preferenceLocalStorage } from 'lib/cookieConsent';
+import { storage } from 'lib/storage';
 import { type VNode, onInsert, hl, icon, domDialog } from 'lib/view';
 import { displayColumns, isTouchDevice } from 'lib/device';
 import { addPointerListeners } from 'lib/pointer';
@@ -16,6 +16,8 @@ export function renderControls(ctrl: AnalyseCtrl) {
     touchDevice = isTouchDevice(),
     mobileUi = columns === 1 && touchDevice,
     activeTool = ctrl.activeControlBarTool();
+  const explorerOpen = activeTool === 'opening-explorer';
+  const menuOpen = activeTool === 'action-menu';
 
   return hl(
     'div.analyse__controls.analyse-controls',
@@ -29,7 +31,7 @@ export function renderControls(ctrl: AnalyseCtrl) {
       ),
     },
     [
-      ctrl.isCevalAllowed() && renderAnalysisToggle(ctrl, activeTool, columns > 1),
+      ctrl.isCevalAllowed() && renderAnalysisToggle(ctrl, activeTool),
       hl('div.jumps', [
         !mobileUi && jumpButton(licon.JumpFirst, 'first', canJumpPrev),
         jumpButton(licon.LessThan, 'prev', canJumpPrev),
@@ -44,9 +46,13 @@ export function renderControls(ctrl: AnalyseCtrl) {
         'button.fbt',
         {
           attrs: {
-            title: 'Opening book and tablebase',
+            title: explorerOpen ? 'Close opening book and tablebase' : 'Open opening book and tablebase',
             'data-act': 'opening-explorer',
-            'aria-label': 'Open opening book and tablebase',
+            'aria-label': explorerOpen
+              ? 'Close opening book and tablebase'
+              : 'Open opening book and tablebase',
+            'aria-expanded': explorerOpen ? 'true' : 'false',
+            ...(explorerOpen ? { 'aria-controls': 'analyse-opening-explorer' } : {}),
           },
           class: {
             hidden: !ctrl.explorer.allowed(),
@@ -59,7 +65,13 @@ export function renderControls(ctrl: AnalyseCtrl) {
         'button.fbt',
         {
           class: { active: activeTool === 'action-menu' },
-          attrs: { title: 'Menu', 'data-act': 'menu', 'aria-label': 'Open analysis menu' },
+          attrs: {
+            title: menuOpen ? 'Close board settings' : 'Open board settings',
+            'data-act': 'menu',
+            'aria-label': menuOpen ? 'Close board settings' : 'Open board settings',
+            'aria-expanded': menuOpen ? 'true' : 'false',
+            ...(menuOpen ? { 'aria-controls': 'analyse-action-menu' } : {}),
+          },
         },
         [icon(licon.Hamburger as any)],
       ),
@@ -67,21 +79,22 @@ export function renderControls(ctrl: AnalyseCtrl) {
   );
 }
 
-function renderAnalysisToggle(ctrl: AnalyseCtrl, activeTool: string | false, showLabel: boolean): VNode {
+function renderAnalysisToggle(ctrl: AnalyseCtrl, activeTool: string | false): VNode {
   const active = ctrl.showCeval(),
     latent = active && !!activeTool;
+  const label = active ? 'Hide live engine' : 'Show live engine';
   return hl(
     'button.fbt.fbt--engine-toggle',
     {
       attrs: {
-        title: 'Toggle reference lines',
+        title: label,
         'data-act': 'analysis',
-        'aria-label': 'Toggle reference lines',
+        'aria-label': label,
         'aria-pressed': active ? 'true' : 'false',
       },
       class: { active, latent, computing: ctrl.ceval.isComputing },
     },
-    [icon(licon.Cogs as any), showLabel ? hl('span.label', 'Lines') : null],
+    [icon(licon.Cogs as any), hl('span.label', 'Engine')],
   );
 }
 
@@ -176,8 +189,8 @@ function scrubHelp(ctrl: AnalyseCtrl) {
 
 function scrubHelpAcknowledged(ack?: boolean) {
   const key = `analyse.help.scrub-acknowledged.${myUserId() ?? 'anon'}`;
-  const store = preferenceLocalStorage();
-  if (ack === undefined) return !!store?.getItem(key);
-  if (ack) store?.setItem(key, '1');
+  const acknowledged = storage.boolean(key);
+  if (ack === undefined) return acknowledged.get();
+  if (ack) acknowledged.set(true);
   return ack;
 }

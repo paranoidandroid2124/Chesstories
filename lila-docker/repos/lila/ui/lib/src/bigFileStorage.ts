@@ -1,8 +1,4 @@
-import { objectStorage } from './objectStorage';
-import { preferenceStorageAllowed } from './cookieConsent';
 import { memoize } from './index';
-import { randomToken } from './algo';
-import { log } from './permalog';
 
 // url keyed storage for very large assets
 
@@ -11,84 +7,65 @@ export const bigFileStorage: () => BigFileStorage = memoize(() => new BigFileSto
 type U8 = Uint8Array<ArrayBuffer>;
 
 class BigFileStorage {
-  private idb = memoize(() => objectStorage<U8>({ store: 'big-file' }));
-  private opfs = memoize(() => directoryHandleIfAvailable());
+  private files = new Map<string, Promise<U8>>();
 
-  async get(assetUrl: string, onProgress?: (loaded: number, total: number) => void): Promise<U8> {
-    const allowStorage = preferenceStorageAllowed();
-    const stored = allowStorage ? await this.readFile(assetUrl).catch(() => undefined) : undefined;
-    if (stored) return stored;
-
-    const fetched = await new Promise<U8>((resolve, reject) => {
+  async get(
+    assetUrl: string,
+    onProgress?: (loaded: number, total: number) => void,
+    signal?: AbortSignal,
+  ): Promise<U8> {
+    if (signal?.aborted) throw signal.reason ?? new DOMException('The operation was aborted.', 'AbortError');
+    const existing = this.files.get(assetUrl);
+    if (existing) return signal ? waitFor(existing, signal) : existing;
+    const fetched = new Promise<U8>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
+      const cleanup = () => signal?.removeEventListener('abort', abort);
+      const abort = () => xhr.abort();
       xhr.open('GET', assetUrl, true);
       xhr.responseType = 'arraybuffer';
       if (onProgress) xhr.onprogress = e => onProgress(e.loaded, e.total);
-      xhr.onerror = () => reject(new Error(`fetch '${assetUrl}' failed: ${xhr.status}`));
-      xhr.onload = () =>
-        xhr.status / 100 === 2
-          ? resolve(new Uint8Array(xhr.response))
-          : reject(new Error(`fetch '${assetUrl}' failed: ${xhr.status}`));
+      xhr.onabort = () => {
+        cleanup();
+        reject(signal?.reason ?? new DOMException('The operation was aborted.', 'AbortError'));
+      };
+      xhr.onerror = () => {
+        cleanup();
+        reject(new Error(`fetch '${assetUrl}' failed: ${xhr.status}`));
+      };
+      xhr.onload = () => {
+        cleanup();
+        if (xhr.status / 100 === 2) resolve(new Uint8Array(xhr.response));
+        else reject(new Error(`fetch '${assetUrl}' failed: ${xhr.status}`));
+      };
+      signal?.addEventListener('abort', abort, { once: true });
       xhr.send();
     });
-    if (allowStorage) this.writeFile(assetUrl, fetched);
-    return fetched;
+    const cached = fetched.catch(error => {
+      if (this.files.get(assetUrl) === cached) this.files.delete(assetUrl);
+      throw error;
+    });
+    this.files.set(assetUrl, cached);
+    return cached;
   }
 
   async delete(assetUrl: string): Promise<void> {
-    if (!preferenceStorageAllowed()) return;
-    const opfs = await this.opfs();
-    if (opfs) await opfs.removeEntry(opfsName(assetUrl)).catch(() => {});
-    else await this.idb().then(idb => idb.remove(assetUrl));
-  }
-
-  private async readFile(assetUrl: string): Promise<U8 | undefined> {
-    if (!preferenceStorageAllowed()) return undefined;
-    const opfs = await this.opfs();
-    if (!opfs) return this.idb().then(idb => idb.get(assetUrl));
-
-    const file = await opfs.getFileHandle(opfsName(assetUrl), { create: false }).then(fh => fh.getFile());
-    const buffer = new ArrayBuffer(file.size);
-    const u8 = new Uint8Array(buffer);
-    const reader = file.stream().getReader();
-    let offset = 0;
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      u8.set(value, offset);
-      offset += value.length;
-    }
-    return offset && offset === file.size ? u8 : undefined;
-  }
-
-  private async writeFile(assetUrl: string, u8: U8) {
-    if (!preferenceStorageAllowed()) return;
-    const out = await this.opfs()
-      ?.then(f => f?.getFileHandle(opfsName(assetUrl), { create: true }).then(fh => fh.createWritable()))
-      .catch(() => undefined);
-    return (
-      out ? out.write(u8).then(() => out.close()) : this.idb().then(idb => idb.put(assetUrl, u8))
-    ).catch(e => log(e));
+    this.files.delete(assetUrl);
   }
 }
 
-function opfsName(assetUrl: string): string {
-  return new URL(assetUrl).pathname.replaceAll('/', '_');
-}
-
-async function directoryHandleIfAvailable(): Promise<FileSystemDirectoryHandle | undefined> {
-  if (!('storage' in navigator)) return undefined;
-  try {
-    const dirHandle = await navigator.storage?.getDirectory?.();
-    const filename = `_${randomToken()}`;
-    const out = await dirHandle.getFileHandle(filename, { create: true }).then(f => f.createWritable());
-    await out
-      .write(new Uint8Array(1))
-      .then(() => out.close())
-      .then(() => dirHandle.removeEntry(filename));
-    return dirHandle;
-  } catch {
-    return undefined;
-  }
+function waitFor<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const abort = () => reject(signal.reason ?? new DOMException('The operation was aborted.', 'AbortError'));
+    signal.addEventListener('abort', abort, { once: true });
+    promise.then(
+      value => {
+        signal.removeEventListener('abort', abort);
+        resolve(value);
+      },
+      error => {
+        signal.removeEventListener('abort', abort);
+        reject(error);
+      },
+    );
+  });
 }

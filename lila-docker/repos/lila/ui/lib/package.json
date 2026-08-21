@@ -3,9 +3,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@lichess-org/stockfish-web": "^0.2.3",
+    "@lichess-org/stockfish-web": "0.2.3",
     "chessops": "^0.15",
-    "idb-keyval": "^6.2.1",
     "stockfish-nnue.wasm": "1.0.0-1946a675.smolnet",
     "stockfish.js": "^10.0.2",
     "stockfish.wasm": "^0.10.0"
@@ -14,6 +13,7 @@
     "sync": {
       "node_modules/stockfish*/*.{js,wasm}": "/public/npm",
       "node_modules/@lichess-org/stockfish-web/*.{js,wasm}": "/public/npm/stockfish-web",
+      "stockfish/move-review-t1/assets/*.{js,wasm}": "/public/npm/stockfish-web-move-review",
       "/node_modules/@lichess-org/chessground/dist/chessground.min.js": "/public/npm"
     },
     "hash": [
@@ -21,6 +21,7 @@
       "/public/images/**",
       "/public/javascripts/**",
       "/public/npm/stockfish-web/*",
+      "/public/npm/stockfish-web-move-review/*",
       "/public/npm/*",
       "/public/piece/**",
       "/public/sound/**/*.mp3"

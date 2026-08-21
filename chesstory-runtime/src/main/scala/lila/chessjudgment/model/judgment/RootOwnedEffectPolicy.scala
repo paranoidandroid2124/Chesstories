@@ -638,7 +638,9 @@ private[chessjudgment] object RootOwnedEffectPolicy:
           case LineEndgameTechniqueHorizonStatus.SupersededByTactic =>
             None
       case RootOwnedEffectProof.StructuralTransition(_, _, consequence) =>
-        if consequence.positive then Some(RootOwnedEffectStake.ActorValue)
+        if consequence.kind == TransitionConsequenceKind.PawnTensionResolution then
+          Some(RootOwnedEffectStake.ActorValue)
+        else if consequence.positive then Some(RootOwnedEffectStake.ActorValue)
         else if consequence.negative then Some(RootOwnedEffectStake.ActorLiability)
         else None
       case RootOwnedEffectProof.RootMoveMotif(_, _) |
@@ -917,9 +919,12 @@ private[chessjudgment] object RootOwnedEffectPolicy:
           .when(structuralConsequenceCompatible(cause, delta, consequence, inheritedAxis))(
             consequence
           )
-          .flatMap(transitionConsequenceChange(cause, _))
+          .map(transitionConsequenceChange(cause, _))
       case RootOwnedEffectProof.RootMoveMotif(_, motif) =>
-        Option.when(moveMotifCanProjectCause(motif, cause.kind))(motif).flatMap(moveMotifChange(cause, _))
+        Option
+          .when(moveMotifCanProjectCause(motif, cause.kind))(motif)
+          .flatMap(rootMoveMotifChange)
+          .map(normalizeCauseChange(cause, _))
       case RootOwnedEffectProof.RootRelation(_, relation) =>
         Option.when(relationCanProjectCause(relation, cause.kind))(relation.kind).flatMap(relationChange(cause, _))
       case RootOwnedEffectProof.ThreatCreation(_, threat) =>
@@ -940,7 +945,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
           .flatMap { exact =>
             cause.kind match
               case RelativeCauseKind.PlanImprovement | RelativeCauseKind.WrongMoveOrder =>
-                transitionConsequenceChange(cause, exact.consequence)
+                Some(transitionConsequenceChange(cause, exact.consequence))
               case RelativeCauseKind.PlanContradiction => Some(DirectCausalChange.Refuted)
               case _ => None
           }
@@ -1115,7 +1120,6 @@ private[chessjudgment] object RootOwnedEffectPolicy:
       case RelativeCauseKind.WrongMoveOrder => eventKind == LineEventKind.Tempo
       case RelativeCauseKind.KingForcing =>
         eventKind == LineEventKind.Check || eventKind == LineEventKind.Mate
-      case RelativeCauseKind.ConversionSecured => eventKind == LineEventKind.DefenderMove
       case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
           RelativeCauseKind.CandidateTacticalLiability =>
         eventKind == LineEventKind.Capture ||
@@ -1179,16 +1183,12 @@ private[chessjudgment] object RootOwnedEffectPolicy:
       case LineEndgameTechniqueHorizonStatus.SupersededByTactic => None
     raw.map(normalizeCauseChange(cause, _))
 
-  private def moveMotifChange(
-      cause: RelativeCauseFact,
+  private[chessjudgment] def rootMoveMotifChange(
       payload: MoveMotifEvidence
   ): Option[DirectCausalChange] =
     val mechanisms = TacticalMechanismKind.fromMotif(payload.motif).toSet
-    val raw =
-      if mechanisms(TacticalMechanismKind.DefensiveResource) then Some(DirectCausalChange.Prevented)
-      else if mechanisms(TacticalMechanismKind.DrawResource) then Some(DirectCausalChange.Maintained)
-      else Option.when(mechanisms.nonEmpty)(DirectCausalChange.Occurred)
-    raw.map(normalizeCauseChange(cause, _))
+    if mechanisms(TacticalMechanismKind.DrawResource) then Some(DirectCausalChange.Maintained)
+    else Option.when(mechanisms.nonEmpty)(DirectCausalChange.Occurred)
 
   private def relationChange(
       cause: RelativeCauseFact,
@@ -1202,15 +1202,14 @@ private[chessjudgment] object RootOwnedEffectPolicy:
   private def transitionConsequenceChange(
       cause: RelativeCauseFact,
       consequence: TransitionConsequence
-  ): Option[DirectCausalChange] =
+  ): DirectCausalChange =
     val raw = consequence.kind match
-      case TransitionConsequenceKind.OpponentMobilityRestriction => Some(DirectCausalChange.Prevented)
-      case TransitionConsequenceKind.PawnTensionResolution => Some(DirectCausalChange.Occurred)
-      case TransitionConsequenceKind.TargetPressureRelease => Some(DirectCausalChange.Lost)
-      case _ if consequence.positive => Some(DirectCausalChange.Occurred)
-      case _ if consequence.negative => Some(DirectCausalChange.Lost)
-      case _ => None
-    raw.map(normalizeCauseChange(cause, _))
+      case TransitionConsequenceKind.OpponentMobilityRestriction => DirectCausalChange.Prevented
+      case TransitionConsequenceKind.PawnTensionResolution => DirectCausalChange.Occurred
+      case TransitionConsequenceKind.TargetPressureRelease => DirectCausalChange.Lost
+      case _ if consequence.negative => DirectCausalChange.Lost
+      case _ => DirectCausalChange.Occurred
+    normalizeCauseChange(cause, raw)
 
   private def axisChange(
       cause: RelativeCauseFact,

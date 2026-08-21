@@ -38,139 +38,142 @@ export function renderCevalSettings(ctrl: CevalHandler): VNode | null {
   return !ceval.showEnginePrefs()
     ? null
     : hl(
-      'div#ceval-settings-anchor',
-      hl(
-        'div#ceval-settings',
-        {
-          hook: onInsert(
-            onClickAway(() => {
-              ceval.showEnginePrefs(false);
-              ceval.opts.redraw();
-            }),
-          ),
-        },
-        [
-          engineSelection(ctrl),
-          (id => {
-            return hl('div.setting', { attrs: { title: 'Set time to evaluate fresh positions' } }, [
-              hl('label', { attrs: { for: id } }, 'Search time'),
-              hl('input#' + id, {
-                attrs: {
-                  type: 'range',
-                  min: 0,
-                  max: searchTicks.length - 1,
-                  step: 1,
-                  'aria-valuetext': `${searchTicks[searchTick()]} seconds`,
-                },
-                hook: rangeConfig(searchTick, n => {
-                  ceval.storedMovetime(searchTicks[n] * 1000);
-                  ctrl.startCeval();
-                  ceval.opts.redraw();
-                }),
+        'div#ceval-settings-anchor',
+        hl(
+          'div#ceval-settings',
+          {
+            hook: onInsert(
+              onClickAway(() => {
+                ceval.showEnginePrefs(false);
+                ceval.opts.redraw();
               }),
-              hl(
-                'div.range_value',
-                isFinite(searchTicks[searchTick()]) ? `${searchTicks[searchTick()]}s` : '∞',
-              ),
-            ]);
-          })('engine-search-ms'),
-          (id => {
-            const max = 5;
-            return hl(
-              'div.setting',
-              { attrs: { title: 'Set number of evaluation lines and move arrows on the board' } },
-              [
-                hl('label', { attrs: { for: id } }, 'Multiple Lines'),
+            ),
+          },
+          [
+            hl('div.ceval-settings__header', [
+              hl('strong', 'Engine settings'),
+              hl('span', 'Local calculation on this device'),
+            ]),
+            engineSelection(ctrl),
+            (id => {
+              return hl('div.setting', { attrs: { title: 'Set time to evaluate fresh positions' } }, [
+                hl('label', { attrs: { for: id } }, 'Search time'),
                 hl('input#' + id, {
-                  attrs: { type: 'range', min: 0, max, step: 1 },
+                  attrs: {
+                    type: 'range',
+                    min: 0,
+                    max: searchTicks.length - 1,
+                    step: 1,
+                    'aria-valuetext': `${searchTicks[searchTick()]} seconds`,
+                  },
+                  hook: rangeConfig(searchTick, n => {
+                    ceval.storedMovetime(searchTicks[n] * 1000);
+                    ctrl.startCeval();
+                    ceval.opts.redraw();
+                  }),
+                }),
+                hl(
+                  'div.range_value',
+                  isFinite(searchTicks[searchTick()]) ? `${searchTicks[searchTick()]}s` : '∞',
+                ),
+              ]);
+            })('engine-search-ms'),
+            (id => {
+              const max = 5;
+              return hl(
+                'div.setting',
+                { attrs: { title: 'Set number of evaluation lines and move arrows on the board' } },
+                [
+                  hl('label', { attrs: { for: id } }, 'Reference lines'),
+                  hl('input#' + id, {
+                    attrs: { type: 'range', min: 0, max, step: 1 },
+                    hook: rangeConfig(
+                      () => ceval.storedPv(),
+                      (pvs: number) => {
+                        ceval.storedPv(pvs);
+                        ctrl.clearCeval?.();
+                        ceval.opts.redraw();
+                      },
+                    ),
+                  }),
+                  hl('div.range_value', `${ceval.storedPv()} / ${max}`),
+                ],
+              );
+            })('analyse-multipv'),
+            maxThreads > minThreads &&
+              (id => {
+                return hl(
+                  'div.setting',
+                  {
+                    attrs: {
+                      title: fewerCores()
+                        ? 'More threads will use more battery for better analysis'
+                        : "Set this below your CPU's thread count\nThe ticks mark a good safe choice",
+                    },
+                  },
+                  [
+                    hl('label', { attrs: { for: id } }, 'Threads'),
+                    hl('span', [
+                      hl('input#' + id, {
+                        attrs: {
+                          type: 'range',
+                          min: minThreads,
+                          max: maxThreads,
+                          step: 1,
+                        },
+                        hook: rangeConfig(() => ceval.threads, clickThreads),
+                      }),
+                      hl(
+                        'div.tick',
+                        {
+                          hook: {
+                            update: (_, v) => setupTick(v, ceval),
+                            insert: v => {
+                              setupTick(v, ceval);
+                              let animationFrameRequestId: number;
+                              observer = new ResizeObserver(() => {
+                                cancelAnimationFrame(animationFrameRequestId);
+                                animationFrameRequestId = requestAnimationFrame(() => setupTick(v, ceval));
+                              });
+                              observer.observe(v.elm!.parentElement!);
+                            },
+                            destroy: () => observer?.disconnect(),
+                          },
+                        },
+                        [threadsTick('up'), threadsTick('down')],
+                      ),
+                    ]),
+                    hl('div.range_value', `${ceval.threads} / ${maxThreads}`),
+                  ],
+                );
+              })('analyse-threads'),
+            (id =>
+              hl('div.setting', { attrs: { title: 'Higher values may improve performance' } }, [
+                hl('label', { attrs: { for: id } }, 'Memory'),
+                hl('input#' + id, {
+                  attrs: {
+                    type: 'range',
+                    min: 4,
+                    max: Math.floor(Math.log2(engCtrl.active?.maxHash ?? 4)),
+                    step: 1,
+                    disabled: ceval.maxHash <= 16,
+                    'aria-valuetext': `${ceval.hashSize} megabytes`,
+                  },
                   hook: rangeConfig(
-                    () => ceval.storedPv(),
-                    (pvs: number) => {
-                      ceval.storedPv(pvs);
-                      ctrl.clearCeval?.();
+                    () => Math.floor(Math.log2(ceval.hashSize)),
+                    v => {
+                      ceval.setHashSize(Math.pow(2, v));
+                      ctrl.startCeval();
                       ceval.opts.redraw();
                     },
                   ),
                 }),
-                hl('div.range_value', `${ceval.storedPv()} / ${max}`),
-              ],
-            );
-          })('analyse-multipv'),
-          maxThreads > minThreads &&
-          (id => {
-            return hl(
-              'div.setting',
-              {
-                attrs: {
-                  title:
-                    fewerCores()
-                      ? 'More threads will use more battery for better analysis'
-                      : "Set this below your CPU's thread count\nThe ticks mark a good safe choice",
-                },
-              },
-              [
-                hl('label', { attrs: { for: id } }, 'Threads'),
-                hl('span', [
-                  hl('input#' + id, {
-                    attrs: {
-                      type: 'range',
-                      min: minThreads,
-                      max: maxThreads,
-                      step: 1,
-                    },
-                    hook: rangeConfig(() => ceval.threads, clickThreads),
-                  }),
-                  hl(
-                    'div.tick',
-                    {
-                      hook: {
-                        update: (_, v) => setupTick(v, ceval),
-                        insert: v => {
-                          setupTick(v, ceval);
-                          let animationFrameRequestId: number;
-                          observer = new ResizeObserver(() => {
-                            cancelAnimationFrame(animationFrameRequestId);
-                            animationFrameRequestId = requestAnimationFrame(() => setupTick(v, ceval));
-                          });
-                          observer.observe(v.elm!.parentElement!);
-                        },
-                        destroy: () => observer?.disconnect(),
-                      },
-                    },
-                    [threadsTick('up'), threadsTick('down')],
-                  ),
-                ]),
-                hl('div.range_value', `${ceval.threads} / ${maxThreads}`),
-              ],
-            );
-          })('analyse-threads'),
-          (id =>
-            hl('div.setting', { attrs: { title: 'Higher values may improve performance' } }, [
-              hl('label', { attrs: { for: id } }, 'Memory'),
-              hl('input#' + id, {
-                attrs: {
-                  type: 'range',
-                  min: 4,
-                  max: Math.floor(Math.log2(engCtrl.active?.maxHash ?? 4)),
-                  step: 1,
-                  disabled: ceval.maxHash <= 16,
-                  'aria-valuetext': `${ceval.hashSize} megabytes`,
-                },
-                hook: rangeConfig(
-                  () => Math.floor(Math.log2(ceval.hashSize)),
-                  v => {
-                    ceval.setHashSize(Math.pow(2, v));
-                    ctrl.startCeval();
-                    ceval.opts.redraw();
-                  },
-                ),
-              }),
 
-              hl('div.range_value', formatHashSize(ceval.hashSize)),
-            ]))('analyse-memory'),
-        ],
-      ),
-    );
+                hl('div.range_value', formatHashSize(ceval.hashSize)),
+              ]))('analyse-memory'),
+          ],
+        ),
+      );
 }
 
 function formatHashSize(v: number) {
@@ -194,22 +197,19 @@ function engineSelection(ctrl: CevalHandler) {
   const ceval = ctrl.ceval,
     active = ceval.engines.active,
     engines = ceval.engines.supporting(ceval.opts.variant.key);
-  return [
-    hl('div.setting', [
-      hl('label', { attrs: { for: 'select-engine' } }, 'Engine:'),
-      hl(
-        'select#select-engine',
-        {
-          hook: bind('change', e => {
-            ceval.selectEngine((e.target as HTMLSelectElement).value);
-            ceval.opts.redraw();
-          }),
-        },
-        engines.map(engine =>
-          hl('option', { attrs: { value: engine.id, selected: active?.id === engine.id } }, engine.name),
-        ),
+  return hl('div.setting', [
+    hl('label', { attrs: { for: 'select-engine' } }, 'Engine'),
+    hl(
+      'select#select-engine',
+      {
+        hook: bind('change', e => {
+          ceval.selectEngine((e.target as HTMLSelectElement).value);
+          ceval.opts.redraw();
+        }),
+      },
+      engines.map(engine =>
+        hl('option', { attrs: { value: engine.id, selected: active?.id === engine.id } }, engine.name),
       ),
-    ]),
-    hl('br'),
-  ];
+    ),
+  ]);
 }

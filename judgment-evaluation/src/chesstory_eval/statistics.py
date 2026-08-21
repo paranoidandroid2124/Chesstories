@@ -229,7 +229,7 @@ def summarize_registered_contrasts(
     row_values = tuple(rows)
     arms = tuple(plan)
     _validate_plan(arms)
-    specifications = _registered_contrast_specifications(arms)
+    specifications = registered_contrast_specifications(arms)
     summaries: list[dict[str, Any]] = []
     for specification in specifications:
         local_seed = _derived_seed(seed, specification["contrast_id"], value_key)
@@ -322,7 +322,7 @@ def summarize_fresh_confirm_equivalence(
 
     specifications = [
         specification
-        for specification in _registered_contrast_specifications(arms)
+        for specification in registered_contrast_specifications(arms)
         if specification["contrast"] in _EQUIVALENCE_CONTRASTS
     ]
     chains = sorted(
@@ -558,7 +558,7 @@ def summarize_fresh_confirm_equivalence(
     }
 
 
-def _registered_contrast_specifications(arms: tuple[Arm, ...]) -> list[dict[str, Any]]:
+def registered_contrast_specifications(arms: tuple[Arm, ...]) -> list[dict[str, Any]]:
     specifications: list[dict[str, Any]] = []
     sequential: dict[tuple[str, str, str], dict[Source, Arm]] = {}
     for arm in arms:
@@ -1019,6 +1019,7 @@ __all__ = [
     "DEFAULT_BOOTSTRAP_ITERATIONS",
     "holm_adjust",
     "paired_cluster_contrast",
+    "registered_contrast_specifications",
     "summarize_fresh_confirm_equivalence",
     "summarize_registered_contrasts",
 ]

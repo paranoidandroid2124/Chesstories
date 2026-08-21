@@ -3,6 +3,7 @@ import type { Player, Status } from 'lib/game';
 import type { ExplorerOpts } from './explorer/interfaces';
 
 import type { Coords, MoveEvent } from 'lib/prefs';
+import type { MoveReviewMode } from './moveReview';
 
 // similar, but not identical, to game/GameData
 export interface AnalyseData {
@@ -25,38 +26,6 @@ export interface AnalysePref {
   showCaptured?: boolean;
   animationDuration?: number;
   moveEvent: MoveEvent;
-}
-
-export interface ImportHistoryAccount {
-  provider: string;
-  providerLabel: string;
-  username: string;
-  href: string;
-  analysisCount: number;
-  activityAt: string;
-  lastAnalysedAt?: string;
-}
-
-export interface ImportHistoryAnalysis {
-  id: string;
-  title: string;
-  provider?: string;
-  providerLabel?: string;
-  username?: string;
-  href: string;
-  openedAt: string;
-  sourceType: string;
-  result?: string;
-  speed?: string;
-  playedAtLabel?: string;
-  variant?: string;
-  opening?: string;
-}
-
-export interface ImportHistoryView {
-  currentAnalysisId?: string;
-  recentAccounts: ImportHistoryAccount[];
-  recentAnalyses: ImportHistoryAnalysis[];
 }
 
 export interface StudyChapterSummary {
@@ -111,6 +80,10 @@ export interface AnalysisSide {
   accuracy: number;
 }
 
+export interface MoveReviewConfig {
+  mode: MoveReviewMode;
+}
+
 export interface AnalyseOpts {
   element: HTMLElement;
   data: AnalyseData;
@@ -118,8 +91,8 @@ export interface AnalyseOpts {
   hunter: boolean;
   explorer: ExplorerOpts;
   study?: StudyView;
+  moveReview?: MoveReviewConfig;
   inlinePgn?: string;
-  importHistory?: ImportHistoryView;
   embed?: boolean;
 }
 

@@ -1,59 +1,89 @@
 .ceval {
-  @extend %metal-bg;
   position: relative;
-  display: flex;
-  column-gap: 6px;
-  align-items: stretch;
-  padding-top: 3px; // bar
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-block-size: 76px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid $c-border;
+  background: $c-bg-high;
 
-  &.enabled .show-threat {
-    visibility: visible;
-  }
-
-  // [ div.switch, pearl (grow), div.engine (grow/shrink), button.show-threat, button.gear ]
-
-  .switch {
-    @extend %flex-center;
-    flex: 0 0 40px;
-    margin-inline-start: 6px;
+  &__readout {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
   }
 
   pearl {
-    flex: 1 0 auto;
-    line-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    border-inline-end: 1px solid $c-border;
     font-size: 1.6em;
-    text-align: center;
     font-weight: bold;
+    font-variant-numeric: tabular-nums;
+    color: $c-font-clearer;
   }
 
   .is-red::before {
     vertical-align: -3px;
   }
 
+  &__identity {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.12rem;
+    padding: 0.65rem 0.8rem 0.6rem;
+  }
+
+  &__heading {
+    color: $c-secondary;
+    font-size: 0.67rem;
+    font-weight: 700;
+    letter-spacing: 0.075em;
+    line-height: 1.15;
+    text-transform: uppercase;
+  }
+
   .engine {
     @extend %nowrap-hidden;
-    flex: 2 1 auto;
-    font-size: 12px;
-    line-height: 16px;
-    margin-top: 3px;
-    color: $c-font-dim;
+    display: flex;
+    align-items: baseline;
+    gap: 0.42rem;
+    color: $c-font;
+    font-size: 0.84rem;
+    line-height: 1.25;
     user-select: none;
+  }
+
+  &__engine-model {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.94rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .info {
+    @extend %nowrap-hidden;
+    display: block;
+    color: $c-font-dim;
+    font-size: 0.76rem;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
   }
 
   .engine {
     .cloud,
     .infinite {
-      @extend %roboto, %box-radius;
+      @extend %roboto;
       margin-inline-start: 4px;
-      background: $c-secondary-dim;
-      color: $c-over;
-      padding: 1px 3px;
+      color: $c-secondary;
       text-transform: uppercase;
-      font-size: 11px;
-    }
-    .info {
-      display: block;
-      white-space: nowrap;
+      font-size: 0.68rem;
     }
 
     .deeper {
@@ -66,14 +96,56 @@
     }
   }
 
-  .show-threat {
-    @extend %button-none;
-    flex: 0 0 18px;
+  .technology {
+    flex: 0 0 auto;
     color: $c-font-dim;
-    font-size: 16px;
-    margin-top: -3px; // bar
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+
+    &.good {
+      color: $c-font-dim;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: stretch;
+  }
+
+  &__action {
+    @extend %button-none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.18rem;
+    min-inline-size: 58px;
+    min-block-size: 44px;
+    padding: 0.45rem 0.55rem;
+    border-inline-start: 1px solid $c-border;
+    color: $c-font-dim;
+    font-size: 15px;
     overflow: hidden;
-    visibility: hidden;
+    transition:
+      background-color var(--cs-motion-state, 150ms) ease,
+      color var(--cs-motion-state, 150ms) ease;
+
+    &:hover,
+    &:focus-visible {
+      background: $c-bg-zebra;
+      color: $c-font;
+    }
+  }
+
+  &__action-label {
+    font-size: 0.66rem;
+    font-weight: 650;
+    line-height: 1;
+  }
+
+  .show-threat {
+    display: none;
 
     &:hover:not(.hidden),
     &.active {
@@ -86,64 +158,127 @@
     }
   }
 
+  &.enabled .show-threat {
+    display: flex;
+  }
+
   .settings-gear {
-    @extend %button-none;
-    color: $c-font-dim;
-    font-size: 16px;
-    padding: 0 6px;
-    margin-inline-end: 6px;
-    margin-top: -3px; // bar
-
-    &:hover {
-      color: $c-font;
-    }
-
     &.active {
-      color: white;
-      background-color: $c-primary;
+      color: $c-primary;
+      background-color: rgba($c-primary, 0.12);
     }
   }
 
-  .technology {
-    margin-inline-start: 5px;
+  &__power-control {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+  }
 
-    &.good {
-      color: $c-good;
+  &__power-input {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__power {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.12rem;
+    min-inline-size: 72px;
+    min-block-size: 44px;
+    padding: 0.45rem 0.65rem;
+    border-inline-start: 1px solid $c-border;
+    color: $c-font-dim;
+    cursor: pointer;
+    transition:
+      background-color var(--cs-motion-state, 150ms) ease,
+      color var(--cs-motion-state, 150ms) ease;
+
+    &:hover {
+      background: $c-bg-zebra;
+      color: $c-font;
     }
+  }
+
+  &__power-label {
+    color: $c-font;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  &__power-state {
+    font-size: 0.68rem;
+    font-weight: 650;
+    line-height: 1;
+  }
+
+  &__power-input:checked + &__power {
+    color: $c-primary;
+    background: rgba($c-primary, 0.08);
+  }
+
+  &__power-input:focus-visible + &__power {
+    outline: 3px solid $c-primary;
+    outline-offset: -3px;
+  }
+
+  &__power-input:disabled + &__power {
+    opacity: 0.48;
+    cursor: not-allowed;
   }
 
   .bar {
     position: absolute;
     width: 100%;
-    height: 3px;
-    top: 0px;
-  }
-
-  @keyframes bar-anim {
-    from {
-      background-position: 0 0;
-    }
-
-    to {
-      background-position: 100000px 0;
-    }
+    height: 2px;
+    inset-inline-start: 0;
+    bottom: 0;
+    overflow: hidden;
   }
 
   .bar span {
     display: block;
-    height: 3px;
-    width: 0;
+    width: 100%;
+    height: 2px;
     background: $c-good;
-    transition: width 1s;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--cs-motion-state, 150ms) linear;
 
     &.threat {
       background: $c-bad;
     }
   }
 
-  &.computing .bar span {
-    background-image: url(../images/bar-highlight.png);
-    animation: bar-anim 1000s linear infinite;
+  @media (max-width: at-most($medium)) {
+    &__readout {
+      grid-template-columns: 56px minmax(0, 1fr);
+    }
+
+    &__identity {
+      padding-inline: 0.65rem;
+    }
+
+    &__action {
+      min-inline-size: 44px;
+      padding-inline: 0.4rem;
+    }
+
+    &__action-label {
+      display: none;
+    }
+
+    &__power {
+      min-inline-size: 58px;
+      padding-inline: 0.5rem;
+    }
   }
 }
 

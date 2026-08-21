@@ -125,7 +125,7 @@ class SchemaRegistry:
         """Validate a non-stage document with the same offline schema engine.
 
         Diagnostic side paths use their own schemas and must not be smuggled
-        through a frozen Q-to-V stage contract.  This additive entry point
+        through a frozen Q-to-P stage contract.  This additive entry point
         keeps those documents under the same no-network, fail-closed validator
         without changing any stage validation behavior.
         """
@@ -419,10 +419,10 @@ class SchemaRegistry:
 
 
 class SemanticTransitionSession:
-    """Fail-closed Q→V wiring and reference-closure state for one arm.
+    """Fail-closed Q→P wiring and reference-closure state for one arm.
 
     This layer validates transport/meaning preservation only.  It never
-    produces a fact, cause, claim, admission, rank, projection, or sentence;
+    produces a fact, cause, claim, admission, rank, or projection;
     those remain exclusively the responsibility of the invoked stage.
     """
 
@@ -439,20 +439,6 @@ class SemanticTransitionSession:
         "input_hash",
         "upstream_artifact_hashes",
     )
-    _CHESS_TOKEN = re.compile(
-        r"(?<![A-Za-z0-9])(?:"
-        r"O-O(?:-O)?|0-0(?:-0)?|"
-        r"[KQRBN](?:[a-h1-8]{0,2})x?[a-h][1-8](?:=[QRBN])?[+#]?|"
-        r"[a-h](?:x[a-h])?[1-8](?:=[QRBN])?[+#]?|"
-        r"[a-h][1-8][a-h][1-8][qrbn]?|"
-        r"[a-h][1-8]|"
-        r"(?:king|queen|rook|bishop|knight|pawn)|"
-        r"[a-h](?:-file|\s+file)|"
-        r"[1-8](?:st|nd|rd|th)?(?:-rank|\s+rank)"
-        r")(?![A-Za-z0-9])",
-        re.IGNORECASE,
-    )
-
     def __init__(self, registry: SchemaRegistry) -> None:
         self.registry = registry
         common = registry.load(registry.root / "common.schema.json")
@@ -463,17 +449,8 @@ class SemanticTransitionSession:
             )
         if contract.get("lineage_order") != list(STAGES):
             raise ContractError(
-                "semantic transition registry lineage order is not frozen Q→V"
+                "semantic transition registry lineage order is not frozen Q→P"
             )
-        grounding = contract.get("verbalization_grounding")
-        if not isinstance(grounding, Mapping):
-            raise ContractError(
-                "semantic transition registry has no verbalization grounding"
-            )
-        text_joiner = grounding.get("text_joiner")
-        if not isinstance(text_joiner, str):
-            raise ContractError("verbalization text_joiner must be text")
-        self._text_joiner = text_joiner
         self._documents: dict[str, Mapping[str, Any]] = {}
         self._hashes: dict[str, str] = {}
         self._lineage_definitions: set[tuple[str, str]] = set()
@@ -539,10 +516,10 @@ class SemanticTransitionSession:
                 )
 
         inherited = self._lineage_definitions
-        if registered in {"P", "V"}:
-            # These boundaries are deliberately self-contained: every public
-            # or verbalized reference must be available in the direct stage
-            # input, not merely somewhere in an older hidden artifact.
+        if registered == "P":
+            # The public projection boundary is deliberately self-contained:
+            # every reference must be available in the direct stage input,
+            # not merely somewhere in an older hidden artifact.
             inherited = self._pending_input_definitions
         self._validate_reference_closure(
             document,
@@ -637,13 +614,6 @@ class SemanticTransitionSession:
                 "ranking_bundle": payload("R"),
                 "plan_events": payload("Jp")["plan_events"],
             }
-        if stage == "V":
-            # The verbalization policy is frozen runner configuration, not an
-            # upstream artifact.  Preserve it while binding projection exactly.
-            return {
-                "projection": payload("P"),
-                "verbalization_policy": current_payload["verbalization_policy"],
-            }
         raise ContractError(f"unknown stage: {stage}")
 
     def _identity_sets(
@@ -712,8 +682,6 @@ class SemanticTransitionSession:
             self._validate_ranking_subset(input_payload, output_payload)
         elif stage == "P":
             self._validate_projection(input_payload, output_payload)
-        elif stage == "V":
-            self._validate_verbalization(input_payload, output_payload)
 
     @staticmethod
     def _claim_id(claim: Any, location: str) -> str:
@@ -872,126 +840,6 @@ class SemanticTransitionSession:
             "fact_id",
             "P exact result",
         )
-
-    def _validate_verbalization(
-        self,
-        input_payload: Mapping[str, Any],
-        output_payload: Mapping[str, Any],
-    ) -> None:
-        projection = input_payload.get("projection")
-        policy = input_payload.get("verbalization_policy")
-        if not isinstance(projection, Mapping) or not isinstance(policy, Mapping):
-            raise ContractError("V input projection/policy is incomplete")
-        if output_payload.get("projection_id") != projection.get("projection_id"):
-            raise ContractError("V output projection_id does not name its direct P input")
-        if output_payload.get("language") != policy.get("language"):
-            raise ContractError("V output language does not preserve the frozen policy")
-
-        sentences = output_payload.get("sentences")
-        tokens = output_payload.get("authorized_tokens")
-        if not isinstance(sentences, list) or not isinstance(tokens, list):
-            raise ContractError("V sentences/authorized_tokens must be arrays")
-        max_sentences = policy.get("max_sentences")
-        if isinstance(max_sentences, int) and len(sentences) > max_sentences:
-            raise ContractError("V exceeds the frozen max_sentences policy")
-
-        text_parts: list[str] = []
-        sentence_ranges: list[tuple[int, int, Mapping[str, Any]]] = []
-        cursor = 0
-        for index, sentence in enumerate(sentences):
-            if not isinstance(sentence, Mapping) or not isinstance(sentence.get("text"), str):
-                raise ContractError(f"V sentence {index} has no text")
-            text = str(sentence["text"])
-            text_parts.append(text)
-            sentence_ranges.append((cursor, cursor + len(text), sentence))
-            cursor += len(text) + len(self._text_joiner)
-        complete_text = self._text_joiner.join(text_parts)
-
-        authorized_spans: dict[tuple[int, int, str], Mapping[str, Any]] = {}
-        for index, token in enumerate(tokens):
-            if not isinstance(token, Mapping):
-                raise ContractError(f"V authorized token {index} is not an object")
-            start, end, spelling = (
-                token.get("char_start"),
-                token.get("char_end"),
-                token.get("token"),
-            )
-            if (
-                not isinstance(start, int)
-                or isinstance(start, bool)
-                or not isinstance(end, int)
-                or isinstance(end, bool)
-                or not isinstance(spelling, str)
-                or start < 0
-                or end <= start
-                or end > len(complete_text)
-                or complete_text[start:end] != spelling
-            ):
-                raise ContractError(
-                    f"V authorized token {index} does not exactly close over its text span"
-                )
-            declared_kind = token.get("kind")
-            if (
-                self._CHESS_TOKEN.fullmatch(spelling) is not None
-                and declared_kind not in self._chess_token_kinds(spelling)
-            ):
-                raise ContractError(
-                    f"V authorized token {index} kind does not match {spelling!r}"
-                )
-            key = (start, end, spelling)
-            if key in authorized_spans:
-                raise ContractError(f"V duplicates authorized token span {start}:{end}")
-            containing = [
-                sentence
-                for sentence_start, sentence_end, sentence in sentence_ranges
-                if sentence_start <= start and end <= sentence_end
-            ]
-            if len(containing) != 1:
-                raise ContractError(
-                    f"V authorized token {index} crosses or misses a sentence boundary"
-                )
-            sentence = containing[0]
-            token_claims = set(token.get("claim_ids", []))
-            token_evidence = set(token.get("evidence_ids", []))
-            if not token_claims and not token_evidence:
-                raise ContractError(f"V authorized token {index} has no authorizing citation")
-            if not token_claims.issubset(set(sentence.get("claim_ids", []))):
-                raise ContractError(
-                    f"V authorized token {index} claim is not cited by its sentence"
-                )
-            if not token_evidence.issubset(set(sentence.get("evidence_ids", []))):
-                raise ContractError(
-                    f"V authorized token {index} evidence is not cited by its sentence"
-                )
-            authorized_spans[key] = token
-
-        prohibited = set(policy.get("prohibited_new_token_kinds", []))
-        if prohibited:
-            for match in self._CHESS_TOKEN.finditer(complete_text):
-                if not (self._chess_token_kinds(match.group(0)) & prohibited):
-                    continue
-                key = (match.start(), match.end(), match.group(0))
-                if key not in authorized_spans:
-                    raise ContractError(
-                        "V contains an unauthorized chess token at "
-                        f"{match.start()}:{match.end()}: {match.group(0)!r}"
-                    )
-
-    @staticmethod
-    def _chess_token_kinds(token: str) -> set[str]:
-        lowered = token.lower()
-        if lowered in {"king", "queen", "rook", "bishop", "knight", "pawn"}:
-            return {"piece"}
-        if lowered.endswith("-file") or lowered.endswith(" file"):
-            return {"file"}
-        if lowered.endswith("-rank") or lowered.endswith(" rank"):
-            return {"rank"}
-        if re.fullmatch(r"[a-h][1-8]", lowered):
-            # Bare algebraic coordinates can be either a destination move or
-            # a named square; authorization under either prohibited kind is
-            # required by the frozen policy.
-            return {"move", "square"}
-        return {"move"}
 
     @staticmethod
     def _unique_by_id(items: Any, field: str, location: str) -> dict[str, Any]:

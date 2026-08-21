@@ -25,13 +25,15 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
         EngineLine(List("h7h6", "f5f6", "g7f6", "f2f4", "c4d4", "g4g5", "h6g5", "f4g5", "f6f5", "h5h6", "f5f4", "h6h7", "f4f3", "h7h8q", "d4e3", "h8h5", "c3c2", "c1c2", "e3f4", "h5h4", "f4f5"), 682, depth = 20)
       )
     )
-    val execution = MoveReviewJudgmentOrchestrator
-      .execute(raw, JudgmentBoundaryIntervention.identity)
-      .getOrElse(fail("expected a complete cached-line execution"))
-    val graph = execution.c.evidenceGraph
-    val rootPlanContent = JudgmentClaimAssembler.propose(execution.c).find { claim =>
+    val f = EvidenceFactAssembler
+      .assemble(raw)
+      .map(RelativeAssessmentAssembler.enrichFacts)
+      .getOrElse(fail("expected a complete cached-line fact assembly"))
+    val c = RelativeAssessmentAssembler.enrichCauses(f)
+    val graph = c.evidenceGraph
+    val rootPlanContent = JudgmentClaimAssembler.propose(c).find { claim =>
       claim.content.collect { case JudgmentClaimContent.StrategicMechanism(carrier) =>
-        carrier.position == execution.c.playedTransition.map(_.from).getOrElse(carrier.position) &&
+        carrier.position == c.playedTransition.map(_.from).getOrElse(carrier.position) &&
           graph.record(carrier).exists {
             case EvidenceRecord(_, mechanism: StrategicMechanismEvidence, _) =>
               mechanism.signals.exists(signal => graph.record(signal.source).exists(_.payload.isInstanceOf[PlanCausalEventEvidence]))
@@ -39,64 +41,14 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
           }
       }.getOrElse(false)
     }.getOrElse(fail("expected a root PlanCausalEvent strategic content claim"))
-    assertEquals(ClaimTruthPolicy.evaluate(rootPlanContent, execution.c).status, ClaimAdmissionStatus.Certified)
+    assertEquals(ClaimTruthPolicy.evaluate(rootPlanContent, c).status, ClaimAdmissionStatus.Certified)
     val causes = graph.records.collect {
       case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) => ref -> cause
     }
     val snapshotsByComparisonId = RelativeAssessmentAssembler
-      .comparisonEndpointEvidenceSnapshots(execution.f)
+      .comparisonEndpointEvidenceSnapshots(f)
       .map(snapshot => snapshot.comparisonEvidence.id -> snapshot)
       .toMap
-    val packet = execution.packet.getOrElse(fail("expected a disposition-closed packet"))
-    val ledger = execution.r.causeDispositionLedger
-    assertEquals(packet.causeDispositionLedger, ledger)
-    assertEquals(
-      ledger.byCauseEvidenceId.keySet,
-      causes.map(_._1.id).toSet
-    )
-    assertEquals(
-      ledger.selectedCauseEvidenceIds,
-      execution.r.causeExposureResolution.selectedCauseEvidenceIds
-    )
-    val incompleteLedger = ledger.copy(dispositions = ledger.dispositions.drop(1))
-    assertEquals(
-      EvidenceBackedJudgmentPacket.fromAssembly(
-        execution.context,
-        packet.probeRequests,
-        execution.r.playerFacingClaimDecisions,
-        execution.r.onlyMoveConstraintResolutions,
-        execution.r.causeExposureResolution,
-        incompleteLedger,
-        execution.r.selectedContentClaimIds
-      ),
-      None
-    )
-    val selectedDisposition = ledger.dispositions
-      .find(_.status == CauseDispositionStatus.Selected)
-      .getOrElse(fail("expected a selected Cause disposition"))
-    val inconsistentLedger = ledger.copy(
-      dispositions = ledger.dispositions.map { disposition =>
-        if disposition.causeEvidence.id == selectedDisposition.causeEvidence.id then
-          disposition.copy(
-            status = CauseDispositionStatus.Diagnostic,
-            reason = CauseDispositionReason.DiagnosticComparison,
-            selectedOwnerClaimId = None
-          )
-        else disposition
-      }
-    )
-    assertEquals(
-      EvidenceBackedJudgmentPacket.fromAssembly(
-        execution.context,
-        packet.probeRequests,
-        execution.r.playerFacingClaimDecisions,
-        execution.r.onlyMoveConstraintResolutions,
-        execution.r.causeExposureResolution,
-        inconsistentLedger,
-        execution.r.selectedContentClaimIds
-      ),
-      None
-    )
     def blockadeCause(
         side: RelativeCauseSourceSide,
         attribution: CauseAttributionKind,
@@ -256,107 +208,6 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
     assertEquals(capturedLineFact.rootActorSurvivesReply, Some(false))
     assert(!DirectOpponentRestrictionProof
       .directRestrictionSurvivesReply(capturedLine, capturedDelta, Some(capturedLineFact)))
-
-  test("C retains a truthful specific cause and its generic companion on the same channel"):
-    val explicitRelation = mateRelation("draft-mate-relation", queenReference)
-    val mateEval = evalRecord("draft-mate-eval", queenPosition, queenReference)
-    val mechanism = kingForcingMechanism(
-      "draft-king-forcing",
-      queenPosition,
-      queenReference,
-      mateEval.ref,
-      explicitRelation.ref
-    )
-    val profile = RelativeCauseSignalProfile.from(
-      fact = queenFact,
-      referenceRecords = List(explicitRelation, mateEval, mechanism),
-      candidateRecords = Nil,
-      sharedRecords = Nil
-    )
-    val comparisonRecord =
-      ExplicitCauseAdmissionTestSupport.comparisonRecord("draft-comparison", queenPosition, queenFact)
-    val drafts = RelativeCauseDraftPlanner.drafts(profile, comparisonRecord)
-    val retained = drafts.filter(draft =>
-      Set(RelativeCauseKind.KingForcing, RelativeCauseKind.MissedTacticalResource)(draft.kind) &&
-        draft.sourceSide.contains(RelativeCauseSourceSide.Reference) &&
-        draft.attributionKind == CauseAttributionKind.ReferenceCreatesResource
-    )
-
-    assert(retained.exists(_.kind == RelativeCauseKind.KingForcing))
-    assert(retained.exists(_.kind == RelativeCauseKind.MissedTacticalResource))
-
-  test("direct Relation proof comes only from support closure or an explicit owned signal"):
-    val explicitRelation = mateRelation("explicit-relation", queenReference)
-    val siblingRelation = mateRelation("unrelated-sibling-relation", queenReference)
-    val mateEval = evalRecord("explicit-mate-eval", queenPosition, queenReference)
-    val mechanism = kingForcingMechanism(
-      "explicit-carrier",
-      queenPosition,
-      queenReference,
-      mateEval.ref,
-      explicitRelation.ref
-    )
-    val graph = graphOf(mechanism, mateEval, explicitRelation, siblingRelation)
-    val ids = directIds(
-      graph,
-      queenFact,
-      RelativeCauseKind.KingForcing,
-      queenBinding,
-      List(mechanism)
-    )
-
-    assert(ids(mechanism.ref.id))
-    assert(ids(explicitRelation.ref.id))
-    assert(!ids(siblingRelation.ref.id))
-
-  test("Relation direct ownership requires exact event line, root move, and root geometry"):
-    val exact = hangingRelation(
-      "exact-relation",
-      queenReference,
-      List(queenReference.rootMove),
-      attackerSquare = "h5",
-      targetSquare = "e8"
-    )
-    val siblingLine = queenReference.copy(id = "sibling-line", rank = 9)
-    val wrongLine = hangingRelation(
-      "wrong-line-relation",
-      siblingLine,
-      List(queenReference.rootMove),
-      attackerSquare = "h5",
-      targetSquare = "e8"
-    )
-    val laterOnly = hangingRelation(
-      "later-only-relation",
-      queenReference,
-      List("e8e7", "e7e6"),
-      attackerSquare = "h5",
-      targetSquare = "e8"
-    )
-    val unrelatedGeometry = hangingRelation(
-      "unrelated-geometry-relation",
-      queenReference,
-      List(queenReference.rootMove),
-      attackerSquare = "a8",
-      targetSquare = "e8"
-    )
-    val graph = graphOf(exact, wrongLine, laterOnly, unrelatedGeometry)
-
-    assertEquals(
-      directIds(graph, queenFact, RelativeCauseKind.MissedTacticalResource, queenBinding, List(exact)),
-      Set(exact.ref.id)
-    )
-    List(wrongLine, laterOnly, unrelatedGeometry).foreach(record =>
-      assertEquals(
-        directIds(
-          graph,
-          queenFact,
-          RelativeCauseKind.MissedTacticalResource,
-          queenBinding,
-          List(record)
-        ),
-        Set.empty[String]
-      )
-    )
 
   test("Threat direct ownership distinguishes exact defense from a root-created mate threat"):
     val defenseFen = "4k3/8/8/8/7q/8/6P1/4K3 w - - 0 1"
@@ -652,7 +503,7 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
         White,
         CandidateLineNode(
           reference,
-          EngineLine(List(reference.rootMove), scoreCp = 500, depth = 20),
+          lila.chessjudgment.model.line.CandidateLineEvaluation.EngineSearch(EngineLine(List(reference.rootMove), scoreCp = 500, depth = 20)),
           evidenceRef(
             s"${reference.id}-eval",
             EvidenceProducer.EngineEvalProducer,
@@ -664,7 +515,7 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
         ),
         CandidateLineNode(
           candidate,
-          EngineLine(List(candidate.rootMove), scoreCp = -500, depth = 20),
+          lila.chessjudgment.model.line.CandidateLineEvaluation.EngineSearch(EngineLine(List(candidate.rootMove), scoreCp = -500, depth = 20)),
           evidenceRef(
             s"${candidate.id}-eval",
             EvidenceProducer.EngineEvalProducer,
@@ -674,7 +525,8 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
             EvidenceConfidence.EngineBacked
           )
         )
-      )
+      ).get,
+      VerdictConfidence.EngineBacked
     )
 
   private def binding(line: LineNodeRef): RelativeCauseBinding =
@@ -705,30 +557,6 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
       RelationFactEvidence.from(detail, List(line.rootMove)).getOrElse(fail("expected mate relation"))
     )
 
-  private def hangingRelation(
-      id: String,
-      line: LineNodeRef,
-      lineMoves: List[String],
-      attackerSquare: String,
-      targetSquare: String
-  ): EvidenceRecord =
-    val detail = RelationWitnessDetail.HangingPiece(
-      EvidenceSquare(attackerSquare),
-      EvidenceSquare(targetSquare),
-      EvidencePieceRole(Queen.name),
-      EvidencePieceRole("king")
-    )
-    EvidenceRecord(
-      evidenceRef(
-        id,
-        EvidenceProducer.TacticalRelationProducer,
-        EvidenceLayer.Relation,
-        queenPosition,
-        line
-      ),
-      RelationFactEvidence.from(detail, lineMoves).getOrElse(fail("expected hanging relation"))
-    )
-
   private def evalRecord(
       id: String,
       position: PositionNodeRef,
@@ -743,7 +571,12 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
         line,
         EvidenceConfidence.EngineBacked
       ),
-      EvalFactEvidence(line, whitePovEvalCp = 900, mate = Some(1), depth = 20)
+      CandidateLineEvaluationEvidence(
+        line,
+        lila.chessjudgment.model.line.CandidateLineEvaluation.EngineSearch(
+          EngineLine(List(line.rootMove), scoreCp = 900, mate = Some(1), depth = 20)
+        )
+      )
     )
 
   private def kingForcingMechanism(

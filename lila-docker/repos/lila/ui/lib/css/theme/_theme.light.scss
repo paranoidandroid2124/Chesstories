@@ -9,26 +9,26 @@
 }
 
 $c-bg: hsl(0, 0%, 100%); // $c-bg-high
-$c-bg-page: hsl(37, 10%, 92%);
-$c-bg-low: hsl(0, 0%, 89%);
-$c-bg-zebra: hsl(37, 12%, 96.5%);
-$c-bg-zebra2: hsl(37, 12%, 92%);
+$c-bg-page: #edf0f2;
+$c-bg-low: #e3e8eb;
+$c-bg-zebra: #f6f8f9;
+$c-bg-zebra2: #e9eef1;
 $c-bg-popup: hsl(0, 0%, 100%);
 $c-bg-opaque: hsl(0, 0%, 100%);
-$c-body-gradient: hsl(37, 12%, 84%);
-$c-font: hsl(0, 0%, 30%);
-$c-font-muted: hsl(0, 0%, 47%);
-$c-primary: hsl(209, 77%, 46%);
-$c-primary-strong: hsl(209, 77%, 36%);
-$c-brag: hsl(37, 74%, 48%);
-$c-shade: hsl(0, 0%, 84%);
-$c-inaccuracy: hsl(202, 78%, 40%);
-$c-mistake: hsl(41, 100%, 35%);
-$c-blunder: hsl(0, 68%, 50%);
-$c-brilliant: hsl(129, 71%, 30%);
-$c-interesting: hsl(307, 80%, 59%);
-$c-paper: hsl(60, 56%, 86%);
-$c-border: hsl(0, 0%, 85%);
+$c-body-gradient: #dfe5e8;
+$c-font: #222b32;
+$c-font-muted: #66737c;
+$c-primary: #a94230;
+$c-primary-strong: #843122;
+$c-brag: #8b632a;
+$c-shade: #d7dfe3;
+$c-inaccuracy: #356f80;
+$c-mistake: #9b6b22;
+$c-blunder: #b54036;
+$c-brilliant: #347759;
+$c-interesting: #74578c;
+$c-paper: #f5f1e9;
+$c-border: #cbd4d9;
 $c-dimmer: #fff;
 $c-clearer: #000;
 
@@ -62,30 +62,37 @@ html.light {
   @include light-mix;
 }
 
-// Chesstory pro keeps the quiet dark tool palette even when light mode is active.
+// Pro and light can coexist: the light control must produce a genuinely light workspace.
 html.pro.light {
-  $pro-bg: #151713;
-  $pro-green: #a7c98c;
-
-  --c-bg-page: #12140f;
-  --c-bg: #{$pro-bg};
-  --c-bg-low: #1f221c;
-  --c-bg-zebra: #24281f;
-  --c-bg-popup: #23261f;
-  --c-border: #34392f;
-  --c-font: #f2f0e8;
-  --c-font-muted: #b8bcad;
-  --c-font-dim: #b8bcad;
-  --c-primary: #{$pro-green};
-  --c-secondary: #8fae99;
-  --c-good: #91bd83;
-  --c-accent: #d6a85d;
-  --c-bad: #d8766f;
-  --c-link: #{$pro-green};
-  --c-primary-strong: #d9e6cc;
-  --c-link-hover: #d9e6cc;
-
-  // Update header and chrome to match
-  --c-bg-header-dropdown: #{$pro-bg};
-  --c-bg-input: #23261f;
+  --c-bg-page: #edf0f2;
+  --c-bg: #fff;
+  --c-bg-box: #fff;
+  --c-bg-high: #fff;
+  --c-bg-low: #e3e8eb;
+  --c-bg-zebra: #f6f8f9;
+  --c-bg-zebra2: #e9eef1;
+  --c-bg-popup: #fff;
+  --c-bg-header-dropdown: #fff;
+  --c-bg-input: #f8fafb;
+  --c-border: #cbd4d9;
+  --c-border-page: #b9c4ca;
+  --c-font: #222b32;
+  --c-font-muted: #66737c;
+  --c-font-dim: #66737c;
+  --c-font-clear: #141b20;
+  --c-font-clearer: #0b1014;
+  --c-primary: #a94230;
+  --c-primary-dim: #c67567;
+  --c-primary-strong: #843122;
+  --c-secondary: #356f7f;
+  --c-good: #347759;
+  --c-accent: #9b6b22;
+  --c-bad: #b54036;
+  --c-link: #a94230;
+  --c-link-hover: #843122;
+  --c-over: #fff;
+  --c-metal-top: #f7f9fa;
+  --c-metal-bottom: #e8edf0;
+  --c-metal-top-hover: #fff;
+  --c-metal-bottom-hover: #dfe6ea;
 }

@@ -46,7 +46,7 @@ final class Db(
           .flatMap(_.database(parsedUri.db.getOrElse("lichess")))
       .await(30.seconds, s"db:$name")
   ) { lap =>
-    logger.info(s"MongoDB connected to $uri in ${lap.showDuration}")
+    logger.info(s"MongoDB connected in ${lap.showDuration}")
   }
 
   def apply(name: CollName): Coll = db.collection(name.value)

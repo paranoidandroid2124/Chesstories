@@ -20,12 +20,10 @@ body > header {
     width: 100%;
     padding: 0 var(---site-header-sticky-padding);
     border-bottom: 1px solid transparent;
-    transition:
-      transform $transition-duration ease-in-out,
-      border-color $transition-duration ease-in-out;
+    transition: border-color var(--cs-motion-state) ease-in-out;
 
     &.scrolled {
-      background-image: linear-gradient(to bottom, $c-body-gradient, $m-body-gradient_bg-page--mix-50 60px);
+      background: $c-bg-page;
       border-color: black;
       @include if-light {
         border-color: hsl(0, 0%, 70%);
@@ -33,33 +31,10 @@ body > header {
     }
 
     @include if-transp {
-      @include back-blur(6px);
       border: none;
-      background: hsla(0, 0, 60%, 0.14);
+      background: $c-bg-page;
     }
 
-    .dropdown {
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-      transition:
-        opacity $transition-duration,
-        visibility 0s linear 0s;
-    }
-
-    &.hide {
-      transform: translateY(-100%);
-
-      #cs-nav,
-      .dropdown {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transition:
-          opacity $transition-duration,
-          visibility 0s linear $transition-duration;
-      }
-    }
   }
 }
 
@@ -76,27 +51,18 @@ body.zen {
 }
 
 .site-footer {
+  // layout/_base.scss resets these on body; the footer keeps the shared shell measure.
+  ---cs-shell-gutter-x: clamp(0.75rem, 2vw, 1.5rem);
+  ---cs-workspace-max-width: 1480px;
   width: 100%;
   padding: 2rem 0 2.5rem;
 
   &__inner {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    width: min(
-      calc(100% - (var(---cs-shell-gutter-x, 1rem) * 2)),
-      var(---cs-workspace-max-width, 1600px)
-    );
-    max-width: none;
+    width: calc(100% - var(---cs-shell-gutter-x, 1rem) - var(---cs-shell-gutter-x, 1rem));
+    max-width: var(---cs-workspace-max-width, 1600px);
     margin: 0 auto;
     padding-top: 1rem;
     border-top: 1px solid $c-border;
-  }
-
-  &__home {
-    font-weight: 700;
   }
 
   &__links {
@@ -117,7 +83,11 @@ body.zen {
   }
 
   a {
-    color: $c-font-dim;
+    display: inline-flex;
+    align-items: center;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    color: $c-font;
 
     &:hover,
     &:focus-visible {
@@ -129,18 +99,11 @@ body.zen {
     padding: 1.5rem 0 2rem;
 
     &__inner {
-      align-items: flex-start;
-      grid-template-columns: 1fr;
+      padding-top: 1rem;
     }
 
     &__links {
       grid-template-columns: repeat(2, minmax(8rem, 1fr));
-    }
-  }
-
-  @media (max-width: 520px) {
-    &__links {
-      grid-template-columns: 1fr;
     }
   }
 }

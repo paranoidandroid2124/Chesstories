@@ -3,20 +3,7 @@ import { wsDestroy } from 'lib/socket';
 let redirectInProgress = false;
 
 export const redirect = (opts: RedirectTo) => {
-  let url: string;
-  if (typeof opts === 'string') url = opts;
-  else {
-    url = opts.url;
-    if (opts.cookie) {
-      const cookie = [
-        encodeURIComponent(opts.cookie.name) + '=' + opts.cookie.value,
-        '; max-age=' + opts.cookie.maxAge,
-        '; path=/',
-        '; domain=' + location.hostname,
-      ].join('');
-      document.cookie = cookie;
-    }
-  }
+  const url = typeof opts === 'string' ? opts : opts.url;
   const href = '//' + location.host + '/' + url.replace(/^\//, '');
   redirectInProgress = true;
   location.href = href;

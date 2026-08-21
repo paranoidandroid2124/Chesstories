@@ -28,7 +28,7 @@
                          "probePath":  "/health",
                          "probeResponse":  {
                                                "ok":  true,
-                                               "schema_version":  "chesstory.move-meaning.response.v3"
+                                               "schema_version":  "chesstory.runtime-health.v1"
                                            },
                          "notes":  "Independent Chesstory graph-judgment runtime base URL."
                      },
@@ -148,15 +148,6 @@
                          "readinessClass":  "none",
                          "probe":  "config_only",
                          "notes":  "Password reset token secret."
-                     },
-                     {
-                         "env":  "EMAIL_CONFIRM_SECRET",
-                         "configPath":  "security.email_confirm.secret",
-                         "kind":  "secret",
-                         "requiredMode":  "always",
-                         "readinessClass":  "none",
-                         "probe":  "config_only",
-                         "notes":  "Email confirm token secret."
                      },
                      {
                          "env":  "EMAIL_CHANGE_SECRET",

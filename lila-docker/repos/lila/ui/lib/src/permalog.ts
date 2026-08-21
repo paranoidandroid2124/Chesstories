@@ -1,91 +1,54 @@
-import { objectStorage, deleteObjectStorage, type ObjectStorage, type DbInfo } from './objectStorage';
-import { preferenceLocalStorage, preferenceStorageAllowed } from './cookieConsent';
-
 interface PermaLog {
   (...args: any[]): Promise<number | void>;
   clear(): Promise<void>;
   get(): Promise<string>;
 }
 
-export const log: PermaLog = makeLog(
-  {
-    db: 'log--db',
-    store: 'log',
-    version: 3,
-    upgrade: (_: any, store: IDBObjectStore) => store?.clear(), // blow it all away when we rev version
-  },
-  parseInt(preferenceLocalStorage()?.getItem('log.window') || '100', 10),
-);
+interface LogEntry {
+  key: number;
+  message: string;
+}
 
-function makeLog(dbInfo: DbInfo, windowSize: number): PermaLog {
-  let store: ObjectStorage<string, number>;
-  let resolveReady!: () => void;
+const memoryLogWindow = 100;
+
+export const log: PermaLog = makeLog(memoryLogWindow);
+
+function makeLog(windowSize: number): PermaLog {
+  const entries: LogEntry[] = [];
   let lastKey = 0;
   let drift = 0.001;
-
-  const ready = new Promise<void>(resolve => (resolveReady = resolve));
 
   (Error.prototype as any).toJSON ??= function () {
     return { [this.name]: this.message, stack: this.stack };
   };
 
-  if (preferenceStorageAllowed()) {
-    objectStorage<string, number>(dbInfo)
-      .then(async s => {
-        store = s;
-        resolveReady();
-      })
-      .catch(e => {
-        console.error(e);
-        deleteObjectStorage(dbInfo);
-        resolveReady();
-      });
-  } else resolveReady();
+  const stringify = (value: any): string =>
+    !value || typeof value === 'string' ? String(value) : JSON.stringify(value);
 
-  function stringify(val: any): string {
-    return !val || typeof val === 'string' ? String(val) : JSON.stringify(val);
-  }
-
-  const log: PermaLog = (...args: any[]) => {
-    if (dbInfo.store === 'log') console.log(...args);
-    const msg =
-      (dbInfo.store === 'log' && site.info ? `#${site.info.commit.substring(0, 7)} - ` : '') +
-      args.map(stringify).join(' ');
+  const log: PermaLog = async (...args: any[]): Promise<number> => {
+    console.log(...args);
+    const message =
+      (site.info ? `#${site.info.commit.substring(0, 7)} - ` : '') + args.map(stringify).join(' ');
     let nextKey = Date.now();
     if (nextKey === lastKey) {
       nextKey += drift;
       drift += 0.001;
-    } else {
-      drift = 0.001;
-      lastKey = nextKey;
-    }
-    return ready.then(() => (preferenceStorageAllowed() ? store?.put(nextKey, msg) : undefined)).catch(console.error);
+    } else drift = 0.001;
+    lastKey = nextKey;
+    entries.push({ key: nextKey, message });
+    if (windowSize >= 0 && entries.length > windowSize) entries.splice(0, entries.length - windowSize);
+    return nextKey;
   };
 
   log.clear = async () => {
-    if (!preferenceStorageAllowed()) return;
-    await ready;
-    await store?.clear();
+    entries.length = 0;
     lastKey = 0;
   };
 
-  log.get = async (): Promise<string> => {
-    if (!preferenceStorageAllowed()) return '';
-    await ready;
-    if (!store) return '';
-    try {
-      const keys = await store.list();
-      if (windowSize >= 0 && keys.length > windowSize)
-        await store.remove(IDBKeyRange.upperBound(keys[keys.length - windowSize], true));
-    } catch (e) {
-      console.error(e);
-      store.clear();
-      deleteObjectStorage(dbInfo);
-      return '';
-    }
-    const [keys, vals] = await Promise.all([store.list(), store.getMany()]);
-    return keys.map((k, i) => `${new Date(k).toISOString().replace(/[TZ]/g, ' ')}${vals[i]}`).join('\n');
-  };
+  log.get = async (): Promise<string> =>
+    entries
+      .map(entry => `${new Date(entry.key).toISOString().replace(/[TZ]/g, ' ')}${entry.message}`)
+      .join('\n');
 
   return log;
 }

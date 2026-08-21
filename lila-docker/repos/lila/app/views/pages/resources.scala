@@ -9,26 +9,20 @@ private object resourcePageBits:
     Page(pageTitle)
       .css("legal")
       .wrap: _ =>
-        val articleBody = List[Frag](
-          header(cls := "legal-header")(
-            h1(heading),
-            p(cls := "legal-meta")(meta)
-          )
-        ) ++ body.toList ++ List[Frag](
-          footer(cls := "legal-footer")(
-            a(href := homeUrl, cls := "legal-link")("Back to Home")
-          )
-        )
         main(cls := "legal-page legal-page--resource")(
           div(cls := "legal-container")(
-            st.article(cls := "legal-content")(articleBody*)
+            header(cls := "legal-header")(
+              h1(heading),
+              p(cls := "legal-meta")(meta)
+            ),
+            div(cls := "legal-content")(body*)
           )
         )
 
-  def linkCards(items: List[(String, String, String)]): Frag =
-    div(cls := "legal-card-grid")(
+  def linkRows(items: List[(String, String, String)]): Frag =
+    div(cls := "legal-link-rows")(
       items.map { (title, copy, url) =>
-        a(href := url, cls := "legal-card-link")(
+        a(href := url, cls := "legal-link-row")(
           strong(title),
           span(copy)
         )
@@ -42,156 +36,159 @@ private object resourcePageBits:
       }*
     )
 
+  def factRows(items: List[(String, Frag)]): Frag =
+    dl(cls := "legal-facts")(
+      items.map { (label, value) =>
+        div(
+          dt(label),
+          dd(value)
+        )
+      }*
+    )
+
 object help:
-  def apply()(using @unused ctx: Context): Page =
+  private val questions = List(
+    "What can I import?" -> "Paste a PGN, choose a PGN file, or browse a public Lichess or Chess.com account.",
+    "What does Stockfish do here?" -> "Evaluation, depth, and candidate lines stay beside the board as evidence for the move you are reviewing.",
+    "What is a review study?" -> "A study keeps the board, move tree, notes, and saved sections together so you can reopen or share a specific chapter.",
+    "Can I use Chesstory without signing in?" -> "You can open the core board flow without an account. Sign in to manage Studies you explicitly save; ordinary analysis and imports are not retained as history.",
+    "Can I delete my data?" -> "Use the contact page for account, study, or privacy requests. The privacy policy describes the current handling of chess material."
+  )
+
+  def apply(query: Option[String] = None)(using @unused ctx: Context): Page =
+    val term = query.map(_.trim).filter(_.nonEmpty)
+    val matched = term.fold(questions): needle =>
+      questions.filter { case (title, body) => s"$title $body".toLowerCase.contains(needle.toLowerCase) }
+    val matchedItems: List[Frag] = matched.map { case (title, body) =>
+      details(
+        summary(title),
+        p(body)
+      )
+    }
     resourcePageBits.shell(
       "Help - Chesstory",
       "Help",
-      "A short guide to starting a review, understanding the output, and sharing the result."
+      "Guidance for importing games, reviewing positions, studies, and account data."
     )(
+      st.form(cls := "legal-search", role := "search", method := "get", action := routes.Main.help.url)(
+        label(`for` := "help-query")("Search help"),
+        div(
+          input(
+            id := "help-query",
+            tpe := "search",
+            name := "q",
+            value := term | "",
+            placeholder := "Import, engine, study, privacy"
+          ),
+          button(tpe := "submit", cls := "button button-thin")("Search")
+        )
+      ),
+      term.map(value =>
+        p(cls := "legal-status", role := "status", attr("aria-live") := "polite")(s"Results for “$value”")
+      ),
       st.section(cls := "legal-section")(
-        h2("Start here"),
-        p(
-          "Chesstory is built for one serious review at a time. Paste a PGN, import a public game, inspect the board, then turn the work into a review study."
-        ),
-        resourcePageBits.actionRow(
+        h2("Start a task"),
+        resourcePageBits.linkRows(
           List(
-            ("Analyze a game", routes.UserAnalysis.index.url, "button"),
-            ("Import public game", routes.Importer.importGame.url, "button button-empty")
+            ("Analyze a game", "Paste a score or start from the board.", routes.UserAnalysis.index.url),
+            (
+              "Import a game",
+              "Paste PGN, choose a file, or browse a public account.",
+              routes.Importer.importGame.url
+            ),
+            ("Browse studies", "Open public studies or return to your saved work.", "/study")
           )
         )
       ),
       st.section(cls := "legal-section")(
-        h2("Common questions"),
-        h3("What can I import?"),
-        p("You can paste a PGN directly or bring recent public games from supported public sources such as Lichess and Chess.com."),
-        h3("What does Stockfish do here?"),
-        p("Stockfish stays visible as objective evidence: evaluation, depth, and candidate lines. Chesstory's job is to explain the strategic logic around that evidence."),
-        h3("How is this different from normal engine analysis?"),
-        p("Normal engine analysis often stops at best moves and numbers. Chesstory tries to explain the question of the position, the effect of the move, and the plan a human should remember."),
-        h3("Does Chesstory replace a coach?"),
-        p("No. It is a review tool for self-study. A coach can still see habits, psychology, and tournament context that a single-game review may miss."),
-        h3("What rating level is it for?"),
-        p("The first beta is aimed at serious improvers who already use engines but struggle to turn engine lines into plans, especially around opening-to-middlegame positions."),
-        h3("What is a review study?"),
-        p("A review study keeps the board, move tree, notes, and explanation together so you can return to the game or share the exact section link."),
-        h3("Can I use Chesstory without signing in?"),
-        p("You can try the core flow without a full account, but saving and sharing review studies requires sign-in."),
-        h3("Can I delete my data?"),
-        p("Account and study data are covered by the privacy policy. For deletion or privacy questions, use the contact page while the beta tools are still being finalized.")
+        h2("Popular questions"),
+        div(cls := "legal-questions")(
+          if matched.nonEmpty then frag(matchedItems*)
+          else p("No help topic matched that search. Try “import”, “engine”, “study”, or “privacy”.")
+        )
       ),
       st.section(cls := "legal-section")(
-        h2("More resources"),
-        resourcePageBits.linkCards(
+        h2("Contact, service, and policy"),
+        resourcePageBits.factRows(
           List(
-            ("Examples", "See sample reviews Chesstory is aiming for.", routes.Main.examples.url),
-            ("Journal", "Read product notes and thinking behind Chesstory.", routes.Main.journal.url),
-            ("Beta Access / Pricing", "Check current beta access before subscriptions exist.", routes.Main.pricing.url),
-            ("Trust", "Understand privacy, AI handling, and open-source obligations.", routes.Main.trust.url),
-            ("Roadmap", "See what is available now and what comes next.", routes.Main.roadmap.url)
+            "Contact" -> frag(a(href := routes.Main.contact.url)("Ask a question or request help.")),
+            "Service" -> frag(
+              "The readiness endpoint is available at ",
+              code("/healthz"),
+              ". A public status page will be added with production monitoring."
+            ),
+            "Policies" -> frag(
+              a(href := routes.Main.privacy.url)("Privacy"),
+              " • ",
+              a(href := routes.Main.terms.url)("Terms"),
+              " • ",
+              a(href := routes.Main.trust.url)("Trust")
+            )
           )
         )
       )
     )
 
 object pricing:
-  private def planCard(name: String, badge: String, copy: String, bullets: List[String], featured: Boolean = false): Frag =
-    val klass = if featured then "legal-card-link legal-plan-card legal-plan-card--featured" else "legal-card-link legal-plan-card"
-    div(cls := klass)(
-      span(cls := "legal-plan-card__badge")(badge),
-      strong(name),
-      span(copy),
-      ul(
-        bullets.map { bullet =>
-          li(bullet)
-        }*
-      )
-    )
+  private def row(feature: String, beta: String, paid: String) =
+    tr(th(attr("scope") := "row")(feature), td(beta), td(paid))
 
   def apply()(using @unused ctx: Context): Page =
     resourcePageBits.shell(
       "Beta Access / Pricing - Chesstory",
-      "Beta Access / Pricing",
-      "Chesstory is currently an open beta. Paid plans are not active yet."
+      "Beta access and pricing",
+      "Chesstory is open beta. There is no active paid subscription or billing flow."
     )(
       st.section(cls := "legal-section")(
-        h2("Current access"),
+        h2("What is available now"),
         p(
-          "The current beta focuses on making one-game review useful before adding subscriptions. The Stockfish line stays visible; Chesstory explains what the position is asking."
+          "The beta is for reviewing one game at a time: board, engine evidence, and saved study work when you are signed in."
         ),
-        ul(
-          li("Paste or import one game and review it on the analysis board within current beta limits."),
-          li("See the Stockfish score and top candidate moves while reviewing the board."),
-          li("Get a plain-language read of what inspected moves are trying to do."),
-          li("Use Coach explanations on key moments during the beta."),
-          li("Create review studies when signed in."),
-          li("No credit card is required for the current beta.")
+        resourcePageBits.actionRow(List(("Start a review", routes.UserAnalysis.index.url, "button")))
+      ),
+      st.section(cls := "legal-section")(
+        h2("Feature comparison"),
+        div(
+          cls := "legal-table-wrap",
+          role := "region",
+          attr("tabindex") := "0",
+          attr("aria-label") := "Pricing feature comparison"
+        )(
+          table(cls := "legal-comparison")(
+            thead(tr(th("Feature"), th("Free beta"), th("Paid plans"))),
+            tbody(
+              row("Board and PGN review", "Available", "Not sold separately"),
+              row("Engine evidence", "Score, depth, and candidate lines", "Same board evidence"),
+              row("Saved studies", "Available when signed in", "Limits will be published before launch"),
+              row("Billing", "No card, renewal, or charge", "Terms shown before any charge"),
+              row("Refunds", "No charge, so no refund process", "Policy shown before checkout")
+            )
+          )
+        )
+      ),
+      st.section(cls := "legal-section")(
+        h2("Before any paid plan"),
+        p(
+          "Prices, review limits, billing interval, renewal terms, cancellation, and refund terms will be published before a subscription is offered."
         ),
         resourcePageBits.actionRow(
           List(
-            ("Start a review", routes.UserAnalysis.index.url, "button"),
-            ("Join paid-plan waitlist", routes.BetaFeedback.formPage(
-              surface = "general",
-              feature = "paid_plan_waitlist",
-              entrypoint = "pricing_page",
-              returnTo = routes.Main.pricing.url,
-              notify = true
-            ).url, "button button-empty")
-          )
-        )
-      ),
-      st.section(cls := "legal-section")(
-        h2("How plans should differ"),
-        p(
-          "Free review already explains the position's main question. Paid plans mainly add deeper coach explanations and more room to ask follow-up questions."
-        ),
-        div(cls := "legal-card-grid legal-plan-grid")(
-          planCard(
-            "Free beta",
-            "Current",
-            "A real post-game review before any subscription.",
-            List(
-              "One serious game review per day during beta",
-              "Stockfish score and top candidate moves",
-              "Plain-language read for moves you inspect",
-              "Coach explanation for key moments within beta limits",
-              "Review study creation when signed in"
+            (
+              "Read beta feedback",
+              routes.BetaFeedback
+                .formPage(
+                  "general",
+                  "paid_plan_waitlist",
+                  "pricing_page",
+                  routes.Main.pricing.url,
+                  notify = true
+                )
+                .url,
+              "button button-empty"
             ),
-            featured = true
-          ),
-          planCard(
-            "Plus",
-            "Planned",
-            "For players who want coach-style explanations whenever they study.",
-            List(
-              "Explain this move on more positions",
-              "Coach explanations for all key moments in a game",
-              "Follow-up questions on the current position",
-              "More daily game reviews",
-              "Clear saved review studies for sharing"
-            )
-          ),
-          planCard(
-            "Pro",
-            "Planned",
-            "For deeper study, preparation, and repeated review work.",
-            List(
-              "More room for deep review sessions",
-              "Broader commentary across opening and middlegame phases",
-              "Multiple-game weakness summaries when available",
-              "Richer export and sharing workflow",
-              "Priority feedback during beta"
-            )
+            ("Read trust details", routes.Main.trust.url, "button button-empty")
           )
-        ),
-        p(cls := "legal-note")(
-          "Exact prices, review limits, renewal terms, refunds, and billing rules will be published before paid subscriptions are opened."
         )
-      ),
-      st.section(cls := "legal-section")(
-        h2("Before paid plans"),
-        p("We will publish pricing, renewal terms, refund terms, and any usage limits before charging for a subscription."),
-        p("Current beta limits may change while we learn how much review depth players need. Changes should be announced before they affect normal use.")
       )
     )
 
@@ -200,85 +197,146 @@ object trust:
     resourcePageBits.shell(
       "Trust - Chesstory",
       "Trust",
-      "How Chesstory handles privacy, AI data, open-source duties, and beta limits."
+      "Facts about the engine, judgment path, chess data, and beta limits."
     )(
       st.section(cls := "legal-section")(
-        h2("Data and AI"),
-        p(
-          "Chess positions, PGNs, study notes, and prompts may be sent to OpenAI API models when needed to produce AI-assisted explanations."
-        ),
-        p("Chesstory does not currently opt in to OpenAI training on API inputs or outputs, and it does not currently promise Zero Data Retention unless that control is approved and configured later."),
-        p(
-          "Chesstory should not be used for private personal data. Treat PGNs, notes, and comments as chess study material."
-        ),
-        p("Chesstory is not aimed at children under 13. If school, club, or youth-program features are added later, they need their own privacy and safety review first.")
-      ),
-      st.section(cls := "legal-section")(
-        h2("Security and reliability"),
-        ul(
-          li("Authentication, cookie, CSRF, and deployment headers are security work required before public launch."),
-          li("The public health endpoint is available for basic service readiness."),
-          li("A dedicated status page will wait until there is real production monitoring to show.")
-        )
-      ),
-      st.section(cls := "legal-section")(
-        h2("Open source"),
-        p(
-          "Chesstory includes AGPL-licensed chess server software. The open-source page explains source-code obligations for the deployed frontend and server shell."
-        ),
-        resourcePageBits.linkCards(
+        h2("What the product uses"),
+        resourcePageBits.factRows(
           List(
-            ("Privacy", "Read how account, study, and analysis data are handled.", routes.Main.privacy.url),
-            ("Terms", "Read the service rules and beta limitations.", routes.Main.terms.url),
-            ("Open Source", "Review AGPL and source-availability notes.", routes.Main.source.url)
+            "Engine reference" -> frag(
+              "Browser-side Stockfish components provide evaluation and principal variations. The product shows depth and lines; it does not currently expose a fixed engine build identifier."
+            ),
+            "Judgment path" -> frag(
+              "Current move facts and judgment are produced by the Chesstory engine and judgment path. This route does not use an external AI-model provider."
+            ),
+            "Review inputs" -> frag(
+              "Current FEN, played move, engine variations and evaluations, move prefix, opening context, and bounded probe results when available."
+            ),
+            "External model processing" -> frag(
+              "The current explanation route does not send review data to an external AI-model provider."
+            ),
+            "Your deletion request" -> frag(
+              "Use ",
+              a(href := routes.Main.contact.url)("contact"),
+              " for account, study, or privacy requests; see the ",
+              a(href := routes.Main.privacy.url)("privacy policy"),
+              " for the current scope."
+            ),
+            "Limitations" -> frag(
+              "Engine output and current judgment facts are study aids, not a coach, tournament arbiter, or guarantee of a correct human plan."
+            )
           )
         )
       ),
       st.section(cls := "legal-section")(
-        h2("Contact"),
-        p(
-          "For security, privacy, or source-code availability questions, use the contact page",
-          contactEmail.map(email => frag(" or email ", a(href := s"mailto:$email")(email))).getOrElse(emptyFrag),
-          "."
-        ),
-        resourcePageBits.actionRow(List(("Contact", routes.Main.contact.url, "button button-empty")))
+        h2("Service and changes"),
+        resourcePageBits.factRows(
+          List(
+            "Service readiness" -> frag(
+              "A health endpoint is available. A public monitored status page is not published yet."
+            ),
+            "Changes" -> frag(
+              "Product changes are recorded in the ",
+              a(href := routes.Main.journal.url)("journal"),
+              " and planned work is listed on the ",
+              a(href := routes.Main.roadmap.url)("roadmap"),
+              "."
+            ),
+            "Source" -> frag(
+              "Chesstory includes AGPL-licensed chess server software; see ",
+              a(href := routes.Main.source.url)("open source"),
+              " for source-availability details."
+            ),
+            "Contact" -> frag(
+              "For privacy, security, or source questions, use ",
+              a(href := routes.Main.contact.url)("contact"),
+              contactEmail
+                .map(email => frag(" or ", a(href := s"mailto:$email")(email)))
+                .getOrElse(emptyFrag),
+              "."
+            )
+          )
+        )
       )
     )
 
 object examples:
+  private def sample(
+      title: String,
+      players: String,
+      result: String,
+      opening: String,
+      topic: String,
+      length: String,
+      fen: String
+  ): Frag =
+    st.article(cls := "legal-example")(
+      chessgroundMini(fen, chess.White, None)(
+        div(cls := "legal-example__board", role := "img", aria.label := s"Sample board for $title")
+      ),
+      div(cls := "legal-example__copy")(
+        h3(title),
+        dl(
+          div(dt("Players"), dd(players)),
+          div(dt("Result"), dd(result)),
+          div(dt("Opening"), dd(opening)),
+          div(dt("Topic"), dd(topic)),
+          div(dt("Length"), dd(length))
+        ),
+        p("Open the board to inspect the position before reviewing your own game."),
+        a(href := routes.UserAnalysis.index.url)("Open analysis board")
+      )
+    )
+
   def apply()(using @unused ctx: Context): Page =
     resourcePageBits.shell(
       "Examples - Chesstory",
-      "Review Shapes",
-      "Sample reviews for players who want to see what Chesstory is trying to produce."
+      "Review examples",
+      "Sample positions with game details and a question to study."
     )(
       st.section(cls := "legal-section")(
-        h2("What a good review should contain"),
-        p(
-          "A useful review does not only mark mistakes. It explains the question of the position, the direct effect of the move, the best-move difference, and the lesson to carry forward."
-        ),
+        h2("Positions worth reviewing"),
         div(cls := "legal-example-list")(
-          div(cls := "legal-example-card")(
-            strong("Opening transition"),
-            p("Question: did the quiet move prepare the central break, or only answer a threat that was not urgent yet?"),
-            span("Review should show: move effect, best-vs-played, plan, and lesson.")
+          sample(
+            "Opening transition",
+            "White vs Black",
+            "1–0",
+            "Italian Game",
+            "Prepare the central break",
+            "22 moves",
+            "r1bq1rk1/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQ1RK1 w - - 4 6"
           ),
-          div(cls := "legal-example-card")(
-            strong("Middlegame plan"),
-            p("Question: should you improve the worst piece, change the pawn structure, or stop the opponent's counterplay first?"),
-            span("Review should show: candidate plans with the Stockfish line kept visible.")
+          sample(
+            "Middlegame plan",
+            "White vs Black",
+            "½–½",
+            "Queen's Gambit Declined",
+            "Improve the worst piece before changing the structure",
+            "38 moves",
+            "r2q1rk1/pp1nbppp/2p1pn2/3p4/3P4/2NBPN2/PPQ2PPP/R3K2R w KQ - 3 9"
           ),
-          div(cls := "legal-example-card")(
-            strong("Critical mistake"),
-            p("Question: was the mistake tactical, strategic, or a plan that failed because of move order?"),
-            span("Review should show: the losing idea, the safer alternative, and the transferable lesson.")
+          sample(
+            "Critical decision",
+            "White vs Black",
+            "0–1",
+            "Sicilian Defence",
+            "Compare a tactical move with the safer resource",
+            "29 moves",
+            "r1bq1rk1/pp3ppp/2nbpn2/3p4/3P4/2NBPN2/PPQ2PPP/R3K2R w KQ - 4 9"
           )
         )
       ),
       st.section(cls := "legal-section")(
-        h2("Public sample studies"),
-        p("Public sample reviews will be added as real studies once the review output stabilizes. Until then, these examples describe the review shape without pretending there are finished public case studies."),
-        resourcePageBits.actionRow(List(("Open the board", routes.UserAnalysis.index.url, "button")))
+        h2("Use an example as a checklist"),
+        resourcePageBits.factRows(
+          List(
+            "Board" -> frag("Keep the move and the resulting position together."),
+            "Metadata" -> frag(
+              "Record player, result, opening, topic, and length before interpreting the game."
+            ),
+            "Preview" -> frag("Open the board before deciding whether the position deserves a saved study.")
+          )
+        )
       )
     )
 
@@ -287,31 +345,31 @@ object roadmap:
     resourcePageBits.shell(
       "Roadmap - Chesstory",
       "Roadmap",
-      "A simple beta roadmap without date promises."
+      "A beta roadmap without date promises."
     )(
       st.section(cls := "legal-section")(
         h2("Now"),
         ul(
-          li("One-game deep review flow."),
+          li("One-game review flow."),
           li("PGN paste and public game import."),
-          li("Stockfish line plus plain-language explanation panels."),
+          li("Stockfish evidence beside plain-language explanation."),
           li("Review studies for saving and sharing work.")
         )
       ),
       st.section(cls := "legal-section")(
         h2("Next"),
         ul(
-          li("Stronger example reviews and public sample studies."),
-          li("Clearer help pages around import, Coach explanations, and study sharing."),
-          li("Better post-game explanation quality as the review output improves.")
+          li("Clearer import, help, and study-sharing flows."),
+          li("Additional public example reviews."),
+          li("Iterate on explanation quality with beta feedback and review evidence.")
         )
       ),
       st.section(cls := "legal-section")(
         h2("Later"),
         ul(
           li("Player-level recurring weakness summaries."),
-          li("Paid plans after usage limits, privacy terms, and billing terms are ready."),
-          li("A real status page after production monitoring exists.")
+          li("Paid plans after limits and billing terms are ready."),
+          li("A monitored public status page.")
         )
       )
     )

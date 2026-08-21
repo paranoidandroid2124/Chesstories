@@ -34,13 +34,11 @@ final class Main(
 
   def home = Auth { ctx ?=> me ?=>
     for
-      summary <- env.analyse.importHistory.recentSummary(me.userId)
       studyPager <- env.study.pager.mine(StudyOrder.updated, page = 1)(using me)
       recentStudies = studyPager.currentPageResults.take(3).toList
       continueCard =
-        summary.analyses.headOption
-          .map(Main.HomeContinueCard.Analysis.apply)
-          .orElse(recentStudies.headOption.map(Main.HomeContinueCard.Study.apply))
+        recentStudies.headOption
+          .map(Main.HomeContinueCard.Study.apply)
           .getOrElse(Main.HomeContinueCard.Starter)
       data = Main.HomePageData(
         continueCard = continueCard,
@@ -58,8 +56,6 @@ final class Main(
             href = routes.Importer.importGame.url
           )
         ),
-        recentAnalyses = summary.analyses.take(4),
-        recentAccounts = summary.accounts.take(4),
         recentStudies = recentStudies
       )
       result <- Ok.page(views.pages.home(data))
@@ -79,7 +75,7 @@ final class Main(
     Redirect(routes.Main.support, MOVED_PERMANENTLY).toFuccess
 
   def help = Open:
-    Ok.page(views.pages.help())
+    Ok.page(views.pages.help(ctx.req.getQueryString("q")))
 
   def pricing = Open:
     Ok.page(views.pages.pricing())
@@ -109,14 +105,6 @@ final class Main(
     journalContent.bySlug(slug) match
       case Some(post) => Ok.page(views.pages.journal(journalContent.all, Some(post)))
       case None       => NotFound.page(views.site.message.notFound(Some("Journal post not found.")))
-
-  def toggleBlindMode = OpenBody:
-    bindForm(WebForms.blind)(
-      _ => BadRequest,
-      (enable, redirect) =>
-        Redirect(redirect).withCookies:
-          lila.web.WebConfig.blindCookie.make(env.security.lilaCookie)(enable != "0")
-    )
 
   def handlerNotFound(msg: Option[String]) =
     fuccess(NotFound(msg.getOrElse("Not Found")))
@@ -177,7 +165,6 @@ object Main:
 
   sealed trait HomeContinueCard
   object HomeContinueCard:
-    final case class Analysis(entry: lila.analyse.ImportHistory.Analysis) extends HomeContinueCard
     final case class Study(entry: lila.study.Study.WithChaptersAndLiked) extends HomeContinueCard
     case object Starter extends HomeContinueCard
 
@@ -191,8 +178,6 @@ object Main:
   final case class HomePageData(
       continueCard: HomeContinueCard,
       quickActions: List[HomeQuickAction],
-      recentAnalyses: List[lila.analyse.ImportHistory.Analysis],
-      recentAccounts: List[lila.analyse.ImportHistory.Account],
       recentStudies: List[lila.study.Study.WithChaptersAndLiked]
   )
 

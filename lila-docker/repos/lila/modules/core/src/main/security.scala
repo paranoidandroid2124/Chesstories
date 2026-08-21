@@ -14,20 +14,6 @@ case class CloseAccount(userId: UserId)
 case class ReopenAccount(user: User)
 case class AskAreRelated(users: PairOf[UserId], promise: Promise[Boolean])
 
-trait LilaCookie:
-  import play.api.mvc.*
-  def cookie(
-      name: String,
-      value: String,
-      maxAge: Option[Int] = None,
-      httpOnly: Option[Boolean] = None
-  ): Cookie
-
-object LilaCookie:
-  val sessionId = "sid"
-  val noRemember = "noRemember"
-  def sid(req: RequestHeader): Option[String] = req.session.get(sessionId)
-
 case class ClearPassword(value: String) extends AnyVal:
   override def toString = "ClearPassword(****)"
 

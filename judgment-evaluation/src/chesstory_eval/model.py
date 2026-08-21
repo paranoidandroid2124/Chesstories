@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Mapping
 
-STAGES: tuple[str, ...] = ("Q", "F", "C", "Jp", "Ja", "R", "P", "V")
+STAGES: tuple[str, ...] = ("Q", "F", "C", "Jp", "Ja", "R", "P")
 
 
 class HarnessError(RuntimeError):

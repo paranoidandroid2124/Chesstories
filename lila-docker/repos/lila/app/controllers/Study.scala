@@ -6,7 +6,7 @@ import play.api.data.Form
 import play.api.data.Forms.*
 import play.api.libs.json.*
 import play.api.mvc.*
-import lila.app.{ *, given }
+import lila.app.*
 import lila.analyse.CondensedJsonView
 import lila.core.game.Pov
 import lila.study.StudyForm
@@ -271,15 +271,14 @@ final class Study(
     bindForm(StudyForm.importGame.form)(
       err =>
         negotiate(
-          Redirect(mineLanding()).flashing("error" -> "Could not create that review study."),
+          Redirect(s"${mineLanding().url}?notice=create-failed"),
           badJsonFormError(err)
         ),
       data =>
         data.gameId match
           case Some(_) =>
             negotiate(
-              Redirect(mineLanding())
-                .flashing("error" -> "Game import is disabled in this deployment."),
+              Redirect(s"${mineLanding().url}?notice=import-disabled"),
               BadRequest(jsonError("game import disabled"))
             )
           case None =>
@@ -308,7 +307,7 @@ final class Study(
                 )
               case _ =>
                 negotiate(
-                  Redirect(mineLanding()).flashing("error" -> "We could not open a new review study right now."),
+                  Redirect(s"${mineLanding().url}?notice=create-failed"),
                   BadRequest(jsonError("Review study creation failed"))
                 )
             }
@@ -324,7 +323,7 @@ final class Study(
       case Some(study) =>
         env.study.api
           .delete(study)
-          .inject(Redirect(mineLanding()).flashing("success" -> "Review study deleted."))
+          .inject(Redirect(s"${mineLanding().url}?notice=deleted"))
       case _ => notFound
     }
   }

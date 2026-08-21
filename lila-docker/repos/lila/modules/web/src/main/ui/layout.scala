@@ -1,8 +1,6 @@
 package lila.web
 package ui
 
-
-import lila.common.CookieConsent
 import lila.ui.*
 import ShellPrimitives.*
 
@@ -37,8 +35,8 @@ case class PieceSetImages(assetHelper: lila.web.ui.AssetFullHelper):
     )
 
 final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
-  import helpers.{ *, given }
-  import assetHelper.{ *, given }
+  import helpers.*
+  import assetHelper.*
 
   val doctype = raw("<!DOCTYPE html>")
   def htmlTag = html()
@@ -80,29 +78,31 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
         s"""<link id="favicon" rel="icon" type="image/png" href="$assetBaseUrl/assets/logo/chesstory-favicon-32.png" sizes="32x32">"""
       )
 
-  def dasher(me: User) =
-    div(cls := "dasher")(
-      a(id := "user_tag", cls := "toggle link", href := routes.Account.profile)(me.username),
-      div(id := "dasher_app", cls := "dropdown")
+  def accountActions(me: User) =
+    div(cls := "account-actions")(
+      a(
+        id := "user_tag",
+        cls := "link",
+        href := routes.Account.profile,
+        aria.label := s"${me.username.value} profile"
+      )(me.username),
+      a(cls := "link", href := routes.Pref.form("display"), dataIcon := Icon.Gear, title := "Preferences")(
+        "Preferences"
+      ),
+      postForm(action := routes.Auth.logout):
+        submitButton(cls := "button button-red link")("Log out")
     )
 
-  def anonDasher(using ctx: Context) =
-    val prefs = "Preferences"
-    frag(
-      div(cls := "signin-or-signup")(
-        a(href := s"${routes.Auth.login.url}?referrer=${ctx.req.path}", cls := "signin")("Sign in")
-      ),
-      div(cls := "dasher")(
-        button(cls := "toggle anon link", title := prefs, aria.label := prefs, dataIcon := Icon.Gear),
-        div(id := "dasher_app", cls := "dropdown")
-      )
+  def signInAction(using ctx: Context) =
+    div(cls := "signin-or-signup")(
+      a(href := s"${routes.Auth.login.url}?referrer=${ctx.req.path}", cls := "signin")("Sign in")
     )
 
   private def themeChoice(currentBg: String) =
     currentBg match
-      case "light"  => "light"
+      case "light" => "light"
       case "system" => "system"
-      case _        => "dark"
+      case _ => "dark"
 
   private def themeSwitch(using ctx: PageContext) =
     val current = themeChoice(ctx.pref.currentBg)
@@ -144,16 +144,7 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
   def hrefLangs(path: LangPath) = raw:
     hrefLang("x-default", path.value) + hrefLang("en", path.value)
 
-  def pageZoom(using ctx: Context): Int = {
-    def oldZoom = ctx.req.session.get("zoom2").flatMap(_.toIntOption).map(_ - 100)
-    ctx.req.cookies
-      .get("zoom")
-      .map(_.value)
-      .flatMap(_.toIntOption)
-      .orElse(oldZoom)
-      .filter(0 <=)
-      .filter(100 >=)
-  } | 80
+  def pageZoom(using Context): Int = 80
 
   def dataSocketDomains = attr("data-socket-domains") := netConfig.socketDomains.mkString(",")
   val dataNonce = attr("data-nonce")
@@ -183,73 +174,9 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
   }
 </style>"""
 
-  private def cookieConsentUi(using ctx: Context) =
-    val consent = CookieConsent.fromRequest(ctx.req)
-    div(
-      id := "cookie-consent",
-      cls := List(
-        "cookie-consent" -> true,
-        "cookie-consent--decided" -> consent.decided,
-        "cookie-consent--editing" -> !consent.decided
-      )
-    )(
-      button(
-        tpe := "button",
-        cls := "cookie-consent__manage js-cookie-consent-open",
-        aria.label := "Cookie settings"
-      )("Cookie settings"),
-      div(
-        cls := "cookie-consent__panel",
-        role := "dialog",
-        aria.label := "Cookie settings",
-        attr("aria-modal") := "true",
-        tabindex := -1
-      )(
-        div(cls := "cookie-consent__eyebrow")("Cookies & Storage"),
-        div(cls := "cookie-consent__head")(
-          h2("Choose what Chesstory stores on this device"),
-          button(
-            tpe := "button",
-            cls := "cookie-consent__close js-cookie-consent-close",
-            aria.label := "Close cookie settings"
-          )("Close")
-        ),
-        p(
-          "Essential cookies keep sign-in and security working. Optional preference storage remembers appearance choices and browser-side study or performance data."
-        ),
-        p(cls := "cookie-consent__note")(
-          "We do not currently use advertising cookies. Your consent choice is stored in an essential cookie so we remember it."
-        ),
-        div(cls := "cookie-consent__category")(
-          div(cls := "cookie-consent__copy")(
-            strong("Essential"),
-            span("Required for sign-in, security, and the consent record itself.")
-          ),
-          span(cls := "cookie-consent__status")("Always on")
-        ),
-        label(cls := "cookie-consent__category cookie-consent__category--toggle")(
-          div(cls := "cookie-consent__copy")(
-            strong("Preferences"),
-            span("Stores theme, zoom, study state, and performance caches in your browser.")
-          ),
-          input(
-            tpe := "checkbox",
-            cls := "js-cookie-consent-prefs",
-            if consent.preferencesAllowed then checked := true else emptyFrag
-          )
-        ),
-        div(cls := "cookie-consent__actions")(
-          button(tpe := "button", cls := "button button-metal js-cookie-consent-essential")("Essential only"),
-          button(tpe := "button", cls := "button button-empty js-cookie-consent-save")("Save choice"),
-          button(tpe := "button", cls := "button js-cookie-consent-accept")("Allow preferences")
-        )
-      )
-    )
-
-  def bottomHtml(using ctx: Context) = frag(
+  def bottomHtml = frag(
     Option.when(netConfig.socketDomains.nonEmpty)(networkAlert),
-    spinnerMask,
-    cookieConsentUi
+    spinnerMask
   )
 
   private def siteHomeUrl(using ctx: Context): String =
@@ -258,23 +185,23 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
   def siteFooter(using ctx: Context) =
     footer(cls := "site-footer", aria.label := "Site footer")(
       div(cls := "site-footer__inner")(
-        a(cls := "site-footer__home", href := siteHomeUrl)("Home"),
         div(cls := "site-footer__links")(
           div(cls := "site-footer__group")(
             strong("Product"),
+            a(href := siteHomeUrl)("Home"),
             a(href := routes.UserAnalysis.index.url)("Analysis"),
             a(href := "/study")("Study"),
             a(href := routes.Importer.importGame.url)("Import")
           ),
           div(cls := "site-footer__group")(
-            strong("Resources"),
+            strong("Learn"),
             a(href := routes.Main.help.url)("Help"),
             a(href := routes.Main.examples.url)("Examples"),
             a(href := routes.Main.journal.url)("Journal"),
             a(href := routes.Main.roadmap.url)("Roadmap")
           ),
           div(cls := "site-footer__group")(
-            strong("Trust"),
+            strong("About"),
             a(href := routes.Main.pricing.url)("Beta Access / Pricing"),
             a(href := routes.Main.trust.url)("Trust"),
             a(href := routes.Main.privacy.url)("Privacy"),
@@ -282,19 +209,17 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
             a(href := routes.Main.source.url)("Open Source")
           ),
           div(cls := "site-footer__group")(
-            strong("Contact"),
+            strong("Support"),
             a(href := routes.Main.contact.url)("Contact"),
-            a(href := routes.Main.support.url)("Support"),
-            a(href := "#cookie-consent", cls := "js-cookie-consent-open")("Cookie settings")
+            a(href := routes.Main.support.url)("Support")
           )
         )
       )
     )
 
-  def sitePreload(modules: EsmList)(using Context): Frag =
+  def sitePreload(modules: EsmList): Frag =
     val keys = "site" :: modules.flatMap(_.map(_.key))
     scriptsPreload("manifest" :: keys)
-
 
   object siteHeader:
 
@@ -335,8 +260,8 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
           else
             ctx.me
               .map: me =>
-                dasher(me)
+                accountActions(me)
               .getOrElse:
-                error.not.option(anonDasher)
+                error.not.option(signInAction)
         )
       )

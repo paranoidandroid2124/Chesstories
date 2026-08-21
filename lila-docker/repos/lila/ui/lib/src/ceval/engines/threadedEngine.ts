@@ -7,8 +7,6 @@ import {
   type EngineNotifier,
 } from '../types';
 import { sharedWasmMemory } from '../util';
-import { Cache } from '../cache';
-import { preferenceStorageAllowed } from '../../cookieConsent';
 
 interface WasmModule {
   (opts: {
@@ -74,35 +72,18 @@ export class ThreadedEngine implements CevalEngine {
 
     let wasmBinary: ArrayBuffer | undefined;
     if (this.info.id === '__sf14nnue') {
-      const cache = preferenceStorageAllowed() && window.indexedDB && new Cache('ceval-wasm-cache');
-      try {
-        if (cache) {
-          const [found, data] = await cache.get(wasmPath, pathVersion!);
-          if (found) wasmBinary = data;
-        }
-      } catch (e) {
-        console.log('ceval: idb cache load failed:', e);
-      }
-      if (!wasmBinary) {
-        wasmBinary = await new Promise((resolve, reject) => {
-          const req = new XMLHttpRequest();
-          req.open('GET', site.asset.url(wasmPath, { pathVersion }), true);
-          req.responseType = 'arraybuffer';
-          req.onerror = event => reject(event);
-          req.onprogress = event => this.status?.({ download: { bytes: event.loaded, total: event.total } });
-          req.onload = _ => {
-            this.status?.();
-            resolve(req.response);
-          };
-          req.send();
-        });
-      }
-      if (cache)
-        try {
-          await cache.set(wasmPath, pathVersion!, wasmBinary);
-        } catch (e) {
-          console.log('ceval: idb cache store failed:', e);
-        }
+      wasmBinary = await new Promise((resolve, reject) => {
+        const req = new XMLHttpRequest();
+        req.open('GET', site.asset.url(wasmPath, { pathVersion }), true);
+        req.responseType = 'arraybuffer';
+        req.onerror = event => reject(event);
+        req.onprogress = event => this.status?.({ download: { bytes: event.loaded, total: event.total } });
+        req.onload = _ => {
+          this.status?.();
+          resolve(req.response);
+        };
+        req.send();
+      });
     }
 
     // Load Emscripten module.

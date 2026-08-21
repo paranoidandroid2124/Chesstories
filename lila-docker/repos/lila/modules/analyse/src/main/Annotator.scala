@@ -1,7 +1,7 @@
 package lila.analyse
 
 import chess.format.pgn.{ Comment, Glyphs, Move, Pgn, PgnStr, SanStr, Tag }
-import chess.{ Ply, Status, Tree, Variation }
+import chess.{ Status, Tree, Variation }
 
 import lila.core.game.Game
 import lila.tree.{ Advice, Analysis, StatusText }

@@ -40,7 +40,8 @@ object betaFeedback:
 
   def apply(
       feedbackForm: Form[FormInput],
-      accountEmail: Option[EmailAddress]
+      accountEmail: Option[EmailAddress],
+      success: Option[String] = None
   )(using @unused ctx: Context): Page =
     Page("Open Beta Feedback - Chesstory")
       .css("legal")
@@ -69,7 +70,7 @@ object betaFeedback:
               feedbackForm.globalErrors.headOption.map(err =>
                 div(cls := "legal-form-banner legal-form-banner--error")(err.message)
               ),
-              ctx.req.flash.get("success").map(msg =>
+              success.map(msg =>
                 div(cls := "legal-form-banner legal-form-banner--success")(msg)
               ),
               st.form(cls := "legal-form", method := "post", action := routes.BetaFeedback.submitForm.url)(

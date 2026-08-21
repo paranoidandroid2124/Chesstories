@@ -8,7 +8,7 @@ import { Autoplay, type AutoplayDelay } from './autoplay';
 import { makeTree, treePath, treeOps, type TreeWrapper } from 'lib/tree';
 import { compute as computeAutoShapes } from './autoShape';
 import type { Config as ChessgroundConfig } from '@lichess-org/chessground/config';
-import type { CevalHandler, EvalMeta, CevalOpts, Work } from 'lib/ceval';
+import type { CevalHandler, EvalMeta, CevalOpts } from 'lib/ceval';
 import { CevalCtrl, isEvalBetter } from 'lib/ceval';
 import { TreeView } from './treeView/treeView';
 import type { Prop, Toggle } from 'lib';
@@ -22,7 +22,6 @@ import {
   myUserId,
   myUsername,
 } from 'lib';
-import { preferenceLocalStorage } from 'lib/cookieConsent';
 import { pubsub } from 'lib/pubsub';
 import type { DrawShape } from '@lichess-org/chessground/draw';
 import { scalachessCharPair } from 'chessops/compat';
@@ -34,23 +33,41 @@ import { makeFen, parseFen } from 'chessops/fen';
 import { setupPosition } from 'chessops/variant';
 import { makeSanAndPlay } from 'chessops/san';
 import { makeUci } from 'chessops';
-import { storedBooleanProp, storedProp, tempStorage } from 'lib/storage';
+import { storedBooleanProp, storedProp } from 'lib/storage';
 import { PromotionCtrl } from 'lib/game/promotion';
 import ExplorerCtrl from './explorer/explorerCtrl';
-import { tablebase as loadTablebase } from './explorer/explorerXhr';
-import type { TablebaseCategory } from './explorer/interfaces';
 import { uciToMove } from '@lichess-org/chessground/util';
 import { IdbTree } from './idbTree';
 import pgnImport from './pgnImport';
 import * as pgnExport from './pgnExport';
-import { emptyPgnError, normalizeInlinePgn, submitPgnToImportPipeline } from './pgnPipeline';
+import { normalizeInlinePgn, pgnInputError, submitPgnToImportPipeline } from './pgnPipeline';
 import * as studyApi from './studyApi';
 import {
-  chesstoryBriefRequestIsActive,
-  decodeChesstoryMoveMeaningResponse,
-  type ChesstoryBriefState,
-} from './chesstoryBrief';
-import { defaultInit, jsonHeader, xhrHeader, ensureOk } from 'lib/xhr';
+  moveReviewCopy,
+  moveReviewEngineOutcomeAtRequiredDepth,
+  moveReviewSubjectFromNodeList,
+  moveReviewSubjectKey,
+  moveReviewVerdictLabel,
+  normalizeMoveReviewLocale,
+  type MoveReviewCopy,
+  type MoveReviewFrameSelection,
+  type MoveReviewJobState,
+  type MoveReviewLocale,
+  type MoveReviewProof,
+  type MoveReviewSubject,
+  type MoveReviewVerdictSymbol,
+  type MoveReviewViewState,
+  type IssuedMoveReviewEngineWork,
+  type MoveReviewEngineOutcome,
+} from './moveReview';
+import {
+  MoveReviewCoordinator,
+  type MoveReviewCoordinatorHost,
+  type MoveReviewPreparation,
+} from './moveReviewCoordinator';
+import { createMoveReviewRuntimeSource } from './moveReviewRuntimeSource';
+import { mergeMoveReviewProofIntoStudy } from './moveReviewStudy';
+import type { MoveReviewPanelProps } from './view/moveReview';
 
 import type { PgnError } from 'chessops/pgn';
 
@@ -59,74 +76,10 @@ import { displayColumns } from 'lib/device';
 import * as Prefs from 'lib/prefs';
 import { boardLabelModeFromCoords, boardLabelModeToCoords, type BoardLabelMode } from './boardWorkspace';
 
-const recentImportStorageKey = 'analyse.import-recents.v1';
 const boardLabelModes = new Set<BoardLabelMode>(['off', 'inside', 'rim', 'full']);
 
 interface AnalyseHistoryState {
   analysePly: Ply;
-}
-
-interface ChesstoryMoveMeaningRequest {
-  fen: FEN;
-  playedMoveUci: Uci;
-  variations: Array<{
-    moves: Uci[];
-    scoreCp: number;
-    mate?: number;
-    depth: number;
-  }>;
-  ply: Ply;
-  openingContext?: {
-    eco?: string;
-    name?: string;
-    family?: string;
-  };
-  movePrefixUci: Uci[];
-  probeResults?: ChesstoryProbeResult[];
-}
-
-interface ChesstoryProbeRequest {
-  id: string;
-  fen: FEN;
-  moves: Uci[];
-  depth: number;
-  purpose?: string;
-  multiPv?: number;
-  baselineEvalCp?: number;
-  candidateMove?: Uci;
-  opponentResourceMove?: Uci;
-  depthFloor?: number;
-  horizon?: string;
-  variationHash?: string;
-  comparisonFen?: FEN;
-}
-
-interface ChesstoryProbeResult {
-  id: string;
-  fen: FEN;
-  replyLines?: Array<{
-    moves: Uci[];
-    scoreCp: number;
-    mate?: number;
-    depth: number;
-  }>;
-  purpose?: string;
-  probedMove?: Uci;
-  depth?: number;
-  candidateMove?: Uci;
-  opponentResourceMove?: Uci;
-  horizon?: string;
-  variationHash?: string;
-  generatedAtEpochMs?: number;
-  tablebase?: {
-    terminal: { fen: FEN; wdl: number; dtm?: number };
-    comparison: { fen: FEN; wdl: number; dtm?: number };
-    legalMoves: Array<{ moveUci: Uci; resultingWdl: number; resultingDtm?: number }>;
-  };
-}
-
-interface ChesstoryProbeBatch {
-  results: ChesstoryProbeResult[];
 }
 
 function loginHref(): string {
@@ -187,7 +140,6 @@ export default class AnalyseCtrl implements CevalHandler {
   fenInput?: string;
   pgnInput?: string;
   pgnError?: string;
-  private recentImportDraftsCache?: string[];
 
   // study write queue (HTTP only, no sockets)
   private studyWriteQueue: Array<() => Promise<void>> = [];
@@ -205,11 +157,15 @@ export default class AnalyseCtrl implements CevalHandler {
   private studyActionTone: 'info' | 'success' | 'error' = 'info';
   private studyActionTimer?: number;
   private studyTransferCount = 0;
-  private chesstoryBriefState: ChesstoryBriefState = { kind: 'no-input' };
-  private chesstoryBriefGeneration = 0;
-  private chesstoryBriefAbort?: AbortController;
-  private chesstoryProbeCancel?: () => void;
-
+  private moveReviewCoordinator?: MoveReviewCoordinator;
+  private moveReviewJob: MoveReviewJobState = { kind: 'idle', reason: 'disabled' };
+  private moveReviewView: MoveReviewViewState = { evidenceExpanded: false };
+  private moveReviewLocale?: MoveReviewLocale;
+  private moveReviewCopyValue?: MoveReviewCopy;
+  private moveReviewSubjectIdentity?: string;
+  private moveReviewEngineFailure?: () => void;
+  private moveReviewAdded?: { subjectKey: string; proofId: string; path: Tree.Path };
+  private moveReviewAnnotations = new Map<Tree.Path, { symbol: MoveReviewVerdictSymbol; label: string }>();
   // other paths
   initialPath: Tree.Path;
   contextMenuPath?: Tree.Path;
@@ -255,7 +211,6 @@ export default class AnalyseCtrl implements CevalHandler {
 
     if (location.hash === '#menu') requestIdleCallback(this.actionMenu.toggle, 500);
     this.startCeval();
-    this.refreshChesstoryBrief();
     keyboard.bind(this);
     this.installHistoryNavigation();
 
@@ -281,6 +236,7 @@ export default class AnalyseCtrl implements CevalHandler {
     pubsub.on('ply.trigger', () =>
       pubsub.emit('ply', this.node.ply, this.tree.lastMainlineNode(this.path).ply === this.node.ply),
     );
+    this.initMoveReview();
     this.mergeIdbThenShowTreeView();
   }
 
@@ -565,7 +521,6 @@ export default class AnalyseCtrl implements CevalHandler {
     this.onMainline = this.tree.pathIsMainline(path);
     this.fenInput = undefined;
     this.pgnInput = undefined;
-    this.idbTree.saveMoves();
     this.idbTree.revealNode();
   };
 
@@ -596,428 +551,332 @@ export default class AnalyseCtrl implements CevalHandler {
     return this.node;
   }
 
-  chesstoryBrief(): ChesstoryBriefState {
-    return this.chesstoryBriefState;
+  moveReviewAvailable(): boolean {
+    return !!this.moveReviewCoordinator;
   }
 
-  private refreshChesstoryBrief(): void {
-    const request = this.makeChesstoryBriefRequest();
-    if (!request) {
-      if (this.chesstoryBriefState.kind === 'no-input') return;
-      this.cancelChesstoryBrief();
-      this.setChesstoryBriefState({ kind: 'no-input' });
-      return;
-    }
-    const key = JSON.stringify({
-      request,
-      probeCapabilities: {
-        replyMultipv: this.isCevalAllowed() && this.cevalEnabled() && this.ceval.available(),
-        endgameTablebase: !!this.opts.explorer.tablebaseEndpoint,
-      },
-    });
-    if (this.chesstoryBriefState.kind !== 'no-input' && key === this.chesstoryBriefState.key) return;
-
-    this.cancelChesstoryBrief();
-    const abort = new AbortController();
-    const generation = ++this.chesstoryBriefGeneration;
-    this.chesstoryBriefAbort = abort;
-    this.setChesstoryBriefState({ kind: 'requesting', key });
-    void this.loadChesstoryBrief(request, key, abort, generation);
-  }
-
-  private cancelChesstoryBrief(): void {
-    this.chesstoryBriefAbort?.abort();
-    this.chesstoryProbeCancel?.();
-    this.chesstoryBriefGeneration++;
-    this.chesstoryBriefAbort = undefined;
-    this.chesstoryProbeCancel = undefined;
-  }
-
-  private setChesstoryBriefState(state: ChesstoryBriefState): void {
-    this.chesstoryBriefState = state;
-    this.redraw();
-  }
-
-  private postChesstoryBrief(request: ChesstoryMoveMeaningRequest, signal: AbortSignal): Promise<unknown> {
-    return fetch('/api/chess-judgment/move-meaning', {
-      ...defaultInit,
-      signal,
-      method: 'post',
-      headers: {
-        ...jsonHeader,
-        ...xhrHeader,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    })
-      .then(ensureOk)
-      .then(res => res.json() as Promise<unknown>);
-  }
-
-  private async loadChesstoryBrief(
-    request: ChesstoryMoveMeaningRequest,
-    key: string,
-    abort: AbortController,
-    generation: number,
-  ): Promise<void> {
-    const isActive = (): boolean =>
-      chesstoryBriefRequestIsActive(this.chesstoryBriefState, generation, this.chesstoryBriefGeneration, key);
-    try {
-      const raw = await this.postChesstoryBrief(request, abort.signal);
-      if (!isActive()) return;
-      let data = decodeChesstoryMoveMeaningResponse(raw);
-      if (!data?.ok) throw new Error('Invalid Chesstory response contract');
-
-      const probeResults: ChesstoryProbeResult[] = [];
-      const seenProbeIds = new Set<string>();
-      const probeBudget = 12;
-      for (let round = 0; round < 6 && probeResults.length < probeBudget; round++) {
-        if (!data.probe_requests.length) break;
-        this.setChesstoryBriefState({ kind: 'probing', key });
-        const batch = await this.chesstoryProbeResults(
-          data.probe_requests,
-          seenProbeIds,
-          probeBudget - probeResults.length,
-          isActive,
-          abort.signal,
-        );
-        if (!isActive()) return;
-        if (!batch.results.length) break;
-        probeResults.push(...batch.results);
-        const nextRaw = await this.postChesstoryBrief({ ...request, probeResults }, abort.signal);
-        if (!isActive()) return;
-        data = decodeChesstoryMoveMeaningResponse(nextRaw);
-        if (!data?.ok) throw new Error('Invalid Chesstory response contract');
-      }
-      if (!isActive()) return;
-      if (data.status === 'withheld') {
-        this.setChesstoryBriefState({ kind: 'withheld', key });
-        return;
-      }
-      const review = data.move_review;
-      if (review.idea_status === 'certified')
-        this.setChesstoryBriefState({ kind: 'ready-certified', key, payload: review });
-      else if (review.idea_status === 'no_certified_differential_idea')
-        this.setChesstoryBriefState({ kind: 'ready-verdict-only', key, payload: review });
-      else throw new Error('Invalid Chesstory response contract');
-    } catch (e) {
-      if (!isActive() || abort.signal.aborted) return;
-      console.info('Chesstory brief unavailable', e);
-      this.setChesstoryBriefState({ kind: 'fault', key });
-    } finally {
-      if (isActive()) {
-        this.chesstoryBriefAbort = undefined;
-        this.chesstoryProbeCancel = undefined;
-        this.redraw();
-      }
-    }
-  }
-
-  private async chesstoryProbeResults(
-    rawRequests: unknown,
-    seenProbeIds: Set<string>,
-    limit: number,
-    isActive: () => boolean,
-    signal: AbortSignal,
-  ): Promise<ChesstoryProbeBatch> {
-    const canRunEngineProbe = this.isCevalAllowed() && this.cevalEnabled() && this.ceval.available();
-    const canRunTablebaseProbe = !!this.opts.explorer.tablebaseEndpoint;
-    const requests = Array.isArray(rawRequests)
-      ? rawRequests.filter(
-          (request): request is ChesstoryProbeRequest =>
-            !!request &&
-            typeof request === 'object' &&
-            typeof (request as ChesstoryProbeRequest).id === 'string' &&
-            typeof (request as ChesstoryProbeRequest).fen === 'string' &&
-            !seenProbeIds.has((request as ChesstoryProbeRequest).id) &&
-            Array.isArray((request as ChesstoryProbeRequest).moves) &&
-            (request as ChesstoryProbeRequest).moves.every(
-              move => typeof move === 'string' && validUci(move),
-            ) &&
-            (((request as ChesstoryProbeRequest).purpose === 'reply_multipv' &&
-              canRunEngineProbe &&
-              ((request as ChesstoryProbeRequest).moves.length === 0 ||
-                ((request as ChesstoryProbeRequest).moves.length === 1 &&
-                  (request as ChesstoryProbeRequest).moves[0] ===
-                    (request as ChesstoryProbeRequest).opponentResourceMove))) ||
-              ((request as ChesstoryProbeRequest).purpose === 'endgame_tablebase' &&
-                canRunTablebaseProbe &&
-                (request as ChesstoryProbeRequest).moves.length > 0 &&
-                typeof (request as ChesstoryProbeRequest).comparisonFen === 'string')),
-        )
-      : [];
-    if (!requests.length) return { results: [] };
-
-    const wasEnabled = !!this.cevalEnabled();
-    const hasEngineProbe = requests.some(request => request.purpose === 'reply_multipv');
-    const results: ChesstoryProbeResult[] = [];
-    if (hasEngineProbe) this.ceval.stop();
-    try {
-      for (const request of requests.slice(0, limit)) {
-        if (!isActive()) break;
-        seenProbeIds.add(request.id);
-        const result =
-          request.purpose === 'endgame_tablebase'
-            ? await this.runChesstoryTablebaseProbe(request, signal)
-            : await this.runChesstoryProbe(request, isActive, signal);
-        if (result && isActive()) results.push(result);
-      }
-    } finally {
-      if (hasEngineProbe) {
-        this.ceval.stop();
-        if (wasEnabled) this.startCeval();
-      }
-    }
-    return { results };
-  }
-
-  private async runChesstoryTablebaseProbe(
-    request: ChesstoryProbeRequest,
-    signal: AbortSignal,
-  ): Promise<ChesstoryProbeResult | undefined> {
-    if (!request.comparisonFen) return;
-    try {
-      const [terminal, comparison] = await Promise.all([
-        loadTablebase(this.opts.explorer.tablebaseEndpoint, request.fen, signal),
-        loadTablebase(this.opts.explorer.tablebaseEndpoint, request.comparisonFen, signal),
-      ]);
-      const terminalWdl = this.chesstoryTablebaseWdl(terminal.category);
-      const comparisonWdl = this.chesstoryTablebaseWdl(comparison.category);
-      if (
-        terminalWdl !== -2 ||
-        comparisonWdl !== 2 ||
-        terminal.dtm === undefined ||
-        comparison.dtm === undefined
-      )
-        return;
-      const legalMoves = request.moves.flatMap(move => {
-        const result = terminal.moves.find(candidate => candidate.uci === move);
-        const resultingWdl = result && this.chesstoryTablebaseWdl(result.category);
-        return result && resultingWdl !== undefined && result.dtm !== undefined
-          ? [{ moveUci: move, resultingWdl, resultingDtm: result.dtm }]
-          : [];
-      });
-      if (legalMoves.length !== request.moves.length) return;
-      return {
-        id: request.id,
-        fen: request.fen,
-        purpose: request.purpose,
-        variationHash: request.variationHash,
-        generatedAtEpochMs: Date.now(),
-        tablebase: {
-          terminal: { fen: request.fen, wdl: terminalWdl, dtm: terminal.dtm },
-          comparison: {
-            fen: request.comparisonFen,
-            wdl: comparisonWdl,
-            dtm: comparison.dtm,
-          },
-          legalMoves,
-        },
-      };
-    } catch (e) {
-      if (!signal.aborted) console.info('Chesstory tablebase probe unavailable', e);
-      return;
-    }
-  }
-
-  private chesstoryTablebaseWdl(category: TablebaseCategory): number | undefined {
-    switch (category) {
-      case 'win':
-        return 2;
-      case 'cursed-win':
-        return 1;
-      case 'draw':
-        return 0;
-      case 'blessed-loss':
-        return -1;
-      case 'loss':
-        return -2;
-      default:
-        return;
-    }
-  }
-
-  private runChesstoryProbe(
-    request: ChesstoryProbeRequest,
-    isActive: () => boolean,
-    signal: AbortSignal,
-  ): Promise<ChesstoryProbeResult | undefined> {
-    const currentFen = request.moves.length
-      ? parseFen(request.fen)
-          .chain(setup => setupPosition('chess', setup))
-          .unwrap(
-            pos => {
-              for (const uci of request.moves) {
-                const move = parseUci(uci);
-                if (!move || !pos.isLegal(move)) return;
-                pos.play(move);
-              }
-              return makeFen(pos.toSetup());
-            },
-            () => undefined,
-          )
-      : request.fen;
-    if (!currentFen || !isActive() || signal.aborted) return Promise.resolve(undefined);
-    return new Promise(resolve => {
-      let done = false;
-      const requiredPvs = Math.max(1, request.multiPv ?? 1);
-      const depthFloor = Math.max(1, request.depthFloor ?? request.depth ?? 1);
-      const timeout = window.setTimeout(() => finish(), Math.min(12000, Math.max(4000, depthFloor * 700)));
-      const cancel = (): void => finish();
-      const finish = (ev?: Tree.LocalEval): void => {
-        if (done) return;
-        done = true;
-        window.clearTimeout(timeout);
-        signal.removeEventListener('abort', cancel);
-        if (this.chesstoryProbeCancel === cancel) this.chesstoryProbeCancel = undefined;
-        if (isActive()) this.ceval.stop();
-        resolve(ev && isActive() ? this.chesstoryProbeResult(request, ev) : undefined);
-      };
-      this.chesstoryProbeCancel = cancel;
-      signal.addEventListener('abort', cancel, { once: true });
-      const work: Work = {
-        variant: this.data.game.variant.key,
-        threads: this.ceval.threads,
-        hashSize: this.ceval.hashSize,
-        gameId: undefined,
-        stopRequested: false,
-        initialFen: request.fen,
-        currentFen,
-        moves: request.moves,
-        path: `chesstory-probe:${request.id}`,
-        ply: this.plyFromFen(currentFen),
-        search: { depth: request.depth || depthFloor },
-        multiPv: requiredPvs,
-        threatMode: false,
-        emit: (ev: Tree.LocalEval) => {
-          if (
-            isActive() &&
-            ev.depth >= depthFloor &&
-            ev.pvs.filter(pv => pv.moves.length && this.chesstoryEvalCp(pv) !== undefined).length >=
-              requiredPvs
-          )
-            finish(ev);
-        },
-      };
-      this.ceval.resume(work);
-    });
-  }
-
-  private chesstoryProbeResult(
-    request: ChesstoryProbeRequest,
-    ev: Tree.LocalEval,
-  ): ChesstoryProbeResult | undefined {
-    const replyLines = ev.pvs.flatMap(pv => {
-      const scoreCp = this.chesstoryEvalCp(pv);
-      return pv.moves.length && scoreCp !== undefined
-        ? [
-            {
-              moves: [...request.moves, ...pv.moves],
-              scoreCp,
-              mate: pv.mate,
-              depth: ev.depth,
-            },
-          ]
-        : [];
-    });
-    if (ev.depth < (request.depthFloor ?? request.depth ?? 1) || replyLines.length < (request.multiPv ?? 1))
-      return;
+  moveReviewPanelProps(): MoveReviewPanelProps {
     return {
-      id: request.id,
-      fen: request.fen,
-      replyLines,
-      purpose: request.purpose,
-      probedMove: request.candidateMove,
-      depth: ev.depth,
-      candidateMove: request.candidateMove,
-      opponentResourceMove: request.opponentResourceMove,
-      horizon: request.horizon,
-      variationHash: request.variationHash,
-      generatedAtEpochMs: Date.now(),
+      job: this.moveReviewJob,
+      view: this.moveReviewView,
+      copy: this.moveReviewCopyValue!,
+      locale: this.moveReviewLocale!,
+      orientation: this.getOrientation(),
+      canWrite: this.canWriteStudy(),
+      liveEnginePaused: !!this.moveReviewCoordinator?.isPreemptingLiveEngine() && !!this.cevalEnabled(),
+      addedProofId:
+        this.moveReviewAdded?.subjectKey === this.moveReviewSubjectIdentity
+          ? this.moveReviewAdded?.proofId
+          : undefined,
+      actions: {
+        selectCandidate: this.selectMoveReviewCandidate,
+        toggleEvidence: this.toggleMoveReviewEvidence,
+        toggleReason: this.toggleMoveReviewReason,
+        previewFrame: this.previewMoveReviewFrame,
+        clearPreview: this.clearMoveReviewPreview,
+        pinFrame: this.pinMoveReviewFrame,
+        clearPin: this.clearMoveReviewPin,
+        retry: this.retryMoveReview,
+        addProof: this.addMoveReviewProof,
+        viewAddedLine: this.viewAddedMoveReviewProof,
+      },
     };
   }
 
-  private chesstoryEvalCp(score: { cp?: number; mate?: number }): number | undefined {
-    if (typeof score.cp === 'number' && Number.isFinite(score.cp)) return score.cp;
-    if (typeof score.mate === 'number' && Number.isFinite(score.mate) && score.mate !== 0)
-      return score.mate > 0 ? 10000 : -10000;
-    return;
+  moveReviewNotation(path: Tree.Path): { symbol: MoveReviewVerdictSymbol; label: string } | undefined {
+    return this.moveReviewAnnotations.get(path);
   }
+
+  private initMoveReview(): void {
+    const mode = this.opts.moveReview?.mode;
+    const variant = this.data.game.variant.key;
+    if (!this.isStudy() || (variant !== 'standard' && variant !== 'chess960') || mode !== 'runtime') return;
+
+    this.moveReviewLocale = normalizeMoveReviewLocale();
+    this.moveReviewCopyValue = moveReviewCopy(this.moveReviewLocale);
+    const host: MoveReviewCoordinatorHost = {
+      prepare: (subject, signal) => this.prepareMoveReview(subject, signal),
+      suspendLiveEngine: this.suspendLiveEngineForMoveReview,
+      resumeLiveEngine: this.resumeLiveEngineAfterMoveReview,
+      stateChanged: this.setMoveReviewState,
+    };
+    this.moveReviewCoordinator = new MoveReviewCoordinator(this.moveReviewLocale, host);
+    const updateVisibility = (): void => {
+      if (document.visibilityState === 'hidden') this.moveReviewCoordinator?.deactivate();
+      else this.moveReviewCoordinator?.activate();
+    };
+    document.addEventListener('visibilitychange', updateVisibility);
+    window.addEventListener('focus', updateVisibility);
+    window.addEventListener('pagehide', () => this.moveReviewCoordinator?.deactivate());
+    window.addEventListener('pageshow', updateVisibility);
+    if (document.visibilityState !== 'hidden') this.moveReviewCoordinator.activate();
+    this.scheduleMoveReviewForCurrentEdge();
+  }
+
+  private scheduleMoveReviewForCurrentEdge(): void {
+    this.moveReviewCoordinator?.settle(
+      moveReviewSubjectFromNodeList(this.data.game.variant.key, this.path, this.nodeList),
+    );
+  }
+
+  private prepareMoveReview = async (
+    subject: MoveReviewSubject,
+    signal: AbortSignal,
+  ): Promise<MoveReviewPreparation> => {
+    const result = await this.ceval.preflightMoveReviewSelection({ variant: subject.variant, signal }, () =>
+      this.moveReviewEngineFailure?.(),
+    );
+    if (!result.ok) {
+      const engineUnavailable = result.failures.some(failure => failure.reason === 'preflight-failed');
+      return {
+        ok: false,
+        reason: engineUnavailable ? 'engine-unavailable' : 'browser-unsupported',
+        message: engineUnavailable
+          ? this.moveReviewCopyValue!.engineUnavailable
+          : this.moveReviewCopyValue!.browserUnsupported,
+      };
+    }
+    return {
+      ok: true,
+      engineProfile: result.profile,
+      source: createMoveReviewRuntimeSource(this.executeMoveReviewEngineWork),
+    };
+  };
+
+  private executeMoveReviewEngineWork = (
+    work: IssuedMoveReviewEngineWork,
+    receivedAtMs: number,
+    signal: AbortSignal,
+  ): Promise<MoveReviewEngineOutcome> =>
+    signal.aborted
+      ? Promise.resolve({
+          kind: 'executor_failed',
+          executorElapsedMs: 0,
+          observedNodes: 0,
+          engineTimeMs: 0,
+          failureCode: 'cancelled',
+          diagnostic: 'The move review was cancelled before engine work started.',
+        })
+      : new Promise(resolve => {
+          let done = false;
+          let latestNodes = 0;
+          let latestEngineTimeMs = 0;
+          let previousEvaluation: Tree.LocalEval | undefined;
+          const startedAt = receivedAtMs;
+          const elapsed = (): number => Math.max(0, Math.floor(performance.now() - startedAt));
+          let leaseTimer: number | undefined;
+          const failure = (failureCode: string, diagnostic: string): MoveReviewEngineOutcome => ({
+            kind: 'executor_failed',
+            executorElapsedMs: elapsed(),
+            observedNodes: latestNodes,
+            engineTimeMs: latestEngineTimeMs,
+            failureCode,
+            diagnostic,
+          });
+          const finish = (outcome: MoveReviewEngineOutcome, stopWork = false): void => {
+            if (done) return;
+            done = true;
+            if (leaseTimer !== undefined) window.clearTimeout(leaseTimer);
+            signal.removeEventListener('abort', cancel);
+            if (this.moveReviewEngineFailure === fail) this.moveReviewEngineFailure = undefined;
+            if (stopWork) this.ceval.stopMoveReviewWork();
+            resolve(outcome);
+          };
+          const cancel = (): void => finish(failure('cancelled', 'The move review was cancelled.'), true);
+          const fail = (): void =>
+            finish(failure('engine_failure', 'The browser engine stopped before producing an exact result.'), true);
+          this.moveReviewEngineFailure = fail;
+          signal.addEventListener('abort', cancel, { once: true });
+          const remainingLeaseMs = work.maxSearchElapsedMs - elapsed();
+          if (remainingLeaseMs <= 0) {
+            finish(failure('lease_expired', 'The browser engine exceeded its issued work lease.'), true);
+            return;
+          }
+          leaseTimer = window.setTimeout(
+            () => finish(failure('lease_expired', 'The browser engine exceeded its issued work lease.'), true),
+            remainingLeaseMs,
+          );
+          try {
+            const started = this.ceval.startMoveReview(work.engineProfile, {
+              variant: work.variant,
+              initialFen: work.enginePositionInitialFen,
+              currentFen: work.searchFen,
+              moves: work.enginePositionMovesUci,
+              path: `move-review:${work.workId}`,
+              ply: this.plyFromFen(work.searchFen),
+              multiPv: work.searchLimits.multiPv,
+              searchLimits: work.searchLimits,
+              rootMoves: work.rootRestriction.kind === 'restricted' ? work.rootRestriction.movesUci : [],
+              observe: (nodes, engineTimeMs) => {
+                latestNodes = Math.max(latestNodes, nodes);
+                latestEngineTimeMs = Math.max(latestEngineTimeMs, engineTimeMs);
+              },
+              emit: evaluation => {
+                latestNodes = Math.max(latestNodes, evaluation.nodes);
+                latestEngineTimeMs = Math.max(latestEngineTimeMs, evaluation.millis);
+                if (
+                  evaluation.depth === work.searchLimits.depth - 1 &&
+                  evaluation.bestmove === undefined
+                )
+                  previousEvaluation = {
+                    ...evaluation,
+                    pvs: evaluation.pvs.map(pv => ({ ...pv, moves: [...pv.moves] })),
+                  };
+                const outcome = moveReviewEngineOutcomeAtRequiredDepth(
+                  work,
+                  evaluation,
+                  previousEvaluation,
+                  elapsed(),
+                );
+                if (outcome) finish(outcome, true);
+                else if (evaluation.bestmove !== undefined) fail();
+              },
+            });
+            if (!started) fail();
+          } catch (_) {
+            fail();
+          }
+        });
+
+  private suspendLiveEngineForMoveReview = (): void => {
+    if (this.cevalEnabled()) this.ceval.stop();
+    this.redraw();
+  };
+
+  private resumeLiveEngineAfterMoveReview = (): void => {
+    this.ceval.stopMoveReview();
+    this.moveReviewEngineFailure = undefined;
+    if (this.cevalEnabled()) this.startCeval();
+    this.redraw();
+  };
+
+  private setMoveReviewState = (state: MoveReviewJobState): void => {
+    this.moveReviewJob = state;
+    const subject =
+      state.kind === 'completed' || state.kind === 'position-action'
+        ? state.snapshot.subject
+        : state.kind === 'loading' ||
+            state.kind === 'abstained' ||
+            state.kind === 'fault' ||
+            state.kind === 'unsupported'
+          ? state.subject
+          : undefined;
+    const subjectKey = subject ? moveReviewSubjectKey(subject) : undefined;
+    if (subjectKey !== this.moveReviewSubjectIdentity || state.kind === 'loading') {
+      this.moveReviewSubjectIdentity = subjectKey;
+      this.moveReviewView = {
+        selectedCandidateUci: subject?.played.uci,
+        evidenceExpanded: false,
+      };
+    }
+    if (state.kind === 'completed') {
+      const played = state.snapshot.evidence.candidates.find(candidate =>
+        candidate.roles.includes('played'),
+      )!;
+      this.moveReviewView.selectedCandidateUci ??= played.uci;
+      const review = played.review;
+      if (
+        review.kind === 'move-verdict' &&
+        !this.moveReviewView.expandedReasonId &&
+        review.core.reasonRefs.primary
+      )
+        this.moveReviewView.expandedReasonId = review.core.reasonRefs.primary;
+      if (review.kind !== 'move-verdict' || review.core.verdictSymbol === 'none')
+        this.moveReviewAnnotations.delete(subject!.after.path);
+      else
+        this.moveReviewAnnotations.set(subject!.after.path, {
+          symbol: review.core.verdictSymbol,
+          label: `${moveReviewVerdictLabel(review.core.verdictSymbol, this.moveReviewCopyValue!)}: ${subject!.played.san}`,
+        });
+    } else if (state.kind === 'position-action') {
+      this.moveReviewAnnotations.delete(subject!.after.path);
+    }
+    this.redraw();
+  };
+
+  private selectMoveReviewCandidate = (uci: Uci): void => {
+    this.moveReviewView = {
+      selectedCandidateUci: uci,
+      evidenceExpanded: this.moveReviewView.evidenceExpanded,
+    };
+    this.redraw();
+  };
+
+  private toggleMoveReviewEvidence = (): void => {
+    this.moveReviewView.evidenceExpanded = !this.moveReviewView.evidenceExpanded;
+    if (!this.moveReviewView.evidenceExpanded) this.moveReviewView.hoveredFrame = undefined;
+    this.redraw();
+  };
+
+  private toggleMoveReviewReason = (reasonId: string): void => {
+    this.moveReviewView.expandedReasonId =
+      this.moveReviewView.expandedReasonId === reasonId ? undefined : reasonId;
+    this.redraw();
+  };
+
+  private previewMoveReviewFrame = (frame: MoveReviewFrameSelection): void => {
+    this.moveReviewView.hoveredFrame = frame;
+    this.redraw();
+  };
+
+  private clearMoveReviewPreview = (): void => {
+    this.moveReviewView.hoveredFrame = undefined;
+    this.redraw();
+  };
+
+  private pinMoveReviewFrame = (frame: MoveReviewFrameSelection): void => {
+    this.moveReviewView.pinnedFrame = frame;
+    this.moveReviewView.hoveredFrame = undefined;
+    this.redraw();
+  };
+
+  private clearMoveReviewPin = (): void => {
+    this.moveReviewView.pinnedFrame = undefined;
+    this.redraw();
+  };
+
+  private retryMoveReview = (): void => this.moveReviewCoordinator?.retry();
+
+  private currentMoveReviewProof(
+    proofId: string,
+  ): { subject: MoveReviewSubject; proof: MoveReviewProof } | undefined {
+    if (this.moveReviewJob.kind !== 'completed') return;
+    const { subject, evidence } = this.moveReviewJob.snapshot;
+    const proof = evidence.candidates
+      .flatMap(candidate =>
+        candidate.review.kind === 'move-verdict'
+          ? candidate.review.reasons.map(reason => reason.proof)
+          : candidate.review.kind === 'single-candidate-insight'
+            ? [candidate.review.proof]
+            : [],
+      )
+      .find(candidate => candidate.id === proofId);
+    return proof ? { subject, proof } : undefined;
+  }
+
+  private addMoveReviewProof = (proofId: string): void => {
+    const selected = this.currentMoveReviewProof(proofId);
+    if (!selected || !this.canWriteStudy()) return;
+    const subjectKey = moveReviewSubjectKey(selected.subject);
+    this.enqueueStudyWrite(async ref => {
+      const path = await mergeMoveReviewProofIntoStudy(this.tree, ref, selected.subject, selected.proof);
+      this.moveReviewAdded = { subjectKey, proofId, path };
+      this.redraw();
+    });
+  };
+
+  private viewAddedMoveReviewProof = (proofId: string): void => {
+    if (
+      this.moveReviewAdded?.proofId === proofId &&
+      this.moveReviewAdded.subjectKey === this.moveReviewSubjectIdentity
+    )
+      this.userJump(this.moveReviewAdded.path);
+  };
 
   private plyFromFen(fen: FEN): Ply {
     const parts = fen.split(/\s+/);
     const fullmove = Math.max(1, Number(parts[5]) || 1);
     return ((fullmove - 1) * 2 + (parts[1] === 'b' ? 1 : 0)) as Ply;
-  }
-
-  private makeChesstoryBriefRequest(): ChesstoryMoveMeaningRequest | undefined {
-    if (!this.isStudy() || this.data.game.variant.key !== 'standard' || this.nodeList.length < 2) return;
-    const played = this.node;
-    const before = this.nodeList[this.nodeList.length - 2];
-    if (!played.uci) return;
-
-    const beforeEval = before.ceval || before.eval;
-    if (!beforeEval?.pvs?.length) return;
-
-    const variations = beforeEval.pvs.flatMap(pv => {
-      const moves = Array.isArray(pv.moves) ? pv.moves : pv.moves.split(' ').filter(Boolean);
-      const scoreCp = this.chesstoryEvalCp(pv);
-      return moves.length && scoreCp !== undefined
-        ? [{ moves, scoreCp, mate: pv.mate, depth: beforeEval.depth || 0 }]
-        : [];
-    });
-    if (!variations.length) return;
-    const playedVariationIndex = variations.findIndex(v => v.moves[0] === played.uci);
-    const playedVariation = playedVariationIndex < 0 ? undefined : variations[playedVariationIndex];
-    const playedIsTerminal = parseFen(played.fen)
-      .chain(setup => setupPosition('chess', setup))
-      .unwrap(
-        pos => pos.isEnd(),
-        () => false,
-      );
-
-    if (!playedVariation || (playedVariation.moves.length < 2 && !playedIsTerminal)) {
-      const playedEval = played.ceval || played.eval;
-      if (!playedEval) return;
-      const playedPv = playedEval.pvs?.find(pv => {
-        const moves = Array.isArray(pv.moves) ? pv.moves : pv.moves.split(' ').filter(Boolean);
-        return moves.length > 0;
-      });
-      const suffix = playedPv
-        ? Array.isArray(playedPv.moves)
-          ? playedPv.moves
-          : playedPv.moves.split(' ').filter(Boolean)
-        : [];
-      const scoreCp = this.chesstoryEvalCp(playedPv || playedEval);
-      if (!suffix.length && !playedIsTerminal) return;
-      if (scoreCp === undefined) return;
-      const completePlayedVariation = {
-        moves: [played.uci, ...suffix],
-        scoreCp,
-        mate: playedPv?.mate ?? playedEval.mate,
-        depth: playedEval.depth || 0,
-      };
-      if (playedVariationIndex < 0) variations.push(completePlayedVariation);
-      else variations[playedVariationIndex] = completePlayedVariation;
-    }
-
-    return {
-      fen: before.fen,
-      playedMoveUci: played.uci,
-      variations,
-      ply: before.ply,
-      openingContext: this.data.game.opening
-        ? {
-            eco: this.data.game.opening.eco,
-            name: this.data.game.opening.name,
-            family: this.data.game.opening.eco?.slice(0, 1),
-          }
-        : undefined,
-      movePrefixUci: this.nodeList
-        .slice(1, -1)
-        .map(n => n.uci)
-        .filter((uci): uci is Uci => !!uci),
-    };
   }
 
   turnColor(): Color {
@@ -1154,9 +1013,9 @@ export default class AnalyseCtrl implements CevalHandler {
       this.threatMode(false);
       this.ceval?.stop();
       this.startCeval();
+      this.scheduleMoveReviewForCurrentEdge();
       site.sound.saySan(this.node.san, true);
     }
-    this.refreshChesstoryBrief();
     this.justPlayed = this.justCaptured = undefined;
     this.explorer.setNode();
     this.syncHref(historyMode);
@@ -1204,12 +1063,15 @@ export default class AnalyseCtrl implements CevalHandler {
   }
 
   reloadData(data: AnalyseData, merge: boolean): void {
+    this.moveReviewCoordinator?.settle(undefined);
     this.initialize(data, merge);
     this.syncWorkspacePrefs();
     this.redirecting = false;
     this.setPath(treePath.root);
     this.initCeval();
-    this.refreshChesstoryBrief();
+    this.startCeval();
+    this.moveReviewAnnotations.clear();
+    this.scheduleMoveReviewForCurrentEdge();
     this.cgVersion.js++;
     this.mergeIdbThenShowTreeView();
   }
@@ -1218,7 +1080,7 @@ export default class AnalyseCtrl implements CevalHandler {
     this.pgnError = '';
     const normalized = normalizeInlinePgn(pgn);
     if (!normalized) {
-      this.pgnError = emptyPgnError;
+      this.pgnError = pgnInputError(pgn);
       requestAnimationFrame(this.redraw);
       return undefined;
     }
@@ -1244,11 +1106,10 @@ export default class AnalyseCtrl implements CevalHandler {
   importPgn(rawPgn: string): boolean {
     this.pgnError = '';
     if (!submitPgnToImportPipeline(rawPgn)) {
-      this.pgnError = emptyPgnError;
+      this.pgnError = pgnInputError(rawPgn);
       requestAnimationFrame(this.redraw);
       return false;
     }
-    this.rememberRecentImportDraft(rawPgn);
     this.redirecting = true;
     this.redraw();
     return true;
@@ -1299,7 +1160,6 @@ export default class AnalyseCtrl implements CevalHandler {
   onPremoveSet = () => {};
 
   addNode(node: Tree.Node, path: Tree.Path) {
-    this.idbTree.onAddNode(node, path);
     const newPath = this.tree.addNode(node, path);
     if (!newPath) {
       console.log("Can't addNode", node, path);
@@ -1346,8 +1206,8 @@ export default class AnalyseCtrl implements CevalHandler {
     this.redraw();
   }
 
-  allowedEval(node: Tree.Node = this.node): Tree.ClientEval | Tree.ServerEval | false | undefined {
-    return this.cevalEnabled() ? node.ceval : false;
+  allowedEval(node: Tree.Node = this.node): Tree.ClientEval | false | undefined {
+    return !this.cevalEnabled() ? false : node.ceval;
   }
 
   outcome(node?: Tree.Node): Outcome | undefined {
@@ -1421,7 +1281,6 @@ export default class AnalyseCtrl implements CevalHandler {
   };
 
   private onNewCeval = (ev: Tree.ClientEval, path: Tree.Path, isThreat?: boolean): void => {
-    let updated = false;
     this.tree.updateAt(path, (node: Tree.Node) => {
       if (node.fen !== ev.fen && !isThreat) return;
 
@@ -1430,11 +1289,9 @@ export default class AnalyseCtrl implements CevalHandler {
         if (!node.threat || isEvalBetter(threat, node.threat)) node.threat = threat;
       } else if (!node.ceval || isEvalBetter(ev, node.ceval)) {
         node.ceval = ev;
-        updated = true;
       } else if (!ev.cloud) {
         if (node.ceval?.cloud && this.ceval.isDeeper()) {
           node.ceval = ev;
-          updated = true;
         }
       }
 
@@ -1443,8 +1300,6 @@ export default class AnalyseCtrl implements CevalHandler {
         this.redraw();
       }
     });
-    if (!isThreat && updated && (path === this.path || path === this.path.slice(0, -2)))
-      this.refreshChesstoryBrief();
   };
 
   private initCeval(): void {
@@ -1455,8 +1310,7 @@ export default class AnalyseCtrl implements CevalHandler {
       onUciHover: this.setAutoShapes,
       redraw: this.redraw,
       onSelectEngine: () => {
-        this.initCeval();
-        this.refreshChesstoryBrief();
+        if (!this.moveReviewCoordinator?.isPreemptingLiveEngine()) this.initCeval();
         this.redraw();
       },
     };
@@ -1483,11 +1337,11 @@ export default class AnalyseCtrl implements CevalHandler {
       this.ceval.showEnginePrefs(false);
       this.redraw();
     }
-    this.refreshChesstoryBrief();
     return enable;
   };
 
   startCeval = () => {
+    if (this.moveReviewCoordinator?.isPreemptingLiveEngine()) return;
     if (!this.ceval.download) this.ceval.stop();
     if (this.node.threefold || !this.cevalEnabled() || this.outcome()) return;
     this.ceval.start(this.path, this.nodeList, undefined, this.threatMode());
@@ -1496,7 +1350,6 @@ export default class AnalyseCtrl implements CevalHandler {
   clearCeval(): void {
     this.tree.removeCeval();
     this.startCeval();
-    this.refreshChesstoryBrief();
   }
 
   showVariationArrows() {
@@ -1556,14 +1409,6 @@ export default class AnalyseCtrl implements CevalHandler {
     this.data.pref.showCaptured = this.showCapturedMaterial();
   }
 
-  private rememberRecentImportDraft(rawPgn: string) {
-    const normalized = normalizeInlinePgn(rawPgn);
-    if (!normalized) return;
-    const next = [normalized, ...this.recentImportDrafts().filter(pgn => pgn !== normalized)].slice(0, 4);
-    this.recentImportDraftsCache = next;
-    tempStorage.set(recentImportStorageKey, JSON.stringify(next));
-  }
-
   activeControlBarTool() {
     return this.actionMenu() ? 'action-menu' : this.explorer.enabled() ? 'opening-explorer' : false;
   }
@@ -1585,28 +1430,6 @@ export default class AnalyseCtrl implements CevalHandler {
     this.threatMode(v);
     this.setAutoShapes();
     this.startCeval();
-    this.redraw();
-  };
-
-  recentImportDrafts = (): string[] => {
-    if (this.recentImportDraftsCache) return this.recentImportDraftsCache;
-    const raw = tempStorage.get(recentImportStorageKey);
-    if (!raw) return (this.recentImportDraftsCache = []);
-    try {
-      const parsed = JSON.parse(raw);
-      this.recentImportDraftsCache = Array.isArray(parsed)
-        ? parsed.filter((v): v is string => typeof v === 'string')
-        : [];
-    } catch (_) {
-      this.recentImportDraftsCache = [];
-    }
-    return this.recentImportDraftsCache;
-  };
-
-  useImportDraft = (draft: string): void => {
-    this.pgnInput = draft;
-    this.pgnError = '';
-    this.redirecting = false;
     this.redraw();
   };
 
@@ -1663,7 +1486,9 @@ export default class AnalyseCtrl implements CevalHandler {
   }
 
   playBestMove(): void {
-    const uci = this.node.ceval?.pvs[0].moves[0] || this.nextNodeBest();
+    const ceval = this.allowedEval();
+    if (!ceval) return;
+    const uci = ceval.pvs[0]?.moves[0] || this.nextNodeBest();
     if (uci) this.playUci(uci);
   }
 
@@ -1678,18 +1503,25 @@ export default class AnalyseCtrl implements CevalHandler {
   };
 
   private makeVariationOpacityProp(): Prop<number | false> {
-    const store = preferenceLocalStorage();
-    let value = parseFloat(store?.getItem('analyse.variation-arrow-opacity') || '0');
-    if (isNaN(value) || value < -1 || value > 1) value = 0;
+    const storedValue = storedProp(
+      'analyse.variation-arrow-opacity',
+      0,
+      value => {
+        const parsed = parseFloat(value);
+        return isNaN(parsed) || parsed < -1 || parsed > 1 ? 0 : parsed;
+      },
+      value => value.toString(),
+    );
     return (v?: number | false) => {
+      const value = storedValue();
       if (v === false) return value;
       if (v === undefined || isNaN(v)) return value > 0 ? value : false;
-      value = Math.min(1, Math.max(-1, v));
-      store?.setItem('analyse.variation-arrow-opacity', value.toString());
+      const nextValue = Math.min(1, Math.max(-1, v));
+      storedValue(nextValue);
       this.setAutoShapes();
       this.chessground.redrawAll();
       this.redraw();
-      return value;
+      return nextValue;
     };
   }
 

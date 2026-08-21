@@ -59,7 +59,9 @@ function throttlePromise<T extends (...args: any) => Promise<void>>(
 ): (...args: Parameters<T>) => Promise<void> {
   const throttler = throttlePromiseWithResult<void, T>(wrapped);
   return function (this: any, ...args: Parameters<T>): Promise<void> {
-    return throttler.apply(this, args).catch(() => {});
+    return throttler.apply(this, args).catch((e: any) => {
+      if (e?.message !== 'Throttled') throw e;
+    });
   };
 }
 

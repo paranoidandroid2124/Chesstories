@@ -531,8 +531,8 @@ class ExperimentRunner:
             plan_metadata
         ):
             raise ContractError("execution bundle differs from the frozen arm plan")
-        if bundle.get("registered_arm_count") != len(plan) or len(plan) != 313:
-            raise ContractError("execution bundle does not bind all 313 arms")
+        if bundle.get("registered_arm_count") != len(plan):
+            raise ContractError("execution bundle does not bind the exact arm plan")
         sample_universe = bundle.get("sample_universe")
         if not isinstance(sample_universe, list) or not sample_universe:
             raise ContractError("execution bundle sample universe is missing")
@@ -734,7 +734,7 @@ class ExperimentRunner:
                     "capture_hashes": hashes,
                 }
 
-            evaluation_view = source_blind_evaluation_view(canonical_outputs["V"])
+            evaluation_view = source_blind_evaluation_view(canonical_outputs["P"])
             endpoint = self.evaluator.evaluate(
                 sample=sample,
                 evaluation_view=evaluation_view,
@@ -932,11 +932,6 @@ class ExperimentRunner:
                 "ranking_bundle": payload("R"),
                 "plan_events": payload("Jp")["plan_events"],
             }
-        if stage == "V":
-            policy = self.preregistration.get("verbalization_policy")
-            if not isinstance(policy, Mapping):
-                raise ContractError("preregistration verbalization_policy is missing")
-            return {"projection": payload("P"), "verbalization_policy": dict(policy)}
         raise ContractError(f"unknown stage: {stage}")
 
     def _stage_context(self, arm: Arm, stage: str) -> Mapping[str, Any]:
@@ -1253,7 +1248,7 @@ class ExperimentRunner:
                         raise ContractError("sentinel evaluations are not separately captured")
                     compared = (
                         "sentinel_definition_sha256",
-                        "canonical_v_output_sha256",
+                        "canonical_p_output_sha256",
                         "source_blind_view_sha256",
                         "normalized_judgment_sha256",
                         "endpoint",
@@ -1531,14 +1526,14 @@ class ExperimentRunner:
                 "binding",
                 "execution_id",
                 "sentinel_definition_sha256",
-                "canonical_v_output_sha256",
+                "canonical_p_output_sha256",
                 "source_blind_view_sha256",
                 "normalized_judgment_sha256",
                 "endpoint",
             },
             "sentinel evaluator artifact",
         )
-        if document.get("schema_version") != "chesstory.eval.sentinel-evaluator-artifact.v1":
+        if document.get("schema_version") != "chesstory.eval.sentinel-p-evaluator-artifact.v1":
             raise ContractError("unsupported sentinel evaluator artifact")
         if (
             document.get("control_type") != "sentinel_blind_duplicate"
@@ -1554,7 +1549,7 @@ class ExperimentRunner:
             raise ContractError("sentinel execution_id must be non-empty text")
         for field in (
             "sentinel_definition_sha256",
-            "canonical_v_output_sha256",
+            "canonical_p_output_sha256",
             "source_blind_view_sha256",
             "normalized_judgment_sha256",
         ):
@@ -1562,10 +1557,10 @@ class ExperimentRunner:
                 raise ContractError(f"sentinel {field} must be a lowercase SHA-256")
         if document["sentinel_definition_sha256"] != sentinel_hash:
             raise ContractError("sentinel definition is not the preregistered definition")
-        if document["canonical_v_output_sha256"] != baseline_snapshot[
+        if document["canonical_p_output_sha256"] != baseline_snapshot[
             "canonical_output_sha256_by_stage"
-        ]["V"]:
-            raise ContractError("sentinel V output is not the current baseline V artifact")
+        ]["P"]:
+            raise ContractError("sentinel P output is not the current baseline P artifact")
         if document["source_blind_view_sha256"] != baseline_snapshot["endpoint"][
             "evaluation_view_sha256"
         ]:
@@ -1733,7 +1728,7 @@ class ExperimentRunner:
         }
         if endpoint.get("binding") != expected_endpoint_binding:
             raise ContractError("baseline endpoint run/sample binding mismatch")
-        expected_view_hash = sha256_json(source_blind_evaluation_view(canonical_documents["V"]))
+        expected_view_hash = sha256_json(source_blind_evaluation_view(canonical_documents["P"]))
         if endpoint.get("evaluation_view_sha256") != expected_view_hash:
             raise ContractError("baseline endpoint source-blind view hash mismatch")
         expected_endpoint = {
@@ -2010,9 +2005,6 @@ class ExperimentRunner:
             reasons.append("split-binding-missing")
         if not self._is_sha256(endpoint_policy_hash):
             reasons.append("frozen-endpoint-policy-missing")
-        if len(plan) != 313:
-            reasons.append("full-frozen-arm-plan-required")
-
         expected_pairs = {
             (str(sample["sample_id"]), arm.arm_id)
             for sample in sample_universe

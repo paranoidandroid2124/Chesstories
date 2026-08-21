@@ -5,7 +5,7 @@ import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.analysis.structure.{ StructuralDeltaAnalyzer, StructuralDeltaContracts }
 import lila.chessjudgment.model.{ PlanMatch, PlanSupport }
-import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.line.{ CanonicalPositionHistory, PrincipalVariationEvidence }
 import lila.chessjudgment.model.strategic.PlanTaxonomy.{ PlanKind, PlanTheme }
 import lila.chessjudgment.model.judgment.*
 
@@ -18,7 +18,8 @@ private[assembly] object PlanCausalEpisodeBuilder:
       rootIdentity: lila.chessjudgment.model.PlanEventIdentity,
       rootConsequences: List[TransitionConsequence],
       rootDevelopmentChoices: List[StructuralDevelopmentChoice],
-      line: LineFactEvidence
+      line: LineFactEvidence,
+      positionHistory: CanonicalPositionHistory
   ): PlanCausalEpisode =
     val rootStep = line.lineReplaySteps.headOption
       .filter(step => EvidenceRef.sameMove(step.moveUci, rootTransition.moveUci))
@@ -42,7 +43,8 @@ private[assembly] object PlanCausalEpisodeBuilder:
       rootLine = rootLine,
       role = rootTransition.role,
       root = root,
-      continuation = line.lineReplaySteps.dropWhile(_ != rootStep).drop(1)
+      continuation = line.lineReplaySteps.dropWhile(_ != rootStep).drop(1),
+      positionHistory = positionHistory
     )
 
   def fromContinuation(
@@ -51,6 +53,7 @@ private[assembly] object PlanCausalEpisodeBuilder:
       role: TransitionEdgeRole,
       root: PlanCausalEventNode,
       continuation: List[LineReplayStep],
+      positionHistory: CanonicalPositionHistory,
       observedResultMove: Option[String] = None,
       observedReplyBranch: Boolean = false
   ): PlanCausalEpisode =
@@ -62,11 +65,19 @@ private[assembly] object PlanCausalEpisodeBuilder:
       step.copy(ply = root.step.ply + index + 1)
     }
     val replay = root.step :: rebasedContinuation
-    val materialSummary = CandidateLineAssembler.lineMaterialSummary(
-      replay.map(_.moveUci),
-      root.step.fenBefore,
-      previousCaptureSquare = None
-    )
+    val materialSummary =
+      Option
+        .when(
+          positionHistory.currentFen == root.step.fenBefore &&
+            positionHistory.currentPly + 1 == root.step.ply
+        )(positionHistory)
+        .flatMap(_.extend(replay.map(_.moveUci)).toOption)
+        .filter { lineHistory =>
+          lineHistory.segmentReplaySteps
+            .drop(positionHistory.segmentReplaySteps.size)
+            .map(step => LineReplayStep(step.ply, step.uci, step.beforeFen, step.afterFen)) == replay
+        }
+        .flatMap(lineHistory => CandidateLineAssembler.lineMaterialSummary(positionHistory, lineHistory))
     val rawCandidates = root :: rebasedContinuation.flatMap(step => eventNode(plan, rootLine, role, root.perspective, step))
     val observedCandidates = withAcceptedExchangeCompletions(plan, rawCandidates, replay)
     val observedResponses = observedCandidates.flatMap(trigger => responsesFor(plan, trigger, replay))

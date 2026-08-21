@@ -1,4 +1,3 @@
-import { clamp } from 'lib/algo';
 import { isBrandV3ShellEnabled, readShellSelectors } from 'lib/shell';
 
 import { isTouchDevice } from 'lib/device';
@@ -11,23 +10,40 @@ export default function () {
   const navToggle = document.getElementById(navToggleId) as HTMLInputElement | null;
   const nav = document.getElementById(navId);
   const navButton = top.querySelector<HTMLButtonElement>('.js-topnav-toggle');
+  const compactNav = window.matchMedia('(max-width: 1019.29px)');
   let lastNavFocus: HTMLElement | null = null;
+  let closeNavTimer: number | undefined;
 
   const navFocusable = () =>
-    [navButton, ...Array.from(nav?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])') || [])].filter(
+    [
+      navButton,
+      ...Array.from(
+        nav?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) || [],
+      ),
+    ].filter(
       (element): element is HTMLElement =>
         !!element && !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true',
     );
 
-  const syncNavButton = (open: boolean) => {
-    navButton?.setAttribute('aria-expanded', open ? 'true' : 'false');
-    navButton?.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
-    nav?.setAttribute('aria-hidden', open ? 'false' : 'true');
-    if (nav) (nav as HTMLElement & { inert?: boolean }).inert = !open;
+  const syncNavState = (open = navToggle?.checked ?? false) => {
+    const isCompact = compactNav.matches;
+    const navOpen = isCompact && open;
+    navButton?.setAttribute('aria-expanded', navOpen ? 'true' : 'false');
+    navButton?.setAttribute('aria-label', navOpen ? 'Close navigation' : 'Open navigation');
+    if (!nav) return;
+    if (isCompact) {
+      nav.setAttribute('aria-hidden', navOpen ? 'false' : 'true');
+      (nav as HTMLElement & { inert?: boolean }).inert = !navOpen;
+    } else {
+      nav.removeAttribute('aria-hidden');
+      (nav as HTMLElement & { inert?: boolean }).inert = false;
+    }
   };
 
   const closeNav = (restoreFocus = true) => {
-    if (!navToggle?.checked) return;
+    if (!compactNav.matches || !navToggle?.checked) return;
     navToggle.checked = false;
     navToggle.dispatchEvent(new Event('change', { bubbles: true }));
     if (restoreFocus) (lastNavFocus?.isConnected ? lastNavFocus : navButton)?.focus();
@@ -38,8 +54,16 @@ export default function () {
     (targets[0] || navButton)?.focus();
   };
 
+  const clearNavClose = () => {
+    if (closeNavTimer !== undefined) {
+      window.clearTimeout(closeNavTimer);
+      closeNavTimer = undefined;
+    }
+    navToggle?.classList.remove('opened');
+  };
+
   const handleNavKeydown = (event: KeyboardEvent) => {
-    if (!navToggle?.checked) return;
+    if (!compactNav.matches || !navToggle?.checked) return;
     if (event.key === 'Escape') {
       event.preventDefault();
       closeNav();
@@ -60,13 +84,8 @@ export default function () {
     focusables[nextIndex]?.focus();
   };
 
-  syncNavButton(false);
+  syncNavState();
   document.addEventListener('keydown', handleNavKeydown);
-
-  // On touchscreens, clicking the top menu element expands it. There's no top link.
-  // Only for mq-topnav-visible in ui/lib/css/abstract/_media-queries.scss
-  if ('ontouchstart' in window && window.matchMedia('(min-width: 1020px)').matches)
-    $(`#${navId} section > a`).removeAttr('href');
 
   const blockBodyScroll = (e: Event) => {
     // on iOS, overflow: hidden isn't sufficient
@@ -74,62 +93,62 @@ export default function () {
   };
 
   $(`#${navToggleId}`).on('change', e => {
-    const menuOpen = (e.target as HTMLInputElement).checked;
-    syncNavButton(menuOpen);
+    const input = e.target as HTMLInputElement;
+    const menuOpen = compactNav.matches && input.checked;
+    if (!compactNav.matches) input.checked = false;
+    const focusWasInNav = !menuOpen && !!nav?.contains(document.activeElement);
+    if (focusWasInNav) (lastNavFocus?.isConnected ? lastNavFocus : navButton)?.focus();
+    syncNavState(menuOpen);
     if (menuOpen) {
+      clearNavClose();
       lastNavFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       document.body.addEventListener('touchmove', blockBodyScroll, { passive: false });
       $(e.target).addClass('opened');
-      requestAnimationFrame(focusFirstNavTarget);
+      requestAnimationFrame(() => {
+        if (compactNav.matches && navToggle?.checked) focusFirstNavTarget();
+      });
     } else {
       document.body.removeEventListener('touchmove', blockBodyScroll);
-      setTimeout(() => $(e.target).removeClass('opened'), 200);
+      if (closeNavTimer !== undefined) window.clearTimeout(closeNavTimer);
+      closeNavTimer = window.setTimeout(() => {
+        if (!navToggle?.checked) navToggle?.classList.remove('opened');
+        closeNavTimer = undefined;
+      }, 200);
     }
     document.body.classList.toggle('masked', menuOpen);
   });
 
+  compactNav.addEventListener('change', () => {
+    if (compactNav.matches && nav?.contains(document.activeElement)) navButton?.focus();
+    navToggle && (navToggle.checked = false);
+    clearNavClose();
+    document.body.removeEventListener('touchmove', blockBodyScroll);
+    document.body.classList.remove('masked');
+    if (!compactNav.matches) {
+      lastNavFocus = null;
+    }
+    syncNavState();
+  });
+
   navButton?.addEventListener('click', () => {
-    if (!navToggle) return;
+    if (!navToggle || !compactNav.matches) return;
     navToggle.checked = !navToggle.checked;
     navToggle.dispatchEvent(new Event('change', { bubbles: true }));
   });
 
   nav?.addEventListener('click', event => {
     const target = event.target as HTMLElement | null;
-    if (target?.closest('a[href]')) closeNav(false);
-  });
-
-  $(top).on('click', '.toggle', function (this: HTMLElement) {
-    const $p = $(this).parent().toggleClass('shown');
-    $p.siblings('.shown').removeClass('shown');
-    setTimeout(() => {
-      const handler = (e: Event) => {
-        const target = e.target as HTMLElement;
-        if (!target.isConnected || $p[0]?.contains(target)) return;
-        $p.removeClass('shown');
-        $('html').off('click', handler);
-      };
-      $('html').on('click', handler);
-    }, 10);
-    return false;
+    if (compactNav.matches && target?.closest('a[href]')) closeNav(false);
   });
 
   {
     // stick top bar
-    let lastY = window.scrollY;
-    if (lastY > 0) top.classList.add('scrolled');
+    if (window.scrollY > 0) top.classList.add('scrolled');
 
     window.addEventListener(
       'scroll',
       () => {
-        const y = window.scrollY;
-        top.classList.toggle('scrolled', y > 0);
-        if (y > lastY + 10) top.classList.add('hide');
-        else if (y <= clamp(lastY - 20, { min: 0, max: document.body.scrollHeight - window.innerHeight }))
-          top.classList.remove('hide');
-        else return;
-
-        lastY = Math.max(0, y);
+        top.classList.toggle('scrolled', window.scrollY > 0);
       },
       { passive: true },
     );
@@ -140,7 +159,6 @@ export default function () {
     document.querySelector<HTMLElement>('.main-board')?.addEventListener(
       'dblclick',
       e => {
-        lastY = -9999;
         window.scrollTo({
           top: parseInt(window.getComputedStyle(document.body).getPropertyValue('---site-header-height')),
           behavior: 'instant',

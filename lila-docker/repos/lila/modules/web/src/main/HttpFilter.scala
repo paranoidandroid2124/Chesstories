@@ -8,7 +8,8 @@ import lila.core.config.NetConfig
 
 final class HttpFilter(
     net: NetConfig,
-    sitewideCoepCredentiallessHeader: () => Boolean
+    sitewideCoepCredentiallessHeader: () => Boolean,
+    cookieHeaderEncoding: CookieHeaderEncoding = DefaultCookieHeaderEncoding()
 )(using val mat: Materializer)(using Executor)
     extends Filter
     with ResponseHeaders:
@@ -16,17 +17,19 @@ final class HttpFilter(
   private val logger = lila.log("http")
 
   def apply(handle: RequestHeader => Fu[Result])(req: RequestHeader): Fu[Result] =
-    if HTTPRequest.isAssets(req) then serveAssets(handle(req))
-    else
-      val startTime = nowMillis
-      redirectWrongDomain(req)
-        .map(fuccess)
-        .getOrElse:
-          handle(req).map: result =>
-            logging(req, startTime)(result)
-            addContextualResponseHeaders(req):
-              addEmbedderPolicyHeaders(req):
-                result
+    val response =
+      if HTTPRequest.isAssets(req) then serveAssets(handle(req))
+      else
+        val startTime = nowMillis
+        redirectWrongDomain(req)
+          .map(fuccess)
+          .getOrElse:
+            handle(req).map: result =>
+              logging(req, startTime)(result)
+              addContextualResponseHeaders(req):
+                addEmbedderPolicyHeaders(req):
+                  result
+    response.map(SidOnlyCookiePolicy(_, req, cookieHeaderEncoding))
 
   private def logging(req: RequestHeader, startTime: Long)(result: Result) =
     if net.logRequests then

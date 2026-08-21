@@ -1,6 +1,6 @@
 package lila.chessjudgment.model.judgment
 
-import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.model.line.CandidateLineEvaluation
 
 case class LineNodeRef(
     id: String,
@@ -29,10 +29,7 @@ object SemanticLineKey:
 
 case class CandidateLineNode(
     ref: LineNodeRef,
-    line: EngineLine,
+    evaluation: CandidateLineEvaluation,
     evidence: EvidenceRef
 ):
   val role: LineNodeRole = ref.role
-  val whitePovEvalCp: Int = line.scoreCp
-  val mate: Option[Int] = line.mate
-  val depth: Int = line.depth

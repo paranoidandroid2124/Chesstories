@@ -30,7 +30,7 @@ const setVariationControls = (ctrl: AnalyseCtrl, closeMenu: () => void, enabled:
 };
 
 export function view(ctrl: AnalyseCtrl): VNode {
-  return hl('div.action-menu', boardSettingsView(ctrl));
+  return hl('div.action-menu', { attrs: { id: 'analyse-action-menu' } }, boardSettingsView(ctrl));
 }
 
 export function boardSettingsView(ctrl: AnalyseCtrl, opts: BoardSettingsOpts = {}): VNode[] {

@@ -29,13 +29,9 @@ from .evaluation import (
     UnavailableEvaluator,
 )
 from .hashing import json_bytes, read_json, sha256_file, sha256_json
-from .model import ContractError, HarnessError, RunContext, SplitSealed
+from .model import ContractError, HarnessError, RunContext, SplitSealed, STAGES
 from .runner import ExperimentRunner
 from .schemas import SchemaRegistry
-from .provisional_proxy import (
-    run_provisional_proxy_diagnostic,
-    validate_provisional_run_id,
-)
 from .attestation import (
     build_candidate_manifest,
     build_fresh_confirm_qualification,
@@ -51,26 +47,15 @@ from .attestation import (
 )
 
 
-def _configure_cause_audit_parser(
-    parser: argparse.ArgumentParser,
-    *,
-    historical_v2: bool,
-) -> None:
+def _configure_cause_audit_parser(parser: argparse.ArgumentParser) -> None:
     _root_argument(parser)
     parser.add_argument(
         "--action",
         required=True,
-        choices=("run", "compare")
-        if historical_v2
-        else (
+        choices=(
             "freeze",
             "acquire",
-            "bind-candidate",
             "run",
-            "freeze-open-world-inventory",
-            "freeze-open-world-candidates",
-            "finalize-open-world-oracle",
-            "compare",
         ),
     )
     parser.add_argument("--run-id", required=True)
@@ -78,33 +63,13 @@ def _configure_cause_audit_parser(
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--cases", required=True, type=Path)
     parser.add_argument("--manifest", type=Path)
-    parser.add_argument("--labels", type=Path)
     parser.add_argument("--acquisition", type=Path)
-    parser.add_argument("--runtime-run", type=Path)
-    parser.add_argument(
-        "--case-id",
-        action="append",
-        default=[],
-        help="run only the named case; repeat for an affected-family rerun",
-    )
-    parser.add_argument(
-        "--candidate-binding",
-        type=Path,
-        help="post-fix immutable candidate file required before sealed production runtime",
-    )
-    parser.add_argument(
-        "--partition", choices=("explore", "sealed_confirm", "all"), default="all"
-    )
     parser.add_argument("--stockfish", type=Path)
     parser.add_argument("--sbt", type=Path)
     parser.add_argument("--adapter-root", type=Path)
-    parser.add_argument("--cache", type=Path)
     parser.add_argument("--timeout-seconds", type=float, default=180.0)
     parser.add_argument("--provider-timeout-seconds", type=float, default=300.0)
     parser.add_argument("--max-probe-rounds", type=int, default=6)
-    if historical_v2:
-        return
-
     parser.add_argument(
         "--oracle-label",
         action="append",
@@ -118,58 +83,13 @@ def _configure_cause_audit_parser(
         action="append",
         default=[],
         metavar="CASE_ID=REASON",
-        help="pre-freeze case excluded from sealed selection with an auditable reason",
+        help="pre-freeze case excluded from the historical untrusted split label",
     )
     parser.add_argument("--corpus-id", default="cause-audit-v1")
-    parser.add_argument("--candidate-id")
-    parser.add_argument(
-        "--component",
-        action="append",
-        default=[],
-        type=Path,
-        help="candidate source file to bind; repeat for every in-scope production file",
-    )
     parser.add_argument(
         "--reference-labels",
         type=Path,
         help="optional manifest-bound labels used only to force reference engine lines",
-    )
-    parser.add_argument(
-        "--oracle-run-manifest",
-        type=Path,
-        help="partition-scoped typed oracle and frozen open-world binding",
-    )
-    parser.add_argument(
-        "--base-oracle",
-        type=Path,
-        help="independent base typed oracle bound before v3 runtime and by its oracle manifest",
-    )
-    parser.add_argument(
-        "--runtime-arm",
-        action="append",
-        default=[],
-        type=Path,
-        help="complete active v3 runtime run to freeze; repeat for every arm",
-    )
-    parser.add_argument(
-        "--open-world-candidates",
-        type=Path,
-        help="source-blind out-of-set candidate artifact bound by the v3 run manifest",
-    )
-    parser.add_argument(
-        "--open-world-adjudication",
-        type=Path,
-        help="frozen open-world adjudication artifact bound by the v3 run manifest",
-    )
-    parser.add_argument(
-        "--open-world-arm-inventory",
-        type=Path,
-        help="frozen all-arm actual-cascade observation inventory bound by v3 candidates",
-    )
-    parser.add_argument(
-        "--run-oracle-output",
-        type=Path,
-        help="immutable canonical JSONL output for the finalized typed run oracle",
     )
     parser.add_argument("--depth", type=int, default=18)
     parser.add_argument("--multipv", type=int, default=4)
@@ -182,7 +102,7 @@ def _configure_cause_audit_parser(
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="judgment-eval",
-        description="External Chesstory Q→F→C→Jp→Ja→R→P→V evaluation harness",
+        description="External Chesstory judgment evaluation harness",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -305,63 +225,11 @@ def _parser() -> argparse.ArgumentParser:
     q_diagnostic.add_argument("--hash-mb", type=int, default=64)
     q_diagnostic.add_argument("--timeout-seconds", type=float, default=180.0)
 
-    native_diagnostic = subparsers.add_parser(
-        "native-diagnostic",
-        help="capture the actual runtime Q→P boundary and materialize the frozen shadow plan",
-    )
-    _root_argument(native_diagnostic)
-    native_diagnostic.add_argument("--run-id", required=True)
-    native_diagnostic.add_argument("--sbt", required=True, type=Path)
-    native_diagnostic.add_argument("--adapter-root", type=Path)
-    native_diagnostic.add_argument("--artifacts", type=Path)
-    native_diagnostic.add_argument("--output", type=Path)
-    native_diagnostic.add_argument(
-        "--provider-timeout-seconds", type=float, default=300.0
-    )
-
-    provisional_proxy = subparsers.add_parser(
-        "provisional-proxy-diagnostic",
-        help=(
-            "materialize the frozen full chain with non-human provisional proxies; "
-            "never release- or production-attribution eligible"
-        ),
-    )
-    _root_argument(provisional_proxy)
-    provisional_proxy.add_argument("--run-id", required=True)
-    provisional_proxy.add_argument("--artifacts", type=Path)
-    provisional_proxy.add_argument("--native-run", type=Path)
-    provisional_proxy.add_argument("--oracle-q-run", type=Path)
-    provisional_proxy.add_argument(
-        "--baseline-probe-completion-report",
-        required=True,
-        type=Path,
-        help="explicit immutable pre-fix closed runtime-probe report binding",
-    )
-    provisional_proxy.add_argument(
-        "--intermediate-probe-completion-report",
-        required=True,
-        type=Path,
-        help="explicit immutable rank/projection-only closed runtime-probe report binding",
-    )
-    provisional_proxy.add_argument(
-        "--probe-completion-report",
-        required=True,
-        type=Path,
-        help="explicit immutable closed runtime-probe completion report binding",
-    )
-    provisional_proxy.add_argument("--output", required=True, type=Path)
-
     cause_audit = subparsers.add_parser(
         "cause-audit",
-        help="run the sole active v3 broad blind C cause audit contract",
+        help="capture public RuntimeProtocol responses while closing runtime probes",
     )
-    _configure_cause_audit_parser(cause_audit, historical_v2=False)
-
-    historical_cause_audit = subparsers.add_parser(
-        "historical-cause-audit-v2",
-        help="explicitly replay or compare the archived v2 Cause contract",
-    )
-    _configure_cause_audit_parser(historical_cause_audit, historical_v2=True)
+    _configure_cause_audit_parser(cause_audit)
     return parser
 
 
@@ -458,9 +326,6 @@ def _doctor(root: Path) -> Mapping[str, Any]:
     canonicalizer = Canonicalizer(registry)
     corpus = Corpus(root / "corpus" / "v1")
     preregistration = read_json(root / "corpus" / "v1" / "preregistration.json")
-    verbalization_policy = preregistration.get("verbalization_policy")
-    if not isinstance(verbalization_policy, Mapping) or verbalization_policy.get("language") != "en":
-        raise ContractError("the judgment harness requires an English verbalization policy")
     corpus.verify_open_splits()
     samples = corpus.load_split("diagnostic-explore")
 
@@ -495,8 +360,6 @@ def _doctor(root: Path) -> Mapping[str, Any]:
 
     q_hashes: list[str] = []
     for sample in samples:
-        if sample.labels.get("language") != "en":
-            raise ContractError(f"sample {sample.sample_id} judgment labels are not bound to English")
         locator = sample.metadata.get("source_locator")
         if not isinstance(locator, Mapping) or set(locator) != {"document_id", "pdf_page"}:
             raise ContractError(f"sample {sample.sample_id} has a non-opaque source locator")
@@ -583,7 +446,7 @@ def _doctor(root: Path) -> Mapping[str, Any]:
 
     plan = build_arm_plan(tuple(preregistration["oracle_chains"]))
     context_counts = Counter(arm.context for arm in plan)
-    if len(plan) != 313 or len({arm.arm_id for arm in plan}) != len(plan):
+    if len({arm.arm_id for arm in plan}) != len(plan):
         raise ContractError("registered intervention plan is incomplete or non-unique")
 
     with tempfile.TemporaryDirectory(prefix="chesstory-eval-doctor-") as temporary:
@@ -595,7 +458,7 @@ def _doctor(root: Path) -> Mapping[str, Any]:
     return {
         "schema_version": "chesstory.eval.doctor-report.v1",
         "status": "passed",
-        "schemas": 16,
+        "schemas": len(STAGES) * 2,
         "explore_samples": len(samples),
         "explore_atomic_clusters": len({sample.atomic_cluster_id for sample in samples}),
         "sealed_access": sealed,
@@ -952,6 +815,7 @@ def _run(root: Path, arguments: argparse.Namespace) -> Mapping[str, Any]:
     if arguments.endpoint_policy:
         if not isinstance(candidate_hash, str):
             raise ContractError("endpoint policy requires a candidate-manifest binding")
+        frozen_plan = _plan(root)
         endpoint_document = read_json(arguments.endpoint_policy.resolve())
         if not isinstance(endpoint_document, Mapping):
             raise ContractError("endpoint policy file must contain an object")
@@ -1010,12 +874,9 @@ def _run(root: Path, arguments: argparse.Namespace) -> Mapping[str, Any]:
                 "split": arguments.split,
                 "split_input_sha256": corpus.split_hash(arguments.split),
                 "endpoint_policy_sha256": endpoint_policy.document_sha256,
-                "plan_sha256": _plan(root)["plan_hash"],
+                "plan_sha256": frozen_plan["plan_hash"],
                 "registered_arm_ids": [
-                    arm.arm_id
-                    for arm in build_arm_plan(
-                        tuple(str(value) for value in preregistration["oracle_chains"])
-                    )
+                    row["arm_id"] for row in frozen_plan["arms"]
                 ],
                 "sample_ids": sorted(endpoint_document["allowed_set_by_sample"]),
                 "live_command_config": live_config_binding,
@@ -1279,6 +1140,7 @@ def _attest_run(root: Path, arguments: argparse.Namespace) -> Mapping[str, Any]:
     if corpus.split_state(arguments.split) != "sealed":
         raise ContractError("attest-run is reserved for sealed two-phase runs")
     preregistration = read_json(root / "corpus" / "v1" / "preregistration.json")
+    frozen_plan = _plan(root)
     custodian_root, custodian_state_id, custodian_storage_binding = _custodian_state(
         corpus
     )
@@ -1325,6 +1187,7 @@ def _attest_run(root: Path, arguments: argparse.Namespace) -> Mapping[str, Any]:
         split_id=arguments.split,
         split_hash=corpus.split_hash(arguments.split),
         corpus_version=corpus.corpus_version,
+        frozen_plan=frozen_plan,
         execution_manifest_path=arguments.execution_manifest_path,
         execution_bundle_path=arguments.execution_bundle_path,
         endpoint_policy_path=arguments.endpoint_policy_path,
@@ -1691,206 +1554,6 @@ def _q_diagnostic(root: Path, arguments: argparse.Namespace) -> Mapping[str, Any
     return report
 
 
-def _native_runtime_request(sample: Any) -> dict[str, Any]:
-    embedded = sample.raw.get("actual_q")
-    if not isinstance(embedded, Mapping):
-        raise ContractError(f"sample {sample.sample_id} has no actual_q artifact")
-    payload = embedded.get("payload")
-    if not isinstance(payload, Mapping):
-        raise ContractError(f"sample {sample.sample_id} has a malformed actual_q payload")
-    if payload.get("probes") not in (None, []):
-        raise ContractError(
-            f"sample {sample.sample_id} has Q probes without a frozen runtime probe-result mapping"
-        )
-    question = payload.get("question")
-    candidate_lines = payload.get("candidate_lines")
-    if not isinstance(question, Mapping) or not isinstance(candidate_lines, list):
-        raise ContractError(f"sample {sample.sample_id} cannot form a native runtime request")
-    root_position = question.get("root_position")
-    if not isinstance(root_position, Mapping):
-        raise ContractError(f"sample {sample.sample_id} has no root position")
-
-    variations: list[dict[str, Any]] = []
-    for index, line in enumerate(candidate_lines):
-        if not isinstance(line, Mapping):
-            raise ContractError(f"sample {sample.sample_id} candidate line {index} is malformed")
-        evaluation = line.get("evaluation")
-        moves = line.get("moves_uci")
-        depth = line.get("depth")
-        if (
-            not isinstance(evaluation, Mapping)
-            or evaluation.get("perspective") != "white"
-            or not isinstance(moves, list)
-            or not moves
-            or not all(isinstance(move, str) and move for move in moves)
-            or isinstance(depth, bool)
-            or not isinstance(depth, int)
-            or depth <= 0
-        ):
-            raise ContractError(
-                f"sample {sample.sample_id} candidate line {index} is not runtime-compatible"
-            )
-        centipawns = evaluation.get("centipawns", 0)
-        mate = evaluation.get("mate")
-        if isinstance(centipawns, bool) or not isinstance(centipawns, int):
-            raise ContractError(
-                f"sample {sample.sample_id} candidate line {index} has no integer score"
-            )
-        if mate is not None and (isinstance(mate, bool) or not isinstance(mate, int)):
-            raise ContractError(
-                f"sample {sample.sample_id} candidate line {index} has an invalid mate score"
-            )
-        variations.append(
-            {
-                "moves": list(moves),
-                "scoreCp": centipawns,
-                "mate": mate,
-                "depth": depth,
-            }
-        )
-
-    fen = root_position.get("fen")
-    played_move = question.get("played_move_uci")
-    if not isinstance(fen, str) or not fen or not isinstance(played_move, str) or not played_move:
-        raise ContractError(f"sample {sample.sample_id} has an invalid runtime question")
-    return {
-        "schema_version": "chesstory.move-meaning.request.v1",
-        "request_id": sample.sample_id,
-        "input": {
-            "fen": fen,
-            "playedMoveUci": played_move,
-            "variations": variations,
-            "movePrefixUci": [],
-        },
-    }
-
-
-def _native_diagnostic(root: Path, arguments: argparse.Namespace) -> Mapping[str, Any]:
-    from .native_diagnostic import (
-        JsonlNativeCommandProvider,
-        NativeEngineeringRunner,
-        NativeEngineeringSample,
-    )
-
-    corpus = Corpus(root / "corpus" / "v1")
-    samples = corpus.load_split("diagnostic-explore")
-    preregistration = read_json(corpus.root / "preregistration.json")
-    artifact_root = (arguments.artifacts or (root / "artifacts")).resolve()
-    _require_output_outside_run_root(
-        arguments.output, artifact_root=artifact_root, run_id=arguments.run_id
-    )
-    adapter_root = (arguments.adapter_root or (root / "runtime-adapter")).resolve(strict=True)
-    if not adapter_root.is_dir():
-        raise ContractError("native diagnostic adapter root must be a directory")
-    sbt = arguments.sbt.resolve(strict=True)
-    if not sbt.is_file():
-        raise ContractError("--sbt must name an exact executable file")
-
-    native_samples = [
-        NativeEngineeringSample(
-            sample_id=sample.sample_id,
-            atomic_cluster_id=sample.atomic_cluster_id,
-            corpus_version=sample.corpus_version,
-            split=sample.split,
-            runtime_request=_native_runtime_request(sample),
-        )
-        for sample in samples
-    ]
-    context = RunContext(
-        run_id=arguments.run_id,
-        seed=int(preregistration["seed"]),
-        corpus_version=corpus.corpus_version,
-        split="diagnostic-explore",
-        artifact_root=artifact_root,
-        stage_context={
-            "design": "frozen-v1-arm-universe-native-v2-shadow",
-            "formal_inference": False,
-        },
-    )
-    command = [
-        str(sbt),
-        "-batch",
-        "-error",
-        "runMain io.chesstory.evaluation.runtimeadapter.NativeInterventionAdapterCli",
-    ]
-    provider = JsonlNativeCommandProvider(
-        command,
-        cwd=adapter_root,
-        response_timeout_seconds=arguments.provider_timeout_seconds,
-    )
-    _reserve_new_run_root(artifact_root=artifact_root, run_id=arguments.run_id)
-    store = ArtifactStore(artifact_root, arguments.run_id)
-    with provider:
-        report = NativeEngineeringRunner(
-            provider=provider,
-            store=store,
-            context=context,
-            preregistration=preregistration,
-        ).run(native_samples)
-    if arguments.output:
-        _write_json(arguments.output, report)
-    return report
-
-
-def _provisional_proxy_diagnostic(
-    root: Path, arguments: argparse.Namespace
-) -> Mapping[str, Any]:
-    validate_provisional_run_id(arguments.run_id)
-    artifact_root = (arguments.artifacts or (root / "artifacts")).resolve()
-    _require_output_outside_run_root(
-        arguments.output,
-        artifact_root=artifact_root,
-        run_id=arguments.run_id,
-    )
-    if arguments.output.resolve().exists():
-        raise ContractError(
-            "--output already exists; provisional diagnostics are single-shot"
-        )
-    native_run = (
-        arguments.native_run
-        or artifact_root / "native-engineering-diagnostic-20260726-v5"
-    ).resolve(strict=True)
-    oracle_q_run = (
-        arguments.oracle_q_run
-        or artifact_root / "q-stable-diagnostic-20260726-v11"
-    ).resolve(strict=True)
-    baseline_probe_completion_report = (
-        arguments.baseline_probe_completion_report.resolve(strict=True)
-    )
-    intermediate_probe_completion_report = (
-        arguments.intermediate_probe_completion_report.resolve(strict=True)
-    )
-    probe_completion_report = arguments.probe_completion_report.resolve(strict=True)
-    if not native_run.is_dir():
-        raise ContractError("--native-run must be an immutable native run directory")
-    if not oracle_q_run.is_dir():
-        raise ContractError("--oracle-q-run must be an immutable Q run directory")
-    for option, report_path in (
-        ("--baseline-probe-completion-report", baseline_probe_completion_report),
-        (
-            "--intermediate-probe-completion-report",
-            intermediate_probe_completion_report,
-        ),
-        ("--probe-completion-report", probe_completion_report),
-    ):
-        if not report_path.is_file():
-            raise ContractError(f"{option} must be an immutable report file")
-    _reserve_new_run_root(artifact_root=artifact_root, run_id=arguments.run_id)
-    store = ArtifactStore(artifact_root, arguments.run_id)
-    report = run_provisional_proxy_diagnostic(
-        root=root,
-        run_id=arguments.run_id,
-        store=store,
-        native_run_root=native_run,
-        oracle_q_run_root=oracle_q_run,
-        baseline_probe_completion_report=baseline_probe_completion_report,
-        intermediate_probe_completion_report=intermediate_probe_completion_report,
-        probe_completion_report=probe_completion_report,
-    )
-    _write_json(arguments.output, report)
-    return report
-
-
 def main(argv: Sequence[str] | None = None) -> int:
     parser = _parser()
     arguments = parser.parse_args(argv)
@@ -1983,69 +1646,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
             )
             return 0
-        if arguments.command == "native-diagnostic":
-            report = _native_diagnostic(root, arguments)
-            plan = report["plan"]
-            print(
-                json.dumps(
-                    {
-                        "run_id": report["binding"]["run_id"],
-                        "mode": report["mode"],
-                        "registered_arm_count": plan["registered_arm_count"],
-                        "planned_row_count": plan["planned_row_count"],
-                        "materialized_row_count": plan["materialized_row_count"],
-                        "provider_invocation_count": plan["provider_invocation_count"],
-                        "completed_row_count": plan["completed_row_count"],
-                        "typed_unavailable_row_count": plan["typed_unavailable_row_count"],
-                        "actual_native_chain": report["actual_native_chain"],
-                        "foundation_gate": report["foundation_gate"],
-                        "production_bottleneck": report["production_bottleneck"],
-                        "output": (
-                            str(arguments.output.resolve()) if arguments.output else None
-                        ),
-                    },
-                    ensure_ascii=False,
-                    indent=2,
-                    sort_keys=True,
-                )
-            )
-            return 0
-        if arguments.command == "provisional-proxy-diagnostic":
-            report = _provisional_proxy_diagnostic(root, arguments)
-            print(
-                json.dumps(
-                    {
-                        "run_id": report["run_id"],
-                        "mode": report["mode"],
-                        "qualification": report["qualification"],
-                        "evidence_tier": report["evidence_tier"],
-                        "registered_arm_count": report["plan"][
-                            "registered_arm_count"
-                        ],
-                        "completed_row_count": report["plan"][
-                            "completed_row_count"
-                        ],
-                        "oracle_q_evidence_level": report["binding"][
-                            "oracle_q_evidence_level"
-                        ],
-                        "engineering_diagnosis": report["engineering_diagnosis"],
-                        "engineering_trajectory": report["engineering_trajectory"],
-                        "production_bottleneck": None,
-                        "output_report_sha256": sha256_file(
-                            arguments.output.resolve()
-                        ),
-                    },
-                    ensure_ascii=False,
-                    indent=2,
-                    sort_keys=True,
-                )
-            )
-            return 0
-        if arguments.command in {"cause-audit", "historical-cause-audit-v2"}:
-            from .cause_audit import (
-                execute_cause_audit_action,
-                execute_historical_cause_audit_v2_action,
-            )
+        if arguments.command == "cause-audit":
+            from .cause_audit import execute_cause_audit_action
 
             artifact_root = (arguments.artifacts or (root / "artifacts")).resolve()
             _require_output_outside_run_root(
@@ -2053,30 +1655,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 artifact_root=artifact_root,
                 run_id=arguments.run_id,
             )
-            if (
-                arguments.command == "cause-audit"
-                and arguments.action == "finalize-open-world-oracle"
-                and arguments.run_oracle_output is not None
-            ):
-                _require_output_outside_run_root(
-                    arguments.run_oracle_output,
-                    artifact_root=artifact_root,
-                    run_id=arguments.run_id,
-                )
             _reserve_new_run_root(
                 artifact_root=artifact_root, run_id=arguments.run_id
             )
             store = ArtifactStore(artifact_root, arguments.run_id)
-            executor = (
-                execute_historical_cause_audit_v2_action
-                if arguments.command == "historical-cause-audit-v2"
-                else execute_cause_audit_action
-            )
-            report = executor(
+            report = execute_cause_audit_action(
                 root=root, store=store, arguments=arguments
             )
-            if arguments.action != "finalize-open-world-oracle":
-                _write_json(arguments.output, report)
+            _write_json(arguments.output, report)
             summary = {
                 "action": arguments.action,
                 "run_id": arguments.run_id,

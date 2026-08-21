@@ -11,8 +11,6 @@ final class Env(
     appConfig: Configuration,
     lightUserApi: lila.core.user.LightUserApi,
     userApi: lila.core.user.UserApi,
-    analyser: lila.tree.Analyser,
-    analysisJson: lila.tree.AnalysisJson,
     annotator: lila.tree.Annotator,
     mongo: lila.db.Env,
     net: lila.core.config.NetConfig,

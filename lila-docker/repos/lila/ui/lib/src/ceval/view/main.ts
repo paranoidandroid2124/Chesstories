@@ -69,41 +69,33 @@ function localInfo(ctrl: CevalHandler, ev?: Tree.ClientEval | false): EvalInfo {
   const knps = ev.nodes / (ev?.millis ?? Number.POSITIVE_INFINITY);
 
   if (knps > 0) {
-    info.npsText = `${knps > 1000 ? (knps / 1000).toFixed(knps > 10000 ? 0 : 1) + ' Mn/s' : Math.round(knps) + ' kn/s'
-      }`;
+    info.npsText = `${
+      knps > 1000 ? (knps / 1000).toFixed(knps > 10000 ? 0 : 1) + ' Mn/s' : Math.round(knps) + ' kn/s'
+    }`;
     info.knps = knps;
   }
   return info;
 }
 
-const threatButton = (ctrl: CevalHandler): VNode | null =>
-  ctrl.ceval.download
-    ? null
-    : hl('button.show-threat', {
-      class: { active: ctrl.threatMode(), hidden: !!ctrl.getNode().check },
-      attrs: { 'data-icon': licon.Target, title: 'Show threat (x)' },
+const threatButton = (ctrl: CevalHandler): VNode | null => {
+  if (ctrl.ceval.download) return null;
+  const active = ctrl.threatMode();
+  const label = active ? 'Hide opponent threat' : 'Show opponent threat';
+  return hl(
+    'button.ceval__action.show-threat',
+    {
+      class: { active, hidden: !!ctrl.getNode().check },
+      attrs: {
+        'data-icon': licon.Target,
+        title: `${label} (X)`,
+        'aria-label': `${label} (X)`,
+        'aria-pressed': active ? 'true' : 'false',
+      },
       hook: bind('click', () => ctrl.toggleThreatMode()),
-    });
-
-function engineName(ctrl: CevalCtrl): VNode[] {
-  const engine = ctrl.engines.active;
-  return engine
-    ? [
-      hl('span', { attrs: { title: engine.name } }, engine.short ?? engine.name),
-      engine.requires.includes('simd')
-          ? hl(
-            'span.technology.good',
-            { attrs: { title: 'Multi-threaded WebAssembly with SIMD' } },
-            engine.tech,
-          )
-          : engine.requires.includes('sharedMem')
-            ? hl('span.technology.good', { attrs: { title: 'Multi-threaded WebAssembly' } }, engine.tech)
-            : engine.requires.includes('wasm')
-              ? hl('span.technology', { attrs: { title: 'Single-threaded WebAssembly' } }, engine.tech)
-              : hl('span.technology', { attrs: { title: 'Single-threaded JavaScript' } }, engine.tech),
-    ]
-    : [];
-}
+    },
+    [hl('span.ceval__action-label', active ? 'Threat on' : 'Threat')],
+  );
+};
 
 export const getBestEval = (ctrl: CevalHandler): EvalScore | undefined => {
   return ctrl.getNode().ceval ?? ctrl.getNode().eval;
@@ -123,10 +115,8 @@ export function renderGauge(ctrl: CevalHandler, isHorizontal = false): VNode | u
   } else ev = gaugeLast;
 
   if (isHorizontal) {
-    const whitePct = ((ev + 1) * 50);
-    const labelText = bestEv
-      ? (defined(bestEv.mate) ? '#' + bestEv.mate : renderEval(bestEv.cp!))
-      : '';
+    const whitePct = (ev + 1) * 50;
+    const labelText = bestEv ? (defined(bestEv.mate) ? '#' + bestEv.mate : renderEval(bestEv.cp!)) : '';
     const advantage = ev > 0.05 ? 'white' : ev < -0.05 ? 'black' : 'equal';
     return hl(
       'div.eval-gauge.eval-gauge--horizontal',
@@ -178,7 +168,9 @@ export function renderCeval(ctrl: CevalHandler): VNode[] {
     else if ('depth' in search.by) percent = Math.min(100, (100 * client.depth) / search.by.depth);
     else if ('nodes' in search.by) percent = Math.min(100, (100 * client.nodes) / search.by.nodes);
   }
-  if (ceval.opts.custom?.pearlNode) {
+  if (!enabled && !ceval.opts.custom?.pearlNode) {
+    pearl = hl('pearl', '—');
+  } else if (ceval.opts.custom?.pearlNode) {
     pearl = ceval.opts.custom.pearlNode();
   } else if (bestEv && typeof bestEv.cp !== 'undefined') {
     pearl = hl('pearl', renderEval(bestEv.cp));
@@ -186,8 +178,7 @@ export function renderCeval(ctrl: CevalHandler): VNode[] {
     pearl = hl('pearl', '#' + bestEv.mate);
     percent = 100;
   } else {
-    if (!enabled) pearl = hl('pearl', hl('i'));
-    else if (ctrl.outcome() || ctrl.getNode().threefold) pearl = hl('pearl', '-');
+    if (ctrl.outcome() || ctrl.getNode().threefold) pearl = hl('pearl', '-');
     else if (ceval.state === CevalState.Failed)
       pearl = hl('pearl', hl('i.is-red', { attrs: { 'data-icon': licon.CautionCircle } }));
     else pearl = hl('pearl', hl('i.ddloader'));
@@ -202,7 +193,7 @@ export function renderCeval(ctrl: CevalHandler): VNode[] {
       'div.bar',
       hl('span', {
         class: { threat: enabled && threatMode },
-        attrs: { style: `width: ${percent}%` },
+        attrs: { style: `transform: scaleX(${percent / 100})` },
         hook: {
           postpatch: (old, vnode) => {
             if (old.data!.percent > percent || !!old.data!.threatMode !== threatMode) {
@@ -218,65 +209,88 @@ export function renderCeval(ctrl: CevalHandler): VNode[] {
       }),
     );
 
-  const body: LooseVNodes = enabled
-    ? [
-      pearl,
-      hl('div.engine', [
-        threatMode ? ['Show threat'] : engineName(ceval),
-        hl(
-          'span.info',
-          ctrl.outcome()
-            ? ['Game over']
-            : ctrl.getNode().threefold
-              ? ['Threefold repetition']
-              : threatMode
-                ? [threatInfo(ctrl, threat)]
-                : localEvalNodes(ctrl, { client, server }),
-        ),
-      ]),
-    ]
-    : [
-      pearl,
-      hl('div.engine', [
-        engineName(ceval),
-        hl('br'),
-        ceval.analysable ? 'In local browser' : 'Illegal positions cannot be analyzed',
-      ]),
-    ];
+  const status: LooseVNodes = enabled
+    ? ctrl.outcome()
+      ? ['Game over']
+      : ctrl.getNode().threefold
+        ? ['Threefold repetition']
+        : threatMode
+          ? [threatInfo(ctrl, threat)]
+          : localEvalNodes(ctrl, { client, server })
+    : [ceval.analysable ? 'Switch on to compare this position' : 'Illegal positions cannot be analyzed'];
 
-  const settingsGear = hl('button.settings-gear', {
-    attrs: { role: 'button', 'data-icon': licon.Gear, title: 'Engine settings' },
-    class: { active: ctrl.ceval.showEnginePrefs() }, // must use ctrl.ceval rather than ceval here
-    hook: bind(
-      'click',
-      e => {
-        e.stopPropagation();
-        ctrl.ceval.showEnginePrefs.toggle(); // must use ctrl.ceval rather than ceval here
-        if (ctrl.ceval.showEnginePrefs())
-          setTimeout(() => document.querySelector<HTMLElement>('#select-engine')?.focus()); // nvui
-      },
-      () => ctrl.ceval.opts.redraw(), // must use ctrl.ceval rather than ceval here
-      false,
-    ),
-  });
-  return [
-    hl('div.ceval' + (enabled ? '.enabled' : ''), { class: { computing: ceval.isComputing } }, [
-      renderCevalSwitch(ctrl),
-      body,
-      !ctrl.ceval.opts.custom && threatButton(ctrl),
-      settingsGear,
-      progressBar,
+  const body = hl('div.ceval__readout', [
+    pearl,
+    hl('div.ceval__identity', [
+      hl('span.ceval__heading', threatMode ? 'Opponent threat' : 'Position evidence'),
+      hl(
+        'div.engine',
+        hl(
+          'strong.ceval__engine-model',
+          threatMode ? 'Threat line' : enabled ? 'Live local estimate' : 'Local estimate paused',
+        ),
+      ),
+      hl('span.info', status),
     ]),
+  ]);
+
+  const settingsOpen = ctrl.ceval.showEnginePrefs();
+  const settingsGear = hl(
+    'button.ceval__action.settings-gear',
+    {
+      attrs: {
+        type: 'button',
+        'data-icon': licon.Gear,
+        title: settingsOpen ? 'Close engine settings' : 'Open engine settings',
+        'aria-label': settingsOpen ? 'Close engine settings' : 'Open engine settings',
+        'aria-expanded': settingsOpen ? 'true' : 'false',
+        ...(settingsOpen ? { 'aria-controls': 'ceval-settings' } : {}),
+      },
+      class: { active: settingsOpen }, // must use ctrl.ceval rather than ceval here
+      hook: bind(
+        'click',
+        e => {
+          e.stopPropagation();
+          ctrl.ceval.showEnginePrefs.toggle(); // must use ctrl.ceval rather than ceval here
+          if (ctrl.ceval.showEnginePrefs())
+            setTimeout(() => document.querySelector<HTMLElement>('#select-engine')?.focus()); // nvui
+        },
+        () => ctrl.ceval.opts.redraw(), // must use ctrl.ceval rather than ceval here
+        false,
+      ),
+    },
+    [hl('span.ceval__action-label', settingsOpen ? 'Close' : 'Settings')],
+  );
+  return [
+    hl(
+      'section.ceval' + (enabled ? '.enabled' : ''),
+      { class: { computing: ceval.isComputing }, attrs: { 'aria-label': 'Position evidence' } },
+      [
+        body,
+        hl('div.ceval__actions', [
+          renderCevalSwitch(ctrl),
+          !ctrl.ceval.opts.custom && threatButton(ctrl),
+          settingsGear,
+        ]),
+        progressBar,
+      ],
+    ),
     renderCevalSettings(ctrl),
   ].filter(v => v != null);
 }
 
 export function renderCevalSwitch(ctrl: CevalHandler): VNode | false {
+  const enabled = !ctrl.ceval.isPaused && !!ctrl.cevalEnabled();
   return (
     ctrl.cevalEnabled() !== 'force' &&
-    hl('div.switch', { attrs: { role: 'button', title: 'Toggle local evaluation (L)' } }, [
-      hl('input#analyse-toggle-ceval.cmn-toggle.cmn-toggle--subtle', {
-        attrs: { type: 'checkbox', disabled: !ctrl.ceval.analysable, checked: ctrl.cevalEnabled() },
+    hl('div.ceval__power-control', [
+      hl('input#analyse-toggle-ceval.ceval__power-input', {
+        attrs: {
+          type: 'checkbox',
+          disabled: !ctrl.ceval.analysable,
+          checked: ctrl.cevalEnabled(),
+          'aria-label': enabled ? 'Turn engine off (L)' : 'Turn engine on (L)',
+        },
         props: { checked: !ctrl.ceval.isPaused && ctrl.cevalEnabled() },
         hook: onInsert((el: HTMLInputElement) => {
           el.addEventListener('change', () => ctrl.cevalEnabled(el.checked));
@@ -285,7 +299,11 @@ export function renderCevalSwitch(ctrl: CevalHandler): VNode | false {
           });
         }),
       }),
-      hl('label', { attrs: { for: 'analyse-toggle-ceval' } }),
+      hl(
+        'label.ceval__power',
+        { attrs: { for: 'analyse-toggle-ceval', title: 'Toggle engine calculation (L)' } },
+        [hl('span.ceval__power-label', 'Engine'), hl('span.ceval__power-state', enabled ? 'On' : 'Off')],
+      ),
     ])
   );
 }

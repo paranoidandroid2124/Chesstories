@@ -39,17 +39,12 @@ final class Env(
   val mailer: lila.mailer.Env = wire[lila.mailer.Env]
   val security: lila.security.Env = wire[lila.security.Env]
   val pref: lila.pref.Env = wire[lila.pref.Env]
-  val analyse: lila.analyse.Env = new lila.analyse.Env(
-    db = mongo.mainDb,
-    net = net
-  )
+  val analyse: lila.analyse.Env = new lila.analyse.Env(net = net)
 
   val study: lila.study.Env = new lila.study.Env(
     appConfig = config,
     lightUserApi = user.lightUserApi,
     userApi = user.api,
-    analyser = analyse.analyser,
-    analysisJson = lila.tree.AnalysisJson,
     annotator = analyse.annotator,
     mongo = mongo,
     net = net,

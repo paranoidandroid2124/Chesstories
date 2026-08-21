@@ -1,6 +1,6 @@
 {
   "schema_version": "chesstory.eval.corpus-manifest.v1",
-  "corpus_version": "judgment-boundary-v1.3.0",
+  "corpus_version": "judgment-boundary-v1.4.0",
   "created_at": "2026-07-26T00:00:00Z",
   "qualification": "harness-and-diagnostic-explore-only",
   "warning": "Diagnostic-confirm, fresh-confirm, and blind are distinct sealed reservations, not release-qualified annotated sets. Independent curators must replace them under a new corpus version before attribution, final-candidate, or blind inference.",
@@ -8,14 +8,14 @@
     "diagnostic-explore": {
       "path": "diagnostic-explore.jsonl",
       "state": "open",
-      "sha256": "2c89aae238cb55212d729aa2d48fa985b94e440f83b251b2f2bc8ab8b7735c15",
+      "sha256": "e79d40937f3c0f1a77554b3448eab310bf9168f478ad013489281dd882513a92",
       "records": 3,
       "purpose": "book-grounded reconstruction and harness diagnosis"
     },
     "diagnostic-confirm": {
       "path": "sealed/diagnostic-confirm.jsonl",
       "state": "sealed",
-      "sha256": "4d5fa46731951732b78cfb2e6888a4f4aafee39f991878da3527a21f9bc86652",
+      "sha256": "210bd095158d85dc85683c4166eb0beb560c0235bee9bed7af49a19f8ccd58c7",
       "records": 1,
       "purpose": "reservation awaiting independent annotation",
       "open_roles": ["independent-confirm-executor"],
@@ -25,7 +25,7 @@
     "fresh-confirm": {
       "path": "sealed/fresh-confirm.jsonl",
       "state": "sealed",
-      "sha256": "df05fdc3288463ab044de73748752eca7de0b9ea01ce97796e2d3d37caa9c2a6",
+      "sha256": "f1237db9ced287313ba913bf9df5f4e4934f0c4bbf677c52867212dd797377ac",
       "records": 1,
       "purpose": "reservation for one execution of the final modified signed candidate",
       "open_roles": ["independent-fresh-confirm-executor"],
@@ -35,7 +35,7 @@
     "blind": {
       "path": "sealed/blind.jsonl",
       "state": "sealed",
-      "sha256": "87eed14da3c1734dd88cd72512ad3f1b1429c42ef496fb85834d5efc56804f0d",
+      "sha256": "7f07fbb3ac408a9466642861f555117f4e4da3dde2a09480d24efbb167bde068",
       "records": 1,
       "purpose": "reservation awaiting an independent blind-set custodian",
       "open_roles": ["independent-blind-executor"],

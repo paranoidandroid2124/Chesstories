@@ -9,6 +9,7 @@ import { playable } from 'lib/game';
 import type { Conceal } from '../interfaces';
 import type { DiscloseState } from '../idbTree';
 import { renderMoveNodes, renderIndex } from '../view/components';
+import { renderMoveReviewNotationBadge } from '../view/moveReview';
 
 export function renderInlineView(ctrl: AnalyseCtrl): VNode {
   const renderer = new InlineView(ctrl);
@@ -156,6 +157,7 @@ export class InlineView {
         ?.map(g => this.glyphs[g.id - 1])
         .filter(Boolean)
         .forEach(cls => (classes[cls] = true));
+    const moveReviewNotation = ctrl.moveReviewNotation(path);
     return hl('move', { attrs: { p: path }, class: classes }, [
       parentDisclose && this.disclosureBtn(parentNode, parentPath),
       withIndex && renderIndex(node.ply, true),
@@ -165,6 +167,8 @@ export class InlineView {
         ctrl.showMoveGlyphs(),
         ctrl.allowedEval(node) || false,
       ),
+      moveReviewNotation &&
+        renderMoveReviewNotationBadge(moveReviewNotation.symbol, moveReviewNotation.label),
     ]);
   }
 

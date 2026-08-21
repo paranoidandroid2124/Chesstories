@@ -5,7 +5,6 @@ import com.softwaremill.macwire.*
 import play.api.inject.DefaultApplicationLifecycle
 import play.api.http.{ FileMimeTypes, HttpRequestHandler }
 import play.api.inject.ApplicationLifecycle
-import play.api.libs.crypto.DefaultCookieSigner
 import play.api.libs.ws.StandaloneWSClient
 import play.api.mvc.*
 import play.api.mvc.request.*
@@ -49,16 +48,8 @@ final class LilaComponents(
 
   import _root_.controllers.*
 
-  // we want to use the legacy session cookie baker for existing sessions
-  lazy val cookieBaker = LegacySessionCookieBaker(httpConfiguration.session, cookieSigner)
-
   override lazy val requestFactory: RequestFactory =
-    val cookieSigner = DefaultCookieSigner(httpConfiguration.secret)
-    DefaultRequestFactory(
-      DefaultCookieHeaderEncoding(httpConfiguration.cookies),
-      cookieBaker,
-      LegacyFlashCookieBaker(httpConfiguration.flash, httpConfiguration.secret, cookieSigner)
-    )
+    lila.web.SidOnlyRequestFactory(DefaultRequestFactory(httpConfiguration))
 
   given ActorSystem = actorSystem
 
@@ -88,7 +79,8 @@ final class LilaComponents(
   val httpFilters = Seq(
     lila.web.HttpFilter(
       env.net,
-      env.web.settings.sitewideCoepCredentiallessHeader.get
+      env.web.settings.sitewideCoepCredentiallessHeader.get,
+      DefaultCookieHeaderEncoding(httpConfiguration.cookies)
     )
   )
 

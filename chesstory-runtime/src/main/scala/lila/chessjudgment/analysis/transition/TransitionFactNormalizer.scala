@@ -83,7 +83,6 @@ object TransitionFactNormalizer:
       comparison: CandidateComparisonFact,
       position: PositionNodeRef,
       scope: EvidenceScope,
-      confidence: EvidenceConfidence = EvidenceConfidence.EngineBacked,
       parents: List[EvidenceRef] = Nil
   ): EvidenceRecord =
     val ref =
@@ -94,7 +93,7 @@ object TransitionFactNormalizer:
         position = position,
         line = Some(comparison.candidateLine),
         scope = scope,
-        confidence = confidence
+        confidence = comparison.verdictConfidence.evidenceConfidence
       )
     EvidenceRecord(
       ref = ref,
@@ -126,7 +125,7 @@ object TransitionFactNormalizer:
       binding: RelativeCauseBinding,
       position: PositionNodeRef,
       scope: EvidenceScope,
-      confidence: EvidenceConfidence = EvidenceConfidence.EngineBacked,
+      confidence: EvidenceConfidence,
       parents: List[EvidenceRef] = Nil
   ): EvidenceRecord =
     val ref =

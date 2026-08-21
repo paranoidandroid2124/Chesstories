@@ -1,6 +1,6 @@
 package lila.chessjudgment.analysis.evaluation
 
-import lila.chessjudgment.model.evaluation.JudgmentThresholds
+import lila.chessjudgment.model.line.CandidateLineEvaluation
 import lila.chessjudgment.model.judgment.*
 
 object EvalFactNormalizer:
@@ -15,22 +15,22 @@ object EvalFactNormalizer:
     val ref =
       EvidenceRef(
         id = id,
-        producer = EvidenceProducer.EngineEvalProducer,
+        producer = (line.evaluation match
+          case CandidateLineEvaluation.EngineSearch(_) => EvidenceProducer.EngineEvalProducer
+          case CandidateLineEvaluation.ExactAutomaticTerminal(_, _) => EvidenceProducer.LegalLineProducer),
         layer = EvidenceLayer.Eval,
         position = position,
         line = Some(line.ref),
         scope = scope,
-        confidence =
-          if JudgmentThresholds.engineBackedByDepth(line.depth, line.mate) then EvidenceConfidence.EngineBacked
-          else EvidenceConfidence.Mixed
+        confidence = line.evaluation match
+          case CandidateLineEvaluation.EngineSearch(_) => EvidenceConfidence.EngineBacked
+          case CandidateLineEvaluation.ExactAutomaticTerminal(_, _) => EvidenceConfidence.LegalReplayVerified
       )
     EvidenceRecord(
       ref = ref,
-      payload = EvalFactEvidence(
+      payload = CandidateLineEvaluationEvidence(
         line = line.ref,
-        whitePovEvalCp = line.whitePovEvalCp,
-        mate = line.mate,
-        depth = line.depth
+        evaluation = line.evaluation
       ),
       parents = parents
     )

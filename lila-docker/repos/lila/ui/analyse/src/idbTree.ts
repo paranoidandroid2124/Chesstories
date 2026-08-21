@@ -1,16 +1,10 @@
 import type AnalyseCtrl from './ctrl';
-import { preferenceStorageAllowed } from 'lib/cookieConsent';
-import { objectStorage, type ObjectStorage } from 'lib/objectStorage';
 import * as treeOps from 'lib/tree/ops';
 
 export type DiscloseState = undefined | 'expanded' | 'collapsed';
 
 export class IdbTree {
-  private dirty = false;
-  private moveDb?: ObjectStorage<MoveState>;
-  private collapseDb?: ObjectStorage<Tree.Path[]>;
-
-  constructor(private ctrl: AnalyseCtrl) { }
+  constructor(private ctrl: AnalyseCtrl) {}
 
   someCollapsedOf(collapsed: boolean, path = ''): boolean {
     return (
@@ -35,7 +29,6 @@ export class IdbTree {
 
   setCollapsed(path: Tree.Path, collapsed: boolean): void {
     this.ctrl.tree.updateAt(path, n => (n.collapsed = collapsed));
-    this.saveCollapsed();
     this.ctrl.redraw();
   }
 
@@ -48,7 +41,6 @@ export class IdbTree {
       from,
       thisBranchOnly,
     );
-    this.saveCollapsed();
     this.ctrl.redraw();
   }
 
@@ -62,7 +54,7 @@ export class IdbTree {
         save = true;
       }
     }
-    if (save) this.saveCollapsed();
+    if (save) this.ctrl.redraw();
   }
 
   discloseOf(node: Tree.Node | undefined, isMainline: boolean): DiscloseState {
@@ -74,60 +66,8 @@ export class IdbTree {
       : undefined;
   }
 
-  onAddNode(node: Tree.Node, path: Tree.Path): void {
-    if (this.ctrl.synthetic || this.dirty) return;
-    this.dirty = !this.ctrl.tree.pathExists(path + node.id);
-  }
-
-  clear = async (): Promise<void> => {
-    if (!preferenceStorageAllowed()) return site.reload();
-    await this.collapseDb?.remove(this.id);
-    if (!this.ctrl.synthetic) await this.moveDb?.put(this.id, { root: undefined });
-    site.reload();
-  };
-
-  async saveMoves(force = false): Promise<IDBValidKey | undefined> {
-    if (!preferenceStorageAllowed()) return;
-    if (this.ctrl.synthetic || !(this.dirty || force)) return;
-    return this.moveDb?.put(this.id, { root: this.ctrl.tree.root });
-  }
-
   async merge(): Promise<void> {
-    if (!preferenceStorageAllowed() || !('indexedDB' in window) || !window.indexedDB) {
-      this.collapseDefault();
-      return;
-    }
-    try {
-      if (!this.ctrl.synthetic) {
-        this.moveDb ??= await objectStorage<MoveState>({ store: 'analyse-state', db: 'lichess' });
-        const state = await this.moveDb.get(this.ctrl.data.game.id);
-        if (state?.root) {
-          this.ctrl.tree.merge(state.root);
-          this.dirty = true;
-        }
-      }
-      this.collapseDb ??= await objectStorage<Tree.Path[]>({ store: 'analyse-collapse' });
-      const collapsedPaths = await this.collapseDb.getOpt(this.id);
-      if (!collapsedPaths) return this.collapseDefault();
-      for (const path of collapsedPaths) {
-        this.ctrl.tree.updateAt(path, n => (n.collapsed = true));
-      }
-    } catch (e) {
-      console.log('IDB error.', e);
-    }
-  }
-
-  get isDirty(): boolean {
-    return this.dirty;
-  }
-
-  private get id(): string {
-    return this.ctrl.data.game.id;
-  }
-
-  private async saveCollapsed() {
-    if (!preferenceStorageAllowed()) return;
-    return this.collapseDb?.put(this.id, this.getCollapsed());
+    this.collapseDefault();
   }
 
   private isCollapsible(node: Tree.Node, isMainline: boolean): boolean {
@@ -135,22 +75,12 @@ export class IdbTree {
     const [first, second, third] = node.children.filter(n => !n.comp);
     return Boolean(
       first?.forceVariation ||
-      third ||
-      (second && treeOps.hasBranching(second, 6)) ||
-      (isMainline &&
-        this.ctrl.treeView.mode === 'column' &&
-        (second || first?.comments?.filter(Boolean).length)),
+        third ||
+        (second && treeOps.hasBranching(second, 6)) ||
+        (isMainline &&
+          this.ctrl.treeView.mode === 'column' &&
+          (second || first?.comments?.filter(Boolean).length)),
     );
-  }
-
-  private getCollapsed(): Tree.Path[] {
-    const collapsedPaths: Tree.Path[] = [];
-    function traverse(node: Tree.Node, path: Tree.Path): void {
-      if (node.collapsed) collapsedPaths.push(path);
-      for (const c of node.children) traverse(c, path + c.id);
-    }
-    traverse(this.ctrl.tree.root, '');
-    return collapsedPaths;
   }
 
   private collapseDefault() {
@@ -167,13 +97,6 @@ export class IdbTree {
 
   private familyOf(path: Tree.Path): [Tree.Path, Tree.Node[]] {
     const parentPath = path.slice(0, -2);
-    return [
-      parentPath,
-      this.ctrl.tree.nodeAtPath(parentPath).children.filter(x => !x.comp),
-    ];
+    return [parentPath, this.ctrl.tree.nodeAtPath(parentPath).children.filter(x => !x.comp)];
   }
-}
-
-interface MoveState {
-  root: Tree.Node | undefined;
 }

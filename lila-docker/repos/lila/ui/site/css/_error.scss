@@ -1,155 +1,119 @@
-// Chesstory Error Pages (404, 500, Rate Limited, etc.)
-// Uses same layout principles as landing and auth pages
-
-@import '../../lib/css/theme/theme.default';
-
-$c-shade: $c-font-muted;
+// Chesstory error pages
 
 .error-page {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background-color: $c-bg-page;
-    font-family: 'Roboto', 'Noto Sans', 'Segoe UI', sans-serif;
-}
-
-body.dark .error-page,
-body.pro .error-page,
-html.dark .error-page,
-html.pro .error-page {
-    background-color: $c-bg-page;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--c-bg-page);
+  font-family: Roboto, 'Noto Sans', 'Segoe UI', sans-serif;
 }
 
 .error-container {
-    max-width: 600px;
-    width: 100%;
-    margin: auto;
-    padding: 2rem;
-    text-align: center;
+  width: 100%;
+  max-width: 600px;
+  margin: auto;
+  padding: 2rem;
+  text-align: center;
 }
 
 .error-code {
-    font-family: 'Georgia', serif;
-    font-size: 8rem;
-    font-weight: 900;
-    line-height: 1;
-    margin: 0;
-    color: $c-font;
-    opacity: 0.1;
-
-    body.dark &,
-    body.pro & {
-        color: $c-font;
-    }
+  margin: 0;
+  color: var(--c-font);
+  font-family: Georgia, serif;
+  font-size: 8rem;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0.1;
 }
 
 .error-title {
-    font-family: 'Georgia', serif;
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin: -2rem 0 1.5rem 0;
-    color: $c-font;
-
-    body.dark &,
-    body.pro & {
-        color: $c-font;
-    }
+  margin: -2rem 0 1.5rem;
+  color: var(--c-font);
+  font-family: Georgia, serif;
+  font-size: 2.5rem;
+  font-weight: 700;
 }
 
 .error-message {
-    font-size: 1.2rem;
-    color: $c-shade;
-    margin-bottom: 3rem;
-    line-height: 1.6;
-
-    body.dark &,
-    body.pro & {
-        color: $c-shade;
-    }
+  margin-bottom: 3rem;
+  color: var(--c-font);
+  font-size: 1.2rem;
+  line-height: 1.6;
 }
 
 .error-actions {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.error-primary,
+.error-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 44px;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  text-decoration: none;
 }
 
 .error-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 1rem 2rem;
-    background: $c-primary;
-    color: $c-bg-page;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: transform 0.2s, background 0.2s;
+  gap: 10px;
+  border: 1px solid transparent;
+  background: var(--c-primary);
+  color: var(--c-bg-page);
+  font-weight: 600;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
 
-    &:hover {
-        transform: translateY(-2px);
-        background: $c-primary-strong;
-    }
-
-    body.dark &,
-    body.pro & {
-        background: $c-primary;
-        color: $c-bg-page;
-
-        &:hover {
-            background: $c-primary-strong;
-            color: $c-bg-page;
-        }
-    }
+  &:hover,
+  &:focus-visible {
+    background: var(--c-primary-strong);
+  }
 }
 
 .error-secondary {
-    display: inline-flex;
-    align-items: center;
-    padding: 1rem 2rem;
-    background: transparent;
-    color: $c-shade;
-    border: 1px solid $c-border;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.2s;
+  border: 1px solid var(--c-border);
+  background: transparent;
+  color: var(--c-font);
+  font-weight: 500;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
 
-    &:hover {
-        background: rgba($c-primary, 0.1);
-        color: $c-font;
-    }
-
-    body.dark &,
-    body.pro & {
-        border-color: $c-border;
-        color: $c-shade;
-
-        &:hover {
-            background: rgba($c-primary, 0.1);
-            color: $c-font;
-        }
-    }
+  &:hover,
+  &:focus-visible {
+    background: var(--c-bg-zebra);
+    color: var(--c-font);
+  }
 }
 
 .error-visual {
-    margin-bottom: 2rem;
-    font-size: 5rem;
-    opacity: 0.8;
+  margin-bottom: 2rem;
+  font-size: 5rem;
+  opacity: 0.8;
 }
 
-// Responsive
 @media (max-width: 500px) {
-    .error-code {
-        font-size: 5rem;
-    }
+  .error-code {
+    font-size: 5rem;
+  }
 
-    .error-title {
-        font-size: 1.8rem;
-        margin-top: -1rem;
-    }
+  .error-title {
+    margin-top: -1rem;
+    font-size: 1.8rem;
+  }
 
-    .error-actions {
-        flex-direction: column;
-    }
+  .error-actions {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .error-primary,
+  .error-secondary {
+    transition: none;
+  }
 }

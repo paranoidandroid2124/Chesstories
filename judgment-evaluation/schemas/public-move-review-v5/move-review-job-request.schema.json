@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/public-move-review-v5/move-review-job-request.schema.json",
+  "title": "Chesstory move review job request v5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "variant",
+    "initial_fen",
+    "move_prefix_uci",
+    "before_fen",
+    "played_move_uci",
+    "after_fen",
+    "engine_profile"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.move-review.job-request.v5"},
+    "request_id": {"$ref": "#/$defs/requestId"},
+    "variant": {"$ref": "#/$defs/variant"},
+    "initial_fen": {"$ref": "#/$defs/fen"},
+    "move_prefix_uci": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/uciMove"}
+    },
+    "before_fen": {"$ref": "#/$defs/fen"},
+    "played_move_uci": {"$ref": "#/$defs/uciMove"},
+    "after_fen": {"$ref": "#/$defs/fen"},
+    "engine_profile": {"$ref": "#/$defs/engineProfile"}
+  },
+  "$defs": {
+    "requestId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+    },
+    "variant": {"enum": ["standard", "chess960"]},
+    "fen": {"type": "string", "minLength": 1, "maxLength": 128},
+    "uciMove": {
+      "type": "string",
+      "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"
+    },
+    "engineProfile": {
+      "enum": ["sf18-smallnet-t2-h16-v1", "sf18-smallnet-single-t1-h16-v1"]
+    }
+  }
+}

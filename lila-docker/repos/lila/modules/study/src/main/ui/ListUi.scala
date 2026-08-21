@@ -18,7 +18,7 @@ final class ListUi(helpers: Helpers, bits: StudyBits):
 
   def all(pag: Paginator[WithChaptersAndLiked], order: StudyOrder)(using Context) =
     page(
-      title = "Public review studies",
+      title = "Public studies",
       active = "all",
       order = order,
       pag = pag,
@@ -27,7 +27,7 @@ final class ListUi(helpers: Helpers, bits: StudyBits):
 
   def mine(pag: Paginator[WithChaptersAndLiked], order: StudyOrder)(using Context) =
     page(
-      title = "My review studies",
+      title = "My studies",
       active = "mine",
       order = order,
       pag = pag,
@@ -41,74 +41,45 @@ final class ListUi(helpers: Helpers, bits: StudyBits):
       pag: Paginator[WithChaptersAndLiked],
       url: StudyOrder => String
   )(using ctx: Context): Page =
-    val (eyebrow, lede, railTitle, railBody) =
-      if active == "mine" then
-        (
-          "Your review studies",
-          "Create a blank review study or reopen the ones you already use for lines, notes, and reusable sections.",
-          "Start from analysis",
-          "Use the analysis board when you want to carry a loaded game into a review study."
-        )
-      else
-        (
-          "Shared review studies",
-          "Browse public review studies built around opening ideas, middlegame plans, and reusable annotated sections.",
-          "Section links",
-          "Open a review study directly on the saved section you want to review or share."
-        )
+    val lede =
+      if active == "mine" then "Resume a chapter or create a blank study."
+      else "Browse public studies by name, owner, chapter, and recent update."
+    val notice = ctx.req.getQueryString("notice").flatMap:
+      case "deleted"         => Some("flash flash-success" -> "Review study deleted.")
+      case "import-disabled" => Some("flash flash-error" -> "Game import is disabled in this deployment.")
+      case "create-failed"   => Some("flash flash-error" -> "Could not create that review study.")
+      case _                 => None
 
     Page(title)
       .css("analyse.study.index")
       .js(Esm("analyse.study.index")):
         main(cls := "page-menu")(
           menu(active, order),
-          main(cls := "page-menu__content study-index box")(
-            div(cls := "box__top notebook-index__top")(
-              div(cls := "notebook-index__intro")(
-                span(cls := "notebook-index__eyebrow")(eyebrow),
+          div(cls := "page-menu__content study-index box")(
+            header(cls := "box__top study-index__head")(
+              div(cls := "study-index__intro")(
                 h1(title),
-                p(cls := "notebook-index__lede")(lede)
+                p(lede)
               ),
-              div(cls := "notebook-index__controls")(
+              div(cls := "study-index__controls")(
                 bits.orderSelect(order, active, url),
-                ctx.isAuth.option(
-                  div(cls := "notebook-index__create")(
-                    bits.newForm(),
-                    p(cls := "notebook-index__create-copy")(
-                      if active == "mine" then
-                        "Starts a blank review study immediately. To carry a loaded game, create it from the analysis board."
-                      else "Signed in? Start a blank review study here, or create one from the analysis board when a game is already loaded."
-                    )
-                  )
-                )
+                ctx.isAuth.option(bits.newForm())
               )
             ),
-            div(cls := "notebook-index__proof")(
-              proofCard("Section-first", "Keep each line as a reusable section instead of a disposable analysis tab."),
-              proofCard("Shareable", "Send a direct review study link to the exact saved section you want to discuss."),
-              proofCard(railTitle, railBody)
-            ),
+            notice.map((cssClass, message) => div(cls := cssClass)(message)),
             paginate(pag, active, url(order))
           )
         )
 
-  private def proofCard(title: String, body: String) =
-    div(cls := "notebook-index__proof-card")(
-      strong(title),
-      span(body)
-    )
-
   private def paginate(pager: Paginator[WithChaptersAndLiked], active: String, url: String) =
     if pager.currentPageResults.isEmpty then
       div(cls := "nostudies")(
-        bits.notebookGlyph("notebook", "notebook-empty__icon"),
-        strong(if active == "mine" then "No review studies yet" else "No public review studies yet"),
+        strong(if active == "mine" then "No studies yet" else "No public studies yet"),
         p(
-          if active == "mine" then
-            "Create one from analysis when a loaded game is worth keeping, or start blank for an outline."
-          else "Public review studies will appear here once authors choose to share them."
+          if active == "mine" then "Create a study from the board or start a blank chapter here."
+          else "Public studies will appear here when their owners choose to share them."
         ),
-        bits.newForm("Create your first review study")
+        bits.newForm("Create study")
       )
     else
       div(cls := "studies list infinite-scroll")(
@@ -122,7 +93,7 @@ final class ListUi(helpers: Helpers, bits: StudyBits):
     val nonMineOrder = if order == StudyOrder.mine then StudyOrder.hot else order
     def activeCls(key: String) = (active == key).option("active")
     lila.ui.bits.pageMenuSubnav(
-      a(cls := activeCls("all"), href := studyAllUrl(nonMineOrder, 1))("Browse review studies"),
+      a(cls := activeCls("all"), href := studyAllUrl(nonMineOrder, 1))("Browse studies"),
       ctx.isAuth.option:
-        a(cls := activeCls("mine"), href := studyMineUrl(StudyOrder.mine, 1))("My review studies")
+        a(cls := activeCls("mine"), href := studyMineUrl(StudyOrder.mine, 1))("My studies")
     )

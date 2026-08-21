@@ -12,7 +12,6 @@ import lila.core.email.EmailAddress
 import lila.core.id.SessionId
 import lila.core.security.ClearPassword
 import lila.core.user.UserEnabled
-import lila.security.{ EmailConfirm, IsPwned }
 
 final class Auth(env: Env) extends LilaController(env):
 
@@ -22,7 +21,7 @@ final class Auth(env: Env) extends LilaController(env):
     mapping(
       "username" -> nonEmptyText,
       "password" -> nonEmptyText,
-      "remember" -> default(play.api.data.Forms.boolean, true)
+      "remember" -> default(play.api.data.Forms.boolean, false)
     )((u, p, r) => (u, p, r))(tuple => Some(tuple))
   )
 
@@ -38,20 +37,11 @@ final class Auth(env: Env) extends LilaController(env):
     )
   )
 
-  private val fixEmailForm = Form(
-    single(
-      "email" -> nonEmptyText.verifying("invalid email", EmailAddress.isValid)
-    )
-  )
-
   private val resetAckMessage = "If an account exists for that email, a reset link has been sent."
   private val signupCaptchaEnabled =
     env.mode == Mode.Prod && env.config.getOptional[Boolean]("security.hcaptcha.enabled").getOrElse(false)
   private val signupCaptchaSiteKey =
     env.config.getOptional[String]("security.hcaptcha.public.sitekey").filter(_.nonEmpty)
-  private val signupEmailConfirmRequired =
-    env.config.getOptional[Boolean]("security.email_confirm.enabled").getOrElse(true)
-
   private def mobileUserOk(u: UserModel, sessionId: SessionId): Fu[Result] =
     fuccess:
       Ok:
@@ -76,18 +66,21 @@ final class Auth(env: Env) extends LilaController(env):
     )
 
   private def loginPage(form: Form[?])(using Context) =
-    views.auth.login(form, ctx.req.flash.get("success"))
+    val notice = ctx.req.getQueryString("notice").flatMap:
+      case "password-updated" => Some("Password updated. Please log in.")
+      case "email-updated"    => Some("Email address updated. Please log in with the new address.")
+      case _                  => None
+    views.auth.login(form, notice)
 
   private def signupPage(form: Form[?])(using Context) =
     views.auth.signup(form, signupCaptchaEnabled, signupCaptchaSiteKey)
 
   def authenticateUser(
       u: UserModel,
-      remember: Boolean,
-      pwned: IsPwned = IsPwned(false)
+      remember: Boolean
   )(using ctx: Context): Fu[Result] =
     api
-      .saveAuthentication(u.id, ctx.mobileApiVersion, pwned)
+      .saveAuthentication(u.id)
       .flatMap: sessionId =>
         negotiate(
           Redirect(getReferrer),
@@ -110,7 +103,7 @@ final class Auth(env: Env) extends LilaController(env):
         limit.passwordLogin(ctx.ip, BadRequest.page(loginPage(tooMany))):
           api.authenticate(data._1, data._2).flatMap:
             case Some(authSuccess) =>
-              authenticateUser(authSuccess.user, remember = data._3, pwned = authSuccess.pwned)
+              authenticateUser(authSuccess.user, remember = data._3)
             case None =>
               val failForm = loginForm
                 .fill((data._1, "", data._3))
@@ -122,7 +115,6 @@ final class Auth(env: Env) extends LilaController(env):
     api.reqSessionId(ctx.req).fold(fuccess(Redirect(getReferrer))): sid =>
       api.logout(sid).map: _ =>
         Redirect(getReferrer)
-          .withNewSession
           .discardingCookies(DiscardingCookie(api.sessionIdKey))
 
   def logoutGet = Open:
@@ -140,14 +132,11 @@ final class Auth(env: Env) extends LilaController(env):
         limit.signup(ctx.ip, BadRequest.page(signupPage(tooMany))):
           env.security.signup.website(data, ctx.blind).flatMap:
             case lila.security.Signup.Result.AllSet(user) =>
-              if signupEmailConfirmRequired then
-                val email = data.normalizedEmail
-                val token = env.security.loginToken.generate(email, 30.minutes)
-                val url = s"${env.baseUrl}${routes.Auth.signupConfirmToken(token).url}"
-                env.mailer.automaticEmail.signupConfirm(user, email, url).inject:
-                  Redirect(routes.Auth.checkYourEmail)
-                    .withCookies(EmailConfirm.cookie.set(user.id, email))
-              else authenticateUser(user, remember = true)
+              val email = data.normalizedEmail
+              val token = env.security.loginToken.generate(email, 30.minutes)
+              val url = s"${env.baseUrl}${routes.Auth.signupConfirmToken(token).url}"
+              env.mailer.automaticEmail.signupConfirm(user, email, url).inject:
+                Redirect(routes.Auth.checkYourEmail)
             case lila.security.Signup.Result.MissingCaptcha =>
               val captchaErr = form
                 .fill(data)
@@ -165,8 +154,7 @@ final class Auth(env: Env) extends LilaController(env):
   def passwordReset = Open:
     Ok.page:
       views.auth.passwordReset(
-        error = ctx.req.flash.get("error"),
-        success = ctx.req.flash.get("success")
+        success = ctx.req.getQueryString("sent").filter(_ == "1").map(_ => resetAckMessage)
       )
 
   def passwordResetApply = OpenBody:
@@ -174,7 +162,7 @@ final class Auth(env: Env) extends LilaController(env):
       _ => BadRequest.page(views.auth.passwordReset(error = Some("Invalid email address."))),
       emailStr =>
         val normalized = EmailAddress(EmailAddress(emailStr).normalize.value)
-        val ack = Redirect(routes.Auth.passwordReset).flashing("success" -> resetAckMessage)
+        val ack = Redirect(s"${routes.Auth.passwordReset.url}?sent=1")
         limit.passwordResetRequest(ctx.ip, ack.toFuccess):
           env.user.repo.byEmail(normalized).flatMap:
             case Some(user) =>
@@ -212,53 +200,11 @@ final class Auth(env: Env) extends LilaController(env):
                 env.security.authenticator
                   .setPassword(userId, clear)
                   .flatMap(_ => env.security.sessionStore.closeAllSessionsOf(userId))
-                  .inject(Redirect(routes.Auth.login).flashing("success" -> "Password updated. Please log in."))
+                  .inject(Redirect(s"${routes.Auth.login.url}?notice=password-updated"))
         )
 
   def checkYourEmail = Open:
-    EmailConfirm.cookie.get(ctx.req).fold(fuccess(Redirect(routes.Auth.signup))): pending =>
-      Ok.page:
-        views.auth.checkEmail(
-          concealedEmail = pending.email.conceal,
-          success = ctx.req.flash.get("success"),
-          error = ctx.req.flash.get("error")
-        )
-
-  def fixEmail = OpenBody:
-    EmailConfirm.cookie.get(ctx.req).fold(fuccess(Redirect(routes.Auth.signup))): pending =>
-      bindForm(fixEmailForm)(
-        _ =>
-          BadRequest.page(
-            views.auth.checkEmail(
-              concealedEmail = pending.email.conceal,
-              error = Some("Invalid email address.")
-            )
-          ),
-        emailStr =>
-          val email = EmailAddress(EmailAddress(emailStr).normalize.value)
-          val tooMany =
-            BadRequest.page(views.auth.checkEmail(concealedEmail = pending.email.conceal, error = Some("Too many requests. Try again later.")))
-          limit.signup(ctx.ip, tooMany):
-            env.user.repo.byEmail(email).flatMap:
-              case Some(existing) if existing.id != pending.userId =>
-                BadRequest.page(
-                  views.auth.checkEmail(
-                    concealedEmail = pending.email.conceal,
-                    error = Some("Email already in use.")
-                  )
-                )
-              case _ =>
-                env.user.repo.updateEmail(pending.userId, email) >> env.user.repo.byId(pending.userId).flatMap:
-                  case Some(user) =>
-                    val token = env.security.loginToken.generate(email, 30.minutes)
-                    val url = s"${env.baseUrl}${routes.Auth.signupConfirmToken(token).url}"
-                    env.mailer.automaticEmail.signupConfirm(user, email, url).inject:
-                      Redirect(routes.Auth.checkYourEmail)
-                        .withCookies(EmailConfirm.cookie.set(user.id, email))
-                        .flashing("success" -> "Confirmation email sent.")
-                  case None =>
-                    Redirect(routes.Auth.signup).toFuccess
-      )
+    Ok.page(views.auth.checkEmail())
 
   private def withSignupConfirmation(token: String)(
       f: (UserModel, EmailAddress) => Fu[Result]
@@ -291,5 +237,4 @@ final class Auth(env: Env) extends LilaController(env):
         if user.enabled.no then env.mailer.automaticEmail.welcomeEmail(activeUser, normalized)(using Lang.defaultLang)
         else funit
       given Context = ctx
-      (enableF >> welcomeF >> authenticateUser(activeUser, remember = true)).map:
-        _.discardingCookies(EmailConfirm.cookie.clear)
+      enableF >> welcomeF >> authenticateUser(activeUser, remember = false)

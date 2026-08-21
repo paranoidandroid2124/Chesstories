@@ -8,6 +8,7 @@ declare namespace Tree {
     ponder?: Uci;
     fen: FEN;
     depth: number;
+    seldepth?: number;
     nodes: number;
     pvs: PvData[];
   }
@@ -35,6 +36,8 @@ declare namespace Tree {
 
   export interface PvData extends EvalScore {
     moves: string[];
+    depth?: number;
+    bound?: 'lowerbound' | 'upperbound';
   }
 
   export interface TablebaseHit {

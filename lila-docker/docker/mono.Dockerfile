@@ -5,7 +5,14 @@ COPY repos/lila /lila
 COPY conf/mono.conf /lila/conf/mono.conf
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable \
-    && /lila/ui/build --clean --debug
+    && /lila/ui/build --clean --debug \
+    && test -s /lila/public/npm/stockfish-web-move-review/sf_18_smallnet_single.js \
+    && test -s /lila/public/npm/stockfish-web-move-review/sf_18_smallnet_single.wasm \
+    && mkdir -p /lila/public/npm/stockfish-web /lila/public/npm \
+    && find -L /lila/ui/lib/node_modules/@lichess-org/stockfish-web -maxdepth 1 -type f \( -name '*.js' -o -name '*.wasm' \) -exec cp {} /lila/public/npm/stockfish-web/ \; \
+    && for engine_dir in /lila/ui/lib/node_modules/stockfish.js /lila/ui/lib/node_modules/stockfish.wasm /lila/ui/lib/node_modules/stockfish-nnue.wasm; do \
+         find -L "$engine_dir" -maxdepth 1 -type f \( -name '*.js' -o -name '*.wasm' \) -exec cp {} /lila/public/npm/ \;; \
+       done
 
 ##################################################################################
 FROM sbtscala/scala-sbt:eclipse-temurin-alpine-25_36_1.11.6_3.7.3 AS lilabuilder

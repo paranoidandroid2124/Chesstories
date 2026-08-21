@@ -1324,8 +1324,9 @@ class AvailabilityGuard(StageAdapter):
 class EmbeddedAcquisitionAdapter(StageAdapter):
     """Reads trusted, actual-only Q packs extracted before adapter dispatch.
 
-    This adapter is deliberately Q-only: using final artifacts to reconstruct
-    F/C/Jp/Ja/R/P/V would create a second judgment implementation.  Its
+    This adapter is deliberately Q-only: using later-stage artifacts to
+    reconstruct the structured P endpoint would create a second judgment
+    implementation.  Its
     constructor accepts a mapping containing only actual Q entries; the corpus
     row, labels, oracle packs, and final outputs are never retained or exposed
     through ``StageInvocation``.

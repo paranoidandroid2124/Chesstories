@@ -1,10 +1,9 @@
 /* eslint no-restricted-syntax:"error" */ // no side effects allowed due to re-export by index.ts
 
 import { defined, notNull, type Prop, withEffect } from './common';
-import { preferenceLocalStorage, preferenceSessionStorage } from './cookieConsent';
 
-export const storage: ChesstoryStorageHelper = makeStorage(() => preferenceLocalStorage());
-export const tempStorage: ChesstoryStorageHelper = makeStorage(() => preferenceSessionStorage());
+export const storage: ChesstoryStorageHelper = makeStorage('chesstory-memory-storage');
+export const tempStorage: ChesstoryStorageHelper = makeStorage();
 
 export interface StoredProp<V> extends Prop<V> {
   (replacement?: V): V;
@@ -107,20 +106,50 @@ interface ChesstoryStorageEvent {
   value?: string;
 }
 
-function makeStorage(storageGetter: () => Storage | null): ChesstoryStorageHelper {
+function makeStorage(broadcastName?: string): ChesstoryStorageHelper {
+  const values = new Map<string, string>();
+  const listeners = new Map<string, Set<(event: ChesstoryStorageEvent) => void>>();
+  const source = Math.random().toString(36).slice(2);
+  let channel: BroadcastChannel | undefined;
+
+  const ensureChannel = (): BroadcastChannel | undefined => {
+    if (
+      !broadcastName ||
+      channel ||
+      typeof window === 'undefined' ||
+      typeof window.BroadcastChannel !== 'function'
+    )
+      return channel;
+    channel = new window.BroadcastChannel(broadcastName);
+    channel.addEventListener('message', event => {
+      const message = event.data as MemoryStorageEvent | undefined;
+      if (!message || message.source === source || typeof message.key !== 'string') return;
+      const storageEvent: ChesstoryStorageEvent = {
+        sri: message.source,
+        nonce: message.nonce,
+        value: message.value,
+      };
+      listeners.get(message.key)?.forEach(listener => listener(storageEvent));
+    });
+    return channel;
+  };
+
   const api = {
-    get: (k: string): string | null => storageGetter()?.getItem(k) ?? null,
-    set: (k: string, v: string): void => storageGetter()?.setItem(k, v),
-    fire: (k: string, v?: string) =>
-      storageGetter()?.setItem(
-        k,
-        JSON.stringify({
-          sri: site.sri,
-          nonce: Math.random(), // ensure item changes
-          value: v,
-        }),
-      ),
-    remove: (k: string) => storageGetter()?.removeItem(k),
+    get: (k: string): string | null => values.get(k) ?? null,
+    set: (k: string, v: string): void => {
+      values.set(k, v);
+    },
+    fire: (k: string, v?: string): void => {
+      ensureChannel()?.postMessage({
+        key: k,
+        source,
+        nonce: Math.random(),
+        value: v,
+      } satisfies MemoryStorageEvent);
+    },
+    remove: (k: string): void => {
+      values.delete(k);
+    },
     make: (k: string, ttl?: number) => {
       const bdKey = ttl && `${k}--bd`;
       const remove = () => {
@@ -141,20 +170,13 @@ function makeStorage(storageGetter: () => Storage | null): ChesstoryStorageHelpe
         },
         fire: (v?: string) => api.fire(k, v),
         remove,
-        listen: (f: (e: ChesstoryStorageEvent) => void) =>
-          window.addEventListener('storage', e => {
-            const storage = storageGetter();
-            if (!storage || e.key !== k || e.storageArea !== storage || e.newValue === null) return;
-            let parsed: ChesstoryStorageEvent | null;
-            try {
-              parsed = JSON.parse(e.newValue);
-            } catch (_) {
-              return;
-            }
-            // check sri, because Safari fires events also in the original
-            // document when there are multiple tabs
-            if (parsed?.sri && parsed.sri !== site.sri) f(parsed);
-          }),
+        listen: (f: (e: ChesstoryStorageEvent) => void) => {
+          if (!broadcastName) return;
+          const keyListeners = listeners.get(k) ?? new Set();
+          keyListeners.add(f);
+          listeners.set(k, keyListeners);
+          ensureChannel();
+        },
       };
     },
     boolean: (k: string) => ({
@@ -168,4 +190,11 @@ function makeStorage(storageGetter: () => Storage | null): ChesstoryStorageHelpe
     }),
   };
   return api;
+}
+
+interface MemoryStorageEvent {
+  key: string;
+  source: string;
+  nonce: number;
+  value?: string;
 }

@@ -22,7 +22,6 @@ object ProductionConfigValidator:
         "play.http.secret.key"         -> Set("CiebwjgIM9cHQ;I?Xk:sfqDJ;BhIe:jsL?r=?IPF[saf>s^r0]?0grUq4>q?5mP^"),
         "user.password.bpass.secret"   -> Set("9qEYN0ThHer1KWLNekA76Q=="),
         "security.password_reset.secret" -> Set("???"),
-        "security.email_confirm.secret"  -> Set("???"),
         "security.email_change.secret"   -> Set("???"),
         "security.login_token.secret"    -> Set("???")
       ).foreach: (path, invalid) =>
@@ -31,6 +30,7 @@ object ProductionConfigValidator:
       requireMailer(config, errors)
       requireSignupProtections(config, errors)
       requireOpenBetaBindings(config, errors)
+      requireMoveReviewDisabled(config, errors)
 
       val problems = errors.toList
       if problems.nonEmpty then
@@ -90,10 +90,6 @@ object ProductionConfigValidator:
       config: Configuration,
       errors: ListBuffer[String]
   ): Unit =
-    val emailConfirmEnabled = config.getOptional[Boolean]("security.email_confirm.enabled").getOrElse(false)
-    if !emailConfirmEnabled then
-      errors += "security.email_confirm.enabled must be true in production."
-
     val enabled = config.getOptional[Boolean]("security.hcaptcha.enabled").getOrElse(false)
     if !enabled then
       errors += "security.hcaptcha.enabled must be true in production."
@@ -118,6 +114,13 @@ object ProductionConfigValidator:
       errors += "push.web.url must remain empty in open-beta production."
     if configuredString(config, "push.web.vapid_public_key").isDefined then
       errors += "push.web.vapid_public_key must remain empty in open-beta production."
+
+  private def requireMoveReviewDisabled(
+      config: Configuration,
+      errors: ListBuffer[String]
+  ): Unit =
+    val mode = config.getOptional[String]("chesstory.moveReview.mode").map(_.trim.toLowerCase).getOrElse("off")
+    if mode != "off" then errors += "chesstory.moveReview.mode must remain off in production."
 
   private def requirePositiveInt(
       config: Configuration,

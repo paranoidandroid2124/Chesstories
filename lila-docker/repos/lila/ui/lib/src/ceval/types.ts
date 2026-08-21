@@ -3,6 +3,16 @@ import type { Prop } from '../index';
 import type { Feature } from '../device';
 import type CevalCtrl from './ctrl';
 import type { VNode } from 'snabbdom';
+import {
+  isMoveReviewEngineProfile,
+  moveReviewEngineProfile,
+  moveReviewEngineProfileSpec,
+  type MoveReviewEngineProfile,
+  type MoveReviewVariant,
+} from './engines/moveReviewEngineProfiles';
+
+export { isMoveReviewEngineProfile, moveReviewEngineProfile };
+export type { MoveReviewEngineProfile, MoveReviewVariant };
 
 export type WinningChances = number;
 export type SearchBy = { movetime: number } | { depth: number } | { nodes: number };
@@ -25,6 +35,45 @@ export interface Work {
   currentFen: string;
   moves: string[];
   emit: (ev: Tree.LocalEval) => void;
+}
+
+export type MoveReviewWorkInput = Omit<
+  Work,
+  'variant' | 'threads' | 'hashSize' | 'gameId' | 'stopRequested' | 'search' | 'threatMode' | 'emit'
+> & {
+  variant: MoveReviewVariant;
+  searchLimits: { depth: 16; nodes: 5_000_000 | 2_000_000; movetimeMs: 5_000 | 2_500 };
+  rootMoves: Uci[];
+  observe?: (nodes: number, engineTimeMs: number) => void;
+  emit: (evaluation: Tree.LocalEval) => void;
+};
+
+type MoveReviewWork = Work & {
+  readonly profile: MoveReviewEngineProfile;
+  readonly searchLimits: MoveReviewWorkInput['searchLimits'];
+  readonly rootMoves: Uci[];
+  readonly observe?: MoveReviewWorkInput['observe'];
+};
+
+export function makeMoveReviewWork(
+  profile: MoveReviewEngineProfile,
+  input: MoveReviewWorkInput,
+): MoveReviewWork {
+  const spec = moveReviewEngineProfileSpec(profile);
+  return {
+    ...input,
+    threads: spec.threads,
+    hashSize: spec.hashSize,
+    search: { depth: input.searchLimits.depth },
+    threatMode: false,
+    gameId: undefined,
+    stopRequested: false,
+    profile,
+  };
+}
+
+export function isMoveReviewWork(work: Work | undefined): work is MoveReviewWork {
+  return !!work && 'profile' in work && isMoveReviewEngineProfile(work.profile);
 }
 
 export interface BaseEngineInfo {
@@ -68,6 +117,10 @@ export interface CevalEngine {
   start(work: Work): void;
   stop(): void;
   destroy(): void;
+}
+
+export interface MoveReviewEngine extends CevalEngine {
+  readonly ready: Promise<boolean>;
 }
 
 export interface EvalMeta {

@@ -3,7 +3,6 @@ package io.chesstory.runtime
 import java.net.InetSocketAddress
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
-import java.util.Locale
 import java.util.concurrent.{ CountDownLatch, ExecutorService, Executors, Semaphore, TimeUnit }
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -19,6 +18,14 @@ object ChesstoryRuntime:
   private val MaxWorkers = 256
   private val QueuedRequestsPerWorker = 4
   private val MaxBodyBytes = 1024 * 1024
+  private val HealthSchema = "chesstory.runtime-health.v1"
+  private val PositionCommentaryJobsPath = "/v1/position-commentary-jobs"
+  private val JobId = "^[A-Za-z0-9_-]{32}$".r
+  private val RootSearchDepth = 16
+  private val MaximumIssuedEngineWorkCount = 512
+  private val JobDeadlineMillis = 10L * 60L * 1000L
+  private val MaximumRetainedJobs = 64
+  private val TerminalJobRetentionMillis = 2L * 60L * 1000L
 
   def main(args: Array[String]): Unit =
     val host = sys.env.getOrElse("CHESSTORY_HOST", DefaultHost)
@@ -48,24 +55,47 @@ object ChesstoryRuntime:
     val workers = Semaphore(workerCount)
     val admitted = Semaphore(workerCount * (QueuedRequestsPerWorker + 1))
     val stopping = AtomicBoolean(false)
+    val commentaryJobs = CommentaryJobRegistry(MaximumRetainedJobs, TerminalJobRetentionMillis)
     val executor = Executors.newVirtualThreadPerTaskExecutor()
     server.setExecutor(executor)
-    server.createContext("/health", exchange => safely(exchange)(handleHealth))
-    server.createContext("/v1/move-meaning", exchange => safely(exchange): exchange =>
-      if !admitted.tryAcquire() then
-        val result = RuntimeProtocol.failure(None, 503, "runtime_busy")
-        respond(exchange, result.httpStatus, result.body)
-      else
-        var workerAcquired = false
-        try
-          workers.acquire()
-          workerAcquired = true
-          if !stopping.get() then handleMoveMeaning(exchange, token)
-        catch
-          case _: InterruptedException => Thread.currentThread.interrupt()
-        finally
-          if workerAcquired then workers.release()
-          admitted.release()
+    server.createContext(
+      "/health",
+      exchange =>
+        completeHttpExchange(
+          exchange,
+          Json.obj("schema_version" -> HealthSchema, "ok" -> false, "error" -> "internal_error")
+        )(respondToHealthRequest)
+    )
+    server.createContext(
+      PositionCommentaryJobsPath,
+      exchange =>
+        completeHttpExchange(
+          exchange,
+          PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "internal_error")
+        ) { exchange =>
+          if !authorized(exchange, token) then
+            respond(exchange, 401, PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "unauthorized"))
+          else if declaredTooLarge(exchange) then
+            respond(exchange, 413, PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "request_too_large"))
+          else if !admitted.tryAcquire() then
+            respond(
+              exchange,
+              503,
+              PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "runtime_busy")
+            )
+          else
+            var workerAcquired = false
+            try
+              workers.acquire()
+              workerAcquired = true
+              if !stopping.get() then
+                routePositionCommentaryJobRequest(exchange, commentaryJobs)
+            catch
+              case _: InterruptedException => Thread.currentThread.interrupt()
+            finally
+              if workerAcquired then workers.release()
+              admitted.release()
+        }
     )
     try
       server.start()
@@ -76,43 +106,186 @@ object ChesstoryRuntime:
         executor.shutdownNow()
         throw error
 
-  private def handleHealth(exchange: HttpExchange): Unit =
-    if exchange.getRequestMethod != "GET" then methodNotAllowed(exchange, "GET")
+  private def respondToHealthRequest(exchange: HttpExchange): Unit =
+    if exchange.getRequestMethod != "GET" then
+      exchange.getResponseHeaders.set("Allow", "GET")
+      respond(
+        exchange,
+        405,
+        Json.obj("schema_version" -> HealthSchema, "ok" -> false, "error" -> "method_not_allowed")
+      )
     else
       respond(
         exchange,
         200,
-        Json.obj("ok" -> true, "schema_version" -> RuntimeProtocol.ResponseSchema)
+        Json.obj("ok" -> true, "schema_version" -> HealthSchema)
       )
 
-  private def handleMoveMeaning(exchange: HttpExchange, token: Option[String]): Unit =
-    if exchange.getRequestMethod != "POST" then methodNotAllowed(exchange, "POST")
-    else if !authorized(exchange, token) then
-      val result = RuntimeProtocol.failure(None, 401, "unauthorized")
-      respond(exchange, result.httpStatus, result.body)
-    else if !isJson(exchange) then
-      val result = RuntimeProtocol.failure(None, 415, "content_type_must_be_json")
-      respond(exchange, result.httpStatus, result.body)
-    else if declaredTooLarge(exchange) then
-      val result = RuntimeProtocol.failure(None, 413, "request_too_large")
-      respond(exchange, result.httpStatus, result.body)
+  /** The one HTTP prefix router for the browser-executed position-commentary job contract. */
+  private def routePositionCommentaryJobRequest(
+      exchange: HttpExchange,
+      commentaryJobs: CommentaryJobRegistry
+  ): Unit =
+    val rawPath = exchange.getRequestURI.getRawPath
+    if rawPath == PositionCommentaryJobsPath then
+      createPositionCommentaryJob(exchange, commentaryJobs)
+    else if rawPath.startsWith(s"$PositionCommentaryJobsPath/") then
+      rawPath.drop(PositionCommentaryJobsPath.length + 1).split("/", -1).toList match
+        case List(jobId) =>
+          exchange.getRequestMethod match
+            case "GET" => readPositionCommentaryJob(exchange, commentaryJobs, jobId)
+            case "DELETE" => cancelPositionCommentaryJob(exchange, commentaryJobs, jobId)
+            case _ => methodNotAllowedForJob(exchange, "GET, DELETE", Option.when(validJobId(jobId))(jobId))
+        case List(jobId, "engine-work-reports") =>
+          submitPositionCommentaryEngineWorkReport(exchange, commentaryJobs, jobId)
+        case _ =>
+          respond(exchange, 404, PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "job_route_not_found"))
+    else
+      respond(exchange, 404, PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "job_route_not_found"))
+
+  private def createPositionCommentaryJob(
+      exchange: HttpExchange,
+      commentaryJobs: CommentaryJobRegistry
+  ): Unit =
+    if exchange.getRequestMethod != "POST" then methodNotAllowedForJob(exchange, "POST", None)
+    else
+      readPositionCommentaryJsonBody(exchange) match
+        case Left(failure) => respond(exchange, failure.httpStatus, PositionCommentaryJobProtocol.jobErrorJson(None, None, None, failure.error))
+        case Right(body) =>
+          PositionCommentaryJobProtocol.parseJobRequest(body) match
+            case Left(failure) =>
+              respond(exchange, 400, PositionCommentaryJobProtocol.jobErrorJson(None, None, None, failure.errorCode))
+            case Right(jobRequest) =>
+              val nowEpochMs = System.currentTimeMillis()
+              val policy = CommentaryJobPolicy(
+                RootSearchDepth,
+                MaximumIssuedEngineWorkCount,
+                nowEpochMs + JobDeadlineMillis,
+                jobRequest.engineProfile
+              )
+              commentaryJobs.createJob(
+                jobRequest.requestId,
+                jobRequest.initialFen,
+                jobRequest.movePrefixUci,
+                jobRequest.currentFen,
+                policy,
+                nowEpochMs
+              ) match
+                case Left(CommentaryJobCreationRejection.RegistryCapacityReached) =>
+                  respond(
+                    exchange,
+                    503,
+                    PositionCommentaryJobProtocol.jobErrorJson(
+                      Some(jobRequest.requestId),
+                      None,
+                      Some(jobRequest.engineProfile),
+                      "commentary_job_capacity_reached"
+                    )
+                  )
+                case Left(CommentaryJobCreationRejection.JobStartRejected(reason)) =>
+                  respond(
+                    exchange,
+                    400,
+                    PositionCommentaryJobProtocol.jobErrorJson(
+                      Some(jobRequest.requestId),
+                      None,
+                      Some(jobRequest.engineProfile),
+                      jobStartRejectionCode(reason)
+                    )
+                  )
+                case Right(snapshot) =>
+                  exchange.getResponseHeaders.set(
+                    "Location",
+                    s"$PositionCommentaryJobsPath/${snapshot.jobId}"
+                  )
+                  respond(exchange, 201, PositionCommentaryJobProtocol.projectJobSnapshot(snapshot))
+
+  private def readPositionCommentaryJob(
+      exchange: HttpExchange,
+      commentaryJobs: CommentaryJobRegistry,
+      jobId: String
+  ): Unit =
+    if !validJobId(jobId) then
+      respond(exchange, 400, PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "invalid_job_id"))
+    else
+      commentaryJobs.expireAndReadJobAt(jobId, System.currentTimeMillis()) match
+        case None => respond(exchange, 404, PositionCommentaryJobProtocol.jobErrorJson(None, Some(jobId), None, "job_not_found"))
+        case Some(snapshot) => respond(exchange, 200, PositionCommentaryJobProtocol.projectJobSnapshot(snapshot))
+
+  private def submitPositionCommentaryEngineWorkReport(
+      exchange: HttpExchange,
+      commentaryJobs: CommentaryJobRegistry,
+      jobId: String
+  ): Unit =
+    if exchange.getRequestMethod != "POST" then
+      methodNotAllowedForJob(exchange, "POST", Option.when(validJobId(jobId))(jobId))
+    else if !validJobId(jobId) then
+      respond(exchange, 400, PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "invalid_job_id"))
+    else
+      readPositionCommentaryJsonBody(exchange) match
+        case Left(failure) => respond(exchange, failure.httpStatus, PositionCommentaryJobProtocol.jobErrorJson(None, Some(jobId), None, failure.error))
+        case Right(body) =>
+          PositionCommentaryJobProtocol.parseEngineWorkReport(body) match
+            case Left(failure) =>
+              respond(exchange, 400, PositionCommentaryJobProtocol.jobErrorJson(None, Some(jobId), None, failure.errorCode))
+            case Right(engineWorkReport) =>
+              commentaryJobs.submitEngineWorkReportAt(jobId, engineWorkReport, System.currentTimeMillis()) match
+                case Left(EngineWorkReportSubmissionRejection.JobNotFound) =>
+                  respond(exchange, 404, PositionCommentaryJobProtocol.jobErrorJson(None, Some(jobId), None, "job_not_found"))
+                case Left(EngineWorkReportSubmissionRejection.WorkNotOutstanding) =>
+                  respond(exchange, 409, PositionCommentaryJobProtocol.jobErrorJson(None, Some(jobId), Some(engineWorkReport.reportedEngineProfile), "engine_work_not_outstanding"))
+                case Right(snapshot) =>
+                  respond(exchange, 200, PositionCommentaryJobProtocol.projectJobSnapshot(snapshot))
+
+  private def cancelPositionCommentaryJob(
+      exchange: HttpExchange,
+      commentaryJobs: CommentaryJobRegistry,
+      jobId: String
+  ): Unit =
+    if !validJobId(jobId) then
+      respond(exchange, 400, PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "invalid_job_id"))
+    else
+      commentaryJobs.cancelJobAt(jobId, System.currentTimeMillis()) match
+        case None => respond(exchange, 404, PositionCommentaryJobProtocol.jobErrorJson(None, Some(jobId), None, "job_not_found"))
+        case Some(snapshot) => respond(exchange, 200, PositionCommentaryJobProtocol.projectJobSnapshot(snapshot))
+
+  private def readPositionCommentaryJsonBody(exchange: HttpExchange): Either[PositionCommentaryJsonBodyFailure, Array[Byte]] =
+    if !isJson(exchange) then Left(PositionCommentaryJsonBodyFailure(415, "content_type_must_be_json"))
     else
       val body = exchange.getRequestBody.readNBytes(MaxBodyBytes + 1)
-      if body.length > MaxBodyBytes then
-        val result = RuntimeProtocol.failure(None, 413, "request_too_large")
-        respond(exchange, result.httpStatus, result.body)
-      else
-        val result = RuntimeProtocol.evaluate(body)
-        respond(exchange, result.httpStatus, result.body)
+      if body.length > MaxBodyBytes then Left(PositionCommentaryJsonBodyFailure(413, "request_too_large"))
+      else Right(body)
 
-  private def safely(exchange: HttpExchange)(handler: HttpExchange => Unit): Unit =
+  private def jobStartRejectionCode(rejection: CommentaryJobStartRejection): String = rejection match
+    case CommentaryJobStartRejection.PositionHistoryInvalid(reason) => reason match
+      case lila.chessjudgment.model.line.CanonicalPositionHistoryFailure.InvalidInitialFen =>
+        "invalid_initial_fen"
+      case lila.chessjudgment.model.line.CanonicalPositionHistoryFailure.InvalidCurrentFen =>
+        "invalid_current_fen"
+      case lila.chessjudgment.model.line.CanonicalPositionHistoryFailure.IllegalMovePrefix =>
+        "invalid_move_prefix_uci"
+      case lila.chessjudgment.model.line.CanonicalPositionHistoryFailure.CurrentFenMismatch =>
+        "current_fen_mismatch"
+      case lila.chessjudgment.model.line.CanonicalPositionHistoryFailure.InitialPlyOutOfRange |
+          lila.chessjudgment.model.line.CanonicalPositionHistoryFailure.MovePrefixPlyOutOfRange |
+          lila.chessjudgment.model.line.CanonicalPositionHistoryFailure.HalfMoveClockOverflow |
+          lila.chessjudgment.model.line.CanonicalPositionHistoryFailure.FullMoveNumberOverflow =>
+        "invalid_position_history"
+    case CommentaryJobStartRejection.RootSearchDepthInvalid => "invalid_commentary_job_policy"
+    case CommentaryJobStartRejection.MaximumIssuedEngineWorkCountInvalid => "invalid_commentary_job_policy"
+
+  private final case class PositionCommentaryJsonBodyFailure(httpStatus: Int, error: String)
+
+  private def completeHttpExchange(
+      exchange: HttpExchange,
+      internalError: => JsObject
+  )(handler: HttpExchange => Unit): Unit =
     try handler(exchange)
     catch
       case NonFatal(error) =>
         System.err.println(s"Chesstory request failed: ${error.getClass.getSimpleName}")
         try
-          val result = RuntimeProtocol.failure(None, 500, "internal_error")
-          respond(exchange, result.httpStatus, result.body)
+          respond(exchange, 500, internalError)
         catch case NonFatal(_) => ()
     finally exchange.close()
 
@@ -124,17 +297,22 @@ object ChesstoryRuntime:
 
   private def isJson(exchange: HttpExchange): Boolean =
     Option(exchange.getRequestHeaders.getFirst("Content-Type"))
-      .exists(_.toLowerCase(Locale.ROOT).startsWith("application/json"))
+      .exists(_.split(";", 2).headOption.exists(_.trim.equalsIgnoreCase("application/json")))
 
   private def declaredTooLarge(exchange: HttpExchange): Boolean =
     Option(exchange.getRequestHeaders.getFirst("Content-Length"))
       .flatMap(_.toLongOption)
       .exists(_ > MaxBodyBytes)
 
-  private def methodNotAllowed(exchange: HttpExchange, allowed: String): Unit =
+  private def methodNotAllowedForJob(
+      exchange: HttpExchange,
+      allowed: String,
+      jobId: Option[String]
+  ): Unit =
     exchange.getResponseHeaders.set("Allow", allowed)
-    val result = RuntimeProtocol.failure(None, 405, "method_not_allowed")
-    respond(exchange, result.httpStatus, result.body)
+    respond(exchange, 405, PositionCommentaryJobProtocol.jobErrorJson(None, jobId, None, "method_not_allowed"))
+
+  private def validJobId(jobId: String): Boolean = JobId.matches(jobId)
 
   private def respond(exchange: HttpExchange, status: Int, body: JsObject): Unit =
     val bytes = Json.stringify(body).getBytes(StandardCharsets.UTF_8)

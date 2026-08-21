@@ -14,7 +14,7 @@ Most chess analysis tools are good at telling you what changed. They show the ev
 
 The missing part is the human question: what was the position asking me to do?
 
-Chesstory starts from the frustration of reviewing a game and still not knowing what the plan should have been. The goal is to turn one game into a record you can return to: a board, a few candidate lines, a clear explanation, and a lesson that survives after the browser tab closes.
+Chesstory starts from the frustration of reviewing a game and still not knowing what the plan should have been. The goal is to make one game understandable now, then let you keep the board, candidate lines, explanation, and lesson only when you explicitly save them as a Study.
 
 The beta version is intentionally narrow. It is not a playing site, a tactics feed, or a social network. It is a place to take one game seriously.
 

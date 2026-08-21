@@ -216,6 +216,7 @@ export function renderExplorerPanel(ctrl: AnalyseCtrl, opts: ExplorerViewOpts = 
   return hl(
     'section.explorer-box.sub-box',
     {
+      attrs: { id: 'analyse-opening-explorer' },
       class: { loading, reduced: !!explorer.failing() || explorer.movesAway() > 2 },
       hook: {
         insert: vnode => ((vnode.elm as HTMLElement).scrollTop = 0),

@@ -3,7 +3,7 @@ package lila.chessjudgment.model.judgment
 import chess.{ Pawn, Square }
 import chess.format.Fen
 import lila.chessjudgment.model.{ Motif, ProbeAdmissionDiagnostic, ProbeRequest, TransitionType }
-import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.line.{ AutomaticTerminal, CandidateLineEvaluation, DrawClaimAction, PrincipalVariationEvidence }
 
 enum ClaimFamily:
   case Tactical
@@ -376,14 +376,28 @@ case class JudgmentClaim(
     content: Option[JudgmentClaimContent] = None
 )
 
+enum PlayerFacingPositionAction:
+  case AutomaticTerminal(value: lila.chessjudgment.model.line.AutomaticTerminal)
+  case ForcedSingleMove(
+      moveUci: String,
+      mover: chess.Color,
+      supportingEvaluation: CandidateLineEvaluation,
+      drawClaims: List[DrawClaimAction]
+  )
+  case DominantDrawClaim(claims: List[DrawClaimAction])
+
+enum PlayerFacingPrimary:
+  case MoveVerdict(comparisonEvidence: EvidenceRef)
+  case BestChoice(comparisonEvidence: EvidenceRef)
+
 final class EvidenceBackedJudgmentPacket private (
     val assembly: JudgmentAssemblyContext,
+    val primary: PlayerFacingPrimary,
     val probeRequests: List[ProbeRequest],
     val playerFacingClaimDecisions: List[PlayerFacingClaimDecision],
     val onlyMoveConstraintResolutions: List[OnlyMoveConstraintResolution],
     val causeExposureResolution: PlayerFacingCauseExposureResolution,
-    val causeDispositionLedger: CauseDispositionLedger,
-    val selectedContentClaimIds: List[String]
+    val causeDispositionLedger: CauseDispositionLedger
 ):
   def root: PositionNodeRef =
     assembly.root.get
@@ -403,31 +417,6 @@ final class EvidenceBackedJudgmentPacket private (
 
   def claims: List[JudgmentClaim] = assembly.claims
 
-  /** Typed importance interpretation of the already selected R Causes. The
-    * packet carries the exact canonical exposure result produced by R; this is
-    * a read-only interpretation of that result, not a second selection pass.
-    */
-  def directCauseImportanceResolution: DirectCauseImportanceResolution =
-    causeExposureResolution.importanceResolution
-
-  def directCauseChannel(
-      selection: PlayerFacingCauseSelection,
-      selectedChannel: PlayerFacingCauseChannelSelection
-  ): Option[DirectCauseChannel] =
-    evidenceGraph.record(selection.causeEvidence).toList.flatMap {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-        RelativeCauseConstructionAdmission
-          .admittedDirectChannels(cause, evidenceGraph)
-          .filter(channel =>
-            channel.binding.source == selectedChannel.carrierEvidence &&
-              channel.causalSignature == selectedChannel.causalSignature &&
-              channel.directChange == selectedChannel.directChange
-          )
-      case _ => Nil
-    } match
-      case channel :: Nil => Some(channel)
-      case _              => None
-
   def probeDiagnostics: List[ProbeAdmissionDiagnostic] = assembly.probeDiagnostics
 
   def playedTransition: Option[MoveTransitionEdge] =
@@ -435,25 +424,6 @@ final class EvidenceBackedJudgmentPacket private (
 
   def referenceTransition: Option[MoveTransitionEdge] =
     exactlyOne(transitions.filter(_.role == TransitionEdgeRole.Reference))
-
-  def primaryRelativeAssessment: Option[RelativeMoveAssessment] =
-    (
-      playedTransition,
-      referenceTransition,
-      candidateLine(LineNodeRole.Played),
-      candidateLine(LineNodeRole.BestReference)
-    ) match
-      case (Some(played), Some(referenceTransition), Some(playedLine), Some(referenceLine)) =>
-        exactlyOne(
-          relativeAssessments.filter(assessment =>
-            assessment.played == played &&
-              assessment.referenceTransition.contains(referenceTransition) &&
-              assessment.candidate == playedLine &&
-              assessment.reference == referenceLine
-          )
-        )
-      case _ =>
-        None
 
   private def exactlyOne[A](items: List[A]): Option[A] =
     items match
@@ -463,15 +433,16 @@ final class EvidenceBackedJudgmentPacket private (
 object EvidenceBackedJudgmentPacket:
   private[chessjudgment] def fromAssembly(
       assembly: JudgmentAssemblyContext,
+      primary: PlayerFacingPrimary,
       probeRequests: List[ProbeRequest],
       playerFacingClaimDecisions: List[PlayerFacingClaimDecision],
       onlyMoveConstraintResolutions: List[OnlyMoveConstraintResolution],
       causeExposureResolution: PlayerFacingCauseExposureResolution,
-      causeDispositionLedger: CauseDispositionLedger,
-      selectedContentClaimIds: List[String]
+      causeDispositionLedger: CauseDispositionLedger
   ): Option[EvidenceBackedJudgmentPacket] =
     Option.when(
       structurallyClosed(assembly) &&
+        primaryClosed(assembly, primary) &&
         probesClosed(assembly, probeRequests) &&
         playerFacingClaimsClosed(
           assembly,
@@ -479,19 +450,48 @@ object EvidenceBackedJudgmentPacket:
           onlyMoveConstraintResolutions,
           causeExposureResolution,
           causeDispositionLedger
-        ) &&
-        contentClaimsClosed(assembly, selectedContentClaimIds)
+        )
     )(
       new EvidenceBackedJudgmentPacket(
         assembly,
+        primary,
         probeRequests,
         playerFacingClaimDecisions,
         onlyMoveConstraintResolutions,
         causeExposureResolution,
-        causeDispositionLedger,
-        selectedContentClaimIds
+        causeDispositionLedger
       )
     )
+
+  private def primaryClosed(
+      assembly: JudgmentAssemblyContext,
+      primary: PlayerFacingPrimary
+  ): Boolean =
+    assembly.relativeAssessments match
+      case assessment :: Nil =>
+        val comparisonEvidence = primary match
+          case PlayerFacingPrimary.MoveVerdict(ref) => ref
+          case PlayerFacingPrimary.BestChoice(ref)  => ref
+        assembly.evidenceGraph.candidateComparisonRecord(comparisonEvidence).exists {
+          case EvidenceRecord(_, CandidateComparisonEvidence(fact), _) =>
+            primary match
+              case PlayerFacingPrimary.MoveVerdict(_) =>
+                fact.kind == CandidateComparisonKind.PlayedVsBest &&
+                  fact.referenceLine == assessment.reference.ref &&
+                  fact.candidateLine == assessment.candidate.ref &&
+                  fact.hasDistinctRootMoves
+              case PlayerFacingPrimary.BestChoice(_) =>
+                fact.kind == CandidateComparisonKind.BestVsSecond &&
+                  EvidenceRef.sameMove(assessment.played.moveUci, assessment.reference.ref.rootMove) &&
+                  EvidenceRef.sameMove(assessment.candidate.ref.rootMove, assessment.reference.ref.rootMove) &&
+                  fact.referenceLine == assessment.reference.ref &&
+                  fact.candidateLine.role == LineNodeRole.Alternative &&
+                  fact.candidateLine.rank == 2 &&
+                  fact.hasDistinctRootMoves &&
+                  fact.candidateSet.nonEmpty
+          case _ => false
+        }
+      case _ => false
 
   private def playerFacingClaimsClosed(
       assembly: JudgmentAssemblyContext,
@@ -500,60 +500,22 @@ object EvidenceBackedJudgmentPacket:
       exposure: PlayerFacingCauseExposureResolution,
       dispositionLedger: CauseDispositionLedger
   ): Boolean =
-    val playedMoves = assembly.relativeAssessments
-      .map(assessment => EvidenceRef.normalizeMove(assessment.played.moveUci))
-      .filter(_.nonEmpty)
-      .toSet
-    val expectedExposure = PlayerFacingCauseExposurePipeline.resolve(
-      assembly.claims,
-      assembly.evidenceGraph,
-      playedMoves
-    )
-    val expectedDecisions = PlayerFacingClaimDecision.fromExposure(
-      assembly.claims,
-      expectedExposure,
-      assembly.evidenceGraph,
-      playedMoves
-    )
-    exposure == expectedExposure &&
-      decisions == expectedDecisions &&
-      onlyMoveResolutions == expectedExposure.onlyMoveConstraintResolutions &&
-      dispositionLedger.closedFor(
-        assembly.evidenceGraph,
-        expectedExposure,
-        assembly.claims.map(_.id).toSet
-      )
-
-  /** P keeps R's selection opaque: it only validates each selected claim's
-    * registered typed content and carrier.
-    */
-  private def contentClaimsClosed(
-      assembly: JudgmentAssemblyContext,
-      claimIds: List[String]
-  ): Boolean =
-    val graph = assembly.evidenceGraph
-    val claimsById = assembly.claims.map(claim => claim.id -> claim).toMap
-
-    def registeredCarrier(content: JudgmentClaimContent): Boolean =
-      content match
-        case JudgmentClaimContent.CandidateComparison(carrier, _) =>
-          graph.record(carrier).exists {
-            case EvidenceRecord(_, CandidateComparisonEvidence(_), _) => true
-            case _                                                     => false
-          }
-        case JudgmentClaimContent.StrategicMechanism(carrier) =>
-          graph.record(carrier).exists {
-            case EvidenceRecord(_, _: StrategicMechanismEvidence, _) => true
+    val claimIds = assembly.claims.map(_.id).toSet
+    val decisionsClosed = decisions.map(_.claimId).distinct.size == decisions.size &&
+      decisions.forall(decision =>
+        claimIds(decision.claimId) && decision.causeSelections.forall(selection =>
+          assembly.evidenceGraph.record(selection.causeEvidence).exists {
+            case EvidenceRecord(_, RelativeCauseFactEvidence(_), _) => true
             case _                                                   => false
           }
-
-    claimIds.distinct.size == claimIds.size &&
-      claimIds.forall(claimId =>
-        claimsById.get(claimId).exists { claim =>
-          claim.content.exists(content =>
-            claim.evidence.contains(content.carrierRef) && registeredCarrier(content)
-          )
-        }
+        )
+      )
+    decisionsClosed &&
+      onlyMoveResolutions == exposure.onlyMoveConstraintResolutions &&
+      dispositionLedger.closedFor(
+        assembly.evidenceGraph,
+        exposure,
+        claimIds
       )
 
   private def probesClosed(
@@ -593,12 +555,8 @@ object EvidenceBackedJudgmentPacket:
         request.purpose.nonEmpty &&
           request.requiredSignals.nonEmpty &&
           requestFen.exists(knownFens) &&
-          request.comparisonFen.forall(fen => canonicalFen(fen).exists(knownFens)) &&
           request.moves.forall(move =>
             PrincipalVariationEvidence.legalFenAfter(request.fen, move).nonEmpty
-          ) &&
-          request.baselineMove.forall(baseline =>
-            request.candidateMove.exists(EvidenceRef.sameMove(baseline, _))
           ) &&
           rootMoveBound
       }
@@ -641,33 +599,59 @@ object EvidenceBackedJudgmentPacket:
         record: EvidenceRecord,
         payload: LineFactEvidence
     ): Boolean =
+      val positionHistory = assembly.input.positionHistory
+      val originHistory =
+        line.role match
+          case LineNodeRole.Threat =>
+            assembly.transitions.filter(transition =>
+              transition.role == TransitionEdgeRole.Threat &&
+                transition.to == record.ref.position
+            ) match
+              case transition :: Nil =>
+                positionHistory
+                  .extend(List(transition.moveUci))
+                  .toOption
+                  .filter(history =>
+                    history.currentFen == record.ref.position.fen &&
+                      history.currentPly == record.ref.position.ply
+                  )
+              case _ =>
+                None
+          case _ =>
+            Option.when(
+              positionHistory.currentFen == record.ref.position.fen &&
+                positionHistory.currentPly == record.ref.position.ply
+            )(positionHistory)
       val expectedReplay =
-        PrincipalVariationEvidence
-          .legalReplay(record.ref.position.fen, line.line.moves, record.ref.position.ply)
-          .map(_.zipWithIndex.map { case ((fenBefore, move), index) =>
-            LineReplayStep(
-              ply = move.ply,
-              moveUci = EvidenceRef.normalizeMove(move.uci),
-              fenBefore = if index == 0 then record.ref.position.fen else fenBefore,
-              fenAfter = move.fenAfter
+        originHistory.flatMap { history =>
+          val prefixSize = history.segmentReplaySteps.size
+          history.extend(line.evaluation.moves).toOption.flatMap { lineHistory =>
+            Option.when(
+              lineHistory.segmentReplaySteps.take(prefixSize) == history.segmentReplaySteps
+            )(
+              lineHistory.segmentReplaySteps.drop(prefixSize).map(step =>
+                LineReplayStep(
+                  ply = step.ply,
+                  moveUci = EvidenceRef.normalizeMove(step.uci),
+                  fenBefore = step.beforeFen,
+                  fenAfter = step.afterFen
+                )
+              )
             )
-          })
+          }
+        }
       val actualReplay =
         payload.lineReplaySteps.map(step =>
           step.copy(moveUci = EvidenceRef.normalizeMove(step.moveUci))
         )
       val lineMatches = payload.line == line.ref
       val movesMatch =
-        normalizedMoves(payload.lineReplayMoves) == normalizedMoves(line.line.moves)
+        normalizedMoves(payload.lineReplayMoves) == normalizedMoves(line.evaluation.moves)
       val replayMatches = expectedReplay.contains(actualReplay)
-      val exactProofsValid =
-        payload.endgameTechniqueHorizons.forall(horizon =>
-          horizon.zugzwangProof.forall(_.validFor(horizon, payload.lineReplaySteps))
-        )
-      lineMatches && movesMatch && replayMatches && exactProofsValid
+      lineMatches && movesMatch && replayMatches
     def exactLineEvidence(line: CandidateLineNode): Boolean =
       val rootMoveMatches =
-        line.line.moves.headOption.exists(move =>
+        line.evaluation.moves.headOption.exists(move =>
           EvidenceRef.sameMove(move, line.ref.rootMove)
         )
       registeredById.get(line.evidence.id).exists {
@@ -682,21 +666,26 @@ object EvidenceBackedJudgmentPacket:
         case _ =>
           false
       }
-    def exactEvalEvidence(line: CandidateLineNode): Boolean =
+    def exactEvaluationEvidence(line: CandidateLineNode): Boolean =
       graphRecords.collect {
-        case record @ EvidenceRecord(_, EvalFactEvidence(payloadLine, _, _, _), _)
+        case record @ EvidenceRecord(_, CandidateLineEvaluationEvidence(payloadLine, _), _)
             if payloadLine == line.ref =>
           record
       } match
-        case List(EvidenceRecord(ref, EvalFactEvidence(_, whitePovEvalCp, mate, depth), parents)) =>
-          ref.producer == EvidenceProducer.EngineEvalProducer &&
+        case List(EvidenceRecord(ref, CandidateLineEvaluationEvidence(_, evaluation), parents)) =>
+          val exactAuthority = evaluation match
+            case CandidateLineEvaluation.EngineSearch(_) =>
+              ref.producer == EvidenceProducer.EngineEvalProducer &&
+                ref.confidence == EvidenceConfidence.EngineBacked
+            case CandidateLineEvaluation.ExactAutomaticTerminal(_, _) =>
+              ref.producer == EvidenceProducer.LegalLineProducer &&
+                ref.confidence == EvidenceConfidence.LegalReplayVerified
+          exactAuthority &&
             ref.layer == EvidenceLayer.Eval &&
             ref.position == line.evidence.position &&
             ref.line.contains(line.ref) &&
             ref.scope == line.role.scope &&
-            whitePovEvalCp == line.whitePovEvalCp &&
-            mate == line.mate &&
-            depth == line.depth &&
+            evaluation == line.evaluation &&
             parents == List(line.evidence)
         case _ =>
           false
@@ -720,7 +709,7 @@ object EvidenceBackedJudgmentPacket:
             false
         }
     val nodeAndTransitionEvidenceClosed =
-      assembly.lines.forall(line => exactLineEvidence(line) && exactEvalEvidence(line)) &&
+      assembly.lines.forall(line => exactLineEvidence(line) && exactEvaluationEvidence(line)) &&
         assembly.transitions.forall(exactTransitionEvidence)
     val planCausalEvidenceClosed =
       graphRecords.forall {
@@ -765,37 +754,32 @@ object EvidenceBackedJudgmentPacket:
       (
         line.evidence ::
           graphRecords.collect {
-            case EvidenceRecord(evalRef, EvalFactEvidence(payloadLine, _, _, _), _)
+            case EvidenceRecord(evalRef, CandidateLineEvaluationEvidence(payloadLine, _), _)
                 if payloadLine == line.ref =>
               evalRef
           }
       ).distinctBy(_.id)
     val expectedCandidateSet =
       for
-        root <- assembly.root
-        mover <- root.sideToMove.orElse(assembly.input.sideToMove)
+        complete <- assembly.input.completeCandidateSet
         reference <- assembly.line(LineNodeRole.BestReference)
-        descriptor <- CandidateSetDescriptor.fromLines(mover, assembly.lines, reference)
-        second <- CandidateSetDescriptor
-          .uniqueLines(assembly.lines)
-          .find(line => !EvidenceRef.sameMove(line.ref.rootMove, reference.ref.rootMove))
+        if EvidenceRef.sameMove(reference.ref.rootMove, complete.bestMoveUci)
+        second <- assembly.lines.find(line => EvidenceRef.sameMove(line.ref.rootMove, complete.secondMoveUci))
         played <- assembly.line(LineNodeRole.Played)
       yield
         val ownerCandidate =
           if EvidenceRef.sameMove(second.ref.rootMove, played.ref.rootMove) then played
           else second
-        (mover, reference, ownerCandidate, descriptor)
+        (reference, ownerCandidate, complete.descriptor)
     val candidateSetClosed =
       expectedCandidateSet match
         case None =>
           candidateSetOwners.isEmpty
-        case Some((_, reference, ownerCandidate, descriptor)) =>
+        case Some((reference, ownerCandidate, descriptor)) =>
           candidateSetOwners match
             case List((ownerRecord, ownerFact)) =>
-              val topCandidateParents =
-                CandidateSetDescriptor
-                  .uniqueLines(assembly.lines)
-                  .take(3)
+              val candidateSetParents =
+                List(reference, ownerCandidate)
                   .flatMap(canonicalLineParents)
                   .distinctBy(_.id)
               val primaryRecord =
@@ -808,7 +792,7 @@ object EvidenceBackedJudgmentPacket:
               ownerFact.referenceLine == reference.ref &&
               ownerFact.candidateLine == ownerCandidate.ref &&
               ownerFact.candidateSet.contains(descriptor) &&
-              topCandidateParents.forall(ownerRecord.parents.contains) &&
+              candidateSetParents.forall(ownerRecord.parents.contains) &&
               primaryRecord.forall(record =>
                 record.ref == ownerRecord.ref || record.parents.contains(ownerRecord.ref)
               )
@@ -823,9 +807,10 @@ object EvidenceBackedJudgmentPacket:
         val descriptorParents =
           Option
             .when(fact.candidateSet.nonEmpty)(
-              CandidateSetDescriptor
-                .uniqueLines(assembly.lines)
-                .take(3)
+              expectedCandidateSet.toList
+                .flatMap { case (reference, ownerCandidate, _) =>
+                  List(reference, ownerCandidate)
+                }
                 .flatMap(canonicalLineParents)
             )
             .toList
@@ -847,37 +832,6 @@ object EvidenceBackedJudgmentPacket:
             .distinctBy(_.id)
         record.parents.size == expectedParents.size &&
           record.parents.toSet == expectedParents.toSet
-      }
-    def descriptorForComparison(
-        record: EvidenceRecord,
-        fact: CandidateComparisonFact
-    ): Option[CandidateSetDescriptor] =
-      fact.candidateSet.orElse(
-        Option
-          .when(fact.kind == CandidateComparisonKind.PlayedVsBest)(
-            candidateSetOwners.collectFirst {
-              case (ownerRecord, ownerFact) if record.parents.contains(ownerRecord.ref) =>
-                ownerFact.candidateSet
-            }.flatten
-          )
-          .flatten
-      )
-    val comparisonValuesCanonical =
-      comparisonRecords.forall { case (record, fact) =>
-        (for
-          root <- assembly.root
-          mover <- root.sideToMove.orElse(assembly.input.sideToMove)
-          reference <- comparisonLinesByRef.get(fact.referenceLine)
-          candidate <- comparisonLinesByRef.get(fact.candidateLine)
-        yield
-          val descriptor = descriptorForComparison(record, fact)
-          fact.comparison ==
-            EvalComparison.fromLines(
-              mover,
-              reference,
-              candidate,
-              descriptor.map(_.candidateSetType)
-            )).contains(true)
       }
     def comparisonFactBound(ref: EvidenceRef): Boolean =
       assembly.evidenceGraph.candidateComparisonRecord(ref).exists {
@@ -936,10 +890,22 @@ object EvidenceBackedJudgmentPacket:
             .exists {
               case EvidenceRecord(primaryRef, CandidateComparisonEvidence(fact), _) =>
                 comparisonFactBound(primaryRef) &&
-                  fact.kind == CandidateComparisonKind.PlayedVsBest &&
-                  fact.referenceLine == assessment.reference.ref &&
-                  fact.candidateLine == assessment.candidate.ref &&
-                  primaryRef.confidence == recordRef.confidence
+                  (fact.kind match
+                    case CandidateComparisonKind.PlayedVsBest =>
+                      fact.referenceLine == assessment.reference.ref &&
+                        fact.candidateLine == assessment.candidate.ref &&
+                        fact.hasDistinctRootMoves
+                    case CandidateComparisonKind.BestVsSecond =>
+                      EvidenceRef.sameMove(assessment.played.moveUci, assessment.reference.ref.rootMove) &&
+                        EvidenceRef.sameMove(assessment.candidate.ref.rootMove, assessment.reference.ref.rootMove) &&
+                        fact.referenceLine == assessment.reference.ref &&
+                        fact.candidateLine.role == LineNodeRole.Alternative &&
+                        fact.candidateLine.rank == 2 &&
+                        fact.hasDistinctRootMoves &&
+                        fact.candidateSet.nonEmpty
+                    case CandidateComparisonKind.PlayedVsAlternative |
+                        CandidateComparisonKind.ReferenceVsAlternative =>
+                      false)
               case _ =>
                 false
             }
@@ -973,27 +939,6 @@ object EvidenceBackedJudgmentPacket:
           relatedComparisonsBound &&
           relativeCausesBound
       }
-    val primaryAssessmentPresent =
-      (
-        assembly.playedTransition,
-        assembly.referenceTransition,
-        assembly.line(LineNodeRole.Played),
-        assembly.line(LineNodeRole.BestReference)
-      ) match
-        case (Some(playedTransition), Some(referenceTransition), Some(playedLine), Some(referenceLine)) =>
-          assembly.relativeAssessments.count(assessment =>
-            assessment.played == playedTransition &&
-              assessment.referenceTransition.contains(referenceTransition) &&
-              assessment.candidate == playedLine &&
-              assessment.reference == referenceLine &&
-              assembly.evidenceGraph.comparisonFor(assessment).exists(fact =>
-                fact.kind == CandidateComparisonKind.PlayedVsBest &&
-                  fact.candidateLine == playedLine.ref &&
-                  fact.referenceLine == referenceLine.ref
-              )
-          ) == 1
-        case _ =>
-          false
     val visiting = scala.collection.mutable.Set.empty[String]
     val visited = scala.collection.mutable.Set.empty[String]
     def visit(id: String): Boolean =
@@ -1026,9 +971,7 @@ object EvidenceBackedJudgmentPacket:
       claimsClosed &&
       causesClosed &&
       assessmentsClosed &&
-      primaryAssessmentPresent &&
       comparisonPairsUnique &&
       candidateSetClosed &&
       comparisonParentsCanonical &&
-      comparisonValuesCanonical &&
       parentDagAcyclic

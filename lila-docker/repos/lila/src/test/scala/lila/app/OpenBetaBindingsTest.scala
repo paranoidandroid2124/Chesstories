@@ -41,11 +41,11 @@ class OpenBetaBindingsTest extends munit.FunSuite:
   test("runtime health probe rejects malformed and mismatched JSON"):
     val invalidResponses = List(
       "not-json",
-      """{"schema_version":"chesstory.move-meaning.response.v3"}""",
-      """{"ok":false,"schema_version":"chesstory.move-meaning.response.v3"}""",
+      """{"schema_version":"chesstory.runtime-health.v1"}""",
+      """{"ok":false,"schema_version":"chesstory.runtime-health.v1"}""",
       """{"ok":true}""",
-      """{"ok":true,"schema_version":"chesstory.move-meaning.response.v2"}""",
-      """{"ok":true,"schema_version":"chesstory.move-meaning.response.v3","extra":true}"""
+      """{"ok":true,"schema_version":"chesstory.runtime-health.v0"}""",
+      """{"ok":true,"schema_version":"chesstory.runtime-health.v1","extra":true}"""
     )
     Future
       .traverse(invalidResponses): response =>
@@ -55,7 +55,7 @@ class OpenBetaBindingsTest extends munit.FunSuite:
       .map(_ => ())
 
   test("runtime health probe accepts the declared contract with or without a trailing slash"):
-    val health = """{"ok":true,"schema_version":"chesstory.move-meaning.response.v3"}"""
+    val health = """{"ok":true,"schema_version":"chesstory.runtime-health.v1"}"""
     withServer({ path =>
       if path == "/health" then 200 -> health else 404 -> "{}"
     }) { base =>
@@ -144,7 +144,7 @@ class OpenBetaBindingsTest extends munit.FunSuite:
         "probePath": "/health",
         "probeResponse": {
           "ok": true,
-          "schema_version": "chesstory.move-meaning.response.v3"
+          "schema_version": "chesstory.runtime-health.v1"
         },
         "notes": "runtime base URL"
       }

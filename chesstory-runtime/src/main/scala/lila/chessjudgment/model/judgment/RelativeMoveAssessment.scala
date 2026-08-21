@@ -2,6 +2,7 @@ package lila.chessjudgment.model.judgment
 
 import chess.Color
 import lila.chessjudgment.model.evaluation.{ JudgmentThresholds, PerspectiveMath, VerdictThresholdPolicy }
+import lila.chessjudgment.model.line.{ CandidateLineEvaluation, RankedCandidateLineEvaluation }
 
 enum MoveChoiceVerdict:
   case ImprovesOnReference
@@ -26,45 +27,42 @@ final case class CandidateSetDescriptor private[judgment] (
 ):
   def onlyMove: Boolean = candidateSetType == CandidateSetType.OnlyMove
 
-object CandidateSetDescriptor:
-  private[chessjudgment] def uniqueLines(lines: List[CandidateLineNode]): List[CandidateLineNode] =
-    lines
-      .filterNot(_.role == LineNodeRole.Threat)
-      .sortBy(_.ref.rank)
-      .groupBy(line => EvidenceRef.normalizeMove(line.ref.rootMove))
-      .values
-      .map(_.minBy(_.ref.rank))
-      .toList
-      .sortBy(_.ref.rank)
+final case class CompleteCandidateSet private[chessjudgment] (
+    bestMoveUci: String,
+    secondMoveUci: String,
+    descriptor: CandidateSetDescriptor
+)
 
-  def fromLines(
+object CandidateSetDescriptor:
+  def fromCompleteRanking(
       mover: Color,
-      lines: List[CandidateLineNode],
-      reference: CandidateLineNode
-  ): Option[CandidateSetDescriptor] =
-    val ordered = uniqueLines(lines)
-    ordered.find(line => !EvidenceRef.sameMove(line.ref.rootMove, reference.ref.rootMove)).map { secondLine =>
+      ranked: List[RankedCandidateLineEvaluation]
+  ): Option[CompleteCandidateSet] =
+    val ordered = ranked.sortBy(_.rank)
+    for
+      best <- ordered.headOption
+      second <- ordered.tail.headOption
+    yield
       val topCandidates = ordered.take(3)
       val reliable =
-        topCandidates.size >= 2 &&
-          topCandidates.forall(line => JudgmentThresholds.engineBackedByDepth(line.depth, line.mate))
-      val gap =
-        EvalComparison
-          .fromLines(mover, reference, secondLine)
-          .winPercentLossForMover
+        topCandidates.forall(_.evaluation.comparisonReady)
+      val bestWinPercent = best.evaluation.winPercentForMover(mover)
+      val gap = (bestWinPercent - second.evaluation.winPercentForMover(mover)).max(0.0)
       val spread =
         topCandidates
-          .map(line => EvalComparison.fromLines(mover, reference, line).winPercentLossForMover)
-          .maxOption
-          .getOrElse(gap)
+          .map(candidate => (bestWinPercent - candidate.evaluation.winPercentForMover(mover)).max(0.0))
+          .max
       val candidateSetType =
-        if topCandidates.size >= 3 && reliable && gap >= JudgmentThresholds.ONLY_MOVE_GAP_WP then
+        if reliable && gap >= JudgmentThresholds.ONLY_MOVE_GAP_WP then
           CandidateSetType.OnlyMove
         else if reliable && spread <= JudgmentThresholds.STYLE_CHOICE_SPREAD_WP then
           CandidateSetType.StyleChoice
         else CandidateSetType.NarrowChoice
-      CandidateSetDescriptor(candidateSetType)
-    }
+      CompleteCandidateSet(
+        bestMoveUci = EvidenceRef.normalizeMove(best.rootMoveUci),
+        secondMoveUci = EvidenceRef.normalizeMove(second.rootMoveUci),
+        descriptor = CandidateSetDescriptor(candidateSetType)
+      )
 
 enum CandidateComparisonKind:
   case PlayedVsBest
@@ -219,10 +217,58 @@ object RelativeCauseBindingTier:
       case RelativeCauseRole.PlayedAlternativeContext | RelativeCauseRole.AlternativeDiagnostic =>
         RelativeCauseBindingTier.Context
 
+enum VerdictConfidence:
+  case EngineBacked
+  case LegalReplayVerified
+  case MixedVerified
+
+  def evidenceConfidence: EvidenceConfidence = this match
+    case EngineBacked        => EvidenceConfidence.EngineBacked
+    case LegalReplayVerified => EvidenceConfidence.LegalReplayVerified
+    case MixedVerified       => EvidenceConfidence.Mixed
+
+object VerdictConfidence:
+  private[judgment] def fromEvaluations(
+      reference: CandidateLineEvaluation,
+      candidate: CandidateLineEvaluation
+  ): Option[VerdictConfidence] =
+    (reference, candidate) match
+      case (CandidateLineEvaluation.EngineSearch(referenceLine), CandidateLineEvaluation.EngineSearch(candidateLine)) =>
+        Option.when(
+          JudgmentThresholds.engineBackedByDepth(referenceLine.depth, referenceLine.mate) &&
+            JudgmentThresholds.engineBackedByDepth(candidateLine.depth, candidateLine.mate)
+        )(VerdictConfidence.EngineBacked)
+      case (
+            CandidateLineEvaluation.ExactAutomaticTerminal(_, _),
+            CandidateLineEvaluation.ExactAutomaticTerminal(_, _)
+          ) =>
+        Some(VerdictConfidence.LegalReplayVerified)
+      case (CandidateLineEvaluation.EngineSearch(line), CandidateLineEvaluation.ExactAutomaticTerminal(_, _)) =>
+        Option.when(JudgmentThresholds.engineBackedByDepth(line.depth, line.mate))(
+          VerdictConfidence.MixedVerified
+        )
+      case (CandidateLineEvaluation.ExactAutomaticTerminal(_, _), CandidateLineEvaluation.EngineSearch(line)) =>
+        Option.when(JudgmentThresholds.engineBackedByDepth(line.depth, line.mate))(
+          VerdictConfidence.MixedVerified
+        )
+
+enum CandidateComparisonDeltaDetail:
+  case EngineEvaluation(rawCpLossForMoverValue: Int, mateDistanceLossForMoverValue: Option[Int])
+  case OutcomeOnly
+
+  def rawCpLossForMover: Option[Int] = this match
+    case EngineEvaluation(value, _) => Some(value)
+    case OutcomeOnly                => None
+
+  def mateDistanceLossForMover: Option[Int] = this match
+    case EngineEvaluation(_, value) => value
+    case OutcomeOnly                => None
+
 final case class EvalComparison private[judgment] (
     mover: Color,
     candidateWinPercentDeltaForMover: Double,
-    verdict: MoveChoiceVerdict
+    verdict: MoveChoiceVerdict,
+    detail: CandidateComparisonDeltaDetail
 ):
   def winPercentLossForMover: Double =
     (-candidateWinPercentDeltaForMover).max(0.0)
@@ -233,30 +279,45 @@ object EvalComparison:
       reference: CandidateLineNode,
       candidate: CandidateLineNode,
       candidateSetType: Option[CandidateSetType] = None
-  ): EvalComparison =
-    val delta =
-      PerspectiveMath.compareForMover(
+  ): Option[EvalComparison] =
+    VerdictConfidence.fromEvaluations(reference.evaluation, candidate.evaluation).map { _ =>
+      val (candidateWinPercentDeltaForMover, detail) =
+        (reference.evaluation, candidate.evaluation) match
+          case (CandidateLineEvaluation.EngineSearch(referenceLine), CandidateLineEvaluation.EngineSearch(candidateLine)) =>
+            val delta =
+              PerspectiveMath.compareForMover(
+                mover = mover,
+                reference = PerspectiveMath.EvalPoint(referenceLine.scoreCp, referenceLine.mate),
+                candidate = PerspectiveMath.EvalPoint(candidateLine.scoreCp, candidateLine.mate)
+              )
+            delta.candidateWinPercentDeltaForMover -> CandidateComparisonDeltaDetail.EngineEvaluation(
+              delta.rawCpLossForMover,
+              delta.mateDistanceLossForMover
+            )
+          case _ =>
+            (
+              candidate.evaluation.winPercentForMover(mover) - reference.evaluation.winPercentForMover(mover)
+            ) -> CandidateComparisonDeltaDetail.OutcomeOnly
+      val winPercentLossForMover = (-candidateWinPercentDeltaForMover).max(0.0)
+      EvalComparison(
         mover = mover,
-        reference = PerspectiveMath.EvalPoint(reference.whitePovEvalCp, reference.mate),
-        candidate = PerspectiveMath.EvalPoint(candidate.whitePovEvalCp, candidate.mate)
+        candidateWinPercentDeltaForMover = candidateWinPercentDeltaForMover,
+        verdict = VerdictThresholdPolicy.verdictFromWinPercent(
+          candidateWinPercentDeltaForMover,
+          winPercentLossForMover,
+          detail,
+          candidateSetType
+        ),
+        detail = detail
       )
-    EvalComparison(
-      mover = mover,
-      candidateWinPercentDeltaForMover = delta.candidateWinPercentDeltaForMover,
-      verdict = VerdictThresholdPolicy.verdictFromWinPercent(
-        delta.candidateWinPercentDeltaForMover,
-        delta.winPercentLossForMover,
-        delta.rawCpLossForMover,
-        delta.mateDistanceLossForMover,
-        candidateSetType
-      )
-    )
+    }
 
 case class CandidateComparisonFact(
     kind: CandidateComparisonKind,
     referenceLine: LineNodeRef,
     candidateLine: LineNodeRef,
     comparison: EvalComparison,
+    verdictConfidence: VerdictConfidence,
     candidateSet: Option[CandidateSetDescriptor] = None,
     defensiveRecaptureResource: Option[PlayedVsBestDefensiveRecaptureResource] = None
 ):
@@ -266,18 +327,26 @@ case class CandidateComparisonFact(
   def candidateSetType: Option[CandidateSetType] =
     candidateSet.map(_.candidateSetType)
 
-  /** Reclassifies this exact comparison from its registered line nodes through
-    * the sole central verdict policy.
-    */
-  def recomputedComparison(
+object CandidateComparisonFact:
+  def fromLines(
+      kind: CandidateComparisonKind,
+      mover: Color,
       reference: CandidateLineNode,
-      candidate: CandidateLineNode
-  ): EvalComparison =
-    EvalComparison.fromLines(
-      mover = comparison.mover,
-      reference = reference,
-      candidate = candidate,
-      candidateSetType = candidateSetType
+      candidate: CandidateLineNode,
+      candidateSet: Option[CandidateSetDescriptor] = None,
+      defensiveRecaptureResource: Option[PlayedVsBestDefensiveRecaptureResource] = None
+  ): Option[CandidateComparisonFact] =
+    for
+      verdictConfidence <- VerdictConfidence.fromEvaluations(reference.evaluation, candidate.evaluation)
+      comparison <- EvalComparison.fromLines(mover, reference, candidate, candidateSet.map(_.candidateSetType))
+    yield CandidateComparisonFact(
+      kind = kind,
+      referenceLine = reference.ref,
+      candidateLine = candidate.ref,
+      comparison = comparison,
+      verdictConfidence = verdictConfidence,
+      candidateSet = candidateSet,
+      defensiveRecaptureResource = defensiveRecaptureResource
     )
 
 /** Evidence-id-independent identity of one evaluated comparison relation.
@@ -290,6 +359,7 @@ final case class CandidateComparisonSemanticKey(
     candidateLine: SemanticLineKey,
     candidateWinPercentDeltaForMover: Double,
     verdict: MoveChoiceVerdict,
+    verdictConfidence: VerdictConfidence,
     candidateSetType: Option[CandidateSetType],
     defensiveRecaptureResource: Option[PlayedVsBestDefensiveRecaptureResource]
 ):
@@ -301,6 +371,7 @@ final case class CandidateComparisonSemanticKey(
       candidateLine.stableKey,
       java.lang.Double.toHexString(candidateWinPercentDeltaForMover),
       verdict.toString,
+      verdictConfidence.toString,
       candidateSetType.map(_.toString).getOrElse(""),
       defensiveRecaptureResource.map(_.toString).getOrElse("")
     ).mkString("|")
@@ -314,6 +385,7 @@ object CandidateComparisonSemanticKey:
       candidateLine = SemanticLineKey.from(comparison.candidateLine),
       candidateWinPercentDeltaForMover = comparison.comparison.candidateWinPercentDeltaForMover,
       verdict = comparison.comparison.verdict,
+      verdictConfidence = comparison.verdictConfidence,
       candidateSetType = comparison.candidateSet.map(_.candidateSetType),
       defensiveRecaptureResource = comparison.defensiveRecaptureResource
     )

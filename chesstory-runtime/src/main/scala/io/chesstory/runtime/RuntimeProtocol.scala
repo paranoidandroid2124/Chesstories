@@ -3,214 +3,25 @@ package io.chesstory.runtime
 import scala.util.Try
 
 import lila.chessjudgment.analysis.assembly.{
-  JudgmentBoundaryExecution,
-  JudgmentBoundaryIntervention,
   MoveReviewJudgmentOrchestrator,
   RawMoveReviewInput,
   RawOpeningContext
 }
 import lila.chessjudgment.analysis.opening.{ OpeningRecognitionIndex, OpeningThemePriorIndex }
-import lila.chessjudgment.model.{ EndgameTablebaseEvidence, ProbeHorizon, ProbePurpose, ProbeRequest, ProbeResult }
-import lila.chessjudgment.model.evaluation.{ PerspectiveMath, VerdictThresholdPolicy }
+import lila.chessjudgment.model.{ ProbeHorizon, ProbePurpose, ProbeRequest, ProbeResolution, ProbeResult }
 import lila.chessjudgment.model.judgment.*
+import lila.chessjudgment.model.line.{ AutomaticTerminal, CandidateLineEvaluation, DrawClaimAction, DrawClaimRule }
 import lila.chessjudgment.model.strategic.EngineLine
 import play.api.libs.json.*
 
 object RuntimeProtocol:
   val RequestSchema = "chesstory.move-meaning.request.v1"
-  val ResponseSchema = "chesstory.move-meaning.response.v3"
-  private[chesstory] val DirectCauseImportanceRelationPolicyVersion =
-    "chesstory.direct-cause-importance.relation.v3"
-  private[chesstory] val PlayerFacingIdeaOrderingPolicyVersion =
-    "chesstory.player-facing-idea-ordering.dominance-layers.v1"
-  private[chesstory] val VerdictClassificationPolicyVersion =
-    VerdictThresholdPolicy.PolicyVersion
-  private[chesstory] val CauseDispositionSummaryAuthority =
-    "cause_disposition_ledger.v1"
+  val ResponseSchema = "chesstory.move-meaning.response.v4"
 
   final case class Result(httpStatus: Int, body: JsObject)
 
-  /** Canonical public codec for the optional, read-only proof compression used
-    * by both the runtime response and the audit adapter.
-    */
-  private[chesstory] def directCauseProofSegmentPublicJson(
-      segment: DirectCauseProofSegment
-  ): JsObject =
-    Json.obj(
-      "terminal_relation" -> code(segment.terminalRelation.toString),
-      "steps" -> segment.steps.map(step =>
-        Json.obj(
-          "ply_offset" -> step.plyOffset,
-          "move_uci" -> EvidenceRef.normalizeMove(step.moveUci),
-          "role" -> code(step.role.toString)
-        )
-      )
-    )
-
-  private def code(value: String): String =
-    value.trim
-      .replaceAll("([a-z0-9])([A-Z])", "$1_$2")
-      .replaceAll("[^A-Za-z0-9]+", "_")
-      .replaceAll("_+", "_")
-      .stripPrefix("_")
-      .stripSuffix("_")
-      .toLowerCase
-
-  /** A packet-selected Cause is an invariant, not an optional presentation
-    * hint. Projection therefore fails closed instead of silently omitting it.
-    */
-  private[chesstory] def requireSelectedCauseProjection[A](
-      causeEvidenceId: String,
-      projected: Option[A]
-  ): A =
-    projected.getOrElse(
-      throw IllegalStateException(
-        s"packet-selected Cause cannot be projected from its registered evidence and channels: $causeEvidenceId"
-      )
-    )
-
-  private[chesstory] def requireSelectedCauseHost[A](
-      claimId: String,
-      host: Option[A]
-  ): A =
-    host.getOrElse(
-      throw IllegalStateException(
-        s"packet-selected Cause host is not a registered packet claim: $claimId"
-      )
-    )
-
-  /** Public Cause ids are a projection of the ledger's selected terminal
-    * state, never an independently filtered subset. Any omission, duplicate,
-    * or addition is a projection-boundary failure.
-    */
-  private[chesstory] def requirePublicIdeaCauseCoverage(
-      ledger: CauseDispositionLedger,
-      publicCauseIds: List[String]
-  ): Unit =
-    val canonicalPublicIds = publicCauseIds.map(_.trim).filter(_.nonEmpty)
-    if canonicalPublicIds.size != publicCauseIds.size ||
-        canonicalPublicIds.distinct.size != canonicalPublicIds.size ||
-        canonicalPublicIds.toSet != ledger.selectedCauseEvidenceIds
-    then
-      throw IllegalStateException(
-        "public idea Cause ids must exactly equal the CauseDispositionLedger selected set"
-      )
-
-  /** Canonical, judgment-free summary of the terminal Cause ledger. */
-  private[chesstory] def causeDispositionPublicJson(
-      ledger: CauseDispositionLedger
-  ): JsObject =
-    val selectedIds = ledger.selectedCauseEvidenceIds.toList.sorted
-    val statusCounts = JsObject(
-      CauseDispositionStatus.values.toList.map { status =>
-        code(status.toString) -> JsNumber(ledger.dispositions.count(_.status == status))
-      }
-    )
-    val reasonCounts = JsObject(
-      CauseDispositionReason.values.toList.map { reason =>
-        code(reason.toString) -> JsNumber(ledger.dispositions.count(_.reason == reason))
-      }
-    )
-    val abstentionCodes =
-      if ledger.dispositions.isEmpty then List("no_relative_cause_generated")
-      else if selectedIds.isEmpty then
-        ledger.dispositions.map(disposition => code(disposition.reason.toString)).distinct.sorted
-      else Nil
-    Json.obj(
-      "authority" -> CauseDispositionSummaryAuthority,
-      "total_cause_count" -> ledger.dispositions.size,
-      "selected_cause_ids" -> selectedIds,
-      "status_counts" -> statusCounts,
-      "reason_counts" -> reasonCounts,
-      "abstention_codes" -> abstentionCodes
-    )
-
-  /** Empty public meaning keeps engine availability separate from the Cause
-    * ledger.  The ledger explains abstention, while only an engine-backed
-    * primary comparison licenses the differential-idea status.
-    */
-  private[chesstory] def emptyMoveMeaningPayloadJson(
-      primaryEngineBacked: Boolean,
-      ledger: CauseDispositionLedger
-  ): JsObject =
-    MoveMeaningProjection.emptyPayloadJson(primaryEngineBacked, ledger)
-
-  enum ProjectionPayloadSource(val id: String):
-    case Full extends ProjectionPayloadSource("full")
-    case Empty extends ProjectionPayloadSource("empty")
-
-  enum ProjectionStatus(val id: String):
-    case Ready extends ProjectionStatus("ready")
-    case Withheld extends ProjectionStatus("withheld")
-
-  enum ProjectionWithheldReason(val id: String):
-    case InsufficientEngineDepth extends ProjectionWithheldReason("insufficient_engine_depth")
-
-  enum VerbalizationStatus:
-    case Unavailable
-
-  final case class ProjectionDecision(
-      fullPayload: Option[JsObject],
-      selectedPayloadSource: ProjectionPayloadSource,
-      selectedPayload: JsObject,
-      renderable: Boolean,
-      status: ProjectionStatus,
-      reason: Option[ProjectionWithheldReason],
-      publicProbeRequests: List[JsObject]
-  )
-
-  final case class ProjectionBoundaryInput(
-      requestId: Option[String],
-      packet: EvidenceBackedJudgmentPacket
-  )
-
-  final case class ProjectionTrace(
-      input: ProjectionBoundaryInput,
-      primaryEngineBacked: Boolean,
-      fullPayload: Option[JsObject],
-      selectedPayloadSource: ProjectionPayloadSource,
-      selectedPayload: JsObject,
-      hasExplanation: Boolean,
-      hasEngineMateOutcome: Boolean,
-      primaryRenderable: Boolean,
-      renderable: Boolean,
-      status: ProjectionStatus,
-      reason: Option[ProjectionWithheldReason],
-      probeRequests: List[ProbeRequest],
-      publicProbeRequests: List[JsObject],
-      moveReview: JsObject,
-      actualDecision: ProjectionDecision,
-      finalPublicResponse: Result
-  ):
-    def decision: ProjectionDecision =
-      ProjectionDecision(
-        fullPayload = fullPayload,
-        selectedPayloadSource = selectedPayloadSource,
-        selectedPayload = selectedPayload,
-        renderable = renderable,
-        status = status,
-        reason = reason,
-        publicProbeRequests = publicProbeRequests
-      )
-
-  final case class RuntimeBoundaryIntervention(
-      judgment: JudgmentBoundaryIntervention = JudgmentBoundaryIntervention.identity,
-      p: Option[ProjectionBoundaryInput => ProjectionDecision] = None
-  )
-
-  object RuntimeBoundaryIntervention:
-    val identity: RuntimeBoundaryIntervention = RuntimeBoundaryIntervention()
-
-    def fromJudgment(intervention: JudgmentBoundaryIntervention): RuntimeBoundaryIntervention =
-      RuntimeBoundaryIntervention(judgment = intervention)
-
-  final case class BoundaryEvaluationTrace(
-      boundaryExecution: Option[JudgmentBoundaryExecution],
-      projection: Option[ProjectionTrace],
-      verbalization: VerbalizationStatus,
-      finalPublicResponse: Result
-  ):
-    def result: Result = finalPublicResponse
+  private[runtime] def acceptsRequestId(value: String): Boolean =
+    InputLimits.validRequestId(value)
 
   private final case class WireVariation(
       moves: List[String],
@@ -233,24 +44,25 @@ object RuntimeProtocol:
       candidateMove: Option[String],
       opponentResourceMove: Option[String],
       horizon: Option[String],
-      variationHash: Option[String],
-      generatedAtEpochMs: Option[Long],
-      tablebase: Option[EndgameTablebaseEvidence]
+      variationHash: Option[String]
   ):
-    def toCore: ProbeResult =
-      ProbeResult(
+    def toCore: Option[ProbeResult] =
+      for
+        lines <- replyLines.filter(_.nonEmpty)
+        realizedDepth <- depth.filter(_ > 0)
+      yield ProbeResult(
         id = id,
         fen = Some(fen),
-        replyLines = replyLines.map(_.map(_.toCore)),
+        resolution = ProbeResolution.EngineSearch(
+          lines.map(line => CandidateLineEvaluation.EngineSearch(line.toCore)),
+          realizedDepth
+        ),
         purpose = purpose,
         probedMove = probedMove,
-        depth = depth,
         candidateMove = candidateMove,
         opponentResourceMove = opponentResourceMove,
         horizon = horizon,
-        variationHash = variationHash,
-        generatedAtEpochMs = generatedAtEpochMs,
-        tablebase = tablebase
+        variationHash = variationHash
       )
 
   private object WireProbeResult:
@@ -265,347 +77,150 @@ object RuntimeProtocol:
       movePrefixUci: Option[List[String]],
       probeResults: Option[List[WireProbeResult]]
   ):
-    def toCore: RawMoveReviewInput =
-      RawMoveReviewInput(
+    def toCore: Option[RawMoveReviewInput] =
+      val coreProbes = probeResults.getOrElse(Nil).map(_.toCore)
+      Option.when(coreProbes.forall(_.nonEmpty))(
+        RawMoveReviewInput(
         fen = fen,
         playedMoveUci = playedMoveUci,
         variations = variations.map(_.toCore),
         ply = ply,
         openingContext = openingContext,
         movePrefixUci = movePrefixUci.getOrElse(Nil),
-        probeResults = probeResults.getOrElse(Nil).map(_.toCore)
+        probeResults = coreProbes.flatten
+        )
       )
 
   private object WireInput:
     given Reads[WireInput] = Json.reads[WireInput]
 
   def evaluate(bytes: Array[Byte]): Result =
-    evaluateWithBoundary(bytes, JudgmentBoundaryIntervention.identity).result
-
-  def evaluate(json: JsValue): Result =
-    evaluateWithBoundary(json, JudgmentBoundaryIntervention.identity).result
-
-  def evaluateWithBoundary(
-      bytes: Array[Byte],
-      intervention: JudgmentBoundaryIntervention
-  ): BoundaryEvaluationTrace =
-    evaluateWithBoundary(bytes, RuntimeBoundaryIntervention.fromJudgment(intervention))
-
-  def evaluateWithBoundary(
-      bytes: Array[Byte],
-      intervention: RuntimeBoundaryIntervention
-  ): BoundaryEvaluationTrace =
     Try(Json.parse(bytes)).fold(
-      _ => unavailableTrace(failure(None, 400, "invalid_json")),
-      json => evaluateWithBoundary(json, intervention)
+      _ => failure(None, 400, "invalid_json"),
+      json => evaluate(json)
     )
 
-  def evaluateWithBoundary(
-      json: JsValue,
-      intervention: JudgmentBoundaryIntervention
-  ): BoundaryEvaluationTrace =
-    evaluateWithBoundary(json, RuntimeBoundaryIntervention.fromJudgment(intervention))
-
-  def evaluateWithBoundary(
-      json: JsValue,
-      intervention: RuntimeBoundaryIntervention
-  ): BoundaryEvaluationTrace =
+  def evaluate(json: JsValue): Result =
     json match
       case obj: JsObject =>
         (obj \ "request_id").validateOpt[String] match
-          case JsError(_) => unavailableTrace(failure(None, 400, "invalid_request_id"))
+          case JsError(_) => failure(None, 400, "invalid_request_id")
           case JsSuccess(requestId, _) if !requestId.forall(InputLimits.validRequestId) =>
-            unavailableTrace(failure(None, 400, "invalid_request_id"))
+            failure(None, 400, "invalid_request_id")
           case JsSuccess(requestId, _) =>
             if (obj \ "schema_version").asOpt[String] != Some(RequestSchema) then
-              unavailableTrace(failure(requestId, 400, "unsupported_schema_version"))
+              failure(requestId, 400, "unsupported_schema_version")
             else
               (obj \ "input").validate[WireInput] match
-                case JsError(_) => unavailableTrace(failure(requestId, 400, "invalid_move_review_input"))
+                case JsError(_) => failure(requestId, 400, "invalid_move_review_input")
                 case JsSuccess(input, _) =>
-                  evaluateWithBoundary(requestId, input.toCore, intervention)
-      case _ => unavailableTrace(failure(None, 400, "invalid_request"))
+                  input.toCore.fold(failure(requestId, 400, "invalid_probe_result"))(
+                    evaluate(requestId, _)
+                  )
+      case _ => failure(None, 400, "invalid_request")
 
-  def evaluateWithBoundary(
-      raw: RawMoveReviewInput,
-      intervention: JudgmentBoundaryIntervention
-  ): BoundaryEvaluationTrace =
-    evaluateWithBoundary(raw, RuntimeBoundaryIntervention.fromJudgment(intervention))
-
-  def evaluateWithBoundary(
-      raw: RawMoveReviewInput,
-      intervention: RuntimeBoundaryIntervention
-  ): BoundaryEvaluationTrace =
-    evaluateWithBoundary(None, raw, intervention)
-
-  def evaluateWithBoundary(
+  private def evaluate(
       requestId: Option[String],
-      raw: RawMoveReviewInput,
-      intervention: JudgmentBoundaryIntervention
-  ): BoundaryEvaluationTrace =
-    evaluateWithBoundary(requestId, raw, RuntimeBoundaryIntervention.fromJudgment(intervention))
-
-  def evaluateWithBoundary(
-      requestId: Option[String],
-      raw: RawMoveReviewInput,
-      intervention: RuntimeBoundaryIntervention
-  ): BoundaryEvaluationTrace =
+      raw: RawMoveReviewInput
+  ): Result =
     if !requestId.forall(InputLimits.validRequestId) then
-      unavailableTrace(failure(None, 400, "invalid_request_id"))
+      failure(None, 400, "invalid_request_id")
     else if !InputLimits.accepts(raw) then
-      unavailableTrace(failure(requestId, 400, "input_limits_exceeded"))
+      failure(requestId, 400, "input_limits_exceeded")
     else
-      MoveReviewJudgmentOrchestrator.execute(raw, intervention.judgment) match
-        case None =>
-          unavailableTrace(failure(requestId, 422, "move_review_not_buildable"))
-        case Some(execution) if !InputLimits.accepts(execution.q) =>
-          unavailableTrace(failure(requestId, 400, "input_limits_exceeded"))
-        case Some(execution) =>
-          execution.packet match
-            case None =>
-              BoundaryEvaluationTrace(
-                boundaryExecution = Some(execution),
-                projection = None,
-                verbalization = VerbalizationStatus.Unavailable,
-                finalPublicResponse = failure(requestId, 422, "move_review_not_buildable")
-              )
-            case Some(packet) =>
-              project(requestId, execution, packet, intervention.p)
+      MoveReviewJudgmentOrchestrator.execute(raw).fold(
+        failure(requestId, 422, "move_review_not_buildable")
+      )(packet => encodeMoveMeaningResult(requestId, packet))
 
   def publicProbeRequestJson(request: ProbeRequest): JsObject =
+    val purpose = request.purpose match
+      case Some(ProbePurpose.ReplyMultipv) => "reply_multipv"
+      case None =>
+        throw IllegalStateException("public probe request has no purpose")
+    val multiPv = request.multiPv match
+      case Some(value) => value
+      case None =>
+        throw IllegalStateException("public probe request has no multiPv")
+    val candidateMove = request.candidateMove match
+      case Some(value) => value
+      case None =>
+        throw IllegalStateException("public probe request has no candidateMove")
+    val variationHash = request.variationHash match
+      case Some(value) => value
+      case None =>
+        throw IllegalStateException("public probe request has no variationHash")
+    val variant = (request.horizon, request.opponentResourceMove) match
+      case (Some(horizon), None) => Json.obj("horizon" -> horizon)
+      case (None, Some(opponentResourceMove)) =>
+        Json.obj("opponentResourceMove" -> opponentResourceMove)
+      case (Some(_), Some(_)) =>
+        throw IllegalStateException("public probe request cannot mix horizon and opponent resource variants")
+      case (None, None) =>
+        throw IllegalStateException("public probe request has no certified variant")
     Json.obj(
       "id" -> request.id,
       "fen" -> request.fen,
       "moves" -> request.moves,
       "depth" -> request.depth,
-      "purpose" -> request.purpose,
-      "multiPv" -> request.multiPv,
-      "baselineEvalCp" -> request.baselineEvalCp,
-      "horizon" -> request.horizon,
-      "candidateMove" -> request.candidateMove,
-      "depthFloor" -> request.depthFloor,
-      "variationHash" -> request.variationHash,
-      "comparisonFen" -> request.comparisonFen
-    ) ++ Option
-      .when(request.opponentResourceMove.nonEmpty)(Json.obj("opponentResourceMove" -> request.opponentResourceMove))
-      .getOrElse(Json.obj())
+      "purpose" -> purpose,
+      "multiPv" -> multiPv,
+      "candidateMove" -> candidateMove,
+      "variationHash" -> variationHash
+    ) ++ variant
 
-  private def project(
+  private[runtime] def encodeMoveMeaningResult(
       requestId: Option[String],
-      execution: JudgmentBoundaryExecution,
-      packet: EvidenceBackedJudgmentPacket,
-      projectionIntervention: Option[ProjectionBoundaryInput => ProjectionDecision]
-  ): BoundaryEvaluationTrace =
-    val primaryEngineBacked = MoveMeaningProjection.engineBacked(packet)
-    val actualDecision = actualProjectionDecision(packet, primaryEngineBacked)
-    val projectionInput = ProjectionBoundaryInput(requestId = requestId, packet = packet)
-    val actualTrace =
-      assembleProjectionTrace(
-        input = projectionInput,
-        primaryEngineBacked = primaryEngineBacked,
-        actualDecision = actualDecision,
-        decision = actualDecision
+      packet: EvidenceBackedJudgmentPacket
+  ): Result =
+    val requestField = requestId.map(value => Json.obj("request_id" -> value)).getOrElse(Json.obj())
+    if packet.probeRequests.nonEmpty then
+      Result(
+        202,
+        Json.obj(
+          "schema_version" -> ResponseSchema,
+          "status" -> "engine_work_required",
+          "probe_requests" -> packet.probeRequests.map(publicProbeRequestJson)
+        ) ++ requestField
       )
-    val acceptedDecision =
-      projectionIntervention
-        .map(intervention =>
-          Try(intervention(projectionInput)).toOption
-            .flatMap(Option(_))
-        )
-        .getOrElse(Some(actualDecision))
-        .filter(projectionClosed(_, packet, actualDecision, primaryEngineBacked))
-    acceptedDecision match
-      case None =>
-        BoundaryEvaluationTrace(
-          boundaryExecution = Some(execution),
-          projection = None,
-          verbalization = VerbalizationStatus.Unavailable,
-          finalPublicResponse = failure(requestId, 422, "projection_intervention_rejected")
-        )
-      case Some(decision) =>
-        val projection =
-          if projectionIntervention.isEmpty then actualTrace
-          else
-            assembleProjectionTrace(
-              input = projectionInput,
-              primaryEngineBacked = primaryEngineBacked,
-              actualDecision = actualDecision,
-              decision = decision
-            )
-        BoundaryEvaluationTrace(
-          boundaryExecution = Some(execution),
-          projection = Some(projection),
-          verbalization = VerbalizationStatus.Unavailable,
-          finalPublicResponse = projection.finalPublicResponse
-        )
-
-  private def actualProjectionDecision(
-      packet: EvidenceBackedJudgmentPacket,
-      primaryEngineBacked: Boolean
-  ): ProjectionDecision =
-    val fullPayload =
-      Option.when(primaryEngineBacked)(MoveMeaningProjection.publicPayloadJson(packet))
-    val signals = projectionSignals(primaryEngineBacked, fullPayload)
-    val renderable = signals.primaryRenderable
-    val (selectedPayloadSource, selectedPayload) =
-      if signals.primaryRenderable then ProjectionPayloadSource.Full -> fullPayload.get
-      else
-        ProjectionPayloadSource.Empty -> emptyMoveMeaningPayloadJson(
-          primaryEngineBacked,
-          packet.causeDispositionLedger
-        )
-    val status = if renderable then ProjectionStatus.Ready else ProjectionStatus.Withheld
-    val reason =
-      Option.unless(primaryEngineBacked)(ProjectionWithheldReason.InsufficientEngineDepth)
-    ProjectionDecision(
-      fullPayload = fullPayload,
-      selectedPayloadSource = selectedPayloadSource,
-      selectedPayload = selectedPayload,
-      renderable = renderable,
-      status = status,
-      reason = reason,
-      publicProbeRequests = packet.probeRequests.map(publicProbeRequestJson)
-    )
-
-  private final case class ProjectionSignals(
-      hasExplanation: Boolean,
-      hasEngineMateOutcome: Boolean,
-      primaryRenderable: Boolean
-  )
-
-  private def projectionSignals(
-      primaryEngineBacked: Boolean,
-      fullPayload: Option[JsObject]
-  ): ProjectionSignals =
-    val hasExplanation =
-      fullPayload.exists(payload =>
-        (payload \ "explanations").asOpt[JsArray].exists(_.value.nonEmpty)
-      )
-    val hasEngineMateOutcome =
-      fullPayload.exists(payload =>
-        (payload \ "verdict" \ "outcome" \ "state").asOpt[String].exists(state =>
-          state == "forced_win" || state == "forced_loss"
-        )
-      )
-    ProjectionSignals(
-      hasExplanation = hasExplanation,
-      hasEngineMateOutcome = hasEngineMateOutcome,
-      // The exact engine-backed comparison owns verdict availability. Cause
-      // abstention only makes `ideas` empty; it must not erase the verdict.
-      primaryRenderable = primaryEngineBacked
-    )
-
-  private def assembleProjectionTrace(
-      input: ProjectionBoundaryInput,
-      primaryEngineBacked: Boolean,
-      actualDecision: ProjectionDecision,
-      decision: ProjectionDecision
-  ): ProjectionTrace =
-    val requestId = input.requestId
-    val packet = input.packet
-    val signals = projectionSignals(primaryEngineBacked, decision.fullPayload)
-    val moveReview = Json.obj("renderable" -> decision.renderable) ++ decision.selectedPayload
-    val finalPublicResponse =
+    else
       Result(
         200,
         Json.obj(
           "schema_version" -> ResponseSchema,
-          "request_id" -> requestId,
-          "ok" -> true,
-          "status" -> decision.status.id,
-          "availability" -> Json.obj("state" -> decision.status.id, "reason" -> decision.reason.map(_.id)),
-          "probe_requests" -> decision.publicProbeRequests,
-          "move_review" -> moveReview
-        )
+          "status" -> "ready",
+          "move_commentary" -> MoveMeaningProjection.moveCommentaryJson(packet)
+        ) ++ requestField
       )
-    ProjectionTrace(
-      input = input,
-      primaryEngineBacked = primaryEngineBacked,
-      fullPayload = decision.fullPayload,
-      selectedPayloadSource = decision.selectedPayloadSource,
-      selectedPayload = decision.selectedPayload,
-      hasExplanation = signals.hasExplanation,
-      hasEngineMateOutcome = signals.hasEngineMateOutcome,
-      primaryRenderable = signals.primaryRenderable,
-      renderable = decision.renderable,
-      status = decision.status,
-      reason = decision.reason,
-      probeRequests = packet.probeRequests,
-      publicProbeRequests = decision.publicProbeRequests,
-      moveReview = moveReview,
-      actualDecision = actualDecision,
-      finalPublicResponse = finalPublicResponse
-    )
 
-  private def projectionClosed(
-      decision: ProjectionDecision,
-      packet: EvidenceBackedJudgmentPacket,
-      actualDecision: ProjectionDecision,
-      primaryEngineBacked: Boolean
-  ): Boolean =
-    // An intervention may choose which already-certified packet projection to
-    // expose (or a probe subset), but it cannot manufacture a second public
-    // meaning DTO. The full payload is derived once from the packet by the
-    // production projector and then used as the closure authority.
-    val packetPayloadsClosed = decision.fullPayload == actualDecision.fullPayload
-    val selectedPayloadClosed =
-      decision.selectedPayloadSource match
-        case ProjectionPayloadSource.Full =>
-          decision.fullPayload.contains(decision.selectedPayload)
-        case ProjectionPayloadSource.Empty =>
-          decision.selectedPayload == emptyMoveMeaningPayloadJson(
-            primaryEngineBacked,
-            packet.causeDispositionLedger
+  private[runtime] def encodePositionCommentaryResponse(
+      requestId: String,
+      completed: CompletedCommentaryJob
+  ): JsObject =
+    val result = completed.result match
+      case CompletedPositionCommentary.PositionAction(action) =>
+        MoveMeaningProjection.positionActionJson(action)
+      case CompletedPositionCommentary.MoveChoices(drawClaims, moveReviews) =>
+        Json.obj(
+          "kind" -> "move_choices",
+          "move_commentaries" -> moveReviews.map { record =>
+            Json.obj(
+              "legal_move_index" -> record.legalMoveIndex,
+              "move_uci" -> record.moveUci,
+              "commentary" -> MoveMeaningProjection.moveCommentaryJson(record.judgmentPacket)
+            )
+          }
+        ) ++ Option.when(drawClaims.nonEmpty)(
+          Json.obj(
+            "draw_claims" -> drawClaims.map(MoveMeaningProjection.drawClaimJson),
+            "presentation" -> MoveMeaningProjection.drawClaimPresentation(drawClaims)
           )
-    val signals =
-      projectionSignals(primaryEngineBacked, decision.fullPayload)
-    val selectedRenderable =
-      decision.selectedPayloadSource match
-        case ProjectionPayloadSource.Full  => signals.primaryRenderable
-        case ProjectionPayloadSource.Empty => false
-    val expectedReason =
-      Option.unless(selectedRenderable)(ProjectionWithheldReason.InsufficientEngineDepth)
-    val availabilityClosed =
-      decision.status match
-        case ProjectionStatus.Ready =>
-          decision.renderable && selectedRenderable && decision.reason.isEmpty &&
-            decision.selectedPayloadSource != ProjectionPayloadSource.Empty
-        case ProjectionStatus.Withheld =>
-          !decision.renderable && !signals.primaryRenderable &&
-            decision.reason == expectedReason &&
-            decision.selectedPayloadSource == ProjectionPayloadSource.Empty
-    val payloadsClosed =
-      decision.fullPayload.forall(payload => !payload.keys.contains("renderable")) &&
-        !decision.selectedPayload.keys.contains("renderable")
-    packetPayloadsClosed &&
-      selectedPayloadClosed &&
-      availabilityClosed &&
-      payloadsClosed &&
-      publicProbeProjectionClosed(packet.probeRequests, decision.publicProbeRequests)
-
-  private def publicProbeProjectionClosed(
-      nativeProbeRequests: List[ProbeRequest],
-      publicProbeRequests: List[JsObject]
-  ): Boolean =
-    val projectedIds = publicProbeRequests.flatMap(json => (json \ "id").asOpt[String])
-    val nativeIds = nativeProbeRequests.map(_.id)
-    val nativeById = nativeProbeRequests.map(request => request.id -> request).toMap
-    projectedIds.size == publicProbeRequests.size &&
-      projectedIds.distinct.size == projectedIds.size &&
-      projectedIds == nativeIds.filter(projectedIds.toSet) &&
-      publicProbeRequests.zip(projectedIds).forall { case (json, id) =>
-        nativeById.get(id).exists { request =>
-          val allowedProjection = publicProbeRequestJson(request)
-          json == allowedProjection
-        }
-      }
-
-  private def unavailableTrace(result: Result): BoundaryEvaluationTrace =
-    BoundaryEvaluationTrace(
-      boundaryExecution = None,
-      projection = None,
-      verbalization = VerbalizationStatus.Unavailable,
-      finalPublicResponse = result
+        ).getOrElse(Json.obj())
+    Json.obj(
+      "schema_version" -> "chesstory.position-commentary.response.v4",
+      "request_id" -> requestId,
+      "engine_profile" -> completed.engineProfile.wireId,
+      "current_fen" -> completed.currentFen,
+      "result" -> result
     )
 
   private[runtime] def failure(requestId: Option[String], httpStatus: Int, error: String): Result =
@@ -613,730 +228,377 @@ object RuntimeProtocol:
       httpStatus,
       Json.obj(
         "schema_version" -> ResponseSchema,
-        "request_id" -> requestId,
-        "ok" -> false,
         "status" -> "error",
         "error" -> error
-      )
+      ) ++ requestId.map(value => Json.obj("request_id" -> value)).getOrElse(Json.obj())
     )
-
-  /** Canonical public projection of R's typed importance result. Evaluation
-    * adapters reuse this codec so packet and public observations cannot drift.
-    */
-  private[chesstory] def directCauseImportancePublicJson(
-      resolution: DirectCauseImportanceResolution
-  ): JsObject =
-    val comparableProfilePairs = resolution.relations.count(
-      _.relation != DirectCauseImportanceRelation.Incomparable
-    )
-    Json.obj(
-      "authority" -> "root_owned_effect_partial_order",
-      "relation_policy_version" -> DirectCauseImportanceRelationPolicyVersion,
-      "ordering_policy_version" -> PlayerFacingIdeaOrderingPolicyVersion,
-      "comparison_exposure_rank_meaning" -> "comparison_exposure_authority",
-      "selected_cause_ids" -> resolution.selectedCauseEvidenceIds,
-      "frontier_cause_ids" -> resolution.frontierCauseEvidenceIds,
-      "dominated_within_domain_cause_ids" -> resolution.dominatedWithinDomainCauseEvidenceIds,
-      "unique_top" -> resolution.uniqueTopCauseEvidenceId.fold[JsValue](JsNull)(JsString.apply),
-      "profile_summary" -> Json.obj(
-        "measured_channels" -> resolution.profiles.size,
-        "measured_causes" -> resolution.profiles.map(_.causeEvidenceId).distinct.size,
-        "fully_measured_causes" -> resolution.decisions.count(_.fullyMeasured),
-        "unmeasured_causes" -> resolution.decisions.count(_.unmeasuredChannelSignatures.nonEmpty)
-      ),
-      "profiles" -> resolution.profiles.map(directCauseImportanceProfileJson),
-      "relations" -> resolution.relations.map { relation =>
-        Json.obj(
-          "left_cause_id" -> relation.leftCauseEvidenceId,
-          "left_causal_signature" -> relation.leftCausalSignature,
-          "right_cause_id" -> relation.rightCauseEvidenceId,
-          "right_causal_signature" -> relation.rightCausalSignature,
-          "relation" -> code(relation.relation.toString),
-          "domain" -> relation.domainKey
-        )
-      },
-      "decisions" -> resolution.decisions.map { decision =>
-        Json.obj(
-          "cause_evidence_id" -> decision.causeEvidenceId,
-          "measured_channel_signatures" -> decision.measuredChannelSignatures,
-          "unmeasured_channel_signatures" -> decision.unmeasuredChannelSignatures,
-          "dominating_cause_ids" -> decision.dominatingCauseEvidenceIds,
-          "dominated_within_domain" -> decision.dominatedWithinDomain,
-          "fully_measured" -> decision.fullyMeasured
-        )
-      },
-      "relation_summary" -> Json.obj(
-        "comparable_profile_pairs" -> comparableProfilePairs,
-        "incomparable_profile_pairs" -> resolution.incomparableProfilePairCount
-      ),
-      "unmeasured" -> resolution.decisions
-        .filter(_.unmeasuredChannelSignatures.nonEmpty)
-        .map(decision =>
-          Json.obj(
-            "cause_evidence_id" -> decision.causeEvidenceId,
-            "channel_count" -> decision.unmeasuredChannelSignatures.size
-          )
-        )
-    )
-
-  private def directCauseImportanceProfileJson(
-      profile: DirectCauseImportanceProfile
-  ): JsObject =
-    Json.obj(
-      "cause_evidence_id" -> profile.causeEvidenceId,
-      "causal_signature" -> profile.causalSignature,
-      "universe" -> directCauseImportanceUniverseJson(profile.universe),
-      "domain_kind" -> directCauseImportanceDomainKind(profile.domain),
-      "domain" -> profile.domain.stableKey,
-      "stake" -> profile.frame.stake.stableKey,
-      "event_line" -> profile.frame.eventLine.stableKey,
-      "effect_mode" -> code(profile.frame.effectMode.toString),
-      "direct_change" -> code(profile.frame.directChange.toString),
-      "played_change" -> code(profile.frame.playedChange.toString),
-      "measure" -> directCauseImportanceMeasureJson(profile.measure),
-      "effect_scope" -> rootOwnedEffectIdentityJson(profile.effectIdentity)
-    )
-
-  private[chesstory] def directCauseImportanceUniverseJson(
-      universe: DirectCauseImportanceUniverse
-  ): JsObject =
-    Json.obj(
-      "root_board_state" -> universe.rootBoardState,
-      "impact" -> universe.impact.stableKey
-    )
-
-  private[chesstory] def directCauseImportanceDomainKind(
-      domain: DirectCauseImportanceDomain
-  ): String =
-    domain match
-      case DirectCauseImportanceDomain.BoardMate                 => "board_mate"
-      case DirectCauseImportanceDomain.Material                  => "material"
-      case DirectCauseImportanceDomain.Threat(_, _)               => "threat"
-      case DirectCauseImportanceDomain.Structural(_, _, _, _)     => "structural"
-
-  private[chesstory] def directCauseImportanceMeasureJson(
-      measure: DirectCauseImportanceMeasure
-  ): JsObject =
-    measure match
-      case DirectCauseImportanceMeasure.MateArrival(plyOffset) =>
-        Json.obj("kind" -> "mate_arrival", "ply_offset" -> plyOffset)
-      case DirectCauseImportanceMeasure.MaterialOutcome(durableNetCp, onsetPlyOffset) =>
-        Json.obj(
-          "kind" -> "material_outcome",
-          "durable_net_cp" -> durableNetCp,
-          "onset_ply_offset" -> onsetPlyOffset
-        )
-      case DirectCauseImportanceMeasure.ThreatHorizon(turnsToImpact) =>
-        Json.obj("kind" -> "threat_horizon", "turns_to_impact" -> turnsToImpact)
-      case DirectCauseImportanceMeasure.StructuralStrength(units) =>
-        Json.obj("kind" -> "structural_strength", "units" -> units)
-      case DirectCauseImportanceMeasure.StrategicStrength(units) =>
-        Json.obj("kind" -> "strategic_strength", "units" -> units)
-
-  /** Exact typed effect measured from this channel's own root proof. Both the
-    * runtime response and the audit adapter use this single projection so a
-    * profile cannot be rebound by reinterpreting descriptor text.
-    */
-  private[chesstory] def directCauseMeasuredEffectPublicJson(
-      channel: DirectCauseChannel
-  ): Option[JsObject] =
-    DirectCauseMeasuredEffect.fromChannel(channel).map { effect =>
-      Json.obj(
-        "stake" -> effect.stake.stableKey,
-        "domain_kind" -> directCauseImportanceDomainKind(effect.domain),
-        "domain" -> effect.domain.stableKey,
-        "measure" -> directCauseImportanceMeasureJson(effect.measure),
-        "effect_scope" -> rootOwnedEffectIdentityJson(effect.effectIdentity)
-      )
-    }
-
-  private[chesstory] def directEffectAdmissionPublicJson(
-      admission: DirectEffectAdmission
-  ): JsObject =
-    val status = admission match
-      case DirectEffectAdmission.Unresolved    => "unresolved"
-      case DirectEffectAdmission.Restricted(_) => "restricted"
-    Json.obj(
-      "status" -> status,
-      "causal_signatures" -> admission.admittedCausalSignatures.toList.sorted
-    )
-
-  private[chesstory] def rootOwnedEffectDescriptorPublicJson(
-      descriptor: RootOwnedEffectDescriptor
-  ): JsObject =
-    Json.obj(
-      "effect_scope" -> rootOwnedEffectIdentityJson(descriptor.identity),
-      "magnitude_status" -> directEffectMagnitudeStatus(descriptor.magnitude),
-      "measure" -> descriptor.exactMagnitude.map(directCauseImportanceMeasureJson),
-      "material_event_salience" -> descriptor.materialEventSalience.map(rootOwnedMaterialEventSalienceJson)
-    )
-
-  private[chesstory] def rootOwnedMaterialEventSalienceJson(
-      event: RootOwnedMaterialEventSalience
-  ): JsObject =
-    Json.obj(
-      "move_uci" -> event.moveUci,
-      "ply_offset" -> event.plyOffset,
-      "captured_role" -> event.capturedRole.name,
-      "square" -> event.square.key,
-      "target_value_cp" -> event.targetValueCp
-    )
-
-  private[chesstory] def directEffectMagnitudeStatus(
-      magnitude: DirectEffectMagnitudeKnowledge
-  ): String =
-    magnitude match
-      case DirectEffectMagnitudeKnowledge.NotApplicable     => "not_applicable"
-      case _: DirectEffectMagnitudeKnowledge.Exact          => "exact"
-      case DirectEffectMagnitudeKnowledge.ExpectedButMissing => "expected_but_missing"
-      case DirectEffectMagnitudeKnowledge.Ambiguous         => "ambiguous"
-
-  private[chesstory] def rootOwnedEffectIdentityJson(
-      identity: RootOwnedEffectIdentity
-  ): JsObject =
-    Json.obj(
-      "primitive_kind" -> code(identity.primitiveKind.toString),
-      "target_signatures" -> identity.targetSignatures,
-      "plan_ids" -> identity.planIds,
-      "plan_result_semantic_key" -> identity.planResult.map(_.stableKey),
-      "strategic_axes" -> identity.strategicAxes.map(axis =>
-        Json.obj(
-          "kind" -> code(axis.kind.toString),
-          "polarity" -> code(axis.polarity.toString),
-          "label" -> axis.label,
-          "comparison_outcome" -> axis.comparisonOutcome.map(value => code(value.toString))
-        )
-      )
-    )
-
-  /** The exact engine-backed PlayedVsBest verdict is a comparison DTO. It is
-    * intentionally independent of Cause generation, claim hosting, and public
-    * idea selection so a sentence-ready verdict survives legitimate Cause
-    * abstention.
-    */
-  private[chesstory] def primaryEngineBackedVerdictPublicJson(
-      packet: EvidenceBackedJudgmentPacket
-  ): Option[JsObject] =
-    MoveMeaningProjection.engineBackedVerdictJson(packet)
-
-  /** Audit-only central classification authority. This is recomputed from the
-    * registered PlayedVsBest line nodes through VerdictThresholdPolicy; it is
-    * not copied from a public verdict label or any Cause/claim evidence.
-    */
-  private[chesstory] def primaryEngineBackedVerdictClassificationAuthorityJson(
-      packet: EvidenceBackedJudgmentPacket
-  ): Option[JsObject] =
-    MoveMeaningProjection.engineBackedClassificationAuthorityJson(packet)
 
   private object MoveMeaningProjection:
-    private final case class PrimaryComparison(
-        assessment: RelativeMoveAssessment,
-        fact: CandidateComparisonFact
-    )
-
-    private def engineBackedPrimaryComparison(
-        packet: EvidenceBackedJudgmentPacket
-    ): Option[PrimaryComparison] =
-      primaryComparison(packet).filter { primary =>
-        packet.evidenceGraph.candidateComparisonRecord(primary.assessment.primaryComparisonEvidence).exists {
-          case EvidenceRecord(ref, CandidateComparisonEvidence(fact), _) =>
-            ref.confidence == EvidenceConfidence.EngineBacked &&
-              fact == primary.fact &&
-              recomputedComparison(primary) == primary.fact.comparison
-          case _ =>
-            false
-        }
-      }
-
-    private def recomputedComparison(primary: PrimaryComparison): EvalComparison =
-      primary.fact.recomputedComparison(
-        reference = primary.assessment.reference,
-        candidate = primary.assessment.candidate
-      )
-
-    def engineBacked(packet: EvidenceBackedJudgmentPacket): Boolean =
-      engineBackedPrimaryComparison(packet).nonEmpty
-
-    def engineBackedVerdictJson(packet: EvidenceBackedJudgmentPacket): Option[JsObject] =
-      engineBackedPrimaryComparison(packet).map(primary =>
-        verdictJson(primary.assessment, primary.fact)
-      )
-
-    def engineBackedClassificationAuthorityJson(
-        packet: EvidenceBackedJudgmentPacket
-    ): Option[JsObject] =
-      engineBackedPrimaryComparison(packet).map { primary =>
-        val comparison = recomputedComparison(primary)
-        val referenceMate = PerspectiveMath.mateForMover(
-          comparison.mover,
-          primary.assessment.reference.mate
-        )
-        val playedMate = PerspectiveMath.mateForMover(
-          comparison.mover,
-          primary.assessment.candidate.mate
-        )
-        Json.obj(
-          "policy_version" -> VerdictClassificationPolicyVersion,
-          "comparison_kind" -> code(primary.fact.kind.toString),
-          "mover" -> (if comparison.mover.white then "white" else "black"),
-          "played_move" -> primary.assessment.played.moveUci,
-          "reference_move" -> primary.assessment.reference.ref.rootMove,
-          "candidate_set_type" -> primary.fact.candidateSetType.map(item => code(item.toString)),
-          "candidate_win_percent_delta_for_mover" -> comparison.candidateWinPercentDeltaForMover,
-          "win_percent_loss_for_mover" -> comparison.winPercentLossForMover,
-          "expected_verdict_code" -> code(comparison.verdict.toString),
-          "expected_move_quality" -> quality(comparison.verdict),
-          "reference_mate_for_mover" -> referenceMate,
-          "played_mate_for_mover" -> playedMate,
-          "mate_distance_loss_for_mover" -> PerspectiveMath.mateDistanceLoss(
-            referenceMate,
-            playedMate
-          )
-        )
-      }
-
-    def publicPayloadJson(packet: EvidenceBackedJudgmentPacket): JsObject =
-      val claims = packet.claims
-      val claimsById = claims.map(claim => claim.id -> claim).toMap
-      val observations = selectedObservationsJson(packet, claimsById)
-      val primary = engineBackedPrimaryComparison(packet)
-      val assessment = primary.map(_.assessment)
-      val playedLine = packet.candidateLine(LineNodeRole.Played)
-      val referenceLine = packet.candidateLine(LineNodeRole.BestReference)
-      val playedMove =
-        assessment.map(_.played.moveUci).orElse(playedLine.map(_.ref.rootMove)).getOrElse("")
-      val referenceMove =
-        assessment.map(_.reference.ref.rootMove).orElse(referenceLine.map(_.ref.rootMove)).getOrElse("")
-      val moveQuality = primary.map(value => quality(value.fact.comparison.verdict)).getOrElse("unknown")
-      val ideaUnits = packet.causeExposureResolution.ideaUnits.sortBy(_.serializationOrder)
-      val ideaUnitByCauseId = ideaUnits.flatMap(unit =>
-        unit.memberCauseEvidenceIds.map(_ -> unit)
-      ).toMap
-      val hostedSelections = packet.playerFacingClaimDecisions.flatMap { decision =>
-        val claim = requireSelectedCauseHost(decision.claimId, claimsById.get(decision.claimId))
-        decision.causeSelections.map(selection => (claim, decision, selection))
-      }.sortBy(_._3.selectionOrder)
-      val ideas = hostedSelections.map { case (claim, decision, selection) =>
-        val unit = ideaUnitByCauseId.getOrElse(
-          selection.causeEvidence.id,
-          throw IllegalStateException(
-            s"packet-selected Cause has no sentence-ready idea unit: ${selection.causeEvidence.id}"
-          )
-        )
-        selectedCauseIdeaJson(claim, decision, selection, unit, packet)
-      }
-      val importance = directCauseImportancePublicJson(packet.directCauseImportanceResolution)
-      val ideaImportance = directCauseImportancePublicJson(
-        packet.causeExposureResolution.ideaImportanceResolution
-      )
-      val explanation =
-        Option.when(playedMove.nonEmpty && ideas.nonEmpty)(
-          Json.obj(
-            "role" -> "played move",
-            "move" -> playedMove,
-            "reference_move" -> referenceMove,
-            "move_quality" -> moveQuality,
-            "ideas" -> ideas,
-            "idea_units" -> ideaUnits.map(playerFacingIdeaUnitJson),
-            "idea_importance" -> ideaImportance,
-            "importance" -> importance
-          )
-        )
-      val publicIdeaCauseIds =
-        Option.when(explanation.nonEmpty)(hostedSelections.map(_._3.causeEvidence.id)).getOrElse(Nil)
-      requirePublicIdeaCauseCoverage(packet.causeDispositionLedger, publicIdeaCauseIds)
-      val dispositionSummary = causeDispositionPublicJson(packet.causeDispositionLedger)
-      Json.obj(
-        "verdict" -> engineBackedVerdictJson(packet),
-        "idea_status" -> (
-          if publicIdeaCauseIds.nonEmpty then "certified"
-          else "no_certified_differential_idea"
-        ),
-        "idea_status_detail" -> dispositionSummary,
-        "explanations" -> explanation.toList,
-        "observations" -> observations
-      )
-
-    def emptyPayloadJson(
-        primaryEngineBacked: Boolean,
-        ledger: CauseDispositionLedger
-    ): JsObject =
-      // With an engine-backed primary comparison, an empty idea projection is
-      // a Cause abstention and therefore requires an empty selected ledger.
-      // Without that primary authority the whole projection is withheld:
-      // secondary-comparison Causes may still be selected at R and must remain
-      // visible in the diagnostic ledger summary rather than being deleted or
-      // rejected merely to make an unavailable public payload empty.
-      if primaryEngineBacked then requirePublicIdeaCauseCoverage(ledger, Nil)
-      Json.obj(
-        "verdict" -> JsNull,
-        "idea_status" -> (
-          if primaryEngineBacked then "no_certified_differential_idea"
-          else "unavailable"
-        ),
-        "idea_status_detail" -> causeDispositionPublicJson(ledger),
-        "explanations" -> Json.arr(),
-        "observations" -> Json.arr()
-      )
-
-    /** P has already selected these exact observations. This is a
-      * mechanical public carrier: it reads only each selected claim, its F
-      * carrier record, and that record's direct parents.
-      */
-    private def selectedObservationsJson(
-        packet: EvidenceBackedJudgmentPacket,
-        claimsById: Map[String, JudgmentClaim]
-    ): List[JsObject] =
-      packet.selectedContentClaimIds.map { claimId =>
-        val claim = claimsById(claimId)
-        claim.content match
-          case Some(JudgmentClaimContent.CandidateComparison(carrier, comparison)) =>
-            packet.evidenceGraph.record(carrier) match
-              case Some(EvidenceRecord(ref, CandidateComparisonEvidence(_), parents)) =>
-                Json.obj(
-                  "claim_id" -> claimId,
-                  "carrier" -> evidenceRefJson(ref),
-                  "parents" -> parents.map(evidenceRefJson),
-                  "kind" -> "candidate_comparison",
-                  "comparison" -> candidateComparisonObservationJson(comparison)
-                )
-              case _ =>
-                throw IllegalStateException(
-                  s"packet-selected candidate comparison observation has no registered F carrier: $claimId"
-                )
-          case Some(JudgmentClaimContent.StrategicMechanism(carrier)) =>
-            packet.evidenceGraph.record(carrier) match
-              case Some(EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents)) =>
-                Json.obj(
-                  "claim_id" -> claimId,
-                  "carrier" -> evidenceRefJson(ref),
-                  "parents" -> parents.map(evidenceRefJson),
-                  "kind" -> "strategic_mechanism",
-                  "mechanism" -> strategicMechanismObservationJson(payload)
-                )
-              case _ =>
-                throw IllegalStateException(
-                  s"packet-selected strategic mechanism observation has no registered F carrier: $claimId"
-                )
-          case None =>
+    def moveCommentaryJson(packet: EvidenceBackedJudgmentPacket): JsObject =
+      val comparisonEvidence = packet.primary match
+        case PlayerFacingPrimary.MoveVerdict(ref) => ref
+        case PlayerFacingPrimary.BestChoice(ref)  => ref
+      val comparisonRecord =
+        packet.evidenceGraph
+          .candidateComparisonRecord(comparisonEvidence)
+          .getOrElse(
             throw IllegalStateException(
-              s"packet-selected observation has no registered content: $claimId"
-            )
-      }
-
-    private def candidateComparisonObservationJson(
-        comparison: CandidateComparisonSemanticKey
-    ): JsObject =
-      Json.obj(
-        "kind" -> code(comparison.kind.toString),
-        "mover" -> (if comparison.mover.white then "white" else "black"),
-        "reference" -> comparisonLineJson(comparison.referenceLine),
-        "candidate" -> comparisonLineJson(comparison.candidateLine),
-        "candidate_win_percent_delta_for_mover" -> comparison.candidateWinPercentDeltaForMover,
-        "verdict" -> code(comparison.verdict.toString),
-        "candidate_set_type" -> comparison.candidateSetType.map(value => code(value.toString)),
-        "recapture_resource" -> comparison.defensiveRecaptureResource.map(
-          defensiveRecaptureResourceJson
-        )
-      )
-
-    private def comparisonLineJson(line: SemanticLineKey): JsObject =
-      Json.obj(
-        "root_move" -> line.rootMove,
-        "role" -> code(line.role.toString),
-        "rank" -> line.rank
-      )
-
-    private def strategicMechanismObservationJson(payload: StrategicMechanismEvidence): JsObject =
-      Json.obj(
-        "kind" -> code(payload.kind.toString),
-        "signals" -> payload.signals.map(signal =>
-          Json.obj(
-            "kind" -> code(signal.kind.toString),
-            "key" -> signal.label,
-            "source" -> evidenceRefJson(signal.source),
-            "strength" -> signal.strength,
-            "axis" -> signal.axis.map(axis =>
-              Json.obj(
-                "kind" -> code(axis.kind.toString),
-                "polarity" -> code(axis.polarity.toString),
-                "key" -> axis.label
-              )
+              s"R-selected primary comparison is not registered: ${comparisonEvidence.id}"
             )
           )
-        ),
-        "semantic_keys" -> payload.semanticAnchors.map(anchor =>
-          Json.obj(
-            "kind" -> code(anchor.kind.toString),
-            "values" -> anchor.values
+      val fact = comparisonRecord.payload match
+        case CandidateComparisonEvidence(value) => value
+        case _ =>
+          throw IllegalStateException(
+            s"R-selected primary is not a candidate comparison: ${comparisonEvidence.id}"
           )
-        )
+      val reference = packet.candidateLines.find(_.ref == fact.referenceLine).getOrElse(
+        throw IllegalStateException("R-selected reference endpoint is not in the packet")
       )
-
-    private def defensiveRecaptureResourceJson(
-        resource: PlayedVsBestDefensiveRecaptureResource
-    ): JsObject =
-      Json.obj(
-        "target" -> resource.target.key,
-        "removed_occupant_role" -> resource.removedOccupantRole.name,
-        "reference_defender_role" -> resource.referenceDefenderRole.name,
-        "preserved_defender_role" -> resource.preservedDefenderRole.name,
-        "reference_root_move" -> EvidenceRef.normalizeMove(resource.referenceRootMove),
-        "opponent_capture_move" -> EvidenceRef.normalizeMove(resource.opponentCaptureMove),
-        "reference_recapture_move" -> EvidenceRef.normalizeMove(resource.referenceRecaptureMove)
+      val candidate = packet.candidateLines.find(_.ref == fact.candidateLine).getOrElse(
+        throw IllegalStateException("R-selected candidate endpoint is not in the packet")
       )
-
-    private def primaryComparison(
-        packet: EvidenceBackedJudgmentPacket
-    ): Option[PrimaryComparison] =
-      for
-        assessment <- packet.primaryRelativeAssessment
-        fact <- packet.evidenceGraph.comparisonFor(assessment)
-        played <- packet.candidateLine(LineNodeRole.Played)
-        reference <- packet.candidateLine(LineNodeRole.BestReference)
-        if assessment.candidate == played
-        if assessment.reference == reference
-        if fact.kind == CandidateComparisonKind.PlayedVsBest
-        if fact.referenceLine == reference.ref
-        if fact.candidateLine == played.ref
-      yield PrimaryComparison(assessment, fact)
-
-    private def verdictJson(
-        assessment: RelativeMoveAssessment,
-      fact: CandidateComparisonFact
-    ): JsObject =
       val comparison = fact.comparison
-      val referenceMate = PerspectiveMath.mateForMover(comparison.mover, assessment.reference.mate)
-      val playedMate = PerspectiveMath.mateForMover(comparison.mover, assessment.candidate.mate)
-      val mateDistanceLoss = PerspectiveMath.mateDistanceLoss(referenceMate, playedMate)
-      Json.obj(
-        "comparison_kind" -> code(fact.kind.toString),
-        "mover" -> (if comparison.mover.white then "white" else "black"),
-        "verdict_code" -> code(comparison.verdict.toString),
-        "move_quality" -> quality(comparison.verdict),
-        "played_move" -> assessment.played.moveUci,
-        "reference_move" -> assessment.reference.ref.rootMove,
-        "candidate_win_percent_delta_for_mover" -> comparison.candidateWinPercentDeltaForMover,
-        "win_percent_loss_for_mover" -> comparison.winPercentLossForMover,
-        "outcome" -> playedMate.map(mate =>
+      val verdictConfidence = fact.verdictConfidence match
+        case VerdictConfidence.EngineBacked        => "engine_backed"
+        case VerdictConfidence.LegalReplayVerified => "legal_replay_verified"
+        case VerdictConfidence.MixedVerified       => "mixed_verified"
+      val verdictCode = comparison.verdict match
+        case MoveChoiceVerdict.ImprovesOnReference => "improves_on_reference"
+        case MoveChoiceVerdict.MatchesReference    => "matches_reference"
+        case MoveChoiceVerdict.PlayableLoss        => "playable_loss"
+        case MoveChoiceVerdict.Inaccuracy          => "inaccuracy"
+        case MoveChoiceVerdict.Mistake             => "mistake"
+        case MoveChoiceVerdict.Blunder             => "blunder"
+      val base = packet.primary match
+        case PlayerFacingPrimary.MoveVerdict(_) =>
+          val verdictText = fact.comparison.verdict match
+            case MoveChoiceVerdict.ImprovesOnReference => "improves on"
+            case MoveChoiceVerdict.MatchesReference    => "matches"
+            case MoveChoiceVerdict.PlayableLoss        => "is playable but inferior to"
+            case MoveChoiceVerdict.Inaccuracy          => "is an inaccuracy compared with"
+            case MoveChoiceVerdict.Mistake             => "is a mistake compared with"
+            case MoveChoiceVerdict.Blunder             => "is a blunder compared with"
           Json.obj(
-            "state" -> mateState(mate),
-            "certainty" -> "engine_mate_score",
-            "reference_state" -> referenceMate.map(mateState),
-            "resistance" -> resistance(referenceMate, playedMate, mateDistanceLoss)
+            "primary" -> Json.obj(
+              "kind" -> "move_verdict",
+              "comparison_evidence_id" -> comparisonEvidence.id,
+              "verdict_code" -> verdictCode,
+              "verdict_confidence" -> verdictConfidence,
+              "mover" -> (if comparison.mover.white then "white" else "black"),
+              "delta" -> comparisonDeltaJson(comparison),
+              "reference_endpoint" -> endpointJson(reference.evaluation, comparison.mover),
+              "played_endpoint" -> endpointJson(candidate.evaluation, comparison.mover),
+              "presentation" ->
+                s"${EvidenceRef.normalizeMove(fact.candidateLine.rootMove)} $verdictText ${EvidenceRef.normalizeMove(fact.referenceLine.rootMove)}."
+            )
           )
-        ),
-        "mate" -> Option.when(referenceMate.nonEmpty || playedMate.nonEmpty)(
+        case PlayerFacingPrimary.BestChoice(_) =>
+          val candidateSet = fact.candidateSet.getOrElse(
+            throw IllegalStateException("R-selected best choice has no complete candidate-set descriptor")
+          )
+          val candidateSetType = candidateSet.candidateSetType match
+            case CandidateSetType.OnlyMove     => "only_move"
+            case CandidateSetType.NarrowChoice => "narrow_choice"
+            case CandidateSetType.StyleChoice  => "style_choice"
           Json.obj(
-            "reference_for_mover" -> referenceMate,
-            "played_for_mover" -> playedMate,
-            "distance_loss" -> mateDistanceLoss
+            "primary" -> Json.obj(
+              "kind" -> "best_choice",
+              "comparison_evidence_id" -> comparisonEvidence.id,
+              "runner_up_verdict_code" -> verdictCode,
+              "verdict_confidence" -> verdictConfidence,
+              "mover" -> (if comparison.mover.white then "white" else "black"),
+              "delta" -> comparisonDeltaJson(comparison),
+              "best_endpoint" -> endpointJson(reference.evaluation, comparison.mover),
+              "runner_up_endpoint" -> endpointJson(candidate.evaluation, comparison.mover),
+              "candidate_set" -> Json.obj(
+                "type" -> candidateSetType
+              ),
+              "presentation" ->
+                s"${EvidenceRef.normalizeMove(fact.referenceLine.rootMove)} is the best choice; ${EvidenceRef.normalizeMove(fact.candidateLine.rootMove)} is the runner-up."
+            )
           )
+      val causalExplanations = packet.causeExposureResolution.narrativeIdeas.map { idea =>
+        val unitKind = idea.unit.kind match
+          case PlayerFacingIdeaUnitKind.SingleCause             => "single_cause"
+          case PlayerFacingIdeaUnitKind.ExactPvbResponsibility => "exact_pvb_responsibility"
+        val facets = idea.facets.map(facetJson(_, packet))
+        val presentation = idea.unit.kind match
+          case PlayerFacingIdeaUnitKind.SingleCause =>
+            val lead = facets match
+              case head :: _ => head
+              case Nil =>
+                throw IllegalStateException("R-selected single-cause unit has no facet")
+            val leadKind = (lead \ "kind").as[String]
+            val leadEffectMode = (lead \ "effect_mode").as[String]
+            val leadChanges = (lead \ "channels").as[List[JsObject]].map { channel =>
+              s"${(channel \ "direct_change").as[String]} / ${(channel \ "played_change").as[String]}"
+            }.mkString(", ")
+            s"The selected $leadKind cause uses $leadEffectMode effect mode with $leadChanges change evidence."
+          case PlayerFacingIdeaUnitKind.ExactPvbResponsibility =>
+            val (lead, supporting) = facets match
+              case lead :: tail if tail.nonEmpty => lead -> tail
+              case Nil =>
+                throw IllegalStateException("R-selected exact PVB responsibility unit has no facet")
+              case _ :: Nil =>
+                throw IllegalStateException("R-selected exact PVB responsibility unit has no supporting facet")
+            val leadKind = (lead \ "kind").as[String]
+            val leadEffectMode = (lead \ "effect_mode").as[String]
+            val supportingKinds = supporting.map { facet =>
+              s"${(facet \ "kind").as[String]} ${(facet \ "effect_mode").as[String]}"
+            }.mkString(", ")
+            s"The selected $leadKind $leadEffectMode cause and $supportingKinds facets form one exact same-effect responsibility relation."
+        Json.obj(
+          "kind" -> unitKind,
+          "presentation" -> presentation,
+          "facets" -> facets
         )
-      )
+      }
+      base ++ Option
+        .when(causalExplanations.nonEmpty)(Json.obj("causal_explanations" -> causalExplanations))
+        .getOrElse(Json.obj())
 
-    private def selectedCauseIdeaJson(
-        claim: JudgmentClaim,
-        decision: PlayerFacingClaimDecision,
-        selection: PlayerFacingCauseSelection,
-        ideaUnit: PlayerFacingIdeaUnit,
+    def positionActionJson(action: PlayerFacingPositionAction): JsObject =
+      action match
+        case PlayerFacingPositionAction.AutomaticTerminal(terminal) =>
+          Json.obj(
+            "kind" -> "automatic_terminal",
+            "terminal" -> automaticTerminalJson(terminal),
+            "presentation" -> terminalPresentation(terminal)
+          )
+        case PlayerFacingPositionAction.ForcedSingleMove(moveUci, mover, supportingEvaluation, drawClaims) =>
+          Json.obj(
+            "kind" -> "forced_single_move",
+            "move_uci" -> EvidenceRef.normalizeMove(moveUci),
+            "supporting_endpoint" -> endpointJson(supportingEvaluation, mover),
+            "presentation" -> s"${EvidenceRef.normalizeMove(moveUci)} is the only legal move."
+          ) ++ Option.when(drawClaims.nonEmpty)(
+            Json.obj("draw_claims" -> drawClaims.map(drawClaimJson))
+          ).getOrElse(Json.obj())
+        case PlayerFacingPositionAction.DominantDrawClaim(claims) =>
+          Json.obj(
+            "kind" -> "draw_claim_action",
+            "claims" -> claims.map(drawClaimJson),
+            "presentation" -> "A legal draw claim is stronger than every played-move outcome."
+          )
+
+    def drawClaimJson(claim: DrawClaimAction): JsObject =
+      claim match
+        case DrawClaimAction.AvailableNow(rule) =>
+          Json.obj(
+            "rule" -> drawClaimRule(rule),
+            "availability" -> "available_now"
+          )
+        case DrawClaimAction.AvailableByDeclaredMoves(rule, moveUcis) =>
+          Json.obj(
+            "rule" -> drawClaimRule(rule),
+            "availability" -> "available_by_declared_move",
+            "move_ucis" -> moveUcis.toList.map(EvidenceRef.normalizeMove).sorted
+          )
+
+    private[RuntimeProtocol] def drawClaimPresentation(claims: List[DrawClaimAction]): String =
+      claims.map {
+        case DrawClaimAction.AvailableNow(DrawClaimRule.ThreefoldRepetition) =>
+          "A draw can be claimed now by threefold repetition."
+        case DrawClaimAction.AvailableNow(DrawClaimRule.FiftyMoveRule) =>
+          "A draw can be claimed now under the fifty-move rule."
+        case DrawClaimAction.AvailableByDeclaredMoves(DrawClaimRule.ThreefoldRepetition, moveUcis) =>
+          val moves = moveUcis.toList.map(EvidenceRef.normalizeMove).sorted.mkString(", ")
+          s"A draw can be claimed by declaring $moves to create a threefold repetition."
+        case DrawClaimAction.AvailableByDeclaredMoves(DrawClaimRule.FiftyMoveRule, moveUcis) =>
+          val moves = moveUcis.toList.map(EvidenceRef.normalizeMove).sorted.mkString(", ")
+          s"A draw can be claimed by declaring $moves under the fifty-move rule."
+      }.mkString(" ")
+
+    private def facetJson(
+        facet: PlayerFacingNarrativeIdeaFacet,
         packet: EvidenceBackedJudgmentPacket
     ): JsObject =
-      val graph = packet.evidenceGraph
-      val projected = for
-        record <- graph.record(selection.causeEvidence)
-        cause <- record.payload match
-          case RelativeCauseFactEvidence(value) => Some(value)
-          case _                                => None
-        comparison <- graph.comparisonFor(cause)
-        binding <- graph.relativeCauseBinding(cause)
-        channels = selection.channels.flatMap(selected =>
-          packet.directCauseChannel(selection, selected).map(channel => selected -> channel)
+      val selection = facet.selection
+      val record = packet.evidenceGraph.record(selection.causeEvidence).getOrElse(
+        throw IllegalStateException(
+          s"R-selected Cause is not registered: ${selection.causeEvidence.id}"
         )
-        if channels.size == selection.channels.size && channels.nonEmpty
-      yield Json.obj(
-        "cause_evidence_id" -> selection.causeEvidence.id,
-        "item_role" -> "cause_facet",
-        "idea_unit_id" -> ideaUnit.id,
-        "comparison_exposure_rank" -> selection.comparisonExposureRank,
-        "selection_order" -> selection.selectionOrder,
-        "host" -> Json.obj(
-          "claim_id" -> claim.id,
-          "family" -> code(claim.family.toString),
-          "tier" -> code(decision.tier.toString)
-        ),
-        "cause" -> Json.obj(
-          "kind" -> code(cause.kind.toString),
-          "effect_mode" -> code(selection.effectMode.toString),
-          "exposure" -> code(selection.exposure.toString),
-          "source_side" -> code(cause.sourceSide.toString),
-          "direct_effect_admission" -> directEffectAdmissionPublicJson(cause.directEffectAdmission),
-          "attribution" -> Json.obj(
-            "kind" -> code(cause.attribution.kind.toString),
-            "root_move_matched" -> cause.attribution.rootMoveMatched,
-            "direct_proof_eligible" -> cause.attribution.directProofEligible
+      )
+      val cause = record.payload match
+        case RelativeCauseFactEvidence(value) => value
+        case _ =>
+          throw IllegalStateException(
+            s"R-selected Cause has the wrong payload: ${selection.causeEvidence.id}"
           )
-        ),
-        "comparison" -> comparisonJson(cause, comparison, binding),
-        "channels" -> channels.map { case (selected, channel) =>
-          channelJson(selected, channel)
-        },
-        "only_move" -> selection.onlyMoveQualifier.map(onlyMoveQualifierJson)
-      )
-      requireSelectedCauseProjection(selection.causeEvidence.id, projected)
-
-    private def playerFacingIdeaUnitJson(unit: PlayerFacingIdeaUnit): JsObject =
-      Json.obj(
-        "idea_id" -> unit.id,
-        "kind" -> code(unit.kind.toString),
-        "lead_cause_evidence_id" -> unit.leadCauseEvidenceId,
-        "member_cause_evidence_ids" -> unit.memberCauseEvidenceIds,
-        "importance_layer" -> unit.importanceLayer,
-        "priority_status" -> code(unit.priorityStatus.toString),
-        "serialization_order" -> unit.serializationOrder
-      )
-
-    private def comparisonJson(
-        cause: RelativeCauseFact,
-        comparison: CandidateComparisonFact,
-        binding: RelativeCauseBinding
-    ): JsObject =
-      val eventLine = binding.eventLine
-      val comparedMove =
-        if eventLine == comparison.referenceLine then comparison.candidateLine.rootMove
-        else comparison.referenceLine.rootMove
-      Json.obj(
-        "evidence_id" -> cause.comparisonEvidence.id,
-        "kind" -> code(comparison.kind.toString),
-        "reference" -> lineRefJson(comparison.referenceLine),
-        "candidate" -> lineRefJson(comparison.candidateLine),
-        "event" -> lineRefJson(eventLine),
-        "compared_move" -> EvidenceRef.normalizeMove(comparedMove),
-        "verdict" -> code(comparison.comparison.verdict.toString),
-        "mover" -> (if comparison.comparison.mover.white then "white" else "black"),
-        "delta" -> Json.obj(
-          "candidate_win_percent_delta_for_mover" -> comparison.comparison.candidateWinPercentDeltaForMover,
-          "win_percent_loss_for_mover" -> comparison.comparison.winPercentLossForMover
+      val comparison = packet.evidenceGraph.comparisonFor(cause).getOrElse(
+        throw IllegalStateException(
+          s"R-selected Cause has no registered comparison: ${selection.causeEvidence.id}"
         )
       )
-
-    private def channelJson(
-        selected: PlayerFacingCauseChannelSelection,
-        channel: DirectCauseChannel
-    ): JsObject =
-      val binding = channel.binding
+      val binding = packet.evidenceGraph.requiredRelativeCauseBinding(cause)
+      val facetRole = facet.role match
+        case PlayerFacingIdeaFacetRole.Lead       => "lead"
+        case PlayerFacingIdeaFacetRole.Supporting => "supporting"
+      val causeKind = cause.kind match
+        case RelativeCauseKind.MissedTacticalResource     => "missed_tactical_resource"
+        case RelativeCauseKind.TacticalRefutationOfPlayed => "tactical_refutation_of_played"
+        case RelativeCauseKind.CandidateTacticalLiability => "candidate_tactical_liability"
+        case RelativeCauseKind.WrongRecapturer            => "wrong_recapturer"
+        case RelativeCauseKind.RecaptureRecoveryWindow   => "recapture_recovery_window"
+        case RelativeCauseKind.WrongMoveOrder             => "wrong_move_order"
+        case RelativeCauseKind.OnlyDefenseNecessity       => "only_defense_necessity"
+        case RelativeCauseKind.TempoLoss                  => "tempo_loss"
+        case RelativeCauseKind.ConversionMiss             => "conversion_miss"
+        case RelativeCauseKind.ConversionSecured          => "conversion_secured"
+        case RelativeCauseKind.SacrificeCompensation      => "sacrifice_compensation"
+        case RelativeCauseKind.StructuralImprovement      => "structural_improvement"
+        case RelativeCauseKind.TargetPressureGain         => "target_pressure_gain"
+        case RelativeCauseKind.TargetPressureRelease      => "target_pressure_release"
+        case RelativeCauseKind.CenterControlGain          => "center_control_gain"
+        case RelativeCauseKind.KingSafetyConcession       => "king_safety_concession"
+        case RelativeCauseKind.PawnWeaknessTarget         => "pawn_weakness_target"
+        case RelativeCauseKind.PawnBreakOpportunity       => "pawn_break_opportunity"
+        case RelativeCauseKind.ActivityGain               => "activity_gain"
+        case RelativeCauseKind.ActivityLoss               => "activity_loss"
+        case RelativeCauseKind.OpponentRestriction        => "opponent_restriction"
+        case RelativeCauseKind.StrategicConcession        => "strategic_concession"
+        case RelativeCauseKind.MissedStrategicImprovement => "missed_strategic_improvement"
+        case RelativeCauseKind.PlanImprovement            => "plan_improvement"
+        case RelativeCauseKind.PlanContradiction          => "plan_contradiction"
+        case RelativeCauseKind.DefensiveResource          => "defensive_resource"
+        case RelativeCauseKind.DrawResource               => "draw_resource"
+        case RelativeCauseKind.KingForcing                => "king_forcing"
+        case RelativeCauseKind.MaterialSwing              => "material_swing"
+      val effectMode = selection.effectMode match
+        case PlayerFacingCauseEffectMode.PlayedLiability     => "played_liability"
+        case PlayerFacingCauseEffectMode.AlternativeResource => "alternative_resource"
+        case PlayerFacingCauseEffectMode.PlayedValue         => "played_value"
+      val exposure = selection.exposure match
+        case PlayerFacingCauseExposureTier.Primary       => "primary"
+        case PlayerFacingCauseExposureTier.Complementary => "complementary"
+      val sourceSide = cause.sourceSide match
+        case RelativeCauseSourceSide.Reference => "reference"
+        case RelativeCauseSourceSide.Candidate => "candidate"
+        case RelativeCauseSourceSide.Shared    => "shared"
+        case RelativeCauseSourceSide.Mixed     => "mixed"
+      val comparisonKind = comparison.kind match
+        case CandidateComparisonKind.PlayedVsBest          => "played_vs_best"
+        case CandidateComparisonKind.BestVsSecond          => "best_vs_second"
+        case CandidateComparisonKind.PlayedVsAlternative   => "played_vs_alternative"
+        case CandidateComparisonKind.ReferenceVsAlternative => "reference_vs_alternative"
       Json.obj(
-        "causal_signature" -> selected.causalSignature,
-        "direct_change" -> code(selected.directChange.toString),
-        "played_change" -> code(selected.playedChange.toString),
-        "carrier" -> evidenceRefJson(binding.source),
-        "provenance" -> binding.provenance.map(evidenceRefJson),
-        "actor" -> rootActorJson(binding),
-        "targets" -> objectArrayJson(binding.target),
-        "mechanisms" -> objectArrayJson(binding.mechanism),
-        "consequences" -> objectArrayJson(binding.consequence),
-        "witnesses" -> objectArrayJson(binding.witness),
-        "line" -> binding.line.map(lineRefJson),
-        "horizon" -> binding.horizon,
-        "proof_segment" -> channel.proofSegment.map(directCauseProofSegmentPublicJson),
-        "effect_descriptor" -> channel.rootOwnedEffectDescriptor.map(rootOwnedEffectDescriptorPublicJson),
-        "importance_effect" -> directCauseMeasuredEffectPublicJson(channel),
-        "descriptor_ambiguous" -> channel.importanceDescriptorAmbiguous,
-        "proof_segment_ambiguous" -> channel.proofSegmentAmbiguous
+        "facet_role" -> facetRole,
+        "cause_evidence_id" -> selection.causeEvidence.id,
+        "kind" -> causeKind,
+        "proof_confidence" -> (selection.causeEvidence.confidence match
+          case EvidenceConfidence.LegalReplayVerified => "legal_replay_verified"
+          case EvidenceConfidence.EngineBacked        => "engine_backed"
+          case EvidenceConfidence.BoardDerived        => "board_derived"
+          case EvidenceConfidence.Heuristic           => "heuristic"
+          case EvidenceConfidence.Mixed               => "mixed"
+        ),
+        "effect_mode" -> effectMode,
+        "exposure" -> exposure,
+        "source_side" -> sourceSide,
+        "event_move" -> EvidenceRef.normalizeMove(binding.eventLine.rootMove),
+        "comparison_kind" -> comparisonKind,
+        "channels" -> selection.channels.map { channel =>
+          val directChange = channel.directChange match
+            case DirectCausalChange.Occurred   => "occurred"
+            case DirectCausalChange.Prevented  => "prevented"
+            case DirectCausalChange.Maintained => "maintained"
+            case DirectCausalChange.Lost       => "lost"
+            case DirectCausalChange.Refuted    => "refuted"
+            case DirectCausalChange.Missed     => "missed"
+          val playedChange = channel.playedChange match
+            case PlayerFacingCausalChange.Occurred   => "occurred"
+            case PlayerFacingCausalChange.Prevented  => "prevented"
+            case PlayerFacingCausalChange.Maintained => "maintained"
+            case PlayerFacingCausalChange.Lost       => "lost"
+            case PlayerFacingCausalChange.Refuted    => "refuted"
+            case PlayerFacingCausalChange.Missed     => "missed"
+          Json.obj(
+            "causal_signature" -> channel.causalSignature,
+            "direct_change" -> directChange,
+            "played_change" -> playedChange
+          )
+        }
       )
 
-    private def rootActorJson(binding: EvidenceObjectBinding): JsObject =
-      val rootMove = binding.line.map(_.rootMove).map(EvidenceRef.normalizeMove).getOrElse("")
-      def first(kind: EvidenceObjectKind): Option[String] =
-        binding.actor.find(_.kind == kind).map(_.key.trim.toLowerCase)
-      Json.obj(
-        "move" -> rootMove,
-        "side" -> first(EvidenceObjectKind.Side),
-        "piece" -> first(EvidenceObjectKind.Piece),
-        "from" -> Option.when(rootMove.length >= 4)(rootMove.take(2)),
-        "to" -> Option.when(rootMove.length >= 4)(rootMove.slice(2, 4))
+    private def comparisonDeltaJson(comparison: EvalComparison): JsObject =
+      val base = Json.obj(
+        "candidate_win_percent_delta_for_mover" -> comparison.candidateWinPercentDeltaForMover
       )
+      comparison.detail match
+        case CandidateComparisonDeltaDetail.EngineEvaluation(_, _) =>
+          base ++ Json.obj("kind" -> "engine_evaluation")
+        case CandidateComparisonDeltaDetail.OutcomeOnly =>
+          base ++ Json.obj("kind" -> "outcome_only")
 
-    private def objectArrayJson(objects: List[ConcreteChessObject]): List[JsObject] =
-      objects
-        .distinctBy(_.signaturePart)
-        .sortBy(_.signaturePart)
-        .map(obj => Json.obj("kind" -> code(obj.kind.toString), "key" -> obj.key))
+    private def endpointJson(evaluation: CandidateLineEvaluation, mover: chess.Color): JsObject =
+      evaluation match
+        case CandidateLineEvaluation.EngineSearch(line) =>
+          Json.obj(
+            "kind" -> "engine_search",
+            "moves" -> line.moves.map(EvidenceRef.normalizeMove),
+            "win_percent_for_mover" -> evaluation.winPercentForMover(mover),
+            "depth" -> line.depth
+          ) ++ line.mate
+            .map(value => Json.obj("mate_forecast_white_pov" -> value))
+            .getOrElse(Json.obj())
+        case CandidateLineEvaluation.ExactAutomaticTerminal(moves, terminal) =>
+          Json.obj(
+            "kind" -> "exact_automatic_terminal",
+            "moves" -> moves.map(EvidenceRef.normalizeMove),
+            "terminal" -> automaticTerminalJson(terminal)
+          )
 
-    private def evidenceRefJson(ref: EvidenceRef): JsObject =
-      Json.obj(
-        "id" -> ref.id,
-        "producer" -> code(ref.producer.toString),
-        "layer" -> code(ref.layer.toString),
-        "scope" -> code(ref.scope.toString),
-        "line" -> ref.line.map(lineRefJson)
-      )
+    private def automaticTerminalJson(terminal: AutomaticTerminal): JsObject =
+      terminal match
+        case AutomaticTerminal.Checkmate(winner) =>
+          Json.obj(
+            "kind" -> "checkmate",
+            "winner" -> (if winner.white then "white" else "black")
+          )
+        case AutomaticTerminal.Stalemate =>
+          Json.obj("kind" -> "stalemate")
+        case AutomaticTerminal.InsufficientMaterial =>
+          Json.obj("kind" -> "insufficient_material")
+        case AutomaticTerminal.FivefoldRepetition =>
+          Json.obj("kind" -> "fivefold_repetition")
+        case AutomaticTerminal.SeventyFiveMoveRule =>
+          Json.obj("kind" -> "seventy_five_move_rule")
 
-    private def lineRefJson(line: LineNodeRef): JsObject =
-      Json.obj(
-        "id" -> line.id,
-        "root_move" -> EvidenceRef.normalizeMove(line.rootMove),
-        "role" -> code(line.role.toString),
-        "rank" -> line.rank
-      )
+    private def terminalPresentation(terminal: AutomaticTerminal): String =
+      terminal match
+        case AutomaticTerminal.Checkmate(winner) =>
+          s"Checkmate: ${if winner.white then "White" else "Black"} wins."
+        case AutomaticTerminal.Stalemate =>
+          "The position is an automatic draw by stalemate."
+        case AutomaticTerminal.InsufficientMaterial =>
+          "The position is an automatic draw because checkmate is impossible."
+        case AutomaticTerminal.FivefoldRepetition =>
+          "The position is an automatic draw by fivefold repetition."
+        case AutomaticTerminal.SeventyFiveMoveRule =>
+          "The position is an automatic draw under the seventy-five-move rule."
 
-    private def onlyMoveQualifierJson(qualifier: OnlyMoveCauseQualifier): JsObject =
-      Json.obj(
-        "comparison_evidence_id" -> qualifier.comparisonEvidence.id,
-        "cause_evidence_id" -> qualifier.causeEvidence.id,
-        "reference" -> lineRefJson(qualifier.referenceLine),
-        "relation" -> code(qualifier.relation.toString),
-        "licenses_causal_because" -> qualifier.licensesCausalBecause
-      )
-
-    private def quality(verdict: MoveChoiceVerdict): String =
-      if verdict.isActionableLoss then "bad"
-      else
-        verdict match
-          case MoveChoiceVerdict.ImprovesOnReference | MoveChoiceVerdict.MatchesReference => "good"
-          case MoveChoiceVerdict.PlayableLoss                                             => "playable"
-          case _ =>
-            throw IllegalStateException(s"non-actionable verdict has no public quality: $verdict")
-
-    private def mateState(mate: Int): String =
-      if mate > 0 then "forced_win"
-      else if mate < 0 then "forced_loss"
-      else throw IllegalStateException("engine mate score must be non-zero")
-
-    private def resistance(
-        referenceMate: Option[Int],
-        playedMate: Option[Int],
-        distanceLoss: Option[Int]
-    ): Option[String] =
-      referenceMate.zip(playedMate).collect {
-        case (reference, played) if reference < 0 && played < 0 && distanceLoss.exists(_ > 0) =>
-          "shortened"
-        case (reference, played) if reference < 0 && played < 0 && played.abs > reference.abs =>
-          "extended"
-        case (reference, played) if reference < 0 && played < 0 =>
-          "held"
-      }
-
+    private def drawClaimRule(rule: DrawClaimRule): String =
+      rule match
+        case DrawClaimRule.ThreefoldRepetition => "threefold_repetition"
+        case DrawClaimRule.FiftyMoveRule        => "fifty_move_rule"
   private object InputLimits:
     private val MaxFenLength = 128
     private val MaxVariations = 16
-    private val MaxPvMoves = 80
     private val MaxMovePrefix = 600
     private val MaxProbeResults = 12
     private val MaxReplyLines = 8
-    private val MaxTablebaseMoves = 256
-    private val MaxDepth = 100
     private val MaxPly = 1000
-    private val MaxEval = 100000L
-    private val MaxMate = 1000L
     private val MaxText = 256
-    private val Uci = "[a-h][1-8][a-h][1-8][nbrq]?".r
     private val RequestId = "[A-Za-z0-9._:-]{1,128}".r
 
     def validRequestId(value: String): Boolean = RequestId.matches(value)
 
     def accepts(raw: RawMoveReviewInput): Boolean =
-      val lines = raw.variations ++ raw.probeResults.flatMap(_.replyLines.getOrElse(Nil))
+      val lines = raw.variations ++ raw.probeResults.flatMap(_.resolution match
+        case ProbeResolution.EngineSearch(evaluations, _) => evaluations.flatMap(_.engineLine)
+        case ProbeResolution.ExactAutomaticTerminal(_)   => Nil
+      )
       raw.fen.nonEmpty && raw.fen.length <= MaxFenLength &&
         validUci(raw.playedMoveUci) &&
         raw.variations.nonEmpty && raw.variations.size <= MaxVariations &&
@@ -1349,51 +611,32 @@ object RuntimeProtocol:
         lines.forall(validLine)
 
     private def validLine(line: EngineLine): Boolean =
-      line.moves.nonEmpty && line.moves.size <= MaxPvMoves && line.moves.forall(validUci) &&
-        bounded(line.scoreCp, MaxEval) && line.mate.forall(mate => mate != 0 && bounded(mate, MaxMate)) &&
-        line.depth >= 0 && line.depth <= MaxDepth
+      EngineLineAdmission.acceptsRuntimeInputLine(line)
 
     private def validProbe(probe: ProbeResult): Boolean =
       probe.id.nonEmpty && probe.id.length <= MaxText &&
         probe.fen.exists(fen => fen.nonEmpty && fen.length <= MaxFenLength) &&
-        probe.replyLines.forall(_.size <= MaxReplyLines) &&
-        probe.depth.forall(depth => depth >= 0 && depth <= MaxDepth) &&
+        (probe.resolution match
+          case ProbeResolution.EngineSearch(evaluations, depth) =>
+            evaluations.nonEmpty && evaluations.size <= MaxReplyLines &&
+              evaluations.forall(_.engineLine.nonEmpty) &&
+              EngineLineAdmission.acceptsRequiredDepth(depth)
+          case ProbeResolution.ExactAutomaticTerminal(_) => false
+        ) &&
         probe.probedMove.forall(validUci) && probe.candidateMove.forall(validUci) &&
         probe.opponentResourceMove.forall(validUci) &&
         probe.horizon.forall(value => value.length <= MaxText && ProbeHorizon.plyOffset(value).nonEmpty) &&
-        probe.variationHash.forall(hash => hash.nonEmpty && hash.length <= MaxText) &&
-        probe.tablebase.forall(validTablebase)
-
-    private def validTablebase(tablebase: EndgameTablebaseEvidence): Boolean =
-      val moves = tablebase.legalMoves
-      validTablebasePosition(tablebase.terminal) && validTablebasePosition(tablebase.comparison) &&
-        moves.nonEmpty && moves.size <= MaxTablebaseMoves &&
-        moves.map(_.moveUci.trim.toLowerCase).distinct.size == moves.size &&
-        moves.forall(move => validUci(move.moveUci) && validWdl(move.resultingWdl) && move.resultingDtm.forall(validDtm))
-
-    private def validTablebasePosition(position: lila.chessjudgment.model.TablebasePositionEvidence): Boolean =
-      position.fen.nonEmpty && position.fen.length <= MaxFenLength && validWdl(position.wdl) && position.dtm.forall(validDtm)
-
-    private def validWdl(wdl: Int): Boolean = wdl >= -2 && wdl <= 2
-
-    private def validDtm(dtm: Int): Boolean = dtm != 0 && bounded(dtm, MaxMate)
+        probe.variationHash.forall(hash => hash.nonEmpty && hash.length <= MaxText)
 
     private def validOpening(opening: RawOpeningContext): Boolean =
       List(opening.eco, opening.name, opening.family).flatten.forall(_.length <= MaxText)
 
-    private def validUci(value: String): Boolean = Uci.matches(value.trim.toLowerCase)
-
-    private def bounded(value: Int, limit: Long): Boolean = value.toLong.abs <= limit
+    private def validUci(value: String): Boolean = EngineLineAdmission.acceptsRuntimeInputUci(value)
 
 object RuntimeResources:
-  private val ThemePriorEntries = 43
-
   def verify(): Unit =
     require(
       OpeningRecognitionIndex.default.allEntries.nonEmpty,
       "scalachess opening database is empty"
     )
-    require(
-      OpeningThemePriorIndex.default.allEntries.size == ThemePriorEntries,
-      "opening theme-prior resource is missing or incomplete"
-    )
+    OpeningThemePriorIndex.default

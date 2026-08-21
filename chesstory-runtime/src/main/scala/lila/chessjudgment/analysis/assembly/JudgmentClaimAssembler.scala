@@ -3,6 +3,7 @@ package lila.chessjudgment.analysis.assembly
 import chess.Pawn
 import chess.format.{ Fen, Uci }
 import lila.chessjudgment.model.evaluation.JudgmentThresholds
+import lila.chessjudgment.model.line.CandidateLineEvaluation
 import lila.chessjudgment.model.judgment.*
 
 object JudgmentClaimAssembler:
@@ -141,7 +142,9 @@ object JudgmentClaimAssembler:
   ): List[JudgmentClaim] =
     val lineRecords = context.evidenceGraph.recordsFor(line.ref)
     val lineFactRecords = lineRecords.collect { case record @ EvidenceRecord(_, _: LineFactEvidence, _) => record }
-    val evalRecords = lineRecords.collect { case record @ EvidenceRecord(_, _: EvalFactEvidence, _) => record }
+    val evalRecords = lineRecords.collect {
+      case record @ EvidenceRecord(_, _: CandidateLineEvaluationEvidence, _) => record
+    }
     val mechanismRecords =
       lineRecords.collect {
         case record @ EvidenceRecord(_, payload: TacticalMechanismEvidence, _) if payload.canAnchorTacticalClaim =>
@@ -868,7 +871,8 @@ object JudgmentClaimAssembler:
       evalRecords: List[EvidenceRecord]
   ): EvidenceConfidence =
     if evalRecords.exists {
-        case EvidenceRecord(_, EvalFactEvidence(_, _, mate, _), _) => mate.nonEmpty
+        case EvidenceRecord(_, CandidateLineEvaluationEvidence(_, CandidateLineEvaluation.EngineSearch(line)), _) =>
+          line.mate.nonEmpty
         case _                                                     => false
       } || relativeAssessments.exists(relativeSupportsTacticalClaim(graph, _))
     then EvidenceConfidence.EngineBacked

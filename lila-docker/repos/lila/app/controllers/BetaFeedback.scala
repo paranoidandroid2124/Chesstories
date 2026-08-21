@@ -102,7 +102,8 @@ final class BetaFeedback(env: Env) extends LilaController(env):
           returnTo = sanitizeReturnTo(returnTo).getOrElse("")
         )
       )
-      Ok.page(renderPage(prefilled, accountEmail))
+      val success = ctx.req.getQueryString("submitted").filter(_ == "1").map(_ => "Thanks. We saved your feedback.")
+      Ok.page(renderPage(prefilled, accountEmail, success))
 
   def submitForm = OpenBody:
     currentAccountEmail.flatMap: accountEmail =>
@@ -126,8 +127,8 @@ final class BetaFeedback(env: Env) extends LilaController(env):
               else
                 env.beta.api
                   .submit(ctx.me.map(_.userId), submission.copy(email = effectiveEmail))
-                  .map: result =>
-                    htmlRedirect(input, result, submission.feature)
+                  .map: _ =>
+                    htmlRedirect(input)
           )
       )
 
@@ -153,8 +154,12 @@ final class BetaFeedback(env: Env) extends LilaController(env):
           )
     )
 
-  private def renderPage(form: Form[FormInput], accountEmail: Option[EmailAddress])(using Context) =
-    views.pages.betaFeedback(form, accountEmail)
+  private def renderPage(
+      form: Form[FormInput],
+      accountEmail: Option[EmailAddress],
+      success: Option[String] = None
+  )(using Context) =
+    views.pages.betaFeedback(form, accountEmail, success)
 
   private def currentAccountEmail(using Context): Fu[Option[EmailAddress]] =
     ctx.me.fold(fuccess(none[EmailAddress]))(me => env.user.api.email(me.userId))
@@ -209,7 +214,7 @@ final class BetaFeedback(env: Env) extends LilaController(env):
         if EmailAddress.isValid(value) then Right(EmailAddress(value).some)
         else Left("Invalid email address.")
 
-  private def htmlRedirect(input: FormInput, result: SubmitResult, feature: String): Result =
+  private def htmlRedirect(input: FormInput): Result =
     val target =
       sanitizeReturnTo(input.returnTo)
         .getOrElse(
@@ -221,7 +226,8 @@ final class BetaFeedback(env: Env) extends LilaController(env):
             notify = input.notifyRequested
           ).url
         )
-    Redirect(target).flashing("success" -> successMessage(result, feature))
+    val separator = if target.contains('?') then "&" else "?"
+    Redirect(s"$target${separator}submitted=1")
 
   private def notificationSubject(feature: String): String =
     if feature.trim.equalsIgnoreCase("launch_notice") then "launch updates"

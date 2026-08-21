@@ -73,7 +73,7 @@ interface Site {
 }
 
 type Redraw = () => void;
-type RedirectTo = string | { id: string; url: string; cookie?: { name: string; value: string; maxAge: number } };
+type RedirectTo = string | { id: string; url: string };
 
 type Timeout = ReturnType<typeof setTimeout>;
 

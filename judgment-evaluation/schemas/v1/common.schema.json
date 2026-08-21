@@ -13,20 +13,13 @@
   },
   "x-semantic-transition-registry": {
     "version": "1.0.0",
-    "lineage_order": ["Q", "F", "C", "Jp", "Ja", "R", "P", "V"],
+    "lineage_order": ["Q", "F", "C", "Jp", "Ja", "R", "P"],
     "envelope": "input payload/hash and the exact committed upstream artifact-hash set; output echoes the validated input envelope",
     "reference_closure": "identity-definition and identity-reference annotations define all namespace closure; duplicate definitions and dangling references are forbidden",
     "stage_relations": {
       "Ja": "each decision is an unchanged member of Jp proposals",
       "R": "each ranked claim is an unchanged admitted Ja decision and ranks are unique",
-      "P": "public claims and materialized support are unchanged subsets of the direct P input",
-      "V": "projection, claim, evidence, token and span references close over the direct V input"
-    },
-    "verbalization_grounding": {
-      "text_joiner": "\n",
-      "offset_unit": "unicode-code-point",
-      "authorized_span": "exact",
-      "unlicensed_prohibited_tokens": "reject"
+      "P": "public claims and materialized support are unchanged subsets of the direct P input"
     }
   },
   "$defs": {
@@ -40,7 +33,7 @@
     },
     "stage": {
       "type": "string",
-      "enum": ["Q", "F", "C", "Jp", "Ja", "R", "P", "V"]
+      "enum": ["Q", "F", "C", "Jp", "Ja", "R", "P"]
     },
     "split": {
       "type": "string",
@@ -113,13 +106,9 @@
         "version": { "$ref": "#/$defs/nonEmptyString" },
         "build_hash": { "$ref": "#/$defs/sha256" },
         "configuration_hash": { "$ref": "#/$defs/sha256" },
-        "model_name": { "$ref": "#/$defs/nonEmptyString" },
-        "model_version": { "$ref": "#/$defs/nonEmptyString" },
         "engine_name": { "$ref": "#/$defs/nonEmptyString" },
         "engine_version": { "$ref": "#/$defs/nonEmptyString" },
         "policy_version": { "$ref": "#/$defs/nonEmptyString" },
-        "prompt_hash": { "$ref": "#/$defs/sha256" },
-        "decoding_hash": { "$ref": "#/$defs/sha256" },
         "dependency_versions": {
           "type": "object",
           "propertyNames": {
@@ -306,15 +295,6 @@
       "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
       "x-canonical": { "mode": "identity-definition", "namespace": "projection" }
     },
-    "projectionIdReference": {
-      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
-      "x-canonical": { "mode": "identity-reference", "namespace": "projection" }
-    },
-    "sentenceIdDefinition": {
-      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
-      "x-canonical": { "mode": "identity-definition", "namespace": "sentence" }
-    },
-
     "position": {
       "type": "object",
       "required": ["position_id", "fen", "side_to_move"],
@@ -1518,7 +1498,7 @@
       ],
       "properties": {
         "claim_id": {
-          "$comment": "The public projection materializes the admitted claim as a definition in this document; V sentence citations reference this namespace.",
+          "$comment": "The public projection materializes the admitted claim as a definition in this document.",
           "$ref": "#/$defs/claimIdDefinition"
         },
         "rank": {
@@ -1675,114 +1655,6 @@
           "items": { "$ref": "#/$defs/exactFact" },
           "x-canonical": { "mode": "unordered-set", "sort_by": ["proof_id"] }
         }
-      },
-      "additionalProperties": false
-    },
-    "verbalizationPolicy": {
-      "type": "object",
-      "required": ["language", "max_sentences", "require_claim_citations", "allow_abstention", "prohibited_new_token_kinds"],
-      "properties": {
-        "language": { "const": "en" },
-        "max_sentences": { "type": "integer", "minimum": 1 },
-        "require_claim_citations": { "const": true },
-        "allow_abstention": { "type": "boolean" },
-        "prohibited_new_token_kinds": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["move", "square", "piece", "file", "rank"]
-          },
-          "uniqueItems": true,
-          "x-canonical": { "mode": "unordered-set", "sort_by": "value" }
-        }
-      },
-      "additionalProperties": false
-    },
-    "sentence": {
-      "type": "object",
-      "required": ["sentence_id", "text", "claim_ids", "evidence_ids"],
-      "properties": {
-        "sentence_id": { "$ref": "#/$defs/sentenceIdDefinition" },
-        "text": { "$ref": "#/$defs/nonEmptyString" },
-        "claim_ids": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "#/$defs/claimIdReference" },
-          "uniqueItems": true,
-          "x-canonical": {
-            "modes": ["unordered-set", "identity-reference-set"],
-            "namespace": "claim",
-            "sort_by": "canonical-id"
-          }
-        },
-        "evidence_ids": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/evidenceIdReference" },
-          "uniqueItems": true,
-          "x-canonical": {
-            "modes": ["unordered-set", "identity-reference-set"],
-            "namespace": "evidence",
-            "sort_by": "canonical-id"
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    "authorizedToken": {
-      "type": "object",
-      "required": ["kind", "token", "char_start", "char_end", "claim_ids", "evidence_ids"],
-      "properties": {
-        "kind": {
-          "type": "string",
-          "enum": ["move", "square", "piece", "file", "rank"]
-        },
-        "token": { "$ref": "#/$defs/nonEmptyString" },
-        "char_start": { "type": "integer", "minimum": 0 },
-        "char_end": { "type": "integer", "minimum": 1 },
-        "claim_ids": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/claimIdReference" },
-          "uniqueItems": true,
-          "x-canonical": {
-            "modes": ["unordered-set", "identity-reference-set"],
-            "namespace": "claim",
-            "sort_by": "canonical-id"
-          }
-        },
-        "evidence_ids": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/evidenceIdReference" },
-          "uniqueItems": true,
-          "x-canonical": {
-            "modes": ["unordered-set", "identity-reference-set"],
-            "namespace": "evidence",
-            "sort_by": "canonical-id"
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    "verbalizationResult": {
-      "type": "object",
-      "required": ["projection_id", "status", "language", "sentences", "authorized_tokens"],
-      "properties": {
-        "projection_id": { "$ref": "#/$defs/projectionIdReference" },
-        "status": {
-          "type": "string",
-          "enum": ["verbalized", "abstained", "rejected"]
-        },
-        "language": { "const": "en" },
-        "sentences": {
-          "$comment": "Sentence order is meaning-bearing and intentionally not canonicalizable.",
-          "type": "array",
-          "items": { "$ref": "#/$defs/sentence" }
-        },
-        "authorized_tokens": {
-          "$comment": "Token order/offsets track the exact text and are intentionally not canonicalizable.",
-          "type": "array",
-          "items": { "$ref": "#/$defs/authorizedToken" }
-        },
-        "withheld_reason": { "$ref": "#/$defs/nonEmptyString" }
       },
       "additionalProperties": false
     }

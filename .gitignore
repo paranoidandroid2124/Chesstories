@@ -7,6 +7,8 @@
 /ops-*-cookie*.txt
 /test-results/
 /target/
+/.playwright-cli/
+/output/playwright/
 
 /lila-docker/conf/*.pem
 /lila-docker/logs/

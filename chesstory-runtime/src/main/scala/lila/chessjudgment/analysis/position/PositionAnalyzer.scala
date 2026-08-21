@@ -233,13 +233,6 @@ object PositionAnalyzer:
       else if q then "can_castle_long"
       else "none"
 
-    def castledSide(color: Color): String =
-      board.kingPosOf(color) match {
-        case Some(sq) if sq.file == File.G => "short"
-        case Some(sq) if sq.file == File.C => "long"
-        case _ => "none"
-      }
-    
     def shieldPawns(color: Color): Int =
       board.kingPosOf(color).map { kSq =>
         val rank = kSq.rank
@@ -259,8 +252,6 @@ object PositionAnalyzer:
 
     val wCastlesRights = castleRights(Color.White)
     val bCastlesRights = castleRights(Color.Black)
-    val wCastled = castledSide(Color.White)
-    val bCastled = castledSide(Color.Black)
     val wShield = shieldPawns(Color.White)
     val bShield = shieldPawns(Color.Black)
 
@@ -344,8 +335,6 @@ object PositionAnalyzer:
     KingSafetyFeatures(
       whiteCastlingRights = wCastlesRights,
       blackCastlingRights = bCastlesRights,
-      whiteCastledSide = wCastled,
-      blackCastledSide = bCastled,
       whiteKingShield = wShield,
       blackKingShield = bShield,
       whiteKingExposedFiles = wExposed,

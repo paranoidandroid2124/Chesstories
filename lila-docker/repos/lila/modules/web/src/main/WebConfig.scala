@@ -4,7 +4,6 @@ import play.api.{ Configuration, ConfigLoader }
 
 import lila.common.config.given
 import lila.core.config.*
-import lila.core.security.LilaCookie
 
 final class WebConfig(
     val apiToken: Secret
@@ -19,16 +18,6 @@ object WebConfig:
     configuredString(c, path)
       .orElse(sys.env.get(envName).map(_.trim).filter(_.nonEmpty))
       .getOrElse("")
-
-  object blindCookie:
-    val name = "mBzamRgfXgRBSnXB"
-    val maxAge = 365.days
-    def make(lilaCookie: LilaCookie)(enable: Boolean) = lilaCookie.cookie(
-      name,
-      if enable then "1" else "",
-      maxAge = maxAge.toSeconds.toInt.some,
-      httpOnly = true.some
-    )
 
   def loadFrom(c: Configuration) =
     WebConfig(

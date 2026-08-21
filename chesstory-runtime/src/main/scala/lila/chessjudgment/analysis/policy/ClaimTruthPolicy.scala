@@ -2,6 +2,7 @@ package lila.chessjudgment.analysis.policy
 
 import lila.chessjudgment.analysis.assembly.{ EvidenceFactAssembler, RelativeAssessmentAssembler }
 import lila.chessjudgment.model.evaluation.JudgmentThresholds
+import lila.chessjudgment.model.line.CandidateLineEvaluation
 import lila.chessjudgment.model.judgment.*
 
 enum ClaimAdmissionStatus:
@@ -170,7 +171,7 @@ object ClaimTruthPolicy:
               lineRecords match
                 case EvidenceRecord(lineRef, _, _) :: Nil =>
                   val evalRecords = graph.records.collect {
-                    case evalRecord @ EvidenceRecord(evalRef, EvalFactEvidence(payloadLine, _, _, _), evalParents)
+                    case evalRecord @ EvidenceRecord(evalRef, CandidateLineEvaluationEvidence(payloadLine, _), evalParents)
                         if evalRef.producer == EvidenceProducer.EngineEvalProducer &&
                           evalRef.layer == EvidenceLayer.Eval &&
                           evalRef.position == lineRef.position &&
@@ -839,15 +840,15 @@ object ClaimTruthPolicy:
           payload.hasLineProof
         case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
           payload.hasLineProof
-        case EvidenceRecord(_, EvalFactEvidence(_, _, mate, _), _) =>
-          mate.nonEmpty
+        case EvidenceRecord(_, CandidateLineEvaluationEvidence(_, CandidateLineEvaluation.EngineSearch(line)), _) =>
+          line.mate.nonEmpty
         case _ =>
           false
       } || exactMoveOrderTacticalCauses.nonEmpty
     val hasEngineProof =
       records.exists {
-        case EvidenceRecord(_, EvalFactEvidence(_, _, mate, _), _) =>
-          mate.nonEmpty
+        case EvidenceRecord(_, CandidateLineEvaluationEvidence(_, CandidateLineEvaluation.EngineSearch(line)), _) =>
+          line.mate.nonEmpty
         case record @ EvidenceRecord(_, RelativeAssessmentEvidence(assessment), _) =>
           engineBackedComparison(graph, assessment.primaryComparisonEvidence)
             .exists(engineComparisonProvesTactic)
@@ -919,8 +920,8 @@ object ClaimTruthPolicy:
       }
     val hasComparison =
       records.exists {
-        case EvidenceRecord(_, EvalFactEvidence(_, _, mate, _), _) =>
-          mate.nonEmpty
+        case EvidenceRecord(_, CandidateLineEvaluationEvidence(_, CandidateLineEvaluation.EngineSearch(line)), _) =>
+          line.mate.nonEmpty
         case record @ EvidenceRecord(_, CandidateComparisonEvidence(_), _) =>
           recordEngineBacked(record)
         case _ =>
@@ -954,23 +955,38 @@ object ClaimTruthPolicy:
   ): Boolean =
     val recordIds = records.map(_.ref.id).toSet
     records.exists {
-      case record @ EvidenceRecord(ref, CandidateComparisonEvidence(fact), _) =>
+      case EvidenceRecord(ref, CandidateComparisonEvidence(fact), _) =>
         claim.content.exists {
           case JudgmentClaimContent.CandidateComparison(carrier, identity) =>
             carrier == ref &&
               CandidateComparisonSemanticKey.from(fact) == identity &&
-              recordIds(ref.id) &&
-              recordEngineBacked(record)
+              recordIds(ref.id)
           case _ => false
         }
       case EvidenceRecord(_, RelativeAssessmentEvidence(assessment), _) =>
         graph
           .candidateComparisonRecord(assessment.primaryComparisonEvidence)
-          .exists(record =>
-            recordIds.contains(record.ref.id) &&
-              recordEngineBacked(record) &&
-              graph.comparisonFor(assessment).exists(_.kind == CandidateComparisonKind.PlayedVsBest)
-          )
+          .exists {
+            case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _) =>
+              recordIds.contains(record.ref.id) &&
+                (fact.kind match
+                  case CandidateComparisonKind.PlayedVsBest =>
+                    fact.referenceLine == assessment.reference.ref &&
+                      fact.candidateLine == assessment.candidate.ref &&
+                      fact.hasDistinctRootMoves
+                  case CandidateComparisonKind.BestVsSecond =>
+                    EvidenceRef.sameMove(assessment.played.moveUci, assessment.reference.ref.rootMove) &&
+                      EvidenceRef.sameMove(assessment.candidate.ref.rootMove, assessment.reference.ref.rootMove) &&
+                      fact.referenceLine == assessment.reference.ref &&
+                      fact.candidateLine.role == LineNodeRole.Alternative &&
+                      fact.candidateLine.rank == 2 &&
+                      fact.hasDistinctRootMoves &&
+                      fact.candidateSet.nonEmpty
+                  case CandidateComparisonKind.PlayedVsAlternative |
+                      CandidateComparisonKind.ReferenceVsAlternative =>
+                    false)
+            case _ => false
+          }
       case _ =>
         false
     }
@@ -981,8 +997,8 @@ object ClaimTruthPolicy:
 
   private def recordHasMate(record: EvidenceRecord): Boolean =
     record.payload match
-      case EvalFactEvidence(_, _, mate, _) =>
-        mate.nonEmpty
+      case CandidateLineEvaluationEvidence(_, CandidateLineEvaluation.EngineSearch(line)) =>
+        line.mate.nonEmpty
       case _ =>
         false
 

@@ -1,33 +1,31 @@
 @import '../../../lib/css/theme/theme.default';
 
-$explorer-bg: $c-bg;
-$explorer-bg-deep: $c-bg-page;
-$explorer-surface: $c-bg-popup;
-$explorer-surface-low: $c-bg-low;
-$explorer-surface-raised: $c-bg-zebra2;
-$explorer-border: $c-border;
-$explorer-text: $c-font;
-$explorer-muted: $c-font-muted;
-$explorer-subtle: mix($c-font-muted, $c-bg-low, 72%);
-$explorer-accent: $c-primary;
-$explorer-accent-strong: $c-primary-strong;
-$explorer-accent-dark: darken($c-primary, 24%);
+$explorer-bg: var(--c-bg);
+$explorer-surface: var(--c-bg-box);
+$explorer-surface-low: var(--c-bg-low);
+$explorer-surface-raised: var(--c-bg-zebra2);
+$explorer-border: var(--c-border);
+$explorer-text: var(--c-font);
+$explorer-muted: var(--c-font);
+$explorer-subtle: var(--c-font);
+$explorer-accent: var(--c-primary);
+$explorer-accent-strong: var(--c-primary-strong);
 
 .explorer-box {
   position: relative;
   flex: 3 1 0px;
   white-space: nowrap;
-  background: rgba($explorer-surface-low, 0.82);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba($explorer-accent, 0.14);
+  background: $explorer-surface;
+  border: 1px solid $explorer-border;
   border-radius: 8px;
   margin: 0.5rem;
   padding: 0.5rem;
   overflow-x: hidden;
   overflow-y: auto;
   font-size: 0.9em;
-  transition: all 0.3s ease;
+  transition:
+    flex var(--cs-motion-state) ease,
+    opacity var(--cs-motion-state) ease;
 
   &.reduced {
     flex: 0.3 3 0px;
@@ -50,7 +48,7 @@ $explorer-accent-dark: darken($c-primary, 24%);
   }
 
   tbody {
-    @include transition;
+    transition: opacity var(--cs-motion-state) ease;
   }
 
   &.loading tbody {
@@ -71,7 +69,7 @@ $explorer-accent-dark: darken($c-primary, 24%);
     text-transform: uppercase;
     letter-spacing: 0;
     padding: 0.8rem 1rem;
-    background: rgba($explorer-accent, 0.08);
+    background: color-mix(in srgb, $explorer-accent 8%, transparent);
     border-radius: 8px 8px 0 0;
     color: $explorer-muted;
 
@@ -84,7 +82,7 @@ $explorer-accent-dark: darken($c-primary, 24%);
       align-items: center;
       padding: 0.4rem 0.8rem;
       color: $explorer-text;
-      background: rgba($explorer-accent, 0.16);
+      background: color-mix(in srgb, $explorer-accent 16%, transparent);
       border-radius: 6px;
       margin-inline-end: 1rem;
       direction: ltr;
@@ -93,7 +91,6 @@ $explorer-accent-dark: darken($c-primary, 24%);
         color: $explorer-accent-strong;
         margin-inline-end: 0.5ch;
       }
-
     }
 
     .long {
@@ -104,11 +101,11 @@ $explorer-accent-dark: darken($c-primary, 24%);
       display: inline-block;
       padding: 0 0.5ch;
       margin-inline-start: 1px;
-      color: $c-font-dim;
+      color: $explorer-subtle;
 
       &:hover {
         color: $explorer-text;
-        background: rgba($explorer-accent, 0.12);
+        background: color-mix(in srgb, $explorer-accent 12%, transparent);
       }
     }
   }
@@ -124,11 +121,15 @@ $explorer-accent-dark: darken($c-primary, 24%);
   }
 
   tr {
-    transition: all 0.2s ease;
-    border-bottom: 1px solid rgba($explorer-accent, 0.1);
+    transition: background-color var(--cs-motion-fast) ease;
+    border-bottom: 1px solid color-mix(in srgb, $explorer-accent 10%, transparent);
+
+    td:first-child {
+      transition: color var(--cs-motion-fast) ease;
+    }
 
     &:hover {
-      background: rgba($explorer-accent, 0.06);
+      background: color-mix(in srgb, $explorer-accent 6%, transparent);
 
       td:first-child {
         color: $explorer-accent;
@@ -149,7 +150,7 @@ $explorer-accent-dark: darken($c-primary, 24%);
       @extend %roboto;
       font-size: 0.8rem;
       line-height: 1.8em;
-      background: rgba($explorer-accent, 0.08);
+      background: color-mix(in srgb, $explorer-accent 8%, transparent);
       color: $explorer-muted;
       padding-inline-start: 7px;
     }
@@ -174,7 +175,7 @@ $explorer-accent-dark: darken($c-primary, 24%);
 
     tbody tr.sum {
       /* sum row */
-      background: rgba($explorer-accent, 0.16);
+      background: color-mix(in srgb, $explorer-accent 16%, transparent);
       color: $explorer-text;
       font-weight: bold;
 
@@ -197,7 +198,6 @@ $explorer-accent-dark: darken($c-primary, 24%);
     border-radius: 4px;
     overflow: hidden;
     background: $explorer-bg;
-    box-shadow: inset 0 2px 4px rgba($explorer-bg-deep, 0.34);
 
     span {
       display: flex;
@@ -207,14 +207,13 @@ $explorer-accent-dark: darken($c-primary, 24%);
       font-size: 0.75rem;
       font-weight: 700;
       overflow: hidden;
-      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: width var(--cs-motion-state) ease;
       border: none;
       background-clip: padding-box;
 
       &:first-child {
-        background: linear-gradient(to right, $explorer-accent-dark, $explorer-accent);
+        background: $explorer-accent;
         color: $explorer-bg;
-        text-shadow: 0 1px 2px rgba($explorer-bg-deep, 0.34);
       }
 
       &.draws {
@@ -279,7 +278,7 @@ $explorer-accent-dark: darken($c-primary, 24%);
       }
 
       a:hover {
-        background: rgba($explorer-accent, 0.14);
+        background: color-mix(in srgb, $explorer-accent 14%, transparent);
       }
     }
   }
@@ -348,6 +347,16 @@ $explorer-accent-dark: darken($c-primary, 24%);
 
   .message button {
     margin: 0 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explorer-box,
+  .explorer-box tbody,
+  .explorer-box tr,
+  .explorer-box tr td:first-child,
+  .explorer-box .bar span {
+    transition: none !important;
   }
 }
 

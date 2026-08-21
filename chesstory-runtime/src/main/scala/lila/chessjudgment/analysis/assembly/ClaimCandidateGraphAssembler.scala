@@ -37,14 +37,14 @@ final case class RankedClaimDecision(
     playerFacingCauseSelections.flatMap(_.onlyMoveQualifier).distinct
 
 final case class ClaimRankingResult(
+    primary: PlayerFacingPrimary,
     ranked: List[RankedClaimDecision],
     deduplicationTrace: List[ClaimDeduplicationTrace],
     causeExposureResolution: PlayerFacingCauseExposureResolution,
     causeDispositionLedger: CauseDispositionLedger,
     causeDominanceDecisions: List[RelativeCauseDominanceDecision],
     crossComparisonExposureDecisions: List[CrossComparisonExposureDecision],
-    onlyMoveConstraintResolutions: List[OnlyMoveConstraintResolution],
-    selectedContentClaimIds: List[String]
+    onlyMoveConstraintResolutions: List[OnlyMoveConstraintResolution]
 ):
   def rankedClaims: List[JudgmentClaim] =
     ranked.map(_.claim)
@@ -379,7 +379,7 @@ object ClaimDeduplicator:
   private def tacticalPriorityEvidenceRecord(record: EvidenceRecord, graph: TypedEvidenceGraph): Boolean =
     record.payload match
       case _: TacticalMechanismEvidence | _: RelationFactEvidence | _: MoveMotifEvidence | _: LineFactEvidence |
-          EvalFactEvidence(_, _, _, _) | _: ThreatEpisodeEvidence |
+          CandidateLineEvaluationEvidence(_, _) | _: ThreatEpisodeEvidence |
           MoveTransitionEvidence(_, _, _) | RelativeAssessmentEvidence(_) |
           CandidateComparisonEvidence(_) =>
         true
@@ -397,38 +397,6 @@ object ClaimDeduplicator:
       case EvidenceConfidence.Heuristic           => 5
 
 object ClaimArbitrator:
-
-  /** Content selection is intentionally separate from Cause exposure and host
-    * tiering. Ja has already certified the exact F binding; R emits one claim
-    * id per semantic identity in deterministic serialization order.
-    */
-  private[assembly] def contentClaimIds(
-    decisions: List[ClaimAdmissionDecision]
-  ): List[String] =
-    val eligible = decisions.flatMap {
-      case ClaimAdmissionDecision(claim, ClaimAdmissionStatus.Certified, _, _, _) =>
-        claim.content.map(claim -> _)
-      case _ => None
-    }
-    eligible
-      .groupBy { case (_, content) => selectionIdentity(content) }
-      .values
-      .collect { case entry :: Nil => entry }
-      .toList
-      .sortBy { case (claim, content) => (contentOrderKey(content), claim.id) }
-      .map(_._1.id)
-
-  private def selectionIdentity(
-      content: JudgmentClaimContent
-  ): Either[CandidateComparisonSemanticKey, EvidenceRef] =
-    content match
-      case JudgmentClaimContent.CandidateComparison(_, comparison) => Left(comparison)
-      case JudgmentClaimContent.StrategicMechanism(carrier) => Right(carrier)
-
-  private def contentOrderKey(content: JudgmentClaimContent): (Int, String) =
-    content match
-      case JudgmentClaimContent.CandidateComparison(_, comparison) => 0 -> comparison.stableKey
-      case JudgmentClaimContent.StrategicMechanism(carrier) => 1 -> carrier.id
 
   private[assembly] def canonicalHostRows(
       claims: List[JudgmentClaim],
@@ -453,7 +421,7 @@ object ClaimArbitrator:
   def rankDetailed(
       graph: ClaimCandidateGraph,
       relativeAssessments: List[RelativeMoveAssessment]
-  ): ClaimRankingResult =
+  ): Option[ClaimRankingResult] =
     val playedMoves =
       relativeAssessments
         .map(assessment => JudgmentSubjectBinding.normalizeMove(assessment.played.moveUci))
@@ -464,14 +432,38 @@ object ClaimArbitrator:
     val claims = deduplication.decisions.map(_.claim)
     val exposure =
       PlayerFacingCauseExposurePipeline.resolve(claims, graph.evidenceGraph, playedMoves)
-    ClaimRankingResult(
-      ranked = canonicalHostRows(claims, exposure, graph.evidenceGraph, playedMoves),
+    val ranked = canonicalHostRows(claims, exposure, graph.evidenceGraph, playedMoves)
+    val primary = relativeAssessments match
+      case assessment :: Nil =>
+        val ref = assessment.primaryComparisonEvidence
+        graph.evidenceGraph.candidateComparisonRecord(ref).flatMap {
+          case EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
+              if fact.kind == CandidateComparisonKind.PlayedVsBest &&
+                fact.referenceLine == assessment.reference.ref &&
+                fact.candidateLine == assessment.candidate.ref &&
+                fact.hasDistinctRootMoves =>
+            Some(PlayerFacingPrimary.MoveVerdict(ref))
+          case EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
+              if fact.kind == CandidateComparisonKind.BestVsSecond &&
+                EvidenceRef.sameMove(assessment.played.moveUci, assessment.reference.ref.rootMove) &&
+                EvidenceRef.sameMove(assessment.candidate.ref.rootMove, assessment.reference.ref.rootMove) &&
+                fact.referenceLine == assessment.reference.ref &&
+                fact.candidateLine.role == LineNodeRole.Alternative &&
+                fact.candidateLine.rank == 2 &&
+                fact.hasDistinctRootMoves &&
+                fact.candidateSet.nonEmpty =>
+            Some(PlayerFacingPrimary.BestChoice(ref))
+          case _ => None
+        }
+      case _ => None
+    primary.map(primary => ClaimRankingResult(
+      primary = primary,
+      ranked = ranked,
       deduplicationTrace = deduplication.trace,
       causeExposureResolution = exposure,
       causeDispositionLedger =
         CauseDispositionPolicy.resolve(graph, deduplication, exposure),
       causeDominanceDecisions = exposure.dominanceDecisions,
       crossComparisonExposureDecisions = exposure.crossDecisions,
-      onlyMoveConstraintResolutions = exposure.onlyMoveConstraintResolutions,
-      selectedContentClaimIds = contentClaimIds(deduplication.decisions)
-    )
+      onlyMoveConstraintResolutions = exposure.onlyMoveConstraintResolutions
+    ))

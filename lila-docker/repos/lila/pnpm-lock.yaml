@@ -95,14 +95,11 @@ importers:
   ui/lib:
     dependencies:
       '@lichess-org/stockfish-web':
-        specifier: ^0.2.3
+        specifier: 0.2.3
         version: 0.2.3
       chessops:
         specifier: ^0.15
         version: 0.15.0
-      idb-keyval:
-        specifier: ^6.2.1
-        version: 6.2.2
       stockfish-nnue.wasm:
         specifier: 1.0.0-1946a675.smolnet
         version: 1.0.0-1946a675.smolnet
@@ -1049,9 +1046,6 @@ packages:
   iconv-lite@0.6.3:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
     engines: {node: '>=0.10.0'}
-
-  idb-keyval@6.2.2:
-    resolution: {integrity: sha512-yjD9nARJ/jb1g+CvD0tlhUHOrJ9Sy0P8T9MF3YaLlHnSRpwPfpTX0XIvpmw3gAJUmEu3FiICLBDPXVwyEvrleg==}
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
@@ -2824,8 +2818,6 @@ snapshots:
   iconv-lite@0.6.3:
     dependencies:
       safer-buffer: 2.1.2
-
-  idb-keyval@6.2.2: {}
 
   ignore@5.3.2: {}
 

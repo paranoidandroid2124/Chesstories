@@ -1,84 +1,223 @@
-// Chesstory look & feel overrides (keep selectors shallow; rely on theme variables where possible)
+// Chesstory shell: use the existing page, box, and header owners with a quiet chess-desk surface.
 
-html.pro {
-  // Global typography
-  h1,
-  h2,
-  h3,
-  h4 {
+:root {
+  ---cs-content-max-width: 1200px;
+  ---cs-workspace-max-width: 1480px;
+  ---cs-shell-gutter-x: clamp(0.75rem, 2vw, 1.5rem);
+  ---cs-shell-block-gap: clamp(0.75rem, 1.25vw, 1.25rem);
+  ---site-header-margin: 0px;
+  ---site-header-sticky-padding: 0px;
+  ---main-margin: var(---cs-shell-gutter-x);
+  ---block-gap: var(---cs-shell-block-gap);
+  --cs-motion-fast: 90ms;
+  --cs-motion-state: 150ms;
+}
+
+html {
+  scroll-behavior: auto;
+}
+
+body {
+  ---site-header-height: 56px;
+  background: var(--c-bg-page);
+  color: var(--c-font);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Georgia', serif;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+#main-wrap {
+  ---main-max-width: var(---cs-workspace-max-width);
+  min-width: 0;
+  scroll-margin-top: calc(var(---site-header-height) + 0.75rem);
+
+  &:focus {
+    outline: 3px solid var(--c-primary);
+    outline-offset: 4px;
+  }
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--c-primary);
+  border-radius: 4px;
+  background: var(--c-bg-high);
+  color: var(--c-font);
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform var(--cs-motion-fast) ease-out;
+
+  &:focus {
+    transform: translateY(0);
+  }
+}
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+body > header {
+  height: var(---site-header-height);
+  max-width: none;
+  margin: 0;
+  padding: 0 var(---cs-shell-gutter-x);
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-bg);
+  box-shadow: none;
+  transition: border-color var(--cs-motion-state) ease-out;
+
+  &.scrolled {
+    background: var(--c-bg);
+    border-color: var(--c-border);
+  }
+
+  .cs-brand {
+    gap: 0.5rem;
+    margin-inline-start: 0;
+    padding: 0.4rem 0.65rem;
+    color: var(--c-font);
+    text-decoration: none;
+    transform: none;
+
+    &:hover {
+      color: var(--c-primary);
+    }
+  }
+
+  .cs-mark {
+    font-size: 1.2rem;
+  }
+
+  .cs-wordmark {
     font-family: 'Georgia', serif;
     font-weight: 700;
-    letter-spacing: 0;
+    letter-spacing: 0.01em;
   }
 
-  // App chrome
-  body {
-    // Softer page background
-    background: $c-bg-page;
-    ---cs-content-max-width: 1320px;
-    ---cs-workspace-max-width: 1520px;
-    ---cs-shell-gutter-x: clamp(1rem, 2.2vw, 2rem);
-    ---cs-shell-block-gap: clamp(0.75rem, 1.4vw, 1.5rem);
-    ---site-header-height: 64px;
-    ---site-header-margin: 0px;
-    ---site-header-sticky-padding: max(0px, calc((100vw - var(---cs-workspace-max-width)) / 2));
-    ---main-margin: var(---cs-shell-gutter-x);
-    ---block-gap: var(---cs-shell-block-gap);
+  .toggle:focus-visible,
+  .cs-burger:focus-visible {
+    box-shadow: none;
+    outline: 3px solid var(--c-primary);
+    outline-offset: -3px;
   }
+}
 
-  #main-wrap {
-    ---main-max-width: var(---cs-workspace-max-width);
-  }
+.site-theme-switch {
+  gap: 0.1rem;
+  padding: 0.15rem;
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  background: var(--c-bg-low);
 
-  // Header: product chrome
-  body > header {
-    height: 64px;
-    max-width: none;
-    margin: 0;
-    padding: 0 var(---cs-shell-gutter-x);
-    border-bottom: 1px solid $c-border;
-    background: $c-bg;
+  &__button {
+    min-height: 32px;
+    padding: 0 0.45rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
 
-    .cs-brand {
-      gap: 0.75rem;
-      text-decoration: none;
-    }
-
-    .cs-mark {
-      font-size: 1.4rem;
-      opacity: 0.9;
-    }
-
-    .cs-wordmark {
-      font-family: 'Georgia', serif;
-      font-weight: 900;
-      letter-spacing: 0;
+    &[aria-pressed='true'] {
+      background: var(--c-primary-dim);
+      color: var(--c-font);
     }
   }
+}
 
-  // Buttons: less "uppercase/metal", more product UI
-  .button {
-    text-transform: none;
-    letter-spacing: 0;
-    border-radius: 10px;
-    padding: 0.75em 1.1em;
+.button {
+  min-height: 44px;
+  padding: 0.6em 0.9em;
+  border-radius: 4px;
+  box-shadow: none;
+  letter-spacing: 0;
+  text-transform: none;
+  transition:
+    background-color var(--cs-motion-state) ease-out,
+    border-color var(--cs-motion-state) ease-out,
+    color var(--cs-motion-state) ease-out;
+}
+
+input,
+textarea,
+select {
+  border-color: var(--c-border);
+  border-radius: 4px;
+  background: var(--c-bg-input);
+  color: var(--c-font);
+}
+
+.box,
+.page-box {
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.page-box {
+  max-width: 860px;
+  margin: 1.5rem auto;
+  padding: clamp(1rem, 3vw, 2rem);
+  background: var(--c-bg-low);
+}
+
+.page-menu__content.box {
+  background: var(--c-bg-low);
+}
+
+.site-footer {
+  padding: 1.5rem 0 2rem;
+  background: var(--c-bg-page);
+
+  &__inner {
+    gap: 1rem;
+    padding-top: 1rem;
+    border-color: var(--c-border);
   }
 
-  // Inputs: clearer borders and slightly rounder corners
-  input,
-  textarea,
-  select {
-    border-radius: 10px;
-    border-color: $c-border;
+  &__group {
+    gap: 0.35rem;
+  }
+}
+
+@media (max-width: 1019.29px) {
+  #cs-nav .cs-nav__link,
+  .site-buttons .link,
+  .signin-or-signup .signin,
+  .site-theme-switch__button {
+    min-height: 44px;
   }
 
-  // Simple content pages (privacy/terms)
-  .page-box {
-    max-width: 860px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: $c-bg-low;
-    border: 1px solid $c-border;
-    border-radius: 12px;
+  body > header .cs-brand {
+    margin-inline-start: calc(var(---site-header-height) + 0.15rem);
+    padding-inline: 0.35rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .site-theme-switch__button {
+    min-width: 2.1rem;
+    padding-inline: 0.2rem;
+    font-size: 0.68rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
   }
 }

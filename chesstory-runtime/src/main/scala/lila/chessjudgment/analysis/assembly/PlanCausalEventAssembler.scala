@@ -2,7 +2,7 @@ package lila.chessjudgment.analysis.assembly
 
 import chess.format.Fen
 import chess.variant.Standard
-import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.line.{ CanonicalPositionHistory, PrincipalVariationEvidence }
 import lila.chessjudgment.model.{ Plan, PlanEventIdentity, PlanMatch, PlanSupport }
 import lila.chessjudgment.model.strategic.PlanTaxonomy.{ PlanKind, PlanTheme }
 import lila.chessjudgment.model.judgment.*
@@ -52,7 +52,7 @@ object PlanCausalEventAssembler:
       allocator: JudgmentProvenanceAllocator
   ): List[EvidenceRecord] =
     val graph = context.evidenceGraph
-    val history = replayedHistory(input)
+    val history = lineReplaySteps(input.positionHistory)
     graph.records.flatMap {
       case pressureRecord @ EvidenceRecord(pressureRef, pressure: PlanPressureEvidence, _)
           if pressureRef.line.exists(_.role != LineNodeRole.Threat) =>
@@ -205,7 +205,7 @@ object PlanCausalEventAssembler:
             developmentChoices = developmentChoices
           )
           mainLineEpisode = ownedDeterrence
-            .map(deterrenceEpisode(_, structural.transition, rootIdentity))
+            .map(draft => deterrenceEpisode(draft, structural.transition, rootIdentity, input.positionHistory))
             .getOrElse(
               PlanCausalEpisodeBuilder.fromLine(
                 plan = rootPlan,
@@ -214,7 +214,8 @@ object PlanCausalEventAssembler:
                 rootIdentity = rootIdentity,
                 rootConsequences = positiveConsequences,
                 rootDevelopmentChoices = developmentChoices,
-                line = linePayload
+                line = linePayload,
+                positionHistory = input.positionHistory
               )
             )
           observedBranchEpisodes = observedBranchEpisodesFor(
@@ -246,7 +247,7 @@ object PlanCausalEventAssembler:
               else
                 (ownedDeterrence, observedBranchEpisode) match
                   case (Some(deterrence), _) =>
-                    deterrenceEpisode(deterrence, structural.transition, resolvedIdentity)
+                    deterrenceEpisode(deterrence, structural.transition, resolvedIdentity, input.positionHistory)
                   case (None, Some(observed)) =>
                     PlanCausalEpisodeBuilder.fromContinuation(
                       plan = rootPlan,
@@ -254,6 +255,7 @@ object PlanCausalEventAssembler:
                       role = structural.transition.role,
                       root = observed.episode.root.copy(identity = resolvedIdentity),
                       continuation = observed.continuation,
+                      positionHistory = input.positionHistory,
                       observedReplyBranch = true
                     )
                   case (None, None) =>
@@ -264,7 +266,8 @@ object PlanCausalEventAssembler:
                       rootIdentity = resolvedIdentity,
                       rootConsequences = positiveConsequences,
                       rootDevelopmentChoices = developmentChoices,
-                      line = linePayload
+                    line = linePayload,
+                    positionHistory = input.positionHistory
                     )
           episode = PlanCausalEpisodeBuilder.withHistory(
             plan = rootPlan,
@@ -454,7 +457,7 @@ object PlanCausalEventAssembler:
         consequences = List(draft.consequence),
         developmentChoices = Nil
       )
-      val episode = deterrenceEpisode(draft, transition, identity)
+      val episode = deterrenceEpisode(draft, transition, identity, input.positionHistory)
       draft.proof.proven(rootLine, transition, episode, context.lines, context.evidenceGraph)
     }.sortBy(draft =>
       (
@@ -481,7 +484,8 @@ object PlanCausalEventAssembler:
   private def deterrenceEpisode(
       draft: ResourceDeterrenceDraft,
       transition: StructuralTransitionBinding,
-      identity: lila.chessjudgment.model.PlanEventIdentity
+      identity: lila.chessjudgment.model.PlanEventIdentity,
+      positionHistory: CanonicalPositionHistory
   ): PlanCausalEpisode =
     val root = PlanCausalEventNode(
       identity = identity,
@@ -501,25 +505,14 @@ object PlanCausalEventAssembler:
       role = transition.role,
       root = root,
       continuation = draft.continuation,
+      positionHistory = positionHistory,
       observedResultMove = Some(draft.materialGain.moveUci)
     )
 
-  private def replayedHistory(input: CanonicalNormalizedMoveReviewInput): List[LineReplayStep] =
-    Option
-      .when(input.movePrefixUci.nonEmpty && input.movePrefixUci.size == input.beforePly)(
-        PrincipalVariationEvidence.legalReplay(Standard.initialFen.value, input.movePrefixUci, 0)
-      )
-      .flatten
-      .filter(replay =>
-        replay.lastOption.exists((_, move) =>
-          PrincipalVariationEvidence.sameBoardState(move.fenAfter, input.beforeFen)
-        )
-      )
-      .toList
-      .flatten
-      .map { case (fenBefore, move) =>
-        LineReplayStep(move.ply, move.uci, fenBefore, move.fenAfter)
-      }
+  private[assembly] def lineReplaySteps(positionHistory: CanonicalPositionHistory): List[LineReplayStep] =
+    positionHistory.segmentReplaySteps.map(step =>
+      LineReplayStep(step.ply, step.uci, step.beforeFen, step.afterFen)
+    )
 
   private def rootPlanMotifRefs(
       graph: TypedEvidenceGraph,
@@ -561,7 +554,8 @@ object PlanCausalEventAssembler:
                   plan = plan,
                   expectedEpisode = expectedEpisode,
                   expectedResult = expectedEvent.publicTailExpectedResult,
-                  certifiedHorizonPlyOffset = certifiedHorizonPlyOffset
+                  certifiedHorizonPlyOffset = certifiedHorizonPlyOffset,
+                  positionHistory = input.positionHistory
                 )
               }
             }
@@ -618,6 +612,7 @@ object PlanCausalEventAssembler:
                     role = transition.role,
                     root = root,
                     continuation = continuation,
+                    positionHistory = input.positionHistory,
                     observedReplyBranch = true
                   )
                   ObservedBranchEpisode(line.ref, continuation, episode)
@@ -1431,7 +1426,8 @@ private[assembly] object PlanCausalEventProof:
       plan: PlanMatch,
       expectedEpisode: PlanCausalEpisode,
       expectedResult: Option[(PlanCausalEventNode, TransitionConsequence)],
-      certifiedHorizonPlyOffset: Int
+      certifiedHorizonPlyOffset: Int,
+      positionHistory: CanonicalPositionHistory
   ): PlanCausalBranchWitness =
     val requiredPlyOffset = expectedResult
       .map((sourceEvent, _) => sourceEvent.step.ply - expectedEpisode.root.step.ply)
@@ -1457,6 +1453,7 @@ private[assembly] object PlanCausalEventProof:
       role = rootTransition.role,
       root = expectedEpisode.root,
       continuation = continuation,
+      positionHistory = positionHistory,
       observedReplyBranch = observedReplyBranch
     )
     val observed = Option.when(observedCandidate.rootEnablesContinuation)(observedCandidate)

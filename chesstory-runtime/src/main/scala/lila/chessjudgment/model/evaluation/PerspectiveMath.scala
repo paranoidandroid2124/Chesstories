@@ -45,13 +45,6 @@ object PerspectiveMath:
   def winPercentAdvantageFor(mover: Color, whiteCp: Int, mate: Option[Int] = None): Double =
     (winPercentForMover(mover, whiteCp, mate) - 50.0).max(0.0)
 
-  private def rawCpLossForMover(isWhiteMover: Boolean, bestWhiteCp: Int, playedWhiteCp: Int): Int =
-    if isWhiteMover then (bestWhiteCp - playedWhiteCp).max(0)
-    else (playedWhiteCp - bestWhiteCp).max(0)
-
-  private def rawCpLossForMover(mover: Color, bestWhiteCp: Int, playedWhiteCp: Int): Int =
-    rawCpLossForMover(mover.white, bestWhiteCp, playedWhiteCp)
-
   def winPercentLossForMover(
       mover: Color,
       bestWhiteCp: Int,
@@ -61,38 +54,17 @@ object PerspectiveMath:
   ): Double =
     (winPercentForMover(mover, bestWhiteCp, bestMate) - winPercentForMover(mover, playedWhiteCp, playedMate)).max(0.0)
 
-  /**
-   * Improvement for the mover when comparing defended/main line vs threat line.
-   * Positive means defended line is better for the mover.
-   */
-  private def winPercentImprovementForMover(
-      mover: Color,
-      defendedWhiteCp: Int,
-      defendedMate: Option[Int],
-      threatWhiteCp: Int,
-      threatMate: Option[Int]
-  ): Double =
-    winPercentForMover(mover, defendedWhiteCp, defendedMate) - winPercentForMover(mover, threatWhiteCp, threatMate)
-
   def compareForMover(
       mover: Color,
       reference: EvalPoint,
       candidate: EvalPoint
   ): EvalDeltaForMover =
     val winPercentDelta =
-      winPercentImprovementForMover(
-        mover = mover,
-        defendedWhiteCp = candidate.whitePovCp,
-        defendedMate = candidate.mate,
-        threatWhiteCp = reference.whitePovCp,
-        threatMate = reference.mate
-      )
+      winPercentForMover(mover, candidate.whitePovCp, candidate.mate) -
+        winPercentForMover(mover, reference.whitePovCp, reference.mate)
     val rawLoss =
-      rawCpLossForMover(
-        mover = mover,
-        bestWhiteCp = reference.whitePovCp,
-        playedWhiteCp = candidate.whitePovCp
-      )
+      if mover.white then (reference.whitePovCp - candidate.whitePovCp).max(0)
+      else (candidate.whitePovCp - reference.whitePovCp).max(0)
     val winPercentLoss =
       winPercentLossForMover(
         mover = mover,

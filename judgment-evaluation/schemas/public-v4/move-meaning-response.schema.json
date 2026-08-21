@@ -1,0 +1,590 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/public-v4/move-meaning-response.schema.json",
+  "title": "Chesstory public move-meaning response v4",
+  "description": "Canonical public wire contract emitted by RuntimeProtocol for response.v4.",
+  "oneOf": [
+    {"$ref": "#/$defs/errorResponse"},
+    {"$ref": "#/$defs/engineWorkRequiredResponse"},
+    {"$ref": "#/$defs/readyResponse"}
+  ],
+  "$defs": {
+    "requestId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "uciMove": {
+      "type": "string",
+      "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"
+    },
+    "errorResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "status", "error"],
+      "properties": {
+        "schema_version": {"const": "chesstory.move-meaning.response.v4"},
+        "request_id": {"$ref": "#/$defs/requestId"},
+        "status": {"const": "error"},
+        "error": {"$ref": "#/$defs/nonEmptyString"}
+      }
+    },
+    "engineWorkRequiredResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "status", "probe_requests"],
+      "properties": {
+        "schema_version": {"const": "chesstory.move-meaning.response.v4"},
+        "request_id": {"$ref": "#/$defs/requestId"},
+        "status": {"const": "engine_work_required"},
+        "probe_requests": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {"$ref": "#/$defs/probeRequest"}
+        }
+      }
+    },
+    "readyResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "status", "move_commentary"],
+      "properties": {
+        "schema_version": {"const": "chesstory.move-meaning.response.v4"},
+        "request_id": {"$ref": "#/$defs/requestId"},
+        "status": {"const": "ready"},
+        "move_commentary": {"$ref": "#/$defs/moveCommentary"}
+      }
+    },
+    "probeRequest": {
+      "oneOf": [
+        {"$ref": "#/$defs/horizonProbeRequest"},
+        {"$ref": "#/$defs/opponentResourceProbeRequest"}
+      ]
+    },
+    "horizonProbeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fen",
+        "moves",
+        "depth",
+        "purpose",
+        "multiPv",
+        "candidateMove",
+        "variationHash",
+        "horizon"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/nonEmptyString"},
+        "fen": {"$ref": "#/$defs/nonEmptyString"},
+        "moves": {
+          "type": "array",
+          "maxItems": 0,
+          "items": {"$ref": "#/$defs/uciMove"}
+        },
+        "depth": {"type": "integer", "minimum": 1, "maximum": 100},
+        "purpose": {"const": "reply_multipv"},
+        "multiPv": {"type": "integer", "minimum": 1, "maximum": 3},
+        "candidateMove": {"$ref": "#/$defs/uciMove"},
+        "variationHash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "horizon": {
+          "type": "string",
+          "maxLength": 14,
+          "pattern": "^ply:[1-9][0-9]*$"
+        }
+      }
+    },
+    "opponentResourceProbeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fen",
+        "moves",
+        "depth",
+        "purpose",
+        "multiPv",
+        "candidateMove",
+        "variationHash",
+        "opponentResourceMove"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/nonEmptyString"},
+        "fen": {"$ref": "#/$defs/nonEmptyString"},
+        "moves": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {"$ref": "#/$defs/uciMove"}
+        },
+        "depth": {"type": "integer", "minimum": 1, "maximum": 100},
+        "purpose": {"const": "reply_multipv"},
+        "multiPv": {"const": 1},
+        "candidateMove": {"$ref": "#/$defs/uciMove"},
+        "variationHash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "opponentResourceMove": {"$ref": "#/$defs/uciMove"}
+      }
+    },
+    "moveCommentary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary"],
+      "properties": {
+        "primary": {"$ref": "#/$defs/primary"},
+        "causal_explanations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/causalExplanation"}
+        }
+      }
+    },
+    "primary": {
+      "oneOf": [
+        {"$ref": "#/$defs/moveVerdictPrimary"},
+        {"$ref": "#/$defs/bestChoicePrimary"}
+      ]
+    },
+    "verdictCode": {
+      "enum": [
+        "improves_on_reference",
+        "matches_reference",
+        "playable_loss",
+        "inaccuracy",
+        "mistake",
+        "blunder"
+      ]
+    },
+    "verdictConfidence": {
+      "enum": ["engine_backed", "legal_replay_verified", "mixed_verified"]
+    },
+    "comparisonDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "candidate_win_percent_delta_for_mover"],
+      "properties": {
+        "kind": {"enum": ["engine_evaluation", "outcome_only"]},
+        "candidate_win_percent_delta_for_mover": {
+          "type": "number",
+          "minimum": -100,
+          "maximum": 100
+        }
+      }
+    },
+    "moveVerdictPrimary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "comparison_evidence_id",
+        "verdict_code",
+        "verdict_confidence",
+        "mover",
+        "delta",
+        "reference_endpoint",
+        "played_endpoint",
+        "presentation"
+      ],
+      "properties": {
+        "kind": {"const": "move_verdict"},
+        "comparison_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "verdict_code": {"$ref": "#/$defs/verdictCode"},
+        "verdict_confidence": {"$ref": "#/$defs/verdictConfidence"},
+        "mover": {"enum": ["white", "black"]},
+        "delta": {"$ref": "#/$defs/comparisonDelta"},
+        "reference_endpoint": {"$ref": "#/$defs/endpoint"},
+        "played_endpoint": {"$ref": "#/$defs/endpoint"},
+        "presentation": {"$ref": "#/$defs/nonEmptyString"}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "verdict_confidence": {"const": "engine_backed"},
+            "delta": {"properties": {"kind": {"const": "engine_evaluation"}}},
+            "reference_endpoint": {"$ref": "#/$defs/engineEndpoint"},
+            "played_endpoint": {"$ref": "#/$defs/engineEndpoint"}
+          }
+        },
+        {
+          "properties": {
+            "verdict_confidence": {"const": "legal_replay_verified"},
+            "delta": {"properties": {"kind": {"const": "outcome_only"}}},
+            "reference_endpoint": {"$ref": "#/$defs/terminalEndpoint"},
+            "played_endpoint": {"$ref": "#/$defs/terminalEndpoint"}
+          }
+        },
+        {
+          "properties": {
+            "verdict_confidence": {"const": "mixed_verified"},
+            "delta": {"properties": {"kind": {"const": "outcome_only"}}},
+            "reference_endpoint": {"$ref": "#/$defs/engineEndpoint"},
+            "played_endpoint": {"$ref": "#/$defs/terminalEndpoint"}
+          }
+        },
+        {
+          "properties": {
+            "verdict_confidence": {"const": "mixed_verified"},
+            "delta": {"properties": {"kind": {"const": "outcome_only"}}},
+            "reference_endpoint": {"$ref": "#/$defs/terminalEndpoint"},
+            "played_endpoint": {"$ref": "#/$defs/engineEndpoint"}
+          }
+        }
+      ]
+    },
+    "bestChoicePrimary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "comparison_evidence_id",
+        "runner_up_verdict_code",
+        "verdict_confidence",
+        "mover",
+        "delta",
+        "best_endpoint",
+        "runner_up_endpoint",
+        "candidate_set",
+        "presentation"
+      ],
+      "properties": {
+        "kind": {"const": "best_choice"},
+        "comparison_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "runner_up_verdict_code": {"$ref": "#/$defs/verdictCode"},
+        "verdict_confidence": {"$ref": "#/$defs/verdictConfidence"},
+        "mover": {"enum": ["white", "black"]},
+        "delta": {"$ref": "#/$defs/comparisonDelta"},
+        "best_endpoint": {"$ref": "#/$defs/endpoint"},
+        "runner_up_endpoint": {"$ref": "#/$defs/endpoint"},
+        "candidate_set": {"$ref": "#/$defs/candidateSet"},
+        "presentation": {"$ref": "#/$defs/nonEmptyString"}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "verdict_confidence": {"const": "engine_backed"},
+            "delta": {"properties": {"kind": {"const": "engine_evaluation"}}},
+            "best_endpoint": {"$ref": "#/$defs/engineEndpoint"},
+            "runner_up_endpoint": {"$ref": "#/$defs/engineEndpoint"}
+          }
+        },
+        {
+          "properties": {
+            "verdict_confidence": {"const": "legal_replay_verified"},
+            "delta": {"properties": {"kind": {"const": "outcome_only"}}},
+            "best_endpoint": {"$ref": "#/$defs/terminalEndpoint"},
+            "runner_up_endpoint": {"$ref": "#/$defs/terminalEndpoint"}
+          }
+        },
+        {
+          "properties": {
+            "verdict_confidence": {"const": "mixed_verified"},
+            "delta": {"properties": {"kind": {"const": "outcome_only"}}},
+            "best_endpoint": {"$ref": "#/$defs/engineEndpoint"},
+            "runner_up_endpoint": {"$ref": "#/$defs/terminalEndpoint"}
+          }
+        },
+        {
+          "properties": {
+            "verdict_confidence": {"const": "mixed_verified"},
+            "delta": {"properties": {"kind": {"const": "outcome_only"}}},
+            "best_endpoint": {"$ref": "#/$defs/terminalEndpoint"},
+            "runner_up_endpoint": {"$ref": "#/$defs/engineEndpoint"}
+          }
+        }
+      ]
+    },
+    "candidateSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {"enum": ["only_move", "narrow_choice", "style_choice"]}
+      }
+    },
+    "endpoint": {
+      "oneOf": [
+        {"$ref": "#/$defs/engineEndpoint"},
+        {"$ref": "#/$defs/terminalEndpoint"}
+      ]
+    },
+    "engineEndpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "moves", "win_percent_for_mover", "depth"],
+      "properties": {
+        "kind": {"const": "engine_search"},
+        "moves": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 80,
+          "items": {"$ref": "#/$defs/uciMove"}
+        },
+        "win_percent_for_mover": {"type": "number", "minimum": 0, "maximum": 100},
+        "depth": {"type": "integer", "minimum": 0, "maximum": 100},
+        "mate_forecast_white_pov": {"$ref": "#/$defs/nonZeroInteger"}
+      },
+      "oneOf": [
+        {
+          "required": ["mate_forecast_white_pov"]
+        },
+        {
+          "not": {"required": ["mate_forecast_white_pov"]},
+          "properties": {
+            "depth": {"type": "integer", "minimum": 8, "maximum": 100}
+          }
+        }
+      ]
+    },
+    "terminalEndpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "moves", "terminal"],
+      "properties": {
+        "kind": {"const": "exact_automatic_terminal"},
+        "moves": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 80,
+          "items": {"$ref": "#/$defs/uciMove"}
+        },
+        "terminal": {"$ref": "#/$defs/automaticTerminal"}
+      }
+    },
+    "nonZeroInteger": {
+      "oneOf": [
+        {"type": "integer", "minimum": -1000, "maximum": -1},
+        {"type": "integer", "minimum": 1, "maximum": 1000}
+      ]
+    },
+    "automaticTerminal": {
+      "oneOf": [
+        {"$ref": "#/$defs/checkmateTerminal"},
+        {"$ref": "#/$defs/stalemateTerminal"},
+        {"$ref": "#/$defs/insufficientMaterialTerminal"},
+        {"$ref": "#/$defs/fivefoldRepetitionTerminal"},
+        {"$ref": "#/$defs/seventyFiveMoveRuleTerminal"}
+      ]
+    },
+    "checkmateTerminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "winner"],
+      "properties": {
+        "kind": {"const": "checkmate"},
+        "winner": {"enum": ["white", "black"]}
+      }
+    },
+    "stalemateTerminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {"const": "stalemate"}
+      }
+    },
+    "insufficientMaterialTerminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {"const": "insufficient_material"}
+      }
+    },
+    "fivefoldRepetitionTerminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {"const": "fivefold_repetition"}
+      }
+    },
+    "seventyFiveMoveRuleTerminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {"const": "seventy_five_move_rule"}
+      }
+    },
+    "causalExplanation": {
+      "oneOf": [
+        {"$ref": "#/$defs/singleCauseExplanation"},
+        {"$ref": "#/$defs/exactPvbResponsibilityExplanation"}
+      ]
+    },
+    "singleCauseExplanation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "presentation", "facets"],
+      "properties": {
+        "kind": {"const": "single_cause"},
+        "presentation": {"$ref": "#/$defs/nonEmptyString"},
+        "facets": {"$ref": "#/$defs/singleCauseFacets"}
+      }
+    },
+    "exactPvbResponsibilityExplanation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "presentation", "facets"],
+      "properties": {
+        "kind": {"const": "exact_pvb_responsibility"},
+        "presentation": {"$ref": "#/$defs/nonEmptyString"},
+        "facets": {"$ref": "#/$defs/exactPvbResponsibilityFacets"}
+      }
+    },
+    "singleCauseFacets": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "prefixItems": [
+        {"$ref": "#/$defs/leadCausalFacet"}
+      ],
+      "items": false
+    },
+    "exactPvbResponsibilityFacets": {
+      "type": "array",
+      "minItems": 2,
+      "prefixItems": [
+        {"$ref": "#/$defs/exactPvbLeadCausalFacet"}
+      ],
+      "items": {"$ref": "#/$defs/exactPvbSupportingCausalFacet"}
+    },
+    "leadCausalFacet": {
+      "allOf": [
+        {"$ref": "#/$defs/causalFacet"},
+        {
+          "type": "object",
+          "properties": {
+            "facet_role": {"const": "lead"}
+          }
+        }
+      ]
+    },
+    "exactPvbLeadCausalFacet": {
+      "allOf": [
+        {"$ref": "#/$defs/causalFacet"},
+        {
+          "type": "object",
+          "properties": {
+            "facet_role": {"const": "lead"},
+            "effect_mode": {"const": "played_liability"},
+            "exposure": {"const": "primary"}
+          }
+        }
+      ]
+    },
+    "exactPvbSupportingCausalFacet": {
+      "allOf": [
+        {"$ref": "#/$defs/causalFacet"},
+        {
+          "type": "object",
+          "properties": {
+            "facet_role": {"const": "supporting"},
+            "effect_mode": {"const": "alternative_resource"},
+            "exposure": {"const": "complementary"}
+          }
+        }
+      ]
+    },
+    "causalFacet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "facet_role",
+        "cause_evidence_id",
+        "kind",
+        "proof_confidence",
+        "effect_mode",
+        "exposure",
+        "source_side",
+        "event_move",
+        "comparison_kind",
+        "channels"
+      ],
+      "properties": {
+        "facet_role": {"enum": ["lead", "supporting"]},
+        "cause_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "kind": {"$ref": "#/$defs/relativeCauseKind"},
+        "proof_confidence": {
+          "enum": [
+            "legal_replay_verified",
+            "engine_backed",
+            "board_derived",
+            "heuristic",
+            "mixed"
+          ]
+        },
+        "effect_mode": {
+          "enum": ["played_liability", "alternative_resource", "played_value"]
+        },
+        "exposure": {"enum": ["primary", "complementary"]},
+        "source_side": {"enum": ["reference", "candidate", "shared", "mixed"]},
+        "event_move": {"$ref": "#/$defs/uciMove"},
+        "comparison_kind": {
+          "enum": [
+            "played_vs_best",
+            "best_vs_second",
+            "played_vs_alternative",
+            "reference_vs_alternative"
+          ]
+        },
+        "channels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/causalChannel"}
+        }
+      }
+    },
+    "relativeCauseKind": {
+      "enum": [
+        "missed_tactical_resource",
+        "tactical_refutation_of_played",
+        "candidate_tactical_liability",
+        "wrong_recapturer",
+        "recapture_recovery_window",
+        "wrong_move_order",
+        "only_defense_necessity",
+        "tempo_loss",
+        "conversion_miss",
+        "conversion_secured",
+        "sacrifice_compensation",
+        "structural_improvement",
+        "target_pressure_gain",
+        "target_pressure_release",
+        "center_control_gain",
+        "king_safety_concession",
+        "pawn_weakness_target",
+        "pawn_break_opportunity",
+        "activity_gain",
+        "activity_loss",
+        "opponent_restriction",
+        "strategic_concession",
+        "missed_strategic_improvement",
+        "plan_improvement",
+        "plan_contradiction",
+        "defensive_resource",
+        "draw_resource",
+        "king_forcing",
+        "material_swing"
+      ]
+    },
+    "causalChannel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["causal_signature", "direct_change", "played_change"],
+      "properties": {
+        "causal_signature": {"$ref": "#/$defs/nonEmptyString"},
+        "direct_change": {
+          "enum": ["occurred", "prevented", "maintained", "lost", "refuted", "missed"]
+        },
+        "played_change": {
+          "enum": ["occurred", "prevented", "maintained", "lost", "refuted", "missed"]
+        }
+      }
+    }
+  }
+}

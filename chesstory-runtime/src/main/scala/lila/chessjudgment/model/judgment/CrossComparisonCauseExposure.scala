@@ -17,7 +17,13 @@ enum PlayerFacingCausalChange:
 
 object PlayerFacingCausalChange:
   def fromDirect(change: DirectCausalChange): PlayerFacingCausalChange =
-    valueOf(change.toString)
+    change match
+      case DirectCausalChange.Occurred   => PlayerFacingCausalChange.Occurred
+      case DirectCausalChange.Prevented  => PlayerFacingCausalChange.Prevented
+      case DirectCausalChange.Maintained => PlayerFacingCausalChange.Maintained
+      case DirectCausalChange.Lost       => PlayerFacingCausalChange.Lost
+      case DirectCausalChange.Refuted    => PlayerFacingCausalChange.Refuted
+      case DirectCausalChange.Missed     => PlayerFacingCausalChange.Missed
 
 enum PlayerFacingCauseExposureTier:
   case Primary
@@ -198,6 +204,26 @@ final case class PlayerFacingIdeaUnit(
     "an exact PVB responsibility unit requires both endpoint facets"
   )
 
+enum PlayerFacingIdeaFacetRole:
+  case Lead
+  case Supporting
+
+/** Final R-owned public idea. The sentence unit and its ordered Cause facets
+  * travel together so P never reconstructs unit membership or lead ownership
+  * from independent id lists.
+  */
+final case class PlayerFacingNarrativeIdeaFacet(
+    role: PlayerFacingIdeaFacetRole,
+    ownerClaimId: String,
+    selection: PlayerFacingCauseSelection,
+    directChannels: List[DirectCauseChannel]
+)
+
+final case class PlayerFacingNarrativeIdea(
+    unit: PlayerFacingIdeaUnit,
+    facets: List[PlayerFacingNarrativeIdeaFacet]
+)
+
 final case class ExactPvbResponsibilityPair(
     liabilityCauseEvidenceId: String,
     resourceCauseEvidenceId: String
@@ -251,9 +277,8 @@ final case class PlayerFacingCauseExposureResolution(
     crossDecisions: List[CrossComparisonExposureDecision],
     ownerClaimIdByCauseId: Map[String, String],
     directChannelsByCauseId: Map[String, List[DirectCauseChannel]],
-    selections: List[PlayerFacingCauseSelection],
     importanceResolution: DirectCauseImportanceResolution,
-    ideaUnits: List[PlayerFacingIdeaUnit],
+    narrativeIdeas: List[PlayerFacingNarrativeIdea],
     ideaImportanceResolution: DirectCauseImportanceResolution,
     onlyMoveConstraintResolutions: List[OnlyMoveConstraintResolution]
 ):
@@ -261,10 +286,12 @@ final case class PlayerFacingCauseExposureResolution(
     dominanceDecisions.filter(_.retained).map(_.causeEvidenceId).toSet
 
   def selectedCauseEvidenceIds: Set[String] =
-    selections.map(_.causeEvidence.id).toSet
+    narrativeIdeas.flatMap(_.facets).map(_.selection.causeEvidence.id).toSet
 
   def selectionsForClaim(claimId: String): List[PlayerFacingCauseSelection] =
-    selections.filter(selection => ownerClaimIdByCauseId.get(selection.causeEvidence.id).contains(claimId))
+    narrativeIdeas
+      .flatMap(_.facets)
+      .collect { case facet if facet.ownerClaimId == claimId => facet.selection }
 
 object PlayerFacingCauseExposurePipeline:
 
@@ -379,15 +406,35 @@ object PlayerFacingCauseExposurePipeline:
       causeImportanceResolution = importanceResolution,
       ideaImportanceResolution = ideaImportanceResolution
     )
+    val orderedSelectionsByCauseId = playerFacingOrdering.selections.map(selection =>
+      selection.causeEvidence.id -> selection
+    ).toMap
+    val narrativeIdeas = playerFacingOrdering.ideaUnits.map { unit =>
+      val facets = unit.memberCauseEvidenceIds.zipWithIndex.map { case (causeId, index) =>
+        val selection = orderedSelectionsByCauseId(causeId)
+        val admittedChannelsBySignature = directChannelsByCauseId(causeId).map(channel =>
+          channel.causalSignature -> channel
+        ).toMap
+        val directChannels = selection.channels.map { selected =>
+          admittedChannelsBySignature(selected.causalSignature)
+        }
+        PlayerFacingNarrativeIdeaFacet(
+          role = if index == 0 then PlayerFacingIdeaFacetRole.Lead else PlayerFacingIdeaFacetRole.Supporting,
+          ownerClaimId = ownerClaimIdByCauseId(causeId),
+          selection = selection,
+          directChannels = directChannels
+        )
+      }
+      PlayerFacingNarrativeIdea(unit, facets)
+    }
     PlayerFacingCauseExposureResolution(
       readyByClaim = readyByClaim,
       dominanceDecisions = dominanceDecisions,
       crossDecisions = crossDecisions,
       ownerClaimIdByCauseId = ownerClaimIdByCauseId,
       directChannelsByCauseId = directChannelsByCauseId,
-      selections = playerFacingOrdering.selections,
       importanceResolution = playerFacingOrdering.causeImportanceResolution,
-      ideaUnits = playerFacingOrdering.ideaUnits,
+      narrativeIdeas = narrativeIdeas,
       ideaImportanceResolution = playerFacingOrdering.ideaImportanceResolution,
       onlyMoveConstraintResolutions = onlyMoveConstraintResolutions
     )
@@ -1001,9 +1048,7 @@ object CrossComparisonCauseExposurePolicy:
       cause.sourceSide == RelativeCauseSourceSide.Candidate &&
       cause.attribution.kind == attributionKind &&
       RelativeCauseKind.sourceAttributionCompatible(cause.kind, cause.sourceSide, cause.attribution.kind) &&
-      RelativeCauseConstructionAdmission
-        .authoritativeBinding(cause, graph)
-        .exists(_.eventLine == comparison.candidateLine)
+      graph.relativeCauseBinding(cause).exists(_.eventLine == comparison.candidateLine)
 
   private def exactReferenceResource(
       cause: RelativeCauseFact,
@@ -1015,9 +1060,7 @@ object CrossComparisonCauseExposurePolicy:
       cause.sourceSide == RelativeCauseSourceSide.Reference &&
       cause.attribution.kind == CauseAttributionKind.ReferenceCreatesResource &&
       RelativeCauseKind.sourceAttributionCompatible(cause.kind, cause.sourceSide, cause.attribution.kind) &&
-      RelativeCauseConstructionAdmission
-        .authoritativeBinding(cause, graph)
-        .exists(_.eventLine == comparison.referenceLine)
+      graph.relativeCauseBinding(cause).exists(_.eventLine == comparison.referenceLine)
 
   private def candidatePlayedOrientation(
       comparison: CandidateComparisonFact,

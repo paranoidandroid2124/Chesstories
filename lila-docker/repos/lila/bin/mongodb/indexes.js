@@ -158,7 +158,6 @@ db.swiss.createIndex(
   { partialFilterExpression: { featurable: true, 'settings.i': { $lte: 600 } } },
 );
 db.coach_review.createIndex({ coachId: 1 });
-db.analysis_requester.createIndex({ total: -1 });
 db.notify_pref.createIndex(
   { correspondenceEmail: 1 },
   { partialFilterExpression: { correspondenceEmail: true } },
@@ -254,8 +253,7 @@ db.game5.createIndex({ ck: 1 }, { sparse: 1 });
 db.game5.createIndex({ pl: 1 }, { sparse: true });
 db.game5.createIndex({ 'pgni.h': 1 }, { sparse: true });
 db.security.createIndex({ user: 1 });
-db.security.createIndex({ ip: 1 });
-db.security.createIndex({ fp: 1 }, { sparse: 1 });
+db.security.createIndex({ date: 1 }, { expireAfterSeconds: 2678400 });
 db.study.createIndex({ ownerId: 1, createdAt: -1 });
 db.study.createIndex({ likes: 1, createdAt: -1 });
 db.study.createIndex({ ownerId: 1, updatedAt: -1 });
@@ -270,17 +268,6 @@ db.study.createIndex({ topics: 1, createdAt: -1 }, { partialFilterExpression: { 
 db.study.createIndex({ topics: 1, updatedAt: -1 }, { partialFilterExpression: { topics: { $exists: 1 } } });
 db.study.createIndex({ topics: 1, likes: -1 }, { partialFilterExpression: { topics: { $exists: 1 } } });
 db.study.createIndex({ uids: 1, rank: -1 }, { partialFilterExpression: { topics: { $exists: 1 } } });
-db.analysis_import_account.createIndex({ userId: 1, provider: 1, usernameKey: 1 }, { unique: true });
-db.analysis_import_account.createIndex({ userId: 1, activityAt: -1 });
-db.analysis_import_history.createIndex({ userId: 1, pgnHash: 1 }, { unique: true });
-db.analysis_import_history.createIndex(
-  { userId: 1, provider: 1, externalGameId: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { provider: { $exists: true }, externalGameId: { $exists: true } },
-  },
-);
-db.analysis_import_history.createIndex({ userId: 1, lastOpenedAt: -1 });
 db.study_chapter_flat.createIndex({ studyId: 1, order: 1 });
 db.study_chapter_flat.createIndex(
   { 'relay.fideIds': 1 },

@@ -47,5 +47,11 @@ jobs:
         shell: pwsh
         run: ./ui/build.ps1 --tsc --sass --esbuild
 
+      - name: UI unit tests
+        run: |
+          corepack pnpm exec tsx --tsconfig ui/lib/tsconfig.json --test ui/lib/tests/*.test.ts
+          corepack pnpm exec tsx --tsconfig ui/analyse/tsconfig.json --test ui/analyse/tests/*.test.ts
+          corepack pnpm exec tsx --tsconfig ui/site/tsconfig.json --test ui/site/tests/*.test.ts
+
       - name: Web compile gate
         run: sbt "web/compile"

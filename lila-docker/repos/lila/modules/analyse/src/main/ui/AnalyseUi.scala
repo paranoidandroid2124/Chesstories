@@ -27,8 +27,7 @@ final class AnalyseUi(helpers: Helpers)(endpoints: AnalyseEndpoints):
       data: JsObject,
       pov: Pov,
       chess960PositionNum: Option[Int] = None,
-      inlinePgn: Option[String] = None,
-      importHistory: Option[JsObject] = None
+      inlinePgn: Option[String] = None
   )(using ctx: Context): Page =
     Page("Analysis")
       .css("analyse.workspace")
@@ -40,8 +39,7 @@ final class AnalyseUi(helpers: Helpers)(endpoints: AnalyseEndpoints):
             .obj(
               "data" -> data
             )
-            .add("inlinePgn", inlinePgn)
-            .add("importHistory", importHistory) ++
+            .add("inlinePgn", inlinePgn) ++
             explorerAndCevalConfig
         )
       .graph(

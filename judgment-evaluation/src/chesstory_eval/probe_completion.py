@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import argparse
 import base64
-import copy
-import hashlib
 import json
 import math
 import os
@@ -19,14 +16,8 @@ from typing import Any
 
 import chess
 
-from .hashing import json_bytes, sha256_bytes, sha256_file, sha256_json, slug
+from .hashing import sha256_bytes
 from .model import ContractError, IntegrityError
-from .native_diagnostic import (
-    NATIVE_HASH_CONTRACT,
-    _validate_native_observation_contract,
-    native_canonical_json,
-    native_sha256_json,
-)
 from .schemas import SchemaRegistry
 from .stockfish import (
     StockfishAcquisitionError,
@@ -42,25 +33,10 @@ from .stockfish import (
 )
 
 
-PROBE_COMPLETION_SCHEMA = "chesstory.eval.runtime-probe-completion.v1"
-PROBE_RESULT_SCHEMA = "chesstory.eval.runtime-probe-result.v1"
-RUNTIME_IO_SCHEMA = "chesstory.eval.runtime-probe-jsonl-io.v1"
 UCI_IO_SCHEMA = "chesstory.eval.runtime-probe-uci-io.v1"
-REPORT_SCHEMA = "chesstory.eval.runtime-probe-completion-report.v1"
-LEDGER_SCHEMA = "chesstory.eval.runtime-probe-artifact-ledger.v1"
-RUNTIME_REQUEST_SCHEMA = "chesstory.move-meaning.request.v1"
-RUNTIME_OBSERVATION_SCHEMA = "chesstory.runtime-observation.v3"
-RUNTIME_RESPONSE_SCHEMA = "chesstory.move-meaning.response.v3"
-NATIVE_RUNTIME_SCHEMA_RELATIVE_PATH = (
-    Path("schemas") / "native-v3" / "runtime-observation.schema.json"
-)
 REPLY_MULTIPV = "reply_multipv"
 MAX_RUNTIME_PROBE_RESULTS = 12
 _MOVE_RE = re.compile(r"^[a-h][1-8][a-h][1-8][qrbn]?")
-
-
-def _canonical_line(value: Any) -> bytes:
-    return (native_canonical_json(value) + "\n").encode("utf-8")
 
 
 def _json_clone(value: Any, label: str) -> Any:
@@ -103,79 +79,16 @@ def _move(value: Any, label: str) -> str:
     return text
 
 
-class _ArtifactCapture:
-    """Small immutable writer for this standalone diagnostic run."""
-
-    def __init__(self, root: Path, run_id: str) -> None:
-        self.run_id = _safe_text(run_id, "run id")
-        self.run_root = root.resolve() / slug(run_id)
-        if self.run_root.exists():
-            raise IntegrityError(f"probe completion run already exists: {self.run_root}")
-        self.run_root.mkdir(parents=True)
-        self._entries: list[dict[str, Any]] = []
-
-    def write(self, relative: str, document: Mapping[str, Any]) -> dict[str, str]:
-        clean = Path(relative)
-        if clean.is_absolute() or ".." in clean.parts or clean.suffix != ".json":
-            raise IntegrityError(f"unsafe probe artifact path: {relative!r}")
-        path = self.run_root / clean
-        payload = json_bytes(_mapping(document, "artifact document"))
-        path.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            with path.open("xb") as handle:
-                handle.write(payload)
-                handle.flush()
-                os.fsync(handle.fileno())
-        except FileExistsError as error:
-            raise IntegrityError(f"probe artifact already exists: {path}") from error
-        digest = sha256_bytes(payload)
-        self._entries.append(
-            {
-                "path": clean.as_posix(),
-                "sha256": digest,
-                "size_bytes": len(payload),
-            }
-        )
-        return {"path": clean.as_posix(), "sha256": digest}
-
-    def finish(self) -> dict[str, Any]:
-        previous: str | None = None
-        records: list[dict[str, Any]] = []
-        for sequence, entry in enumerate(self._entries, 1):
-            unsigned = {
-                "schema_version": LEDGER_SCHEMA,
-                "run_id": self.run_id,
-                "sequence": sequence,
-                "previous_record_sha256": previous,
-                **entry,
-            }
-            record = {**unsigned, "record_sha256": sha256_json(unsigned)}
-            records.append(record)
-            previous = record["record_sha256"]
-        ledger_path = self.run_root / "artifact-ledger.jsonl"
-        ledger_bytes = b"".join(json_bytes(record) for record in records)
-        with ledger_path.open("xb") as handle:
-            handle.write(ledger_bytes)
-            handle.flush()
-            os.fsync(handle.fileno())
-        return {
-            "path": "artifact-ledger.jsonl",
-            "sha256": sha256_bytes(ledger_bytes),
-            "records": len(records),
-            "chain_head_sha256": previous,
-        }
-
-
 @dataclass(frozen=True)
 class _RuntimeExchange:
-    observation: Mapping[str, Any]
+    http_status: int
+    body: Mapping[str, Any]
+    request_jsonl_base64: str
     request_jsonl_sha256: str
-    response_jsonl_sha256: str
+    request_jsonl_length: int
     response_jsonl_base64: str
-    diagnostic_line_sha256: tuple[str, ...]
-    diagnostic_stream_sha256: str
-    request_sha256: str | None = None
-    hash_contract: str | None = None
+    response_jsonl_sha256: str
+    response_jsonl_length: int
 
 
 def _verified_response_jsonl_bytes(
@@ -193,52 +106,6 @@ def _verified_response_jsonl_bytes(
     return response_bytes
 
 
-def _validate_runtime_observation(
-    value: Any,
-    *,
-    expected_schema: str,
-    registry: SchemaRegistry | None,
-    schema_path: Path | None,
-    expected_request_sha256: str | None = None,
-    expected_hash_contract: str | None = None,
-) -> dict[str, Any]:
-    observation = _mapping(value, "runtime observation")
-    if observation.get("schema_version") != expected_schema:
-        raise ContractError("runtime adapter emitted an unexpected observation schema")
-    if (registry is None) != (schema_path is None):
-        raise ContractError("runtime observation validator binding is incomplete")
-    if registry is not None and schema_path is not None:
-        registry.validate_document(
-            observation,
-            schema_path,
-            label="runtime v3 observation",
-        )
-    if expected_schema == RUNTIME_OBSERVATION_SCHEMA:
-        _validate_native_observation_contract(
-            observation,
-            expected_schema=RUNTIME_OBSERVATION_SCHEMA,
-            expected_native_contract_version="chesstory.runtime-native-boundary.v3",
-            expected_adapter_version="0.3.0",
-            expected_response_schema=RUNTIME_RESPONSE_SCHEMA,
-        )
-        if observation.get("observation_status") == "complete":
-            runtime = _mapping(observation.get("runtime"), "runtime observation metadata")
-            public_response = _mapping(
-                observation.get("public_response"),
-                "runtime observation public response",
-            )
-            if runtime.get("http_status") != public_response.get("http_status"):
-                raise IntegrityError("runtime observation HTTP status copies disagree")
-    if (expected_request_sha256 is None) != (expected_hash_contract is None):
-        raise ContractError("runtime request hash validator binding is incomplete")
-    if expected_hash_contract is not None:
-        if observation.get("hash_contract") != expected_hash_contract:
-            raise ContractError("runtime adapter emitted an unsupported hash contract")
-        if observation.get("request_sha256") != expected_request_sha256:
-            raise IntegrityError("runtime adapter request hash mismatch")
-    return observation
-
-
 class _RuntimeJsonlSession:
     """Persistent sbt JSONL process with byte-exact transport hashes."""
 
@@ -248,9 +115,6 @@ class _RuntimeJsonlSession:
         *,
         cwd: Path,
         timeout_seconds: float,
-        expected_schema: str = RUNTIME_OBSERVATION_SCHEMA,
-        observation_schema_path: Path | None = None,
-        expected_hash_contract: str | None = None,
     ) -> None:
         if isinstance(command, (str, bytes)) or not command:
             raise ContractError("runtime command must be a non-empty argument array")
@@ -261,43 +125,15 @@ class _RuntimeJsonlSession:
         if not math.isfinite(timeout_seconds) or not 0.001 <= timeout_seconds <= 3600.0:
             raise ContractError("runtime timeout must be from 0.001 through 3600 seconds")
         self.timeout_seconds = float(timeout_seconds)
-        self.expected_schema = _safe_text(expected_schema, "runtime observation schema")
-        if (
-            expected_hash_contract is None
-            and self.expected_schema == RUNTIME_OBSERVATION_SCHEMA
-        ):
-            expected_hash_contract = NATIVE_HASH_CONTRACT
-        self.expected_hash_contract = (
-            _safe_text(expected_hash_contract, "runtime request hash contract")
-            if expected_hash_contract is not None
-            else None
+        self.public_response_schema_path = (
+            Path(__file__).resolve().parents[2]
+            / "schemas"
+            / "public-v4"
+            / "move-meaning-response.schema.json"
+        ).resolve(strict=True)
+        self.public_response_schema_registry = SchemaRegistry(
+            self.public_response_schema_path.parent
         )
-        if observation_schema_path is None and self.expected_schema == RUNTIME_OBSERVATION_SCHEMA:
-            observation_schema_path = self.cwd.parent / NATIVE_RUNTIME_SCHEMA_RELATIVE_PATH
-        self.observation_schema_path = (
-            observation_schema_path.resolve(strict=True)
-            if observation_schema_path is not None
-            else None
-        )
-        schema_registry_root = (
-            self.observation_schema_path.parents[1]
-            if self.observation_schema_path is not None
-            and self.expected_schema == RUNTIME_OBSERVATION_SCHEMA
-            else self.observation_schema_path.parent
-            if self.observation_schema_path is not None
-            else None
-        )
-        self.observation_schema_registry = (
-            SchemaRegistry(schema_registry_root)
-            if schema_registry_root is not None
-            else None
-        )
-        if (self.observation_schema_path is None) != (
-            self.expected_hash_contract is None
-        ):
-            raise ContractError(
-                "runtime observation schema and request hash contract must be bound together"
-            )
         self._process: subprocess.Popen[bytes] | None = None
         self._reader: threading.Thread | None = None
         self._output: queue.Queue[tuple[str, bytes | BaseException]] = queue.Queue()
@@ -355,18 +191,23 @@ class _RuntimeJsonlSession:
         process = self._start()
         if process.stdin is None:
             raise ContractError("runtime stdin is unavailable")
-        request_bytes = _canonical_line(request)
-        request_sha256 = (
-            sha256_bytes(request_bytes[:-1])
-            if self.expected_hash_contract is not None
-            else None
-        )
+        try:
+            request_bytes = (
+                json.dumps(
+                    dict(request),
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                    allow_nan=False,
+                )
+                + "\n"
+            ).encode("utf-8")
+        except (TypeError, ValueError) as error:
+            raise ContractError("runtime request must be finite JSON") from error
         try:
             process.stdin.write(request_bytes)
             process.stdin.flush()
         except (BrokenPipeError, OSError) as error:
             raise ContractError("runtime adapter closed its input") from error
-        diagnostics: list[bytes] = []
         deadline = time.monotonic() + self.timeout_seconds
         while True:
             remaining = deadline - time.monotonic()
@@ -384,33 +225,42 @@ class _RuntimeJsonlSession:
                     f"runtime adapter ended before a JSON response; exit={process.poll()}"
                 )
             assert isinstance(value, bytes)
-            stripped = value.strip()
-            if not stripped.startswith(b"{"):
-                if stripped:
-                    diagnostics.append(value)
-                continue
             try:
-                parsed = json.loads(stripped.decode("utf-8"))
+                parsed = json.loads(value.decode("utf-8"))
             except (UnicodeError, json.JSONDecodeError) as error:
                 raise ContractError("runtime adapter emitted malformed UTF-8 JSON") from error
-            observation = _validate_runtime_observation(
-                parsed,
-                expected_schema=self.expected_schema,
-                registry=self.observation_schema_registry,
-                schema_path=self.observation_schema_path,
-                expected_request_sha256=request_sha256,
-                expected_hash_contract=self.expected_hash_contract,
+            outer = _mapping(parsed, "runtime public response")
+            if set(outer) != {"http_status", "body"}:
+                raise ContractError(
+                    "runtime adapter response must contain exactly http_status and body"
+                )
+            http_status = _integer(
+                outer["http_status"], "runtime response http_status", 100, 599
             )
-            diagnostic_stream = b"".join(diagnostics)
+            body = _mapping(outer["body"], "runtime response body")
+            self.public_response_schema_registry.validate_document(
+                body,
+                self.public_response_schema_path,
+                label="runtime public response body",
+            )
+            request_id = request.get("request_id")
+            if (
+                isinstance(request_id, str)
+                and re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", request_id) is not None
+                and body.get("request_id") != request_id
+            ):
+                raise ContractError(
+                    "runtime public response must exactly echo a valid request_id"
+                )
             return _RuntimeExchange(
-                observation=observation,
+                http_status=http_status,
+                body=body,
+                request_jsonl_base64=base64.b64encode(request_bytes).decode("ascii"),
                 request_jsonl_sha256=sha256_bytes(request_bytes),
-                response_jsonl_sha256=sha256_bytes(value),
+                request_jsonl_length=len(request_bytes),
                 response_jsonl_base64=base64.b64encode(value).decode("ascii"),
-                diagnostic_line_sha256=tuple(sha256_bytes(line) for line in diagnostics),
-                diagnostic_stream_sha256=sha256_bytes(diagnostic_stream),
-                request_sha256=request_sha256,
-                hash_contract=self.expected_hash_contract,
+                response_jsonl_sha256=sha256_bytes(value),
+                response_jsonl_length=len(value),
             )
 
     def close(self) -> None:
@@ -436,83 +286,62 @@ class _RuntimeJsonlSession:
             self._reader.join(timeout=2)
 
 
-def _load_runtime_request(path: Path) -> dict[str, Any]:
-    try:
-        document = json.loads(path.read_text(encoding="utf-8-sig"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as error:
-        raise ContractError(f"runtime request source is invalid JSON: {path}") from error
-    root = _mapping(document, "runtime request source")
-    candidates: list[Any] = [root, root.get("runtime_request")]
-    invocation = root.get("invocation")
-    if isinstance(invocation, Mapping):
-        candidates.append(invocation.get("runtime_request"))
-    for candidate in candidates:
-        if isinstance(candidate, Mapping) and candidate.get("schema_version") == RUNTIME_REQUEST_SCHEMA:
-            request = _mapping(candidate, "runtime request")
-            if not isinstance(request.get("input"), Mapping):
-                raise ContractError("runtime request input must be an object")
-            _safe_text(request.get("request_id"), "runtime request id")
-            return request
-    raise ContractError(f"no runtime request.v1 envelope was found in {path}")
-
-
-def _public_body(observation: Mapping[str, Any]) -> dict[str, Any]:
-    response = observation.get("public_response")
-    if not isinstance(response, Mapping):
-        raise ContractError("runtime observation has no public response")
-    body = response.get("body")
-    if not isinstance(body, Mapping):
-        raise ContractError("runtime public response has no body")
-    return dict(body)
-
-
-def _public_status(observation: Mapping[str, Any]) -> str | None:
-    response = observation.get("public_response")
-    body = response.get("body") if isinstance(response, Mapping) else None
-    status = body.get("status") if isinstance(body, Mapping) else None
-    return status if isinstance(status, str) else None
-
-
-def _probe_requests(observation: Mapping[str, Any]) -> list[dict[str, Any]]:
-    value = _public_body(observation).get("probe_requests")
-    if not isinstance(value, list) or not all(isinstance(item, Mapping) for item in value):
-        raise ContractError("runtime probe_requests must be an object array")
-    requests = [_mapping(item, "runtime probe request") for item in value]
-    ids = [_safe_text(item.get("id"), "probe request id") for item in requests]
-    if len(set(ids)) != len(ids):
-        raise ContractError("runtime emitted duplicate probe request ids")
-    return requests
-
-
 def _validate_probe_request(request: Mapping[str, Any]) -> dict[str, Any]:
     value = _mapping(request, "probe request")
-    if value.get("purpose") != REPLY_MULTIPV:
-        raise ContractError(f"unsupported runtime probe purpose: {value.get('purpose')!r}")
-    _safe_text(value.get("id"), "probe request id")
-    fen = _safe_text(value.get("fen"), "probe request FEN")
+    common_keys = {
+        "id",
+        "fen",
+        "moves",
+        "depth",
+        "purpose",
+        "multiPv",
+        "candidateMove",
+        "variationHash",
+    }
+    is_resource_probe = "opponentResourceMove" in value
+    expected_keys = common_keys | (
+        {"opponentResourceMove"} if is_resource_probe else {"horizon"}
+    )
+    if set(value) != expected_keys:
+        raise ContractError("runtime probe request fields are not an exact v4 variant")
+    if value["purpose"] != REPLY_MULTIPV:
+        raise ContractError(f"unsupported runtime probe purpose: {value['purpose']!r}")
+    _safe_text(value["id"], "probe request id")
+    fen = _safe_text(value["fen"], "probe request FEN")
     try:
         board = chess.Board(fen)
     except ValueError as error:
         raise ContractError("probe request FEN is invalid") from error
     if board.status() != chess.STATUS_VALID:
         raise ContractError(f"probe request FEN is illegal (status={int(board.status())})")
-    _integer(value.get("depth"), "probe request depth", 1, 100)
-    _integer(value.get("multiPv"), "probe request multiPv", 1, 8)
-    _move(value.get("candidateMove"), "probe request candidateMove")
-    variation_hash = _safe_text(value.get("variationHash"), "probe request variationHash")
+    _integer(value["depth"], "probe request depth", 1, 100)
+    multi_pv = _integer(value["multiPv"], "probe request multiPv", 1, 3)
+    _move(value["candidateMove"], "probe request candidateMove")
+    variation_hash = _safe_text(value["variationHash"], "probe request variationHash")
     if re.fullmatch(r"[0-9a-f]{64}", variation_hash) is None:
         raise ContractError("probe request variationHash must be lowercase SHA-256")
-    raw_moves = value.get("moves")
+    raw_moves = value["moves"]
     if not isinstance(raw_moves, list):
         raise ContractError("probe request moves must be an array")
     moves = [_move(item, "probe request move") for item in raw_moves]
-    resource = value.get("opponentResourceMove")
-    if resource is not None:
-        resource = _move(resource, "probe request opponentResourceMove")
-        if moves != [resource] or value["multiPv"] != 1 or value.get("horizon") is not None:
+    if is_resource_probe:
+        resource = _move(
+            value["opponentResourceMove"], "probe request opponentResourceMove"
+        )
+        if moves != [resource] or multi_pv != 1:
             raise ContractError("opponent-resource probe binding is not exact")
-    elif moves:
-        raise ContractError("unforced reply_multipv probe must not carry request moves")
+    else:
+        horizon = _safe_text(value["horizon"], "probe request horizon")
+        if len(horizon) > 14:
+            raise ContractError("ordinary reply_multipv probe horizon is too long")
+        horizon_match = re.fullmatch(r"ply:([1-9][0-9]*)", horizon)
+        if horizon_match is None:
+            raise ContractError("ordinary reply_multipv probe horizon is invalid")
+        horizon_ply = int(horizon_match.group(1))
+        if not 1 <= horizon_ply <= 2_147_483_647:
+            raise ContractError("ordinary reply_multipv probe horizon is out of range")
+        if moves:
+            raise ContractError("ordinary reply_multipv probe must not carry request moves")
     return value
 
 
@@ -681,786 +510,3 @@ def _search_probe(
     if probe.get("horizon") is not None:
         result["horizon"] = probe["horizon"]
     return result, io_document
-
-
-def _walk(value: Any):
-    yield value
-    if isinstance(value, Mapping):
-        for child in value.values():
-            yield from _walk(child)
-    elif isinstance(value, list):
-        for child in value:
-            yield from _walk(child)
-
-
-def _products(tree: Any, constructor: str) -> list[Mapping[str, Any]]:
-    return [
-        value
-        for value in _walk(tree)
-        if isinstance(value, Mapping) and value.get("constructor") == constructor
-    ]
-
-
-def _field(product: Mapping[str, Any], name: str) -> Any:
-    fields = product.get("fields")
-    if not isinstance(fields, list):
-        return None
-    for item in fields:
-        if isinstance(item, Mapping) and item.get("name") == name:
-            return item.get("value")
-    return None
-
-
-def _native_value(node: Any) -> Any:
-    if not isinstance(node, Mapping):
-        if isinstance(node, list):
-            return [_native_value(item) for item in node]
-        return node
-    kind = node.get("node_kind")
-    if kind in {"string", "boolean"}:
-        return node.get("value")
-    if kind == "number":
-        raw = node.get("value")
-        try:
-            return int(raw)
-        except (TypeError, ValueError):
-            try:
-                return float(raw)
-            except (TypeError, ValueError):
-                return raw
-    if kind == "option":
-        return None if node.get("variant") == "None" else _native_value(node.get("value"))
-    if kind == "sequence":
-        values = node.get("values")
-        return [_native_value(value) for value in values] if isinstance(values, list) else []
-    if kind == "product":
-        fields = node.get("fields")
-        if not fields:
-            return node.get("constructor")
-        return {
-            str(item.get("name")): _native_value(item.get("value"))
-            for item in fields
-            if isinstance(item, Mapping) and isinstance(item.get("name"), str)
-        }
-    return node.get("value", node.get("constructor"))
-
-
-def _contains_constructor(node: Any, constructor: str) -> bool:
-    return any(
-        isinstance(value, Mapping) and value.get("constructor") == constructor
-        for value in _walk(node)
-    )
-
-
-def _contains_text(node: Any, token: str) -> bool:
-    needle = token.casefold()
-    return any(
-        isinstance(value, str) and needle in value.casefold()
-        for value in _walk(node)
-    )
-
-
-def _counts(values: Sequence[Any]) -> dict[str, int]:
-    result: dict[str, int] = {}
-    for value in values:
-        key = str(value)
-        result[key] = result.get(key, 0) + 1
-    return dict(sorted(result.items()))
-
-
-def _stage_tree(observation: Mapping[str, Any], stage: str) -> Any:
-    stages = observation.get("stages")
-    if not isinstance(stages, Mapping):
-        return None
-    record = stages.get(stage)
-    if not isinstance(record, Mapping):
-        return None
-    artifact = record.get("artifact")
-    return artifact.get("native_tree") if isinstance(artifact, Mapping) else None
-
-
-def _trace_required(node: Any, kind: str, label: str, constructor: str | None = None) -> Any:
-    if not isinstance(node, Mapping) or node.get("node_kind") != kind or (
-        constructor is not None and node.get("constructor") != constructor
-    ):
-        raise ContractError(f"claim content trace requires {label} {constructor or kind}")
-    if kind == "product":
-        return node
-    if kind == "option":
-        if node.get("variant") == "None":
-            return None
-        if node.get("variant") == "Some" and "value" in node:
-            return node["value"]
-    value = node.get("values" if kind == "sequence" else "value")
-    if (kind == "sequence" and isinstance(value, list)) or (
-        kind == "string" and isinstance(value, str) and value
-    ):
-        return value
-    raise ContractError(f"claim content trace has malformed {label}")
-
-
-def _trace_field(product: Mapping[str, Any], name: str, label: str) -> Any:
-    fields = product.get("fields")
-    matches = [
-        item for item in fields
-        if isinstance(item, Mapping) and item.get("name") == name and "value" in item
-    ] if isinstance(fields, list) else []
-    if len(matches) != 1:
-        raise ContractError(f"claim content trace requires one {label}.{name}")
-    return matches[0]["value"]
-
-
-def _trace_content(node: Any, label: str) -> tuple[str, str, str, str, str] | None:
-    claim = _trace_required(node, "product", label, "JudgmentClaim")
-    claim_id = _trace_required(_trace_field(claim, "id", label), "string", f"{label}.id")
-    content = _trace_required(_trace_field(claim, "content", label), "option", f"{label}.content")
-    if content is None:
-        return None
-    content = _trace_required(content, "product", f"{label}.content")
-    kind = content.get("constructor")
-    if kind not in {"CandidateComparison", "StrategicMechanism"}:
-        raise ContractError(f"claim content trace has unsupported {label}.content")
-    carrier = _trace_required(
-        _trace_field(content, "carrier", f"{label}.content"),
-        "product", f"{label}.content.carrier", "EvidenceRef",
-    )
-    carrier_id = _trace_required(
-        _trace_field(carrier, "id", f"{label}.content.carrier"),
-        "string", f"{label}.content.carrier.id",
-    )
-    return claim_id, native_sha256_json(claim), kind, carrier_id, native_sha256_json(carrier)
-
-
-def _claim_content_trace(observation: Mapping[str, Any]) -> dict[str, Any]:
-    """Describe exact native content linkage; do not re-evaluate its semantics."""
-    names, stages = ("F", "Jp", "Ja", "R", "P"), observation.get("stages")
-    records = {name: stages.get(name) for name in names} if isinstance(stages, Mapping) else {}
-    if len(records) != len(names) or not all(isinstance(item, Mapping) for item in records.values()):
-        raise ContractError("claim content trace has missing stage records")
-    p_record = records["P"]
-    reason = p_record.get("reason")
-    if not isinstance(reason, str) or not reason:
-        raise ContractError("claim content trace P has no reason")
-    p_trace: dict[str, Any] = (
-        {"state": "unavailable", "reason": reason}
-        if p_record.get("status") != "observed-native" else {"state": "observed"}
-    )
-    if any(records[name].get("status") != "observed-native" for name in names[:-1]):
-        return {"state": "unavailable", "reason": "required content stages unavailable", "P": p_trace}
-    trees = {name: _stage_tree(observation, name) for name in names[:-1]}
-    if any(tree is None for tree in trees.values()):
-        raise ContractError("claim content trace has missing native tree")
-
-    f_by_ref: dict[str, int] = {}
-    for index, node in enumerate(_products(trees["F"], "EvidenceRecord")):
-        record = _trace_required(node, "product", f"F record {index}", "EvidenceRecord")
-        ref = _trace_required(
-            _trace_field(record, "ref", f"F record {index}"),
-            "product", f"F record {index}.ref", "EvidenceRef",
-        )
-        ref_hash = native_sha256_json(ref)
-        f_by_ref[ref_hash] = f_by_ref.get(ref_hash, 0) + 1
-    jp_items = [
-        item for index, node in enumerate(_products(trees["Jp"], "JudgmentClaim"))
-        if (item := _trace_content(node, f"Jp claim {index}")) is not None
-    ]
-    if len({item[0] for item in jp_items}) != len(jp_items):
-        raise IntegrityError("claim content trace Jp content claim IDs are not unique")
-    if len({item[1] for item in jp_items}) != len(jp_items):
-        raise IntegrityError("claim content trace Jp content claims are not unique")
-    jp = {item[1]: item for item in jp_items}
-    ja: dict[str, list[tuple[str, str]]] = {}
-    ja_by_id: dict[str, list[tuple[str, str]]] = {}
-    for index, node in enumerate(_products(trees["Ja"], "ClaimAdmissionDecision")):
-        decision = _trace_required(node, "product", f"Ja decision {index}", "ClaimAdmissionDecision")
-        item = _trace_content(_trace_field(decision, "claim", f"Ja decision {index}"), f"Ja decision {index}.claim")
-        if item is not None:
-            status_node = _trace_field(decision, "status", f"Ja decision {index}")
-            status = _native_value(status_node)
-            if status is None and isinstance(status_node, Mapping):
-                status = status_node.get("constant")
-            if not isinstance(status, str) or not status:
-                raise ContractError("claim content trace has malformed Ja status")
-            ja.setdefault(item[1], []).append((item[0], status))
-            ja_by_id.setdefault(item[0], []).append((item[1], status))
-    if set(ja) != set(jp) or any(len(items) != 1 for items in ja.values()):
-        raise IntegrityError("claim content trace Ja claims do not exactly match Jp")
-
-    links: list[dict[str, Any]] = []
-    links_by_hash: dict[str, dict[str, Any]] = {}
-    for claim_id, claim_hash, kind, carrier_id, carrier_hash in jp.values():
-        if f_by_ref.get(carrier_hash) != 1:
-            raise IntegrityError("claim content trace Jp carrier does not map to one F record")
-        link = {
-            "claim_id": claim_id, "kind": kind, "carrier_id": carrier_id,
-            "carrier_ref_sha256": carrier_hash, "jp_claim_sha256": claim_hash,
-            "ja_status": ja[claim_hash][0][1], "ja_claim_sha256": claim_hash,
-            "r_selected": False, "r_claim_sha256": None, "p_claim_sha256": None,
-        }
-        links.append(link)
-        links_by_hash[claim_hash] = link
-
-    rankings = _products(trees["R"], "ClaimRankingResult")
-    if len(rankings) != 1:
-        raise ContractError("claim content trace requires one R ranking result")
-    selected_ids = [
-        _trace_required(item, "string", f"R selected ID {index}")
-        for index, item in enumerate(_trace_required(
-            _trace_field(rankings[0], "selectedContentClaimIds", "R ranking"), "sequence", "R selected IDs"))
-    ]
-    if len(selected_ids) != len(set(selected_ids)):
-        raise IntegrityError("claim content trace R selected IDs are not unique")
-    ranked_by_id: dict[str, list[str]] = {}
-    for index, node in enumerate(_products(trees["R"], "RankedClaimDecision")):
-        decision = _trace_required(node, "product", f"R decision {index}", "RankedClaimDecision")
-        item = _trace_content(_trace_field(decision, "claim", f"R decision {index}"), f"R decision {index}.claim")
-        if item is not None:
-            ranked_by_id.setdefault(item[0], []).append(item[1])
-    for claim_id in selected_ids:
-        ja_matches, r_matches = ja_by_id.get(claim_id, []), ranked_by_id.get(claim_id, [])
-        if len(ja_matches) != 1 or len(r_matches) != 1 or ja_matches[0][0] != r_matches[0]:
-            raise IntegrityError("claim content trace R selected ID has no unique exact Ja/R link")
-        link = links_by_hash[ja_matches[0][0]]
-        link["r_selected"], link["r_claim_sha256"] = True, r_matches[0]
-
-    if p_record.get("status") == "observed-native":
-        p_tree = _stage_tree(observation, "P")
-        packets = _products(p_tree, "EvidenceBackedJudgmentPacket")
-        if p_tree is None or len(packets) != 1:
-            raise ContractError("claim content trace requires one P packet")
-        packet = packets[0]
-        packet_ids = [_trace_required(item, "string", f"P selected ID {index}") for index, item in enumerate(
-            _trace_required(_trace_field(packet, "selectedContentClaimIds", "P packet"), "sequence", "P selected IDs"))]
-        if packet_ids != selected_ids:
-            raise IntegrityError("claim content trace P selected IDs differ from R")
-        assembly = _trace_required(_trace_field(packet, "assembly", "P packet"), "product", "P packet assembly", "JudgmentAssemblyContext")
-        packet_by_id: dict[str, list[str]] = {}
-        for index, node in enumerate(_trace_required(_trace_field(assembly, "claims", "P assembly"), "sequence", "P claims")):
-            item = _trace_content(node, f"P claim {index}")
-            if item is not None:
-                packet_by_id.setdefault(item[0], []).append(item[1])
-        for claim_id in selected_ids:
-            link, matches = links_by_hash[ja_by_id[claim_id][0][0]], packet_by_id.get(claim_id, [])
-            if len(matches) != 1 or matches[0] != link["r_claim_sha256"]:
-                raise IntegrityError("claim content trace P claim hash differs from R")
-            link["p_claim_sha256"] = matches[0]
-        p_trace = {"state": "observed", "packet_sha256": native_sha256_json(packet)}
-    return {"state": "observed", "r_selected_content_claim_ids": selected_ids, "claim_links": links, "P": p_trace}
-
-def _claim_summary(product: Mapping[str, Any]) -> dict[str, Any]:
-    claim_id = _native_value(_field(product, "id"))
-    claim_text = claim_id if isinstance(claim_id, str) else ""
-    cause_match = re.search(r"(?:relative-cause|strategic-mechanism):([^:]+)", claim_text)
-    return {
-        "id_sha256": sha256_bytes(claim_text.encode("utf-8")) if claim_text else None,
-        "cause_or_mechanism": cause_match.group(1) if cause_match else None,
-        "family": _native_value(_field(product, "family")),
-        "scope": _native_value(_field(product, "scope")),
-        "contains_opponent_restriction": (
-            _contains_constructor(product, "OpponentRestriction")
-            or _contains_text(product, "opponent-restriction")
-        ),
-    }
-
-
-def _semantic_checkpoints(observation: Mapping[str, Any]) -> dict[str, Any]:
-    claim_content_trace = _claim_content_trace(observation)
-    f_tree = _stage_tree(observation, "F")
-    c_tree = _stage_tree(observation, "C")
-    jp_tree = _stage_tree(observation, "Jp")
-    ja_tree = _stage_tree(observation, "Ja")
-    r_tree = _stage_tree(observation, "R")
-    p_tree = _stage_tree(observation, "P")
-    diagnostics_by_id: dict[str, Mapping[str, Any]] = {}
-    for item in _products(f_tree, "ProbeAdmissionDiagnostic"):
-        probe_id = _native_value(_field(item, "probeId"))
-        if isinstance(probe_id, str):
-            diagnostics_by_id.setdefault(probe_id, item)
-    admission_statuses = [
-        _native_value(_field(item, "status")) for item in diagnostics_by_id.values()
-    ]
-    relative_causes = _products(c_tree, "RelativeCauseFact")
-    opponent_causes = [
-        item for item in relative_causes if _contains_constructor(item, "OpponentRestriction")
-    ]
-    cause_kinds = [_native_value(_field(item, "kind")) for item in relative_causes]
-    jp_claims = _products(jp_tree, "JudgmentClaim")
-    admission_decisions = _products(ja_tree, "ClaimAdmissionDecision")
-    ranked = _products(r_tree, "RankedClaimDecision")
-    ranked_summary: list[dict[str, Any]] = []
-    for item in ranked:
-        claim = _field(item, "claim")
-        ranked_summary.append(
-            {
-                **(_claim_summary(claim) if isinstance(claim, Mapping) else {}),
-                "exposure_tier": _native_value(_field(item, "exposureTier")),
-            }
-        )
-    deduplication = _products(r_tree, "ClaimDeduplicationTrace")
-    dedup_reasons = [_native_value(_field(item, "reason")) for item in deduplication]
-    primary_to_context = 0
-    played_transition_to_context = 0
-    for item in deduplication:
-        original = str(_native_value(_field(item, "originalClaimId")) or "")
-        kept = str(_native_value(_field(item, "keptClaimId")) or "")
-        if ":primary:" in original and ":context:" in kept:
-            primary_to_context += 1
-        if "played-transition" in original and ":context:" in kept:
-            played_transition_to_context += 1
-    projections = _products(p_tree, "ProjectionTrace")
-    projection = projections[0] if projections else None
-    projection_summary = (
-        {
-            "selected_payload_source": _native_value(_field(projection, "selectedPayloadSource")),
-            "has_explanation": _native_value(_field(projection, "hasExplanation")),
-            "has_engine_mate_outcome": _native_value(
-                _field(projection, "hasEngineMateOutcome")
-            ),
-            "primary_renderable": _native_value(_field(projection, "primaryRenderable")),
-            "renderable": _native_value(_field(projection, "renderable")),
-            "status": _native_value(_field(projection, "status")),
-            "reason": _native_value(_field(projection, "reason")),
-        }
-        if projection is not None
-        else None
-    )
-    body = _public_body(observation)
-    move_review = body.get("move_review")
-    explanations = move_review.get("explanations") if isinstance(move_review, Mapping) else None
-    public_causes = sorted(
-        {
-            kind
-            for explanation in (explanations if isinstance(explanations, list) else [])
-            for idea in (
-                explanation.get("ideas", [])
-                if isinstance(explanation, Mapping)
-                else []
-            )
-            if isinstance(idea, Mapping)
-            for cause in [idea.get("cause")]
-            if isinstance(cause, Mapping)
-            for kind in [cause.get("kind")]
-            if isinstance(kind, str)
-        }
-    )
-    stages = observation.get("stages")
-    v_record = stages.get("V") if isinstance(stages, Mapping) else None
-    c_deterrence_count = len(_products(c_tree, "OpponentResourceDeterrenceProof"))
-    c_opponent_cause_count = len(opponent_causes)
-    jp_opponent_claim_count = sum(
-        _contains_constructor(item, "OpponentRestriction")
-        or _contains_text(item, "opponent-restriction")
-        for item in jp_claims
-    )
-    tier_counts = _counts([item.get("exposure_tier") for item in ranked_summary])
-    public_status = body.get("status")
-    if admission_statuses and all(status == "Admitted" for status in admission_statuses) and c_deterrence_count == 0:
-        first_missing = "C:opponent-resource-branches-admitted-without-deterrence-proof"
-    elif c_deterrence_count > 0 and c_opponent_cause_count == 0:
-        first_missing = "C:deterrence-proof-not-converted-to-opponent-restriction-cause"
-    elif c_opponent_cause_count > 0 and jp_opponent_claim_count == 0:
-        first_missing = "Jp:opponent-restriction-cause-not-proposed-as-claim"
-    elif jp_opponent_claim_count > 0 and not any(
-        item.get("contains_opponent_restriction")
-        and item.get("exposure_tier") in {"Primary", "Secondary"}
-        for item in ranked_summary
-    ):
-        first_missing = "R:opponent-restriction-claim-not-player-facing"
-    elif public_status == "withheld":
-        first_missing = "P:ranked-evidence-not-selected-for-public-response"
-    else:
-        first_missing = "none-through-P"
-    return {
-        "first_missing_checkpoint": first_missing,
-        "claim_content_trace": claim_content_trace,
-        "F": {
-            "unique_probe_diagnostic_count": len(diagnostics_by_id),
-            "admission_status_counts": _counts(admission_statuses),
-            "normalized_threat_branch_count": len(_products(f_tree, "NormalizedThreatBranch")),
-        },
-        "C": {
-            "opponent_resource_deterrence_proof_count": c_deterrence_count,
-            "plan_causal_event_evidence_count": len(
-                _products(c_tree, "PlanCausalEventEvidence")
-            ),
-            "relative_cause_count": len(relative_causes),
-            "relative_cause_kind_counts": _counts(cause_kinds),
-            "opponent_restriction_relative_cause_count": c_opponent_cause_count,
-        },
-        "Jp": {
-            "claim_count": len(jp_claims),
-            "claims_containing_opponent_restriction_count": jp_opponent_claim_count,
-        },
-        "Ja": {
-            "admission_decision_count": len(admission_decisions),
-            "certified_count": sum(
-                _native_value(_field(item, "status")) == "Certified"
-                for item in admission_decisions
-            ),
-            "deferred_count": sum(
-                _native_value(_field(item, "status")) == "Deferred"
-                for item in admission_decisions
-            ),
-            "rejected_count": sum(
-                _native_value(_field(item, "status")) == "Rejected"
-                for item in admission_decisions
-            ),
-        },
-        "R": {
-            "ranked_claim_count": len(ranked),
-            "exposure_tier_counts": tier_counts,
-            "ranked_claims": ranked_summary,
-            "deduplication_count": len(deduplication),
-            "deduplication_reason_counts": _counts(dedup_reasons),
-            "primary_to_context_replacement_count": primary_to_context,
-            "played_transition_to_context_replacement_count": played_transition_to_context,
-        },
-        "P": projection_summary,
-        "V": {
-            "status": v_record.get("status") if isinstance(v_record, Mapping) else None,
-            "boundary_reached": (
-                v_record.get("boundary_reached") if isinstance(v_record, Mapping) else None
-            ),
-            "reason": v_record.get("reason") if isinstance(v_record, Mapping) else None,
-        },
-        "public": {
-            "status": body.get("status"),
-            "availability": body.get("availability"),
-            "renderable": move_review.get("renderable") if isinstance(move_review, Mapping) else None,
-            "explanation_count": len(explanations) if isinstance(explanations, list) else 0,
-            "explanation_causes": public_causes,
-            "verdict_present": (
-                move_review.get("verdict") is not None if isinstance(move_review, Mapping) else False
-            ),
-            "remaining_probe_request_count": len(_probe_requests(observation)),
-        },
-    }
-
-
-def _runtime_io_document(
-    exchange: _RuntimeExchange,
-    request: Mapping[str, Any],
-    *,
-    command: Sequence[str],
-    round_index: int,
-) -> dict[str, Any]:
-    document = {
-        "schema_version": RUNTIME_IO_SCHEMA,
-        "round_index": round_index,
-        "transport": "canonical-jsonl-utf8-stdio",
-        "command_argv_sha256": sha256_json(list(command)),
-        "request": _mapping(request, "runtime request"),
-        "request_canonical_sha256": sha256_bytes(
-            native_canonical_json(request).encode("utf-8")
-        ),
-        "request_jsonl_sha256": exchange.request_jsonl_sha256,
-        "response": _mapping(exchange.observation, "runtime observation"),
-        "response_jsonl_sha256": exchange.response_jsonl_sha256,
-        "diagnostic_line_count": len(exchange.diagnostic_line_sha256),
-        "diagnostic_line_sha256": list(exchange.diagnostic_line_sha256),
-        "diagnostic_stream_sha256": exchange.diagnostic_stream_sha256,
-    }
-    if exchange.observation.get("schema_version") == RUNTIME_OBSERVATION_SCHEMA:
-        _verified_response_jsonl_bytes(
-            exchange.response_jsonl_base64,
-            exchange.response_jsonl_sha256,
-        )
-        document["response_jsonl_base64"] = exchange.response_jsonl_base64
-    return document
-
-
-def complete_runtime_probes(
-    runtime_request: Mapping[str, Any],
-    *,
-    runtime: _RuntimeJsonlSession,
-    stockfish: Path,
-    stockfish_sha256: str,
-    capture: _ArtifactCapture,
-    max_rounds: int,
-    engine_timeout_seconds: float,
-) -> dict[str, Any]:
-    base_request = _mapping(runtime_request, "runtime request")
-    sample_id = _safe_text(base_request.get("request_id"), "runtime request id")
-    sample_slug = slug(sample_id)
-    input_value = _mapping(base_request.get("input"), "runtime request input")
-    existing = input_value.get("probeResults", [])
-    if not isinstance(existing, list) or not all(isinstance(item, Mapping) for item in existing):
-        raise ContractError("runtime input probeResults must be an object array")
-    results = [_mapping(item, "existing probe result") for item in existing]
-    if len(results) > MAX_RUNTIME_PROBE_RESULTS:
-        raise ContractError("runtime input exceeds the probe result limit")
-    result_bindings: dict[str, str] = {
-        _safe_text(item.get("id"), "existing probe result id"): sha256_json(item)
-        for item in results
-    }
-    round_records: list[dict[str, Any]] = []
-    probe_records: list[dict[str, Any]] = []
-    final_observation: Mapping[str, Any] | None = None
-    stop_reason = "max-rounds-reached"
-
-    for round_index in range(max_rounds + 1):
-        request = copy.deepcopy(base_request)
-        request_input = _mapping(request.get("input"), "runtime request input")
-        if results:
-            request_input["probeResults"] = copy.deepcopy(results)
-        else:
-            request_input.pop("probeResults", None)
-        request["input"] = request_input
-        exchange = runtime.invoke(request)
-        final_observation = exchange.observation
-        runtime_io = _runtime_io_document(
-            exchange,
-            request,
-            command=runtime.command,
-            round_index=round_index,
-        )
-        runtime_ref = capture.write(
-            f"samples/{sample_slug}/runtime-round-{round_index:02d}.json",
-            runtime_io,
-        )
-        observation_status = exchange.observation.get("observation_status")
-        requests = (
-            _probe_requests(exchange.observation)
-            if observation_status == "complete"
-            else []
-        )
-        round_records.append(
-            {
-                "round_index": round_index,
-                "runtime_io": runtime_ref,
-                "submitted_probe_result_count": len(results),
-                "issued_probe_request_count": len(requests),
-                "issued_probe_ids": [item["id"] for item in requests],
-                "observation_status": observation_status,
-                "public_status": _public_status(exchange.observation),
-            }
-        )
-        if observation_status != "complete":
-            stop_reason = "runtime-observation-not-complete"
-            break
-        if not requests:
-            stop_reason = "all-runtime-probes-closed"
-            break
-        validated = [_validate_probe_request(item) for item in requests]
-        for request_item in validated:
-            request_id = str(request_item["id"])
-            current_binding = sha256_json(request_item)
-            if request_id in result_bindings and result_bindings[request_id] != current_binding:
-                raise IntegrityError(f"runtime changed an issued probe binding: {request_id}")
-        new_requests = [item for item in validated if str(item["id"]) not in result_bindings]
-        if not new_requests:
-            stop_reason = "runtime-reissued-fulfilled-probes"
-            break
-        if round_index >= max_rounds:
-            break
-        if len(results) + len(new_requests) > MAX_RUNTIME_PROBE_RESULTS:
-            raise ContractError("dynamic probe closure exceeds the runtime result limit")
-        for request_item in new_requests:
-            result, uci_io = _search_probe(
-                stockfish,
-                request_item,
-                timeout_seconds=engine_timeout_seconds,
-                executable_sha256=stockfish_sha256,
-            )
-            probe_key = hashlib.sha256(str(request_item["id"]).encode("utf-8")).hexdigest()[:16]
-            uci_ref = capture.write(
-                f"samples/{sample_slug}/probe-{probe_key}-uci.json",
-                uci_io,
-            )
-            result_doc = {
-                "schema_version": PROBE_RESULT_SCHEMA,
-                "request": request_item,
-                "request_sha256": sha256_json(request_item),
-                "result": result,
-                "result_sha256": sha256_json(result),
-                "uci_io": uci_ref,
-            }
-            result_ref = capture.write(
-                f"samples/{sample_slug}/probe-{probe_key}-result.json",
-                result_doc,
-            )
-            results.append(result)
-            result_bindings[str(request_item["id"])] = sha256_json(request_item)
-            probe_records.append(
-                {
-                    "probe_id": request_item["id"],
-                    "kind": (
-                        "opponent-resource"
-                        if request_item.get("opponentResourceMove") is not None
-                        else "branch-reply"
-                    ),
-                    "depth": request_item["depth"],
-                    "multipv": request_item["multiPv"],
-                    "horizon": request_item.get("horizon"),
-                    "result": result_ref,
-                    "uci_io": uci_ref,
-                }
-            )
-
-    assert final_observation is not None
-    final_observation_status = final_observation.get("observation_status")
-    semantic_checkpoints = (
-        _semantic_checkpoints(final_observation)
-        if final_observation_status == "complete"
-        else {
-            "first_missing_checkpoint": "runtime-observation-not-complete",
-            "observation_status": final_observation_status,
-        }
-    )
-    summary = {
-        "schema_version": PROBE_COMPLETION_SCHEMA,
-        "sample_id": sample_id,
-        "initial_request_sha256": sha256_json(base_request),
-        "stockfish_executable_sha256": stockfish_sha256,
-        "closure_status": (
-            "closed" if stop_reason == "all-runtime-probes-closed" else "incomplete"
-        ),
-        "stop_reason": stop_reason,
-        "runtime_round_count": len(round_records),
-        "acquired_probe_count": len(probe_records),
-        "opponent_resource_probe_count": sum(
-            item["kind"] == "opponent-resource" for item in probe_records
-        ),
-        "branch_reply_probe_count": sum(item["kind"] == "branch-reply" for item in probe_records),
-        "rounds": round_records,
-        "probes": probe_records,
-        "final_observation_sha256": sha256_json(final_observation),
-        "semantic_checkpoints": semantic_checkpoints,
-    }
-    summary_ref = capture.write(f"samples/{sample_slug}/completion.json", summary)
-    return {**summary, "completion_artifact": summary_ref}
-
-
-def run_probe_completion(
-    request_paths: Sequence[Path],
-    *,
-    stockfish: Path,
-    sbt: Path,
-    adapter_root: Path,
-    artifact_root: Path,
-    run_id: str,
-    max_rounds: int = 4,
-    runtime_timeout_seconds: float = 300.0,
-    engine_timeout_seconds: float = 180.0,
-) -> dict[str, Any]:
-    if not request_paths:
-        raise ContractError("at least one runtime request source is required")
-    max_rounds = _integer(max_rounds, "max rounds", 1, 12)
-    stockfish = stockfish.resolve(strict=True)
-    sbt = sbt.resolve(strict=True)
-    adapter_root = adapter_root.resolve(strict=True)
-    if not stockfish.is_file() or not sbt.is_file() or not adapter_root.is_dir():
-        raise ContractError("Stockfish, sbt, and adapter paths must have the expected types")
-    requests = [_load_runtime_request(path.resolve(strict=True)) for path in request_paths]
-    request_ids = [str(item["request_id"]) for item in requests]
-    if len(set(request_ids)) != len(request_ids):
-        raise ContractError("runtime request ids must be unique")
-    stockfish_sha256 = sha256_file(stockfish)
-    observation_schema_path = (
-        adapter_root.parent / NATIVE_RUNTIME_SCHEMA_RELATIVE_PATH
-    ).resolve(strict=True)
-    command = [
-        str(sbt),
-        "-batch",
-        "-error",
-        "runMain io.chesstory.evaluation.runtimeadapter.RuntimeAdapterCli",
-    ]
-    capture = _ArtifactCapture(artifact_root, run_id)
-    config = {
-        "schema_version": "chesstory.eval.runtime-probe-completion-config.v1",
-        "run_id": run_id,
-        "runtime_command_argv_sha256": sha256_json(command),
-        "runtime_adapter_root_sha256": sha256_bytes(str(adapter_root).encode("utf-8")),
-        "runtime_observation_schema": RUNTIME_OBSERVATION_SCHEMA,
-        "runtime_observation_schema_sha256": sha256_file(observation_schema_path),
-        "runtime_response_schema": RUNTIME_RESPONSE_SCHEMA,
-        "stockfish_executable_sha256": stockfish_sha256,
-        "engine": {"Threads": 1, "Hash": 16, "fixed_depth_from_each_request": True},
-        "max_rounds": max_rounds,
-        "runtime_timeout_seconds": runtime_timeout_seconds,
-        "engine_timeout_seconds": engine_timeout_seconds,
-        "request_sources": [
-            {"request_id": request["request_id"], "request_sha256": sha256_json(request)}
-            for request in requests
-        ],
-    }
-    config_ref = capture.write("config.json", config)
-    with _RuntimeJsonlSession(
-        command,
-        cwd=adapter_root,
-        timeout_seconds=runtime_timeout_seconds,
-        expected_schema=RUNTIME_OBSERVATION_SCHEMA,
-        observation_schema_path=observation_schema_path,
-    ) as runtime:
-        samples = [
-            complete_runtime_probes(
-                request,
-                runtime=runtime,
-                stockfish=stockfish,
-                stockfish_sha256=stockfish_sha256,
-                capture=capture,
-                max_rounds=max_rounds,
-                engine_timeout_seconds=engine_timeout_seconds,
-            )
-            for request in requests
-        ]
-    report = {
-        "schema_version": REPORT_SCHEMA,
-        "run_id": run_id,
-        "config": config_ref,
-        "sample_count": len(samples),
-        "all_probes_closed": all(item["closure_status"] == "closed" for item in samples),
-        "samples": samples,
-    }
-    report_ref = capture.write("report.json", report)
-    ledger = capture.finish()
-    return {
-        **report,
-        "report_artifact": report_ref,
-        "artifact_ledger": ledger,
-        "run_root": str(capture.run_root),
-    }
-
-
-def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Close RuntimeProtocol reply_multipv probes with deterministic Stockfish "
-            "acquisition and capture full Q-to-P native observations."
-        )
-    )
-    parser.add_argument("--request", action="append", type=Path, required=True)
-    parser.add_argument("--stockfish", type=Path, required=True)
-    parser.add_argument("--sbt", type=Path, required=True)
-    parser.add_argument("--adapter-root", type=Path, required=True)
-    parser.add_argument("--artifact-root", type=Path, required=True)
-    parser.add_argument("--run-id", required=True)
-    parser.add_argument("--max-rounds", type=int, default=4)
-    parser.add_argument("--runtime-timeout-seconds", type=float, default=300.0)
-    parser.add_argument("--engine-timeout-seconds", type=float, default=180.0)
-    return parser
-
-
-def main(argv: Sequence[str] | None = None) -> int:
-    arguments = _parser().parse_args(argv)
-    try:
-        report = run_probe_completion(
-            arguments.request,
-            stockfish=arguments.stockfish,
-            sbt=arguments.sbt,
-            adapter_root=arguments.adapter_root,
-            artifact_root=arguments.artifact_root,
-            run_id=arguments.run_id,
-            max_rounds=arguments.max_rounds,
-            runtime_timeout_seconds=arguments.runtime_timeout_seconds,
-            engine_timeout_seconds=arguments.engine_timeout_seconds,
-        )
-    except (ContractError, IntegrityError, StockfishAcquisitionError, OSError) as error:
-        print(json.dumps({"ok": False, "error": str(error)}, ensure_ascii=False, sort_keys=True))
-        return 2
-    print(json.dumps({"ok": True, **report}, ensure_ascii=False, sort_keys=True))
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

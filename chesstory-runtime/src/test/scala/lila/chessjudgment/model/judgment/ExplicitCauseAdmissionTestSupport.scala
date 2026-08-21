@@ -2,24 +2,6 @@ package lila.chessjudgment.model.judgment
 
 private[chessjudgment] object ExplicitCauseAdmissionTestSupport:
 
-  def comparisonRecord(
-      id: String,
-      position: PositionNodeRef,
-      comparison: CandidateComparisonFact
-  ): EvidenceRecord =
-    EvidenceRecord(
-      EvidenceRef(
-        id = id,
-        producer = EvidenceProducer.RelativeMoveProducer,
-        layer = EvidenceLayer.CandidateComparison,
-        position = position,
-        line = Some(comparison.candidateLine),
-        scope = comparison.candidateLine.role.scope,
-        confidence = EvidenceConfidence.EngineBacked
-      ),
-      CandidateComparisonEvidence(comparison)
-    )
-
   def graph(records: List[EvidenceRecord]): TypedEvidenceGraph =
     val rawGraph = records
       .filterNot(_.payload.isInstanceOf[RelativeCauseFactEvidence])

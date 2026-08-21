@@ -1,16 +1,16 @@
 package lila.chessjudgment.model.judgment
 
 import chess.Color
-import lila.chessjudgment.model.{ ProbeAdmissionDiagnostic, ProbeResult }
-import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.model.ProbeAdmissionDiagnostic
+import lila.chessjudgment.model.line.{ CandidateLineEvaluation, CanonicalPositionHistory }
 
 final case class NormalizedCandidateLine(
     role: LineNodeRole,
     rank: Int,
-    line: EngineLine
+    evaluation: CandidateLineEvaluation
 ):
   def rootMove: Option[String] =
-    line.moves.headOption.map(_.trim.toLowerCase)
+    evaluation.moves.headOption.map(_.trim.toLowerCase)
 
 final case class NormalizedThreatBranch(
     sourceProbeId: String,
@@ -32,13 +32,10 @@ final case class NormalizedMoveReviewInput(
     afterPlayedFen: String,
     afterReferenceFen: Option[String],
     lines: List[NormalizedCandidateLine],
-    opening: Option[OpeningIdentity],
-    movePrefixUci: List[String] = Nil,
-    openingRecognition: Option[OpeningRecognition] = None,
-    openingThemePriorSelection: Option[OpeningThemePriorSelection] = None,
-    openingSignals: List[OpeningContextSignal] = Nil,
+    completeCandidateSet: Option[CompleteCandidateSet],
+    positionHistory: CanonicalPositionHistory,
+    openingContext: OpeningContextEvidence,
     threatBranches: List[NormalizedThreatBranch] = Nil,
-    endgameTablebaseResults: List[ProbeResult] = Nil,
     probeDiagnostics: List[ProbeAdmissionDiagnostic] = Nil
 ):
   def playedLine: Option[NormalizedCandidateLine] =

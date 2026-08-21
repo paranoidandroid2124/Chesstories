@@ -2,15 +2,21 @@
 
 import { throttle } from '../async';
 import { Engines } from './engines/engines';
+import type { MoveReviewEngineCapabilityReason } from './engines/moveReviewEngineProfiles';
 import {
   type CevalOpts,
   type CevalEngine,
   type Work,
+  type MoveReviewEngine,
+  type MoveReviewEngineProfile,
+  type MoveReviewVariant,
+  type MoveReviewWorkInput,
   type Step,
   type Hovering,
   type PvBoard,
   type Started,
   type Search,
+  makeMoveReviewWork,
   CevalState,
 } from './types';
 import { sanIrreversible, showEngineError, fewerCores } from './util';
@@ -20,6 +26,23 @@ import { povChances } from './winningChances';
 import { prop, type Prop, type Toggle, toggle } from '../index';
 import { clamp } from '../algo';
 import { storedIntProp, storage } from '../storage';
+
+type MoveReviewPreflightFailure = {
+  readonly profile: MoveReviewEngineProfile;
+  readonly reason: MoveReviewEngineCapabilityReason | 'preflight-cancelled' | 'preflight-failed';
+};
+
+type MoveReviewPreflightResult =
+  | {
+      readonly ok: true;
+      readonly profile: MoveReviewEngineProfile;
+    }
+  | { readonly ok: false; readonly failures: readonly MoveReviewPreflightFailure[] };
+
+type MoveReviewPreflightOptions = {
+  readonly variant: MoveReviewVariant;
+  readonly signal: AbortSignal;
+};
 
 export default class CevalCtrl {
   opts: CevalOpts;
@@ -36,6 +59,10 @@ export default class CevalCtrl {
   showEnginePrefs: Toggle = toggle(false);
 
   private worker: CevalEngine | undefined;
+  private moveReviewWorker: MoveReviewEngine | undefined;
+  private moveReviewProfile: MoveReviewEngineProfile | undefined;
+  private moveReviewVariant: MoveReviewVariant | undefined;
+  private moveReviewReady = false;
 
   constructor(opts: CevalOpts) {
     this.init(opts);
@@ -70,15 +97,112 @@ export default class CevalCtrl {
     if (work) this.worker.start(work);
   }
 
+  preflightMoveReviewSelection = async (
+    options: MoveReviewPreflightOptions,
+    onFailure: (error: string) => void,
+  ): Promise<MoveReviewPreflightResult> => {
+    this.stopMoveReview();
+    const failures: MoveReviewPreflightFailure[] = [];
+
+    for (const capability of this.engines.moveReviewCapabilities()) {
+      if (options.signal.aborted) return { ok: false, failures };
+      if (!capability.supported) {
+        failures.push({
+          profile: capability.profile,
+          reason: capability.reason,
+        });
+        continue;
+      }
+      let bootFailure: string | undefined;
+      let preflightComplete = false;
+      const worker = this.engines.makeMoveReview(
+        capability,
+        status => {
+          if (!status?.error) return;
+          bootFailure = status.error;
+          if (preflightComplete && this.moveReviewWorker === worker) {
+            this.moveReviewReady = false;
+            onFailure(status.error);
+          }
+        },
+        options.signal,
+      );
+
+      this.moveReviewWorker = worker;
+      this.moveReviewProfile = capability.profile;
+      this.moveReviewVariant = options.variant;
+      const ready = await worker.ready;
+      preflightComplete = true;
+      if (options.signal.aborted) {
+        failures.push({
+          profile: capability.profile,
+          reason: 'preflight-cancelled',
+        });
+        if (this.moveReviewWorker === worker) this.clearMoveReviewWorker();
+        else worker.destroy();
+        return { ok: false, failures };
+      }
+      if (ready && !bootFailure && this.moveReviewWorker === worker) {
+        this.moveReviewReady = true;
+        return {
+          ok: true,
+          profile: capability.profile,
+        };
+      }
+
+      failures.push({
+        profile: capability.profile,
+        reason: 'preflight-failed',
+      });
+      if (this.moveReviewWorker === worker) this.clearMoveReviewWorker();
+      else worker.destroy();
+    }
+
+    return { ok: false, failures };
+  };
+
+  startMoveReview = (profile: MoveReviewEngineProfile, input: MoveReviewWorkInput): boolean => {
+    if (
+      !this.moveReviewReady ||
+      !this.moveReviewWorker ||
+      this.moveReviewProfile !== profile ||
+      this.moveReviewVariant !== input.variant
+    )
+      return false;
+    const worker = this.moveReviewWorker;
+    worker.start(
+      makeMoveReviewWork(profile, {
+        ...input,
+        emit: emission => {
+          if (this.moveReviewWorker === worker && this.moveReviewReady) input.emit(emission);
+        },
+      }),
+    );
+    return true;
+  };
+
+  stopMoveReviewWork = (): void => {
+    this.moveReviewWorker?.stop();
+  };
+
+  stopMoveReview = (): void => {
+    this.clearMoveReviewWorker();
+  };
+
+  private clearMoveReviewWorker = (): void => {
+    const worker = this.moveReviewWorker;
+    this.moveReviewWorker = undefined;
+    this.moveReviewProfile = undefined;
+    this.moveReviewVariant = undefined;
+    this.moveReviewReady = false;
+    worker?.stop();
+    worker?.destroy();
+  };
+
   onEmit: (ev: Tree.LocalEval, work: Work) => void = throttle(200, (ev: Tree.LocalEval, work: Work) => {
     this.sortPvsInPlace(ev.pvs, work.ply % 2 === (work.threatMode ? 1 : 0) ? 'white' : 'black');
     this.curEval = ev;
     this.opts.emit(ev, work);
-    if (ev.fen !== this.lastEmitFen) {
-      // amnesty while auto disable not processed
-      this.lastEmitFen = ev.fen;
-      storage.fire('ceval.fen', ev.fen);
-    }
     if (!this.lastStarted || this.isDeeper() || this.isInfinite || work.threatMode) return;
     const showingNode = this.lastStarted.steps[this.lastStarted.steps.length - 1];
     const byMovetime = 'movetime' in this.search.by && this.search.by.movetime;
@@ -264,7 +388,6 @@ export default class CevalCtrl {
     this.worker = undefined;
   }
 
-  private lastEmitFen: string | null = null;
   private sortPvsInPlace = (pvs: Tree.PvData[], color: Color) =>
     pvs.sort((a, b) => povChances(color, b) - povChances(color, a));
 }

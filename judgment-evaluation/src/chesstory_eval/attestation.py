@@ -17,10 +17,12 @@ import math
 import os
 import random
 import re
+from collections import Counter
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 from .attribution import (
+    SEMANTIC_CONTRASTS,
     normalize_selected_attribution_hypothesis,
     resolve_attribution_minimum_deltas,
     select_attribution_contrasts,
@@ -426,6 +428,7 @@ def build_run_attestation(
     split_id: str,
     split_hash: str,
     corpus_version: str,
+    frozen_plan: Mapping[str, Any],
     execution_manifest_path: str | Path,
     execution_bundle_path: str | Path,
     endpoint_policy_path: str | Path,
@@ -464,6 +467,40 @@ def build_run_attestation(
     corpus_version = _nonempty_text(corpus_version, "corpus_version")
     if not isinstance(raw_provider_io_required, bool):
         raise ContractError("raw_provider_io_required must be boolean")
+    if not isinstance(frozen_plan, Mapping) or set(frozen_plan) != {
+        "schema_version",
+        "arm_count",
+        "plan_hash",
+        "context_counts",
+        "arms",
+    }:
+        raise ContractError("frozen_plan must be a chesstory.eval.arm-plan.v1 document")
+    if frozen_plan["schema_version"] != "chesstory.eval.arm-plan.v1":
+        raise ContractError("unsupported frozen arm-plan schema")
+    plan_rows = frozen_plan["arms"]
+    if not isinstance(plan_rows, list) or not plan_rows or not all(
+        isinstance(row, Mapping) for row in plan_rows
+    ):
+        raise ContractError("frozen arm plan rows are missing")
+    ordered_arm_ids = [row.get("arm_id") for row in plan_rows]
+    if not all(isinstance(arm_id, str) and arm_id for arm_id in ordered_arm_ids) or len(
+        set(ordered_arm_ids)
+    ) != len(ordered_arm_ids):
+        raise ContractError("frozen arm plan IDs are invalid")
+    contexts = [row.get("context") for row in plan_rows]
+    if not all(isinstance(context, str) and context for context in contexts):
+        raise ContractError("frozen arm plan contexts are invalid")
+    plan_sha = sha256_json(plan_rows)
+    actual_context_counts = dict(sorted(Counter(contexts).items()))
+    if (
+        isinstance(frozen_plan["arm_count"], bool)
+        or not isinstance(frozen_plan["arm_count"], int)
+        or frozen_plan["arm_count"] != len(plan_rows)
+        or frozen_plan["plan_hash"] != plan_sha
+        or not isinstance(frozen_plan["context_counts"], Mapping)
+        or frozen_plan["context_counts"] != actual_context_counts
+    ):
+        raise IntegrityError("frozen arm plan self-binding is invalid")
     _, frozen_execution_path = _normalize_relative_file_path(execution_manifest_path)
     _, frozen_bundle_path = _normalize_relative_file_path(execution_bundle_path)
     _, frozen_policy_path = _normalize_relative_file_path(endpoint_policy_path)
@@ -570,14 +607,6 @@ def build_run_attestation(
     for key, expected_value in expected_execution_binding.items():
         if execution_document.get(key) != expected_value:
             raise IntegrityError(f"execution manifest {key} binding mismatch")
-    registered_arm_ids = execution_document.get("registered_arm_ids")
-    if (
-        not isinstance(registered_arm_ids, list)
-        or len(registered_arm_ids) != 313
-        or registered_arm_ids != sorted(set(registered_arm_ids))
-    ):
-        raise ContractError("execution manifest does not freeze the full 313-arm plan")
-    _require_sha256(execution_document.get("plan_sha256"), "execution plan_sha256")
     execution_bundle = _read_run_json(artifact_store, frozen_bundle_path)
     if execution_bundle.get("schema_version") != (
         "chesstory.eval.pre-unblinding-execution.v1"
@@ -595,17 +624,25 @@ def build_run_attestation(
     }.items():
         if bundle_binding.get(key) != expected_value:
             raise IntegrityError(f"execution bundle {key} binding mismatch")
-    if (
-        execution_bundle.get("plan_sha256") != execution_document.get("plan_sha256")
-        or execution_bundle.get("registered_arm_count") != 313
-    ):
-        raise IntegrityError("execution bundle differs from the frozen 313-arm plan")
     bundle_plan = execution_bundle.get("plan")
-    if not isinstance(bundle_plan, list) or [
-        value.get("arm_id") if isinstance(value, Mapping) else None
-        for value in bundle_plan
-    ] != registered_arm_ids:
-        raise IntegrityError("execution bundle arm universe differs from execution manifest")
+    if not isinstance(bundle_plan, list) or not all(
+        isinstance(value, Mapping) for value in bundle_plan
+    ):
+        raise ContractError("execution bundle arm plan is missing")
+    manifest_arm_ids = execution_document.get("registered_arm_ids")
+    if (
+        execution_document.get("plan_sha256") != plan_sha
+        or not isinstance(manifest_arm_ids, list)
+        or manifest_arm_ids != ordered_arm_ids
+    ):
+        raise ContractError("execution manifest does not freeze the exact arm plan")
+    if (
+        execution_bundle.get("plan") != plan_rows
+        or execution_bundle.get("plan_sha256") != plan_sha
+        or execution_bundle.get("registered_arm_count") != len(plan_rows)
+        or [value.get("arm_id") for value in bundle_plan] != ordered_arm_ids
+    ):
+        raise IntegrityError("execution bundle differs from the frozen exact arm plan")
     if execution_document.get("live_command_config") != execution_bundle.get(
         "live_command_config"
     ):
@@ -716,7 +753,7 @@ def build_run_attestation(
     ]
     if bundle_samples != expected_bundle_samples:
         raise IntegrityError("execution bundle sample topology differs from endpoint policy")
-    expected_row_count = len(registered_arm_ids) * len(sample_ids)
+    expected_row_count = len(ordered_arm_ids) * len(sample_ids)
     if (
         execution_bundle.get("split_sample_count") != len(sample_ids)
         or execution_bundle.get("atomic_cluster_count")
@@ -742,7 +779,7 @@ def build_run_attestation(
             not isinstance(sample_id, str)
             or not isinstance(arm_id, str)
             or sample_id not in policy_topology
-            or arm_id not in registered_arm_ids
+            or arm_id not in ordered_arm_ids
         ):
             raise IntegrityError("execution bundle row identity is invalid")
         pair = (sample_id, arm_id)
@@ -766,7 +803,7 @@ def build_run_attestation(
         full_pairs = {
             (sample_id, arm_id)
             for sample_id in sample_ids
-            for arm_id in registered_arm_ids
+            for arm_id in ordered_arm_ids
         }
         if not gates_passed or bundle_row_pairs != full_pairs:
             raise IntegrityError(
@@ -804,7 +841,7 @@ def build_run_attestation(
         if (
             not isinstance(sample_id, str)
             or policy_topology.get(sample_id) != cluster_id
-            or arm_id not in registered_arm_ids
+            or arm_id not in ordered_arm_ids
         ):
             raise IntegrityError(f"endpoint capture sample/cluster/arm mismatch: {relative_path}")
         pair = (sample_id, str(arm_id))
@@ -851,7 +888,7 @@ def build_run_attestation(
             run_file_hashes=first_snapshot,
             exact_run_binding=exact_run_binding,
             sample_topology=policy_topology,
-            registered_arm_ids=set(registered_arm_ids),
+            registered_arm_ids=set(ordered_arm_ids),
         )
     evaluator_artifact_paths = sorted(
         path
@@ -1102,9 +1139,9 @@ def build_run_attestation(
             "document_sha256": sha256_json(execution_bundle),
         },
         "execution_binding": {
-            "plan_sha256": execution_document["plan_sha256"],
-            "registered_arm_ids_sha256": sha256_json(registered_arm_ids),
-            "registered_arm_count": len(registered_arm_ids),
+            "plan_sha256": plan_sha,
+            "registered_arm_ids_sha256": sha256_json(ordered_arm_ids),
+            "registered_arm_count": len(plan_rows),
             "sample_ids_sha256": sha256_json(sample_ids),
             "sample_count": len(sample_ids),
             "execution_status": execution_bundle["execution_status"],
@@ -1659,6 +1696,7 @@ def _assess_fresh_confirm_release(
         }
         for arm in plan
     ]
+    ordered_arm_ids = [arm.arm_id for arm in plan]
     expected_plan_hash = sha256_json(plan_rows)
     sample_universe = [
         {"sample_id": sample_id, "atomic_cluster_id": topology[sample_id]}
@@ -1669,9 +1707,9 @@ def _assess_fresh_confirm_release(
     if not isinstance(execution_binding, Mapping) or not all(
         (
             execution_binding.get("plan_sha256") == expected_plan_hash,
-            execution_binding.get("registered_arm_count") == 313,
+            execution_binding.get("registered_arm_count") == len(plan),
             execution_binding.get("registered_arm_ids_sha256")
-            == sha256_json(sorted(arm.arm_id for arm in plan)),
+            == sha256_json(ordered_arm_ids),
             execution_binding.get("sample_ids_sha256")
             == sha256_json(sorted(sample_ids)),
             execution_binding.get("sample_count") == len(sample_ids),
@@ -1737,7 +1775,7 @@ def _assess_fresh_confirm_release(
         (
             bundle.get("plan") != plan_rows,
             bundle.get("plan_sha256") != expected_plan_hash,
-            bundle.get("registered_arm_count") != 313,
+            bundle.get("registered_arm_count") != len(plan),
             bundle.get("sample_universe") != sample_universe,
             bundle.get("sample_universe_sha256") != sample_universe_hash,
             bundle.get("split_sample_count") != len(sample_ids),
@@ -1800,18 +1838,17 @@ def _assess_fresh_confirm_release(
     )
     if any(
         (
-            len(plan) != 313,
             actual_pairs != expected_pairs,
             not rows_completed,
             bundle.get("execution_status") != "ready-for-analysis",
-            bundle.get("executed_arm_count") != 313,
+            bundle.get("executed_arm_count") != len(plan),
             execution_binding.get("bundle_row_universe_sha256") != sha256_json(rows),
             execution_binding.get("bundle_row_count") != len(rows),
             execution_binding.get("endpoint_artifact_universe_sha256")
             != sha256_json(sorted(endpoint_universe)),
         )
     ):
-        raise IntegrityError("phase-A bundle is not the exact completed 313-arm universe")
+        raise IntegrityError("phase-A bundle is not the exact completed arm-plan universe")
 
     recomputed_ceiling = _recompute_all_oracle_ceiling(
         rows=rows,
@@ -1825,10 +1862,8 @@ def _assess_fresh_confirm_release(
         raise ContractError("fresh-confirm qualification requires passed phase-A gates")
 
     epsilon_registry = preregistration.get("epsilon_gain")
-    if not isinstance(epsilon_registry, Mapping) or len(epsilon_registry) != 156:
-        raise ContractError(
-            "fresh-confirm qualification requires an exact 156-contrast epsilon registry"
-        )
+    if not isinstance(epsilon_registry, Mapping):
+        raise ContractError("fresh-confirm qualification requires an epsilon registry")
     for contrast_id, epsilon in epsilon_registry.items():
         if (
             not isinstance(contrast_id, str)
@@ -1854,6 +1889,15 @@ def _assess_fresh_confirm_release(
         confidence=float(bootstrap.get("confidence", 0.95)),
         alternative=alternative,
     )
+    expected_epsilon_ids = {
+        str(summary["contrast_id"])
+        for summary in recomputed_contrasts
+        if summary.get("contrast") in SEMANTIC_CONTRASTS
+    }
+    if set(epsilon_registry) != expected_epsilon_ids:
+        raise ContractError(
+            "epsilon registry does not match the exact semantic contrast ID set"
+        )
     attribution_minimum_deltas = resolve_attribution_minimum_deltas(
         preregistration,
         recomputed_contrasts,
@@ -1928,9 +1972,9 @@ def _assess_fresh_confirm_release(
         "schema_version": "chesstory.eval.experiment-report.v1",
         "split_sample_count": len(sample_ids),
         "atomic_cluster_count": len({str(cluster) for cluster in topology.values()}),
-        "registered_arm_count": 313,
+        "registered_arm_count": len(plan),
         "expected_row_count": len(expected_pairs),
-        "executed_arm_count": 313,
+        "executed_arm_count": len(plan),
         "status": "completed-fresh-confirm",
         "endpoint_allowed_set_source": "pre-unblinding-frozen-run-artifact",
         "live_command_config": bundle.get("live_command_config"),
@@ -1982,7 +2026,7 @@ def _assess_fresh_confirm_release(
             "seed": preregistration.get("seed"),
             "preregistration_sha256": sha256_json(preregistration),
             "plan_sha256": expected_plan_hash,
-            "registered_arm_count": 313,
+            "registered_arm_count": len(plan),
             "sample_universe_sha256": sample_universe_hash,
             "row_universe_sha256": row_universe_hash,
             "epsilon_registry_sha256": sha256_json(epsilon_registry),
@@ -2059,9 +2103,9 @@ def _assess_fresh_confirm_release(
         "split_input_sha256": split_hash,
         "endpoint_policy_sha256": policy_sha,
         "plan_sha256": expected_plan_hash,
-        "registered_arm_count": 313,
+        "registered_arm_count": len(plan),
         "epsilon_registry_sha256": sha256_json(epsilon_registry),
-        "epsilon_contrast_count": 156,
+        "epsilon_contrast_count": len(expected_epsilon_ids),
         "sample_universe_sha256": sample_universe_hash,
         "expected_row_count": len(expected_pairs),
         "selected_attribution_hypothesis_sha256": sha256_json(hypothesis),
@@ -2296,9 +2340,6 @@ def _recompute_fresh_confirm_equivalence(
         reasons.append("split-binding-missing")
     if not _SHA256_RE.fullmatch(endpoint_policy_hash):
         reasons.append("frozen-endpoint-policy-missing")
-    if len(plan) != 313:
-        reasons.append("full-frozen-arm-plan-required")
-
     expected_pairs = {
         (str(sample["sample_id"]), arm.arm_id)
         for sample in sample_universe
@@ -2723,8 +2764,8 @@ def _validate_equivalence_certificate(
         raise ContractError("unsupported fresh-confirm equivalence schema")
     if document.get("split") != "fresh-confirm" or document.get("fresh_confirm") is not True:
         raise ContractError("equivalence evidence is not from fresh-confirm")
-    if document.get("expected_contrast_count") != 156:
-        raise ContractError("equivalence evidence does not cover all 156 contrasts")
+    if document.get("expected_contrast_count") != len(epsilon_registry):
+        raise ContractError("equivalence evidence does not cover the exact epsilon registry")
     if document.get("minimum_atomic_clusters") != minimum_clusters:
         raise ContractError("equivalence minimum-cluster gate differs from preregistration")
     if document.get("oracle_chains") != sorted(chains):
@@ -2870,10 +2911,12 @@ def _validate_qualification_document(document: Mapping[str, Any]) -> None:
         "live_command_config_sha256",
     ):
         _require_sha256(binding.get(key), f"qualification binding {key}")
-    if binding.get("split") != "fresh-confirm" or binding.get("registered_arm_count") != 313:
-        raise ContractError("qualification does not bind the full fresh-confirm plan")
-    if binding.get("epsilon_contrast_count") != 156:
-        raise ContractError("qualification epsilon registry is not exact")
+    if binding.get("split") != "fresh-confirm":
+        raise ContractError("qualification does not bind fresh-confirm")
+    for field in ("registered_arm_count", "epsilon_contrast_count"):
+        value = binding.get(field)
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise ContractError(f"qualification {field} is invalid")
     expected_rows = binding.get("expected_row_count")
     if isinstance(expected_rows, bool) or not isinstance(expected_rows, int) or expected_rows <= 0:
         raise ContractError("qualification expected row count is invalid")
@@ -2952,7 +2995,7 @@ def _validate_execution_row_artifacts(
     A row and an endpoint capture are two summaries of the same adjudication.
     Hashing both is insufficient if their semantic fields can disagree, so the
     boundary compares the two documents field-for-field and derives the blind
-    evaluator-view hash again from the attested canonical V output.
+    evaluator-view hash again from the attested canonical P output.
     """
 
     sample_id = row.get("sample_id")
@@ -3097,24 +3140,24 @@ def _validate_execution_row_artifacts(
         row.get("evaluator_artifact_hash"), "execution row evaluator artifact hash"
     )
 
-    v_entry = stage_artifacts["V"]
-    assert isinstance(v_entry, Mapping)
-    v_hashes = v_entry["capture_hashes"]
-    assert isinstance(v_hashes, Mapping)
-    v_relative = (
+    p_entry = stage_artifacts["P"]
+    assert isinstance(p_entry, Mapping)
+    p_hashes = p_entry["capture_hashes"]
+    assert isinstance(p_hashes, Mapping)
+    p_relative = (
         f"samples/{ArtifactStore._segment(sample_id)}/"
-        f"{ArtifactStore._segment(arm_id)}/{ArtifactStore._segment('v')}/"
+        f"{ArtifactStore._segment(arm_id)}/{ArtifactStore._segment('p')}/"
         "canonical-output.json"
     )
-    v_file_entry = run_file_hashes.get(v_relative)
+    p_file_entry = run_file_hashes.get(p_relative)
     if (
-        not isinstance(v_file_entry, Mapping)
-        or v_file_entry.get("sha256") != v_hashes.get("canonical-output.json")
+        not isinstance(p_file_entry, Mapping)
+        or p_file_entry.get("sha256") != p_hashes.get("canonical-output.json")
     ):
-        raise IntegrityError("completed execution row V artifact binding mismatch")
-    canonical_v = _read_run_json(artifact_store, v_relative)
+        raise IntegrityError("completed execution row P artifact binding mismatch")
+    canonical_p = _read_run_json(artifact_store, p_relative)
     expected_evaluation_view_hash = sha256_json(
-        source_blind_evaluation_view(canonical_v)
+        source_blind_evaluation_view(canonical_p)
     )
     claimed_evaluation_view_hash = _require_sha256(
         endpoint_document.get("evaluation_view_sha256"),
@@ -3122,7 +3165,7 @@ def _validate_execution_row_artifacts(
     )
     if claimed_evaluation_view_hash != expected_evaluation_view_hash:
         raise IntegrityError(
-            "endpoint evaluation-view hash is not derived from the attested canonical V"
+            "endpoint evaluation-view hash is not derived from the attested canonical P"
         )
     return endpoint_document
 
@@ -4253,8 +4296,13 @@ def _validate_run_attestation_document(document: Mapping[str, Any]) -> None:
         "bundle_row_universe_sha256",
     ):
         _require_sha256(execution_binding.get(key), f"execution_binding.{key}")
-    if execution_binding.get("registered_arm_count") != 313:
-        raise ContractError("run attestation does not bind the full 313-arm plan")
+    registered_arm_count = execution_binding.get("registered_arm_count")
+    if (
+        isinstance(registered_arm_count, bool)
+        or not isinstance(registered_arm_count, int)
+        or registered_arm_count <= 0
+    ):
+        raise ContractError("run attestation registered_arm_count is invalid")
     sample_count = execution_binding.get("sample_count")
     if isinstance(sample_count, bool) or not isinstance(sample_count, int) or sample_count <= 0:
         raise ContractError("run attestation sample_count is invalid")

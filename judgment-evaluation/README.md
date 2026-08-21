@@ -1,10 +1,10 @@
 # Chesstory Judgment Evaluation Harness
 
-이 디렉터리는 Chesstory의 판단 품질을 배포 코드 밖에서 식별하기 위한 외부 평가 하네스다. 판단 과정을 `Q → F → C → Jp → Ja → R → P → V`의 버전된 계약으로 나누고, 실제 산출물과 같은 스키마의 전문가 oracle을 단계별로 교체해 최종 실패가 어느 인터페이스에서 회복되는지 측정한다.
+이 디렉터리는 Chesstory의 판단 품질을 배포 코드 밖에서 식별하기 위한 외부 평가 하네스다. 실제 산출물과 같은 스키마의 전문가 oracle과 불변 artifact를 결속해 외부 진단을 수행한다.
 
 이 하네스가 존재하거나 `doctor`가 통과한다는 사실만으로 생산 판단의 정확성, 설명 품질, 병목 식별이 증명되지는 않는다. 현재 생산 경계와 예약 코퍼스로 얻을 수 있는 결론은 **판정 불가(indeterminate)** 다.
 
-기계가 소비하는 판단 계약·코퍼스 라벨·provider 입출력·프록시 평가는 영어를 canonical backend language로 사용한다. `preregistration.verbalization_policy.language`와 각 explore 라벨의 `language`는 모두 `en`이어야 하며 `doctor`가 이를 강제한다. 이 README와 사용자 보고서의 한국어는 설명 표면일 뿐 실행 payload에 들어가지 않는다.
+기계가 소비하는 판단 계약·코퍼스 라벨·provider 입출력은 구조화된 JSON으로만 교환한다. 이 README와 사용자 보고서는 실행 payload에 들어가지 않는다.
 
 ## 목적과 비목표
 
@@ -18,7 +18,7 @@
 
 명시적인 비목표는 다음과 같다.
 
-- 운영 기본 응답과 판단 결과를 바꾸지 않는다. 운영 쪽 변경은 호출별·기본 무효인 stage 경계와 typed trace에 한정한다.
+- 운영 기본 응답과 판단 결과를 바꾸지 않는다.
 - 배포 테스트 코드를 늘리거나 봉인 코퍼스를 운영 모듈의 테스트 fixture로 옮기지 않는다.
 - 운영 모듈, 체스 규칙, 판단 정책을 이 디렉터리에 복제하지 않는다.
 - 공개 응답을 관측했다는 이유로 노출되지 않은 중간 stage artifact를 추정하거나 만들어 내지 않는다.
@@ -35,15 +35,14 @@
 | Ja | 참인 후보 승인과 거짓 후보 거부 | precision-constrained recall |
 | R | 승인 claim의 중복 제거와 중요도 순위 결정 | 핵심 claim top-1 agreement |
 | P | packet 의미를 공개 JSON으로 손실 없이 투영 | 의미 필드 보존율 |
-| V | 투영된 의미를 근거 제한 문장으로 표현 | 근거 위반 0 하의 유용성 |
 
-`Jp`와 `Ja`를 분리해야 탐색 실패와 과잉 거부를 구분할 수 있고, `P`와 `V`를 분리해야 투영 손실을 문장화 실패로 오인하지 않는다.
+`Jp`와 `Ja`를 분리해야 탐색 실패와 과잉 거부를 구분할 수 있으며, `P`는 `Q → F → C → Jp → Ja → R → P`에서 끝나는 구조화된 runtime projection 경계다.
 
 ## 구현 구조
 
 | 위치 | 역할 |
 |---|---|
-| `schemas/v1/` | Q/F/C/Jp/Ja/R/P/V 각각의 입력·출력 스키마 16개와 공통 envelope 계약 |
+| `schemas/v1/` | 보존된 stage 입력·출력 스키마와 공통 envelope 계약 |
 | `src/chesstory_eval/schemas.py` | 스키마 참조 해석, registry 검증, stage 문서 검증 |
 | `src/chesstory_eval/capture.py` | 원시 입력·출력, validated/canonical 출력, provider I/O와 metadata의 불변 저장, 해시 연결 ledger와 접근 로그 |
 | `src/chesstory_eval/adapters.py` | actual/oracle/replay/외부 command 산출물을 같은 stage 호출 계약으로 변환하고 가용성 경계를 강제 |
@@ -53,11 +52,9 @@
 | `src/chesstory_eval/canonicalize.py` | 참조를 보존한 ID 재할당과 스키마가 허용한 비의미 형식만 정규화 |
 | `src/chesstory_eval/statistics.py` | 원자 클러스터 paired bootstrap, 사전 등록 대조량과 Holm 다중비교 보정 |
 | `src/chesstory_eval/evaluation.py` | source/arm-blind 최종 endpoint `E`의 diagnostic replay와 release live 평가 계약 |
-| `src/chesstory_eval/native_diagnostic.py` | frozen v1의 313개 arm을 native-v2 shadow로 물질화하던 보존 runner. 현재 v3 runtime adapter는 의도적으로 거부하며, 별도 v3 runner 이관 전에는 새 실행에 사용할 수 없다. |
-| `src/chesstory_eval/model_proxy.py` | role-blind 비인간 평가 vote를 검증·집계하되 human/release/attribution 자격으로 승격하지 않는 보조 계층 |
 | `corpus/v1/` | manifest, 사전 등록, 역할·접근 정책, explore와 봉인 예약 split |
 | `references/` | 로컬 참고 PDF의 불투명 ID·해시·페이지 메타데이터만 보존하는 색인 |
-| `runtime-adapter/` | 운영 판단 규칙을 복제하지 않고 native Q–P ADT와 typed V 부재를 결정적으로 캡처하는 얇은 외부 Scala 어댑터 |
+| `runtime-adapter/` | development-only current public-v4 schema JSONL adapter. CauseAudit는 untrusted raw transport/probe capture만 하며 player authority나 quality proof를 주장하지 않는다. |
 
 ### Schema와 artifact capture
 
@@ -69,13 +66,13 @@ Artifact store는 stage별 raw input, raw output, validated output, canonical ou
 
 Stage adapter는 실제 산출물과 oracle 산출물을 같은 입력 payload와 같은 출력 스키마 아래에서 호출한다. Replay는 sample, stage, source, oracle chain, 실험 문맥과 입력 해시가 일치하는 artifact만 사용할 수 있다. 열린 진단 경로는 코퍼스의 외부 취득 Q, `--stage-replay`, `--evaluator-replay`를 계속 사용할 수 있다. Live 경로는 `--live-command-config`의 shell-free 명령만 호출하며, 명시된 route가 provider I/O 뒤 실패하면 replay로 조용히 대체하지 않는다.
 
-Live config의 최상위 계약은 `chesstory.eval.live-command-config.v1`이며 `stage_routes`와 단일 `evaluator_route`를 가진다. 각 route는 `argv` 문자열 배열, 1–3600초의 `timeout_seconds`, 명시적 `env` 객체와 `bound_files` 배열을 반드시 포함한다. 각 bound-file 항목은 정확히 `{argv_index,path,sha256,size}`이고, `path`는 해당 `argv` 원소와 문자 단위로 같은 canonical absolute regular non-link file이어야 한다. `argv[0]`은 반드시 결속되므로 PATH 탐색 실행은 허용되지 않는다. 실행 파일뿐 아니라 argv로 전달하는 script, JAR, model, engine 파일도 각각 결속해야 한다. Oracle route는 `oracle_chain`도 포함한다. 알 수 없는 필드, 중복 JSON key/route, 비유한 수, shell 문자열, NUL, secret/token/password/key 계열 환경변수와 알려진 secret 형태의 값은 거부된다. 봉인 실행은 Q/F/C/Jp/Ja/R/P/V의 actual 8개와 사전 등록된 두 chain별 oracle 16개 route가 정확히 모두 있어야 한다.
+Live config의 최상위 계약은 `chesstory.eval.live-command-config.v1`이며 `stage_routes`와 단일 `evaluator_route`를 가진다. 각 route는 `argv` 문자열 배열, 1–3600초의 `timeout_seconds`, 명시적 `env` 객체와 `bound_files` 배열을 반드시 포함한다. 각 bound-file 항목은 정확히 `{argv_index,path,sha256,size}`이고, `path`는 해당 `argv` 원소와 문자 단위로 같은 canonical absolute regular non-link file이어야 한다. `argv[0]`은 반드시 결속되므로 PATH 탐색 실행은 허용되지 않는다. 실행 파일뿐 아니라 argv로 전달하는 script, JAR, model, engine 파일도 각각 결속해야 한다. Oracle route는 `oracle_chain`도 포함한다. 알 수 없는 필드, 중복 JSON key/route, 비유한 수, shell 문자열, NUL, secret/token/password/key 계열 환경변수와 알려진 secret 형태의 값은 거부된다. 봉인 실행의 route 구성은 보존된 schema 계약으로 검증된다.
 
 Candidate freeze는 component root 안의 config와 bound file을 `live-command-config` component의 exact file manifest에 넣고, root 밖 파일은 별도 signed `external_executable_binding`에 canonical absolute-path fingerprint, byte SHA-256, size와 route/argv 사용처로 결속한다. 이 결속은 split open 전과 각 호출 직전·직후 다시 검증된다. Release 실행은 Windows에서 각 파일을 read-only, share-read-only handle로 열어 호출이 끝날 때까지 write/delete/rename sharing을 금지한다. 이 보장이 없는 플랫폼의 release 실행은 명시적으로 fail-closed한다. 이는 argv 밖에서 프로세스가 암묵적으로 여는 미신고 파일까지 자동 발견한다는 뜻은 아니므로 route 소유자는 모든 실행 의존 파일을 `bound_files`에 열거해야 한다.
 
-Evaluator의 stdin은 canonical V에서 만든 `chesstory.eval.source-blind-view.v1` 객체 그 자체뿐이다. Sample ID와 canonical-output hash는 arm/source/oracle/provider 정보가 없는 전용 control-plane 환경변수로 전달하며, 응답이 두 값을 정확히 echo해야 한다. Release 응답은 endpoint policy의 정확한 rater roster, rater별 `{evaluator_id, score}` vote와 그 산술평균인 `usefulness_consensus`를 포함해야 한다. 평가 artifact, stdout/stderr/base64를 포함한 raw provider I/O와 각 rater의 접근 event는 immutable run tree와 append-only 접근 로그에 남는다.
+개발 evaluator `E`의 stdin은 `chesstory.eval.source-blind-p-view.v1` 객체 그 자체뿐이며 canonical P의 `payload`를 정확히 얕게 복사한 것이다. `E`는 Cause, verdict, importance, legality를 재판정하지 않는다. Sample ID와 canonical-output hash는 arm/source/oracle/provider 정보가 없는 전용 control-plane 환경변수로 전달하며, 응답이 두 값을 정확히 echo해야 한다. Release 응답은 endpoint policy의 정확한 rater roster, rater별 `{evaluator_id, score}` vote와 그 산술평균인 `usefulness_consensus`를 포함해야 한다. 평가 artifact, stdout/stderr/base64를 포함한 raw provider I/O와 각 rater의 접근 event는 immutable run tree와 append-only 접근 로그에 남는다.
 
-고정 계획은 두 독립 oracle chain에 대해 actual/format-control/oracle 조건, stable-Q, all-oracle, one-stage, leave-one-actual, forward/backward substitution, 인접 stage factorial을 포함한다. 현재 계획은 313개 arm이다. Runner는 하네스 identity/null control과 두 chain의 all-oracle ceiling이 통과한 뒤에만 개입 arm과 통계 대조를 확장한다.
+고정 계획은 두 독립 oracle chain에 대해 actual/format-control/oracle 조건, stable-Q, all-oracle, one-stage, leave-one-actual, forward/backward substitution, 인접 stage factorial을 포함한다. schema 수와 arm 수는 현행 `STAGES`에서 `doctor`와 `plan`이 도출한다. Runner는 하네스 identity/null control과 두 chain의 all-oracle ceiling이 통과한 뒤에만 개입 arm과 통계 대조를 확장한다.
 
 ### Canonicalizer와 statistics
 
@@ -85,25 +82,17 @@ Canonicalizer는 스키마가 명시적으로 허용한 세 변환만 한다.
 - `unordered-set`으로 선언된 배열의 표현 순서 정규화
 - `null-equivalent-omission`으로 선언된 `null`의 생략
 
-각 arm은 Q부터 V까지 하나의 canonicalization/transition session을 사용한다. 앞 단계에서 정의된 ID mapping을 다음 단계가 이어받고, duplicate definition·dangling reference, Ja 밖 R claim, packet 밖 P 의미, P 밖 V citation과 허가되지 않은 move/square/piece span을 fail-closed한다. Confidence, ranked list 순서, 실제 missingness, 수치, 문구, 집합 cardinality는 바꾸지 않는다. 따라서 format-control은 작동 의미를 바꾸는 정책 개입이 아니다.
+개발 하네스의 각 arm은 P까지 하나의 canonicalization/transition session을 사용하지만 player/runtime 권위를 대체하거나 확장하지 않는다. 앞 단계에서 정의된 ID mapping을 다음 단계가 이어받고, duplicate definition·dangling reference, Ja 밖 R claim, packet 밖 P 의미를 fail-closed한다. Confidence, ranked list 순서, 실제 missingness, 수치, 문구, 집합 cardinality는 바꾸지 않는다. 따라서 format-control은 작동 의미를 바꾸는 정책 개입이 아니다.
 
 통계 계층은 같은 원자 클러스터의 treatment/control을 짝지은 bootstrap을 사용하고, 사전 등록된 단측 신뢰구간과 Holm 보정을 적용한다. 유의하지 않음은 동등성의 증거가 아니다. 잔여 이득이 없다는 결론에는 별도 fresh-confirm에서 `epsilon_gain`에 대한 단측 상한 기준을 통과해야 한다.
 
 병목 귀속은 foundation control과 두 all-oracle ceiling이 먼저 통과한 완전 실행에서만 결정론적으로 계산한다. `diagnostic-explore`는 Φ를 제외한 Δ/Λ/Γ 중 두 fixed oracle chain이 동일한 `(contrast, context, focus_stage, held_stage, held_source)` 좌표에서 별도로 사전 등록한 `attribution_minimum_delta`, 양의 단측 CI 하한, Holm-adjusted `p`, 최소 원자 cluster를 모두 만족한 항목을 후보 목록으로만 남기며 `production_bottleneck`은 항상 `null`이다. 잔여 이득 동등성 경계인 `epsilon_gain`이나 release 비열등성 delta를 양성 귀속의 최소 효과량으로 재사용하지 않으며, 별도 귀속 threshold가 없으면 fail-closed한다. `diagnostic-confirm`은 정확히 사전 등록된 positive hypothesis와 chain별 contrast ID가 같은 좌표로 재현될 때만 확정한다. 비-factorial 좌표는 `confirmed-stage-bottleneck`과 stage를 반환하지만, factorial Γ는 `confirmed-interface-conditioned-bottleneck`과 exact held interface를 반환하고 단일 stage `production_bottleneck`은 `null`로 유지한다. `fresh-confirm`과 `blind`는 새 병목 귀속을 만들지 않는다.
 
-## 생산 런타임의 현재 관측 경계
+## CauseAudit의 현재 관측 경계
 
-운영 런타임에는 호출별 `JudgmentBoundaryIntervention`과 `RuntimeBoundaryIntervention`이 있다. 아무 개입도 넘기지 않는 기본값은 기존 경로와 같은 판단·공개 응답을 만들며, 전역 상태·환경변수·파일로 활성화되는 우회 경로는 없다. Oracle callback은 각 stage의 입력만 받고 실제 stage 산출물을 보지 않으며, 반환값은 질문 불변식, F/C 소유권, claim/evidence closure, rank·dedup 계보, packet-derived P payload와 probe 부분수열 조건을 통과해야 한다.
+CauseAudit는 development-only untrusted raw public-response/probe capture 경로다. `RuntimePublicResponseCli`에서 받은 current public-v4 schema JSONL의 raw bytes, SHA-256, length와 런타임이 발행한 probe의 direct acquisition, cap, binding만 기록한다. Cause, verdict, importance, idea status는 읽거나 재판정하지 않는다.
 
-현재 외부 adapter는 `chesstory.runtime-observation.v3`와
-`chesstory.move-meaning.response.v3`로 다음 경계를 관측한다.
-
-- **Q/F/C/Jp/Ja/R/P는 observed-native**: 정상적으로 packet이 만들어진 실제 요청에서 각 native ADT를 구조 손실 없이 캡처한다.
-- **V는 typed unavailable**: 운영 verbalizer가 없으므로 빈 문자열이나 공개 응답을 V로 가장하지 않는다.
-- packet이 만들어지지 않은 요청은 Q–R까지만 관측하고 P를 `unavailable`로 기록한다. 잘못된 요청은 도달하지 않은 모든 경계를 명시한다.
-- 전체 observation은 stage별 SHA-256과 upstream hash chain을 가지며, 공개 응답은 별도 hash로 보존한다.
-
-다만 native ADT와 frozen v1 의미 스키마는 같은 계약이 아니다. F/C context, Jp의 assertion·confidence, Ja의 Certified/Deferred/Rejected, R 상세 trace, P runtime projection을 v1 의미 필드로 옮기는 무손실·검증 가능한 bridge가 아직 없다. 또한 보존된 `native_diagnostic.py`는 producer identity를 native-v2/response-v2로 고정하므로 현재 v3 CLI를 의도적으로 거부한다. 별도 v3 runner 이관 전에는 새 native engineering run을 시작하지 않는다. 이는 **생산 F 품질의 실패가 아니라 평가 인터페이스의 첫 차단점**이다. 두 독립 oracle chain과 source-blind evaluator도 준비되지 않았으므로 `production_bottleneck`은 계속 `null`이다.
+player/runtime authority는 `Q → F → C → Jp → Ja → R → P`에만 있으며, current public-v4 schema는 development-only untrusted raw transport일 뿐 authority가 아니다. `run`은 player authority나 quality proof가 아니다.
 
 ## 참고 자료와 저작권 경계
 
@@ -157,7 +146,7 @@ python -m pip install -e .
 python -m chesstory_eval doctor --root .
 ```
 
-`doctor`는 영어 backend 정책, 16개 stage schema, open split과 참고 locator, sealed split의 개발자 접근 거부와 파일 해시, canonicalizer 불변식, artifact ledger control, 고정 arm 계획을 점검한다. 현재 통과 결과는 17개 참고 문서, explore 3표본·2클러스터, 313개 arm을 보고한다. 이는 하네스 건강 점검이지 생산 품질 합격이 아니다.
+`doctor`는 현행 `STAGES`에서 도출한 stage schema 수와 고정 arm 계획, open split과 참고 locator, sealed split의 개발자 접근 거부와 파일 해시, canonicalizer 불변식, artifact ledger control을 점검한다. 현재 통과 결과는 참고 문서와 explore 표본·클러스터 및 도출된 arm 계획을 보고한다. 이는 하네스 건강 점검이지 생산 품질 합격이 아니다.
 
 ### 고정 intervention 계획
 
@@ -175,84 +164,23 @@ python -m chesstory_eval q-diagnostic --root . --stockfish STOCKFISH_EXECUTABLE 
 
 이 명령은 열린 explore split만 대상으로 더 높은 depth·MultiPV와 반복 안정성 조건의 Q 증거를 외부 Stockfish에서 취득하고 원시 engine I/O까지 capture한다. 기본값은 depth 20, MultiPV 4, 3회 반복, 안정성 허용폭 15cp, Threads 1, Hash 64MB다. Q의 coverage와 안정성이 좋아져도 downstream stage나 생산 병목이 식별되는 것은 아니며, 현재 2클러스터에서는 보고서가 `indeterminate`여야 한다.
 
-Q diagnostic은 단일 실행 명령이다. 정규화된 run ID의 불변 디렉터리가 이미 존재하면 provider를 시작하기 전에 거부하며, `--output`도 같은 정규화 규칙으로 그 디렉터리 내부를 가리킬 수 없게 막는다. 아래 native-v2 명령은 현재 실행 대상이 아닌 보존 예시다.
+Q diagnostic은 단일 실행 명령이다. 정규화된 run ID의 불변 디렉터리가 이미 존재하면 provider를 시작하기 전에 거부하며, `--output`도 같은 정규화 규칙으로 그 디렉터리 내부를 가리킬 수 없게 막는다.
 
-### 보존된 native-v2 engineering diagnostic (현재 이관 차단)
+### CauseAudit raw capture
 
-```text
-python -m chesstory_eval native-diagnostic --root . --run-id native-diagnostic-explore --sbt SBT_EXECUTABLE --adapter-root runtime-adapter --output reports/native-diagnostic-explore.json
-```
-
-위 명령은 native-v2/response-v2 producer identity에 고정된 역사적 실행 예시다. 현재 runtime adapter는 v3를 내보내므로 runner가 provider identity 불일치로 fail-closed해야 하며, v3 schema·validator·artifact contract를 갖춘 별도 이관 전에는 실행하지 않는다. 보존된 v2 실행에서는 embedded actual Q를 운영 request envelope로 엄격히 옮기고 invocation, raw provider I/O, validated result를 서로 다른 불변 artifact로 저장했으며, 로컬 경로 대신 SHA-256 결속만 남겼다. 이 보존 경로 역시 frozen-v1 oracle 의미나 생산 병목 귀속을 주장하지 않는다.
-
-### Blind model proxy
-
-`model_proxy.py`는 source와 정답을 보지 않은 역할별 평가자의 영어 view/vote를 결속하고 Stockfish 증거와 함께 engineering endpoint를 집계할 수 있다. 이 결과의 tier는 항상 `model-proxy-nonhuman`이고 held-out-human 수는 0이다. 따라서 일치도가 높더라도 3명 이상의 독립 인간 평가자 조건, release gate 또는 생산 병목 귀속을 대신하지 않는다.
-
-### Provisional full-chain proxy diagnostic
-
-`provisional-proxy-diagnostic`는 운영 모듈을 복제하거나 호출 경로를 바꾸지 않는 외부 진단이다. Frozen 313-arm 계획과 explore 3표본의 939행을 모두 물질화하고, Q→F→C→Jp→Ja→R→P→V 산출물을 같은 frozen-v1 schema, canonicalizer와 append-only artifact ledger로 결속한다. 의미가 같은 stage prefix는 한 번만 실행·capture하되, 각 행은 원래 arm source와 공유 artifact hash를 명시적으로 참조한다. Cache key에는 sample, stage, effective source prefix와 upstream canonical output hash가 포함되므로 의미가 다른 실행을 합치지 않는다.
-
-완성 probe report는 실행 전에 모든 참조 artifact의 경로와 SHA-256을 재검증하고 Q에 명시적으로 결속한다. Pre-fix, rank/projection-only, current-semantic-fix report도 각각 명시적으로 받아 같은 검증을 거친 뒤 `C→C→V` engineering trajectory로 별도 기록한다. 939행 matrix는 current report에 결속된 descriptive proxy reachability일 뿐이며 이 production trajectory의 근거로 가장하지 않는다. Machine-readable schema, receipt, stage output, evaluator와 report payload는 영어만 사용하고, canonical ASCII가 아닌 run ID나 artifact 내부 문자열은 capture 전에 거부한다. Expert label을 보조한 oracle과 영어 proxy V는 engineering reachability를 진단할 뿐이며, 독립 인간 평가·formal inference·release gate·`production_bottleneck`을 만들지 않는다.
-
-```text
-python -B -m chesstory_eval provisional-proxy-diagnostic --root . --run-id provisional-model-proxy-chain-20260727-v1 --native-run artifacts/native-engineering-diagnostic-20260726-v5 --oracle-q-run artifacts/q-stable-diagnostic-20260726-v11 --baseline-probe-completion-report artifacts/probe-completion-diagnostic-20260727-v1/report.json --intermediate-probe-completion-report artifacts/probe-completion-diagnostic-20260727-v2/report.json --probe-completion-report artifacts/probe-completion-diagnostic-20260727-v11/report.json --output reports/provisional-model-proxy-chain-20260727-v1.json
-```
-
-위 명령의 v11 결속 실행은 완료됐다. 외부 보고서 `reports/provisional-model-proxy-chain-20260727-v1.json`의 물리 SHA-256은 `634d3fe155b3b6784daaa51e0649f672818b64530f815b2ae014af9a88bb5773`이고, run 내부의 `artifacts/provisional-model-proxy-chain-20260727-v1/provisional-model-proxy-report.json`은 같은 JSON 의미를 가지며 물리 SHA-256은 `affd05266eee9ee23b2f2632f7ae32c4cf19aa440ac1da39b92bc61a8abef469`이다. `artifact-ledger.jsonl`은 445개 record, SHA-256 `14513314ac1408f825919adb416c21602a2f7f4e04dee97122a1f69855ef2258`, 최종 chain head `21d2db1023f454d054c7bcce180ef14a3931b5af7231455dade50b47ca6d8180`으로 검증됐다.
-
-실행 수치는 313 arm, 939행, 7,512개 row-stage 참조, 357개 고유 stage capture, 7,155개 재사용 참조, 87개 고유 endpoint 평가다. Hash-bound runtime checkpoint의 실용적 engineering trajectory는 `C→C→V`이며 current primary locus는 미구현 verbalization 경계 `V`다. 이는 구체적인 수정·구현 우선순위 판정이다. 반면 세 explore 표본·두 원자 cluster, model-proxy 비인간 평가, 독립 인간 평가자 부재라는 통계적 한계 때문에 formal inference는 `indeterminate`, `production_bottleneck`은 별도 필드에서 `null`로 유지한다.
-
-### Broad blind Cause audit
-
-`cause-audit`는 기존 313-arm 실험을 다시 실행하지 않고 C 원인 판정과 그 원인에서 이어지는 Jp→Ja→R→P만 넓게 검사하는 외부 경로다. 운영 판단 규칙을 복제하지 않으며 `CauseAuditAdapterCli`의 compact native view, 기존 Stockfish 취득기, 선택적 `reply_multipv` probe 완료기, schema registry, canonicalizer와 immutable artifact store를 그대로 연결한다.
-
-코퍼스와 oracle은 런타임을 호출하기 전에 먼저 freeze한다. 논리 split은 원본 JSONL의 역사적 partition을 바꾸지 않고, 라벨이나 런타임을 보지 않는 `minimum SHA-256 per cause_family` 규칙으로 8개 cause family 각각에서 정확히 1개를 `sealed_confirm`, 나머지 2개를 `explore`로 고른다. Freeze manifest는 salt, 입력 형식, 각 case의 원래/논리 partition, 선택 해시와 전체 assignment 해시를 모두 보존한다.
+`cause-audit`는 explore-only development untrusted raw public-response/probe capture 경로다. 현재 CLI action은 `freeze`, `acquire`, `run`뿐이며 candidate, sealed, player, quality proof를 만들지 않는다.
 
 ```text
 python -m chesstory_eval cause-audit --root . --action freeze --run-id CAUSE_FREEZE_RUN --cases CASES.jsonl --oracle-label oracle-a=ORACLE_A.jsonl --oracle-label oracle-b=ORACLE_B.jsonl --adjudicated-label ADJUDICATED.jsonl --contamination-exclusion "CASE_ID=PRE_FREEZE_REASON" --output CAUSE_FREEZE.json
 
-python -m chesstory_eval cause-audit --root . --action acquire --run-id CAUSE_Q_RUN --cases CASES.jsonl --manifest CAUSE_FREEZE.json --reference-labels ADJUDICATED.jsonl --partition explore --stockfish STOCKFISH_EXECUTABLE --output CAUSE_Q.json
+python -m chesstory_eval cause-audit --root . --action acquire --run-id CAUSE_Q_RUN --cases CASES.jsonl --manifest CAUSE_FREEZE.json --reference-labels ADJUDICATED.jsonl --stockfish STOCKFISH_EXECUTABLE --output CAUSE_Q.json
 
-python -m chesstory_eval cause-audit --root . --action run --run-id CAUSE_RUNTIME_RUN --cases CASES.jsonl --manifest CAUSE_FREEZE.json --base-oracle BASE_ORACLE_V3.jsonl --acquisition CAUSE_Q.json --partition explore --stockfish STOCKFISH_EXECUTABLE --sbt SBT_EXECUTABLE --adapter-root runtime-adapter --output CAUSE_RUNTIME.json
+python -m chesstory_eval cause-audit --root . --action run --run-id CAUSE_RUNTIME_RUN --cases CASES.jsonl --manifest CAUSE_FREEZE.json --acquisition CAUSE_Q.json --stockfish STOCKFISH_EXECUTABLE --sbt SBT_EXECUTABLE --adapter-root runtime-adapter --output CAUSE_RUNTIME.json
 ```
 
-`cause-audit`는 의미값을 직접 판정하는 유일한 active V3 계약이다. 별도의 contract-version opt-in은 없으며, `run`은 adapter를 시작하기 전에 전체 partition의 독립 typed base oracle을 검증·canonicalize하고 그 물리·의미·case-set hash를 runtime run에 결속한다. `compare`와 open-world inventory 생성은 같은 결속을 다시 계산해 일치하는 active V3 runtime만 받는다. 보관된 V2 실행·비교는 별도 명령 `historical-cause-audit-v2`로만 허용되며 이 base-oracle 결속과 open-world 생산 action을 사용하지 않는다.
+`freeze`는 case와 manifest-bound label을 결속한다. `acquire`와 `run`은 freeze manifest의 순서 있는 explore case set 전체만 사용한다. acquisition v2에는 runtime request를 저장하지 않는다. CauseAudit에는 cache path가 없으며, 각 Q acquisition과 runtime-issued probe를 직접 취득해 raw provider I/O와 함께 capture한다. `run`은 외부 acquisition JSON을 source artifact run의 captured acquisition document와 exact value로 대조하고, 그 store와 각 Q stage-capture ledger binding을 검증한 뒤에만 captured engine pack에서 request를 다시 만든다.
 
-```text
-python -m chesstory_eval cause-audit --root . --action run --run-id CAUSE_RUNTIME_V3 --cases CASES.jsonl --manifest CAUSE_FREEZE.json --base-oracle BASE_ORACLE_V3.jsonl --acquisition CAUSE_Q.json --partition explore --stockfish STOCKFISH_EXECUTABLE --sbt SBT_EXECUTABLE --adapter-root runtime-adapter --output CAUSE_RUNTIME_V3.json
-
-python -m chesstory_eval cause-audit --root . --action freeze-open-world-inventory --run-id CAUSE_INVENTORY_V3 --cases CASES.jsonl --manifest CAUSE_FREEZE.json --base-oracle BASE_ORACLE_V3.jsonl --runtime-arm CAUSE_RUNTIME_V3.json --partition explore --output FROZEN_ARM_INVENTORY.json
-
-python -m chesstory_eval cause-audit --root . --action freeze-open-world-candidates --run-id CAUSE_CANDIDATES_V3 --cases CASES.jsonl --manifest CAUSE_FREEZE.json --base-oracle BASE_ORACLE_V3.jsonl --open-world-arm-inventory FROZEN_ARM_INVENTORY.json --partition explore --output SOURCE_BLIND_CANDIDATES.json
-
-# FROZEN_ADJUDICATION.json is supplied by an external source-blind adjudicator.
-python -m chesstory_eval cause-audit --root . --action finalize-open-world-oracle --run-id CAUSE_ORACLE_FINALIZE_V3 --cases CASES.jsonl --manifest CAUSE_FREEZE.json --base-oracle BASE_ORACLE_V3.jsonl --open-world-arm-inventory FROZEN_ARM_INVENTORY.json --open-world-candidates SOURCE_BLIND_CANDIDATES.json --open-world-adjudication FROZEN_ADJUDICATION.json --run-oracle-output RUN_ORACLE_V3.jsonl --partition explore --output ORACLE_RUN_MANIFEST_V3.json
-
-python -m chesstory_eval cause-audit --root . --action compare --run-id CAUSE_COMPARE_V3 --cases CASES.jsonl --manifest CAUSE_FREEZE.json --labels RUN_ORACLE_V3.jsonl --oracle-run-manifest ORACLE_RUN_MANIFEST_V3.json --base-oracle BASE_ORACLE_V3.jsonl --open-world-arm-inventory FROZEN_ARM_INVENTORY.json --open-world-candidates SOURCE_BLIND_CANDIDATES.json --open-world-adjudication FROZEN_ADJUDICATION.json --runtime-run CAUSE_RUNTIME_V3.json --partition explore --output CAUSE_REPORT_V3.json
-
-python -m chesstory_eval historical-cause-audit-v2 --root . --action run --run-id HISTORICAL_CAUSE_RUNTIME_V2 --cases CASES.jsonl --manifest HISTORICAL_FREEZE.json --acquisition HISTORICAL_Q.json --partition explore --stockfish STOCKFISH_EXECUTABLE --sbt SBT_EXECUTABLE --adapter-root runtime-adapter --output HISTORICAL_CAUSE_RUNTIME_V2.json
-```
-
-v3의 `generation_policy`는 C 존재성만 결정한다. Jp→Ja→R→P 생존 의무는 별도의 `exposure_policy`가 결정한다. `primary`와 `complementary`는 공개 경계를 끝까지 통과해야 하고, `diagnostic_only`는 C 이후 생존 의무가 없으며 R 공개는 금지된다. `fallback_only`의 후속 공개 의무는 더 구체적인 `dominated_by` 의미가 실제 Cause와 대응되어 Ja를 통과하고, 생성된 fallback Cause 자신의 V3 `r.fallback_dominance`가 그 exact Cause ID를 `dominated_fallback`의 dominator로 기록할 때만 면제된다. Fallback Cause가 생성되지 않아 이 결정을 관측할 수 없는 경우에만 자기 자신을 대표하는 `selected_primary` 또는 `selected_complementary` cross-comparison 결정을 보조 권위로 사용한다. Ja 생존이나 diagnostic R 기록만으로는 fallback을 억제하지 않으며, 해당 V3 관측이 누락되거나 모순되면 fallback 의무를 유지한다. Oracle의 `channels`는 대안 목록이 아니라 논리곱이므로 각 expected channel이 서로 다른 actual owned channel 하나와 정확히 대응해야 한다.
-
-Typed compare는 논리 partition 하나만 읽으며 반대 partition row를 즉시 거부한다. Run manifest의 base oracle, run oracle, frozen arm inventory, source-blind candidate set, frozen adjudication SHA-256은 CLI로 받은 실제 파일 bytes와 대조한다. Arm inventory만 각 arm의 producer 계약, 실제 cascade hash, unmatched C의 stage와 selection variant를 진단 정보로 보존한다. 이번 계약에서 모든 arm은 동일한 frozen partition case set을 중복 없이 전부 가져야 하므로 arm×case coverage는 완전 직교한다. Candidate/adjudication에는 support ID, Cause ID, arm ID, observed stage, R/P 선택 상태를 넣지 않고 정확한 C 소유 의미만 원자 단위로 공개한다. 같은 case와 C 의미의 candidate ID는 결정적이며 candidate set은 frozen inventory에 있는 모든 arm의 unmatched-C 합집합과 정확히 같아야 한다.
-
-Adjudication은 모든 candidate에 대해 정확히 한 번 accepted/rejected를 기록하고 candidate 전체 hash를 다시 결속한다. Source-blind adjudicator는 실제 arm의 선택 결과를 답으로 베끼지 않고 exact C 의미를 검증한 뒤 `generation_policy`, `exposure_policy`, effect mode, played change를 독립적으로 정한다. 공개 가능한 accepted meaning에는 비교 종류·source·attribution이 정하는 played 관점과 direct→played change 호환성을 강제한다. `BestVsSecond`에서는 reference가 실제 played이므로 `reference_creates_resource`가 `played_value`이다. 자기 소유 direct channel을 가진 `ReferenceVsAlternative`는 `diagnostic_only`로만 C를 인증할 수 있고, 이때 effect/played-change 필드는 공개 판정 권한을 갖지 않는다. 현재 runtime의 shared/mixed source와 shared_context/context_only attribution은 직접 증명 자격을 얻지 못한다. 이들을 포함해 소유 channel이 0개인 C는 빈 channel 집합 그대로 source-blind inventory에 기록하되 accepted meaning으로 병합할 수 없다. Rejected 상태에서 `unmapped_generated_cause` C 오류로 남으며, `raw_owned_bindings`를 대신 truth 권한으로 승격하지 않는다.
-
-R에서 관측되지 않은 C-only candidate도 독립 판정상 핵심 원인이면 `generation_policy=required`, `exposure_policy=primary`가 될 수 있다. 이 경우 C 성공 뒤의 소실을 Jp/Ja/R 실패로 측정하며, 관측 행동을 이유로 diagnostic으로 강등하지 않는다. 공개 가능한 accepted candidate가 하나라도 있는 case는 source-blind final case judgment가 정확한 병합 후 meaning ID 집합, disposition, `required_top_one_of`, tie group, precedence를 모두 소유해야 한다. Accepted top은 required primary여야 하고, accepted non-top public meaning은 allowed여야 한다. 누락·중복·pending case policy나 병합 집합 밖의 priority 참조는 scoring 전에 fail-closed한다.
-
-Accepted meaning만 base oracle에 병합한 뒤 schema·체스 합법성·중복 의미·fallback/priority 참조를 다시 검증하고, 그 canonical all-arm merge가 run oracle과 byte-independent semantic hash까지 정확히 일치해야 scoring을 시작한다. Rejected candidate는 C의 `unmapped_generated_cause`로 남고 pending 결정은 scoring을 막는다. Base oracle는 완전 목록으로 간주하지 않으며, runtime의 모든 unmatched generated C Cause는 R/P 선택 여부와 무관하게 frozen source-blind candidate로 덮여야 한다. Compare는 현재 runtime run의 file hash, run ID, producer 계약, case 범위, cascade hash, unmatched-C 관측을 inventory의 정확히 한 arm과 재대조한다. 다른 arm은 adjudication 전에 별도 inventory 생성 절차가 runtime artifact에서 검증·동결해야 하며 compare는 그 동결된 합집합과 hash chain을 검증한다.
-
-Stockfish root search와 런타임이 정확히 발행한 probe는 내용 해시 cache를 사용한다. `run`은 각 요청을 persistent JSONL adapter에 보내고, 발행된 probe만 검증·취득해 원래 request의 `probeResults`에 추가한 뒤 닫힐 때까지 다시 호출한다. 각 case에는 실제 C cause와 연결된 Jp claim, Ja 결정, R rank/dedup, packet/public P 도달 여부가 남는다. `compare`는 허용된 primary cause 중 하나가 played-vs-reference 관계와 직접 attribution을 만족하는지, 금지 fallback이 대신 선택됐는지, 경쟁 원인이 앞서 랭크됐는지, actor/target/mechanism/consequence typed binding과 downstream 단계가 어디서 사라졌는지를 센다. Oracle에 열거되지 않은 추가 cause는 금지 라벨이나 priority inversion 근거가 없는 한 자동으로 false positive 처리하지 않는다.
-
-Typed object 진단은 하나의 Cause가 소유한 동일한 direct binding 안에 actor/target/mechanism/consequence가 함께 있는지를 검사한다. 서로 다른 binding, sibling Cause, ancestor/context evidence의 필드를 합쳐 완전한 원인으로 세지 않는다. Oracle의 자유 문구와 그 object가 체스 의미상 정확히 같은지, oracle의 white/black `source_side`와 runtime의 candidate/reference/shared/mixed가 같은 뜻인지는 문자열 유사도로 발명하지 않는다. Report는 이를 `not-performed-requires-blind-human-proxy-adjudication`으로 명시하며, 정확한 의미 일치는 별도 blind human-proxy adjudication이 맡아야 한다.
-
-각 단계의 `--case-id`는 여러 번 줄 수 있다. 따라서 수정 뒤에는 영향 family의 case만 다시 adapter에 보내고, 나머지 Stockfish root/probe 결과는 내용 해시 cache에서 재사용할 수 있다. `--case-id`를 생략하면 선택 partition 전체를 실행한다.
-
-봉인 oracle의 원문, 기대 cause, PV와 rationale은 freeze/report에 복사하지 않는다. 현재 v3 judgment가 `meaning_id`를 포함하므로 redacted sealed projection이 구현될 때까지 `sealed_confirm` typed compare는 label, per-case judgment, report capture보다 먼저 fail-closed한다. 이 24개 진단 코퍼스는 결함 family를 찾는 engineering audit이며 release 통계나 보편적 `production_bottleneck` 주장을 만들지 않는다.
-
-Production `run`은 `explore`와 `sealed_confirm`을 한 호출에서 섞지 않는다. 봉인 실행에는 수정 후보를 나타내는 불변 파일을 `--candidate-binding`으로 반드시 주어야 하며 그 byte SHA-256을 runtime run에 결속한다. Engine-only `acquire`는 후보 고정 전에도 허용하지만, 이 결속 없이 `sealed_confirm` C→P를 호출하는 공식 하네스 경로는 거부된다.
+`RuntimePublicResponseCli`의 current public-v4 schema body는 operational probe extraction에만 일시 사용한다. runtime report는 byte-exact raw request/response JSONL의 base64, SHA-256, length와 validated probe records를 유지하지만 `rounds[].body`는 저장하지 않는다. 이는 parsed response body persistence를 제거하는 breaking boundary다. 이 raw capture는 runtime producer attribution이 아니다. report는 adapter main class나 sbt hash를 bind하지 않으며 runtime-adapter/chesstory-runtime source, build, JDK, dependency closure를 attest하지 않는다.
 
 ### Gated experiment runner
 
@@ -262,7 +190,7 @@ Production `run`은 `explore`와 `sealed_confirm`을 한 호출에서 섞지 않
 python -m chesstory_eval run --root . --run-id explore-smoke --split diagnostic-explore --output artifacts/explore-smoke-report.json
 ```
 
-Embedded Q 뒤의 native 단계는 관측되지만 frozen v1 의미 bridge와 evaluator가 없으므로 이 실행은 완전한 병목 실험이 아니며 F `unavailable`, foundation-not-passed와 `indeterminate`를 기록하는 것이 정상이다.
+Embedded Q만 관측되고 provider/replay가 없는 F 이상 단계는 unavailable이므로, 이 실행은 완전한 병목 실험이 아니며 foundation-not-passed와 indeterminate가 정상이다.
 
 실제 개입 실행에는 동일 입력 해시와 문맥에 맞는 stage replay, 두 coherent oracle chain의 산출물, source-blind evaluator replay와 필요한 foundation control artifact가 먼저 있어야 한다. 관련 옵션은 반복해서 줄 수 있다.
 

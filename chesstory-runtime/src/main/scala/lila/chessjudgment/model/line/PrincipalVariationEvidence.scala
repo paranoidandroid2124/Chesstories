@@ -75,15 +75,24 @@ private[chessjudgment] object PrincipalVariationEvidence:
       moves: List[String],
       startPly: Int
   ): Option[List[LegalReplayStep]] =
+    Fen.read(Standard, Fen.Full(normalizeFen(startFen))).flatMap { position =>
+      legalMoveReplayFromPosition(position, moves, startPly)
+    }
+
+  private[chessjudgment] def legalMoveReplayFromPosition(
+      start: Position,
+      moves: List[String],
+      startPly: Int
+  ): Option[List[LegalReplayStep]] =
     val accepted = scala.collection.mutable.ListBuffer.empty[LegalReplayStep]
     var ply = startPly
     var legal = true
-    var current = Fen.read(Standard, Fen.Full(normalizeFen(startFen)))
+    var current = start
     moves.iterator.map(normalizeUci).foreach { uci =>
       if legal then
-        current.flatMap(position => legalMove(position, uci)) match
+        legalMove(current, uci) match
           case Some(move) =>
-            val before = current.get
+            val before = current
             val capturedRole =
               move.capture
                 .flatMap(before.board.roleAt)
@@ -97,7 +106,7 @@ private[chessjudgment] object PrincipalVariationEvidence:
               after = move.after,
               capturedRole = capturedRole
             )
-            current = Some(move.after)
+            current = move.after
           case None =>
             legal = false
     }

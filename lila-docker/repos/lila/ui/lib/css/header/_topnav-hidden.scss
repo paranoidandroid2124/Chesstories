@@ -20,8 +20,9 @@
     z-index: $z-topnav-111;
 
     &:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba($c-primary, 0.3);
+      outline: 3px solid $c-primary;
+      outline-offset: -3px;
+      box-shadow: none;
     }
 
     &__in {
@@ -167,7 +168,7 @@
       align-items: center;
       width: 100%;
       padding: 0.85rem 1rem;
-      border-radius: 12px;
+      border-radius: 4px;
       font-size: 1.1em;
       font-weight: 600;
       letter-spacing: 0;
@@ -184,8 +185,9 @@
       }
 
       &:focus-visible {
-        outline: none;
-        box-shadow: 0 0 0 2px rgba($c-primary, 0.25);
+        outline: 3px solid $c-primary;
+        outline-offset: 2px;
+        box-shadow: none;
       }
     }
 

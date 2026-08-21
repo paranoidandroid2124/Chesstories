@@ -5,13 +5,12 @@ import java.security.MessageDigest
 
 import _root_.chess.format.Fen
 import _root_.chess.variant.Standard
-import lila.chessjudgment.model.judgment.{ CandidateLineNode, EvidenceRef, LineNodeRole, PositionNodeRef }
-import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.model.judgment.{ EvidenceRef, LineNodeRole }
+import lila.chessjudgment.model.line.CandidateLineEvaluation
 import play.api.libs.json._
 
 enum ProbePurpose(val key: String):
   case ReplyMultipv extends ProbePurpose("reply_multipv")
-  case EndgameTablebase extends ProbePurpose("endgame_tablebase")
 
 object ProbePurpose:
   private val byKey = ProbePurpose.values.map(p => p.key -> p).toMap
@@ -19,8 +18,6 @@ object ProbePurpose:
     Option(key).map(_.trim).filter(_.nonEmpty).flatMap(byKey.get)
   def isBranchReply(purpose: ProbePurpose): Boolean =
     purpose == ProbePurpose.ReplyMultipv
-  def isEndgameTablebase(purpose: ProbePurpose): Boolean =
-    purpose == ProbePurpose.EndgameTablebase
 
   given Reads[ProbePurpose] = Reads:
     case JsString(raw) =>
@@ -51,83 +48,40 @@ case class ProbeRequest(
   // Optional metadata for diagnostics and probe contracts
   purpose: Option[ProbePurpose] = None,
   multiPv: Option[Int] = None,
-  planId: Option[String] = None,
-  planScore: Option[Double] = None,
-  // Optional baseline line context so the probe can be self-contained
-  baselineMove: Option[String] = None,
-  baselineEvalCp: Option[Int] = None, // External probe contract; white POV centipawns.
-  baselineMate: Option[Int] = None,
-  baselineDepth: Option[Int] = None,
   // Objective-driven probing contract
   objective: Option[String] = None,        // e.g. "branch_reply_multipv", "compare_branches"
-  seedId: Option[String] = None,           // Latent seed identifier when relevant
   requiredSignals: List[String] = Nil,
   horizon: Option[String] = None,          // exact branch proof deadline, e.g. "ply:8"
   candidateMove: Option[String] = None,    // explicit root move when the request is move-bound
   opponentResourceMove: Option[String] = None, // exact opponent resource forced from the post-root position
   depthFloor: Option[Int] = None,          // minimum acceptable realized depth for certification
-  variationHash: Option[String] = None,    // binds the request to a specific logical variation bundle
-  engineConfigFingerprint: Option[String] = None, // binds the request to engine/config generation
-  comparisonFen: Option[String] = None
+  variationHash: Option[String] = None     // binds the request to a specific logical variation bundle
 )
 
 object ProbeRequest:
   given Reads[ProbeRequest] = Json.reads[ProbeRequest]
   given Writes[ProbeRequest] = Json.writes[ProbeRequest]
 
-case class TablebasePositionEvidence(
-    fen: String,
-    wdl: Int,
-    dtm: Option[Int] = None
-)
+enum ProbeResolution:
+  case EngineSearch(evaluations: List[CandidateLineEvaluation], depth: Int)
+  case ExactAutomaticTerminal(evaluation: CandidateLineEvaluation.ExactAutomaticTerminal)
 
-object TablebasePositionEvidence:
-  given OFormat[TablebasePositionEvidence] = Json.format[TablebasePositionEvidence]
-
-case class TablebaseMoveEvidence(
-    moveUci: String,
-    resultingWdl: Int,
-    resultingDtm: Option[Int] = None
-)
-
-object TablebaseMoveEvidence:
-  given OFormat[TablebaseMoveEvidence] = Json.format[TablebaseMoveEvidence]
-
-case class EndgameTablebaseEvidence(
-    terminal: TablebasePositionEvidence,
-    comparison: TablebasePositionEvidence,
-    legalMoves: List[TablebaseMoveEvidence]
-)
-
-object EndgameTablebaseEvidence:
-  given OFormat[EndgameTablebaseEvidence] = Json.format[EndgameTablebaseEvidence]
-
-/** Raw client-computed evidence returned to the core. */
+/** Canonical server-bound resolution of an issued probe. */
 case class ProbeResult(
   id: String,
   fen: Option[String] = None, // Base FEN the probe was run from (critical when probing non-root branches)
-  replyLines: Option[List[EngineLine]] = None,
+  resolution: ProbeResolution,
   // Optional metadata that keeps branch probes self-describing.
   purpose: Option[ProbePurpose] = None,
   probedMove: Option[String] = None, // The probed candidate move (UCI)
-  depth: Option[Int] = None,         // Depth reached by the client engine
   // Optional contract diagnostics.
   objective: Option[String] = None,
-  seedId: Option[String] = None,
   requiredSignals: List[String] = Nil,
   horizon: Option[String] = None,
   candidateMove: Option[String] = None,
   opponentResourceMove: Option[String] = None,
-  depthFloor: Option[Int] = None,
-  variationHash: Option[String] = None,
-  engineConfigFingerprint: Option[String] = None,
-  generatedAtEpochMs: Option[Long] = None,
-  tablebase: Option[EndgameTablebaseEvidence] = None
+  variationHash: Option[String] = None
 )
-
-object ProbeResult:
-  given Reads[ProbeResult] = Json.reads[ProbeResult]
-  given Writes[ProbeResult] = Json.writes[ProbeResult]
 
 enum ProbeAdmissionStatus:
   case Admitted
@@ -195,7 +149,11 @@ object ProbeContractValidator:
       requestPurpose.exists(_ => requestPurposeSignals.isEmpty) ||
         (fromRequest.isEmpty && requestPurpose.isEmpty && resultPurposeSignals.isEmpty)
     val requiredReplyLineCount = request.multiPv.getOrElse(DefaultBranchReplyMultiPv)
-    val base = validateSignals(result, required, requiredReplyLineCount)
+    val base = result.resolution match
+      case ProbeResolution.EngineSearch(_, _) =>
+        validateSignals(result, required, requiredReplyLineCount)
+      case ProbeResolution.ExactAutomaticTerminal(_) =>
+        ValidationResult(true, Nil, List("EXACT_AUTOMATIC_TERMINAL"))
     val purposeMismatch =
       request.purpose.flatMap(rp => result.purpose.map(_ != rp)).contains(true)
     val idMismatch = request.id != result.id
@@ -209,22 +167,12 @@ object ProbeContractValidator:
       requestFen.exists(fen => Fen.read(Standard, Fen.Full(fen)).isEmpty)
     val resultFenInvalid =
       resultFen.exists(fen => Fen.read(Standard, Fen.Full(fen)).isEmpty)
-    val comparisonFen = request.comparisonFen.map(_.trim).filter(_.nonEmpty)
-    val resultComparisonFen = result.tablebase.map(_.comparison.fen.trim).filter(_.nonEmpty)
-    val comparisonFenMissing = comparisonFen.nonEmpty && resultComparisonFen.isEmpty
-    val comparisonFenMismatch = comparisonFen.exists(expected => resultComparisonFen.exists(_ != expected))
-    val comparisonFenInvalid =
-      (comparisonFen.toList ++ resultComparisonFen.toList).exists(fen => Fen.read(Standard, Fen.Full(fen)).isEmpty)
     val objectiveMismatch =
       request.objective.flatMap(expected => result.objective.map(_ != expected)).contains(true)
-    val seedMismatch =
-      request.seedId.flatMap(expected => result.seedId.map(_ != expected)).contains(true)
     val requestMoves =
       request.moves.map(_.trim).filter(_.nonEmpty)
     val candidateMoves = request.candidateMove.map(_.trim).filter(_.nonEmpty).toList
-    val allowedMoves =
-      if request.purpose.exists(ProbePurpose.isEndgameTablebase) then candidateMoves
-      else (candidateMoves ++ requestMoves).distinct
+    val allowedMoves = (candidateMoves ++ requestMoves).distinct
     val resultMove =
       result.probedMove
         .orElse(result.candidateMove)
@@ -254,27 +202,31 @@ object ProbeContractValidator:
     val horizonMismatch = requestHorizon.exists(expected => resultHorizon.exists(_ != expected))
     val requestHorizonInvalid = requestHorizon.exists(ProbeHorizon.plyOffset(_).isEmpty)
     val resultHorizonInvalid = resultHorizon.exists(ProbeHorizon.plyOffset(_).isEmpty)
-    val engineConfigMismatch =
-      request.engineConfigFingerprint.flatMap(expected => result.engineConfigFingerprint.map(_ != expected)).contains(true)
     val depthFloor =
       request.depthFloor
         .orElse(if request.depth > 0 then Some(request.depth) else None)
         .filter(_ > 0)
+    val resultDepth = result.resolution match
+      case ProbeResolution.EngineSearch(_, depth) => Some(depth)
+      case ProbeResolution.ExactAutomaticTerminal(_) => None
     val depthFloorUnmet =
-      depthFloor.exists(floor => result.depth.exists(_ < floor))
+      depthFloor.exists(floor => resultDepth.exists(_ < floor))
     val scoredReplyLineCount =
-      result.replyLines.map(_.count(line => line.moves.nonEmpty && line.depth > 0)).getOrElse(0)
+      result.resolution match
+        case ProbeResolution.EngineSearch(evaluations, _) => evaluations.count(_.moves.nonEmpty)
+        case ProbeResolution.ExactAutomaticTerminal(_) => 0
+    val engineResolution = result.resolution match
+      case ProbeResolution.EngineSearch(_, _) => true
+      case ProbeResolution.ExactAutomaticTerminal(_) => false
     val replyMultiPvIncomplete =
-      request.purpose.exists(ProbePurpose.isBranchReply) &&
+      engineResolution &&
+        request.purpose.exists(ProbePurpose.isBranchReply) &&
         scoredReplyLineCount < requiredReplyLineCount
     val hardReasonBuilder = List.newBuilder[String]
     if fenMissing then hardReasonBuilder += "FEN_UNVERIFIED"
     if requestFenInvalid then hardReasonBuilder += "REQUEST_FEN_INVALID"
     if resultFenInvalid then hardReasonBuilder += "RESULT_FEN_INVALID"
     if fenMismatch then hardReasonBuilder += "FEN_MISMATCH"
-    if comparisonFenMissing then hardReasonBuilder += "COMPARISON_FEN_UNVERIFIED"
-    if comparisonFenMismatch then hardReasonBuilder += "COMPARISON_FEN_MISMATCH"
-    if comparisonFenInvalid then hardReasonBuilder += "COMPARISON_FEN_INVALID"
     if idMismatch then hardReasonBuilder += "ID_MISMATCH"
     if moveMissing then hardReasonBuilder += "PROBED_MOVE_UNVERIFIED"
     if requestMoveInvalid then hardReasonBuilder += "REQUEST_MOVE_INVALID"
@@ -284,7 +236,8 @@ object ProbeContractValidator:
     if opponentResourceMismatch then hardReasonBuilder += "OPPONENT_RESOURCE_MISMATCH"
     if opponentResourceInvalid then hardReasonBuilder += "OPPONENT_RESOURCE_INVALID"
     if purposeContractMissing then hardReasonBuilder += "PURPOSE_CONTRACT_MISSING"
-    if depthFloor.nonEmpty && result.depth.isEmpty then hardReasonBuilder += "DEPTH_FLOOR_UNVERIFIED"
+    if engineResolution && depthFloor.nonEmpty && resultDepth.isEmpty then
+      hardReasonBuilder += "DEPTH_FLOOR_UNVERIFIED"
     if depthFloorUnmet then hardReasonBuilder += "DEPTH_FLOOR_UNMET"
     if replyMultiPvIncomplete then hardReasonBuilder += "REPLY_MULTIPV_INCOMPLETE"
     if horizonMissing then hardReasonBuilder += "HORIZON_UNVERIFIED"
@@ -297,14 +250,9 @@ object ProbeContractValidator:
     val softReasonBuilder = List.newBuilder[String]
     if purposeMismatch then softReasonBuilder += "PURPOSE_MISMATCH"
     if objectiveMismatch then softReasonBuilder += "OBJECTIVE_MISMATCH"
-    if seedMismatch then softReasonBuilder += "SEED_MISMATCH"
     if request.variationHash.exists(_.trim.nonEmpty) && result.variationHash.forall(_.trim.isEmpty) then
       softReasonBuilder += "VARIATION_HASH_MISSING"
     if variationHashMismatch then softReasonBuilder += "VARIATION_HASH_MISMATCH"
-    if request.engineConfigFingerprint.exists(_.trim.nonEmpty) &&
-      result.engineConfigFingerprint.forall(_.trim.isEmpty)
-    then softReasonBuilder += "ENGINE_CONFIG_FINGERPRINT_MISSING"
-    if engineConfigMismatch then softReasonBuilder += "ENGINE_CONFIG_MISMATCH"
     val softReasons = softReasonBuilder.result()
     val allHardReasons = (base.hardReasonCodes ++ hardReasons).distinct
     val certificateStatus =
@@ -349,27 +297,27 @@ object ProbeContractValidator:
 
   private def purposeRequiredSignals(purpose: ProbePurpose): Set[String] =
     if ProbePurpose.isBranchReply(purpose) then Set("replyLines")
-    else if ProbePurpose.isEndgameTablebase(purpose) then Set("tablebase")
     else Set.empty[String]
 
   private def hasSignal(signal: String, result: ProbeResult, requiredReplyLineCount: Int): Boolean =
     signal match
       case "replyLines" =>
-        result.replyLines.exists(_.count(line => line.moves.nonEmpty && line.depth > 0) >= requiredReplyLineCount)
+        result.resolution match
+          case ProbeResolution.EngineSearch(evaluations, _) =>
+            evaluations.count(_.moves.nonEmpty) >= requiredReplyLineCount
+          case ProbeResolution.ExactAutomaticTerminal(_) => false
       case "purpose" =>
         result.purpose.nonEmpty
       case "depth" =>
-        result.depth.exists(_ > 0)
+        result.resolution match
+          case ProbeResolution.EngineSearch(_, depth) => depth > 0
+          case ProbeResolution.ExactAutomaticTerminal(_) => false
       case "variationHash" =>
         result.variationHash.exists(_.trim.nonEmpty)
       case "horizon" =>
         result.horizon.flatMap(ProbeHorizon.plyOffset).nonEmpty
       case "opponentResourceMove" =>
         result.opponentResourceMove.exists(_.trim.nonEmpty)
-      case "engineConfigFingerprint" =>
-        result.engineConfigFingerprint.exists(_.trim.nonEmpty)
-      case "tablebase" =>
-        result.tablebase.nonEmpty
       case _ =>
         false
 
@@ -390,22 +338,6 @@ object BranchReplyProbeBinding:
 
   def horizonPlyOffset(value: String): Option[Int] =
     ProbeHorizon.plyOffset(value)
-
-  def variationHash(
-      root: PositionNodeRef,
-      line: CandidateLineNode,
-      certifiedHorizonPlyOffset: Int
-  ): String =
-    variationHash(
-      rootFen = root.fen,
-      role = line.ref.role,
-      rootMove = line.ref.rootMove,
-      whitePovEvalCp = line.whitePovEvalCp,
-      mate = line.mate,
-      depth = line.depth,
-      moves = line.line.moves,
-      certifiedHorizonPlyOffset = certifiedHorizonPlyOffset
-    )
 
   def variationHash(
       rootFen: String,
@@ -462,18 +394,6 @@ object CounterResourceProbeBinding:
   val Objective = "opponent_resource_reply"
   val RequiredSignals: List[String] =
     List("replyLines", "depth", "purpose", "variationHash", "opponentResourceMove")
-
-  def variationHash(root: PositionNodeRef, line: CandidateLineNode, opponentResourceMove: String): String =
-    variationHash(
-      rootFen = root.fen,
-      role = line.ref.role,
-      rootMove = line.ref.rootMove,
-      whitePovEvalCp = line.whitePovEvalCp,
-      mate = line.mate,
-      depth = line.depth,
-      moves = line.line.moves,
-      opponentResourceMove = opponentResourceMove
-    )
 
   def variationHash(
       rootFen: String,

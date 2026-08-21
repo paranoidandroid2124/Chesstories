@@ -47,8 +47,6 @@ final case class ActivityFeatures(
 final case class KingSafetyFeatures(
     whiteCastlingRights: String,
     blackCastlingRights: String,
-    whiteCastledSide: String,
-    blackCastledSide: String,
     whiteKingShield: Int,
     blackKingShield: Int,
     whiteKingExposedFiles: Int,
@@ -134,7 +132,7 @@ object PositionFeatures:
     plyCount = 0,
     pawns = PawnStructureFeatures(0, 0, 0, 0, 0, 0, 0, 0, false, false, false, false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
     activity = ActivityFeatures(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    kingSafety = KingSafetyFeatures("", "", "", "", 0, 0, 0, 0, false, false, 0, 0, 0, 0, 0, 0),
+    kingSafety = KingSafetyFeatures("", "", 0, 0, 0, 0, false, false, 0, 0, 0, 0, 0, 0),
     materialPhase = MaterialPhaseFeatures(0, 0, 0, "opening"),
     lineControl = LineControlFeatures(0, 0, 0, false, false),
     imbalance = MaterialImbalanceFeatures(0, 0, 0, 0, 0, 0, 0, 0, false, false),

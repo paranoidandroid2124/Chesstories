@@ -9,17 +9,14 @@ from .design import (
     LEAVE_ONE_ACTUAL_CONTEXT,
     ONE_STAGE_CONTEXT,
     STABLE_Q_CONTEXT,
+    build_arm_plan,
     parse_factorial_context,
 )
 from .model import ContractError, IntegrityError, STAGES
+from .statistics import registered_contrast_specifications
 
 
 SEMANTIC_CONTRASTS = frozenset({"delta", "lambda", "gamma"})
-_REGISTERED_CONTRASTS = frozenset({"delta", "lambda", "phi", "gamma"})
-_EXPECTED_CONTRAST_COUNT = 278
-_EXPECTED_CONTRASTS_PER_CHAIN = 139
-_EXPECTED_SEMANTIC_CONTRAST_COUNT = 156
-_EXPECTED_SEMANTIC_COORDINATE_COUNT = 78
 _DIAGNOSTIC_SPLITS = frozenset({"diagnostic-explore", "diagnostic-confirm"})
 _NON_ATTRIBUTION_SPLITS = frozenset({"fresh-confirm", "blind"})
 _HYPOTHESIS_KEYS = frozenset(
@@ -376,8 +373,8 @@ def resolve_attribution_minimum_deltas(
 ) -> dict[str, float]:
     """Resolve the exact preregistered positive-effect threshold by contrast ID.
 
-    The resolver requires the complete frozen 278-contrast family, returns all
-    156 semantic Delta/Lambda/Gamma IDs, and never substitutes ``epsilon_gain``
+    The resolver derives its complete semantic Delta/Lambda/Gamma ID set from
+    the recomputed registered contrasts and never substitutes ``epsilon_gain``
     or a release noninferiority delta for ``attribution_minimum_delta``.
     """
 
@@ -440,8 +437,10 @@ def _index_semantic_contrasts(
 ) -> dict[tuple[Any, ...], dict[str, Mapping[str, Any]]]:
     indexed: dict[tuple[Any, ...], dict[str, Mapping[str, Any]]] = {}
     seen_ids: set[str] = set()
-    semantic_ids: set[str] = set()
-    counts_by_chain = {chain: 0 for chain in chains}
+    expected_by_id = {
+        str(specification["contrast_id"]): specification
+        for specification in registered_contrast_specifications(tuple(build_arm_plan(chains)))
+    }
     for summary in contrasts:
         if not isinstance(summary, Mapping):
             raise IntegrityError("statistical contrast summary must be an object")
@@ -450,15 +449,31 @@ def _index_semantic_contrasts(
         chain = summary.get("oracle_chain")
         if not isinstance(contrast_id, str) or not contrast_id or contrast_id in seen_ids:
             raise IntegrityError("registered contrast IDs must be unique non-empty text")
+        expected_specification = expected_by_id.get(contrast_id)
+        if expected_specification is None or any(
+            summary.get(key) != expected_specification[key]
+            for key in (
+                "contrast_id",
+                "contrast",
+                "symbol",
+                "context",
+                "focus_stage",
+                "oracle_chain",
+                "held_stage",
+                "held_source",
+                "treatment_arm",
+                "control_arm",
+            )
+        ):
+            raise IntegrityError(
+                "registered contrast summary differs from the exact fixed oracle-chain plan"
+            )
         if chain not in chains:
             raise IntegrityError("registered contrast names an unregistered oracle chain")
-        if contrast not in _REGISTERED_CONTRASTS:
-            raise IntegrityError("registered contrast has an unknown contrast type")
         expected_family = f"fixed-oracle-chain:{chain}"
         if summary.get("holm_family") != expected_family:
             raise IntegrityError("registered contrast has an invalid Holm family")
         seen_ids.add(contrast_id)
-        counts_by_chain[str(chain)] += 1
         if contrast not in SEMANTIC_CONTRASTS:
             continue
         if summary.get("focus_stage") not in STAGES:
@@ -471,7 +486,6 @@ def _index_semantic_contrasts(
             raise IntegrityError(
                 "semantic contrast ID does not bind its exact intervention coordinate"
             )
-        semantic_ids.add(contrast_id)
         coordinate = _coordinate(summary)
         by_chain = indexed.setdefault(coordinate, {})
         if chain in by_chain:
@@ -479,18 +493,13 @@ def _index_semantic_contrasts(
                 "multiple semantic contrasts occupy one chain/intervention coordinate"
             )
         by_chain[str(chain)] = summary
-    if (
-        len(seen_ids) != _EXPECTED_CONTRAST_COUNT
-        or any(
-            count != _EXPECTED_CONTRASTS_PER_CHAIN
-            for count in counts_by_chain.values()
-        )
-        or len(semantic_ids) != _EXPECTED_SEMANTIC_CONTRAST_COUNT
-        or len(indexed) != _EXPECTED_SEMANTIC_COORDINATE_COUNT
-        or any(set(by_chain) != set(chains) for by_chain in indexed.values())
-    ):
+    if seen_ids != set(expected_by_id):
         raise IntegrityError(
-            "attribution requires the exact complete 278-contrast frozen-plan family"
+            "registered contrast IDs do not match the exact fixed oracle-chain plan"
+        )
+    if not indexed or any(set(by_chain) != set(chains) for by_chain in indexed.values()):
+        raise IntegrityError(
+            "attribution requires every semantic intervention coordinate in each fixed oracle chain"
         )
     return indexed
 

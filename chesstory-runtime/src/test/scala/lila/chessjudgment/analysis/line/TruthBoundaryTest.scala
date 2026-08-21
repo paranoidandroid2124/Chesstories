@@ -2,13 +2,33 @@ package lila.chessjudgment.analysis.line
 
 import chess.{ Black, White }
 import chess.variant.Standard
-import lila.chessjudgment.model.Motif
-import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.line.{
+  AutomaticTerminal,
+  CanonicalPositionHistory,
+  CanonicalPositionHistoryFailure,
+  PrincipalVariationEvidence
+}
 import lila.chessjudgment.analysis.position.PositionAnalyzer
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.strategic.EngineLine
 
 class TruthBoundaryTest extends munit.FunSuite:
+
+  test("boundary inspection replays a full legal tail but retains only its first automatic terminal"):
+    val initialFen = "7k/8/8/8/K7/1p6/8/8 w - - 0 1"
+    val suffix = List("a4b3", "h8h7", "b3c3")
+    val history = CanonicalPositionHistory
+      .from(initialFen, Nil, initialFen)
+      .getOrElse(fail("expected the K+N versus K position to be canonical"))
+
+    assertEquals(
+      history.inspectAutomaticTerminalBoundary(suffix),
+      Right(Some(List("a4b3") -> AutomaticTerminal.InsufficientMaterial))
+    )
+    assertEquals(
+      history.extend(suffix),
+      Left(CanonicalPositionHistoryFailure.IllegalMovePrefix)
+    )
 
   test("material imbalance comes from board piece counts"):
     val balanced = PositionAnalyzer

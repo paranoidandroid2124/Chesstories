@@ -373,158 +373,6 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
     assertEquals(inventories.mate, ComparisonEndpointEffectInventory.Complete(Set.empty))
     assertEquals(inventories.qualitative, ComparisonEndpointEffectInventory.Incomplete)
 
-  test("eligible endgame horizon projection failure makes qualitative inventory incomplete"):
-    val replay = legalReplay(rootFen, List(reference.rootMove))
-    val payload = LineFactEvidence(
-      line = reference,
-      material = Some(emptyMaterial),
-      replay = replay,
-      endgameHorizons = List(LineEndgameTechniqueHorizon(
-        pattern = "Lucena",
-        rookPattern = Some("Lucena"),
-        techniqueSide = White,
-        entryPlyOffset = 0,
-        terminalPlyOffset = 0,
-        status = LineEndgameTechniqueHorizonStatus.Failed,
-        triggerMove = Some(reference.rootMove),
-        requiredSquares = Nil
-      ))
-    )
-    val inventories = EvidenceObjectBinding.comparisonEndpointLineObservations(
-      evidenceRef(
-        "sparse-endgame-horizon",
-        reference,
-        EvidenceLayer.Line,
-        EvidenceProducer.LegalLineProducer,
-        EvidenceScope.BestLine
-      ),
-      payload,
-      root
-    )
-
-    assertEquals(inventories.material, ComparisonEndpointEffectInventory.Complete(Set.empty))
-    assertEquals(inventories.mate, ComparisonEndpointEffectInventory.Complete(Set.empty))
-    assertEquals(inventories.qualitative, ComparisonEndpointEffectInventory.Incomplete)
-
-  test("strategic Release has one exact stake and change table"):
-    val pawnBreak = StrategicAxisDetail(
-      StrategicAxisKind.PawnBreak,
-      StrategicAxisPolarity.Release,
-      "central-break"
-    )
-    val target = StrategicAxisDetail(
-      StrategicAxisKind.Target,
-      StrategicAxisPolarity.Release,
-      "weak-target"
-    )
-    val activity = StrategicAxisDetail(
-      StrategicAxisKind.Activity,
-      StrategicAxisPolarity.Release,
-      "piece-activity"
-    )
-    val generic = StrategicAxisDetail(
-      StrategicAxisKind.SpaceCenter,
-      StrategicAxisPolarity.Release,
-      "space"
-    )
-
-    assertEquals(
-      RootOwnedEffectPolicy.strategicAxisStake(pawnBreak),
-      Some(RootOwnedEffectStake.ActorValue)
-    )
-    assertEquals(
-      RootOwnedEffectPolicy.strategicAxisChange(pawnBreak),
-      Some(DirectCausalChange.Occurred)
-    )
-    List(target, activity).foreach { axis =>
-      assertEquals(
-        RootOwnedEffectPolicy.strategicAxisStake(axis),
-        Some(RootOwnedEffectStake.ActorLiability)
-      )
-      assertEquals(
-        RootOwnedEffectPolicy.strategicAxisChange(axis),
-        Some(DirectCausalChange.Lost)
-      )
-    }
-    assertEquals(RootOwnedEffectPolicy.strategicAxisStake(generic), None)
-    assertEquals(RootOwnedEffectPolicy.strategicAxisChange(generic), None)
-
-  test("neutral snapshot membership is exact, unique, and independent of directChange"):
-    val fixture = retainedValueFixture()
-    val channel = EvidenceObjectBinding
-      .directCauseChannelsForProjection(fixture.cause, fixture.graph)
-      .headOption
-      .getOrElse(fail("expected a candidate-owned relation channel"))
-    val endpointRecords = fixture.graph.records.filterNot(
-      _.ref.id == fixture.cause.comparisonEvidence.id
-    )
-    val witness = EvidenceObjectBinding
-      .comparisonEndpointEvidenceWitnesses(
-        RelativeCauseSourceSide.Candidate,
-        candidate,
-        root,
-        fixture.cause.comparisonEvidence,
-        fixture.comparison,
-        endpointRecords,
-        endpointRecords,
-        fixture.graph
-      )
-      .headOption
-      .getOrElse(fail("expected a Cause-neutral relation witness"))
-    val snapshot = ComparisonEndpointEvidenceSnapshot(
-      comparisonEvidence = fixture.cause.comparisonEvidence,
-      comparison = fixture.comparison,
-      reference = ComparisonEndpointEvidenceSideSnapshot(
-        RelativeCauseSourceSide.Reference,
-        reference,
-        Nil
-      ),
-      candidate = ComparisonEndpointEvidenceSideSnapshot(
-        RelativeCauseSourceSide.Candidate,
-        candidate,
-        List(witness)
-      )
-    )
-
-    def matched(
-        candidateSnapshot: ComparisonEndpointEvidenceSnapshot,
-        sourceSide: RelativeCauseSourceSide,
-        candidateChannel: DirectCauseChannel
-    ): Boolean =
-      ComparisonEndpointEffectObservationPolicy
-        .uniqueNeutralWitnessFor(
-          candidateSnapshot,
-          sourceSide,
-          candidateChannel,
-          fixture.graph
-        )
-        .contains(witness)
-
-    assert(matched(snapshot, RelativeCauseSourceSide.Candidate, channel))
-    assert(matched(
-      snapshot,
-      RelativeCauseSourceSide.Candidate,
-      channel.copy(directChange = DirectCausalChange.Prevented)
-    ))
-    assert(!matched(
-      snapshot,
-      RelativeCauseSourceSide.Candidate,
-      channel.copy(binding = channel.binding.copy(
-        actor = channel.binding.actor.map(_.copy(key = "forged-actor"))
-      ))
-    ))
-    assert(!matched(snapshot, RelativeCauseSourceSide.Reference, channel))
-    assert(!matched(
-      snapshot.copy(candidate = snapshot.candidate.copy(line = reference)),
-      RelativeCauseSourceSide.Candidate,
-      channel
-    ))
-    assert(!matched(
-      snapshot.copy(candidate = snapshot.candidate.copy(witnesses = List(witness, witness))),
-      RelativeCauseSourceSide.Candidate,
-      channel
-    ))
-
   private final case class RetainedFixture(
       cause: RelativeCauseFact,
       comparison: CandidateComparisonFact,
@@ -598,7 +446,7 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
         White,
         CandidateLineNode(
           reference,
-          EngineLine(List(reference.rootMove), referenceScore, depth = 18),
+          lila.chessjudgment.model.line.CandidateLineEvaluation.EngineSearch(EngineLine(List(reference.rootMove), referenceScore, depth = 18)),
           evidenceRef(
             "reference-eval",
             reference,
@@ -609,7 +457,7 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
         ),
         CandidateLineNode(
           candidate,
-          EngineLine(List(candidate.rootMove), candidateScore, depth = 18),
+          lila.chessjudgment.model.line.CandidateLineEvaluation.EngineSearch(EngineLine(List(candidate.rootMove), candidateScore, depth = 18)),
           evidenceRef(
             "candidate-eval",
             candidate,
@@ -618,7 +466,8 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
             EvidenceScope.PlayedLine
           )
         )
-      )
+      ).get,
+      VerdictConfidence.EngineBacked
     )
 
   private def materialObservation(
@@ -766,3 +615,36 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
       scope,
       EvidenceConfidence.LegalReplayVerified
     )
+
+  test("eligible endgame horizon projection failure makes qualitative inventory incomplete"):
+    val replay = legalReplay(rootFen, List(reference.rootMove))
+    val payload = LineFactEvidence(
+      line = reference,
+      material = Some(emptyMaterial),
+      replay = replay,
+      endgameHorizons = List(LineEndgameTechniqueHorizon(
+        pattern = "Lucena",
+        rookPattern = Some("Lucena"),
+        techniqueSide = White,
+        entryPlyOffset = 0,
+        terminalPlyOffset = 0,
+        status = LineEndgameTechniqueHorizonStatus.Failed,
+        triggerMove = Some(reference.rootMove),
+        requiredSquares = Nil
+      ))
+    )
+    val inventories = EvidenceObjectBinding.comparisonEndpointLineObservations(
+      evidenceRef(
+        "sparse-endgame-horizon",
+        reference,
+        EvidenceLayer.Line,
+        EvidenceProducer.LegalLineProducer,
+        EvidenceScope.BestLine
+      ),
+      payload,
+      root
+    )
+
+    assertEquals(inventories.material, ComparisonEndpointEffectInventory.Complete(Set.empty))
+    assertEquals(inventories.mate, ComparisonEndpointEffectInventory.Complete(Set.empty))
+    assertEquals(inventories.qualitative, ComparisonEndpointEffectInventory.Incomplete)

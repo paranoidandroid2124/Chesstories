@@ -17,7 +17,6 @@ object LameNameCheck extends TotalWrapper[LameNameCheck, Boolean]
 final private class SecurityConfig(
     val collection: Collection,
     @ConfigName("password_reset.secret") val passwordResetSecret: Secret,
-    @ConfigName("email_confirm") val emailConfirm: EmailConfirm,
     @ConfigName("email_change.secret") val emailChangeSecret: Secret,
     @ConfigName("login_token.secret") val loginTokenSecret: Secret,
     @ConfigName("hcaptcha") val hcaptcha: Hcaptcha.Config,
@@ -36,13 +35,6 @@ private object SecurityConfig:
       firewall: CollName
   )
   given ConfigLoader[Collection] = AutoConfig.loader
-
-  case class EmailConfirm(
-      enabled: Boolean,
-      secret: Secret,
-      cookie: String
-  )
-  given ConfigLoader[EmailConfirm] = AutoConfig.loader
 
   case class Ip2Proxy(
       enabled: Boolean,

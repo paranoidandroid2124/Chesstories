@@ -32,7 +32,6 @@ POST  /password-reset                  controllers.Auth.passwordResetApply
 GET   /logout                          controllers.Auth.logoutGet
 POST  /logout                          controllers.Auth.logout
 GET   /auth/check-email                controllers.Auth.checkYourEmail
-POST  /auth/fix-email                  controllers.Auth.fixEmail
 GET   /auth/password-reset/:token      controllers.Auth.passwordResetToken(token)
 POST  /auth/password-reset/:token      controllers.Auth.passwordResetTokenApply(token)
 GET   /auth/signup-confirm/:token      controllers.Auth.signupConfirmToken(token)
@@ -61,8 +60,6 @@ POST  /api/study/$id<\w{8}>/$chapterId<\w{8}>/comment controllers.Study.setNodeC
 
 # User Analysis
 GET   /analysis/help                   controllers.UserAnalysis.help
-GET   /analysis/import/:id             controllers.UserAnalysis.imported(id: String)
-GET   /analysis/pgn/*pgn               controllers.UserAnalysis.pgn(pgn)
 GET   /analysis/*something             controllers.UserAnalysis.parseArg(something)
 GET   /embed/analysis                  controllers.UserAnalysis.embed
 # GET   /api/cloud-eval                  controllers.Api.cloudEval
@@ -70,8 +67,10 @@ GET   /embed/analysis                  controllers.UserAnalysis.embed
 # Explorer Proxy (authenticated upstream relay)
 GET   /api/explorer/:db                controllers.ExplorerProxy.opening(db: String)
 
-# AI Analysis
-POST  /api/chess-judgment/move-meaning controllers.Analyse.moveMeaning
+# Development-gated position commentary v6 jobs
+POST    /api/chess-judgment/position-commentary-jobs                                                   controllers.Analyse.createMoveReviewJob
+DELETE  /api/chess-judgment/position-commentary-jobs/$jobId<[A-Za-z0-9_-]{32}>                         controllers.Analyse.cancelMoveReviewJob(jobId: String)
+POST    /api/chess-judgment/position-commentary-jobs/$jobId<[A-Za-z0-9_-]{32}>/engine-work-reports     controllers.Analyse.reportMoveReviewEngineWork(jobId: String)
 GET   /support                         controllers.Main.support
 GET   /plan                            controllers.Main.plan
 GET   /help                            controllers.Main.help

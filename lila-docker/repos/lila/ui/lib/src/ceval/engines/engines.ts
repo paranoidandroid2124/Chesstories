@@ -1,10 +1,22 @@
-import type { BrowserEngineInfo, EngineInfo, CevalEngine } from '../types';
+import {
+  type BrowserEngineInfo,
+  type MoveReviewEngine,
+  type EngineNotifier,
+  type EngineInfo,
+  type CevalEngine,
+} from '../types';
 import type CevalCtrl from '../ctrl';
 import { SimpleEngine } from './simpleEngine';
+import { SingleThreadEngine } from './singleThreadEngine';
 import { StockfishWebEngine } from './stockfishWebEngine';
 import { ThreadedEngine } from './threadedEngine';
 import { storedStringProp, type StoredProp } from '@/storage';
 import { isAndroid, isIos, isIPad, features as browserSupport } from '@/device';
+import {
+  moveReviewEngineCapabilities,
+  type MoveReviewEngineCapability,
+  type MoveReviewEngineSupportedCapability,
+} from './moveReviewEngineProfiles';
 
 import { log } from '@/permalog';
 
@@ -168,6 +180,20 @@ export class Engines {
     return this.localEngines.filter(e => e.variants?.includes(variant));
   }
 
+  moveReviewCapabilities(): readonly MoveReviewEngineCapability[] {
+    return moveReviewEngineCapabilities(this.moveReviewEnvironment());
+  }
+
+  makeMoveReview(
+    capability: MoveReviewEngineSupportedCapability,
+    status: EngineNotifier,
+    signal: AbortSignal,
+  ): MoveReviewEngine {
+    return capability.manifest.loader === 'stockfish-web-pthread'
+      ? new StockfishWebEngine(capability.info, status, signal)
+      : new SingleThreadEngine(capability.info, status, signal);
+  }
+
   getEngine(selector?: { id?: string; variant?: VariantKey }): EngineInfo | undefined {
     const id = selector?.id || this.selectProp();
     const variant = selector?.variant || 'standard';
@@ -182,6 +208,13 @@ export class Engines {
     if (!e) throw Error(`Engine not found ${selector?.id ?? selector?.variant ?? this.selectProp()}}`);
 
     return this.localEngineMap.get(e.id)!.make(e);
+  }
+
+  private moveReviewEnvironment() {
+    return {
+      features: browserSupport(),
+      hardwareConcurrency: Math.max(0, navigator.hardwareConcurrency || 0),
+    };
   }
 }
 

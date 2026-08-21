@@ -42,7 +42,7 @@ final class Mailer(
       logger.warn("Can't send any emails due to live setting")
       funit
     else if msg.to.isNoReply then
-      logger.warn(s"Can't send ${msg.subject} to noreply email ${msg.to}")
+      logger.warn("Skipping email to a no-reply recipient")
       funit
     else
       Future:
@@ -59,16 +59,16 @@ final class Mailer(
       .monSuccess(_.email.send.time)
         .recoverWith:
           case _: EmailException if msg.to.normalize.value != msg.to.value =>
-            logger.warn(s"Email ${msg.to} is invalid, trying ${msg.to.normalize}")
+            logger.warn("Retrying delivery with a normalized recipient address")
             send(msg.copy(to = msg.to.normalize.into(EmailAddress)), orFail, retry)
           case e: Exception =>
             retry.again match
               case None if orFail => throw e
               case None =>
-                logger.warn(s"Couldn't send email to ${msg.to}: ${e.getMessage}")
+                logger.warn(s"Email delivery failed: ${e.getClass.getSimpleName}")
                 funit
               case Some(nextTry) =>
-                logger.info(s"Will retry to send email to ${msg.to} after: ${e.getMessage}")
+                logger.info(s"Email delivery will retry after ${nextTry.delay}: ${e.getClass.getSimpleName}")
                 scheduler.scheduleOnce(nextTry.delay)(send(msg, orFail, nextTry))
                 funit
         .void

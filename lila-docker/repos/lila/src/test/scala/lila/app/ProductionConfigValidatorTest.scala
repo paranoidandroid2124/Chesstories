@@ -12,9 +12,7 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
       net.email = "contact@chesstory.com"
       play.http.secret.key = "play-http-secret"
       user.password.bpass.secret = "bpass-secret"
-      security.email_confirm.enabled = true
       security.password_reset.secret = "reset-secret"
-      security.email_confirm.secret = "confirm-secret"
       security.email_change.secret = "change-secret"
       security.login_token.secret = "token-secret"
       auth.magicLink.autoCreate = false
@@ -34,6 +32,16 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
   test("valid production configuration passes validation"):
     ProductionConfigValidator.validate(validProdConfig, Mode.Prod)
 
+  test("production validation keeps move review dark"):
+    val runtimeConfig = Configuration(
+      ConfigFactory
+        .parseString("""chesstory.moveReview.mode = "runtime"""")
+        .withFallback(validProdConfig.underlying)
+    )
+    val error = intercept[IllegalStateException]:
+      ProductionConfigValidator.validate(runtimeConfig, Mode.Prod)
+    assert(error.getMessage.contains("chesstory.moveReview.mode"))
+
   test("production validation rejects invalid configurations"):
     List(
       (
@@ -45,7 +53,6 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
             play.http.secret.key = "play-http-secret"
             user.password.bpass.secret = "bpass-secret"
             security.password_reset.secret = "???"
-            security.email_confirm.secret = "???"
             security.email_change.secret = "???"
             security.login_token.secret = "???"
             mailer.primary.mock = true
@@ -67,9 +74,7 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
             net.email = "contact@chesstory.com"
             play.http.secret.key = "play-http-secret"
             user.password.bpass.secret = "bpass-secret"
-            security.email_confirm.enabled = true
             security.password_reset.secret = "reset-secret"
-            security.email_confirm.secret = "confirm-secret"
             security.email_change.secret = "change-secret"
             security.login_token.secret = "token-secret"
             auth.magicLink.autoCreate = false
@@ -95,9 +100,7 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
             net.email = "contact@chesstory.com"
             play.http.secret.key = "play-http-secret"
             user.password.bpass.secret = "bpass-secret"
-            security.email_confirm.enabled = false
             security.password_reset.secret = "reset-secret"
-            security.email_confirm.secret = "confirm-secret"
             security.email_change.secret = "change-secret"
             security.login_token.secret = "token-secret"
             auth.magicLink.autoCreate = true
@@ -113,7 +116,7 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
             security.hcaptcha.public.sitekey = "captcha-sitekey"
           """)
         ),
-        List("security.email_confirm.enabled", "security.hcaptcha.enabled")
+        List("security.hcaptcha.enabled")
       ),
       (
         Configuration(
@@ -121,7 +124,6 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
             net.domain = "chesstory.com"
             net.base_url = "https://chesstory.com"
             security.password_reset.secret = "reset-secret"
-            security.email_confirm.secret = "confirm-secret"
             security.email_change.secret = "change-secret"
             security.login_token.secret = "token-secret"
             play.http.secret.key = "play-http-secret"
@@ -145,9 +147,7 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
             net.email = "contact@chesstory.com"
             play.http.secret.key = "CiebwjgIM9cHQ;I?Xk:sfqDJ;BhIe:jsL?r=?IPF[saf>s^r0]?0grUq4>q?5mP^"
             user.password.bpass.secret = "9qEYN0ThHer1KWLNekA76Q=="
-            security.email_confirm.enabled = true
             security.password_reset.secret = "reset-secret"
-            security.email_confirm.secret = "confirm-secret"
             security.email_change.secret = "change-secret"
             security.login_token.secret = "token-secret"
             auth.magicLink.autoCreate = false
@@ -173,9 +173,7 @@ class ProductionConfigValidatorTest extends munit.FunSuite:
             net.email = "contact@chesstory.com"
             play.http.secret.key = "play-http-secret"
             user.password.bpass.secret = "bpass-secret"
-            security.email_confirm.enabled = true
             security.password_reset.secret = "reset-secret"
-            security.email_confirm.secret = "confirm-secret"
             security.email_change.secret = "change-secret"
             security.login_token.secret = "token-secret"
             auth.magicLink.autoCreate = false

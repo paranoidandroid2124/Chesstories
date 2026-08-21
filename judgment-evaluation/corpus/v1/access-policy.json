@@ -45,9 +45,5 @@
     "read_roles": ["independent-blind-executor"],
     "development_use": false,
     "open_once_after_fresh_confirm": true
-  },
-  "out_of_set_view": {
-    "strip": ["style", "original wording", "provider", "arm", "raw id", "rank", "confidence"],
-    "retain": ["canonical atomic meaning", "legal replay", "board verification", "engine verification"]
   }
 }

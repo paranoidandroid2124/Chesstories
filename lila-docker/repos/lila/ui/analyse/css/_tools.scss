@@ -1,11 +1,14 @@
 .analyse__tools {
-  @extend %box-neat, %flex-column;
+  @extend %flex-column;
 
   position: relative;
   background: $c-bg-box;
+  border: 1px solid $c-border;
+  border-radius: 0;
+  box-shadow: none;
 
   .ceval {
-    flex: 0 0 44px;
+    flex: 0 0 auto;
   }
 
   .sub-box {
@@ -47,13 +50,13 @@
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.9rem;
+  gap: 0.55rem;
+  padding: 0.75rem 0.8rem;
   border-top: $border;
   background: $c-bg-zebra;
 
   &.is-idle {
-    background: linear-gradient(180deg, $c-bg-box 0%, $c-bg-zebra 100%);
+    background: $c-bg-box;
   }
 }
 
@@ -62,8 +65,10 @@
   flex-direction: column;
   gap: 0.18rem;
 
-  strong {
+  h2 {
+    margin: 0;
     font-size: 0.9rem;
+    line-height: 1.25;
   }
 
   span {
@@ -75,44 +80,44 @@
 
 .analyse__workspace-dock-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
-  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0;
+  border: 1px solid rgba($c-border, 0.8);
 }
 
-.analyse__workspace-card {
+.analyse__workspace-tool {
   @extend %button-none;
 
   width: 100%;
   display: flex;
   align-items: flex-start;
-  gap: 0.7rem;
-  padding: 0.8rem;
-  border: $border;
-  border-radius: $box-radius-size;
-  background: $c-bg-box;
+  gap: 0.55rem;
+  min-block-size: 44px;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   text-align: left;
   transition:
-    border-color 0.16s ease,
-    background 0.16s ease,
-    transform 0.16s ease;
+    background 150ms ease,
+    color 150ms ease;
 
-  &:hover {
-    border-color: $c-secondary;
+  + .analyse__workspace-tool {
+    border-inline-start: 1px solid rgba($c-border, 0.8);
+  }
+
+  &:hover,
+  &:focus-visible {
     background: $c-bg-zebra;
-    transform: translateY(-1px);
   }
 
   &.active {
-    border-color: rgba($c-secondary, 0.45);
     background: $c-bg-zebra;
-  }
-
-  &.busy {
-    border-color: rgba($c-primary, 0.45);
+    box-shadow: inset 0 -2px 0 $c-secondary;
   }
 }
 
-.analyse__workspace-card-icon {
+.analyse__workspace-tool-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -125,7 +130,7 @@
   }
 }
 
-.analyse__workspace-card-copy {
+.analyse__workspace-tool-copy {
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -140,149 +145,6 @@
     line-height: 1.35;
     color: $c-font-dim;
     white-space: normal;
-  }
-}
-
-.analyse__workspace-card-state {
-  margin-inline-start: auto;
-  align-self: center;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: rgba($c-primary, 0.12);
-  color: $c-primary;
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.analyse__chesstory-brief {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-  padding: 0.85rem 0.9rem;
-  border-top: $border;
-  border-bottom: $border;
-  background: linear-gradient(180deg, rgba($c-secondary, 0.08), rgba($c-bg-zebra, 0.92)), $c-bg-box;
-}
-
-.analyse__chesstory-brief-head,
-.analyse__chesstory-brief-focus,
-.analyse__chesstory-brief-row-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
-}
-
-.analyse__chesstory-brief-title {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.12rem;
-
-  span {
-    color: $c-secondary;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  strong {
-    font-size: 1rem;
-    line-height: 1.2;
-  }
-}
-
-.analyse__chesstory-brief-state,
-.analyse__chesstory-brief-row-head span {
-  flex: 0 0 auto;
-  padding: 0.13rem 0.42rem;
-  border: 1px solid rgba($c-secondary, 0.3);
-  border-radius: 999px;
-  color: $c-font-dim;
-  font-size: 0.68rem;
-  font-weight: 700;
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-
-.analyse__chesstory-brief-focus {
-  padding-inline-start: 0.65rem;
-  border-inline-start: 3px solid $c-secondary;
-
-  span {
-    flex: 0 0 auto;
-    color: $c-font-dim;
-    font-size: 0.74rem;
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-
-  strong {
-    min-width: 0;
-    color: $c-font-clear;
-    font-size: 0.92rem;
-    line-height: 1.25;
-    text-align: right;
-    overflow-wrap: anywhere;
-  }
-}
-
-.analyse__chesstory-brief-access {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.45rem;
-  padding: 0.65rem;
-  border: 1px solid rgba($c-secondary, 0.22);
-  border-radius: $box-radius-size;
-  background: rgba($c-secondary, 0.08);
-
-  span {
-    color: $c-font-dim;
-    font-size: 0.76rem;
-    line-height: 1.35;
-  }
-
-  strong {
-    color: $c-font-clear;
-  }
-
-  .button {
-    justify-self: start;
-    padding: 0.35rem 0.58rem;
-    font-size: 0.74rem;
-    line-height: 1.2;
-  }
-}
-
-.analyse__chesstory-brief-list {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid rgba($c-border, 0.8);
-  border-radius: $box-radius-size;
-  background: rgba($c-bg-box, 0.74);
-}
-
-.analyse__chesstory-brief-row {
-  padding: 0.62rem 0.7rem;
-
-  + .analyse__chesstory-brief-row {
-    border-top: 1px solid rgba($c-border, 0.72);
-  }
-
-  strong {
-    min-width: 0;
-    font-size: 0.82rem;
-    line-height: 1.25;
-  }
-
-  p {
-    margin: 0.26rem 0 0;
-    color: $c-font-dim;
-    font-size: 0.78rem;
-    line-height: 1.38;
   }
 }
 
@@ -326,7 +188,9 @@
     padding: 0.5em;
     width: 100%;
 
-    @include transition;
+    transition:
+      color 150ms ease,
+      background-color 150ms ease;
 
     &:hover {
       color: $c-link-hover;
@@ -350,6 +214,8 @@
 .analyse__controls {
   height: $col3-uniboard-controls;
   align-items: stretch;
+  border: 1px solid $c-border;
+  background: $c-bg-low;
 
   div {
     display: flex;
@@ -365,7 +231,15 @@
     @extend %page-text;
 
     flex: 0 0 2.5rem;
+    min-block-size: 44px;
+    border-inline-start: 1px solid $c-border;
+    background: transparent;
     transition: visibility 0s;
+
+    &:hover:not(:disabled) {
+      background: $c-bg-zebra;
+      color: $c-font;
+    }
   }
 
   .fbt--engine-toggle {
@@ -379,16 +253,19 @@
       font-size: 0.82rem;
       font-weight: 700;
     }
+
+    &.active {
+      color: $c-primary;
+      background: rgba($c-primary, 0.08) !important;
+      box-shadow: inset 0 -2px 0 $c-primary;
+    }
   }
 
   .active {
-    margin-top: -3px;
-    padding-top: 3px;
-    color: $c-over;
-  }
-
-  .fbt.busy {
-    box-shadow: inset 0 0 0 1px rgba($c-secondary, 0.4);
+    margin-top: 0;
+    padding-top: 0;
+    color: $c-primary;
+    background: rgba($c-primary, 0.08) !important;
   }
 
   .fbt.latent {

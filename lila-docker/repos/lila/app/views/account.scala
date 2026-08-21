@@ -7,14 +7,8 @@ import scala.annotation.unused
 
 object account:
 
-  private def flashMessages(using ctx: Context) =
-    val flashes = List(
-      ctx.flash("success").map(msg => div(cls := "flash flash-success")(msg)),
-      ctx.flash("warning").map(msg => div(cls := "flash flash-warning")(msg)),
-      ctx.flash("error").map(msg => div(cls := "flash flash-error")(msg)),
-      ctx.flash("failure").map(msg => div(cls := "flash flash-error")(msg))
-    ).flatten
-    frag(flashes*)
+  private def noticeMessage(notice: Option[String]) =
+    notice.map(msg => div(cls := "flash flash-success")(msg))
 
   private def settingsPage(title: String, activeTab: String)(content: Context ?=> scalatags.Text.all.Frag)(using ctx: Context) =
     Page(s"$title - Chesstory")
@@ -40,13 +34,17 @@ object account:
           )
         )
 
-  def profile(user: User, form: play.api.data.Form[lila.core.userId.UserName])(using ctx: Context) =
+  def profile(
+      user: User,
+      form: play.api.data.Form[lila.core.userId.UserName],
+      notice: Option[String] = None
+  )(using ctx: Context) =
     settingsPage("Profile Settings", "profile"):
       frag(
         h2("Profile Settings"),
         p(cls := "desc")("Manage your Chesstory identity."),
         hr,
-        flashMessages,
+        noticeMessage(notice),
         form.globalError.map: e =>
           div(cls := "form-error")(e.message)
         ,
@@ -85,7 +83,8 @@ object account:
       user: User,
       hasPassword: Boolean,
       emailForm: play.api.data.Form[?],
-      passwordForm: play.api.data.Form[?]
+      passwordForm: play.api.data.Form[?],
+      notice: Option[String] = None
   )(using ctx: Context) =
     settingsPage("Security Settings", "security"):
       val passwordTitle = if hasPassword then "Change Password" else "Set Password"
@@ -94,7 +93,7 @@ object account:
         h2("Security Settings"),
         p(cls := "desc")("Manage your email address, password, and login methods."),
         hr,
-        flashMessages,
+        noticeMessage(notice),
         div(cls := "account-form")(
           h3("Email Address"),
           p(cls := "help")("Current login email"),
@@ -182,7 +181,9 @@ object account:
         h2("Preferences"),
         p(cls := "desc")("Appearance and board settings for Chesstory."),
         hr,
-        flashMessages,
+        noticeMessage(ctx.req.getQueryString("notice").collect:
+          case "preferences-updated" => "Preferences updated"
+        ),
         postForm(action := routes.Pref.formApply, cls := "account-form")(
           div(cls := "form-group")(
             label(attr("for") := "bg")("Site theme"),
@@ -220,7 +221,7 @@ object account:
         p("Closing your account disables sign-in and hides your profile."),
         div(cls := "warning-box")(
           strong("Warning: "),
-          "This disables sign-in. If you need the account reopened later, contact support from the same email address. This page does not erase your saved game reviews."
+          "This disables sign-in. If you need the account reopened later, contact support from the same email address. This page does not erase Studies you explicitly saved."
         ),
         postForm(action := routes.Account.closeConfirm, cls := "mt-2")(
           button(tpe := "submit", cls := "btn-danger")("I understand, close my account")

@@ -10,8 +10,7 @@ import lila.core.security.ClearPassword
 final class SecurityApi(
     userRepo: lila.user.UserRepo,
     sessionStore: SessionStore,
-    authenticator: Authenticator,
-    pwnedApi: PwnedApi
+    authenticator: Authenticator
 )(using Executor):
 
   val sessionIdKey = "sid"
@@ -19,54 +18,11 @@ final class SecurityApi(
   def reqSessionId(req: play.api.mvc.RequestHeader): Option[SessionId] =
     req.cookies.get(sessionIdKey).map(_.value).map(SessionId.apply)
 
-  def saveAuthentication(
-      userId: lila.core.userId.UserId,
-      apiVersion: Option[lila.core.net.ApiVersion],
-      pwned: IsPwned
-  )(using req: play.api.mvc.RequestHeader): Fu[SessionId] =
+  def saveAuthentication(userId: lila.core.userId.UserId): Fu[SessionId] =
     val sid = SessionId(java.util.UUID.randomUUID.toString)
-    sessionStore.save(
-      sid,
-      userId,
-      req,
-      apiVersion,
-      up = true,
-      proxy = lila.core.security.IsProxy.empty,
-      pwned = pwned.yes
-    ) >> Future.successful(sid)
+    sessionStore.save(sid, userId) >> Future.successful(sid)
 
-  object appeal:
-    def saveAuthentication(userId: lila.core.userId.UserId)(using req: play.api.mvc.RequestHeader): Fu[SessionId] =
-      val sid = SessionId(java.util.UUID.randomUUID.toString)
-      sessionStore.save(
-        sid,
-        userId,
-        req,
-        apiVersion = Option.empty,
-        up = true,
-        proxy = lila.core.security.IsProxy.empty,
-        pwned = false
-      ) >> Future.successful(sid)
-
-  import play.api.data.*
-  import play.api.data.Forms.*
-
-  def loginForm = Form(
-    mapping(
-      "username" -> nonEmptyText,
-      "password" -> nonEmptyText
-    )((u, p) => (u, p))(_ => None)
-  )
-
-  def loginFormFilled(u: lila.core.email.UserStrOrEmail) = loginForm.fill(u.value -> "")
-  def loadLoginForm(u: lila.core.email.UserStrOrEmail, pwned: IsPwned) =
-    Future.successful:
-      val form = loginFormFilled(u)
-      if pwned.yes then form.withGlobalError("This password appears in known breaches. Change it after login.")
-      else form
-  def rememberForm = Form(single("remember" -> boolean))
-
-  case class AuthSuccess(user: lila.core.user.User, pwned: IsPwned)
+  case class AuthSuccess(user: lila.core.user.User)
 
   def authenticate(
       login: String,
@@ -85,11 +41,11 @@ final class SecurityApi(
             .read(trimmed)
             .fold[Fu[Option[lila.core.user.User]]](fuccess(None))(u => authenticator.authenticateById(u.id, withPassword))
 
-    authUser.flatMap:
+    authUser.map:
       case Some(user) if user.enabled.yes =>
-        pwnedApi.isPwned(password).map(pwned => AuthSuccess(user, pwned).some)
+        AuthSuccess(user).some
       case _ =>
-        fuccess(None)
+        None
 
   def logout(sid: SessionId): Funit =
     sessionStore.delete(sid)

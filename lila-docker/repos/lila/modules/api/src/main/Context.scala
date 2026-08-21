@@ -31,7 +31,7 @@ class Context(
   export loginContext.*
   def ip: IpAddress = HTTPRequest.ipAddress(req)
   lazy val mobileApiVersion: Option[lila.core.net.ApiVersion] = None
-  lazy val blind = req.cookies.get(lila.web.WebConfig.blindCookie.name).exists(_.value.nonEmpty)
+  lazy val blind = false
   def updatePref(f: Update[Pref]) = new Context(req, loginContext, f(pref))
 
 object Context:

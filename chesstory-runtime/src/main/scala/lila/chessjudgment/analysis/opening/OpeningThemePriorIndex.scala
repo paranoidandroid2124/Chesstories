@@ -20,9 +20,6 @@ final class OpeningThemePriorIndex private (
       .flatMap(entry => entry.family.map(_ -> entry))
       .toMap
 
-  def allEntries: List[OpeningThemePrior] =
-    entries
-
   def priorFor(lineage: Option[String], family: Option[OpeningFamily]): Option[OpeningThemePrior] =
     priorFor(lineage, family, None)
 
@@ -199,6 +196,11 @@ object OpeningThemePriorIndex:
   private val FamilyFallbackLineages: Set[String] =
     Set("eco_a", "eco_b", "eco_c", "eco_d", "eco_e")
 
+  private val RequiredNormalizedLineageKeys: Set[String] =
+    (LineageRules.iterator.map(_.lineage) ++ FamilyFallbackLineages.iterator)
+      .map(OpeningRecognitionIndex.normalizeLineage)
+      .toSet
+
   private[opening] def isFamilyFallbackLineage(lineage: String): Boolean =
     FamilyFallbackLineages.contains(lineage)
 
@@ -261,38 +263,69 @@ object OpeningThemePriorIndex:
     OpeningThemePriorIndex(entries.iterator.toList)
 
   private def loadResourceRows(path: String): List[OpeningThemePrior] =
-    Option(getClass.getClassLoader.getResourceAsStream(path)).toList.flatMap: stream =>
-      Using.resource(Source.fromInputStream(stream, "UTF-8")): source =>
-        parseRows(source.getLines()).toList
+    val stream = Option(getClass.getClassLoader.getResourceAsStream(path)).getOrElse(
+      resourceFailure(s"is missing: $path")
+    )
+    Using.resource(Source.fromInputStream(stream, "UTF-8")): source =>
+      parseRows(source.getLines())
 
-  private def parseRows(lines: IterableOnce[String]): Iterable[OpeningThemePrior] =
-    lines.iterator
-      .map(_.trim)
-      .filter(line => line.nonEmpty && !line.startsWith("#"))
-      .dropWhile(_.toLowerCase(Locale.ROOT).startsWith("lineage\t"))
-      .flatMap(parseLine)
+  private def parseRows(lines: IterableOnce[String]): List[OpeningThemePrior] =
+    val resourceRows = lines.iterator
+      .filter: line =>
+        val trimmed = line.trim
+        trimmed.nonEmpty && !trimmed.startsWith("#")
       .toList
+    resourceRows match
+      case header :: dataRows if header == TsvHeader =>
+        validateRows(dataRows.map(line => parseLine(line.trim)))
+      case _ =>
+        resourceFailure("has an invalid header")
 
-  private def parseLine(line: String): Option[OpeningThemePrior] =
-    line.split("\t", -1).toList match
+  private def validateRows(entries: List[OpeningThemePrior]): List[OpeningThemePrior] =
+    val lineageKeys = entries.flatMap(_.lineage)
+    val duplicateLineageKeys = lineageKeys
+      .groupBy(identity)
+      .collect { case (lineage, _ :: _ :: _) => lineage }
+    if duplicateLineageKeys.nonEmpty then
+      resourceFailure("contains duplicate normalized lineage keys")
+    if lineageKeys.toSet != RequiredNormalizedLineageKeys then
+      resourceFailure("does not exactly match the required lineage keys")
+    entries
+
+  private def parseLine(line: String): OpeningThemePrior =
+    line.split("\\t", -1).toList match
       case lineageRaw :: familyRaw :: themesRaw :: structuresRaw :: breaksRaw :: developmentRaw ::
-          gambitRaw :: plansRaw :: _ =>
-        val themes = splitList(themesRaw).flatMap(theme)
-        val lineage = OpeningRecognitionIndex.cleanText(lineageRaw).map(OpeningRecognitionIndex.normalizeLineage)
-        val family = OpeningRecognitionIndex.cleanText(familyRaw).flatMap(OpeningFamily.fromRaw)
-        Option.when(lineage.nonEmpty || family.nonEmpty)(
-          OpeningThemePrior(
-            lineage = lineage,
-            family = family,
-            themes = themes.distinct,
-            typicalPawnStructures = splitList(structuresRaw),
-            centerBreaks = splitList(breaksRaw),
-            developmentPriorities = splitList(developmentRaw),
-            gambitCompensation = gambitRaw.trim.equalsIgnoreCase("true"),
-            strategicPlanPriors = splitList(plansRaw)
-          )
+          gambitRaw :: plansRaw :: Nil =>
+        val lineage = OpeningRecognitionIndex.cleanText(lineageRaw)
+          .map(OpeningRecognitionIndex.normalizeLineage)
+          .getOrElse(resourceFailure(s"has a malformed lineage: $lineageRaw"))
+        val family = OpeningRecognitionIndex.cleanText(familyRaw)
+          .flatMap(OpeningFamily.fromRaw)
+          .getOrElse(resourceFailure(s"has a malformed family: $familyRaw"))
+        val themes = splitList(themesRaw)
+          .map(raw => theme(raw).getOrElse(resourceFailure(s"has a malformed theme: $raw")))
+          .distinct
+        OpeningThemePrior(
+          lineage = Some(lineage),
+          family = Some(family),
+          themes = themes,
+          typicalPawnStructures = splitList(structuresRaw),
+          centerBreaks = splitList(breaksRaw),
+          developmentPriorities = splitList(developmentRaw),
+          gambitCompensation = parseBoolean(gambitRaw),
+          strategicPlanPriors = splitList(plansRaw)
         )
-      case _ => None
+      case _ =>
+        resourceFailure("has an invalid column count")
+
+  private def parseBoolean(raw: String): Boolean =
+    raw.trim.toLowerCase(Locale.ROOT) match
+      case "true"  => true
+      case "false" => false
+      case _        => resourceFailure(s"has a malformed boolean: $raw")
+
+  private def resourceFailure(message: String): Nothing =
+    throw IllegalStateException(s"opening theme-prior resource $message")
 
   private def splitList(raw: String): List[String] =
     Option(raw).getOrElse("").split("[|]").toList.map(_.trim).filter(_.nonEmpty)

@@ -1,14 +1,14 @@
 package controllers
 
 import lila.app.*
-import lila.analyse.ImportHistory
 import play.api.libs.json.*
 import play.api.libs.ws.StandaloneWSClient
 import play.api.libs.ws.DefaultBodyReadables.*
 import play.api.mvc.Result
 
 import java.net.URI
-import java.nio.charset.StandardCharsets
+import java.nio.ByteBuffer
+import java.nio.charset.{ CodingErrorAction, StandardCharsets }
 import java.time.{ Instant, ZoneOffset }
 import java.time.format.DateTimeFormatter
 import java.util.Base64
@@ -16,7 +16,20 @@ import scala.concurrent.duration.*
 import scala.util.control.NonFatal
 
 object Importer:
-  case class GameCard(
+  val providerLichess = "lichess"
+  val providerChessCom = "chesscom"
+  val providers = Set(providerLichess, providerChessCom)
+
+  enum SubmittedPgn:
+    case Inline(value: String)
+    case InvalidEncoded
+
+  enum GameSelectionSubmission:
+    case Absent
+    case Invalid
+    case Selected(pgn: String)
+
+  case class GameSummary(
       provider: String,
       gameId: String,
       playedAt: String,
@@ -25,7 +38,7 @@ object Importer:
       result: String,
       speed: String,
       sourceUrl: Option[String],
-      pgn64: String
+      pgn: String
   )
 
   private val chessComArchiveHost = "api.chess.com"
@@ -39,27 +52,71 @@ object Importer:
       .flatMap(approvedChessComArchiveUrl)
 
   private def approvedChessComArchiveUrl(raw: String): Option[String] =
-    Option(raw).filter(_.nonEmpty).flatMap: value =>
+    Option(raw)
+      .filter(_.nonEmpty)
+      .flatMap: value =>
+        try
+          val uri = URI.create(value)
+          val rawPath = Option(uri.getRawPath)
+          Option.when(
+            Option(uri.getScheme).exists(_.equalsIgnoreCase("https")) &&
+              Option(uri.getHost).exists(_.equalsIgnoreCase(chessComArchiveHost)) &&
+              (uri.getPort == -1 || uri.getPort == 443) &&
+              uri.getRawUserInfo == null &&
+              uri.getRawQuery == null &&
+              uri.getRawFragment == null &&
+              rawPath.exists(path => chessComArchivePath.pattern.matcher(path).matches)
+          )(uri.toString)
+        catch case NonFatal(_) => None
+
+  private[controllers] def submittedPgn(form: Map[String, Seq[String]]): Option[SubmittedPgn] =
+    def first(name: String): Option[String] =
+      form.get(name).flatMap(_.headOption).map(_.trim).filter(_.nonEmpty)
+    if form.contains("pgn64") then
+      Some(decodePgn64(first("pgn64").getOrElse("")) match
+        case Some(pgn) => SubmittedPgn.Inline(pgn)
+        case None => SubmittedPgn.InvalidEncoded)
+    else first("pgn").map(SubmittedPgn.Inline.apply)
+
+  private[controllers] def gameSelectionSubmission(
+      form: Map[String, Seq[String]],
+      lookup: String => Option[(String, GameSummary)]
+  ): GameSelectionSubmission =
+    form.get("gameSelection") match
+      case None => GameSelectionSubmission.Absent
+      case Some(values) =>
+        values.headOption
+          .map(_.trim)
+          .filter(_.nonEmpty)
+          .flatMap(lookup)
+          .fold[GameSelectionSubmission](GameSelectionSubmission.Invalid): (_, game) =>
+            GameSelectionSubmission.Selected(game.pgn)
+
+  private[controllers] def decodePgn64(encoded: String): Option[String] =
+    val normalized = Option(encoded).map(_.trim).filter(_.nonEmpty)
+    normalized.flatMap { raw =>
+      val padded =
+        raw.length % 4 match
+          case 0 => raw
+          case mod => raw + ("=" * (4 - mod))
       try
-        val uri = URI.create(value)
-        val rawPath = Option(uri.getRawPath)
-        Option.when(
-          Option(uri.getScheme).exists(_.equalsIgnoreCase("https")) &&
-            Option(uri.getHost).exists(_.equalsIgnoreCase(chessComArchiveHost)) &&
-            (uri.getPort == -1 || uri.getPort == 443) &&
-            uri.getRawUserInfo == null &&
-            uri.getRawQuery == null &&
-            uri.getRawFragment == null &&
-            rawPath.exists(path => chessComArchivePath.pattern.matcher(path).matches)
-        )(uri.toString)
-      catch
-        case NonFatal(_) => None
+        val text =
+          StandardCharsets.UTF_8
+            .newDecoder()
+            .onMalformedInput(CodingErrorAction.REPORT)
+            .onUnmappableCharacter(CodingErrorAction.REPORT)
+            .decode(ByteBuffer.wrap(Base64.getUrlDecoder.decode(padded)))
+            .toString
+            .trim
+        Option(text).filter(_.nonEmpty)
+      catch case NonFatal(_) => None
+    }
 
 final class Importer(
     env: Env,
     ws: StandaloneWSClient
 ) extends LilaController(env):
-  import Importer.GameCard
+  import Importer.GameSummary
 
   private val logger = lila.log("importer")
   private val usernamePattern = "^[A-Za-z0-9][A-Za-z0-9_-]{1,29}$".r
@@ -84,53 +141,82 @@ final class Importer(
       .orElse(sys.env.get("CHESSCOM_API_BASE").map(_.trim).filter(_.nonEmpty))
       .getOrElse("https://api.chess.com")
       .stripSuffix("/")
+  private val gameSelections =
+    env.memo.cacheApi.notLoadingSync[String, (String, GameSummary)](128, "importer.gameSelection"):
+      _.maximumSize(2048).expireAfterWrite(10.minutes).build()
 
   def importGame = Open:
     def queryParam(name: String): Option[String] =
       req.queryString.get(name).flatMap(_.headOption).map(_.trim).filter(_.nonEmpty)
     val provider =
-      queryParam("provider").map(_.toLowerCase).filter(ImportHistory.providers).getOrElse(ImportHistory.providerLichess)
+      queryParam("provider")
+        .map(_.toLowerCase)
+        .filter(Importer.providers)
+        .getOrElse(Importer.providerLichess)
     val username = queryParam("username").getOrElse("")
-    Ok.async(importIndexPage(provider = provider, username = username)).map: result =>
-      if ctx.isAuth then result.hasPersonalData else result
+    Ok.async(importIndexPage(provider = provider, username = username))
+      .map: result =>
+        if ctx.isAuth then result.hasPersonalData else result
 
   // Handles two cases:
   // 1) provider + username => redirect to fetched game list
-  // 2) pgn64 => render analysis for selected game
+  // 2) game selection, pgn64 or pgn => render analysis for an inline game
   def sendGame = OpenBodyOf(parse.formUrlEncoded): (ctx: BodyContext[Map[String, Seq[String]]]) ?=>
     val form = ctx.body.body
 
-    def first(name: String): Option[String] =
-      form.get(name).flatMap(_.headOption).map(_.trim).filter(_.nonEmpty)
-
-    first("pgn64").flatMap(decodePgn64) match
-      case Some(pgn) =>
-        renderAnalysisWithInlinePgn(pgn, submittedAnalysisSource(first))
-      case None =>
-        val provider = first("provider").map(_.toLowerCase)
-        val username = first("username")
-        (provider, username) match
-          case (Some(ImportHistory.providerLichess), Some(user)) =>
-            Redirect(routes.Importer.importFromLichess(user)).toFuccess
-          case (Some(ImportHistory.providerChessCom), Some(user)) =>
-            Redirect(routes.Importer.importFromChessCom(user)).toFuccess
-          case _ =>
-            BadRequest.async(importIndexPage(error = Some("Please choose provider and enter a valid username."))).map: result =>
-              if ctx.isAuth then result.hasPersonalData else result
+    Importer.gameSelectionSubmission(
+      form,
+      id =>
+        val selected = gameSelections.getIfPresent(id)
+        gameSelections.invalidate(id)
+        selected
+    ) match
+      case Importer.GameSelectionSubmission.Selected(pgn) =>
+        renderAnalysisWithInlinePgn(pgn)
+      case Importer.GameSelectionSubmission.Invalid =>
+        BadRequest
+          .async(importIndexPage(error = Some("This game selection expired. Reload the game list and try again.")))
+          .map: result =>
+            if ctx.isAuth then result.hasPersonalData else result
+      case Importer.GameSelectionSubmission.Absent =>
+        Importer.submittedPgn(form) match
+          case Some(Importer.SubmittedPgn.Inline(pgn)) =>
+            renderAnalysisWithInlinePgn(pgn)
+          case Some(Importer.SubmittedPgn.InvalidEncoded) =>
+            BadRequest
+              .async(importIndexPage(error = Some("The encoded game could not be read.")))
+              .map: result =>
+                if ctx.isAuth then result.hasPersonalData else result
+          case None =>
+            def first(name: String): Option[String] =
+              form.get(name).flatMap(_.headOption).map(_.trim).filter(_.nonEmpty)
+            val provider = first("provider").map(_.toLowerCase)
+            val username = first("username")
+            (provider, username) match
+              case (Some(Importer.providerLichess), Some(user)) =>
+                Redirect(routes.Importer.importFromLichess(user)).toFuccess
+              case (Some(Importer.providerChessCom), Some(user)) =>
+                Redirect(routes.Importer.importFromChessCom(user)).toFuccess
+              case _ =>
+                BadRequest
+                  .async(importIndexPage(error = Some("Please choose provider and enter a valid username.")))
+                  .map: result =>
+                    if ctx.isAuth then result.hasPersonalData else result
 
   def apiSendGame = Open:
     Redirect(routes.Importer.importGame).toFuccess
 
   def importFromLichess(username: String) = Open:
     normalizedUsername(username).fold[Fu[Result]](
-      BadRequest.async(importIndexPage(error = Some("Invalid Lichess username."))).map: result =>
-        if ctx.isAuth then result.hasPersonalData else result
+      BadRequest
+        .async(importIndexPage(error = Some("Invalid Lichess username.")))
+        .map: result =>
+          if ctx.isAuth then result.hasPersonalData else result
     ) { normalized =>
       for
-        _ <- recordAccountSearch(ImportHistory.providerLichess, normalized)
         games <- fetchRecentLichessGames(normalized)
         page <- gameListPage(
-          provider = ImportHistory.providerLichess,
+          provider = Importer.providerLichess,
           username = normalized,
           games = games,
           notice = Option.when(games.isEmpty)("No public games found for this Lichess user.")
@@ -141,14 +227,15 @@ final class Importer(
 
   def importFromChessCom(username: String) = Open:
     normalizedUsername(username).fold[Fu[Result]](
-      BadRequest.async(importIndexPage(error = Some("Invalid Chess.com username."))).map: result =>
-        if ctx.isAuth then result.hasPersonalData else result
+      BadRequest
+        .async(importIndexPage(error = Some("Invalid Chess.com username.")))
+        .map: result =>
+          if ctx.isAuth then result.hasPersonalData else result
     ) { normalized =>
       for
-        _ <- recordAccountSearch(ImportHistory.providerChessCom, normalized)
         games <- fetchRecentChessComGames(normalized)
         page <- gameListPage(
-          provider = ImportHistory.providerChessCom,
+          provider = Importer.providerChessCom,
           username = normalized,
           games = games,
           notice = Option.when(games.isEmpty)("No public games found for this Chess.com user.")
@@ -160,80 +247,57 @@ final class Importer(
   private def normalizedUsername(raw: String): Option[String] =
     Option(raw).map(_.trim).filter(_.nonEmpty).flatMap(usernamePattern.findFirstIn)
 
-  private def renderAnalysisWithInlinePgn(
-      rawPgn: String,
-      source: ImportHistory.AnalysisSource
-  )(using ctx: Context): Fu[Result] =
-    AnalysePgnPipeline.normalizedInlinePgn(rawPgn).fold[Fu[Result]](
-      BadRequest("Empty PGN payload from upstream provider").toFuccess
-    ): inlinePgn =>
-      ctx.me.fold[Fu[Result]](
+  private def renderAnalysisWithInlinePgn(rawPgn: String)(using ctx: Context): Fu[Result] =
+    AnalysePgnPipeline
+      .validatedInlinePgn(rawPgn)
+      .fold[Fu[Result]](
+        BadRequest
+          .async(
+            importIndexPage(
+              error = Some(
+                "Enter a complete replayable PGN: 200,000 characters or fewer, with up to 600 moves across the full PGN tree."
+              ),
+              draft = AnalysePgnPipeline.inlinePgnDraft(rawPgn)
+            )
+          )
+          .map: result =>
+            if ctx.isAuth then result.hasPersonalData else result
+      ): inlinePgn =>
         Ok.page(AnalysePgnPipeline.page(inlinePgn = Some(inlinePgn))).map(_.hasPersonalData)
-      ): me =>
-        env.analyse.importHistory
-          .recordAnalysis(me.userId, inlinePgn, source)
-          .map: entry =>
-            Redirect(routes.UserAnalysis.imported(entry._id))
-          .recoverWith { case NonFatal(err) =>
-            logger.warn(s"import analysis history save failed err=${err.getMessage}")
-            Ok.page(AnalysePgnPipeline.page(inlinePgn = Some(inlinePgn))).map(_.hasPersonalData)
-          }
-
-  private def submittedAnalysisSource(
-      first: String => Option[String]
-  ): ImportHistory.AnalysisSource =
-    ImportHistory.AnalysisSource(
-      sourceType = first("sourceType").getOrElse(ImportHistory.sourceManual),
-      provider = first("sourceProvider").orElse(first("provider")),
-      username = first("sourceUsername").orElse(first("username")),
-      externalGameId = first("sourceGameId"),
-      sourceUrl = first("sourceUrl").flatMap(trustedSourceUrl),
-      white = first("sourceWhite"),
-      black = first("sourceBlack"),
-      result = first("sourceResult"),
-      speed = first("sourceSpeed"),
-      playedAtLabel = first("sourcePlayedAt")
-    )
 
   private def importIndexPage(
       error: Option[String] = None,
-      provider: String = ImportHistory.providerLichess,
-      username: String = ""
+      provider: String = Importer.providerLichess,
+      username: String = "",
+      draft: Option[String] = None
   )(using ctx: Context): Fu[lila.ui.Page] =
-    importPageSummary.map: summary =>
+    fuccess:
       views.importer.index(
         error = error,
         provider = provider,
         username = username,
-        recentAccounts = summary.accounts,
-        recentAnalyses = summary.analyses
+        draft = draft
       )
 
   private def gameListPage(
       provider: String,
       username: String,
-      games: List[GameCard],
+      games: List[GameSummary],
       notice: Option[String]
   )(using ctx: Context): Fu[lila.ui.Page] =
-    importPageSummary.map: summary =>
+    fuccess:
+      val selectedGames = games.map: game =>
+        val selectionId = scalalib.SecureRandom.nextString(24)
+        gameSelections.put(selectionId, username -> game)
+        selectionId -> game
       views.importer.gameList(
         provider = provider,
         username = username,
-        games = games,
-        notice = notice,
-        recentAccounts = summary.accounts,
-        recentAnalyses = summary.analyses
+        games = selectedGames,
+        notice = notice
       )
 
-  private def importPageSummary(using ctx: Context): Fu[ImportHistory.RecentSummary] =
-    ctx.me.fold(fuccess(ImportHistory.RecentSummary.empty)): me =>
-      env.analyse.importHistory.recentSummary(me.userId)
-
-  private def recordAccountSearch(provider: String, username: String)(using ctx: Context): Funit =
-    ctx.me.fold(funit): me =>
-      env.analyse.importHistory.recordAccountSearch(me.userId, provider, username)
-
-  private def fetchRecentLichessGames(username: String): Fu[List[GameCard]] =
+  private def fetchRecentLichessGames(username: String): Fu[List[GameSummary]] =
     val url = s"$lichessImportApiBase/api/games/user/$username?max=$recentGameTarget&pgnInJson=true"
     ws.url(url)
       .withHttpHeaders("Accept" -> "application/x-ndjson")
@@ -241,23 +305,22 @@ final class Importer(
       .get()
       .map { res =>
         if res.status == 200 then
-          Option(res.body[String])
-            .toList
+          Option(res.body[String]).toList
             .flatMap(_.split('\n').toList)
             .map(_.trim)
             .filter(_.nonEmpty)
             .flatMap(parseLichessNdjsonLine)
             .take(recentGameTarget)
         else
-          logger.warn(s"lichess import list failed username=$username status=${res.status}")
+          logger.warn(s"lichess import list failed status=${res.status}")
           Nil
       }
       .recover { case NonFatal(err) =>
-        logger.warn(s"lichess import list exception username=$username err=${err.getMessage}")
+        logger.warn(s"lichess import list exception=${err.getClass.getSimpleName}")
         Nil
       }
 
-  private def parseLichessNdjsonLine(line: String): Option[GameCard] =
+  private def parseLichessNdjsonLine(line: String): Option[GameSummary] =
     try
       val js = Json.parse(line)
       val pgn = (js \ "pgn").asOpt[String].map(_.trim).filter(_.nonEmpty)
@@ -269,12 +332,12 @@ final class Importer(
         val result = winner match
           case Some("white") => "1-0"
           case Some("black") => "0-1"
-          case _             => "1/2-1/2"
+          case _ => "1/2-1/2"
         val playedAt = formatEpochMs((js \ "lastMoveAt").asOpt[Long].orElse((js \ "createdAt").asOpt[Long]))
         val speed = (js \ "speed").asOpt[String].orElse((js \ "perf").asOpt[String]).getOrElse("-")
         val sourceUrl = Some(s"$lichessWebBase/$gameId")
-        GameCard(
-          provider = ImportHistory.providerLichess,
+        GameSummary(
+          provider = Importer.providerLichess,
           gameId = gameId,
           playedAt = playedAt,
           white = white,
@@ -282,11 +345,10 @@ final class Importer(
           result = result,
           speed = speed,
           sourceUrl = sourceUrl,
-          pgn64 = encodePgn64(value)
+          pgn = value
         )
       }
-    catch
-      case NonFatal(_) => None
+    catch case NonFatal(_) => None
 
   private def lichessPlayerName(js: JsValue, side: String): String =
     (js \ "players" \ side \ "user" \ "name")
@@ -294,7 +356,7 @@ final class Importer(
       .orElse((js \ "players" \ side \ "name").asOpt[String])
       .getOrElse(side.capitalize)
 
-  private def fetchRecentChessComGames(username: String): Fu[List[GameCard]] =
+  private def fetchRecentChessComGames(username: String): Fu[List[GameSummary]] =
     val archivesUrl = s"$chessComApiBase/pub/player/${username.toLowerCase}/games/archives"
     ws.url(archivesUrl)
       .withRequestTimeout(requestTimeout)
@@ -308,20 +370,19 @@ final class Importer(
               .take(chessComArchiveScanLimit)
           collectChessComGames(archives, acc = Nil)
         else
-          logger.warn(s"chesscom archives failed username=$username status=${res.status}")
+          logger.warn(s"chesscom archives failed status=${res.status}")
           fuccess(Nil)
       }
       .recover { case NonFatal(err) =>
-        logger.warn(s"chesscom archives exception username=$username err=${err.getMessage}")
+        logger.warn(s"chesscom archives exception=${err.getClass.getSimpleName}")
         Nil
       }
 
   private def collectChessComGames(
       archives: List[String],
-      acc: List[GameCard]
-  ): Fu[List[GameCard]] =
-    if acc.size >= recentGameTarget || archives.isEmpty then
-      fuccess(acc.take(recentGameTarget))
+      acc: List[GameSummary]
+  ): Fu[List[GameSummary]] =
+    if acc.size >= recentGameTarget || archives.isEmpty then fuccess(acc.take(recentGameTarget))
     else
       val head = archives.head
       val tail = archives.tail
@@ -339,25 +400,28 @@ final class Importer(
           collectChessComGames(tail, acc)
         }
 
-  private def parseChessComArchive(jsonText: String): List[GameCard] =
+  private def parseChessComArchive(jsonText: String): List[GameSummary] =
     val games = (Json.parse(jsonText) \ "games").asOpt[List[JsObject]].getOrElse(Nil)
     games
       .sortBy(g => (g \ "end_time").asOpt[Long].getOrElse(0L))
       .reverse
       .flatMap(parseChessComGame)
 
-  private def parseChessComGame(game: JsObject): Option[GameCard] =
+  private def parseChessComGame(game: JsObject): Option[GameSummary] =
     val pgn = (game \ "pgn").asOpt[String].map(_.trim).filter(_.nonEmpty)
     pgn.map { value =>
       val sourceUrl = (game \ "url").asOpt[String].flatMap(trustedSourceUrl)
-      val gameId = sourceUrl.flatMap(_.split('/').lastOption).filter(_.nonEmpty).getOrElse(s"chesscom-${Math.abs(value.hashCode)}")
+      val gameId = sourceUrl
+        .flatMap(_.split('/').lastOption)
+        .filter(_.nonEmpty)
+        .getOrElse(s"chesscom-${Math.abs(value.hashCode)}")
       val white = (game \ "white" \ "username").asOpt[String].getOrElse("White")
       val black = (game \ "black" \ "username").asOpt[String].getOrElse("Black")
       val result = chessComResult(game)
       val speed = (game \ "time_class").asOpt[String].getOrElse("-")
       val playedAt = formatEpochMs((game \ "end_time").asOpt[Long].map(_ * 1000L))
-      GameCard(
-        provider = ImportHistory.providerChessCom,
+      GameSummary(
+        provider = Importer.providerChessCom,
         gameId = gameId,
         playedAt = playedAt,
         white = white,
@@ -365,7 +429,7 @@ final class Importer(
         result = result,
         speed = speed,
         sourceUrl = sourceUrl,
-        pgn64 = encodePgn64(value)
+        pgn = value
       )
     }
 
@@ -381,23 +445,6 @@ final class Importer(
       .map(ms => utcDateFmt.format(Instant.ofEpochMilli(ms)))
       .getOrElse("-")
 
-  private def encodePgn64(pgn: String): String =
-    Base64.getUrlEncoder.withoutPadding().encodeToString(pgn.getBytes(StandardCharsets.UTF_8))
-
-  private def decodePgn64(encoded: String): Option[String] =
-    val normalized = Option(encoded).map(_.trim).filter(_.nonEmpty)
-    normalized.flatMap { raw =>
-      val padded =
-        raw.length % 4 match
-          case 0 => raw
-          case mod => raw + ("=" * (4 - mod))
-      try
-        val text = new String(Base64.getUrlDecoder.decode(padded), StandardCharsets.UTF_8).trim
-        Option(text).filter(_.nonEmpty)
-      catch
-        case NonFatal(_) => None
-    }
-
   private def trustedSourceUrl(raw: String): Option[String] =
     try
       val uri = URI.create(raw.trim)
@@ -405,7 +452,8 @@ final class Importer(
       val scheme = Option(uri.getScheme).map(_.toLowerCase)
       Option.when(
         scheme.contains("https") &&
-          host.exists(h => h == "lichess.org" || h.endsWith(".lichess.org") || h == "chess.com" || h.endsWith(".chess.com"))
+          host.exists(h =>
+            h == "lichess.org" || h.endsWith(".lichess.org") || h == "chess.com" || h.endsWith(".chess.com")
+          )
       )(uri.toString)
-    catch
-      case NonFatal(_) => None
+    catch case NonFatal(_) => None

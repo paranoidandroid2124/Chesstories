@@ -16,7 +16,7 @@ object privacy:
             st.article(cls := "legal-content")(
               header(cls := "legal-header")(
                 h1("Privacy Policy"),
-                p(cls := "legal-meta")("Effective Date: March 10, 2026 • Last Updated: July 2, 2026")
+                p(cls := "legal-meta")("Effective Date: March 10, 2026 • Last Updated: August 12, 2026")
               ),
 
               st.section(cls := "legal-section")(
@@ -33,13 +33,13 @@ object privacy:
                 h2("2. Information We Collect"),
                 ul(
                   li(strong("Account data: "), "email address, username, and password hash or other authentication-related records needed to run your account"),
-                  li(strong("Chess content: "), "games, PGNs, studies, positions, candidate lines, comments, notes, and analysis inputs you submit or save"),
+                  li(strong("Analysis requests: "), "PGNs, games, positions, moves, candidate lines, comments, notes, and instructions you submit for the analysis you request"),
+                  li(strong("Explicitly saved Study content: "), "Study chapters, positions, move trees, comments, notes, titles, and other chess material you choose to save"),
                   li(strong("Study sharing data: "), "review study titles, section names, visibility settings, collaborator records, and shareable links or public listing metadata"),
                   li(strong("Support communications: "), "messages you send through email or the contact page"),
                   li(strong("Beta feedback and waitlist data: "), "payment-intent answers, price-band preferences, optional product notes, and notification email addresses you submit through beta feedback prompts or forms"),
                   li(strong("Technical and security data: "), "IP address, browser and device information, request logs, and abuse-prevention signals"),
-                  li(strong("Public chess data: "), "if you request imports or opponent analysis, Chesstory may fetch public game data from third-party chess platforms"),
-                  li(strong("Import history for signed-in users: "), "provider, public username, external game ID, source URL, players, result, date or time controls, opening metadata, and PGN for games you choose to save or reopen")
+                  li(strong("Public chess data: "), "if you request imports or opponent analysis, Chesstory may fetch public game data from third-party chess platforms")
                 )
               ),
 
@@ -83,10 +83,11 @@ object privacy:
                   "Do not place sensitive personal information, confidential third-party material, or private non-chess information inside PGNs, notes, comments, or prompts unless you are comfortable with that information being processed for the requested explanation."
                 ),
                 p(
-                  "Generated explanations may be stored by Chesstory when you save them as part of a review study, note, import history, or analysis record. ",
-                  "Temporary request logs may be retained for a limited period for reliability, security, abuse prevention, and debugging. ",
+                  "Chesstory processes ordinary analysis and import inputs, intermediate results, and generated explanations transiently in server memory to complete the request. ",
+                  "It does not add those requests to a durable analysis or import history. Only content you explicitly save as part of a Study persists as account content. ",
+                  "Limited request, session, security, and operational records may still be retained for reliability, account protection, abuse prevention, and debugging. ",
                   "OpenAI may process prompts and outputs under its API terms, privacy terms, data-processing settings, and retention policies. ",
-                  "OpenAI states that API data is not used to train or improve OpenAI models by default unless the customer opts in, but API abuse-monitoring logs may retain prompts, responses, and related metadata for up to 30 days unless a different approved retention control applies."
+                  "OpenAI states that API data is not used to train or improve OpenAI models by default unless the customer opts in. Its default abuse-monitoring logs may contain prompts, responses, and related metadata and may be retained for up to 30 days, or longer when required by law or reasonably necessary to protect OpenAI's services or a third party from harm. Some API features may also retain application state according to the endpoint and request settings, unless a different approved retention control applies."
                 ),
                 p(
                   "Chesstory does not currently promise Zero Data Retention or Modified Abuse Monitoring for OpenAI API requests. ",
@@ -100,35 +101,26 @@ object privacy:
 
               st.section(cls := "legal-section")(
                 h2("5. Cookies and Similar Technologies"),
-                p("Chesstory uses cookies and similar browser storage to operate the Service and, if you allow it, to remember optional on-device preferences."),
-                h3("Essential storage"),
-                ul(
-                  li(strong("Session and sign-in cookies: "), "keep you signed in and protect your account session"),
-                  li(strong("Security cookies or tokens: "), "support email confirmation, password reset, and related account security flows"),
-                  li(strong("Consent record cookie: "), "stores your Cookie Settings choice so we can remember it on later visits"),
-                  li(strong("Security and request handling signals: "), "support abuse prevention, account protection, and normal service delivery")
+                p(
+                  "Chesstory itself sets one first-party cookie, ",
+                  code("sid"),
+                  ". It is strictly necessary to authenticate a signed-in session and does not contain a PGN or analysis history."
                 ),
-                h3("Optional preference storage"),
-                p("If you choose to allow preferences, Chesstory may store optional browser-side data such as:"),
                 ul(
-                  li(strong("Appearance settings: "), "theme and zoom preferences, especially for signed-out visitors"),
-                  li(strong("On-device analysis state: "), "panel choices and local analysis snapshots saved in your browser"),
-                  li(strong("Performance caches: "), "browser-side IndexedDB or file storage used to cache engine assets or similar performance-related files"),
-                  li(strong("Troubleshooting logs: "), "browser-side diagnostic logs that help surface client-side errors")
+                  li(strong("Purpose: "), "keep you signed in and associate browser requests with the corresponding server-side session record"),
+                  li(strong("Protection: "), "the cookie is HttpOnly, Secure in production, limited to the Chesstory site, and sent with SameSite=Lax"),
+                  li(strong("Duration: "), "it is a browser-session cookie unless you choose Remember me, in which case it can remain for up to 30 days")
                 ),
                 p(
-                  "If you switch to Essential only, Chesstory stops using optional preference storage and performs best-effort cleanup of known preference cookies and browser-side storage on that device."
+                  "Chesstory does not use first-party advertising, analytics, preference, or consent cookies. Your browser may still use its normal HTTP cache for application and chess-engine assets; that asset cache is not an analysis history."
                 ),
-                h3("Advertising and tracking"),
-                p("Chesstory does not currently use advertising cookies or cross-site tracking cookies."),
+                h3("hCaptcha"),
                 p(
-                  "When anti-abuse providers such as captcha or challenge tools are enabled, those providers may process device or browser signals under their own policies."
-                ),
-                div(cls := "legal-actions")(
-                  a(href := "#cookie-consent", cls := "button button-empty js-cookie-consent-open")("Manage Cookie Settings")
-                ),
-                p(cls := "legal-note")(
-                  "Cookie Settings control optional browser-side storage on your device. They do not delete account data stored on Chesstory's servers."
+                  "Account and anti-abuse screens may load hCaptcha, a third-party service. hCaptcha may use its own cookies or browser storage and process network, browser, device, timing, interaction, and challenge signals under its ",
+                  a(href := "https://www.hcaptcha.com/privacy")("Privacy Policy"),
+                  " and ",
+                  a(href := "https://www.hcaptcha.com/terms")("Terms of Service"),
+                  ". Those third-party technologies are not Chesstory first-party cookies."
                 )
               ),
 
@@ -147,7 +139,13 @@ object privacy:
               st.section(cls := "legal-section")(
                 h2("7. Retention, Closure, and Deletion"),
                 p(
-                  "We keep account and service data for as long as needed to operate the Service, secure accounts, and handle legitimate support and operational needs."
+                  "Ordinary analysis and import requests are handled in transient server memory and are not added to a durable analysis or import history. Only a Study you explicitly choose to save persists as account content until you delete it or request erasure."
+                ),
+                p(
+                  "Earlier beta versions may have created import-history records. During the no-history transition, a legacy record may remain until the migration or a deletion request removes it; Chesstory does not rely on those legacy records as a current history feature."
+                ),
+                p(
+                  "Authentication still requires account and server-side session records. We may also retain limited security, fraud-prevention, request, support, and operational records for as long as reasonably needed to operate and protect the Service or comply with law. These records are separate from an analysis history."
                 ),
                 p(
                   "Closing your account disables access, but deletion is handled through a separate request process. ",
@@ -181,11 +179,6 @@ object privacy:
                 p(
                   "You can also manage some account information directly inside the Service, including email and password settings when available."
                 ),
-                p(
-                  "You can change optional browser storage choices at any time through ",
-                  a(href := "#cookie-consent", cls := "js-cookie-consent-open")("Cookie Settings"),
-                  "."
-                ),
                 contactEmail.fold[Frag](
                   p(
                     "For privacy or account requests, please use the ",
@@ -210,8 +203,6 @@ object privacy:
 
               footer(cls := "legal-footer")(
                 a(href := routes.Main.terms.url, cls := "legal-link")("Terms of Service"),
-                span(" • "),
-                a(href := "#cookie-consent", cls := "legal-link js-cookie-consent-open")("Cookie settings"),
                 span(" • "),
                 a(href := routes.Main.contact.url, cls := "legal-link")("Contact"),
                 span(" • "),

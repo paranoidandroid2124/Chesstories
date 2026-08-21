@@ -45,10 +45,18 @@ final class Account(
   private def securityPage(
       me: UserModel,
       emailForm: Form[EmailAddress] = emailChangeForm,
-      passwordForm: Form[PasswordChangeData] = passwordChangeForm
+      passwordForm: Form[PasswordChangeData] = passwordChangeForm,
+      notice: Option[String] = None
   )(render: lila.ui.Page => Fu[Result])(using Context): Fu[Result] =
     env.security.authenticator.hasPassword(me.id).flatMap: hasPassword =>
-      render(views.account.security(me, hasPassword, emailForm, passwordForm))
+      render(views.account.security(me, hasPassword, emailForm, passwordForm, notice))
+
+  private def securityNotice(using Context): Option[String] =
+    ctx.req.getQueryString("notice").flatMap:
+      case "password-updated"        => Some("Password updated.")
+      case "email-confirmation-sent" => Some("Confirmation email sent.")
+      case "email-updated"           => Some("Email address updated.")
+      case _                         => None
 
   private def deletePage(
       me: UserModel,
@@ -59,16 +67,18 @@ final class Account(
 
   def profile = Auth { ctx ?=> me ?=>
     val form = forms.username(me)
-    Ok.page(views.account.profile(me, form))
+    val notice = ctx.req.getQueryString("notice").collect:
+      case "username-updated" => "Username updated"
+    Ok.page(views.account.profile(me, form, notice))
   }
 
   def profileApply = AuthBody { ctx ?=> me ?=>
     bindForm(forms.username(me))(
-      err => BadRequest.page(views.account.profile(me, err)),
+      err => BadRequest.page(views.account.profile(me, err, None)),
       name =>
         if name.id == me.username.id then
           env.user.api.updateUsername(me.id, name) inject
-            Redirect(routes.Account.profile).flashing("success" -> "Username updated")
+            Redirect(s"${routes.Account.profile.url}?notice=username-updated")
         else
           fuccess(BadRequest("Username mismatch"))
     )
@@ -116,7 +126,6 @@ final class Account(
     val closeF = env.user.api.disable(me.id) >> env.security.sessionStore.closeAllSessionsOf(me.id)
     closeF.inject(
       Redirect(routes.Main.landing)
-        .flashing("success" -> "Account closed. Contact support from the same email address if you need it reopened.")
         .discardingCookies(DiscardingCookie(env.security.api.sessionIdKey))
     )
   }
@@ -138,7 +147,6 @@ final class Account(
             env.security.sessionStore.closeAllSessionsOf(me.id)
         requestF.inject(
           Redirect(routes.Main.landing)
-            .flashing("success" -> "Deletion request submitted. Your account has been closed and queued for manual erasure.")
             .discardingCookies(DiscardingCookie(env.security.api.sessionIdKey))
         )
     )
@@ -148,7 +156,7 @@ final class Account(
   def usernameApply = profileApply
 
   def passwd = Auth { ctx ?=> me ?=>
-    securityPage(me)(Ok.page)
+    securityPage(me, notice = securityNotice)(Ok.page)
   }
 
   def passwdApply = AuthBody { ctx ?=> me ?=>
@@ -191,12 +199,7 @@ final class Account(
                 case _ =>
                   env.security.authenticator
                     .setPassword(me.id, newPassword)
-                    .inject(
-                      Redirect(routes.Account.passwd).flashing(
-                        "success" ->
-                          (if hasPassword then "Password updated." else "Password set. You can now log in with it.")
-                      )
-                    )
+                    .inject(Redirect(s"${routes.Account.passwd.url}?notice=password-updated"))
     )
   }
 
@@ -228,8 +231,7 @@ final class Account(
                 val token = env.security.emailChangeToken.generate(me.id, normalized, 30.minutes)
                 val url = s"${env.baseUrl}${routes.Account.emailConfirm(token).url}"
                 env.mailer.automaticEmail.emailChangeConfirm(me, normalized, url).inject(
-                  Redirect(routes.Account.passwd)
-                    .flashing("success" -> s"Confirmation email sent to ${normalized.conceal}.")
+                  Redirect(s"${routes.Account.passwd.url}?notice=email-confirmation-sent")
                 )
     )
   }
@@ -257,6 +259,6 @@ final class Account(
   def emailConfirmApply(token: String) = OpenBody:
     withEmailChange(token): (user, email) =>
       env.user.repo.updateEmail(user.id, email).inject:
-        val redirect =
-          if ctx.me.exists(_.id == user.id) then routes.Account.passwd else routes.Auth.login
-        Redirect(redirect).flashing("success" -> "Email address updated.")
+        if ctx.me.exists(_.id == user.id) then
+          Redirect(s"${routes.Account.passwd.url}?notice=email-updated")
+        else Redirect(s"${routes.Auth.login.url}?notice=email-updated")

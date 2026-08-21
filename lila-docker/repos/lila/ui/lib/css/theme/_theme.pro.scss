@@ -1,77 +1,45 @@
 @import 'theme.default';
 
-// Color Palette: Chesstory quiet tool
-$c-bg: #151713;
-$c-bg-page: #12140f;
-$c-bg-low: #1f221c;
-$c-bg-zebra: #24281f;
-$c-bg-zebra2: #292d24;
-$c-bg-popup: #23261f;
-$c-bg-opaque: #151713;
-$c-body-gradient: #181b15;
-$c-border: #34392f;
+// Chesstory ink desk
+$c-bg: #141c22;
+$c-bg-page: #0e1419;
+$c-bg-low: #1a242c;
+$c-bg-zebra: #202c35;
+$c-bg-zebra2: #26333d;
+$c-bg-popup: #1b252d;
+$c-bg-opaque: #141c22;
+$c-body-gradient: #11181e;
+$c-border: #34434e;
 
 // Typography & Text
-$c-font: #f2f0e8;
-$c-shade: #b8bcad;
-$c-paper: #F1F5F9;
+$c-font: #edf1f3;
+$c-shade: #a8b3bb;
+$c-paper: #f1f5f9;
 
 // Accents
-$c-primary: #a7c98c;
-$c-primary-strong: #d9e6cc;
-$c-secondary: #8fae99;
-$c-good: #91bd83;
-$c-bad: #d8766f;
-$c-accent: #d6a85d;
-$c-brag: #b8955a;
-
-// Glass/Surface overrides (Subtle)
-$glass-surface: rgba(35, 38, 31, 0.95); // High opacity for readability
-$glass-border: rgba(255, 255, 255, 0.05);
+$c-primary: #e07a5f;
+$c-primary-strong: #f3a38d;
+$c-secondary: #7fa6b2;
+$c-good: #78b899;
+$c-bad: #e27870;
+$c-accent: #d7a55f;
+$c-brag: #c99b59;
 
 html.pro {
-    @include shared-color-defs;
+  @include shared-color-defs;
 
-    --c-primary-dim: #{rgba($c-primary, 0.22)};
-    --c-link-hover: #{$c-primary-strong};
-    --c-border-page: #{$c-border};
+  --c-primary-dim: #{rgba($c-primary, 0.22)};
+  --c-link-hover: #{$c-primary-strong};
+  --c-border-page: #{$c-border};
 
-    // Chesstory: keep core layout logic in `ui/analyse/css/_layout.scss`,
-    // but give analysis panels a distinct "workspace card" look.
-    main.analyse {
-        padding: 2rem;
-        max-width: 1600px;
-        margin: 0 auto;
-    }
+  // Keep evaluation/engine UI aligned with the Chesstory palette.
+  .ceval,
+  .analyse__tools .ceval {
+    --c-good: #{$c-good};
+  }
 
-    .analyse__side,
-    .analyse__tools,
-    .analyse__underboard,
-    .analyse__controls,
-    .study__metadata,
-    .study__chapters,
-    .study__members,
-    .study-index,
-    .study-desc {
-        background: #{$c-bg-low};
-        border: 1px solid #{$c-border};
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-        overflow: hidden;
-    }
+  @include pro-mix;
 
-    .study__metadata h2,
-    .study-index h1 {
-        background: $c-bg !important;
-        border-bottom: 1px solid $c-border !important;
-        padding: 1rem !important;
-    }
-
-    // Keep evaluation/engine UI aligned with the Chesstory palette.
-    .ceval,
-    .analyse__tools .ceval {
-        --c-good: #{$c-good};
-    }
-
-    @include pro-mix;
+  // Text over the bright annotation color uses ink, not low-contrast white.
+  --c-over: #0e1419;
 }

@@ -4,6 +4,7 @@ import lila.chessjudgment.model.evaluation.JudgmentThresholds
 import lila.chessjudgment.model.judgment.ThreatDriver
 import lila.chessjudgment.analysis.tactical.TacticalMotifClassifier
 import lila.chessjudgment.model.Motif
+import lila.chessjudgment.model.line.CandidateLineEvaluation
 import lila.chessjudgment.model.judgment.*
 
 /** Generation intent only. This classification may decide which drafts are
@@ -1302,8 +1303,8 @@ private[chessjudgment] object RelativeCauseSignalProfile:
             ) ||
               payload.consequencesForRootMove(rootMove).exists(_.kind == LineConsequenceKind.Mate)
           )
-      case EvidenceRecord(ref, EvalFactEvidence(_, _, mate, _), _) =>
-        ref.line.contains(eventLine) && mate.nonEmpty
+      case EvidenceRecord(ref, CandidateLineEvaluationEvidence(_, CandidateLineEvaluation.EngineSearch(line)), _) =>
+        ref.line.contains(eventLine) && line.mate.nonEmpty
       case EvidenceRecord(ref, payload: TacticalMechanismEvidence, _) =>
         ref.line.contains(eventLine) &&
           payload.line.contains(eventLine) &&
@@ -1416,12 +1417,12 @@ private[chessjudgment] object RelativeCauseSignalProfile:
   private[chessjudgment] def promotionRaceRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
     records.filter {
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
-        payload.hasProofSignalConsequence(LineConsequenceKind.Promotion) ||
-          payload.hasProofSignalConsequence(LineConsequenceKind.PromotionRace) ||
-          payload.materialOutcomeProfile.gainSignals.contains(LineMaterialOutcomeSignal.PromotionGain) ||
-          payload.materialOutcomeProfile.lossSignals.contains(LineMaterialOutcomeSignal.PromotionLoss)
-      case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.kind == TacticalMechanismKind.PawnPromotion && payload.canAnchorTacticalClaim
+        payload
+          .rootOwnedCausalEpisodes(payload.line.rootMove)
+          .exists(episode =>
+            episode.consequence.kind == LineConsequenceKind.Promotion ||
+              episode.consequence.kind == LineConsequenceKind.PromotionRace
+          )
       case _ =>
         false
     }.distinctBy(_.ref.id)

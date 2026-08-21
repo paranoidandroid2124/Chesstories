@@ -20,14 +20,9 @@ trait CtrlExtensions extends play.api.mvc.ControllerHelpers with ResponseHeaders
   extension (req: RequestHeader)
     def ipAddress = HTTPRequest.ipAddress(req)
     def userAgent = HTTPRequest.userAgent(req)
-    def sid = lila.core.security.LilaCookie.sid(req)
 
   extension (result: Result)
     def toFuccess = Future.successful(result)
-    def flashSuccess(msg: String): Result = result.flashing("success" -> msg)
-    def flashSuccess: Result = flashSuccess("")
-    def flashFailure(msg: String): Result = result.flashing("failure" -> msg)
-    def flashFailure: Result = flashFailure("")
     def withCanonical(url: String): Result =
       result.withHeaders(LINK -> s"<${baseUrl}${url}>; rel=\"canonical\"")
     def withCanonical(url: Call): Result = withCanonical(url.url)

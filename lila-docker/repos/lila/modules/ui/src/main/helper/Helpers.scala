@@ -27,10 +27,11 @@ trait Helpers:
 
   def chessgroundMini(fen: String | chess.format.BoardFen, color: chess.Color, lastMove: Option[chess.format.Uci]): Tag => Tag = t =>
     t(
-      cls := "mini-board pv-line",
+      cls := "mini-board mini-board--init pv-line",
       attr("data-fen") := fen.toString,
       attr("data-color") := color.name,
-      attr("data-lastmove") := lastMove.map(_.uci).getOrElse("")
+      attr("data-lastmove") := lastMove.map(_.uci).getOrElse(""),
+      attr("data-state") := s"${fen.toString},${color.name},${lastMove.map(_.uci).getOrElse("")}"
     )
   def userIdLink(
       userId: Option[lila.core.userId.UserId],

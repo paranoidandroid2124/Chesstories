@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/public-commentary-v4/position-commentary-job-status.schema.json",
+  "title": "Chesstory position commentary job status v4",
+  "oneOf": [
+    {"$ref": "#/$defs/awaitingEngineWork"},
+    {"$ref": "#/$defs/stopped"}
+  ],
+  "$defs": {
+    "requestId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+    },
+    "uciMove": {
+      "type": "string",
+      "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "legal_move_count",
+        "root_lines_collected",
+        "move_commentaries_completed",
+        "engine_work_issued",
+        "engine_work_reports_accepted"
+      ],
+      "properties": {
+        "legal_move_count": {"type": "integer", "minimum": 0},
+        "root_lines_collected": {"type": "integer", "minimum": 0},
+        "move_commentaries_completed": {"type": "integer", "minimum": 0},
+        "engine_work_issued": {"type": "integer", "minimum": 0},
+        "engine_work_reports_accepted": {"type": "integer", "minimum": 0}
+      }
+    },
+    "awaitingEngineWork": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "engine_profile",
+        "request_id",
+        "job_id",
+        "state",
+        "deadline_epoch_ms",
+        "progress",
+        "issued_engine_work"
+      ],
+      "properties": {
+        "schema_version": {"const": "chesstory.position-commentary.job-status.v4"},
+        "engine_profile": {"const": "sf18-smallnet-t2-h16-v1"},
+        "request_id": {"$ref": "#/$defs/requestId"},
+        "job_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{32}$"},
+        "state": {"const": "awaiting_engine_work"},
+        "deadline_epoch_ms": {"type": "integer", "minimum": 0},
+        "progress": {"$ref": "#/$defs/progress"},
+        "issued_engine_work": {"$ref": "#/$defs/issuedEngineWork"}
+      }
+    },
+    "issuedEngineWork": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "work_id",
+        "engine_profile",
+        "engine_position_initial_fen",
+        "engine_position_moves_uci",
+        "search_fen",
+        "required_depth",
+        "multi_pv"
+      ],
+      "properties": {
+        "work_id": {"type": "string", "pattern": "^work:[0-9]+$"},
+        "engine_profile": {"const": "sf18-smallnet-t2-h16-v1"},
+        "engine_position_initial_fen": {"type": "string", "minLength": 1, "maxLength": 128},
+        "engine_position_moves_uci": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/uciMove"}
+        },
+        "search_fen": {"type": "string", "minLength": 1, "maxLength": 128},
+        "required_depth": {"type": "integer", "minimum": 1, "maximum": 100},
+        "multi_pv": {"type": "integer", "minimum": 1, "maximum": 3}
+      }
+    },
+    "stopped": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "engine_profile",
+        "request_id",
+        "job_id",
+        "state",
+        "deadline_epoch_ms",
+        "progress",
+        "stop_condition"
+      ],
+      "properties": {
+        "schema_version": {"const": "chesstory.position-commentary.job-status.v4"},
+        "engine_profile": {"const": "sf18-smallnet-t2-h16-v1"},
+        "request_id": {"$ref": "#/$defs/requestId"},
+        "job_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{32}$"},
+        "state": {"const": "stopped"},
+        "deadline_epoch_ms": {"type": "integer", "minimum": 0},
+        "progress": {"$ref": "#/$defs/progress"},
+        "stop_condition": {
+          "enum": [
+            "deadline_exceeded",
+            "budget_exhausted",
+            "cancelled",
+            "engine_execution_failed",
+            "invalid_engine_work_report",
+            "review_construction_failed",
+            "move_review_preparation_failed",
+            "repetition_history_unavailable"
+          ]
+        }
+      }
+    }
+  }
+}

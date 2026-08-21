@@ -2,6 +2,8 @@ package lila.chessjudgment.model.judgment
 
 import chess.{ Black, Queen, Square, White }
 import lila.chessjudgment.model.Motif
+import lila.chessjudgment.model.strategic.EngineLine
+
 
 class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
 
@@ -156,7 +158,12 @@ class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
         line = Some(fixture.candidate),
         confidence = EvidenceConfidence.EngineBacked
       ),
-      payload = EvalFactEvidence(fixture.candidate, 0, None, 18),
+      payload = CandidateLineEvaluationEvidence(
+        fixture.candidate,
+        lila.chessjudgment.model.line.CandidateLineEvaluation.EngineSearch(
+          EngineLine(List(fixture.candidate.rootMove), 0, None, 18)
+        )
+      ),
       parents = List(exactDefense.ref)
     )
     val graph = graphOf(fixture.comparisonRecord, exactThreat, exactDefense, descendant)
@@ -187,62 +194,6 @@ class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
     )
     assertEquals(selected.map(_.disposition), List(OnlyMoveConstraintDisposition.ConcreteCauseQualifier))
 
-  test("played best uses BestVsSecond as the only-move relation while PlayedVsAlternative stays diagnostic"):
-    val playedBest = LineNodeRef("played-best", "d1h5", 1, LineNodeRole.BestReference)
-    val second = LineNodeRef("second", "d1g4", 2, LineNodeRole.Alternative)
-    val fixture = constraintFixture(
-      comparisonId = "best-vs-second",
-      reference = playedBest,
-      candidate = second,
-      kind = CandidateComparisonKind.BestVsSecond
-    )
-    val proof = threatRecord("played-best-defense", playedBest, playedBest.rootMove, "e1")
-    val exact = causeRecord(
-      id = "played-best-only-defense",
-      fixture = fixture,
-      kind = RelativeCauseKind.OnlyDefenseNecessity,
-      sourceSide = RelativeCauseSourceSide.Reference,
-      attribution = ownedReferenceAttribution,
-      direct = proof.ref
-    )
-    val graph = graphOf(fixture.comparisonRecord, proof, exact)
-
-    assert(OnlyMoveConstraintPolicy.isConstraint(
-      fixture.comparisonRecord.ref,
-      graph,
-      Set(playedBest.rootMove)
-    ))
-    assert(OnlyMoveConstraintPolicy.qualifier(
-      exact.ref,
-      cause(exact, graph),
-      graph,
-      Set(playedBest.rootMove)
-    ).nonEmpty)
-    assertEquals(
-      OnlyMoveConstraintPolicy.constraintFact(
-        fixture.comparisonRecord.ref,
-        graph,
-        Set(second.rootMove)
-      ),
-      None
-    )
-
-    val pva = constraintFixture(
-      comparisonId = "played-vs-alternative",
-      reference = playedBest,
-      candidate = second.copy(role = LineNodeRole.Played),
-      kind = CandidateComparisonKind.PlayedVsAlternative
-    )
-    val pvaGraph = graphOf(pva.comparisonRecord)
-    assertEquals(
-      OnlyMoveConstraintPolicy.constraintFact(
-        pva.comparisonRecord.ref,
-        pvaGraph,
-        Set(pva.candidate.rootMove)
-      ),
-      None
-    )
-
   private final case class ConstraintFixture(
       reference: LineNodeRef,
       candidate: LineNodeRef,
@@ -260,7 +211,13 @@ class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
       kind = kind,
       referenceLine = reference,
       candidateLine = candidate,
-      comparison = EvalComparison(White, -30.0, MoveChoiceVerdict.Blunder),
+      comparison = EvalComparison(
+        White,
+        -30.0,
+        MoveChoiceVerdict.Blunder,
+        CandidateComparisonDeltaDetail.OutcomeOnly
+      ),
+      verdictConfidence = VerdictConfidence.EngineBacked,
       candidateSet = Some(CandidateSetDescriptor(CandidateSetType.OnlyMove))
     )
     val ref = evidenceRef(

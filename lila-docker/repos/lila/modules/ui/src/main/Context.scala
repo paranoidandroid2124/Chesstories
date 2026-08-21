@@ -20,7 +20,6 @@ trait Context:
   def is[U: UserIdOf](u: U): Boolean = me.exists(_.is(u))
   def isnt[U: UserIdOf](u: U): Boolean = !is(u)
   def myId: Option[MyId] = me.map(_.myId)
-  def flash(name: String): Option[String] = req.flash.get(name)
 
 import lila.core.user.Me
 object Context:
