@@ -275,42 +275,6 @@ html.light:not(.pro) .legal-actions a.button {
   }
 }
 
-.legal-table-wrap {
-  overflow-x: auto;
-  border-block: 1px solid $c-border;
-
-  &:focus-visible {
-    outline: 3px solid $c-primary;
-    outline-offset: 3px;
-  }
-}
-
-.legal-comparison {
-  width: 100%;
-  min-width: 38rem;
-  border-collapse: collapse;
-  text-align: left;
-
-  th,
-  td {
-    padding: 0.7rem;
-    border-bottom: 1px solid $c-border;
-    vertical-align: top;
-    line-height: 1.4;
-  }
-
-  thead th,
-  tbody th {
-    color: $c-font;
-    font-weight: 700;
-  }
-
-  td {
-    color: $c-font;
-    font-size: 0.86rem;
-  }
-}
-
 .legal-questions {
   border-block: 1px solid $c-border;
 
@@ -347,9 +311,9 @@ html.light:not(.pro) .legal-actions a.button {
 
 .legal-example {
   display: grid;
-  grid-template-columns: minmax(7rem, 9rem) minmax(0, 1fr);
-  gap: 1rem;
-  padding: 0.9rem 0;
+  grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1.25rem 0;
 
   + .legal-example {
     border-top: 1px solid $c-border;
@@ -364,7 +328,8 @@ html.light:not(.pro) .legal-actions a.button {
   &__copy {
     min-width: 0;
     display: grid;
-    gap: 0.55rem;
+    align-content: start;
+    gap: 0.8rem;
 
     h3,
     p {
@@ -373,23 +338,13 @@ html.light:not(.pro) .legal-actions a.button {
 
     h3 {
       color: $c-font;
-      font-size: 1rem;
+      font-size: 1.25rem;
     }
 
     p {
       color: $c-font;
-      font-size: 0.84rem;
-      line-height: 1.4;
-    }
-
-    > a {
-      justify-self: start;
-      min-block-size: 44px;
-      display: inline-flex;
-      align-items: center;
-      padding-inline: 0.35rem;
-      font-size: 0.86rem;
-      font-weight: 700;
+      font-size: 0.95rem;
+      line-height: 1.5;
     }
   }
 
@@ -406,7 +361,7 @@ html.light:not(.pro) .legal-actions a.button {
 
   dt {
     color: $c-font;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
   }
@@ -414,7 +369,7 @@ html.light:not(.pro) .legal-actions a.button {
   dd {
     margin: 0.1rem 0 0;
     color: $c-font;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     line-height: 1.3;
     overflow-wrap: anywhere;
   }
@@ -540,7 +495,12 @@ html.light:not(.pro) .legal-actions a.button {
   }
 
   .legal-example {
-    grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1fr);
+    grid-template-columns: 1fr;
+  }
+
+  .legal-example__board {
+    width: min(100%, 22rem);
+    justify-self: center;
   }
 
   .legal-example dl {

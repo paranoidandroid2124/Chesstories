@@ -77,19 +77,13 @@ object PlayerFacingImpact:
           )
 
 enum DirectCauseStructuralOrigin:
-  case RootTransition
   case PlanResult
   case PlanRestriction
 
-/** A domain whose numeric measure has one typed meaning.
-  *
-  * Values from different cases, structural kinds, polarities, threat kinds,
-  * or threat targets are intentionally incomparable.
-  */
+/** A domain whose numeric measure has one typed meaning. */
 enum DirectCauseImportanceDomain:
   case BoardMate
   case Material
-  case Threat(kind: ThreatKind, targetKey: String)
   case Structural(
       origin: DirectCauseStructuralOrigin,
       kind: TransitionConsequenceKind,
@@ -101,8 +95,6 @@ enum DirectCauseImportanceDomain:
     this match
       case BoardMate => "board-mate"
       case Material => "material"
-      case Threat(kind, targetKey) =>
-        s"threat:${kind.toString.toLowerCase}:$targetKey"
       case Structural(origin, kind, polarity, robustness) =>
         List(
           "structural",
@@ -171,8 +163,21 @@ object DirectCauseImportanceUniverse:
       case _   => None
     }
 
+final case class DirectCauseImportanceChannelIdentity(
+    channelId: String,
+    exactOccurrence: RootOwnedEffectChannelOccurrenceFingerprint
+):
+  require(channelId.nonEmpty, "a direct Cause importance channel requires an exact channel id")
+
+object DirectCauseImportanceChannelIdentity:
+  private[judgment] def from(
+      channel: PlayerFacingCauseChannelSelection
+  ): DirectCauseImportanceChannelIdentity =
+    DirectCauseImportanceChannelIdentity(channel.channelId, channel.exactOccurrence)
+
 final case class DirectCauseImportanceProfile(
     causeEvidenceId: String,
+    channelIdentity: DirectCauseImportanceChannelIdentity,
     causalSignature: String,
     frame: DirectCauseImportanceFrame,
     universe: DirectCauseImportanceUniverse,
@@ -180,6 +185,10 @@ final case class DirectCauseImportanceProfile(
     measure: DirectCauseImportanceMeasure,
     effectIdentity: RootOwnedEffectIdentity = RootOwnedEffectIdentity.unscoped
 ):
+  require(
+    causalSignature == channelIdentity.exactOccurrence.causalSignature,
+    "importance semantic identity must belong to its exact channel occurrence"
+  )
   require(
     PlayerFacingImpact
       .from(
@@ -201,8 +210,10 @@ enum DirectCauseImportanceRelation:
 
 final case class DirectCauseImportanceRelationDecision(
     leftCauseEvidenceId: String,
+    leftChannelId: String,
     leftCausalSignature: String,
     rightCauseEvidenceId: String,
+    rightChannelId: String,
     rightCausalSignature: String,
     relation: DirectCauseImportanceRelation,
     domainKey: Option[String]
@@ -210,13 +221,13 @@ final case class DirectCauseImportanceRelationDecision(
 
 final case class DirectCauseImportanceDecision(
     causeEvidenceId: String,
-    measuredChannelSignatures: List[String],
-    unmeasuredChannelSignatures: List[String],
+    measuredChannelIds: List[String],
+    unmeasuredChannelIds: List[String],
     dominatingCauseEvidenceIds: List[String],
     dominatedWithinDomain: Boolean
 ):
   def fullyMeasured: Boolean =
-    measuredChannelSignatures.nonEmpty && unmeasuredChannelSignatures.isEmpty
+    measuredChannelIds.nonEmpty && unmeasuredChannelIds.isEmpty
 
 final case class DirectCauseImportanceResolution(
     selectedCauseEvidenceIds: List[String],
@@ -227,11 +238,6 @@ final case class DirectCauseImportanceResolution(
   def frontierCauseEvidenceIds: List[String] =
     selectedCauseEvidenceIds.filter(id =>
       decisions.find(_.causeEvidenceId == id).exists(decision => !decision.dominatedWithinDomain)
-    )
-
-  def dominatedWithinDomainCauseEvidenceIds: List[String] =
-    selectedCauseEvidenceIds.filter(id =>
-      decisions.find(_.causeEvidenceId == id).exists(_.dominatedWithinDomain)
     )
 
   /** A single top Cause is certified only when every selected channel has a
@@ -248,9 +254,6 @@ final case class DirectCauseImportanceResolution(
         decisions.forall(_.fullyMeasured) &&
         frontierCauseEvidenceIds.size == 1
     )(frontierCauseEvidenceIds.head)
-
-  def incomparableProfilePairCount: Int =
-    relations.count(_.relation == DirectCauseImportanceRelation.Incomparable)
 
 object DirectCauseImportanceResolution:
   val empty: DirectCauseImportanceResolution =
@@ -356,8 +359,8 @@ object PlayerFacingIdeaOrderingPolicy:
     * An idea whose lead is not fully proven dominated (including any
     * unmeasured or partially dominated lead) is always layer zero. Only
     * decisions already certified as dominated may contribute incoming edges
-    * to later layers. Invalid or cyclic edges have no ordering authority, so
-    * every idea falls back to layer zero and retains comparison-rank/id order.
+    * to later layers. Invalid or cyclic certified edges violate the upstream
+    * contract; silently flattening them would hide corrupt semantics.
     */
   private def dominanceLayers(
       leadIds: List[String],
@@ -383,23 +386,19 @@ object PlayerFacingIdeaOrderingPolicy:
         dominators.subsetOf(selectedIdSet) &&
         !dominators(causeId)
     }
-    val stableFallback = selectedIdSet.map(_ -> 0).toMap
-    if !validEdges then stableFallback
-    else
-      var remaining = provenDominatedIds
-      var layer = 1
-      var layers = (selectedIdSet -- provenDominatedIds).map(_ -> 0).toMap
-      var acyclic = true
-      while remaining.nonEmpty && acyclic do
-        val next = remaining.filter(causeId =>
-          dominatorsByCauseId(causeId).intersect(remaining).isEmpty
-        )
-        if next.isEmpty then acyclic = false
-        else
-          layers = layers ++ next.map(_ -> layer)
-          remaining = remaining -- next
-          layer += 1
-      if acyclic then layers else stableFallback
+    require(validEdges, "importance dominance contains an invalid certified edge")
+    var remaining = provenDominatedIds
+    var layer = 1
+    var layers = (selectedIdSet -- provenDominatedIds).map(_ -> 0).toMap
+    while remaining.nonEmpty do
+      val next = remaining.filter(causeId =>
+        dominatorsByCauseId(causeId).intersect(remaining).isEmpty
+      )
+      require(next.nonEmpty, "importance dominance contains a certified cycle")
+      layers = layers ++ next.map(_ -> layer)
+      remaining = remaining -- next
+      layer += 1
+    layers
 
 /** Measured semantics owned by exactly one direct Cause channel.
   *
@@ -437,26 +436,6 @@ object DirectCauseMeasuredEffect:
     proof match
       case RootOwnedEffectProof.LineEpisode(_, _, episode) =>
         lineEpisodeEffect(episode, descriptor)
-      case RootOwnedEffectProof.ThreatCreation(_, threat) =>
-        threatEffect(
-          threat = threat,
-          stake = DirectCauseEffectStake.Benefits(threat.episode.threatActor),
-          descriptor = descriptor
-        )
-      case RootOwnedEffectProof.ThreatDefense(_, threat, _) =>
-        threatEffect(
-          threat = threat,
-          stake = DirectCauseEffectStake.Preserves(threat.episode.sideUnderPressure),
-          descriptor = descriptor
-        )
-      case RootOwnedEffectProof.StructuralTransition(_, delta, consequence) =>
-        structuralEffect(
-          DirectCauseStructuralOrigin.RootTransition,
-          delta.perspective,
-          consequence,
-          None,
-          descriptor = descriptor
-        )
       case RootOwnedEffectProof.PlanResult(_, event, assessment, _) =>
         structuralEffect(
           DirectCauseStructuralOrigin.PlanResult,
@@ -510,22 +489,6 @@ object DirectCauseMeasuredEffect:
         )
       case _ => None
 
-  private def threatEffect(
-      threat: ThreatEpisodeEvidence,
-      stake: DirectCauseEffectStake,
-      descriptor: RootOwnedEffectDescriptor
-  ): Option[DirectCauseMeasuredEffect] =
-    val targetKey = descriptor.identity.targetSignatures.mkString("|")
-    descriptor.exactMagnitude.collect {
-      case measure @ DirectCauseImportanceMeasure.ThreatHorizon(_) if targetKey.nonEmpty =>
-        DirectCauseMeasuredEffect(
-          stake = stake,
-          domain = DirectCauseImportanceDomain.Threat(threat.episode.kind, targetKey),
-          measure = measure,
-          effectIdentity = descriptor.identity
-        )
-    }
-
   private def structuralEffect(
       origin: DirectCauseStructuralOrigin,
       perspective: Color,
@@ -575,7 +538,7 @@ object DirectCauseImportancePolicy:
   ): DirectCauseImportanceResolution =
     val causesById = selectedCauses.map { case (cause, ref) => ref.id -> cause }.toMap
     val selectedChannelsByCauseId = selections.map(selection =>
-      selection.causeEvidence.id -> selection.channels.map(_.causalSignature).distinct
+      selection.causeEvidence.id -> selection.channels.map(DirectCauseImportanceChannelIdentity.from)
     )
     val profiles = selections.flatMap { selection =>
       causesById.get(selection.causeEvidence.id).toList.flatMap { cause =>
@@ -583,13 +546,16 @@ object DirectCauseImportancePolicy:
         selection.channels.flatMap { selectedChannel =>
           val exactChannels = channels.filter(channel =>
             channel.binding.source == selectedChannel.carrierEvidence &&
-              channel.causalSignature == selectedChannel.causalSignature &&
-              channel.directChange == selectedChannel.directChange
+              channel.exactOccurrenceFingerprint == selectedChannel.exactOccurrence
           )
           exactChannels match
             case channel :: Nil =>
               profile(cause, selection, selectedChannel, channel, graph).toList
-            case _ => Nil
+            case Nil => Nil
+            case _ =>
+              throw IllegalStateException(
+                s"multiple direct channels own one exact importance occurrence: ${selectedChannel.channelId}"
+              )
         }
       }
     }
@@ -618,6 +584,7 @@ object DirectCauseImportancePolicy:
       )
     yield DirectCauseImportanceProfile(
       causeEvidenceId = selection.causeEvidence.id,
+      channelIdentity = DirectCauseImportanceChannelIdentity.from(selectedChannel),
       causalSignature = selectedChannel.causalSignature,
       frame = DirectCauseImportanceFrame(
         comparison = CandidateComparisonSemanticKey.from(comparison),
@@ -666,11 +633,6 @@ object DirectCauseImportancePolicy:
             exactlyEqual = leftCp == rightCp && leftPly == rightPly
           )
         case (
-              DirectCauseImportanceMeasure.ThreatHorizon(leftTurns),
-              DirectCauseImportanceMeasure.ThreatHorizon(rightTurns)
-            ) =>
-          lowerIsStronger(leftTurns, rightTurns)
-        case (
               DirectCauseImportanceMeasure.StructuralStrength(leftUnits),
               DirectCauseImportanceMeasure.StructuralStrength(rightUnits)
             ) =>
@@ -679,29 +641,56 @@ object DirectCauseImportancePolicy:
           DirectCauseImportanceRelation.Incomparable
 
   private[judgment] def resolveProfiles(
-      selectedChannelsByCauseId: List[(String, List[String])],
+      selectedChannelsByCauseId: List[(String, List[DirectCauseImportanceChannelIdentity])],
       profiles: List[DirectCauseImportanceProfile]
   ): DirectCauseImportanceResolution =
-    val selectedCauseIds = selectedChannelsByCauseId.map(_._1).distinct
+    val selectedCauseIds = selectedChannelsByCauseId.map(_._1)
+    require(
+      selectedCauseIds.distinct.size == selectedCauseIds.size,
+      "direct Cause importance requires one selected channel set per Cause"
+    )
+    val canonicalSelections = selectedChannelsByCauseId.sortBy(_._1).map { case (causeId, channels) =>
+      require(channels.nonEmpty, s"selected Cause '$causeId' requires an exact channel occurrence")
+      require(
+        channels.map(_.channelId).distinct.size == channels.size &&
+          channels.map(_.exactOccurrence).distinct.size == channels.size,
+        s"selected Cause '$causeId' contains duplicate or conflicting exact channel identities"
+      )
+      causeId -> channels.sortBy(_.channelId)
+    }
+    val canonicalSelectedCauseIds = canonicalSelections.map(_._1)
+    val selectedChannelsById = canonicalSelections.toMap
     val selectedCauseIdSet = selectedCauseIds.toSet
-    val canonicalProfiles = profiles
+    val selectedChannelSets = selectedChannelsById.view.mapValues(_.toSet).toMap
+    val selectedProfiles = profiles
       .filter(profile => selectedCauseIdSet(profile.causeEvidenceId))
-      .groupBy(profile => (profile.causeEvidenceId, profile.causalSignature))
+    require(
+      selectedProfiles.forall(profile =>
+        selectedChannelSets(profile.causeEvidenceId)(profile.channelIdentity)
+      ),
+      "an importance profile must belong to a selected exact channel occurrence"
+    )
+    val canonicalProfiles = selectedProfiles
+      .groupBy(profile => (profile.causeEvidenceId, profile.channelIdentity))
       .toList
-      .flatMap { case (_, variants) =>
-        variants.distinct match
-          case exact :: Nil => List(exact)
-          case _            => Nil
+      .map {
+        case (_, profile :: Nil) => profile
+        case ((causeId, channel), variants) =>
+          throw IllegalStateException(
+            s"exact channel '${channel.channelId}' of Cause '$causeId' has ${variants.size} importance profiles"
+          )
       }
-      .sortBy(profile => (profile.causeEvidenceId, profile.causalSignature))
+      .sortBy(profile => (profile.causeEvidenceId, profile.channelIdentity.channelId))
     val relations = canonicalProfiles.zipWithIndex.flatMap { case (left, index) =>
       canonicalProfiles.drop(index + 1).collect {
         case right if left.causeEvidenceId != right.causeEvidenceId =>
           val relation = compare(left, right)
           DirectCauseImportanceRelationDecision(
             leftCauseEvidenceId = left.causeEvidenceId,
+            leftChannelId = left.channelIdentity.channelId,
             leftCausalSignature = left.causalSignature,
             rightCauseEvidenceId = right.causeEvidenceId,
+            rightChannelId = right.channelIdentity.channelId,
             rightCausalSignature = right.causalSignature,
             relation = relation,
             domainKey = Option.when(relation != DirectCauseImportanceRelation.Incomparable)(
@@ -710,11 +699,11 @@ object DirectCauseImportancePolicy:
           )
       }
     }
-    val decisions = selectedChannelsByCauseId.map { case (causeId, selectedSignatures) =>
-      val distinctSelected = selectedSignatures.distinct
+    val decisions = canonicalSelections.map { case (causeId, selectedChannels) =>
       val ownedProfiles = canonicalProfiles.filter(_.causeEvidenceId == causeId)
-      val measuredSignatures = ownedProfiles.map(_.causalSignature).distinct
-      val unmeasuredSignatures = distinctSelected.filterNot(measuredSignatures.toSet)
+      val measuredChannels = ownedProfiles.map(_.channelIdentity)
+      val measuredChannelSet = measuredChannels.toSet
+      val unmeasuredChannels = selectedChannels.filterNot(measuredChannelSet)
       val dominatorIdsByProfile = ownedProfiles.map { owned =>
         canonicalProfiles
           .filter(other =>
@@ -732,17 +721,16 @@ object DirectCauseImportancePolicy:
         case Nil           => Nil
       DirectCauseImportanceDecision(
         causeEvidenceId = causeId,
-        measuredChannelSignatures = measuredSignatures,
-        unmeasuredChannelSignatures = unmeasuredSignatures,
+        measuredChannelIds = measuredChannels.map(_.channelId),
+        unmeasuredChannelIds = unmeasuredChannels.map(_.channelId),
         dominatingCauseEvidenceIds = commonDominatorIds,
         dominatedWithinDomain =
-          unmeasuredSignatures.isEmpty &&
-            measuredSignatures.size == distinctSelected.size &&
+          unmeasuredChannels.isEmpty &&
             commonDominatorIds.nonEmpty
       )
     }
     DirectCauseImportanceResolution(
-      selectedCauseEvidenceIds = selectedCauseIds,
+      selectedCauseEvidenceIds = canonicalSelectedCauseIds,
       profiles = canonicalProfiles,
       relations = relations,
       decisions = decisions
@@ -771,7 +759,6 @@ object DirectCauseImportancePolicy:
     (profile.domain, profile.measure) match
       case (DirectCauseImportanceDomain.BoardMate, DirectCauseImportanceMeasure.MateArrival(_)) => true
       case (DirectCauseImportanceDomain.Material, DirectCauseImportanceMeasure.MaterialOutcome(_, _)) => true
-      case (DirectCauseImportanceDomain.Threat(_, _), DirectCauseImportanceMeasure.ThreatHorizon(_)) => true
       case (
             DirectCauseImportanceDomain.Structural(_, _, _, _),
             DirectCauseImportanceMeasure.StructuralStrength(_)

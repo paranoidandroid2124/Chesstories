@@ -7,7 +7,9 @@ case class LineNodeRef(
     rootMove: String,
     rank: Int,
     role: LineNodeRole
-)
+):
+  def rootMoveIn(normalizedMoves: Set[String]): Boolean =
+    normalizedMoves(EvidenceRef.normalizeMove(rootMove))
 
 /** Evidence-id-independent line identity used only where semantic equality is
   * required. Role and rank remain part of the comparison relation.
@@ -26,6 +28,12 @@ object SemanticLineKey:
       rank = line.rank,
       rootMove = EvidenceRef.normalizeMove(line.rootMove)
     )
+
+  def same(left: LineNodeRef, right: LineNodeRef): Boolean =
+    from(left) == from(right)
+
+  def sameOptional(left: Option[LineNodeRef], right: Option[LineNodeRef]): Boolean =
+    left.map(from) == right.map(from)
 
 case class CandidateLineNode(
     ref: LineNodeRef,

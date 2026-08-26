@@ -32,9 +32,7 @@ export interface MoveReviewCoordinatorHost {
   stateChanged(state: MoveReviewJobState): void;
 }
 
-type LeaseMessage =
-  | { type: 'claim'; token: string; activatedAt: number }
-  | { type: 'release'; token: string };
+type LeaseMessage = { type: 'claim'; token: string; order: number } | { type: 'release'; token: string };
 
 const channelName = 'chesstory.position-commentary.v6';
 const debounceMillis = 250;
@@ -44,9 +42,10 @@ export class MoveReviewCoordinator {
   private readonly token = randomToken();
   private readonly channel = new BroadcastChannel(channelName);
   private generation = 0;
-  private activatedAt = 0;
+  private leaseClock = 0;
+  private claimOrder = 0;
   private ownerToken = this.token;
-  private ownerActivatedAt = 0;
+  private ownerClaimOrder = 0;
   private active = false;
   private subject?: MoveReviewSubject;
   private completed?: Extract<MoveReviewSnapshot, { kind: 'completed' }>;
@@ -63,13 +62,13 @@ export class MoveReviewCoordinator {
 
   activate(): void {
     this.active = true;
-    this.activatedAt = Date.now();
+    this.claimOrder = ++this.leaseClock;
     this.ownerToken = this.token;
-    this.ownerActivatedAt = this.activatedAt;
+    this.ownerClaimOrder = this.claimOrder;
     this.channel.postMessage({
       type: 'claim',
       token: this.token,
-      activatedAt: this.activatedAt,
+      order: this.claimOrder,
     } satisfies LeaseMessage);
     this.arm();
   }
@@ -265,21 +264,24 @@ export class MoveReviewCoordinator {
     if (message.type === 'release') {
       if (this.ownerToken !== message.token || !this.active) return;
       this.ownerToken = this.token;
-      this.ownerActivatedAt = this.activatedAt;
+      this.ownerClaimOrder = this.claimOrder;
       this.channel.postMessage({
         type: 'claim',
         token: this.token,
-        activatedAt: this.activatedAt,
+        order: this.claimOrder,
       } satisfies LeaseMessage);
       this.arm();
       return;
     }
+    this.leaseClock = Math.max(this.leaseClock, message.order);
+    // An activation that observed another claim is causally newer. Truly
+    // concurrent claims have the same order and converge by token.
     const remoteWins =
-      message.activatedAt > this.ownerActivatedAt ||
-      (message.activatedAt === this.ownerActivatedAt && message.token > this.ownerToken);
+      message.order > this.ownerClaimOrder ||
+      (message.order === this.ownerClaimOrder && message.token > this.ownerToken);
     if (!remoteWins) return;
     this.ownerToken = message.token;
-    this.ownerActivatedAt = message.activatedAt;
+    this.ownerClaimOrder = message.order;
     const incomplete = this.subject !== undefined && !this.completed;
     this.cancelAttempt();
     if (incomplete) this.host.stateChanged({ kind: 'loading', subject: this.subject! });

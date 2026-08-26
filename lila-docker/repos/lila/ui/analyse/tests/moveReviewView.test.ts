@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import type { VNode } from 'snabbdom';
 import {
   moveReviewCopy,
+  moveReviewReasonText,
   type MoveReviewJobState,
   type MoveReviewLocale,
   type MoveReviewProof,
@@ -52,8 +53,8 @@ function makeProof(id: string): MoveReviewProof {
 function makeReason(id: string): MoveReviewReason {
   return {
     id,
-    messageKey: 'move_review.reason.for_candidate',
     messageSlots: { candidateUci: playedUci },
+    message: { kind: 'line', moves: [playedUci, 'h1g2' as Uci] },
     proof: makeProof(id),
   };
 }
@@ -70,7 +71,6 @@ const completedJob: CompletedJob = {
     engineProfile: 'sf18-smallnet-t2-h16-v1',
     judgmentRevision: 'chesstory.position-commentary.response.v6',
     annotationPolicyRevision: 'chesstory.verdict-threshold-policy.v2',
-    generation: 0,
     subject: {
       variant: 'standard',
       initialFen: beforeFen,
@@ -109,6 +109,8 @@ const completedJob: CompletedJob = {
               reasonRefs: { primary: primaryReason.id, support: [supportingReason.id] },
             },
             reasons: [supportingReason, primaryReason],
+            onlyMoveQualifiers: [],
+            responsibilityLinks: [],
           },
         },
       ],
@@ -297,6 +299,56 @@ test('renders a forced single move terminal as an exact line outcome', () => {
   assert.equal(findNodes(panel, 'span.move-review__verdict-badge').length, 0);
 });
 
+test('renders selected relation and direct-cause carriers at their proven strength', () => {
+  const candidate = completedJob.snapshot.evidence.candidates[1]!;
+  const relation: MoveReviewReason = {
+    ...primaryReason,
+    message: { kind: 'relation', relationKind: 'fork', squares: ['e3', 'f5', 'g4'] },
+  };
+  const cause: MoveReviewReason = {
+    ...primaryReason,
+    message: {
+      kind: 'absolute-pin-capture',
+      pinnedRole: 'knight',
+      pinnedSquare: 'e7',
+      kingSquare: 'e8',
+      capturedRole: 'pawn',
+      captureSquare: 'f5',
+    },
+  };
+  assert.equal(
+    moveReviewReasonText(relation, candidate, 'ko-KR'),
+    'Ke3로 시작하는 검증 수순은 e3·f5·g4에서 포크 패턴을 보여 줍니다.',
+  );
+  assert.equal(
+    moveReviewReasonText(cause, candidate, 'en-US'),
+    'The pawn on f5 can be captured because the knight on e7 is pinned to the king on e8 and cannot recapture.',
+  );
+});
+
+test('closes a verdict-only review with an explicit cause-withheld message', () => {
+  const candidates = completedJob.snapshot.evidence.candidates.map(candidate =>
+    candidate.review.kind === 'move-verdict'
+      ? {
+          ...candidate,
+          review: {
+            ...candidate.review,
+            core: { ...candidate.review.core, reasonRefs: { support: [] } },
+            reasons: [],
+          },
+        }
+      : candidate,
+  );
+  const job: CompletedJob = {
+    ...completedJob,
+    snapshot: { ...completedJob.snapshot, evidence: { candidates } },
+  };
+  assert.match(
+    renderedText(renderMoveReview(props({ job }))),
+    /verdict is available, but no cause for the difference from the reference move was verified/i,
+  );
+});
+
 test('uses selected reason order and UCI proof labels without browser SAN synthesis', () => {
   const panel = renderMoveReview(
     props({
@@ -306,8 +358,8 @@ test('uses selected reason order and UCI proof labels without browser SAN synthe
   );
   const reasons = findNodes(panel, 'button.move-review__reason-button').map(renderedText);
   assert.equal(reasons.length, 2);
-  assert.match(reasons[0]!, /^Primary reason/);
-  assert.match(reasons[1]!, /^Supporting reason/);
+  assert.match(reasons[0]!, /^Primary evidence Verified line: Ke3 h1g2\./);
+  assert.match(reasons[1]!, /^Supporting evidence Verified line: Ke3 h1g2\./);
   const moves = findNodes(panel, 'button.move-review__proof-san');
   assert.deepEqual(moves.map(renderedText), ['e2e3', 'h1g2']);
   assert.deepEqual(
@@ -352,7 +404,6 @@ test('renders exact terminal and draw-claim position actions without a verdict b
     engineProfile: 'sf18-smallnet-t2-h16-v1' as const,
     judgmentRevision: 'chesstory.position-commentary.response.v6',
     annotationPolicyRevision: 'chesstory.verdict-threshold-policy.v2',
-    generation: 0,
     subject: completedJob.snapshot.subject,
   };
   const terminal = renderMoveReview(

@@ -1,0 +1,54 @@
+package lila.chessjudgment.model.judgment
+
+class CauseChannelMultiplicityTest extends munit.FunSuite:
+
+  private val position = PositionNodeRef(
+    "4k3/8/r7/8/8/8/4B3/4R1K1 w - - 0 1",
+    ply = 0
+  )
+
+  private val causeRef = EvidenceRef(
+    id = "cause:coexisting-relations",
+    producer = EvidenceProducer.RelativeMoveProducer,
+    layer = EvidenceLayer.RelativeCause,
+    position = position,
+    line = None,
+    scope = EvidenceScope.PlayedTransition,
+    confidence = EvidenceConfidence.LegalReplayVerified
+  )
+
+  private val relationRef = causeRef.copy(
+    id = "relation:coexisting-relations",
+    producer = EvidenceProducer.RelationProducer,
+    layer = EvidenceLayer.Relation
+  )
+
+  private def channel(mechanism: String): DirectCauseChannel =
+    DirectCauseChannel(
+      binding = EvidenceObjectBinding(
+        source = relationRef,
+        actor = List(ConcreteChessObject(EvidenceObjectKind.Piece, "bishop@b5")),
+        target = List(ConcreteChessObject(EvidenceObjectKind.Square, "e8")),
+        mechanism = List(ConcreteChessObject(EvidenceObjectKind.Relation, mechanism)),
+        consequence = List(ConcreteChessObject(EvidenceObjectKind.Consequence, "king-forcing"))
+      ),
+      directChange = DirectCausalChange.Occurred
+    )
+
+  test("public Cause transport removes only an exact duplicate, not coexisting relation ideas"):
+    val doubleCheck = channel("double-check")
+    val checkingMultiControl = channel("checking-multi-control")
+
+    val selection = PlayerFacingCauseSelectionPolicy
+      .build(
+        causeEvidence = causeRef,
+        status = CrossComparisonExposureStatus.SelectedPrimary,
+        effectMode = PlayerFacingCauseEffectMode.PlayedValue,
+        channels = List(doubleCheck, doubleCheck, checkingMultiControl),
+        onlyMoveQualifiers = Nil
+      )
+      .getOrElse(fail("expected a player-facing Cause selection"))
+
+    assertEquals(selection.channels.size, 2)
+    assertEquals(selection.channels.map(_.causalSignature).distinct.size, 2)
+    assertEquals(selection.channels.map(_.exactOccurrence).distinct.size, 2)

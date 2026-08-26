@@ -119,7 +119,6 @@ object RelativeCauseSourceSide:
         role.defaultEventLine(referenceLine, candidateLine)
 
   def fromSupportEvidence(
-      kind: RelativeCauseKind,
       referenceLine: LineNodeRef,
       candidateLine: LineNodeRef,
       supportEvidence: List[EvidenceRef]
@@ -203,8 +202,7 @@ object CauseAttribution:
 object RelativeCauseBindingTier:
   def from(
       role: RelativeCauseRole,
-      sourceSide: RelativeCauseSourceSide,
-      kind: RelativeCauseKind
+      sourceSide: RelativeCauseSourceSide
   ): RelativeCauseBindingTier =
     role match
       case RelativeCauseRole.PrimaryPlayedCause
@@ -397,23 +395,11 @@ enum RelativeCauseKind:
   case WrongRecapturer
   case RecaptureRecoveryWindow
   case WrongMoveOrder
-  case OnlyDefenseNecessity
   case TempoLoss
   case ConversionMiss
   case ConversionSecured
   case SacrificeCompensation
-  case StructuralImprovement
-  case TargetPressureGain
-  case TargetPressureRelease
-  case CenterControlGain
-  case KingSafetyConcession
-  case PawnWeaknessTarget
-  case PawnBreakOpportunity
-  case ActivityGain
-  case ActivityLoss
   case OpponentRestriction
-  case StrategicConcession
-  case MissedStrategicImprovement
   case PlanImprovement
   case PlanContradiction
   case DefensiveResource
@@ -427,15 +413,7 @@ enum RelativeCauseKind:
   */
 enum DirectEffectAdmission:
   case Unresolved
-  case Restricted(causalSignatures: Set[String])
-
-  def admittedCausalSignatures: Set[String] =
-    this match
-      case DirectEffectAdmission.Restricted(signatures) => signatures
-      case _                                             => Set.empty
-
-  def productionReady: Boolean =
-    admittedCausalSignatures.nonEmpty
+  case Restricted(exactOccurrences: Set[RootOwnedEffectChannelOccurrenceFingerprint])
 
 case class RelativeCauseFact(
     kind: RelativeCauseKind,
@@ -446,78 +424,19 @@ case class RelativeCauseFact(
     proof: Option[RelativeCauseProof] = None,
     directEffectAdmission: DirectEffectAdmission = DirectEffectAdmission.Unresolved
 ):
-  def hasRawTypedDepth(graph: TypedEvidenceGraph): Boolean =
-    graph.relativeCauseHasRawTypedDepth(this)
   def hasOwnedTypedDepth(graph: TypedEvidenceGraph): Boolean =
     graph.relativeCauseHasOwnedTypedDepth(this)
   def strategicCauseKind: Boolean =
     RelativeCauseKind.strategicContrastBacked(kind)
-  def hasStrategicContrastDepth(graph: TypedEvidenceGraph): Boolean =
-    graph.relativeCauseHasStrategicContrastDepth(this)
-  def hasOwnedStrategicContrastDepth(graph: TypedEvidenceGraph): Boolean =
-    attribution.directProofEligible && hasStrategicContrastDepth(graph)
   def hasOwnedAdmissibleLongTermProof(graph: TypedEvidenceGraph): Boolean =
     graph.relativeCauseHasOwnedAdmissibleLongTermProof(this)
   def hasOwnedTacticalProof(graph: TypedEvidenceGraph): Boolean =
     graph.relativeCauseHasOwnedTacticalProof(this)
-  def strategicProofIdentity(graph: TypedEvidenceGraph): RelativeCauseStrategicProofIdentity =
-    graph.relativeCauseStrategicProofIdentity(this)
 
 object RelativeCauseKind:
   def requiresExactPlanResult(kind: RelativeCauseKind): Boolean =
     kind == RelativeCauseKind.PlanImprovement ||
       kind == RelativeCauseKind.PlanContradiction
-
-  def defaultAttributionKind(
-      kind: RelativeCauseKind,
-      sourceSide: Option[RelativeCauseSourceSide]
-  ): CauseAttributionKind =
-    sourceSide match
-      case Some(RelativeCauseSourceSide.Reference) =>
-        CauseAttributionKind.ReferenceCreatesResource
-      case Some(RelativeCauseSourceSide.Candidate) =>
-        kind match
-          case RelativeCauseKind.RecaptureRecoveryWindow | RelativeCauseKind.ConversionSecured |
-              RelativeCauseKind.SacrificeCompensation | RelativeCauseKind.StructuralImprovement |
-              RelativeCauseKind.TargetPressureGain | RelativeCauseKind.CenterControlGain |
-              RelativeCauseKind.PawnWeaknessTarget | RelativeCauseKind.PawnBreakOpportunity |
-              RelativeCauseKind.ActivityGain | RelativeCauseKind.OpponentRestriction |
-              RelativeCauseKind.PlanImprovement | RelativeCauseKind.DefensiveResource |
-              RelativeCauseKind.DrawResource =>
-            CauseAttributionKind.CandidateCreatesValue
-          case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
-              RelativeCauseKind.CandidateTacticalLiability | RelativeCauseKind.WrongRecapturer |
-              RelativeCauseKind.WrongMoveOrder | RelativeCauseKind.OnlyDefenseNecessity |
-              RelativeCauseKind.TempoLoss |
-              RelativeCauseKind.ConversionMiss | RelativeCauseKind.TargetPressureRelease |
-              RelativeCauseKind.KingSafetyConcession | RelativeCauseKind.ActivityLoss |
-              RelativeCauseKind.StrategicConcession | RelativeCauseKind.MissedStrategicImprovement |
-              RelativeCauseKind.PlanContradiction | RelativeCauseKind.KingForcing |
-              RelativeCauseKind.MaterialSwing =>
-            CauseAttributionKind.CandidateAllowsLiability
-      case Some(RelativeCauseSourceSide.Shared) =>
-        CauseAttributionKind.SharedContext
-      case Some(RelativeCauseSourceSide.Mixed) | None =>
-        kind match
-          case RelativeCauseKind.OnlyDefenseNecessity |
-              RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.MissedStrategicImprovement |
-              RelativeCauseKind.KingForcing =>
-            CauseAttributionKind.ReferenceCreatesResource
-          case RelativeCauseKind.WrongRecapturer | RelativeCauseKind.WrongMoveOrder |
-              RelativeCauseKind.TempoLoss | RelativeCauseKind.TacticalRefutationOfPlayed |
-              RelativeCauseKind.CandidateTacticalLiability | RelativeCauseKind.MaterialSwing |
-              RelativeCauseKind.PlanContradiction | RelativeCauseKind.TargetPressureRelease |
-              RelativeCauseKind.ActivityLoss | RelativeCauseKind.OpponentRestriction |
-              RelativeCauseKind.StrategicConcession | RelativeCauseKind.KingSafetyConcession |
-              RelativeCauseKind.ConversionMiss =>
-            CauseAttributionKind.CandidateAllowsLiability
-          case RelativeCauseKind.RecaptureRecoveryWindow | RelativeCauseKind.ConversionSecured |
-              RelativeCauseKind.SacrificeCompensation | RelativeCauseKind.StructuralImprovement |
-              RelativeCauseKind.TargetPressureGain | RelativeCauseKind.CenterControlGain |
-              RelativeCauseKind.PawnWeaknessTarget | RelativeCauseKind.PawnBreakOpportunity |
-              RelativeCauseKind.ActivityGain | RelativeCauseKind.PlanImprovement |
-              RelativeCauseKind.DefensiveResource | RelativeCauseKind.DrawResource =>
-            CauseAttributionKind.Unattributed
 
   def sourceAttributionCompatible(
       kind: RelativeCauseKind,
@@ -550,12 +469,7 @@ object RelativeCauseKind:
 
   def strategicContrastBacked(kind: RelativeCauseKind): Boolean =
     kind match
-      case RelativeCauseKind.StructuralImprovement | RelativeCauseKind.TargetPressureGain |
-          RelativeCauseKind.TargetPressureRelease |
-          RelativeCauseKind.CenterControlGain | RelativeCauseKind.KingSafetyConcession |
-          RelativeCauseKind.PawnWeaknessTarget | RelativeCauseKind.PawnBreakOpportunity |
-          RelativeCauseKind.ActivityGain | RelativeCauseKind.ActivityLoss | RelativeCauseKind.OpponentRestriction |
-          RelativeCauseKind.StrategicConcession | RelativeCauseKind.MissedStrategicImprovement |
+      case RelativeCauseKind.SacrificeCompensation | RelativeCauseKind.OpponentRestriction |
           RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
         true
       case _ =>
@@ -567,50 +481,18 @@ object RelativeCauseKind:
       sourceSide: RelativeCauseSourceSide
   ): Boolean =
     kind match
+      case RelativeCauseKind.SacrificeCompensation =>
+        Set(RelativeCauseSourceSide.Reference, RelativeCauseSourceSide.Candidate)(sourceSide) &&
+          axis.kind == StrategicAxisKind.Counterplay &&
+          axis.polarity == StrategicAxisPolarity.Restrain
       case RelativeCauseKind.PlanImprovement =>
         axis.kind == StrategicAxisKind.PlanCoherence &&
           axis.polarity == StrategicAxisPolarity.Gain
       case RelativeCauseKind.PlanContradiction =>
         axis.kind == StrategicAxisKind.PlanCoherence &&
           axis.polarity == StrategicAxisPolarity.Concede
-      case RelativeCauseKind.TargetPressureGain | RelativeCauseKind.PawnWeaknessTarget =>
-        axis.kind == StrategicAxisKind.Target && axis.polarity == StrategicAxisPolarity.Gain
-      case RelativeCauseKind.TargetPressureRelease =>
-        axis.kind == StrategicAxisKind.Target &&
-          Set(
-            StrategicAxisPolarity.Release,
-            StrategicAxisPolarity.Loss,
-            StrategicAxisPolarity.Concede
-          )(axis.polarity)
-      case RelativeCauseKind.PawnBreakOpportunity =>
-        axis.kind == StrategicAxisKind.PawnBreak &&
-          Set(
-            StrategicAxisPolarity.Support,
-            StrategicAxisPolarity.Preserve,
-            StrategicAxisPolarity.Release,
-            StrategicAxisPolarity.Gain
-          )(axis.polarity)
-      case RelativeCauseKind.CenterControlGain =>
-        axis.kind == StrategicAxisKind.SpaceCenter
-      case RelativeCauseKind.ActivityGain =>
-        axis.kind == StrategicAxisKind.Activity &&
-          axis.polarity == StrategicAxisPolarity.Gain &&
-          (sourceSide == RelativeCauseSourceSide.Reference || sourceSide == RelativeCauseSourceSide.Candidate)
-      case RelativeCauseKind.ActivityLoss =>
-        axis.kind == StrategicAxisKind.Activity &&
-          sourceSide == RelativeCauseSourceSide.Candidate &&
-          Set(
-            StrategicAxisPolarity.Loss,
-            StrategicAxisPolarity.Release,
-            StrategicAxisPolarity.Concede
-          )(axis.polarity)
       case RelativeCauseKind.OpponentRestriction =>
         axis.kind == StrategicAxisKind.Counterplay && axis.polarity == StrategicAxisPolarity.Restrain
-      case RelativeCauseKind.KingSafetyConcession =>
-        axis.kind == StrategicAxisKind.Counterplay && axis.polarity == StrategicAxisPolarity.Concede
-      case RelativeCauseKind.StructuralImprovement | RelativeCauseKind.MissedStrategicImprovement |
-          RelativeCauseKind.StrategicConcession =>
-        true
       case _ =>
         false
 
@@ -620,21 +502,19 @@ object RelativeCauseKind:
   ): Boolean =
     kind match
       case RelativeCauseKind.PlanImprovement =>
-        event.exactRobustPublicResultAssessment.nonEmpty
+        event.exactRobustPublicResultAssessments.nonEmpty
       case RelativeCauseKind.PlanContradiction =>
-        event.exactRefutedPublicResultAssessment.nonEmpty
+        event.exactRefutedPublicResultAssessments.nonEmpty
+      case RelativeCauseKind.SacrificeCompensation =>
+        event.exactRobustPublicResultAssessments.nonEmpty
       case RelativeCauseKind.OpponentRestriction =>
-        (
-          event.opponentResourceDeterrence.nonEmpty &&
-            event.structuralConsequences.exists(consequence =>
+        event.opponentResourceDeterrenceProofReady &&
+          event.opponentResourceDeterrence
+            .flatMap(_.consequence)
+            .exists(consequence =>
               consequence.kind == TransitionConsequenceKind.OpponentMobilityRestriction &&
-                consequence.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
+                consequence.subjectFacts.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
             )
-        ) ||
-          (
-            DirectOpponentRestrictionProof.rootMoveDirectlyRestrictsOpponent(event) &&
-              DirectOpponentRestrictionProof.exactRootPawnBlockadeConsequences(event).nonEmpty
-          )
       case _ =>
         false
 
@@ -692,116 +572,25 @@ object RelativeCauseKind:
   ): List[TransitionConsequence] =
     import TransitionConsequenceKind.*
     kind match
-      case RelativeCauseKind.TargetPressureGain =>
-        payload.consequencesOf(TransitionConsequenceKind.TargetPressureGain) ++
-          payload.consequencesOf(KingSafetyPressure) ++
-          payload.consequencesOf(KingRingPressureGain)
-      case RelativeCauseKind.TargetPressureRelease =>
-        payload.consequencesOf(TransitionConsequenceKind.TargetPressureRelease)
-      case RelativeCauseKind.CenterControlGain =>
-        payload.consequencesOf(TransitionConsequenceKind.CenterControlGain)
-      case RelativeCauseKind.OpponentRestriction =>
-        opponentRestrictionConsequences(payload) ++ counterBreakCarrierConsequences(payload)
-      case RelativeCauseKind.KingSafetyConcession =>
-        payload.consequencesOf(TransitionConsequenceKind.KingSafetyConcession) ++
-          payload.consequencesOf(KingRingPressureConcession)
-      case RelativeCauseKind.PawnWeaknessTarget =>
-        payload.consequencesOf(WeakPawnTargetCreated) ++
-          payload.consequencesOf(WeakSquareTargetCreated)
-      case RelativeCauseKind.PawnBreakOpportunity =>
-        payload.consequencesOf(PawnTensionGain) ++
-          payload.consequencesOf(PawnTensionResolution)
-      case RelativeCauseKind.ActivityGain =>
-        payload.consequencesOf(DevelopmentLagReduced) ++
-          payload.consequencesOf(DevelopmentPieceActivated) ++
-          payload.consequencesOf(DevelopmentMobilityGain) ++
-          payload.consequencesOf(DevelopmentCenterControlGain) ++
-          payload.consequencesOf(DevelopmentSafePlacement) ++
-          payload.consequencesOf(FileOccupationGain) ++
-          payload.consequencesOf(MobilityGain) ++
-          payload.consequencesOf(LineUnlockGain) ++
-          payload.consequencesOf(FileAccessGain) ++
-          payload.consequencesOf(BatteryPressureGain) ++
-          payload.consequencesOf(OutpostGain)
-      case RelativeCauseKind.ActivityLoss =>
-        payload.consequencesOf(DevelopmentLagIncreased) ++
-          payload.consequencesOf(DevelopmentPieceRetreated) ++
-          payload.consequencesOf(DevelopmentMobilityLoss) ++
-          payload.consequencesOf(DevelopmentCenterControlLoss) ++
-          payload.consequencesOf(DevelopmentUnsafePlacement) ++
-          payload.consequencesOf(MobilityLoss) ++
-          payload.consequencesOf(FileAccessLoss) ++
-          payload.consequencesOf(OutpostConcession)
-      case RelativeCauseKind.StructuralImprovement | RelativeCauseKind.MissedStrategicImprovement =>
-        payload.positiveConsequences.filter(consequence =>
-          StructuralDeltaEvidence.isStructuralAnchorConsequence(consequence.kind)
-        )
-      case RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
-        Nil
-      case RelativeCauseKind.ConversionMiss =>
-        payload.negativeConsequences.filter(consequence =>
-          consequence.kind == PromotionPressureConcession ||
-            consequence.kind == PassedPawnConcession
-        )
-      case RelativeCauseKind.ConversionSecured =>
-        payload.positiveConsequences.filter(consequence =>
-          consequence.kind == PromotionPressureGain ||
-            consequence.kind == PassedPawnProgress
-        )
-      case RelativeCauseKind.StrategicConcession =>
-        payload.negativeConsequences.filter(consequence =>
-          StructuralDeltaEvidence.isStrategicSupportConsequence(consequence.kind)
-        )
-      case _ =>
-        Nil
-
-  def structuralConsequences(
-      kind: RelativeCauseKind,
-      payload: StructuralDeltaEvidence,
-      axis: Option[StrategicAxisDetail]
-  ): List[TransitionConsequence] =
-    import TransitionConsequenceKind.*
-    kind match
-      case RelativeCauseKind.PawnBreakOpportunity =>
-        axis match
-          case Some(detail)
-              if detail.kind == StrategicAxisKind.PawnBreak &&
-                detail.polarity == StrategicAxisPolarity.Release =>
-            payload.consequencesOf(PawnTensionResolution)
-          case Some(detail)
-              if detail.kind == StrategicAxisKind.PawnBreak &&
-                (
-                  detail.polarity == StrategicAxisPolarity.Support ||
-                    detail.polarity == StrategicAxisPolarity.Preserve ||
-                    detail.polarity == StrategicAxisPolarity.Gain
-                ) =>
-            payload.consequencesOf(PawnTensionGain)
-          case Some(_) =>
-            Nil
-          case None =>
-            structuralConsequences(kind, payload)
       case RelativeCauseKind.OpponentRestriction =>
         opponentRestrictionConsequences(payload)
+      case RelativeCauseKind.SacrificeCompensation | RelativeCauseKind.PlanImprovement |
+          RelativeCauseKind.PlanContradiction =>
+        Nil
+      case RelativeCauseKind.ConversionMiss =>
+        payload.removedConsequences.filter(consequence =>
+          consequence.kind == PassedPawnConcession
+        )
+      case RelativeCauseKind.ConversionSecured =>
+        payload.establishedConsequences.filter(consequence =>
+          consequence.kind == PassedPawnProgress
+        )
       case _ =>
-        structuralConsequences(kind, payload)
+        Nil
 
   private def opponentRestrictionConsequences(payload: StructuralDeltaEvidence): List[TransitionConsequence] =
     payload.consequencesOf(TransitionConsequenceKind.OpponentMobilityRestriction).filter(consequence =>
-      consequence.subjects.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
-    )
-
-  private def counterBreakCarrierConsequences(payload: StructuralDeltaEvidence): List[TransitionConsequence] =
-    payload.consequences.filter(consequence =>
-      (
-        consequence.kind == TransitionConsequenceKind.PawnTensionGain ||
-          consequence.kind == TransitionConsequenceKind.PawnTensionResolution
-      ) &&
-        consequence.subjects.exists(subject =>
-          val normalized = Option(subject).getOrElse("").trim.toLowerCase
-          normalized.startsWith("break-file:") ||
-            normalized.startsWith("created-tension:") ||
-            normalized.startsWith("resolved-tension:")
-        )
+      consequence.subjectFacts.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
     )
 
 /** Evidence-id-independent causal frame. Two Causes may be compared for
@@ -917,19 +706,16 @@ object RelativeCauseFact:
     val sourceSide =
       explicitSourceSide
         .orElse(semanticSourceSide(kind, referenceLine, candidateLine, supportEvidence))
-        .orElse(RelativeCauseSourceSide.fromSupportEvidence(kind, referenceLine, candidateLine, supportEvidence))
-        .getOrElse(defaultSourceSide(kind))
+        .orElse(RelativeCauseSourceSide.fromSupportEvidence(referenceLine, candidateLine, supportEvidence))
+        .getOrElse(RelativeCauseSourceSide.Shared)
     val eventLine = RelativeCauseSourceSide.eventLine(sourceSide, role, referenceLine, candidateLine)
     RelativeCauseBinding(
       role = role,
       sourceSide = sourceSide,
       eventLine = eventLine,
       evidenceLines = evidenceLinesFor(referenceLine, candidateLine, supportEvidence, sourceSide),
-      bindingTier = RelativeCauseBindingTier.from(role, sourceSide, kind)
+      bindingTier = RelativeCauseBindingTier.from(role, sourceSide)
     )
-
-  def defaultSourceSide(kind: RelativeCauseKind): RelativeCauseSourceSide =
-    RelativeCauseSourceSide.Shared
 
   private def semanticSourceSide(
       kind: RelativeCauseKind,

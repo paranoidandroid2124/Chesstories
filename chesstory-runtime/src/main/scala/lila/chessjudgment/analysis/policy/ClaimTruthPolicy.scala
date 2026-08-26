@@ -28,46 +28,52 @@ object ClaimTruthPolicy:
     val claimBoundRecords =
       claim.evidence
         .flatMap(ref => graph.record(ref))
+        .filter(graph.proofEligible)
         .filter(isBoundToClaim(claim, _, graph))
     val directlyNamedCauses =
       directlyHostedRelativeCauseRecords(claim, graph)
     val directlyHostedCauses =
-      directlyNamedCauses.filter(record => isBoundToClaim(claim, record, graph))
+      directlyNamedCauses.filter(record => graph.proofEligible(record) && isBoundToClaim(claim, record, graph))
     val allNamedCausesBound =
       directlyNamedCauses.size == directlyHostedCauses.size
     val causeHostProofGroups =
       directlyHostedCauses.map(record => directCauseHostProofRecords(record, graph))
     val useCauseHostProof =
       claim.content.isEmpty && causeHostProofGroups.nonEmpty
-    val proofRecords =
+    val proofGroups =
       if useCauseHostProof then
-        causeHostProofGroups.flatten.distinctBy(_.ref.id)
+        causeHostProofGroups.map(_.filter(graph.proofEligible).distinctBy(_.ref.id))
       else
-        val directRecords =
-          if claim.content.nonEmpty then claimBoundRecords
-          else claimBoundRecords ++ claimBoundRecords.flatMap(graph.parentClosure)
-        directRecords.distinctBy(_.ref.id)
+        claimBoundRecords.map(record =>
+          (record :: graph.parentClosure(record))
+            .filter(graph.proofEligible)
+            .distinctBy(_.ref.id)
+        )
+    val proofRecords = proofGroups.flatten.distinctBy(_.ref.id)
     val claimBoundLayers =
       proofRecords
         .map(_.ref.layer)
         .toSet
     val requiredGroups = contentRequiredLayerGroups(claim).getOrElse(requiredLayerGroups(claim.family))
+    def missingFor(records: List[EvidenceRecord]): List[Set[EvidenceLayer]] =
+      val layers = records.map(_.ref.layer).toSet
+      requiredGroups.filterNot(group => group.exists(layers.contains))
+    def routeCertified(records: List[EvidenceRecord]): Boolean =
+      missingFor(records).isEmpty && familySpecificProof(claim, records, graph)
+    val certifiedRouteGroups = proofGroups.filter(routeCertified)
     val missingGroups =
-      if useCauseHostProof then
-        causeHostProofGroups
-          .flatMap(records =>
-            val layers = records.map(_.ref.layer).toSet
-            requiredGroups.filterNot(group => group.exists(layers.contains))
-          )
-          .distinct
+      if certifiedRouteGroups.nonEmpty then Nil
       else
-        requiredGroups.filterNot(group => group.exists(claimBoundLayers.contains))
+        proofGroups
+          .map(missingFor)
+          .minByOption(_.size)
+          .getOrElse(requiredGroups)
     val hasFamilyProof =
       allNamedCausesBound &&
         (
           if useCauseHostProof then
-            causeHostProofGroups.forall(records => familySpecificProof(claim, records, graph))
-          else familySpecificProof(claim, proofRecords, graph)
+            proofGroups.nonEmpty && proofGroups.forall(routeCertified)
+          else certifiedRouteGroups.nonEmpty
         )
     val baselineStatus =
       if claim.evidence.isEmpty || missingEvidence.nonEmpty then ClaimAdmissionStatus.Rejected
@@ -123,7 +129,7 @@ object ClaimTruthPolicy:
     graph.record(carrier).exists {
       case EvidenceRecord(_, CandidateComparisonEvidence(fact), _) =>
         exactPlayedTransition(graph).exists { case (_, transition) =>
-          val playedMove = JudgmentSubjectBinding.normalizeMove(transition.moveUci)
+          val playedMove = EvidenceRef.normalizeMove(transition.moveUci)
           val playedMoves = Set(playedMove).filter(_.nonEmpty)
           JudgmentSubjectBinding.uniquePlayedEndpoint(fact, playedMoves).exists { line =>
                 carrier.producer == EvidenceProducer.RelativeMoveProducer &&
@@ -356,7 +362,7 @@ object ClaimTruthPolicy:
 
   private def claimProofCarrierLayer(layer: EvidenceLayer): Boolean =
     layer match
-      case EvidenceLayer.Board => false
+      case EvidenceLayer.PositionFeature => false
       case _                   => true
 
   private def claimLayerCompatible(record: EvidenceRecord): Boolean =
@@ -367,7 +373,7 @@ object ClaimTruthPolicy:
     if family.isLongTerm then positionLocalLayer(layer)
     else
       layer match
-        case EvidenceLayer.Board | EvidenceLayer.Line | EvidenceLayer.Eval =>
+        case EvidenceLayer.PositionFeature | EvidenceLayer.Relation | EvidenceLayer.Line | EvidenceLayer.Eval =>
           true
         case _ =>
           false
@@ -431,8 +437,6 @@ object ClaimTruthPolicy:
       graph: TypedEvidenceGraph
   ): Boolean =
     record.payload match
-      case payload: MoveMotifEvidence =>
-        payload.moveUci == move
       case MoveTransitionEvidence(moveUci, _, _) =>
         moveUci == move &&
           claimLine.forall(line =>
@@ -457,7 +461,7 @@ object ClaimTruthPolicy:
 
   private def positionLocalLayer(layer: EvidenceLayer): Boolean =
     layer match
-      case EvidenceLayer.Board | EvidenceLayer.StrategicMechanism =>
+      case EvidenceLayer.PositionFeature | EvidenceLayer.Relation | EvidenceLayer.StrategicMechanism =>
         true
       case _ =>
         false
@@ -480,9 +484,7 @@ object ClaimTruthPolicy:
         List(
           Set(EvidenceLayer.StrategicMechanism, EvidenceLayer.RelativeCause),
           Set(
-            EvidenceLayer.Board,
-            EvidenceLayer.PawnStructure,
-            EvidenceLayer.Strategic,
+            EvidenceLayer.Relation,
             EvidenceLayer.StructuralDelta,
             EvidenceLayer.FeatureAnchor
           ),
@@ -498,7 +500,7 @@ object ClaimTruthPolicy:
       case ClaimFamily.PawnStructure =>
         List(
           Set(EvidenceLayer.StrategicMechanism, EvidenceLayer.RelativeCause),
-          Set(EvidenceLayer.PawnStructure, EvidenceLayer.StructuralDelta, EvidenceLayer.Strategic),
+          Set(EvidenceLayer.StructuralDelta),
           Set(
             EvidenceLayer.Line,
             EvidenceLayer.MoveTransition,
@@ -520,7 +522,6 @@ object ClaimTruthPolicy:
       case ClaimFamily.Defensive =>
         List(
           Set(
-            EvidenceLayer.ThreatPressure,
             EvidenceLayer.TacticalMechanism,
             EvidenceLayer.RelativeCause
           ),
@@ -535,7 +536,7 @@ object ClaimTruthPolicy:
       case ClaimFamily.Conversion =>
         List(
           Set(EvidenceLayer.RelativeCause),
-          Set(EvidenceLayer.Line, EvidenceLayer.Board, EvidenceLayer.StructuralDelta, EvidenceLayer.Relation),
+          Set(EvidenceLayer.Line, EvidenceLayer.StructuralDelta, EvidenceLayer.Relation),
           Set(EvidenceLayer.Eval, EvidenceLayer.Line, EvidenceLayer.CandidateComparison)
         )
       case ClaimFamily.Material =>
@@ -556,13 +557,13 @@ object ClaimTruthPolicy:
       case ClaimFamily.Tactical =>
         tacticalProof(claim, records, graph)
       case ClaimFamily.Defensive =>
-        defensiveProof(claim, records, graph)
+        defensiveProof(records, graph)
       case ClaimFamily.Strategic =>
         strategicProof(claim, records, graph)
       case ClaimFamily.PawnStructure =>
         pawnStructureProof(claim, records, graph)
       case ClaimFamily.Opening =>
-        openingProof(records)
+        openingProof(claim, records, graph)
       case ClaimFamily.Plan =>
         planProof(claim, records, graph)
       case ClaimFamily.Conversion =>
@@ -578,113 +579,144 @@ object ClaimTruthPolicy:
       graph: TypedEvidenceGraph
   ): Boolean =
     val relativeCauses = relativeCausesBoundToClaimEvidence(claim, records)
-    val hasObservation =
-      records.exists(strategicObservation) ||
-        claim.content.exists {
-          case JudgmentClaimContent.StrategicMechanism(_) =>
-            records.exists {
-              case EvidenceRecord(_, _: PlanCausalEventEvidence, _) => true
-              case _                                                => false
-            }
-          case _ => false
-        }
-    val hasCausalSupport = records.exists(longTermCausalSupport(claim, _, graph))
-    val hasStrategicAnchor = records.exists {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
+    records.exists {
+      case record @ EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
         relativeCauses.contains(cause) &&
-          graph.comparisonFor(cause).nonEmpty && strategicRelativeCauseHasProof(cause, graph)
-      case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-        relativeCauses.isEmpty && payload.hasSustainedActionableContrast
-      case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
-        relativeCauses.isEmpty && payload.canAnchorStrategicClaim
-      case _ =>
-        false
+          graph.comparisonFor(cause).nonEmpty &&
+          strategicRelativeCauseHasProof(cause, graph) &&
+          anchorClosureProves(claim, record, records, graph, strategicObservation(_, graph))
+      case record @ EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
+        relativeCauses.isEmpty &&
+          payload.hasSustainedActionableContrast &&
+          anchorSourcesBound(record, payload.sourceRefs, records, graph) &&
+          anchorClosureProves(claim, record, records, graph, strategicObservation(_, graph))
+      case record @ EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
+        relativeCauses.isEmpty &&
+          graph.proofEligible(record) &&
+          payload.canAnchorStrategicClaim &&
+          anchorSourcesBound(record, payload.signals.map(_.source), records, graph) &&
+          anchorClosureProves(claim, record, records, graph, strategicObservation(_, graph))
+      case _ => false
     }
-    hasObservation && hasCausalSupport && hasStrategicAnchor
 
   private def pawnStructureProof(
       claim: JudgmentClaim,
       records: List[EvidenceRecord],
       graph: TypedEvidenceGraph
   ): Boolean =
-    val relativeCauses = relativeCausesBoundToClaimEvidence(claim, records)
-    val hasObservation = records.exists(pawnStructureObservation)
-    val hasCausalSupport = records.exists(longTermCausalSupport(claim, _, graph))
-    val hasPawnAnchor = records.exists {
-      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-        relativeCauses.contains(cause) &&
-          graph.comparisonFor(cause).nonEmpty &&
-          strategicRelativeCauseHasProof(cause, graph) &&
-          pawnStructureCause(cause, graph)
-      case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-        relativeCauses.isEmpty &&
-          payload.sustainedActionableComparisons.exists(_.axis.kind == StrategicAxisKind.PawnBreak)
-      case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
-        relativeCauses.isEmpty && payload.canAnchorPawnStructureClaim
-      case _ =>
-        false
+    records.exists {
+      case record @ EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
+        graph.proofEligible(record) &&
+          payload.canAnchorPawnStructureClaim &&
+          anchorSourcesBound(record, payload.signals.map(_.source), records, graph) &&
+          anchorClosureProves(claim, record, records, graph, pawnStructureObservation)
+      case _ => false
     }
-    hasObservation && hasCausalSupport && hasPawnAnchor
 
-  private def openingProof(records: List[EvidenceRecord]): Boolean =
-    val certifyingPriorThemes =
-      records
-        .collect {
-          case EvidenceRecord(_, OpeningContextEvidence(_, _, _, Some(selection)), _)
-              if selection.canCertifyOpeningClaim =>
-            selection.prior.themes
-        }
-        .flatten
-        .toSet
-    val certifyingAssessments =
-      records.collect {
-        case EvidenceRecord(_, ApplicabilityAssessmentEvidence(assessment), _)
-            if assessment.canCertifyOpeningClaim =>
-          assessment
-      }
-    val observedApplicableThemes =
-      certifyingAssessments
-        .flatMap(assessment => assessment.observedThemes.intersect(assessment.supportedThemes))
-        .toSet
-        .intersect(certifyingPriorThemes)
-    val hasCurrentBoardAnchor =
-      records.exists {
-        case EvidenceRecord(_, FeatureAnchorEvidence(anchor), _) =>
-          anchor.hasPositiveStrength &&
-            anchor.canCorroborateOpeningPrior &&
-            observedApplicableThemes.contains(anchor.theme)
-        case _ =>
-          false
-      }
-    StrategicMechanismEvidence.openingClaimSupported(records) &&
-      certifyingPriorThemes.nonEmpty &&
-      observedApplicableThemes.nonEmpty &&
-      hasCurrentBoardAnchor
+  private def anchorClosure(
+      anchor: EvidenceRecord,
+      records: List[EvidenceRecord],
+      graph: TypedEvidenceGraph
+  ): List[EvidenceRecord] =
+    val admittedIds = records.map(_.ref.id).toSet
+    (anchor :: graph.parentClosure(anchor))
+      .filter(record => admittedIds(record.ref.id) && graph.proofEligible(record))
+      .distinctBy(_.ref.id)
 
-  private def strategicObservation(record: EvidenceRecord): Boolean =
+  private def anchorSourcesBound(
+      anchor: EvidenceRecord,
+      sources: List[EvidenceRef],
+      records: List[EvidenceRecord],
+      graph: TypedEvidenceGraph
+  ): Boolean =
+    val closureById = anchorClosure(anchor, records, graph).map(record => record.ref.id -> record.ref).toMap
+    sources.nonEmpty && sources.distinctBy(_.id).size == sources.size &&
+      sources.forall(source => closureById.get(source.id).contains(source))
+
+  private def anchorClosureProves(
+      claim: JudgmentClaim,
+      anchor: EvidenceRecord,
+      records: List[EvidenceRecord],
+      graph: TypedEvidenceGraph,
+      observation: EvidenceRecord => Boolean
+  ): Boolean =
+    val closure = anchorClosure(anchor, records, graph)
+    closure.exists(observation) && closure.exists(longTermCausalSupport(claim, _, graph))
+
+  private def strategicObservation(record: EvidenceRecord, graph: TypedEvidenceGraph): Boolean =
+    graph.relationProofEligible(record) ||
+      strategicNonRelationObservation(record) ||
+      record.payload.isInstanceOf[PlanCausalEventEvidence]
+
+  private def strategicNonRelationObservation(record: EvidenceRecord): Boolean =
     record.payload match
-      case _: BoardFactEvidence | _: PawnStructureFactEvidence =>
-        true
-      case payload: StrategicFactEvidence =>
-        payload.hasTypedSupport
-      case payload: StructuralDeltaEvidence =>
-        payload.hasTypedOutput
-      case FeatureAnchorEvidence(anchor) =>
-        anchor.hasPositiveStrength
-      case _ =>
-        false
+      case payload: StructuralDeltaEvidence => payload.hasTypedOutput
+      case _: FeatureAnchorEvidence => true
+      case _ => false
 
   private def pawnStructureObservation(record: EvidenceRecord): Boolean =
     record.payload match
-      case _: PawnStructureFactEvidence =>
-        true
-      case payload: StrategicFactEvidence =>
-        payload.kind == StrategicFactKind.Structure && payload.hasTypedSupport
       case payload: StructuralDeltaEvidence =>
         payload.hasConsequenceCategory(TransitionConsequenceCategory.PawnStructure) ||
           payload.hasConsequenceCategory(TransitionConsequenceCategory.PawnStructureDelta)
+      case _ => false
+
+  private def openingProof(
+      claim: JudgmentClaim,
+      records: List[EvidenceRecord],
+      graph: TypedEvidenceGraph
+  ): Boolean =
+    records.exists {
+      case mechanismRecord @ EvidenceRecord(_, payload: StrategicMechanismEvidence, _)
+          if graph.proofEligible(mechanismRecord) && payload.canAnchorOpeningClaim =>
+        val mechanismClosure = anchorClosure(mechanismRecord, records, graph)
+        val applicabilitySources = payload.signals
+          .filter(_.kind == StrategicMechanismSignalKind.OpeningApplicability)
+          .flatMap(signal =>
+            mechanismClosure.collect {
+              case record @ EvidenceRecord(ref, ApplicabilityAssessmentEvidence(assessment), _)
+                  if ref == signal.source && assessment.canCertifyOpeningClaim =>
+                record -> assessment
+            }
+          )
+          .distinctBy(_._1.ref.id)
+        StrategicMechanismEvidence.openingClaimSupported(List(mechanismRecord)) &&
+          applicabilitySources.exists { case (assessmentRecord, assessment) =>
+            openingAssessmentRouteProves(claim, assessmentRecord, assessment, records, graph)
+          }
       case _ =>
         false
+    }
+
+  private def openingAssessmentRouteProves(
+      claim: JudgmentClaim,
+      assessmentRecord: EvidenceRecord,
+      assessment: ApplicabilityAssessment,
+      records: List[EvidenceRecord],
+      graph: TypedEvidenceGraph
+  ): Boolean =
+    val route = anchorClosure(assessmentRecord, records, graph)
+    val priorThemes = route.collect {
+      case EvidenceRecord(_, OpeningContextEvidence(_, _, _, Some(selection)), _)
+          if selection.canCertifyOpeningClaim =>
+        selection.prior.themes
+    }.flatten.toSet
+    val applicableThemes = assessment.observedThemes
+      .intersect(assessment.supportedThemes)
+      .toSet
+      .intersect(priorThemes)
+    val matchingAnchors = route.collect {
+      case record @ EvidenceRecord(_, FeatureAnchorEvidence(anchor), _)
+          if applicableThemes(anchor.theme) =>
+        record
+    }
+    val moveBoundRoute =
+      if claim.primaryLine.nonEmpty || claim.subjectMove.nonEmpty then
+        matchingAnchors.exists(anchor =>
+          anchorClosure(anchor, records, graph).exists(longTermCausalSupport(claim, _, graph))
+        )
+      else true
+    priorThemes.nonEmpty && applicableThemes.nonEmpty && matchingAnchors.nonEmpty && moveBoundRoute
 
   private def longTermCausalSupport(
       claim: JudgmentClaim,
@@ -733,47 +765,6 @@ object ClaimTruthPolicy:
     ) &&
       claim.subjectMove.forall(move => EvidenceRef.sameMove(move, moveUci))
 
-  private def pawnStructureCause(cause: RelativeCauseFact, graph: TypedEvidenceGraph): Boolean =
-    cause.kind == RelativeCauseKind.PawnWeaknessTarget ||
-      cause.kind == RelativeCauseKind.PawnBreakOpportunity ||
-      cause.proof.exists(proof =>
-          graph
-            .relativeCauseStrategicMechanisms(proof.directProof)
-            .exists { case (_, payload) =>
-              payload.signals.exists(signal =>
-                signal.axis.exists(axis =>
-                  axis.kind == StrategicAxisKind.PawnBreak &&
-                    RelativeCauseKind.strategicAxisCanProveCause(cause.kind, axis, cause.sourceSide)
-                )
-              )
-            } ||
-          graph
-            .relativeCauseStrategicContrasts(proof.directProof)
-            .exists { case (_, payload) =>
-              payload
-                .sustainedCauseComparisons(cause.kind, cause.sourceSide)
-                .exists(_.axis.kind == StrategicAxisKind.PawnBreak)
-            } ||
-          graph
-            .relativeCauseTransitionConsequences(cause.kind, proof.directProof)
-            .exists { case (_, _, consequence) => pawnStructureConsequence(consequence.kind) }
-      )
-
-  private def pawnStructureConsequence(kind: TransitionConsequenceKind): Boolean =
-    kind match
-      case TransitionConsequenceKind.OpenFileGain |
-          TransitionConsequenceKind.SemiOpenFileGain |
-          TransitionConsequenceKind.WeakPawnTargetCreated |
-          TransitionConsequenceKind.PawnTensionGain |
-          TransitionConsequenceKind.PawnTensionResolution |
-          TransitionConsequenceKind.PassedPawnProgress |
-          TransitionConsequenceKind.PassedPawnConcession |
-          TransitionConsequenceKind.PromotionPressureGain |
-          TransitionConsequenceKind.PromotionPressureConcession =>
-        true
-      case _ =>
-        false
-
   private def planProof(
       claim: JudgmentClaim,
       records: List[EvidenceRecord],
@@ -790,8 +781,8 @@ object ClaimTruthPolicy:
       records.exists {
         case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
           payload.planComparison.exists(_.hasPlanDelta)
-        case EvidenceRecord(ref, payload: StrategicMechanismEvidence, _) =>
-          ref.confidence != EvidenceConfidence.Heuristic && payload.canAnchorPlanClaim
+        case record @ EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
+          graph.proofEligible(record) && payload.canAnchorPlanClaim
         case _ =>
           false
       }
@@ -819,68 +810,29 @@ object ClaimTruthPolicy:
       relativeCauses.filter(exactMoveOrderPlanResultTacticalProof(_, graph))
     val hasMaterialSwingCauseCarrier =
       relativeCauses.exists(_.kind == RelativeCauseKind.MaterialSwing)
-    val hasTacticalAnchor =
-      records.exists {
-        case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-          payload.canAnchorTacticalClaim
-        case EvidenceRecord(_, payload: RelationFactEvidence, _) =>
-          payload.hasConcreteRelationProof
-        case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-          graph.comparisonFor(cause).nonEmpty &&
+    val ownedCauseProof =
+      relativeCauses.exists { cause =>
+        graph.comparisonFor(cause).exists(fact =>
+          engineComparisonProvesTactic(fact) &&
             tacticalRelativeCause(cause.kind) &&
             (cause.hasOwnedTacticalProof(graph) || exactMoveOrderTacticalCauses.contains(cause))
+        )
+      }
+    val selfContainedMechanismProof =
+      records.exists {
+        case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
+          payload.canAnchorTacticalClaim && payload.hasLineProof && payload.hasEngineOrForcingProof
         case _ =>
           false
       }
-    val hasConcreteLine =
-      records.exists {
-        case EvidenceRecord(_, payload: LineFactEvidence, _) =>
-          lineHasTacticalProof(payload)
-        case EvidenceRecord(_, payload: RelationFactEvidence, _) =>
-          payload.hasLineProof
-        case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-          payload.hasLineProof
-        case EvidenceRecord(_, CandidateLineEvaluationEvidence(_, CandidateLineEvaluation.EngineSearch(line)), _) =>
-          line.mate.nonEmpty
-        case _ =>
-          false
-      } || exactMoveOrderTacticalCauses.nonEmpty
-    val hasEngineProof =
-      records.exists {
-        case EvidenceRecord(_, CandidateLineEvaluationEvidence(_, CandidateLineEvaluation.EngineSearch(line)), _) =>
-          line.mate.nonEmpty
-        case record @ EvidenceRecord(_, RelativeAssessmentEvidence(assessment), _) =>
-          engineBackedComparison(graph, assessment.primaryComparisonEvidence)
-            .exists(engineComparisonProvesTactic)
-        case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _) =>
-          recordEngineBacked(record) &&
-          engineComparisonProvesTactic(fact)
-        case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-          payload.hasEngineOrForcingProof
-        case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-          engineBackedComparison(graph, cause.comparisonEvidence).exists(fact =>
-            engineComparisonProvesTactic(fact) &&
-              (
-              cause.hasOwnedTacticalProof(graph) ||
-                exactMoveOrderTacticalCauses.contains(cause) ||
-                fact.comparison.winPercentLossForMover >= JudgmentThresholds.SIGNIFICANT_THREAT_WP ||
-                fact.comparison.candidateWinPercentDeltaForMover >= JudgmentThresholds.PLAYABLE_LOSS_WP
-            )
-          )
-        case _ =>
-          false
-      }
-    !hasMaterialSwingCauseCarrier && hasTacticalAnchor && hasConcreteLine && hasEngineProof
+    !hasMaterialSwingCauseCarrier &&
+      (ownedCauseProof || selfContainedMechanismProof || exactMoveOrderTacticalCauses.nonEmpty)
 
   private def defensiveProof(
-      claim: JudgmentClaim,
       records: List[EvidenceRecord],
       graph: TypedEvidenceGraph
   ): Boolean =
     records.exists {
-      case record @ EvidenceRecord(_, payload: ThreatEpisodeEvidence, _) =>
-        payload.isProofSignalDefensivePressure &&
-          (!branchLocalThreatPressure(record) || claimIsBranchLocal(claim))
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
         payload.canAnchorDefensiveClaim
       case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
@@ -892,14 +844,6 @@ object ClaimTruthPolicy:
   private def defensiveRelativeCauseHasProof(cause: RelativeCauseFact, graph: TypedEvidenceGraph): Boolean =
     defensiveRelativeCause(cause.kind) &&
       cause.hasOwnedTypedDepth(graph)
-
-  private def claimIsBranchLocal(claim: JudgmentClaim): Boolean =
-    claim.scope == EvidenceScope.ThreatLine ||
-      claim.primaryLine.exists(_.role == LineNodeRole.Threat)
-
-  private def branchLocalThreatPressure(record: EvidenceRecord): Boolean =
-    record.ref.scope == EvidenceScope.ThreatLine ||
-      record.ref.line.exists(_.role == LineNodeRole.Threat)
 
   private def materialProof(records: List[EvidenceRecord], graph: TypedEvidenceGraph): Boolean =
     val hasMaterialCause =
@@ -1002,17 +946,6 @@ object ClaimTruthPolicy:
       case _ =>
         false
 
-  private def engineBackedComparison(
-      graph: TypedEvidenceGraph,
-      ref: EvidenceRef
-  ): Option[CandidateComparisonFact] =
-    graph
-      .candidateComparisonRecord(ref)
-      .filter(recordEngineBacked)
-      .collect {
-        case EvidenceRecord(_, CandidateComparisonEvidence(fact), _) => fact
-      }
-
   private def engineComparisonProvesTactic(
       fact: CandidateComparisonFact
   ): Boolean =
@@ -1020,10 +953,10 @@ object ClaimTruthPolicy:
       fact.comparison.candidateWinPercentDeltaForMover >= JudgmentThresholds.PLAYABLE_LOSS_WP
 
   private def tacticalRelativeCause(kind: RelativeCauseKind): Boolean =
-    ClaimFamily.fromCause(kind).contains(ClaimFamily.Tactical)
+    ClaimFamily.fromCause(kind) == ClaimFamily.Tactical
 
   private def materialResultCause(kind: RelativeCauseKind): Boolean =
-    ClaimFamily.fromCause(kind).contains(ClaimFamily.Material)
+    ClaimFamily.fromCause(kind) == ClaimFamily.Material
 
   private def materialRelativeCauseHasProof(cause: RelativeCauseFact, graph: TypedEvidenceGraph): Boolean =
     materialResultCause(cause.kind) &&
@@ -1115,7 +1048,7 @@ object ClaimTruthPolicy:
                       causeBinding.eventLine,
                       comparison.comparison.mover
                     )
-                )(())
+                )(()).toList
                 (assessment, response) <-
                   ComparisonEndpointEffectObservationPolicy
                     .exactInducedResponseMoveOrder(
@@ -1124,12 +1057,9 @@ object ClaimTruthPolicy:
                       source,
                       event,
                       graph
-                    )
-                actor <- RootCausalActor.fromPosition(
-                  cause.comparisonEvidence.position,
-                  causeBinding.eventLine.rootMove
                 )
-                exactBinding <- EvidenceObjectBinding.inducedResponseMoveOrderBinding(
+                actor <- RootCausalActor.fromPlanEvent(event).toList
+                routeBindings = EvidenceObjectBinding.inducedResponseMoveOrderBindings(
                   comparison,
                   cause.sourceSide,
                   source,
@@ -1138,24 +1068,32 @@ object ClaimTruthPolicy:
                   assessment,
                   response,
                   causeBinding.eventLine
+                ).map(_._1.copy(proofRole = Some(RelativeCauseProofRole.DirectProof)))
+                if routeBindings.nonEmpty && routeBindings.forall(binding =>
+                  binding.source == source &&
+                    binding.provenance.isEmpty &&
+                    binding.proofRole.contains(RelativeCauseProofRole.DirectProof)
                 )
-                directBinding = exactBinding.copy(proofRole = Some(RelativeCauseProofRole.DirectProof))
-                if directBinding.source == source &&
-                  directBinding.provenance.isEmpty &&
-                  directBinding.proofRole.contains(RelativeCauseProofRole.DirectProof)
-                observation <- ComparisonEndpointEffectObservationPolicy.fromExactPlanResult(
-                  cause.comparisonEvidence.position,
-                  causeBinding.eventLine,
-                  source,
-                  event,
-                  assessment,
-                  Some(directBinding),
-                  selectedInducedResponse = Some(response)
+                routeObservations = routeBindings.flatMap(binding =>
+                  ComparisonEndpointEffectObservationPolicy.fromExactPlanResult(
+                    cause.comparisonEvidence.position,
+                    causeBinding.eventLine,
+                    source,
+                    event,
+                    assessment,
+                    graph,
+                    Some(binding),
+                    selectedInducedResponse = Some(response)
+                  )
                 )
-                inventoryObservation <- sourceInventory.exactInducedResponseObservationFor(source)
+                observation <- Option.when(
+                  routeObservations.size == routeBindings.size &&
+                    routeObservations.distinct.size == 1
+                )(routeObservations.head).toList
+                inventoryObservation <- sourceInventory.exactInducedResponseObservationFor(source).toList
                 if inventoryObservation == observation
               yield source -> observation
-            case _ => None
+            case _ => Nil
         }).getOrElse(Nil)
         val resolved = sourceObservations.flatten
         val admittedSources = RelativeCauseConstructionAdmission
@@ -1171,6 +1109,8 @@ object ClaimTruthPolicy:
             RelativeAssessmentAssembler.PlanResultDifferentialPolicy.admitted(
               sourceInventory,
               counterpartInventory,
+              comparison,
+              cause.sourceSide,
               source,
               observation
             )
@@ -1186,4 +1126,4 @@ object ClaimTruthPolicy:
     )
 
   private def defensiveRelativeCause(kind: RelativeCauseKind): Boolean =
-    ClaimFamily.fromCause(kind).contains(ClaimFamily.Defensive)
+    ClaimFamily.fromCause(kind) == ClaimFamily.Defensive

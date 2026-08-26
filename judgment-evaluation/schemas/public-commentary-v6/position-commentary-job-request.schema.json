@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/public-commentary-v6/position-commentary-job-request.schema.json",
+  "title": "Chesstory focused position commentary job request v6",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "variant",
+    "initial_fen",
+    "move_prefix_uci",
+    "current_fen",
+    "focus",
+    "engine_profile"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.position-commentary.job-request.v6"},
+    "request_id": {"$ref": "#/$defs/requestId"},
+    "variant": {"const": "standard"},
+    "initial_fen": {"$ref": "#/$defs/fen"},
+    "move_prefix_uci": {
+      "type": "array",
+      "maxItems": 600,
+      "items": {"$ref": "#/$defs/uciMove"}
+    },
+    "current_fen": {"$ref": "#/$defs/fen"},
+    "focus": {"$ref": "#/$defs/focus"},
+    "engine_profile": {"$ref": "#/$defs/engineProfile"}
+  },
+  "$defs": {
+    "requestId": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$"},
+    "fen": {"type": "string", "minLength": 1, "maxLength": 128},
+    "uciMove": {"type": "string", "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"},
+    "engineProfile": {"const": "sf18-smallnet-t2-h16-v1"},
+    "focus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "played_move_uci", "resulting_fen"],
+      "properties": {
+        "kind": {"const": "played_move"},
+        "played_move_uci": {"$ref": "#/$defs/uciMove"},
+        "resulting_fen": {"$ref": "#/$defs/fen"}
+      }
+    }
+  }
+}

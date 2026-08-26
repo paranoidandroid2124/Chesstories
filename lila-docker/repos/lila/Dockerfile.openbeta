@@ -11,7 +11,11 @@ COPY . .
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm --dir ui/.build install --ignore-workspace --frozen-lockfile
-RUN rm -f ui/.build/instance.lock && node --experimental-strip-types --no-warnings bin/build-openbeta-assets.mjs
+RUN rm -f ui/.build/instance.lock \
+    && node --experimental-strip-types --no-warnings bin/build-openbeta-assets.mjs \
+    && test -s public/npm/stockfish-web/sf_18_smallnet.js \
+    && test -s public/npm/stockfish-web/sf_18_smallnet.wasm \
+    && echo '4ca89e4b3abfbe9df13e4f3db2acb64dc6ddc7a9becb2ac1cf388f4d66b3bd94  public/lifat/nnue/nn-4ca89e4b3abf.nnue' | sha256sum -c -
 
 
 FROM sbtscala/scala-sbt:eclipse-temurin-alpine-25_36_1.11.6_3.7.3 AS app-builder
@@ -31,9 +35,14 @@ WORKDIR /app
 RUN useradd --create-home --shell /bin/bash appuser
 
 COPY --from=app-builder /src/target/universal/stage /app
+COPY --from=ui-builder /src/public /app/public
 COPY --from=app-builder /src/conf/application.openbeta.conf /app/conf/application.openbeta.conf
 COPY --from=app-builder /src/conf/openbeta-bindings.json /app/conf/openbeta-bindings.json
 COPY --from=app-builder /src/conf/logger.openbeta.xml /app/conf/logger.openbeta.xml
+
+RUN test -s /app/public/npm/stockfish-web/sf_18_smallnet.js \
+    && test -s /app/public/npm/stockfish-web/sf_18_smallnet.wasm \
+    && echo '4ca89e4b3abfbe9df13e4f3db2acb64dc6ddc7a9becb2ac1cf388f4d66b3bd94  /app/public/lifat/nnue/nn-4ca89e4b3abf.nnue' | sha256sum -c -
 
 ENV JAVA_OPTS=""
 ENV PORT=8080

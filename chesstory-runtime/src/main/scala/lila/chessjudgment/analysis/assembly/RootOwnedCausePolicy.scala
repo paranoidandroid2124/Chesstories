@@ -1,29 +1,8 @@
 package lila.chessjudgment.analysis.assembly
 
-import lila.chessjudgment.analysis.tactical.TacticalMotifClassifier
 import lila.chessjudgment.model.judgment.*
 
 private[chessjudgment] object RootOwnedCausePolicy:
-  private val forcingResourceRelations = Set(
-    RelationFactKind.Overload,
-    RelationFactKind.Deflection,
-    RelationFactKind.DiscoveredAttack,
-    RelationFactKind.DoubleCheck,
-    RelationFactKind.BackRankMate,
-    RelationFactKind.MateNet,
-    RelationFactKind.Fork,
-    RelationFactKind.Decoy,
-    RelationFactKind.Interference,
-    RelationFactKind.Clearance,
-    RelationFactKind.XRay,
-    RelationFactKind.Pin,
-    RelationFactKind.Skewer,
-    RelationFactKind.Zwischenzug,
-    RelationFactKind.Domination,
-    RelationFactKind.TrappedPiece,
-    RelationFactKind.GreekGift
-  )
-
   def directProofRecords(
       graph: TypedEvidenceGraph,
       fact: CandidateComparisonFact,
@@ -42,7 +21,7 @@ private[chessjudgment] object RootOwnedCausePolicy:
       val primitiveOwners =
         records.filter(record =>
           graph.record(record.ref).contains(record) &&
-            primitiveResourceOwner(record, binding.eventLine)
+            primitiveResourceOwner(graph, record, binding.eventLine)
         )
       val mechanismOwners = records.filter(record =>
         tacticalMechanismOwnsResource(graph, record, binding.eventLine)
@@ -50,14 +29,16 @@ private[chessjudgment] object RootOwnedCausePolicy:
       (primitiveOwners ++ mechanismOwners).distinctBy(_.ref.id)
 
   def forcingResourceRecords(
+      graph: TypedEvidenceGraph,
       records: List[EvidenceRecord],
       eventLine: LineNodeRef
   ): List[EvidenceRecord] =
     records
-      .filter(record => primitiveResourceOwner(record, eventLine))
+      .filter(record => primitiveResourceOwner(graph, record, eventLine))
       .distinctBy(_.ref.id)
 
   private def primitiveResourceOwner(
+      graph: TypedEvidenceGraph,
       record: EvidenceRecord,
       eventLine: LineNodeRef
   ): Boolean =
@@ -65,13 +46,12 @@ private[chessjudgment] object RootOwnedCausePolicy:
       case line: LineFactEvidence =>
         RootOwnedEffectPolicy.lineRecordOwnsEventRoot(record.ref, line, eventLine) &&
           line.rootOwnedCausalEpisodes(eventLine.rootMove).exists(_.forcingTacticalResource(line))
-      case motif: MoveMotifEvidence =>
-        RootOwnedEffectPolicy.motifRecordOwnsEventRoot(record.ref, motif, eventLine) &&
-          TacticalMotifClassifier.isRootCauseEligible(motif) &&
-          motif.geometry.focusSquares.nonEmpty
       case relation: RelationFactEvidence =>
-        RootOwnedEffectPolicy.relationRecordOwnsEventRoot(record.ref, relation, eventLine) &&
-          forcingResourceRelations(relation.kind)
+        RootOwnedEffectPolicy.relationRecordOwnsEventRoot(graph, record.ref, relation, eventLine) &&
+          RootOwnedEffectPolicy.relationDirectlyProvesCause(
+            relation,
+            RelativeCauseKind.MissedTacticalResource
+          )
       case _ =>
         false
 
@@ -82,10 +62,10 @@ private[chessjudgment] object RootOwnedCausePolicy:
   ): Boolean =
     record.payload match
       case mechanism: TacticalMechanismEvidence =>
-        RootOwnedEffectPolicy.tacticalCarrierOwnsEventRoot(record.ref, mechanism, eventLine) &&
+        RootOwnedEffectPolicy.tacticalCarrierOwnsEventRoot(graph, record.ref, mechanism, eventLine) &&
           mechanism.signals.exists(signal =>
             signal.source.exists(source =>
-              graph.record(source).exists(primitiveResourceOwner(_, eventLine))
+              graph.record(source).exists(primitiveResourceOwner(graph, _, eventLine))
             )
           )
       case _ =>

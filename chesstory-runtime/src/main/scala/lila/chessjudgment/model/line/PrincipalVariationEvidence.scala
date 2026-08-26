@@ -1,8 +1,7 @@
 package lila.chessjudgment.model.line
 
-import chess.{ Move, Position, Role }
-import chess.format.{ Fen, Uci }
-import chess.variant.Standard
+import chess.{ HalfMoveClock, Move, Position, Role }
+import chess.format.Fen
 
 /**
  * The single authoritative result of replaying a legal engine line.
@@ -18,13 +17,84 @@ private[chessjudgment] final case class LegalReplayStep(
     capturedRole: Option[Role]
 )
 
+private[chessjudgment] object LegalReplayStep:
+  def fromMove(ply: Int, before: Position, move: Move): LegalReplayStep =
+    require(ply > 0, "a legal replay step must have a positive ply")
+    val capturedRole =
+      move.capture.flatMap(before.board.roleAt).orElse(before.board.roleAt(move.dest))
+    LegalReplayStep(
+      ply = ply,
+      uci = PrincipalVariationEvidence.normalizeUci(move.toUci.uci),
+      before = before,
+      move = move,
+      after = move.after,
+      capturedRole = capturedRole
+    )
+
+private[chessjudgment] final class StripedLruCache[K, V](
+    maxEntries: Int,
+    requestedStripes: Int = 64
+):
+  require(maxEntries > 0)
+  require(requestedStripes > 0)
+
+  private val stripeCount = math.min(maxEntries, requestedStripes)
+  private val caches = Vector.tabulate(stripeCount) { index =>
+    val stripeMaxEntries =
+      maxEntries / stripeCount + Option.when(index < maxEntries % stripeCount)(1).getOrElse(0)
+    new java.util.LinkedHashMap[K, V](stripeMaxEntries, 0.75f, true):
+      override def removeEldestEntry(eldest: java.util.Map.Entry[K, V]): Boolean =
+        size() > stripeMaxEntries
+  }
+
+  def getOrCompute(key: K)(compute: => V): V =
+    val cache = caches(Math.floorMod(key.##, stripeCount))
+    cache.synchronized {
+      if cache.containsKey(key) then cache.get(key)
+      else
+        val value = compute
+        cache.put(key, value)
+        value
+    }
+
 private[chessjudgment] object PrincipalVariationEvidence:
+
+  private val PositionCacheMaxEntries = 4096
+  private val positionCache =
+    new StripedLruCache[String, Option[Position]](PositionCacheMaxEntries)
+  private val legalMoveCache =
+    new StripedLruCache[Position, List[Move]](PositionCacheMaxEntries)
+
+  def readPosition(fen: String): Option[Position] =
+    val key = normalizeFen(fen)
+    positionCache.getOrCompute(key) {
+      Fen
+        .read(chess.variant.Standard, Fen.Full(key))
+        .map(withFenHalfMoveClock(_, key))
+    }
+
+  /** The sole legal-move generator for commentary analysis. The complete
+    * Position key retains clocks and repetition history, so Move.after values
+    * are never shared across merely board-equivalent occurrences.
+    */
+  private[chessjudgment] def actualLegalMoves(position: Position): List[Move] =
+    legalMoveCache.getOrCompute(position)(position.legalMoves.toList)
 
   final case class LineMoveRef(
       ply: Int,
       uci: String,
       fenAfter: String
   )
+
+  /** scalachess positions do not retain the FEN clock field when parsed.
+    * Restore it once at the shared parsing boundary so rule assessment and
+    * every derived Move.after carry the actual occurrence state.
+    */
+  private[chessjudgment] def withFenHalfMoveClock(position: Position, fen: String): Position =
+    fen.trim.split("\\s+").lift(4).flatMap(_.toIntOption).filter(_ >= 0) match
+      case Some(clock) if position.history.halfMoveClock != HalfMoveClock(clock) =>
+        position.updateHistory(_.setHalfMoveClock(HalfMoveClock(clock)))
+      case _ => position
 
   final case class LineVariationRef(
       moves: List[LineMoveRef]
@@ -37,27 +107,6 @@ private[chessjudgment] object PrincipalVariationEvidence:
       continuation: Option[LineMoveRef],
       continuationTail: List[LineMoveRef] = Nil
   )
-
-  final case class ValidatedLine(
-      line: LineVariationRef,
-      moves: List[LineMoveRef]
-  ):
-    def first: Option[LineMoveRef] = moves.headOption
-    def reply: Option[LineMoveRef] = moves.lift(1)
-    def continuation: Option[LineMoveRef] = moves.lift(2)
-
-  def validatedLineFromStart(
-      startFen: String,
-      line: LineVariationRef
-  ): Option[ValidatedLine] =
-    val moves = line.moves
-    Option.when(
-      moves.nonEmpty &&
-        moves.forall(_.fenAfter.trim.nonEmpty) &&
-        strictlyOrdered(moves)
-    )(moves)
-      .flatMap(replay(startFen, _))
-      .map(validatedMoves => ValidatedLine(line, validatedMoves))
 
   def legalFenAfter(fen: String, uciMove: String): Option[String] =
     legalMoveReplay(fen, List(uciMove), startPly = 0)
@@ -75,7 +124,7 @@ private[chessjudgment] object PrincipalVariationEvidence:
       moves: List[String],
       startPly: Int
   ): Option[List[LegalReplayStep]] =
-    Fen.read(Standard, Fen.Full(normalizeFen(startFen))).flatMap { position =>
+    readPosition(startFen).flatMap { position =>
       legalMoveReplayFromPosition(position, moves, startPly)
     }
 
@@ -93,19 +142,8 @@ private[chessjudgment] object PrincipalVariationEvidence:
         legalMove(current, uci) match
           case Some(move) =>
             val before = current
-            val capturedRole =
-              move.capture
-                .flatMap(before.board.roleAt)
-                .orElse(before.board.roleAt(move.dest))
             ply += 1
-            accepted += LegalReplayStep(
-              ply = ply,
-              uci = uci,
-              before = before,
-              move = move,
-              after = move.after,
-              capturedRole = capturedRole
-            )
+            accepted += LegalReplayStep.fromMove(ply, before, move)
             current = move.after
           case None =>
             legal = false
@@ -125,25 +163,12 @@ private[chessjudgment] object PrincipalVariationEvidence:
     Option.when(fields.size >= 4)(fields.take(4).mkString(" "))
 
   private def legalMove(position: Position, uci: String): Option[Move] =
+    val normalized = normalizeUci(uci)
     Option
-      .when(uci.matches("(?i)^[a-h][1-8][a-h][1-8][qrbn]?$"))(uci)
-      .flatMap(Uci(_).collect { case move: Uci.Move => move })
-      .flatMap(position.move(_).toOption)
-
-  private def replay(startFen: String, moves: List[LineMoveRef]): Option[List[LineMoveRef]] =
-    legalReplay(startFen, moves.map(_.uci), moves.headOption.map(_.ply - 1).getOrElse(0))
-      .map(_.map(_._2))
-      .filter(replayed =>
-        replayed.zip(moves).forall { case (actual, expected) =>
-          actual.ply == expected.ply && sameBoardState(actual.fenAfter, expected.fenAfter)
-        }
+      .when(normalized.matches("^[a-h][1-8][a-h][1-8][qrbn]?$"))(normalized)
+      .flatMap(candidate =>
+        actualLegalMoves(position).find(move => normalizeUci(move.toUci.uci) == candidate)
       )
 
-  private def strictlyOrdered(moves: List[LineMoveRef]): Boolean =
-    moves.sliding(2).forall {
-      case List(left, right) => left.ply < right.ply
-      case _                 => true
-    }
-
-  private def normalizeFen(fen: String): String =
+  def normalizeFen(fen: String): String =
     Option(fen).getOrElse("").trim.split("\\s+").filter(_.nonEmpty).mkString(" ")

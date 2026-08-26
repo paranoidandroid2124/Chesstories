@@ -30,7 +30,7 @@ object ProductionConfigValidator:
       requireMailer(config, errors)
       requireSignupProtections(config, errors)
       requireOpenBetaBindings(config, errors)
-      requireMoveReviewDisabled(config, errors)
+      requireMoveReviewRuntime(config, errors)
 
       val problems = errors.toList
       if problems.nonEmpty then
@@ -115,12 +115,12 @@ object ProductionConfigValidator:
     if configuredString(config, "push.web.vapid_public_key").isDefined then
       errors += "push.web.vapid_public_key must remain empty in open-beta production."
 
-  private def requireMoveReviewDisabled(
+  private def requireMoveReviewRuntime(
       config: Configuration,
       errors: ListBuffer[String]
   ): Unit =
     val mode = config.getOptional[String]("chesstory.moveReview.mode").map(_.trim.toLowerCase).getOrElse("off")
-    if mode != "off" then errors += "chesstory.moveReview.mode must remain off in production."
+    if mode != "runtime" then errors += "chesstory.moveReview.mode must be runtime in production."
 
   private def requirePositiveInt(
       config: Configuration,

@@ -1,10 +1,9 @@
 package lila.chessjudgment.analysis.line
 
-import chess.*
-import chess.format.Fen
-import lila.chessjudgment.analysis.tactical.TacticalPatternDetectors
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.line.LegalReplayStep
 import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.model.judgment.CanonicalLineReplay
 
 /**
  * Truth Boundary (High-Precision Validation Layer)
@@ -21,49 +20,35 @@ object ForcedLineTruth:
     lineMoves: List[String] = Nil
   )
 
-  def detect(
-      fen: String,
-      playedUci: String,
-      variations: List[EngineLine] = Nil
+  private[chessjudgment] def detect(
+      replay: CanonicalLineReplay,
+      variations: List[EngineLine]
   ): Option[VerifiedTheme] =
-    PrincipalVariationEvidence.legalFenAfter(fen, playedUci).flatMap { afterFen =>
-      val posOpt = Fen.read(chess.variant.Standard, Fen.Full(afterFen))
-      val beforePosOpt = Fen.read(chess.variant.Standard, Fen.Full(fen))
-      posOpt
-        .flatMap(pos => detectPatterns(beforePosOpt, pos, playedUci, variations))
-        .orElse(detectImmediateReplyCheck(fen, playedUci, variations))
-    }
+    replay.legalSteps.headOption.flatMap(first => detect(replay.legalSteps, first.uci, variations))
 
-  private def detectPatterns(
-      beforePos: Option[Position],
-      pos: Position,
+  private def detect(
+      replay: List[LegalReplayStep],
       playedUci: String,
       variations: List[EngineLine]
   ): Option[VerifiedTheme] =
-    val continuationLines = variations.map(_.moves.map(PrincipalVariationEvidence.normalizeUci))
-    TacticalPatternDetectors.ordered
-      .find(detector =>
-        (!detector.requiresMate || pos.checkMate) &&
-          detector.matchesWithContinuations(beforePos, pos, playedUci, continuationLines)
+    replay.headOption
+      .filter(_.uci == PrincipalVariationEvidence.normalizeUci(playedUci))
+      .flatMap(first =>
+        detectImmediateReplyCheck(first.uci, replay, variations)
       )
-      .map(detector => VerifiedTheme(detector.id))
 
   private def detectImmediateReplyCheck(
-      fen: String,
       playedUci: String,
+      replay: List[LegalReplayStep],
       variations: List[EngineLine]
   ): Option[VerifiedTheme] =
     val played = PrincipalVariationEvidence.normalizeUci(playedUci)
-    variations.view
+    val declared = variations.view
       .flatMap { variation =>
         val moves = variation.moves.map(PrincipalVariationEvidence.normalizeUci).filter(_.nonEmpty)
         Option.when(moves.headOption.contains(played) && moves.size >= 2)(moves.take(2))
       }
-      .find(replyChecksMover(fen, _))
+      .find(line => replay.take(2).map(_.uci) == line)
+    declared
+      .filter(_ => replay.lift(1).exists(_.after.check.yes))
       .map(line => VerifiedTheme(ImmediateReplyCheckId, line))
-
-  private def replyChecksMover(fen: String, line: List[String]): Boolean =
-    PrincipalVariationEvidence
-      .legalMoveReplay(fen, line, startPly = 0)
-      .flatMap(_.lastOption)
-      .exists(_.after.check.yes)

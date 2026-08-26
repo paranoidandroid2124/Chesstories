@@ -216,13 +216,6 @@ object OpeningThemePriorIndex:
         rule.lineage
     }
 
-  private[chessjudgment] def familyHintForName(openingName: String): Option[OpeningFamily] =
-    val normalized = normalizeOpeningName(openingName)
-    LineageRules.collectFirst {
-      case rule if rule.families.size == 1 && rule.nameNeedles.exists(needle => normalized.contains(needle)) =>
-        rule.families.head
-    }
-
   private[opening] def lineageForOpeningName(openingName: String): String =
     val familyName = Option(openingName).getOrElse("").split(":", 2).headOption.getOrElse("")
     lineageHintForName(openingName, None)

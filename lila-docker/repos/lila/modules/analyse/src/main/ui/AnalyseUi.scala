@@ -29,7 +29,7 @@ final class AnalyseUi(helpers: Helpers)(endpoints: AnalyseEndpoints):
       chess960PositionNum: Option[Int] = None,
       inlinePgn: Option[String] = None
   )(using ctx: Context): Page =
-    Page("Analysis")
+    Page("Review")
       .css("analyse.workspace")
       .csp(bits.csp.compose(_.withExternalAnalysisApis))
       .js:
@@ -43,9 +43,10 @@ final class AnalyseUi(helpers: Helpers)(endpoints: AnalyseEndpoints):
             explorerAndCevalConfig
         )
       .graph(
-        title = "Chess analysis board",
+        title = "Chess review board",
         url = lila.ui.Url(routeUrl(routes.UserAnalysis.index)),
-        description = "Analyse chess positions and variations on an interactive chess board"
+        description =
+          "Review chess positions move by move with engine evidence and plain-language explanations"
       )
       .flag(_.zoom):
         main(

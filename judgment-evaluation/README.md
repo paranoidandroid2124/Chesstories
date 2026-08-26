@@ -54,7 +54,7 @@
 | `src/chesstory_eval/evaluation.py` | source/arm-blind 최종 endpoint `E`의 diagnostic replay와 release live 평가 계약 |
 | `corpus/v1/` | manifest, 사전 등록, 역할·접근 정책, explore와 봉인 예약 split |
 | `references/` | 로컬 참고 PDF의 불투명 ID·해시·페이지 메타데이터만 보존하는 색인 |
-| `runtime-adapter/` | development-only current public-v4 schema JSONL adapter. CauseAudit는 untrusted raw transport/probe capture만 하며 player authority나 quality proof를 주장하지 않는다. |
+| `runtime-adapter/` | development-only `public-v6` direct-response JSONL adapter. CauseAudit는 untrusted raw transport/probe capture만 하며 player authority나 quality proof를 주장하지 않는다. |
 
 ### Schema와 artifact capture
 
@@ -90,9 +90,9 @@ Canonicalizer는 스키마가 명시적으로 허용한 세 변환만 한다.
 
 ## CauseAudit의 현재 관측 경계
 
-CauseAudit는 development-only untrusted raw public-response/probe capture 경로다. `RuntimePublicResponseCli`에서 받은 current public-v4 schema JSONL의 raw bytes, SHA-256, length와 런타임이 발행한 probe의 direct acquisition, cap, binding만 기록한다. Cause, verdict, importance, idea status는 읽거나 재판정하지 않는다.
+CauseAudit는 development-only untrusted raw public-response/probe capture 경로다. `RuntimePublicResponseCli`에서 받은 `public-v6` direct-response JSONL의 raw bytes, SHA-256, length와 런타임이 발행한 probe의 direct acquisition, cap, binding만 기록한다. Cause, verdict, importance, idea status는 읽거나 재판정하지 않는다.
 
-player/runtime authority는 `Q → F → C → Jp → Ja → R → P`에만 있으며, current public-v4 schema는 development-only untrusted raw transport일 뿐 authority가 아니다. `run`은 player authority나 quality proof가 아니다.
+player/runtime authority는 `Q → F → C → Jp → Ja → R → P`에만 있으며, `public-v6` direct schema는 development-only untrusted raw transport일 뿐 authority가 아니다. `run`은 player authority나 quality proof가 아니다.
 
 ## 참고 자료와 저작권 경계
 
@@ -180,7 +180,7 @@ python -m chesstory_eval cause-audit --root . --action run --run-id CAUSE_RUNTIM
 
 `freeze`는 case와 manifest-bound label을 결속한다. `acquire`와 `run`은 freeze manifest의 순서 있는 explore case set 전체만 사용한다. acquisition v2에는 runtime request를 저장하지 않는다. CauseAudit에는 cache path가 없으며, 각 Q acquisition과 runtime-issued probe를 직접 취득해 raw provider I/O와 함께 capture한다. `run`은 외부 acquisition JSON을 source artifact run의 captured acquisition document와 exact value로 대조하고, 그 store와 각 Q stage-capture ledger binding을 검증한 뒤에만 captured engine pack에서 request를 다시 만든다.
 
-`RuntimePublicResponseCli`의 current public-v4 schema body는 operational probe extraction에만 일시 사용한다. runtime report는 byte-exact raw request/response JSONL의 base64, SHA-256, length와 validated probe records를 유지하지만 `rounds[].body`는 저장하지 않는다. 이는 parsed response body persistence를 제거하는 breaking boundary다. 이 raw capture는 runtime producer attribution이 아니다. report는 adapter main class나 sbt hash를 bind하지 않으며 runtime-adapter/chesstory-runtime source, build, JDK, dependency closure를 attest하지 않는다.
+`RuntimePublicResponseCli`의 `public-v6` direct-response body는 operational probe extraction에만 일시 사용한다. runtime report는 byte-exact raw request/response JSONL의 base64, SHA-256, length와 validated probe records를 유지하지만 `rounds[].body`는 저장하지 않는다. 이는 parsed response body persistence를 제거하는 breaking boundary다. 이 raw capture는 runtime producer attribution이 아니다. report는 adapter main class나 sbt hash를 bind하지 않으며 runtime-adapter/chesstory-runtime source, build, JDK, dependency closure를 attest하지 않는다.
 
 ### Gated experiment runner
 

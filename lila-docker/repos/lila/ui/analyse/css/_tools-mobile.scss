@@ -11,8 +11,15 @@
       order: 1;
     }
 
-    .analyse__moves {
+    .analyse__moves,
+    .analyse__empty-game {
       order: 2;
+    }
+
+    .analyse__empty-game {
+      flex: 0 0 auto;
+      justify-content: flex-start;
+      padding: 1.25rem;
     }
 
     .ceval__readout {

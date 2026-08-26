@@ -1,11 +1,13 @@
 package lila.chessjudgment.model.judgment
 
-import chess.{ Black, Queen, Square, White }
-import lila.chessjudgment.model.Motif
+import chess.{ King, Queen, White }
+import lila.chessjudgment.model.line.CanonicalPositionHistory
 import lila.chessjudgment.model.strategic.EngineLine
 
 
 class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
+
+  private val mateFen = "7k/8/5KQ1/8/8/8/P7/8 w - - 0 1"
 
   private def playedMoves(fixture: ConstraintFixture): Set[String] =
     fixture.fact.kind match
@@ -13,51 +15,51 @@ class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
       case CandidateComparisonKind.BestVsSecond => Set(fixture.reference.rootMove)
       case _                                     => Set.empty
 
-  test("only-move constraint qualification truth table"):
+  test("only-move constraint qualifies an exact line-backed mate cause"):
     val fixture = constraintFixture()
-    val exactThreat = threatRecord("exact-threat", fixture.reference, fixture.reference.rootMove, "e1")
+    val exactLine = mateLineRecord("exact-line", fixture.reference)
     val siblingLine = fixture.reference.copy(id = "sibling", role = LineNodeRole.Threat)
-    val siblingThreat = threatRecord("sibling-threat", siblingLine, fixture.reference.rootMove, "h4")
+    val siblingProofRecord = mateLineRecord("sibling-line", siblingLine)
 
     val exact = causeRecord(
       id = "exact-cause",
       fixture = fixture,
-      kind = RelativeCauseKind.OnlyDefenseNecessity,
+      kind = RelativeCauseKind.KingForcing,
       sourceSide = RelativeCauseSourceSide.Reference,
       attribution = ownedReferenceAttribution,
-      direct = exactThreat.ref
+      direct = exactLine.ref
     )
     val wrongSource = causeRecord(
       id = "wrong-source-cause",
       fixture = fixture,
-      kind = RelativeCauseKind.OnlyDefenseNecessity,
+      kind = RelativeCauseKind.KingForcing,
       sourceSide = RelativeCauseSourceSide.Candidate,
       attribution = CauseAttribution(
         CauseAttributionKind.CandidateCreatesValue,
         rootMoveMatched = true,
         directProofEligible = true
       ),
-      direct = exactThreat.ref
+      direct = exactLine.ref
     )
     val wrongAttribution = causeRecord(
       id = "wrong-attribution-cause",
       fixture = fixture,
-      kind = RelativeCauseKind.OnlyDefenseNecessity,
+      kind = RelativeCauseKind.KingForcing,
       sourceSide = RelativeCauseSourceSide.Reference,
       attribution = CauseAttribution(
         CauseAttributionKind.ContextOnly,
         rootMoveMatched = true,
         directProofEligible = false
       ),
-      direct = exactThreat.ref
+      direct = exactLine.ref
     )
     val siblingProof = causeRecord(
       id = "sibling-proof-cause",
       fixture = fixture,
-      kind = RelativeCauseKind.OnlyDefenseNecessity,
+      kind = RelativeCauseKind.KingForcing,
       sourceSide = RelativeCauseSourceSide.Reference,
       attribution = ownedReferenceAttribution,
-      direct = siblingThreat.ref
+      direct = siblingProofRecord.ref
     )
 
     val otherFixture = constraintFixture(
@@ -67,17 +69,17 @@ class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
     val otherComparisonCause = causeRecord(
       id = "other-comparison-cause",
       fixture = otherFixture,
-      kind = RelativeCauseKind.OnlyDefenseNecessity,
+      kind = RelativeCauseKind.KingForcing,
       sourceSide = RelativeCauseSourceSide.Reference,
       attribution = ownedReferenceAttribution,
-      direct = exactThreat.ref
+      direct = exactLine.ref
     )
 
     val graph = graphOf(
       fixture.comparisonRecord,
       otherFixture.comparisonRecord,
-      exactThreat,
-      siblingThreat,
+      exactLine,
+      siblingProofRecord,
       exact,
       wrongSource,
       wrongAttribution,
@@ -116,11 +118,12 @@ class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
     assertEquals(qualifier.comparisonEvidence.id, fixture.comparisonRecord.ref.id)
     assertEquals(qualifier.relation, OnlyMoveMechanismRelation.SameChannelAssociation)
     assertEquals(qualifier.licensesCausalBecause, false)
-    assert(
+    assertEquals(
       EvidenceObjectBinding
         .fromRelativeCauseForProjection(cause(exact, graph), graph)
         .filter(_.specificTargetMechanismReady)
-        .forall(_.source.id == exactThreat.ref.id)
+        .map(_.source.id),
+      List(exactLine.ref.id)
     )
 
   test("comparison-only uniqueness remains diagnostic without a concrete cause"):
@@ -139,16 +142,16 @@ class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
     assertEquals(resolution.disposition, OnlyMoveConstraintDisposition.DiagnosticOnly)
     assertEquals(resolution.qualifiers, Nil)
 
-  test("exact only-defense survives while sibling and descendant evidence cannot be borrowed"):
+  test("exact line-backed cause survives while descendant evidence cannot be borrowed"):
     val fixture = constraintFixture()
-    val exactThreat = threatRecord("defense-threat", fixture.reference, fixture.reference.rootMove, "e1")
-    val exactDefense = causeRecord(
-      id = "only-defense",
+    val exactLine = mateLineRecord("mate-line", fixture.reference)
+    val exactCause = causeRecord(
+      id = "line-backed-cause",
       fixture = fixture,
-      kind = RelativeCauseKind.OnlyDefenseNecessity,
+      kind = RelativeCauseKind.KingForcing,
       sourceSide = RelativeCauseSourceSide.Reference,
       attribution = ownedReferenceAttribution,
-      direct = exactThreat.ref
+      direct = exactLine.ref
     )
     val descendant = EvidenceRecord(
       ref = evidenceRef(
@@ -164,16 +167,16 @@ class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
           EngineLine(List(fixture.candidate.rootMove), 0, None, 18)
         )
       ),
-      parents = List(exactDefense.ref)
+      parents = List(exactCause.ref)
     )
-    val graph = graphOf(fixture.comparisonRecord, exactThreat, exactDefense, descendant)
-    val defenseCause = cause(exactDefense, graph)
+    val graph = graphOf(fixture.comparisonRecord, exactLine, exactCause, descendant)
+    val lineCause = cause(exactCause, graph)
 
-    assertEquals(ClaimFamily.fromCause(RelativeCauseKind.OnlyDefenseNecessity), Some(ClaimFamily.Defensive))
-    assert(defenseCause.hasOwnedTypedDepth(graph))
+    assertEquals(ClaimFamily.fromCause(RelativeCauseKind.KingForcing), ClaimFamily.Tactical)
+    assert(lineCause.hasOwnedTypedDepth(graph))
     assert(
       EvidenceObjectBinding.specificTargetMechanismReady(
-        EvidenceObjectBinding.fromRelativeCauseForProjection(defenseCause, graph)
+        EvidenceObjectBinding.fromRelativeCauseForProjection(lineCause, graph)
       )
     )
     val diagnostic = OnlyMoveConstraintPolicy.resolveAll(
@@ -185,12 +188,12 @@ class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
     assertEquals(diagnostic.flatMap(_.qualifiers), Nil)
     val selected = OnlyMoveConstraintPolicy.resolveAll(
       graph,
-      List(defenseCause -> exactDefense.ref),
+      List(lineCause -> exactCause.ref),
       playedMoves(fixture)
     )
     assertEquals(
       selected.flatMap(_.qualifiers).map(_.causeEvidence.id),
-      List(exactDefense.ref.id)
+      List(exactCause.ref.id)
     )
     assertEquals(selected.map(_.disposition), List(OnlyMoveConstraintDisposition.ConcreteCauseQualifier))
 
@@ -203,7 +206,7 @@ class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
 
   private def constraintFixture(
       comparisonId: String = "played-vs-best",
-      reference: LineNodeRef = LineNodeRef("best", "d1h5", 1, LineNodeRole.BestReference),
+      reference: LineNodeRef = LineNodeRef("best", "g6g7", 1, LineNodeRole.BestReference),
       candidate: LineNodeRef = LineNodeRef("played", "a2a3", 2, LineNodeRole.Played),
       kind: CandidateComparisonKind = CandidateComparisonKind.PlayedVsBest
   ): ConstraintFixture =
@@ -265,32 +268,50 @@ class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
       parents = List(fixture.comparisonRecord.ref, direct).distinctBy(_.id)
     )
 
-  private def threatRecord(
-      id: String,
-      line: LineNodeRef,
-      onlyDefense: String,
-      targetSquare: String
-  ): EvidenceRecord =
-    val square = Square.fromKey(targetSquare).getOrElse(fail(s"expected square $targetSquare"))
-    val threat = Threat(
-      threatActor = Black,
-      kind = ThreatKind.Mate,
-      turnsToImpact = 1,
-      motifs = List(Motif.Check(Queen, square, Motif.CheckType.Normal, Black, 0, Some("d8h4"))),
-      attackSquares = List(targetSquare),
-      targetPieces = List("King"),
-      bestDefense = Some(onlyDefense),
-      defenseCount = 1
-    )
+  private def mateLineRecord(id: String, line: LineNodeRef): EvidenceRecord =
+    val history = CanonicalPositionHistory
+      .from(mateFen, Nil, mateFen)
+      .getOrElse(fail("expected a canonical mate root"))
+    val extended = history
+      .extend(List(line.rootMove))
+      .getOrElse(fail("expected legal mating move"))
+    val replay = CanonicalLineReplay
+      .fromHistory(extended.segmentReplaySteps.drop(history.segmentReplaySteps.size))
+      .getOrElse(fail("expected one certified mating replay"))
     EvidenceRecord(
       ref = evidenceRef(
         id = id,
-        producer = EvidenceProducer.ThreatPressureProducer,
-        layer = EvidenceLayer.ThreatPressure,
+        producer = EvidenceProducer.LegalLineProducer,
+        layer = EvidenceLayer.Line,
         line = Some(line),
         confidence = EvidenceConfidence.LegalReplayVerified
       ),
-      payload = ThreatEpisodeEvidence(ThreatEpisode.fromThreat(threat, 0))
+      payload = LineFactEvidence.fromCertifiedReplay(
+        line = line,
+        replay = replay,
+        events = List(
+          LineMoveEvent(
+            kind = LineEventKind.Mate,
+            moveUci = line.rootMove,
+            plyOffset = 0,
+            side = Some(White),
+            pieceRole = Some(EvidencePieceRole(Queen.name)),
+            targetRole = Some(EvidencePieceRole(King.name)),
+            square = Some(EvidenceSquare("h8"))
+          )
+        ),
+        consequences = List(
+          LineConsequence(
+            kind = LineConsequenceKind.Mate,
+            lineMoves = List(line.rootMove),
+            proofSignal = true,
+            eventMove = Some(line.rootMove),
+            rootMove = Some(line.rootMove),
+            rootSide = Some(White),
+            beneficiary = Some(White)
+          )
+        )
+      )
     )
 
   private def evidenceRef(
@@ -304,7 +325,7 @@ class OnlyMoveConstraintPolicyTest extends munit.FunSuite:
       id = id,
       producer = producer,
       layer = layer,
-      position = PositionNodeRef("4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 0, Some(White)),
+      position = PositionNodeRef(mateFen, 0, Some(White)),
       line = line,
       scope = line.map(_.role.scope).getOrElse(EvidenceScope.Counterfactual),
       confidence = confidence

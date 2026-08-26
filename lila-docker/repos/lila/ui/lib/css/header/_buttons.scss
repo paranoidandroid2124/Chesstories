@@ -183,6 +183,12 @@
   .site-buttons {
     gap: 0.15rem;
 
+    .site-theme-switch__button {
+      min-width: 2.4rem;
+      padding-inline: 0.25rem;
+      font-size: 0.72rem;
+    }
+
     .account-actions,
     .signin-or-signup {
       gap: 0.1rem;

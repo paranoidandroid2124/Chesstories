@@ -2,7 +2,7 @@ package lila.chessjudgment.analysis.assembly
 
 import chess.White
 import lila.chessjudgment.model.judgment.*
-import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.line.CanonicalPositionHistory
 import lila.chessjudgment.model.strategic.EngineLine
 
 class RelativeCauseRecordConflictTest extends munit.FunSuite:
@@ -11,12 +11,18 @@ class RelativeCauseRecordConflictTest extends munit.FunSuite:
     val mateFen = "7k/8/5KQ1/8/8/8/8/8 w - - 0 1"
     val matePosition = PositionNodeRef(mateFen, 0, Some(White))
     val mateLine = LineNodeRef("mate-polarity", "g6g7", 1, LineNodeRole.BestReference)
-    val mateAfter = PrincipalVariationEvidence
-      .legalFenAfter(mateFen, mateLine.rootMove)
+    val history = CanonicalPositionHistory
+      .from(mateFen, Nil, mateFen)
+      .getOrElse(fail("expected a canonical mate root"))
+    val extended = history
+      .extend(List(mateLine.rootMove))
       .getOrElse(fail("expected legal mate"))
-    val payload = LineFactEvidence(
+    val replay = CanonicalLineReplay
+      .fromHistory(extended.segmentReplaySteps.drop(history.segmentReplaySteps.size))
+      .getOrElse(fail("expected one certified mate replay"))
+    val payload = LineFactEvidence.fromCertifiedReplay(
       line = mateLine,
-      replay = List(LineReplayStep(0, mateLine.rootMove, mateFen, mateAfter)),
+      replay = replay,
       events = List(LineMoveEvent(
         kind = LineEventKind.Mate,
         moveUci = mateLine.rootMove,

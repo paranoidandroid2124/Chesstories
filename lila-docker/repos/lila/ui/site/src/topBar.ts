@@ -9,7 +9,7 @@ export default function () {
   if (!top) return;
   const navToggle = document.getElementById(navToggleId) as HTMLInputElement | null;
   const nav = document.getElementById(navId);
-  const navButton = top.querySelector<HTMLButtonElement>('.js-topnav-toggle');
+  const navButton = top.querySelector<HTMLButtonElement>('.js-nav-toggle');
   const compactNav = window.matchMedia('(max-width: 1019.29px)');
   let lastNavFocus: HTMLElement | null = null;
   let closeNavTimer: number | undefined;

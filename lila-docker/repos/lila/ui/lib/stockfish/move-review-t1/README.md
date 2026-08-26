@@ -7,7 +7,7 @@ This directory carries the exact non-pthread fallback for the
 The source is pinned to:
 
 - official Stockfish commit `cb3d4ee9b47d0c5aae855b12379378ea1439675c`;
-- the `sscg13/threat-small` changes used by `@lichess-org/stockfish-web@0.2.3`;
+- the `sscg13/threat-small` changes used by `@lichess-org/stockfish-web@0.4.2`;
 - `nn-4ca89e4b3abf.nnue` (full SHA-256
   `4ca89e4b3abfbe9df13e4f3db2acb64dc6ddc7a9becb2ac1cf388f4d66b3bd94`);
 - the non-pthread/Asyncify web port from `nmrugg/stockfish.js` commit

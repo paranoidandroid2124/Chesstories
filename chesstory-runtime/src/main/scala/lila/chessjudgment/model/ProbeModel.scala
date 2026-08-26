@@ -3,8 +3,6 @@ package lila.chessjudgment.model
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
-import _root_.chess.format.Fen
-import _root_.chess.variant.Standard
 import lila.chessjudgment.model.judgment.{ EvidenceRef, LineNodeRole }
 import lila.chessjudgment.model.line.CandidateLineEvaluation
 import play.api.libs.json._
@@ -26,6 +24,21 @@ object ProbePurpose:
 
   given Writes[ProbePurpose] = Writes(p => JsString(p.key))
 
+enum ProbeObjective(val key: String):
+  case BranchReplyMultiPv extends ProbeObjective("branch_reply_multipv")
+  case CausalContinuation extends ProbeObjective("causal_continuation")
+  case CounterResource extends ProbeObjective("opponent_resource_reply")
+
+object ProbeObjective:
+  private val byKey = ProbeObjective.values.map(value => value.key -> value).toMap
+
+  given Reads[ProbeObjective] = Reads:
+    case JsString(raw) =>
+      byKey.get(raw.trim).fold[JsResult[ProbeObjective]](JsError(s"Unknown probe objective: $raw"))(JsSuccess(_))
+    case _ => JsError("Probe objective must be a string id")
+
+  given Writes[ProbeObjective] = Writes(value => JsString(value.key))
+
 object ProbeHorizon:
   private val PlyOffset = raw"ply:([1-9][0-9]*)".r
 
@@ -40,27 +53,48 @@ object ProbeHorizon:
  * Request for client-side engine probing.
  * The purpose identifies whether a returned probe result can enter a certified graph branch.
  */
+enum ProbeVariant:
+  case BranchReply(requiredHorizonPlyOffset: Int)
+  case CausalContinuation(replyMove: String, followUpMove: String)
+  case CounterResource(move: String)
+
 case class ProbeRequest(
   id: String,
   fen: String,
-  moves: List[String], // UCI format moves to probe (e.g. "e2e4")
-  depth: Int,          // Target depth for the WASM engine
-  // Optional metadata for diagnostics and probe contracts
-  purpose: Option[ProbePurpose] = None,
-  multiPv: Option[Int] = None,
-  // Objective-driven probing contract
-  objective: Option[String] = None,        // e.g. "branch_reply_multipv", "compare_branches"
-  requiredSignals: List[String] = Nil,
-  horizon: Option[String] = None,          // exact branch proof deadline, e.g. "ply:8"
-  candidateMove: Option[String] = None,    // explicit root move when the request is move-bound
-  opponentResourceMove: Option[String] = None, // exact opponent resource forced from the post-root position
-  depthFloor: Option[Int] = None,          // minimum acceptable realized depth for certification
-  variationHash: Option[String] = None     // binds the request to a specific logical variation bundle
-)
+  depth: Int,
+  multiPv: Int,
+  candidateMove: String,
+  depthFloor: Int,
+  variationHash: String,
+  variant: ProbeVariant
+):
+  def purpose: ProbePurpose = ProbePurpose.ReplyMultipv
+  def objective: ProbeObjective = variant match
+    case ProbeVariant.BranchReply(_)          => ProbeObjective.BranchReplyMultiPv
+    case ProbeVariant.CausalContinuation(_, _) => ProbeObjective.CausalContinuation
+    case ProbeVariant.CounterResource(_)      => ProbeObjective.CounterResource
+  def moves: List[String] = variant match
+    case ProbeVariant.BranchReply(_)        => Nil
+    case ProbeVariant.CausalContinuation(reply, followUp) => List(reply, followUp)
+    case ProbeVariant.CounterResource(move) => List(move)
+  def horizon: Option[String] = variant match
+    case ProbeVariant.BranchReply(offset) => Some(ProbeHorizon.renderPlyOffset(offset))
+    case _                                => None
+  def opponentResourceMove: Option[String] = variant match
+    case ProbeVariant.CounterResource(move) => Some(move)
+    case _                                  => None
+  def continuationMoves: List[String] = variant match
+    case ProbeVariant.CausalContinuation(reply, followUp) => List(reply, followUp)
+    case _                                      => Nil
 
 object ProbeRequest:
-  given Reads[ProbeRequest] = Json.reads[ProbeRequest]
-  given Writes[ProbeRequest] = Json.writes[ProbeRequest]
+  /** Public transport identity for one complete physical-search contract.
+    * The variation hash already owns the exact root, line, search, and variant
+    * fields; embedding an occurrence-rich line id here would duplicate that
+    * identity and can exceed the wire limit.
+    */
+  def transportId(objective: ProbeObjective, variationHash: String): String =
+    s"probe:${objective.key}:$variationHash"
 
 enum ProbeResolution:
   case EngineSearch(evaluations: List[CandidateLineEvaluation], depth: Int)
@@ -69,24 +103,12 @@ enum ProbeResolution:
 /** Canonical server-bound resolution of an issued probe. */
 case class ProbeResult(
   id: String,
-  fen: Option[String] = None, // Base FEN the probe was run from (critical when probing non-root branches)
-  resolution: ProbeResolution,
-  // Optional metadata that keeps branch probes self-describing.
-  purpose: Option[ProbePurpose] = None,
-  probedMove: Option[String] = None, // The probed candidate move (UCI)
-  // Optional contract diagnostics.
-  objective: Option[String] = None,
-  requiredSignals: List[String] = Nil,
-  horizon: Option[String] = None,
-  candidateMove: Option[String] = None,
-  opponentResourceMove: Option[String] = None,
-  variationHash: Option[String] = None
+  resolution: ProbeResolution
 )
 
 enum ProbeAdmissionStatus:
   case Admitted
   case Rejected
-  case Ignored
 
 object ProbeAdmissionStatus:
   given Writes[ProbeAdmissionStatus] = Writes(status => JsString(status.toString))
@@ -109,230 +131,72 @@ case class ProbeAdmissionDiagnostic(
 object ProbeAdmissionDiagnostic:
   given Writes[ProbeAdmissionDiagnostic] = Json.writes[ProbeAdmissionDiagnostic]
 
-/**
- * Purpose-aware probe contract validator.
- * Fail-closed: if required signals are missing for a purpose, the probe should
- * not be used as certified evidence.
- */
+/** Purpose-aware request/result envelope validation.
+  *
+  * Board legality and horizon coverage belong to the canonical branch
+  * admission that owns the replay. Keeping them out of this envelope check
+  * prevents the same engine line from being replayed at every contract gate.
+  */
 object ProbeContractValidator:
-
-  private val DefaultBranchReplyMultiPv = 3
-
-  enum ProbeCertificateStatus:
-    case Valid
-    case WeaklyValid
-    case Invalid
-
   case class ValidationResult(
       isValid: Boolean,
-      missingSignals: List[String],
-      reasonCodes: List[String],
-      certificateStatus: ProbeCertificateStatus = ProbeCertificateStatus.Valid,
-      hardReasonCodes: List[String] = Nil,
-      softReasonCodes: List[String] = Nil
+      reasonCodes: List[String]
   )
+
+  def validateRequest(request: ProbeRequest): ValidationResult =
+    validation(requestReasons(request))
 
   def validateAgainstRequest(
       request: ProbeRequest,
       result: ProbeResult
   ): ValidationResult =
-    val fromRequest = request.requiredSignals.toSet
-    val requestPurpose = request.purpose
-    val requestPurposeSignals = requestPurpose.map(purposeRequiredSignals).getOrElse(Set.empty)
-    val resultPurposeSignals =
-      result.purpose.map(purposeRequiredSignals).getOrElse(Set.empty)
-    val required =
-      if fromRequest.nonEmpty then fromRequest
-      else if requestPurpose.nonEmpty then requestPurposeSignals
-      else resultPurposeSignals
-    val purposeContractMissing =
-      requestPurpose.exists(_ => requestPurposeSignals.isEmpty) ||
-        (fromRequest.isEmpty && requestPurpose.isEmpty && resultPurposeSignals.isEmpty)
-    val requiredReplyLineCount = request.multiPv.getOrElse(DefaultBranchReplyMultiPv)
-    val base = result.resolution match
-      case ProbeResolution.EngineSearch(_, _) =>
-        validateSignals(result, required, requiredReplyLineCount)
-      case ProbeResolution.ExactAutomaticTerminal(_) =>
-        ValidationResult(true, Nil, List("EXACT_AUTOMATIC_TERMINAL"))
-    val purposeMismatch =
-      request.purpose.flatMap(rp => result.purpose.map(_ != rp)).contains(true)
-    val idMismatch = request.id != result.id
-    val resultFen = result.fen.map(_.trim).filter(_.nonEmpty)
-    val requestFen = Option(request.fen).map(_.trim).filter(_.nonEmpty)
-    val fenMissing =
-      requestFen.nonEmpty && resultFen.isEmpty
-    val fenMismatch =
-      requestFen.exists(expected => resultFen.exists(_ != expected))
-    val requestFenInvalid =
-      requestFen.exists(fen => Fen.read(Standard, Fen.Full(fen)).isEmpty)
-    val resultFenInvalid =
-      resultFen.exists(fen => Fen.read(Standard, Fen.Full(fen)).isEmpty)
-    val objectiveMismatch =
-      request.objective.flatMap(expected => result.objective.map(_ != expected)).contains(true)
-    val requestMoves =
-      request.moves.map(_.trim).filter(_.nonEmpty)
-    val candidateMoves = request.candidateMove.map(_.trim).filter(_.nonEmpty).toList
-    val allowedMoves = (candidateMoves ++ requestMoves).distinct
-    val resultMove =
-      result.probedMove
-        .orElse(result.candidateMove)
-        .map(_.trim)
-        .filter(_.nonEmpty)
-    val moveMissing =
-      allowedMoves.nonEmpty && resultMove.isEmpty
-    val moveMismatch =
-      resultMove.exists(move => allowedMoves.nonEmpty && !allowedMoves.contains(move))
-    val requestedOpponentResource = request.opponentResourceMove.map(_.trim).filter(_.nonEmpty)
-    val observedOpponentResource = result.opponentResourceMove.map(_.trim).filter(_.nonEmpty)
-    val opponentResourceMissing = requestedOpponentResource.nonEmpty && observedOpponentResource.isEmpty
-    val opponentResourceMismatch =
-      requestedOpponentResource.exists(expected => observedOpponentResource.exists(_ != expected))
-    val opponentResourceInvalid =
-      (requestedOpponentResource.toList ++ observedOpponentResource.toList).exists(move => !validUciMove(move))
-    val requestMoveInvalid =
-      (candidateMoves ++ requestMoves).exists(move => !validUciMove(move))
-    val resultMoveInvalid =
-      resultMove.exists(move => !validUciMove(move))
-    val variationHashMismatch =
-      request.variationHash.flatMap(expected => result.variationHash.map(_ != expected)).contains(true)
-    val requestHorizon = request.horizon.filter(_.nonEmpty)
-    val resultHorizon = result.horizon.filter(_.nonEmpty)
-    val horizonMissing = requestHorizon.nonEmpty && resultHorizon.isEmpty
-    val horizonUnexpected = requestHorizon.isEmpty && resultHorizon.nonEmpty
-    val horizonMismatch = requestHorizon.exists(expected => resultHorizon.exists(_ != expected))
-    val requestHorizonInvalid = requestHorizon.exists(ProbeHorizon.plyOffset(_).isEmpty)
-    val resultHorizonInvalid = resultHorizon.exists(ProbeHorizon.plyOffset(_).isEmpty)
-    val depthFloor =
-      request.depthFloor
-        .orElse(if request.depth > 0 then Some(request.depth) else None)
-        .filter(_ > 0)
-    val resultDepth = result.resolution match
-      case ProbeResolution.EngineSearch(_, depth) => Some(depth)
-      case ProbeResolution.ExactAutomaticTerminal(_) => None
-    val depthFloorUnmet =
-      depthFloor.exists(floor => resultDepth.exists(_ < floor))
-    val scoredReplyLineCount =
-      result.resolution match
-        case ProbeResolution.EngineSearch(evaluations, _) => evaluations.count(_.moves.nonEmpty)
-        case ProbeResolution.ExactAutomaticTerminal(_) => 0
-    val engineResolution = result.resolution match
-      case ProbeResolution.EngineSearch(_, _) => true
-      case ProbeResolution.ExactAutomaticTerminal(_) => false
-    val replyMultiPvIncomplete =
-      engineResolution &&
-        request.purpose.exists(ProbePurpose.isBranchReply) &&
-        scoredReplyLineCount < requiredReplyLineCount
-    val hardReasonBuilder = List.newBuilder[String]
-    if fenMissing then hardReasonBuilder += "FEN_UNVERIFIED"
-    if requestFenInvalid then hardReasonBuilder += "REQUEST_FEN_INVALID"
-    if resultFenInvalid then hardReasonBuilder += "RESULT_FEN_INVALID"
-    if fenMismatch then hardReasonBuilder += "FEN_MISMATCH"
-    if idMismatch then hardReasonBuilder += "ID_MISMATCH"
-    if moveMissing then hardReasonBuilder += "PROBED_MOVE_UNVERIFIED"
-    if requestMoveInvalid then hardReasonBuilder += "REQUEST_MOVE_INVALID"
-    if moveMismatch then hardReasonBuilder += "PROBED_MOVE_MISMATCH"
-    if resultMoveInvalid then hardReasonBuilder += "PROBED_MOVE_INVALID"
-    if opponentResourceMissing then hardReasonBuilder += "OPPONENT_RESOURCE_UNVERIFIED"
-    if opponentResourceMismatch then hardReasonBuilder += "OPPONENT_RESOURCE_MISMATCH"
-    if opponentResourceInvalid then hardReasonBuilder += "OPPONENT_RESOURCE_INVALID"
-    if purposeContractMissing then hardReasonBuilder += "PURPOSE_CONTRACT_MISSING"
-    if engineResolution && depthFloor.nonEmpty && resultDepth.isEmpty then
-      hardReasonBuilder += "DEPTH_FLOOR_UNVERIFIED"
-    if depthFloorUnmet then hardReasonBuilder += "DEPTH_FLOOR_UNMET"
-    if replyMultiPvIncomplete then hardReasonBuilder += "REPLY_MULTIPV_INCOMPLETE"
-    if horizonMissing then hardReasonBuilder += "HORIZON_UNVERIFIED"
-    if horizonUnexpected then hardReasonBuilder += "HORIZON_UNEXPECTED"
-    if horizonMismatch then hardReasonBuilder += "HORIZON_MISMATCH"
-    if requestHorizonInvalid then hardReasonBuilder += "REQUEST_HORIZON_INVALID"
-    if resultHorizonInvalid then hardReasonBuilder += "RESULT_HORIZON_INVALID"
-    val hardReasons = hardReasonBuilder.result()
+    val reasons = List.newBuilder[String]
+    reasons ++= requestReasons(request)
+    if request.id != result.id then reasons += "ID_MISMATCH"
+    result.resolution match
+      case ProbeResolution.EngineSearch(evaluations, depth) =>
+        if request.multiPv != evaluations.size then reasons += "REPLY_MULTIPV_COUNT_MISMATCH"
+        if evaluations.exists(_.moves.isEmpty) then reasons += "REPLY_LINE_MISSING"
+        val rootMoves = evaluations.flatMap(_.moves.headOption).map(EvidenceRef.normalizeMove)
+        if rootMoves.distinct.size != rootMoves.size then reasons += "REPLY_ROOT_MOVE_CONFLICT"
+        if depth < request.depthFloor then reasons += "DEPTH_FLOOR_UNMET"
+      case ProbeResolution.ExactAutomaticTerminal(_) => ()
+    validation(reasons.result())
 
-    val softReasonBuilder = List.newBuilder[String]
-    if purposeMismatch then softReasonBuilder += "PURPOSE_MISMATCH"
-    if objectiveMismatch then softReasonBuilder += "OBJECTIVE_MISMATCH"
-    if request.variationHash.exists(_.trim.nonEmpty) && result.variationHash.forall(_.trim.isEmpty) then
-      softReasonBuilder += "VARIATION_HASH_MISSING"
-    if variationHashMismatch then softReasonBuilder += "VARIATION_HASH_MISMATCH"
-    val softReasons = softReasonBuilder.result()
-    val allHardReasons = (base.hardReasonCodes ++ hardReasons).distinct
-    val certificateStatus =
-      if allHardReasons.nonEmpty then ProbeCertificateStatus.Invalid
-      else if softReasons.nonEmpty then ProbeCertificateStatus.WeaklyValid
-      else ProbeCertificateStatus.Valid
-    base.copy(
-      isValid = allHardReasons.isEmpty,
-      reasonCodes = (base.reasonCodes ++ allHardReasons ++ softReasons).distinct,
-      certificateStatus = certificateStatus,
-      hardReasonCodes = allHardReasons,
-      softReasonCodes = softReasons.distinct
+  private def requestReasons(request: ProbeRequest): List[String] =
+    val reasons = List.newBuilder[String]
+    if request.id.trim.isEmpty then reasons += "REQUEST_ID_MISSING"
+    if request.fen.trim.isEmpty then reasons += "REQUEST_FEN_MISSING"
+    if request.depth <= 0 then reasons += "REQUEST_DEPTH_INVALID"
+    if request.depthFloor <= 0 || request.depthFloor > request.depth then reasons += "DEPTH_FLOOR_INVALID"
+    if !validUciMove(request.candidateMove) then reasons += "CANDIDATE_MOVE_INVALID"
+    if request.variationHash.trim.isEmpty then reasons += "VARIATION_HASH_MISSING"
+    request.variant match
+      case ProbeVariant.BranchReply(requiredHorizonPlyOffset) =>
+        if request.multiPv <= 0 || request.multiPv > BranchReplyProbeBinding.ReplyMultiPv then
+          reasons += "REPLY_MULTIPV_INVALID"
+        if requiredHorizonPlyOffset <= 0 then reasons += "HORIZON_INVALID"
+      case ProbeVariant.CausalContinuation(reply, followUp) =>
+        if request.multiPv != 1 || !validUciMove(reply) || !validUciMove(followUp)
+        then reasons += "CAUSAL_CONTINUATION_INVALID"
+      case ProbeVariant.CounterResource(resource) =>
+        if request.multiPv != 1 || !validUciMove(resource) then reasons += "COUNTER_RESOURCE_INVALID"
+    reasons.result()
+
+  private def validation(reasons: List[String]): ValidationResult =
+    val distinct = reasons.distinct
+    ValidationResult(
+      isValid = distinct.isEmpty,
+      reasonCodes = if distinct.isEmpty then List("PROBE_CONTRACT_VERIFIED") else distinct
     )
 
   private def validUciMove(raw: String): Boolean =
-    Option(raw).map(_.trim.toLowerCase).exists(_.matches("""[a-h][1-8][a-h][1-8][nbrq]?"""))
-
-  private def validateSignals(
-      result: ProbeResult,
-      requiredSignals: Set[String],
-      requiredReplyLineCount: Int
-  ): ValidationResult =
-    if requiredSignals.isEmpty then
-      ValidationResult(
-        isValid = false,
-        missingSignals = Nil,
-        reasonCodes = List("NO_REQUIRED_SIGNALS"),
-        hardReasonCodes = List("NO_REQUIRED_SIGNALS")
-      )
-    else
-      val missing = requiredSignals.filterNot(sig => hasSignal(sig, result, requiredReplyLineCount)).toList.sorted
-      val hardReasons =
-        if missing.isEmpty then Nil else List("MISSING_REQUIRED_SIGNALS") ++ missing
-      ValidationResult(
-        isValid = missing.isEmpty,
-        missingSignals = missing,
-        reasonCodes =
-          if missing.isEmpty then List("REQUIRED_SIGNALS_PRESENT")
-          else List("MISSING_REQUIRED_SIGNALS"),
-        hardReasonCodes = hardReasons
-      )
-
-  private def purposeRequiredSignals(purpose: ProbePurpose): Set[String] =
-    if ProbePurpose.isBranchReply(purpose) then Set("replyLines")
-    else Set.empty[String]
-
-  private def hasSignal(signal: String, result: ProbeResult, requiredReplyLineCount: Int): Boolean =
-    signal match
-      case "replyLines" =>
-        result.resolution match
-          case ProbeResolution.EngineSearch(evaluations, _) =>
-            evaluations.count(_.moves.nonEmpty) >= requiredReplyLineCount
-          case ProbeResolution.ExactAutomaticTerminal(_) => false
-      case "purpose" =>
-        result.purpose.nonEmpty
-      case "depth" =>
-        result.resolution match
-          case ProbeResolution.EngineSearch(_, depth) => depth > 0
-          case ProbeResolution.ExactAutomaticTerminal(_) => false
-      case "variationHash" =>
-        result.variationHash.exists(_.trim.nonEmpty)
-      case "horizon" =>
-        result.horizon.flatMap(ProbeHorizon.plyOffset).nonEmpty
-      case "opponentResourceMove" =>
-        result.opponentResourceMove.exists(_.trim.nonEmpty)
-      case _ =>
-        false
+    EvidenceRef.normalizeMove(raw).matches("""[a-h][1-8][a-h][1-8][nbrq]?""")
 
 object BranchReplyProbeBinding:
   val ReplyMultiPv = 3
   val Depth = 16
   val DepthFloor = 12
-  val Objective = "branch_reply_multipv"
-  val RequiredSignals: List[String] = List("replyLines", "depth", "purpose", "variationHash", "horizon")
-
-  def requiredReplyCount(branchFen: String): Int =
-    _root_.chess.format.Fen
-      .read(_root_.chess.variant.Standard, _root_.chess.format.Fen.Full(branchFen))
-      .map(_.legalMoves.size.min(ReplyMultiPv))
-      .getOrElse(ReplyMultiPv)
 
   def horizon(requiredPlyOffset: Int): String = ProbeHorizon.renderPlyOffset(requiredPlyOffset)
 
@@ -391,9 +255,6 @@ object BranchReplyProbeBinding:
       .mkString
 
 object CounterResourceProbeBinding:
-  val Objective = "opponent_resource_reply"
-  val RequiredSignals: List[String] =
-    List("replyLines", "depth", "purpose", "variationHash", "opponentResourceMove")
 
   def variationHash(
       rootFen: String,
@@ -417,7 +278,39 @@ object CounterResourceProbeBinding:
           moves
         ),
         EvidenceRef.normalizeMove(opponentResourceMove),
-        Objective
+        ProbeObjective.CounterResource.key
+      ).mkString("||")
+    MessageDigest
+      .getInstance("SHA-256")
+      .digest(raw.getBytes(StandardCharsets.UTF_8))
+      .map(byte => f"${byte & 0xff}%02x")
+      .mkString
+
+object CausalContinuationProbeBinding:
+
+  def variationHash(
+      rootFen: String,
+      role: LineNodeRole,
+      rootMove: String,
+      whitePovEvalCp: Int,
+      mate: Option[Int],
+      depth: Int,
+      moves: List[String],
+      continuationMoves: List[String]
+  ): String =
+    val raw =
+      List(
+        BranchReplyProbeBinding.variationBaseHash(
+          rootFen,
+          role,
+          rootMove,
+          whitePovEvalCp,
+          mate,
+          depth,
+          moves
+        ),
+        continuationMoves.map(EvidenceRef.normalizeMove).mkString(","),
+        ProbeObjective.CausalContinuation.key
       ).mkString("||")
     MessageDigest
       .getInstance("SHA-256")

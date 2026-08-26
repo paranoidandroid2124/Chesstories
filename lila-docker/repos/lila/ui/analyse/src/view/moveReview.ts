@@ -5,6 +5,7 @@ import {
   formatMoveReviewPercent,
   formatMoveReviewPercentagePointChange,
   moveReviewReasonRole,
+  moveReviewReasonText,
   moveReviewVerdictCodeLabel,
   selectedMoveReviewCandidate,
   type MoveReviewAnnotationShape,
@@ -263,10 +264,10 @@ function renderReviewBody(
           hl('p.move-review__core-comparison', renderCoreComparison(played, best, props.copy)),
           primary
             ? hl('div.move-review__primary-reason', [
-                hl('span', reasonMessage(primary, played, props.copy)),
+                hl('span', moveReviewReasonText(primary, played, props.locale)),
               ])
-            : review.kind === 'move-verdict' && review.reasons.length
-              ? hl('p', props.copy.noPrimaryReason)
+            : review.kind === 'move-verdict'
+              ? hl('p', review.reasons.length ? props.copy.noPrimaryReason : props.copy.noVerifiedReason)
               : review.kind === 'abstained'
                 ? hl('p', props.copy.candidateUnavailable)
                 : undefined,
@@ -582,7 +583,7 @@ function renderReason(
       [
         hl('span.move-review__reason-copy', [
           hl('strong', reasonRoleLabel(role, props.copy)),
-          hl('span', reasonMessage(reason, candidate, props.copy)),
+          hl('span', moveReviewReasonText(reason, candidate, props.locale)),
         ]),
         hl('span.move-review__reason-chevron', { attrs: { 'aria-hidden': 'true' } }, '⌄'),
       ],
@@ -597,17 +598,6 @@ function reasonRoleLabel(role: MoveReviewReasonRole, copy: MoveReviewCopy): stri
       return copy.primaryReason;
     case 'support':
       return copy.supportingReason;
-  }
-}
-
-function reasonMessage(
-  reason: MoveReviewReason,
-  candidate: MoveReviewCandidate,
-  copy: MoveReviewCopy,
-): string {
-  switch (reason.messageKey) {
-    case 'move_review.reason.for_candidate':
-      return `${copy.reasonForCandidate}: ${candidate.label}`;
   }
 }
 

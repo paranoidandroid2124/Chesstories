@@ -2,8 +2,14 @@ package lila.chessjudgment.analysis.assembly
 
 import chess.Pawn
 import chess.variant.Standard
-import lila.chessjudgment.model.{ ProbeRequest, ProbeResolution, ProbeResult }
-import lila.chessjudgment.model.judgment.*
+import lila.chessjudgment.model.{
+  ProbeContractValidator,
+  ProbeObjective,
+  ProbeRequest,
+  ProbeResolution,
+  ProbeResult,
+  ProbeVariant
+}
 import lila.chessjudgment.model.line.{
   CandidateLineEvaluation,
   CanonicalPositionHistory,
@@ -12,6 +18,37 @@ import lila.chessjudgment.model.line.{
 import lila.chessjudgment.model.strategic.EngineLine
 
 class HistoryOpeningContinuityTest extends munit.FunSuite:
+
+  test("probe variants derive one exact objective and cannot mix request shapes"):
+    val common = ProbeRequest(
+      id = "exact-probe",
+      fen = Standard.initialFen.value,
+      depth = 16,
+      multiPv = 1,
+      candidateMove = "d2d4",
+      depthFloor = 12,
+      variationHash = "exact-variation",
+      variant = ProbeVariant.CausalContinuation("d7d5", "c2c4")
+    )
+    assertEquals(common.objective, ProbeObjective.CausalContinuation)
+    assertEquals(common.moves, List("d7d5", "c2c4"))
+    assertEquals(common.horizon, None)
+    assertEquals(common.opponentResourceMove, None)
+    assert(ProbeContractValidator.validateRequest(common).isValid)
+
+    val invalidHorizon = common.copy(variant = ProbeVariant.BranchReply(0))
+    assert(!ProbeContractValidator.validateRequest(invalidHorizon).isValid)
+    val wrongLineCount = ProbeResult(
+      id = common.id,
+      resolution = ProbeResolution.EngineSearch(
+        List(
+          CandidateLineEvaluation.EngineSearch(EngineLine(List("d7d5"), 0, None, 16)),
+          CandidateLineEvaluation.EngineSearch(EngineLine(List("g8f6"), 0, None, 16))
+        ),
+        16
+      )
+    )
+    assert(!ProbeContractValidator.validateAgainstRequest(common, wrongLineCount).isValid)
 
   test("trusted prepared probe pairs fail loudly before the shared executor on impossible metadata"):
     val prepared = MoveReviewInputNormalizer
@@ -29,13 +66,15 @@ class HistoryOpeningContinuityTest extends munit.FunSuite:
     val request = ProbeRequest(
       id = "trusted-request",
       fen = Standard.initialFen.value,
-      moves = Nil,
       depth = 16,
-      multiPv = Some(1)
+      multiPv = 1,
+      candidateMove = "d2d4",
+      depthFloor = 12,
+      variationHash = "trusted-variation",
+      variant = ProbeVariant.BranchReply(1)
     )
     val mismatched = ProbeResult(
       id = "different-result",
-      fen = Some(request.fen),
       resolution = ProbeResolution.EngineSearch(
         List(CandidateLineEvaluation.EngineSearch(EngineLine(List("e2e4"), 0, None, 16))),
         16

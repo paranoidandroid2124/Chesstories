@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/public-commentary-v6/position-commentary-response.schema.json",
+  "title": "Chesstory completed focused position commentary response v6",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "annotation_policy_revision",
+    "request_id",
+    "job_id",
+    "engine_profile",
+    "variant",
+    "current_fen",
+    "focus",
+    "progress",
+    "result"
+  ],
+  "properties": {
+    "schema_version": {"const": "chesstory.position-commentary.response.v6"},
+    "annotation_policy_revision": {"const": "chesstory.verdict-threshold-policy.v2"},
+    "request_id": {"$ref": "#/$defs/requestId"},
+    "job_id": {"$ref": "#/$defs/jobId"},
+    "engine_profile": {"const": "sf18-smallnet-t2-h16-v1"},
+    "variant": {"const": "standard"},
+    "current_fen": {"$ref": "#/$defs/fen"},
+    "focus": {"$ref": "#/$defs/focus"},
+    "progress": {"$ref": "#/$defs/completedProgress"},
+    "result": {"$ref": "#/$defs/positionResult"}
+  },
+  "$defs": {
+    "requestId": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$"},
+    "jobId": {"type": "string", "pattern": "^[A-Za-z0-9_-]{32}$"},
+    "nonEmptyString": {"type": "string", "minLength": 1},
+    "fen": {"type": "string", "minLength": 1, "maxLength": 128},
+    "uciMove": {"type": "string", "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"},
+    "focus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "played_move_uci", "resulting_fen"],
+      "properties": {
+        "kind": {"const": "played_move"},
+        "played_move_uci": {"$ref": "#/$defs/uciMove"},
+        "resulting_fen": {"$ref": "#/$defs/fen"}
+      }
+    },
+    "completedProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "legal_move_count",
+        "root_candidate_lines_admitted",
+        "selected_commentaries_completed",
+        "physical_works_issued",
+        "physical_reports_accepted",
+        "causal_waves_completed"
+      ],
+      "properties": {
+        "phase": {"const": "completed"},
+        "legal_move_count": {"type": "integer", "minimum": 1},
+        "root_candidate_lines_admitted": {"type": "integer", "minimum": 1, "maximum": 3},
+        "selected_commentaries_completed": {"type": "integer", "minimum": 0, "maximum": 1},
+        "physical_works_issued": {"type": "integer", "minimum": 1, "maximum": 32},
+        "physical_reports_accepted": {"type": "integer", "minimum": 1, "maximum": 32},
+        "causal_waves_completed": {"type": "integer", "minimum": 0, "maximum": 3}
+      }
+    },
+    "positionResult": {
+      "oneOf": [
+        {"$ref": "#/$defs/automaticTerminalResult"},
+        {"$ref": "#/$defs/forcedSingleMoveResult"},
+        {"$ref": "#/$defs/drawClaimActionResult"},
+        {"$ref": "#/$defs/selectedMoveChoicesResult"}
+      ]
+    },
+    "automaticTerminalResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "terminal", "presentation"],
+      "properties": {
+        "kind": {"const": "automatic_terminal"},
+        "terminal": {"$ref": "../public-v6/move-meaning-response.schema.json#/$defs/automaticTerminal"},
+        "presentation": {"$ref": "#/$defs/nonEmptyString"}
+      }
+    },
+    "forcedSingleMoveResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "move_uci", "supporting_endpoint", "presentation"],
+      "properties": {
+        "kind": {"const": "forced_single_move"},
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "supporting_endpoint": {"$ref": "../public-v6/move-meaning-response.schema.json#/$defs/endpoint"},
+        "presentation": {"$ref": "#/$defs/nonEmptyString"},
+        "draw_claims": {"$ref": "#/$defs/drawClaims"}
+      }
+    },
+    "drawClaimActionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "claims", "presentation"],
+      "properties": {
+        "kind": {"const": "draw_claim_action"},
+        "claims": {"$ref": "#/$defs/drawClaims"},
+        "presentation": {"$ref": "#/$defs/nonEmptyString"}
+      }
+    },
+    "selectedMoveChoicesResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "selected_move_reviews"],
+      "properties": {
+        "kind": {"const": "selected_move_choices"},
+        "selected_move_reviews": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "oneOf": [
+              {"$ref": "#/$defs/referenceLineReview"},
+              {"$ref": "#/$defs/playedMoveReview"}
+            ]
+          }
+        },
+        "draw_claims": {"$ref": "#/$defs/drawClaims"}
+      }
+    },
+    "referenceLineReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["legal_move_index", "move_uci", "selection", "line_insight"],
+      "properties": {
+        "legal_move_index": {"type": "integer", "minimum": 0},
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "selection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["roles", "root_rank"],
+          "properties": {
+            "roles": {"const": ["best"]},
+            "root_rank": {"const": 1}
+          }
+        },
+        "line_insight": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["endpoint"],
+          "properties": {
+            "endpoint": {"$ref": "../public-v6/move-meaning-response.schema.json#/$defs/endpoint"}
+          }
+        }
+      }
+    },
+    "playedMoveReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["legal_move_index", "move_uci", "selection", "commentary"],
+      "properties": {
+        "legal_move_index": {"type": "integer", "minimum": 0},
+        "move_uci": {"$ref": "#/$defs/uciMove"},
+        "selection": {
+          "oneOf": [
+            {"$ref": "#/$defs/playedSelection"},
+            {"$ref": "#/$defs/bestAndPlayedSelection"}
+          ]
+        },
+        "commentary": {"$ref": "../public-v6/move-meaning-response.schema.json#/$defs/moveCommentary"}
+      }
+    },
+    "playedSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roles"],
+      "properties": {
+        "roles": {"const": ["played"]},
+        "root_rank": {"type": "integer", "minimum": 1, "maximum": 3}
+      }
+    },
+    "bestAndPlayedSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roles", "root_rank"],
+      "properties": {
+        "roles": {"const": ["best", "played"]},
+        "root_rank": {"const": 1}
+      }
+    },
+    "drawClaims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/drawClaim"}
+    },
+    "drawClaim": {
+      "oneOf": [
+        {"$ref": "#/$defs/drawClaimAvailableNow"},
+        {"$ref": "#/$defs/drawClaimByDeclaredMove"}
+      ]
+    },
+    "drawClaimRule": {"enum": ["threefold_repetition", "fifty_move_rule"]},
+    "drawClaimAvailableNow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule", "availability"],
+      "properties": {
+        "rule": {"$ref": "#/$defs/drawClaimRule"},
+        "availability": {"const": "available_now"}
+      }
+    },
+    "drawClaimByDeclaredMove": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule", "availability", "move_ucis"],
+      "properties": {
+        "rule": {"$ref": "#/$defs/drawClaimRule"},
+        "availability": {"const": "available_by_declared_move"},
+        "move_ucis": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/uciMove"}
+        }
+      }
+    }
+  }
+}

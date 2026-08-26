@@ -63,7 +63,7 @@ final class Analyse(
     List("Accept" -> "application/json", "Content-Type" -> "application/json") ++
       runtimeToken.map(value => "Authorization" -> s"Bearer $value")
   // These limit only the Lila-to-runtime transport, never browser engine work.
-  private val moveReviewTransportTimeout = 5.seconds
+  private val moveReviewTransportTimeout = 30.seconds
   private val moveReviewJobsPath = Analyse.positionCommentaryJobsPath(runtimeBase)
   private val moveReviewRuntimeEnabled =
     configured("chesstory.moveReview.mode").exists(_.equalsIgnoreCase("runtime"))

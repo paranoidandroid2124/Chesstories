@@ -7,20 +7,15 @@ import java.util.Locale
 import chess.opening.OpeningDb
 
 import lila.chessjudgment.model.judgment.*
+import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 object OpeningIndexKeys:
 
   def movePrefixHash(moves: List[String]): String =
-    hash(moves.map(normalizeUci).filter(_.nonEmpty).mkString(" "))
+    hash(moves.map(EvidenceRef.normalizeMove).filter(_.nonEmpty).mkString(" "))
 
   def positionKey(fen: String): String =
-    hash(boardStateFen(fen))
-
-  def normalizeUci(uci: String): String =
-    Option(uci).getOrElse("").trim.toLowerCase(Locale.ROOT)
-
-  def boardStateFen(fen: String): String =
-    Option(fen).getOrElse("").trim.split("\\s+").filter(_.nonEmpty).take(4).mkString(" ")
+    hash(PrincipalVariationEvidence.semanticBoardStateFen(fen).getOrElse(""))
 
   private def hash(value: String): String =
     val digest = MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8))

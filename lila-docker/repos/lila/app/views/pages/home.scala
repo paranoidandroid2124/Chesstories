@@ -19,18 +19,21 @@ object home:
         main(cls := "home-page")(
           div(cls := "home-shell")(
             header(cls := "home-heading")(
-              h1("Continue a study or start an analysis"),
-              p("Open something you chose to save, or begin a fresh review on the board.")
+              h1("Continue a study or explain a game"),
+              p("Return to a saved lesson, or compare the move played with the line that explains it.")
             ),
-            renderContinueCard(data.continueCard),
+            data.continueStudy.map(renderContinueCard).getOrElse(emptyFrag),
             st.nav(cls := "home-actions", aria.label := "Start a review")(
               data.quickActions.map(renderQuickAction)*
             ),
             renderSection(
               "Studies",
-              "Sections and notes linked to their games.",
+              "Saved positions, variations, explanations, and lessons.",
               data.recentStudies.map(renderStudy),
-              renderEmptyStrip("No studies", "Create a study when a line or position needs to be kept.")
+              renderEmptyStrip(
+                "No studies",
+                "Save a study when an explanation or variation is worth keeping."
+              )
             )
           )
         )
@@ -44,34 +47,21 @@ object home:
       if rows.nonEmpty then div(cls := "home-rows")(rows*) else empty
     )
 
-  private def renderContinueCard(card: Main.HomeContinueCard): Frag =
-    card match
-      case Main.HomeContinueCard.Study(entry) =>
-        val sectionCount = entry.chapters.size
-        div(cls := "home-continue")(
-          div(cls := "home-continue__label")("Continue"),
-          div(cls := "home-continue__copy")(
-            strong(entry.study.name.value),
-            span(
-              s"${reviewStudyVisibilityLabel(entry.study)} • " +
-                s"$sectionCount ${if sectionCount == 1 then "section" else "sections"}"
-            )
-          ),
-          div(cls := "home-continue__actions")(
-            a(href := routes.Study.show(entry.study.id).url, cls := "button button-fat")("Open study")
-          )
+  private def renderContinueCard(entry: lila.study.Study.WithChaptersAndLiked): Frag =
+    val sectionCount = entry.chapters.size
+    div(cls := "home-continue")(
+      div(cls := "home-continue__label")("Continue"),
+      div(cls := "home-continue__copy")(
+        strong(entry.study.name.value),
+        span(
+          s"${reviewStudyVisibilityLabel(entry.study)} • " +
+            s"$sectionCount ${if sectionCount == 1 then "section" else "sections"}"
         )
-      case Main.HomeContinueCard.Starter =>
-        div(cls := "home-continue")(
-          div(cls := "home-continue__label")("Start"),
-          div(cls := "home-continue__copy")(
-            strong("Start with a clean board"),
-            span("Paste a PGN or open a public game. Nothing is kept unless you save a Study.")
-          ),
-          div(cls := "home-continue__actions")(
-            a(href := routes.UserAnalysis.index.url, cls := "button button-fat")("Open analysis")
-          )
-        )
+      ),
+      div(cls := "home-continue__actions")(
+        a(href := routes.Study.show(entry.study.id).url, cls := "button button-fat")("Open study")
+      )
+    )
 
   private def renderQuickAction(action: Main.HomeQuickAction): Frag =
     a(href := action.href, cls := "home-action")(

@@ -13,11 +13,11 @@ case class PlanEventIdentity(
     targets: List[String],
     results: List[String]
 ):
-  def goalKind: Option[PlanKind] = Some(kind)
   def goalTheme: PlanTheme = kind.theme
   def goalKey: String = kind.id
   def stableKey: String =
     List(
+      rootMove,
       goalKey,
       actorRole.getOrElse(""),
       actorFrom.getOrElse(""),
@@ -29,18 +29,11 @@ case class PlanEventIdentity(
 object PlanEventIdentity:
   def from(
       rootMove: String,
-      support: List[PlanSupport],
+      kind: PlanKind,
       actorRole: Option[String],
       targets: List[String],
       results: List[String]
   ): PlanEventIdentity =
-    val kind = support
-      .collectFirst { case PlanSupport.Subplan(value) => value }
-      .getOrElse(throw new IllegalArgumentException("plan event identity requires canonical plan kind"))
-    require(
-      support.collect { case PlanSupport.Theme(theme) => theme }.forall(_ == kind.theme),
-      "plan event theme must be derived from plan kind"
-    )
     val move = Option(rootMove).getOrElse("").trim.toLowerCase
     PlanEventIdentity(
       rootMove = move,
@@ -95,8 +88,97 @@ object PlanEventIdentity:
     )
   }
 
+final case class PlanPositionOccurrence private (
+    fen: String,
+    ply: Int
+):
+  def stableKey: String =
+    PlanExactOccurrenceKey.product("position", List(fen, ply.toString))
+
+object PlanPositionOccurrence:
+  def from(fen: String, ply: Int): PlanPositionOccurrence =
+    val exactFen = Option(fen).getOrElse("").trim
+    require(exactFen.nonEmpty, "plan position occurrence requires a FEN")
+    require(ply >= 0, "plan position occurrence requires a non-negative ply")
+    PlanPositionOccurrence(exactFen, ply)
+
+final case class PlanEventOccurrence private (
+    event: PlanEventIdentity,
+    before: PlanPositionOccurrence,
+    after: PlanPositionOccurrence
+):
+  def stableKey: String =
+    val eventKey = PlanExactOccurrenceKey.product(
+      "event",
+      List(
+        event.rootMove,
+        event.kind.id,
+        PlanExactOccurrenceKey.optional(event.actorRole),
+        PlanExactOccurrenceKey.optional(event.actorFrom),
+        PlanExactOccurrenceKey.optional(event.actorTo),
+        PlanExactOccurrenceKey.sequence(event.targets.distinct.sorted),
+        PlanExactOccurrenceKey.sequence(event.results.distinct.sorted)
+      )
+    )
+    PlanExactOccurrenceKey.product("event-occurrence", List(eventKey, before.stableKey, after.stableKey))
+
+object PlanEventOccurrence:
+  def from(
+      event: PlanEventIdentity,
+      moveUci: String,
+      ply: Int,
+      fenBefore: String,
+      fenAfter: String
+  ): PlanEventOccurrence =
+    val exactMove = Option(moveUci).getOrElse("").trim.toLowerCase
+    require(
+      exactMove.nonEmpty && event.rootMove == exactMove,
+      "plan event occurrence move must match its event identity"
+    )
+    require(ply > 0, "plan event occurrence requires a positive result ply")
+    PlanEventOccurrence(
+      event = event,
+      before = PlanPositionOccurrence.from(fenBefore, ply - 1),
+      after = PlanPositionOccurrence.from(fenAfter, ply)
+    )
+
+final case class PlanSequencePathOccurrence private (
+    events: List[PlanEventOccurrence]
+):
+  def stableKey: String =
+    PlanExactOccurrenceKey.product(
+      "plan-sequence-path",
+      List(PlanExactOccurrenceKey.sequence(events.map(_.stableKey)))
+    )
+
+object PlanSequencePathOccurrence:
+  def from(events: List[PlanEventOccurrence]): PlanSequencePathOccurrence =
+    require(events.nonEmpty, "plan sequence path occurrence requires at least one event")
+    val eventPlies = events.map(_.after.ply)
+    require(
+      eventPlies == eventPlies.sorted && eventPlies.distinct.size == eventPlies.size,
+      "plan sequence path occurrences must be strictly ordered by ply"
+    )
+    PlanSequencePathOccurrence(events)
+
+private object PlanExactOccurrenceKey:
+  def optional(value: Option[String]): String =
+    value match
+      case Some(exact) => product("some", List(exact))
+      case None        => product("none", Nil)
+
+  def sequence(values: Iterable[String]): String =
+    product("sequence", values.toList)
+
+  def product(kind: String, values: Iterable[String]): String =
+    sequenceParts(kind :: values.toList)
+
+  private def sequenceParts(values: Iterable[String]): String =
+    values.iterator.map(value => s"${value.length}:$value").mkString("|")
+
 case class PlanSequenceSummary(
   transitionType: TransitionType,
+  exactPathOccurrence: PlanSequencePathOccurrence,
   primaryPlanId: Option[PlanKind] = None,
   previousPlanId: Option[PlanKind] = None,
   continuity: Option[PlanContinuity] = None,
@@ -107,7 +189,5 @@ case class PlanSequenceSummary(
 enum TransitionType:
   case Continuation   // Same plan persists
   case Completion     // A prior event's concrete route or target is realized
-  case NaturalShift   // Phase change → new plan
   case ForcedPivot    // Threat forces abandonment
-  case Opportunistic  // Unexpected opportunity
   case Opening        // First move of sequence

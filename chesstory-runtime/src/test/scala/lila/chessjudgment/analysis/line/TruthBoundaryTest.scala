@@ -8,7 +8,6 @@ import lila.chessjudgment.model.line.{
   CanonicalPositionHistoryFailure,
   PrincipalVariationEvidence
 }
-import lila.chessjudgment.analysis.position.PositionAnalyzer
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.strategic.EngineLine
 
@@ -29,18 +28,6 @@ class TruthBoundaryTest extends munit.FunSuite:
       history.extend(suffix),
       Left(CanonicalPositionHistoryFailure.IllegalMovePrefix)
     )
-
-  test("material imbalance comes from board piece counts"):
-    val balanced = PositionAnalyzer
-      .extractFeatures(Standard.initialFen.value, plyCount = 0)
-      .getOrElse(fail("expected initial-position features"))
-    val extraWhiteKnight = PositionAnalyzer
-      .extractFeatures("4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", plyCount = 0)
-      .getOrElse(fail("expected imbalanced-position features"))
-
-    assertEquals(balanced.imbalance.whiteKnights, balanced.imbalance.blackKnights)
-    assertEquals(extraWhiteKnight.imbalance.whiteKnights, 1)
-    assertEquals(extraWhiteKnight.imbalance.blackKnights, 0)
 
   test("lasting material outcome separates a queen target from the retained exchange gain"):
     val fen = "r2q3k/8/8/8/8/8/8/3R3K w - - 0 1"
@@ -320,9 +307,18 @@ class TruthBoundaryTest extends munit.FunSuite:
       scoreCp = 900,
       depth = 18
     )
+    val history = CanonicalPositionHistory
+      .from(beforeQueenMove, Nil, beforeQueenMove)
+      .getOrElse(fail("expected the queen-line root to be canonical"))
+    val extended = history
+      .extend(declaredLine.moves)
+      .getOrElse(fail("expected the declared queen line to be legal"))
+    val replay = CanonicalLineReplay
+      .fromHistory(extended.segmentReplaySteps.drop(history.segmentReplaySteps.size))
+      .getOrElse(fail("expected one canonical queen-line replay"))
 
     assertEquals(
-      ForcedLineTruth.detect(beforeQueenMove, "d1h5", List(declaredLine)),
+      ForcedLineTruth.detect(replay, List(declaredLine)),
       None
     )
 
@@ -385,13 +381,16 @@ class TruthBoundaryTest extends munit.FunSuite:
       moves: List[String],
       summary: LineMaterialSummary
   ): LineFactEvidence =
-    val moveRefs = moves.zipWithIndex.foldLeft(fen -> List.empty[PrincipalVariationEvidence.LineMoveRef]) {
-      case ((before, refs), (move, ply)) =>
-        val after = PrincipalVariationEvidence
-          .legalFenAfter(before, move)
-          .getOrElse(fail(s"expected legal material move $move"))
-        after -> (refs :+ PrincipalVariationEvidence.LineMoveRef(ply, move, after))
-    }._2
+    val lineHistory = CanonicalPositionHistory
+      .from(fen, Nil, fen)
+      .flatMap(_.extend(moves))
+      .getOrElse(fail("expected canonical material line history"))
+    val canonicalReplay = CanonicalLineReplay
+      .fromHistory(lineHistory.segmentReplaySteps)
+      .getOrElse(fail("expected canonical material line replay"))
+    val moveRefs = canonicalReplay.replaySteps.map(step =>
+      PrincipalVariationEvidence.LineMoveRef(step.ply, step.moveUci, step.fenAfter)
+    )
     val first = moveRefs.headOption.getOrElse(fail("expected a non-empty material line"))
     val lineRef = LineNodeRef(id, first.uci, 1, LineNodeRole.BestReference)
     val facts = PrincipalVariationEvidence.LineFacts(
@@ -406,6 +405,7 @@ class TruthBoundaryTest extends munit.FunSuite:
         id = s"$id-evidence",
         lineRef = lineRef,
         facts = facts,
+        replay = canonicalReplay,
         position = PositionNodeRef(fen, 0, Some(summary.sideToMove)),
         scope = lineRef.role.scope,
         materialSummary = Some(summary)

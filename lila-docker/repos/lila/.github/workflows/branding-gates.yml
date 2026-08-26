@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -45,10 +47,29 @@ jobs:
 
       - name: UI build gate
         shell: pwsh
-        run: ./ui/build.ps1 --tsc --sass --esbuild
+        run: ./ui/build.ps1
+
+      - name: Stockfish 18 small asset gate
+        shell: pwsh
+        run: |
+          $assets = @(
+            'public/npm/stockfish-web/sf_18_smallnet.js',
+            'public/npm/stockfish-web/sf_18_smallnet.wasm',
+            'public/lifat/nnue/nn-4ca89e4b3abf.nnue'
+          )
+          foreach ($asset in $assets) {
+            if (!(Test-Path -LiteralPath $asset) -or (Get-Item -LiteralPath $asset).Length -eq 0) {
+              throw "Missing Stockfish asset: $asset"
+            }
+          }
+          $nnueHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $assets[2]).Hash.ToLowerInvariant()
+          if ($nnueHash -ne '4ca89e4b3abfbe9df13e4f3db2acb64dc6ddc7a9becb2ac1cf388f4d66b3bd94') {
+            throw "Unexpected Stockfish NNUE checksum: $nnueHash"
+          }
 
       - name: UI unit tests
         run: |
+          node --experimental-strip-types --no-warnings --test ui/.build/tests/*.test.ts
           corepack pnpm exec tsx --tsconfig ui/lib/tsconfig.json --test ui/lib/tests/*.test.ts
           corepack pnpm exec tsx --tsconfig ui/analyse/tsconfig.json --test ui/analyse/tests/*.test.ts
           corepack pnpm exec tsx --tsconfig ui/site/tsconfig.json --test ui/site/tests/*.test.ts

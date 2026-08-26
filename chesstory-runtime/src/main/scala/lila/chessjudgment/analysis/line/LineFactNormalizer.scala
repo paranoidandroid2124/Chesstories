@@ -1,12 +1,8 @@
 package lila.chessjudgment.analysis.line
 
 import chess.{ Color, King, Pawn, Position }
-import chess.format.Fen
-import chess.variant.Standard
 
 import lila.chessjudgment.analysis.material.MaterialValue
-import lila.chessjudgment.model.position.PawnTopology
-import lila.chessjudgment.analysis.strategic.EndgamePatternOracle
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
@@ -16,18 +12,17 @@ object LineFactNormalizer:
       id: String,
       lineRef: LineNodeRef,
       facts: PrincipalVariationEvidence.LineFacts,
+      replay: CanonicalLineReplay,
       position: PositionNodeRef,
       scope: EvidenceScope,
       forcedTheme: Option[ForcedLineThemeEvidence] = None,
       materialSummary: Option[LineMaterialSummary] = None,
+      predecessorReplay: Option[CanonicalLineReplay] = None,
       whitePovMate: Option[Int] = None,
       parents: List[EvidenceRef] = Nil
   ): EvidenceRecord =
-    val replay = replaySteps(position.fen, facts)
-    val events = lineEvents(lineRef, facts, replay, forcedTheme, materialSummary)
-    val baseConsequences = lineConsequences(facts, replay, forcedTheme, materialSummary, whitePovMate)
-    val endgameHorizons = endgameTechniqueHorizons(position.fen, replay, baseConsequences)
-    val consequences = (baseConsequences ++ endgameTechniqueConsequences(facts, endgameHorizons)).distinct
+    val events = lineEvents(facts, replay, forcedTheme, materialSummary)
+    val consequences = lineConsequences(facts, replay, forcedTheme, materialSummary, whitePovMate)
     val ref =
       EvidenceRef(
         id = id,
@@ -38,17 +33,18 @@ object LineFactNormalizer:
         scope = scope,
         confidence = EvidenceConfidence.LegalReplayVerified
       )
+    val payload = LineFactEvidence.fromCertifiedReplay(
+      line = lineRef,
+      forcedTheme = forcedTheme,
+      material = materialSummary,
+      replay = replay,
+      events = events,
+      consequences = consequences,
+      predecessorReplay = predecessorReplay
+    )
     EvidenceRecord(
       ref = ref,
-      payload = LineFactEvidence(
-        line = lineRef,
-        forcedTheme = forcedTheme,
-        material = materialSummary,
-        replay = replay,
-        events = events,
-        consequences = consequences,
-        endgameHorizons = endgameHorizons
-      ),
+      payload = payload,
       parents = parents
     )
 
@@ -58,30 +54,19 @@ object LineFactNormalizer:
       lineMoves = theme.lineMoves
     )
 
-  private def replaySteps(startFen: String, facts: PrincipalVariationEvidence.LineFacts): List[LineReplayStep] =
-    facts.line.moves.foldLeft((startFen, List.empty[LineReplayStep])) { case ((fenBefore, acc), move) =>
-      move.fenAfter -> (LineReplayStep(
-        ply = move.ply,
-        moveUci = move.uci,
-        fenBefore = fenBefore,
-        fenAfter = move.fenAfter
-      ) :: acc)
-    }._2.reverse
-
   private def lineEvents(
-      lineRef: LineNodeRef,
       facts: PrincipalVariationEvidence.LineFacts,
-      replay: List[LineReplayStep],
+      replay: CanonicalLineReplay,
       forcedTheme: Option[ForcedLineThemeEvidence],
       materialSummary: Option[LineMaterialSummary]
   ): List[LineMoveEvent] =
     val replayEvents =
       facts.line.moves.zipWithIndex.flatMap { case (move, index) =>
         val normalized = PrincipalVariationEvidence.normalizeUci(move.uci)
-        val moverRole = replay.lift(index).flatMap(step => movingPieceRole(step.fenBefore, normalized))
+        val moverRole = replay.legalSteps.lift(index).map(step => EvidencePieceRole(step.move.piece.role.name))
         val checkDefense =
-          replay.lift(index).toList.flatMap(step =>
-            positionAfter(step.fenBefore).toList.filter(_.check.yes).map { position =>
+          replay.legalSteps.lift(index).toList.flatMap(step =>
+            Option.when(step.before.check.yes)(step.before).toList.map { position =>
               LineMoveEvent(
                 kind = LineEventKind.DefenderMove,
                 moveUci = normalized,
@@ -94,7 +79,8 @@ object LineFactNormalizer:
             }
           )
         val stateEvents =
-          positionAfter(move.fenAfter).toList.flatMap { position =>
+          replay.legalSteps.lift(index).toList.flatMap { step =>
+            val position = step.after
             val kingSquare = position.board.kingPosOf(position.color).map(square => EvidenceSquare(square.key))
             val checkLike =
               Option.when(position.checkMate)(
@@ -158,27 +144,12 @@ object LineFactNormalizer:
           }
         castlingEvent(normalized, index).toList ++ checkDefense ++ stateEvents
       }
-    val roleEvents =
-      Option
-        .when(lineRef.role == LineNodeRole.Threat)(
-          LineMoveEvent(
-            kind = LineEventKind.Threat,
-            moveUci = PrincipalVariationEvidence.normalizeUci(facts.first.uci),
-            plyOffset = 0
-          )
-        )
-        .toList
     val forcedEvents =
       forcedTheme.toList.flatMap(theme =>
         theme.lineMoves.headOption.toList.flatMap(move =>
           List(
             LineMoveEvent(
               kind = LineEventKind.ForcedTheme,
-              moveUci = move,
-              plyOffset = 0
-            ),
-            LineMoveEvent(
-              kind = LineEventKind.Threat,
               moveUci = move,
               plyOffset = 0
             )
@@ -219,94 +190,37 @@ object LineFactNormalizer:
       }
     val promotionEvents =
       promotionMoves(facts).flatMap { case (plyOffset, moveUci) =>
-        replay.lift(plyOffset).flatMap { step =>
+        replay.legalSteps.lift(plyOffset).flatMap { step =>
           for
-            side <- movingPieceColor(step.fenBefore, moveUci)
             square <- chess.Square.fromKey(moveUci.slice(2, 4))
           yield LineMoveEvent(
             kind = LineEventKind.Promotion,
             moveUci = moveUci,
             plyOffset = plyOffset,
-            side = Some(side),
+            side = Some(step.move.piece.color),
             pieceRole = Some(EvidencePieceRole(Pawn.name)),
-            targetRole = positionAfter(step.fenAfter).flatMap(_.board.pieceAt(square)).map(piece => EvidencePieceRole(piece.role.name)),
+            targetRole = step.after.board.pieceAt(square).map(piece => EvidencePieceRole(piece.role.name)),
             square = Some(EvidenceSquare(square.key))
           )
         }.toList
       }
     val materialEvents = captureEvents ++ promotionEvents
-    val carriedDefense =
-      facts.line.moves.headOption.toList.flatMap { root =>
-        val rootMove = PrincipalVariationEvidence.normalizeUci(root.uci)
-        val rootTo = Option.when(rootMove.length >= 4)(rootMove.slice(2, 4))
-        val rootSide = replay.headOption.flatMap(step => positionAfter(step.fenBefore).map(_.color))
-        val rootPieceRole = replay.headOption.flatMap(step => movingPieceRole(step.fenBefore, rootMove))
-        val laterDefense = (replayEvents ++ materialEvents).collectFirst {
-          case event
-              if event.kind == LineEventKind.DefenderMove &&
-                event.plyOffset > 0 &&
-                PrincipalVariationEvidence.normalizeUci(event.moveUci).take(2) == rootTo.getOrElse("") =>
-            event
-        }
-        laterDefense.map(event =>
-          event.copy(
-            moveUci = rootMove,
-            plyOffset = 0,
-            side = rootSide.orElse(event.side),
-            pieceRole = rootPieceRole.orElse(event.pieceRole)
-          )
-        )
-      }
-    val passedPawnEvents = linePassedPawnEvents(replay)
-    (replayEvents ++ roleEvents ++ forcedEvents ++ materialEvents ++ passedPawnEvents ++ carriedDefense).distinct
-
-  private def linePassedPawnEvents(replay: List[LineReplayStep]): List[LineMoveEvent] =
-    replay.zipWithIndex.flatMap { case (step, index) =>
-      val beforeAfter =
-        for
-          before <- positionAfter(step.fenBefore).toList
-          after <- positionAfter(step.fenAfter).toList
-        yield (before, after)
-      beforeAfter.flatMap { case (before, after) =>
-        val move = PrincipalVariationEvidence.normalizeUci(step.moveUci)
-        val moverRole = movingPieceRole(step.fenBefore, move)
-        List(Color.White, Color.Black).flatMap { color =>
-          val beforePassed = passedPawnSquares(before, color)
-          val gained = passedPawnSquares(after, color).diff(beforePassed)
-          gained.toList.sorted.map(square =>
-            LineMoveEvent(
-              kind = LineEventKind.PassedPawn,
-              moveUci = move,
-              plyOffset = index,
-              side = Some(color),
-              pieceRole = moverRole,
-              targetRole = Some(EvidencePieceRole(Pawn.name)),
-              square = Some(EvidenceSquare(square))
-            )
-          )
-        }
-      }
-    }
-
-  private def passedPawnSquares(position: Position, color: Color): Set[String] =
-    PawnTopology
-      .passedPawns(color, position.board.byPiece(color, Pawn), position.board.byPiece(!color, Pawn))
-      .map(_.key)
-      .toSet
+    (replayEvents ++ forcedEvents ++ materialEvents).distinct
 
   private def lineConsequences(
       facts: PrincipalVariationEvidence.LineFacts,
-      replay: List[LineReplayStep],
+      replay: CanonicalLineReplay,
       forcedTheme: Option[ForcedLineThemeEvidence],
       materialSummary: Option[LineMaterialSummary],
       whitePovMate: Option[Int]
   ): List[LineConsequence] =
     val rootMove = facts.line.moves.headOption.map(move => PrincipalVariationEvidence.normalizeUci(move.uci))
-    val rootSide = replay.headOption.flatMap(step => movingPieceColor(step.fenBefore, step.moveUci))
+    val rootSide = replay.legalSteps.headOption.map(_.move.piece.color)
     val outcome =
       facts.line.moves.zipWithIndex.flatMap { case (move, index) =>
         val normalized = PrincipalVariationEvidence.normalizeUci(move.uci)
-        positionAfter(move.fenAfter).toList.flatMap { position =>
+        replay.legalSteps.lift(index).toList.flatMap { step =>
+          val position = step.after
           val prefix = facts.line.moves.take(index + 1).map(_.uci)
           List(
             Option.when(position.checkMate && mateResultMatches(whitePovMate, !position.color))(
@@ -353,15 +267,7 @@ object LineFactNormalizer:
           summary.captures.map(capture => capture.plyOffset -> capture.moveUci) ++ indexedPromotionMoves
         ).sortBy(_._1)
         val proofMoves = indexedProofMoves.map(_._2).distinct
-        val rootCaptureAcceptance = rootCaptureAcceptanceEvidence(replay, summary, rootMove)
-        val rootCaptureSacrificeOfferMove =
-          rootCaptureAcceptance.filter(_.sacrificeOffer).map(_.moveUci)
-        val offeredSacrifices = offeredSacrificeEvidence(replay, summary, rootMove)
-        val rootMovedOffer = rootMove.flatMap(root =>
-          offeredSacrifices.collectFirst {
-            case (Some(offerMove), capture) if EvidenceRef.sameMove(offerMove, root) => offerMove -> capture
-          }
-        )
+        val sacrificeOccurrences = offeredSacrificeOccurrences(replay, summary, rootMove)
         val materialEvents = materialOutcomeEvents(replay, summary)
         val lastingMaterialOutcome = lastingMaterialOutcomeFor(materialEvents, summary)
         val materialOutcomeEvent = lastingMaterialOutcome.map(_.event)
@@ -381,15 +287,10 @@ object LineFactNormalizer:
           .flatten
         val materialGainEventMove = materialGainEvent.map(_.moveUci)
         val materialLossEventMove = materialLossEvent.map(_.moveUci)
-        val selectedRootMovedOffer = rootMovedOffer.filter { case (_, capture) =>
-          materialLossEvent.exists(event =>
-            event.plyOffset == capture.plyOffset && EvidenceRef.sameMove(event.moveUci, capture.moveUci)
-          )
-        }
         val materialGainRootMove =
           rootMove.filter(_ => materialGainEvent.exists(_.plyOffset == 0))
         val materialLossRootMove =
-          rootMove.filter(_ => materialLossEvent.exists(_.plyOffset == 0) || selectedRootMovedOffer.nonEmpty)
+          rootMove.filter(_ => materialLossEvent.exists(_.plyOffset == 0))
         def proofMovesThrough(plyOffset: Int): List[String] =
           indexedProofMoves.takeWhile(_._1 <= plyOffset).map(_._2).distinct
         def proofMovesFrom(event: Option[MaterialOutcomeEvent]): List[String] =
@@ -397,9 +298,7 @@ object LineFactNormalizer:
             .map(materialEvent => proofMovesThrough(materialEvent.plyOffset))
             .getOrElse(Nil)
         val materialGainProofMoves = proofMovesFrom(materialGainEvent)
-        val materialLossProofMoves = materialLossEvent
-          .map(event => (selectedRootMovedOffer.map(_._1).toList ++ proofMovesFrom(Some(event))).distinct)
-          .getOrElse(Nil)
+        val materialLossProofMoves = proofMovesFrom(materialLossEvent)
         val materialResultConsequences = List(
           Option.when(summary.hasProofSignalMaterialGain || summary.hasUnrecoveredPawnGainForMover)(
             LineConsequence(
@@ -442,6 +341,20 @@ object LineFactNormalizer:
                 beneficiary = Some(capture.side)
               )
             )
+        val sacrificeConsequences =
+          sacrificeOccurrences.map { occurrence =>
+            val acceptance = occurrence.acceptance
+            LineConsequence(
+              LineConsequenceKind.Sacrifice,
+              replay.replaySteps.take(acceptance.plyOffset + 1).map(_.moveUci),
+              proofSignal = true,
+              eventMove = Some(acceptance.moveUci),
+              rootMove = rootMove,
+              rootSide = Some(summary.sideToMove),
+              beneficiary = Some(acceptance.side),
+              sacrificeOccurrence = Some(occurrence)
+            )
+          }
         val remainingMaterialConsequences = List(
           summary.durableRecoveryCaptureForMover.map(capture =>
             LineConsequence(
@@ -452,17 +365,6 @@ object LineFactNormalizer:
               rootMove = rootMove,
               rootSide = Some(summary.sideToMove),
               beneficiary = Some(summary.sideToMove)
-            )
-          ),
-          Option.when(summary.hasSacrificeMaterialEventFor(rootMove) || rootCaptureSacrificeOfferMove.nonEmpty)(
-            LineConsequence(
-              LineConsequenceKind.Sacrifice,
-              summary.captures.map(_.moveUci),
-              proofSignal = true,
-              eventMove = rootCaptureSacrificeOfferMove.orElse(offeredSacrifices.flatMap(_._1).headOption),
-              rootMove = rootMove,
-              rootSide = Some(summary.sideToMove),
-              stationarySacrificeCaptures = offeredSacrifices.collect { case (None, capture) => capture }
             )
           ),
           promotionEvent.map(event =>
@@ -478,7 +380,7 @@ object LineFactNormalizer:
             )
           )
         ).flatten
-        materialResultConsequences ++ recaptureConsequences ++ remainingMaterialConsequences
+        materialResultConsequences ++ recaptureConsequences ++ sacrificeConsequences ++ remainingMaterialConsequences
       }
     (outcome ++ forced ++ material).distinct
 
@@ -515,21 +417,22 @@ object LineFactNormalizer:
       )
 
   private def materialOutcomeEvents(
-      replay: List[LineReplayStep],
+      replay: CanonicalLineReplay,
       summary: LineMaterialSummary
   ): List[MaterialOutcomeEvent] =
-    replay.headOption.flatMap(step => positionAfter(step.fenBefore)).toList.flatMap { start =>
+    replay.legalSteps.headOption.toList.flatMap { first =>
+      val start = first.before
       val initialBalance = materialBalanceCp(start, summary.sideToMove)
-      replay.zipWithIndex.flatMap { case (step, plyOffset) =>
-        val moveUci = PrincipalVariationEvidence.normalizeUci(step.moveUci)
+      replay.legalSteps.zipWithIndex.flatMap { case (step, plyOffset) =>
+        val moveUci = PrincipalVariationEvidence.normalizeUci(step.uci)
         for
-          before <- positionAfter(step.fenBefore).toList
-          after <- positionAfter(step.fenAfter).toList
+          positionRef <- replay.replaySteps.lift(plyOffset).toList
+          afterAnalysis <- replay.analysisAfter(positionRef).toList
           origin <- chess.Square.fromKey(moveUci.take(2)).toList
           destination <- chess.Square.fromKey(moveUci.slice(2, 4)).toList
-          actor <- before.board.pieceAt(origin).toList
-          beforeBalance = materialBalanceCp(before, summary.sideToMove) - initialBalance
-          afterBalance = materialBalanceCp(after, summary.sideToMove) - initialBalance
+          actor <- step.before.board.pieceAt(origin).toList
+          beforeBalance = materialBalanceCp(step.before, summary.sideToMove) - initialBalance
+          afterBalance = materialBalanceCp(step.after, summary.sideToMove) - initialBalance
           signedDelta = afterBalance - beforeBalance
           if signedDelta != 0
           if (actor.color == summary.sideToMove) == (signedDelta > 0)
@@ -542,7 +445,7 @@ object LineFactNormalizer:
             plyOffset = plyOffset,
             side = actor.color,
             balanceAfterForMover = afterBalance,
-            immediateAcceptanceBalancesForMover = after.legalMoves
+            immediateAcceptanceBalancesForMover = afterAnalysis.actualLegalMoves
               .filter(reply => reply.captures && reply.dest == destination)
               .map(reply => materialBalanceCp(reply.after, summary.sideToMove) - initialBalance),
             promotion = moveUci.length == 5,
@@ -601,133 +504,33 @@ object LineFactNormalizer:
   private def materialBalanceCp(position: Position, side: Color): Int =
     MaterialValue.sideMaterialCp(position.board, side) - MaterialValue.sideMaterialCp(position.board, !side)
 
-  private final case class RootCaptureAcceptance(
-      moveUci: String,
-      capturedValueCp: Int,
-      actorValueCp: Int,
-      legallyAcceptable: Boolean
-  ):
-    def sacrificeOffer: Boolean =
-      legallyAcceptable && actorValueCp > capturedValueCp
-
-  private def rootCaptureAcceptanceEvidence(
-      replay: List[LineReplayStep],
+  private def offeredSacrificeOccurrences(
+      replay: CanonicalLineReplay,
       summary: LineMaterialSummary,
       rootMove: Option[String]
-  ): Option[RootCaptureAcceptance] =
-    (for
-      move <- rootMove
-      capture <- summary.captureForMove(move).filter(_.plyOffset == 0)
-      rootStep <- replay.headOption.filter(step => EvidenceRef.sameMove(step.moveUci, move))
-      origin <- chess.Square.fromKey(PrincipalVariationEvidence.normalizeUci(move).take(2))
-      destination <- chess.Square.fromKey(PrincipalVariationEvidence.normalizeUci(move).slice(2, 4))
-      before <- positionAfter(rootStep.fenBefore)
-      actor <- before.board.pieceAt(origin)
-      after <- positionAfter(rootStep.fenAfter)
-    yield
-      val acceptingCaptures = after.legalMoves.filter(reply => reply.captures && reply.dest == destination)
-      RootCaptureAcceptance(
-        moveUci = PrincipalVariationEvidence.normalizeUci(move),
-        capturedValueCp = capture.valueCp,
-        actorValueCp = MaterialValue.materialValueCp(actor.role),
-        legallyAcceptable = acceptingCaptures.nonEmpty
+  ): List[LineSacrificeOccurrence] =
+    summary.exactCaptures.toList.flatMap { captures =>
+      val rootCaptureResponses = rootMove.toList.flatMap(move =>
+        summary.exactCaptureAt(0, move).toList.flatMap(summary.sacrificeResponsesFor)
       )
-    )
-
-  private def offeredSacrificeEvidence(
-      replay: List[LineReplayStep],
-      summary: LineMaterialSummary,
-      rootMove: Option[String]
-  ): List[(Option[String], LineMaterialCapture)] =
-    val rootCaptureSacrificeResponse =
-      for
-        move <- rootMove
-        capture <- summary.captureForMove(move)
-        response <- summary.sacrificeResponseFor(capture)
-      yield response
-    summary.captures
-      .filter(capture =>
-        capture.side != summary.sideToMove &&
-          (!capture.recapture || rootCaptureSacrificeResponse.contains(capture))
-      )
-      .sortBy(_.plyOffset)
-      .flatMap { capture =>
-        replay.lift(capture.plyOffset).toList.flatMap { captureStep =>
-          val movedOffer = replay.zipWithIndex.take(capture.plyOffset).reverse.flatMap { case (offerStep, _) =>
-            val move = PrincipalVariationEvidence.normalizeUci(offerStep.moveUci)
-            (for
-              origin <- chess.Square.fromKey(move.take(2))
-              destination <- chess.Square.fromKey(move.slice(2, 4))
-              if destination.key == capture.square.key
-              beforeOffer <- positionAfter(offerStep.fenBefore)
-              offeredPiece <- beforeOffer.board.pieceAt(origin)
-              if offeredPiece.color == summary.sideToMove
-              if capture.capturedRole.name.equalsIgnoreCase(offeredPiece.role.toString)
-              afterOffer <- positionAfter(offerStep.fenAfter)
-              if afterOffer.board.pieceAt(destination).contains(offeredPiece)
-              beforeCapture <- positionAfter(captureStep.fenBefore)
-              afterCapture <- positionAfter(captureStep.fenAfter)
-              if beforeCapture.board.pieceAt(destination).contains(offeredPiece)
-              if !afterCapture.board.pieceAt(destination).contains(offeredPiece)
-            yield move).toList
-          }.headOption
-          movedOffer
-            .map(move => Some(move) -> capture)
-            .orElse(Option.when(stationarySacrifice(replay, capture))(None -> capture))
-        }
-      }
-      .distinctBy(_._2)
-
-  private def stationarySacrifice(
-      replay: List[LineReplayStep],
-      capture: LineMaterialCapture
-  ): Boolean =
-    (for
-      rootStep <- replay.headOption
-      captureStep <- replay.lift(capture.plyOffset)
-      square <- chess.Square.fromKey(capture.square.key)
-      beforeRoot <- positionAfter(rootStep.fenBefore)
-      offeredPiece <- beforeRoot.board.pieceAt(square)
-      if offeredPiece.color != capture.side
-      if capture.capturedRole.name.equalsIgnoreCase(offeredPiece.role.toString)
-      if replay.take(capture.plyOffset).forall { step =>
-        val move = PrincipalVariationEvidence.normalizeUci(step.moveUci)
-        move.take(2) != square.key && move.slice(2, 4) != square.key
-      }
-      beforeCapture <- positionAfter(captureStep.fenBefore)
-      afterCapture <- positionAfter(captureStep.fenAfter)
-      if beforeCapture.board.pieceAt(square).contains(offeredPiece)
-      if !afterCapture.board.pieceAt(square).contains(offeredPiece)
-    yield true).getOrElse(false)
-
-  private def endgameTechniqueConsequences(
-      facts: PrincipalVariationEvidence.LineFacts,
-      horizons: List[LineEndgameTechniqueHorizon]
-  ): List[LineConsequence] =
-    val lineMoves = facts.line.moves.map(move => PrincipalVariationEvidence.normalizeUci(move.uci))
-    horizons
-      .filter(horizon =>
-        LineEndgameTechniqueHorizon.defensivePattern(horizon.pattern) &&
-          LineEndgameTechniqueHorizon.maintained(horizon.status) &&
-          horizon.triggerMove.nonEmpty
-      )
-      .map(horizon =>
-        LineConsequence(
-          kind = LineConsequenceKind.DrawResource,
-          lineMoves = lineMoves,
-          proofSignal = false,
-          eventMove = horizon.triggerMove,
-          rootMove = lineMoves.headOption
+      val acceptedMaterialLosses =
+        Option
+          .when(summary.materialWindowComplete && summary.netCaptureCpForMover < 0)(
+            captures.filter(capture => capture.side != summary.sideToMove && !capture.recapture)
+          )
+          .toList
+          .flatten
+      (acceptedMaterialLosses ++ rootCaptureResponses)
+        .distinct
+        .sortBy(capture => (
+          capture.plyOffset,
+          EvidenceRef.normalizeMove(capture.moveUci),
+          capture.square.key.toLowerCase
+        ))
+        .flatMap(capture =>
+          LineSacrificeOccurrence.fromCanonicalReplay(replay, summary.sideToMove, capture)
         )
-      )
-      .distinct
-
-  private def endgameTechniqueHorizons(
-      startFen: String,
-      replay: List[LineReplayStep],
-      consequences: List[LineConsequence]
-  ): List[LineEndgameTechniqueHorizon] =
-    EndgamePatternOracle.techniqueHorizons(startFen, replay, consequences.filter(_.proofSignal))
+    }
 
   private def castlingEvent(moveUci: String, plyOffset: Int): Option[LineMoveEvent] =
     castlingSide(moveUci).map(side =>
@@ -755,22 +558,5 @@ object LineFactNormalizer:
       case "e8a8" => Some(EvidenceSquare("c8"))
       case _      => Option.when(moveUci.length >= 4)(EvidenceSquare(moveUci.slice(2, 4)))
 
-  private def movingPieceRole(fenBefore: String, moveUci: String): Option[EvidencePieceRole] =
-    for
-      position <- positionAfter(fenBefore)
-      from <- _root_.chess.Square.all.find(_.key == moveUci.take(2))
-      piece <- position.board.pieceAt(from)
-    yield EvidencePieceRole(piece.role.name)
-
-  private def movingPieceColor(fenBefore: String, moveUci: String): Option[Color] =
-    for
-      position <- positionAfter(fenBefore)
-      from <- _root_.chess.Square.all.find(_.key == moveUci.take(2))
-      piece <- position.board.pieceAt(from)
-    yield piece.color
-
   private def mateResultMatches(whitePovMate: Option[Int], winner: Color): Boolean =
     whitePovMate.exists(mate => mate != 0 && (mate > 0) == winner.white)
-
-  private def positionAfter(fen: String): Option[Position] =
-    Fen.read(Standard, Fen.Full(fen))

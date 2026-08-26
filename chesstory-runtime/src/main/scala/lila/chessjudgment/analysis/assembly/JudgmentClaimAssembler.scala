@@ -1,7 +1,6 @@
 package lila.chessjudgment.analysis.assembly
 
 import chess.Pawn
-import chess.format.{ Fen, Uci }
 import lila.chessjudgment.model.evaluation.JudgmentThresholds
 import lila.chessjudgment.model.line.CandidateLineEvaluation
 import lila.chessjudgment.model.judgment.*
@@ -13,8 +12,7 @@ object JudgmentClaimAssembler:
     case MaterialGain extends TacticalClaimDriver("material-gain")
     case RecaptureChoice extends TacticalClaimDriver("recapture-choice")
     case Tempo extends TacticalClaimDriver("tempo")
-    case RelationMechanism extends TacticalClaimDriver("relation-mechanism")
-    case Conversion extends TacticalClaimDriver("conversion")
+    case DefensiveResource extends TacticalClaimDriver("defensive-resource")
     case Refutation extends TacticalClaimDriver("refutation")
     case DrawResource extends TacticalClaimDriver("draw-resource")
     case PawnPromotion extends TacticalClaimDriver("pawn-promotion")
@@ -101,7 +99,7 @@ object JudgmentClaimAssembler:
           context.evidenceGraph.records.filter(record =>
             record.ref.scope == EvidenceScope.PlayedTransition &&
               record.ref.position == edge.from &&
-              transitionRecordMentionsMove(record, edge.moveUci)
+              record.mentionsMove(edge.moveUci)
           )
         val mechanismRecords =
           transitionRecords.collect {
@@ -162,8 +160,6 @@ object JudgmentClaimAssembler:
     primaryPosition.toList.flatMap { position =>
       drivers.flatMap { driver =>
         val evidence = compositeMechanismEvidence(
-          context = context,
-          position = position,
           driver = driver,
           lineRecords = lineFactRecords,
           evalRecords = evalRecords,
@@ -200,7 +196,7 @@ object JudgmentClaimAssembler:
             ref :: parents ++
               pawnStructureMechanismTransitionEvidence(context, ref) ++
               primaryLine.toList.flatMap(lineLayerRefs(context, _)) ++
-              recordsForPosition(context, EvidenceLayer.Board, ref.position)
+              recordsForPosition(context, EvidenceLayer.Relation, ref.position)
           )
         )
         Option.when(primaryLine.nonEmpty && evidence.nonEmpty) {
@@ -225,25 +221,6 @@ object JudgmentClaimAssembler:
       context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator
   ): List[JudgmentClaim] =
-    val threatEpisodeClaims = context.evidenceGraph.records.collect {
-      case EvidenceRecord(ref, payload: ThreatEpisodeEvidence, parents)
-          if ref.position.sideToMove.forall(_ == payload.sideUnderPressure) &&
-            payload.canAnchorDefensiveResource =>
-        val evidence =
-          (ref :: parents ++
-            ref.line.toList.flatMap(lineLayerRefs(context, _))).distinctBy(_.id)
-        judgmentClaimFromEvidence(
-          id = allocator.evidenceId(s"claim:defensive:${allocator.key(ref.id)}"),
-          family = ClaimFamily.Defensive,
-          subject = ClaimSubject.Threat,
-          primaryPosition = ref.position,
-          primaryLine = ref.line,
-          moveUci = payload.onlyDefense.orElse(payload.episode.bestDefense),
-          evidence = evidence,
-          scope = ref.scope,
-          confidence = ref.confidence
-        )
-    }
     val mechanismClaims = context.evidenceGraph.records.collect {
       case EvidenceRecord(ref, payload: TacticalMechanismEvidence, parents) if payload.canAnchorDefensiveClaim =>
         val evidence =
@@ -261,14 +238,14 @@ object JudgmentClaimAssembler:
           confidence = ref.confidence
         )
     }
-    consistentClaimsById(threatEpisodeClaims ++ mechanismClaims)
+    consistentClaimsById(mechanismClaims)
 
   private def evaluationClaims(
       context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator
   ): List[JudgmentClaim] =
     context.playedTransition.toList.flatMap { played =>
-      val playedMove = JudgmentSubjectBinding.normalizeMove(played.moveUci)
+      val playedMove = EvidenceRef.normalizeMove(played.moveUci)
       val playedMoves = Set(playedMove).filter(_.nonEmpty)
       context.evidenceGraph.records.flatMap {
         case EvidenceRecord(ref, CandidateComparisonEvidence(fact), _)
@@ -341,12 +318,11 @@ object JudgmentClaimAssembler:
       family: ClaimFamily,
       cause: RelativeCauseFact,
       subjectLine: LineNodeRef,
-      ref: EvidenceRef
+    ref: EvidenceRef
   ): String =
     val key = RelativeCauseSemanticKey.from(cause, ref.id, graph)
-    val identityHash = Integer.toHexString(key.stableKey.hashCode)
     allocator.evidenceId(
-      s"claim:${allocator.key(family)}:relative-cause:${allocator.key(key.kind)}:${allocator.key(key.comparisonKind)}:${allocator.key(key.role)}:${allocator.key(key.sourceSide)}:${allocator.key(subjectLine.rootMove)}:$identityHash:${allocator.key(ref.id)}"
+      s"claim:${allocator.key(family)}:relative-cause:${allocator.key(key.kind)}:${allocator.key(key.comparisonKind)}:${allocator.key(key.role)}:${allocator.key(key.sourceSide)}:${allocator.key(subjectLine.rootMove)}:${allocator.key(ref.id)}"
     )
 
   private def relativeCauseClaimSupportRefs(
@@ -400,7 +376,7 @@ object JudgmentClaimAssembler:
         supportEvidence
 
   private def familyForRelativeCause(kind: RelativeCauseKind): ClaimFamily =
-    ClaimFamily.fromCause(kind).getOrElse(ClaimFamily.Strategic)
+    ClaimFamily.fromCause(kind)
 
   private def familiesForRelativeCause(
       context: JudgmentAssemblyContext,
@@ -421,12 +397,6 @@ object JudgmentClaimAssembler:
         Nil
       case kind if strategicRelativeCause(kind) =>
         List(
-          Option.when(
-            cause.hasOwnedAdmissibleLongTermProof(context.evidenceGraph) &&
-              hasPawnStructureRelativeCauseSupport(cause, supportRecords, context.evidenceGraph)
-          )(
-            ClaimFamily.PawnStructure
-          ),
           Option.when(
             cause.hasOwnedAdmissibleLongTermProof(context.evidenceGraph) &&
               hasOpeningRelativeCauseSupport(supportRecords)
@@ -462,36 +432,6 @@ object JudgmentClaimAssembler:
   ): List[EvidenceRecord] =
     refs.flatMap(ref => context.evidenceGraph.byId.get(ref.id))
 
-  private def hasPawnStructureRelativeCauseSupport(
-      cause: RelativeCauseFact,
-      records: List[EvidenceRecord],
-      graph: TypedEvidenceGraph
-  ): Boolean =
-    cause.kind == RelativeCauseKind.PawnWeaknessTarget ||
-      cause.kind == RelativeCauseKind.PawnBreakOpportunity ||
-      cause.proof.exists(proof =>
-        graph
-          .relativeCauseTransitionConsequences(cause.kind, proof.directProof)
-          .exists { case (_, _, consequence) =>
-            consequence.kind == TransitionConsequenceKind.WeakPawnTargetCreated
-          }
-      ) ||
-    records.exists {
-      case EvidenceRecord(_, payload: StrategicMechanismContrastEvidence, _) =>
-        payload.sustainedCauseComparisons(cause.kind, cause.sourceSide).exists(comparison =>
-          comparison.axis.kind == StrategicAxisKind.PawnBreak
-        )
-      case EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
-        payload.signals.exists(signal =>
-          signal.axis.exists(axis =>
-            axis.kind == StrategicAxisKind.PawnBreak &&
-              RelativeCauseKind.strategicAxisCanProveCause(cause.kind, axis, cause.sourceSide)
-          )
-        )
-      case _ =>
-        false
-    }
-
   private def hasOpeningRelativeCauseSupport(records: List[EvidenceRecord]): Boolean =
     StrategicMechanismEvidence.openingClaimSupported(records)
 
@@ -520,7 +460,7 @@ object JudgmentClaimAssembler:
 
   private def subjectForRelativeCause(cause: RelativeCauseFact, line: LineNodeRef): ClaimSubject =
     cause.kind match
-      case kind if ClaimFamily.fromCause(kind).contains(ClaimFamily.Defensive) =>
+      case kind if ClaimFamily.fromCause(kind) == ClaimFamily.Defensive =>
         ClaimSubject.Threat
       case RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
         ClaimSubject.Plan
@@ -532,9 +472,10 @@ object JudgmentClaimAssembler:
       allocator: JudgmentProvenanceAllocator
   ): List[JudgmentClaim] =
     context.evidenceGraph.records.flatMap {
-      case EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents)
-          if lineBoundLongTermMechanism(ref) && (payload.canAnchorStrategicClaim || payload.canAnchorPlanClaim) =>
-        val contentRoute = strategicMechanismContentEvidence(context, EvidenceRecord(ref, payload, parents))
+      case record @ EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents)
+          if context.evidenceGraph.proofEligible(record) &&
+            lineBoundLongTermMechanism(ref) && (payload.canAnchorStrategicClaim || payload.canAnchorPlanClaim) =>
+        val contentRoute = strategicMechanismContentEvidence(context, record)
         if contentRoute.nonEmpty && payload.canAnchorPawnStructureClaim then None
         else
           val subject =
@@ -543,8 +484,7 @@ object JudgmentClaimAssembler:
           val evidence = contentRoute.map(_._2).getOrElse(
             longTermClaimEvidence(
                 ref :: parents ++
-                ref.line.toList.flatMap(lineLayerRefs(context, _)) ++
-                recordsForPosition(context, EvidenceLayer.Board, ref.position)
+                ref.line.toList.flatMap(lineLayerRefs(context, _))
             )
           )
           Option.when(evidence.nonEmpty) {
@@ -610,17 +550,16 @@ object JudgmentClaimAssembler:
       .filter(edge =>
         ref.scope == EvidenceScope.AfterPlayedPosition &&
           edge.to == ref.position &&
-          playedMoveIsPawnMove(edge)
+          playedMoveIsPawnMove(context, edge)
       )
 
-  private def playedMoveIsPawnMove(edge: MoveTransitionEdge): Boolean =
-    Fen.read(chess.variant.Standard, Fen.Full(edge.from.fen))
-      .flatMap(position =>
-        Uci(edge.moveUci)
-          .collect { case move: Uci.Move => move }
-          .flatMap(move => position.board.roleAt(move.orig))
-      )
-      .contains(Pawn)
+  private def playedMoveIsPawnMove(
+      context: JudgmentAssemblyContext,
+      edge: MoveTransitionEdge
+  ): Boolean =
+    context.transitionReplay(edge)
+      .flatMap(_.legalSteps.headOption)
+      .exists(_.move.piece.role == Pawn)
 
   private def openingClaims(
       context: JudgmentAssemblyContext,
@@ -630,113 +569,117 @@ object JudgmentClaimAssembler:
       case record @ EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents)
           if payload.canAnchorOpeningClaim =>
         val supportRecords = openingMechanismSupport(context, record)
-        val assessment = supportRecords.collectFirst {
+        val assessments = supportRecords.collect {
           case EvidenceRecord(_, ApplicabilityAssessmentEvidence(assessment), _) => assessment
         }
-        val moveBinding = assessment.flatMap(openingMoveBinding(context, _, supportRecords.map(_.ref)))
-        val primaryLine = moveBinding.flatMap(_.primaryLine)
-        val evidence =
-          longTermClaimEvidence(
-            ref :: parents ++
-              supportRecords.map(_.ref) ++
-              moveBinding.toList.flatMap(_.evidence) ++
-              primaryLine.toList.flatMap(lineLayerRefs(context, _))
-          )
-        Option.when(StrategicMechanismEvidence.openingClaimSupported(supportRecords) && evidence.nonEmpty) {
-          judgmentClaimFromEvidence(
-            id = allocator.evidenceId(s"claim:opening-mechanism:${allocator.key(ref.id)}"),
-            family = ClaimFamily.Opening,
-            subject = moveBinding.map(_.subject).getOrElse(ClaimSubject.Position),
-            primaryPosition = ref.position,
-            primaryLine = primaryLine,
-            moveUci = moveBinding.flatMap(_.moveUci),
-            evidence = evidence,
-            scope = ref.scope,
-            confidence = ref.confidence
-          )
+        val exactMoveBindings = assessments
+          .flatMap(openingMoveBindings(context, _, supportRecords.map(_.ref)))
+          .distinct
+        val claimBindings =
+          if exactMoveBindings.nonEmpty then exactMoveBindings.map(Some(_))
+          else List(None)
+        claimBindings.flatMap { moveBinding =>
+          val primaryLine = moveBinding.flatMap(_.primaryLine)
+          val evidence =
+            longTermClaimEvidence(
+              ref :: parents ++
+                supportRecords.map(_.ref) ++
+                moveBinding.toList.flatMap(_.evidence) ++
+                primaryLine.toList.flatMap(lineLayerRefs(context, _))
+            )
+          val bindingKey = moveBinding
+            .map(binding =>
+              List(
+                binding.subject.toString,
+                binding.primaryLine.map(_.id).getOrElse("none"),
+                binding.moveUci.getOrElse("none")
+              ).map(allocator.key).mkString(":")
+            )
+            .getOrElse("position")
+          Option.when(StrategicMechanismEvidence.openingClaimSupported(List(record)) && evidence.nonEmpty) {
+            judgmentClaimFromEvidence(
+              id = allocator.evidenceId(s"claim:opening-mechanism:${allocator.key(ref.id)}:$bindingKey"),
+              family = ClaimFamily.Opening,
+              subject = moveBinding.map(_.subject).getOrElse(ClaimSubject.Position),
+              primaryPosition = ref.position,
+              primaryLine = primaryLine,
+              moveUci = moveBinding.flatMap(_.moveUci),
+              evidence = evidence,
+              scope = ref.scope,
+              confidence = ref.confidence
+            )
+          }
         }
       case _ =>
-        None
+        Nil
     }
 
   private def openingMechanismSupport(context: JudgmentAssemblyContext, record: EvidenceRecord): List[EvidenceRecord] =
-    val parentRecords = record.parents.flatMap(parent => context.evidenceGraph.byId.get(parent.id))
-    val siblingOpeningAnchors =
-      context.evidenceGraph.records.filter {
-        case EvidenceRecord(ref, payload: StrategicMechanismEvidence, _) =>
-          ref.position == record.ref.position &&
-            payload.hasOpeningAnchorSignal
-        case _ =>
-          false
-      }
-    val siblingParents =
-      siblingOpeningAnchors.flatMap(_.parents.flatMap(parent => context.evidenceGraph.byId.get(parent.id)))
-    (record :: parentRecords ++ siblingOpeningAnchors ++ siblingParents).distinctBy(_.ref.id)
+    (record :: context.evidenceGraph.parentClosure(record))
+      .filter(context.evidenceGraph.proofEligible)
+      .distinctBy(_.ref.id)
 
-  private def openingMoveBinding(
+  private def openingMoveBindings(
       context: JudgmentAssemblyContext,
       assessment: ApplicabilityAssessment,
       parents: List[EvidenceRef]
-  ): Option[OpeningMoveBinding] =
+  ): List[OpeningMoveBinding] =
     val supportedThemes = assessment.supportedThemes.toSet
     val supportedAnchors =
       parents
         .flatMap(parent => context.evidenceGraph.byId.get(parent.id))
         .collect {
           case record @ EvidenceRecord(_, FeatureAnchorEvidence(anchor), _)
-              if supportedThemes.contains(anchor.theme) && anchor.canCorroborateOpeningPrior =>
+              if supportedThemes.contains(anchor.theme) =>
             record
         }
     val sourceRecords =
       supportedAnchors
         .flatMap(anchorRecord => anchorRecord.parents.flatMap(parent => context.evidenceGraph.byId.get(parent.id)))
         .distinctBy(_.ref.id)
-    List(
-      openingLineBinding(sourceRecords, LineNodeRole.Played, ClaimSubject.PlayedMove),
-      openingLineBinding(sourceRecords, LineNodeRole.BestReference, ClaimSubject.ReferenceMove),
-      openingLineBinding(sourceRecords, LineNodeRole.Alternative, ClaimSubject.CandidateLine)
-    ).flatten.sortBy(openingMoveBindingScore).lastOption
+    sourceRecords
+      .flatMap(record =>
+        List(
+          openingLineBinding(record, LineNodeRole.Played, ClaimSubject.PlayedMove),
+          openingLineBinding(record, LineNodeRole.BestReference, ClaimSubject.ReferenceMove),
+          openingLineBinding(record, LineNodeRole.Alternative, ClaimSubject.CandidateLine)
+        ).flatten
+      )
+      .groupBy(binding => (binding.subject, binding.primaryLine, binding.moveUci))
+      .toList
+      .sortBy { case ((subject, line, move), _) =>
+        (subject.toString, line.map(_.id).getOrElse(""), move.getOrElse(""))
+      }
+      .map { case ((subject, line, move), bindings) =>
+        OpeningMoveBinding(
+          subject = subject,
+          primaryLine = line,
+          moveUci = move,
+          evidence = bindings.flatMap(_.evidence).distinctBy(_.id).sortBy(_.id)
+        )
+      }
 
   private def openingLineBinding(
-      sourceRecords: List[EvidenceRecord],
+      sourceRecord: EvidenceRecord,
       role: LineNodeRole,
       subject: ClaimSubject
   ): Option[OpeningMoveBinding] =
-    val roleSources = sourceRecords.filter(openingSourceMatchesRole(_, role))
-    val primaryLine =
-      roleSources.flatMap(record => openingSourceLine(record, role)).headOption
-    val moveUci =
-      roleSources.collectFirst { case EvidenceRecord(_, payload: StructuralDeltaEvidence, _) =>
-        payload.moveUci
-      }.orElse(
-        roleSources.collectFirst { case EvidenceRecord(_, MoveTransitionEvidence(move, _, _), _) =>
-          move
-        }
-      ).orElse(primaryLine.map(_.rootMove))
-    Option.when(primaryLine.nonEmpty || moveUci.nonEmpty)(
+    val primaryLine = openingSourceLine(sourceRecord, role)
+    val sourceMove = sourceRecord.payload match
+      case payload: StructuralDeltaEvidence       => Some(payload.moveUci)
+      case MoveTransitionEvidence(moveUci, _, _) => Some(moveUci)
+      case _                                      => primaryLine.map(_.rootMove)
+    for
+      line <- primaryLine
+      moveUci <- sourceMove
+      if EvidenceRef.sameMove(moveUci, line.rootMove)
+    yield
       OpeningMoveBinding(
         subject = subject,
-        primaryLine = primaryLine,
-        moveUci = moveUci,
-        evidence = roleSources.map(_.ref)
+        primaryLine = Some(line),
+        moveUci = Some(moveUci),
+        evidence = List(sourceRecord.ref)
       )
-    )
-
-  private def openingMoveBindingScore(binding: OpeningMoveBinding): (Int, Int, Int, Int) =
-    (
-      binding.evidence.size,
-      Option.when(binding.evidence.exists(_.layer == EvidenceLayer.StructuralDelta))(1).getOrElse(0),
-      Option.when(binding.moveUci.nonEmpty)(1).getOrElse(0),
-      binding.subject match
-        case ClaimSubject.PlayedMove     => 2
-        case ClaimSubject.ReferenceMove  => 1
-        case ClaimSubject.CandidateLine  => 0
-        case ClaimSubject.Position | ClaimSubject.Threat | ClaimSubject.Plan => 0
-    )
-
-  private def openingSourceMatchesRole(record: EvidenceRecord, role: LineNodeRole): Boolean =
-    openingSourceLine(record, role).nonEmpty ||
-      (role == LineNodeRole.Played && record.ref.scope == EvidenceScope.PlayedTransition)
 
   private def openingSourceLine(record: EvidenceRecord, role: LineNodeRole): Option[LineNodeRef] =
     record.payload match
@@ -766,10 +709,6 @@ object JudgmentClaimAssembler:
         TacticalClaimDriver.RecaptureChoice
       case TacticalMechanismKind.Tempo =>
         TacticalClaimDriver.Tempo
-      case TacticalMechanismKind.RelationMechanism =>
-        TacticalClaimDriver.RelationMechanism
-      case TacticalMechanismKind.Conversion =>
-        TacticalClaimDriver.Conversion
       case TacticalMechanismKind.Refutation =>
         TacticalClaimDriver.Refutation
       case TacticalMechanismKind.DrawResource =>
@@ -777,11 +716,9 @@ object JudgmentClaimAssembler:
       case TacticalMechanismKind.PawnPromotion =>
         TacticalClaimDriver.PawnPromotion
       case TacticalMechanismKind.DefensiveResource =>
-        TacticalClaimDriver.RelationMechanism
+        TacticalClaimDriver.DefensiveResource
 
   private def compositeMechanismEvidence(
-      context: JudgmentAssemblyContext,
-      position: PositionNodeRef,
       driver: TacticalClaimDriver,
       lineRecords: List[EvidenceRecord],
       evalRecords: List[EvidenceRecord],
@@ -797,13 +734,8 @@ object JudgmentClaimAssembler:
       }
     val lineRefs = (lineRecords ++ evalRecords).map(_.ref)
     val engineRefs = relativeEvidenceRefs(relativeAssessments)
-    val boardRefs =
-      context.evidenceGraph.records.collect {
-        case record if record.ref.layer == EvidenceLayer.Board && record.ref.position == position =>
-          record.ref
-      }
     if driverRefs.isEmpty then Nil
-    else (driverRefs ++ lineRefs ++ engineRefs ++ boardRefs.take(2)).distinctBy(_.id)
+    else (driverRefs ++ lineRefs ++ engineRefs).distinctBy(_.id)
 
   private def transitionMechanismEvidence(
       context: JudgmentAssemblyContext,
@@ -820,33 +752,13 @@ object JudgmentClaimAssembler:
       }
     val transitionRef =
       context.evidenceGraph.byId.get(edge.evidence.id).map(_.ref).toList
-    val boardRefs =
-      context.evidenceGraph.records.collect {
-        case record if record.ref.layer == EvidenceLayer.Board && record.ref.position == edge.from =>
-          record.ref
-      }
-    (driverRefs ++ transitionRef ++ boardRefs.take(2)).distinctBy(_.id)
+    (driverRefs ++ transitionRef).distinctBy(_.id)
 
   private def longTermClaimEvidence(refs: List[EvidenceRef]): List[EvidenceRef] =
     refs
       .filterNot(ref => ClaimEvidenceSemantics.longTermSupportExcludedLayer(ref.layer))
       .filterNot(ref => StrategicMechanismEvidence.rawStrategicSourceLayer(ref.layer))
       .distinctBy(_.id)
-
-  private def transitionRecordMentionsMove(record: EvidenceRecord, moveUci: String): Boolean =
-    record.payload match
-      case payload: MoveMotifEvidence =>
-        payload.moveUci == moveUci
-      case MoveTransitionEvidence(move, _, _) =>
-        move == moveUci
-      case payload: RelationFactEvidence =>
-        payload.mentionsLineMove(moveUci) || record.ref.scope == EvidenceScope.PlayedTransition
-      case payload: TacticalMechanismEvidence =>
-        payload.moveUci.exists(EvidenceRef.sameMove(_, moveUci)) ||
-          payload.line.exists(_.rootMove == moveUci) ||
-          record.ref.scope == EvidenceScope.PlayedTransition
-      case _ =>
-        false
 
   private def relativeEvidenceRefs(assessments: List[RelativeMoveAssessment]): List[EvidenceRef] =
     assessments
@@ -876,7 +788,7 @@ object JudgmentClaimAssembler:
         case _                                                     => false
       } || relativeAssessments.exists(relativeSupportsTacticalClaim(graph, _))
     then EvidenceConfidence.EngineBacked
-    else if driver == TacticalClaimDriver.RelationMechanism then EvidenceConfidence.LegalReplayVerified
+    else if driver == TacticalClaimDriver.DefensiveResource then EvidenceConfidence.LegalReplayVerified
     else EvidenceConfidence.Mixed
 
   private def lineLayerRefs(

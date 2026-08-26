@@ -48,6 +48,12 @@ final class CanonicalPositionHistory private (
     private val currentFullMoveNumber: Int,
     val currentPly: Int
 ):
+  /** The canonical root move set for this history occurrence. scalachess
+    * generates it once; scheduling and admission reuse the same ordered value.
+    */
+  lazy val currentLegalMoveUcis: List[String] =
+    PrincipalVariationEvidence.actualLegalMoves(currentPosition).map(_.toUci.uci).sorted
+
   def extend(
       relativeMovesUci: List[String]
   ): Either[CanonicalPositionHistoryFailure, CanonicalPositionHistory] =
@@ -58,30 +64,48 @@ final class CanonicalPositionHistory private (
       PrincipalVariationEvidence
         .legalMoveReplayFromPosition(currentPosition, normalizedMoves, currentPly)
         .toRight(CanonicalPositionHistoryFailure.IllegalMovePrefix)
-        .flatMap { additionalSteps =>
-          CanonicalPositionHistory.acceptTerminalBoundaries(additionalSteps)
-            .flatMap(_ => CanonicalPositionHistory.acceptHalfMoveClocks(additionalSteps))
-            .flatMap(_ => CanonicalPositionHistory.fullMoveNumberAfter(currentFullMoveNumber, additionalSteps))
-            .map { nextFullMoveNumber =>
-              val nextPosition = additionalSteps.lastOption.fold(currentPosition)(_.after)
-              val nextSegmentReplaySteps = CanonicalPositionHistory.materializeSteps(
-                existingSteps = segmentReplaySteps,
-                beforeFullMoveNumber = currentFullMoveNumber,
-                replay = additionalSteps
-              )
-              new CanonicalPositionHistory(
-                initialFen = initialFen,
-                movePrefixUci = movePrefixUci ++ normalizedMoves,
-                segmentReplaySteps = nextSegmentReplaySteps,
-                preInitialHistoryKnowledge = preInitialHistoryKnowledge,
-                currentFen = CanonicalPositionHistory.render(nextPosition, nextFullMoveNumber),
-                currentPosition = nextPosition,
-                repetitionHistoryComplete = repetitionHistoryComplete ||
-                  additionalSteps.exists(CanonicalPositionHistory.establishesRepetitionCompleteness),
-                currentFullMoveNumber = nextFullMoveNumber,
-                currentPly = currentPly + normalizedMoves.size
-              )
-            }
+        .flatMap(extendAdmitted)
+
+  /** Extends this history with steps already admitted by the canonical replay
+    * owner. This validates occurrence continuity but never generates moves.
+    */
+  private[chessjudgment] def extendAdmitted(
+      additionalSteps: List[LegalReplayStep]
+  ): Either[CanonicalPositionHistoryFailure, CanonicalPositionHistory] =
+    val contiguous = additionalSteps.zipWithIndex.forall { case (step, index) =>
+      val expectedBefore = additionalSteps.lift(index - 1).map(_.after).getOrElse(currentPosition)
+      step.ply == currentPly + index + 1 &&
+        step.before == expectedBefore &&
+        step.move.after == step.after
+    }
+    if currentPly.toLong + additionalSteps.size.toLong > Int.MaxValue then
+      Left(CanonicalPositionHistoryFailure.MovePrefixPlyOutOfRange)
+    else if !contiguous then
+      Left(CanonicalPositionHistoryFailure.IllegalMovePrefix)
+    else
+      CanonicalPositionHistory.acceptTerminalBoundaries(additionalSteps)
+        .flatMap(_ => CanonicalPositionHistory.acceptHalfMoveClocks(additionalSteps))
+        .flatMap(_ => CanonicalPositionHistory.fullMoveNumberAfter(currentFullMoveNumber, additionalSteps))
+        .map { nextFullMoveNumber =>
+          val normalizedMoves = additionalSteps.map(step => PrincipalVariationEvidence.normalizeUci(step.uci))
+          val nextPosition = additionalSteps.lastOption.fold(currentPosition)(_.after)
+          val nextSegmentReplaySteps = CanonicalPositionHistory.materializeSteps(
+            existingSteps = segmentReplaySteps,
+            beforeFullMoveNumber = currentFullMoveNumber,
+            replay = additionalSteps
+          )
+          new CanonicalPositionHistory(
+            initialFen = initialFen,
+            movePrefixUci = movePrefixUci ++ normalizedMoves,
+            segmentReplaySteps = nextSegmentReplaySteps,
+            preInitialHistoryKnowledge = preInitialHistoryKnowledge,
+            currentFen = CanonicalPositionHistory.render(nextPosition, nextFullMoveNumber),
+            currentPosition = nextPosition,
+            repetitionHistoryComplete = repetitionHistoryComplete ||
+              additionalSteps.exists(CanonicalPositionHistory.establishesRepetitionCompleteness),
+            currentFullMoveNumber = nextFullMoveNumber,
+            currentPly = currentPly + additionalSteps.size
+          )
         }
 
   /**
@@ -112,6 +136,12 @@ final class CanonicalPositionHistory private (
         }
 
 object CanonicalPositionHistory:
+  def normalizeFen(fen: String): String =
+    PrincipalVariationEvidence.normalizeFen(fen)
+
+  def sameBoardState(leftFen: String, rightFen: String): Boolean =
+    PrincipalVariationEvidence.sameBoardState(leftFen, rightFen)
+
   def from(
       initialFen: String,
       movePrefixUci: List[String],
@@ -204,8 +234,8 @@ object CanonicalPositionHistory:
           fullMoveNumber <- rawFullMoveNumber.toIntOption
             .filter(_ >= 1)
             .toRight(failure)
-          parsed <- Fen.read(Standard, Fen.Full(normalizedFen)).toRight(failure)
-          position = parsed.updateHistory(_.setHalfMoveClock(HalfMoveClock(halfMoveClock)))
+          parsed <- PrincipalVariationEvidence.readPosition(normalizedFen).toRight(failure)
+          position = parsed
           canonicalFen = render(position, fullMoveNumber)
           _ <- Either.cond(canonicalFen == normalizedFen, (), failure)
         yield ParsedCanonicalFen(canonicalFen, position, HalfMoveClock(halfMoveClock), fullMoveNumber)

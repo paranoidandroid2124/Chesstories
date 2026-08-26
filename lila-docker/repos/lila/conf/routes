@@ -67,7 +67,7 @@ GET   /embed/analysis                  controllers.UserAnalysis.embed
 # Explorer Proxy (authenticated upstream relay)
 GET   /api/explorer/:db                controllers.ExplorerProxy.opening(db: String)
 
-# Development-gated position commentary v6 jobs
+# Position commentary v6 jobs
 POST    /api/chess-judgment/position-commentary-jobs                                                   controllers.Analyse.createMoveReviewJob
 DELETE  /api/chess-judgment/position-commentary-jobs/$jobId<[A-Za-z0-9_-]{32}>                         controllers.Analyse.cancelMoveReviewJob(jobId: String)
 POST    /api/chess-judgment/position-commentary-jobs/$jobId<[A-Za-z0-9_-]{32}>/engine-work-reports     controllers.Analyse.reportMoveReviewEngineWork(jobId: String)

@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chesstories.dev/judgment-evaluation/schemas/public-commentary-v6/position-commentary-job-status.schema.json",
+  "title": "Chesstory focused position commentary job status v6",
+  "oneOf": [
+    {"$ref": "#/$defs/awaitingEngineWork"},
+    {"$ref": "#/$defs/stopped"}
+  ],
+  "$defs": {
+    "requestId": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$"},
+    "jobId": {"type": "string", "pattern": "^[A-Za-z0-9_-]{32}$"},
+    "fen": {"type": "string", "minLength": 1, "maxLength": 128},
+    "uciMove": {"type": "string", "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"},
+    "engineProfile": {"const": "sf18-smallnet-t2-h16-v1"},
+    "focus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "played_move_uci", "resulting_fen"],
+      "properties": {
+        "kind": {"const": "played_move"},
+        "played_move_uci": {"$ref": "#/$defs/uciMove"},
+        "resulting_fen": {"$ref": "#/$defs/fen"}
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "legal_move_count",
+        "root_candidate_lines_admitted",
+        "selected_commentaries_completed",
+        "physical_works_issued",
+        "physical_reports_accepted",
+        "causal_waves_completed"
+      ],
+      "properties": {
+        "phase": {"enum": ["root_search", "focus_comparison", "causal_probe", "completed", "stopped"]},
+        "legal_move_count": {"type": "integer", "minimum": 0},
+        "root_candidate_lines_admitted": {"type": "integer", "minimum": 0, "maximum": 3},
+        "selected_commentaries_completed": {"type": "integer", "minimum": 0, "maximum": 1},
+        "physical_works_issued": {"type": "integer", "minimum": 0, "maximum": 32},
+        "physical_reports_accepted": {"type": "integer", "minimum": 0, "maximum": 32},
+        "causal_waves_completed": {"type": "integer", "minimum": 0, "maximum": 3}
+      }
+    },
+    "awaitingEngineWork": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "job_id",
+        "engine_profile",
+        "variant",
+        "deadline_epoch_ms",
+        "focus",
+        "state",
+        "progress",
+        "issued_engine_work"
+      ],
+      "properties": {
+        "schema_version": {"const": "chesstory.position-commentary.job-status.v6"},
+        "request_id": {"$ref": "#/$defs/requestId"},
+        "job_id": {"$ref": "#/$defs/jobId"},
+        "engine_profile": {"$ref": "#/$defs/engineProfile"},
+        "variant": {"const": "standard"},
+        "deadline_epoch_ms": {"type": "integer", "minimum": 0},
+        "focus": {"$ref": "#/$defs/focus"},
+        "state": {"const": "awaiting_engine_work"},
+        "progress": {"$ref": "#/$defs/progress"},
+        "issued_engine_work": {
+          "oneOf": [
+            {"$ref": "#/$defs/rootSearchWork"},
+            {"$ref": "#/$defs/focusComparisonWork"},
+            {"$ref": "#/$defs/causalProbeWork"}
+          ]
+        }
+      }
+    },
+    "stopped": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "request_id",
+        "job_id",
+        "engine_profile",
+        "variant",
+        "deadline_epoch_ms",
+        "focus",
+        "state",
+        "progress",
+        "stop_condition"
+      ],
+      "properties": {
+        "schema_version": {"const": "chesstory.position-commentary.job-status.v6"},
+        "request_id": {"$ref": "#/$defs/requestId"},
+        "job_id": {"$ref": "#/$defs/jobId"},
+        "engine_profile": {"$ref": "#/$defs/engineProfile"},
+        "variant": {"const": "standard"},
+        "deadline_epoch_ms": {"type": "integer", "minimum": 0},
+        "focus": {"$ref": "#/$defs/focus"},
+        "state": {"const": "stopped"},
+        "progress": {"$ref": "#/$defs/progress"},
+        "stop_condition": {
+          "enum": [
+            "deadline_exceeded",
+            "budget_exhausted",
+            "cancelled",
+            "engine_execution_failed",
+            "invalid_engine_work_report",
+            "review_construction_failed",
+            "move_review_preparation_failed",
+            "repetition_history_unavailable"
+          ]
+        }
+      }
+    },
+    "issuedEngineWork": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "work_id",
+        "purpose",
+        "engine_profile",
+        "execution_key_sha256",
+        "variant",
+        "engine_position_initial_fen",
+        "engine_position_moves_uci",
+        "search_fen",
+        "root_restriction",
+        "search_limits",
+        "max_search_elapsed_ms"
+      ],
+      "properties": {
+        "work_id": {"type": "string", "pattern": "^work:[0-9]+$"},
+        "purpose": {"enum": ["root_search", "focus_comparison", "causal_probe"]},
+        "engine_profile": {"$ref": "#/$defs/engineProfile"},
+        "execution_key_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "variant": {"const": "standard"},
+        "engine_position_initial_fen": {"$ref": "#/$defs/fen"},
+        "engine_position_moves_uci": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/uciMove"}
+        },
+        "search_fen": {"$ref": "#/$defs/fen"},
+        "root_restriction": {
+          "oneOf": [
+            {"$ref": "#/$defs/unrestrictedRoots"},
+            {"$ref": "#/$defs/restrictedRoots"}
+          ]
+        },
+        "search_limits": {"$ref": "#/$defs/searchLimits"},
+        "max_search_elapsed_ms": {"enum": [3500, 6000]}
+      }
+    },
+    "rootSearchWork": {
+      "allOf": [
+        {"$ref": "#/$defs/issuedEngineWork"},
+        {
+          "type": "object",
+          "properties": {
+            "purpose": {"const": "root_search"},
+            "root_restriction": {"$ref": "#/$defs/unrestrictedRoots"},
+            "search_limits": {"$ref": "#/$defs/rootSearchLimits"},
+            "max_search_elapsed_ms": {"const": 6000}
+          }
+        }
+      ]
+    },
+    "focusComparisonWork": {
+      "allOf": [
+        {"$ref": "#/$defs/issuedEngineWork"},
+        {
+          "type": "object",
+          "properties": {
+            "purpose": {"const": "focus_comparison"},
+            "root_restriction": {"$ref": "#/$defs/restrictedRoots"},
+            "search_limits": {"$ref": "#/$defs/focusSearchLimits"},
+            "max_search_elapsed_ms": {"const": 3500}
+          }
+        }
+      ]
+    },
+    "causalProbeWork": {
+      "allOf": [
+        {"$ref": "#/$defs/issuedEngineWork"},
+        {
+          "type": "object",
+          "properties": {
+            "purpose": {"const": "causal_probe"},
+            "root_restriction": {"$ref": "#/$defs/unrestrictedRoots"},
+            "search_limits": {"$ref": "#/$defs/causalSearchLimits"},
+            "max_search_elapsed_ms": {"const": 3500}
+          }
+        }
+      ]
+    },
+    "unrestrictedRoots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {"kind": {"const": "unrestricted"}}
+    },
+    "restrictedRoots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "moves_uci"],
+      "properties": {
+        "kind": {"const": "restricted"},
+        "moves_uci": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/uciMove"}
+        }
+      }
+    },
+    "searchLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["depth", "nodes", "movetime_ms", "multi_pv"],
+      "properties": {
+        "depth": {"const": 16},
+        "nodes": {"enum": [2000000, 5000000]},
+        "movetime_ms": {"enum": [2500, 5000]},
+        "multi_pv": {"type": "integer", "minimum": 1, "maximum": 3}
+      }
+    },
+    "rootSearchLimits": {
+      "type": "object",
+      "properties": {
+        "depth": {"const": 16},
+        "nodes": {"const": 5000000},
+        "movetime_ms": {"const": 5000},
+        "multi_pv": {"type": "integer", "minimum": 1, "maximum": 3}
+      }
+    },
+    "focusSearchLimits": {
+      "type": "object",
+      "properties": {
+        "depth": {"const": 16},
+        "nodes": {"const": 2000000},
+        "movetime_ms": {"const": 2500},
+        "multi_pv": {"const": 2}
+      }
+    },
+    "causalSearchLimits": {
+      "type": "object",
+      "properties": {
+        "depth": {"const": 16},
+        "nodes": {"const": 2000000},
+        "movetime_ms": {"const": 2500},
+        "multi_pv": {"type": "integer", "minimum": 1, "maximum": 3}
+      }
+    }
+  }
+}

@@ -95,8 +95,8 @@ importers:
   ui/lib:
     dependencies:
       '@lichess-org/stockfish-web':
-        specifier: 0.2.3
-        version: 0.2.3
+        specifier: 0.4.2
+        version: 0.4.2
       chessops:
         specifier: ^0.15
         version: 0.15.0
@@ -391,8 +391,8 @@ packages:
   '@lichess-org/chessground@9.9.0':
     resolution: {integrity: sha512-0BAyVXgRLaYTC8lj69Wr5EZoQzHRRwY1oGsggCbNXnkdcoQPP6lQgW0bHgbTScADGiNZvRs8VcV5JEZTTMEPfg==}
 
-  '@lichess-org/stockfish-web@0.2.3':
-    resolution: {integrity: sha512-tGCmBVklEQqJwN7pA6peGzgTw9F7Dk62Ajs53byL1EgGU75eqwzv1ZDecY4t7HAsxG5KlcVuEXWXwEDXkNR73w==}
+  '@lichess-org/stockfish-web@0.4.2':
+    resolution: {integrity: sha512-qVboc1DNDNRg/ZTu5YlgiiWmxyVZcF4u2nkx0rNzQvh/y/LiH4qz4+aG4mLoSyVWt8u39JdmzIyJFn8wJ2IXNw==}
 
   '@mdn/browser-compat-data@5.7.6':
     resolution: {integrity: sha512-7xdrMX0Wk7grrTZQwAoy1GkvPMFoizStUoL+VmtUkAxegbCCec+3FKwOM6yc/uGU5+BEczQHXAlWiqvM8JeENg==}
@@ -1961,7 +1961,7 @@ snapshots:
 
   '@lichess-org/chessground@9.9.0': {}
 
-  '@lichess-org/stockfish-web@0.2.3': {}
+  '@lichess-org/stockfish-web@0.4.2': {}
 
   '@mdn/browser-compat-data@5.7.6': {}
 

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { join, dirname } from 'node:path';
 import { makeTask } from './task.ts';
 import { env, c } from './env.ts';
-import { isGlob, isFolder, isClose } from './parse.ts';
+import { glob, isGlob, isFolder, isClose } from './parse.ts';
 import { isEquivalent } from './algo.ts';
 
 export async function sync(): Promise<any> {
@@ -10,14 +10,14 @@ export async function sync(): Promise<any> {
   return Promise.all(
     [...env.tasks('sync')].map(async ([pkg, sync]) => {
       const resolvedSrc = await resolveSyncSrc(env.rootDir, sync.src);
-      const { root, exact } = await srcRoot(env.rootDir, resolvedSrc);
+      const { root } = await srcRoot(env.rootDir, resolvedSrc);
       await makeTask({
         includes: { path: resolvedSrc, cwd: env.rootDir },
         ctx: 'sync',
         always: true,
         debounce: 300,
         execute: (files, fullList) => {
-          if (exact && files.length === 0) throw `Not found '${c.cyan(resolvedSrc)}`;
+          if (fullList.length === 0) throw `Not found '${c.cyan(resolvedSrc)}'`;
           const logEvery = !isEquivalent(files, fullList);
           if (!logEvery)
             env.log(`${c.grey(pkg.name)} '${c.cyan(resolvedSrc)}' -> '${c.cyan(sync.dest)}'`, 'sync');
@@ -36,7 +36,7 @@ export async function sync(): Promise<any> {
   );
 }
 
-async function resolveSyncSrc(cwd: string, src: string): Promise<string> {
+export async function resolveSyncSrc(cwd: string, src: string): Promise<string> {
   // pnpm can be configured with `node-linker=hoisted`, which removes per-package `ui/<pkg>/node_modules`.
   // In that case, sync sources under `ui/<pkg>/node_modules/...` should fall back to repo `node_modules/...`.
   if (!src.startsWith('ui/') || !src.includes('/node_modules/')) return src;
@@ -44,25 +44,17 @@ async function resolveSyncSrc(cwd: string, src: string): Promise<string> {
   const parts = src.split('/');
   const fallback = parts.length >= 3 && parts[0] === 'ui' ? parts.slice(2).join('/') : src;
 
-  // Prefer the package-local path if it actually exists.
-  // (On Windows, broken junctions can look like directories but still fail to access contents.)
-  if (!isGlob(src)) {
-    try {
-      await fs.promises.access(join(cwd, src));
-      return src;
-    } catch {
-      /* fall through */
-    }
-  }
+  if (await syncSourceExists(cwd, src)) return src;
+  if (await syncSourceExists(cwd, fallback)) return fallback;
+  return src;
+}
 
-  // Otherwise fall back to repo-root node_modules.
-  if (isGlob(fallback)) return fallback;
-  try {
-    await fs.promises.access(join(cwd, fallback));
-    return fallback;
-  } catch {
-    return src;
-  }
+async function syncSourceExists(cwd: string, src: string): Promise<boolean> {
+  if (isGlob(src)) return (await glob(src, { cwd })).length > 0;
+  return fs.promises.access(join(cwd, src)).then(
+    () => true,
+    () => false,
+  );
 }
 
 async function syncOne(absSrc: string, absDest: string): Promise<boolean> {

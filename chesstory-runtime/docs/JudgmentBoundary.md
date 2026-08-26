@@ -10,17 +10,17 @@
 2. 모든 공개 판단은 등록된 증거와 연결된다.
 3. 평가값의 관점, 수순의 합법성, 비교 대상이 중간 단계에서 바뀌지 않는다.
 4. 인간적 아이디어의 탐색과 사실의 인증을 분리한다.
-5. 전체 player-use system 목표 표기 `Q → F → C → Jp → Ja → R → P`에서 player `Q`는 `CommentaryJobReducer`가 소유한다. 서버가 canonical root FEN, 완전·정렬된 legal move inventory, 순차 `IssuedEngineWork`, suffix admission, probe issuance와 모든 legal-move coverage를 만든다.
+5. 전체 player-use system 목표 표기 `Q → F → C → Jp → Ja → R → P`에서 player `Q`는 `CommentaryJobReducer`가 소유한다. 서버는 canonical history와 played focus를 검증하고, 하나의 root candidate bundle, 필요할 때만 played-vs-best comparison, 의미 계층이 요구한 추가 causal work를 순차 발급·입회한다.
 6. 브라우저는 preflight 뒤 전용 exact profile worker `sf18-smallnet-t2-h16-v1`만 사용하며 ordinary selectable ceval은 절대 사용하지 않는다. 서버가 발급한 `search_fen`·depth·MultiPV만 실행하고 suffix를 돌려주는 thin opaque executor로서, legal move를 열거하거나 work·probe·coverage를 선택하거나, root line·평가·Cause를 구성하거나, admission을 결정하지 않는다.
 7. 서버는 suffix admission 전에 required profile을 parse·bind하고 terminal projection까지 보존한다. issued work·report·status·response의 profile equality가 없거나 unsupported이면 semantic use 전에 거부한다. 브라우저 preflight failure는 POST도 server job도 만들지 않는 local unavailable fault다. 일치하는 issued work가 outstanding인 동안의 execution failure만 profile-bound `executor_failed`로 보고되고 서버는 stop하며 downgrade·retry·fallback이 없다. 이 profile equality는 configured contract binding만 증명하며 hostile-client 또는 remote attestation은 증명하지 않는다.
-8. 서버는 admission 뒤의 `F → C → Jp → Ja → R → P`와 packet/projection을 계속 소유한다. `RawMoveReviewInput` 직접 경로는 development-only 호환 입력이며 player-use transport 또는 Q 권위가 아니다.
+8. 서버는 admission 뒤의 `F → C → Jp → Ja → R → P`와 packet/projection을 계속 소유한다. `RawMoveReviewInput` 직접 경로는 development-only 직접 입력이며 player-use transport 또는 Q 권위가 아니다.
 9. evaluation/oracle material은 development-only이며 player-use runtime 계약과 분리한다.
 
 ## 2. 단일 권위 흐름
 
 ```mermaid
 flowchart LR
-    A["요청: root FEN"] --> Q["Q: server legal inventory + issued work"]
+    A["요청: canonical history + played focus"] --> Q["Q: focused v6 work ledger"]
     Q --> X["thin opaque browser executor: suffix only"]
     X --> N["server EngineLineAdmission: replay + bind"]
     N --> B["정규화된 입력"]
@@ -43,7 +43,7 @@ flowchart LR
 | 의미 | 단일 권위 |
 |---|---|
 | Stockfish 후보선 | `EngineLine` |
-| player Q의 legal inventory·work·coverage | `CommentaryJobReducer`와 `PreparedMoveReviewInventory` |
+| player Q의 root/focus/causal work와 중복 없는 admission | `CommentaryJobReducer`와 `PreparedFocusedMoveReview` |
 | browser suffix의 replay·root binding·mate 기준 정규화 | `EngineLineAdmission` |
 | 합법 수순 재생 | `PrincipalVariationEvidence.legalMoveReplay` |
 | 조립 중 상태 | `JudgmentAssemblyContext` |
@@ -76,11 +76,24 @@ flowchart LR
 - 모든 상대평가의 비교·원인·판정 근거가 그래프에 등록되어 있다.
 - C에 등록된 모든 `RelativeCause` evidence ID는 `CauseDispositionLedger`에 정확히 한 번 존재한다. 원장은 새 판정을 만들지 않고 `ClaimTruthPolicy`의 Ja 결정, `ClaimDeduplicator` trace, canonical `PlayerFacingCauseExposureResolution`만 소비하여 `selected`, `dominated`, `redundant`, `diagnostic`, `inferior`, `admission-deferred`, `rejected`, `unproposed`, `object-unready` 중 하나로 귀결한다. 준비된 Cause가 claim host 없이 남으면 `unproposed`, 승인 뒤 claim dedup에서 host를 잃으면 해당 trace에 결속된 `redundant`이므로 조용히 사라질 수 없다.
 - C의 의미 정규화는 공개 준비가 된 Cause를 동일 `RelativeCauseSemanticFrameKey` 안에서만 다룬다. 그 안에서 root-owned `causal_signature`가 하나라도 겹치는 Cause들을 **연결요소**로 묶어 proof·support를 한 번 병합한다. 따라서 `{A,B}`와 `{B,C}`는 한 Cause가 되지만 서로 겹치지 않는 `{A}`와 `{C}`는 같은 frame이어도 별도 Cause로 보존된다. 병합 뒤에는 기존에 승인된 signature와 다시 계산한 비모호 signature의 교집합만 `DirectEffectAdmission.Restricted`에 남긴다. 같은 signature의 effect descriptor가 충돌하면 임의의 승자를 고르지 않고 그 채널만 fail-closed한다. 이는 exact-equality 대표 선택이나 strict-subset 승자 방식이 아니다. 공개 미준비 Cause는 자기 evidence ID와 함께 서로 분리해 보존한다.
-- 공개 fallback 억제는 `RelativeCauseDominancePolicy` 한 곳에서만 판정한다. representative를 고르기 전에 독립적으로 공개 가능한 모든 Cause가 자기 ID로 eligibility에 참여하며, 실제 선택 가능한 **하나의** specific Cause가 동일 effect mode로 generic Cause의 모든 직접 effect를 스스로 소유하고, 같은 root·source·attribution·event line에서 generic의 공개 tier를 낮추지 않을 때만 억제한다. dominance 뒤에는 retained Cause끼리만 representative를 고른다. 이때 한 Cause가 다른 Cause를 흡수하려면 중앙 dominance가 이미 증명한 fallback obligation을 자기 혼자 superset으로 보존해야 하고 비교 공개 우선순위를 역전할 수 없다. obligation이 서로 비교 불가능하면 둘 다 남으며 sibling의 obligation을 합칠 수 없다. 모든 제거 fallback은 최종 selected representative 중 적어도 하나를 실제 maximal direct dominator로 계속 가져야 한다. exact owned effect channel 일치는 필요조건일 뿐 종류 간 edge를 만들지 않으며, edge는 엄격한 의미 정제만 허용한다. 현재 전술 그래프는 `MissedTacticalResource → {WrongMoveOrder, RecaptureRecoveryWindow, KingForcing, MaterialSwing}`, `CandidateTacticalLiability → MaterialSwing`, `MaterialSwing → {WrongRecapturer, SacrificeCompensation, TacticalRefutationOfPlayed}`, `TacticalRefutationOfPlayed → {TempoLoss, KingForcing}`다. 전략 그래프는 `MissedStrategicImprovement → {StructuralImprovement, TargetPressureGain, CenterControlGain, PawnBreakOpportunity, ActivityGain, OpponentRestriction, PlanImprovement}`, `StructuralImprovement → PawnWeaknessTarget`, `StrategicConcession → {TargetPressureRelease, KingSafetyConcession, ActivityLoss, PlanContradiction}`다. 따라서 `MaterialSwing → WrongMoveOrder`, 전술 fallback과 draw/conversion 사이, 구조·전략 fallback과 conversion 사이처럼 의미 축이 다른 관계는 금지한다. `MaterialSwing`은 exact same owned channel의 `TacticalRefutationOfPlayed`를 억제할 수 없고 그 반대만 가능하며, 채널이 다르면 둘 다 보존한다. plan 정제는 specific Cause가 실제 `PlanResult`/`PlanRestriction` 직접 proof를 소유해야 한다. Primary specific은 Primary/Complementary fallback을 지배할 수 있지만 Complementary specific은 Primary fallback을 제거할 수 없고, sibling Cause의 채널 합산이나 diagnostic Cause의 억제도 금지한다.
+- 공개 fallback 억제는 `RelativeCauseDominancePolicy` 한 곳에서만 판정한다. representative를 고르기 전에 독립적으로 공개 가능한 모든 Cause가 자기 ID로 eligibility에 참여하며, 실제 선택 가능한 **하나의** specific Cause가 동일 effect mode로 generic Cause의 모든 직접 effect를 스스로 소유하고, 같은 root·source·attribution·event line에서 generic의 공개 tier를 낮추지 않을 때만 억제한다. dominance 뒤에는 retained Cause끼리만 representative를 고른다. 이때 한 Cause가 다른 Cause를 흡수하려면 중앙 dominance가 이미 증명한 fallback obligation을 자기 혼자 superset으로 보존해야 하고 비교 공개 우선순위를 역전할 수 없다. obligation이 서로 비교 불가능하면 둘 다 남으며 sibling의 obligation을 합칠 수 없다. 모든 제거 fallback은 최종 selected representative 중 적어도 하나를 실제 maximal direct dominator로 계속 가져야 한다. exact owned effect channel 일치는 필요조건일 뿐 종류 간 edge를 만들지 않으며, edge는 엄격한 의미 정제만 허용한다. 현재 전술 그래프는 `MissedTacticalResource → {WrongMoveOrder, RecaptureRecoveryWindow, KingForcing, MaterialSwing}`, `CandidateTacticalLiability → MaterialSwing`, `MaterialSwing → {WrongRecapturer, SacrificeCompensation, TacticalRefutationOfPlayed}`, `TacticalRefutationOfPlayed → {TempoLoss, KingForcing}`다. 전략 그래프는 `MissedStrategicImprovement → {StructuralImprovement, TargetPressureGain, CenterControlGain, PawnBreakOpportunity, ActivityGain, OpponentRestriction, PlanImprovement}`, `StrategicConcession → {TargetPressureRelease, ActivityLoss, PlanContradiction}`다. 따라서 `MaterialSwing → WrongMoveOrder`, 전술 fallback과 draw/conversion 사이, 구조·전략 fallback과 conversion 사이처럼 의미 축이 다른 관계는 금지한다. `MaterialSwing`은 exact same owned channel의 `TacticalRefutationOfPlayed`를 억제할 수 없고 그 반대만 가능하며, 채널이 다르면 둘 다 보존한다. plan 정제는 specific Cause가 실제 `PlanResult`/`PlanRestriction` 직접 proof를 소유해야 한다. Primary specific은 Primary/Complementary fallback을 지배할 수 있지만 Complementary specific은 Primary fallback을 제거할 수 없고, sibling Cause의 채널 합산이나 diagnostic Cause의 억제도 금지한다.
 - ordered line pair마다 비교 레코드는 하나뿐이며, delta·승률 변화·mate·verdict는 두 등록 line에서 정규 생성한 값과 정확히 같다.
 - 후보군 descriptor는 실제 best/second pair 한 레코드만 소유하고, 그 분류에 사용한 top-3 line/eval을 parent로 가진다.
 - F는 Cause draft와 무관하게 각 비교의 reference/candidate endpoint inventory를 만든다. 합법 재생된 line의 material·mate·qualitative family는 각각 독립적인 completeness를 가지므로 한 family의 누락이 다른 family를 지우지 않는다. material은 완전한 material window와 정확한 값, mate는 engine-backed mate 평가와 root-owned mate 관찰의 일치, qualitative은 정확한 합법 line에서 도출된 전체 관찰을 요구한다. structural은 root move의 합법적인 exact endpoint delta, strategic은 해당 비교의 모든 axis·source·outcome이 완전한 exact contrast를 요구한다. 필요한 source/counterpart inventory가 incomplete·중복 모호·불일치이면 C는 draft나 다른 family의 근거로 채우지 않고 해당 차등 채널을 명시적으로 보류한다.
 - 외부 `currentEvalCp`, `deltaVsBaseline`, probe 요약 평가값은 입력 계약에서 제거되었으며, 그래프 평가는 등록된 line에서만 파생된다.
+- 합법수 생성은 `PrincipalVariationEvidence.actualLegalMoves` 한 곳만 소유한다. 캐시 키는 보드 문자열이 아니라 시계와 반복 이력을 포함한 완전한 `Position`이므로 같은 보드라도 서로 다른 발생의 `Move.after`를 섞지 않는다. `PositionAnalyzer`는 전달된 `Position`과 FEN의 semantic board state가 일치할 때만 캐시를 조회한다. 동일 semantic board state의 폰 topology·slider ray·rule attack만 공유하고, occurrence별 합법수와 그 합법수에서 나온 `PiecePressure`는 해당 발생에 결속한다.
+- 표준 관계의 board-snapshot 생산자는 `PositionRelationExtractor` 하나다. 모든 슬라이더 방향은 보드 끝까지 만나는 **모든 occupied square를 거리순으로** 하나의 `RayBarrier` 사실에 보존한다. 핀·엑스레이·배터리·스큐어는 이 완전한 점유열에서 결정적으로 분류할 뿐 별도 board fact를 생산하지 않는다. 세 번째 이후 점유자는 향후 해소 순서를 위한 정확한 witness이지 현재의 즉시 전술 target이 아니므로 둘을 혼동하지 않는다. 이 사실의 의존 범위도 공격자에서 보드 끝까지여야 하므로 먼 기물이 바뀌어도 기존 장벽 뒤에 숨지 않는다. 다만 먼 점유자만 바뀐 전체 위상 churn은 첫 장벽·즉시 표적·축이 같은 기존 핀·엑스레이·스큐어·배터리를 새로 만들지 않는다. `RelationRayProjection`이 named 관계, 즉시 표적, 배터리 형성의 단일 투영 권한을 가지며 구조 계층이 `occupants.lift(1)`을 다시 해석하지 않는다. named ray를 합법 line에 투영할 때도 새 기하 생산자로 취급하지 않고 정확한 after-position `RayBarrier` 하나를 직접 부모로 가져야 한다. 실제 합법 수 하나의 `BoardTransitionFootprint`는 바뀐 각 칸의 before/after occupant와 그 칸을 지나는 모든 slider origin을 보존한다. 이후 공격맵과 ray/barrier는 이 발자국으로 희소 갱신하며 냉간 계산과 완전 동치여야 한다. 캐슬링의 룩, 앙파상 제거 칸, promotion 역할 변환을 주 이동자 두 칸으로 축소하지 않는다.
+- 현재 차례의 `LegalMove`만 occurrence 전역 사실이며 합법 transition마다 정확히 재생산한다. FEN의 active color와 `PositionNodeRef.sideToMove`가 일치하지 않는 발생점은 관계 그래프와 폐쇄 인증에서 모두 거부한다. 부재는 저장되는 음성 fact가 아니라 폐쇄 인벤토리에 대한 타입화된 질의로만 그때그때 증명한다. `AnyLegalMove`와 `LegalCaptureOf`는 실제 side-to-move에만 허용하고, `GeometricFriendlySupportOf`는 해당 칸에 실제 아군 기물이 있을 때의 기하적 지원 부재만 뜻한다. 이들 중 어느 하나도 단독으로 “수비자가 없다”나 “응수가 없다”로 승격되지 않는다.
+- 구조 델타가 소비하는 전·후 범위는 전이 종류에서 다시 추측하지 않고 등록된 `PositionNode.role.scope`가 소유한다. 위협 응수선도 FEN에서 별도 시작 분석을 만드는 대신 등록된 위협 결과 분석의 실제 합법수에 다시 결속하며, 동일 수가 여러 위협 발생점에 있으면 각 전이 evidence ID가 별도 구조 델타를 소유한다.
+- 관계 인증은 canonical position extractor와 legal tactical replay 두 입구뿐이다. 임의의 detail에 합법 수순을 붙이는 것으로 인증 등급을 올릴 수 없고, 구조 목적 문자열은 닫힌 문법으로 완전히 파싱되어 actor·출발칸·도착칸·대상·promotion까지 정확히 결속된다. 이름만 있고 이 의무를 증명하지 못하는 pattern·plan은 생산하지 않는다.
+- 구조 델타는 정확히 일치하는 합법 `MoveTransitionEvidence`와 전·후 `PositionFeatureEvidence`를 직접 부모로 가져야 증명 가능하다. 생산자 이름이나 보드 좌표가 든 문자열만으로는 권한을 얻지 못한다.
+- 표준 관계 델타는 전·후 relation node 목록이 각 `PositionAnalysis`의 전체 canonical inventory와 정확히 일치할 때만 인증한다. 증명 키는 실제 changed square와 그 dependency를 통과한 moved piece뿐이다. 같은 file이라는 사실은 검색 인덱스일 수는 있어도 인과 증명이 아니다. 한 합법 전이의 변화들은 pairwise 사실을 재생산하지 않고 하나의 `CanonicalRelationChangeCombination`에서 모두 보존하며, 각 변화는 자기 관계를 실제로 건드린 changed-square·moved-piece 키를 잃지 않는다. 따라서 앙파상처럼 서로 다른 변경 칸이 서로 다른 선을 동시에 여는 경우도 한 전이로 결합되지만, 관계마다 국소 증명 키는 섞이지 않는다. 결합으로 파생된 관계도 선택한 premise들의 증명 키 전부를 보존하고, 그래프 승인 시 각 전·후 premise가 그 실제 칸·기물 변화에 다시 결속되는지 확인한다. 이것은 동시 관계변화를 증명할 뿐, 준비·예방·과부하 같은 이름이나 인과 결론을 자동 승인하지 않는다. 현재 차례에만 성립하는 `LegalMove`도 턴이 바뀌었다는 이유로 move-caused 델타가 될 수 없다. 임의로 차례를 바꾼 가상 합법수나 별도 attack-map에는 증명 권한이 없다.
+- 같은 계획 사건에서 증명된 결과와 응답 후속 관계는 진실 단계에서 전부 보존한다. 역사 의존관계도 kind별 최신 하나를 고르지 않고 모든 exact dependency를 보존한다. 같은 target square는 상관관계일 뿐 선행 수가 후속 수를 가능하게 했다는 증명이 아니므로 causal dependency가 아니다. `representativeResult`는 미래 수·목표를 하나만 보여줘야 하는 표시 투영에만 쓰며, branch 승인·Cause 원시값·robust/refuted 결과 권한은 복수 `PlanCausalResultAssessment`를 각각 소비한다. 결과 종류별 salience 점수나 의존관계 종류별 우선순위로 형제를 버리지 않는다.
+- 관계와 line consequence가 같은 PV에 있거나 같은 target square를 언급한다는 이유만으로 tactical mechanism을 만들지 않는다. 관계 occurrence와 결과 사이의 명시적 causal edge가 없으면 비워 둔다. Cause attribution도 kind/source fallback으로 만들지 않고 draft 생성 시 `ReferenceCreatesResource`, `CandidateCreatesValue`, `CandidateAllowsLiability`, `SharedContext`를 증명 경로가 명시해야 한다. 누락된 attribution은 public cause 권한을 얻지 못한다.
+- 하나의 물리 root move에 서로 다른 score·mate·continuation을 가진 엔진 평가가 들어오면 깊이·입력 순서로 하나를 고르지 않는다. root/focus/probe admission에서 충돌로 거부하며, MultiPV reply의 root move는 서로 달라야 한다. `RelativeCauseKind → ClaimFamily`는 전수 match라 새 cause kind가 조용히 `Strategic`으로 fallback할 수 없다.
+- 보드의 supporter/attacker 질의는 `ExactBoardRelations`만 직접 수행한다. 중요도 계산은 최초 해석에서 만든 profile을 idea lead에도 재사용하며, 인증된 dominance edge가 잘못되거나 순환하면 모두 0층으로 숨기지 않고 계약 위반으로 실패한다.
+- canonical structural delta와 그 pawn topology, relation inventory, 인증서는 호출자가 모두 명시해야 한다. 빈 기본값으로 미완성 증명 객체를 정상 상태처럼 만들 수 없다.
+- 계획 어휘는 실제 `PlanCausalGoalProof`가 증명하는 종류만 가진다. 같은 theme라는 이유로 개발·공간·활동 결과를 다른 계획에 빌려주는 fallback은 없다.
 
 이는 사후 테스트가 구조를 정당화하는 방식이 아니다. 불완전한 상태를 최종 타입으로 만들 수 없게 하는 구성 규칙이다.
 
@@ -125,47 +138,24 @@ flowchart LR
 3. 단일 인증 정책이 그래프에서 증명 의무를 충족한 후보만 승인한다.
 4. 승인된 claim만 중요도 경쟁을 거쳐 공개된다.
 
-## 6. 직접 공개 투영
+## 6. v6 직접 공개 투영과 추가 인과 탐색
 
-공개 JSON은 패킷에서 다음 정보만 직접 읽는다.
+플레이어 응답은 `chesstory.position-commentary.response.v6` 하나뿐이다. 전체 합법수 목록을 공개하거나 각각을 별도 해설하지 않는다. 요청이 지정한 played move와 엔진이 고른 best가 같으면 한 레코드, 다르면 best의 `line_insight`와 played의 `commentary` 두 레코드만 `selected_move_reviews`에 둔다.
 
-- verdict와 비교한 수
-- R이 선택한 Cause의 종류, 비교 공개 권한인 `comparison_exposure_rank`, typed importance dominance layer를 반영한 `selection_order`, 공개 tier, effect mode, source side와 attribution
-- `CauseDispositionLedger`만 기계적으로 집계한 `idea_status_detail`: authority, 전체 Cause 수, selected Cause ID, 상태·이유별 count, abstention code
-- 그 Cause가 소유한 정확한 `DirectCauseChannel`의 actor, target, mechanism, consequence
-- 채널에서 직접 일어난 `directChange`와 그 비교가 played move에 뜻하는 `playedChange`
-- 채널의 carrier, provenance, line, horizon과 witness
-- 채널의 `rootOwnedProof`에서만 압축한 nullable `proof_segment`
-- Cause를 정확히 한 번 배치하는 승인 claim host의 family와 tier
-- Cause에 결속된 only-move qualifier
+`commentary.primary`는 동일 mover 관점의 reference/played endpoint와 그 비교에서 직접 나온 verdict다. `causal_explanations`는 R이 선택한 `PlayerFacingNarrativeIdea`만 투영한다. 각 facet은 다음 결속을 잃지 않는다.
 
-Claim host는 표시 위치와 family/tier metadata만 제공할 뿐 Cause의 우선순위나 인과 근거를 결정하지 않는다. 일반 claim evidence, sibling Cause, context evidence 또는 parent closure에서 actor·target·mechanism·consequence를 다시 조립할 수 없다. 공개 Cause 한 개는 R이 선택한 `cause_evidence_id`, `comparison_exposure_rank`, `selection_order`와 그 안의 완전한 직접 채널을 그대로 운반한다. `comparison_exposure_rank`는 PlayedVsBest·BestVsSecond·PlayedVsAlternative 사이의 **비교 공개 권한 순서**이고 개별 Cause의 체스적 중요도 점수가 아니다. played orientation의 `PlayedVsAlternative`가 자기 exact compatible channel로 임계값 이상의 개선과 `CandidateAllowsLiability`를 함께 증명하면 동일 의미의 `PlayedVsBest` 책임 Cause가 없을 때 Complementary로 생존하며, 동일 PVB Primary가 있으면 PVB만 책임 대표로 남는다. 동일 `PlayedVsBest` 안에서 대안 자원을 Complementary로 내리는 판정은 fallback 억제 뒤에도 살아남은 하나의 played-liability Cause가 resource의 모든 채널과 같은 exact effect frame을 소유하고, direct change가 명시된 보완쌍일 때만 허용한다. sibling liability의 채널을 합치거나 같은 비교·종류·target만으로 대응시킬 수 없으며, 최종 tier가 확정된 뒤 단일 rank 정책이 `comparison_exposure_rank`를 처음부터 다시 계산한다. `selection_order`는 그 뒤 `PlayerFacingIdeaOrderingPolicy`가 증명된 idea-level typed dominance layer를 먼저, 동률이면 lead Cause의 comparison rank와 idea ID를 사용해 부여한다. 이는 선택 집합이나 Cause 의미를 바꾸지 않지만 단순 직렬화 순서도 아니다.
+- `cause_evidence_id`, cause kind, effect mode, exposure, source side, comparison kind
+- 원인이 발생한 facet의 `event_move`
+- 각 `DirectCauseChannel`의 고유 `channel_id`, actor, target, mechanism, consequence, witness, 그리고 그 채널이 실제로 소유한 `proof_line_moves`
+- proof가 존재할 때만 그 proof에서 압축한 `proof_segment`의 ply offset, move, role, terminal relation
 
-하나의 플레이어용 구조화 commentary 항목이 반드시 Cause 하나와 같지는 않다. 동일 `PlayedVsBest` 관계에서 정확히 한 played-liability Cause가 대안 resource Cause의 모든 직접 채널과 같은 effect frame을 자기 근거로 대응시킬 때만 `ExactPvbResponsibilityPair`가 생성된다. `PlayerFacingIdeaUnitPolicy`는 이 이미 인증된 pair만 받아 책임 Cause를 lead로, 대안 자원을 counterfactual facet으로 둔 하나의 `PlayerFacingIdeaUnit`을 만든다. Cause 기록·극성·source·attribution은 합치지 않으며, 대응이 없거나 둘 이상이면 각각 독립 unit으로 남긴다. 일반 channel 유사성, claim host, support ID 또는 비교 순위로 새 pair를 추론할 수 없다. 공개 `ideas`의 각 원소는 하나의 ordered unit이고, 그 안의 `facets` 첫 원소만 `facet_role=lead`, 나머지는 모두 `facet_role=supporting`이다. 실제 최상위 권한은 `idea_importance.unique_top`과 unit의 `priority_status`에만 있다. 배열의 첫 원소는 그것만으로 최상위가 아니다.
+공개 계층은 이름이나 휴리스틱 confidence로 빈 구조를 채우지 않는다. 선택된 Cause가 heuristic이면 투영 자체가 실패한다. `proof_segment`의 각 수는 같은 채널의 `proof_line_moves[ply_offset]`와 일치해야 하며, 브라우저는 채널별 합법 재생까지 확인한 뒤에만 보드 표시로 사용한다. 같은 의미 문장을 갖는 두 채널도 `channel_id`와 증명 수순이 다르면 둘 다 남는다. Cause가 선택되지 않은 경우에도 검증된 played PV는 수의 결과를 보여 주는 별도 line evidence로 남지만, 이를 인과 설명으로 재명명하지 않는다.
 
-`idea_status_detail`은 새로운 fallback 또는 공개 판정 권위가 아니다. status/reason count는 원장의 enum을 모두 포함하는 고정 key 집합으로 집계하고, selected ID는 정렬해 싣는다. C Cause가 하나도 없으면 abstention은 `no_relative_cause_generated`, Cause는 있지만 selected가 없으면 원장에 실제 기록된 terminal reason code의 중복 제거 집합, selected가 하나라도 있으면 빈 목록이다. primary comparison이 engine-backed여서 full/renderable explanation을 투영할 때 공개 `ideas[*].cause_evidence_id`의 집합은 원장의 selected ID 집합과 정확히 같아야 하며 누락·추가·중복이면 projection이 fail-closed한다. 이 경우에만 기존 `idea_status`의 `certified`/`no_certified_differential_idea`를 이 닫힌 동일 집합에서 정한다. primary comparison이 engine-backed가 아니어서 payload 자체가 withheld되면 public ideas는 구조상 비어 있고 `idea_status`는 `unavailable`로 남는다. 이때 자체 비교가 engine-backed인 보조 비교 Cause가 R에서 이미 selected일 수 있으므로, 그 selected 원장은 삭제하거나 거부하지 않고 `idea_status_detail`에 진단 상태로 그대로 보존한다.
+추가 인과 탐색은 v6 job reducer의 동일 원장 안에서만 일어난다. 최초 root bundle과 필요한 played-vs-best comparison을 조립한 뒤 의미 계층이 발행한 동일 objective의 probe 요청을 한 wave로 동결한다. 한 wave의 결과를 모두 수집하기 전에는 조립을 다시 실행하지 않는다. 다음 objective는 갱신된 증거 그래프가 새로 요구할 때만 생기며, 정적인 단계 순위를 사용하지 않는다. 따라서 causal continuation에서 처음 드러난 계획에 branch reply 검증이 뒤따를 수 있지만, 이미 이행한 request ID를 재발행하거나 같은 물리 탐색을 다시 실행할 수는 없다. 완전한 engine profile·시작 이력·search FEN·강제 prefix·root restriction·limits·elapsed contract가 같은 suffix는 원장에서 재사용하고, 빠진 물리 탐색만 새 `causal_probe` work가 된다. `ProbeVariant`는 branch census, 두 수의 causal continuation, 한 수의 counter-resource를 서로 섞을 수 없는 합타입으로 보존하며, counter-resource 후보는 임의 top-k가 아니라 정확히 변화한 모든 자원을 명시적 job budget 안에서 처리한다.
 
-`RelativeCauseBinding.bindingTier`와 v3 진단 필드 `binding_tier`는 Cause가 비교 관계에 결속되는 역할(`Primary`/`Supporting`/`Context`)만 나타낸다. 이것 역시 체스적 중요도가 아니며 `importance` 부분순서나 `comparison_exposure_rank`를 대신할 수 없다.
+player-use `Q → F → C → Jp → Ja → R → P`에서 Q의 단일 권위는 `CommentaryJobReducer`다. Q는 canonical history와 focus를 검증하고 root/focus/causal work의 발급·identity·중복 제거·admission을 소유한다. 브라우저는 발급된 `search_fen`에서 Stockfish를 실행하고 suffix만 반환한다. 서버는 Stockfish 프로세스를 실행하지 않으며 F 이후의 구조화 의미 계산만 담당한다. `RawMoveReviewInput` 직접 경로와 Q-stage oracle 실험은 development-only다.
 
-Commentary 객체에는 selected Cause와 무관한 played PV 전체를 별도 `line`으로 싣지 않는다. 수순이 commentary 근거가 되려면 해당 채널의 `rootOwnedProof`에서 직접 압축한 `proof_segment` 안에 있어야 한다. line episode는 검증된 root-to-event replay prefix만, plan result는 그 proof가 소유한 root-to-source enabling path만 싣고, root-local motif·relation·threat·transition은 정확한 root move 한 수만 싣는다. strategic wrapper는 primitive segment를 그대로 재사용한다. descendant·sibling·witness 수순을 합성하지 않으며 안전하게 압축할 수 없으면 `null`을 싣되 Cause 자체를 제거하지 않는다. 이 segment는 구조화 commentary의 근거일 뿐 준비도·선택·fallback·importance 권위로 사용하지 않는다. 특히 reference resource의 commentary에 played line의 후손 수를 근거로 섞는 통로를 공개 DTO 수준에서 닫는다.
-
-별도 `importance` 객체는 R이 이미 선택한 집합을 바꾸지 않고 `RootOwnedEffectPolicy`가 승인한 직접 채널의 typed 결과만 부분순서로 비교한다. 비교 권한을 주는 universe는 **semantic root board + 정규화된 `PlayerFacingImpact`**뿐이다. comparison, event line, source/attribution, exposure, effect mode, actor, direct/played change와 source-side stake는 완전한 provenance로 보존되지만 그 값의 equality가 magnitude 비교 권한을 주거나 막지는 않는다. 같은 universe 안에서도 typed effect domain과 필요한 effect identity가 맞아야 하며, 실제 board-mate episode만 terminal result로서 cross-domain 우위를 가질 수 있다. material effect는 포획 대상의 role·square·value라는 event salience와 beneficiary 기준의 durable outcome을 분리한다. 중요도 magnitude는 complete observed material window에서 양수로 유지되는 stable floor와 그 onset만 사용하며, event salience는 commentary 정보일 뿐 ranking 값이 아니다. cause kind, claim host의 family/tier, support/provenance 수, ID, 비교 delta와 line 전체 평가는 중요도 크기나 점수로 쓰이지 않는다. 다른 typed family와 미측정 proof는 `incomparable`로 보존한다. Cause 전체를 낮은 dominance layer로 내리려면 **하나의 동일한 다른 Cause**가 그 Cause의 선택된 모든 측정 채널을 각각 엄격 지배해야 하며, 서로 다른 sibling Cause의 우위를 합산할 수 없다. 미측정·모호 채널은 계속 fail-closed한다. `idea_importance`는 각 unit의 책임-owning lead만 같은 정책에 넣어 pair의 두 facet이 서로 경쟁하지 않게 한다. 그 뒤 `PlayerFacingIdeaOrderingPolicy`가 증명된 dominance graph의 maximal layer부터 unit과 그 연속된 facet의 `selection_order`를 다시 부여하되 선택 집합은 불변이다. claim host 행은 별도 휴리스틱 점수 없이 exposure tier 내림차순, claim ID 오름차순으로만 운반된다. 모든 선택 idea lead의 모든 채널이 측정되고 frontier unit이 정확히 하나일 때만 `unique_top`을 공개한다.
-
-Packet은 공개 시점에 exposure를 다시 판정하지 않는다. R이 산출한 canonical `PlayerFacingCauseExposureResolution` 전체를 factory에서 재계산 결과와 동일한지 검증한 뒤 그대로 보존하고, `importance`는 그 안의 `importanceResolution`만 읽는다. 따라서 중요도 해석은 새로운 선택 권위나 공개 fallback 경로가 아니다.
-
-공개 `importance`는 선택 Cause ID, 모든 profile, `incomparable`을 포함한 모든 profile 관계의 양쪽 `causal_signature`, nullable domain, Cause별 measured/unmeasured channel 결정까지 보존한다. 관계를 Cause 쌍으로 합치거나 incomparable 관계를 개수만 남기고 버리지 않는다. `relation_summary`의 comparable/incomparable 수는 Cause 쌍이 아니라 실제 측정된 **effect profile 쌍**의 수다. 여러 직접 채널을 가진 Cause를 하나의 합산 점수로 압축하지 않기 때문에 이 단위를 명시적으로 유지한다.
-
-공개 `idea_status`는 player-use commentary 생성 여부가 아니라 인증 경계를 나타낸다.
-
-- `certified`: R이 선택해 공개하는 differential Cause가 하나 이상 있다.
-- `no_certified_differential_idea`: exact engine-backed `PlayedVsBest` 1차 비교는 있어 verdict를 공개할 수 있지만, 공개 인증된 differential Cause는 없다. 이는 수 전체를 판단 불능으로 만드는 상태가 아니라 Cause에 대해서만 명시적으로 보류한 상태다.
-- `unavailable`: exact engine-backed 1차 비교 자체가 없어 verdict와 differential idea를 판단할 근거가 없다.
-
-모든 합법 수는 보드를 변화시키며 F 수준의 사실을 만들 수 있다. 그러나 모든 수에 “가장 중요한 차등 아이디어”가 증명되는 것은 아니므로, 시스템은 Cause를 억지로 생성하지 않는다. Cause가 0개여도 exact engine-backed `PlayedVsBest` verdict는 그대로 공개하고 `idea_status=no_certified_differential_idea`로 구분한다.
-
-이 문서는 runtime judgment boundary로서, 전체 system 목표 표기 `Q → F → C → Jp → Ja → R → P`의 player-use 경계를 다룬다. Q는 `CommentaryJobReducer`의 server-owned legal inventory/work/admission/coverage이고, `PreparedMoveReviewInventory`가 모든 legal root move를 한 번만 rank해 F로 넘긴다. 브라우저는 issued `search_fen`에서 suffix를 실행·보고할 뿐이며, `EngineLineAdmission`이 서버의 initial FEN과 canonical prefix에 replay·bind한 뒤에만 F로 들어간다. 서버가 F→C→Jp→Ja→R→P와 packet/projection을 소유한다. `RawMoveReviewInput` 직접 경로와 이 문서 뒤의 Q-stage oracle 실험은 development-only로, player-use transport·권위·coverage를 확장하지 않는다. 이 범위에 자연어 문장화 구현은 추가하지 않는다.
-
-공개 의미의 루트는 두 종류뿐이다. 인과 아이디어·계획은 R이 선택한 Cause와 그 Cause가 소유한 정확한 `DirectCauseChannel`에서, verdict는 player-facing `Primary` `PlayedVsBest` 비교에서 직접 투영된다. 따라서 verdict는 전체 수의 1차 판정 범위이고, 각 idea의 `comparison`은 그 idea가 무엇과 무엇을 비교하는지 결정하는 유일한 권위다. 둘을 합쳐 별도 의미 모델을 만들거나 verdict의 비교를 모든 idea에 덮어씌우지 않는다. 승인 claim은 선택된 Cause를 정확히 한 host에 배치하지만 Cause의 의미나 근거를 확장하지 않는다.
+공개 의미의 루트는 두 종류뿐이다. verdict는 player-facing `Primary` 비교에서, 인과 아이디어와 계획은 R이 선택한 Cause와 그 Cause가 소유한 정확한 `DirectCauseChannel`에서 나온다. 표현 계층은 둘을 합쳐 제3의 판단 모델을 만들지 않는다.
 
 ## 7. Development-only 블라인드 실패의 병목을 찾는 식별 실험
 
@@ -370,11 +360,11 @@ Confidence 값, ranked list의 순서, 필드의 실제 missingness는 뒤 단�
 - evidence parent 관계가 닫혀 있고 순환하지 않는다.
 - player-facing Cause 집합이 직접 채널 준비도, provisional 비교 공개 판정과 단일 `RelativeCauseDominancePolicy`의 최종 fallback 억제를 중앙에서 다시 계산한 결과와 일치한다.
 - packet의 Cause disposition ID 집합이 C의 전체 RelativeCause ID 집합과 정확히 같고, R에 도달한 각 disposition이 canonical dominance/cross-comparison 결과와 일치하며, `selected` ID와 owner가 packet의 실제 selected Cause 집합과 정확히 같다. Packet은 이미 끝난 Jp/Ja 결정을 다시 추론하지 않고 원장의 전수 coverage와 R 일관성만 검증한다.
-- 공개 `idea_status_detail`은 위 원장만 입력으로 삼는다. primary comparison이 engine-backed인 full/renderable 투영에서는 공개 idea Cause ID 집합이 원장의 selected 집합과 정확히 같을 때만 `idea_status`와 explanations를 완성한다. primary가 불충분한 withheld 투영은 public ideas를 비우되 보조 비교에서 이미 selected인 원장을 summary에 보존한다. 어느 경로도 Jp/Ja/R을 재실행하거나 Cause/fallback을 생성하지 않는다.
-- 선택된 각 Cause가 정확히 한 승인 claim host에 배치되고 R의 비교 공개 권한 `comparison_exposure_rank`와 typed importance dominance layer를 반영한 `selection_order`가 packet에 함께 보존된다.
+- v6 공개 투영은 packet 원장을 다시 요약하거나 상태 이름을 노출하지 않고, R이 선택한 narrative idea의 Cause ID 집합만 `causal_explanations[*].facets[*]`로 운반한다. 어느 경로도 Jp/Ja/R을 재실행하거나 Cause/fallback을 생성하지 않는다.
+- 선택된 각 Cause는 packet 내부에서 정확히 한 승인 claim host와 canonical ordering을 갖지만, v6 wire는 이를 별도 공개 점수나 우선순위 숫자로 재포장하지 않는다.
 - 각 Cause 선택이 같은 Cause의 등록된 직접 채널을 `causal_signature`, carrier와 `directChange`로 정확히 가리킨다.
 - 선택된 Cause가 공개 단계에서 재해석 불능이면 조용히 생략하지 않고 invariant 위반으로 실패하며, 선택 채널의 `proof_segment`는 오직 해당 `rootOwnedProof`에서만 생성된다.
-- typed importance 해석은 선택 집합을 변경하지 않으며, 승인된 root-owned effect 중 같은 semantic root board와 `PlayerFacingImpact` 아래 typed 단위가 비교 가능한 결과만 frontier와 dominance로 표시한다. `PlayerFacingIdeaOrderingPolicy`는 이 부분순서의 layer에 따라 idea unit과 그 Cause facet의 `selectionOrder`만 재부여한다. Packet의 모든 profile 관계와 Cause별 측정 coverage는 공개 JSON에 channel signature 단위로 보존된다.
+- typed importance 해석은 선택 집합을 변경하지 않으며, 승인된 root-owned effect 중 같은 semantic root board와 `PlayerFacingImpact` 아래 typed 단위가 비교 가능한 결과만 내부 ordering에 반영한다. 공개 JSON은 선택된 facet 순서와 각 channel signature·직접 증명만 보존한다.
 
 공개 투영은 이 factory를 통과한 packet만 받는다. 일반 아이디어·계획은 R이 선택한 Cause의 정확한 `DirectCauseChannel`만 읽고, claim은 그 Cause의 유일한 host로만 사용한다. Verdict는 검증된 player-facing `Primary` `PlayedVsBest` 비교만 읽으며 각 idea는 자기 Cause의 comparison을 그대로 보존한다. 독립 line/exact payload는 공개 준비도를 만들 수 없다. 따라서 Cause에서 직접 proof channel로 거슬러 올라가는 귀납으로 모든 인과 근거가 같은 유한 DAG 안에 있음을 보일 수 있다. Packet의 selection DTO와 `proof_segment`는 새 의미를 복사하거나 재판정하지 않고 등록된 Cause·채널·root-owned proof의 exact key와 exact move만 운반하므로, 끝단 표현이 두 번째 판단 권위가 되지 않는다.
 

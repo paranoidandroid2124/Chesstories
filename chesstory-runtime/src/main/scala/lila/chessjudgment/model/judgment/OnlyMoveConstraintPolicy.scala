@@ -132,8 +132,8 @@ object OnlyMoveConstraintPolicy:
       fact: CandidateComparisonFact,
       playedMoves: Set[String]
   ): Boolean =
-    val candidatePlayed = lineIsPlayed(fact.candidateLine, playedMoves)
-    val referencePlayed = lineIsPlayed(fact.referenceLine, playedMoves)
+    val candidatePlayed = fact.candidateLine.rootMoveIn(playedMoves)
+    val referencePlayed = fact.referenceLine.rootMoveIn(playedMoves)
     fact.kind match
       case CandidateComparisonKind.PlayedVsBest =>
         candidatePlayed && !referencePlayed
@@ -141,6 +141,3 @@ object OnlyMoveConstraintPolicy:
         referencePlayed && !candidatePlayed
       case CandidateComparisonKind.PlayedVsAlternative | CandidateComparisonKind.ReferenceVsAlternative =>
         false
-
-  private def lineIsPlayed(line: LineNodeRef, playedMoves: Set[String]): Boolean =
-    playedMoves(EvidenceRef.normalizeMove(line.rootMove))

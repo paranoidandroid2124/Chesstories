@@ -6,11 +6,9 @@
 .scala-build
 target
 dist
-node_modules
-ui/.build/node_modules
+**/node_modules
 ui/.build/.cache
 ui/.build/instance.lock
-ui/**/node_modules
 ui/**/dist
 public/compiled
 public/npm

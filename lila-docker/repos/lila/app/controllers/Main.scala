@@ -7,7 +7,7 @@ import lila.app.*
 import lila.core.study.StudyOrder
 import lila.core.config.CollName
 import lila.db.dsl.*
-import lila.web.{ StaticContent, WebForms }
+import lila.web.StaticContent
 
 final class Main(
     env: Env,
@@ -30,29 +30,26 @@ final class Main(
     else Redirect(routes.Main.prelaunch).toFuccess
 
   def prelaunch = Open:
-    Ok.page(views.pages.landing.prelaunch())
+    Ok.page(views.pages.landing())
 
   def home = Auth { ctx ?=> me ?=>
     for
       studyPager <- env.study.pager.mine(StudyOrder.updated, page = 1)(using me)
       recentStudies = studyPager.currentPageResults.take(3).toList
-      continueCard =
-        recentStudies.headOption
-          .map(Main.HomeContinueCard.Study.apply)
-          .getOrElse(Main.HomeContinueCard.Starter)
       data = Main.HomePageData(
-        continueCard = continueCard,
+        continueStudy = recentStudies.headOption,
         quickActions = List(
           Main.HomeQuickAction(
             label = "PGN",
-            title = "Start a deep review",
-            copy = "Paste one game and review the key positions on the board.",
+            title = "Explain a game move by move",
+            copy =
+              "Select any move to compare what was played with a reference line and inspect the evidence.",
             href = routes.UserAnalysis.index.url
           ),
           Main.HomeQuickAction(
             label = "Recent games",
-            title = "Bring a public game",
-            copy = "Find recent Lichess or Chess.com games and choose one to review.",
+            title = "Explain a public game",
+            copy = "Choose a recent Lichess or Chess.com game and review it move by move.",
             href = routes.Importer.importGame.url
           )
         ),
@@ -104,7 +101,7 @@ final class Main(
   def journalPost(slug: String) = Open:
     journalContent.bySlug(slug) match
       case Some(post) => Ok.page(views.pages.journal(journalContent.all, Some(post)))
-      case None       => NotFound.page(views.site.message.notFound(Some("Journal post not found.")))
+      case None => NotFound.page(views.site.message.notFound(Some("Journal post not found.")))
 
   def handlerNotFound(msg: Option[String]) =
     fuccess(NotFound(msg.getOrElse("Not Found")))
@@ -128,7 +125,7 @@ final class Main(
   def healthz = Anon:
     healthChecks.map: checks =>
       val ready = Main.isReady(checks)
-      (if ready then Ok else ServiceUnavailable)(
+      (if ready then Ok else ServiceUnavailable) (
         Json.obj(
           "status" -> (if ready then "ready" else "unready"),
           "checks" -> checks.map(_.json)
@@ -142,16 +139,15 @@ final class Main(
     for
       mongoReady <- mongoHealth
       bindingStatuses <- env.openBetaBindings.snapshot
-    yield
-      List(
-        Main.HealthCheck(
-          name = "mongo",
-          ok = mongoReady,
-          required = true,
-          detail = if mongoReady then "query_ok" else "query_failed"
-        ),
-        Main.mailerCheck(env.config, env.mailer.mailer.canSend, required = requiredInProd),
-      ) ++ bindingStatuses.flatMap(Main.bindingHealthCheck(_, requiredInProd))
+    yield List(
+      Main.HealthCheck(
+        name = "mongo",
+        ok = mongoReady,
+        required = true,
+        detail = if mongoReady then "query_ok" else "query_failed"
+      ),
+      Main.mailerCheck(env.config, env.mailer.mailer.canSend, required = requiredInProd)
+    ) ++ bindingStatuses.flatMap(Main.bindingHealthCheck(_, requiredInProd))
 
   private def mongoHealth =
     env.mongo
@@ -163,11 +159,6 @@ final class Main(
 
 object Main:
 
-  sealed trait HomeContinueCard
-  object HomeContinueCard:
-    final case class Study(entry: lila.study.Study.WithChaptersAndLiked) extends HomeContinueCard
-    case object Starter extends HomeContinueCard
-
   final case class HomeQuickAction(
       label: String,
       title: String,
@@ -176,7 +167,7 @@ object Main:
   )
 
   final case class HomePageData(
-      continueCard: HomeContinueCard,
+      continueStudy: Option[lila.study.Study.WithChaptersAndLiked],
       quickActions: List[HomeQuickAction],
       recentStudies: List[lila.study.Study.WithChaptersAndLiked]
   )

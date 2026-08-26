@@ -1,8 +1,7 @@
 package lila.chessjudgment.analysis.transition
 
 import chess.Color
-import lila.chessjudgment.analysis.structure.{ StructuralDeltaContracts, TransitionStructuralDelta }
-import lila.chessjudgment.model.PlanSequenceSummary
+import lila.chessjudgment.analysis.structure.{ CanonicalTransitionStructuralDelta, StructuralDeltaContracts }
 import lila.chessjudgment.model.judgment.*
 
 object TransitionFactNormalizer:
@@ -19,12 +18,39 @@ object TransitionFactNormalizer:
 
   def fromStructuralDelta(
       id: String,
-      delta: TransitionStructuralDelta,
+      delta: CanonicalTransitionStructuralDelta,
       transition: MoveTransitionEdge,
+      replay: CanonicalLineReplay,
       line: Option[LineNodeRef],
       perspective: Color,
-      parents: List[EvidenceRef] = Nil
+      parents: List[EvidenceRef]
   ): EvidenceRecord =
+    val structural = delta.structural
+    val binding = StructuralTransitionBinding(
+      moveUci = transition.moveUci,
+      role = transition.role,
+      from = transition.from,
+      to = transition.to,
+      line = line,
+      perspective = perspective,
+      actorRole = replay.legalSteps.headOption.map(step => EvidencePieceRole(step.move.piece.role.name))
+    )
+    val transitionProof = CanonicalTransitionProof
+      .from(binding, replay)
+      .getOrElse(
+        throw IllegalArgumentException(
+          s"structural transition '${transition.evidence.id}' must reuse its admitted legal move"
+        )
+      )
+    val signals = StructuralDeltaContracts.signals(structural)
+    val consequences = StructuralDeltaContracts.consequences(structural)
+    val relationChanges = delta.canonicalRelations.changes
+    val deltaProof = CanonicalTransitionDeltaProof.from(
+      transitionProof,
+      signals,
+      consequences,
+      relationChanges
+    )
     val ref =
       EvidenceRef(
         id = id,
@@ -38,24 +64,19 @@ object TransitionFactNormalizer:
     EvidenceRecord(
       ref = ref,
       payload = StructuralDeltaEvidence(
-        transition = StructuralTransitionBinding(
-          moveUci = transition.moveUci,
-          role = transition.role,
-          from = transition.from,
-          to = transition.to,
-          line = line,
-          perspective = perspective
-        ),
-        signals = StructuralDeltaContracts.signals(delta),
-        consequences = StructuralDeltaContracts.consequences(delta),
-        developmentChoices = StructuralDeltaContracts.developmentChoices(delta)
+        transition = binding,
+        signals = signals,
+        consequences = consequences,
+        relationChanges = relationChanges,
+        canonicalTransitionProof = Some(transitionProof),
+        canonicalDeltaProof = Some(deltaProof)
       ),
       parents = parents
     )
 
   def fromPlanTransition(
       id: String,
-      transition: PlanSequenceSummary,
+      proof: PlanSequenceProof,
       position: PositionNodeRef,
       line: Option[LineNodeRef],
       scope: EvidenceScope,
@@ -74,7 +95,7 @@ object TransitionFactNormalizer:
       )
     EvidenceRecord(
       ref = ref,
-      payload = PlanTransitionEvidence(transition),
+      payload = PlanTransitionEvidence(proof),
       parents = parents
     )
 

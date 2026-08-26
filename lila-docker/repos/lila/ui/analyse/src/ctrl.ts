@@ -82,8 +82,21 @@ interface AnalyseHistoryState {
   analysePly: Ply;
 }
 
+const reviewResumeMarker = 'chesstory-review-pgn\n';
+
 function loginHref(): string {
-  return `/login?referrer=${encodeURIComponent(location.pathname + location.search)}`;
+  return `/login?referrer=${encodeURIComponent('/analysis?resumeReview=1')}`;
+}
+
+function takeResumedReviewPgn(): string | undefined {
+  const url = new URL(location.href);
+  if (url.searchParams.get('resumeReview') !== '1') return;
+  url.searchParams.delete('resumeReview');
+  history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+  if (!window.name.startsWith(reviewResumeMarker)) return;
+  const pgn = normalizeInlinePgn(window.name.slice(reviewResumeMarker.length));
+  window.name = '';
+  return pgn;
 }
 
 export default class AnalyseCtrl implements CevalHandler {
@@ -192,7 +205,8 @@ export default class AnalyseCtrl implements CevalHandler {
       () => this.withCg(g => g.set(this.cgConfig)),
       this.redraw,
     );
-    if (opts.inlinePgn) this.data = this.changePgn(opts.inlinePgn, false) || this.data;
+    const initialPgn = opts.inlinePgn || takeResumedReviewPgn();
+    if (initialPgn) this.data = this.changePgn(initialPgn, false) || this.data;
 
     this.initialize(this.data, false);
     this.initWorkspacePrefs();
@@ -335,6 +349,11 @@ export default class AnalyseCtrl implements CevalHandler {
 
   studyLoginHref = (): string => loginHref();
 
+  prepareStudyLogin = (): void => {
+    const pgn = normalizeInlinePgn(pgnExport.renderFullTxt(this));
+    if (pgn) window.name = reviewResumeMarker + pgn;
+  };
+
   studyNeedsAuth = (): boolean => !myUserId();
 
   studyUrl = (chapterId?: string): string | null => {
@@ -427,6 +446,7 @@ export default class AnalyseCtrl implements CevalHandler {
   private createStudyFromCurrentAnalysis = async (setup: studyApi.StudyCreateSetup): Promise<void> => {
     if (this.studyCreateLoading) return;
     if (!myUserId()) {
+      this.prepareStudyLogin();
       location.assign(this.studyLoginHref());
       return;
     }
@@ -450,6 +470,7 @@ export default class AnalyseCtrl implements CevalHandler {
     } catch (e) {
       if (e instanceof studyApi.StudyApiError) {
         if (e.status === 401) {
+          this.prepareStudyLogin();
           location.assign(this.studyLoginHref());
           return;
         }
@@ -590,7 +611,7 @@ export default class AnalyseCtrl implements CevalHandler {
   private initMoveReview(): void {
     const mode = this.opts.moveReview?.mode;
     const variant = this.data.game.variant.key;
-    if (!this.isStudy() || (variant !== 'standard' && variant !== 'chess960') || mode !== 'runtime') return;
+    if (!this.isStudy() || variant !== 'standard' || mode !== 'runtime') return;
 
     this.moveReviewLocale = normalizeMoveReviewLocale();
     this.moveReviewCopyValue = moveReviewCopy(this.moveReviewLocale);
@@ -664,7 +685,7 @@ export default class AnalyseCtrl implements CevalHandler {
           let previousEvaluation: Tree.LocalEval | undefined;
           const startedAt = receivedAtMs;
           const elapsed = (): number => Math.max(0, Math.floor(performance.now() - startedAt));
-          let leaseTimer: number | undefined;
+          let leaseTimer: number | undefined = undefined;
           const failure = (failureCode: string, diagnostic: string): MoveReviewEngineOutcome => ({
             kind: 'executor_failed',
             executorElapsedMs: elapsed(),

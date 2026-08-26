@@ -8,11 +8,9 @@ RUN corepack enable \
     && /lila/ui/build --clean --debug \
     && test -s /lila/public/npm/stockfish-web-move-review/sf_18_smallnet_single.js \
     && test -s /lila/public/npm/stockfish-web-move-review/sf_18_smallnet_single.wasm \
-    && mkdir -p /lila/public/npm/stockfish-web /lila/public/npm \
-    && find -L /lila/ui/lib/node_modules/@lichess-org/stockfish-web -maxdepth 1 -type f \( -name '*.js' -o -name '*.wasm' \) -exec cp {} /lila/public/npm/stockfish-web/ \; \
-    && for engine_dir in /lila/ui/lib/node_modules/stockfish.js /lila/ui/lib/node_modules/stockfish.wasm /lila/ui/lib/node_modules/stockfish-nnue.wasm; do \
-         find -L "$engine_dir" -maxdepth 1 -type f \( -name '*.js' -o -name '*.wasm' \) -exec cp {} /lila/public/npm/ \;; \
-       done
+    && test -s /lila/public/npm/stockfish-web/sf_18_smallnet.js \
+    && test -s /lila/public/npm/stockfish-web/sf_18_smallnet.wasm \
+    && echo '4ca89e4b3abfbe9df13e4f3db2acb64dc6ddc7a9becb2ac1cf388f4d66b3bd94  /lila/public/lifat/nnue/nn-4ca89e4b3abf.nnue' | sha256sum -c -
 
 ##################################################################################
 FROM sbtscala/scala-sbt:eclipse-temurin-alpine-25_36_1.11.6_3.7.3 AS lilabuilder

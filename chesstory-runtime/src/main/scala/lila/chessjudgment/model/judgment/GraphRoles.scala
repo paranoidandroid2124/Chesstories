@@ -6,6 +6,7 @@ enum PositionNodeRole:
   case AfterReference
   case AfterAlternative
   case AfterThreat
+  case AfterThreatContinuation
 
   def scope: EvidenceScope =
     this match
@@ -14,6 +15,7 @@ enum PositionNodeRole:
       case AfterReference   => EvidenceScope.AfterReferencePosition
       case AfterAlternative => EvidenceScope.AlternativeTransition
       case AfterThreat      => EvidenceScope.ThreatLine
+      case AfterThreatContinuation => EvidenceScope.ThreatLine
 
 enum LineNodeRole:
   case Played
@@ -55,6 +57,7 @@ enum TransitionEdgeRole:
   case Reference
   case Alternative
   case Threat
+  case ThreatContinuation
 
   def lineRole: LineNodeRole =
     this match
@@ -62,6 +65,7 @@ enum TransitionEdgeRole:
       case Reference   => LineNodeRole.BestReference
       case Alternative => LineNodeRole.Alternative
       case Threat      => LineNodeRole.Threat
+      case ThreatContinuation => LineNodeRole.Threat
 
   def scope: EvidenceScope =
     this match
@@ -69,6 +73,7 @@ enum TransitionEdgeRole:
       case Reference   => EvidenceScope.ReferenceTransition
       case Alternative => EvidenceScope.AlternativeTransition
       case Threat      => EvidenceScope.ThreatLine
+      case ThreatContinuation => EvidenceScope.ThreatLine
 
   def subject: ClaimSubject =
     this match
@@ -76,24 +81,20 @@ enum TransitionEdgeRole:
       case Reference   => ClaimSubject.ReferenceMove
       case Alternative => ClaimSubject.CandidateLine
       case Threat      => ClaimSubject.Threat
+      case ThreatContinuation => ClaimSubject.Threat
 
 enum EvidenceLayer:
-  case Board
-  case PawnStructure
-  case Strategic
+  case PositionFeature
   case StrategicMechanism
   case OpeningContext
   case FeatureAnchor
   case ApplicabilityAssessment
-  case ThreatPressure
   case Line
   case Eval
-  case MoveMotif
   case TacticalMechanism
   case MoveTransition
   case Relation
   case StructuralDelta
-  case PlanPressure
   case PlanCausalEvent
   case PlanTransition
   case CandidateComparison

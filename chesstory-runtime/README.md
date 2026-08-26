@@ -34,10 +34,12 @@ Player use is the position-commentary job path only:
 - `POST /v1/position-commentary-jobs/{jobId}/engine-work-reports`
 - `DELETE /v1/position-commentary-jobs/{jobId}`
 
-The server creates exact engine work and owns legal-move coverage, admission,
-and the completed commentary response. The browser only executes issued engine
-work and returns its line suffixes. Active and stopped job responses use the
-atomic `public-commentary-v4` cohort (`request`, `report`, `error`, `status`,
+The server creates one root-candidate search, an optional played-vs-best
+comparison, and only the causal searches requested by the v6 semantic graph.
+It owns work identity, legal replay, evidence admission, and the completed
+commentary response. The browser only executes issued engine work and returns
+its line suffixes. Active and stopped job responses use the atomic
+`public-commentary-v6` cohort (`request`, `report`, `error`, `status`,
 `response`). A request supplies the complete
 `initial_fen` + `move_prefix_uci` history and its exact `current_fen`; the
 server legally replays and binds that history before issuing work. Browser
@@ -56,5 +58,5 @@ Chesstory's theme-prior resource are available before the server starts.
 ## Development-only direct API
 
 `RuntimeProtocol.evaluate` and `RuntimePublicResponseCli` remain development
-interfaces for the legacy direct request/response contract. They are not a
-player HTTP API.
+interfaces for the v6 direct request/response contract. They are not a player
+HTTP API.

@@ -12,49 +12,6 @@ export const pgnInputError = (rawPgn: string | undefined | null): string => {
 
 export type PgnDraftStatus = 'empty' | 'current' | 'ready' | 'invalid';
 
-export type ReviewStudyCreateGate = {
-  disabled: boolean;
-  buttonLabel: string;
-  message: string;
-  tone: 'info' | 'success' | 'error';
-  title?: string;
-};
-
-export const reviewStudyCreateGate = (status: PgnDraftStatus): ReviewStudyCreateGate => {
-  switch (status) {
-    case 'current':
-      return {
-        disabled: false,
-        buttonLabel: 'Save as review study',
-        message:
-          'Save the loaded game and candidate lines as a review study. Add explanation notes after it opens.',
-        tone: 'success',
-      };
-    case 'ready':
-      return {
-        disabled: true,
-        buttonLabel: 'Load game first',
-        message: 'Load the pasted PGN before creating a review so the study matches the board.',
-        tone: 'info',
-        title: 'Study waiting',
-      };
-    case 'invalid':
-      return {
-        disabled: true,
-        buttonLabel: 'Fix game text',
-        message: 'Fix or reset the PGN before creating a review study.',
-        tone: 'error',
-      };
-    case 'empty':
-      return {
-        disabled: true,
-        buttonLabel: 'Paste PGN first',
-        message: 'Paste or reset the game text before creating a review study.',
-        tone: 'error',
-      };
-  }
-};
-
 export const normalizeInlinePgn = (rawPgn: string | undefined | null): string | undefined => {
   const trimmed = rawPgn?.trim();
   return trimmed && trimmed.length <= maxInlinePgnChars ? trimmed : undefined;

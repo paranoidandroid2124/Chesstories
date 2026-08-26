@@ -16,15 +16,15 @@ object ChesstoryRuntime:
   private val DefaultPort = 8091
   private val DefaultWorkers = math.max(1, math.min(Runtime.getRuntime.availableProcessors, 8))
   private val MaxWorkers = 256
-  private val QueuedRequestsPerWorker = 4
+  private val MaximumQueuedRequests = 512
   private val MaxBodyBytes = 1024 * 1024
   private val HealthSchema = "chesstory.runtime-health.v1"
   private val PositionCommentaryJobsPath = "/v1/position-commentary-jobs"
   private val JobId = "^[A-Za-z0-9_-]{32}$".r
   private val RootSearchDepth = 16
-  private val MaximumIssuedEngineWorkCount = 512
-  private val JobDeadlineMillis = 10L * 60L * 1000L
-  private val MaximumRetainedJobs = 64
+  private val MaximumIssuedEngineWorkCount = 32
+  private val JobDeadlineMillis = 3L * 60L * 1000L
+  private val MaximumRetainedJobs = 2048
   private val TerminalJobRetentionMillis = 2L * 60L * 1000L
 
   def main(args: Array[String]): Unit =
@@ -51,9 +51,9 @@ object ChesstoryRuntime:
   ): RunningRuntimeServer =
     require(workerCount > 0 && workerCount <= MaxWorkers, s"workerCount must be between 1 and $MaxWorkers")
     RuntimeResources.verify()
-    val server = HttpServer.create(address, 32)
+    val server = HttpServer.create(address, 256)
     val workers = Semaphore(workerCount)
-    val admitted = Semaphore(workerCount * (QueuedRequestsPerWorker + 1))
+    val admitted = Semaphore(workerCount + MaximumQueuedRequests)
     val stopping = AtomicBoolean(false)
     val commentaryJobs = CommentaryJobRegistry(MaximumRetainedJobs, TerminalJobRetentionMillis)
     val executor = Executors.newVirtualThreadPerTaskExecutor()
@@ -168,6 +168,8 @@ object ChesstoryRuntime:
                 jobRequest.initialFen,
                 jobRequest.movePrefixUci,
                 jobRequest.currentFen,
+                jobRequest.playedMoveUci,
+                jobRequest.resultingFen,
                 policy,
                 nowEpochMs
               ) match
@@ -271,6 +273,7 @@ object ChesstoryRuntime:
           lila.chessjudgment.model.line.CanonicalPositionHistoryFailure.HalfMoveClockOverflow |
           lila.chessjudgment.model.line.CanonicalPositionHistoryFailure.FullMoveNumberOverflow =>
         "invalid_position_history"
+    case CommentaryJobStartRejection.FocusedMoveInvalid => "invalid_focus"
     case CommentaryJobStartRejection.RootSearchDepthInvalid => "invalid_commentary_job_policy"
     case CommentaryJobStartRejection.MaximumIssuedEngineWorkCountInvalid => "invalid_commentary_job_policy"
 

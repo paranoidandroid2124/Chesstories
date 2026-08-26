@@ -70,8 +70,7 @@ object RelativeCauseDominancePolicy:
     ),
     RelativeCauseKind.MaterialSwing -> Set(
       RelativeCauseKind.WrongRecapturer,
-      RelativeCauseKind.SacrificeCompensation,
-      RelativeCauseKind.TacticalRefutationOfPlayed
+      RelativeCauseKind.SacrificeCompensation
     ),
     RelativeCauseKind.CandidateTacticalLiability -> Set(
       RelativeCauseKind.MaterialSwing
@@ -79,34 +78,7 @@ object RelativeCauseDominancePolicy:
     RelativeCauseKind.TacticalRefutationOfPlayed -> Set(
       RelativeCauseKind.TempoLoss,
       RelativeCauseKind.KingForcing
-    ),
-    RelativeCauseKind.MissedStrategicImprovement -> Set(
-      RelativeCauseKind.StructuralImprovement,
-      RelativeCauseKind.TargetPressureGain,
-      RelativeCauseKind.CenterControlGain,
-      RelativeCauseKind.PawnBreakOpportunity,
-      RelativeCauseKind.ActivityGain,
-      RelativeCauseKind.OpponentRestriction,
-      RelativeCauseKind.PlanImprovement
-    ),
-    RelativeCauseKind.StructuralImprovement -> Set(
-      RelativeCauseKind.PawnWeaknessTarget
-    ),
-    RelativeCauseKind.StrategicConcession -> Set(
-      RelativeCauseKind.TargetPressureRelease,
-      RelativeCauseKind.KingSafetyConcession,
-      RelativeCauseKind.ActivityLoss,
-      RelativeCauseKind.PlanContradiction
     )
-  )
-
-  /** A plan label is a strict refinement only when the Cause itself owns the
-    * exact typed plan event. A matching actor/target/mechanism/consequence
-    * surface assembled from a non-plan proof is insufficient.
-    */
-  private val PlanCausalRefinements = Set(
-    RelativeCauseKind.MissedStrategicImprovement -> RelativeCauseKind.PlanImprovement,
-    RelativeCauseKind.StrategicConcession -> RelativeCauseKind.PlanContradiction
   )
 
   require(specificityAcyclic, "relative Cause fallback specificity must be acyclic")
@@ -198,8 +170,7 @@ object RelativeCauseDominancePolicy:
       sameDominanceFrame(candidate.frame, fallback.frame) &&
       exposureAtLeast(candidate.exposureStatus, fallback.exposureStatus) &&
       specificKindsForFallback(fallback.kind)(candidate.kind) &&
-      ownsEveryFallbackEffect(candidate, fallback) &&
-      requiredOwnedProofReady(candidate, fallback)
+      ownsEveryFallbackEffect(candidate, fallback)
 
   private def sameDominanceFrame(
       candidate: DominanceFrame,
@@ -275,27 +246,6 @@ object RelativeCauseDominancePolicy:
 
   private def normalized(value: Option[String]): Option[String] =
     value.map(_.trim.toLowerCase)
-
-  private def requiredOwnedProofReady(
-      candidate: Candidate,
-      fallback: Candidate
-  ): Boolean =
-    if PlanCausalRefinements(fallback.kind -> candidate.kind) then
-      fallback.directChannels.forall(channel =>
-        matchingOwnedChannels(candidate, channel).exists(ownsPlanCausalProof)
-      )
-    else true
-
-  private[judgment] def ownsPlanCausalProof(channel: DirectCauseChannel): Boolean =
-    def primitive(proof: RootOwnedEffectProof): RootOwnedEffectProof =
-      proof match
-        case RootOwnedEffectProof.StrategicAxis(wrapped, _, _) => primitive(wrapped)
-        case other                                             => other
-    channel.rootOwnedProof.map(primitive).exists {
-      case _: RootOwnedEffectProof.PlanResult      => true
-      case _: RootOwnedEffectProof.PlanRestriction => true
-      case _                                        => false
-    }
 
   private def exposureAtLeast(
       candidate: CrossComparisonExposureStatus,

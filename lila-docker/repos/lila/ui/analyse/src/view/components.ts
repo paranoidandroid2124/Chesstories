@@ -1,9 +1,9 @@
 import { view as cevalView, renderEval as normalizeEval } from 'lib/ceval';
-import { parseFen } from 'chessops/fen';
+import { INITIAL_FEN, parseFen } from 'chessops/fen';
 import { defined } from 'lib';
 import * as licon from 'lib/licon';
 import { type VNode, type LooseVNodes, bind, onInsert, icon, hl } from 'lib/view';
-import { displayColumns, isMobile } from 'lib/device';
+import { isMobile } from 'lib/device';
 import * as materialView from 'lib/game/view/material';
 
 import { view as actionMenu } from './actionMenu';
@@ -21,12 +21,7 @@ import statusView from 'lib/game/view/status';
 import { plyToTurn } from 'lib/game/chess';
 import { dispatchChessgroundResize } from 'lib/chessgroundResize';
 import pgnImport, { renderPgnError } from '../pgnImport';
-import {
-  normalizeInlinePgn,
-  pgnInputError,
-  reviewStudyCreateGate,
-  type PgnDraftStatus,
-} from '../pgnPipeline';
+import { normalizeInlinePgn, pgnInputError, type PgnDraftStatus } from '../pgnPipeline';
 import { storage } from 'lib/storage';
 import { renderMoveReview } from './moveReview';
 
@@ -84,17 +79,7 @@ export function renderMain(ctx: ViewContext, ...kids: LooseVNodes[]): VNode {
   );
 }
 
-type WorkspaceToolId = 'opening-explorer' | 'action-menu';
-type NotebookGlyphKind = 'bookmark' | 'page' | 'section';
-
-type WorkspaceTool = {
-  id: WorkspaceToolId;
-  label: string;
-  summary: string;
-  icon: string;
-  active: boolean;
-  open: () => void;
-};
+type NotebookGlyphKind = 'bookmark' | 'page';
 
 function notebookGlyphNodes(kind: NotebookGlyphKind): VNode[] {
   switch (kind) {
@@ -113,14 +98,6 @@ function notebookGlyphNodes(kind: NotebookGlyphKind): VNode[] {
         hl('path', { attrs: { d: 'M12.5 15h9' } }),
         hl('path', { attrs: { d: 'M12.5 18.5h9' } }),
         hl('path', { attrs: { d: 'M12.5 22h6.5' } }),
-      ];
-    case 'section':
-      return [
-        hl('path', { attrs: { d: 'M8 9.5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-14Z' } }),
-        hl('path', { attrs: { d: 'M10.5 7.5v-2a2 2 0 0 1 2-2H21l3 3' } }),
-        hl('path', { attrs: { d: 'M13 15h7' } }),
-        hl('path', { attrs: { d: 'M13 18.5h7' } }),
-        hl('path', { attrs: { d: 'M13 22h4.5' } }),
       ];
   }
 }
@@ -154,96 +131,6 @@ function renderNotebookGlyph(kind: NotebookGlyphKind, extraClass?: string): VNod
   );
 }
 
-function notebookGlyphForTool(tool: WorkspaceTool): NotebookGlyphKind {
-  switch (tool.id) {
-    case 'opening-explorer':
-      return 'bookmark';
-    case 'action-menu':
-      return 'section';
-  }
-}
-
-function renderWorkspaceToolIcon(ctrl: AnalyseCtrl, tool: WorkspaceTool): VNode {
-  return ctrl.isStudy()
-    ? renderNotebookGlyph(notebookGlyphForTool(tool), 'analyse__workspace-glyph')
-    : icon(tool.icon as any);
-}
-
-function workspaceTools(ctrl: AnalyseCtrl): WorkspaceTool[] {
-  const tools: WorkspaceTool[] = [
-    {
-      id: 'opening-explorer',
-      label: 'Opening book',
-      summary: 'Opening games and tablebase positions',
-      icon: licon.Book,
-      active: ctrl.activeControlBarTool() === 'opening-explorer',
-      open: ctrl.toggleExplorer,
-    },
-  ];
-
-  tools.push({
-    id: 'action-menu',
-    label: 'Board view',
-    summary: 'Coordinates, moves, and review cues',
-    icon: licon.Hamburger,
-    active: ctrl.activeControlBarTool() === 'action-menu',
-    open: ctrl.toggleActionMenu,
-  });
-
-  return tools;
-}
-
-function workspaceToolControls(ctrl: AnalyseCtrl, tool: WorkspaceTool): string | undefined {
-  if (!tool.active) return;
-  if (tool.id === 'opening-explorer') return ctrl.explorer.allowed() ? 'analyse-opening-explorer' : undefined;
-  return ctrl.actionMenu() ? 'analyse-action-menu' : undefined;
-}
-
-function renderWorkspaceDock(ctrl: AnalyseCtrl): VNode {
-  const activeTool = ctrl.activeControlBarTool();
-  const tools = workspaceTools(ctrl);
-  return hl(`section.analyse__workspace-dock${activeTool ? '' : '.is-idle'}`, [
-    hl('div.analyse__workspace-dock-head', [
-      hl('h2', 'Reference desk'),
-      hl(
-        'span',
-        activeTool
-          ? 'The current position stays fixed while you inspect another source.'
-          : 'Opening records and board settings stay attached to this position.',
-      ),
-    ]),
-    hl(
-      'div.analyse__workspace-dock-grid',
-      tools.map(tool => {
-        const controls = workspaceToolControls(ctrl, tool);
-        return hl(
-          'button.analyse__workspace-tool',
-          {
-            key: tool.id,
-            attrs: {
-              type: 'button',
-              title: tool.summary,
-              'aria-label': `${tool.active ? 'Close' : 'Open'} ${tool.label}`,
-              'data-tool-id': tool.id,
-              'aria-pressed': tool.active ? 'true' : 'false',
-              'aria-expanded': tool.active ? 'true' : 'false',
-              ...(controls ? { 'aria-controls': controls } : {}),
-            },
-            hook: bind('click', tool.open, ctrl.redraw),
-            class: {
-              active: tool.active,
-            },
-          },
-          [
-            hl('span.analyse__workspace-tool-icon', [renderWorkspaceToolIcon(ctrl, tool)]),
-            hl('span.analyse__workspace-tool-copy', [hl('strong', tool.label), hl('span', tool.summary)]),
-          ],
-        );
-      }),
-    ),
-  ]);
-}
-
 export function renderTools({ ctrl, concealOf }: ViewContext) {
   const showCeval = ctrl.isCevalAllowed() && ctrl.showCeval();
   const activeTool = explorerView(ctrl);
@@ -253,7 +140,6 @@ export function renderTools({ ctrl, concealOf }: ViewContext) {
     ctrl.moveReviewAvailable() && renderMoveReview(ctrl.moveReviewPanelProps()),
     renderMoveList(ctrl, concealOf),
     forkView(ctrl, concealOf),
-    displayColumns() > 1 && renderWorkspaceDock(ctrl),
     activeTool,
     ctrl.actionMenu() && actionMenu(ctrl),
   ]);
@@ -320,66 +206,19 @@ function renderInputs(ctrl: AnalyseCtrl): VNode | undefined {
     defined(ctrl.fenInput) ? ctrl.fenInput : ctrl.node.fen,
     ctrl.node.fen,
   );
+  const pgnError = ctrl.pgnError || pgnInspection.error;
+  const pgnChanged = defined(ctrl.pgnInput) && ctrl.pgnInput !== currentPgn;
   const submitPgnDraft = () => {
     if (pgnInspection.status !== 'ready') return;
     const draft = defined(ctrl.pgnInput) ? ctrl.pgnInput : pgnExport.renderFullTxt(ctrl);
     if (draft !== pgnExport.renderFullTxt(ctrl)) ctrl.importPgn(draft);
   };
   return hl('div.copyables.copyables--workspace', [
-    hl('div.analyse-review__summary-grid.copyables__summary', [
-      summaryFact(pgnInspection.headline, 'game text'),
-      summaryFact(
-        pgnDraftReplaySize(pgnInspection),
-        pgnInspection.preview ? 'moves to replay' : 'score text',
-      ),
-      summaryFact(fenInspection.headline, 'board position'),
-    ]),
-    renderStudyLaunchPanel(ctrl, pgnInspection.status),
-    hl('div.copyables__panel', [
-      hl('div.pair', [
-        hl('label.name', 'Position setup'),
-        hl('input.copyable', {
-          attrs: { spellcheck: 'false', enterkeyhint: 'done' },
-          hook: {
-            insert: vnode => {
-              const el = vnode.elm as HTMLInputElement;
-              el.value = defined(ctrl.fenInput) ? ctrl.fenInput : ctrl.node.fen;
-              const submitFen = () => {
-                const nextFen = el.value.trim();
-                if (nextFen === ctrl.node.fen || !parseFen(nextFen).isOk) return false;
-                ctrl.changeFen(nextFen);
-                return true;
-              };
-              el.addEventListener('change', () => {
-                if (el.reportValidity()) submitFen();
-              });
-              el.addEventListener('keydown', (e: KeyboardEvent) => {
-                if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
-                if (el.reportValidity() && submitFen()) e.preventDefault();
-              });
-              el.addEventListener('input', () => {
-                ctrl.fenInput = el.value;
-                el.setCustomValidity(parseFen(el.value.trim()).isOk ? '' : 'Position setup needs fixes');
-                requestAnimationFrame(ctrl.redraw);
-              });
-            },
-            postpatch: (_, vnode) => {
-              const el = vnode.elm as HTMLInputElement;
-              if (!defined(ctrl.fenInput)) {
-                el.value = ctrl.node.fen;
-                el.setCustomValidity('');
-              } else if (el.value !== ctrl.fenInput) el.value = ctrl.fenInput;
-            },
-          },
-        }),
-      ]),
-      renderInlineStatus(fenInspection.headline, fenInspection.message, fenInspection.status === 'invalid'),
-    ]),
     hl('div.copyables__panel.copyables__panel--pgn', [
       hl('div.pair', [
-        hl('label.name', 'Game text'),
+        hl('label.name', 'PGN'),
         hl('textarea.copyable', {
-          attrs: { spellcheck: 'false' },
+          attrs: { spellcheck: 'false', placeholder: 'Paste a game in PGN format' },
           class: { 'is-error': !!ctrl.pgnError || pgnInspection.status === 'invalid' },
           hook: {
             ...onInsert((el: HTMLTextAreaElement) => {
@@ -409,36 +248,85 @@ function renderInputs(ctrl: AnalyseCtrl): VNode | undefined {
         }),
       ]),
       hl('div.bottom-item.bottom-actions', [
-        hl(
-          'button.button.button-thin.bottom-action.text',
-          {
-            attrs: pgnInspection.status !== 'ready' ? { disabled: true } : {},
-            hook: bind('click', submitPgnDraft),
-          },
-          [icon(licon.PlayTriangle as any), ' Load game'],
-        ),
-        pgnInspection.status !== 'current' &&
+        pgnInspection.status === 'ready' &&
+          hl('button.button.button-thin.bottom-action.text', { hook: bind('click', submitPgnDraft) }, [
+            icon(licon.PlayTriangle as any),
+            ' Open game',
+          ]),
+        pgnChanged &&
           hl(
             'button.button.button-thin.bottom-action.text',
             {
               hook: bind('click', () => ctrl.resetImportDraft()),
             },
-            [icon(licon.Reload as any), ' Reset draft'],
+            [icon(licon.Reload as any), currentInspection.status === 'empty' ? ' Clear' : ' Cancel'],
           ),
       ]),
-      renderInlineStatus(
-        pgnInspection.headline,
-        pgnInspection.preview
-          ? `${pgnInspection.message} ${pgnDraftPlayerDetail(pgnInspection)}`
-          : pgnInspection.message,
-        pgnInspection.status === 'invalid',
-      ),
-      hl(
-        'div.bottom-item.bottom-error',
-        { class: { 'is-error': !!ctrl.pgnError || pgnInspection.status === 'invalid' } },
-        [icon(licon.CautionTriangle as any), renderPgnError(ctrl.pgnError || pgnInspection.error)],
-      ),
-      renderImportPreview(currentInspection, pgnInspection),
+      (pgnInspection.status === 'ready' || pgnInspection.status === 'invalid') &&
+        renderInlineStatus(
+          pgnInspection.headline,
+          pgnInspection.preview
+            ? `${pgnInspection.message} ${pgnPreviewDetail(pgnInspection)}`
+            : pgnInspection.message,
+          pgnInspection.status === 'invalid',
+        ),
+      pgnError
+        ? hl('div.bottom-item.bottom-error.is-error', [
+            icon(licon.CautionTriangle as any),
+            renderPgnError(pgnError),
+          ])
+        : null,
+    ]),
+    pgnInspection.status === 'current' &&
+      currentInspection.status !== 'empty' &&
+      renderStudyLaunchPanel(ctrl),
+    hl('details.copyables__position', [
+      hl('summary', 'Set up a position'),
+      hl('div.copyables__panel', [
+        hl('div.pair', [
+          hl('label.name', 'FEN'),
+          hl('input.copyable', {
+            attrs: { spellcheck: 'false', enterkeyhint: 'done', placeholder: 'Paste a FEN' },
+            hook: {
+              insert: vnode => {
+                const el = vnode.elm as HTMLInputElement;
+                el.value = defined(ctrl.fenInput) ? ctrl.fenInput : ctrl.node.fen;
+                const submitFen = () => {
+                  const nextFen = el.value.trim();
+                  if (nextFen === ctrl.node.fen || !parseFen(nextFen).isOk) return false;
+                  ctrl.changeFen(nextFen);
+                  return true;
+                };
+                el.addEventListener('change', () => {
+                  if (el.reportValidity()) submitFen();
+                });
+                el.addEventListener('keydown', (e: KeyboardEvent) => {
+                  if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
+                  if (el.reportValidity() && submitFen()) e.preventDefault();
+                });
+                el.addEventListener('input', () => {
+                  ctrl.fenInput = el.value;
+                  el.setCustomValidity(parseFen(el.value.trim()).isOk ? '' : 'Check the FEN');
+                  requestAnimationFrame(ctrl.redraw);
+                });
+              },
+              postpatch: (_, vnode) => {
+                const el = vnode.elm as HTMLInputElement;
+                if (!defined(ctrl.fenInput)) {
+                  el.value = ctrl.node.fen;
+                  el.setCustomValidity('');
+                } else if (el.value !== ctrl.fenInput) el.value = ctrl.fenInput;
+              },
+            },
+          }),
+        ]),
+        fenInspection.status !== 'current' &&
+          renderInlineStatus(
+            fenInspection.headline,
+            fenInspection.message,
+            fenInspection.status === 'invalid',
+          ),
+      ]),
     ]),
   ]);
 }
@@ -632,65 +520,61 @@ function renderStudySetupForm(ctrl: AnalyseCtrl): VNode | null {
   );
 }
 
-function renderStudyLaunchPanel(ctrl: AnalyseCtrl, pgnStatus: PgnDraftStatus): VNode {
+function renderStudyLaunchPanel(ctrl: AnalyseCtrl): VNode {
   const busy = ctrl.studyCreateBusy();
   const needsAuth = ctrl.studyNeedsAuth();
   const transferCount = ctrl.studyTransferCountValue();
   const error = ctrl.studyCreateErrorText();
   const setupOpen = ctrl.studyCreateSetupVisible();
-  const createGate = reviewStudyCreateGate(pgnStatus);
-  const createDisabled = busy || createGate.disabled;
 
   return hl('section.copyables__study.copyables__study--launch', [
     hl('div.copyables__study-head', [
       hl('div.copyables__study-copy', [
-        hl('h2', 'Save this game as a study'),
-        hl('span.copyables__study-subline', 'Keep the game, chapters, and notes together.'),
+        hl('h2', 'Get a move-by-move review'),
+        hl(
+          'span.copyables__study-subline',
+          'Save the game as a study to see clear explanations and the lines behind them.',
+        ),
       ]),
       hl('div.copyables__study-actions', [
-        createGate.disabled
+        needsAuth
           ? hl(
+              'a.button.copyables__study-button',
+              {
+                attrs: { href: ctrl.studyLoginHref() },
+                hook: bind('click', ctrl.prepareStudyLogin),
+              },
+              [renderNotebookGlyph('bookmark', 'copyables__study-button-glyph'), ' Sign in to review'],
+            )
+          : hl(
               'button.button.copyables__study-button',
               {
-                attrs: { type: 'button', disabled: true },
+                attrs: busy
+                  ? { type: 'button', disabled: true }
+                  : {
+                      id: 'study-create-launch',
+                      type: 'button',
+                      'aria-expanded': setupOpen ? 'true' : 'false',
+                      ...(setupOpen ? { 'aria-controls': 'study-create-setup' } : {}),
+                    },
+                hook: busy
+                  ? undefined
+                  : bind('click', () => {
+                      ctrl.openStudyCreateSetup();
+                    }),
               },
-              createGate.buttonLabel,
-            )
-          : needsAuth
-            ? hl('a.button.copyables__study-button', { attrs: { href: ctrl.studyLoginHref() } }, [
-                renderNotebookGlyph('bookmark', 'copyables__study-button-glyph'),
-                ' Sign in to create',
-              ])
-            : hl(
-                'button.button.copyables__study-button',
-                {
-                  attrs: createDisabled
-                    ? { type: 'button', disabled: true }
-                    : {
-                        id: 'study-create-launch',
-                        type: 'button',
-                        'aria-expanded': setupOpen ? 'true' : 'false',
-                        ...(setupOpen ? { 'aria-controls': 'study-create-setup' } : {}),
-                      },
-                  hook: createDisabled
-                    ? undefined
-                    : bind('click', () => {
-                        ctrl.openStudyCreateSetup();
-                      }),
-                },
-                busy ? 'Creating...' : createGate.buttonLabel,
-              ),
+              busy ? 'Starting...' : 'Start review',
+            ),
       ]),
     ]),
-    renderStudyStatus(
-      busy
-        ? transferCount > 0
-          ? `Creating the study and carrying over ${transferCount} saved line${transferCount === 1 ? '' : 's'}.`
-          : 'Creating the study from the current game.'
-        : createGate.message,
-      busy ? 'info' : createGate.tone,
-      busy ? undefined : createGate.title,
-    ),
+    busy
+      ? renderStudyStatus(
+          transferCount > 0
+            ? `Creating the study and carrying over ${transferCount} saved line${transferCount === 1 ? '' : 's'}.`
+            : 'Creating the study from the current game.',
+          'info',
+        )
+      : null,
     error && !setupOpen ? renderStudyStatus(error, 'error') : null,
     renderStudySetupForm(ctrl),
   ]);
@@ -706,8 +590,6 @@ type PgnDraftInspection = {
   status: PgnDraftStatus;
   headline: string;
   message: string;
-  chars: number;
-  lines: number;
   normalized?: string;
   error?: string;
   preview?: {
@@ -725,38 +607,35 @@ function inspectFenDraft(draft: string, currentFen: string): FenDraftInspection 
     return {
       status: 'current',
       headline: 'Current position',
-      message: 'Edit the position setup and press Enter to reopen the board from a new position.',
+      message: '',
     };
   }
   if (!parseFen(trimmed).isOk) {
     return {
       status: 'invalid',
-      headline: 'Position setup needs fixes',
-      message: 'The board waits until the position setup can be read.',
+      headline: 'Check the FEN',
+      message: "We couldn't open this position.",
     };
   }
   return {
     status: 'ready',
-    headline: 'Ready to jump',
-    message: 'Press Enter to relaunch from this board state.',
+    headline: 'Position ready',
+    message: 'Press Enter to open it on the board.',
   };
 }
 
 function inspectPgnDraft(draft: string, currentPgn: string): PgnDraftInspection {
   if (lastPgnInspection?.draft === draft && lastPgnInspection.current === currentPgn)
     return lastPgnInspection.result;
-  const chars = draft.trim().length;
-  const lines = draft ? draft.split(/\r?\n/).length : 0;
+  const hasText = draft.trim().length > 0;
   const normalized = normalizeInlinePgn(draft);
   const normalizedCurrent = normalizeInlinePgn(currentPgn);
   let result: PgnDraftInspection;
   if (!normalized) {
     result = {
-      status: chars ? 'invalid' : 'empty',
-      headline: chars ? 'Game text too long' : 'Draft empty',
-      message: chars ? pgnInputError(draft) : 'Paste a game to load another game on this board.',
-      chars,
-      lines,
+      status: hasText ? 'invalid' : 'empty',
+      headline: hasText ? 'PGN is too long' : 'Paste a PGN',
+      message: hasText ? pgnInputError(draft) : '',
     };
   } else {
     try {
@@ -772,29 +651,23 @@ function inspectPgnDraft(draft: string, currentPgn: string): PgnDraftInspection 
         normalizedCurrent === normalized
           ? {
               status: 'current',
-              headline: 'Current board game',
-              message: 'The draft matches the game already loaded on this board.',
-              chars,
-              lines,
+              headline: 'Game on the board',
+              message: '',
               normalized,
               preview,
             }
           : {
               status: 'ready',
-              headline: 'Ready to load',
-              message: 'Loading this game will replace the current board and moves.',
-              chars,
-              lines,
+              headline: 'Ready to open',
+              message: 'Open this game to replay it on the board.',
               normalized,
               preview,
             };
     } catch (err) {
       result = {
         status: 'invalid',
-        headline: 'Game text needs fixes',
-        message: 'The board waits until the game text can be read.',
-        chars,
-        lines,
+        headline: 'Check the PGN',
+        message: "We couldn't read this game.",
         normalized,
         error: (err as Error).message,
       };
@@ -811,35 +684,16 @@ function renderInlineStatus(headline: string, message: string, error = false): V
   ]);
 }
 
-function summaryFact(value: string, label: string): VNode {
-  return hl('div.analyse-review__summary-fact', [hl('strong', value), hl('span', label)]);
+function pgnPreviewDetail(inspection: PgnDraftInspection): string {
+  if (!inspection.preview) return '';
+  const moves = Math.ceil(inspection.preview.plies / 2);
+  const game =
+    inspection.preview.opening ||
+    (inspection.preview.variant === 'standard' ? 'Standard chess' : inspection.preview.variant);
+  return `${game} · ${moves} move${moves === 1 ? '' : 's'}`;
 }
 
-function pgnDraftReplaySize(inspection: PgnDraftInspection): string {
-  return inspection.preview ? playedMoveLabel(inspection.preview.plies) : gameTextLineLabel(inspection.lines);
-}
-
-function pgnDraftPlayerDetail(inspection: PgnDraftInspection): string {
-  if (inspection.preview) {
-    return [inspection.preview.variant, playedMoveLabel(inspection.preview.plies), inspection.preview.opening]
-      .filter(Boolean)
-      .join(' • ');
-  }
-  if (inspection.chars > 0) return `${gameTextLineLabel(inspection.lines)} pasted`;
-  return 'Paste a game to begin.';
-}
-
-function playedMoveLabel(plies: number): string {
-  const count = Math.max(0, plies);
-  return `${count} played move${count === 1 ? '' : 's'}`;
-}
-
-function gameTextLineLabel(lines: number): string {
-  const count = Math.max(1, lines);
-  return `${count} game text line${count === 1 ? '' : 's'}`;
-}
-
-function renderStudyStatus(message: string, tone: 'info' | 'success' | 'error', title?: string): VNode {
+function renderStudyStatus(message: string, tone: 'info' | 'success' | 'error'): VNode {
   const statusAttrs: Record<string, string> =
     tone === 'error'
       ? { role: 'alert', 'aria-atomic': 'true' }
@@ -851,33 +705,10 @@ function renderStudyStatus(message: string, tone: 'info' | 'success' | 'error', 
       attrs: statusAttrs,
     },
     [
-      hl(
-        'strong',
-        title || (tone === 'error' ? 'Study issue' : tone === 'info' ? 'Study in progress' : 'Study ready'),
-      ),
+      hl('strong', tone === 'error' ? "Couldn't save the study" : tone === 'info' ? 'Saving study' : 'Ready'),
       hl('span', message),
     ],
   );
-}
-
-function renderImportPreview(current: PgnDraftInspection, incoming: PgnDraftInspection): VNode {
-  return hl('div.copyables__preview', [
-    hl('div.copyables__preview-item', [
-      hl('span.copyables__preview-label', 'On the board'),
-      hl('strong', current.preview?.opening || current.preview?.variant || 'Current board'),
-      hl('span', pgnDraftPlayerDetail(current)),
-    ]),
-    hl('div.copyables__preview-item', [
-      hl('span.copyables__preview-label', 'Ready to load'),
-      hl(
-        'strong',
-        incoming.preview?.opening ||
-          incoming.preview?.variant ||
-          (incoming.status === 'invalid' ? 'Game text needs fixes' : 'Awaiting draft'),
-      ),
-      hl('span', pgnDraftPlayerDetail(incoming)),
-    ]),
-  ]);
 }
 
 function renderResult(ctrl: AnalyseCtrl): VNode[] {
@@ -918,10 +749,36 @@ export function renderMoveNodes(
   ];
 }
 
-const renderMoveList = (ctrl: AnalyseCtrl, concealOf?: ConcealOf): VNode =>
-  hl('div.analyse__moves.areplay', { hook: ctrl.treeView.hook() }, [
+const renderMoveList = (ctrl: AnalyseCtrl, concealOf?: ConcealOf): VNode => {
+  if (ctrl.data.userAnalysis && ctrl.tree.root.children.length === 0) {
+    const initialPosition =
+      ctrl.tree.root.fen === INITIAL_FEN &&
+      !/^\/analysis\/(?:standard|chess960)\/.+/.test(window.location.pathname);
+    return hl('section.analyse__empty-game', [
+      hl('h2', initialPosition ? 'Review a game' : 'Explore this position'),
+      hl(
+        'p',
+        initialPosition
+          ? 'Paste a PGN to replay your game and continue to a move-by-move review.'
+          : 'Make a move on the board, or turn on Stockfish to explore candidate lines.',
+      ),
+      initialPosition &&
+        hl(
+          'button.button.button-thin',
+          {
+            attrs: { type: 'button' },
+            hook: bind('click', () =>
+              document.querySelector<HTMLTextAreaElement>('.copyables__panel--pgn textarea')?.focus(),
+            ),
+          },
+          'Paste a PGN',
+        ),
+    ]);
+  }
+  return hl('div.analyse__moves.areplay', { hook: ctrl.treeView.hook() }, [
     hl('div', [ctrl.treeView.render(concealOf), renderResult(ctrl)]),
   ]);
+};
 
 const renderMaterialDiffs = (ctrl: AnalyseCtrl): [VNode, VNode] =>
   materialView.renderMaterialDiffs(

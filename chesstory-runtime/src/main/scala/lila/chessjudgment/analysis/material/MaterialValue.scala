@@ -12,20 +12,6 @@ object MaterialValue:
     case Queen  => 900
     case King   => 0
 
-  def materialValueUnit(role: Role): Int =
-    materialValueCp(role) / 100
-
-  def tacticalValueCp(role: Role): Int = role match
-    case Pawn   => 100
-    case Knight => 320
-    case Bishop => 330
-    case Rook   => 500
-    case Queen  => 900
-    case King   => 10000
-
-  def tacticalValueUnit(role: Role): Int =
-    if role == King then 100 else tacticalValueCp(role) / 100
-
   def sideMaterialCp(board: Board, side: Color): Int =
     board.byPiece(side, Pawn).count * materialValueCp(Pawn) +
       board.byPiece(side, Knight).count * materialValueCp(Knight) +

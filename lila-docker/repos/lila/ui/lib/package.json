@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@lichess-org/stockfish-web": "0.2.3",
+    "@lichess-org/stockfish-web": "0.4.2",
     "chessops": "^0.15",
     "stockfish-nnue.wasm": "1.0.0-1946a675.smolnet",
     "stockfish.js": "^10.0.2",

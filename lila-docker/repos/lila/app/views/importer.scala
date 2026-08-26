@@ -24,8 +24,8 @@ object importer:
         main(cls := "import-page")(
           div(cls := "import-shell")(
             header(cls := "import-heading")(
-              h1("Open a game"),
-              p("Paste a PGN or choose a file, then open the game on the analysis board.")
+              h1("Review a game"),
+              p("Paste a PGN or choose a file, then review the game move by move.")
             ),
             pageError.map(msg => div(cls := "import-message import-message--error", role := "alert")(msg)),
             importWorkspace(draft),
@@ -48,7 +48,7 @@ object importer:
               h1(s"@$username"),
               p(
                 providerShortLabel(provider),
-                " • Open one public game on the board. Save a study only after the review is useful."
+                " • Choose one public game to review move by move. Save a study only after the review is useful."
               )
             ),
             notice
@@ -68,7 +68,7 @@ object importer:
             accountLookup(provider, username, compact = true),
             div(cls := "auth-links")(
               a(href := routes.Importer.importGame.url)("New import"),
-              a(href := routes.UserAnalysis.index.url)("Open analysis board")
+              a(href := routes.UserAnalysis.index.url)("Review another game")
             )
           )
         )
@@ -115,7 +115,7 @@ object importer:
               attr("aria-live") := "polite"
             )
           ),
-          button(id := "import-submit", cls := "button", tpe := "submit")("Open on analysis board")
+          button(id := "import-submit", cls := "button", tpe := "submit")("Review this game")
         )
       )
     )

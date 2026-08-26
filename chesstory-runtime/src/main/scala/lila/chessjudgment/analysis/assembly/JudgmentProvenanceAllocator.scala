@@ -1,5 +1,7 @@
 package lila.chessjudgment.analysis.assembly
 
+import java.nio.charset.StandardCharsets
+import java.util.Base64
 import java.util.Locale
 
 import chess.Color
@@ -8,6 +10,7 @@ import lila.chessjudgment.model.judgment.{
   NormalizedCandidateLine as CanonicalNormalizedCandidateLine,
   NormalizedMoveReviewInput as CanonicalNormalizedMoveReviewInput
 }
+import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 final case class JudgmentProvenanceAllocator(prefix: String):
 
@@ -24,19 +27,75 @@ final case class JudgmentProvenanceAllocator(prefix: String):
       id = Some(s"$prefix:position:${positionKey(role, fen, ply)}")
     )
 
-  def lineRef(line: CanonicalNormalizedCandidateLine): LineNodeRef =
+  def lineRootPositionRef(
+      role: PositionNodeRole,
+      fen: String,
+      ply: Int,
+      sideToMove: Option[Color],
+      line: LineNodeRef
+  ): PositionNodeRef =
+    PositionNodeRef(
+      fen = fen,
+      ply = ply,
+      sideToMove = sideToMove,
+      id = Some(s"$prefix:position:${lineRootPositionKey(role, fen, ply, line)}")
+    )
+
+  def lineOccurrenceKey(
+      line: CanonicalNormalizedCandidateLine,
+      root: PositionNodeRef
+  ): String =
+    exactKey(List(
+      root.id.getOrElse(""),
+      root.ply.toString,
+      root.sideToMove.map(_.toString).getOrElse(""),
+      occurrenceFen(root.fen),
+      key(line.role),
+      line.rank.toString,
+      line.rootMove.getOrElse("none")
+    ))
+
+  def lineRef(
+      line: CanonicalNormalizedCandidateLine,
+      occurrenceKey: String
+  ): LineNodeRef =
     LineNodeRef(
-      id = s"$prefix:line:${key(line.role)}:${line.rank}:${line.rootMove.getOrElse("none")}",
+      id = s"$prefix:line:$occurrenceKey",
       rootMove = line.rootMove.getOrElse("none"),
       rank = line.rank,
       role = line.role
     )
 
+  def transitionOccurrenceKey(
+      role: TransitionEdgeRole,
+      from: PositionNodeRef,
+      moveUci: String,
+      to: PositionNodeRef
+  ): String =
+    exactKey(List(
+      key(role),
+      from.id.getOrElse(""),
+      from.ply.toString,
+      occurrenceFen(from.fen),
+      EvidenceRef.normalizeMove(moveUci),
+      to.id.getOrElse(""),
+      to.ply.toString,
+      occurrenceFen(to.fen)
+    ))
+
   def evidenceId(suffix: String): String =
     s"$prefix:evidence:$suffix"
 
   def positionKey(role: PositionNodeRole, fen: String, ply: Int): String =
-    s"${key(role)}:$ply:${fenKey(fen)}"
+    exactKey(List(key(role), ply.toString, occurrenceFen(fen)))
+
+  def lineRootPositionKey(
+      role: PositionNodeRole,
+      fen: String,
+      ply: Int,
+      line: LineNodeRef
+  ): String =
+    exactKey(List(key(role), ply.toString, occurrenceFen(fen), line.id))
 
   def evidenceRef(
       suffix: String,
@@ -62,12 +121,16 @@ final case class JudgmentProvenanceAllocator(prefix: String):
       .map(_.toString.replaceAll("([a-z])([A-Z])", "$1-$2").toLowerCase(Locale.ROOT))
       .getOrElse("none")
 
-  private def fenKey(fen: String): String =
-    Integer.toHexString(Option(fen).getOrElse("").hashCode)
+  private def occurrenceFen(fen: String): String =
+    PrincipalVariationEvidence.normalizeFen(fen)
+
+  private def exactKey(parts: Iterable[String]): String =
+    val raw = parts.iterator.map(value => s"${value.length}:$value").mkString("|")
+    Base64.getUrlEncoder.withoutPadding.encodeToString(raw.getBytes(StandardCharsets.UTF_8))
 
 object JudgmentProvenanceAllocator:
 
   def forInput(input: CanonicalNormalizedMoveReviewInput): JudgmentProvenanceAllocator =
     JudgmentProvenanceAllocator(
-      s"move-review:${input.beforePly}:${MoveReviewInputNormalizer.normalizeUci(input.playedMoveUci)}"
+      s"move-review:${input.beforePly}:${EvidenceRef.normalizeMove(input.playedMoveUci)}"
     )

@@ -12,7 +12,7 @@ final case class ClaimCandidateGraph(
 
 enum ClaimDeduplicationReason(val id: String):
   case SemanticAggregation extends ClaimDeduplicationReason("semantic_aggregation")
-  case SameRankKeyLowerScore extends ClaimDeduplicationReason("same_rank_key_lower_score")
+  case SameRankKeyAggregation extends ClaimDeduplicationReason("same_rank_key_aggregation")
 
 final case class ClaimDeduplicationTrace(
     order: Int,
@@ -30,11 +30,7 @@ final case class RankedClaimDecision(
     claim: JudgmentClaim,
     exposureTier: PlayerFacingClaimTier,
     playerFacingCauseSelections: List[PlayerFacingCauseSelection]
-):
-  def playerFacingCauseEvidenceIds: List[String] =
-    playerFacingCauseSelections.map(_.causeEvidence.id)
-  def onlyMoveQualifiers: List[OnlyMoveCauseQualifier] =
-    playerFacingCauseSelections.flatMap(_.onlyMoveQualifier).distinct
+)
 
 final case class ClaimRankingResult(
     primary: PlayerFacingPrimary,
@@ -97,27 +93,12 @@ object ClaimCandidateGraphAssembler:
             s"evaluation claim '${claim.id}' refers to conflicting engine comparisons"
           )
 
-private object RelativeCauseClaimDepth:
-
-  def hasTacticalDepth(cause: RelativeCauseFact, graph: TypedEvidenceGraph): Boolean =
-    isTactical(cause.kind) &&
-      cause.hasOwnedTacticalProof(graph)
-
-  private def isTactical(kind: RelativeCauseKind): Boolean =
-    ClaimFamily.fromCause(kind).contains(ClaimFamily.Tactical)
-
 object ClaimDeduplicator:
 
-  private final case class AggregatedClaimDecision(
-      index: Int,
-      decision: ClaimAdmissionDecision,
-      aggregationTrace: List[IndexedDeduplicationTrace]
-  )
-
-  private final case class RankKeySelection(
+  private final case class ExactClaimSelection(
       firstIndex: Int,
-      kept: AggregatedClaimDecision,
-      suppressed: List[AggregatedClaimDecision]
+      kept: ClaimAdmissionDecision,
+      suppressed: List[(ClaimAdmissionDecision, Int)]
   )
 
   private final case class IndexedDeduplicationTrace(
@@ -127,79 +108,45 @@ object ClaimDeduplicator:
       reason: ClaimDeduplicationReason
   )
 
-  private def aggregateCertified(
-      decisions: List[ClaimAdmissionDecision],
-      graph: TypedEvidenceGraph
-  ): List[AggregatedClaimDecision] =
-    val grouped =
-      decisions.zipWithIndex
-        .collect { case (decision, index) if aggregationEligible(decision.claim, graph) =>
-          aggregationKey(decision.claim, graph) -> (decision, index)
-        }
-        .groupBy(_._1)
-    val aggregated =
-      grouped.values.map { entries =>
-        val decisionsInGroup = entries.map(_._2._1)
-        val mergedDecision = mergeDecisions(decisionsInGroup, graph)
-        AggregatedClaimDecision(
-          index = entries.map(_._2._2).min,
-          decision = mergedDecision,
-          aggregationTrace = entries
-            .map(_._2)
-            .collect {
-              case (decision, index) if decision.claim.id != mergedDecision.claim.id =>
-                IndexedDeduplicationTrace(
-                  index = index,
-                  originalClaimId = decision.claim.id,
-                  keptClaimId = mergedDecision.claim.id,
-                  reason = ClaimDeduplicationReason.SemanticAggregation
-                )
-            }
-        )
-      }.toList
-    val passthrough =
-      decisions.zipWithIndex.collect { case (decision, index) if !aggregationEligible(decision.claim, graph) =>
-        AggregatedClaimDecision(index, decision, Nil)
-      }
-    (passthrough ++ aggregated).sortBy(_.index)
-
   def deduplicateDetailed(
       decisions: List[ClaimAdmissionDecision],
       graph: TypedEvidenceGraph
   ): ClaimDeduplicationResult =
-    val aggregated = aggregateCertified(decisions, graph)
+    val proofCarrierIndex =
+      decisions
+        .flatMap(_.claim.evidence)
+        .distinct
+        .map(carrier => carrier -> proofCarrierKey(carrier, graph))
+        .toMap
     val selections =
-      aggregated
-        .groupBy(item => key(item.decision.claim, graph))
-      .values
-      .map { items =>
-        val kept = items.maxBy(item => (score(item.decision, graph), -item.index))
-        RankKeySelection(
-          firstIndex = items.map(_.index).min,
-          kept = kept,
-          suppressed = items.filterNot(_.index == kept.index).sortBy(_.index)
-        )
-      }
-      .toList
-    val aggregationTrace =
-      aggregated
-        .flatMap(_.aggregationTrace)
-        .sortBy(item => (item.index, item.originalClaimId, item.keptClaimId))
-    val suppressionTrace =
-      selections
-        .sortBy(_.firstIndex)
-        .flatMap(selection =>
-          selection.suppressed.map(item =>
-            IndexedDeduplicationTrace(
-              index = item.index,
-              originalClaimId = item.decision.claim.id,
-              keptClaimId = selection.kept.decision.claim.id,
-              reason = ClaimDeduplicationReason.SameRankKeyLowerScore
-            )
+      decisions.zipWithIndex
+        .groupBy { case (decision, _) => key(decision.claim, graph, proofCarrierIndex) }
+        .values
+        .map { entries =>
+          val ordered = entries.toList.sortBy(_._2)
+          val canonical = ordered.minBy { case (decision, index) => decision.claim.id -> index }
+          ExactClaimSelection(
+            firstIndex = ordered.head._2,
+            kept = canonical._1,
+            suppressed = ordered.filterNot(_._2 == canonical._2)
           )
+        }
+        .toList
+    val indexedTrace =
+      selections
+        .flatMap(selection =>
+          selection.suppressed.map { case (decision, index) =>
+            IndexedDeduplicationTrace(
+              index = index,
+              originalClaimId = decision.claim.id,
+              keptClaimId = selection.kept.claim.id,
+              reason = ClaimDeduplicationReason.SemanticAggregation
+            )
+          }
         )
+        .sortBy(item => (item.index, item.originalClaimId, item.keptClaimId))
     val trace =
-      (aggregationTrace ++ suppressionTrace).zipWithIndex.map { case (item, order) =>
+      indexedTrace.zipWithIndex.map { case (item, order) =>
         ClaimDeduplicationTrace(
           order = order,
           originalClaimId = item.originalClaimId,
@@ -208,193 +155,91 @@ object ClaimDeduplicator:
         )
       }
     ClaimDeduplicationResult(
-      decisions = selections.sortBy(_.firstIndex).map(_.kept.decision),
+      decisions = selections.sortBy(_.firstIndex).map(_.kept),
       trace = trace
     )
 
   private final case class SemanticPositionKey(
       fen: String,
       ply: Int,
-      sideToMove: Option[chess.Color]
+      sideToMove: Option[chess.Color],
+      occurrenceId: Option[String]
   )
 
-  private enum RankEvidenceKey:
-    case CauseKeys(values: List[String])
-    case EvidenceAnchors(values: List[String])
-    case Unique(claimId: String)
+  private final case class SemanticLineOccurrenceKey(
+      id: String,
+      semantic: SemanticLineKey
+  )
+
+  private final case class ProofCarrierKey(
+      carrier: EvidenceRef,
+      route: List[EvidenceRef]
+  )
 
   private final case class ClaimRankKey(
       family: ClaimFamily,
       subject: ClaimSubject,
       primaryPosition: SemanticPositionKey,
-      primaryLine: Option[SemanticLineKey],
+      primaryLine: Option[SemanticLineOccurrenceKey],
       subjectMove: Option[String],
-      evidence: RankEvidenceKey,
+      scope: EvidenceScope,
+      confidence: EvidenceConfidence,
+      semanticAnchors: List[EvidenceSemanticAnchor],
+      proofCarriers: List[ProofCarrierKey],
       contentIdentity: Option[JudgmentClaimContent]
   )
 
   private def key(
       claim: JudgmentClaim,
-      graph: TypedEvidenceGraph
+      graph: TypedEvidenceGraph,
+      proofCarrierIndex: Map[EvidenceRef, ProofCarrierKey]
   ): ClaimRankKey =
-    val causeKeys = claim.evidence
-      .flatMap(ref => graph.byId.get(ref.id))
-      .collect { case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) =>
-        relativeCauseRankSignature(cause, ref.id, graph)
-      }
-      .distinct
-      .sorted
-    val anchorKeys = ClaimEvidenceSemantics
-      .semanticAnchors(claim, graph)
-      .map(_.stableKey)
-      .distinct
-      .sorted
-    val evidenceKey =
-      if causeKeys.nonEmpty then RankEvidenceKey.CauseKeys(causeKeys)
-      else if anchorKeys.nonEmpty then RankEvidenceKey.EvidenceAnchors(anchorKeys)
-      else RankEvidenceKey.Unique(claim.id)
+    val semanticAnchors = ClaimEvidenceSemantics.semanticAnchors(claim, graph)
     ClaimRankKey(
       family = claim.family,
       subject = claim.subject,
       primaryPosition = semanticPositionKey(claim.primaryPosition),
-      primaryLine = claim.primaryLine.map(semanticLineKey),
+      primaryLine = claim.primaryLine.map(semanticLineOccurrenceKey),
       subjectMove = semanticMove(claim.subjectMove),
-      evidence = evidenceKey,
+      scope = claim.scope,
+      confidence = claim.confidence,
+      semanticAnchors = semanticAnchors,
+      proofCarriers = proofCarrierKeys(claim, proofCarrierIndex),
       contentIdentity = claim.content
     )
 
-  private def relativeCauseRankSignature(
-      cause: RelativeCauseFact,
-      causeEvidenceId: String,
-      graph: TypedEvidenceGraph
-  ): String =
-    RelativeCauseSemanticKey.from(cause, causeEvidenceId, graph).stableKey
-
-  private def semanticLineKey(line: LineNodeRef): SemanticLineKey =
-    SemanticLineKey.from(line)
+  private def semanticLineOccurrenceKey(line: LineNodeRef): SemanticLineOccurrenceKey =
+    SemanticLineOccurrenceKey(line.id, SemanticLineKey.from(line))
 
   private def semanticPositionKey(position: PositionNodeRef): SemanticPositionKey =
     SemanticPositionKey(
       fen = position.fen.trim.split("\\s+").filter(_.nonEmpty).mkString(" "),
       ply = position.ply,
-      sideToMove = position.sideToMove
+      sideToMove = position.sideToMove,
+      occurrenceId = position.id
     )
+
+  private def proofCarrierKey(
+      carrier: EvidenceRef,
+      graph: TypedEvidenceGraph
+  ): ProofCarrierKey =
+    val route = graph
+      .record(carrier)
+      .toList
+      .flatMap(record => record :: graph.parentClosure(record))
+      .map(_.ref)
+      .distinctBy(_.id)
+      .sortBy(_.id)
+    ProofCarrierKey(carrier, route)
+
+  private def proofCarrierKeys(
+      claim: JudgmentClaim,
+      index: Map[EvidenceRef, ProofCarrierKey]
+  ): List[ProofCarrierKey] =
+    claim.evidence.distinct.sortBy(_.id).map(index)
 
   private def semanticMove(move: Option[String]): Option[String] =
     move.map(EvidenceRef.normalizeMove)
-
-  private final case class AggregationKey(
-      family: ClaimFamily,
-      subject: ClaimSubject,
-      primaryPosition: SemanticPositionKey,
-      primaryLine: Option[SemanticLineKey],
-      subjectMove: Option[String],
-      scope: Option[EvidenceScope],
-      semanticAnchors: List[EvidenceSemanticAnchor]
-  )
-
-  private def aggregationEligible(
-      claim: JudgmentClaim,
-      graph: TypedEvidenceGraph
-  ): Boolean =
-    claim.family.isLongTerm &&
-      claim.content.isEmpty &&
-      ClaimCandidateGraphAssembler.comparisonForClaim(claim, graph).isEmpty &&
-      claim.evidence.nonEmpty &&
-      !claim.evidence.exists(ref => ClaimEvidenceSemantics.longTermSupportExcludedLayer(ref.layer)) &&
-      !claim.evidence.exists(ref => StrategicMechanismEvidence.rawStrategicSourceLayer(ref.layer)) &&
-      ClaimEvidenceSemantics.semanticAnchors(claim, graph).nonEmpty
-
-  private def aggregationKey(
-      claim: JudgmentClaim,
-      graph: TypedEvidenceGraph
-  ): AggregationKey =
-    AggregationKey(
-      family = claim.family,
-      subject = claim.subject,
-      primaryPosition = semanticPositionKey(claim.primaryPosition),
-      primaryLine = claim.primaryLine.map(semanticLineKey),
-      subjectMove = semanticMove(claim.subjectMove),
-      scope = scopeAnchor(claim),
-      semanticAnchors = ClaimEvidenceSemantics.semanticAnchors(claim, graph)
-    )
-
-  private def scopeAnchor(claim: JudgmentClaim): Option[EvidenceScope] =
-    Option.when(claim.primaryLine.nonEmpty || claim.subjectMove.nonEmpty)(claim.scope)
-
-  private def mergeDecisions(decisions: Iterable[ClaimAdmissionDecision], graph: TypedEvidenceGraph): ClaimAdmissionDecision =
-    val list = decisions.toList
-    val mergedClaim = mergeClaims(list.map(_.claim), graph)
-    val mergedPresentLayers = list.flatMap(_.presentLayers).toSet
-    val mergedMissingLayerGroups = list.flatMap(_.missingLayerGroups).distinct
-    val mergedMissingEvidence = list.flatMap(_.missingEvidence).distinct
-    list.maxBy(decision => score(decision, graph)).copy(
-      claim = mergedClaim,
-      presentLayers = mergedPresentLayers,
-      missingLayerGroups = mergedMissingLayerGroups,
-      missingEvidence = mergedMissingEvidence
-    )
-
-  private def mergeClaims(claims: Iterable[JudgmentClaim], graph: TypedEvidenceGraph): JudgmentClaim =
-    val claimList = claims.toList
-    val mergeBase = claimList.maxBy(claim => score(claim, graph))
-    if claimList.size == 1 then mergeBase
-    else
-      mergeBase.copy(
-        evidence = claimList.flatMap(_.evidence).distinctBy(_.id),
-        confidence = claimList.map(_.confidence).maxBy(confidenceScore)
-      )
-
-  private def score(claim: JudgmentClaim, graph: TypedEvidenceGraph): Int =
-    claimEvidencePriority(claim, graph) * 10 +
-      confidenceScore(claim.confidence)
-
-  private def score(decision: ClaimAdmissionDecision, graph: TypedEvidenceGraph): Int =
-    score(decision.claim, graph)
-
-  private def claimEvidencePriority(claim: JudgmentClaim, graph: TypedEvidenceGraph): Int =
-    val weightedEvidence =
-      claim.evidence
-        .flatMap(ref => graph.byId.get(ref.id))
-        .filter(record => priorityEvidenceRecord(claim.family, record, graph))
-        .map(_.ref.id)
-        .distinct
-        .size
-    if claim.evidence.nonEmpty then weightedEvidence.max(1) else 0
-
-  private def priorityEvidenceRecord(
-      family: ClaimFamily,
-      record: EvidenceRecord,
-      graph: TypedEvidenceGraph
-  ): Boolean =
-    family match
-      case ClaimFamily.Tactical =>
-        tacticalPriorityEvidenceRecord(record, graph)
-      case family if family.isLongTerm =>
-        !ClaimEvidenceSemantics.longTermSupportExcludedLayer(record.ref.layer) &&
-          !StrategicMechanismEvidence.rawStrategicSourceLayer(record.ref.layer)
-      case _ =>
-        true
-
-  private def tacticalPriorityEvidenceRecord(record: EvidenceRecord, graph: TypedEvidenceGraph): Boolean =
-    record.payload match
-      case _: TacticalMechanismEvidence | _: RelationFactEvidence | _: MoveMotifEvidence | _: LineFactEvidence |
-          CandidateLineEvaluationEvidence(_, _) | _: ThreatEpisodeEvidence |
-          MoveTransitionEvidence(_, _, _) | RelativeAssessmentEvidence(_) |
-          CandidateComparisonEvidence(_) =>
-        true
-      case RelativeCauseFactEvidence(cause) =>
-        RelativeCauseClaimDepth.hasTacticalDepth(cause, graph)
-      case _ =>
-        false
-
-  private def confidenceScore(confidence: EvidenceConfidence): Int =
-    confidence match
-      case EvidenceConfidence.LegalReplayVerified => 40
-      case EvidenceConfidence.EngineBacked        => 30
-      case EvidenceConfidence.BoardDerived        => 25
-      case EvidenceConfidence.Mixed               => 15
-      case EvidenceConfidence.Heuristic           => 5
 
 object ClaimArbitrator:
 
@@ -424,7 +269,7 @@ object ClaimArbitrator:
   ): Option[ClaimRankingResult] =
     val playedMoves =
       relativeAssessments
-        .map(assessment => JudgmentSubjectBinding.normalizeMove(assessment.played.moveUci))
+        .map(assessment => EvidenceRef.normalizeMove(assessment.played.moveUci))
         .filter(_.nonEmpty)
         .toSet
     val deduplication =

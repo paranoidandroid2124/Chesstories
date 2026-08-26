@@ -32,7 +32,7 @@ case class TopNav(helpers: Helpers):
     st.nav(id := navId, aria.label := "Primary")(
       ul(cls := navMainClass)(
         item("/", "Home", ctx.req.path == "/", mobileOnly = true),
-        item("/analysis", "Analysis", isOn("/analysis")),
+        item("/analysis", "Review", isOn("/analysis"), Some("Review a game move by move")),
         item("/study", "Study", isOn("/study")),
         item("/import", "Import Games", isOn("/import"), Some("Import recent public games")),
         item("/help", "Help", isOn("/help")),

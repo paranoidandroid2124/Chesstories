@@ -49,10 +49,10 @@ object RelativeCauseConstructionAdmission:
   ): List[DirectCauseChannel] =
     graph.relativeCauseBinding(cause).toList.flatMap { _ =>
       cause.directEffectAdmission match
-        case DirectEffectAdmission.Restricted(signatures) if signatures.nonEmpty =>
+        case DirectEffectAdmission.Restricted(occurrences) if occurrences.nonEmpty =>
           EvidenceObjectBinding
             .rawDirectSentenceChannelsForProjection(cause, graph)
-            .filter(channel => signatures(channel.causalSignature))
+            .filter(channel => occurrences(channel.exactOccurrenceFingerprint))
         case DirectEffectAdmission.Unresolved | DirectEffectAdmission.Restricted(_) =>
           Nil
     }

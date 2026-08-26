@@ -4,6 +4,7 @@ import java.security.SecureRandom
 import java.util.Base64
 
 import scala.collection.mutable
+import scala.util.control.NonFatal
 
 enum CommentaryJobCreationRejection:
   case RegistryCapacityReached
@@ -34,40 +35,55 @@ final class CommentaryJobRegistry(
       @volatile var forgetAfterEpochMs: Long
   )
 
-  private val creationLock = new Object
   private val membershipLock = new Object
   private val secureRandom = SecureRandom()
   private val retainedJobs = mutable.Map.empty[String, RetainedCommentaryJob]
+  private var reservedCreations = 0
 
   def createJob(
       requestId: String,
       initialFen: String,
       movePrefixUci: List[String],
       currentFen: String,
+      playedMoveUci: String,
+      resultingFen: String,
       policy: CommentaryJobPolicy,
       nowEpochMs: Long
   ): Either[CommentaryJobCreationRejection, CommentaryJobSnapshot] =
-    creationLock.synchronized:
-      removeForgottenJobsAt(nowEpochMs)
-      val capacityReached = membershipLock.synchronized:
-        retainedJobs.size >= maximumRetainedJobs
-      if capacityReached then Left(CommentaryJobCreationRejection.RegistryCapacityReached)
-      else
-        CommentaryJobReducer.startJob(initialFen, movePrefixUci, currentFen, policy, nowEpochMs) match
-          case Left(reason) => Left(CommentaryJobCreationRejection.JobStartRejected(reason))
-          case Right(state) =>
-            membershipLock.synchronized:
-              if retainedJobs.size >= maximumRetainedJobs then
-                throw IllegalStateException("retained job capacity changed while creation was serialized")
-              val jobId = nextUnusedJobId()
-              val retained = retainNewJobAt(
-                requestId,
-                state,
-                policy.deadlineEpochMs,
-                nowEpochMs
-              )
-              retainedJobs.update(jobId, retained)
-              Right(snapshotOf(jobId, retained))
+    removeForgottenJobsAt(nowEpochMs)
+    if !reserveCreationSlot() then Left(CommentaryJobCreationRejection.RegistryCapacityReached)
+    else
+      val started =
+        try CommentaryJobReducer.startJob(
+          initialFen,
+          movePrefixUci,
+          currentFen,
+          playedMoveUci,
+          resultingFen,
+          policy,
+          nowEpochMs
+        )
+        catch
+          case NonFatal(error) =>
+            releaseCreationSlot()
+            throw error
+      started match
+        case Left(reason) =>
+          releaseCreationSlot()
+          Left(CommentaryJobCreationRejection.JobStartRejected(reason))
+        case Right(state) =>
+          membershipLock.synchronized:
+            require(reservedCreations > 0, "commentary job creation reservation was lost")
+            reservedCreations -= 1
+            val jobId = nextUnusedJobId()
+            val retained = retainNewJobAt(
+              requestId,
+              state,
+              policy.deadlineEpochMs,
+              nowEpochMs
+            )
+            retainedJobs.update(jobId, retained)
+            Right(snapshotOf(jobId, retained))
 
   def expireAndReadJobAt(jobId: String, nowEpochMs: Long): Option[CommentaryJobSnapshot] =
     removeForgottenJobsAt(nowEpochMs)
@@ -168,9 +184,13 @@ final class CommentaryJobRegistry(
       nextState match
         case stopped: StoppedCommentaryJob
             if stopped.stopCondition == CommentaryJobStopCondition.DeadlineExceeded =>
-          deadlineEpochMs + terminalJobRetentionMillis
-        case _ => nowEpochMs + terminalJobRetentionMillis
-    else previous.fold(deadlineEpochMs + terminalJobRetentionMillis)(_.forgetAfterEpochMs)
+          retentionDeadlineFrom(deadlineEpochMs)
+        case _ => retentionDeadlineFrom(nowEpochMs)
+    else previous.fold(retentionDeadlineFrom(deadlineEpochMs))(_.forgetAfterEpochMs)
+
+  private def retentionDeadlineFrom(epochMs: Long): Long =
+    if epochMs > Long.MaxValue - terminalJobRetentionMillis then Long.MaxValue
+    else epochMs + terminalJobRetentionMillis
 
   private def isTerminalJobState(state: CommentaryJobState): Boolean = state match
     case _: AwaitingEngineWork => false
@@ -195,6 +215,18 @@ final class CommentaryJobRegistry(
   private def retainedJobFor(jobId: String): Option[RetainedCommentaryJob] =
     membershipLock.synchronized:
       retainedJobs.get(jobId)
+
+  private def reserveCreationSlot(): Boolean =
+    membershipLock.synchronized:
+      if retainedJobs.size + reservedCreations >= maximumRetainedJobs then false
+      else
+        reservedCreations += 1
+        true
+
+  private def releaseCreationSlot(): Unit =
+    membershipLock.synchronized:
+      require(reservedCreations > 0, "commentary job creation reservation was lost")
+      reservedCreations -= 1
 
   private def isCurrentRetainedJob(jobId: String, retained: RetainedCommentaryJob): Boolean =
     membershipLock.synchronized:

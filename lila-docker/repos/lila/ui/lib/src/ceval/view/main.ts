@@ -217,19 +217,17 @@ export function renderCeval(ctrl: CevalHandler): VNode[] {
         : threatMode
           ? [threatInfo(ctrl, threat)]
           : localEvalNodes(ctrl, { client, server })
-    : [ceval.analysable ? 'Switch on to compare this position' : 'Illegal positions cannot be analyzed'];
+    : [ceval.analysable ? 'Turn on the engine to see its evaluation' : 'This position cannot be analyzed'];
+
+  const engineLabel = (ctrl.ceval.engines.active?.short || 'Chess engine')
+    .replace(/^SF /, 'Stockfish ')
+    .replace(/\s*·.*$/, '');
 
   const body = hl('div.ceval__readout', [
     pearl,
     hl('div.ceval__identity', [
-      hl('span.ceval__heading', threatMode ? 'Opponent threat' : 'Position evidence'),
-      hl(
-        'div.engine',
-        hl(
-          'strong.ceval__engine-model',
-          threatMode ? 'Threat line' : enabled ? 'Live local estimate' : 'Local estimate paused',
-        ),
-      ),
+      hl('span.ceval__heading', threatMode ? 'Opponent threat' : 'Engine analysis'),
+      hl('div.engine', hl('strong.ceval__engine-model', engineLabel)),
       hl('span.info', status),
     ]),
   ]);
@@ -264,7 +262,7 @@ export function renderCeval(ctrl: CevalHandler): VNode[] {
   return [
     hl(
       'section.ceval' + (enabled ? '.enabled' : ''),
-      { class: { computing: ceval.isComputing }, attrs: { 'aria-label': 'Position evidence' } },
+      { class: { computing: ceval.isComputing }, attrs: { 'aria-label': 'Engine analysis' } },
       [
         body,
         hl('div.ceval__actions', [

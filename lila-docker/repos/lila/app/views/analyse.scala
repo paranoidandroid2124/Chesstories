@@ -73,7 +73,7 @@ object analyse:
           )
           .add("inlinePgn", inlinePgn) ++ analyseUi.explorerAndCevalConfig
       views.base.embed.site(
-        title = "Analysis board and eval",
+        title = "Review board and engine evidence",
         cssKeys = List("analyse.workspace"),
         pageModule = Some(analyseUi.bits.analyseModule("userAnalysis", cfg)),
         csp = analyseUi.bits.csp.compose(_.withExternalAnalysisApis)

@@ -3,39 +3,22 @@ package io.chesstory.runtime
 import java.net.{ InetSocketAddress, URI }
 import java.net.http.{ HttpClient, HttpRequest, HttpResponse }
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.Executors
 
-import chess.opening.OpeningDb
-import lila.chessjudgment.analysis.assembly.MoveReviewInputNormalizer
-import lila.chessjudgment.model.evaluation.PerspectiveMath
-import lila.chessjudgment.analysis.opening.OpeningRecognitionIndex
-import lila.chessjudgment.model.{ ProbePurpose, ProbeRequest, ProbeResolution }
-import lila.chessjudgment.model.judgment.*
-import lila.chessjudgment.model.line.{
-  AutomaticTerminal,
-  CanonicalPositionHistory,
-  CanonicalPositionHistoryFailure,
-  DrawClaimAvailability,
-  DrawClaimRule,
-  DeclaredDrawClaim,
-  FivefoldRepetitionKnowledge,
-  PositionRuleAssessment,
-  CandidateLineEvaluation,
-  ThreefoldClaimKnowledge
-}
-import play.api.libs.json.*
+import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.concurrent.duration.*
+
+import lila.chessjudgment.model.line.{ AutomaticTerminal, CandidateLineEvaluation, CanonicalPositionHistory }
 import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.analysis.assembly.{ MoveReviewInputNormalizer, RawMoveReviewInput }
+import play.api.libs.json.*
 
 class RuntimeProtocolTest extends munit.FunSuite:
 
   private val engineProfile = CommentaryEngineProfile.ServerAdmitted
+  private val initialFen = chess.variant.Standard.initialFen.value
 
-  private def commentaryPolicy(deadlineEpochMs: Long = Long.MaxValue): CommentaryJobPolicy =
-    CommentaryJobPolicy(16, 512, deadlineEpochMs, engineProfile)
-
-  private def canonicalHistory(
-      initialFen: String,
-      moves: List[String] = Nil
-  ): CanonicalPositionHistory =
+  private def history(moves: List[String] = Nil): CanonicalPositionHistory =
     CanonicalPositionHistory
       .from(initialFen, Nil, initialFen)
       .toOption
@@ -44,28 +27,65 @@ class RuntimeProtocolTest extends munit.FunSuite:
       .toOption
       .get
 
-  private def rootInventory(
-      history: CanonicalPositionHistory,
-      terminalMove: String,
-      terminalLine: EngineLine
-  ) =
-    val orderedLegalMoves = history.currentPosition.legalMoves.map(_.toUci.uci)
-    val evaluations = orderedLegalMoves.map { move =>
-      val line =
-        if move == terminalMove then terminalLine
-        else EngineLine(List(move), 0, None, 16)
-      CandidateLineEvaluation.EngineSearch(line)
-    }
-    MoveReviewInputNormalizer.prepareMoveReviewInventory(
-      history,
-      orderedLegalMoves,
-      PositionRuleAssessment.assess(history),
-      evaluations,
-      Set.empty
+  private def policy(deadline: Long = Long.MaxValue): CommentaryJobPolicy =
+    CommentaryJobPolicy(16, 32, deadline, engineProfile)
+
+  private def resultingFen(move: String): String =
+    history().extend(List(move)).toOption.get.currentFen
+
+  private def completedReport(
+      work: IssuedEngineWork,
+      lines: List[(List[String], Int)]
+  ): EngineWorkReport =
+    EngineWorkReport.Completed(
+      work.engineProfile,
+      work.workId,
+      work.executionKeySha256,
+      lines.map { case (moves, score) =>
+        ReportedEngineLineSuffix(moves, ReportedWhiteEngineScore.Centipawns(score), work.requiredDepth)
+      }
     )
 
-  private val input = Json.obj(
-    "fen" -> chess.variant.Standard.initialFen.value,
+  private def rootLines: List[(List[String], Int)] = List(
+    List("e2e4", "e7e5", "g1f3") -> 30,
+    List("d2d4", "d7d5", "g1f3") -> 20,
+    List("g1f3", "g8f6", "d2d4") -> 10
+  )
+
+  private val causalFen = "4k3/p7/3p4/8/4P3/8/8/4K1N1 w - - 0 1"
+  private val causalPlayedMove = "g1f3"
+  private val causalRootLines = List(
+    List("g1f3", "a7a6", "e1d1") -> 30,
+    List("e1d1", "a7a6", "g1f3") -> 40,
+    List("g1h3", "a7a6", "e1d1") -> 0
+  )
+  private val causalReplyLines = List(
+    List("a7a6", "e4e5", "d6e5", "f3e5") -> 30
+  )
+  private val causalBranchReplyLines = List(
+    List("a7a6", "e4e5") -> 30,
+    List("e8d7", "e4e5") -> 25,
+    List("e8f7", "e4e5") -> 20
+  )
+
+  private def wireVariations(lines: List[(List[String], Int)], depth: Int): JsArray =
+    JsArray(lines.map { case (moves, score) =>
+      Json.obj("moves" -> moves, "scoreCp" -> score, "depth" -> depth)
+    })
+
+  private def wireProbeResult(
+      probe: JsObject,
+      lines: List[(List[String], Int)]
+  ): JsObject =
+    val base = Json.obj(
+      "id" -> (probe \ "id").as[String],
+      "replyLines" -> wireVariations(lines, (probe \ "depth").as[Int]),
+      "depth" -> (probe \ "depth").as[Int]
+    )
+    base
+
+  private val directInput = Json.obj(
+    "fen" -> initialFen,
     "playedMoveUci" -> "d2d4",
     "variations" -> Json.arr(
       Json.obj("moves" -> Json.arr("e2e4", "e7e5", "g1f3"), "scoreCp" -> 30, "depth" -> 16),
@@ -75,1214 +95,526 @@ class RuntimeProtocolTest extends munit.FunSuite:
     "movePrefixUci" -> Json.arr()
   )
 
-  private def request(schema: String = RuntimeProtocol.RequestSchema, body: JsObject = input): JsObject =
-    Json.obj("schema_version" -> schema, "request_id" -> "test-1", "input" -> body)
-
-  test("opening recognition reuses the canonical scalachess database"):
-    val canonical = OpeningDb.all.head
-    val moves = canonical.uci.value.split("\\s+").toList
-    val recognized = OpeningRecognitionIndex.default.recognize(moves, canonical.fen.value, moves.size)
-    assert(recognized.exists(_.candidates.exists(_.identity.name.contains(canonical.name.value))))
-
-  test("a unique canonical position preserves opening identity across move-order transposition"):
-    val canonical = OpeningDb.all.find: opening =>
-      opening.eco.value == "E08" &&
-        opening.name.value == "Catalan Opening: Closed" &&
-        opening.uci.value.endsWith("d1c2")
-    val alternateMoves =
-      "d2d4 g8f6 c2c4 e7e6 g1f3 d7d5 g2g3 f8e7 f1g2 e8g8 e1g1 b8d7 d1c2".split(" ").toList
-    val recognized = canonical.flatMap: opening =>
-      OpeningRecognitionIndex.default.recognize(alternateMoves, opening.fen.value, alternateMoves.size)
-    assertEquals(recognized.map(_.matchedBy), Some(OpeningRecognitionMatchKind.PositionTransposition))
-    assertEquals(recognized.flatMap(_.bestIdentity.flatMap(_.name)), Some("Catalan Opening: Closed"))
-
-  test("canonical position history allows the terminal-reaching move and rejects every continuation"):
-    val initialFen =
-      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 149 501"
-    val currentFen =
-      "rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq - 150 501"
-    val history = CanonicalPositionHistory.from(initialFen, List("g1f3"), currentFen).toOption.get
-    assertEquals(history.currentFen, currentFen)
-    assertEquals(
-      PositionRuleAssessment.assess(history),
-      PositionRuleAssessment.Terminal(AutomaticTerminal.SeventyFiveMoveRule)
+  private def directRequest(body: JsObject = directInput): JsObject =
+    Json.obj(
+      "schema_version" -> RuntimeProtocol.RequestSchema,
+      "request_id" -> "direct-v6",
+      "input" -> body
     )
-    assertEquals(history.extend(Nil).map(_.currentFen), Right(currentFen))
-    assertEquals(
-      history.extend(List("g8f6")),
-      Left(CanonicalPositionHistoryFailure.IllegalMovePrefix)
-    )
-    assertEquals(
-      CanonicalPositionHistory.from(
-        initialFen,
-        List("g1f3", "g8f6"),
-        "rnbqkb1r/pppppppp/5n2/8/8/5N2/PPPPPPPP/RNBQKB1R w KQkq - 151 502"
+
+  private def jobRequest(playedMove: String = "d2d4"): JsObject =
+    Json.obj(
+      "schema_version" -> PositionCommentaryJobProtocol.JobRequestSchema,
+      "request_id" -> "job-v6",
+      "variant" -> "standard",
+      "initial_fen" -> initialFen,
+      "move_prefix_uci" -> Json.arr(),
+      "current_fen" -> initialFen,
+      "focus" -> Json.obj(
+        "kind" -> "played_move",
+        "played_move_uci" -> playedMove,
+        "resulting_fen" -> resultingFen(playedMove)
       ),
-      Left(CanonicalPositionHistoryFailure.IllegalMovePrefix)
+      "engine_profile" -> engineProfile.wireId
     )
 
-  test("canonical position history rejects illegal prefixes and current-FEN mismatch"):
-    val initialFen = chess.variant.Standard.initialFen.value
-    assertEquals(
-      CanonicalPositionHistory.from(initialFen, List("e2e5"), initialFen),
-      Left(CanonicalPositionHistoryFailure.IllegalMovePrefix)
+  test("v6 job request owns one standard played-move focus and rejects unsupported schemas"):
+    val parsed = PositionCommentaryJobProtocol
+      .parseJobRequest(Json.stringify(jobRequest()).getBytes(StandardCharsets.UTF_8))
+      .toOption
+      .get
+    assertEquals(parsed.playedMoveUci, "d2d4")
+    assertEquals(parsed.resultingFen, resultingFen("d2d4"))
+    assertEquals(parsed.engineProfile, engineProfile)
+
+    val unsupported = jobRequest() + (
+      "schema_version" -> JsString("unsupported.position-commentary.job-request")
     )
     assertEquals(
-      CanonicalPositionHistory.from(initialFen, List("e2e4"), initialFen),
-      Left(CanonicalPositionHistoryFailure.CurrentFenMismatch)
+      PositionCommentaryJobProtocol.parseJobRequest(
+        Json.stringify(unsupported).getBytes(StandardCharsets.UTF_8)
+      ),
+      Left(PositionCommentaryJobProtocol.PositionCommentaryJobWireFailure.UnsupportedJobRequestSchema)
     )
 
-  test("engine admission projects legal terminal tails into engine-backed logical prefixes"):
-    val drawFen = "7k/8/8/8/K7/1p6/8/8 w - - 0 1"
-    val drawWork = IssuedEngineWork(
-      engineProfile,
-      "work:draw",
-      drawFen,
-      Nil,
-      drawFen,
-      drawFen,
-      Nil,
-      requiredDepth = 16,
-      multiPv = 1
+    val chess960 = jobRequest() + ("variant" -> JsString("chess960"))
+    assertEquals(
+      PositionCommentaryJobProtocol.parseJobRequest(
+        Json.stringify(chess960).getBytes(StandardCharsets.UTF_8)
+      ),
+      Left(PositionCommentaryJobProtocol.PositionCommentaryJobWireFailure.UnsupportedVariant)
     )
-    val legalTail = List("a4b3", "h8h7", "b3c3")
-    List(-24 -> 16, 9 -> 17).foreach { case (score, depth) =>
-      EngineLineAdmission.bindReportedLineSuffixes(
-        drawWork,
-        List(ReportedEngineLineSuffix(legalTail, ReportedWhiteEngineScore.Centipawns(score), depth))
-      ) match
-        case Some(List(CandidateLineEvaluation.EngineSearch(EngineLine(moves, admittedScore, None, admittedDepth)))) =>
-          assertEquals(moves, List("a4b3"))
-          assertEquals(admittedScore, score)
-          assertEquals(admittedDepth, depth)
-        case other => fail(s"expected engine-backed projected tail for cp $score, found $other")
+
+  test("v6 issues one unrestricted root bundle instead of one search per legal move"):
+    val started = CommentaryJobReducer
+      .startJob(
+        initialFen,
+        Nil,
+        initialFen,
+        "d2d4",
+        resultingFen("d2d4"),
+        policy(),
+        nowEpochMs = 0L
+      )
+      .toOption
+      .get
+    val root = started match
+      case awaiting: AwaitingEngineWork => awaiting
+      case other                       => fail(s"expected root work, found $other")
+    assertEquals(root.issuedWork.purpose, EngineWorkPurpose.RootSearch)
+    assertEquals(root.issuedWork.rootRestriction, EngineRootRestriction.Unrestricted)
+    assertEquals(root.issuedWork.multiPv, 3)
+    assertEquals(root.issuedWork.enginePositionMovesUci, Nil)
+    assertEquals(root.progress.physicalWorksIssued, 1)
+    assert(root.progress.legalMoveCount > root.progress.physicalWorksIssued)
+
+    val afterRoot = CommentaryJobReducer
+      .submitIssuedWorkReport(root, completedReport(root.issuedWork, rootLines), nowEpochMs = 1L)
+      .toOption
+      .get
+    afterRoot match
+      case awaiting: AwaitingEngineWork =>
+        assertEquals(awaiting.issuedWork.purpose, EngineWorkPurpose.CausalProbe)
+      case completed: CompletedCommentaryJob =>
+        assertEquals(completed.progress.selectedCommentariesCompleted, 1)
+      case other => fail(s"covered focus must not schedule a focus comparison: $other")
+    assertEquals(afterRoot.progress.physicalReportsAccepted, 1)
+
+  test("v6 adds one restricted focus comparison only when played move is outside the root bundle"):
+    val played = "a2a3"
+    val root = CommentaryJobReducer
+      .startJob(
+        initialFen,
+        Nil,
+        initialFen,
+        played,
+        resultingFen(played),
+        policy(),
+        nowEpochMs = 0L
+      )
+      .toOption
+      .collect { case value: AwaitingEngineWork => value }
+      .get
+    val afterRoot = CommentaryJobReducer
+      .submitIssuedWorkReport(root, completedReport(root.issuedWork, rootLines), nowEpochMs = 1L)
+      .toOption
+      .collect { case value: AwaitingEngineWork => value }
+      .get
+    assertEquals(afterRoot.issuedWork.purpose, EngineWorkPurpose.FocusComparison)
+    assertEquals(
+      afterRoot.issuedWork.rootRestriction,
+      EngineRootRestriction.Restricted(List("e2e4", played))
+    )
+    assertEquals(afterRoot.issuedWork.multiPv, 2)
+    assertEquals(afterRoot.progress.physicalWorksIssued, 2)
+
+    val afterFocus = CommentaryJobReducer
+      .submitIssuedWorkReport(
+        afterRoot,
+        completedReport(
+          afterRoot.issuedWork,
+          List(
+            List("e2e4", "e7e5", "g1f3") -> 30,
+            List("a2a3", "e7e5", "g1f3") -> -10
+          )
+        ),
+        nowEpochMs = 2L
+      )
+      .toOption
+      .get
+    assertEquals(afterFocus.progress.physicalReportsAccepted, 2)
+    afterFocus match
+      case awaiting: AwaitingEngineWork =>
+        assertEquals(awaiting.issuedWork.purpose, EngineWorkPurpose.CausalProbe)
+      case _: CompletedCommentaryJob => ()
+      case other => fail(s"focused review did not enter commentary assembly: $other")
+
+  test("v6 fulfills an additional causal search inside the same monotonic job ledger"):
+    val causalHistory = CanonicalPositionHistory.from(causalFen, Nil, causalFen).toOption.get
+    val causalResultingFen = causalHistory.extend(List(causalPlayedMove)).toOption.get.currentFen
+    val root = CommentaryJobReducer
+      .startJob(
+        causalFen,
+        Nil,
+        causalFen,
+        causalPlayedMove,
+        causalResultingFen,
+        CommentaryJobPolicy(20, 32, Long.MaxValue, engineProfile),
+        nowEpochMs = 0L
+      )
+      .toOption
+      .collect { case value: AwaitingEngineWork => value }
+      .get
+    val completeRootLines = causalRootLines
+    val afterRoot = CommentaryJobReducer
+      .submitIssuedWorkReport(root, completedReport(root.issuedWork, completeRootLines), nowEpochMs = 1L)
+      .toOption
+      .get
+    val causal = afterRoot match
+      case value: AwaitingEngineWork => value
+      case other                     => fail(s"expected causal work after root report, found $other")
+    assertEquals(causal.issuedWork.purpose, EngineWorkPurpose.CausalProbe)
+    assertEquals(
+      causal.issuedWork.commentaryLinePrefixUci,
+      List("a7a6", "e4e5"),
+      clues(causal.issuedWork)
+    )
+    assertEquals(causal.issuedWork.multiPv, 1, clues(causal.issuedWork))
+    assertEquals(causal.progress.physicalWorksIssued, 2)
+    assertEquals(causal.progress.physicalReportsAccepted, 1)
+
+    val forcedPrefix = causal.issuedWork.commentaryLinePrefixUci
+    val causalSuffixes = causalReplyLines.map { case (moves, score) =>
+      assertEquals(moves.take(forcedPrefix.size), forcedPrefix)
+      moves.drop(forcedPrefix.size) -> score
     }
+    val afterContinuation = CommentaryJobReducer
+      .submitIssuedWorkReport(causal, completedReport(causal.issuedWork, causalSuffixes), nowEpochMs = 2L)
+      .toOption
+      .get
+    val replyCensus = afterContinuation match
+      case value: AwaitingEngineWork => value
+      case other                     => fail(s"expected one reply census after exact causal continuation, found $other")
+    assertEquals(replyCensus.issuedWork.purpose, EngineWorkPurpose.CausalProbe)
+    assertEquals(replyCensus.issuedWork.commentaryLinePrefixUci, Nil)
+    assertEquals(replyCensus.issuedWork.multiPv, 3)
+    val completed = CommentaryJobReducer
+      .submitIssuedWorkReport(
+        replyCensus,
+        completedReport(replyCensus.issuedWork, causalBranchReplyLines),
+        nowEpochMs = 3L
+      )
+      .toOption
+      .collect { case value: CompletedCommentaryJob => value }
+      .getOrElse(fail("expected completion after the bounded reply census"))
+    assertEquals(completed.progress.physicalWorksIssued, 3)
+    assertEquals(completed.progress.physicalReportsAccepted, 3)
+    assertEquals(completed.progress.causalWavesCompleted, 2)
+    assertEquals(completed.progress.selectedCommentariesCompleted, 1)
+
+  test("execution identity and minimal v6 engine report bind exactly one outstanding work"):
+    val root = CommentaryJobReducer
+      .startJob(
+        initialFen,
+        Nil,
+        initialFen,
+        "d2d4",
+        resultingFen("d2d4"),
+        policy(),
+        nowEpochMs = 0L
+      )
+      .toOption
+      .collect { case value: AwaitingEngineWork => value }
+      .get
+    val reportJson = Json.obj(
+      "schema_version" -> PositionCommentaryJobProtocol.EngineWorkReportSchema,
+      "engine_profile" -> engineProfile.wireId,
+      "work_id" -> root.issuedWork.workId,
+      "execution_key_sha256" -> root.issuedWork.executionKeySha256,
+      "outcome" -> Json.obj(
+        "kind" -> "completed",
+        "line_suffixes" -> rootLines.map { case (moves, score) =>
+          Json.obj(
+            "moves" -> moves,
+            "depth" -> 16,
+            "white_score" -> Json.obj("kind" -> "cp", "value" -> score)
+          )
+        }
+      )
+    )
+    val parsed = PositionCommentaryJobProtocol
+      .parseEngineWorkReport(Json.stringify(reportJson).getBytes(StandardCharsets.UTF_8))
+      .toOption
+      .get
+    assertEquals(parsed.reportedExecutionKeySha256, root.issuedWork.executionKeySha256)
+    val wrongKey = parsed match
+      case EngineWorkReport.Completed(profile, workId, _, lines) =>
+        EngineWorkReport.Completed(profile, workId, "0" * 64, lines)
+      case _ => fail("expected completed report")
+    assertEquals(
+      CommentaryJobReducer.submitIssuedWorkReport(root, wrongKey, 1L),
+      Left(EngineWorkReportRejection.WorkNotOutstanding)
+    )
+
+  test("admission replays browser lines and truncates only at an automatic terminal"):
+    val drawFen = "7k/8/8/8/K7/1p6/8/8 w - - 0 1"
+    val drawHistory = CanonicalPositionHistory.from(drawFen, Nil, drawFen).toOption.get
+    val work = IssuedEngineWork.create(
+      engineProfile,
+      "work:0",
+      EngineWorkPurpose.RootSearch,
+      drawFen,
+      Nil,
+      drawFen,
+      EngineRootRestriction.Unrestricted,
+      drawFen,
+      Nil,
+      EngineSearchLimits(16, 5_000_000, 5_000, 1),
+      6_000
+    )
+    assertEquals(drawHistory.currentFen, drawFen)
+    val suffixMoves = List("a4b3", "h8h7", "b3c3")
     assertEquals(
       EngineLineAdmission.bindReportedLineSuffixes(
-        drawWork,
+        work,
         List(
           ReportedEngineLineSuffix(
-            List("a4b3", "h8h7", "b3b5"),
-            ReportedWhiteEngineScore.Centipawns(0),
+            suffixMoves,
+            ReportedWhiteEngineScore.Centipawns(-24),
             16
           )
         )
       ),
       None
     )
-    List(
-      ReportedWhiteEngineScore.Mate(0),
-      ReportedWhiteEngineScore.Mate(1001),
-      ReportedWhiteEngineScore.Mate(-1001),
-      ReportedWhiteEngineScore.Mate(Int.MinValue),
-      ReportedWhiteEngineScore.Centipawns(100001),
-      ReportedWhiteEngineScore.Centipawns(-100001),
-      ReportedWhiteEngineScore.Centipawns(Int.MinValue)
-    ).foreach { score =>
-      assertEquals(
-        EngineLineAdmission.bindReportedLineSuffixes(
-          drawWork,
-          List(ReportedEngineLineSuffix(legalTail, score, 16))
-        ),
-        None
-      )
-    }
-
-  test("reported mate observations remain engine-backed with normalized distances and defense ordering"):
-    val initialFen = chess.variant.Standard.initialFen.value
-    val prefix = List("e2e4", "e7e5")
-    val searchFen = canonicalHistory(initialFen, prefix).currentFen
-    val mateWork = IssuedEngineWork(
-      engineProfile,
-      "work:mate",
-      initialFen,
-      prefix,
-      searchFen,
-      initialFen,
-      prefix,
-      requiredDepth = 16,
-      multiPv = 2
-    )
     val admitted = EngineLineAdmission.bindReportedLineSuffixes(
-      mateWork,
+      work,
       List(
-        ReportedEngineLineSuffix(List("g1f3"), ReportedWhiteEngineScore.Mate(-1), 16),
-        ReportedEngineLineSuffix(List("b1c3"), ReportedWhiteEngineScore.Mate(-5), 17)
-      )
-    )
-    admitted match
-      case Some(List(CandidateLineEvaluation.EngineSearch(shorter), CandidateLineEvaluation.EngineSearch(longer))) =>
-        assertEquals(shorter.moves, prefix ++ List("g1f3"))
-        assertEquals(longer.moves, prefix ++ List("b1c3"))
-        assertEquals(shorter.scoreCp, -10000)
-        assertEquals(longer.scoreCp, -10000)
-        assertEquals(shorter.mate, Some(-2))
-        assertEquals(longer.mate, Some(-6))
-        assertEquals(shorter.depth, 16)
-        assertEquals(longer.depth, 17)
-        assert(
-          CandidateLineEvaluation.EngineSearch(longer).rankingScoreForMover(chess.Color.White) >
-            CandidateLineEvaluation.EngineSearch(shorter).rankingScoreForMover(chess.Color.White)
-        )
-        val comparison = PerspectiveMath.compareForMover(
-          chess.Color.White,
-          PerspectiveMath.EvalPoint(longer.scoreCp, longer.mate),
-          PerspectiveMath.EvalPoint(shorter.scoreCp, shorter.mate)
-        )
-        assertEquals(comparison.winPercentLossForMover, 0.0)
-        assertEquals(comparison.mateDistanceLossForMover, Some(4))
-      case other => fail(s"expected normalized engine mate observations, found $other")
-
-  test("physical MultiPV preserves ordered engine-backed terminal-prefix candidates"):
-    val initialFen = "7k/8/8/8/K7/1p6/8/8 b - - 0 1"
-    val work = IssuedEngineWork(
-      engineProfile,
-      "work:terminal-prefixes",
-      initialFen,
-      Nil,
-      initialFen,
-      initialFen,
-      Nil,
-      requiredDepth = 16,
-      multiPv = 2
-    )
-    val mixedReports = List(
-      ReportedEngineLineSuffix(
-        List("h8h7", "a4b3", "h7g6"),
-        ReportedWhiteEngineScore.Centipawns(-24),
-        17
-      ),
-      ReportedEngineLineSuffix(
-        List("h8g8", "a4a5"),
-        ReportedWhiteEngineScore.Centipawns(9),
-        16
-      )
-    )
-    val mixed = EngineLineAdmission
-      .bindReportedLineSuffixes(work, mixedReports)
-      .getOrElse(fail("expected mixed physical candidates"))
-    assertEquals(mixed.size, 2)
-    assertEquals(mixed.map(_.moves), List(List("h8h7", "a4b3"), List("h8g8", "a4a5")))
-    assert(mixed.forall(_.isInstanceOf[CandidateLineEvaluation.EngineSearch]))
-    assertEquals(mixed.flatMap(_.engineLine.map(_.depth)), List(17, 16))
-    val mixedAggregate: ProbeResolution.EngineSearch = ProbeResolution.EngineSearch(
-      mixed,
-      mixedReports.map(_.depth).min
-    )
-    assertEquals(mixedAggregate.depth, 16)
-    assertEquals(mixedAggregate.evaluations, mixed)
-
-    val allTerminalReports = List(
-      ReportedEngineLineSuffix(
-        List("h8h7", "a4b3", "h7g6"),
-        ReportedWhiteEngineScore.Centipawns(-24),
-        17
-      ),
-      ReportedEngineLineSuffix(
-        List("h8g8", "a4b3", "g8f7"),
-        ReportedWhiteEngineScore.Centipawns(9),
-        16
-      )
-    )
-    val allTerminal = EngineLineAdmission
-      .bindReportedLineSuffixes(work, allTerminalReports)
-      .getOrElse(fail("expected all terminal-prefix candidates"))
-    assertEquals(allTerminal.size, 2)
-    assertEquals(allTerminal.map(_.moves), List(List("h8h7", "a4b3"), List("h8g8", "a4b3")))
-    assert(allTerminal.forall(_.isInstanceOf[CandidateLineEvaluation.EngineSearch]))
-    assertEquals(allTerminal.flatMap(_.engineLine.map(_.depth)), List(17, 16))
-    val noWork = ProbeResolution.ExactAutomaticTerminal(
-      CandidateLineEvaluation.ExactAutomaticTerminal(List("a4b3"), AutomaticTerminal.InsufficientMaterial)
-    )
-    assert(noWork.isInstanceOf[ProbeResolution.ExactAutomaticTerminal])
-
-  test("root normalizer accepts bounded engine observations for overrun-capable terminals"):
-    val insufficient = canonicalHistory("7k/8/8/8/K7/1p6/8/8 w - - 0 1")
-    assert(rootInventory(insufficient, "a4b3", EngineLine(List("a4b3"), -24, None, 16)).nonEmpty)
-
-    val fivefoldPrefix = List.fill(3)(List("g1f3", "g8f6", "f3g1", "f6g8")).flatten ++
-      List("g1f3", "g8f6", "f3g1")
-    val fivefold = canonicalHistory(chess.variant.Standard.initialFen.value, fivefoldPrefix)
-    assertEquals(
-      PositionRuleAssessment.assess(fivefold),
-      PositionRuleAssessment.Nonterminal(
-        FivefoldRepetitionKnowledge.CertifiedNonterminal,
-        ThreefoldClaimKnowledge.Known(DrawClaimAvailability.AvailableNow),
-        DrawClaimAvailability.Unavailable
-      )
-    )
-    assert(rootInventory(fivefold, "f6g8", EngineLine(List("f6g8"), 9, None, 16)).nonEmpty)
-
-    val seventyFive = canonicalHistory(
-      "4k3/8/8/8/8/8/8/4K2R w K - 148 1",
-      List("h1h2")
-    )
-    assert(rootInventory(seventyFive, "e8d7", EngineLine(List("e8d7"), 9, None, 16)).nonEmpty)
-
-    assertEquals(
-      rootInventory(insufficient, "a4b3", EngineLine(List("a4b3", "h8h7"), 9, None, 16)),
-      None
-    )
-    val historyUnavailable = canonicalHistory(
-      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 16 1"
-    )
-    val unavailableMove = historyUnavailable.currentPosition.legalMoves.head.toUci.uci
-    assertEquals(
-      rootInventory(historyUnavailable, unavailableMove, EngineLine(List(unavailableMove), 0, None, 16)),
-      None
-    )
-
-    val checkmate = canonicalHistory("8/8/8/8/8/8/8/k1KQ4 w - - 0 17")
-    assertEquals(
-      rootInventory(checkmate, "d1a4", EngineLine(List("d1a4"), -10000, Some(-1), 16)),
-      None
-    )
-    val stalemate = canonicalHistory("7k/8/4Q1K1/8/8/8/8/8 w - - 0 1")
-    assertEquals(
-      rootInventory(stalemate, "e6f7", EngineLine(List("e6f7"), 9, None, 16)),
-      None
-    )
-
-  test("nonterminal reported work remains engine-backed"):
-    val initialFen = chess.variant.Standard.initialFen.value
-    val searchFen = canonicalHistory(initialFen, List("e2e4")).currentFen
-    val nonterminalWork = IssuedEngineWork(
-      engineProfile,
-      "work:nonterminal",
-      initialFen,
-      List("e2e4"),
-      searchFen,
-      initialFen,
-      List("e2e4"),
-      requiredDepth = 16,
-      multiPv = 1
-    )
-    assertEquals(
-      EngineLineAdmission.bindReportedLineSuffixes(
-        nonterminalWork,
-        List(ReportedEngineLineSuffix(List("e7e5"), ReportedWhiteEngineScore.Centipawns(23), 16))
-      ),
-      Some(List(CandidateLineEvaluation.EngineSearch(EngineLine(List("e2e4", "e7e5"), 23, None, 16))))
-    )
-
-  test("position rules certify automatic terminals in FIDE precedence order"):
-    val checkmateAtSeventyFive = canonicalHistory(
-      "7k/6Q1/6K1/8/8/8/8/8 b - - 150 80"
-    )
-    assertEquals(
-      PositionRuleAssessment.assess(checkmateAtSeventyFive),
-      PositionRuleAssessment.Terminal(AutomaticTerminal.Checkmate(chess.Color.White))
-    )
-
-    val stalemate = canonicalHistory("7k/5Q2/6K1/8/8/8/8/8 b - - 0 1")
-    assertEquals(
-      PositionRuleAssessment.assess(stalemate),
-      PositionRuleAssessment.Terminal(AutomaticTerminal.Stalemate)
-    )
-
-    val insufficient = canonicalHistory("8/8/8/8/8/8/7k/K7 w - - 0 1")
-    assertEquals(
-      PositionRuleAssessment.assess(insufficient),
-      PositionRuleAssessment.Terminal(AutomaticTerminal.InsufficientMaterial)
-    )
-
-    val seventyFive = canonicalHistory("4k3/8/8/8/8/8/8/4K2R w K - 150 1")
-    assertEquals(
-      PositionRuleAssessment.assess(seventyFive),
-      PositionRuleAssessment.Terminal(AutomaticTerminal.SeventyFiveMoveRule)
-    )
-
-    val knightCycle = List("g1f3", "g8f6", "f3g1", "f6g8")
-    val incompleteInitial =
-      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 1 1"
-    val incomplete = canonicalHistory(incompleteInitial)
-    assert(!incomplete.repetitionHistoryComplete)
-    assertEquals(
-      PositionRuleAssessment.assess(incomplete),
-      PositionRuleAssessment.Nonterminal(
-        FivefoldRepetitionKnowledge.CertifiedNonterminal,
-        ThreefoldClaimKnowledge.Known(DrawClaimAvailability.Unavailable),
-        DrawClaimAvailability.Unavailable
-      )
-    )
-    val provenThreefold = canonicalHistory(incompleteInitial, List.fill(2)(knightCycle).flatten)
-    assert(!provenThreefold.repetitionHistoryComplete)
-    assertEquals(
-      PositionRuleAssessment.assess(provenThreefold),
-      PositionRuleAssessment.Nonterminal(
-        FivefoldRepetitionKnowledge.CertifiedNonterminal,
-        ThreefoldClaimKnowledge.Known(DrawClaimAvailability.AvailableNow),
-        DrawClaimAvailability.Unavailable
-      )
-    )
-    val provenFivefold = canonicalHistory(incompleteInitial, List.fill(4)(knightCycle).flatten)
-    assert(!provenFivefold.repetitionHistoryComplete)
-    assertEquals(
-      PositionRuleAssessment.assess(provenFivefold),
-      PositionRuleAssessment.Terminal(AutomaticTerminal.FivefoldRepetition)
-    )
-    val incompleteFifty = canonicalHistory(
-      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 100 1"
-    )
-    assertEquals(
-      PositionRuleAssessment.assess(incompleteFifty),
-      PositionRuleAssessment.Nonterminal(
-        FivefoldRepetitionKnowledge.HistoryUnavailable,
-        ThreefoldClaimKnowledge.HistoryUnavailable,
-        DrawClaimAvailability.AvailableNow
-      )
-    )
-
-  test("incomplete repetition history uses the exact eight- and sixteen-ply impossibility bounds"):
-    def fenAtHalfMoveClock(clock: Int): String =
-      s"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - $clock 1"
-
-    (0 to 7).foreach { clock =>
-      val fen = fenAtHalfMoveClock(clock)
-      val history = canonicalHistory(fen)
-      assertEquals(
-        PositionRuleAssessment.assess(history),
-        PositionRuleAssessment.Nonterminal(
-          FivefoldRepetitionKnowledge.CertifiedNonterminal,
-          ThreefoldClaimKnowledge.Known(DrawClaimAvailability.Unavailable),
-          DrawClaimAvailability.Unavailable
+        ReportedEngineLineSuffix(
+          suffixMoves,
+          ReportedWhiteEngineScore.Centipawns(0),
+          16
         )
       )
-      CommentaryJobReducer.startJob(
-        fen,
-        Nil,
-        fen,
-        commentaryPolicy(),
-        nowEpochMs = 0L
-      ) match
-        case Right(_: AwaitingEngineWork) => ()
-        case other                         => fail(s"clock $clock should proceed, found $other")
-    }
-
-    (8 to 15).foreach { clock =>
-      val fen = fenAtHalfMoveClock(clock)
-      assertEquals(
-        PositionRuleAssessment.assess(canonicalHistory(fen)),
-        PositionRuleAssessment.Nonterminal(
-          FivefoldRepetitionKnowledge.CertifiedNonterminal,
-          ThreefoldClaimKnowledge.HistoryUnavailable,
-          DrawClaimAvailability.Unavailable
-        )
-      )
-      CommentaryJobReducer.startJob(
-        fen,
-        Nil,
-        fen,
-        commentaryPolicy(),
-        nowEpochMs = 0L
-      ) match
-        case Right(StoppedCommentaryJob(`engineProfile`, CommentaryJobStopCondition.RepetitionHistoryUnavailable, _)) => ()
-        case other => fail(s"clock $clock should stop on unknown threefold history, found $other")
-    }
-
-    val sixteenFen = fenAtHalfMoveClock(16)
-    assertEquals(
-      PositionRuleAssessment.assess(canonicalHistory(sixteenFen)),
-      PositionRuleAssessment.Nonterminal(
-        FivefoldRepetitionKnowledge.HistoryUnavailable,
-        ThreefoldClaimKnowledge.HistoryUnavailable,
-        DrawClaimAvailability.Unavailable
-      )
     )
-    CommentaryJobReducer.startJob(
-      sixteenFen,
-      Nil,
-      sixteenFen,
-      commentaryPolicy(),
-      nowEpochMs = 0L
-    ) match
-      case Right(StoppedCommentaryJob(`engineProfile`, CommentaryJobStopCondition.RepetitionHistoryUnavailable, _)) => ()
-      case other => fail(s"clock 16 should stop on unknown repetition history, found $other")
-
-  test("positive repetition remains certified with an incomplete initial history"):
-    val incompleteInitial =
-      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 1 1"
-    val cycle = List("g1f3", "g8f6", "f3g1", "f6g8")
-    val threefoldMoves = List.fill(2)(cycle).flatten
-    val threefold = canonicalHistory(incompleteInitial, threefoldMoves)
-    assert(!threefold.repetitionHistoryComplete)
     assertEquals(
-      PositionRuleAssessment.assess(threefold),
-      PositionRuleAssessment.Nonterminal(
-        FivefoldRepetitionKnowledge.CertifiedNonterminal,
-        ThreefoldClaimKnowledge.Known(DrawClaimAvailability.AvailableNow),
-        DrawClaimAvailability.Unavailable
-      )
-    )
-    CommentaryJobReducer.startJob(
-      incompleteInitial,
-      threefoldMoves,
-      threefold.currentFen,
-      commentaryPolicy(),
-      nowEpochMs = 0L
-    ) match
-      case Right(_: AwaitingEngineWork) => ()
-      case other                         => fail(s"positive threefold should proceed, found $other")
-
-    val fivefoldMoves = List.fill(4)(cycle).flatten
-    val fivefold = canonicalHistory(incompleteInitial, fivefoldMoves)
-    assert(!fivefold.repetitionHistoryComplete)
-    assertEquals(
-      PositionRuleAssessment.assess(fivefold),
-      PositionRuleAssessment.Terminal(AutomaticTerminal.FivefoldRepetition)
-    )
-    CommentaryJobReducer.startJob(
-      incompleteInitial,
-      fivefoldMoves,
-      fivefold.currentFen,
-      commentaryPolicy(),
-      nowEpochMs = 0L
-    ) match
-      case Right(completed: CompletedCommentaryJob) =>
-        assertEquals(
-          completed.result,
-          CompletedPositionCommentary.PositionAction(
-            PlayerFacingPositionAction.AutomaticTerminal(AutomaticTerminal.FivefoldRepetition)
+      admitted,
+      Some(
+        List(
+          CandidateLineEvaluation.ExactAutomaticTerminal(
+            List("a4b3"),
+            AutomaticTerminal.InsufficientMaterial
           )
         )
-        assertEquals(completed.progress.engineWorkIssued, 0)
-      case other => fail(s"positive fivefold should complete exactly, found $other")
+      )
+    )
 
-  test("draw claims distinguish current availability from an exact declared move"):
-    val knightCycle = List("g1f3", "g8f6", "f3g1", "f6g8")
-    val beforeDeclared = canonicalHistory(
-      chess.variant.Standard.initialFen.value,
-      knightCycle ++ knightCycle.dropRight(1)
-    )
-    val afterDeclared = beforeDeclared.extend(List("f6g8")).toOption.get
-    val beforeAssessment = PositionRuleAssessment.assess(beforeDeclared)
-    val afterAssessment = PositionRuleAssessment.assess(afterDeclared)
-    assertEquals(
-      beforeAssessment,
-      PositionRuleAssessment.Nonterminal(
-        FivefoldRepetitionKnowledge.CertifiedNonterminal,
-        ThreefoldClaimKnowledge.Known(DrawClaimAvailability.Unavailable),
-        DrawClaimAvailability.Unavailable
-      )
-    )
-    assertEquals(
-      afterAssessment,
-      PositionRuleAssessment.Nonterminal(
-        FivefoldRepetitionKnowledge.CertifiedNonterminal,
-        ThreefoldClaimKnowledge.Known(DrawClaimAvailability.AvailableNow),
-        DrawClaimAvailability.Unavailable
-      )
-    )
-    assertEquals(
-      PositionRuleAssessment.declaredDrawClaims("a1a2", beforeAssessment, afterAssessment),
-      Set(DeclaredDrawClaim("a1a2", DrawClaimRule.ThreefoldRepetition))
-    )
-    assertEquals(
-      PositionRuleAssessment.declaredDrawClaims(
-        "a1a2",
-        PositionRuleAssessment.Nonterminal(
-          FivefoldRepetitionKnowledge.CertifiedNonterminal,
-          ThreefoldClaimKnowledge.Known(DrawClaimAvailability.Unavailable),
-          DrawClaimAvailability.Unavailable
-        ),
-        PositionRuleAssessment.Nonterminal(
-          FivefoldRepetitionKnowledge.CertifiedNonterminal,
-          ThreefoldClaimKnowledge.Known(DrawClaimAvailability.Unavailable),
-          DrawClaimAvailability.AvailableNow
+  test("direct development response emits the v6 schema"):
+    val result = RuntimeProtocol.evaluate(directRequest())
+    assertEquals(result.httpStatus, 200, clues(result.body))
+    assertEquals((result.body \ "schema_version").as[String], "chesstory.move-meaning.response.v6")
+    assertEquals((result.body \ "status").as[String], "ready")
+    assert((result.body \ "move_commentary" \ "primary").toOption.nonEmpty)
+
+  test("selected causal projection carries its exact proof line, channel, and proof segment"):
+    val causalHistory = CanonicalPositionHistory.from(causalFen, Nil, causalFen).toOption.get
+    causalRootLines.foreach { case (moves, _) =>
+      assert(causalHistory.extend(moves).isRight, clues(moves))
+    }
+    assert(
+      MoveReviewInputNormalizer
+        .normalize(
+          RawMoveReviewInput(
+            causalFen,
+            causalPlayedMove,
+            causalRootLines.map { case (moves, score) => EngineLine(moves, score, depth = 20) }
+          )
         )
-      ),
-      Set(DeclaredDrawClaim("a1a2", DrawClaimRule.FiftyMoveRule))
+        .nonEmpty
     )
-
-  test("automatic root and successor terminals issue no engine work"):
-    val insufficientFen = "8/8/8/8/8/8/7k/K7 w - - 0 1"
-    val rootTerminal = CommentaryJobReducer
-      .startJob(
-        insufficientFen,
-        Nil,
-        insufficientFen,
-        commentaryPolicy(),
-        nowEpochMs = 0L
-      )
-      .toOption
-      .get
-    val completedRoot = rootTerminal match
-      case completed: CompletedCommentaryJob => completed
-      case other                             => fail(s"expected completed root terminal, found $other")
-    assertEquals(
-      completedRoot.result,
-      CompletedPositionCommentary.PositionAction(
-        PlayerFacingPositionAction.AutomaticTerminal(AutomaticTerminal.InsufficientMaterial)
-      )
+    val selectedCauseInput = Json.obj(
+      "fen" -> causalFen,
+      "playedMoveUci" -> causalPlayedMove,
+      "variations" -> wireVariations(causalRootLines, depth = 20)
     )
-    assertEquals(completedRoot.progress.engineWorkIssued, 0)
-
-    val beforeSuccessors = "4k3/8/8/8/8/8/8/4K2R w K - 148 1"
-    val successorRoot = canonicalHistory(beforeSuccessors, List("h1h2"))
-    assert(successorRoot.repetitionHistoryComplete)
-    assertEquals(
-      PositionRuleAssessment.assess(successorRoot),
-      PositionRuleAssessment.Nonterminal(
-        FivefoldRepetitionKnowledge.CertifiedNonterminal,
-        ThreefoldClaimKnowledge.Known(DrawClaimAvailability.Unavailable),
-        DrawClaimAvailability.AvailableNow
+    val first = RuntimeProtocol.evaluate(directRequest(selectedCauseInput))
+    assertEquals(first.httpStatus, 202, clues(first.body))
+    val continuationProbe = (first.body \ "probe_requests").as[List[JsObject]].head
+    assert(
+      (continuationProbe \ "id").as[String].length <= 256,
+      clues((continuationProbe \ "id").as[String])
+    )
+    val continuationResult = wireProbeResult(continuationProbe, causalReplyLines)
+    val afterContinuation = RuntimeProtocol.evaluate(
+      directRequest(selectedCauseInput + ("probeResults" -> Json.arr(continuationResult)))
+    )
+    assertEquals(afterContinuation.httpStatus, 202, clues(afterContinuation.body))
+    val replyProbe = (afterContinuation.body \ "probe_requests").as[List[JsObject]].head
+    val replyResult = wireProbeResult(replyProbe, causalBranchReplyLines)
+    val ready = RuntimeProtocol.evaluate(
+      directRequest(
+        selectedCauseInput +
+          ("probeResults" -> Json.arr(continuationResult, replyResult))
       )
     )
-    val successorTerminals = CommentaryJobReducer
-      .startJob(
-        beforeSuccessors,
-        List("h1h2"),
-        successorRoot.currentFen,
-        commentaryPolicy(),
-        nowEpochMs = 0L
-      )
-      .toOption
-      .get
-    val completedSuccessors = successorTerminals match
-      case completed: CompletedCommentaryJob => completed
-      case other                             => fail(s"expected completed successor terminals, found $other")
-    val successorReviews = completedSuccessors.result match
-      case CompletedPositionCommentary.MoveChoices(_, reviews) => reviews
-      case other                                                => fail(s"expected move choices, found $other")
-    val terminalEndpoints = successorReviews.flatMap(_.judgmentPacket.evidenceGraph.records.collect {
-      case EvidenceRecord(
-            _,
-            CandidateLineEvaluationEvidence(
-              _,
-              CandidateLineEvaluation.ExactAutomaticTerminal(_, terminal)
-            ),
-            _
-          ) => terminal
-    })
-    assertEquals(successorReviews.size, completedSuccessors.progress.legalMoveCount)
-    assert(terminalEndpoints.nonEmpty)
-    assertEquals(terminalEndpoints.toSet, Set(AutomaticTerminal.SeventyFiveMoveRule))
-    assertEquals(completedSuccessors.progress.engineWorkIssued, 0)
-    assertEquals(completedSuccessors.progress.rootLinesCollected, completedSuccessors.progress.legalMoveCount)
-    val projectedSuccessors = RuntimeProtocol.encodePositionCommentaryResponse(
-      "successor-terminals",
-      completedSuccessors
-    )
-    val projectedEndpoints = (projectedSuccessors \ "result" \ "move_commentaries")
-      .as[List[JsObject]]
-      .flatMap { record =>
-        val primary = (record \ "commentary" \ "primary").as[JsObject]
-        List("reference_endpoint", "played_endpoint", "best_endpoint", "runner_up_endpoint")
-          .flatMap(endpointKey => (primary \ endpointKey).asOpt[JsObject])
-      }
-    val exactEndpoints = projectedEndpoints.filter(endpoint =>
-      (endpoint \ "kind").asOpt[String].contains("exact_automatic_terminal")
-    )
-    assert(exactEndpoints.nonEmpty, projectedSuccessors)
-    exactEndpoints.foreach: endpoint =>
-      assert((endpoint \ "moves").as[List[String]].nonEmpty, endpoint)
-      assert((endpoint \ "terminal").asOpt[JsObject].nonEmpty, endpoint)
-      assertEquals((endpoint \ "win_percent_for_mover").toOption, None, endpoint)
+    assertEquals(ready.httpStatus, 200, clues(ready.body))
+    val causalExplanations = (ready.body \ "move_commentary" \ "causal_explanations").as[List[JsObject]]
+    assertEquals(causalExplanations.size, 1)
+    val facets = (causalExplanations.head \ "facets").as[List[JsObject]]
+    assertEquals(facets.size, 1)
+    val facet = facets.head
+    assertEquals((facet \ "proof_line_moves").toOption, None)
+    val channel = (facet \ "channels")(0).as[JsObject]
+    assert((channel \ "channel_id").as[String].startsWith("cause-channel:"))
+    assert((channel \ "causal_signature").as[String].nonEmpty)
+    val proofLine = (channel \ "proof_line_moves").as[List[String]]
+    assert(proofLine.nonEmpty)
+    val steps = (channel \ "proof_segment" \ "steps").as[List[JsObject]]
+    assert(steps.nonEmpty)
+    steps.foreach: step =>
+      val offset = (step \ "ply_offset").as[Int]
+      assertEquals((step \ "move_uci").as[String], proofLine(offset))
+    val planEvents = steps.flatMap(step => (step \ "plan_event").asOpt[JsObject])
+    assert(planEvents.nonEmpty)
+    planEvents.foreach { event =>
+      assert((event \ "goal_kind").as[String].nonEmpty)
+      assert((event \ "actor_from").as[String].matches("[a-h][1-8]"))
+      assert((event \ "actor_to").as[String].matches("[a-h][1-8]"))
+    }
 
-
-  test("position commentary v4 request and issued work bind history and engine profile"):
-    val initialFen = chess.variant.Standard.initialFen.value
-    val currentFen =
-      "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2"
-    val body = Json.obj(
-      "schema_version" -> PositionCommentaryJobProtocol.JobRequestSchema,
-      "request_id" -> "history-test",
-      "initial_fen" -> initialFen,
-      "move_prefix_uci" -> Json.arr("e2e4", "e7e5"),
-      "current_fen" -> currentFen,
-      "engine_profile" -> engineProfile.wireId
-    )
-    val parsed = PositionCommentaryJobProtocol
-      .parseJobRequest(Json.stringify(body).getBytes(StandardCharsets.UTF_8))
-      .toOption
-      .get
-    assertEquals(parsed.initialFen, initialFen)
-    assertEquals(parsed.movePrefixUci, List("e2e4", "e7e5"))
-    assertEquals(parsed.currentFen, currentFen)
-    assertEquals(parsed.engineProfile, engineProfile)
-    val awaiting = CommentaryJobReducer
-      .startJob(
-        parsed.initialFen,
-        parsed.movePrefixUci,
-        parsed.currentFen,
-        commentaryPolicy(),
-        nowEpochMs = 0L
-      )
-      .toOption
-      .collect { case state: AwaitingEngineWork => state }
-      .get
-    assertEquals(awaiting.issuedWork.enginePositionInitialFen, initialFen)
-    assertEquals(awaiting.engineProfile, engineProfile)
-    assertEquals(awaiting.issuedWork.engineProfile, engineProfile)
-    assertEquals(awaiting.issuedWork.enginePositionMovesUci, List("e2e4", "e7e5", "a2a3"))
-    assertEquals(
-      awaiting.issuedWork.searchFen,
-      "rnbqkbnr/pppp1ppp/8/4p3/4P3/P7/1PPP1PPP/RNBQKBNR b KQkq - 0 2"
-    )
-    assertEquals(awaiting.issuedWork.commentaryLineOriginFen, currentFen)
-    assertEquals(awaiting.issuedWork.commentaryLinePrefixUci, List("a2a3"))
-    val status = PositionCommentaryJobProtocol.projectJobSnapshot(
-      CommentaryJobSnapshot("a" * 32, "history-test", Long.MaxValue, awaiting)
-    )
-    assertEquals(
-      (status \ "issued_engine_work" \ "engine_position_moves_uci").as[List[String]],
-      List("e2e4", "e7e5", "a2a3")
-    )
-    assertEquals(
-      (status \ "issued_engine_work" \ "engine_position_initial_fen").as[String],
-      initialFen
-    )
-    assertEquals((status \ "engine_profile").as[String], engineProfile.wireId)
-    assertEquals((status \ "issued_engine_work" \ "engine_profile").as[String], engineProfile.wireId)
-    val legacy = Json.obj(
-      "schema_version" -> "chesstory.position-commentary.job-request.v1",
-      "request_id" -> "history-test",
-      "root_fen" -> currentFen
-    )
-    assertEquals(
-      PositionCommentaryJobProtocol.parseJobRequest(
-        Json.stringify(legacy).getBytes(StandardCharsets.UTF_8)
-      ),
-      Left(PositionCommentaryJobProtocol.PositionCommentaryJobWireFailure.UnsupportedJobRequestSchema)
-    )
-
-  test("position commentary v4 rejects missing, unknown, and legacy request profiles"):
-    val base = Json.obj(
-      "schema_version" -> PositionCommentaryJobProtocol.JobRequestSchema,
-      "request_id" -> "profile-request",
-      "initial_fen" -> chess.variant.Standard.initialFen.value,
-      "move_prefix_uci" -> Json.arr(),
-      "current_fen" -> chess.variant.Standard.initialFen.value,
-      "engine_profile" -> engineProfile.wireId
-    )
-    def parse(value: JsObject) =
-      PositionCommentaryJobProtocol.parseJobRequest(
-        Json.stringify(value).getBytes(StandardCharsets.UTF_8)
-      )
-
-    assertEquals(
-      parse(base - "engine_profile"),
-      Left(PositionCommentaryJobProtocol.PositionCommentaryJobWireFailure.InvalidEngineProfile)
-    )
-    assertEquals(
-      parse(base + ("engine_profile" -> JsString("sf18-smallnet-t2-h16-v2"))),
-      Left(PositionCommentaryJobProtocol.PositionCommentaryJobWireFailure.UnsupportedEngineProfile)
-    )
-    List(
-      "chesstory.position-commentary.job-request.v2",
-      "chesstory.position-commentary.job-request.v3"
-    ).foreach: legacySchema =>
-      assertEquals(
-        parse(base + ("schema_version" -> JsString(legacySchema))),
-        Left(PositionCommentaryJobProtocol.PositionCommentaryJobWireFailure.UnsupportedJobRequestSchema)
-      )
-    val unavailableError = PositionCommentaryJobProtocol.jobErrorJson(None, None, None, "invalid_engine_profile")
-    assertEquals(unavailableError.keys, Set("schema_version", "error"))
-    assert(!Json.stringify(unavailableError).contains("null"), unavailableError)
-
-  test("position commentary v4 HTTP route preserves issued work on unknown profiles and stops executor failures"):
+  test("HTTP v6 route keeps Stockfish work in the browser and stops an executor failure"):
     val server = ChesstoryRuntime.start(new InetSocketAddress("127.0.0.1", 0), None, workerCount = 1)
     try
       val client = HttpClient.newHttpClient()
-      val jobsUri = URI.create(s"http://127.0.0.1:${server.getAddress.getPort}/v1/position-commentary-jobs")
-      val create = client.send(
-        HttpRequest
-          .newBuilder(jobsUri)
-          .header("Content-Type", "application/json")
-          .POST(
-            HttpRequest.BodyPublishers.ofString(
-              Json.stringify(
-                Json.obj(
-                  "schema_version" -> PositionCommentaryJobProtocol.JobRequestSchema,
-                  "request_id" -> "profile-report",
-                  "initial_fen" -> chess.variant.Standard.initialFen.value,
-                  "move_prefix_uci" -> Json.arr(),
-                  "current_fen" -> chess.variant.Standard.initialFen.value,
-                  "engine_profile" -> engineProfile.wireId
-                )
-              )
-            )
-          )
-          .build(),
-        HttpResponse.BodyHandlers.ofString()
-      )
-      assertEquals(create.statusCode(), 201)
-      val issued = Json.parse(create.body()).as[JsObject]
-      val issuedWork = (issued \ "issued_engine_work").as[JsObject]
-      val issuedProfile = (issued \ "engine_profile").as[String]
-      val issuedWorkId = (issuedWork \ "work_id").as[String]
-      val reportsAccepted = (issued \ "progress" \ "engine_work_reports_accepted").as[Int]
-      val workIssued = (issued \ "progress" \ "engine_work_issued").as[Int]
-      val jobUri = URI.create(s"$jobsUri/${(issued \ "job_id").as[String]}")
-      assertEquals((issued \ "schema_version").as[String], PositionCommentaryJobProtocol.JobStatusSchema)
-      assertEquals((issued \ "state").as[String], "awaiting_engine_work")
-      assertEquals(issuedProfile, engineProfile.wireId)
-      assertEquals((issuedWork \ "engine_profile").as[String], issuedProfile)
-
-      val unknownProfile = client.send(
-        HttpRequest
-          .newBuilder(URI.create(s"$jobUri/engine-work-reports"))
-          .header("Content-Type", "application/json")
-          .POST(
-            HttpRequest.BodyPublishers.ofString(
-              Json.stringify(
-                Json.obj(
-                  "schema_version" -> PositionCommentaryJobProtocol.EngineWorkReportSchema,
-                  "engine_profile" -> "sf18-smallnet-t2-h16-v2",
-                  "work_id" -> issuedWorkId,
-                  "outcome" -> Json.obj("kind" -> "executor_failed")
-                )
-              )
-            )
-          )
-          .build(),
-        HttpResponse.BodyHandlers.ofString()
-      )
-      assertEquals(unknownProfile.statusCode(), 400)
-      assertEquals(
-        (Json.parse(unknownProfile.body()) \ "error").as[String],
-        "unsupported_engine_profile"
-      )
-
-      val afterUnknownProfile = client.send(
-        HttpRequest.newBuilder(jobUri).GET().build(),
-        HttpResponse.BodyHandlers.ofString()
-      )
-      assertEquals(afterUnknownProfile.statusCode(), 200)
-      val stillIssued = Json.parse(afterUnknownProfile.body()).as[JsObject]
-      assertEquals((stillIssued \ "state").as[String], "awaiting_engine_work")
-      assertEquals(
-        (stillIssued \ "progress" \ "engine_work_reports_accepted").as[Int],
-        reportsAccepted
-      )
-      assertEquals((stillIssued \ "issued_engine_work").as[JsObject], issuedWork)
-
-      val executorFailed = client.send(
-        HttpRequest
-          .newBuilder(URI.create(s"$jobUri/engine-work-reports"))
-          .header("Content-Type", "application/json")
-          .POST(
-            HttpRequest.BodyPublishers.ofString(
-              Json.stringify(
-                Json.obj(
-                  "schema_version" -> PositionCommentaryJobProtocol.EngineWorkReportSchema,
-                  "engine_profile" -> issuedProfile,
-                  "work_id" -> issuedWorkId,
-                  "outcome" -> Json.obj("kind" -> "executor_failed")
-                )
-              )
-            )
-          )
-          .build(),
-        HttpResponse.BodyHandlers.ofString()
-      )
-      assertEquals(executorFailed.statusCode(), 200)
-      val stopped = Json.parse(executorFailed.body()).as[JsObject]
-      assertEquals((stopped \ "schema_version").as[String], PositionCommentaryJobProtocol.JobStatusSchema)
-      assertEquals((stopped \ "state").as[String], "stopped")
-      assertEquals((stopped \ "engine_profile").as[String], issuedProfile)
-      assertEquals((stopped \ "stop_condition").as[String], "engine_execution_failed")
-      assertEquals((stopped \ "issued_engine_work").toOption, None)
-      assertEquals((stopped \ "progress" \ "engine_work_issued").as[Int], workIssued)
-      assertEquals(
-        (stopped \ "progress" \ "engine_work_reports_accepted").as[Int],
-        reportsAccepted + 1
-      )
-    finally server.stop(0)
-
-  test("completed position commentary HTTP response retains the admitted profile"):
-    val server = ChesstoryRuntime.start(new InetSocketAddress("127.0.0.1", 0), None, workerCount = 1)
-    try
-      val client = HttpClient.newHttpClient()
-      val jobsUri = URI.create(s"http://127.0.0.1:${server.getAddress.getPort}/v1/position-commentary-jobs")
-      val terminalFen = "8/8/8/8/8/8/7k/K7 w - - 0 1"
+      val jobs = URI.create(s"http://127.0.0.1:${server.getAddress.getPort}/v1/position-commentary-jobs")
       val created = client.send(
-        HttpRequest
-          .newBuilder(jobsUri)
+        HttpRequest.newBuilder(jobs)
           .header("Content-Type", "application/json")
-          .POST(
-            HttpRequest.BodyPublishers.ofString(
-              Json.stringify(
-                Json.obj(
-                  "schema_version" -> PositionCommentaryJobProtocol.JobRequestSchema,
-                  "request_id" -> "profile-complete",
-                  "initial_fen" -> terminalFen,
-                  "move_prefix_uci" -> Json.arr(),
-                  "current_fen" -> terminalFen,
-                  "engine_profile" -> engineProfile.wireId
-                )
-              )
-            )
-          )
+          .POST(HttpRequest.BodyPublishers.ofString(Json.stringify(jobRequest())))
           .build(),
         HttpResponse.BodyHandlers.ofString()
       )
       assertEquals(created.statusCode(), 201)
-      val response = Json.parse(created.body()).as[JsObject]
-      assertEquals((response \ "schema_version").as[String], "chesstory.position-commentary.response.v4")
-      assertEquals((response \ "engine_profile").as[String], engineProfile.wireId)
+      val awaiting = Json.parse(created.body()).as[JsObject]
+      assertEquals((awaiting \ "schema_version").as[String], PositionCommentaryJobProtocol.JobStatusSchema)
+      assertEquals((awaiting \ "issued_engine_work" \ "purpose").as[String], "root_search")
+      assertEquals((awaiting \ "issued_engine_work" \ "variant").as[String], "standard")
+      val workId = (awaiting \ "issued_engine_work" \ "work_id").as[String]
+      val executionKey = (awaiting \ "issued_engine_work" \ "execution_key_sha256").as[String]
+      val reportUri = URI.create(
+        s"$jobs/${(awaiting \ "job_id").as[String]}/engine-work-reports"
+      )
+      val failed = client.send(
+        HttpRequest.newBuilder(reportUri)
+          .header("Content-Type", "application/json")
+          .POST(
+            HttpRequest.BodyPublishers.ofString(
+              Json.stringify(
+                Json.obj(
+                  "schema_version" -> PositionCommentaryJobProtocol.EngineWorkReportSchema,
+                  "engine_profile" -> engineProfile.wireId,
+                  "work_id" -> workId,
+                  "execution_key_sha256" -> executionKey,
+                  "outcome" -> Json.obj("kind" -> "executor_failed", "failure_code" -> "engine_failure")
+                )
+              )
+            )
+          )
+          .build(),
+        HttpResponse.BodyHandlers.ofString()
+      )
+      assertEquals(failed.statusCode(), 200)
+      val stopped = Json.parse(failed.body())
+      assertEquals((stopped \ "state").as[String], "stopped")
+      assertEquals((stopped \ "stop_condition").as[String], "engine_execution_failed")
+      assertEquals((stopped \ "progress" \ "physical_reports_accepted").as[Int], 1)
     finally server.stop(0)
 
-  test("v4 work-required envelope exposes only exact outstanding engine work"):
-    RuntimeResources.verify()
-    val result = RuntimeProtocol.evaluate(request())
-    assertEquals(result.httpStatus, 202)
-    assertEquals((result.body \ "schema_version").as[String], RuntimeProtocol.ResponseSchema)
-    assertEquals((result.body \ "request_id").as[String], "test-1")
-    assertEquals((result.body \ "status").as[String], "engine_work_required")
-    assert((result.body \ "probe_requests").as[JsArray].value.nonEmpty, result.body)
-    assertEquals((result.body \ "move_commentary").toOption, None)
-
-  test("a request without a primary engine comparison is unavailable before projection"):
-    val noPlayedLine = input + ("variations" -> Json.arr(
-      Json.obj(
-        "moves" -> Json.arr("e2e4", "e7e5", "g1f3"),
-        "scoreCp" -> 30,
-        "depth" -> 16
-      )
-    ))
-    val result = RuntimeProtocol.evaluate(request(body = noPlayedLine))
-    assertEquals(result.httpStatus, 422)
-    assertEquals((result.body \ "error").as[String], "move_review_not_buildable")
-
-  test("v3 selected Cause projects its comparison and direct channel"):
-    val selectedCauseInput = Json.obj(
-      "fen" -> "8/5ppp/8/5P1P/2k3P1/2p5/5P2/2K5 b - - 0 1",
-      "playedMoveUci" -> "h7h6",
-      "variations" -> Json.arr(
-        Json.obj(
-          "moves" -> Json.arr("f7f6", "h5h6", "g7h6", "c1d1", "c4d5", "d1c2", "d5e4", "g4g5", "h6g5", "c2c3", "g5g4", "c3c2", "e4f4", "c2c3"),
-          "scoreCp" -> -534,
-          "depth" -> 20
-        ),
-        Json.obj(
-          "moves" -> Json.arr("h7h6", "f5f6", "g7f6", "f2f4", "c4d4", "g4g5", "h6g5", "f4g5", "f6f5", "h5h6", "f5f4", "h6h7", "f4f3", "h7h8q", "d4e3", "h8h5", "c3c2", "c1c2", "e3f4", "h5h4", "f4f5"),
-          "scoreCp" -> 682,
-          "depth" -> 20
-        )
-      )
+  test("HTTP v6 completes a focused review from one browser-owned engine report"):
+    val forcedFen = "B5Q1/5n1k/2n5/1P3p2/1P1PN1P1/1b1N2R1/8/2B3K1 b - - 0 56"
+    val forcedMove = "h7g8"
+    val forcedResultingFen = "B5k1/5n2/2n5/1P3p2/1P1PN1P1/1b1N2R1/8/2B3K1 w - - 0 57"
+    val request = Json.obj(
+      "schema_version" -> PositionCommentaryJobProtocol.JobRequestSchema,
+      "request_id" -> "forced-v6-roundtrip",
+      "variant" -> "standard",
+      "initial_fen" -> forcedFen,
+      "move_prefix_uci" -> Json.arr(),
+      "current_fen" -> forcedFen,
+      "focus" -> Json.obj(
+        "kind" -> "played_move",
+        "played_move_uci" -> forcedMove,
+        "resulting_fen" -> forcedResultingFen
+      ),
+      "engine_profile" -> engineProfile.wireId
     )
-    val initial = RuntimeProtocol.evaluate(request(body = selectedCauseInput))
-    assertEquals(initial.httpStatus, 202)
-    assertEquals((initial.body \ "move_commentary").toOption, None)
-    val issued = (initial.body \ "probe_requests").as[JsArray].value.map(_.as[JsObject])
-    val playedBranch = issued.find(probe =>
-      (probe \ "candidateMove").asOpt[String].contains("h7h6") &&
-        (probe \ "horizon").asOpt[String].contains("ply:6")
-    ).getOrElse(fail("expected played branch horizon work"))
-    val playedResource = issued.find(probe =>
-      (probe \ "candidateMove").asOpt[String].contains("h7h6") &&
-        (probe \ "opponentResourceMove").asOpt[String].contains("g4g5")
-    ).getOrElse(fail("expected played resource work"))
-    val referenceResource = issued.find(probe =>
-      (probe \ "candidateMove").asOpt[String].contains("f7f6") &&
-        (probe \ "opponentResourceMove").asOpt[String].contains("g4g5")
-    ).getOrElse(fail("expected reference resource work"))
-    assertEquals(issued.size, 3)
-    val commonProbeKeys = Set(
-      "id",
-      "fen",
-      "moves",
-      "depth",
-      "purpose",
-      "multiPv",
-      "candidateMove",
-      "variationHash"
-    )
-    assertEquals(playedBranch.keys, commonProbeKeys + "horizon")
-    assertEquals(playedResource.keys, commonProbeKeys + "opponentResourceMove")
-    assertEquals(referenceResource.keys, commonProbeKeys + "opponentResourceMove")
-    List(playedBranch, playedResource, referenceResource).foreach: probe =>
-      assert(!Json.stringify(probe).contains("null"), probe)
-    val probeResults = Json.arr(
-      Json.obj(
-        "id" -> (playedBranch \ "id").as[String],
-        "fen" -> (playedBranch \ "fen").as[String],
-        "replyLines" -> Json.arr(
-          Json.obj(
-            "moves" -> Json.arr(
-              "f5f6", "g7f6", "f2f4", "c4d4", "g4g5", "h6g5", "f4g5", "f6f5", "h5h6", "f5f4",
-              "h6h7", "f4f3", "h7h8q", "d4e3", "h8h5", "c3c2", "c1c2", "e3f4", "h5h4", "f4f5"
-            ),
-            "scoreCp" -> 682,
-            "depth" -> (playedBranch \ "depth").as[Int]
-          ),
-          Json.obj(
-            "moves" -> Json.arr("g4g5", "h6g5", "f2f4", "c4d4", "h5h6", "g5f4"),
-            "scoreCp" -> 700,
-            "depth" -> (playedBranch \ "depth").as[Int]
-          ),
-          Json.obj(
-            "moves" -> Json.arr("f2f4", "c4d4", "g4g5", "h6g5", "h5h6", "g5f4"),
-            "scoreCp" -> 650,
-            "depth" -> (playedBranch \ "depth").as[Int]
+    val server = ChesstoryRuntime.start(new InetSocketAddress("127.0.0.1", 0), None, workerCount = 2)
+    try
+      val client = HttpClient.newHttpClient()
+      val jobs = URI.create(s"http://127.0.0.1:${server.getAddress.getPort}/v1/position-commentary-jobs")
+      val created = client.send(
+        HttpRequest.newBuilder(jobs)
+          .header("Content-Type", "application/json")
+          .POST(HttpRequest.BodyPublishers.ofString(Json.stringify(request)))
+          .build(),
+        HttpResponse.BodyHandlers.ofString()
+      )
+      assertEquals(created.statusCode(), 201)
+      val awaiting = Json.parse(created.body()).as[JsObject]
+      assertEquals((awaiting \ "issued_engine_work" \ "purpose").as[String], "root_search")
+      assertEquals((awaiting \ "issued_engine_work" \ "search_limits" \ "multi_pv").as[Int], 1)
+      val report = Json.obj(
+        "schema_version" -> PositionCommentaryJobProtocol.EngineWorkReportSchema,
+        "engine_profile" -> engineProfile.wireId,
+        "work_id" -> (awaiting \ "issued_engine_work" \ "work_id").as[String],
+        "execution_key_sha256" -> (awaiting \ "issued_engine_work" \ "execution_key_sha256").as[String],
+        "outcome" -> Json.obj(
+          "kind" -> "completed",
+          "line_suffixes" -> Json.arr(
+            Json.obj(
+              "moves" -> Json.arr(forcedMove),
+              "depth" -> 16,
+              "white_score" -> Json.obj("kind" -> "cp", "value" -> 0)
+            )
           )
-        ),
-        "purpose" -> (playedBranch \ "purpose").as[String],
-        "probedMove" -> (playedBranch \ "candidateMove").as[String],
-        "depth" -> (playedBranch \ "depth").as[Int],
-        "candidateMove" -> (playedBranch \ "candidateMove").as[String],
-        "horizon" -> (playedBranch \ "horizon").as[String],
-        "variationHash" -> (playedBranch \ "variationHash").as[String]
-      ),
-      Json.obj(
-        "id" -> (playedResource \ "id").as[String],
-        "fen" -> (playedResource \ "fen").as[String],
-        "replyLines" -> Json.arr(Json.obj(
-          "moves" -> Json.arr("g4g5", "h6g5", "f2f4", "c4d4", "h5h6", "g5f4"),
-          "scoreCp" -> 682,
-          "depth" -> (playedResource \ "depth").as[Int]
-        )),
-        "purpose" -> (playedResource \ "purpose").as[String],
-        "probedMove" -> (playedResource \ "candidateMove").as[String],
-        "depth" -> (playedResource \ "depth").as[Int],
-        "candidateMove" -> (playedResource \ "candidateMove").as[String],
-        "opponentResourceMove" -> (playedResource \ "opponentResourceMove").as[String],
-        "variationHash" -> (playedResource \ "variationHash").as[String]
-      ),
-      Json.obj(
-        "id" -> (referenceResource \ "id").as[String],
-        "fen" -> (referenceResource \ "fen").as[String],
-        "replyLines" -> Json.arr(Json.obj(
-          "moves" -> Json.arr("g4g5", "h7h6", "c1d1", "c4d5", "d1c2", "d5e4"),
-          "scoreCp" -> -534,
-          "depth" -> (referenceResource \ "depth").as[Int]
-        )),
-        "purpose" -> (referenceResource \ "purpose").as[String],
-        "probedMove" -> (referenceResource \ "candidateMove").as[String],
-        "depth" -> (referenceResource \ "depth").as[Int],
-        "candidateMove" -> (referenceResource \ "candidateMove").as[String],
-        "opponentResourceMove" -> (referenceResource \ "opponentResourceMove").as[String],
-        "variationHash" -> (referenceResource \ "variationHash").as[String]
-      )
-    )
-    val result = RuntimeProtocol.evaluate(
-      request(body = selectedCauseInput + ("probeResults" -> probeResults))
-    )
-    assertEquals(result.httpStatus, 200)
-    assertEquals((result.body \ "status").as[String], "ready")
-    val commentary = (result.body \ "move_commentary").as[JsObject]
-    val primary = (commentary \ "primary").as[JsObject]
-    List("comparison_kind", "played_move", "reference_move", "runner_up_move").foreach: deletedKey =>
-      assertEquals((primary \ deletedKey).toOption, None, clues(deletedKey))
-    assert((primary \ "reference_endpoint" \ "moves").as[List[String]].nonEmpty, primary)
-    assert((primary \ "played_endpoint" \ "moves").as[List[String]].nonEmpty, primary)
-    val delta = (primary \ "delta").as[JsObject]
-    assertEquals(delta.keys, Set("kind", "candidate_win_percent_delta_for_mover"))
-    List(
-      "raw_cp_loss_for_mover",
-      "mate_distance_loss_for_mover",
-      "win_percent_loss_for_mover"
-    ).foreach: lossKey =>
-      assertEquals((delta \ lossKey).toOption, None, clues(lossKey))
-    assertEquals((commentary \ "causal_explanation").toOption, None)
-    val explanations = (commentary \ "causal_explanations").as[List[JsObject]]
-    assert(explanations.nonEmpty, commentary)
-    val explanation = explanations.head
-    assertEquals(explanation.keys, Set("kind", "presentation", "facets"))
-    val unitKind = (explanation \ "kind").as[String]
-    assertEquals(unitKind, "single_cause")
-    val presentation = (explanation \ "presentation").as[String]
-    assert(presentation.nonEmpty, explanation)
-    val facets = (explanation \ "facets").as[List[JsObject]]
-    assertEquals(facets.size, 1)
-    val facet = facets.head
-    assertEquals((facet \ "facet_role").as[String], "lead")
-    assertEquals((facet \ "presentation").toOption, None)
-    List(
-      "cause_evidence_id",
-      "kind",
-      "proof_confidence",
-      "effect_mode",
-      "exposure",
-      "source_side",
-      "event_move",
-      "comparison_kind"
-    ).foreach: diagnosticKey =>
-      assert((facet \ diagnosticKey).asOpt[String].exists(_.nonEmpty), clues(diagnosticKey))
-    assert((facet \ "proof_confidence").asOpt[String].exists(_.nonEmpty), facet)
-    assertEquals((facet \ "comparison_kind").as[String], "played_vs_best")
-    val channel = (facet \ "channels")(0).as[JsObject]
-    assert((channel \ "causal_signature").asOpt[String].exists(_.nonEmpty), channel)
-    assert((channel \ "direct_change").asOpt[String].exists(_.nonEmpty), channel)
-    assert((channel \ "played_change").asOpt[String].exists(_.nonEmpty), channel)
-
-  test("v4 rejects a shallow primary comparison without a partial success envelope"):
-    val lowDepthVariations = (input \ "variations").as[JsArray].value.map: variation =>
-      variation.as[JsObject] + ("depth" -> JsNumber(1))
-    val result = RuntimeProtocol.evaluate(request(body = input + ("variations" -> JsArray(lowDepthVariations))))
-
-    assertEquals(result.httpStatus, 422)
-    assertEquals((result.body \ "status").as[String], "error")
-    assertEquals((result.body \ "error").as[String], "move_review_not_buildable")
-    assertEquals((result.body \ "move_commentary").toOption, None)
-    assertEquals((result.body \ "probe_requests").toOption, None)
-    assertEquals((result.body \ "availability").toOption, None)
-
-  test("v1 rejects unknown schema and oversized PV bundles"):
-    val unsupported = RuntimeProtocol.evaluate(request("v2"))
-    assertEquals(unsupported.httpStatus, 400)
-    assertEquals((unsupported.body \ "error").as[String], "unsupported_schema_version")
-    val oversized = input + ("variations" -> JsArray(List.fill(17)((input \ "variations")(0))))
-    val result = RuntimeProtocol.evaluate(request(body = oversized))
-    assertEquals(result.httpStatus, 400)
-    assertEquals((result.body \ "error").as[String], "input_limits_exceeded")
-    val zeroMate = input + ("variations" -> Json.arr(
-      Json.obj(
-        "moves" -> Json.arr("e2e4", "e7e5"),
-        "scoreCp" -> 0,
-        "mate" -> 0,
-        "depth" -> 18
-      )
-    ))
-    val zeroMateResult = RuntimeProtocol.evaluate(request(body = zeroMate))
-    assertEquals(zeroMateResult.httpStatus, 400)
-    assertEquals((zeroMateResult.body \ "error").as[String], "input_limits_exceeded")
-
-  test("public probe request exposes only the certified ordinary-reply contract"):
-    val json = RuntimeProtocol.publicProbeRequestJson(
-      ProbeRequest(
-        id = "opaque-probe",
-        fen = chess.variant.Standard.initialFen.value,
-        moves = Nil,
-        depth = 18,
-        purpose = Some(ProbePurpose.ReplyMultipv),
-        multiPv = Some(3),
-        objective = Some("internal-objective"),
-        requiredSignals = List("replyLines"),
-        horizon = Some("ply:8"),
-        candidateMove = Some("d2d4"),
-        opponentResourceMove = None,
-        depthFloor = Some(16),
-        variationHash = Some("opaque-hash")
-      )
-    )
-    assertEquals(
-      json.keys,
-      Set("id", "fen", "moves", "depth", "purpose", "multiPv", "candidateMove", "variationHash", "horizon")
-    )
-    List(
-      "objective",
-      "requiredSignals",
-      "depthFloor",
-      "opponentResourceMove"
-    ).foreach: internalKey =>
-      assert((json \ internalKey).toOption.isEmpty, clues(internalKey))
-    assertEquals((json \ "horizon").as[String], "ply:8")
-    assert(!Json.stringify(json).contains("internal"))
-    assert(!Json.stringify(json).contains("null"), json)
-
-  test("stripped client probe result still closes the certified branch contract"):
-    val baseInput = Json.obj(
-      "fen" -> "r1b2rk1/pp2ppbp/5np1/q1nP4/4PB2/2N2P2/PP4PP/2RQKBNR b K - 0 10",
-      "playedMoveUci" -> "b7b5",
-      "variations" -> Json.arr(
-        Json.obj("moves" -> Json.arr("e7e5"), "scoreCp" -> -50, "depth" -> 16),
-        Json.obj(
-          "moves" -> Json.arr("b7b5", "b2b4", "a5b4", "f4d2", "b4b2", "c1c2", "b2a3", "f1e2", "b5b4"),
-          "scoreCp" -> 0,
-          "depth" -> 16
         )
-      ),
-      "ply" -> 19,
-      "openingContext" -> Json.obj("name" -> "Grunfeld / b5-b4 counterplay versus center"),
-      "movePrefixUci" -> Json.arr(
-        "d2d4", "g8f6", "c2c4", "g7g6", "b1c3", "d7d5", "c1f4", "f8g7", "e2e3", "c7c5",
-        "d4c5", "d8a5", "a1c1", "e8h8", "c4d5", "b8d7", "f2f3", "d7c5", "e3e4"
       )
-    )
-    val initial = RuntimeProtocol.evaluate(request(body = baseInput))
-    assertEquals(initial.httpStatus, 202)
-    val issued = (initial.body \ "probe_requests").as[JsArray].value.map(_.as[JsObject])
-    val branchProbe = issued.find(probe =>
-      (probe \ "candidateMove").asOpt[String].contains("b7b5") &&
-        (probe \ "horizon").asOpt[String].exists(_.matches("ply:[1-9][0-9]*"))
-    ).getOrElse(fail("expected b7b5 branch probe"))
-    val playedResource = issued.find(probe =>
-      (probe \ "candidateMove").asOpt[String].contains("b7b5") &&
-        (probe \ "opponentResourceMove").asOpt[String].contains("a2a4")
-    ).getOrElse(fail("expected b7b5 resource probe"))
-    val referenceResource = issued.find(probe =>
-      (probe \ "candidateMove").asOpt[String].contains("e7e5") &&
-        (probe \ "opponentResourceMove").asOpt[String].contains("a2a4")
-    ).getOrElse(fail("expected e7e5 resource probe"))
-    assertEquals(issued.size, 3)
-    val branchResult = Json.obj(
-      "id" -> (branchProbe \ "id").as[String],
-      "fen" -> (branchProbe \ "fen").as[String],
-      "replyLines" -> Json.arr(
-        Json.obj(
-          "moves" -> Json.arr("b2b4", "a5b4", "f4d2", "b4b2", "c1c2", "b2a3", "f1e2", "b5b4"),
-          "scoreCp" -> 0,
-          "depth" -> (branchProbe \ "depth").as[Int]
-        ),
-        Json.obj("moves" -> Json.arr("f1e2", "b5b4"), "scoreCp" -> 0, "depth" -> (branchProbe \ "depth").as[Int]),
-        Json.obj("moves" -> Json.arr("h2h3", "b5b4"), "scoreCp" -> 0, "depth" -> (branchProbe \ "depth").as[Int])
-      ),
-      "purpose" -> (branchProbe \ "purpose").as[String],
-      "probedMove" -> (branchProbe \ "candidateMove").as[String],
-      "depth" -> (branchProbe \ "depth").as[Int],
-      "candidateMove" -> (branchProbe \ "candidateMove").as[String],
-      "horizon" -> (branchProbe \ "horizon").as[String],
-      "variationHash" -> (branchProbe \ "variationHash").as[String]
-    )
-    val playedResourceResult = Json.obj(
-      "id" -> (playedResource \ "id").as[String],
-      "fen" -> (playedResource \ "fen").as[String],
-      "replyLines" -> Json.arr(Json.obj(
-        "moves" -> Json.arr("a2a4", "a5a4"),
-        "scoreCp" -> 0,
-        "depth" -> (playedResource \ "depth").as[Int]
-      )),
-      "purpose" -> (playedResource \ "purpose").as[String],
-      "probedMove" -> (playedResource \ "candidateMove").as[String],
-      "depth" -> (playedResource \ "depth").as[Int],
-      "candidateMove" -> (playedResource \ "candidateMove").as[String],
-      "opponentResourceMove" -> (playedResource \ "opponentResourceMove").as[String],
-      "variationHash" -> (playedResource \ "variationHash").as[String]
-    )
-    val referenceResourceResult = Json.obj(
-      "id" -> (referenceResource \ "id").as[String],
-      "fen" -> (referenceResource \ "fen").as[String],
-      "replyLines" -> Json.arr(Json.obj(
-        "moves" -> Json.arr("a2a4", "a5a4"),
-        "scoreCp" -> -50,
-        "depth" -> (referenceResource \ "depth").as[Int]
-      )),
-      "purpose" -> (referenceResource \ "purpose").as[String],
-      "probedMove" -> (referenceResource \ "candidateMove").as[String],
-      "depth" -> (referenceResource \ "depth").as[Int],
-      "candidateMove" -> (referenceResource \ "candidateMove").as[String],
-      "opponentResourceMove" -> (referenceResource \ "opponentResourceMove").as[String],
-      "variationHash" -> (referenceResource \ "variationHash").as[String]
-    )
-    val results = Json.arr(branchResult, playedResourceResult, referenceResourceResult)
-    val closed = RuntimeProtocol.evaluate(request(body = baseInput + ("probeResults" -> results)))
-    assertEquals(closed.httpStatus, 200)
-    assertEquals((closed.body \ "status").as[String], "ready")
-    assertEquals((closed.body \ "probe_requests").toOption, None)
-    val primary = (closed.body \ "move_commentary" \ "primary").as[JsObject]
-    assertEquals((primary \ "kind").as[String], "move_verdict")
-    List("comparison_kind", "played_move", "reference_move", "runner_up_move").foreach: deletedKey =>
-      assertEquals((primary \ deletedKey).toOption, None, clues(deletedKey))
-    assert((primary \ "reference_endpoint" \ "moves").as[List[String]].nonEmpty, primary)
-    assert((primary \ "played_endpoint" \ "moves").as[List[String]].nonEmpty, primary)
-    val delta = (primary \ "delta").as[JsObject]
-    assertEquals(delta.keys, Set("kind", "candidate_win_percent_delta_for_mover"))
-    List(
-      "raw_cp_loss_for_mover",
-      "mate_distance_loss_for_mover",
-      "win_percent_loss_for_mover"
-    ).foreach: lossKey =>
-      assertEquals((delta \ lossKey).toOption, None, clues(lossKey))
-    assertEquals((closed.body \ "move_commentary" \ "causal_explanations").toOption, None)
-    val duplicate = RuntimeProtocol.evaluate(
-      request(body = baseInput + ("probeResults" -> Json.arr(
-        branchResult,
-        playedResourceResult,
-        referenceResourceResult,
-        branchResult
-      )))
-    )
-    assertEquals(duplicate.httpStatus, 400)
-    assertEquals((duplicate.body \ "error").as[String], "input_limits_exceeded")
+      val reportUri = URI.create(
+        s"$jobs/${(awaiting \ "job_id").as[String]}/engine-work-reports"
+      )
+      val completed = client.send(
+        HttpRequest.newBuilder(reportUri)
+          .header("Content-Type", "application/json")
+          .POST(HttpRequest.BodyPublishers.ofString(Json.stringify(report)))
+          .build(),
+        HttpResponse.BodyHandlers.ofString()
+      )
+      assertEquals(completed.statusCode(), 200, completed.body())
+      val response = Json.parse(completed.body())
+      assertEquals(
+        (response \ "schema_version").as[String],
+        "chesstory.position-commentary.response.v6",
+        clues(completed.body())
+      )
+      assertEquals((response \ "progress" \ "phase").as[String], "completed")
+      assertEquals((response \ "progress" \ "physical_works_issued").as[Int], 1)
+      assertEquals((response \ "progress" \ "physical_reports_accepted").as[Int], 1)
+      assertEquals((response \ "result" \ "kind").as[String], "forced_single_move")
+      assertEquals((response \ "result" \ "move_uci").as[String], forcedMove)
+    finally server.stop(0)
+
+  test("hundreds of concurrent v6 creations preserve exact capacity and independent ledgers"):
+    val registry = CommentaryJobRegistry(maximumRetainedJobs = 128, terminalJobRetentionMillis = 120000L)
+    val executor = Executors.newFixedThreadPool(16)
+    given ExecutionContext = ExecutionContext.fromExecutorService(executor)
+    try
+      val created = Await.result(
+        Future.traverse((0 until 200).toList) { index =>
+          Future(
+            registry.createJob(
+              requestId = s"concurrent-$index",
+              initialFen = initialFen,
+              movePrefixUci = Nil,
+              currentFen = initialFen,
+              playedMoveUci = "e2e4",
+              resultingFen = resultingFen("e2e4"),
+              policy = policy(),
+              nowEpochMs = 0L
+            )
+          )
+        },
+        30.seconds
+      )
+      val snapshots = created.flatMap(_.toOption)
+      assertEquals(snapshots.size, 128)
+      assertEquals(snapshots.map(_.jobId).distinct.size, 128)
+      assertEquals(
+        created.count(_.left.toOption.contains(CommentaryJobCreationRejection.RegistryCapacityReached)),
+        72
+      )
+      assert(snapshots.forall(_.state.isInstanceOf[AwaitingEngineWork]))
+      assert(snapshots.forall(snapshot =>
+        snapshot.state.asInstanceOf[AwaitingEngineWork].issuedWork.workId == "work:0"
+      ))
+    finally
+      executor.shutdownNow()

@@ -128,7 +128,7 @@ class _RuntimeJsonlSession:
         self.public_response_schema_path = (
             Path(__file__).resolve().parents[2]
             / "schemas"
-            / "public-v4"
+            / "public-v6"
             / "move-meaning-response.schema.json"
         ).resolve(strict=True)
         self.public_response_schema_registry = SchemaRegistry(
@@ -298,12 +298,17 @@ def _validate_probe_request(request: Mapping[str, Any]) -> dict[str, Any]:
         "candidateMove",
         "variationHash",
     }
-    is_resource_probe = "opponentResourceMove" in value
-    expected_keys = common_keys | (
-        {"opponentResourceMove"} if is_resource_probe else {"horizon"}
-    )
+    variant_keys = {
+        key
+        for key in ("horizon", "opponentResourceMove", "continuationMoves")
+        if key in value
+    }
+    if len(variant_keys) != 1:
+        raise ContractError("runtime probe request must declare exactly one causal objective")
+    variant_key = next(iter(variant_keys))
+    expected_keys = common_keys | {variant_key}
     if set(value) != expected_keys:
-        raise ContractError("runtime probe request fields are not an exact v4 variant")
+        raise ContractError("runtime probe request fields do not match one exact causal objective")
     if value["purpose"] != REPLY_MULTIPV:
         raise ContractError(f"unsupported runtime probe purpose: {value['purpose']!r}")
     _safe_text(value["id"], "probe request id")
@@ -324,12 +329,22 @@ def _validate_probe_request(request: Mapping[str, Any]) -> dict[str, Any]:
     if not isinstance(raw_moves, list):
         raise ContractError("probe request moves must be an array")
     moves = [_move(item, "probe request move") for item in raw_moves]
-    if is_resource_probe:
+    if variant_key == "opponentResourceMove":
         resource = _move(
             value["opponentResourceMove"], "probe request opponentResourceMove"
         )
         if moves != [resource] or multi_pv != 1:
             raise ContractError("opponent-resource probe binding is not exact")
+    elif variant_key == "continuationMoves":
+        raw_continuation = value["continuationMoves"]
+        if not isinstance(raw_continuation, list):
+            raise ContractError("causal continuation must be an array")
+        continuation = [
+            _move(item, "probe request continuation move")
+            for item in raw_continuation
+        ]
+        if len(continuation) != 2 or moves != continuation or multi_pv != 1:
+            raise ContractError("causal-continuation probe binding is not exact")
     else:
         horizon = _safe_text(value["horizon"], "probe request horizon")
         if len(horizon) > 14:
@@ -359,14 +374,22 @@ def _search_probe(
     probe = _validate_probe_request(request)
     branch_board = chess.Board(str(probe["fen"]))
     resource = probe.get("opponentResourceMove")
+    continuation = probe.get("continuationMoves")
     search_board = branch_board.copy(stack=False)
     prefix: list[str] = []
-    if resource is not None:
-        resource_move = chess.Move.from_uci(str(resource))
-        if not search_board.is_legal(resource_move):
-            raise ContractError(f"opponent resource is illegal at requested FEN: {resource}")
-        search_board.push(resource_move)
-        prefix.append(str(resource))
+    forced_moves = (
+        list(continuation)
+        if continuation is not None
+        else [resource]
+        if resource is not None
+        else []
+    )
+    for forced in forced_moves:
+        forced_move = chess.Move.from_uci(str(forced))
+        if not search_board.is_legal(forced_move):
+            raise ContractError(f"forced probe move is illegal at requested FEN: {forced}")
+        search_board.push(forced_move)
+        prefix.append(str(forced))
     depth = int(probe["depth"])
     multipv = int(probe["multiPv"])
     expected_lines = min(multipv, search_board.legal_moves.count())
@@ -504,9 +527,12 @@ def _search_probe(
         "probedMove": probe["candidateMove"],
         "depth": depth,
         "candidateMove": probe["candidateMove"],
-        "opponentResourceMove": resource,
         "variationHash": probe["variationHash"],
     }
+    if resource is not None:
+        result["opponentResourceMove"] = resource
+    if continuation is not None:
+        result["continuationMoves"] = continuation
     if probe.get("horizon") is not None:
         result["horizon"] = probe["horizon"]
     return result, io_document

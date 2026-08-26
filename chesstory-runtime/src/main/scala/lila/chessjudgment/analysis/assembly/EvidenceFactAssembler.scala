@@ -1,46 +1,59 @@
 package lila.chessjudgment.analysis.assembly
 
-import chess.Color
-import chess.format.Fen
-import chess.variant.Standard
-import lila.chessjudgment.model.evaluation.PerspectiveMath
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import lila.chessjudgment.model.line.CandidateLineEvaluation
-import lila.chessjudgment.analysis.move.{ MoveAnalyzer, MoveMotifNormalizer }
 import lila.chessjudgment.analysis.opening.OpeningContextFactNormalizer
-import lila.chessjudgment.analysis.plan.{ PlanInteractionContext, PlanMatcher }
-import lila.chessjudgment.analysis.strategic.StrategicFactNormalizer
-import lila.chessjudgment.analysis.structure.{
-  PawnPlayAssessor,
-  PlanAlignmentScorer,
-  StructuralDeltaAnalyzer,
-  StructuralPlaybook
-}
-import lila.chessjudgment.analysis.tactical.{
-  RelationFactNormalizer,
-  TacticalMotifClassifier,
-  TacticalRelationEvidence,
-  ThreatPressureAssessor
-}
+import lila.chessjudgment.analysis.structure.StructuralDeltaAnalyzer
+import lila.chessjudgment.analysis.tactical.TacticalRelationEvidence
 import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
-import lila.chessjudgment.model.{
-  CompatibilityAdjustment,
-  Motif,
-  PlanCategory
-}
-import lila.chessjudgment.analysis.structure.PawnStructureAssessor
-import lila.chessjudgment.model.position.PositionFeatures
-import lila.chessjudgment.model.strategic.EngineLine
 import lila.chessjudgment.model.judgment.*
 
 object EvidenceFactAssembler:
 
-  private val OpeningRelevanceMaxPly = 20
+  final private case class PlanTransitionProductionOccurrence(
+      eventRecord: EvidenceRef,
+      proof: PlanSequenceProof
+  ):
+    def idKey: String =
+      val exact = exactIdentityKey(List(eventRecord.id, proof.stableKey))
+      MessageDigest
+        .getInstance("SHA-256")
+        .digest(exact.getBytes(StandardCharsets.UTF_8))
+        .iterator
+        .map(byte => f"${byte & 0xff}%02x")
+        .mkString
 
-  private final case class TacticalMechanismCandidate(
+  final private case class TacticalMechanismCandidate(
       kind: TacticalMechanismKind,
       records: List[EvidenceRecord],
-      signals: List[TacticalMechanismSignal]
-  )
+      signals: List[TacticalMechanismSignal],
+      semanticAnchors: List[EvidenceSemanticAnchor]
+  ):
+    require(records.map(_.ref.id).distinct.size == records.size, "a tactical mechanism cannot repeat one source")
+    require(signals.distinct.size == signals.size, "a tactical mechanism cannot repeat one signal")
+    require(
+      semanticAnchors.map(_.stableKey).distinct.size == semanticAnchors.size,
+      "a tactical mechanism cannot repeat one semantic anchor"
+    )
+
+    def exactKey: (TacticalMechanismKind, List[String], List[String], List[String]) =
+      (
+        kind,
+        records.map(_.ref.id).sorted,
+        signals.map(tacticalSignalKey).sorted,
+        semanticAnchors.map(_.stableKey).sorted
+      )
+
+    def idKey: String =
+      exactIdentityKey(
+        kind.toString :: exactKey._2.map(id => s"carrier:$id") ++
+          exactKey._3.map(signal => s"signal:$signal") ++
+          exactKey._4.map(anchor => s"anchor:$anchor")
+      )
+
+    def withRecords(additional: List[EvidenceRecord]): TacticalMechanismCandidate =
+      copy(records = (records ++ additional).sortBy(_.ref.id))
 
   def assemble(raw: RawMoveReviewInput): Option[JudgmentAssemblyContext] =
     NodeLineTransitionAssembler.assemble(raw).map(enrich)
@@ -48,24 +61,21 @@ object EvidenceFactAssembler:
   def enrich(context: JudgmentAssemblyContext): JudgmentAssemblyContext =
     val input = context.input
     val allocator = JudgmentProvenanceAllocator.forInput(input)
-    val motifRecords = moveMotifRecords(input, context, allocator)
-    val motifContext = context.withEvidence(motifRecords)
+    val closedRelationsByOccurrence = closedPositionRelations(context)
+    val canonicalRelationDeltas = canonicalRelationDeltasFor(
+      context,
+      closedRelationsByOccurrence
+    )
     val baseRecords =
-      motifRecords ++ List.concat(
-        relationRecords(input, context, allocator),
-        pawnStructureRecords(motifContext, allocator),
-        threatPressureRecords(input, motifContext, allocator),
-        structuralDeltaRecords(context, allocator)
+      List.concat(
+        relationRecords(context, allocator, closedRelationsByOccurrence, canonicalRelationDeltas),
+        structuralDeltaRecords(context, allocator, canonicalRelationDeltas)
       )
     val baseContext = context.withEvidence(baseRecords)
     val mechanismRecords = tacticalMechanismRecords(baseContext, allocator)
-    val mechanismContext = baseContext.withEvidence(mechanismRecords)
-    val strategicRecords = strategicFeatureRecords(mechanismContext, allocator)
-    val strategicContext = mechanismContext.withEvidence(strategicRecords)
-    val planRecords = planPressureRecords(input, strategicContext, allocator)
-    val planContext = strategicContext.withEvidence(planRecords)
-    val planCausalEventRecords = PlanCausalEventAssembler.fromAssembly(input, planContext, allocator)
-    val causalPlanContext = planContext.withEvidence(planCausalEventRecords)
+    val strategicContext = baseContext.withEvidence(mechanismRecords)
+    val planCausalEventRecords = PlanCausalEventAssembler.fromAssembly(input, strategicContext, allocator)
+    val causalPlanContext = strategicContext.withEvidence(planCausalEventRecords)
     val transitionRecords = planTransitionRecords(causalPlanContext, allocator)
     val planEventContext = causalPlanContext.withEvidence(transitionRecords)
     val openingRecords = featureApplicabilityRecords(input, planEventContext, allocator)
@@ -79,381 +89,142 @@ object EvidenceFactAssembler:
     val actual = context.evidenceGraph.records.collect {
       case record @ EvidenceRecord(_, _: StrategicMechanismEvidence, _) => record
     }
-    val sourceContext = context.copy(
-      evidenceGraph = graphWithoutMechanismPayloads(context.evidenceGraph)
-    )
-    val expected = strategicMechanismRecords(
-      sourceContext,
-      JudgmentProvenanceAllocator.forInput(context.input)
-    )
     Option.when(
-      exactRecordInventory(actual, expected) &&
-        sourcesPrecedeMechanisms(context, expected)
+      actual.forall(context.evidenceGraph.proofEligible) &&
+        sourcesPrecedeMechanisms(context, actual)
     )(actual)
-
-  private def graphWithoutMechanismPayloads(graph: TypedEvidenceGraph): TypedEvidenceGraph =
-    graph.records
-      .filterNot(record =>
-        record.payload.isInstanceOf[StrategicMechanismEvidence] ||
-          record.payload.isInstanceOf[StrategicMechanismContrastEvidence]
-      )
-      .foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
 
   private def sourcesPrecedeMechanisms(
       context: JudgmentAssemblyContext,
       expected: List[EvidenceRecord]
   ): Boolean =
-    expected.flatMap(_.parents).distinctBy(_.id).forall(source =>
-      context.evidenceGraph.record(source).exists(record =>
-        context.evidenceGraph.parentClosure(record).forall { parent =>
-          !parent.payload.isInstanceOf[StrategicMechanismEvidence] &&
-            !parent.payload.isInstanceOf[StrategicMechanismContrastEvidence]
-        }
+    expected
+      .flatMap(_.parents)
+      .distinctBy(_.id)
+      .forall(source =>
+        context.evidenceGraph
+          .record(source)
+          .exists(record =>
+            context.evidenceGraph.parentClosure(record).forall { parent =>
+              !parent.payload.isInstanceOf[StrategicMechanismEvidence] &&
+              !parent.payload.isInstanceOf[StrategicMechanismContrastEvidence]
+            }
+          )
       )
+
+  private def closedPositionRelations(
+      context: JudgmentAssemblyContext
+  ): Map[PositionNodeRef, CanonicalPositionRelationSnapshot] =
+    val positionScopes = context.positions.map(node => node.ref -> node.role.scope).toMap
+    require(
+      positionScopes.size == context.positions.size,
+      "every registered relation occurrence must own exactly one evidence scope"
     )
-
-  private[assembly] def exactRecordInventory(
-      actual: List[EvidenceRecord],
-      expected: List[EvidenceRecord]
-  ): Boolean =
-    val actualById = actual.map(record => record.ref.id -> record)
-    val expectedById = expected.map(record => record.ref.id -> record)
-    actualById.map(_._1).distinct.size == actual.size &&
-      expectedById.map(_._1).distinct.size == expected.size &&
-      actual.size == expected.size &&
-      actualById.toMap == expectedById.toMap
-
-  private def moveMotifRecords(
-      input: NormalizedMoveReviewInput,
-      context: JudgmentAssemblyContext,
-      allocator: JudgmentProvenanceAllocator
-  ): List[EvidenceRecord] =
-    val before = context.position(PositionNodeRole.Before).toList
-    before.flatMap { root =>
-      val transitionRecords =
-        List(
-          context.playedTransition.toList.flatMap { edge =>
-            val line = lineForTransition(context, edge)
-            moveMotifRecord(
-              id = allocator.evidenceId(s"move-motif:played:${edge.moveUci}"),
-              startFen = input.beforeFen,
-              position = root.ref,
-              moveUci = edge.moveUci,
-              moves = List(edge.moveUci),
-              line = line,
-              scope = EvidenceScope.PlayedTransition,
-              parents = transitionParents(context, edge, line)
-            )
-          },
-          context.referenceTransition.toList.flatMap { edge =>
-            val line = lineForTransition(context, edge)
-            moveMotifRecord(
-              id = allocator.evidenceId(s"move-motif:reference:${edge.moveUci}"),
-              startFen = input.beforeFen,
-              position = root.ref,
-              moveUci = edge.moveUci,
-              moves = List(edge.moveUci),
-              line = line,
-              scope = EvidenceScope.ReferenceTransition,
-              parents = transitionParents(context, edge, line)
-            )
-          }
-        ).flatten
-      val lineRecords =
-        context.lines.flatMap { line =>
-          lineFactEvidence(context, line.ref).toList.flatMap { lineFacts =>
-            val startPosition = startPositionForLine(input, context, root, line)
-            moveMotifRecord(
-              id = allocator.evidenceId(s"move-motif:line:${allocator.key(line.role)}:${line.ref.rank}:${line.ref.rootMove}"),
-              startFen = startPosition.ref.fen,
-              position = startPosition.ref,
-              moveUci = line.ref.rootMove,
-              moves = lineFacts.lineReplayMoves,
-              line = Some(line),
-              scope = line.role.scope,
-              parents = lineParents(context, line)
-            )
-          }
-        }
-      transitionRecords ++ lineRecords
-    }
-
-  private def moveMotifRecord(
-      id: String,
-      startFen: String,
-      position: PositionNodeRef,
-      moveUci: String,
-      moves: List[String],
-      line: Option[CandidateLineNode],
-      scope: EvidenceScope,
-      parents: List[EvidenceRef]
-  ): List[EvidenceRecord] =
-    MoveAnalyzer.tokenizePv(startFen, moves).flatMap { motifs =>
-      val rootMotifs = motifs.filter(TacticalMotifClassifier.isRootMoveMotif(moveUci, _))
-      Option.when(rootMotifs.nonEmpty) {
-        MoveMotifNormalizer.fromMotifs(
-          id = id,
-          moveUci = moveUci,
-          motifs = rootMotifs,
-          position = position,
-          line = line.map(_.ref),
-          scope = scope,
-          parents = parents
+    context.transitions
+      .flatMap(edge => List(edge.from, edge.to))
+      .distinct
+      .map { position =>
+        val scope = positionScopes.getOrElse(
+          position,
+          throw IllegalArgumentException(
+            s"relation occurrence '${position.id.getOrElse(position.fen)}' has no registered scope"
+          )
+        )
+        val analysis = context.positionAnalysis(position).getOrElse(
+          throw IllegalArgumentException(
+            s"relation occurrence '${position.id.getOrElse(position.fen)}' has no position analysis"
+          )
+        )
+        position -> context.evidenceGraph.relationGraph.closedPositionRelationSnapshot(
+          position,
+          scope,
+          analysis.relationInventory
         )
       }
-    }.getOrElse(Nil)
+      .toMap
+
+  /** One occurrence binding per admitted transition. Closed relation outputs
+    * and structural deltas consume this same value instead of resolving the
+    * identical changed relation nodes twice.
+    */
+  private def canonicalRelationDeltasFor(
+      context: JudgmentAssemblyContext,
+      closedRelations: Map[PositionNodeRef, CanonicalPositionRelationSnapshot]
+  ): Map[String, CanonicalRelationDelta] =
+    val deltas = context.transitions.map { edge =>
+      val transition = context
+        .transitionReplay(edge)
+        .flatMap(_.onlyTransition)
+        .getOrElse(
+          throw IllegalArgumentException(
+            s"transition '${edge.evidence.id}' has no exact canonical replay transition"
+          )
+        )
+      edge.evidence.id -> CanonicalRelationDelta.bind(
+        transition.declared,
+        transition.relationDelta,
+        closedRelations(edge.from),
+        closedRelations(edge.to)
+      )
+    }
+    require(
+      deltas.map(_._1).distinct.size == deltas.size,
+      "one transition evidence occurrence must own exactly one canonical relation delta"
+    )
+    deltas.toMap
 
   private def relationRecords(
-      input: NormalizedMoveReviewInput,
       context: JudgmentAssemblyContext,
-      allocator: JudgmentProvenanceAllocator
-  ): List[EvidenceRecord] =
-    val root = context.position(PositionNodeRole.Before)
-    root.toList.flatMap { rootNode =>
-      val rootRef = rootNode.ref
-      val continuationLines =
-        context.lines
-          .flatMap(line => lineFactEvidence(context, line.ref).map(_.lineReplayMoves))
-      val relationTargetHints = relationTargetHintsFromBoardFacts(context)
-      val lineBackedRecords = context.lines.flatMap { line =>
-        lineFactEvidence(context, line.ref)
-          .flatMap(lineFacts => TacticalRelationEvidence.boundedReplayFromSteps(lineFacts.lineReplaySteps, maxPlies = 8))
-          .toList
-          .flatMap { replay =>
-            val position = startPositionForLine(input, context, rootNode, line).ref
-            val engineLine = line.evaluation.engineLine
-            val witnesses =
-              TacticalRelationEvidence
-                .relationWitnesses(
-                  replay = replay,
-                  playedMove = line.ref.rootMove,
-                  targetHints = relationTargetHints,
-                  continuationLines = continuationLines,
-                  engineMate = engineLine.flatMap(_.mate),
-                  drawishWinPercent = engineLine.map(value =>
-                    PerspectiveMath.winPercentFromWhiteEval(value.scoreCp, value.mate)
-                  )
-                )
-                .distinctBy(witness => (witness.kind, witness.focusSquares, witness.targetSquare, witness.lineMoves))
-            witnesses.zipWithIndex.flatMap { case (witness, index) =>
-              RelationFactNormalizer.fromWitness(
-                id = allocator.evidenceId(s"relation:${allocator.key(line.role)}:${line.ref.rank}:$index:${witness.kind}"),
-                witness = witness,
-                position = position,
-                line = Some(line.ref),
-                scope = line.role.scope,
-                confidence = EvidenceConfidence.LegalReplayVerified
-              ).map { record =>
-                record.copy(parents = lineParents(context, line))
-              }
-            }
-          }
-      }
-      val transitionLocalRecords =
-        context.playedTransition.toList
-          .filter(edge => lineForTransition(context, edge).isEmpty)
-          .flatMap { edge =>
-            TacticalRelationEvidence
-              .boundedReplay(input.beforeFen, List(edge.moveUci), maxPlies = 1)
-              .toList
-              .flatMap { replay =>
-                val witnesses =
-                  TacticalRelationEvidence
-                    .relationWitnesses(
-                      replay = replay,
-                      playedMove = edge.moveUci,
-                      targetHints = relationTargetHints,
-                      continuationLines = continuationLines,
-                      includeDrawResources = false
-                    )
-                    .distinctBy(witness => (witness.kind, witness.focusSquares, witness.targetSquare, witness.lineMoves))
-                witnesses.zipWithIndex.flatMap { case (witness, index) =>
-                  RelationFactNormalizer.fromWitness(
-                    id = allocator.evidenceId(s"relation:${allocator.key(edge.role)}:transition:$index:${witness.kind}"),
-                    witness = witness,
-                    position = rootRef,
-                    line = None,
-                    scope = edge.role.scope,
-                    confidence = EvidenceConfidence.LegalReplayVerified
-                  ).map { record =>
-                    record.copy(parents = transitionParents(context, edge, None))
-                  }
-                }
-              }
-          }
-      lineBackedRecords ++ transitionLocalRecords
-    }
-
-  private def relationTargetHintsFromBoardFacts(context: JudgmentAssemblyContext): List[EvidenceSquare] =
-    context.evidenceGraph.records.collect {
-      case EvidenceRecord(_, payload: BoardFactEvidence, _) =>
-        payload.targetHintSquares
-    }.flatten.distinct
-
-  private def pawnStructureRecords(
-      context: JudgmentAssemblyContext,
-      allocator: JudgmentProvenanceAllocator
-  ): List[EvidenceRecord] =
-    context.positions.flatMap { node =>
-      (for
-        features <- boardFactEvidence(context, node.ref).flatMap(_.positionFeatures)
-        position <- Fen.read(Standard, Fen.Full(node.ref.fen))
-      yield
-        val side = node.ref.sideToMove.getOrElse(position.color)
-        val profile = PawnStructureAssessor.assess(features, position.board)
-        val pawnPlay =
-          PawnPlayAssessor.analyze(
-            features = features,
-            motifs = pawnPlayMotifsForPosition(context, node.role),
-            sideToMove = side
-          )
-        val record = StrategicFactNormalizer.fromPawnStructure(
-          id = allocator.evidenceId(s"pawn-structure:${allocator.positionKey(node.role, node.ref.fen, node.ref.ply)}"),
-          profile = profile,
-          pawnPlay = pawnPlay,
-          position = node.ref,
-          scope = node.role.scope,
-          parents = evidenceRefs(context, EvidenceLayer.Board, Some(node.ref), None)
-        )
-        record.payload match
-          case payload: PawnStructureFactEvidence if StrategicMechanismEvidence.pawnStructureCanAnchorPlan(payload) =>
-            Some(record)
-          case _ =>
-            None
-      ).toList.flatten
-    }
-
-  private def threatPressureRecords(
-      input: NormalizedMoveReviewInput,
-      context: JudgmentAssemblyContext,
-      allocator: JudgmentProvenanceAllocator
-  ): List[EvidenceRecord] =
-    val beforeRecords = context.position(PositionNodeRole.Before).toList.flatMap { node =>
-      positionFeatures(context, node.ref).toList.flatMap { features =>
-        node.ref.sideToMove.toList.flatMap { sideUnderPressure =>
-          val threatMotifs =
-            (motifsForLineRole(context, LineNodeRole.BestReference) ++
-              urgentStateThreatMotifs(node.ref.fen, node.ref.ply)).distinct
-          val threats =
-            ThreatPressureAssessor.analyze(
-              fen = input.beforeFen,
-              motifs = threatMotifs,
-              multiPv = input.rankedUniqueLines.flatMap(_.evaluation.engineLine),
-              features = features,
-              sideUnderPressure = sideUnderPressure
-            )
-          threatPressureBundle(
-            baseId = s"threat-pressure:${allocator.key(sideUnderPressure.name)}:before",
-            allocator = allocator,
-            sideUnderPressure = sideUnderPressure,
-            threats = threats,
-            position = node.ref,
-            line = input.referenceLine.flatMap(line => context.line(line.role).map(_.ref)),
-            scope = EvidenceScope.BeforePosition,
-            parents = evidenceRefs(context, EvidenceLayer.Board, Some(node.ref), None) ++
-              context.line(LineNodeRole.BestReference).toList.flatMap(lineParents(context, _))
-          )
-        }
-      }
-    }
-    val branchRecords =
-      input.threatBranches.flatMap { branch =>
-        val lineNodes = branch.lines.flatMap(lineNodeForNormalized(context, _))
-        (for
-          node <- context.positions.find(position =>
-            position.role == PositionNodeRole.AfterThreat && position.ref.fen == branch.branchFen
-          ).toList
-          features <- positionFeatures(context, node.ref).toList
-          threatActor <- node.ref.sideToMove.toList
-        yield
-          val sideUnderPressure = !threatActor
-          val threats =
-            ThreatPressureAssessor.analyze(
-              fen = branch.branchFen,
-              motifs = lineNodes.flatMap(motifsForLineNode(context, _)).distinct,
-              multiPv = branch.rankedUniqueLines.flatMap(_.evaluation.engineLine),
-              features = features,
-              sideUnderPressure = sideUnderPressure
-            )
-          threatPressureBundle(
-            baseId =
-              s"threat-pressure:${allocator.key(sideUnderPressure.name)}:branch:${allocator.key(branch.sourceProbeId)}:${allocator.key(branch.probedMoveUci)}",
-            allocator = allocator,
-            sideUnderPressure = sideUnderPressure,
-            threats = threats,
-            position = node.ref,
-            line = lineNodes.headOption.map(_.ref),
-            scope = EvidenceScope.ThreatLine,
-            parents = evidenceRefs(context, EvidenceLayer.Board, Some(node.ref), None) ++
-              lineNodes.flatMap(lineParents(context, _))
-          )).flatten
-      }
-    val afterLineRecords =
-      context.transitions.flatMap { edge =>
-        (for
-          line <- lineForTransition(context, edge).toList
-          lineFacts <- lineFactEvidence(context, line.ref).toList
-          engineLine <- line.evaluation.engineLine.toList
-          node <- context.positions.find(_.ref == edge.to).toList
-          features <- positionFeatures(context, node.ref).toList
-          threatActor <- node.ref.sideToMove.toList
-          suffixMoves = lineFacts.lineReplayContinuationMoves
-          if suffixMoves.nonEmpty
-          sideUnderPressure = !threatActor
-          continuationPv = EngineLine(
-            moves = suffixMoves,
-            scoreCp = engineLine.scoreCp,
-            mate = engineLine.mate,
-            depth = engineLine.depth
-          )
-          threats = ThreatPressureAssessor.analyze(
-            fen = edge.to.fen,
-            motifs = motifsForLineRole(context, line.role),
-            multiPv = List(continuationPv),
-            features = features,
-            sideUnderPressure = sideUnderPressure
-          )
-          if threats.nonEmpty
-        yield
-          threatPressureBundle(
-            baseId = s"threat-pressure:${allocator.key(sideUnderPressure.name)}:${allocator.key(edge.role)}:${edge.moveUci}",
-            allocator = allocator,
-            sideUnderPressure = sideUnderPressure,
-            threats = threats,
-            position = node.ref,
-            line = Some(line.ref),
-            scope = line.role.scope,
-            parents = List(edge.evidence) ++
-              evidenceRefs(context, EvidenceLayer.Board, Some(node.ref), None) ++
-              lineParents(context, line)
-          )).flatten
-      }
-    beforeRecords ++ branchRecords ++ afterLineRecords
-
-  private def threatPressureBundle(
-      baseId: String,
       allocator: JudgmentProvenanceAllocator,
-      sideUnderPressure: Color,
-      threats: List[Threat],
-      position: PositionNodeRef,
-      line: Option[LineNodeRef],
-      scope: EvidenceScope,
-      parents: List[EvidenceRef]
+      closedRelationsByOccurrence: Map[PositionNodeRef, CanonicalPositionRelationSnapshot],
+      canonicalRelationDeltas: Map[String, CanonicalRelationDelta]
   ): List[EvidenceRecord] =
-    if threats.exists(_.sideUnderPressure != sideUnderPressure) then Nil
-    else
-      ThreatEpisode.fromThreats(threats).map { episode =>
-        StrategicFactNormalizer.fromThreatEpisode(
+    context.transitions.flatMap { edge =>
+      val lineOwner = lineForTransition(context, edge)
+      val replay = context.transitionReplay(edge).getOrElse(
+        throw IllegalArgumentException(
+          s"transition '${edge.evidence.id}' has no exact canonical replay"
+        )
+      )
+      val production = TacticalRelationEvidence.relationProduction(replay, edge.moveUci)
+      val closedRelations = production.bindClosedOutput(
+        closedRelationsByOccurrence(edge.from),
+        closedRelationsByOccurrence(edge.to),
+        canonicalRelationDeltas(edge.evidence.id)
+      )
+      val lineEvidence = lineOwner.map(line => requiredLineFactRecord(context, line.ref).ref)
+      val provisional = production.relations.map { relation =>
+        val occurrenceOwner = lineOwner.map(_.ref.id).getOrElse(edge.evidence.id)
+        RelationFactEvidence.record(
           id = allocator.evidenceId(
-            s"$baseId:episode:${episode.sourceThreatIndex}:${allocator.key(episode.kind.toString)}"
+            s"relation:transition:${exactIdentityKey(List(occurrenceOwner, RelationFactKind.id(relation.kind), relation.semanticId))}"
           ),
-          episode = episode,
-          position = position,
-          line = line,
-          scope = scope,
-          parents = parents.distinctBy(_.id)
+          payload = relation,
+          position = edge.from,
+          line = lineOwner.map(_.ref),
+          scope = edge.role.scope,
+          confidence = EvidenceConfidence.LegalReplayVerified
         )
       }
+      val sourceNodesByOutputId = provisional.map { record =>
+        val relation = record.payload match
+          case exact: RelationFactEvidence => exact
+          case _ => throw IllegalArgumentException("a tactical relation production emitted a non-relation payload")
+        record.ref.id -> relationSourceNodes(closedRelations, relation)
+      }.toMap
+      require(
+        sourceNodesByOutputId.size == provisional.size,
+        "one transition occurrence cannot repeat a materialized relation output"
+      )
+      closedRelations.materializeOccurrence(
+        occurrenceId = allocator.evidenceId(s"closed-relation-occurrence:${edge.evidence.id}"),
+        edge = edge,
+        lineOwner = lineOwner.map(_.ref),
+        lineEvidence = lineEvidence,
+        outputRecords = provisional,
+        sourceNodesByOutputId = sourceNodesByOutputId
+      )
+    }
 
   private def tacticalMechanismRecords(
       context: JudgmentAssemblyContext,
@@ -465,7 +236,15 @@ object EvidenceFactAssembler:
       context.transitions
         .filter(edge => lineForTransition(context, edge).isEmpty)
         .flatMap(edge => tacticalMechanismRecordsForTransition(context, allocator, edge))
-    (lineMechanisms ++ unlinedTransitionMechanisms).distinctBy(_.ref.id)
+    val mechanisms = lineMechanisms ++ unlinedTransitionMechanisms
+    val duplicateIds = mechanisms.groupBy(_.ref.id).collect {
+      case (id, records) if records.size > 1 => id
+    }.toList.sorted
+    require(
+      duplicateIds.isEmpty,
+      s"tactical mechanism producer emitted duplicate evidence ids: ${duplicateIds.mkString(",")}"
+    )
+    mechanisms
 
   private def tacticalMechanismRecordsForLine(
       context: JudgmentAssemblyContext,
@@ -473,22 +252,20 @@ object EvidenceFactAssembler:
       line: CandidateLineNode
   ): List[EvidenceRecord] =
     val lineRecords = context.evidenceGraph.recordsFor(line.ref)
-    val position =
-      lineRecords.headOption.map(_.ref.position).orElse(context.root)
-    val records =
-      position match
-        case Some(nodeRef) if line.role == LineNodeRole.Threat =>
-          (lineRecords ++ context.evidenceGraph.recordsFor(nodeRef).collect {
-            case record @ EvidenceRecord(ref, _: ThreatEpisodeEvidence, _) if ref.scope == EvidenceScope.ThreatLine =>
-              record
-          }).distinctBy(_.ref.id)
-        case _ =>
-          lineRecords
+    val positions = lineRecords.map(_.ref.position).distinct
+    val position = positions match
+      case exact :: Nil => Some(exact)
+      case Nil          => context.root
+      case _ =>
+        throw IllegalArgumentException(
+          s"line '${line.ref.id}' carries tactical inputs from conflicting position occurrences"
+        )
+    val records = lineRecords
     position.toList.flatMap { nodeRef =>
-      tacticalMechanismCandidates(records, line.ref.rootMove).flatMap { candidate =>
+      tacticalMechanismCandidates(context.evidenceGraph, records, line.ref.rootMove).flatMap { candidate =>
         tacticalMechanismRecord(
           id = allocator.evidenceId(
-            s"tactical-mechanism:line:${allocator.key(line.role)}:${line.ref.rank}:${line.ref.rootMove}:${allocator.key(candidate.kind)}"
+            s"tactical-mechanism:line:${allocator.key(line.role)}:${line.ref.rank}:${line.ref.rootMove}:${allocator.key(candidate.kind)}:${candidate.idKey}"
           ),
           kind = candidate.kind,
           position = nodeRef,
@@ -508,263 +285,203 @@ object EvidenceFactAssembler:
   ): List[EvidenceRecord] =
     val records =
       context.evidenceGraph.records.filter(record =>
-        record.ref.scope == edge.role.scope &&
+          record.ref.scope == edge.role.scope &&
           record.ref.position == edge.from &&
-          transitionRecordMentionsMove(record, edge.moveUci)
+          record.mentionsMove(edge.moveUci)
       )
-    tacticalMechanismCandidates(records, edge.moveUci).flatMap { candidate =>
+    tacticalMechanismCandidates(context.evidenceGraph, records, edge.moveUci).flatMap { candidate =>
+      val routedCandidate =
+        candidate.withRecords(context.evidenceGraph.byId.get(edge.evidence.id).toList)
       tacticalMechanismRecord(
-        id = allocator.evidenceId(s"tactical-mechanism:transition:${allocator.key(edge.role)}:${edge.moveUci}:${allocator.key(candidate.kind)}"),
-        kind = candidate.kind,
+        id = allocator.evidenceId(
+          s"tactical-mechanism:transition:${allocator.key(edge.role)}:${edge.moveUci}:${allocator.key(candidate.kind)}:${routedCandidate.idKey}"
+        ),
+        kind = routedCandidate.kind,
         position = edge.from,
         line = None,
         moveUci = Some(edge.moveUci),
         scope = edge.role.scope,
-        records = candidate.records ++ context.evidenceGraph.byId.get(edge.evidence.id).toList,
-        signals = candidate.signals
+        records = routedCandidate.records,
+        signals = routedCandidate.signals
       )
     }
 
-  private def tacticalMechanismCandidates(records: List[EvidenceRecord], rootMove: String): List[TacticalMechanismCandidate] =
-    val baseEntries =
+  private def tacticalMechanismCandidates(
+      graph: TypedEvidenceGraph,
+      records: List[EvidenceRecord],
+      rootMove: String
+  ): List[TacticalMechanismCandidate] =
+    val relationNodes = graph.proofEligibleRelationNodesByEvidenceIds(records.map(_.ref.id).toSet)
+    val nonRelationEntries =
       records.flatMap(record =>
         record.payload match
-          case payload: MoveMotifEvidence =>
-            TacticalMotifClassifier.rootMotif(payload).filter(_ => EvidenceRef.sameMove(payload.rootMove, rootMove)).toList.flatMap { motif =>
-              TacticalMechanismKind.fromMotif(motif).map(kind =>
-                TacticalMechanismCandidate(
-                  kind,
-                  List(record),
-                  List(TacticalMechanismSignal(TacticalMechanismSignalKind.Motif, payload.kind, EvidenceLayer.MoveMotif, Some(record.ref)))
-                )
-              )
-            }
-          case payload: RelationFactEvidence
-              if payload.hasConcreteRelationProof && payload.hasLineProof && payload.mentionsLineMove(rootMove) =>
-            List(
-              TacticalMechanismCandidate(
-                TacticalMechanismKind.fromRelation(payload.kind),
-                List(record),
-                List(
-                  TacticalMechanismSignal(
-                    TacticalMechanismSignalKind.Relation,
-                    payload.kind.toString,
-                    EvidenceLayer.Relation,
-                    Some(record.ref),
-                    relationKind = Some(payload.kind)
-                  )
-                )
-              )
-            )
           case payload: LineFactEvidence =>
             (
               payload.rootOwnedCausalConsequences(rootMove) ++
                 payload.immediateReplyCheckLiabilitiesForRootMove(rootMove)
-            ).map(_.kind).distinct.flatMap(kind =>
-              TacticalMechanismKind.fromLineConsequence(kind, payload.rootIsRecapture(rootMove)).map(mechanismKind =>
-                TacticalMechanismCandidate(
-                  mechanismKind,
-                  List(record),
-                  List(TacticalMechanismSignal(TacticalMechanismSignalKind.LineConsequence, kind.toString, EvidenceLayer.Line, Some(record.ref)))
-                )
+            ).distinct
+              .flatMap(consequence =>
+                TacticalMechanismKind
+                  .fromLineConsequence(consequence.kind, payload.rootIsRecapture(rootMove))
+                  .map(mechanismKind =>
+                    TacticalMechanismCandidate(
+                      mechanismKind,
+                      List(record),
+                      List(
+                        TacticalMechanismSignal(
+                          TacticalMechanismSignalKind.LineConsequence,
+                          consequence.kind.toString,
+                          EvidenceLayer.Line,
+                          Some(record.ref)
+                        )
+                      ),
+                      List(lineConsequenceAnchor(consequence))
+                    )
+                  )
               )
-            )
-          case CandidateLineEvaluationEvidence(_, CandidateLineEvaluation.EngineSearch(line)) if line.mate.nonEmpty =>
-            List(
+          case CandidateLineEvaluationEvidence(_, CandidateLineEvaluation.EngineSearch(line)) =>
+            line.mate.toList.map(mate =>
               TacticalMechanismCandidate(
                 TacticalMechanismKind.KingForcing,
                 List(record),
-                List(TacticalMechanismSignal(TacticalMechanismSignalKind.MateBranch, line.mate.map(_.toString).getOrElse("mate"), EvidenceLayer.Eval, Some(record.ref)))
+                List(
+                  TacticalMechanismSignal(
+                    TacticalMechanismSignalKind.MateBranch,
+                    mate.toString,
+                    EvidenceLayer.Eval,
+                    Some(record.ref)
+                  )
+                ),
+                List(
+                  EvidenceSemanticAnchor.of(
+                    EvidenceSemanticAnchorKind.LineConsequence,
+                    LineConsequenceKind.Mate.toString,
+                    s"mate:$mate",
+                    s"moves:${line.moves.map(EvidenceRef.normalizeMove).mkString(",")}"
+                  )
+                )
               )
             )
           case _ =>
             Nil
       )
-    val relationDrivenConsequenceKinds = Set(
-      RelationFactKind.DefenderTrade,
-      RelationFactKind.Overload,
-      RelationFactKind.Deflection,
-      RelationFactKind.DiscoveredAttack,
-      RelationFactKind.DoubleCheck,
-      RelationFactKind.BackRankMate,
-      RelationFactKind.MateNet,
-      RelationFactKind.Fork,
-      RelationFactKind.Decoy,
-      RelationFactKind.Interference,
-      RelationFactKind.Clearance,
-      RelationFactKind.XRay,
-      RelationFactKind.Battery,
-      RelationFactKind.Pin,
-      RelationFactKind.Skewer,
-      RelationFactKind.GreekGift
+    val relationEntries = relationNodes.flatMap(node =>
+      TacticalRelationLineContract.bindings(graph, node, rootMove).map(binding =>
+        TacticalMechanismCandidate(
+          binding.kind,
+          List(node.record, binding.lineRecord),
+          binding.signals,
+          node.relation.semanticGroupingAnchors :+ lineEventAnchor(binding.event)
+        )
+      )
     )
-    val relationRecords = records.collect {
-      case record @ EvidenceRecord(_, payload: RelationFactEvidence, _)
-          if payload.hasConcreteRelationProof && payload.hasLineProof && relationDrivenConsequenceKinds.contains(payload.kind) =>
-        record -> payload
-    }
-    val lineConsequenceRecords = records.collect { case record @ EvidenceRecord(_, payload: LineFactEvidence, _) =>
-      (
-        // A relation/consequence pair is still assembled as a raw mechanism candidate here.
-        // Root ownership is decided once by RootOwnedCausePolicy after the typed relation is attached.
-        payload.consequencesForRootMove(rootMove) ++
-          payload.immediateReplyCheckLiabilitiesForRootMove(rootMove)
-      ).distinct.flatMap { consequence =>
-        val consequenceMoves = consequence.eventMove.toList ++ consequence.lineMoves
-        val consequenceCaptureSquares =
-          payload.materialCaptures
-            .filter(capture => consequenceMoves.exists(EvidenceRef.sameMove(_, capture.moveUci)))
-            .map(_.square)
-        TacticalMechanismKind
-          .fromLineConsequence(consequence.kind, payload.rootIsRecapture(rootMove))
-          .filter(kind =>
-            kind == TacticalMechanismKind.KingForcing ||
-              kind == TacticalMechanismKind.MaterialGain ||
-              kind == TacticalMechanismKind.RecaptureChoice
-          )
-          .map(kind => (record, consequence, kind, consequenceMoves, consequenceCaptureSquares))
-      }
-    }.flatten
-    val mateThreatRecords = records.collect {
-      case record @ EvidenceRecord(_, payload: ThreatEpisodeEvidence, _)
-          if payload.episode.driver == ThreatDriver.MateThreat &&
-            payload.episode.hasConcreteThreatProof &&
-            (payload.defenseRequired || payload.episode.immediate) =>
-        record -> payload
-    }
-    val relationConsequenceEntries =
-      relationRecords.flatMap { case (relationRecord, relation) =>
-        lineConsequenceRecords.collect {
-          case (lineRecord, consequence, mechanismKind, consequenceMoves, consequenceCaptureSquares)
-              if relationRecord.ref.line.exists(lineRecord.referencesLine) &&
-                (
-                  (relation.lineProofCount > 1 && consequenceMoves.exists(relation.mentionsLineMove)) ||
-                    consequenceCaptureSquares.exists(square => relation.targetSquare.contains(square) || relation.focusSquares.contains(square)) ||
-                    (mechanismKind == TacticalMechanismKind.KingForcing &&
-                      TacticalMechanismKind.fromRelation(relation.kind) == TacticalMechanismKind.KingForcing)
-                ) =>
-            TacticalMechanismCandidate(
-              mechanismKind,
-              List(relationRecord, lineRecord),
-              List(
-                TacticalMechanismSignal(
-                  TacticalMechanismSignalKind.Relation,
-                  relation.kind.toString,
-                  EvidenceLayer.Relation,
-                  Some(relationRecord.ref),
-                  relationKind = Some(relation.kind)
-                ),
-                TacticalMechanismSignal(TacticalMechanismSignalKind.LineConsequence, consequence.kind.toString, EvidenceLayer.Line, Some(lineRecord.ref))
-              )
-            )
-        }
-      }
-    val mateThreatMaterialEntries =
-      mateThreatRecords.flatMap { case (threatRecord, threat) =>
-        lineConsequenceRecords.collect {
-          case (lineRecord, consequence, TacticalMechanismKind.MaterialGain, consequenceMoves, consequenceCaptureSquares)
-              if consequence.kind == LineConsequenceKind.MaterialGain &&
-                {
-                  val sameThreatBranchPosition =
-                    threatRecord.ref.scope == EvidenceScope.ThreatLine &&
-                      lineRecord.ref.scope == EvidenceScope.ThreatLine &&
-                      threatRecord.ref.position == lineRecord.ref.position
-                  (
-                    threatRecord.ref.line.exists(lineRecord.referencesLine) ||
-                      sameThreatBranchPosition
-                  ) &&
-                    mateThreatMaterialLinked(threat, consequenceMoves, consequenceCaptureSquares, sameThreatBranchPosition)
-                } =>
-            TacticalMechanismCandidate(
-              TacticalMechanismKind.MaterialGain,
-              List(threatRecord, lineRecord),
-              List(
-                TacticalMechanismSignal(TacticalMechanismSignalKind.ThreatEpisode, threat.episode.episodeId, EvidenceLayer.ThreatPressure, Some(threatRecord.ref)),
-                TacticalMechanismSignal(TacticalMechanismSignalKind.LineConsequence, consequence.kind.toString, EvidenceLayer.Line, Some(lineRecord.ref))
-              )
-            )
-        }
-      }
     val defensiveResourceEntries =
       records.collect { case record @ EvidenceRecord(_, payload: LineFactEvidence, _) =>
-        val rootMove = payload.rootMove.map(EvidenceRef.normalizeMove)
-        val rootTo = rootMove.filter(_.length >= 4).map(_.slice(2, 4))
-        val rootDefenderMove =
-          payload.lineEventsOf(LineEventKind.DefenderMove).exists(event =>
-            event.plyOffset == 0 &&
-              rootMove.exists(root => EvidenceRef.sameMove(root, event.moveUci))
-          )
-        val rootCheckDefense =
-          payload.lineEventsOf(LineEventKind.DefenderMove).exists(event =>
-            event.plyOffset == 0 &&
-              rootMove.exists(root => EvidenceRef.sameMove(root, event.moveUci)) &&
-              event.targetRole.exists(_.name.equalsIgnoreCase("king"))
-          )
-        val rootMoveRecoveryKinds =
-          rootMove
+        val declaredRootMove = payload.rootMove.map(EvidenceRef.normalizeMove)
+        val rootDefenderEvents =
+          payload
+            .lineEventsOf(LineEventKind.DefenderMove)
+            .filter(event =>
+              event.plyOffset == 0 &&
+                declaredRootMove.exists(root => EvidenceRef.sameMove(root, event.moveUci))
+            )
+        val rootMoveRecoveryConsequences =
+          declaredRootMove
             .map(payload.consequencesForRootMove)
             .getOrElse(Nil)
             .filter(consequence =>
               consequence.kind == LineConsequenceKind.RecaptureSequence ||
                 consequence.kind == LineConsequenceKind.RecoveryWindow
             )
-        val carriedDefenseRecoveryKinds =
-          if payload.lineEventsOf(LineEventKind.DefenderMove).exists(event =>
-              event.plyOffset > 0 &&
-                rootTo.exists(to => EvidenceRef.normalizeMove(event.moveUci).take(2) == to)
-            )
-          then
-            payload.proofSignalConsequences.filter(consequence =>
-              consequence.kind == LineConsequenceKind.RecaptureSequence ||
-                consequence.kind == LineConsequenceKind.RecoveryWindow
-            )
-          else Nil
-        val recoveryKinds = (rootMoveRecoveryKinds ++ carriedDefenseRecoveryKinds).distinct
-        Option.when(rootDefenderMove && recoveryKinds.nonEmpty)(
-          TacticalMechanismCandidate(
-            TacticalMechanismKind.DefensiveResource,
-            List(record),
-            recoveryKinds.map(consequence =>
-              TacticalMechanismSignal(TacticalMechanismSignalKind.LineConsequence, consequence.kind.toString, EvidenceLayer.Line, Some(record.ref))
-            )
-          )
-        ).orElse(
-          Option.when(rootCheckDefense)(
-            TacticalMechanismCandidate(
-              TacticalMechanismKind.DefensiveResource,
-              List(record),
-              List(
-                TacticalMechanismSignal(TacticalMechanismSignalKind.LineEvent, LineEventKind.DefenderMove.toString, EvidenceLayer.Line, Some(record.ref))
+        val recoveryEntries =
+          if rootDefenderEvents.isEmpty then Nil
+          else
+            rootMoveRecoveryConsequences.map(consequence =>
+              TacticalMechanismCandidate(
+                TacticalMechanismKind.DefensiveResource,
+                List(record),
+                List(
+                  TacticalMechanismSignal(
+                    TacticalMechanismSignalKind.LineConsequence,
+                    consequence.kind.toString,
+                    EvidenceLayer.Line,
+                    Some(record.ref)
+                  )
+                ),
+                List(lineConsequenceAnchor(consequence))
               )
             )
-          )
-        )
+        val checkDefenseEntries =
+          rootDefenderEvents
+            .filter(_.targetRole.exists(_.name.equalsIgnoreCase("king")))
+            .map(event =>
+              TacticalMechanismCandidate(
+                TacticalMechanismKind.DefensiveResource,
+                List(record),
+                List(
+                  TacticalMechanismSignal(
+                    TacticalMechanismSignalKind.LineEvent,
+                    LineEventKind.DefenderMove.toString,
+                    EvidenceLayer.Line,
+                    Some(record.ref)
+                  )
+                ),
+                List(lineEventAnchor(event))
+              )
+            )
+        recoveryEntries ++ checkDefenseEntries
       }.flatten
-    (baseEntries ++ relationConsequenceEntries ++ mateThreatMaterialEntries ++ defensiveResourceEntries)
-      .groupBy(_.kind)
-      .toList
-      .map { case (kind, grouped) =>
-        TacticalMechanismCandidate(
-          kind = kind,
-          records = grouped.flatMap(_.records).distinctBy(_.ref.id),
-          signals = grouped.flatMap(_.signals).distinct
-        )
-      }
+    val candidates = nonRelationEntries ++ defensiveResourceEntries ++ relationEntries
+    require(
+      candidates.map(_.exactKey).distinct.size == candidates.size,
+      "tactical mechanism producers emitted one exact candidate twice"
+    )
+    candidates
+      .sortBy(_.idKey)
       .filter { candidate =>
         val payload = TacticalMechanismEvidence(candidate.kind, None, None, candidate.signals)
         payload.canAnchorTacticalClaim || payload.canAnchorDefensiveClaim
       }
 
-  private def mateThreatMaterialLinked(
-      threat: ThreatEpisodeEvidence,
-      consequenceMoves: List[String],
-      consequenceCaptureSquares: List[EvidenceSquare],
-      sameThreatBranchPosition: Boolean
-  ): Boolean =
-    val attackSquares = threat.episode.attackSquares.toSet
-    consequenceCaptureSquares.exists(attackSquares.contains) ||
-      threat.episode.bestDefense.exists(defense => consequenceMoves.exists(EvidenceRef.sameMove(defense, _))) ||
-      (sameThreatBranchPosition && threat.defenseRequired && consequenceCaptureSquares.nonEmpty)
+  private def lineConsequenceAnchor(consequence: LineConsequence): EvidenceSemanticAnchor =
+    EvidenceSemanticAnchor.of(
+      EvidenceSemanticAnchorKind.LineConsequence,
+      consequence.kind.toString,
+      s"proof:${consequence.proofSignal}",
+      s"root:${consequence.rootMove.map(EvidenceRef.normalizeMove).getOrElse("none")}",
+      s"event:${consequence.eventMove.map(EvidenceRef.normalizeMove).getOrElse("none")}",
+      s"moves:${consequence.lineMoves.map(EvidenceRef.normalizeMove).mkString(",")}",
+      s"root-side:${consequence.rootSide.map(_.toString).getOrElse("none")}",
+      s"beneficiary:${consequence.beneficiary.map(_.toString).getOrElse("none")}",
+      s"captures:${consequence.stationarySacrificeCaptures.mkString(",")}",
+      s"material:${consequence.materialOutcome.map(_.toString).getOrElse("none")}"
+    )
+
+  private def lineEventAnchor(event: LineMoveEvent): EvidenceSemanticAnchor =
+    EvidenceSemanticAnchor.of(
+      EvidenceSemanticAnchorKind.LineEvent,
+      event.kind.toString,
+      s"move:${EvidenceRef.normalizeMove(event.moveUci)}",
+      s"ply:${event.plyOffset}",
+      s"side:${event.side.map(_.toString).getOrElse("none")}",
+      s"piece:${event.pieceRole.map(_.name).getOrElse("none")}",
+      s"target:${event.targetRole.map(_.name).getOrElse("none")}",
+      s"square:${event.square.map(_.key).getOrElse("none")}"
+    )
+
+  private def tacticalSignalKey(signal: TacticalMechanismSignal): String =
+    exactIdentityKey(
+      List(
+        signal.kind.toString,
+        signal.label,
+        signal.sourceLayer.toString,
+        signal.source.map(_.id).getOrElse("none"),
+        signal.relationKind.map(RelationFactKind.id).getOrElse("none")
+      )
+    )
+
+  private def exactIdentityKey(parts: Iterable[String]): String =
+    parts.iterator.map(value => s"${value.length}:$value").mkString("|")
 
   private def tacticalMechanismRecord(
       id: String,
@@ -779,7 +496,8 @@ object EvidenceFactAssembler:
     val payload = TacticalMechanismEvidence(kind, moveUci, line, signals)
     Option.when(payload.hasConcreteProof) {
       val confidence =
-        if signals.exists(_.kind == TacticalMechanismSignalKind.MateBranch) then EvidenceConfidence.EngineBacked
+        if signals.exists(_.kind == TacticalMechanismSignalKind.MateBranch) then
+          EvidenceConfidence.EngineBacked
         else if signals.exists(signal =>
             signal.kind == TacticalMechanismSignalKind.Relation ||
               signal.kind == TacticalMechanismSignalKind.LineConsequence ||
@@ -798,201 +516,67 @@ object EvidenceFactAssembler:
           confidence = confidence
         ),
         payload = payload,
-        parents = records.map(_.ref).distinctBy(_.id)
+        parents = records.map(_.ref)
       )
     }
-
-  private def transitionRecordMentionsMove(record: EvidenceRecord, moveUci: String): Boolean =
-    record.payload match
-      case payload: MoveMotifEvidence =>
-        payload.moveUci == moveUci
-      case MoveTransitionEvidence(move, _, _) =>
-        move == moveUci
-      case payload: RelationFactEvidence =>
-        payload.mentionsLineMove(moveUci) || record.ref.scope == EvidenceScope.PlayedTransition
-      case _ =>
-        false
 
   private def structuralDeltaRecords(
       context: JudgmentAssemblyContext,
-      allocator: JudgmentProvenanceAllocator
+      allocator: JudgmentProvenanceAllocator,
+      canonicalRelationDeltas: Map[String, CanonicalRelationDelta]
   ): List[EvidenceRecord] =
     context.transitions.flatMap { edge =>
       for
-        fromPosition <- Fen.read(Standard, Fen.Full(edge.from.fen))
-        toPosition <- Fen.read(Standard, Fen.Full(edge.to.fen))
-        side <- edge.from.sideToMove.orElse(Some(fromPosition.color))
-        (files, targets, createdTensionFrom) = moveStructureInputs(edge.moveUci)
-        if files.nonEmpty
+        transitionReplay <- context.transitionReplay(edge)
+        replayTransition <- transitionReplay.onlyTransition
+        legalStep = replayTransition.legal
+        side = legalStep.move.piece.color
         line = lineForTransition(context, edge)
-        lineFacts = line.flatMap(node => lineFactEvidence(context, node.ref))
-        delta <- StructuralDeltaAnalyzer.delta(
-          beforeFen = edge.from.fen,
-          beforeBoard = fromPosition.board,
-          afterFen = edge.to.fen,
-          afterBoard = toPosition.board,
-          side = side,
-          files = files,
-          targets = targets,
-          createdTensionFrom = createdTensionFrom,
-          moveUci = Some(edge.moveUci)
+        delta = StructuralDeltaAnalyzer.bind(
+          transition = replayTransition,
+          canonicalRelations = canonicalRelationDeltas(edge.evidence.id)
         )
         record = TransitionFactNormalizer.fromStructuralDelta(
-          id = allocator.evidenceId(s"structural-delta:${allocator.key(edge.role)}:${edge.moveUci}"),
+          id = allocator.evidenceId(s"structural-delta:${edge.evidence.id}"),
           delta = delta,
           transition = edge,
+          replay = transitionReplay,
           line = line.map(_.ref),
           perspective = side,
-          parents = transitionParents(context, edge, line) ++
-            evidenceRefs(context, EvidenceLayer.Board, Some(edge.to), None)
+          parents = (
+            List(edge.evidence) ++
+              line.toList.flatMap(lineParents(context, _)) ++
+              evidenceRefs(context, EvidenceLayer.PositionFeature, Some(edge.from), None) ++
+              evidenceRefs(context, EvidenceLayer.PositionFeature, Some(edge.to), None) ++
+              delta.canonicalRelations.sourceRefs
+          ).distinctBy(_.id)
         )
         if record.payload match
           case payload: StructuralDeltaEvidence =>
-            payload.hasTypedOutput || lineFacts.exists(_.rootPreparesFuturePawnAdvance(edge.moveUci))
-          case _                                => false
+            payload.hasTypedOutput
+          case _ => false
       yield record
     }
 
-  private def strategicFeatureRecords(
+  private def requiredLineFactRecord(
       context: JudgmentAssemblyContext,
-      allocator: JudgmentProvenanceAllocator
-  ): List[EvidenceRecord] =
-    context.positions.flatMap { node =>
-      val boardParents = evidenceRefs(context, EvidenceLayer.Board, Some(node.ref), None)
-      val boardFacts = boardFactEvidence(context, node.ref)
-      val targetAnchors =
-        boardFacts.toList.flatMap(_.looseMaterialAnchors)
-      val targetFixation =
-        Option
-        .when(targetAnchors.nonEmpty) {
-          StrategicFactNormalizer.fromBoardAnchors(
-            id = allocator.evidenceId(
-              s"strategic:target-fixation:${allocator.positionKey(node.role, node.ref.fen, node.ref.ply)}"
-            ),
-            kind = StrategicFactKind.TargetFixation,
-            anchors = targetAnchors,
-            relatedPlans = Nil,
-            confidence = 0.78,
-            position = node.ref,
-            line = None,
-            scope = node.role.scope,
-            parents = boardParents
-          )
-        }
-        .toList
-      val outpostAnchors =
-        boardFacts.toList.flatMap(_.outpostAnchors)
-      val outpost =
-        Option.when(outpostAnchors.nonEmpty) {
-          StrategicFactNormalizer.fromBoardAnchors(
-            id = allocator.evidenceId(s"strategic:outpost:${allocator.positionKey(node.role, node.ref.fen, node.ref.ply)}"),
-            kind = StrategicFactKind.Outpost,
-            anchors = outpostAnchors,
-            relatedPlans = Nil,
-            confidence = 0.78,
-            position = node.ref,
-            line = None,
-            scope = node.role.scope,
-            parents = boardParents
-          )
-        }.toList
-      val endgameAnchors =
-        boardFacts.toList.flatMap(_.endgameTechniqueAnchors)
-      val endgame =
-        Option.when(endgameAnchors.nonEmpty) {
-          StrategicFactNormalizer.fromBoardAnchors(
-            id = allocator.evidenceId(s"strategic:endgame:${allocator.positionKey(node.role, node.ref.fen, node.ref.ply)}"),
-            kind = StrategicFactKind.Endgame,
-            anchors = endgameAnchors,
-            relatedPlans = Nil,
-            confidence = endgameAnchors.map(_.confidence).max,
-            position = node.ref,
-            line = None,
-            scope = node.role.scope,
-            parents = boardParents
-          )
-        }.toList
-      val featureRecords =
-        boardFacts.toList.flatMap(featureStrategicRecords(node, _, allocator, boardParents))
-      targetFixation ++ outpost ++ endgame ++ featureRecords
+      line: LineNodeRef
+  ): EvidenceRecord =
+    val matches = context.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, payload: LineFactEvidence, _)
+          if record.carriesLinePayload(line, EvidenceLayer.Line) =>
+        record
     }
-
-  private def boardFactEvidence(context: JudgmentAssemblyContext, position: PositionNodeRef): Option[BoardFactEvidence] =
-    context.evidenceGraph.records.collectFirst {
-      case EvidenceRecord(ref, payload: BoardFactEvidence, _) if ref.position == position =>
-        payload
-    }
-
-  private[assembly] def positionFeatures(
-      context: JudgmentAssemblyContext,
-      position: PositionNodeRef
-  ): Option[PositionFeatures] =
-    boardFactEvidence(context, position).flatMap(_.positionFeatures)
-
-  private def lineFactEvidence(context: JudgmentAssemblyContext, line: LineNodeRef): Option[LineFactEvidence] =
-    context.evidenceGraph.records.collectFirst {
-      case record @ EvidenceRecord(_, payload: LineFactEvidence, _) if record.carriesLinePayload(line, EvidenceLayer.Line) =>
-        payload
-    }
-
-  private def featureStrategicRecords(
-      node: PositionNode,
-      boardFacts: BoardFactEvidence,
-      allocator: JudgmentProvenanceAllocator,
-      parents: List[EvidenceRef]
-  ): List[EvidenceRecord] =
-    val nodeKey = allocator.positionKey(node.role, node.ref.fen, node.ref.ply)
-    List(
-      strategicAnchorRecord(
-        id = allocator.evidenceId(s"strategic:file-control:$nodeKey"),
-        node = node,
-        kind = StrategicFactKind.FileControl,
-        anchors = boardFacts.fileControlAnchors,
-        parents = parents
-      ),
-      strategicAnchorRecord(
-        id = allocator.evidenceId(s"strategic:space:$nodeKey"),
-        node = node,
-        kind = StrategicFactKind.Space,
-        anchors = boardFacts.spaceAnchors,
-        parents = parents
-      ),
-      strategicAnchorRecord(
-        id = allocator.evidenceId(s"strategic:activity:$nodeKey"),
-        node = node,
-        kind = StrategicFactKind.Activity,
-        anchors = boardFacts.activityAnchors,
-        parents = parents
-      ),
-      strategicAnchorRecord(
-        id = allocator.evidenceId(s"strategic:counterplay-restraint:$nodeKey"),
-        node = node,
-        kind = StrategicFactKind.CounterplayRestraint,
-        anchors = boardFacts.counterplayRestraintAnchors,
-        parents = parents
-      )
-    ).flatten
-
-  private def strategicAnchorRecord(
-      id: String,
-      node: PositionNode,
-      kind: StrategicFactKind,
-      anchors: List[BoardAnchor],
-      parents: List[EvidenceRef]
-  ): Option[EvidenceRecord] =
-    Option.when(anchors.nonEmpty) {
-      StrategicFactNormalizer.fromBoardAnchors(
-        id = id,
-        kind = kind,
-        anchors = anchors,
-        relatedPlans = Nil,
-        confidence = anchors.map(_.confidence).max,
-        position = node.ref,
-        line = None,
-        scope = node.role.scope,
-        parents = parents
-      )
-    }
+    matches match
+      case exact :: Nil => exact
+      case Nil =>
+        throw IllegalArgumentException(
+          s"line '${line.id}' has no canonical line-fact carrier"
+        )
+      case _ =>
+        throw IllegalArgumentException(
+          s"line '${line.id}' has more than one canonical line-fact carrier"
+        )
 
   private def featureApplicabilityRecords(
       input: NormalizedMoveReviewInput,
@@ -1001,55 +585,48 @@ object EvidenceFactAssembler:
   ): List[EvidenceRecord] =
     val root = context.position(PositionNodeRole.Before)
     root.toList.flatMap { rootNode =>
-      val openingPhase =
-        positionFeatures(context, rootNode.ref).exists(_.materialPhase.phase == "opening")
       val openingContext = input.openingContext
       val canAssessOpening =
-        openingPhase || openingContext.identity.nonEmpty || openingContext.recognition.nonEmpty
-      val signals =
-        openingContext.signals ++ List(
-          Option.when(openingPhase)(OpeningContextSignal.OpeningPhase)
-        ).flatten
-      val contextRecord = Option.when(
-        signals.nonEmpty ||
-          openingContext.identity.nonEmpty ||
+        openingContext.identity.nonEmpty ||
           openingContext.recognition.nonEmpty ||
-          openingContext.themePriorSelection.nonEmpty ||
-          canAssessOpening
-      ) {
+          openingContext.themePriorSelection.nonEmpty
+      val contextRecord = Option.when(canAssessOpening) {
         OpeningContextFactNormalizer.fromContext(
           id = allocator.evidenceId("opening-context:before"),
           identity = openingContext.identity,
-          signals = signals,
+          signals = openingContext.signals,
           recognition = openingContext.recognition,
           themePriorSelection = openingContext.themePriorSelection,
           position = rootNode.ref,
           line = None,
           scope = EvidenceScope.BeforePosition,
-          confidence = openingContextConfidence(openingContext.identity, openingContext.recognition, openingPhase),
+          confidence = EvidenceConfidence.Mixed,
           parents = openingContextParents(context, rootNode.ref)
         )
       }
       val anchorRecords = featureAnchorRecords(context, rootNode, allocator)
         .filter(record => StrategicMechanismEvidence.sourceMechanisms(record).nonEmpty)
-      val anchors = anchorRecords.collect { case EvidenceRecord(_, FeatureAnchorEvidence(anchor), _) => anchor }
+      val anchors = anchorRecords.collect { case EvidenceRecord(_, FeatureAnchorEvidence(anchor), _) =>
+        anchor
+      }
       val openingContextEvidence =
         contextRecord.collect { case EvidenceRecord(_, payload: OpeningContextEvidence, _) => payload }
       val applicabilityRecord =
         for
-          assessment <- assessApplicability(context, openingContextEvidence, input.beforePly, rootNode.ref, anchors)
+          assessment <- assessApplicability(openingContextEvidence, anchors)
           if assessment.canCertifyOpeningClaim
-        yield
-          applicabilityAssessmentRecord(
-            id = allocator.evidenceId("applicability:before"),
-            assessment = assessment,
-            position = rootNode.ref,
-            line = None,
-            scope = EvidenceScope.BeforePosition,
-            confidence = applicabilityConfidence(assessment),
-            parents = (contextRecord.map(_.ref).toList ++ anchorRecords.map(_.ref)).distinctBy(_.id)
-          )
-      contextRecord.filter(_ => applicabilityRecord.nonEmpty).toList ++ anchorRecords ++ applicabilityRecord.toList
+        yield applicabilityAssessmentRecord(
+          id = allocator.evidenceId("applicability:before"),
+          assessment = assessment,
+          position = rootNode.ref,
+          line = None,
+          scope = EvidenceScope.BeforePosition,
+          confidence = EvidenceConfidence.Mixed,
+          parents = (contextRecord.map(_.ref).toList ++ anchorRecords.map(_.ref)).distinctBy(_.id)
+        )
+      contextRecord
+        .filter(_ => applicabilityRecord.nonEmpty)
+        .toList ++ anchorRecords ++ applicabilityRecord.toList
     }
 
   private def strategicMechanismRecords(
@@ -1057,109 +634,149 @@ object EvidenceFactAssembler:
       allocator: JudgmentProvenanceAllocator
   ): List[EvidenceRecord] =
     val candidates =
-      context.evidenceGraph.records.flatMap { record =>
+      context.evidenceGraph.records.filter(context.evidenceGraph.proofEligible).flatMap { record =>
         StrategicMechanismEvidence.sourceMechanisms(record).map { case (kind, signal) =>
-          StrategicMechanismCandidate(kind, record.ref.position, record.ref.line, record.ref.scope, signal, record)
+          StrategicMechanismCandidate(
+            kind,
+            record.ref.position,
+            record.ref.line,
+            record.ref.scope,
+            signal,
+            record
+          )
         }
       }
     candidates
-      .groupBy(candidate => (candidate.kind, candidate.position, candidate.line, candidate.scope))
-      .toList
-      .flatMap { case ((kind, position, line, scope), grouped) =>
-        val routeRecords =
-          if kind != StrategicMechanismKind.Activity && kind != StrategicMechanismKind.Endgame then Nil
+      .distinctBy(_.exactKey)
+      .sortBy(_.idKey)
+      .flatMap { candidate =>
+        val transitionCarriers =
+          if candidate.kind != StrategicMechanismKind.PlanPressure ||
+            !candidate.source.payload.isInstanceOf[PlanCausalEventEvidence]
+          then Nil
           else
-            context.transitions
-              .filter(_.to == position)
-              .flatMap(edge =>
-                context.evidenceGraph.records.collect {
-                  case record @ EvidenceRecord(ref, payload: MoveMotifEvidence, _)
-                      if ref.position == edge.from &&
-                        ref.scope == edge.role.scope &&
-                        line.forall(ref.line.contains) &&
-                        transitionRecordMentionsMove(record, edge.moveUci) &&
-                        payload.isRootEvent &&
-                        (payload.motif.isInstanceOf[Motif.KingStep] || payload.motif.isInstanceOf[Motif.Castling]) =>
-                    record
-                }
-              )
-              .distinctBy(_.ref.id)
-        val lineBoundRouteContexts = routeRecords
-          .groupBy(record => (record.ref.line, record.ref.scope))
-          .toList
-          .collect { case ((Some(routeLine), routeScope), records) => (Some(routeLine), routeScope, records) }
-        val routeContexts =
-          if line.nonEmpty || lineBoundRouteContexts.isEmpty then List((line, scope, routeRecords))
-          else lineBoundRouteContexts
-        routeContexts.flatMap { case (mechanismLine, mechanismScope, ownedRouteRecords) =>
-          val routeSignals =
-            ownedRouteRecords.map(record =>
-              StrategicMechanismSignal(
-                StrategicMechanismSignalKind.StrategicFact,
-                "current-move-route",
-                record.ref,
-                1,
-                Some(StrategicAxisDetail(StrategicAxisKind.Activity, StrategicAxisPolarity.Support, "current-move-route"))
-              )
-            )
-          val signalSourceRecords = (grouped.map(_.source) ++ ownedRouteRecords).distinctBy(_.ref.id)
-          val planEventSourceIds = grouped.collect {
-            case candidate if candidate.source.payload.isInstanceOf[PlanCausalEventEvidence] => candidate.source.ref.id
-          }.toSet
-          val transitionCarriers =
-            if kind != StrategicMechanismKind.PlanPressure || planEventSourceIds.isEmpty then Nil
-            else
-              context.evidenceGraph.records.collect {
-                case record @ EvidenceRecord(ref, _: PlanTransitionEvidence, parents)
-                    if ref.line == mechanismLine &&
-                      ref.scope == mechanismScope &&
-                      parents.exists(parent => planEventSourceIds(parent.id)) =>
-                  record
-              }
-          val sourceRecords = (signalSourceRecords ++ transitionCarriers).distinctBy(_.ref.id)
-          val signals = (grouped.map(_.signal) ++ routeSignals).distinct
+            context.evidenceGraph.records.collect {
+              case record @ EvidenceRecord(ref, _: PlanTransitionEvidence, parents)
+                  if ref.line == candidate.line &&
+                    ref.scope == candidate.scope &&
+                    parents.exists(_.id == candidate.source.ref.id) &&
+                    context.evidenceGraph.proofEligible(record) =>
+                record
+            }
+        val routes =
+          if transitionCarriers.isEmpty then List(List(candidate.source))
+          else transitionCarriers.sortBy(_.ref.id).map(carrier => List(candidate.source, carrier))
+        routes.map { route =>
+          val sourceRecords = route.distinctBy(_.ref.id).sortBy(_.ref.id)
+          val signals = List(candidate.signal)
           val semanticAnchors =
             (
-              EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.StrategicMechanism, kind.toString) ::
+              EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.StrategicMechanism, candidate.kind.toString) ::
                 sourceRecords.flatMap(StrategicMechanismEvidence.sourceSemanticAnchors)
-            ).distinctBy(_.stableKey)
-          Option.when(signals.nonEmpty) {
-            val payload = StrategicMechanismEvidence(kind, signals, semanticAnchors)
-            val positionKey =
-              position.id.map(allocator.key).getOrElse(s"${position.ply}:${Integer.toHexString(position.fen.hashCode)}")
-            EvidenceRecord(
-              ref = EvidenceRef(
-                id = allocator.evidenceId(
-                  s"strategic-mechanism:${allocator.key(kind)}:$positionKey:${mechanismLine.map(line => allocator.key(line.rootMove)).getOrElse("position")}:${allocator.key(mechanismScope)}"
-                ),
-                producer = EvidenceProducer.StrategicMechanismProducer,
-                layer = EvidenceLayer.StrategicMechanism,
-                position = position,
-                line = mechanismLine,
-                scope = mechanismScope,
-                confidence = strategicMechanismConfidence(sourceRecords)
-              ),
-              payload = payload,
-              parents = sourceRecords.map(_.ref).distinctBy(_.id)
-            )
-          }
+            ).distinctBy(_.stableKey).sortBy(_.stableKey)
+          val positionKey =
+            candidate.position.id
+              .map(allocator.key)
+              .getOrElse(exactIdentityKey(List(candidate.position.ply.toString, candidate.position.fen)))
+          val routeKey = exactIdentityKey(
+            candidate.kind.toString ::
+              sourceRecords.map(record => s"carrier:${record.ref.id}") ++
+              signals.map(signal => s"signal:${strategicSignalKey(signal)}") ++
+              semanticAnchors.map(anchor => s"anchor:${anchor.stableKey}")
+          )
+          val ref = EvidenceRef(
+            id = allocator.evidenceId(
+              s"strategic-mechanism:${allocator.key(candidate.kind)}:$positionKey:${candidate.line.map(line => allocator.key(line.rootMove)).getOrElse("position")}:${allocator.key(candidate.scope)}:$routeKey"
+            ),
+            producer = EvidenceProducer.StrategicMechanismProducer,
+            layer = EvidenceLayer.StrategicMechanism,
+            position = candidate.position,
+            line = candidate.line,
+            scope = candidate.scope,
+            confidence = strategicMechanismConfidence(sourceRecords)
+          )
+          val parents = sourceRecords.map(_.ref)
+          val barePayload = StrategicMechanismEvidence(candidate.kind, signals, semanticAnchors)
+          val payload = barePayload.copy(
+            assemblyProof = Some(StrategicMechanismAssemblyProof.from(ref, parents, barePayload))
+          )
+          EvidenceRecord(
+            ref = ref,
+            payload = payload,
+            parents = parents
+          )
         }
       }
 
-  private final case class StrategicMechanismCandidate(
+  final private case class StrategicMechanismCandidate(
       kind: StrategicMechanismKind,
       position: PositionNodeRef,
       line: Option[LineNodeRef],
       scope: EvidenceScope,
       signal: StrategicMechanismSignal,
       source: EvidenceRecord
-  )
+  ):
+    def exactKey
+        : (StrategicMechanismKind, PositionNodeRef, Option[LineNodeRef], EvidenceScope, String, List[String]) =
+      (
+        kind,
+        position,
+        line,
+        scope,
+        strategicSignalKey(signal),
+        source.ref.id :: StrategicMechanismEvidence
+          .sourceSemanticAnchors(source)
+          .map(_.stableKey)
+          .distinct
+          .sorted
+      )
 
-  private def strategicMechanismConfidence(records: List[EvidenceRecord]): EvidenceConfidence =
+    def idKey: String =
+      exactIdentityKey(
+        List(
+          kind.toString,
+          position.id.getOrElse(position.fen),
+          position.ply.toString,
+          line.map(_.id).getOrElse("position"),
+          scope.toString,
+          strategicSignalKey(signal),
+          source.ref.id
+        ) ++ exactKey._6
+      )
+
+  private def strategicSignalKey(signal: StrategicMechanismSignal): String =
+    exactIdentityKey(
+      List(
+        signal.kind.toString,
+        signal.label,
+        signal.source.id,
+        signal.axisKey.getOrElse("none"),
+        signal.planResultAssessment
+          .map(_.resultRoute.stableKey)
+          .getOrElse("no-plan-result-route")
+      )
+    )
+
+  private def strategicMechanismConfidence(
+      records: List[EvidenceRecord]
+  ): EvidenceConfidence =
     if records.exists(_.ref.confidence == EvidenceConfidence.EngineBacked) then EvidenceConfidence.Mixed
-    else if records.forall(_.ref.confidence == EvidenceConfidence.BoardDerived) then EvidenceConfidence.BoardDerived
-    else if records.forall(_.ref.confidence == EvidenceConfidence.Heuristic) then EvidenceConfidence.Heuristic
+    else if records.forall(_.ref.confidence == EvidenceConfidence.BoardDerived) then
+      EvidenceConfidence.BoardDerived
     else EvidenceConfidence.Mixed
+
+  private def confidenceForParents(
+      context: JudgmentAssemblyContext,
+      parents: List[EvidenceRef]
+  ): EvidenceConfidence =
+    val confidences = parents
+      .flatMap(context.evidenceGraph.record)
+      .flatMap(record => record :: context.evidenceGraph.parentClosure(record))
+      .map(_.ref.confidence)
+      .distinct
+    confidences match
+      case confidence :: Nil => confidence
+      case _                 => EvidenceConfidence.Mixed
 
   private def openingContextParents(
       context: JudgmentAssemblyContext,
@@ -1167,60 +784,41 @@ object EvidenceFactAssembler:
   ): List[EvidenceRef] =
     val base =
       List(
-        EvidenceLayer.Board,
-        EvidenceLayer.MoveMotif
+        EvidenceLayer.PositionFeature,
+        EvidenceLayer.Relation
       ).flatMap(layer => evidenceRefs(context, layer, Some(position), None))
-    val pawnStructure =
-      context.evidenceGraph.records.collect {
-        case EvidenceRecord(ref, PawnStructureFactEvidence(profile, pawnPlay), _)
-            if ref.position == position &&
-              (profile.primary != lila.chessjudgment.model.structure.StructureId.Unknown ||
-                pawnPlay.exists(_.primaryDriver != PawnPlayDriver.Quiet)) =>
-          ref
-      }
-    (base ++ pawnStructure).distinctBy(_.id)
+    base.distinctBy(_.id)
 
   private def featureAnchorRecords(
       context: JudgmentAssemblyContext,
       node: PositionNode,
       allocator: JudgmentProvenanceAllocator
   ): List[EvidenceRecord] =
-    val boardParents =
-      evidenceRefs(context, EvidenceLayer.Board, Some(node.ref), None)
-    val featureAnchors =
-      boardFactEvidence(context, node.ref).toList.flatMap { boardFacts =>
-        boardOpeningFeatureAnchors(boardFacts).map(anchor => anchor -> boardParents)
-      }
     val evidenceAnchors =
       context.evidenceGraph.records
-        .filter(_.ref.position == node.ref)
+        .filter(record => record.ref.position == node.ref && context.evidenceGraph.proofEligible(record))
         .flatMap(evidenceFeatureAnchors)
-    (featureAnchors ++ evidenceAnchors)
+    evidenceAnchors
       .distinctBy { case (anchor, parents) =>
         (anchor.theme, anchor.signal, anchor.sourceLayer, parents.map(_.id).sorted.mkString("|"))
       }
       .map { case (anchor, parents) =>
+        val parentIds = parents.map(_.id).distinct.sorted
+        val parentKey =
+          if parentIds.isEmpty then "root"
+          else exactIdentityKey(parentIds.map(id => s"parent:$id"))
         featureAnchorRecord(
           id = allocator.evidenceId(
-            s"feature-anchor:${allocator.key(anchor.theme)}:${allocator.key(anchor.sourceLayer)}:${allocator.key(anchor.signal)}:${parents.headOption.map(parent => allocator.key(parent.id)).getOrElse("root")}"
+            s"feature-anchor:${allocator.key(anchor.theme)}:${allocator.key(anchor.sourceLayer)}:${allocator.key(anchor.signal)}:$parentKey"
           ),
           anchor = anchor,
           position = node.ref,
           line = None,
           scope = EvidenceScope.BeforePosition,
-          confidence = if anchor.isBoardObservation then EvidenceConfidence.BoardDerived else EvidenceConfidence.Mixed,
+          confidence = confidenceForParents(context, parents),
           parents = parents.distinctBy(_.id)
         )
       }
-
-  private def openingContextConfidence(
-      identity: Option[OpeningIdentity],
-      recognition: Option[OpeningRecognition],
-      openingPhase: Boolean
-  ): EvidenceConfidence =
-    if (identity.nonEmpty || recognition.nonEmpty) && openingPhase then EvidenceConfidence.Mixed
-    else if openingPhase || identity.nonEmpty || recognition.nonEmpty then EvidenceConfidence.BoardDerived
-    else EvidenceConfidence.Heuristic
 
   private def featureAnchorRecord(
       id: String,
@@ -1273,10 +871,7 @@ object EvidenceFactAssembler:
     )
 
   private def assessApplicability(
-      context: JudgmentAssemblyContext,
       contextEvidence: Option[OpeningContextEvidence],
-      beforePly: Int,
-      position: PositionNodeRef,
       anchors: List[FeatureAnchor]
   ): Option[ApplicabilityAssessment] =
     val observedThemes = anchors.map(_.theme).distinct
@@ -1284,15 +879,15 @@ object EvidenceFactAssembler:
       val priorSelections = contextEvidence.flatMap(_.themePriorSelection).toList
       val priorThemes = priorSelections.flatMap(_.prior.themes).distinct
       val supported = priorThemes.filter(theme =>
-        anchors.exists(anchor => anchor.theme == theme && proofSignalOpeningAnchor(anchor))
+        anchors.exists(_.theme == theme)
       )
       val unverified = priorThemes.filterNot(supported.contains)
       val observedOnly = observedThemes.filterNot(priorThemes.contains)
       val ambiguousRecognition = contextEvidence.flatMap(_.recognition).exists(_.candidates.drop(1).nonEmpty)
-      val applicability = featureApplicability(context, contextEvidence, beforePly, position, anchors, supported)
+      val applicability =
+        featureApplicability(contextEvidence, supported)
       val status =
-        if applicability == FeatureApplicability.Contraindicated then ApplicabilityStatus.Contradicted
-        else if priorThemes.isEmpty then ApplicabilityStatus.InternalOnly
+        if priorThemes.isEmpty then ApplicabilityStatus.InternalOnly
         else if ambiguousRecognition && supported.isEmpty then ApplicabilityStatus.Ambiguous
         else if supported.nonEmpty && unverified.nonEmpty then ApplicabilityStatus.PartiallySupported
         else if supported.nonEmpty then ApplicabilityStatus.Supported
@@ -1308,339 +903,50 @@ object EvidenceFactAssembler:
       )
     }
 
-  private def proofSignalOpeningAnchor(anchor: FeatureAnchor): Boolean =
-    anchor.canCorroborateOpeningPrior
-
   private def featureApplicability(
-      context: JudgmentAssemblyContext,
       contextEvidence: Option[OpeningContextEvidence],
-      beforePly: Int,
-      position: PositionNodeRef,
-      anchors: List[FeatureAnchor],
       supportedThemes: List[OpeningTheme]
   ): FeatureApplicability =
-    val features = boardFactEvidence(context, position).flatMap(_.positionFeatures)
-    val featurePhase = features.map(_.materialPhase.phase)
-    val openingPhase = featurePhase.contains("opening")
-    val openingWindow = beforePly <= OpeningRelevanceMaxPly
-    val middlegamePhase = featurePhase.contains("middlegame")
-    val endgamePhase = featurePhase.contains("endgame")
-    val hasOpeningContext =
-      contextEvidence.exists(context =>
-        context.identity.nonEmpty ||
-          context.recognition.nonEmpty ||
-          context.themePriorSelection.nonEmpty ||
-          context.signals.exists(signal =>
-            signal == OpeningContextSignal.InputIdentity ||
-              signal == OpeningContextSignal.RecognizedIdentity ||
-              signal == OpeningContextSignal.ThemePrior
-          )
-      )
-    val denseMaterial =
-      features.exists(features =>
-        features.imbalance.whiteQueens > 0 ||
-          features.imbalance.blackQueens > 0 ||
-          features.imbalance.whiteKnights + features.imbalance.blackKnights +
-            features.imbalance.whiteBishops + features.imbalance.blackBishops >= 4 ||
-          features.materialPhase.whiteMaterial + features.materialPhase.blackMaterial >= 48
-      )
-    val openingSensitiveTheme =
-      anchors.exists(anchor =>
-        anchor.theme == OpeningTheme.Development ||
-          anchor.theme == OpeningTheme.GambitInitiative ||
-          anchor.theme == OpeningTheme.KingSafety ||
-          anchor.theme == OpeningTheme.CenterControl
-      )
-    val themePriorSupportedByInternalAnchor = supportedThemes.nonEmpty
-    if endgamePhase && !openingWindow then FeatureApplicability.EndgameRelevant
-    else if openingPhase && !openingWindow && themePriorSupportedByInternalAnchor then FeatureApplicability.MiddlegameRelevant
-    else if endgamePhase && openingSensitiveTheme && !themePriorSupportedByInternalAnchor then FeatureApplicability.Contraindicated
-    else if openingWindow && denseMaterial && openingSensitiveTheme && themePriorSupportedByInternalAnchor then
-      FeatureApplicability.OpeningRelevant
-    else if openingWindow && themePriorSupportedByInternalAnchor then FeatureApplicability.OpeningRelevant
-    else if endgamePhase then FeatureApplicability.EndgameRelevant
-    else if hasOpeningContext || middlegamePhase || anchors.exists(anchor => anchor.sourceLayer == EvidenceLayer.PlanPressure || anchor.sourceLayer == EvidenceLayer.Strategic) then
-      FeatureApplicability.MiddlegameRelevant
+    val hasOpeningContext = contextEvidence.exists(opening =>
+      opening.identity.nonEmpty || opening.recognition.nonEmpty || opening.themePriorSelection.nonEmpty
+    )
+    if hasOpeningContext && supportedThemes.nonEmpty then FeatureApplicability.OpeningRelevant
     else FeatureApplicability.ObservedOnly
 
-  private def applicabilityConfidence(assessment: ApplicabilityAssessment): EvidenceConfidence =
-    assessment.status match
-      case ApplicabilityStatus.Supported | ApplicabilityStatus.PartiallySupported =>
-        EvidenceConfidence.Mixed
-      case ApplicabilityStatus.InternalOnly =>
-        EvidenceConfidence.BoardDerived
-      case ApplicabilityStatus.Unverified | ApplicabilityStatus.Ambiguous |
-          ApplicabilityStatus.Contradicted =>
-        EvidenceConfidence.Heuristic
-
-  private def boardOpeningFeatureAnchors(boardFacts: BoardFactEvidence): List[FeatureAnchor] =
-    boardFacts
-      .openingContextAnchors
-      .flatMap(boardOpeningFeatureAnchor)
-      .distinctBy(anchor => (anchor.theme, anchor.signal, anchor.sourceLayer))
-
-  private def boardOpeningFeatureAnchor(anchor: BoardAnchor): Option[FeatureAnchor] =
-    anchor.kind match
-      case BoardAnchorKind.CenterControl | BoardAnchorKind.Space =>
-        Some(FeatureAnchor(OpeningTheme.CenterControl, FeatureAnchorSignal.CenterControlObserved, EvidenceLayer.Board, anchor.confidence.max(0.6)))
-      case BoardAnchorKind.Development | BoardAnchorKind.Activity =>
-        Some(FeatureAnchor(OpeningTheme.Development, FeatureAnchorSignal.DevelopmentTempoObserved, EvidenceLayer.Board, anchor.confidence.max(0.55)))
-      case BoardAnchorKind.PawnStructure =>
-        Some(FeatureAnchor(OpeningTheme.PawnStructure, FeatureAnchorSignal.PawnStructureObserved, EvidenceLayer.Board, anchor.confidence.max(0.55)))
-      case BoardAnchorKind.KingSafety =>
-        Some(FeatureAnchor(OpeningTheme.KingSafety, FeatureAnchorSignal.KingSafetyObserved, EvidenceLayer.Board, anchor.confidence.max(0.5)))
-      case BoardAnchorKind.FileControl | BoardAnchorKind.BatteryPressure | BoardAnchorKind.WeakSquare =>
-        Some(FeatureAnchor(OpeningTheme.PlanPressure, FeatureAnchorSignal.LinePressureObserved, EvidenceLayer.Board, anchor.confidence.max(0.5)))
-      case BoardAnchorKind.CounterplayRestraint | BoardAnchorKind.LooseMaterial |
-          BoardAnchorKind.PinPressure | BoardAnchorKind.SkewerPressure | BoardAnchorKind.ForkPressure |
-          BoardAnchorKind.XRayPressure | BoardAnchorKind.Outpost | BoardAnchorKind.EndgameTechnique =>
-        None
 
   private def evidenceFeatureAnchors(record: EvidenceRecord): List[(FeatureAnchor, List[EvidenceRef])] =
     record.payload match
-      case PawnStructureFactEvidence(profile, pawnPlay)
-          if profile.primary != lila.chessjudgment.model.structure.StructureId.Unknown ||
-            pawnPlay.exists(_.primaryDriver != PawnPlayDriver.Quiet) =>
-        val signal =
-          pawnPlay match
-            case Some(play) if play.pawnBreakReady || play.primaryDriver == PawnPlayDriver.BreakReady =>
-              FeatureAnchorSignal.PawnBreakObserved
-            case Some(play)
-                if play.advanceOrCapture ||
-                  play.primaryDriver == PawnPlayDriver.TensionCritical ||
-                  play.primaryDriver == PawnPlayDriver.TensionActive =>
-              FeatureAnchorSignal.CentralTensionObserved
-            case _ =>
-              FeatureAnchorSignal.PawnStructureObserved
-        List(
-          FeatureAnchor(
-            OpeningTheme.PawnStructure,
-            signal,
-            EvidenceLayer.PawnStructure,
-            profile.confidence.max(0.6)
-          ) -> (record.ref :: record.parents)
-        )
-      case payload: PlanPressureEvidence
-          if payload.activePlans.primary.plan.category == PlanCategory.Opening ||
-            payload.activePlans.secondary.exists(_.plan.category == PlanCategory.Opening) ||
-            payload.activePlans.compatibilityEvents.exists(_.adjustment == CompatibilityAdjustment.OpeningPhase) =>
-        val activePlans = payload.activePlans
-        List(
-          FeatureAnchor(
-            OpeningTheme.PlanPressure,
-            FeatureAnchorSignal.PlanPressureObserved,
-            EvidenceLayer.PlanPressure,
-            activePlans.primary.score.max(0.6)
-          ) -> (record.ref :: record.parents)
-        )
       case payload: StructuralDeltaEvidence if payload.hasTypedOutput =>
-        val hasOpeningLinePressure =
-          payload.hasAnyConsequence(
-            Set(
-              TransitionConsequenceKind.LineUnlockGain,
-              TransitionConsequenceKind.FileAccessGain,
-              TransitionConsequenceKind.RookLiftActivation,
-              TransitionConsequenceKind.BatteryPressureGain,
-              TransitionConsequenceKind.KingRingPressureGain,
-              TransitionConsequenceKind.OutpostGain
-            )
-          )
-        val center =
-          Option.when(
-            payload.hasConsequenceCategory(TransitionConsequenceCategory.OpeningCenterControl)
-          )(
-            FeatureAnchor(
-              OpeningTheme.CenterControl,
-              FeatureAnchorSignal.StructuralDeltaObserved,
-              EvidenceLayer.StructuralDelta,
-              0.65
-            )
-          )
-        val pressure =
-          Option.when(payload.hasTargetPressureGain || hasOpeningLinePressure)(
-            FeatureAnchor(
-              OpeningTheme.PlanPressure,
-              if hasOpeningLinePressure then FeatureAnchorSignal.LinePressureObserved
-              else FeatureAnchorSignal.StructuralDeltaObserved,
-              EvidenceLayer.StructuralDelta,
-              if payload.hasTargetPressureGain then 0.66 else 0.62
-            )
-        )
-        val structure =
-          val hasPawnStructureAnchor =
-            payload.hasConsequenceCategory(TransitionConsequenceCategory.PawnStructure) ||
-              payload.hasConsequence(TransitionConsequenceKind.PawnTensionResolution)
-          val signal =
-            if payload.hasAnyConsequence(
-                Set(
-                  TransitionConsequenceKind.PawnTensionGain,
-                  TransitionConsequenceKind.PawnTensionResolution
-                )
-              )
-            then FeatureAnchorSignal.CentralTensionObserved
-            else if payload.hasAnyConsequence(
-                Set(
-                  TransitionConsequenceKind.OpenFileGain,
-                  TransitionConsequenceKind.SemiOpenFileGain,
-                  TransitionConsequenceKind.FileOccupationGain
-                )
-              )
-            then FeatureAnchorSignal.LinePressureObserved
-            else FeatureAnchorSignal.PawnStructureObserved
+        val hasPawnStructureAnchor =
+          payload.hasConsequenceCategory(TransitionConsequenceCategory.PawnStructure) ||
+            payload.hasConsequence(TransitionConsequenceKind.PawnTensionResolution)
+        val pawnStructure =
           Option.when(hasPawnStructureAnchor)(
             FeatureAnchor(
               OpeningTheme.PawnStructure,
-              signal,
-              EvidenceLayer.StructuralDelta,
-              0.65
+              FeatureAnchorSignal.PawnStructureObserved,
+              EvidenceLayer.StructuralDelta
             )
           )
-        val development =
-          Option.when(payload.hasConsequenceCategory(TransitionConsequenceCategory.OpeningDevelopment))(
-            FeatureAnchor(
-              OpeningTheme.Development,
-              if payload.hasConsequence(TransitionConsequenceKind.DevelopmentLagReduced) then
-                FeatureAnchorSignal.DevelopmentLagObserved
-              else FeatureAnchorSignal.DevelopmentTempoObserved,
-              EvidenceLayer.StructuralDelta,
-              0.62
-            )
-          )
-        val kingSafety =
-          Option.when(payload.hasKingSafetyPressure || payload.hasConsequence(TransitionConsequenceKind.KingRingPressureGain))(
-            FeatureAnchor(
-              OpeningTheme.KingSafety,
-              FeatureAnchorSignal.StructuralDeltaObserved,
-              EvidenceLayer.StructuralDelta,
-              0.66
-            )
-          )
-        List(center, pressure, structure, development, kingSafety).flatten.map(_ -> (record.ref :: record.parents))
-      case payload @ StrategicFactEvidence(kind, facts, relatedPlans, confidence, _)
-          if payload.hasTypedSupport && (facts.nonEmpty || relatedPlans.nonEmpty) =>
-        val theme =
-          kind match
-            case StrategicFactKind.Space        => Some(OpeningTheme.CenterControl)
-            case StrategicFactKind.Activity     => Some(OpeningTheme.Development)
-            case StrategicFactKind.Compensation => Some(OpeningTheme.GambitInitiative)
-            case StrategicFactKind.Structure    => Some(OpeningTheme.PawnStructure)
-            case StrategicFactKind.PlanPressure => Some(OpeningTheme.PlanPressure)
-            case _                              => None
-        theme
-          .map(openingTheme =>
-            FeatureAnchor(
-              openingTheme,
-              FeatureAnchorSignal.PlanPressureObserved,
-              EvidenceLayer.Strategic,
-              confidence.max(0.55)
-            ) -> (record.ref :: record.parents)
-          )
-          .toList
-      case _ => Nil
-
-  private def planPressureRecords(
-      input: NormalizedMoveReviewInput,
-      context: JudgmentAssemblyContext,
-      allocator: JudgmentProvenanceAllocator
-  ): List[EvidenceRecord] =
-    val mover = context.position(PositionNodeRole.Before).flatMap(_.ref.sideToMove).orElse(input.sideToMove)
-    val snapshots = mover.toList.flatMap { side =>
-      context.positions.flatMap { node =>
-        val incoming = context.transitions.find(_.to == node.ref)
-        val line =
-          if node.role == PositionNodeRole.Before then context.line(LineNodeRole.BestReference)
-          else incoming.flatMap(lineForTransition(context, _))
-        val motifs =
-          if node.role == PositionNodeRole.Before then motifsForLineRole(context, LineNodeRole.BestReference)
-          else
-            incoming.toList.flatMap { edge =>
-              context.evidenceGraph.records.collect {
-                case EvidenceRecord(ref, payload: MoveMotifEvidence, _)
-                    if payload.isRootEvent &&
-                      EvidenceRef.sameMove(payload.rootMove, edge.moveUci) &&
-                      line.forall(candidate => ref.line.contains(candidate.ref)) =>
-                  payload.motif
-              }
-            }.distinct
-        val snapshot = for
-          candidateLine <- line
-          engineLine <- candidateLine.evaluation.engineLine
-          features <- positionFeatures(context, node.ref)
-          initialPosition <- Fen.read(Standard, Fen.Full(node.ref.fen))
-        yield
-          val positionThreatRecords = threatEpisodeRecords(context, node.ref)
-          val positionThreatEpisodes = positionThreatRecords.map(_._2.episode)
-          val threatsToUs = positionThreatEpisodes.filter(episode =>
-            episode.sideUnderPressure == side && episode.threatActor == !side
-          )
-          val threatsToThem = positionThreatEpisodes.filter(episode =>
-            episode.sideUnderPressure == !side && episode.threatActor == side
-          )
-          val pawnStructureRecord = pawnStructureRecordFor(context, node.ref)
-          val pawnStructure = pawnStructureRecord.map(_._2)
-          val rootPosition =
-            incoming
-              .flatMap(edge => Fen.read(Standard, Fen.Full(edge.from.fen)))
-              .getOrElse(initialPosition)
-          val planContext =
-            PlanInteractionContext(
-              whitePovEvalCp = engineLine.scoreCp,
-              positionFeatures = Some(features),
-              candidateLineAvailable = true,
-              pawnAnalysis = pawnStructure.flatMap(_.pawnPlay).filter(_ => node.ref.sideToMove.contains(side)),
-              threatEpisodesToUs = threatsToUs,
-              threatEpisodesToThem = threatsToThem,
-              initialPos = Some(rootPosition),
-              rootMove = Some(candidateLine.ref.rootMove),
-              structureProfile = pawnStructure.map(_.profile)
-            )
-          val scoring = PlanMatcher.matchPlans(motifs, planContext, side)
-          val alignment =
-            for
-              pawn <- pawnStructure
-              entry <- StructuralPlaybook.lookup(pawn.profile.primary)
-            yield PlanAlignmentScorer.score(
-              structureProfile = pawn.profile,
-              playbookEntry = entry,
-              topPlans = scoring.topPlans,
-              motifs = motifs,
-              pawnAnalysis = pawn.pawnPlay,
-              sideToMove = side
-            )
-          PlanMatcher.toActivePlans(scoring.topPlans, scoring.compatibilityEvents).map { activePlans =>
-            val planMotifs = activePlans.allPlans.flatMap(_.evidence.map(_.motif)).toSet
-            val planMotifParents = context.evidenceGraph.records.collect {
-              case EvidenceRecord(motifRef, payload: MoveMotifEvidence, _)
-                  if planMotifs(payload.motif) &&
-                    line.forall(candidate => motifRef.line.contains(candidate.ref)) =>
-                motifRef
-            }
-            val planPressure =
-              StrategicFactNormalizer.fromPlanPressure(
-                id = allocator.evidenceId(s"plan-pressure:${allocator.positionKey(node.role, node.ref.fen, node.ref.ply)}"),
-                scoring = scoring,
-                activePlans = activePlans,
-                alignment = alignment,
-                position = node.ref,
-                line = line.map(_.ref),
-                scope = node.role.scope,
-                parents = (
-                  evidenceRefs(context, EvidenceLayer.Board, Some(node.ref), None) ++
-                    evidenceRefs(context, EvidenceLayer.PawnStructure, Some(node.ref), None) ++
-                    positionThreatRecords.map(_._1.ref) ++
-                    planMotifParents ++
-                    incoming.toList.flatMap(edge =>
-                      List(edge.evidence) ++
-                        evidenceRefs(context, EvidenceLayer.StructuralDelta, Some(edge.from), line.map(_.ref))
-                    )
-                ).distinctBy(_.id)
+        val pawnTension =
+          Option.when(
+            payload.hasAnyConsequence(
+              Set(
+                TransitionConsequenceKind.PawnTensionCreated,
+                TransitionConsequenceKind.PawnTensionResolution
               )
-            node.ref -> planPressure
-          }
-        snapshot.flatten
-      }
-    }.toMap
-    snapshots.values.toList
+            )
+          )(
+            FeatureAnchor(
+              OpeningTheme.PawnStructure,
+              FeatureAnchorSignal.PawnTensionObserved,
+              EvidenceLayer.StructuralDelta
+            )
+          )
+        List(pawnStructure, pawnTension).flatten.map(
+          _ -> (record.ref :: record.parents)
+        )
+      case _ => Nil
 
   private def planTransitionRecords(
       context: JudgmentAssemblyContext,
@@ -1648,18 +954,22 @@ object EvidenceFactAssembler:
   ): List[EvidenceRecord] =
     val graph = context.evidenceGraph
     val authoritativeEvents = graph.records.collect {
-      case record @ EvidenceRecord(ref, event: PlanCausalEventEvidence, _)
-          if ref.confidence != EvidenceConfidence.Heuristic =>
+      case record @ EvidenceRecord(_, event: PlanCausalEventEvidence, _)
+          if graph.proofEligible(record) =>
         record -> event
     }
-    authoritativeEvents
+    val produced = authoritativeEvents
       .flatMap { case (eventRecord, event) =>
-        event.planSequenceSummary.map { summary =>
+        event.planSequenceProofs.map { proof =>
+          val occurrence = PlanTransitionProductionOccurrence(
+            eventRecord = eventRecord.ref,
+            proof = proof
+          )
           TransitionFactNormalizer.fromPlanTransition(
             id = allocator.evidenceId(
-              s"plan-transition:${allocator.key(event.rootLine.role)}:${event.rootMove}:${allocator.key(event.planId.id)}"
+              s"plan-transition:${occurrence.idKey}"
             ),
-            transition = summary,
+            proof = proof,
             position = event.rootTransition.from,
             line = Some(event.rootLine),
             scope = eventRecord.ref.scope,
@@ -1668,107 +978,26 @@ object EvidenceFactAssembler:
           )
         }
       }
-      .distinctBy(_.ref.id)
+    val duplicateIds = produced
+      .groupMapReduce(_.ref.id)(_ => 1)(_ + _)
+      .collect { case (id, count) if count > 1 => id }
+      .toList
+      .sorted
+    require(
+      duplicateIds.isEmpty,
+      s"plan transition producer emitted duplicate exact evidence ids: ${duplicateIds.mkString(", ")}"
+    )
+    produced.sortBy(_.ref.id)
 
-  private def motifsForLineRole(context: JudgmentAssemblyContext, role: LineNodeRole): List[Motif] =
-    context.line(role).map(_.ref).flatMap { lineRef =>
-      Some(context.evidenceGraph.records.collect {
-        case EvidenceRecord(ref, payload: MoveMotifEvidence, _) if ref.line.contains(lineRef) => payload.motif
-      })
-    }.getOrElse(Nil)
-
-  private def urgentStateThreatMotifs(fen: String, ply: Int): List[Motif] =
-    Fen.read(Standard, Fen.Full(fen)).map { position =>
-      MoveAnalyzer.detectStateMotifs(position, ply).filter {
-        case m: Motif.Check =>
-          m.checkType == Motif.CheckType.Mate || m.checkType == Motif.CheckType.Smothered
-        case _: Motif.BackRankMate | _: Motif.MateNet | _: Motif.SmotheredMate =>
-          true
-        case _ =>
-          false
-      }
-    }.getOrElse(Nil)
-
-  private def pawnPlayMotifsForPosition(context: JudgmentAssemblyContext, role: PositionNodeRole): List[Motif] =
-    role match
-      case PositionNodeRole.AfterPlayed =>
-        motifsForLineRole(context, LineNodeRole.Played)
-      case PositionNodeRole.AfterReference =>
-        motifsForLineRole(context, LineNodeRole.BestReference)
-      case PositionNodeRole.AfterAlternative =>
-        motifsForLineRole(context, LineNodeRole.Alternative)
-      case PositionNodeRole.AfterThreat =>
-        motifsForLineRole(context, LineNodeRole.Threat)
-      case PositionNodeRole.Before =>
-        motifsForLineRole(context, LineNodeRole.BestReference)
-
-  private def motifsForLineNode(context: JudgmentAssemblyContext, line: CandidateLineNode): List[Motif] =
-    context.evidenceGraph.records.collect {
-      case EvidenceRecord(ref, payload: MoveMotifEvidence, _) if ref.line.contains(line.ref) => payload.motif
-    }
-
-  private def startPositionForLine(
-      input: NormalizedMoveReviewInput,
-      context: JudgmentAssemblyContext,
-      root: PositionNode,
-      line: CandidateLineNode
-  ): PositionNode =
-    if line.role != LineNodeRole.Threat then root
-    else
-      input.threatBranches
-        .find(branch => branch.lines.exists(normalizedLineMatches(_, line)))
-        .flatMap(branch =>
-          context.positions.find(position =>
-            position.role == PositionNodeRole.AfterThreat && position.ref.fen == branch.branchFen
-          )
-        )
-        .getOrElse(root)
-
-  private def lineNodeForNormalized(
-      context: JudgmentAssemblyContext,
-      normalized: NormalizedCandidateLine
-  ): Option[CandidateLineNode] =
-    context.lines.find(line => normalizedLineMatches(normalized, line))
-
-  private def normalizedLineMatches(normalized: NormalizedCandidateLine, line: CandidateLineNode): Boolean =
-    normalized.role == line.role &&
-      normalized.rank == line.ref.rank &&
-      normalized.rootMove.contains(line.ref.rootMove)
-
-  private def moveStructureInputs(moveUci: String): (List[Char], List[String], Option[String]) =
-    val normalized = MoveReviewInputNormalizer.normalizeUci(moveUci)
-    val destination = normalized.slice(2, 4)
-    val files = ('a' to 'h').toList
-    val createdTensionFrom = Option.when(destination.matches("[a-h][1-8]"))(destination)
-    (files, Nil, createdTensionFrom)
-
-  private def pawnStructureRecordFor(
-      context: JudgmentAssemblyContext,
-      position: PositionNodeRef
-  ): Option[(EvidenceRecord, PawnStructureFactEvidence)] =
-    context.evidenceGraph.records.collectFirst {
-      case record @ EvidenceRecord(ref, payload: PawnStructureFactEvidence, _) if ref.position == position =>
-        record -> payload
-    }
-
-  private def threatEpisodeRecords(
-      context: JudgmentAssemblyContext,
-      position: PositionNodeRef
-  ): List[(EvidenceRecord, ThreatEpisodeEvidence)] =
-    context.evidenceGraph.records.collect {
-      case record @ EvidenceRecord(ref, payload: ThreatEpisodeEvidence, _)
-          if ref.position == position =>
-        record -> payload
-    }
-
-  private def transitionParents(
-      context: JudgmentAssemblyContext,
-      edge: MoveTransitionEdge,
-      line: Option[CandidateLineNode]
-  ): List[EvidenceRef] =
-    List(edge.evidence) ++
-      line.toList.flatMap(lineParents(context, _)) ++
-      evidenceRefs(context, EvidenceLayer.Board, Some(edge.from), None)
+  private def relationSourceNodes(
+      closedRelations: CanonicalRelationTransitionInventory,
+      relation: RelationFactEvidence
+  ): List[CanonicalRelationNode] =
+    closedRelations.sourceNodesFor(relation).getOrElse(
+      throw IllegalArgumentException(
+        s"closed relation '${relation.semanticId}' has no exact occurrence binding"
+      )
+    )
 
   private def lineParents(
       context: JudgmentAssemblyContext,
@@ -1795,4 +1024,4 @@ object EvidenceFactAssembler:
       context: JudgmentAssemblyContext,
       edge: MoveTransitionEdge
   ): Option[CandidateLineNode] =
-    context.lines.find(line => line.role == edge.role.lineRole && line.ref.rootMove == edge.moveUci)
+    context.lineForRootTransition(edge)

@@ -54,7 +54,9 @@ object page:
           ctx.blind.option(cssTag("bits.blind")),
           p.cssKeys.map(cssTag),
           meta(
-            content := p.openGraph.fold("Chesstory - Chess review that keeps the board in view")(o => o.description),
+            content := p.openGraph.fold(
+              "Chesstory explains why a chess position changed, move by move, with the engine evidence beside it."
+            )(o => o.description),
             name := "description"
           ),
           link(rel := "mask-icon", href := staticAssetUrl("logo/chesstory.svg"), attr("color") := "black"),
@@ -137,7 +139,9 @@ object page:
           p.pageModule.map { mod =>
             frag(
               jsonScript(mod.data),
-              ctx.nonce.map(n => embedJsUnsafe(s"site.load.then(() => site.asset.loadEsmPage('${mod.name}'))")(n.some))
+              ctx.nonce.map(n =>
+                embedJsUnsafe(s"site.load.then(() => site.asset.loadEsmPage('${mod.name}'))")(n.some)
+              )
             )
           }
         )

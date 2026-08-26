@@ -42,7 +42,7 @@ const moveReviewEngineManifests: Readonly<Record<MoveReviewEngineProfile, MoveRe
       requires: ['sharedMem', 'simd', 'dynamicImportFromWorker'],
     },
     assets: {
-      version: '0.2.3',
+      version: '0.4.2',
       root: 'npm/stockfish-web',
       js: 'sf_18_smallnet.js',
       wasm: 'sf_18_smallnet.wasm',

@@ -90,7 +90,11 @@ object help:
         h2("Start a task"),
         resourcePageBits.linkRows(
           List(
-            ("Analyze a game", "Paste a score or start from the board.", routes.UserAnalysis.index.url),
+            (
+              "Review a game",
+              "Paste a PGN and work through why key positions changed.",
+              routes.UserAnalysis.index.url
+            ),
             (
               "Import a game",
               "Paste PGN, choose a file, or browse a public account.",
@@ -115,7 +119,7 @@ object help:
             "Service" -> frag(
               "The readiness endpoint is available at ",
               code("/healthz"),
-              ". A public status page will be added with production monitoring."
+              "."
             ),
             "Policies" -> frag(
               a(href := routes.Main.privacy.url)("Privacy"),
@@ -130,9 +134,6 @@ object help:
     )
 
 object pricing:
-  private def row(feature: String, beta: String, paid: String) =
-    tr(th(attr("scope") := "row")(feature), td(beta), td(paid))
-
   def apply()(using @unused ctx: Context): Page =
     resourcePageBits.shell(
       "Beta Access / Pricing - Chesstory",
@@ -145,50 +146,6 @@ object pricing:
           "The beta is for reviewing one game at a time: board, engine evidence, and saved study work when you are signed in."
         ),
         resourcePageBits.actionRow(List(("Start a review", routes.UserAnalysis.index.url, "button")))
-      ),
-      st.section(cls := "legal-section")(
-        h2("Feature comparison"),
-        div(
-          cls := "legal-table-wrap",
-          role := "region",
-          attr("tabindex") := "0",
-          attr("aria-label") := "Pricing feature comparison"
-        )(
-          table(cls := "legal-comparison")(
-            thead(tr(th("Feature"), th("Free beta"), th("Paid plans"))),
-            tbody(
-              row("Board and PGN review", "Available", "Not sold separately"),
-              row("Engine evidence", "Score, depth, and candidate lines", "Same board evidence"),
-              row("Saved studies", "Available when signed in", "Limits will be published before launch"),
-              row("Billing", "No card, renewal, or charge", "Terms shown before any charge"),
-              row("Refunds", "No charge, so no refund process", "Policy shown before checkout")
-            )
-          )
-        )
-      ),
-      st.section(cls := "legal-section")(
-        h2("Before any paid plan"),
-        p(
-          "Prices, review limits, billing interval, renewal terms, cancellation, and refund terms will be published before a subscription is offered."
-        ),
-        resourcePageBits.actionRow(
-          List(
-            (
-              "Read beta feedback",
-              routes.BetaFeedback
-                .formPage(
-                  "general",
-                  "paid_plan_waitlist",
-                  "pricing_page",
-                  routes.Main.pricing.url,
-                  notify = true
-                )
-                .url,
-              "button button-empty"
-            ),
-            ("Read trust details", routes.Main.trust.url, "button button-empty")
-          )
-        )
       )
     )
 
@@ -260,81 +217,47 @@ object trust:
       )
     )
 
+private[pages] object ReviewExample:
+  val fen = "r1bq1rk1/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQ1RK1 w - - 4 6"
+  val move = "6. h3"
+  val opening = "Italian Game"
+  val line = "6. c3 d6 7. d4"
+  val explanation =
+    "6. h3 prevents ...Bg4, but it does not prepare the central break. " +
+      "6. c3 supports d4 immediately; after 6...d6, 7. d4 challenges e5 with the break prepared."
+  val lesson = "Prepare the support for a central break before playing the break itself."
+
 object examples:
-  private def sample(
-      title: String,
-      players: String,
-      result: String,
-      opening: String,
-      topic: String,
-      length: String,
-      fen: String
-  ): Frag =
-    st.article(cls := "legal-example")(
-      chessgroundMini(fen, chess.White, None)(
-        div(cls := "legal-example__board", role := "img", aria.label := s"Sample board for $title")
-      ),
-      div(cls := "legal-example__copy")(
-        h3(title),
-        dl(
-          div(dt("Players"), dd(players)),
-          div(dt("Result"), dd(result)),
-          div(dt("Opening"), dd(opening)),
-          div(dt("Topic"), dd(topic)),
-          div(dt("Length"), dd(length))
-        ),
-        p("Open the board to inspect the position before reviewing your own game."),
-        a(href := routes.UserAnalysis.index.url)("Open analysis board")
-      )
-    )
 
   def apply()(using @unused ctx: Context): Page =
     resourcePageBits.shell(
-      "Examples - Chesstory",
-      "Review examples",
-      "Sample positions with game details and a question to study."
+      "Explained example - Chesstory",
+      "A move sequence, explained",
+      "See how Chesstory connects the move under review, a reference line, and a reusable lesson."
     )(
       st.section(cls := "legal-section")(
-        h2("Positions worth reviewing"),
+        h2(s"${ReviewExample.opening}: prepare the central break"),
         div(cls := "legal-example-list")(
-          sample(
-            "Opening transition",
-            "White vs Black",
-            "1–0",
-            "Italian Game",
-            "Prepare the central break",
-            "22 moves",
-            "r1bq1rk1/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQ1RK1 w - - 4 6"
-          ),
-          sample(
-            "Middlegame plan",
-            "White vs Black",
-            "½–½",
-            "Queen's Gambit Declined",
-            "Improve the worst piece before changing the structure",
-            "38 moves",
-            "r2q1rk1/pp1nbppp/2p1pn2/3p4/3P4/2NBPN2/PPQ2PPP/R3K2R w KQ - 3 9"
-          ),
-          sample(
-            "Critical decision",
-            "White vs Black",
-            "0–1",
-            "Sicilian Defence",
-            "Compare a tactical move with the safer resource",
-            "29 moves",
-            "r1bq1rk1/pp3ppp/2nbpn2/3p4/3P4/2NBPN2/PPQ2PPP/R3K2R w KQ - 4 9"
-          )
-        )
-      ),
-      st.section(cls := "legal-section")(
-        h2("Use an example as a checklist"),
-        resourcePageBits.factRows(
-          List(
-            "Board" -> frag("Keep the move and the resulting position together."),
-            "Metadata" -> frag(
-              "Record player, result, opening, topic, and length before interpreting the game."
+          st.article(cls := "legal-example")(
+            chessgroundMini(ReviewExample.fen, chess.White, None)(
+              div(
+                cls := "legal-example__board",
+                role := "img",
+                aria.label := "Italian Game position after 5...O-O"
+              )
             ),
-            "Preview" -> frag("Open the board before deciding whether the position deserves a saved study.")
+            div(cls := "legal-example__copy")(
+              h3("Why 6. c3 comes before 7. d4"),
+              dl(
+                div(dt("Move under review"), dd(ReviewExample.move)),
+                div(dt("Reference line"), dd(ReviewExample.line))
+              ),
+              p(ReviewExample.explanation),
+              p(strong("Lesson: "), ReviewExample.lesson),
+              resourcePageBits.actionRow(
+                List(("Review your own game", routes.UserAnalysis.index.url, "button"))
+              )
+            )
           )
         )
       )

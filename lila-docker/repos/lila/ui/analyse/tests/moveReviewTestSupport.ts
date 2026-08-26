@@ -1,5 +1,5 @@
 import { moveReviewEngineProfile, type MoveReviewEngineProfile } from 'lib/ceval/types';
-import type { MoveReviewCompactReceipt, MoveReviewSubject } from '../src/moveReview';
+import type { MoveReviewSubject } from '../src/moveReview';
 
 export const initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1' as FEN;
 export const beforeFen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1' as FEN;
@@ -21,210 +21,51 @@ export const subject: MoveReviewSubject = {
   after: { path: 'aabb', fen: afterFen },
 };
 
-type RawSnapshotState = 'awaiting_core' | 'awaiting_evidence' | 'completed';
-
-export function compactReceipt(workId: 'work:0' | 'work:1'): MoveReviewCompactReceipt {
-  const comparison = workId === 'work:1';
-  return {
-    kind: 'completed',
-    workId,
-    executionKeySha256: comparison ? 'b'.repeat(64) : 'a'.repeat(64),
-    rootRestriction: comparison
-      ? { kind: 'restricted', movesUci: ['c7c5', 'e7e5'] }
-      : { kind: 'unrestricted' },
-    searchLimits: {
-      depth: 16,
-      nodes: comparison ? 2_000_000 : 5_000_000,
-      movetimeMs: comparison ? 2_500 : 5_000,
-      multiPv: 2,
-    },
-    maxSearchElapsedMs: comparison ? 3_500 : 6_000,
-    completedDepth: 16,
-    nodes: 100_000,
-    engineTimeMs: 500,
-    executorElapsedMs: 550,
-  };
+export function decodeContext(engineProfile: MoveReviewEngineProfile = moveReviewEngineProfile) {
+  return { requestId, subject, engineProfile };
 }
-
-export function failedCompactReceipt(workId: 'work:0' | 'work:1'): MoveReviewCompactReceipt {
-  const completed = compactReceipt(workId);
-  return {
-    kind: 'executor_failed',
-    workId: completed.workId,
-    executionKeySha256: completed.executionKeySha256,
-    rootRestriction: completed.rootRestriction,
-    searchLimits: completed.searchLimits,
-    maxSearchElapsedMs: completed.maxSearchElapsedMs,
-    executorElapsedMs: 1,
-    observedNodes: 0,
-    engineTimeMs: 0,
-    failureCode: 'fixture_failure',
-    diagnostic: 'Fixture engine failure.',
-  };
-}
-
-export function decodeContext(
-  reportedReceipts: readonly MoveReviewCompactReceipt[] = [compactReceipt('work:0'), compactReceipt('work:1')],
-  engineProfile: MoveReviewEngineProfile = moveReviewEngineProfile,
-) {
-  return { requestId, subject, engineProfile, generation: 0, reportedReceipts };
-}
-
-export const playedMoveBudget = {
-  maximum_physical_works: 2,
-  maximum_total_nodes: 7_000_000,
-  maximum_configured_engine_time_ms: 7_500,
-  maximum_position_wall_ms: 20_000,
-  finalization_reserve_ms: 2_000,
-};
 
 export function rawProgress(
-  phase: 'root_search' | 'evidence_acquisition' | 'completed' | 'stopped',
-  receipts: readonly MoveReviewCompactReceipt[],
-  pending?: ReturnType<typeof rawIssuedWork>,
+  phase: 'root_search' | 'focus_comparison' | 'causal_probe' | 'completed' | 'stopped',
+  works = phase === 'root_search' ? 1 : phase === 'focus_comparison' ? 2 : 3,
+  reports = phase === 'completed' || phase === 'stopped' ? works : works - 1,
 ): Record<string, unknown> {
-  const selectedCandidateCount = phase === 'completed' && receipts.length > 0 ? 2 : 0;
   return {
     phase,
     legal_move_count: 20,
-    root_candidate_lines_admitted: receipts.length ? 1 : 0,
-    selected_candidate_count: selectedCandidateCount,
-    selected_commentaries_completed: selectedCandidateCount,
-    selected_commentaries_abstained: 0,
-    focus_coverage: receipts.length ? 'supplement' : 'not_requested',
-    physical_works_issued: receipts.length + (pending ? 1 : 0),
-    physical_reports_accepted: receipts.length,
-    accepted_nodes: receipts.reduce(
-      (sum, receipt) => sum + (receipt.kind === 'completed' ? receipt.nodes : 0),
-      0,
-    ),
-    configured_engine_time_ms:
-      receipts.reduce((sum, receipt) => sum + receipt.searchLimits.movetimeMs, 0) +
-      (pending ? Number((pending.search_limits as Record<string, unknown>).movetime_ms) : 0),
+    root_candidate_lines_admitted: phase === 'root_search' ? 0 : 3,
+    selected_commentaries_completed: phase === 'completed' ? 1 : 0,
+    physical_works_issued: works,
+    physical_reports_accepted: reports,
+    causal_waves_completed: phase === 'completed' ? 1 : 0,
   };
-}
-
-export function rawMetrics(receipts: readonly MoveReviewCompactReceipt[]): Record<string, unknown> {
-  const engineTime = receipts.reduce((sum, receipt) => sum + receipt.engineTimeMs, 0);
-  const executorTime = receipts.reduce((sum, receipt) => sum + receipt.executorElapsedMs, 0);
-  const attemptedNodes = receipts.reduce(
-    (sum, receipt) => sum + (receipt.kind === 'completed' ? receipt.nodes : receipt.observedNodes),
-    0,
-  );
-  const completedNodes = receipts.reduce(
-    (sum, receipt) => sum + (receipt.kind === 'completed' ? receipt.nodes : 0),
-    0,
-  );
-  return {
-    position_wall_ms: Math.max(1, engineTime, executorTime),
-    queue_elapsed_ms: 0,
-    report_reduction_elapsed_ms: 0,
-    assembly_elapsed_ms: 0,
-    engine_reported_time_ms: engineTime,
-    executor_search_elapsed_ms: executorTime,
-    attempted_nodes: attemptedNodes,
-    total_nodes: completedNodes,
-  };
-}
-
-export function rawCompactReceipt(receipt: MoveReviewCompactReceipt): Record<string, unknown> {
-  const common = {
-    work_id: receipt.workId,
-    execution_key_sha256: receipt.executionKeySha256,
-    root_restriction:
-      receipt.rootRestriction.kind === 'unrestricted'
-        ? { kind: 'unrestricted' }
-        : { kind: 'restricted', moves_uci: receipt.rootRestriction.movesUci },
-    search_limits: {
-      depth: receipt.searchLimits.depth,
-      nodes: receipt.searchLimits.nodes,
-      movetime_ms: receipt.searchLimits.movetimeMs,
-      multi_pv: receipt.searchLimits.multiPv,
-    },
-    max_search_elapsed_ms: receipt.maxSearchElapsedMs,
-  };
-  return receipt.kind === 'completed'
-    ? {
-        kind: receipt.kind,
-        ...common,
-        completed_depth: receipt.completedDepth,
-        nodes: receipt.nodes,
-        engine_time_ms: receipt.engineTimeMs,
-        executor_elapsed_ms: receipt.executorElapsedMs,
-      }
-    : {
-        kind: receipt.kind,
-        ...common,
-        executor_elapsed_ms: receipt.executorElapsedMs,
-        observed_nodes: receipt.observedNodes,
-        engine_time_ms: receipt.engineTimeMs,
-        failure_code: receipt.failureCode,
-        diagnostic: receipt.diagnostic,
-      };
 }
 
 export function rawIssuedWork(
-  workId: 'work:0' | 'work:1' = 'work:0',
+  purpose: 'root_search' | 'focus_comparison' | 'causal_probe' = 'root_search',
   engineProfile: MoveReviewEngineProfile = moveReviewEngineProfile,
 ): Record<string, unknown> {
-  const comparison = workId === 'work:1';
+  const focus = purpose === 'focus_comparison';
+  const causal = purpose === 'causal_probe';
   return {
-    work_id: workId,
-    generation: 0,
+    work_id: purpose === 'root_search' ? 'work:0' : focus ? 'work:1' : 'work:2',
+    purpose,
     engine_profile: engineProfile,
-    execution_key_sha256: comparison ? 'b'.repeat(64) : 'a'.repeat(64),
-    variant: subject.variant,
+    execution_key_sha256: purpose === 'root_search' ? 'a'.repeat(64) : focus ? 'b'.repeat(64) : 'c'.repeat(64),
+    variant: 'standard',
     engine_position_initial_fen: initialFen,
-    engine_position_moves_uci: ['e2e4'],
-    search_fen: beforeFen,
-    root_restriction: comparison
+    engine_position_moves_uci: causal ? ['e2e4', 'e7e5'] : ['e2e4'],
+    search_fen: causal ? afterFen : beforeFen,
+    root_restriction: focus
       ? { kind: 'restricted', moves_uci: ['c7c5', 'e7e5'] }
       : { kind: 'unrestricted' },
     search_limits: {
       depth: 16,
-      nodes: comparison ? 2_000_000 : 5_000_000,
-      movetime_ms: comparison ? 2_500 : 5_000,
-      multi_pv: 2,
+      nodes: purpose === 'root_search' ? 5_000_000 : 2_000_000,
+      movetime_ms: purpose === 'root_search' ? 5_000 : 2_500,
+      multi_pv: purpose === 'root_search' ? 3 : focus ? 2 : 1,
     },
-    admission: { minimum_completed_depth: 16 },
-    max_search_elapsed_ms: comparison ? 3_500 : 6_000,
-  };
-}
-
-export function rawEpisode(
-  role: 'reviewed' | 'reference',
-  reason = false,
-): Record<string, unknown> {
-  const reviewed = role === 'reviewed';
-  const move = reviewed ? 'e7e5' : 'c7c5';
-  const fenAfter = reviewed ? afterFen : bestFen;
-  const id = `line.${role}`;
-  return {
-    episode_id: id,
-    line_evidence_id: id,
-    role,
-    line_authority: 'legal_replay_verified',
-    root_move_uci: move,
-    line_moves: [move],
-    replay_steps: [
-      {
-        order: 0,
-        ply: 1,
-        move_uci: move,
-        from: move.slice(0, 2),
-        to: move.slice(2, 4),
-        fen_before: beforeFen,
-        fen_after: fenAfter,
-      },
-    ],
-    events: [],
-    material_captures: [],
-    relation_facts: [],
-    direct_cause_channels: [],
-    consequences: [],
-    causal_episodes: [],
-    structural_transitions: [],
-    ...(reason ? { selected_reason_order: 0 } : {}),
+    max_search_elapsed_ms: purpose === 'root_search' ? 6_000 : 3_500,
   };
 }
 
@@ -234,80 +75,99 @@ export function rawCommentary(overrides: Record<string, unknown> = {}): Record<s
       kind: 'move_verdict',
       comparison_evidence_id: 'comparison.played-vs-best',
       verdict_code: 'inaccuracy',
-      verdict_symbol: '?!',
       verdict_confidence: 'engine_backed',
       mover: 'black',
       delta: { kind: 'engine_evaluation', candidate_win_percent_delta_for_mover: -8 },
       reference_endpoint: {
         kind: 'engine_search',
-        moves: ['c7c5'],
+        moves: ['c7c5', 'g1f3'],
         win_percent_for_mover: 54,
         depth: 16,
       },
       played_endpoint: {
         kind: 'engine_search',
-        moves: ['e7e5'],
+        moves: ['e7e5', 'g1f3'],
         win_percent_for_mover: 46,
         depth: 16,
       },
-      primary_reason_evidence_id: 'line.reviewed',
-      supporting_reason_evidence_ids: [],
-      semantic_episode_ids: ['line.reviewed', 'line.reference'],
+      presentation: 'e7e5 is an inaccuracy compared with c7c5.',
     },
-    position_context: {
-      board_evidence_id: 'board.before',
-      authority: 'board_derived',
-      fen: beforeFen,
-    },
-    semantic_episodes: [rawEpisode('reviewed', true), rawEpisode('reference')],
+    causal_explanations: [
+      {
+        kind: 'single_cause',
+        presentation: 'Exact selected cause.',
+        facets: [
+          {
+            facet_role: 'lead',
+            cause_evidence_id: 'cause.center',
+            kind: 'center_control_gain',
+            proof_confidence: 'engine_backed',
+            effect_mode: 'played_liability',
+            exposure: 'primary',
+            source_side: 'candidate',
+            event_move: 'e7e5',
+            comparison_kind: 'played_vs_best',
+            only_move_qualifiers: [],
+            channels: [
+              {
+                channel_id: 'cause-channel:exact-center-pressure',
+                causal_signature: 'cause.center:pressure',
+                direct_change: 'occurred',
+                played_change: 'lost',
+                actor: { move_uci: 'e7e5', side: 'black', piece: 'pawn:e7', from: 'e7', to: 'e5' },
+                targets: [{ kind: 'square', key: 'e5' }],
+                mechanisms: [{ kind: 'relation', key: 'center-control' }],
+                consequences: [{ kind: 'consequence', key: 'tempo-target' }],
+                witnesses: [{ kind: 'line', key: 'played' }],
+                proof_line_moves: ['e7e5', 'g1f3'],
+                proof_segment: {
+                  terminal_relation: 'produces_line_consequence',
+                  steps: [
+                    { ply_offset: 0, move_uci: 'e7e5', role: 'root_action' },
+                    { ply_offset: 1, move_uci: 'g1f3', role: 'terminal_event' },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
     ...overrides,
   };
 }
 
 export function rawResponse(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-  const receipts = [compactReceipt('work:0'), compactReceipt('work:1')];
   return {
     schema_version: judgmentRevision,
     annotation_policy_revision: annotationPolicyRevision,
-    engine_profile: moveReviewEngineProfile,
-    variant: subject.variant,
     request_id: requestId,
     job_id: jobId,
-    generation: 0,
+    engine_profile: moveReviewEngineProfile,
+    variant: 'standard',
     current_fen: beforeFen,
     focus: { kind: 'played_move', played_move_uci: 'e7e5', resulting_fen: afterFen },
-    budget: playedMoveBudget,
-    progress: rawProgress('completed', receipts),
-    metrics: rawMetrics(receipts),
-    work_receipts: receipts.map(rawCompactReceipt),
-    decision_trace: { events: [] },
+    progress: rawProgress('completed', 3, 3),
     result: {
       kind: 'selected_move_choices',
       selected_move_reviews: [
         {
           legal_move_index: 0,
           move_uci: 'c7c5',
-          selection: { kind: 'root_candidate', root_rank: 1 },
-          commentary: {
-            primary: {
-              kind: 'single_candidate_insight',
-              line_evidence_id: 'line.reference',
-              move_uci: 'c7c5',
-              line_moves: ['c7c5'],
-              semantic_episode_ids: ['line.reference'],
+          selection: { roles: ['best'], root_rank: 1 },
+          line_insight: {
+            endpoint: {
+              kind: 'engine_search',
+              moves: ['c7c5', 'g1f3'],
+              win_percent_for_mover: 54,
+              depth: 16,
             },
-            position_context: {
-              board_evidence_id: 'board.before',
-              authority: 'board_derived',
-              fen: beforeFen,
-            },
-            semantic_episodes: [{ ...rawEpisode('reference'), role: 'reviewed' }],
           },
         },
         {
           legal_move_index: 1,
           move_uci: 'e7e5',
-          selection: { kind: 'played_focus', focus_coverage: 'supplement' },
+          selection: { roles: ['played'] },
           commentary: rawCommentary(),
         },
       ],
@@ -317,27 +177,31 @@ export function rawResponse(overrides: Record<string, unknown> = {}): Record<str
 }
 
 export function rawSnapshot(
-  state: RawSnapshotState,
+  state: 'awaiting_core' | 'awaiting_evidence' | 'awaiting_causal' | 'completed' | 'stopped',
   options: { engineProfile?: MoveReviewEngineProfile } = {},
 ): Record<string, unknown> {
-  if (state === 'completed')
-    return { ...rawResponse(), engine_profile: options.engineProfile ?? moveReviewEngineProfile };
-  const comparison = state === 'awaiting_evidence';
-  const receipts = comparison ? [compactReceipt('work:0')] : [];
-  const work = rawIssuedWork(comparison ? 'work:1' : 'work:0', options.engineProfile);
-  return {
+  if (state === 'completed') return { ...rawResponse(), engine_profile: options.engineProfile ?? moveReviewEngineProfile };
+  const purpose = state === 'awaiting_core' ? 'root_search' : state === 'awaiting_evidence' ? 'focus_comparison' : 'causal_probe';
+  const base = {
     schema_version: 'chesstory.position-commentary.job-status.v6',
-    engine_profile: options.engineProfile ?? moveReviewEngineProfile,
-    variant: subject.variant,
     request_id: requestId,
     job_id: jobId,
-    generation: 0,
-    state: 'awaiting_engine_work',
-    deadline_epoch_ms: 1_900_000_000_000,
+    engine_profile: options.engineProfile ?? moveReviewEngineProfile,
+    variant: 'standard',
+    deadline_epoch_ms: 9_999_999_999_999,
     focus: { kind: 'played_move', played_move_uci: 'e7e5', resulting_fen: afterFen },
-    budget: playedMoveBudget,
-    progress: rawProgress(comparison ? 'evidence_acquisition' : 'root_search', receipts, work),
-    decision_trace: { events: [] },
-    issued_engine_work: work,
+  };
+  if (state === 'stopped')
+    return {
+      ...base,
+      state: 'stopped',
+      progress: rawProgress('stopped', 1, 1),
+      stop_condition: 'engine_execution_failed',
+    };
+  return {
+    ...base,
+    state: 'awaiting_engine_work',
+    progress: rawProgress(purpose, purpose === 'root_search' ? 1 : purpose === 'focus_comparison' ? 2 : 3),
+    issued_engine_work: rawIssuedWork(purpose, options.engineProfile),
   };
 }

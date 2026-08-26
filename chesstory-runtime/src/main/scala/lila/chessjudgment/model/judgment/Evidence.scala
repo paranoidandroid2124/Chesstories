@@ -1,5 +1,7 @@
 package lila.chessjudgment.model.judgment
 
+import lila.chessjudgment.model.line.PrincipalVariationEvidence
+
 case class EvidenceRef(
     id: String,
     producer: EvidenceProducer,
@@ -22,25 +24,20 @@ object EvidenceRef:
       normalizedLeft.slice(2, 4) == normalizedRight.slice(2, 4)
 
   def normalizeMove(raw: String): String =
-    Option(raw).getOrElse("").trim.toLowerCase
+    PrincipalVariationEvidence.normalizeUci(raw)
 
 enum EvidenceProducer:
-  case BoardFactProducer
+  case PositionFeatureProducer
   case LegalLineProducer
   case EngineEvalProducer
-  case TacticalRelationProducer
-  case PawnStructureProducer
-  case StrategicFeatureProducer
+  case RelationProducer
   case StrategicMechanismProducer
   case OpeningContextProducer
   case FeatureAnchorProducer
   case ApplicabilityAssessmentProducer
-  case ThreatPressureProducer
-  case MoveMotifProducer
   case TacticalMechanismProducer
   case MoveTransitionProducer
   case StructuralDeltaProducer
-  case PlanPressureProducer
   case PlanCausalEventProducer
   case PlanTransitionProducer
   case RelativeMoveProducer
@@ -63,5 +60,4 @@ enum EvidenceConfidence:
   case LegalReplayVerified
   case EngineBacked
   case BoardDerived
-  case Heuristic
   case Mixed

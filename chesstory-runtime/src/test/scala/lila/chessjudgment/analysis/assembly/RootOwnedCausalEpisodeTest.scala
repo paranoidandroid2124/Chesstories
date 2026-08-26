@@ -1,8 +1,7 @@
 package lila.chessjudgment.analysis.assembly
 
-import chess.{ Bishop, Black, Color, King, Knight, Pawn, Queen, Rook, Square, White }
+import chess.{ Bishop, Black, Color, King, Knight, Pawn, Queen, Rook, White }
 import lila.chessjudgment.analysis.line.LineFactNormalizer
-import lila.chessjudgment.model.Motif
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.{ CanonicalPositionHistory, PrincipalVariationEvidence }
 import lila.chessjudgment.model.strategic.EngineLine
@@ -23,7 +22,7 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     assert(!RootOwnedEffectPolicy.admitsLineEpisode(line, episode))
     assertEquals(line.rootOwnedCausalEpisodes(line.line.rootMove), Nil)
     assert(!episode.forcingTacticalResource(line))
-    assertEquals(RelativeCauseSignalProfile.materialGainRecords(List(record)), Nil)
+    assertEquals(RelativeCauseSignalProfile.materialGainRecords(graphOf(List(record)), List(record)), Nil)
     assertEquals(
       EvidenceObjectBinding
         .comparisonEndpointLineObservations(record.ref, line, record.ref.position)
@@ -99,7 +98,10 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     assert(episode.links.exists(_.kind == RootCausalLinkKind.ForcedCaptureResponse))
     assert(RootOwnedEffectPolicy.admitsLineEpisode(line, episode))
     assert(episode.forcingTacticalResource(line))
-    assertEquals(RelativeCauseSignalProfile.materialGainRecords(List(record)), List(record))
+    assertEquals(
+      RelativeCauseSignalProfile.materialGainRecords(graphOf(List(record)), List(record)),
+      List(record)
+    )
     EvidenceObjectBinding
       .comparisonEndpointLineObservations(record.ref, line, record.ref.position)
       .material match
@@ -151,7 +153,11 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
       )
       assert(RootOwnedEffectPolicy.admitsLineEpisode(line, episode), label)
       assert(episode.forcingTacticalResource(line), label)
-      assertEquals(RelativeCauseSignalProfile.materialGainRecords(List(record)), List(record), label)
+      assertEquals(
+        RelativeCauseSignalProfile.materialGainRecords(graphOf(List(record)), List(record)),
+        List(record),
+        label
+      )
       EvidenceObjectBinding
         .comparisonEndpointLineObservations(record.ref, line, record.ref.position)
         .material match
@@ -172,11 +178,13 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
   test("broad continuation geometry cannot seed a root-owned material result"):
     val unrelatedCheck = unrelatedCheckFollowUpMaterialLine()
     val checkSteps = unrelatedCheck.lineReplaySteps
+    val checkReplay = unrelatedCheck.certifiedReplay.getOrElse(fail("expected certified check replay"))
     val broadCheck = CheckResponseFollowUpTrajectory.find(
       checkSteps.head,
       checkSteps(1),
       checkSteps(2),
-      List(checkSteps(1))
+      List(checkSteps(1)),
+      checkReplay
     )
     assert(broadCheck.nonEmpty)
     assertEquals(unrelatedCheck.rootOwnedCausalEpisodes(unrelatedCheck.line.rootMove), Nil)
@@ -187,16 +195,13 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
 
     val placementOnly = placementBeforeClearanceMaterialLine()
     val placementSteps = placementOnly.lineReplaySteps
-    assert(
-      LineAccessTrajectory
-        .find(placementSteps.head, placementSteps(2), List(placementSteps(1)))
-        .nonEmpty
-    )
+    val placementReplay = placementOnly.certifiedReplay.getOrElse(fail("expected certified placement replay"))
     assertEquals(
       LineAccessTrajectory.findRootClearanceBeforeUse(
         placementSteps.head,
         placementSteps(2),
-        List(placementSteps(1))
+        List(placementSteps(1)),
+        placementReplay
       ),
       None
     )
@@ -445,7 +450,7 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
       "a draw consequence without a verified stalemated king must not become public-ready"
     )
 
-  test("root-owned promotion and root-triggered endgames retain conversion evidence"):
+  test("root-owned promotion retains conversion evidence"):
     val promotion = forcedPromotionLine()
     val promotionRecord = lineRecord("forced-promotion-proof", promotion, White)
     val promotionEpisode = promotion
@@ -464,23 +469,10 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     })
     assert(promotionChannels.head.binding.consequence.exists(_.key.equalsIgnoreCase("Promotion")))
 
-    List(
-      "maintained" -> rootTriggeredEndgameConversionLine(LineEndgameTechniqueHorizonStatus.Active),
-      "completed" -> rootTriggeredEndgameConversionLine(LineEndgameTechniqueHorizonStatus.Completed)
-    ).foreach { case (label, line) =>
-      val channels = projectionChannels(line, RelativeCauseKind.ConversionSecured, White)
-      assert(line.endgameTechniquesTriggeredByRootMove(line.line.rootMove, RelativeCauseKind.ConversionSecured).nonEmpty, label)
-      assert(channels.exists(_.rootOwnedProof.exists {
-        case RootOwnedEffectProof.EndgameHorizon(_, _, _) => true
-        case _                                            => false
-      }), label)
-    }
-
   test("missed tactical resource admission truth table"):
     val clearance = clearanceLine()
     val unrelated = unrelatedFollowUpLine()
     val exactMotifLine = LineNodeRef("motif-reference", "d1h5", 1, LineNodeRole.BestReference)
-    val siblingMotifLine = LineNodeRef("motif-sibling", "d1h5", 9, LineNodeRole.Threat)
 
     val rows = List(
       mtrRow(
@@ -495,20 +487,6 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
         unrelated.line,
         Black,
         List(lineRecord("unrelated-proof", unrelated)),
-        expected = false
-      ),
-      mtrRow(
-        "independent root forcing motif",
-        exactMotifLine,
-        White,
-        List(motifRecord("exact-motif", exactMotifLine, exactMotifLine)),
-        expected = true
-      ),
-      mtrRow(
-        "sibling forcing motif",
-        exactMotifLine,
-        White,
-        List(motifRecord("sibling-motif", siblingMotifLine, exactMotifLine)),
         expected = false
       ),
       mtrRow(
@@ -687,6 +665,9 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
       .extend(moves)
       .toOption
       .getOrElse(fail("expected canonical material line history"))
+    val canonicalReplay = CanonicalLineReplay
+      .fromHistory(lineHistory.segmentReplaySteps.drop(positionHistory.segmentReplaySteps.size))
+      .getOrElse(fail("expected canonical material line replay"))
     val materialSummary = CandidateLineAssembler
       .lineMaterialSummary(positionHistory, lineHistory)
       .getOrElse(fail("expected a complete material summary"))
@@ -695,6 +676,7 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
         id = s"$id-evidence",
         lineRef = line,
         facts = facts,
+        replay = canonicalReplay,
         position = PositionNodeRef(fen, 0, Some(sideToMove)),
         scope = role.scope,
         materialSummary = Some(materialSummary)
@@ -732,8 +714,10 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     val moves = List("c4d4", "a1b1", "d4e4")
     val gain = capture("d4e4", 2, Black, King.name, Pawn.name, "e4", 100)
     val line = LineNodeRef("continuation-only-material", moves.head, 1, LineNodeRole.BestReference)
-    LineFactEvidence(
+    certifiedLineFact(
       line = line,
+      fen = fen,
+      moves = moves,
       material = Some(LineMaterialSummary(
         sideToMove = Black,
         captures = List(gain),
@@ -745,7 +729,6 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
         promotionGainCpForMover = 0,
         materialWindowComplete = true
       )),
-      replay = legalReplay(fen, moves),
       consequences = List(LineConsequence(
         kind = LineConsequenceKind.MaterialGain,
         lineMoves = List(gain.moveUci),
@@ -767,8 +750,10 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     val response = capture("b4e4", 1, Black, "Rook", Queen.name, "e4", 900, recapture = true)
     val payoff = capture("g2e4", 2, White, Bishop.name, "Rook", "e4", 500, recapture = true)
     val line = LineNodeRef("root-triggered-material", moves.head, 1, LineNodeRole.BestReference)
-    LineFactEvidence(
+    certifiedLineFact(
       line = line,
+      fen = fen,
+      moves = moves,
       material = Some(LineMaterialSummary(
         sideToMove = White,
         captures = List(trigger, response, payoff),
@@ -780,7 +765,6 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
         promotionGainCpForMover = 0,
         materialWindowComplete = true
       )),
-      replay = legalReplay(fen, moves),
       consequences = List(LineConsequence(
         kind = LineConsequenceKind.MaterialGain,
         lineMoves = moves,
@@ -815,7 +799,7 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     val moves = List("d1a4", "e8d8", "a4a7", "a8a7", "g1a7")
     ownedMaterialGainLine(
       id = "long-forced-check-material",
-      fen = "q3k3/p7/8/8/8/8/8/3QK1B w - - 0 1",
+      fen = "q3k3/p7/8/8/8/8/8/3QK1B1 w - - 0 1",
       moves = moves,
       captures = List(
         capture(moves(2), 2, White, Queen.name, Pawn.name, "a7", 100),
@@ -869,8 +853,10 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
   ): LineFactEvidence =
     val payoff = captures.lastOption.getOrElse(fail("a material-gain fixture needs a payoff capture"))
     val line = LineNodeRef(id, moves.head, 1, LineNodeRole.BestReference)
-    LineFactEvidence(
+    certifiedLineFact(
       line = line,
+      fen = fen,
+      moves = moves,
       material = Some(LineMaterialSummary(
         sideToMove = White,
         captures = captures,
@@ -882,7 +868,6 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
         promotionGainCpForMover = 0,
         materialWindowComplete = true
       )),
-      replay = legalReplay(fen, moves),
       consequences = List(LineConsequence(
         kind = LineConsequenceKind.MaterialGain,
         lineMoves = moves,
@@ -904,9 +889,10 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
       kind: LineConsequenceKind
   ): LineFactEvidence =
     val line = LineNodeRef(id, moves.head, 1, LineNodeRole.BestReference)
-    LineFactEvidence(
+    certifiedLineFact(
       line = line,
-      replay = legalReplay(fen, moves),
+      fen = fen,
+      moves = moves,
       consequences = List(LineConsequence(
         kind = kind,
         lineMoves = List(moves.last),
@@ -920,9 +906,10 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
 
   private def forcedPromotionLine(): LineFactEvidence =
     val moves = List("g6g7", "h8h7", "g7g8q")
-    LineFactEvidence(
+    certifiedLineFact(
       line = LineNodeRef("forced-promotion", moves.head, 1, LineNodeRole.BestReference),
-      replay = legalReplay("7k/8/5KP1/8/8/8/8/8 w - - 0 1", moves),
+      fen = "7k/8/5KP1/8/8/8/8/8 w - - 0 1",
+      moves = moves,
       consequences = List(LineConsequence(
         kind = LineConsequenceKind.Promotion,
         lineMoves = List(moves.last),
@@ -931,34 +918,6 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
         rootMove = None,
         rootSide = Some(White),
         beneficiary = Some(White)
-      ))
-    )
-
-  private def rootTriggeredEndgameConversionLine(
-      status: LineEndgameTechniqueHorizonStatus
-  ): LineFactEvidence =
-    val move = "a7a8q"
-    LineFactEvidence(
-      line = LineNodeRef(s"root-triggered-${status.toString.toLowerCase}", move, 1, LineNodeRole.BestReference),
-      replay = legalReplay("4k3/P7/8/8/8/8/8/4K3 w - - 0 1", List(move)),
-      consequences = List(LineConsequence(
-        kind = LineConsequenceKind.Promotion,
-        lineMoves = List(move),
-        proofSignal = true,
-        eventMove = Some(move),
-        rootMove = Some(move),
-        rootSide = Some(White),
-        beneficiary = Some(White)
-      )),
-      endgameHorizons = List(LineEndgameTechniqueHorizon(
-        pattern = "Lucena",
-        rookPattern = None,
-        techniqueSide = White,
-        entryPlyOffset = 0,
-        terminalPlyOffset = 0,
-        status = status,
-        triggerMove = Some(move),
-        requiredSquares = List("a8")
       ))
     )
 
@@ -971,8 +930,10 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
       consequence: LineConsequence
   ): LineFactEvidence =
     val line = LineNodeRef(id, moves.head, 1, LineNodeRole.BestReference)
-    LineFactEvidence(
+    certifiedLineFact(
       line = line,
+      fen = fen,
+      moves = moves,
       material = Some(LineMaterialSummary(
         sideToMove = sideToMove,
         captures = captures,
@@ -984,7 +945,6 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
         promotionGainCpForMover = 0,
         materialWindowComplete = true
       )),
-      replay = legalReplay(fen, moves),
       consequences = List(consequence)
     )
 
@@ -1013,10 +973,11 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
         materialWindowComplete = true
       )
     )
-    LineFactEvidence(
+    certifiedLineFact(
       line = line,
+      fen = fen,
+      moves = List(move),
       material = material,
-      replay = legalReplay(fen, List(move)),
       events = List(LineMoveEvent(
         kind = eventKind,
         moveUci = move,
@@ -1162,15 +1123,20 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
       ).get,
       verdictConfidence = VerdictConfidence.EngineBacked
     )
+    val proofRecord = lineRecord(s"${line.line.id}-draft-proof", line, mover)
+    val comparisonRecord = EvidenceRecord(comparisonRef, CandidateComparisonEvidence(comparison))
+    val graph = List(proofRecord, comparisonRecord)
+      .foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
     RelativeCauseDraftPlanner
       .drafts(
         RelativeCauseSignalProfile.from(
-          comparison,
-          List(lineRecord(s"${line.line.id}-draft-proof", line, mover)),
-          Nil,
-          Nil
+          fact = comparison,
+          graph = graph,
+          referenceRecords = List(proofRecord),
+          candidateRecords = Nil,
+          sharedRecords = Nil
         ),
-        EvidenceRecord(comparisonRef, CandidateComparisonEvidence(comparison))
+        comparisonRecord
       )
       .filter(_.kind == RelativeCauseKind.ConversionSecured)
 
@@ -1179,6 +1145,30 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
       kind: EvidenceObjectKind
   ): Set[String] =
     objects.collect { case obj if obj.kind == kind => obj.key.toLowerCase }.toSet
+
+  private def certifiedLineFact(
+      line: LineNodeRef,
+      fen: String,
+      moves: List[String],
+      material: Option[LineMaterialSummary] = None,
+      events: List[LineMoveEvent] = Nil,
+      consequences: List[LineConsequence]
+  ): LineFactEvidence =
+    val replay = (for
+      history <- CanonicalPositionHistory.from(fen, Nil, fen).toOption
+      extended <- history.extend(moves).toOption
+      admitted <- CanonicalLineReplay.fromHistory(
+        extended.segmentReplaySteps.drop(history.segmentReplaySteps.size)
+      )
+      rebased <- admitted.rebased(1)
+    yield rebased).getOrElse(fail(s"expected one certified replay for ${line.id}"))
+    LineFactEvidence.fromCertifiedReplay(
+      line = line,
+      replay = replay,
+      material = material,
+      events = events,
+      consequences = consequences
+    )
 
   private def legalReplay(fen: String, moves: List[String]): List[LineReplayStep] =
     moves.zipWithIndex.foldLeft(fen -> List.empty[LineReplayStep]) {
@@ -1218,28 +1208,9 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     val position = PositionNodeRef(line.lineReplaySteps.head.fenBefore, 0, Some(sideToMove))
     EvidenceRecord(lineRef(id, line.line, position), line)
 
-  private def motifRecord(
-      id: String,
-      recordLine: LineNodeRef,
-      eventLine: LineNodeRef
-  ): EvidenceRecord =
-    val position = PositionNodeRef("4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 0, Some(White))
-    val target = Square.fromKey("e8").getOrElse(fail("expected e8"))
-    EvidenceRecord(
-      EvidenceRef(
-        id = id,
-        producer = EvidenceProducer.MoveMotifProducer,
-        layer = EvidenceLayer.MoveMotif,
-        position = position,
-        line = Some(recordLine),
-        scope = recordLine.role.scope,
-        confidence = EvidenceConfidence.LegalReplayVerified
-      ),
-      MoveMotifEvidence(MoveMotifEvent.fromMotif(
-        eventLine.rootMove,
-        Motif.Check(Queen, target, Motif.CheckType.Normal, White, 0, Some(eventLine.rootMove))
-      ))
-    )
+  private def graphOf(records: List[EvidenceRecord]): TypedEvidenceGraph =
+    records.foldLeft(TypedEvidenceGraph.empty)(_.add(_))
+
 
   private def evalRecord(id: String, line: LineNodeRef): EvidenceRecord =
     val position = PositionNodeRef("4k3/8/8/8/8/8/8/4K3 w - - 0 1", 0, Some(White))

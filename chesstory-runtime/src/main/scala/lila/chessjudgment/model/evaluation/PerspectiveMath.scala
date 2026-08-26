@@ -42,9 +42,6 @@ object PerspectiveMath:
     val whiteWinPercent = winPercentFromWhiteEval(whiteCp, mate)
     if mover.white then whiteWinPercent else 100.0 - whiteWinPercent
 
-  def winPercentAdvantageFor(mover: Color, whiteCp: Int, mate: Option[Int] = None): Double =
-    (winPercentForMover(mover, whiteCp, mate) - 50.0).max(0.0)
-
   def winPercentLossForMover(
       mover: Color,
       bestWhiteCp: Int,

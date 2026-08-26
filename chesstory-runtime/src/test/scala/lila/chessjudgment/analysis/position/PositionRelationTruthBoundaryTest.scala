@@ -1,0 +1,410 @@
+package lila.chessjudgment.analysis.position
+
+import chess.{ Color, HalfMoveClock, Square }
+import chess.format.Fen
+import chess.variant.Standard
+import lila.chessjudgment.model.judgment.{
+  EvidenceSemanticAnchorKind,
+  EvidenceScope,
+  EvidenceSquare,
+  PositionNodeRef,
+  CanonicalLineReplay,
+  RelationAxisSignal,
+  RelationControlTarget,
+  RelationFactEvidence,
+  RelationFactKind,
+  RelationRayPattern,
+  RelationWitnessDetail,
+  TypedEvidenceGraph
+}
+import lila.chessjudgment.analysis.tactical.TacticalRelationEvidence
+import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.position.BoardGeometry
+
+class PositionRelationTruthBoundaryTest extends munit.FunSuite:
+
+  private def position(fen: String) =
+    Fen.read(Standard, Fen.Full(fen)).get
+
+  private def relations(fen: String): List[RelationFactEvidence] =
+    PositionAnalyzer.analyze(position(fen), fen, plyCount = 0).boardRelations
+
+  private def closedSnapshot(
+      analysis: PositionAnalysis,
+      positionRef: PositionNodeRef,
+      scope: EvidenceScope = EvidenceScope.CurrentPosition
+  ) =
+    val records = PositionRelationExtractor.records(
+      analysis.boardRelations,
+      positionRef,
+      scope,
+      relation => s"closed:${positionRef.ply}:${relation.semanticId}"
+    )
+    TypedEvidenceGraph.empty
+      .addAll(records)
+      .relationGraph
+      .closedPositionRelationSnapshot(positionRef, scope, analysis.relationInventory)
+
+  private def rayPattern(relation: RelationFactEvidence): Option[RelationRayPattern] =
+    relation.detail match
+      case RelationWitnessDetail.RayBarrier(owner, _, _, occupants, axis) =>
+        Some(RelationRayPattern.classify(owner, occupants, axis))
+      case _ => None
+
+  test("one board geometry owner supplies paths, rays, and geometric controls"):
+    val current = position("7k/8/8/6r1/8/8/8/2B3K1 w - - 0 1")
+    val bishop = current.board.pieceAt(Square.C1).getOrElse(fail("expected bishop on c1"))
+    val analysis = PositionAnalyzer.analyze(current, Fen.write(current).value, 0)
+
+    assertEquals(
+      BoardGeometry.movementPath(bishop, Square.C1, Square.G5).map(_.key),
+      List("d2", "e3", "f4")
+    )
+    assertEquals(
+      analysis.boardRelations.flatMap(_.detail match
+        case RelationWitnessDetail.GeometricControl(_, attacker, _, target, _)
+            if attacker.key == Square.C1.key => Square.fromKey(target.key).toList
+        case _ => Nil
+      )
+        .filter(_.file.value > Square.C1.file.value)
+        .toList
+        .sortBy(_.file.value)
+        .map(_.key),
+      List("d2", "e3", "f4", "g5")
+    )
+    assertEquals(BoardGeometry.movementPath(bishop, Square.C1, Square.C4), Nil)
+    assertEquals(
+      BoardGeometry.geometricControls(bishop.role, Square.C1, bishop.color, current.board.occupied),
+      Square.C1.bishopAttacks(current.board.occupied)
+    )
+
+  test("the initial position exposes exact pawn topology without tactical substitutes"):
+    val initial = relations("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    assertEquals(initial.count(_.kind == RelationFactKind.PawnFileGroup), 16)
+    assertEquals(initial.count(_.kind == RelationFactKind.PawnFrontOccupancy), 16)
+    assertEquals(initial.count(_.kind == RelationFactKind.PawnPassage), 16)
+    assert(initial.exists(_.kind == RelationFactKind.GeometricControl))
+    assert(initial.exists(_.kind == RelationFactKind.LegalMove))
+
+  test("geometric control and legal capture remain distinct canonical facts"):
+    val currentRelations = relations("4k3/8/8/8/3q4/8/3R4/4K3 w - - 0 1")
+    val capture = currentRelations.find(_.detail match
+      case RelationWitnessDetail.LegalMove(Color.White, from, _, to, moveUci, Some(captured)) =>
+        from.key == "d2" && to.key == "d4" && moveUci == "d2d4" &&
+          captured.capturedSquare.key == "d4" && captured.capturedSide == Color.Black
+      case _ => false
+    ).getOrElse(fail("expected the exact legal rook capture on d4"))
+
+    assert(capture.hasConcreteWitness)
+    assert(capture.semanticGroupingAnchors.exists(_.kind == EvidenceSemanticAnchorKind.Relation))
+
+    val controls = currentRelations.collect {
+      case relation if relation.kind == RelationFactKind.GeometricControl => relation.detail
+    }
+    assert(controls.exists {
+      case RelationWitnessDetail.GeometricControl(
+            Color.White,
+            attacker,
+            _,
+            target,
+            RelationControlTarget.Enemy(_)
+          ) =>
+        attacker.key == "d2" && target.key == "d4"
+      case _ => false
+    })
+    assert(controls.exists {
+      case RelationWitnessDetail.GeometricControl(
+            Color.Black,
+            attacker,
+            _,
+            target,
+            RelationControlTarget.Enemy(_)
+          ) =>
+        attacker.key == "d4" && target.key == "d2"
+      case _ => false
+    })
+    assertEquals(
+      currentRelations.count(_.detail match
+        case RelationWitnessDetail.LegalMove(Color.Black, _, _, _, _, _) => true
+        case _                                                           => false
+      ),
+      0,
+      "the non-moving side's geometric attack must not become a hypothetical legal move"
+    )
+
+  test("en passant legal capture is owned by the captured pawn square without expanding child replies"):
+    val beforeFen = "7k/8/8/8/3p4/8/4P3/K3R3 w - - 0 1"
+    val advance = PrincipalVariationEvidence
+      .legalMoveReplay(beforeFen, List("e2e4"), startPly = 0)
+      .flatMap(_.headOption)
+      .getOrElse(fail("expected the double pawn advance"))
+    val afterFen = Fen.write(advance.after).value
+    val beforeAnalysis = PositionAnalyzer.analyze(advance.before, beforeFen, plyCount = 0)
+    val afterAnalysis = PositionAnalyzer.analyzeAfter(beforeAnalysis, advance, afterFen)
+    val pressure = afterAnalysis.boardRelations
+      .find(_.detail match
+        case RelationWitnessDetail.LegalMove(Color.Black, from, _, to, moveUci, Some(capture)) =>
+          from.key == "d4" && to.key == "e3" && moveUci == "d4e3" && capture.capturedSquare.key == "e4"
+        case _ => false
+      )
+      .getOrElse(fail("expected the en-passant legal capture"))
+
+    pressure.detail match
+      case RelationWitnessDetail.LegalMove(_, _, _, _, _, Some(capture)) =>
+        assertEquals(capture.capturedSquare.key, "e4")
+        assertEquals(capture.capturedSide, Color.White)
+      case detail => fail(s"expected LegalMove, got ${detail.detailName}")
+
+  test("every position relation uses the canonical relation payload"):
+    val currentRelations = relations("4k3/8/8/8/3q4/8/3R4/4K3 w - - 0 1")
+    assert(currentRelations.nonEmpty)
+    assert(currentRelations.forall(_.hasConcreteWitness))
+
+  test("closed absence keeps legal reachability and geometric support in separate domains"):
+    import PositionRelationExtractor.ClosedRelationAbsenceQuery.*
+
+    val mateFen = "7k/6Q1/6K1/8/8/8/8/8 b - - 0 1"
+    val mate = PositionAnalyzer.analyze(position(mateFen), mateFen, plyCount = 0)
+    val mateRef = PositionNodeRef(mateFen, 0, Some(Color.Black))
+    val closedMate = closedSnapshot(mate, mateRef)
+    assert(closedMate.proveAbsence(AnyLegalMove(Color.Black)).nonEmpty)
+    assertEquals(closedMate.proveAbsence(AnyLegalMove(Color.White)), None)
+
+    val unsupportedFen = "7k/8/8/8/8/8/8/R6K w - - 0 1"
+    val unsupported = PositionAnalyzer.analyze(position(unsupportedFen), unsupportedFen, plyCount = 0)
+    val exactRef = PositionNodeRef(unsupportedFen, 0, Some(Color.White))
+    val closedUnsupported = closedSnapshot(unsupported, exactRef)
+    assert(closedUnsupported.proveAbsence(GeometricFriendlySupportOf(Color.White, EvidenceSquare("a1"))).nonEmpty)
+    assertEquals(
+      closedUnsupported.proveAbsence(GeometricFriendlySupportOf(Color.White, EvidenceSquare("a2"))),
+      None,
+      "an empty square cannot be certified as an unsupported friendly piece"
+    )
+    assert(
+      closedUnsupported
+        .proveAbsence(
+          ExactLegalMove(Color.White, EvidenceSquare("a1"), EvidenceSquare("b2"), "a1b2")
+        )
+        .nonEmpty
+    )
+    assertEquals(
+      closedUnsupported.proveAbsence(
+        ExactLegalMove(Color.White, EvidenceSquare("a1"), EvidenceSquare("a2"), "a1a2")
+      ),
+      None
+    )
+    val wrongTurnRef = exactRef.copy(sideToMove = Some(Color.Black))
+    val inventoryEntries = unsupported.boardRelations.map(relation => relation.semanticId -> relation)
+    assert(unsupported.relationInventory.certifies(exactRef, inventoryEntries))
+    assert(!unsupported.relationInventory.certifies(wrongTurnRef, inventoryEntries))
+    val wrongTurnRecords = PositionRelationExtractor.records(
+      unsupported.boardRelations,
+      wrongTurnRef,
+      EvidenceScope.CurrentPosition,
+      relation => s"wrong-turn:${relation.semanticId}"
+    )
+    intercept[IllegalArgumentException](TypedEvidenceGraph.empty.addAll(wrongTurnRecords))
+
+  test("an ordered ray retains distant occupants and invalidates when the third occupant moves"):
+    val beforeFen = "k2q4/8/3p4/8/3N4/8/8/3R3K b - - 0 1"
+    val before = PositionAnalyzer.analyze(position(beforeFen), beforeFen, plyCount = 0)
+    val beforeRay = before.boardRelations.find(_.detail match
+      case RelationWitnessDetail.RayBarrier(Color.White, attacker, _, occupants, RelationAxisSignal.File) =>
+        attacker.key == "d1" && occupants.map(_.square.key) == List("d4", "d6", "d8")
+      case _ => false
+    ).getOrElse(fail("expected the complete d-file occupancy chain"))
+    assertEquals(beforeRay.targetSquares, Nil)
+    assertEquals(
+      beforeRay.focusSquares.map(_.key),
+      List("d1", "d4", "d6", "d8"),
+      "distant occupants remain exact witnesses without becoming immediate tactical targets"
+    )
+
+    val step = PrincipalVariationEvidence
+      .legalMoveReplay(beforeFen, List("d8e8"), startPly = 0)
+      .flatMap(_.headOption)
+      .getOrElse(fail("expected the queen move from the third ray occupant"))
+    val afterFen = Fen.write(step.after).value
+    val incremental = PositionAnalyzer.analyzeAfter(before, step, afterFen).boardRelations
+    val cold = PositionComputation
+      .from(StaticBoardGeometryComputation.cold(step.after.board), step.after)
+      .boardRelations
+    assertEquals(incremental, cold)
+    assert(incremental.exists(_.detail match
+      case RelationWitnessDetail.RayBarrier(Color.White, attacker, _, occupants, RelationAxisSignal.File) =>
+        attacker.key == "d1" && occupants.map(_.square.key) == List("d4", "d6")
+      case _ => false
+    ))
+
+  test("Doknjas Bf7 removes one rook support without proving that f6 has no supporter"):
+    import PositionRelationExtractor.ClosedRelationAbsenceQuery.GeometricFriendlySupportOf
+
+    val beforeFen = "3r1r1k/1p4pp/p2pbp2/4n3/q2BPR2/2PB2Q1/P1P3PP/R6K b - - 7 24"
+    val before = PositionAnalyzer.analyze(position(beforeFen), beforeFen, plyCount = 0)
+    val step = PrincipalVariationEvidence
+      .legalMoveReplay(beforeFen, List("e6f7"), startPly = 0)
+      .flatMap(_.headOption)
+      .getOrElse(fail("expected Doknjas's ...Bf7"))
+    val afterFen = Fen.write(step.after).value
+    val after = PositionAnalyzer.analyzeAfter(before, step, afterFen)
+    val transition = after.relationTransition.getOrElse(fail("expected the exact relation transition"))
+
+    assert(transition.comparableRemoved.exists(_.detail match
+      case RelationWitnessDetail.GeometricControl(
+            Color.Black,
+            controller,
+            _,
+            target,
+            RelationControlTarget.Friendly(_)
+          ) => controller.key == "f8" && target.key == "f6"
+      case _ => false
+    ))
+    assert(transition.comparableEstablished.exists(_.detail match
+      case RelationWitnessDetail.RayBarrier(
+            Color.Black,
+            attacker,
+            _,
+            occupants,
+            RelationAxisSignal.File
+          ) => attacker.key == "f8" && occupants.map(_.square.key) == List("f7", "f6", "f4")
+      case _ => false
+    ))
+    assert(after.boardRelations.exists(_.detail match
+      case RelationWitnessDetail.GeometricControl(
+            Color.Black,
+            controller,
+            _,
+            target,
+            RelationControlTarget.Friendly(_)
+          ) => controller.key == "g7" && target.key == "f6"
+      case _ => false
+    ))
+    val afterRef = PositionNodeRef(afterFen, after.features.plyCount, Some(after.position.color))
+    val closedAfter = closedSnapshot(after, afterRef)
+    assertEquals(
+      closedAfter.proveAbsence(GeometricFriendlySupportOf(Color.Black, EvidenceSquare("f6"))),
+      None,
+      "loss of the f8 rook ray must not erase the independent g7 pawn support"
+    )
+
+  test("one canonical ray inventory distinguishes absolute pin, x-ray, battery, and king skewer"):
+    val pin = relations("4k3/4n3/8/8/8/8/8/4R1K1 b - - 0 1")
+    val xray = relations("k3q3/8/8/4b3/8/8/8/4R1K1 w - - 0 1")
+    val battery = relations("k3q3/8/8/8/8/8/4Q3/4R1K1 w - - 0 1")
+    val skewer = relations("4q3/8/8/4k3/8/8/8/4R1K1 b - - 0 1")
+
+    assert(pin.exists(relation => relation.detail match
+      case RelationWitnessDetail.RayBarrier(_, attacker, _, occupants, _) =>
+        attacker.key == "e1" && occupants.head.square.key == "e7" && occupants.lift(1).exists(_.square.key == "e8") &&
+          rayPattern(relation).contains(RelationRayPattern.Pin)
+      case _ => false
+    ))
+    assert(xray.exists(relation => relation.detail match
+      case RelationWitnessDetail.RayBarrier(_, attacker, _, occupants, _) =>
+        attacker.key == "e1" && occupants.head.square.key == "e5" && occupants.lift(1).exists(_.square.key == "e8") &&
+          rayPattern(relation).contains(RelationRayPattern.XRay)
+      case _ => false
+    ))
+    assert(battery.exists(relation => relation.detail match
+      case RelationWitnessDetail.RayBarrier(_, back, _, occupants, _) =>
+        occupants.head.square.key == "e2" && back.key == "e1" && occupants.lift(1).exists(_.square.key == "e8") &&
+          rayPattern(relation).contains(RelationRayPattern.Battery)
+      case _ => false
+    ))
+    assert(skewer.exists(relation => relation.detail match
+      case RelationWitnessDetail.RayBarrier(_, attacker, _, occupants, _) =>
+        attacker.key == "e1" && occupants.head.square.key == "e5" && occupants.lift(1).exists(_.square.key == "e8") &&
+          rayPattern(relation).contains(RelationRayPattern.Skewer)
+      case _ => false
+    ))
+    assert((pin ++ xray ++ battery ++ skewer).forall(relation =>
+      relation.kind != RelationFactKind.RayBarrier ||
+        relation.isPositionRelation
+    ))
+
+  test("material value does not manufacture relative pins or non-king skewers"):
+    val shieldedQueen = relations("k3q3/8/8/4n3/8/8/8/4R1K1 w - - 0 1")
+    val queenInFront = relations("k3b3/8/8/4q3/8/8/8/4R1K1 w - - 0 1")
+
+    assert(shieldedQueen.exists(rayPattern(_).contains(RelationRayPattern.XRay)))
+    assert(!shieldedQueen.exists(rayPattern(_).contains(RelationRayPattern.Pin)))
+    assert(queenInFront.exists(rayPattern(_).contains(RelationRayPattern.XRay)))
+    assert(!queenInFront.exists(rayPattern(_).contains(RelationRayPattern.Skewer)))
+
+  test("battery compatibility follows the shared ray axis rather than a named role-pair list"):
+    val bishopBattery = relations("k7/8/7r/8/8/8/3B4/K1B5 w - - 0 1")
+
+    assert(bishopBattery.exists(relation => relation.detail match
+      case RelationWitnessDetail.RayBarrier(_, back, backRole, occupants, axis) =>
+        occupants.head.square.key == "d2" && back.key == "c1" && occupants.lift(1).exists(_.square.key == "h6") &&
+          occupants.head.role.name == "bishop" && backRole.name == "bishop" && axis == RelationAxisSignal.Diagonal &&
+          rayPattern(relation).contains(RelationRayPattern.Battery)
+      case _ => false
+    ))
+
+  test("tactical root ownership projects the canonical after-position geometry without rescanning rays"):
+    val beforeFen = "4k3/4n3/8/8/8/8/8/R5K1 w - - 0 1"
+    val legalReplay = PrincipalVariationEvidence
+      .legalMoveReplay(beforeFen, List("a1e1"), startPly = 0)
+      .getOrElse(fail("expected a legal pin-creating move"))
+    val replay = CanonicalLineReplay
+      .fromLegalReplay(legalReplay)
+      .getOrElse(fail("expected canonical pin replay"))
+    val after = legalReplay.head.after
+    val afterFen = Fen.write(after).value
+    val canonicalPin = PositionAnalyzer
+      .analyze(after, afterFen, plyCount = 1)
+      .boardRelations
+      .find(rayPattern(_).contains(RelationRayPattern.Pin))
+      .getOrElse(fail("expected the canonical after-position pin"))
+    val projectedPin = TacticalRelationEvidence
+      .relationProduction(replay, "a1e1")
+      .relations
+      .find(rayPattern(_).contains(RelationRayPattern.Pin))
+      .getOrElse(fail("expected a line-owned projection of the canonical pin"))
+
+    assertEquals(projectedPin.detail, canonicalPin.detail)
+    assertEquals(projectedPin.lineMoves, List("a1e1"))
+
+  test("semantic geometry is shared across clock fields while legal move occurrences remain distinct"):
+    val firstFen = "4k3/8/8/8/3q4/8/3R4/4K3 w - - 0 1"
+    val secondFen = "4k3/8/8/8/3q4/8/3R4/4K3 w - - 37 92"
+    val first = PositionAnalyzer.analyze(position(firstFen), firstFen, plyCount = 1)
+    val second = PositionAnalyzer.analyze(position(secondFen), secondFen, plyCount = 183)
+
+    assertEquals(first.features.fen, firstFen)
+    assertEquals(second.features.fen, secondFen)
+    assertEquals(first.features.plyCount, 1)
+    assertEquals(second.features.plyCount, 183)
+    assert(!(first.actualLegalMoves.asInstanceOf[AnyRef] eq second.actualLegalMoves.asInstanceOf[AnyRef]))
+    assertEquals(first.actualLegalMoves.map(_.toUci.uci), second.actualLegalMoves.map(_.toUci.uci))
+    assert(
+      first.actualLegalMoves.zip(second.actualLegalMoves).exists { case (left, right) =>
+        Fen.write(left.after).value != Fen.write(right.after).value
+      }
+    )
+    assert(first.computation.staticBoard.asInstanceOf[AnyRef] eq second.computation.staticBoard.asInstanceOf[AnyRef])
+    assert(!(first.computation.asInstanceOf[AnyRef] eq second.computation.asInstanceOf[AnyRef]))
+    assert(!(first.relationInventory.asInstanceOf[AnyRef] eq second.relationInventory.asInstanceOf[AnyRef]))
+    assert(first.pawnTopology.asInstanceOf[AnyRef] eq second.pawnTopology.asInstanceOf[AnyRef])
+    assertEquals(first.boardRelations, second.boardRelations)
+    assert(!(first.boardRelations.asInstanceOf[AnyRef] eq second.boardRelations.asInstanceOf[AnyRef]))
+
+  test("canonical relation producers are unique without defensive deduplication"):
+    val current = relations("4k3/3p1p2/2n1b3/1q1P4/2B1P3/2N2N2/3Q1P2/4K3 w - - 0 1")
+    assertEquals(current.map(_.semanticId).distinct.size, current.size)
+
+  test("all consumers share one normalized full-FEN parse while clock-distinct positions remain distinct"):
+    val fen = "4k3/8/8/8/3q4/8/3R4/4K3 w - - 0 1"
+    val first = PrincipalVariationEvidence.readPosition(fen).getOrElse(fail("expected a legal position"))
+    val repeated = PrincipalVariationEvidence
+      .readPosition(s"  ${fen.replace(" ", "   ")}  ")
+      .getOrElse(fail("expected the normalized position"))
+    val differentClock = PrincipalVariationEvidence
+      .readPosition("4k3/8/8/8/3q4/8/3R4/4K3 w - - 37 92")
+      .getOrElse(fail("expected the clock-distinct position"))
+
+    assert(first.asInstanceOf[AnyRef] eq repeated.asInstanceOf[AnyRef])
+    assert(!(first.asInstanceOf[AnyRef] eq differentClock.asInstanceOf[AnyRef]))
+    assertEquals(first.history.halfMoveClock, HalfMoveClock(0))
+    assertEquals(differentClock.history.halfMoveClock, HalfMoveClock(37))

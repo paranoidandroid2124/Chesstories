@@ -189,7 +189,7 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
           div(cls := "site-footer__group")(
             strong("Product"),
             a(href := siteHomeUrl)("Home"),
-            a(href := routes.UserAnalysis.index.url)("Analysis"),
+            a(href := routes.UserAnalysis.index.url)("Review"),
             a(href := "/study")("Study"),
             a(href := routes.Importer.importGame.url)("Import")
           ),
@@ -227,7 +227,7 @@ final class layout(helpers: Helpers, assetHelper: lila.web.ui.AssetFullHelper):
       s"""
 <input type="checkbox" id="$navToggleId" class="$navToggleClass fullscreen-toggle" autocomplete="off" aria-label="Navigation" tabindex="-1" aria-hidden="true">
 <label for="$navToggleId" class="fullscreen-mask"></label>
-<button type="button" class="$burgerClass js-topnav-toggle" aria-controls="$navId" aria-expanded="false" aria-label="Open navigation"><span class="$burgerInnerClass"></span></button>"""
+<button type="button" class="$burgerClass js-nav-toggle" aria-controls="$navId" aria-expanded="false" aria-label="Open navigation"><span class="$burgerInnerClass"></span></button>"""
 
     private val siteNameFrag: Frag = frag(siteName)
 

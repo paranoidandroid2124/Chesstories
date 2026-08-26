@@ -1,22 +1,24 @@
 package lila.chessjudgment.analysis.assembly
 
-import chess.{ Black, Queen, White }
-import lila.chessjudgment.analysis.policy.{ ClaimAdmissionStatus, ClaimTruthPolicy }
-import lila.chessjudgment.model.Motif
+import chess.{ Black, White }
+import lila.chessjudgment.analysis.position.{ PositionAnalyzer, PositionRelationExtractor }
+import lila.chessjudgment.analysis.structure.StructuralDeltaAnalyzer
+import lila.chessjudgment.analysis.tactical.TacticalRelationEvidence
+import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
 import lila.chessjudgment.model.judgment.*
-import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.line.{ CanonicalPositionHistory, PrincipalVariationEvidence }
 import lila.chessjudgment.model.strategic.EngineLine
 
 class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
 
-  private val queenFen = "4k3/8/8/8/8/8/8/3QK3 w - - 0 1"
+  private val queenFen = "4k3/8/8/8/8/8/4B3/4R1K1 w - - 0 1"
   private val queenPosition = PositionNodeRef(queenFen, 0, Some(White))
-  private val queenReference = LineNodeRef("queen-reference", "d1h5", 1, LineNodeRole.BestReference)
-  private val queenCandidate = LineNodeRef("queen-played", "d1d2", 2, LineNodeRole.Played)
+  private val queenReference = LineNodeRef("queen-reference", "e2b5", 1, LineNodeRole.BestReference)
+  private val queenCandidate = LineNodeRef("queen-played", "e2d3", 2, LineNodeRole.Played)
   private val queenFact = comparison(queenPosition, queenReference, queenCandidate)
   private val queenBinding = binding(queenReference)
 
-  test("exact direct pawn blockades remain endpoint-owned resources"):
+  test("hypothetical-turn pawn blockades do not enter v6 authority"):
     val raw = RawMoveReviewInput(
       fen = "8/5ppp/8/5P1P/2k3P1/2p5/5P2/2K5 b - - 0 1",
       playedMoveUci = "h7h6",
@@ -31,344 +33,99 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
       .getOrElse(fail("expected a complete cached-line fact assembly"))
     val c = RelativeAssessmentAssembler.enrichCauses(f)
     val graph = c.evidenceGraph
-    val rootPlanContent = JudgmentClaimAssembler.propose(c).find { claim =>
-      claim.content.collect { case JudgmentClaimContent.StrategicMechanism(carrier) =>
-        carrier.position == c.playedTransition.map(_.from).getOrElse(carrier.position) &&
-          graph.record(carrier).exists {
-            case EvidenceRecord(_, mechanism: StrategicMechanismEvidence, _) =>
-              mechanism.signals.exists(signal => graph.record(signal.source).exists(_.payload.isInstanceOf[PlanCausalEventEvidence]))
-            case _ => false
-          }
-      }.getOrElse(false)
-    }.getOrElse(fail("expected a root PlanCausalEvent strategic content claim"))
-    assertEquals(ClaimTruthPolicy.evaluate(rootPlanContent, c).status, ClaimAdmissionStatus.Certified)
-    val causes = graph.records.collect {
-      case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) => ref -> cause
-    }
-    val snapshotsByComparisonId = RelativeAssessmentAssembler
-      .comparisonEndpointEvidenceSnapshots(f)
-      .map(snapshot => snapshot.comparisonEvidence.id -> snapshot)
-      .toMap
-    def blockadeCause(
-        side: RelativeCauseSourceSide,
-        attribution: CauseAttributionKind,
-        restrictedFrom: String,
-        restrictedTo: String
-    ): (EvidenceRef, RelativeCauseFact, List[DirectCauseChannel]) =
-      val (ref, cause) = causes.find { case (_, candidate) =>
-        candidate.kind == RelativeCauseKind.OpponentRestriction &&
-          candidate.sourceSide == side &&
-          candidate.attribution.kind == attribution
-      }.getOrElse(fail(s"missing $side direct pawn-blockade Cause"))
-      val channels = RelativeCauseConstructionAdmission.admittedDirectChannels(cause, graph)
-      assert(channels.nonEmpty)
-      assert(cause.directEffectAdmission.productionReady)
-      assertEquals(graph.comparisonFor(cause).map(_.kind), Some(CandidateComparisonKind.PlayedVsBest))
-      val snapshot = snapshotsByComparisonId.getOrElse(
-        cause.comparisonEvidence.id,
-        fail(s"missing neutral snapshot for ${cause.comparisonEvidence.id}")
-      )
-      assert(
-        channels.exists(channel =>
-          ComparisonEndpointEffectObservationPolicy
-            .uniqueNeutralWitnessFor(snapshot, cause.sourceSide, channel, graph)
-            .nonEmpty
-        )
-      )
-      channels.foreach(channel =>
-        val targets = channel.binding.target.map(_.signaturePart).toSet
-        assertEquals(channel.directChange, DirectCausalChange.Prevented)
-        assert(targets(s"${EvidenceObjectKind.Piece}:pawn"))
-        assert(targets(s"${EvidenceObjectKind.Square}:$restrictedFrom"))
-        assert(targets(s"${EvidenceObjectKind.Square}:$restrictedTo"))
-        val proof = channel.rootOwnedProof.getOrElse(fail("expected an owned structural proof"))
-        val segment = DirectCauseProofSegment.from(proof).getOrElse(fail("expected an exact root proof segment"))
-        assertEquals(segment.steps.map(_.moveUci), List(channel.binding.line.get.rootMove))
-        def structuralPrimitive(value: RootOwnedEffectProof): Option[(StructuralDeltaEvidence, TransitionConsequence)] =
-          value match
-            case RootOwnedEffectProof.StructuralTransition(_, delta, consequence) => Some(delta -> consequence)
-            case RootOwnedEffectProof.StrategicAxis(primitive, _, _)               => structuralPrimitive(primitive)
-            case _                                                                 => None
-        val (delta, consequence) = structuralPrimitive(proof).getOrElse(fail("expected a structural primitive"))
-        assertEquals(delta.moveUci, channel.binding.line.get.rootMove)
-        assert(
-          StructuralDeltaEvidence
-            .exactRootOccupiedPawnAdvanceRestrictions(delta, consequence)
-            .contains(s"pawn:$restrictedFrom-$restrictedTo:advance-restricted")
-        )
-      )
-      val expectedAxisLabel = s"direct-pawn-advance-block:$restrictedFrom-$restrictedTo"
-      val (carriedChannel, carrier, signal) = channels.flatMap { channel =>
-        graph.record(channel.binding.source).toList.collect {
-          case EvidenceRecord(_, mechanism: StrategicMechanismEvidence, _) =>
-            mechanism.signals
-              .find(_.axis.exists(axis =>
-                axis.kind == StrategicAxisKind.Counterplay &&
-                  axis.polarity == StrategicAxisPolarity.Restrain &&
-                  axis.label == expectedAxisLabel
-              ))
-              .map(signal => (channel, mechanism, signal))
-        }.flatten
-      }.headOption.getOrElse(fail("expected a direct PlanPressure carrier"))
-      val eventRecord = graph.record(signal.source).collect {
-        case record @ EvidenceRecord(_, event: PlanCausalEventEvidence, _) => record -> event
-      }.getOrElse(fail("expected the carrier to own an exact plan event"))
-      val (eventEvidence, event) = eventRecord
-      val primitives = DirectOpponentRestrictionProof
-        .exactRootPawnBlockadePrimitives(eventEvidence.ref, event, graph)
-      assert(primitives.nonEmpty)
-      val (structuralRef, _, lineRef, line, _) = primitives.head
-      val directParentIds = eventEvidence.parents.map(_.id).toSet
-      assert(directParentIds(structuralRef.id))
-      assert(directParentIds(lineRef.id))
-      assertEquals(line.rootActorSurvivesReply, Some(true))
-      val provenanceIds = carriedChannel.binding.provenance.map(_.id).toSet
-      assert(provenanceIds(eventEvidence.ref.id))
-      assert(provenanceIds(structuralRef.id))
-      assert(provenanceIds(lineRef.id))
-      assert(carrier.signals.exists(_.source.id == eventEvidence.ref.id))
-      (ref, cause, channels)
-
-    val (_, referenceCause, referenceChannels) = blockadeCause(
-      RelativeCauseSourceSide.Reference,
-      CauseAttributionKind.ReferenceCreatesResource,
-      restrictedFrom = "f5",
-      restrictedTo = "f6"
-    )
-    val (_, candidateCause, candidateChannels) = blockadeCause(
-      RelativeCauseSourceSide.Candidate,
-      CauseAttributionKind.CandidateCreatesValue,
-      restrictedFrom = "h5",
-      restrictedTo = "h6"
-    )
-    assert(referenceChannels.forall(_.binding.line.exists(_.rootMove == "f7f6")))
-    assert(candidateChannels.forall(_.binding.line.exists(_.rootMove == "h7h6")))
-    assert(!causes.exists { case (_, cause) =>
-      cause.kind == RelativeCauseKind.OpponentRestriction &&
-        cause.attribution.kind == CauseAttributionKind.CandidateAllowsLiability
+    assert(!graph.records.exists {
+      case EvidenceRecord(_, delta: StructuralDeltaEvidence, _) =>
+        delta.consequencesOf(TransitionConsequenceKind.OpponentMobilityRestriction).nonEmpty
+      case _ => false
     })
-    assertEquals(referenceCause.sourceSide, RelativeCauseSourceSide.Reference)
-    assertEquals(candidateCause.sourceSide, RelativeCauseSourceSide.Candidate)
+    assert(!graph.records.exists {
+      case EvidenceRecord(_, event: PlanCausalEventEvidence, _) =>
+        event.planId == lila.chessjudgment.model.strategic.PlanTaxonomy.PlanKind.ProphylaxisRestraint
+      case _ => false
+    })
+    assert(!graph.records.exists {
+      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
+        cause.kind == RelativeCauseKind.OpponentRestriction
+      case _ => false
+    })
 
   test("direct pawn restriction authority rejects illegal and non-surviving blockades"):
-    def restrictionDelta(fen: String, move: String, line: LineNodeRef): (StructuralDeltaEvidence, TransitionConsequence) =
-      val afterFen = PrincipalVariationEvidence
-        .legalFenAfter(fen, move)
-        .getOrElse(fail(s"expected legal root move $move"))
-      val consequence = TransitionConsequence(
-        kind = TransitionConsequenceKind.OpponentMobilityRestriction,
-        polarity = StructuralSignalPolarity.Gain,
-        strength = 2,
-        subjects = List("pawn:f5-f6:advance-restricted")
+    def restrictionDelta(
+        fen: String,
+        move: String,
+        line: LineNodeRef
+    ): (StructuralDeltaEvidence, Option[TransitionConsequence]) =
+      val replay = certifiedReplay(fen, List(move))
+      val replayTransition = replay.onlyTransition.getOrElse(fail("expected one replay transition"))
+      val afterFen = replayTransition.declared.fenAfter
+      val from = PositionNodeRef(fen, 0, Some(Black))
+      val to = PositionNodeRef(afterFen, 1, Some(White))
+      val beforeRelations = canonicalRelations(replayTransition.beforeAnalysis, from)
+      val afterRelations = canonicalRelations(replayTransition.afterAnalysis, to)
+      val delta = StructuralDeltaAnalyzer.bind(
+        transition = replayTransition,
+        canonicalRelations = CanonicalRelationDelta.bind(
+          replayTransition.declared,
+          replayTransition.relationDelta,
+          beforeRelations,
+          afterRelations
+        )
       )
-      StructuralDeltaEvidence(
-        transition = StructuralTransitionBinding(
-          moveUci = move,
-          role = TransitionEdgeRole.Reference,
-          from = PositionNodeRef(fen, 0, Some(Black)),
-          to = PositionNodeRef(afterFen, 1, Some(White)),
+      val transitionRef = EvidenceRef(
+        id = s"restriction-transition:$move:${line.id}",
+        producer = EvidenceProducer.MoveTransitionProducer,
+        layer = EvidenceLayer.MoveTransition,
+        position = from,
+        line = Some(line),
+        scope = EvidenceScope.ReferenceTransition,
+        confidence = EvidenceConfidence.LegalReplayVerified
+      )
+
+      val transition = MoveTransitionEdge(
+        role = TransitionEdgeRole.Reference,
+        from = from,
+        moveUci = move,
+        to = to,
+        evidence = transitionRef
+      )
+      val structural = TransitionFactNormalizer
+        .fromStructuralDelta(
+          id = s"restriction-structural:$move:${line.id}",
+          delta = delta,
+          transition = transition,
+          replay = replay,
           line = Some(line),
-          perspective = Black
-        ),
-        signals = Nil,
-        consequences = List(consequence)
-      ) -> consequence
+          perspective = Black,
+          parents = Nil
+        )
+        .payload match
+          case value: StructuralDeltaEvidence => value
+          case _                              => fail("expected normalized structural evidence")
+      val consequence = structural
+        .consequencesOf(TransitionConsequenceKind.OpponentMobilityRestriction)
+        .headOption
+      structural -> consequence
 
     val pinnedFen = "2k5/5p2/8/r4P1K/8/8/8/8 b - - 0 1"
     val pinnedLine = LineNodeRef("pinned-pawn-reference", "f7f6", 1, LineNodeRole.BestReference)
     val (pinnedDelta, pinnedConsequence) = restrictionDelta(pinnedFen, "f7f6", pinnedLine)
-    assertEquals(
-      StructuralDeltaEvidence.exactRootOccupiedPawnAdvanceRestrictions(pinnedDelta, pinnedConsequence),
-      Nil
-    )
-    assert(!DirectOpponentRestrictionProof.directRestrictionSurvivesReply(pinnedLine, pinnedDelta, None))
-    assert(!StrategicMechanismEvidence
-      .structuralAxesForConsequence(pinnedDelta, pinnedConsequence)
-      .exists(_.label.startsWith("direct-pawn-advance-block:")))
+    assertEquals(pinnedConsequence, None)
+    assertEquals(pinnedDelta.consequencesOf(TransitionConsequenceKind.OpponentMobilityRestriction), Nil)
 
     val capturedFen = "2k5/5p2/8/4PP2/8/8/8/2K5 b - - 0 1"
     val capturedLine = LineNodeRef("captured-blocker-reference", "f7f6", 1, LineNodeRole.BestReference)
-    val (capturedDelta, capturedConsequence) = restrictionDelta(capturedFen, "f7f6", capturedLine)
-    val afterRoot = capturedDelta.transition.to.fen
-    val afterReply = PrincipalVariationEvidence
-      .legalFenAfter(afterRoot, "e5f6")
-      .getOrElse(fail("expected the reply to capture the blocker"))
-    val capturedLineFact = LineFactEvidence(
+    val (capturedDelta, capturedConsequenceOption) = restrictionDelta(capturedFen, "f7f6", capturedLine)
+    assertEquals(capturedConsequenceOption, None)
+    val capturedReplay = certifiedReplay(capturedFen, List("f7f6", "e5f6"))
+    val capturedLineFact = LineFactEvidence.fromCertifiedReplay(
       line = capturedLine,
-      replay = List(
-        LineReplayStep(1, "f7f6", capturedFen, afterRoot),
-        LineReplayStep(2, "e5f6", afterRoot, afterReply)
-      )
-    )
-    assert(
-      StructuralDeltaEvidence
-        .exactRootOccupiedPawnAdvanceRestrictions(capturedDelta, capturedConsequence)
-        .nonEmpty
+      replay = capturedReplay
     )
     assertEquals(capturedLineFact.rootActorSurvivesReply, Some(false))
-    assert(!DirectOpponentRestrictionProof
-      .directRestrictionSurvivesReply(capturedLine, capturedDelta, Some(capturedLineFact)))
+    assertEquals(capturedDelta.consequencesOf(TransitionConsequenceKind.OpponentMobilityRestriction), Nil)
 
-  test("Threat direct ownership distinguishes exact defense from a root-created mate threat"):
-    val defenseFen = "4k3/8/8/8/7q/8/6P1/4K3 w - - 0 1"
-    val defensePosition = PositionNodeRef(defenseFen, 0, Some(White))
-    val defenseLine = LineNodeRef("defense-reference", "g2g3", 1, LineNodeRole.BestReference)
-    val defenseCandidate = LineNodeRef("defense-played", "e1f1", 2, LineNodeRole.Played)
-    val defenseFact = comparison(defensePosition, defenseLine, defenseCandidate)
-    val defenseBinding = binding(defenseLine)
-    val exactDefense = threatRecord(
-      "exact-defense",
-      defensePosition,
-      defenseLine,
-      threatActor = Black,
-      motifMove = "d8h4",
-      motifPly = 0,
-      bestDefense = Some(defenseLine.rootMove),
-      defenseCount = 1
-    )
-    val wrongDefense = exactDefense.copy(
-      ref = exactDefense.ref.copy(id = "wrong-defense"),
-      payload = threatPayload(
-        threatActor = Black,
-        motifMove = "d8h4",
-        motifPly = 0,
-        bestDefense = Some("e1f1"),
-        defenseCount = 1
-      )
-    )
-    val wrongSide = exactDefense.copy(
-      ref = exactDefense.ref.copy(id = "wrong-side-defense"),
-      payload = threatPayload(
-        threatActor = White,
-        motifMove = defenseLine.rootMove,
-        motifPly = 0,
-        bestDefense = Some(defenseLine.rootMove),
-        defenseCount = 1
-      )
-    )
-    val defenseGraph = graphOf(exactDefense, wrongDefense, wrongSide)
-
-    assertEquals(
-      directIds(
-        defenseGraph,
-        defenseFact,
-        RelativeCauseKind.OnlyDefenseNecessity,
-        defenseBinding,
-        List(exactDefense)
-      ),
-      Set(exactDefense.ref.id)
-    )
-    List(wrongDefense, wrongSide).foreach(record =>
-      assertEquals(
-        directIds(
-          defenseGraph,
-          defenseFact,
-          RelativeCauseKind.OnlyDefenseNecessity,
-          defenseBinding,
-          List(record)
-        ),
-        Set.empty[String]
-      )
-    )
-    val exactBestDefense = exactDefense.copy(
-      ref = exactDefense.ref.copy(id = "exact-best-defense"),
-      payload = threatPayload(
-        threatActor = Black,
-        motifMove = "d8h4",
-        motifPly = 0,
-        bestDefense = Some(defenseLine.rootMove),
-        defenseCount = 2
-      )
-    )
-    val wrongBestDefense = exactBestDefense.copy(
-      ref = exactBestDefense.ref.copy(id = "wrong-best-defense"),
-      payload = threatPayload(
-        threatActor = Black,
-        motifMove = "d8h4",
-        motifPly = 0,
-        bestDefense = Some("e1f1"),
-        defenseCount = 2
-      )
-    )
-    val bestDefenseGraph = graphOf(exactBestDefense, wrongBestDefense, wrongSide)
-    assertEquals(
-      directIds(
-        bestDefenseGraph,
-        defenseFact,
-        RelativeCauseKind.DefensiveResource,
-        defenseBinding,
-        List(exactBestDefense)
-      ),
-      Set(exactBestDefense.ref.id)
-    )
-    List(wrongBestDefense, wrongSide).foreach(record =>
-      assertEquals(
-        directIds(
-          bestDefenseGraph,
-          defenseFact,
-          RelativeCauseKind.DefensiveResource,
-          defenseBinding,
-          List(record)
-        ),
-        Set.empty[String]
-      )
-    )
-
-    val rootThreat = threatRecord(
-      "root-created-mate",
-      queenPosition,
-      queenReference,
-      threatActor = White,
-      motifMove = queenReference.rootMove,
-      motifPly = 0,
-      bestDefense = None,
-      defenseCount = 0
-    )
-    val laterThreat = rootThreat.copy(
-      ref = rootThreat.ref.copy(id = "later-mate"),
-      payload = threatPayload(
-        threatActor = White,
-        motifMove = queenReference.rootMove,
-        motifPly = 1,
-        bestDefense = None,
-        defenseCount = 0
-      )
-    )
-    val wrongMoveThreat = rootThreat.copy(
-      ref = rootThreat.ref.copy(id = "wrong-move-mate"),
-      payload = threatPayload(
-        threatActor = White,
-        motifMove = "d1d2",
-        motifPly = 0,
-        bestDefense = None,
-        defenseCount = 0
-      )
-    )
-    val threatGraph = graphOf(rootThreat, laterThreat, wrongMoveThreat)
-    assertEquals(
-      directIds(
-        threatGraph,
-        queenFact,
-        RelativeCauseKind.KingForcing,
-        queenBinding,
-        List(rootThreat)
-      ),
-      Set(rootThreat.ref.id)
-    )
-    List(laterThreat, wrongMoveThreat).foreach(record =>
-      assertEquals(
-        directIds(
-          threatGraph,
-          queenFact,
-          RelativeCauseKind.KingForcing,
-          queenBinding,
-          List(record)
-        ),
-        Set.empty[String]
-      )
-    )
   test("Tactical mechanism requires its own exact root move and an owned primitive source"):
-    val explicitRelation = mateRelation("mechanism-relation", queenReference)
+    val explicitRelation = forcingRelation("mechanism-relation", queenReference)
     val mateEval = evalRecord("mechanism-mate-eval", queenPosition, queenReference)
     val exact = kingForcingMechanism(
       "exact-mechanism",
@@ -408,7 +165,7 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
       )
     )
 
-  test("PlanContradiction rejects a positive structural delta without an owned refuted plan event"):
+  test("PlanContradiction rejects a structural delta without an owned refuted plan event"):
     val candidateAfter = PositionNodeRef(
       PrincipalVariationEvidence
         .legalFenAfter(queenPosition.fen, queenCandidate.rootMove)
@@ -427,11 +184,21 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
       ),
       signals = Nil,
       consequences = List(TransitionConsequence(
-        TransitionConsequenceKind.TargetPressureGain,
-        StructuralSignalPolarity.Gain,
+        TransitionConsequenceKind.FileOccupationEstablished,
         strength = 3,
-        subjects = List("king:e8")
-      ))
+        subjectBindings = List(
+          StructuralSubjectBinding.unbound(
+            StructuralSubject.FileOccupation(
+              EvidenceFile("h"),
+              EvidenceSquare("h5"),
+              EvidencePieceRole("queen")
+            )
+          )
+        )
+      )),
+      relationChanges = Nil,
+      canonicalTransitionProof = None,
+      canonicalDeltaProof = None
     )
     val positiveStructural = EvidenceRecord(
       evidenceRef(
@@ -538,23 +305,27 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
       RelativeCauseBindingTier.Primary
     )
 
-  private def mateRelation(id: String, line: LineNodeRef): EvidenceRecord =
-    val detail = RelationWitnessDetail.MatePattern(
-      "mate_net",
-      EvidenceSquare("e8"),
-      List(EvidenceSquare("h5")),
-      line.rootMove,
-      Some("root-mate-net")
-    )
+  private def forcingRelation(id: String, line: LineNodeRef): EvidenceRecord =
+    val legalReplay = PrincipalVariationEvidence
+      .legalMoveReplay(queenFen, List(line.rootMove), startPly = 0)
+      .getOrElse(fail("expected legal forcing replay"))
+    val replay = CanonicalLineReplay
+      .fromLegalReplay(legalReplay)
+      .getOrElse(fail("expected canonical forcing replay"))
+    val certified = TacticalRelationEvidence
+      .relationProduction(replay, line.rootMove)
+      .relations
+      .find(_.kind == RelationFactKind.DoubleCheck)
+      .getOrElse(fail("expected exact double-check relation"))
     EvidenceRecord(
       evidenceRef(
         id,
-        EvidenceProducer.TacticalRelationProducer,
+        EvidenceProducer.RelationProducer,
         EvidenceLayer.Relation,
         queenPosition,
         line
       ),
-      RelationFactEvidence.from(detail, List(line.rootMove)).getOrElse(fail("expected mate relation"))
+      certified
     )
 
   private def evalRecord(
@@ -607,62 +378,14 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
           ),
           TacticalMechanismSignal(
             TacticalMechanismSignalKind.Relation,
-            "mate-net",
+            "double-check",
             EvidenceLayer.Relation,
             Some(relationSource),
-            Some(RelationFactKind.MateNet)
+            Some(RelationFactKind.DoubleCheck)
           )
         )
       )
     )
-
-  private def threatRecord(
-      id: String,
-      position: PositionNodeRef,
-      line: LineNodeRef,
-      threatActor: chess.Color,
-      motifMove: String,
-      motifPly: Int,
-      bestDefense: Option[String],
-      defenseCount: Int
-  ): EvidenceRecord =
-    EvidenceRecord(
-      evidenceRef(
-        id,
-        EvidenceProducer.ThreatPressureProducer,
-        EvidenceLayer.ThreatPressure,
-        position,
-        line
-      ),
-      threatPayload(threatActor, motifMove, motifPly, bestDefense, defenseCount)
-    )
-
-  private def threatPayload(
-      threatActor: chess.Color,
-      motifMove: String,
-      motifPly: Int,
-      bestDefense: Option[String],
-      defenseCount: Int
-  ): ThreatEpisodeEvidence =
-    val target = chess.Square.fromKey("e8").getOrElse(fail("expected e8"))
-    val threat = Threat(
-      threatActor,
-      ThreatKind.Mate,
-      turnsToImpact = 1,
-      motifs = List(Motif.Check(
-        Queen,
-        target,
-        Motif.CheckType.Mate,
-        threatActor,
-        motifPly,
-        Some(motifMove)
-      )),
-      attackSquares = List("e8"),
-      targetPieces = List("king"),
-      bestDefense = bestDefense,
-      defenseCount = defenseCount
-    )
-    ThreatEpisodeEvidence(ThreatEpisode.fromThreat(threat, 0))
 
   private def evidenceRef(
       id: String,
@@ -674,5 +397,37 @@ class RelativeCauseGenerationOwnershipTest extends munit.FunSuite:
   ): EvidenceRef =
     EvidenceRef(id, producer, layer, position, Some(line), line.role.scope, confidence)
 
+  private def certifiedReplay(fen: String, moves: List[String]): CanonicalLineReplay =
+    (for
+      history <- CanonicalPositionHistory.from(fen, Nil, fen).toOption
+      extended <- history.extend(moves).toOption
+      replay <- CanonicalLineReplay.fromHistory(
+        extended.segmentReplaySteps.drop(history.segmentReplaySteps.size)
+      )
+      rebased <- replay.rebased(1)
+    yield rebased).getOrElse(
+      fail(s"expected one certified replay for ${moves.mkString(" ")}")
+    )
+
   private def graphOf(records: EvidenceRecord*): TypedEvidenceGraph =
     records.foldLeft(TypedEvidenceGraph.empty)((graph, record) => graph.add(record))
+
+  private def canonicalRelations(
+      analysis: lila.chessjudgment.analysis.position.PositionAnalysis,
+      position: PositionNodeRef
+  ): CanonicalPositionRelationSnapshot =
+    TypedEvidenceGraph.empty
+      .addAll(
+        PositionRelationExtractor.records(
+          analysis.boardRelations,
+          position,
+          EvidenceScope.CurrentPosition,
+          relation => s"restriction:${position.ply}:${relation.semanticId}"
+        )
+      )
+      .relationGraph
+      .closedPositionRelationSnapshot(
+        position,
+        EvidenceScope.CurrentPosition,
+        analysis.relationInventory
+      )
