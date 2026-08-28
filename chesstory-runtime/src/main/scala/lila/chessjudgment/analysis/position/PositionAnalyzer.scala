@@ -59,6 +59,23 @@ private[position] object GeometricControlInventory:
     }
     GeometricControlInventory(retainedByOrigin ++ refreshedByOrigin, refreshedInverse)
 
+  def controllersAtAfterMove(
+      previous: GeometricControlInventory,
+      after: Board,
+      footprint: BoardTransitionFootprint,
+      side: Color,
+      target: Square
+  ): Set[Square] =
+    val invalidated = footprint.geometricControlOriginsToRefresh
+    val retained = previous.controllersByTarget.getOrElse(side -> target, Set.empty) -- invalidated
+    val refreshed = invalidated.filter { origin =>
+      after.pieceAt(origin).exists { piece =>
+        piece.color == side &&
+          BoardGeometry.geometricControls(piece.role, origin, piece.color, after.occupied).contains(target)
+      }
+    }
+    retained ++ refreshed
+
   private def attacksFor(board: Board, origins: Set[Square]): Map[Square, Bitboard] =
     origins.toList.flatMap { square =>
       board.pieceAt(square).map(piece =>
@@ -85,7 +102,6 @@ private[position] final class StaticBoardGeometryComputation private (
     val board: Board,
     private[position] val geometricControlInventory: GeometricControlInventory,
     val pawnTopology: PawnTopologySnapshot,
-    private[position] val occupiedSliderRaysByOrigin: Map[Square, List[OccupiedSliderRay]],
     private[position] val relationSnapshot: PositionRelationExtractor.BoardRelationSnapshot
 )
 
@@ -98,8 +114,7 @@ private[position] object StaticBoardGeometryComputation:
   def cold(board: Board): StaticBoardGeometryComputation =
     val geometricControls = GeometricControlInventory.from(board)
     val pawnTopology = PawnTopologySnapshot.from(board)
-    val raysByOrigin = BoardGeometry.occupiedSliderRays(board).groupBy(_.attackerSquare)
-    val rays = raysByOrigin.toList.sortBy(_._1.key).flatMap(_._2)
+    val rays = BoardGeometry.sliderRays(board)
     val relationSnapshot = PositionRelationExtractor.extractStaticBoardRelationSnapshot(
       board,
       rays,
@@ -110,7 +125,6 @@ private[position] object StaticBoardGeometryComputation:
       board = board,
       geometricControlInventory = geometricControls,
       pawnTopology = pawnTopology,
-      occupiedSliderRaysByOrigin = raysByOrigin,
       relationSnapshot = relationSnapshot
     )
 
@@ -120,12 +134,10 @@ private[position] object StaticBoardGeometryComputation:
       footprint: BoardTransitionFootprint
   ): StaticBoardGeometryBuild =
     val rayOrigins = footprint.affectedOccupiedRayOrigins
-    val refreshedRays = BoardGeometry.occupiedSliderRays(
+    val refreshedRays = BoardGeometry.sliderRays(
       board,
       rayOrigins
     )
-    val occupiedSliderRaysByOrigin =
-      (previous.occupiedSliderRaysByOrigin -- rayOrigins) ++ refreshedRays.groupBy(_.attackerSquare)
     val invalidatedAttackOrigins = footprint.geometricControlOriginsToRefresh
     val geometricControls = GeometricControlInventory.after(
       previous.geometricControlInventory,
@@ -150,7 +162,6 @@ private[position] object StaticBoardGeometryComputation:
       board = board,
       geometricControlInventory = geometricControls,
       pawnTopology = pawnTopology,
-      occupiedSliderRaysByOrigin = occupiedSliderRaysByOrigin,
       relationSnapshot = relationUpdate.snapshot
     )
     StaticBoardGeometryBuild(geometry, relationUpdate.transition)
@@ -169,7 +180,12 @@ private[position] final class PositionComputation private (
 
   private[chessjudgment] lazy val relationInventory:
       PositionRelationExtractor.PositionRelationInventoryCertificate =
-    PositionRelationExtractor.closedPositionInventory(relationSnapshot, position, actualLegalMoves)
+    PositionRelationExtractor.closedPositionInventory(
+      relationSnapshot,
+      position,
+      actualLegalMoves,
+      staticBoard.geometricControlInventory
+    )
 
   lazy val boardRelations: List[RelationFactEvidence] = relationInventory.relations
 

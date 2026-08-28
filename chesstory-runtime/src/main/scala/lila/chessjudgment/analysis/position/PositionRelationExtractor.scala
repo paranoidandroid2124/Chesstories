@@ -1,6 +1,6 @@
 package lila.chessjudgment.analysis.position
 
-import chess.{ Bishop, Board, Castles, Color, File, King, Move, Pawn, Position, Queen, Role, Rook, Side, Square }
+import chess.{ Bishop, Board, Castles, Color, File, King, Knight, Move, Pawn, Position, Queen, Rank, Role, Rook, Side, Square }
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 import lila.chessjudgment.model.position.*
@@ -10,6 +10,87 @@ object PositionRelationExtractor:
   private[position] enum BoardRelationInventoryDomain:
     case StaticBoard
     case PositionOccurrence
+
+  private[position] enum BoardRelationProductionSlot:
+    case AttackOrigin(square: Square)
+    case SliderDirection(square: Square, fileStep: Int, rankStep: Int)
+    case PawnFileState(side: Color, file: File)
+    case PawnFrontState(side: Color, pawn: Square)
+    case PawnPassageState(side: Color, pawn: Square)
+    case PawnAdvanceState(side: Color, pawn: Square)
+    case LegalMoveInventory
+
+    private[position] def refreshKeys: Set[RelationDependencyKey] =
+      this match
+        case BoardRelationProductionSlot.AttackOrigin(square) =>
+          Set(RelationDependencyKey.AttackOrigin(square))
+        case BoardRelationProductionSlot.SliderDirection(square, _, _) =>
+          Set(RelationDependencyKey.SliderOrigin(square))
+        case BoardRelationProductionSlot.PawnFileState(side, file) =>
+          Set(RelationDependencyKey.PawnFile(side, file))
+        case BoardRelationProductionSlot.PawnFrontState(side, pawn) =>
+          Set(RelationDependencyKey.PawnIdentity(side, pawn)) ++
+            pawnFrontSquares(side, pawn).headOption.map(RelationDependencyKey.PawnFrontCell(side, _))
+        case BoardRelationProductionSlot.PawnPassageState(side, pawn) =>
+          Set(RelationDependencyKey.PawnIdentity(side, pawn)) ++
+            pawnPassageSquares(side, pawn).map(RelationDependencyKey.PawnIdentity(!side, _))
+        case BoardRelationProductionSlot.PawnAdvanceState(side, pawn) =>
+          Set(RelationDependencyKey.PawnIdentity(side, pawn)) ++
+            pawnFrontSquares(side, pawn).map(RelationDependencyKey.PawnFrontCell(side, _))
+        case BoardRelationProductionSlot.LegalMoveInventory =>
+          Set(RelationDependencyKey.LegalMoveInventory)
+
+  private[position] final case class ProducedBoardRelation private (
+      slot: BoardRelationProductionSlot,
+      fact: CanonicalRelationFact
+  ):
+    require(
+      fact.dependencyFootprint.exists(_.keys.intersect(slot.refreshKeys).nonEmpty),
+      "a produced board fact must retain the dependency of its exact production slot"
+    )
+
+  private[position] object ProducedBoardRelation:
+    def apply(
+        slot: BoardRelationProductionSlot,
+        detail: RelationWitnessDetail,
+        dependencyKeys: Set[RelationDependencyKey],
+        dependencySquares: List[EvidenceSquare]
+    ): ProducedBoardRelation =
+      val footprint = RelationDependencyFootprint(
+        dependencyKeys,
+        dependencySquares.distinct.sortBy(_.key)
+      )
+      new ProducedBoardRelation(slot, CanonicalRelationFact.fromPosition(detail, footprint))
+
+  private[position] final case class ClosedBoardRelationProduction private[position] (
+      executedSlots: Set[BoardRelationProductionSlot],
+      activeSlots: Set[BoardRelationProductionSlot],
+      facts: List[ProducedBoardRelation]
+  ):
+    require(activeSlots.subsetOf(executedSlots), "active production slots must have been executed")
+    require(
+      facts.forall(produced => activeSlots(produced.slot)),
+      "a produced fact must belong to one active slot"
+    )
+    require(
+      facts.map(_.fact.detail).distinct.size == facts.size,
+      "one closed production cannot emit duplicate relation details"
+    )
+    private val factCountBySlot = facts.groupMapReduce(_.slot)(_ => 1)(_ + _)
+    activeSlots.foreach { slot =>
+      val count = factCountBySlot.getOrElse(slot, 0)
+      slot match
+        case _: BoardRelationProductionSlot.AttackOrigin =>
+          require(count > 0, "an occupied attack origin must emit its complete non-empty control set")
+        case _: BoardRelationProductionSlot.SliderDirection |
+            _: BoardRelationProductionSlot.PawnFileState |
+            _: BoardRelationProductionSlot.PawnFrontState |
+            _: BoardRelationProductionSlot.PawnPassageState =>
+          require(count == 1, "one closed state slot must emit exactly one canonical relation")
+        case _: BoardRelationProductionSlot.PawnAdvanceState =>
+          require(count <= 2, "one pawn can expose at most two geometric advance resources")
+        case BoardRelationProductionSlot.LegalMoveInventory => ()
+    }
 
   private def inventoryDomain(kind: RelationFactKind): Option[BoardRelationInventoryDomain] =
     import BoardRelationInventoryDomain.*
@@ -26,20 +107,11 @@ object PositionRelationExtractor:
           RelationFactKind.SliderLineInterruption |
           RelationFactKind.GeometricLineControlAfterBlockerRemoval |
           RelationFactKind.NamedRayTransition |
-          RelationFactKind.GeometricSupportCausalTransition |
           RelationFactKind.CaptureRecaptureInventory |
           RelationFactKind.CreatedCheckResponseInventory |
           RelationFactKind.RootCheckResponse |
-          RelationFactKind.MovementAffordanceLegalRestriction |
-          RelationFactKind.AbsolutePinMovementRestriction |
           RelationFactKind.SliderReachDelta |
-          RelationFactKind.GeometricMultiTargetContact |
-          RelationFactKind.GeometricEnemyContactWithoutFriendlySupport |
-          RelationFactKind.SharedGeometricSupportOfEnemyControlledTargets |
           RelationFactKind.PawnTopologyTransition |
-          RelationFactKind.PawnOccupiedFilePartitionTransition |
-          RelationFactKind.MajorPiecePawnFileCorridorTransition |
-          RelationFactKind.CastlingRightRemoved |
           RelationFactKind.StalemateTransition =>
         None
 
@@ -72,10 +144,12 @@ object PositionRelationExtractor:
 
   private[position] final class BoardRelationSnapshot private (
       private[position] val domain: BoardRelationInventoryDomain,
+      private[position] val activeSlots: Set[BoardRelationProductionSlot],
       private[position] val factsByDetail: Map[RelationWitnessDetail, CanonicalRelationFact],
       factsBySemanticId: Map[String, CanonicalRelationFact],
       detailsByRefreshKey: Map[RelationDependencyKey, Set[RelationWitnessDetail]],
-      refreshKeysByDetail: Map[RelationWitnessDetail, Set[RelationDependencyKey]]
+      refreshKeysByDetail: Map[RelationWitnessDetail, Set[RelationDependencyKey]],
+      detailsBySlot: Map[BoardRelationProductionSlot, Set[RelationWitnessDetail]]
   ):
     require(
       factsByDetail.values.forall(fact => inventoryDomain(fact.kind).contains(domain)),
@@ -116,19 +190,32 @@ object PositionRelationExtractor:
       )
 
     def updated(
-        refreshed: List[RelationWitnessDetail],
+        production: ClosedBoardRelationProduction,
         refresh: BoardRelationRefreshFootprint
     ): BoardRelationUpdate =
       require(
         domain == BoardRelationInventoryDomain.StaticBoard,
         "only the static-board inventory supports sparse dependency refresh"
       )
-      require(refreshed.distinct.size == refreshed.size, "one incremental producer emitted duplicate relation details")
-      val affected = detailsFor(refresh.keys)
-      val refreshedSet = refreshed.toSet
-      val refreshedFacts = refreshedSet.map(detail =>
-        detail -> factsByDetail.getOrElse(detail, CanonicalRelationFact.from(detail, Nil))
-      ).toMap
+      val affectedSlots = activeSlots.filter(slot => slot.refreshKeys.intersect(refresh.keys).nonEmpty)
+      require(
+        production.executedSlots == affectedSlots ++ production.activeSlots,
+        "an incremental producer must execute every retired and active affected slot exactly once"
+      )
+      require(
+        production.activeSlots.forall(slot => slot.refreshKeys.intersect(refresh.keys).nonEmpty),
+        "an incremental producer cannot activate a slot outside the exact refresh footprint"
+      )
+      val affected = affectedSlots.flatMap(slot => detailsBySlot.getOrElse(slot, Set.empty))
+      require(
+        affected == detailsFor(refresh.keys),
+        "slot closure and dependency indexes must identify the same affected facts"
+      )
+      val refreshedSet = production.facts.map(_.fact.detail).toSet
+      val refreshedFacts = production.facts.map { produced =>
+        val detail = produced.fact.detail
+        detail -> factsByDetail.getOrElse(detail, produced.fact)
+      }.toMap
       require(
         refreshedFacts.values.forall(fact =>
           fact.dependencyFootprint.exists(_.keys.exists(refresh.keys))
@@ -169,10 +256,15 @@ object PositionRelationExtractor:
       }
       val snapshot = new BoardRelationSnapshot(
         domain,
+        (activeSlots -- affectedSlots) ++ production.activeSlots,
         nextFactsByDetail,
         nextFactsBySemanticId,
         nextByRefreshKey,
-        nextKeysByDetail
+        nextKeysByDetail,
+        ((detailsBySlot -- affectedSlots) ++ production.facts
+          .groupMap(_.slot)(_.fact.detail)
+          .view
+          .mapValues(_.toSet))
       )
       BoardRelationUpdate(
         snapshot = snapshot,
@@ -188,10 +280,13 @@ object PositionRelationExtractor:
   private[position] object BoardRelationSnapshot:
     def from(
         domain: BoardRelationInventoryDomain,
-        details: List[RelationWitnessDetail]
+        production: ClosedBoardRelationProduction
     ): BoardRelationSnapshot =
-      require(details.distinct.size == details.size, "one cold producer emitted duplicate relation details")
-      val factsByDetail = details.map(detail => detail -> CanonicalRelationFact.from(detail, Nil)).toMap
+      require(
+        production.executedSlots == production.activeSlots,
+        "a cold inventory must execute every active production slot"
+      )
+      val factsByDetail = production.facts.map(produced => produced.fact.detail -> produced.fact).toMap
       val factsBySemanticId = factsByDetail.values.map(fact => fact.semanticId -> fact).toMap
       require(
         factsBySemanticId.size == factsByDetail.size,
@@ -208,7 +303,15 @@ object PositionRelationExtractor:
         .view
         .mapValues(_.toSet)
         .toMap
-      new BoardRelationSnapshot(domain, factsByDetail, factsBySemanticId, byKey, keysByDetail)
+      new BoardRelationSnapshot(
+        domain,
+        production.activeSlots,
+        factsByDetail,
+        factsBySemanticId,
+        byKey,
+        keysByDetail,
+        production.facts.groupMap(_.slot)(_.fact.detail).view.mapValues(_.toSet).toMap
+      )
 
   private[position] final case class PositionRelationSnapshot(
       staticBoard: BoardRelationSnapshot,
@@ -269,9 +372,16 @@ object PositionRelationExtractor:
         case _                                    => None
 
   private[position] object ClosedGeometricControl:
-    def from(source: RelationFactEvidence): ClosedGeometricControl =
+    def from(
+        source: RelationFactEvidence,
+        occupantAt: EvidenceSquare => Option[RelationColoredPieceWitness]
+    ): ClosedGeometricControl =
       source.detail match
-        case RelationWitnessDetail.GeometricControl(side, controller, role, target, targetState) =>
+        case RelationWitnessDetail.GeometricControl(side, controller, role, target) =>
+          val targetState = occupantAt(target) match
+            case None => RelationControlTarget.Empty
+            case Some(piece) if piece.side == side => RelationControlTarget.Friendly(piece.role)
+            case Some(piece) => RelationControlTarget.Enemy(piece.role)
           ClosedGeometricControl(
             source,
             side,
@@ -312,7 +422,7 @@ object PositionRelationExtractor:
       direction: RelationRayDirection,
       controls: List[ClosedGeometricControl],
       firstOccupant: Option[RelationColoredPieceWitness],
-      barrierSource: Option[RelationFactEvidence]
+      raySource: RelationFactEvidence
   ):
     require(controls.nonEmpty, "a closed slider reach needs one controlled square")
     require(
@@ -320,8 +430,12 @@ object PositionRelationExtractor:
       "a closed slider reach must retain one exact controller occurrence"
     )
     require(
-      firstOccupant.nonEmpty == barrierSource.nonEmpty,
-      "a closed slider reach must bind its first occupant to the canonical ray barrier"
+      raySource.detail match
+        case RelationWitnessDetail.RayBarrier(owner, attacker, attackerRole, occupants, geometry) =>
+          owner == side && attacker == slider.square && attackerRole == slider.role &&
+            geometry.direction == direction && occupants.headOption == firstOccupant
+        case _ => false,
+      "a closed slider reach must bind its exact canonical ray topology"
     )
 
     def segment: List[RelationControlReachWitness] =
@@ -404,39 +518,36 @@ object PositionRelationExtractor:
   ):
     require(modes.nonEmpty, "every legal check response needs its exact response mechanism")
 
-  /** A geometrically reachable king destination that is controlled in the
-    * current position and absent from the closed legal-move inventory. This
-    * intentionally says nothing about controls that would appear only after
-    * the king vacates or captures on the destination.
+  /** One exact geometric resource that is absent from the legal inventory
+    * because its candidate board exposes the moving side's king. This is the
+    * sole legality-restriction producer; pin is an optional explanation of the
+    * resulting controller, never a second legality authority.
     */
-  private[chessjudgment] final case class ClosedControlledKingDestination private[position] (
+  private[chessjudgment] final case class ClosedLegalResourceRestriction private[position] (
       movement: ClosedMovementAffordance,
-      opponentControls: List[ClosedGeometricControl]
+      boardEffect: BoardMoveEffect,
+      kingSquare: EvidenceSquare,
+      postMoveControllers: List[RelationPieceWitness]
   ):
     require(
-      movement.piece.role.name.equalsIgnoreCase(King.name) &&
-        movement.mode == RelationMovementResourceMode.ControlledDestination,
-      "a controlled king destination needs one exact geometric king movement"
+      boardEffect.pieceTransitions.exists(transition =>
+        evidenceRole(transition.beforeRole) == movement.piece.role &&
+          evidenceSquare(transition.from) == movement.piece.square &&
+          evidenceSquare(transition.to) == movement.destination
+      ),
+      "a legal-resource restriction needs its exact candidate transition"
     )
-    require(opponentControls.nonEmpty, "a controlled king destination needs a current opponent control")
+    require(postMoveControllers.nonEmpty, "a legal-resource restriction needs post-move king exposure")
     require(
-      opponentControls.forall(_.targetSquare == movement.destination),
-      "every opponent control must terminate on the exact king destination"
-    )
-    require(
-      opponentControls.map(_.target).distinct.size == 1,
-      "one occupied destination must have one opponent-side target classification"
-    )
-    require(
-      opponentControls.distinct.size == opponentControls.size &&
-        opponentControls == opponentControls.sortBy(control =>
-          control.controller.square.key -> control.controller.role.name
+      postMoveControllers.distinct.size == postMoveControllers.size &&
+        postMoveControllers == postMoveControllers.sortBy(controller =>
+          controller.square.key -> controller.role.name
         ),
-      "opponent controls of a king destination must be unique and canonical"
+      "post-move king controllers must be unique and canonical"
     )
 
-    private[position] def stableKey: String =
-      s"${movement.destination.key.toLowerCase}:${opponentControls.map(control => s"${control.controller.role.name.toLowerCase}@${control.controller.square.key.toLowerCase}").mkString(",")}"
+    private[chessjudgment] def stableKey: String =
+      s"${movement.piece.role.name.toLowerCase}@${movement.piece.square.key.toLowerCase}-${movement.destination.key.toLowerCase}:${movement.mode.stableKey}:${kingSquare.key.toLowerCase}:${postMoveControllers.map(controller => s"${controller.role.name.toLowerCase}@${controller.square.key.toLowerCase}").mkString(",")}"
 
   private[chessjudgment] enum ClosedKingTerminalState:
     case Ongoing
@@ -454,7 +565,7 @@ object PositionRelationExtractor:
       checkers: List[ClosedGeometricControl],
       legalMoves: List[ClosedLegalMove],
       responses: List[ClosedKingResponse],
-      controlledKingDestinations: List[ClosedControlledKingDestination],
+      controlledKingDestinations: List[ClosedLegalResourceRestriction],
       interpositionRay: Option[RelationFactEvidence],
       terminal: ClosedKingTerminalState
   ):
@@ -474,7 +585,8 @@ object PositionRelationExtractor:
     require(
       controlledKingDestinations.forall(destination =>
         kingSquare.contains(destination.movement.piece.square) &&
-          destination.opponentControls.forall(_.side == !side) &&
+          destination.movement.piece.role.name.equalsIgnoreCase(King.name) &&
+          destination.kingSquare == destination.movement.destination &&
           !legalMoves.exists(move =>
             move.movement.beforeRole.name.equalsIgnoreCase(King.name) &&
               move.movement.from == destination.movement.piece.square &&
@@ -571,61 +683,6 @@ object PositionRelationExtractor:
     require(pawns.nonEmpty, "a pawn component cannot be empty")
     require(pawnGroupSources.nonEmpty, "a pawn component needs its canonical PawnFileGroup sources")
 
-  /** One exact maximal run of consecutive occupied files for a single side.
-    * This deliberately does not use the human term "pawn island": books use
-    * that term for incompatible pawn-connectivity notions. The closed
-    * side-level partition, not an individual run, owns the empty boundary
-    * files needed to prove maximality.
-    */
-  private[chessjudgment] final case class ClosedPawnOccupiedFileRun private[position] (
-      side: Color,
-      files: List[EvidenceFile],
-      pawns: List[EvidenceSquare]
-  ):
-    val witness: RelationPawnOccupiedFileRunWitness = RelationPawnOccupiedFileRunWitness(files, pawns)
-
-  /** Complete side-wide occupied-file partition. Its eight same-side
-    * PawnFileGroup sources are the closure authority; a run by itself cannot
-    * prove that an intervening or boundary file is empty.
-    */
-  private[chessjudgment] final class ClosedPawnOccupiedFilePartition private[position] (
-      val side: Color,
-      closedFiles: List[ClosedPawnFile]
-  ):
-    private val expectedFiles = File.all.map(file =>
-      EvidenceFile((('a'.toInt + file.value).toChar).toString)
-    )
-    require(
-      closedFiles.map(_.file) == expectedFiles,
-      "an occupied-file partition must own all eight files in board order"
-    )
-
-    val pawnFileSources: List[RelationFactEvidence] =
-      closedFiles.map(_.sourceFor(side))
-
-    val runs: List[ClosedPawnOccupiedFileRun] =
-      val result = List.newBuilder[ClosedPawnOccupiedFileRun]
-      var current = List.empty[ClosedPawnFile]
-      closedFiles.foreach { file =>
-        if file.pawnsFor(side).nonEmpty then current = current :+ file
-        else if current.nonEmpty then
-          result += ClosedPawnOccupiedFileRun(
-            side,
-            current.map(_.file),
-            current.flatMap(_.pawnsFor(side)).sortBy(_.key)
-          )
-          current = Nil
-      }
-      if current.nonEmpty then
-        result += ClosedPawnOccupiedFileRun(
-          side,
-          current.map(_.file),
-          current.flatMap(_.pawnsFor(side)).sortBy(_.key)
-        )
-      result.result()
-
-    val witnesses: List[RelationPawnOccupiedFileRunWitness] = runs.map(_.witness)
-
   private[chessjudgment] final case class ClosedPawnState private[position] (
       side: Color,
       square: EvidenceSquare,
@@ -661,11 +718,10 @@ object PositionRelationExtractor:
             Color.White,
             controller,
             controllerRole,
-            target,
-            RelationControlTarget.Enemy(targetRole)
+            target
           ) =>
         controller == whitePawn && target == blackPawn &&
-          controllerRole.name.equalsIgnoreCase(Pawn.name) && targetRole.name.equalsIgnoreCase(Pawn.name)
+          controllerRole.name.equalsIgnoreCase(Pawn.name)
       case _ => false,
       "an enemy-pawn contact must retain its exact white-pawn control source"
     )
@@ -689,7 +745,6 @@ object PositionRelationExtractor:
     */
   private[chessjudgment] final class ClosedPawnTopology private[position] (
       fileProjection: File => ClosedPawnFile,
-      occupiedFilePartitionProjection: Color => ClosedPawnOccupiedFilePartition,
       detailProjection: () => ClosedPawnTopologyDetails
   ):
     lazy val files: List[ClosedPawnFile] =
@@ -698,15 +753,6 @@ object PositionRelationExtractor:
       exact
 
     private[chessjudgment] def file(file: File): ClosedPawnFile = fileProjection(file)
-
-    private lazy val whiteOccupiedFilePartition = occupiedFilePartitionProjection(Color.White)
-    private lazy val blackOccupiedFilePartition = occupiedFilePartitionProjection(Color.Black)
-
-    /** This file-only projection is cached independently for each side and
-      * does not force support, passage, or contact closure.
-      */
-    private[chessjudgment] def occupiedFilePartition(side: Color): ClosedPawnOccupiedFilePartition =
-      if side.white then whiteOccupiedFilePartition else blackOccupiedFilePartition
 
     private lazy val details = detailProjection()
     lazy val pawns: List[ClosedPawnState] = details.pawns
@@ -780,9 +826,6 @@ object PositionRelationExtractor:
         square: EvidenceSquare
     ): Option[RelationPawnTopologyStateWitness] =
       stateWitnesses.find(state => state.side == side && state.square == square)
-
-    private[chessjudgment] def occupiedFileRunWitnesses(side: Color): List[RelationPawnOccupiedFileRunWitness] =
-      occupiedFilePartition(side).witnesses
 
   /** Typed access to the exact board state owned by one closed position
     * inventory. Consumers never reopen a Board or parse FEN to decide whether
@@ -910,8 +953,14 @@ object PositionRelationExtractor:
     */
   private[chessjudgment] enum ClosedPositionStateQuery:
     case OccupiedBy(piece: RelationColoredPieceWitness)
+    case OwnKingExposure(
+        side: Color,
+        piece: RelationPieceWitness,
+        resource: RelationMovementResourceWitness,
+        kingSquare: EvidenceSquare,
+        postMoveControllers: List[RelationPieceWitness]
+    )
     case PawnTopology(state: RelationPawnTopologyStateWitness)
-    case PawnOccupiedFilePartition(side: Color, runs: List[RelationPawnOccupiedFileRunWitness])
     case PotentialEnPassant(square: Option[EvidenceSquare])
     case CastlingRight(side: Color, castleSide: Side, retained: Boolean)
     case SliderReach(
@@ -925,10 +974,13 @@ object PositionRelationExtractor:
       this match
         case OccupiedBy(piece) =>
           Square.fromKey(piece.square.key).nonEmpty
+        case OwnKingExposure(_, piece, resource, kingSquare, controllers) =>
+          Square.fromKey(piece.square.key).nonEmpty && Square.fromKey(resource.destination.key).nonEmpty &&
+            Square.fromKey(kingSquare.key).nonEmpty &&
+            controllers.nonEmpty && controllers.distinct.size == controllers.size &&
+            controllers == controllers.sortBy(controller => controller.square.key -> controller.role.name)
         case PawnTopology(exact) =>
           Square.fromKey(exact.square.key).nonEmpty
-        case PawnOccupiedFilePartition(_, exact) =>
-          RelationPawnOccupiedFileRunWitness.canonicalPartition(exact)
         case PotentialEnPassant(square) =>
           square.forall(value => Square.fromKey(value.key).nonEmpty)
         case CastlingRight(_, _, _) => true
@@ -940,10 +992,10 @@ object PositionRelationExtractor:
       this match
         case OccupiedBy(piece) =>
           s"occupied-by:${piece.side.toString.toLowerCase}:${piece.square.key.toLowerCase}:${piece.role.name.toLowerCase}"
+        case OwnKingExposure(side, piece, resource, kingSquare, controllers) =>
+          s"own-king-exposure:${side.toString.toLowerCase}:${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}:${resource.stableKey}:${kingSquare.key.toLowerCase}:${controllers.map(controller => s"${controller.role.name.toLowerCase}@${controller.square.key.toLowerCase}").mkString(",")}"
         case PawnTopology(state) =>
           s"pawn-topology:${state.stableKey}"
-        case PawnOccupiedFilePartition(side, runs) =>
-          s"pawn-occupied-file-partition:${side.toString.toLowerCase}:${runs.map(_.stableKey).mkString("[", ",", "]")}"
         case PotentialEnPassant(square) =>
           s"potential-en-passant:${square.map(_.key.toLowerCase).getOrElse("none")}"
         case CastlingRight(side, castleSide, retained) =>
@@ -1005,7 +1057,8 @@ object PositionRelationExtractor:
   private[chessjudgment] final class PositionRelationInventoryCertificate private[position] (
       private val position: Position,
       private val snapshot: PositionRelationSnapshot,
-      private val actualLegalMoves: List[Move]
+      private val actualLegalMoves: List[Move],
+      private val geometricControlInventory: GeometricControlInventory
   ):
     private val state = new ClosedPositionStateFacet(position, canonicalInCheck)
     private lazy val semanticFen = chess.format.Fen.write(position).value
@@ -1053,7 +1106,7 @@ object PositionRelationExtractor:
       closedGeometricControlCache.synchronized {
         closedGeometricControlCache.getOrElseUpdate(
           relation.semanticId,
-          ClosedGeometricControl.from(relation)
+          ClosedGeometricControl.from(relation, state.occupantAt)
         )
       }
 
@@ -1195,14 +1248,8 @@ object PositionRelationExtractor:
           exact.headOption
         case _ => None
       val interpositionSquares = checkingSliderRay.toList.flatMap(_.detail match
-        case RelationWitnessDetail.RayBarrier(_, attacker, _, _, _) =>
-          king.toList.flatMap(kingSquare =>
-            BoardGeometry
-              .lineSpan(boardSquare(attacker), boardSquare(kingSquare))
-              .drop(1)
-              .dropRight(1)
-              .map(evidenceSquare)
-          )
+        case RelationWitnessDetail.RayBarrier(_, _, _, _, geometry) =>
+          king.toList.flatMap(kingSquare => geometry.squares.takeWhile(_ != kingSquare))
         case _ => Nil
       ).toSet
       val responses =
@@ -1227,16 +1274,10 @@ object PositionRelationExtractor:
                 move.movement.beforeRole.name.equalsIgnoreCase(King.name) => move.destination
           }.toSet
           king.toList.flatMap { kingSquare =>
-            movementAffordancesFrom(kingSquare).flatMap { movement =>
-              val opponentControls = controlsAt(!side, movement.destination)
-                .sortBy(control => control.controller.square.key -> control.controller.role.name)
-              Option.when(
-                movement.mode == RelationMovementResourceMode.ControlledDestination &&
-                  !legalKingDestinations(movement.destination) && opponentControls.nonEmpty
-              )(
-                ClosedControlledKingDestination(movement, opponentControls)
-              ).toList
-            }
+            movementAffordancesFrom(kingSquare)
+              .filter(_.mode == RelationMovementResourceMode.ControlledDestination)
+              .filterNot(movement => legalKingDestinations(movement.destination))
+              .flatMap(legalRestrictionFor)
           }.sortBy(_.stableKey)
       val interpositionRay = Option.when(
         responses.exists(_.modes(ClosedKingResponseMode.Interpose))
@@ -1270,22 +1311,6 @@ object PositionRelationExtractor:
         )
       }
 
-    private def directionFrom(
-        origin: EvidenceSquare,
-        target: EvidenceSquare
-    ): RelationRayDirection =
-      val from = boardSquare(origin)
-      val to = boardSquare(target)
-      RelationRayDirection(
-        Integer.signum(to.file.value - from.file.value),
-        Integer.signum(to.rank.value - from.rank.value)
-      )
-
-    private def rayDistance(origin: EvidenceSquare, target: EvidenceSquare): Int =
-      val from = boardSquare(origin)
-      val to = boardSquare(target)
-      math.max((to.file.value - from.file.value).abs, (to.rank.value - from.rank.value).abs)
-
     private val sliderReachCache =
       scala.collection.mutable.Map.empty[EvidenceSquare, List[ClosedSliderReach]]
 
@@ -1294,50 +1319,62 @@ object PositionRelationExtractor:
         List(Bishop.name, Rook.name, Queen.name).exists(_.equalsIgnoreCase(coloredSlider.role.name))
       ).flatMap { coloredSlider =>
         val slider = RelationPieceWitness(coloredSlider.square, coloredSlider.role)
-        indexedControlsFrom(slider.square)
-          .groupBy(control => directionFrom(slider.square, control.targetSquare))
-          .toList
-          .map { case (direction, exactControls) =>
-            val ordered = exactControls.sortBy(control => rayDistance(slider.square, control.targetSquare))
-            require(
-              ordered.dropRight(1).forall(_.target == RelationControlTarget.Empty),
-              "a slider reach cannot continue beyond its first occupied square"
-            )
-            val firstOccupant = ordered.lastOption.flatMap { last =>
-              def exactOccupant(role: EvidencePieceRole, friendly: Boolean): RelationColoredPieceWitness =
-                val occupant = state.occupantAt(last.targetSquare).getOrElse(
-                  throw IllegalArgumentException("a non-empty slider target lost its exact occupant")
-                )
-                require(
-                  occupant.role == role && (occupant.side == coloredSlider.side) == friendly,
-                  "a slider target state must match its exact first occupant"
-                )
-                occupant
-              last.target match
-                case RelationControlTarget.Empty => None
-                case RelationControlTarget.Friendly(role) => Some(exactOccupant(role, friendly = true))
-                case RelationControlTarget.Enemy(role)    => Some(exactOccupant(role, friendly = false))
-            }
-            val barrier = firstOccupant.flatMap { occupant =>
-              val exact = rayBarriersFrom(slider.square).filter(_.detail match
-                case RelationWitnessDetail.RayBarrier(side, attacker, attackerRole, occupants, axis) =>
-                  side == coloredSlider.side && attacker == slider.square && attackerRole == slider.role &&
-                    axis == direction.axis && occupants.headOption.contains(occupant)
-                case _ => false
+        val controlsByTarget = indexedControlsFrom(slider.square).map(control => control.targetSquare -> control).toMap
+        rayBarriersFrom(slider.square).sortBy(_.detail match
+          case RelationWitnessDetail.RayBarrier(_, _, _, _, geometry) => geometry.direction.stableKey
+          case _ => ""
+        ).map { raySource =>
+          val (direction, raySquares, firstOccupant) = raySource.detail match
+            case RelationWitnessDetail.RayBarrier(side, attacker, attackerRole, occupants, geometry) =>
+              require(
+                side == coloredSlider.side && attacker == slider.square && attackerRole == slider.role,
+                "a canonical ray source changed slider identity"
               )
-              require(exact.size == 1, "one occupied slider reach needs one canonical ray barrier")
-              exact.headOption
-            }
-            ClosedSliderReach(
-              coloredSlider.side,
-              slider,
-              direction,
-              ordered,
-              firstOccupant,
-              barrier
+              (geometry.direction, geometry.squares, occupants.headOption)
+            case _ => throw IllegalArgumentException("a slider reach source changed relation kind")
+          val controlledCount = firstOccupant
+            .map(occupant => raySquares.indexOf(occupant.square) + 1)
+            .getOrElse(raySquares.size)
+          require(controlledCount > 0, "a ray occupant must belong to its canonical geometry")
+          val expectedSquares = raySquares.take(controlledCount)
+          val ordered = expectedSquares.map(square =>
+            controlsByTarget.getOrElse(
+              square,
+              throw IllegalArgumentException("a canonical slider ray lost one geometric-control edge")
             )
-          }
-          .sortBy(_.direction.stableKey)
+          )
+          require(
+            controlsByTarget.keySet.intersect(raySquares.toSet) == expectedSquares.toSet,
+            "a slider control inventory cannot continue beyond its first occupant"
+          )
+          require(
+            ordered.dropRight(1).forall(_.target == RelationControlTarget.Empty),
+            "a slider reach cannot continue beyond its first occupied square"
+          )
+          firstOccupant match
+            case Some(occupant) =>
+              val expectedTarget =
+                if occupant.side == coloredSlider.side then RelationControlTarget.Friendly(occupant.role)
+                else RelationControlTarget.Enemy(occupant.role)
+              require(
+                state.occupantAt(occupant.square).contains(occupant) &&
+                  ordered.last.target == expectedTarget,
+                "a slider ray occupant must match its exact closed target state"
+              )
+            case None =>
+              require(
+                ordered.forall(_.target == RelationControlTarget.Empty),
+                "an open slider ray cannot contain an occupied control target"
+              )
+          ClosedSliderReach(
+            coloredSlider.side,
+            slider,
+            direction,
+            ordered,
+            firstOccupant,
+            raySource
+          )
+        }
       }
 
     private lazy val pawnFileGroupSources: Map[(Color, String), (List[EvidenceSquare], RelationFactEvidence)] =
@@ -1385,14 +1422,6 @@ object PositionRelationExtractor:
 
     private lazy val closedPawnFileInventory: List[ClosedPawnFile] =
       File.all.map(indexedClosedPawnFile)
-
-    private lazy val whitePawnOccupiedFilePartition =
-      new ClosedPawnOccupiedFilePartition(Color.White, closedPawnFileInventory)
-    private lazy val blackPawnOccupiedFilePartition =
-      new ClosedPawnOccupiedFilePartition(Color.Black, closedPawnFileInventory)
-
-    private def closedPawnOccupiedFilePartition(side: Color): ClosedPawnOccupiedFilePartition =
-      if side.white then whitePawnOccupiedFilePartition else blackPawnOccupiedFilePartition
 
     private lazy val closedPawnTopologyDetails: ClosedPawnTopologyDetails =
       val files = closedPawnFileInventory
@@ -1555,7 +1584,6 @@ object PositionRelationExtractor:
     private lazy val closedPawnTopologyInventory: ClosedPawnTopology =
       new ClosedPawnTopology(
         file => indexedClosedPawnFile(file),
-        side => closedPawnOccupiedFilePartition(side),
         () => closedPawnTopologyDetails
       )
 
@@ -1715,6 +1743,101 @@ object PositionRelationExtractor:
         (controlled ++ advances).sortBy(resource => resource.destination.key -> resource.mode.stableKey)
       }
 
+    private def pseudoMovesFor(resource: ClosedMovementAffordance): List[Move] =
+      val origin = boardSquare(resource.piece.square)
+      val destination = boardSquare(resource.destination)
+      position.board.pieceAt(origin).toList.filter(piece =>
+        piece.color == position.color && evidenceRole(piece.role) == resource.piece.role
+      ).flatMap { piece =>
+        val generated = resource.mode match
+          case RelationMovementResourceMode.EnPassantCapture(_) =>
+            position.genEnPassant(origin.bb).filter(_.dest == destination)
+          case _ =>
+            piece.role match
+              case Pawn   => position.genPawn(origin.bb, destination.bb)
+              case Knight => position.genKnight(origin.bb, destination.bb)
+              case Bishop => position.genBishop(origin.bb, destination.bb)
+              case Rook   => position.genRook(origin.bb, destination.bb)
+              case Queen  => position.genQueen(origin.bb, destination.bb)
+              case King   => position.genUnsafeKing(origin, destination.bb)
+        generated.filter { move =>
+          val exactTarget = resource.target match
+            case RelationControlTarget.Empty => position.board.pieceAt(destination).isEmpty
+            case RelationControlTarget.Friendly(_) => false
+            case RelationControlTarget.Enemy(role) =>
+              !role.name.equalsIgnoreCase(King.name) &&
+                position.board.pieceAt(destination).exists(target =>
+                  target.color != piece.color && evidenceRole(target.role) == role
+                )
+          val exactMode = resource.mode match
+            case RelationMovementResourceMode.ControlledDestination =>
+              !move.enpassant &&
+                (piece.role != Pawn || move.capture.contains(destination))
+            case RelationMovementResourceMode.EnPassantCapture(capturedPawn) =>
+              move.enpassant && move.capture.exists(captured =>
+                evidenceSquare(captured) == capturedPawn.square
+              )
+            case RelationMovementResourceMode.PawnAdvance =>
+              piece.role == Pawn && move.capture.isEmpty && origin.yDist(destination) == 1
+            case RelationMovementResourceMode.PawnDoubleAdvance =>
+              piece.role == Pawn && move.capture.isEmpty && origin.yDist(destination) == 2
+          move.orig == origin && move.dest == destination && exactTarget && exactMode
+        }
+      }
+
+    private val legalRestrictionCache =
+      scala.collection.mutable.HashMap.empty[
+        ClosedMovementAffordance,
+        Option[ClosedLegalResourceRestriction]
+      ]
+
+    /** Demand-driven legality explanation for one exact canonical geometric
+      * resource. The legal inventory remains the authority; a missing move is
+      * explained only when the exact pseudo-move board exposes the own king.
+      */
+    private[chessjudgment] def legalRestrictionFor(
+        resource: ClosedMovementAffordance
+    ): Option[ClosedLegalResourceRestriction] = legalRestrictionCache.synchronized {
+      legalRestrictionCache.getOrElseUpdate(
+        resource,
+        if state.sideToMove != position.color ||
+            legalMovesFrom(resource.piece.square).exists(_.destination == resource.destination)
+        then None
+        else
+          pseudoMovesFor(resource).headOption.flatMap { candidate =>
+            val boardEffect = BoardGeometry.moveEffect(candidate)
+            val footprint = BoardGeometry.transitionFootprint(candidate, boardEffect)
+            val candidateBoard = candidate.after.board
+            candidate.after.kingPosOf(position.color).flatMap { kingSquare =>
+              val controllers = GeometricControlInventory
+                .controllersAtAfterMove(
+                  geometricControlInventory,
+                  candidateBoard,
+                  footprint,
+                  !position.color,
+                  kingSquare
+                )
+                .toList
+                .map { origin =>
+                  val controller = candidateBoard.pieceAt(origin).getOrElse(
+                    throw IllegalArgumentException("a post-candidate king controller lost its piece identity")
+                  )
+                  RelationPieceWitness(evidenceSquare(origin), evidenceRole(controller.role))
+                }
+                .sortBy(controller => controller.square.key -> controller.role.name)
+              Option.when(controllers.nonEmpty)(
+                ClosedLegalResourceRestriction(
+                  resource,
+                  boardEffect,
+                  evidenceSquare(kingSquare),
+                  controllers
+                )
+              )
+            }
+          }
+      )
+    }
+
     private[chessjudgment] def supportersOf(
         side: Color,
         supported: EvidenceSquare
@@ -1848,10 +1971,18 @@ object PositionRelationExtractor:
       val holds = query.admissible(state) && (query match
         case ClosedPositionStateQuery.OccupiedBy(piece) =>
           state.occupantAt(piece.square).contains(piece)
+        case ClosedPositionStateQuery.OwnKingExposure(side, piece, resource, kingSquare, controllers) =>
+          state.sideToMove == side && movementAffordancesFrom(piece.square)
+            .find(movement =>
+              movement.piece == piece && movement.destination == resource.destination &&
+                movement.target == resource.target && movement.mode == resource.mode
+            )
+            .flatMap(legalRestrictionFor)
+            .exists(exact =>
+              exact.kingSquare == kingSquare && exact.postMoveControllers == controllers
+            )
         case ClosedPositionStateQuery.PawnTopology(exact) =>
           closedPawnTopologyInventory.stateWitness(exact.side, exact.square).contains(exact)
-        case ClosedPositionStateQuery.PawnOccupiedFilePartition(side, exact) =>
-          closedPawnTopologyInventory.occupiedFileRunWitnesses(side) == exact
         case ClosedPositionStateQuery.PotentialEnPassant(exact) =>
           state.potentialEnPassantSquare == exact
         case ClosedPositionStateQuery.CastlingRight(side, castleSide, retained) =>
@@ -1890,9 +2021,10 @@ object PositionRelationExtractor:
   private[position] def closedPositionInventory(
       snapshot: PositionRelationSnapshot,
       position: Position,
-      actualLegalMoves: List[Move]
+      actualLegalMoves: List[Move],
+      geometricControlInventory: GeometricControlInventory
   ): PositionRelationInventoryCertificate =
-    new PositionRelationInventoryCertificate(position, snapshot, actualLegalMoves)
+    new PositionRelationInventoryCertificate(position, snapshot, actualLegalMoves, geometricControlInventory)
 
   def records(
       relations: List[RelationFactEvidence],
@@ -1913,43 +2045,47 @@ object PositionRelationExtractor:
 
   private[position] def extractStaticBoardRelationSnapshot(
       board: Board,
-      occupiedSliderRays: List[OccupiedSliderRay],
+      sliderRays: List[SliderRay],
       pawnTopology: PawnTopologySnapshot,
       geometricControlInventory: GeometricControlInventory
   ): BoardRelationSnapshot =
-    val relations =
-      (
-      rayRelations(occupiedSliderRays) ++
-        geometricControls(board, geometricControlInventory) ++
-        pawnRelations(board, pawnTopology)
+    BoardRelationSnapshot.from(
+      BoardRelationInventoryDomain.StaticBoard,
+      produceStaticBoardRelations(
+        board,
+        sliderRays,
+        pawnTopology,
+        geometricControlInventory,
+        staticProductionSlots(board, sliderRays)
       )
-    BoardRelationSnapshot.from(BoardRelationInventoryDomain.StaticBoard, sortDetails(relations))
+    )
 
   private[position] def extractStaticBoardRelationSnapshotAfter(
       previous: BoardRelationSnapshot,
       board: Board,
-      refreshedOccupiedSliderRays: List[OccupiedSliderRay],
+      refreshedSliderRays: List[SliderRay],
       pawnTopologyProduction: PawnTopologyProduction,
       geometricControlInventory: GeometricControlInventory,
       footprint: BoardTransitionFootprint
   ): BoardRelationUpdate =
     val refresh = staticRelationRefreshFootprint(footprint)
-    val changedSquares = footprint.changedSquareSet
-    val affectedAttackOrigins = footprint.geometricControlOriginsToRefresh
-    val occupiedAfter = board.occupied.squares.toSet
-    val refreshedAttackMapOrigins = affectedAttackOrigins.intersect(occupiedAfter)
-    val changedTargetAttackOrigins = changedSquares.flatMap(target =>
-      List(Color.White, Color.Black).flatMap(side =>
-        geometricControlInventory.controllersByTarget.getOrElse(side -> target, Set.empty)
-      )
-    ).diff(refreshedAttackMapOrigins)
-    val refreshed =
-      rayRelations(refreshedOccupiedSliderRays) ++
-        geometricControls(board, geometricControlInventory, refreshedAttackMapOrigins) ++
-        geometricControls(board, geometricControlInventory, changedTargetAttackOrigins, changedSquares) ++
-        pawnRelationsAfter(board, pawnTopologyProduction, footprint)
-
-    previous.updated(sortDetails(refreshed), refresh)
+    val retiredOrRefreshed = previous.activeSlots.filter(slot => slot.refreshKeys.intersect(refresh.keys).nonEmpty)
+    val currentSlots = staticProductionSlotsForRefresh(
+      board,
+      refreshedSliderRays,
+      pawnTopologyProduction,
+      footprint
+    )
+    previous.updated(
+      produceStaticBoardRelations(
+        board,
+        refreshedSliderRays,
+        pawnTopologyProduction.snapshot,
+        geometricControlInventory,
+        retiredOrRefreshed ++ currentSlots
+      ),
+      refresh
+    )
 
   private[position] def extractOccurrenceRelationSnapshot(
       position: Position,
@@ -1957,7 +2093,7 @@ object PositionRelationExtractor:
   ): BoardRelationSnapshot =
     BoardRelationSnapshot.from(
       BoardRelationInventoryDomain.PositionOccurrence,
-      sortDetails(legalMoveRelations(position, legalMoves))
+      legalMoveProduction(position, legalMoves)
     )
 
   private[position] def certifyPositionRelationTransition(
@@ -1982,14 +2118,230 @@ object PositionRelationExtractor:
     existing(transition.removed, before, "removed") ->
       existing(transition.established, after, "established")
 
+  private def staticProductionSlots(
+      board: Board,
+      sliderRays: List[SliderRay]
+  ): Set[BoardRelationProductionSlot] =
+    val attackSlots = board.occupied.squares.map(BoardRelationProductionSlot.AttackOrigin.apply).toSet
+    val raySlots = sliderRays.map(raySlot).toSet
+    val pawnFileSlots = List(Color.White, Color.Black).flatMap(side =>
+      File.all.map(file => BoardRelationProductionSlot.PawnFileState(side, file))
+    ).toSet
+    val pawnSlots = board.pawns.squares.flatMap { pawn =>
+      board.pieceAt(pawn).toList.flatMap { piece =>
+        List(
+          BoardRelationProductionSlot.PawnFrontState(piece.color, pawn),
+          BoardRelationProductionSlot.PawnPassageState(piece.color, pawn),
+          BoardRelationProductionSlot.PawnAdvanceState(piece.color, pawn)
+        )
+      }
+    }.toSet
+    attackSlots ++ raySlots ++ pawnFileSlots ++ pawnSlots
+
+  private def staticProductionSlotsForRefresh(
+      board: Board,
+      sliderRays: List[SliderRay],
+      pawnTopology: PawnTopologyProduction,
+      footprint: BoardTransitionFootprint
+  ): Set[BoardRelationProductionSlot] =
+    val attackSlots = footprint.geometricControlOriginsToRefresh.flatMap(square =>
+      board.pieceAt(square).map(_ => BoardRelationProductionSlot.AttackOrigin(square))
+    )
+    val raySlots = sliderRays.map(raySlot).toSet
+    val pawnFileSlots = pawnTopology.affectedPawnFileKeys.map { case (side, file) =>
+      BoardRelationProductionSlot.PawnFileState(side, file)
+    }
+    val pawnFrontSlots = pawnTopology.frontStatesProduced.keySet.map { case (side, pawn) =>
+      BoardRelationProductionSlot.PawnFrontState(side, pawn)
+    }
+    val pawnPassageSlots = pawnTopology.passageStatesProduced.keySet.map { case (side, pawn) =>
+      BoardRelationProductionSlot.PawnPassageState(side, pawn)
+    }
+    val changedPawnSlots = footprint.pawnIdentityChanges.flatMap { case (side, pawn) =>
+      board.pieceAt(pawn).filter(piece => piece.color == side && piece.role == Pawn)
+        .map(_ => side -> pawn)
+    }
+    val pawnAdvanceSlots =
+      (changedPawnSlots ++ pawnAdvanceDependentPawns(board, footprint.changedSquareSet)).map {
+        case (side, pawn) => BoardRelationProductionSlot.PawnAdvanceState(side, pawn)
+      }
+    attackSlots ++ raySlots ++ pawnFileSlots ++ pawnFrontSlots ++ pawnPassageSlots ++ pawnAdvanceSlots
+
+  private def produceStaticBoardRelations(
+      board: Board,
+      sliderRays: List[SliderRay],
+      pawnTopology: PawnTopologySnapshot,
+      geometricControlInventory: GeometricControlInventory,
+      candidateSlots: Set[BoardRelationProductionSlot]
+  ): ClosedBoardRelationProduction =
+    val rayEntries = sliderRays.map(ray => raySlot(ray) -> ray)
+    val raysBySlot = rayEntries.toMap
+    require(raysBySlot.size == rayEntries.size, "one slider direction must have one canonical ray")
+    val raysByOrigin = sliderRays.groupBy(_.attackerSquare)
+    def active(slot: BoardRelationProductionSlot): Boolean =
+      slot match
+        case BoardRelationProductionSlot.AttackOrigin(origin) => board.pieceAt(origin).nonEmpty
+        case exact: BoardRelationProductionSlot.SliderDirection => raysBySlot.contains(exact)
+        case BoardRelationProductionSlot.PawnFileState(_, _) => true
+        case BoardRelationProductionSlot.PawnFrontState(side, pawn) =>
+          pawnTopology.frontOccupancy.contains(side -> pawn)
+        case BoardRelationProductionSlot.PawnPassageState(side, pawn) =>
+          pawnTopology.passageOpponents.contains(side -> pawn)
+        case BoardRelationProductionSlot.PawnAdvanceState(side, pawn) =>
+          board.pieceAt(pawn).exists(piece => piece.color == side && piece.role == Pawn)
+        case BoardRelationProductionSlot.LegalMoveInventory => false
+    val activeSlots = candidateSlots.filter(active)
+    val facts = activeSlots.toList.sortBy(productionSlotKey).flatMap { slot =>
+      slot match
+        case BoardRelationProductionSlot.AttackOrigin(origin) =>
+          val piece = board.pieceAt(origin).getOrElse(
+            throw IllegalArgumentException(s"active attack origin '${origin.key}' is empty")
+          )
+          geometricControlInventory.byOrigin.getOrElse(
+            origin,
+            throw IllegalArgumentException(s"active attack origin '${origin.key}' has no geometric inventory")
+          ).squares.toList.sortBy(_.key).map {
+            target =>
+              val detail = RelationWitnessDetail.GeometricControl(
+                piece.color,
+                evidenceSquare(origin),
+                evidenceRole(piece.role),
+                evidenceSquare(target)
+              )
+              val dependencySquares =
+                if List(Bishop, Rook, Queen).contains(piece.role) then
+                  val exactRays = raysByOrigin.getOrElse(origin, Nil).filter(_.squares.contains(target))
+                  require(exactRays.size == 1, "one slider control must belong to one canonical ray")
+                  exactRays.head.segmentThrough(target)
+                else List(origin, target)
+              ProducedBoardRelation(
+                slot,
+                detail,
+                Set(
+                  RelationDependencyKey.AttackOrigin(origin),
+                  RelationDependencyKey.AttackTarget(target)
+                ),
+                dependencySquares.map(evidenceSquare)
+              )
+          }
+        case exact: BoardRelationProductionSlot.SliderDirection =>
+          val ray = raysBySlot(exact)
+          ProducedBoardRelation(
+            exact,
+            rayRelation(ray),
+            Set(RelationDependencyKey.SliderOrigin(ray.attackerSquare)) ++
+              ray.occupants.headOption.map(piece => RelationDependencyKey.RayFirstOccupant(piece.square)),
+            (ray.attackerSquare :: ray.squares).map(evidenceSquare)
+          ) :: Nil
+        case exact @ BoardRelationProductionSlot.PawnFileState(side, file) =>
+          val detail = pawnFileGroups(pawnTopology, Set(side -> file)).head
+          ProducedBoardRelation(
+            exact,
+            detail,
+            Set(RelationDependencyKey.PawnFile(side, file)),
+            Rank.all.map(rank => evidenceSquare(Square(file, rank)))
+          ) :: Nil
+        case exact @ BoardRelationProductionSlot.PawnFrontState(side, pawn) =>
+          pawnTopology.frontOccupancy.get(side -> pawn).toList.map { state =>
+            ProducedBoardRelation(
+              exact,
+              pawnFrontDetail(state),
+              exact.refreshKeys,
+              (pawn :: state.front.toList).map(evidenceSquare)
+            )
+          }
+        case exact @ BoardRelationProductionSlot.PawnPassageState(side, pawn) =>
+          pawnTopology.passageOpponents.get(side -> pawn).toList.map { state =>
+            ProducedBoardRelation(
+              exact,
+              pawnPassageDetail(state),
+              exact.refreshKeys,
+              (pawn :: pawnPassageSquares(side, pawn)).map(evidenceSquare)
+            )
+          }
+        case exact @ BoardRelationProductionSlot.PawnAdvanceState(side, pawn) =>
+          pawnAdvanceAffordances(board, Set(pawn)).collect {
+            case detail @ RelationWitnessDetail.PawnAdvanceAffordance(`side`, exactPawn, _, traversed)
+                if exactPawn.key.equalsIgnoreCase(pawn.key) =>
+              ProducedBoardRelation(
+                exact,
+                detail,
+                exact.refreshKeys,
+                (evidenceSquare(pawn) :: traversed).distinct
+              )
+          }
+        case BoardRelationProductionSlot.LegalMoveInventory =>
+          throw IllegalArgumentException("the static producer cannot own legal-move inventory")
+    }
+    new ClosedBoardRelationProduction(candidateSlots, activeSlots, facts)
+
+  private def legalMoveProduction(
+      position: Position,
+      legalMoves: List[Move]
+  ): ClosedBoardRelationProduction =
+    val slot = BoardRelationProductionSlot.LegalMoveInventory
+    val facts = legalMoveRelations(position, legalMoves).zip(legalMoves).map { case (detail, move) =>
+      ProducedBoardRelation(
+        slot,
+        detail,
+        Set(RelationDependencyKey.LegalMoveInventory),
+        BoardGeometry.moveEffect(move).cellChanges.map(change => evidenceSquare(change.square))
+      )
+    }
+    new ClosedBoardRelationProduction(Set(slot), Set(slot), facts)
+
+  private def raySlot(ray: SliderRay): BoardRelationProductionSlot.SliderDirection =
+    BoardRelationProductionSlot.SliderDirection(
+      ray.attackerSquare,
+      ray.direction.fileStep,
+      ray.direction.rankStep
+    )
+
+  private def productionSlotKey(slot: BoardRelationProductionSlot): String =
+    slot match
+      case BoardRelationProductionSlot.AttackOrigin(square) => "attack:" + square.key
+      case BoardRelationProductionSlot.SliderDirection(square, fileStep, rankStep) =>
+        "ray:" + square.key + ":" + fileStep + ":" + rankStep
+      case BoardRelationProductionSlot.PawnFileState(side, file) => "pawn-file:" + side + ":" + file.value
+      case BoardRelationProductionSlot.PawnFrontState(side, pawn) => "pawn-front:" + side + ":" + pawn.key
+      case BoardRelationProductionSlot.PawnPassageState(side, pawn) => "pawn-passage:" + side + ":" + pawn.key
+      case BoardRelationProductionSlot.PawnAdvanceState(side, pawn) => "pawn-advance:" + side + ":" + pawn.key
+      case BoardRelationProductionSlot.LegalMoveInventory => "legal-moves"
+
+  private def pawnAdvanceDependentPawns(
+      board: Board,
+      changedSquares: Set[Square]
+  ): Set[(Color, Square)] =
+    changedSquares.flatMap { changed =>
+      List(Color.White, Color.Black).flatMap { side =>
+        val step = if side.white then 1 else -1
+        List(1, 2).flatMap { distance =>
+          Square.at(changed.file.value, changed.rank.value - step * distance).toList.flatMap { pawn =>
+            board.pieceAt(pawn).collect {
+              case piece if piece.color == side && piece.role == Pawn => side -> pawn
+            }
+          }
+        }
+      }
+    }
+
+  private def pawnFrontSquares(side: Color, pawn: Square): List[Square] =
+    val step = if side.white then 1 else -1
+    List(1, 2).flatMap(distance => Square.at(pawn.file.value, pawn.rank.value + step * distance))
+
+  private def pawnPassageSquares(side: Color, pawn: Square): List[Square] =
+    val ranks = (0 to 7).filter(rank =>
+      if side.white then rank > pawn.rank.value else rank < pawn.rank.value
+    )
+    (-1 to 1).toList.flatMap(fileOffset =>
+      ranks.flatMap(rank => Square.at(pawn.file.value + fileOffset, rank))
+    )
+
   /** One exact ray inventory owns every occupied square in distance order.
     * Pin, x-ray, battery, and skewer are deterministic projections of this
     * complete topology, never parallel board producers.
     */
-  private def rayRelations(rays: List[OccupiedSliderRay]): List[RelationWitnessDetail] =
-    rays.map(rayRelation)
-
-  private def rayRelation(ray: OccupiedSliderRay): RelationWitnessDetail =
+  private def rayRelation(ray: SliderRay): RelationWitnessDetail =
     RelationWitnessDetail.RayBarrier(
       side = ray.attackerColor,
       attackerSquare = evidenceSquare(ray.attackerSquare),
@@ -2001,29 +2353,11 @@ object PositionRelationExtractor:
           piece.color
         )
       ),
-      axis = relationAxis(ray.axis)
+      geometry = RelationRayGeometry(
+        RelationRayDirection(ray.direction.fileStep, ray.direction.rankStep),
+        ray.squares.map(evidenceSquare)
+      )
     )
-
-  private def relationAxis(axis: BoardLineAxis): RelationAxisSignal =
-    axis match
-      case BoardLineAxis.File     => RelationAxisSignal.File
-      case BoardLineAxis.Rank     => RelationAxisSignal.Rank
-      case BoardLineAxis.Diagonal => RelationAxisSignal.Diagonal
-
-  /** Geometric control follows the piece rules and current occupancy.  It is
-    * deliberately independent of turn, check, and king-safety legality.
-    */
-  private def controlTarget(
-      board: Board,
-      side: Color,
-      target: Square
-  ): RelationControlTarget =
-    board.pieceAt(target) match
-      case None => RelationControlTarget.Empty
-      case Some(piece) if piece.color == side =>
-        RelationControlTarget.Friendly(evidenceRole(piece.role))
-      case Some(piece) =>
-        RelationControlTarget.Enemy(evidenceRole(piece.role))
 
   /** Legal reachability is emitted only for the actual side to move. It is a
     * different fact from geometric control and owns captures and recaptures.
@@ -2055,84 +2389,6 @@ object PositionRelationExtractor:
 
   private def legalDestination(move: Move): Square =
     move.castle.map(_.kingTo).getOrElse(move.dest)
-
-  private def geometricControls(
-      board: Board,
-      inventory: GeometricControlInventory
-  ): List[RelationWitnessDetail] =
-    geometricControls(board, inventory, board.occupied.squares.toSet)
-
-  private def geometricControls(
-      board: Board,
-      inventory: GeometricControlInventory,
-      origins: Set[Square],
-      targets: Set[Square] = Square.all.toSet
-  ): List[RelationWitnessDetail] =
-    origins.toList.sortBy(_.key).flatMap { attackerSquare =>
-      for
-        attacker <- board.pieceAt(attackerSquare).toList
-        targetSquare <- inventory.byOrigin(attackerSquare).squares.toList.filter(targets).sortBy(_.key)
-      yield RelationWitnessDetail.GeometricControl(
-        side = attacker.color,
-        attackerSquare = evidenceSquare(attackerSquare),
-        attackerRole = evidenceRole(attacker.role),
-        targetSquare = evidenceSquare(targetSquare),
-        target = controlTarget(board, attacker.color, targetSquare)
-      )
-    }
-
-  private def pawnRelations(
-      board: Board,
-      topology: PawnTopologySnapshot
-  ): List[RelationWitnessDetail] =
-    val fileGroups = pawnFileGroups(
-      topology,
-      List(Color.White, Color.Black).flatMap(side => File.all.map(side -> _)).toSet
-    )
-    val front = topology.frontOccupancy.values.toList
-      .sortBy(state => (state.side.toString, state.pawn.key))
-      .map(pawnFrontDetail)
-    val passage = topology.passageOpponents.values.toList
-      .sortBy(state => (state.side.toString, state.pawn.key))
-      .map(pawnPassageDetail)
-    fileGroups ++ front ++ passage ++
-      pawnAdvanceAffordances(board, board.pawns.squares.toSet)
-
-  private def pawnRelationsAfter(
-      board: Board,
-      production: PawnTopologyProduction,
-      footprint: BoardTransitionFootprint
-  ): List[RelationWitnessDetail] =
-    val front = production.frontStatesProduced.values.toList
-      .sortBy(state => (state.side.toString, state.pawn.key))
-      .map(pawnFrontDetail)
-    val passage = production.passageStatesProduced.values.toList
-      .sortBy(state => (state.side.toString, state.pawn.key))
-      .map(pawnPassageDetail)
-    pawnFileGroups(production.snapshot, production.affectedPawnFileKeys) ++
-      front ++ passage ++ pawnAdvanceAffordancesAfter(board, footprint)
-
-  private def pawnAdvanceAffordancesAfter(
-      board: Board,
-      footprint: BoardTransitionFootprint
-  ): List[RelationWitnessDetail] =
-    val changedSquares = footprint.changedSquareSet
-    val changedSquareKeys = changedSquares.map(_.key.toLowerCase)
-    val candidateOrigins = footprint.pawnIdentityChanges.map(_._2) ++ changedSquares.flatMap { changed =>
-      List(Color.White, Color.Black).flatMap { side =>
-        val step = if side.white then 1 else -1
-        List(1, 2).flatMap(distance =>
-          Square.at(changed.file.value, changed.rank.value - step * distance)
-        )
-      }
-    }
-    pawnAdvanceAffordances(board, candidateOrigins).filter {
-      case RelationWitnessDetail.PawnAdvanceAffordance(side, pawn, _, traversed) =>
-        footprint.pawnIdentityChanges.exists { case (exactSide, square) =>
-          exactSide == side && square.key.equalsIgnoreCase(pawn.key)
-        } || traversed.exists(square => changedSquareKeys(square.key.toLowerCase))
-      case _ => false
-    }
 
   private def pawnAdvanceAffordances(
       board: Board,
@@ -2210,7 +2466,6 @@ object PositionRelationExtractor:
     val changedSquares = footprint.changedSquareSet
     BoardRelationRefreshFootprint(
       footprint.geometricControlOriginsToRefresh.map(AttackOrigin.apply) ++
-        changedSquares.map(AttackTarget.apply) ++
         footprint.affectedOccupiedRayOrigins.map(SliderOrigin.apply) ++
         changedSquares.map(RayFirstOccupant.apply) ++
         footprint.pawnIdentityChanges.map { case (side, square) => PawnIdentity(side, square) } ++

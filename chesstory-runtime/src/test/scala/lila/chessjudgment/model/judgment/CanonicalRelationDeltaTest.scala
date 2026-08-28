@@ -18,8 +18,8 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
     val delta = relationDelta("4k3/4n3/8/8/8/8/8/R5K1 w - - 0 1", "a1e1")
     val pin = delta.established
       .find(_.detail match
-        case RelationWitnessDetail.RayBarrier(owner, _, _, occupants, axis) =>
-          RelationRayPattern.classify(owner, occupants, axis) == RelationRayPattern.AbsoluteKingPin
+        case RelationWitnessDetail.RayBarrier(owner, _, _, occupants, geometry) =>
+          RelationRayPattern.classify(owner, occupants, geometry.axis) == RelationRayPattern.AbsoluteKingPin
         case _ => false
       )
       .getOrElse(fail("expected the created pin"))
@@ -152,7 +152,7 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
     )
     val attack = delta.relationDelta.established
       .find(_.detail match
-        case RelationWitnessDetail.GeometricControl(Color.White, attacker, _, target, _) =>
+        case RelationWitnessDetail.GeometricControl(Color.White, attacker, _, target) =>
           attacker.key == "d1" && target.key == "d4"
         case _ => false
       )

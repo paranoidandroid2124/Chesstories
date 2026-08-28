@@ -306,7 +306,7 @@ object CandidateLineAssembler:
           )
           val occurrence = inventories.head
           val matching = occurrence.relation.detail match
-            case RelationWitnessDetail.CaptureRecaptureInventory(_, _, _, legalRecaptures, _) =>
+            case RelationWitnessDetail.CaptureRecaptureInventory(_, _, _, legalRecaptures, _, _) =>
               legalRecaptures.filter(resource =>
                 EvidenceRef.sameMove(resource.moveUci, declared.moveUci) &&
                   resource.movement == root.witness &&

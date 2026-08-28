@@ -20,7 +20,6 @@ import lila.chessjudgment.model.judgment.{
   RelationCombinationContractKind,
   RelationFactEvidence,
   RelationFactKind,
-  RelationMovementResourceMode,
   RelationRayPattern,
   RelationMoveTransitionWitness,
   RelationPawnConnectionDirection,
@@ -28,7 +27,6 @@ import lila.chessjudgment.model.judgment.{
   RelationPawnConnectionWitness,
   RelationPawnTopologyFacet,
   RelationPieceWitness,
-  RelationSupportChangeCause,
   RelationWitnessDetail,
   TypedEvidenceGraph,
   VerticalRelationPremiseRole
@@ -89,22 +87,17 @@ class ClosedRelationEvidenceTest extends munit.FunSuite:
       case RelationWitnessDetail.SliderLineInterruption(mover, _, _, _, _, _, _) => Some(mover)
       case RelationWitnessDetail.GeometricLineControlAfterBlockerRemoval(mover, _, _, _, _, _, _, _, _, _, _) => Some(mover)
       case RelationWitnessDetail.NamedRayTransition(mover, _, _, _, _, _, _, _, _, _) => Some(mover)
-      case RelationWitnessDetail.GeometricSupportCausalTransition(mover, _, _, _, _, _, _, _, _, _, _) => Some(mover)
-      case RelationWitnessDetail.CaptureRecaptureInventory(mover, _, _, _, _) => Some(mover)
+      case RelationWitnessDetail.CaptureRecaptureInventory(mover, _, _, _, _, _) => Some(mover)
       case RelationWitnessDetail.CreatedCheckResponseInventory(mover, _, _, _, _, _, _, _) => Some(mover)
       case RelationWitnessDetail.RootCheckResponse(mover, _, _, _, _, _) => Some(mover)
-      case RelationWitnessDetail.AbsolutePinMovementRestriction(mover, _, _, _, _, _, _, _, _, _) => Some(mover)
-      case RelationWitnessDetail.GeometricMultiTargetContact(mover, _, _, _, _, _, _) => Some(mover)
-      case RelationWitnessDetail.GeometricEnemyContactWithoutFriendlySupport(mover, _, _, _, _, _) => Some(mover)
-      case RelationWitnessDetail.SharedGeometricSupportOfEnemyControlledTargets(mover, _, _, _, _, _) => Some(mover)
       case RelationWitnessDetail.PawnTopologyTransition(mover, _, _, _, _) => Some(mover)
       case RelationWitnessDetail.StalemateTransition(mover, _, _, _) => Some(mover)
       case _ => None
 
   private def rayPattern(relation: RelationFactEvidence): Option[RelationRayPattern] =
     relation.detail match
-      case RelationWitnessDetail.RayBarrier(owner, _, _, occupants, axis) =>
-        Some(RelationRayPattern.classify(owner, occupants, axis))
+      case RelationWitnessDetail.RayBarrier(owner, _, _, occupants, geometry) =>
+        Some(RelationRayPattern.classify(owner, occupants, geometry.axis))
       case RelationWitnessDetail.NamedRayTransition(_, _, _, _, _, _, _, pattern, _, _) =>
         Some(pattern)
       case _ => None
@@ -238,251 +231,6 @@ class ClosedRelationEvidenceTest extends munit.FunSuite:
       case _ => false
     )
 
-  test("L1 explains removed support while preserving replacements and every lower mechanism"):
-    val captured = relations(
-      "7k/8/8/8/B7/8/7K/Rr6 b - - 0 1",
-      List("b1a1")
-    )
-    val capturedEliminations = captured.filter(_.kind == RelationFactKind.GeometricSupportCausalTransition)
-    assertEquals(capturedEliminations.size, 1)
-    assert(capturedEliminations.head.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(
-            mover,
-            White,
-            supportedBefore,
-            supportedBeforeRole,
-            supportedAfter,
-            supportedAfterRole,
-            beforeSupporters,
-            afterSupporters,
-            removals,
-            establishedSupporters,
-            proof
-          ) =>
-        mover.from.key == "b1" && mover.to.key == "a1" &&
-          supportedBefore.key == "a4" && supportedAfter.key == "a4" &&
-          supportedBeforeRole.name.equalsIgnoreCase("bishop") &&
-          supportedAfterRole.name.equalsIgnoreCase("bishop") &&
-          beforeSupporters.map(_.square.key) == List("a1") && afterSupporters.isEmpty &&
-          establishedSupporters.isEmpty &&
-          removals.size == 1 && removals.exists(removal =>
-            removal.supporter.square.key == "a1" &&
-              removal.supporter.role.name.equalsIgnoreCase("rook") &&
-              removal.causes == List(RelationSupportChangeCause.SupporterCaptured)
-          ) &&
-          proof.premises.map(_.kind).toSet == Set(
-            RelationFactKind.GeometricSupportDelta,
-            RelationFactKind.GeometricSupporterCapture
-          ) && proof.absences.size == 1
-      case _ => false
-    )
-
-    val interrupted = relations(
-      "7k/8/8/8/Bn6/8/7K/R7 b - - 0 1",
-      List("b4a2")
-    )
-    assert(interrupted.exists(_.kind == RelationFactKind.SliderLineInterruption))
-    assert(interrupted.exists(_.kind == RelationFactKind.GeometricSupportDelta))
-    assert(interrupted.exists(_.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(
-            _,
-            White,
-            _,
-            _,
-            supported,
-            _,
-            _,
-            afterSupporters,
-            removals,
-            _,
-            proof
-          ) =>
-        supported.key == "a4" && afterSupporters.isEmpty && removals.exists(removal =>
-          removal.supporter.square.key == "a1" &&
-            removal.causes == List(RelationSupportChangeCause.SliderLineInterrupted)
-        ) &&
-          proof.premises.map(_.kind).toSet == Set(
-            RelationFactKind.GeometricSupportDelta,
-            RelationFactKind.SliderLineInterruption
-          )
-      case _ => false
-    ))
-
-    val replacementRemains = relations(
-      "7k/8/8/8/Bn6/8/7K/R2Q4 b - - 0 1",
-      List("b4a2")
-    )
-    assert(replacementRemains.exists(_.kind == RelationFactKind.SliderLineInterruption))
-    assert(replacementRemains.exists(_.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(
-            _,
-            White,
-            _,
-            _,
-            supported,
-            _,
-            _,
-            afterSupporters,
-            removals,
-            establishedSupporters,
-            proof
-          ) =>
-        supported.key == "a4" && afterSupporters.map(_.square.key) == List("d1") &&
-          removals.exists(removal =>
-            removal.supporter.square.key == "a1" &&
-              removal.causes == List(RelationSupportChangeCause.SliderLineInterrupted)
-          ) && establishedSupporters.isEmpty && proof.absences.isEmpty
-      case _ => false
-    ))
-
-    val simultaneous = relations(
-      "4k3/8/8/8/4P3/2N5/8/4R1K1 w - - 0 1",
-      List("c3e2")
-    ).filter(_.kind == RelationFactKind.GeometricSupportCausalTransition)
-    val simultaneousTargets = simultaneous.flatMap(_.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(_, White, _, _, supported, _, _, _, _, _, _) =>
-        Some(supported.key)
-      case _ => None
-    ).toSet
-    assertEquals(simultaneousTargets, Set("e2", "e4", "g1"))
-    val simultaneousLoss = simultaneous.find(_.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(_, White, _, _, supported, _, _, _, _, _, _) =>
-        supported.key == "e4"
-      case _ => false
-    ).getOrElse(fail("expected the simultaneous loss of both e4 supporters"))
-    assert(simultaneousLoss.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(_, White, _, _, supported, _, _, afterSupporters, removals, _, proof) =>
-        val relocated = removals.collectFirst {
-          case removal
-              if removal.supporter.square.key == "c3" &&
-                removal.supporter.role.name.equalsIgnoreCase("knight") =>
-            removal.causes.collectFirst {
-              case RelationSupportChangeCause.SupporterRelocated(movement) => movement
-            }
-        }.flatten
-        supported.key == "e4" && afterSupporters.isEmpty && relocated.exists(movement =>
-          movement.from.key == "c3" && movement.to.key == "e2" &&
-            movement.beforeRole.name.equalsIgnoreCase("knight") &&
-            movement.afterRole.name.equalsIgnoreCase("knight")
-        ) && removals.exists(removal =>
-          removal.supporter.square.key == "e1" &&
-            removal.causes == List(RelationSupportChangeCause.SliderLineInterrupted)
-        ) && proof.premises.map(_.kind).toSet == Set(
-          RelationFactKind.GeometricSupportDelta,
-          RelationFactKind.LegalMove,
-          RelationFactKind.SliderLineInterruption
-        )
-      case _ => false
-    )
-    assert(simultaneous.exists(_.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(
-            _,
-            White,
-            _,
-            _,
-            supported,
-            _,
-            _,
-            _,
-            _,
-            establishments,
-            _
-          ) if supported.key == "e2" =>
-        establishments.exists(establishment =>
-          establishment.supporter.square.key == "e1" && establishment.causes.exists {
-            case RelationSupportChangeCause.SupportedPieceRelocated(movement) =>
-              movement.from.key == "c3" && movement.to.key == "e2"
-            case _ => false
-          }
-        )
-      case _ => false
-    ))
-    assert(simultaneous.exists(_.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(
-            _,
-            White,
-            _,
-            _,
-            supported,
-            _,
-            _,
-            _,
-            _,
-            establishments,
-            _
-          ) if supported.key == "g1" =>
-        establishments.exists(establishment =>
-          establishment.supporter.square.key == "e2" && establishment.causes.exists {
-            case RelationSupportChangeCause.SupporterRelocated(movement) =>
-              movement.from.key == "c3" && movement.to.key == "e2"
-            case _ => false
-          }
-        )
-      case _ => false
-    ))
-
-    val castlingRelocation = relations(
-      "4k3/8/8/8/8/7P/8/4K2R w K - - 0 1",
-      List("e1g1")
-    ).filter(_.kind == RelationFactKind.GeometricSupportCausalTransition)
-    assertEquals(castlingRelocation.flatMap(_.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(_, White, _, _, supported, _, _, _, _, _, _) =>
-        Some(supported.key)
-      case _ => None
-    ).toSet, Set("f1", "h3"))
-    val castlingSupportLoss = castlingRelocation.find(_.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(_, White, _, _, supported, _, _, _, _, _, _) =>
-        supported.key == "h3"
-      case _ => false
-    ).getOrElse(fail("expected castling to remove the rook's support of h3"))
-    assert(castlingSupportLoss.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(_, White, _, _, supported, _, _, afterSupporters, removals, _, proof) =>
-        val rookRelocation = removals.collectFirst {
-          case removal
-              if removal.supporter.square.key == "h1" &&
-                removal.supporter.role.name.equalsIgnoreCase("rook") =>
-            removal.causes.collectFirst {
-              case RelationSupportChangeCause.SupporterRelocated(movement) => movement
-            }
-        }.flatten
-        supported.key == "h3" && afterSupporters.isEmpty && rookRelocation.exists(movement =>
-          movement.from.key == "h1" && movement.to.key == "f1" &&
-            movement.beforeRole.name.equalsIgnoreCase("rook") &&
-            movement.afterRole.name.equalsIgnoreCase("rook")
-        ) && proof.premises.map(_.kind).toSet == Set(RelationFactKind.GeometricSupportDelta, RelationFactKind.LegalMove)
-      case _ => false
-    )
-    assert(castlingRelocation.exists(_.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(
-            _,
-            White,
-            _,
-            _,
-            supported,
-            _,
-            _,
-            _,
-            _,
-            establishments,
-            proof
-          ) if supported.key == "f1" =>
-        val causes = establishments.flatMap(_.causes)
-        causes.exists {
-          case RelationSupportChangeCause.SupporterRelocated(movement) =>
-            movement.from.key == "e1" && movement.to.key == "g1"
-          case _ => false
-        } && causes.exists {
-          case RelationSupportChangeCause.SupportedPieceRelocated(movement) =>
-            movement.from.key == "h1" && movement.to.key == "f1"
-          case _ => false
-        } && proof.sourcePremises.count(_.kind == RelationFactKind.LegalMove) == 1 &&
-          proof.premises.count(_.role match
-            case VerticalRelationPremiseRole.SupportEstablishmentCause(_, _, _) => true
-            case _                                                            => false
-          ) == 2
-      case _ => false
-    ))
-
   test("control-set deltas certify the last controller of an empty square"):
     val emptySquare = relations(
       "7k/8/8/8/8/8/8/5R1K w - - 0 1",
@@ -531,34 +279,6 @@ class ClosedRelationEvidenceTest extends munit.FunSuite:
       )
     )
     assert(witnesses.forall(_.lineMoves == List("a2b3")))
-
-    val openedSupport = relations(
-      "7k/Q7/8/8/8/8/B7/R3K3 w - - 0 1",
-      List("a2b3")
-    ).find(_.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(
-            _,
-            White,
-            _,
-            _,
-            supported,
-            _,
-            _,
-            _,
-            _,
-            establishments,
-            proof
-          ) =>
-        supported.key == "a7" && establishments.exists(establishment =>
-          establishment.supporter.square.key == "a1" &&
-            establishment.causes == List(RelationSupportChangeCause.SliderLineOpened)
-        ) && proof.premises.map(_.kind).toSet == Set(
-          RelationFactKind.GeometricSupportDelta,
-          RelationFactKind.GeometricLineControlAfterBlockerRemoval
-        )
-      case _ => false
-    )
-    assert(openedSupport.nonEmpty)
 
   test("all typed witnesses survive before downstream display selection"):
     val openedLines = relations(
@@ -987,27 +707,23 @@ class ClosedRelationEvidenceTest extends munit.FunSuite:
       Set("a4", "h4")
     )
 
-  test("fresh double check and exact multi-target contact remain distinct ideas"):
-    val result = relations(
+  test("fresh double check retains both exact checkers"):
+    val freshDoubleChecks = relations(
       "4k3/8/r7/8/8/8/4B3/4R1K1 w - - 0 1",
       List("e2b5")
-    )
-    val freshDoubleChecks = result.filter(hasCreatedDoubleCheck)
-    val multiTarget = result.filter(_.kind == RelationFactKind.GeometricMultiTargetContact)
+    ).filter(hasCreatedDoubleCheck)
 
     assertEquals(freshDoubleChecks.size, 1)
-    assertEquals(multiTarget.size, 1)
-    assert((freshDoubleChecks ++ multiTarget).forall(_.lineMoves == List("e2b5")))
-    assert(multiTarget.head.detail match
-      case RelationWitnessDetail.GeometricMultiTargetContact(_, White, controllerBefore, controllerAfter, newlyEstablished, maintained, proof) =>
-        controllerBefore.square.key == "e2" && controllerAfter.square.key == "b5" &&
-          newlyEstablished.map(_.square.key) == List("e8") &&
-          maintained.map(_.square.key) == List("a6") &&
-          proof.premises.exists(_.kind == RelationFactKind.GeometricControlSetDelta)
+    assertEquals(freshDoubleChecks.head.lineMoves, List("e2b5"))
+    assert(freshDoubleChecks.head.detail match
+      case RelationWitnessDetail.CreatedCheckResponseInventory(_, Black, kingSquare, checkers, _, _, _, _) =>
+        kingSquare.key == "e8" &&
+          checkers.map(checker => checker.square.key -> checker.role.name.toLowerCase).toSet ==
+            Set("b5" -> "bishop", "e1" -> "rook")
       case _ => false
     )
 
-  test("a pinned geometric recapturer stays distinct from an actually legal recapture"):
+  test("a pinned geometric recapture records one exact legal restriction and its cause"):
     val result = relations(
       "4k3/4n3/8/3p4/4P3/8/8/4R1K1 w - - 0 1",
       List("e4d5")
@@ -1021,169 +737,44 @@ class ClosedRelationEvidenceTest extends munit.FunSuite:
             captured,
             geometric,
             legal,
+            restricted,
             proof
           ) =>
+        val restrictedExactly =
+          restricted match
+            case List(restriction) =>
+              restriction.piece ==
+                RelationPieceWitness(EvidenceSquare("e7"), EvidencePieceRole("knight")) &&
+                restriction.resource.destination.key == "d5" &&
+                restriction.kingSquare.key == "e8" &&
+                restriction.postMoveControllers ==
+                  List(RelationPieceWitness(EvidenceSquare("e1"), EvidencePieceRole("rook"))) &&
+                restriction.absolutePinPaths.exists(path =>
+                  path.pinner == RelationPieceWitness(EvidenceSquare("e1"), EvidencePieceRole("rook")) &&
+                    path.pinned == restriction.piece && path.kingSquare == restriction.kingSquare
+                )
+            case _ => false
+        val exactLegalAbsence = proof.absences.exists(_.query match
+          case PositionRelationExtractor.ClosedRelationAbsenceQuery.LegalMoveFromTo(Black, from, to) =>
+            from.key == "e7" && to.key == "d5"
+          case _ => false
+        )
+        val exactExposureState = proof.states.exists(_.query match
+          case PositionRelationExtractor.ClosedPositionStateQuery.OwnKingExposure(
+                Black,
+                piece,
+                resource,
+                kingSquare,
+                controllers
+              ) =>
+            piece.square.key == "e7" && resource.destination.key == "d5" &&
+              kingSquare.key == "e8" && controllers.map(_.square.key) == List("e1")
+          case _ => false
+        )
         mover.from.key == "e4" && mover.to.key == "d5" && captured.square.key == "d5" &&
-          captured.side == Black && geometric == List(
-            RelationPieceWitness(EvidenceSquare("e7"), EvidencePieceRole("knight"))
-          ) && legal.isEmpty && proof.absences.size == 1
-      case _ => false
-    )
-    assert(result.exists(_.detail match
-      case RelationWitnessDetail.MovementAffordanceLegalRestriction(
-            _,
-            Black,
-            restrictedPiece,
-            geometric,
-            legal,
-            unavailable,
-            proof
-          ) =>
-        restrictedPiece == RelationPieceWitness(EvidenceSquare("e7"), EvidencePieceRole("knight")) &&
-          geometric.exists(_.destination.key == "d5") && legal.isEmpty &&
-          unavailable.exists(_.destination.key == "d5") &&
-          proof.absences.exists(_.query match
-            case PositionRelationExtractor.ClosedRelationAbsenceQuery.LegalMoveFromTo(_, from, to) =>
-              from.key == "e7" && to.key == "d5"
-            case _ => false
-          )
-      case _ => false
-    ))
-
-    val exactTarget = relations(
-      "4k3/1N6/8/8/8/8/8/5R1K w - - 0 1",
-      List("f1a1")
-    ).filter(_.kind == RelationFactKind.MovementAffordanceLegalRestriction)
-    assert(!exactTarget.exists(_.detail match
-      case RelationWitnessDetail.MovementAffordanceLegalRestriction(_, _, _, _, _, unavailable, _) =>
-        unavailable.exists(_.destination.key == "d8")
-      case _ => false
-    ))
-
-    val pinnedPawn = relations(
-      "7k/6p1/8/8/8/8/1B6/K7 w - - 0 1",
-      List("b2c3")
-    )
-    assert(pinnedPawn.exists(_.detail match
-      case RelationWitnessDetail.AbsolutePinMovementRestriction(
-            _,
-            Black,
-            _,
-            pinned,
-            king,
-            _,
-            movement,
-            legal,
-            forbidden,
-            _
-          ) =>
-        pinned.square.key == "g7" && king.key == "h8" && legal.isEmpty &&
-          movement.map(resource => resource.destination.key -> resource.mode).toSet == Set(
-            "g5" -> RelationMovementResourceMode.PawnDoubleAdvance,
-            "g6" -> RelationMovementResourceMode.PawnAdvance
-          ) && forbidden.toSet == movement.toSet
-      case _ => false
-    ))
-    assert(result.exists(_.detail match
-      case RelationWitnessDetail.AbsolutePinMovementRestriction(
-            _,
-            Black,
-            pinner,
-            pinned,
-            kingSquare,
-            _,
-            geometric,
-            legal,
-            forbidden,
-            proof
-          ) =>
-        pinner.square.key == "e1" && pinned.square.key == "e7" && kingSquare.key == "e8" &&
-          geometric.exists(_.destination.key == "d5") && legal.isEmpty &&
-          forbidden.exists(_.destination.key == "d5") &&
-          proof.premises.exists(_.kind == RelationFactKind.GeometricControlSetDelta) &&
-          proof.absences.exists(_.query match
-            case PositionRelationExtractor.ClosedRelationAbsenceQuery.LegalMoveFromTo(_, from, to) =>
-              from.key == "e7" && to.key == "d5"
-            case _ => false
-          )
-      case _ => false
-    ))
-
-  test("one legal move preserves simultaneous L1 ideas from distinct proof contracts"):
-    val result = relations(
-      "4k3/8/r7/7P/8/8/4B3/4R1K1 w - - 0 1",
-      List("e2b5")
-    )
-    val expectedKinds = Set(
-      RelationFactKind.CreatedCheckResponseInventory,
-      RelationFactKind.GeometricSupportCausalTransition,
-      RelationFactKind.GeometricMultiTargetContact
-    )
-    val l1Counts = result.filter(relation => expectedKinds(relation.kind)).groupMapReduce(_.kind)(_ => 1)(_ + _)
-
-    assert(result.exists(_.detail match
-      case RelationWitnessDetail.MovementAffordanceLegalRestriction(
-            _,
-            Black,
-            restrictedPiece,
-            _,
-            _,
-            unavailable,
-            proof
-          ) =>
-        restrictedPiece.square.key == "e8" && restrictedPiece.role.name.equalsIgnoreCase("king") &&
-          unavailable.nonEmpty && proof.absences.nonEmpty
-      case _ => false
-    ))
-
-    assertEquals(
-      l1Counts,
-      Map(
-        RelationFactKind.CreatedCheckResponseInventory -> 1,
-        RelationFactKind.GeometricSupportCausalTransition -> 2,
-        RelationFactKind.GeometricMultiTargetContact -> 1
-      )
-    )
-    val supportTargets = result.flatMap(_.detail match
-      case RelationWitnessDetail.GeometricSupportCausalTransition(
-            _,
-            _,
-            supportedBefore,
-            _,
-            supportedAfter,
-            _,
-            _,
-            _,
-            _,
-            _,
-            _
-          ) => Some(supportedBefore.key -> supportedAfter.key)
-      case _ => None
-    ).toSet
-    assertEquals(supportTargets, Set("e2" -> "b5", "h5" -> "h5"))
-    assert(result.filter(relation => expectedKinds(relation.kind)).forall(_.lineMoves == List("e2b5")))
-
-  test("shared geometric support of enemy-controlled targets does not overclaim attack or overload"):
-    val result = relations(
-      "k7/6p1/5n1n/8/8/4N3/8/K7 w - - 0 1",
-      List("e3g4")
-    ).filter(_.kind == RelationFactKind.SharedGeometricSupportOfEnemyControlledTargets)
-
-    assertEquals(result.size, 1)
-    assert(result.head.detail match
-      case RelationWitnessDetail.SharedGeometricSupportOfEnemyControlledTargets(
-            mover,
-            White,
-            Black,
-            sharedSupporter,
-            targets,
-            proof
-          ) =>
-        mover.from.key == "e3" && mover.to.key == "g4" && sharedSupporter.square.key == "g7" &&
-          targets.map(_.target.square.key).toSet == Set("f6", "h6") &&
-          targets.forall(_.friendlySupporters.contains(sharedSupporter)) &&
-          proof.premises.exists(_.kind == RelationFactKind.GeometricControlSetDelta) &&
-          proof.premises.count(_.kind == RelationFactKind.GeometricControl) >= 4
+          captured.side == Black &&
+          geometric == List(RelationPieceWitness(EvidenceSquare("e7"), EvidencePieceRole("knight"))) &&
+          legal.isEmpty && restrictedExactly && exactLegalAbsence && exactExposureState
       case _ => false
     )
 
@@ -1209,111 +800,3 @@ class ClosedRelationEvidenceTest extends munit.FunSuite:
       RelationPawnConnectionKind.GeometricSupport,
       RelationPawnConnectionDirection.SupportedBy
     )))
-
-  test("L1 breadth retains exact check response, unsupported contact, pawn topology, and stalemate facts"):
-    val checkResponse = relations(
-      "k3r3/8/8/8/8/3B4/8/4K3 w - - 0 1",
-      List("d3e2")
-    ).filter(_.kind == RelationFactKind.RootCheckResponse)
-    assertEquals(checkResponse.size, 1)
-    assert(checkResponse.head.detail match
-      case RelationWitnessDetail.RootCheckResponse(mover, White, kingSquare, checkers, response, proof) =>
-        mover.from.key == "d3" && mover.to.key == "e2" && kingSquare.key == "e1" &&
-          checkers == List(RelationPieceWitness(EvidenceSquare("e8"), EvidencePieceRole("rook"))) &&
-          response.modes == List(RelationCheckResponseMode.Interpose) &&
-          proof.premises.map(_.kind).toSet == Set(
-            RelationFactKind.LegalMove,
-            RelationFactKind.GeometricControl,
-            RelationFactKind.RayBarrier
-          )
-      case _ => false
-    )
-
-    val unsupported = relations(
-      "k7/8/5n2/8/8/4N3/8/K7 w - - 0 1",
-      List("e3g4")
-    ).filter(_.kind == RelationFactKind.GeometricEnemyContactWithoutFriendlySupport)
-    assertEquals(unsupported.size, 1)
-    assert(unsupported.head.detail match
-      case RelationWitnessDetail.GeometricEnemyContactWithoutFriendlySupport(
-            mover,
-            White,
-            beforeController,
-            afterController,
-            target,
-            proof
-          ) =>
-        mover.from.key == "e3" && mover.to.key == "g4" &&
-          beforeController.square.key == "e3" && afterController.square.key == "g4" &&
-          target == RelationPieceWitness(EvidenceSquare("f6"), EvidencePieceRole("knight")) &&
-          proof.absences.exists(_.query ==
-            PositionRelationExtractor.ClosedRelationAbsenceQuery.GeometricFriendlySupportOf(
-              Black,
-              EvidenceSquare("f6")
-            )
-          )
-      case _ => false
-    )
-
-    val topology = relations(
-      "7k/8/8/4p3/5P2/8/4P3/K7 w - - 0 1",
-      List("e2e4")
-    ).filter(_.kind == RelationFactKind.PawnTopologyTransition)
-    val topologyFacets = topology.flatMap(_.detail match
-      case RelationWitnessDetail.PawnTopologyTransition(_, Some(before), after, changed, _) =>
-        Some((before.side, before.square.key, after.map(_.square.key), changed.toSet))
-      case _ => None
-    ).toSet
-    val expectedTopologyFacets: Set[(Color, String, Option[String], Set[RelationPawnTopologyFacet])] =
-      Set(
-        (
-          White,
-          "e2",
-          Some("e4"),
-          Set(
-            RelationPawnTopologyFacet.FrontState,
-            RelationPawnTopologyFacet.Component,
-            RelationPawnTopologyFacet.Connections
-          )
-        ),
-        (
-          White,
-          "f4",
-          Some("f4"),
-          Set(RelationPawnTopologyFacet.Component, RelationPawnTopologyFacet.Connections)
-        ),
-        (
-          Black,
-          "e5",
-          Some("e5"),
-          Set(RelationPawnTopologyFacet.FrontState)
-        )
-      )
-    assertEquals(topologyFacets, expectedTopologyFacets)
-
-    val componentRelation = relations(
-      "7k/8/8/3P4/2P5/1P6/P7/7K w - - 0 1",
-      List("d5d6")
-    ).find(_.detail match
-      case RelationWitnessDetail.PawnTopologyTransition(_, Some(before), _, changed, _) =>
-        before.square.key == "a2" && changed.contains(RelationPawnTopologyFacet.Component)
-      case _ => false
-    ).getOrElse(fail("expected the a2 component transition"))
-    val componentProof = componentRelation.detail match
-      case RelationWitnessDetail.PawnTopologyTransition(_, _, _, _, proof) => proof
-      case _ => fail("expected a pawn topology proof")
-    assert(componentProof.premises.count(_.kind == RelationFactKind.GeometricControl) >= 3)
-
-    val stalemate = relations(
-      "k7/2Q5/2K5/8/8/8/8/8 w - - 0 1",
-      List("c7b6")
-    ).filter(_.kind == RelationFactKind.StalemateTransition)
-    assertEquals(stalemate.size, 1)
-    assert(stalemate.head.detail match
-      case RelationWitnessDetail.StalemateTransition(_, Black, kingSquare, proof) =>
-        kingSquare.key == "a8" && proof.absences.map(_.query).toSet == Set(
-          PositionRelationExtractor.ClosedRelationAbsenceQuery.AnyLegalMove(Black),
-          PositionRelationExtractor.ClosedRelationAbsenceQuery.KingCheck(Black, kingSquare)
-        )
-      case _ => false
-    )

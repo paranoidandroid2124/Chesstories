@@ -474,11 +474,8 @@ private[chessjudgment] object RootOwnedEffectPolicy:
           if beneficiary == actor.color then RootOwnedEffectStake.ActorValue
           else RootOwnedEffectStake.ActorLiability
         )
-      case RootOwnedEffectProof.RootLineEvent(_, _, event) =>
-        Some(
-          if event.kind == LineEventKind.Tempo then RootOwnedEffectStake.ActorLiability
-          else RootOwnedEffectStake.ActorValue
-        )
+      case RootOwnedEffectProof.RootLineEvent(_, _, _) =>
+        Some(RootOwnedEffectStake.ActorValue)
       case RootOwnedEffectProof.RootRelation(_, _) =>
         Some(RootOwnedEffectStake.ActorValue)
       case RootOwnedEffectProof.PlanResult(_, _, assessment, _) =>
@@ -717,7 +714,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
       eventKind: LineEventKind
   ): Boolean =
     causeKind match
-      case RelativeCauseKind.WrongMoveOrder => eventKind == LineEventKind.Tempo
+      case RelativeCauseKind.WrongMoveOrder => false
       case RelativeCauseKind.KingForcing =>
         eventKind == LineEventKind.Check || eventKind == LineEventKind.Mate
       case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
@@ -764,8 +761,8 @@ private[chessjudgment] object RootOwnedEffectPolicy:
   ): Option[DirectCausalChange] =
     val raw = kind match
       case LineEventKind.Capture | LineEventKind.Recapture | LineEventKind.Check |
-          LineEventKind.Mate | LineEventKind.Promotion | LineEventKind.Tempo |
-          LineEventKind.CheckEvasion => Some(DirectCausalChange.Occurred)
+          LineEventKind.Mate | LineEventKind.Promotion | LineEventKind.CheckEvasion =>
+        Some(DirectCausalChange.Occurred)
       case _ => None
     raw.map(normalizeCauseChange(cause, _))
 

@@ -388,7 +388,6 @@ enum RelativeCauseKind:
   case CandidateTacticalLiability
   case RecaptureRecoveryWindow
   case WrongMoveOrder
-  case TempoLoss
   case ConversionMiss
   case ConversionSecured
   case SacrificeCompensation
@@ -507,8 +506,6 @@ object RelativeCauseKind:
           consequenceKind == LineConsequenceKind.RecoveryWindow
       case RelativeCauseKind.WrongMoveOrder =>
         false
-      case RelativeCauseKind.TempoLoss =>
-        consequenceKind == LineConsequenceKind.ImmediateReplyCheck
       case RelativeCauseKind.KingForcing =>
         consequenceKind == LineConsequenceKind.Mate
       case RelativeCauseKind.DrawResource =>

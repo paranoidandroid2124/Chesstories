@@ -73,7 +73,6 @@ object RelativeCauseDominancePolicy:
       RelativeCauseKind.MaterialSwing
     ),
     RelativeCauseKind.TacticalRefutationOfPlayed -> Set(
-      RelativeCauseKind.TempoLoss,
       RelativeCauseKind.KingForcing
     )
   )

@@ -1,15 +1,11 @@
 package lila.chessjudgment.analysis.position
 
-import chess.{ Color, File, Square }
+import chess.Square
 import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.model.judgment.{
   CanonicalLineReplay,
-  EvidenceFile,
-  EvidenceSquare,
   LineReplayStep,
-  RelationFactEvidence,
-  RelationFactKind,
   RelationWitnessDetail
 }
 import lila.chessjudgment.model.line.{ LegalReplayStep, PrincipalVariationEvidence }
@@ -47,44 +43,6 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
       )
     )
     assertEquals(responses.responses.map(_.move), responses.legalMoves)
-
-  test("pawn-file projection is independent, empty-footprint lazy, and key-unique"):
-    import PositionRelationExtractor.BoardRelationInventoryDomain.StaticBoard
-
-    val fen = Standard.initialFen.value
-    val position = PrincipalVariationEvidence.readPosition(fen).get
-    val analysis = PositionAnalyzer.analyze(position, fen, 0)
-    val full = analysis.computation.relationSnapshot
-    val fileDetails = full.staticBoard.factsByDetail.values.collect {
-      case fact
-          if fact.kind == RelationFactKind.PawnFileGroup => fact.detail
-    }.toList
-    def inventory(staticBoard: PositionRelationExtractor.BoardRelationSnapshot) =
-      PositionRelationExtractor.closedPositionInventory(
-        PositionRelationExtractor.PositionRelationSnapshot(staticBoard, full.occurrence),
-        position,
-        analysis.actualLegalMoves
-      )
-
-    val fileOnly = inventory(PositionRelationExtractor.BoardRelationSnapshot.from(StaticBoard, fileDetails))
-    assertEquals(fileOnly.pawnFiles(Set.empty), Nil)
-    val targetedAFile = fileOnly.pawnFiles(Set(File.A)).head
-    val allFiles = fileOnly.pawnTopologyView.files
-    assertEquals(targetedAFile.file.key, "a")
-    assertEquals(allFiles.size, File.all.size)
-    assert(targetedAFile.asInstanceOf[AnyRef].eq(allFiles.find(_.file.key == "a").get.asInstanceOf[AnyRef]))
-
-    val repeatedAFile = RelationWitnessDetail.PawnFileGroup(
-      Color.White,
-      EvidenceFile("a"),
-      List(EvidenceSquare("a3"))
-    )
-    val repeated = inventory(
-      PositionRelationExtractor.BoardRelationSnapshot.from(StaticBoard, fileDetails :+ repeatedAFile)
-    )
-    assertEquals(repeated.pawnFiles(Set.empty), Nil)
-    val error = intercept[IllegalArgumentException](repeated.pawnFiles(Set(File.A)))
-    assert(error.getMessage.contains("closed pawn file groups repeated key"))
 
   test("incremental geometry matches cold geometry for ordinary and special move footprints"):
     val cases = List(
@@ -131,11 +89,6 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
 
       assertEquals(incremental.features, cold.features, moveUci)
       assertEquals(incremental.pawnTopology, cold.pawnTopology, moveUci)
-      assertEquals(
-        incrementalGeometry.staticBoard.occupiedSliderRaysByOrigin,
-        coldGeometry.staticBoard.occupiedSliderRaysByOrigin,
-        moveUci
-      )
       val incrementalDetails = incremental.boardRelations.map(_.detail)
       val coldDetails = cold.boardRelations.map(_.detail)
       assert(

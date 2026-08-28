@@ -9,7 +9,6 @@ import lila.chessjudgment.model.evaluation.{ JudgmentThresholds, PerspectiveMath
 import lila.chessjudgment.model.line.{ LegalReplayStep, PrincipalVariationEvidence }
 import lila.chessjudgment.analysis.position.{ PositionAnalysis, PositionRelationExtractor }
 import lila.chessjudgment.model.position.{
-  BoardGeometry,
   BoardPieceTransition,
   BoardTransitionFootprint,
   PositionFeatures
@@ -1152,7 +1151,6 @@ object EvidenceObjectBinding:
             LineEventKind.Check,
             LineEventKind.Mate,
             LineEventKind.Promotion,
-            LineEventKind.Tempo,
             LineEventKind.CheckEvasion
           )(event.kind)
         )
@@ -2598,7 +2596,7 @@ object EvidenceObjectBinding:
           )
       case LineEventKind.Promotion =>
         squareObject(event.square) ++ roleObject(event.targetRole)
-      case LineEventKind.Tempo | LineEventKind.CheckEvasion =>
+      case LineEventKind.CheckEvasion =>
         squareObject(event.square) ++ roleObject(event.targetRole)
       case _ =>
         Nil
@@ -3003,7 +3001,7 @@ object EvidenceObjectBinding:
       )
     val relationActors =
       payload.detail match
-        case RelationWitnessDetail.GeometricControl(side, _, _, _, _) =>
+        case RelationWitnessDetail.GeometricControl(side, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(side))
         case RelationWitnessDetail.LegalMove(side, _, _, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(side))
@@ -3024,10 +3022,7 @@ object EvidenceObjectBinding:
         case RelationWitnessDetail.NamedRayTransition(mover, owner, _, _, _, _, _, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
             objectOf(EvidenceObjectKind.Side, colorKey(owner))
-        case RelationWitnessDetail.GeometricSupportCausalTransition(mover, supportedSide, _, _, _, _, _, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
-            objectOf(EvidenceObjectKind.Side, colorKey(supportedSide))
-        case RelationWitnessDetail.CaptureRecaptureInventory(mover, captured, _, _, _) =>
+        case RelationWitnessDetail.CaptureRecaptureInventory(mover, captured, _, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
             objectOf(EvidenceObjectKind.Side, colorKey(captured.side))
         case RelationWitnessDetail.CreatedCheckResponseInventory(mover, checkedSide, _, _, _, _, _, _) =>
@@ -3036,36 +3031,12 @@ object EvidenceObjectBinding:
         case RelationWitnessDetail.RootCheckResponse(mover, respondingSide, _, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
             objectOf(EvidenceObjectKind.Side, colorKey(respondingSide))
-        case RelationWitnessDetail.MovementAffordanceLegalRestriction(mover, restrictedSide, _, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
-            objectOf(EvidenceObjectKind.Side, colorKey(restrictedSide))
-        case RelationWitnessDetail.AbsolutePinMovementRestriction(mover, restrictedSide, _, _, _, _, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
-            objectOf(EvidenceObjectKind.Side, colorKey(restrictedSide))
         case RelationWitnessDetail.SliderReachDelta(mover, owner, _, _, _, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
             objectOf(EvidenceObjectKind.Side, colorKey(owner))
-        case RelationWitnessDetail.SharedGeometricSupportOfEnemyControlledTargets(_, controllingSide, supportedSide, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(controllingSide)) ++
-            objectOf(EvidenceObjectKind.Side, colorKey(supportedSide))
-        case RelationWitnessDetail.GeometricMultiTargetContact(mover, controllingSide, _, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
-            objectOf(EvidenceObjectKind.Side, colorKey(controllingSide))
-        case RelationWitnessDetail.GeometricEnemyContactWithoutFriendlySupport(mover, controllingSide, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
-            objectOf(EvidenceObjectKind.Side, colorKey(controllingSide))
         case RelationWitnessDetail.PawnTopologyTransition(mover, before, after, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
             (before.orElse(after).toList.flatMap(value => objectOf(EvidenceObjectKind.Side, colorKey(value.side))))
-        case RelationWitnessDetail.PawnOccupiedFilePartitionTransition(mover, owner, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
-            objectOf(EvidenceObjectKind.Side, colorKey(owner))
-        case RelationWitnessDetail.MajorPiecePawnFileCorridorTransition(mover, owner, _, _, _, _, _, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
-            objectOf(EvidenceObjectKind.Side, colorKey(owner))
-        case RelationWitnessDetail.CastlingRightRemoved(mover, owner, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
-            objectOf(EvidenceObjectKind.Side, colorKey(owner))
         case RelationWitnessDetail.StalemateTransition(mover, stalledSide, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
             objectOf(EvidenceObjectKind.Side, colorKey(stalledSide))
@@ -3081,11 +3052,8 @@ object EvidenceObjectBinding:
           objectOf(EvidenceObjectKind.Side, colorKey(side))
     val relationTargets =
       payload.detail match
-        case RelationWitnessDetail.GeometricControl(side, _, _, _, target) =>
-          target match
-            case RelationControlTarget.Friendly(_) => objectOf(EvidenceObjectKind.Side, colorKey(side))
-            case RelationControlTarget.Enemy(_)    => objectOf(EvidenceObjectKind.Side, colorKey(!side))
-            case RelationControlTarget.Empty       => Nil
+        case RelationWitnessDetail.GeometricControl(_, _, _, _) =>
+          Nil
         case RelationWitnessDetail.LegalMove(_, _, _, _, _, capture) =>
           capture.toList.flatMap(value => objectOf(EvidenceObjectKind.Side, colorKey(value.capturedSide)))
         case RelationWitnessDetail.GeometricControlSetDelta(_, controllingSide, _, beforeTarget, afterTarget, _, _, _, _, _) =>
@@ -3120,35 +3088,16 @@ object EvidenceObjectBinding:
           Option.when(barrier.side != owner || target.exists(_.side != owner))(
             objectOf(EvidenceObjectKind.Side, colorKey(!owner))
           ).getOrElse(Nil)
-        case RelationWitnessDetail.GeometricSupportCausalTransition(_, supportedSide, _, _, _, _, _, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(supportedSide))
-        case RelationWitnessDetail.CaptureRecaptureInventory(_, captured, _, _, _) =>
+        case RelationWitnessDetail.CaptureRecaptureInventory(_, captured, _, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(captured.side))
         case RelationWitnessDetail.CreatedCheckResponseInventory(_, checkedSide, _, _, _, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(checkedSide))
         case RelationWitnessDetail.RootCheckResponse(_, respondingSide, _, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(respondingSide))
-        case RelationWitnessDetail.MovementAffordanceLegalRestriction(_, restrictedSide, _, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(restrictedSide))
-        case RelationWitnessDetail.AbsolutePinMovementRestriction(_, restrictedSide, _, _, _, _, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(restrictedSide))
         case RelationWitnessDetail.SliderReachDelta(_, owner, _, _, _, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(owner))
-        case RelationWitnessDetail.SharedGeometricSupportOfEnemyControlledTargets(_, _, supportedSide, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(supportedSide))
-        case RelationWitnessDetail.GeometricMultiTargetContact(_, controllingSide, _, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(!controllingSide))
-        case RelationWitnessDetail.GeometricEnemyContactWithoutFriendlySupport(_, controllingSide, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(!controllingSide))
         case RelationWitnessDetail.PawnTopologyTransition(_, before, after, _, _) =>
           before.orElse(after).toList.flatMap(value => objectOf(EvidenceObjectKind.Side, colorKey(value.side)))
-        case RelationWitnessDetail.PawnOccupiedFilePartitionTransition(_, owner, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(owner))
-        case RelationWitnessDetail.MajorPiecePawnFileCorridorTransition(_, owner, file, _, _, _, _, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(owner)) ++
-            objectOf(EvidenceObjectKind.File, file.key)
-        case RelationWitnessDetail.CastlingRightRemoved(_, owner, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(owner))
         case RelationWitnessDetail.StalemateTransition(_, stalledSide, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(stalledSide))
         case RelationWitnessDetail.PawnFileGroup(_, file, _) =>
@@ -3614,6 +3563,28 @@ final case class RelationRayDirection(fileStep: Int, rankStep: Int):
 
   private[chessjudgment] def stableKey: String = s"$fileStep:$rankStep"
 
+final case class RelationRayGeometry(
+    direction: RelationRayDirection,
+    squares: List[EvidenceSquare]
+):
+  require(squares.nonEmpty, "a relation ray needs its exact non-empty board segment")
+  require(squares.distinct.size == squares.size, "a relation ray cannot repeat a board square")
+
+  def axis: RelationAxisSignal = direction.axis
+
+  private[chessjudgment] def strictlyBetween(
+      target: EvidenceSquare,
+      candidate: EvidenceSquare
+  ): Boolean =
+    val targetIndex = squares.indexOf(target)
+    val candidateIndex = squares.indexOf(candidate)
+    targetIndex >= 0 && candidateIndex >= 0 && candidateIndex < targetIndex
+
+  private[chessjudgment] def distance(square: EvidenceSquare): Int =
+    val index = squares.indexOf(square)
+    require(index >= 0, "a ray-distance query must name one exact ray square")
+    index + 1
+
 /** Exact chess classification of one canonical slider barrier. The
   * classification is derived from the ray occupants; it never owns a second
   * board fact.
@@ -3631,23 +3602,23 @@ object RelationRayPattern:
       occupants: List[RelationColoredPieceWitness],
       axis: RelationAxisSignal
   ): RelationRayPattern =
-    require(occupants.nonEmpty, "a ray pattern needs its first occupied barrier")
-    val barrier = occupants.head
-    val rear = occupants.lift(1)
-    val barrierIsKing = barrier.role.name.equalsIgnoreCase(King.name)
-    rear match
-      case Some(target) if barrier.side != owner && target.side == barrier.side &&
-          target.role.name.equalsIgnoreCase(King.name) && !barrierIsKing =>
-        RelationRayPattern.AbsoluteKingPin
-      case Some(target) if barrier.side != owner && target.side == barrier.side &&
-          barrierIsKing && !target.role.name.equalsIgnoreCase(King.name) =>
-        RelationRayPattern.KingSkewer
-      case Some(target) if barrier.side != owner && target.side == barrier.side =>
-        RelationRayPattern.XRay
-      case _ if barrier.side == owner && sliderSupports(barrier.role, axis) =>
-        RelationRayPattern.Battery
-      case _ =>
-        RelationRayPattern.Ordinary
+    occupants.headOption.fold(RelationRayPattern.Ordinary) { barrier =>
+      val rear = occupants.lift(1)
+      val barrierIsKing = barrier.role.name.equalsIgnoreCase(King.name)
+      rear match
+        case Some(target) if barrier.side != owner && target.side == barrier.side &&
+            target.role.name.equalsIgnoreCase(King.name) && !barrierIsKing =>
+          RelationRayPattern.AbsoluteKingPin
+        case Some(target) if barrier.side != owner && target.side == barrier.side &&
+            barrierIsKing && !target.role.name.equalsIgnoreCase(King.name) =>
+          RelationRayPattern.KingSkewer
+        case Some(target) if barrier.side != owner && target.side == barrier.side =>
+          RelationRayPattern.XRay
+        case _ if barrier.side == owner && sliderSupports(barrier.role, axis) =>
+          RelationRayPattern.Battery
+        case _ =>
+          RelationRayPattern.Ordinary
+    }
 
   def id(pattern: RelationRayPattern): String =
     pattern match
@@ -3805,8 +3776,7 @@ enum RelationWitnessDetail:
       side: Color,
       attackerSquare: EvidenceSquare,
       attackerRole: EvidencePieceRole,
-      targetSquare: EvidenceSquare,
-      target: RelationControlTarget
+      targetSquare: EvidenceSquare
   )
   case LegalMove(
       side: Color,
@@ -3883,24 +3853,12 @@ enum RelationWitnessDetail:
       direction: RelationChangeDirection,
       proof: RelationCombinationProof
   )
-  case GeometricSupportCausalTransition(
-      mover: RelationMoveTransitionWitness,
-      supportedSide: Color,
-      supportedBeforeSquare: EvidenceSquare,
-      supportedBeforeRole: EvidencePieceRole,
-      supportedAfterSquare: EvidenceSquare,
-      supportedAfterRole: EvidencePieceRole,
-      beforeSupporters: List[RelationPieceWitness],
-      afterSupporters: List[RelationPieceWitness],
-      removals: List[RelationSupportRemovalWitness],
-      establishments: List[RelationSupportEstablishmentWitness],
-      proof: VerticalRelationDerivationProof
-  )
   case CaptureRecaptureInventory(
       mover: RelationMoveTransitionWitness,
       captured: RelationColoredPieceWitness,
       geometricRecapturers: List[RelationPieceWitness],
       legalRecaptures: List[RelationLegalMoveResourceWitness],
+      restrictedRecaptures: List[RelationRestrictedResourceWitness],
       proof: VerticalRelationDerivationProof
   )
   case CreatedCheckResponseInventory(
@@ -3921,27 +3879,6 @@ enum RelationWitnessDetail:
       response: RelationCheckResponseWitness,
       proof: VerticalRelationDerivationProof
   )
-  case MovementAffordanceLegalRestriction(
-      mover: RelationMoveTransitionWitness,
-      restrictedSide: Color,
-      piece: RelationPieceWitness,
-      movementResources: List[RelationMovementResourceWitness],
-      legalResources: List[RelationLegalMoveResourceWitness],
-      unavailableResources: List[RelationMovementResourceWitness],
-      proof: VerticalRelationDerivationProof
-  )
-  case AbsolutePinMovementRestriction(
-      mover: RelationMoveTransitionWitness,
-      restrictedSide: Color,
-      pinner: RelationPieceWitness,
-      pinned: RelationPieceWitness,
-      kingSquare: EvidenceSquare,
-      axis: RelationAxisSignal,
-      movementResources: List[RelationMovementResourceWitness],
-      legalResources: List[RelationLegalMoveResourceWitness],
-      newlyPinForbiddenResources: List[RelationMovementResourceWitness],
-      proof: VerticalRelationDerivationProof
-  )
   case SliderReachDelta(
       mover: RelationMoveTransitionWitness,
       side: Color,
@@ -3952,62 +3889,11 @@ enum RelationWitnessDetail:
       after: Option[RelationSliderReachWitness],
       proof: VerticalRelationDerivationProof
   )
-  case GeometricMultiTargetContact(
-      mover: RelationMoveTransitionWitness,
-      controllingSide: Color,
-      controllerBefore: RelationPieceWitness,
-      controllerAfter: RelationPieceWitness,
-      newlyEstablishedTargets: List[RelationPieceWitness],
-      maintainedTargets: List[RelationPieceWitness],
-      proof: VerticalRelationDerivationProof
-  )
-  case GeometricEnemyContactWithoutFriendlySupport(
-      mover: RelationMoveTransitionWitness,
-      controllingSide: Color,
-      controllerBefore: RelationPieceWitness,
-      controllerAfter: RelationPieceWitness,
-      target: RelationPieceWitness,
-      proof: VerticalRelationDerivationProof
-  )
-  case SharedGeometricSupportOfEnemyControlledTargets(
-      mover: RelationMoveTransitionWitness,
-      controllingSide: Color,
-      supportedSide: Color,
-      sharedSupporter: RelationPieceWitness,
-      targets: List[RelationSharedGeometricSupportTargetWitness],
-      proof: VerticalRelationDerivationProof
-  )
   case PawnTopologyTransition(
       mover: RelationMoveTransitionWitness,
       before: Option[RelationPawnTopologyStateWitness],
       after: Option[RelationPawnTopologyStateWitness],
       changedFacets: List[RelationPawnTopologyFacet],
-      proof: VerticalRelationDerivationProof
-  )
-  case PawnOccupiedFilePartitionTransition(
-      mover: RelationMoveTransitionWitness,
-      side: Color,
-      before: List[RelationPawnOccupiedFileRunWitness],
-      after: List[RelationPawnOccupiedFileRunWitness],
-      proof: VerticalRelationDerivationProof
-  )
-  case MajorPiecePawnFileCorridorTransition(
-      mover: RelationMoveTransitionWitness,
-      side: Color,
-      file: EvidenceFile,
-      sliderBefore: Option[RelationPieceWitness],
-      sliderAfter: Option[RelationPieceWitness],
-      occurrenceChange: Option[RelationSliderOccurrenceChange],
-      beforePawnFile: RelationPawnFileStateWitness,
-      afterPawnFile: RelationPawnFileStateWitness,
-      beforeCorridor: Option[RelationFileCorridorWitness],
-      afterCorridor: Option[RelationFileCorridorWitness],
-      proof: VerticalRelationDerivationProof
-  )
-  case CastlingRightRemoved(
-      mover: RelationMoveTransitionWitness,
-      side: Color,
-      flank: RelationCastlingFlank,
       proof: VerticalRelationDerivationProof
   )
   case StalemateTransition(
@@ -4035,7 +3921,7 @@ enum RelationWitnessDetail:
       attackerSquare: EvidenceSquare,
       attackerRole: EvidencePieceRole,
       occupants: List[RelationColoredPieceWitness],
-      axis: RelationAxisSignal
+      geometry: RelationRayGeometry
   )
 
   def detailName: String =
@@ -4080,9 +3966,12 @@ final case class RelationBatteryFormationWitness(
     "a battery formation must use canonical slider order"
   )
 
+  private[chessjudgment] def stableKey: String =
+    s"${side.toString.toLowerCase}:${axis.toString.toLowerCase}:${firstSlider.role.name.toLowerCase}@${firstSlider.square.key.toLowerCase}:${secondSlider.role.name.toLowerCase}@${secondSlider.square.key.toLowerCase}"
+
 private[chessjudgment] object RelationRayProjection:
   def pattern(detail: RelationWitnessDetail.RayBarrier): RelationRayPattern =
-    RelationRayPattern.classify(detail.side, detail.occupants, detail.axis)
+    RelationRayPattern.classify(detail.side, detail.occupants, detail.geometry.axis)
 
   def immediateTarget(
       detail: RelationWitnessDetail.RayBarrier
@@ -4096,50 +3985,19 @@ private[chessjudgment] object RelationRayProjection:
       case RelationRayPattern.Ordinary =>
         None
 
-  def liesStrictlyBetweenAttackerAnd(
-      detail: RelationWitnessDetail.RayBarrier,
-      target: EvidenceSquare,
-      candidate: EvidenceSquare
-  ): Boolean =
-    require(
-      detail.occupants.exists(_.square == target),
-      "a ray corridor target must belong to its canonical ordered occupants"
-    )
-    liesStrictlyBetween(detail.attackerSquare, target, candidate)
-
-  def liesStrictlyBetween(
-      attacker: EvidenceSquare,
-      target: EvidenceSquare,
-      candidate: EvidenceSquare
-  ): Boolean =
-    BoardGeometry.liesStrictlyBetween(
-      boardSquare(attacker),
-      boardSquare(target),
-      boardSquare(candidate)
-    )
-
-  private def boardSquare(square: EvidenceSquare): Square =
-    Square.fromKey(square.key).getOrElse(
-      throw IllegalArgumentException(s"invalid canonical ray square '${square.key}'")
-    )
-
   def named(
       detail: RelationWitnessDetail.RayBarrier
   ): Option[RelationNamedRayProjection] =
     val exactPattern = pattern(detail)
     Option.when(exactPattern != RelationRayPattern.Ordinary) {
       if exactPattern == RelationRayPattern.Battery then
-        val sliders = List(
-          RelationColoredPieceWitness(detail.attackerSquare, detail.attackerRole, detail.side),
-          detail.occupants.head
-        ).sortBy(piece => piece.square.key.toLowerCase -> piece.role.name.toLowerCase)
         RelationNamedRayProjection(
           side = detail.side,
-          attackerSquare = sliders.head.square,
-          attackerRole = sliders.head.role,
-          barrier = sliders.last,
-          immediateTarget = None,
-          axis = detail.axis,
+          attackerSquare = detail.attackerSquare,
+          attackerRole = detail.attackerRole,
+          barrier = detail.occupants.head,
+          immediateTarget = immediateTarget(detail),
+          axis = detail.geometry.axis,
           pattern = exactPattern
         )
       else
@@ -4149,7 +4007,7 @@ private[chessjudgment] object RelationRayProjection:
           attackerRole = detail.attackerRole,
           barrier = detail.occupants.head,
           immediateTarget = immediateTarget(detail),
-          axis = detail.axis,
+          axis = detail.geometry.axis,
           pattern = exactPattern
         )
     }
@@ -4159,14 +4017,18 @@ private[chessjudgment] object RelationRayProjection:
   ): Option[RelationBatteryFormationWitness] =
     named(detail).collect {
       case projection if projection.pattern == RelationRayPattern.Battery =>
-        RelationBatteryFormationWitness(
-          side = projection.side,
-          firstSlider = RelationColoredPieceWitness(
+        val sliders = List(
+          RelationColoredPieceWitness(
             projection.attackerSquare,
             projection.attackerRole,
             projection.side
           ),
-          secondSlider = projection.barrier,
+          projection.barrier
+        ).sortBy(piece => piece.square.key.toLowerCase -> piece.role.name.toLowerCase)
+        RelationBatteryFormationWitness(
+          side = projection.side,
+          firstSlider = sliders.head,
+          secondSlider = sliders.last,
           axis = projection.axis
         )
     }
@@ -4237,10 +4099,6 @@ object RelationWitnessDetail:
         side(value.capturedSide)
       )
     )
-  private def supportRemoval(value: RelationSupportRemovalWitness): String =
-    tuple("support-removal", List(piece(value.supporter), sequence(value.causes.map(_.stableKey))))
-  private def supportEstablishment(value: RelationSupportEstablishmentWitness): String =
-    tuple("support-establishment", List(piece(value.supporter), sequence(value.causes.map(_.stableKey))))
   private def movementResource(value: RelationMovementResourceWitness): String =
     tuple(
       "movement-resource",
@@ -4279,21 +4137,6 @@ object RelationWitnessDetail:
   private def pawnTopologySquares(value: RelationPawnTopologyStateWitness): List[EvidenceSquare] =
     (value.square :: value.frontSquare.toList ++ value.frontOccupant.map(_.square) ++
       value.componentPawns ++ value.connections.map(_.peer) ++ value.enemyPawnContacts).distinct
-  private def pawnOccupiedFileRun(value: RelationPawnOccupiedFileRunWitness): String =
-    tuple(
-      "pawn-occupied-file-run",
-      List(sequence(value.files.map(boardFile)), sequence(value.pawns.map(square)))
-    )
-  private def changedPawnOccupiedFileRuns(
-      before: List[RelationPawnOccupiedFileRunWitness],
-      after: List[RelationPawnOccupiedFileRunWitness]
-  ): List[RelationPawnOccupiedFileRunWitness] =
-    def fileKey(run: RelationPawnOccupiedFileRunWitness): String =
-      run.files.map(_.key.toLowerCase).mkString
-    val beforeKeys = before.map(fileKey).toSet
-    val afterKeys = after.map(fileKey).toSet
-    before.filterNot(run => afterKeys(fileKey(run))) ++
-      after.filterNot(run => beforeKeys(fileKey(run)))
   private def optional[A](value: Option[A])(encode: A => String): String =
     value.map(item => tuple("some", List(encode(item)))).getOrElse(tuple("none", Nil))
 
@@ -4303,8 +4146,8 @@ object RelationWitnessDetail:
     */
   private def encodedKey(detail: RelationWitnessDetail, includeDerivation: Boolean): String =
     val fields = detail match
-      case GeometricControl(owner, attacker, attackerRole, target, targetState) =>
-        List(side(owner), square(attacker), role(attackerRole), square(target), controlTarget(targetState))
+      case GeometricControl(owner, attacker, attackerRole, target) =>
+        List(side(owner), square(attacker), role(attackerRole), square(target))
       case LegalMove(owner, mover, moverRole, destination, moveUci, captured) =>
         List(
           side(owner),
@@ -4465,49 +4308,14 @@ object RelationWitnessDetail:
           RelationRayPattern.id(pattern),
           direction.toString
         ) ++ Option.when(includeDerivation)(proof.stableKey).toList
-      case GeometricSupportCausalTransition(
+      case CaptureRecaptureInventory(
             mover,
-            supportedSide,
-            supportedBeforeSquare,
-            supportedBeforeRole,
-            supportedAfterSquare,
-            supportedAfterRole,
-            beforeSupporters,
-            afterSupporters,
-            removals,
-            establishments,
+            captured,
+            geometricRecapturers,
+            legalRecaptures,
+            restrictedRecaptures,
             proof
           ) =>
-        def canonicalSupporters(values: List[RelationPieceWitness]): Boolean =
-          values.distinct.size == values.size &&
-            values == values.sortBy(value => value.square.key -> value.role.name)
-        require(
-          removals.nonEmpty || establishments.nonEmpty,
-          "a causal support transition needs one changed support relation"
-        )
-        require(
-          canonicalSupporters(beforeSupporters) && canonicalSupporters(afterSupporters) &&
-            removals.map(_.supporter).distinct.size == removals.size &&
-            removals == removals.sortBy(value => value.supporter.square.key -> value.supporter.role.name) &&
-            removals.forall(removal => beforeSupporters.contains(removal.supporter)) &&
-            establishments.map(_.supporter).distinct.size == establishments.size &&
-            establishments == establishments.sortBy(value => value.supporter.square.key -> value.supporter.role.name) &&
-            establishments.forall(establishment => afterSupporters.contains(establishment.supporter)),
-          "a causal support transition must retain canonical closed support sets and exact changed members"
-        )
-        List(
-          moveTransition(mover),
-          side(supportedSide),
-          square(supportedBeforeSquare),
-          role(supportedBeforeRole),
-          square(supportedAfterSquare),
-          role(supportedAfterRole),
-          values(beforeSupporters.map(piece)),
-          values(afterSupporters.map(piece)),
-          values(removals.map(supportRemoval)),
-          values(establishments.map(supportEstablishment))
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
-      case CaptureRecaptureInventory(mover, captured, geometricRecapturers, legalRecaptures, proof) =>
         require(
           geometricRecapturers.distinct.size == geometricRecapturers.size &&
             geometricRecapturers == geometricRecapturers.sortBy(value => value.square.key -> value.role.name),
@@ -4518,11 +4326,27 @@ object RelationWitnessDetail:
             legalRecaptures == legalRecaptures.sortBy(_.stableKey),
           "legal recaptures must be unique and canonically ordered"
         )
+        require(
+          restrictedRecaptures.distinct.size == restrictedRecaptures.size &&
+            restrictedRecaptures == restrictedRecaptures.sortBy(_.stableKey) &&
+            restrictedRecaptures.forall(restriction =>
+              geometricRecapturers.contains(restriction.piece) &&
+                restriction.resource.destination == mover.to &&
+                restriction.resource.target == RelationControlTarget.Enemy(mover.afterRole) &&
+                restriction.resource.mode == RelationMovementResourceMode.ControlledDestination &&
+                legalRecaptures.forall(resource =>
+                  resource.movement.from != restriction.piece.square ||
+                    resource.movement.to != restriction.resource.destination
+                )
+            ),
+          "restricted recaptures must be canonical, geometric, and absent from legal recaptures"
+        )
         List(
           moveTransition(mover),
           coloredPiece(captured),
           values(geometricRecapturers.map(piece)),
-          values(legalRecaptures.map(_.stableKey))
+          values(legalRecaptures.map(_.stableKey)),
+          values(restrictedRecaptures.map(_.stableKey))
         ) ++ Option.when(includeDerivation)(proof.stableKey).toList
       case CreatedCheckResponseInventory(
             mover,
@@ -4577,83 +4401,6 @@ object RelationWitnessDetail:
           values(checkers.map(piece)),
           response.stableKey
         ) ++ Option.when(includeDerivation)(proof.stableKey).toList
-      case MovementAffordanceLegalRestriction(
-            mover,
-            restrictedSide,
-            restrictedPiece,
-            movementResources,
-            legalResources,
-            unavailableResources,
-            proof
-          ) =>
-        val movementDestinations = movementResources.map(_.destination).toSet
-        val legalDestinations = legalResources.map(_.movement.to).toSet
-        require(restrictedSide != mover.side, "an after-position legal restriction belongs to the reply side")
-        require(
-          movementResources.nonEmpty && movementResources.distinct.size == movementResources.size &&
-            movementResources == movementResources.sortBy(_.stableKey) &&
-            legalResources.distinct.size == legalResources.size && legalResources == legalResources.sortBy(_.stableKey) &&
-            legalResources.forall(resource =>
-              resource.movement.side == restrictedSide && resource.movement.from == restrictedPiece.square &&
-                movementDestinations(resource.movement.to)
-            ) &&
-            unavailableResources.nonEmpty && unavailableResources.distinct.size == unavailableResources.size &&
-            unavailableResources == unavailableResources.sortBy(_.stableKey) &&
-            unavailableResources.forall(movementResources.contains) &&
-            unavailableResources.forall(resource => !legalDestinations(resource.destination)),
-          "a movement-affordance legal restriction needs canonical movement, legal, and unavailable resources"
-        )
-        List(
-          moveTransition(mover),
-          side(restrictedSide),
-          piece(restrictedPiece),
-          sequence(movementResources.map(movementResource)),
-          sequence(legalResources.map(_.stableKey)),
-          sequence(unavailableResources.map(movementResource))
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
-      case AbsolutePinMovementRestriction(
-            mover,
-            restrictedSide,
-            pinner,
-            pinned,
-            kingSquare,
-            axis,
-            movementResources,
-            legalResources,
-            newlyPinForbiddenResources,
-            proof
-          ) =>
-        require(pinner.square != pinned.square, "an absolute pin needs distinct pinner and pinned piece")
-        require(pinned.square != kingSquare, "an absolute pin needs the pinned piece in front of its king")
-        require(restrictedSide != mover.side, "an after-position pin restriction belongs to the reply side")
-        require(
-          movementResources.nonEmpty && movementResources.distinct.size == movementResources.size &&
-            movementResources == movementResources.sortBy(_.stableKey) &&
-            legalResources.distinct.size == legalResources.size && legalResources == legalResources.sortBy(_.stableKey) &&
-            legalResources.forall(resource =>
-              resource.movement.side == restrictedSide && resource.movement.from == pinned.square &&
-                movementResources.exists(_.destination == resource.movement.to)
-            ) &&
-            newlyPinForbiddenResources.nonEmpty &&
-            newlyPinForbiddenResources.distinct.size == newlyPinForbiddenResources.size &&
-            newlyPinForbiddenResources == newlyPinForbiddenResources.sortBy(_.stableKey) &&
-            newlyPinForbiddenResources.forall(movementResources.contains) &&
-            newlyPinForbiddenResources.forall(forbidden =>
-              legalResources.forall(_.movement.to != forbidden.destination)
-            ),
-          "an absolute pin restriction needs canonical movement, legal, and newly forbidden resources"
-        )
-        List(
-          moveTransition(mover),
-          side(restrictedSide),
-          piece(pinner),
-          piece(pinned),
-          square(kingSquare),
-          axis.toString,
-          sequence(movementResources.map(movementResource)),
-          sequence(legalResources.map(_.stableKey)),
-          sequence(newlyPinForbiddenResources.map(movementResource))
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
       case SliderReachDelta(mover, owner, sliderBefore, sliderAfter, direction, before, after, proof) =>
         require(sliderBefore.nonEmpty || sliderAfter.nonEmpty, "a slider-reach delta needs one slider occurrence")
         require(before != after, "a slider-reach delta must change its exact reachable segment")
@@ -4672,59 +4419,6 @@ object RelationWitnessDetail:
           optional(before)(sliderReach),
           optional(after)(sliderReach)
         ) ++ Option.when(includeDerivation)(proof.stableKey).toList
-      case GeometricMultiTargetContact(
-            mover,
-            controllingSide,
-            controllerBefore,
-            controllerAfter,
-            newlyEstablishedTargets,
-            maintainedTargets,
-            proof
-          ) =>
-        val targets = newlyEstablishedTargets ++ maintainedTargets
-        require(controllingSide == mover.side, "multi-target control must belong to the root mover's side")
-        require(
-          newlyEstablishedTargets.nonEmpty && targets.size >= 2 && targets.distinct.size == targets.size,
-          "multi-target control needs one new and at least two total enemy contacts"
-        )
-        List(
-          moveTransition(mover),
-          side(controllingSide),
-          piece(controllerBefore),
-          piece(controllerAfter),
-          values(newlyEstablishedTargets.map(piece)),
-          values(maintainedTargets.map(piece))
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
-      case GeometricEnemyContactWithoutFriendlySupport(
-            mover,
-            controllingSide,
-            controllerBefore,
-            controllerAfter,
-            target,
-            proof
-          ) =>
-        require(controllingSide == mover.side, "a new enemy contact must belong to the root mover's side")
-        List(
-          moveTransition(mover),
-          side(controllingSide),
-          piece(controllerBefore),
-          piece(controllerAfter),
-          piece(target)
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
-      case SharedGeometricSupportOfEnemyControlledTargets(mover, controllingSide, supportedSide, sharedSupporter, targets, proof) =>
-        require(controllingSide == mover.side && supportedSide != controllingSide, "enemy control and friendly support must join opposing sides")
-        require(
-          targets.size >= 2 && targets.distinct.size == targets.size &&
-            targets == targets.sortBy(_.stableKey) && targets.forall(_.friendlySupporters.contains(sharedSupporter)),
-          "shared geometric support needs two canonical enemy-controlled targets with the same friendly supporter"
-        )
-        List(
-          moveTransition(mover),
-          side(controllingSide),
-          side(supportedSide),
-          piece(sharedSupporter),
-          values(targets.map(_.stableKey))
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
       case PawnTopologyTransition(mover, before, after, changedFacets, proof) =>
         require(before.nonEmpty, "a pawn topology transition needs its before occurrence")
         require(
@@ -4740,100 +4434,6 @@ object RelationWitnessDetail:
           optional(before)(pawnTopologyState),
           optional(after)(pawnTopologyState),
           sequence(changedFacets.map(_.stableKey))
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
-      case PawnOccupiedFilePartitionTransition(mover, owner, before, after, proof) =>
-        require(
-          RelationPawnOccupiedFileRunWitness.canonicalPartition(before) &&
-            RelationPawnOccupiedFileRunWitness.canonicalPartition(after),
-          "an occupied-file partition transition needs canonical before and after partitions"
-        )
-        require(
-          before.map(_.files) != after.map(_.files),
-          "an occupied-file partition transition must change its maximal file runs"
-        )
-        List(
-          moveTransition(mover),
-          side(owner),
-          sequence(before.map(pawnOccupiedFileRun)),
-          sequence(after.map(pawnOccupiedFileRun))
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
-      case MajorPiecePawnFileCorridorTransition(
-            mover,
-            owner,
-            file,
-            sliderBefore,
-            sliderAfter,
-            occurrenceChange,
-            beforePawnFile,
-            afterPawnFile,
-            beforeCorridor,
-            afterCorridor,
-            proof
-          ) =>
-        val pieces = sliderBefore.toList ++ sliderAfter.toList
-        def onFile(value: RelationPieceWitness): Boolean =
-          EvidenceFile.contains(file, value.square)
-        require(
-          pieces.nonEmpty && pieces.forall(piece =>
-            piece.role.name.equalsIgnoreCase(Rook.name) || piece.role.name.equalsIgnoreCase(Queen.name)
-          ),
-          "a pawn-file corridor transition needs an exact rook or queen occurrence"
-        )
-        require(
-          beforePawnFile.file == file && afterPawnFile.file == file &&
-            sliderBefore.exists(onFile) == beforeCorridor.nonEmpty &&
-            sliderAfter.exists(onFile) == afterCorridor.nonEmpty,
-          "a pawn-file corridor must bind each two-ray state to the slider occurrence on its file"
-        )
-        require(
-          beforeCorridor.nonEmpty && beforePawnFile.opennessFor(owner).ownPawnAbsent ||
-            afterCorridor.nonEmpty && afterPawnFile.opennessFor(owner).ownPawnAbsent,
-          "a pawn-file corridor transition needs one usable exact two-direction corridor"
-        )
-        require(
-          occurrenceChange.isEmpty == (sliderBefore == sliderAfter),
-          "a changed slider occurrence needs one exact movement, promotion, or capture cause"
-        )
-        occurrenceChange.foreach {
-          case RelationSliderOccurrenceChange.PieceTransition(movement) =>
-            require(
-              movement.side == owner && sliderAfter.exists(after =>
-                movement.to == after.square && movement.afterRole == after.role
-              ) && (sliderBefore match
-                case Some(before) =>
-                  movement.from == before.square && movement.beforeRole == before.role
-                case None => movement.beforeRole.name.equalsIgnoreCase(Pawn.name)),
-              "a slider occurrence transition must bind its exact before and after identities"
-            )
-          case RelationSliderOccurrenceChange.Captured(piece) =>
-            require(
-              piece.side == owner && sliderBefore.contains(RelationPieceWitness(piece.square, piece.role)) &&
-                sliderAfter.isEmpty,
-              "a captured slider cause must bind the exact vanished occurrence"
-            )
-        }
-        require(
-          sliderBefore != sliderAfter || beforeCorridor != afterCorridor ||
-            beforePawnFile.opennessFor(owner) != afterPawnFile.opennessFor(owner),
-          "a pawn-file corridor transition must change its occurrence, owner-relative openness, or two-ray state"
-        )
-        List(
-          moveTransition(mover),
-          side(owner),
-          boardFile(file),
-          optional(sliderBefore)(piece),
-          optional(sliderAfter)(piece),
-          optional(occurrenceChange)(_.stableKey),
-          beforePawnFile.stableKey,
-          afterPawnFile.stableKey,
-          optional(beforeCorridor)(_.stableKey),
-          optional(afterCorridor)(_.stableKey)
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
-      case CastlingRightRemoved(mover, owner, flank, proof) =>
-        List(
-          moveTransition(mover),
-          side(owner),
-          flank.stableKey
         ) ++ Option.when(includeDerivation)(proof.stableKey).toList
       case StalemateTransition(mover, stalledSide, kingSquare, proof) =>
         require(stalledSide != mover.side, "the after-position side to move must be the stalemated side")
@@ -4855,14 +4455,14 @@ object RelationWitnessDetail:
         List(side(owner), square(pawn), square(destination), sequence(traversed.map(square)))
       case PawnPassage(owner, pawn, opposingPawns) =>
         List(side(owner), square(pawn), values(opposingPawns.map(square)))
-      case RayBarrier(owner, attacker, attackerRole, occupants, axis) =>
-        require(occupants.nonEmpty, "a ray barrier needs its ordered occupied topology")
+      case RayBarrier(owner, attacker, attackerRole, occupants, geometry) =>
         List(
           side(owner),
           square(attacker),
           role(attackerRole),
           sequence(occupants.map(coloredPiece)),
-          axis.toString
+          geometry.direction.stableKey,
+          sequence(geometry.squares.map(square))
         )
     tuple(RelationFactKind.id(factKind(detail)), fields)
 
@@ -4902,21 +4502,11 @@ object RelationWitnessDetail:
       case _: GeometricLineControlAfterBlockerRemoval =>
         RelationFactKind.GeometricLineControlAfterBlockerRemoval
       case _: NamedRayTransition   => RelationFactKind.NamedRayTransition
-      case _: GeometricSupportCausalTransition => RelationFactKind.GeometricSupportCausalTransition
       case _: CaptureRecaptureInventory => RelationFactKind.CaptureRecaptureInventory
       case _: CreatedCheckResponseInventory => RelationFactKind.CreatedCheckResponseInventory
       case _: RootCheckResponse => RelationFactKind.RootCheckResponse
-      case _: MovementAffordanceLegalRestriction => RelationFactKind.MovementAffordanceLegalRestriction
-      case _: AbsolutePinMovementRestriction => RelationFactKind.AbsolutePinMovementRestriction
       case _: SliderReachDelta => RelationFactKind.SliderReachDelta
-      case _: GeometricMultiTargetContact => RelationFactKind.GeometricMultiTargetContact
-      case _: GeometricEnemyContactWithoutFriendlySupport =>
-        RelationFactKind.GeometricEnemyContactWithoutFriendlySupport
-      case _: SharedGeometricSupportOfEnemyControlledTargets => RelationFactKind.SharedGeometricSupportOfEnemyControlledTargets
       case _: PawnTopologyTransition => RelationFactKind.PawnTopologyTransition
-      case _: PawnOccupiedFilePartitionTransition => RelationFactKind.PawnOccupiedFilePartitionTransition
-      case _: MajorPiecePawnFileCorridorTransition => RelationFactKind.MajorPiecePawnFileCorridorTransition
-      case _: CastlingRightRemoved => RelationFactKind.CastlingRightRemoved
       case _: StalemateTransition => RelationFactKind.StalemateTransition
       case _: PawnFileGroup        => RelationFactKind.PawnFileGroup
       case _: PawnFrontOccupancy   => RelationFactKind.PawnFrontOccupancy
@@ -4978,7 +4568,7 @@ object RelationWitnessDetail:
   def focusSquares(detail: RelationWitnessDetail): List[EvidenceSquare] =
     val squares =
       detail match
-        case GeometricControl(_, attackerSquare, _, targetSquare, _) =>
+        case GeometricControl(_, attackerSquare, _, targetSquare) =>
           List(attackerSquare, targetSquare)
         case LegalMove(_, moverSquare, _, destinationSquare, _, capture) =>
           List(moverSquare, destinationSquare) ++ capture.map(_.capturedSquare)
@@ -5019,25 +4609,16 @@ object RelationWitnessDetail:
           List(mover.from, mover.to, controllerBefore, controllerAfter, blocker) ++ opened.map(_.square)
         case NamedRayTransition(mover, _, attacker, _, barrier, immediateTarget, _, _, _, _) =>
           List(mover.from, mover.to, attacker, barrier.square) ++ immediateTarget.map(_.square)
-        case GeometricSupportCausalTransition(
-              mover,
-              _,
-              supportedBefore,
-              _,
-              supportedAfter,
-              _,
-              beforeSupporters,
-              afterSupporters,
-              removals,
-              establishments,
-              _
-            ) =>
-          List(mover.from, mover.to, supportedBefore, supportedAfter) ++
-            (beforeSupporters ++ afterSupporters ++ removals.map(_.supporter) ++
-              establishments.map(_.supporter)).map(_.square)
-        case CaptureRecaptureInventory(mover, captured, geometricRecapturers, legalRecaptures, _) =>
+        case CaptureRecaptureInventory(mover, captured, geometricRecapturers, legalRecaptures, restrictions, _) =>
           List(mover.from, mover.to, captured.square) ++ geometricRecapturers.map(_.square) ++
-            legalRecaptures.flatMap(resource => List(resource.movement.from, resource.movement.to))
+            legalRecaptures.flatMap(resource => List(resource.movement.from, resource.movement.to)) ++
+            restrictions.flatMap(restriction =>
+              List(restriction.piece.square, restriction.resource.destination, restriction.kingSquare) ++
+                restriction.postMoveControllers.map(_.square) ++
+                restriction.absolutePinPaths.flatMap(path =>
+                  List(path.pinner.square, path.pinned.square, path.kingSquare) ++ path.geometry.squares
+                )
+            )
         case CreatedCheckResponseInventory(
               mover,
               _,
@@ -5056,55 +4637,13 @@ object RelationWitnessDetail:
         case RootCheckResponse(mover, _, kingSquare, checkers, response, _) =>
           List(mover.from, mover.to, kingSquare) ++ checkers.map(_.square) ++
             List(response.resource.movement.from, response.resource.movement.to)
-        case MovementAffordanceLegalRestriction(mover, _, restrictedPiece, geometric, legal, unavailable, _) =>
-          List(mover.from, mover.to, restrictedPiece.square) ++ geometric.map(_.destination) ++
-            legal.flatMap(resource => List(resource.movement.from, resource.movement.to)) ++
-            unavailable.map(_.destination)
-        case AbsolutePinMovementRestriction(mover, _, pinner, pinned, kingSquare, _, geometric, legal, forbidden, _) =>
-          List(mover.from, mover.to, pinner.square, pinned.square, kingSquare) ++
-            geometric.map(_.destination) ++ legal.flatMap(resource => List(resource.movement.from, resource.movement.to)) ++
-            forbidden.map(_.destination)
         case SliderReachDelta(mover, _, sliderBefore, sliderAfter, _, before, after, _) =>
           List(mover.from, mover.to) ++ sliderBefore.map(_.square) ++ sliderAfter.map(_.square) ++
             before.toList.flatMap(reach => reach.segment.map(_.square) ++ reach.firstOccupant.map(_.square)) ++
             after.toList.flatMap(reach => reach.segment.map(_.square) ++ reach.firstOccupant.map(_.square))
-        case GeometricMultiTargetContact(mover, _, controllerBefore, controllerAfter, newlyEstablished, maintained, _) =>
-          List(mover.from, mover.to, controllerBefore.square, controllerAfter.square) ++
-            (newlyEstablished ++ maintained).map(_.square)
-        case GeometricEnemyContactWithoutFriendlySupport(mover, _, controllerBefore, controllerAfter, target, _) =>
-          List(mover.from, mover.to, controllerBefore.square, controllerAfter.square, target.square)
-        case SharedGeometricSupportOfEnemyControlledTargets(mover, _, _, sharedSupporter, targets, _) =>
-          List(mover.from, mover.to, sharedSupporter.square) ++ targets.flatMap(target =>
-            target.target.square :: (target.enemyControllers ++ target.friendlySupporters).map(_.square)
-          )
         case PawnTopologyTransition(mover, before, after, _, _) =>
           List(mover.from, mover.to) ++ before.toList.flatMap(pawnTopologySquares) ++
             after.toList.flatMap(pawnTopologySquares)
-        case PawnOccupiedFilePartitionTransition(mover, _, before, after, _) =>
-          List(mover.from, mover.to) ++ changedPawnOccupiedFileRuns(before, after).flatMap(_.pawns)
-        case MajorPiecePawnFileCorridorTransition(
-              mover,
-              _,
-              _,
-              sliderBefore,
-              sliderAfter,
-              _,
-              beforePawnFile,
-              afterPawnFile,
-              beforeCorridor,
-              afterCorridor,
-              _
-            ) =>
-          def corridorSquares(corridor: Option[RelationFileCorridorWitness]): List[EvidenceSquare] =
-            corridor.toList.flatMap(_.rays.flatMap(_.reach.toList.flatMap(reach =>
-              reach.segment.map(_.square) ++ reach.firstOccupant.map(_.square)
-            )))
-          List(mover.from, mover.to) ++ sliderBefore.map(_.square) ++ sliderAfter.map(_.square) ++
-            beforePawnFile.whitePawns ++ beforePawnFile.blackPawns ++
-            afterPawnFile.whitePawns ++ afterPawnFile.blackPawns ++
-            corridorSquares(beforeCorridor) ++ corridorSquares(afterCorridor)
-        case CastlingRightRemoved(mover, _, _, _) =>
-          List(mover.from, mover.to)
         case StalemateTransition(mover, _, kingSquare, _) =>
           List(mover.from, mover.to, kingSquare)
         case PawnFileGroup(_, _, pawns) =>
@@ -5121,7 +4660,7 @@ object RelationWitnessDetail:
 
   def targetSquares(detail: RelationWitnessDetail): List[EvidenceSquare] =
     val squares = detail match
-      case GeometricControl(_, _, _, targetSquare, _) =>
+      case GeometricControl(_, _, _, targetSquare) =>
         List(targetSquare)
       case LegalMove(_, _, _, destinationSquare, _, capture) =>
         capture.map(_.capturedSquare).getOrElse(destinationSquare) :: Nil
@@ -5137,34 +4676,16 @@ object RelationWitnessDetail:
         opened.map(_.square)
       case NamedRayTransition(_, _, _, _, barrier, immediateTarget, _, _, _, _) =>
         immediateTarget.map(_.square).getOrElse(barrier.square) :: Nil
-      case GeometricSupportCausalTransition(_, _, _, _, supportedAfter, _, _, _, _, _, _) =>
-        List(supportedAfter)
-      case CaptureRecaptureInventory(mover, _, _, _, _) =>
+      case CaptureRecaptureInventory(mover, _, _, _, _, _) =>
         List(mover.to)
       case CreatedCheckResponseInventory(_, _, kingSquare, _, _, _, _, _) =>
         List(kingSquare)
       case RootCheckResponse(_, _, kingSquare, _, _, _) =>
         List(kingSquare)
-      case MovementAffordanceLegalRestriction(_, _, restrictedPiece, _, _, unavailable, _) =>
-        restrictedPiece.square :: unavailable.map(_.destination)
-      case AbsolutePinMovementRestriction(_, _, _, pinned, _, _, _, _, forbidden, _) =>
-        pinned.square :: forbidden.map(_.destination)
       case SliderReachDelta(_, _, _, _, _, _, after, _) =>
         after.toList.flatMap(_.segment.map(_.square))
-      case GeometricMultiTargetContact(_, _, _, _, newlyEstablished, maintained, _) =>
-        (newlyEstablished ++ maintained).map(_.square)
-      case GeometricEnemyContactWithoutFriendlySupport(_, _, _, _, target, _) =>
-        List(target.square)
-      case SharedGeometricSupportOfEnemyControlledTargets(_, _, _, _, targets, _) =>
-        targets.map(_.target.square)
       case PawnTopologyTransition(_, before, after, _, _) =>
         after.orElse(before).toList.map(_.square)
-      case PawnOccupiedFilePartitionTransition(_, _, before, after, _) =>
-        changedPawnOccupiedFileRuns(before, after).flatMap(_.pawns)
-      case MajorPiecePawnFileCorridorTransition(_, _, _, sliderBefore, sliderAfter, _, _, _, _, _, _) =>
-        sliderAfter.orElse(sliderBefore).toList.map(_.square)
-      case CastlingRightRemoved(_, _, _, _) =>
-        Nil
       case StalemateTransition(_, _, kingSquare, _) =>
         List(kingSquare)
       case PawnFileGroup(_, _, pawns) =>
@@ -5183,16 +4704,13 @@ object RelationWitnessDetail:
 
   def files(detail: RelationWitnessDetail): List[EvidenceFile] =
     detail match
-      case PawnOccupiedFilePartitionTransition(_, _, before, after, _) =>
-        changedPawnOccupiedFileRuns(before, after).flatMap(_.files).distinct.sortBy(_.key)
-      case MajorPiecePawnFileCorridorTransition(_, _, file, _, _, _, _, _, _, _, _) => List(file)
       case PawnFileGroup(_, file, _)                => List(file)
       case _                                       => Nil
 
   def participants(detail: RelationWitnessDetail): List[RelationParticipant] =
     val values =
       detail match
-        case GeometricControl(_, attackerSquare, attackerRole, targetSquare, targetState) =>
+        case GeometricControl(_, attackerSquare, attackerRole, targetSquare) =>
           List(
             part(
               attackerSquare,
@@ -5201,10 +4719,7 @@ object RelationWitnessDetail:
             ),
             part(
               targetSquare,
-              targetState match
-                case RelationControlTarget.Friendly(_) => RelationParticipantRole.Supported
-                case _                                 => RelationParticipantRole.Target,
-              targetState.pieceRole
+              RelationParticipantRole.Target
             )
           )
         case LegalMove(_, moverSquare, moverRole, destinationSquare, _, capture) =>
@@ -5323,34 +4838,7 @@ object RelationWitnessDetail:
               Some(target.role)
             )
           )
-        case GeometricSupportCausalTransition(
-              mover,
-              _,
-              supportedBefore,
-              supportedBeforeRole,
-              supportedAfter,
-              supportedAfterRole,
-              beforeSupporters,
-              afterSupporters,
-              removals,
-              establishments,
-              _
-            ) =>
-          List(
-            part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
-            part(mover.to, RelationParticipantRole.Mover, Some(mover.afterRole)),
-            part(supportedBefore, RelationParticipantRole.Supported, Some(supportedBeforeRole)),
-            part(supportedAfter, RelationParticipantRole.Supported, Some(supportedAfterRole))
-          ) ++ (beforeSupporters ++ afterSupporters ++ establishments.map(_.supporter)).map(supporter =>
-            part(supporter.square, RelationParticipantRole.Controller, Some(supporter.role))
-          ) ++ removals.map(removal =>
-            part(
-              removal.supporter.square,
-              RelationParticipantRole.Controller,
-              Some(removal.supporter.role)
-            )
-          )
-        case CaptureRecaptureInventory(mover, captured, geometricRecapturers, legalRecaptures, _) =>
+        case CaptureRecaptureInventory(mover, captured, geometricRecapturers, legalRecaptures, restrictions, _) =>
           List(
             part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
             part(mover.to, RelationParticipantRole.Mover, Some(mover.afterRole)),
@@ -5359,6 +4847,12 @@ object RelationWitnessDetail:
             part(value.square, RelationParticipantRole.Controller, Some(value.role))
           ) ++ legalRecaptures.map(value =>
             part(value.movement.from, RelationParticipantRole.Controller, Some(value.movement.beforeRole))
+          ) ++ restrictions.flatMap(restriction =>
+            part(restriction.piece.square, RelationParticipantRole.Controller, Some(restriction.piece.role)) ::
+              part(restriction.kingSquare, RelationParticipantRole.King, Some(EvidencePieceRole(King.name))) ::
+              restriction.postMoveControllers.map(value =>
+                part(value.square, RelationParticipantRole.Attacker, Some(value.role))
+              )
           )
         case CreatedCheckResponseInventory(
               mover,
@@ -5396,24 +4890,6 @@ object RelationWitnessDetail:
           ) ++ checkers.map(value =>
             part(value.square, RelationParticipantRole.Attacker, Some(value.role))
           )
-        case MovementAffordanceLegalRestriction(mover, _, restrictedPiece, _, _, unavailable, _) =>
-          List(
-            part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
-            part(mover.to, RelationParticipantRole.Mover, Some(mover.afterRole)),
-            part(restrictedPiece.square, RelationParticipantRole.Controller, Some(restrictedPiece.role))
-          ) ++ unavailable.map(resource =>
-            part(resource.destination, RelationParticipantRole.Target, resource.target.pieceRole)
-          )
-        case AbsolutePinMovementRestriction(mover, _, pinner, pinned, kingSquare, _, _, _, forbidden, _) =>
-          List(
-            part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
-            part(mover.to, RelationParticipantRole.Mover, Some(mover.afterRole)),
-            part(pinner.square, RelationParticipantRole.Attacker, Some(pinner.role)),
-            part(pinned.square, RelationParticipantRole.Blocker, Some(pinned.role)),
-            part(kingSquare, RelationParticipantRole.King, Some(EvidencePieceRole(King.name)))
-          ) ++ forbidden.map(resource =>
-            part(resource.destination, RelationParticipantRole.Target, resource.target.pieceRole)
-          )
         case SliderReachDelta(mover, _, sliderBefore, sliderAfter, _, before, after, _) =>
           List(
             part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
@@ -5426,33 +4902,6 @@ object RelationWitnessDetail:
             reach.segment.map(control =>
               part(control.square, RelationParticipantRole.Target, control.target.pieceRole)
             )
-          )
-        case GeometricMultiTargetContact(mover, _, controllerBefore, controllerAfter, newlyEstablished, maintained, _) =>
-          List(
-            part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
-            part(mover.to, RelationParticipantRole.Mover, Some(mover.afterRole)),
-            part(controllerBefore.square, RelationParticipantRole.Controller, Some(controllerBefore.role)),
-            part(controllerAfter.square, RelationParticipantRole.Controller, Some(controllerAfter.role))
-          ) ++ (newlyEstablished ++ maintained).map(target =>
-            part(target.square, RelationParticipantRole.Target, Some(target.role))
-          )
-        case GeometricEnemyContactWithoutFriendlySupport(mover, _, controllerBefore, controllerAfter, target, _) =>
-          List(
-            part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
-            part(mover.to, RelationParticipantRole.Mover, Some(mover.afterRole)),
-            part(controllerBefore.square, RelationParticipantRole.Controller, Some(controllerBefore.role)),
-            part(controllerAfter.square, RelationParticipantRole.Controller, Some(controllerAfter.role)),
-            part(target.square, RelationParticipantRole.Target, Some(target.role))
-          )
-        case SharedGeometricSupportOfEnemyControlledTargets(mover, _, _, sharedSupporter, targets, _) =>
-          List(
-            part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
-            part(mover.to, RelationParticipantRole.Mover, Some(mover.afterRole)),
-            part(sharedSupporter.square, RelationParticipantRole.Controller, Some(sharedSupporter.role))
-          ) ++ targets.flatMap(target =>
-            part(target.target.square, RelationParticipantRole.Supported, Some(target.target.role)) ::
-              target.enemyControllers.map(value => part(value.square, RelationParticipantRole.Controller, Some(value.role))) ++
-              target.friendlySupporters.map(value => part(value.square, RelationParticipantRole.Controller, Some(value.role)))
           )
         case PawnTopologyTransition(mover, before, after, _, _) =>
           val states = before.toList ++ after.toList
@@ -5477,28 +4926,6 @@ object RelationWitnessDetail:
                 part(value, RelationParticipantRole.Target, Some(EvidencePieceRole("pawn")))
               )
           )
-        case PawnOccupiedFilePartitionTransition(mover, _, before, after, _) =>
-          val moverSquares = Set(mover.from, mover.to)
-          List(
-            part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
-            part(mover.to, RelationParticipantRole.Mover, Some(mover.afterRole))
-          ) ++ changedPawnOccupiedFileRuns(before, after).flatMap(_.pawns).filterNot(moverSquares).map(square =>
-            part(square, RelationParticipantRole.Other, Some(EvidencePieceRole(Pawn.name)))
-          )
-        case MajorPiecePawnFileCorridorTransition(mover, _, _, sliderBefore, sliderAfter, _, _, _, _, _, _) =>
-          List(
-            part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
-            part(mover.to, RelationParticipantRole.Mover, Some(mover.afterRole))
-          ) ++ sliderBefore.map(piece =>
-            part(piece.square, RelationParticipantRole.Beneficiary, Some(piece.role))
-          ) ++ sliderAfter.map(piece =>
-            part(piece.square, RelationParticipantRole.Beneficiary, Some(piece.role))
-          )
-        case CastlingRightRemoved(mover, _, _, _) =>
-          List(
-            part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
-            part(mover.to, RelationParticipantRole.Mover, Some(mover.afterRole))
-          )
         case StalemateTransition(mover, _, kingSquare, _) =>
           List(
             part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
@@ -5521,27 +4948,27 @@ object RelationWitnessDetail:
             opposingPawnSquares.map(part(_, RelationParticipantRole.Target, Some(EvidencePieceRole("pawn"))))
         case ray @ RayBarrier(_, attackerSquare, attackerRole, occupants, _) =>
           val pattern = RelationRayProjection.pattern(ray)
-          val barrier = occupants.head
           val exactTarget = targetSquares(detail).toSet
-          val barrierParticipantRole =
-            if pattern == RelationRayPattern.Battery then RelationParticipantRole.Attacker
-            else if barrier.role.name.equalsIgnoreCase(King.name) then RelationParticipantRole.King
-            else RelationParticipantRole.Blocker
-          List(
-            part(attackerSquare, RelationParticipantRole.Attacker, Some(attackerRole)),
-            part(barrier.square, barrierParticipantRole, Some(barrier.role))
-          ) ++ occupants.drop(1).zipWithIndex.map { case (piece, rearIndex) =>
-            val participantRole =
-              if rearIndex == 0 && exactTarget(piece.square) then
-                if piece.role.name.equalsIgnoreCase(King.name) then RelationParticipantRole.King
-                else RelationParticipantRole.Target
-              else RelationParticipantRole.Other
-            part(
-              piece.square,
-              participantRole,
-              Some(piece.role)
-            )
-          }
+          part(attackerSquare, RelationParticipantRole.Attacker, Some(attackerRole)) ::
+            occupants.headOption.toList.flatMap { barrier =>
+              val barrierParticipantRole =
+                if pattern == RelationRayPattern.Battery then RelationParticipantRole.Attacker
+                else if barrier.role.name.equalsIgnoreCase(King.name) then RelationParticipantRole.King
+                else RelationParticipantRole.Blocker
+              part(barrier.square, barrierParticipantRole, Some(barrier.role)) ::
+                occupants.drop(1).zipWithIndex.map { case (piece, rearIndex) =>
+                  val participantRole =
+                    if rearIndex == 0 && exactTarget(piece.square) then
+                      if piece.role.name.equalsIgnoreCase(King.name) then RelationParticipantRole.King
+                      else RelationParticipantRole.Target
+                    else RelationParticipantRole.Other
+                  part(
+                    piece.square,
+                    participantRole,
+                    Some(piece.role)
+                  )
+                }
+            }
     values.distinct
 
   private def part(
@@ -5560,20 +4987,11 @@ enum RelationFactKind:
   case SliderLineInterruption
   case GeometricLineControlAfterBlockerRemoval
   case NamedRayTransition
-  case GeometricSupportCausalTransition
   case CaptureRecaptureInventory
   case CreatedCheckResponseInventory
   case RootCheckResponse
-  case MovementAffordanceLegalRestriction
-  case AbsolutePinMovementRestriction
   case SliderReachDelta
-  case GeometricMultiTargetContact
-  case GeometricEnemyContactWithoutFriendlySupport
-  case SharedGeometricSupportOfEnemyControlledTargets
   case PawnTopologyTransition
-  case PawnOccupiedFilePartitionTransition
-  case MajorPiecePawnFileCorridorTransition
-  case CastlingRightRemoved
   case StalemateTransition
   case PawnFileGroup
   case PawnFrontOccupancy
@@ -5597,21 +5015,11 @@ object RelationFactKind:
       case SliderLineInterruption          => "slider_line_interruption"
       case GeometricLineControlAfterBlockerRemoval => "geometric_line_control_after_blocker_removal"
       case NamedRayTransition   => "named_ray_transition"
-      case GeometricSupportCausalTransition => "geometric_support_causal_transition"
       case CaptureRecaptureInventory => "capture_recapture_inventory"
       case CreatedCheckResponseInventory => "created_check_response_inventory"
       case RootCheckResponse => "root_check_response"
-      case MovementAffordanceLegalRestriction => "movement_affordance_legal_restriction"
-      case AbsolutePinMovementRestriction => "absolute_pin_movement_restriction"
       case SliderReachDelta => "slider_reach_delta"
-      case GeometricMultiTargetContact => "geometric_multi_target_contact"
-      case GeometricEnemyContactWithoutFriendlySupport =>
-        "geometric_enemy_contact_without_friendly_support"
-      case SharedGeometricSupportOfEnemyControlledTargets => "shared_geometric_support_of_enemy_controlled_targets"
       case PawnTopologyTransition => "pawn_topology_transition"
-      case PawnOccupiedFilePartitionTransition => "pawn_occupied_file_partition_transition"
-      case MajorPiecePawnFileCorridorTransition => "major_piece_pawn_file_corridor_transition"
-      case CastlingRightRemoved => "castling_right_removed"
       case StalemateTransition => "stalemate_transition"
       case PawnFileGroup         => "pawn_file_group"
       case PawnFrontOccupancy    => "pawn_front_occupancy"
@@ -6666,7 +6074,6 @@ enum LineEventKind:
   case Castling
   case Check
   case Mate
-  case Tempo
   case Stalemate
   case Promotion
   case ForcedTheme
@@ -8738,10 +8145,15 @@ private[chessjudgment] object TransitionConsequenceRelationProof:
               Color.White,
               whitePawn,
               whiteRole,
-              blackPawn,
-              RelationControlTarget.Enemy(blackRole)
+              blackPawn
             ) =>
-          whiteRole.name.equalsIgnoreCase(Pawn.name) && blackRole.name.equalsIgnoreCase(Pawn.name) &&
+          val inventory =
+            if direction == RelationChangeDirection.Established then delta.afterInventory
+            else delta.beforeInventory
+          val blackPawnPresent = inventory.stateView.occupantAt(blackPawn).exists(piece =>
+            piece.side == Color.Black && piece.role.name.equalsIgnoreCase(Pawn.name)
+          )
+          whiteRole.name.equalsIgnoreCase(Pawn.name) && blackPawnPresent &&
             (if side.white then whitePawn == from && blackPawn == to
              else blackPawn == from && whitePawn == to)
         case _ => false)
@@ -9023,106 +8435,6 @@ private[chessjudgment] final case class RelationDependencyFootprint(
   require(keys.nonEmpty, "a board relation dependency footprint requires typed invalidation keys")
   require(squares.nonEmpty, "a board relation dependency footprint requires exact board cells")
 
-private[chessjudgment] object RelationDependencyFootprint:
-  import RelationDependencyKey.*
-
-  def forBoardRelation(detail: RelationWitnessDetail): Option[RelationDependencyFootprint] =
-    val keys = detail match
-      case RelationWitnessDetail.GeometricControl(_, attacker, _, target, _) =>
-        Set[RelationDependencyKey](AttackOrigin(boardSquare(attacker)), AttackTarget(boardSquare(target)))
-      case _: RelationWitnessDetail.LegalMove =>
-        Set[RelationDependencyKey](LegalMoveInventory)
-      case RelationWitnessDetail.RayBarrier(_, attacker, _, occupants, _) =>
-        Set[RelationDependencyKey](SliderOrigin(boardSquare(attacker))) ++
-          occupants.headOption.map(occupant => RayFirstOccupant(boardSquare(occupant.square)))
-      case RelationWitnessDetail.PawnFileGroup(side, file, _) =>
-        Set[RelationDependencyKey](PawnFile(side, boardFile(file)))
-      case RelationWitnessDetail.PawnFrontOccupancy(side, pawn, front, _) =>
-        Set[RelationDependencyKey](PawnIdentity(side, boardSquare(pawn))) ++
-          front.map(value => PawnFrontCell(side, boardSquare(value)))
-      case RelationWitnessDetail.PawnAdvanceAffordance(side, pawn, _, traversed) =>
-        Set[RelationDependencyKey](PawnIdentity(side, boardSquare(pawn))) ++
-          traversed.map(value => PawnFrontCell(side, boardSquare(value)))
-      case RelationWitnessDetail.PawnPassage(side, pawn, _) =>
-        val origin = boardSquare(pawn)
-        val passage = (0 to 7).filter(rank =>
-          if side.white then rank > origin.rank.value else rank < origin.rank.value
-        ).flatMap(rank =>
-          (-1 to 1).flatMap(fileOffset => Square.at(origin.file.value + fileOffset, rank))
-        ).map(target => PawnIdentity(!side, target)).toSet
-        passage + PawnIdentity(side, origin)
-      case _: RelationWitnessDetail.GeometricSupportCausalTransition |
-      _: RelationWitnessDetail.CaptureRecaptureInventory |
-      _: RelationWitnessDetail.CreatedCheckResponseInventory |
-          _: RelationWitnessDetail.RootCheckResponse |
-          _: RelationWitnessDetail.MovementAffordanceLegalRestriction |
-          _: RelationWitnessDetail.AbsolutePinMovementRestriction |
-          _: RelationWitnessDetail.SliderReachDelta |
-          _: RelationWitnessDetail.SharedGeometricSupportOfEnemyControlledTargets |
-          _: RelationWitnessDetail.GeometricMultiTargetContact |
-          _: RelationWitnessDetail.GeometricEnemyContactWithoutFriendlySupport |
-          _: RelationWitnessDetail.PawnTopologyTransition |
-          _: RelationWitnessDetail.PawnOccupiedFilePartitionTransition |
-          _: RelationWitnessDetail.MajorPiecePawnFileCorridorTransition |
-          _: RelationWitnessDetail.CastlingRightRemoved |
-          _: RelationWitnessDetail.StalemateTransition |
-          _: RelationWitnessDetail.GeometricControlSetDelta |
-          _: RelationWitnessDetail.GeometricSupporterCapture | _: RelationWitnessDetail.GeometricSupportDelta |
-          _: RelationWitnessDetail.SliderLineInterruption |
-          _: RelationWitnessDetail.GeometricLineControlAfterBlockerRemoval |
-          _: RelationWitnessDetail.NamedRayTransition =>
-        Set.empty[RelationDependencyKey]
-    Option.when(keys.nonEmpty) {
-      val spans = detail match
-        case RelationWitnessDetail.GeometricControl(_, attacker, _, target, _) => lineSpan(attacker, target)
-        case RelationWitnessDetail.RayBarrier(_, attacker, _, occupants, _) =>
-          raySpanToEdge(attacker, occupants.head.square)
-        case RelationWitnessDetail.PawnPassage(side, pawn, _) => pawnPassageSpan(side, pawn)
-        case RelationWitnessDetail.PawnFileGroup(_, file, _) => fileSpan(file)
-        case _ => Nil
-      val squares = (
-        RelationWitnessDetail.focusSquares(detail) ++
-          RelationWitnessDetail.targetSquares(detail) ++
-          RelationWitnessDetail.participants(detail).map(_.square) ++
-          spans
-      ).distinct.sortBy(_.key)
-      RelationDependencyFootprint(keys, squares)
-    }
-
-  private def boardSquare(value: EvidenceSquare): Square =
-    Square.fromKey(value.key).getOrElse(
-      throw IllegalArgumentException(s"invalid canonical relation square '${value.key}'")
-    )
-
-  private def boardFile(value: EvidenceFile): File =
-    value.key.toLowerCase.headOption.flatMap(File.fromChar).getOrElse(
-      throw IllegalArgumentException(s"invalid canonical relation file '${value.key}'")
-    )
-
-  private def lineSpan(from: EvidenceSquare, to: EvidenceSquare): List[EvidenceSquare] =
-    val origin = boardSquare(from)
-    val target = boardSquare(to)
-    BoardGeometry.lineSpan(origin, target)
-      .map(square => EvidenceSquare(square.key))
-
-  private def raySpanToEdge(from: EvidenceSquare, through: EvidenceSquare): List[EvidenceSquare] =
-    BoardGeometry
-      .raySpanToEdge(boardSquare(from), boardSquare(through))
-      .map(square => EvidenceSquare(square.key))
-
-  private def pawnPassageSpan(side: Color, pawn: EvidenceSquare): List[EvidenceSquare] =
-    val origin = boardSquare(pawn)
-    val ranks = (0 to 7).filter(rank =>
-      if side.white then rank > origin.rank.value else rank < origin.rank.value
-    )
-    (-1 to 1).toList.flatMap(fileOffset =>
-      ranks.flatMap(rank => Square.at(origin.file.value + fileOffset, rank))
-    ).map(square => EvidenceSquare(square.key))
-
-  private def fileSpan(file: EvidenceFile): List[EvidenceSquare] =
-    val exactFile = boardFile(file)
-    Rank.all.map(rank => EvidenceSquare(Square(exactFile, rank).key))
-
 /** Immutable semantic core of one relation fact. Position/line occurrence
   * authority is deliberately kept out of this object so unchanged facts can
   * be shared by incremental position snapshots without rehashing them.
@@ -9137,9 +8449,30 @@ private[chessjudgment] final class CanonicalRelationFact private (
 )
 
 private[chessjudgment] object CanonicalRelationFact:
+  def fromPosition(
+      detail: RelationWitnessDetail,
+      dependencyFootprint: RelationDependencyFootprint
+  ): CanonicalRelationFact =
+    require(
+      RelationWitnessDetail.proofStage(detail) == RelationProofStage.PositionFact,
+      "only an L0 producer may attach a board dependency footprint"
+    )
+    build(detail, Nil, Some(dependencyFootprint))
+
   def from(
       detail: RelationWitnessDetail,
       lineMoves: List[String]
+  ): CanonicalRelationFact =
+    require(
+      RelationWitnessDetail.proofStage(detail) != RelationProofStage.PositionFact,
+      "L0 facts must come from their producer with an exact dependency footprint"
+    )
+    build(detail, lineMoves, None)
+
+  private def build(
+      detail: RelationWitnessDetail,
+      lineMoves: List[String],
+      dependencyFootprint: Option[RelationDependencyFootprint]
   ): CanonicalRelationFact =
     val normalizedLineMoves = normalizeMoves(lineMoves)
     val raw = RelationWitnessDetail.stableOccurrenceKey(detail, normalizedLineMoves)
@@ -9160,7 +8493,7 @@ private[chessjudgment] object CanonicalRelationFact:
       lineMoves = normalizedLineMoves,
       assertionId = assertionId,
       semanticId = semanticId,
-      dependencyFootprint = RelationDependencyFootprint.forBoardRelation(detail)
+      dependencyFootprint = dependencyFootprint
     )
 
   def normalizeMoves(moves: List[String]): List[String] =
@@ -9255,33 +8588,15 @@ final class RelationFactEvidence private (
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
       case RelationWitnessDetail.NamedRayTransition(mover, _, _, _, _, _, _, _, _, _) =>
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
-      case RelationWitnessDetail.GeometricSupportCausalTransition(mover, _, _, _, _, _, _, _, _, _, _) =>
-        moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
-      case RelationWitnessDetail.CaptureRecaptureInventory(mover, _, _, _, _) =>
+      case RelationWitnessDetail.CaptureRecaptureInventory(mover, _, _, _, _, _) =>
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
       case RelationWitnessDetail.CreatedCheckResponseInventory(mover, _, _, _, _, _, _, _) =>
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
       case RelationWitnessDetail.RootCheckResponse(mover, _, _, _, _, _) =>
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
-      case RelationWitnessDetail.MovementAffordanceLegalRestriction(mover, _, _, _, _, _, _) =>
-        moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
-      case RelationWitnessDetail.AbsolutePinMovementRestriction(mover, _, _, _, _, _, _, _, _, _) =>
-        moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
       case RelationWitnessDetail.SliderReachDelta(mover, _, _, _, _, _, _, _) =>
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
-      case RelationWitnessDetail.GeometricMultiTargetContact(mover, _, _, _, _, _, _) =>
-        moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
-      case RelationWitnessDetail.GeometricEnemyContactWithoutFriendlySupport(mover, _, _, _, _, _) =>
-        moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
-      case RelationWitnessDetail.SharedGeometricSupportOfEnemyControlledTargets(mover, _, _, _, _, _) =>
-        moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
       case RelationWitnessDetail.PawnTopologyTransition(mover, _, _, _, _) =>
-        moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
-      case RelationWitnessDetail.PawnOccupiedFilePartitionTransition(mover, _, _, _, _) =>
-        moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
-      case RelationWitnessDetail.MajorPiecePawnFileCorridorTransition(mover, _, _, _, _, _, _, _, _, _, _) =>
-        moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
-      case RelationWitnessDetail.CastlingRightRemoved(mover, _, _, _) =>
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
       case RelationWitnessDetail.StalemateTransition(mover, _, _, _) =>
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
@@ -9454,7 +8769,6 @@ enum TacticalMechanismKind:
   case KingForcing
   case MaterialGain
   case RecaptureChoice
-  case Tempo
   case Refutation
   case DrawResource
   case PawnPromotion
@@ -9475,7 +8789,7 @@ object TacticalMechanismKind:
       case LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow =>
         Option.when(rootRecapture)(TacticalMechanismKind.RecaptureChoice).toList
       case LineConsequenceKind.ImmediateReplyCheck =>
-        List(TacticalMechanismKind.Tempo)
+        Nil
       case LineConsequenceKind.Mate =>
         List(TacticalMechanismKind.KingForcing)
       case LineConsequenceKind.DrawResource =>
@@ -9498,8 +8812,6 @@ object TacticalMechanismKind:
           if playedCandidate then RelativeCauseKind.TacticalRefutationOfPlayed
           else RelativeCauseKind.CandidateTacticalLiability
         else RelativeCauseKind.RecaptureRecoveryWindow
-      case TacticalMechanismKind.Tempo =>
-        if badLoss then RelativeCauseKind.TempoLoss else RelativeCauseKind.WrongMoveOrder
       case TacticalMechanismKind.DrawResource =>
         RelativeCauseKind.DrawResource
       case TacticalMechanismKind.DefensiveResource =>

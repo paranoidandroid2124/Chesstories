@@ -32,7 +32,7 @@ object ClaimFamily:
       case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
           RelativeCauseKind.CandidateTacticalLiability |
           RelativeCauseKind.RecaptureRecoveryWindow |
-          RelativeCauseKind.WrongMoveOrder | RelativeCauseKind.TempoLoss | RelativeCauseKind.KingForcing =>
+          RelativeCauseKind.WrongMoveOrder | RelativeCauseKind.KingForcing =>
         ClaimFamily.Tactical
       case RelativeCauseKind.DefensiveResource | RelativeCauseKind.DrawResource =>
         ClaimFamily.Defensive

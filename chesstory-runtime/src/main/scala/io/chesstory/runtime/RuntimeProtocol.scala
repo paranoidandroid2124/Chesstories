@@ -686,7 +686,6 @@ object RuntimeProtocol:
         case RelativeCauseKind.CandidateTacticalLiability => "candidate_tactical_liability"
         case RelativeCauseKind.RecaptureRecoveryWindow   => "recapture_recovery_window"
         case RelativeCauseKind.WrongMoveOrder             => "wrong_move_order"
-        case RelativeCauseKind.TempoLoss                  => "tempo_loss"
         case RelativeCauseKind.ConversionMiss             => "conversion_miss"
         case RelativeCauseKind.ConversionSecured          => "conversion_secured"
         case RelativeCauseKind.SacrificeCompensation      => "sacrifice_compensation"

@@ -13,20 +13,38 @@ private[chessjudgment] final case class OccupiedRayPiece(
     color: Color
 )
 
-/** Exact occupied topology in one direction from a slider.
-  *
-  * `occupants` contains every occupied square in distance order. The first is
-  * the immediate barrier. Named patterns such as pin or battery are
-  * projections of this topology; they are not separate geometry producers.
+private[chessjudgment] final case class BoardRayDirection(
+    fileStep: Int,
+    rankStep: Int,
+    axis: BoardLineAxis
+):
+  require(
+    (-1 to 1).contains(fileStep) && (-1 to 1).contains(rankStep) &&
+      (fileStep != 0 || rankStep != 0),
+    "a board ray direction needs one non-zero unit step"
+  )
+
+/** Exact topology in one direction from a slider. `squares` closes the empty
+  * result as well as occupied barriers; `occupants` is the ordered occupied
+  * projection of that same sequence.
   */
-private[chessjudgment] final case class OccupiedSliderRay(
+private[chessjudgment] final case class SliderRay(
     attackerSquare: Square,
     attackerRole: Role,
     attackerColor: Color,
+    direction: BoardRayDirection,
+    squares: List[Square],
     occupants: List[OccupiedRayPiece],
-    axis: BoardLineAxis
 ):
-  require(occupants.nonEmpty, "an occupied slider ray needs at least its immediate barrier")
+  require(
+    occupants.map(_.square) == squares.filter(square => occupants.exists(_.square == square)),
+    "slider-ray occupants must retain exact board-distance order"
+  )
+
+  def segmentThrough(target: Square): List[Square] =
+    val index = squares.indexOf(target)
+    require(index >= 0, "a slider-control dependency must belong to its canonical ray")
+    attackerSquare :: squares.take(index + 1)
 
 private[chessjudgment] final case class BoardCellChange(
     square: Square,
@@ -174,25 +192,25 @@ private[chessjudgment] object BoardGeometry:
       case Queen  => square.queenAttacks(occupied)
       case King   => square.kingAttacks
 
-  def occupiedSliderRays(board: Board): List[OccupiedSliderRay] =
-    occupiedSliderRays(board, (board.bishops | board.rooks | board.queens).squares.toSet)
+  def sliderRays(board: Board): List[SliderRay] =
+    sliderRays(board, (board.bishops | board.rooks | board.queens).squares.toSet)
 
-  def occupiedSliderRays(board: Board, origins: Set[Square]): List[OccupiedSliderRay] =
+  def sliderRays(board: Board, origins: Set[Square]): List[SliderRay] =
     origins.toList.sortBy(_.key).flatMap { attackerSquare =>
       board.pieceAt(attackerSquare).toList.flatMap { attacker =>
-        directions(attacker.role).flatMap { case (fileStep, rankStep, axis) =>
-          val occupants = occupiedAlong(board, attackerSquare, fileStep, rankStep).flatMap { square =>
+        directions(attacker.role).flatMap { direction =>
+          val squares = squaresAlong(attackerSquare, direction.fileStep, direction.rankStep)
+          val occupants = squares.flatMap { square =>
             board.pieceAt(square).map(piece => OccupiedRayPiece(square, piece.role, piece.color))
           }
-          Option.when(occupants.nonEmpty) {
-              OccupiedSliderRay(
-                attackerSquare = attackerSquare,
-                attackerRole = attacker.role,
-                attackerColor = attacker.color,
-                occupants = occupants,
-                axis = axis
-              )
-          }
+          Option.when(squares.nonEmpty)(SliderRay(
+            attackerSquare = attackerSquare,
+            attackerRole = attacker.role,
+            attackerColor = attacker.color,
+            direction = direction,
+            squares = squares,
+            occupants = occupants
+          )).toList
         }
       }
     }
@@ -201,8 +219,8 @@ private[chessjudgment] object BoardGeometry:
       board: Board,
       changed: Square
   ): SliderDependencyClosure =
-    val directionalOccupied = directions(Queen).map { case (fileStep, rankStep, axis) =>
-      axis -> occupiedAlong(board, changed, fileStep, rankStep)
+    val directionalOccupied = directions(Queen).map { direction =>
+      direction.axis -> occupiedAlong(board, changed, direction.fileStep, direction.rankStep)
     }
     SliderDependencyClosure(
       geometricControlOrigins = directionalOccupied.flatMap { case (axis, occupied) =>
@@ -278,18 +296,18 @@ private[chessjudgment] object BoardGeometry:
       )
     }.toList
 
-  private def directions(role: Role): List[(Int, Int, BoardLineAxis)] =
+  private def directions(role: Role): List[BoardRayDirection] =
     val orthogonal = List(
-      (1, 0, BoardLineAxis.Rank),
-      (-1, 0, BoardLineAxis.Rank),
-      (0, 1, BoardLineAxis.File),
-      (0, -1, BoardLineAxis.File)
+      BoardRayDirection(1, 0, BoardLineAxis.Rank),
+      BoardRayDirection(-1, 0, BoardLineAxis.Rank),
+      BoardRayDirection(0, 1, BoardLineAxis.File),
+      BoardRayDirection(0, -1, BoardLineAxis.File)
     )
     val diagonal = List(
-      (1, 1, BoardLineAxis.Diagonal),
-      (1, -1, BoardLineAxis.Diagonal),
-      (-1, 1, BoardLineAxis.Diagonal),
-      (-1, -1, BoardLineAxis.Diagonal)
+      BoardRayDirection(1, 1, BoardLineAxis.Diagonal),
+      BoardRayDirection(1, -1, BoardLineAxis.Diagonal),
+      BoardRayDirection(-1, 1, BoardLineAxis.Diagonal),
+      BoardRayDirection(-1, -1, BoardLineAxis.Diagonal)
     )
     role match
       case Bishop => diagonal

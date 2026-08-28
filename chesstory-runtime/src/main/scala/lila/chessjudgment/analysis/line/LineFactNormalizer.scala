@@ -99,47 +99,25 @@ object LineFactNormalizer:
               ) =>
             terminal match
               case RelationCheckTerminalState.Checkmate =>
-                List(
-                  LineMoveEvent(
-                    kind = LineEventKind.Mate,
-                    moveUci = normalized,
-                    plyOffset = index,
-                    side = Some(mover.side),
-                    pieceRole = moverRole,
-                    targetRole = Some(EvidencePieceRole(King.name)),
-                    square = Some(kingSquare)
-                  ),
-                  LineMoveEvent(
-                    kind = LineEventKind.Tempo,
-                    moveUci = normalized,
-                    plyOffset = index,
-                    side = Some(mover.side),
-                    pieceRole = moverRole,
-                    targetRole = Some(EvidencePieceRole(King.name)),
-                    square = Some(kingSquare)
-                  )
-                )
+                List(LineMoveEvent(
+                  kind = LineEventKind.Mate,
+                  moveUci = normalized,
+                  plyOffset = index,
+                  side = Some(mover.side),
+                  pieceRole = moverRole,
+                  targetRole = Some(EvidencePieceRole(King.name)),
+                  square = Some(kingSquare)
+                ))
               case RelationCheckTerminalState.Ongoing =>
-                List(
-                  LineMoveEvent(
-                    kind = LineEventKind.Check,
-                    moveUci = normalized,
-                    plyOffset = index,
-                    side = Some(mover.side),
-                    pieceRole = moverRole,
-                    targetRole = Some(EvidencePieceRole(King.name)),
-                    square = Some(kingSquare)
-                  ),
-                  LineMoveEvent(
-                    kind = LineEventKind.Tempo,
-                    moveUci = normalized,
-                    plyOffset = index,
-                    side = Some(mover.side),
-                    pieceRole = moverRole,
-                    targetRole = Some(EvidencePieceRole(King.name)),
-                    square = Some(kingSquare)
-                  )
-                )
+                List(LineMoveEvent(
+                  kind = LineEventKind.Check,
+                  moveUci = normalized,
+                  plyOffset = index,
+                  side = Some(mover.side),
+                  pieceRole = moverRole,
+                  targetRole = Some(EvidencePieceRole(King.name)),
+                  square = Some(kingSquare)
+                ))
           case RelationWitnessDetail.StalemateTransition(mover, _, kingSquare, _) =>
             List(LineMoveEvent(
               kind = LineEventKind.Stalemate,
@@ -169,19 +147,11 @@ object LineFactNormalizer:
     val forcedEvents =
       forcedTheme.toList.flatMap(theme =>
         theme.lineMoves.headOption.toList.flatMap(move =>
-          List(
-            LineMoveEvent(
-              kind = LineEventKind.ForcedTheme,
-              moveUci = move,
-              plyOffset = 0
-            )
-          ) ++ Option.when(theme.id == ForcedLineTruth.ImmediateReplyCheckId)(
-            LineMoveEvent(
-              kind = LineEventKind.Tempo,
-              moveUci = move,
-              plyOffset = 0
-            )
-          ).toList
+          List(LineMoveEvent(
+            kind = LineEventKind.ForcedTheme,
+            moveUci = move,
+            plyOffset = 0
+          ))
         )
       )
     val captureEvents =

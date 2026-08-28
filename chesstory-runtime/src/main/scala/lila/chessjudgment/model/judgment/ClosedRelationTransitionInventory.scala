@@ -38,9 +38,9 @@ private[chessjudgment] object RelationCombinationContractKind:
       case _: RelationWitnessDetail.NamedRayTransition => Some(NamedRayTransition)
       case _                                                   => None
 
-/** The sole closed result of the registered transition-fact producers.
-  * Every field is mandatory, including an empty result, so completeness does
-  * not need a second chess-semantic evaluator.
+/** The sole closed result of the transition-fact producers activated by exact
+  * changed source keys. An absent contract was not executed; an active result
+  * remains closed by its complete source-key set.
   */
 private[chessjudgment] final class ClosedRelationCombinationResults private (
     engine: ClosedRelationCombinationEngine,
@@ -77,7 +77,7 @@ private[chessjudgment] final class ClosedRelationCombinationResults private (
     RelationCombinationContractKind,
     List[RelationFactEvidence]
   ] =
-    RelationCombinationContractKind.values.toList
+    engine.activeContracts
       .sortBy(RelationCombinationContractKind.id)
       .foldLeft(VectorMap.empty[RelationCombinationContractKind, List[RelationFactEvidence]]) {
         case (closed, contract) => closed.updated(contract, resultsFor(contract))
@@ -108,54 +108,68 @@ private[chessjudgment] final case class RelationCombinationEmission(
   require(sourceKey.trim.nonEmpty, "a relation-combination emission needs its canonical source key")
 
 private final class ClosedRelationCombinationEngine(
+    val activeContracts: List[RelationCombinationContractKind],
     expectedSourceKeys: RelationCombinationContractKind => List[String],
     derive: RelationCombinationContractKind => List[RelationCombinationEmission]
 ):
+  require(
+    activeContracts.distinct.size == activeContracts.size,
+    "active relation-combination contracts must be unique"
+  )
+  private val sourceKeysByContract: Map[RelationCombinationContractKind, List[String]] =
+    activeContracts.map { contract =>
+      val keys = expectedSourceKeys(contract).sorted
+      require(keys.distinct.size == keys.size, "relation-combination source keys must be unique")
+      contract -> keys
+    }.toMap
+
   private val rawByContract = scala.collection.mutable.Map.empty[
     RelationCombinationContractKind,
     List[RelationFactEvidence]
   ]
 
   def resultsFor(contract: RelationCombinationContractKind): List[RelationFactEvidence] = synchronized {
-    rawByContract.getOrElseUpdate(
-      contract,
-      {
-        val expected = expectedSourceKeys(contract).sorted
-        val emissions = derive(contract).sortBy(_.sourceKey)
-        val emittedKeys = emissions.map(_.sourceKey)
-        require(
-          expected.distinct.size == expected.size && emittedKeys.distinct.size == emittedKeys.size &&
-            emittedKeys == expected,
-          s"relation-combination contract '${RelationCombinationContractKind.id(contract)}' did not consume every canonical source exactly once"
-        )
-        val results = emissions.map(_.relation).sortBy(_.semanticId)
-        require(
-          results.forall(relation => RelationCombinationContractKind.forDetail(relation.detail).contains(contract)),
-          "a relation-combination contract may emit only its own exact result kind"
-        )
-        require(
-          results.map(_.semanticId).distinct.size == results.size,
-          "one relation-combination contract cannot repeat relation semantics"
-        )
-        results
-      }
-    )
+    if !sourceKeysByContract.contains(contract) then Nil
+    else
+      rawByContract.getOrElseUpdate(
+        contract,
+        {
+          val expected = sourceKeysByContract(contract)
+          val emissions = derive(contract).sortBy(_.sourceKey)
+          val emittedKeys = emissions.map(_.sourceKey)
+          require(
+            emittedKeys.distinct.size == emittedKeys.size && emittedKeys == expected,
+            s"relation-combination contract '${RelationCombinationContractKind.id(contract)}' did not consume every canonical source exactly once"
+          )
+          val results = emissions.map(_.relation).sortBy(_.semanticId)
+          require(
+            results.forall(relation => RelationCombinationContractKind.forDetail(relation.detail).contains(contract)),
+            "a relation-combination contract may emit only its own exact result kind"
+          )
+          require(
+            results.map(_.semanticId).distinct.size == results.size,
+            "one relation-combination contract cannot repeat relation semantics"
+          )
+          results
+        }
+      )
   }
 
 private[chessjudgment] object ClosedRelationCombinationResults:
   def demand(
+      activeContracts: List[RelationCombinationContractKind],
       expectedSourceKeys: RelationCombinationContractKind => List[String],
       derive: RelationCombinationContractKind => List[RelationCombinationEmission]
   ): ClosedRelationCombinationResults =
     new ClosedRelationCombinationResults(
-      new ClosedRelationCombinationEngine(expectedSourceKeys, derive),
+      new ClosedRelationCombinationEngine(activeContracts, expectedSourceKeys, derive),
       identity,
       None
     )
 
-/** Exact relation-output inventory for one admitted transition. Every
-  * combination contract is produced once, including empty results. `bind`
-  * adds occurrence ownership.
+/** Exact relation-output inventory for one admitted transition. Only contracts
+  * whose canonical changed-source set is non-empty execute. `bind` adds
+  * occurrence ownership.
   */
 private[chessjudgment] final class ClosedRelationTransitionInventory private (
     val transition: LineReplayStep,

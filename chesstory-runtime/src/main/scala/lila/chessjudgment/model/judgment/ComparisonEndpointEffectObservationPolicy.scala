@@ -486,7 +486,6 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
         LineEventKind.Check,
         LineEventKind.Mate,
         LineEventKind.Promotion,
-        LineEventKind.Tempo,
         LineEventKind.CheckEvasion
       )(event.kind)
       observation <- fromOwnedProof(

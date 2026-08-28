@@ -256,35 +256,6 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
       _.scope.effectIdentity.primitiveKind == RootOwnedEffectPrimitiveKind.RootLineEvent
     ))
 
-  test("eligible root event projection failure makes only qualitative inventory incomplete"):
-    val replay = certifiedReplay(rootFen, List(reference.rootMove))
-    val payload = LineFactEvidence.fromCertifiedReplay(
-      line = reference,
-      replay = replay,
-      material = None,
-      events = List(LineMoveEvent(
-        kind = LineEventKind.Tempo,
-        moveUci = reference.rootMove,
-        plyOffset = 0,
-        side = Some(White)
-      ))
-    )
-    val inventories = EvidenceObjectBinding.comparisonEndpointLineObservations(
-      evidenceRef(
-        "sparse-root-event",
-        reference,
-        EvidenceLayer.Line,
-        EvidenceProducer.LegalLineProducer,
-        EvidenceScope.BestLine
-      ),
-      payload,
-      root
-    )
-
-    assertEquals(inventories.material, ComparisonEndpointEffectInventory.Complete(Set.empty))
-    assertEquals(inventories.mate, ComparisonEndpointEffectInventory.Complete(Set.empty))
-    assertEquals(inventories.qualitative, ComparisonEndpointEffectInventory.Incomplete)
-
   private def comparisonFact(
       kind: CandidateComparisonKind,
       equalScore: Boolean

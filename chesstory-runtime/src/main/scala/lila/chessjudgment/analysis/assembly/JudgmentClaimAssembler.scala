@@ -10,7 +10,6 @@ object JudgmentClaimAssembler:
     case KingForcing extends TacticalClaimDriver("king-forcing")
     case MaterialGain extends TacticalClaimDriver("material-gain")
     case RecaptureChoice extends TacticalClaimDriver("recapture-choice")
-    case Tempo extends TacticalClaimDriver("tempo")
     case DefensiveResource extends TacticalClaimDriver("defensive-resource")
     case Refutation extends TacticalClaimDriver("refutation")
     case DrawResource extends TacticalClaimDriver("draw-resource")
@@ -665,8 +664,6 @@ object JudgmentClaimAssembler:
         TacticalClaimDriver.MaterialGain
       case TacticalMechanismKind.RecaptureChoice =>
         TacticalClaimDriver.RecaptureChoice
-      case TacticalMechanismKind.Tempo =>
-        TacticalClaimDriver.Tempo
       case TacticalMechanismKind.Refutation =>
         TacticalClaimDriver.Refutation
       case TacticalMechanismKind.DrawResource =>

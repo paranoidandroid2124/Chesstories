@@ -105,8 +105,6 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
     referenceEndpointMoveOrderRecords.distinctBy(_.ref.id)
   val candidateMoveOrderResource: List[EvidenceRecord] =
     candidateEndpointMoveOrderRecords.distinctBy(_.ref.id)
-  val candidateTempoLiability: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.tempoLiabilityRecords(fact, candidateRecords)
   val referenceForcingLineResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.forcingLineResourceRecords(
       referenceRecords,
@@ -364,13 +362,6 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         CauseAttributionKind.ReferenceCreatesResource
       ),
       causeDraft(
-        RelativeCauseKind.TempoLoss,
-        candidateTempoLiability,
-        candidateTempoLiability.nonEmpty && badLoss,
-        RelativeCauseSourceSide.Candidate,
-        CauseAttributionKind.CandidateAllowsLiability
-      ),
-      causeDraft(
         RelativeCauseKind.KingForcing,
         referenceForcingLineResource,
         referenceForcingLineResource.nonEmpty && badLoss,
@@ -468,13 +459,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       Option
         .when(actionableLoss && profile.tacticalLoss)(
           mechanismCauseKinds(
-            profile.referenceTacticalMechanism.filter {
-              case EvidenceRecord(_, payload: TacticalMechanismEvidence, _)
-                  if payload.kind == TacticalMechanismKind.Tempo =>
-                false
-              case _ =>
-                true
-            },
+            profile.referenceTacticalMechanism,
             badLoss = false,
             sourceSide = RelativeCauseSourceSide.Reference,
             attributionKind = CauseAttributionKind.ReferenceCreatesResource
@@ -541,7 +526,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         Some(RelativeCauseKind.MaterialSwing)
       case TacticalMechanismKind.PawnPromotion =>
         Some(RelativeCauseKind.ConversionSecured)
-      case TacticalMechanismKind.Tempo | TacticalMechanismKind.Refutation =>
+      case TacticalMechanismKind.Refutation =>
         None
       case _ =>
         Some(TacticalMechanismKind.relativeCauseKind(payload.kind, badLoss = false, playedCandidate = false))
@@ -555,10 +540,6 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         payload.kind match
           case TacticalMechanismKind.RecaptureChoice =>
             false
-          case TacticalMechanismKind.Tempo =>
-            candidateNegativeLineConsequences(record, profile).exists(
-              _.kind == LineConsequenceKind.ImmediateReplyCheck
-            )
           case TacticalMechanismKind.KingForcing =>
             candidateNegativeLineConsequences(record, profile).exists(
               _.kind == LineConsequenceKind.Mate
@@ -828,44 +809,6 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         payload.kind == TacticalMechanismKind.RecaptureChoice &&
           payload.canAnchorTacticalClaim &&
           payload.moveUci.exists(EvidenceRef.sameMove(_, rootMove))
-      case _ =>
-        false
-    }.distinctBy(_.ref.id)
-
-  private[chessjudgment] def tempoLiabilityRecords(
-      fact: CandidateComparisonFact,
-      records: List[EvidenceRecord]
-  ): List[EvidenceRecord] =
-    def ownsImmediateReplyLiability(sourceLabels: Map[String, Set[String]]): Boolean =
-      sourceLabels.nonEmpty &&
-        TypedEvidenceGraph
-          .ownedLineConsequences(
-            records,
-            fact,
-            RelativeCauseSourceSide.Candidate,
-            CauseAttributionKind.CandidateAllowsLiability,
-            sourceLabels
-          )
-          .exists(_._2.kind == LineConsequenceKind.ImmediateReplyCheck)
-    val ownedLineIds =
-      TypedEvidenceGraph
-        .ownedLineConsequences(
-          records,
-          fact,
-          RelativeCauseSourceSide.Candidate,
-          CauseAttributionKind.CandidateAllowsLiability
-        )
-        .collect {
-          case (ref, consequence) if consequence.kind == LineConsequenceKind.ImmediateReplyCheck => ref.id
-        }
-        .toSet
-    records.filter {
-      case EvidenceRecord(ref, _: LineFactEvidence, _) =>
-        ownedLineIds.contains(ref.id)
-      case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) =>
-        payload.kind == TacticalMechanismKind.Tempo &&
-          payload.canAnchorTacticalClaim &&
-          ownsImmediateReplyLiability(payload.lineConsequenceSourceLabelsByEvidenceId)
       case _ =>
         false
     }.distinctBy(_.ref.id)

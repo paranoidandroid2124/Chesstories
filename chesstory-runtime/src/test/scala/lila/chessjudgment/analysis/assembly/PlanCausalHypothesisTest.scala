@@ -148,7 +148,7 @@ class PlanCausalHypothesisTest extends munit.FunSuite:
     ).structural.relationChanges.filter(change =>
       change.direction == RelationChangeDirection.Established &&
         (change.detail match
-          case RelationWitnessDetail.GeometricControl(White, attacker, _, target, _) =>
+          case RelationWitnessDetail.GeometricControl(White, attacker, _, target) =>
             attacker.key == "h5" && target.key == "e8"
           case _ => false)
     )

@@ -2180,9 +2180,7 @@ object RelativeAssessmentAssembler:
             consequence.kind == LineConsequenceKind.RecoveryWindow
         )
       case RelativeCauseKind.WrongMoveOrder =>
-        payload.eventsForRootMove(rootMove).exists(_.kind == LineEventKind.Tempo)
-      case RelativeCauseKind.TempoLoss =>
-        ownedConsequences.exists(_.kind == LineConsequenceKind.ImmediateReplyCheck)
+        false
       case RelativeCauseKind.KingForcing =>
         ownedConsequences.exists(_.kind == LineConsequenceKind.Mate) ||
         payload
@@ -2308,10 +2306,6 @@ object RelativeAssessmentAssembler:
       payload: TacticalMechanismEvidence
   ): Boolean =
     kind match
-      case RelativeCauseKind.TempoLoss =>
-        payload.kind == TacticalMechanismKind.Tempo
-      case RelativeCauseKind.WrongMoveOrder if payload.kind == TacticalMechanismKind.Tempo =>
-        false
       case RelativeCauseKind.TacticalRefutationOfPlayed | RelativeCauseKind.CandidateTacticalLiability
           if payload.kind == TacticalMechanismKind.RecaptureChoice =>
         false

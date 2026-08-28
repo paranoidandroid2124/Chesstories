@@ -622,10 +622,9 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
               Color.White,
               whitePawn,
               whiteRole,
-              blackPawn,
-              RelationControlTarget.Enemy(blackRole)
+              blackPawn
             ) =>
-          whiteRole.name.equalsIgnoreCase(Pawn.name) && blackRole.name.equalsIgnoreCase(Pawn.name) &&
+          whiteRole.name.equalsIgnoreCase(Pawn.name) &&
             (if side.white then whitePawn == from && blackPawn == to
              else blackPawn == from && whitePawn == to)
         case _ => false

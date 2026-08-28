@@ -11,7 +11,6 @@ import lila.chessjudgment.model.judgment.{
   CanonicalLineReplay,
   RelationAxisSignal,
   RelationChangeDirection,
-  RelationControlTarget,
   RelationFactEvidence,
   RelationFactKind,
   RelationRayProjection,
@@ -49,8 +48,8 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
 
   private def rayPattern(relation: RelationFactEvidence): Option[RelationRayPattern] =
     relation.detail match
-      case RelationWitnessDetail.RayBarrier(owner, _, _, occupants, axis) =>
-        Some(RelationRayPattern.classify(owner, occupants, axis))
+      case RelationWitnessDetail.RayBarrier(owner, _, _, occupants, geometry) =>
+        Some(RelationRayPattern.classify(owner, occupants, geometry.axis))
       case RelationWitnessDetail.NamedRayTransition(_, _, _, _, _, _, _, pattern, _, _) =>
         Some(pattern)
       case _ => None
@@ -66,7 +65,7 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     )
     assertEquals(
       analysis.boardRelations.flatMap(_.detail match
-        case RelationWitnessDetail.GeometricControl(_, attacker, _, target, _)
+        case RelationWitnessDetail.GeometricControl(_, attacker, _, target)
             if attacker.key == Square.C1.key => Square.fromKey(target.key).toList
         case _ => Nil
       )
@@ -110,8 +109,7 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
             Color.White,
             attacker,
             _,
-            target,
-            RelationControlTarget.Enemy(_)
+            target
           ) =>
         attacker.key == "d2" && target.key == "d4"
       case _ => false
@@ -121,8 +119,7 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
             Color.Black,
             attacker,
             _,
-            target,
-            RelationControlTarget.Enemy(_)
+            target
           ) =>
         attacker.key == "d4" && target.key == "d2"
       case _ => false
@@ -278,8 +275,9 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     val beforeFen = "k2q4/8/3p4/8/3N4/8/8/3R3K b - - 0 1"
     val before = PositionAnalyzer.analyze(position(beforeFen), beforeFen, plyCount = 0)
     val beforeRay = before.boardRelations.find(_.detail match
-      case RelationWitnessDetail.RayBarrier(Color.White, attacker, _, occupants, RelationAxisSignal.File) =>
-        attacker.key == "d1" && occupants.map(_.square.key) == List("d4", "d6", "d8")
+      case RelationWitnessDetail.RayBarrier(Color.White, attacker, _, occupants, geometry) =>
+        geometry.axis == RelationAxisSignal.File &&
+          attacker.key == "d1" && occupants.map(_.square.key) == List("d4", "d6", "d8")
       case _ => false
     ).getOrElse(fail("expected the complete d-file occupancy chain"))
     assertEquals(beforeRay.targetSquares, Nil)
@@ -300,8 +298,9 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
       .boardRelations
     assertEquals(incremental, cold)
     assert(incremental.exists(_.detail match
-      case RelationWitnessDetail.RayBarrier(Color.White, attacker, _, occupants, RelationAxisSignal.File) =>
-        attacker.key == "d1" && occupants.map(_.square.key) == List("d4", "d6")
+      case RelationWitnessDetail.RayBarrier(Color.White, attacker, _, occupants, geometry) =>
+        geometry.axis == RelationAxisSignal.File &&
+          attacker.key == "d1" && occupants.map(_.square.key) == List("d4", "d6")
       case _ => false
     ))
 
@@ -323,8 +322,7 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
             Color.Black,
             controller,
             _,
-            target,
-            RelationControlTarget.Friendly(_)
+            target
           ) => controller.key == "f8" && target.key == "f6"
       case _ => false
     ))
@@ -334,8 +332,10 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
             attacker,
             _,
             occupants,
-            RelationAxisSignal.File
-          ) => attacker.key == "f8" && occupants.map(_.square.key) == List("f7", "f6", "f4")
+            geometry
+          ) =>
+        geometry.axis == RelationAxisSignal.File &&
+          attacker.key == "f8" && occupants.map(_.square.key) == List("f7", "f6", "f4")
       case _ => false
     ))
     assert(after.boardRelations.exists(_.detail match
@@ -343,8 +343,7 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
             Color.Black,
             controller,
             _,
-            target,
-            RelationControlTarget.Friendly(_)
+            target
           ) => controller.key == "g7" && target.key == "f6"
       case _ => false
     ))
@@ -396,9 +395,10 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     val bishopBattery = relations("k7/8/7r/8/8/8/3B4/K1B5 w - - 0 1")
 
     assert(bishopBattery.exists(relation => relation.detail match
-      case RelationWitnessDetail.RayBarrier(_, back, backRole, occupants, axis) =>
+      case RelationWitnessDetail.RayBarrier(_, back, backRole, occupants, geometry) =>
         occupants.head.square.key == "d2" && back.key == "c1" && occupants.lift(1).exists(_.square.key == "h6") &&
-          occupants.head.role.name == "bishop" && backRole.name == "bishop" && axis == RelationAxisSignal.Diagonal &&
+          occupants.head.role.name == "bishop" && backRole.name == "bishop" &&
+          geometry.axis == RelationAxisSignal.Diagonal &&
           rayPattern(relation).contains(RelationRayPattern.Battery)
       case _ => false
     ))
