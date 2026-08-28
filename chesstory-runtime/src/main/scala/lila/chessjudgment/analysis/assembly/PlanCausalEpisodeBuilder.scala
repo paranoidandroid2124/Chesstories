@@ -12,19 +12,19 @@ private[assembly] final case class CausalStepObservation(
     step: LineReplayStep,
     transition: StructuralTransitionBinding,
     consequences: List[TransitionConsequence],
-    actorRole: Option[chess.Role]
+    movement: CanonicalRootLegalMove
 )
 
 private[assembly] final case class CausalStepRelation(
     from: LineReplayStep,
     to: LineReplayStep,
     between: List[LineReplayStep],
-    objectState: Option[LineObjectTrajectory],
+    objectStates: List[LineObjectTrajectory],
     lineAccess: Option[LineAccessTrajectory],
     responseContinuations: Map[LineReplayStep, List[PlanResponseContinuationTrajectory]]
 ):
   def exactlyEnables: Boolean =
-    objectState.nonEmpty ||
+    objectStates.nonEmpty ||
       lineAccess.nonEmpty ||
       responseContinuations.valuesIterator.exists(_.nonEmpty)
 
@@ -56,6 +56,9 @@ private[assembly] final case class CausalLineTrace(
   def relation(from: LineReplayStep, to: LineReplayStep): Option[CausalStepRelation] = relations.get(from -> to)
   def legalStep(step: LineReplayStep): Option[lila.chessjudgment.model.line.LegalReplayStep] =
     canonicalReplay.flatMap(_.legalStep(step))
+
+  def transition(step: LineReplayStep): Option[CanonicalReplayTransition] =
+    canonicalReplay.flatMap(_.transition(step))
   def indexOf(step: LineReplayStep): Option[Int] = replayIndex.get(step)
   def positionFeatures(fen: String, ply: Int): Option[PositionFeatures] =
     positionFacts.get(ReplayOccurrenceKey.from(fen, ply)).map(_.features)
@@ -112,8 +115,8 @@ private[assembly] object CausalLineTrace:
             from = from.step,
             to = to.step,
             between = between,
-            objectState = canonicalReplay
-              .flatMap(LineObjectTrajectory.find(from.step, between :+ to.step, (between.size + 1).max(1), _))
+            objectStates = canonicalReplay.toList
+              .flatMap(LineObjectTrajectory.findAll(from.step, between :+ to.step, _))
               .filter(_.futureStep == to.step),
             lineAccess = canonicalReplay.flatMap(
               LineAccessTrajectory.findRootClearanceBeforeUse(from.step, to.step, between, _)
@@ -186,15 +189,12 @@ private[assembly] object CausalLineTrace:
         to = PositionNodeRef(step.fenAfter, step.ply, Some(afterFacts.position.color)),
         line = Some(rootLine),
         perspective = perspective,
-        actorRole = Square.fromKey(EvidenceRef.normalizeMove(step.moveUci).take(2))
-          .flatMap(beforeFacts.position.board.roleAt)
-          .map(role => EvidencePieceRole(role.name))
+        actorRole = Some(EvidencePieceRole(replayTransition.legal.move.piece.role.name))
       ),
       consequences = StructuralDeltaContracts
         .consequences(delta)
         .filter(consequence => consequence.establishesState && consequence.strength > 0),
-      actorRole = Square.fromKey(EvidenceRef.normalizeMove(step.moveUci).take(2))
-        .flatMap(beforeFacts.position.board.roleAt)
+      movement = replayTransition.relationDelta.rootMove
     )
 
 private[assembly] object PlanCausalEpisodeBuilder:
@@ -206,7 +206,6 @@ private[assembly] object PlanCausalEpisodeBuilder:
       rootIdentity: lila.chessjudgment.model.PlanEventIdentity,
       rootConsequences: List[TransitionConsequence],
       line: LineFactEvidence,
-      positionHistory: CanonicalPositionHistory,
       trace: CausalLineTrace
   ): PlanCausalEpisode =
     val rootStep = line.lineReplaySteps.headOption
@@ -224,7 +223,8 @@ private[assembly] object PlanCausalEpisodeBuilder:
       step = rootStep,
       perspective = rootTransition.perspective,
       structuralConsequences = rootConsequences,
-      canonicalStep = trace.legalStep(rootStep)
+      canonicalStep = trace.legalStep(rootStep),
+      canonicalMovement = trace.transition(rootStep).map(_.relationDelta.rootMove)
     )
     fromContinuation(
       plan = plan,
@@ -232,7 +232,6 @@ private[assembly] object PlanCausalEpisodeBuilder:
       role = rootTransition.role,
       root = root,
       continuation = line.lineReplaySteps.dropWhile(_ != rootStep).drop(1),
-      positionHistory = positionHistory,
       trace = Some(trace)
     )
 
@@ -242,7 +241,6 @@ private[assembly] object PlanCausalEpisodeBuilder:
       role: TransitionEdgeRole,
       root: PlanCausalEventNode,
       continuation: List[LineReplayStep],
-      positionHistory: CanonicalPositionHistory,
       observedResultMove: Option[String] = None,
       trace: Option[CausalLineTrace] = None,
       admittedReplay: Option[CanonicalLineReplay] = None
@@ -264,7 +262,7 @@ private[assembly] object PlanCausalEpisodeBuilder:
         role,
         root.perspective,
         replay,
-        Some(
+        root.canonicalMovement.map(movement =>
           CausalStepObservation(
             root.step,
             StructuralTransitionBinding(
@@ -274,20 +272,20 @@ private[assembly] object PlanCausalEpisodeBuilder:
               PositionNodeRef(root.step.fenAfter, root.step.ply, Some(!root.perspective)),
               Some(rootLine),
               root.perspective,
-              root.identity.actorRole.map(EvidencePieceRole.apply)
+              Some(EvidencePieceRole(root.identity.actor.beforeRole))
             ),
             root.structuralConsequences,
-            root.certifiedLegalStep.map(_.move.piece.role)
+            movement
           )
         ),
         admittedReplay = exactAdmittedReplay
       )
     }
-    val materialSummary = activeTrace.canonicalReplay
-      .filter(_.matches(replay))
-      .flatMap(CandidateLineAssembler.lineMaterialSummary(positionHistory, _))
     val certifiedRoot = root.copy(
-      canonicalStep = root.certifiedLegalStep.orElse(activeTrace.legalStep(root.step))
+      canonicalStep = root.certifiedLegalStep.orElse(activeTrace.legalStep(root.step)),
+      canonicalMovement = root.canonicalMovement.orElse(
+        activeTrace.transition(root.step).map(_.relationDelta.rootMove)
+      )
     )
     val observedCandidates = certifiedRoot :: rebasedContinuation.flatMap(step =>
       eventNode(plan, rootLine, role, root.perspective, step, Some(activeTrace))
@@ -295,7 +293,7 @@ private[assembly] object PlanCausalEpisodeBuilder:
     val observedResponses = observedCandidates.flatMap(trigger => responsesFor(trigger, replay, activeTrace))
     val rawBaseDependencies = observedCandidates.zipWithIndex.flatMap { case (from, fromIndex) =>
       observedCandidates.drop(fromIndex + 1).flatMap(to =>
-        dependency(plan, rootLine, role, from, to, activeTrace, observedResponses, observedResultMove, materialSummary)
+        dependency(plan, rootLine, role, from, to, activeTrace, observedResponses, observedResultMove)
       )
     }
     val baseDependencies = rawBaseDependencies
@@ -328,10 +326,13 @@ private[assembly] object PlanCausalEpisodeBuilder:
     val selectedByObservation = observedCandidates
       .filter(routeEvents)
       .map { event =>
+        val provenConsequences = provenConsequencesByEvent.getOrElse(event, Nil)
         val selected = selectResults(
           plan,
           event,
-          provenConsequencesByEvent.getOrElse(event, Nil)
+          if event == certifiedRoot then
+            (certifiedRoot.structuralConsequences ++ provenConsequences).distinct
+          else provenConsequences
         )
         event -> (if event == certifiedRoot then selected.copy(identity = certifiedRoot.identity) else selected)
       }
@@ -480,24 +481,17 @@ private[assembly] object PlanCausalEpisodeBuilder:
       includePersistentPreconditions: Boolean,
       replay: CanonicalLineReplay
   ): List[PlanCausalEventDependency] =
-    val sourceMove = EvidenceRef.normalizeMove(sourceStep.moveUci)
-    val targetMove = EvidenceRef.normalizeMove(target.moveUci)
-    val samePerspective = replay.before(sourceStep).exists(_.color == target.perspective)
+    val samePerspective = replay.legalStep(sourceStep).exists(_.move.piece.color == target.perspective)
     val consecutiveActorTurns = between.forall(step =>
-      replay.before(step).exists(_.color != target.perspective)
+      replay.legalStep(step).exists(_.move.piece.color != target.perspective)
     )
-    val objectState = Option
-      .when(
-        samePerspective &&
-          consecutiveActorTurns &&
-          sourceMove.slice(2, 4) == targetMove.take(2)
-      )(
+    val objectStates =
+      if samePerspective && consecutiveActorTurns then
         LineObjectTrajectory
-          .find(sourceStep, between :+ target.step, between.size + 1, replay)
+          .findAll(sourceStep, between :+ target.step, replay)
           .filter(_.futureStep == target.step)
-      )
-      .flatten
-      .map(PlanCausalDependencyKind.ObjectStatePrecondition -> PlanCausalDependencyProof.ObjectState(_))
+          .map(PlanCausalDependencyKind.ObjectStatePrecondition -> PlanCausalDependencyProof.ObjectState(_))
+      else Nil
     val persistent =
       if samePerspective && includePersistentPreconditions then
         LineAccessTrajectory
@@ -505,7 +499,7 @@ private[assembly] object PlanCausalEpisodeBuilder:
           .map(PlanCausalDependencyKind.LineAccessPrecondition -> PlanCausalDependencyProof.LineAccess(_))
           .toList
       else Nil
-    val proofs = objectState.toList ++ persistent
+    val proofs = objectStates ++ persistent
     Option
       .when(proofs.nonEmpty)(eventNode(plan, rootLine, role, target.perspective, sourceStep, admittedReplay = Some(replay)))
       .flatten
@@ -526,29 +520,33 @@ private[assembly] object PlanCausalEpisodeBuilder:
   ): Option[PlanCausalEventNode] =
     val resolved = trace
       .flatMap(traceValue =>
-        traceValue.observation(step).map(observed => observed -> traceValue.legalStep(step))
+        for
+          observed <- traceValue.observation(step)
+          transition <- traceValue.transition(step)
+        yield (observed, transition)
       )
       .orElse(
         admittedReplay
           .flatMap(_.subset(List(step)))
           .flatMap(replay =>
-            CausalLineTrace
-              .observe(rootLine, role, perspective, step, replay)
-              .map(observed => observed -> replay.legalStep(step))
+            for
+              observed <- CausalLineTrace.observe(rootLine, role, perspective, step, replay)
+              transition <- replay.transition(step)
+            yield (observed, transition)
           )
       )
-    resolved.map { case (observed, legalStep) =>
+    resolved.map { case (observed, transition) =>
       PlanCausalEventNode(
         identity = PlanEventIdentityBuilder.from(
           rootMove = step.moveUci,
-          actorRole = legalStep.map(_.move.piece.role.name),
-          plan = plan,
-          consequences = observed.consequences,
+          actor = transition.relationDelta.rootMove,
+          plan = plan
         ),
         step = step,
         perspective = perspective,
         structuralConsequences = observed.consequences,
-        canonicalStep = legalStep
+        canonicalStep = Some(transition.legal),
+        canonicalMovement = Some(transition.relationDelta.rootMove)
       )
     }
 
@@ -560,8 +558,7 @@ private[assembly] object PlanCausalEpisodeBuilder:
       to: PlanCausalEventNode,
       trace: CausalLineTrace,
       responses: List[PlanCausalResponse],
-      observedResultMove: Option[String],
-      materialSummary: Option[LineMaterialSummary]
+      observedResultMove: Option[String]
   ): List[PlanCausalEventDependency] =
     val replay = trace.replay
     val relation = trace.relation(from.step, to.step)
@@ -574,12 +571,10 @@ private[assembly] object PlanCausalEpisodeBuilder:
     val inducedResponseBetween = responses.exists(response =>
       response.trigger == from && response.step.ply > from.step.ply && response.step.ply < to.step.ply
     )
-    val objectState =
-      Option
-        .when(hasPlanResult || inducedResponseBetween)(
-          relation.flatMap(_.objectState).map(objectStateDependency(from, to, _))
-        )
-        .flatten
+    val objectStates =
+      if hasPlanResult || inducedResponseBetween then
+        relation.toList.flatMap(_.objectStates).map(objectStateDependency(from, to, _))
+      else Nil
     val lineAccessCandidate = relation
       .flatMap(_.lineAccess)
       .map(lineAccessDependency(from, to, _))
@@ -593,28 +588,7 @@ private[assembly] object PlanCausalEpisodeBuilder:
           response.step.ply > from.step.ply &&
           response.step.ply < to.step.ply
       )
-      .flatMap(response =>
-        val exchangeConversion =
-          Option
-            .when(advantageTransformationPlan(plan) && promotedPassedPawnResult(to))(
-              materialSummary.flatMap(summary =>
-                trace.canonicalReplay.flatMap(admitted =>
-                  ExchangeConversionTrajectory.find(
-                    planRootStep = replay.head,
-                    exchangeStep = from.step,
-                    replyStep = response.step,
-                    promotionStep = to.step,
-                    interveningSteps = between,
-                    planPrefix = replay.slice(1, fromIndex),
-                    materialSummary = summary,
-                    replay = admitted
-                  )
-                )
-              )
-            )
-            .flatten
-        exchangeConversion.toList ++ relation.toList.flatMap(_.continuationsFor(response.step))
-      )
+      .flatMap(response => relation.toList.flatMap(_.continuationsFor(response.step)))
       .filter {
         case pawn: PawnBreakFollowUpTrajectory =>
           hasPlanResult ||
@@ -625,7 +599,6 @@ private[assembly] object PlanCausalEpisodeBuilder:
             )
         case _: CaptureResponseFollowUpTrajectory => true
         case _: CheckResponseFollowUpTrajectory => hasPlanResult
-        case _: ExchangeConversionTrajectory    => hasPlanResult && promotedPassedPawnResult(to)
       }
       .map(trajectory =>
         PlanCausalEventDependency(
@@ -636,10 +609,7 @@ private[assembly] object PlanCausalEpisodeBuilder:
           plyOffset
         )
       )
-    List(
-      objectState,
-      lineAccess,
-    ).flatten ++ responseContinuations
+    objectStates ++ lineAccess.toList ++ responseContinuations
 
   private def routeDependencies(
       from: PlanCausalEventNode,
@@ -647,11 +617,8 @@ private[assembly] object PlanCausalEpisodeBuilder:
       trace: CausalLineTrace
   ): List[PlanCausalEventDependency] =
     trace.relation(from.step, to.step).toList.flatMap(relation =>
-      List(
-        relation.objectState.map(objectStateDependency(from, to, _)),
-        relation.lineAccess
-          .map(lineAccessDependency(from, to, _))
-      ).flatten
+      relation.objectStates.map(objectStateDependency(from, to, _)) ++
+        relation.lineAccess.map(lineAccessDependency(from, to, _)).toList
     )
 
   private def objectStateDependency(
@@ -688,30 +655,19 @@ private[assembly] object PlanCausalEpisodeBuilder:
       role: TransitionEdgeRole,
       event: PlanCausalEventNode
   ): Boolean =
-    event.structuralConsequences.exists(consequence =>
-      PlanCausalEventProof.candidateConsequenceForPlan(
-        plan,
-        consequence,
-        transitionFor(rootLine, role, event)
-      ).nonEmpty
+    event.canonicalMovement.exists(movement =>
+      event.structuralConsequences.exists(consequence =>
+        PlanCausalEventProof.candidateConsequenceForPlan(
+          plan,
+          consequence,
+          transitionFor(rootLine, role, event),
+          movement
+        ).nonEmpty
+      )
     )
 
   private def responseTransformationPlan(plan: Plan): Boolean =
-    Set(PlanTheme.PawnBreakPreparation, PlanTheme.AdvantageTransformation)(plan.theme)
-
-  private def advantageTransformationPlan(plan: Plan): Boolean =
     plan.theme == PlanTheme.AdvantageTransformation
-
-  private def promotedPassedPawnResult(event: PlanCausalEventNode): Boolean =
-    val move = EvidenceRef.normalizeMove(event.moveUci)
-    event.structuralConsequences.exists(consequence =>
-      consequence.kind == TransitionConsequenceKind.PassedPawnProgress &&
-        consequence.subjectFacts.exists {
-          case StructuralSubject.PassedPawnPromoted(_, from, to) =>
-            move.length == 5 && move.take(2) == from.key.toLowerCase && move.slice(2, 4) == to.key.toLowerCase
-          case _ => false
-        }
-    )
 
   private def responsesFor(
       trigger: PlanCausalEventNode,
@@ -721,19 +677,24 @@ private[assembly] object PlanCausalEpisodeBuilder:
     val triggerIndex = replay.indexOf(trigger.step)
     if triggerIndex < 0 then Nil
     else
-      replay
-        .drop(triggerIndex + 1)
-        .takeWhile(step => PlanCausalResponse.planPiecePresent(trigger, step, trace.legalStep(step)))
-        .flatMap { step =>
-          for
-            legalStep <- trace.legalStep(step).toList
-            beforeAnalysis <- trace.positionAnalysis(step.fenBefore, step.ply - 1).toList
-            afterAnalysis <- trace.positionAnalysis(step.fenAfter, step.ply).toList
-            response <- PlanCausalResponse
-              .certified(trigger, step, legalStep, beforeAnalysis, afterAnalysis)
-              .toList
-          yield response
-        }
+      (for
+        triggerTransition <- trace.transition(trigger.step).toList
+        planSquare = triggerTransition.legal.move.dest
+        candidates = replay.drop(triggerIndex + 1)
+        whilePresent = candidates.foldLeft((true, List.empty[(LineReplayStep, CanonicalReplayTransition)])) {
+          case ((false, admitted), _) => false -> admitted
+          case ((true, admitted), step) =>
+            trace.transition(step) match
+              case None => false -> admitted
+              case Some(transition) =>
+                val originalActorStillPresent = !transition.boardFootprint.changedSquareSet(planSquare)
+                originalActorStillPresent -> (admitted :+ (step -> transition))
+        }._2
+        (step, responseTransition) <- whilePresent
+        response <- PlanCausalResponse
+          .certified(trigger, step, triggerTransition, responseTransition)
+          .toList
+      yield response)
 
   private def selectResults(
       plan: Plan,
@@ -742,12 +703,7 @@ private[assembly] object PlanCausalEpisodeBuilder:
   ): PlanCausalEventNode =
     val consequences = provenConsequences.distinct
     event.copy(
-      identity = PlanEventIdentityBuilder.from(
-        rootMove = event.step.moveUci,
-        actorRole = event.certifiedLegalStep.map(_.move.piece.role.name),
-        plan = plan,
-        consequences = consequences
-      ),
+      identity = event.identity.copy(kind = plan.kind),
       structuralConsequences = consequences
     )
 
@@ -762,7 +718,7 @@ private[assembly] object PlanCausalEpisodeBuilder:
       PlanCausalEpisode.resultConsequences(sourceEvent).flatMap { consequence =>
         val causalPaths = episode.enablingDependencyPathsTo(sourceEvent)
         val sourceProofs = PlanCausalGoalProof
-          .certify(plan.theme, Some(plan.kind), transition, consequence)
+          .certify(sourceEvent.identity, transition, consequence)
           .toList
         val dependencyProofs = episode
           .enablingDependenciesTo(sourceEvent)
@@ -790,5 +746,5 @@ private[assembly] object PlanCausalEpisodeBuilder:
       to = PositionNodeRef(event.step.fenAfter, event.step.ply, Some(!event.perspective)),
       line = Some(rootLine),
       perspective = event.perspective,
-      actorRole = event.identity.actorRole.map(EvidencePieceRole.apply)
+      actorRole = Some(EvidencePieceRole(event.identity.actor.beforeRole))
     )

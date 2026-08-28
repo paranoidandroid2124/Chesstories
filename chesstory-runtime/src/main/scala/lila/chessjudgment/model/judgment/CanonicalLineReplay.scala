@@ -12,6 +12,17 @@ private final class CanonicalReplayTransitionCalculation(
     afterAnalysis: PositionAnalysis,
     legalStep: LegalReplayStep
 ):
+  def ownsOccurrence(
+      before: PositionAnalysis,
+      after: PositionAnalysis,
+      step: LegalReplayStep
+  ): Boolean =
+    step.copy(ply = legalStep.ply) == legalStep &&
+      before.position == beforeAnalysis.position && after.position == afterAnalysis.position &&
+      before.relationInventory.sameOwner(beforeAnalysis.relationInventory) &&
+      after.relationInventory.sameOwner(afterAnalysis.relationInventory) &&
+      after.transitionFootprint == afterAnalysis.transitionFootprint
+
   lazy val relationTransition: RelationInventoryTransition =
     afterAnalysis.relationTransition.getOrElse(
       throw IllegalArgumentException("a replay transition destination must own its canonical relation transition")
@@ -25,8 +36,57 @@ private final class CanonicalReplayTransitionCalculation(
   lazy val relationDelta: RelationSemanticDelta =
     CanonicalRelationDelta.semanticFrom(legalStep, boardFootprint, relationTransition)
 
-  lazy val structuralDelta: TransitionStructuralDelta =
-    StructuralDeltaAnalyzer.delta(beforeAnalysis, afterAnalysis, legalStep, relationDelta)
+  lazy val relationContractBatch: TransitionRelationContractBatch =
+    TransitionRelationContractBatch.derive(relationDelta)
+
+  lazy val certifiedCombinations: ClosedRelationCombinationResults =
+    RelationFactEvidence
+      .certifiedTransitionContractBatch(
+        relationContractBatch,
+        relationDelta,
+        legalStep,
+        boardFootprint
+      )
+      .getOrElse(
+        throw IllegalArgumentException("a closed relation batch failed legal-replay certification")
+      )
+
+  lazy val certifiedVertical: ClosedVerticalRelationResults =
+    val unverified = ClosedVerticalRelationResults.derive(certifiedCombinations, relationDelta)
+    RelationFactEvidence
+      .certifiedVerticalBatch(
+        unverified,
+        certifiedCombinations,
+        relationDelta,
+        legalStep,
+        boardFootprint
+      )
+      .getOrElse(
+        throw IllegalArgumentException("a closed vertical relation batch failed typed contract certification")
+      )
+
+/** Semantic time-axis address of one certified L1 result. The replay step
+  * identifies the exact transition occurrence; graph binding later adds the
+  * concrete line occurrence without changing this relation meaning.
+  */
+private[chessjudgment] final case class ReplayVerticalRelationOccurrence private[judgment] (
+    step: LineReplayStep,
+    contract: VerticalRelationContractKind,
+    relation: RelationFactEvidence
+):
+  require(
+    VerticalRelationContractKind.forDetail(relation.detail).contains(contract),
+    "a replay vertical occurrence must retain its producing contract"
+  )
+  require(
+    relation.mentionsLineMove(step.moveUci) && (relation.origin match
+      case RelationEvidenceOrigin.LegalReplay(beforeFen, afterFen, List(moveUci)) =>
+        EvidenceRef.sameMove(moveUci, step.moveUci) &&
+          PrincipalVariationEvidence.sameBoardState(beforeFen, step.fenBefore) &&
+          PrincipalVariationEvidence.sameBoardState(afterFen, step.fenAfter)
+      case _ => false),
+    "a replay vertical occurrence must retain its exact certified transition"
+  )
 
 private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
     val declared: LineReplayStep,
@@ -37,8 +97,57 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
 ):
   def relationTransition: RelationInventoryTransition = calculation.relationTransition
   def relationDelta: RelationSemanticDelta = calculation.relationDelta
-  def structuralDelta: TransitionStructuralDelta = calculation.structuralDelta
   def boardFootprint: lila.chessjudgment.model.position.BoardTransitionFootprint = calculation.boardFootprint
+
+  private lazy val closedRelationOutput: ClosedRelationTransitionInventory =
+    ClosedRelationTransitionInventory.close(
+      declared,
+      relationDelta,
+      calculation.certifiedCombinations,
+      calculation.certifiedVertical
+    )
+
+  private[chessjudgment] def combinationRelationsFor(
+      contract: RelationCombinationContractKind
+  ): List[RelationFactEvidence] =
+    calculation.certifiedCombinations.resultsFor(contract)
+
+  private[chessjudgment] def verticalRelationsFor(
+      contract: VerticalRelationContractKind
+  ): List[RelationFactEvidence] =
+    calculation.certifiedVertical.resultsFor(contract)
+
+  private[chessjudgment] def closedRelationInventory: ClosedRelationTransitionInventory =
+    closedRelationOutput
+
+  private lazy val structuralOutput: TransitionStructuralDelta =
+    StructuralDeltaAnalyzer.delta(
+      beforeAnalysis,
+      afterAnalysis,
+      legal,
+      relationDelta,
+      combinationRelationsFor(RelationCombinationContractKind.GeometricControlSetDelta),
+      combinationRelationsFor(RelationCombinationContractKind.NamedRayTransition),
+      verticalRelationsFor(VerticalRelationContractKind.PawnTopologyTransition),
+      verticalRelationsFor(VerticalRelationContractKind.SliderReachDelta)
+    )
+
+  def structuralDelta: TransitionStructuralDelta = structuralOutput
+
+  private[judgment] def certifiesBinding(
+      transition: StructuralTransitionBinding
+  ): Boolean =
+    declared.ply == transition.to.ply &&
+      transition.to.ply == transition.from.ply + 1 &&
+      legal.ply == declared.ply &&
+      EvidenceRef.sameMove(declared.moveUci, transition.moveUci) &&
+      EvidenceRef.sameMove(legal.uci, transition.moveUci) &&
+      PrincipalVariationEvidence.normalizeFen(declared.fenBefore) ==
+        PrincipalVariationEvidence.normalizeFen(transition.from.fen) &&
+      PrincipalVariationEvidence.normalizeFen(declared.fenAfter) ==
+        PrincipalVariationEvidence.normalizeFen(transition.to.fen) &&
+      legal.move.piece.color == transition.perspective &&
+      transition.from.sideToMove.forall(_ == transition.perspective)
 
   private[judgment] def atOccurrence(
       nextDeclared: LineReplayStep,
@@ -46,6 +155,14 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
       nextBeforeAnalysis: PositionAnalysis,
       nextAfterAnalysis: PositionAnalysis
   ): CanonicalReplayTransition =
+    require(
+      calculation.ownsOccurrence(nextBeforeAnalysis, nextAfterAnalysis, nextLegal) &&
+        nextDeclared.ply == nextLegal.ply &&
+        EvidenceRef.sameMove(nextDeclared.moveUci, nextLegal.uci) &&
+        PrincipalVariationEvidence.sameBoardState(nextDeclared.fenBefore, Fen.write(nextLegal.before).value) &&
+        PrincipalVariationEvidence.sameBoardState(nextDeclared.fenAfter, Fen.write(nextLegal.after).value),
+      "a canonical transition calculation may only be rebound to the same admitted occurrence"
+    )
     if declared == nextDeclared && legal == nextLegal &&
         (beforeAnalysis.asInstanceOf[AnyRef] eq nextBeforeAnalysis.asInstanceOf[AnyRef]) &&
         (afterAnalysis.asInstanceOf[AnyRef] eq nextAfterAnalysis.asInstanceOf[AnyRef])
@@ -131,6 +248,22 @@ private[chessjudgment] final class CanonicalLineReplay private (
 
   def transition(step: LineReplayStep): Option[CanonicalReplayTransition] =
     indexByReplayStep.get(step).flatMap(transitionOccurrences.lift)
+
+  private[chessjudgment] def verticalRelationOccurrences(
+      step: LineReplayStep,
+      contracts: List[VerticalRelationContractKind]
+  ): List[ReplayVerticalRelationOccurrence] =
+    require(
+      contracts.distinct.size == contracts.size,
+      "one time-axis query cannot repeat an L1 contract"
+    )
+    transition(step).toList.flatMap { exactTransition =>
+      contracts.flatMap(contract =>
+        exactTransition.verticalRelationsFor(contract).map(relation =>
+          ReplayVerticalRelationOccurrence(step, contract, relation)
+        )
+      )
+    }
 
   def onlyTransition: Option[CanonicalReplayTransition] =
     Option.when(replaySteps.size == 1)(transitionOccurrences.head)
@@ -272,18 +405,15 @@ private[chessjudgment] object CanonicalLineReplay:
   ): Option[CanonicalLineReplay] =
     val before = beforeAnalysis.position
     val uci = PrincipalVariationEvidence.normalizeUci(move.toUci.uci)
+    val ownedMove = beforeAnalysis.actualLegalMoves.exists(candidate =>
+      candidate.asInstanceOf[AnyRef] eq move.asInstanceOf[AnyRef]
+    )
     Option.when(
       step.ply > 0 &&
         beforeAnalysis.features.plyCount == step.ply - 1 &&
         PrincipalVariationEvidence.sameBoardState(beforeAnalysis.features.fen, step.fenBefore) &&
         EvidenceRef.sameMove(step.moveUci, uci) &&
-        beforeAnalysis.actualLegalMoves.exists(candidate =>
-          EvidenceRef.sameMove(candidate.toUci.uci, uci) &&
-            PrincipalVariationEvidence.sameBoardState(
-              Fen.write(candidate.after).value,
-              step.fenAfter
-            )
-        ) &&
+        ownedMove && move.before == before &&
         PrincipalVariationEvidence.sameBoardState(step.fenAfter, Fen.write(move.after).value)
     ) {
       val legal = LegalReplayStep.fromMove(step.ply, before, move)
@@ -301,6 +431,7 @@ private[chessjudgment] object CanonicalLineReplay:
         steps.forall(step =>
           step.ply > 0 &&
             EvidenceRef.sameMove(step.uci, step.move.toUci.uci) &&
+            step.before == step.move.before &&
             step.after == step.move.after
         ) &&
         steps.sliding(2).forall {
@@ -327,6 +458,7 @@ private[chessjudgment] object CanonicalLineReplay:
         steps.forall(step =>
           step.ply > 0 &&
             EvidenceRef.sameMove(step.uci, step.move.toUci.uci) &&
+            step.before == step.move.before &&
             step.move.after == step.after
         ) &&
         steps.sliding(2).forall {
@@ -461,48 +593,71 @@ private[chessjudgment] object CanonicalLineReplay:
   * Consumers compare this certificate with the declared transition instead
   * of replaying the same move again.
   */
-private[chessjudgment] final case class CanonicalTransitionProof private (
-    transitionBinding: StructuralTransitionBinding,
-    declared: LineReplayStep,
+private[chessjudgment] final class CanonicalTransitionProof private (
+    private[judgment] val transitionBinding: StructuralTransitionBinding,
     legal: LegalReplayStep,
-    afterAnalysis: PositionAnalysis
+    afterAnalysis: PositionAnalysis,
+    private[chessjudgment] val relationDelta: RelationSemanticDelta
 ):
   private lazy val legalResponses: List[Move] = afterAnalysis.actualLegalMoves
+  private lazy val legalResponsesByUci: Map[String, Move] =
+    legalResponses.map(move => EvidenceRef.normalizeMove(move.toUci.uci) -> move).toMap
 
   def proves(transition: StructuralTransitionBinding): Boolean =
-    transition == transitionBinding &&
-      declared.ply == transition.to.ply &&
-      transition.to.ply == transition.from.ply + 1 &&
-      legal.ply == declared.ply &&
-      EvidenceRef.sameMove(declared.moveUci, transition.moveUci) &&
-      EvidenceRef.sameMove(legal.uci, transition.moveUci) &&
-      PrincipalVariationEvidence.normalizeFen(declared.fenBefore) ==
-        PrincipalVariationEvidence.normalizeFen(transition.from.fen) &&
-      PrincipalVariationEvidence.normalizeFen(declared.fenAfter) ==
-        PrincipalVariationEvidence.normalizeFen(transition.to.fen) &&
-      legal.move.piece.color == transition.perspective &&
-      transition.from.sideToMove.forall(_ == transition.perspective) &&
-      afterAnalysis.features.plyCount == declared.ply &&
-      PrincipalVariationEvidence.normalizeFen(afterAnalysis.features.fen) ==
-        PrincipalVariationEvidence.normalizeFen(declared.fenAfter)
+    transition == transitionBinding
+
+  private[chessjudgment] def provesMove(
+      moveUci: String,
+      from: PositionNodeRef,
+      to: PositionNodeRef,
+      scope: EvidenceScope
+  ): Boolean =
+    transitionBinding.line.isEmpty && transitionBinding.role.scope == scope &&
+      EvidenceRef.sameMove(transitionBinding.moveUci, moveUci) &&
+      transitionBinding.from == from && transitionBinding.to == to &&
+      proves(transitionBinding)
 
   private[chessjudgment] def rootStep: LegalReplayStep = legal
 
-  private[chessjudgment] def legalResponseCount(maximum: Int): Int =
-    legalResponses.size.min(maximum.max(0))
+  private[chessjudgment] def rootMovement: CanonicalRootLegalMove =
+    relationDelta.rootMove
+
+  private[chessjudgment] def legalResponseCount: Int =
+    legalResponses.size
+
+  private[chessjudgment] def legalResponseMoves: List[String] =
+    legalResponsesByUci.keys.toList.sorted
+
+  private[chessjudgment] def certifiesCompleteLegalResponseSet(
+      responses: List[LineReplayStep]
+  ): Boolean =
+    responses.size == legalResponseCount &&
+      responses.forall(response =>
+        response.ply == transitionBinding.to.ply + 1 &&
+          legalResponsesByUci
+            .get(EvidenceRef.normalizeMove(response.moveUci))
+            .exists(move =>
+              PrincipalVariationEvidence.sameBoardState(response.fenBefore, Fen.write(move.before).value) &&
+                PrincipalVariationEvidence.sameBoardState(response.fenAfter, Fen.write(move.after).value)
+            )
+      ) &&
+      responses.map(response => EvidenceRef.normalizeMove(response.moveUci)).toSet == legalResponsesByUci.keySet
 
 private[chessjudgment] object CanonicalTransitionProof:
   def from(
       transition: StructuralTransitionBinding,
       replay: CanonicalLineReplay
   ): Option[CanonicalTransitionProof] =
-    (replay.replaySteps, replay.legalSteps) match
-      case (declared :: Nil, legal :: Nil) =>
-        replay.analysisAfter(declared).flatMap { analysis =>
-          val proof = CanonicalTransitionProof(transition, declared, legal, analysis)
-          Option.when(proof.proves(transition))(proof)
-        }
-      case _ => None
+    replay.onlyTransition
+      .filter(_.certifiesBinding(transition))
+      .map(owner =>
+        new CanonicalTransitionProof(
+          transition,
+          owner.legal,
+          owner.afterAnalysis,
+          owner.relationDelta
+        )
+      )
 
 /** Binds the exact structural output inventory to the admitted legal
   * transition that produced it.  A legal move certificate alone cannot
@@ -512,27 +667,46 @@ private[chessjudgment] final case class CanonicalTransitionDeltaProof private (
     transitionProof: CanonicalTransitionProof,
     signals: List[StructuralSignal],
     consequences: List[TransitionConsequence],
-    relationChanges: List[CanonicalRelationChange]
+    relationChanges: List[CanonicalRelationChange],
+    derivedRelations: List[RelationFactEvidence],
+    derivedRelationSources: List[StructuralDerivedRelationSource]
 ):
   def proves(delta: StructuralDeltaEvidence): Boolean =
     transitionProof.proves(delta.transition) &&
       signals == delta.signals &&
       consequences == delta.consequences &&
       relationChanges == delta.relationChanges &&
-      TransitionConsequenceRelationProof.provesCanonical(consequences, relationChanges, delta.transition)
+      derivedRelationSources == delta.derivedRelationSources &&
+      TransitionConsequenceRelationProof.provesCanonical(
+        consequences,
+        relationChanges,
+        delta.transition,
+        transitionProof.relationDelta,
+        derivedRelations
+      )
 
 private[chessjudgment] object CanonicalTransitionDeltaProof:
   def from(
       transitionProof: CanonicalTransitionProof,
       signals: List[StructuralSignal],
       consequences: List[TransitionConsequence],
-      relationChanges: List[CanonicalRelationChange]
+      relationChanges: List[CanonicalRelationChange],
+      derivedRelations: List[RelationFactEvidence],
+      derivedRelationSources: List[StructuralDerivedRelationSource]
   ): CanonicalTransitionDeltaProof =
+    require(
+      derivedRelationSources.map(_.key).distinct.size == derivedRelationSources.size &&
+        derivedRelationSources.map(_.source).distinct.size == derivedRelationSources.size &&
+        derivedRelationSources.map(_.key).toSet == derivedRelations.map(DerivedRelationResultKey.from).toSet,
+      "canonical structural proof needs one occurrence output per derived relation"
+    )
     require(
       TransitionConsequenceRelationProof.provesCanonical(
         consequences,
         relationChanges,
-        transitionProof.transitionBinding
+        transitionProof.transitionBinding,
+        transitionProof.relationDelta,
+        derivedRelations
       ),
       "canonical transition consequences must be causally bound to their exact relation changes"
     )
@@ -540,5 +714,7 @@ private[chessjudgment] object CanonicalTransitionDeltaProof:
       transitionProof,
       signals,
       consequences,
-      relationChanges
+      relationChanges,
+      derivedRelations,
+      derivedRelationSources
     )

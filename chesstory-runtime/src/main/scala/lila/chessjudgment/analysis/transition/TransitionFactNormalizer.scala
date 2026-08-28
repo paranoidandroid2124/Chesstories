@@ -6,13 +6,32 @@ import lila.chessjudgment.model.judgment.*
 
 object TransitionFactNormalizer:
 
-  def fromMoveTransition(edge: MoveTransitionEdge): EvidenceRecord =
+  def fromMoveTransition(
+      edge: MoveTransitionEdge,
+      replay: CanonicalLineReplay
+  ): EvidenceRecord =
+    val legal = replay.legalSteps match
+      case exact :: Nil => exact
+      case _ => throw IllegalArgumentException("a move transition needs exactly one admitted legal replay step")
+    val binding = StructuralTransitionBinding(
+      moveUci = edge.moveUci,
+      role = edge.role,
+      from = edge.from,
+      to = edge.to,
+      line = None,
+      perspective = legal.move.piece.color,
+      actorRole = Some(EvidencePieceRole(legal.move.piece.role.name))
+    )
+    val proof = CanonicalTransitionProof.from(binding, replay).getOrElse(
+      throw IllegalArgumentException("a move transition must reuse its exact admitted legal replay")
+    )
     EvidenceRecord(
       ref = edge.evidence,
       payload = MoveTransitionEvidence(
         moveUci = edge.moveUci,
         from = edge.from,
-        to = edge.to
+        to = edge.to,
+        canonicalTransitionProof = Some(proof)
       )
     )
 
@@ -23,6 +42,7 @@ object TransitionFactNormalizer:
       replay: CanonicalLineReplay,
       line: Option[LineNodeRef],
       perspective: Color,
+      derivedRelationSources: List[StructuralDerivedRelationSource],
       parents: List[EvidenceRef]
   ): EvidenceRecord =
     val structural = delta.structural
@@ -49,7 +69,9 @@ object TransitionFactNormalizer:
       transitionProof,
       signals,
       consequences,
-      relationChanges
+      relationChanges,
+      structural.derivedRelations,
+      derivedRelationSources
     )
     val ref =
       EvidenceRef(
@@ -68,6 +90,7 @@ object TransitionFactNormalizer:
         signals = signals,
         consequences = consequences,
         relationChanges = relationChanges,
+        derivedRelationSources = derivedRelationSources,
         canonicalTransitionProof = Some(transitionProof),
         canonicalDeltaProof = Some(deltaProof)
       ),

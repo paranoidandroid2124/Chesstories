@@ -15,11 +15,6 @@ object PositionFeatures:
     plyCount = 0
   )
 
-private[chessjudgment] final case class PawnTensionEdge(
-    whitePawn: Square,
-    blackPawn: Square
-)
-
 private[chessjudgment] final case class PawnFrontOccupancy(
     side: Color,
     pawn: Square,
@@ -30,65 +25,40 @@ private[chessjudgment] final case class PawnFrontOccupancy(
 private[chessjudgment] final case class PawnPassage(
     side: Color,
     pawn: Square,
-    blockers: List[Square]
+    opposingPawns: List[Square]
 )
-
-private[chessjudgment] final case class PawnFileTopologyState(
-    whitePawns: List[Square],
-    blackPawns: List[Square]
-):
-  def pawns(side: Color): List[Square] =
-    if side.white then whitePawns else blackPawns
-
-  def isOpen: Boolean =
-    whitePawns.isEmpty && blackPawns.isEmpty
-
-  def isSemiOpenFor(side: Color): Boolean =
-    pawns(side).isEmpty && pawns(!side).nonEmpty
 
 private[chessjudgment] final case class PawnTopologyProduction(
     snapshot: PawnTopologySnapshot,
     affectedPawnFileKeys: Set[(Color, File)],
-    tensionEdgesProduced: Set[PawnTensionEdge],
     frontStatesProduced: Map[(Color, Square), PawnFrontOccupancy],
     passageStatesProduced: Map[(Color, Square), PawnPassage]
 )
 
 /** Complete, immutable pawn topology for one board.
   *
-  * The four stored indexes are factual board relations only: file membership,
-  * opposing tension, the immediately-forward square (including emptiness),
-  * and all opposing pawns in a pawn's passage. Friendly pawn support belongs
-  * to the canonical geometric-control inventory shared by every piece. Terms such as
+  * The three stored indexes are factual pawn-only board relations: file
+  * membership, the immediately-forward square (including emptiness), and all
+  * opposing pawns in a pawn's passage. Enemy contact and friendly support are
+  * projections of the canonical geometric-control inventory shared by every
+  * piece; pawn topology does not produce those edges again. Terms such as
   * "weak", "backward", "space" and "outpost" are deliberately absent: they
   * require a separate causal contract rather than a static label.
   */
 private[chessjudgment] final case class PawnTopologySnapshot private (
     byFile: Map[(Color, File), List[Square]],
-    tension: Set[PawnTensionEdge],
     frontOccupancy: Map[(Color, Square), PawnFrontOccupancy],
-    passageBlockers: Map[(Color, Square), PawnPassage]
+    passageOpponents: Map[(Color, Square), PawnPassage]
 ):
   def pawns(side: Color, file: File): List[Square] =
     byFile(side -> file)
 
-  def fileState(file: File): PawnFileTopologyState =
-    PawnFileTopologyState(
-      whitePawns = pawns(Color.White, file),
-      blackPawns = pawns(Color.Black, file)
-    )
-
   def afterTransition(
       after: Board,
-      footprint: BoardTransitionFootprint,
-      geometricControlsByOrigin: Map[Square, Bitboard]
+      footprint: BoardTransitionFootprint
   ): PawnTopologyProduction =
     val pawnChanges = footprint.pawnCellChanges
     if pawnChanges.nonEmpty then
-      require(
-        geometricControlsByOrigin.keySet == after.occupied.squares.toSet,
-        "pawn topology must consume the complete canonical attack inventory"
-      )
       val changedPawnSquares = pawnChanges.map(_.square).toSet
       val affectedPawnFileKeys = pawnChanges.flatMap(change =>
         (change.before.toList ++ change.after.toList).collect {
@@ -114,30 +84,6 @@ private[chessjudgment] final case class PawnTopologySnapshot private (
         }
       }
 
-      val pawnAttackOrigins = changedPawnSquares.flatMap { square =>
-        List(Color.White, Color.Black).flatMap { side =>
-          square :: PawnTopologySnapshot.pawnAttackOrigins(side, square)
-        }
-      }.flatMap(square =>
-        after.pieceAt(square).collect {
-          case piece if piece.role == Pawn => piece.color -> square
-        }
-      )
-      val retainedTension = tension.filterNot(edge =>
-        changedPawnSquares(edge.whitePawn) || changedPawnSquares(edge.blackPawn)
-      )
-      val refreshedTension = pawnAttackOrigins.flatMap { case (side, pawn) =>
-        geometricControlsByOrigin(pawn).squares.flatMap { target =>
-          after.pieceAt(target).collect {
-            case piece if piece == Piece(!side, Pawn) =>
-              if side.white then PawnTensionEdge(pawn, target)
-              else PawnTensionEdge(target, pawn)
-          }
-        }
-      }.filter(edge =>
-        changedPawnSquares(edge.whitePawn) || changedPawnSquares(edge.blackPawn)
-      ).toSet
-
       val affectedFrontKeys = (
         addedPawnKeys ++ PawnTopologySnapshot.frontDependentPawnKeys(changedPawnSquares)
       ).intersect(afterPawnKeys)
@@ -160,7 +106,7 @@ private[chessjudgment] final case class PawnTopologySnapshot private (
           )
       }.toSet
       val affectedPassageKeys = (addedPawnKeys ++ passageDependents).intersect(afterPawnKeys)
-      val updatedPassage = passageBlockers
+      val updatedPassage = passageOpponents
         .filter { case (key, _) => afterPawnKeys(key) && !affectedPassageKeys(key) } ++
         affectedPassageKeys.map { case key @ (side, pawn) =>
           key -> PawnTopologySnapshot.passageState(
@@ -173,12 +119,10 @@ private[chessjudgment] final case class PawnTopologySnapshot private (
       PawnTopologyProduction(
         snapshot = PawnTopologySnapshot(
           byFile = updatedByFile,
-          tension = retainedTension ++ refreshedTension,
           frontOccupancy = updatedFront,
-          passageBlockers = updatedPassage
+          passageOpponents = updatedPassage
         ),
         affectedPawnFileKeys = affectedPawnFileKeys,
-        tensionEdgesProduced = refreshedTension,
         frontStatesProduced = affectedFrontKeys.flatMap(key => updatedFront.get(key).map(key -> _)).toMap,
         passageStatesProduced = affectedPassageKeys.flatMap(key => updatedPassage.get(key).map(key -> _)).toMap
       )
@@ -197,7 +141,6 @@ private[chessjudgment] final case class PawnTopologySnapshot private (
       PawnTopologyProduction(
         snapshot = updated,
         affectedPawnFileKeys = Set.empty,
-        tensionEdgesProduced = Set.empty,
         frontStatesProduced = affectedFrontKeys.flatMap(key => updated.frontOccupancy.get(key).map(key -> _)).toMap,
         passageStatesProduced = Map.empty
       )
@@ -214,12 +157,6 @@ private[chessjudgment] object PawnTopologySnapshot:
   private def frontDependentPawnKeys(changedSquares: Set[Square]): Set[(Color, Square)] =
     changedSquares.flatMap(front =>
       Sides.flatMap(side => pawnBehindFront(side, front).map(side -> _))
-    )
-
-  private def pawnAttackOrigins(side: Color, target: Square): List[Square] =
-    val originRank = target.rank.value - (if side.white then 1 else -1)
-    List(target.file.value - 1, target.file.value + 1).flatMap(file =>
-      Square.at(file, originRank)
     )
 
   private def frontState(board: Board, side: Color, pawn: Square): PawnFrontOccupancy =
@@ -261,11 +198,7 @@ private[chessjudgment] object PawnTopologySnapshot:
   ): PawnPassage =
     PawnPassage(side, pawn, opponents.filter(inPassage(side, pawn, _)).sortBy(_.key))
 
-  def from(board: Board, geometricControlsByOrigin: Map[Square, Bitboard]): PawnTopologySnapshot =
-    require(
-      geometricControlsByOrigin.keySet == board.occupied.squares.toSet,
-      "pawn topology must consume the complete canonical attack inventory"
-    )
+  def from(board: Board): PawnTopologySnapshot =
     val sides = List(Color.White, Color.Black)
     val pawnsBySide = sides.map { side =>
       side -> board.byPiece(side, Pawn).squares.toList.sortBy(_.key)
@@ -278,24 +211,17 @@ private[chessjudgment] object PawnTopologySnapshot:
     def pawns(side: Color): List[Square] =
       pawnsBySide(side)
 
-    val blackPawns = pawns(Color.Black).toSet
-    val tension = pawns(Color.White).flatMap { whitePawn =>
-      geometricControlsByOrigin(whitePawn).squares.filter(blackPawns).map(blackPawn =>
-        PawnTensionEdge(whitePawn, blackPawn)
-      )
-    }.toSet
-
     val frontOccupancy = sides.flatMap { side =>
       pawns(side).map { pawn =>
         (side -> pawn) -> frontState(board, side, pawn)
       }
     }.toMap
 
-    val passageBlockers = sides.flatMap { side =>
+    val passageOpponents = sides.flatMap { side =>
       val opponents = pawns(!side)
       pawns(side).map { pawn =>
         (side -> pawn) -> passageState(side, pawn, opponents)
       }
     }.toMap
 
-    PawnTopologySnapshot(byFile, tension, frontOccupancy, passageBlockers)
+    PawnTopologySnapshot(byFile, frontOccupancy, passageOpponents)

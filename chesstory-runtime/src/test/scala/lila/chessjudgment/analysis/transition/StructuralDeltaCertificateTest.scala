@@ -6,23 +6,8 @@ import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.analysis.structure.StructuralDeltaAnalyzer
 import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
-import lila.chessjudgment.model.position.PositionFeatures
 
 class StructuralDeltaCertificateTest extends munit.FunSuite:
-
-  test("a structural result kind is the sole owner of observed direction"):
-    assertEquals(
-      TransitionConsequence(TransitionConsequenceKind.OpenFileEstablished, 1).polarity,
-      StructuralSignalPolarity.Neutral
-    )
-    assertEquals(
-      TransitionConsequence(TransitionConsequenceKind.PassedPawnConcession, 1).polarity,
-      StructuralSignalPolarity.Loss
-    )
-    assertEquals(
-      TransitionConsequence(TransitionConsequenceKind.PawnTensionResolution, 1).polarity,
-      StructuralSignalPolarity.Neutral
-    )
 
   test("a legal transition certificate does not certify copied structural output"):
     val beforeFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -34,22 +19,6 @@ class StructuralDeltaCertificateTest extends munit.FunSuite:
 
     val omittedRelationChange = payload.copy(relationChanges = payload.relationChanges.tail)
     assert(!omittedRelationChange.exactOutputInventoryCertified)
-    val omittedRecord = record.copy(
-      ref = record.ref.copy(id = "omitted-relation-change"),
-      payload = omittedRelationChange
-    )
-    val omittedGraph = graphWithRelationSources(omittedRecord)
-    assert(!omittedGraph.proofEligible(omittedRecord))
-    assertEquals(EvidenceObjectBinding.fromEvidenceRefs(omittedGraph, List(omittedRecord.ref)), Nil)
-
-    val relationBindings = EvidenceObjectBinding
-      .fromEvidenceRefs(graphWithRelationSources(record), List(record.ref))
-      .filter(_.mechanism.exists(_.kind == EvidenceObjectKind.Relation))
-    assertEquals(relationBindings.size, payload.relationChanges.size)
-    assertEquals(
-      relationBindings.flatMap(_.provenance.map(_.id)).toSet,
-      payload.relationChanges.map(_.source.id).toSet
-    )
 
     val injected = payload.copy(
       consequences = TransitionConsequence(
@@ -58,21 +27,17 @@ class StructuralDeltaCertificateTest extends munit.FunSuite:
         subjectBindings = List(
           StructuralSubjectBinding.unbound(
             StructuralSubject.Battery(
-              RelationWitnessDetail.RayBarrier(
+              RelationBatteryFormationWitness(
                 White,
-                EvidenceSquare("g4"),
-                EvidencePieceRole("bishop"),
-                List(
-                  RelationColoredPieceWitness(
-                    EvidenceSquare("h5"),
-                    EvidencePieceRole("queen"),
-                    White
-                  ),
-                  RelationColoredPieceWitness(
-                    EvidenceSquare("e8"),
-                    EvidencePieceRole("king"),
-                    Black
-                  )
+                RelationColoredPieceWitness(
+                  EvidenceSquare("g4"),
+                  EvidencePieceRole("bishop"),
+                  White
+                ),
+                RelationColoredPieceWitness(
+                  EvidenceSquare("h5"),
+                  EvidencePieceRole("queen"),
+                  White
                 ),
                 RelationAxisSignal.Diagonal
               )
@@ -81,36 +46,12 @@ class StructuralDeltaCertificateTest extends munit.FunSuite:
         ),
         targetBindings = List(
           StructuralSubjectBinding.unbound(
-            StructuralSubject.PieceAt(EvidencePieceRole("king"), EvidenceSquare("e8"))
+            StructuralSubject.PieceAt(Black, EvidencePieceRole("king"), EvidenceSquare("e8"))
           )
         )
       ) :: payload.consequences
     )
     assert(!injected.exactOutputInventoryCertified)
-
-  test("a relation-backed consequence projects only the sources bound to its subjects"):
-    val record = structuralRecord("4k3/8/8/3p1p2/8/8/4P3/4K3 w - - 0 1", "e2e4")
-    val payload = record.payload.asInstanceOf[StructuralDeltaEvidence]
-    val tension = payload.consequences
-      .find(_.kind == TransitionConsequenceKind.PawnTensionCreated)
-      .getOrElse(fail("expected a two-edge pawn-tension consequence"))
-    val sourceByKey = payload.relationChanges.map(change => change.key -> change.source).toMap
-    val expectedSources = tension.relationKeys.map(sourceByKey).map(_.id).toSet
-    val bindings = EvidenceObjectBinding
-      .fromEvidenceRefs(graphWithRelationSources(record), List(record.ref))
-      .filter(binding =>
-        binding.consequence.nonEmpty &&
-          binding.mechanism.exists(_.key.equalsIgnoreCase(TransitionConsequenceKind.PawnTensionCreated.toString))
-      )
-
-    assertEquals(expectedSources.size, 2)
-    assertEquals(bindings.size, 3)
-    val provenanceSets = bindings.map(_.provenance.map(_.id).toSet).toSet
-    assertEquals(
-      provenanceSets,
-      expectedSources.map(Set(_)) + expectedSources
-    )
-    assertEquals(bindings.flatMap(_.provenance.map(_.id)).toSet, expectedSources)
 
   test("distant ray churn does not recreate an existing battery formation"):
     val record = structuralRecord(
@@ -120,6 +61,101 @@ class StructuralDeltaCertificateTest extends munit.FunSuite:
     val payload = record.payload.asInstanceOf[StructuralDeltaEvidence]
     assert(!payload.signals.exists(_.kind == StructuralSignalKind.BatteryCreated))
     assert(!payload.consequences.exists(_.kind == TransitionConsequenceKind.BatteryFormation))
+
+  test("one battery formation preserves both established directional ray proofs"):
+    val record = structuralRecord(
+      "7k/8/8/8/8/8/1R6/R6K w - - 0 1",
+      "b2a2"
+    )
+    val payload = record.payload.asInstanceOf[StructuralDeltaEvidence]
+    val battery =
+      payload.consequences.filter(_.kind == TransitionConsequenceKind.BatteryFormation) match
+        case only :: Nil => only
+        case found       => fail(s"expected one battery formation, found ${found.size}")
+    val proofKeys =
+      battery.subjectBindings match
+        case only :: Nil => only.relationKeys
+        case found       => fail(s"expected one battery subject, found ${found.size}")
+
+    assertEquals(proofKeys.size, 2)
+    assertEquals(proofKeys, proofKeys.sortBy(_.stableKey))
+    val sources = proofKeys.map(key =>
+      payload.relationChanges.find(_.key == key).getOrElse(fail(s"missing battery source ${key.stableKey}"))
+    )
+    assert(sources.forall(_.direction == RelationChangeDirection.Established))
+    assertEquals(
+      sources.map(_.detail).collect {
+        case RelationWitnessDetail.RayBarrier(White, attacker, _, _, _) => attacker.key
+      }.toSet,
+      Set("a1", "a2")
+    )
+
+  test("Ra1-a2 preserves exact file and rank reach changes from every derived result"):
+    val record = structuralRecord(
+      "4k3/8/8/8/8/P7/8/R3K3 w - - 0 1",
+      "a1a2"
+    )
+    val payload = record.payload.asInstanceOf[StructuralDeltaEvidence]
+    val consequence = payload.consequencesOf(TransitionConsequenceKind.SliderReachChanged) match
+      case only :: Nil => only
+      case found       => fail(s"expected one slider-reach consequence, found ${found.size}")
+    val changes = consequence.subjectFacts.collect {
+      case change: StructuralSubject.SliderReachChange => change
+    }
+
+    assertEquals(consequence.strength, changes.size)
+    assertEquals(
+      changes.map(_.direction.axis).toSet,
+      Set(RelationAxisSignal.File, RelationAxisSignal.Rank)
+    )
+    val rookBefore = RelationPieceWitness(EvidenceSquare("a1"), EvidencePieceRole("rook"))
+    val rookAfter = RelationPieceWitness(EvidenceSquare("a2"), EvidencePieceRole("rook"))
+    assert(changes.forall(change => change.sliderBefore.contains(rookBefore) && change.sliderAfter.contains(rookAfter)))
+
+    val down = changes.find(_.direction == RelationRayDirection(0, -1)).getOrElse(fail("expected the gained a1 ray"))
+    assertEquals(
+      down.gained,
+      List(RelationControlReachWitness(EvidenceSquare("a1"), RelationControlTarget.Empty))
+    )
+    assertEquals(down.lost, Nil)
+    val up = changes.find(_.direction == RelationRayDirection(0, 1)).getOrElse(fail("expected the lost a2 ray"))
+    assertEquals(up.gained, Nil)
+    assertEquals(
+      up.lost,
+      List(RelationControlReachWitness(EvidenceSquare("a2"), RelationControlTarget.Empty))
+    )
+    val rank = changes.find(_.direction == RelationRayDirection(1, 0)).getOrElse(fail("expected the rank ray"))
+    assert(
+      rank.lost.contains(
+        RelationControlReachWitness(
+          EvidenceSquare("e1"),
+          RelationControlTarget.Friendly(EvidencePieceRole("king"))
+        )
+      )
+    )
+
+    val boundKeys = consequence.subjectBindings.flatMap(_.derivedRelationKeys)
+    val sliderSourceKeys = payload.derivedRelationSources.map(_.key)
+      .filter(_.kind == RelationFactKind.SliderReachDelta)
+    assertEquals(boundKeys.toSet, sliderSourceKeys.toSet)
+    assertEquals(boundKeys.size, boundKeys.distinct.size)
+    assert(payload.consequences.exists(_.kind == TransitionConsequenceKind.GeometricControlSetChanged))
+    assert(payload.exactOutputInventoryCertified)
+
+  test("a passed pawn that changes file can lose passed status at its destination"):
+    val record = structuralRecord(
+      "k7/5p2/4n3/3P4/8/8/8/7K w - - 0 1",
+      "d5e6"
+    )
+    val payload = record.payload.asInstanceOf[StructuralDeltaEvidence]
+    val losses = payload.consequencesOf(TransitionConsequenceKind.PassedPawnConcession)
+
+    assertEquals(losses.size, 1)
+    assertEquals(
+      losses.head.subjectFacts,
+      List(StructuralSubject.PassedPawnLost(White, EvidenceSquare("e6")))
+    )
+    assertEquals(losses.head.subjectBindings.head.relationKeys.size, 2)
 
   test("canonical consequence proof rejects a relation source owned by the wrong occurrence"):
     val record = structuralRecord("4k3/8/8/3p1p2/8/8/4P3/4K3 w - - 0 1", "e2e4")
@@ -140,7 +176,13 @@ class StructuralDeltaCertificateTest extends munit.FunSuite:
       !TransitionConsequenceRelationProof.provesCanonical(
         payload.consequences,
         wrongChanges,
-        payload.transition
+        payload.transition,
+        payload.canonicalTransitionProof
+          .map(_.relationDelta)
+          .getOrElse(fail("expected canonical transition proof")),
+        payload.canonicalDeltaProof
+          .map(_.derivedRelations)
+          .getOrElse(fail("expected canonical delta proof"))
       )
     )
 
@@ -188,6 +230,20 @@ class StructuralDeltaCertificateTest extends munit.FunSuite:
         afterRelations
       )
     )
+    val derivedRelationSources = delta.derivedRelations.zipWithIndex.map { case (relation, index) =>
+      StructuralDerivedRelationSource(
+        DerivedRelationResultKey.from(relation),
+        EvidenceRef(
+          id = s"$moveUci-vertical-$index-${relation.semanticId}",
+          producer = EvidenceProducer.RelationProducer,
+          layer = EvidenceLayer.Relation,
+          position = from,
+          line = None,
+          scope = EvidenceScope.PlayedTransition,
+          confidence = EvidenceConfidence.LegalReplayVerified
+        )
+      )
+    }
     TransitionFactNormalizer.fromStructuralDelta(
       id = s"$moveUci-structural",
       delta = delta,
@@ -195,39 +251,15 @@ class StructuralDeltaCertificateTest extends munit.FunSuite:
       replay = replay,
       line = None,
       perspective = White,
+      derivedRelationSources = derivedRelationSources,
       parents = (
         List(
           transitionRef,
           positionFeatureRef(s"$moveUci-before-features", from, EvidenceScope.BeforePosition),
           positionFeatureRef(s"$moveUci-after-features", to, EvidenceScope.AfterPlayedPosition)
-        ) ++ delta.canonicalRelations.sourceRefs
+        ) ++ delta.canonicalRelations.sourceRefs ++ derivedRelationSources.map(_.source)
       ).distinctBy(_.id)
     )
-
-  private def graphWithRelationSources(record: EvidenceRecord): TypedEvidenceGraph =
-    val payload = record.payload.asInstanceOf[StructuralDeltaEvidence]
-    val directContext = record.parents.flatMap { parent =>
-      parent.producer match
-        case EvidenceProducer.MoveTransitionProducer =>
-          List(EvidenceRecord(parent, MoveTransitionEvidence(payload.moveUci, payload.from, payload.to)))
-        case EvidenceProducer.PositionFeatureProducer =>
-          List(
-            EvidenceRecord(
-              parent,
-              PositionFeatureEvidence(
-                PositionFeatures(
-                  fen = parent.position.fen,
-                  sideToMove = parent.position.sideToMove.getOrElse(fail("position parent requires side to move")),
-                  plyCount = parent.position.ply
-                )
-              )
-            )
-          )
-        case _ => Nil
-    }
-    TypedEvidenceGraph.empty
-      .addAll(directContext ++ payload.relationChanges.map(_.sourceNode.record))
-      .add(record)
 
   private def positionFeatureRef(
       id: String,

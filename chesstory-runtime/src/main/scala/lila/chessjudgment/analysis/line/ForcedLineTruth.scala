@@ -1,9 +1,12 @@
 package lila.chessjudgment.analysis.line
 
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
-import lila.chessjudgment.model.line.LegalReplayStep
 import lila.chessjudgment.model.strategic.EngineLine
-import lila.chessjudgment.model.judgment.CanonicalLineReplay
+import lila.chessjudgment.model.judgment.{
+  CanonicalLineReplay,
+  RelationWitnessDetail,
+  VerticalRelationContractKind
+}
 
 /**
  * Truth Boundary (High-Precision Validation Layer)
@@ -24,22 +27,13 @@ object ForcedLineTruth:
       replay: CanonicalLineReplay,
       variations: List[EngineLine]
   ): Option[VerifiedTheme] =
-    replay.legalSteps.headOption.flatMap(first => detect(replay.legalSteps, first.uci, variations))
-
-  private def detect(
-      replay: List[LegalReplayStep],
-      playedUci: String,
-      variations: List[EngineLine]
-  ): Option[VerifiedTheme] =
-    replay.headOption
-      .filter(_.uci == PrincipalVariationEvidence.normalizeUci(playedUci))
-      .flatMap(first =>
-        detectImmediateReplyCheck(first.uci, replay, variations)
-      )
+    replay.legalSteps.headOption.flatMap(first =>
+      detectImmediateReplyCheck(first.uci, replay, variations)
+    )
 
   private def detectImmediateReplyCheck(
       playedUci: String,
-      replay: List[LegalReplayStep],
+      replay: CanonicalLineReplay,
       variations: List[EngineLine]
   ): Option[VerifiedTheme] =
     val played = PrincipalVariationEvidence.normalizeUci(playedUci)
@@ -48,7 +42,17 @@ object ForcedLineTruth:
         val moves = variation.moves.map(PrincipalVariationEvidence.normalizeUci).filter(_.nonEmpty)
         Option.when(moves.headOption.contains(played) && moves.size >= 2)(moves.take(2))
       }
-      .find(line => replay.take(2).map(_.uci) == line)
+      .find(line => replay.legalSteps.take(2).map(_.uci) == line)
     declared
-      .filter(_ => replay.lift(1).exists(_.after.check.yes))
+      .filter(_ =>
+        replay.replaySteps.lift(1).exists(step =>
+          replay.verticalRelationOccurrences(
+            step,
+            List(VerticalRelationContractKind.CreatedCheckResponseInventory)
+          ).exists(_.relation.detail match
+            case _: RelationWitnessDetail.CreatedCheckResponseInventory => true
+            case _                                                       => false
+          )
+        )
+      )
       .map(line => VerifiedTheme(ImmediateReplyCheckId, line))

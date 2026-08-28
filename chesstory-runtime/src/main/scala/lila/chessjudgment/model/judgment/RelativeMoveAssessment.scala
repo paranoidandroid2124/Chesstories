@@ -316,8 +316,7 @@ case class CandidateComparisonFact(
     candidateLine: LineNodeRef,
     comparison: EvalComparison,
     verdictConfidence: VerdictConfidence,
-    candidateSet: Option[CandidateSetDescriptor] = None,
-    defensiveRecaptureResource: Option[PlayedVsBestDefensiveRecaptureResource] = None
+    candidateSet: Option[CandidateSetDescriptor] = None
 ):
   def hasDistinctRootMoves: Boolean =
     !EvidenceRef.sameMove(referenceLine.rootMove, candidateLine.rootMove)
@@ -331,8 +330,7 @@ object CandidateComparisonFact:
       mover: Color,
       reference: CandidateLineNode,
       candidate: CandidateLineNode,
-      candidateSet: Option[CandidateSetDescriptor] = None,
-      defensiveRecaptureResource: Option[PlayedVsBestDefensiveRecaptureResource] = None
+      candidateSet: Option[CandidateSetDescriptor] = None
   ): Option[CandidateComparisonFact] =
     for
       verdictConfidence <- VerdictConfidence.fromEvaluations(reference.evaluation, candidate.evaluation)
@@ -343,8 +341,7 @@ object CandidateComparisonFact:
       candidateLine = candidate.ref,
       comparison = comparison,
       verdictConfidence = verdictConfidence,
-      candidateSet = candidateSet,
-      defensiveRecaptureResource = defensiveRecaptureResource
+      candidateSet = candidateSet
     )
 
 /** Evidence-id-independent identity of one evaluated comparison relation.
@@ -358,8 +355,7 @@ final case class CandidateComparisonSemanticKey(
     candidateWinPercentDeltaForMover: Double,
     verdict: MoveChoiceVerdict,
     verdictConfidence: VerdictConfidence,
-    candidateSetType: Option[CandidateSetType],
-    defensiveRecaptureResource: Option[PlayedVsBestDefensiveRecaptureResource]
+    candidateSetType: Option[CandidateSetType]
 ):
   def stableKey: String =
     List(
@@ -370,8 +366,7 @@ final case class CandidateComparisonSemanticKey(
       java.lang.Double.toHexString(candidateWinPercentDeltaForMover),
       verdict.toString,
       verdictConfidence.toString,
-      candidateSetType.map(_.toString).getOrElse(""),
-      defensiveRecaptureResource.map(_.toString).getOrElse("")
+      candidateSetType.map(_.toString).getOrElse("")
     ).mkString("|")
 
 object CandidateComparisonSemanticKey:
@@ -384,22 +379,19 @@ object CandidateComparisonSemanticKey:
       candidateWinPercentDeltaForMover = comparison.comparison.candidateWinPercentDeltaForMover,
       verdict = comparison.comparison.verdict,
       verdictConfidence = comparison.verdictConfidence,
-      candidateSetType = comparison.candidateSet.map(_.candidateSetType),
-      defensiveRecaptureResource = comparison.defensiveRecaptureResource
+      candidateSetType = comparison.candidateSet.map(_.candidateSetType)
     )
 
 enum RelativeCauseKind:
   case MissedTacticalResource
   case TacticalRefutationOfPlayed
   case CandidateTacticalLiability
-  case WrongRecapturer
   case RecaptureRecoveryWindow
   case WrongMoveOrder
   case TempoLoss
   case ConversionMiss
   case ConversionSecured
   case SacrificeCompensation
-  case OpponentRestriction
   case PlanImprovement
   case PlanContradiction
   case DefensiveResource
@@ -469,30 +461,25 @@ object RelativeCauseKind:
 
   def strategicContrastBacked(kind: RelativeCauseKind): Boolean =
     kind match
-      case RelativeCauseKind.SacrificeCompensation | RelativeCauseKind.OpponentRestriction |
-          RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
+      case RelativeCauseKind.SacrificeCompensation | RelativeCauseKind.PlanImprovement |
+          RelativeCauseKind.PlanContradiction =>
         true
       case _ =>
         false
 
   def strategicAxisCanProveCause(
       kind: RelativeCauseKind,
-      axis: StrategicAxisDetail,
-      sourceSide: RelativeCauseSourceSide
+      axis: StrategicAxisDetail
   ): Boolean =
     kind match
       case RelativeCauseKind.SacrificeCompensation =>
-        Set(RelativeCauseSourceSide.Reference, RelativeCauseSourceSide.Candidate)(sourceSide) &&
-          axis.kind == StrategicAxisKind.Counterplay &&
-          axis.polarity == StrategicAxisPolarity.Restrain
+        false
       case RelativeCauseKind.PlanImprovement =>
         axis.kind == StrategicAxisKind.PlanCoherence &&
           axis.polarity == StrategicAxisPolarity.Gain
       case RelativeCauseKind.PlanContradiction =>
         axis.kind == StrategicAxisKind.PlanCoherence &&
           axis.polarity == StrategicAxisPolarity.Concede
-      case RelativeCauseKind.OpponentRestriction =>
-        axis.kind == StrategicAxisKind.Counterplay && axis.polarity == StrategicAxisPolarity.Restrain
       case _ =>
         false
 
@@ -507,14 +494,6 @@ object RelativeCauseKind:
         event.exactRefutedPublicResultAssessments.nonEmpty
       case RelativeCauseKind.SacrificeCompensation =>
         event.exactRobustPublicResultAssessments.nonEmpty
-      case RelativeCauseKind.OpponentRestriction =>
-        event.opponentResourceDeterrenceProofReady &&
-          event.opponentResourceDeterrence
-            .flatMap(_.consequence)
-            .exists(consequence =>
-              consequence.kind == TransitionConsequenceKind.OpponentMobilityRestriction &&
-                consequence.subjectFacts.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
-            )
       case _ =>
         false
 
@@ -523,8 +502,6 @@ object RelativeCauseKind:
       consequenceKind: LineConsequenceKind
   ): Boolean =
     kind match
-      case RelativeCauseKind.WrongRecapturer =>
-        consequenceKind == LineConsequenceKind.MaterialLoss
       case RelativeCauseKind.RecaptureRecoveryWindow =>
         consequenceKind == LineConsequenceKind.RecaptureSequence ||
           consequenceKind == LineConsequenceKind.RecoveryWindow
@@ -572,8 +549,6 @@ object RelativeCauseKind:
   ): List[TransitionConsequence] =
     import TransitionConsequenceKind.*
     kind match
-      case RelativeCauseKind.OpponentRestriction =>
-        opponentRestrictionConsequences(payload)
       case RelativeCauseKind.SacrificeCompensation | RelativeCauseKind.PlanImprovement |
           RelativeCauseKind.PlanContradiction =>
         Nil
@@ -587,11 +562,6 @@ object RelativeCauseKind:
         )
       case _ =>
         Nil
-
-  private def opponentRestrictionConsequences(payload: StructuralDeltaEvidence): List[TransitionConsequence] =
-    payload.consequencesOf(TransitionConsequenceKind.OpponentMobilityRestriction).filter(consequence =>
-      consequence.subjectFacts.exists(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject)
-    )
 
 /** Evidence-id-independent causal frame. Two Causes may be compared for
   * semantic channel subsumption only when every field in this frame agrees.
@@ -724,11 +694,6 @@ object RelativeCauseFact:
       supportEvidence: List[EvidenceRef]
   ): Option[RelativeCauseSourceSide] =
     kind match
-      case RelativeCauseKind.WrongRecapturer
-          if EvidenceRef.sameDestinationDifferentOrigin(referenceLine.rootMove, candidateLine.rootMove) &&
-            supportReferencesLine(supportEvidence, referenceLine) &&
-            supportReferencesLine(supportEvidence, candidateLine) =>
-        Some(RelativeCauseSourceSide.Candidate)
       case _ =>
         None
 

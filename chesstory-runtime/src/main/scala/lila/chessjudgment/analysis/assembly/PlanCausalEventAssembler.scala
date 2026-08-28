@@ -1,9 +1,13 @@
 package lila.chessjudgment.analysis.assembly
 
-import lila.chessjudgment.model.line.{ CanonicalPositionHistory, PrincipalVariationEvidence }
-import lila.chessjudgment.model.{ Plan, PlanEventIdentity, PlanEventOccurrence }
-import lila.chessjudgment.model.ProbeObjective
-import lila.chessjudgment.model.strategic.PlanTaxonomy.{ PlanKind, PlanTheme }
+import lila.chessjudgment.model.line.{
+  AutomaticTerminal,
+  CandidateLineEvaluation,
+  CanonicalPositionHistory,
+  PrincipalVariationEvidence
+}
+import lila.chessjudgment.model.{ Plan, PlanActorOccurrence, PlanEventIdentity, PlanEventOccurrence }
+import lila.chessjudgment.model.strategic.PlanTaxonomy.PlanKind
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.judgment.{
   NormalizedCandidateLine as CanonicalNormalizedCandidateLine,
@@ -24,22 +28,6 @@ object PlanCausalEventAssembler:
       continuation: List[LineReplayStep],
       trace: CausalLineTrace
   )
-
-  final private case class ResourceDeterrenceDraft(
-      rootLine: LineNodeRef,
-      proof: OpponentResourceDeterrenceProof,
-      continuation: List[LineReplayStep],
-      replay: CanonicalLineReplay,
-      perspective: chess.Color,
-      resourceMove: String,
-      resourceRole: String,
-      materialGain: LineMaterialCapture
-  ):
-    def plan: Plan =
-      Plan(PlanKind.ProphylaxisRestraint, perspective)
-
-    def consequence: TransitionConsequence =
-      OpponentResourceDeterrenceProof.consequence(resourceMove, resourceRole)
 
   final private case class PlanCausalEventDraft(
       suffix: String,
@@ -72,6 +60,9 @@ object PlanCausalEventAssembler:
             linePayload,
             linePayload.certifiedReplay
           )
+          rootReplayStep <- linePayload.lineReplaySteps.headOption.toList
+          rootCanonicalTransition <- lineTrace.transition(rootReplayStep).toList
+          rootMovement = rootCanonicalTransition.relationDelta.rootMove
           observedBranchLines = observedBranchLinesFor(
             input,
             context,
@@ -81,30 +72,26 @@ object PlanCausalEventAssembler:
           observedBranchPlans = observedBranchLines.flatMap(branch =>
             PlanCausalEventProof.eventCandidatePlans(branch.trace, structural.perspective)
           )
-          deterrenceDrafts = resourceDeterrenceDrafts(input, context, rootLine, structural.transition)
           rootPlanCandidates = (
             PlanCausalEventProof.eventCandidatePlans(lineTrace, structural.perspective) ++
-              observedBranchPlans ++
-              deterrenceDrafts.map(_.plan)
+              observedBranchPlans
           ).distinctBy(_.kind)
           rootPlan <- rootPlanCandidates
-          ownedDeterrenceCandidates = deterrenceDrafts.filter(_.plan.kind == rootPlan.kind)
-          ownedDeterrence <-
-            if ownedDeterrenceCandidates.nonEmpty then ownedDeterrenceCandidates.map(Some(_))
-            else List(None)
-          rootAlreadyOwned = ownedDeterrence.nonEmpty
           directFunctionDurable = linePayload.rootActorSurvivesLine.contains(true)
-          rootMoveIsPromotion = rootLine.rootMove.length == 5
           structuralBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, List(structuralRecord.ref))
           supportedConsequences = structural.consequences
             .filter(consequence => consequence.establishesState && consequence.strength > 0)
               .flatMap(
-                PlanCausalEventProof.candidateConsequenceForPlan(rootPlan, _, structural.transition)
+                PlanCausalEventProof.candidateConsequenceForPlan(
+                  rootPlan,
+                  _,
+                  structural.transition,
+                  rootMovement
+                )
               )
               .filter(consequence =>
                 val durabilityProven = directFunctionDurable || !TransitionConsequenceKind
                   .requiresRootActorSurvival(consequence.kind)
-                !rootMoveIsPromotion &&
                 durabilityProven &&
                 PlanCausalEventProof.consequenceProvenForRootMove(
                   rootLine,
@@ -119,43 +106,27 @@ object PlanCausalEventAssembler:
                   structuralBindings
                 )
               )
-          rootEstablishedConsequences = PlanCausalEventProof.goalConsequences(
+          rootGoalProofs = PlanCausalEventProof.goalProofs(
             rootPlan,
             structural.transition,
-            supportedConsequences
+            supportedConsequences,
+            rootMovement
           )
-          establishedConsequences = Option
-            .when(rootAlreadyOwned)(
-              (
-                rootEstablishedConsequences ++
-                  ownedDeterrence.map(_.consequence)
-              ).distinct
-            )
-            .getOrElse(Nil)
+          establishedConsequences = rootGoalProofs.map(_.consequence).distinct
           rootIdentity = PlanEventIdentityBuilder.from(
             rootMove = rootLine.rootMove,
-            actorRole = linePayload.lineReplaySteps.headOption
-              .flatMap(lineTrace.legalStep)
-              .map(_.move.piece.role.name),
-            plan = rootPlan,
-            consequences = establishedConsequences
+            actor = rootMovement,
+            plan = rootPlan
           )
-          mainLineEpisode = ownedDeterrence
-            .map(draft =>
-              deterrenceEpisode(draft, structural.transition, rootIdentity, input.positionHistory)
-            )
-            .getOrElse(
-              PlanCausalEpisodeBuilder.fromLine(
-                plan = rootPlan,
-                rootLine = rootLine,
-                rootTransition = structural.transition,
-                rootIdentity = rootIdentity,
-                rootConsequences = establishedConsequences,
-                line = linePayload,
-                positionHistory = input.positionHistory,
-                trace = lineTrace
-              )
-            )
+          mainLineEpisode = PlanCausalEpisodeBuilder.fromLine(
+            plan = rootPlan,
+            rootLine = rootLine,
+            rootTransition = structural.transition,
+            rootIdentity = rootIdentity,
+            rootConsequences = establishedConsequences,
+            line = linePayload,
+            trace = lineTrace
+          )
           observedBranchEpisodes = observedBranchEpisodesFor(
             rootLine = rootLine,
             transition = structural.transition,
@@ -167,66 +138,21 @@ object PlanCausalEventAssembler:
           observedBranchEpisode <-
             Option.empty[ObservedBranchEpisode] :: observedBranchEpisodes.map(Some(_))
           initialEpisode = observedBranchEpisode.map(_.episode).getOrElse(mainLineEpisode)
-          resolvedIdentity = PlanCausalEventProof.goalEstablishedByContinuation(
-            rootIdentity,
-            establishedConsequences,
-            initialEpisode
-          )
-          resolvedEpisode =
-            if resolvedIdentity == rootIdentity then initialEpisode
-            else
-              (ownedDeterrence, observedBranchEpisode) match
-                case (Some(deterrence), _) =>
-                  deterrenceEpisode(
-                    deterrence,
-                    structural.transition,
-                    resolvedIdentity,
-                    input.positionHistory
-                  )
-                case (None, Some(observed)) =>
-                  PlanCausalEpisodeBuilder.fromContinuation(
-                    plan = rootPlan,
-                    rootLine = rootLine,
-                    role = structural.transition.role,
-                    root = observed.episode.root.copy(identity = resolvedIdentity),
-                    continuation = observed.continuation,
-                    positionHistory = input.positionHistory,
-                    trace = Some(observed.trace)
-                  )
-                case (None, None) =>
-                  PlanCausalEpisodeBuilder.fromLine(
-                    plan = rootPlan,
-                    rootLine = rootLine,
-                    rootTransition = structural.transition,
-                    rootIdentity = resolvedIdentity,
-                    rootConsequences = establishedConsequences,
-                    line = linePayload,
-                    positionHistory = input.positionHistory,
-                    trace = lineTrace
-                  )
           episode = PlanCausalEpisodeBuilder.withHistory(
             plan = rootPlan,
             rootLine = rootLine,
             role = structural.transition.role,
-            episode = resolvedEpisode,
+            episode = initialEpisode,
             historyReplay = input.historyReplay,
             trace = lineTrace
           )
-          deterrenceProof = ownedDeterrence
-            .map(_.proof)
-            .filter(_.certifiedFor(rootLine, structural.transition, episode).nonEmpty)
-          if (ownedDeterrence.nonEmpty && deterrenceProof.nonEmpty) ||
-            (ownedDeterrence.isEmpty && (
-              (rootAlreadyOwned &&
-                (establishedConsequences.nonEmpty || episode.causalEpisodeProven)) ||
-                (!rootAlreadyOwned && episode.rootEnablesContinuation)
-            ))
+          if establishedConsequences.nonEmpty || episode.rootEnablesContinuation
         yield
           val provisionalPayload = PlanCausalEventEvidence(
             rootTransition = structural.transition,
-            causalEpisode = episode.withRootIdentity(resolvedIdentity),
+            causalEpisode = episode,
+            directGoalProofs = rootGoalProofs,
             branchWitnesses = Nil,
-            opponentResourceDeterrence = deterrenceProof,
             continuationSourceLine = observedBranchEpisode.map(_.line),
             canonicalRootTransitionProof = structural.canonicalTransitionProof
           )
@@ -241,12 +167,9 @@ object PlanCausalEventAssembler:
           val payload = provisionalPayload.copy(branchWitnesses = branchWitnesses)
           val futureKey = if payload.observedGoalResultRoutes.nonEmpty then "causal" else "direct"
           val occurrenceKey = allocator.key(episodeOccurrenceKey(payload.causalEpisode, observedBranchEpisode.map(_.line)))
-          val deterrenceKey = ownedDeterrence
-            .map(draft => s":resource:${allocator.key(draft.proof.resourceLine.id)}:${allocator.key(draft.resourceMove)}")
-            .getOrElse("")
           PlanCausalEventDraft(
             suffix =
-              s"plan-causal-event:${allocator.key(rootLine.role)}:${rootLine.rootMove}:${allocator.key(payload.planId.id)}:$futureKey:$occurrenceKey$deterrenceKey",
+              s"plan-causal-event:${allocator.key(rootLine.role)}:${rootLine.rootMove}:${allocator.key(payload.planId.id)}:$futureKey:$occurrenceKey",
             position = transition.from,
             line = rootLine,
             scope = transition.role.scope,
@@ -258,11 +181,6 @@ object PlanCausalEventAssembler:
                 ) ++
                 branchWitnesses.flatMap(witness =>
                   uniqueLineRecord(graph, witness.line).map(_._1.ref)
-                ) ++
-                deterrenceProof.toList.flatMap(proof =>
-                  (proof.resourceLine :: proof.comparisons.map(_.resourceLine)).flatMap(line =>
-                    uniqueLineRecord(graph, line).map(_._1.ref)
-                  )
                 )
             ).distinctBy(_.id)
           )
@@ -327,117 +245,6 @@ object PlanCausalEventAssembler:
           )
     }
 
-  private def resourceDeterrenceDrafts(
-      input: CanonicalNormalizedMoveReviewInput,
-      context: JudgmentAssemblyContext,
-      rootLine: LineNodeRef,
-      transition: StructuralTransitionBinding
-  ): List[ResourceDeterrenceDraft] =
-    val rootBranches =
-      input.threatBranches.filter(branch => EvidenceRef.sameMove(branch.probedMoveUci, rootLine.rootMove))
-    val drafts = for
-      branch <- rootBranches
-      (resourceMove, normalizedLine) <- resourceLines(branch)
-      resourceLine <- exactThreatLineFor(context, branch, normalizedLine).toList
-      payload <- linePayload(context, resourceLine.ref).toList
-      combinedReplay <- context.continuationReplay(transition, resourceLine.ref).toList
-      continuation = combinedReplay.replaySteps.drop(1)
-      continuationLegal = combinedReplay.legalSteps.drop(1)
-      _ <- continuation.headOption
-        .filter(step => EvidenceRef.sameMove(step.moveUci, resourceMove))
-        .toList
-      resourceLegal <- continuationLegal.headOption
-        .filter(step =>
-          EvidenceRef.sameMove(step.uci, resourceMove) &&
-            step.move.piece.color == !transition.perspective
-        )
-        .toList
-      resourceRole = resourceLegal.move.piece.role.toString.toLowerCase
-      _ <- continuation.lift(1)
-        .filter(_ => continuationLegal.lift(1).exists(_.move.piece.color == transition.perspective))
-        .toList
-      materialGain <- payload
-        .opponentResourcePunishmentCapturesFor(transition.perspective)
-        .sortBy(_.plyOffset)
-      _ <- continuation
-        .lift(materialGain.plyOffset)
-        .filter(step => EvidenceRef.sameMove(step.moveUci, materialGain.moveUci))
-        .toList
-      comparisons = input.threatBranches
-        .filter(comparison => !EvidenceRef.sameMove(comparison.probedMoveUci, rootLine.rootMove))
-        .flatMap(comparison =>
-          resourceLines(comparison)
-            .collect {
-              case (move, normalized) if EvidenceRef.sameMove(move, resourceMove) => normalized
-            }
-            .flatMap(normalized =>
-              exactThreatLineFor(context, comparison, normalized).map(line =>
-                OpponentResourceComparison(
-                  rootMove = comparison.probedMoveUci,
-                  sourceProbeId = comparison.sourceProbeId,
-                  resourceLine = line.ref
-                )
-              )
-            )
-        )
-        .distinct
-      if comparisons.nonEmpty
-      resourceSequence = continuation.take(materialGain.plyOffset + 1)
-      if resourceSequence.size >= 2
-      proof = OpponentResourceDeterrenceProof(
-        sourceProbeId = branch.sourceProbeId,
-        resourceLine = resourceLine.ref,
-        comparisons = comparisons,
-        materialGainPlyOffset = materialGain.plyOffset
-      )
-      draft = ResourceDeterrenceDraft(
-        rootLine = rootLine,
-        proof = proof,
-        continuation = continuation,
-        replay = combinedReplay,
-        perspective = transition.perspective,
-        resourceMove = resourceMove,
-        resourceRole = resourceRole,
-        materialGain = materialGain
-      )
-    yield draft
-    drafts
-      .flatMap { draft =>
-        val identity = PlanEventIdentityBuilder.from(
-          rootMove = rootLine.rootMove,
-          actorRole = draft.replay.legalSteps.headOption.map(_.move.piece.role.name),
-          plan = draft.plan,
-          consequences = List(draft.consequence)
-        )
-        val episode = deterrenceEpisode(draft, transition, identity, input.positionHistory)
-        draft.proof
-          .certify(rootLine, transition, episode, context.lines, context.evidenceGraph)
-          .flatMap(certified =>
-            certified.certifiedComparisonMetrics.map(metrics => draft.copy(proof = certified) -> metrics)
-          )
-          .toList
-      }
-      .sortBy { case (draft, (rootImprovement, comparisonContrast)) =>
-        (-comparisonContrast, -rootImprovement, draft.materialGain.plyOffset)
-      }
-      .map(_._1)
-
-  private def resourceLines(
-      branch: NormalizedThreatBranch
-  ): List[(String, CanonicalNormalizedCandidateLine)] =
-    Option
-      .when(branch.objective == ProbeObjective.CounterResource)(branch.opponentResourceMove)
-      .flatten
-      .toList
-      .flatMap(resourceMove =>
-      branch.lines.flatMap(normalized =>
-        normalized.rootMove
-          .map(EvidenceRef.normalizeMove)
-          .filter(EvidenceRef.sameMove(_, resourceMove))
-          .map(move => move -> normalized)
-      )
-    )
-      .distinct
 
   private[assembly] def exactThreatLineFor(
       context: JudgmentAssemblyContext,
@@ -453,33 +260,6 @@ object PlanCausalEventAssembler:
       case line :: Nil => Some(line)
       case _           => None
 
-  private def deterrenceEpisode(
-      draft: ResourceDeterrenceDraft,
-      transition: StructuralTransitionBinding,
-      identity: lila.chessjudgment.model.PlanEventIdentity,
-      positionHistory: CanonicalPositionHistory
-  ): PlanCausalEpisode =
-    val root = PlanCausalEventNode(
-      identity = identity,
-      step = LineReplayStep(
-        ply = transition.to.ply,
-        moveUci = transition.moveUci,
-        fenBefore = transition.from.fen,
-        fenAfter = transition.to.fen
-      ),
-      perspective = transition.perspective,
-      structuralConsequences = List(draft.consequence)
-    )
-    PlanCausalEpisodeBuilder.fromContinuation(
-      plan = draft.plan,
-      rootLine = draft.rootLine,
-      role = transition.role,
-      root = root,
-      continuation = draft.continuation,
-      positionHistory = positionHistory,
-      observedResultMove = Some(draft.materialGain.moveUci),
-      admittedReplay = Some(draft.replay)
-    )
 
   private[assembly] def lineReplaySteps(positionHistory: CanonicalPositionHistory): List[LineReplayStep] =
     positionHistory.segmentReplaySteps.map(step =>
@@ -495,53 +275,65 @@ object PlanCausalEventAssembler:
       expectedEvent: PlanCausalEventEvidence
   ): List[PlanCausalBranchWitness] =
     expectedEvent.episode.toList.flatMap(expectedEpisode =>
-      replyBranches(input, transition, expectedEvent.requiredHorizonPlyOffset)
-        .flatMap(branch =>
-          branch.certifiedHorizonPlyOffset.toList.flatMap { certifiedHorizonPlyOffset =>
-            branch.lines.flatMap { normalized =>
-              exactThreatLineFor(context, branch, normalized)
-                .flatMap(line => linePayload(context, line.ref).map(line -> _))
-                .flatMap { case (line, payload) =>
-                  context.continuationReplay(transition, line.ref).map { combinedReplay =>
-                    PlanCausalEventProof.branchWitness(
-                      sourceProbeId = branch.sourceProbeId,
-                      line = line.ref,
-                      linePayload = payload,
-                      rootLine = rootLine,
-                      rootTransition = transition,
-                      plan = plan,
-                      expectedEpisode = expectedEpisode,
-                      certifiedHorizonPlyOffset = certifiedHorizonPlyOffset,
-                      positionHistory = input.positionHistory,
-                      admittedReplay = Some(combinedReplay)
-                    )
-                  }
-                }
+      val requiredHorizonPlyOffset = expectedEvent.requiredHorizonPlyOffset
+      replyBranchLines(input, transition, requiredHorizonPlyOffset)
+        .flatMap { case (branch, normalized) =>
+          exactThreatLineFor(context, branch, normalized)
+            .flatMap(line => linePayload(context, line.ref).map(line -> _))
+            .flatMap { case (line, payload) =>
+              context.continuationReplay(transition, line.ref).map { combinedReplay =>
+                PlanCausalEventProof.branchWitness(
+                  sourceProbeId = branch.sourceProbeId,
+                  line = line.ref,
+                  linePayload = payload,
+                  rootLine = rootLine,
+                  rootTransition = transition,
+                  plan = plan,
+                  expectedEpisode = expectedEpisode,
+                  requiredHorizonPlyOffset = requiredHorizonPlyOffset,
+                  evaluation = normalized.evaluation,
+                  admittedReplay = Some(combinedReplay)
+                )
+              }
             }
-          }
-        )
-        .distinct
+        }
     )
 
-  private def replyBranches(
+  private[assembly] def replyBranchLines(
       input: CanonicalNormalizedMoveReviewInput,
       transition: StructuralTransitionBinding,
       requiredHorizonPlyOffset: Int
-  ): List[NormalizedThreatBranch] =
-    input.threatBranches
+  ): List[(NormalizedThreatBranch, NormalizedCandidateLine)] =
+    val covering = input.threatBranches
       .filter { branch =>
-        branch.objective == ProbeObjective.BranchReplyMultiPv &&
         EvidenceRef.sameMove(branch.probedMoveUci, transition.moveUci) &&
         PrincipalVariationEvidence.sameBoardState(branch.branchFen, transition.to.fen) &&
-        branch.certifiedHorizonPlyOffset.contains(requiredHorizonPlyOffset)
+        branch.certifiedHorizonPlyOffset >= requiredHorizonPlyOffset
       }
-      .distinct
-      .sortBy(branch => (
-        branch.sourceProbeId,
-        branch.certifiedHorizonPlyOffset.getOrElse(0),
-        branch.lines.map(line => (line.rank, line.rootMove.getOrElse(""))).mkString(":"),
-        PrincipalVariationEvidence.normalizeFen(branch.branchFen)
-      ))
+      .flatMap(branch => branch.lines.map(branch -> _))
+    val minimumCoveringHorizonByReply = covering
+      .flatMap { case (branch, line) =>
+        line.rootMove.map(move => EvidenceRef.normalizeMove(move) -> branch.certifiedHorizonPlyOffset)
+      }
+      .groupMap(_._1)(_._2)
+      .view
+      .mapValues(_.min)
+      .toMap
+    covering
+      .filter { case (branch, line) =>
+        line.rootMove.exists(move =>
+          minimumCoveringHorizonByReply(EvidenceRef.normalizeMove(move)) == branch.certifiedHorizonPlyOffset
+        )
+      }
+      .sortBy { case (branch, line) =>
+        (
+          branch.sourceProbeId,
+          branch.certifiedHorizonPlyOffset,
+          line.rank,
+          line.rootMove.getOrElse(""),
+          PrincipalVariationEvidence.normalizeFen(branch.branchFen)
+        )
+      }
 
   private def observedBranchLinesFor(
       input: CanonicalNormalizedMoveReviewInput,
@@ -556,11 +348,13 @@ object PlanCausalEventAssembler:
       fenBefore = transition.from.fen,
       fenAfter = transition.to.fen
     )
-    val rootObservation = CausalStepObservation(
-      rootStep,
-      transition,
-      structural.consequences,
-      structural.certifiedRootStep.map(_.move.piece.role)
+    val rootObservation = structural.certifiedRootMovement.map(movement =>
+      CausalStepObservation(
+        rootStep,
+        transition,
+        structural.consequences,
+        movement
+      )
     )
     planObservationBranches(input, transition)
       .flatMap(branch =>
@@ -579,7 +373,7 @@ object PlanCausalEventAssembler:
                   transition.role,
                   transition.perspective,
                   combinedSteps,
-                  Some(rootObservation),
+                  rootObservation,
                   admittedReplay = Some(combinedReplay)
                 )
               yield ObservedBranchLine(line.ref, continuation, trace)
@@ -604,7 +398,6 @@ object PlanCausalEventAssembler:
           role = transition.role,
           root = root,
           continuation = branch.continuation,
-          positionHistory = positionHistory,
           trace = Some(branch.trace)
         )
         ObservedBranchEpisode(branch.line, branch.continuation, episode, branch.trace)
@@ -627,7 +420,6 @@ object PlanCausalEventAssembler:
       transition: StructuralTransitionBinding
   ): List[NormalizedThreatBranch] =
     input.threatBranches.filter(branch =>
-        branch.objective == ProbeObjective.CausalContinuation &&
         EvidenceRef.sameMove(branch.probedMoveUci, transition.moveUci) &&
         PrincipalVariationEvidence.sameBoardState(branch.branchFen, transition.to.fen)
     ).distinct
@@ -688,14 +480,11 @@ object PlanCausalEventAssembler:
       case _             => None
 
 private[assembly] object PlanCausalEventProof:
-  private val CandidateKinds = PlanKind.values.toList
-
   def structuralConsequenceEstablishesPlanGoal(
       plan: Plan,
       structural: StructuralDeltaEvidence,
       consequence: TransitionConsequence
   ): Boolean =
-    consequence.kind != TransitionConsequenceKind.OpponentMobilityRestriction &&
     structural.consequences.exists(observed =>
       observed.kind == consequence.kind &&
         observed.polarity == consequence.polarity &&
@@ -703,7 +492,9 @@ private[assembly] object PlanCausalEventProof:
     ) &&
     consequence.establishesState &&
     consequence.strength > 0 &&
-    goalConsequenceForPlan(plan, consequence, structural.transition).nonEmpty
+    structural.certifiedRootMovement
+      .flatMap(goalConsequenceForPlan(plan, consequence, structural.transition, _))
+      .nonEmpty
 
   def causalTrace(
       rootLine: LineNodeRef,
@@ -711,16 +502,17 @@ private[assembly] object PlanCausalEventProof:
       line: LineFactEvidence,
       replay: Option[CanonicalLineReplay] = None
   ): CausalLineTrace =
-    val rootObservation = line.lineReplaySteps.headOption
-      .filter(step => EvidenceRef.sameMove(step.moveUci, rootLine.rootMove))
-      .map(step =>
+    val rootObservation = for
+      step <- line.lineReplaySteps.headOption
+      if EvidenceRef.sameMove(step.moveUci, rootLine.rootMove)
+      movement <- structural.certifiedRootMovement
+    yield
         CausalStepObservation(
           step,
           structural.transition,
           structural.consequences,
-          structural.certifiedRootStep.map(_.move.piece.role)
+          movement
         )
-      )
     CausalLineTrace.from(
       rootLine,
       structural.transition.role,
@@ -756,12 +548,15 @@ private[assembly] object PlanCausalEventProof:
     * here is never proof of intent or durability.
     */
   private[assembly] def candidatePlanKindsAt(observation: CausalStepObservation): List[PlanKind] =
-    CandidateKinds.filter(kind =>
-      observation.consequences.exists(consequence =>
-        consequence.kind != TransitionConsequenceKind.OpponentMobilityRestriction &&
-          PlanCausalGoalProof.proves(kind.theme, Some(kind), observation.transition, consequence)
+    observation.consequences
+      .flatMap(consequence =>
+        PlanCausalGoalProof.directCandidates(
+          observation.transition,
+          consequence,
+          observation.movement
+        ).map(_.goalKind)
       )
-    )
+      .distinct
 
   /** A newly opened developing square proves that the future move develops a
     * piece, but not that the root move intended that square among all legal
@@ -807,61 +602,45 @@ private[assembly] object PlanCausalEventProof:
       .filter(step => EvidenceRef.sameMove(step.uci, rootLine.rootMove))
       .map(step => step.move.orig -> step.move.piece)
 
-  def goalEstablishedByContinuation(
-      initial: PlanEventIdentity,
-      rootConsequences: List[TransitionConsequence],
-      episode: PlanCausalEpisode
-  ): PlanEventIdentity =
-    if rootConsequences.nonEmpty then initial
-    else if initial.goalTheme == PlanTheme.PieceRedeployment &&
-      episode.dependencies.exists(dependency =>
-        dependency.from == episode.root &&
-          dependency.kind == PlanCausalDependencyKind.LineAccessPrecondition &&
-          dependency.proofPieceRoles.exists(_.name.equalsIgnoreCase(_root_.chess.Rook.toString))
-      )
-    then initial.copy(kind = PlanKind.RookFileTransfer)
-    else initial
-
   def decisiveGoalProof(
       event: PlanCausalEventEvidence
   ): Boolean =
-    import TransitionConsequenceKind.*
-    val opponentProofReady =
-      event.opponentResourceDeterrence.forall(_ => event.opponentResourceDeterrenceProofReady)
     val futureRoutes = event.observedGoalResultRoutes
-    val consequences = (
-      event.structuralConsequences ++
-        futureRoutes.map(_.consequence)
-    ).distinct
-    opponentProofReady &&
-    (event.identity.goalTheme match
-      case PlanTheme.OpeningPrinciples =>
-        false
-      case _ =>
-        event.goalDependencyProofReady ||
-        event.directGoalConsequences.nonEmpty ||
-        futureRoutes.nonEmpty)
+    event.directGoalConsequences.nonEmpty || futureRoutes.nonEmpty
 
-  def goalConsequences(
+  def goalProofs(
       plan: Plan,
       transition: StructuralTransitionBinding,
-      consequences: List[TransitionConsequence]
-  ): List[TransitionConsequence] =
-    consequences.flatMap(goalConsequenceForPlan(plan, _, transition))
+      consequences: List[TransitionConsequence],
+      movement: CanonicalRootLegalMove
+  ): List[PlanCausalGoalProof] =
+    consequences.flatMap(consequence =>
+      PlanCausalGoalProof.certify(
+        plan.theme,
+        Some(plan.kind),
+        transition,
+        consequence,
+        movement
+      )
+    ).distinct
 
   def goalConsequenceForPlan(
       plan: Plan,
       consequence: TransitionConsequence,
-      transition: StructuralTransitionBinding
+      transition: StructuralTransitionBinding,
+      movement: CanonicalRootLegalMove
   ): Option[TransitionConsequence] =
-    Option.when(PlanCausalGoalProof.proves(plan.theme, Some(plan.kind), transition, consequence))(consequence)
+    Option.when(
+      PlanCausalGoalProof.proves(plan.theme, Some(plan.kind), transition, consequence, movement)
+    )(consequence)
 
   def candidateConsequenceForPlan(
       plan: Plan,
       consequence: TransitionConsequence,
-      transition: StructuralTransitionBinding
+      transition: StructuralTransitionBinding,
+      movement: CanonicalRootLegalMove
   ): Option[TransitionConsequence] =
-    goalConsequenceForPlan(plan, consequence, transition)
+    goalConsequenceForPlan(plan, consequence, transition, movement)
 
   def consequenceProvenForRootMove(
       rootLine: LineNodeRef,
@@ -902,7 +681,6 @@ private[assembly] object PlanCausalEventProof:
       Set(
         TransitionConsequenceKind.OpenFileEstablished,
         TransitionConsequenceKind.SemiOpenFileEstablished,
-        TransitionConsequenceKind.FileOccupationEstablished,
         TransitionConsequenceKind.PawnTensionCreated,
         TransitionConsequenceKind.PassedPawnProgress,
         TransitionConsequenceKind.BatteryFormation
@@ -921,92 +699,76 @@ private[assembly] object PlanCausalEventProof:
       rootTransition: StructuralTransitionBinding,
       plan: Plan,
       expectedEpisode: PlanCausalEpisode,
-      certifiedHorizonPlyOffset: Int,
-      positionHistory: CanonicalPositionHistory,
+      requiredHorizonPlyOffset: Int,
+      evaluation: CandidateLineEvaluation,
       admittedReplay: Option[CanonicalLineReplay] = None
   ): PlanCausalBranchWitness =
     val proofThroughPlyOffset = linePayload.lineReplayCount
-      .min(certifiedHorizonPlyOffset)
+      .min(requiredHorizonPlyOffset)
     val continuation = linePayload.lineReplaySteps.take(proofThroughPlyOffset)
+    val canonicalPrefix = linePayload.certifiedReplay.flatMap(_.subset(continuation))
     val observedCandidate = PlanCausalEpisodeBuilder.fromContinuation(
       plan = plan,
       rootLine = rootLine,
       role = rootTransition.role,
       root = expectedEpisode.root,
       continuation = continuation,
-      positionHistory = positionHistory,
       admittedReplay = admittedReplay
     )
     val observed = Option.when(observedCandidate.rootEnablesContinuation)(observedCandidate)
+    val exactTerminalOutcome = evaluation match
+      case CandidateLineEvaluation.ExactAutomaticTerminal(_, AutomaticTerminal.Checkmate(winner)) =>
+        Some(
+          if winner == expectedEpisode.root.perspective then PlanCausalTerminalOutcome.Victory
+          else PlanCausalTerminalOutcome.Defeat
+        )
+      case CandidateLineEvaluation.ExactAutomaticTerminal(
+            _,
+            AutomaticTerminal.Stalemate |
+            AutomaticTerminal.InsufficientMaterial |
+            AutomaticTerminal.FivefoldRepetition |
+            AutomaticTerminal.SeventyFiveMoveRule
+          ) =>
+        Some(PlanCausalTerminalOutcome.Draw)
+      case CandidateLineEvaluation.EngineSearch(_) => None
     val terminalOutcome =
       Option
         .when(proofThroughPlyOffset == linePayload.lineReplayCount)(continuation.lastOption)
         .flatten
-        .flatMap(step => linePayload.certifiedReplay.flatMap(_.legalStep(step)))
-        .flatMap(step => terminalOutcomeAt(step.after, expectedEpisode.root.perspective))
+        .flatMap(step => canonicalPrefix.flatMap(_.legalStep(step)))
+        .flatMap(_ => exactTerminalOutcome)
     val terminalStep = Option.when(terminalOutcome.nonEmpty)(continuation.lastOption).flatten
     PlanCausalBranchWitness(
       sourceProbeId = sourceProbeId,
       line = line,
       observedEpisode = observed,
-      certifiedHorizonPlyOffset = certifiedHorizonPlyOffset,
+      certifiedHorizonPlyOffset = requiredHorizonPlyOffset,
       observedThroughPlyOffset = proofThroughPlyOffset,
       terminalOutcome = terminalOutcome,
       terminalPlyOffset = Option.when(terminalOutcome.nonEmpty)(continuation.size),
       terminalStep = terminalStep,
-      canonicalReplay = linePayload.certifiedReplay
+      canonicalReplay = canonicalPrefix
     )
 
-  private[assembly] def terminalOutcomeAt(
-      position: chess.Position,
-      perspective: chess.Color
-  ): Option[PlanCausalTerminalOutcome] =
-    position.status.flatMap {
-      case chess.Status.Mate =>
-        Some(
-          if !position.color == perspective then PlanCausalTerminalOutcome.Victory
-          else PlanCausalTerminalOutcome.Defeat
-        )
-      case chess.Status.Stalemate | chess.Status.Draw | chess.Status.InsufficientMaterialClaim =>
-        Some(PlanCausalTerminalOutcome.Draw)
-      case _ => None
-    }
-
 private[assembly] object PlanEventIdentityBuilder:
-  private val EventCategories = Set(
-    TransitionConsequenceCategory.PawnStructure,
-    TransitionConsequenceCategory.PawnStructureDelta,
-    TransitionConsequenceCategory.PieceActivity
-  )
-
   def from(
       rootMove: String,
-      actorRole: Option[String],
-      plan: Plan,
-      consequences: List[TransitionConsequence]
+      actor: CanonicalRootLegalMove,
+      plan: Plan
   ): PlanEventIdentity =
-    val consequenceTargets = consequences
-      .filterNot(consequence => PlanCausalEpisode.meansOnlyResultKind(consequence.kind))
-      .flatMap(PlanCausalEpisode.goalTargetSubjects)
-    val squareTargets =
-      consequences
-        .filterNot(consequence => PlanCausalEpisode.meansOnlyResultKind(consequence.kind))
-        .flatMap(PlanCausalEpisode.consequenceTargetSquares)
-        .map(square => s"square:${square.key.toLowerCase}")
-    val targets =
-      consequenceTargets ++ squareTargets
-    val results =
-      consequences.flatMap(consequence =>
-        s"kind:${consequence.kind.toString.toLowerCase}" ::
-          EventCategories.toList.collect {
-            case category if StructuralDeltaEvidence.hasConsequenceCategory(consequence.kind, category) =>
-              s"category:${category.toString.toLowerCase}"
-          }
-      )
-    PlanEventIdentity.from(
+    require(
+      EvidenceRef.sameMove(rootMove, actor.moveUci),
+      "a plan identity must consume the same canonical legal move"
+    )
+    PlanEventIdentity.fromCanonical(
       rootMove = rootMove,
       kind = plan.kind,
-      actorRole = actorRole.map(_.trim.toLowerCase).filter(_.nonEmpty),
-      targets = targets,
-      results = results
+      actor = PlanActorOccurrence.certified(
+        side = actor.side,
+        beforeRole = actor.beforeRole.name,
+        afterRole = actor.afterRole.name,
+        from = actor.from.key,
+        to = actor.to.key,
+        legalMoveSemanticId = actor.fact.semanticId
+      )
     )

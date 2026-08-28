@@ -2,7 +2,7 @@ package lila.chessjudgment.model.judgment
 
 import chess.Color
 import lila.chessjudgment.analysis.position.PositionAnalysis
-import lila.chessjudgment.model.{ ProbeAdmissionDiagnostic, ProbeObjective }
+import lila.chessjudgment.model.ProbeAdmissionDiagnostic
 import lila.chessjudgment.model.line.{ CandidateLineEvaluation, CanonicalPositionHistory, PrincipalVariationEvidence }
 
 final case class NormalizedCandidateLine(
@@ -17,25 +17,13 @@ final case class NormalizedCandidateLine(
 
 final case class NormalizedThreatBranch(
     sourceProbeId: String,
-    objective: ProbeObjective,
     probedMoveUci: String,
     branchFen: String,
     branchPly: Int,
-    opponentResourceMove: Option[String],
-    certifiedHorizonPlyOffset: Option[Int],
+    certifiedHorizonPlyOffset: Int,
     lines: List[NormalizedCandidateLine],
-    continuationMoves: List[String] = Nil
 ):
-  require(
-    objective match
-      case ProbeObjective.BranchReplyMultiPv =>
-        opponentResourceMove.isEmpty && continuationMoves.isEmpty && certifiedHorizonPlyOffset.nonEmpty
-      case ProbeObjective.CausalContinuation =>
-        opponentResourceMove.isEmpty && continuationMoves.size == 2 && certifiedHorizonPlyOffset.isEmpty
-      case ProbeObjective.CounterResource =>
-        opponentResourceMove.nonEmpty && continuationMoves.isEmpty && certifiedHorizonPlyOffset.isEmpty,
-    "a normalized threat branch must have exactly one objective-shaped proof contract"
-  )
+  require(certifiedHorizonPlyOffset > 0, "a branch-reply probe needs an exact positive horizon")
   require(
     lines.groupBy(_.rootMove).values.forall(group => group.map(line => line.evaluation -> line.replay).distinct.size == 1),
     "one threat-branch root move cannot carry conflicting evaluations"
@@ -44,12 +32,9 @@ final case class NormalizedThreatBranch(
     lines.sortBy(_.rank).distinctBy(_.rootMove)
 
 final case class ThreatLineOccurrenceOwner(
-    sourceProbeId: String,
-    objective: ProbeObjective,
     probedMoveUci: String,
     branchPosition: PositionNodeRef
 ):
-  require(sourceProbeId.trim.nonEmpty, "a threat-line occurrence requires its source probe")
   require(EvidenceRef.normalizeMove(probedMoveUci).nonEmpty, "a threat-line occurrence requires its probed move")
 
 final case class LineRootOccurrence(

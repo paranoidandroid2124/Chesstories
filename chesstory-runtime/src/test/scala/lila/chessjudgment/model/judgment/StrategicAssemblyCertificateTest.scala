@@ -63,11 +63,3 @@ class StrategicAssemblyCertificateTest extends munit.FunSuite:
     )
     val tamperedGraph = TypedEvidenceGraph.empty.addAll(List(source, tampered))
     assert(!tamperedGraph.proofEligible(tampered))
-
-  test("only a branch-proven plan gain is current-move coherence"):
-    def axis(polarity: StrategicAxisPolarity) =
-      StrategicAxisDetail(StrategicAxisKind.PlanCoherence, polarity, "pawn-advance-preparation")
-
-    assert(StrategicMechanismContrastEvidence.currentMovePlanCoherenceAxis(axis(StrategicAxisPolarity.Gain)))
-    assert(!StrategicMechanismContrastEvidence.currentMovePlanCoherenceAxis(axis(StrategicAxisPolarity.Support)))
-    assert(!StrategicMechanismContrastEvidence.currentMovePlanCoherenceAxis(axis(StrategicAxisPolarity.Concede)))

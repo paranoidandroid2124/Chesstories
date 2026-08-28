@@ -68,10 +68,7 @@ object RelativeCauseDominancePolicy:
       RelativeCauseKind.KingForcing,
       RelativeCauseKind.MaterialSwing
     ),
-    RelativeCauseKind.MaterialSwing -> Set(
-      RelativeCauseKind.WrongRecapturer,
-      RelativeCauseKind.SacrificeCompensation
-    ),
+    RelativeCauseKind.MaterialSwing -> Set(RelativeCauseKind.SacrificeCompensation),
     RelativeCauseKind.CandidateTacticalLiability -> Set(
       RelativeCauseKind.MaterialSwing
     ),

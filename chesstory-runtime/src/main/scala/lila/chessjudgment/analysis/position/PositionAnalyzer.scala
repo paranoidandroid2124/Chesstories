@@ -2,7 +2,12 @@ package lila.chessjudgment.analysis.position
 
 import chess._
 import chess.format.Fen
-import lila.chessjudgment.model.line.{ LegalReplayStep, PrincipalVariationEvidence, StripedLruCache }
+import lila.chessjudgment.model.line.{
+  LegalReplayStep,
+  PositionOccurrenceKey,
+  PrincipalVariationEvidence,
+  StripedLruCache
+}
 import lila.chessjudgment.model.position.*
 import lila.chessjudgment.model.judgment.{
   RelationFactEvidence,
@@ -11,7 +16,7 @@ import lila.chessjudgment.model.judgment.{
 
 private[position] final case class GeometricControlInventory(
     byOrigin: Map[Square, Bitboard],
-    attackersByTarget: Map[(Color, Square), Set[Square]]
+    controllersByTarget: Map[(Color, Square), Set[Square]]
 )
 
 private[position] object GeometricControlInventory:
@@ -32,7 +37,7 @@ private[position] object GeometricControlInventory:
       refreshedByOrigin.keySet == refreshedOrigins,
       "every occupied invalidated attack origin must be produced exactly once"
     )
-    val withoutInvalidated = invalidatedOrigins.foldLeft(previous.attackersByTarget) { (indexed, origin) =>
+    val withoutInvalidated = invalidatedOrigins.foldLeft(previous.controllersByTarget) { (indexed, origin) =>
       val invalidatedTargets = before.pieceAt(origin).toList.flatMap { piece =>
         previous.byOrigin.get(origin).toList.flatMap(attacks =>
           attacks.squares.map(target => piece.color -> target)
@@ -92,7 +97,7 @@ private[position] final case class StaticBoardGeometryBuild(
 private[position] object StaticBoardGeometryComputation:
   def cold(board: Board): StaticBoardGeometryComputation =
     val geometricControls = GeometricControlInventory.from(board)
-    val pawnTopology = PawnTopologySnapshot.from(board, geometricControls.byOrigin)
+    val pawnTopology = PawnTopologySnapshot.from(board)
     val raysByOrigin = BoardGeometry.occupiedSliderRays(board).groupBy(_.attackerSquare)
     val rays = raysByOrigin.toList.sortBy(_._1.key).flatMap(_._2)
     val relationSnapshot = PositionRelationExtractor.extractStaticBoardRelationSnapshot(
@@ -130,8 +135,7 @@ private[position] object StaticBoardGeometryComputation:
     )
     val pawnTopologyProduction = previous.pawnTopology.afterTransition(
       board,
-      footprint,
-      geometricControls.byOrigin
+      footprint
     )
     val pawnTopology = pawnTopologyProduction.snapshot
     val relationUpdate = PositionRelationExtractor.extractStaticBoardRelationSnapshotAfter(
@@ -163,12 +167,11 @@ private[position] final class PositionComputation private (
     occurrence = occurrenceRelationSnapshot
   )
 
-  lazy val boardRelations: List[RelationFactEvidence] =
-    PositionRelationExtractor.certifyPositionRelations(relationSnapshot.facts, position)
-
   private[chessjudgment] lazy val relationInventory:
       PositionRelationExtractor.PositionRelationInventoryCertificate =
-    PositionRelationExtractor.closedPositionInventory(relationSnapshot, position)
+    PositionRelationExtractor.closedPositionInventory(relationSnapshot, position, actualLegalMoves)
+
+  lazy val boardRelations: List[RelationFactEvidence] = relationInventory.relations
 
 private[position] object PositionComputation:
   def from(
@@ -188,21 +191,42 @@ private[position] object PositionComputation:
     )
 
 private[position] final class PositionRelationTransitionCalculation(
-    detailTransition: PositionRelationExtractor.BoardRelationDetailTransition,
-    before: Position,
-    after: Position,
-    beforeInventory: PositionRelationExtractor.PositionRelationInventoryCertificate,
-    afterInventory: PositionRelationExtractor.PositionRelationInventoryCertificate
+    detailTransition: () => PositionRelationExtractor.BoardRelationDetailTransition,
+    beforeInventory: () => PositionRelationExtractor.PositionRelationInventoryCertificate,
+    afterInventory: () => PositionRelationExtractor.PositionRelationInventoryCertificate
 ):
   lazy val value: RelationInventoryTransition =
+    val before = beforeInventory()
+    val after = afterInventory()
     val (boardRemoved, boardEstablished) =
-      PositionRelationExtractor.certifyPositionRelationTransition(detailTransition, before, after)
-    RelationInventoryTransition.fromBoardTransition(
+      PositionRelationExtractor.certifyPositionRelationTransition(detailTransition(), before, after)
+    RelationInventoryTransition.fromStaticTransition(
       boardRemoved = boardRemoved,
       boardEstablished = boardEstablished,
-      beforeInventory = beforeInventory,
-      afterInventory = afterInventory
+      beforeInventory = before,
+      afterInventory = after
     )
+
+private[position] final class StaticRelationTransitionKey(
+    val before: PositionRelationExtractor.BoardRelationSnapshot,
+    val after: PositionRelationExtractor.BoardRelationSnapshot,
+    val refresh: PositionRelationExtractor.BoardRelationRefreshFootprint
+):
+  private val cachedHash =
+    var hash = 17
+    hash = 31 * hash + System.identityHashCode(before)
+    hash = 31 * hash + System.identityHashCode(after)
+    31 * hash + refresh.##
+
+  override def hashCode(): Int = cachedHash
+
+  override def equals(other: Any): Boolean =
+    other match
+      case that: StaticRelationTransitionKey =>
+        (before.asInstanceOf[AnyRef] eq that.before.asInstanceOf[AnyRef]) &&
+          (after.asInstanceOf[AnyRef] eq that.after.asInstanceOf[AnyRef]) &&
+          refresh == that.refresh
+      case _ => false
 
 private[chessjudgment] final class PositionAnalysis private[position] (
     val features: PositionFeatures,
@@ -216,7 +240,7 @@ private[chessjudgment] final class PositionAnalysis private[position] (
   private[chessjudgment] def relationInventory:
       PositionRelationExtractor.PositionRelationInventoryCertificate =
     computation.relationInventory
-  def pawnTopology: PawnTopologySnapshot = computation.pawnTopology
+  private[position] def pawnTopology: PawnTopologySnapshot = computation.pawnTopology
   private[chessjudgment] lazy val relationTransition: Option[RelationInventoryTransition] =
     transitionCalculation.map(_.value)
 
@@ -265,10 +289,10 @@ object PositionAnalyzer:
       "the supplied position must match the supplied FEN"
     )
     val occurrence = PrincipalVariationEvidence.withFenHalfMoveClock(position, fen)
-    val staticBoard = staticBoardGeometryCache.getOrCompute(occurrence.board) {
-      StaticBoardGeometryComputation.cold(occurrence.board)
-    }
-    val computation = positionComputationCache.getOrCompute(occurrence) {
+    val computation = positionComputationCache.getOrCompute(PositionOccurrenceKey.from(occurrence)) {
+      val staticBoard = staticBoardGeometryCache.getOrCompute(occurrence.board) {
+        StaticBoardGeometryComputation.cold(occurrence.board)
+      }
       PositionComputation.from(staticBoard, occurrence)
     }
     PositionAnalysis.fresh(
@@ -286,6 +310,7 @@ object PositionAnalyzer:
   ): PositionAnalysis =
     require(
       previousAnalysis.features.plyCount == legalStep.ply - 1 &&
+        legalStep.before == previousAnalysis.position &&
         PrincipalVariationEvidence.sameBoardState(
           previousAnalysis.features.fen,
           Fen.write(legalStep.before).value
@@ -294,14 +319,12 @@ object PositionAnalyzer:
     )
     analyzeAfterComputation(
       previousAnalysis.computation,
-      previousAnalysis.position,
       legalStep,
       fen
     )
 
   private def analyzeAfterComputation(
       previousComputation: PositionComputation,
-      beforeOccurrence: Position,
       legalStep: LegalReplayStep,
       fen: String
   ): PositionAnalysis =
@@ -311,43 +334,44 @@ object PositionAnalyzer:
       "the transition destination FEN must match the admitted legal move"
     )
     require(
-      PrincipalVariationEvidence.sameBoardState(
-        Fen.write(previousComputation.position).value,
-        Fen.write(legalStep.before).value
-      ),
-      "the previous geometry must match the admitted transition source"
+      previousComputation.position == legalStep.before,
+      "the previous computation must own the admitted transition source occurrence"
     )
     val occurrence = PrincipalVariationEvidence.withFenHalfMoveClock(legalStep.after, fen)
-    val footprint = BoardGeometry.transitionFootprint(legalStep.move)
+    val moveEffect = previousComputation.relationInventory.legalMove(legalStep.uci).map(_.boardEffect).getOrElse(
+      throw IllegalArgumentException(s"'${legalStep.uci}' is absent from its source occurrence's closed legal inventory")
+    )
+    val footprint = BoardGeometry.transitionFootprint(legalStep.move, moveEffect)
     var builtStaticTransition = Option.empty[PositionRelationExtractor.BoardRelationDetailTransition]
-    val staticBoard = staticBoardGeometryCache.getOrCompute(occurrence.board) {
-      val build = StaticBoardGeometryComputation.buildAfter(
-        previousComputation.staticBoard,
-        occurrence.board,
-        footprint
-      )
-      builtStaticTransition = Some(build.relationTransition)
-      build.geometry
-    }
-    val computation = positionComputationCache.getOrCompute(occurrence) {
+    val computation = positionComputationCache.getOrCompute(PositionOccurrenceKey.from(occurrence)) {
+      val staticBoard = staticBoardGeometryCache.getOrCompute(occurrence.board) {
+        val build = StaticBoardGeometryComputation.buildAfter(
+          previousComputation.staticBoard,
+          occurrence.board,
+          footprint
+        )
+        builtStaticTransition = Some(build.relationTransition)
+        build.geometry
+      }
       PositionComputation.from(staticBoard, occurrence)
     }
-    val staticTransition =
-      builtStaticTransition.getOrElse(
-        previousComputation.staticBoard.relationSnapshot.transitionTo(
-          staticBoard.relationSnapshot,
-          PositionRelationExtractor.staticRelationRefreshFootprint(footprint)
-        )
-      )
-    val occurrenceTransition =
-      previousComputation.occurrenceRelationSnapshot.transitionAllTo(computation.occurrenceRelationSnapshot)
-    val detailTransition = staticTransition ++ occurrenceTransition
+    val destinationStaticBoard = computation.staticBoard
+    val beforeStaticRelations = previousComputation.staticBoard.relationSnapshot
+    val afterStaticRelations = destinationStaticBoard.relationSnapshot
+    val staticRefresh = PositionRelationExtractor.staticRelationRefreshFootprint(footprint)
+    val staticTransitionKey = new StaticRelationTransitionKey(
+      beforeStaticRelations,
+      afterStaticRelations,
+      staticRefresh
+    )
     val transitionCalculation = new PositionRelationTransitionCalculation(
-      detailTransition = detailTransition,
-      before = beforeOccurrence,
-      after = occurrence,
-      beforeInventory = previousComputation.relationInventory,
-      afterInventory = computation.relationInventory
+      detailTransition = () => staticRelationTransitionCache.getOrCompute(staticTransitionKey) {
+        builtStaticTransition.getOrElse(
+          beforeStaticRelations.transitionTo(afterStaticRelations, staticRefresh)
+        )
+      },
+      beforeInventory = () => previousComputation.relationInventory,
+      afterInventory = () => computation.relationInventory
     )
     PositionAnalysis.fresh(
       features = computeFeatures(occurrence, fen).copy(plyCount = legalStep.ply),
@@ -361,7 +385,11 @@ object PositionAnalyzer:
   private val staticBoardGeometryCache =
     new StripedLruCache[Board, StaticBoardGeometryComputation](CacheMaxEntries)
   private val positionComputationCache =
-    new StripedLruCache[Position, PositionComputation](CacheMaxEntries)
+    new StripedLruCache[PositionOccurrenceKey, PositionComputation](CacheMaxEntries)
+  private val staticRelationTransitionCache =
+    new StripedLruCache[StaticRelationTransitionKey, PositionRelationExtractor.BoardRelationDetailTransition](
+      CacheMaxEntries
+    )
 
   private[position] def computeFeatures(
       position: Position,

@@ -39,9 +39,9 @@
         "legal_move_count": {"type": "integer", "minimum": 0},
         "root_candidate_lines_admitted": {"type": "integer", "minimum": 0, "maximum": 3},
         "selected_commentaries_completed": {"type": "integer", "minimum": 0, "maximum": 1},
-        "physical_works_issued": {"type": "integer", "minimum": 0, "maximum": 32},
-        "physical_reports_accepted": {"type": "integer", "minimum": 0, "maximum": 32},
-        "causal_waves_completed": {"type": "integer", "minimum": 0, "maximum": 3}
+        "physical_works_issued": {"type": "integer", "minimum": 0},
+        "physical_reports_accepted": {"type": "integer", "minimum": 0},
+        "causal_waves_completed": {"type": "integer", "minimum": 0}
       }
     },
     "awaitingEngineWork": {

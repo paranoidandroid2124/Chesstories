@@ -2,7 +2,8 @@ package lila.chessjudgment.analysis.assembly
 
 import chess.{ Black, White }
 import lila.chessjudgment.analysis.policy.{ ClaimAdmissionDecision, ClaimAdmissionStatus }
-import lila.chessjudgment.model.ProbeObjective
+import lila.chessjudgment.analysis.position.PositionRelationExtractor
+import lila.chessjudgment.analysis.relation.ClosedRelationEvidence
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.{ CandidateLineEvaluation, CanonicalPositionHistory, PrincipalVariationEvidence }
 import lila.chessjudgment.model.strategic.EngineLine
@@ -12,6 +13,12 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
   private val fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
   private val position = PositionNodeRef(fen, 0, Some(White), Some("identity-root"))
   private val line = LineNodeRef("identity-line", "e2e4", 1, LineNodeRole.Played)
+
+  private def hasCreatedDoubleCheck(relation: RelationFactEvidence): Boolean =
+    relation.detail match
+      case RelationWitnessDetail.CreatedCheckResponseInventory(_, _, _, checkers, _, _, _, _) =>
+        checkers.size >= 2
+      case _ => false
 
   test("same tactical kind on different proof carriers remains separate"):
     val first = mateEvaluation("mate-route-a", mate = 2)
@@ -43,54 +50,6 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       case EvidenceRecord(_, payload: TacticalMechanismEvidence, _) => payload.signals.size == 1
       case _                                                        => false
     })
-
-  test("same strategic kind preserves exact anchors and carrier routes"):
-    val assembled = strategicAssembly()
-    val mechanisms = strategicMechanisms(assembled)
-
-    assertEquals(mechanisms.size, 3)
-    assertEquals(
-      strategicMechanisms(strategicAssembly(reverseSources = true)).map(_.ref.id),
-      mechanisms.map(_.ref.id)
-    )
-    assertEquals(
-      mechanisms.map(_.parents.map(_.id).toSet).toSet,
-      Set(Set("center-route-a"), Set("center-route-b"), Set("center-route-c"))
-    )
-    val byParent = mechanisms.map(record => record.parents.head.id -> record).toMap
-    val anchorsA = strategicPayload(byParent("center-route-a")).semanticGroupingAnchors.map(_.stableKey).toSet
-    val anchorsB = strategicPayload(byParent("center-route-b")).semanticGroupingAnchors.map(_.stableKey).toSet
-    val anchorsC = strategicPayload(byParent("center-route-c")).semanticGroupingAnchors.map(_.stableKey).toSet
-    assertNotEquals(anchorsA, anchorsB)
-    assertEquals(anchorsA, anchorsC)
-
-  test("claim canonicalization removes only an exact duplicate"):
-    val assembled = strategicAssembly()
-    val byParent = strategicMechanisms(assembled).map(record => record.parents.head.id -> record).toMap
-    val routeA = strategicClaim("claim-route-a", byParent("center-route-a"), EvidenceConfidence.BoardDerived)
-    val exactDuplicate = routeA.copy(id = "claim-route-a-duplicate")
-    val routeC = strategicClaim("claim-route-c", byParent("center-route-c"), EvidenceConfidence.BoardDerived)
-    val distinctConfidence = strategicClaim("claim-route-a-mixed", byParent("center-route-a"), EvidenceConfidence.Mixed)
-    val decisions = List(routeA, exactDuplicate, routeC, distinctConfidence).map(certified)
-    val result = ClaimDeduplicator.deduplicateDetailed(decisions, assembled.evidenceGraph)
-    val reversed = ClaimDeduplicator.deduplicateDetailed(decisions.reverse, assembled.evidenceGraph)
-
-    assertEquals(result.decisions.size, 3)
-    assertEquals(result.trace.map(_.originalClaimId), List(exactDuplicate.id))
-    assertEquals(reversed.decisions.map(_.claim.id).toSet, result.decisions.map(_.claim.id).toSet)
-    assertEquals(
-      reversed.trace.map(trace => trace.originalClaimId -> trace.keptClaimId).toSet,
-      result.trace.map(trace => trace.originalClaimId -> trace.keptClaimId).toSet
-    )
-    assert(result.decisions.forall(_.claim.evidence.size == 1))
-    assertEquals(
-      result.decisions.map(decision => decision.claim.evidence.head.id -> decision.claim.confidence).toSet,
-      Set(
-        byParent("center-route-a").ref.id -> EvidenceConfidence.BoardDerived,
-        byParent("center-route-c").ref.id -> EvidenceConfidence.BoardDerived,
-        byParent("center-route-a").ref.id -> EvidenceConfidence.Mixed
-      )
-    )
 
   test("line and transition identities include their exact board occurrence"):
     val afterE4 = PrincipalVariationEvidence
@@ -148,7 +107,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       allocator.transitionOccurrenceKey(TransitionEdgeRole.Threat, rootB, move, toB)
     )
 
-  test("a combined relation is sealed by one exact transition occurrence"):
+  test("fresh double-check control stays on one transition occurrence and feeds king forcing"):
     val assembled = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
@@ -161,32 +120,146 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
         )
       )
       .getOrElse(fail("expected the double-check review to assemble"))
-    val doubleChecks = assembled.evidenceGraph.records.collect {
+    val freshChecks = assembled.evidenceGraph.records.collect {
       case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)
-          if relation.kind == RelationFactKind.DoubleCheck => record
+          if hasCreatedDoubleCheck(relation) => record
     }
 
-    assert(doubleChecks.nonEmpty)
-    doubleChecks.foreach { record =>
+    assert(freshChecks.nonEmpty)
+    freshChecks.foreach { record =>
       val carriers = record.parents.flatMap(assembled.evidenceGraph.record).collect {
         case EvidenceRecord(_, occurrence: ClosedRelationOccurrenceEvidence, _) => occurrence
       }
       assertEquals(carriers.size, 1)
-      assert(carriers.head.closedResults(RelationCombinationContractKind.DoubleCheck).contains(record.ref))
       assert(assembled.evidenceGraph.proofEligible(record))
     }
-    val doubleCheckIds = doubleChecks.map(_.ref.id).toSet
-    val verticalMechanisms = assembled.evidenceGraph.records.collect {
+    val responseInventories = assembled.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)
+          if relation.kind == RelationFactKind.CreatedCheckResponseInventory => record
+    }
+    assert(responseInventories.nonEmpty)
+    assert(responseInventories.forall(assembled.evidenceGraph.proofEligible))
+    val freshCheckIds = freshChecks.map(_.ref.id).toSet
+    val mechanisms = assembled.evidenceGraph.records.collect {
       case record @ EvidenceRecord(_, payload: TacticalMechanismEvidence, _)
           if payload.kind == TacticalMechanismKind.KingForcing &&
             payload.signals.exists(signal =>
               signal.kind == TacticalMechanismSignalKind.Relation &&
-                signal.source.exists(source => doubleCheckIds(source.id))
+                signal.source.exists(source => freshCheckIds(source.id))
             ) && payload.signalKinds.contains(TacticalMechanismSignalKind.LineEvent) =>
         record
     }
-    assertEquals(verticalMechanisms.size, doubleChecks.size)
-    assert(verticalMechanisms.forall(assembled.evidenceGraph.proofEligible))
+    assertEquals(mechanisms.size, freshChecks.size)
+    assert(mechanisms.forall { record =>
+      val proof = record.payload
+        .asInstanceOf[TacticalMechanismEvidence]
+        .relationLineProof
+        .getOrElse(fail("expected the exact relation/occurrence/line bridge"))
+      record.parents.contains(proof.relation) && record.parents.contains(proof.line) &&
+        assembled.evidenceGraph
+          .record(proof.relation)
+          .exists(_.parents.contains(proof.occurrence)) &&
+        assembled.evidenceGraph.proofEligible(record)
+    })
+
+  test("a root check response binds the transition carrier and chosen legal response once"):
+    val assembled = EvidenceFactAssembler
+      .assemble(
+        RawMoveReviewInput(
+          fen = "k3r3/8/8/8/8/3B4/8/4K3 w - - 0 1",
+          playedMoveUci = "d3e2",
+          variations = List(
+            EngineLine(List("e1d2"), scoreCp = 20, depth = 20),
+            EngineLine(List("d3e2", "e8e2"), scoreCp = 0, depth = 20)
+          )
+        )
+      )
+      .getOrElse(fail("expected the checked root response to assemble"))
+    val response = assembled.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)
+          if relation.kind == RelationFactKind.RootCheckResponse => record
+    }.getOrElse(fail("expected the root response relation"))
+    val carriers = response.parents.flatMap(assembled.evidenceGraph.record).collect {
+      case EvidenceRecord(_, occurrence: ClosedRelationOccurrenceEvidence, _) => occurrence
+    }
+
+    assertEquals(carriers.size, 1)
+    assertEquals(response.parents.distinct.size, response.parents.size)
+    assert(assembled.evidenceGraph.proofEligible(response))
+
+  test("a root-and-absence stalemate proof materializes without a fabricated positive source"):
+    val assembled = EvidenceFactAssembler
+      .assemble(
+        RawMoveReviewInput(
+          fen = "k7/2Q5/2K5/8/8/8/8/8 w - - 0 1",
+          playedMoveUci = "c7b6",
+          variations = List(
+            EngineLine(List("c7b6"), scoreCp = 0, depth = 20)
+          )
+        )
+      )
+      .getOrElse(fail("expected the stalemate transition to assemble"))
+    val stalemate = assembled.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, relation: RelationFactEvidence, _)
+          if relation.kind == RelationFactKind.StalemateTransition => record
+    }.getOrElse(fail("expected the closed stalemate relation"))
+    val parents = stalemate.parents.flatMap(assembled.evidenceGraph.record)
+
+    assertEquals(parents.count(_.payload.isInstanceOf[ClosedRelationOccurrenceEvidence]), 1)
+    assertEquals(parents.count(_.payload.isInstanceOf[RelationFactEvidence]), 0)
+    assert(assembled.evidenceGraph.proofEligible(stalemate))
+
+  test("transposed boards share double-check control semantics but retain both exact occurrences"):
+    val rootFen = "4k3/6pp/8/8/8/8/PP2B3/4R1K1 w - - 0 1"
+    def endFen(moves: List[String]): String =
+      PrincipalVariationEvidence
+        .legalMoveReplay(rootFen, moves, startPly = 0)
+        .flatMap(CanonicalLineReplay.fromLegalReplay)
+        .flatMap(_.replaySteps.lastOption.map(_.fenAfter))
+        .getOrElse(fail(s"expected legal transposition path: ${moves.mkString(" ")}"))
+    val transposedA = endFen(List("a2a3", "h7h6", "b2b3", "g7g6"))
+    val transposedB = endFen(List("b2b3", "g7g6", "a2a3", "h7h6"))
+    assert(PrincipalVariationEvidence.sameBoardState(transposedA, transposedB))
+
+    val replay = PrincipalVariationEvidence
+      .legalMoveReplay(transposedA, List("e2b5"), startPly = 4)
+      .flatMap(CanonicalLineReplay.fromLegalReplay)
+      .getOrElse(fail("expected the transposed double-check transition"))
+    val transition = replay.onlyTransition.getOrElse(fail("expected one transition"))
+    val production = ClosedRelationEvidence.relationProduction(replay, "e2b5")
+    def bind(path: String): CanonicalRelationTransitionInventory =
+      val beforeRef = PositionNodeRef(transposedA, 4, Some(White), Some(s"$path-before"))
+      val afterFen = chess.format.Fen.write(transition.legal.after).value
+      val afterRef = PositionNodeRef(afterFen, 5, Some(Black), Some(s"$path-after"))
+      def snapshot(
+          analysis: lila.chessjudgment.analysis.position.PositionAnalysis,
+          position: PositionNodeRef
+      ): CanonicalPositionRelationSnapshot =
+        TypedEvidenceGraph.empty
+          .addAll(PositionRelationExtractor.records(
+            analysis.boardRelations,
+            position,
+            EvidenceScope.CurrentPosition,
+            relation => s"$path:${position.ply}:${relation.semanticId}"
+          ))
+          .relationGraph
+          .closedPositionRelationSnapshot(position, EvidenceScope.CurrentPosition, analysis.relationInventory)
+      val before = snapshot(transition.beforeAnalysis, beforeRef)
+      val after = snapshot(transition.afterAnalysis, afterRef)
+      val delta = CanonicalRelationDelta.bind(transition.declared, transition.relationDelta, before, after)
+      production.bindClosedOutput(before, after, delta)
+    val boundA = bind("transposition-a")
+    val boundB = bind("transposition-b")
+    val doubleA = boundA.relations.filter(hasCreatedDoubleCheck)
+    val doubleB = boundB.relations.filter(hasCreatedDoubleCheck)
+
+    assertEquals(doubleA.size, 1)
+    assertEquals(doubleB.size, 1)
+    assertEquals(doubleA.head.assertionId, doubleB.head.assertionId)
+    assertEquals(doubleA.head.semanticId, doubleB.head.semanticId)
+    assertNotEquals(boundA.before.position, boundB.before.position)
+    assert(PrincipalVariationEvidence.sameBoardState(boundA.before.position.fen, boundB.before.position.fen))
+    assertNotEquals(boundA.after.position, boundB.after.position)
 
   test("threat relation production uses each exact branch occurrence owner"):
     val rootFen = "4k3/8/8/2b5/8/2N5/P7/4K3 w - - 0 1"
@@ -203,12 +276,10 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       val continuation = replay(branchFen, List(relationMove), startPly = rootPly + 1)
       NormalizedThreatBranch(
         sourceProbeId = sourceProbeId,
-        objective = ProbeObjective.BranchReplyMultiPv,
         probedMoveUci = probedMove,
         branchFen = branchFen,
         branchPly = rootPly + 1,
-        opponentResourceMove = None,
-        certifiedHorizonPlyOffset = Some(1),
+        certifiedHorizonPlyOffset = 1,
         lines = List(
           NormalizedCandidateLine(
             role = LineNodeRole.Threat,
@@ -278,16 +349,13 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       closedOccurrences.map(_.edge.evidence.id).toSet,
       assembled.transitions.map(_.evidence.id).toSet
     )
-    assert(closedOccurrences.forall(
-      _.closedResults.keySet == RelationCombinationContractKind.values.toSet
-    ))
     val relationRecords = enriched.evidenceGraph
       .records
       .collect {
         case record @ EvidenceRecord(ref, relation: RelationFactEvidence, _)
             if ref.line.exists(expectedPositionByLine.contains) && (relation.detail match
-              case RelationWitnessDetail.RayBarrier(owner, _, _, occupants, axis) =>
-                RelationRayPattern.classify(owner, occupants, axis) == RelationRayPattern.Pin
+              case RelationWitnessDetail.NamedRayTransition(_, _, _, _, _, _, _, pattern, direction, _) =>
+                pattern == RelationRayPattern.AbsoluteKingPin && direction == RelationChangeDirection.Established
               case _ => false
             ) =>
           record -> relation
@@ -303,7 +371,19 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       val afterPosition = afterPositionByLine(record.ref.line.get)
       val source = enriched.evidenceGraph.relationGraph
         .positionRelationsAt(afterPosition)
-        .filter(_.relation.detail == relation.detail)
+        .filter(node => (node.relation.detail, relation.detail) match
+          case (
+                ray: RelationWitnessDetail.RayBarrier,
+                RelationWitnessDetail.NamedRayTransition(_, side, attacker, role, barrier, target, axis, pattern, _, _)
+              ) =>
+            RelationRayProjection.named(ray).exists(projection =>
+              projection.side == side && projection.attackerSquare == attacker &&
+                projection.attackerRole == role && projection.barrier == barrier &&
+                projection.immediateTarget == target && projection.axis == axis &&
+                projection.pattern == pattern
+            )
+          case _ => false
+        )
       assertEquals(source.size, 1)
       assert(
         record.parents.contains(source.head.ref),
@@ -311,82 +391,6 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       )
       assert(enriched.evidenceGraph.proofEligible(record))
     }
-
-  private def strategicAssembly(reverseSources: Boolean = false): JudgmentAssemblyContext =
-    val sourceRecords = List(
-      featureAnchor("center-route-a", FeatureAnchorSignal.PawnTensionObserved),
-      featureAnchor("center-route-b", FeatureAnchorSignal.StructuralDeltaObserved),
-      featureAnchor("center-route-c", FeatureAnchorSignal.PawnTensionObserved)
-    )
-    val sources = if reverseSources then sourceRecords.reverse else sourceRecords
-    EvidenceFactAssembler.enrich(
-      JudgmentAssemblyContext(
-        input = input,
-        positions = Nil,
-        lines = Nil,
-        transitions = Nil,
-        evidenceGraph = TypedEvidenceGraph.empty.addAll(sources),
-        claims = Nil
-      )
-    )
-
-  private def strategicMechanisms(context: JudgmentAssemblyContext): List[EvidenceRecord] =
-    context.evidenceGraph.records.collect {
-      case record @ EvidenceRecord(_, payload: StrategicMechanismEvidence, _)
-          if payload.kind == StrategicMechanismKind.CenterControl =>
-        record
-    }
-
-  private def strategicPayload(record: EvidenceRecord): StrategicMechanismEvidence =
-    record.payload match
-      case payload: StrategicMechanismEvidence => payload
-      case _                                    => fail("expected strategic mechanism")
-
-  private def strategicClaim(
-      id: String,
-      carrier: EvidenceRecord,
-      confidence: EvidenceConfidence
-  ): JudgmentClaim =
-    JudgmentClaim(
-      id = id,
-      family = ClaimFamily.Strategic,
-      subject = ClaimSubject.Position,
-      primaryPosition = position,
-      primaryLine = None,
-      subjectMove = None,
-      evidence = List(carrier.ref),
-      scope = EvidenceScope.BeforePosition,
-      confidence = confidence
-    )
-
-  private def certified(claim: JudgmentClaim): ClaimAdmissionDecision =
-    ClaimAdmissionDecision(
-      claim = claim,
-      status = ClaimAdmissionStatus.Certified,
-      presentLayers = claim.evidence.map(_.layer).toSet,
-      missingLayerGroups = Nil,
-      missingEvidence = Nil
-    )
-
-  private def featureAnchor(id: String, signal: FeatureAnchorSignal): EvidenceRecord =
-    EvidenceRecord(
-      EvidenceRef(
-        id = id,
-        producer = EvidenceProducer.FeatureAnchorProducer,
-        layer = EvidenceLayer.FeatureAnchor,
-        position = position,
-        line = None,
-        scope = EvidenceScope.BeforePosition,
-        confidence = EvidenceConfidence.BoardDerived
-      ),
-      FeatureAnchorEvidence(
-        FeatureAnchor(
-          theme = OpeningTheme.CenterControl,
-          signal = signal,
-          sourceLayer = EvidenceLayer.Relation
-        )
-      )
-    )
 
   private def mateEvaluation(id: String, mate: Int): EvidenceRecord =
     val evaluation = CandidateLineEvaluation.EngineSearch(

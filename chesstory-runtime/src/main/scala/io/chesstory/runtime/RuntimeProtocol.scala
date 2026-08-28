@@ -34,22 +34,50 @@ object RuntimeProtocol:
   private object WireVariation:
     given Reads[WireVariation] = Json.reads[WireVariation]
 
+  private final case class WireAutomaticTerminal(
+      kind: String,
+      winner: Option[String]
+  ):
+    def toCore: Option[AutomaticTerminal] =
+      (kind, winner) match
+        case ("checkmate", Some("white")) => Some(AutomaticTerminal.Checkmate(chess.Color.White))
+        case ("checkmate", Some("black")) => Some(AutomaticTerminal.Checkmate(chess.Color.Black))
+        case ("stalemate", None) => Some(AutomaticTerminal.Stalemate)
+        case ("insufficient_material", None) => Some(AutomaticTerminal.InsufficientMaterial)
+        case ("fivefold_repetition", None) => Some(AutomaticTerminal.FivefoldRepetition)
+        case ("seventy_five_move_rule", None) => Some(AutomaticTerminal.SeventyFiveMoveRule)
+        case _ => None
+
+  private object WireAutomaticTerminal:
+    given Reads[WireAutomaticTerminal] = Json.reads[WireAutomaticTerminal]
+
   private final case class WireProbeResult(
       id: String,
       replyLines: Option[List[WireVariation]],
-      depth: Option[Int]
+      depth: Option[Int],
+      moves: Option[List[String]],
+      terminal: Option[WireAutomaticTerminal]
   ):
     def toCore: Option[ProbeResult] =
-      for
-        lines <- replyLines.filter(_.nonEmpty)
-        realizedDepth <- depth.filter(_ > 0)
-      yield ProbeResult(
-        id = id,
-        resolution = ProbeResolution.EngineSearch(
-          lines.map(line => CandidateLineEvaluation.EngineSearch(line.toCore)),
-          realizedDepth
-        )
-      )
+      (replyLines, depth, moves, terminal) match
+        case (Some(lines), Some(realizedDepth), None, None) if lines.nonEmpty && realizedDepth > 0 =>
+          Some(ProbeResult(
+            id = id,
+            resolution = ProbeResolution.EngineSearch(
+              lines.map(line => CandidateLineEvaluation.EngineSearch(line.toCore)),
+              realizedDepth
+            )
+          ))
+        case (None, None, Some(lineMoves), Some(terminalValue)) if lineMoves.nonEmpty =>
+          terminalValue.toCore.map(value =>
+            ProbeResult(
+              id = id,
+              resolution = ProbeResolution.ExactAutomaticTerminal(
+                CandidateLineEvaluation.ExactAutomaticTerminal(lineMoves, value)
+              )
+            )
+          )
+        case _ => None
 
   private object WireProbeResult:
     given Reads[WireProbeResult] = Json.reads[WireProbeResult]
@@ -120,19 +148,15 @@ object RuntimeProtocol:
 
   def publicProbeRequestJson(request: ProbeRequest): JsObject =
     val variant = request.variant match
-      case ProbeVariant.BranchReply(requiredHorizonPlyOffset) =>
+      case ProbeVariant.BranchReply(_, requiredHorizonPlyOffset) =>
         Json.obj("horizon" -> ProbeHorizon.renderPlyOffset(requiredHorizonPlyOffset))
-      case ProbeVariant.CounterResource(opponentResourceMove) =>
-        Json.obj("opponentResourceMove" -> opponentResourceMove)
-      case ProbeVariant.CausalContinuation(reply, followUp) =>
-        Json.obj("continuationMoves" -> List(reply, followUp))
     Json.obj(
       "id" -> request.id,
       "fen" -> request.fen,
       "moves" -> request.moves,
       "depth" -> request.depth,
-      "purpose" -> request.purpose.key,
-      "multiPv" -> request.multiPv,
+      "purpose" -> request.kind.key,
+      "multiPv" -> 1,
       "candidateMove" -> request.candidateMove,
       "variationHash" -> request.variationHash
     ) ++ variant
@@ -157,9 +181,12 @@ object RuntimeProtocol:
         Json.obj(
           "schema_version" -> ResponseSchema,
           "status" -> "ready",
-          "move_commentary" -> MoveMeaningProjection.moveCommentaryJson(packet)
+          "move_commentary" -> moveCommentaryJson(packet)
         ) ++ requestField
       )
+
+  private[runtime] def moveCommentaryJson(packet: EvidenceBackedJudgmentPacket): JsObject =
+    MoveMeaningProjection.moveCommentaryJson(packet)
 
   private[runtime] def encodePositionCommentaryResponse(
       snapshot: CommentaryJobSnapshot,
@@ -169,7 +196,7 @@ object RuntimeProtocol:
       case CompletedPositionCommentary.PositionAction(action) =>
         MoveMeaningProjection.positionActionJson(action)
       case CompletedPositionCommentary.FocusedMoveReview(drawClaims, record) =>
-        val commentary = MoveMeaningProjection.moveCommentaryJson(record.judgmentPacket)
+        val commentary = moveCommentaryJson(record.judgmentPacket)
         val playedRoles =
           if record.moveUci == record.bestMoveUci then List("best", "played") else List("played")
         val playedReview = Json.obj(
@@ -309,6 +336,10 @@ object RuntimeProtocol:
                 s"${EvidenceRef.normalizeMove(fact.referenceLine.rootMove)} is the best choice; ${EvidenceRef.normalizeMove(fact.candidateLine.rootMove)} is the runner-up."
             )
           )
+      val selectedLine = packet.primary match
+        case PlayerFacingPrimary.MoveVerdict(_) => candidate.ref
+        case PlayerFacingPrimary.BestChoice(_)  => reference.ref
+      val structuralIdeaUnits = structuralIdeaUnitsJson(packet, selectedLine)
       val causalExplanations = packet.causeExposureResolution.narrativeIdeas.map { idea =>
         val unitKind = idea.unit.kind match
           case PlayerFacingIdeaUnitKind.SingleCause             => "single_cause"
@@ -352,11 +383,231 @@ object RuntimeProtocol:
           "liability_cause_evidence_ids" -> item.liabilityCauseEvidenceIds
         )
       }
-      base ++ Option
+      base ++ Json.obj("structural_idea_units" -> structuralIdeaUnits) ++ Option
         .when(causalExplanations.nonEmpty)(Json.obj("causal_explanations" -> causalExplanations))
         .getOrElse(Json.obj()) ++ Option
         .when(responsibilityLinks.nonEmpty)(Json.obj("responsibility_links" -> responsibilityLinks))
         .getOrElse(Json.obj())
+
+    private def structuralIdeaUnitsJson(
+        packet: EvidenceBackedJudgmentPacket,
+        selectedLine: LineNodeRef
+    ): List[JsObject] =
+      val graph = packet.evidenceGraph
+      graph.recordsFor(selectedLine).flatMap {
+        case record @ EvidenceRecord(ref, payload: StructuralDeltaEvidence, _)
+            if graph.proofEligible(record) &&
+              ref.line.contains(selectedLine) &&
+              payload.line.contains(selectedLine) &&
+              EvidenceRef.sameMove(payload.moveUci, selectedLine.rootMove) =>
+          payload.consequences.zipWithIndex.map { case (consequence, index) =>
+            Json.obj(
+              "structural_evidence_id" -> ref.id,
+              "consequence_index" -> index,
+              "line_id" -> selectedLine.id,
+              "root_move" -> EvidenceRef.normalizeMove(selectedLine.rootMove),
+              "consequence_kind" -> consequenceKindCode(consequence.kind),
+              "consequence_key" -> consequence.proofKey,
+              "polarity" -> structuralPolarityCode(consequence.polarity),
+              "state_direction" -> consequenceStateDirection(consequence.kind),
+              "strength" -> consequence.strength,
+              "subjects" -> consequence.subjectBindings.map(structuralSubjectBindingJson(payload, _)),
+              "targets" -> consequence.targetBindings.map(structuralSubjectBindingJson(payload, _))
+            )
+          }
+        case _ => Nil
+      }
+
+    private def structuralSubjectBindingJson(
+        payload: StructuralDeltaEvidence,
+        binding: StructuralSubjectBinding
+    ): JsObject =
+      structuralSubjectJson(binding.subject) ++ Json.obj(
+        "binding_key" -> binding.stableKey,
+        "proof_sources" -> payload.provenanceFor(binding).map(proof =>
+          Json.obj(
+            "proof_key" -> proof.proofKey,
+            "evidence_id" -> proof.evidenceId
+          )
+        )
+      )
+
+    private def structuralSubjectJson(subject: StructuralSubject): JsObject =
+      subject match
+        case StructuralSubject.OpenFile(file) =>
+          Json.obj("kind" -> "open_file", "file" -> file.key.toLowerCase)
+        case StructuralSubject.SemiOpenFile(side, file) =>
+          Json.obj(
+            "kind" -> "semi_open_file",
+            "side" -> colorCode(side),
+            "file" -> file.key.toLowerCase
+          )
+        case StructuralSubject.PieceAt(side, role, square) =>
+          Json.obj(
+            "kind" -> "piece_at",
+            "side" -> colorCode(side),
+            "piece" -> role.name.toLowerCase,
+            "square" -> square.key.toLowerCase
+          )
+        case StructuralSubject.GeometricControlSetChange(
+              mover,
+              controllingSide,
+              targetSquare,
+              beforeTarget,
+              afterTarget,
+              beforeControllers,
+              afterControllers,
+              removedControllers,
+              establishedControllers
+            ) =>
+          Json.obj(
+            "kind" -> "geometric_control_set_change",
+            "root_movement" -> Json.obj(
+              "side" -> colorCode(mover.side),
+              "from" -> mover.from.key.toLowerCase,
+              "to" -> mover.to.key.toLowerCase,
+              "piece_before" -> mover.beforeRole.name.toLowerCase,
+              "piece_after" -> mover.afterRole.name.toLowerCase
+            ),
+            "controlling_side" -> colorCode(controllingSide),
+            "target_square" -> targetSquare.key.toLowerCase,
+            "before_target" -> controlTargetJson(beforeTarget),
+            "after_target" -> controlTargetJson(afterTarget),
+            "before_controllers" -> beforeControllers.map(relationPieceJson),
+            "after_controllers" -> afterControllers.map(relationPieceJson),
+            "removed_controllers" -> removedControllers.map(relationPieceJson),
+            "established_controllers" -> establishedControllers.map(relationPieceJson)
+          )
+        case StructuralSubject.SliderReachChange(side, sliderBefore, sliderAfter, direction, gained, lost) =>
+          Json.obj(
+            "kind" -> "slider_reach_change",
+            "side" -> colorCode(side),
+            "slider_before" -> sliderBefore.fold[JsValue](JsNull)(relationPieceJson),
+            "slider_after" -> sliderAfter.fold[JsValue](JsNull)(relationPieceJson),
+            "direction" -> Json.obj(
+              "file_step" -> direction.fileStep,
+              "rank_step" -> direction.rankStep,
+              "axis" -> relationAxisCode(direction.axis)
+            ),
+            "gained" -> gained.map(controlReachJson),
+            "lost" -> lost.map(controlReachJson)
+          )
+        case StructuralSubject.PawnTensionCreated(side, from, to) =>
+          pawnRouteSubjectJson("pawn_tension_created", side, from, to)
+        case StructuralSubject.PawnTensionResolved(side, from, to) =>
+          pawnRouteSubjectJson("pawn_tension_resolved", side, from, to)
+        case StructuralSubject.Battery(formation) =>
+          Json.obj(
+            "kind" -> "battery",
+            "side" -> colorCode(formation.side),
+            "axis" -> relationAxisCode(formation.axis),
+            "pieces" -> List(
+              coloredRelationPieceJson(formation.firstSlider),
+              coloredRelationPieceJson(formation.secondSlider)
+            )
+          )
+        case StructuralSubject.PassedPawnCreated(side, square) =>
+          pawnSquareSubjectJson("passed_pawn_created", side, square)
+        case StructuralSubject.PassedPawnLost(side, square) =>
+          pawnSquareSubjectJson("passed_pawn_lost", side, square)
+        case StructuralSubject.PassedPawnAdvanced(side, from, to, relativeRank) =>
+          pawnRouteSubjectJson("passed_pawn_advanced", side, from, to) ++
+            Json.obj("relative_rank" -> relativeRank)
+        case StructuralSubject.PassedStatusCreated(side, from, to, relativeRank) =>
+          pawnRouteSubjectJson("passed_status_created", side, from, to) ++
+            Json.obj("relative_rank" -> relativeRank)
+        case StructuralSubject.PassedPawnPromoted(side, from, to) =>
+          pawnRouteSubjectJson("passed_pawn_promoted", side, from, to)
+
+    private def pawnSquareSubjectJson(
+        kind: String,
+        side: chess.Color,
+        square: EvidenceSquare
+    ): JsObject =
+      Json.obj(
+        "kind" -> kind,
+        "side" -> colorCode(side),
+        "piece" -> "pawn",
+        "square" -> square.key.toLowerCase
+      )
+
+    private def pawnRouteSubjectJson(
+        kind: String,
+        side: chess.Color,
+        from: EvidenceSquare,
+        to: EvidenceSquare
+    ): JsObject =
+      Json.obj(
+        "kind" -> kind,
+        "side" -> colorCode(side),
+        "piece" -> "pawn",
+        "from" -> from.key.toLowerCase,
+        "to" -> to.key.toLowerCase
+      )
+
+    private def relationPieceJson(piece: RelationPieceWitness): JsObject =
+      Json.obj(
+        "piece" -> piece.role.name.toLowerCase,
+        "square" -> piece.square.key.toLowerCase
+      )
+
+    private def coloredRelationPieceJson(piece: RelationColoredPieceWitness): JsObject =
+      relationPieceJson(RelationPieceWitness(piece.square, piece.role)) ++
+        Json.obj("side" -> colorCode(piece.side))
+
+    private def controlReachJson(reach: RelationControlReachWitness): JsObject =
+      Json.obj(
+        "square" -> reach.square.key.toLowerCase,
+        "target" -> controlTargetJson(reach.target)
+      )
+
+    private def controlTargetJson(target: RelationControlTarget): JsObject =
+      target match
+        case RelationControlTarget.Empty =>
+          Json.obj("kind" -> "empty")
+        case RelationControlTarget.Friendly(role) =>
+          Json.obj("kind" -> "friendly_piece", "piece" -> role.name.toLowerCase)
+        case RelationControlTarget.Enemy(role) =>
+          Json.obj("kind" -> "enemy_piece", "piece" -> role.name.toLowerCase)
+
+    private def consequenceKindCode(kind: TransitionConsequenceKind): String =
+      kind match
+        case TransitionConsequenceKind.OpenFileEstablished            => "open_file_established"
+        case TransitionConsequenceKind.SemiOpenFileEstablished        => "semi_open_file_established"
+        case TransitionConsequenceKind.GeometricControlSetChanged    => "geometric_control_set_changed"
+        case TransitionConsequenceKind.PawnTensionCreated             => "pawn_tension_created"
+        case TransitionConsequenceKind.PawnTensionResolution          => "pawn_tension_resolution"
+        case TransitionConsequenceKind.PassedPawnProgress             => "passed_pawn_progress"
+        case TransitionConsequenceKind.PassedPawnConcession           => "passed_pawn_concession"
+        case TransitionConsequenceKind.BatteryFormation               => "battery_formation"
+        case TransitionConsequenceKind.SliderReachChanged             => "slider_reach_changed"
+
+    private def structuralPolarityCode(polarity: StructuralSignalPolarity): String =
+      polarity match
+        case StructuralSignalPolarity.Gain    => "gain"
+        case StructuralSignalPolarity.Loss    => "loss"
+        case StructuralSignalPolarity.Neutral => "neutral"
+
+    private def consequenceStateDirection(kind: TransitionConsequenceKind): String =
+      kind match
+        case TransitionConsequenceKind.PawnTensionResolution |
+            TransitionConsequenceKind.PassedPawnConcession => "removed"
+        case TransitionConsequenceKind.GeometricControlSetChanged |
+            TransitionConsequenceKind.SliderReachChanged => "changed"
+        case TransitionConsequenceKind.OpenFileEstablished |
+            TransitionConsequenceKind.SemiOpenFileEstablished |
+            TransitionConsequenceKind.PawnTensionCreated |
+            TransitionConsequenceKind.PassedPawnProgress |
+            TransitionConsequenceKind.BatteryFormation => "established"
+
+    private def relationAxisCode(axis: RelationAxisSignal): String =
+      axis match
+        case RelationAxisSignal.File     => "file"
+        case RelationAxisSignal.Rank     => "rank"
+        case RelationAxisSignal.Diagonal => "diagonal"
+
+    private def colorCode(side: chess.Color): String =
+      if side.white then "white" else "black"
 
     def referenceLineInsightJson(commentary: JsObject): JsObject =
       val primary = (commentary \ "primary").as[JsObject]
@@ -433,14 +684,12 @@ object RuntimeProtocol:
         case RelativeCauseKind.MissedTacticalResource     => "missed_tactical_resource"
         case RelativeCauseKind.TacticalRefutationOfPlayed => "tactical_refutation_of_played"
         case RelativeCauseKind.CandidateTacticalLiability => "candidate_tactical_liability"
-        case RelativeCauseKind.WrongRecapturer            => "wrong_recapturer"
         case RelativeCauseKind.RecaptureRecoveryWindow   => "recapture_recovery_window"
         case RelativeCauseKind.WrongMoveOrder             => "wrong_move_order"
         case RelativeCauseKind.TempoLoss                  => "tempo_loss"
         case RelativeCauseKind.ConversionMiss             => "conversion_miss"
         case RelativeCauseKind.ConversionSecured          => "conversion_secured"
         case RelativeCauseKind.SacrificeCompensation      => "sacrifice_compensation"
-        case RelativeCauseKind.OpponentRestriction        => "opponent_restriction"
         case RelativeCauseKind.PlanImprovement            => "plan_improvement"
         case RelativeCauseKind.PlanContradiction          => "plan_contradiction"
         case RelativeCauseKind.DefensiveResource          => "defensive_resource"
@@ -563,8 +812,6 @@ object RuntimeProtocol:
     ): List[List[String]] = proof match
       case RootOwnedEffectProof.PlanResult(_, event, _, _) =>
         continuationProofLine(event, packet).toList
-      case RootOwnedEffectProof.PlanRestriction(_, event, _, _) =>
-        continuationProofLine(event, packet).toList
       case RootOwnedEffectProof.StrategicAxis(primitive, _, _) =>
         proofOwnedLineCandidates(primitive, packet)
       case _ => Nil
@@ -590,7 +837,7 @@ object RuntimeProtocol:
         "causal_signature" -> selected.causalSignature,
         "direct_change" -> directChangeCode(selected.directChange),
         "played_change" -> playedChangeCode(selected.playedChange),
-        "actor" -> rootActorJson(binding),
+        "actor" -> rootActorJson(channel.rootActor),
         "targets" -> objectArrayJson(binding.target),
         "mechanisms" -> objectArrayJson(binding.mechanism),
         "consequences" -> objectArrayJson(binding.consequence),
@@ -602,20 +849,13 @@ object RuntimeProtocol:
         .map(segment => Json.obj("proof_segment" -> proofSegmentJson(segment)))
         .getOrElse(Json.obj())
 
-    private def rootActorJson(binding: EvidenceObjectBinding): JsObject =
-      def required(kind: EvidenceObjectKind): String =
-        binding.actor.find(_.kind == kind).map(_.key).getOrElse(
-          throw IllegalStateException(
-            s"R-selected direct channel has no ${objectKindCode(kind)} actor object"
-          )
-        )
-      val move = EvidenceRef.normalizeMove(required(EvidenceObjectKind.Move))
+    private def rootActorJson(actor: RootCausalActor): JsObject =
       Json.obj(
-        "move_uci" -> move,
-        "side" -> required(EvidenceObjectKind.Side),
-        "piece" -> required(EvidenceObjectKind.Piece),
-        "from" -> move.take(2),
-        "to" -> move.slice(2, 4)
+        "move_uci" -> EvidenceRef.normalizeMove(actor.moveUci),
+        "side" -> colorCode(actor.color),
+        "piece" -> actor.role.name.toLowerCase,
+        "from" -> actor.from.key.toLowerCase,
+        "to" -> actor.to.key.toLowerCase
       )
 
     private def objectArrayJson(objects: List[ConcreteChessObject]): List[JsObject] =
@@ -637,13 +877,13 @@ object RuntimeProtocol:
               Json.obj(
                 "plan_event" -> (Json.obj(
                   "goal_kind" -> event.kind.id,
-                  "actor_from" -> event.actorFrom.get,
-                  "actor_to" -> event.actorTo.get,
-                  "targets" -> event.targets.distinct.sorted,
-                  "results" -> event.results.distinct.sorted
-                ) ++ event.actorRole
-                  .map(role => Json.obj("actor_role" -> role))
-                  .getOrElse(Json.obj()))
+                  "actor_side" -> event.actor.side.toString.toLowerCase,
+                  "actor_role" -> event.actor.beforeRole,
+                  "actor_after_role" -> event.actor.afterRole,
+                  "actor_from" -> event.actor.from,
+                  "actor_to" -> event.actor.to,
+                  "legal_move_relation" -> event.actor.legalMoveSemanticId
+                ))
               )
             )
             .getOrElse(Json.obj())
@@ -692,10 +932,6 @@ object RuntimeProtocol:
           "instantiates_relation"
         case DirectCauseProofTerminalRelation.RealizesPlanResult =>
           "realizes_plan_result"
-        case DirectCauseProofTerminalRelation.RestrictsOpponentResource =>
-          "restricts_opponent_resource"
-        case DirectCauseProofTerminalRelation.CreatesDefensiveRecaptureResource =>
-          "creates_defensive_recapture_resource"
 
     private def proofStepRoleCode(role: DirectCauseProofStepRole): String =
       role match
@@ -768,7 +1004,6 @@ object RuntimeProtocol:
     private val MaxFenLength = 128
     private val MaxVariations = 16
     private val MaxMovePrefix = 600
-    private val MaxProbeResults = 12
     private val MaxReplyLines = 8
     private val MaxPly = 1000
     private val MaxText = 256
@@ -785,7 +1020,6 @@ object RuntimeProtocol:
         validUci(raw.playedMoveUci) &&
         raw.variations.nonEmpty && raw.variations.size <= MaxVariations &&
         raw.movePrefixUci.size <= MaxMovePrefix && raw.movePrefixUci.forall(validUci) &&
-        raw.probeResults.size <= MaxProbeResults &&
         raw.probeResults.map(_.id).distinct.size == raw.probeResults.size &&
         raw.probeResults.forall(validProbe) &&
         raw.ply.forall(ply => ply >= 0 && ply <= MaxPly) &&
@@ -802,7 +1036,8 @@ object RuntimeProtocol:
             evaluations.nonEmpty && evaluations.size <= MaxReplyLines &&
               evaluations.forall(_.engineLine.nonEmpty) &&
               EngineLineAdmission.acceptsRequiredDepth(depth)
-          case ProbeResolution.ExactAutomaticTerminal(_) => false
+          case ProbeResolution.ExactAutomaticTerminal(evaluation) =>
+            EngineLineAdmission.acceptsRuntimeInputMoves(evaluation.moves)
         )
 
     private def validOpening(opening: RawOpeningContext): Boolean =

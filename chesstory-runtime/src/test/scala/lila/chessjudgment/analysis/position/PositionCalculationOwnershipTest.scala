@@ -1,37 +1,90 @@
 package lila.chessjudgment.analysis.position
 
-import chess.Square
+import chess.{ Color, File, Square }
 import chess.format.Fen
 import chess.variant.Standard
-import lila.chessjudgment.model.judgment.{ RelationFactEvidence, RelationWitnessDetail }
-import lila.chessjudgment.model.line.PrincipalVariationEvidence
+import lila.chessjudgment.model.judgment.{
+  CanonicalLineReplay,
+  EvidenceFile,
+  EvidenceSquare,
+  LineReplayStep,
+  RelationFactEvidence,
+  RelationFactKind,
+  RelationWitnessDetail
+}
+import lila.chessjudgment.model.line.{ LegalReplayStep, PrincipalVariationEvidence }
 import lila.chessjudgment.model.position.BoardGeometry
 
 class PositionCalculationOwnershipTest extends munit.FunSuite:
 
-  test("the legal-move-only API reuses the canonical occurrence calculation"):
-    val fen = "4k3/8/8/8/3q4/8/3R4/4K3 w - - 37 92"
-    val position = Fen.read(Standard, Fen.Full(fen)).get
-    val occurrence = PrincipalVariationEvidence.withFenHalfMoveClock(position, fen)
-    val canonical = PrincipalVariationEvidence.actualLegalMoves(occurrence)
-    val legalOnly = PrincipalVariationEvidence.actualLegalMoves(occurrence)
+  test("an analyzed replay accepts only the exact legal-move occurrence it owns"):
+    val ownedFen = "4k3/8/8/8/8/8/8/4K2R w - - 0 1"
+    val foreignFen = "4k3/8/8/8/8/8/8/4K2R w - - 37 19"
+    val owned = PositionAnalyzer.analyze(PrincipalVariationEvidence.readPosition(ownedFen).get, ownedFen, 0)
+    val foreign = PositionAnalyzer.analyze(PrincipalVariationEvidence.readPosition(foreignFen).get, foreignFen, 0)
+    val ownedMove = owned.actualLegalMoves.find(_.toUci.uci == "h1h2").getOrElse(fail("expected Rh2"))
+    val foreignMove = foreign.actualLegalMoves.find(_.toUci.uci == "h1h2").getOrElse(fail("expected foreign Rh2"))
+    val step = LineReplayStep(1, "h1h2", ownedFen, Fen.write(ownedMove.after).value)
 
-    assert(canonical.asInstanceOf[AnyRef] eq legalOnly.asInstanceOf[AnyRef])
+    assert(CanonicalLineReplay.fromAnalyzedLegalMove(step, owned, foreignMove).isEmpty)
+    intercept[IllegalArgumentException](LegalReplayStep.fromMove(1, owned.position, foreignMove))
 
-  test("legal replay selects its move from the canonical occurrence calculation"):
-    val fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-    val occurrence = PrincipalVariationEvidence.readPosition(fen).get
-    val cachedMove = PrincipalVariationEvidence
-      .actualLegalMoves(occurrence)
-      .find(_.toUci.uci == "e2e4")
-      .get
-    val replayedMove = PrincipalVariationEvidence
-      .legalMoveReplay(fen, List("e2e4"), startPly = 0)
-      .flatMap(_.headOption)
-      .map(_.move)
-      .get
+  test("one targeted legal projection is reused when check responses close the full inventory"):
+    val fen = "4r2k/8/8/8/8/8/3B4/4K3 w - - 0 1"
+    val position = PrincipalVariationEvidence.readPosition(fen).get
+    val analysis = PositionAnalyzer.analyze(position, fen, 0)
+    val inventory = analysis.relationInventory
+    val targeted = inventory.legalMove("d2e3").getOrElse(fail("expected the interposition"))
+    val responses = inventory.kingResponses
 
-    assert(cachedMove.asInstanceOf[AnyRef] eq replayedMove.asInstanceOf[AnyRef])
+    assertEquals(
+      responses.legalMoves.map(_.moveUci),
+      analysis.actualLegalMoves.map(_.toUci.uci).sorted
+    )
+    assert(
+      targeted.asInstanceOf[AnyRef].eq(
+        responses.legalMoves.find(_.moveUci == "d2e3").get.asInstanceOf[AnyRef]
+      )
+    )
+    assertEquals(responses.responses.map(_.move), responses.legalMoves)
+
+  test("pawn-file projection is independent, empty-footprint lazy, and key-unique"):
+    import PositionRelationExtractor.BoardRelationInventoryDomain.StaticBoard
+
+    val fen = Standard.initialFen.value
+    val position = PrincipalVariationEvidence.readPosition(fen).get
+    val analysis = PositionAnalyzer.analyze(position, fen, 0)
+    val full = analysis.computation.relationSnapshot
+    val fileDetails = full.staticBoard.factsByDetail.values.collect {
+      case fact
+          if fact.kind == RelationFactKind.PawnFileGroup => fact.detail
+    }.toList
+    def inventory(staticBoard: PositionRelationExtractor.BoardRelationSnapshot) =
+      PositionRelationExtractor.closedPositionInventory(
+        PositionRelationExtractor.PositionRelationSnapshot(staticBoard, full.occurrence),
+        position,
+        analysis.actualLegalMoves
+      )
+
+    val fileOnly = inventory(PositionRelationExtractor.BoardRelationSnapshot.from(StaticBoard, fileDetails))
+    assertEquals(fileOnly.pawnFiles(Set.empty), Nil)
+    val targetedAFile = fileOnly.pawnFiles(Set(File.A)).head
+    val allFiles = fileOnly.pawnTopologyView.files
+    assertEquals(targetedAFile.file.key, "a")
+    assertEquals(allFiles.size, File.all.size)
+    assert(targetedAFile.asInstanceOf[AnyRef].eq(allFiles.find(_.file.key == "a").get.asInstanceOf[AnyRef]))
+
+    val repeatedAFile = RelationWitnessDetail.PawnFileGroup(
+      Color.White,
+      EvidenceFile("a"),
+      List(EvidenceSquare("a3"))
+    )
+    val repeated = inventory(
+      PositionRelationExtractor.BoardRelationSnapshot.from(StaticBoard, fileDetails :+ repeatedAFile)
+    )
+    assertEquals(repeated.pawnFiles(Set.empty), Nil)
+    val error = intercept[IllegalArgumentException](repeated.pawnFiles(Set(File.A)))
+    assert(error.getMessage.contains("closed pawn file groups repeated key"))
 
   test("incremental geometry matches cold geometry for ordinary and special move footprints"):
     val cases = List(
@@ -49,7 +102,10 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
         .flatMap(_.headOption)
         .getOrElse(fail(s"expected legal replay for $moveUci"))
       val afterFen = Fen.write(legalStep.after).value
-      val footprint = BoardGeometry.transitionFootprint(legalStep.move)
+      val footprint = BoardGeometry.transitionFootprint(
+        legalStep.move,
+        BoardGeometry.moveEffect(legalStep.move)
+      )
       val incrementalStatic = StaticBoardGeometryComputation.buildAfter(
         beforeAnalysis.computation.staticBoard,
         legalStep.after.board,
@@ -101,7 +157,10 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
       .flatMap(_.headOption)
       .getOrElse(fail("expected the rook move"))
     val afterFen = Fen.write(legalStep.after).value
-    val footprint = BoardGeometry.transitionFootprint(legalStep.move)
+    val footprint = BoardGeometry.transitionFootprint(
+      legalStep.move,
+      BoardGeometry.moveEffect(legalStep.move)
+    )
     val build = StaticBoardGeometryComputation.buildAfter(
       before.computation.staticBoard,
       legalStep.after.board,
@@ -125,7 +184,10 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
     val before = PositionAnalyzer.analyze(PrincipalVariationEvidence.readPosition(fen).get, fen, 0)
     val legalStep = replay(fen, "a2a3")
     val afterFen = Fen.write(legalStep.after).value
-    val footprint = BoardGeometry.transitionFootprint(legalStep.move)
+    val footprint = BoardGeometry.transitionFootprint(
+      legalStep.move,
+      BoardGeometry.moveEffect(legalStep.move)
+    )
     val build = StaticBoardGeometryComputation.buildAfter(
       before.computation.staticBoard,
       legalStep.after.board,
@@ -134,15 +196,9 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
 
     val pawnProduction = before.pawnTopology.afterTransition(
       legalStep.after.board,
-      footprint,
-      build.geometry.geometricControlInventory.byOrigin
+      footprint
     )
     assertEquals(pawnProduction.affectedPawnFileKeys, Set(chess.White -> chess.File.A))
-    assert(
-      pawnProduction.tensionEdgesProduced.forall(edge =>
-        footprint.changedSquareSet(edge.whitePawn) || footprint.changedSquareSet(edge.blackPawn)
-      )
-    )
     assertEquals(
       pawnProduction.frontStatesProduced.keySet,
       Set(chess.White -> Square.A3)
@@ -200,7 +256,6 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
 
     assert(after.computation.asInstanceOf[AnyRef] eq coldDestination.computation.asInstanceOf[AnyRef])
     assertTransitionMatchesBoardDifference(before, after)
-    assertTurnScopedTransitionComplete(before, after)
 
   test("one cached destination keeps distinct sparse transitions for different predecessors"):
     val leftFen = "4k3/8/8/8/8/8/8/1N2K3 w - - 0 1"
@@ -229,42 +284,15 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
       !(leftAfter.relationTransition.get.asInstanceOf[AnyRef] eq rightAfter.relationTransition.get.asInstanceOf[AnyRef])
     )
 
-  test("the transition footprint is sourced from the legal move's exact changed cells"):
-    val cases = List(
-      (
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-        "e2e4",
-        Set("e2", "e4")
-      ),
-      (
-        "4k3/8/8/8/8/8/8/4K2R w K - 0 1",
-        "e1g1",
-        Set("e1", "f1", "g1", "h1")
-      ),
-      (
-        "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1",
-        "e5d6",
-        Set("d5", "d6", "e5")
-      ),
-      (
-        "4k3/P7/8/8/8/8/8/4K3 w - - 0 1",
-        "a7a8q",
-        Set("a7", "a8")
-      )
-    )
-
-    cases.foreach { case (fen, uci, expected) =>
-      val step = replay(fen, uci)
-      val footprint = BoardGeometry.transitionFootprint(step.move)
-      assertEquals(footprint.changedSquareSet.map(_.key), expected, uci)
-    }
-
   test("slider attack and full occupied-ray invalidation use different exact closures"):
     val secondOccupantMove = replay(
       "4k3/8/8/N7/8/P7/8/R3K3 w - - 0 1",
       "a5b7"
     )
-    val secondOccupantFootprint = BoardGeometry.transitionFootprint(secondOccupantMove.move)
+    val secondOccupantFootprint = BoardGeometry.transitionFootprint(
+      secondOccupantMove.move,
+      BoardGeometry.moveEffect(secondOccupantMove.move)
+    )
     assert(secondOccupantFootprint.affectedOccupiedRayOrigins(Square.A1))
     assert(!secondOccupantFootprint.affectedGeometricControlOrigins(Square.A1))
 
@@ -272,7 +300,10 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
       "q3k3/8/8/8/N7/8/8/R3K3 w - - 0 1",
       "a4b6"
     )
-    val openedAttackFootprint = BoardGeometry.transitionFootprint(openedAttackMove.move)
+    val openedAttackFootprint = BoardGeometry.transitionFootprint(
+      openedAttackMove.move,
+      BoardGeometry.moveEffect(openedAttackMove.move)
+    )
     assert(openedAttackFootprint.affectedOccupiedRayOrigins(Square.A1))
     assert(openedAttackFootprint.affectedGeometricControlOrigins(Square.A1))
 
@@ -301,20 +332,9 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
     after: PositionAnalysis
   ): Unit =
     val transition = after.relationTransition.getOrElse(fail("expected a complete relation transition"))
-    val beforeDetails = before.computation.relationSnapshot.facts.map(_.detail).toSet
-    val afterDetails = after.computation.relationSnapshot.facts.map(_.detail).toSet
-    val actualRemoved = transition.removed.map(_.detail).toSet
-    val actualEstablished = transition.established.map(_.detail).toSet
+    val beforeDetails = before.computation.staticBoard.relationSnapshot.factsByDetail.keySet
+    val afterDetails = after.computation.staticBoard.relationSnapshot.factsByDetail.keySet
+    val actualRemoved = transition.comparableRemoved.map(_.detail).toSet
+    val actualEstablished = transition.comparableEstablished.map(_.detail).toSet
     assertEquals(actualRemoved, beforeDetails -- afterDetails)
     assertEquals(actualEstablished, afterDetails -- beforeDetails)
-
-  private def assertTurnScopedTransitionComplete(
-      before: PositionAnalysis,
-      after: PositionAnalysis
-  ): Unit =
-    def turnScoped(relation: RelationFactEvidence): Boolean = relation.detail match
-      case _: RelationWitnessDetail.LegalMove => true
-      case _                                  => false
-    val transition = after.relationTransition.getOrElse(fail("expected a complete relation transition"))
-    assertEquals(transition.turnScopedBefore.toSet, before.boardRelations.filter(turnScoped).toSet)
-    assertEquals(transition.turnScopedAfter.toSet, after.boardRelations.filter(turnScoped).toSet)

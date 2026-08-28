@@ -78,7 +78,6 @@ object PlayerFacingImpact:
 
 enum DirectCauseStructuralOrigin:
   case PlanResult
-  case PlanRestriction
 
 /** A domain whose numeric measure has one typed meaning. */
 enum DirectCauseImportanceDomain:
@@ -137,7 +136,7 @@ final case class DirectCauseImportanceUniverse(
 object DirectCauseImportanceUniverse:
 
   def from(
-      rootFen: String,
+      rootPosition: PositionNodeRef,
       effectMode: PlayerFacingCauseEffectMode,
       actor: Color,
       directChange: DirectCausalChange,
@@ -145,8 +144,8 @@ object DirectCauseImportanceUniverse:
       stake: DirectCauseEffectStake
   ): Option[DirectCauseImportanceUniverse] =
     for
-      rootBoardState <- PrincipalVariationEvidence.semanticBoardStateFen(rootFen)
-      if rootBoardMover(rootBoardState).contains(actor)
+      rootBoardState <- PrincipalVariationEvidence.semanticBoardStateFen(rootPosition.fen)
+      if rootPosition.sideToMove.contains(actor)
       impact <- PlayerFacingImpact.from(
         effectMode,
         actor,
@@ -155,13 +154,6 @@ object DirectCauseImportanceUniverse:
         stake
       )
     yield DirectCauseImportanceUniverse(rootBoardState, impact)
-
-  private def rootBoardMover(rootBoardState: String): Option[Color] =
-    rootBoardState.split("\\s+").lift(1).flatMap {
-      case "w" => Some(White)
-      case "b" => Some(Black)
-      case _   => None
-    }
 
 final case class DirectCauseImportanceChannelIdentity(
     channelId: String,
@@ -444,15 +436,6 @@ object DirectCauseMeasuredEffect:
           Some(assessment.robustness),
           descriptor = descriptor
         )
-      case RootOwnedEffectProof.PlanRestriction(_, event, consequence, _) =>
-        structuralEffect(
-          DirectCauseStructuralOrigin.PlanRestriction,
-          event.perspective,
-          consequence,
-          None,
-          descriptor = descriptor,
-          forcedStake = Some(DirectCauseEffectStake.Preserves(event.perspective))
-        )
       case RootOwnedEffectProof.StrategicAxis(primitive, _, _) =>
         fromProof(primitive, descriptor)
       case _ =>
@@ -575,7 +558,7 @@ object DirectCauseImportancePolicy:
       eventLine <- channel.binding.line
       actor <- actorSide(channel.binding)
       universe <- DirectCauseImportanceUniverse.from(
-        cause.comparisonEvidence.position.fen,
+        cause.comparisonEvidence.position,
         selection.effectMode,
         actor,
         selectedChannel.directChange,

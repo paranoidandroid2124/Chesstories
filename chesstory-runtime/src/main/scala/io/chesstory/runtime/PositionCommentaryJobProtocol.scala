@@ -287,7 +287,6 @@ object PositionCommentaryJobProtocol:
 
   private def stopConditionCode(condition: CommentaryJobStopCondition): String = condition match
     case CommentaryJobStopCondition.DeadlineExceeded              => "deadline_exceeded"
-    case CommentaryJobStopCondition.BudgetExhausted               => "budget_exhausted"
     case CommentaryJobStopCondition.Cancelled                     => "cancelled"
     case CommentaryJobStopCondition.EngineExecutionFailed         => "engine_execution_failed"
     case CommentaryJobStopCondition.InvalidEngineWorkReport       => "invalid_engine_work_report"

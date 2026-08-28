@@ -214,13 +214,13 @@ object ClaimTruthPolicy:
       graph: TypedEvidenceGraph
   ): Option[(EvidenceRef, MoveTransitionEvidence)] =
     graph.records.collect {
-      case EvidenceRecord(ref, payload @ MoveTransitionEvidence(_, from, _), _)
+      case record @ EvidenceRecord(ref, payload @ MoveTransitionEvidence(_, from, _, _), _)
           if ref.producer == EvidenceProducer.MoveTransitionProducer &&
             ref.layer == EvidenceLayer.MoveTransition &&
             ref.scope == EvidenceScope.PlayedTransition &&
             ref.position == from &&
             ref.line.isEmpty &&
-            ref.confidence == EvidenceConfidence.LegalReplayVerified =>
+            ref.confidence == EvidenceConfidence.LegalReplayVerified && graph.proofEligible(record) =>
         ref -> payload
     } match
       case transition :: Nil => Some(transition)
@@ -400,7 +400,7 @@ object ClaimTruthPolicy:
       graph.records
         .filter(record => claimEvidenceIds.contains(record.ref.id))
         .collect {
-          case EvidenceRecord(_, MoveTransitionEvidence(moveUci, _, to), _) if claimMoves.contains(moveUci) =>
+          case EvidenceRecord(_, MoveTransitionEvidence(moveUci, _, to, _), _) if claimMoves.contains(moveUci) =>
             to
         }
         .toSet
@@ -437,7 +437,7 @@ object ClaimTruthPolicy:
       graph: TypedEvidenceGraph
   ): Boolean =
     record.payload match
-      case MoveTransitionEvidence(moveUci, _, _) =>
+      case MoveTransitionEvidence(moveUci, _, _, _) =>
         moveUci == move &&
           claimLine.forall(line =>
             LineNodeRole.fromMoveEvidenceScope(record.ref.scope).contains(line.role) && line.rootMove == move
@@ -605,10 +605,12 @@ object ClaimTruthPolicy:
       graph: TypedEvidenceGraph
   ): Boolean =
     records.exists {
-      case record @ EvidenceRecord(_, payload: StrategicMechanismEvidence, _) =>
+      case record @ EvidenceRecord(_, payload: StructuralDeltaEvidence, _) =>
         graph.proofEligible(record) &&
-          payload.canAnchorPawnStructureClaim &&
-          anchorSourcesBound(record, payload.signals.map(_.source), records, graph) &&
+          (
+            payload.hasConsequenceCategory(TransitionConsequenceCategory.PawnStructure) ||
+              payload.hasConsequenceCategory(TransitionConsequenceCategory.PawnStructureDelta)
+          ) &&
           anchorClosureProves(claim, record, records, graph, pawnStructureObservation)
       case _ => false
     }
@@ -737,7 +739,7 @@ object ClaimTruthPolicy:
       case payload: StructuralDeltaEvidence =>
         payload.hasTypedOutput &&
           transitionBoundToClaim(claim, payload.moveUci, payload.line)
-      case MoveTransitionEvidence(moveUci, _, _) =>
+      case MoveTransitionEvidence(moveUci, _, _, _) =>
         transitionBoundToClaim(claim, moveUci, record.ref.line, Some(record.ref.scope))
       case _: LineFactEvidence =>
         claim.primaryLine.nonEmpty && record.ref.line == claim.primaryLine
@@ -966,7 +968,7 @@ object ClaimTruthPolicy:
     payload.hasMaterialConsequence ||
       payload.hasRecaptureRecoveryConsequence ||
       payload.hasMaterialRecaptureChain ||
-      payload.hasMaterialRecoveryWindow ||
+      payload.hasClosedMaterialRecovery ||
       payload.hasProofSignalMaterialEvent
 
   private def conversionRelativeCauseHasProof(cause: RelativeCauseFact, graph: TypedEvidenceGraph): Boolean =

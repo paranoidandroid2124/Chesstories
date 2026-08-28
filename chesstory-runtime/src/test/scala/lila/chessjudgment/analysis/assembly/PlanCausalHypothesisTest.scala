@@ -5,7 +5,6 @@ import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.analysis.position.{ PositionAnalyzer, PositionRelationExtractor }
 import lila.chessjudgment.analysis.structure.{ StructuralDeltaAnalyzer, StructuralDeltaContracts }
-import lila.chessjudgment.model.ProbeObjective
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.{
   CandidateLineEvaluation,
@@ -13,29 +12,8 @@ import lila.chessjudgment.model.line.{
   PrincipalVariationEvidence
 }
 import lila.chessjudgment.model.strategic.EngineLine
-import lila.chessjudgment.model.strategic.PlanTaxonomy.PlanKind
 
 class PlanCausalHypothesisTest extends munit.FunSuite:
-
-  test("a raw development delta cannot own a plan event"):
-    val opening = analyzedFixture(Standard.initialFen.value, List("g1f3", "g8f6"))
-    val kinds = assembledEvents(opening).collect {
-      case EvidenceRecord(_, event: PlanCausalEventEvidence, _) => event.planId
-    }
-
-    assert(!kinds.contains(PlanKind.OpeningDevelopment))
-
-
-  test("a captured restriction mechanism cannot own prophylaxis"):
-    val capturedRestrictor = analyzedFixture(
-      "4k3/8/3p4/4p3/2Q5/8/4N3/4K3 w - - 0 1",
-      List("e2f4", "e5f4")
-    )
-    val kinds = assembledEvents(capturedRestrictor).collect {
-      case EvidenceRecord(_, event: PlanCausalEventEvidence, _) => event.planId
-    }
-
-    assert(!kinds.contains(PlanKind.ProphylaxisRestraint))
 
   test("branch witnesses use the exact branch position move and rank"):
     val fen = "4k3/p7/3p4/8/4P3/8/8/4K1N1 w - - 0 1"
@@ -49,12 +27,10 @@ class PlanCausalHypothesisTest extends munit.FunSuite:
     val normalized = NormalizedCandidateLine(LineNodeRole.Threat, 1, evaluation, replay)
     val branch = NormalizedThreatBranch(
       sourceProbeId = "exact-branch",
-      objective = ProbeObjective.BranchReplyMultiPv,
       probedMoveUci = "g1f3",
       branchFen = branchFen,
       branchPly = 1,
-      opponentResourceMove = None,
-      certifiedHorizonPlyOffset = Some(1),
+      certifiedHorizonPlyOffset = 1,
       lines = List(normalized)
     )
     def candidate(id: String, move: String, positionFen: String): CandidateLineNode =
@@ -115,12 +91,10 @@ class PlanCausalHypothesisTest extends munit.FunSuite:
             threatBranches = List(
               NormalizedThreatBranch(
                 sourceProbeId = "predecessor-selection",
-                objective = ProbeObjective.BranchReplyMultiPv,
                 probedMoveUci = "g1f3",
                 branchFen = exactBranchFen,
                 branchPly = branchPly,
-                opponentResourceMove = None,
-                certifiedHorizonPlyOffset = Some(1),
+                certifiedHorizonPlyOffset = 1,
                 lines = lines
               )
             )
@@ -157,80 +131,6 @@ class PlanCausalHypothesisTest extends munit.FunSuite:
     assertEquals(NodeLineTransitionAssembler.uniqueSemanticPredecessor(List(pathA, pathB)), None)
     assertEquals(NodeLineTransitionAssembler.uniqueSemanticPredecessor(List(pathB, pathA)), None)
 
-  test("root clearance discovers a PV-absent rook transfer through the causal trace"):
-    val fen = "4k3/7p/8/8/8/1n6/P7/R3K3 w - - 0 1"
-    val latent = latentCandidateMoves(fen, "a2b3")
-
-    assert(
-      latent.contains("a1a2"),
-      "a2b3 must own the rook's newly opened a-file route, not only pawn-support continuations"
-    )
-    val context = assemblyContext(fixture(fen, List("a2b3", "h7h6")))
-    assert(
-      ExactCausalContinuationProbePlanner
-        .fromAssembly(context)
-        .exists(_.continuationMoves == List("h7h6", "a1a2"))
-    )
-
-  test("proactive discovery rejects hanging line-clearance fantasies"):
-    assert(
-      !latentCandidateMoves(Standard.initialFen.value, "d2d4")
-        .contains("c1h6")
-    )
-    assert(
-      !latentCandidateMoves(Standard.initialFen.value, "e2e4")
-        .contains("f1a6")
-    )
-
-  test("counter-resource discovery keeps exact captures and rejects pre-existing contact"):
-    val captureFen = "2B1k3/n7/8/8/8/2N5/8/4K3 w - - 0 1"
-    val exact = exactResourceMovesAfter(captureFen, "c3b5")
-    assert(exact.contains("a7c8"), "the newly attacked knight's capture must remain a resource candidate")
-    val consequence = OpponentResourceDeterrenceProof.consequence("a7c8", "knight")
-    assertEquals(consequence.subjects, List("knight:a7-c8:resource-deterred"))
-    assert(StructuralDeltaEvidence.validOpponentMobilityRestrictionSubject(consequence.subjectFacts.head))
-
-    val preExistingContactFen = "2B1k3/n7/8/8/8/8/8/R3K3 w - - 0 1"
-    val preExisting = exactResourceMovesAfter(preExistingContactFen, "a1a6")
-    assert(
-      !preExisting.contains("a7c8"),
-      "moving along an already open rook ray must not manufacture a newly contested resource"
-    )
-
-    def resourceLine(id: String, move: String, role: LineNodeRole, rank: Int): CandidateLineNode =
-      val ref = LineNodeRef(id, move, rank, role)
-      val evidence = EvidenceRef(
-        id = s"$id-evidence",
-        producer = EvidenceProducer.LegalLineProducer,
-        layer = EvidenceLayer.Line,
-        position = PositionNodeRef(captureFen, 0, Some(White)),
-        line = Some(ref),
-        scope = role.scope,
-        confidence = EvidenceConfidence.LegalReplayVerified
-      )
-      CandidateLineNode(
-        ref,
-        CandidateLineEvaluation.EngineSearch(EngineLine(List(move), scoreCp = 0, depth = 20)),
-        evidence
-      )
-    val comparisonFixture = fixture(captureFen, List("c3b5", "a7c8"))
-    val comparisonContext = JudgmentAssemblyContext(
-      input = normalizedInput(comparisonFixture),
-      positions = List(PositionNode(PositionNodeRole.Before, PositionNodeRef(captureFen, 0, Some(White)))),
-      lines = List(
-        resourceLine("resource-played", "c3b5", LineNodeRole.Played, 1),
-        resourceLine("resource-reference", "e1d1", LineNodeRole.BestReference, 2)
-      ),
-      transitions = Nil,
-      evidenceGraph = TypedEvidenceGraph.empty,
-      claims = Nil
-    )
-    assertEquals(
-      CounterResourceProbePlanner.fromAssembly(comparisonContext),
-      Nil,
-      "an exact resource candidate must not schedule work before an exact causal episode demands it"
-    )
-
   test("each newly created exact structural fact contributes exactly one result"):
     val pawnTension = analyzedFixture(
       "4k3/8/8/6p1/8/8/7P/4K3 w - - 0 1",
@@ -239,7 +139,7 @@ class PlanCausalHypothesisTest extends munit.FunSuite:
     assertEquals(pawnTension.map(_.strength), List(1))
     assertEquals(
       pawnTension.flatMap(_.subjects),
-      List("break-file:h", "created-tension:h4-g5")
+      List("created-tension:white:h4-g5")
     )
 
     val geometricControl = analyzedFixture(
@@ -323,6 +223,7 @@ class PlanCausalHypothesisTest extends munit.FunSuite:
         signals = Nil,
         consequences = Nil,
         relationChanges = Nil,
+        derivedRelationSources = Nil,
         canonicalTransitionProof = Some(transitionProof),
         canonicalDeltaProof = None
       ),
@@ -401,7 +302,7 @@ class PlanCausalHypothesisTest extends munit.FunSuite:
       producer = EvidenceProducer.MoveTransitionProducer,
       layer = EvidenceLayer.MoveTransition,
       position = fixture.structural.from,
-      line = Some(fixture.line),
+      line = None,
       scope = EvidenceScope.PlayedTransition,
       confidence = EvidenceConfidence.LegalReplayVerified
     )
@@ -415,6 +316,12 @@ class PlanCausalHypothesisTest extends munit.FunSuite:
       fixture.replay.legalSteps.head,
       fixture.structural.to.fen
     )
+    val rootReplay = fixture.replay
+      .subset(List(fixture.replay.replaySteps.head))
+      .getOrElse(fail("expected the admitted root transition"))
+    val moveTransitionProof = CanonicalTransitionProof
+      .from(fixture.structural.transition.copy(line = None), rootReplay)
+      .getOrElse(fail("expected an unlined move-transition certificate"))
     val input = normalizedInput(fixture)
     val graph = List(
       EvidenceRecord(lineRef, fixture.facts),
@@ -424,7 +331,8 @@ class PlanCausalHypothesisTest extends munit.FunSuite:
         MoveTransitionEvidence(
           fixture.line.rootMove,
           fixture.structural.from,
-          fixture.structural.to
+          fixture.structural.to,
+          Some(moveTransitionProof)
         )
       )
     ).foldLeft(TypedEvidenceGraph.empty)((current, record) => current.add(record))
@@ -466,34 +374,6 @@ class PlanCausalHypothesisTest extends munit.FunSuite:
       claims = Nil
     )
     context
-
-  private def assembledEvents(fixture: Fixture): List[EvidenceRecord] =
-    val context = assemblyContext(fixture)
-    PlanCausalEventAssembler.fromAssembly(
-      context.input,
-      context,
-      JudgmentProvenanceAllocator.forInput(context.input)
-    )
-
-  private def candidateKinds(fixture: Fixture): List[PlanKind] =
-    PlanCausalEventProof
-      .eventCandidatePlans(
-        PlanCausalEventProof.causalTrace(
-          fixture.line,
-          fixture.structural,
-          fixture.facts,
-          Some(fixture.replay)
-        ),
-        fixture.structural.perspective
-      )
-      .map(_.kind)
-
-  private def latentCandidateMoves(fen: String, move: String): List[String] =
-    val root = fixture(fen, List(move))
-    ExactCausalContinuationProbePlanner.latentCandidateMoves(root.line, root.replay)
-
-  private def exactResourceMovesAfter(fen: String, move: String): List[String] =
-    CounterResourceProbePlanner.exactResourceMovesAfter(fixture(fen, List(move)).replay)
 
   private def normalizedInput(fixture: Fixture): NormalizedMoveReviewInput =
     val fen = fixture.structural.from.fen

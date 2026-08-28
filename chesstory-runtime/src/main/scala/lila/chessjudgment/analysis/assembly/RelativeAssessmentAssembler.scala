@@ -256,16 +256,6 @@ object RelativeAssessmentAssembler:
                   Some(lineMate)
                 case Some(RootOwnedEffectProof.RootLineEvent(_, _, _)) => Some(lineQualitative)
                 case _ => None
-            case kind @ (
-                  RootOwnedEffectPrimitiveKind.PlanRestriction |
-                  RootOwnedEffectPrimitiveKind.DefensiveRecaptureResource
-                ) =>
-              Some(
-                ComparisonEndpointEffectInventoryPair(
-                  endpointSnapshot.reference.barePrimitiveInventory(kind),
-                  endpointSnapshot.candidate.barePrimitiveInventory(kind)
-                )
-              )
             case RootOwnedEffectPrimitiveKind.RootRelation | RootOwnedEffectPrimitiveKind.PlanResult |
                 RootOwnedEffectPrimitiveKind.Unspecified =>
               None
@@ -675,35 +665,11 @@ object RelativeAssessmentAssembler:
       .zipWithIndex
       .flatMap { case ((kind, refLine, candLine, descriptor), index) =>
         CandidateComparisonFact.fromLines(kind, mover, refLine, candLine, descriptor).map { baseComparison =>
-          val defensiveRecaptureResource =
-            Option
-              .when(kind == CandidateComparisonKind.PlayedVsBest)(
-                (
-                  context.evidenceGraph.recordsFor(candLine.ref).collect {
-                    case EvidenceRecord(_, payload: LineFactEvidence, _) if payload.line == candLine.ref =>
-                      payload
-                  },
-                  context.evidenceGraph.recordsFor(refLine.ref).collect {
-                    case EvidenceRecord(_, payload: LineFactEvidence, _) if payload.line == refLine.ref =>
-                      payload
-                  }
-                )
-              )
-              .flatMap {
-                case (candidateLineFact :: Nil, referenceLineFact :: Nil) =>
-                  PlayedVsBestDefensiveRecaptureResource.derive(
-                    baseComparison,
-                    root,
-                    candidateLineFact,
-                    referenceLineFact
-                  )
-                case _ => None
-              }
           TransitionFactNormalizer.fromCandidateComparison(
             id = allocator.evidenceId(
               s"candidate-comparison:${allocator.key(kind)}:${allocator.key(refLine.ref.rootMove)}:${allocator.key(candLine.ref.rootMove)}:$index"
             ),
-            comparison = baseComparison.copy(defensiveRecaptureResource = defensiveRecaptureResource),
+            comparison = baseComparison,
             position = root,
             scope = EvidenceScope.Counterfactual,
             parents = (
@@ -936,14 +902,8 @@ object RelativeAssessmentAssembler:
       .exists {
         case EvidenceRecord(_, payload: PlanCausalEventEvidence, _) =>
           strategicAxisEventMatchesPlan(comparison.axis, payload) &&
-          (
-            payload.observedGoalResultRoutes.exists(route =>
-              route.sourceEvent.step.ply > payload.causalEpisode.root.step.ply
-            ) || (
-              comparison.axis.kind == StrategicAxisKind.Counterplay &&
-                comparison.axis.polarity == StrategicAxisPolarity.Restrain &&
-                payload.opponentResourceDeterrenceProofReady
-            )
+          payload.observedGoalResultRoutes.exists(route =>
+            route.sourceEvent.step.ply > payload.causalEpisode.root.step.ply
           )
         case EvidenceRecord(_, PlanTransitionEvidence(proof), _) =>
           proof.summary.continuity.exists(_.consecutivePlies >= 2)
@@ -1309,7 +1269,7 @@ object RelativeAssessmentAssembler:
       case None => ComparisonEndpointLineEffectInventories.incomplete
 
   /** Each endpoint family owns its own completeness predicate. A missing
-    * material window cannot erase mate/endgame facts, and a missing or
+    * closed material outcome cannot erase mate/endgame facts, and a missing or
     * inconsistent engine mate score cannot erase material/endgame facts.
     */
   private[assembly] def enforceLineFamilyCompleteness(
@@ -1318,7 +1278,7 @@ object RelativeAssessmentAssembler:
       evaluation: Option[lila.chessjudgment.model.strategic.EngineLine]
   ): ComparisonEndpointLineEffectInventories =
     val material =
-      if payload.materialNetCaptureCpForMover.nonEmpty && payload.hasCompleteMaterialWindow then
+      if payload.materialClosedNetCpForMover.nonEmpty then
         inventories.material
       else ComparisonEndpointEffectInventory.Incomplete
     val mate = evaluation.fold[ComparisonEndpointEffectInventory](
@@ -1876,15 +1836,6 @@ object RelativeAssessmentAssembler:
       proofRecords.filter {
         case record @ EvidenceRecord(_, payload: PlanCausalEventEvidence, _) =>
           planCausalEventDirectlyOwnsCause(graph, fact, kind, binding, record, payload)
-        case record @ EvidenceRecord(_, CandidateComparisonEvidence(_), _) =>
-          comparisonDefensiveResourceDirectlyOwnsCause(
-            graph,
-            fact,
-            kind,
-            binding,
-            attributionKind,
-            record
-          )
         case _ if RelativeCauseKind.requiresExactPlanResult(kind) =>
           false
         case record @ EvidenceRecord(_, payload: LineFactEvidence, _) =>
@@ -2067,9 +2018,7 @@ object RelativeAssessmentAssembler:
       record: EvidenceRecord
   ): Boolean =
     val rootMove = binding.eventLine.rootMove
-    val rootRecaptureCause =
-      kind == RelativeCauseKind.WrongRecapturer ||
-        kind == RelativeCauseKind.RecaptureRecoveryWindow
+    val rootRecaptureCause = kind == RelativeCauseKind.RecaptureRecoveryWindow
     val verifiedRootRecapture =
       !rootRecaptureCause ||
         (record :: graph.parentClosure(record)).exists {
@@ -2149,42 +2098,8 @@ object RelativeAssessmentAssembler:
           graph,
           Some(binding.eventLine)
         )
-      case CandidateComparisonEvidence(_) =>
-        comparisonDefensiveResourceDirectlyOwnsCause(
-          graph,
-          fact,
-          kind,
-          binding,
-          attributionKind,
-          record
-        )
       case _ =>
         false)
-
-  private def comparisonDefensiveResourceDirectlyOwnsCause(
-      graph: TypedEvidenceGraph,
-      fact: CandidateComparisonFact,
-      kind: RelativeCauseKind,
-      binding: RelativeCauseBinding,
-      attributionKind: CauseAttributionKind,
-      record: EvidenceRecord
-  ): Boolean =
-    record.payload match
-      case CandidateComparisonEvidence(registered) =>
-        val exactCandidateLineParents = record.parents.flatMap(graph.record).collect {
-          case EvidenceRecord(ref, line: LineFactEvidence, _) if line.line == fact.candidateLine => ref
-        }
-        registered == fact &&
-        kind == RelativeCauseKind.DefensiveResource &&
-        fact.kind == CandidateComparisonKind.PlayedVsBest &&
-        fact.comparison.verdict.isActionableLoss &&
-        fact.defensiveRecaptureResource.nonEmpty &&
-        binding.sourceSide == RelativeCauseSourceSide.Reference &&
-        binding.eventLine == fact.referenceLine &&
-        attributionKind == CauseAttributionKind.ReferenceCreatesResource &&
-        record.ref.layer == EvidenceLayer.CandidateComparison &&
-        exactCandidateLineParents.size == 1
-      case _ => false
 
   private def planCausalEventDirectlyOwnsCause(
       graph: TypedEvidenceGraph,
@@ -2258,7 +2173,7 @@ object RelativeAssessmentAssembler:
   ): Boolean =
     val rootMoveConsequences = ownedConsequences.filter(_.rootMoveMatched(rootMove))
     kind match
-      case RelativeCauseKind.WrongRecapturer | RelativeCauseKind.RecaptureRecoveryWindow =>
+      case RelativeCauseKind.RecaptureRecoveryWindow =>
         payload.rootIsRecapture(rootMove) &&
         rootMoveConsequences.exists(consequence =>
           consequence.kind == LineConsequenceKind.RecaptureSequence ||
@@ -2430,7 +2345,7 @@ object RelativeAssessmentAssembler:
       eventLine: Option[LineNodeRef]
   ): Boolean =
     val normalizedRoot = EvidenceRef.normalizeMove(rootMove)
-    signal.axis.exists(axis => RelativeCauseKind.strategicAxisCanProveCause(kind, axis, sourceSide)) &&
+    signal.axis.exists(axis => RelativeCauseKind.strategicAxisCanProveCause(kind, axis)) &&
     (signal.kind match
       case StrategicMechanismSignalKind.PlanPressure =>
         graph.byId.get(signal.source.id).exists {
@@ -2452,7 +2367,7 @@ object RelativeAssessmentAssembler:
   ): List[StrategicMechanismSignal] =
     payload.signals
       .filter(signal =>
-        signal.axis.exists(axis => RelativeCauseKind.strategicAxisCanProveCause(kind, axis, sourceSide))
+        signal.axis.exists(axis => RelativeCauseKind.strategicAxisCanProveCause(kind, axis))
       )
       .distinct
 
@@ -2491,9 +2406,6 @@ object RelativeAssessmentAssembler:
               compensationReturnDirectlyOwned(comparison, sourceSide, line, graph)
           )
         case RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
-          ownedPlanEventCanProveCause(comparison)
-        case RelativeCauseKind.OpponentRestriction
-            if comparison.axis.label == "opponent-resource-deterrence" =>
           ownedPlanEventCanProveCause(comparison)
         case _ =>
           true
@@ -2551,11 +2463,8 @@ object RelativeAssessmentAssembler:
           EvidenceRef.sameMove(line.rootMove, rootMove) &&
             RootOwnedEffectPolicy.planEventOwnsRoot(record.ref, payload, line, mover)
         )
-      case CandidateComparisonEvidence(fact) =>
-        fact.kind == CandidateComparisonKind.PlayedVsBest &&
-        fact.defensiveRecaptureResource.nonEmpty &&
-        EvidenceRef.sameMove(fact.referenceLine.rootMove, rootMove) &&
-        fact.comparison.mover == mover
+      case CandidateComparisonEvidence(_) =>
+        false
       case _ =>
         false
 
@@ -2757,7 +2666,7 @@ object RelativeAssessmentAssembler:
         candidateEndpointMoveOrderRecords =
           endpointMoveOrderRecords.getOrElse(RelativeCauseSourceSide.Candidate, Nil)
       )
-    RelativeCauseDraftPlanner.drafts(profile, comparisonRecord)
+    RelativeCauseDraftPlanner.drafts(profile)
 
   private def parentsForLine(
       context: JudgmentAssemblyContext,

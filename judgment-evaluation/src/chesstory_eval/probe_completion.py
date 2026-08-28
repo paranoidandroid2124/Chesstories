@@ -34,7 +34,8 @@ from .stockfish import (
 
 
 UCI_IO_SCHEMA = "chesstory.eval.runtime-probe-uci-io.v1"
-REPLY_MULTIPV = "reply_multipv"
+RULE_PROOF_SCHEMA = "chesstory.eval.runtime-probe-rule-proof.v1"
+BRANCH_REPLY = "branch_reply"
 MAX_RUNTIME_PROBE_RESULTS = 12
 _MOVE_RE = re.compile(r"^[a-h][1-8][a-h][1-8][qrbn]?")
 
@@ -288,7 +289,7 @@ class _RuntimeJsonlSession:
 
 def _validate_probe_request(request: Mapping[str, Any]) -> dict[str, Any]:
     value = _mapping(request, "probe request")
-    common_keys = {
+    expected_keys = {
         "id",
         "fen",
         "moves",
@@ -297,19 +298,11 @@ def _validate_probe_request(request: Mapping[str, Any]) -> dict[str, Any]:
         "multiPv",
         "candidateMove",
         "variationHash",
+        "horizon",
     }
-    variant_keys = {
-        key
-        for key in ("horizon", "opponentResourceMove", "continuationMoves")
-        if key in value
-    }
-    if len(variant_keys) != 1:
-        raise ContractError("runtime probe request must declare exactly one causal objective")
-    variant_key = next(iter(variant_keys))
-    expected_keys = common_keys | {variant_key}
     if set(value) != expected_keys:
-        raise ContractError("runtime probe request fields do not match one exact causal objective")
-    if value["purpose"] != REPLY_MULTIPV:
+        raise ContractError("runtime probe request fields do not match the branch-reply contract")
+    if value["purpose"] != BRANCH_REPLY:
         raise ContractError(f"unsupported runtime probe purpose: {value['purpose']!r}")
     _safe_text(value["id"], "probe request id")
     fen = _safe_text(value["fen"], "probe request FEN")
@@ -320,7 +313,7 @@ def _validate_probe_request(request: Mapping[str, Any]) -> dict[str, Any]:
     if board.status() != chess.STATUS_VALID:
         raise ContractError(f"probe request FEN is illegal (status={int(board.status())})")
     _integer(value["depth"], "probe request depth", 1, 100)
-    multi_pv = _integer(value["multiPv"], "probe request multiPv", 1, 3)
+    multi_pv = _integer(value["multiPv"], "probe request multiPv", 1, 1)
     _move(value["candidateMove"], "probe request candidateMove")
     variation_hash = _safe_text(value["variationHash"], "probe request variationHash")
     if re.fullmatch(r"[0-9a-f]{64}", variation_hash) is None:
@@ -329,35 +322,36 @@ def _validate_probe_request(request: Mapping[str, Any]) -> dict[str, Any]:
     if not isinstance(raw_moves, list):
         raise ContractError("probe request moves must be an array")
     moves = [_move(item, "probe request move") for item in raw_moves]
-    if variant_key == "opponentResourceMove":
-        resource = _move(
-            value["opponentResourceMove"], "probe request opponentResourceMove"
-        )
-        if moves != [resource] or multi_pv != 1:
-            raise ContractError("opponent-resource probe binding is not exact")
-    elif variant_key == "continuationMoves":
-        raw_continuation = value["continuationMoves"]
-        if not isinstance(raw_continuation, list):
-            raise ContractError("causal continuation must be an array")
-        continuation = [
-            _move(item, "probe request continuation move")
-            for item in raw_continuation
-        ]
-        if len(continuation) != 2 or moves != continuation or multi_pv != 1:
-            raise ContractError("causal-continuation probe binding is not exact")
-    else:
-        horizon = _safe_text(value["horizon"], "probe request horizon")
-        if len(horizon) > 14:
-            raise ContractError("ordinary reply_multipv probe horizon is too long")
-        horizon_match = re.fullmatch(r"ply:([1-9][0-9]*)", horizon)
-        if horizon_match is None:
-            raise ContractError("ordinary reply_multipv probe horizon is invalid")
-        horizon_ply = int(horizon_match.group(1))
-        if not 1 <= horizon_ply <= 2_147_483_647:
-            raise ContractError("ordinary reply_multipv probe horizon is out of range")
-        if moves:
-            raise ContractError("ordinary reply_multipv probe must not carry request moves")
+    if len(moves) != 1 or multi_pv != 1:
+        raise ContractError("branch-reply probe must bind one exact legal reply")
+    reply = chess.Move.from_uci(moves[0])
+    if not board.is_legal(reply):
+        raise ContractError("branch-reply probe move is illegal at requested FEN")
+    horizon = _safe_text(value["horizon"], "probe request horizon")
+    if len(horizon) > 14:
+        raise ContractError("branch-reply probe horizon is too long")
+    horizon_match = re.fullmatch(r"ply:([1-9][0-9]*)", horizon)
+    if horizon_match is None:
+        raise ContractError("branch-reply probe horizon is invalid")
+    horizon_ply = int(horizon_match.group(1))
+    if not 1 <= horizon_ply <= 2_147_483_647:
+        raise ContractError("branch-reply probe horizon is out of range")
     return value
+
+
+def _fen_provable_automatic_terminal(board: chess.Board) -> dict[str, str] | None:
+    if board.is_checkmate():
+        return {
+            "kind": "checkmate",
+            "winner": "black" if board.turn == chess.WHITE else "white",
+        }
+    if board.is_stalemate():
+        return {"kind": "stalemate"}
+    if board.is_insufficient_material():
+        return {"kind": "insufficient_material"}
+    if board.is_seventyfive_moves():
+        return {"kind": "seventy_five_move_rule"}
+    return None
 
 
 def _stream_hash(lines: Sequence[str]) -> str:
@@ -373,28 +367,35 @@ def _search_probe(
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     probe = _validate_probe_request(request)
     branch_board = chess.Board(str(probe["fen"]))
-    resource = probe.get("opponentResourceMove")
-    continuation = probe.get("continuationMoves")
     search_board = branch_board.copy(stack=False)
-    prefix: list[str] = []
-    forced_moves = (
-        list(continuation)
-        if continuation is not None
-        else [resource]
-        if resource is not None
-        else []
-    )
-    for forced in forced_moves:
-        forced_move = chess.Move.from_uci(str(forced))
-        if not search_board.is_legal(forced_move):
-            raise ContractError(f"forced probe move is illegal at requested FEN: {forced}")
-        search_board.push(forced_move)
-        prefix.append(str(forced))
+    prefix = [str(probe["moves"][0])]
+    search_board.push(chess.Move.from_uci(prefix[0]))
+    automatic_terminal = _fen_provable_automatic_terminal(search_board)
+    if automatic_terminal is not None:
+        result = {
+            "id": probe["id"],
+            "fen": probe["fen"],
+            "moves": prefix,
+            "terminal": automatic_terminal,
+            "purpose": probe["purpose"],
+            "probedMove": probe["candidateMove"],
+            "candidateMove": probe["candidateMove"],
+            "variationHash": probe["variationHash"],
+            "horizon": probe["horizon"],
+        }
+        proof = {
+            "schema_version": RULE_PROOF_SCHEMA,
+            "probe_id": probe["id"],
+            "request_fen": probe["fen"],
+            "move_uci": prefix[0],
+            "terminal": automatic_terminal,
+        }
+        return result, proof
     depth = int(probe["depth"])
     multipv = int(probe["multiPv"])
     expected_lines = min(multipv, search_board.legal_moves.count())
     if expected_lines < 1:
-        raise ContractError("reply_multipv probe reached a terminal search position")
+        raise ContractError("branch_reply probe reached a terminal search position")
 
     session: _UciSession | None = None
     identity: Any = None
@@ -529,10 +530,5 @@ def _search_probe(
         "candidateMove": probe["candidateMove"],
         "variationHash": probe["variationHash"],
     }
-    if resource is not None:
-        result["opponentResourceMove"] = resource
-    if continuation is not None:
-        result["continuationMoves"] = continuation
-    if probe.get("horizon") is not None:
-        result["horizon"] = probe["horizon"]
+    result["horizon"] = probe["horizon"]
     return result, io_document

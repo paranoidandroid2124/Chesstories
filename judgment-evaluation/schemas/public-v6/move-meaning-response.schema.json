@@ -21,6 +21,20 @@
       "type": "string",
       "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"
     },
+    "side": {
+      "enum": ["white", "black"]
+    },
+    "square": {
+      "type": "string",
+      "pattern": "^[a-h][1-8]$"
+    },
+    "boardFile": {
+      "type": "string",
+      "pattern": "^[a-h]$"
+    },
+    "pieceRole": {
+      "enum": ["pawn", "knight", "bishop", "rook", "queen", "king"]
+    },
     "errorResponse": {
       "type": "object",
       "additionalProperties": false,
@@ -43,7 +57,6 @@
         "probe_requests": {
           "type": "array",
           "minItems": 1,
-          "maxItems": 12,
           "items": {"$ref": "#/$defs/probeRequest"}
         }
       }
@@ -60,13 +73,6 @@
       }
     },
     "probeRequest": {
-      "oneOf": [
-        {"$ref": "#/$defs/horizonProbeRequest"},
-        {"$ref": "#/$defs/opponentResourceProbeRequest"},
-        {"$ref": "#/$defs/causalContinuationProbeRequest"}
-      ]
-    },
-    "horizonProbeRequest": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -85,12 +91,13 @@
         "fen": {"$ref": "#/$defs/nonEmptyString"},
         "moves": {
           "type": "array",
-          "maxItems": 0,
+          "minItems": 1,
+          "maxItems": 1,
           "items": {"$ref": "#/$defs/uciMove"}
         },
         "depth": {"type": "integer", "minimum": 1, "maximum": 100},
-        "purpose": {"const": "reply_multipv"},
-        "multiPv": {"type": "integer", "minimum": 1, "maximum": 3},
+        "purpose": {"const": "branch_reply"},
+        "multiPv": {"const": 1},
         "candidateMove": {"$ref": "#/$defs/uciMove"},
         "variationHash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "horizon": {
@@ -100,79 +107,17 @@
         }
       }
     },
-    "opponentResourceProbeRequest": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "fen",
-        "moves",
-        "depth",
-        "purpose",
-        "multiPv",
-        "candidateMove",
-        "variationHash",
-        "opponentResourceMove"
-      ],
-      "properties": {
-        "id": {"$ref": "#/$defs/nonEmptyString"},
-        "fen": {"$ref": "#/$defs/nonEmptyString"},
-        "moves": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 1,
-          "items": {"$ref": "#/$defs/uciMove"}
-        },
-        "depth": {"type": "integer", "minimum": 1, "maximum": 100},
-        "purpose": {"const": "reply_multipv"},
-        "multiPv": {"const": 1},
-        "candidateMove": {"$ref": "#/$defs/uciMove"},
-        "variationHash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "opponentResourceMove": {"$ref": "#/$defs/uciMove"}
-      }
-    },
-    "causalContinuationProbeRequest": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "fen",
-        "moves",
-        "depth",
-        "purpose",
-        "multiPv",
-        "candidateMove",
-        "variationHash",
-        "continuationMoves"
-      ],
-      "properties": {
-        "id": {"$ref": "#/$defs/nonEmptyString"},
-        "fen": {"$ref": "#/$defs/nonEmptyString"},
-        "moves": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "items": {"$ref": "#/$defs/uciMove"}
-        },
-        "depth": {"type": "integer", "minimum": 1, "maximum": 100},
-        "purpose": {"const": "reply_multipv"},
-        "multiPv": {"const": 1},
-        "candidateMove": {"$ref": "#/$defs/uciMove"},
-        "variationHash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "continuationMoves": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "items": {"$ref": "#/$defs/uciMove"}
-        }
-      }
-    },
     "moveCommentary": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["primary"],
+      "required": ["primary", "structural_idea_units"],
       "properties": {
         "primary": {"$ref": "#/$defs/primary"},
+        "structural_idea_units": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/structuralIdeaUnit"}
+        },
         "causal_explanations": {
           "type": "array",
           "minItems": 1,
@@ -185,6 +130,454 @@
           "items": {"$ref": "#/$defs/resourceLiabilityResponsibilityLink"}
         }
       }
+    },
+    "structuralProofSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["proof_key", "evidence_id"],
+      "properties": {
+        "proof_key": {"$ref": "#/$defs/nonEmptyString"},
+        "evidence_id": {"$ref": "#/$defs/nonEmptyString"}
+      }
+    },
+    "relationPiece": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["piece", "square"],
+      "properties": {
+        "piece": {"$ref": "#/$defs/pieceRole"},
+        "square": {"$ref": "#/$defs/square"}
+      }
+    },
+    "nullableRelationPiece": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/relationPiece"}
+      ]
+    },
+    "coloredRelationPiece": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["piece", "square", "side"],
+      "properties": {
+        "piece": {"$ref": "#/$defs/pieceRole"},
+        "square": {"$ref": "#/$defs/square"},
+        "side": {"$ref": "#/$defs/side"}
+      }
+    },
+    "rootMovement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["side", "from", "to", "piece_before", "piece_after"],
+      "properties": {
+        "side": {"$ref": "#/$defs/side"},
+        "from": {"$ref": "#/$defs/square"},
+        "to": {"$ref": "#/$defs/square"},
+        "piece_before": {"$ref": "#/$defs/pieceRole"},
+        "piece_after": {"$ref": "#/$defs/pieceRole"}
+      }
+    },
+    "controlTarget": {
+      "oneOf": [
+        {"$ref": "#/$defs/emptyControlTarget"},
+        {"$ref": "#/$defs/friendlyControlTarget"},
+        {"$ref": "#/$defs/enemyControlTarget"}
+      ]
+    },
+    "emptyControlTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {"const": "empty"}
+      }
+    },
+    "friendlyControlTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "piece"],
+      "properties": {
+        "kind": {"const": "friendly_piece"},
+        "piece": {"$ref": "#/$defs/pieceRole"}
+      }
+    },
+    "enemyControlTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "piece"],
+      "properties": {
+        "kind": {"const": "enemy_piece"},
+        "piece": {"$ref": "#/$defs/pieceRole"}
+      }
+    },
+    "controlReach": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["square", "target"],
+      "properties": {
+        "square": {"$ref": "#/$defs/square"},
+        "target": {"$ref": "#/$defs/controlTarget"}
+      }
+    },
+    "relationDirection": {
+      "oneOf": [
+        {"$ref": "#/$defs/fileRelationDirection"},
+        {"$ref": "#/$defs/rankRelationDirection"},
+        {"$ref": "#/$defs/diagonalRelationDirection"}
+      ]
+    },
+    "fileRelationDirection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file_step", "rank_step", "axis"],
+      "properties": {
+        "file_step": {"const": 0},
+        "rank_step": {"enum": [-1, 1]},
+        "axis": {"const": "file"}
+      }
+    },
+    "rankRelationDirection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file_step", "rank_step", "axis"],
+      "properties": {
+        "file_step": {"enum": [-1, 1]},
+        "rank_step": {"const": 0},
+        "axis": {"const": "rank"}
+      }
+    },
+    "diagonalRelationDirection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file_step", "rank_step", "axis"],
+      "properties": {
+        "file_step": {"enum": [-1, 1]},
+        "rank_step": {"enum": [-1, 1]},
+        "axis": {"const": "diagonal"}
+      }
+    },
+    "structuralSubjectBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "binding_key", "proof_sources"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "open_file",
+            "semi_open_file",
+            "piece_at",
+            "geometric_control_set_change",
+            "slider_reach_change",
+            "pawn_tension_created",
+            "pawn_tension_resolved",
+            "battery",
+            "passed_pawn_created",
+            "passed_pawn_lost",
+            "passed_pawn_advanced",
+            "passed_status_created",
+            "passed_pawn_promoted"
+          ]
+        },
+        "binding_key": {"$ref": "#/$defs/nonEmptyString"},
+        "proof_sources": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/structuralProofSource"}
+        },
+        "side": {"$ref": "#/$defs/side"},
+        "file": {"$ref": "#/$defs/boardFile"},
+        "square": {"$ref": "#/$defs/square"},
+        "piece": {"$ref": "#/$defs/pieceRole"},
+        "root_movement": {"$ref": "#/$defs/rootMovement"},
+        "controlling_side": {"$ref": "#/$defs/side"},
+        "target_square": {"$ref": "#/$defs/square"},
+        "before_target": {"$ref": "#/$defs/controlTarget"},
+        "after_target": {"$ref": "#/$defs/controlTarget"},
+        "before_controllers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/relationPiece"}
+        },
+        "after_controllers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/relationPiece"}
+        },
+        "removed_controllers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/relationPiece"}
+        },
+        "established_controllers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/relationPiece"}
+        },
+        "slider_before": {"$ref": "#/$defs/nullableRelationPiece"},
+        "slider_after": {"$ref": "#/$defs/nullableRelationPiece"},
+        "direction": {"$ref": "#/$defs/relationDirection"},
+        "gained": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/controlReach"}
+        },
+        "lost": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/controlReach"}
+        },
+        "from": {"$ref": "#/$defs/square"},
+        "to": {"$ref": "#/$defs/square"},
+        "axis": {"enum": ["file", "rank", "diagonal"]},
+        "pieces": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/coloredRelationPiece"}
+        },
+        "relative_rank": {"type": "integer", "minimum": 1, "maximum": 8}
+      },
+      "oneOf": [
+        {
+          "required": ["kind", "binding_key", "proof_sources", "file"],
+          "maxProperties": 4,
+          "properties": {"kind": {"const": "open_file"}}
+        },
+        {
+          "required": ["kind", "binding_key", "proof_sources", "side", "file"],
+          "maxProperties": 5,
+          "properties": {"kind": {"const": "semi_open_file"}}
+        },
+        {
+          "required": ["kind", "binding_key", "proof_sources", "side", "piece", "square"],
+          "maxProperties": 6,
+          "properties": {"kind": {"const": "piece_at"}}
+        },
+        {
+          "required": [
+            "kind",
+            "binding_key",
+            "proof_sources",
+            "root_movement",
+            "controlling_side",
+            "target_square",
+            "before_target",
+            "after_target",
+            "before_controllers",
+            "after_controllers",
+            "removed_controllers",
+            "established_controllers"
+          ],
+          "maxProperties": 12,
+          "properties": {"kind": {"const": "geometric_control_set_change"}}
+        },
+        {
+          "required": [
+            "kind",
+            "binding_key",
+            "proof_sources",
+            "side",
+            "slider_before",
+            "slider_after",
+            "direction",
+            "gained",
+            "lost"
+          ],
+          "maxProperties": 9,
+          "properties": {"kind": {"const": "slider_reach_change"}},
+          "not": {
+            "required": ["slider_before", "slider_after"],
+            "properties": {
+              "slider_before": {"type": "null"},
+              "slider_after": {"type": "null"}
+            }
+          },
+          "anyOf": [
+            {"properties": {"gained": {"minItems": 1}}},
+            {"properties": {"lost": {"minItems": 1}}}
+          ]
+        },
+        {
+          "required": ["kind", "binding_key", "proof_sources", "side", "piece", "from", "to"],
+          "maxProperties": 7,
+          "properties": {
+            "kind": {"const": "pawn_tension_created"},
+            "piece": {"const": "pawn"}
+          }
+        },
+        {
+          "required": ["kind", "binding_key", "proof_sources", "side", "piece", "from", "to"],
+          "maxProperties": 7,
+          "properties": {
+            "kind": {"const": "pawn_tension_resolved"},
+            "piece": {"const": "pawn"}
+          }
+        },
+        {
+          "required": ["kind", "binding_key", "proof_sources", "side", "axis", "pieces"],
+          "maxProperties": 6,
+          "properties": {"kind": {"const": "battery"}}
+        },
+        {
+          "required": ["kind", "binding_key", "proof_sources", "side", "piece", "square"],
+          "maxProperties": 6,
+          "properties": {
+            "kind": {"const": "passed_pawn_created"},
+            "piece": {"const": "pawn"}
+          }
+        },
+        {
+          "required": ["kind", "binding_key", "proof_sources", "side", "piece", "square"],
+          "maxProperties": 6,
+          "properties": {
+            "kind": {"const": "passed_pawn_lost"},
+            "piece": {"const": "pawn"}
+          }
+        },
+        {
+          "required": [
+            "kind",
+            "binding_key",
+            "proof_sources",
+            "side",
+            "piece",
+            "from",
+            "to",
+            "relative_rank"
+          ],
+          "maxProperties": 8,
+          "properties": {
+            "kind": {"const": "passed_pawn_advanced"},
+            "piece": {"const": "pawn"}
+          }
+        },
+        {
+          "required": [
+            "kind",
+            "binding_key",
+            "proof_sources",
+            "side",
+            "piece",
+            "from",
+            "to",
+            "relative_rank"
+          ],
+          "maxProperties": 8,
+          "properties": {
+            "kind": {"const": "passed_status_created"},
+            "piece": {"const": "pawn"}
+          }
+        },
+        {
+          "required": ["kind", "binding_key", "proof_sources", "side", "piece", "from", "to"],
+          "maxProperties": 7,
+          "properties": {
+            "kind": {"const": "passed_pawn_promoted"},
+            "piece": {"const": "pawn"}
+          }
+        }
+      ]
+    },
+    "structuralIdeaUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "structural_evidence_id",
+        "consequence_index",
+        "line_id",
+        "root_move",
+        "consequence_kind",
+        "consequence_key",
+        "polarity",
+        "state_direction",
+        "strength",
+        "subjects",
+        "targets"
+      ],
+      "properties": {
+        "structural_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "consequence_index": {"type": "integer", "minimum": 0},
+        "line_id": {"$ref": "#/$defs/nonEmptyString"},
+        "root_move": {"$ref": "#/$defs/uciMove"},
+        "consequence_kind": {
+          "enum": [
+            "open_file_established",
+            "semi_open_file_established",
+            "geometric_control_set_changed",
+            "pawn_tension_created",
+            "pawn_tension_resolution",
+            "passed_pawn_progress",
+            "passed_pawn_concession",
+            "battery_formation",
+            "slider_reach_changed"
+          ]
+        },
+        "consequence_key": {"$ref": "#/$defs/nonEmptyString"},
+        "polarity": {"enum": ["gain", "loss", "neutral"]},
+        "state_direction": {"enum": ["established", "removed", "changed"]},
+        "strength": {"type": "integer"},
+        "subjects": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/structuralSubjectBinding"}
+        },
+        "targets": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/structuralSubjectBinding"}
+        }
+      },
+      "anyOf": [
+        {"properties": {"subjects": {"minItems": 1}}},
+        {"properties": {"targets": {"minItems": 1}}}
+      ],
+      "oneOf": [
+        {
+          "properties": {
+            "consequence_kind": {
+              "enum": [
+                "open_file_established",
+                "semi_open_file_established",
+                "pawn_tension_created",
+                "battery_formation"
+              ]
+            },
+            "polarity": {"const": "neutral"},
+            "state_direction": {"const": "established"}
+          }
+        },
+        {
+          "properties": {
+            "consequence_kind": {"const": "pawn_tension_resolution"},
+            "polarity": {"const": "neutral"},
+            "state_direction": {"const": "removed"}
+          }
+        },
+        {
+          "properties": {
+            "consequence_kind": {"const": "passed_pawn_progress"},
+            "polarity": {"const": "gain"},
+            "state_direction": {"const": "established"}
+          }
+        },
+        {
+          "properties": {
+            "consequence_kind": {"const": "passed_pawn_concession"},
+            "polarity": {"const": "loss"},
+            "state_direction": {"const": "removed"}
+          }
+        },
+        {
+          "properties": {
+            "consequence_kind": {
+              "enum": ["geometric_control_set_changed", "slider_reach_changed"]
+            },
+            "polarity": {"const": "neutral"},
+            "state_direction": {"const": "changed"}
+          }
+        }
+      ]
     },
     "primary": {
       "oneOf": [
@@ -633,23 +1026,12 @@
         "missed_tactical_resource",
         "tactical_refutation_of_played",
         "candidate_tactical_liability",
-        "wrong_recapturer",
         "recapture_recovery_window",
         "wrong_move_order",
         "tempo_loss",
         "conversion_miss",
         "conversion_secured",
         "sacrifice_compensation",
-        "structural_improvement",
-        "target_pressure_gain",
-        "target_pressure_release",
-        "center_control_gain",
-        "pawn_break_opportunity",
-        "activity_gain",
-        "activity_loss",
-        "opponent_restriction",
-        "strategic_concession",
-        "missed_strategic_improvement",
         "plan_improvement",
         "plan_contradiction",
         "defensive_resource",
@@ -735,11 +1117,9 @@
             "pawn",
             "plan_subject",
             "relation",
-            "motif",
             "line",
             "mechanism",
-            "consequence",
-            "horizon"
+            "consequence"
           ]
         },
         "key": {"$ref": "#/$defs/nonEmptyString"}
@@ -754,15 +1134,8 @@
           "enum": [
             "produces_line_consequence",
             "is_root_line_event",
-            "triggers_endgame_horizon",
-            "makes_structural_transition",
-            "instantiates_motif",
             "instantiates_relation",
-            "creates_threat",
-            "defends_threat",
-            "realizes_plan_result",
-            "restricts_opponent_resource",
-            "creates_defensive_recapture_resource"
+            "realizes_plan_result"
           ]
         },
         "steps": {
@@ -787,24 +1160,23 @@
     "directCausePlanEventOccurrence": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["goal_kind", "actor_from", "actor_to", "targets", "results"],
+      "required": [
+        "goal_kind",
+        "actor_side",
+        "actor_role",
+        "actor_after_role",
+        "actor_from",
+        "actor_to",
+        "legal_move_relation"
+      ],
       "properties": {
-        "goal_kind": {"$ref": "#/$defs/nonEmptyString"},
-        "actor_role": {"$ref": "#/$defs/nonEmptyString"},
-        "actor_from": {"type": "string", "pattern": "^[a-h][1-8]$"},
-        "actor_to": {"type": "string", "pattern": "^[a-h][1-8]$"},
-        "targets": {
-          "type": "array",
-          "maxItems": 64,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/nonEmptyString"}
-        },
-        "results": {
-          "type": "array",
-          "maxItems": 64,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/nonEmptyString"}
-        }
+        "goal_kind": {"enum": ["passer_conversion", "passed_pawn_manufacture"]},
+        "actor_side": {"$ref": "#/$defs/side"},
+        "actor_role": {"$ref": "#/$defs/pieceRole"},
+        "actor_after_role": {"$ref": "#/$defs/pieceRole"},
+        "actor_from": {"$ref": "#/$defs/square"},
+        "actor_to": {"$ref": "#/$defs/square"},
+        "legal_move_relation": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
       }
     }
   }

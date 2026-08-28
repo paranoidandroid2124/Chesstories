@@ -203,7 +203,7 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
     val matePayload = LineFactEvidence.fromCertifiedReplay(
       line = mateLine,
       replay = mateReplay,
-      material = Some(emptyMaterial),
+      material = None,
       events = List(
         LineMoveEvent(
           kind = LineEventKind.Check,
@@ -261,7 +261,7 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
     val payload = LineFactEvidence.fromCertifiedReplay(
       line = reference,
       replay = replay,
-      material = Some(emptyMaterial),
+      material = None,
       events = List(LineMoveEvent(
         kind = LineEventKind.Tempo,
         moveUci = reference.rootMove,
@@ -363,18 +363,6 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
         DirectCauseImportanceMeasure.MaterialOutcome(durableNetCp.getOrElse(valueCp), eventPly)
       )
     )
-
-  private val emptyMaterial = LineMaterialSummary(
-    sideToMove = White,
-    captures = Nil,
-    netCaptureCpForMover = 0,
-    maxGainCpForMover = 0,
-    maxLossCpForMover = 0,
-    hasRecaptureChain = false,
-    hasRecoveryWindow = false,
-    promotionGainCpForMover = 0,
-    materialWindowComplete = true
-  )
 
   private def certifiedReplay(startFen: String, moves: List[String]): CanonicalLineReplay =
     (for

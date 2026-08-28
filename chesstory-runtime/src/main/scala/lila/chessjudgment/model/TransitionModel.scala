@@ -1,17 +1,57 @@
 package lila.chessjudgment.model
 
+import chess.Color
 import lila.chessjudgment.model.strategic.PlanTaxonomy.{ PlanKind, PlanTheme }
 import lila.chessjudgment.model.strategic.PlanContinuity
 import play.api.libs.json.*
 
+final case class PlanActorOccurrence private (
+    side: Color,
+    beforeRole: String,
+    afterRole: String,
+    from: String,
+    to: String,
+    legalMoveSemanticId: String
+):
+  require(beforeRole.nonEmpty && afterRole.nonEmpty, "a plan actor needs exact before/after roles")
+  require(from.matches("[a-h][1-8]") && to.matches("[a-h][1-8]"), "a plan actor needs exact board squares")
+  require(legalMoveSemanticId.matches("[0-9a-f]{64}"), "a plan actor needs its canonical legal-move relation")
+
+  def stableKey: String =
+    List(
+      side.toString.toLowerCase,
+      beforeRole,
+      afterRole,
+      from,
+      to,
+      legalMoveSemanticId
+    ).mkString("|")
+
+object PlanActorOccurrence:
+  private[chessjudgment] def certified(
+      side: Color,
+      beforeRole: String,
+      afterRole: String,
+      from: String,
+      to: String,
+      legalMoveSemanticId: String
+  ): PlanActorOccurrence =
+    PlanActorOccurrence(
+      side,
+      normalize(beforeRole),
+      normalize(afterRole),
+      normalize(from),
+      normalize(to),
+      normalize(legalMoveSemanticId)
+    )
+
+  private def normalize(raw: String): String =
+    Option(raw).getOrElse("").trim.toLowerCase
+
 case class PlanEventIdentity(
     rootMove: String,
     kind: PlanKind,
-    actorRole: Option[String],
-    actorFrom: Option[String],
-    actorTo: Option[String],
-    targets: List[String],
-    results: List[String]
+    actor: PlanActorOccurrence
 ):
   def goalTheme: PlanTheme = kind.theme
   def goalKey: String = kind.id
@@ -19,31 +59,18 @@ case class PlanEventIdentity(
     List(
       rootMove,
       goalKey,
-      actorRole.getOrElse(""),
-      actorFrom.getOrElse(""),
-      actorTo.getOrElse(""),
-      targets.distinct.sorted.mkString(","),
-      results.distinct.sorted.mkString(",")
+      actor.stableKey
     ).mkString("|")
 
 object PlanEventIdentity:
-  def from(
+  private[chessjudgment] def fromCanonical(
       rootMove: String,
       kind: PlanKind,
-      actorRole: Option[String],
-      targets: List[String],
-      results: List[String]
+      actor: PlanActorOccurrence
   ): PlanEventIdentity =
     val move = Option(rootMove).getOrElse("").trim.toLowerCase
-    PlanEventIdentity(
-      rootMove = move,
-      kind = kind,
-      actorRole = actorRole.map(_.trim.toLowerCase).filter(_.nonEmpty),
-      actorFrom = Option.when(move.length >= 4)(move.take(2)),
-      actorTo = Option.when(move.length >= 4)(move.slice(2, 4)),
-      targets = targets.map(_.trim.toLowerCase).filter(_.nonEmpty).distinct.sorted,
-      results = results.map(_.trim.toLowerCase).filter(_.nonEmpty).distinct.sorted
-    )
+    require(move.matches("[a-h][1-8][a-h][1-8][qrbn]?"), "a plan event needs one exact legal move id")
+    PlanEventIdentity(move, kind, actor)
 
   given Reads[PlanEventIdentity] = Reads { js =>
     for
@@ -59,19 +86,27 @@ object PlanEventIdentity:
             .filter(_ == kind.theme)
             .map(_ => JsSuccess(()))
             .getOrElse(JsError("goalTheme conflicts with goalKind"))
-      actorRole <- (js \ "actorRole").validateOpt[String]
-      actorFrom <- (js \ "actorFrom").validateOpt[String]
-      actorTo <- (js \ "actorTo").validateOpt[String]
-      targets <- (js \ "targets").validateOpt[List[String]]
-      results <- (js \ "results").validateOpt[List[String]]
+      rawSide <- (js \ "actorSide").validate[String]
+      actorSide <- rawSide.trim.toLowerCase match
+        case "white" => JsSuccess(Color.White)
+        case "black" => JsSuccess(Color.Black)
+        case _       => JsError("invalid actorSide")
+      actorRole <- (js \ "actorRole").validate[String]
+      actorAfterRole <- (js \ "actorAfterRole").validate[String]
+      actorFrom <- (js \ "actorFrom").validate[String]
+      actorTo <- (js \ "actorTo").validate[String]
+      legalMoveSemanticId <- (js \ "actorLegalMoveSemanticId").validate[String]
     yield PlanEventIdentity(
-      rootMove,
+      rootMove.trim.toLowerCase,
       kind,
-      actorRole,
-      actorFrom,
-      actorTo,
-      targets.getOrElse(Nil),
-      results.getOrElse(Nil)
+      PlanActorOccurrence.certified(
+        actorSide,
+        actorRole,
+        actorAfterRole,
+        actorFrom,
+        actorTo,
+        legalMoveSemanticId
+      )
     )
   }
 
@@ -80,11 +115,12 @@ object PlanEventIdentity:
       "rootMove" -> event.rootMove,
       "goalTheme" -> event.goalTheme.id,
       "goalKind" -> event.kind.id,
-      "actorRole" -> event.actorRole,
-      "actorFrom" -> event.actorFrom,
-      "actorTo" -> event.actorTo,
-      "targets" -> event.targets,
-      "results" -> event.results
+      "actorSide" -> event.actor.side.toString.toLowerCase,
+      "actorRole" -> event.actor.beforeRole,
+      "actorAfterRole" -> event.actor.afterRole,
+      "actorFrom" -> event.actor.from,
+      "actorTo" -> event.actor.to,
+      "actorLegalMoveSemanticId" -> event.actor.legalMoveSemanticId
     )
   }
 
@@ -113,11 +149,7 @@ final case class PlanEventOccurrence private (
       List(
         event.rootMove,
         event.kind.id,
-        PlanExactOccurrenceKey.optional(event.actorRole),
-        PlanExactOccurrenceKey.optional(event.actorFrom),
-        PlanExactOccurrenceKey.optional(event.actorTo),
-        PlanExactOccurrenceKey.sequence(event.targets.distinct.sorted),
-        PlanExactOccurrenceKey.sequence(event.results.distinct.sorted)
+        event.actor.stableKey
       )
     )
     PlanExactOccurrenceKey.product("event-occurrence", List(eventKey, before.stableKey, after.stableKey))

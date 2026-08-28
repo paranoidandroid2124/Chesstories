@@ -1,10 +1,11 @@
 package lila.chessjudgment.model.judgment
 
-import chess.{ Bitboard, Color, King, Rank, Rook, Square }
+import chess.{ Bishop, Color, King, Queen, Rook, Square }
 
+import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.analysis.position.PositionRelationExtractor.PositionRelationInventoryCertificate
 import lila.chessjudgment.model.line.{ LegalReplayStep, PrincipalVariationEvidence }
-import lila.chessjudgment.model.position.{ BoardGeometry, BoardPieceTransition, BoardTransitionFootprint }
+import lila.chessjudgment.model.position.{ BoardGeometry, BoardTransitionFootprint }
 
 private[chessjudgment] enum RelationChangeDirection:
   case Established
@@ -100,7 +101,12 @@ private[chessjudgment] object RelationProofKey:
           EvidenceSquare(transition.to.key)
         )
     }
-    (changed ++ movers).distinct.sortBy(_.stableKey)
+    val keys = changed ++ movers
+    require(
+      keys.distinct.size == keys.size,
+      "one canonical transition footprint cannot repeat a relation proof key"
+    )
+    keys.sortBy(_.stableKey)
 
 private[chessjudgment] final case class RelationSemanticChange(
     direction: RelationChangeDirection,
@@ -117,18 +123,30 @@ private[chessjudgment] final case class RelationSemanticChange(
   def key: RelationChangeKey = RelationChangeKey(direction, kind, semanticId)
   def stableKey: String = key.stableKey
 
+private[chessjudgment] final case class RelationNamedRayChange(
+    projection: RelationNamedRayProjection,
+    change: RelationSemanticChange
+):
+  require(
+    change.detail.isInstanceOf[RelationWitnessDetail.RayBarrier] &&
+      projection.pattern != RelationRayPattern.Ordinary,
+    "a named-ray change needs one exact non-ordinary ray projection"
+  )
+
+  def stableKey: String = change.stableKey
+
 private[chessjudgment] final case class RelationSemanticDelta(
     moveUci: String,
-    moverSide: Color,
-    changedSquares: List[EvidenceSquare],
     changes: List[RelationSemanticChange],
     rootMove: CanonicalRootLegalMove,
     beforeInventory: PositionRelationInventoryCertificate,
     afterInventory: PositionRelationInventoryCertificate,
     geometricControlTransition: GeometricControlRelationTransition,
     geometricSupportTransition: GeometricSupportRelationTransition,
+    sliderReachTransition: ClosedSliderReachTransitionInventory,
     geometricCombinationTransition: GeometricRelationCombinationTransition,
-    newlyEstablishedNamedRays: List[RelationSemanticChange]
+    transitionFootprint: BoardTransitionFootprint,
+    changedNamedRays: List[RelationNamedRayChange]
 ):
   require(changes.map(_.stableKey).distinct.size == changes.size, "duplicate semantic relation changes")
   require(changes.map(_.semanticId).distinct.size == changes.size, "one relation semantic cannot change twice")
@@ -159,17 +177,15 @@ private[chessjudgment] final case class RelationSemanticDelta(
 
 private[chessjudgment] final case class CanonicalRootLegalMove(
     fact: RelationFactEvidence,
-    movement: BoardPieceTransition,
+    witness: RelationMoveTransitionWitness,
     moveUci: String,
     capture: Option[RelationLegalCaptureWitness]
 ):
-  def side: Color = movement.side
-  def from: EvidenceSquare = EvidenceSquare(movement.from.key)
-  def to: EvidenceSquare = EvidenceSquare(movement.to.key)
-  def beforeRole: EvidencePieceRole = EvidencePieceRole(movement.beforeRole.name)
-  def afterRole: EvidencePieceRole = EvidencePieceRole(movement.afterRole.name)
-  def witness: RelationMoveTransitionWitness =
-    RelationMoveTransitionWitness(side, from, to, beforeRole, afterRole)
+  def side: Color = witness.side
+  def from: EvidenceSquare = witness.from
+  def to: EvidenceSquare = witness.to
+  def beforeRole: EvidencePieceRole = witness.beforeRole
+  def afterRole: EvidencePieceRole = witness.afterRole
 
 private[chessjudgment] final case class GeometricControlKey(
     side: Color,
@@ -178,17 +194,7 @@ private[chessjudgment] final case class GeometricControlKey(
     target: EvidenceSquare
 )
 
-private[chessjudgment] final case class GeometricControlTargetStateTransition(
-    key: GeometricControlKey,
-    before: RelationControlTarget,
-    after: RelationControlTarget,
-    removedFact: RelationFactEvidence,
-    establishedFact: RelationFactEvidence
-):
-  require(before != after, "a geometric-control target-state transition must change occupancy state")
-
 private[chessjudgment] final case class GeometricControlRelationTransition(
-    targetStateChanges: List[GeometricControlTargetStateTransition],
     newlyEstablished: List[RelationFactEvidence],
     targetSetChanges: List[GeometricControlTargetSetChange]
 )
@@ -217,6 +223,16 @@ private[chessjudgment] final case class GeometricControlTargetSetChange(
   lazy val established: List[GeometricControlEdge] =
     after.filter(edge => establishedControllers.contains(edge.controller)).sortBy(_.fact.semanticId)
 
+  def stableKey: String =
+    List(
+      side.toString.toLowerCase,
+      target.key.toLowerCase,
+      beforeState.toString,
+      afterState.toString,
+      before.map(_.fact.semanticId).sorted.mkString(","),
+      after.map(_.fact.semanticId).sorted.mkString(",")
+    ).mkString(":")
+
 private[chessjudgment] final case class GeometricSupportEdge(
     fact: RelationFactEvidence,
     supporter: RelationColoredPieceWitness,
@@ -241,24 +257,98 @@ private[chessjudgment] final case class GeometricSupportChange(
     "closed support sets must belong to their exact beneficiary occurrence"
   )
 
+  def stableKey: String =
+    List(
+      supportedBefore.side.toString.toLowerCase,
+      supportedBefore.square.key.toLowerCase,
+      supportedBefore.role.name.toLowerCase,
+      supportedAfter.square.key.toLowerCase,
+      supportedAfter.role.name.toLowerCase,
+      before.map(_.fact.semanticId).sorted.mkString(","),
+      after.map(_.fact.semanticId).sorted.mkString(",")
+    ).mkString(":")
+
 private[chessjudgment] final case class GeometricSupportRelationTransition(
     changes: List[GeometricSupportChange]
 ):
   val removed: List[GeometricSupportEdge] = changes.flatMap(_.removed)
   val established: List[GeometricSupportEdge] = changes.flatMap(_.established)
 
+/** One exact directional reach change for a slider identity. Both the generic
+  * L1 reach fact and the more specific opening/interruption facts consume this
+  * inventory; neither reconstructs slider pairing or ray state independently.
+  */
+private[chessjudgment] final case class ClosedSliderReachChange(
+    side: Color,
+    sliderBefore: Option[RelationPieceWitness],
+    sliderAfter: Option[RelationPieceWitness],
+    direction: RelationRayDirection,
+    before: Option[PositionRelationExtractor.ClosedSliderReach],
+    after: Option[PositionRelationExtractor.ClosedSliderReach],
+    removedControls: List[GeometricControlEdge],
+    establishedControls: List[GeometricControlEdge]
+):
+  require(sliderBefore.nonEmpty || sliderAfter.nonEmpty, "a slider-reach change needs one slider occurrence")
+  require(
+    before.map(_.witness) != after.map(_.witness),
+    "a slider-reach change must alter its exact directional reach"
+  )
+  require(
+    before.forall(reach => reach.side == side && sliderBefore.contains(reach.slider)) &&
+      after.forall(reach => reach.side == side && sliderAfter.contains(reach.slider)),
+    "a slider-reach change must retain its exact before and after slider occurrences"
+  )
+  require(
+    removedControls.forall(edge => sliderBefore.contains(edge.controller)) &&
+      establishedControls.forall(edge => sliderAfter.contains(edge.controller)),
+    "changed controls must belong to the paired slider occurrence"
+  )
+
+  def stableKey: String =
+    def piece(value: Option[RelationPieceWitness]): String =
+      value.map(item => s"${item.role.name.toLowerCase}@${item.square.key.toLowerCase}").getOrElse("-")
+    s"${side.toString.toLowerCase}:${piece(sliderBefore)}:${piece(sliderAfter)}:${direction.stableKey}"
+
+private[chessjudgment] final case class ClosedSliderReachTransitionInventory(
+    changes: List[ClosedSliderReachChange],
+    pieceMovements: List[RelationMoveTransitionWitness]
+):
+  require(
+    changes.map(_.stableKey).distinct.size == changes.size,
+    "one slider-reach transition cannot repeat a directional change"
+  )
+  require(
+    pieceMovements.map(_.stableKey).distinct.size == pieceMovements.size,
+    "one slider-reach transition cannot repeat a causal piece movement"
+  )
+
 private[chessjudgment] final case class GeometricSupporterCaptureChange(
     removedSupport: GeometricSupportEdge
 ):
   def stableKey: String = removedSupport.fact.semanticId
 
-private[chessjudgment] final case class SliderControlInterferenceChange(
+private[chessjudgment] final case class SliderLineInterruptionChange(
     interposer: RelationMoveTransitionWitness,
-    removedControl: GeometricControlEdge,
+    controllerSide: Color,
+    controllerBefore: RelationPieceWitness,
+    controllerAfter: RelationPieceWitness,
+    removedControls: List[GeometricControlEdge],
     establishedBarrier: RelationFactEvidence
 ):
+  require(removedControls.nonEmpty, "a line interruption needs a non-empty affected corridor")
+  require(
+    removedControls.map(_.fact.semanticId).distinct.size == removedControls.size &&
+      removedControls.map(_.target).distinct.size == removedControls.size,
+    "a line interruption cannot repeat one removed control"
+  )
+  require(
+    removedControls.forall(control =>
+      control.side == controllerSide && control.controller == controllerBefore
+    ),
+    "one line interruption may describe only one exact slider occurrence"
+  )
   def stableKey: String =
-    s"${removedControl.fact.semanticId}:${establishedBarrier.semanticId}:${interposer.from.key}-${interposer.to.key}:${interposer.afterRole.name}"
+    s"${removedControls.map(_.fact.semanticId).mkString(",")}:${establishedBarrier.semanticId}:${interposer.from.key}-${interposer.to.key}:${interposer.afterRole.name}"
 
 private[chessjudgment] final case class GeometricLineOpeningChange(
     removingMove: RelationMoveTransitionWitness,
@@ -267,24 +357,27 @@ private[chessjudgment] final case class GeometricLineOpeningChange(
     controllerAfter: EvidenceSquare,
     controllerRole: EvidencePieceRole,
     blocker: RelationColoredPieceWitness,
-    target: EvidenceSquare,
-    targetState: RelationControlTarget,
+    openedControls: List[GeometricControlEdge],
     barrierPattern: RelationRayPattern,
     removalMode: RelationBlockerRemovalMode,
-    removedBarrier: RelationFactEvidence,
-    establishedControl: RelationFactEvidence
+    removedBarrier: RelationFactEvidence
 ):
+  require(openedControls.nonEmpty, "a geometric line opening must establish a non-empty corridor")
+  require(
+    openedControls.map(_.target).distinct.size == openedControls.size,
+    "a geometric line-opening corridor cannot repeat a target square"
+  )
   def stableKey: String =
-    s"${removedBarrier.semanticId}:${establishedControl.semanticId}:${removingMove.from.key}-${removingMove.to.key}:${removalMode.toString}"
+    s"${removedBarrier.semanticId}:${openedControls.map(_.fact.semanticId).mkString(",")}:${removingMove.from.key}-${removingMove.to.key}:${removalMode.toString}"
 
 private[chessjudgment] final case class GeometricRelationCombinationTransition(
     supporterCaptures: List[GeometricSupporterCaptureChange],
-    controlInterferences: List[SliderControlInterferenceChange],
+    lineInterruptions: List[SliderLineInterruptionChange],
     lineOpenings: List[GeometricLineOpeningChange]
 ):
   require(
-    supporterCaptures.map(_.stableKey).distinct.size == supporterCaptures.size &&
-      controlInterferences.map(_.stableKey).distinct.size == controlInterferences.size &&
+      supporterCaptures.map(_.stableKey).distinct.size == supporterCaptures.size &&
+      lineInterruptions.map(_.stableKey).distinct.size == lineInterruptions.size &&
       lineOpenings.map(_.stableKey).distinct.size == lineOpenings.size,
     "a geometric combination transition cannot repeat an exact change"
   )
@@ -302,8 +395,6 @@ private final case class GeometricRelationTransition(
 private[chessjudgment] final case class RelationInventoryTransition(
     comparableRemoved: List[RelationFactEvidence],
     comparableEstablished: List[RelationFactEvidence],
-    turnScopedBefore: List[RelationFactEvidence],
-    turnScopedAfter: List[RelationFactEvidence],
     beforeInventory: PositionRelationInventoryCertificate,
     afterInventory: PositionRelationInventoryCertificate
 ):
@@ -314,11 +405,10 @@ private[chessjudgment] final case class RelationInventoryTransition(
     )
   requireUnique("removed comparable", comparableRemoved)
   requireUnique("established comparable", comparableEstablished)
-  requireUnique("before turn-scoped", turnScopedBefore)
-  requireUnique("after turn-scoped", turnScopedAfter)
-
-  def removed: List[RelationFactEvidence] = comparableRemoved ++ turnScopedBefore
-  def established: List[RelationFactEvidence] = comparableEstablished ++ turnScopedAfter
+  require(
+    (comparableRemoved ++ comparableEstablished).forall(_.kind != RelationFactKind.LegalMove),
+    "a sparse relation transition cannot carry position-owned legal-move inventories"
+  )
 
   private lazy val removedGeometricControlsByKey: Map[GeometricControlKey, (RelationControlTarget, RelationFactEvidence)] =
     geometricControlsByKey(comparableRemoved, "removed")
@@ -332,38 +422,110 @@ private[chessjudgment] final case class RelationInventoryTransition(
     val established = establishedGeometricControlsByKey.toList.sortBy { case (key, _) =>
       (key.side.toString, key.controller.key, key.target.key, key.controllerRole.name)
     }
-    val classified = established.map { case (afterKey, (afterTarget, afterFact)) =>
+    val newlyEstablished = established.flatMap { case (afterKey, (_, afterFact)) =>
       val beforeKey = priorControlKey(afterKey, boardFootprint)
-      removedGeometricControlsByKey.get(beforeKey) match
-        case Some((beforeTarget, beforeFact)) if beforeTarget != afterTarget =>
-          Some(
-            GeometricControlTargetStateTransition(
-              afterKey,
-              beforeTarget,
-              afterTarget,
-              beforeFact,
-              afterFact
-            )
-          ) -> None
-        case Some(_) =>
-          None -> None
-        case None =>
-          None -> Some(afterFact)
+      Option.unless(removedGeometricControlsByKey.contains(beforeKey))(afterFact)
     }
     val targetSetChanges = geometricControlTargetSetChanges(boardFootprint)
     GeometricRelationTransition(
       control = GeometricControlRelationTransition(
-        targetStateChanges = classified.flatMap(_._1),
-        newlyEstablished = classified.flatMap(_._2).sortBy(_.semanticId),
+        newlyEstablished = newlyEstablished.sortBy(_.semanticId),
         targetSetChanges = targetSetChanges
       ),
       support = geometricSupportTransition(boardFootprint, targetSetChanges)
     )
 
-  def geometricCombinationTransition(
+  def sliderReachTransition(
       boardFootprint: BoardTransitionFootprint,
-      rootMove: CanonicalRootLegalMove,
       geometric: GeometricRelationTransition
+  ): ClosedSliderReachTransitionInventory =
+    def isSlider(role: EvidencePieceRole): Boolean =
+      List(Bishop.name, Rook.name, Queen.name).exists(_.equalsIgnoreCase(role.name))
+
+    def sliderAt(
+        inventory: PositionRelationInventoryCertificate,
+        square: EvidenceSquare
+    ): Option[(Color, RelationPieceWitness)] =
+      inventory.stateView.occupantAt(square).filter(piece => isSlider(piece.role)).map(piece =>
+        piece.side -> RelationPieceWitness(piece.square, piece.role)
+      )
+
+    def reachesByDirection(
+        reaches: List[PositionRelationExtractor.ClosedSliderReach]
+    ): Map[RelationRayDirection, PositionRelationExtractor.ClosedSliderReach] =
+      reaches.map(reach => reach.direction -> reach).toMap
+
+    val affectedSquares = (
+      boardFootprint.geometricControlOriginsToRefresh ++ boardFootprint.affectedOccupiedRayOrigins
+    ).toList.sortBy(_.key).map(square => EvidenceSquare(square.key))
+    val beforeSliders = affectedSquares.flatMap(square => sliderAt(beforeInventory, square))
+    val afterSliders = affectedSquares.flatMap(square => sliderAt(afterInventory, square))
+    val pairedFromBefore = beforeSliders.map { case before @ (side, slider) =>
+      val movement = boardFootprint.pieceTransitions.find(candidate =>
+        candidate.side == side && candidate.from.key.equalsIgnoreCase(slider.square.key) &&
+          candidate.beforeRole.name.equalsIgnoreCase(slider.role.name)
+      )
+      val movedAfter = movement.filter(candidate =>
+        isSlider(EvidencePieceRole(candidate.afterRole.name))
+      ).flatMap(candidate =>
+        sliderAt(afterInventory, EvidenceSquare(candidate.to.key)).filter { case (afterSide, afterSlider) =>
+          afterSide == side && afterSlider.role.name.equalsIgnoreCase(candidate.afterRole.name)
+        }
+      )
+      val stationaryAfter = Option.when(movement.isEmpty)(()).flatMap(_ =>
+        sliderAt(afterInventory, slider.square).filter(_ == before)
+      )
+      Some(before) -> movedAfter.orElse(stationaryAfter)
+    }
+    val usedAfter = pairedFromBefore.flatMap(_._2).toSet
+    val pairs = pairedFromBefore ++ afterSliders.filterNot(usedAfter).map(after => None -> Some(after))
+    val removedById = geometric.control.targetSetChanges.flatMap(_.removed).map(edge => edge.fact.semanticId -> edge).toMap
+    val establishedById =
+      geometric.control.targetSetChanges.flatMap(_.established).map(edge => edge.fact.semanticId -> edge).toMap
+
+    val changes = pairs.flatMap { case (beforeSlider, afterSlider) =>
+      val side = beforeSlider.orElse(afterSlider).map(_._1).getOrElse(
+        throw IllegalArgumentException("a slider-reach transition lost both slider occurrences")
+      )
+      val beforePiece = beforeSlider.map(_._2)
+      val afterPiece = afterSlider.map(_._2)
+      val beforeByDirection = reachesByDirection(
+        beforePiece.toList.flatMap(piece => beforeInventory.sliderReachesFrom(piece.square))
+      )
+      val afterByDirection = reachesByDirection(
+        afterPiece.toList.flatMap(piece => afterInventory.sliderReachesFrom(piece.square))
+      )
+      (beforeByDirection.keySet ++ afterByDirection.keySet).toList.sortBy(_.stableKey).flatMap { direction =>
+        val beforeReach = beforeByDirection.get(direction)
+        val afterReach = afterByDirection.get(direction)
+        Option.when(beforeReach.map(_.witness) != afterReach.map(_.witness))(
+          ClosedSliderReachChange(
+            side = side,
+            sliderBefore = beforePiece,
+            sliderAfter = afterPiece,
+            direction = direction,
+            before = beforeReach,
+            after = afterReach,
+            removedControls = beforeReach.toList.flatMap(_.controls).flatMap(control =>
+              removedById.get(control.source.semanticId)
+            ),
+            establishedControls = afterReach.toList.flatMap(_.controls).flatMap(control =>
+              establishedById.get(control.source.semanticId)
+            )
+          )
+        ).toList
+      }
+    }.sortBy(_.stableKey)
+
+    ClosedSliderReachTransitionInventory(
+      changes,
+      boardFootprint.pieceTransitions.map(RelationMoveTransitionWitness.from).sortBy(_.stableKey)
+    )
+
+  def geometricCombinationTransition(
+      rootMove: CanonicalRootLegalMove,
+      geometric: GeometricRelationTransition,
+      sliderReach: ClosedSliderReachTransitionInventory
   ): GeometricRelationCombinationTransition =
     val supporterCaptures = rootMove.capture.toList.flatMap { capture =>
       geometric.support.removed.collect {
@@ -376,121 +538,92 @@ private[chessjudgment] final case class RelationInventoryTransition(
       }
     }.sortBy(_.stableKey)
 
-    val establishedRays = comparableEstablished
-      .filter(_.kind == RelationFactKind.RayBarrier)
-      .sortBy(_.semanticId)
-    val removedControls = geometric.control.targetSetChanges.flatMap(_.removed).sortBy(_.fact.semanticId)
-    val controlInterferences = removedControls.flatMap { control =>
-      val controllerBefore = RelationColoredPieceWitness(
-        control.controller.square,
-        control.controller.role,
-        control.side
-      )
-      pieceAfter(controllerBefore, boardFootprint).toList.flatMap { controllerAfter =>
-        boardFootprint.pieceTransitions.flatMap { movement =>
-          val interposer = movementWitness(movement)
-          val liesBetween = BoardGeometry.liesStrictlyBetween(
+    val establishedBarrierIds = comparableEstablished.collect {
+      case relation if relation.kind == RelationFactKind.RayBarrier => relation.semanticId
+    }.toSet
+    val removedBarrierIds = comparableRemoved.collect {
+      case relation if relation.kind == RelationFactKind.RayBarrier => relation.semanticId
+    }.toSet
+
+    val lineInterruptions = sliderReach.changes.flatMap { change =>
+      for
+        controllerBefore <- change.sliderBefore.toList
+        controllerAfter <- change.sliderAfter.toList
+        afterReach <- change.after.toList
+        barrier <- afterReach.barrierSource.filter(source => establishedBarrierIds(source.semanticId)).toList
+        occupant <- afterReach.firstOccupant.toList
+        interposer <- sliderReach.pieceMovements.filter(movement =>
+          movement.side == occupant.side && movement.to == occupant.square && movement.afterRole == occupant.role
+        )
+        interrupted = change.removedControls.filter(control =>
+          BoardGeometry.liesStrictlyBetween(
             boardSquare(controllerAfter.square),
             boardSquare(control.target),
-            movement.to
+            boardSquare(interposer.to)
           )
-          Option.when(liesBetween)(interposer).toList.flatMap { exactInterposer =>
-            establishedRays.collect {
-              case barrier
-                  if (barrier.detail match
-                    case RelationWitnessDetail.RayBarrier(side, controller, role, occupants, _) =>
-                      side == controllerAfter.side && controller == controllerAfter.square &&
-                        role == controllerAfter.role &&
-                        occupants.headOption.exists(occupant =>
-                          occupant.side == movement.side &&
-                            occupant.square.key.equalsIgnoreCase(movement.to.key) &&
-                            occupant.role.name.equalsIgnoreCase(movement.afterRole.name)
-                        )
-                    case _ => false) =>
-                SliderControlInterferenceChange(exactInterposer, control, barrier)
-            }
-          }
-        }
-      }
+        ).sortBy(control =>
+          BoardGeometry.lineSpan(boardSquare(controllerAfter.square), boardSquare(control.target)).size ->
+            control.target.key
+        )
+        if interrupted.nonEmpty
+      yield SliderLineInterruptionChange(
+        interposer,
+        change.side,
+        controllerBefore,
+        controllerAfter,
+        interrupted,
+        barrier
+      )
     }.sortBy(_.stableKey)
 
-    val removedRays = comparableRemoved.filter(_.kind == RelationFactKind.RayBarrier).sortBy(_.semanticId)
-    val establishedControls = geometric.control.targetSetChanges.flatMap(_.established).sortBy(_.fact.semanticId)
-    val lineOpenings = removedRays.flatMap { removed =>
-      removed.detail match
-        case ray @ RelationWitnessDetail.RayBarrier(
-              controllerSide,
-              controllerBefore,
-              controllerBeforeRole,
-              occupants,
-              _
-            ) =>
-          val blocker = occupants.head
-          val movedBlocker = boardFootprint.pieceTransitions.find(movement =>
-            movement.side == blocker.side &&
-              movement.from.key.equalsIgnoreCase(blocker.square.key) &&
-              movement.beforeRole.name.equalsIgnoreCase(blocker.role.name)
+    val lineOpenings = sliderReach.changes.flatMap { change =>
+      for
+        controllerBefore <- change.sliderBefore.toList
+        controllerAfter <- change.sliderAfter.toList
+        beforeReach <- change.before.toList
+        removedBarrier <- beforeReach.barrierSource.filter(source => removedBarrierIds(source.semanticId)).toList
+        blocker <- beforeReach.firstOccupant.toList
+        barrierPattern <- (removedBarrier.detail match
+          case ray: RelationWitnessDetail.RayBarrier => Some(RelationRayProjection.pattern(ray))
+          case _                                      => None).toList
+        removal <- (
+          sliderReach.pieceMovements.filter(movement =>
+            movement.side == blocker.side && movement.from == blocker.square && movement.beforeRole == blocker.role
+          ).map(movement => RelationBlockerRemovalMode.Moved -> movement) ++
+            rootMove.capture.filter(capture =>
+              capture.capturedSide == blocker.side && capture.capturedSquare == blocker.square &&
+                capture.capturedRole == blocker.role
+            ).map(_ => RelationBlockerRemovalMode.Captured -> rootMove.witness)
+        )
+        opened = change.establishedControls.filter(control =>
+          BoardGeometry.liesStrictlyBetween(
+            boardSquare(controllerBefore.square),
+            boardSquare(control.target),
+            boardSquare(blocker.square)
           )
-          val capturedBlocker = rootMove.capture.filter(capture =>
-            capture.capturedSide == blocker.side && capture.capturedSquare == blocker.square &&
-              capture.capturedRole == blocker.role
-          )
-          val removal = movedBlocker
-            .map(movement => RelationBlockerRemovalMode.Moved -> movementWitness(movement))
-            .orElse(capturedBlocker.map(_ => RelationBlockerRemovalMode.Captured -> rootMove.witness))
-          removal.toList.flatMap { case (removalMode, removingMove) =>
-            val controllerMovement = boardFootprint.pieceTransitions.find(movement =>
-              movement.side == controllerSide &&
-                movement.from.key.equalsIgnoreCase(controllerBefore.key) &&
-                movement.beforeRole.name.equalsIgnoreCase(controllerBeforeRole.name)
-            )
-            val controllerAfter = controllerMovement
-              .map(movement => EvidenceSquare(movement.to.key))
-              .getOrElse(controllerBefore)
-            val controllerAfterRole = controllerMovement
-              .map(movement => EvidencePieceRole(movement.afterRole.name))
-              .getOrElse(controllerBeforeRole)
-            establishedControls.collect {
-              case control
-                  if control.side == controllerSide && control.controller.square == controllerAfter &&
-                    control.controller.role == controllerAfterRole &&
-                    BoardGeometry.liesStrictlyBetween(
-                      boardSquare(controllerBefore),
-                      boardSquare(control.target),
-                      boardSquare(blocker.square)
-                    ) =>
-                GeometricLineOpeningChange(
-                  removingMove = removingMove,
-                  controllerSide = controllerSide,
-                  controllerBefore = controllerBefore,
-                  controllerAfter = controllerAfter,
-                  controllerRole = controllerAfterRole,
-                  blocker = blocker,
-                  target = control.target,
-                  targetState = control.targetState,
-                  barrierPattern = RelationRayProjection.pattern(ray),
-                  removalMode = removalMode,
-                  removedBarrier = removed,
-                  establishedControl = control.fact
-                )
-            }
-          }
-        case _ => Nil
+        ).sortBy(control =>
+          BoardGeometry.lineSpan(boardSquare(controllerAfter.square), boardSquare(control.target)).size ->
+            control.target.key
+        )
+        if opened.nonEmpty
+      yield GeometricLineOpeningChange(
+        removingMove = removal._2,
+        controllerSide = change.side,
+        controllerBefore = controllerBefore.square,
+        controllerAfter = controllerAfter.square,
+        controllerRole = controllerAfter.role,
+        blocker = blocker,
+        openedControls = opened,
+        barrierPattern = barrierPattern,
+        removalMode = removal._1,
+        removedBarrier = removedBarrier
+      )
     }.sortBy(_.stableKey)
 
     GeometricRelationCombinationTransition(
       supporterCaptures = supporterCaptures,
-      controlInterferences = controlInterferences,
+      lineInterruptions = lineInterruptions,
       lineOpenings = lineOpenings
-    )
-
-  private def movementWitness(movement: BoardPieceTransition): RelationMoveTransitionWitness =
-    RelationMoveTransitionWitness(
-      movement.side,
-      EvidenceSquare(movement.from.key),
-      EvidenceSquare(movement.to.key),
-      EvidencePieceRole(movement.beforeRole.name),
-      EvidencePieceRole(movement.afterRole.name)
     )
 
   private def geometricControlTargetSetChanges(
@@ -762,27 +895,18 @@ private[chessjudgment] final case class RelationInventoryTransition(
     values.toMap
 
 private[chessjudgment] object RelationInventoryTransition:
-  def fromBoardTransition(
+  def fromStaticTransition(
       boardRemoved: List[RelationFactEvidence],
       boardEstablished: List[RelationFactEvidence],
       beforeInventory: PositionRelationInventoryCertificate,
       afterInventory: PositionRelationInventoryCertificate
   ): RelationInventoryTransition =
-    val (turnBoardBefore, comparableRemoved) = boardRemoved.partition(isTurnScoped)
-    val (turnBoardAfter, comparableEstablished) = boardEstablished.partition(isTurnScoped)
     RelationInventoryTransition(
-      comparableRemoved = comparableRemoved,
-      comparableEstablished = comparableEstablished,
-      turnScopedBefore = turnBoardBefore.sortBy(_.semanticId),
-      turnScopedAfter = turnBoardAfter.sortBy(_.semanticId),
+      comparableRemoved = boardRemoved,
+      comparableEstablished = boardEstablished,
       beforeInventory = beforeInventory,
       afterInventory = afterInventory
     )
-
-  private[judgment] def isTurnScoped(relation: RelationFactEvidence): Boolean =
-    relation.detail match
-      case _: RelationWitnessDetail.LegalMove => true
-      case _                                  => false
 
 private[chessjudgment] final case class CanonicalRelationChange(
     direction: RelationChangeDirection,
@@ -808,8 +932,6 @@ private[chessjudgment] final case class CanonicalRelationDelta private (
 ):
   require(changes.map(_.stableKey).distinct.size == changes.size, "duplicate canonical relation changes")
   require(changes.map(_.source.id).distinct.size == changes.size, "canonical relation changes must own distinct sources")
-
-  def changedSquares: List[EvidenceSquare] = semantic.changedSquares
 
   lazy val established: List[CanonicalRelationChange] =
     changes.filter(_.direction == RelationChangeDirection.Established)
@@ -914,20 +1036,14 @@ private[chessjudgment] object CanonicalRelationDelta:
       afterFen,
       "established comparable"
     )
-    val turnScopedBefore = uniquePositionInventory(relationTransition.turnScopedBefore, beforeFen, "before turn-scoped")
-    val turnScopedAfter = uniquePositionInventory(relationTransition.turnScopedAfter, afterFen, "after turn-scoped")
     require(
-      removedBySemanticId.values.forall(relation => !RelationInventoryTransition.isTurnScoped(relation)) &&
-        establishedBySemanticId.values.forall(relation => !RelationInventoryTransition.isTurnScoped(relation)) &&
-        turnScopedBefore.values.forall(RelationInventoryTransition.isTurnScoped) &&
-        turnScopedAfter.values.forall(RelationInventoryTransition.isTurnScoped),
-      "comparable and turn-scoped relation transitions must remain disjoint"
+      (removedBySemanticId.values ++ establishedBySemanticId.values).forall(_.kind != RelationFactKind.LegalMove),
+      "a sparse semantic transition cannot own position-scoped legal moves"
     )
     require(
       removedBySemanticId.keySet.intersect(establishedBySemanticId.keySet).isEmpty,
       "an exact relation transition cannot remove and establish the same semantic fact"
     )
-    val changedSquares = boardFootprint.changedSquares.map(square => EvidenceSquare(square.key))
     val removed = removedBySemanticId.toList.sortBy(_._1).map { case (_, relation) =>
       semanticChange(RelationChangeDirection.Removed, relation, boardFootprint, legalStep.uci)
     }
@@ -936,89 +1052,80 @@ private[chessjudgment] object CanonicalRelationDelta:
     }
     val rootMove = canonicalRootLegalMove(legalStep, boardFootprint, relationTransition)
     val geometricTransition = relationTransition.geometricTransition(boardFootprint)
-    val geometricCombinations = relationTransition.geometricCombinationTransition(
+    val sliderReachTransition = relationTransition.sliderReachTransition(
       boardFootprint,
-      rootMove,
       geometricTransition
     )
-    val namedRays = newlyEstablishedNamedRays(removed, established)
+    val geometricCombinations = relationTransition.geometricCombinationTransition(
+      rootMove,
+      geometricTransition,
+      sliderReachTransition
+    )
+    val namedRays = changedNamedRays(removed, established)
     RelationSemanticDelta(
       moveUci = EvidenceRef.normalizeMove(legalStep.uci),
-      moverSide = legalStep.before.color,
-      changedSquares = changedSquares,
       changes = (removed ++ established).sortBy(_.stableKey),
       rootMove = rootMove,
       beforeInventory = relationTransition.beforeInventory,
       afterInventory = relationTransition.afterInventory,
       geometricControlTransition = geometricTransition.control,
       geometricSupportTransition = geometricTransition.support,
+      sliderReachTransition = sliderReachTransition,
       geometricCombinationTransition = geometricCombinations,
-      newlyEstablishedNamedRays = namedRays
+      transitionFootprint = boardFootprint,
+      changedNamedRays = namedRays
     )
 
-  private def newlyEstablishedNamedRays(
+  private def changedNamedRays(
       removed: List[RelationSemanticChange],
       established: List[RelationSemanticChange]
-  ): List[RelationSemanticChange] =
-    val removedProjections = removed.flatMap(change =>
-      change.detail match
-        case ray: RelationWitnessDetail.RayBarrier => RelationRayProjection.named(ray)
-        case _                                      => None
-    ).toSet
-    established.filter(change =>
-      change.detail match
-        case ray: RelationWitnessDetail.RayBarrier =>
-          RelationRayProjection.named(ray).exists(projection => !removedProjections(projection))
-        case _ => false
-    ).sortBy(_.stableKey)
+  ): List[RelationNamedRayChange] =
+    def namedChanges(
+        changes: List[RelationSemanticChange]
+    ): List[(RelationNamedRayProjection, RelationSemanticChange)] =
+      changes.flatMap(change =>
+        change.detail match
+          case ray: RelationWitnessDetail.RayBarrier =>
+            RelationRayProjection.named(ray).map(_ -> change)
+          case _ => None
+      )
+    val removedNamed = namedChanges(removed)
+    val establishedNamed = namedChanges(established)
+    val removedProjections = removedNamed.map(_._1).toSet
+    val establishedProjections = establishedNamed.map(_._1).toSet
+    (removedNamed.filterNot { case (projection, _) => establishedProjections(projection) } ++
+      establishedNamed.filterNot { case (projection, _) => removedProjections(projection) })
+      .map(RelationNamedRayChange.apply)
+      .sortBy(_.stableKey)
 
   private def canonicalRootLegalMove(
       legalStep: LegalReplayStep,
       footprint: BoardTransitionFootprint,
       transition: RelationInventoryTransition
   ): CanonicalRootLegalMove =
-    val matches = transition.turnScopedBefore.filter(_.detail match
-      case RelationWitnessDetail.LegalMove(_, _, _, _, moveUci, _) =>
-        EvidenceRef.sameMove(moveUci, legalStep.uci)
-      case _ => false
+    val legalMove = transition.beforeInventory.legalMove(legalStep.uci).getOrElse(
+      throw IllegalArgumentException(s"'${legalStep.uci}' is absent from its closed legal-move inventory")
     )
-    matches match
-      case fact :: Nil =>
-        fact.detail match
-          case RelationWitnessDetail.LegalMove(side, from, role, to, moveUci, capture) =>
-            val movements = footprint.pieceTransitions.filter(movement =>
-              movement.side == side && movement.from.key.equalsIgnoreCase(from.key) &&
-                movement.to.key.equalsIgnoreCase(to.key) &&
-                movement.beforeRole.name.equalsIgnoreCase(role.name)
-            )
-            require(movements.size == 1, s"'${legalStep.uci}' must own one exact primary piece transition")
-            val movement = movements.head
-            val promotionRole = PrincipalVariationEvidence.normalizeUci(legalStep.uci).lift(4).flatMap {
-              case 'q' => Some("queen")
-              case 'r' => Some("rook")
-              case 'b' => Some("bishop")
-              case 'n' => Some("knight")
-              case _   => None
-            }
-            require(
-              promotionRole.fold(movement.beforeRole == movement.afterRole)(
-                _.equalsIgnoreCase(movement.afterRole.name)
-              ),
-              s"'${legalStep.uci}' role transition must agree with its exact legal move"
-            )
-            if footprint.pieceTransitions.size > 1 then
-              require(
-                footprint.pieceTransitions.size == 2 &&
-                  footprint.pieceTransitions.forall(_.side == side) &&
-                  footprint.pieceTransitions.map(_.beforeRole).toSet == Set(King, Rook),
-                s"'${legalStep.uci}' may have multiple piece transitions only for castling"
-              )
-            CanonicalRootLegalMove(fact, movement, moveUci, capture)
-          case _ => throw IllegalStateException("a selected legal-move relation changed kind")
-      case Nil =>
-        throw IllegalArgumentException(s"'${legalStep.uci}' is absent from its closed legal-move inventory")
-      case _ =>
-        throw IllegalArgumentException(s"canonical legal-move inventory repeated '${legalStep.uci}'")
+    require(
+      footprint.moveEffect.asInstanceOf[AnyRef].eq(legalMove.boardEffect.asInstanceOf[AnyRef]),
+      s"'${legalStep.uci}' must reuse one canonical move effect across legal resources and transition geometry"
+    )
+    val movement = legalMove.movement
+    val footprintMovements = footprint.pieceTransitions.filter(exact =>
+      exact.side == movement.side && exact.from.key.equalsIgnoreCase(movement.from.key) &&
+        exact.to.key.equalsIgnoreCase(movement.to.key) &&
+        exact.beforeRole.name.equalsIgnoreCase(movement.beforeRole.name) &&
+        exact.afterRole.name.equalsIgnoreCase(movement.afterRole.name)
+    )
+    require(footprintMovements.size == 1, s"'${legalStep.uci}' must own one exact primary piece transition")
+    if footprint.pieceTransitions.size > 1 then
+      require(
+        footprint.pieceTransitions.size == 2 &&
+          footprint.pieceTransitions.forall(_.side == movement.side) &&
+          footprint.pieceTransitions.map(_.beforeRole).toSet == Set(King, Rook),
+        s"'${legalStep.uci}' may have multiple piece transitions only for castling"
+      )
+    CanonicalRootLegalMove(legalMove.source, movement, legalMove.moveUci, legalMove.capture)
 
   private def uniquePositionInventory(
       relations: List[RelationFactEvidence],

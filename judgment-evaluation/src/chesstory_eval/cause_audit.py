@@ -1272,7 +1272,7 @@ def run_cause_audit(
                     stop_reason = "max_probe_rounds_reached"
                     break
                 for probe in new_probes:
-                    result, uci_io = _search_probe(
+                    result, acquisition = _search_probe(
                         executable=executable,
                         executable_sha256=executable_sha256,
                         timeout_seconds=timeout_seconds,
@@ -1281,7 +1281,7 @@ def run_cause_audit(
                     record = {
                         "request": copy.deepcopy(probe),
                         "result": result,
-                        "uci_io": uci_io,
+                        "acquisition": acquisition,
                     }
                     round_record["probe_results"].append(record)
                     current_results.append(result)

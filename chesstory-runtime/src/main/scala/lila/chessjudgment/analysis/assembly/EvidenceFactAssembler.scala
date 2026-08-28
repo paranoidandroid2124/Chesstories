@@ -5,7 +5,7 @@ import java.security.MessageDigest
 import lila.chessjudgment.model.line.CandidateLineEvaluation
 import lila.chessjudgment.analysis.opening.OpeningContextFactNormalizer
 import lila.chessjudgment.analysis.structure.StructuralDeltaAnalyzer
-import lila.chessjudgment.analysis.tactical.TacticalRelationEvidence
+import lila.chessjudgment.analysis.relation.ClosedRelationEvidence
 import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
 import lila.chessjudgment.model.judgment.*
 
@@ -28,7 +28,8 @@ object EvidenceFactAssembler:
       kind: TacticalMechanismKind,
       records: List[EvidenceRecord],
       signals: List[TacticalMechanismSignal],
-      semanticAnchors: List[EvidenceSemanticAnchor]
+      semanticAnchors: List[EvidenceSemanticAnchor],
+      relationLineProof: Option[TacticalRelationLineProof] = None
   ):
     require(records.map(_.ref.id).distinct.size == records.size, "a tactical mechanism cannot repeat one source")
     require(signals.distinct.size == signals.size, "a tactical mechanism cannot repeat one signal")
@@ -49,7 +50,8 @@ object EvidenceFactAssembler:
       exactIdentityKey(
         kind.toString :: exactKey._2.map(id => s"carrier:$id") ++
           exactKey._3.map(signal => s"signal:$signal") ++
-          exactKey._4.map(anchor => s"anchor:$anchor")
+          exactKey._4.map(anchor => s"anchor:$anchor") ++
+          relationLineProof.toList.map(proof => s"relation-line:${proof.relation.id}:${proof.occurrence.id}:${proof.line.id}")
       )
 
     def withRecords(additional: List[EvidenceRecord]): TacticalMechanismCandidate =
@@ -66,10 +68,16 @@ object EvidenceFactAssembler:
       context,
       closedRelationsByOccurrence
     )
+    val closedRelationRecords = relationRecords(
+      context,
+      allocator,
+      closedRelationsByOccurrence,
+      canonicalRelationDeltas
+    )
     val baseRecords =
       List.concat(
-        relationRecords(context, allocator, closedRelationsByOccurrence, canonicalRelationDeltas),
-        structuralDeltaRecords(context, allocator, canonicalRelationDeltas)
+        closedRelationRecords,
+        structuralDeltaRecords(context, allocator, canonicalRelationDeltas, closedRelationRecords)
       )
     val baseContext = context.withEvidence(baseRecords)
     val mechanismRecords = tacticalMechanismRecords(baseContext, allocator)
@@ -186,7 +194,7 @@ object EvidenceFactAssembler:
           s"transition '${edge.evidence.id}' has no exact canonical replay"
         )
       )
-      val production = TacticalRelationEvidence.relationProduction(replay, edge.moveUci)
+      val production = ClosedRelationEvidence.relationProduction(replay, edge.moveUci)
       val closedRelations = production.bindClosedOutput(
         closedRelationsByOccurrence(edge.from),
         closedRelationsByOccurrence(edge.to),
@@ -206,23 +214,12 @@ object EvidenceFactAssembler:
           confidence = EvidenceConfidence.LegalReplayVerified
         )
       }
-      val sourceNodesByOutputId = provisional.map { record =>
-        val relation = record.payload match
-          case exact: RelationFactEvidence => exact
-          case _ => throw IllegalArgumentException("a tactical relation production emitted a non-relation payload")
-        record.ref.id -> relationSourceNodes(closedRelations, relation)
-      }.toMap
-      require(
-        sourceNodesByOutputId.size == provisional.size,
-        "one transition occurrence cannot repeat a materialized relation output"
-      )
       closedRelations.materializeOccurrence(
         occurrenceId = allocator.evidenceId(s"closed-relation-occurrence:${edge.evidence.id}"),
         edge = edge,
         lineOwner = lineOwner.map(_.ref),
         lineEvidence = lineEvidence,
-        outputRecords = provisional,
-        sourceNodesByOutputId = sourceNodesByOutputId
+        outputRecords = provisional
       )
     }
 
@@ -273,7 +270,8 @@ object EvidenceFactAssembler:
           moveUci = Some(line.ref.rootMove),
           scope = line.role.scope,
           records = candidate.records,
-          signals = candidate.signals
+          signals = candidate.signals,
+          relationLineProof = candidate.relationLineProof
         )
       }
     }
@@ -302,7 +300,8 @@ object EvidenceFactAssembler:
         moveUci = Some(edge.moveUci),
         scope = edge.role.scope,
         records = routedCandidate.records,
-        signals = routedCandidate.signals
+        signals = routedCandidate.signals,
+        relationLineProof = routedCandidate.relationLineProof
       )
     }
 
@@ -371,16 +370,17 @@ object EvidenceFactAssembler:
           binding.kind,
           List(node.record, binding.lineRecord),
           binding.signals,
-          node.relation.semanticGroupingAnchors :+ lineEventAnchor(binding.event)
+          node.relation.semanticGroupingAnchors :+ lineEventAnchor(binding.event),
+          Some(binding.proof)
         )
       )
     )
     val defensiveResourceEntries =
       records.collect { case record @ EvidenceRecord(_, payload: LineFactEvidence, _) =>
         val declaredRootMove = payload.rootMove.map(EvidenceRef.normalizeMove)
-        val rootDefenderEvents =
+        val rootCheckEvasionEvents =
           payload
-            .lineEventsOf(LineEventKind.DefenderMove)
+            .lineEventsOf(LineEventKind.CheckEvasion)
             .filter(event =>
               event.plyOffset == 0 &&
                 declaredRootMove.exists(root => EvidenceRef.sameMove(root, event.moveUci))
@@ -394,7 +394,7 @@ object EvidenceFactAssembler:
                 consequence.kind == LineConsequenceKind.RecoveryWindow
             )
         val recoveryEntries =
-          if rootDefenderEvents.isEmpty then Nil
+          if !declaredRootMove.exists(payload.rootIsRecapture) then Nil
           else
             rootMoveRecoveryConsequences.map(consequence =>
               TacticalMechanismCandidate(
@@ -412,7 +412,7 @@ object EvidenceFactAssembler:
               )
             )
         val checkDefenseEntries =
-          rootDefenderEvents
+          rootCheckEvasionEvents
             .filter(_.targetRole.exists(_.name.equalsIgnoreCase("king")))
             .map(event =>
               TacticalMechanismCandidate(
@@ -421,7 +421,7 @@ object EvidenceFactAssembler:
                 List(
                   TacticalMechanismSignal(
                     TacticalMechanismSignalKind.LineEvent,
-                    LineEventKind.DefenderMove.toString,
+                    LineEventKind.CheckEvasion.toString,
                     EvidenceLayer.Line,
                     Some(record.ref)
                   )
@@ -439,7 +439,13 @@ object EvidenceFactAssembler:
     candidates
       .sortBy(_.idKey)
       .filter { candidate =>
-        val payload = TacticalMechanismEvidence(candidate.kind, None, None, candidate.signals)
+        val payload = TacticalMechanismEvidence(
+          candidate.kind,
+          None,
+          None,
+          candidate.signals,
+          candidate.relationLineProof
+        )
         payload.canAnchorTacticalClaim || payload.canAnchorDefensiveClaim
       }
 
@@ -491,9 +497,10 @@ object EvidenceFactAssembler:
       moveUci: Option[String],
       scope: EvidenceScope,
       records: List[EvidenceRecord],
-      signals: List[TacticalMechanismSignal]
+      signals: List[TacticalMechanismSignal],
+      relationLineProof: Option[TacticalRelationLineProof]
   ): Option[EvidenceRecord] =
-    val payload = TacticalMechanismEvidence(kind, moveUci, line, signals)
+    val payload = TacticalMechanismEvidence(kind, moveUci, line, signals, relationLineProof)
     Option.when(payload.hasConcreteProof) {
       val confidence =
         if signals.exists(_.kind == TacticalMechanismSignalKind.MateBranch) then
@@ -523,8 +530,12 @@ object EvidenceFactAssembler:
   private def structuralDeltaRecords(
       context: JudgmentAssemblyContext,
       allocator: JudgmentProvenanceAllocator,
-      canonicalRelationDeltas: Map[String, CanonicalRelationDelta]
+      canonicalRelationDeltas: Map[String, CanonicalRelationDelta],
+      relationRecords: List[EvidenceRecord]
   ): List[EvidenceRecord] =
+    val occurrencesById = relationRecords.collect {
+      case EvidenceRecord(ref, occurrence: ClosedRelationOccurrenceEvidence, _) => ref.id -> occurrence
+    }.toMap
     context.transitions.flatMap { edge =>
       for
         transitionReplay <- context.transitionReplay(edge)
@@ -536,6 +547,24 @@ object EvidenceFactAssembler:
           transition = replayTransition,
           canonicalRelations = canonicalRelationDeltas(edge.evidence.id)
         )
+        expectedDerived = delta.derivedRelations.map(relation => relation.semanticId -> relation).toMap
+        derivedOutputRecords = relationRecords.collect {
+          case record @ EvidenceRecord(_, relation: RelationFactEvidence, parents)
+              if expectedDerived.get(relation.semanticId).contains(relation) &&
+                parents.exists(parent => occurrencesById.get(parent.id).exists(_.edge == edge)) =>
+            relation.semanticId -> record
+        }
+        _ = require(
+          derivedOutputRecords.map(_._1).distinct.size == derivedOutputRecords.size &&
+            derivedOutputRecords.map(_._1).toSet == expectedDerived.keySet,
+          "a structural delta must bind each consumed derived relation to one exact occurrence output"
+        )
+        derivedSources = derivedOutputRecords.sortBy(_._1).map { case (_, output) =>
+          val relation = output.payload match
+            case value: RelationFactEvidence => value
+            case _ => throw IllegalArgumentException("a derived structural source changed payload kind")
+          StructuralDerivedRelationSource(DerivedRelationResultKey.from(relation), output.ref)
+        }
         record = TransitionFactNormalizer.fromStructuralDelta(
           id = allocator.evidenceId(s"structural-delta:${edge.evidence.id}"),
           delta = delta,
@@ -543,12 +572,14 @@ object EvidenceFactAssembler:
           replay = transitionReplay,
           line = line.map(_.ref),
           perspective = side,
+          derivedRelationSources = derivedSources,
           parents = (
             List(edge.evidence) ++
               line.toList.flatMap(lineParents(context, _)) ++
               evidenceRefs(context, EvidenceLayer.PositionFeature, Some(edge.from), None) ++
               evidenceRefs(context, EvidenceLayer.PositionFeature, Some(edge.to), None) ++
-              delta.canonicalRelations.sourceRefs
+              delta.canonicalRelations.sourceRefs ++
+              derivedSources.map(_.source)
           ).distinctBy(_.id)
         )
         if record.payload match
@@ -605,7 +636,6 @@ object EvidenceFactAssembler:
         )
       }
       val anchorRecords = featureAnchorRecords(context, rootNode, allocator)
-        .filter(record => StrategicMechanismEvidence.sourceMechanisms(record).nonEmpty)
       val anchors = anchorRecords.collect { case EvidenceRecord(_, FeatureAnchorEvidence(anchor), _) =>
         anchor
       }
@@ -988,16 +1018,6 @@ object EvidenceFactAssembler:
       s"plan transition producer emitted duplicate exact evidence ids: ${duplicateIds.mkString(", ")}"
     )
     produced.sortBy(_.ref.id)
-
-  private def relationSourceNodes(
-      closedRelations: CanonicalRelationTransitionInventory,
-      relation: RelationFactEvidence
-  ): List[CanonicalRelationNode] =
-    closedRelations.sourceNodesFor(relation).getOrElse(
-      throw IllegalArgumentException(
-        s"closed relation '${relation.semanticId}' has no exact occurrence binding"
-      )
-    )
 
   private def lineParents(
       context: JudgmentAssemblyContext,

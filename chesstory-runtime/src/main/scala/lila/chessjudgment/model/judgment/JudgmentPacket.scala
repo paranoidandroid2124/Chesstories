@@ -1,6 +1,13 @@
 package lila.chessjudgment.model.judgment
 
-import lila.chessjudgment.model.{ ProbeAdmissionDiagnostic, ProbeContractValidator, ProbeRequest }
+import lila.chessjudgment.model.{
+  BranchReplyProbeBinding,
+  ProbeAdmissionDiagnostic,
+  ProbeContractValidator,
+  ProbeKind,
+  ProbeRequest,
+  ProbeVariant
+}
 import lila.chessjudgment.model.line.{ AutomaticTerminal, CandidateLineEvaluation, DrawClaimAction, PrincipalVariationEvidence }
 
 enum ClaimFamily:
@@ -24,7 +31,7 @@ object ClaimFamily:
     kind match
       case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
           RelativeCauseKind.CandidateTacticalLiability |
-          RelativeCauseKind.WrongRecapturer | RelativeCauseKind.RecaptureRecoveryWindow |
+          RelativeCauseKind.RecaptureRecoveryWindow |
           RelativeCauseKind.WrongMoveOrder | RelativeCauseKind.TempoLoss | RelativeCauseKind.KingForcing =>
         ClaimFamily.Tactical
       case RelativeCauseKind.DefensiveResource | RelativeCauseKind.DrawResource =>
@@ -35,8 +42,6 @@ object ClaimFamily:
         ClaimFamily.Material
       case RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
         ClaimFamily.Plan
-      case RelativeCauseKind.OpponentRestriction =>
-        ClaimFamily.Strategic
 
 enum SubjectBindingClass:
   case PrimaryPlayedCause
@@ -135,7 +140,7 @@ object JudgmentSubjectBinding:
 
   def recordMentionsMove(record: EvidenceRecord, move: String): Boolean =
     record.payload match
-      case MoveTransitionEvidence(moveUci, _, _) =>
+      case MoveTransitionEvidence(moveUci, _, _, _) =>
         EvidenceRef.sameMove(moveUci, move)
       case payload: StructuralDeltaEvidence =>
         EvidenceRef.sameMove(payload.moveUci, move)
@@ -310,6 +315,14 @@ object ClaimEvidenceSemantics:
         payload.semanticGroupingAnchors
       case payload: RelationFactEvidence =>
         payload.semanticGroupingAnchors
+      case payload: StructuralDeltaEvidence =>
+        (
+          payload.signalAnchors.map(anchor =>
+            EvidenceSemanticAnchor.of(StructuralDelta, s"signal:$anchor")
+          ) ++ payload.consequenceAnchors.map(anchor =>
+            EvidenceSemanticAnchor.of(StructuralDelta, s"consequence:$anchor")
+          )
+        ).distinctBy(_.stableKey)
       case _ =>
         Nil
 
@@ -493,42 +506,42 @@ object EvidenceBackedJudgmentPacket:
 
   private def probesClosed(
       assembly: JudgmentAssemblyContext,
-    requests: List[ProbeRequest]
+      requests: List[ProbeRequest]
   ): Boolean =
-    def canonicalFen(raw: String): Option[String] =
-      PrincipalVariationEvidence.semanticBoardStateFen(raw)
-    val knownFens =
-      (
-        assembly.positions.map(_.ref.fen) ++
-          assembly.evidenceGraph.records.flatMap {
-            case EvidenceRecord(_, facts: LineFactEvidence, _) =>
-              facts.lineReplaySteps.flatMap(step => List(step.fenBefore, step.fenAfter))
-            case _ =>
-              Nil
-          }
-      ).flatMap(canonicalFen).toSet
-    val root = assembly.root
     val ids = requests.map(_.id.trim)
     ids.forall(_.nonEmpty) &&
       ids.distinct.size == ids.size &&
       requests.forall { request =>
-        val requestFen = canonicalFen(request.fen)
-        val rootMoveBound =
-          root.exists(rootPosition =>
-            assembly.lines
-              .filter(line => EvidenceRef.sameMove(line.ref.rootMove, request.candidateMove))
-              .flatMap(line => assembly.lineReplay(line.ref).toList.flatMap(_.replaySteps.headOption))
-              .exists(step =>
-                PrincipalVariationEvidence.sameBoardState(step.fenBefore, rootPosition.fen) &&
-                  canonicalFen(step.fenAfter).contains(requestFen.getOrElse(""))
-              )
-          )
         ProbeContractValidator.validateRequest(request).isValid &&
-          requestFen.exists(knownFens) &&
-          PrincipalVariationEvidence
-            .legalReplay(request.fen, request.moves, startPly = 0)
-            .exists(_.size == request.moves.size) &&
-          rootMoveBound
+          assembly.root.exists { root =>
+            request.variant match
+              case ProbeVariant.BranchReply(replyMove, requiredHorizonPlyOffset) =>
+                assembly.lines.exists { line =>
+                  EvidenceRef.sameMove(line.ref.rootMove, request.candidateMove) &&
+                    line.evaluation.engineLine.exists { engineLine =>
+                      assembly.lineReplay(line.ref).flatMap(_.replaySteps.headOption).exists { rootStep =>
+                        val expectedHash = BranchReplyProbeBinding.variationHash(
+                          rootFen = root.fen,
+                          role = line.ref.role,
+                          rootMove = line.ref.rootMove,
+                          whitePovEvalCp = engineLine.scoreCp,
+                          mate = engineLine.mate,
+                          depth = engineLine.depth,
+                          moves = engineLine.moves,
+                          replyMove = replyMove,
+                          certifiedHorizonPlyOffset = requiredHorizonPlyOffset
+                        )
+                        PrincipalVariationEvidence.sameBoardState(rootStep.fenBefore, root.fen) &&
+                          PrincipalVariationEvidence.sameBoardState(rootStep.fenAfter, request.fen) &&
+                          assembly.evidenceGraph
+                            .certifiedRootResponseMovesFor(line.ref)
+                            .exists(_.exists(EvidenceRef.sameMove(_, replyMove))) &&
+                          request.variationHash == expectedHash &&
+                          request.id == ProbeRequest.transportId(ProbeKind.BranchReply, expectedHash)
+                      }
+                    }
+                }
+          }
       }
 
   private def structurallyClosed(assembly: JudgmentAssemblyContext): Boolean =
@@ -622,7 +635,7 @@ object EvidenceBackedJudgmentPacket:
       positionRefs.contains(transition.from) &&
         positionRefs.contains(transition.to) &&
         registeredById.get(transition.evidence.id).exists {
-          case record @ EvidenceRecord(ref, MoveTransitionEvidence(moveUci, from, to), parents) =>
+          case record @ EvidenceRecord(ref, payload @ MoveTransitionEvidence(moveUci, from, to, _), parents) =>
             ref == transition.evidence &&
               ref.producer == EvidenceProducer.MoveTransitionProducer &&
               ref.layer == EvidenceLayer.MoveTransition &&
@@ -633,6 +646,9 @@ object EvidenceBackedJudgmentPacket:
               from == transition.from &&
               to == transition.to &&
               parents.isEmpty &&
+              payload.canonicalTransitionProof.exists(
+                _.provesMove(moveUci, from, to, ref.scope)
+              ) &&
               transition.matches(record)
           case _ =>
             false
@@ -644,10 +660,7 @@ object EvidenceBackedJudgmentPacket:
       graphRecords.forall {
         case EvidenceRecord(ref, event: PlanCausalEventEvidence, _) =>
           ref.line.contains(event.rootLine) &&
-            event.rootTransition.line.contains(event.rootLine) &&
-            event.opponentResourceDeterrence.forall(_ =>
-              event.opponentResourceDeterrenceProofReady
-            )
+            event.rootTransition.line.contains(event.rootLine)
         case _ =>
           true
       }

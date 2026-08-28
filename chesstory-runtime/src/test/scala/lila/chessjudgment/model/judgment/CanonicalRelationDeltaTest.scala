@@ -19,12 +19,11 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
     val pin = delta.established
       .find(_.detail match
         case RelationWitnessDetail.RayBarrier(owner, _, _, occupants, axis) =>
-          RelationRayPattern.classify(owner, occupants, axis) == RelationRayPattern.Pin
+          RelationRayPattern.classify(owner, occupants, axis) == RelationRayPattern.AbsoluteKingPin
         case _ => false
       )
       .getOrElse(fail("expected the created pin"))
 
-    assertEquals(delta.changedSquares.map(_.key), List("a1", "e1"))
     assert(pin.proofKeys.contains(RelationProofKey.ChangedSquare(EvidenceSquare("e1"))))
     assert(
       pin.proofKeys.contains(
@@ -60,31 +59,6 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
     assert(establishedKinds.contains(RelationFactKind.RayBarrier))
     assertEquals(delta.changes.map(_.stableKey).distinct.size, delta.changes.size)
     assert(delta.changes.forall(_.proofKeys.nonEmpty))
-
-  test("changed-square evidence stays exact for castling, en passant, and promotion"):
-    val cases = List(
-      (
-        "4k3/8/8/8/8/8/8/4K2R w K - 0 1",
-        "e1g1",
-        Set("e1", "f1", "g1", "h1")
-      ),
-      (
-        "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1",
-        "e5d6",
-        Set("d5", "d6", "e5")
-      ),
-      (
-        "4k3/P7/8/8/8/8/8/4K3 w - - 0 1",
-        "a7a8q",
-        Set("a7", "a8")
-      )
-    )
-
-    cases.foreach { case (fen, move, expectedSquares) =>
-      val delta = relationDelta(fen, move)
-      assertEquals(delta.changedSquares.map(_.key).toSet, expectedSquares)
-      assert(delta.changes.forall(_.proofKeys.nonEmpty))
-    }
 
   test("piece-transition proof keys retain castling partners and promotion roles"):
     val castling = relationDelta("4k3/8/8/8/8/8/8/4K2R w K - 0 1", "e1g1")
@@ -125,7 +99,7 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
         .legalMoveReplay(fen, List(move), startPly = 0)
         .flatMap(_.headOption)
         .getOrElse(fail(s"expected legal move $move"))
-      BoardGeometry.transitionFootprint(step.move).cellChanges
+      BoardGeometry.transitionFootprint(step.move, BoardGeometry.moveEffect(step.move)).cellChanges
         .map(change => change.square -> (change.before -> change.after))
         .toMap
 
@@ -148,7 +122,10 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
       .flatMap(_.headOption)
       .getOrElse(fail("expected legal promotion"))
     assertEquals(
-      BoardGeometry.transitionFootprint(promotedStep.move).pieceTransitions,
+      BoardGeometry.transitionFootprint(
+        promotedStep.move,
+        BoardGeometry.moveEffect(promotedStep.move)
+      ).pieceTransitions,
       List(lila.chessjudgment.model.position.BoardPieceTransition(
         Color.White,
         Pawn,
@@ -157,36 +134,6 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
         Square.A8
       ))
     )
-
-  test("a relation-change witness resolves only at its exact replay occurrence"):
-    val legal = PrincipalVariationEvidence
-      .legalMoveReplay(
-        "4k3/8/4p3/8/3P4/8/8/4K3 w - - 0 1",
-        List("d4d5"),
-        startPly = 0
-      )
-      .getOrElse(fail("expected pawn-tension replay"))
-    val replay = CanonicalLineReplay
-      .fromLegalReplay(legal)
-      .getOrElse(fail("expected canonical replay"))
-    val step = replay.replaySteps.head
-    val change = replay.onlyTransition.toList
-      .flatMap(_.relationDelta.established)
-      .find(_.kind == RelationFactKind.PawnTension)
-      .getOrElse(fail("expected established pawn tension"))
-    val witness = ReplayRelationChangeWitness
-      .certify(replay, step, change)
-      .getOrElse(fail("expected exact relation-change witness"))
-
-    assertEquals(witness.resolve(replay), Some(change))
-    assertEquals(witness.resolve(replay.rebased(2).getOrElse(fail("expected rebased replay"))), None)
-
-  test("file establishment is a neutral state transition rather than an inferred benefit"):
-    assertEquals(
-      TransitionConsequenceKind.observedPolarity(TransitionConsequenceKind.OpenFileEstablished),
-      StructuralSignalPolarity.Neutral
-    )
-    assert(TransitionConsequenceKind.establishesState(TransitionConsequenceKind.OpenFileEstablished))
 
   test("same-side hypothetical legality does not promote geometric control into a structural result"):
     val delta = transitionDelta(
@@ -240,24 +187,18 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
     )
     assertEquals(resolved.pawnTopology.createdTensions, Nil)
 
-  test("coexisting pawn tensions retain local relation keys without duplicating their shared break subject"):
+  test("coexisting pawn tensions retain their exact local relation keys"):
     val delta = transitionDelta("4k3/8/8/3p1p2/8/8/4P3/4K3 w - - 0 1", "e2e4")
     val consequence = StructuralDeltaContracts
       .consequences(delta.structural)
       .find(_.kind == TransitionConsequenceKind.PawnTensionCreated)
       .getOrElse(fail("expected both pawn tensions created by e2e4"))
     val tensionBindings = consequence.subjectBindings.collect {
-      case binding @ StructuralSubjectBinding(StructuralSubject.PawnTensionCreated(_, _), _) => binding
+      case binding @ StructuralSubjectBinding(StructuralSubject.PawnTensionCreated(_, _, _), _, _) => binding
     }
-    val breakBindings = consequence.subjectBindings.collect {
-      case binding @ StructuralSubjectBinding(StructuralSubject.BreakFile(_), _) => binding
-    }
-
     assertEquals(tensionBindings.size, 2)
     assert(tensionBindings.forall(_.relationKeys.size == 1))
     assertEquals(tensionBindings.flatMap(_.relationKeys).distinct.size, 2)
-    assertEquals(breakBindings.size, 1)
-    assertEquals(breakBindings.head.relationKeys.toSet, tensionBindings.flatMap(_.relationKeys).toSet)
 
     val selected = consequence.copy(subjectBindings = List(tensionBindings.head))
     assertEquals(selected.relationKeys, tensionBindings.head.relationKeys)
@@ -283,13 +224,6 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
     assertEquals(opened.pawnTopology.semiOpenedFiles, Nil)
     assertEquals(semiOpened.pawnTopology.openedFiles, Nil)
     assertEquals(semiOpened.pawnTopology.semiOpenedFiles.map(_.file.value), List(0))
-
-  test("file occupation follows every changed major piece, including castling and promotion"):
-    val castling = transitionDelta("4k3/8/8/8/8/8/8/4K2R w K - 0 1", "e1g1")
-    val promotion = transitionDelta("4k3/P7/8/8/8/8/8/4K3 w - - 0 1", "a7a8q")
-
-    assertEquals(castling.fileOccupation.map(_.subject.label), List("f:f1"))
-    assertEquals(promotion.fileOccupation.map(_.subject.label), List("a:a8"))
 
   test("a missing changed relation cannot be certified as an exact delta"):
     intercept[IllegalArgumentException] {

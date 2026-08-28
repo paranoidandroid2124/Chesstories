@@ -36,7 +36,6 @@ import lila.chessjudgment.model.strategic.EngineLine
 
 final case class CommentaryJobPolicy(
     rootSearchDepth: Int,
-    maximumIssuedEngineWorkCount: Int,
     deadlineEpochMs: Long,
     engineProfile: CommentaryEngineProfile
 )
@@ -45,11 +44,9 @@ enum CommentaryJobStartRejection:
   case PositionHistoryInvalid(reason: CanonicalPositionHistoryFailure)
   case FocusedMoveInvalid
   case RootSearchDepthInvalid
-  case MaximumIssuedEngineWorkCountInvalid
 
 enum CommentaryJobStopCondition:
   case DeadlineExceeded
-  case BudgetExhausted
   case Cancelled
   case EngineExecutionFailed
   case InvalidEngineWorkReport
@@ -220,9 +217,11 @@ private[runtime] object EngineLineAdmission:
       limits.nodes > 0 &&
       limits.movetimeMs > 0
 
+  def acceptsRuntimeInputMoves(moves: List[String]): Boolean =
+    moves.nonEmpty && moves.size <= MaximumFullLineMoves && moves.forall(acceptsRuntimeInputUci)
+
   def acceptsRuntimeInputLine(line: EngineLine): Boolean =
-    line.moves.nonEmpty && line.moves.size <= MaximumFullLineMoves &&
-      line.moves.forall(acceptsRuntimeInputUci) &&
+    acceptsRuntimeInputMoves(line.moves) &&
       acceptsCentipawnScore(line.scoreCp) &&
       line.mate.forall(acceptsMateScore) &&
       acceptsRuntimeInputDepth(line.depth)
@@ -418,8 +417,6 @@ object CommentaryJobReducer:
   ): Either[CommentaryJobStartRejection, CommentaryJobState] =
     if !EngineLineAdmission.acceptsRequiredDepth(policy.rootSearchDepth) then
       Left(CommentaryJobStartRejection.RootSearchDepthInvalid)
-    else if policy.maximumIssuedEngineWorkCount < 1 then
-      Left(CommentaryJobStartRejection.MaximumIssuedEngineWorkCountInvalid)
     else
       CanonicalPositionHistory
         .from(initialFen, movePrefixUci, currentFen)
@@ -762,10 +759,8 @@ object CommentaryJobReducer:
       requests: List[ProbeRequest],
       ledger: EngineWorkLedger
   ): CommentaryJobState =
-    val objectives = requests.map(_.objective)
     val requestIds = requests.map(_.id)
     if requests.isEmpty ||
-      objectives.distinct.size != 1 ||
       requests.exists(request => !ProbeContractValidator.validateRequest(request).isValid) ||
       requestIds.exists(_.trim.isEmpty) ||
       requestIds.distinct.size != requestIds.size ||
@@ -836,8 +831,7 @@ object CommentaryJobReducer:
     for
       _ <- Either.cond(
         ProbeContractValidator.validateRequest(request).isValid &&
-          EngineLineAdmission.acceptsRequiredDepth(request.depth) &&
-          EngineLineAdmission.acceptsMultiPv(request.multiPv),
+          EngineLineAdmission.acceptsRequiredDepth(request.depth),
         (),
         CommentaryJobStopCondition.ReviewConstructionFailed
       )
@@ -890,8 +884,8 @@ object CommentaryJobReducer:
                       ThreefoldClaimKnowledge.Known(_),
                       _
                     ) =>
-                  reuseCoreEvidence(context, request, request.multiPv).map(result => Right(Left(result))).getOrElse {
-                    val limits = EngineSearchLimits(request.depth, ProbeNodes, ProbeMovetimeMs, request.multiPv)
+                  reuseCoreEvidence(context, request).map(result => Right(Left(result))).getOrElse {
+                    val limits = EngineSearchLimits(request.depth, ProbeNodes, ProbeMovetimeMs, 1)
                     val work = issuedWork(
                       active.engineProfile,
                       ledger.issuedWorkId,
@@ -915,8 +909,7 @@ object CommentaryJobReducer:
 
   private def reuseCoreEvidence(
       context: ReviewContext,
-      request: ProbeRequest,
-      multiPv: Int
+      request: ProbeRequest
   ): Option[ProbeResult] =
     val candidateMove = EvidenceRef.normalizeMove(request.candidateMove)
     val forcedPrefix = request.moves.map(EvidenceRef.normalizeMove)
@@ -931,9 +924,9 @@ object CommentaryJobReducer:
       .map(line => line.copy(moves = line.moves.tail.map(EvidenceRef.normalizeMove)))
     val grouped = matching.groupBy(line => line.moves.drop(forcedPrefix.size).headOption)
     val conflicting = grouped.values.exists(_.distinct.size > 1)
-    val candidates = matching.distinctBy(line => line.moves.drop(forcedPrefix.size).headOption).take(multiPv)
+    val candidates = matching.distinctBy(line => line.moves.drop(forcedPrefix.size).headOption).take(1)
     Option
-      .when(!conflicting && candidates.size == multiPv)(
+      .when(!conflicting && candidates.size == 1)(
         canonicalProbeResult(
           request,
           ProbeResolution.EngineSearch(
@@ -1004,9 +997,7 @@ object CommentaryJobReducer:
       pending: PendingWork,
       ledger: EngineWorkLedger
   ): CommentaryJobState =
-    if ledger.physicalWorksIssued >= active.policy.maximumIssuedEngineWorkCount then
-      stop(active.copy(phase = phase, ledger = ledger), CommentaryJobStopCondition.BudgetExhausted)
-    else active.copy(phase = phase, pending = pending, ledger = ledger.afterIssuing)
+    active.copy(phase = phase, pending = pending, ledger = ledger.afterIssuing)
 
   private def issuedWork(
       engineProfile: CommentaryEngineProfile,

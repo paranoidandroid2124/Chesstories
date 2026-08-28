@@ -3,14 +3,14 @@ package lila.chessjudgment.analysis.assembly
 import chess.Pawn
 import chess.variant.Standard
 import lila.chessjudgment.model.{
-  ProbeContractValidator,
-  ProbeObjective,
+  BranchReplyProbeBinding,
   ProbeRequest,
   ProbeResolution,
   ProbeResult,
   ProbeVariant
 }
 import lila.chessjudgment.model.line.{
+  AutomaticTerminal,
   CandidateLineEvaluation,
   CanonicalPositionHistory,
   PreInitialHistoryKnowledge
@@ -19,36 +19,96 @@ import lila.chessjudgment.model.strategic.EngineLine
 
 class HistoryOpeningContinuityTest extends munit.FunSuite:
 
-  test("probe variants derive one exact objective and cannot mix request shapes"):
-    val common = ProbeRequest(
-      id = "exact-probe",
-      fen = Standard.initialFen.value,
-      depth = 16,
-      multiPv = 1,
-      candidateMove = "d2d4",
-      depthFloor = 12,
-      variationHash = "exact-variation",
-      variant = ProbeVariant.CausalContinuation("d7d5", "c2c4")
-    )
-    assertEquals(common.objective, ProbeObjective.CausalContinuation)
-    assertEquals(common.moves, List("d7d5", "c2c4"))
-    assertEquals(common.horizon, None)
-    assertEquals(common.opponentResourceMove, None)
-    assert(ProbeContractValidator.validateRequest(common).isValid)
+  test("engine lines stop at the history-owned automatic terminal boundary"):
+    val fen = "7k/8/8/8/K7/1p6/8/8 w - - 0 1"
+    val prepared = MoveReviewInputNormalizer
+      .normalize(
+        RawMoveReviewInput(
+          fen = fen,
+          playedMoveUci = "a4b3",
+          variations = List(
+            EngineLine(List("a4a3", "h8g8"), 20, None, 16),
+            EngineLine(List("a4b3", "h8h7", "b3c3"), 0, None, 16)
+          )
+        )
+      )
+      .getOrElse(fail("expected the automatic-terminal line to normalize"))
 
-    val invalidHorizon = common.copy(variant = ProbeVariant.BranchReply(0))
-    assert(!ProbeContractValidator.validateRequest(invalidHorizon).isValid)
-    val wrongLineCount = ProbeResult(
-      id = common.id,
-      resolution = ProbeResolution.EngineSearch(
-        List(
-          CandidateLineEvaluation.EngineSearch(EngineLine(List("d7d5"), 0, None, 16)),
-          CandidateLineEvaluation.EngineSearch(EngineLine(List("g8f6"), 0, None, 16))
-        ),
-        16
+    assertEquals(
+      prepared.playedLine.map(_.evaluation),
+      Some(
+        CandidateLineEvaluation.ExactAutomaticTerminal(
+          List("a4b3"),
+          AutomaticTerminal.InsufficientMaterial
+        )
       )
     )
-    assert(!ProbeContractValidator.validateAgainstRequest(common, wrongLineCount).isValid)
+
+  test("branch reply horizon closes on a history-owned automatic terminal"):
+    val fen = "k7/6b1/8/8/8/8/3R4/7K w - - 0 1"
+    val playedMove = "d2d4"
+    val replyMove = "g7d4"
+    val prepared = MoveReviewInputNormalizer
+      .normalize(
+        RawMoveReviewInput(
+          fen = fen,
+          playedMoveUci = playedMove,
+          variations = List(
+            EngineLine(List("d2d3", "g7f8", "h1g1"), 20, None, 16),
+            EngineLine(List(playedMove, "g7f8", "h1g1"), 0, None, 16)
+          )
+        )
+      )
+      .getOrElse(fail("expected the branch root to normalize"))
+    val played = prepared.playedLine.getOrElse(fail("expected the played root line"))
+    val engineLine = played.evaluation.engineLine.getOrElse(fail("expected a nonterminal root engine line"))
+    val branchFen = played.replay.replaySteps.headOption
+      .map(_.fenAfter)
+      .getOrElse(fail("expected the branch position"))
+    val horizon = 3
+    val variationHash = BranchReplyProbeBinding.variationHash(
+      rootFen = fen,
+      role = played.role,
+      rootMove = playedMove,
+      whitePovEvalCp = engineLine.scoreCp,
+      mate = engineLine.mate,
+      depth = engineLine.depth,
+      moves = engineLine.moves,
+      replyMove = replyMove,
+      certifiedHorizonPlyOffset = horizon
+    )
+    val request = ProbeRequest(
+      id = "insufficient-material-reply",
+      fen = branchFen,
+      depth = 16,
+      candidateMove = playedMove,
+      depthFloor = 12,
+      variationHash = variationHash,
+      variant = ProbeVariant.BranchReply(replyMove, horizon)
+    )
+    val result = ProbeResult(
+      id = request.id,
+      resolution = ProbeResolution.ExactAutomaticTerminal(
+        CandidateLineEvaluation.ExactAutomaticTerminal(
+          List(replyMove),
+          AutomaticTerminal.InsufficientMaterial
+        )
+      )
+    )
+    val admission = MoveReviewInputNormalizer
+      .admitIssuedProbeResult(prepared, request, result, prepared.lines.map(_.rank).max + 1)
+      .fold(diagnostic => fail(diagnostic.reasonCodes.mkString(",")), identity)
+
+    assertEquals(admission.branch.certifiedHorizonPlyOffset, horizon)
+    assertEquals(
+      admission.branch.lines.map(_.evaluation),
+      List(
+        CandidateLineEvaluation.ExactAutomaticTerminal(
+          List(replyMove),
+          AutomaticTerminal.InsufficientMaterial
+        )
+      )
+    )
 
   test("trusted prepared probe pairs fail loudly before the shared executor on impossible metadata"):
     val prepared = MoveReviewInputNormalizer
@@ -67,11 +127,10 @@ class HistoryOpeningContinuityTest extends munit.FunSuite:
       id = "trusted-request",
       fen = Standard.initialFen.value,
       depth = 16,
-      multiPv = 1,
       candidateMove = "d2d4",
       depthFloor = 12,
       variationHash = "trusted-variation",
-      variant = ProbeVariant.BranchReply(1)
+      variant = ProbeVariant.BranchReply("d7d5", 1)
     )
     val mismatched = ProbeResult(
       id = "different-result",

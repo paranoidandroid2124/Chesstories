@@ -1,5 +1,7 @@
 package lila.chessjudgment.model.judgment
 
+import chess.White
+
 class CauseChannelMultiplicityTest extends munit.FunSuite:
 
   private val position = PositionNodeRef(
@@ -23,6 +25,14 @@ class CauseChannelMultiplicityTest extends munit.FunSuite:
     layer = EvidenceLayer.Relation
   )
 
+  private val rootActor = RootCausalActor(
+    moveUci = "e2b5",
+    role = EvidencePieceRole("bishop"),
+    color = White,
+    from = EvidenceSquare("e2"),
+    to = EvidenceSquare("b5")
+  )
+
   private def channel(mechanism: String): DirectCauseChannel =
     DirectCauseChannel(
       binding = EvidenceObjectBinding(
@@ -32,6 +42,7 @@ class CauseChannelMultiplicityTest extends munit.FunSuite:
         mechanism = List(ConcreteChessObject(EvidenceObjectKind.Relation, mechanism)),
         consequence = List(ConcreteChessObject(EvidenceObjectKind.Consequence, "king-forcing"))
       ),
+      rootActor = rootActor,
       directChange = DirectCausalChange.Occurred
     )
 

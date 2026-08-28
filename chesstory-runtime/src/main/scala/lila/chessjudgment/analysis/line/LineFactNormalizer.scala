@@ -1,6 +1,6 @@
 package lila.chessjudgment.analysis.line
 
-import chess.{ Color, King, Pawn, Position }
+import chess.{ Color, King, Pawn }
 
 import lila.chessjudgment.analysis.material.MaterialValue
 import lila.chessjudgment.model.judgment.*
@@ -64,85 +64,107 @@ object LineFactNormalizer:
       facts.line.moves.zipWithIndex.flatMap { case (move, index) =>
         val normalized = PrincipalVariationEvidence.normalizeUci(move.uci)
         val moverRole = replay.legalSteps.lift(index).map(step => EvidencePieceRole(step.move.piece.role.name))
-        val checkDefense =
-          replay.legalSteps.lift(index).toList.flatMap(step =>
-            Option.when(step.before.check.yes)(step.before).toList.map { position =>
+        val relationDetails = replay.replaySteps.lift(index).toList.flatMap(step =>
+          replay.verticalRelationOccurrences(
+            step,
+            List(
+              VerticalRelationContractKind.RootCheckResponse,
+              VerticalRelationContractKind.CreatedCheckResponseInventory,
+              VerticalRelationContractKind.StalemateTransition
+            )
+          ).map(_.relation.detail)
+        )
+        val checkDefense = relationDetails.collect {
+          case RelationWitnessDetail.RootCheckResponse(_, respondingSide, kingSquare, _, _, _) =>
               LineMoveEvent(
-                kind = LineEventKind.DefenderMove,
+                kind = LineEventKind.CheckEvasion,
                 moveUci = normalized,
                 plyOffset = index,
-                side = Some(position.color),
+                side = Some(respondingSide),
                 pieceRole = moverRole,
                 targetRole = Some(EvidencePieceRole(King.name)),
-                square = position.board.kingPosOf(position.color).map(square => EvidenceSquare(square.key))
+                square = Some(kingSquare)
               )
-            }
-          )
-        val stateEvents =
-          replay.legalSteps.lift(index).toList.flatMap { step =>
-            val position = step.after
-            val kingSquare = position.board.kingPosOf(position.color).map(square => EvidenceSquare(square.key))
-            val checkLike =
-              Option.when(position.checkMate)(
+        }
+        val stateEvents = relationDetails.flatMap {
+          case RelationWitnessDetail.CreatedCheckResponseInventory(
+                mover,
+                _,
+                kingSquare,
+                _,
+                _,
+                _,
+                terminal,
+                _
+              ) =>
+            terminal match
+              case RelationCheckTerminalState.Checkmate =>
                 List(
                   LineMoveEvent(
                     kind = LineEventKind.Mate,
                     moveUci = normalized,
                     plyOffset = index,
-                    side = Some(!position.color),
+                    side = Some(mover.side),
                     pieceRole = moverRole,
                     targetRole = Some(EvidencePieceRole(King.name)),
-                    square = kingSquare
+                    square = Some(kingSquare)
                   ),
                   LineMoveEvent(
                     kind = LineEventKind.Tempo,
                     moveUci = normalized,
                     plyOffset = index,
-                    side = Some(!position.color),
+                    side = Some(mover.side),
                     pieceRole = moverRole,
                     targetRole = Some(EvidencePieceRole(King.name)),
-                    square = kingSquare
+                    square = Some(kingSquare)
                   )
                 )
-              ).orElse(
-                Option.when(position.check.yes)(
-                  List(
-                    LineMoveEvent(
-                      kind = LineEventKind.Check,
-                      moveUci = normalized,
-                      plyOffset = index,
-                      side = Some(!position.color),
-                      pieceRole = moverRole,
-                      targetRole = Some(EvidencePieceRole(King.name)),
-                      square = kingSquare
-                    ),
-                    LineMoveEvent(
-                      kind = LineEventKind.Tempo,
-                      moveUci = normalized,
-                      plyOffset = index,
-                      side = Some(!position.color),
-                      pieceRole = moverRole,
-                      targetRole = Some(EvidencePieceRole(King.name)),
-                      square = kingSquare
-                    )
+              case RelationCheckTerminalState.Ongoing =>
+                List(
+                  LineMoveEvent(
+                    kind = LineEventKind.Check,
+                    moveUci = normalized,
+                    plyOffset = index,
+                    side = Some(mover.side),
+                    pieceRole = moverRole,
+                    targetRole = Some(EvidencePieceRole(King.name)),
+                    square = Some(kingSquare)
+                  ),
+                  LineMoveEvent(
+                    kind = LineEventKind.Tempo,
+                    moveUci = normalized,
+                    plyOffset = index,
+                    side = Some(mover.side),
+                    pieceRole = moverRole,
+                    targetRole = Some(EvidencePieceRole(King.name)),
+                    square = Some(kingSquare)
                   )
                 )
-              ).getOrElse(Nil)
-            checkLike ++ List(
-              Option.when(position.staleMate)(
-                LineMoveEvent(
-                  kind = LineEventKind.Stalemate,
-                  moveUci = normalized,
-                  plyOffset = index,
-                  side = Some(!position.color),
-                  pieceRole = moverRole,
-                  targetRole = Some(EvidencePieceRole(King.name)),
-                  square = position.board.kingPosOf(position.color).map(square => EvidenceSquare(square.key))
-                )
-              )
-            ).flatten
-          }
-        castlingEvent(normalized, index).toList ++ checkDefense ++ stateEvents
+          case RelationWitnessDetail.StalemateTransition(mover, _, kingSquare, _) =>
+            List(LineMoveEvent(
+              kind = LineEventKind.Stalemate,
+              moveUci = normalized,
+              plyOffset = index,
+              side = Some(mover.side),
+              pieceRole = moverRole,
+              targetRole = Some(EvidencePieceRole(King.name)),
+              square = Some(kingSquare)
+            ))
+          case _ => Nil
+        }
+        val castling = replay.replaySteps.lift(index).flatMap(replay.transition).flatMap { transition =>
+          Option.when(transition.legal.move.castle.nonEmpty)(
+            LineMoveEvent(
+              kind = LineEventKind.Castling,
+              moveUci = normalized,
+              plyOffset = index,
+              side = Some(transition.relationDelta.rootMove.side),
+              pieceRole = Some(EvidencePieceRole(King.name)),
+              square = Some(transition.relationDelta.rootMove.to)
+            )
+          )
+        }
+        castling.toList ++ checkDefense ++ stateEvents
       }
     val forcedEvents =
       forcedTheme.toList.flatMap(theme =>
@@ -174,35 +196,19 @@ object LineFactNormalizer:
             targetRole = Some(capture.capturedRole),
             square = Some(capture.square)
           )
-        captureEvent :: Option
-          .when(capture.recapture)(
-            LineMoveEvent(
-              kind = LineEventKind.DefenderMove,
-              moveUci = capture.moveUci,
-              plyOffset = capture.plyOffset,
-              side = Some(capture.side),
-              pieceRole = Some(capture.attackerRole),
-              targetRole = Some(capture.capturedRole),
-              square = Some(capture.square)
-            )
-          )
-          .toList
+        captureEvent :: Nil
       }
     val promotionEvents =
-      promotionMoves(facts).flatMap { case (plyOffset, moveUci) =>
-        replay.legalSteps.lift(plyOffset).flatMap { step =>
-          for
-            square <- chess.Square.fromKey(moveUci.slice(2, 4))
-          yield LineMoveEvent(
+      materialSummary.toList.flatMap(_.events).filter(_.promotionGainCp > 0).map { event =>
+          LineMoveEvent(
             kind = LineEventKind.Promotion,
-            moveUci = moveUci,
-            plyOffset = plyOffset,
-            side = Some(step.move.piece.color),
+            moveUci = event.moveUci,
+            plyOffset = event.plyOffset,
+            side = Some(event.movement.side),
             pieceRole = Some(EvidencePieceRole(Pawn.name)),
-            targetRole = step.after.board.pieceAt(square).map(piece => EvidencePieceRole(piece.role.name)),
-            square = Some(EvidenceSquare(square.key))
+            targetRole = Some(event.movement.afterRole),
+            square = Some(event.movement.to)
           )
-        }.toList
       }
     val materialEvents = captureEvents ++ promotionEvents
     (replayEvents ++ forcedEvents ++ materialEvents).distinct
@@ -219,11 +225,26 @@ object LineFactNormalizer:
     val outcome =
       facts.line.moves.zipWithIndex.flatMap { case (move, index) =>
         val normalized = PrincipalVariationEvidence.normalizeUci(move.uci)
-        replay.legalSteps.lift(index).toList.flatMap { step =>
-          val position = step.after
-          val prefix = facts.line.moves.take(index + 1).map(_.uci)
-          List(
-            Option.when(position.checkMate && mateResultMatches(whitePovMate, !position.color))(
+        val prefix = facts.line.moves.take(index + 1).map(_.uci)
+        replay.replaySteps.lift(index).toList.flatMap { step =>
+          replay.verticalRelationOccurrences(
+            step,
+            List(
+              VerticalRelationContractKind.CreatedCheckResponseInventory,
+              VerticalRelationContractKind.StalemateTransition
+            )
+          ).flatMap(_.relation.detail match
+            case RelationWitnessDetail.CreatedCheckResponseInventory(
+                  mover,
+                  _,
+                  _,
+                  _,
+                  _,
+                  _,
+                  RelationCheckTerminalState.Checkmate,
+                  _
+                ) if mateResultMatches(whitePovMate, mover.side) =>
+              Some(
               LineConsequence(
                 LineConsequenceKind.Mate,
                 prefix,
@@ -231,10 +252,11 @@ object LineFactNormalizer:
                 eventMove = Some(normalized),
                 rootMove = rootMove,
                 rootSide = rootSide,
-                beneficiary = Some(!position.color)
+                beneficiary = Some(mover.side)
               )
-            ),
-            Option.when(position.staleMate)(
+              )
+            case RelationWitnessDetail.StalemateTransition(_, _, _, _) =>
+              Some(
               LineConsequence(
                 LineConsequenceKind.DrawResource,
                 prefix,
@@ -243,8 +265,9 @@ object LineFactNormalizer:
                 rootMove = rootMove,
                 rootSide = rootSide
               )
-            )
-          ).flatten
+              )
+            case _ => None
+          )
         }
       }
     val forced =
@@ -262,13 +285,15 @@ object LineFactNormalizer:
       )
     val material =
       materialSummary.toList.flatMap { summary =>
-        val indexedPromotionMoves = promotionMoves(facts)
+        val indexedPromotionMoves = summary.events
+          .filter(_.promotionGainCp > 0)
+          .map(event => event.plyOffset -> event.moveUci)
         val indexedProofMoves = (
           summary.captures.map(capture => capture.plyOffset -> capture.moveUci) ++ indexedPromotionMoves
         ).sortBy(_._1)
         val proofMoves = indexedProofMoves.map(_._2).distinct
         val sacrificeOccurrences = offeredSacrificeOccurrences(replay, summary, rootMove)
-        val materialEvents = materialOutcomeEvents(replay, summary)
+        val materialEvents = materialOutcomeEvents(summary)
         val lastingMaterialOutcome = lastingMaterialOutcomeFor(materialEvents, summary)
         val materialOutcomeEvent = lastingMaterialOutcome.map(_.event)
         val materialGainEvent = materialOutcomeEvent.filter(_.side == summary.sideToMove)
@@ -279,12 +304,6 @@ object LineFactNormalizer:
         val materialLossOutcome = lastingMaterialOutcome
           .filter(_.event.side != summary.sideToMove)
           .flatMap(_.toRootOwnedOutcome)
-        val promotionEvent = Option
-          .when(
-            (summary.hasPromotionGainForMover && summary.netCaptureCpForMover > 0) ||
-              (summary.hasPromotionLossForMover && summary.netCaptureCpForMover < 0)
-          )(beneficiaryPromotionEvent(materialEvents, summary))
-          .flatten
         val materialGainEventMove = materialGainEvent.map(_.moveUci)
         val materialLossEventMove = materialLossEvent.map(_.moveUci)
         val materialGainRootMove =
@@ -326,11 +345,7 @@ object LineFactNormalizer:
           )
         ).flatten
         val recaptureConsequences =
-          Option
-            .when(summary.materialWindowComplete)(summary.captures.filter(_.recapture))
-            .toList
-            .flatten
-            .map(capture =>
+          summary.captures.filter(_.recapture).map(capture =>
               LineConsequence(
                 LineConsequenceKind.RecaptureSequence,
                 proofMovesThrough(capture.plyOffset),
@@ -340,7 +355,7 @@ object LineFactNormalizer:
                 rootSide = Some(summary.sideToMove),
                 beneficiary = Some(capture.side)
               )
-            )
+          )
         val sacrificeConsequences =
           sacrificeOccurrences.map { occurrence =>
             val acceptance = occurrence.acceptance
@@ -355,8 +370,7 @@ object LineFactNormalizer:
               sacrificeOccurrence = Some(occurrence)
             )
           }
-        val remainingMaterialConsequences = List(
-          summary.durableRecoveryCaptureForMover.map(capture =>
+        val recoveryConsequences = summary.durableRecoveryCaptureForMover.toList.map(capture =>
             LineConsequence(
               LineConsequenceKind.RecoveryWindow,
               proofMovesThrough(capture.plyOffset),
@@ -366,12 +380,14 @@ object LineFactNormalizer:
               rootSide = Some(summary.sideToMove),
               beneficiary = Some(summary.sideToMove)
             )
-          ),
-          promotionEvent.map(event =>
+          )
+        val promotionEvents = materialEvents.filter(_.promotion)
+        val promotionRace = promotionEvents.map(_.side).distinct.size > 1
+        val promotionConsequences = promotionEvents.map(event =>
             LineConsequence(
-              if materialEvents.filter(_.promotion).map(_.side).distinct.size > 1 then LineConsequenceKind.PromotionRace
+              if promotionRace then LineConsequenceKind.PromotionRace
               else LineConsequenceKind.Promotion,
-              proofMoves,
+              proofMovesThrough(event.plyOffset),
               proofSignal = true,
               eventMove = Some(event.moveUci),
               rootMove = rootMove.filter(_ => event.plyOffset == 0),
@@ -379,23 +395,17 @@ object LineFactNormalizer:
               beneficiary = Some(event.side)
             )
           )
-        ).flatten
-        materialResultConsequences ++ recaptureConsequences ++ sacrificeConsequences ++ remainingMaterialConsequences
+        materialResultConsequences ++ recaptureConsequences ++ sacrificeConsequences ++
+          recoveryConsequences ++ promotionConsequences
       }
     (outcome ++ forced ++ material).distinct
 
-  private def promotionMoves(facts: PrincipalVariationEvidence.LineFacts): List[(Int, String)] =
-    facts.line.moves.zipWithIndex.collect {
-      case (move, index) if PrincipalVariationEvidence.normalizeUci(move.uci).length == 5 =>
-        index -> PrincipalVariationEvidence.normalizeUci(move.uci)
-    }
 
   private final case class MaterialOutcomeEvent(
       moveUci: String,
       plyOffset: Int,
       side: Color,
       balanceAfterForMover: Int,
-      immediateAcceptanceBalancesForMover: List[Int],
       promotion: Boolean,
       recapture: Boolean,
       capture: Option[LineMaterialCapture]
@@ -417,92 +427,54 @@ object LineFactNormalizer:
       )
 
   private def materialOutcomeEvents(
-      replay: CanonicalLineReplay,
       summary: LineMaterialSummary
   ): List[MaterialOutcomeEvent] =
-    replay.legalSteps.headOption.toList.flatMap { first =>
-      val start = first.before
-      val initialBalance = materialBalanceCp(start, summary.sideToMove)
-      replay.legalSteps.zipWithIndex.flatMap { case (step, plyOffset) =>
-        val moveUci = PrincipalVariationEvidence.normalizeUci(step.uci)
-        for
-          positionRef <- replay.replaySteps.lift(plyOffset).toList
-          afterAnalysis <- replay.analysisAfter(positionRef).toList
-          origin <- chess.Square.fromKey(moveUci.take(2)).toList
-          destination <- chess.Square.fromKey(moveUci.slice(2, 4)).toList
-          actor <- step.before.board.pieceAt(origin).toList
-          beforeBalance = materialBalanceCp(step.before, summary.sideToMove) - initialBalance
-          afterBalance = materialBalanceCp(step.after, summary.sideToMove) - initialBalance
-          signedDelta = afterBalance - beforeBalance
-          if signedDelta != 0
-          if (actor.color == summary.sideToMove) == (signedDelta > 0)
-        yield
-          val exactCaptures = summary.captures.filter(capture =>
-            capture.plyOffset == plyOffset && EvidenceRef.sameMove(capture.moveUci, moveUci)
-          )
+    summary.events.foldLeft((0, List.empty[MaterialOutcomeEvent])) {
+      case ((runningBalance, events), observed) =>
+        val captureDelta = observed.capture.map(_.valueCp).getOrElse(0)
+        val unsignedDelta = captureDelta + observed.promotionGainCp
+        val signedDelta =
+          if observed.movement.side == summary.sideToMove then unsignedDelta else -unsignedDelta
+        val afterBalance = runningBalance + signedDelta
+        val event = Option.when(signedDelta != 0)(
           MaterialOutcomeEvent(
-            moveUci = moveUci,
-            plyOffset = plyOffset,
-            side = actor.color,
+            moveUci = observed.moveUci,
+            plyOffset = observed.plyOffset,
+            side = observed.movement.side,
             balanceAfterForMover = afterBalance,
-            immediateAcceptanceBalancesForMover = afterAnalysis.actualLegalMoves
-              .filter(reply => reply.captures && reply.dest == destination)
-              .map(reply => materialBalanceCp(reply.after, summary.sideToMove) - initialBalance),
-            promotion = moveUci.length == 5,
-            recapture = exactCaptures.exists(_.recapture),
-            capture = exactCaptures match
-              case capture :: Nil => Some(capture)
-              case _              => None
+            promotion = observed.promotionGainCp > 0,
+            recapture = observed.capture.exists(_.recapture),
+            capture = observed.capture
           )
-      }
-    }
+        )
+        afterBalance -> (events ++ event)
+    }._2
 
   private def lastingMaterialOutcomeFor(
       events: List[MaterialOutcomeEvent],
       summary: LineMaterialSummary
   ): Option[LastingMaterialOutcome] =
-    val finalSign = Integer.signum(summary.netCaptureCpForMover)
-    val observedNet = events.lastOption.map(_.balanceAfterForMover).getOrElse(0)
-    Option.when(
-      summary.materialWindowComplete &&
-        finalSign != 0 &&
-        observedNet == summary.netCaptureCpForMover
-    ) {
-      val beneficiary = if finalSign > 0 then summary.sideToMove else !summary.sideToMove
-      def keepsFinalSign(balance: Int): Boolean = finalSign * balance > 0
-      events.zipWithIndex.collectFirst {
-        case (event, index)
-            if event.side == beneficiary &&
-              keepsFinalSign(event.balanceAfterForMover) &&
-              events.drop(index).forall(next => keepsFinalSign(next.balanceAfterForMover)) &&
-              event.immediateAcceptanceBalancesForMover.forall(keepsFinalSign) &&
-              !(event.plyOffset == 0 && event.recapture && !event.promotion) =>
-          val beneficiaryBalances =
-            (events.drop(index).map(_.balanceAfterForMover) ++
-              event.immediateAcceptanceBalancesForMover).map(finalSign * _)
-          beneficiaryBalances.minOption
-            .filter(_ > 0)
-            .map(durableNetCp => LastingMaterialOutcome(event, durableNetCp))
-      }
-    }.flatten.flatten
-
-  private def beneficiaryPromotionEvent(
-      events: List[MaterialOutcomeEvent],
-      summary: LineMaterialSummary
-  ): Option[MaterialOutcomeEvent] =
-    val finalSign = Integer.signum(summary.netCaptureCpForMover)
-    val observedNet = events.lastOption.map(_.balanceAfterForMover).getOrElse(0)
-    Option.when(finalSign != 0 && observedNet == summary.netCaptureCpForMover) {
-      val beneficiary = if finalSign > 0 then summary.sideToMove else !summary.sideToMove
-      events.reverse.find(event =>
-        event.promotion &&
-          event.side == beneficiary &&
-          event.immediateAcceptanceBalancesForMover.forall(balance => finalSign * balance > 0)
-      )
-    }.flatten
-
-  private def materialBalanceCp(position: Position, side: Color): Int =
-    MaterialValue.sideMaterialCp(position.board, side) - MaterialValue.sideMaterialCp(position.board, !side)
+    summary.closedNetCpForMover.flatMap { closedNet =>
+      val finalSign = Integer.signum(closedNet)
+      val observedNet = events.lastOption.map(_.balanceAfterForMover).getOrElse(0)
+      Option.when(finalSign != 0 && observedNet == closedNet) {
+        val beneficiary = if finalSign > 0 then summary.sideToMove else !summary.sideToMove
+        def keepsFinalSign(balance: Int): Boolean = finalSign * balance > 0
+        events.zipWithIndex.collectFirst {
+          case (event, index)
+              if event.side == beneficiary &&
+                keepsFinalSign(event.balanceAfterForMover) &&
+                events.drop(index).forall(next => keepsFinalSign(next.balanceAfterForMover)) &&
+                !(event.plyOffset == 0 && event.recapture && !event.promotion) =>
+            events
+              .drop(index)
+              .map(next => finalSign * next.balanceAfterForMover)
+              .minOption
+              .filter(_ > 0)
+              .map(durableNetCp => LastingMaterialOutcome(event, durableNetCp))
+        }.flatten
+      }.flatten
+    }
 
   private def offeredSacrificeOccurrences(
       replay: CanonicalLineReplay,
@@ -515,8 +487,10 @@ object LineFactNormalizer:
       )
       val acceptedMaterialLosses =
         Option
-          .when(summary.materialWindowComplete && summary.netCaptureCpForMover < 0)(
-            captures.filter(capture => capture.side != summary.sideToMove && !capture.recapture)
+          .when(summary.closedNetCpForMover.exists(_ < 0))(
+            captures.filter(capture =>
+              capture.side != summary.sideToMove && capture.recaptureExcluded
+            )
           )
           .toList
           .flatten
@@ -531,32 +505,6 @@ object LineFactNormalizer:
           LineSacrificeOccurrence.fromCanonicalReplay(replay, summary.sideToMove, capture)
         )
     }
-
-  private def castlingEvent(moveUci: String, plyOffset: Int): Option[LineMoveEvent] =
-    castlingSide(moveUci).map(side =>
-      LineMoveEvent(
-        kind = LineEventKind.Castling,
-        moveUci = moveUci,
-        plyOffset = plyOffset,
-        side = Some(side),
-        pieceRole = Some(EvidencePieceRole(King.name)),
-        square = destinationSquare(moveUci)
-      )
-    )
-
-  private[chessjudgment] def castlingSide(moveUci: String): Option[Color] =
-    moveUci match
-      case "e1g1" | "e1h1" | "e1c1" | "e1a1" => Some(Color.White)
-      case "e8g8" | "e8h8" | "e8c8" | "e8a8" => Some(Color.Black)
-      case _               => None
-
-  private def destinationSquare(moveUci: String): Option[EvidenceSquare] =
-    moveUci match
-      case "e1h1" => Some(EvidenceSquare("g1"))
-      case "e1a1" => Some(EvidenceSquare("c1"))
-      case "e8h8" => Some(EvidenceSquare("g8"))
-      case "e8a8" => Some(EvidenceSquare("c8"))
-      case _      => Option.when(moveUci.length >= 4)(EvidenceSquare(moveUci.slice(2, 4)))
 
   private def mateResultMatches(whitePovMate: Option[Int], winner: Color): Boolean =
     whitePovMate.exists(mate => mate != 0 && (mate > 0) == winner.white)

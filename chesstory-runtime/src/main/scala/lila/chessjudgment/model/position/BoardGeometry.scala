@@ -44,8 +44,21 @@ private[chessjudgment] final case class BoardPieceTransition(
 ):
   require(from != to || beforeRole != afterRole, "a piece transition must change square or role")
 
-/** Exact board cells changed by one admitted legal move and the dependency
-  * closure of the two canonical slider inventories.
+/** Exact board cells and piece identities changed by one admitted legal move.
+  * Castling, en passant, and promotion are interpreted once here.
+  */
+private[chessjudgment] final case class BoardMoveEffect(
+    cellChanges: List[BoardCellChange],
+    pieceTransitions: List[BoardPieceTransition]
+):
+  require(cellChanges.nonEmpty, "a legal move effect must change at least one board cell")
+  require(cellChanges.map(_.square).distinct.size == cellChanges.size, "move-effect cells must be unique")
+  require(pieceTransitions.nonEmpty, "a legal move effect must move or transform at least one piece")
+  require(pieceTransitions.map(_.from).distinct.size == pieceTransitions.size, "move-effect origins must be unique")
+  require(pieceTransitions.map(_.to).distinct.size == pieceTransitions.size, "move-effect destinations must be unique")
+
+/** Dependency closure of one exact move effect over the two canonical slider
+  * inventories.
   *
   * Geometric controls stop at the first occupied square of a ray. An occupied
   * slider relation owns the complete ordered occupant chain to the board edge,
@@ -54,16 +67,12 @@ private[chessjudgment] final case class BoardPieceTransition(
   * cannot change the attack map through an unchanged nearer barrier.
   */
 private[chessjudgment] final case class BoardTransitionFootprint(
-    cellChanges: List[BoardCellChange],
-    pieceTransitions: List[BoardPieceTransition],
+    moveEffect: BoardMoveEffect,
     affectedGeometricControlOrigins: Set[Square],
     affectedOccupiedRayOrigins: Set[Square]
 ):
-  require(cellChanges.nonEmpty, "a legal board transition must change at least one board cell")
-  require(cellChanges.map(_.square).distinct.size == cellChanges.size, "transition cells must be unique")
-  require(pieceTransitions.nonEmpty, "a legal board transition must move or transform at least one piece")
-  require(pieceTransitions.map(_.from).distinct.size == pieceTransitions.size, "piece-transition origins must be unique")
-  require(pieceTransitions.map(_.to).distinct.size == pieceTransitions.size, "piece-transition destinations must be unique")
+  def cellChanges: List[BoardCellChange] = moveEffect.cellChanges
+  def pieceTransitions: List[BoardPieceTransition] = moveEffect.pieceTransitions
 
   lazy val changedSquares: List[Square] = cellChanges.map(_.square)
   lazy val changedSquareSet: Set[Square] = changedSquares.toSet
@@ -81,13 +90,6 @@ private[chessjudgment] final case class BoardTransitionFootprint(
     ).toSet
   lazy val pawnFileChanges: Set[(Color, File)] =
     pawnIdentityChanges.map { case (side, square) => side -> square.file }
-  lazy val majorPieceFileChanges: Set[(Color, File)] =
-    cellChanges.flatMap(change =>
-      (change.before.toList ++ change.after.toList).collect {
-        case piece if piece.role == Rook || piece.role == Queen =>
-          piece.color -> change.square.file
-      }
-    ).toSet
 
 /** One board-law implementation for attack geometry and occupied slider rays.
   * It knows nothing about material value, plans, target hints, or whose turn
@@ -100,7 +102,7 @@ private[chessjudgment] object BoardGeometry:
       occupiedRayOrigins: Set[Square]
   )
 
-  def transitionFootprint(move: Move): BoardTransitionFootprint =
+  def moveEffect(move: Move): BoardMoveEffect =
     val before = move.before.board
     val after = move.after.board
     val castlingSquares = move.castle.toList.flatMap(castle =>
@@ -132,6 +134,12 @@ private[chessjudgment] object BoardGeometry:
         to = to
       )
     }
+    BoardMoveEffect(cellChanges, pieceTransitions)
+
+  def transitionFootprint(move: Move, exactMoveEffect: BoardMoveEffect): BoardTransitionFootprint =
+    val before = move.before.board
+    val after = move.after.board
+    val cellChanges = exactMoveEffect.cellChanges
     val changedSquares = cellChanges.map(_.square)
     val changedSliderOrigins = cellChanges.flatMap(change =>
       (change.before.toList ++ change.after.toList)
@@ -147,8 +155,7 @@ private[chessjudgment] object BoardGeometry:
     val affectedOccupiedRayOrigins =
       changedSliderOrigins ++ dependencyClosures.flatMap(_.occupiedRayOrigins)
     BoardTransitionFootprint(
-      cellChanges,
-      pieceTransitions,
+      exactMoveEffect,
       affectedGeometricControlOrigins.toSet,
       affectedOccupiedRayOrigins.toSet
     )
@@ -227,9 +234,6 @@ private[chessjudgment] object BoardGeometry:
   def liesStrictlyBetween(from: Square, to: Square, square: Square): Boolean =
     lineSpan(from, to).drop(1).dropRight(1).contains(square)
 
-  def pathIsClear(board: Board, from: Square, to: Square): Boolean =
-    lineSpan(from, to).drop(1).dropRight(1).forall(board.pieceAt(_).isEmpty)
-
   /** Squares crossed by the named piece on one geometrically valid move.
     * Endpoints are excluded; occupancy and move legality remain the caller's
     * responsibility.
@@ -247,13 +251,6 @@ private[chessjudgment] object BoardGeometry:
       lineDirection(piece.role, from, to).toList.flatMap { case (fileStep, rankStep) =>
         squaresAlong(from, fileStep, rankStep).take(math.max(fileDelta.abs, rankDelta.abs) - 1)
       }
-
-  def isOneOrInitialTwoStepPawnAdvance(from: Square, to: Square, color: Color): Boolean =
-    val direction = if color.white then 1 else -1
-    val distance = to.rank.value - from.rank.value
-    from.file == to.file &&
-      (distance == direction ||
-        (distance == direction * 2 && from.rank.value == (if color.white then 1 else 6)))
 
   private def occupiedAlong(
       board: Board,

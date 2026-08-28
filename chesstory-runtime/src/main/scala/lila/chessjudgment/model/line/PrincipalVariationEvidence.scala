@@ -20,6 +20,7 @@ private[chessjudgment] final case class LegalReplayStep(
 private[chessjudgment] object LegalReplayStep:
   def fromMove(ply: Int, before: Position, move: Move): LegalReplayStep =
     require(ply > 0, "a legal replay step must have a positive ply")
+    require(move.before == before, "a legal replay move must belong to its exact source occurrence")
     val capturedRole =
       move.capture.flatMap(before.board.roleAt).orElse(before.board.roleAt(move.dest))
     LegalReplayStep(
@@ -46,16 +47,62 @@ private[chessjudgment] final class StripedLruCache[K, V](
       override def removeEldestEntry(eldest: java.util.Map.Entry[K, V]): Boolean =
         size() > stripeMaxEntries
   }
+  private val inFlight =
+    new java.util.concurrent.ConcurrentHashMap[K, java.util.concurrent.CompletableFuture[V]]()
+
+  private def cached(cache: java.util.LinkedHashMap[K, V], key: K): Option[V] =
+    cache.synchronized {
+      if cache.containsKey(key) then Some(cache.get(key)) else None
+    }
 
   def getOrCompute(key: K)(compute: => V): V =
     val cache = caches(Math.floorMod(key.##, stripeCount))
-    cache.synchronized {
-      if cache.containsKey(key) then cache.get(key)
+    cached(cache, key).getOrElse {
+      val promise = new java.util.concurrent.CompletableFuture[V]()
+      val existing = inFlight.putIfAbsent(key, promise)
+      if existing != null then
+        try existing.join()
+        catch
+          case failure: java.util.concurrent.CompletionException if failure.getCause != null =>
+            throw failure.getCause
       else
-        val value = compute
-        cache.put(key, value)
-        value
+        try
+          val value = cached(cache, key).getOrElse {
+            val calculated = compute
+            cache.synchronized(cache.put(key, calculated))
+            calculated
+          }
+          promise.complete(value)
+          value
+        catch
+          case failure: Throwable =>
+            promise.completeExceptionally(failure)
+            throw failure
+        finally inFlight.remove(key, promise)
     }
+
+/** Exact occurrence key for computations whose result retains scalachess
+  * `Move.before`/`Move.after` objects. Board- or history-equivalent positions
+  * cannot share those objects: each move remains owned by the Position
+  * instance that generated it. Semantic board geometry uses its separate
+  * cache upstream.
+  */
+private[chessjudgment] final class PositionOccurrenceKey private (
+    private val position: Position
+):
+  private val cachedHash = System.identityHashCode(position)
+
+  override def hashCode: Int = cachedHash
+
+  override def equals(other: Any): Boolean =
+    other match
+      case that: PositionOccurrenceKey =>
+        position.asInstanceOf[AnyRef] eq that.position.asInstanceOf[AnyRef]
+      case _ => false
+
+private[chessjudgment] object PositionOccurrenceKey:
+  def from(position: Position): PositionOccurrenceKey =
+    new PositionOccurrenceKey(position)
 
 private[chessjudgment] object PrincipalVariationEvidence:
 
@@ -63,7 +110,7 @@ private[chessjudgment] object PrincipalVariationEvidence:
   private val positionCache =
     new StripedLruCache[String, Option[Position]](PositionCacheMaxEntries)
   private val legalMoveCache =
-    new StripedLruCache[Position, List[Move]](PositionCacheMaxEntries)
+    new StripedLruCache[PositionOccurrenceKey, List[Move]](PositionCacheMaxEntries)
 
   def readPosition(fen: String): Option[Position] =
     val key = normalizeFen(fen)
@@ -76,9 +123,19 @@ private[chessjudgment] object PrincipalVariationEvidence:
   /** The sole legal-move generator for commentary analysis. The complete
     * Position key retains clocks and repetition history, so Move.after values
     * are never shared across merely board-equivalent occurrences.
+    *
+    * scalachess exposes both standard-UCI king-destination castling and the
+    * UCI_Chess960 king-to-rook alias even in a Standard position. Chesstory's
+    * public engine contract is Standard, so only the actual king-destination
+    * representation owns the legal resource. This is representation
+    * canonicalization, not result deduplication.
     */
   private[chessjudgment] def actualLegalMoves(position: Position): List[Move] =
-    legalMoveCache.getOrCompute(position)(position.legalMoves.toList)
+    legalMoveCache.getOrCompute(PositionOccurrenceKey.from(position))(
+      position.legalMoves.toList.filter(move =>
+        move.castle.forall(castle => move.dest == castle.kingTo)
+      ).sortBy(_.toUci.uci)
+    )
 
   final case class LineMoveRef(
       ply: Int,

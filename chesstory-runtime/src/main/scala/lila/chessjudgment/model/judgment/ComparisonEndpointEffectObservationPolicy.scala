@@ -10,8 +10,7 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
     case Incomparable
 
   private[chessjudgment] final case class PlanResultCounterfactualResponseMapping(
-      sourceInducedResponse: PlanResultSourceOccurrence,
-      counterpartRouteResponse: Option[PlanResultSourceOccurrence]
+      sourceInducedResponse: PlanResultSourceOccurrence
   )
 
   private[chessjudgment] final case class PlanResultCounterfactualDependencyMapping(
@@ -167,15 +166,13 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
       if counterpartIdentity.selectedInducedResponse.isEmpty
       if sourceIdentity.root.plyOffset == 0 && counterpartIdentity.root.plyOffset == 0
       if sourceIdentity.source.plyOffset == 2 && counterpartIdentity.source.plyOffset == 2
-      if sourceResponse.plyOffset == 1 && sourceResponse.actorRole.nonEmpty
+      if sourceResponse.plyOffset == 1
       if sameMove(sourceIdentity.root.moveUci, sourceLine.rootMove)
       if sameMove(sourceIdentity.source.moveUci, counterpartLine.rootMove)
       if sameMove(counterpartIdentity.root.moveUci, counterpartLine.rootMove)
       if sameMove(counterpartIdentity.source.moveUci, sourceLine.rootMove)
-      if sourceIdentity.root.actorRole.nonEmpty && sourceIdentity.source.actorRole.nonEmpty
-      if counterpartIdentity.root.actorRole.nonEmpty && counterpartIdentity.source.actorRole.nonEmpty
-      if sourceIdentity.root.actorRole == counterpartIdentity.source.actorRole
-      if sourceIdentity.source.actorRole == counterpartIdentity.root.actorRole
+      if sameActorRoleTransition(sourceIdentity.root, counterpartIdentity.source)
+      if sameActorRoleTransition(sourceIdentity.source, counterpartIdentity.root)
       sourceOutcome <- planResultOutcomeSemantics(sourceObservation, sourceIdentity)
       counterpartOutcome <- planResultOutcomeSemantics(counterpartObservation, counterpartIdentity)
       if sourceOutcome == counterpartOutcome
@@ -203,8 +200,7 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
         sourceRootToCounterpartResult = sourceIdentity.root -> counterpartIdentity.source,
         sourceResultToCounterpartRoot = sourceIdentity.source -> counterpartIdentity.root,
         inducedResponse = PlanResultCounterfactualResponseMapping(
-          sourceResponse,
-          responseOccurrence(counterpartDependency)
+          sourceResponse
         ),
         dependencyMappings = List(
           PlanResultCounterfactualDependencyMapping(sourceDependency, counterpartDependency)
@@ -325,9 +321,9 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
             right: PlanCausalDependencyFunctionProof.ObjectState
           ) =>
         left.color == right.color &&
-          roleMatches(left.pieceRole, sourceIdentity.root) &&
+          roleMatches(left.rootBeforeRole, sourceIdentity.root) &&
           roleMatches(left.pieceRole, sourceIdentity.source) &&
-          roleMatches(right.pieceRole, counterpartIdentity.root) &&
+          roleMatches(right.rootBeforeRole, counterpartIdentity.root) &&
           roleMatches(right.pieceRole, counterpartIdentity.source) &&
           moveSquaresMatch(sourceIdentity.root, left.rootFrom, left.rootTo) &&
           moveSquaresMatch(sourceIdentity.source, left.futureFrom, left.futureTo) &&
@@ -342,8 +338,8 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
           roleMatches(right.enabledPieceRole, counterpartIdentity.source) &&
           moveSquaresMatch(sourceIdentity.source, left.enabledFrom, left.enabledTo) &&
           moveSquaresMatch(counterpartIdentity.source, right.enabledFrom, right.enabledTo) &&
-          moveOriginMatches(sourceIdentity.root, left.vacatedSquare) &&
-          moveOriginMatches(counterpartIdentity.root, right.vacatedSquare)
+          left.vacatedSquares.exists(moveOriginMatches(sourceIdentity.root, _)) &&
+          right.vacatedSquares.exists(moveOriginMatches(counterpartIdentity.root, _))
       case (
             left: PlanCausalDependencyFunctionProof.ResponseContinuation,
             right: PlanCausalDependencyFunctionProof.ResponseContinuation
@@ -359,35 +355,32 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
             right.proofSquares.drop(4).map(_.key.toLowerCase)
       case _ => false
 
-  private def responseOccurrence(
-      dependency: PlanCausalDependencyFunctionIdentity
-  ): Option[PlanResultSourceOccurrence] =
-    dependency.proof match
-      case response: PlanCausalDependencyFunctionProof.ResponseContinuation =>
-        Some(PlanResultSourceOccurrence(EvidenceRef.normalizeMove(response.replyMoveUci), 1))
-      case _ => None
-
   private def roleMatches(
       role: EvidencePieceRole,
       occurrence: PlanResultSourceOccurrence
   ): Boolean =
-    occurrence.actorRole.exists(_.equalsIgnoreCase(role.name))
+    occurrence.actor.beforeRole.equalsIgnoreCase(role.name)
+
+  private def sameActorRoleTransition(
+      left: PlanResultSourceOccurrence,
+      right: PlanResultSourceOccurrence
+  ): Boolean =
+    left.actor.beforeRole.equalsIgnoreCase(right.actor.beforeRole) &&
+      left.actor.afterRole.equalsIgnoreCase(right.actor.afterRole)
 
   private def moveSquaresMatch(
       occurrence: PlanResultSourceOccurrence,
       from: EvidenceSquare,
       to: EvidenceSquare
   ): Boolean =
-    val move = EvidenceRef.normalizeMove(occurrence.moveUci)
-    move.length >= 4 &&
-      move.take(2).equalsIgnoreCase(from.key) &&
-      move.slice(2, 4).equalsIgnoreCase(to.key)
+    occurrence.actor.from.equalsIgnoreCase(from.key) &&
+      occurrence.actor.to.equalsIgnoreCase(to.key)
 
   private def moveOriginMatches(
       occurrence: PlanResultSourceOccurrence,
       square: EvidenceSquare
   ): Boolean =
-    EvidenceRef.normalizeMove(occurrence.moveUci).take(2).equalsIgnoreCase(square.key)
+    occurrence.actor.from.equalsIgnoreCase(square.key)
 
   private def sameMove(left: String, right: String): Boolean =
     EvidenceRef.sameMove(left, right)
@@ -494,7 +487,7 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
         LineEventKind.Mate,
         LineEventKind.Promotion,
         LineEventKind.Tempo,
-        LineEventKind.DefenderMove
+        LineEventKind.CheckEvasion
       )(event.kind)
       observation <- fromOwnedProof(
         rootPosition,
@@ -525,8 +518,6 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
         Some(DirectCausalChange.Refuted)
       else if event.exactRobustPublicResultAssessments.contains(assessment) then
         assessment.consequence.kind match
-          case TransitionConsequenceKind.OpponentMobilityRestriction =>
-            Some(DirectCausalChange.Prevented)
           case TransitionConsequenceKind.PawnTensionResolution =>
             Some(DirectCausalChange.Occurred)
           case _ if assessment.consequence.establishesState =>

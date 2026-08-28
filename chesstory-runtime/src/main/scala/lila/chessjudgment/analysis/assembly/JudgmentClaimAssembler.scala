@@ -1,6 +1,5 @@
 package lila.chessjudgment.analysis.assembly
 
-import chess.Pawn
 import lila.chessjudgment.model.evaluation.JudgmentThresholds
 import lila.chessjudgment.model.line.CandidateLineEvaluation
 import lila.chessjudgment.model.judgment.*
@@ -187,21 +186,18 @@ object JudgmentClaimAssembler:
       allocator: JudgmentProvenanceAllocator
   ): List[JudgmentClaim] =
     context.evidenceGraph.records.flatMap {
-      case EvidenceRecord(ref, payload: StrategicMechanismEvidence, parents)
-          if payload.canAnchorPawnStructureClaim =>
-        val contentRoute = strategicMechanismContentEvidence(context, EvidenceRecord(ref, payload, parents))
-        val primaryLine = contentRoute.map(_._1).orElse(pawnStructureMechanismPrimaryLine(context, ref))
-        val evidence = contentRoute.map(_._2).getOrElse(
-          longTermClaimEvidence(
-            ref :: parents ++
-              pawnStructureMechanismTransitionEvidence(context, ref) ++
-              primaryLine.toList.flatMap(lineLayerRefs(context, _)) ++
-              recordsForPosition(context, EvidenceLayer.Relation, ref.position)
-          )
-        )
-        Option.when(primaryLine.nonEmpty && evidence.nonEmpty) {
+      case record @ EvidenceRecord(ref, payload: StructuralDeltaEvidence, parents)
+          if context.evidenceGraph.proofEligible(record) &&
+            ref.line.exists(_.role == LineNodeRole.Played) &&
+            (
+              payload.hasConsequenceCategory(TransitionConsequenceCategory.PawnStructure) ||
+                payload.hasConsequenceCategory(TransitionConsequenceCategory.PawnStructureDelta)
+            ) =>
+        val primaryLine = ref.line
+        val evidence = longTermClaimEvidence(ref :: parents)
+        Option.when(evidence.nonEmpty) {
           judgmentClaimFromEvidence(
-            id = allocator.evidenceId(s"claim:pawn-structure-mechanism:${allocator.key(ref.id)}"),
+            id = allocator.evidenceId(s"claim:pawn-structure:${allocator.key(ref.id)}"),
             family = ClaimFamily.PawnStructure,
             subject = primaryLine.map(_.role.subject).getOrElse(ClaimSubject.Position),
             primaryPosition = ref.position,
@@ -209,8 +205,7 @@ object JudgmentClaimAssembler:
             moveUci = primaryLine.map(_.rootMove),
             evidence = evidence,
             scope = ref.scope,
-            confidence = ref.confidence,
-            content = contentRoute.map(_ => JudgmentClaimContent.StrategicMechanism(ref))
+            confidence = ref.confidence
           )
         }
       case _ =>
@@ -476,31 +471,29 @@ object JudgmentClaimAssembler:
           if context.evidenceGraph.proofEligible(record) &&
             lineBoundLongTermMechanism(ref) && (payload.canAnchorStrategicClaim || payload.canAnchorPlanClaim) =>
         val contentRoute = strategicMechanismContentEvidence(context, record)
-        if contentRoute.nonEmpty && payload.canAnchorPawnStructureClaim then None
-        else
-          val subject =
-            if payload.kind == StrategicMechanismKind.PlanPressure && payload.canAnchorPlanClaim then ClaimSubject.Plan
-            else ref.line.map(_.role.subject).getOrElse(ClaimSubject.Position)
-          val evidence = contentRoute.map(_._2).getOrElse(
-            longTermClaimEvidence(
-                ref :: parents ++
-                ref.line.toList.flatMap(lineLayerRefs(context, _))
-            )
+        val subject =
+          if payload.kind == StrategicMechanismKind.PlanPressure && payload.canAnchorPlanClaim then ClaimSubject.Plan
+          else ref.line.map(_.role.subject).getOrElse(ClaimSubject.Position)
+        val evidence = contentRoute.map(_._2).getOrElse(
+          longTermClaimEvidence(
+              ref :: parents ++
+              ref.line.toList.flatMap(lineLayerRefs(context, _))
           )
-          Option.when(evidence.nonEmpty) {
-            judgmentClaimFromEvidence(
-              id = allocator.evidenceId(s"claim:strategic-mechanism:${allocator.key(ref.id)}"),
-              family = ClaimFamily.Strategic,
-              subject = subject,
-              primaryPosition = ref.position,
-              primaryLine = ref.line,
-              moveUci = ref.line.map(_.rootMove),
-              evidence = evidence,
-              scope = ref.scope,
-              confidence = ref.confidence,
-              content = contentRoute.map(_ => JudgmentClaimContent.StrategicMechanism(ref))
-            )
-          }
+        )
+        Option.when(evidence.nonEmpty) {
+          judgmentClaimFromEvidence(
+            id = allocator.evidenceId(s"claim:strategic-mechanism:${allocator.key(ref.id)}"),
+            family = ClaimFamily.Strategic,
+            subject = subject,
+            primaryPosition = ref.position,
+            primaryLine = ref.line,
+            moveUci = ref.line.map(_.rootMove),
+            evidence = evidence,
+            scope = ref.scope,
+            confidence = ref.confidence,
+            content = contentRoute.map(_ => JudgmentClaimContent.StrategicMechanism(ref))
+          )
+        }
       case _ =>
         None
     }
@@ -525,41 +518,6 @@ object JudgmentClaimAssembler:
         }
       case _ =>
         None
-
-  private def pawnStructureMechanismPrimaryLine(
-      context: JudgmentAssemblyContext,
-      ref: EvidenceRef
-  ): Option[LineNodeRef] =
-    ref.line.filter(_.role == LineNodeRole.Played).orElse {
-      Option.when(playedPawnStructureTransition(context, ref).nonEmpty)(
-        context.line(LineNodeRole.Played).map(_.ref)
-      ).flatten
-    }
-
-  private def pawnStructureMechanismTransitionEvidence(
-      context: JudgmentAssemblyContext,
-      ref: EvidenceRef
-  ): List[EvidenceRef] =
-    playedPawnStructureTransition(context, ref).map(_.evidence).toList
-
-  private def playedPawnStructureTransition(
-      context: JudgmentAssemblyContext,
-      ref: EvidenceRef
-  ): Option[MoveTransitionEdge] =
-    context.playedTransition
-      .filter(edge =>
-        ref.scope == EvidenceScope.AfterPlayedPosition &&
-          edge.to == ref.position &&
-          playedMoveIsPawnMove(context, edge)
-      )
-
-  private def playedMoveIsPawnMove(
-      context: JudgmentAssemblyContext,
-      edge: MoveTransitionEdge
-  ): Boolean =
-    context.transitionReplay(edge)
-      .flatMap(_.legalSteps.headOption)
-      .exists(_.move.piece.role == Pawn)
 
   private def openingClaims(
       context: JudgmentAssemblyContext,
@@ -667,7 +625,7 @@ object JudgmentClaimAssembler:
     val primaryLine = openingSourceLine(sourceRecord, role)
     val sourceMove = sourceRecord.payload match
       case payload: StructuralDeltaEvidence       => Some(payload.moveUci)
-      case MoveTransitionEvidence(moveUci, _, _) => Some(moveUci)
+      case MoveTransitionEvidence(moveUci, _, _, _) => Some(moveUci)
       case _                                      => primaryLine.map(_.rootMove)
     for
       line <- primaryLine
@@ -685,7 +643,7 @@ object JudgmentClaimAssembler:
     record.payload match
       case payload: StructuralDeltaEvidence =>
         payload.line.filter(_.role == role)
-      case MoveTransitionEvidence(_, _, _) =>
+      case MoveTransitionEvidence(_, _, _, _) =>
         record.ref.line.filter(_.role == role)
       case _ =>
         record.ref.line.filter(_.role == role)
@@ -797,13 +755,4 @@ object JudgmentClaimAssembler:
   ): List[EvidenceRef] =
     context.evidenceGraph.recordsFor(line).collect {
       case record if record.ref.layer == EvidenceLayer.Line || record.ref.layer == EvidenceLayer.Eval => record.ref
-    }
-
-  private def recordsForPosition(
-      context: JudgmentAssemblyContext,
-      layer: EvidenceLayer,
-      position: PositionNodeRef
-  ): List[EvidenceRef] =
-    context.evidenceGraph.recordsFor(position).collect {
-      case record if record.ref.layer == layer => record.ref
     }

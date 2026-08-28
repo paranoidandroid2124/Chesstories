@@ -22,7 +22,6 @@ object ChesstoryRuntime:
   private val PositionCommentaryJobsPath = "/v1/position-commentary-jobs"
   private val JobId = "^[A-Za-z0-9_-]{32}$".r
   private val RootSearchDepth = 16
-  private val MaximumIssuedEngineWorkCount = 32
   private val JobDeadlineMillis = 3L * 60L * 1000L
   private val MaximumRetainedJobs = 2048
   private val TerminalJobRetentionMillis = 2L * 60L * 1000L
@@ -159,7 +158,6 @@ object ChesstoryRuntime:
               val nowEpochMs = System.currentTimeMillis()
               val policy = CommentaryJobPolicy(
                 RootSearchDepth,
-                MaximumIssuedEngineWorkCount,
                 nowEpochMs + JobDeadlineMillis,
                 jobRequest.engineProfile
               )
@@ -275,7 +273,6 @@ object ChesstoryRuntime:
         "invalid_position_history"
     case CommentaryJobStartRejection.FocusedMoveInvalid => "invalid_focus"
     case CommentaryJobStartRejection.RootSearchDepthInvalid => "invalid_commentary_job_policy"
-    case CommentaryJobStartRejection.MaximumIssuedEngineWorkCountInvalid => "invalid_commentary_job_policy"
 
   private final case class PositionCommentaryJsonBodyFailure(httpStatus: Int, error: String)
 

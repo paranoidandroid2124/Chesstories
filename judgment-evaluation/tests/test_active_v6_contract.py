@@ -28,39 +28,18 @@ FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 class RuntimePublicResponseTransportTest(unittest.TestCase):
     @staticmethod
-    def _probe(
-        identifier: str, *, resource: bool = False, continuation: bool = False
-    ) -> dict[str, object]:
-        probe: dict[str, object] = {
+    def _probe(identifier: str) -> dict[str, object]:
+        return {
             "id": identifier,
             "fen": FEN,
-            "moves": [],
+            "moves": ["e2e4"],
             "depth": 16,
-            "purpose": "reply_multipv",
-            "multiPv": 3,
+            "purpose": "branch_reply",
+            "multiPv": 1,
             "candidateMove": "e2e4",
             "variationHash": "a" * 64,
             "horizon": "ply:2147483647",
         }
-        if resource:
-            probe.update(
-                {
-                    "moves": ["e2e4"],
-                    "multiPv": 1,
-                    "opponentResourceMove": "e2e4",
-                }
-            )
-            del probe["horizon"]
-        elif continuation:
-            probe.update(
-                {
-                    "moves": ["e2e4", "e7e5"],
-                    "multiPv": 1,
-                    "continuationMoves": ["e2e4", "e7e5"],
-                }
-            )
-            del probe["horizon"]
-        return probe
 
     @staticmethod
     def _exchange(http_status: int, body: dict[str, object]) -> _RuntimeExchange:
@@ -189,34 +168,252 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         with self.assertRaises(IntegrityError):
             _verified_response_jsonl_bytes(exchange.response_jsonl_base64, "f" * 64)
 
-    def test_probe_and_endpoint_bounds_reject_before_execution(self) -> None:
+    def test_public_move_schema_closes_runtime_structural_and_plan_shapes(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
-        horizon_probe = self._probe("horizon")
-        resource_probe = self._probe("resource", resource=True)
-        continuation_probe = self._probe("continuation", continuation=True)
-        self.assertEqual(_validate_probe_request(horizon_probe)["id"], "horizon")
-        self.assertEqual(_validate_probe_request(resource_probe)["id"], "resource")
-        self.assertEqual(
-            _validate_probe_request(continuation_probe)["id"], "continuation"
-        )
+        endpoint = {
+            "kind": "engine_search",
+            "moves": ["a1a2"],
+            "win_percent_for_mover": 50,
+            "depth": 16,
+        }
+        ready = {
+            "schema_version": "chesstory.move-meaning.response.v6",
+            "status": "ready",
+            "move_commentary": {
+                "primary": {
+                    "kind": "move_verdict",
+                    "comparison_evidence_id": "comparison",
+                    "verdict_code": "matches_reference",
+                    "verdict_confidence": "engine_backed",
+                    "mover": "white",
+                    "delta": {
+                        "kind": "engine_evaluation",
+                        "candidate_win_percent_delta_for_mover": 0,
+                    },
+                    "reference_endpoint": endpoint,
+                    "played_endpoint": copy.deepcopy(endpoint),
+                    "presentation": "Matches.",
+                },
+                "structural_idea_units": [
+                    {
+                        "structural_evidence_id": "structural-evidence",
+                        "consequence_index": 0,
+                        "line_id": "line-a1a2",
+                        "root_move": "a1a2",
+                        "consequence_kind": "slider_reach_changed",
+                        "consequence_key": "slider-reach-consequence",
+                        "polarity": "neutral",
+                        "state_direction": "changed",
+                        "strength": 1,
+                        "subjects": [
+                            {
+                                "kind": "slider_reach_change",
+                                "side": "white",
+                                "slider_before": {"piece": "rook", "square": "a1"},
+                                "slider_after": {"piece": "rook", "square": "a2"},
+                                "direction": {
+                                    "file_step": 1,
+                                    "rank_step": 0,
+                                    "axis": "rank",
+                                },
+                                "gained": [
+                                    {"square": "b2", "target": {"kind": "empty"}}
+                                ],
+                                "lost": [
+                                    {
+                                        "square": "b1",
+                                        "target": {
+                                            "kind": "enemy_piece",
+                                            "piece": "queen",
+                                        },
+                                    }
+                                ],
+                                "binding_key": "slider-reach-binding",
+                                "proof_sources": [
+                                    {
+                                        "proof_key": "slider-reach-proof",
+                                        "evidence_id": "relation-evidence",
+                                    }
+                                ],
+                            }
+                        ],
+                        "targets": [],
+                    },
+                    {
+                        "structural_evidence_id": "structural-evidence",
+                        "consequence_index": 1,
+                        "line_id": "line-a1a2",
+                        "root_move": "a1a2",
+                        "consequence_kind": "geometric_control_set_changed",
+                        "consequence_key": "control-set-consequence",
+                        "polarity": "neutral",
+                        "state_direction": "changed",
+                        "strength": 1,
+                        "subjects": [
+                            {
+                                "kind": "geometric_control_set_change",
+                                "root_movement": {
+                                    "side": "white",
+                                    "from": "a1",
+                                    "to": "a2",
+                                    "piece_before": "rook",
+                                    "piece_after": "rook",
+                                },
+                                "controlling_side": "white",
+                                "target_square": "b2",
+                                "before_target": {"kind": "empty"},
+                                "after_target": {"kind": "empty"},
+                                "before_controllers": [
+                                    {"piece": "rook", "square": "a1"}
+                                ],
+                                "after_controllers": [
+                                    {"piece": "rook", "square": "a2"}
+                                ],
+                                "removed_controllers": [
+                                    {"piece": "rook", "square": "a1"}
+                                ],
+                                "established_controllers": [
+                                    {"piece": "rook", "square": "a2"}
+                                ],
+                                "binding_key": "control-set-binding",
+                                "proof_sources": [
+                                    {
+                                        "proof_key": "control-set-proof",
+                                        "evidence_id": "control-relation-evidence",
+                                    }
+                                ],
+                            }
+                        ],
+                        "targets": [],
+                    },
+                ],
+                "causal_explanations": [
+                    {
+                        "kind": "single_cause",
+                        "presentation": "Exact plan result.",
+                        "facets": [
+                            {
+                                "facet_role": "lead",
+                                "cause_evidence_id": "cause-evidence",
+                                "kind": "plan_improvement",
+                                "proof_confidence": "legal_replay_verified",
+                                "effect_mode": "played_value",
+                                "exposure": "primary",
+                                "source_side": "candidate",
+                                "event_move": "a2a3",
+                                "comparison_kind": "played_vs_best",
+                                "only_move_qualifiers": [],
+                                "channels": [
+                                    {
+                                        "channel_id": "channel-1",
+                                        "causal_signature": "plan-result-channel",
+                                        "direct_change": "occurred",
+                                        "played_change": "occurred",
+                                        "actor": {
+                                            "move_uci": "a2a3",
+                                            "side": "white",
+                                            "piece": "pawn",
+                                            "from": "a2",
+                                            "to": "a3",
+                                        },
+                                        "targets": [
+                                            {"kind": "relation", "key": "passed-status"}
+                                        ],
+                                        "mechanisms": [],
+                                        "consequences": [],
+                                        "witnesses": [],
+                                        "proof_line_moves": ["a2a3"],
+                                        "proof_segment": {
+                                            "terminal_relation": "realizes_plan_result",
+                                            "steps": [
+                                                {
+                                                    "ply_offset": 0,
+                                                    "move_uci": "a2a3",
+                                                    "role": "root_action",
+                                                    "plan_event": {
+                                                        "goal_kind": "passed_pawn_manufacture",
+                                                        "actor_side": "white",
+                                                        "actor_role": "pawn",
+                                                        "actor_after_role": "pawn",
+                                                        "actor_from": "a2",
+                                                        "actor_to": "a3",
+                                                        "legal_move_relation": "b" * 64,
+                                                    },
+                                                }
+                                            ],
+                                        },
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        registry.validate_document(ready, move_path, label="runtime v6 shapes")
 
-        bad_multipv = copy.deepcopy(horizon_probe)
-        bad_multipv["multiPv"] = 4
+        invalid_documents = []
+        missing_structural_units = copy.deepcopy(ready)
+        del missing_structural_units["move_commentary"]["structural_idea_units"]
+        invalid_documents.append(missing_structural_units)
+
+        legacy_plan_event = copy.deepcopy(ready)
+        legacy_plan_event["move_commentary"]["causal_explanations"][0]["facets"][0][
+            "channels"
+        ][0]["proof_segment"]["steps"][0]["plan_event"] = {
+            "goal_kind": "passed_pawn_manufacture",
+            "actor_from": "a2",
+            "actor_to": "a3",
+            "targets": [],
+            "results": [],
+        }
+        invalid_documents.append(legacy_plan_event)
+
+        stale_cause = copy.deepcopy(ready)
+        stale_cause["move_commentary"]["causal_explanations"][0]["facets"][0][
+            "kind"
+        ] = "wrong_recapturer"
+        invalid_documents.append(stale_cause)
+
+        stale_object = copy.deepcopy(ready)
+        stale_object["move_commentary"]["causal_explanations"][0]["facets"][0][
+            "channels"
+        ][0]["targets"][0]["kind"] = "motif"
+        invalid_documents.append(stale_object)
+
+        stale_terminal = copy.deepcopy(ready)
+        stale_terminal["move_commentary"]["causal_explanations"][0]["facets"][0][
+            "channels"
+        ][0]["proof_segment"]["terminal_relation"] = "restricts_opponent_resource"
+        invalid_documents.append(stale_terminal)
+
+        for document in invalid_documents:
+            with self.subTest(document=document), self.assertRaises(ContractError):
+                registry.validate_document(document, move_path, label="closed v6 shape")
+
+    def test_branch_reply_and_endpoint_domains_reject_invalid_values(self) -> None:
+        registry = SchemaRegistry(ROOT / "schemas")
+        move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
+        branch_probe = self._probe("branch")
+        self.assertEqual(_validate_probe_request(branch_probe)["id"], "branch")
+
+        bad_multipv = copy.deepcopy(branch_probe)
+        bad_multipv["multiPv"] = 2
         with self.assertRaises(ContractError):
             _validate_probe_request(bad_multipv)
-        bad_horizon = copy.deepcopy(horizon_probe)
+        bad_horizon = copy.deepcopy(branch_probe)
         bad_horizon["horizon"] = "ply:2147483648"
         with self.assertRaises(ContractError):
             _validate_probe_request(bad_horizon)
-        bad_continuation = copy.deepcopy(continuation_probe)
-        bad_continuation["continuationMoves"] = ["e2e4"]
+        missing_reply = copy.deepcopy(branch_probe)
+        missing_reply["moves"] = []
         with self.assertRaises(ContractError):
-            _validate_probe_request(bad_continuation)
-        mixed_variant = copy.deepcopy(continuation_probe)
-        mixed_variant["horizon"] = "ply:2"
+            _validate_probe_request(missing_reply)
+        illegal_reply = copy.deepcopy(branch_probe)
+        illegal_reply["moves"] = ["e7e5"]
         with self.assertRaises(ContractError):
-            _validate_probe_request(mixed_variant)
+            _validate_probe_request(illegal_reply)
 
         terminal_endpoint = {
             "kind": "exact_automatic_terminal",
@@ -233,6 +430,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             "schema_version": "chesstory.move-meaning.response.v6",
             "status": "ready",
             "move_commentary": {
+                "structural_idea_units": [],
                 "primary": {
                     "kind": "move_verdict",
                     "comparison_evidence_id": "comparison",
@@ -261,12 +459,6 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         registry.validate_document(mate_depth_zero, move_path, label="mate depth zero")
 
         invalid_documents: list[dict[str, object]] = []
-        bad_probe_count = {
-            "schema_version": "chesstory.move-meaning.response.v6",
-            "status": "engine_work_required",
-            "probe_requests": [self._probe(f"probe-{index}") for index in range(13)],
-        }
-        invalid_documents.append(bad_probe_count)
         bad_endpoint_moves = copy.deepcopy(base_ready)
         bad_endpoint_moves["move_commentary"]["primary"]["reference_endpoint"]["moves"] = [
             "e2e4"
@@ -320,6 +512,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             "depth": 16,
         }
         commentary = {
+            "structural_idea_units": [],
             "primary": {
                 "kind": "move_verdict",
                 "comparison_evidence_id": "comparison",

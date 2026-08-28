@@ -2,6 +2,7 @@ package lila.chessjudgment.model.judgment
 
 import scala.collection.immutable.VectorMap
 
+import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 /** Closed catalogue of the one-transition relation contracts currently owned
@@ -12,10 +13,9 @@ private[chessjudgment] enum RelationCombinationContractKind:
   case GeometricControlSetDelta
   case GeometricSupporterCapture
   case GeometricSupportDelta
-  case SliderControlInterference
+  case SliderLineInterruption
   case GeometricLineControlAfterBlockerRemoval
-  case CheckingEnemyControlBundle
-  case DoubleCheck
+  case NamedRayTransition
 
 private[chessjudgment] object RelationCombinationContractKind:
   def id(kind: RelationCombinationContractKind): String =
@@ -23,102 +23,146 @@ private[chessjudgment] object RelationCombinationContractKind:
       case GeometricControlSetDelta => "geometric_control_set_delta"
       case GeometricSupporterCapture => "geometric_supporter_capture"
       case GeometricSupportDelta => "geometric_support_delta"
-      case SliderControlInterference  => "slider_control_interference"
+      case SliderLineInterruption  => "slider_line_interruption"
       case GeometricLineControlAfterBlockerRemoval => "geometric_line_control_after_blocker_removal"
-      case CheckingEnemyControlBundle => "checking_enemy_control_bundle"
-      case DoubleCheck                => "double_check"
+      case NamedRayTransition => "named_ray_transition"
 
   def forDetail(detail: RelationWitnessDetail): Option[RelationCombinationContractKind] =
     detail match
       case _: RelationWitnessDetail.GeometricControlSetDelta => Some(GeometricControlSetDelta)
       case _: RelationWitnessDetail.GeometricSupporterCapture => Some(GeometricSupporterCapture)
       case _: RelationWitnessDetail.GeometricSupportDelta => Some(GeometricSupportDelta)
-      case _: RelationWitnessDetail.SliderControlInterference => Some(SliderControlInterference)
+      case _: RelationWitnessDetail.SliderLineInterruption => Some(SliderLineInterruption)
       case _: RelationWitnessDetail.GeometricLineControlAfterBlockerRemoval =>
         Some(GeometricLineControlAfterBlockerRemoval)
-      case _: RelationWitnessDetail.CheckingEnemyControlBundle => Some(CheckingEnemyControlBundle)
-      case _: RelationWitnessDetail.DoubleCheck                => Some(DoubleCheck)
+      case _: RelationWitnessDetail.NamedRayTransition => Some(NamedRayTransition)
       case _                                                   => None
 
-/** The sole closed result of the seven registered combination producers.
+/** The sole closed result of the registered transition-fact producers.
   * Every field is mandatory, including an empty result, so completeness does
   * not need a second chess-semantic evaluator.
   */
 private[chessjudgment] final class ClosedRelationCombinationResults private (
-    private[judgment] val byContract: VectorMap[RelationCombinationContractKind, List[RelationFactEvidence]]
+    engine: ClosedRelationCombinationEngine,
+    certify: RelationFactEvidence => RelationFactEvidence,
+    certificationOwner: Option[RelationReplayCertificationOwner]
 ):
-  val relations: List[RelationFactEvidence] = byContract.valuesIterator.flatten.toList
+  private val certifiedByContract = scala.collection.mutable.Map.empty[
+    RelationCombinationContractKind,
+    List[RelationFactEvidence]
+  ]
 
-  require(
-    byContract.keySet == RelationCombinationContractKind.values.toSet,
-    "closed relation combinations must contain every registered contract"
-  )
-  require(
-    byContract.forall { case (contract, results) =>
-      results.forall(relation => RelationCombinationContractKind.forDetail(relation.detail).contains(contract))
-    },
-    "a relation-combination contract may emit only its own exact result kind"
-  )
-  require(
-    relations.map(_.semanticId).distinct.size == relations.size,
-    "closed relation combinations cannot repeat relation semantics"
-  )
+  private[chessjudgment] def resultsFor(
+      contract: RelationCombinationContractKind
+  ): List[RelationFactEvidence] = synchronized {
+    certifiedByContract.getOrElseUpdate(
+      contract,
+      engine.resultsFor(contract).map(certify)
+    )
+  }
 
-  private[chessjudgment] def replaceWithCertified(
-      certified: List[RelationFactEvidence]
+  /** Exact-output ownership closes the gap between a true premise set and a
+    * potentially partial hand-built result. Membership reuses the one cached
+    * total producer result; it does not repeat any board or delta calculation.
+    */
+  private[judgment] def ownsOutput(
+      contract: RelationCombinationContractKind,
+      relation: RelationFactEvidence
+  ): Boolean =
+    resultsFor(contract).exists(expected =>
+      expected.asInstanceOf[AnyRef].eq(relation.asInstanceOf[AnyRef])
+    )
+
+  private[judgment] lazy val byContract: VectorMap[
+    RelationCombinationContractKind,
+    List[RelationFactEvidence]
+  ] =
+    RelationCombinationContractKind.values.toList
+      .sortBy(RelationCombinationContractKind.id)
+      .foldLeft(VectorMap.empty[RelationCombinationContractKind, List[RelationFactEvidence]]) {
+        case (closed, contract) => closed.updated(contract, resultsFor(contract))
+      }
+
+  lazy val relations: List[RelationFactEvidence] =
+    val exact = byContract.valuesIterator.flatten.toList
+    require(
+      exact.map(_.semanticId).distinct.size == exact.size,
+      "closed relation combinations cannot repeat relation semantics"
+    )
+    exact
+
+  private[judgment] def certifiedBy(
+      owner: RelationReplayCertificationOwner,
+      certification: RelationFactEvidence => RelationFactEvidence
   ): ClosedRelationCombinationResults =
-    val (remaining, rebuilt) = byContract.foldLeft(
-      certified -> VectorMap.empty[RelationCombinationContractKind, List[RelationFactEvidence]]
-    ) { case ((unclaimed, inventory), (contract, raw)) =>
-      val (owned, rest) = unclaimed.splitAt(raw.size)
-      require(
-        owned.map(_.detail) == raw.map(_.detail),
-        s"certified ${RelationCombinationContractKind.id(contract)} results changed their produced semantics"
-      )
-      rest -> inventory.updated(contract, owned)
-    }
-    require(remaining.isEmpty, "legal-replay certification returned an unowned combination result")
-    new ClosedRelationCombinationResults(rebuilt)
+    require(certificationOwner.isEmpty, "a relation batch cannot replace replay certification authority")
+    new ClosedRelationCombinationResults(engine, certification, Some(owner))
+
+  private[judgment] def certifiedFor(owner: RelationReplayCertificationOwner): Boolean =
+    certificationOwner.contains(owner)
+
+private[chessjudgment] final case class RelationCombinationEmission(
+    sourceKey: String,
+    relation: RelationFactEvidence
+):
+  require(sourceKey.trim.nonEmpty, "a relation-combination emission needs its canonical source key")
+
+private final class ClosedRelationCombinationEngine(
+    expectedSourceKeys: RelationCombinationContractKind => List[String],
+    derive: RelationCombinationContractKind => List[RelationCombinationEmission]
+):
+  private val rawByContract = scala.collection.mutable.Map.empty[
+    RelationCombinationContractKind,
+    List[RelationFactEvidence]
+  ]
+
+  def resultsFor(contract: RelationCombinationContractKind): List[RelationFactEvidence] = synchronized {
+    rawByContract.getOrElseUpdate(
+      contract,
+      {
+        val expected = expectedSourceKeys(contract).sorted
+        val emissions = derive(contract).sortBy(_.sourceKey)
+        val emittedKeys = emissions.map(_.sourceKey)
+        require(
+          expected.distinct.size == expected.size && emittedKeys.distinct.size == emittedKeys.size &&
+            emittedKeys == expected,
+          s"relation-combination contract '${RelationCombinationContractKind.id(contract)}' did not consume every canonical source exactly once"
+        )
+        val results = emissions.map(_.relation).sortBy(_.semanticId)
+        require(
+          results.forall(relation => RelationCombinationContractKind.forDetail(relation.detail).contains(contract)),
+          "a relation-combination contract may emit only its own exact result kind"
+        )
+        require(
+          results.map(_.semanticId).distinct.size == results.size,
+          "one relation-combination contract cannot repeat relation semantics"
+        )
+        results
+      }
+    )
+  }
 
 private[chessjudgment] object ClosedRelationCombinationResults:
-  def exact(
-      geometricControlSetDeltas: List[RelationFactEvidence],
-      geometricSupporterCaptures: List[RelationFactEvidence],
-      geometricSupportDeltas: List[RelationFactEvidence],
-      sliderControlInterferences: List[RelationFactEvidence],
-      geometricLineControlsAfterBlockerRemoval: List[RelationFactEvidence],
-      checkingEnemyControlBundles: List[RelationFactEvidence],
-      doubleChecks: List[RelationFactEvidence]
+  def demand(
+      expectedSourceKeys: RelationCombinationContractKind => List[String],
+      derive: RelationCombinationContractKind => List[RelationCombinationEmission]
   ): ClosedRelationCombinationResults =
     new ClosedRelationCombinationResults(
-      VectorMap(
-        RelationCombinationContractKind.GeometricControlSetDelta -> geometricControlSetDeltas.sortBy(_.semanticId),
-        RelationCombinationContractKind.GeometricSupporterCapture -> geometricSupporterCaptures.sortBy(_.semanticId),
-        RelationCombinationContractKind.GeometricSupportDelta -> geometricSupportDeltas.sortBy(_.semanticId),
-        RelationCombinationContractKind.SliderControlInterference -> sliderControlInterferences.sortBy(_.semanticId),
-        RelationCombinationContractKind.GeometricLineControlAfterBlockerRemoval ->
-          geometricLineControlsAfterBlockerRemoval.sortBy(_.semanticId),
-        RelationCombinationContractKind.CheckingEnemyControlBundle -> checkingEnemyControlBundles.sortBy(_.semanticId),
-        RelationCombinationContractKind.DoubleCheck -> doubleChecks.sortBy(_.semanticId)
-      )
+      new ClosedRelationCombinationEngine(expectedSourceKeys, derive),
+      identity,
+      None
     )
 
 /** Exact relation-output inventory for one admitted transition. Every
-  * combination contract is produced once, including empty results, and every
-  * canonical named-ray projection is present. `bind` adds occurrence ownership.
+  * combination contract is produced once, including empty results. `bind`
+  * adds occurrence ownership.
   */
 private[chessjudgment] final class ClosedRelationTransitionInventory private (
     val transition: LineReplayStep,
     private val combinations: ClosedRelationCombinationResults,
-    val projections: List[RelationFactEvidence],
+    private val vertical: ClosedVerticalRelationResults,
     private val delta: RelationSemanticDelta
 ):
-  private[judgment] val resultSemanticIdsByContract: VectorMap[RelationCombinationContractKind, List[String]] =
-    combinations.byContract.foldLeft(VectorMap.empty[RelationCombinationContractKind, List[String]]) {
-      case (inventory, (contract, results)) =>
-        inventory.updated(contract, results.map(_.semanticId).sorted)
-    }
-
   val combinationRelations: List[RelationFactEvidence] =
     combinations.byContract.iterator
       .flatMap { case (contract, results) =>
@@ -135,12 +179,45 @@ private[chessjudgment] final class ClosedRelationTransitionInventory private (
     "a closed relation transition inventory cannot repeat combination semantics"
   )
 
+  val verticalRelations: List[RelationFactEvidence] =
+    vertical.byContract.iterator
+      .flatMap { case (contract, results) =>
+        results.iterator.map(relation => contract -> relation)
+      }
+      .toList
+      .sortBy { case (contract, relation) =>
+        VerticalRelationContractKind.id(contract) -> relation.semanticId
+      }
+      .map(_._2)
+
+  require(
+    verticalRelations.map(_.semanticId).distinct.size == verticalRelations.size,
+    "a closed relation transition inventory cannot repeat a vertical derivation"
+  )
+
   val allRelations: List[RelationFactEvidence] =
-    (combinationRelations ++ projections).sortBy(relation => RelationFactKind.id(relation.kind) -> relation.semanticId)
+    (combinationRelations ++ verticalRelations)
+      .sortBy(relation => RelationFactKind.id(relation.kind) -> relation.semanticId)
+
+  private[judgment] def absenceCertificate(
+      premise: ClosedRelationAbsencePremise
+  ): Option[PositionRelationExtractor.ClosedRelationAbsenceCertificate] =
+    vertical.absenceCertificate(premise)
+
+  private[judgment] def stateCertificate(
+      premise: ClosedPositionStatePremise
+  ): Option[PositionRelationExtractor.ClosedPositionStateCertificate] =
+    vertical.stateCertificate(premise)
+
+  private[judgment] def ownsCombinationOutput(
+      contract: RelationCombinationContractKind,
+      relation: RelationFactEvidence
+  ): Boolean =
+    combinations.ownsOutput(contract, relation)
 
   require(
     allRelations.map(_.semanticId).distinct.size == allRelations.size,
-    "a closed relation output inventory cannot repeat combination or projection semantics"
+    "a closed relation output inventory cannot repeat a derivation"
   )
 
   /** Bind the shareable semantic result to the exact graph occurrences that
@@ -158,23 +235,12 @@ private[chessjudgment] object ClosedRelationTransitionInventory:
       transition: LineReplayStep,
       delta: RelationSemanticDelta,
       combinations: ClosedRelationCombinationResults,
-      projections: List[RelationFactEvidence]
+      vertical: ClosedVerticalRelationResults
   ): ClosedRelationTransitionInventory =
-    val expectedProjectionDetails = delta.newlyEstablishedNamedRays.map(_.detail).sortBy(
-      RelationWitnessDetail.stableKey
-    )
-    val actualProjectionDetails = projections.map(_.detail).sortBy(RelationWitnessDetail.stableKey)
-    require(
-      projections.forall(relation =>
-        relation.kind == RelationFactKind.RayBarrier &&
-          relation.lineMoves == List(EvidenceRef.normalizeMove(transition.moveUci))
-      ) && actualProjectionDetails == expectedProjectionDetails,
-      "a closed relation output inventory must contain every exact named-ray projection"
-    )
     new ClosedRelationTransitionInventory(
       transition,
       combinations,
-      projections.sortBy(_.semanticId),
+      vertical,
       delta
     )
 
@@ -182,27 +248,39 @@ private[chessjudgment] object ClosedRelationTransitionInventory:
   * binding cannot be shared across occurrences: every premise is an exact
   * canonical graph node at the declared transition origin or destination.
   */
+private[chessjudgment] final case class CanonicalRelationSourceBinding(
+    positionSources: List[CanonicalRelationNode],
+    derivedSourceSemanticIds: List[String],
+    absenceProofs: List[BoundClosedRelationAbsence],
+    stateProofs: List[BoundClosedPositionState]
+):
+  require(
+    positionSources.map(_.ref.id).distinct.size == positionSources.size,
+    "a relation source binding cannot repeat a position occurrence"
+  )
+  require(
+    derivedSourceSemanticIds.distinct.size == derivedSourceSemanticIds.size,
+    "a relation source binding cannot repeat a derived result"
+  )
+
 private[chessjudgment] final class CanonicalRelationTransitionInventory private (
     val transition: LineReplayStep,
     val before: CanonicalPositionRelationSnapshot,
     val after: CanonicalPositionRelationSnapshot,
     val delta: CanonicalRelationDelta,
     val relations: List[RelationFactEvidence],
-    private val sourceNodesByResult: VectorMap[String, List[CanonicalRelationNode]],
-    private val resultSemanticIdsByContract: VectorMap[RelationCombinationContractKind, List[String]]
+    private val sourceBindingsByResult: VectorMap[String, CanonicalRelationSourceBinding],
+    private val combinationSemanticIds: Set[String],
+    private val verticalSemanticIds: Set[String]
 ):
   private val relationsBySemanticId: Map[String, RelationFactEvidence] =
     relations.map(relation => relation.semanticId -> relation).toMap
 
-  private val combinationSemanticIds: Set[String] =
-    resultSemanticIdsByContract.valuesIterator.flatten.toSet
-
-  private[chessjudgment] def sourceNodesFor(
-      relation: RelationFactEvidence
-  ): Option[List[CanonicalRelationNode]] =
-    sourceNodesByResult
-      .get(relation.semanticId)
-      .filter(_ => relationsBySemanticId.get(relation.semanticId).contains(relation))
+  require(
+    combinationSemanticIds.intersect(verticalSemanticIds).isEmpty &&
+      combinationSemanticIds ++ verticalSemanticIds == relationsBySemanticId.keySet,
+    "a canonical transition inventory needs an exact disjoint result partition"
+  )
 
   /** Materializes one persistent transition occurrence. Chess meaning and
     * proof keys were already closed by the semantic producer and occurrence
@@ -213,8 +291,7 @@ private[chessjudgment] final class CanonicalRelationTransitionInventory private 
       edge: MoveTransitionEdge,
       lineOwner: Option[LineNodeRef],
       lineEvidence: Option[EvidenceRef],
-      outputRecords: List[EvidenceRecord],
-      sourceNodesByOutputId: Map[String, List[CanonicalRelationNode]]
+      outputRecords: List[EvidenceRecord]
   ): List[EvidenceRecord] =
     require(
       edge.from == before.position && edge.to == after.position &&
@@ -223,11 +300,7 @@ private[chessjudgment] final class CanonicalRelationTransitionInventory private 
         PrincipalVariationEvidence.sameBoardState(edge.to.fen, transition.fenAfter),
       "a relation occurrence must bind its exact canonical transition"
     )
-    require(
-      outputRecords.map(_.ref.id).distinct.size == outputRecords.size &&
-        sourceNodesByOutputId.keySet == outputRecords.map(_.ref.id).toSet,
-      "a relation occurrence needs one exact source binding per unique output"
-    )
+    require(outputRecords.map(_.ref.id).distinct.size == outputRecords.size, "a relation occurrence cannot repeat an output")
     val relationOutputs = outputRecords.map {
       case record @ EvidenceRecord(_, relation: RelationFactEvidence, _) => record -> relation
       case _ => throw IllegalArgumentException("a closed relation occurrence may materialize only relation facts")
@@ -246,33 +319,49 @@ private[chessjudgment] final class CanonicalRelationTransitionInventory private 
     val combinationOutputsBySemanticId = outputsBySemanticId.filter { case (semanticId, _) =>
       combinationSemanticIds(semanticId)
     }
-    val closedResults = resultSemanticIdsByContract.foldLeft(
-      VectorMap.empty[RelationCombinationContractKind, List[EvidenceRef]]
-    ) { case (inventory, (contract, semanticIds)) =>
-      val refs = semanticIds.map(semanticId => combinationOutputsBySemanticId(semanticId).head._1.ref)
-      inventory.updated(contract, refs.sortBy(_.id))
+    val verticalOutputsBySemanticId = outputsBySemanticId.filter { case (semanticId, _) =>
+      verticalSemanticIds(semanticId)
     }
+    require(
+      combinationOutputsBySemanticId.keySet == combinationSemanticIds &&
+        verticalOutputsBySemanticId.keySet == verticalSemanticIds,
+      "a relation occurrence must preserve the exact closed combination and vertical result partitions"
+    )
     val bindings = relationOutputs.map { case (record, relation) =>
-      val sources = sourceNodesByOutputId(record.ref.id)
-      sourceNodesFor(relation).foreach(expected =>
-        require(
-          sources.map(_.ref).toSet == expected.map(_.ref).toSet && sources.size == expected.size,
-          s"combined relation '${relation.semanticId}' must preserve its exact premise occurrences"
-        )
+      val binding = sourceBindingsByResult.getOrElse(
+        relation.semanticId,
+        throw IllegalArgumentException(s"relation '${relation.semanticId}' has no exact occurrence source binding")
       )
-      ClosedRelationOutputBinding.certified(record.ref, relation, sources.map(_.ref))
+      val derivedSources = binding.derivedSourceSemanticIds.map { semanticId =>
+        outputsBySemanticId.get(semanticId) match
+          case Some((sourceRecord, sourceRelation) :: Nil)
+              if RelationProofStage.rank(sourceRelation.proofStage) < RelationProofStage.rank(relation.proofStage) =>
+            sourceRecord.ref
+          case _ =>
+            throw IllegalArgumentException(
+              s"vertical relation '${relation.semanticId}' lost lower source '$semanticId'"
+            )
+      }
+      val sources = (binding.positionSources.map(_.ref) ++ derivedSources).sortBy(_.id)
+      ClosedRelationOutputBinding.certified(
+        record.ref,
+        relation,
+        sources,
+        binding.absenceProofs,
+        binding.stateProofs
+      )
     }
     val occurrence = ClosedRelationOccurrenceEvidence.certified(
       edge,
       lineOwner,
       lineEvidence,
-      closedResults,
       bindings
     )
     val carrier = ClosedRelationOccurrenceEvidence.record(occurrenceId, occurrence)
+    val bindingsByResultId = bindings.map(binding => binding.result.id -> binding).toMap
     carrier :: outputRecords.map { record =>
-      val sources = sourceNodesByOutputId(record.ref.id).map(_.ref).sortBy(_.id)
-      record.copy(parents = carrier.ref :: sources)
+      val sources = bindingsByResultId(record.ref.id).sources
+      record.copy(parents = carrier.ref :: sources.sortBy(_.id))
     }
 
 private[chessjudgment] object CanonicalRelationTransitionInventory:
@@ -297,6 +386,11 @@ private[chessjudgment] object CanonicalRelationTransitionInventory:
     val combinationBindings = semantic.combinationRelations.map { relation =>
       val proof = RelationWitnessDetail.combinationProof(relation.detail).getOrElse(
         throw IllegalArgumentException("a closed combination result needs its registered proof")
+      )
+      require(
+        RelationCombinationContractKind.forDetail(relation.detail).contains(proof.contract) &&
+          semantic.ownsCombinationOutput(proof.contract, relation),
+        s"combination result '${relation.semanticId}' is not owned by its exact total producer"
       )
       val resolved = proof.premises.map { premise =>
         premise.occurrence match
@@ -359,27 +453,123 @@ private[chessjudgment] object CanonicalRelationTransitionInventory:
         changedProofKeys.nonEmpty && changedProofKeys == proof.proofKeys,
         s"combination result '${relation.semanticId}' does not own its exact transition proof keys"
       )
-      relation.semanticId -> resolved.sortBy(_.ref.id)
+      relation.semanticId -> CanonicalRelationSourceBinding(
+        resolved.sortBy(_.ref.id),
+        Nil,
+        Nil,
+        Nil
+      )
     }
-    val projectionBindings = semantic.projections.map { projection =>
-      val expected = semanticDelta.newlyEstablishedNamedRays.filter(
-        _.detail == projection.detail
+    val lowerRelationsBySemanticId = (semantic.combinationRelations ++ semantic.verticalRelations)
+      .map(relation => relation.semanticId -> relation)
+      .toMap
+    val verticalBindings = semantic.verticalRelations.map { relation =>
+      val proof = VerticalRelationContracts.proofOf(relation.detail).getOrElse(
+        throw IllegalArgumentException("a vertical relation result needs its typed derivation proof")
       )
+      val resolvedSources = proof.sourcePremises.flatMap { premise =>
+        def exactPositionSource(node: Option[CanonicalRelationNode]): Option[CanonicalRelationNode] =
+          node.filter(source =>
+            source.relation.kind == premise.kind && source.relation.assertionId == premise.assertionId &&
+              source.relation.semanticId == premise.semanticId && source.relation.proofStage == premise.stage &&
+              premise.stage == RelationProofStage.PositionFact
+          )
+
+        def required[A](source: Option[A]): A =
+          source.getOrElse(
+            throw IllegalArgumentException(
+              s"vertical result '${relation.semanticId}' lost exact typed premise '${premise.stableKey}'"
+            )
+          )
+
+        premise.source match
+          case VerticalRelationPremiseSource.Position(RelationPremiseOccurrence.Before) =>
+            List(Left(required(exactPositionSource(before.nodesBySemanticId.get(premise.semanticId)))))
+          case VerticalRelationPremiseSource.Position(RelationPremiseOccurrence.After) =>
+            List(Left(required(exactPositionSource(after.nodesBySemanticId.get(premise.semanticId)))))
+          case VerticalRelationPremiseSource.Position(RelationPremiseOccurrence.Removed) =>
+            List(Left(required(exactPositionSource(
+              changesByKey
+                .get((RelationChangeDirection.Removed, premise.kind, premise.semanticId))
+                .map(_.sourceNode)
+            ))))
+          case VerticalRelationPremiseSource.Position(RelationPremiseOccurrence.Established) =>
+            List(Left(required(exactPositionSource(
+              changesByKey
+                .get((RelationChangeDirection.Established, premise.kind, premise.semanticId))
+                .map(_.sourceNode)
+            ))))
+          case VerticalRelationPremiseSource.RootTransition =>
+            require(
+              premise.stage == RelationProofStage.TransitionFact &&
+                semanticDelta.rootMove.fact.kind == premise.kind &&
+                semanticDelta.rootMove.fact.assertionId == premise.assertionId &&
+                semanticDelta.rootMove.fact.semanticId == premise.semanticId,
+              s"vertical result '${relation.semanticId}' lost its exact root transition"
+            )
+            // The occurrence carrier owns the transition edge. Rebinding this
+            // obligation to the before-position LegalMove node would give one
+            // fact two occurrence roles and can duplicate a genuine position
+            // premise such as the chosen check response.
+            Nil
+          case VerticalRelationPremiseSource.Derived =>
+            List(Right(required(lowerRelationsBySemanticId.get(premise.semanticId).filter(source =>
+              source.kind == premise.kind && source.assertionId == premise.assertionId &&
+                source.proofStage == premise.stage &&
+                RelationProofStage.rank(source.proofStage) < RelationProofStage.rank(relation.proofStage)
+            )).semanticId))
+      }
+      val positionSources = resolvedSources.collect { case Left(source) => source }
+        .foldLeft(VectorMap.empty[String, CanonicalRelationNode]) { (indexed, source) =>
+          indexed.get(source.ref.id) match
+            case Some(existing) =>
+              require(
+                existing.asInstanceOf[AnyRef].eq(source.asInstanceOf[AnyRef]),
+                s"vertical result '${relation.semanticId}' changed one canonical premise owner"
+              )
+              indexed
+            case None => indexed.updated(source.ref.id, source)
+        }
+        .values
+        .toList
+        .sortBy(_.ref.id)
+      val sourceSemanticIds = resolvedSources.collect { case Right(semanticId) => semanticId }.sorted
       require(
-        expected.size == 1,
-        s"named-ray projection '${projection.semanticId}' must match one exact canonical change"
+        sourceSemanticIds.distinct.size == sourceSemanticIds.size,
+        s"vertical result '${relation.semanticId}' repeated one derived premise occurrence"
       )
-      val source = changesByKey
-        .get((RelationChangeDirection.Established, RelationFactKind.RayBarrier, expected.head.semanticId))
-        .map(_.sourceNode)
-        .getOrElse(
+      val absenceProofs = proof.absences.map { absence =>
+        val certificate = semantic.absenceCertificate(absence).getOrElse(
           throw IllegalArgumentException(
-            s"named-ray projection '${projection.semanticId}' lost its exact after-position source"
+            s"vertical result '${relation.semanticId}' lost semantic absence '${absence.stableKey}'"
           )
         )
-      projection.semanticId -> List(source)
+        BoundClosedRelationAbsence.bind(absence, certificate, before, after).getOrElse(
+          throw IllegalArgumentException(
+            s"vertical result '${relation.semanticId}' cannot bind '${absence.stableKey}' to this occurrence"
+          )
+        )
+      }
+      val stateProofs = proof.states.map { state =>
+        val certificate = semantic.stateCertificate(state).getOrElse(
+          throw IllegalArgumentException(
+            s"vertical result '${relation.semanticId}' lost semantic state '${state.stableKey}'"
+          )
+        )
+        BoundClosedPositionState.bind(state, certificate, before, after).getOrElse(
+          throw IllegalArgumentException(
+            s"vertical result '${relation.semanticId}' cannot bind '${state.stableKey}' to this occurrence"
+          )
+        )
+      }
+      relation.semanticId -> CanonicalRelationSourceBinding(
+        positionSources,
+        sourceSemanticIds,
+        absenceProofs,
+        stateProofs
+      )
     }
-    val bindings = combinationBindings ++ projectionBindings
+    val bindings = combinationBindings ++ verticalBindings
     require(
       bindings.map(_._1).distinct.size == bindings.size,
       "a canonical relation output inventory cannot repeat result semantics"
@@ -390,8 +580,9 @@ private[chessjudgment] object CanonicalRelationTransitionInventory:
       after,
       canonicalDelta,
       semantic.allRelations,
-      bindings.foldLeft(VectorMap.empty[String, List[CanonicalRelationNode]]) {
+      bindings.foldLeft(VectorMap.empty[String, CanonicalRelationSourceBinding]) {
         case (inventory, (semanticId, sources)) => inventory.updated(semanticId, sources)
       },
-      semantic.resultSemanticIdsByContract
+      semantic.combinationRelations.map(_.semanticId).toSet,
+      semantic.verticalRelations.map(_.semanticId).toSet
     )

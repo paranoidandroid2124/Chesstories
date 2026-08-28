@@ -5,6 +5,7 @@ import chess.variant.Standard
 import play.api.libs.json.{ Json, OFormat }
 import lila.chessjudgment.analysis.opening.{ OpeningRecognitionIndex, OpeningThemePriorIndex }
 import lila.chessjudgment.model.line.{
+  AutomaticTerminal,
   CandidateLineEvaluation,
   CanonicalPositionHistory,
   DrawClaimAction,
@@ -18,13 +19,10 @@ import lila.chessjudgment.model.line.{
 }
 import lila.chessjudgment.model.{
   BranchReplyProbeBinding,
-  CausalContinuationProbeBinding,
-  CounterResourceProbeBinding,
   ProbeAdmissionDiagnostic,
   ProbeAdmissionStatus,
   ProbeContractValidator,
-  ProbeObjective,
-  ProbePurpose,
+  ProbeKind,
   ProbeRequest,
   ProbeResolution,
   ProbeResult
@@ -99,7 +97,8 @@ enum PreparedFocusedPositionCommentary:
 object MoveReviewInputNormalizer:
   private final case class AdmittedEvaluation(
       evaluation: CandidateLineEvaluation,
-      replay: CanonicalLineReplay
+      replay: CanonicalLineReplay,
+      automaticTerminal: Option[AutomaticTerminal]
   )
 
   private[assembly] final case class AdmittedProbeBranch(
@@ -344,6 +343,9 @@ object MoveReviewInputNormalizer:
           .find { case (admitted, _) =>
             admitted.evaluation.moves.headOption.exists(move => EvidenceRef.sameMove(move, playedMove))
           }
+          .filter { case (admitted, _) =>
+            admitted.evaluation.moves.size >= 2 || admitted.automaticTerminal.nonEmpty
+          }
           .map { case (admitted, index) =>
             NormalizedCandidateLine(
               LineNodeRole.Played,
@@ -352,12 +354,6 @@ object MoveReviewInputNormalizer:
               admitted.replay
             )
           }
-          .filter(line =>
-            line.evaluation.moves.size >= 2 ||
-              line.replay.replaySteps.headOption
-                .flatMap(line.replay.analysisAfter)
-                .exists(_.actualLegalMoves.isEmpty)
-          )
       val alternatives =
         ranked
           .filterNot { case (_, index) =>
@@ -407,23 +403,42 @@ object MoveReviewInputNormalizer:
       rawEvaluation: CandidateLineEvaluation,
       predecessorReplay: Option[CanonicalLineReplay] = None
   ): Option[AdmittedEvaluation] =
-    val evaluation = normalizedEvaluation(rawEvaluation)
+    val normalized = normalizedEvaluation(rawEvaluation)
     val prefixSize = history.segmentReplaySteps.size
     for
-      _ <- Option.when(evaluation.moves.nonEmpty)(())
-      lineHistory <- history.extend(evaluation.moves).toOption
+      _ <- Option.when(normalized.moves.nonEmpty)(())
+      (evaluation, lineHistory) <- normalized match
+        case CandidateLineEvaluation.EngineSearch(line) =>
+          history.extend(line.moves).toOption match
+            case Some(completeHistory) =>
+              val terminal = automaticTerminal(completeHistory)
+              Option.when(engineScoreConsistent(line, terminal))(
+                terminal
+                  .map(CandidateLineEvaluation.ExactAutomaticTerminal(line.moves, _))
+                  .getOrElse(normalized) -> completeHistory
+              )
+            case None =>
+              history
+                .inspectAutomaticTerminalBoundary(line.moves)
+                .toOption
+                .flatten
+                .filter { case (_, terminal) => engineScoreConsistent(line, Some(terminal)) }
+                .flatMap { case (terminalMoves, terminal) =>
+                  history.extend(terminalMoves).toOption.map(
+                    CandidateLineEvaluation.ExactAutomaticTerminal(terminalMoves, terminal) -> _
+                  )
+                }
+        case exact @ CandidateLineEvaluation.ExactAutomaticTerminal(moves, terminal) =>
+          history
+            .extend(moves)
+            .toOption
+            .filter(lineHistory => automaticTerminal(lineHistory).contains(terminal))
+            .map(exact -> _)
       steps = lineHistory.segmentReplaySteps.drop(prefixSize)
       replay <- predecessorReplay match
         case Some(predecessor) => CanonicalLineReplay.continueFromHistory(predecessor, steps)
         case None              => CanonicalLineReplay.fromHistory(steps)
-      _ <- evaluation match
-        case CandidateLineEvaluation.EngineSearch(line) =>
-          Option.when(terminalScoreConsistent(lineHistory.currentPosition, line))((): Unit)
-        case CandidateLineEvaluation.ExactAutomaticTerminal(_, terminal) =>
-          Option.when(
-            PositionRuleAssessment.assess(lineHistory) == PositionRuleAssessment.Terminal(terminal)
-          )((): Unit)
-    yield AdmittedEvaluation(evaluation, replay)
+    yield AdmittedEvaluation(evaluation, replay, automaticTerminal(lineHistory))
 
   private def focusedDrawClaims(
       playedMove: String,
@@ -539,17 +554,14 @@ object MoveReviewInputNormalizer:
 
   private final case class ThreatBranchSeed(
       sourceProbeId: String,
-      objective: ProbeObjective,
       probedMoveUci: String,
+      replyMoveUci: String,
       branchFen: String,
       branchHistory: CanonicalPositionHistory,
       predecessorReplay: CanonicalLineReplay,
-      purpose: ProbePurpose,
       evaluations: List[CandidateLineEvaluation],
       variationHash: Option[String],
-      opponentResourceMove: Option[String],
-      continuationMoves: List[String],
-      certifiedHorizonPlyOffset: Option[Int],
+      certifiedHorizonPlyOffset: Int,
       requiredReplyCount: Int,
       depthFloor: Int
   )
@@ -582,7 +594,7 @@ object MoveReviewInputNormalizer:
             result,
             status = ProbeAdmissionStatus.Rejected,
             reasons = List("PROBE_ADMISSION_INCONSISTENT"),
-            purpose = Some(request.purpose),
+            purpose = Some(request.kind),
             candidateMove = Some(request.candidateMove),
             branchFen = Some(request.fen),
             admittedLineCount = 0,
@@ -618,34 +630,22 @@ object MoveReviewInputNormalizer:
           val requiredReplyCount = seed.requiredReplyCount
           val topLegalLines = legalLines.take(requiredReplyCount)
           val topLinesDepthReady = topLegalLines.forall {
-            case AdmittedEvaluation(CandidateLineEvaluation.EngineSearch(line), _) =>
+            case AdmittedEvaluation(CandidateLineEvaluation.EngineSearch(line), _, _) =>
               line.depth >= depthFloor
-            case AdmittedEvaluation(CandidateLineEvaluation.ExactAutomaticTerminal(_, _), _) =>
+            case AdmittedEvaluation(CandidateLineEvaluation.ExactAutomaticTerminal(_, _), _, _) =>
               true
           }
-          val opponentResourceLineBound = seed.opponentResourceMove.forall(resource =>
-            topLegalLines.size == 1 &&
-              topLegalLines.head.evaluation.moves.headOption.exists(EvidenceRef.sameMove(_, resource))
-          )
-          val continuationLineBound =
-            seed.continuationMoves.isEmpty ||
-              (topLegalLines.size == 1 &&
-                topLegalLines.head.evaluation.moves.take(seed.continuationMoves.size).zip(seed.continuationMoves).forall {
-                  case (observed, expected) => EvidenceRef.sameMove(observed, expected)
-                } && topLegalLines.head.evaluation.moves.size >= seed.continuationMoves.size)
-          val horizonCovered = seed.certifiedHorizonPlyOffset.forall(requiredPlyOffset =>
-            topLegalLines.forall(admitted =>
-              admitted.replay.legalSteps.size >= requiredPlyOffset ||
-                admitted.replay.replaySteps.lastOption
-                  .flatMap(admitted.replay.analysisAfter)
-                  .exists(_.actualLegalMoves.isEmpty)
-            )
+          val replyLineBound = topLegalLines match
+            case exact :: Nil => exact.evaluation.moves.headOption.exists(EvidenceRef.sameMove(_, seed.replyMoveUci))
+            case _            => false
+          val horizonCovered = topLegalLines.forall(admitted =>
+            admitted.replay.legalSteps.size >= seed.certifiedHorizonPlyOffset ||
+              admitted.automaticTerminal.nonEmpty
           )
           if requiredReplyCount > 0 &&
             topLegalLines.size == requiredReplyCount &&
             topLinesDepthReady &&
-            opponentResourceLineBound &&
-            continuationLineBound &&
+            replyLineBound &&
             horizonCovered
           then
             val branchLines = topLegalLines.map { admitted =>
@@ -661,12 +661,9 @@ object MoveReviewInputNormalizer:
             }
             branches += NormalizedThreatBranch(
               sourceProbeId = seed.sourceProbeId,
-              objective = seed.objective,
               probedMoveUci = seed.probedMoveUci,
               branchFen = seed.branchFen,
               branchPly = plyFromFen(seed.branchFen),
-              opponentResourceMove = seed.opponentResourceMove,
-              continuationMoves = seed.continuationMoves,
               certifiedHorizonPlyOffset = seed.certifiedHorizonPlyOffset,
               lines = branchLines
             )
@@ -674,36 +671,35 @@ object MoveReviewInputNormalizer:
               probe,
               status = ProbeAdmissionStatus.Admitted,
               reasons = List("ADMITTED"),
-              purpose = Some(seed.purpose),
+              purpose = Some(ProbeKind.BranchReply),
               candidateMove = Some(seed.probedMoveUci),
               branchFen = Some(seed.branchFen),
               admittedLineCount = branchLines.size,
               legalLineCount = legalLines.size,
               scoredLineCount = seed.evaluations.count(_.moves.nonEmpty),
               depthFloor = Some(depthFloor),
-              horizon = seed.certifiedHorizonPlyOffset.map(BranchReplyProbeBinding.horizon),
+              horizon = Some(BranchReplyProbeBinding.horizon(seed.certifiedHorizonPlyOffset)),
               variationHash = seed.variationHash
             )
           else
             val reason =
               if requiredReplyCount == 0 then "BRANCH_POSITION_TERMINAL"
               else if legalLines.size < requiredReplyCount then "INSUFFICIENT_LEGAL_REPLY_LINES"
-              else if !opponentResourceLineBound then "OPPONENT_RESOURCE_LINE_UNBOUND"
-              else if !continuationLineBound then "CAUSAL_CONTINUATION_LINE_UNBOUND"
+              else if !replyLineBound then "REPLY_MOVE_UNBOUND"
               else if !horizonCovered then "HORIZON_COVERAGE_UNVERIFIED"
               else "REPLY_LINE_DEPTH_FLOOR_UNMET"
             diagnostics += probeDiagnostic(
               probe,
               status = ProbeAdmissionStatus.Rejected,
               reasons = List(reason),
-              purpose = Some(seed.purpose),
+              purpose = Some(ProbeKind.BranchReply),
               candidateMove = Some(seed.probedMoveUci),
               branchFen = Some(seed.branchFen),
               admittedLineCount = 0,
               legalLineCount = legalLines.size,
               scoredLineCount = seed.evaluations.count(_.moves.nonEmpty),
               depthFloor = Some(depthFloor),
-              horizon = seed.certifiedHorizonPlyOffset.map(BranchReplyProbeBinding.horizon),
+              horizon = Some(BranchReplyProbeBinding.horizon(seed.certifiedHorizonPlyOffset)),
               variationHash = seed.variationHash
             )
     }
@@ -719,13 +715,12 @@ object MoveReviewInputNormalizer:
     val evaluations = probe.resolution match
       case ProbeResolution.EngineSearch(values, _) => values
       case ProbeResolution.ExactAutomaticTerminal(evaluation) => List(evaluation)
-    val purpose = Option.when(ProbePurpose.isBranchReply(request.purpose))(request.purpose)
     val branchFen = Option(request.fen).map(PrincipalVariationEvidence.normalizeFen).filter(_.nonEmpty)
     val probedMove = Option(EvidenceRef.normalizeMove(request.candidateMove)).filter(_.nonEmpty)
-    val opponentResourceMove = request.opponentResourceMove.map(EvidenceRef.normalizeMove).filter(_.nonEmpty)
-    val continuationMoves = request.continuationMoves.map(EvidenceRef.normalizeMove).filter(_.nonEmpty)
+    val replyMove = request.moves match
+      case exact :: Nil => Option(EvidenceRef.normalizeMove(exact)).filter(_.nonEmpty)
+      case _            => None
     val certifiedHorizonPlyOffset = request.horizon.flatMap(BranchReplyProbeBinding.horizonPlyOffset)
-    val requiredReplyCount = Option.when(request.multiPv > 0)(request.multiPv)
     val depthFloor = Option.when(request.depthFloor > 0)(request.depthFloor)
     val contract = ProbeContractValidator.validateAgainstRequest(request, probe)
     val baseDiagnostic = (reasons: List[String]) =>
@@ -733,7 +728,7 @@ object MoveReviewInputNormalizer:
         probe,
         status = ProbeAdmissionStatus.Rejected,
         reasons = reasons,
-        purpose = Some(request.purpose),
+        purpose = Some(request.kind),
         candidateMove = probedMove,
         branchFen = branchFen,
         admittedLineCount = 0,
@@ -744,15 +739,15 @@ object MoveReviewInputNormalizer:
         variationHash = Some(request.variationHash)
       )
 
-    if purpose.isEmpty then Left(baseDiagnostic(List("UNSUPPORTED_BRANCH_PURPOSE")))
-    else if !contract.isValid then
+    if !contract.isValid then
       Left(baseDiagnostic(("CONTRACT_INVALID" :: contract.reasonCodes).distinct))
-    else (branchFen, probedMove, requiredReplyCount, depthFloor) match
-      case (None, _, _, _) => Left(baseDiagnostic(List("BRANCH_FEN_MISSING")))
-      case (_, None, _, _) => Left(baseDiagnostic(List("PROBED_MOVE_MISSING")))
-      case (_, _, None, _) => Left(baseDiagnostic(List("REPLY_MULTIPV_MISSING")))
-      case (_, _, _, None) => Left(baseDiagnostic(List("DEPTH_FLOOR_UNVERIFIED")))
-      case (Some(fen), Some(move), Some(replyCount), Some(floor)) =>
+    else (branchFen, probedMove, replyMove, certifiedHorizonPlyOffset, depthFloor) match
+      case (None, _, _, _, _) => Left(baseDiagnostic(List("BRANCH_FEN_MISSING")))
+      case (_, None, _, _, _) => Left(baseDiagnostic(List("PROBED_MOVE_MISSING")))
+      case (_, _, None, _, _) => Left(baseDiagnostic(List("REPLY_MOVE_UNVERIFIED")))
+      case (_, _, _, None, _) => Left(baseDiagnostic(List("HORIZON_UNVERIFIED")))
+      case (_, _, _, _, None) => Left(baseDiagnostic(List("DEPTH_FLOOR_UNVERIFIED")))
+      case (Some(fen), Some(move), Some(reply), Some(horizon), Some(floor)) =>
         val moveLines = rootLines
           .filter(_.rootMove.exists(EvidenceRef.sameMove(_, move)))
         val matchingMoveLines = moveLines.flatMap { line =>
@@ -767,9 +762,8 @@ object MoveReviewInputNormalizer:
               beforeFen,
               line,
               move,
-              opponentResourceMove,
-              continuationMoves,
-              certifiedHorizonPlyOffset
+              reply,
+              horizon
             )
             if request.variationHash == expectedHash
           yield (predecessor, branchHistory)
@@ -780,18 +774,15 @@ object MoveReviewInputNormalizer:
             Right(
               ThreatBranchSeed(
                 sourceProbeId = request.id,
-                objective = request.objective,
                 probedMoveUci = move,
+                replyMoveUci = reply,
                 branchFen = branchHistory.currentFen,
                 branchHistory = branchHistory,
                 predecessorReplay = predecessor,
-                purpose = purpose.get,
                 evaluations = evaluations,
                 variationHash = Some(request.variationHash),
-                opponentResourceMove = opponentResourceMove,
-                continuationMoves = continuationMoves,
-                certifiedHorizonPlyOffset = certifiedHorizonPlyOffset,
-                requiredReplyCount = replyCount,
+                certifiedHorizonPlyOffset = horizon,
+                requiredReplyCount = 1,
                 depthFloor = floor
               )
             )
@@ -802,60 +793,30 @@ object MoveReviewInputNormalizer:
       beforeFen: String,
       line: NormalizedCandidateLine,
       probedMove: String,
-      opponentResourceMove: Option[String],
-      continuationMoves: List[String],
-      certifiedHorizonPlyOffset: Option[Int]
+      replyMove: String,
+      certifiedHorizonPlyOffset: Int
   ): Option[(EngineLine, String)] =
     line.evaluation.engineLine.flatMap { engineLine =>
-      val hash =
-        if continuationMoves.nonEmpty then
-          Some(
-            CausalContinuationProbeBinding.variationHash(
-              rootFen = beforeFen,
-              role = line.role,
-              rootMove = probedMove,
-              whitePovEvalCp = engineLine.scoreCp,
-              mate = engineLine.mate,
-              depth = engineLine.depth,
-              moves = engineLine.moves,
-              continuationMoves = continuationMoves
-            )
-          )
-        else opponentResourceMove match
-          case Some(resourceMove) =>
-            Some(
-              CounterResourceProbeBinding.variationHash(
-                rootFen = beforeFen,
-                role = line.role,
-                rootMove = probedMove,
-                whitePovEvalCp = engineLine.scoreCp,
-                mate = engineLine.mate,
-                depth = engineLine.depth,
-                moves = engineLine.moves,
-                opponentResourceMove = resourceMove
-              )
-            )
-          case None =>
-            certifiedHorizonPlyOffset.map { horizonPlyOffset =>
-              BranchReplyProbeBinding.variationHash(
-                rootFen = beforeFen,
-                role = line.role,
-                rootMove = probedMove,
-                whitePovEvalCp = engineLine.scoreCp,
-                mate = engineLine.mate,
-                depth = engineLine.depth,
-                moves = engineLine.moves,
-                certifiedHorizonPlyOffset = horizonPlyOffset
-              )
-            }
-      hash.map(engineLine -> _)
+      Some(
+        engineLine -> BranchReplyProbeBinding.variationHash(
+          rootFen = beforeFen,
+          role = line.role,
+          rootMove = probedMove,
+          whitePovEvalCp = engineLine.scoreCp,
+          mate = engineLine.mate,
+          depth = engineLine.depth,
+          moves = engineLine.moves,
+          replyMove = replyMove,
+          certifiedHorizonPlyOffset = certifiedHorizonPlyOffset
+        )
+      )
     }
 
   private def probeDiagnostic(
       probe: ProbeResult,
       status: ProbeAdmissionStatus,
       reasons: List[String],
-      purpose: Option[ProbePurpose],
+      purpose: Option[ProbeKind],
       candidateMove: Option[String],
       branchFen: Option[String],
       admittedLineCount: Int,
@@ -880,16 +841,27 @@ object MoveReviewInputNormalizer:
       variationHash = variationHash
     )
 
-  private def terminalScoreConsistent(terminal: chess.Position, line: EngineLine): Boolean =
+  private def automaticTerminal(history: CanonicalPositionHistory): Option[AutomaticTerminal] =
+    PositionRuleAssessment.assess(history) match
+      case PositionRuleAssessment.Terminal(terminal) => Some(terminal)
+      case PositionRuleAssessment.Nonterminal(_, _, _) => None
+
+  private def engineScoreConsistent(
+      line: EngineLine,
+      terminal: Option[AutomaticTerminal]
+  ): Boolean =
     if line.mate.contains(0) then false
-    else
-      if terminal.staleMate then line.mate.isEmpty && line.scoreCp.abs <= 1
-      else if terminal.checkMate then
-        line.mate.exists(mate =>
-          val whiteWon = terminal.color.black
-          (mate > 0) == whiteWon
-        )
-      else true
+    else terminal match
+      case Some(AutomaticTerminal.Checkmate(winner)) =>
+        line.mate.exists(mate => (mate > 0) == winner.white)
+      case Some(
+            AutomaticTerminal.Stalemate |
+            AutomaticTerminal.InsufficientMaterial |
+            AutomaticTerminal.FivefoldRepetition |
+            AutomaticTerminal.SeventyFiveMoveRule
+          ) =>
+        line.mate.isEmpty && line.scoreCp.abs <= 1
+      case None => true
 
   private def certifyingRecognitionLineage(recognition: Option[OpeningRecognition]): Option[String] =
     recognition.filter(certifyingRecognition).flatMap(_.lineage)

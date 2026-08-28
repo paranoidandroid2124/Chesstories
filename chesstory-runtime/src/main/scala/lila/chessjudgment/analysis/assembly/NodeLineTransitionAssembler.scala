@@ -1,6 +1,6 @@
 package lila.chessjudgment.analysis.assembly
 
-import chess.{ Bishop, Knight, Pawn, Queen, Rook }
+import chess.Pawn
 import chess.format.Fen
 import lila.chessjudgment.analysis.evaluation.EvalFactNormalizer
 import lila.chessjudgment.analysis.line.{ ForcedLineTruth, LineFactNormalizer }
@@ -197,89 +197,167 @@ object CandidateLineAssembler:
       replay: CanonicalLineReplay,
       predecessorReplay: Option[CanonicalLineReplay] = None
   ): Option[LineMaterialSummary] =
-    val legal = replay.legalSteps
-    val predecessor = predecessorReplay
-      .flatMap(_.legalSteps.lastOption)
-      .filter(step =>
-        legal.headOption.exists(first =>
-          step.ply + 1 == first.ply &&
-            step.after == first.before
+
+    val events = replay.replaySteps.zipWithIndex.flatMap { case (declared, plyOffset) =>
+      replay.transition(declared).flatMap { transition =>
+        val root = transition.relationDelta.rootMove
+        val primaryMovements = transition.boardFootprint.pieceTransitions.filter(movement =>
+          movement.side == root.side &&
+            EvidenceSquare(movement.from.key) == root.from &&
+            EvidenceSquare(movement.to.key) == root.to &&
+            EvidencePieceRole(movement.beforeRole.name) == root.beforeRole &&
+            EvidencePieceRole(movement.afterRole.name) == root.afterRole
         )
-      )
-    if legal.isEmpty ||
-      (legal.head.capturedRole.nonEmpty &&
-        positionHistory.segmentReplaySteps.isEmpty &&
-        predecessor.isEmpty &&
-        positionHistory.preInitialHistoryKnowledge == PreInitialHistoryKnowledge.Unknown)
-    then None
-    else
-      legal.headOption.map(_.move.piece.color).flatMap { mover =>
-        val captures = legal.zipWithIndex.flatMap { case (step, index) =>
-          if step.move.castle.nonEmpty then None
-          else step.capturedRole.map { captured =>
-            val previous =
-              if index == 0 then
-                predecessor
-                  .map(previous => (previous.capturedRole, previous.move.dest, previous.move.piece.color))
-                  .orElse(
-                    positionHistory.segmentReplaySteps.lastOption.map(previous =>
-                      (previous.capturedRole, previous.move.dest, previous.move.piece.color)
-                    )
-                  )
-              else
-                legal.lift(index - 1).map(previous =>
-                  (previous.capturedRole, previous.move.dest, previous.move.piece.color)
-                )
-            LineMaterialCapture(
-              moveUci = step.uci,
-              plyOffset = index,
-              side = step.move.piece.color,
-              attackerRole = EvidencePieceRole(step.move.piece.role.toString),
-              capturedRole = EvidencePieceRole(captured.toString),
-              square = EvidenceSquare(step.move.dest.key),
-              valueCp = MaterialValue.materialValueCp(captured),
-              recapture = previous.exists { case (capturedRole, destination, color) =>
-                capturedRole.nonEmpty &&
-                  destination == step.move.dest &&
-                  color != step.move.piece.color
-              }
+        require(
+          primaryMovements.size == 1,
+          s"'${declared.moveUci}' needs one canonical primary movement in its material ledger"
+        )
+        val primary = primaryMovements.head
+        val promotionGain =
+          if primary.beforeRole == Pawn && primary.afterRole != Pawn then
+            MaterialValue.materialValueCp(primary.afterRole) - MaterialValue.materialValueCp(Pawn)
+          else 0
+        val capture = root.capture.map { captured =>
+          val capturedRole = transition.legal.capturedRole.getOrElse(
+            throw IllegalArgumentException(s"'${declared.moveUci}' lost its canonical captured role")
+          )
+          require(
+            capturedRole.name.equalsIgnoreCase(captured.capturedRole.name),
+            s"'${declared.moveUci}' capture disagrees with its closed legal-move relation"
+          )
+          LineMaterialCapture(
+            moveUci = EvidenceRef.normalizeMove(declared.moveUci),
+            plyOffset = plyOffset,
+            side = root.side,
+            attackerRole = root.beforeRole,
+            capturedRole = captured.capturedRole,
+            square = captured.capturedSquare,
+            valueCp = MaterialValue.materialValueCp(capturedRole),
+            recaptureStatus = recaptureStatus(
+              positionHistory,
+              predecessorReplay,
+              replay,
+              declared,
+              plyOffset,
+              root
             )
-          }
+          )
         }
-        val promotionGain = legal.map { step =>
-          val gain = promotionGainCp(step.uci)
-          if step.move.piece.color == mover then gain else -gain
-        }.sum
-        val signedValues =
-          captures.map(capture => if capture.side == mover then capture.valueCp else -capture.valueCp) ++
-            Option.when(promotionGain != 0)(promotionGain).toList
-        val running = signedValues.scanLeft(0)(_ + _).tail
-        val net = running.lastOption.getOrElse(0)
-        Option.when(captures.nonEmpty || promotionGain != 0)(
-          LineMaterialSummary(
-            sideToMove = mover,
-            captures = captures,
-            netCaptureCpForMover = net,
-            maxGainCpForMover = (0 :: running).max,
-            maxLossCpForMover = (0 :: running).min,
-            hasRecaptureChain = captures.exists(_.recapture),
-            hasRecoveryWindow = running.exists(_ < 0) && running.exists(_ >= 0) && net >= 0,
-            promotionGainCpForMover = promotionGain,
-            materialWindowComplete = true
+        Option.when(capture.nonEmpty || promotionGain > 0)(
+          ObservedLineMaterialEvent(
+            moveUci = EvidenceRef.normalizeMove(declared.moveUci),
+            plyOffset = plyOffset,
+            movement = root.witness,
+            legalMoveSemanticId = root.fact.semanticId,
+            capture = capture,
+            promotionGainCp = promotionGain
           )
         )
       }
+    }
+    Option.when(events.nonEmpty)(
+      LineMaterialSummary(
+        sideToMove = replay.legalSteps.head.move.piece.color,
+        events = events,
+        closedOutcome = closedMaterialOutcome(replay)
+      )
+    )
 
-  private def promotionGainCp(uci: String): Int =
-    Option.when(uci.length == 5) {
-      val promotedValue = uci.last.toLower match
-        case 'q' => MaterialValue.materialValueCp(Queen)
-        case 'r' => MaterialValue.materialValueCp(Rook)
-        case 'b' => MaterialValue.materialValueCp(Bishop)
-        case 'n' => MaterialValue.materialValueCp(Knight)
-        case _   => MaterialValue.materialValueCp(Queen)
-      promotedValue - MaterialValue.materialValueCp(Pawn)
-    }.getOrElse(0)
+  private def recaptureStatus(
+      positionHistory: CanonicalPositionHistory,
+      predecessorReplay: Option[CanonicalLineReplay],
+      replay: CanonicalLineReplay,
+      declared: LineReplayStep,
+      plyOffset: Int,
+      root: CanonicalRootLegalMove
+  ): LineMaterialRecaptureStatus =
+    val priorOccurrence =
+      if plyOffset > 0 then
+        replay.replaySteps.lift(plyOffset - 1).map(replay -> _)
+      else
+        predecessorReplay.flatMap(previous =>
+          for
+            previousStep <- previous.replaySteps.lastOption
+            if previousStep.ply + 1 == declared.ply
+            if PrincipalVariationEvidence.sameBoardState(previousStep.fenAfter, declared.fenBefore)
+          yield previous -> previousStep
+        )
+    priorOccurrence match
+      case None =>
+        if plyOffset == 0 &&
+            positionHistory.segmentReplaySteps.isEmpty &&
+            positionHistory.preInitialHistoryKnowledge == PreInitialHistoryKnowledge.KnownEmpty
+        then LineMaterialRecaptureStatus.Excluded
+        else LineMaterialRecaptureStatus.Unknown
+      case Some((priorReplay, priorStep)) =>
+        val priorTransition = priorReplay.transition(priorStep).getOrElse(
+          throw IllegalArgumentException("a predecessor replay step lost its canonical transition")
+        )
+        if priorTransition.relationDelta.rootMove.capture.isEmpty then
+          LineMaterialRecaptureStatus.Excluded
+        else
+          val inventories = priorReplay.verticalRelationOccurrences(
+            priorStep,
+            List(VerticalRelationContractKind.CaptureRecaptureInventory)
+          )
+          require(
+            inventories.size == 1,
+            "a canonical capture must own exactly one closed recapture inventory"
+          )
+          val occurrence = inventories.head
+          val matching = occurrence.relation.detail match
+            case RelationWitnessDetail.CaptureRecaptureInventory(_, _, _, legalRecaptures, _) =>
+              legalRecaptures.filter(resource =>
+                EvidenceRef.sameMove(resource.moveUci, declared.moveUci) &&
+                  resource.movement == root.witness &&
+                  resource.capture == root.capture
+              )
+            case _ =>
+              throw IllegalArgumentException("a recapture contract changed relation kind")
+          matching match
+            case _ :: Nil =>
+              LineMaterialRecaptureStatus.Proven(DerivedRelationResultKey.from(occurrence.relation))
+            case Nil =>
+              LineMaterialRecaptureStatus.Excluded
+            case _ =>
+              throw IllegalArgumentException("one legal move cannot occur twice in a closed recapture inventory")
+
+  private def closedMaterialOutcome(
+      replay: CanonicalLineReplay
+  ): Option[ClosedLineMaterialOutcome] =
+    replay.replaySteps.lastOption.flatMap { terminalStep =>
+      val terminals = replay.verticalRelationOccurrences(
+        terminalStep,
+        List(
+          VerticalRelationContractKind.CreatedCheckResponseInventory,
+          VerticalRelationContractKind.StalemateTransition
+        )
+      ).flatMap(occurrence =>
+        occurrence.relation.detail match
+          case RelationWitnessDetail.CreatedCheckResponseInventory(
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                RelationCheckTerminalState.Checkmate,
+                _
+              ) =>
+            Some(ClosedLineMaterialTerminal.Checkmate)
+          case RelationWitnessDetail.StalemateTransition(_, _, _, _) =>
+            Some(ClosedLineMaterialTerminal.Stalemate)
+          case _ =>
+            None
+      ).distinct
+      terminals match
+        case terminal :: Nil =>
+          Some(ClosedLineMaterialOutcome(terminal, replay.replaySteps.size - 1))
+        case Nil =>
+          None
+        case _ =>
+          throw IllegalArgumentException("one canonical line cannot terminate as both mate and stalemate")
+    }
 
 object TransitionEdgeAssembler:
 
@@ -311,7 +389,7 @@ object TransitionEdgeAssembler:
         to = to.ref,
         evidence = transitionEvidence
       )
-    TransitionEdgeAssembly(edge, List(TransitionFactNormalizer.fromMoveTransition(edge)), replay)
+    TransitionEdgeAssembly(edge, List(TransitionFactNormalizer.fromMoveTransition(edge, replay)), replay)
 
 object NodeLineTransitionAssembler:
   private final case class LineRootTransitionAssembly(
@@ -505,8 +583,6 @@ object NodeLineTransitionAssembler:
       val threatLineAssemblies =
         afterThreats.flatMap { case ((branch, predecessor), position) =>
           val owner = ThreatLineOccurrenceOwner(
-            sourceProbeId = branch.sourceProbeId,
-            objective = branch.objective,
             probedMoveUci = EvidenceRef.normalizeMove(branch.probedMoveUci),
             branchPosition = position.node.ref
           )

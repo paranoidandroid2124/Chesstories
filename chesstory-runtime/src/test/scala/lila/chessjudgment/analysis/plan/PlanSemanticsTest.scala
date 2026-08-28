@@ -49,81 +49,6 @@ class PlanSemanticsTest extends munit.FunSuite:
       )
     )
 
-    val invasionTransition = transition(
-      "7k/8/8/8/8/8/8/R6K w - - 0 1",
-      "a1a7"
-    )
-    val invasion = consequence(
-      TransitionConsequenceKind.FileOccupationEstablished,
-      List(
-        StructuralSubject.FileOccupation(
-          EvidenceFile("a"),
-          EvidenceSquare("a7"),
-          EvidencePieceRole("rook")
-        )
-      )
-    )
-    assert(proves(PlanKind.InvasionTransition, invasionTransition, invasion))
-
-  test("pawn-advance preparation is board-zone agnostic"):
-    val centralTransition = transition(
-      "4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",
-      "e2e4"
-    )
-    val centralTension = consequence(
-      TransitionConsequenceKind.PawnTensionCreated,
-      List(
-        StructuralSubject.PawnTensionCreated(EvidenceSquare("e4"), EvidenceSquare("d5")),
-        StructuralSubject.BreakFile(EvidenceFile("e"))
-      )
-    )
-    assert(proves(PlanKind.PawnAdvancePreparation, centralTransition, centralTension))
-
-    val flankTransition = transition(
-      "4k3/8/8/8/8/8/7P/4K3 w - - 0 1",
-      "h2h4"
-    )
-    val flankTension = consequence(
-      TransitionConsequenceKind.PawnTensionCreated,
-      List(
-        StructuralSubject.PawnTensionCreated(EvidenceSquare("h4"), EvidenceSquare("g5")),
-        StructuralSubject.BreakFile(EvidenceFile("h"))
-      )
-    )
-    assert(proves(PlanKind.PawnAdvancePreparation, flankTransition, flankTension))
-
-  test("file transfer requires its exact actor-result pair"):
-    val queenTransfer = transition("4k3/8/8/8/8/8/8/Q3K3 w - - 0 1", "a1a7")
-    val fileOccupation = consequence(
-      TransitionConsequenceKind.FileOccupationEstablished,
-      List(
-        StructuralSubject.FileOccupation(
-          EvidenceFile("a"),
-          EvidenceSquare("a7"),
-          EvidencePieceRole("rook")
-        )
-      )
-    )
-    assert(!proves(PlanKind.RookFileTransfer, queenTransfer, fileOccupation))
-
-    val rookTransfer = transition("7k/8/8/8/8/8/8/R6K w - - 0 1", "a1a7")
-    assert(proves(PlanKind.RookFileTransfer, rookTransfer, fileOccupation))
-    assert(
-      !proves(
-        PlanKind.RookFileTransfer,
-        rookTransfer,
-        consequence(
-          TransitionConsequenceKind.FileOccupationEstablished,
-          List(
-            StructuralSubject.FileOccupation(
-              EvidenceFile("b"),
-              EvidenceSquare("b7"),
-              EvidencePieceRole("rook")
-            )
-          )
-        )
-      )
-    )
   test("causal target extraction separates battery witnesses from its exact target"):
     val battery = TransitionConsequence(
       kind = TransitionConsequenceKind.BatteryFormation,
@@ -131,21 +56,17 @@ class PlanSemanticsTest extends munit.FunSuite:
       subjectBindings = List(
         StructuralSubjectBinding.unbound(
           StructuralSubject.Battery(
-            RelationWitnessDetail.RayBarrier(
+            RelationBatteryFormationWitness(
               White,
-              EvidenceSquare("c1"),
-              EvidencePieceRole("bishop"),
-              List(
-                RelationColoredPieceWitness(
-                  EvidenceSquare("d2"),
-                  EvidencePieceRole("queen"),
-                  White
-                ),
-                RelationColoredPieceWitness(
-                  EvidenceSquare("e3"),
-                  EvidencePieceRole("rook"),
-                  Black
-                )
+              RelationColoredPieceWitness(
+                EvidenceSquare("c1"),
+                EvidencePieceRole("bishop"),
+                White
+              ),
+              RelationColoredPieceWitness(
+                EvidenceSquare("d2"),
+                EvidencePieceRole("queen"),
+                White
               ),
               RelationAxisSignal.Diagonal
             )
@@ -154,13 +75,13 @@ class PlanSemanticsTest extends munit.FunSuite:
       ),
       targetBindings = List(
         StructuralSubjectBinding.unbound(
-          StructuralSubject.PieceAt(EvidencePieceRole("rook"), EvidenceSquare("e3"))
+          StructuralSubject.PieceAt(Black, EvidencePieceRole("rook"), EvidenceSquare("e3"))
         )
       )
     )
     assertEquals(
       PlanCausalEpisode.consequenceSquares(battery).map(_.key).toSet,
-      Set("c1", "d2", "e3")
+      Set("c1", "d2")
     )
     assertEquals(
       PlanCausalEpisode.consequenceTargetSquares(battery).map(_.key),
@@ -169,10 +90,16 @@ class PlanSemanticsTest extends munit.FunSuite:
 
   private def proves(
       kind: PlanKind,
-      transition: StructuralTransitionBinding,
+      transition: CertifiedPlanTransition,
       consequence: TransitionConsequence
   ): Boolean =
-    PlanCausalGoalProof.proves(kind.theme, Some(kind), transition, consequence)
+    PlanCausalGoalProof.proves(
+      kind.theme,
+      Some(kind),
+      transition.binding,
+      consequence,
+      transition.movement
+    )
 
   private def consequence(
       kind: TransitionConsequenceKind,
@@ -184,7 +111,12 @@ class PlanSemanticsTest extends munit.FunSuite:
       subjectBindings = subjects.map(StructuralSubjectBinding.unbound)
     )
 
-  private def transition(fen: String, move: String): StructuralTransitionBinding =
+  private final case class CertifiedPlanTransition(
+      binding: StructuralTransitionBinding,
+      movement: CanonicalRootLegalMove
+  )
+
+  private def transition(fen: String, move: String): CertifiedPlanTransition =
     val history = CanonicalPositionHistory
       .from(fen, Nil, fen)
       .getOrElse(fail("expected a canonical test root"))
@@ -192,12 +124,21 @@ class PlanSemanticsTest extends munit.FunSuite:
       .extend(List(move))
       .getOrElse(fail(s"expected legal test move $move"))
     val step = extended.segmentReplaySteps.lastOption.getOrElse(fail("expected one legal step"))
-    StructuralTransitionBinding(
-      moveUci = move,
-      role = TransitionEdgeRole.Reference,
-      from = PositionNodeRef(fen, 0, Some(White)),
-      to = PositionNodeRef(step.afterFen, 1, Some(chess.Black)),
-      line = None,
-      perspective = White,
-      actorRole = Some(EvidencePieceRole(step.move.piece.role.name))
+    val replay = CanonicalLineReplay
+      .fromHistory(extended.segmentReplaySteps.drop(history.segmentReplaySteps.size))
+      .getOrElse(fail("expected one canonical plan transition"))
+    val movement = replay.onlyTransition
+      .map(_.relationDelta.rootMove)
+      .getOrElse(fail("expected one canonical root movement"))
+    CertifiedPlanTransition(
+      StructuralTransitionBinding(
+        moveUci = move,
+        role = TransitionEdgeRole.Reference,
+        from = PositionNodeRef(fen, 0, Some(White)),
+        to = PositionNodeRef(step.afterFen, 1, Some(chess.Black)),
+        line = None,
+        perspective = White,
+        actorRole = Some(EvidencePieceRole(step.move.piece.role.name))
+      ),
+      movement
     )

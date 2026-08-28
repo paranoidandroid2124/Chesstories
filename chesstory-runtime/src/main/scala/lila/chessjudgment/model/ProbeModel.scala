@@ -7,37 +7,11 @@ import lila.chessjudgment.model.judgment.{ EvidenceRef, LineNodeRole }
 import lila.chessjudgment.model.line.CandidateLineEvaluation
 import play.api.libs.json._
 
-enum ProbePurpose(val key: String):
-  case ReplyMultipv extends ProbePurpose("reply_multipv")
+enum ProbeKind(val key: String):
+  case BranchReply extends ProbeKind("branch_reply")
 
-object ProbePurpose:
-  private val byKey = ProbePurpose.values.map(p => p.key -> p).toMap
-  def fromKey(key: String): Option[ProbePurpose] =
-    Option(key).map(_.trim).filter(_.nonEmpty).flatMap(byKey.get)
-  def isBranchReply(purpose: ProbePurpose): Boolean =
-    purpose == ProbePurpose.ReplyMultipv
-
-  given Reads[ProbePurpose] = Reads:
-    case JsString(raw) =>
-      fromKey(raw).fold[JsResult[ProbePurpose]](JsError(s"Unknown probe purpose: $raw"))(JsSuccess(_))
-    case _ => JsError("Probe purpose must be a string id")
-
-  given Writes[ProbePurpose] = Writes(p => JsString(p.key))
-
-enum ProbeObjective(val key: String):
-  case BranchReplyMultiPv extends ProbeObjective("branch_reply_multipv")
-  case CausalContinuation extends ProbeObjective("causal_continuation")
-  case CounterResource extends ProbeObjective("opponent_resource_reply")
-
-object ProbeObjective:
-  private val byKey = ProbeObjective.values.map(value => value.key -> value).toMap
-
-  given Reads[ProbeObjective] = Reads:
-    case JsString(raw) =>
-      byKey.get(raw.trim).fold[JsResult[ProbeObjective]](JsError(s"Unknown probe objective: $raw"))(JsSuccess(_))
-    case _ => JsError("Probe objective must be a string id")
-
-  given Writes[ProbeObjective] = Writes(value => JsString(value.key))
+object ProbeKind:
+  given Writes[ProbeKind] = Writes(value => JsString(value.key))
 
 object ProbeHorizon:
   private val PlyOffset = raw"ply:([1-9][0-9]*)".r
@@ -54,38 +28,23 @@ object ProbeHorizon:
  * The purpose identifies whether a returned probe result can enter a certified graph branch.
  */
 enum ProbeVariant:
-  case BranchReply(requiredHorizonPlyOffset: Int)
-  case CausalContinuation(replyMove: String, followUpMove: String)
-  case CounterResource(move: String)
+  case BranchReply(replyMove: String, requiredHorizonPlyOffset: Int)
 
 case class ProbeRequest(
   id: String,
   fen: String,
   depth: Int,
-  multiPv: Int,
   candidateMove: String,
   depthFloor: Int,
   variationHash: String,
   variant: ProbeVariant
 ):
-  def purpose: ProbePurpose = ProbePurpose.ReplyMultipv
-  def objective: ProbeObjective = variant match
-    case ProbeVariant.BranchReply(_)          => ProbeObjective.BranchReplyMultiPv
-    case ProbeVariant.CausalContinuation(_, _) => ProbeObjective.CausalContinuation
-    case ProbeVariant.CounterResource(_)      => ProbeObjective.CounterResource
+  def kind: ProbeKind = variant match
+    case ProbeVariant.BranchReply(_, _) => ProbeKind.BranchReply
   def moves: List[String] = variant match
-    case ProbeVariant.BranchReply(_)        => Nil
-    case ProbeVariant.CausalContinuation(reply, followUp) => List(reply, followUp)
-    case ProbeVariant.CounterResource(move) => List(move)
+    case ProbeVariant.BranchReply(replyMove, _) => List(EvidenceRef.normalizeMove(replyMove))
   def horizon: Option[String] = variant match
-    case ProbeVariant.BranchReply(offset) => Some(ProbeHorizon.renderPlyOffset(offset))
-    case _                                => None
-  def opponentResourceMove: Option[String] = variant match
-    case ProbeVariant.CounterResource(move) => Some(move)
-    case _                                  => None
-  def continuationMoves: List[String] = variant match
-    case ProbeVariant.CausalContinuation(reply, followUp) => List(reply, followUp)
-    case _                                      => Nil
+    case ProbeVariant.BranchReply(_, offset) => Some(ProbeHorizon.renderPlyOffset(offset))
 
 object ProbeRequest:
   /** Public transport identity for one complete physical-search contract.
@@ -93,8 +52,8 @@ object ProbeRequest:
     * fields; embedding an occurrence-rich line id here would duplicate that
     * identity and can exceed the wire limit.
     */
-  def transportId(objective: ProbeObjective, variationHash: String): String =
-    s"probe:${objective.key}:$variationHash"
+  def transportId(kind: ProbeKind, variationHash: String): String =
+    s"probe:${kind.key}:$variationHash"
 
 enum ProbeResolution:
   case EngineSearch(evaluations: List[CandidateLineEvaluation], depth: Int)
@@ -117,7 +76,7 @@ case class ProbeAdmissionDiagnostic(
   probeId: String,
   status: ProbeAdmissionStatus,
   reasonCodes: List[String],
-  purpose: Option[ProbePurpose] = None,
+  purpose: Option[ProbeKind] = None,
   candidateMove: Option[String] = None,
   fen: Option[String] = None,
   admittedLineCount: Int = 0,
@@ -155,12 +114,22 @@ object ProbeContractValidator:
     if request.id != result.id then reasons += "ID_MISMATCH"
     result.resolution match
       case ProbeResolution.EngineSearch(evaluations, depth) =>
-        if request.multiPv != evaluations.size then reasons += "REPLY_MULTIPV_COUNT_MISMATCH"
+        if evaluations.size != 1 then reasons += "REPLY_LINE_COUNT_MISMATCH"
         if evaluations.exists(_.moves.isEmpty) then reasons += "REPLY_LINE_MISSING"
+        request.variant match
+          case ProbeVariant.BranchReply(replyMove, _) =>
+            if evaluations.exists(_.moves.headOption.forall(move => !EvidenceRef.sameMove(move, replyMove))) then
+              reasons += "REPLY_MOVE_MISMATCH"
         val rootMoves = evaluations.flatMap(_.moves.headOption).map(EvidenceRef.normalizeMove)
         if rootMoves.distinct.size != rootMoves.size then reasons += "REPLY_ROOT_MOVE_CONFLICT"
         if depth < request.depthFloor then reasons += "DEPTH_FLOOR_UNMET"
-      case ProbeResolution.ExactAutomaticTerminal(_) => ()
+      case ProbeResolution.ExactAutomaticTerminal(evaluation) =>
+        request.variant match
+          case ProbeVariant.BranchReply(replyMove, _) =>
+            if evaluation.moves match
+                case exact :: Nil => !EvidenceRef.sameMove(exact, replyMove)
+                case _            => true
+            then reasons += "REPLY_MOVE_MISMATCH"
     validation(reasons.result())
 
   private def requestReasons(request: ProbeRequest): List[String] =
@@ -172,15 +141,9 @@ object ProbeContractValidator:
     if !validUciMove(request.candidateMove) then reasons += "CANDIDATE_MOVE_INVALID"
     if request.variationHash.trim.isEmpty then reasons += "VARIATION_HASH_MISSING"
     request.variant match
-      case ProbeVariant.BranchReply(requiredHorizonPlyOffset) =>
-        if request.multiPv <= 0 || request.multiPv > BranchReplyProbeBinding.ReplyMultiPv then
-          reasons += "REPLY_MULTIPV_INVALID"
+      case ProbeVariant.BranchReply(replyMove, requiredHorizonPlyOffset) =>
+        if !validUciMove(replyMove) then reasons += "REPLY_SEARCH_INVALID"
         if requiredHorizonPlyOffset <= 0 then reasons += "HORIZON_INVALID"
-      case ProbeVariant.CausalContinuation(reply, followUp) =>
-        if request.multiPv != 1 || !validUciMove(reply) || !validUciMove(followUp)
-        then reasons += "CAUSAL_CONTINUATION_INVALID"
-      case ProbeVariant.CounterResource(resource) =>
-        if request.multiPv != 1 || !validUciMove(resource) then reasons += "COUNTER_RESOURCE_INVALID"
     reasons.result()
 
   private def validation(reasons: List[String]): ValidationResult =
@@ -194,7 +157,6 @@ object ProbeContractValidator:
     EvidenceRef.normalizeMove(raw).matches("""[a-h][1-8][a-h][1-8][nbrq]?""")
 
 object BranchReplyProbeBinding:
-  val ReplyMultiPv = 3
   val Depth = 16
   val DepthFloor = 12
 
@@ -211,21 +173,12 @@ object BranchReplyProbeBinding:
       mate: Option[Int],
       depth: Int,
       moves: List[String],
+      replyMove: String,
       certifiedHorizonPlyOffset: Int
   ): String =
     digest(variationFields(rootFen, role, rootMove, whitePovEvalCp, mate, depth, moves) :+
+      EvidenceRef.normalizeMove(replyMove) :+
       horizon(certifiedHorizonPlyOffset))
-
-  private[model] def variationBaseHash(
-      rootFen: String,
-      role: LineNodeRole,
-      rootMove: String,
-      whitePovEvalCp: Int,
-      mate: Option[Int],
-      depth: Int,
-      moves: List[String]
-  ): String =
-    digest(variationFields(rootFen, role, rootMove, whitePovEvalCp, mate, depth, moves))
 
   private def variationFields(
       rootFen: String,
@@ -248,70 +201,6 @@ object BranchReplyProbeBinding:
 
   private def digest(fields: List[String]): String =
     val raw = fields.mkString("||")
-    MessageDigest
-      .getInstance("SHA-256")
-      .digest(raw.getBytes(StandardCharsets.UTF_8))
-      .map(byte => f"${byte & 0xff}%02x")
-      .mkString
-
-object CounterResourceProbeBinding:
-
-  def variationHash(
-      rootFen: String,
-      role: LineNodeRole,
-      rootMove: String,
-      whitePovEvalCp: Int,
-      mate: Option[Int],
-      depth: Int,
-      moves: List[String],
-      opponentResourceMove: String
-  ): String =
-    val raw =
-      List(
-        BranchReplyProbeBinding.variationBaseHash(
-          rootFen,
-          role,
-          rootMove,
-          whitePovEvalCp,
-          mate,
-          depth,
-          moves
-        ),
-        EvidenceRef.normalizeMove(opponentResourceMove),
-        ProbeObjective.CounterResource.key
-      ).mkString("||")
-    MessageDigest
-      .getInstance("SHA-256")
-      .digest(raw.getBytes(StandardCharsets.UTF_8))
-      .map(byte => f"${byte & 0xff}%02x")
-      .mkString
-
-object CausalContinuationProbeBinding:
-
-  def variationHash(
-      rootFen: String,
-      role: LineNodeRole,
-      rootMove: String,
-      whitePovEvalCp: Int,
-      mate: Option[Int],
-      depth: Int,
-      moves: List[String],
-      continuationMoves: List[String]
-  ): String =
-    val raw =
-      List(
-        BranchReplyProbeBinding.variationBaseHash(
-          rootFen,
-          role,
-          rootMove,
-          whitePovEvalCp,
-          mate,
-          depth,
-          moves
-        ),
-        continuationMoves.map(EvidenceRef.normalizeMove).mkString(","),
-        ProbeObjective.CausalContinuation.key
-      ).mkString("||")
     MessageDigest
       .getInstance("SHA-256")
       .digest(raw.getBytes(StandardCharsets.UTF_8))
