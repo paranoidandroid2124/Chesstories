@@ -70,8 +70,7 @@ private[assembly] final case class CausalLineTrace(
         val continuations: List[CausalResponseContinuationTrajectory] = canonicalReplay.toList.flatMap { admitted =>
           List(
             PawnBreakFollowUpTrajectory.find(from, response, to, between, admitted),
-            CaptureResponseFollowUpTrajectory.find(from, response, to, between, admitted),
-            CheckResponseFollowUpTrajectory.find(from, response, to, between, admitted)
+            CaptureResponseFollowUpTrajectory.find(from, response, to, between, admitted)
           ).flatten
         }
         Option.when(continuations.nonEmpty)(response -> continuations)
@@ -364,7 +363,6 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
           hasPassedPawnResult ||
             to.structuralConsequences.exists(_.kind == TransitionConsequenceKind.PassedPawnProgress)
         case _: CaptureResponseFollowUpTrajectory => true
-        case _: CheckResponseFollowUpTrajectory => hasPassedPawnResult
       }
       .map(trajectory =>
         PassedPawnResultDependency(

@@ -23,4 +23,4 @@ class ConversionContextPolicyTest extends munit.FunSuite:
       PositionOccurrenceEvidence(occurrence)
     )
 
-    assert(!ConversionContextPolicy.supports(List(record), RelativeCauseKind.ConversionSecured))
+    assert(!ConversionContextPolicy.supports(List(record)))

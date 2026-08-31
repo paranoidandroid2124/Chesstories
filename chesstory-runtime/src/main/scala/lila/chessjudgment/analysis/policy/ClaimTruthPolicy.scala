@@ -704,10 +704,7 @@ object ClaimTruthPolicy:
       payload.hasDirectCauseProjectionEligibleMaterialEvent
 
   private def conversionRelativeCauseHasProof(cause: RelativeCauseFact, graph: TypedEvidenceGraph): Boolean =
-    (
-      cause.kind == RelativeCauseKind.ConversionSecured ||
-        cause.kind == RelativeCauseKind.RecaptureRecoveryWindow
-    ) &&
+    cause.kind == RelativeCauseKind.RecaptureRecoveryWindow &&
       cause.hasOwnedTypedDepth(graph)
 
   private def passedPawnResultRelativeCauseHasProof(cause: RelativeCauseFact, graph: TypedEvidenceGraph): Boolean =

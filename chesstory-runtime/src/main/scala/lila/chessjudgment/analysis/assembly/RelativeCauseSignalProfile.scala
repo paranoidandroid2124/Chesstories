@@ -14,7 +14,6 @@ private[chessjudgment] enum RelativeCauseDraftIntent:
 private[chessjudgment] object RelativeCauseDraftIntent:
   private val EndpointPositiveKinds = Set(
     RelativeCauseKind.RecaptureRecoveryWindow,
-    RelativeCauseKind.ConversionSecured,
     RelativeCauseKind.PassedPawnResult,
     RelativeCauseKind.DrawResource,
     RelativeCauseKind.KingForcing,
@@ -191,9 +190,6 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       RelativeCauseKind.KingForcing -> nonTactical(
         RelativeCauseSignalProfile.forcingLineResourceRecords(records, eventLine)
       ),
-      RelativeCauseKind.ConversionSecured -> nonTactical(
-        RelativeCauseSignalProfile.promotionRaceRecords(records)
-      ),
       RelativeCauseKind.DrawResource -> nonTactical(
         RelativeCauseSignalProfile.drawResourceRecords(records)
       ),
@@ -324,7 +320,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       case TacticalMechanismKind.MaterialGain =>
         Some(RelativeCauseKind.MaterialSwing)
       case TacticalMechanismKind.PawnPromotion =>
-        Some(RelativeCauseKind.ConversionSecured)
+        None
       case _ =>
         TacticalMechanismKind.relativeCauseKind(mechanismKind, badLoss = false, playedCandidate = false)
 
@@ -506,19 +502,6 @@ private[chessjudgment] object RelativeCauseSignalProfile:
         false
     }.distinctBy(_.ref.id)
 
-  private[chessjudgment] def promotionRaceRecords(records: List[EvidenceRecord]): List[EvidenceRecord] =
-    records.filter {
-      case EvidenceRecord(_, payload: LineFactEvidence, _) =>
-        payload
-          .rootOwnedCausalEpisodes(payload.line.rootMove)
-          .exists(episode =>
-            episode.consequence.kind == LineConsequenceKind.Promotion ||
-              episode.consequence.kind == LineConsequenceKind.PromotionRace
-          )
-      case _ =>
-        false
-    }.distinctBy(_.ref.id)
-
   private[chessjudgment] def opponentPromotionLiabilityRecords(
       fact: CandidateComparisonFact,
       sourceSide: RelativeCauseSourceSide,
@@ -533,9 +516,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
           CauseAttributionKind.CandidateAllowsLiability
         )
         .collect {
-          case (ref, consequence)
-              if consequence.kind == LineConsequenceKind.Promotion ||
-                consequence.kind == LineConsequenceKind.PromotionRace =>
+          case (ref, consequence) if consequence.kind == LineConsequenceKind.Promotion =>
             ref.id
         }
         .toSet

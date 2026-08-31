@@ -412,7 +412,6 @@ object RuntimeProtocol:
         case RelativeCauseKind.CandidateTacticalLiability => "candidate_tactical_liability"
         case RelativeCauseKind.RecaptureRecoveryWindow   => "recapture_recovery_window"
         case RelativeCauseKind.WrongMoveOrder             => "wrong_move_order"
-        case RelativeCauseKind.ConversionSecured          => "conversion_secured"
         case RelativeCauseKind.PassedPawnResult            => "passed_pawn_result"
         case RelativeCauseKind.DrawResource               => "draw_resource"
         case RelativeCauseKind.KingForcing                => "king_forcing"

@@ -1394,10 +1394,6 @@ object RelativeAssessmentAssembler:
           consequence.kind == LineConsequenceKind.MaterialGain ||
             consequence.kind == LineConsequenceKind.MaterialLoss
         )
-      case RelativeCauseKind.ConversionSecured =>
-        ownedConsequences.exists(consequence =>
-          RelativeCauseKind.acceptsDirectLineConsequence(kind, payload, rootMove, consequence)
-        )
       case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
           RelativeCauseKind.CandidateTacticalLiability =>
         ownedConsequences.exists(consequence =>

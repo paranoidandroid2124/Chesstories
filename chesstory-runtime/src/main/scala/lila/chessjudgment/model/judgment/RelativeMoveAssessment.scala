@@ -388,7 +388,6 @@ enum RelativeCauseKind:
   case CandidateTacticalLiability
   case RecaptureRecoveryWindow
   case WrongMoveOrder
-  case ConversionSecured
   case PassedPawnResult
   case DrawResource
   case KingForcing
@@ -464,16 +463,7 @@ object RelativeCauseKind:
           sourceSide == RelativeCauseSourceSide.Shared || sourceSide == RelativeCauseSourceSide.Mixed
         case CauseAttributionKind.ContextOnly | CauseAttributionKind.Unattributed =>
           false
-    val kindCompatible =
-      kind match
-        case RelativeCauseKind.ConversionSecured =>
-          (sourceSide == RelativeCauseSourceSide.Reference &&
-            attributionKind == CauseAttributionKind.ReferenceCreatesResource) ||
-            (sourceSide == RelativeCauseSourceSide.Candidate &&
-              attributionKind == CauseAttributionKind.CandidateCreatesValue)
-        case _ =>
-          true
-    polarityCompatible && kindCompatible
+    polarityCompatible
 
   /** Public passed-pawn-result causality is authorized only by the closed L2 proof record.
     * The raw passed-pawn result event remains a premise/probe and cannot prove a Cause.
@@ -501,11 +491,6 @@ object RelativeCauseKind:
         consequenceKind == LineConsequenceKind.Mate
       case RelativeCauseKind.DrawResource =>
         consequenceKind == LineConsequenceKind.DrawResource
-      case RelativeCauseKind.ConversionSecured =>
-        consequenceKind == LineConsequenceKind.RecaptureSequence ||
-          consequenceKind == LineConsequenceKind.RecoveryWindow ||
-          consequenceKind == LineConsequenceKind.Promotion ||
-          consequenceKind == LineConsequenceKind.PromotionRace
       case RelativeCauseKind.MaterialSwing =>
         consequenceKind == LineConsequenceKind.MaterialGain ||
           consequenceKind == LineConsequenceKind.MaterialLoss ||

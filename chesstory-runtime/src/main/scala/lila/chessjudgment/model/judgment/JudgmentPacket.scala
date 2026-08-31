@@ -33,8 +33,6 @@ object ClaimFamily:
         ClaimFamily.Tactical
       case RelativeCauseKind.DrawResource =>
         ClaimFamily.Defensive
-      case RelativeCauseKind.ConversionSecured =>
-        ClaimFamily.Conversion
       case RelativeCauseKind.MaterialSwing =>
         ClaimFamily.Material
       case RelativeCauseKind.PassedPawnResult =>

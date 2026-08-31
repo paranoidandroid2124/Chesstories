@@ -98,7 +98,7 @@ export function rawCommentary(overrides: Record<string, unknown> = {}): Record<s
           {
             facet_role: 'lead',
             cause_evidence_id: 'cause.center',
-            kind: 'conversion_secured',
+            kind: 'candidate_tactical_liability',
             proof_confidence: 'engine_backed',
             effect_mode: 'played_liability',
             exposure: 'primary',

@@ -34,9 +34,9 @@ class RelativeCauseRecordConflictTest extends munit.FunSuite:
       )),
       consequences = List(LineConsequence(
         kind = LineConsequenceKind.Mate,
-        lineMoves = List(mateLine.rootMove),
+        proofOccurrences = List(LineMoveOccurrence(mateLine.rootMove, 0)),
         directCauseProjectionEligible = true,
-        eventMove = Some(mateLine.rootMove),
+        eventOccurrence = Some(LineMoveOccurrence(mateLine.rootMove, 0)),
         rootMove = Some(mateLine.rootMove),
         rootSide = Some(White),
         beneficiary = Some(White)

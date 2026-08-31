@@ -163,7 +163,7 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
           Some(DirectCausalChange.Lost)
         case LineConsequenceKind.ImmediateReplyCheck | LineConsequenceKind.Mate |
             LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow |
-            LineConsequenceKind.Promotion | LineConsequenceKind.PromotionRace =>
+            LineConsequenceKind.Promotion =>
           Some(DirectCausalChange.Occurred)
         case LineConsequenceKind.DrawResource => Some(DirectCausalChange.Maintained)
         case _ => None

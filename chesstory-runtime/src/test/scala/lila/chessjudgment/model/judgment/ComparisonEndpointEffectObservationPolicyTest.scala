@@ -102,9 +102,9 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
     val mateReplay = certifiedReplay(mateFen, List(mateLine.rootMove))
     val mateConsequence = LineConsequence(
       LineConsequenceKind.Mate,
-      List(mateLine.rootMove),
+      List(LineMoveOccurrence(mateLine.rootMove, 0)),
       directCauseProjectionEligible = true,
-      eventMove = Some(mateLine.rootMove),
+      eventOccurrence = Some(LineMoveOccurrence(mateLine.rootMove, 0)),
       rootMove = Some(mateLine.rootMove),
       rootSide = Some(White),
       beneficiary = Some(White)

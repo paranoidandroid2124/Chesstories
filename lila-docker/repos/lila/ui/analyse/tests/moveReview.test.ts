@@ -177,7 +177,7 @@ test('projects the real primary → causal facet → channel → proof segment s
   assert.ok(cause);
   assert.equal(cause.message.kind, 'causal');
   if (cause.message.kind !== 'causal') return;
-  assert.equal(cause.message.causeKind, 'conversion_secured');
+  assert.equal(cause.message.causeKind, 'candidate_tactical_liability');
   assert.equal(cause.message.actor.side, 'black');
   assert.deepEqual(cause.message.witnesses, ['line:played']);
   assert.deepEqual(

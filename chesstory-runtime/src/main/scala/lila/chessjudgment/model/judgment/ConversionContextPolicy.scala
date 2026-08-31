@@ -7,8 +7,7 @@ object ConversionContextPolicy:
     records.exists {
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
         payload.directCauseProjectionEligibleConsequenceKinds.exists {
-          case LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow |
-              LineConsequenceKind.Promotion | LineConsequenceKind.PromotionRace =>
+          case LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow =>
             true
           case _ =>
             false

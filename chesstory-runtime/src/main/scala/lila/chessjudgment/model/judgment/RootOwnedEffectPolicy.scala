@@ -60,8 +60,8 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
           case LineConsequenceKind.Mate =>
             Option
               .when(
-                episode.consequence.beneficiary.nonEmpty && episode.eventPlyOffset >= 0
-              )(DirectCauseImportanceMeasure.MateArrival(episode.eventPlyOffset))
+                episode.consequence.beneficiary.nonEmpty
+              )(DirectCauseImportanceMeasure.MateArrival(episode.eventOccurrence.plyOffset))
               .map(DirectEffectMagnitudeKnowledge.Exact.apply)
               .getOrElse(DirectEffectMagnitudeKnowledge.ExpectedButMissing)
           case LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss =>
@@ -118,66 +118,57 @@ private[chessjudgment] object RootOwnedEffectPolicy:
       episode: RootOwnedCausalEpisode
   ): Boolean =
     val rootMove = EvidenceRef.normalizeMove(line.line.rootMove)
-    val chain = episode.chainMoves.map(EvidenceRef.normalizeMove)
-    val replay = line.lineReplayMoves.map(EvidenceRef.normalizeMove)
-    val eventMove = chain.lastOption
+    val replay = line.lineReplaySteps.zipWithIndex.map { case (step, plyOffset) =>
+      LineMoveOccurrence(EvidenceRef.normalizeMove(step.moveUci), plyOffset)
+    }
+    val event = episode.eventOccurrence
     val exactReplayPrefix =
       episode.line == line.line &&
         EvidenceRef.sameMove(episode.actor.moveUci, rootMove) &&
-        chain.nonEmpty &&
-        chain == replay.take(chain.size) &&
-        episode.eventPlyOffset == chain.size - 1 &&
+        episode.chain.nonEmpty &&
+        episode.chain == replay.take(episode.chain.size) &&
+        event.plyOffset == episode.chain.size - 1 &&
         line.lineReplaySteps
-          .lift(episode.eventPlyOffset)
-          .exists(step => eventMove.exists(EvidenceRef.sameMove(step.moveUci, _)))
+          .lift(event.plyOffset)
+          .exists(step => event.sameOccurrence(event.plyOffset, step.moveUci))
     exactReplayPrefix &&
-      causalPathStartsAtRoot(episode, rootMove)
+      causalPathStartsAtRoot(episode)
 
   private def causalPathStartsAtRoot(
-      episode: RootOwnedCausalEpisode,
-      rootMove: String
+      episode: RootOwnedCausalEpisode
   ): Boolean =
-    val chain = episode.chainMoves.map(EvidenceRef.normalizeMove)
-    val eventMove = chain.last
-    val indexedMoves = chain.zipWithIndex
-    def occursBefore(causeMove: String, effectMove: String): Boolean =
-      indexedMoves.exists { case (cause, causeIndex) =>
-        EvidenceRef.sameMove(cause, causeMove) &&
-          indexedMoves.exists { case (effect, effectIndex) =>
-            effectIndex > causeIndex && EvidenceRef.sameMove(effect, effectMove)
-          }
-      }
+    val root = episode.chain.head
+    val event = episode.eventOccurrence
     val transports = episode.links.filter(link =>
       link.kind == RootCausalLinkKind.MaterialActorContinuation ||
         link.kind == RootCausalLinkKind.MaterialCaptureResponse
     )
-    def reachesEvent(currentMove: String, visited: Set[String]): Boolean =
-      EvidenceRef.sameMove(currentMove, eventMove) ||
+    def reachesEvent(
+        current: LineMoveOccurrence,
+        visited: Set[LineMoveOccurrence]
+    ): Boolean =
+      current == event ||
         transports.exists(link =>
-          EvidenceRef.sameMove(link.causeMove, currentMove) &&
-            occursBefore(link.causeMove, link.effectMove) &&
-            !visited(EvidenceRef.normalizeMove(link.effectMove)) &&
+          link.cause == current &&
+            !visited(link.effect) &&
             reachesEvent(
-              link.effectMove,
-              visited + EvidenceRef.normalizeMove(link.effectMove)
+              link.effect,
+              visited + link.effect
             )
         )
 
     episode.links.exists { link =>
-      val rootSeed = EvidenceRef.sameMove(link.causeMove, rootMove)
+      val rootSeed = link.cause == root
       link.kind match
         case RootCausalLinkKind.ImmediateRootAction =>
-          chain.size == 1 && rootSeed &&
-            EvidenceRef.sameMove(link.effectMove, rootMove)
+          episode.chain.size == 1 && rootSeed && link.effect == root && event == root
         case RootCausalLinkKind.ContinuousLineAccess |
             RootCausalLinkKind.ForcedCaptureResponse |
-            RootCausalLinkKind.ForcedCheckResponse |
             RootCausalLinkKind.RootActorCaptured =>
           rootSeed &&
-            occursBefore(link.causeMove, link.effectMove) &&
             reachesEvent(
-              link.effectMove,
-              Set(EvidenceRef.normalizeMove(link.effectMove))
+              link.effect,
+              Set(link.effect)
             )
         case RootCausalLinkKind.RootActorContinuation |
             RootCausalLinkKind.MaterialActorContinuation |
@@ -593,7 +584,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
         )
       case LineConsequenceKind.ImmediateReplyCheck | LineConsequenceKind.Mate |
           LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow |
-          LineConsequenceKind.Promotion | LineConsequenceKind.PromotionRace =>
+          LineConsequenceKind.Promotion =>
         Some(DirectCausalChange.Occurred)
       case LineConsequenceKind.DrawResource => Some(DirectCausalChange.Maintained)
       case LineConsequenceKind.ForcedTheme | LineConsequenceKind.Sacrifice => None

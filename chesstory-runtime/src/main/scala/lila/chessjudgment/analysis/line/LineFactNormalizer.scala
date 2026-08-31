@@ -195,7 +195,9 @@ object LineFactNormalizer:
     val outcome =
       facts.line.moves.zipWithIndex.flatMap { case (move, index) =>
         val normalized = PrincipalVariationEvidence.normalizeUci(move.uci)
-        val prefix = facts.line.moves.take(index + 1).map(_.uci)
+        val prefix = facts.line.moves.take(index + 1).zipWithIndex.map { case (proofMove, plyOffset) =>
+          LineMoveOccurrence(PrincipalVariationEvidence.normalizeUci(proofMove.uci), plyOffset)
+        }
         replay.replaySteps.lift(index).toList.flatMap { step =>
           replay.verticalRelationOccurrences(
             step,
@@ -219,7 +221,7 @@ object LineFactNormalizer:
                 LineConsequenceKind.Mate,
                 prefix,
                 directCauseProjectionEligible = true,
-                eventMove = Some(normalized),
+                eventOccurrence = Some(LineMoveOccurrence(normalized, index)),
                 rootMove = rootMove,
                 rootSide = rootSide,
                 beneficiary = Some(mover.side)
@@ -231,7 +233,7 @@ object LineFactNormalizer:
                 LineConsequenceKind.DrawResource,
                 prefix,
                 directCauseProjectionEligible = true,
-                eventMove = Some(normalized),
+                eventOccurrence = Some(LineMoveOccurrence(normalized, index)),
                 rootMove = rootMove,
                 rootSide = rootSide
               )
@@ -246,22 +248,24 @@ object LineFactNormalizer:
           kind =
             if theme.id == ForcedLineTruth.ImmediateReplyCheckId then LineConsequenceKind.ImmediateReplyCheck
             else LineConsequenceKind.ForcedTheme,
-          lineMoves = theme.lineMoves,
+          proofOccurrences = theme.lineMoves.zipWithIndex.map { case (move, plyOffset) =>
+            LineMoveOccurrence(PrincipalVariationEvidence.normalizeUci(move), plyOffset)
+          },
           directCauseProjectionEligible = false,
-          eventMove = theme.lineMoves.headOption,
+          eventOccurrence = theme.lineMoves.headOption.map(move =>
+            LineMoveOccurrence(PrincipalVariationEvidence.normalizeUci(move), 0)
+          ),
           rootMove = rootMove,
           rootSide = rootSide
         )
       )
     val material =
       materialSummary.toList.flatMap { summary =>
-        val indexedPromotionMoves = summary.events
-          .filter(_.promotionGainCp > 0)
-          .map(event => event.plyOffset -> event.moveUci)
-        val indexedProofMoves = (
-          summary.captures.map(capture => capture.plyOffset -> capture.moveUci) ++ indexedPromotionMoves
-        ).sortBy(_._1)
-        val proofMoves = indexedProofMoves.map(_._2).distinct
+        val indexedProofOccurrences = summary.events
+          .filter(event => event.capture.nonEmpty || event.promotionGainCp > 0)
+          .map(event =>
+            LineMoveOccurrence(EvidenceRef.normalizeMove(event.moveUci), event.plyOffset)
+          )
         val sacrificeOccurrences = offeredSacrificeOccurrences(replay, summary, rootMove)
         val materialEvents = materialOutcomeEvents(summary)
         val lastingMaterialOutcome = lastingMaterialOutcomeFor(materialEvents, summary)
@@ -274,27 +278,31 @@ object LineFactNormalizer:
         val materialLossOutcome = lastingMaterialOutcome
           .filter(_.event.side != summary.sideToMove)
           .flatMap(_.toRootOwnedOutcome)
-        val materialGainEventMove = materialGainEvent.map(_.moveUci)
-        val materialLossEventMove = materialLossEvent.map(_.moveUci)
+        val materialGainEventOccurrence = materialGainEvent.map(event =>
+          LineMoveOccurrence(EvidenceRef.normalizeMove(event.moveUci), event.plyOffset)
+        )
+        val materialLossEventOccurrence = materialLossEvent.map(event =>
+          LineMoveOccurrence(EvidenceRef.normalizeMove(event.moveUci), event.plyOffset)
+        )
         val materialGainRootMove =
           rootMove.filter(_ => materialGainEvent.exists(_.plyOffset == 0))
         val materialLossRootMove =
           rootMove.filter(_ => materialLossEvent.exists(_.plyOffset == 0))
-        def proofMovesThrough(plyOffset: Int): List[String] =
-          indexedProofMoves.takeWhile(_._1 <= plyOffset).map(_._2).distinct
-        def proofMovesFrom(event: Option[MaterialOutcomeEvent]): List[String] =
+        def proofOccurrencesThrough(plyOffset: Int): List[LineMoveOccurrence] =
+          indexedProofOccurrences.takeWhile(_.plyOffset <= plyOffset)
+        def proofOccurrencesFrom(event: Option[MaterialOutcomeEvent]): List[LineMoveOccurrence] =
           event
-            .map(materialEvent => proofMovesThrough(materialEvent.plyOffset))
+            .map(materialEvent => proofOccurrencesThrough(materialEvent.plyOffset))
             .getOrElse(Nil)
-        val materialGainProofMoves = proofMovesFrom(materialGainEvent)
-        val materialLossProofMoves = proofMovesFrom(materialLossEvent)
+        val materialGainProofOccurrences = proofOccurrencesFrom(materialGainEvent)
+        val materialLossProofOccurrences = proofOccurrencesFrom(materialLossEvent)
         val materialResultConsequences = List(
           Option.when(summary.hasDirectCauseProjectionEligibleMaterialGain || summary.hasUnrecoveredPawnGainForMover)(
             LineConsequence(
               LineConsequenceKind.MaterialGain,
-              materialGainProofMoves,
+              materialGainProofOccurrences,
               directCauseProjectionEligible = summary.hasDirectCauseProjectionEligibleMaterialGain,
-              eventMove = materialGainEventMove,
+              eventOccurrence = materialGainEventOccurrence,
               rootMove = materialGainRootMove,
               rootSide = Some(summary.sideToMove),
               beneficiary = Some(summary.sideToMove),
@@ -304,9 +312,9 @@ object LineFactNormalizer:
           Option.when(summary.hasDirectCauseProjectionEligibleMaterialLoss || summary.hasUnrecoveredPawnLossForMover)(
             LineConsequence(
               LineConsequenceKind.MaterialLoss,
-              materialLossProofMoves,
+              materialLossProofOccurrences,
               directCauseProjectionEligible = summary.hasDirectCauseProjectionEligibleMaterialLoss,
-              eventMove = materialLossEventMove,
+              eventOccurrence = materialLossEventOccurrence,
               rootMove = materialLossRootMove,
               rootSide = Some(summary.sideToMove),
               beneficiary = Some(!summary.sideToMove),
@@ -318,9 +326,9 @@ object LineFactNormalizer:
           summary.captures.filter(_.recapture).map(capture =>
               LineConsequence(
                 LineConsequenceKind.RecaptureSequence,
-                proofMovesThrough(capture.plyOffset),
+                proofOccurrencesThrough(capture.plyOffset),
                 directCauseProjectionEligible = true,
-                eventMove = Some(capture.moveUci),
+                eventOccurrence = Some(LineMoveOccurrence(EvidenceRef.normalizeMove(capture.moveUci), capture.plyOffset)),
                 rootMove = rootMove,
                 rootSide = Some(summary.sideToMove),
                 beneficiary = Some(capture.side)
@@ -331,9 +339,13 @@ object LineFactNormalizer:
             val acceptance = occurrence.acceptance
             LineConsequence(
               LineConsequenceKind.Sacrifice,
-              replay.replaySteps.take(acceptance.plyOffset + 1).map(_.moveUci),
+              replay.replaySteps.take(acceptance.plyOffset + 1).zipWithIndex.map { case (step, plyOffset) =>
+                LineMoveOccurrence(EvidenceRef.normalizeMove(step.moveUci), plyOffset)
+              },
               directCauseProjectionEligible = true,
-              eventMove = Some(acceptance.moveUci),
+              eventOccurrence = Some(
+                LineMoveOccurrence(EvidenceRef.normalizeMove(acceptance.moveUci), acceptance.plyOffset)
+              ),
               rootMove = rootMove,
               rootSide = Some(summary.sideToMove),
               beneficiary = Some(acceptance.side),
@@ -343,23 +355,21 @@ object LineFactNormalizer:
         val recoveryConsequences = summary.durableRecoveryCaptureForMover.toList.map(capture =>
             LineConsequence(
               LineConsequenceKind.RecoveryWindow,
-              proofMovesThrough(capture.plyOffset),
+              proofOccurrencesThrough(capture.plyOffset),
               directCauseProjectionEligible = true,
-              eventMove = Some(capture.moveUci),
+              eventOccurrence = Some(LineMoveOccurrence(EvidenceRef.normalizeMove(capture.moveUci), capture.plyOffset)),
               rootMove = rootMove,
               rootSide = Some(summary.sideToMove),
               beneficiary = Some(summary.sideToMove)
             )
-          )
+        )
         val promotionEvents = materialEvents.filter(_.promotion)
-        val promotionRace = promotionEvents.map(_.side).distinct.size > 1
         val promotionConsequences = promotionEvents.map(event =>
             LineConsequence(
-              if promotionRace then LineConsequenceKind.PromotionRace
-              else LineConsequenceKind.Promotion,
-              proofMovesThrough(event.plyOffset),
+              LineConsequenceKind.Promotion,
+              proofOccurrencesThrough(event.plyOffset),
               directCauseProjectionEligible = true,
-              eventMove = Some(event.moveUci),
+              eventOccurrence = Some(LineMoveOccurrence(EvidenceRef.normalizeMove(event.moveUci), event.plyOffset)),
               rootMove = rootMove.filter(_ => event.plyOffset == 0),
               rootSide = Some(summary.sideToMove),
               beneficiary = Some(event.side)

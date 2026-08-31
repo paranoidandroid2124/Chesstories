@@ -719,7 +719,7 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       "requirement failed: one causal replay step cannot have multiple observation producers"
     )
 
-  test("parallel exact response-continuation proofs remain separate causal paths"):
+  test("a check response is not promoted beside the exact capture continuation"):
     val exactFixture = fixture(
       "5rk1/5p2/8/8/2B5/1Q6/8/4K3 w - - 0 1",
       List("c4f7", "f8f7", "b3f7")
@@ -781,7 +781,7 @@ class PassedPawnResultProofTest extends munit.FunSuite:
           plyOffset = 2
         )
       )
-    assertEquals(dependencies.size, 2)
+    assertEquals(dependencies.size, 1)
     assert(dependencies.forall(_.enablesContinuation))
     val paths = PassedPawnResultEpisode(
       root,
@@ -789,13 +789,12 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       dependencies,
       List(reply)
     ).enablingDependencyPathsTo(result)
-    assertEquals(paths.size, 2)
+    assertEquals(paths.size, 1)
     assertEquals(
       paths.flatMap(_.headOption).map(_.proof).collect {
         case PassedPawnResultDependencyProof.ResponseContinuation(_: CaptureResponseFollowUpTrajectory) => "capture"
-        case PassedPawnResultDependencyProof.ResponseContinuation(_: CheckResponseFollowUpTrajectory)   => "check"
       }.toSet,
-      Set("capture", "check")
+      Set("capture")
     )
 
   test("a reply-backed passed-pawn result dependency retains its exact L1 occurrence owners in the result premise"):

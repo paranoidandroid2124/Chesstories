@@ -3410,7 +3410,6 @@ function standardCauseKind(value: unknown): value is string {
     value === 'tactical_refutation_of_played' ||
     value === 'candidate_tactical_liability' ||
     value === 'recapture_recovery_window' ||
-    value === 'conversion_secured' ||
     value === 'draw_resource' ||
     value === 'king_forcing' ||
     value === 'material_swing'

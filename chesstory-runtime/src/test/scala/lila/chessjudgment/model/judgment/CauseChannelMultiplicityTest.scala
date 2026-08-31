@@ -9,7 +9,6 @@ class CauseChannelMultiplicityTest extends munit.FunSuite:
     val exactOwners = List(
       TacticalMechanismKind.MaterialGain -> RelativeCauseKind.MaterialSwing,
       TacticalMechanismKind.RecaptureChoice -> RelativeCauseKind.RecaptureRecoveryWindow,
-      TacticalMechanismKind.PawnPromotion -> RelativeCauseKind.ConversionSecured,
       TacticalMechanismKind.KingForcing -> RelativeCauseKind.KingForcing
     )
     assertEquals(
@@ -17,6 +16,10 @@ class CauseChannelMultiplicityTest extends munit.FunSuite:
         mechanism -> RelativeCauseDraftPlanner.endpointPositiveMechanismCauseKind(mechanism)
       },
       exactOwners.map { case (mechanism, cause) => mechanism -> Some(cause) }
+    )
+    assertEquals(
+      RelativeCauseDraftPlanner.endpointPositiveMechanismCauseKind(TacticalMechanismKind.PawnPromotion),
+      None
     )
 
   private val position = PositionNodeRef(

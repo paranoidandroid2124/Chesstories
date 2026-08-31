@@ -719,7 +719,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         typed_passed_pawn_result_under_standard_kind = copy.deepcopy(ready)
         typed_passed_pawn_result_under_standard_kind["move_commentary"]["causal_explanations"][0]["facets"][0][
             "kind"
-        ] = "conversion_secured"
+        ] = "material_swing"
         invalid_documents.append(typed_passed_pawn_result_under_standard_kind)
 
         passed_pawn_result_without_closed_reply_branch = copy.deepcopy(ready)

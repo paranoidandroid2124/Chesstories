@@ -649,7 +649,8 @@ object DirectCauseProofSegment:
       line: LineFactEvidence,
       episode: RootOwnedCausalEpisode
   ): Option[DirectCauseProofSegment] =
-    val replayPrefix = line.lineReplaySteps.take(episode.eventPlyOffset + 1)
+    val eventOccurrence = episode.eventOccurrence
+    val replayPrefix = line.lineReplaySteps.take(eventOccurrence.plyOffset + 1)
     val rootPly = replayPrefix.headOption.map(_.ply)
     val exactReplay = replayPrefix.flatMap(step =>
       for
@@ -657,20 +658,22 @@ object DirectCauseProofSegment:
         move <- exactMove(step.moveUci)
       yield (step.ply - root) -> move
     )
-    val exactChain = episode.chainMoves.flatMap(exactMove)
-    val replayMoves = exactReplay.map(_._2)
+    val exactChain = episode.chain.flatMap(occurrence =>
+      exactMove(occurrence.moveUci).map(occurrence.plyOffset -> _)
+    )
     Option
       .when(
         episode.line == line.line &&
-          episode.eventPlyOffset >= 0 &&
-          replayPrefix.size == episode.eventPlyOffset + 1 &&
+          replayPrefix.size == eventOccurrence.plyOffset + 1 &&
           exactReplay.size == replayPrefix.size &&
-          exactChain.size == episode.chainMoves.size &&
+          exactChain.size == episode.chain.size &&
           exactReplay.size == exactChain.size &&
-          exactReplay.map(_._1) == (0 to episode.eventPlyOffset).toList &&
-          replayMoves.zip(exactChain).forall((left, right) => EvidenceRef.sameMove(left, right)) &&
-          replayMoves.headOption.exists(EvidenceRef.sameMove(_, episode.actor.moveUci)) &&
-          episode.consequence.eventMove.forall(move => replayMoves.lastOption.exists(EvidenceRef.sameMove(_, move)))
+          exactReplay.map(_._1) == (0 to eventOccurrence.plyOffset).toList &&
+          exactReplay.zip(exactChain).forall { case ((leftPly, leftMove), (rightPly, rightMove)) =>
+            leftPly == rightPly && EvidenceRef.sameMove(leftMove, rightMove)
+          } &&
+          exactReplay.headOption.exists((_, move) => EvidenceRef.sameMove(move, episode.actor.moveUci)) &&
+          exactReplay.lastOption.exists((ply, move) => episode.consequence.eventMatches(ply, move))
       )(
         DirectCauseProofSegment(
           DirectCauseProofTerminalRelation.ProducesLineConsequence,
@@ -1239,7 +1242,7 @@ object EvidenceObjectBinding:
         Some(ComparisonEndpointLineProofFamily.LineEpisodeMate)
       case LineConsequenceKind.ImmediateReplyCheck | LineConsequenceKind.DrawResource |
           LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow |
-          LineConsequenceKind.Promotion | LineConsequenceKind.PromotionRace =>
+          LineConsequenceKind.Promotion =>
         Some(ComparisonEndpointLineProofFamily.LineEpisodeQualitative)
       case _ => None
 
@@ -1790,12 +1793,12 @@ object EvidenceObjectBinding:
         episodeSource.position.fen,
         rootEventSource.position.fen
       ) &&
-      episode.eventPlyOffset == event.plyOffset &&
+      episode.eventOccurrence.plyOffset == event.plyOffset &&
       event.plyOffset == 0 &&
       episode.consequence.rootMove.exists(
         EvidenceRef.sameMove(_, rootEventLine.line.rootMove)
       ) &&
-      episode.consequence.eventMove.exists(EvidenceRef.sameMove(_, event.moveUci)) &&
+      episode.consequence.eventMatches(event.plyOffset, event.moveUci) &&
       sameExactReplayEvent(episodeLine, episode, rootEventLine, event) &&
       sameConcreteObjects(episodeBinding.actor, rootEventBinding.actor) &&
       sameConcreteObjects(episodeBinding.target, rootEventBinding.target) &&
@@ -1848,7 +1851,7 @@ object EvidenceObjectBinding:
       event: LineMoveEvent
   ): Boolean =
     (for
-      episodeStep <- episodeLine.lineReplaySteps.lift(episode.eventPlyOffset)
+      episodeStep <- episodeLine.lineReplaySteps.lift(episode.eventOccurrence.plyOffset)
       eventStep <- eventLine.lineReplaySteps.lift(event.plyOffset)
     yield
       EvidenceRef.sameMove(episodeStep.moveUci, eventStep.moveUci) &&
@@ -2380,41 +2383,45 @@ object EvidenceObjectBinding:
       episode: RootOwnedCausalEpisode
   ): EvidenceObjectBinding =
     val target = episodeTargetObjects(payload, episode)
+    val event = episode.eventOccurrence
     EvidenceObjectBinding(
       source = source,
       actor = rootActorObjects(episode.actor),
       target = target,
       mechanism = episode.links.flatMap(link => objectOf(EvidenceObjectKind.Mechanism, link.kind.toString)),
       consequence = objectOf(EvidenceObjectKind.Consequence, episode.consequence.kind.toString),
-      witness = episode.chainMoves.flatMap(move => objectOf(EvidenceObjectKind.Move, move)) ++
+      witness = episode.chain.flatMap(occurrence => objectOf(EvidenceObjectKind.Move, occurrence.moveUci)) ++
         episode.links.flatMap(link => objectOf(EvidenceObjectKind.Square, link.anchor.key)) ++
         lineObject(episode.line),
       line = Some(episode.line),
-      horizon = Some(s"ply:${episode.eventPlyOffset}")
+      horizon = Some(s"ply:${event.plyOffset}"),
+      lineOccurrence = payload.lineReplaySteps.lift(event.plyOffset)
     )
 
   private def episodeTargetObjects(
       payload: LineFactEvidence,
       episode: RootOwnedCausalEpisode
   ): List[ConcreteChessObject] =
+    val eventOccurrence = episode.eventOccurrence
     val square = objectOf(EvidenceObjectKind.Square, episode.target.key)
     val role = episode.consequence.kind match
       case LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss |
           LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow =>
         payload.lineReplaySteps
-          .lift(episode.eventPlyOffset)
-          .flatMap(step => payload.uniqueMaterialCaptureAt(episode.eventPlyOffset, step.moveUci))
+          .lift(eventOccurrence.plyOffset)
+          .filter(step => eventOccurrence.sameOccurrence(eventOccurrence.plyOffset, step.moveUci))
+          .flatMap(step => payload.uniqueMaterialCaptureAt(eventOccurrence.plyOffset, step.moveUci))
           .toList
           .flatMap(capture => roleObject(Some(capture.capturedRole)))
       case LineConsequenceKind.ImmediateReplyCheck | LineConsequenceKind.Mate |
           LineConsequenceKind.DrawResource =>
         roleObject(Some(EvidencePieceRole(King.name)))
-      case LineConsequenceKind.Promotion | LineConsequenceKind.PromotionRace =>
+      case LineConsequenceKind.Promotion =>
         payload.lineEvents
           .find(event =>
-            event.plyOffset == episode.eventPlyOffset &&
+            event.plyOffset == eventOccurrence.plyOffset &&
               event.kind == LineEventKind.Promotion &&
-              episode.chainMoves.lastOption.exists(EvidenceRef.sameMove(_, event.moveUci))
+              eventOccurrence.sameOccurrence(event.plyOffset, event.moveUci)
           )
           .toList
           .flatMap(event => roleObject(event.targetRole))
@@ -2666,26 +2673,13 @@ object EvidenceObjectBinding:
       }
     val consequenceBindings =
       payload.directCauseProjectionEligibleConsequences.flatMap { consequence =>
-        val lineMoves = consequence.lineMoves.map(normalize)
         val ownedSacrificeOccurrence = consequence.sacrificeOccurrence.filter(_ =>
           consequence.kind == LineConsequenceKind.Sacrifice &&
             consequence.rootMove.exists(root => payload.rootMove.exists(EvidenceRef.sameMove(_, root)))
         )
-        val eventMove = ownedSacrificeOccurrence
-          .map(_.acceptance.moveUci)
-          .orElse(consequence.eventMove)
-          .orElse(lineMoves.headOption)
-          .map(normalize)
-        val consequenceMoves = (lineMoves ++ eventMove.toList).distinct
-        val eventActor = ownedSacrificeOccurrence
-          .flatMap(occurrence =>
-            exactLineActorAt(
-              payload,
-              occurrence.acceptance.plyOffset,
-              occurrence.acceptance.moveUci
-            )
-          )
-          .orElse(eventMove.flatMap(uniqueLineActorFor(payload, _)))
+        val eventActor = consequence.eventOccurrence.flatMap(occurrence =>
+          exactLineActorAt(payload, occurrence.plyOffset, occurrence.moveUci)
+        )
         val sacrificeCaptureTargets =
           ownedSacrificeOccurrence.toList.flatMap { occurrence =>
             val capture = occurrence.acceptance
@@ -2694,16 +2688,21 @@ object EvidenceObjectBinding:
               objectOf(EvidenceObjectKind.PassedPawnSubject, s"material-sacrifice:${capture.square.key}")
           }
         val lineMoveWitness =
-          consequenceMoves.flatMap(move =>
-            exactLineActorsFor(payload, move).flatMap(actor =>
-              objectOf(EvidenceObjectKind.Move, move) ++ actorTargetSquare(actor)
+          consequence.proofOccurrences.flatMap(occurrence =>
+            exactLineActorAt(payload, occurrence.plyOffset, occurrence.moveUci).toList.flatMap(actor =>
+              objectOf(EvidenceObjectKind.Move, occurrence.moveUci) ++ actorTargetSquare(actor)
             )
           )
         val lineEventWitness =
           payload.lineEvents
-            .filter(event => consequenceMoves.contains(normalize(event.moveUci)))
+            .filter(event => consequence.hasProofOccurrence(event.plyOffset, event.moveUci))
             .flatMap(event => squareObject(event.square) ++ roleObject(event.pieceRole) ++ roleObject(event.targetRole))
-        eventActor.toList.map(actor =>
+        (for
+          occurrence <- consequence.eventOccurrence.toList
+          actor <- eventActor.toList
+          step <- payload.lineReplaySteps.lift(occurrence.plyOffset).toList
+          if occurrence.sameOccurrence(occurrence.plyOffset, step.moveUci)
+        yield
           EvidenceObjectBinding(
             source = ref,
             actor = rootActorObjects(actor),
@@ -2711,7 +2710,9 @@ object EvidenceObjectBinding:
             mechanism = objectOf(EvidenceObjectKind.Mechanism, consequence.kind.toString),
             consequence = objectOf(EvidenceObjectKind.Consequence, consequence.kind.toString),
             witness = lineMoveWitness ++ lineEventWitness ++ lineObject(payload.line),
-            line = Some(payload.line)
+            line = Some(payload.line),
+            horizon = Some(s"ply:${occurrence.plyOffset}"),
+            lineOccurrence = Some(step)
           )
         )
       }
@@ -2970,26 +2971,6 @@ object EvidenceObjectBinding:
       legal <- replay.legalStep(step)
       actor <- RootCausalActor.fromLegalStep(step.moveUci, legal)
     yield actor
-
-  private def exactLineActorsFor(
-      payload: LineFactEvidence,
-      moveUci: String
-  ): List[RootCausalActor] =
-    payload.lineReplaySteps.zipWithIndex.flatMap { case (step, plyOffset) =>
-      Option
-        .when(EvidenceRef.sameMove(step.moveUci, moveUci))(
-          exactLineActorAt(payload, plyOffset, step.moveUci)
-        )
-        .flatten
-    }
-
-  private def uniqueLineActorFor(
-      payload: LineFactEvidence,
-      moveUci: String
-  ): Option[RootCausalActor] =
-    exactLineActorsFor(payload, moveUci).distinct match
-      case exact :: Nil => Some(exact)
-      case _            => None
 
   private def actorTargetSquare(actor: RootCausalActor): List[ConcreteChessObject] =
     objectOf(EvidenceObjectKind.Square, actor.to.key)
@@ -4789,98 +4770,6 @@ object CaptureResponseFollowUpTrajectory:
       movement.to.key.equalsIgnoreCase(legal.move.dest.key) &&
       movement.beforeRole.name.equalsIgnoreCase(legal.move.piece.role.name)
 
-final case class CheckResponseFollowUpTrajectory private (
-    triggerStep: LineReplayStep,
-    replyStep: LineReplayStep,
-    followUpStep: LineReplayStep,
-    interveningSteps: List[LineReplayStep],
-    triggerRole: EvidencePieceRole,
-    responderRole: EvidencePieceRole,
-    followUpRole: EvidencePieceRole,
-    replyFrom: EvidenceSquare,
-    replyTo: EvidenceSquare,
-    followUpFrom: EvidenceSquare,
-    followUpTo: EvidenceSquare,
-    plyOffset: Int,
-    private[chessjudgment] val relationOccurrenceBinding: ReplayVerticalRelationOccurrenceBinding
-) extends CausalResponseContinuationTrajectory:
-  require(
-    relationOccurrenceBinding.step == triggerStep &&
-      relationOccurrenceBinding.contract == VerticalRelationContractKind.CreatedCheckResponseInventory &&
-      relationOccurrenceBinding.result.kind == RelationFactKind.CreatedCheckResponseInventory,
-    "a check-response continuation needs its exact L1 response inventory occurrence"
-  )
-  private[chessjudgment] def checkInventoryKey: DerivedRelationResultKey =
-    relationOccurrenceBinding.result
-  def involvedRoles: List[EvidencePieceRole] = List(triggerRole, responderRole, followUpRole).distinct
-
-object CheckResponseFollowUpTrajectory:
-  private[chessjudgment] def find(
-      triggerStep: LineReplayStep,
-      replyStep: LineReplayStep,
-      followUpStep: LineReplayStep,
-      interveningSteps: List[LineReplayStep],
-      replay: CanonicalLineReplay
-  ): Option[CheckResponseFollowUpTrajectory] =
-    val candidates = for
-      triggerLegal <- replay.legalStep(triggerStep).toList
-      replyLegal <- replay.legalStep(replyStep).toList
-      followUpLegal <- replay.legalStep(followUpStep).toList
-      if interveningSteps == List(replyStep) && followUpStep.ply - triggerStep.ply == 2
-      if replyLegal.move.piece.color == !triggerLegal.move.piece.color
-      if followUpLegal.move.piece.color == triggerLegal.move.piece.color
-      (checkOccurrence, _) <- replay.exactCheckResponseOccurrenceMembership(triggerStep, replyStep).toList
-    yield CheckResponseFollowUpTrajectory(
-      triggerStep = triggerStep,
-      replyStep = replyStep,
-      followUpStep = followUpStep,
-      interveningSteps = interveningSteps,
-      triggerRole = EvidencePieceRole(triggerLegal.move.piece.role.name),
-      responderRole = EvidencePieceRole(replyLegal.move.piece.role.name),
-      followUpRole = EvidencePieceRole(followUpLegal.move.piece.role.name),
-      replyFrom = EvidenceSquare(replyLegal.move.orig.key),
-      replyTo = EvidenceSquare(replyLegal.move.dest.key),
-      followUpFrom = EvidenceSquare(followUpLegal.move.orig.key),
-      followUpTo = EvidenceSquare(followUpLegal.move.dest.key),
-      plyOffset = 2,
-      relationOccurrenceBinding = ReplayVerticalRelationOccurrenceBinding.from(checkOccurrence)
-    )
-    candidates match
-      case exact :: Nil => Some(exact)
-      case _            => None
-
-  /** Root-owned check-response seed: the checking actor itself must survive
-    * the forced reply and perform the follow-up. Cross-piece continuations can
-    * still be useful result diagnostics, but need a separate reply-enabled
-    * geometry proof before they can own a public causal episode.
-    */
-  private[chessjudgment] def findRootActorContinuation(
-      triggerStep: LineReplayStep,
-      replyStep: LineReplayStep,
-      followUpStep: LineReplayStep,
-      interveningSteps: List[LineReplayStep],
-      replay: CanonicalLineReplay
-  ): Option[CheckResponseFollowUpTrajectory] =
-    find(triggerStep, replyStep, followUpStep, interveningSteps, replay)
-      .filter(rootActorContinues(_, replay))
-
-  private def rootActorContinues(
-      trajectory: CheckResponseFollowUpTrajectory,
-      replay: CanonicalLineReplay
-  ): Boolean =
-    replay.legalStep(trajectory.triggerStep).exists(trigger =>
-      LineObjectTrajectory
-        .findAll(
-          trajectory.triggerStep,
-          trajectory.interveningSteps :+ trajectory.followUpStep,
-          replay
-        )
-        .exists(route =>
-          route.futureStep == trajectory.followUpStep &&
-            route.rootFrom.key.equalsIgnoreCase(trigger.move.orig.key)
-        )
-    )
-
 enum LineEventKind:
   case Capture
   case Recapture
@@ -4913,7 +4802,6 @@ enum LineConsequenceKind:
   case RecoveryWindow
   case Sacrifice
   case Promotion
-  case PromotionRace
 
 object LineConsequenceKind:
 
@@ -4923,7 +4811,7 @@ object LineConsequenceKind:
       case LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss |
           LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow |
           LineConsequenceKind.ImmediateReplyCheck | LineConsequenceKind.Mate |
-          LineConsequenceKind.DrawResource | LineConsequenceKind.Promotion | LineConsequenceKind.PromotionRace =>
+          LineConsequenceKind.DrawResource | LineConsequenceKind.Promotion =>
         true
       case LineConsequenceKind.ForcedTheme | LineConsequenceKind.Sacrifice =>
         false
@@ -4937,17 +4825,62 @@ enum LineMaterialOutcomeSignal:
   case UnrecoveredPawnLoss
   case RecoveryWindow
 
+final case class LineMoveOccurrence(
+    moveUci: String,
+    plyOffset: Int
+):
+  require(
+    moveUci.matches("^[a-h][1-8][a-h][1-8][qrbn]?$") &&
+      moveUci == EvidenceRef.normalizeMove(moveUci),
+    "a line move occurrence needs one canonical UCI move"
+  )
+  require(plyOffset >= 0, "a line move occurrence needs a root-relative ply")
+
+  def stableKey: String = s"$plyOffset:$moveUci"
+
+  def sameOccurrence(otherPlyOffset: Int, otherMoveUci: String): Boolean =
+    plyOffset == otherPlyOffset && EvidenceRef.sameMove(moveUci, otherMoveUci)
+
 final case class LineConsequence(
     kind: LineConsequenceKind,
-    lineMoves: List[String],
+    proofOccurrences: List[LineMoveOccurrence],
     directCauseProjectionEligible: Boolean,
-    eventMove: Option[String] = None,
+    eventOccurrence: Option[LineMoveOccurrence] = None,
     rootMove: Option[String] = None,
     rootSide: Option[Color] = None,
     beneficiary: Option[Color] = None,
     sacrificeOccurrence: Option[LineSacrificeOccurrence] = None,
     materialOutcome: Option[RootOwnedMaterialOutcome] = None
 ):
+  require(
+    proofOccurrences.map(_.stableKey).distinct.size == proofOccurrences.size &&
+      proofOccurrences.map(_.plyOffset).distinct.size == proofOccurrences.size &&
+      proofOccurrences.map(_.plyOffset) == proofOccurrences.map(_.plyOffset).sorted,
+    "line consequence proof occurrences must be exact, unique, and ordered"
+  )
+  require(
+    eventOccurrence.forall(event =>
+      proofOccurrences.exists(_.sameOccurrence(event.plyOffset, event.moveUci))
+    ),
+    "a line consequence event must belong to its exact proof occurrence path"
+  )
+  require(
+    !directCauseProjectionEligible || eventOccurrence.nonEmpty,
+    "a direct line consequence needs an exact event occurrence"
+  )
+  require(
+    !directCauseProjectionEligible || eventOccurrence.exists(event =>
+      proofOccurrences.lastOption.exists(_.sameOccurrence(event.plyOffset, event.moveUci))
+    ),
+    "a direct line consequence event must terminate its proof occurrence path"
+  )
+
+  def hasProofOccurrence(plyOffset: Int, moveUci: String): Boolean =
+    proofOccurrences.exists(_.sameOccurrence(plyOffset, moveUci))
+
+  def eventMatches(plyOffset: Int, moveUci: String): Boolean =
+    eventOccurrence.exists(_.sameOccurrence(plyOffset, moveUci))
+
   def rootMoveMatched(rootMove: String): Boolean =
     this.rootMove.exists(move => EvidenceRef.sameMove(move, rootMove))
 
@@ -4960,11 +4893,9 @@ final case class LineConsequence(
 final case class LineConsequenceProfile(
     directCauseProjectionEligibleKinds: List[LineConsequenceKind],
     hasDirectCauseProjectionEligibleConsequence: Boolean,
-    hasConversionConsequence: Boolean,
     hasMaterialResult: Boolean,
     hasRecaptureRecovery: Boolean,
     hasSacrifice: Boolean,
-    hasPromotionRace: Boolean,
     hasMate: Boolean,
     hasDrawResource: Boolean
 )
@@ -5384,7 +5315,6 @@ enum RootCausalLinkKind:
   case RootActorContinuation
   case ContinuousLineAccess
   case ForcedCaptureResponse
-  case ForcedCheckResponse
   case RootActorCaptured
   case MaterialActorContinuation
   case MaterialCaptureResponse
@@ -5433,10 +5363,18 @@ object RootCausalActor:
 
 final case class RootCausalLink(
     kind: RootCausalLinkKind,
-    causeMove: String,
-    effectMove: String,
+    cause: LineMoveOccurrence,
+    effect: LineMoveOccurrence,
     anchor: EvidenceSquare
-)
+):
+  require(
+    cause.plyOffset <= effect.plyOffset,
+    "a root causal link cannot point backward in its line"
+  )
+  require(
+    kind == RootCausalLinkKind.ImmediateRootAction || cause.plyOffset < effect.plyOffset,
+    "only an immediate root action may link one occurrence to itself"
+  )
 
 final case class RootOwnedCausalEpisode private (
     line: LineNodeRef,
@@ -5444,11 +5382,29 @@ final case class RootOwnedCausalEpisode private (
     target: EvidenceSquare,
     links: List[RootCausalLink],
     consequence: LineConsequence,
-    eventPlyOffset: Int,
-    chainMoves: List[String]
+    chain: List[LineMoveOccurrence]
 ):
   require(links.nonEmpty, "a root-owned causal episode needs a verified causal link")
-  require(chainMoves.nonEmpty, "a root-owned causal episode needs a replay chain")
+  require(chain.nonEmpty, "a root-owned causal episode needs a replay chain")
+  require(
+    chain.map(_.plyOffset) == chain.indices.toList,
+    "a root-owned causal episode needs a contiguous root-relative replay chain"
+  )
+  require(
+    consequence.eventOccurrence.exists(event =>
+      chain.lastOption.exists(_.sameOccurrence(event.plyOffset, event.moveUci))
+    ),
+    "a root-owned causal episode must terminate at its consequence occurrence"
+  )
+  require(
+    links.forall(link =>
+      chain.exists(_.sameOccurrence(link.cause.plyOffset, link.cause.moveUci)) &&
+        chain.exists(_.sameOccurrence(link.effect.plyOffset, link.effect.moveUci))
+    ),
+    "a root causal link must connect exact occurrences in its episode chain"
+  )
+
+  def eventOccurrence: LineMoveOccurrence = chain.last
 
   def forcingTacticalResource(lineFacts: LineFactEvidence): Boolean =
     RootOwnedEffectPolicy.admitsLineEpisode(lineFacts, this) &&
@@ -5557,11 +5513,11 @@ final case class LineFactEvidence private[chessjudgment] (
   private[chessjudgment] def uniqueMaterialCaptureFor(
       episode: RootOwnedCausalEpisode
   ): Option[LineMaterialCapture] =
+    val event = episode.eventOccurrence
     for
-      replayStep <- replay.lift(episode.eventPlyOffset)
-      chainMove <- episode.chainMoves.lastOption
-      if EvidenceRef.sameMove(chainMove, replayStep.moveUci)
-      capture <- uniqueMaterialCaptureAt(episode.eventPlyOffset, replayStep.moveUci)
+      replayStep <- replay.lift(event.plyOffset)
+      if event.sameOccurrence(event.plyOffset, replayStep.moveUci)
+      capture <- uniqueMaterialCaptureAt(event.plyOffset, replayStep.moveUci)
     yield capture
   private[chessjudgment] def durableRecoveryCaptureForMover: Option[LineMaterialCapture] =
     material.flatMap(_.durableRecoveryCaptureForMover)
@@ -5583,14 +5539,14 @@ final case class LineFactEvidence private[chessjudgment] (
         occurrence.acceptance
     }
   def materialGainCapturesFor(side: Color): List[LineMaterialCapture] =
-    val lastingGainMoves = consequences.collect {
+    val lastingGainOccurrences = consequences.collect {
       case consequence
           if Set(LineConsequenceKind.MaterialGain, LineConsequenceKind.MaterialLoss)(consequence.kind) &&
             consequence.beneficiary.contains(side) =>
-        consequence.eventMove
+        consequence.eventOccurrence
     }.flatten
-    materialCaptures.filter(capture =>
-      capture.side == side && lastingGainMoves.exists(EvidenceRef.sameMove(_, capture.moveUci))
+    lastingGainOccurrences.flatMap(occurrence =>
+      uniqueMaterialCaptureAt(occurrence.plyOffset, occurrence.moveUci).filter(_.side == side)
     ).distinct
   def opponentResourcePunishmentCapturesFor(side: Color): List[LineMaterialCapture] =
     val immediatePawnPunishments = materialCaptures.filter(capture =>
@@ -5679,10 +5635,11 @@ final case class LineFactEvidence private[chessjudgment] (
         consequence.kind == LineConsequenceKind.ImmediateReplyCheck &&
         consequence.rootMoveMatched(rootMoveUci) &&
         consequence.rootSide.nonEmpty &&
-        (consequence.lineMoves match
-          case root :: replyMove :: _ =>
-            EvidenceRef.sameMove(root, rootMoveUci) &&
-              reply.exists(EvidenceRef.sameMove(_, replyMove))
+        (consequence.proofOccurrences match
+          case root :: replyOccurrence :: _ =>
+            root.sameOccurrence(0, rootMoveUci) &&
+              replyOccurrence.plyOffset == 1 &&
+              reply.exists(EvidenceRef.sameMove(_, replyOccurrence.moveUci))
           case _ =>
             false)
     )
@@ -5720,17 +5677,9 @@ final case class LineFactEvidence private[chessjudgment] (
     LineConsequenceProfile(
       directCauseProjectionEligibleKinds = kinds,
       hasDirectCauseProjectionEligibleConsequence = kinds.nonEmpty,
-      hasConversionConsequence = kinds.exists {
-        case LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow |
-            LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss |
-            LineConsequenceKind.Sacrifice =>
-          true
-        case _ =>
-          false
-      },
       hasMaterialResult = kinds.exists {
         case LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss |
-            LineConsequenceKind.Sacrifice | LineConsequenceKind.Promotion | LineConsequenceKind.PromotionRace =>
+            LineConsequenceKind.Sacrifice | LineConsequenceKind.Promotion =>
           true
         case _ =>
           false
@@ -5739,14 +5688,9 @@ final case class LineFactEvidence private[chessjudgment] (
         kind == LineConsequenceKind.RecaptureSequence || kind == LineConsequenceKind.RecoveryWindow
       ),
       hasSacrifice = kinds.contains(LineConsequenceKind.Sacrifice),
-      hasPromotionRace = kinds.exists(kind =>
-        kind == LineConsequenceKind.Promotion || kind == LineConsequenceKind.PromotionRace
-      ),
       hasMate = kinds.contains(LineConsequenceKind.Mate),
       hasDrawResource = kinds.contains(LineConsequenceKind.DrawResource)
     )
-  def hasConversionConsequence: Boolean =
-    consequenceProfile.hasConversionConsequence
   def hasMaterialConsequence: Boolean =
     consequenceProfile.hasMaterialResult
   def hasRecaptureRecoveryConsequence: Boolean =
@@ -5841,8 +5785,9 @@ object RootOwnedCausalEpisode:
               target = target,
               links = links,
               consequence = consequence,
-              eventPlyOffset = eventPlyOffset,
-              chainMoves = steps.take(eventPlyOffset + 1).map(_.moveUci)
+              chain = steps.take(eventPlyOffset + 1).zipWithIndex.map { case (step, plyOffset) =>
+                LineMoveOccurrence(EvidenceRef.normalizeMove(step.moveUci), plyOffset)
+              }
             )
           }
         }
@@ -5853,26 +5798,11 @@ object RootOwnedCausalEpisode:
       line: LineFactEvidence,
       consequence: LineConsequence
   ): List[Int] =
-    consequence.sacrificeOccurrence match
-      case Some(occurrence) if consequence.kind == LineConsequenceKind.Sacrifice =>
-        val acceptance = occurrence.acceptance
-        line.lineReplaySteps.lift(acceptance.plyOffset).toList.collect {
-          case step if EvidenceRef.sameMove(step.moveUci, acceptance.moveUci) => acceptance.plyOffset
-        }
-      case _ =>
-        val moves = line.lineReplayMoves
-        val explicitMove = consequence.eventMove.map(EvidenceRef.normalizeMove)
-        val proofTailMove = consequence.lineMoves.lastOption.map(EvidenceRef.normalizeMove)
-        val selectedMove = explicitMove.orElse(proofTailMove)
-        val materialOffsets = selectedMove.toList.flatMap(move =>
-          line.materialCaptures.collect {
-            case capture if EvidenceRef.sameMove(capture.moveUci, move) => capture.plyOffset
-          }
-        )
-        val replayOffsets = selectedMove.toList.flatMap(move =>
-          moves.zipWithIndex.collect { case (candidate, index) if EvidenceRef.sameMove(candidate, move) => index }
-        )
-        (materialOffsets ++ replayOffsets).filter(index => index >= 0 && index < moves.size).distinct.sorted
+    consequence.eventOccurrence.toList.flatMap(occurrence =>
+      line.lineReplaySteps.lift(occurrence.plyOffset).toList.collect {
+        case step if occurrence.sameOccurrence(occurrence.plyOffset, step.moveUci) => occurrence.plyOffset
+      }
+    )
 
   private def consequenceTarget(
       line: LineFactEvidence,
@@ -5892,7 +5822,7 @@ object RootOwnedCausalEpisode:
         verifiedKingTarget(eventStep, replay, VerifiedKingState.Checkmate)
       case LineConsequenceKind.DrawResource =>
         verifiedKingTarget(eventStep, replay, VerifiedKingState.Stalemate)
-      case LineConsequenceKind.Promotion | LineConsequenceKind.PromotionRace =>
+      case LineConsequenceKind.Promotion =>
         replay.transition(eventStep).flatMap { transition =>
           val movement = transition.relationDelta.rootMove
           Option.when(
@@ -5943,16 +5873,18 @@ object RootOwnedCausalEpisode:
     consequence.kind match
       case LineConsequenceKind.MaterialGain =>
         capture.exists(captured =>
-          consequence.beneficiary.contains(captured.side) && captured.side == rootColor
+          consequence.eventMatches(eventPlyOffset, captured.moveUci) &&
+            consequence.beneficiary.contains(captured.side) && captured.side == rootColor
         )
       case LineConsequenceKind.MaterialLoss =>
         capture.exists(captured =>
-          consequence.beneficiary.contains(captured.side) && captured.side != rootColor
+          consequence.eventMatches(eventPlyOffset, captured.moveUci) &&
+            consequence.beneficiary.contains(captured.side) && captured.side != rootColor
         )
       case LineConsequenceKind.RecaptureSequence =>
         capture.exists(actual =>
           actual.recapture &&
-            consequence.eventMove.exists(EvidenceRef.sameMove(_, actual.moveUci)) &&
+            consequence.eventMatches(eventPlyOffset, actual.moveUci) &&
             consequence.rootSide.contains(rootColor) &&
             consequence.beneficiary.contains(actual.side)
         )
@@ -5961,7 +5893,7 @@ object RootOwnedCausalEpisode:
           case (Some(expected), Some(actual)) =>
             expected == actual &&
               expected.side == rootColor &&
-              consequence.eventMove.exists(EvidenceRef.sameMove(_, expected.moveUci)) &&
+              consequence.eventMatches(eventPlyOffset, expected.moveUci) &&
               consequence.rootSide.contains(rootColor) &&
               consequence.beneficiary.contains(rootColor)
           case _ =>
@@ -5979,8 +5911,8 @@ object RootOwnedCausalEpisode:
         afterInventory.exists(
           _.kingTerminalState == PositionRelationExtractor.ClosedKingTerminalState.Stalemate
         )
-      case LineConsequenceKind.Promotion | LineConsequenceKind.PromotionRace =>
-        eventTransition.exists(transition =>
+      case LineConsequenceKind.Promotion =>
+        consequence.eventMatches(eventPlyOffset, eventStep.moveUci) && eventTransition.exists(transition =>
           val movement = transition.relationDelta.rootMove
           consequence.beneficiary.contains(movement.side) &&
             movement.beforeRole.name.equalsIgnoreCase(Pawn.name) &&
@@ -6013,8 +5945,8 @@ object RootOwnedCausalEpisode:
       if eventPlyOffset == 0 then
         Some(List(RootCausalLink(
           RootCausalLinkKind.ImmediateRootAction,
-          rootMove,
-          eventMove,
+          LineMoveOccurrence(rootMove, 0),
+          LineMoveOccurrence(eventMove, eventPlyOffset),
           eventAnchor
         )))
       else
@@ -6025,23 +5957,21 @@ object RootOwnedCausalEpisode:
               movement.beforeRole.name.equalsIgnoreCase(tracked.role.name)
           ).map(_ => RootCausalLink(
             RootCausalLinkKind.RootActorContinuation,
-            rootMove,
-            eventMove,
+            LineMoveOccurrence(rootMove, 0),
+            LineMoveOccurrence(eventMove, eventPlyOffset),
             eventAnchor
           ))
         val lineAccess =
           continuousLineAccessSeedLink(line, eventPlyOffset, replay)
         val forcedCaptureResponse =
           forcedCaptureResponseLink(line, rootStep, eventStep, eventPlyOffset, replay)
-        val forcedCheckResponse =
-          forcedCheckResponseLink(line, rootStep, eventStep, eventPlyOffset, replay)
         val actorCaptured =
           Option.when(consequence.kind == LineConsequenceKind.MaterialLoss)(
             rootActorCapturedSeedLink(line, actor, eventPlyOffset, replay)
           ).flatten
         val materialSequence =
           materialSequenceLinks(line, rootStep, actor, consequence, eventPlyOffset, replay)
-        (List(actorAction, lineAccess, forcedCaptureResponse, forcedCheckResponse, actorCaptured).flatten ++
+        (List(actorAction, lineAccess, forcedCaptureResponse, actorCaptured).flatten ++
           materialSequence) match
           case Nil   => None
           case links => Some(links.distinct)
@@ -6066,30 +5996,8 @@ object RootOwnedCausalEpisode:
         trajectory <- CaptureResponseFollowUpTrajectory.find(rootStep, reply, eventStep, List(reply), replay)
       yield RootCausalLink(
         RootCausalLinkKind.ForcedCaptureResponse,
-        rootMove,
-        eventMove,
-        trajectory.replyTo
-      )
-
-  private def forcedCheckResponseLink(
-      line: LineFactEvidence,
-      rootStep: LineReplayStep,
-      eventStep: LineReplayStep,
-      eventPlyOffset: Int,
-      replay: CanonicalLineReplay
-  ): Option[RootCausalLink] =
-    val rootMove = EvidenceRef.normalizeMove(rootStep.moveUci)
-    val eventMove = EvidenceRef.normalizeMove(eventStep.moveUci)
-    if eventPlyOffset != 2 then None
-    else
-      for
-        reply <- line.lineReplaySteps.lift(1)
-        trajectory <- CheckResponseFollowUpTrajectory
-          .findRootActorContinuation(rootStep, reply, eventStep, List(reply), replay)
-      yield RootCausalLink(
-        RootCausalLinkKind.ForcedCheckResponse,
-        rootMove,
-        eventMove,
+        LineMoveOccurrence(rootMove, 0),
+        LineMoveOccurrence(eventMove, eventPlyOffset),
         trajectory.replyTo
       )
 
@@ -6110,8 +6018,8 @@ object RootOwnedCausalEpisode:
       )
     yield RootCausalLink(
       RootCausalLinkKind.ContinuousLineAccess,
-      EvidenceRef.normalizeMove(rootStep.moveUci),
-      EvidenceRef.normalizeMove(eventStep.moveUci),
+      LineMoveOccurrence(EvidenceRef.normalizeMove(rootStep.moveUci), 0),
+      LineMoveOccurrence(EvidenceRef.normalizeMove(eventStep.moveUci), eventPlyOffset),
       trajectory.vacatedSquare
     )
 
@@ -6139,8 +6047,8 @@ object RootOwnedCausalEpisode:
       if immediateReplyOwnsLoss || rootSacrificeOwnsLoss
     yield RootCausalLink(
       RootCausalLinkKind.RootActorCaptured,
-      EvidenceRef.normalizeMove(rootStep.moveUci),
-      EvidenceRef.normalizeMove(eventStep.moveUci),
+      LineMoveOccurrence(EvidenceRef.normalizeMove(rootStep.moveUci), 0),
+      LineMoveOccurrence(EvidenceRef.normalizeMove(eventStep.moveUci), eventPlyOffset),
       EvidenceSquare(tracked.square.key)
     )
 
@@ -6152,12 +6060,16 @@ object RootOwnedCausalEpisode:
       eventPlyOffset: Int,
       replay: CanonicalLineReplay
   ): List[RootCausalLink] =
-    val consequenceMoves = consequence.lineMoves.map(EvidenceRef.normalizeMove).toSet
+    val consequenceOccurrences = consequence.proofOccurrences.map(occurrence =>
+      occurrence.plyOffset -> occurrence.moveUci
+    ).toSet
     val capturesByPly = line.materialCaptures
       .filter(capture =>
         capture.plyOffset > 0 &&
           capture.plyOffset <= eventPlyOffset &&
-          consequenceMoves.exists(EvidenceRef.sameMove(_, capture.moveUci))
+          consequenceOccurrences.contains(
+            capture.plyOffset -> EvidenceRef.normalizeMove(capture.moveUci)
+          )
       )
       .map(capture => capture.plyOffset -> capture)
       .toMap
@@ -6198,13 +6110,12 @@ object RootOwnedCausalEpisode:
             )
             .map(_ => RootCausalLink(
               RootCausalLinkKind.RootActorContinuation,
-              rootMove,
-              eventMove,
+              LineMoveOccurrence(rootMove, 0),
+              LineMoveOccurrence(eventMove, eventPlyOffset),
               movement.to
             ))
         List(
           forcedCaptureResponseLink(line, rootStep, eventStep, eventPlyOffset, replay),
-          forcedCheckResponseLink(line, rootStep, eventStep, eventPlyOffset, replay),
           rootActorCapturedSeedLink(line, actor, eventPlyOffset, replay),
           continuousLineAccessSeedLink(line, eventPlyOffset, replay),
           actorAction
@@ -6229,14 +6140,14 @@ object RootOwnedCausalEpisode:
           .find(_.futureStep == toStep)
           .map(trajectory => RootCausalLink(
             RootCausalLinkKind.MaterialActorContinuation,
-            fromStep.moveUci,
-            toStep.moveUci,
+            LineMoveOccurrence(EvidenceRef.normalizeMove(fromStep.moveUci), fromCapture.plyOffset),
+            LineMoveOccurrence(EvidenceRef.normalizeMove(toStep.moveUci), toCapture.plyOffset),
             trajectory.rootTo
           ))
       val actorCaptured = materialActorCaptured(line, fromCapture, toCapture, replay).map(anchor => RootCausalLink(
         RootCausalLinkKind.MaterialCaptureResponse,
-        fromStep.moveUci,
-        toStep.moveUci,
+        LineMoveOccurrence(EvidenceRef.normalizeMove(fromStep.moveUci), fromCapture.plyOffset),
+        LineMoveOccurrence(EvidenceRef.normalizeMove(toStep.moveUci), toCapture.plyOffset),
         anchor
       ))
       List(actorContinuation, actorCaptured).flatten
@@ -6328,6 +6239,17 @@ object LineFactEvidence:
     require(
       replay.replaySteps.headOption.exists(step => EvidenceRef.sameMove(step.moveUci, line.rootMove)),
       "certified line evidence must begin with its declared root move"
+    )
+    def ownsOccurrence(occurrence: LineMoveOccurrence): Boolean =
+      replay.replaySteps
+        .lift(occurrence.plyOffset)
+        .exists(step => occurrence.sameOccurrence(occurrence.plyOffset, step.moveUci))
+    require(
+      consequences.forall(consequence =>
+        consequence.proofOccurrences.forall(ownsOccurrence) &&
+          consequence.eventOccurrence.forall(ownsOccurrence)
+      ),
+      "a certified line consequence must retain only occurrences from its canonical replay"
     )
     val derived = LineReplayDerivedFacts.from(replay)
     val provisional = LineFactEvidence(
@@ -7142,7 +7064,7 @@ object TacticalMechanismKind:
         List(TacticalMechanismKind.KingForcing)
       case LineConsequenceKind.DrawResource =>
         List(TacticalMechanismKind.DrawResource)
-      case LineConsequenceKind.Promotion | LineConsequenceKind.PromotionRace =>
+      case LineConsequenceKind.Promotion =>
         List(TacticalMechanismKind.PawnPromotion)
       case LineConsequenceKind.ForcedTheme | LineConsequenceKind.Sacrifice =>
         Nil
@@ -8180,32 +8102,6 @@ object CausalDependencyFunctionProof:
       recaptureInventoryKey
     )
 
-  final case class CheckFollowUp(
-      triggerRole: EvidencePieceRole,
-      responderRole: EvidencePieceRole,
-      followUpRole: EvidencePieceRole,
-      replyMoveUci: String,
-      replyFrom: EvidenceSquare,
-      replyTo: EvidenceSquare,
-      followUpFrom: EvidenceSquare,
-      followUpTo: EvidenceSquare,
-      checkInventoryKey: String
-  ) extends ResponseContinuation:
-    val kind = "response-continuation:check-follow-up"
-    val proofPieceRoles = List(triggerRole, responderRole, followUpRole).distinct
-    protected val resultSquares = Nil
-    protected val identityParts = List(
-      triggerRole.name.toLowerCase,
-      responderRole.name.toLowerCase,
-      followUpRole.name.toLowerCase,
-      EvidenceRef.normalizeMove(replyMoveUci),
-      replyFrom.key.toLowerCase,
-      replyTo.key.toLowerCase,
-      followUpFrom.key.toLowerCase,
-      followUpTo.key.toLowerCase,
-      checkInventoryKey
-    )
-
   def from(dependency: PassedPawnResultDependency): CausalDependencyFunctionProof =
     dependency.proof match
       case PassedPawnResultDependencyProof.ObjectState(trajectory) =>
@@ -8250,18 +8146,6 @@ object CausalDependencyFunctionProof:
           trajectory.followUpFrom,
           trajectory.followUpTo,
           trajectory.recaptureInventoryKey.stableKey
-        )
-      case PassedPawnResultDependencyProof.ResponseContinuation(trajectory: CheckResponseFollowUpTrajectory) =>
-        CheckFollowUp(
-          trajectory.triggerRole,
-          trajectory.responderRole,
-          trajectory.followUpRole,
-          trajectory.replyStep.moveUci,
-          trajectory.replyFrom,
-          trajectory.replyTo,
-          trajectory.followUpFrom,
-          trajectory.followUpTo,
-          trajectory.checkInventoryKey.stableKey
         )
 
 final case class CausalDependencyFunctionIdentity(
