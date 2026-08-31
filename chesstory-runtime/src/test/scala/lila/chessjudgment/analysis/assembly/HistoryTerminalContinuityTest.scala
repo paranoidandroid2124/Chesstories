@@ -157,13 +157,11 @@ class HistoryTerminalContinuityTest extends munit.FunSuite:
 
     assertEquals(customHistory.preInitialHistoryKnowledge, PreInitialHistoryKnowledge.Unknown)
     assertEquals(customHistory.currentPly, 80)
-    assertEquals(capture.index, 0)
     assertEquals(capture.ply, 80)
     assertEquals(capture.uci, "d4e3")
     assertEquals(capture.beforeFen, customInitial)
     assertEquals(capture.afterFen, customCurrent)
     assertEquals(capture.capturedRole, Some(Pawn))
-    assertEquals(capture.castle, None)
 
     val castleInitial = "4k2r/8/8/8/8/8/8/4K2R w Kk - 0 1"
     val castleCurrent = "4k2r/8/8/8/8/8/8/5RK1 b k - 1 1"
@@ -174,11 +172,10 @@ class HistoryTerminalContinuityTest extends munit.FunSuite:
     val castle = castleHistory.segmentReplaySteps.headOption
       .getOrElse(fail("expected the castle replay step"))
 
-    assertEquals(castle.index, 0)
     assertEquals(castle.ply, 1)
     assertEquals(castle.beforeFen, castleInitial)
     assertEquals(castle.afterFen, castleCurrent)
-    assert(castle.castle.nonEmpty)
+    assertEquals(castle.move.castle.map(_.kingTo.key), Some("g1"))
 
   test("material summaries use stored predecessor knowledge and reject unknown prehistory"):
     val customInitial = "4k3/8/8/8/3p4/4P3/5P2/4K3 b - - 0 40"

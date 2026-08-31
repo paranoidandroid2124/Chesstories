@@ -20,19 +20,20 @@ private[position] final case class GeometricControlInventory(
 )
 
 private[position] object GeometricControlInventory:
-  def from(board: Board): GeometricControlInventory =
-    val byOrigin = attacksFor(board, board.occupied.squares.toSet)
+  def from(board: Board, sliderRays: List[SliderRay]): GeometricControlInventory =
+    val byOrigin = attacksFor(board, board.occupied.squares.toSet, sliderRays)
     GeometricControlInventory(byOrigin, inverse(board, byOrigin))
 
   def after(
       previous: GeometricControlInventory,
       before: Board,
       after: Board,
-      invalidatedOrigins: Set[Square]
+      invalidatedOrigins: Set[Square],
+      refreshedSliderRays: List[SliderRay]
   ): GeometricControlInventory =
     val retainedByOrigin = previous.byOrigin -- invalidatedOrigins
     val refreshedOrigins = invalidatedOrigins.filter(after.pieceAt(_).nonEmpty)
-    val refreshedByOrigin = attacksFor(after, refreshedOrigins)
+    val refreshedByOrigin = attacksFor(after, refreshedOrigins, refreshedSliderRays)
     require(
       refreshedByOrigin.keySet == refreshedOrigins,
       "every occupied invalidated attack origin must be produced exactly once"
@@ -68,18 +69,39 @@ private[position] object GeometricControlInventory:
   ): Set[Square] =
     val invalidated = footprint.geometricControlOriginsToRefresh
     val retained = previous.controllersByTarget.getOrElse(side -> target, Set.empty) -- invalidated
-    val refreshed = invalidated.filter { origin =>
-      after.pieceAt(origin).exists { piece =>
-        piece.color == side &&
-          BoardGeometry.geometricControls(piece.role, origin, piece.color, after.occupied).contains(target)
-      }
+    val refreshedOrigins = invalidated.filter(after.pieceAt(_).nonEmpty)
+    val refreshedByOrigin = attacksFor(
+      after,
+      refreshedOrigins,
+      BoardGeometry.sliderRays(after, refreshedOrigins)
+    )
+    val refreshed = refreshedByOrigin.collect {
+      case (origin, controls)
+          if after.pieceAt(origin).exists(_.color == side) && controls.contains(target) => origin
     }
     retained ++ refreshed
 
-  private def attacksFor(board: Board, origins: Set[Square]): Map[Square, Bitboard] =
+  private def attacksFor(
+      board: Board,
+      origins: Set[Square],
+      sliderRays: List[SliderRay]
+  ): Map[Square, Bitboard] =
+    val sliderOrigins = origins.filter(square =>
+      board.roleAt(square).exists(role => List(Bishop, Rook, Queen).contains(role))
+    )
+    val sliderControls = BoardGeometry.controlsFromSliderRays(
+      sliderRays.filter(ray => sliderOrigins(ray.attackerSquare))
+    )
+    require(
+      sliderControls.keySet == sliderOrigins,
+      "every requested slider origin must own one complete canonical ray projection"
+    )
     origins.toList.flatMap { square =>
       board.pieceAt(square).map(piece =>
-        square -> BoardGeometry.geometricControls(piece.role, square, piece.color, board.occupied)
+        square -> sliderControls.getOrElse(
+          square,
+          BoardGeometry.fixedPatternControls(piece.role, square, piece.color)
+        )
       )
     }.toMap
 
@@ -112,9 +134,9 @@ private[position] final case class StaticBoardGeometryBuild(
 
 private[position] object StaticBoardGeometryComputation:
   def cold(board: Board): StaticBoardGeometryComputation =
-    val geometricControls = GeometricControlInventory.from(board)
-    val pawnTopology = PawnTopologySnapshot.from(board)
     val rays = BoardGeometry.sliderRays(board)
+    val geometricControls = GeometricControlInventory.from(board, rays)
+    val pawnTopology = PawnTopologySnapshot.from(board)
     val relationSnapshot = PositionRelationExtractor.extractStaticBoardRelationSnapshot(
       board,
       rays,
@@ -143,7 +165,8 @@ private[position] object StaticBoardGeometryComputation:
       previous.geometricControlInventory,
       previous.board,
       board,
-      invalidatedAttackOrigins
+      invalidatedAttackOrigins,
+      refreshedRays
     )
     val pawnTopologyProduction = previous.pawnTopology.afterTransition(
       board,
@@ -169,9 +192,10 @@ private[position] object StaticBoardGeometryComputation:
 private[position] final class PositionComputation private (
     val staticBoard: StaticBoardGeometryComputation,
     val position: Position,
-    val actualLegalMoves: List[Move],
+    private[position] val actualLegalMoveEffects: List[(Move, BoardMoveEffect)],
     private[position] val occurrenceRelationSnapshot: PositionRelationExtractor.BoardRelationSnapshot
 ):
+  val actualLegalMoves: List[Move] = actualLegalMoveEffects.map(_._1)
   val pawnTopology: PawnTopologySnapshot = staticBoard.pawnTopology
   private[position] val relationSnapshot = PositionRelationExtractor.PositionRelationSnapshot(
     staticBoard = staticBoard.relationSnapshot,
@@ -183,7 +207,7 @@ private[position] final class PositionComputation private (
     PositionRelationExtractor.closedPositionInventory(
       relationSnapshot,
       position,
-      actualLegalMoves,
+      actualLegalMoveEffects,
       staticBoard.geometricControlInventory
     )
 
@@ -199,11 +223,12 @@ private[position] object PositionComputation:
       "static board facts and occurrence facts must describe the same board"
     )
     val legalMoves = PrincipalVariationEvidence.actualLegalMoves(position)
+    val legalMoveEffects = legalMoves.map(move => move -> BoardGeometry.moveEffect(move))
     new PositionComputation(
       staticBoard = staticBoard,
       position = position,
-      actualLegalMoves = legalMoves,
-      occurrenceRelationSnapshot = PositionRelationExtractor.extractOccurrenceRelationSnapshot(position, legalMoves)
+      actualLegalMoveEffects = legalMoveEffects,
+      occurrenceRelationSnapshot = PositionRelationExtractor.extractOccurrenceRelationSnapshot(position, legalMoveEffects)
     )
 
 private[position] final class PositionRelationTransitionCalculation(
@@ -245,7 +270,7 @@ private[position] final class StaticRelationTransitionKey(
       case _ => false
 
 private[chessjudgment] final class PositionAnalysis private[position] (
-    val features: PositionFeatures,
+    val occurrence: PositionOccurrenceState,
     val position: Position,
     private[position] val computation: PositionComputation,
     private[chessjudgment] val transitionFootprint: Option[BoardTransitionFootprint],
@@ -270,10 +295,10 @@ private[chessjudgment] final class PositionAnalysis private[position] (
       transitionFootprint.isEmpty || plyCount > 0,
       "a transition destination occurrence must have a positive ply"
     )
-    if features.plyCount == plyCount then this
+    if occurrence.plyCount == plyCount then this
     else
       new PositionAnalysis(
-        features = features.copy(plyCount = plyCount),
+        occurrence = occurrence.copy(plyCount = plyCount),
         position = position,
         computation = computation,
         transitionFootprint = transitionFootprint,
@@ -282,14 +307,14 @@ private[chessjudgment] final class PositionAnalysis private[position] (
 
 private[position] object PositionAnalysis:
   def fresh(
-      features: PositionFeatures,
+      occurrence: PositionOccurrenceState,
       position: Position,
       computation: PositionComputation,
       transitionFootprint: Option[BoardTransitionFootprint],
       transitionCalculation: Option[PositionRelationTransitionCalculation]
   ): PositionAnalysis =
     new PositionAnalysis(
-      features,
+      occurrence,
       position,
       computation,
       transitionFootprint,
@@ -312,7 +337,7 @@ object PositionAnalyzer:
       PositionComputation.from(staticBoard, occurrence)
     }
     PositionAnalysis.fresh(
-      features = computeFeatures(occurrence, fen).copy(plyCount = plyCount),
+      occurrence = computeOccurrence(occurrence, fen).copy(plyCount = plyCount),
       position = occurrence,
       computation = computation,
       transitionFootprint = None,
@@ -325,10 +350,10 @@ object PositionAnalyzer:
       fen: String
   ): PositionAnalysis =
     require(
-      previousAnalysis.features.plyCount == legalStep.ply - 1 &&
+      previousAnalysis.occurrence.plyCount == legalStep.ply - 1 &&
         legalStep.before == previousAnalysis.position &&
         PrincipalVariationEvidence.sameBoardState(
-          previousAnalysis.features.fen,
+          previousAnalysis.occurrence.fen,
           Fen.write(legalStep.before).value
         ),
       "the previous analysis must own the transition source occurrence"
@@ -390,7 +415,7 @@ object PositionAnalyzer:
       afterInventory = () => computation.relationInventory
     )
     PositionAnalysis.fresh(
-      features = computeFeatures(occurrence, fen).copy(plyCount = legalStep.ply),
+      occurrence = computeOccurrence(occurrence, fen).copy(plyCount = legalStep.ply),
       position = occurrence,
       computation = computation,
       transitionFootprint = Some(footprint),
@@ -407,11 +432,11 @@ object PositionAnalyzer:
       CacheMaxEntries
     )
 
-  private[position] def computeFeatures(
+  private[position] def computeOccurrence(
       position: Position,
       fen: String
-  ): PositionFeatures =
-    PositionFeatures(
+  ): PositionOccurrenceState =
+    PositionOccurrenceState(
       fen = fen,
       sideToMove = position.color,
       plyCount = 0

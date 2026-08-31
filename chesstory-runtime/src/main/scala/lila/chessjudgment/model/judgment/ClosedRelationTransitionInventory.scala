@@ -11,18 +11,15 @@ import lila.chessjudgment.model.line.PrincipalVariationEvidence
   */
 private[chessjudgment] enum RelationCombinationContractKind:
   case GeometricControlSetDelta
-  case NamedRayTransition
 
 private[chessjudgment] object RelationCombinationContractKind:
   def id(kind: RelationCombinationContractKind): String =
     kind match
       case GeometricControlSetDelta => "geometric_control_set_delta"
-      case NamedRayTransition => "named_ray_transition"
 
   def forDetail(detail: RelationWitnessDetail): Option[RelationCombinationContractKind] =
     detail match
       case _: RelationWitnessDetail.GeometricControlSetDelta => Some(GeometricControlSetDelta)
-      case _: RelationWitnessDetail.NamedRayTransition => Some(NamedRayTransition)
       case _                                                   => None
 
 /** The sole closed result of the transition-fact producers activated by exact

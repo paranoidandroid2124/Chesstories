@@ -164,9 +164,9 @@ final case class JudgmentAssemblyContext(
 
   def withPosition(node: PositionNode, analysis: PositionAnalysis): JudgmentAssemblyContext =
     require(
-      analysis.features.plyCount == node.ref.ply &&
+      analysis.occurrence.plyCount == node.ref.ply &&
         analysis.position.color == node.ref.sideToMove.getOrElse(analysis.position.color) &&
-        PrincipalVariationEvidence.sameBoardState(analysis.features.fen, node.ref.fen),
+        PrincipalVariationEvidence.sameBoardState(analysis.occurrence.fen, node.ref.fen),
       "a position analysis must describe its registered position occurrence"
     )
     val updated = appendWithoutCollision(

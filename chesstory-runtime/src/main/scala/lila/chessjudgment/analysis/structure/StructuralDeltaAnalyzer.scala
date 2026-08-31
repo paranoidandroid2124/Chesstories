@@ -11,35 +11,27 @@ import lila.chessjudgment.model.judgment.{
   EvidenceFile,
   EvidencePieceRole,
   EvidenceSquare,
-  RelationBatteryFormationWitness,
+  DerivedRelationResultKey,
   RelationChangeDirection,
   RelationChangeKey,
-  RelationColoredPieceWitness,
   RelationControlTarget,
   RelationFactEvidence,
   RelationFactKind,
-  DerivedRelationResultKey,
   RelationPawnTopologyStateWitness,
   RelationSemanticChange,
   RelationSemanticDelta,
-  RelationRayProjection,
   RelationWitnessDetail,
   StructuralSubject,
   StructuralSubjectBinding,
-  StructuralSignal,
-  StructuralSignalKind,
   TransitionConsequence,
   TransitionConsequenceKind,
-  TransitionConsequenceRelationProof,
   VerticalRelationContracts
 }
 
 private[chessjudgment] final case class TransitionStructuralDelta(
     perspective: Color,
     relationDelta: RelationSemanticDelta,
-    derivedRelations: List[RelationFactEvidence],
-    pawnTopology: PawnTopologyDelta,
-    batteryCreated: List[StructuralBatteryChange]
+    pawnTopology: PawnTopologyDelta
 )
 
 /** Evidence-stage binding of one replay-owned structural calculation to the
@@ -53,9 +45,7 @@ private[chessjudgment] final case class CanonicalTransitionStructuralDelta priva
   export structural.{
     perspective,
     relationDelta,
-    derivedRelations,
-    pawnTopology,
-    batteryCreated
+    pawnTopology
   }
 
 private[chessjudgment] final case class PawnFileStateChange(file: File, relationKeys: List[RelationChangeKey])
@@ -64,7 +54,8 @@ private[chessjudgment] final case class DirectedPawnTension(
     side: Color,
     from: Square,
     to: Square,
-    relationKey: RelationChangeKey
+    relationKey: RelationChangeKey,
+    resultKey: DerivedRelationResultKey
 )
 
 private[chessjudgment] enum PassedPawnAdvanceKind:
@@ -76,12 +67,14 @@ private[chessjudgment] final case class PassedPawnAdvance(
     from: Square,
     to: Square,
     kind: PassedPawnAdvanceKind,
-    relationKeys: List[RelationChangeKey]
+    relationKeys: List[RelationChangeKey],
+    resultKey: DerivedRelationResultKey
 )
 
 private[chessjudgment] final case class PassedPawnChange(
     square: Square,
-    relationKeys: List[RelationChangeKey]
+    relationKeys: List[RelationChangeKey],
+    resultKey: DerivedRelationResultKey
 ):
   require(relationKeys.nonEmpty, "a passed-pawn state change needs exact passage relations")
   require(
@@ -111,76 +104,19 @@ private final case class ClosedPawnStateTransition(
     relation: RelationFactEvidence,
     before: Option[RelationPawnTopologyStateWitness],
     after: Option[RelationPawnTopologyStateWitness]
-)
-
-private[chessjudgment] final case class StructuralBatteryChange(
-    formation: RelationBatteryFormationWitness,
-    relationKeys: List[RelationChangeKey],
-    targetRelations: List[(RelationColoredPieceWitness, RelationChangeKey)]
 ):
-  require(relationKeys.nonEmpty, "a battery formation needs an exact relation proof")
-  require(
-    relationKeys.distinct.size == relationKeys.size,
-    "one battery formation cannot repeat a relation proof key"
-  )
-
-private object StructuralBatteryProjection:
-  def subject(battery: StructuralBatteryChange): StructuralSubject =
-    StructuralSubject.Battery(battery.formation)
-
-  def targetBindings(
-      battery: StructuralBatteryChange
-  ): List[(StructuralSubject, List[RelationChangeKey])] =
-    battery.targetRelations.map { case (target, relationKey) =>
-      StructuralSubject.PieceAt(target.side, target.role, target.square) -> List(relationKey)
-    }
+  val resultKey: DerivedRelationResultKey = DerivedRelationResultKey.from(relation)
 
 private[chessjudgment] object StructuralDeltaContracts:
-  import StructuralSignalKind.*
   import TransitionConsequenceKind.*
-
-  def signals(delta: TransitionStructuralDelta): List[StructuralSignal] =
-    val topology = delta.pawnTopology
-    List(
-      signal(
-        StructuralSignalKind.PawnTensionCreated,
-        topology.createdTensions.size,
-        topology.createdTensions.map(createdTensionSubject)
-      ),
-      signal(PawnTensionResolved, topology.resolvedTensions.size, topology.resolvedTensions.map(resolvedTensionSubject)),
-      signal(PassedPawnCreated, topology.passedCreated.size, topology.passedCreated.map(change => passedCreatedSubject(delta.perspective, change.square))),
-      signal(PassedPawnAdvanced, topology.passedAdvanced.size, topology.passedAdvanced.map(passedAdvanceSubject)),
-      signal(BatteryCreated, delta.batteryCreated.size, delta.batteryCreated.map(StructuralBatteryProjection.subject))
-    ).flatten
 
   def consequences(delta: TransitionStructuralDelta): List[TransitionConsequence] =
     val topology = delta.pawnTopology
-    val controlSetBindings = exactDerivedRelationBindings(
-      delta.derivedRelations
-        .filter(_.kind == RelationFactKind.GeometricControlSetDelta)
-        .map { relation =>
-          val subject = StructuralSubject.fromGeometricControlSetDelta(relation).getOrElse(
-            throw IllegalArgumentException("a closed control-set result lost its exact control delta")
-          )
-          subject -> List(DerivedRelationResultKey.from(relation))
-        }
-    )
-    val sliderReachBindings = exactDerivedRelationBindings(
-      delta.derivedRelations
-        .filter(_.kind == RelationFactKind.SliderReachDelta)
-        .map { relation =>
-          val subject = StructuralSubject.fromSliderReachDelta(relation).getOrElse(
-            throw IllegalArgumentException("a closed slider-reach result lost its exact reach delta")
-          )
-          subject -> List(DerivedRelationResultKey.from(relation))
-        }
-    )
     val baseConsequences =
       List(
         Option.when(topology.openedFiles.nonEmpty)(
           TransitionConsequence(
             OpenFileEstablished,
-            topology.openedFiles.size,
             subjectBindings = exactRelationBindings(
               topology.openedFiles.map(change => fileSubject(change.file) -> change.relationKeys)
             )
@@ -189,7 +125,6 @@ private[chessjudgment] object StructuralDeltaContracts:
         Option.when(topology.semiOpenedFiles.nonEmpty)(
           TransitionConsequence(
             SemiOpenFileEstablished,
-            topology.semiOpenedFiles.size,
             subjectBindings = exactRelationBindings(
                 topology.semiOpenedFiles.map(change => semiOpenFileSubject(delta.perspective, change.file) -> change.relationKeys)
             )
@@ -198,91 +133,57 @@ private[chessjudgment] object StructuralDeltaContracts:
         Option.when(topology.createdTensions.nonEmpty)(
           TransitionConsequence(
             TransitionConsequenceKind.PawnTensionCreated,
-            topology.createdTensions.size,
             subjectBindings = exactRelationBindings(topology.createdTensions.map(edge =>
               createdTensionSubject(edge) -> List(edge.relationKey)
-            ))
+            )),
+            resultPremiseKeys = exactResultKeys(topology.createdTensions.map(_.resultKey))
           )
         ),
         Option.when(topology.resolvedTensions.nonEmpty)(
           TransitionConsequence(
             PawnTensionResolution,
-            topology.resolvedTensions.size,
             subjectBindings = exactRelationBindings(topology.resolvedTensions.map(edge =>
               resolvedTensionSubject(edge) -> List(edge.relationKey)
-            ))
-          )
-        ),
-        Option.when(controlSetBindings.nonEmpty)(
-          TransitionConsequence(
-            GeometricControlSetChanged,
-            controlSetBindings.size,
-            subjectBindings = controlSetBindings
-          )
-        ),
-        Option.when(sliderReachBindings.nonEmpty)(
-          TransitionConsequence(
-            SliderReachChanged,
-            sliderReachBindings.size,
-            subjectBindings = sliderReachBindings
+            )),
+            resultPremiseKeys = exactResultKeys(topology.resolvedTensions.map(_.resultKey))
           )
         ),
         Option.when(topology.passedCreated.nonEmpty || topology.passedAdvanced.nonEmpty)(
           TransitionConsequence(
             PassedPawnProgress,
-            topology.passedCreated.size + topology.passedAdvanced.size,
             subjectBindings = exactRelationBindings(
               topology.passedCreated.map(change =>
                 passedCreatedSubject(delta.perspective, change.square) -> change.relationKeys
               ) ++ topology.passedAdvanced.map(advance =>
                 passedAdvanceSubject(advance) -> advance.relationKeys
               )
+            ),
+            resultPremiseKeys = exactResultKeys(
+              topology.passedCreated.map(_.resultKey) ++ topology.passedAdvanced.map(_.resultKey)
             )
           )
         ),
         Option.when(topology.passedLost.nonEmpty)(
           TransitionConsequence(
-            PassedPawnConcession,
-            topology.passedLost.size,
+            PassedPawnStatusRemoved,
             subjectBindings = exactRelationBindings(
               topology.passedLost.map(change =>
                 passedLostSubject(delta.perspective, change.square) -> change.relationKeys
               )
-            )
+            ),
+            resultPremiseKeys = exactResultKeys(topology.passedLost.map(_.resultKey))
           )
         )
       ).flatten
-    val consequences =
-      baseConsequences ++
-        delta.batteryCreated.map(battery =>
-          TransitionConsequence(
-            BatteryFormation,
-            1,
-            subjectBindings = exactRelationBindings(List(
-              StructuralBatteryProjection.subject(battery) -> battery.relationKeys
-            )),
-            targetBindings = exactRelationBindings(
-              StructuralBatteryProjection.targetBindings(battery)
-            ),
-          )
-        )
+    val consequences = baseConsequences
     val semanticKeys = consequences.map(consequence =>
       (
         consequence.kind,
-        consequence.strength,
         consequence.subjectBindings.map(_.stableKey).sorted.mkString(","),
         consequence.targetBindings.map(_.stableKey).sorted.mkString(",")
       )
     )
     require(semanticKeys.distinct.size == semanticKeys.size, "duplicate structural consequences")
-    require(
-      TransitionConsequenceRelationProof.provesSemantic(
-        consequences,
-        delta.relationDelta,
-        delta.derivedRelations
-      ),
-      "structural consequences must bind every relation-derived result to its exact canonical relation changes"
-    )
     consequences
 
   /** A single interpreted subject may be witnessed by several exact relation
@@ -306,21 +207,8 @@ private[chessjudgment] object StructuralDeltaContracts:
         StructuralSubjectBinding.fromRelations(subject, keys)
       }
 
-  private def exactDerivedRelationBindings(
-      entries: List[(StructuralSubject, List[DerivedRelationResultKey])]
-  ): List[StructuralSubjectBinding] =
-    entries
-      .groupMap(_._1)(_._2)
-      .toList
-      .sortBy(_._1.stableKey)
-      .map { case (subject, keyGroups) =>
-        val keys = keyGroups.flatten
-        require(
-          keys.distinct.size == keys.size,
-          s"structural subject '${subject.stableKey}' repeated one derived result key"
-        )
-        StructuralSubjectBinding.fromDerivedRelations(subject, keys)
-      }
+  private def exactResultKeys(keys: List[DerivedRelationResultKey]): List[DerivedRelationResultKey] =
+    keys.distinct.sortBy(_.stableKey)
 
   private def createdTensionSubject(edge: DirectedPawnTension): StructuralSubject =
     StructuralSubject.PawnTensionCreated(edge.side, EvidenceSquare(edge.from.key), EvidenceSquare(edge.to.key))
@@ -369,14 +257,6 @@ private[chessjudgment] object StructuralDeltaContracts:
   private def relativeRank(square: Square, side: Color): Int =
     if side.white then square.rank.value + 1 else 8 - square.rank.value
 
-  private def signal(
-      kind: StructuralSignalKind,
-      magnitude: Int,
-      subjects: List[StructuralSubject]
-  ): Option[StructuralSignal] =
-    require(subjects.distinct.size == subjects.size, s"$kind repeated one structural subject")
-    Option.when(magnitude > 0)(StructuralSignal(kind, magnitude, subjects))
-
 private[chessjudgment] object StructuralDeltaAnalyzer:
 
   def delta(
@@ -384,10 +264,7 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       afterAnalysis: PositionAnalysis,
       legalStep: lila.chessjudgment.model.line.LegalReplayStep,
       relationDelta: RelationSemanticDelta,
-      controlSetTransitions: List[RelationFactEvidence],
-      namedRayTransitions: List[RelationFactEvidence],
-      pawnTopologyTransitions: List[RelationFactEvidence],
-      sliderReachTransitions: List[RelationFactEvidence]
+      pawnTopologyTransitions: List[RelationFactEvidence]
   ): TransitionStructuralDelta =
     val transitionFootprint = admittedFootprint(beforeAnalysis, afterAnalysis, legalStep)
     require(
@@ -396,15 +273,9 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       "a structural delta must consume the exact replay-owned relation delta"
     )
     assembleDelta(
-      beforeAnalysis,
-      afterAnalysis,
-      legalStep,
       transitionFootprint,
       relationDelta,
-      controlSetTransitions,
-      namedRayTransitions,
-      pawnTopologyTransitions,
-      sliderReachTransitions
+      pawnTopologyTransitions
     )
 
   def bind(
@@ -440,17 +311,11 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
     )
 
   private def assembleDelta(
-      beforeAnalysis: PositionAnalysis,
-      afterAnalysis: PositionAnalysis,
-      legalStep: lila.chessjudgment.model.line.LegalReplayStep,
       transitionFootprint: lila.chessjudgment.model.position.BoardTransitionFootprint,
       relationDelta: RelationSemanticDelta,
-      controlSetTransitions: List[RelationFactEvidence],
-      namedRayTransitions: List[RelationFactEvidence],
-      pawnTopologyTransitions: List[RelationFactEvidence],
-      sliderReachTransitions: List[RelationFactEvidence]
+      pawnTopologyTransitions: List[RelationFactEvidence]
   ): TransitionStructuralDelta =
-    val side = legalStep.move.piece.color
+    val side = relationDelta.rootMove.side
     val verticalPawnDelta = pawnSemanticTransitionFrom(
       pawnTopologyTransitions,
       relationDelta,
@@ -463,30 +328,9 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       side,
       affectedPawnFiles
     )
-    require(
-      controlSetTransitions.forall(relation =>
-        relation.kind == RelationFactKind.GeometricControlSetDelta &&
-          relation.mentionsLineMove(relationDelta.moveUci)
-      ),
-      "a structural control-set projection accepts only the closed root-owned transition inventory"
-    )
-    require(
-      sliderReachTransitions.forall(relation =>
-        relation.kind == RelationFactKind.SliderReachDelta &&
-          relation.mentionsLineMove(relationDelta.moveUci)
-      ),
-      "a structural slider-reach projection accepts only the closed root-owned L1 inventory"
-    )
-    val consumedDerivedRelations = controlSetTransitions ++ sliderReachTransitions
-    val consumedDerivedKeys = consumedDerivedRelations.map(DerivedRelationResultKey.from)
-    require(
-      consumedDerivedKeys.distinct.size == consumedDerivedKeys.size,
-      "a structural delta cannot repeat one derived result"
-    )
     TransitionStructuralDelta(
         perspective = side,
         relationDelta = relationDelta,
-        derivedRelations = consumedDerivedRelations.sortBy(relation => DerivedRelationResultKey.from(relation).stableKey),
         pawnTopology = PawnTopologyDelta(
           openedFiles = pawnFileDelta.opened,
           semiOpenedFiles = pawnFileDelta.semiOpened,
@@ -495,9 +339,7 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
           passedCreated = verticalPawnDelta.passedCreated,
           passedAdvanced = verticalPawnDelta.passedAdvanced,
           passedLost = verticalPawnDelta.passedLost
-        ),
-        batteryCreated = batteryRelations(relationDelta, namedRayTransitions, side)
-          .sortBy(battery => StructuralBatteryProjection.subject(battery).label)
+        )
       )
 
   private final case class PawnFileTransitionDelta(
@@ -674,7 +516,8 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
             side,
             exactSquare(after.square),
             exactSquare(target),
-            tensionKey(state, RelationChangeDirection.Established, after.square, target)
+            tensionKey(state, RelationChangeDirection.Established, after.square, target),
+            state.resultKey
           )
         }
       case _ => Nil
@@ -687,7 +530,8 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
             side,
             exactSquare(before.square),
             exactSquare(target),
-            tensionKey(state, RelationChangeDirection.Removed, before.square, target)
+            tensionKey(state, RelationChangeDirection.Removed, before.square, target),
+            state.resultKey
           )
         }
       case _ => Nil
@@ -701,7 +545,8 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
           List(
             passageKey(state, RelationChangeDirection.Removed, before.square),
             passageKey(state, RelationChangeDirection.Established, after.square)
-          ).sortBy(_.stableKey)
+          ).sortBy(_.stableKey),
+          state.resultKey
         ))
       case _ => Nil
     }.sortBy(_.square.key)
@@ -713,7 +558,8 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
           List(
             passageKey(state, RelationChangeDirection.Removed, before.square),
             passageKey(state, RelationChangeDirection.Established, after.square)
-          ).sortBy(_.stableKey)
+          ).sortBy(_.stableKey),
+          state.resultKey
         ))
       case _ => Nil
     }.sortBy(_.square.key)
@@ -741,7 +587,8 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
             to,
             if before.passed then PassedPawnAdvanceKind.ExistingPasserAdvanced
             else PassedPawnAdvanceKind.PassedStatusCreated,
-            relationKeys.sortBy(_.stableKey)
+            relationKeys.sortBy(_.stableKey),
+            state.resultKey
           )
         }
       case state @ ClosedPawnStateTransition(_, Some(before), None) if before.passed =>
@@ -752,7 +599,8 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
           movement.from,
           movement.to,
           PassedPawnAdvanceKind.Promoted,
-          List(passageKey(state, RelationChangeDirection.Removed, before.square))
+          List(passageKey(state, RelationChangeDirection.Removed, before.square)),
+          state.resultKey
         ))
       case _ => Nil
     }.sortBy(advance => advance.from.key -> advance.to.key)
@@ -772,59 +620,6 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
       passedAdvanced = passedAdvanced,
       passedLost = passedLost
     )
-
-  private def batteryRelations(
-      relationDelta: RelationSemanticDelta,
-      namedRayTransitions: List[RelationFactEvidence],
-      side: Color
-  ): List[StructuralBatteryChange] =
-    require(
-      namedRayTransitions.forall(_.kind == RelationFactKind.NamedRayTransition),
-      "a structural battery projection accepts only certified named-ray transitions"
-    )
-    val projected = namedRayTransitions
-      .flatMap { relation =>
-        relation.detail match
-          case named @ RelationWitnessDetail.NamedRayTransition(_, owner, _, _, _, target, _, pattern, direction, proof)
-              if owner == side && pattern == lila.chessjudgment.model.judgment.RelationRayPattern.Battery &&
-                direction == RelationChangeDirection.Established =>
-            val sourceChanges = proof.premises.flatMap(premise =>
-              Option.when(
-                premise.occurrence == lila.chessjudgment.model.judgment.RelationPremiseOccurrence.Established &&
-                  premise.kind == RelationFactKind.RayBarrier
-              )(relationDelta.changeBySemanticId(premise.semanticId)).flatten
-            )
-            val sourceChange = sourceChanges match
-              case only :: Nil => only
-              case found =>
-                throw IllegalArgumentException(
-                  s"a named battery transition must retain exactly one established RayBarrier source, found ${found.size}"
-                )
-            RelationRayProjection.batteryFormation(named).map(formation =>
-              (formation, target, sourceChange.key)
-            ).toList
-          case _ => Nil
-      }
-    projected
-      .groupMap(_._1)(entry => entry._2 -> entry._3)
-      .toList
-      .map { case (formation, entries) =>
-        val relationKeys = entries.map(_._2)
-        require(
-          relationKeys.distinct.size == relationKeys.size,
-          "one battery formation cannot hide duplicate named-ray proof keys"
-        )
-        val targetRelations = entries.collect { case (Some(target), key) => target -> key }.sortBy {
-          case (target, key) =>
-            s"${target.side}:${target.square.key}:${target.role.name}" -> key.stableKey
-        }
-        StructuralBatteryChange(
-          formation,
-          relationKeys.sortBy(_.stableKey),
-          targetRelations
-        )
-      }
-      .sortBy(change => change.formation.firstSlider.square.key -> change.formation.secondSlider.square.key)
 
   private def relativeRank(square: Square, side: Color): Int =
     if side.white then square.rank.value + 1 else 8 - square.rank.value

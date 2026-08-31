@@ -1,6 +1,6 @@
 package lila.chessjudgment.analysis.position
 
-import chess.{ Color, HalfMoveClock, Side, Square }
+import chess.{ Color, HalfMoveClock, Square }
 import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.model.judgment.{
@@ -10,15 +10,12 @@ import lila.chessjudgment.model.judgment.{
   PositionNodeRef,
   CanonicalLineReplay,
   RelationAxisSignal,
-  RelationChangeDirection,
   RelationFactEvidence,
   RelationFactKind,
   RelationRayProjection,
-  RelationRayPattern,
   RelationWitnessDetail,
   TypedEvidenceGraph
 }
-import lila.chessjudgment.analysis.relation.ClosedRelationEvidence
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 import lila.chessjudgment.model.position.BoardGeometry
 
@@ -46,23 +43,17 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
       .relationGraph
       .closedPositionRelationSnapshot(positionRef, scope, analysis.relationInventory)
 
-  private def rayPattern(relation: RelationFactEvidence): Option[RelationRayPattern] =
+  private def hasAbsoluteKingPinGeometry(relation: RelationFactEvidence): Boolean =
     relation.detail match
-      case RelationWitnessDetail.RayBarrier(owner, _, _, occupants, geometry) =>
-        Some(RelationRayPattern.classify(owner, occupants, geometry.axis))
-      case RelationWitnessDetail.NamedRayTransition(_, _, _, _, _, _, _, pattern, _, _) =>
-        Some(pattern)
-      case _ => None
+      case ray: RelationWitnessDetail.RayBarrier =>
+        RelationRayProjection.isAbsoluteKingPinGeometry(ray)
+      case _ => false
 
-  test("one board geometry owner supplies paths, rays, and geometric controls"):
+  test("one board geometry owner supplies rays and geometric controls"):
     val current = position("7k/8/8/6r1/8/8/8/2B3K1 w - - 0 1")
     val bishop = current.board.pieceAt(Square.C1).getOrElse(fail("expected bishop on c1"))
     val analysis = PositionAnalyzer.analyze(current, Fen.write(current).value, 0)
 
-    assertEquals(
-      BoardGeometry.movementPath(bishop, Square.C1, Square.G5).map(_.key),
-      List("d2", "e3", "f4")
-    )
     assertEquals(
       analysis.boardRelations.flatMap(_.detail match
         case RelationWitnessDetail.GeometricControl(_, attacker, _, target)
@@ -75,9 +66,8 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
         .map(_.key),
       List("d2", "e3", "f4", "g5")
     )
-    assertEquals(BoardGeometry.movementPath(bishop, Square.C1, Square.C4), Nil)
     assertEquals(
-      BoardGeometry.geometricControls(bishop.role, Square.C1, bishop.color, current.board.occupied),
+      analysis.computation.staticBoard.geometricControlInventory.byOrigin(Square.C1),
       Square.C1.bishopAttacks(current.board.occupied)
     )
 
@@ -166,8 +156,6 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     val initial = PositionAnalyzer.analyze(position(initialFen), initialFen, plyCount = 0)
     val initialRef = PositionNodeRef(initialFen, 0, Some(Color.White))
     val closedInitial = closedSnapshot(initial, initialRef)
-    assert(closedInitial.inventory.stateView.castlingRights.allows(Color.White, Side.KingSide))
-    assert(closedInitial.inventory.stateView.castlingRights.allows(Color.Black, Side.QueenSide))
     assertEquals(closedInitial.inventory.stateView.kingSquare(Color.White).map(_.key), Some("e1"))
     assertEquals(
       closedInitial.inventory.stateView.pieces(Color.White, lila.chessjudgment.model.judgment.EvidencePieceRole("pawn")).size,
@@ -185,7 +173,7 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     val after = PositionAnalyzer.analyzeAfter(before, step, afterFen)
     val closedAfter = closedSnapshot(
       after,
-      PositionNodeRef(afterFen, after.features.plyCount, Some(Color.Black))
+      PositionNodeRef(afterFen, after.occurrence.plyCount, Some(Color.Black))
     )
     assertEquals(closedAfter.inventory.stateView.potentialEnPassantSquare.map(_.key), Some("e3"))
     val enPassant = closedAfter.inventory.legalMovesFrom(EvidenceSquare("d4")).find(_.moveUci == "d4e3").getOrElse(
@@ -193,13 +181,12 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     )
     assertEquals(enPassant.capture.map(_.capturedSquare.key), Some("e4"))
     assertEquals(enPassant.destination.key, "e3")
-    assertEquals(enPassant.changedCells.map(_.square.key).toSet, Set("d4", "e3", "e4"))
+    assertEquals(enPassant.boardEffect.cellChanges.map(_.square.key).toSet, Set("d4", "e3", "e4"))
     assertEquals(enPassant.capture.map(_.capturedSquare.key), Some("e4"))
     assertEquals(closedAfter.inventory.legalCapturesOf(EvidenceSquare("e4")).map(_.source.semanticId), List(enPassant.source.semanticId))
     val fromOrigin = closedAfter.inventory.controlsFrom(EvidenceSquare("d4")).find(_.targetSquare.key == "e3")
     val fromTarget = closedAfter.inventory.controlsAt(Color.Black, EvidenceSquare("e3")).find(_.controller.square.key == "d4")
     assertEquals(fromOrigin.map(_.source.semanticId), fromTarget.map(_.source.semanticId))
-    assertEquals(enPassant.geometricControl.map(_.source.semanticId), fromOrigin.map(_.source.semanticId))
 
     val castlingFen = "4k3/8/8/8/8/8/8/4K2R w K - 0 1"
     val castlingAnalysis = PositionAnalyzer.analyze(position(castlingFen), castlingFen, plyCount = 0)
@@ -211,12 +198,11 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
       fail("expected the exact castling legal resource")
     )
     assertEquals(castling.mode, PositionRelationExtractor.ClosedLegalMovementMode.Castling)
-    assertEquals(castling.traversedSquares.map(_.key), List("f1"))
     assertEquals(
       castling.boardEffect.pieceTransitions.map(movement => movement.from.key -> movement.to.key).toSet,
       Set("e1" -> "g1", "h1" -> "f1")
     )
-    assertEquals(castling.changedCells.map(_.square.key).toSet, Set("e1", "f1", "g1", "h1"))
+    assertEquals(castling.boardEffect.cellChanges.map(_.square.key).toSet, Set("e1", "f1", "g1", "h1"))
 
     val promotionFen = "7k/P7/8/8/8/8/8/4K3 w - - 0 1"
     val promotionAnalysis = PositionAnalyzer.analyze(position(promotionFen), promotionFen, plyCount = 0)
@@ -228,7 +214,7 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     )
     assertEquals(promotion.movement.beforeRole.name, "pawn")
     assertEquals(promotion.movement.afterRole.name, "queen")
-    assertEquals(promotion.changedCells.map(_.square.key).toSet, Set("a7", "a8"))
+    assertEquals(promotion.boardEffect.cellChanges.map(_.square.key).toSet, Set("a7", "a8"))
 
   test("closed king responses classify every legal reply without a reply search"):
     import PositionRelationExtractor.ClosedKingResponseMode.*
@@ -266,11 +252,6 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     assert(d4.passed && d4.geometricallyProtectedPasser)
     assertEquals(d4.componentPawns.map(_.key), List("c3", "d4", "e3"))
     assert(a2.isolated && !a2.geometricallyProtectedPasser)
-    assertEquals(
-      pawnTopology.files.find(_.file.key == "b").map(_.occupancy),
-      Some(PositionRelationExtractor.ClosedPawnFileOccupancy.Open)
-    )
-
   test("an ordered ray retains distant occupants and invalidates when the third occupant moves"):
     val beforeFen = "k2q4/8/3p4/8/3N4/8/8/3R3K b - - 0 1"
     val before = PositionAnalyzer.analyze(position(beforeFen), beforeFen, plyCount = 0)
@@ -280,7 +261,7 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
           attacker.key == "d1" && occupants.map(_.square.key) == List("d4", "d6", "d8")
       case _ => false
     ).getOrElse(fail("expected the complete d-file occupancy chain"))
-    assertEquals(beforeRay.targetSquares, Nil)
+    assertEquals(beforeRay.targetSquares.map(_.key), List("d4"))
     assertEquals(
       beforeRay.focusSquares.map(_.key),
       List("d1", "d4", "d6", "d8"),
@@ -305,8 +286,6 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     ))
 
   test("Doknjas Bf7 removes one rook support without proving that f6 has no supporter"):
-    import PositionRelationExtractor.ClosedRelationAbsenceQuery.GeometricFriendlySupportOf
-
     val beforeFen = "3r1r1k/1p4pp/p2pbp2/4n3/q2BPR2/2PB2Q1/P1P3PP/R6K b - - 7 24"
     val before = PositionAnalyzer.analyze(position(beforeFen), beforeFen, plyCount = 0)
     val step = PrincipalVariationEvidence
@@ -347,67 +326,34 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
           ) => controller.key == "g7" && target.key == "f6"
       case _ => false
     ))
-  test("one canonical ray inventory distinguishes absolute pin, x-ray, battery, and king skewer"):
+  test("one canonical ray inventory preserves ordered occupants and exact absolute king pins"):
+    def hasOrderedRay(
+        facts: List[RelationFactEvidence],
+        attacker: String,
+        occupants: List[String]
+    ): Boolean =
+      facts.exists(_.detail match
+        case RelationWitnessDetail.RayBarrier(_, exactAttacker, _, exactOccupants, _) =>
+          exactAttacker.key == attacker && exactOccupants.map(_.square.key) == occupants
+        case _ => false
+      )
+
     val pin = relations("4k3/4n3/8/8/8/8/8/4R1K1 b - - 0 1")
-    val xray = relations("k3q3/8/8/4b3/8/8/8/4R1K1 w - - 0 1")
-    val battery = relations("k3q3/8/8/8/8/8/4Q3/4R1K1 w - - 0 1")
-    val skewer = relations("4q3/8/8/4k3/8/8/8/4R1K1 b - - 0 1")
+    val screenedEnemy = relations("k3q3/8/8/4b3/8/8/8/4R1K1 w - - 0 1")
+    val supportedSlider = relations("k3q3/8/8/8/8/8/4Q3/4R1K1 w - - 0 1")
+    val kingFirst = relations("4q3/8/8/4k3/8/8/8/4R1K1 b - - 0 1")
 
-    assert(pin.exists(relation => relation.detail match
-      case RelationWitnessDetail.RayBarrier(_, attacker, _, occupants, _) =>
-        attacker.key == "e1" && occupants.headOption.exists(_.square.key == "e7") &&
-          occupants.lift(1).exists(_.square.key == "e8") &&
-          rayPattern(relation).contains(RelationRayPattern.AbsoluteKingPin)
-      case _ => false
-    ))
-    assert(xray.exists(relation => relation.detail match
-      case RelationWitnessDetail.RayBarrier(_, attacker, _, occupants, _) =>
-        attacker.key == "e1" && occupants.headOption.exists(_.square.key == "e5") &&
-          occupants.lift(1).exists(_.square.key == "e8") &&
-          rayPattern(relation).contains(RelationRayPattern.XRay)
-      case _ => false
-    ))
-    assert(battery.exists(relation => relation.detail match
-      case RelationWitnessDetail.RayBarrier(_, back, _, occupants, _) =>
-        occupants.headOption.exists(_.square.key == "e2") && back.key == "e1" &&
-          occupants.lift(1).exists(_.square.key == "e8") &&
-          rayPattern(relation).contains(RelationRayPattern.Battery)
-      case _ => false
-    ))
-    assert(skewer.exists(relation => relation.detail match
-      case RelationWitnessDetail.RayBarrier(_, attacker, _, occupants, _) =>
-        attacker.key == "e1" && occupants.headOption.exists(_.square.key == "e5") &&
-          occupants.lift(1).exists(_.square.key == "e8") &&
-          rayPattern(relation).contains(RelationRayPattern.KingSkewer)
-      case _ => false
-    ))
-    assert((pin ++ xray ++ battery ++ skewer).forall(relation =>
-      relation.kind != RelationFactKind.RayBarrier ||
-        relation.isPositionRelation
+    assert(hasOrderedRay(pin, "e1", List("e7", "e8")))
+    assert(pin.exists(hasAbsoluteKingPinGeometry))
+    assert(hasOrderedRay(screenedEnemy, "e1", List("e5", "e8")))
+    assert(hasOrderedRay(supportedSlider, "e1", List("e2", "e8")))
+    assert(hasOrderedRay(kingFirst, "e1", List("e5", "e8")))
+    assert((pin ++ screenedEnemy ++ supportedSlider ++ kingFirst).forall(relation =>
+      relation.kind != RelationFactKind.RayBarrier || relation.isPositionRelation
     ))
 
-  test("material value does not manufacture relative pins or non-king skewers"):
-    val shieldedQueen = relations("k3q3/8/8/4n3/8/8/8/4R1K1 w - - 0 1")
-    val queenInFront = relations("k3b3/8/8/4q3/8/8/8/4R1K1 w - - 0 1")
 
-    assert(shieldedQueen.exists(rayPattern(_).contains(RelationRayPattern.XRay)))
-    assert(!shieldedQueen.exists(rayPattern(_).contains(RelationRayPattern.AbsoluteKingPin)))
-    assert(queenInFront.exists(rayPattern(_).contains(RelationRayPattern.XRay)))
-    assert(!queenInFront.exists(rayPattern(_).contains(RelationRayPattern.KingSkewer)))
-
-  test("battery compatibility follows the shared ray axis rather than a named role-pair list"):
-    val bishopBattery = relations("k7/8/7r/8/8/8/3B4/K1B5 w - - 0 1")
-
-    assert(bishopBattery.exists(relation => relation.detail match
-      case RelationWitnessDetail.RayBarrier(_, back, backRole, occupants, geometry) =>
-        occupants.headOption.exists(piece => piece.square.key == "d2" && piece.role.name == "bishop") &&
-          back.key == "c1" && occupants.lift(1).exists(_.square.key == "h6") && backRole.name == "bishop" &&
-          geometry.axis == RelationAxisSignal.Diagonal &&
-          rayPattern(relation).contains(RelationRayPattern.Battery)
-      case _ => false
-    ))
-
-  test("tactical root ownership projects the canonical after-position geometry without rescanning rays"):
+  test("the canonical relation delta retains the exact established ordered ray"):
     val beforeFen = "4k3/4n3/8/8/8/8/8/R5K1 w - - 0 1"
     val legalReplay = PrincipalVariationEvidence
       .legalMoveReplay(beforeFen, List("a1e1"), startPly = 0)
@@ -420,38 +366,17 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     val canonicalPin = PositionAnalyzer
       .analyze(after, afterFen, plyCount = 1)
       .boardRelations
-      .find(rayPattern(_).contains(RelationRayPattern.AbsoluteKingPin))
+      .find(hasAbsoluteKingPinGeometry)
       .getOrElse(fail("expected the canonical after-position pin"))
-    val projectedPin = ClosedRelationEvidence
-      .relationProduction(replay, "a1e1")
-      .relations
-      .find(rayPattern(_).contains(RelationRayPattern.AbsoluteKingPin))
-      .getOrElse(fail("expected a line-owned projection of the canonical pin"))
+    val establishedPin = replay.onlyTransition
+      .getOrElse(fail("expected one replay transition"))
+      .relationDelta
+      .establishedOf(RelationFactKind.RayBarrier)
+      .find(change => hasAbsoluteKingPinGeometry(change.relation))
+      .getOrElse(fail("expected the canonical established pin change"))
 
-    val canonicalProjection = canonicalPin.detail match
-      case ray: RelationWitnessDetail.RayBarrier =>
-        RelationRayProjection.named(ray).getOrElse(fail("expected a named canonical pin projection"))
-      case _ => fail("expected a canonical ray barrier")
-    assert(projectedPin.detail match
-      case RelationWitnessDetail.NamedRayTransition(
-            _,
-            side,
-            attacker,
-            attackerRole,
-            barrier,
-            target,
-            axis,
-            pattern,
-            direction,
-            _
-          ) =>
-        side == canonicalProjection.side && attacker == canonicalProjection.attackerSquare &&
-          attackerRole == canonicalProjection.attackerRole && barrier == canonicalProjection.barrier &&
-          target == canonicalProjection.immediateTarget && axis == canonicalProjection.axis &&
-          pattern == canonicalProjection.pattern && direction == RelationChangeDirection.Established
-      case _ => false
-    )
-    assertEquals(projectedPin.lineMoves, List("a1e1"))
+    assertEquals(establishedPin.relation.detail, canonicalPin.detail)
+    assert(establishedPin.proofKeys.nonEmpty)
 
   test("semantic geometry is shared across clock fields while legal move occurrences remain distinct"):
     val firstFen = "4k3/8/8/8/3q4/8/3R4/4K3 w - - 0 1"
@@ -459,10 +384,10 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
     val first = PositionAnalyzer.analyze(position(firstFen), firstFen, plyCount = 1)
     val second = PositionAnalyzer.analyze(position(secondFen), secondFen, plyCount = 183)
 
-    assertEquals(first.features.fen, firstFen)
-    assertEquals(second.features.fen, secondFen)
-    assertEquals(first.features.plyCount, 1)
-    assertEquals(second.features.plyCount, 183)
+    assertEquals(first.occurrence.fen, firstFen)
+    assertEquals(second.occurrence.fen, secondFen)
+    assertEquals(first.occurrence.plyCount, 1)
+    assertEquals(second.occurrence.plyCount, 183)
     assert(!(first.actualLegalMoves.asInstanceOf[AnyRef] eq second.actualLegalMoves.asInstanceOf[AnyRef]))
     assertEquals(first.actualLegalMoves.map(_.toUci.uci), second.actualLegalMoves.map(_.toUci.uci))
     assert(

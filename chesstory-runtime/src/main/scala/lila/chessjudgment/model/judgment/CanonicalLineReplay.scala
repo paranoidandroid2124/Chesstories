@@ -75,33 +75,21 @@ private final class CanonicalReplayTransitionCalculation(
       afterAnalysis,
       legalStep,
       relationDelta,
-      certifiedCombinations.resultsFor(RelationCombinationContractKind.GeometricControlSetDelta),
-      certifiedCombinations.resultsFor(RelationCombinationContractKind.NamedRayTransition),
-      certifiedVertical.resultsFor(VerticalRelationContractKind.PawnTopologyTransition),
-      certifiedVertical.resultsFor(VerticalRelationContractKind.SliderReachDelta)
+      certifiedVertical.resultsFor(VerticalRelationContractKind.PawnTopologyTransition)
     )
-
-  lazy val structuralSignals: List[StructuralSignal] =
-    StructuralDeltaContracts.signals(structuralDelta)
 
   lazy val structuralConsequences: List[TransitionConsequence] =
     StructuralDeltaContracts.consequences(structuralDelta)
 
-  def structuralOccurrence(step: LineReplayStep): ReplayStructuralOccurrence =
-    val verticalSourcePremiseKeys = List(
-      VerticalRelationContractKind.PawnTopologyTransition,
-      VerticalRelationContractKind.SliderReachDelta
-    ).flatMap(contract =>
-      certifiedVertical
-        .resultsFor(contract)
-        .flatMap(ReplayVerticalRelationOccurrence.certifiedSourcePremiseIds)
-    )
+  def structuralOccurrence(
+      step: LineReplayStep,
+      resultPremiseOccurrences: List[ReplayVerticalRelationOccurrenceBinding]
+  ): ReplayStructuralOccurrence =
     ReplayStructuralOccurrence.certified(
       step,
       relationDelta.rootMove,
-      structuralSignals,
       structuralConsequences,
-      verticalSourcePremiseKeys
+      resultPremiseOccurrences
     )
 
 /** Semantic time-axis address of one certified L1 result. The replay step
@@ -211,15 +199,15 @@ private[chessjudgment] object ReplayVerticalRelationOccurrenceBinding:
       occurrence.certifiedSourcePremiseIds
     )
 
-/** Replay-owned L0.5 structural result for one admitted transition occurrence.
+/** Replay-owned exact consequence inventory for one admitted transition occurrence.
   * Root graph records and bounded L2 consumers project this same calculation;
   * neither is allowed to invoke the structural contracts again.
   */
 private[chessjudgment] final case class ReplayStructuralOccurrence private[judgment] (
     step: LineReplayStep,
     occurrenceId: String,
-    signals: List[StructuralSignal],
     consequences: List[TransitionConsequence],
+    resultPremiseOccurrences: List[ReplayVerticalRelationOccurrenceBinding],
     sourcePremiseKeys: List[String]
 ):
   require(occurrenceId.matches("[0-9a-f]{64}"), "a replay structural occurrence needs a canonical id")
@@ -232,19 +220,29 @@ private[chessjudgment] object ReplayStructuralOccurrence:
   private[judgment] def certified(
       step: LineReplayStep,
       movement: CanonicalRootLegalMove,
-      signals: List[StructuralSignal],
       consequences: List[TransitionConsequence],
-      certifiedVerticalSourcePremiseKeys: List[String]
+      resultPremiseOccurrences: List[ReplayVerticalRelationOccurrenceBinding]
   ): ReplayStructuralOccurrence =
+    val expectedResultKeys = consequences.flatMap(_.resultPremiseKeys).distinct.sortBy(_.stableKey)
+    require(
+      resultPremiseOccurrences.map(_.result) == expectedResultKeys &&
+        resultPremiseOccurrences.map(_.occurrenceId).distinct.size == resultPremiseOccurrences.size &&
+        resultPremiseOccurrences.forall(_.step == step),
+      "a structural occurrence must retain every consumed L1 result at this exact replay occurrence"
+    )
     val relationPremises = consequences.flatMap(consequence =>
       (consequence.subjectBindings ++ consequence.targetBindings).flatMap(binding =>
-        binding.relationKeys.map(key => s"relation:${key.stableKey}") ++
-          binding.derivedRelationKeys.map(key => s"derived:${key.stableKey}")
+        binding.relationKeys.map(key => s"relation:${key.stableKey}")
       )
     )
+    val resultPremises = resultPremiseOccurrences.flatMap(binding =>
+      List(
+        s"result:${binding.result.stableKey}",
+        s"result-occurrence:${binding.occurrenceId}"
+      ) ++ binding.certifiedSourcePremiseIds
+    )
     val premiseKeys = (
-      s"legal-move:${movement.fact.semanticId}" ::
-        (certifiedVerticalSourcePremiseKeys ++ relationPremises)
+      s"legal-move:${movement.fact.semanticId}" :: (resultPremises ++ relationPremises)
     ).distinct.sorted
     val semanticParts = List(
       "replay-structural-occurrence:v1",
@@ -257,18 +255,12 @@ private[chessjudgment] object ReplayStructuralOccurrence:
         PrincipalVariationEvidence.normalizeFen(step.fenAfter)
       ),
       movement.fact.semanticId,
-      signals.map(signal =>
-        List(
-          signal.kind.toString,
-          signal.magnitude.toString,
-          signal.subjectFacts.map(_.stableKey).sorted.mkString("[", ",", "]")
-        ).mkString(":")
-      ).sorted.mkString("[", ",", "]"),
       consequences.map(_.stableKey).sorted.mkString("[", ",", "]"),
+      resultPremiseOccurrences.map(_.stableKey).mkString("[", ",", "]"),
       premiseKeys.mkString("[", ",", "]")
     )
     val digest = BoundedCausalIdentity.digest(semanticParts)
-    ReplayStructuralOccurrence(step, digest, signals, consequences, premiseKeys)
+    ReplayStructuralOccurrence(step, digest, consequences, resultPremiseOccurrences, premiseKeys)
 
 private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
     val declared: LineReplayStep,
@@ -304,11 +296,30 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
 
   def structuralDelta: TransitionStructuralDelta = calculation.structuralDelta
 
+  private[chessjudgment] def structuralConsequences: List[TransitionConsequence] =
+    calculation.structuralConsequences
+
   private[chessjudgment] def ownsStructuralDelta(delta: TransitionStructuralDelta): Boolean =
     calculation.structuralDelta.asInstanceOf[AnyRef] eq delta.asInstanceOf[AnyRef]
 
   private[chessjudgment] lazy val structuralOccurrence: ReplayStructuralOccurrence =
-    calculation.structuralOccurrence(declared)
+    val expectedKeys = calculation.structuralConsequences.flatMap(_.resultPremiseKeys).toSet
+    val occurrences = VerticalRelationContractKind.values.toList.flatMap { contract =>
+      verticalRelationsFor(contract).flatMap { relation =>
+        val key = DerivedRelationResultKey.from(relation)
+        Option.when(expectedKeys(key))(
+          ReplayVerticalRelationOccurrenceBinding.from(
+            ReplayVerticalRelationOccurrence(declared, contract, relation)(closedRelationOutput)
+          )
+        )
+      }
+    }.sortBy(_.result.stableKey)
+    require(
+      occurrences.map(_.result).distinct.size == occurrences.size &&
+        occurrences.map(_.result).toSet == expectedKeys,
+      "a structural occurrence must resolve every consumed L1 result exactly once"
+    )
+    calculation.structuralOccurrence(declared, occurrences)
 
   private[judgment] def certifiesBinding(
       transition: StructuralTransitionBinding
@@ -677,7 +688,7 @@ private[chessjudgment] final class CanonicalLineReplay private (
   ): Option[CanonicalLineReplay] =
     replaySteps.headOption.flatMap { first =>
       val alreadyOwned = analysisBefore(first).exists(existing =>
-        existing.features.plyCount == rootAnalysis.features.plyCount &&
+        existing.occurrence.plyCount == rootAnalysis.occurrence.plyCount &&
           existing.relationInventory.sameOwner(rootAnalysis.relationInventory)
       )
       if alreadyOwned then Some(this)
@@ -692,9 +703,9 @@ private[chessjudgment] final class CanonicalLineReplay private (
             )
             matchingMoves match
               case move :: Nil
-                  if beforeAnalysis.features.plyCount == declared.ply - 1 &&
+                  if beforeAnalysis.occurrence.plyCount == declared.ply - 1 &&
                     PrincipalVariationEvidence.sameBoardState(
-                      beforeAnalysis.features.fen,
+                      beforeAnalysis.occurrence.fen,
                       declared.fenBefore
                     ) =>
                 val legal = LegalReplayStep.fromMove(declared.ply, beforeAnalysis.position, move)
@@ -752,8 +763,8 @@ private[chessjudgment] object CanonicalLineReplay:
     )
     Option.when(
       step.ply > 0 &&
-        beforeAnalysis.features.plyCount == step.ply - 1 &&
-        PrincipalVariationEvidence.sameBoardState(beforeAnalysis.features.fen, step.fenBefore) &&
+        beforeAnalysis.occurrence.plyCount == step.ply - 1 &&
+        PrincipalVariationEvidence.sameBoardState(beforeAnalysis.occurrence.fen, step.fenBefore) &&
         EvidenceRef.sameMove(step.moveUci, uci) &&
         ownedMove && move.before == before &&
         PrincipalVariationEvidence.sameBoardState(step.fenAfter, Fen.write(move.after).value)
@@ -849,10 +860,10 @@ private[chessjudgment] object CanonicalLineReplay:
       if PrincipalVariationEvidence.sameBoardState(firstDeclared.fenBefore, previousDeclared.fenAfter)
       if PrincipalVariationEvidence.sameBoardState(firstDeclared.fenBefore, Fen.write(firstLegal.before).value)
       if previousAnalysis.position == continuationRoot.position
-      if previousAnalysis.features.plyCount == continuationRoot.features.plyCount
+      if previousAnalysis.occurrence.plyCount == continuationRoot.occurrence.plyCount
       if PrincipalVariationEvidence.sameBoardState(
-        previousAnalysis.features.fen,
-        continuationRoot.features.fen
+        previousAnalysis.occurrence.fen,
+        continuationRoot.occurrence.fen
       )
     yield
       val continuationAnalyses =
@@ -1007,56 +1018,55 @@ private[chessjudgment] object CanonicalTransitionProof:
   */
 private[chessjudgment] final case class CanonicalTransitionDeltaProof private (
     transitionProof: CanonicalTransitionProof,
-    signals: List[StructuralSignal],
+    canonicalRelations: CanonicalRelationDelta,
     consequences: List[TransitionConsequence],
     relationChanges: List[CanonicalRelationChange],
-    derivedRelations: List[RelationFactEvidence],
-    derivedRelationSources: List[StructuralDerivedRelationSource]
+    resultPremiseSources: List[TransitionResultPremiseSource]
 ):
   def proves(delta: StructuralDeltaEvidence): Boolean =
     transitionProof.proves(delta.transition) &&
-      signals == delta.signals &&
       consequences == delta.consequences &&
       relationChanges == delta.relationChanges &&
-      derivedRelationSources == delta.derivedRelationSources &&
-      TransitionConsequenceRelationProof.provesCanonical(
+      resultPremiseSources == delta.resultPremiseSources &&
+      TransitionConsequenceBindingProof.provesCanonical(
         consequences,
         relationChanges,
         delta.transition,
-        transitionProof.relationDelta,
-        derivedRelations
+        canonicalRelations
       )
 
 private[chessjudgment] object CanonicalTransitionDeltaProof:
   def from(
       transitionProof: CanonicalTransitionProof,
-      signals: List[StructuralSignal],
+      canonicalRelations: CanonicalRelationDelta,
       consequences: List[TransitionConsequence],
       relationChanges: List[CanonicalRelationChange],
-      derivedRelations: List[RelationFactEvidence],
-      derivedRelationSources: List[StructuralDerivedRelationSource]
+      resultPremiseSources: List[TransitionResultPremiseSource]
   ): CanonicalTransitionDeltaProof =
     require(
-      derivedRelationSources.map(_.key).distinct.size == derivedRelationSources.size &&
-        derivedRelationSources.map(_.source).distinct.size == derivedRelationSources.size &&
-        derivedRelationSources.map(_.key).toSet == derivedRelations.map(DerivedRelationResultKey.from).toSet,
-      "canonical structural proof needs one occurrence output per derived relation"
+      canonicalRelations.owns(transitionProof.relationDelta),
+      "canonical consequences must retain the admitted transition's exact semantic delta"
+    )
+    val expectedResultKeys = consequences.flatMap(_.resultPremiseKeys).toSet
+    require(
+      resultPremiseSources.map(_.key).distinct.size == resultPremiseSources.size &&
+        resultPremiseSources.map(_.source).distinct.size == resultPremiseSources.size &&
+        resultPremiseSources.map(_.key).toSet == expectedResultKeys,
+      "canonical consequences need one exact occurrence source for every consumed transition result"
     )
     require(
-      TransitionConsequenceRelationProof.provesCanonical(
+      TransitionConsequenceBindingProof.provesCanonical(
         consequences,
         relationChanges,
         transitionProof.transitionBinding,
-        transitionProof.relationDelta,
-        derivedRelations
+        canonicalRelations
       ),
       "canonical transition consequences must be causally bound to their exact relation changes"
     )
     CanonicalTransitionDeltaProof(
       transitionProof,
-      signals,
+      canonicalRelations,
       consequences,
       relationChanges,
-      derivedRelations,
-      derivedRelationSources
+      resultPremiseSources
     )

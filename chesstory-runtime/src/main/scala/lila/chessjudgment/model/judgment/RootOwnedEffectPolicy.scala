@@ -25,7 +25,7 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
         passedPawnResult = parts.passedPawnResult,
         causalProofId = parts.causalProofId
       ),
-      magnitude = magnitudeKnowledge(proof, binding, materialOutcome),
+      magnitude = magnitudeKnowledge(proof, materialOutcome),
       materialEventSalience = materialOutcome.map(_.event)
     )
 
@@ -52,7 +52,6 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
 
   private def magnitudeKnowledge(
       proof: RootOwnedEffectProof,
-      binding: EvidenceObjectBinding,
       materialOutcome: Option[RootOwnedMaterialOutcome]
   ): DirectEffectMagnitudeKnowledge =
     proof match
@@ -80,18 +79,10 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
             )).map(DirectEffectMagnitudeKnowledge.Exact.apply)
               .getOrElse(DirectEffectMagnitudeKnowledge.ExpectedButMissing)
           case _ => DirectEffectMagnitudeKnowledge.NotApplicable
-      case RootOwnedEffectProof.PassedPawnResult(_, result) =>
-        expectedMagnitude(structuralMagnitude(result.assessment.consequence))
-      case _: RootOwnedEffectProof.RootLineEvent | _: RootOwnedEffectProof.RootRelation |
+      case _: RootOwnedEffectProof.PassedPawnResult | _: RootOwnedEffectProof.RootLineEvent |
+          _: RootOwnedEffectProof.RootRelation |
           _: RootOwnedEffectProof.ForcedReplyResourceDifferential =>
         DirectEffectMagnitudeKnowledge.NotApplicable
-
-  private def expectedMagnitude(
-      magnitude: Option[DirectCauseImportanceMeasure]
-  ): DirectEffectMagnitudeKnowledge =
-    magnitude
-      .map(DirectEffectMagnitudeKnowledge.Exact.apply)
-      .getOrElse(DirectEffectMagnitudeKnowledge.ExpectedButMissing)
 
   private def rootOwnedMaterialOutcome(
       proof: RootOwnedEffectProof
@@ -100,13 +91,6 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
       case RootOwnedEffectProof.LineEpisode(_, _, episode) =>
         episode.consequence.materialOutcome
       case _ => None
-
-  private def structuralMagnitude(
-      consequence: TransitionConsequence
-  ): Option[DirectCauseImportanceMeasure] =
-    Option.when(consequence.strength > 0)(
-      DirectCauseImportanceMeasure.StructuralStrength(consequence.strength)
-    )
 
   private def normalize(value: String): String =
     Option(value).getOrElse("").trim.toLowerCase

@@ -333,63 +333,39 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       line.ref -> owner.branchPosition
     }.toMap
     assertEquals(expectedPositionByLine.values.toSet.size, 2)
-    val afterPositionByLine = branchReplyLines.map { line =>
-      line.ref -> assembled
-        .lineRootOccurrence(line.ref)
-        .getOrElse(fail(s"expected root occurrence for ${line.ref.id}"))
-        .destination
-    }.toMap
-
     val enriched = EvidenceFactAssembler.enrich(assembled)
     val closedOccurrences = enriched.evidenceGraph.records.collect {
-      case EvidenceRecord(_, occurrence: ClosedRelationOccurrenceEvidence, _) => occurrence
-    }
+      case EvidenceRecord(ref, occurrence: ClosedRelationOccurrenceEvidence, _) => ref.id -> occurrence
+    }.toMap
     assertEquals(
-      closedOccurrences.map(_.edge.evidence.id).toSet,
+      closedOccurrences.values.map(_.edge.evidence.id).toSet,
       assembled.transitions.map(_.evidence.id).toSet
     )
-    val relationRecords = enriched.evidenceGraph
-      .records
-      .collect {
-        case record @ EvidenceRecord(ref, relation: RelationFactEvidence, _)
-            if ref.line.exists(expectedPositionByLine.contains) && (relation.detail match
-              case RelationWitnessDetail.NamedRayTransition(_, _, _, _, _, _, _, pattern, direction, _) =>
-                pattern == RelationRayPattern.AbsoluteKingPin && direction == RelationChangeDirection.Established
-              case _ => false
-            ) =>
-          record -> relation
-      }
-    assertEquals(relationRecords.size, 2)
+    val branchTransitionOutputs = enriched.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(ref, relation: RelationFactEvidence, _)
+          if ref.line.exists(expectedPositionByLine.contains) &&
+            relation.kind == RelationFactKind.GeometricControlSetDelta =>
+        record -> relation
+    }
+    val relationRecords = branchTransitionOutputs
+      .groupBy(_._2.semanticId)
+      .values
+      .find(records => records.map(_._1.ref.line).distinct.size == 2)
+      .getOrElse(fail("expected one shared branch-local control-set transition"))
     assertEquals(
       relationRecords.map { case (record, _) => record.ref.line.get -> record.ref.position }.toMap,
       expectedPositionByLine
     )
     assertEquals(relationRecords.map(_._2.semanticId).distinct.size, 1)
     assertEquals(relationRecords.map(_._1.ref.id).distinct.size, 2)
-    relationRecords.foreach { case (record, relation) =>
-      val afterPosition = afterPositionByLine(record.ref.line.get)
-      val source = enriched.evidenceGraph.relationGraph
-        .positionRelationsAt(afterPosition)
-        .filter(node => (node.relation.detail, relation.detail) match
-          case (
-                ray: RelationWitnessDetail.RayBarrier,
-                RelationWitnessDetail.NamedRayTransition(_, side, attacker, role, barrier, target, axis, pattern, _, _)
-              ) =>
-            RelationRayProjection.named(ray).exists(projection =>
-              projection.side == side && projection.attackerSquare == attacker &&
-                projection.attackerRole == role && projection.barrier == barrier &&
-                projection.immediateTarget == target && projection.axis == axis &&
-                projection.pattern == pattern
-            )
-          case _ => false
-        )
-      assertEquals(source.size, 1)
-      assert(
-        record.parents.contains(source.head.ref),
-        "a line-owned named ray must retain its exact closed after-position source"
-      )
+    relationRecords.foreach { case (record, _) =>
+      val owners = record.parents.flatMap(parent => closedOccurrences.get(parent.id))
+      assertEquals(owners.size, 1)
+      assertEquals(owners.head.lineOwner, record.ref.line)
+      assertEquals(owners.head.edge.from, record.ref.position)
       assert(enriched.evidenceGraph.proofEligible(record))
     }
+
 
   test("a branch-reply carrier cannot become a defensive claim without a line reference"):
     val carrier = EvidenceRecord(

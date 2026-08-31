@@ -41,10 +41,17 @@ private[chessjudgment] final case class SliderRay(
     "slider-ray occupants must retain exact board-distance order"
   )
 
-  def segmentThrough(target: Square): List[Square] =
-    val index = squares.indexOf(target)
-    require(index >= 0, "a slider-control dependency must belong to its canonical ray")
-    attackerSquare :: squares.take(index + 1)
+  lazy val controlledSquares: List[Square] =
+    occupants.headOption match
+      case Some(first) => squares.takeWhile(_ != first.square) :+ first.square
+      case None        => squares
+
+  lazy val controlDependencyByTarget: Map[Square, List[Square]] =
+    controlledSquares
+      .scanLeft(List(attackerSquare))((path, square) => path :+ square)
+      .tail
+      .map(path => path.last -> path)
+      .toMap
 
 private[chessjudgment] final case class BoardCellChange(
     square: Square,
@@ -178,19 +185,17 @@ private[chessjudgment] object BoardGeometry:
       affectedOccupiedRayOrigins.toSet
     )
 
-  def geometricControls(
+  def fixedPatternControls(
       role: Role,
       square: Square,
-      color: Color,
-      occupied: Bitboard
+      color: Color
   ): Bitboard =
     role match
       case Pawn   => square.pawnAttacks(color)
       case Knight => square.knightAttacks
-      case Bishop => square.bishopAttacks(occupied)
-      case Rook   => square.rookAttacks(occupied)
-      case Queen  => square.queenAttacks(occupied)
       case King   => square.kingAttacks
+      case _ =>
+        throw IllegalArgumentException("slider controls must be projected from canonical rays")
 
   def sliderRays(board: Board): List[SliderRay] =
     sliderRays(board, (board.bishops | board.rooks | board.queens).squares.toSet)
@@ -215,6 +220,33 @@ private[chessjudgment] object BoardGeometry:
       }
     }
 
+  def controlsFromSliderRays(rays: List[SliderRay]): Map[Square, Bitboard] =
+    rays.groupBy(_.attackerSquare).map { case (origin, exactRays) =>
+      val first = exactRays.head
+      require(
+        exactRays.forall(ray =>
+          ray.attackerSquare == origin &&
+            ray.attackerRole == first.attackerRole &&
+            ray.attackerColor == first.attackerColor
+        ),
+        "one slider origin must retain one exact piece identity"
+      )
+      val expectedDirections = directions(first.attackerRole)
+        .filter(direction => squaresAlong(origin, direction.fileStep, direction.rankStep).nonEmpty)
+        .toSet
+      require(
+        exactRays.map(_.direction).toSet == expectedDirections &&
+          exactRays.map(_.direction).distinct.size == exactRays.size,
+        "slider controls require the complete canonical ray inventory for their origin"
+      )
+      val controlledSquares = exactRays.flatMap(_.controlledSquares)
+      require(
+        controlledSquares.distinct.size == controlledSquares.size,
+        "one slider target must belong to one canonical direction"
+      )
+      origin -> controlledSquares.foldLeft(Bitboard.empty)((controls, square) => controls.add(square))
+    }
+
   private def sliderDependencyClosure(
       board: Board,
       changed: Square
@@ -236,28 +268,6 @@ private[chessjudgment] object BoardGeometry:
       role == Rook && axis != BoardLineAxis.Diagonal ||
       role == Bishop && axis == BoardLineAxis.Diagonal
 
-  def lineSpan(from: Square, to: Square): List[Square] =
-    if from == to then List(from)
-    else from :: movementPath(Piece(White, Queen), from, to) ::: List(to)
-
-  /** Squares crossed by the named piece on one geometrically valid move.
-    * Endpoints are excluded; occupancy and move legality remain the caller's
-    * responsibility.
-    */
-  def movementPath(piece: Piece, from: Square, to: Square): List[Square] =
-    val fileDelta = to.file.value - from.file.value
-    val rankDelta = to.rank.value - from.rank.value
-    val pawnDoubleStep =
-      piece.role == Pawn &&
-        fileDelta == 0 &&
-        rankDelta == (if piece.color.white then 2 else -2)
-    if pawnDoubleStep then
-      Square.at(from.file.value, from.rank.value + (if piece.color.white then 1 else -1)).toList
-    else
-      lineDirection(piece.role, from, to).toList.flatMap { case (fileStep, rankStep) =>
-        squaresAlong(from, fileStep, rankStep).take(math.max(fileDelta.abs, rankDelta.abs) - 1)
-      }
-
   private def occupiedAlong(
       board: Board,
       from: Square,
@@ -265,16 +275,6 @@ private[chessjudgment] object BoardGeometry:
       rankStep: Int
   ): List[Square] =
     squaresAlong(from, fileStep, rankStep).filter(board.pieceAt(_).nonEmpty)
-
-  private def lineDirection(role: Role, from: Square, to: Square): Option[(Int, Int)] =
-    val fileDelta = to.file.value - from.file.value
-    val rankDelta = to.rank.value - from.rank.value
-    val diagonal = fileDelta.abs == rankDelta.abs && fileDelta != 0
-    val straight = (fileDelta == 0) != (rankDelta == 0)
-    Option.when(
-      (diagonal || straight) &&
-        (role == Queen || role == Bishop && diagonal || role == Rook && straight)
-    )(Integer.signum(fileDelta) -> Integer.signum(rankDelta))
 
   private def squaresAlong(from: Square, fileStep: Int, rankStep: Int): List[Square] =
     (1 to 7).flatMap { offset =>

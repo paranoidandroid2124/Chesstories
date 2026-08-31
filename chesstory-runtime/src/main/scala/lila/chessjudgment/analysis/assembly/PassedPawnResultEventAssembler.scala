@@ -95,7 +95,7 @@ object PassedPawnResultEventAssembler:
           directFunctionDurable = linePayload.rootActorSurvivesLine.contains(true)
           structuralBindings = EvidenceObjectBinding.fromEvidenceRefs(graph, List(structuralRecord.ref))
           supportedConsequences = structural.consequences
-            .filter(consequence => consequence.establishesState && consequence.strength > 0)
+            .filter(_.establishesState)
               .flatMap(
                 PassedPawnResultEventProof.candidateConsequenceForKind(
                   rootKind,
@@ -567,7 +567,7 @@ object PassedPawnResultEventAssembler:
             ref.layer == EvidenceLayer.StructuralDelta &&
             ref.confidence == EvidenceConfidence.BoardDerived &&
             payload.line.contains(line) && EvidenceRef.sameMove(payload.moveUci, line.rootMove) &&
-            payload.transitionIsCertified && payload.exactOutputInventoryCertified &&
+            payload.transitionIsCertified && payload.canonicalOutputShapeCertified &&
             graph.proofEligible(record) =>
         record -> payload
     } match
@@ -584,11 +584,9 @@ private[assembly] object PassedPawnResultEventProof:
   ): Boolean =
     structural.consequences.exists(observed =>
       observed.kind == consequence.kind &&
-        observed.polarity == consequence.polarity &&
         consequence.subjectFacts.toSet.subsetOf(observed.subjectFacts.toSet)
     ) &&
     consequence.establishesState &&
-    consequence.strength > 0 &&
     structural.certifiedRootMovement
       .flatMap(
         resultConsequenceForKind(
@@ -680,22 +678,21 @@ private[assembly] object PassedPawnResultEventProof:
       ownedOccurrence <- ownedReplay.structuralOccurrence(step)
       occurrence <- replay.structuralOccurrence(step)
       if ownedOccurrence == occurrence
-      canonicalPerspective <- replay.legalSteps.headOption.map(_.move.piece.color)
       role <- transitionRole(line.line.role)
       movement = canonical.relationDelta.rootMove
       transition = StructuralTransitionBinding(
         moveUci = step.moveUci,
         role = role,
-        from = PositionNodeRef(step.fenBefore, step.ply - 1, Some(canonical.legal.move.piece.color)),
-        to = PositionNodeRef(step.fenAfter, step.ply, Some(canonical.legal.after.color)),
+        from = PositionNodeRef(step.fenBefore, step.ply - 1, Some(movement.side)),
+        to = PositionNodeRef(step.fenAfter, step.ply, Some(!movement.side)),
         line = Some(line.line),
-        perspective = canonicalPerspective,
-        actorRole = Some(EvidencePieceRole(canonical.legal.move.piece.role.name))
+        perspective = movement.side,
+        actorRole = Some(movement.beforeRole)
       )
     yield CausalStepObservation(
       step,
       transition,
-      occurrence.consequences.filter(consequence => consequence.establishesState && consequence.strength > 0),
+      occurrence.consequences.filter(_.establishesState),
       movement,
       lineOwner.ref,
       occurrence
@@ -872,8 +869,7 @@ private[assembly] object PassedPawnResultEventProof:
         TransitionConsequenceKind.OpenFileEstablished,
         TransitionConsequenceKind.SemiOpenFileEstablished,
         TransitionConsequenceKind.PawnTensionCreated,
-        TransitionConsequenceKind.PassedPawnProgress,
-        TransitionConsequenceKind.BatteryFormation
+        TransitionConsequenceKind.PassedPawnProgress
       )(consequence.kind)
     consequenceBindings.nonEmpty &&
     (!concreteTargetRequired ||

@@ -138,9 +138,9 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       "4k3/8/8/6p1/8/8/7P/4K3 w - - 0 1",
       List("h2h4")
     ).structural.consequences.filter(_.kind == TransitionConsequenceKind.PawnTensionCreated)
-    assertEquals(pawnTension.map(_.strength), List(1))
+    assertEquals(pawnTension.flatMap(_.subjectFacts).size, 1)
     assertEquals(
-      pawnTension.flatMap(_.subjects),
+      pawnTension.flatMap(_.subjectFacts.map(_.label)),
       List("created-tension:white:h4-g5")
     )
 
@@ -149,40 +149,12 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       List("d1h5")
     ).structural.relationChanges.filter(change =>
       change.direction == RelationChangeDirection.Established &&
-        (change.detail match
+        (change.relation.detail match
           case RelationWitnessDetail.GeometricControl(White, attacker, _, target) =>
             attacker.key == "h5" && target.key == "e8"
           case _ => false)
     )
     assertEquals(geometricControl.size, 1)
-
-  test("a pinned geometric attack remains an exact neutral relation change"):
-    val structural = analyzedFixture(
-      "k2r4/8/1r3q2/8/5N2/8/8/3K4 w - - 0 1",
-      List("f4d5")
-    ).structural
-    assert(structural.consequences.nonEmpty)
-    assert(structural.consequences.forall(consequence =>
-      Set(
-        TransitionConsequenceKind.GeometricControlSetChanged,
-        TransitionConsequenceKind.SliderReachChanged
-      )(consequence.kind) && consequence.polarity == StructuralSignalPolarity.Neutral
-    ), clues(structural.consequences))
-    assert(structural.relationChanges.exists(_.kind == RelationFactKind.GeometricControl))
-
-  test("an opened pawn path is not promoted when the pawn advances remain illegal"):
-    val structural = analyzedFixture(
-      "7k/8/8/b7/8/3N4/3P4/4K3 w - - 0 1",
-      List("d3f4")
-    ).structural
-    assert(!structural.signals.flatMap(_.subjects).exists(_.contains("advance-path-cleared")))
-    assert(structural.consequences.nonEmpty)
-    assert(structural.consequences.forall(consequence =>
-      Set(
-        TransitionConsequenceKind.GeometricControlSetChanged,
-        TransitionConsequenceKind.SliderReachChanged
-      )(consequence.kind) && consequence.polarity == StructuralSignalPolarity.Neutral
-    ), clues(structural.consequences))
 
   test("passed-pawn progress without an observed result route stays structural"):
     val result = analyzedFixture(
@@ -644,11 +616,23 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       .collect { case EvidenceRecord(_, line: LineFactEvidence, _) => line }
       .flatMap(_.certifiedReplay)
       .getOrElse(fail("expected the exact result line owner replay"))
-    val exactPawnTopologyPremises = resultOwnerReplay
+    val consumedPawnTopologyOccurrences = resultEvent.structuralOccurrence.resultPremiseOccurrences
+      .filter(_.contract == VerticalRelationContractKind.PawnTopologyTransition)
+    assert(consumedPawnTopologyOccurrences.nonEmpty, "expected a consumed L1 pawn-topology occurrence")
+    val exactPawnTopologyOccurrences = resultOwnerReplay
       .verticalRelationOccurrences(
         resultEvent.step,
         List(VerticalRelationContractKind.PawnTopologyTransition)
       )
+      .filter(occurrence =>
+        consumedPawnTopologyOccurrences.exists(_.occurrenceId == occurrence.occurrenceId)
+      )
+    assertEquals(
+      exactPawnTopologyOccurrences.map(_.occurrenceId).sorted,
+      consumedPawnTopologyOccurrences.map(_.occurrenceId).sorted,
+      "the structural result must select exact L1 occurrences rather than every same-contract output"
+    )
+    val exactPawnTopologyPremises = exactPawnTopologyOccurrences
       .flatMap(_.certifiedSourcePremiseIds)
       .distinct
     assert(exactPawnTopologyPremises.nonEmpty, "expected the exact L1 pawn-topology premises")
@@ -1055,10 +1039,9 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       LineFactEvidence.fromCertifiedReplay(line = line, replay = replay),
       StructuralDeltaEvidence(
         transition,
-        signals = Nil,
         consequences = Nil,
         relationChanges = Nil,
-        derivedRelationSources = Nil,
+        resultPremiseSources = Nil,
         canonicalTransitionProof = Some(transitionProof),
         canonicalDeltaProof = None
       ),
@@ -1088,7 +1071,6 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       )
     )
     base.copy(structural = base.structural.copy(
-      signals = StructuralDeltaContracts.signals(delta.structural),
       consequences = StructuralDeltaContracts.consequences(delta.structural),
       relationChanges = delta.canonicalRelations.changes
     ))

@@ -576,7 +576,7 @@ private[chessjudgment] object VerticalRelationPremiseRole:
             positionAt(RelationPremiseOccurrence.After, RelationPremiseOccurrence.Established)
         exactOccurrence && (relation.detail match
           case ray @ RelationWitnessDetail.RayBarrier(owner, attacker, attackerRole, occupants, geometry) =>
-            RelationRayProjection.pattern(ray) == RelationRayPattern.AbsoluteKingPin &&
+            RelationRayProjection.isAbsoluteKingPinGeometry(ray) &&
               owner == !restrictedSide && attacker == pinner.square && attackerRole == pinner.role &&
               geometry.axis == axis &&
               occupants.headOption.exists(piece =>
@@ -1710,7 +1710,7 @@ private[chessjudgment] final class VerticalRelationInput private (
     val pinCauses = after.rayBarriersWithFirstOccupant(pinned.square).flatMap { source =>
       source.detail match
         case ray @ RelationWitnessDetail.RayBarrier(owner, attacker, attackerRole, occupants, geometry)
-            if RelationRayProjection.pattern(ray) == RelationRayPattern.AbsoluteKingPin &&
+            if RelationRayProjection.isAbsoluteKingPinGeometry(ray) &&
               owner == !after.sideToMove &&
               restriction.postMoveControllers.contains(RelationPieceWitness(attacker, attackerRole)) &&
               occupants.headOption.exists(piece =>

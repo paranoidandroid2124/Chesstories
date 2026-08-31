@@ -435,7 +435,7 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
       (for
         canonicalReplay <- trace.canonicalReplay.toList
         triggerTransition <- trace.transition(trigger.step).toList
-        triggerDestination = triggerTransition.legal.move.dest
+        triggerDestination = triggerTransition.relationDelta.rootMove.to
         candidates = replay.drop(triggerIndex + 1)
         whilePresent = candidates.foldLeft((true, List.empty[(LineReplayStep, CanonicalReplayTransition)])) {
           case ((false, admitted), _) => false -> admitted
@@ -443,7 +443,9 @@ private[assembly] object PassedPawnResultEpisodeBuilder:
             trace.transition(step) match
               case None => false -> admitted
               case Some(transition) =>
-                val originalActorStillPresent = !transition.boardFootprint.changedSquareSet(triggerDestination)
+                val originalActorStillPresent = !transition.boardFootprint.changedSquares.exists(
+                  _.key.equalsIgnoreCase(triggerDestination.key)
+                )
                 originalActorStillPresent -> (admitted :+ (step -> transition))
         }._2
         (step, responseTransition) <- whilePresent

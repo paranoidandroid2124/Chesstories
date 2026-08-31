@@ -44,7 +44,7 @@ object PositionNodeAssembler:
   ): PositionNodeAssembly =
     val position = analysis.position
     require(
-      analysis.features.fen == fen && analysis.features.plyCount == ply,
+      analysis.occurrence.fen == fen && analysis.occurrence.plyCount == ply,
       "a position node must use the analysis of its exact occurrence"
     )
     val ref = lineRootOwner
@@ -53,18 +53,18 @@ object PositionNodeAssembler:
     val nodeKey = lineRootOwner
       .map(allocator.lineRootPositionKey(role, fen, ply, _))
       .getOrElse(allocator.positionKey(role, fen, ply))
-    val featureRecord =
+    val occurrenceRecord =
       EvidenceRecord(
         ref = EvidenceRef(
-          id = allocator.evidenceId(s"position-feature:$nodeKey"),
-          producer = EvidenceProducer.PositionFeatureProducer,
-          layer = EvidenceLayer.PositionFeature,
+          id = allocator.evidenceId(s"position-occurrence:$nodeKey"),
+          producer = EvidenceProducer.PositionOccurrenceProducer,
+          layer = EvidenceLayer.PositionOccurrence,
           position = ref,
           line = None,
           scope = scope,
           confidence = EvidenceConfidence.BoardDerived
         ),
-        payload = PositionFeatureEvidence(analysis.features)
+        payload = PositionOccurrenceEvidence(analysis.occurrence)
       )
     val relationRecords = PositionRelationExtractor.records(
       analysis.boardRelations,
@@ -76,7 +76,7 @@ object PositionNodeAssembler:
         )
     )
     val node = PositionNode(role = role, ref = ref)
-    PositionNodeAssembly(node, featureRecord :: relationRecords, analysis)
+    PositionNodeAssembly(node, occurrenceRecord :: relationRecords, analysis)
 
 object CandidateLineAssembler:
 
@@ -414,8 +414,8 @@ object NodeLineTransitionAssembler:
       playedReplayStep <- playedLine.replay.replaySteps.headOption
       beforeAnalysis <- playedLine.replay.analysisBefore(playedReplayStep)
       afterPlayedAnalysis <- playedLine.replay.analysisAfter(playedReplayStep)
-      if beforeAnalysis.features.plyCount == input.beforePly
-      if PrincipalVariationEvidence.sameBoardState(beforeAnalysis.features.fen, input.beforeFen)
+      if beforeAnalysis.occurrence.plyCount == input.beforePly
+      if PrincipalVariationEvidence.sameBoardState(beforeAnalysis.occurrence.fen, input.beforeFen)
       if PrincipalVariationEvidence.sameBoardState(playedReplayStep.fenAfter, input.afterPlayedFen)
     yield
       val before = PositionNodeAssembler.fromAnalysis(

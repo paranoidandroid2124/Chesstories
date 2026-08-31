@@ -1,6 +1,6 @@
 package lila.chessjudgment.analysis.result
 
-import chess.{ Black, White }
+import chess.White
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.CanonicalPositionHistory
 import lila.chessjudgment.model.PassedPawnResultKind
@@ -67,45 +67,6 @@ class PassedPawnResultSemanticsTest extends munit.FunSuite:
       )
     )
 
-  test("causal target extraction separates battery witnesses from its exact target"):
-    val battery = TransitionConsequence(
-      kind = TransitionConsequenceKind.BatteryFormation,
-      strength = 1,
-      subjectBindings = List(
-        StructuralSubjectBinding.unbound(
-          StructuralSubject.Battery(
-            RelationBatteryFormationWitness(
-              White,
-              RelationColoredPieceWitness(
-                EvidenceSquare("c1"),
-                EvidencePieceRole("bishop"),
-                White
-              ),
-              RelationColoredPieceWitness(
-                EvidenceSquare("d2"),
-                EvidencePieceRole("queen"),
-                White
-              ),
-              RelationAxisSignal.Diagonal
-            )
-          )
-        )
-      ),
-      targetBindings = List(
-        StructuralSubjectBinding.unbound(
-          StructuralSubject.PieceAt(Black, EvidencePieceRole("rook"), EvidenceSquare("e3"))
-        )
-      )
-    )
-    assertEquals(
-      PassedPawnResultEpisode.consequenceSquares(battery).map(_.key).toSet,
-      Set("c1", "d2")
-    )
-    assertEquals(
-      PassedPawnResultEpisode.consequenceTargetSquares(battery).map(_.key),
-      List("e3")
-    )
-
   private def proves(
       kind: PassedPawnResultKind,
       transition: CertifiedPassedPawnResultTransition,
@@ -131,8 +92,7 @@ class PassedPawnResultSemanticsTest extends munit.FunSuite:
   ): TransitionConsequence =
     TransitionConsequence(
       kind = kind,
-      strength = 1,
-      subjectBindings = subjects.map(StructuralSubjectBinding.unbound)
+      subjectBindings = subjects.map(StructuralSubjectBinding(_, Nil))
     )
 
   private final case class CertifiedPassedPawnResultTransition(

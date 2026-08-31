@@ -72,32 +72,15 @@ object PlayerFacingImpact:
             PlayerFacingImpact.PreservesReviewedMover(actor)
           )
 
-enum DirectCauseStructuralOrigin:
-  case PassedPawnResult
-
 /** A domain whose numeric measure has one typed meaning. */
 enum DirectCauseImportanceDomain:
   case BoardMate
   case Material
-  case Structural(
-      origin: DirectCauseStructuralOrigin,
-      kind: TransitionConsequenceKind,
-      polarity: StructuralSignalPolarity,
-      robustness: Option[PassedPawnResultReplyCoverage]
-  )
 
   def stableKey: String =
     this match
       case BoardMate => "board-mate"
       case Material => "material"
-      case Structural(origin, kind, polarity, robustness) =>
-        List(
-          "structural",
-          origin.toString.toLowerCase,
-          kind.toString.toLowerCase,
-          polarity.toString.toLowerCase,
-          robustness.map(_.toString.toLowerCase).getOrElse("none")
-        ).mkString(":")
 
 /** Complete provenance for diagnostics. This frame records how a profile was
   * reached, but its equality does not grant or deny magnitude comparison.
@@ -420,14 +403,6 @@ object DirectCauseMeasuredEffect:
     proof match
       case RootOwnedEffectProof.LineEpisode(_, _, episode) =>
         lineEpisodeEffect(episode, descriptor)
-      case RootOwnedEffectProof.PassedPawnResult(_, result) =>
-        structuralEffect(
-          DirectCauseStructuralOrigin.PassedPawnResult,
-          result.event.perspective,
-          result.assessment.consequence,
-          Some(result.assessment.robustness),
-          descriptor = descriptor
-        )
       case _ =>
         None
 
@@ -461,37 +436,6 @@ object DirectCauseMeasuredEffect:
           effectIdentity = descriptor.identity
         )
       case _ => None
-
-  private def structuralEffect(
-      origin: DirectCauseStructuralOrigin,
-      perspective: Color,
-      consequence: TransitionConsequence,
-      robustness: Option[PassedPawnResultReplyCoverage],
-      descriptor: RootOwnedEffectDescriptor,
-      forcedStake: Option[DirectCauseEffectStake] = None
-  ): Option[DirectCauseMeasuredEffect] =
-    val stake = forcedStake.orElse(
-      consequence.polarity match
-        case StructuralSignalPolarity.Gain => Some(DirectCauseEffectStake.Benefits(perspective))
-        case StructuralSignalPolarity.Loss => Some(DirectCauseEffectStake.Harms(perspective))
-        case StructuralSignalPolarity.Neutral => None
-    )
-    for
-      exactStake <- stake
-      measure <- descriptor.exactMagnitude.collect {
-        case exact @ DirectCauseImportanceMeasure.StructuralStrength(_) => exact
-      }
-    yield DirectCauseMeasuredEffect(
-      stake = exactStake,
-      domain = DirectCauseImportanceDomain.Structural(
-        origin,
-        consequence.kind,
-        consequence.polarity,
-        robustness
-      ),
-      measure = measure,
-      effectIdentity = descriptor.identity
-    )
 
 /** Typed partial order over effects already selected by R.
   *
@@ -589,9 +533,7 @@ object DirectCauseImportancePolicy:
     else if leftTerminal != rightTerminal then
       if leftTerminal then DirectCauseImportanceRelation.Dominates
       else DirectCauseImportanceRelation.DominatedBy
-    else if left.domain != right.domain ||
-      !sameRequiredEffectScope(left, right)
-    then DirectCauseImportanceRelation.Incomparable
+    else if left.domain != right.domain then DirectCauseImportanceRelation.Incomparable
     else
       (left.measure, right.measure) match
         case (DirectCauseImportanceMeasure.MateArrival(leftPly), DirectCauseImportanceMeasure.MateArrival(rightPly)) =>
@@ -605,11 +547,6 @@ object DirectCauseImportancePolicy:
             rightAtLeast = rightCp >= leftCp && rightPly <= leftPly,
             exactlyEqual = leftCp == rightCp && leftPly == rightPly
           )
-        case (
-              DirectCauseImportanceMeasure.StructuralStrength(leftUnits),
-              DirectCauseImportanceMeasure.StructuralStrength(rightUnits)
-            ) =>
-          higherIsStronger(leftUnits, rightUnits)
         case _ =>
           DirectCauseImportanceRelation.Incomparable
 
@@ -709,20 +646,6 @@ object DirectCauseImportancePolicy:
       decisions = decisions
     )
 
-  private def sameRequiredEffectScope(
-      left: DirectCauseImportanceProfile,
-      right: DirectCauseImportanceProfile
-  ): Boolean =
-    (left.domain, right.domain) match
-      case (
-            DirectCauseImportanceDomain.Structural(_, _, _, _),
-            DirectCauseImportanceDomain.Structural(_, _, _, _)
-          ) =>
-        left.effectIdentity != RootOwnedEffectIdentity.unscoped &&
-          right.effectIdentity != RootOwnedEffectIdentity.unscoped &&
-          left.effectIdentity == right.effectIdentity
-      case _ => true
-
   private def terminalMateProfile(profile: DirectCauseImportanceProfile): Boolean =
     (profile.domain, profile.measure) match
       case (DirectCauseImportanceDomain.BoardMate, DirectCauseImportanceMeasure.MateArrival(_)) => true
@@ -732,10 +655,6 @@ object DirectCauseImportancePolicy:
     (profile.domain, profile.measure) match
       case (DirectCauseImportanceDomain.BoardMate, DirectCauseImportanceMeasure.MateArrival(_)) => true
       case (DirectCauseImportanceDomain.Material, DirectCauseImportanceMeasure.MaterialOutcome(_, _)) => true
-      case (
-            DirectCauseImportanceDomain.Structural(_, _, _, _),
-            DirectCauseImportanceMeasure.StructuralStrength(_)
-          ) => true
       case _ => false
 
   private def relationDomainKey(
@@ -746,10 +665,7 @@ object DirectCauseImportancePolicy:
     else "terminal:board-mate"
 
   private def domainKey(profile: DirectCauseImportanceProfile): String =
-    profile.domain match
-      case DirectCauseImportanceDomain.Structural(_, _, _, _) =>
-        s"${profile.domain.stableKey}|effect:${profile.effectIdentity.stableKey}"
-      case _ => profile.domain.stableKey
+    profile.domain.stableKey
 
   private def actorSide(binding: EvidenceObjectBinding): Option[Color] =
     binding.actor.collect {
@@ -762,11 +678,6 @@ object DirectCauseImportancePolicy:
   private def lowerIsStronger(left: Int, right: Int): DirectCauseImportanceRelation =
     if left < right then DirectCauseImportanceRelation.Dominates
     else if left > right then DirectCauseImportanceRelation.DominatedBy
-    else DirectCauseImportanceRelation.Tied
-
-  private def higherIsStronger(left: Int, right: Int): DirectCauseImportanceRelation =
-    if left > right then DirectCauseImportanceRelation.Dominates
-    else if left < right then DirectCauseImportanceRelation.DominatedBy
     else DirectCauseImportanceRelation.Tied
 
   private def pareto(

@@ -1,6 +1,5 @@
 package lila.chessjudgment.analysis.transition
 
-import chess.Color
 import lila.chessjudgment.analysis.structure.CanonicalTransitionStructuralDelta
 import lila.chessjudgment.model.judgment.*
 
@@ -10,17 +9,17 @@ object TransitionFactNormalizer:
       edge: MoveTransitionEdge,
       replay: CanonicalLineReplay
   ): EvidenceRecord =
-    val legal = replay.legalSteps match
-      case exact :: Nil => exact
-      case _ => throw IllegalArgumentException("a move transition needs exactly one admitted legal replay step")
+    val root = replay.onlyTransition
+      .map(_.relationDelta.rootMove)
+      .getOrElse(throw IllegalArgumentException("a move transition needs exactly one admitted legal replay step"))
     val binding = StructuralTransitionBinding(
       moveUci = edge.moveUci,
       role = edge.role,
       from = edge.from,
       to = edge.to,
       line = None,
-      perspective = legal.move.piece.color,
-      actorRole = Some(EvidencePieceRole(legal.move.piece.role.name))
+      perspective = root.side,
+      actorRole = Some(root.beforeRole)
     )
     val proof = CanonicalTransitionProof.from(binding, replay).getOrElse(
       throw IllegalArgumentException("a move transition must reuse its exact admitted legal replay")
@@ -41,19 +40,22 @@ object TransitionFactNormalizer:
       transition: MoveTransitionEdge,
       replay: CanonicalLineReplay,
       line: Option[LineNodeRef],
-      perspective: Color,
-      derivedRelationSources: List[StructuralDerivedRelationSource],
+      resultPremiseSources: List[TransitionResultPremiseSource],
       parents: List[EvidenceRef]
   ): EvidenceRecord =
     val structural = delta.structural
+    val root = replay.onlyTransition
+      .map(_.relationDelta.rootMove)
+      .getOrElse(throw IllegalArgumentException("a structural transition needs exactly one admitted legal replay step"))
+    require(root.side == structural.perspective, "a structural transition must retain its canonical root perspective")
     val binding = StructuralTransitionBinding(
       moveUci = transition.moveUci,
       role = transition.role,
       from = transition.from,
       to = transition.to,
       line = line,
-      perspective = perspective,
-      actorRole = replay.legalSteps.headOption.map(step => EvidencePieceRole(step.move.piece.role.name))
+      perspective = root.side,
+      actorRole = Some(root.beforeRole)
     )
     val transitionProof = CanonicalTransitionProof
       .from(binding, replay)
@@ -69,17 +71,20 @@ object TransitionFactNormalizer:
         throw IllegalArgumentException(
           s"structural transition '${transition.evidence.id}' must project its replay-owned structural occurrence"
         )
-      )
-    val signals = structuralOccurrence.signals
+    )
     val consequences = structuralOccurrence.consequences
-    val relationChanges = delta.canonicalRelations.changes
+    val requiredRelationKeys = consequences.flatMap(_.relationKeys).toSet
+    val relationChanges = delta.canonicalRelations.changes.filter(change => requiredRelationKeys(change.key))
+    require(
+      relationChanges.map(_.key).toSet == requiredRelationKeys,
+      "a structural transition must resolve every consequence premise from its canonical relation delta"
+    )
     val deltaProof = CanonicalTransitionDeltaProof.from(
       transitionProof,
-      signals,
+      delta.canonicalRelations,
       consequences,
       relationChanges,
-      structural.derivedRelations,
-      derivedRelationSources
+      resultPremiseSources
     )
     val ref =
       EvidenceRef(
@@ -95,10 +100,9 @@ object TransitionFactNormalizer:
       ref = ref,
       payload = StructuralDeltaEvidence(
         transition = binding,
-        signals = signals,
         consequences = consequences,
         relationChanges = relationChanges,
-        derivedRelationSources = derivedRelationSources,
+        resultPremiseSources = resultPremiseSources,
         canonicalTransitionProof = Some(transitionProof),
         canonicalDeltaProof = Some(deltaProof),
         replayStructuralOccurrence = Some(structuralOccurrence)

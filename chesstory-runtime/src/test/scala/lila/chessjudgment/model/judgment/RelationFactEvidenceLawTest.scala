@@ -69,10 +69,9 @@ class RelationFactEvidenceLawTest extends munit.FunSuite:
           None,
           Color.White
         ),
-        signals = Nil,
         consequences = Nil,
         relationChanges = Nil,
-        derivedRelationSources = Nil,
+        resultPremiseSources = Nil,
         canonicalTransitionProof = None,
         canonicalDeltaProof = None
       )

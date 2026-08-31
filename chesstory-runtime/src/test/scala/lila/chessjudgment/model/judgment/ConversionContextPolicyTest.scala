@@ -1,25 +1,26 @@
 package lila.chessjudgment.model.judgment
 
 import chess.White
+import chess.variant.Standard
 
-import lila.chessjudgment.model.position.PositionFeatures
+import lila.chessjudgment.model.position.PositionOccurrenceState
 
 class ConversionContextPolicyTest extends munit.FunSuite:
 
-  test("position features alone are not a conversion mechanism"):
-    val features = PositionFeatures.empty
-    val position = PositionNodeRef(features.fen, 0, Some(White))
+  test("position occurrence metadata alone is not a conversion mechanism"):
+    val occurrence = PositionOccurrenceState(Standard.initialFen.value, White, 0)
+    val position = PositionNodeRef(occurrence.fen, 0, Some(White))
     val record = EvidenceRecord(
       EvidenceRef(
         "low-material",
-        EvidenceProducer.PositionFeatureProducer,
-        EvidenceLayer.PositionFeature,
+        EvidenceProducer.PositionOccurrenceProducer,
+        EvidenceLayer.PositionOccurrence,
         position,
         None,
         EvidenceScope.CurrentPosition,
         EvidenceConfidence.BoardDerived
       ),
-      PositionFeatureEvidence(features)
+      PositionOccurrenceEvidence(occurrence)
     )
 
     assert(!ConversionContextPolicy.supports(List(record), RelativeCauseKind.ConversionSecured))

@@ -76,7 +76,7 @@ enum TransitionEdgeRole:
       case BranchReplyContinuation => EvidenceScope.BranchReplyLine
 
 enum EvidenceLayer:
-  case PositionFeature
+  case PositionOccurrence
   case Line
   case Eval
   case TacticalMechanism

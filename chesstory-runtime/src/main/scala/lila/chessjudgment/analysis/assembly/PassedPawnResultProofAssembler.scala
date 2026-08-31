@@ -103,7 +103,7 @@ private[chessjudgment] object PassedPawnResultProofAssembler:
             ref.line.contains(event.rootLine) &&
             ref.scope == event.rootTransition.role.scope &&
             payload.transition == event.rootTransition &&
-            payload.transitionIsCertified && payload.exactOutputInventoryCertified &&
+            payload.transitionIsCertified && payload.canonicalOutputShapeCertified &&
             payload.canonicalTransitionProof == event.canonicalRootTransitionProof &&
             graph.proofEligible(record) =>
         record

@@ -288,7 +288,7 @@ object ClaimTruthPolicy:
 
   private def claimProofCarrierLayer(layer: EvidenceLayer): Boolean =
     layer match
-      case EvidenceLayer.PositionFeature => false
+      case EvidenceLayer.PositionOccurrence => false
       case _                   => true
 
   private def claimLayerCompatible(record: EvidenceRecord): Boolean =
@@ -299,7 +299,7 @@ object ClaimTruthPolicy:
     if family.isLongTerm then positionLocalLayer(layer)
     else
       layer match
-        case EvidenceLayer.PositionFeature | EvidenceLayer.Relation | EvidenceLayer.Line | EvidenceLayer.Eval =>
+        case EvidenceLayer.PositionOccurrence | EvidenceLayer.Relation | EvidenceLayer.Line | EvidenceLayer.Eval =>
           true
         case _ =>
           false
@@ -385,7 +385,7 @@ object ClaimTruthPolicy:
 
   private def positionLocalLayer(layer: EvidenceLayer): Boolean =
     layer match
-      case EvidenceLayer.PositionFeature | EvidenceLayer.Relation =>
+      case EvidenceLayer.PositionOccurrence | EvidenceLayer.Relation =>
         true
       case _ =>
         false

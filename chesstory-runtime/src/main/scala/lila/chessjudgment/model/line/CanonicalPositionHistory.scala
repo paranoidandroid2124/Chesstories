@@ -18,14 +18,12 @@ enum PreInitialHistoryKnowledge:
   case KnownEmpty, Unknown
 
 final case class CanonicalPositionHistoryStep(
-    index: Int,
     ply: Int,
     uci: String,
     before: Position,
     beforeFen: String,
     move: Move,
     capturedRole: Option[Role],
-    castle: Option[Move.Castle],
     after: Position,
     afterFen: String
 )
@@ -343,14 +341,12 @@ object CanonicalPositionHistory:
           if step.before.color.black then fullMoveNumber + 1
           else fullMoveNumber
         val materialized = CanonicalPositionHistoryStep(
-          index = existingSteps.size + steps.size,
           ply = step.ply,
           uci = step.uci,
           before = step.before,
           beforeFen = render(step.before, fullMoveNumber),
           move = step.move,
           capturedRole = step.capturedRole,
-          castle = step.move.castle,
           after = step.after,
           afterFen = render(step.after, afterFullMoveNumber)
         )

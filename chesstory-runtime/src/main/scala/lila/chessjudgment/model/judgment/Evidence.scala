@@ -19,7 +19,7 @@ object EvidenceRef:
     PrincipalVariationEvidence.normalizeUci(raw)
 
 enum EvidenceProducer:
-  case PositionFeatureProducer
+  case PositionOccurrenceProducer
   case LegalLineProducer
   case EngineEvalProducer
   case RelationProducer

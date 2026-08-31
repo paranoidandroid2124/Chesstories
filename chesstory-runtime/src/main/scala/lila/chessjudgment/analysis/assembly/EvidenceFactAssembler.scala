@@ -483,34 +483,45 @@ object EvidenceFactAssembler:
     val occurrencesById = relationRecords.collect {
       case EvidenceRecord(ref, occurrence: ClosedRelationOccurrenceEvidence, _) => ref.id -> occurrence
     }.toMap
+    val resultOutputsByTransitionId = relationRecords.flatMap {
+      case record @ EvidenceRecord(_, relation: RelationFactEvidence, parents)
+          if relation.proofStage != RelationProofStage.PositionFact =>
+        parents.flatMap(parent =>
+          occurrencesById.get(parent.id).flatMap(occurrence =>
+            occurrence.outputFor(record.ref).map(_ =>
+              occurrence.edge.evidence.id -> (DerivedRelationResultKey.from(relation) -> record)
+            )
+          )
+        )
+      case _ => Nil
+    }.groupMap(_._1)(_._2)
     context.transitions.flatMap { edge =>
       for
         transitionReplay <- context.transitionReplay(edge)
         replayTransition <- transitionReplay.onlyTransition
-        legalStep = replayTransition.legal
-        side = legalStep.move.piece.color
         line = lineForTransition(context, edge)
+        consequences = replayTransition.structuralConsequences
+        if consequences.nonEmpty
         delta = StructuralDeltaAnalyzer.bind(
           transition = replayTransition,
           canonicalRelations = canonicalRelationDeltas(edge.evidence.id)
         )
-        expectedDerived = delta.derivedRelations.map(relation => relation.semanticId -> relation).toMap
-        derivedOutputRecords = relationRecords.collect {
-          case record @ EvidenceRecord(_, relation: RelationFactEvidence, parents)
-              if expectedDerived.get(relation.semanticId).contains(relation) &&
-                parents.exists(parent => occurrencesById.get(parent.id).exists(_.edge == edge)) =>
-            relation.semanticId -> record
-        }
+        consequenceKeys = consequences.flatMap(_.relationKeys).toSet
+        relationSources = delta.canonicalRelations.changes
+          .filter(change => consequenceKeys(change.key))
+          .map(_.source)
+          .distinctBy(_.id)
+        expectedResultKeys = consequences.flatMap(_.resultPremiseKeys).toSet
+        resultOutputRecords = resultOutputsByTransitionId
+          .getOrElse(edge.evidence.id, Nil)
+          .filter { case (key, _) => expectedResultKeys(key) }
         _ = require(
-          derivedOutputRecords.map(_._1).distinct.size == derivedOutputRecords.size &&
-            derivedOutputRecords.map(_._1).toSet == expectedDerived.keySet,
-          "a structural delta must bind each consumed derived relation to one exact occurrence output"
+          resultOutputRecords.map(_._1).distinct.size == resultOutputRecords.size &&
+            resultOutputRecords.map(_._1).toSet == expectedResultKeys,
+          "a structural consequence must bind every consumed transition result to one exact occurrence output"
         )
-        derivedSources = derivedOutputRecords.sortBy(_._1).map { case (_, output) =>
-          val relation = output.payload match
-            case value: RelationFactEvidence => value
-            case _ => throw IllegalArgumentException("a derived structural source changed payload kind")
-          StructuralDerivedRelationSource(DerivedRelationResultKey.from(relation), output.ref)
+        resultPremiseSources = resultOutputRecords.sortBy(_._1.stableKey).map { case (key, output) =>
+          TransitionResultPremiseSource(key, output.ref)
         }
         record = TransitionFactNormalizer.fromStructuralDelta(
           id = allocator.evidenceId(s"structural-delta:${edge.evidence.id}"),
@@ -518,21 +529,16 @@ object EvidenceFactAssembler:
           transition = edge,
           replay = transitionReplay,
           line = line.map(_.ref),
-          perspective = side,
-          derivedRelationSources = derivedSources,
+          resultPremiseSources = resultPremiseSources,
           parents = (
             List(edge.evidence) ++
               line.toList.flatMap(lineParents(context, _)) ++
-              evidenceRefs(context, EvidenceLayer.PositionFeature, Some(edge.from), None) ++
-              evidenceRefs(context, EvidenceLayer.PositionFeature, Some(edge.to), None) ++
-              delta.canonicalRelations.sourceRefs ++
-              derivedSources.map(_.source)
+              evidenceRefs(context, EvidenceLayer.PositionOccurrence, Some(edge.from), None) ++
+              evidenceRefs(context, EvidenceLayer.PositionOccurrence, Some(edge.to), None) ++
+              relationSources ++
+              resultPremiseSources.map(_.source)
           ).distinctBy(_.id)
         )
-        if record.payload match
-          case payload: StructuralDeltaEvidence =>
-            payload.hasTypedOutput
-          case _ => false
       yield record
     }
 

@@ -44,6 +44,26 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
     )
     assertEquals(responses.responses.map(_.move), responses.legalMoves)
 
+  test("one actual legal move effect is reused by its closed resource and transition"):
+    val fen = "4k3/8/8/8/8/8/8/4K2R w K - 0 1"
+    val position = PrincipalVariationEvidence.readPosition(fen).getOrElse(fail("expected legal FEN"))
+    val analysis = PositionAnalyzer.analyze(position, fen, 0)
+    val boardEffect = analysis.computation.actualLegalMoveEffects
+      .find(_._1.toUci.uci == "e1g1")
+      .map(_._2)
+      .getOrElse(fail("expected castling effect"))
+    val closed = analysis.relationInventory.legalMove("e1g1").getOrElse(fail("expected castling resource"))
+    val step = PrincipalVariationEvidence
+      .legalMoveReplay(fen, List("e1g1"), startPly = 0)
+      .flatMap(_.headOption)
+      .getOrElse(fail("expected legal castling replay"))
+    val after = PositionAnalyzer.analyzeAfter(analysis, step, Fen.write(step.after).value)
+
+    assert(boardEffect.asInstanceOf[AnyRef].eq(closed.boardEffect.asInstanceOf[AnyRef]))
+    assert(after.transitionFootprint.exists(footprint =>
+      boardEffect.asInstanceOf[AnyRef].eq(footprint.moveEffect.asInstanceOf[AnyRef])
+    ))
+
   test("incremental geometry matches cold geometry for ordinary and special move footprints"):
     val cases = List(
       "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" -> "e2e4",
@@ -73,21 +93,21 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
       val incrementalGeometry = PositionComputation.from(incrementalStatic, legalStep.after)
       val coldGeometry = PositionComputation.from(coldStatic, legalStep.after)
       val incremental = PositionAnalysis.fresh(
-        PositionAnalyzer.computeFeatures(legalStep.after, afterFen).copy(plyCount = 1),
+        PositionAnalyzer.computeOccurrence(legalStep.after, afterFen).copy(plyCount = 1),
         legalStep.after,
         incrementalGeometry,
         Some(footprint),
         None
       )
       val cold = PositionAnalysis.fresh(
-        PositionAnalyzer.computeFeatures(legalStep.after, afterFen).copy(plyCount = 1),
+        PositionAnalyzer.computeOccurrence(legalStep.after, afterFen).copy(plyCount = 1),
         legalStep.after,
         coldGeometry,
         None,
         None
       )
 
-      assertEquals(incremental.features, cold.features, moveUci)
+      assertEquals(incremental.occurrence, cold.occurrence, moveUci)
       assertEquals(incremental.pawnTopology, cold.pawnTopology, moveUci)
       val incrementalDetails = incremental.boardRelations.map(_.detail)
       val coldDetails = cold.boardRelations.map(_.detail)
@@ -100,6 +120,25 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
         PositionAnalyzer.analyzeAfter(beforeAnalysis, legalStep, afterFen).transitionFootprint,
         Some(footprint)
       )
+    }
+
+  test("bishop rook and queen controls are exact first-barrier ray projections"):
+    val fen = "4k3/8/2b5/8/3qP3/8/2R5/4K3 w - - 0 1"
+    val current = PrincipalVariationEvidence.readPosition(fen).getOrElse(fail("expected legal FEN"))
+    val inventory = PositionAnalyzer
+      .analyze(current, fen, 0)
+      .computation
+      .staticBoard
+      .geometricControlInventory
+
+    (current.board.bishops | current.board.rooks | current.board.queens).squares.foreach { origin =>
+      val piece = current.board.pieceAt(origin).getOrElse(fail(s"expected slider on ${origin.key}"))
+      val expected = piece.role match
+        case chess.Bishop => origin.bishopAttacks(current.board.occupied)
+        case chess.Rook   => origin.rookAttacks(current.board.occupied)
+        case chess.Queen  => origin.queenAttacks(current.board.occupied)
+        case role         => fail(s"unexpected slider role: $role")
+      assertEquals(inventory.byOrigin(origin), expected, origin.key)
     }
 
   test("an unrelated non-pawn move reuses the immutable pawn topology"):
@@ -194,8 +233,8 @@ class PositionCalculationOwnershipTest extends munit.FunSuite:
     assert(rebased.relationInventory.asInstanceOf[AnyRef] eq inventory.asInstanceOf[AnyRef])
     assert(rebased.pawnTopology.asInstanceOf[AnyRef] eq after.pawnTopology.asInstanceOf[AnyRef])
     assert(rebased.relationTransition.get.asInstanceOf[AnyRef] eq transition.asInstanceOf[AnyRef])
-    assertEquals(rebased.features.plyCount, 23)
-    assertEquals(rebased.features.fen, after.features.fen)
+    assertEquals(rebased.occurrence.plyCount, 23)
+    assertEquals(rebased.occurrence.fen, after.occurrence.fen)
     intercept[IllegalArgumentException](after.atPly(0))
     intercept[IllegalArgumentException](before.atPly(-1))
 

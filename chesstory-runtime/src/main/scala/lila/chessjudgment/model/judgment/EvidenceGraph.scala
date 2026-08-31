@@ -11,7 +11,7 @@ import lila.chessjudgment.analysis.position.{ PositionAnalysis, PositionRelation
 import lila.chessjudgment.model.position.{
   BoardPieceTransition,
   BoardTransitionFootprint,
-  PositionFeatures
+  PositionOccurrenceState
 }
 import lila.chessjudgment.model.{
   PassedPawnResultActorOccurrence,
@@ -134,7 +134,7 @@ enum RootOwnedEffectProof:
       case RootOwnedEffectProof.RootLineEvent(source, _, _)               => source
       case RootOwnedEffectProof.RootRelation(source, _)                    => source
       case RootOwnedEffectProof.ForcedReplyResourceDifferential(source, _) => source
-      case RootOwnedEffectProof.PassedPawnResult(source, _)                      => source
+      case RootOwnedEffectProof.PassedPawnResult(source, _)               => source
 
 /** Primitive family of the exact effect owned by one public Cause channel.
   * This is deliberately independent of evidence ids and carrier wrappers.
@@ -176,7 +176,6 @@ object RootOwnedEffectIdentity:
 enum DirectCauseImportanceMeasure:
   case MateArrival(plyOffset: Int)
   case MaterialOutcome(durableNetCp: Int, onsetPlyOffset: Int)
-  case StructuralStrength(units: Int)
 
 enum DirectEffectMagnitudeKnowledge:
   case NotApplicable
@@ -220,8 +219,6 @@ final case class RootOwnedEffectDescriptor(
             s"mate-arrival:$plyOffset"
           case DirectCauseImportanceMeasure.MaterialOutcome(durableNetCp, onsetPlyOffset) =>
             s"material-outcome:$durableNetCp:$onsetPlyOffset"
-          case DirectCauseImportanceMeasure.StructuralStrength(units) =>
-            s"structural-strength:$units"
     List(
       identity.stableKey,
       magnitudeKey,
@@ -2776,9 +2773,6 @@ object EvidenceObjectBinding:
         case RelationWitnessDetail.GeometricControlSetDelta(mover, controllingSide, _, _, _, _, _, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
             objectOf(EvidenceObjectKind.Side, colorKey(controllingSide))
-        case RelationWitnessDetail.NamedRayTransition(mover, owner, _, _, _, _, _, _, _, _) =>
-          objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
-            objectOf(EvidenceObjectKind.Side, colorKey(owner))
         case RelationWitnessDetail.CaptureRecaptureInventory(mover, captured, _, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(mover.side)) ++
             objectOf(EvidenceObjectKind.Side, colorKey(captured.side))
@@ -2825,10 +2819,6 @@ object EvidenceObjectBinding:
             }
           then objectOf(EvidenceObjectKind.Side, colorKey(controllingSide))
           else Nil
-        case RelationWitnessDetail.NamedRayTransition(_, owner, _, _, barrier, target, _, _, _, _) =>
-          Option.when(barrier.side != owner || target.exists(_.side != owner))(
-            objectOf(EvidenceObjectKind.Side, colorKey(!owner))
-          ).getOrElse(Nil)
         case RelationWitnessDetail.CaptureRecaptureInventory(_, captured, _, _, _, _) =>
           objectOf(EvidenceObjectKind.Side, colorKey(captured.side))
         case RelationWitnessDetail.CreatedCheckResponseInventory(_, checkedSide, _, _, _, _, _, _) =>
@@ -2872,48 +2862,9 @@ object EvidenceObjectBinding:
 
   private def fromStructuralDelta(ref: EvidenceRef, payload: StructuralDeltaEvidence): List[EvidenceObjectBinding] =
     val actor = payload.certifiedRootMovement.toList.flatMap(movementActorObjects)
-    val signalBindings =
-      payload.signals.map { signal =>
-        EvidenceObjectBinding(
-          source = ref,
-          actor = actor.distinctBy(_.signaturePart),
-          target = signal.subjectFacts.flatMap(subjectObject),
-          mechanism = objectOf(EvidenceObjectKind.Mechanism, signal.kind.toString),
-          consequence = Nil,
-          witness = objectOf(EvidenceObjectKind.Move, payload.moveUci) ++ payload.line.toList.flatMap(lineObject),
-          line = payload.line
-        )
-      }
-    val consequenceBindings =
-      payload.consequences.flatMap(consequence =>
-        structuralConsequenceBindings(ref, payload, actor, consequence)
-      )
-    val relationChangeBindings =
-      payload.relationChanges.map { change =>
-        EvidenceObjectBinding(
-          source = ref,
-          actor = actor.distinctBy(_.signaturePart),
-          target = (
-            change.targetSquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
-              change.files.flatMap(file => objectOf(EvidenceObjectKind.File, file.key))
-          ).distinctBy(_.signaturePart),
-          mechanism = objectOf(EvidenceObjectKind.Relation, change.kind.toString),
-          consequence = objectOf(
-            EvidenceObjectKind.Consequence,
-            s"relation-${change.direction.toString.toLowerCase}:${RelationFactKind.id(change.kind)}"
-          ),
-          witness = (
-            objectOf(EvidenceObjectKind.Move, payload.moveUci) ++
-              payload.line.toList.flatMap(lineObject) ++
-              change.participants.flatMap(participantObjects) ++
-              change.dependencySquares.flatMap(square => objectOf(EvidenceObjectKind.Square, square.key)) ++
-              change.proofKeys.flatMap(relationProofKeyObjects)
-          ).distinctBy(_.signaturePart),
-          line = payload.line,
-          provenance = List(change.source)
-        )
-      }
-    (signalBindings ++ consequenceBindings).distinctBy(_.occurrenceSignature) ++ relationChangeBindings
+    payload.consequences
+      .flatMap(consequence => structuralConsequenceBindings(ref, payload, actor, consequence))
+      .distinctBy(_.occurrenceSignature)
 
   private def structuralConsequenceBindings(
       ref: EvidenceRef,
@@ -2923,35 +2874,20 @@ object EvidenceObjectBinding:
   ): List[EvidenceObjectBinding] =
     val allBindings = (consequence.subjectBindings ++ consequence.targetBindings).distinct
     val groups =
-      if TransitionConsequenceRelationProof.relationBacked(consequence.kind) then
-        allBindings
-          .groupBy(binding =>
-            (
-              binding.relationKeys.map(_.stableKey) ++
-                binding.derivedRelationKeys.map(_.stableKey)
-            ).sorted.mkString("|")
-          )
-          .toList
-          .sortBy(_._1)
-          .map(_._2)
-      else List(allBindings)
+      allBindings
+        .groupBy(binding => binding.relationKeys.map(_.stableKey).sorted.mkString("|"))
+        .toList
+        .sortBy(_._1)
+        .map(_._2)
     val changesByKey = payload.relationChanges.groupMap(_.key)(identity)
-    val derivedSourcesByKey = payload.derivedRelationSources.groupMap(_.key)(_.source)
     val resolved = groups.map { bindings =>
       val keys = bindings.flatMap(_.relationKeys).distinct.sortBy(_.stableKey)
-      val derivedKeys = bindings.flatMap(_.derivedRelationKeys).distinct.sortBy(_.stableKey)
-      val sources = (
-        keys.flatMap(key => changesByKey.getOrElse(key, Nil).map(_.source)) ++
-          derivedKeys.flatMap(key => derivedSourcesByKey.getOrElse(key, Nil))
-      ).distinctBy(_.id)
+      val sources = keys.flatMap(key => changesByKey.getOrElse(key, Nil).map(_.source)).distinctBy(_.id)
       val exactResolution =
-        if TransitionConsequenceRelationProof.relationBacked(consequence.kind) then
-          bindings.nonEmpty &&
-            bindings.forall(binding => binding.relationKeys.nonEmpty || binding.derivedRelationKeys.nonEmpty) &&
-            keys.forall(key => changesByKey.get(key).exists(_.size == 1)) &&
-            derivedKeys.forall(key => derivedSourcesByKey.get(key).exists(_.size == 1)) &&
-            sources.size == keys.size + derivedKeys.size
-        else bindings.forall(binding => binding.relationKeys.isEmpty && binding.derivedRelationKeys.isEmpty)
+        bindings.nonEmpty &&
+          bindings.forall(_.relationKeys.nonEmpty) &&
+          keys.forall(key => changesByKey.get(key).exists(_.size == 1)) &&
+          sources.size == keys.size
       Option.when(exactResolution) {
         val bindingSet = bindings.toSet
         val resultSubjects = consequence.resultSubjectBindings.filter(bindingSet).map(_.subject)
@@ -3077,44 +3013,12 @@ object EvidenceObjectBinding:
       case StructuralSubject.PieceAt(side, role, square) =>
         objectOf(EvidenceObjectKind.Side, colorKey(side)) ++
           objectOf(EvidenceObjectKind.Piece, role.name) ++ objectOf(EvidenceObjectKind.Square, square.key)
-      case StructuralSubject.GeometricControlSetChange(
-            _,
-            controllingSide,
-            targetSquare,
-            _,
-            _,
-            beforeControllers,
-            afterControllers,
-            removedControllers,
-            establishedControllers
-          ) =>
-        objectOf(EvidenceObjectKind.Side, colorKey(controllingSide)) ++
-          objectOf(EvidenceObjectKind.Square, targetSquare.key) ++
-          (beforeControllers ++ afterControllers ++ removedControllers ++ establishedControllers).flatMap(piece =>
-            objectOf(EvidenceObjectKind.Piece, piece.role.name) ++
-              objectOf(EvidenceObjectKind.Square, piece.square.key)
-          )
-      case StructuralSubject.SliderReachChange(side, sliderBefore, sliderAfter, _, gained, lost) =>
-        objectOf(EvidenceObjectKind.Side, colorKey(side)) ++
-          (sliderBefore.toList ++ sliderAfter.toList).flatMap(slider =>
-            objectOf(EvidenceObjectKind.Piece, slider.role.name) ++
-              objectOf(EvidenceObjectKind.Square, slider.square.key)
-          ) ++ (gained ++ lost).flatMap(reach =>
-            objectOf(EvidenceObjectKind.Square, reach.square.key) ++
-              roleObject(reach.target.pieceRole)
-          )
       case StructuralSubject.PawnTensionCreated(side, from, to) =>
         objectOf(EvidenceObjectKind.Side, colorKey(side)) ++ objectOf(EvidenceObjectKind.Piece, "pawn") ++
           objectOf(EvidenceObjectKind.Square, from.key) ++ objectOf(EvidenceObjectKind.Square, to.key)
       case StructuralSubject.PawnTensionResolved(side, from, to) =>
         objectOf(EvidenceObjectKind.Side, colorKey(side)) ++ objectOf(EvidenceObjectKind.Piece, "pawn") ++
           objectOf(EvidenceObjectKind.Square, from.key) ++ objectOf(EvidenceObjectKind.Square, to.key)
-      case StructuralSubject.Battery(formation) =>
-        objectOf(EvidenceObjectKind.Side, colorKey(formation.side)) ++
-          List(formation.firstSlider, formation.secondSlider).flatMap(slider =>
-            objectOf(EvidenceObjectKind.Piece, slider.role.name) ++
-            objectOf(EvidenceObjectKind.Square, slider.square.key)
-          )
       case StructuralSubject.PassedPawnCreated(side, square) =>
         objectOf(EvidenceObjectKind.Side, colorKey(side)) ++ objectOf(EvidenceObjectKind.Piece, "pawn") ++
           objectOf(EvidenceObjectKind.Square, square.key)
@@ -3190,54 +3094,6 @@ final case class RelationRayGeometry(
   require(squares.distinct.size == squares.size, "a relation ray cannot repeat a board square")
 
   def axis: RelationAxisSignal = direction.axis
-
-/** Exact chess classification of one canonical slider barrier. The
-  * classification is derived from the ray occupants; it never owns a second
-  * board fact.
-  */
-enum RelationRayPattern:
-  case Ordinary
-  case XRay
-  case Battery
-  case AbsoluteKingPin
-  case KingSkewer
-
-object RelationRayPattern:
-  private[chessjudgment] def classify(
-      owner: Color,
-      occupants: List[RelationColoredPieceWitness],
-      axis: RelationAxisSignal
-  ): RelationRayPattern =
-    occupants.headOption.fold(RelationRayPattern.Ordinary) { barrier =>
-      val rear = occupants.lift(1)
-      val barrierIsKing = barrier.role.name.equalsIgnoreCase(King.name)
-      rear match
-        case Some(target) if barrier.side != owner && target.side == barrier.side &&
-            target.role.name.equalsIgnoreCase(King.name) && !barrierIsKing =>
-          RelationRayPattern.AbsoluteKingPin
-        case Some(target) if barrier.side != owner && target.side == barrier.side &&
-            barrierIsKing && !target.role.name.equalsIgnoreCase(King.name) =>
-          RelationRayPattern.KingSkewer
-        case Some(target) if barrier.side != owner && target.side == barrier.side =>
-          RelationRayPattern.XRay
-        case _ if barrier.side == owner && sliderSupports(barrier.role, axis) =>
-          RelationRayPattern.Battery
-        case _ =>
-          RelationRayPattern.Ordinary
-    }
-
-  def id(pattern: RelationRayPattern): String =
-    pattern match
-      case Ordinary => "ray_barrier"
-      case XRay     => "xray"
-      case Battery  => "battery"
-      case AbsoluteKingPin => "absolute_king_pin"
-      case KingSkewer      => "king_skewer"
-
-  private[judgment] def sliderSupports(role: EvidencePieceRole, axis: RelationAxisSignal): Boolean =
-    role.name.equalsIgnoreCase(Queen.name) ||
-      role.name.equalsIgnoreCase(Rook.name) && axis != RelationAxisSignal.Diagonal ||
-      role.name.equalsIgnoreCase(Bishop.name) && axis == RelationAxisSignal.Diagonal
 
 final case class RelationPieceWitness(
     square: EvidenceSquare,
@@ -3400,18 +3256,6 @@ enum RelationWitnessDetail:
       establishedControllers: List[RelationPieceWitness],
       proof: RelationCombinationProof
   )
-  case NamedRayTransition(
-      mover: RelationMoveTransitionWitness,
-      side: Color,
-      attackerSquare: EvidenceSquare,
-      attackerRole: EvidencePieceRole,
-      barrier: RelationColoredPieceWitness,
-      immediateTarget: Option[RelationColoredPieceWitness],
-      axis: RelationAxisSignal,
-      pattern: RelationRayPattern,
-      direction: RelationChangeDirection,
-      proof: RelationCombinationProof
-  )
   case CaptureRecaptureInventory(
       mover: RelationMoveTransitionWitness,
       captured: RelationColoredPieceWitness,
@@ -3484,129 +3328,21 @@ enum RelationWitnessDetail:
   )
 
   def detailName: String =
-    this match
-      case ray: RayBarrier =>
-        RelationRayPattern.id(RelationRayProjection.pattern(ray))
-      case NamedRayTransition(_, _, _, _, _, _, _, pattern, _, _) =>
-        RelationRayPattern.id(pattern)
-      case _ => RelationFactKind.id(RelationWitnessDetail.factKind(this))
-
-/** Named ray semantics are a projection of the complete ordered barrier, not
-  * a second board fact. Distant occupants remain in the source RayBarrier but
-  * do not make an unchanged pin, skewer, x-ray, or battery newly established.
-  */
-private[chessjudgment] final case class RelationNamedRayProjection(
-    side: Color,
-    attackerSquare: EvidenceSquare,
-    attackerRole: EvidencePieceRole,
-    barrier: RelationColoredPieceWitness,
-    immediateTarget: Option[RelationColoredPieceWitness],
-    axis: RelationAxisSignal,
-    pattern: RelationRayPattern
-)
-
-final case class RelationBatteryFormationWitness(
-    side: Color,
-    firstSlider: RelationColoredPieceWitness,
-    secondSlider: RelationColoredPieceWitness,
-    axis: RelationAxisSignal
-):
-  require(firstSlider.side == side && secondSlider.side == side, "a battery cannot mix sides")
-  require(firstSlider.square != secondSlider.square, "a battery needs two distinct sliders")
-  require(
-    RelationRayPattern.sliderSupports(firstSlider.role, axis) &&
-      RelationRayPattern.sliderSupports(secondSlider.role, axis),
-    "a battery needs two sliders compatible with its exact axis"
-  )
-  require(
-    s"${firstSlider.square.key.toLowerCase}:${firstSlider.role.name.toLowerCase}".compareTo(
-      s"${secondSlider.square.key.toLowerCase}:${secondSlider.role.name.toLowerCase}"
-    ) < 0,
-    "a battery formation must use canonical slider order"
-  )
-
-  private[chessjudgment] def stableKey: String =
-    s"${side.toString.toLowerCase}:${axis.toString.toLowerCase}:${firstSlider.role.name.toLowerCase}@${firstSlider.square.key.toLowerCase}:${secondSlider.role.name.toLowerCase}@${secondSlider.square.key.toLowerCase}"
+    RelationFactKind.id(RelationWitnessDetail.factKind(this))
 
 private[chessjudgment] object RelationRayProjection:
-  def pattern(detail: RelationWitnessDetail.RayBarrier): RelationRayPattern =
-    RelationRayPattern.classify(detail.side, detail.occupants, detail.geometry.axis)
-
-  def immediateTarget(
-      detail: RelationWitnessDetail.RayBarrier
-  ): Option[RelationColoredPieceWitness] =
-    val rear = detail.occupants.lift(1)
-    pattern(detail) match
-      case RelationRayPattern.AbsoluteKingPin | RelationRayPattern.XRay | RelationRayPattern.KingSkewer =>
-        rear
-      case RelationRayPattern.Battery =>
-        rear.filter(_.side != detail.side)
-      case RelationRayPattern.Ordinary =>
-        None
-
-  def named(
-      detail: RelationWitnessDetail.RayBarrier
-  ): Option[RelationNamedRayProjection] =
-    val exactPattern = pattern(detail)
-    Option.when(exactPattern != RelationRayPattern.Ordinary) {
-      if exactPattern == RelationRayPattern.Battery then
-        RelationNamedRayProjection(
-          side = detail.side,
-          attackerSquare = detail.attackerSquare,
-          attackerRole = detail.attackerRole,
-          barrier = detail.occupants.head,
-          immediateTarget = immediateTarget(detail),
-          axis = detail.geometry.axis,
-          pattern = exactPattern
-        )
-      else
-        RelationNamedRayProjection(
-          side = detail.side,
-          attackerSquare = detail.attackerSquare,
-          attackerRole = detail.attackerRole,
-          barrier = detail.occupants.head,
-          immediateTarget = immediateTarget(detail),
-          axis = detail.geometry.axis,
-          pattern = exactPattern
-        )
+  /** Geometry alone does not certify a pin. L1 consumers combine this exact
+    * ray shape with legal-resource absence and post-move king exposure.
+    */
+  def isAbsoluteKingPinGeometry(detail: RelationWitnessDetail.RayBarrier): Boolean =
+    detail.occupants.headOption.exists { barrier =>
+      detail.occupants.lift(1).exists { rear =>
+        barrier.side != detail.side && rear.side == barrier.side &&
+          rear.role.name.equalsIgnoreCase(King.name) &&
+          !barrier.role.name.equalsIgnoreCase(King.name)
+      }
     }
 
-  def batteryFormation(
-      detail: RelationWitnessDetail.RayBarrier
-  ): Option[RelationBatteryFormationWitness] =
-    named(detail).collect {
-      case projection if projection.pattern == RelationRayPattern.Battery =>
-        val sliders = List(
-          RelationColoredPieceWitness(
-            projection.attackerSquare,
-            projection.attackerRole,
-            projection.side
-          ),
-          projection.barrier
-        ).sortBy(piece => piece.square.key.toLowerCase -> piece.role.name.toLowerCase)
-        RelationBatteryFormationWitness(
-          side = projection.side,
-          firstSlider = sliders.head,
-          secondSlider = sliders.last,
-          axis = projection.axis
-        )
-    }
-
-  def batteryFormation(
-      detail: RelationWitnessDetail.NamedRayTransition
-  ): Option[RelationBatteryFormationWitness] =
-    Option.when(detail.pattern == RelationRayPattern.Battery) {
-      val sliders = List(
-        RelationColoredPieceWitness(detail.attackerSquare, detail.attackerRole, detail.side),
-        detail.barrier
-      ).sortBy(piece => piece.square.key.toLowerCase -> piece.role.name.toLowerCase)
-      RelationBatteryFormationWitness(
-        side = detail.side,
-        firstSlider = sliders.head,
-        secondSlider = sliders.last,
-        axis = detail.axis
-      )
-    }
 
 object RelationWitnessDetail:
   private def atom(value: String): String =
@@ -3742,34 +3478,6 @@ object RelationWitnessDetail:
           values(afterControllers.map(piece)),
           values(removedControllers.map(piece)),
           values(establishedControllers.map(piece))
-        ) ++ Option.when(includeDerivation)(proof.stableKey).toList
-      case NamedRayTransition(
-            mover,
-            owner,
-            attacker,
-            attackerRole,
-            barrier,
-            immediateTarget,
-            axis,
-            pattern,
-            direction,
-            proof
-          ) =>
-        require(pattern != RelationRayPattern.Ordinary, "a named-ray transition needs a named pattern")
-        require(
-          pattern == RelationRayPattern.Battery || immediateTarget.nonEmpty,
-          "a pin, skewer, or x-ray transition needs its exact rear target"
-        )
-        List(
-          moveTransition(mover),
-          side(owner),
-          square(attacker),
-          role(attackerRole),
-          coloredPiece(barrier),
-          immediateTarget.map(coloredPiece).getOrElse("none"),
-          axis.toString,
-          RelationRayPattern.id(pattern),
-          direction.toString
         ) ++ Option.when(includeDerivation)(proof.stableKey).toList
       case CaptureRecaptureInventory(
             mover,
@@ -3959,7 +3667,6 @@ object RelationWitnessDetail:
       case _: GeometricControl     => RelationFactKind.GeometricControl
       case _: LegalMove            => RelationFactKind.LegalMove
       case _: GeometricControlSetDelta => RelationFactKind.GeometricControlSetDelta
-      case _: NamedRayTransition   => RelationFactKind.NamedRayTransition
       case _: CaptureRecaptureInventory => RelationFactKind.CaptureRecaptureInventory
       case _: CreatedCheckResponseInventory => RelationFactKind.CreatedCheckResponseInventory
       case _: RootCheckResponse => RelationFactKind.RootCheckResponse
@@ -3978,7 +3685,7 @@ object RelationWitnessDetail:
           _: PawnFrontOccupancy | _: PawnAdvanceAffordance | _: PawnPassage |
           _: RayBarrier =>
         RelationProofStage.PositionFact
-      case _: GeometricControlSetDelta | _: NamedRayTransition =>
+      case _: GeometricControlSetDelta =>
         RelationProofStage.TransitionFact
       case vertical =>
         VerticalRelationContractKind.forDetail(vertical)
@@ -3999,7 +3706,6 @@ object RelationWitnessDetail:
   ): Option[RelationCombinationProof] =
     detail match
       case GeometricControlSetDelta(_, _, _, _, _, _, _, _, _, proof) => Some(proof)
-      case NamedRayTransition(_, _, _, _, _, _, _, _, _, proof) => Some(proof)
       case _ => None
 
   def combinationPremises(detail: RelationWitnessDetail): List[RelationCombinationPremise] =
@@ -4026,8 +3732,6 @@ object RelationWitnessDetail:
             ) =>
           mover.from :: mover.to :: target ::
             (beforeControllers ++ afterControllers ++ removedControllers ++ establishedControllers).map(_.square)
-        case NamedRayTransition(mover, _, attacker, _, barrier, immediateTarget, _, _, _, _) =>
-          List(mover.from, mover.to, attacker, barrier.square) ++ immediateTarget.map(_.square)
         case CaptureRecaptureInventory(mover, captured, geometricRecapturers, legalRecaptures, restrictions, _) =>
           List(mover.from, mover.to, captured.square) ++ geometricRecapturers.map(_.square) ++
             legalRecaptures.flatMap(resource => List(resource.movement.from, resource.movement.to)) ++
@@ -4085,8 +3789,6 @@ object RelationWitnessDetail:
         capture.map(_.capturedSquare).getOrElse(destinationSquare) :: Nil
       case GeometricControlSetDelta(_, _, target, _, _, _, _, _, _, _) =>
         List(target)
-      case NamedRayTransition(_, _, _, _, barrier, immediateTarget, _, _, _, _) =>
-        immediateTarget.map(_.square).getOrElse(barrier.square) :: Nil
       case CaptureRecaptureInventory(mover, _, _, _, _, _) =>
         List(mover.to)
       case CreatedCheckResponseInventory(_, _, kingSquare, _, _, _, _, _) =>
@@ -4110,7 +3812,7 @@ object RelationWitnessDetail:
       case PawnPassage(_, pawnSquare, _) =>
         List(pawnSquare)
       case ray: RayBarrier =>
-        RelationRayProjection.immediateTarget(ray).map(_.square).toList
+        ray.occupants.headOption.map(_.square).toList
     squares.distinct
 
   def files(detail: RelationWitnessDetail): List[EvidenceFile] =
@@ -4164,25 +3866,6 @@ object RelationWitnessDetail:
             )
           ) ++ (beforeControllers ++ afterControllers ++ removedControllers ++ establishedControllers).map(value =>
             part(value.square, RelationParticipantRole.Controller, Some(value.role))
-          )
-        case NamedRayTransition(mover, owner, attacker, attackerRole, barrier, immediateTarget, _, pattern, _, _) =>
-          val barrierRole =
-            if pattern == RelationRayPattern.Battery then RelationParticipantRole.Attacker
-            else if barrier.role.name.equalsIgnoreCase(King.name) then RelationParticipantRole.King
-            else RelationParticipantRole.Blocker
-          List(
-            part(mover.from, RelationParticipantRole.Mover, Some(mover.beforeRole)),
-            part(mover.to, RelationParticipantRole.Mover, Some(mover.afterRole)),
-            part(attacker, RelationParticipantRole.Attacker, Some(attackerRole)),
-            part(barrier.square, barrierRole, Some(barrier.role))
-          ) ++ immediateTarget.map(target =>
-            part(
-              target.square,
-              if target.role.name.equalsIgnoreCase(King.name) then RelationParticipantRole.King
-              else if target.side == owner then RelationParticipantRole.Supported
-              else RelationParticipantRole.Target,
-              Some(target.role)
-            )
           )
         case CaptureRecaptureInventory(mover, captured, geometricRecapturers, legalRecaptures, restrictions, _) =>
           List(
@@ -4293,12 +3976,11 @@ object RelationWitnessDetail:
           part(pawnSquare, RelationParticipantRole.Beneficiary, Some(EvidencePieceRole("pawn"))) ::
             opposingPawnSquares.map(part(_, RelationParticipantRole.Target, Some(EvidencePieceRole("pawn"))))
         case ray @ RayBarrier(_, attackerSquare, attackerRole, occupants, _) =>
-          val pattern = RelationRayProjection.pattern(ray)
           val exactTarget = targetSquares(detail).toSet
           part(attackerSquare, RelationParticipantRole.Attacker, Some(attackerRole)) ::
             occupants.headOption.toList.flatMap { barrier =>
               val barrierParticipantRole =
-                if pattern == RelationRayPattern.Battery then RelationParticipantRole.Attacker
+                if barrier.side == ray.side then RelationParticipantRole.Supported
                 else if barrier.role.name.equalsIgnoreCase(King.name) then RelationParticipantRole.King
                 else RelationParticipantRole.Blocker
               part(barrier.square, barrierParticipantRole, Some(barrier.role)) ::
@@ -4328,7 +4010,6 @@ enum RelationFactKind:
   case GeometricControl
   case LegalMove
   case GeometricControlSetDelta
-  case NamedRayTransition
   case CaptureRecaptureInventory
   case CreatedCheckResponseInventory
   case RootCheckResponse
@@ -4352,7 +4033,6 @@ object RelationFactKind:
       case GeometricControl      => "geometric_control"
       case LegalMove             => "legal_move"
       case GeometricControlSetDelta => "geometric_control_set_delta"
-      case NamedRayTransition   => "named_ray_transition"
       case CaptureRecaptureInventory => "capture_recapture_inventory"
       case CreatedCheckResponseInventory => "created_check_response_inventory"
       case RootCheckResponse => "root_check_response"
@@ -4367,7 +4047,9 @@ object RelationFactKind:
 
 sealed trait EvidencePayload
 
-final case class PositionFeatureEvidence(features: PositionFeatures) extends EvidencePayload
+private[chessjudgment] final case class PositionOccurrenceEvidence(
+    occurrence: PositionOccurrenceState
+) extends EvidencePayload
 
 /** First result in the common bounded L2 family. It is deliberately
   * package-private: the only public projection is the existing WrongMoveOrder
@@ -6255,7 +5937,7 @@ object RootOwnedCausalEpisode:
   ): Boolean =
     val move = EvidenceRef.normalizeMove(eventStep.moveUci)
     val eventTransition = replay.transition(eventStep)
-    val mover = eventTransition.map(_.legal.move.piece)
+    val mover = eventTransition.map(_.relationDelta.rootMove)
     val afterInventory = eventTransition.map(_.afterAnalysis.relationInventory)
     val capture = line.uniqueMaterialCaptureAt(eventPlyOffset, move)
     consequence.kind match
@@ -6285,12 +5967,12 @@ object RootOwnedCausalEpisode:
           case _ =>
             false
       case LineConsequenceKind.ImmediateReplyCheck =>
-        eventPlyOffset == 1 && mover.exists(_.color != rootColor) && afterInventory.exists { inventory =>
+        eventPlyOffset == 1 && mover.exists(_.side != rootColor) && afterInventory.exists { inventory =>
           val state = inventory.stateView
           state.inCheck(state.sideToMove)
         }
       case LineConsequenceKind.Mate =>
-        mover.exists(piece => consequence.beneficiary.contains(piece.color)) && afterInventory.exists(
+        mover.exists(movement => consequence.beneficiary.contains(movement.side)) && afterInventory.exists(
           _.kingTerminalState == PositionRelationExtractor.ClosedKingTerminalState.Checkmate
         )
       case LineConsequenceKind.DrawResource =>
@@ -6299,13 +5981,10 @@ object RootOwnedCausalEpisode:
         )
       case LineConsequenceKind.Promotion | LineConsequenceKind.PromotionRace =>
         eventTransition.exists(transition =>
-          consequence.beneficiary.contains(transition.legal.move.piece.color) &&
-            transition.boardFootprint.pieceTransitions.exists(movement =>
-              movement.side == transition.legal.move.piece.color &&
-                movement.from == transition.legal.move.orig &&
-                movement.to == transition.legal.move.dest &&
-                movement.beforeRole == Pawn && movement.afterRole != Pawn
-            )
+          val movement = transition.relationDelta.rootMove
+          consequence.beneficiary.contains(movement.side) &&
+            movement.beforeRole.name.equalsIgnoreCase(Pawn.name) &&
+            !movement.afterRole.name.equalsIgnoreCase(Pawn.name)
         )
       case LineConsequenceKind.Sacrifice =>
         consequence.sacrificeOccurrence.exists(occurrence =>
@@ -6699,19 +6378,7 @@ final case class MoveTransitionEvidence private[chessjudgment] (
     private[chessjudgment] val canonicalTransitionProof: Option[CanonicalTransitionProof]
 ) extends EvidencePayload
 
-enum StructuralSignalPolarity:
-  case Gain
-  case Loss
-  case Neutral
-
-enum StructuralSignalKind:
-  case PawnTensionCreated
-  case PawnTensionResolved
-  case PassedPawnCreated
-  case PassedPawnAdvanced
-  case BatteryCreated
-
-/** Typed chess objects carried by structural signals and consequences.
+/** Typed chess objects carried by structural consequences.
   * `label` is a one-way presentation projection; no proof code may recover
   * chess semantics by parsing it.
   */
@@ -6719,28 +6386,8 @@ enum StructuralSubject:
   case OpenFile(file: EvidenceFile)
   case SemiOpenFile(side: Color, file: EvidenceFile)
   case PieceAt(side: Color, role: EvidencePieceRole, square: EvidenceSquare)
-  case GeometricControlSetChange(
-      mover: RelationMoveTransitionWitness,
-      controllingSide: Color,
-      targetSquare: EvidenceSquare,
-      beforeTarget: RelationControlTarget,
-      afterTarget: RelationControlTarget,
-      beforeControllers: List[RelationPieceWitness],
-      afterControllers: List[RelationPieceWitness],
-      removedControllers: List[RelationPieceWitness],
-      establishedControllers: List[RelationPieceWitness]
-  )
-  case SliderReachChange(
-      side: Color,
-      sliderBefore: Option[RelationPieceWitness],
-      sliderAfter: Option[RelationPieceWitness],
-      direction: RelationRayDirection,
-      gained: List[RelationControlReachWitness],
-      lost: List[RelationControlReachWitness]
-  )
   case PawnTensionCreated(side: Color, from: EvidenceSquare, to: EvidenceSquare)
   case PawnTensionResolved(side: Color, from: EvidenceSquare, to: EvidenceSquare)
-  case Battery(formation: RelationBatteryFormationWitness)
   case PassedPawnCreated(side: Color, square: EvidenceSquare)
   case PassedPawnLost(side: Color, square: EvidenceSquare)
   case PassedPawnAdvanced(side: Color, from: EvidenceSquare, to: EvidenceSquare, relativeRank: Int)
@@ -6755,30 +6402,10 @@ enum StructuralSubject:
       case SemiOpenFile(side, file) => s"semi-open-file:${side.toString.toLowerCase}:${file.key.toLowerCase}"
       case PieceAt(side, role, square) =>
         s"piece-at:${side.toString.toLowerCase}:${role.name.toLowerCase}:${square.key.toLowerCase}"
-      case GeometricControlSetChange(
-            mover,
-            controllingSide,
-            targetSquare,
-            beforeTarget,
-            afterTarget,
-            beforeControllers,
-            afterControllers,
-            removedControllers,
-            establishedControllers
-          ) =>
-        s"geometric-control-set-change:${mover.stableKey}:${controllingSide.toString.toLowerCase}:${targetSquare.key.toLowerCase}:" +
-          s"${StructuralSubject.controlTargetKey(beforeTarget)}>${StructuralSubject.controlTargetKey(afterTarget)}:" +
-          s"before:${StructuralSubject.pieceKeys(beforeControllers)}:after:${StructuralSubject.pieceKeys(afterControllers)}:" +
-          s"removed:${StructuralSubject.pieceKeys(removedControllers)}:established:${StructuralSubject.pieceKeys(establishedControllers)}"
-      case SliderReachChange(side, sliderBefore, sliderAfter, direction, gained, lost) =>
-        s"slider-reach-change:${side.toString.toLowerCase}:${StructuralSubject.sliderKey(sliderBefore)}-${StructuralSubject.sliderKey(sliderAfter)}:${direction.stableKey}:gained:${gained.map(_.stableKey).mkString(",")}:lost:${lost.map(_.stableKey).mkString(",")}"
       case PawnTensionCreated(side, from, to) =>
         s"created-tension:${side.toString.toLowerCase}:${from.key.toLowerCase}-${to.key.toLowerCase}"
       case PawnTensionResolved(side, from, to) =>
         s"resolved-tension:${side.toString.toLowerCase}:${from.key.toLowerCase}-${to.key.toLowerCase}"
-      case Battery(formation) =>
-        val sliders = List(formation.firstSlider, formation.secondSlider)
-        s"battery:${formation.side.toString.toLowerCase}:${formation.axis.toString.toLowerCase}:${sliders.map(_.square.key.toLowerCase).mkString("-")}:${sliders.map(_.role.name.toLowerCase).mkString("-")}"
       case PassedPawnCreated(side, square) =>
         s"passed-pawn-created:${side.toString.toLowerCase}:${square.key.toLowerCase}"
       case PassedPawnLost(side, square) =>
@@ -6794,15 +6421,8 @@ enum StructuralSubject:
     this match
       case OpenFile(_) | SemiOpenFile(_, _) => Nil
       case PieceAt(_, _, square) => List(square)
-      case GeometricControlSetChange(mover, _, target, _, _, before, after, removed, established) =>
-        (List(mover.from, mover.to, target) ++ (before ++ after ++ removed ++ established).map(_.square)).distinct
-      case SliderReachChange(_, sliderBefore, sliderAfter, _, gained, lost) =>
-        (sliderBefore.toList.map(_.square) ++ sliderAfter.toList.map(_.square) ++
-          (gained ++ lost).map(_.square)).distinct
       case PawnTensionCreated(_, from, to) => List(from, to)
       case PawnTensionResolved(_, from, to) => List(from, to)
-      case Battery(formation) =>
-        List(formation.firstSlider.square, formation.secondSlider.square)
       case PassedPawnCreated(_, square) => List(square)
       case PassedPawnLost(_, square) => List(square)
       case PassedPawnAdvanced(_, from, to, _) => List(from, to)
@@ -6813,11 +6433,8 @@ enum StructuralSubject:
     this match
       case OpenFile(_) | SemiOpenFile(_, _) => Nil
       case PieceAt(_, _, square) => List(square)
-      case GeometricControlSetChange(_, _, target, _, _, _, _, _, _) => List(target)
-      case SliderReachChange(_, _, _, _, gained, lost) => (gained ++ lost).map(_.square).distinct
       case PawnTensionCreated(_, from, to) => List(from, to)
       case PawnTensionResolved(_, from, to) => List(from, to)
-      case Battery(_) => Nil
       case PassedPawnCreated(_, square) => List(square)
       case PassedPawnLost(_, square) => List(square)
       case PassedPawnAdvanced(_, _, to, _) => List(to)
@@ -6840,129 +6457,13 @@ object StructuralSubject:
   private def key(kind: String, values: String*): String =
     atom(kind) + values.iterator.map(atom).mkString
 
-  private def sliderKey(slider: Option[RelationPieceWitness]): String =
-    slider.fold("absent")(piece => s"${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}")
-
-  private def pieceKey(piece: RelationPieceWitness): String =
-    s"${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}"
-
-  private def pieceKeys(pieces: List[RelationPieceWitness]): String =
-    pieces.map(pieceKey).mkString(",")
-
-  private def controlTargetKey(target: RelationControlTarget): String =
-    target match
-      case RelationControlTarget.Empty          => "empty"
-      case RelationControlTarget.Friendly(role) => s"friendly:${role.name.toLowerCase}"
-      case RelationControlTarget.Enemy(role)    => s"enemy:${role.name.toLowerCase}"
-
-  private[chessjudgment] def fromGeometricControlSetDelta(
-      relation: RelationFactEvidence
-  ): Option[StructuralSubject] =
-    if relation.kind != RelationFactKind.GeometricControlSetDelta then None
-    else
-      relation.detail match
-        case RelationWitnessDetail.GeometricControlSetDelta(
-              mover,
-              controllingSide,
-              targetSquare,
-              beforeTarget,
-              afterTarget,
-              beforeControllers,
-              afterControllers,
-              removedControllers,
-              establishedControllers,
-              _
-            ) =>
-          Some(
-            GeometricControlSetChange(
-              mover,
-              controllingSide,
-              targetSquare,
-              beforeTarget,
-              afterTarget,
-              beforeControllers,
-              afterControllers,
-              removedControllers,
-              establishedControllers
-            )
-          )
-        case _ => None
-
-  private[chessjudgment] def fromSliderReachDelta(relation: RelationFactEvidence): Option[StructuralSubject] =
-    if relation.kind != RelationFactKind.SliderReachDelta then None
-    else
-      relation.detail match
-        case RelationWitnessDetail.SliderReachDelta(
-              _,
-              side,
-              sliderBefore,
-              sliderAfter,
-              direction,
-              before,
-              after,
-              _
-            ) =>
-          val beforeSegment = before.toList.flatMap(_.segment)
-          val afterSegment = after.toList.flatMap(_.segment)
-          val beforeSet = beforeSegment.toSet
-          val afterSet = afterSegment.toSet
-          val gained = afterSegment.filterNot(beforeSet)
-          val lost = beforeSegment.filterNot(afterSet)
-          Option.when(gained.nonEmpty || lost.nonEmpty)(
-            SliderReachChange(side, sliderBefore, sliderAfter, direction, gained, lost)
-          )
-        case _ => None
-
   def stableKey(subject: StructuralSubject): String =
     subject match
       case OpenFile(file) => key("open-file", file.key)
       case SemiOpenFile(side, file) => key("semi-open-file", side.toString, file.key)
       case PieceAt(side, role, square) => key("piece-at", side.toString, role.name, square.key)
-      case GeometricControlSetChange(
-            mover,
-            controllingSide,
-            targetSquare,
-            beforeTarget,
-            afterTarget,
-            beforeControllers,
-            afterControllers,
-            removedControllers,
-            establishedControllers
-          ) =>
-        key(
-          "geometric-control-set-change",
-          mover.stableKey,
-          controllingSide.toString,
-          targetSquare.key,
-          controlTargetKey(beforeTarget),
-          controlTargetKey(afterTarget),
-          pieceKeys(beforeControllers),
-          pieceKeys(afterControllers),
-          pieceKeys(removedControllers),
-          pieceKeys(establishedControllers)
-        )
-      case SliderReachChange(side, sliderBefore, sliderAfter, direction, gained, lost) =>
-        key(
-          "slider-reach-change",
-          side.toString,
-          sliderKey(sliderBefore),
-          sliderKey(sliderAfter),
-          direction.stableKey,
-          gained.map(_.stableKey).mkString(","),
-          lost.map(_.stableKey).mkString(",")
-        )
       case PawnTensionCreated(side, from, to) => key("pawn-tension-created", side.toString, from.key, to.key)
       case PawnTensionResolved(side, from, to) => key("pawn-tension-resolved", side.toString, from.key, to.key)
-      case Battery(formation) =>
-        key(
-          "battery",
-          formation.side.toString,
-          formation.axis.toString,
-          formation.firstSlider.square.key,
-          formation.firstSlider.role.name,
-          formation.secondSlider.square.key,
-          formation.secondSlider.role.name
-        )
       case PassedPawnCreated(side, square) => key("passed-pawn-created", side.toString, square.key)
       case PassedPawnLost(side, square) => key("passed-pawn-lost", side.toString, square.key)
       case PassedPawnAdvanced(side, from, to, rank) =>
@@ -6972,58 +6473,31 @@ object StructuralSubject:
       case PassedPawnPromoted(side, from, to) =>
         key("passed-pawn-promoted", side.toString, from.key, to.key)
 
-final case class StructuralSignal(
-    kind: StructuralSignalKind,
-    magnitude: Int,
-    subjectFacts: List[StructuralSubject] = Nil
-):
-  def subjects: List[String] = subjectFacts.map(_.label)
-  def anchorKey: String =
-    kind.toString
-
 enum TransitionConsequenceKind:
   case OpenFileEstablished
   case SemiOpenFileEstablished
-  case GeometricControlSetChanged
   case PawnTensionCreated
   case PawnTensionResolution
   case PassedPawnProgress
-  case PassedPawnConcession
-  case BatteryFormation
-  case SliderReachChanged
+  case PassedPawnStatusRemoved
 
 object TransitionConsequenceKind:
-  private val RootActorBound = Set(
-    BatteryFormation,
-    PassedPawnProgress
-  )
+  private val RootActorBound = Set(PassedPawnProgress)
 
   private val EstablishedStates = Set(
     OpenFileEstablished,
     SemiOpenFileEstablished,
     PawnTensionCreated,
-    PassedPawnProgress,
-    BatteryFormation
+    PassedPawnProgress
   )
 
   private val RemovedStates = Set(
     PawnTensionResolution,
-    PassedPawnConcession
+    PassedPawnStatusRemoved
   )
 
   def requiresRootActorSurvival(kind: TransitionConsequenceKind): Boolean =
     RootActorBound(kind)
-
-  /** Direction of the observed state change, not an evaluation of the move. */
-  def observedPolarity(kind: TransitionConsequenceKind): StructuralSignalPolarity =
-    kind match
-      case PassedPawnConcession =>
-        StructuralSignalPolarity.Loss
-      case OpenFileEstablished | SemiOpenFileEstablished | GeometricControlSetChanged |
-          PawnTensionCreated | PawnTensionResolution | BatteryFormation | SliderReachChanged =>
-        StructuralSignalPolarity.Neutral
-      case PassedPawnProgress =>
-        StructuralSignalPolarity.Gain
 
   def establishesState(kind: TransitionConsequenceKind): Boolean = EstablishedStates(kind)
   def removesState(kind: TransitionConsequenceKind): Boolean = RemovedStates(kind)
@@ -7045,37 +6519,24 @@ private[chessjudgment] object DerivedRelationResultKey:
       relation.proofStage match
         case RelationProofStage.TransitionFact | RelationProofStage.Vertical(_) => true
         case _                                                                 => false,
-      "a structural derived source must be a certified transition or vertical result"
+      "a derived result key must identify a certified transition or vertical result"
     )
     DerivedRelationResultKey(relation.kind, relation.semanticId)
 
-private[chessjudgment] final case class StructuralDerivedRelationSource(
+private[chessjudgment] final case class TransitionResultPremiseSource(
     key: DerivedRelationResultKey,
     source: EvidenceRef
 )
 
-final case class StructuralProofProvenance(
-    proofKey: String,
-    evidenceId: String
-)
-
 final case class StructuralSubjectBinding private[chessjudgment] (
     subject: StructuralSubject,
-    relationKeys: List[RelationChangeKey],
-    derivedRelationKeys: List[DerivedRelationResultKey]
+    relationKeys: List[RelationChangeKey]
 ):
   require(relationKeys.distinct.size == relationKeys.size, "duplicate structural-subject relation keys")
-  require(
-    derivedRelationKeys.distinct.size == derivedRelationKeys.size,
-    "duplicate structural-subject derived relation keys"
-  )
   def stableKey: String =
-    s"${subject.stableKey}:relations:${relationKeys.map(_.stableKey).mkString("[", ",", "]")}:derived:${derivedRelationKeys.map(_.stableKey).mkString("[", ",", "]")}"
+    s"${subject.stableKey}:relations:${relationKeys.map(_.stableKey).mkString("[", ",", "]")}"
 
 object StructuralSubjectBinding:
-  private[chessjudgment] def unbound(subject: StructuralSubject): StructuralSubjectBinding =
-    StructuralSubjectBinding(subject, Nil, Nil)
-
   private[chessjudgment] def fromRelations(
       subject: StructuralSubject,
       relationKeys: List[RelationChangeKey]
@@ -7085,320 +6546,80 @@ object StructuralSubjectBinding:
       relationKeys.distinct.size == relationKeys.size,
       "a relation-derived structural subject cannot hide duplicate proof keys"
     )
-    StructuralSubjectBinding(subject, relationKeys.sortBy(_.stableKey), Nil)
-
-  private[chessjudgment] def fromDerivedRelations(
-      subject: StructuralSubject,
-      relationKeys: List[DerivedRelationResultKey]
-  ): StructuralSubjectBinding =
-    require(relationKeys.nonEmpty, "a derived structural subject requires exact result keys")
-    require(
-      relationKeys.distinct.size == relationKeys.size,
-      "a derived structural subject cannot hide duplicate result keys"
-    )
-    StructuralSubjectBinding(subject, Nil, relationKeys.sortBy(_.stableKey))
+    StructuralSubjectBinding(subject, relationKeys.sortBy(_.stableKey))
 
 final case class TransitionConsequence private[chessjudgment] (
     kind: TransitionConsequenceKind,
-    strength: Int,
     subjectBindings: List[StructuralSubjectBinding] = Nil,
-    targetBindings: List[StructuralSubjectBinding] = Nil
+    targetBindings: List[StructuralSubjectBinding] = Nil,
+    private[chessjudgment] val resultPremiseKeys: List[DerivedRelationResultKey] = Nil
 ):
+  require(subjectBindings.nonEmpty, "a transition consequence needs at least one exact subject")
   require(subjectBindings.distinct.size == subjectBindings.size, "duplicate structural consequence subject bindings")
   require(targetBindings.distinct.size == targetBindings.size, "duplicate structural consequence target bindings")
+  require(
+    resultPremiseKeys == resultPremiseKeys.distinct.sortBy(_.stableKey),
+    "transition-result premise keys must be unique and canonically ordered"
+  )
   def subjectFacts: List[StructuralSubject] = subjectBindings.map(_.subject)
   def targetSubjectFacts: List[StructuralSubject] = targetBindings.map(_.subject)
   private[chessjudgment] def relationKeys: List[RelationChangeKey] =
     (subjectBindings ++ targetBindings).flatMap(_.relationKeys).distinct.sortBy(_.stableKey)
-  private[chessjudgment] def derivedRelationKeys: List[DerivedRelationResultKey] =
-    (subjectBindings ++ targetBindings).flatMap(_.derivedRelationKeys).distinct.sortBy(_.stableKey)
   require(subjectFacts.distinct.size == subjectFacts.size, "duplicate structural consequence subjects")
   require(targetSubjectFacts.distinct.size == targetSubjectFacts.size, "duplicate structural consequence targets")
 
-  def subjects: List[String] = subjectFacts.map(_.label)
-  def targetSubjects: List[String] = targetSubjectFacts.map(_.label)
-  def polarity: StructuralSignalPolarity =
-    TransitionConsequenceKind.observedPolarity(kind)
   def establishesState: Boolean =
     TransitionConsequenceKind.establishesState(kind)
   def removesState: Boolean =
     TransitionConsequenceKind.removesState(kind)
   def anchorKey: String =
-    s"$kind:$polarity"
+    kind.toString
   private[chessjudgment] def stableKey: String =
     PassedPawnResultProofKey.product(
       "transition-consequence",
       List(
         kind.toString.toLowerCase,
-        strength.toString,
         PassedPawnResultProofKey.sequence(subjectBindings.map(_.stableKey).distinct.sorted),
-        PassedPawnResultProofKey.sequence(targetBindings.map(_.stableKey).distinct.sorted)
+        PassedPawnResultProofKey.sequence(targetBindings.map(_.stableKey).distinct.sorted),
+        PassedPawnResultProofKey.sequence(resultPremiseKeys.map(_.stableKey))
       )
     )
-  def proofKey: String = stableKey
   private[chessjudgment] def resultSubjectFacts: List[StructuralSubject] =
     if targetSubjectFacts.nonEmpty then targetSubjectFacts else subjectFacts
   private[chessjudgment] def witnessSubjectFacts: List[StructuralSubject] =
     if targetSubjectFacts.isEmpty then Nil else subjectFacts.filterNot(targetSubjectFacts.toSet)
-  def resultSubjects: List[String] =
-    resultSubjectFacts.map(_.label)
-  def witnessSubjects: List[String] =
-    witnessSubjectFacts.map(_.label)
   private[chessjudgment] def resultSubjectBindings: List[StructuralSubjectBinding] =
     if targetBindings.nonEmpty then targetBindings else subjectBindings
   private[chessjudgment] def witnessSubjectBindings: List[StructuralSubjectBinding] =
     if targetBindings.isEmpty then Nil else subjectBindings.filterNot(targetBindings.toSet)
 
-private[chessjudgment] object TransitionConsequenceRelationProof:
-  private val RelationBackedKinds = Set(
-    TransitionConsequenceKind.OpenFileEstablished,
-    TransitionConsequenceKind.SemiOpenFileEstablished,
-    TransitionConsequenceKind.GeometricControlSetChanged,
-    TransitionConsequenceKind.PawnTensionCreated,
-    TransitionConsequenceKind.PawnTensionResolution,
-    TransitionConsequenceKind.PassedPawnProgress,
-    TransitionConsequenceKind.PassedPawnConcession,
-    TransitionConsequenceKind.BatteryFormation,
-    TransitionConsequenceKind.SliderReachChanged
-  )
-
-  def relationBacked(kind: TransitionConsequenceKind): Boolean =
-    RelationBackedKinds(kind)
-
-  def provesSemantic(
-      consequences: List[TransitionConsequence],
-      delta: RelationSemanticDelta,
-      derivedRelations: List[RelationFactEvidence]
-  ): Boolean =
-    relationSemanticsResolve(
-      consequences,
-      delta.changes.map(change => RelationChangeProofView(change.direction, change.key, change.detail)),
-      derivedRelations,
-      delta
-    )
-
+private[chessjudgment] object TransitionConsequenceBindingProof:
   def provesCanonical(
       consequences: List[TransitionConsequence],
       changes: List[CanonicalRelationChange],
       transition: StructuralTransitionBinding,
-      semanticDelta: RelationSemanticDelta,
-      derivedRelations: List[RelationFactEvidence]
+      canonicalDelta: CanonicalRelationDelta
   ): Boolean =
-    changes.map(_.key).toSet == semanticDelta.changes.map(_.key).toSet &&
+    val bindings = consequences.flatMap(consequence =>
+      consequence.subjectBindings ++ consequence.targetBindings
+    )
+    val expectedKeys = bindings.flatMap(_.relationKeys).toSet
+    val canonicalByKey = canonicalDelta.changes.map(change => change.key -> change).toMap
+    consequences.nonEmpty &&
+      consequences.distinct.size == consequences.size &&
+      bindings.nonEmpty &&
+      bindings.forall(_.relationKeys.nonEmpty) &&
+      changes.map(_.key).distinct.size == changes.size &&
+      changes.map(_.key).toSet == expectedKeys &&
+      expectedKeys.subsetOf(canonicalByKey.keySet) &&
       changes.forall { change =>
         val owner = change.direction match
           case RelationChangeDirection.Removed     => transition.from
           case RelationChangeDirection.Established => transition.to
-        change.source.position == owner
-      } && relationSemanticsResolve(
-        consequences,
-        changes.map(change => RelationChangeProofView(change.direction, change.key, change.detail)),
-        derivedRelations,
-        semanticDelta
-      )
+        change.source.position == owner &&
+          canonicalByKey.get(change.key).contains(change)
+      }
 
-  private final case class RelationChangeProofView(
-      direction: RelationChangeDirection,
-      key: RelationChangeKey,
-      detail: RelationWitnessDetail
-  )
-
-  private def relationSemanticsResolve(
-      consequences: List[TransitionConsequence],
-      changes: List[RelationChangeProofView],
-      derivedRelations: List[RelationFactEvidence],
-      delta: RelationSemanticDelta
-  ): Boolean =
-    val byKey = changes.map(change => change.key -> change).toMap
-    val derivedByKey = derivedRelations.map(relation => DerivedRelationResultKey.from(relation) -> relation).toMap
-    byKey.size == changes.size && derivedByKey.size == derivedRelations.size && consequences.forall { consequence =>
-      val bindings = consequence.subjectBindings ++ consequence.targetBindings
-      if relationBacked(consequence.kind) then
-        bindings.nonEmpty && bindings.forall { binding =>
-          (binding.relationKeys.nonEmpty || binding.derivedRelationKeys.nonEmpty) &&
-            binding.relationKeys.flatMap(byKey.get).size == binding.relationKeys.size &&
-            binding.derivedRelationKeys.flatMap(derivedByKey.get).size == binding.derivedRelationKeys.size &&
-            provesBinding(
-              consequence.kind,
-              binding.subject,
-              binding.relationKeys.map(byKey),
-              binding.derivedRelationKeys.map(derivedByKey),
-              delta
-            )
-        }
-      else
-        bindings.forall(binding => binding.relationKeys.isEmpty && binding.derivedRelationKeys.isEmpty)
-    }
-
-  private def provesBinding(
-      consequenceKind: TransitionConsequenceKind,
-      subject: StructuralSubject,
-      changes: List[RelationChangeProofView],
-      derivedRelations: List[RelationFactEvidence],
-      delta: RelationSemanticDelta
-  ): Boolean =
-    def passageStates(
-        side: Color
-    ): List[(RelationChangeDirection, EvidenceSquare, List[EvidenceSquare])] =
-      changes.flatMap(change => change.detail match
-        case RelationWitnessDetail.PawnPassage(owner, pawn, opposingPawns) if owner == side =>
-          List((change.direction, pawn, opposingPawns))
-        case _ => Nil
-      )
-    def exactPassageTransition(
-        side: Color,
-        from: EvidenceSquare,
-        to: EvidenceSquare,
-        beforePassed: Boolean,
-        afterPassed: Boolean
-    ): Boolean =
-      val states = passageStates(side)
-      states.size == changes.size && states.count {
-        case (RelationChangeDirection.Removed, pawn, opposing) =>
-          pawn == from && opposing.isEmpty == beforePassed
-        case _ => false
-      } == 1 && states.count {
-        case (RelationChangeDirection.Established, pawn, opposing) =>
-          pawn == to && opposing.isEmpty == afterPassed
-        case _ => false
-      } == 1
-    def rootPawnTransition(side: Color, from: EvidenceSquare, to: EvidenceSquare): Boolean =
-      val root = delta.rootMove
-      root.side == side && root.from == from && root.to == to &&
-        root.beforeRole.name.equalsIgnoreCase(Pawn.name)
-    def exactFile(file: EvidenceFile): Option[File] =
-      file.key.toLowerCase.headOption.flatMap(File.fromChar)
-    def afterPawnFile(file: EvidenceFile): Option[PositionRelationExtractor.ClosedPawnFile] =
-      exactFile(file).flatMap(exact =>
-        delta.afterInventory.pawnFiles(Set(exact)).find(_.file == file)
-      )
-    def exactPawnTension(
-        direction: RelationChangeDirection,
-        side: Color,
-        from: EvidenceSquare,
-        to: EvidenceSquare
-    ): Boolean =
-      changes.size == 1 && changes.head.direction == direction && (changes.head.detail match
-        case RelationWitnessDetail.GeometricControl(
-              Color.White,
-              whitePawn,
-              whiteRole,
-              blackPawn
-            ) =>
-          val inventory =
-            if direction == RelationChangeDirection.Established then delta.afterInventory
-            else delta.beforeInventory
-          val blackPawnPresent = inventory.stateView.occupantAt(blackPawn).exists(piece =>
-            piece.side == Color.Black && piece.role.name.equalsIgnoreCase(Pawn.name)
-          )
-          whiteRole.name.equalsIgnoreCase(Pawn.name) && blackPawnPresent &&
-            (if side.white then whitePawn == from && blackPawn == to
-             else blackPawn == from && whitePawn == to)
-        case _ => false)
-
-    val acceptsDerivedRelations =
-      consequenceKind == TransitionConsequenceKind.GeometricControlSetChanged ||
-        consequenceKind == TransitionConsequenceKind.SliderReachChanged
-    if !acceptsDerivedRelations && derivedRelations.nonEmpty then false
-    else (consequenceKind, subject) match
-      case (TransitionConsequenceKind.OpenFileEstablished, StructuralSubject.OpenFile(file)) =>
-        changes.nonEmpty && changes.forall(change => change.detail match
-          case RelationWitnessDetail.PawnFileGroup(_, exact, _) => exact == file
-          case _                                                => false
-        ) && afterPawnFile(file).exists(_.isOpen)
-      case (
-            TransitionConsequenceKind.SemiOpenFileEstablished,
-            StructuralSubject.SemiOpenFile(side, file)
-          ) =>
-        changes.nonEmpty && changes.forall(change => change.detail match
-          case RelationWitnessDetail.PawnFileGroup(_, exact, _) => exact == file
-          case _                                                => false
-        ) && afterPawnFile(file).exists(_.semiOpenFor(side))
-      case (
-            TransitionConsequenceKind.GeometricControlSetChanged,
-            exact: StructuralSubject.GeometricControlSetChange
-          ) =>
-        changes.isEmpty && derivedRelations.nonEmpty &&
-          derivedRelations.forall(StructuralSubject.fromGeometricControlSetDelta(_).contains(exact))
-      case (
-            TransitionConsequenceKind.SliderReachChanged,
-            exact: StructuralSubject.SliderReachChange
-          ) =>
-        changes.isEmpty && derivedRelations.nonEmpty &&
-          derivedRelations.forall(StructuralSubject.fromSliderReachDelta(_).contains(exact))
-      case (
-            TransitionConsequenceKind.PawnTensionCreated,
-            StructuralSubject.PawnTensionCreated(side, from, to)
-          ) =>
-        exactPawnTension(RelationChangeDirection.Established, side, from, to)
-      case (
-            TransitionConsequenceKind.PawnTensionResolution,
-            StructuralSubject.PawnTensionResolved(side, from, to)
-          ) =>
-        exactPawnTension(RelationChangeDirection.Removed, side, from, to)
-      case (
-            TransitionConsequenceKind.PassedPawnProgress,
-            StructuralSubject.PassedPawnCreated(side, square)
-          ) =>
-        exactPassageTransition(side, square, square, beforePassed = false, afterPassed = true)
-      case (
-            TransitionConsequenceKind.PassedPawnConcession,
-            StructuralSubject.PassedPawnLost(side, square)
-          ) =>
-        passageStates(side) match
-          case List(
-                (RelationChangeDirection.Removed, from, beforeOpposing),
-                (RelationChangeDirection.Established, to, afterOpposing)
-              ) =>
-            to == square && beforeOpposing.isEmpty && afterOpposing.nonEmpty &&
-              (from == to || rootPawnTransition(side, from, to))
-          case List(
-                (RelationChangeDirection.Established, to, afterOpposing),
-                (RelationChangeDirection.Removed, from, beforeOpposing)
-              ) =>
-            to == square && beforeOpposing.isEmpty && afterOpposing.nonEmpty &&
-              (from == to || rootPawnTransition(side, from, to))
-          case _ => false
-      case (
-            TransitionConsequenceKind.PassedPawnProgress,
-            StructuralSubject.PassedPawnAdvanced(side, from, to, _)
-          ) =>
-        rootPawnTransition(side, from, to) &&
-          exactPassageTransition(side, from, to, beforePassed = true, afterPassed = true)
-      case (
-            TransitionConsequenceKind.PassedPawnProgress,
-            StructuralSubject.PassedStatusCreated(side, from, to, _)
-          ) =>
-        rootPawnTransition(side, from, to) &&
-          exactPassageTransition(side, from, to, beforePassed = false, afterPassed = true)
-      case (
-            TransitionConsequenceKind.PassedPawnProgress,
-            StructuralSubject.PassedPawnPromoted(side, from, to)
-          ) =>
-        val root = delta.rootMove
-        rootPawnTransition(side, from, to) && !root.afterRole.name.equalsIgnoreCase(Pawn.name) &&
-          passageStates(side) == List((RelationChangeDirection.Removed, from, Nil))
-      case (
-            TransitionConsequenceKind.BatteryFormation,
-            StructuralSubject.Battery(formation)
-          ) =>
-        changes.nonEmpty && changes.forall(change =>
-          change.direction == RelationChangeDirection.Established && (change.detail match
-            case ray: RelationWitnessDetail.RayBarrier =>
-              RelationRayProjection.batteryFormation(ray).contains(formation)
-            case _ => false)
-        )
-      case (
-            TransitionConsequenceKind.BatteryFormation,
-            StructuralSubject.PieceAt(side, role, square)
-          ) =>
-        changes.nonEmpty && changes.forall(change =>
-          change.direction == RelationChangeDirection.Established && (change.detail match
-            case ray: RelationWitnessDetail.RayBarrier =>
-              ray.occupants.contains(RelationColoredPieceWitness(square, role, side))
-            case _ => false)
-        )
-      case _ => false
 
 final case class StructuralTransitionBinding(
     moveUci: String,
@@ -7715,8 +6936,6 @@ final class RelationFactEvidence private (
 
     detail match
       case RelationWitnessDetail.GeometricControlSetDelta(mover, _, _, _, _, _, _, _, _, _) =>
-        moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
-      case RelationWitnessDetail.NamedRayTransition(mover, _, _, _, _, _, _, _, _, _) =>
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
       case RelationWitnessDetail.CaptureRecaptureInventory(mover, _, _, _, _, _) =>
         moved(mover.side, mover.from, mover.to, Some(mover.beforeRole), Some(mover.afterRole))
@@ -8156,10 +7375,9 @@ private[chessjudgment] object TacticalRelationLineContract:
 
 final case class StructuralDeltaEvidence(
     transition: StructuralTransitionBinding,
-    signals: List[StructuralSignal],
     consequences: List[TransitionConsequence],
     private[chessjudgment] val relationChanges: List[CanonicalRelationChange],
-    private[chessjudgment] val derivedRelationSources: List[StructuralDerivedRelationSource],
+    private[chessjudgment] val resultPremiseSources: List[TransitionResultPremiseSource],
     private[chessjudgment] val canonicalTransitionProof: Option[CanonicalTransitionProof],
     private[chessjudgment] val canonicalDeltaProof: Option[CanonicalTransitionDeltaProof],
     private[chessjudgment] val replayStructuralOccurrence: Option[ReplayStructuralOccurrence] = None
@@ -8169,13 +7387,14 @@ final case class StructuralDeltaEvidence(
   private lazy val certifiedTransitionProof: Option[CanonicalTransitionProof] =
     canonicalTransitionProof.filter(_.proves(transition))
 
-  private[chessjudgment] lazy val exactOutputInventoryCertified: Boolean =
+  private[chessjudgment] lazy val canonicalOutputShapeCertified: Boolean =
     canonicalDeltaProof.exists(_.proves(this)) && replayStructuralOccurrence.exists(occurrence =>
       occurrence.step.ply == transition.to.ply &&
         EvidenceRef.sameMove(occurrence.step.moveUci, transition.moveUci) &&
         PrincipalVariationEvidence.sameBoardState(occurrence.step.fenBefore, transition.from.fen) &&
         PrincipalVariationEvidence.sameBoardState(occurrence.step.fenAfter, transition.to.fen) &&
-        occurrence.signals == signals && occurrence.consequences == consequences
+        occurrence.consequences == consequences &&
+        occurrence.resultPremiseOccurrences.map(_.result) == resultPremiseSources.map(_.key)
     )
 
   def moveUci: String = transition.moveUci
@@ -8184,40 +7403,9 @@ final case class StructuralDeltaEvidence(
   def to: PositionNodeRef = transition.to
   def line: Option[LineNodeRef] = transition.line
   def perspective: Color = transition.perspective
-  def hasSignals: Boolean = signals.nonEmpty
-  def hasConsequences: Boolean = consequences.nonEmpty
-  private[chessjudgment] def hasRelationChanges: Boolean = relationChanges.nonEmpty
-  def hasTypedOutput: Boolean = hasSignals || hasConsequences || hasRelationChanges
-  def signalAnchors: List[String] = signals.map(_.anchorKey).distinct
   def consequenceAnchors: List[String] = consequences.map(_.anchorKey).distinct
-  def consequencesOf(kind: TransitionConsequenceKind): List[TransitionConsequence] = consequences.filter(_.kind == kind)
-  def hasConsequence(kind: TransitionConsequenceKind): Boolean = consequences.exists(_.kind == kind)
-  def hasAnyConsequence(kinds: Set[TransitionConsequenceKind]): Boolean =
-    consequences.exists(consequence => kinds.contains(consequence.kind))
-  def provenanceFor(binding: StructuralSubjectBinding): List[StructuralProofProvenance] =
-    val relationProofs = binding.relationKeys.map { key =>
-      relationChanges.filter(_.key == key) match
-        case exact :: Nil => StructuralProofProvenance(key.stableKey, exact.source.id)
-        case matches =>
-          throw IllegalStateException(
-            s"structural relation key '${key.stableKey}' resolved to ${matches.size} evidence sources"
-          )
-    }
-    val derivedProofs = binding.derivedRelationKeys.map { key =>
-      derivedRelationSources.filter(_.key == key) match
-        case exact :: Nil => StructuralProofProvenance(key.stableKey, exact.source.id)
-        case matches =>
-          throw IllegalStateException(
-            s"structural derived key '${key.stableKey}' resolved to ${matches.size} evidence sources"
-          )
-    }
-    (relationProofs ++ derivedProofs).sortBy(proof => proof.proofKey -> proof.evidenceId)
   def hasConsequenceCategory(category: TransitionConsequenceCategory): Boolean =
     consequences.exists(consequence => StructuralDeltaEvidence.hasConsequenceCategory(consequence.kind, category))
-  def establishedConsequences: List[TransitionConsequence] =
-    consequences.filter(_.establishesState)
-  def removedConsequences: List[TransitionConsequence] =
-    consequences.filter(_.removesState)
   private[chessjudgment] def transitionIsCertified: Boolean =
     certifiedTransitionProof.nonEmpty
   private[chessjudgment] def certifiedRootStep: Option[LegalReplayStep] =
@@ -8240,7 +7428,7 @@ object StructuralDeltaEvidence:
       PawnTensionCreated -> Set(PawnStructure, PawnStructureDelta),
       PawnTensionResolution -> Set(PawnStructureDelta),
       PassedPawnProgress -> Set(PawnStructure, PawnStructureDelta),
-      PassedPawnConcession -> Set(PawnStructure, PawnStructureDelta)
+      PassedPawnStatusRemoved -> Set(PawnStructure, PawnStructureDelta)
     )
 
 enum PassedPawnResultDependencyKind:
@@ -8652,7 +7840,6 @@ object PassedPawnResultRoute:
         causalPath.last.to == sourceEvent &&
         connected &&
         consequence.establishesState &&
-        consequence.strength > 0 &&
         resultProof.binds(sourceEvent, consequence, causalPath)
     )(
       PassedPawnResultRoute(sourceEvent, consequence, causalPath, resultProof)
@@ -8787,10 +7974,6 @@ final case class PassedPawnResultEpisode(
 
 
 object PassedPawnResultEpisode:
-  private val PressureKinds = Set(
-    TransitionConsequenceKind.BatteryFormation
-  )
-
   private val MeansOnlyResultKinds = Set.empty[TransitionConsequenceKind]
 
   def resultConsequences(event: PassedPawnResultEventNode): List[TransitionConsequence] =
@@ -8813,13 +7996,6 @@ object PassedPawnResultEpisode:
 
   private[chessjudgment] def meansOnlyResultKind(kind: TransitionConsequenceKind): Boolean =
     MeansOnlyResultKinds(kind)
-
-  def pressureTargetSquares(event: PassedPawnResultEventNode): Set[String] =
-    event.structuralConsequences
-      .filter(consequence => PressureKinds(consequence.kind))
-      .flatMap(consequenceSquares)
-      .map(_.key.toLowerCase)
-      .toSet
 
   def triggerMoveCapturesPiece(trigger: PassedPawnResultEventNode): Boolean =
     trigger.certifiedLegalStep.exists(_.capturedRole.nonEmpty)
@@ -9207,8 +8383,8 @@ object PassedPawnResultFunctionalMatch:
       expected: List[TransitionConsequence],
       observed: List[TransitionConsequence]
   ): Boolean =
-    val expectedPositive = expected.filter(consequence => consequence.establishesState && consequence.strength > 0)
-    val observedPositive = observed.filter(consequence => consequence.establishesState && consequence.strength > 0)
+    val expectedPositive = expected.filter(_.establishesState)
+    val observedPositive = observed.filter(_.establishesState)
     @annotation.tailrec
     def consume(
         remainingExpected: List[TransitionConsequence],
@@ -9252,8 +8428,6 @@ object PassedPawnResultFunctionalMatch:
       observed: TransitionConsequence
   ): Boolean =
     expected.kind == observed.kind &&
-      expected.polarity == observed.polarity &&
-      observed.strength >= expected.strength &&
       targetObjectsCompatible(expected, observed)
 
   private def functionPath(
@@ -9346,9 +8520,7 @@ final case class PassedPawnResultSemanticIdentity(
     root: PassedPawnResultSourceOccurrence,
     source: PassedPawnResultSourceOccurrence,
     consequenceKind: TransitionConsequenceKind,
-    polarity: StructuralSignalPolarity,
     resultTargetSubjects: List[String],
-    strength: Int,
     robustness: PassedPawnResultReplyCoverage,
     branches: List[PassedPawnResultBranchIdentity],
     causalRoute: List[CausalDependencyFunctionIdentity],
@@ -9357,9 +8529,7 @@ final case class PassedPawnResultSemanticIdentity(
   def stableKey: String =
     (List(root.stableKey, source.stableKey) ++ List(
       consequenceKind.toString.toLowerCase,
-      polarity.toString.toLowerCase,
       resultTargetSubjects.mkString("[", ",", "]"),
-      strength.toString,
       robustness.toString.toLowerCase,
       branches.map(_.stableKey).mkString("[", ",", "]"),
       causalRoute.map(_.stableKey).mkString("[", ",", "]"),
@@ -9383,11 +8553,9 @@ object PassedPawnResultSemanticIdentity:
         assessment.sourceEvent.identity.actor
       ),
       consequenceKind = assessment.consequence.kind,
-      polarity = assessment.consequence.polarity,
       resultTargetSubjects = normalizedResultTargetSubjects(
         assessment.consequence.resultSubjectBindings.map(_.stableKey)
       ),
-      strength = assessment.consequence.strength,
       robustness = assessment.robustness,
       branches = assessmentBranches(assessment.observations),
       causalRoute = assessment.causalPath.map(
@@ -9528,7 +8696,6 @@ object PassedPawnResultReplyAssessment:
     val consequenceKeys = event.structuralConsequences.map { consequence =>
       List(
         consequence.kind.toString,
-        consequence.strength.toString,
         consequence.subjectBindings.map(_.stableKey).mkString("[", ",", "]"),
         consequence.targetBindings.map(_.stableKey).mkString("[", ",", "]")
       ).mkString(":")
@@ -9648,10 +8815,9 @@ final case class PassedPawnResultEventEvidence(
       .sortBy(publicResultAssessmentSortKey)
   private def publicResultAssessmentSortKey(
       assessment: PassedPawnResultReplyAssessment
-  ): (Int, Int, String, String, String) =
+  ): (Int, String, String, String) =
     (
       assessment.sourcePlyOffset,
-      -assessment.consequence.strength,
       assessment.consequence.kind.toString,
       assessment.consequence.subjectBindings.map(_.stableKey).sorted.mkString(":"),
       assessment.causalPath.map(_.stableKey).mkString
@@ -10627,13 +9793,13 @@ final class TypedEvidenceGraph private (
   private def intrinsicallyProofEligible(record: EvidenceRecord): Boolean =
     (record.ref.confidence != EvidenceConfidence.Mixed || record.parents.nonEmpty) &&
       (record.payload match
-        case PositionFeatureEvidence(features) =>
-          exactAuthority(record, EvidenceProducer.PositionFeatureProducer, EvidenceLayer.PositionFeature) &&
+        case PositionOccurrenceEvidence(occurrence) =>
+          exactAuthority(record, EvidenceProducer.PositionOccurrenceProducer, EvidenceLayer.PositionOccurrence) &&
             record.ref.confidence == EvidenceConfidence.BoardDerived &&
             record.ref.line.isEmpty &&
-            PrincipalVariationEvidence.sameBoardState(features.fen, record.ref.position.fen) &&
-            features.plyCount == record.ref.position.ply &&
-            record.ref.position.sideToMove.forall(_ == features.sideToMove)
+            PrincipalVariationEvidence.sameBoardState(occurrence.fen, record.ref.position.fen) &&
+            occurrence.plyCount == record.ref.position.ply &&
+            record.ref.position.sideToMove.forall(_ == occurrence.sideToMove)
         case payload: LineFactEvidence =>
           exactAuthority(record, EvidenceProducer.LegalLineProducer, EvidenceLayer.Line) &&
             record.ref.confidence == EvidenceConfidence.LegalReplayVerified &&
@@ -10659,7 +9825,7 @@ final class TypedEvidenceGraph private (
             payload.canonicalTransitionProof.exists(_.provesMove(moveUci, from, to, record.ref.scope))
         case payload: StructuralDeltaEvidence =>
           structuralDeltaAncestryVerified(record, payload) &&
-            payload.exactOutputInventoryCertified
+            payload.canonicalOutputShapeCertified
         case payload: ForcedReplyResourceDifferentialEvidence =>
           exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
             payload.exactOccurrenceCertified(record)
@@ -11084,43 +10250,51 @@ final class TypedEvidenceGraph private (
   ): Boolean =
     val directParents = record.parents.flatMap(parent => byId.get(parent.id).filter(_.ref == parent))
     val directParentsById = directParents.map(parent => parent.ref.id -> parent).toMap
-    val transitionParent = directParents.exists {
-      case EvidenceRecord(ref, MoveTransitionEvidence(moveUci, from, to, _), _) =>
-        ref.producer == EvidenceProducer.MoveTransitionProducer &&
-          ref.layer == EvidenceLayer.MoveTransition &&
-          ref.confidence == EvidenceConfidence.LegalReplayVerified &&
-          EvidenceRef.sameMove(moveUci, payload.moveUci) &&
-          from == payload.from &&
-          to == payload.to
-      case _ =>
-        false
+    val transitionParents = directParents.collect {
+      case record @ EvidenceRecord(ref, MoveTransitionEvidence(moveUci, from, to, _), _)
+          if ref.producer == EvidenceProducer.MoveTransitionProducer &&
+            ref.layer == EvidenceLayer.MoveTransition &&
+            ref.confidence == EvidenceConfidence.LegalReplayVerified &&
+            EvidenceRef.sameMove(moveUci, payload.moveUci) &&
+            from == payload.from &&
+            to == payload.to =>
+        record
     }
+    val transitionParent = transitionParents match
+      case exact :: Nil => Some(exact)
+      case _            => None
     def positionParent(position: PositionNodeRef): Boolean =
       directParents.exists {
-        case EvidenceRecord(ref, PositionFeatureEvidence(features), _) =>
-          ref.producer == EvidenceProducer.PositionFeatureProducer &&
-            ref.layer == EvidenceLayer.PositionFeature &&
+        case EvidenceRecord(ref, PositionOccurrenceEvidence(occurrence), _) =>
+          ref.producer == EvidenceProducer.PositionOccurrenceProducer &&
+            ref.layer == EvidenceLayer.PositionOccurrence &&
             ref.confidence == EvidenceConfidence.BoardDerived &&
             ref.position == position &&
-            PrincipalVariationEvidence.sameBoardState(features.fen, position.fen) &&
-            features.plyCount == position.ply &&
-            position.sideToMove.forall(_ == features.sideToMove)
+            PrincipalVariationEvidence.sameBoardState(occurrence.fen, position.fen) &&
+            occurrence.plyCount == position.ply &&
+            position.sideToMove.forall(_ == occurrence.sideToMove)
         case _ =>
           false
       }
-    val expectedDerivedKeys = payload.consequences.flatMap(_.derivedRelationKeys).toSet
-    val exactDerivedSources =
-      payload.derivedRelationSources.map(_.key).toSet == expectedDerivedKeys &&
-        payload.derivedRelationSources.forall { source =>
-          directParentsById.get(source.source.id).exists {
+    val expectedResultKeys = payload.consequences.flatMap(_.resultPremiseKeys).toSet
+    val exactResultPremiseSources =
+      payload.resultPremiseSources.map(_.key).distinct.size == payload.resultPremiseSources.size &&
+        payload.resultPremiseSources.map(_.source).distinct.size == payload.resultPremiseSources.size &&
+        payload.resultPremiseSources.map(_.key).toSet == expectedResultKeys &&
+        payload.resultPremiseSources.forall { premise =>
+          directParentsById.get(premise.source.id).exists {
             case EvidenceRecord(ref, relation: RelationFactEvidence, parents) =>
-              ref == source.source && (relation.proofStage match
-                case RelationProofStage.TransitionFact | RelationProofStage.Vertical(_) =>
-                  DerivedRelationResultKey.from(relation) == source.key
-                case _ => false) &&
-                relation.mentionsLineMove(payload.moveUci) && relationGraph.contains(ref, relation) &&
+              ref == premise.source &&
+                ref.line == payload.line &&
+                relation.proofStage != RelationProofStage.PositionFact &&
+                DerivedRelationResultKey.from(relation) == premise.key &&
+                relation.mentionsLineMove(payload.moveUci) &&
+                relationGraph.contains(ref, relation) &&
                 parents.exists(parent => byId.get(parent.id).exists {
-                  case EvidenceRecord(_, occurrence: ClosedRelationOccurrenceEvidence, _) =>
+                  case EvidenceRecord(occurrenceRef, occurrence: ClosedRelationOccurrenceEvidence, _) =>
+                    occurrenceRef == parent && occurrenceRef.line == payload.line &&
+                      occurrence.lineOwner == payload.line &&
+                      transitionParent.exists(exact => occurrence.edge.evidence == exact.ref) &&
                     occurrence.edge.from == payload.from && occurrence.edge.to == payload.to &&
                       EvidenceRef.sameMove(occurrence.edge.moveUci, payload.moveUci) &&
                       occurrence.outputFor(ref).exists(_.relation == relation)
@@ -11133,10 +10307,10 @@ final class TypedEvidenceGraph private (
       record.ref.layer == EvidenceLayer.StructuralDelta &&
       record.ref.confidence == EvidenceConfidence.BoardDerived &&
       record.ref.position == payload.from &&
-      transitionParent &&
+      transitionParent.nonEmpty &&
       positionParent(payload.from) &&
       positionParent(payload.to) &&
-      exactDerivedSources &&
+      exactResultPremiseSources &&
       payload.relationChanges.forall(change =>
         directParentsById.get(change.source.id).contains(change.sourceNode.record) &&
           relationGraph.contains(change.source, change.relation)

@@ -2,19 +2,6 @@ package lila.chessjudgment.model.position
 
 import chess.*
 
-final case class PositionFeatures(
-    fen: String,
-    sideToMove: Color,
-    plyCount: Int
-)
-
-object PositionFeatures:
-  def empty: PositionFeatures = PositionFeatures(
-    fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-    sideToMove = Color.White,
-    plyCount = 0
-  )
-
 private[chessjudgment] final case class PawnFrontOccupancy(
     side: Color,
     pawn: Square,

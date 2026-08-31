@@ -120,8 +120,8 @@ class RelativeCauseRecordConflictTest extends munit.FunSuite:
     def carrier(id: String): EvidenceRef =
       EvidenceRef(
         id,
-        EvidenceProducer.PositionFeatureProducer,
-        EvidenceLayer.PositionFeature,
+        EvidenceProducer.PositionOccurrenceProducer,
+        EvidenceLayer.PositionOccurrence,
         position,
         None,
         EvidenceScope.CurrentPosition,

@@ -310,12 +310,8 @@ object ClaimEvidenceSemantics:
       case payload: RelationFactEvidence =>
         payload.semanticGroupingAnchors
       case payload: StructuralDeltaEvidence =>
-        (
-          payload.signalAnchors.map(anchor =>
-            EvidenceSemanticAnchor.of(StructuralDelta, s"signal:$anchor")
-          ) ++ payload.consequenceAnchors.map(anchor =>
-            EvidenceSemanticAnchor.of(StructuralDelta, s"consequence:$anchor")
-          )
+        payload.consequenceAnchors.map(anchor =>
+          EvidenceSemanticAnchor.of(StructuralDelta, s"consequence:$anchor")
         ).distinctBy(_.stableKey)
       case _ =>
         Nil

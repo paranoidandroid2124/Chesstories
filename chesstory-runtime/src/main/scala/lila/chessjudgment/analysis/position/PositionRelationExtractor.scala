@@ -1,6 +1,6 @@
 package lila.chessjudgment.analysis.position
 
-import chess.{ Bishop, Board, Castles, Color, File, King, Knight, Move, Pawn, Position, Queen, Rank, Role, Rook, Side, Square }
+import chess.{ Bishop, Board, Color, File, King, Knight, Move, Pawn, Position, Queen, Rank, Role, Rook, Square }
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 import lila.chessjudgment.model.position.*
@@ -102,7 +102,7 @@ object PositionRelationExtractor:
         Some(StaticBoard)
       case RelationFactKind.LegalMove =>
         Some(PositionOccurrence)
-      case RelationFactKind.GeometricControlSetDelta | RelationFactKind.NamedRayTransition |
+      case RelationFactKind.GeometricControlSetDelta |
           RelationFactKind.CaptureRecaptureInventory |
           RelationFactKind.CreatedCheckResponseInventory |
           RelationFactKind.RootCheckResponse |
@@ -339,19 +339,6 @@ object PositionRelationExtractor:
     ): List[CanonicalRelationFact] =
       sortFacts(staticBoard.factsFor(keys) ++ occurrence.factsFor(keys))
 
-  private[chessjudgment] final case class ClosedCastlingRights private[position] (
-      whiteKingSide: Boolean,
-      whiteQueenSide: Boolean,
-      blackKingSide: Boolean,
-      blackQueenSide: Boolean
-  ):
-    def allows(side: Color, castleSide: Side): Boolean =
-      (side, castleSide) match
-        case (Color.White, Side.KingSide)  => whiteKingSide
-        case (Color.White, Side.QueenSide) => whiteQueenSide
-        case (Color.Black, Side.KingSide)  => blackKingSide
-        case (Color.Black, Side.QueenSide) => blackQueenSide
-
   /** One existing canonical control edge viewed in controller- and
     * target-centric directions. `source` remains the sole graph fact.
     */
@@ -361,11 +348,7 @@ object PositionRelationExtractor:
       controller: RelationPieceWitness,
       targetSquare: EvidenceSquare,
       target: RelationControlTarget
-  ):
-    def friendlySupport: Option[RelationPieceWitness] =
-      target match
-        case RelationControlTarget.Friendly(role) => Some(RelationPieceWitness(targetSquare, role))
-        case _                                    => None
+  )
 
   private[position] object ClosedGeometricControl:
     def from(
@@ -446,31 +429,18 @@ object PositionRelationExtractor:
     case PawnDoubleAdvance
     case Castling
 
-  private[chessjudgment] final case class ClosedBoardCellChange private[position] (
-      square: EvidenceSquare,
-      before: Option[RelationColoredPieceWitness],
-      after: Option[RelationColoredPieceWitness]
-  ):
-    require(before != after, "a closed legal move cell must change occupant identity")
-    require(
-      before.forall(_.square == square) && after.forall(_.square == square),
-      "a closed legal move cell witness must name its exact square"
-    )
-
   /** Exact projection of one already-generated legal `Move`. No child
     * position is searched and no second legal-move producer exists.
     */
   private[chessjudgment] final case class ClosedLegalMove private[position] (
       source: RelationFactEvidence,
       movement: RelationMoveTransitionWitness,
-      destination: EvidenceSquare,
       moveUci: String,
       capture: Option[RelationLegalCaptureWitness],
       mode: ClosedLegalMovementMode,
-      geometricControl: Option[ClosedGeometricControl],
-      traversedSquares: List[EvidenceSquare],
       boardEffect: BoardMoveEffect
   ):
+    def destination: EvidenceSquare = movement.to
     require(
       EvidenceRef.sameMove(moveUci, source.detail match
         case RelationWitnessDetail.LegalMove(_, _, _, _, exactUci, _) => exactUci
@@ -485,23 +455,6 @@ object PositionRelationExtractor:
       ),
       "a closed legal move must retain its exact primary move effect"
     )
-    require(
-      (mode == ClosedLegalMovementMode.ControlledDestination) == geometricControl.nonEmpty,
-      "only control-shaped movement may claim a canonical geometric-control edge"
-    )
-
-    lazy val changedCells: List[ClosedBoardCellChange] =
-      boardEffect.cellChanges.map(change =>
-        ClosedBoardCellChange(
-          evidenceSquare(change.square),
-          change.before.map(piece =>
-            RelationColoredPieceWitness(evidenceSquare(change.square), evidenceRole(piece.role), piece.color)
-          ),
-          change.after.map(piece =>
-            RelationColoredPieceWitness(evidenceSquare(change.square), evidenceRole(piece.role), piece.color)
-          )
-        )
-      )
 
   private[chessjudgment] enum ClosedKingResponseMode:
     case KingMove
@@ -613,10 +566,8 @@ object PositionRelationExtractor:
       file: EvidenceFile,
       whitePawns: List[EvidenceSquare],
       blackPawns: List[EvidenceSquare],
-      occupancy: ClosedPawnFileOccupancy,
-      sourceGroups: List[RelationFactEvidence]
+      occupancy: ClosedPawnFileOccupancy
   ):
-    require(sourceGroups.size == 2, "a closed pawn file needs both sides' canonical file groups")
     require(
       occupancy == ((whitePawns.nonEmpty, blackPawns.nonEmpty) match
         case (false, false) => ClosedPawnFileOccupancy.Open
@@ -632,9 +583,6 @@ object PositionRelationExtractor:
         case Color.Black => occupancy == ClosedPawnFileOccupancy.WhitePawnsOnly
 
     def isOpen: Boolean = occupancy == ClosedPawnFileOccupancy.Open
-
-    def pawnsFor(side: Color): List[EvidenceSquare] =
-      if side.white then whitePawns else blackPawns
 
   private[chessjudgment] enum ClosedPawnConnectionKind:
     case GeometricSupport
@@ -708,7 +656,6 @@ object PositionRelationExtractor:
   private[position] final case class ClosedPawnTopologyDetails(
       pawns: List[ClosedPawnState],
       connections: List[ClosedPawnConnection],
-      components: List[ClosedPawnComponent],
       enemyPawnContacts: List[ClosedEnemyPawnContact]
   )
 
@@ -723,20 +670,11 @@ object PositionRelationExtractor:
     * cached closure.
     */
   private[chessjudgment] final class ClosedPawnTopology private[position] (
-      fileProjection: File => ClosedPawnFile,
       detailProjection: () => ClosedPawnTopologyDetails
   ):
-    lazy val files: List[ClosedPawnFile] =
-      val exact = File.all.map(fileProjection)
-      require(exact.size == File.all.size, "closed pawn topology must certify every board file")
-      exact
-
-    private[chessjudgment] def file(file: File): ClosedPawnFile = fileProjection(file)
-
     private lazy val details = detailProjection()
     lazy val pawns: List[ClosedPawnState] = details.pawns
     lazy val connections: List[ClosedPawnConnection] = details.connections
-    lazy val components: List[ClosedPawnComponent] = details.components
     lazy val enemyPawnContacts: List[ClosedEnemyPawnContact] = details.enemyPawnContacts
 
     /** Complete, canonical per-pawn state owned by this closed topology. L1
@@ -834,15 +772,6 @@ object PositionRelationExtractor:
         .mapValues(_.sortBy(_.square.key))
         .toMap
 
-    lazy val castlingRights: ClosedCastlingRights =
-      val rights = position.history.castles
-      ClosedCastlingRights(
-        whiteKingSide = Castles.whiteKingSide(rights),
-        whiteQueenSide = Castles.whiteQueenSide(rights),
-        blackKingSide = Castles.blackKingSide(rights),
-        blackQueenSide = Castles.blackQueenSide(rights)
-      )
-
     /** Potential FEN en-passant state, independent of whether a legal
       * en-passant capture currently exists. Legal captures remain owned by the
       * LegalMove inventory.
@@ -885,7 +814,6 @@ object PositionRelationExtractor:
     )
     case LegalCaptureOf(side: Color, capturedSquare: EvidenceSquare)
     case GeometricControlOf(side: Color, targetSquare: EvidenceSquare)
-    case GeometricFriendlySupportOf(side: Color, supportedSquare: EvidenceSquare)
     case GeometricPawnSupportOf(side: Color, supportedSquare: EvidenceSquare)
     case KingCheck(side: Color, kingSquare: EvidenceSquare)
 
@@ -901,8 +829,6 @@ object PositionRelationExtractor:
           side == state.sideToMove && state.occupantAt(capturedSquare).exists(_.side != side)
         case GeometricControlOf(_, targetSquare) =>
           Square.fromKey(targetSquare.key).nonEmpty
-        case GeometricFriendlySupportOf(side, supportedSquare) =>
-          state.occupantAt(supportedSquare).exists(_.side == side)
         case GeometricPawnSupportOf(side, supportedSquare) =>
           state.occupantAt(supportedSquare).exists(piece =>
             piece.side == side && piece.role.name.equalsIgnoreCase(Pawn.name)
@@ -919,8 +845,6 @@ object PositionRelationExtractor:
           s"legal-capture:${side.toString.toLowerCase}:${capturedSquare.key.toLowerCase}"
         case GeometricControlOf(side, targetSquare) =>
           s"geometric-control:${side.toString.toLowerCase}:${targetSquare.key.toLowerCase}"
-        case GeometricFriendlySupportOf(side, supportedSquare) =>
-          s"geometric-friendly-support:${side.toString.toLowerCase}:${supportedSquare.key.toLowerCase}"
         case GeometricPawnSupportOf(side, supportedSquare) =>
           s"geometric-pawn-support:${side.toString.toLowerCase}:${supportedSquare.key.toLowerCase}"
         case KingCheck(side, kingSquare) =>
@@ -931,7 +855,6 @@ object PositionRelationExtractor:
     * materializing all 64 squares as persistent graph records.
     */
   private[chessjudgment] enum ClosedPositionStateQuery:
-    case OccupiedBy(piece: RelationColoredPieceWitness)
     case OwnKingExposure(
         side: Color,
         piece: RelationPieceWitness,
@@ -940,8 +863,6 @@ object PositionRelationExtractor:
         postMoveControllers: List[RelationPieceWitness]
     )
     case PawnTopology(state: RelationPawnTopologyStateWitness)
-    case PotentialEnPassant(square: Option[EvidenceSquare])
-    case CastlingRight(side: Color, castleSide: Side, retained: Boolean)
     case SliderReach(
         side: Color,
         slider: RelationPieceWitness,
@@ -951,8 +872,6 @@ object PositionRelationExtractor:
 
     private[position] def admissible(state: ClosedPositionStateFacet): Boolean =
       this match
-        case OccupiedBy(piece) =>
-          Square.fromKey(piece.square.key).nonEmpty
         case OwnKingExposure(_, piece, resource, kingSquare, controllers) =>
           Square.fromKey(piece.square.key).nonEmpty && Square.fromKey(resource.destination.key).nonEmpty &&
             Square.fromKey(kingSquare.key).nonEmpty &&
@@ -960,25 +879,16 @@ object PositionRelationExtractor:
             controllers == controllers.sortBy(controller => controller.square.key -> controller.role.name)
         case PawnTopology(exact) =>
           Square.fromKey(exact.square.key).nonEmpty
-        case PotentialEnPassant(square) =>
-          square.forall(value => Square.fromKey(value.key).nonEmpty)
-        case CastlingRight(_, _, _) => true
         case SliderReach(_, slider, _, reach) =>
           Square.fromKey(slider.square.key).nonEmpty &&
             reach.toList.flatMap(_.segment).forall(value => Square.fromKey(value.square.key).nonEmpty)
 
     def stableKey: String =
       this match
-        case OccupiedBy(piece) =>
-          s"occupied-by:${piece.side.toString.toLowerCase}:${piece.square.key.toLowerCase}:${piece.role.name.toLowerCase}"
         case OwnKingExposure(side, piece, resource, kingSquare, controllers) =>
           s"own-king-exposure:${side.toString.toLowerCase}:${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}:${resource.stableKey}:${kingSquare.key.toLowerCase}:${controllers.map(controller => s"${controller.role.name.toLowerCase}@${controller.square.key.toLowerCase}").mkString(",")}"
         case PawnTopology(state) =>
           s"pawn-topology:${state.stableKey}"
-        case PotentialEnPassant(square) =>
-          s"potential-en-passant:${square.map(_.key.toLowerCase).getOrElse("none")}"
-        case CastlingRight(side, castleSide, retained) =>
-          s"castling-right:${side.toString.toLowerCase}:${castleSide.toString.toLowerCase}:$retained"
         case SliderReach(side, slider, direction, reach) =>
           s"slider-reach:${side.toString.toLowerCase}:${slider.role.name.toLowerCase}@${slider.square.key.toLowerCase}:${direction.stableKey}:${reach.map(_.stableKey).getOrElse("none")}"
 
@@ -1036,9 +946,10 @@ object PositionRelationExtractor:
   private[chessjudgment] final class PositionRelationInventoryCertificate private[position] (
       private val position: Position,
       private val snapshot: PositionRelationSnapshot,
-      private val actualLegalMoves: List[Move],
+      private val actualLegalMoveEffects: List[(Move, BoardMoveEffect)],
       private val geometricControlInventory: GeometricControlInventory
   ):
+    private val actualLegalMoves = actualLegalMoveEffects.map(_._1)
     private val state = new ClosedPositionStateFacet(position, canonicalInCheck)
     private lazy val semanticFen = chess.format.Fen.write(position).value
     require(
@@ -1153,9 +1064,10 @@ object PositionRelationExtractor:
 
     private final class IndexedLegalMove(
         val move: Move,
+        val boardEffect: BoardMoveEffect,
         val source: RelationFactEvidence
     ):
-      lazy val closed: ClosedLegalMove = closedLegalMove(move, source)
+      lazy val closed: ClosedLegalMove = closedLegalMove(move, boardEffect, source)
 
     private lazy val indexedLegalMovesByUci: Map[String, IndexedLegalMove] =
       val sources = uniqueIndex(
@@ -1168,15 +1080,14 @@ object PositionRelationExtractor:
         "canonical legal inventory"
       )
       val moves = uniqueIndex(
-        actualLegalMoves.map(move => PrincipalVariationEvidence.normalizeUci(move.toUci.uci) -> move),
+        actualLegalMoveEffects.map { case (move, boardEffect) =>
+          PrincipalVariationEvidence.normalizeUci(move.toUci.uci) -> (move -> boardEffect)
+        },
         "already-generated legal moves"
       )
-      require(
-        moves.keySet == sources.keySet,
-        "the closed LegalMove facts and already-generated legal moves must be exhaustive"
-      )
-      moves.map { case (moveUci, move) =>
-        moveUci -> new IndexedLegalMove(move, sources(moveUci))
+      require(moves.keySet == sources.keySet, "the closed LegalMove facts and already-generated legal moves must be exhaustive")
+      moves.map { case (moveUci, (move, boardEffect)) =>
+        moveUci -> new IndexedLegalMove(move, boardEffect, sources(moveUci))
       }
 
     private lazy val indexedLegalMovesOrdered: List[IndexedLegalMove] =
@@ -1372,8 +1283,8 @@ object PositionRelationExtractor:
 
     private def closedPawnFile(file: File): ClosedPawnFile =
       val key = fileKey(file)
-      val (whitePawns, whiteSource) = pawnFileGroupSources(Color.White -> key)
-      val (blackPawns, blackSource) = pawnFileGroupSources(Color.Black -> key)
+      val whitePawns = pawnFileGroupSources(Color.White -> key)._1
+      val blackPawns = pawnFileGroupSources(Color.Black -> key)._1
       val occupancy = (whitePawns.nonEmpty, blackPawns.nonEmpty) match
         case (false, false) => ClosedPawnFileOccupancy.Open
         case (true, false)  => ClosedPawnFileOccupancy.WhitePawnsOnly
@@ -1383,8 +1294,7 @@ object PositionRelationExtractor:
         EvidenceFile(key),
         whitePawns,
         blackPawns,
-        occupancy,
-        List(whiteSource, blackSource)
+        occupancy
       )
 
     private final class IndexedPawnFile(val file: File):
@@ -1438,6 +1348,9 @@ object PositionRelationExtractor:
             )
           case _ => Nil
       }
+      val pawnSupportByTarget = supportConnections.groupMap(connection =>
+        connection.side -> connection.target
+      )(identity)
       val phalanxConnections = List(Color.White, Color.Black).flatMap { side =>
         val sidePawns = pawnWitnesses.collect { case (`side`, square) => square }.sortBy(_.key)
         sidePawns.combinations(2).flatMap {
@@ -1534,10 +1447,6 @@ object PositionRelationExtractor:
         val opposingPawns = passageSource.detail match
           case RelationWitnessDetail.PawnPassage(_, _, exactOpposingPawns) => exactOpposingPawns
           case _ => throw IllegalArgumentException("pawn passage source changed kind")
-        val pawnSupporters = controlsAt(side, square).filter(control =>
-          control.controller.role.name.equalsIgnoreCase(Pawn.name) &&
-            control.friendlySupport.exists(_.role.name.equalsIgnoreCase(Pawn.name))
-        )
         val passed = opposingPawns.isEmpty
         ClosedPawnState(
           side,
@@ -1546,7 +1455,7 @@ object PositionRelationExtractor:
           doubled = pawnFileGroupSources(side -> file.key)._1.size > 1,
           isolated = isolated,
           passed = passed,
-          geometricallyProtectedPasser = passed && pawnSupporters.nonEmpty,
+          geometricallyProtectedPasser = passed && pawnSupportByTarget.contains(side -> square),
           frontSquare = frontSquare,
           frontOccupant = frontOccupant,
           componentPawns = componentByPawn(side -> square).pawns,
@@ -1558,15 +1467,18 @@ object PositionRelationExtractor:
           passageSource = passageSource
         )
       }.sortBy(pawn => pawn.side.toString -> pawn.square.key)
-      ClosedPawnTopologyDetails(pawnStates, connections, components, whitePawnContacts)
+      ClosedPawnTopologyDetails(pawnStates, connections, whitePawnContacts)
 
     private lazy val closedPawnTopologyInventory: ClosedPawnTopology =
       new ClosedPawnTopology(
-        file => indexedClosedPawnFile(file),
         () => closedPawnTopologyDetails
       )
 
-    private def closedLegalMove(move: Move, source: RelationFactEvidence): ClosedLegalMove =
+    private def closedLegalMove(
+        move: Move,
+        boardEffect: BoardMoveEffect,
+        source: RelationFactEvidence
+    ): ClosedLegalMove =
       val moveUci = move.toUci.uci
       val actualDestination = legalDestination(move)
       val (sourceSide, sourceFrom, sourceRole, sourceDestination, capture) = source.detail match
@@ -1596,32 +1508,22 @@ object PositionRelationExtractor:
         else if move.piece.role == Pawn && move.orig.file == actualDestination.file then
           ClosedLegalMovementMode.PawnAdvance
         else ClosedLegalMovementMode.ControlledDestination
-      val geometricControl =
-        if mode != ClosedLegalMovementMode.ControlledDestination then None
-        else
-          controlsFrom(movement.from).filter(control =>
+      if mode == ClosedLegalMovementMode.ControlledDestination then
+        controlsFrom(movement.from).filter(control =>
             control.side == movement.side && control.controller.role == movement.beforeRole &&
               control.targetSquare == movement.to
           ) match
-            case exact :: Nil => Some(exact)
+            case _ :: Nil => ()
             case controls =>
               throw IllegalArgumentException(
                 s"legal control-shaped move '$moveUci' needs exactly one geometric source, found ${controls.size}"
               )
-      val boardEffect = BoardGeometry.moveEffect(move)
-      val traversedSquares =
-        if move.castle.nonEmpty then
-          BoardGeometry.lineSpan(move.orig, actualDestination).drop(1).dropRight(1).map(evidenceSquare)
-        else BoardGeometry.movementPath(move.piece, move.orig, actualDestination).map(evidenceSquare)
       ClosedLegalMove(
         source,
         movement,
-        movement.to,
         moveUci,
         capture,
         mode,
-        geometricControl,
-        traversedSquares,
         boardEffect
       )
 
@@ -1817,12 +1719,6 @@ object PositionRelationExtractor:
       )
     }
 
-    private[chessjudgment] def supportersOf(
-        side: Color,
-        supported: EvidenceSquare
-    ): List[ClosedGeometricControl] =
-      controlsAt(side, supported).filter(_.friendlySupport.nonEmpty)
-
     private[chessjudgment] def legalMove(moveUci: String): Option[ClosedLegalMove] =
       indexedLegalMovesByUci.get(PrincipalVariationEvidence.normalizeUci(moveUci)).map(_.closed)
 
@@ -1923,8 +1819,6 @@ object PositionRelationExtractor:
           indexedLegalCapturesByTarget.getOrElse(capturedSquare, Nil).isEmpty
         case ClosedRelationAbsenceQuery.GeometricControlOf(side, targetSquare) =>
           controlsAt(side, targetSquare).isEmpty
-        case ClosedRelationAbsenceQuery.GeometricFriendlySupportOf(side, supportedSquare) =>
-          supportersOf(side, supportedSquare).isEmpty
         case ClosedRelationAbsenceQuery.GeometricPawnSupportOf(side, supportedSquare) =>
           controlsAt(side, supportedSquare).forall(control =>
             !control.controller.role.name.equalsIgnoreCase(Pawn.name) || (control.target match
@@ -1932,10 +1826,7 @@ object PositionRelationExtractor:
               case _                                     => true)
           )
         case ClosedRelationAbsenceQuery.KingCheck(side, kingSquare) =>
-          controlsAt(!side, kingSquare).forall(control => control.target match
-            case RelationControlTarget.Enemy(role) => !role.name.equalsIgnoreCase(King.name)
-            case _                                 => true
-          ))
+          !state.inCheck(side))
 
     private[chessjudgment] def certifyAbsence(
         query: ClosedRelationAbsenceQuery
@@ -1948,8 +1839,6 @@ object PositionRelationExtractor:
         query: ClosedPositionStateQuery
     ): Option[ClosedPositionStateCertificate] =
       val holds = query.admissible(state) && (query match
-        case ClosedPositionStateQuery.OccupiedBy(piece) =>
-          state.occupantAt(piece.square).contains(piece)
         case ClosedPositionStateQuery.OwnKingExposure(side, piece, resource, kingSquare, controllers) =>
           state.sideToMove == side && movementAffordancesFrom(piece.square)
             .find(movement =>
@@ -1962,10 +1851,6 @@ object PositionRelationExtractor:
             )
         case ClosedPositionStateQuery.PawnTopology(exact) =>
           closedPawnTopologyInventory.stateWitness(exact.side, exact.square).contains(exact)
-        case ClosedPositionStateQuery.PotentialEnPassant(exact) =>
-          state.potentialEnPassantSquare == exact
-        case ClosedPositionStateQuery.CastlingRight(side, castleSide, retained) =>
-          state.castlingRights.allows(side, castleSide) == retained
         case ClosedPositionStateQuery.SliderReach(side, slider, direction, exact) =>
           sliderReachesFrom(slider.square)
             .find(reach => reach.side == side && reach.slider == slider && reach.direction == direction)
@@ -2000,10 +1885,10 @@ object PositionRelationExtractor:
   private[position] def closedPositionInventory(
       snapshot: PositionRelationSnapshot,
       position: Position,
-      actualLegalMoves: List[Move],
+      actualLegalMoveEffects: List[(Move, BoardMoveEffect)],
       geometricControlInventory: GeometricControlInventory
   ): PositionRelationInventoryCertificate =
-    new PositionRelationInventoryCertificate(position, snapshot, actualLegalMoves, geometricControlInventory)
+    new PositionRelationInventoryCertificate(position, snapshot, actualLegalMoveEffects, geometricControlInventory)
 
   def records(
       relations: List[RelationFactEvidence],
@@ -2068,11 +1953,11 @@ object PositionRelationExtractor:
 
   private[position] def extractOccurrenceRelationSnapshot(
       position: Position,
-      legalMoves: List[Move]
+      legalMoveEffects: List[(Move, BoardMoveEffect)]
   ): BoardRelationSnapshot =
     BoardRelationSnapshot.from(
       BoardRelationInventoryDomain.PositionOccurrence,
-      legalMoveProduction(position, legalMoves)
+      legalMoveProduction(position, legalMoveEffects)
     )
 
   private[position] def certifyPositionRelationTransition(
@@ -2156,7 +2041,16 @@ object PositionRelationExtractor:
     val rayEntries = sliderRays.map(ray => raySlot(ray) -> ray)
     val raysBySlot = rayEntries.toMap
     require(raysBySlot.size == rayEntries.size, "one slider direction must have one canonical ray")
-    val raysByOrigin = sliderRays.groupBy(_.attackerSquare)
+    val sliderControlDependencies = sliderRays.flatMap { ray =>
+      ray.controlDependencyByTarget.map { case (target, dependency) =>
+        (ray.attackerSquare -> target) -> dependency
+      }
+    }
+    val sliderControlDependencyByTarget = sliderControlDependencies.toMap
+    require(
+      sliderControlDependencyByTarget.size == sliderControlDependencies.size,
+      "one slider control must belong to one canonical direction"
+    )
     def active(slot: BoardRelationProductionSlot): Boolean =
       slot match
         case BoardRelationProductionSlot.AttackOrigin(origin) => board.pieceAt(origin).nonEmpty
@@ -2189,9 +2083,10 @@ object PositionRelationExtractor:
               )
               val dependencySquares =
                 if List(Bishop, Rook, Queen).contains(piece.role) then
-                  val exactRays = raysByOrigin.getOrElse(origin, Nil).filter(_.squares.contains(target))
-                  require(exactRays.size == 1, "one slider control must belong to one canonical ray")
-                  exactRays.head.segmentThrough(target)
+                  sliderControlDependencyByTarget.getOrElse(
+                    origin -> target,
+                    throw IllegalArgumentException("a slider control must belong to its canonical ray")
+                  )
                 else List(origin, target)
               ProducedBoardRelation(
                 slot,
@@ -2256,15 +2151,16 @@ object PositionRelationExtractor:
 
   private def legalMoveProduction(
       position: Position,
-      legalMoves: List[Move]
+      legalMoveEffects: List[(Move, BoardMoveEffect)]
   ): ClosedBoardRelationProduction =
     val slot = BoardRelationProductionSlot.LegalMoveInventory
-    val facts = legalMoveRelations(position, legalMoves).zip(legalMoves).map { case (detail, move) =>
+    val legalMoves = legalMoveEffects.map(_._1)
+    val facts = legalMoveRelations(position, legalMoves).zip(legalMoveEffects).map { case (detail, (move, boardEffect)) =>
       ProducedBoardRelation(
         slot,
         detail,
         Set(RelationDependencyKey.LegalMoveInventory),
-        BoardGeometry.moveEffect(move).cellChanges.map(change => evidenceSquare(change.square))
+        boardEffect.cellChanges.map(change => evidenceSquare(change.square))
       )
     }
     new ClosedBoardRelationProduction(Set(slot), Set(slot), facts)
@@ -2317,8 +2213,9 @@ object PositionRelationExtractor:
     )
 
   /** One exact ray inventory owns every occupied square in distance order.
-    * Pin, x-ray, battery, and skewer are deterministic projections of this
-    * complete topology, never parallel board producers.
+    * The topology carries no tactical label; any higher projection must add
+    * its own closed legality or resource proof without becoming a parallel
+    * board producer.
     */
   private def rayRelation(ray: SliderRay): RelationWitnessDetail =
     RelationWitnessDetail.RayBarrier(

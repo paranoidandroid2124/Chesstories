@@ -1,15 +1,17 @@
 package lila.chessjudgment.model.judgment
 
 import chess.White
+import chess.variant.Standard
 import lila.chessjudgment.analysis.position.PositionAnalyzer
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 import lila.chessjudgment.model.line.CandidateLineEvaluation
-import lila.chessjudgment.model.position.PositionFeatures
+import lila.chessjudgment.model.position.PositionOccurrenceState
 import lila.chessjudgment.model.line.EngineLine
 
 class TypedEvidenceGraphBatchTest extends munit.FunSuite:
 
-  private val position = PositionNodeRef(PositionFeatures.empty.fen, 0, Some(White))
+  private val initialOccurrence = PositionOccurrenceState(Standard.initialFen.value, White, 0)
+  private val position = PositionNodeRef(initialOccurrence.fen, 0, Some(White))
   private val relationPayload = PositionAnalyzer
     .analyze(
       PrincipalVariationEvidence.readPosition(position.fen).get,
@@ -19,18 +21,18 @@ class TypedEvidenceGraphBatchTest extends munit.FunSuite:
     .boardRelations
     .head
 
-  private def featureRecord(id: String, parents: List[EvidenceRef] = Nil): EvidenceRecord =
+  private def occurrenceRecord(id: String, parents: List[EvidenceRef] = Nil): EvidenceRecord =
     EvidenceRecord(
       EvidenceRef(
         id = id,
-        producer = EvidenceProducer.PositionFeatureProducer,
-        layer = EvidenceLayer.PositionFeature,
+        producer = EvidenceProducer.PositionOccurrenceProducer,
+        layer = EvidenceLayer.PositionOccurrence,
         position = position,
         line = None,
         scope = EvidenceScope.CurrentPosition,
         confidence = EvidenceConfidence.BoardDerived
       ),
-      PositionFeatureEvidence(PositionFeatures.empty),
+      PositionOccurrenceEvidence(initialOccurrence),
       parents
     )
 
@@ -45,16 +47,16 @@ class TypedEvidenceGraphBatchTest extends munit.FunSuite:
     )
 
   test("batch insertion preserves order and ignores an identical repeated record"):
-    val first = featureRecord("first")
-    val second = featureRecord("second")
+    val first = occurrenceRecord("first")
+    val second = occurrenceRecord("second")
     val graph = TypedEvidenceGraph.empty.addAll(List(first, second, first))
 
     assertEquals(graph.records, List(first, second))
     assert(graph.addAll(List(first)) eq graph)
 
   test("batch insertion rejects a conflicting evidence id"):
-    val first = featureRecord("same-id")
-    val conflicting = featureRecord("same-id", List(first.ref))
+    val first = occurrenceRecord("same-id")
+    val conflicting = occurrenceRecord("same-id", List(first.ref))
 
     intercept[IllegalArgumentException] {
       TypedEvidenceGraph.empty.addAll(List(first, conflicting))
@@ -62,15 +64,15 @@ class TypedEvidenceGraphBatchTest extends munit.FunSuite:
 
   test("batch insertion reuses or updates the canonical relation graph exactly when needed"):
     val empty = TypedEvidenceGraph.empty
-    val featureOnly = empty.add(featureRecord("feature"))
-    assert(featureOnly.relationGraph eq empty.relationGraph)
+    val occurrenceOnly = empty.add(occurrenceRecord("occurrence"))
+    assert(occurrenceOnly.relationGraph eq empty.relationGraph)
 
     val relation = relationRecord("relation")
-    val withRelation = featureOnly.add(relation)
-    assert(!(withRelation.relationGraph eq featureOnly.relationGraph))
+    val withRelation = occurrenceOnly.add(relation)
+    assert(!(withRelation.relationGraph eq occurrenceOnly.relationGraph))
     assertEquals(withRelation.relationGraph.nodes.map(_.record), List(relation))
 
-    val unchangedRelations = withRelation.addAll(List(relation, featureRecord("another-feature")))
+    val unchangedRelations = withRelation.addAll(List(relation, occurrenceRecord("another-occurrence")))
     assert(unchangedRelations.relationGraph eq withRelation.relationGraph)
 
   test("incremental relation batches equal one cold build without revisiting existing nodes"):
@@ -143,8 +145,8 @@ class TypedEvidenceGraphBatchTest extends munit.FunSuite:
       )
     val exact = mechanism("authority-exact", evaluation.ref)
     val forged = mechanism("authority-forged", evaluation.ref.copy(id = "missing-eval"))
-    val wrongProducer = featureRecord("wrong-producer").copy(
-      ref = featureRecord("wrong-producer").ref.copy(producer = EvidenceProducer.MoveTransitionProducer)
+    val wrongProducer = occurrenceRecord("wrong-producer").copy(
+      ref = occurrenceRecord("wrong-producer").ref.copy(producer = EvidenceProducer.MoveTransitionProducer)
     )
     val graph = TypedEvidenceGraph.empty.addAll(List(evaluation, exact, forged, wrongProducer))
 

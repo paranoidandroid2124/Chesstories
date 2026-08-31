@@ -1702,7 +1702,7 @@ object RelativeAssessmentAssembler:
 
   private def rootContextLayer(layer: EvidenceLayer): Boolean =
     layer match
-      case EvidenceLayer.PositionFeature | EvidenceLayer.Relation =>
+      case EvidenceLayer.PositionOccurrence | EvidenceLayer.Relation =>
         true
       case _ =>
         false
@@ -1716,7 +1716,7 @@ object RelativeAssessmentAssembler:
 
   private def afterPositionLayer(layer: EvidenceLayer): Boolean =
     layer match
-      case EvidenceLayer.PositionFeature | EvidenceLayer.Relation =>
+      case EvidenceLayer.PositionOccurrence | EvidenceLayer.Relation =>
         true
       case _ =>
         false

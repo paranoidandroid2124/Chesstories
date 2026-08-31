@@ -36,9 +36,9 @@ class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
     assert(firstAfter eq replay.analysisAfter(first).getOrElse(fail("expected the cached first destination")))
     assert(firstAfter eq secondBefore)
     assert(secondAfter eq replay.analysisAfter(second).getOrElse(fail("expected the cached second destination")))
-    assertEquals(firstBefore.features.plyCount, first.ply - 1)
-    assertEquals(firstAfter.features.plyCount, first.ply)
-    assertEquals(secondAfter.features.plyCount, second.ply)
+    assertEquals(firstBefore.occurrence.plyCount, first.ply - 1)
+    assertEquals(firstAfter.occurrence.plyCount, first.ply)
+    assertEquals(secondAfter.occurrence.plyCount, second.ply)
 
   test("rebasing changes only occurrence plies and shares the owned calculations"):
     val replay = twoPlyReplay
@@ -53,8 +53,8 @@ class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
     val rebasedAfter = rebased.analysisAfter(rebasedFirst).getOrElse(fail("expected rebased destination"))
 
     assertEquals(rebasedFirst.ply, 4)
-    assertEquals(rebasedBefore.features.plyCount, 3)
-    assertEquals(rebasedAfter.features.plyCount, 4)
+    assertEquals(rebasedBefore.occurrence.plyCount, 3)
+    assertEquals(rebasedAfter.occurrence.plyCount, 4)
     assert(rebasedBefore.position eq originalBefore.position)
     assert(rebasedAfter.position eq originalAfter.position)
     assert(rebasedBefore.actualLegalMoves eq originalBefore.actualLegalMoves)

@@ -16,10 +16,11 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
 
   test("a legal move binds a created pin to its exact changed square and mover"):
     val delta = relationDelta("4k3/4n3/8/8/8/8/8/R5K1 w - - 0 1", "a1e1")
-    val pin = delta.established
-      .find(_.detail match
-        case RelationWitnessDetail.RayBarrier(owner, _, _, occupants, geometry) =>
-          RelationRayPattern.classify(owner, occupants, geometry.axis) == RelationRayPattern.AbsoluteKingPin
+    val pin = delta.changes
+      .filter(_.direction == RelationChangeDirection.Established)
+      .find(_.relation.detail match
+        case ray: RelationWitnessDetail.RayBarrier =>
+          RelationRayProjection.isAbsoluteKingPinGeometry(ray)
         case _ => false
       )
       .getOrElse(fail("expected the created pin"))
@@ -63,6 +64,9 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
   test("piece-transition proof keys retain castling partners and promotion roles"):
     val castling = relationDelta("4k3/8/8/8/8/8/8/4K2R w K - 0 1", "e1g1")
     val promotion = relationDelta("4k3/P7/8/8/8/8/8/4K3 w - - 0 1", "a7a8q")
+    val castlingRoot = transitionDelta("4k3/8/8/8/8/8/8/4K2R w K - 0 1", "e1g1").relationDelta.rootMove
+    assertEquals(castlingRoot.mode, PositionRelationExtractor.ClosedLegalMovementMode.Castling)
+    assert(castlingRoot.isCastling)
 
     val castlingMovers = castling.changes.flatMap(_.proofKeys).collect {
       case mover @ RelationProofKey.MovedPiece(_, _, _, _, _) => mover
@@ -150,7 +154,8 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
       "4k3/8/8/8/3q4/8/8/R3K3 w - - 0 1",
       "a1d1"
     )
-    val attack = delta.relationDelta.established
+    val attack = delta.relationDelta.changes
+      .filter(_.direction == RelationChangeDirection.Established)
       .find(_.detail match
         case RelationWitnessDetail.GeometricControl(Color.White, attacker, _, target) =>
           attacker.key == "d1" && target.key == "d4"
@@ -194,7 +199,7 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
       .find(_.kind == TransitionConsequenceKind.PawnTensionCreated)
       .getOrElse(fail("expected both pawn tensions created by e2e4"))
     val tensionBindings = consequence.subjectBindings.collect {
-      case binding @ StructuralSubjectBinding(StructuralSubject.PawnTensionCreated(_, _, _), _, _) => binding
+      case binding @ StructuralSubjectBinding(StructuralSubject.PawnTensionCreated(_, _, _), _) => binding
     }
     assertEquals(tensionBindings.size, 2)
     assert(tensionBindings.forall(_.relationKeys.size == 1))

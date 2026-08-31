@@ -45,7 +45,7 @@ fallback truth source가 될 수 없다.
 - **L0**: 한 position occurrence의 점유, 순수 기하 통제, 지원/공격
   투영, 합법수·합법 자원, 킹 안전, ray, pawn topology와 폐쇄 부재다.
 - **L0.5**: 동일한 합법 수의 before/after L0 inventory에서 직접
-  증명되는 통제자·지원·line·named-ray 변화다.
+  증명되는 통제자·지원·line·순서 보존 `RayBarrier` topology 변화다.
 - **L1**: 한 transition에서 L0/L0.5를 수직 결합한 폐쇄 자원·제약
   사실이다. 포획 뒤 재포획, 체크의 실제 응수 집합, slider reach,
   pawn topology, stalemate 등이 여기에 속한다.

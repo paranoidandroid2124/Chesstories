@@ -131,7 +131,7 @@ object LineFactNormalizer:
           case _ => Nil
         }
         val castling = replay.replaySteps.lift(index).flatMap(replay.transition).flatMap { transition =>
-          Option.when(transition.legal.move.castle.nonEmpty)(
+          Option.when(transition.relationDelta.rootMove.isCastling)(
             LineMoveEvent(
               kind = LineEventKind.Castling,
               moveUci = normalized,

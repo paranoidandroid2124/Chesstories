@@ -20,8 +20,6 @@ private[chessjudgment] object TransitionRelationContractBatch:
       derive = {
         case RelationCombinationContractKind.GeometricControlSetDelta =>
           geometricControlSetDeltas(delta, rootMove)
-        case RelationCombinationContractKind.NamedRayTransition =>
-          namedRayTransitions(delta, rootMove)
       }
     )
     new TransitionRelationContractBatch(results, delta)
@@ -33,8 +31,6 @@ private[chessjudgment] object TransitionRelationContractBatch:
     contract match
       case RelationCombinationContractKind.GeometricControlSetDelta =>
         delta.geometricControlTransition.targetSetChanges.map(_.stableKey)
-      case RelationCombinationContractKind.NamedRayTransition =>
-        delta.changedNamedRays.map(_.stableKey)
 
   private def activeContracts(
       delta: RelationSemanticDelta
@@ -42,12 +38,7 @@ private[chessjudgment] object TransitionRelationContractBatch:
     val changedControlDependency =
       delta.transitionFootprint.changedSquares.nonEmpty ||
         delta.ofKind(RelationFactKind.GeometricControl).nonEmpty
-    val removedRays = delta.removedOf(RelationFactKind.RayBarrier).nonEmpty
-    val establishedRays = delta.establishedOf(RelationFactKind.RayBarrier).nonEmpty
-    List(
-      Option.when(changedControlDependency)(RelationCombinationContractKind.GeometricControlSetDelta),
-      Option.when(removedRays || establishedRays)(RelationCombinationContractKind.NamedRayTransition)
-    ).flatten
+    Option.when(changedControlDependency)(RelationCombinationContractKind.GeometricControlSetDelta).toList
 
   private def relation(
       detail: RelationWitnessDetail,
@@ -136,38 +127,6 @@ private[chessjudgment] object TransitionRelationContractBatch:
         afterControllers = change.after.map(_.controller),
         removedControllers = change.removedControllers,
         establishedControllers = change.establishedControllers,
-        proof = proof
-      ), rootMove)
-    }
-
-  private def namedRayTransitions(
-      delta: RelationSemanticDelta,
-      rootMove: CanonicalRootLegalMove
-  ): List[RelationCombinationEmission] =
-    delta.changedNamedRays.map { named =>
-      val change = named.change
-      val projection = named.projection
-      val proof = combinationProof(
-        delta,
-        RelationCombinationContractKind.NamedRayTransition,
-        List(
-          RelationPremiseOccurrence.Before -> rootMove.fact,
-          (change.direction match
-            case RelationChangeDirection.Established => RelationPremiseOccurrence.Established
-            case RelationChangeDirection.Removed     => RelationPremiseOccurrence.Removed
-          ) -> change.relation
-        )
-      )
-      emission(named.stableKey, RelationWitnessDetail.NamedRayTransition(
-        mover = rootMove.witness,
-        side = projection.side,
-        attackerSquare = projection.attackerSquare,
-        attackerRole = projection.attackerRole,
-        barrier = projection.barrier,
-        immediateTarget = projection.immediateTarget,
-        axis = projection.axis,
-        pattern = projection.pattern,
-        direction = change.direction,
         proof = proof
       ), rootMove)
     }

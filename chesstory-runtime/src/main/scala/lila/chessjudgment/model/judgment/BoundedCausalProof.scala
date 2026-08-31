@@ -883,7 +883,7 @@ private[chessjudgment] object CausalClosedReplyInventoryBinding:
         inventoryRecord.ref.line.contains(event.rootLine) &&
         inventoryRecord.ref.scope == event.rootTransition.role.scope &&
         inventory.transition == event.rootTransition &&
-        inventory.transitionIsCertified && inventory.exactOutputInventoryCertified &&
+        inventory.transitionIsCertified && inventory.canonicalOutputShapeCertified &&
         inventory.canonicalTransitionProof == event.canonicalRootTransitionProof,
       "a reply closure must consume the exact graph-owned root transition inventory"
     )

@@ -120,9 +120,6 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
       case (ComparisonEndpointEffectMagnitude.Exact(DirectCauseImportanceMeasure.MateArrival(leftPly)),
             ComparisonEndpointEffectMagnitude.Exact(DirectCauseImportanceMeasure.MateArrival(rightPly))) =>
         orderedSmallerIsStronger(leftPly, rightPly)
-      case (ComparisonEndpointEffectMagnitude.Exact(DirectCauseImportanceMeasure.StructuralStrength(leftUnits)),
-            ComparisonEndpointEffectMagnitude.Exact(DirectCauseImportanceMeasure.StructuralStrength(rightUnits))) =>
-        orderedLargerIsStronger(leftUnits, rightUnits)
       case _ => Incomparable
 
   private[chessjudgment] def fromOwnedProof(
@@ -398,12 +395,6 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
     else if leftNoWorse && !rightNoWorse then LeftStrictlyStronger
     else if rightNoWorse && !leftNoWorse then RightStrictlyStronger
     else Incomparable
-
-  private def orderedLargerIsStronger(left: Int, right: Int): MagnitudeRelation =
-    import MagnitudeRelation.*
-    if left == right then Equal
-    else if left > right then LeftStrictlyStronger
-    else RightStrictlyStronger
 
   private def orderedSmallerIsStronger(left: Int, right: Int): MagnitudeRelation =
     import MagnitudeRelation.*
