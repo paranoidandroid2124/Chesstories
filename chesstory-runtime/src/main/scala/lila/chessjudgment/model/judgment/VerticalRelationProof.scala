@@ -1575,11 +1575,6 @@ private[chessjudgment] final class VerticalRelationInput private (
 
   private var derivedBySemanticId = Map.empty[String, RelationFactEvidence]
 
-  private var stateCertificatesByKey = Map.empty[
-    String,
-    Option[PositionRelationExtractor.ClosedPositionStateCertificate]
-  ]
-
   private var retainedTransitionContracts = Set.empty[RelationCombinationContractKind]
 
   def transitionResultsFor(contract: RelationCombinationContractKind): List[RelationFactEvidence] =
@@ -2009,15 +2004,10 @@ private[chessjudgment] final class VerticalRelationInput private (
   private[judgment] def stateCertificate(
       state: ClosedPositionStatePremise
   ): Option[PositionRelationExtractor.ClosedPositionStateCertificate] =
-    stateCertificatesByKey.get(state.stableKey) match
-      case Some(cached) => cached
-      case None =>
-        val inventory = state.occurrence match
-          case RelationSnapshotOccurrence.Before => delta.beforeInventory
-          case RelationSnapshotOccurrence.After  => delta.afterInventory
-        val certified = inventory.certifyState(state.query)
-        stateCertificatesByKey = stateCertificatesByKey.updated(state.stableKey, certified)
-        certified
+    val inventory = state.occurrence match
+      case RelationSnapshotOccurrence.Before => delta.beforeInventory
+      case RelationSnapshotOccurrence.After  => delta.afterInventory
+    inventory.certifyState(state.query)
 
   private[judgment] def admit(relations: List[RelationFactEvidence]): Unit =
     retainDerived(relations, allowExisting = false)

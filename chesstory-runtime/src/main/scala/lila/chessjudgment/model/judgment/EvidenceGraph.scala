@@ -4716,6 +4716,40 @@ object LineObjectTrajectory:
           }
     loop(continuation, 1)
 
+private[chessjudgment] final case class LineAccessPersistenceState private (
+    step: LineReplayStep,
+    occurrence: ReplayPositionOccurrence,
+    proof: PositionRelationExtractor.ClosedPositionStateProof
+)
+
+private[chessjudgment] object LineAccessPersistenceState:
+  def from(
+      step: LineReplayStep,
+      replay: CanonicalLineReplay,
+      scope: EvidenceScope,
+      side: Color,
+      slider: RelationPieceWitness,
+      direction: RelationRayDirection,
+      destination: EvidenceSquare
+  ): Option[LineAccessPersistenceState] =
+    for
+      occurrence <- replay.positionAfter(step)
+      proof <- occurrence.existingSliderReachState(side, slider, direction, scope)
+      reach <- proof.query match
+        case PositionRelationExtractor.ClosedPositionStateQuery.SliderReach(
+              exactSide,
+              exactSlider,
+              exactDirection,
+              Some(exactReach)
+            ) if exactSide == side && exactSlider == slider && exactDirection == direction =>
+          Some(exactReach)
+        case _ => None
+      if reach.segment.exists(control =>
+        control.square == destination && LineAccessTrajectory.movementAvailable(control.target)
+      )
+      if occurrence.step == step && occurrence.certifies(proof, scope)
+    yield LineAccessPersistenceState(step, occurrence, proof)
+
 final case class LineAccessTrajectory private (
     enablingStep: LineReplayStep,
     enabledStep: LineReplayStep,
@@ -4726,7 +4760,8 @@ final case class LineAccessTrajectory private (
     enabledFrom: EvidenceSquare,
     enabledTo: EvidenceSquare,
     plyOffset: Int,
-    private[chessjudgment] val relationOccurrenceBinding: ReplayVerticalRelationOccurrenceBinding
+    private[chessjudgment] val relationOccurrenceBinding: ReplayVerticalRelationOccurrenceBinding,
+    private[chessjudgment] val persistenceStates: List[LineAccessPersistenceState]
 ):
   require(vacatedSquares.nonEmpty, "a line-access trajectory needs an exact vacated gate")
   require(
@@ -4734,6 +4769,10 @@ final case class LineAccessTrajectory private (
       relationOccurrenceBinding.contract == VerticalRelationContractKind.SliderReachDelta &&
       relationOccurrenceBinding.result.kind == RelationFactKind.SliderReachDelta,
     "a line-access trajectory needs its exact L1 slider-reach occurrence"
+  )
+  require(
+    persistenceStates.map(_.step) == interveningSteps,
+    "a line-access trajectory must retain one exact positive-state proof for every intervening occurrence"
   )
   def vacatedSquare: EvidenceSquare = vacatedSquares.head
   private[chessjudgment] def accessRelationKey: DerivedRelationResultKey =
@@ -4743,12 +4782,13 @@ object LineAccessTrajectory:
   /** Exact root-to-effect access used by causal episodes. Merely placing a
     * slider behind a blocker does not cause the blocker's later move or capture.
     */
-  private[chessjudgment] def findRootClearanceBeforeUse(
+  private[chessjudgment] def findAllRootClearancesBeforeUse(
       enablingStep: LineReplayStep,
       enabledStep: LineReplayStep,
       interveningSteps: List[LineReplayStep],
-      replay: CanonicalLineReplay
-  ): Option[LineAccessTrajectory] =
+      replay: CanonicalLineReplay,
+      scopeAt: LineReplayStep => Option[EvidenceScope]
+  ): List[LineAccessTrajectory] =
     val candidates =
       for
         enablingIndex <- replay.replaySteps.indexOf(enablingStep) :: Nil
@@ -4786,16 +4826,20 @@ object LineAccessTrajectory:
         }.toSet
         vacated = openedSegment.filter(vacatedSet)
         if vacated.nonEmpty
-        if interveningSteps.forall(step =>
-          replay.analysisAfter(step).exists(analysis =>
-            accessAvailable(
-              analysis.relationInventory,
+        persistenceStates = interveningSteps.flatMap(step =>
+          scopeAt(step).flatMap(scope =>
+            LineAccessPersistenceState.from(
+              step,
+              replay,
+              scope,
               detail.side,
               enabledPiece,
+              detail.direction,
               destination
             )
           )
         )
+        if persistenceStates.size == interveningSteps.size
       yield LineAccessTrajectory(
         enablingStep = enablingStep,
         enabledStep = enabledStep,
@@ -4806,30 +4850,35 @@ object LineAccessTrajectory:
         enabledFrom = enabledPiece.square,
         enabledTo = destination,
         plyOffset = enabledIndex - enablingIndex,
-        relationOccurrenceBinding = ReplayVerticalRelationOccurrenceBinding.from(occurrence)
+        relationOccurrenceBinding = ReplayVerticalRelationOccurrenceBinding.from(occurrence),
+        persistenceStates = persistenceStates
       )
 
-    candidates match
-      case exact :: Nil => Some(exact)
-      case _            => None
+    require(
+      candidates.size <= 1,
+      "one enabled slider move cannot have multiple exact L1 clearance producers"
+    )
+    candidates
 
-  private def movementAvailable(target: RelationControlTarget): Boolean =
+  private[chessjudgment] def findRootClearanceBeforeUse(
+      enablingStep: LineReplayStep,
+      enabledStep: LineReplayStep,
+      interveningSteps: List[LineReplayStep],
+      replay: CanonicalLineReplay,
+      scopeAt: LineReplayStep => Option[EvidenceScope]
+  ): Option[LineAccessTrajectory] =
+    findAllRootClearancesBeforeUse(
+      enablingStep,
+      enabledStep,
+      interveningSteps,
+      replay,
+      scopeAt
+    ).headOption
+
+  private[judgment] def movementAvailable(target: RelationControlTarget): Boolean =
     target match
       case RelationControlTarget.Friendly(_) => false
       case RelationControlTarget.Empty | RelationControlTarget.Enemy(_) => true
-
-  private def accessAvailable(
-      inventory: PositionRelationExtractor.PositionRelationInventoryCertificate,
-      side: Color,
-      piece: RelationPieceWitness,
-      destination: EvidenceSquare
-  ): Boolean =
-    inventory.occupantAt(piece.square).exists(occupant =>
-      occupant.side == side && occupant.role == piece.role
-    ) && inventory.controlsFrom(piece.square).exists(control =>
-      control.side == side && control.controller == piece &&
-        control.targetSquare == destination && movementAvailable(control.target)
-    )
 
 sealed trait CausalResponseContinuationTrajectory:
   def triggerStep: LineReplayStep

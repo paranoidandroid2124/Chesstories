@@ -8,6 +8,12 @@ import lila.chessjudgment.model.line.{ CanonicalPositionHistory, PrincipalVariat
 
 class RootOwnedCausalEpisodeTest extends munit.FunSuite:
 
+  private object LineAccessBranchRole extends CausalBranchRole:
+    val stableKey = "line-access-reference"
+
+  private object LineAccessStateRole extends CausalStateRole:
+    val stableKey = "intervening-slider-reach"
+
   test("an immediate recapture is owned through the canonical relation inventory"):
     val initialFen = "r1b2rk1/5ppp/1qp2n2/p2p4/1b6/N3P1P1/PPQB1PBP/R1R3K1 w - - 0 13"
     val rootFen = "r1b2rk1/5ppp/1qp2n2/p2p4/1b6/4P1P1/PPQB1PBP/RNR3K1 b - - 1 13"
@@ -171,9 +177,17 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     )
     val replay = payload.certifiedReplay.getOrElse(fail("expected the certified clearance replay"))
     val steps = payload.lineReplaySteps
-    val trajectory = LineAccessTrajectory
-      .findRootClearanceBeforeUse(steps.head, steps(2), List(steps(1)), replay)
-      .getOrElse(fail("expected the exact slider-reach occurrence"))
+    val trajectories = LineAccessTrajectory
+      .findAllRootClearancesBeforeUse(
+        steps.head,
+        steps(2),
+        List(steps(1)),
+        replay,
+        _ => Some(line.role.scope)
+      )
+    val trajectory = trajectories match
+      case exact :: Nil => exact
+      case other        => fail(s"expected one exact slider-reach occurrence, found ${other.size}")
 
     assertEquals(trajectory.vacatedSquares, List(EvidenceSquare("a2")))
     assertEquals(trajectory.enabledFrom, EvidenceSquare("a1"))
@@ -184,6 +198,76 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     )
     assert(trajectory.relationOccurrenceBinding.occurrenceId.matches("[0-9a-f]{64}"))
     assert(trajectory.relationOccurrenceBinding.certifiedSourcePremiseIds.nonEmpty)
+    assertEquals(trajectory.persistenceStates.map(_.step), List(steps(1)))
+    assert(
+      trajectory.persistenceStates.forall(state =>
+        state.occurrence.certifies(state.proof, line.role.scope)
+      )
+    )
+    val persistence = trajectory.persistenceStates.head
+    val inventory = replay
+      .analysisAfter(steps(1))
+      .getOrElse(fail("expected the intervening position analysis"))
+      .relationInventory
+    val firstCertificate = inventory
+      .certifyState(persistence.proof.query)
+      .getOrElse(fail("expected the cached slider-reach state"))
+    val repeatedCertificate = inventory
+      .certifyState(persistence.proof.query)
+      .getOrElse(fail("expected the repeated slider-reach state"))
+    assert(firstCertificate eq repeatedCertificate)
+
+    val (foreignPayload, _) = normalizedLine(
+      id = "foreign-line-clearance-owner",
+      initialFen = rootFen,
+      historyMoves = Nil,
+      rootFen = rootFen,
+      moves = List("a2b3", "h6h5", "a1a8"),
+      whitePovMate = Some(1)
+    )
+    val foreignReplay = foreignPayload.certifiedReplay.getOrElse(fail("expected the foreign replay"))
+    val foreignOccurrence = foreignReplay
+      .positionAfter(foreignReplay.replaySteps(1))
+      .getOrElse(fail("expected the foreign intervening occurrence"))
+    val foreignInventory = foreignReplay
+      .analysisAfter(foreignReplay.replaySteps(1))
+      .getOrElse(fail("expected the foreign intervening analysis"))
+      .relationInventory
+    assertEquals(
+      foreignInventory.bindState(firstCertificate, foreignOccurrence.position, line.role.scope),
+      None
+    )
+
+    val branch = CausalBranchOccurrence.certifiedCounterfactual(
+      LineAccessBranchRole,
+      line,
+      replay,
+      steps.size
+    )
+    val issuer = EvidenceRecord(
+      EvidenceRef(
+        "line-access-state-owner",
+        EvidenceProducer.LegalLineProducer,
+        EvidenceLayer.Line,
+        PositionNodeRef(rootFen, 0, Some(White)),
+        Some(line),
+        line.role.scope,
+        EvidenceConfidence.LegalReplayVerified
+      ),
+      payload
+    )
+    val binding = CausalClosedStateBinding.afterStep(
+      LineAccessStateRole,
+      persistence.proof,
+      branch,
+      1,
+      issuer,
+      persistence.occurrence
+    )
+    assertEquals(binding.issuerOccurrenceId, persistence.occurrence.occurrenceId)
+    assertEquals(binding.queryKey, persistence.proof.query.stableKey)
+    assertEquals(binding.afterStepIndex, 1)
+    assert(binding.semanticProofId.matches("[0-9a-f]{64}"))
     assert(payload.lineConsequences.exists(_.kind == LineConsequenceKind.Mate))
     assertEquals(payload.rootOwnedCausalEpisodes(line.rootMove), Nil)
 

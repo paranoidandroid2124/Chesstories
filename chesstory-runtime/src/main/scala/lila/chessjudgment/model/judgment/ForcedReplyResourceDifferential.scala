@@ -773,7 +773,7 @@ private[chessjudgment] object ForcedReplyResourceProof:
       referenceSource: EvidenceRecord,
       playedSource: EvidenceRecord
   ): Boolean =
-    WrongMoveOrderCausalProofDemand.acceptsRecord(
+    ActionablePlayedVsBestCausalProofDemand.acceptsRecord(
       source,
       comparison,
       root,

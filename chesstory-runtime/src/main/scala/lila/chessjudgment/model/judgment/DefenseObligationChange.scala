@@ -826,7 +826,7 @@ private[chessjudgment] object DefenseObligationChangeProof:
       referenceSource: EvidenceRecord,
       playedSource: EvidenceRecord
   ): Boolean =
-    WrongMoveOrderCausalProofDemand.acceptsRecord(
+    ActionablePlayedVsBestCausalProofDemand.acceptsRecord(
       source,
       comparison,
       root,

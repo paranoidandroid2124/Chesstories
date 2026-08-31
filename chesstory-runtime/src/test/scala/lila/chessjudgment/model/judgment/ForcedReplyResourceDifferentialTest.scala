@@ -66,6 +66,7 @@ class ForcedReplyResourceDifferentialTest extends munit.FunSuite:
     val absenceUse = path.closedAbsenceUses match
       case one :: Nil => one
       case other      => fail(s"expected one exact closed-absence use, found ${other.size}")
+    assertEquals(path.closedStateUses, Nil)
     assertEquals(absenceUse.binding.queryKey, "legal-capture:black:d8")
     assertEquals(absenceUse.binding.afterStepIndex, 2)
     assertEquals(absenceUse.binding.branchId, exact.occurrence.referenceBranch.branchId)
@@ -333,7 +334,7 @@ class ForcedReplyResourceDifferentialTest extends munit.FunSuite:
     }.getOrElse(fail("expected the canonical non-demand comparison"))
     val quietComparison = quietRecord.payload.asInstanceOf[CandidateComparisonEvidence].comparison
     assert(quietContext.evidenceGraph.proofEligible(quietRecord))
-    assert(!WrongMoveOrderCausalProofDemand.accepts(quietComparison))
+    assert(!ActionablePlayedVsBestCausalProofDemand.accepts(quietComparison))
 
     assertEquals(
       ForcedReplyResourceDifferentialAssembler.fromAssembly(

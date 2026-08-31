@@ -960,6 +960,11 @@ object PositionRelationExtractor:
         ClosedRelationAbsenceQuery,
         Option[ClosedRelationAbsenceCertificate]
       ]
+    private val stateCertificateCache =
+      scala.collection.mutable.HashMap.empty[
+        ClosedPositionStateQuery,
+        Option[ClosedPositionStateCertificate]
+      ]
     require(
       actualLegalMoves.forall(move => move.before == position && move.piece.color == position.color),
       "a closed position inventory accepts only its already-generated legal moves"
@@ -1849,26 +1854,31 @@ object PositionRelationExtractor:
 
     private[chessjudgment] def certifyState(
         query: ClosedPositionStateQuery
-    ): Option[ClosedPositionStateCertificate] =
-      val holds = query.admissible(state) && (query match
-        case ClosedPositionStateQuery.OwnKingExposure(side, piece, resource, kingSquare, controllers) =>
-          state.sideToMove == side && movementAffordancesFrom(piece.square)
-            .find(movement =>
-              movement.piece == piece && movement.destination == resource.destination &&
-                movement.target == resource.target && movement.mode == resource.mode
-            )
-            .flatMap(legalRestrictionFor)
-            .exists(exact =>
-              exact.kingSquare == kingSquare && exact.postMoveControllers == controllers
-            )
-        case ClosedPositionStateQuery.PawnTopology(exact) =>
-          closedPawnTopologyInventory.stateWitness(exact.side, exact.square).contains(exact)
-        case ClosedPositionStateQuery.SliderReach(side, slider, direction, exact) =>
-          sliderReachesFrom(slider.square)
-            .find(reach => reach.side == side && reach.slider == slider && reach.direction == direction)
-            .map(_.witness) == exact
+    ): Option[ClosedPositionStateCertificate] = stateCertificateCache.synchronized {
+      stateCertificateCache.getOrElseUpdate(
+        query,
+        Option.when(
+          query.admissible(state) && (query match
+            case ClosedPositionStateQuery.OwnKingExposure(side, piece, resource, kingSquare, controllers) =>
+              state.sideToMove == side && movementAffordancesFrom(piece.square)
+                .find(movement =>
+                  movement.piece == piece && movement.destination == resource.destination &&
+                    movement.target == resource.target && movement.mode == resource.mode
+                )
+                .flatMap(legalRestrictionFor)
+                .exists(exact =>
+                  exact.kingSquare == kingSquare && exact.postMoveControllers == controllers
+                )
+            case ClosedPositionStateQuery.PawnTopology(exact) =>
+              closedPawnTopologyInventory.stateWitness(exact.side, exact.square).contains(exact)
+            case ClosedPositionStateQuery.SliderReach(side, slider, direction, exact) =>
+              sliderReachesFrom(slider.square)
+                .find(reach => reach.side == side && reach.slider == slider && reach.direction == direction)
+                .map(_.witness) == exact
+          )
+        )(new ClosedPositionStateCertificate(query, this))
       )
-      Option.when(holds)(new ClosedPositionStateCertificate(query, this))
+    }
 
     private[chessjudgment] def bindAbsence(
         certificate: ClosedRelationAbsenceCertificate,

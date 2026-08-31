@@ -97,7 +97,7 @@ private[chessjudgment] object DefenseObligationChangeAssembler:
     }
     val exactDependencies = for
       fact <- demandingComparison.toList
-      if WrongMoveOrderCausalProofDemand.accepts(fact)
+      if ActionablePlayedVsBestCausalProofDemand.accepts(fact)
       reference <- context.line(LineNodeRole.BestReference).toList
       played <- context.line(LineNodeRole.Played).toList
       if reference.ref == fact.referenceLine

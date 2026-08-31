@@ -1,6 +1,6 @@
 package lila.chessjudgment.model.judgment
 
-import chess.{ Move, Position, Role }
+import chess.{ Color, Move, Position, Role }
 import chess.format.Fen
 
 import lila.chessjudgment.analysis.position.{ PositionAnalysis, PositionAnalyzer, PositionRelationExtractor }
@@ -132,8 +132,51 @@ private[chessjudgment] final class ReplayPositionOccurrence private[judgment] (
       inventory.bindAbsence(certificate, position, scope)
     )
 
+  private[chessjudgment] def closedState(
+      query: PositionRelationExtractor.ClosedPositionStateQuery,
+      scope: EvidenceScope
+  ): Option[PositionRelationExtractor.ClosedPositionStateProof] =
+    inventory.certifyState(query).flatMap(certificate =>
+      inventory.bindState(certificate, position, scope)
+    )
+
+  /** Selects one exact reach already owned by this position inventory, then
+    * binds that full state to this replay occurrence. No ray or control is
+    * regenerated from the FEN.
+    */
+  private[chessjudgment] def existingSliderReachState(
+      side: Color,
+      slider: RelationPieceWitness,
+      direction: RelationRayDirection,
+      scope: EvidenceScope
+  ): Option[PositionRelationExtractor.ClosedPositionStateProof] =
+    inventory
+      .sliderReachesFrom(slider.square)
+      .filter(reach => reach.side == side && reach.slider == slider && reach.direction == direction) match
+      case exact :: Nil =>
+        closedState(
+          PositionRelationExtractor.ClosedPositionStateQuery.SliderReach(
+            side,
+            slider,
+            direction,
+            Some(exact.witness)
+          ),
+          scope
+        )
+      case Nil => None
+      case other =>
+        throw IllegalStateException(
+          s"one replay position produced ${other.size} slider reaches for one side/piece/direction"
+        )
+
   private[chessjudgment] def certifies(
       proof: PositionRelationExtractor.ClosedRelationAbsenceProof,
+      scope: EvidenceScope
+  ): Boolean =
+    proof.sameOwner(position, scope, inventory)
+
+  private[chessjudgment] def certifies(
+      proof: PositionRelationExtractor.ClosedPositionStateProof,
       scope: EvidenceScope
   ): Boolean =
     proof.sameOwner(position, scope, inventory)

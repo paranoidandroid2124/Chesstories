@@ -245,7 +245,7 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
         RelativeCauseKind.WrongMoveOrder,
         referenceMoveOrderProofs,
         referenceMoveOrderProofs.nonEmpty &&
-          WrongMoveOrderCausalProofDemand.accepts(fact),
+          ActionablePlayedVsBestCausalProofDemand.accepts(fact),
         RelativeCauseSourceSide.Reference,
         CauseAttributionKind.ReferenceCreatesResource
       ),

@@ -2,11 +2,11 @@ package lila.chessjudgment.model.judgment
 
 import lila.chessjudgment.model.evaluation.JudgmentThresholds
 
-/** Sole upper-consumer demand gate shared by the bounded causal families
-  * selected for WrongMoveOrder. Evaluation activates dispatch but proves no
-  * L2 proposition.
+/** Sole upper-consumer demand gate for bounded causal proof families attached
+  * to an actionable PlayedVsBest comparison. Evaluation activates dispatch
+  * but proves no L2 proposition.
   */
-private[chessjudgment] object WrongMoveOrderCausalProofDemand:
+private[chessjudgment] object ActionablePlayedVsBestCausalProofDemand:
   def accepts(fact: CandidateComparisonFact): Boolean =
     fact.kind == CandidateComparisonKind.PlayedVsBest &&
       fact.referenceLine.role == LineNodeRole.BestReference &&

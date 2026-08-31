@@ -729,7 +729,7 @@ object ClaimTruthPolicy:
           cause.attribution.directProofEligible && cause.attribution.rootMoveMatched &&
           section.role == RelativeCauseProofRole.DirectProof &&
           section.strength == RelativeCauseProofStrength.Primary &&
-          WrongMoveOrderCausalProofDemand.accepts(fact) &&
+          ActionablePlayedVsBestCausalProofDemand.accepts(fact) &&
           admitted.exists {
             case channel @ DirectCauseChannel(_, _, _, _, Some(
                   RootOwnedEffectProof.ForcedReplyResourceDifferential(source, result)

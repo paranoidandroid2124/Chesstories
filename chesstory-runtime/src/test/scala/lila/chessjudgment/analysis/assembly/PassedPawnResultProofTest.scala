@@ -939,7 +939,13 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       )
     val enablingStep :: interveningStep :: enabledStep :: Nil = exactFixture.replay.replaySteps: @unchecked
     val trajectory = LineAccessTrajectory
-      .findRootClearanceBeforeUse(enablingStep, enabledStep, List(interveningStep), exactFixture.replay)
+      .findRootClearanceBeforeUse(
+        enablingStep,
+        enabledStep,
+        List(interveningStep),
+        exactFixture.replay,
+        _ => Some(exactFixture.line.role.scope)
+      )
       .getOrElse(fail("expected the exact line-access trajectory"))
     val dependency = PassedPawnResultDependency(
       event(enablingStep),

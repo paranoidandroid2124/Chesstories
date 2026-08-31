@@ -82,8 +82,14 @@ private[assembly] final case class CausalLineTrace(
         objectStates = canonicalReplay.toList
           .flatMap(LineObjectTrajectory.findAll(from, between :+ to, _))
           .filter(_.futureStep == to),
-        lineAccess = canonicalReplay.flatMap(
-          LineAccessTrajectory.findRootClearanceBeforeUse(from, to, between, _)
+        lineAccess = canonicalReplay.flatMap(admitted =>
+          LineAccessTrajectory.findRootClearanceBeforeUse(
+            from,
+            to,
+            between,
+            admitted,
+            step => observations.get(step).map(_.lineOccurrenceOwner.scope)
+          )
         ),
         responseContinuations = responseContinuations
       )
