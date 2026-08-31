@@ -89,8 +89,8 @@ private[chessjudgment] final case class RelativeCauseSignalProfile(
     RootOwnedCausePolicy.forcingResourceRecords(graph, referenceRecords, fact.referenceLine)
   val candidateRecaptureResource: List[EvidenceRecord] =
     RelativeCauseSignalProfile.recaptureResourceRecords(candidateRecords, fact.candidateLine.rootMove)
-  val referenceMoveOrderResource: List[EvidenceRecord] =
-    RelativeCauseSignalProfile.forcedReplyResourceDifferentialRecords(
+  val referenceMoveOrderProofs: List[EvidenceRecord] =
+    RelativeCauseSignalProfile.moveOrderCausalProofRecords(
       graph,
       referenceRecords,
       fact,
@@ -243,9 +243,9 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       ),
       causeDraft(
         RelativeCauseKind.WrongMoveOrder,
-        referenceMoveOrderResource,
-        referenceMoveOrderResource.nonEmpty &&
-          ForcedReplyResourceDifferentialDemand.accepts(fact),
+        referenceMoveOrderProofs,
+        referenceMoveOrderProofs.nonEmpty &&
+          WrongMoveOrderCausalProofDemand.accepts(fact),
         RelativeCauseSourceSide.Reference,
         CauseAttributionKind.ReferenceCreatesResource
       ),
@@ -401,7 +401,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
       sharedRecords = sharedRecords
     )
 
-  private[chessjudgment] def forcedReplyResourceDifferentialRecords(
+  private[chessjudgment] def moveOrderCausalProofRecords(
       graph: TypedEvidenceGraph,
       records: List[EvidenceRecord],
       fact: CandidateComparisonFact,
@@ -416,6 +416,13 @@ private[chessjudgment] object RelativeCauseSignalProfile:
     exactDependencies.toList.flatMap { case (reference, played, demand) =>
       records.collect {
         case record @ EvidenceRecord(_, payload: ForcedReplyResourceDifferentialEvidence, _)
+            if payload.occurrence.referenceLine == fact.referenceLine &&
+              payload.occurrence.playedLine == fact.candidateLine &&
+              payload.proofPaths.nonEmpty &&
+              payload.consumesDependencies(fact, reference, played, demand) &&
+              graph.proofEligible(record) =>
+          record
+        case record @ EvidenceRecord(_, payload: DefenseObligationChangeEvidence, _)
             if payload.occurrence.referenceLine == fact.referenceLine &&
               payload.occurrence.playedLine == fact.candidateLine &&
               payload.proofPaths.nonEmpty &&

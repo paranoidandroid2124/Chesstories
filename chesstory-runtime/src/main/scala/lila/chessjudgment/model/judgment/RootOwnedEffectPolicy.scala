@@ -39,7 +39,12 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
         IdentityParts(RootOwnedEffectPrimitiveKind.RootRelation)
       case RootOwnedEffectProof.ForcedReplyResourceDifferential(_, result) =>
         IdentityParts(
-          RootOwnedEffectPrimitiveKind.CausalResourceDifferential,
+          RootOwnedEffectPrimitiveKind.ForcedReplyResourceDifferential,
+          causalProofId = Some(result.semanticId)
+        )
+      case RootOwnedEffectProof.DefenseObligationChange(_, result) =>
+        IdentityParts(
+          RootOwnedEffectPrimitiveKind.DefenseObligationChange,
           causalProofId = Some(result.semanticId)
         )
       case RootOwnedEffectProof.PassedPawnResult(_, result) =>
@@ -81,7 +86,8 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
           case _ => DirectEffectMagnitudeKnowledge.NotApplicable
       case _: RootOwnedEffectProof.PassedPawnResult | _: RootOwnedEffectProof.RootLineEvent |
           _: RootOwnedEffectProof.RootRelation |
-          _: RootOwnedEffectProof.ForcedReplyResourceDifferential =>
+          _: RootOwnedEffectProof.ForcedReplyResourceDifferential |
+          _: RootOwnedEffectProof.DefenseObligationChange =>
         DirectEffectMagnitudeKnowledge.NotApplicable
 
   private def rootOwnedMaterialOutcome(
@@ -241,7 +247,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
               cause.sourceSide,
               cause.attribution.kind
             ) &&
-              requiredExactPassedPawnResultAuthority(cause, graph, proof) &&
+              requiredExactFamilyAuthority(cause, graph, proof) &&
               sameCausalRootBoard(cause, effect.binding, proof) &&
               expectedDirectChange(cause, proof).contains(effect.directChange) &&
               effect.binding.line.contains(eventLine) &&
@@ -267,13 +273,23 @@ private[chessjudgment] object RootOwnedEffectPolicy:
       case _ =>
         None
 
-  private def requiredExactPassedPawnResultAuthority(
+  private def requiredExactFamilyAuthority(
       cause: RelativeCauseFact,
       graph: TypedEvidenceGraph,
       proof: RootOwnedEffectProof
   ): Boolean =
     proof match
       case RootOwnedEffectProof.ForcedReplyResourceDifferential(source, result) =>
+        cause.kind == RelativeCauseKind.WrongMoveOrder &&
+          cause.sourceSide == RelativeCauseSourceSide.Reference &&
+          graph.comparisonFor(cause).exists(comparison =>
+            result.occurrence.referenceLine == comparison.referenceLine &&
+              result.occurrence.playedLine == comparison.candidateLine
+          ) &&
+          graph.record(source).exists(record =>
+            record.payload == result && graph.proofEligible(record)
+          )
+      case RootOwnedEffectProof.DefenseObligationChange(source, result) =>
         cause.kind == RelativeCauseKind.WrongMoveOrder &&
           cause.sourceSide == RelativeCauseSourceSide.Reference &&
           graph.comparisonFor(cause).exists(comparison =>
@@ -392,6 +408,8 @@ private[chessjudgment] object RootOwnedEffectPolicy:
         Some(RootOwnedEffectStake.ActorValue)
       case RootOwnedEffectProof.ForcedReplyResourceDifferential(_, _) =>
         Some(RootOwnedEffectStake.ActorValue)
+      case RootOwnedEffectProof.DefenseObligationChange(_, _) =>
+        Some(RootOwnedEffectStake.ActorValue)
       case RootOwnedEffectProof.PassedPawnResult(_, result) =>
         result.assessment.robustness match
           case PassedPawnResultReplyCoverage.AllLegalRepliesRealize | PassedPawnResultReplyCoverage.SomeRepliesRealize =>
@@ -419,6 +437,8 @@ private[chessjudgment] object RootOwnedEffectPolicy:
         eligiblePayload(source, relation)
       case RootOwnedEffectProof.ForcedReplyResourceDifferential(source, result) =>
         eligiblePayload(source, result)
+      case RootOwnedEffectProof.DefenseObligationChange(source, result) =>
+        eligiblePayload(source, result)
       case RootOwnedEffectProof.PassedPawnResult(source, result) =>
         eligiblePayload(source, result)
 
@@ -445,6 +465,8 @@ private[chessjudgment] object RootOwnedEffectPolicy:
         relationRecordOwnsEventRoot(graph, source, relation, eventLine)
       case RootOwnedEffectProof.ForcedReplyResourceDifferential(source, result) =>
         forcedReplyResourceOwnsEventRoot(graph, source, result, eventLine, actor)
+      case RootOwnedEffectProof.DefenseObligationChange(source, result) =>
+        defenseObligationChangeOwnsEventRoot(graph, source, result, eventLine, actor)
       case RootOwnedEffectProof.PassedPawnResult(source, result) =>
         passedPawnResultOwnsEventRoot(graph, source, result, eventLine, actor)
 
@@ -492,6 +514,10 @@ private[chessjudgment] object RootOwnedEffectPolicy:
         Option.when(
           cause.kind == RelativeCauseKind.WrongMoveOrder && result.hasCompleteProofPaths
         )(DirectCausalChange.Occurred)
+      case RootOwnedEffectProof.DefenseObligationChange(_, result) =>
+        Option.when(
+          cause.kind == RelativeCauseKind.WrongMoveOrder && result.hasCompleteProofPaths
+        )(DirectCausalChange.Occurred)
       case RootOwnedEffectProof.PassedPawnResult(_, result) =>
         Option
           .when(RelativeCauseKind.passedPawnResultProofCanProveCause(cause.kind, result))(
@@ -512,6 +538,24 @@ private[chessjudgment] object RootOwnedEffectPolicy:
       result.semantic.trigger.beforeRole == actor.role &&
       result.semantic.trigger.from == actor.from &&
       result.semantic.trigger.to == actor.to &&
+      graph.record(source).exists(record =>
+        record.payload == result && graph.proofEligible(record)
+      )
+
+  private def defenseObligationChangeOwnsEventRoot(
+      graph: TypedEvidenceGraph,
+      source: EvidenceRef,
+      result: DefenseObligationChangeEvidence,
+      eventLine: LineNodeRef,
+      actor: RootCausalActor
+  ): Boolean =
+    source.line.contains(eventLine) &&
+      result.occurrence.referenceLine == eventLine &&
+      EvidenceRef.sameMove(result.occurrence.removalStep.moveUci, eventLine.rootMove) &&
+      result.semantic.remover.side == actor.color &&
+      result.semantic.remover.beforeRole == actor.role &&
+      result.semantic.remover.from == actor.from &&
+      result.semantic.remover.to == actor.to &&
       graph.record(source).exists(record =>
         record.payload == result && graph.proofEligible(record)
       )

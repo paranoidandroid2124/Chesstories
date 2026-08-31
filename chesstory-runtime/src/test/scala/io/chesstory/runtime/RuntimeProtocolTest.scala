@@ -757,8 +757,8 @@ class RuntimeProtocolTest extends munit.FunSuite:
     assertEquals((proof \ "participants" \ "disabled_defender" \ "piece").as[String], "rook")
     assertEquals((proof \ "participants" \ "disabled_defender" \ "square").as[String], "f8")
 
-  test("v6 commentary serializes the exact forced recapturer removal path"):
-    val rootFen = "7k/4p3/5n2/3r2B1/8/8/2B5/K2Q2R1 w - - 0 1"
+  test("v6 commentary serializes the exact sole-recapturer removal proof"):
+    val rootFen = "8/4p2k/5n2/3r2B1/8/8/8/K2Q4 w - - 0 1"
     val referenceMoves = List("g5f6", "e7f6", "d1d5")
     val playedMoves = List("d1d5", "f6d5")
     val packet = MoveReviewJudgmentOrchestrator
@@ -772,7 +772,31 @@ class RuntimeProtocolTest extends munit.FunSuite:
           )
         )
       )
-      .getOrElse(fail("expected an evidence-backed recapturer-removal packet"))
+      .getOrElse(fail("expected an evidence-backed defense-obligation packet"))
+
+    val moveOrderProofRecords = packet.evidenceGraph.records.filter(_.ref.layer == EvidenceLayer.CausalProof)
+    assertEquals(moveOrderProofRecords.size, 1)
+    val defenseCauseRecords = packet.evidenceGraph.records.collect {
+      case record @ EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
+          if cause.kind == RelativeCauseKind.WrongMoveOrder &&
+            cause.supportEvidence.exists(source => moveOrderProofRecords.exists(_.ref == source)) => record
+    }
+    assertEquals(
+      defenseCauseRecords.size,
+      1,
+      clues(
+        moveOrderProofRecords.map(record => record.ref -> packet.evidenceGraph.proofEligible(record)),
+        packet.evidenceGraph.records.collect {
+          case EvidenceRecord(ref, RelativeCauseFactEvidence(cause), _) =>
+            (ref, cause.kind, cause.supportEvidence)
+        }
+      )
+    )
+    val selectedCauseIds = packet.playerFacingClaimDecisions.flatMap(_.causeSelections.map(_.causeEvidence.id)).toSet
+    assert(
+      defenseCauseRecords.exists(record => selectedCauseIds(record.ref.id)),
+      clues(defenseCauseRecords.map(_.ref.id), packet.playerFacingClaimDecisions, packet.causeDispositionLedger)
+    )
 
     val proof = RuntimeProtocol.moveCommentaryJson(packet)
       .value("causal_explanations")
@@ -781,28 +805,31 @@ class RuntimeProtocolTest extends munit.FunSuite:
       .find(facet => (facet \ "kind").as[String] == "wrong_move_order")
       .toList
       .flatMap(facet => (facet \ "channels").as[List[JsObject]])
-      .flatMap(channel => (channel \ "resource_differential_proof").asOpt[JsObject]) match
+      .flatMap(channel => (channel \ "defense_obligation_change_proof").asOpt[JsObject]) match
         case exact :: Nil => exact
         case other        => fail(s"expected one public removal proof, found ${other.size}")
 
-    assertEquals((proof \ "trigger_mechanism").as[String], "forced_recapturer_removal")
-    assertEquals((proof \ "realizing_move").as[String], "d1d5")
-    assertEquals((proof \ "played_root_branch_legal_defense_move").as[String], "f6d5")
+    assertEquals((proof \ "contract").as[String], "defense_obligation_change")
+    assertEquals((proof \ "mechanism").as[String], "sole_recapturer_removal")
+    assertEquals((proof \ "later_exploit_move").as[String], "d1d5")
+    assertEquals((proof \ "played_sole_recapture_move").as[String], "f6d5")
     val premises = (proof \ "proof_paths" \ 0 \ "premises").as[List[JsObject]]
     assertEquals(
       premises.map(premise => (premise \ "role").as[String]),
       List(
-        "reference_root_capture",
-        "created_check_response",
-        "reference_capture_recapture",
-        "played_capture_recapture"
+        "reference_defender_removal",
+        "reference_later_exploit_inventory",
+        "played_immediate_exploit_inventory"
       )
     )
-    assertEquals(premises.take(2).map(premise => (premise \ "step_index").as[Int]), List(0, 0))
-    assertEquals((proof \ "participants" \ "trigger" \ "to").as[String], "f6")
-    assertEquals((proof \ "participants" \ "forced_reply" \ "move_uci").as[String], "e7f6")
-    assertEquals((proof \ "participants" \ "disabled_defender" \ "piece").as[String], "knight")
-    assertEquals((proof \ "participants" \ "disabled_defender" \ "square").as[String], "f6")
+    assertEquals(premises.map(premise => (premise \ "step_index").as[Int]), List(0, 2, 0))
+    assertEquals((proof \ "participants" \ "remover" \ "to").as[String], "f6")
+    assertEquals((proof \ "participants" \ "removal_recapture" \ "move_uci").as[String], "e7f6")
+    assertEquals((proof \ "participants" \ "removed_defender" \ "piece").as[String], "knight")
+    assertEquals((proof \ "participants" \ "removed_defender" \ "square").as[String], "f6")
+    assertEquals((proof \ "participants" \ "later_exploit" \ "to").as[String], "d5")
+    assertEquals((proof \ "participants" \ "captured_target" \ "piece").as[String], "rook")
+    assertEquals((proof \ "participants" \ "played_sole_recapture" \ "move_uci").as[String], "f6d5")
     assertEquals(
       (proof \ "proof_paths" \ 0 \ "closed_absence_uses" \ 0 \ "query").as[String],
       "legal-capture:black:d5"

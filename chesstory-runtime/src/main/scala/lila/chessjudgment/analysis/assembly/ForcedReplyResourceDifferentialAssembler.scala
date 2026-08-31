@@ -2,7 +2,7 @@ package lila.chessjudgment.analysis.assembly
 
 import lila.chessjudgment.model.judgment.*
 
-/** Demand dispatcher for the first L2 proof family. WrongMoveOrder compares
+/** Demand dispatcher for the forced-reply L2 proof family. WrongMoveOrder compares
   * exactly one BestReference/Played sibling pair, so no all-lines pair product
   * is constructed. This family admits only the immediate third-ply realizer;
   * a later occurrence remains unproved until intervening dependencies exist.
@@ -22,7 +22,7 @@ private[chessjudgment] object ForcedReplyResourceDifferentialAssembler:
     }
     val demandedPair = for
       fact <- demandingComparison
-      _ <- Option.when(ForcedReplyResourceDifferentialDemand.accepts(fact))((): Unit)
+      _ <- Option.when(WrongMoveOrderCausalProofDemand.accepts(fact))((): Unit)
       reference <- context.line(LineNodeRole.BestReference)
       played <- context.line(LineNodeRole.Played)
       if reference.ref == fact.referenceLine

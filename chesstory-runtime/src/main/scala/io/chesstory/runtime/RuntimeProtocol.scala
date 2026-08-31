@@ -433,18 +433,19 @@ object RuntimeProtocol:
         case CandidateComparisonKind.BestVsSecond          => "best_vs_second"
         case CandidateComparisonKind.PlayedVsAlternative   => "played_vs_alternative"
         case CandidateComparisonKind.ReferenceVsAlternative => "reference_vs_alternative"
-      val resourceDifferentialFacet = cause.kind == RelativeCauseKind.WrongMoveOrder
+      val moveOrderFacet = cause.kind == RelativeCauseKind.WrongMoveOrder
       val passedPawnResultFacet = cause.kind == RelativeCauseKind.PassedPawnResult
-      if resourceDifferentialFacet then
+      if moveOrderFacet then
         require(
           selection.causeEvidence.confidence == EvidenceConfidence.LegalReplayVerified &&
             selection.effectMode == PlayerFacingCauseEffectMode.AlternativeResource &&
             selection.exposure == PlayerFacingCauseExposureTier.Primary &&
             cause.sourceSide == RelativeCauseSourceSide.Reference &&
             comparison.kind == CandidateComparisonKind.PlayedVsBest &&
-            facet.directChannels.forall(channel =>
+            facet.directChannels.nonEmpty && facet.directChannels.forall(channel =>
               channel.rootOwnedProof.exists {
                 case RootOwnedEffectProof.ForcedReplyResourceDifferential(_, _) => true
+                case RootOwnedEffectProof.DefenseObligationChange(_, _)         => true
                 case _                                                          => false
               }
             ),
@@ -475,6 +476,7 @@ object RuntimeProtocol:
           facet.directChannels.forall(channel =>
             !channel.rootOwnedProof.exists {
               case RootOwnedEffectProof.ForcedReplyResourceDifferential(_, _) => true
+              case RootOwnedEffectProof.DefenseObligationChange(_, _)         => true
               case RootOwnedEffectProof.PassedPawnResult(_, _)                      => true
               case _                                                          => false
             }
@@ -499,7 +501,7 @@ object RuntimeProtocol:
           channelJson(selected, channel, binding, packet)
         }
       )
-      if resourceDifferentialFacet || passedPawnResultFacet then facetObject
+      if moveOrderFacet || passedPawnResultFacet then facetObject
       else
         facetObject ++ Json.obj(
           "event_move" -> EvidenceRef.normalizeMove(binding.eventLine.rootMove)
@@ -566,6 +568,23 @@ object RuntimeProtocol:
               )
             )
           )
+        case Some(proof @ RootOwnedEffectProof.DefenseObligationChange(_, _)) =>
+          require(
+            selected.directChange == DirectCausalChange.Occurred &&
+              selected.playedChange == PlayerFacingCausalChange.Missed,
+            s"L2 defense-obligation public change semantics diverged: ${selected.channelId}"
+          )
+          Json.obj(
+            "channel_id" -> selected.channelId,
+            "causal_signature" -> selected.causalSignature,
+            "direct_change" -> "occurred",
+            "played_change" -> "missed",
+            "defense_obligation_change_proof" -> defenseObligationChangeProofJson(proof).getOrElse(
+              throw IllegalStateException(
+                s"L2 defense-obligation proof lost its typed serializer: ${selected.channelId}"
+              )
+            )
+          )
         case Some(proof @ RootOwnedEffectProof.PassedPawnResult(_, result)) =>
           require(
             selected.directChange == DirectCausalChange.Occurred &&
@@ -607,74 +626,76 @@ object RuntimeProtocol:
             .map(segment => Json.obj("proof_segment" -> proofSegmentJson(segment)))
             .getOrElse(Json.obj())
 
+    private def causalBranchJson(branch: BoundedCausalPublicBranch): JsObject =
+      val line = branch.line
+      Json.obj(
+        "branch_id" -> branch.branchId,
+        "line_id" -> line.id,
+        "line_role" -> (line.role match
+          case LineNodeRole.BestReference => "best_reference"
+          case LineNodeRole.Played        => "played"
+          case LineNodeRole.Alternative   => "alternative"
+          case LineNodeRole.BranchReply   => "branch_reply"
+        ),
+        "branch_role" -> causalRoleCode(branch.role),
+        "root_provenance" -> causalEnumCode(branch.rootProvenance),
+        "line_rank" -> line.rank,
+        "root_move" -> EvidenceRef.normalizeMove(line.rootMove),
+        "steps" -> branch.steps.map(step =>
+          Json.obj(
+            "step_index" -> step.index,
+            "provenance" -> causalEnumCode(step.provenance),
+            "ply" -> step.ply,
+            "move_uci" -> EvidenceRef.normalizeMove(step.moveUci),
+            "fen_before" -> step.fenBefore,
+            "fen_after" -> step.fenAfter
+          )
+        )
+      )
+
+    private def causalProofPathJson(path: BoundedCausalPublicProofPath): JsObject =
+      Json.obj(
+        "path_occurrence_id" -> path.pathOccurrenceId,
+        "premises" -> path.premises.map(premise =>
+          Json.obj(
+            "role" -> causalRoleCode(premise.role),
+            "contract" -> causalEnumCode(premise.contract),
+            "result_id" -> premise.resultId,
+            "source_premise_ids" -> premise.sourcePremiseIds,
+            "branch_id" -> premise.branchId,
+            "branch_role" -> causalRoleCode(premise.branchRole),
+            "step_index" -> premise.stepIndex
+          )
+        ),
+        "closed_absence_uses" -> path.closedAbsenceUses.map(use =>
+          Json.obj(
+            "use_id" -> use.useId,
+            "role" -> causalRoleCode(use.role),
+            "semantic_proof_id" -> use.semanticProofId,
+            "issuer" -> "position_relation_extractor.closed_relation_inventory",
+            "issuer_evidence_id" -> use.issuerEvidenceId,
+            "issuer_occurrence_id" -> use.issuerOccurrenceId,
+            "query" -> use.query,
+            "branch_id" -> use.branchId,
+            "branch_role" -> causalRoleCode(use.branchRole),
+            "after_step_index" -> use.afterStepIndex,
+            "position" -> Json.obj(
+              "fen" -> use.position.fen,
+              "ply" -> use.position.ply,
+              "scope" -> evidenceScopeCode(use.scope)
+            )
+          )
+        )
+      )
+
     private def forcedReplyResourceProofJson(proof: RootOwnedEffectProof): Option[JsObject] =
       proof match
         case RootOwnedEffectProof.ForcedReplyResourceDifferential(source, result) =>
           require(result.referenceLine.role == LineNodeRole.BestReference)
           require(result.playedLine.role == LineNodeRole.Played)
-          val branchPayloads = List(result.referenceBranch, result.playedBranch).map { branch =>
-            val line = branch.line
-            Json.obj(
-              "branch_id" -> branch.branchId,
-              "line_id" -> line.id,
-              "line_role" -> (line.role match
-                case LineNodeRole.BestReference => "best_reference"
-                case LineNodeRole.Played        => "played"
-                case LineNodeRole.Alternative   => "alternative"
-                case LineNodeRole.BranchReply   => "branch_reply"
-              ),
-              "branch_role" -> causalRoleCode(branch.role.stableKey),
-              "root_provenance" -> causalEnumCode(branch.rootProvenance.toString),
-              "line_rank" -> line.rank,
-              "root_move" -> EvidenceRef.normalizeMove(line.rootMove),
-              "steps" -> branch.steps.map(step =>
-                Json.obj(
-                  "step_index" -> step.index,
-                  "provenance" -> causalEnumCode(step.provenance.toString),
-                  "ply" -> step.step.ply,
-                  "move_uci" -> EvidenceRef.normalizeMove(step.step.moveUci),
-                  "fen_before" -> step.step.fenBefore,
-                  "fen_after" -> step.step.fenAfter
-                )
-              )
-            )
-          }
-          val proofPathPayloads = result.proofPaths.map { path =>
-            Json.obj(
-              "path_occurrence_id" -> path.pathOccurrenceId,
-              "premises" -> path.premiseUses.map(premise =>
-                Json.obj(
-                  "role" -> causalRoleCode(premise.role.stableKey),
-                  "contract" -> causalEnumCode(premise.contract.toString),
-                  "result_id" -> premise.result.stableKey,
-                  "source_premise_ids" -> premise.sourcePremiseIds,
-                  "branch_id" -> premise.branchId,
-                  "branch_role" -> causalRoleCode(premise.branchRole.stableKey),
-                  "step_index" -> premise.stepIndex
-                )
-              ),
-              "closed_absence_uses" -> path.closedAbsenceUses.map { use =>
-                val binding = use.binding
-                Json.obj(
-                  "use_id" -> use.useId,
-                  "role" -> causalRoleCode(binding.role.stableKey),
-                  "semantic_proof_id" -> binding.semanticProofId,
-                  "issuer" -> "position_relation_extractor.closed_relation_inventory",
-                  "issuer_evidence_id" -> binding.issuerEvidenceId,
-                  "issuer_occurrence_id" -> binding.issuerOccurrenceId,
-                  "query" -> binding.queryKey,
-                  "branch_id" -> binding.branchId,
-                  "branch_role" -> causalRoleCode(binding.branchRole.stableKey),
-                  "after_step_index" -> binding.afterStepIndex,
-                  "position" -> Json.obj(
-                    "fen" -> binding.position.fen,
-                    "ply" -> binding.position.ply,
-                    "scope" -> evidenceScopeCode(binding.scope)
-                  )
-                )
-              }
-            )
-          }
+          val branchPayloads =
+            List(result.publicReferenceBranch, result.publicPlayedBranch).map(causalBranchJson)
+          val proofPathPayloads = result.publicProofPaths.map(causalProofPathJson)
           Some(
             Json.obj(
               "family" -> "immediate_forced_reply_resource_differential",
@@ -696,6 +717,39 @@ object RuntimeProtocol:
               ),
               "realizing_move" -> EvidenceRef.normalizeMove(result.realizingMove),
               "played_root_branch_legal_defense_move" -> EvidenceRef.normalizeMove(result.playedDefenseMove)
+            )
+          )
+        case _ => None
+
+    private def defenseObligationChangeProofJson(proof: RootOwnedEffectProof): Option[JsObject] =
+      proof match
+        case RootOwnedEffectProof.DefenseObligationChange(source, result) =>
+          require(result.referenceLine.role == LineNodeRole.BestReference)
+          require(result.playedLine.role == LineNodeRole.Played)
+          val branchPayloads =
+            List(result.publicReferenceBranch, result.publicPlayedBranch).map(causalBranchJson)
+          val proofPathPayloads = result.publicProofPaths.map(causalProofPathJson)
+          Some(
+            Json.obj(
+              "contract" -> "defense_obligation_change",
+              "mechanism" -> result.mechanism,
+              "source_evidence_id" -> source.id,
+              "semantic_id" -> result.semanticId,
+              "occurrence_id" -> result.occurrenceId,
+              "dependency_fingerprint" -> result.dependencyId,
+              "counterfactual_reference_branch" -> branchPayloads.head,
+              "played_root_branch" -> branchPayloads(1),
+              "proof_paths" -> proofPathPayloads,
+              "participants" -> Json.obj(
+                "remover" -> movementWitnessJson(result.remover),
+                "removed_defender" -> coloredPieceWitnessJson(result.removedDefender),
+                "removal_recapture" -> legalResourceWitnessJson(result.removalRecapture),
+                "later_exploit" -> movementWitnessJson(result.laterExploit),
+                "captured_target" -> coloredPieceWitnessJson(result.capturedTarget),
+                "played_sole_recapture" -> legalResourceWitnessJson(result.playedSoleRecapture)
+              ),
+              "later_exploit_move" -> EvidenceRef.normalizeMove(result.laterExploitMove),
+              "played_sole_recapture_move" -> EvidenceRef.normalizeMove(result.playedSoleRecaptureMove)
             )
           )
         case _ => None

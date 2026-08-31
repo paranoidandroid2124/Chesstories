@@ -429,6 +429,116 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
       triggerMechanism: 'forced_displacement',
     },
   };
+  const defense: MoveReviewReason = {
+    ...primaryReason,
+    id: 'defense-obligation.typed',
+    message: {
+      kind: 'defense-obligation-change',
+      channelId: 'typed.defense-obligation',
+      causalSignature: 'typed.defense-obligation.signature',
+      causeEvidenceId: 'cause.defense-obligation',
+      causeKind: 'wrong_move_order',
+      effectMode: 'alternative_resource',
+      directChange: 'occurred',
+      playedChange: 'missed',
+      contract: 'defense_obligation_change',
+      mechanism: 'sole_recapturer_removal',
+      sourceEvidenceId: 'defense-obligation.source',
+      semanticId: 'd'.repeat(64),
+      occurrenceId: 'e'.repeat(64),
+      dependencyFingerprint: 'f'.repeat(64),
+      pathOccurrenceId: '4'.repeat(64),
+      branch: {
+        id: '1'.repeat(64),
+        role: 'counterfactual_reference',
+        provenance: 'counterfactual_analyzed_root',
+        lineId: 'line.reference',
+        lineRole: 'best_reference',
+        lineRank: 1,
+        rootMove: 'g5f6' as Uci,
+      },
+      counterpart: {
+        id: '2'.repeat(64),
+        role: 'observed_played_root',
+        provenance: 'observed_game_root',
+        lineId: 'line.played',
+        lineRole: 'played',
+        lineRank: 1,
+        rootMove: 'd1d5' as Uci,
+      },
+      remover: { side: 'white', from: 'g5', to: 'f6', pieceBefore: 'bishop', pieceAfter: 'bishop' },
+      removedDefender: { side: 'black', piece: 'knight', square: 'f6' },
+      removalRecapture: {
+        side: 'black',
+        from: 'e7',
+        to: 'f6',
+        pieceBefore: 'pawn',
+        pieceAfter: 'pawn',
+        moveUci: 'e7f6' as Uci,
+      },
+      laterExploit: {
+        side: 'white',
+        from: 'd1',
+        to: 'd5',
+        pieceBefore: 'queen',
+        pieceAfter: 'queen',
+      },
+      capturedTarget: { side: 'black', piece: 'rook', square: 'd5' },
+      playedSoleRecapture: {
+        side: 'black',
+        from: 'f6',
+        to: 'd5',
+        pieceBefore: 'knight',
+        pieceAfter: 'knight',
+        moveUci: 'f6d5' as Uci,
+      },
+      laterExploitMove: 'd1d5' as Uci,
+      playedSoleRecaptureMove: 'f6d5' as Uci,
+      premises: [
+        {
+          role: 'reference_defender_removal',
+          contract: 'capture_recapture_inventory',
+          resultId: `capture_recapture_inventory:${'0'.repeat(64)}`,
+          sourcePremiseIds: ['reference-removal'],
+          branchId: '1'.repeat(64),
+          branchRole: 'counterfactual_reference',
+          stepIndex: 0,
+        },
+        {
+          role: 'reference_later_exploit_inventory',
+          contract: 'capture_recapture_inventory',
+          resultId: `capture_recapture_inventory:${'1'.repeat(64)}`,
+          sourcePremiseIds: ['reference-exploit'],
+          branchId: '1'.repeat(64),
+          branchRole: 'counterfactual_reference',
+          stepIndex: 2,
+        },
+        {
+          role: 'played_immediate_exploit_inventory',
+          contract: 'capture_recapture_inventory',
+          resultId: `capture_recapture_inventory:${'2'.repeat(64)}`,
+          sourcePremiseIds: ['played-exploit'],
+          branchId: '2'.repeat(64),
+          branchRole: 'observed_played_root',
+          stepIndex: 0,
+        },
+      ],
+      absence: {
+        useId: '4'.repeat(64),
+        role: 'reference_replacement_recapture_absent',
+        semanticProofId: '5'.repeat(64),
+        issuer: 'position_relation_extractor.closed_relation_inventory',
+        issuerEvidenceId: 'reference-line-evidence',
+        issuerOccurrenceId: '6'.repeat(64),
+        query: 'legal-capture:black:d5',
+        branchId: '1'.repeat(64),
+        afterStepIndex: 2,
+        fen: secondFen,
+        ply: 3,
+        scope: 'best_line',
+      },
+    },
+  };
   const passedPawnResult: MoveReviewReason = {
     ...primaryReason,
     id: 'passed-pawn-result.typed',
@@ -566,6 +676,13 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
     resourceText,
     /legal-capture:black:d8.*lower proofs reference recapture:result.*disabled rook on f8.*mechanism forced defender displacement/,
   );
+  const defenseText = moveReviewReasonText(defense, candidate, 'en-US');
+  assert.match(
+    defenseText,
+    /bishop from g5 captures the knight on f6, is recaptured by e7f6.*d1d5.*rook on d5/,
+  );
+  assert.match(defenseText, /observed played branch.*knight from f6.*f6d5/);
+  assert.match(defenseText, /legal-capture:black:d5.*reference defender removal/);
   const passedPawnResultText = moveReviewReasonText(passedPawnResult, candidate, 'en-US');
   assert.match(
     passedPawnResultText,
@@ -589,9 +706,9 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
             ...item.review,
             core: {
               ...item.review.core,
-              reasonRefs: { primary: resource.id, support: [passedPawnResult.id], routes: [] },
+              reasonRefs: { primary: resource.id, support: [defense.id, passedPawnResult.id], routes: [] },
             },
-            reasons: [resource, passedPawnResult],
+            reasons: [resource, defense, passedPawnResult],
           },
         }
       : item,
@@ -606,6 +723,7 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
     }),
   );
   assert.match(renderedText(panel), /counterfactual reference branch/);
+  assert.match(renderedText(panel), /reference defender removal/);
   assert.deepEqual(findNodes(panel, 'button.move-review__proof-san').map(renderedText), ['e2e3', 'h1g2']);
 });
 

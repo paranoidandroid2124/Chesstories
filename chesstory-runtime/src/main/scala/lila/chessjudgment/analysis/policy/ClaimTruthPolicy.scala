@@ -729,10 +729,19 @@ object ClaimTruthPolicy:
           cause.attribution.directProofEligible && cause.attribution.rootMoveMatched &&
           section.role == RelativeCauseProofRole.DirectProof &&
           section.strength == RelativeCauseProofStrength.Primary &&
-          ForcedReplyResourceDifferentialDemand.accepts(fact) &&
+          WrongMoveOrderCausalProofDemand.accepts(fact) &&
           admitted.exists {
             case channel @ DirectCauseChannel(_, _, _, _, Some(
                   RootOwnedEffectProof.ForcedReplyResourceDifferential(source, result)
+                ), _, _, _) =>
+              section.sourceRefs.contains(source) && cause.supportEvidence.contains(source) &&
+                result.occurrence.referenceLine == fact.referenceLine &&
+                result.occurrence.playedLine == fact.candidateLine &&
+                result.hasCompleteProofPaths &&
+                channel.binding.proofRole.contains(RelativeCauseProofRole.DirectProof) &&
+                RootOwnedEffectPolicy.admits(cause, graph, channel)
+            case channel @ DirectCauseChannel(_, _, _, _, Some(
+                  RootOwnedEffectProof.DefenseObligationChange(source, result)
                 ), _, _, _) =>
               section.sourceRefs.contains(source) && cause.supportEvidence.contains(source) &&
                 result.occurrence.referenceLine == fact.referenceLine &&

@@ -1,20 +1,7 @@
 package lila.chessjudgment.model.judgment
 
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
-import lila.chessjudgment.model.evaluation.JudgmentThresholds
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
-
-/** Sole demand gate shared by the producer, Cause draft, and Ja. Evaluation
-  * does not prove the L2 fact; it only establishes that WrongMoveOrder has an
-  * active public consumer for this exact PlayedVsBest comparison.
-  */
-private[chessjudgment] object ForcedReplyResourceDifferentialDemand:
-  def accepts(fact: CandidateComparisonFact): Boolean =
-    fact.kind == CandidateComparisonKind.PlayedVsBest &&
-      fact.referenceLine.role == LineNodeRole.BestReference &&
-      fact.candidateLine.role == LineNodeRole.Played &&
-      fact.hasDistinctRootMoves && fact.comparison.verdict.isActionableLoss &&
-      fact.comparison.winPercentLossForMover >= JudgmentThresholds.INACCURACY_WP
 
 /** Sole family construction authority. It validates and emits the exact
   * semantic descriptor consumed by the common identity core.
@@ -78,14 +65,12 @@ private[chessjudgment] enum ForcedReplyResourceBranchRole extends CausalBranchRo
       case ObservedPlayedRoot       => "observed-played-root"
 
 private[chessjudgment] enum ForcedReplyResourcePremiseRole extends CausalPremiseRole:
-  case ReferenceRootCapture
   case CreatedCheckResponse
   case ReferenceCaptureRecapture
   case PlayedCaptureRecapture
 
   def stableKey: String =
     this match
-      case ReferenceRootCapture       => "reference-root-capture"
       case CreatedCheckResponse       => "created-check-response"
       case ReferenceCaptureRecapture  => "reference-capture-recapture"
       case PlayedCaptureRecapture     => "played-capture-recapture"
@@ -100,17 +85,10 @@ private[chessjudgment] enum ForcedReplyResourceAbsenceRole extends CausalAbsence
   */
 private[chessjudgment] enum ForcedReplyResourceMechanism:
   case ForcedDisplacement
-  case ForcedRecapturerRemoval
 
-  def stableKey: String =
-    this match
-      case ForcedDisplacement      => "forced-displacement"
-      case ForcedRecapturerRemoval => "forced-recapturer-removal"
+  def stableKey: String = "forced-displacement"
 
-  def wireCode: String =
-    this match
-      case ForcedDisplacement      => "forced_displacement"
-      case ForcedRecapturerRemoval => "forced_recapturer_removal"
+  def wireCode: String = "forced_displacement"
 
 /** Complete named lower-premise manifest for this contract. The common core
   * accepts only typed manifests; this family is the sole authority for which
@@ -139,21 +117,6 @@ private[chessjudgment] object ForcedReplyResourceManifest:
     val mechanism = ForcedReplyResourceMechanism.ForcedDisplacement
     val premiseUses = List(checkResponse, referenceRecapture, playedRecapture)
 
-  private final case class RecapturerRemoval(
-      referenceRootCapture: CausalVerticalRelationPremiseUse,
-      checkResponse: CausalVerticalRelationPremiseUse,
-      referenceRecapture: CausalVerticalRelationPremiseUse,
-      playedRecapture: CausalVerticalRelationPremiseUse,
-      referenceNoRecapture: CausalClosedAbsenceBinding
-  ) extends ForcedReplyResourceManifest:
-    val mechanism = ForcedReplyResourceMechanism.ForcedRecapturerRemoval
-    val premiseUses = List(
-      referenceRootCapture,
-      checkResponse,
-      referenceRecapture,
-      playedRecapture
-    )
-
   def displacement(
       checkResponse: CausalVerticalRelationPremiseUse,
       referenceRecapture: CausalVerticalRelationPremiseUse,
@@ -162,31 +125,6 @@ private[chessjudgment] object ForcedReplyResourceManifest:
   ): ForcedReplyResourceManifest =
     validateShared(checkResponse, referenceRecapture, playedRecapture, referenceNoRecapture)
     Displacement(checkResponse, referenceRecapture, playedRecapture, referenceNoRecapture)
-
-  def recapturerRemoval(
-      referenceRootCapture: CausalVerticalRelationPremiseUse,
-      checkResponse: CausalVerticalRelationPremiseUse,
-      referenceRecapture: CausalVerticalRelationPremiseUse,
-      playedRecapture: CausalVerticalRelationPremiseUse,
-      referenceNoRecapture: CausalClosedAbsenceBinding
-  ): ForcedReplyResourceManifest =
-    validateShared(checkResponse, referenceRecapture, playedRecapture, referenceNoRecapture)
-    require(
-      referenceRootCapture.role == ForcedReplyResourcePremiseRole.ReferenceRootCapture &&
-        referenceRootCapture.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
-        referenceRootCapture.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-        referenceRootCapture.branchRole == ForcedReplyResourceBranchRole.CounterfactualReference &&
-        referenceRootCapture.branchId == checkResponse.branchId &&
-        referenceRootCapture.stepIndex == 0,
-      "recapturer removal must consume the exact counterfactual root capture inventory"
-    )
-    RecapturerRemoval(
-      referenceRootCapture,
-      checkResponse,
-      referenceRecapture,
-      playedRecapture,
-      referenceNoRecapture
-    )
 
   private def validateShared(
       checkResponse: CausalVerticalRelationPremiseUse,
@@ -252,16 +190,11 @@ private[chessjudgment] final case class ForcedReplyResourceSemanticProof private
     "the resource differential must retain the exact played-branch recapturer identity"
   )
   require(
-    mechanism match
-      case ForcedReplyResourceMechanism.ForcedDisplacement =>
-        disabledDefender.side == forcedReply.movement.side &&
-          disabledDefender.role == forcedReply.movement.beforeRole &&
-          disabledDefender.square == forcedReply.movement.from
-      case ForcedReplyResourceMechanism.ForcedRecapturerRemoval =>
-        trigger.side != disabledDefender.side &&
-          trigger.to == disabledDefender.square &&
-          forcedReply.movement.side == disabledDefender.side,
-    "the semantic proof must retain its exact displacement or recapturer-removal mechanism"
+    mechanism == ForcedReplyResourceMechanism.ForcedDisplacement &&
+      disabledDefender.side == forcedReply.movement.side &&
+      disabledDefender.role == forcedReply.movement.beforeRole &&
+      disabledDefender.square == forcedReply.movement.from,
+    "the semantic proof must retain its exact forced-displacement mechanism"
   )
 
   def semanticId: String = identity.semanticId
@@ -429,7 +362,9 @@ private[chessjudgment] final class ForcedReplyResourceOccurrenceProof private[ch
       ForcedReplyResourceProof.exactDemandRecord(
         demandRecord,
         demandingComparison,
-        referenceLineRecord.ref.position
+        referenceLineRecord.ref.position,
+        referenceLineRecord,
+        playedLineRecord
       ) && referenceLineRecord.ref.position == playedLineRecord.ref.position &&
       demandRecord.ref.position == referenceLineRecord.ref.position &&
       referenceReplay.replaySteps.take(occurrence.referenceSteps.size) == occurrence.referenceSteps &&
@@ -507,8 +442,7 @@ private[chessjudgment] object ForcedReplyResourceProof:
 
   private final case class MechanismBinding(
       mechanism: ForcedReplyResourceMechanism,
-      disabledDefender: RelationColoredPieceWitness,
-      referenceRootCapture: Option[ReplayVerticalRelationOccurrence]
+      disabledDefender: RelationColoredPieceWitness
   )
 
   def deriveImmediate(
@@ -554,7 +488,13 @@ private[chessjudgment] object ForcedReplyResourceProof:
     val inputs = for
       _ <- Option.when(exactLineRecord(referenceLineRecord, referenceLine, referenceReplay))((): Unit)
       if exactLineRecord(playedLineRecord, playedLine, playedReplay)
-      if exactDemandRecord(demandRecord, demandingComparison, referenceLineRecord.ref.position)
+      if exactDemandRecord(
+        demandRecord,
+        demandingComparison,
+        referenceLineRecord.ref.position,
+        referenceLineRecord,
+        playedLineRecord
+      )
       if demandingComparison.referenceLine == referenceLine
       if demandingComparison.candidateLine == playedLine
       triggerStep <- referenceReplay.replaySteps.headOption
@@ -663,7 +603,7 @@ private[chessjudgment] object ForcedReplyResourceProof:
     )
 
     inputs.toList.flatMap { exact =>
-      mechanismBindings(exact, referenceReplay).map { binding =>
+      mechanismBindings(exact).map { binding =>
         certify(
           exact,
           binding,
@@ -731,30 +671,12 @@ private[chessjudgment] object ForcedReplyResourceProof:
       referenceLineRecord,
       inputs.referenceCaptureOccurrence
     )
-    val manifest = binding.referenceRootCapture match
-      case None =>
-        require(binding.mechanism == ForcedReplyResourceMechanism.ForcedDisplacement)
-        ForcedReplyResourceManifest.displacement(
-          checkUse,
-          referenceRecaptureUse,
-          playedRecaptureUse,
-          absenceBinding
-        )
-      case Some(rootCaptureOccurrence) =>
-        require(binding.mechanism == ForcedReplyResourceMechanism.ForcedRecapturerRemoval)
-        val rootCaptureUse = CausalVerticalRelationPremiseUse.from(
-          ForcedReplyResourcePremiseRole.ReferenceRootCapture,
-          rootCaptureOccurrence,
-          referenceBranch,
-          0
-        )
-        ForcedReplyResourceManifest.recapturerRemoval(
-          rootCaptureUse,
-          checkUse,
-          referenceRecaptureUse,
-          playedRecaptureUse,
-          absenceBinding
-        )
+    val manifest = ForcedReplyResourceManifest.displacement(
+      checkUse,
+      referenceRecaptureUse,
+      playedRecaptureUse,
+      absenceBinding
+    )
     val path = CausalProofPathOccurrence.from(proposition, manifest)
     val absenceUse = path.closedAbsenceUses match
       case exact :: Nil => exact
@@ -801,40 +723,15 @@ private[chessjudgment] object ForcedReplyResourceProof:
     )
     CertifiedForcedReplyResourceDifferential(semantic, occurrence, dependency, proof)
 
-  private def mechanismBindings(
-      inputs: ImmediateInputs,
-      referenceReplay: CanonicalLineReplay
-  ): List[MechanismBinding] =
-    val displacement = Option.when(
+  private def mechanismBindings(inputs: ImmediateInputs): List[MechanismBinding] =
+    Option.when(
       sameInitialPiece(inputs.forcedReply.movement, inputs.playedDefense.movement)
     )(
       MechanismBinding(
         ForcedReplyResourceMechanism.ForcedDisplacement,
-        coloredPieceAtStart(inputs.forcedReply.movement),
-        None
+        coloredPieceAtStart(inputs.forcedReply.movement)
       )
-    )
-    val recapturerRemoval = for
-      triggerStep <- inputs.referenceBranch.stepAt(0).map(_.step)
-      rootCaptureOccurrence <- uniqueVertical(
-        referenceReplay,
-        triggerStep,
-        VerticalRelationContractKind.CaptureRecaptureInventory
-      )
-      if rootCaptureOccurrence.certifiedSourcePremiseIds.nonEmpty
-      rootCapture <- rootCaptureOccurrence.relation.detail match
-        case value: RelationWitnessDetail.CaptureRecaptureInventory => Some(value)
-        case _                                                       => None
-      if rootCapture.mover == inputs.check.mover
-      if rootCapture.captured.square == rootCapture.mover.to
-      if rootCapture.legalRecaptures == List(inputs.forcedReply)
-      if sameInitialPiece(rootCapture.captured, inputs.playedDefense.movement)
-    yield MechanismBinding(
-      ForcedReplyResourceMechanism.ForcedRecapturerRemoval,
-      rootCapture.captured,
-      Some(rootCaptureOccurrence)
-    )
-    (displacement.toList ++ recapturerRemoval.toList).sortBy(_.mechanism.stableKey)
+    ).toList
 
   private def uniqueVertical(
       replay: CanonicalLineReplay,
@@ -850,12 +747,6 @@ private[chessjudgment] object ForcedReplyResourceProof:
       right: RelationMoveTransitionWitness
   ): Boolean =
     left.side == right.side && left.from == right.from && left.beforeRole == right.beforeRole
-
-  private def sameInitialPiece(
-      piece: RelationColoredPieceWitness,
-      movement: RelationMoveTransitionWitness
-  ): Boolean =
-    piece.side == movement.side && piece.square == movement.from && piece.role == movement.beforeRole
 
   private def coloredPieceAtStart(
       movement: RelationMoveTransitionWitness
@@ -900,12 +791,14 @@ private[chessjudgment] object ForcedReplyResourceProof:
   private[chessjudgment] def exactDemandRecord(
       source: EvidenceRecord,
       comparison: CandidateComparisonFact,
-      root: PositionNodeRef
+      root: PositionNodeRef,
+      referenceSource: EvidenceRecord,
+      playedSource: EvidenceRecord
   ): Boolean =
-    source match
-      case EvidenceRecord(ref, CandidateComparisonEvidence(value), _) =>
-        value == comparison && ForcedReplyResourceDifferentialDemand.accepts(value) &&
-          ref.producer == EvidenceProducer.RelativeMoveProducer &&
-          ref.layer == EvidenceLayer.CandidateComparison && ref.position == root &&
-          ref.line.contains(comparison.candidateLine) && ref.scope == EvidenceScope.Counterfactual
-      case _ => false
+    WrongMoveOrderCausalProofDemand.acceptsRecord(
+      source,
+      comparison,
+      root,
+      referenceSource,
+      playedSource
+    )

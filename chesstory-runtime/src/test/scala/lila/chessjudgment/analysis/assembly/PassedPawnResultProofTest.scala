@@ -281,6 +281,11 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       .getOrElse(fail("expected an exact PlayedVsBest comparison"))
     val root = facts.root.getOrElse(fail("expected a comparison root"))
     def demand(id: String, fact: CandidateComparisonFact): EvidenceRecord =
+      val parents = List(fact.referenceLine, fact.candidateLine)
+        .flatMap(line => facts.evidenceGraph.recordsFor(line))
+        .filter(record => record.ref.layer == EvidenceLayer.Line || record.ref.layer == EvidenceLayer.Eval)
+        .map(_.ref)
+        .distinctBy(_.id)
       EvidenceRecord(
         EvidenceRef(
           id = id,
@@ -289,10 +294,10 @@ class PassedPawnResultProofTest extends munit.FunSuite:
           position = root,
           line = Some(fact.candidateLine),
           scope = EvidenceScope.Counterfactual,
-          confidence = EvidenceConfidence.EngineBacked
+          confidence = fact.verdictConfidence.evidenceConfidence
         ),
         CandidateComparisonEvidence(fact),
-        List(referenceNode.evidence, playedNode.evidence)
+        parents
       )
     val activeDemand = demand("played-vs-best-demand", comparison)
     val demandedContext = facts.withEvidence(activeDemand)

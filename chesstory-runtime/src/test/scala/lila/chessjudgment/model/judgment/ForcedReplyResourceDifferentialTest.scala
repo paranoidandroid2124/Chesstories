@@ -19,9 +19,6 @@ class ForcedReplyResourceDifferentialTest extends munit.FunSuite:
   private val rootFen = "3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1"
   private val referenceMoves = List("c4f7", "f8f7", "d1d8")
   private val playedMoves = List("d1d8", "f8d8")
-  private val removalRootFen = "7k/4p3/5n2/3r2B1/8/8/2B5/K2Q2R1 w - - 0 1"
-  private val removalReferenceMoves = List("g5f6", "e7f6", "d1d5")
-  private val removalPlayedMoves = List("d1d5", "f6d5")
 
   test("forced reply proof consumes exact L1 inventories and a closed recapture absence"):
     val referenceLine = LineNodeRef("reference-order", referenceMoves.head, 1, LineNodeRole.BestReference)
@@ -82,92 +79,6 @@ class ForcedReplyResourceDifferentialTest extends munit.FunSuite:
     assertEquals(absenceUse.binding.issuerOccurrenceId, issuerOccurrence.occurrenceId)
     assert(absenceUse.binding.semanticProofId.matches("[0-9a-f]{64}"))
     assert(exact.dependency.value.matches("[0-9a-f]{64}"))
-
-  test("forced recapturer removal consumes the exact root capture before the later target capture"):
-    val referenceLine = LineNodeRef(
-      "reference-removal",
-      removalReferenceMoves.head,
-      1,
-      LineNodeRole.BestReference
-    )
-    val playedLine = LineNodeRef(
-      "played-removal",
-      removalPlayedMoves.head,
-      1,
-      LineNodeRole.Played
-    )
-    val proofs = deriveProofs(
-      "removal",
-      referenceLine,
-      playedLine,
-      certifiedReplay(removalRootFen, removalReferenceMoves),
-      certifiedReplay(removalRootFen, removalPlayedMoves),
-      root = removalRootFen
-    )
-    assertEquals(
-      proofs.map(_.semantic.mechanism),
-      List(ForcedReplyResourceMechanism.ForcedRecapturerRemoval)
-    )
-    val exact = proofs.head
-    assertEquals(exact.semantic.trigger.from.key.toLowerCase, "g5")
-    assertEquals(exact.semantic.trigger.to.key.toLowerCase, "f6")
-    assertEquals(exact.semantic.forcedReply.moveUci, "e7f6")
-    assertEquals(exact.semantic.realizer.from.key.toLowerCase, "d1")
-    assertEquals(exact.semantic.realizer.to.key.toLowerCase, "d5")
-    assertEquals(exact.semantic.playedDefense.moveUci, "f6d5")
-    assertEquals(exact.semantic.disabledDefender.side, chess.Black)
-    assertEquals(exact.semantic.disabledDefender.role.name.toLowerCase, "knight")
-    assertEquals(exact.semantic.disabledDefender.square.key.toLowerCase, "f6")
-    val path = exact.occurrence.proofPaths match
-      case one :: Nil => one
-      case other      => fail(s"expected one exact removal proof path, found ${other.size}")
-    assertEquals(
-      path.premiseUses.map(_.role),
-      List(
-        ForcedReplyResourcePremiseRole.ReferenceRootCapture,
-        ForcedReplyResourcePremiseRole.CreatedCheckResponse,
-        ForcedReplyResourcePremiseRole.ReferenceCaptureRecapture,
-        ForcedReplyResourcePremiseRole.PlayedCaptureRecapture
-      )
-    )
-    assertEquals(path.premiseUses.take(2).map(_.stepIndex), List(0, 0))
-    assertEquals(path.premiseUses(2).stepIndex, 2)
-    assertEquals(path.premiseUses(3).stepIndex, 0)
-    assertEquals(
-      path.closedAbsenceUses.map(_.binding.queryKey),
-      List("legal-capture:black:d5")
-    )
-
-    val packet = MoveReviewJudgmentOrchestrator
-      .execute(
-        RawMoveReviewInput(
-          fen = removalRootFen,
-          playedMoveUci = removalPlayedMoves.head,
-          variations = List(
-            EngineLine(removalReferenceMoves, scoreCp = 600, depth = 24),
-            EngineLine(removalPlayedMoves, scoreCp = 0, depth = 24)
-          )
-        )
-      )
-      .getOrElse(fail("expected the removal proof to reach the judgment packet"))
-    val causalResults = packet.evidenceGraph.records.collect {
-      case EvidenceRecord(_, payload: ForcedReplyResourceDifferentialEvidence, _) => payload
-    }
-    assertEquals(
-      causalResults.map(_.semantic.mechanism),
-      List(ForcedReplyResourceMechanism.ForcedRecapturerRemoval)
-    )
-    val selectedResults = packet.causeExposureResolution.narrativeIdeas
-      .flatMap(_.facets)
-      .flatMap(_.directChannels)
-      .flatMap(_.rootOwnedProof)
-      .collect {
-        case RootOwnedEffectProof.ForcedReplyResourceDifferential(_, result) => result
-      }
-    assertEquals(
-      selectedResults.map(_.semantic.mechanism).distinct,
-      List(ForcedReplyResourceMechanism.ForcedRecapturerRemoval)
-    )
 
   test("the exact L1 absence capability binds once and mismatched premises fail closed"):
     val replay = certifiedReplay(referenceMoves)
@@ -275,14 +186,9 @@ class ForcedReplyResourceDifferentialTest extends munit.FunSuite:
           if fact.kind == CandidateComparisonKind.PlayedVsBest => record
     }.getOrElse(fail("expected the first exact comparison demand"))
     val oldFact = oldDemand.payload.asInstanceOf[CandidateComparisonEvidence].comparison
-    val changedFact = oldFact.copy(
-      comparison = oldFact.comparison.copy(
-        candidateWinPercentDeltaForMover = oldFact.comparison.candidateWinPercentDeltaForMover - 1.0
-      )
-    )
+    val changedFact = oldFact
     val changedDemand = oldDemand.copy(
-      ref = oldDemand.ref.copy(id = s"${oldDemand.ref.id}:changed"),
-      payload = CandidateComparisonEvidence(changedFact)
+      ref = oldDemand.ref.copy(id = s"${oldDemand.ref.id}:changed")
     )
     val staleContext = initial.withEvidence(changedDemand)
     val dispatched = ForcedReplyResourceDifferentialAssembler.fromAssembly(
@@ -329,7 +235,7 @@ class ForcedReplyResourceDifferentialTest extends munit.FunSuite:
       candidateRecords,
       Nil
     )
-    assertEquals(profile.referenceMoveOrderResource.map(_.ref.id), List(dispatched.ref.id))
+    assertEquals(profile.referenceMoveOrderProofs.map(_.ref.id), List(dispatched.ref.id))
 
   test("missing sibling defense fails closed"):
     val referenceLine = LineNodeRef("reference-closed", referenceMoves.head, 1, LineNodeRole.BestReference)
@@ -363,7 +269,7 @@ class ForcedReplyResourceDifferentialTest extends munit.FunSuite:
       Nil
     )
 
-  test("an inactive public consumer does not dispatch the L2 producer"):
+  test("a canonical non-demand comparison does not dispatch the L2 producer"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
@@ -371,40 +277,20 @@ class ForcedReplyResourceDifferentialTest extends munit.FunSuite:
           playedMoveUci = playedMoves.head,
           variations = List(
             EngineLine(referenceMoves, scoreCp = 600, mate = Some(1), depth = 24),
-            EngineLine(playedMoves, scoreCp = 0, depth = 24)
+            EngineLine(playedMoves, scoreCp = 0, depth = 24),
+            EngineLine(List("b3b7"), scoreCp = -100, depth = 24)
           )
         )
       )
       .getOrElse(fail("expected the lower facts to assemble"))
-    val reference = lowerFacts.line(LineNodeRole.BestReference).getOrElse(fail("missing reference"))
-    val candidate = lowerFacts.line(LineNodeRole.Played).getOrElse(fail("missing candidate"))
-    val quietComparison = CandidateComparisonFact(
-      kind = CandidateComparisonKind.PlayedVsBest,
-      referenceLine = reference.ref,
-      candidateLine = candidate.ref,
-      comparison = EvalComparison(
-        mover = White,
-        candidateWinPercentDeltaForMover = 0.0,
-        verdict = MoveChoiceVerdict.MatchesReference,
-        detail = CandidateComparisonDeltaDetail.EngineEvaluation(0, None)
-      ),
-      verdictConfidence = VerdictConfidence.EngineBacked
-    )
-    val quietRecord = EvidenceRecord(
-      ref = EvidenceRef(
-        id = "quiet-comparison-demand",
-        producer = EvidenceProducer.RelativeMoveProducer,
-        layer = EvidenceLayer.CandidateComparison,
-        position = lowerFacts.root.getOrElse(fail("missing root")),
-        line = Some(candidate.ref),
-        scope = EvidenceScope.Counterfactual,
-        confidence = EvidenceConfidence.EngineBacked
-      ),
-      payload = CandidateComparisonEvidence(quietComparison)
-    )
-    val quietContext = lowerFacts.withEvidence(List(quietRecord))
+    val quietContext = RelativeAssessmentAssembler.enrichFacts(lowerFacts)
+    val quietRecord = quietContext.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, CandidateComparisonEvidence(fact), _)
+          if fact.kind == CandidateComparisonKind.ReferenceVsAlternative => record
+    }.getOrElse(fail("expected the canonical non-demand comparison"))
+    val quietComparison = quietRecord.payload.asInstanceOf[CandidateComparisonEvidence].comparison
     assert(quietContext.evidenceGraph.proofEligible(quietRecord))
-    assert(!ForcedReplyResourceDifferentialDemand.accepts(quietComparison))
+    assert(!WrongMoveOrderCausalProofDemand.accepts(quietComparison))
 
     assertEquals(
       ForcedReplyResourceDifferentialAssembler.fromAssembly(
@@ -478,7 +364,7 @@ class ForcedReplyResourceDifferentialTest extends munit.FunSuite:
       candidateRecords,
       Nil
     )
-    assertEquals(profile.referenceMoveOrderResource.map(_.ref.id), causalRecords.map(_.ref.id))
+    assertEquals(profile.referenceMoveOrderProofs.map(_.ref.id), causalRecords.map(_.ref.id))
     val drafts = RelativeCauseDraftPlanner.drafts(profile)
     assertEquals(
       drafts.count(draft =>
@@ -660,7 +546,13 @@ class ForcedReplyResourceDifferentialTest extends munit.FunSuite:
         scope = EvidenceScope.Counterfactual,
         confidence = EvidenceConfidence.EngineBacked
       ),
-      payload = CandidateComparisonEvidence(comparison)
+      payload = CandidateComparisonEvidence(comparison),
+      parents = List(
+        referenceRecord.ref,
+        playedRecord.ref,
+        evaluationRef(s"reference-eval-$path", referenceLine, referenceRecord.ref.position),
+        evaluationRef(s"played-eval-$path", playedLine, playedRecord.ref.position)
+      ).sortBy(_.id)
     )
     ForcedReplyResourceProof.deriveImmediate(
       referenceLine,
@@ -682,4 +574,19 @@ class ForcedReplyResourceDifferentialTest extends munit.FunSuite:
       line = Some(line),
       scope = line.role.scope,
       confidence = EvidenceConfidence.LegalReplayVerified
+    )
+
+  private def evaluationRef(
+      id: String,
+      line: LineNodeRef,
+      root: PositionNodeRef
+  ): EvidenceRef =
+    EvidenceRef(
+      id = id,
+      producer = EvidenceProducer.EngineEvalProducer,
+      layer = EvidenceLayer.Eval,
+      position = root,
+      line = Some(line),
+      scope = line.role.scope,
+      confidence = EvidenceConfidence.EngineBacked
     )

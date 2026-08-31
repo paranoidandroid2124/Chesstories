@@ -287,7 +287,7 @@ def _passed_pawn_result_proof() -> dict[str, object]:
     }
 
 
-def _recapturer_removal_proof() -> dict[str, object]:
+def _defense_obligation_change_proof() -> dict[str, object]:
     root = "7k/4p3/5n2/3r2B1/8/8/2B5/K2Q2R1 w - - 0 1"
     reference_fens = [
         "7k/4p3/5B2/3r4/8/8/2B5/K2Q2R1 b - - 0 1",
@@ -339,9 +339,9 @@ def _recapturer_removal_proof() -> dict[str, object]:
         }
 
     return {
-        "family": "immediate_forced_reply_resource_differential",
-        "trigger_mechanism": "forced_recapturer_removal",
-        "source_evidence_id": "resource.source",
+        "contract": "defense_obligation_change",
+        "mechanism": "sole_recapturer_removal",
+        "source_evidence_id": "defense.source",
         "semantic_id": "a" * 64,
         "occurrence_id": "b" * 64,
         "dependency_fingerprint": "c" * 64,
@@ -369,15 +369,14 @@ def _recapturer_removal_proof() -> dict[str, object]:
             {
                 "path_occurrence_id": "d" * 64,
                 "premises": [
-                    premise("reference_root_capture", "capture_recapture_inventory", reference_id, "counterfactual_reference", 0, "0"),
-                    premise("created_check_response", "created_check_response_inventory", reference_id, "counterfactual_reference", 0, "3"),
-                    premise("reference_capture_recapture", "capture_recapture_inventory", reference_id, "counterfactual_reference", 2, "4"),
-                    premise("played_capture_recapture", "capture_recapture_inventory", played_id, "observed_played_root", 0, "5"),
+                    premise("reference_defender_removal", "capture_recapture_inventory", reference_id, "counterfactual_reference", 0, "0"),
+                    premise("reference_later_exploit_inventory", "capture_recapture_inventory", reference_id, "counterfactual_reference", 2, "4"),
+                    premise("played_immediate_exploit_inventory", "capture_recapture_inventory", played_id, "observed_played_root", 0, "5"),
                 ],
                 "closed_absence_uses": [
                     {
                         "use_id": "6" * 64,
-                        "role": "reference_recapture_absent",
+                        "role": "reference_replacement_recapture_absent",
                         "semantic_proof_id": "7" * 64,
                         "issuer": "position_relation_extractor.closed_relation_inventory",
                         "issuer_evidence_id": "reference-line-evidence",
@@ -392,16 +391,100 @@ def _recapturer_removal_proof() -> dict[str, object]:
             }
         ],
         "participants": {
-            "trigger": {"side": "white", "from": "g5", "to": "f6", "piece_before": "bishop", "piece_after": "bishop"},
-            "forced_reply": {"side": "black", "from": "e7", "to": "f6", "piece_before": "pawn", "piece_after": "pawn", "move_uci": "e7f6"},
-            "realizer": {"side": "white", "from": "d1", "to": "d5", "piece_before": "queen", "piece_after": "queen"},
+            "remover": {"side": "white", "from": "g5", "to": "f6", "piece_before": "bishop", "piece_after": "bishop"},
+            "removed_defender": {"side": "black", "piece": "knight", "square": "f6"},
+            "removal_recapture": {"side": "black", "from": "e7", "to": "f6", "piece_before": "pawn", "piece_after": "pawn", "move_uci": "e7f6"},
+            "later_exploit": {"side": "white", "from": "d1", "to": "d5", "piece_before": "queen", "piece_after": "queen"},
             "captured_target": {"side": "black", "piece": "rook", "square": "d5"},
-            "played_defense": {"side": "black", "from": "f6", "to": "d5", "piece_before": "knight", "piece_after": "knight", "move_uci": "f6d5"},
-            "disabled_defender": {"side": "black", "piece": "knight", "square": "f6"},
+            "played_sole_recapture": {"side": "black", "from": "f6", "to": "d5", "piece_before": "knight", "piece_after": "knight", "move_uci": "f6d5"},
         },
-        "realizing_move": "d1d5",
-        "played_root_branch_legal_defense_move": "f6d5",
+        "later_exploit_move": "d1d5",
+        "played_sole_recapture_move": "f6d5",
     }
+
+
+def _promoting_defense_obligation_change_proof() -> dict[str, object]:
+    proof = _defense_obligation_change_proof()
+    root = "3qkr2/2P3B1/8/8/8/8/8/K7 w - - 0 1"
+    reference_fens = [
+        "3qkB2/2P5/8/8/8/8/8/K7 b - - 0 1",
+        "3q1k2/2P5/8/8/8/8/8/K7 w - - 0 2",
+        "3Q1k2/8/8/8/8/8/8/K7 b - - 0 2",
+    ]
+    played_fens = [
+        "3Qkr2/8/8/8/8/8/8/K7 b - - 0 1",
+        "3rk3/8/8/8/8/8/8/K7 w - - 0 2",
+    ]
+    reference_moves = ["g7f8", "e8f8", "c7d8q"]
+    played_moves = ["c7d8q", "f8d8"]
+
+    def steps(moves: list[str], fens: list[str], observed: bool) -> list[dict[str, object]]:
+        return [
+            {
+                "step_index": index,
+                "provenance": (
+                    "observed_game_move"
+                    if observed and index == 0
+                    else "certified_analysis_move"
+                ),
+                "ply": index + 1,
+                "move_uci": move,
+                "fen_before": root if index == 0 else fens[index - 1],
+                "fen_after": fens[index],
+            }
+            for index, move in enumerate(moves)
+        ]
+
+    reference = proof["counterfactual_reference_branch"]
+    played = proof["played_root_branch"]
+    reference["root_move"] = reference_moves[0]
+    reference["steps"] = steps(reference_moves, reference_fens, False)
+    played["root_move"] = played_moves[0]
+    played["steps"] = steps(played_moves, played_fens, True)
+    proof["participants"] = {
+        "remover": {
+            "side": "white",
+            "from": "g7",
+            "to": "f8",
+            "piece_before": "bishop",
+            "piece_after": "bishop",
+        },
+        "removed_defender": {"side": "black", "piece": "rook", "square": "f8"},
+        "removal_recapture": {
+            "side": "black",
+            "from": "e8",
+            "to": "f8",
+            "piece_before": "king",
+            "piece_after": "king",
+            "move_uci": "e8f8",
+        },
+        "later_exploit": {
+            "side": "white",
+            "from": "c7",
+            "to": "d8",
+            "piece_before": "pawn",
+            "piece_after": "queen",
+        },
+        "captured_target": {"side": "black", "piece": "queen", "square": "d8"},
+        "played_sole_recapture": {
+            "side": "black",
+            "from": "f8",
+            "to": "d8",
+            "piece_before": "rook",
+            "piece_after": "rook",
+            "move_uci": "f8d8",
+        },
+    }
+    proof["later_exploit_move"] = "c7d8q"
+    proof["played_sole_recapture_move"] = "f8d8"
+    absence = proof["proof_paths"][0]["closed_absence_uses"][0]
+    absence["query"] = "legal-capture:black:d8"
+    absence["position"] = {
+        "fen": reference_fens[2],
+        "ply": 3,
+        "scope": "best_line",
+    }
+    return proof
 
 
 class RuntimePublicResponseTransportTest(unittest.TestCase):
@@ -472,38 +555,91 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             registry._validate(invalid, channel_schema, move_path, "$", errors)
             self.assertTrue(errors, retired)
 
-    def test_recapturer_removal_requires_its_exact_four_premise_manifest(self) -> None:
+    def test_defense_obligation_change_requires_its_exact_three_premise_manifest(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
-        proof_schema = registry.load(move_path)["$defs"]["resourceDifferentialProof"]
-        proof = _recapturer_removal_proof()
+        definitions = registry.load(move_path)["$defs"]
+        proof_schema = definitions["defenseObligationChangeProof"]
+        proof = _defense_obligation_change_proof()
 
         def validation_errors(candidate: dict[str, object]) -> list[str]:
             errors: list[str] = []
             registry._validate(candidate, proof_schema, move_path, "$", errors)
             if not errors:
-                registry._validate_resource_proof_identifiers(candidate, "$", errors)
+                registry._validate_defense_obligation_change_proof_identifiers(
+                    candidate, "$", errors
+                )
             return errors
 
         self.assertEqual(validation_errors(proof), [])
 
+        def set_exploit_move(candidate: dict[str, object], move: str) -> None:
+            candidate["later_exploit_move"] = move
+            candidate["counterfactual_reference_branch"]["steps"][2]["move_uci"] = move
+            candidate["played_root_branch"]["root_move"] = move
+            candidate["played_root_branch"]["steps"][0]["move_uci"] = move
+
+        for promoted_piece, suffix in (
+            ("queen", "q"),
+            ("rook", "r"),
+            ("bishop", "b"),
+            ("knight", "n"),
+        ):
+            promotion = _promoting_defense_obligation_change_proof()
+            promotion["participants"]["later_exploit"]["piece_after"] = promoted_piece
+            set_exploit_move(promotion, f"c7d8{suffix}")
+            self.assertEqual(validation_errors(promotion), [])
+
+        missing_promotion_suffix = _promoting_defense_obligation_change_proof()
+        set_exploit_move(missing_promotion_suffix, "c7d8")
+        self.assertTrue(validation_errors(missing_promotion_suffix))
+
+        wrong_promotion_suffix = _promoting_defense_obligation_change_proof()
+        set_exploit_move(wrong_promotion_suffix, "c7d8r")
+        self.assertTrue(validation_errors(wrong_promotion_suffix))
+
+        nonpromotion_suffix = copy.deepcopy(proof)
+        set_exploit_move(nonpromotion_suffix, "d1d5q")
+        self.assertTrue(validation_errors(nonpromotion_suffix))
+
         mechanism_mismatch = copy.deepcopy(proof)
-        mechanism_mismatch["trigger_mechanism"] = "forced_displacement"
+        mechanism_mismatch["mechanism"] = "forced_displacement"
         self.assertTrue(validation_errors(mechanism_mismatch))
 
-        missing_root_capture = copy.deepcopy(proof)
-        missing_root_capture["proof_paths"][0]["premises"].pop(0)
-        self.assertTrue(validation_errors(missing_root_capture))
+        missing_removal = copy.deepcopy(proof)
+        missing_removal["proof_paths"][0]["premises"].pop(0)
+        self.assertTrue(validation_errors(missing_removal))
 
         detached_defender = copy.deepcopy(proof)
-        detached_defender["participants"]["disabled_defender"]["square"] = "a1"
+        detached_defender["participants"]["removed_defender"]["square"] = "a1"
         self.assertTrue(validation_errors(detached_defender))
 
-        detached_forced_reply = copy.deepcopy(proof)
-        detached_forced_reply["participants"]["forced_reply"]["to"] = "e6"
-        detached_forced_reply["participants"]["forced_reply"]["move_uci"] = "e7e6"
-        detached_forced_reply["counterfactual_reference_branch"]["steps"][1]["move_uci"] = "e7e6"
-        self.assertTrue(validation_errors(detached_forced_reply))
+        detached_removal_recapture = copy.deepcopy(proof)
+        detached_removal_recapture["participants"]["removal_recapture"]["to"] = "e6"
+        detached_removal_recapture["participants"]["removal_recapture"]["move_uci"] = "e7e6"
+        detached_removal_recapture["counterfactual_reference_branch"]["steps"][1]["move_uci"] = "e7e6"
+        self.assertTrue(validation_errors(detached_removal_recapture))
+
+        detached_played_recapture = copy.deepcopy(proof)
+        detached_played_recapture["participants"]["played_sole_recapture"]["from"] = "h7"
+        detached_played_recapture["participants"]["played_sole_recapture"]["move_uci"] = "h7d5"
+        detached_played_recapture["played_root_branch"]["steps"][1]["move_uci"] = "h7d5"
+        detached_played_recapture["played_sole_recapture_move"] = "h7d5"
+        self.assertTrue(validation_errors(detached_played_recapture))
+
+        malformed_role = copy.deepcopy(proof)
+        malformed_role["proof_paths"][0]["premises"][1]["role"] = "reference_defender_removal"
+        self.assertTrue(validation_errors(malformed_role))
+
+        wrong_premise_branch = copy.deepcopy(proof)
+        wrong_premise_branch["proof_paths"][0]["premises"][1]["branch_id"] = "2" * 64
+        self.assertTrue(validation_errors(wrong_premise_branch))
+
+        wrong_replacement_absence = copy.deepcopy(proof)
+        wrong_replacement_absence["proof_paths"][0]["closed_absence_uses"][0][
+            "query"
+        ] = "legal-capture:white:d5"
+        self.assertTrue(validation_errors(wrong_replacement_absence))
 
         wrong_absence_position = copy.deepcopy(proof)
         wrong_absence_position["proof_paths"][0]["closed_absence_uses"][0]["position"]["fen"] = FEN
@@ -512,6 +648,13 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         noncanonical_sources = copy.deepcopy(proof)
         noncanonical_sources["proof_paths"][0]["premises"][0]["source_premise_ids"] = ["source.z", "source.a"]
         self.assertTrue(validation_errors(noncanonical_sources))
+
+        independent_paths = copy.deepcopy(proof)
+        independent_path = copy.deepcopy(independent_paths["proof_paths"][0])
+        independent_path["path_occurrence_id"] = "e" * 64
+        independent_path["closed_absence_uses"][0]["use_id"] = "f" * 64
+        independent_paths["proof_paths"].append(independent_path)
+        self.assertEqual(validation_errors(independent_paths), [])
 
         noncanonical_paths = copy.deepcopy(proof)
         second_path = copy.deepcopy(noncanonical_paths["proof_paths"][0])
@@ -526,6 +669,35 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         duplicate_path["path_occurrence_id"] = "e" * 64
         duplicate_absence["proof_paths"].append(duplicate_path)
         self.assertTrue(validation_errors(duplicate_absence))
+
+        defense_channel = {
+            "channel_id": "defense.channel",
+            "causal_signature": "defense.signature",
+            "direct_change": "occurred",
+            "played_change": "missed",
+            "defense_obligation_change_proof": proof,
+        }
+        channel_errors: list[str] = []
+        registry._validate(
+            defense_channel,
+            definitions["wrongMoveOrderCausalChannel"],
+            move_path,
+            "$",
+            channel_errors,
+        )
+        self.assertEqual(channel_errors, [])
+
+        mixed_channel = copy.deepcopy(defense_channel)
+        mixed_channel["resource_differential_proof"] = proof
+        channel_errors = []
+        registry._validate(
+            mixed_channel,
+            definitions["wrongMoveOrderCausalChannel"],
+            move_path,
+            "$",
+            channel_errors,
+        )
+        self.assertTrue(channel_errors)
 
     def test_exact_raw_jsonl_outer_shape_schema_and_request_binding(self) -> None:
         class FakeProcess:
@@ -701,6 +873,30 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             },
         }
         registry.validate_document(ready, move_path, label="public v6 legal passed-pawn-result schema shape")
+
+        defense_ready = copy.deepcopy(ready)
+        defense_facet = defense_ready["move_commentary"]["causal_explanations"][0][
+            "facets"
+        ][0]
+        defense_facet.update(
+            kind="wrong_move_order",
+            effect_mode="alternative_resource",
+            source_side="reference",
+        )
+        defense_facet["channels"] = [
+            {
+                "channel_id": "channel-defense-obligation-change",
+                "causal_signature": "defense-obligation-change-channel",
+                "direct_change": "occurred",
+                "played_change": "missed",
+                "defense_obligation_change_proof": _defense_obligation_change_proof(),
+            }
+        ]
+        registry.validate_document(
+            defense_ready,
+            move_path,
+            label="public v6 legal defense-obligation-change schema shape",
+        )
 
         multiple_proof_paths = copy.deepcopy(ready)
         proof_paths = multiple_proof_paths["move_commentary"]["causal_explanations"][0][
@@ -891,6 +1087,9 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         wrong_move_order_without_l2["move_commentary"]["causal_explanations"][0]["facets"][0][
             "source_side"
         ] = "reference"
+        wrong_move_order_without_l2["move_commentary"]["causal_explanations"][0]["facets"][0][
+            "effect_mode"
+        ] = "alternative_resource"
         invalid_documents.append(wrong_move_order_without_l2)
 
         retired_structural_units = copy.deepcopy(ready)

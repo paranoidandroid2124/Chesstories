@@ -80,6 +80,30 @@ _SCHEMA_SINGLE_KEYWORDS = (
 )
 
 
+def _movement_witness_uci(actor: Mapping[str, Any]) -> str | None:
+    origin = actor.get("from")
+    destination = actor.get("to")
+    piece_before = actor.get("piece_before")
+    piece_after = actor.get("piece_after")
+    if not all(
+        isinstance(value, str)
+        for value in (origin, destination, piece_before, piece_after)
+    ):
+        return None
+    move = origin + destination
+    if piece_before != "pawn":
+        return move if piece_after == piece_before else None
+    if piece_after == "pawn":
+        return move
+    suffix = {
+        "queen": "q",
+        "rook": "r",
+        "bishop": "b",
+        "knight": "n",
+    }.get(piece_after)
+    return move + suffix if suffix else None
+
+
 @dataclass(frozen=True)
 class IdentityOccurrence:
     """A definition/reference discovered from the frozen schema annotations."""
@@ -296,6 +320,13 @@ class SchemaRegistry:
                 self._validate_resource_proof_identifiers(
                     resource,
                     f"{location}.resource_differential_proof",
+                    errors,
+                )
+            defense = value.get("defense_obligation_change_proof")
+            if isinstance(defense, Mapping):
+                self._validate_defense_obligation_change_proof_identifiers(
+                    defense,
+                    f"{location}.defense_obligation_change_proof",
                     errors,
                 )
             for key, child in value.items():
@@ -517,6 +548,37 @@ class SchemaRegistry:
         location: str,
         errors: list[str],
     ) -> None:
+        paths = self._validate_two_branch_causal_proof_identifiers(
+            proof,
+            location,
+            errors,
+        )
+        self._validate_resource_proof_field_closure(proof, paths, location, errors)
+
+    def _validate_defense_obligation_change_proof_identifiers(
+        self,
+        proof: Mapping[str, Any],
+        location: str,
+        errors: list[str],
+    ) -> None:
+        paths = self._validate_two_branch_causal_proof_identifiers(
+            proof,
+            location,
+            errors,
+        )
+        self._validate_defense_obligation_change_field_closure(
+            proof,
+            paths,
+            location,
+            errors,
+        )
+
+    def _validate_two_branch_causal_proof_identifiers(
+        self,
+        proof: Mapping[str, Any],
+        location: str,
+        errors: list[str],
+    ) -> list[Any]:
         branch_values = [
             proof.get("counterfactual_reference_branch"),
             proof.get("played_root_branch"),
@@ -586,8 +648,7 @@ class SchemaRegistry:
             errors.append(
                 f"{location}.proof_paths: closed absence use_id values must be globally unique"
             )
-
-        self._validate_resource_proof_field_closure(proof, paths, location, errors)
+        return paths
 
     @staticmethod
     def _validate_resource_proof_field_closure(
@@ -638,11 +699,6 @@ class SchemaRegistry:
             value = branch_steps[index] if index < len(branch_steps) else None
             return value if isinstance(value, Mapping) else None
 
-        def actor_move(actor: Mapping[str, Any]) -> str | None:
-            origin = actor.get("from")
-            destination = actor.get("to")
-            return origin + destination if isinstance(origin, str) and isinstance(destination, str) else None
-
         def require_equal(actual: Any, expected: Any, field: str) -> None:
             if actual != expected:
                 errors.append(f"{location}.{field}: public proof fields do not identify the same occurrence")
@@ -671,15 +727,15 @@ class SchemaRegistry:
         defense_move = proof.get("played_root_branch_legal_defense_move")
         require_equal(reference.get("root_move"), reference_root.get("move_uci"), "counterfactual_reference_branch.root_move")
         require_equal(played.get("root_move"), played_root.get("move_uci"), "played_root_branch.root_move")
-        require_equal(reference_root.get("move_uci"), actor_move(trigger), "participants.trigger")
+        require_equal(reference_root.get("move_uci"), _movement_witness_uci(trigger), "participants.trigger")
         require_equal(reference_reply.get("move_uci"), forced_reply.get("move_uci"), "participants.forced_reply.move_uci")
-        require_equal(forced_reply.get("move_uci"), actor_move(forced_reply), "participants.forced_reply")
+        require_equal(forced_reply.get("move_uci"), _movement_witness_uci(forced_reply), "participants.forced_reply")
         require_equal(reference_realizer.get("move_uci"), realizing_move, "realizing_move")
         require_equal(played_root.get("move_uci"), realizing_move, "played_root_branch.steps[0]")
-        require_equal(realizing_move, actor_move(realizer), "participants.realizer")
+        require_equal(realizing_move, _movement_witness_uci(realizer), "participants.realizer")
         require_equal(played_reply.get("move_uci"), defense_move, "played_root_branch.steps[1]")
         require_equal(played_defense.get("move_uci"), defense_move, "participants.played_defense.move_uci")
-        require_equal(defense_move, actor_move(played_defense), "participants.played_defense")
+        require_equal(defense_move, _movement_witness_uci(played_defense), "participants.played_defense")
         require_equal(trigger.get("side"), realizer.get("side"), "participants.trigger.side")
         require_equal(forced_reply.get("side"), played_defense.get("side"), "participants.forced_reply.side")
         require_equal(forced_reply.get("side"), disabled.get("side"), "participants.disabled_defender.side")
@@ -692,15 +748,8 @@ class SchemaRegistry:
         require_equal(disabled.get("piece"), played_defense.get("piece_before"), "participants.disabled_defender.piece")
         require_equal(disabled.get("square"), played_defense.get("from"), "participants.disabled_defender.square")
 
-        mechanism = proof.get("trigger_mechanism")
-        if mechanism == "forced_displacement":
-            require_equal(disabled.get("piece"), forced_reply.get("piece_before"), "participants.forced_reply.piece_before")
-            require_equal(disabled.get("square"), forced_reply.get("from"), "participants.forced_reply.from")
-        elif mechanism == "forced_recapturer_removal":
-            if trigger.get("side") == disabled.get("side"):
-                errors.append(f"{location}.participants: a removal trigger must capture an opposing defender")
-            require_equal(trigger.get("to"), disabled.get("square"), "participants.trigger.to")
-            require_equal(forced_reply.get("to"), trigger.get("to"), "participants.forced_reply.to")
+        require_equal(disabled.get("piece"), forced_reply.get("piece_before"), "participants.forced_reply.piece_before")
+        require_equal(disabled.get("square"), forced_reply.get("from"), "participants.forced_reply.from")
 
         expected_query = (
             f"legal-capture:{target.get('side')}:{realizer.get('to')}"
@@ -723,6 +772,156 @@ class SchemaRegistry:
                 if isinstance(position, Mapping):
                     require_equal(position.get("fen"), reference_realizer.get("fen_after"), f"{prefix}.position.fen")
                     require_equal(position.get("ply"), reference_realizer.get("ply"), f"{prefix}.position.ply")
+
+    @staticmethod
+    def _validate_defense_obligation_change_field_closure(
+        proof: Mapping[str, Any],
+        paths: list[Any],
+        location: str,
+        errors: list[str],
+    ) -> None:
+        """Bind the defense proof's public fields without replaying chess."""
+
+        reference = proof.get("counterfactual_reference_branch")
+        played = proof.get("played_root_branch")
+        participants = proof.get("participants")
+        if not all(isinstance(value, Mapping) for value in (reference, played, participants)):
+            return
+        assert isinstance(reference, Mapping)
+        assert isinstance(played, Mapping)
+        assert isinstance(participants, Mapping)
+
+        names = (
+            "remover",
+            "removed_defender",
+            "removal_recapture",
+            "later_exploit",
+            "captured_target",
+            "played_sole_recapture",
+        )
+        values = {name: participants.get(name) for name in names}
+        if not all(isinstance(value, Mapping) for value in values.values()):
+            return
+        remover = values["remover"]
+        removed = values["removed_defender"]
+        removal_recapture = values["removal_recapture"]
+        exploit = values["later_exploit"]
+        target = values["captured_target"]
+        played_recapture = values["played_sole_recapture"]
+        assert all(
+            isinstance(value, Mapping)
+            for value in (remover, removed, removal_recapture, exploit, target, played_recapture)
+        )
+
+        def steps(branch: Mapping[str, Any]) -> list[Any]:
+            value = branch.get("steps")
+            return value if isinstance(value, list) else []
+
+        def require_equal(actual: Any, expected: Any, field: str) -> None:
+            if actual != expected:
+                errors.append(
+                    f"{location}.{field}: public proof fields do not identify the same occurrence"
+                )
+
+        reference_steps = steps(reference)
+        played_steps = steps(played)
+        if len(reference_steps) != 3 or len(played_steps) != 2:
+            return
+        if not all(isinstance(value, Mapping) for value in reference_steps + played_steps):
+            return
+        reference_root, reference_reply, reference_exploit = reference_steps
+        played_root, played_reply = played_steps
+        assert all(
+            isinstance(value, Mapping)
+            for value in (reference_root, reference_reply, reference_exploit, played_root, played_reply)
+        )
+
+        for branch_name, branch_steps in (
+            ("counterfactual_reference_branch", reference_steps),
+            ("played_root_branch", played_steps),
+        ):
+            require_equal(
+                [step.get("step_index") for step in branch_steps],
+                list(range(len(branch_steps))),
+                f"{branch_name}.steps.step_index",
+            )
+            for index, (before, after) in enumerate(zip(branch_steps, branch_steps[1:])):
+                require_equal(
+                    after.get("fen_before"),
+                    before.get("fen_after"),
+                    f"{branch_name}.steps[{index + 1}].fen_before",
+                )
+                before_ply = before.get("ply")
+                expected_ply = before_ply + 1 if isinstance(before_ply, int) else None
+                require_equal(
+                    after.get("ply"),
+                    expected_ply,
+                    f"{branch_name}.steps[{index + 1}].ply",
+                )
+
+        later_exploit_move = proof.get("later_exploit_move")
+        sole_recapture_move = proof.get("played_sole_recapture_move")
+        require_equal(reference.get("root_move"), reference_root.get("move_uci"), "counterfactual_reference_branch.root_move")
+        require_equal(played.get("root_move"), played_root.get("move_uci"), "played_root_branch.root_move")
+        require_equal(reference_root.get("fen_before"), played_root.get("fen_before"), "played_root_branch.steps[0].fen_before")
+        require_equal(reference_root.get("ply"), played_root.get("ply"), "played_root_branch.steps[0].ply")
+        require_equal(reference_root.get("move_uci"), _movement_witness_uci(remover), "participants.remover")
+        require_equal(reference_reply.get("move_uci"), removal_recapture.get("move_uci"), "participants.removal_recapture.move_uci")
+        require_equal(removal_recapture.get("move_uci"), _movement_witness_uci(removal_recapture), "participants.removal_recapture")
+        require_equal(reference_exploit.get("move_uci"), later_exploit_move, "later_exploit_move")
+        require_equal(played_root.get("move_uci"), later_exploit_move, "played_root_branch.steps[0]")
+        require_equal(later_exploit_move, _movement_witness_uci(exploit), "participants.later_exploit")
+        require_equal(played_reply.get("move_uci"), sole_recapture_move, "played_sole_recapture_move")
+        require_equal(played_recapture.get("move_uci"), sole_recapture_move, "participants.played_sole_recapture.move_uci")
+        require_equal(sole_recapture_move, _movement_witness_uci(played_recapture), "participants.played_sole_recapture")
+
+        require_equal(remover.get("side"), exploit.get("side"), "participants.later_exploit.side")
+        require_equal(removed.get("side"), removal_recapture.get("side"), "participants.removal_recapture.side")
+        require_equal(removed.get("side"), target.get("side"), "participants.captured_target.side")
+        require_equal(removed.get("side"), played_recapture.get("side"), "participants.played_sole_recapture.side")
+        if remover.get("side") == removed.get("side"):
+            errors.append(f"{location}.participants: remover and removed defender must have opposing sides")
+        require_equal(remover.get("to"), removed.get("square"), "participants.remover.to")
+        require_equal(removal_recapture.get("to"), remover.get("to"), "participants.removal_recapture.to")
+        require_equal(exploit.get("to"), target.get("square"), "participants.captured_target.square")
+        require_equal(played_recapture.get("to"), exploit.get("to"), "participants.played_sole_recapture.to")
+        require_equal(played_recapture.get("from"), removed.get("square"), "participants.played_sole_recapture.from")
+        require_equal(played_recapture.get("piece_before"), removed.get("piece"), "participants.played_sole_recapture.piece_before")
+
+        reference_id = reference.get("branch_id")
+        played_id = played.get("branch_id")
+        expected_query = (
+            f"legal-capture:{removed.get('side')}:{exploit.get('to')}"
+            if isinstance(removed.get("side"), str) and isinstance(exploit.get("to"), str)
+            else None
+        )
+        for path_index, path in enumerate(paths):
+            if not isinstance(path, Mapping):
+                continue
+            path_location = f"proof_paths[{path_index}]"
+            premises = path.get("premises")
+            if isinstance(premises, list) and len(premises) == 3 and all(
+                isinstance(premise, Mapping) for premise in premises
+            ):
+                require_equal(premises[0].get("branch_id"), reference_id, f"{path_location}.premises[0].branch_id")
+                require_equal(premises[1].get("branch_id"), reference_id, f"{path_location}.premises[1].branch_id")
+                require_equal(premises[2].get("branch_id"), played_id, f"{path_location}.premises[2].branch_id")
+                result_ids = [premise.get("result_id") for premise in premises]
+                if len(result_ids) != len(set(result_ids)):
+                    errors.append(f"{location}.{path_location}.premises: result_id values must be distinct")
+            absences = path.get("closed_absence_uses")
+            if not isinstance(absences, list):
+                continue
+            for absence_index, absence in enumerate(absences):
+                if not isinstance(absence, Mapping):
+                    continue
+                prefix = f"{path_location}.closed_absence_uses[{absence_index}]"
+                require_equal(absence.get("query"), expected_query, f"{prefix}.query")
+                require_equal(absence.get("branch_id"), reference_id, f"{prefix}.branch_id")
+                position = absence.get("position")
+                if isinstance(position, Mapping):
+                    require_equal(position.get("fen"), reference_exploit.get("fen_after"), f"{prefix}.position.fen")
+                    require_equal(position.get("ply"), reference_exploit.get("ply"), f"{prefix}.position.ply")
 
     def validate_registry(self) -> None:
         roots: list[tuple[Mapping[str, Any], Path]] = []

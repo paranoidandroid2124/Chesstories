@@ -8,12 +8,15 @@ import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 private[chessjudgment] enum BoundedCausalContractKind:
   case ImmediateForcedReplyResourceDifferential
+  case DefenseObligationChange
   case PassedPawnResultUnderClosedReplies
 
   def semanticNamespace: String =
     this match
       case ImmediateForcedReplyResourceDifferential =>
         "causal-proposition:immediate-forced-reply-resource-differential:v2"
+      case DefenseObligationChange =>
+        "causal-proposition:defense-obligation-change:v1"
       case PassedPawnResultUnderClosedReplies =>
         "causal-proposition:passed-pawn-result-under-closed-replies:v1"
 
@@ -590,6 +593,116 @@ private[chessjudgment] object BoundedCausalProofSet:
       "every premise and absence use must belong to a retained branch"
     )
     BoundedCausalProofSet(proposition, occurrence, paths.sortBy(_.pathOccurrenceId))
+
+/** Read-only wire projection for common branch, vertical-relation premise,
+  * and closed-relation-absence coordinates. Family-specific supplemental
+  * premises stay in their own typed projection and may never be dropped here.
+  */
+final case class BoundedCausalPublicStep private[chessjudgment] (
+    index: Int,
+    provenance: String,
+    ply: Int,
+    moveUci: String,
+    fenBefore: String,
+    fenAfter: String
+)
+
+final case class BoundedCausalPublicBranch private[chessjudgment] (
+    branchId: String,
+    line: LineNodeRef,
+    role: String,
+    rootProvenance: String,
+    steps: List[BoundedCausalPublicStep]
+)
+
+final case class BoundedCausalPublicPremiseUse private[chessjudgment] (
+    role: String,
+    contract: String,
+    resultId: String,
+    sourcePremiseIds: List[String],
+    branchId: String,
+    branchRole: String,
+    stepIndex: Int
+)
+
+final case class BoundedCausalPublicClosedAbsenceUse private[chessjudgment] (
+    useId: String,
+    role: String,
+    semanticProofId: String,
+    issuerEvidenceId: String,
+    issuerOccurrenceId: String,
+    query: String,
+    branchId: String,
+    branchRole: String,
+    afterStepIndex: Int,
+    position: PositionNodeRef,
+    scope: EvidenceScope
+)
+
+final case class BoundedCausalPublicProofPath private[chessjudgment] (
+    pathOccurrenceId: String,
+    premises: List[BoundedCausalPublicPremiseUse],
+    closedAbsenceUses: List[BoundedCausalPublicClosedAbsenceUse]
+)
+
+private[chessjudgment] object BoundedCausalPublicProjection:
+  def branch(branch: CausalBranchOccurrence): BoundedCausalPublicBranch =
+    BoundedCausalPublicBranch(
+      branch.branchId,
+      branch.line,
+      branch.role.stableKey,
+      branch.rootProvenance.toString,
+      branch.steps.map(step =>
+        BoundedCausalPublicStep(
+          step.index,
+          step.provenance.toString,
+          step.step.ply,
+          step.step.moveUci,
+          step.step.fenBefore,
+          step.step.fenAfter
+        )
+      )
+    )
+
+  def paths(paths: List[CausalProofPathOccurrence]): List[BoundedCausalPublicProofPath] =
+    require(
+      paths.forall(path =>
+        path.manifest.supplementalPremiseUses.isEmpty && path.supplementalClosureUses.isEmpty
+      ),
+      "the common public causal projection cannot omit family-specific supplemental proof uses"
+    )
+    paths.map(path =>
+      BoundedCausalPublicProofPath(
+        path.pathOccurrenceId,
+        path.premiseUses.map(premise =>
+          BoundedCausalPublicPremiseUse(
+            premise.role.stableKey,
+            premise.contract.toString,
+            premise.result.stableKey,
+            premise.sourcePremiseIds,
+            premise.branchId,
+            premise.branchRole.stableKey,
+            premise.stepIndex
+          )
+        ),
+        path.closedAbsenceUses.map { use =>
+          val binding = use.binding
+          BoundedCausalPublicClosedAbsenceUse(
+            use.useId,
+            binding.role.stableKey,
+            binding.semanticProofId,
+            binding.issuerEvidenceId,
+            binding.issuerOccurrenceId,
+            binding.queryKey,
+            binding.branchId,
+            binding.branchRole.stableKey,
+            binding.afterStepIndex,
+            binding.position,
+            binding.scope
+          )
+        }
+      )
+    )
 
 private[chessjudgment] trait BoundedCausalDependencyManifest:
   def contractKind: BoundedCausalContractKind

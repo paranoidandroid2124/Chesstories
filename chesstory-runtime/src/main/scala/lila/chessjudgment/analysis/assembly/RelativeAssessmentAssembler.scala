@@ -124,7 +124,16 @@ object RelativeAssessmentAssembler:
                   primary
                 )
               case _ => Nil
-            passedPawnResultProofContext.withEvidence(forcedReplyProofRecords)
+            val forcedReplyProofContext = passedPawnResultProofContext.withEvidence(forcedReplyProofRecords)
+            val defenseObligationProofRecords = primary.payload match
+              case CandidateComparisonEvidence(_) =>
+                DefenseObligationChangeAssembler.fromAssembly(
+                  forcedReplyProofContext,
+                  inputs.allocator,
+                  primary
+                )
+              case _ => Nil
+            forcedReplyProofContext.withEvidence(defenseObligationProofRecords)
           }
         }
       }
@@ -682,7 +691,8 @@ object RelativeAssessmentAssembler:
       then Some(ComparisonEndpointWitnessDemandMode.MembershipOnly)
       else
         channel.rootOwnedEffectDescriptor.flatMap(_.identity.primitiveKind match
-          case RootOwnedEffectPrimitiveKind.CausalResourceDifferential =>
+          case RootOwnedEffectPrimitiveKind.ForcedReplyResourceDifferential |
+              RootOwnedEffectPrimitiveKind.DefenseObligationChange =>
             Some(ComparisonEndpointWitnessDemandMode.MembershipOnly)
           case RootOwnedEffectPrimitiveKind.LineEpisode |
               RootOwnedEffectPrimitiveKind.RootLineEvent |
@@ -800,9 +810,23 @@ object RelativeAssessmentAssembler:
       case RelativeCauseSourceSide.Shared | RelativeCauseSourceSide.Mixed => None
     channel.rootOwnedEffectDescriptor match
       case Some(descriptor)
-          if descriptor.identity.primitiveKind == RootOwnedEffectPrimitiveKind.CausalResourceDifferential =>
+          if Set(
+            RootOwnedEffectPrimitiveKind.ForcedReplyResourceDifferential,
+            RootOwnedEffectPrimitiveKind.DefenseObligationChange
+          )(descriptor.identity.primitiveKind) =>
         channel.rootOwnedProof.exists {
           case RootOwnedEffectProof.ForcedReplyResourceDifferential(source, result) =>
+            val comparison = endpointSnapshot.comparison
+            cause.kind == RelativeCauseKind.WrongMoveOrder &&
+              cause.sourceSide == RelativeCauseSourceSide.Reference &&
+              result.occurrence.referenceLine == comparison.referenceLine &&
+              result.occurrence.playedLine == comparison.candidateLine &&
+              neutralWitness.primitiveProofSource == source &&
+              neutralWitness.observation.exists(observation =>
+                observation.scope.directChange == DirectCausalChange.Occurred &&
+                  observation.scope.effectIdentity.causalProofId.contains(result.semanticId)
+              )
+          case RootOwnedEffectProof.DefenseObligationChange(source, result) =>
             val comparison = endpointSnapshot.comparison
             cause.kind == RelativeCauseKind.WrongMoveOrder &&
               cause.sourceSide == RelativeCauseSourceSide.Reference &&
@@ -1163,6 +1187,8 @@ object RelativeAssessmentAssembler:
           passedPawnResultCausalProofDirectlyOwnsCause(graph, fact, kind, binding, record, payload)
         case record @ EvidenceRecord(_, _: ForcedReplyResourceDifferentialEvidence, _) =>
           directProofSource(graph, fact, kind, binding, attributionKind, record)
+        case record @ EvidenceRecord(_, _: DefenseObligationChangeEvidence, _) =>
+          directProofSource(graph, fact, kind, binding, attributionKind, record)
         case _ if RelativeCauseKind.requiresExactPassedPawnResult(kind) =>
           false
         case record @ EvidenceRecord(_, payload: LineFactEvidence, _) =>
@@ -1279,7 +1305,8 @@ object RelativeAssessmentAssembler:
         }
     val exactKindCarrier = kind match
       case RelativeCauseKind.WrongMoveOrder =>
-        record.payload.isInstanceOf[ForcedReplyResourceDifferentialEvidence]
+        record.payload.isInstanceOf[ForcedReplyResourceDifferentialEvidence] ||
+          record.payload.isInstanceOf[DefenseObligationChangeEvidence]
       case _ if RelativeCauseKind.requiresExactPassedPawnResult(kind) =>
         record.payload.isInstanceOf[PassedPawnResultProofEvidence]
       case _ =>
@@ -1319,6 +1346,13 @@ object RelativeAssessmentAssembler:
         payload.rootGeometryConnected(rootMove) &&
         relationCanDirectlyProveCause(kind, payload)
       case payload: ForcedReplyResourceDifferentialEvidence =>
+        kind == RelativeCauseKind.WrongMoveOrder &&
+          binding.sourceSide == RelativeCauseSourceSide.Reference &&
+          payload.occurrence.referenceLine == fact.referenceLine &&
+          payload.occurrence.playedLine == fact.candidateLine &&
+          binding.eventLine == fact.referenceLine &&
+          graph.proofEligible(record)
+      case payload: DefenseObligationChangeEvidence =>
         kind == RelativeCauseKind.WrongMoveOrder &&
           binding.sourceSide == RelativeCauseSourceSide.Reference &&
           payload.occurrence.referenceLine == fact.referenceLine &&
@@ -1521,6 +1555,11 @@ object RelativeAssessmentAssembler:
           payload.semantic.trigger.side == mover &&
           EvidenceRef.sameMove(payload.occurrence.referenceLine.rootMove, rootMove) &&
           EvidenceRef.sameMove(payload.occurrence.triggerStep.moveUci, rootMove)
+      case payload: DefenseObligationChangeEvidence =>
+        graph.proofEligible(record) &&
+          payload.semantic.remover.side == mover &&
+          EvidenceRef.sameMove(payload.occurrence.referenceLine.rootMove, rootMove) &&
+          EvidenceRef.sameMove(payload.occurrence.removalStep.moveUci, rootMove)
       case CandidateComparisonEvidence(_) =>
         false
       case _ =>
@@ -1639,7 +1678,9 @@ object RelativeAssessmentAssembler:
       (
         endpointLayer(record.ref.layer) ||
           (record.payload match
-            case _: ForcedReplyResourceDifferentialEvidence | _: PassedPawnResultProofEvidence =>
+            case _: ForcedReplyResourceDifferentialEvidence |
+                _: DefenseObligationChangeEvidence |
+                _: PassedPawnResultProofEvidence =>
               context.evidenceGraph.proofEligible(record)
             case _ => false)
       ) &&

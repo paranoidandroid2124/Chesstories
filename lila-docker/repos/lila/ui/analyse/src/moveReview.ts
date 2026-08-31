@@ -247,7 +247,49 @@ export type MoveReviewReasonMessage =
         ply: number;
         scope: 'best_line';
       };
-      triggerMechanism: 'forced_displacement' | 'forced_recapturer_removal';
+      triggerMechanism: 'forced_displacement';
+    }
+  | {
+      kind: 'defense-obligation-change';
+      channelId: string;
+      causalSignature: string;
+      causeEvidenceId: string;
+      causeKind: string;
+      effectMode: 'played_liability' | 'alternative_resource' | 'played_value';
+      directChange: 'occurred';
+      playedChange: 'missed';
+      contract: 'defense_obligation_change';
+      mechanism: 'sole_recapturer_removal';
+      sourceEvidenceId: string;
+      semanticId: string;
+      occurrenceId: string;
+      dependencyFingerprint: string;
+      pathOccurrenceId: string;
+      branch: MoveReviewTypedBranch;
+      counterpart: MoveReviewTypedBranch;
+      remover: MoveReviewTypedActor;
+      removedDefender: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+      removalRecapture: MoveReviewTypedActor & { moveUci: Uci };
+      laterExploit: MoveReviewTypedActor;
+      capturedTarget: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+      playedSoleRecapture: MoveReviewTypedActor & { moveUci: Uci };
+      laterExploitMove: Uci;
+      playedSoleRecaptureMove: Uci;
+      premises: MoveReviewTypedPremise[];
+      absence: {
+        useId: string;
+        role: 'reference_replacement_recapture_absent';
+        semanticProofId: string;
+        issuer: 'position_relation_extractor.closed_relation_inventory';
+        issuerEvidenceId: string;
+        issuerOccurrenceId: string;
+        query: string;
+        branchId: string;
+        afterStepIndex: 2;
+        fen: FEN;
+        ply: number;
+        scope: 'best_line';
+      };
     }
   | {
       kind: 'passed-pawn-result';
@@ -666,7 +708,6 @@ export function moveReviewReasonText(
   }
   if (message.kind === 'resource-differential') {
     const premiseLabels: Record<MoveReviewTypedPremise['role'], [string, string]> = {
-      reference_root_capture: ['기준 첫 포획', 'reference root capture'],
       created_check_response: ['강제 체크 응수', 'forced check reply'],
       reference_capture_recapture: ['기준 재포획', 'reference recapture'],
       played_capture_recapture: ['실전 재포획', 'played recapture'],
@@ -689,26 +730,16 @@ export function moveReviewReasonText(
         ? `; 비활성화된 ${message.disabledDefender.piece} ${message.disabledDefender.square}`
         : `; disabled ${message.disabledDefender.piece} on ${message.disabledDefender.square}`;
     const mechanismLabel =
-      message.triggerMechanism === 'forced_recapturer_removal'
-        ? locale === 'ko-KR'
-          ? '강제 재포획에 앞선 수비자 제거'
-          : 'forced recapturer removal'
-        : locale === 'ko-KR'
-          ? '강제 응수에 의한 수비자 이동'
-          : 'forced defender displacement';
+      locale === 'ko-KR' ? '강제 응수에 의한 수비자 이동' : 'forced defender displacement';
     const mechanism = locale === 'ko-KR' ? `; 기제 ${mechanismLabel}` : `; mechanism ${mechanismLabel}`;
     const absenceIssuer =
       locale === 'ko-KR'
         ? `폐쇄 관계 인벤토리 (${message.absence.issuerEvidenceId})`
         : `closed relation inventory (${message.absence.issuerEvidenceId})`;
     const referenceLead =
-      message.triggerMechanism === 'forced_recapturer_removal'
-        ? locale === 'ko-KR'
-          ? `${message.trigger.from}의 ${message.trigger.pieceBefore}가 ${message.disabledDefender.square}의 ${message.disabledDefender.piece}을 잡아 ${message.forcedReply.moveUci} 응수를 강제하고`
-          : `the ${message.trigger.pieceBefore} from ${message.trigger.from} captures the ${message.disabledDefender.piece} on ${message.disabledDefender.square}, forcing ${message.forcedReply.moveUci}, and then`
-        : locale === 'ko-KR'
-          ? `${message.trigger.from}의 ${message.trigger.pieceBefore}가 ${message.trigger.to}로 이동해 ${message.forcedReply.moveUci} 응수를 강제하고`
-          : `the ${message.trigger.pieceBefore} moves ${message.trigger.from}–${message.trigger.to}, forcing ${message.forcedReply.moveUci}, then`;
+      locale === 'ko-KR'
+        ? `${message.trigger.from}의 ${message.trigger.pieceBefore}가 ${message.trigger.to}로 이동해 ${message.forcedReply.moveUci} 응수를 강제하고`
+        : `the ${message.trigger.pieceBefore} moves ${message.trigger.from}–${message.trigger.to}, forcing ${message.forcedReply.moveUci}, then`;
     const referenceSummary =
       locale === 'ko-KR'
         ? `${referenceLead} ${message.realizingMove}의 ${message.realizer.pieceBefore}가 ${message.capturedTarget.square}의 ${message.capturedTarget.piece}을 잡습니다`
@@ -728,6 +759,34 @@ export function moveReviewReasonText(
     return locale === 'ko-KR'
       ? `[${message.causeKind}] ${occurrenceComparison}. 경로 ${message.pathOccurrenceId.slice(0, 8)}는 ${absenceIssuer}가 ${message.absence.fen} (ply ${message.absence.ply})에서 인증한 부재 ${message.absence.query}와 하위 증거 ${premises}를 대조합니다${disabled}${mechanism}.`
       : `[${message.causeKind}] ${occurrenceComparison}. Path ${message.pathOccurrenceId.slice(0, 8)} contrasts absence ${message.absence.query}, certified by the ${absenceIssuer} at ${message.absence.fen} (ply ${message.absence.ply}), with lower proofs ${premises}${disabled}${mechanism}.`;
+  }
+  if (message.kind === 'defense-obligation-change') {
+    const premiseLabels: Record<string, [string, string]> = {
+      reference_defender_removal: ['기준 수비자 제거', 'reference defender removal'],
+      reference_later_exploit_inventory: ['기준 후속 포획', 'reference later exploit'],
+      played_immediate_exploit_inventory: ['실전 즉시 포획', 'played immediate exploit'],
+    };
+    const premises = message.premises
+      .map(premise => {
+        const identity = premise.resultId.split(':').pop()?.slice(0, 8) || premise.resultId.slice(0, 8);
+        return `${premiseLabels[premise.role]![locale === 'ko-KR' ? 0 : 1]}:${identity}`;
+      })
+      .join(', ');
+    const reference =
+      locale === 'ko-KR'
+        ? `반사실 기준 가지에서 ${message.remover.from}의 ${message.remover.pieceBefore}가 ${message.removedDefender.square}의 ${message.removedDefender.piece}을 잡고, ${message.removalRecapture.moveUci}로 재포획된 뒤 ${message.laterExploitMove}가 ${message.capturedTarget.square}의 ${message.capturedTarget.piece}을 잡습니다`
+        : `in the counterfactual reference branch, the ${message.remover.pieceBefore} from ${message.remover.from} captures the ${message.removedDefender.piece} on ${message.removedDefender.square}, is recaptured by ${message.removalRecapture.moveUci}, and ${message.laterExploitMove} then captures the ${message.capturedTarget.piece} on ${message.capturedTarget.square}`;
+    const played =
+      locale === 'ko-KR'
+        ? `실전 가지에서는 같은 ${message.laterExploitMove}에 ${message.removedDefender.square}의 ${message.removedDefender.piece}이 ${message.playedSoleRecaptureMove}로 재포획합니다`
+        : `in the observed played branch, the same ${message.laterExploitMove} is recaptured by the ${message.removedDefender.piece} from ${message.removedDefender.square} with ${message.playedSoleRecaptureMove}`;
+    const occurrenceComparison =
+      message.branch.role === 'counterfactual_reference'
+        ? `${reference}; ${played}`
+        : `${played}; ${reference}`;
+    return locale === 'ko-KR'
+      ? `[${message.causeKind}] ${occurrenceComparison}. 경로 ${message.pathOccurrenceId.slice(0, 8)}는 ${message.absence.issuerEvidenceId}가 ${message.absence.fen} (ply ${message.absence.ply})에서 발급한 ${message.absence.query} 부재와 하위 증거 ${premises}를 보존합니다.`
+      : `[${message.causeKind}] ${occurrenceComparison}. Path ${message.pathOccurrenceId.slice(0, 8)} retains absence ${message.absence.query}, issued by ${message.absence.issuerEvidenceId} at ${message.absence.fen} (ply ${message.absence.ply}), and lower proofs ${premises}.`;
   }
   const targets = message.resultTargetSubjects.join(', ');
   const premises = message.premises.map(premise => premise.resultId.slice(0, 8)).join(', ');
@@ -1675,7 +1734,8 @@ function projectCausalChannel(
   startFen: FEN,
 ): MoveReviewReason[] | undefined {
   if (!isObject(value) || !semanticId(value.channel_id) || !semanticId(value.causal_signature)) return;
-  if (Object.prototype.hasOwnProperty.call(value, 'resource_differential_proof'))
+  if (Object.prototype.hasOwnProperty.call(value, 'resource_differential_proof')) {
+    if (causeKind !== 'wrong_move_order') return;
     return projectResourceDifferential(
       value,
       causeEvidenceId,
@@ -1684,6 +1744,18 @@ function projectCausalChannel(
       candidateMove,
       startFen,
     );
+  }
+  if (Object.prototype.hasOwnProperty.call(value, 'defense_obligation_change_proof')) {
+    if (causeKind !== 'wrong_move_order') return;
+    return projectDefenseObligationChange(
+      value,
+      causeEvidenceId,
+      causeKind,
+      effectMode,
+      candidateMove,
+      startFen,
+    );
+  }
   if (Object.prototype.hasOwnProperty.call(value, 'passed_pawn_result_proof'))
     return projectPassedPawnResult(
       value,
@@ -1879,6 +1951,12 @@ type MoveReviewResourcePath = {
   absence: Extract<MoveReviewReasonMessage, { kind: 'resource-differential' }>['absence'];
 };
 
+type MoveReviewDefenseObligationPath = {
+  id: string;
+  premises: MoveReviewTypedPremise[];
+  absence: Extract<MoveReviewReasonMessage, { kind: 'defense-obligation-change' }>['absence'];
+};
+
 type MoveReviewPassedPawnResultPath = {
   id: string;
   branch: MoveReviewPassedPawnResultWireBranch & { replyMove: Uci };
@@ -1892,7 +1970,7 @@ type MoveReviewPassedPawnResultPath = {
 
 function typedChannelProof(
   channel: Record<string, unknown>,
-  key: 'resource_differential_proof' | 'passed_pawn_result_proof',
+  key: 'resource_differential_proof' | 'defense_obligation_change_proof' | 'passed_pawn_result_proof',
 ): Record<string, unknown> | undefined {
   return hasExactKeys(channel, ['channel_id', 'causal_signature', 'direct_change', 'played_change', key]) &&
     channel.direct_change === 'occurred' &&
@@ -1926,10 +2004,6 @@ function projectResourceDifferential(
 ): MoveReviewReason[] | undefined {
   const wire = typedChannelProof(channel, 'resource_differential_proof');
   if (!wire || channel.played_change !== 'missed') return;
-  const triggerMechanism =
-    wire.trigger_mechanism === 'forced_displacement' || wire.trigger_mechanism === 'forced_recapturer_removal'
-      ? wire.trigger_mechanism
-      : undefined;
   if (
     !hasExactKeys(wire, [
       'family',
@@ -1946,7 +2020,7 @@ function projectResourceDifferential(
       'played_root_branch_legal_defense_move',
     ]) ||
     wire.family !== 'immediate_forced_reply_resource_differential' ||
-    !triggerMechanism ||
+    wire.trigger_mechanism !== 'forced_displacement' ||
     !nonEmptyWireString(wire.source_evidence_id) ||
     !typedHash(wire.semantic_id) ||
     !typedHash(wire.occurrence_id) ||
@@ -1979,13 +2053,13 @@ function projectResourceDifferential(
     reference.steps[2]?.move !== realizingMove ||
     played.steps[0]?.move !== realizingMove ||
     played.rootMove !== realizingMove ||
-    !typedActorMatchesMove(participants.realizer, realizingMove) ||
-    !typedActorMatchesMove(participants.trigger, reference.steps[0]!.move) ||
+    typedActorMove(participants.realizer) !== realizingMove ||
+    typedActorMove(participants.trigger) !== reference.steps[0]!.move ||
     played.steps[1]?.move !== defenseMove ||
     participants.forcedReply.moveUci !== reference.steps[1]?.move ||
-    !typedActorMatchesMove(participants.forcedReply, participants.forcedReply.moveUci) ||
+    typedActorMove(participants.forcedReply) !== participants.forcedReply.moveUci ||
     participants.playedDefender.moveUci !== defenseMove ||
-    !typedActorMatchesMove(participants.playedDefender, participants.playedDefender.moveUci) ||
+    typedActorMove(participants.playedDefender) !== participants.playedDefender.moveUci ||
     participants.trigger.side !== participants.realizer.side ||
     participants.trigger.side !== fenSideToMove(startFen) ||
     participants.forcedReply.side !== participants.playedDefender.side ||
@@ -2000,16 +2074,10 @@ function projectResourceDifferential(
   )
     return;
   const mechanismConsistent =
-    triggerMechanism === 'forced_displacement'
-      ? participants.disabledDefender.piece === participants.forcedReply.pieceBefore &&
-        participants.disabledDefender.square === participants.forcedReply.from
-      : participants.trigger.side !== participants.disabledDefender.side &&
-        participants.trigger.to === participants.disabledDefender.square &&
-        participants.forcedReply.to === participants.trigger.to;
+    participants.disabledDefender.piece === participants.forcedReply.pieceBefore &&
+    participants.disabledDefender.square === participants.forcedReply.from;
   if (!mechanismConsistent) return;
-  const exactPaths = wire.proof_paths.map(path =>
-    projectResourcePath(path, reference.id, played.id, triggerMechanism),
-  );
+  const exactPaths = wire.proof_paths.map(path => projectResourcePath(path, reference.id, played.id));
   if (
     !exactPaths.every((path): path is MoveReviewResourcePath => !!path) ||
     !canonicalStrings(exactPaths.map(path => path.id)) ||
@@ -2056,7 +2124,7 @@ function projectResourceDifferential(
           disabledDefender: participants.disabledDefender,
           premises: path.premises,
           absence: path.absence,
-          triggerMechanism,
+          triggerMechanism: 'forced_displacement',
         },
         proof,
       };
@@ -2064,67 +2132,318 @@ function projectResourceDifferential(
   );
 }
 
+function projectDefenseObligationChange(
+  channel: Record<string, unknown>,
+  causeEvidenceId: string,
+  causeKind: string,
+  effectMode: MoveReviewCauseEffectMode,
+  candidateMove: Uci,
+  startFen: FEN,
+): MoveReviewReason[] | undefined {
+  const wire = typedChannelProof(channel, 'defense_obligation_change_proof');
+  if (
+    !wire ||
+    channel.played_change !== 'missed' ||
+    !hasExactKeys(wire, [
+      'contract',
+      'mechanism',
+      'source_evidence_id',
+      'semantic_id',
+      'occurrence_id',
+      'dependency_fingerprint',
+      'counterfactual_reference_branch',
+      'played_root_branch',
+      'proof_paths',
+      'participants',
+      'later_exploit_move',
+      'played_sole_recapture_move',
+    ]) ||
+    wire.contract !== 'defense_obligation_change' ||
+    wire.mechanism !== 'sole_recapturer_removal' ||
+    !nonEmptyWireString(wire.source_evidence_id) ||
+    !typedHash(wire.semantic_id) ||
+    !typedHash(wire.occurrence_id) ||
+    !typedHash(wire.dependency_fingerprint) ||
+    !Array.isArray(wire.proof_paths) ||
+    wire.proof_paths.length < 1
+  )
+    return;
+  const reference = projectTypedBranch(
+    wire.counterfactual_reference_branch,
+    'counterfactual_reference',
+    startFen,
+  );
+  const played = projectTypedBranch(wire.played_root_branch, 'observed_played_root', startFen);
+  const laterExploitMove = uci(wire.later_exploit_move);
+  const playedSoleRecaptureMove = uci(wire.played_sole_recapture_move);
+  const participants = projectDefenseObligationParticipants(wire.participants);
+  if (
+    !reference ||
+    !played ||
+    reference.id === played.id ||
+    reference.rootMove === played.rootMove ||
+    reference.steps[0]?.ply !== played.steps[0]?.ply ||
+    reference.steps[0]!.ply < 1 ||
+    played.rootMove !== candidateMove ||
+    !laterExploitMove ||
+    !playedSoleRecaptureMove ||
+    !participants ||
+    reference.steps[2]?.move !== laterExploitMove ||
+    played.steps[0]?.move !== laterExploitMove ||
+    played.rootMove !== laterExploitMove ||
+    reference.steps[1]?.move !== participants.removalRecapture.moveUci ||
+    played.steps[1]?.move !== playedSoleRecaptureMove ||
+    participants.playedSoleRecapture.moveUci !== playedSoleRecaptureMove ||
+    typedActorMove(participants.remover) !== reference.steps[0]!.move ||
+    typedActorMove(participants.removalRecapture) !== participants.removalRecapture.moveUci ||
+    typedActorMove(participants.laterExploit) !== laterExploitMove ||
+    typedActorMove(participants.playedSoleRecapture) !== playedSoleRecaptureMove ||
+    participants.remover.side !== participants.laterExploit.side ||
+    participants.remover.side !== fenSideToMove(startFen) ||
+    participants.remover.side === participants.removedDefender.side ||
+    participants.removedDefender.side !== participants.removalRecapture.side ||
+    participants.removedDefender.side !== participants.capturedTarget.side ||
+    participants.removedDefender.side !== participants.playedSoleRecapture.side ||
+    participants.remover.to !== participants.removedDefender.square ||
+    participants.removalRecapture.to !== participants.remover.to ||
+    participants.laterExploit.to !== participants.capturedTarget.square ||
+    participants.playedSoleRecapture.from !== participants.removedDefender.square ||
+    participants.playedSoleRecapture.pieceBefore !== participants.removedDefender.piece ||
+    participants.playedSoleRecapture.to !== participants.laterExploit.to
+  )
+    return;
+  const paths = wire.proof_paths.map(path => projectDefenseObligationPath(path, reference, played));
+  if (
+    !paths.every((path): path is MoveReviewDefenseObligationPath => !!path) ||
+    !canonicalStrings(paths.map(path => path.id)) ||
+    !unique(paths.map(path => path.absence.useId)) ||
+    paths.some(
+      path =>
+        path.absence.query !==
+          `legal-capture:${participants.removedDefender.side}:${participants.laterExploit.to}` ||
+        path.absence.fen !== reference.steps[2]!.fenAfter ||
+        path.absence.ply !== reference.steps[2]!.ply,
+    )
+  )
+    return;
+  return paths.flatMap((path, pathIndex) =>
+    [reference, played].map((branch, branchIndex) => {
+      const proof = proofFromWireSteps(
+        `cause:${path.id}:${pathIndex}:${branchIndex}:${branch.id}`,
+        startFen,
+        branch.steps,
+      )!;
+      const counterpart = branch === reference ? played : reference;
+      return {
+        id: proof.id,
+        messageSlots: { candidateUci: candidateMove },
+        message: {
+          kind: 'defense-obligation-change' as const,
+          channelId: channel.channel_id as string,
+          causalSignature: channel.causal_signature as string,
+          causeEvidenceId,
+          causeKind,
+          effectMode,
+          directChange: 'occurred' as const,
+          playedChange: 'missed' as const,
+          contract: 'defense_obligation_change' as const,
+          mechanism: 'sole_recapturer_removal' as const,
+          sourceEvidenceId: wire.source_evidence_id as string,
+          semanticId: wire.semantic_id as string,
+          occurrenceId: wire.occurrence_id as string,
+          dependencyFingerprint: wire.dependency_fingerprint as string,
+          pathOccurrenceId: path.id,
+          branch: wireBranchIdentity(branch),
+          counterpart: wireBranchIdentity(counterpart),
+          ...participants,
+          laterExploitMove,
+          playedSoleRecaptureMove,
+          premises: path.premises,
+          absence: path.absence,
+        },
+        proof,
+      };
+    }),
+  );
+}
+
+function projectDefenseObligationPath(
+  value: unknown,
+  reference: MoveReviewWireBranch,
+  played: MoveReviewWireBranch,
+): MoveReviewDefenseObligationPath | undefined {
+  if (
+    !isObject(value) ||
+    !hasExactKeys(value, ['path_occurrence_id', 'premises', 'closed_absence_uses']) ||
+    !typedHash(value.path_occurrence_id) ||
+    !Array.isArray(value.premises) ||
+    value.premises.length !== 3 ||
+    !Array.isArray(value.closed_absence_uses) ||
+    value.closed_absence_uses.length !== 1
+  )
+    return;
+  const expected = [
+    ['reference_defender_removal', reference.id, 'counterfactual_reference', 0],
+    ['reference_later_exploit_inventory', reference.id, 'counterfactual_reference', 2],
+    ['played_immediate_exploit_inventory', played.id, 'observed_played_root', 0],
+  ] as const;
+  const premises = value.premises.map((premise, index) => projectTypedPremise(premise, expected[index]![1]));
+  if (
+    !premises.every((premise): premise is MoveReviewTypedPremise => !!premise) ||
+    !unique(premises.map(premise => premise.resultId)) ||
+    premises.some((premise, index) => {
+      const [role, , branchRole, stepIndex] = expected[index]!;
+      return (
+        premise.role !== role ||
+        premise.contract !== 'capture_recapture_inventory' ||
+        !premise.resultId.startsWith('capture_recapture_inventory:') ||
+        premise.branchRole !== branchRole ||
+        premise.stepIndex !== stepIndex
+      );
+    })
+  )
+    return;
+  const absence = value.closed_absence_uses[0];
+  if (
+    !isObject(absence) ||
+    !hasExactKeys(absence, [
+      'use_id',
+      'role',
+      'semantic_proof_id',
+      'issuer',
+      'issuer_evidence_id',
+      'issuer_occurrence_id',
+      'query',
+      'branch_id',
+      'branch_role',
+      'after_step_index',
+      'position',
+    ]) ||
+    absence.role !== 'reference_replacement_recapture_absent' ||
+    absence.issuer !== 'position_relation_extractor.closed_relation_inventory' ||
+    !typedHash(absence.use_id) ||
+    !typedHash(absence.semantic_proof_id) ||
+    !nonEmptyWireString(absence.issuer_evidence_id) ||
+    !typedHash(absence.issuer_occurrence_id) ||
+    typeof absence.query !== 'string' ||
+    !/^legal-capture:(white|black):[a-h][1-8]$/.test(absence.query) ||
+    absence.branch_id !== reference.id ||
+    absence.branch_role !== 'counterfactual_reference' ||
+    absence.after_step_index !== 2
+  )
+    return;
+  const position = isObject(absence.position) ? absence.position : undefined;
+  const fen = position ? fenText(position.fen) : undefined;
+  const ply = position ? nonNegativeInteger(position.ply) : undefined;
+  if (
+    !position ||
+    !hasExactKeys(position, ['fen', 'ply', 'scope']) ||
+    !fen ||
+    ply === undefined ||
+    position.scope !== 'best_line'
+  )
+    return;
+  return {
+    id: value.path_occurrence_id as string,
+    premises,
+    absence: {
+      useId: absence.use_id as string,
+      role: 'reference_replacement_recapture_absent',
+      semanticProofId: absence.semantic_proof_id as string,
+      issuer: 'position_relation_extractor.closed_relation_inventory',
+      issuerEvidenceId: absence.issuer_evidence_id as string,
+      issuerOccurrenceId: absence.issuer_occurrence_id as string,
+      query: absence.query,
+      branchId: reference.id,
+      afterStepIndex: 2,
+      fen,
+      ply,
+      scope: 'best_line',
+    },
+  };
+}
+
+function projectDefenseObligationParticipants(value: unknown):
+  | {
+      remover: MoveReviewTypedActor;
+      removedDefender: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+      removalRecapture: MoveReviewTypedActor & { moveUci: Uci };
+      laterExploit: MoveReviewTypedActor;
+      capturedTarget: { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key };
+      playedSoleRecapture: MoveReviewTypedActor & { moveUci: Uci };
+    }
+  | undefined {
+  if (
+    !isObject(value) ||
+    !hasExactKeys(value, [
+      'remover',
+      'removed_defender',
+      'removal_recapture',
+      'later_exploit',
+      'captured_target',
+      'played_sole_recapture',
+    ])
+  )
+    return;
+  const remover = projectTypedActor(value.remover);
+  const removedDefender = projectColoredPiece(value.removed_defender);
+  const removalRecapture = projectTypedActor(value.removal_recapture, true);
+  const laterExploit = projectTypedActor(value.later_exploit);
+  const capturedTarget = projectColoredPiece(value.captured_target);
+  const playedSoleRecapture = projectTypedActor(value.played_sole_recapture, true);
+  return remover &&
+    removedDefender &&
+    removalRecapture?.moveUci &&
+    laterExploit &&
+    capturedTarget &&
+    playedSoleRecapture?.moveUci
+    ? {
+        remover,
+        removedDefender,
+        removalRecapture: { ...removalRecapture, moveUci: removalRecapture.moveUci },
+        laterExploit,
+        capturedTarget,
+        playedSoleRecapture: { ...playedSoleRecapture, moveUci: playedSoleRecapture.moveUci },
+      }
+    : undefined;
+}
+
+function projectColoredPiece(
+  value: unknown,
+): { side: 'white' | 'black'; piece: MoveReviewPieceRole; square: Key } | undefined {
+  if (
+    !isObject(value) ||
+    !hasExactKeys(value, ['side', 'piece', 'square']) ||
+    (value.side !== 'white' && value.side !== 'black') ||
+    !pieceRole(value.piece) ||
+    !key(value.square)
+  )
+    return;
+  return { side: value.side, piece: value.piece as MoveReviewPieceRole, square: value.square as Key };
+}
+
 function projectResourcePath(
   value: unknown,
   referenceBranchId: string,
   playedBranchId: string,
-  mechanism: 'forced_displacement' | 'forced_recapturer_removal',
 ): MoveReviewResourcePath | undefined {
-  const expected =
-    mechanism === 'forced_displacement'
-      ? ([
-          [
-            'created_check_response',
-            'created_check_response_inventory',
-            referenceBranchId,
-            'counterfactual_reference',
-            0,
-          ],
-          [
-            'reference_capture_recapture',
-            'capture_recapture_inventory',
-            referenceBranchId,
-            'counterfactual_reference',
-            2,
-          ],
-          [
-            'played_capture_recapture',
-            'capture_recapture_inventory',
-            playedBranchId,
-            'observed_played_root',
-            0,
-          ],
-        ] as const)
-      : ([
-          [
-            'reference_root_capture',
-            'capture_recapture_inventory',
-            referenceBranchId,
-            'counterfactual_reference',
-            0,
-          ],
-          [
-            'created_check_response',
-            'created_check_response_inventory',
-            referenceBranchId,
-            'counterfactual_reference',
-            0,
-          ],
-          [
-            'reference_capture_recapture',
-            'capture_recapture_inventory',
-            referenceBranchId,
-            'counterfactual_reference',
-            2,
-          ],
-          [
-            'played_capture_recapture',
-            'capture_recapture_inventory',
-            playedBranchId,
-            'observed_played_root',
-            0,
-          ],
-        ] as const);
+  const expected = [
+    [
+      'created_check_response',
+      'created_check_response_inventory',
+      referenceBranchId,
+      'counterfactual_reference',
+      0,
+    ],
+    [
+      'reference_capture_recapture',
+      'capture_recapture_inventory',
+      referenceBranchId,
+      'counterfactual_reference',
+      2,
+    ],
+    ['played_capture_recapture', 'capture_recapture_inventory', playedBranchId, 'observed_played_root', 0],
+  ] as const;
   if (
     !isObject(value) ||
     !hasExactKeys(value, ['path_occurrence_id', 'premises', 'closed_absence_uses']) ||
@@ -2425,8 +2744,8 @@ function projectPassedPawnResult(
     !(wire.lower_premise_ids as string[]).includes(inventory.coverageEvidenceId) ||
     !(wire.lower_premise_ids as string[]).includes(inventory.issuerEvidenceId) ||
     !(wire.lower_premise_ids as string[]).includes(comparisonEvidenceId) ||
-    !typedActorMatchesMove(rootActor, rootMove) ||
-    !typedActorMatchesMove(realizingActor, realizingMove) ||
+    typedActorMove(rootActor) !== rootMove ||
+    typedActorMove(realizingActor) !== realizingMove ||
     rootActor.side !== fenSideToMove(startFen) ||
     realizingActor.side !== rootActor.side
   )
@@ -2632,13 +2951,13 @@ function projectPassedPawnResultInventory(value: unknown):
 
 function projectTypedBranch(
   value: unknown,
-  resourceRole: 'counterfactual_reference' | 'observed_played_root' | undefined,
+  boundedCausalRole: 'counterfactual_reference' | 'observed_played_root' | undefined,
   startFen: FEN,
 ): MoveReviewWireBranch | undefined {
-  const resource = resourceRole !== undefined;
+  const boundedCausal = boundedCausalRole !== undefined;
   if (
     !isObject(value) ||
-    !(resource
+    !(boundedCausal
       ? hasExactKeys(value, [
           'branch_id',
           'line_id',
@@ -2661,7 +2980,7 @@ function projectTypedBranch(
   )
     return;
   const line = projectPassedPawnResultLine(
-    resource
+    boundedCausal
       ? {
           line_id: value.line_id,
           line_role: value.line_role,
@@ -2671,18 +2990,18 @@ function projectTypedBranch(
       : value.line,
   );
   if (!line) return;
-  const steps = value.steps.map(step => projectWireStep(step, !resource));
+  const steps = value.steps.map(step => projectWireStep(step, !boundedCausal));
   if (
     !steps.every((step): step is MoveReviewWireStep => !!step) ||
-    (!resource && !steps.every(isPassedPawnResultWireStep)) ||
+    (!boundedCausal && !steps.every(isPassedPawnResultWireStep)) ||
     !wireStepsHaveOrderedOccurrences(steps, startFen) ||
     steps[0]?.move !== line.rootMove
   )
     return;
-  if (resource) {
-    const reference = resourceRole === 'counterfactual_reference';
+  if (boundedCausal) {
+    const reference = boundedCausalRole === 'counterfactual_reference';
     if (
-      value.branch_role !== resourceRole ||
+      value.branch_role !== boundedCausalRole ||
       line.role !== (reference ? 'best_reference' : 'played') ||
       value.root_provenance !== (reference ? 'counterfactual_analyzed_root' : 'observed_game_root') ||
       steps.length !== (reference ? 3 : 2) ||
@@ -2694,7 +3013,7 @@ function projectTypedBranch(
       return;
     return {
       id: value.branch_id as string,
-      role: resourceRole,
+      role: boundedCausalRole,
       provenance: value.root_provenance,
       lineId: line.id,
       lineRole: line.role,
@@ -2815,7 +3134,7 @@ function projectPassedPawnResultPath(
     !realizationMove ||
     realizationPly === undefined ||
     !realizationMatchKind ||
-    !typedActorMatchesMove(realizationActor, realizationMove) ||
+    typedActorMove(realizationActor) !== realizationMove ||
     realizationStepIndices.length !== 1 ||
     realizationActor.side !== fenSideToMove(realizationStep!.fenBefore) ||
     !premises.every((premise): premise is MoveReviewTypedPremise => !!premise) ||
@@ -3378,8 +3697,18 @@ function fenPieceAt(
   }
 }
 
-function typedActorMatchesMove(actor: MoveReviewTypedActor, move: Uci): boolean {
-  return move.slice(0, 2) === actor.from && move.slice(2, 4) === actor.to;
+function typedActorMove(actor: MoveReviewTypedActor): Uci | undefined {
+  if (actor.pieceBefore !== 'pawn')
+    return actor.pieceAfter === actor.pieceBefore ? uci(`${actor.from}${actor.to}`) : undefined;
+  if (actor.pieceAfter === 'pawn') return uci(`${actor.from}${actor.to}`);
+  const promotion: Partial<Record<MoveReviewPieceRole, string>> = {
+    queen: 'q',
+    rook: 'r',
+    bishop: 'b',
+    knight: 'n',
+  };
+  const suffix = promotion[actor.pieceAfter];
+  return suffix ? uci(`${actor.from}${actor.to}${suffix}`) : undefined;
 }
 
 function passedPawnResultTransitionScope(role: MoveReviewTypedLine['role']): string {

@@ -104,7 +104,7 @@ dependency에 인증된 결과가 정확히 하나 있을 때만 파생 전에 �
 
 ## 5. 현재 봉인된 L2 증명군
 
-현재 공통 뼈대를 끝까지 사용하는 증명군은 두 개다.
+현재 공통 뼈대를 끝까지 사용하는 증명군은 세 개다.
 
 ### 강제 응수에 따른 수비 자원 차이
 
@@ -115,9 +115,6 @@ dependency에 인증된 결과가 정확히 하나 있을 때만 파생 전에 �
   응수를 닫으며, 다음 같은 편의 실현수가 정확한 대상을 잡아야 한다.
 - `forced_displacement`는 실전에서 재포획한 바로 그 수비 기물이
   reference의 유일 응수로 이동한 경우만 승인한다.
-- `forced_recapturer_removal`은 reference 첫 수가 실전 재포획자를
-  정확히 잡고, 상대의 유일 응수가 그 포획 기물을 정확히 되잡은 뒤
-  같은 실현수에 재포획이 없어진 경우만 승인한다.
 - reference branch에는 해당 수비 기물의 `LegalCaptureOf`가 없고,
   played branch에는 같은 수비 기물의 합법 재포획이 실제 line으로
   있어야 한다.
@@ -126,10 +123,33 @@ dependency에 인증된 결과가 정확히 하나 있을 때만 파생 전에 �
 - 결과는 `WrongMoveOrder`의 direct proof로 claim 승인·선택을 거쳐
   public v6의 typed `resource_differential_proof`까지 소비된다.
 
-따라서 현재 말할 수 있는 명제는 “기준 순서는 강제 이동 또는 정확한
-포획으로 실전의 재포획자를 먼저 비활성화해 즉시 실현수를 가능하게
-하지만, 실전 순서는 그 자원을 남겨 같은 실현수에 재포획을 허용했다”는
-좁은 경우다.
+따라서 현재 말할 수 있는 명제는 “기준 수의 유일한 체크 응수가 실전의
+재포획자를 정확히 이동시켜 뒤의 실현수를 가능하게 하지만, 실전 순서는
+그 자원을 남겨 같은 실현수에 재포획을 허용했다”는 좁은 경우다.
+
+### 유일 재포획자 제거에 따른 수비 의무 변화
+
+- 유일 생산자는 `DefenseObligationChangeAssembler`다.
+- actionable `PlayedVsBest`의 exact demand가 있을 때만 같은 reference/played
+  sibling pair를 계산한다.
+- reference 첫 수는 실전 즉시 exploit의 유일 재포획자를 정확히 잡고,
+  상대의 정확히 하나인 재포획으로 되잡혀야 한다. 같은 편의 세 번째 수는
+  played 첫 수와 동일한 exploit·대상을 실제로 소비해야 한다.
+- reference의 later exploit에는 합법 재포획이 하나도 없어야 하고,
+  `LegalCaptureOf(수비측, exploit 칸)`의 폐쇄 부재를 해당 L1
+  `CaptureRecaptureInventory` occurrence가 발급해야 한다.
+- played의 immediate exploit에는 제거 전의 동일 기물이 정확히 하나인
+  합법 재포획자로 남아 실제 둘째 수로 나타나야 한다.
+- 세 L1 inventory, 두 occurrence branch, 관련 기물 identity, exploit과
+  재포획 수, exact demand를 dependency fingerprint와 한 proof path에
+  보존한다.
+- 결과는 `WrongMoveOrder`의 독립 direct proof channel로 선택되어 public
+  v6의 typed `defense_obligation_change_proof`까지 소비된다.
+
+따라서 이 증명군은 일반 과부하나 일반 수비 붕괴를 말하지 않는다.
+“기준 순서가 실전의 유일 재포획자를 먼저 제거했기 때문에 뒤의 동일
+exploit에는 대체 재포획이 없지만, 실전 즉시 exploit에는 그 수비자가
+남아 있다”는 명제만 승인한다.
 
 ### 폐쇄 응수 아래 통과폰 결과
 
@@ -153,10 +173,10 @@ dependency에 인증된 결과가 정확히 하나 있을 때만 파생 전에 �
 source root의 결과만 인증하며 played sibling의 부재나 `missed`를 주장하지
 않는다. 장기적 승리, 최선의 계획, 의도나 일반적 준비도 주장하지 않는다.
 
-현재는 일반 과부하, 일반 간섭, 대체 수비자까지 닫힌 수비 붕괴,
+현재는 일반 과부하, 일반 간섭, 모든 합법 repair까지 닫힌 수비 붕괴,
 교환·이동에 의한 일반 수비 의무 이전, 지연된 준비, 예방, 반격,
-기동을 증명하지 않는다. 대체 수비자 전체, intervening dependency와
-실제 후속 소비가 닫히기 전에는 이 이름들을 만들지 않는다.
+기동을 증명하지 않는다. 대체 수비자와 repair 전체, intervening
+dependency와 실제 후속 소비가 닫히기 전에는 이 이름들을 만들지 않는다.
 
 ## 6. 공개와 평가의 분리
 

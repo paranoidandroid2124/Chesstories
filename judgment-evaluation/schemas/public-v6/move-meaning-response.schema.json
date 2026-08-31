@@ -461,12 +461,12 @@
     },
     "causalFacet": {
       "oneOf": [
-        {"$ref": "#/$defs/resourceDifferentialCausalFacet"},
+        {"$ref": "#/$defs/wrongMoveOrderCausalFacet"},
         {"$ref": "#/$defs/passedPawnResultFacet"},
         {"$ref": "#/$defs/standardCausalFacet"}
       ]
     },
-    "resourceDifferentialCausalFacet": {
+    "wrongMoveOrderCausalFacet": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -492,7 +492,7 @@
         "channels": {
           "type": "array",
           "minItems": 1,
-          "items": {"$ref": "#/$defs/resourceDifferentialCausalChannel"}
+          "items": {"$ref": "#/$defs/wrongMoveOrderCausalChannel"}
         }
       }
     },
@@ -594,6 +594,12 @@
         }
       }
     },
+    "wrongMoveOrderCausalChannel": {
+      "oneOf": [
+        {"$ref": "#/$defs/resourceDifferentialCausalChannel"},
+        {"$ref": "#/$defs/defenseObligationChangeCausalChannel"}
+      ]
+    },
     "resourceDifferentialCausalChannel": {
       "type": "object",
       "additionalProperties": false,
@@ -610,6 +616,24 @@
         "direct_change": {"const": "occurred"},
         "played_change": {"const": "missed"},
         "resource_differential_proof": {"$ref": "#/$defs/resourceDifferentialProof"}
+      }
+    },
+    "defenseObligationChangeCausalChannel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "channel_id",
+        "causal_signature",
+        "direct_change",
+        "played_change",
+        "defense_obligation_change_proof"
+      ],
+      "properties": {
+        "channel_id": {"$ref": "#/$defs/nonEmptyString"},
+        "causal_signature": {"$ref": "#/$defs/nonEmptyString"},
+        "direct_change": {"const": "occurred"},
+        "played_change": {"const": "missed"},
+        "defense_obligation_change_proof": {"$ref": "#/$defs/defenseObligationChangeProof"}
       }
     },
     "passedPawnResultChannel": {
@@ -1418,14 +1442,14 @@
       ],
       "properties": {
         "family": {"const": "immediate_forced_reply_resource_differential"},
-        "trigger_mechanism": {"enum": ["forced_displacement", "forced_recapturer_removal"]},
+        "trigger_mechanism": {"const": "forced_displacement"},
         "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
         "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "counterfactual_reference_branch": {
           "allOf": [
-            {"$ref": "#/$defs/resourceDifferentialBranch"},
+            {"$ref": "#/$defs/boundedCausalBranch"},
             {
               "properties": {
                 "line_role": {"const": "best_reference"},
@@ -1444,7 +1468,7 @@
         },
         "played_root_branch": {
           "allOf": [
-            {"$ref": "#/$defs/resourceDifferentialBranch"},
+            {"$ref": "#/$defs/boundedCausalBranch"},
             {
               "properties": {
                 "line_role": {"const": "played"},
@@ -1468,41 +1492,14 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": {
-            "oneOf": [
-              {"$ref": "#/$defs/resourceDifferentialDisplacementProofPath"},
-              {"$ref": "#/$defs/resourceDifferentialRecapturerRemovalProofPath"}
-            ]
-          }
+          "items": {"$ref": "#/$defs/resourceDifferentialDisplacementProofPath"}
         },
         "participants": {"$ref": "#/$defs/resourceDifferentialParticipants"},
         "realizing_move": {"$ref": "#/$defs/uciMove"},
         "played_root_branch_legal_defense_move": {"$ref": "#/$defs/uciMove"}
-      },
-      "allOf": [
-        {
-          "if": {"properties": {"trigger_mechanism": {"const": "forced_displacement"}}},
-          "then": {
-            "properties": {
-              "proof_paths": {
-                "items": {"$ref": "#/$defs/resourceDifferentialDisplacementProofPath"}
-              }
-            }
-          }
-        },
-        {
-          "if": {"properties": {"trigger_mechanism": {"const": "forced_recapturer_removal"}}},
-          "then": {
-            "properties": {
-              "proof_paths": {
-                "items": {"$ref": "#/$defs/resourceDifferentialRecapturerRemovalProofPath"}
-              }
-            }
-          }
-        }
-      ]
+      }
     },
-    "resourceDifferentialBranch": {
+    "boundedCausalBranch": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1526,11 +1523,11 @@
         "steps": {
           "type": "array",
           "minItems": 2,
-          "items": {"$ref": "#/$defs/resourceDifferentialStep"}
+          "items": {"$ref": "#/$defs/boundedCausalStep"}
         }
       }
     },
-    "resourceDifferentialStep": {
+    "boundedCausalStep": {
       "type": "object",
       "additionalProperties": false,
       "required": ["step_index", "provenance", "ply", "move_uci", "fen_before", "fen_after"],
@@ -1583,52 +1580,6 @@
         }
       }
     },
-    "resourceDifferentialRecapturerRemovalProofPath": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["path_occurrence_id", "premises", "closed_absence_uses"],
-      "properties": {
-        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "premises": {
-          "type": "array",
-          "minItems": 4,
-          "maxItems": 4,
-          "prefixItems": [
-            {
-              "allOf": [
-                {"$ref": "#/$defs/resourceDifferentialPremiseUse"},
-                {"properties": {"role": {"const": "reference_root_capture"}, "contract": {"const": "capture_recapture_inventory"}, "result_id": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"const": 0}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/resourceDifferentialPremiseUse"},
-                {"properties": {"role": {"const": "created_check_response"}, "contract": {"const": "created_check_response_inventory"}, "result_id": {"pattern": "^created_check_response_inventory:[0-9a-f]{64}$"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"const": 0}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/resourceDifferentialPremiseUse"},
-                {"properties": {"role": {"const": "reference_capture_recapture"}, "contract": {"const": "capture_recapture_inventory"}, "result_id": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"const": 2}}}
-              ]
-            },
-            {
-              "allOf": [
-                {"$ref": "#/$defs/resourceDifferentialPremiseUse"},
-                {"properties": {"role": {"const": "played_capture_recapture"}, "contract": {"const": "capture_recapture_inventory"}, "result_id": {"pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"}, "branch_role": {"const": "observed_played_root"}, "step_index": {"const": 0}}}
-              ]
-            }
-          ],
-          "items": false
-        },
-        "closed_absence_uses": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 1,
-          "items": {"$ref": "#/$defs/resourceDifferentialAbsenceUse"}
-        }
-      }
-    },
     "resourceDifferentialPremiseUse": {
       "type": "object",
       "additionalProperties": false,
@@ -1643,7 +1594,7 @@
       ],
       "properties": {
         "role": {
-          "enum": ["reference_root_capture", "created_check_response", "reference_capture_recapture", "played_capture_recapture"]
+          "enum": ["created_check_response", "reference_capture_recapture", "played_capture_recapture"]
         },
         "contract": {"enum": ["created_check_response_inventory", "capture_recapture_inventory"]},
         "result_id": {
@@ -1700,20 +1651,228 @@
         }
       }
     },
+    "defenseObligationChangeProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "mechanism",
+        "source_evidence_id",
+        "semantic_id",
+        "occurrence_id",
+        "dependency_fingerprint",
+        "counterfactual_reference_branch",
+        "played_root_branch",
+        "proof_paths",
+        "participants",
+        "later_exploit_move",
+        "played_sole_recapture_move"
+      ],
+      "properties": {
+        "contract": {"const": "defense_obligation_change"},
+        "mechanism": {"const": "sole_recapturer_removal"},
+        "source_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "semantic_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "dependency_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "counterfactual_reference_branch": {
+          "allOf": [
+            {"$ref": "#/$defs/boundedCausalBranch"},
+            {
+              "properties": {
+                "line_role": {"const": "best_reference"},
+                "branch_role": {"const": "counterfactual_reference"},
+                "root_provenance": {"const": "counterfactual_analyzed_root"},
+                "steps": {
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "properties": {"provenance": {"const": "certified_analysis_move"}}
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "played_root_branch": {
+          "allOf": [
+            {"$ref": "#/$defs/boundedCausalBranch"},
+            {
+              "properties": {
+                "line_role": {"const": "played"},
+                "branch_role": {"const": "observed_played_root"},
+                "root_provenance": {"const": "observed_game_root"},
+                "steps": {
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "prefixItems": [
+                    {"properties": {"step_index": {"const": 0}, "provenance": {"const": "observed_game_move"}}}
+                  ],
+                  "items": {
+                    "properties": {"provenance": {"const": "certified_analysis_move"}}
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "proof_paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/defenseObligationChangeProofPath"}
+        },
+        "participants": {"$ref": "#/$defs/defenseObligationChangeParticipants"},
+        "later_exploit_move": {"$ref": "#/$defs/uciMove"},
+        "played_sole_recapture_move": {"$ref": "#/$defs/uciMove"}
+      }
+    },
+    "defenseObligationChangeProofPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path_occurrence_id", "premises", "closed_absence_uses"],
+      "properties": {
+        "path_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "premises": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "prefixItems": [
+            {
+              "allOf": [
+                {"$ref": "#/$defs/defenseObligationChangePremiseUse"},
+                {"properties": {"role": {"const": "reference_defender_removal"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"const": 0}}}
+              ]
+            },
+            {
+              "allOf": [
+                {"$ref": "#/$defs/defenseObligationChangePremiseUse"},
+                {"properties": {"role": {"const": "reference_later_exploit_inventory"}, "branch_role": {"const": "counterfactual_reference"}, "step_index": {"const": 2}}}
+              ]
+            },
+            {
+              "allOf": [
+                {"$ref": "#/$defs/defenseObligationChangePremiseUse"},
+                {"properties": {"role": {"const": "played_immediate_exploit_inventory"}, "branch_role": {"const": "observed_played_root"}, "step_index": {"const": 0}}}
+              ]
+            }
+          ],
+          "items": false
+        },
+        "closed_absence_uses": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {"$ref": "#/$defs/defenseObligationChangeAbsenceUse"}
+        }
+      }
+    },
+    "defenseObligationChangePremiseUse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "contract",
+        "result_id",
+        "source_premise_ids",
+        "branch_id",
+        "branch_role",
+        "step_index"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "reference_defender_removal",
+            "reference_later_exploit_inventory",
+            "played_immediate_exploit_inventory"
+          ]
+        },
+        "contract": {"const": "capture_recapture_inventory"},
+        "result_id": {"type": "string", "pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"},
+        "source_premise_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonEmptyString"}
+        },
+        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "branch_role": {"enum": ["counterfactual_reference", "observed_played_root"]},
+        "step_index": {"type": "integer", "minimum": 0}
+      }
+    },
+    "defenseObligationChangeAbsenceUse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "use_id",
+        "role",
+        "semantic_proof_id",
+        "issuer",
+        "issuer_evidence_id",
+        "issuer_occurrence_id",
+        "query",
+        "branch_id",
+        "branch_role",
+        "after_step_index",
+        "position"
+      ],
+      "properties": {
+        "use_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "role": {"const": "reference_replacement_recapture_absent"},
+        "semantic_proof_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "issuer": {"const": "position_relation_extractor.closed_relation_inventory"},
+        "issuer_evidence_id": {"$ref": "#/$defs/nonEmptyString"},
+        "issuer_occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "query": {"type": "string", "pattern": "^legal-capture:(white|black):[a-h][1-8]$"},
+        "branch_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "branch_role": {"const": "counterfactual_reference"},
+        "after_step_index": {"const": 2},
+        "position": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fen", "ply", "scope"],
+          "properties": {
+            "fen": {"$ref": "#/$defs/nonEmptyString"},
+            "ply": {"type": "integer", "minimum": 1},
+            "scope": {"const": "best_line"}
+          }
+        }
+      }
+    },
+    "defenseObligationChangeParticipants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "remover",
+        "removed_defender",
+        "removal_recapture",
+        "later_exploit",
+        "captured_target",
+        "played_sole_recapture"
+      ],
+      "properties": {
+        "remover": {"$ref": "#/$defs/boundedCausalMovement"},
+        "removed_defender": {"$ref": "#/$defs/boundedCausalPiece"},
+        "removal_recapture": {"$ref": "#/$defs/boundedCausalLegalResource"},
+        "later_exploit": {"$ref": "#/$defs/boundedCausalMovement"},
+        "captured_target": {"$ref": "#/$defs/boundedCausalPiece"},
+        "played_sole_recapture": {"$ref": "#/$defs/boundedCausalLegalResource"}
+      }
+    },
     "resourceDifferentialParticipants": {
       "type": "object",
       "additionalProperties": false,
       "required": ["trigger", "forced_reply", "realizer", "captured_target", "played_defense", "disabled_defender"],
       "properties": {
-        "trigger": {"$ref": "#/$defs/resourceDifferentialMovement"},
-        "forced_reply": {"$ref": "#/$defs/resourceDifferentialLegalResource"},
-        "realizer": {"$ref": "#/$defs/resourceDifferentialMovement"},
-        "captured_target": {"$ref": "#/$defs/resourceDifferentialPiece"},
-        "played_defense": {"$ref": "#/$defs/resourceDifferentialLegalResource"},
-        "disabled_defender": {"$ref": "#/$defs/resourceDifferentialPiece"}
+        "trigger": {"$ref": "#/$defs/boundedCausalMovement"},
+        "forced_reply": {"$ref": "#/$defs/boundedCausalLegalResource"},
+        "realizer": {"$ref": "#/$defs/boundedCausalMovement"},
+        "captured_target": {"$ref": "#/$defs/boundedCausalPiece"},
+        "played_defense": {"$ref": "#/$defs/boundedCausalLegalResource"},
+        "disabled_defender": {"$ref": "#/$defs/boundedCausalPiece"}
       }
     },
-    "resourceDifferentialMovement": {
+    "boundedCausalMovement": {
       "type": "object",
       "additionalProperties": false,
       "required": ["side", "from", "to", "piece_before", "piece_after"],
@@ -1725,7 +1884,7 @@
         "piece_after": {"$ref": "#/$defs/pieceRole"}
       }
     },
-    "resourceDifferentialLegalResource": {
+    "boundedCausalLegalResource": {
       "type": "object",
       "additionalProperties": false,
       "required": ["side", "from", "to", "piece_before", "piece_after", "move_uci"],
@@ -1738,7 +1897,7 @@
         "move_uci": {"$ref": "#/$defs/uciMove"}
       }
     },
-    "resourceDifferentialPiece": {
+    "boundedCausalPiece": {
       "type": "object",
       "additionalProperties": false,
       "required": ["side", "piece", "square"],
