@@ -234,7 +234,9 @@ function renderReviewBody(
       ? review.reasons.find(reason => reason.id === review.core.reasonRefs.primary)
       : undefined;
   const verdictLabel = core
-    ? moveReviewVerdictCodeLabel(core.verdictCode, props.copy)
+    ? core.kind === 'best-choice'
+      ? props.copy.candidateSetLabels[core.bestChoice.candidateSet]
+      : moveReviewVerdictCodeLabel(core.verdictCode, props.copy)
     : review.kind === 'single-candidate-insight'
       ? props.copy.lineInsight
       : review.kind === 'forced-single-move'
@@ -261,7 +263,7 @@ function renderReviewBody(
         hl('div.move-review__summary-copy', [
           hl('span.move-review__eyebrow', played.label),
           hl('h3', verdictLabel),
-          hl('p.move-review__core-comparison', renderCoreComparison(played, best, props.copy)),
+          hl('p.move-review__core-comparison', renderCoreComparison(played, best, core, props.copy)),
           primary
             ? hl('div.move-review__primary-reason', [
                 hl('span', moveReviewReasonText(primary, played, props.locale)),
@@ -291,8 +293,14 @@ function renderReviewBody(
 function renderCoreComparison(
   played: MoveReviewCandidate,
   best: MoveReviewCandidate,
+  core: MoveReviewCore | undefined,
   copy: MoveReviewCopy,
 ): string {
+  if (core?.kind === 'best-choice')
+    return `${copy.best} ${played.label} · ${copy.runnerUp} ${core.bestChoice.runnerUpUci}: ${moveReviewVerdictCodeLabel(
+      core.bestChoice.runnerUpVerdictCode,
+      copy,
+    )}`;
   return played.uci === best.uci
     ? `${copy.played} + ${copy.best} · ${played.label}`
     : `${copy.played} ${played.label} · ${copy.best} ${best.label}`;
@@ -323,8 +331,14 @@ function renderTerminalOutcomes(core: MoveReviewCore, props: MoveReviewPanelProp
       ? `${props.copy.terminalLabels.checkmate} · ${props.copy.colorLabels[terminal.winner]}`
       : props.copy.terminalLabels[terminal.kind];
   return hl('dl.move-review__outcomes', [
-    core.referenceTerminal && hl('div', [hl('dt', props.copy.best), hl('dd', label(core.referenceTerminal))]),
-    core.reviewedTerminal && hl('div', [hl('dt', props.copy.played), hl('dd', label(core.reviewedTerminal))]),
+    core.referenceTerminal && hl('div', [
+      hl('dt', core.kind === 'best-choice' ? props.copy.runnerUp : props.copy.best),
+      hl('dd', label(core.referenceTerminal)),
+    ]),
+    core.reviewedTerminal && hl('div', [
+      hl('dt', core.kind === 'best-choice' ? props.copy.best : props.copy.played),
+      hl('dd', label(core.reviewedTerminal)),
+    ]),
   ]);
 }
 
@@ -374,6 +388,7 @@ function renderCandidateReview(candidate: MoveReviewCandidate, props: MoveReview
   const reasonById = new Map(review.reasons.map(reason => [reason.id, reason]));
   const orderedRefs = [
     ...(review.core.reasonRefs.primary ? [review.core.reasonRefs.primary] : []),
+    ...review.core.reasonRefs.routes,
     ...review.core.reasonRefs.support,
   ];
   const reasons = orderedRefs
@@ -598,6 +613,8 @@ function reasonRoleLabel(role: MoveReviewReasonRole, copy: MoveReviewCopy): stri
       return copy.primaryReason;
     case 'support':
       return copy.supportingReason;
+    case 'proof-route':
+      return copy.proofRouteReason;
   }
 }
 

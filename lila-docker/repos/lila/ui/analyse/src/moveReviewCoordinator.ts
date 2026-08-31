@@ -1,9 +1,7 @@
 import { randomToken } from 'lib/algo';
 import {
-  moveReviewCacheKey,
   moveReviewCopy,
   moveReviewSubjectKey,
-  MoveReviewMemoryLru,
   type MoveReviewJobState,
   type MoveReviewLocale,
   type MoveReviewSnapshot,
@@ -32,20 +30,15 @@ export interface MoveReviewCoordinatorHost {
   stateChanged(state: MoveReviewJobState): void;
 }
 
-type LeaseMessage = { type: 'claim'; token: string; order: number } | { type: 'release'; token: string };
-
-const channelName = 'chesstory.position-commentary.v6';
+const lockName = 'chesstory.position-commentary.v6';
 const debounceMillis = 250;
 
 export class MoveReviewCoordinator {
-  private readonly cache = new MoveReviewMemoryLru<Extract<MoveReviewSnapshot, { kind: 'completed' }>>(64);
-  private readonly token = randomToken();
-  private readonly channel = new BroadcastChannel(channelName);
   private generation = 0;
-  private leaseClock = 0;
-  private claimOrder = 0;
-  private ownerToken = this.token;
-  private ownerClaimOrder = 0;
+  private authorityGeneration = 0;
+  private authorityAbort?: AbortController;
+  private authorityRelease?: () => void;
+  private hasAuthority = false;
   private active = false;
   private subject?: MoveReviewSubject;
   private completed?: Extract<MoveReviewSnapshot, { kind: 'completed' }>;
@@ -56,33 +49,21 @@ export class MoveReviewCoordinator {
   constructor(
     private readonly locale: MoveReviewLocale,
     private readonly host: MoveReviewCoordinatorHost,
-  ) {
-    this.channel.onmessage = event => this.receiveLease(event.data as LeaseMessage);
-  }
+  ) {}
 
   activate(): void {
+    if (this.active) return;
     this.active = true;
-    this.claimOrder = ++this.leaseClock;
-    this.ownerToken = this.token;
-    this.ownerClaimOrder = this.claimOrder;
-    this.channel.postMessage({
-      type: 'claim',
-      token: this.token,
-      order: this.claimOrder,
-    } satisfies LeaseMessage);
-    this.arm();
+    this.acquireAuthority();
   }
 
   deactivate(): void {
+    if (!this.active) return;
     this.active = false;
     const incomplete = this.subject !== undefined && !this.completed;
+    this.releaseAuthority();
     this.cancelAttempt();
     if (incomplete) this.host.stateChanged({ kind: 'loading', subject: this.subject! });
-    if (this.ownerToken === this.token)
-      this.channel.postMessage({
-        type: 'release',
-        token: this.token,
-      } satisfies LeaseMessage);
   }
 
   settle(subject: MoveReviewSubject | undefined): void {
@@ -107,12 +88,10 @@ export class MoveReviewCoordinator {
 
   destroy(): void {
     this.deactivate();
-    this.channel.close();
   }
 
   private arm(): void {
-    if (!this.active || this.ownerToken !== this.token || !this.subject || this.completed || this.abort)
-      return;
+    if (!this.active || !this.hasAuthority || !this.subject || this.completed || this.abort) return;
     if (this.debounceTimer !== undefined) window.clearTimeout(this.debounceTimer);
     const subjectKey = moveReviewSubjectKey(this.subject);
     this.debounceTimer = window.setTimeout(() => {
@@ -131,7 +110,6 @@ export class MoveReviewCoordinator {
     let completed: Extract<MoveReviewSnapshot, { kind: 'completed' }> | undefined;
     let positionAction: Extract<MoveReviewSnapshot, { kind: 'position-action' }> | undefined;
     let abstained = false;
-    let cacheHit = false;
     try {
       const prepared = await this.host.prepare(subject, abort.signal);
       if (!this.isCurrent(generation, subject) || abort.signal.aborted) return;
@@ -163,25 +141,10 @@ export class MoveReviewCoordinator {
             positionAction = incoming;
             return;
           }
-          const cached = this.cache.get(
-            moveReviewCacheKey(subject, {
-              engineProfile: incoming.engineProfile,
-              judgmentRevision: incoming.judgmentRevision,
-              annotationPolicyRevision: incoming.annotationPolicyRevision,
-            }),
-          );
-          if (cached) {
-            completed = cached;
-            cacheHit = true;
-            abort.abort();
-          } else if (incoming.kind === 'completed') completed = incoming;
+          if (incoming.kind === 'completed') completed = incoming;
         },
         abort.signal,
       );
-      if (cacheHit && completed && this.isCurrent(generation, subject)) {
-        this.publishCompleted(completed, abort);
-        return;
-      }
       if (!this.isCurrent(generation, subject) || abort.signal.aborted) return;
       if (positionAction) {
         this.finishAttempt(abort);
@@ -195,20 +158,8 @@ export class MoveReviewCoordinator {
         return;
       }
       if (!completed) throw new Error('move-review-source-ended');
-      this.cache.set(
-        moveReviewCacheKey(completed.subject, {
-          engineProfile: completed.engineProfile,
-          judgmentRevision: completed.judgmentRevision,
-          annotationPolicyRevision: completed.annotationPolicyRevision,
-        }),
-        completed,
-      );
       this.publishCompleted(completed, abort);
     } catch (error) {
-      if (cacheHit && completed && this.isCurrent(generation, subject)) {
-        this.publishCompleted(completed, abort);
-        return;
-      }
       if (!this.isCurrent(generation, subject) || abort.signal.aborted) return;
       this.completed = undefined;
       this.finishAttempt(abort);
@@ -233,7 +184,7 @@ export class MoveReviewCoordinator {
   private isCurrent(generation: number, subject: MoveReviewSubject): boolean {
     return (
       generation === this.generation &&
-      this.ownerToken === this.token &&
+      this.hasAuthority &&
       this.subject !== undefined &&
       moveReviewSubjectKey(this.subject) === moveReviewSubjectKey(subject)
     );
@@ -259,31 +210,45 @@ export class MoveReviewCoordinator {
     this.host.resumeLiveEngine();
   }
 
-  private receiveLease(message: LeaseMessage): void {
-    if (!message || message.token === this.token) return;
-    if (message.type === 'release') {
-      if (this.ownerToken !== message.token || !this.active) return;
-      this.ownerToken = this.token;
-      this.ownerClaimOrder = this.claimOrder;
-      this.channel.postMessage({
-        type: 'claim',
-        token: this.token,
-        order: this.claimOrder,
-      } satisfies LeaseMessage);
+  private acquireAuthority(): void {
+    const locks = typeof navigator === 'undefined' ? undefined : navigator.locks;
+    if (!locks) {
+      // ponytail: without Web Locks, independent server jobs are safer than another client lease protocol.
+      this.hasAuthority = true;
       this.arm();
       return;
     }
-    this.leaseClock = Math.max(this.leaseClock, message.order);
-    // An activation that observed another claim is causally newer. Truly
-    // concurrent claims have the same order and converge by token.
-    const remoteWins =
-      message.order > this.ownerClaimOrder ||
-      (message.order === this.ownerClaimOrder && message.token > this.ownerToken);
-    if (!remoteWins) return;
-    this.ownerToken = message.token;
-    this.ownerClaimOrder = message.order;
-    const incomplete = this.subject !== undefined && !this.completed;
-    this.cancelAttempt();
-    if (incomplete) this.host.stateChanged({ kind: 'loading', subject: this.subject! });
+
+    const generation = ++this.authorityGeneration;
+    const abort = new AbortController();
+    this.authorityAbort = abort;
+    void locks
+      .request(lockName, { mode: 'exclusive', signal: abort.signal }, async () => {
+        if (generation !== this.authorityGeneration || !this.active) return;
+        if (this.authorityAbort === abort) this.authorityAbort = undefined;
+        this.hasAuthority = true;
+        this.arm();
+        await new Promise<void>(resolve => {
+          this.authorityRelease = resolve;
+        });
+        if (generation !== this.authorityGeneration) return;
+        this.authorityRelease = undefined;
+        this.hasAuthority = false;
+      })
+      .catch(() => {
+        if (generation !== this.authorityGeneration || abort.signal.aborted || !this.active) return;
+        if (this.authorityAbort === abort) this.authorityAbort = undefined;
+        this.hasAuthority = true;
+        this.arm();
+      });
+  }
+
+  private releaseAuthority(): void {
+    this.authorityGeneration++;
+    this.authorityAbort?.abort();
+    this.authorityAbort = undefined;
+    this.hasAuthority = false;
+    this.authorityRelease?.();
+    this.authorityRelease = undefined;
   }
 }

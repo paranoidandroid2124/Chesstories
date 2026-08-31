@@ -1,7 +1,6 @@
 """Fail-closed candidate freezing and post-run attestation contracts.
 
-This module implements the ordering boundary in JudgmentBoundary section 10:
-candidate inputs are frozen before execution; raw run/adjudication evidence is
+Candidate inputs are frozen before execution; raw run/adjudication evidence is
 attested before statistical unblinding; and a separate signed qualification
 binds the later report and release decision.  Signing keys are accepted as
 in-memory bytes and are never placed in a returned document or written beside

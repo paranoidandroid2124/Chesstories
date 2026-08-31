@@ -36,10 +36,10 @@ object RelativeCauseConstructionAdmission:
       graph: TypedEvidenceGraph,
       admittedChannels: List[DirectCauseChannel]
   ): Boolean =
-    if cause.strategicCauseKind then
-      cause.hasOwnedAdmissibleLongTermProof(graph) &&
+    if cause.passedPawnResultCauseKind then
+      cause.hasOwnedPassedPawnResultProof(graph) &&
         admittedChannels.forall(
-          graph.relativeCauseStrategicChannelHasOwnedLongTermProof(cause, _)
+          graph.relativeCauseChannelHasOwnedPassedPawnResultProof(cause, _)
         )
     else cause.hasOwnedTypedDepth(graph)
 
@@ -49,10 +49,10 @@ object RelativeCauseConstructionAdmission:
   ): List[DirectCauseChannel] =
     graph.relativeCauseBinding(cause).toList.flatMap { _ =>
       cause.directEffectAdmission match
-        case DirectEffectAdmission.Restricted(occurrences) if occurrences.nonEmpty =>
+        case DirectEffectAdmission.Restricted(endpointObservations) if endpointObservations.nonEmpty =>
           EvidenceObjectBinding
             .rawDirectSentenceChannelsForProjection(cause, graph)
-            .filter(channel => occurrences(channel.exactOccurrenceFingerprint))
+            .filter(channel => endpointObservations.contains(channel.exactOccurrenceFingerprint))
         case DirectEffectAdmission.Unresolved | DirectEffectAdmission.Restricted(_) =>
           Nil
     }

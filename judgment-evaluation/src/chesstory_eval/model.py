@@ -201,8 +201,3 @@ def require_stage(stage: str) -> str:
     if stage not in STAGES:
         raise ContractError(f"unknown stage: {stage!r}")
     return stage
-
-
-def previous_stage(stage: str) -> str | None:
-    index = STAGES.index(require_stage(stage))
-    return STAGES[index - 1] if index else None

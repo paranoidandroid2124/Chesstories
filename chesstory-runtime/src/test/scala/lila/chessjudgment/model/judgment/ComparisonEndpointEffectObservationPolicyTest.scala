@@ -2,7 +2,7 @@ package lila.chessjudgment.model.judgment
 
 import chess.{ White, Black }
 import lila.chessjudgment.model.line.{ CanonicalPositionHistory, PrincipalVariationEvidence }
-import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.model.line.EngineLine
 
 class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
 
@@ -10,42 +10,6 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
   private val root = PositionNodeRef(rootFen, 0, Some(White))
   private val reference = LineNodeRef("reference", "d1d2", 1, LineNodeRole.BestReference)
   private val candidate = LineNodeRef("candidate", "d1h5", 2, LineNodeRole.Played)
-
-  private def rootActor(moveUci: String, role: String): RootCausalActor =
-    RootCausalActor(
-      moveUci,
-      EvidencePieceRole(role),
-      White,
-      EvidenceSquare(moveUci.take(2)),
-      EvidenceSquare(moveUci.slice(2, 4))
-    )
-
-  test("strategic endpoint outcome ignores which root piece realizes the shared axis"):
-    val axis = StrategicAxisDetail(
-      StrategicAxisKind.PlanCoherence,
-      StrategicAxisPolarity.Gain,
-      "plan-a"
-    )
-    val referenceObservation = ComparisonEndpointEffectObservationPolicy
-      .fromStrategicAxis(root, rootActor(reference.rootMove, "queen"), axis)
-      .getOrElse(fail("expected reference observation"))
-    val candidateObservation = ComparisonEndpointEffectObservationPolicy
-      .fromStrategicAxis(root, rootActor(candidate.rootMove, "queen"), axis)
-      .getOrElse(fail("expected candidate observation"))
-    val kingLine = LineNodeRef("king-candidate", "e1f1", 3, LineNodeRole.Alternative)
-    val differentActor = ComparisonEndpointEffectObservationPolicy
-      .fromStrategicAxis(root, rootActor(kingLine.rootMove, "king"), axis)
-      .getOrElse(fail("expected different-actor observation"))
-
-    assertEquals(referenceObservation.scope, candidateObservation.scope)
-    assertEquals(referenceObservation.scope, differentActor.scope)
-    assertEquals(
-      ComparisonEndpointEffectObservationPolicy.compareMagnitude(
-        referenceObservation.magnitude,
-        candidateObservation.magnitude
-      ),
-      ComparisonEndpointEffectObservationPolicy.MagnitudeRelation.Equal
-    )
 
   test("material timing belongs to typed magnitude and Pareto trade-offs fail closed"):
     val earlier = exactMaterialObservation(
@@ -131,61 +95,6 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
       List("consequence:material-transfer")
     )
 
-  test("complete inventories require a unique observation per semantic scope"):
-    val observation = ComparisonEndpointEffectObservationPolicy
-      .fromStrategicAxis(
-        root,
-        rootActor(reference.rootMove, "queen"),
-        StrategicAxisDetail(
-          StrategicAxisKind.PlanCoherence,
-          StrategicAxisPolarity.Gain,
-          "plan-a"
-        )
-      )
-      .getOrElse(fail("expected observation"))
-    val ambiguous = observation.copy(
-      magnitude = ComparisonEndpointEffectMagnitude.Exact(
-        DirectCauseImportanceMeasure.StructuralStrength(5)
-      )
-    )
-
-    assertEquals(
-      EvidenceObjectBinding.completeEndpointObservations(
-        List(Some(observation), Some(observation))
-      ),
-      Some(Set(observation)),
-      "support-id duplicates must canonicalize to one semantic observation"
-    )
-    assertEquals(
-      EvidenceObjectBinding.completeEndpointObservations(
-        List(Some(observation), Some(ambiguous))
-      ),
-      None,
-      "one scope with conflicting typed magnitudes must fail closed"
-    )
-
-    assertEquals(
-      ComparisonEndpointEffectObservationPolicy.uniqueObservationFor(
-        ComparisonEndpointEffectInventory.Complete(Set(observation)),
-        observation.scope
-      ),
-      Some(Some(observation))
-    )
-    assertEquals(
-      ComparisonEndpointEffectObservationPolicy.uniqueObservationFor(
-        ComparisonEndpointEffectInventory.Complete(Set(observation, ambiguous)),
-        observation.scope
-      ),
-      None
-    )
-    assertEquals(
-      ComparisonEndpointEffectObservationPolicy.uniqueObservationFor(
-        ComparisonEndpointEffectInventory.Incomplete,
-        observation.scope
-      ),
-      None
-    )
-
   test("complete line inventory carries mate magnitude and qualitative endgame conversion"):
     val mateFen = "7k/8/5KQ1/8/8/8/8/8 w - - 0 1"
     val matePosition = PositionNodeRef(mateFen, 0, Some(White))
@@ -194,7 +103,7 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
     val mateConsequence = LineConsequence(
       LineConsequenceKind.Mate,
       List(mateLine.rootMove),
-      proofSignal = true,
+      directCauseProjectionEligible = true,
       eventMove = Some(mateLine.rootMove),
       rootMove = Some(mateLine.rootMove),
       rootSide = Some(White),
@@ -235,26 +144,108 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
       EvidenceScope.BestLine,
       EvidenceConfidence.LegalReplayVerified
     )
-    val mateObservations = EvidenceObjectBinding
-      .comparisonEndpointLineObservations(mateRef, matePayload, matePosition)
-      .mate match
-        case ComparisonEndpointEffectInventory.Complete(observations) => observations
-        case ComparisonEndpointEffectInventory.Incomplete => fail("expected complete mate inventory")
-    assert(
-      mateObservations.exists(
-        _.magnitude == ComparisonEndpointEffectMagnitude.Exact(
-          DirectCauseImportanceMeasure.MateArrival(0)
-        )
+    val episode = matePayload.rootOwnedCausalEpisodes(mateLine.rootMove) match
+      case exact :: Nil => exact
+      case _ => fail("expected one root-owned mate episode")
+    val binding = EvidenceObjectBinding(
+      source = mateRef,
+      actor = List(ConcreteChessObject(EvidenceObjectKind.Piece, "white-queen")),
+      target = List(ConcreteChessObject(EvidenceObjectKind.Piece, "black-king")),
+      mechanism = List(ConcreteChessObject(EvidenceObjectKind.Mechanism, "mate")),
+      consequence = List(ConcreteChessObject(EvidenceObjectKind.Consequence, "mate")),
+      line = Some(mateLine),
+      horizon = Some("ply:0")
+    )
+    val mateProof = RootOwnedEffectProof.LineEpisode(mateRef, matePayload, episode)
+    val mateObservation = ComparisonEndpointEffectObservationPolicy
+      .fromLineEpisode(matePosition, mateLine, binding, mateProof, episode)
+      .getOrElse(fail("expected exact mate observation"))
+    assertEquals(
+      mateObservation.magnitude,
+      ComparisonEndpointEffectMagnitude.Exact(DirectCauseImportanceMeasure.MateArrival(0))
+    )
+
+    val checkEvent = matePayload.eventsForRootMove(mateLine.rootMove).find(_.kind == LineEventKind.Check)
+      .getOrElse(fail("expected root check event"))
+    val checkProof = RootOwnedEffectProof.RootLineEvent(mateRef, matePayload, checkEvent)
+    val checkObservation = ComparisonEndpointEffectObservationPolicy
+      .fromRootLineEvent(matePosition, mateLine, binding, checkProof, checkEvent)
+      .getOrElse(fail("expected qualitative root-event observation"))
+    assertEquals(
+      checkObservation.scope.effectIdentity.primitiveKind,
+      RootOwnedEffectPrimitiveKind.RootLineEvent
+    )
+    assertEquals(checkObservation.magnitude, ComparisonEndpointEffectMagnitude.QualitativePresence)
+
+    val channel = DirectCauseChannel(
+      binding = binding,
+      rootActor = episode.actor,
+      directChange = DirectCausalChange.Occurred,
+      rootOwnedProof = Some(mateProof)
+    )
+    val comparisonRef = mateRef.copy(
+      id = "comparison",
+      producer = EvidenceProducer.RelativeMoveProducer,
+      layer = EvidenceLayer.CandidateComparison,
+      line = None,
+      scope = EvidenceScope.Counterfactual
+    )
+    val admittedCause = RelativeCauseFact(
+      kind = RelativeCauseKind.KingForcing,
+      comparisonEvidence = comparisonRef,
+      supportEvidence = Nil,
+      sourceSide = RelativeCauseSourceSide.Candidate,
+      attribution = CauseAttribution(CauseAttributionKind.CandidateCreatesValue),
+      directEffectAdmission = DirectEffectAdmission.Restricted(
+        Map(channel.exactOccurrenceFingerprint -> Some(mateObservation))
       )
     )
-    val mateQualitative = EvidenceObjectBinding
-      .comparisonEndpointLineObservations(mateRef, matePayload, matePosition)
-      .qualitative match
-        case ComparisonEndpointEffectInventory.Complete(observations) => observations
-        case ComparisonEndpointEffectInventory.Incomplete => fail("expected complete qualitative inventory")
-    assert(mateQualitative.exists(
-      _.scope.effectIdentity.primitiveKind == RootOwnedEffectPrimitiveKind.RootLineEvent
-    ))
+    assertEquals(admittedCause.admittedEndpointObservation(channel), Some(mateObservation))
+    assertEquals(
+      admittedCause.admittedEndpointObservation(channel.copy(directChange = DirectCausalChange.Lost)),
+      None,
+      "a different occurrence must not borrow the transported endpoint observation"
+    )
+    assertEquals(
+      admittedCause
+        .copy(attribution = CauseAttribution(CauseAttributionKind.CandidateAllowsLiability))
+        .admittedEndpointObservation(channel),
+      None,
+      "transported endpoint stake must still agree with Cause attribution"
+    )
+    val membership = ComparisonEndpointWitnessDemandEntry
+      .fromChannel(
+        RelativeCauseSourceSide.Reference,
+        ComparisonEndpointWitnessDemandMode.MembershipOnly,
+        channel
+      )
+      .getOrElse(fail("expected exact membership demand"))
+    val closure = ComparisonEndpointWitnessDemandEntry
+      .fromChannel(
+        RelativeCauseSourceSide.Reference,
+        ComparisonEndpointWitnessDemandMode.DifferentialClosure,
+        channel
+      )
+      .getOrElse(fail("expected exact closure demand"))
+    val membershipDemand = ComparisonEndpointWitnessDemand.fromEntries(List(membership, membership))
+    assertEquals(membershipDemand.entries.size, 1)
+    assertEquals(membershipDemand.entriesForEndpoint(RelativeCauseSourceSide.Candidate), Nil)
+    assertEquals(
+      ComparisonEndpointWitnessDemand.fromEntries(List(closure))
+        .entriesForEndpoint(RelativeCauseSourceSide.Candidate),
+      List(closure)
+    )
+    val secondCarrier = ComparisonEndpointWitnessDemandEntry
+      .fromChannel(
+        RelativeCauseSourceSide.Reference,
+        ComparisonEndpointWitnessDemandMode.MembershipOnly,
+        channel.copy(binding = binding.copy(source = mateRef.copy(id = "second-carrier")))
+      )
+      .getOrElse(fail("expected second carrier occurrence"))
+    assertEquals(
+      ComparisonEndpointWitnessDemand.fromEntries(List(membership, secondCarrier)).entries.size,
+      2
+    )
 
   private def comparisonFact(
       kind: CandidateComparisonKind,
@@ -325,8 +316,7 @@ class ComparisonEndpointEffectObservationPolicyTest extends munit.FunSuite:
         effectIdentity = RootOwnedEffectIdentity(
           primitiveKind = RootOwnedEffectPrimitiveKind.LineEpisode,
           targetSignatures = materialTransfer,
-          planIds = Nil,
-          strategicAxes = Nil
+          passedPawnResultKindIds = Nil
         ),
         stake = stake
       ),

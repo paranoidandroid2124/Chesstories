@@ -102,63 +102,57 @@ export default class CevalCtrl {
     onFailure: (error: string) => void,
   ): Promise<MoveReviewPreflightResult> => {
     this.stopMoveReview();
-    const failures: MoveReviewPreflightFailure[] = [];
+    if (options.signal.aborted) return { ok: false, failures: [] };
 
-    for (const capability of this.engines.moveReviewCapabilities()) {
-      if (options.signal.aborted) return { ok: false, failures };
-      if (!capability.supported) {
-        failures.push({
-          profile: capability.profile,
-          reason: capability.reason,
-        });
-        continue;
-      }
-      let bootFailure: string | undefined;
-      let preflightComplete = false;
-      const worker = this.engines.makeMoveReview(
-        capability,
-        status => {
-          if (!status?.error) return;
-          bootFailure = status.error;
-          if (preflightComplete && this.moveReviewWorker === worker) {
-            this.moveReviewReady = false;
-            onFailure(status.error);
-          }
-        },
-        options.signal,
-      );
+    const capability = this.engines.moveReviewCapability();
+    if (!capability.supported)
+      return {
+        ok: false,
+        failures: [{ profile: capability.profile, reason: capability.reason }],
+      };
 
-      this.moveReviewWorker = worker;
-      this.moveReviewProfile = capability.profile;
-      this.moveReviewVariant = options.variant;
-      const ready = await worker.ready;
-      preflightComplete = true;
-      if (options.signal.aborted) {
-        failures.push({
-          profile: capability.profile,
-          reason: 'preflight-cancelled',
-        });
-        if (this.moveReviewWorker === worker) this.clearMoveReviewWorker();
-        else worker.destroy();
-        return { ok: false, failures };
-      }
-      if (ready && !bootFailure && this.moveReviewWorker === worker) {
-        this.moveReviewReady = true;
-        return {
-          ok: true,
-          profile: capability.profile,
-        };
-      }
+    let bootFailure: string | undefined;
+    let preflightComplete = false;
+    const worker = this.engines.makeMoveReview(
+      capability,
+      status => {
+        if (!status?.error) return;
+        bootFailure = status.error;
+        if (preflightComplete && this.moveReviewWorker === worker) {
+          this.moveReviewReady = false;
+          onFailure(status.error);
+        }
+      },
+      options.signal,
+    );
 
-      failures.push({
-        profile: capability.profile,
-        reason: 'preflight-failed',
-      });
+    this.moveReviewWorker = worker;
+    this.moveReviewProfile = capability.profile;
+    this.moveReviewVariant = options.variant;
+    const ready = await worker.ready;
+    preflightComplete = true;
+    if (options.signal.aborted) {
       if (this.moveReviewWorker === worker) this.clearMoveReviewWorker();
       else worker.destroy();
+      return {
+        ok: false,
+        failures: [{ profile: capability.profile, reason: 'preflight-cancelled' }],
+      };
+    }
+    if (ready && !bootFailure && this.moveReviewWorker === worker) {
+      this.moveReviewReady = true;
+      return {
+        ok: true,
+        profile: capability.profile,
+      };
     }
 
-    return { ok: false, failures };
+    if (this.moveReviewWorker === worker) this.clearMoveReviewWorker();
+    else worker.destroy();
+    return {
+      ok: false,
+      failures: [{ profile: capability.profile, reason: 'preflight-failed' }],
+    };
   };
 
   startMoveReview = (profile: MoveReviewEngineProfile, input: MoveReviewWorkInput): boolean => {

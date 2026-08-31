@@ -930,7 +930,6 @@ class ExperimentRunner:
                 "fact_bundle": payload("F"),
                 "cause_bundle": payload("C"),
                 "ranking_bundle": payload("R"),
-                "plan_events": payload("Jp")["plan_events"],
             }
         raise ContractError(f"unknown stage: {stage}")
 

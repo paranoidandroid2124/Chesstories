@@ -622,15 +622,17 @@ export default class AnalyseCtrl implements CevalHandler {
       stateChanged: this.setMoveReviewState,
     };
     this.moveReviewCoordinator = new MoveReviewCoordinator(this.moveReviewLocale, host);
-    const updateVisibility = (): void => {
-      if (document.visibilityState === 'hidden') this.moveReviewCoordinator?.deactivate();
+    const updateActivity = (): void => {
+      if (document.visibilityState === 'hidden' || !document.hasFocus())
+        this.moveReviewCoordinator?.deactivate();
       else this.moveReviewCoordinator?.activate();
     };
-    document.addEventListener('visibilitychange', updateVisibility);
-    window.addEventListener('focus', updateVisibility);
+    document.addEventListener('visibilitychange', updateActivity);
+    window.addEventListener('focus', updateActivity);
+    window.addEventListener('blur', updateActivity);
     window.addEventListener('pagehide', () => this.moveReviewCoordinator?.deactivate());
-    window.addEventListener('pageshow', updateVisibility);
-    if (document.visibilityState !== 'hidden') this.moveReviewCoordinator.activate();
+    window.addEventListener('pageshow', updateActivity);
+    updateActivity();
     this.scheduleMoveReviewForCurrentEdge();
   }
 

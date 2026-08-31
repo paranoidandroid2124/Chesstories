@@ -6,9 +6,9 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
 
   private final case class IdentityParts(
       primitiveKind: RootOwnedEffectPrimitiveKind,
-      planIds: List[String] = Nil,
-      strategicAxes: List[RootOwnedStrategicAxisIdentity] = Nil,
-      planResult: Option[PlanResultSemanticIdentity] = None
+      passedPawnResultKindIds: List[String] = Nil,
+      passedPawnResult: Option[PassedPawnResultSemanticIdentity] = None,
+      causalProofId: Option[String] = None
   )
 
   def describe(
@@ -21,9 +21,9 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
       identity = RootOwnedEffectIdentity(
         primitiveKind = parts.primitiveKind,
         targetSignatures = binding.target.map(_.signaturePart).distinct.sorted,
-        planIds = parts.planIds.map(normalize).filter(_.nonEmpty).distinct.sorted,
-        strategicAxes = parts.strategicAxes.distinct.sortBy(_.stableKey),
-        planResult = parts.planResult
+        passedPawnResultKindIds = parts.passedPawnResultKindIds.map(normalize).filter(_.nonEmpty).distinct.sorted,
+        passedPawnResult = parts.passedPawnResult,
+        causalProofId = parts.causalProofId
       ),
       magnitude = magnitudeKnowledge(proof, binding, materialOutcome),
       materialEventSalience = materialOutcome.map(_.event)
@@ -37,23 +37,17 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
         IdentityParts(RootOwnedEffectPrimitiveKind.RootLineEvent)
       case _: RootOwnedEffectProof.RootRelation =>
         IdentityParts(RootOwnedEffectPrimitiveKind.RootRelation)
-      case RootOwnedEffectProof.PlanResult(_, event, assessment, selectedInducedResponse) =>
+      case RootOwnedEffectProof.ForcedReplyResourceDifferential(_, result) =>
         IdentityParts(
-          RootOwnedEffectPrimitiveKind.PlanResult,
-          planIds = List(event.planId.id),
-          planResult = Some(
-            PlanResultSemanticIdentity.from(event, assessment, selectedInducedResponse)
-          )
+          RootOwnedEffectPrimitiveKind.CausalResourceDifferential,
+          causalProofId = Some(result.semanticId)
         )
-      case RootOwnedEffectProof.StrategicAxis(primitive, axis, outcome) =>
-        val base = identityParts(primitive)
-        base.copy(
-          strategicAxes = base.strategicAxes :+ RootOwnedStrategicAxisIdentity(
-            kind = axis.kind,
-            polarity = axis.polarity,
-            label = normalize(axis.label),
-            comparisonOutcome = outcome
-          )
+      case RootOwnedEffectProof.PassedPawnResult(_, result) =>
+        IdentityParts(
+          RootOwnedEffectPrimitiveKind.PassedPawnResult,
+          passedPawnResultKindIds = List(result.event.passedPawnResultKind.id),
+          passedPawnResult = Some(result.semanticIdentity),
+          causalProofId = Some(result.semanticId)
         )
 
   private def magnitudeKnowledge(
@@ -86,11 +80,10 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
             )).map(DirectEffectMagnitudeKnowledge.Exact.apply)
               .getOrElse(DirectEffectMagnitudeKnowledge.ExpectedButMissing)
           case _ => DirectEffectMagnitudeKnowledge.NotApplicable
-      case RootOwnedEffectProof.PlanResult(_, _, assessment, _) =>
-        expectedMagnitude(structuralMagnitude(assessment.consequence))
-      case RootOwnedEffectProof.StrategicAxis(primitive, _, _) =>
-        magnitudeKnowledge(primitive, binding, materialOutcome)
-      case _: RootOwnedEffectProof.RootLineEvent | _: RootOwnedEffectProof.RootRelation =>
+      case RootOwnedEffectProof.PassedPawnResult(_, result) =>
+        expectedMagnitude(structuralMagnitude(result.assessment.consequence))
+      case _: RootOwnedEffectProof.RootLineEvent | _: RootOwnedEffectProof.RootRelation |
+          _: RootOwnedEffectProof.ForcedReplyResourceDifferential =>
         DirectEffectMagnitudeKnowledge.NotApplicable
 
   private def expectedMagnitude(
@@ -106,8 +99,6 @@ private[judgment] object RootOwnedEffectDescriptorPolicy:
     proof match
       case RootOwnedEffectProof.LineEpisode(_, _, episode) =>
         episode.consequence.materialOutcome
-      case RootOwnedEffectProof.StrategicAxis(primitive, _, _) =>
-        rootOwnedMaterialOutcome(primitive)
       case _ => None
 
   private def structuralMagnitude(
@@ -210,14 +201,19 @@ private[chessjudgment] object RootOwnedEffectPolicy:
           false
     }
 
-  def planResultProofs(
+  def passedPawnResultProofs(
       cause: RelativeCauseFact,
       source: EvidenceRef,
-      event: PlanCausalEventEvidence
-  ): List[(PlanCausalResultAssessment, RootOwnedEffectProof)] =
-    exactPlanAssessments(cause.kind, event).map(assessment =>
-      assessment -> RootOwnedEffectProof.PlanResult(source, event, assessment)
-    )
+      result: PassedPawnResultProofEvidence
+  ): List[(PassedPawnResultReplyAssessment, RootOwnedEffectProof)] =
+    Option
+      .when(
+        result.comparisonDemand == cause.comparisonEvidence &&
+          RelativeCauseKind.passedPawnResultProofCanProveCause(cause.kind, result)
+      )(
+        result.assessment -> RootOwnedEffectProof.PassedPawnResult(source, result)
+      )
+      .toList
 
   def certify(
       cause: RelativeCauseFact,
@@ -270,7 +266,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
               cause.sourceSide,
               cause.attribution.kind
             ) &&
-              requiredExactPlanResultAuthority(cause, graph, proof) &&
+              requiredExactPassedPawnResultAuthority(cause, graph, proof) &&
               sameCausalRootBoard(cause, effect.binding, proof) &&
               expectedDirectChange(cause, proof).contains(effect.directChange) &&
               effect.binding.line.contains(eventLine) &&
@@ -286,101 +282,42 @@ private[chessjudgment] object RootOwnedEffectPolicy:
       }
     }
 
-  def strategicProof(
-      primitive: RootOwnedEffectProof,
-      axis: StrategicAxisDetail,
-      outcome: Option[StrategicAxisComparisonOutcome],
-      authorizedPlanResults: List[StrategicAxisPlanResultBinding]
-  ): Option[RootOwnedEffectProof] =
-    val exactPrimitive = primitive.primitiveProof
-    if !strategicPrimitiveAuthorized(exactPrimitive, axis, authorizedPlanResults) then None
-    else primitive match
-      case RootOwnedEffectProof.StrategicAxis(inner, existingAxis, existingOutcome)
-          if existingAxis.stableKey == axis.stableKey =>
-        val exactOutcome: Option[Option[StrategicAxisComparisonOutcome]] =
-          (existingOutcome, outcome) match
-            case (Some(existing), Some(requested)) if existing != requested => None
-            case (Some(existing), _)                                        => Some(Some(existing))
-            case (None, requested)                                         => Some(requested)
-        exactOutcome.map(resolved =>
-            RootOwnedEffectProof.StrategicAxis(
-              inner,
-              existingAxis,
-              resolved
-            )
-          )
-      case RootOwnedEffectProof.StrategicAxis(_, _, _) =>
-        None
-      case _ =>
-        Some(RootOwnedEffectProof.StrategicAxis(primitive, axis, outcome))
-
-  /** A strategic wrapper owns one primitive only through its exact typed
-    * producer/result binding. A non-PlanResult primitive does not require a
-    * plan-result binding; it still requires its own exact proof contract.
-    */
-  private[chessjudgment] def strategicPrimitiveAuthorized(
-      primitive: RootOwnedEffectProof,
-      axis: StrategicAxisDetail,
-      authorizedPlanResults: List[StrategicAxisPlanResultBinding]
-  ): Boolean =
-    val exactPrimitive = primitive.primitiveProof
-    val exactResultAuthority = exactPrimitive match
-      case RootOwnedEffectProof.PlanResult(source, _, assessment, selectedInducedResponse) =>
-        selectedInducedResponse.isEmpty &&
-          authorizedPlanResults.contains(StrategicAxisPlanResultBinding(source, assessment))
-      case _ =>
-        authorizedPlanResults.isEmpty
-    exactResultAuthority && strategicAxisOwnsPrimitive(exactPrimitive, axis)
-
-  /** Extracts only a bare exact plan result. Strategic wrappers belong to the
-    * strategic comparison inventory and cannot substitute for this primitive.
-    */
-  private[chessjudgment] def exactPlanResultPrimitive(
+  /** Extracts one exact passed-pawn-result occurrence. */
+  private[chessjudgment] def exactPassedPawnResultPrimitive(
       proof: RootOwnedEffectProof
-  ): Option[(
-      EvidenceRef,
-      PlanCausalEventEvidence,
-      PlanCausalResultAssessment,
-      Option[PlanCausalResponse]
-  )] =
+  ): Option[(EvidenceRef, PassedPawnResultProofEvidence)] =
     proof match
-      case RootOwnedEffectProof.PlanResult(source, event, assessment, selectedInducedResponse) =>
-        Some((source, event, assessment, selectedInducedResponse))
+      case RootOwnedEffectProof.PassedPawnResult(source, result) =>
+        Some((source, result))
       case _ =>
         None
 
-  private def requiredExactPlanResultAuthority(
+  private def requiredExactPassedPawnResultAuthority(
       cause: RelativeCauseFact,
       graph: TypedEvidenceGraph,
       proof: RootOwnedEffectProof
   ): Boolean =
-    exactPlanResultPrimitive(proof) match
-      case Some((source, event, assessment, Some(selectedInducedResponse)))
-          if cause.kind == RelativeCauseKind.WrongMoveOrder =>
-        graph
-          .comparisonFor(cause)
-          .toList
-          .flatMap(comparison =>
-            ComparisonEndpointEffectObservationPolicy
-              .exactInducedResponseMoveOrder(
-                comparison,
-                cause.sourceSide,
-                source,
-                event,
-                graph
-              )
+    proof match
+      case RootOwnedEffectProof.ForcedReplyResourceDifferential(source, result) =>
+        cause.kind == RelativeCauseKind.WrongMoveOrder &&
+          cause.sourceSide == RelativeCauseSourceSide.Reference &&
+          graph.comparisonFor(cause).exists(comparison =>
+            result.occurrence.referenceLine == comparison.referenceLine &&
+              result.occurrence.playedLine == comparison.candidateLine
+          ) &&
+          graph.record(source).exists(record =>
+            record.payload == result && graph.proofEligible(record)
           )
-          .contains(assessment -> selectedInducedResponse)
-      case Some((_, _, _, None)) if cause.kind == RelativeCauseKind.WrongMoveOrder =>
+      case _ if cause.kind == RelativeCauseKind.WrongMoveOrder =>
         false
-      case Some((_, _, _, Some(_))) =>
-        false
-      case exactPlanResult =>
-        !RelativeCauseKind.requiresExactPlanResult(cause.kind) ||
-          exactPlanResult.exists { case (_, event, assessment, selectedInducedResponse) =>
-            selectedInducedResponse.isEmpty &&
-            exactPlanAssessments(cause.kind, event).contains(assessment)
-          }
+      case RootOwnedEffectProof.PassedPawnResult(source, result) =>
+        result.comparisonDemand == cause.comparisonEvidence &&
+          RelativeCauseKind.passedPawnResultProofCanProveCause(cause.kind, result) &&
+          graph.record(source).exists(record =>
+            record.payload == result && graph.proofEligible(record)
+          )
+      case _ =>
+        !RelativeCauseKind.requiresExactPassedPawnResult(cause.kind)
 
   /** Common root-ownership predicates shared by Cause generation and public
     * projection. Callers may add kind-specific semantics, but may not weaken
@@ -478,61 +415,15 @@ private[chessjudgment] object RootOwnedEffectPolicy:
         Some(RootOwnedEffectStake.ActorValue)
       case RootOwnedEffectProof.RootRelation(_, _) =>
         Some(RootOwnedEffectStake.ActorValue)
-      case RootOwnedEffectProof.PlanResult(_, _, assessment, _) =>
-        assessment.robustness match
-          case PlanCausalRobustness.Refuted => Some(RootOwnedEffectStake.ActorLiability)
-          case PlanCausalRobustness.Robust | PlanCausalRobustness.Conditional =>
-            Some(RootOwnedEffectStake.ActorValue)
-          case PlanCausalRobustness.Untested | PlanCausalRobustness.Deferred |
-              PlanCausalRobustness.Superseded =>
-            None
-      case RootOwnedEffectProof.StrategicAxis(primitive, _, _) =>
-        effectStake(primitive, actor)
-
-  private[chessjudgment] def strategicAxisStake(
-      axis: StrategicAxisDetail
-  ): Option[RootOwnedEffectStake] =
-    axis.polarity match
-      case StrategicAxisPolarity.Gain | StrategicAxisPolarity.Support =>
+      case RootOwnedEffectProof.ForcedReplyResourceDifferential(_, _) =>
         Some(RootOwnedEffectStake.ActorValue)
-      case StrategicAxisPolarity.Concede =>
-        Some(RootOwnedEffectStake.ActorLiability)
-
-  private[chessjudgment] def strategicAxisChange(
-      axis: StrategicAxisDetail
-  ): Option[DirectCausalChange] =
-    axis.polarity match
-      case StrategicAxisPolarity.Gain => Some(DirectCausalChange.Occurred)
-      case StrategicAxisPolarity.Support =>
-        Some(DirectCausalChange.Maintained)
-      case StrategicAxisPolarity.Concede =>
-        Some(DirectCausalChange.Lost)
-
-  private def strategicAxisOwnsPrimitive(
-      primitive: RootOwnedEffectProof,
-      axis: StrategicAxisDetail
-  ): Boolean =
-    primitive match
-      case RootOwnedEffectProof.PlanResult(_, event, assessment, _) =>
-        val expectedPolarity =
-          if event.exactRobustPublicResultAssessments.contains(assessment) then
-            Some(StrategicAxisPolarity.Gain)
-          else if event.exactRefutedPublicResultAssessments.contains(assessment) then
-            Some(StrategicAxisPolarity.Concede)
-          else if
-            assessment.robustness == PlanCausalRobustness.Conditional &&
-              event.positiveCausalResultAssessments.contains(assessment)
-          then Some(StrategicAxisPolarity.Support)
-          else None
-        expectedPolarity.exists(polarity =>
-          axis.kind == StrategicAxisKind.PlanCoherence &&
-            axis.polarity == polarity &&
-            axis.label == event.planId.id
-        )
-      case RootOwnedEffectProof.StrategicAxis(_, _, _) =>
-        false
-      case _ =>
-        false
+      case RootOwnedEffectProof.PassedPawnResult(_, result) =>
+        result.assessment.robustness match
+          case PassedPawnResultReplyCoverage.AllLegalRepliesRealize | PassedPawnResultReplyCoverage.SomeRepliesRealize =>
+            Some(RootOwnedEffectStake.ActorValue)
+          case PassedPawnResultReplyCoverage.NoReplyWitnesses | PassedPawnResultReplyCoverage.IncompleteReplyCoverage |
+              PassedPawnResultReplyCoverage.AllRepliesDiverted =>
+            None
 
   private def proofSourceCarried(binding: EvidenceObjectBinding, source: EvidenceRef): Boolean =
     binding.source == source || binding.provenance.contains(source)
@@ -551,10 +442,10 @@ private[chessjudgment] object RootOwnedEffectPolicy:
         eligiblePayload(source, line)
       case RootOwnedEffectProof.RootRelation(source, relation) =>
         eligiblePayload(source, relation)
-      case RootOwnedEffectProof.PlanResult(source, event, _, _) =>
-        eligiblePayload(source, event)
-      case RootOwnedEffectProof.StrategicAxis(primitive, _, _) =>
-        primitiveSourceRegistered(graph, primitive)
+      case RootOwnedEffectProof.ForcedReplyResourceDifferential(source, result) =>
+        eligiblePayload(source, result)
+      case RootOwnedEffectProof.PassedPawnResult(source, result) =>
+        eligiblePayload(source, result)
 
   private def proofOwnsEventRoot(
       proof: RootOwnedEffectProof,
@@ -577,40 +468,30 @@ private[chessjudgment] object RootOwnedEffectPolicy:
           event.side.forall(_ == actor.color)
       case RootOwnedEffectProof.RootRelation(source, relation) =>
         relationRecordOwnsEventRoot(graph, source, relation, eventLine)
-      case RootOwnedEffectProof.PlanResult(source, event, _, _) =>
-        planEventOwnsRoot(source, event, eventLine, actor.color)
-      case RootOwnedEffectProof.StrategicAxis(primitive, _, _) =>
-        proofOwnsEventRoot(primitive, eventLine, actor, cause, graph, binding)
+      case RootOwnedEffectProof.ForcedReplyResourceDifferential(source, result) =>
+        forcedReplyResourceOwnsEventRoot(graph, source, result, eventLine, actor)
+      case RootOwnedEffectProof.PassedPawnResult(source, result) =>
+        passedPawnResultOwnsEventRoot(graph, source, result, eventLine, actor)
 
-  private def planTransitionRootOwned(
-      event: PlanCausalEventEvidence,
+  private[chessjudgment] def passedPawnResultOwnsEventRoot(
+      graph: TypedEvidenceGraph,
       source: EvidenceRef,
+      result: PassedPawnResultProofEvidence,
       eventLine: LineNodeRef,
       actor: RootCausalActor
   ): Boolean =
-    planEventOwnsRoot(source, event, eventLine, actor.color)
-
-  /** Exact root ownership shared by C proof transport and final root-owned
-    * effect certification. This verifies only the actor/root relation; the
-    * Cause-specific result remains a separate typed proof obligation.
-    */
-  private[chessjudgment] def planEventOwnsRoot(
-      source: EvidenceRef,
-      event: PlanCausalEventEvidence,
-      eventLine: LineNodeRef,
-      mover: Color
-  ): Boolean =
     source.line.contains(eventLine) &&
-      event.rootLine == eventLine &&
-      EvidenceRef.sameMove(event.rootMove, eventLine.rootMove) &&
-      event.perspective == mover &&
-      sameCausalRootOccurrence(source.position, event.rootTransition.from) &&
-      event.rootTransitionIsCertified
+      result.rootLine == eventLine &&
+      EvidenceRef.sameMove(result.rootMove, eventLine.rootMove) &&
+      RootCausalActor.fromPassedPawnResultEvent(result.event).contains(actor) &&
+      sameCausalRootOccurrence(source.position, result.event.rootTransition.from) &&
+      graph.record(source).exists(record =>
+        record.payload == result && graph.proofEligible(record)
+      )
 
   private def expectedDirectChange(
       cause: RelativeCauseFact,
-      proof: RootOwnedEffectProof,
-      inheritedAxis: Option[StrategicAxisDetail] = None
+      proof: RootOwnedEffectProof
   ): Option[DirectCausalChange] =
     proof match
       case RootOwnedEffectProof.LineEpisode(_, line, episode) =>
@@ -624,51 +505,41 @@ private[chessjudgment] object RootOwnedEffectPolicy:
                 episode.consequence
               ) && lineBeneficiaryCompatible(cause, episode.consequence, episode.actor.color)
           )(episode)
-          .flatMap(owned => lineConsequenceChange(cause, owned.consequence, owned.actor.color))
+          .flatMap(owned => lineConsequenceChange(owned.consequence, owned.actor.color))
       case RootOwnedEffectProof.RootLineEvent(_, _, event) =>
         Option
           .when(rootLocalEventAccepted(cause.kind, event.kind))(event.kind)
-          .flatMap(lineEventChange(cause, _))
+          .flatMap(lineEventChange)
       case RootOwnedEffectProof.RootRelation(_, relation) =>
         Option
-          .when(relationDirectlyProvesCause(relation, cause.kind))(
-            normalizeCauseChange(cause, DirectCausalChange.Occurred)
+          .when(relationDirectlyProvesCause(relation, cause.kind))(DirectCausalChange.Occurred)
+      case RootOwnedEffectProof.ForcedReplyResourceDifferential(_, result) =>
+        Option.when(
+          cause.kind == RelativeCauseKind.WrongMoveOrder && result.hasCompleteProofPaths
+        )(DirectCausalChange.Occurred)
+      case RootOwnedEffectProof.PassedPawnResult(_, result) =>
+        Option
+          .when(RelativeCauseKind.passedPawnResultProofCanProveCause(cause.kind, result))(
+            transitionConsequenceChange(result.assessment.consequence)
           )
-      case RootOwnedEffectProof.PlanResult(_, event, assessment, _) =>
-        val exactAssessment =
-          if cause.kind == RelativeCauseKind.WrongMoveOrder then
-            event.exactRobustPublicResultAssessments
-          else exactPlanAssessments(cause.kind, event)
-        exactAssessment
-          .find(_ == assessment)
-          .flatMap { exact =>
-            cause.kind match
-              case RelativeCauseKind.PlanImprovement | RelativeCauseKind.WrongMoveOrder =>
-                Some(transitionConsequenceChange(cause, exact.consequence))
-              case RelativeCauseKind.PlanContradiction => Some(DirectCausalChange.Refuted)
-              case _ => None
-          }
-      case RootOwnedEffectProof.StrategicAxis(primitive, axis, outcome) =>
-        val sameAxis = inheritedAxis.forall(existing =>
-          existing.kind == axis.kind && existing.polarity == axis.polarity
-        )
-        for
-          _ <- Option.when(strategicAxisOwnsPrimitive(primitive, axis)) { () }
-          primitiveChange <- expectedDirectChange(cause, primitive, Some(axis))
-          if RelativeCauseKind.strategicAxisCanProveCause(cause.kind, axis)
-          expectedAxisChange <- Option.when(sameAxis)(axisChange(cause, axis)).flatten
-          if primitiveChange == expectedAxisChange
-          if outcome.forall(strategicComparisonOutcomeCompatible(_, cause.sourceSide, primitiveChange))
-        yield primitiveChange
 
-  private def exactPlanAssessments(
-      kind: RelativeCauseKind,
-      event: PlanCausalEventEvidence
-  ): List[PlanCausalResultAssessment] =
-    kind match
-      case RelativeCauseKind.PlanImprovement => event.exactRobustPublicResultAssessments
-      case RelativeCauseKind.PlanContradiction => event.exactRefutedPublicResultAssessments
-      case _ => Nil
+  private def forcedReplyResourceOwnsEventRoot(
+      graph: TypedEvidenceGraph,
+      source: EvidenceRef,
+      result: ForcedReplyResourceDifferentialEvidence,
+      eventLine: LineNodeRef,
+      actor: RootCausalActor
+  ): Boolean =
+    source.line.contains(eventLine) &&
+      result.occurrence.referenceLine == eventLine &&
+      EvidenceRef.sameMove(result.occurrence.triggerStep.moveUci, eventLine.rootMove) &&
+      result.semantic.trigger.side == actor.color &&
+      result.semantic.trigger.beforeRole == actor.role &&
+      result.semantic.trigger.from == actor.from &&
+      result.semantic.trigger.to == actor.to &&
+      graph.record(source).exists(record =>
+        record.payload == result && graph.proofEligible(record)
+      )
 
   private def exactRootActor(binding: EvidenceObjectBinding, actor: RootCausalActor): Boolean =
     val expected = Set(
@@ -726,18 +597,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
           eventKind == LineEventKind.Promotion
       case _ => false
 
-  private def normalizeCauseChange(
-      cause: RelativeCauseFact,
-      raw: DirectCausalChange
-  ): DirectCausalChange =
-    if cause.kind == RelativeCauseKind.ConversionMiss &&
-      cause.sourceSide == RelativeCauseSourceSide.Candidate &&
-      cause.attribution.kind == CauseAttributionKind.CandidateAllowsLiability
-    then DirectCausalChange.Missed
-    else raw
-
   private def lineConsequenceChange(
-      cause: RelativeCauseFact,
       consequence: LineConsequence,
       actor: Color
   ): Option[DirectCausalChange] =
@@ -753,10 +613,9 @@ private[chessjudgment] object RootOwnedEffectPolicy:
         Some(DirectCausalChange.Occurred)
       case LineConsequenceKind.DrawResource => Some(DirectCausalChange.Maintained)
       case LineConsequenceKind.ForcedTheme | LineConsequenceKind.Sacrifice => None
-    raw.map(normalizeCauseChange(cause, _))
+    raw
 
   private def lineEventChange(
-      cause: RelativeCauseFact,
       kind: LineEventKind
   ): Option[DirectCausalChange] =
     val raw = kind match
@@ -764,40 +623,13 @@ private[chessjudgment] object RootOwnedEffectPolicy:
           LineEventKind.Mate | LineEventKind.Promotion | LineEventKind.CheckEvasion =>
         Some(DirectCausalChange.Occurred)
       case _ => None
-    raw.map(normalizeCauseChange(cause, _))
+    raw
 
   private def transitionConsequenceChange(
-      cause: RelativeCauseFact,
       consequence: TransitionConsequence
   ): DirectCausalChange =
     val raw = consequence.kind match
       case TransitionConsequenceKind.PawnTensionResolution => DirectCausalChange.Occurred
       case _ if consequence.removesState => DirectCausalChange.Lost
       case _ => DirectCausalChange.Occurred
-    normalizeCauseChange(cause, raw)
-
-  private def axisChange(
-      cause: RelativeCauseFact,
-      axis: StrategicAxisDetail
-  ): Option[DirectCausalChange] =
-    strategicAxisChange(axis).map(normalizeCauseChange(cause, _))
-
-  private def strategicComparisonOutcomeCompatible(
-      outcome: StrategicAxisComparisonOutcome,
-      sourceSide: RelativeCauseSourceSide,
-      change: DirectCausalChange
-  ): Boolean =
-    val resourceChange = Set(
-      DirectCausalChange.Occurred,
-      DirectCausalChange.Prevented,
-      DirectCausalChange.Maintained
-    )(change)
-    outcome match
-      case StrategicAxisComparisonOutcome.ReferenceOnly =>
-        sourceSide == RelativeCauseSourceSide.Reference && resourceChange
-      case StrategicAxisComparisonOutcome.CandidateOnly =>
-        sourceSide == RelativeCauseSourceSide.Candidate && resourceChange
-      case StrategicAxisComparisonOutcome.SharedSustained =>
-        change == DirectCausalChange.Maintained
-      case StrategicAxisComparisonOutcome.CandidateConcession =>
-        sourceSide == RelativeCauseSourceSide.Candidate && change == DirectCausalChange.Lost
+    raw

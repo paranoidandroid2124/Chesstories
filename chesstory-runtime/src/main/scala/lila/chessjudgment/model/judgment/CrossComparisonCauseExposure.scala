@@ -9,21 +9,16 @@ enum PlayerFacingCauseEffectMode:
 
 enum PlayerFacingCausalChange:
   case Occurred
-  case Prevented
   case Maintained
   case Lost
-  case Refuted
   case Missed
 
 object PlayerFacingCausalChange:
   def fromDirect(change: DirectCausalChange): PlayerFacingCausalChange =
     change match
       case DirectCausalChange.Occurred   => PlayerFacingCausalChange.Occurred
-      case DirectCausalChange.Prevented  => PlayerFacingCausalChange.Prevented
       case DirectCausalChange.Maintained => PlayerFacingCausalChange.Maintained
       case DirectCausalChange.Lost       => PlayerFacingCausalChange.Lost
-      case DirectCausalChange.Refuted    => PlayerFacingCausalChange.Refuted
-      case DirectCausalChange.Missed     => PlayerFacingCausalChange.Missed
 
 enum PlayerFacingCauseExposureTier:
   case Primary
@@ -43,7 +38,6 @@ final case class PlayerFacingCauseSelection(
     exposure: PlayerFacingCauseExposureTier,
     effectMode: PlayerFacingCauseEffectMode,
     channels: List[PlayerFacingCauseChannelSelection],
-    onlyMoveQualifiers: List[OnlyMoveCauseQualifier] = Nil,
     comparisonExposureRank: Int = Int.MaxValue,
     selectionOrder: Int = Int.MaxValue
 ):
@@ -66,8 +60,7 @@ object PlayerFacingCauseSelectionPolicy:
       causeEvidence: EvidenceRef,
       status: CrossComparisonExposureStatus,
       effectMode: PlayerFacingCauseEffectMode,
-      channels: List[DirectCauseChannel],
-      onlyMoveQualifiers: List[OnlyMoveCauseQualifier]
+      channels: List[DirectCauseChannel]
   ): Option[PlayerFacingCauseSelection] =
     val exposure = status match
       case CrossComparisonExposureStatus.SelectedPrimary =>
@@ -76,7 +69,11 @@ object PlayerFacingCauseSelectionPolicy:
         Some(PlayerFacingCauseExposureTier.Complementary)
       case _ => None
     val compatible = compatibleChannels(effectMode, channels)
-      .distinctBy(_._1.exactOccurrenceFingerprint)
+    require(
+      compatible.map(_._1.exactOccurrenceFingerprint).distinct.size == compatible.size,
+      "player-facing Cause channels must be canonical before public selection"
+    )
+    val exactCompatible = compatible
       .sortBy { case (channel, _) =>
         (
           channel.causalSignature,
@@ -85,13 +82,13 @@ object PlayerFacingCauseSelectionPolicy:
         )
       }
     require(
-      compatible
+      exactCompatible
         .groupBy(_._1.exactOccurrenceFingerprint.stableSortKey)
         .values
         .forall(group => group.map(_._1.exactOccurrenceFingerprint).distinct.size == 1),
       "distinct direct-channel occurrences require distinct stable transport identities"
     )
-    val selectedChannels = compatible.map { case (channel, played) =>
+    val selectedChannels = exactCompatible.map { case (channel, played) =>
       val occurrence = channel.exactOccurrenceFingerprint
       PlayerFacingCauseChannelSelection(
         channelId = s"cause-channel:${occurrence.stablePublicId(causeEvidence.id)}",
@@ -102,26 +99,6 @@ object PlayerFacingCauseSelectionPolicy:
         exactOccurrence = occurrence
       )
     }
-    val exactOnlyMoveQualifiers = onlyMoveQualifiers
-      .distinctBy(qualifier =>
-        (
-          qualifier.comparisonEvidence.id,
-          qualifier.causeEvidence.id,
-          qualifier.referenceLine,
-          qualifier.relation
-        )
-      )
-      .sortBy(qualifier =>
-        (
-          qualifier.comparisonEvidence.id,
-          qualifier.causeEvidence.id,
-          qualifier.referenceLine.id,
-          qualifier.referenceLine.rootMove,
-          qualifier.referenceLine.rank,
-          qualifier.referenceLine.role.toString,
-          qualifier.relation.toString
-        )
-      )
     for
       tier <- exposure
       if selectedChannels.nonEmpty
@@ -129,8 +106,7 @@ object PlayerFacingCauseSelectionPolicy:
       causeEvidence = causeEvidence,
       exposure = tier,
       effectMode = effectMode,
-      channels = selectedChannels,
-      onlyMoveQualifiers = exactOnlyMoveQualifiers
+      channels = selectedChannels
     )
 
   private[judgment] def restoreExactChannels(
@@ -155,32 +131,22 @@ object PlayerFacingCauseSelectionPolicy:
       effectMode: PlayerFacingCauseEffectMode,
       directChange: DirectCausalChange
   ): Option[PlayerFacingCausalChange] =
-    effectMode match
-      case PlayerFacingCauseEffectMode.AlternativeResource =>
-        Option.when(
-          Set(
-            DirectCausalChange.Occurred,
-            DirectCausalChange.Prevented,
-            DirectCausalChange.Maintained
-          )(directChange)
-        )(PlayerFacingCausalChange.Missed)
-      case PlayerFacingCauseEffectMode.PlayedLiability =>
-        Option.when(
-          Set(
-            DirectCausalChange.Occurred,
-            DirectCausalChange.Lost,
-            DirectCausalChange.Refuted,
-            DirectCausalChange.Missed
-          )(directChange)
-        )(PlayerFacingCausalChange.fromDirect(directChange))
-      case PlayerFacingCauseEffectMode.PlayedValue =>
-        Option.when(
-          Set(
-            DirectCausalChange.Occurred,
-            DirectCausalChange.Prevented,
-            DirectCausalChange.Maintained
-          )(directChange)
-        )(PlayerFacingCausalChange.fromDirect(directChange))
+    (effectMode, directChange) match
+      case (
+            PlayerFacingCauseEffectMode.AlternativeResource,
+            DirectCausalChange.Occurred | DirectCausalChange.Maintained
+          ) => Some(PlayerFacingCausalChange.Missed)
+      case (PlayerFacingCauseEffectMode.AlternativeResource, DirectCausalChange.Lost) => None
+      case (
+            PlayerFacingCauseEffectMode.PlayedLiability,
+            DirectCausalChange.Occurred | DirectCausalChange.Lost
+          ) => Some(PlayerFacingCausalChange.fromDirect(directChange))
+      case (PlayerFacingCauseEffectMode.PlayedLiability, DirectCausalChange.Maintained) => None
+      case (
+            PlayerFacingCauseEffectMode.PlayedValue,
+            DirectCausalChange.Occurred | DirectCausalChange.Maintained
+          ) => Some(PlayerFacingCausalChange.fromDirect(directChange))
+      case (PlayerFacingCauseEffectMode.PlayedValue, DirectCausalChange.Lost) => None
 
 enum CrossComparisonExposureStatus:
   case SelectedPrimary
@@ -211,7 +177,7 @@ enum CrossComparisonExposureReason:
   case ComparisonOrientationMismatch
   case UnsupportedAlternativeAttribution
   case DirectChangeIncompatible
-  case ConflictingRootOwnedEffectTruth
+  case ConflictingRootOwnedEffectAgreement
 
 final case class CrossComparisonExposureDecision(
     causeEvidenceId: String,
@@ -375,8 +341,7 @@ final case class PlayerFacingCauseExposureResolution(
     importanceResolution: DirectCauseImportanceResolution,
     narrativeIdeas: List[PlayerFacingNarrativeIdea],
     ideaImportanceResolution: DirectCauseImportanceResolution,
-    resourceLiabilityMatches: List[PvbResourceLiabilityMatch],
-    onlyMoveConstraintResolutions: List[OnlyMoveConstraintResolution]
+    resourceLiabilityMatches: List[PvbResourceLiabilityMatch]
 ):
   require(
     resourceLiabilityMatches ==
@@ -464,11 +429,6 @@ object PlayerFacingCauseExposurePipeline:
       )
     }.toMap
     val selectedCauses = allReady.filter { case (_, ref) => selectedIds(ref.id) }
-    val onlyMoveConstraintResolutions =
-      OnlyMoveConstraintPolicy.resolveAll(graph, selectedCauses, normalizedPlayedMoves)
-    val qualifiersByCauseId = onlyMoveConstraintResolutions
-      .flatMap(_.qualifiers)
-      .groupBy(_.causeEvidence.id)
     val comparisonOrderedSelections = crossDecisions.flatMap { decision =>
       for
         effectMode <- decision.effectMode
@@ -479,8 +439,7 @@ object PlayerFacingCauseExposurePipeline:
           causeEvidence = ref,
           status = decision.status,
           effectMode = effectMode,
-          channels = directChannelsByCauseId.getOrElse(ref.id, Nil),
-          onlyMoveQualifiers = qualifiersByCauseId.getOrElse(ref.id, Nil)
+          channels = directChannelsByCauseId.getOrElse(ref.id, Nil)
         )
       yield selection.copy(comparisonExposureRank = comparisonExposureRank)
     }.sortBy(selection => (selection.comparisonExposureRank, selection.causeEvidence.id))
@@ -541,8 +500,7 @@ object PlayerFacingCauseExposurePipeline:
       importanceResolution = playerFacingOrdering.causeImportanceResolution,
       narrativeIdeas = narrativeIdeas,
       ideaImportanceResolution = playerFacingOrdering.ideaImportanceResolution,
-      resourceLiabilityMatches = responsibility.resourceLiabilityMatches,
-      onlyMoveConstraintResolutions = onlyMoveConstraintResolutions
+      resourceLiabilityMatches = responsibility.resourceLiabilityMatches
     )
 
 /** The sole R-stage authority for per-Cause exposure eligibility and final
@@ -612,16 +570,10 @@ object CrossComparisonCauseExposurePolicy:
       rawHorizon: Option[String],
       primitiveKind: RootOwnedEffectPrimitiveKind,
       primitiveTargets: List[String],
-      planIds: List[String],
-      planResult: Option[PlanResultSemanticIdentity],
-      strategicAxes: List[PvbResponsibilityStrategicAxis],
+      passedPawnResultKindIds: List[String],
+      passedPawnResult: Option[PassedPawnResultSemanticIdentity],
       magnitude: DirectEffectMagnitudeKnowledge,
       materialEvent: Option[PvbResponsibilityMaterialEvent]
-  )
-
-  private final case class PvbResponsibilityStrategicAxis(
-      kind: StrategicAxisKind,
-      label: String
   )
 
   /** Material endpoint scopes intentionally compress every transfer to one
@@ -648,12 +600,12 @@ object CrossComparisonCauseExposurePolicy:
       effectMode: Option[PlayerFacingCauseEffectMode],
       improvement: Double,
       channels: List[DirectCauseChannel],
-      truthView: RootOwnedEffectTruthView
+      agreementView: RootOwnedEffectAgreementView
   ):
     def certifiedNovelty: Option[CertifiedExplanatoryNovelty] =
       for
         base <- novelty
-        agreement <- truthView.certifiedExplanatoryAgreement
+        agreement <- agreementView.certifiedExplanatoryAgreement
       yield CertifiedExplanatoryNovelty(base, agreement)
 
     def exactTruthBase: Option[ExactCausalTruthBase] =
@@ -779,7 +731,7 @@ object CrossComparisonCauseExposurePolicy:
         decision(
           item,
           CrossComparisonExposureStatus.DiagnosticComparison,
-          CrossComparisonExposureReason.ConflictingRootOwnedEffectTruth,
+          CrossComparisonExposureReason.ConflictingRootOwnedEffectAgreement,
           item.ref.id
         )
       else representativeByCauseId.get(item.ref.id) match
@@ -815,7 +767,7 @@ object CrossComparisonCauseExposurePolicy:
         decision(
           item,
           CrossComparisonExposureStatus.DiagnosticComparison,
-          CrossComparisonExposureReason.ConflictingRootOwnedEffectTruth,
+          CrossComparisonExposureReason.ConflictingRootOwnedEffectAgreement,
           item.ref.id
         )
       else decision(item, item.provisionalStatus, item.provisionalReason, item.ref.id)
@@ -861,7 +813,7 @@ object CrossComparisonCauseExposurePolicy:
           decision.effectMode.contains(PlayerFacingCauseEffectMode.AlternativeResource)
       )(retainedCandidates.get(decision.causeEvidenceId)).flatten.flatMap { resource =>
         val matchingLiabilityIds = liabilities
-          .filter(liability => samePvbResponsibilityFrame(liability, resource, graph))
+          .filter(liability => samePvbResponsibilityFrame(liability, resource))
           .map(_.ref.id)
           .distinct
           .sorted
@@ -965,12 +917,12 @@ object CrossComparisonCauseExposurePolicy:
       effectMode = effectMode,
       improvement = improvement,
       channels = compatibleChannels,
-      truthView = RootOwnedEffectTruthView.from(compatibleChannels)
+      agreementView = RootOwnedEffectAgreementView.from(compatibleChannels)
     )
 
   private def causallyAgree(candidates: List[Candidate]): Boolean =
     candidates.headOption.forall(head =>
-      candidates.tail.forall(_.truthView.agreesCausallyWith(head.truthView))
+      candidates.tail.forall(_.agreementView.agreesCausallyWith(head.agreementView))
     )
 
   private def provisionalDecision(
@@ -1208,8 +1160,7 @@ object CrossComparisonCauseExposurePolicy:
     */
   private def samePvbResponsibilityFrame(
       liability: Candidate,
-      resource: Candidate,
-      graph: TypedEvidenceGraph
+      resource: Candidate
   ): Boolean =
     liability.comparison.kind == CandidateComparisonKind.PlayedVsBest &&
       resource.comparison.kind == CandidateComparisonKind.PlayedVsBest &&
@@ -1224,8 +1175,7 @@ object CrossComparisonCauseExposurePolicy:
             liability.cause,
             liabilityChannel,
             resource.cause,
-            resourceChannel,
-            graph
+            resourceChannel
           )
         )
       )
@@ -1234,14 +1184,11 @@ object CrossComparisonCauseExposurePolicy:
       liabilityCause: RelativeCauseFact,
       liabilityChannel: DirectCauseChannel,
       resourceCause: RelativeCauseFact,
-      resourceChannel: DirectCauseChannel,
-      graph: TypedEvidenceGraph
+      resourceChannel: DirectCauseChannel
   ): Boolean =
     (for
-      liabilityScope <- ComparisonEndpointEffectObservationPolicy
-        .scopeFromChannel(liabilityCause, liabilityChannel, graph)
-      resourceScope <- ComparisonEndpointEffectObservationPolicy
-        .scopeFromChannel(resourceCause, resourceChannel, graph)
+      liabilityScope <- liabilityCause.admittedEndpointObservation(liabilityChannel).map(_.scope)
+      resourceScope <- resourceCause.admittedEndpointObservation(resourceChannel).map(_.scope)
       if expectedPvbResponsibilityPolarity(liabilityScope, resourceScope)
       liabilityFrame <- pvbResponsibilityChannelFrame(liabilityChannel, liabilityScope)
       resourceFrame <- pvbResponsibilityChannelFrame(resourceChannel, resourceScope)
@@ -1264,11 +1211,8 @@ object CrossComparisonCauseExposurePolicy:
       resource: DirectCausalChange
   ): Boolean =
     (liability, resource) match
-      case (DirectCausalChange.Occurred, DirectCausalChange.Prevented) => true
-      case (DirectCausalChange.Lost, DirectCausalChange.Maintained)    => true
-      case (DirectCausalChange.Refuted, DirectCausalChange.Occurred)  => true
-      case (DirectCausalChange.Missed, DirectCausalChange.Occurred)   => true
-      case _                                                          => false
+      case (DirectCausalChange.Lost, DirectCausalChange.Maintained) => true
+      case _                                                       => false
 
   private def pvbResponsibilityChannelFrame(
       channel: DirectCauseChannel,
@@ -1281,31 +1225,27 @@ object CrossComparisonCauseExposurePolicy:
       descriptor <- channel.rootOwnedEffectDescriptor
       if descriptor.magnitude.comparisonReady
       materialEvent <- pvbMaterialEvent(descriptor)
-      axes = descriptor.identity.strategicAxes
-      normalizedScope = pvbPolarityNeutralScope(scope, axes)
     yield PvbResponsibilityChannelFrame(
       rootBoardState = scope.rootBoardState,
       mover = scope.mover,
-      endpointTargets = normalizedScope._1,
-      endpointMechanisms = normalizedScope._2,
-      endpointConsequences = normalizedScope._3,
+      endpointTargets = scope.targetSignatures.map(normalizePvbFrameAtom).distinct.sorted,
+      endpointMechanisms = scope.mechanismSignatures.map(normalizePvbFrameAtom).distinct.sorted,
+      endpointConsequences = normalizedPvbConsequenceSignatures(scope.consequenceSignatures),
       endpointHorizon = scope.horizon.map(normalizePvbFrameAtom),
       rawTargets = normalizedObjects(channel.binding.target),
       rawMechanisms = normalizedObjects(channel.binding.mechanism),
-      rawConsequences = normalizedPvbConsequences(channel.binding.consequence, axes),
+      rawConsequences = normalizedPvbConsequenceSignatures(
+        channel.binding.consequence.map(_.signaturePart)
+      ),
       rawHorizon = channel.binding.horizon.map(normalizePvbFrameAtom),
       primitiveKind = descriptor.identity.primitiveKind,
       primitiveTargets = descriptor.identity.targetSignatures.map(normalizePvbFrameAtom).distinct.sorted,
-      planIds = Option.unless(descriptor.identity.planResult.nonEmpty)(descriptor.identity.planIds)
+      passedPawnResultKindIds = Option.unless(descriptor.identity.passedPawnResult.nonEmpty)(descriptor.identity.passedPawnResultKindIds)
         .getOrElse(Nil)
         .map(normalizePvbFrameAtom)
         .distinct
         .sorted,
-      planResult = descriptor.identity.planResult,
-      strategicAxes = axes
-        .map(axis => PvbResponsibilityStrategicAxis(axis.kind, normalizePvbFrameAtom(axis.label)))
-        .distinct
-        .sortBy(axis => (axis.kind.toString, axis.label)),
+      passedPawnResult = descriptor.identity.passedPawnResult,
       magnitude = descriptor.magnitude,
       materialEvent = materialEvent
     )
@@ -1331,55 +1271,6 @@ object CrossComparisonCauseExposurePolicy:
             durableNetCp = durableNetCp
           )))
       case _ => Some(None)
-
-  /** Strategic endpoint scopes encode polarity and comparison outcome in
-    * their synthetic object signatures.  Normalize only those typed wrapper
-    * dimensions; kind, label, primitive targets, raw mechanism, raw horizon,
-    * and typed magnitude remain exact.
-    */
-  private def pvbPolarityNeutralScope(
-      scope: ComparisonEndpointEffectScopeKey,
-      axes: List[RootOwnedStrategicAxisIdentity]
-  ): (List[String], List[String], List[String]) =
-    if axes.isEmpty then
-      (
-        scope.targetSignatures.map(normalizePvbFrameAtom).distinct.sorted,
-        scope.mechanismSignatures.map(normalizePvbFrameAtom).distinct.sorted,
-        normalizedPvbConsequenceSignatures(scope.consequenceSignatures)
-      )
-    else
-      val normalizedAxes = axes.map(axis =>
-        val kind = normalizePvbFrameAtom(axis.kind.toString)
-        val label = normalizePvbFrameAtom(axis.label)
-        s"strategic-axis:$kind:$label"
-      ).distinct.sorted
-      (
-        normalizedAxes,
-        axes.map(axis => s"strategic-axis-kind:${normalizePvbFrameAtom(axis.kind.toString)}").distinct.sorted,
-        normalizedAxes.map(axis => s"strategic-axis-effect:$axis")
-      )
-
-  private def normalizedPvbConsequences(
-      consequences: List[ConcreteChessObject],
-      axes: List[RootOwnedStrategicAxisIdentity]
-  ): List[String] =
-    val raw = normalizedPvbConsequenceSignatures(consequences.map(_.signaturePart))
-    if axes.isEmpty then raw
-    else
-      val wrapperSignatures = axes.flatMap { axis =>
-        val axisSignature = ConcreteChessObject(
-          EvidenceObjectKind.Consequence,
-          s"${axis.kind}:${axis.polarity}:${axis.label}"
-        ).signaturePart
-        val outcomeSignature = axis.comparisonOutcome.toList.map(outcome =>
-          ConcreteChessObject(EvidenceObjectKind.Consequence, outcome.toString).signaturePart
-        )
-        axisSignature :: outcomeSignature
-      }.map(normalizePvbFrameAtom).toSet
-      val normalizedAxes = axes.map(axis =>
-        s"consequence:strategic-axis:${normalizePvbFrameAtom(axis.kind.toString)}:${normalizePvbFrameAtom(axis.label)}"
-      )
-      (raw.filterNot(wrapperSignatures) ++ normalizedAxes).distinct.sorted
 
   private def normalizedPvbConsequenceSignatures(
       consequences: List[String]

@@ -218,7 +218,7 @@ object LineFactNormalizer:
               LineConsequence(
                 LineConsequenceKind.Mate,
                 prefix,
-                proofSignal = true,
+                directCauseProjectionEligible = true,
                 eventMove = Some(normalized),
                 rootMove = rootMove,
                 rootSide = rootSide,
@@ -230,7 +230,7 @@ object LineFactNormalizer:
               LineConsequence(
                 LineConsequenceKind.DrawResource,
                 prefix,
-                proofSignal = true,
+                directCauseProjectionEligible = true,
                 eventMove = Some(normalized),
                 rootMove = rootMove,
                 rootSide = rootSide
@@ -247,7 +247,7 @@ object LineFactNormalizer:
             if theme.id == ForcedLineTruth.ImmediateReplyCheckId then LineConsequenceKind.ImmediateReplyCheck
             else LineConsequenceKind.ForcedTheme,
           lineMoves = theme.lineMoves,
-          proofSignal = false,
+          directCauseProjectionEligible = false,
           eventMove = theme.lineMoves.headOption,
           rootMove = rootMove,
           rootSide = rootSide
@@ -289,11 +289,11 @@ object LineFactNormalizer:
         val materialGainProofMoves = proofMovesFrom(materialGainEvent)
         val materialLossProofMoves = proofMovesFrom(materialLossEvent)
         val materialResultConsequences = List(
-          Option.when(summary.hasProofSignalMaterialGain || summary.hasUnrecoveredPawnGainForMover)(
+          Option.when(summary.hasDirectCauseProjectionEligibleMaterialGain || summary.hasUnrecoveredPawnGainForMover)(
             LineConsequence(
               LineConsequenceKind.MaterialGain,
               materialGainProofMoves,
-              proofSignal = summary.hasProofSignalMaterialGain,
+              directCauseProjectionEligible = summary.hasDirectCauseProjectionEligibleMaterialGain,
               eventMove = materialGainEventMove,
               rootMove = materialGainRootMove,
               rootSide = Some(summary.sideToMove),
@@ -301,11 +301,11 @@ object LineFactNormalizer:
               materialOutcome = materialGainOutcome
             )
           ),
-          Option.when(summary.hasProofSignalMaterialLoss || summary.hasUnrecoveredPawnLossForMover)(
+          Option.when(summary.hasDirectCauseProjectionEligibleMaterialLoss || summary.hasUnrecoveredPawnLossForMover)(
             LineConsequence(
               LineConsequenceKind.MaterialLoss,
               materialLossProofMoves,
-              proofSignal = summary.hasProofSignalMaterialLoss,
+              directCauseProjectionEligible = summary.hasDirectCauseProjectionEligibleMaterialLoss,
               eventMove = materialLossEventMove,
               rootMove = materialLossRootMove,
               rootSide = Some(summary.sideToMove),
@@ -319,7 +319,7 @@ object LineFactNormalizer:
               LineConsequence(
                 LineConsequenceKind.RecaptureSequence,
                 proofMovesThrough(capture.plyOffset),
-                proofSignal = true,
+                directCauseProjectionEligible = true,
                 eventMove = Some(capture.moveUci),
                 rootMove = rootMove,
                 rootSide = Some(summary.sideToMove),
@@ -332,7 +332,7 @@ object LineFactNormalizer:
             LineConsequence(
               LineConsequenceKind.Sacrifice,
               replay.replaySteps.take(acceptance.plyOffset + 1).map(_.moveUci),
-              proofSignal = true,
+              directCauseProjectionEligible = true,
               eventMove = Some(acceptance.moveUci),
               rootMove = rootMove,
               rootSide = Some(summary.sideToMove),
@@ -344,7 +344,7 @@ object LineFactNormalizer:
             LineConsequence(
               LineConsequenceKind.RecoveryWindow,
               proofMovesThrough(capture.plyOffset),
-              proofSignal = true,
+              directCauseProjectionEligible = true,
               eventMove = Some(capture.moveUci),
               rootMove = rootMove,
               rootSide = Some(summary.sideToMove),
@@ -358,7 +358,7 @@ object LineFactNormalizer:
               if promotionRace then LineConsequenceKind.PromotionRace
               else LineConsequenceKind.Promotion,
               proofMovesThrough(event.plyOffset),
-              proofSignal = true,
+              directCauseProjectionEligible = true,
               eventMove = Some(event.moveUci),
               rootMove = rootMove.filter(_ => event.plyOffset == 0),
               rootSide = Some(summary.sideToMove),

@@ -2,11 +2,10 @@ package lila.chessjudgment.analysis.assembly
 
 import chess.White
 
-import lila.chessjudgment.model.Plan
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.{ CandidateLineEvaluation, CanonicalPositionHistory }
-import lila.chessjudgment.model.strategic.EngineLine
-import lila.chessjudgment.model.strategic.PlanTaxonomy.PlanKind
+import lila.chessjudgment.model.line.EngineLine
+import lila.chessjudgment.model.PassedPawnResultKind
 
 class BranchReplyHorizonContractTest extends munit.FunSuite:
 
@@ -38,7 +37,7 @@ class BranchReplyHorizonContractTest extends munit.FunSuite:
       perspective = White,
       actorRole = Some(EvidencePieceRole("knight"))
     )
-    val input = NormalizedMoveReviewInput(
+    val input = AdmittedMoveReviewInput(
       beforeFen = fen,
       playedMoveUci = rootMove,
       beforePly = 0,
@@ -46,7 +45,7 @@ class BranchReplyHorizonContractTest extends munit.FunSuite:
       afterPlayedFen = rootStep.fenAfter,
       afterReferenceFen = None,
       lines = List(
-        NormalizedCandidateLine(
+        AdmittedReviewLine(
           LineNodeRole.Played,
           1,
           CandidateLineEvaluation.EngineSearch(EngineLine(rootMove :: branchMoves, 0, depth = 20)),
@@ -55,44 +54,58 @@ class BranchReplyHorizonContractTest extends munit.FunSuite:
       ),
       completeCandidateSet = None,
       positionHistory = history,
-      openingContext = OpeningContextEvidence(None, Nil)
     )
     val branchEvaluation = CandidateLineEvaluation.EngineSearch(
       EngineLine(branchMoves, scoreCp = 0, depth = 20)
     )
     def branch(sourceProbeId: String, horizon: Int, rank: Int) =
-      NormalizedThreatBranch(
+      AdmittedReviewBranchReply(
         sourceProbeId = sourceProbeId,
         probedMoveUci = rootMove,
         branchFen = rootStep.fenAfter,
         branchPly = 1,
         certifiedHorizonPlyOffset = horizon,
-        lines = List(NormalizedCandidateLine(LineNodeRole.Threat, rank, branchEvaluation, branchReplay))
+        lines = List(AdmittedReviewLine(LineNodeRole.BranchReply, rank, branchEvaluation, branchReplay))
       )
     val exact = branch("exact-horizon", 2, 1)
     val deeper = branch("deeper-horizon", 3, 2)
 
     assertEquals(
-      PlanCausalEventAssembler
-        .replyBranchLines(input.copy(threatBranches = List(deeper)), transition, 2)
+      PassedPawnResultEventAssembler
+        .replyBranchLines(input.copy(branchReplies = List(deeper)), transition, 2)
         .map(_._1.sourceProbeId),
       List("deeper-horizon")
     )
     assertEquals(
-      PlanCausalEventAssembler
-        .replyBranchLines(input.copy(threatBranches = List(deeper, exact)), transition, 2)
+      PassedPawnResultEventAssembler
+        .replyBranchLines(input.copy(branchReplies = List(deeper, exact)), transition, 2)
         .map(_._1.sourceProbeId),
       List("exact-horizon")
     )
 
     val rootTransition = rootReplay.onlyTransition.getOrElse(fail("expected the root transition"))
-    val plan = Plan(PlanKind.PasserConversion, White)
-    val expectedEpisode = PlanCausalEpisode(
-      root = PlanCausalEventNode(
-        identity = PlanEventIdentityBuilder.from(rootMove, rootTransition.relationDelta.rootMove, plan),
+    val resultKind = PassedPawnResultKind.AdvanceOrPromote
+    val rootLineOccurrenceOwner = EvidenceRef(
+      "root-line-owner",
+      EvidenceProducer.LegalLineProducer,
+      EvidenceLayer.Line,
+      transition.from,
+      Some(rootLine),
+      rootLine.role.scope,
+      EvidenceConfidence.LegalReplayVerified
+    )
+    val rootStructuralOccurrence = fullReplay
+      .structuralOccurrence(rootStep)
+      .getOrElse(fail("expected the root structural occurrence"))
+    val expectedEpisode = PassedPawnResultEpisode(
+      root = PassedPawnResultEventNode(
+        identity = PassedPawnResultEventIdentityBuilder.from(rootMove, rootTransition.relationDelta.rootMove, resultKind),
         step = rootStep,
         perspective = White,
         structuralConsequences = Nil,
+        lineOccurrenceOwner = rootLineOccurrenceOwner,
+        structuralOccurrence = rootStructuralOccurrence,
+        structuralTransition = transition,
         canonicalStep = Some(rootReplay.legalSteps.head),
         canonicalMovement = Some(rootTransition.relationDelta.rootMove)
       ),
@@ -100,18 +113,29 @@ class BranchReplyHorizonContractTest extends munit.FunSuite:
       dependencies = Nil,
       responses = Nil
     )
-    val threatLine = LineNodeRef("deeper-prefix", branchMoves.head, 2, LineNodeRole.Threat)
-    val witness = PlanCausalEventProof.branchWitness(
+    val branchReplyLine = LineNodeRef("deeper-prefix", branchMoves.head, 2, LineNodeRole.BranchReply)
+    val trace = CausalLineTrace.from(
+      fullReplay.replaySteps,
+      List(CausalStepObservation(
+        rootStep,
+        transition,
+        Nil,
+        rootTransition.relationDelta.rootMove,
+        rootLineOccurrenceOwner,
+        rootStructuralOccurrence
+      )),
+      Some(fullReplay)
+    )
+    val witness = PassedPawnResultEventProof.branchWitness(
       sourceProbeId = deeper.sourceProbeId,
-      line = threatLine,
-      linePayload = LineFactEvidence.fromCertifiedReplay(threatLine, branchReplay),
+      line = branchReplyLine,
+      linePayload = LineFactEvidence.fromCertifiedReplay(branchReplyLine, branchReplay),
       rootLine = rootLine,
       rootTransition = transition,
-      plan = plan,
       expectedEpisode = expectedEpisode,
       requiredHorizonPlyOffset = 2,
       evaluation = branchEvaluation,
-      admittedReplay = Some(fullReplay)
+      trace = trace
     )
 
     assertEquals(witness.certifiedHorizonPlyOffset, 2)

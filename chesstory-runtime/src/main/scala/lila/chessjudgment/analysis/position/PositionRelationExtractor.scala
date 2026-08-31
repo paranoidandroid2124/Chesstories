@@ -102,11 +102,7 @@ object PositionRelationExtractor:
         Some(StaticBoard)
       case RelationFactKind.LegalMove =>
         Some(PositionOccurrence)
-      case RelationFactKind.GeometricControlSetDelta | RelationFactKind.GeometricSupporterCapture |
-          RelationFactKind.GeometricSupportDelta |
-          RelationFactKind.SliderLineInterruption |
-          RelationFactKind.GeometricLineControlAfterBlockerRemoval |
-          RelationFactKind.NamedRayTransition |
+      case RelationFactKind.GeometricControlSetDelta | RelationFactKind.NamedRayTransition |
           RelationFactKind.CaptureRecaptureInventory |
           RelationFactKind.CreatedCheckResponseInventory |
           RelationFactKind.RootCheckResponse |
@@ -640,15 +636,6 @@ object PositionRelationExtractor:
     def pawnsFor(side: Color): List[EvidenceSquare] =
       if side.white then whitePawns else blackPawns
 
-    def sourceFor(side: Color): RelationFactEvidence =
-      val exact = sourceGroups.filter(_.detail match
-        case RelationWitnessDetail.PawnFileGroup(owner, exactFile, exactPawns) =>
-          owner == side && exactFile == file && exactPawns == pawnsFor(side)
-        case _ => false
-      )
-      require(exact.size == 1, "one closed pawn file needs one exact source per side")
-      exact.head
-
   private[chessjudgment] enum ClosedPawnConnectionKind:
     case GeometricSupport
     case Phalanx
@@ -666,13 +653,6 @@ object PositionRelationExtractor:
       "a phalanx connection must retain canonical endpoint order"
     )
     require(sources.nonEmpty, "a pawn connection needs canonical source relations")
-
-    def contains(square: EvidenceSquare): Boolean =
-      controller == square || target == square
-
-    def peerOf(square: EvidenceSquare): EvidenceSquare =
-      require(contains(square), "a pawn connection peer query needs one exact endpoint")
-      if controller == square then target else controller
 
   private[chessjudgment] final case class ClosedPawnComponent private[position] (
       side: Color,
@@ -702,7 +682,6 @@ object PositionRelationExtractor:
       passageSource: RelationFactEvidence
   ):
     require(!geometricallyProtectedPasser || passed, "a geometrically protected passer must first be passed")
-    def frontBlocked: Boolean = frontOccupant.nonEmpty
 
   /** Canonical opposing-pawn contact projected from one white-pawn
     * GeometricControl edge. The reciprocal black-pawn edge is checked when
@@ -2452,9 +2431,6 @@ object PositionRelationExtractor:
         pawns = topology.pawns(side, file).map(evidenceSquare)
       )
     }
-
-  private def sortDetails(details: List[RelationWitnessDetail]): List[RelationWitnessDetail] =
-    details.sortBy(RelationWitnessDetail.stableKey)
 
   private def sortFacts(facts: List[CanonicalRelationFact]): List[CanonicalRelationFact] =
     facts.sortBy(fact => RelationWitnessDetail.stableKey(fact.detail))

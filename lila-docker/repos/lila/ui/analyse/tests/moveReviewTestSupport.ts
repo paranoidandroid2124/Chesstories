@@ -90,24 +90,21 @@ export function rawCommentary(overrides: Record<string, unknown> = {}): Record<s
         win_percent_for_mover: 46,
         depth: 16,
       },
-      presentation: 'e7e5 is an inaccuracy compared with c7c5.',
     },
     causal_explanations: [
       {
         kind: 'single_cause',
-        presentation: 'Exact selected cause.',
         facets: [
           {
             facet_role: 'lead',
             cause_evidence_id: 'cause.center',
-            kind: 'center_control_gain',
+            kind: 'conversion_secured',
             proof_confidence: 'engine_backed',
             effect_mode: 'played_liability',
             exposure: 'primary',
             source_side: 'candidate',
             event_move: 'e7e5',
             comparison_kind: 'played_vs_best',
-            only_move_qualifiers: [],
             channels: [
               {
                 channel_id: 'cause-channel:exact-center-pressure',

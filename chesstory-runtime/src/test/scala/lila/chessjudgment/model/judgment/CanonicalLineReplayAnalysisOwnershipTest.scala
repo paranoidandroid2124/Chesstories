@@ -5,6 +5,15 @@ import lila.chessjudgment.model.line.CanonicalPositionHistory
 
 class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
 
+  private def replayFrom(fen: String, moves: List[String]): CanonicalLineReplay =
+    val history = CanonicalPositionHistory
+      .from(fen, Nil, fen)
+      .flatMap(_.extend(moves))
+      .getOrElse(fail(s"expected a legal replay for ${moves.mkString(" ")}"))
+    CanonicalLineReplay
+      .fromHistory(history.segmentReplaySteps)
+      .getOrElse(fail("expected a canonical replay"))
+
   private def twoPlyReplay: CanonicalLineReplay =
     val history = CanonicalPositionHistory
       .from(Standard.initialFen.value, Nil, Standard.initialFen.value)
@@ -50,3 +59,117 @@ class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
     assert(rebasedAfter.position eq originalAfter.position)
     assert(rebasedBefore.actualLegalMoves eq originalBefore.actualLegalMoves)
     assert(rebasedAfter.boardRelations eq originalAfter.boardRelations)
+
+  test("exact recapture membership returns its occurrence-owned L1 key and resource"):
+    val replay = replayFrom(
+      "3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1",
+      List("d1d8", "f8d8")
+    )
+    val capture :: recapture :: Nil = replay.replaySteps: @unchecked
+
+    val (key, resource) = replay
+      .exactRecaptureMembership(capture, recapture)
+      .getOrElse(fail("expected the exact recapture membership"))
+
+    assertEquals(key.kind, RelationFactKind.CaptureRecaptureInventory)
+    assert(EvidenceRef.sameMove(resource.moveUci, "f8d8"))
+    assertEquals(resource.movement, replay.transition(recapture).map(_.relationDelta.rootMove.witness).get)
+
+    val captureReplay = replay.subset(List(capture)).getOrElse(fail("expected the capture occurrence"))
+    val recaptureReplay = replay.subset(List(recapture)).getOrElse(fail("expected the reply occurrence"))
+    assertEquals(
+      captureReplay.exactRecaptureMembership(capture, recaptureReplay, recapture),
+      Some(key -> resource)
+    )
+
+  test("exact check-response membership rejects the same semantic move from another occurrence"):
+    val replay = replayFrom(
+      "3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1",
+      List("c4f7", "f8f7")
+    )
+    val check :: response :: Nil = replay.replaySteps: @unchecked
+    val (key, witness) = replay
+      .exactCheckResponseMembership(check, response)
+      .getOrElse(fail("expected the exact check-response membership"))
+
+    assertEquals(key.kind, RelationFactKind.CreatedCheckResponseInventory)
+    assert(EvidenceRef.sameMove(witness.resource.moveUci, "f8f7"))
+
+    val foreignResponse = replay
+      .rebased(4)
+      .getOrElse(fail("expected a rebased occurrence"))
+      .replaySteps(1)
+    assertEquals(replay.exactCheckResponseMembership(check, foreignResponse), None)
+
+  test("a pawn-break follow-up consumes the reply occurrence's L1 passed-state transition"):
+    val fen = "4k3/8/3p4/2P5/4P3/8/8/4K3 w - - 0 1"
+    val history = CanonicalPositionHistory
+      .from(fen, Nil, fen)
+      .flatMap(_.extend(List("e4e5", "d6e5", "c5c6")))
+      .getOrElse(fail("expected a legal pawn-break continuation"))
+    val replay = CanonicalLineReplay
+      .fromHistory(history.segmentReplaySteps)
+      .getOrElse(fail("expected a canonical pawn-break replay"))
+    val breakStep :: replyStep :: followUpStep :: Nil = replay.replaySteps: @unchecked
+    val releaseOccurrences = replay.verticalRelationOccurrences(
+      replyStep,
+      List(VerticalRelationContractKind.PawnTopologyTransition)
+    ).filter { occurrence =>
+      occurrence.relation.detail match
+        case detail: RelationWitnessDetail.PawnTopologyTransition =>
+          detail.before.exists(_.square.key.equalsIgnoreCase("c5")) &&
+            detail.changedFacets.contains(RelationPawnTopologyFacet.Passed)
+        case _ => false
+    }
+    val releaseOccurrence = releaseOccurrences match
+      case exact :: Nil => exact
+      case found        => fail(s"expected one L1 release occurrence, found ${found.size}")
+    val trajectory = PawnBreakFollowUpTrajectory
+      .find(breakStep, replyStep, followUpStep, List(replyStep), replay)
+      .getOrElse(fail("expected the L1-certified pawn-break follow-up"))
+
+    assertEquals(trajectory.releasedPassedPawn, EvidenceSquare("c5"))
+    assertEquals(
+      trajectory.pawnTopologyTransitionKey,
+      DerivedRelationResultKey.from(releaseOccurrence.relation)
+    )
+    assertEquals(trajectory.relationOccurrenceBinding.step, replyStep)
+    assertEquals(
+      trajectory.relationOccurrenceBinding.contract,
+      VerticalRelationContractKind.PawnTopologyTransition
+    )
+    assertEquals(
+      trajectory.relationOccurrenceBinding.occurrenceId,
+      releaseOccurrence.occurrenceId
+    )
+    assertEquals(
+      trajectory.relationOccurrenceBinding.certifiedSourcePremiseIds,
+      releaseOccurrence.certifiedSourcePremiseIds
+    )
+    assertEquals(
+      trajectory.pawnTopologyTransitionKey.kind,
+      RelationFactKind.PawnTopologyTransition
+    )
+    releaseOccurrence.relation.detail match
+      case detail: RelationWitnessDetail.PawnTopologyTransition =>
+        assert(detail.before.exists(state => !state.passed))
+        assert(detail.after.exists(_.passed))
+      case _ => fail("expected the exact L1 pawn-topology detail")
+
+    val functionProof = CausalDependencyFunctionProof.PawnBreakFollowUp(
+      trajectory.color,
+      replyStep.moveUci,
+      trajectory.replyFrom,
+      trajectory.replyTo,
+      trajectory.followUpFrom,
+      trajectory.followUpTo,
+      trajectory.releasedPassedPawn,
+      trajectory.pawnTopologyTransitionKey.stableKey
+    )
+    assertEquals(
+      functionProof.pawnTopologyTransitionKey,
+      trajectory.pawnTopologyTransitionKey.stableKey
+    )
+    intercept[IllegalArgumentException] {
+      functionProof.copy(pawnTopologyTransitionKey = s"pawn_passage:${List.fill(64)("0").mkString}")
+    }

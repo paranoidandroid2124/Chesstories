@@ -150,7 +150,7 @@ object RelativeCauseSourceSide:
             lineRoleSourceSide(LineNodeRole.Alternative, referenceLine, candidateLine)
           case EvidenceScope.BeforePosition | EvidenceScope.CurrentPosition =>
             Some(RelativeCauseSourceSide.Shared)
-          case EvidenceScope.ThreatLine | EvidenceScope.Counterfactual =>
+          case EvidenceScope.BranchReplyLine | EvidenceScope.Counterfactual =>
             None
 
   private def lineRoleSourceSide(
@@ -388,12 +388,8 @@ enum RelativeCauseKind:
   case CandidateTacticalLiability
   case RecaptureRecoveryWindow
   case WrongMoveOrder
-  case ConversionMiss
   case ConversionSecured
-  case SacrificeCompensation
-  case PlanImprovement
-  case PlanContradiction
-  case DefensiveResource
+  case PassedPawnResult
   case DrawResource
   case KingForcing
   case MaterialSwing
@@ -404,7 +400,19 @@ enum RelativeCauseKind:
   */
 enum DirectEffectAdmission:
   case Unresolved
-  case Restricted(exactOccurrences: Set[RootOwnedEffectChannelOccurrenceFingerprint])
+  case Restricted(
+      endpointObservations: Map[
+        RootOwnedEffectChannelOccurrenceFingerprint,
+        Option[ComparisonEndpointEffectObservation]
+      ]
+  )
+
+  private[chessjudgment] def observationFor(
+      occurrence: RootOwnedEffectChannelOccurrenceFingerprint
+  ): Option[ComparisonEndpointEffectObservation] =
+    this match
+      case Unresolved                       => None
+      case Restricted(endpointObservations) => endpointObservations.get(occurrence).flatten
 
 case class RelativeCauseFact(
     kind: RelativeCauseKind,
@@ -417,17 +425,29 @@ case class RelativeCauseFact(
 ):
   def hasOwnedTypedDepth(graph: TypedEvidenceGraph): Boolean =
     graph.relativeCauseHasOwnedTypedDepth(this)
-  def strategicCauseKind: Boolean =
-    RelativeCauseKind.strategicContrastBacked(kind)
-  def hasOwnedAdmissibleLongTermProof(graph: TypedEvidenceGraph): Boolean =
-    graph.relativeCauseHasOwnedAdmissibleLongTermProof(this)
+  def passedPawnResultCauseKind: Boolean =
+    RelativeCauseKind.requiresExactPassedPawnResult(kind)
+  def hasOwnedPassedPawnResultProof(graph: TypedEvidenceGraph): Boolean =
+    graph.relativeCauseHasOwnedPassedPawnResultProof(this)
   def hasOwnedTacticalProof(graph: TypedEvidenceGraph): Boolean =
     graph.relativeCauseHasOwnedTacticalProof(this)
+  private[chessjudgment] def admittedEndpointObservation(
+      channel: DirectCauseChannel
+  ): Option[ComparisonEndpointEffectObservation] =
+    val expectedStake = attribution.kind match
+      case CauseAttributionKind.ReferenceCreatesResource | CauseAttributionKind.CandidateCreatesValue =>
+        Some(RootOwnedEffectStake.ActorValue)
+      case CauseAttributionKind.CandidateAllowsLiability =>
+        Some(RootOwnedEffectStake.ActorLiability)
+      case CauseAttributionKind.SharedContext | CauseAttributionKind.ContextOnly |
+          CauseAttributionKind.Unattributed => None
+    directEffectAdmission
+      .observationFor(channel.exactOccurrenceFingerprint)
+      .filter(observation => expectedStake.contains(observation.scope.stake))
 
 object RelativeCauseKind:
-  def requiresExactPlanResult(kind: RelativeCauseKind): Boolean =
-    kind == RelativeCauseKind.PlanImprovement ||
-      kind == RelativeCauseKind.PlanContradiction
+  def requiresExactPassedPawnResult(kind: RelativeCauseKind): Boolean =
+    kind == RelativeCauseKind.PassedPawnResult
 
   def sourceAttributionCompatible(
       kind: RelativeCauseKind,
@@ -446,9 +466,6 @@ object RelativeCauseKind:
           false
     val kindCompatible =
       kind match
-        case RelativeCauseKind.ConversionMiss =>
-          sourceSide == RelativeCauseSourceSide.Candidate &&
-            attributionKind == CauseAttributionKind.CandidateAllowsLiability
         case RelativeCauseKind.ConversionSecured =>
           (sourceSide == RelativeCauseSourceSide.Reference &&
             attributionKind == CauseAttributionKind.ReferenceCreatesResource) ||
@@ -458,43 +475,17 @@ object RelativeCauseKind:
           true
     polarityCompatible && kindCompatible
 
-  def strategicContrastBacked(kind: RelativeCauseKind): Boolean =
-    kind match
-      case RelativeCauseKind.SacrificeCompensation | RelativeCauseKind.PlanImprovement |
-          RelativeCauseKind.PlanContradiction =>
-        true
-      case _ =>
-        false
-
-  def strategicAxisCanProveCause(
+  /** Public passed-pawn-result causality is authorized only by the closed L2 proof record.
+    * The raw passed-pawn result event remains a premise/probe and cannot prove a Cause.
+    */
+  def passedPawnResultProofCanProveCause(
       kind: RelativeCauseKind,
-      axis: StrategicAxisDetail
+      result: PassedPawnResultProofEvidence
   ): Boolean =
-    kind match
-      case RelativeCauseKind.SacrificeCompensation =>
-        false
-      case RelativeCauseKind.PlanImprovement =>
-        axis.kind == StrategicAxisKind.PlanCoherence &&
-          axis.polarity == StrategicAxisPolarity.Gain
-      case RelativeCauseKind.PlanContradiction =>
-        axis.kind == StrategicAxisKind.PlanCoherence &&
-          axis.polarity == StrategicAxisPolarity.Concede
-      case _ =>
-        false
-
-  def planCausalEventCanProveCause(
-      kind: RelativeCauseKind,
-      event: PlanCausalEventEvidence
-  ): Boolean =
-    kind match
-      case RelativeCauseKind.PlanImprovement =>
-        event.exactRobustPublicResultAssessments.nonEmpty
-      case RelativeCauseKind.PlanContradiction =>
-        event.exactRefutedPublicResultAssessments.nonEmpty
-      case RelativeCauseKind.SacrificeCompensation =>
-        event.exactRobustPublicResultAssessments.nonEmpty
-      case _ =>
-        false
+    kind == RelativeCauseKind.PassedPawnResult &&
+      result.consequenceKind == TransitionConsequenceKind.PassedPawnProgress &&
+      result.assessment.robustness == PassedPawnResultReplyCoverage.AllLegalRepliesRealize &&
+      result.hasCompleteProofPaths
 
   def acceptsLineConsequence(
       kind: RelativeCauseKind,
@@ -510,12 +501,12 @@ object RelativeCauseKind:
         consequenceKind == LineConsequenceKind.Mate
       case RelativeCauseKind.DrawResource =>
         consequenceKind == LineConsequenceKind.DrawResource
-      case RelativeCauseKind.ConversionMiss | RelativeCauseKind.ConversionSecured =>
+      case RelativeCauseKind.ConversionSecured =>
         consequenceKind == LineConsequenceKind.RecaptureSequence ||
           consequenceKind == LineConsequenceKind.RecoveryWindow ||
           consequenceKind == LineConsequenceKind.Promotion ||
           consequenceKind == LineConsequenceKind.PromotionRace
-      case RelativeCauseKind.MaterialSwing | RelativeCauseKind.SacrificeCompensation =>
+      case RelativeCauseKind.MaterialSwing =>
         consequenceKind == LineConsequenceKind.MaterialGain ||
           consequenceKind == LineConsequenceKind.MaterialLoss ||
           consequenceKind == LineConsequenceKind.Sacrifice
@@ -539,26 +530,6 @@ object RelativeCauseKind:
           case _ =>
             true
       )
-
-  def structuralConsequences(
-      kind: RelativeCauseKind,
-      payload: StructuralDeltaEvidence
-  ): List[TransitionConsequence] =
-    import TransitionConsequenceKind.*
-    kind match
-      case RelativeCauseKind.SacrificeCompensation | RelativeCauseKind.PlanImprovement |
-          RelativeCauseKind.PlanContradiction =>
-        Nil
-      case RelativeCauseKind.ConversionMiss =>
-        payload.removedConsequences.filter(consequence =>
-          consequence.kind == PassedPawnConcession
-        )
-      case RelativeCauseKind.ConversionSecured =>
-        payload.establishedConsequences.filter(consequence =>
-          consequence.kind == PassedPawnProgress
-        )
-      case _ =>
-        Nil
 
 /** Evidence-id-independent causal frame. Two Causes may be compared for
   * semantic channel subsumption only when every field in this frame agrees.
@@ -725,36 +696,15 @@ enum RelativeCauseProofStrength:
   case Supporting
   case WeakHint
 
-case class RelativeCauseStrategicProofIdentity(
-    axisKeys: List[String],
-    mechanismKinds: List[StrategicMechanismKind],
-    mechanismSourceIds: List[String],
-    signalSourceIds: List[String]
-):
-  def isEmpty: Boolean =
-    axisKeys.isEmpty && mechanismKinds.isEmpty && mechanismSourceIds.isEmpty && signalSourceIds.isEmpty
-
-object RelativeCauseStrategicProofIdentity:
-  val empty: RelativeCauseStrategicProofIdentity =
-    RelativeCauseStrategicProofIdentity(Nil, Nil, Nil, Nil)
-
 case class RelativeCauseProofSection(
     role: RelativeCauseProofRole,
     strength: RelativeCauseProofStrength,
     sourceRefs: List[EvidenceRef] = Nil
-)
-
-object RelativeCauseProofSection:
-  def merge(
-      role: RelativeCauseProofRole,
-      strength: RelativeCauseProofStrength,
-      sections: List[RelativeCauseProofSection]
-  ): RelativeCauseProofSection =
-    RelativeCauseProofSection(
-      role = role,
-      strength = strength,
-      sourceRefs = sections.flatMap(_.sourceRefs).distinctBy(_.id)
-    )
+):
+  require(
+    sourceRefs.map(_.id).distinct.size == sourceRefs.size,
+    "a relative Cause proof section must not repeat or collide source owners"
+  )
 
 case class RelativeCauseProof(
     directProof: RelativeCauseProofSection = RelativeCauseProofSection(
@@ -772,26 +722,6 @@ case class RelativeCauseProof(
 ):
   def sections: List[RelativeCauseProofSection] =
     List(directProof, contrastProof, contextSupport)
-
-object RelativeCauseProof:
-  def merge(proofs: List[RelativeCauseProof]): RelativeCauseProof =
-    RelativeCauseProof(
-      directProof = RelativeCauseProofSection.merge(
-        RelativeCauseProofRole.DirectProof,
-        RelativeCauseProofStrength.Primary,
-        proofs.map(_.directProof)
-      ),
-      contrastProof = RelativeCauseProofSection.merge(
-        RelativeCauseProofRole.ContrastProof,
-        RelativeCauseProofStrength.Supporting,
-        proofs.map(_.contrastProof)
-      ),
-      contextSupport = RelativeCauseProofSection.merge(
-        RelativeCauseProofRole.ContextSupport,
-        RelativeCauseProofStrength.WeakHint,
-        proofs.map(_.contextSupport)
-      )
-    )
 
 case class RelativeMoveAssessment(
     played: MoveTransitionEdge,

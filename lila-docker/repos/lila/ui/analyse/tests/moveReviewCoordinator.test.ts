@@ -78,28 +78,23 @@ class TestTimers {
   }
 }
 
-class TestBroadcastChannel {
-  private static readonly channels = new Map<string, Set<TestBroadcastChannel>>();
-  onmessage: ((event: MessageEvent) => void) | null = null;
+class TestLockManager {
+  private tail = Promise.resolve();
 
-  constructor(readonly name: string) {
-    const peers = TestBroadcastChannel.channels.get(name) ?? new Set<TestBroadcastChannel>();
-    peers.add(this);
-    TestBroadcastChannel.channels.set(name, peers);
-  }
-
-  postMessage(message: unknown): void {
-    for (const peer of TestBroadcastChannel.channels.get(this.name) ?? [])
-      if (peer !== this) peer.onmessage?.({ data: message } as MessageEvent);
-  }
-
-  close(): void {
-    TestBroadcastChannel.channels.get(this.name)?.delete(this);
-  }
-
-  static reset(): void {
-    TestBroadcastChannel.channels.clear();
-  }
+  readonly api = {
+    request: async (name: string, _options: { signal?: AbortSignal }, callback: () => unknown) => {
+      assert.equal(name, 'chesstory.position-commentary.v6');
+      const previous = this.tail;
+      let release = () => {};
+      this.tail = new Promise<void>(resolve => (release = resolve));
+      await previous;
+      try {
+        return await callback();
+      } finally {
+        release();
+      }
+    },
+  } as unknown as LockManager;
 }
 
 function replaceGlobal(name: string, value: unknown): () => void {
@@ -111,15 +106,15 @@ function replaceGlobal(name: string, value: unknown): () => void {
   };
 }
 
-function installCoordinatorEnvironment() {
+function installCoordinatorEnvironment({ webLocks = true } = {}) {
   const timers = new TestTimers();
+  const lockManager = new TestLockManager();
   const restoreWindow = replaceGlobal('window', timers.window);
-  const restoreChannel = replaceGlobal('BroadcastChannel', TestBroadcastChannel);
+  const restoreNavigator = replaceGlobal('navigator', webLocks ? { locks: lockManager.api } : {});
   return {
     timers,
     restore: () => {
-      TestBroadcastChannel.reset();
-      restoreChannel();
+      restoreNavigator();
       restoreWindow();
     },
   };
@@ -139,8 +134,7 @@ function createHost(source: MoveReviewSource) {
 }
 
 async function settleAsync(): Promise<void> {
-  await Promise.resolve();
-  await Promise.resolve();
+  for (let index = 0; index < 4; index++) await Promise.resolve();
 }
 
 test('coordinator preempts the live engine once and publishes one completed v6 review', async t => {
@@ -155,6 +149,7 @@ test('coordinator preempts the live engine once and publishes one completed v6 r
 
   coordinator.activate();
   coordinator.settle(subject);
+  await settleAsync();
   environment.timers.runAll();
   await settleAsync();
 
@@ -163,8 +158,56 @@ test('coordinator preempts the live engine once and publishes one completed v6 r
   assert.equal(coordinator.isPreemptingLiveEngine(), false);
 });
 
-test('cross-tab lease allows only the most recently activated coordinator to compute', async t => {
+test('Web Lock serializes a late-joining coordinator and hands off after deactivation', async t => {
   const environment = installCoordinatorEnvironment();
+  t.after(environment.restore);
+  let firstRuns = 0;
+  let secondRuns = 0;
+  const first = new MoveReviewCoordinator(
+    'en-US',
+    createHost({
+      run: async (request, emit) => {
+        firstRuns++;
+        emit(completedSnapshot(request));
+      },
+    }).host,
+  );
+  const coordinators = [first];
+  t.after(() => coordinators.forEach(coordinator => coordinator.destroy()));
+
+  first.activate();
+  first.settle(subject);
+  await settleAsync();
+  environment.timers.runAll();
+  await settleAsync();
+  assert.equal(firstRuns, 1);
+
+  const second = new MoveReviewCoordinator(
+    'en-US',
+    createHost({
+      run: async (request, emit) => {
+        secondRuns++;
+        emit(completedSnapshot(request));
+      },
+    }).host,
+  );
+  coordinators.push(second);
+  second.activate();
+  second.settle(subject);
+  await settleAsync();
+  environment.timers.runAll();
+  await settleAsync();
+  assert.equal(secondRuns, 0);
+
+  first.deactivate();
+  await settleAsync();
+  environment.timers.runAll();
+  await settleAsync();
+  assert.equal(secondRuns, 1);
+});
+
+test('coordinators compute independently when Web Locks are unavailable', async t => {
+  const environment = installCoordinatorEnvironment({ webLocks: false });
   t.after(environment.restore);
   let firstRuns = 0;
   let secondRuns = 0;
@@ -198,8 +241,7 @@ test('cross-tab lease allows only the most recently activated coordinator to com
   environment.timers.runAll();
   await settleAsync();
 
-  assert.equal(firstRuns, 0);
-  assert.equal(secondRuns, 1);
+  assert.deepEqual([firstRuns, secondRuns], [1, 1]);
 });
 
 test('runtime source executes root, focus, and causal searches only through the browser executor', async t => {

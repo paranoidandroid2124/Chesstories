@@ -706,7 +706,7 @@ private[chessjudgment] object VerticalRelationPremiseRole:
           case RelationPawnTopologyFacet.Component =>
             componentSet(pawn) && exactComponentSource
           case RelationPawnTopologyFacet.EnemyPawnContacts =>
-            exactEnemyPawnContact(relation.detail)
+            exactEnemyPawnContact(relation.detail) || exactPawnPassage(relation.detail)
           case RelationPawnTopologyFacet.Removed =>
             ownOrAdjacentPawnGroup(relation.detail) || exactPawnPassage(relation.detail) ||
               exactPawnSupport(relation.detail) || exactEnemyPawnContact(relation.detail) ||
@@ -1796,10 +1796,7 @@ private[chessjudgment] final class VerticalRelationInput private (
             change.mover,
             !change.controllingSide,
             change.target,
-            change.beforeControllers.sortBy(value => value.square.key -> value.role.name),
-            change.afterControllers.sortBy(value => value.square.key -> value.role.name),
-            change.removedControllers.sortBy(value => value.square.key -> value.role.name),
-            change.establishedControllers.sortBy(value => value.square.key -> value.role.name)
+            change.afterControllers.sortBy(value => value.square.key -> value.role.name)
           ))
         case _ => None
     }.sortBy(_.relation.semanticId)
@@ -2111,10 +2108,7 @@ private[chessjudgment] final case class VerticalCheckTransitionSubject(
     mover: RelationMoveTransitionWitness,
     checkedSide: _root_.chess.Color,
     kingSquare: EvidenceSquare,
-    beforeCheckers: List[RelationPieceWitness],
-    afterCheckers: List[RelationPieceWitness],
-    removedCheckers: List[RelationPieceWitness],
-    establishedCheckers: List[RelationPieceWitness]
+    afterCheckers: List[RelationPieceWitness]
 )
 
 private[chessjudgment] final case class VerticalControlSetChange(
@@ -2892,7 +2886,10 @@ private[chessjudgment] object VerticalRelationContracts:
         RelationPawnTopologyFacet.FrontState -> List(pawn.frontSource),
         RelationPawnTopologyFacet.Component -> componentSources,
         RelationPawnTopologyFacet.Connections -> localConnectionSources,
-        RelationPawnTopologyFacet.EnemyPawnContacts -> contacts.map(_._2).sortBy(_.semanticId),
+        RelationPawnTopologyFacet.EnemyPawnContacts -> sourceSet(
+          "enemy-pawn-contact",
+          pawn.passageSource :: contacts.map(_._2)
+        ),
         RelationPawnTopologyFacet.Removed -> sourceSet(
           "removed-state",
           List(pawn.ownFileSource, pawn.frontSource, pawn.passageSource) ++

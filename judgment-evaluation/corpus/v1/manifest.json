@@ -8,14 +8,14 @@
     "diagnostic-explore": {
       "path": "diagnostic-explore.jsonl",
       "state": "open",
-      "sha256": "e79d40937f3c0f1a77554b3448eab310bf9168f478ad013489281dd882513a92",
+      "sha256": "df9587293e72bd7e3b805ae241c1042bd38fcf7f4d5778bd03496d62e9b38d21",
       "records": 3,
       "purpose": "book-grounded reconstruction and harness diagnosis"
     },
     "diagnostic-confirm": {
       "path": "sealed/diagnostic-confirm.jsonl",
       "state": "sealed",
-      "sha256": "210bd095158d85dc85683c4166eb0beb560c0235bee9bed7af49a19f8ccd58c7",
+      "sha256": "70abd7c14298bf206e86e91a28d634840083729c185fb8c4b41f17af3ae4e633",
       "records": 1,
       "purpose": "reservation awaiting independent annotation",
       "open_roles": ["independent-confirm-executor"],
@@ -25,7 +25,7 @@
     "fresh-confirm": {
       "path": "sealed/fresh-confirm.jsonl",
       "state": "sealed",
-      "sha256": "f1237db9ced287313ba913bf9df5f4e4934f0c4bbf677c52867212dd797377ac",
+      "sha256": "6d9bfe2cd758b91d692307d2ad699aca9c864fab1bddd437deff7e6b7136ac17",
       "records": 1,
       "purpose": "reservation for one execution of the final modified signed candidate",
       "open_roles": ["independent-fresh-confirm-executor"],
@@ -35,7 +35,7 @@
     "blind": {
       "path": "sealed/blind.jsonl",
       "state": "sealed",
-      "sha256": "7f07fbb3ac408a9466642861f555117f4e4da3dde2a09480d24efbb167bde068",
+      "sha256": "3544db8e5b7d4cf38a0dda8fac97ee941e6bb17893bf0179a507fe21d2d7c500",
       "records": 1,
       "purpose": "reservation awaiting an independent blind-set custodian",
       "open_roles": ["independent-blind-executor"],

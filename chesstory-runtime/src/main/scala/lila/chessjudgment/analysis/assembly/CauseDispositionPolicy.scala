@@ -7,16 +7,14 @@ import lila.chessjudgment.model.judgment.*
   * RelativeCause record.
   *
   * This policy consumes, without re-deciding, the admission decisions made by
-  * `ClaimTruthPolicy`, the lineage emitted by `ClaimDeduplicator`, and the
-  * canonical `PlayerFacingCauseExposureResolution`.  It therefore exposes a
-  * missing Jp host or a Ja/R suppression instead of allowing a ready Cause to
+  * `ClaimTruthPolicy` and the `PlayerFacingCauseExposureResolution`. It exposes
+  * a missing Jp host or Ja/R decision instead of allowing a ready Cause to
   * disappear between stage-specific collections.
   */
 object CauseDispositionPolicy:
 
   def resolve(
       graph: ClaimCandidateGraph,
-      deduplication: ClaimDeduplicationResult,
       exposure: PlayerFacingCauseExposureResolution
   ): CauseDispositionLedger =
     val causeRecords = graph.evidenceGraph.records.collect {
@@ -24,10 +22,8 @@ object CauseDispositionPolicy:
     }.sortBy(_.ref.id)
     val proposalDecisions = graph.decisions
     val proposalIds = proposalDecisions.map(_.claim.id)
-    val rankedClaims = deduplication.decisions.map(_.claim)
+    val rankedClaims = graph.certified.map(_.claim)
     val rankedClaimIds = rankedClaims.map(_.id).toSet
-    val trace = deduplication.trace
-    val traceByOriginalClaimId = trace.map(item => item.originalClaimId -> item.keptClaimId).toMap
     val readyHostsByCauseId = exposure.readyByClaim.toList
       .flatMap { case (claimId, causes) =>
         causes.map { case (_, causeRef) => causeRef.id -> claimId }
@@ -45,14 +41,7 @@ object CauseDispositionPolicy:
       proposalIds.size == proposalIds.distinct.size,
       "Cause disposition requires unique Jp claim ids"
     )
-    require(
-      rankedClaimIds.size == rankedClaims.size,
-      "Cause disposition requires unique post-deduplication claim ids"
-    )
-    require(
-      traceByOriginalClaimId.size == trace.size,
-      "Cause disposition requires one claim-deduplication successor per original claim"
-    )
+    require(rankedClaimIds.size == rankedClaims.size, "Cause disposition requires unique ranked claim ids")
     require(
       dominanceByCauseId.size == exposure.dominanceDecisions.size,
       "Cause disposition requires one dominance decision per ready Cause"
@@ -64,16 +53,6 @@ object CauseDispositionPolicy:
 
     def directlyHosts(claim: JudgmentClaim, causeRef: EvidenceRef): Boolean =
       claim.evidence.contains(causeRef)
-
-    def terminalClaimId(claimId: String): Option[String] =
-      @annotation.tailrec
-      def loop(current: String, visited: Set[String]): Option[String] =
-        if rankedClaimIds(current) then Some(current)
-        else if visited(current) then None
-        else traceByOriginalClaimId.get(current) match
-          case Some(next) => loop(next, visited + current)
-          case None       => None
-      loop(claimId, Set.empty)
 
     def rDisposition(
         causeRef: EvidenceRef,
@@ -87,7 +66,7 @@ object CauseDispositionPolicy:
           s"rank-eligible Cause '${causeRef.id}' has no dominance decision"
         )
       )
-      val authority = CauseRDispositionAuthority
+      val authority = CauseExposureDispositionAuthority
         .from(dominance, crossByCauseId.get(causeRef.id))
         .getOrElse(
           throw IllegalArgumentException(
@@ -111,8 +90,7 @@ object CauseDispositionPolicy:
         certifiedClaimIds = certifiedClaimIds,
         rankEligibleClaimIds = rankEligibleClaimIds,
         selectedOwnerClaimId = owner,
-        relatedCauseEvidenceIds = authority.relatedCauseEvidenceIds,
-        relatedClaimIds = Nil
+        relatedCauseEvidenceIds = authority.relatedCauseEvidenceIds
       )
 
     val dispositions = causeRecords.map {
@@ -141,7 +119,6 @@ object CauseDispositionPolicy:
             certifiedClaimIds,
             Nil,
             None,
-            Nil,
             Nil
           )
         else if proposedClaimIds.isEmpty then
@@ -153,7 +130,6 @@ object CauseDispositionPolicy:
             Nil,
             Nil,
             None,
-            Nil,
             Nil
           )
         else if certifiedClaimIds.isEmpty && deferredClaimIds.nonEmpty then
@@ -165,7 +141,6 @@ object CauseDispositionPolicy:
             Nil,
             Nil,
             None,
-            Nil,
             Nil
           )
         else if certifiedClaimIds.isEmpty && rejectedClaimIds.nonEmpty then
@@ -177,25 +152,11 @@ object CauseDispositionPolicy:
             Nil,
             Nil,
             None,
-            Nil,
             Nil
           )
         else if rankEligibleClaimIds.isEmpty then
-          val terminalClaimIds = certifiedClaimIds.flatMap(terminalClaimId).distinct.sorted
-          require(
-            terminalClaimIds.nonEmpty,
-            s"certified Cause '${causeRef.id}' disappeared without ClaimDeduplicator lineage"
-          )
-          CauseDisposition(
-            causeRef,
-            CauseDispositionStatus.Redundant,
-            CauseDispositionReason.CertifiedClaimDeduplicated,
-            proposedClaimIds,
-            certifiedClaimIds,
-            Nil,
-            None,
-            Nil,
-            terminalClaimIds
+          throw IllegalStateException(
+            s"certified Cause '${causeRef.id}' has no rank-eligible claim owner"
           )
         else
           rDisposition(

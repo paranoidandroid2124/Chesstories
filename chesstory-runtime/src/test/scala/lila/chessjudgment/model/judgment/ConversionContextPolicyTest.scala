@@ -22,4 +22,4 @@ class ConversionContextPolicyTest extends munit.FunSuite:
       PositionFeatureEvidence(features)
     )
 
-    assert(!ConversionContextPolicy.supports(List(record), RelativeCauseKind.ConversionMiss))
+    assert(!ConversionContextPolicy.supports(List(record), RelativeCauseKind.ConversionSecured))

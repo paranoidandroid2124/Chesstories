@@ -1,7 +1,7 @@
 package lila.chessjudgment.analysis.line
 
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
-import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.model.line.EngineLine
 import lila.chessjudgment.model.judgment.{
   CanonicalLineReplay,
   RelationWitnessDetail,

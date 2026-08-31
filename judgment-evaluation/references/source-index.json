@@ -14,36 +14,7 @@
       "extracted_analysis"
     ]
   },
-  "totals": {
-    "document_count": 17,
-    "byte_size": 518543566,
-    "page_count": 9188,
-    "explore_contaminated_count": 9,
-    "uncontaminated_count": 8
-  },
   "documents": [
-    {
-      "document_id": "ref-199b754493e4499599156955b9f7215a",
-      "basename": "100 Tactical Patterns You Must Know_ Learn to Recognize Key -- Frank Erwich -- PT, 2024 -- New In Chess.pdf",
-      "title": "100 Tactical Patterns You Must Know",
-      "sha256": "45429242fc2d679cf5738e290631ea89475b25d36d6fbfb8836fc2b122a707fc",
-      "byte_size": 31952330,
-      "page_count": 852,
-      "source_type": "local-reference-only",
-      "locator_policy_id": "document-id-plus-pdf-page-only",
-      "explore_contaminated": false
-    },
-    {
-      "document_id": "ref-9fad845ac9794eacb252fff218e92b46",
-      "basename": "Chess structures.pdf",
-      "title": "Chess Structures",
-      "sha256": "d171e8ca8e487f5177934b0caceba932004e2ea04947f2154dc927912f3af2ed",
-      "byte_size": 9024077,
-      "page_count": 464,
-      "source_type": "local-reference-only",
-      "locator_policy_id": "document-id-plus-pdf-page-only",
-      "explore_contaminated": false
-    },
     {
       "document_id": "ref-dc427a9593ab48248d19627b245fafaa",
       "basename": "Doknjas, Joshua - The AI Revolution in Chess-Everyman Chess (2022).pdf",
@@ -60,37 +31,15 @@
       }
     },
     {
-      "document_id": "ref-32c9c5cb2f9e4bb7b7e21b6b9405a2c2",
-      "basename": "Dvoretsky's Endgame Manual.pdf",
-      "title": "Dvoretsky's Endgame Manual",
-      "sha256": "87dc42e279f7cd918755769340057dba189ab66ee714c9f0ecaeff67d8f9179a",
-      "byte_size": 7427334,
-      "page_count": 816,
+      "document_id": "ref-b7e552e8d8914cdc31ce1002fbb8252e",
+      "basename": "Opening Reportoire The Sicilian Najdorf -- John Doknjas Joshua Doknjas.pdf",
+      "title": "Opening Repertoire: The Sicilian Najdorf",
+      "sha256": "b7e552e8d8914cdc31ce1002fbb8252e8b722f54d5baa8c0c2e956ff5dd63ed6",
+      "byte_size": 30592390,
+      "page_count": 365,
       "source_type": "local-reference-only",
       "locator_policy_id": "document-id-plus-pdf-page-only",
-      "explore_contaminated": false
-    },
-    {
-      "document_id": "ref-ea3b164f4aef4dc19771ae18d1ddb683",
-      "basename": "Forcing Chess Moves.pdf",
-      "title": "Forcing Chess Moves",
-      "sha256": "bc8f190b5c79469a0962603273f88796e1f6cc9b4f6191b280954d57a6ae8275",
-      "byte_size": 26189182,
-      "page_count": 770,
-      "source_type": "local-reference-only",
-      "locator_policy_id": "document-id-plus-pdf-page-only",
-      "explore_contaminated": false
-    },
-    {
-      "document_id": "ref-7030a1cc05b145d389bc98e911b67dda",
-      "basename": "Grandmaster Preparation_ Calculation.pdf",
-      "title": "Grandmaster Preparation: Calculation",
-      "sha256": "df7824fee5d6a23450c363df95ef55e82e3c7b9540409b40439ae4673a741b2d",
-      "byte_size": 6355187,
-      "page_count": 306,
-      "source_type": "local-reference-only",
-      "locator_policy_id": "document-id-plus-pdf-page-only",
-      "explore_contaminated": false
+      "explore_contaminated": true
     },
     {
       "document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975",
@@ -119,17 +68,6 @@
       }
     },
     {
-      "document_id": "ref-f11a82bab807466a8d7ef545f5847d9d",
-      "basename": "Nimzo-Indian, A Complete Opening Repertoire for Black.pdf",
-      "title": "Nimzo-Indian: A Complete Opening Repertoire for Black",
-      "sha256": "06f424e7d686ff3c0bf4a99822a470a7bd03f547b33dabb1d3718848aa621ddf",
-      "byte_size": 68025991,
-      "page_count": 715,
-      "source_type": "local-reference-only",
-      "locator_policy_id": "document-id-plus-pdf-page-only",
-      "explore_contaminated": true
-    },
-    {
       "document_id": "ref-35c04c3495434a6290c20ee4712660a6",
       "basename": "Opening repertoire _ the modern Benoni.pdf",
       "title": "Opening Repertoire: The Modern Benoni",
@@ -141,17 +79,6 @@
       "explore_contaminated": false
     },
     {
-      "document_id": "ref-7e10c5860cd747ddbe63125d5b105513",
-      "basename": "Re-Engineering the Chess Classics 2023-TLS -- Matthew Sadler and Steve Giddins -- PT, 2023 -- New In Chess -- 9789083311265 -- ae4bba6dc77a8901cf22ae1590362819 -- Anna’s Archive.pdf",
-      "title": "Re-Engineering the Chess Classics",
-      "sha256": "923caa00e953cb05b5742c304e2abdd50338f0503efef8c96f2017701f6f4f03",
-      "byte_size": 16831473,
-      "page_count": 308,
-      "source_type": "local-reference-only",
-      "locator_policy_id": "document-id-plus-pdf-page-only",
-      "explore_contaminated": true
-    },
-    {
       "document_id": "ref-009749ddb7ef4fe0a033b33e9712fc74",
       "basename": "The Basman Williams Attack.pdf",
       "title": "The Basman Williams Attack",
@@ -161,28 +88,6 @@
       "source_type": "local-reference-only",
       "locator_policy_id": "document-id-plus-pdf-page-only",
       "explore_contaminated": true
-    },
-    {
-      "document_id": "ref-e2ebe1bce3704f168244ec145e857e80",
-      "basename": "The Chess Tactics Detection Workbook (Everyman Chess).pdf",
-      "title": "The Chess Tactics Detection Workbook",
-      "sha256": "21f575b7b3ded665c64c81b5d73226af137d34f59ade580a991892181717a2ab",
-      "byte_size": 22053491,
-      "page_count": 296,
-      "source_type": "local-reference-only",
-      "locator_policy_id": "document-id-plus-pdf-page-only",
-      "explore_contaminated": false
-    },
-    {
-      "document_id": "ref-3344aaf99bcd498eba2e3085fbdff159",
-      "basename": "The Complete Chess Swindler.pdf",
-      "title": "The Complete Chess Swindler: How to Save Points From Lost Positions",
-      "sha256": "f83fc88bd45ae8dcf195d1328cb382b951b28e43aee2429656362e3bc9dca82f",
-      "byte_size": 54735230,
-      "page_count": 710,
-      "source_type": "local-reference-only",
-      "locator_policy_id": "document-id-plus-pdf-page-only",
-      "explore_contaminated": false
     },
     {
       "document_id": "ref-edf868ccf0a3425488f55ef6b4b08acf",
@@ -213,6 +118,50 @@
       "sha256": "666724beaab9e7a58c59898f684bff091f9f978558deb4385ffdfb5e7bbe3da6",
       "byte_size": 81313781,
       "page_count": 987,
+      "source_type": "local-reference-only",
+      "locator_policy_id": "document-id-plus-pdf-page-only",
+      "explore_contaminated": true
+    },
+    {
+      "document_id": "ref-6661fa92ce6d237a8eb6c8e9e6c49fe",
+      "basename": "Beating the Najdorf_ rare lines.pdf",
+      "title": "Beating the Najdorf: Rare Lines",
+      "sha256": "6661fa92ce6d237a8eb6c8e9e6c49fe445e973fb8cd10b235b360c5df3cbdec5",
+      "byte_size": 46074042,
+      "page_count": 462,
+      "source_type": "local-reference-only",
+      "locator_policy_id": "document-id-plus-pdf-page-only",
+      "explore_contaminated": false
+    },
+    {
+      "document_id": "ref-638dbc429db08ca52ef07553822722d8b",
+      "basename": "The Najdorf Bg5 Revisited Volume 1 - Lukasz Jarmula.pdf",
+      "title": "The Najdorf Bg5 Revisited, Volume 1",
+      "sha256": "638dbc429db08ca52ef07553822722d8b18b6b35cf818a8bbbd5fb5f7716e381",
+      "byte_size": 66168037,
+      "page_count": 747,
+      "source_type": "local-reference-only",
+      "locator_policy_id": "document-id-plus-pdf-page-only",
+      "explore_contaminated": false
+    },
+    {
+      "document_id": "ref-37f7d12776c8cc2f391b4b17add2d59",
+      "basename": "The Najdorf Bg5 Revisited Volume 2 - Lukasz Jarmula.pdf",
+      "title": "The Najdorf Bg5 Revisited, Volume 2",
+      "sha256": "37f7d12776c8cc2f391b4b17add2d59bddb4812f5802145a6f6ff30ffccc2f5e",
+      "byte_size": 86530923,
+      "page_count": 921,
+      "source_type": "local-reference-only",
+      "locator_policy_id": "document-id-plus-pdf-page-only",
+      "explore_contaminated": false
+    },
+    {
+      "document_id": "ref-03c77bd9c6c6ae987e07067822fd63b",
+      "basename": "Understanding Before Moving 3 - Sicilian Structures - Part 1 -- Herman Grooten -- Understanding before Moving 3.pdf",
+      "title": "Understanding Before Moving 3: Sicilian Structures, Part 1",
+      "sha256": "03c77bd9c6c6ae987e07067822fd63bdb0af39970220f5dd08ee3b95e111b821",
+      "byte_size": 36959860,
+      "page_count": 351,
       "source_type": "local-reference-only",
       "locator_policy_id": "document-id-plus-pdf-page-only",
       "explore_contaminated": true

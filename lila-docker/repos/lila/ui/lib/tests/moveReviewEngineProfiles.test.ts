@@ -5,17 +5,15 @@ import {
   isMoveReviewWork,
   makeMoveReviewWork,
   moveReviewEngineProfile,
-  type MoveReviewEngineProfile,
   type Work,
 } from '../src/ceval/types';
 import {
-  moveReviewEngineCapabilities,
+  moveReviewEngineCapability,
   moveReviewEngineProfileSpec,
 } from '../src/ceval/engines/moveReviewEngineProfiles';
 import { Protocol } from '../src/ceval/protocol';
 
-type MoveReviewEngineEnvironment = Parameters<typeof moveReviewEngineCapabilities>[0];
-const moveReviewFallbackEngineProfile: MoveReviewEngineProfile = 'sf18-smallnet-single-t1-h16-v1';
+type MoveReviewEngineEnvironment = Parameters<typeof moveReviewEngineCapability>[0];
 
 const capableBrowser: MoveReviewEngineEnvironment = {
   features: ['wasm', 'sharedMem', 'simd', 'dynamicImportFromWorker'],
@@ -24,21 +22,17 @@ const capableBrowser: MoveReviewEngineEnvironment = {
 
 const startFen = 'rn2kbnr/ppp1pppp/3q4/3p4/8/3P4/PPP1PPPP/RNBQKBNR w KQkq - 2 3';
 
-test('move review profile identities are distinct and parse as a closed union', () => {
-  assert.deepEqual(
-    moveReviewEngineCapabilities(capableBrowser).map(capability => capability.profile),
-    ['sf18-smallnet-t2-h16-v1', 'sf18-smallnet-single-t1-h16-v1'],
-  );
+test('move review profile identity is the closed server-admitted singleton', () => {
+  assert.equal(moveReviewEngineCapability(capableBrowser).profile, 'sf18-smallnet-t2-h16-v1');
   assert.equal(isMoveReviewEngineProfile(moveReviewEngineProfile), true);
-  assert.equal(isMoveReviewEngineProfile(moveReviewFallbackEngineProfile), true);
+  assert.equal(isMoveReviewEngineProfile('sf18-smallnet-single-t1-h16-v1'), false);
   assert.equal(isMoveReviewEngineProfile('sf18-smallnet-t1-h16-v1'), false);
-  assert.notEqual(moveReviewEngineProfile, moveReviewFallbackEngineProfile);
 });
 
-test('the bundled t2 profile admits standard and Chess960 on a capable browser', () => {
-  const manifest = moveReviewEngineProfileSpec(moveReviewEngineProfile);
-  assert.deepEqual(manifest.variants, ['standard', 'chess960']);
-  const capability = moveReviewEngineCapabilities(capableBrowser)[0];
+test('the bundled t2 profile admits only the runtime-supported standard variant', () => {
+  const manifest = moveReviewEngineProfileSpec();
+  assert.deepEqual(manifest.variants, ['standard']);
+  const capability = moveReviewEngineCapability(capableBrowser);
   assert.equal(capability.supported, true);
   if (!capability.supported) return;
   assert.equal(capability.profile, moveReviewEngineProfile);
@@ -48,51 +42,22 @@ test('the bundled t2 profile admits standard and Chess960 on a capable browser',
   assert.deepEqual(capability.info.variants, manifest.variants);
 });
 
-test('the exact t1 artifact admits Standard and Chess960 without shared memory', () => {
-  const manifest = moveReviewEngineProfileSpec(moveReviewFallbackEngineProfile);
-  assert.equal(manifest.loader, 'stockfish-web-single-thread-worker');
-  assert.deepEqual(manifest.variants, ['standard', 'chess960']);
-  assert.deepEqual(manifest.assets, {
-    root: 'npm/stockfish-web-move-review',
-    js: 'sf_18_smallnet_single.js',
-    wasm: 'sf_18_smallnet_single.wasm',
-  });
-  const singleThreadBrowser: MoveReviewEngineEnvironment = {
-    features: ['wasm', 'simd'],
-    hardwareConcurrency: 1,
-  };
-  const capability = moveReviewEngineCapabilities(singleThreadBrowser)[1];
-  assert.equal(capability.supported, true);
-  assert.equal(capability.profile, moveReviewFallbackEngineProfile);
-});
-
-test('selection falls back once from t2 to the exact t1 profile without shared memory', () => {
+test('the exact t2 profile fails closed without shared memory', () => {
   const noSharedMemory: MoveReviewEngineEnvironment = {
     features: ['wasm', 'simd', 'dynamicImportFromWorker'],
     hardwareConcurrency: 8,
   };
-  const capabilities = moveReviewEngineCapabilities(noSharedMemory);
-
-  assert.equal(
-    capabilities.find(capability => capability.supported)?.profile,
-    moveReviewFallbackEngineProfile,
-  );
-  assert.deepEqual(
-    capabilities.map(capability => [
-      capability.profile,
-      capability.supported ? 'supported' : capability.reason,
-    ]),
-    [
-      [moveReviewEngineProfile, 'missing-browser-feature'],
-      [moveReviewFallbackEngineProfile, 'supported'],
-    ],
-  );
+  const capability = moveReviewEngineCapability(noSharedMemory);
+  assert.equal(capability.supported, false);
+  assert.equal(capability.profile, moveReviewEngineProfile);
+  if (capability.supported) return;
+  assert.equal(capability.reason, 'missing-browser-feature');
 });
 
-test('move review work retains the selected profile and its protocol settings', () => {
+test('move review work retains the exact profile and its protocol settings', () => {
   let emitted: Tree.LocalEval | undefined;
-  const work = makeMoveReviewWork(moveReviewFallbackEngineProfile, {
-    variant: 'chess960',
+  const work = makeMoveReviewWork(moveReviewEngineProfile, {
+    variant: 'standard',
     initialFen: startFen,
     currentFen: startFen,
     moves: [],
@@ -105,9 +70,9 @@ test('move review work retains the selected profile and its protocol settings', 
   });
 
   assert.equal(isMoveReviewWork(work), true);
-  assert.equal(work.profile, moveReviewFallbackEngineProfile);
-  assert.equal(work.variant, 'chess960');
-  assert.equal(work.threads, 1);
+  assert.equal(work.profile, moveReviewEngineProfile);
+  assert.equal(work.variant, 'standard');
+  assert.equal(work.threads, 2);
   assert.equal(work.hashSize, 16);
   assert.deepEqual(work.search, { depth: 16 });
   assert.deepEqual(work.searchLimits, { depth: 16, nodes: 2_000_000, movetimeMs: 2_500 });
@@ -119,7 +84,7 @@ test('move review work retains the selected profile and its protocol settings', 
   assert.equal(emitted, evaluation);
 });
 
-test('protocol becomes ready only after readyok and applies each move review profile settings', async () => {
+test('protocol becomes ready only after readyok and applies the exact move review profile settings', async () => {
   const commands: string[] = [];
   const protocol = new Protocol();
   let ready = false;
@@ -151,8 +116,8 @@ test('protocol becomes ready only after readyok and applies each move review pro
   protocol.compute(ordinaryWork);
   protocol.received('bestmove e2e4');
 
-  const moveReviewWork = makeMoveReviewWork(moveReviewFallbackEngineProfile, {
-    variant: 'chess960',
+  const moveReviewWork = makeMoveReviewWork(moveReviewEngineProfile, {
+    variant: 'standard',
     initialFen: startFen,
     currentFen: startFen,
     moves: [],
@@ -168,13 +133,13 @@ test('protocol becomes ready only after readyok and applies each move review pro
   protocol.received('readyok');
   const moveReviewCommands = commands.slice(commandStart);
 
-  assert.ok(moveReviewCommands.includes('setoption name UCI_Variant value chess960'));
-  assert.ok(moveReviewCommands.includes('setoption name Threads value 1'));
+  assert.equal(moveReviewWork.variant, 'standard');
+  assert.ok(moveReviewCommands.includes('setoption name Threads value 2'));
   assert.ok(moveReviewCommands.includes('setoption name Hash value 16'));
   assert.ok(moveReviewCommands.includes('setoption name MultiPV value 2'));
   assert.ok(moveReviewCommands.includes('setoption name Clear Hash'));
   assert.ok(moveReviewCommands.includes(`position fen ${startFen} moves`));
-  assert.ok(moveReviewCommands.includes('go depth 16 nodes 3750000 movetime 5000'));
+  assert.ok(moveReviewCommands.includes('go depth 16 nodes 5000000 movetime 5000'));
   assert.ok(commands.includes('go depth 1'));
 });
 
@@ -204,7 +169,7 @@ test('comparison work appends exactly two issued searchmoves to the bounded go c
   protocol.compute(work);
   protocol.received('readyok');
 
-  assert.ok(commands.includes('go depth 16 nodes 1500000 movetime 2500 searchmoves c7c5 e7e5'));
+  assert.ok(commands.includes('go depth 16 nodes 2000000 movetime 2500 searchmoves c7c5 e7e5'));
   protocol.received('info depth 1 seldepth 3 nodes 100 multipv 1 score cp 20 time 100 pv c7c5');
   assert.equal(evaluations.length, 0);
   protocol.received('info depth 1 seldepth 2 nodes 100 multipv 2 score cp 8 time 100 pv e7e5');

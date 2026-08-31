@@ -13,7 +13,7 @@
     "played_move_uci",
     "side_to_move",
     "game_phase",
-    "cause_family",
+    "stratum_id",
     "source",
     "source_ordinal",
     "partition_rule",
@@ -28,18 +28,7 @@
     "played_move_uci": {"$ref": "#/$defs/uciMove"},
     "side_to_move": {"enum": ["white", "black"]},
     "game_phase": {"enum": ["opening", "middlegame", "endgame"]},
-    "cause_family": {
-      "enum": [
-        "activity_restriction",
-        "conversion_control",
-        "drawing_defense",
-        "move_order_tempo",
-        "pawn_breaks_center",
-        "strategic_plan",
-        "structure_targets",
-        "tactical_resource"
-      ]
-    },
+    "stratum_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
     "source": {
       "type": "object",
       "additionalProperties": false,

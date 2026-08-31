@@ -77,33 +77,30 @@
     "automaticTerminalResult": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "terminal", "presentation"],
+      "required": ["kind", "terminal"],
       "properties": {
         "kind": {"const": "automatic_terminal"},
-        "terminal": {"$ref": "../public-v6/move-meaning-response.schema.json#/$defs/automaticTerminal"},
-        "presentation": {"$ref": "#/$defs/nonEmptyString"}
+        "terminal": {"$ref": "../public-v6/move-meaning-response.schema.json#/$defs/automaticTerminal"}
       }
     },
     "forcedSingleMoveResult": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "move_uci", "supporting_endpoint", "presentation"],
+      "required": ["kind", "move_uci", "supporting_endpoint"],
       "properties": {
         "kind": {"const": "forced_single_move"},
         "move_uci": {"$ref": "#/$defs/uciMove"},
         "supporting_endpoint": {"$ref": "../public-v6/move-meaning-response.schema.json#/$defs/endpoint"},
-        "presentation": {"$ref": "#/$defs/nonEmptyString"},
         "draw_claims": {"$ref": "#/$defs/drawClaims"}
       }
     },
     "drawClaimActionResult": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "claims", "presentation"],
+      "required": ["kind", "claims"],
       "properties": {
         "kind": {"const": "draw_claim_action"},
-        "claims": {"$ref": "#/$defs/drawClaims"},
-        "presentation": {"$ref": "#/$defs/nonEmptyString"}
+        "claims": {"$ref": "#/$defs/drawClaims"}
       }
     },
     "selectedMoveChoicesResult": {
@@ -113,15 +110,25 @@
       "properties": {
         "kind": {"const": "selected_move_choices"},
         "selected_move_reviews": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 2,
-          "items": {
-            "oneOf": [
-              {"$ref": "#/$defs/referenceLineReview"},
-              {"$ref": "#/$defs/playedMoveReview"}
-            ]
-          }
+          "oneOf": [
+            {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "prefixItems": [{"$ref": "#/$defs/combinedBestPlayedMoveReview"}],
+              "items": false
+            },
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "prefixItems": [
+                {"$ref": "#/$defs/referenceLineReview"},
+                {"$ref": "#/$defs/playedOnlyMoveReview"}
+              ],
+              "items": false
+            }
+          ]
         },
         "draw_claims": {"$ref": "#/$defs/drawClaims"}
       }
@@ -167,6 +174,18 @@
         },
         "commentary": {"$ref": "../public-v6/move-meaning-response.schema.json#/$defs/moveCommentary"}
       }
+    },
+    "combinedBestPlayedMoveReview": {
+      "allOf": [
+        {"$ref": "#/$defs/playedMoveReview"},
+        {"properties": {"selection": {"$ref": "#/$defs/bestAndPlayedSelection"}}}
+      ]
+    },
+    "playedOnlyMoveReview": {
+      "allOf": [
+        {"$ref": "#/$defs/playedMoveReview"},
+        {"properties": {"selection": {"$ref": "#/$defs/playedSelection"}}}
+      ]
     },
     "playedSelection": {
       "type": "object",

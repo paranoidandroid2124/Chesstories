@@ -314,14 +314,13 @@ export class Protocol {
     this.nextWork = undefined;
 
     this.send(['position fen', work.initialFen, 'moves', ...work.moves].join(' '));
-    const physicalNodes = Math.floor((work.searchLimits.nodes * 3) / 4);
     this.send(
       [
         'go',
         'depth',
         work.searchLimits.depth,
         'nodes',
-        physicalNodes,
+        work.searchLimits.nodes,
         'movetime',
         work.searchLimits.movetimeMs,
         ...(work.rootMoves.length ? ['searchmoves', ...work.rootMoves] : []),

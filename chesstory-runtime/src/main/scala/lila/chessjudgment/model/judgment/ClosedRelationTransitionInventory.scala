@@ -11,30 +11,17 @@ import lila.chessjudgment.model.line.PrincipalVariationEvidence
   */
 private[chessjudgment] enum RelationCombinationContractKind:
   case GeometricControlSetDelta
-  case GeometricSupporterCapture
-  case GeometricSupportDelta
-  case SliderLineInterruption
-  case GeometricLineControlAfterBlockerRemoval
   case NamedRayTransition
 
 private[chessjudgment] object RelationCombinationContractKind:
   def id(kind: RelationCombinationContractKind): String =
     kind match
       case GeometricControlSetDelta => "geometric_control_set_delta"
-      case GeometricSupporterCapture => "geometric_supporter_capture"
-      case GeometricSupportDelta => "geometric_support_delta"
-      case SliderLineInterruption  => "slider_line_interruption"
-      case GeometricLineControlAfterBlockerRemoval => "geometric_line_control_after_blocker_removal"
       case NamedRayTransition => "named_ray_transition"
 
   def forDetail(detail: RelationWitnessDetail): Option[RelationCombinationContractKind] =
     detail match
       case _: RelationWitnessDetail.GeometricControlSetDelta => Some(GeometricControlSetDelta)
-      case _: RelationWitnessDetail.GeometricSupporterCapture => Some(GeometricSupporterCapture)
-      case _: RelationWitnessDetail.GeometricSupportDelta => Some(GeometricSupportDelta)
-      case _: RelationWitnessDetail.SliderLineInterruption => Some(SliderLineInterruption)
-      case _: RelationWitnessDetail.GeometricLineControlAfterBlockerRemoval =>
-        Some(GeometricLineControlAfterBlockerRemoval)
       case _: RelationWitnessDetail.NamedRayTransition => Some(NamedRayTransition)
       case _                                                   => None
 
@@ -167,6 +154,31 @@ private[chessjudgment] object ClosedRelationCombinationResults:
       None
     )
 
+/** Opaque occurrence capability for an absence already certified while one
+  * exact L1 result was closed. Consumers may bind that certificate to the
+  * matching replay position, but cannot ask the L0 inventory to adjudicate the
+  * query again.
+  */
+private[chessjudgment] final class ReplayClosedRelationAbsenceCapability private[judgment] (
+    premise: ClosedRelationAbsencePremise,
+    transition: LineReplayStep,
+    certificate: PositionRelationExtractor.ClosedRelationAbsenceCertificate,
+    inventory: PositionRelationExtractor.PositionRelationInventoryCertificate
+):
+  private[chessjudgment] def bind(
+      position: PositionNodeRef,
+      scope: EvidenceScope
+  ): Option[PositionRelationExtractor.ClosedRelationAbsenceProof] =
+    val (expectedFen, expectedPly) = premise.occurrence match
+      case RelationSnapshotOccurrence.Before => transition.fenBefore -> (transition.ply - 1)
+      case RelationSnapshotOccurrence.After  => transition.fenAfter -> transition.ply
+    Option
+      .when(
+        certificate.query == premise.query && position.ply == expectedPly &&
+          PrincipalVariationEvidence.sameBoardState(position.fen, expectedFen)
+      )((): Unit)
+      .flatMap(_ => inventory.bindAbsence(certificate, position, scope))
+
 /** Exact relation-output inventory for one admitted transition. Only contracts
   * whose canonical changed-source set is non-empty execute. `bind` adds
   * occurrence ownership.
@@ -217,6 +229,31 @@ private[chessjudgment] final class ClosedRelationTransitionInventory private (
       premise: ClosedRelationAbsencePremise
   ): Option[PositionRelationExtractor.ClosedRelationAbsenceCertificate] =
     vertical.absenceCertificate(premise)
+
+  /** Mint only from an exact absence obligation of this exact L1 output. The
+    * vertical producer resolved and cached the certificate before admitting
+    * the result, so this handoff never opens a second truth query.
+    */
+  private[chessjudgment] def absenceCapability(
+      relation: RelationFactEvidence,
+      premise: ClosedRelationAbsencePremise
+  ): Option[ReplayClosedRelationAbsenceCapability] =
+    for
+      proof <- VerticalRelationContracts.proofOf(relation.detail)
+      if verticalRelations.exists(existing =>
+        existing.asInstanceOf[AnyRef].eq(relation.asInstanceOf[AnyRef])
+      )
+      if proof.absences.contains(premise)
+      certificate <- absenceCertificate(premise)
+      inventory = premise.occurrence match
+        case RelationSnapshotOccurrence.Before => delta.beforeInventory
+        case RelationSnapshotOccurrence.After  => delta.afterInventory
+    yield new ReplayClosedRelationAbsenceCapability(
+      premise,
+      transition,
+      certificate,
+      inventory
+    )
 
   private[judgment] def stateCertificate(
       premise: ClosedPositionStatePremise
@@ -449,7 +486,7 @@ private[chessjudgment] object CanonicalRelationTransitionInventory:
         resolved.map(_.ref.id).distinct.size == resolved.size,
         s"combination result '${relation.semanticId}' repeats one exact premise occurrence"
       )
-      val changedProofKeys = proof.premises.flatMap { premise =>
+      val changedRelationProofKeys = proof.premises.flatMap { premise =>
         premise.occurrence match
           case RelationPremiseOccurrence.Before | RelationPremiseOccurrence.After => Nil
           case RelationPremiseOccurrence.Removed =>
@@ -462,10 +499,19 @@ private[chessjudgment] object CanonicalRelationTransitionInventory:
               .get((RelationChangeDirection.Established, premise.kind, premise.semanticId))
               .toList
               .flatMap(_.proofKeys)
-      }.distinct.sortBy(_.stableKey)
+      }
+      val changedStateProofKeys = relation.detail match
+        case RelationWitnessDetail.GeometricControlSetDelta(_, _, target, _, _, _, _, _, _, _) =>
+          RelationProofKey.forDependencySquares(List(target), semanticDelta.transitionFootprint)
+        case _ =>
+          Nil
+      val exactProofKeys = (changedRelationProofKeys ++ changedStateProofKeys).distinct.sortBy(_.stableKey)
       require(
-        changedProofKeys.nonEmpty && changedProofKeys == proof.proofKeys,
-        s"combination result '${relation.semanticId}' does not own its exact transition proof keys"
+        exactProofKeys.nonEmpty && exactProofKeys == proof.proofKeys,
+        s"combination result '${relation.semanticId}' (${proof.contract}) does not own its exact transition proof keys: " +
+          s"changed=${exactProofKeys.map(_.stableKey).mkString("[", ",", "]")}, " +
+          s"declared=${proof.proofKeys.map(_.stableKey).mkString("[", ",", "]")}, " +
+          s"premises=${proof.premises.map(premise => s"${premise.occurrence}:${premise.kind}:${premise.semanticId}").mkString("[", ",", "]")}"
       )
       relation.semanticId -> CanonicalRelationSourceBinding(
         resolved.sortBy(_.ref.id),

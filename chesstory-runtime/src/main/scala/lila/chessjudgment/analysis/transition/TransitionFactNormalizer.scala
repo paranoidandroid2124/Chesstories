@@ -1,7 +1,7 @@
 package lila.chessjudgment.analysis.transition
 
 import chess.Color
-import lila.chessjudgment.analysis.structure.{ CanonicalTransitionStructuralDelta, StructuralDeltaContracts }
+import lila.chessjudgment.analysis.structure.CanonicalTransitionStructuralDelta
 import lila.chessjudgment.model.judgment.*
 
 object TransitionFactNormalizer:
@@ -62,8 +62,16 @@ object TransitionFactNormalizer:
           s"structural transition '${transition.evidence.id}' must reuse its admitted legal move"
         )
       )
-    val signals = StructuralDeltaContracts.signals(structural)
-    val consequences = StructuralDeltaContracts.consequences(structural)
+    val structuralOccurrence = replay.onlyTransition
+      .filter(_.ownsStructuralDelta(structural))
+      .map(_.structuralOccurrence)
+      .getOrElse(
+        throw IllegalArgumentException(
+          s"structural transition '${transition.evidence.id}' must project its replay-owned structural occurrence"
+        )
+      )
+    val signals = structuralOccurrence.signals
+    val consequences = structuralOccurrence.consequences
     val relationChanges = delta.canonicalRelations.changes
     val deltaProof = CanonicalTransitionDeltaProof.from(
       transitionProof,
@@ -92,33 +100,9 @@ object TransitionFactNormalizer:
         relationChanges = relationChanges,
         derivedRelationSources = derivedRelationSources,
         canonicalTransitionProof = Some(transitionProof),
-        canonicalDeltaProof = Some(deltaProof)
+        canonicalDeltaProof = Some(deltaProof),
+        replayStructuralOccurrence = Some(structuralOccurrence)
       ),
-      parents = parents
-    )
-
-  def fromPlanTransition(
-      id: String,
-      proof: PlanSequenceProof,
-      position: PositionNodeRef,
-      line: Option[LineNodeRef],
-      scope: EvidenceScope,
-      confidence: EvidenceConfidence,
-      parents: List[EvidenceRef] = Nil
-  ): EvidenceRecord =
-    val ref =
-      EvidenceRef(
-        id = id,
-        producer = EvidenceProducer.PlanTransitionProducer,
-        layer = EvidenceLayer.PlanTransition,
-        position = position,
-        line = line,
-        scope = scope,
-        confidence = confidence
-      )
-    EvidenceRecord(
-      ref = ref,
-      payload = PlanTransitionEvidence(proof),
       parents = parents
     )
 

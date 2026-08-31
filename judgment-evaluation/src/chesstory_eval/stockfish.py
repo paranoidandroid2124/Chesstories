@@ -39,11 +39,6 @@ class StockfishAcquisitionResult:
     diagnostics: Mapping[str, Any]
     raw_provider_io: Mapping[str, Any]
 
-    def as_q_payload(self) -> dict[str, Any]:
-        """Return the payload required by the current Q output schema."""
-
-        return dict(self.engine_evidence_pack)
-
 
 @dataclass(frozen=True)
 class _UciOption:
@@ -470,7 +465,6 @@ def _validate_question(
         "move_history_uci",
         "requested_reference_moves_uci",
         "game_phase",
-        "family_tags",
     }
     _exact_keys(result, {"root_position", "played_move_uci"}, allowed, "question")
     root = result["root_position"]
@@ -523,21 +517,6 @@ def _validate_question(
         "endgame",
     }:
         raise StockfishAcquisitionError("game_phase is invalid")
-    families = result.get("family_tags", [])
-    valid_families = {
-        "tactical",
-        "strategic",
-        "defensive",
-        "conversion",
-        "material",
-        "evaluation",
-    }
-    if not isinstance(families, list) or len({_json_text(value) for value in families}) != len(
-        families
-    ):
-        raise StockfishAcquisitionError("family_tags must be a unique array")
-    if any(family not in valid_families for family in families):
-        raise StockfishAcquisitionError("family_tags contains an invalid value")
     return result, board, legal_moves
 
 

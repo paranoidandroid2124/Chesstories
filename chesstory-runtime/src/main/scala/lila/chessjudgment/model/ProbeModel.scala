@@ -65,31 +65,6 @@ case class ProbeResult(
   resolution: ProbeResolution
 )
 
-enum ProbeAdmissionStatus:
-  case Admitted
-  case Rejected
-
-object ProbeAdmissionStatus:
-  given Writes[ProbeAdmissionStatus] = Writes(status => JsString(status.toString))
-
-case class ProbeAdmissionDiagnostic(
-  probeId: String,
-  status: ProbeAdmissionStatus,
-  reasonCodes: List[String],
-  purpose: Option[ProbeKind] = None,
-  candidateMove: Option[String] = None,
-  fen: Option[String] = None,
-  admittedLineCount: Int = 0,
-  legalLineCount: Int = 0,
-  scoredLineCount: Int = 0,
-  depthFloor: Option[Int] = None,
-  horizon: Option[String] = None,
-  variationHash: Option[String] = None
-)
-
-object ProbeAdmissionDiagnostic:
-  given Writes[ProbeAdmissionDiagnostic] = Json.writes[ProbeAdmissionDiagnostic]
-
 /** Purpose-aware request/result envelope validation.
   *
   * Board legality and horizon coverage belong to the canonical branch

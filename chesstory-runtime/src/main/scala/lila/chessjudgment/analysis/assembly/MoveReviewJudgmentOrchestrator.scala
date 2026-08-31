@@ -2,11 +2,8 @@ package lila.chessjudgment.analysis.assembly
 
 import lila.chessjudgment.model.{
   BranchReplyProbeBinding,
-  ProbeAdmissionDiagnostic,
-  ProbeAdmissionStatus,
   ProbeKind,
   ProbeRequest,
-  ProbeResolution,
   ProbeResult,
   ProbeVariant
 }
@@ -19,35 +16,42 @@ object MoveReviewJudgmentOrchestrator:
   final case class ReviewExecution(
       packet: EvidenceBackedJudgmentPacket,
       admittedProbeResultIds: List[String],
-      preparedInput: NormalizedMoveReviewInput
+      preparedInput: AdmittedMoveReviewInput
   )
 
   final private case class ProbeAdmission(
-      admittedBranches: List[MoveReviewInputNormalizer.AdmittedProbeBranch],
-      diagnostics: List[ProbeAdmissionDiagnostic]
+      admittedBranches: List[MoveReviewInputAdmission.AdmittedProbeBranch]
   )
 
   /** Development-only direct v6 entrypoint; player jobs enter through executePreparedReview. */
   def execute(raw: RawMoveReviewInput): Option[EvidenceBackedJudgmentPacket] =
-    MoveReviewInputNormalizer
-      .normalize(raw.copy(probeResults = Nil))
+    MoveReviewInputAdmission
+      .admit(raw.copy(probeResults = Nil))
       .flatMap { preparedInput =>
         executeCommon(preparedInput, admitIssuedProbeResults(preparedInput, raw.probeResults))
       }
       .map(_.packet)
 
-  /** Sole F -> C -> Jp -> Ja -> R authority for a normalizer-owned root review. */
+  /** Sole F -> C -> Jp -> Ja -> R authority for an admitted root review. */
   def executePreparedReview(
-      preparedInput: NormalizedMoveReviewInput,
+      preparedInput: AdmittedMoveReviewInput
+  ): Option[ReviewExecution] =
+    executeCommon(preparedInput, ProbeAdmission(Nil))
+
+  /** Development/test handoff for raw probe results. Player jobs admit probe
+    * histories before invoking the one-argument entrypoint above.
+    */
+  def executePreparedReview(
+      preparedInput: AdmittedMoveReviewInput,
       fulfilledProbeResults: List[(ProbeRequest, ProbeResult)]
   ): Option[ReviewExecution] =
     executeCommon(preparedInput, admitPreparedProbeResults(preparedInput, fulfilledProbeResults))
 
   private def executeCommon(
-      preparedInput: NormalizedMoveReviewInput,
+      preparedInput: AdmittedMoveReviewInput,
       admission: ProbeAdmission
   ): Option[ReviewExecution] =
-    val admittedInput = MoveReviewInputNormalizer.withAdmittedProbeBranches(
+    val admittedInput = MoveReviewInputAdmission.withAdmittedProbeBranches(
       preparedInput,
       admission.admittedBranches
     )
@@ -57,16 +61,10 @@ object MoveReviewJudgmentOrchestrator:
       )
       pendingRequests = pendingProbeRequests(
         f,
-        admittedInput.threatBranches.map(_.sourceProbeId).toSet
+        admittedInput.branchReplies.map(_.sourceProbeId).toSet
       )
       _ <- Option.when(
-        evidenceClosed(f) &&
-          factStagePayloadsClosed(f) &&
-          (
-            pendingRequests.nonEmpty ||
-              EvidenceFactAssembler.exactStrategicMechanisms(f).nonEmpty &&
-                RelativeAssessmentAssembler.exactStrategicContrasts(f).nonEmpty
-          )
+        evidenceClosed(f) && factStagePayloadsClosed(f)
       )(())
       c = RelativeAssessmentAssembler.enrichCauses(f)
       jp = JudgmentClaimAssembler.propose(c)
@@ -75,22 +73,17 @@ object MoveReviewJudgmentOrchestrator:
       rankedContext = r.rankedClaims.foldLeft(c.copy(claims = Nil))((context, claim) =>
         context.withClaim(claim)
       )
-      context = rankedContext.copy(
-        probeDiagnostics = (rankedContext.probeDiagnostics ++ admission.diagnostics)
-          .distinctBy(diagnostic => diagnostic.probeId -> diagnostic.reasonCodes)
-      )
       packet <- EvidenceBackedJudgmentPacket.fromAssembly(
-        context,
+        rankedContext,
         r.primary,
         pendingRequests,
         r.playerFacingClaimDecisions,
-        r.onlyMoveConstraintResolutions,
         r.causeExposureResolution,
         r.causeDispositionLedger
       )
     yield ReviewExecution(
       packet,
-      admittedInput.threatBranches.map(_.sourceProbeId),
+      admittedInput.branchReplies.map(_.sourceProbeId),
       admittedInput
     )
 
@@ -128,11 +121,11 @@ object MoveReviewJudgmentOrchestrator:
     )
 
   private def assembledFactContext(
-      preparedInput: NormalizedMoveReviewInput,
-      admittedBranches: List[MoveReviewInputNormalizer.AdmittedProbeBranch]
+      preparedInput: AdmittedMoveReviewInput,
+      admittedBranches: List[MoveReviewInputAdmission.AdmittedProbeBranch]
   ): Option[JudgmentAssemblyContext] =
     NodeLineTransitionAssembler
-      .assemble(MoveReviewInputNormalizer.withAdmittedProbeBranches(preparedInput, admittedBranches))
+      .assemble(MoveReviewInputAdmission.withAdmittedProbeBranches(preparedInput, admittedBranches))
       .map(EvidenceFactAssembler.enrich)
 
   private def pendingProbeRequests(
@@ -144,39 +137,39 @@ object MoveReviewJudgmentOrchestrator:
       .filterNot(request => fulfilledProbeIds(request.id))
 
   private def pendingProbeRequestsForPreparedReview(
-      preparedInput: NormalizedMoveReviewInput,
-      admittedBranches: List[MoveReviewInputNormalizer.AdmittedProbeBranch]
+      preparedInput: AdmittedMoveReviewInput,
+      admittedBranches: List[MoveReviewInputAdmission.AdmittedProbeBranch]
   ): List[ProbeRequest] =
-    assembledFactContext(preparedInput, admittedBranches).toList.flatMap(context =>
+    assembledFactContext(preparedInput, admittedBranches).map(
+      RelativeAssessmentAssembler.enrichFacts
+    ).toList.flatMap(context =>
       pendingProbeRequests(
         context,
         (
-          preparedInput.threatBranches.map(_.sourceProbeId) ++
-            admittedBranches.map(_.request.id)
+          preparedInput.branchReplies.map(_.sourceProbeId) ++
+            admittedBranches.map(_.branch.sourceProbeId)
         ).toSet
       )
     )
 
   private final case class IssuedProbeReplay(
       issued: List[ProbeRequest],
-      admitted: List[MoveReviewInputNormalizer.AdmittedProbeBranch],
-      rejected: List[ProbeAdmissionDiagnostic]
+      admitted: List[MoveReviewInputAdmission.AdmittedProbeBranch]
   )
 
   /** Reconstructs reachability while admitting every submitted result at most once. */
   private def replayIssuedProbeResults(
-      preparedInput: NormalizedMoveReviewInput,
+      preparedInput: AdmittedMoveReviewInput,
       submittedProbeResults: List[ProbeResult]
   ): IssuedProbeReplay =
     @annotation.tailrec
     def loop(
         issued: List[ProbeRequest],
-        admitted: List[MoveReviewInputNormalizer.AdmittedProbeBranch],
+        admitted: List[MoveReviewInputAdmission.AdmittedProbeBranch],
         attemptedIds: Set[String],
-        rejected: List[ProbeAdmissionDiagnostic],
         remainingRounds: Int
     ): IssuedProbeReplay =
-      if remainingRounds <= 0 then IssuedProbeReplay(issued, admitted, rejected)
+      if remainingRounds <= 0 then IssuedProbeReplay(issued, admitted)
       else
         val roundRequests = pendingProbeRequestsForPreparedReview(preparedInput, admitted)
         val nextIssued = (issued ++ roundRequests).distinctBy(_.id)
@@ -184,37 +177,35 @@ object MoveReviewJudgmentOrchestrator:
           if attemptedIds(result.id) then None
           else nextIssued.find(_.id == result.id).map(_ -> result)
         )
-        val (nextAdmitted, newRejections) = newlyReachable.foldLeft(admitted -> List.empty[ProbeAdmissionDiagnostic]) {
-          case ((accepted, failures), (request, result)) =>
-            MoveReviewInputNormalizer.admitIssuedProbeResult(
+        val nextAdmitted = newlyReachable.foldLeft(admitted) {
+          case (accepted, (request, result)) =>
+            MoveReviewInputAdmission.admitIssuedProbeResult(
               preparedInput,
               request,
               result,
-              MoveReviewInputNormalizer.nextThreatRank(preparedInput, accepted)
+              MoveReviewInputAdmission.nextBranchReplyRank(preparedInput, accepted)
             ) match
-              case Right(admission) => (accepted :+ admission) -> failures
-              case Left(diagnostic) => accepted -> (failures :+ diagnostic)
+              case Some(admission) => accepted :+ admission
+              case None            => accepted
         }
         val nextAttempted = attemptedIds ++ newlyReachable.map(_._2.id)
-        val nextRejected = rejected ++ newRejections
         if nextIssued == issued && nextAdmitted == admitted && nextAttempted == attemptedIds then
-          IssuedProbeReplay(nextIssued, nextAdmitted, nextRejected)
+          IssuedProbeReplay(nextIssued, nextAdmitted)
         else
           loop(
             nextIssued,
             nextAdmitted,
             nextAttempted,
-            nextRejected,
             remainingRounds - 1
           )
 
-    loop(Nil, Nil, Set.empty, Nil, submittedProbeResults.size + 1)
+    loop(Nil, Nil, Set.empty, submittedProbeResults.size + 1)
 
   private def admitIssuedProbeResults(
-      preparedInput: NormalizedMoveReviewInput,
+      preparedInput: AdmittedMoveReviewInput,
       submittedProbeResults: List[ProbeResult]
   ): ProbeAdmission =
-    if submittedProbeResults.isEmpty then ProbeAdmission(Nil, Nil)
+    if submittedProbeResults.isEmpty then ProbeAdmission(Nil)
     else
       val duplicateIds = submittedProbeResults
         .groupMapReduce(_.id)(_ => 1)(_ + _)
@@ -224,22 +215,10 @@ object MoveReviewJudgmentOrchestrator:
         .toSet
       val eligible = submittedProbeResults.filterNot(result => duplicateIds(result.id))
       val replay = replayIssuedProbeResults(preparedInput, eligible)
-      val admittedIds = replay.admitted.map(_.request.id).toSet
-      val rejectedIds = replay.rejected.map(_.probeId).toSet
-      val duplicateDiagnostics = submittedProbeResults
-        .filter(result => duplicateIds(result.id))
-        .map(result => rejectedDiagnostic(result, None, List("DUPLICATE_PROBE_RESULT_ID")))
-      val unissuedDiagnostics = eligible
-        .filterNot(result => admittedIds(result.id) || rejectedIds(result.id))
-        .map(result => rejectedDiagnostic(result, None, List("PROBE_REQUEST_UNISSUED")))
-      ProbeAdmission(
-        replay.admitted,
-        (replay.admitted.map(_.diagnostic) ++ replay.rejected ++ duplicateDiagnostics ++ unissuedDiagnostics)
-          .distinctBy(diagnostic => diagnostic.probeId -> diagnostic.reasonCodes)
-      )
+      ProbeAdmission(replay.admitted)
 
   private def admitPreparedProbeResults(
-      preparedInput: NormalizedMoveReviewInput,
+      preparedInput: AdmittedMoveReviewInput,
       fulfilledProbeResults: List[(ProbeRequest, ProbeResult)]
   ): ProbeAdmission =
     require(
@@ -247,45 +226,21 @@ object MoveReviewJudgmentOrchestrator:
         fulfilledProbeResults.map(_._2.id).distinct.size == fulfilledProbeResults.size,
       "trusted player probe handoff has duplicate request or result ids"
     )
-    val admitted = fulfilledProbeResults.foldLeft(List.empty[MoveReviewInputNormalizer.AdmittedProbeBranch]) {
+    val admitted = fulfilledProbeResults.foldLeft(List.empty[MoveReviewInputAdmission.AdmittedProbeBranch]) {
       case (accepted, (request, result)) =>
-        MoveReviewInputNormalizer.admitIssuedProbeResult(
+        MoveReviewInputAdmission.admitIssuedProbeResult(
           preparedInput,
           request,
           result,
-          MoveReviewInputNormalizer.nextThreatRank(preparedInput, accepted)
+          MoveReviewInputAdmission.nextBranchReplyRank(preparedInput, accepted)
         ) match
-          case Right(admission) => accepted :+ admission
-          case Left(diagnostic) =>
+          case Some(admission) => accepted :+ admission
+          case None =>
             throw IllegalArgumentException(
-              s"trusted player probe handoff mismatch for ${request.id}: ${diagnostic.reasonCodes.mkString(",")}"
+              s"trusted player probe handoff mismatch for ${request.id}"
             )
     }
-    ProbeAdmission(admitted, admitted.map(_.diagnostic))
-
-  private def rejectedDiagnostic(
-      result: ProbeResult,
-      request: Option[ProbeRequest],
-      reasons: List[String]
-  ): ProbeAdmissionDiagnostic =
-    ProbeAdmissionDiagnostic(
-      probeId = Option(result.id).map(_.trim).filter(_.nonEmpty).getOrElse("probe-result"),
-      status = ProbeAdmissionStatus.Rejected,
-      reasonCodes = reasons.distinct,
-      purpose = request.map(_.kind),
-      candidateMove = request.map(_.candidateMove),
-      fen = request.map(_.fen),
-      admittedLineCount = 0,
-      legalLineCount = 0,
-      scoredLineCount = (result.resolution match
-        case ProbeResolution.EngineSearch(evaluations, _) =>
-          evaluations.count(_.moves.nonEmpty)
-        case ProbeResolution.ExactAutomaticTerminal(_) => 0
-      ),
-      depthFloor = request.map(_.depthFloor),
-      horizon = request.flatMap(_.horizon),
-      variationHash = request.map(_.variationHash)
-    )
+    ProbeAdmission(admitted)
 
 private[assembly] object BranchReplyProbePlanner:
   def fromAssembly(ctx: JudgmentAssemblyContext): List[ProbeRequest] =
@@ -295,7 +250,7 @@ private[assembly] object BranchReplyProbePlanner:
         val requiredCausalResultsByHorizon =
           ctx.evidenceGraph.records
             .flatMap {
-              case record @ EvidenceRecord(_, event: PlanCausalEventEvidence, _)
+              case record @ EvidenceRecord(_, event: PassedPawnResultEventEvidence, _)
                   if ctx.evidenceGraph.proofEligible(record) &&
                     event.observedRootEnablesContinuation &&
                     event.causalResultAssessments.nonEmpty &&
@@ -355,17 +310,17 @@ private[assembly] object BranchReplyProbePlanner:
       rootMove: String,
       requiredHorizonPlyOffset: Int
   ): Set[String] =
-    ctx.input.threatBranches
+    ctx.input.branchReplies
       .filter(branch =>
         EvidenceRef.sameMove(branch.probedMoveUci, rootMove) &&
           branch.certifiedHorizonPlyOffset >= requiredHorizonPlyOffset
       )
-      .flatMap(_.rankedUniqueLines.flatMap(_.rootMove))
+      .flatMap(_.firstRankedLinePerRootMove.flatMap(_.rootMove))
       .map(EvidenceRef.normalizeMove)
       .toSet
 
   private[assembly] def selectedRootLines(lines: List[CandidateLineNode]): List[CandidateLineNode] =
-    val rootLines = lines.filterNot(_.role == LineNodeRole.Threat)
+    val rootLines = lines.filterNot(_.role == LineNodeRole.BranchReply)
     val primary =
       List(LineNodeRole.Played, LineNodeRole.BestReference).flatMap(role => rootLines.find(_.role == role))
     val alternatives =

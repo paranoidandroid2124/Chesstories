@@ -355,25 +355,29 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
 
     assert(pin.exists(relation => relation.detail match
       case RelationWitnessDetail.RayBarrier(_, attacker, _, occupants, _) =>
-        attacker.key == "e1" && occupants.head.square.key == "e7" && occupants.lift(1).exists(_.square.key == "e8") &&
+        attacker.key == "e1" && occupants.headOption.exists(_.square.key == "e7") &&
+          occupants.lift(1).exists(_.square.key == "e8") &&
           rayPattern(relation).contains(RelationRayPattern.AbsoluteKingPin)
       case _ => false
     ))
     assert(xray.exists(relation => relation.detail match
       case RelationWitnessDetail.RayBarrier(_, attacker, _, occupants, _) =>
-        attacker.key == "e1" && occupants.head.square.key == "e5" && occupants.lift(1).exists(_.square.key == "e8") &&
+        attacker.key == "e1" && occupants.headOption.exists(_.square.key == "e5") &&
+          occupants.lift(1).exists(_.square.key == "e8") &&
           rayPattern(relation).contains(RelationRayPattern.XRay)
       case _ => false
     ))
     assert(battery.exists(relation => relation.detail match
       case RelationWitnessDetail.RayBarrier(_, back, _, occupants, _) =>
-        occupants.head.square.key == "e2" && back.key == "e1" && occupants.lift(1).exists(_.square.key == "e8") &&
+        occupants.headOption.exists(_.square.key == "e2") && back.key == "e1" &&
+          occupants.lift(1).exists(_.square.key == "e8") &&
           rayPattern(relation).contains(RelationRayPattern.Battery)
       case _ => false
     ))
     assert(skewer.exists(relation => relation.detail match
       case RelationWitnessDetail.RayBarrier(_, attacker, _, occupants, _) =>
-        attacker.key == "e1" && occupants.head.square.key == "e5" && occupants.lift(1).exists(_.square.key == "e8") &&
+        attacker.key == "e1" && occupants.headOption.exists(_.square.key == "e5") &&
+          occupants.lift(1).exists(_.square.key == "e8") &&
           rayPattern(relation).contains(RelationRayPattern.KingSkewer)
       case _ => false
     ))
@@ -396,8 +400,8 @@ class PositionRelationTruthBoundaryTest extends munit.FunSuite:
 
     assert(bishopBattery.exists(relation => relation.detail match
       case RelationWitnessDetail.RayBarrier(_, back, backRole, occupants, geometry) =>
-        occupants.head.square.key == "d2" && back.key == "c1" && occupants.lift(1).exists(_.square.key == "h6") &&
-          occupants.head.role.name == "bishop" && backRole.name == "bishop" &&
+        occupants.headOption.exists(piece => piece.square.key == "d2" && piece.role.name == "bishop") &&
+          back.key == "c1" && occupants.lift(1).exists(_.square.key == "h6") && backRole.name == "bishop" &&
           geometry.axis == RelationAxisSignal.Diagonal &&
           rayPattern(relation).contains(RelationRayPattern.Battery)
       case _ => false

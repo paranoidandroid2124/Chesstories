@@ -5,7 +5,7 @@ import java.security.MessageDigest
 import java.util.Locale
 
 import lila.chessjudgment.analysis.assembly.{
-  MoveReviewInputNormalizer,
+  MoveReviewInputAdmission,
   MoveReviewJudgmentOrchestrator,
   PreparedFocusedMoveReview,
   PreparedFocusedPositionCommentary
@@ -19,12 +19,14 @@ import lila.chessjudgment.model.{
 import lila.chessjudgment.model.judgment.{
   EvidenceBackedJudgmentPacket,
   EvidenceRef,
-  NormalizedMoveReviewInput,
+  AdmittedMoveReviewInput,
   PlayerFacingPositionAction
 }
 import lila.chessjudgment.model.line.{
+  AdmittedCandidateLine,
   AutomaticTerminal,
   CandidateLineEvaluation,
+  CanonicalHistoryContinuation,
   CanonicalPositionHistory,
   CanonicalPositionHistoryFailure,
   DrawClaimAction,
@@ -32,7 +34,7 @@ import lila.chessjudgment.model.line.{
   PositionRuleAssessment,
   ThreefoldClaimKnowledge
 }
-import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.model.line.EngineLine
 
 final case class CommentaryJobPolicy(
     rootSearchDepth: Int,
@@ -89,6 +91,11 @@ final case class ReportedEngineLineSuffix(
     moves: List[String],
     whiteScore: ReportedWhiteEngineScore,
     depth: Int
+)
+
+private[runtime] final case class AdmittedPhysicalEngineLine(
+    reported: ReportedEngineLineSuffix,
+    continuation: CanonicalHistoryContinuation
 )
 
 enum EngineWorkReport:
@@ -226,10 +233,10 @@ private[runtime] object EngineLineAdmission:
       line.mate.forall(acceptsMateScore) &&
       acceptsRuntimeInputDepth(line.depth)
 
-  def bindReportedLineSuffixes(
+  def admitReportedLineSuffixes(
       issuedWork: IssuedEngineWork,
       lineSuffixes: List[ReportedEngineLineSuffix]
-  ): Option[List[CandidateLineEvaluation]] =
+  ): Option[List[AdmittedPhysicalEngineLine]] =
     val restrictedRootsValid = issuedWork.rootRestriction match
       case EngineRootRestriction.Unrestricted => true
       case EngineRootRestriction.Restricted(moves) =>
@@ -260,41 +267,60 @@ private[runtime] object EngineLineAdmission:
           issuedWork.searchFen
           )
           .toOption
-        if PositionRuleAssessment.automaticTerminal(engineHistory.currentPosition).isEmpty
-        commentaryOrigin <- CanonicalPositionHistory
-          .from(issuedWork.commentaryLineOriginFen, Nil, issuedWork.commentaryLineOriginFen)
-          .toOption
-        commentaryPrefix <- commentaryOrigin.extend(issuedWork.commentaryLinePrefixUci).toOption
-        whitePrefixMoves = issuedWork.commentaryLinePrefixUci.indices.count { prefixIndex =>
-          if commentaryOrigin.currentPosition.color.white then prefixIndex % 2 == 0 else prefixIndex % 2 != 0
-        }
-        blackPrefixMoves = issuedWork.commentaryLinePrefixUci.size - whitePrefixMoves
-        evaluations <- lineSuffixes.foldLeft(Option(List.empty[CandidateLineEvaluation])) { (bound, suffix) =>
+        admitted <- lineSuffixes.foldLeft(Option(List.empty[AdmittedPhysicalEngineLine])) { (bound, suffix) =>
           bound.flatMap { accepted =>
             engineHistory
-              .inspectAutomaticTerminalBoundary(suffix.moves)
+              .admitToFirstAutomaticTerminal(suffix.moves)
               .toOption
-              .flatMap { terminalBoundary =>
-                val logicalSuffix = terminalBoundary.map(_._1).getOrElse(suffix.moves)
-                commentaryPrefix.extend(logicalSuffix).toOption.flatMap { history =>
-                  terminalBoundary match
-                    case Some((_, terminal)) =>
-                      Option.when(reportedTerminalScoreConsistent(suffix.whiteScore, terminal))(
-                        CandidateLineEvaluation.ExactAutomaticTerminal(history.movePrefixUci, terminal)
-                      )
-                    case None =>
-                      serverEngineLine(
-                        history.movePrefixUci,
-                        suffix,
-                        whitePrefixMoves,
-                        blackPrefixMoves
-                      ).map(CandidateLineEvaluation.EngineSearch.apply)
-                }
-              }
+              .map(continuation => AdmittedPhysicalEngineLine(suffix, continuation))
               .map(accepted :+ _)
           }
         }
-      yield evaluations
+      yield admitted
+
+  def bindAdmittedLineSuffixes(
+      issuedWork: IssuedEngineWork,
+      admittedLines: List[AdmittedPhysicalEngineLine]
+  ): Option[List[AdmittedCandidateLine]] =
+    for
+      _ <- Option.when(admittedLines.size == issuedWork.multiPv)(())
+      commentaryOrigin <- CanonicalPositionHistory
+        .from(issuedWork.commentaryLineOriginFen, Nil, issuedWork.commentaryLineOriginFen)
+        .toOption
+      if admittedLines.forall(line =>
+        line.continuation.startingFen == CanonicalPositionHistory.normalizeFen(issuedWork.searchFen)
+      )
+      whitePrefixMoves = issuedWork.commentaryLinePrefixUci.indices.count { prefixIndex =>
+        if commentaryOrigin.currentPosition.color.white then prefixIndex % 2 == 0 else prefixIndex % 2 != 0
+      }
+      blackPrefixMoves = issuedWork.commentaryLinePrefixUci.size - whitePrefixMoves
+      bound <- admittedLines.foldLeft(Option(List.empty[AdmittedCandidateLine])) { (accepted, admitted) =>
+        accepted.flatMap { lines =>
+          val fullMoves = issuedWork.commentaryLinePrefixUci ++ admitted.continuation.moves
+          val evaluation = admitted.continuation.automaticTerminal match
+            case Some(terminal) =>
+              Option.when(reportedTerminalScoreConsistent(admitted.reported.whiteScore, terminal))(
+                CandidateLineEvaluation.ExactAutomaticTerminal(fullMoves, terminal)
+              )
+            case None =>
+              serverEngineLine(
+                fullMoves,
+                admitted.reported,
+                whitePrefixMoves,
+                blackPrefixMoves
+              ).map(CandidateLineEvaluation.EngineSearch.apply)
+          evaluation
+            .flatMap(
+              admitted.continuation.bindFromOccurrence(
+                commentaryOrigin.currentFen,
+                issuedWork.commentaryLinePrefixUci,
+                _
+              )
+            )
+            .map(lines :+ _)
+        }
+      }
+    yield bound
 
   private def acceptsReportedWhiteEngineScore(value: ReportedWhiteEngineScore): Boolean = value match
     case ReportedWhiteEngineScore.Centipawns(score) => acceptsCentipawnScore(score)
@@ -495,18 +521,23 @@ object CommentaryJobReducer:
       work: IssuedEngineWork
   ) extends PendingWork
 
+  private final case class CertifiedProbeResolution(
+      result: ProbeResult,
+      admissions: List[AdmittedCandidateLine]
+  )
+
   private sealed trait JobPhase
   private case object CollectingRoot extends JobPhase
   private final case class CollectingFocus(
-      rootEvaluations: List[CandidateLineEvaluation]
+      rootEvaluations: List[AdmittedCandidateLine]
   ) extends JobPhase
 
   private final case class ReviewContext(
       review: PreparedFocusedMoveReview,
-      preparedInput: NormalizedMoveReviewInput,
-      rootEvaluations: List[CandidateLineEvaluation],
-      focusEvaluations: List[CandidateLineEvaluation],
-      fulfilled: List[(ProbeRequest, ProbeResult)],
+      preparedInput: AdmittedMoveReviewInput,
+      rootEvaluations: List[AdmittedCandidateLine],
+      focusEvaluations: List[AdmittedCandidateLine],
+      fulfilledProbeIds: List[String],
       wavesCompleted: Int
   )
 
@@ -528,7 +559,7 @@ object CommentaryJobReducer:
   private final case class EngineWorkLedger(
       physicalWorksIssued: Int,
       physicalReportsAccepted: Int,
-      validatedPhysicalSearches: Map[PhysicalSearchIdentity, List[ReportedEngineLineSuffix]]
+      validatedPhysicalSearches: Map[PhysicalSearchIdentity, List[AdmittedPhysicalEngineLine]]
   ):
     def issuedWorkId: String = s"work:$physicalWorksIssued"
     def afterIssuing: EngineWorkLedger = copy(physicalWorksIssued = physicalWorksIssued + 1)
@@ -625,9 +656,13 @@ object CommentaryJobReducer:
       active: ActiveCommentaryJob,
       suffixes: List[ReportedEngineLineSuffix]
   ): Either[EngineWorkReportRejection, CommentaryJobState] =
-    EngineLineAdmission.bindReportedLineSuffixes(active.issuedWork, suffixes) match
+    val admittedReport = for
+      physical <- EngineLineAdmission.admitReportedLineSuffixes(active.issuedWork, suffixes)
+      evaluations <- EngineLineAdmission.bindAdmittedLineSuffixes(active.issuedWork, physical)
+    yield physical -> evaluations
+    admittedReport match
       case None => Right(stop(active, CommentaryJobStopCondition.InvalidEngineWorkReport))
-      case Some(evaluations) =>
+      case Some((physicalLines, evaluations)) =>
         val acceptedLedger = active.ledger.afterAcceptedReport
         val acceptedActive = active.copy(ledger = acceptedLedger)
         active.pending match
@@ -643,39 +678,46 @@ object CommentaryJobReducer:
           case probe: ProbePending =>
             active.phase match
               case wave: CollectingProbeWave =>
-                val resolution = ProbeResolution.EngineSearch(evaluations, suffixes.map(_.depth).min)
+                val resolution = ProbeResolution.EngineSearch(evaluations.map(_.evaluation), suffixes.map(_.depth).min)
                 val cachedLedger = acceptedLedger.copy(
                   validatedPhysicalSearches = acceptedLedger.validatedPhysicalSearches.updated(
                     probe.identity,
-                    suffixes
+                    physicalLines
                   )
                 )
-                Right(
-                  continueProbeWave(
-                    acceptedActive,
-                    wave.context.copy(
-                      fulfilled = wave.context.fulfilled :+ (
-                        probe.request -> canonicalProbeResult(probe.request, resolution)
+                val result = canonicalProbeResult(probe.request, resolution)
+                contextAfterCertifiedProbe(
+                  wave.context,
+                  probe.request,
+                  CertifiedProbeResolution(result, evaluations)
+                ) match
+                  case Some(updated) =>
+                    Right(
+                      continueProbeWave(
+                        acceptedActive,
+                        updated,
+                        wave.remaining,
+                        cachedLedger
                       )
-                    ),
-                    wave.remaining,
-                    cachedLedger
-                  )
-                )
+                    )
+                  case None =>
+                    Right(stop(acceptedActive, CommentaryJobStopCondition.InvalidEngineWorkReport))
               case _ => Right(stop(acceptedActive, CommentaryJobStopCondition.ReviewConstructionFailed))
 
   private def afterRootReport(
       active: ActiveCommentaryJob,
-      rootEvaluations: List[CandidateLineEvaluation],
+      rootEvaluations: List[AdmittedCandidateLine],
       ledger: EngineWorkLedger
   ): CommentaryJobState =
     val ranked = rootEvaluations.zipWithIndex.sortBy { case (evaluation, index) =>
-      (-evaluation.rankingScoreForMover(active.positionHistory.currentPosition.color), index)
+      (-evaluation.evaluation.rankingScoreForMover(active.positionHistory.currentPosition.color), index)
     }.map(_._1)
-    ranked.headOption.flatMap(_.moves.headOption) match
+    ranked.headOption.flatMap(_.evaluation.moves.headOption) match
       case None => stop(active, CommentaryJobStopCondition.InvalidEngineWorkReport)
       case Some(bestMove) =>
-        val playedCovered = ranked.exists(_.moves.headOption.exists(EvidenceRef.sameMove(_, active.playedMoveUci)))
+        val playedCovered = ranked.exists(
+          _.evaluation.moves.headOption.exists(EvidenceRef.sameMove(_, active.playedMoveUci))
+        )
         if playedCovered then beginPreparedReview(active, ranked, Nil, ledger)
         else
           val limits = EngineSearchLimits(
@@ -699,11 +741,11 @@ object CommentaryJobReducer:
 
   private def beginPreparedReview(
       active: ActiveCommentaryJob,
-      rootEvaluations: List[CandidateLineEvaluation],
-      focusEvaluations: List[CandidateLineEvaluation],
+      rootEvaluations: List[AdmittedCandidateLine],
+      focusEvaluations: List[AdmittedCandidateLine],
       ledger: EngineWorkLedger
   ): CommentaryJobState =
-    MoveReviewInputNormalizer.prepareFocusedMoveReview(
+    MoveReviewInputAdmission.prepareFocusedMoveReview(
       active.positionHistory,
       active.playedMoveUci,
       active.resultingFen,
@@ -726,17 +768,12 @@ object CommentaryJobReducer:
       context: ReviewContext,
       ledger: EngineWorkLedger
   ): CommentaryJobState =
-    val alreadyAdmittedIds = context.preparedInput.threatBranches.map(_.sourceProbeId).toSet
-    val newlyFulfilled = context.fulfilled.filterNot { case (request, _) =>
-      alreadyAdmittedIds(request.id)
-    }
     MoveReviewJudgmentOrchestrator.executePreparedReview(
-      context.preparedInput,
-      newlyFulfilled
+      context.preparedInput
     ) match
       case None => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
       case Some(execution)
-          if execution.admittedProbeResultIds.toSet != context.fulfilled.map(_._1.id).toSet =>
+          if execution.admittedProbeResultIds.toSet != context.fulfilledProbeIds.toSet =>
         stop(active, CommentaryJobStopCondition.InvalidEngineWorkReport)
       case Some(execution) if execution.packet.probeRequests.isEmpty =>
         completeReview(
@@ -764,7 +801,7 @@ object CommentaryJobReducer:
       requests.exists(request => !ProbeContractValidator.validateRequest(request).isValid) ||
       requestIds.exists(_.trim.isEmpty) ||
       requestIds.distinct.size != requestIds.size ||
-      requestIds.exists(context.fulfilled.map(_._1.id).toSet)
+      requestIds.exists(context.fulfilledProbeIds.toSet)
     then stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
     else continueProbeWave(active, context, requests, ledger)
 
@@ -785,39 +822,56 @@ object CommentaryJobReducer:
     case request :: tail =>
       resolveProbe(active, context, request, ledger) match
         case Left(condition) => stop(active, condition)
-        case Right(Left(result)) =>
-          continueProbeWave(
-            active,
-            context.copy(fulfilled = context.fulfilled :+ (request -> result)),
-            tail,
-            ledger
-          )
+        case Right(Left(resolution)) =>
+          contextAfterCertifiedProbe(context, request, resolution) match
+            case Some(updated) => continueProbeWave(active, updated, tail, ledger)
+            case None          => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
         case Right(Right((pending, identity))) =>
           ledger.validatedPhysicalSearches.get(identity) match
-            case Some(cachedSuffixes) =>
-              EngineLineAdmission.bindReportedLineSuffixes(pending.work, cachedSuffixes) match
+            case Some(cachedLines) =>
+              EngineLineAdmission.bindAdmittedLineSuffixes(pending.work, cachedLines) match
                 case Some(evaluations) =>
-                  continueProbeWave(
-                    active,
-                    context.copy(
-                      fulfilled = context.fulfilled :+ (
-                        request -> canonicalProbeResult(
-                          request,
-                          ProbeResolution.EngineSearch(evaluations, cachedSuffixes.map(_.depth).min)
-                        )
-                      )
-                    ),
-                    tail,
-                    ledger
+                  val result = canonicalProbeResult(
+                    request,
+                    ProbeResolution.EngineSearch(
+                      evaluations.map(_.evaluation),
+                      cachedLines.map(_.reported.depth).min
+                    )
                   )
+                  contextAfterCertifiedProbe(
+                    context,
+                    request,
+                    CertifiedProbeResolution(result, evaluations)
+                  ) match
+                    case Some(updated) => continueProbeWave(active, updated, tail, ledger)
+                    case None          => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
                 case None => stop(active, CommentaryJobStopCondition.ReviewConstructionFailed)
             case None =>
               issue(
                 active,
                 CollectingProbeWave(context, tail),
-                pending,
-                ledger
-              )
+                  pending,
+                  ledger
+                )
+
+  private def contextAfterCertifiedProbe(
+      context: ReviewContext,
+      request: ProbeRequest,
+      resolution: CertifiedProbeResolution
+  ): Option[ReviewContext] =
+    MoveReviewInputAdmission
+      .admitCertifiedProbeResult(
+        context.preparedInput,
+        request,
+        resolution.result,
+        resolution.admissions
+      )
+      .map(preparedInput =>
+        context.copy(
+          preparedInput = preparedInput,
+          fulfilledProbeIds = context.fulfilledProbeIds :+ request.id
+        )
+      )
 
   private def resolveProbe(
       active: ActiveCommentaryJob,
@@ -826,7 +880,7 @@ object CommentaryJobReducer:
       ledger: EngineWorkLedger
   ): Either[
     CommentaryJobStopCondition,
-    Either[ProbeResult, (ProbePending, PhysicalSearchIdentity)]
+    Either[CertifiedProbeResolution, (ProbePending, PhysicalSearchIdentity)]
   ] =
     for
       _ <- Either.cond(
@@ -845,96 +899,57 @@ object CommentaryJobReducer:
         CommentaryJobStopCondition.ReviewConstructionFailed
       )
       resolution <- PositionRuleAssessment.assess(branchHistory) match
-        case PositionRuleAssessment.Terminal(terminal) =>
-          Right(
-            Left(
-              canonicalProbeResult(
-                request,
-                ProbeResolution.ExactAutomaticTerminal(
-                  CandidateLineEvaluation.ExactAutomaticTerminal(Nil, terminal)
-                )
-              )
-            )
-          )
+        case PositionRuleAssessment.Terminal(_) =>
+          Left(CommentaryJobStopCondition.ReviewConstructionFailed)
         case PositionRuleAssessment.Nonterminal(
               FivefoldRepetitionKnowledge.CertifiedNonterminal,
               ThreefoldClaimKnowledge.Known(_),
               _
             ) =>
-          branchHistory.extend(request.moves.map(EvidenceRef.normalizeMove))
+          branchHistory.admitToFirstAutomaticTerminal(request.moves.map(EvidenceRef.normalizeMove))
             .left.map(_ => CommentaryJobStopCondition.ReviewConstructionFailed)
-            .flatMap { searchHistory =>
-              PositionRuleAssessment.assess(searchHistory) match
+            .flatMap { continuation =>
+              val searchHistory = continuation.resultingHistory
+              continuation.resultingRuleAssessment match
                 case PositionRuleAssessment.Terminal(terminal) =>
-                  Right(
-                    Left(
-                      canonicalProbeResult(
-                        request,
-                        ProbeResolution.ExactAutomaticTerminal(
-                          CandidateLineEvaluation.ExactAutomaticTerminal(
-                            request.moves.map(EvidenceRef.normalizeMove),
-                            terminal
-                          )
-                        )
-                      )
+                  val evaluation: CandidateLineEvaluation.ExactAutomaticTerminal =
+                    CandidateLineEvaluation.ExactAutomaticTerminal(
+                      continuation.moves,
+                      terminal
                     )
-                  )
+                  continuation.bind(evaluation) match
+                    case Some(admission) =>
+                      val result = canonicalProbeResult(
+                        request,
+                        ProbeResolution.ExactAutomaticTerminal(evaluation)
+                      )
+                      Right(Left(CertifiedProbeResolution(result, List(admission))))
+                    case None => Left(CommentaryJobStopCondition.ReviewConstructionFailed)
                 case PositionRuleAssessment.Nonterminal(
                       FivefoldRepetitionKnowledge.CertifiedNonterminal,
                       ThreefoldClaimKnowledge.Known(_),
                       _
                     ) =>
-                  reuseCoreEvidence(context, request).map(result => Right(Left(result))).getOrElse {
-                    val limits = EngineSearchLimits(request.depth, ProbeNodes, ProbeMovetimeMs, 1)
-                    val work = issuedWork(
-                      active.engineProfile,
-                      ledger.issuedWorkId,
-                      EngineWorkPurpose.CausalProbe,
-                      searchHistory,
-                      EngineRootRestriction.Unrestricted,
-                      branchHistory.currentFen,
-                      request.moves.map(EvidenceRef.normalizeMove),
-                      limits,
-                      ProbeElapsedMs
-                    )
-                    val identity = physicalIdentity(work)
-                    Right(Right(ProbePending(request, identity, work) -> identity))
-                  }
+                  val limits = EngineSearchLimits(request.depth, ProbeNodes, ProbeMovetimeMs, 1)
+                  val work = issuedWork(
+                    active.engineProfile,
+                    ledger.issuedWorkId,
+                    EngineWorkPurpose.CausalProbe,
+                    searchHistory,
+                    EngineRootRestriction.Unrestricted,
+                    branchHistory.currentFen,
+                    request.moves.map(EvidenceRef.normalizeMove),
+                    limits,
+                    ProbeElapsedMs
+                  )
+                  val identity = physicalIdentity(work)
+                  Right(Right(ProbePending(request, identity, work) -> identity))
                 case PositionRuleAssessment.Nonterminal(_, _, _) =>
                   Left(CommentaryJobStopCondition.RepetitionHistoryUnavailable)
             }
         case PositionRuleAssessment.Nonterminal(_, _, _) =>
           Left(CommentaryJobStopCondition.RepetitionHistoryUnavailable)
     yield resolution
-
-  private def reuseCoreEvidence(
-      context: ReviewContext,
-      request: ProbeRequest
-  ): Option[ProbeResult] =
-    val candidateMove = EvidenceRef.normalizeMove(request.candidateMove)
-    val forcedPrefix = request.moves.map(EvidenceRef.normalizeMove)
-    val matching = (context.focusEvaluations ++ context.rootEvaluations)
-      .flatMap(_.engineLine)
-      .filter(line =>
-        line.depth >= request.depth &&
-          line.moves.headOption.exists(EvidenceRef.sameMove(_, candidateMove)) &&
-          line.moves.tail.take(forcedPrefix.size).zip(forcedPrefix).forall(EvidenceRef.sameMove) &&
-          line.moves.tail.size > forcedPrefix.size
-      )
-      .map(line => line.copy(moves = line.moves.tail.map(EvidenceRef.normalizeMove)))
-    val grouped = matching.groupBy(line => line.moves.drop(forcedPrefix.size).headOption)
-    val conflicting = grouped.values.exists(_.distinct.size > 1)
-    val candidates = matching.distinctBy(line => line.moves.drop(forcedPrefix.size).headOption).take(1)
-    Option
-      .when(!conflicting && candidates.size == 1)(
-        canonicalProbeResult(
-          request,
-          ProbeResolution.EngineSearch(
-            candidates.map(line => CandidateLineEvaluation.EngineSearch(line)),
-            candidates.map(_.depth).min
-          )
-        )
-      )
 
   private def completePositionAction(
       active: ActiveCommentaryJob,

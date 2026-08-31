@@ -2,9 +2,8 @@ package lila.chessjudgment.analysis.assembly
 
 import chess.Color
 import chess.variant.Standard
-import play.api.libs.json.{ Json, OFormat }
-import lila.chessjudgment.analysis.opening.{ OpeningRecognitionIndex, OpeningThemePriorIndex }
 import lila.chessjudgment.model.line.{
+  AdmittedCandidateLine,
   AutomaticTerminal,
   CandidateLineEvaluation,
   CanonicalPositionHistory,
@@ -19,37 +18,22 @@ import lila.chessjudgment.model.line.{
 }
 import lila.chessjudgment.model.{
   BranchReplyProbeBinding,
-  ProbeAdmissionDiagnostic,
-  ProbeAdmissionStatus,
   ProbeContractValidator,
-  ProbeKind,
   ProbeRequest,
   ProbeResolution,
   ProbeResult
 }
-import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.model.line.EngineLine
 import lila.chessjudgment.model.judgment.{
   EvidenceRef,
   CanonicalLineReplay,
   CandidateSetDescriptor,
   LineNodeRole,
-  NormalizedCandidateLine,
-  NormalizedMoveReviewInput,
-  NormalizedThreatBranch,
-  OpeningContextEvidence,
-  OpeningContextSignal,
-  OpeningRecognition,
+  AdmittedReviewLine,
+  AdmittedMoveReviewInput,
+  AdmittedReviewBranchReply,
   PlayerFacingPositionAction
 }
-
-final case class RawOpeningContext(
-    eco: Option[String] = None,
-    name: Option[String] = None,
-    family: Option[String] = None
-)
-
-object RawOpeningContext:
-  given OFormat[RawOpeningContext] = Json.format[RawOpeningContext]
 
 /** Development-only input; player-use jobs enter through the focused v6 preparation path. */
 final case class RawMoveReviewInput(
@@ -57,7 +41,6 @@ final case class RawMoveReviewInput(
     playedMoveUci: String,
     variations: List[EngineLine],
     ply: Option[Int] = None,
-    openingContext: Option[RawOpeningContext] = None,
     movePrefixUci: List[String] = Nil,
     probeResults: List[ProbeResult] = Nil
 )
@@ -68,7 +51,7 @@ final class PreparedFocusedMoveReview private (
     val playedMoveUci: String,
     val bestMoveUci: String,
     val playedRootRank: Option[Int],
-    val preparedInput: NormalizedMoveReviewInput,
+    val preparedInput: AdmittedMoveReviewInput,
     val drawClaims: List[DrawClaimAction]
 )
 
@@ -78,7 +61,7 @@ object PreparedFocusedMoveReview:
       playedMoveUci: String,
       bestMoveUci: String,
       playedRootRank: Option[Int],
-      preparedInput: NormalizedMoveReviewInput,
+      preparedInput: AdmittedMoveReviewInput,
       drawClaims: List[DrawClaimAction]
   ): PreparedFocusedMoveReview =
     new PreparedFocusedMoveReview(
@@ -94,19 +77,14 @@ enum PreparedFocusedPositionCommentary:
   case PositionAction(action: PlayerFacingPositionAction)
   case MoveReview(review: PreparedFocusedMoveReview)
 
-object MoveReviewInputNormalizer:
+object MoveReviewInputAdmission:
   private final case class AdmittedEvaluation(
       evaluation: CandidateLineEvaluation,
       replay: CanonicalLineReplay,
       automaticTerminal: Option[AutomaticTerminal]
   )
 
-  private[assembly] final case class AdmittedProbeBranch(
-      request: ProbeRequest,
-      result: ProbeResult,
-      branch: NormalizedThreatBranch,
-      diagnostic: ProbeAdmissionDiagnostic
-  )
+  private[assembly] final case class AdmittedProbeBranch(branch: AdmittedReviewBranchReply)
   /**
    * Prepares the sole v6 player review. The unrestricted root bundle owns the
    * reference ranking; a focused comparison is admitted only when the played
@@ -117,8 +95,8 @@ object MoveReviewInputNormalizer:
       playedMoveUci: String,
       resultingFen: String,
       rootRuleAssessment: PositionRuleAssessment,
-      rootEvaluations: List[CandidateLineEvaluation],
-      focusComparisonEvaluations: List[CandidateLineEvaluation]
+      rootEvaluations: List[AdmittedCandidateLine],
+      focusComparisonEvaluations: List[AdmittedCandidateLine]
   ): Option[PreparedFocusedPositionCommentary] =
     val rootPosition = positionHistory.currentPosition
     val legalMoves = positionHistory.currentLegalMoveUcis
@@ -129,7 +107,7 @@ object MoveReviewInputNormalizer:
     for
       _ <- Option.when(legalMoveIndex >= 0)(())
       _ <- Option.when(rootEvaluations.size == legalMoves.size.min(3))((): Unit)
-      admittedRoot <- admitEvaluations(positionHistory, rootEvaluations)
+      admittedRoot <- materializeAdmissions(positionHistory, rootEvaluations)
       rootMoves = admittedRoot.flatMap(_.evaluation.moves.headOption).map(EvidenceRef.normalizeMove)
       _ <- Option.when(
         rootMoves.size == admittedRoot.size &&
@@ -144,7 +122,7 @@ object MoveReviewInputNormalizer:
       bestEvaluation = best.evaluation
       bestMove <- bestEvaluation.moves.headOption.map(EvidenceRef.normalizeMove)
       playedInRoot = rankedRoot.find(_.evaluation.moves.headOption.exists(EvidenceRef.sameMove(_, playedMove)))
-      admittedComparison <- admitEvaluations(positionHistory, focusComparisonEvaluations)
+      admittedComparison <- materializeAdmissions(positionHistory, focusComparisonEvaluations)
       _ <- Option.when(
         playedInRoot.nonEmpty == admittedComparison.isEmpty
       )((): Unit)
@@ -155,6 +133,11 @@ object MoveReviewInputNormalizer:
             comparisonMoves.distinct.size == 2 &&
             comparisonMoves.toSet == Set(bestMove, playedMove) &&
             admittedComparison.forall(_.evaluation.comparisonReady))
+      )((): Unit)
+      focusedBest = admittedComparison.find(_.evaluation.moves.headOption.exists(EvidenceRef.sameMove(_, bestMove)))
+      _ <- Option.when(
+        admittedComparison.isEmpty ||
+          focusedBest.exists(value => sameReferenceEvaluationPoint(best.evaluation, value.evaluation))
       )((): Unit)
       playedAdmission <- playedInRoot.orElse(
         admittedComparison.find(_.evaluation.moves.headOption.exists(EvidenceRef.sameMove(_, playedMove)))
@@ -188,18 +171,19 @@ object MoveReviewInputNormalizer:
               val comparisonByMove = admittedComparison.map(value =>
                 EvidenceRef.normalizeMove(value.evaluation.moves.head) -> value
               ).toMap
-              List(comparisonByMove(bestMove), comparisonByMove(playedMove)) ++
+              // Root owns the reference evaluation and trajectory. The focused
+              // best line has already certified the same evaluation point, so
+              // only its newly covered played line is consumed here.
+              List(best, comparisonByMove(playedMove)) ++
                 rankedRoot.filterNot(value =>
                   Set(bestMove, playedMove)(EvidenceRef.normalizeMove(value.evaluation.moves.head))
                 )
             else rankedRoot
           for
-            prepared <- normalizeAdmittedPrepared(
+            prepared <- assembleAdmittedReview(
               positionHistory,
               playedMove,
-              reviewEvaluations,
-              OpeningRecognitionIndex.default,
-              OpeningThemePriorIndex.default
+              reviewEvaluations
             )
             referenceMove <- prepared.referenceLine.flatMap(_.rootMove)
             _ <- Option.when(EvidenceRef.sameMove(referenceMove, bestMove))((): Unit)
@@ -231,54 +215,45 @@ object MoveReviewInputNormalizer:
 
   /** Adds already certified branches without replaying or revalidating them. */
   private[assembly] def withAdmittedProbeBranches(
-      preparedInput: NormalizedMoveReviewInput,
+      preparedInput: AdmittedMoveReviewInput,
       admissions: List[AdmittedProbeBranch]
-  ): NormalizedMoveReviewInput =
-    val branches = preparedInput.threatBranches ++ admissions.map(_.branch)
+  ): AdmittedMoveReviewInput =
+    val branches = preparedInput.branchReplies ++ admissions.map(_.branch)
     require(
       branches.map(_.sourceProbeId).distinct.size == branches.size,
       "admitted probe branches must have unique source ids"
     )
-    preparedInput.copy(
-      threatBranches = branches,
-      probeDiagnostics = (
-        preparedInput.probeDiagnostics ++ admissions.map(_.diagnostic)
-      ).distinctBy(diagnostic => diagnostic.probeId -> diagnostic.reasonCodes)
-    )
+    preparedInput.copy(branchReplies = branches)
 
   /** Test/development boundary for an exact issued request/result handoff. */
   private[assembly] def withAdmittedProbeResults(
-      preparedInput: NormalizedMoveReviewInput,
+      preparedInput: AdmittedMoveReviewInput,
       fulfilledProbeResults: List[(ProbeRequest, ProbeResult)]
-  ): NormalizedMoveReviewInput =
+  ): AdmittedMoveReviewInput =
     val admissions = fulfilledProbeResults.foldLeft(List.empty[AdmittedProbeBranch]) {
       case (accepted, (request, result)) =>
-        val firstRank = nextThreatRank(preparedInput, accepted)
+        val firstRank = nextBranchReplyRank(preparedInput, accepted)
         admitIssuedProbeResult(preparedInput, request, result, firstRank) match
-          case Right(admission) => accepted :+ admission
-          case Left(diagnostic) =>
+          case Some(admission) => accepted :+ admission
+          case None =>
             throw IllegalArgumentException(
-              s"issued probe ${request.id} was rejected: ${diagnostic.reasonCodes.mkString(",")}"
+              s"issued probe ${request.id} was rejected"
             )
     }
     withAdmittedProbeBranches(preparedInput, admissions)
 
-  private[assembly] def nextThreatRank(
-      preparedInput: NormalizedMoveReviewInput,
+  private[assembly] def nextBranchReplyRank(
+      preparedInput: AdmittedMoveReviewInput,
       admissions: List[AdmittedProbeBranch]
   ): Int =
     (
       preparedInput.lines.map(_.rank) ++
-        preparedInput.threatBranches.flatMap(_.lines.map(_.rank)) ++
+        preparedInput.branchReplies.flatMap(_.lines.map(_.rank)) ++
         admissions.flatMap(_.branch.lines.map(_.rank))
     ).maxOption
       .getOrElse(0) + 1
 
-  def normalize(
-      raw: RawMoveReviewInput,
-      recognitionIndex: OpeningRecognitionIndex = OpeningRecognitionIndex.default,
-      themePriorIndex: OpeningThemePriorIndex = OpeningThemePriorIndex.default
-  ): Option[NormalizedMoveReviewInput] =
+  def admit(raw: RawMoveReviewInput): Option[AdmittedMoveReviewInput] =
     val beforeFen = PrincipalVariationEvidence.normalizeFen(raw.fen)
     val playedMove = EvidenceRef.normalizeMove(raw.playedMoveUci)
     val movePrefix = raw.movePrefixUci.map(EvidenceRef.normalizeMove).filter(_.nonEmpty)
@@ -289,49 +264,40 @@ object MoveReviewInputNormalizer:
       _ <- Option.when(raw.probeResults.isEmpty)(())
       history <- positionHistory.toOption
       _ <- Option.when(raw.ply.forall(_ == history.currentPly))((): Unit)
-      input <- normalizePrepared(
+      input <- admitPrepared(
         history,
         playedMove,
-        raw.variations.map(line => CandidateLineEvaluation.EngineSearch(line)),
-        recognitionIndex,
-        themePriorIndex
+        raw.variations.map(line => CandidateLineEvaluation.EngineSearch(line))
       )
     yield input
 
-  private def normalizePrepared(
+  private def admitPrepared(
       history: CanonicalPositionHistory,
       playedMove: String,
-      variations: List[CandidateLineEvaluation],
-      recognitionIndex: OpeningRecognitionIndex,
-      themePriorIndex: OpeningThemePriorIndex
-  ): Option[NormalizedMoveReviewInput] =
+      variations: List[CandidateLineEvaluation]
+  ): Option[AdmittedMoveReviewInput] =
     admitEvaluations(history, variations).flatMap { admitted =>
-      normalizeAdmittedPrepared(
+      assembleAdmittedReview(
         history,
         playedMove,
-        admitted,
-        recognitionIndex,
-        themePriorIndex
+        admitted
       )
     }
 
-  private def normalizeAdmittedPrepared(
+  private def assembleAdmittedReview(
       history: CanonicalPositionHistory,
       playedMove: String,
-      variations: List[AdmittedEvaluation],
-      recognitionIndex: OpeningRecognitionIndex,
-      themePriorIndex: OpeningThemePriorIndex
-  ): Option[NormalizedMoveReviewInput] =
+      variations: List[AdmittedEvaluation]
+  ): Option[AdmittedMoveReviewInput] =
       val canonicalBeforeFen = history.currentFen
       val beforePly = history.currentPly
       val side = Some(history.currentPosition.color)
-      val openingContext = openingContextFor(history, recognitionIndex, themePriorIndex)
       val ranked = preferredRankedEvaluations(
         variations,
         side
       ).zipWithIndex
       val reference = ranked.headOption.map { case (admitted, index) =>
-        NormalizedCandidateLine(
+        AdmittedReviewLine(
           LineNodeRole.BestReference,
           index + 1,
           admitted.evaluation,
@@ -347,7 +313,7 @@ object MoveReviewInputNormalizer:
             admitted.evaluation.moves.size >= 2 || admitted.automaticTerminal.nonEmpty
           }
           .map { case (admitted, index) =>
-            NormalizedCandidateLine(
+            AdmittedReviewLine(
               LineNodeRole.Played,
               index + 1,
               admitted.evaluation,
@@ -360,7 +326,7 @@ object MoveReviewInputNormalizer:
             reference.exists(_.rank == index + 1) || played.exists(_.rank == index + 1)
           }
           .map { case (admitted, index) =>
-            NormalizedCandidateLine(
+            AdmittedReviewLine(
               LineNodeRole.Alternative,
               index + 1,
               admitted.evaluation,
@@ -374,7 +340,7 @@ object MoveReviewInputNormalizer:
           for
             graphAfterPlayed <- playedLine.replay.replaySteps.headOption.map(_.fenAfter)
             afterReference = reference.flatMap(_.replay.replaySteps.headOption).map(_.fenAfter)
-          yield NormalizedMoveReviewInput(
+          yield AdmittedMoveReviewInput(
             beforeFen = canonicalBeforeFen,
             playedMoveUci = graphPlayedMove,
             beforePly = beforePly,
@@ -384,9 +350,7 @@ object MoveReviewInputNormalizer:
             lines = lines,
             completeCandidateSet = None,
             positionHistory = history,
-            openingContext = openingContext,
-            threatBranches = Nil,
-            probeDiagnostics = Nil
+            branchReplies = Nil
           )
         }
       }
@@ -398,47 +362,49 @@ object MoveReviewInputNormalizer:
     val admitted = evaluations.map(admitEvaluation(history, _))
     Option.when(admitted.forall(_.nonEmpty))(admitted.flatten)
 
+  private def materializeAdmissions(
+      history: CanonicalPositionHistory,
+      admissions: List[AdmittedCandidateLine]
+  ): Option[List[AdmittedEvaluation]] =
+    val materialized = admissions.map(materializeAdmission(history, _))
+    Option.when(materialized.forall(_.nonEmpty))(materialized.flatten)
+
   private def admitEvaluation(
       history: CanonicalPositionHistory,
       rawEvaluation: CandidateLineEvaluation,
       predecessorReplay: Option[CanonicalLineReplay] = None
   ): Option[AdmittedEvaluation] =
     val normalized = normalizedEvaluation(rawEvaluation)
-    val prefixSize = history.segmentReplaySteps.size
     for
       _ <- Option.when(normalized.moves.nonEmpty)(())
-      (evaluation, lineHistory) <- normalized match
+      continuation <- history.admitToFirstAutomaticTerminal(normalized.moves).toOption
+      evaluation <- normalized match
         case CandidateLineEvaluation.EngineSearch(line) =>
-          history.extend(line.moves).toOption match
-            case Some(completeHistory) =>
-              val terminal = automaticTerminal(completeHistory)
-              Option.when(engineScoreConsistent(line, terminal))(
-                terminal
-                  .map(CandidateLineEvaluation.ExactAutomaticTerminal(line.moves, _))
-                  .getOrElse(normalized) -> completeHistory
-              )
-            case None =>
-              history
-                .inspectAutomaticTerminalBoundary(line.moves)
-                .toOption
-                .flatten
-                .filter { case (_, terminal) => engineScoreConsistent(line, Some(terminal)) }
-                .flatMap { case (terminalMoves, terminal) =>
-                  history.extend(terminalMoves).toOption.map(
-                    CandidateLineEvaluation.ExactAutomaticTerminal(terminalMoves, terminal) -> _
-                  )
-                }
+          Option.when(engineScoreConsistent(line, continuation.automaticTerminal))(
+            continuation.automaticTerminal
+              .map(CandidateLineEvaluation.ExactAutomaticTerminal(continuation.moves, _))
+              .getOrElse(normalized)
+          )
         case exact @ CandidateLineEvaluation.ExactAutomaticTerminal(moves, terminal) =>
-          history
-            .extend(moves)
-            .toOption
-            .filter(lineHistory => automaticTerminal(lineHistory).contains(terminal))
-            .map(exact -> _)
-      steps = lineHistory.segmentReplaySteps.drop(prefixSize)
+          Option.when(
+            continuation.moves == moves.map(EvidenceRef.normalizeMove) &&
+              continuation.automaticTerminal.contains(terminal)
+          )(exact)
+      admission <- continuation.bind(evaluation)
+      materialized <- materializeAdmission(history, admission, predecessorReplay)
+    yield materialized
+
+  private def materializeAdmission(
+      history: CanonicalPositionHistory,
+      admission: AdmittedCandidateLine,
+      predecessorReplay: Option[CanonicalLineReplay] = None
+  ): Option[AdmittedEvaluation] =
+    for
+      steps <- admission.continuationAfter(history)
       replay <- predecessorReplay match
         case Some(predecessor) => CanonicalLineReplay.continueFromHistory(predecessor, steps)
         case None              => CanonicalLineReplay.fromHistory(steps)
-    yield AdmittedEvaluation(evaluation, replay, automaticTerminal(lineHistory))
+    yield AdmittedEvaluation(admission.evaluation, replay, admission.automaticTerminal)
 
   private def focusedDrawClaims(
       playedMove: String,
@@ -487,32 +453,6 @@ object MoveReviewInputNormalizer:
         ).flatten
       case _ => Nil
 
-  private def openingContextFor(
-      positionHistory: CanonicalPositionHistory,
-      recognitionIndex: OpeningRecognitionIndex,
-      themePriorIndex: OpeningThemePriorIndex
-  ): OpeningContextEvidence =
-    val recognition = recognitionIndex.recognize(
-      positionHistory.movePrefixUci,
-      positionHistory.currentFen,
-      positionHistory.currentPly
-    )
-    val identity = recognition.flatMap(_.bestIdentity)
-    val themePriorSelection = themePriorIndex.priorSelectionFor(
-      certifyingRecognitionLineage(recognition),
-      identity.flatMap(_.family),
-      identity.flatMap(_.name)
-    )
-    OpeningContextEvidence(
-      identity = identity,
-      signals = List(
-        Option.when(recognition.nonEmpty)(OpeningContextSignal.RecognizedIdentity),
-        Option.when(themePriorSelection.nonEmpty)(OpeningContextSignal.ThemePrior)
-      ).flatten,
-      recognition = recognition,
-      themePriorSelection = themePriorSelection
-    )
-
   private def normalizedLine(line: EngineLine): EngineLine =
     line.copy(moves = line.moves.map(EvidenceRef.normalizeMove))
 
@@ -522,6 +462,24 @@ object MoveReviewInputNormalizer:
         CandidateLineEvaluation.EngineSearch(normalizedLine(line))
       case CandidateLineEvaluation.ExactAutomaticTerminal(moves, terminal) =>
         CandidateLineEvaluation.ExactAutomaticTerminal(moves.map(EvidenceRef.normalizeMove), terminal)
+
+  /** The focused best result is a comparison calibration, not a second
+    * reference owner. Different continuations are harmless only when they
+    * certify the exact same score/mate or automatic-terminal outcome.
+    */
+  private def sameReferenceEvaluationPoint(
+      root: CandidateLineEvaluation,
+      focused: CandidateLineEvaluation
+  ): Boolean =
+    (root, focused) match
+      case (CandidateLineEvaluation.EngineSearch(rootLine), CandidateLineEvaluation.EngineSearch(focusedLine)) =>
+        rootLine.scoreCp == focusedLine.scoreCp && rootLine.mate == focusedLine.mate
+      case (
+            CandidateLineEvaluation.ExactAutomaticTerminal(_, rootTerminal),
+            CandidateLineEvaluation.ExactAutomaticTerminal(_, focusedTerminal)
+          ) =>
+        rootTerminal == focusedTerminal
+      case _ => false
 
   private def preferredRankedEvaluations(
       evaluations: List[AdmittedEvaluation],
@@ -552,79 +510,94 @@ object MoveReviewInputNormalizer:
       case None => selectedEvaluations.sortBy(_._2)
     ordered.map(_._1)
 
-  private final case class ThreatBranchSeed(
+  private enum ProbeCandidateLines:
+    case Raw(override val evaluations: List[CandidateLineEvaluation])
+    case Certified(admissions: List[AdmittedCandidateLine])
+
+    def evaluations: List[CandidateLineEvaluation] = this match
+      case Raw(values)       => values
+      case Certified(values) => values.map(_.evaluation)
+
+  private final case class ProbeAdmissionInput(
+      request: ProbeRequest,
+      result: ProbeResult,
+      lines: ProbeCandidateLines
+  )
+
+  private final case class BranchReplySeed(
       sourceProbeId: String,
       probedMoveUci: String,
       replyMoveUci: String,
       branchFen: String,
       branchHistory: CanonicalPositionHistory,
       predecessorReplay: CanonicalLineReplay,
-      evaluations: List[CandidateLineEvaluation],
-      variationHash: Option[String],
+      lines: ProbeCandidateLines,
       certifiedHorizonPlyOffset: Int,
       requiredReplyCount: Int,
       depthFloor: Int
   )
 
-  private final case class ThreatBranchNormalization(
-      branches: List[NormalizedThreatBranch],
-      diagnostics: List[ProbeAdmissionDiagnostic]
-  )
-
   private[assembly] def admitIssuedProbeResult(
-      preparedInput: NormalizedMoveReviewInput,
+      preparedInput: AdmittedMoveReviewInput,
       request: ProbeRequest,
       result: ProbeResult,
-      firstThreatRank: Int
-  ): Either[ProbeAdmissionDiagnostic, AdmittedProbeBranch] =
-    val normalized = normalizeThreatBranches(
-      List(request -> result),
+      firstBranchReplyRank: Int
+  ): Option[AdmittedProbeBranch] =
+    val evaluations = result.resolution match
+      case ProbeResolution.EngineSearch(values, _) => values
+      case ProbeResolution.ExactAutomaticTerminal(evaluation) => List(evaluation)
+    admitBranchReplies(
+      List(ProbeAdmissionInput(request, result, ProbeCandidateLines.Raw(evaluations))),
       beforeFen = preparedInput.beforeFen,
-      rootLines = preparedInput.lines.filterNot(_.role == LineNodeRole.Threat),
-      firstThreatRank = firstThreatRank,
+      rootLines = preparedInput.lines.filterNot(_.role == LineNodeRole.BranchReply),
+      firstBranchReplyRank = firstBranchReplyRank,
       positionHistory = preparedInput.positionHistory
-    )
-    (normalized.branches, normalized.diagnostics) match
-      case (branch :: Nil, diagnostic :: Nil) if diagnostic.status == ProbeAdmissionStatus.Admitted =>
-        Right(AdmittedProbeBranch(request, result, branch, diagnostic))
-      case (Nil, diagnostic :: Nil) => Left(diagnostic)
-      case _ =>
-        Left(
-          probeDiagnostic(
-            result,
-            status = ProbeAdmissionStatus.Rejected,
-            reasons = List("PROBE_ADMISSION_INCONSISTENT"),
-            purpose = Some(request.kind),
-            candidateMove = Some(request.candidateMove),
-            branchFen = Some(request.fen),
-            admittedLineCount = 0,
-            legalLineCount = 0,
-            scoredLineCount = 0,
-            depthFloor = Some(request.depthFloor),
-            horizon = request.horizon,
-            variationHash = Some(request.variationHash)
-          )
-        )
+    ) match
+      case branch :: Nil => Some(AdmittedProbeBranch(branch))
+      case _             => None
 
-  private def normalizeThreatBranches(
-      probes: List[(ProbeRequest, ProbeResult)],
+  /** Production handoff for lines whose history occurrence was already
+    * admitted when the browser report was accepted. No UCI move is replayed.
+    */
+  def admitCertifiedProbeResult(
+      preparedInput: AdmittedMoveReviewInput,
+      request: ProbeRequest,
+      result: ProbeResult,
+      admissions: List[AdmittedCandidateLine]
+  ): Option[AdmittedMoveReviewInput] =
+    admitBranchReplies(
+      List(ProbeAdmissionInput(request, result, ProbeCandidateLines.Certified(admissions))),
+      beforeFen = preparedInput.beforeFen,
+      rootLines = preparedInput.lines.filterNot(_.role == LineNodeRole.BranchReply),
+      firstBranchReplyRank = nextBranchReplyRank(preparedInput, Nil),
+      positionHistory = preparedInput.positionHistory
+    ) match
+      case branch :: Nil =>
+        Some(withAdmittedProbeBranches(preparedInput, List(AdmittedProbeBranch(branch))))
+      case _ => None
+
+  private def admitBranchReplies(
+      probes: List[ProbeAdmissionInput],
       beforeFen: String,
-      rootLines: List[NormalizedCandidateLine],
-      firstThreatRank: Int,
+      rootLines: List[AdmittedReviewLine],
+      firstBranchReplyRank: Int,
       positionHistory: CanonicalPositionHistory
-  ): ThreatBranchNormalization =
-    val branches = List.newBuilder[NormalizedThreatBranch]
-    val diagnostics = List.newBuilder[ProbeAdmissionDiagnostic]
-    var nextRank = firstThreatRank
-    probes.foreach { case (request, probe) =>
-      threatBranchSeed(beforeFen, rootLines, positionHistory, request, probe) match
-        case Left(diagnostic) =>
-          diagnostics += diagnostic
-        case Right(seed) =>
+  ): List[AdmittedReviewBranchReply] =
+    val branches = List.newBuilder[AdmittedReviewBranchReply]
+    var nextRank = firstBranchReplyRank
+    probes.foreach { probe =>
+      branchReplySeed(beforeFen, rootLines, positionHistory, probe) match
+        case None => ()
+        case Some(seed) =>
           val side = Some(seed.branchHistory.currentPosition.color)
           val depthFloor = seed.depthFloor
+          val materializedLines = seed.lines match
+            case ProbeCandidateLines.Raw(evaluations) =>
+              evaluations.flatMap(admitEvaluation(seed.branchHistory, _, Some(seed.predecessorReplay)))
+            case ProbeCandidateLines.Certified(admissions) =>
+              admissions.flatMap(materializeAdmission(seed.branchHistory, _, Some(seed.predecessorReplay)))
           val legalLines = preferredRankedEvaluations(
-            seed.evaluations.flatMap(admitEvaluation(seed.branchHistory, _, Some(seed.predecessorReplay))),
+            materializedLines,
             side
           )
           val requiredReplyCount = seed.requiredReplyCount
@@ -651,15 +624,15 @@ object MoveReviewInputNormalizer:
             val branchLines = topLegalLines.map { admitted =>
               val rank = nextRank
               nextRank += 1
-              NormalizedCandidateLine(
-                role = LineNodeRole.Threat,
+              AdmittedReviewLine(
+                role = LineNodeRole.BranchReply,
                 rank = rank,
                 evaluation = admitted.evaluation,
                 replay = admitted.replay,
                 predecessorReplay = Some(seed.predecessorReplay)
               )
             }
-            branches += NormalizedThreatBranch(
+            branches += AdmittedReviewBranchReply(
               sourceProbeId = seed.sourceProbeId,
               probedMoveUci = seed.probedMoveUci,
               branchFen = seed.branchFen,
@@ -667,51 +640,17 @@ object MoveReviewInputNormalizer:
               certifiedHorizonPlyOffset = seed.certifiedHorizonPlyOffset,
               lines = branchLines
             )
-            diagnostics += probeDiagnostic(
-              probe,
-              status = ProbeAdmissionStatus.Admitted,
-              reasons = List("ADMITTED"),
-              purpose = Some(ProbeKind.BranchReply),
-              candidateMove = Some(seed.probedMoveUci),
-              branchFen = Some(seed.branchFen),
-              admittedLineCount = branchLines.size,
-              legalLineCount = legalLines.size,
-              scoredLineCount = seed.evaluations.count(_.moves.nonEmpty),
-              depthFloor = Some(depthFloor),
-              horizon = Some(BranchReplyProbeBinding.horizon(seed.certifiedHorizonPlyOffset)),
-              variationHash = seed.variationHash
-            )
-          else
-            val reason =
-              if requiredReplyCount == 0 then "BRANCH_POSITION_TERMINAL"
-              else if legalLines.size < requiredReplyCount then "INSUFFICIENT_LEGAL_REPLY_LINES"
-              else if !replyLineBound then "REPLY_MOVE_UNBOUND"
-              else if !horizonCovered then "HORIZON_COVERAGE_UNVERIFIED"
-              else "REPLY_LINE_DEPTH_FLOOR_UNMET"
-            diagnostics += probeDiagnostic(
-              probe,
-              status = ProbeAdmissionStatus.Rejected,
-              reasons = List(reason),
-              purpose = Some(ProbeKind.BranchReply),
-              candidateMove = Some(seed.probedMoveUci),
-              branchFen = Some(seed.branchFen),
-              admittedLineCount = 0,
-              legalLineCount = legalLines.size,
-              scoredLineCount = seed.evaluations.count(_.moves.nonEmpty),
-              depthFloor = Some(depthFloor),
-              horizon = Some(BranchReplyProbeBinding.horizon(seed.certifiedHorizonPlyOffset)),
-              variationHash = seed.variationHash
-            )
     }
-    ThreatBranchNormalization(branches.result(), diagnostics.result())
+    branches.result()
 
-  private def threatBranchSeed(
+  private def branchReplySeed(
       beforeFen: String,
-      rootLines: List[NormalizedCandidateLine],
+      rootLines: List[AdmittedReviewLine],
       positionHistory: CanonicalPositionHistory,
-      request: ProbeRequest,
-      probe: ProbeResult
-  ): Either[ProbeAdmissionDiagnostic, ThreatBranchSeed] =
+      input: ProbeAdmissionInput
+  ): Option[BranchReplySeed] =
+    val request = input.request
+    val probe = input.result
     val evaluations = probe.resolution match
       case ProbeResolution.EngineSearch(values, _) => values
       case ProbeResolution.ExactAutomaticTerminal(evaluation) => List(evaluation)
@@ -723,30 +662,13 @@ object MoveReviewInputNormalizer:
     val certifiedHorizonPlyOffset = request.horizon.flatMap(BranchReplyProbeBinding.horizonPlyOffset)
     val depthFloor = Option.when(request.depthFloor > 0)(request.depthFloor)
     val contract = ProbeContractValidator.validateAgainstRequest(request, probe)
-    val baseDiagnostic = (reasons: List[String]) =>
-      probeDiagnostic(
-        probe,
-        status = ProbeAdmissionStatus.Rejected,
-        reasons = reasons,
-        purpose = Some(request.kind),
-        candidateMove = probedMove,
-        branchFen = branchFen,
-        admittedLineCount = 0,
-        legalLineCount = 0,
-        scoredLineCount = evaluations.count(_.moves.nonEmpty),
-        depthFloor = depthFloor,
-        horizon = request.horizon,
-        variationHash = Some(request.variationHash)
-      )
-
-    if !contract.isValid then
-      Left(baseDiagnostic(("CONTRACT_INVALID" :: contract.reasonCodes).distinct))
+    if !contract.isValid || input.lines.evaluations != evaluations then None
     else (branchFen, probedMove, replyMove, certifiedHorizonPlyOffset, depthFloor) match
-      case (None, _, _, _, _) => Left(baseDiagnostic(List("BRANCH_FEN_MISSING")))
-      case (_, None, _, _, _) => Left(baseDiagnostic(List("PROBED_MOVE_MISSING")))
-      case (_, _, None, _, _) => Left(baseDiagnostic(List("REPLY_MOVE_UNVERIFIED")))
-      case (_, _, _, None, _) => Left(baseDiagnostic(List("HORIZON_UNVERIFIED")))
-      case (_, _, _, _, None) => Left(baseDiagnostic(List("DEPTH_FLOOR_UNVERIFIED")))
+      case (None, _, _, _, _) => None
+      case (_, None, _, _, _) => None
+      case (_, _, None, _, _) => None
+      case (_, _, _, None, _) => None
+      case (_, _, _, _, None) => None
       case (Some(fen), Some(move), Some(reply), Some(horizon), Some(floor)) =>
         val moveLines = rootLines
           .filter(_.rootMove.exists(EvidenceRef.sameMove(_, move)))
@@ -768,30 +690,29 @@ object MoveReviewInputNormalizer:
             if request.variationHash == expectedHash
           yield (predecessor, branchHistory)
         }
-        if moveLines.isEmpty then Left(baseDiagnostic(List("ROOT_LINE_UNBOUND")))
+        if moveLines.isEmpty then None
         else matchingMoveLines match
           case (predecessor, branchHistory) :: Nil =>
-            Right(
-              ThreatBranchSeed(
+            Some(
+              BranchReplySeed(
                 sourceProbeId = request.id,
                 probedMoveUci = move,
                 replyMoveUci = reply,
                 branchFen = branchHistory.currentFen,
                 branchHistory = branchHistory,
                 predecessorReplay = predecessor,
-                evaluations = evaluations,
-                variationHash = Some(request.variationHash),
+                lines = input.lines,
                 certifiedHorizonPlyOffset = horizon,
                 requiredReplyCount = 1,
                 depthFloor = floor
               )
             )
-          case Nil => Left(baseDiagnostic(List("BRANCH_OR_VARIATION_UNBOUND")))
-          case _   => Left(baseDiagnostic(List("ROOT_LINE_AMBIGUOUS")))
+          case Nil => None
+          case _   => None
 
   private def branchHash(
       beforeFen: String,
-      line: NormalizedCandidateLine,
+      line: AdmittedReviewLine,
       probedMove: String,
       replyMove: String,
       certifiedHorizonPlyOffset: Int
@@ -811,35 +732,6 @@ object MoveReviewInputNormalizer:
         )
       )
     }
-
-  private def probeDiagnostic(
-      probe: ProbeResult,
-      status: ProbeAdmissionStatus,
-      reasons: List[String],
-      purpose: Option[ProbeKind],
-      candidateMove: Option[String],
-      branchFen: Option[String],
-      admittedLineCount: Int,
-      legalLineCount: Int,
-      scoredLineCount: Int,
-      depthFloor: Option[Int],
-      horizon: Option[String],
-      variationHash: Option[String]
-  ): ProbeAdmissionDiagnostic =
-    ProbeAdmissionDiagnostic(
-      probeId = Option(probe.id).map(_.trim).filter(_.nonEmpty).getOrElse("probe-result"),
-      status = status,
-      reasonCodes = reasons.distinct,
-      purpose = purpose,
-      candidateMove = candidateMove,
-      fen = branchFen,
-      admittedLineCount = admittedLineCount,
-      legalLineCount = legalLineCount,
-      scoredLineCount = scoredLineCount,
-      depthFloor = depthFloor,
-      horizon = horizon,
-      variationHash = variationHash
-    )
 
   private def automaticTerminal(history: CanonicalPositionHistory): Option[AutomaticTerminal] =
     PositionRuleAssessment.assess(history) match
@@ -863,18 +755,8 @@ object MoveReviewInputNormalizer:
         line.mate.isEmpty && line.scoreCp.abs <= 1
       case None => true
 
-  private def certifyingRecognitionLineage(recognition: Option[OpeningRecognition]): Option[String] =
-    recognition.filter(certifyingRecognition).flatMap(_.lineage)
-
-  private def certifyingRecognition(recognition: OpeningRecognition): Boolean =
-    // A unique canonical position keeps the same opening identity across legal move-order transpositions.
-    recognition.confidence >= CertifyingRecognitionMinConfidence &&
-      recognition.candidates.size == 1
-
   private def plyFromFen(fen: String): Int =
     val parts = fen.split("\\s+")
     val fullMove = parts.lift(5).flatMap(_.toIntOption).getOrElse(1).max(1)
     val blackToMove = parts.lift(1).contains("b")
     (fullMove - 1) * 2 + Option.when(blackToMove)(1).getOrElse(0)
-
-  private val CertifyingRecognitionMinConfidence: Double = 0.7

@@ -39,7 +39,7 @@ CAUSE_ADAPTER_MAIN = (
     "io.chesstory.evaluation.runtimeadapter.RuntimePublicResponseCli"
 )
 PARTITIONS = ("explore", "sealed_confirm")
-SPLIT_SALT = "cause-audit-v1-family-seal"
+SPLIT_SALT = "cause-audit-v1-stratum-seal"
 
 
 def _checked_runtime_response(
@@ -318,7 +318,7 @@ def _ids_hash(rows: Sequence[Mapping[str, Any]]) -> str:
     return sha256_json(sorted(str(item["case_id"]) for item in rows))
 
 
-def _family_balanced_split(
+def _stratum_balanced_split(
     cases: Sequence[Mapping[str, Any]],
     contamination_exclusions: Sequence[Mapping[str, Any]] = (),
 ) -> tuple[dict[str, list[str]], list[dict[str, Any]], str]:
@@ -335,12 +335,12 @@ def _family_balanced_split(
         if case_id in exclusion_by_id:
             raise ContractError(f"duplicate contamination exclusion: {case_id}")
         exclusion_by_id[case_id] = reason
-    by_family: dict[str, list[Mapping[str, Any]]] = {}
+    by_stratum: dict[str, list[Mapping[str, Any]]] = {}
     for case in cases:
-        by_family.setdefault(str(case["cause_family"]), []).append(case)
-    if len(by_family) != 8 or any(len(values) != 3 for values in by_family.values()):
+        by_stratum.setdefault(str(case["stratum_id"]), []).append(case)
+    if len(by_stratum) != 8 or any(len(values) != 3 for values in by_stratum.values()):
         raise ContractError(
-            "family-balanced split requires exactly 8 cause families with 3 cases each"
+            "stratum-balanced split requires exactly 8 strata with 3 cases each"
         )
     case_ids = {str(case["case_id"]) for case in cases}
     if not set(exclusion_by_id).issubset(case_ids):
@@ -351,19 +351,19 @@ def _family_balanced_split(
     ]
     assignments: list[dict[str, Any]] = []
     partitions = {"explore": [], "sealed_confirm": []}
-    for family in sorted(by_family):
+    for stratum_id in sorted(by_stratum):
         candidates: list[tuple[str, Mapping[str, Any]]] = []
-        for case in by_family[family]:
+        for case in by_stratum[stratum_id]:
             case_id = str(case["case_id"])
             digest = hashlib.sha256(
-                f"{SPLIT_SALT}|{family}|{case_id}".encode("ascii")
+                f"{SPLIT_SALT}|{stratum_id}|{case_id}".encode("ascii")
             ).hexdigest()
             candidates.append((digest, case))
         eligible = [
             item for item in candidates if str(item[1]["case_id"]) not in exclusion_by_id
         ]
         if not eligible:
-            raise ContractError(f"all cases in cause family {family} are contaminated")
+            raise ContractError(f"all cases in stratum {stratum_id} are contaminated")
         sealed_id = str(min(eligible, key=lambda item: (item[0], str(item[1]["case_id"])))[1]["case_id"])
         for digest, case in candidates:
             case_id = str(case["case_id"])
@@ -372,7 +372,7 @@ def _family_balanced_split(
             assignments.append(
                 {
                     "case_id": case_id,
-                    "cause_family": family,
+                    "stratum_id": stratum_id,
                     "embedded_partition": str(case["partition"]),
                     "logical_partition": logical,
                     "sealed_eligible": case_id not in exclusion_by_id,
@@ -383,19 +383,19 @@ def _family_balanced_split(
         values.sort()
     assignments.sort(key=lambda item: str(item["case_id"]))
     if len(partitions["explore"]) != 16 or len(partitions["sealed_confirm"]) != 8:
-        raise ContractError("family-balanced split did not produce a 16/8 partition")
-    sealed_families = Counter(
-        item["cause_family"]
+        raise ContractError("stratum-balanced split did not produce a 16/8 partition")
+    sealed_strata = Counter(
+        item["stratum_id"]
         for item in assignments
         if item["logical_partition"] == "sealed_confirm"
     )
-    explore_families = Counter(
-        item["cause_family"]
+    explore_strata = Counter(
+        item["stratum_id"]
         for item in assignments
         if item["logical_partition"] == "explore"
     )
-    if set(sealed_families.values()) != {1} or set(explore_families.values()) != {2}:
-        raise ContractError("family-balanced split does not preserve 2 explore and 1 sealed per family")
+    if set(sealed_strata.values()) != {1} or set(explore_strata.values()) != {2}:
+        raise ContractError("stratum-balanced split does not preserve 2 explore and 1 sealed per stratum")
     return (
         partitions,
         assignments,
@@ -476,7 +476,7 @@ def freeze_cause_audit(
     contamination_exclusions = [
         _exclusion_spec(value) for value in contamination_exclusion_specs
     ]
-    partition_case_ids, case_assignments, assignment_hash = _family_balanced_split(
+    partition_case_ids, case_assignments, assignment_hash = _stratum_balanced_split(
         cases, contamination_exclusions
     )
     manifest = {
@@ -490,14 +490,14 @@ def freeze_cause_audit(
             "case_ids_sha256": _ids_hash(cases),
         },
         "split_assignment": {
-            "algorithm": "minimum-sha256-per-cause-family-after-contamination-exclusions.v1",
+            "algorithm": "minimum-sha256-per-stratum-after-contamination-exclusions.v1",
             "salt": SPLIT_SALT,
-            "input_format": "{salt}|{cause_family}|{case_id}",
-            "unit": "cause_family",
+            "input_format": "{salt}|{stratum_id}|{case_id}",
+            "unit": "stratum_id",
             "contamination_exclusions": contamination_exclusions,
-            "family_count": 8,
-            "cases_per_family": 3,
-            "sealed_per_family": 1,
+            "stratum_count": 8,
+            "cases_per_stratum": 3,
+            "sealed_per_stratum": 1,
             "assignment_sha256": assignment_hash,
             "case_assignments": case_assignments,
         },
@@ -562,20 +562,20 @@ def _verify_manifest(
     exclusions = split_assignment.get("contamination_exclusions")
     if not isinstance(exclusions, list):
         raise IntegrityError("cause audit split has no contamination exclusion array")
-    actual_partitions, actual_assignments, actual_assignment_hash = _family_balanced_split(
+    actual_partitions, actual_assignments, actual_assignment_hash = _stratum_balanced_split(
         cases, [item for item in exclusions if isinstance(item, Mapping)]
     )
     if manifest["partition_case_ids"] != actual_partitions:
         raise IntegrityError("cause case partitions no longer match the freeze manifest")
     expected_split = {
-        "algorithm": "minimum-sha256-per-cause-family-after-contamination-exclusions.v1",
+        "algorithm": "minimum-sha256-per-stratum-after-contamination-exclusions.v1",
         "salt": SPLIT_SALT,
-        "input_format": "{salt}|{cause_family}|{case_id}",
-        "unit": "cause_family",
+        "input_format": "{salt}|{stratum_id}|{case_id}",
+        "unit": "stratum_id",
         "contamination_exclusions": exclusions,
-        "family_count": 8,
-        "cases_per_family": 3,
-        "sealed_per_family": 1,
+        "stratum_count": 8,
+        "cases_per_stratum": 3,
+        "sealed_per_stratum": 1,
         "assignment_sha256": actual_assignment_hash,
         "case_assignments": actual_assignments,
     }
@@ -635,18 +635,6 @@ def _selected_cases(
     return selected
 
 
-_FAMILY_TAGS: dict[str, list[str]] = {
-    "activity_restriction": ["strategic"],
-    "conversion_control": ["conversion"],
-    "drawing_defense": ["defensive", "evaluation"],
-    "move_order_tempo": ["strategic", "tactical"],
-    "pawn_breaks_center": ["strategic"],
-    "strategic_plan": ["strategic"],
-    "structure_targets": ["strategic"],
-    "tactical_resource": ["tactical"],
-}
-
-
 def _question(
     case: Mapping[str, Any], reference_label: Mapping[str, Any] | None
 ) -> dict[str, Any]:
@@ -670,7 +658,6 @@ def _question(
         "move_history_uci": [],
         "requested_reference_moves_uci": references,
         "game_phase": str(case["game_phase"]),
-        "family_tags": list(_FAMILY_TAGS[str(case["cause_family"])]),
     }
 
 
@@ -1061,7 +1048,6 @@ def _acquisition_rows(
             "played_move_uci",
             "move_history_uci",
             "game_phase",
-            "family_tags",
         ):
             if question.get(field) != expected_question[field]:
                 raise IntegrityError(f"acquisition question case binding failed for {case_id}")

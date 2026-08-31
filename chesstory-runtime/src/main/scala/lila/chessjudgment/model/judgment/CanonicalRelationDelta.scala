@@ -155,26 +155,11 @@ private[chessjudgment] final class RelationSemanticDelta(
   lazy val geometricControlTransition: GeometricControlRelationTransition =
     relationTransition.geometricControlTransition(transitionFootprint)
 
-  lazy val geometricSupportTransition: GeometricSupportRelationTransition =
-    relationTransition.geometricSupportTransition(
-      transitionFootprint,
-      geometricControlTransition
-    )
-
   lazy val sliderReachTransition: ClosedSliderReachTransitionInventory =
     relationTransition.sliderReachTransition(
       transitionFootprint,
       geometricControlTransition
     )
-
-  lazy val geometricSupporterCaptures: List[GeometricSupporterCaptureChange] =
-    relationTransition.geometricSupporterCaptures(rootMove, geometricSupportTransition)
-
-  lazy val sliderLineInterruptions: List[SliderLineInterruptionChange] =
-    relationTransition.sliderLineInterruptions(sliderReachTransition)
-
-  lazy val geometricLineOpenings: List[GeometricLineOpeningChange] =
-    relationTransition.geometricLineOpenings(rootMove, sliderReachTransition)
 
   lazy val changedNamedRays: List[RelationNamedRayChange] =
     CanonicalRelationDelta.changedNamedRays(removed, established)
@@ -261,50 +246,9 @@ private[chessjudgment] final case class GeometricControlTargetSetChange(
       after.map(_.fact.semanticId).sorted.mkString(",")
     ).mkString(":")
 
-private[chessjudgment] final case class GeometricSupportEdge(
-    fact: RelationFactEvidence,
-    supporter: RelationColoredPieceWitness,
-    supported: RelationColoredPieceWitness
-)
-
-private[chessjudgment] final case class GeometricSupportChange(
-    supportedBefore: RelationColoredPieceWitness,
-    supportedAfter: RelationColoredPieceWitness,
-    before: List[GeometricSupportEdge],
-    after: List[GeometricSupportEdge],
-    removed: List[GeometricSupportEdge],
-    established: List[GeometricSupportEdge]
-):
-  require(removed.nonEmpty || established.nonEmpty, "a support change needs an exact changed edge")
-  require(
-    (removed ++ established).forall(edge => edge.supported.side == supportedBefore.side),
-    "one support change cannot mix beneficiary sides"
-  )
-  require(
-    before.forall(_.supported == supportedBefore) && after.forall(_.supported == supportedAfter),
-    "closed support sets must belong to their exact beneficiary occurrence"
-  )
-
-  def stableKey: String =
-    List(
-      supportedBefore.side.toString.toLowerCase,
-      supportedBefore.square.key.toLowerCase,
-      supportedBefore.role.name.toLowerCase,
-      supportedAfter.square.key.toLowerCase,
-      supportedAfter.role.name.toLowerCase,
-      before.map(_.fact.semanticId).sorted.mkString(","),
-      after.map(_.fact.semanticId).sorted.mkString(",")
-    ).mkString(":")
-
-private[chessjudgment] final case class GeometricSupportRelationTransition(
-    changes: List[GeometricSupportChange]
-):
-  val removed: List[GeometricSupportEdge] = changes.flatMap(_.removed)
-  val established: List[GeometricSupportEdge] = changes.flatMap(_.established)
-
-/** One exact directional reach change for a slider identity. Both the generic
-  * L1 reach fact and the more specific opening/interruption facts consume this
-  * inventory; neither reconstructs slider pairing or ray state independently.
+/** One exact directional reach change for a slider identity. The generic
+  * L1 reach fact consumes this inventory without reconstructing slider pairing
+  * or ray state independently.
   */
 private[chessjudgment] final case class ClosedSliderReachChange(
     side: Color,
@@ -338,66 +282,12 @@ private[chessjudgment] final case class ClosedSliderReachChange(
     s"${side.toString.toLowerCase}:${piece(sliderBefore)}:${piece(sliderAfter)}:${direction.stableKey}"
 
 private[chessjudgment] final case class ClosedSliderReachTransitionInventory(
-    changes: List[ClosedSliderReachChange],
-    pieceMovements: List[RelationMoveTransitionWitness]
+    changes: List[ClosedSliderReachChange]
 ):
   require(
     changes.map(_.stableKey).distinct.size == changes.size,
     "one slider-reach transition cannot repeat a directional change"
   )
-  require(
-    pieceMovements.map(_.stableKey).distinct.size == pieceMovements.size,
-    "one slider-reach transition cannot repeat a causal piece movement"
-  )
-
-private[chessjudgment] final case class GeometricSupporterCaptureChange(
-    removedSupport: GeometricSupportEdge
-):
-  def stableKey: String = removedSupport.fact.semanticId
-
-private[chessjudgment] final case class SliderLineInterruptionChange(
-    interposer: RelationMoveTransitionWitness,
-    controllerSide: Color,
-    controllerBefore: RelationPieceWitness,
-    controllerAfter: RelationPieceWitness,
-    removedControls: List[GeometricControlEdge],
-    establishedBarrier: RelationFactEvidence
-):
-  require(removedControls.nonEmpty, "a line interruption needs a non-empty affected corridor")
-  require(
-    removedControls.map(_.fact.semanticId).distinct.size == removedControls.size &&
-      removedControls.map(_.target).distinct.size == removedControls.size,
-    "a line interruption cannot repeat one removed control"
-  )
-  require(
-    removedControls.forall(control =>
-      control.side == controllerSide && control.controller == controllerBefore
-    ),
-    "one line interruption may describe only one exact slider occurrence"
-  )
-  def stableKey: String =
-    s"${removedControls.map(_.fact.semanticId).mkString(",")}:${establishedBarrier.semanticId}:${interposer.from.key}-${interposer.to.key}:${interposer.afterRole.name}"
-
-private[chessjudgment] final case class GeometricLineOpeningChange(
-    removingMove: RelationMoveTransitionWitness,
-    controllerSide: Color,
-    controllerBefore: EvidenceSquare,
-    controllerAfter: EvidenceSquare,
-    controllerRole: EvidencePieceRole,
-    blocker: RelationColoredPieceWitness,
-    openedControls: List[GeometricControlEdge],
-    barrierPattern: RelationRayPattern,
-    removalMode: RelationBlockerRemovalMode,
-    removedBarrier: RelationFactEvidence
-):
-  require(openedControls.nonEmpty, "a geometric line opening must establish a non-empty corridor")
-  require(
-    openedControls.map(_.target).distinct.size == openedControls.size,
-    "a geometric line-opening corridor cannot repeat a target square"
-  )
-  def stableKey: String =
-    s"${removedBarrier.semanticId}:${openedControls.map(_.fact.semanticId).mkString(",")}:${removingMove.from.key}-${removingMove.to.key}:${removalMode.toString}"
-
 /** Exact relation facts changed by the canonical position producer for one
   * admitted legal transition. Unchanged position facts are deliberately not
   * copied here: transition proof consumes this sparse inventory instead of
@@ -442,12 +332,6 @@ private[chessjudgment] final case class RelationInventoryTransition(
       newlyEstablished = newlyEstablished.sortBy(_.semanticId),
       targetSetChanges = targetSetChanges
     )
-
-  def geometricSupportTransition(
-      boardFootprint: BoardTransitionFootprint,
-      geometricControl: GeometricControlRelationTransition
-  ): GeometricSupportRelationTransition =
-    geometricSupportTransition(boardFootprint, geometricControl.targetSetChanges)
 
   def sliderReachTransition(
       boardFootprint: BoardTransitionFootprint,
@@ -531,126 +415,7 @@ private[chessjudgment] final case class RelationInventoryTransition(
       }
     }.sortBy(_.stableKey)
 
-    ClosedSliderReachTransitionInventory(
-      changes,
-      boardFootprint.pieceTransitions.map(RelationMoveTransitionWitness.from).sortBy(_.stableKey)
-    )
-
-  def geometricSupporterCaptures(
-      rootMove: CanonicalRootLegalMove,
-      geometricSupport: GeometricSupportRelationTransition
-  ): List[GeometricSupporterCaptureChange] =
-    val supporterCaptures = rootMove.capture.toList.flatMap { capture =>
-      geometricSupport.removed.collect {
-        case support
-            if rootMove.side != support.supporter.side &&
-              capture.capturedSide == support.supporter.side &&
-              capture.capturedSquare == support.supporter.square &&
-              capture.capturedRole == support.supporter.role =>
-          GeometricSupporterCaptureChange(support)
-      }
-    }.sortBy(_.stableKey)
-    require(
-      supporterCaptures.map(_.stableKey).distinct.size == supporterCaptures.size,
-      "a supporter-capture transition cannot repeat an exact change"
-    )
-    supporterCaptures
-
-  def sliderLineInterruptions(
-      sliderReach: ClosedSliderReachTransitionInventory
-  ): List[SliderLineInterruptionChange] =
-    val establishedBarrierIds = comparableEstablished.collect {
-      case relation if relation.kind == RelationFactKind.RayBarrier => relation.semanticId
-    }.toSet
-
-    val lineInterruptions = sliderReach.changes.flatMap { change =>
-      for
-        controllerBefore <- change.sliderBefore.toList
-        controllerAfter <- change.sliderAfter.toList
-        afterReach <- change.after.toList
-        barrier <- Option(afterReach.raySource).filter(source => establishedBarrierIds(source.semanticId)).toList
-        occupant <- afterReach.firstOccupant.toList
-        geometry <- (barrier.detail match
-          case RelationWitnessDetail.RayBarrier(_, _, _, _, exact) => Some(exact)
-          case _ => None).toList
-        interposer <- sliderReach.pieceMovements.filter(movement =>
-          movement.side == occupant.side && movement.to == occupant.square && movement.afterRole == occupant.role
-        )
-        interrupted = change.removedControls
-          .filter(control => geometry.strictlyBetween(control.target, interposer.to))
-          .sortBy(control => geometry.distance(control.target) -> control.target.key)
-        if interrupted.nonEmpty
-      yield SliderLineInterruptionChange(
-        interposer,
-        change.side,
-        controllerBefore,
-        controllerAfter,
-        interrupted,
-        barrier
-      )
-    }.sortBy(_.stableKey)
-    require(
-      lineInterruptions.map(_.stableKey).distinct.size == lineInterruptions.size,
-      "a line-interruption transition cannot repeat an exact change"
-    )
-    lineInterruptions
-
-  def geometricLineOpenings(
-      rootMove: CanonicalRootLegalMove,
-      sliderReach: ClosedSliderReachTransitionInventory
-  ): List[GeometricLineOpeningChange] =
-    val removedBarrierIds = comparableRemoved.collect {
-      case relation if relation.kind == RelationFactKind.RayBarrier => relation.semanticId
-    }.toSet
-    val lineOpenings = sliderReach.changes.flatMap { change =>
-      for
-        controllerBefore <- change.sliderBefore.toList
-        controllerAfter <- change.sliderAfter.toList
-        beforeReach <- change.before.toList
-        afterReach <- change.after.toList
-        removedBarrier <- Option(beforeReach.raySource).filter(source => removedBarrierIds(source.semanticId)).toList
-        geometry <- (removedBarrier.detail match
-          case RelationWitnessDetail.RayBarrier(_, _, _, _, exact) => Some(exact)
-          case _ => None).toList
-        blocker <- beforeReach.firstOccupant.toList
-        barrierPattern <- (removedBarrier.detail match
-          case ray: RelationWitnessDetail.RayBarrier => Some(RelationRayProjection.pattern(ray))
-          case _                                      => None).toList
-        removal <- (
-          sliderReach.pieceMovements.filter(movement =>
-            movement.side == blocker.side && movement.from == blocker.square && movement.beforeRole == blocker.role
-          ).map(movement => RelationBlockerRemovalMode.Moved -> movement) ++
-            rootMove.capture.filter(capture =>
-              capture.capturedSide == blocker.side && capture.capturedSquare == blocker.square &&
-                capture.capturedRole == blocker.role
-            ).map(_ => RelationBlockerRemovalMode.Captured -> rootMove.witness)
-        )
-        openedIds = change.establishedControls
-          .filter(control => geometry.strictlyBetween(control.target, blocker.square))
-          .map(_.fact.semanticId)
-          .toSet
-        opened = afterReach.controls
-          .flatMap(control => change.establishedControls.find(_.fact.semanticId == control.source.semanticId))
-          .filter(control => openedIds(control.fact.semanticId))
-        if opened.nonEmpty
-      yield GeometricLineOpeningChange(
-        removingMove = removal._2,
-        controllerSide = change.side,
-        controllerBefore = controllerBefore.square,
-        controllerAfter = controllerAfter.square,
-        controllerRole = controllerAfter.role,
-        blocker = blocker,
-        openedControls = opened,
-        barrierPattern = barrierPattern,
-        removalMode = removal._1,
-        removedBarrier = removedBarrier
-      )
-    }.sortBy(_.stableKey)
-    require(
-      lineOpenings.map(_.stableKey).distinct.size == lineOpenings.size,
-      "a line-opening transition cannot repeat an exact change"
-    )
-    lineOpenings
+    ClosedSliderReachTransitionInventory(changes)
 
   private def geometricControlTargetSetChanges(
       footprint: BoardTransitionFootprint
@@ -758,110 +523,6 @@ private[chessjudgment] final case class RelationInventoryTransition(
       throw IllegalArgumentException(s"invalid relation square '${square.key}'")
     )
 
-  private def geometricSupportTransition(
-      boardFootprint: BoardTransitionFootprint,
-      targetSetChanges: List[GeometricControlTargetSetChange]
-  ): GeometricSupportRelationTransition =
-    final case class SupportPair(
-        supporter: RelationColoredPieceWitness,
-        supported: RelationColoredPieceWitness
-    )
-    final case class SupportedIdentity(
-        before: RelationColoredPieceWitness,
-        after: RelationColoredPieceWitness
-    )
-
-    val removed = targetSetChanges.flatMap(_.before.flatMap(geometricSupport)).sortBy(_.fact.semanticId)
-    val established = targetSetChanges.flatMap(_.after.flatMap(geometricSupport)).sortBy(_.fact.semanticId)
-    val establishedByPair = established.map(edge => SupportPair(edge.supporter, edge.supported) -> edge).toMap
-    require(
-      establishedByPair.size == established.size,
-      "one position cannot repeat a geometric support edge"
-    )
-    val maintainedEstablished = removed.flatMap { edge =>
-      for
-        supporter <- pieceAfter(edge.supporter, boardFootprint)
-        supported <- pieceAfter(edge.supported, boardFootprint)
-        maintained <- establishedByPair.get(SupportPair(supporter, supported))
-      yield maintained.fact.semanticId
-    }.toSet
-    val removedChanges = removed.flatMap { edge =>
-      pieceAfter(edge.supported, boardFootprint).flatMap { supportedAfter =>
-        val maintained = for
-          supporterAfter <- pieceAfter(edge.supporter, boardFootprint)
-          exact <- establishedByPair.get(SupportPair(supporterAfter, supportedAfter))
-        yield exact
-        Option.when(maintained.isEmpty)(
-          SupportedIdentity(edge.supported, supportedAfter) -> edge
-        )
-      }
-    }
-    val establishedChanges = established
-      .filterNot(edge => maintainedEstablished(edge.fact.semanticId))
-      .map { edge =>
-        val supportedBefore = pieceBefore(edge.supported, boardFootprint).getOrElse(
-          throw IllegalArgumentException(
-            s"established support beneficiary '${edge.supported.square.key}' has no exact pre-move identity"
-          )
-        )
-        SupportedIdentity(supportedBefore, edge.supported) -> edge
-      }
-    val identities = (removedChanges.map(_._1) ++ establishedChanges.map(_._1)).distinct.sortBy(identity =>
-      (
-        identity.before.side.toString,
-        identity.before.square.key,
-        identity.before.role.name,
-        identity.after.square.key,
-        identity.after.role.name
-      )
-    )
-    GeometricSupportRelationTransition(
-      identities.map { identity =>
-        GeometricSupportChange(
-          supportedBefore = identity.before,
-          supportedAfter = identity.after,
-          before = fullSupportsAt(targetSetChanges, identity.before, before = true),
-          after = fullSupportsAt(targetSetChanges, identity.after, before = false),
-          removed = removedChanges.collect { case (`identity`, edge) => edge }.sortBy(_.fact.semanticId),
-          established = establishedChanges.collect { case (`identity`, edge) => edge }.sortBy(_.fact.semanticId)
-        )
-      }
-    )
-
-  private def geometricSupports(
-      controls: Map[GeometricControlKey, (RelationControlTarget, RelationFactEvidence)]
-  ): List[GeometricSupportEdge] =
-    controls.values.flatMap { case (targetState, fact) =>
-      geometricSupport(geometricControl(fact, targetState))
-    }.toList.sortBy(_.fact.semanticId)
-
-  private def fullSupportsAt(
-      targetSetChanges: List[GeometricControlTargetSetChange],
-      supported: RelationColoredPieceWitness,
-      before: Boolean
-  ): List[GeometricSupportEdge] =
-    targetSetChanges
-      .find(change => change.side == supported.side && change.target == supported.square)
-      .toList
-      .flatMap(change => if before then change.before else change.after)
-      .flatMap(geometricSupport)
-      .filter(_.supported == supported)
-      .sortBy(_.fact.semanticId)
-
-  private def geometricSupport(
-      edge: GeometricControlEdge
-  ): Option[GeometricSupportEdge] =
-    edge.targetState match
-      case RelationControlTarget.Friendly(supportedRole) =>
-        Some(
-          GeometricSupportEdge(
-            edge.fact,
-            RelationColoredPieceWitness(edge.controller.square, edge.controller.role, edge.side),
-            RelationColoredPieceWitness(edge.target, supportedRole, edge.side)
-          )
-        )
-      case _ => None
-
   private def pieceAfter(
       before: RelationColoredPieceWitness,
       footprint: BoardTransitionFootprint
@@ -880,25 +541,6 @@ private[chessjudgment] final case class RelationInventoryTransition(
         )
       )
       .orElse(Option.when(!footprint.changedSquares.exists(_.key.equalsIgnoreCase(before.square.key)))(before))
-
-  private def pieceBefore(
-      after: RelationColoredPieceWitness,
-      footprint: BoardTransitionFootprint
-  ): Option[RelationColoredPieceWitness] =
-    footprint.pieceTransitions
-      .find(transition =>
-        transition.side == after.side &&
-          transition.to.key.equalsIgnoreCase(after.square.key) &&
-          transition.afterRole.name.equalsIgnoreCase(after.role.name)
-      )
-      .map(transition =>
-        RelationColoredPieceWitness(
-          EvidenceSquare(transition.from.key),
-          EvidencePieceRole(transition.beforeRole.name),
-          transition.side
-        )
-      )
-      .orElse(Option.when(!footprint.changedSquares.exists(_.key.equalsIgnoreCase(after.square.key)))(after))
 
   private def priorControlKey(
       after: GeometricControlKey,
@@ -1161,8 +803,11 @@ private[chessjudgment] object CanonicalRelationDelta:
         if toIdentities(identity) then Nil
         else
           val ordered = values.sortBy(value => projectionOrder(value._1))
-          val targetBearing = ordered.filter(_._1.immediateTarget.nonEmpty)
-          if targetBearing.nonEmpty then targetBearing else ordered.take(1)
+          require(
+            ordered.map(_._1).distinct.size == ordered.size,
+            s"battery formation '${identity.stableKey}' repeated one directional ray occurrence"
+          )
+          ordered
       }
 
     val (removedBatteries, removedOther) = removedNamed.partition(_._1.pattern == RelationRayPattern.Battery)

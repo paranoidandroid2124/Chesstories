@@ -2,7 +2,6 @@ package lila.chessjudgment.model.judgment
 
 import lila.chessjudgment.model.{
   BranchReplyProbeBinding,
-  ProbeAdmissionDiagnostic,
   ProbeContractValidator,
   ProbeKind,
   ProbeRequest,
@@ -12,10 +11,8 @@ import lila.chessjudgment.model.line.{ AutomaticTerminal, CandidateLineEvaluatio
 
 enum ClaimFamily:
   case Tactical
-  case Strategic
   case PawnStructure
-  case Opening
-  case Plan
+  case PassedPawnResult
   case Defensive
   case Conversion
   case Material
@@ -23,8 +20,8 @@ enum ClaimFamily:
 
   private[chessjudgment] def isLongTerm: Boolean =
     this match
-      case Strategic | PawnStructure | Opening | Plan => true
-      case Tactical | Defensive | Conversion | Material | Evaluation => false
+      case PawnStructure => true
+      case Tactical | PassedPawnResult | Defensive | Conversion | Material | Evaluation => false
 
 object ClaimFamily:
   def fromCause(kind: RelativeCauseKind): ClaimFamily =
@@ -34,14 +31,14 @@ object ClaimFamily:
           RelativeCauseKind.RecaptureRecoveryWindow |
           RelativeCauseKind.WrongMoveOrder | RelativeCauseKind.KingForcing =>
         ClaimFamily.Tactical
-      case RelativeCauseKind.DefensiveResource | RelativeCauseKind.DrawResource =>
+      case RelativeCauseKind.DrawResource =>
         ClaimFamily.Defensive
-      case RelativeCauseKind.ConversionMiss | RelativeCauseKind.ConversionSecured =>
+      case RelativeCauseKind.ConversionSecured =>
         ClaimFamily.Conversion
-      case RelativeCauseKind.MaterialSwing | RelativeCauseKind.SacrificeCompensation =>
+      case RelativeCauseKind.MaterialSwing =>
         ClaimFamily.Material
-      case RelativeCauseKind.PlanImprovement | RelativeCauseKind.PlanContradiction =>
-        ClaimFamily.Plan
+      case RelativeCauseKind.PassedPawnResult =>
+        ClaimFamily.PassedPawnResult
 
 enum SubjectBindingClass:
   case PrimaryPlayedCause
@@ -201,7 +198,7 @@ object PlayerFacingClaimPolicy:
     else
       val evidenceRecords = claim.evidence.flatMap(graph.record)
       val hasRelativeCause = evidenceRecords.exists(_.payload.isInstanceOf[RelativeCauseFactEvidence])
-      if hasRelativeCause || (claim.family != ClaimFamily.Evaluation && claim.family != ClaimFamily.Opening) then
+      if hasRelativeCause || claim.family != ClaimFamily.Evaluation then
         PlayerFacingClaimTier.Diagnostic
       else
         val hasContextEvidence =
@@ -275,8 +272,7 @@ object ClaimEvidenceSemantics:
     )
 
   private[chessjudgment] def longTermSupportExcludedLayer(layer: EvidenceLayer): Boolean =
-    longTermExcludedLayers.contains(layer) ||
-      StrategicMechanismEvidence.rawStrategicSourceLayer(layer)
+    longTermExcludedLayers.contains(layer)
 
   def semanticAnchors(claim: JudgmentClaim, graph: TypedEvidenceGraph): List[EvidenceSemanticAnchor] =
     claim.evidence
@@ -288,8 +284,6 @@ object ClaimEvidenceSemantics:
   private def semanticAnchorsForRecord(record: EvidenceRecord): List[EvidenceSemanticAnchor] =
     import EvidenceSemanticAnchorKind.*
     record.payload match
-      case payload: StrategicMechanismEvidence =>
-        payload.semanticGroupingAnchors
       case CandidateComparisonEvidence(fact) =>
         List(
           Option.when(
@@ -342,12 +336,10 @@ enum JudgmentClaimContent:
       carrier: EvidenceRef,
       comparison: CandidateComparisonSemanticKey
   )
-  case StrategicMechanism(carrier: EvidenceRef)
 
   def carrierRef: EvidenceRef =
     this match
-      case CandidateComparison(value, _)       => value
-      case StrategicMechanism(value)  => value
+      case CandidateComparison(value, _) => value
 
 case class JudgmentClaim(
     id: String,
@@ -360,7 +352,11 @@ case class JudgmentClaim(
     scope: EvidenceScope,
     confidence: EvidenceConfidence,
     content: Option[JudgmentClaimContent] = None
-)
+):
+  require(
+    evidence.map(_.id).distinct.size == evidence.size,
+    "a claim must not repeat or collide evidence owners"
+  )
 
 enum PlayerFacingPositionAction:
   case AutomaticTerminal(value: lila.chessjudgment.model.line.AutomaticTerminal)
@@ -377,44 +373,16 @@ enum PlayerFacingPrimary:
   case BestChoice(comparisonEvidence: EvidenceRef)
 
 final class EvidenceBackedJudgmentPacket private (
-    val assembly: JudgmentAssemblyContext,
+    private[chessjudgment] val assembly: JudgmentAssemblyContext,
     val primary: PlayerFacingPrimary,
     val probeRequests: List[ProbeRequest],
     val playerFacingClaimDecisions: List[PlayerFacingClaimDecision],
-    val onlyMoveConstraintResolutions: List[OnlyMoveConstraintResolution],
     val causeExposureResolution: PlayerFacingCauseExposureResolution,
     val causeDispositionLedger: CauseDispositionLedger
 ):
-  def root: PositionNodeRef =
-    assembly.root.get
-
-  def positions: List[PositionNode] = assembly.positions
-
   def candidateLines: List[CandidateLineNode] = assembly.lines
 
-  def candidateLine(role: LineNodeRole): Option[CandidateLineNode] =
-    exactlyOne(candidateLines.filter(_.role == role))
-
-  def transitions: List[MoveTransitionEdge] = assembly.transitions
-
-  def relativeAssessments: List[RelativeMoveAssessment] = assembly.relativeAssessments
-
   def evidenceGraph: TypedEvidenceGraph = assembly.evidenceGraph
-
-  def claims: List[JudgmentClaim] = assembly.claims
-
-  def probeDiagnostics: List[ProbeAdmissionDiagnostic] = assembly.probeDiagnostics
-
-  def playedTransition: Option[MoveTransitionEdge] =
-    exactlyOne(transitions.filter(_.role == TransitionEdgeRole.Played))
-
-  def referenceTransition: Option[MoveTransitionEdge] =
-    exactlyOne(transitions.filter(_.role == TransitionEdgeRole.Reference))
-
-  private def exactlyOne[A](items: List[A]): Option[A] =
-    items match
-      case item :: Nil => Some(item)
-      case _           => None
 
 object EvidenceBackedJudgmentPacket:
   private[chessjudgment] def fromAssembly(
@@ -422,7 +390,6 @@ object EvidenceBackedJudgmentPacket:
       primary: PlayerFacingPrimary,
       probeRequests: List[ProbeRequest],
       playerFacingClaimDecisions: List[PlayerFacingClaimDecision],
-      onlyMoveConstraintResolutions: List[OnlyMoveConstraintResolution],
       causeExposureResolution: PlayerFacingCauseExposureResolution,
       causeDispositionLedger: CauseDispositionLedger
   ): Option[EvidenceBackedJudgmentPacket] =
@@ -433,7 +400,6 @@ object EvidenceBackedJudgmentPacket:
         playerFacingClaimsClosed(
           assembly,
           playerFacingClaimDecisions,
-          onlyMoveConstraintResolutions,
           causeExposureResolution,
           causeDispositionLedger
         )
@@ -443,7 +409,6 @@ object EvidenceBackedJudgmentPacket:
         primary,
         probeRequests,
         playerFacingClaimDecisions,
-        onlyMoveConstraintResolutions,
         causeExposureResolution,
         causeDispositionLedger
       )
@@ -482,7 +447,6 @@ object EvidenceBackedJudgmentPacket:
   private def playerFacingClaimsClosed(
       assembly: JudgmentAssemblyContext,
       decisions: List[PlayerFacingClaimDecision],
-      onlyMoveResolutions: List[OnlyMoveConstraintResolution],
       exposure: PlayerFacingCauseExposureResolution,
       dispositionLedger: CauseDispositionLedger
   ): Boolean =
@@ -497,7 +461,6 @@ object EvidenceBackedJudgmentPacket:
         )
       )
     decisionsClosed &&
-      onlyMoveResolutions == exposure.onlyMoveConstraintResolutions &&
       dispositionLedger.closedFor(
         assembly.evidenceGraph,
         exposure,
@@ -656,9 +619,9 @@ object EvidenceBackedJudgmentPacket:
     val nodeAndTransitionEvidenceClosed =
       assembly.lines.forall(line => exactLineEvidence(line) && exactEvaluationEvidence(line)) &&
         assembly.transitions.forall(exactTransitionEvidence)
-    val planCausalEvidenceClosed =
+    val passedPawnResultEvidenceClosed =
       graphRecords.forall {
-        case EvidenceRecord(ref, event: PlanCausalEventEvidence, _) =>
+        case EvidenceRecord(ref, event: PassedPawnResultEventEvidence, _) =>
           ref.line.contains(event.rootLine) &&
             event.rootTransition.line.contains(event.rootLine)
         case _ =>
@@ -909,7 +872,7 @@ object EvidenceBackedJudgmentPacket:
       uniqueGraphIds &&
       graphClosed &&
       nodeAndTransitionEvidenceClosed &&
-      planCausalEvidenceClosed &&
+      passedPawnResultEvidenceClosed &&
       claimsClosed &&
       causesClosed &&
       assessmentsClosed &&

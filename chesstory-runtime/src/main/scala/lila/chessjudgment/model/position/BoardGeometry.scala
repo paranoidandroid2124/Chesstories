@@ -240,18 +240,6 @@ private[chessjudgment] object BoardGeometry:
     if from == to then List(from)
     else from :: movementPath(Piece(White, Queen), from, to) ::: List(to)
 
-  /** Complete board ray beginning at `from` and passing through `through`.
-    * A closed `RayBarrier` depends on this span because its ordered occupant
-    * list also certifies that no omitted occupant exists beyond the last one.
-    */
-  def raySpanToEdge(from: Square, through: Square): List[Square] =
-    lineDirection(Queen, from, through)
-      .map { case (fileStep, rankStep) => from :: squaresAlong(from, fileStep, rankStep) }
-      .getOrElse(Nil)
-
-  def liesStrictlyBetween(from: Square, to: Square, square: Square): Boolean =
-    lineSpan(from, to).drop(1).dropRight(1).contains(square)
-
   /** Squares crossed by the named piece on one geometrically valid move.
     * Endpoints are excluded; occupancy and move legality remain the caller's
     * responsibility.

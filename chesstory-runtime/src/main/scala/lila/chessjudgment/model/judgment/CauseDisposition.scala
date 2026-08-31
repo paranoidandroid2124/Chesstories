@@ -20,7 +20,6 @@ enum CauseDispositionReason:
   case PlayerFacingSelection
   case DominatedFallback
   case CrossComparisonRedundancy
-  case CertifiedClaimDeduplicated
   case DiagnosticComparison
   case InferiorAlternative
   case ClaimAdmissionDeferred
@@ -36,8 +35,7 @@ final case class CauseDisposition(
     certifiedClaimIds: List[String],
     rankEligibleClaimIds: List[String],
     selectedOwnerClaimId: Option[String],
-    relatedCauseEvidenceIds: List[String],
-    relatedClaimIds: List[String]
+    relatedCauseEvidenceIds: List[String]
 ):
   require(
     causeEvidence.layer == EvidenceLayer.RelativeCause,
@@ -47,7 +45,6 @@ final case class CauseDisposition(
   require(canonicalIds(certifiedClaimIds), "certified Cause hosts must be canonical")
   require(canonicalIds(rankEligibleClaimIds), "rank-eligible Cause hosts must be canonical")
   require(canonicalIds(relatedCauseEvidenceIds), "related Cause ids must be canonical")
-  require(canonicalIds(relatedClaimIds), "related claim ids must be canonical")
   require(
     certifiedClaimIds.forall(proposedClaimIds.contains),
     "every certified Cause host must originate in Jp"
@@ -68,32 +65,29 @@ final case class CauseDisposition(
   private def statusReasonCompatible: Boolean =
     (status, reason) match
       case (CauseDispositionStatus.Selected, CauseDispositionReason.PlayerFacingSelection) =>
-        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.isEmpty && relatedClaimIds.isEmpty
+        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.isEmpty
       case (CauseDispositionStatus.Dominated, CauseDispositionReason.DominatedFallback) =>
-        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.nonEmpty && relatedClaimIds.isEmpty
+        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.nonEmpty
       case (CauseDispositionStatus.Redundant, CauseDispositionReason.CrossComparisonRedundancy) =>
-        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.nonEmpty && relatedClaimIds.isEmpty
-      case (CauseDispositionStatus.Redundant, CauseDispositionReason.CertifiedClaimDeduplicated) =>
-        certifiedClaimIds.nonEmpty && rankEligibleClaimIds.isEmpty &&
-          relatedCauseEvidenceIds.isEmpty && relatedClaimIds.nonEmpty
+        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.nonEmpty
       case (CauseDispositionStatus.Diagnostic, CauseDispositionReason.DiagnosticComparison) =>
-        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.isEmpty && relatedClaimIds.isEmpty
+        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.isEmpty
       case (CauseDispositionStatus.Inferior, CauseDispositionReason.InferiorAlternative) =>
-        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.isEmpty && relatedClaimIds.isEmpty
+        rankEligibleClaimIds.nonEmpty && relatedCauseEvidenceIds.isEmpty
       case (CauseDispositionStatus.AdmissionDeferred, CauseDispositionReason.ClaimAdmissionDeferred) =>
         proposedClaimIds.nonEmpty && certifiedClaimIds.isEmpty && rankEligibleClaimIds.isEmpty &&
-          relatedCauseEvidenceIds.isEmpty && relatedClaimIds.isEmpty
+          relatedCauseEvidenceIds.isEmpty
       case (CauseDispositionStatus.Rejected, CauseDispositionReason.ClaimAdmissionRejected) =>
         proposedClaimIds.nonEmpty && certifiedClaimIds.isEmpty && rankEligibleClaimIds.isEmpty &&
-          relatedCauseEvidenceIds.isEmpty && relatedClaimIds.isEmpty
+          relatedCauseEvidenceIds.isEmpty
       case (CauseDispositionStatus.Unproposed, CauseDispositionReason.NoClaimProposal) =>
         proposedClaimIds.isEmpty && certifiedClaimIds.isEmpty && rankEligibleClaimIds.isEmpty &&
-          relatedCauseEvidenceIds.isEmpty && relatedClaimIds.isEmpty
+          relatedCauseEvidenceIds.isEmpty
       case (CauseDispositionStatus.ObjectUnready, CauseDispositionReason.ObjectReadinessFailed) =>
-        rankEligibleClaimIds.isEmpty && relatedCauseEvidenceIds.isEmpty && relatedClaimIds.isEmpty
+        rankEligibleClaimIds.isEmpty && relatedCauseEvidenceIds.isEmpty
       case _ => false
 
-private[chessjudgment] final case class CauseRDispositionAuthority(
+private[chessjudgment] final case class CauseExposureDispositionAuthority(
     status: CauseDispositionStatus,
     reason: CauseDispositionReason,
     relatedCauseEvidenceIds: List[String]
@@ -103,15 +97,15 @@ private[chessjudgment] final case class CauseRDispositionAuthority(
   * Both the assembler and packet closure check reuse this translation; neither
   * owns a second interpretation of dominance or cross-comparison status.
   */
-private[chessjudgment] object CauseRDispositionAuthority:
+private[chessjudgment] object CauseExposureDispositionAuthority:
 
   def from(
       dominance: RelativeCauseDominanceDecision,
       cross: Option[CrossComparisonExposureDecision]
-  ): Option[CauseRDispositionAuthority] =
+  ): Option[CauseExposureDispositionAuthority] =
     if dominance.status == RelativeCauseDominanceStatus.DominatedFallback then
       Some(
-        CauseRDispositionAuthority(
+        CauseExposureDispositionAuthority(
           CauseDispositionStatus.Dominated,
           CauseDispositionReason.DominatedFallback,
           dominance.dominatingCauseEvidenceIds.distinct.sorted
@@ -122,25 +116,25 @@ private[chessjudgment] object CauseRDispositionAuthority:
         decision.status match
           case CrossComparisonExposureStatus.SelectedPrimary |
               CrossComparisonExposureStatus.SelectedComplementary =>
-            CauseRDispositionAuthority(
+            CauseExposureDispositionAuthority(
               CauseDispositionStatus.Selected,
               CauseDispositionReason.PlayerFacingSelection,
               Nil
             )
           case CrossComparisonExposureStatus.RedundantAcrossComparison =>
-            CauseRDispositionAuthority(
+            CauseExposureDispositionAuthority(
               CauseDispositionStatus.Redundant,
               CauseDispositionReason.CrossComparisonRedundancy,
               List(decision.representativeCauseEvidenceId).distinct.sorted
             )
           case CrossComparisonExposureStatus.DiagnosticComparison =>
-            CauseRDispositionAuthority(
+            CauseExposureDispositionAuthority(
               CauseDispositionStatus.Diagnostic,
               CauseDispositionReason.DiagnosticComparison,
               Nil
             )
           case CrossComparisonExposureStatus.InferiorAlternative =>
-            CauseRDispositionAuthority(
+            CauseExposureDispositionAuthority(
               CauseDispositionStatus.Inferior,
               CauseDispositionReason.InferiorAlternative,
               Nil
@@ -197,9 +191,9 @@ final case class CauseDispositionLedger(
 
     def expectedRDisposition(
         disposition: CauseDisposition
-    ): Option[CauseRDispositionAuthority] =
+    ): Option[CauseExposureDispositionAuthority] =
       dominanceByCauseId.get(disposition.causeEvidence.id).flatMap { dominance =>
-        CauseRDispositionAuthority.from(dominance, crossByCauseId.get(disposition.causeEvidence.id))
+        CauseExposureDispositionAuthority.from(dominance, crossByCauseId.get(disposition.causeEvidence.id))
       }
 
     val rCauseIds = readyHostsByCauseId.keySet
@@ -213,7 +207,6 @@ final case class CauseDispositionLedger(
             disposition.status == authority.status &&
             disposition.reason == authority.reason &&
             disposition.relatedCauseEvidenceIds == authority.relatedCauseEvidenceIds &&
-            disposition.relatedClaimIds.isEmpty &&
             disposition.selectedOwnerClaimId == expectedOwner
         case None =>
           expectedReadyHosts.isEmpty &&
@@ -240,6 +233,3 @@ final case class CauseDispositionLedger(
       exposure.ownerClaimIdByCauseId.keySet == selectedIds &&
       selectedCauseEvidenceIds == selectedIds &&
       rDispositionsClosed
-
-object CauseDispositionLedger:
-  val empty: CauseDispositionLedger = CauseDispositionLedger(Nil)

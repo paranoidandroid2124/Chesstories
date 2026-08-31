@@ -20,6 +20,7 @@ import lila.chessjudgment.model.judgment.{
   RelationFactKind,
   DerivedRelationResultKey,
   RelationPawnTopologyStateWitness,
+  RelationSemanticChange,
   RelationSemanticDelta,
   RelationRayProjection,
   RelationWitnessDetail,
@@ -590,20 +591,27 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         throw IllegalArgumentException(s"invalid L1 pawn square '${square.key}'")
       )
 
+    def matchingChanges(
+        state: ClosedPawnStateTransition,
+        direction: RelationChangeDirection,
+        kind: RelationFactKind
+    )(matches: RelationWitnessDetail => Boolean): List[RelationSemanticChange] =
+      val admittedSourceIds = VerticalRelationContracts.proofOf(state.relation.detail)
+        .toList
+        .flatMap(_.sourceSemanticIds)
+        .toSet
+      (direction match
+        case RelationChangeDirection.Removed => relationDelta.removedOf(kind)
+        case RelationChangeDirection.Established => relationDelta.establishedOf(kind)
+      ).filter(change => admittedSourceIds(change.semanticId) && matches(change.detail))
+
     def exactChange(
         state: ClosedPawnStateTransition,
         direction: RelationChangeDirection,
         kind: RelationFactKind,
         label: String
     )(matches: RelationWitnessDetail => Boolean): RelationChangeKey =
-      val admittedSourceIds = VerticalRelationContracts.proofOf(state.relation.detail)
-        .toList
-        .flatMap(_.sourceSemanticIds)
-        .toSet
-      val candidates = (direction match
-        case RelationChangeDirection.Removed => relationDelta.removedOf(kind)
-        case RelationChangeDirection.Established => relationDelta.establishedOf(kind)
-      ).filter(change => admittedSourceIds(change.semanticId) && matches(change.detail))
+      val candidates = matchingChanges(state, direction, kind)(matches)
       candidates match
         case change :: Nil => change.key
         case found =>
@@ -617,7 +625,11 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
         from: EvidenceSquare,
         to: EvidenceSquare
     ): RelationChangeKey =
-      exactChange(state, direction, RelationFactKind.GeometricControl, s"${from.key}-${to.key}") {
+      val changedControls = matchingChanges(
+        state,
+        direction,
+        RelationFactKind.GeometricControl
+      ) {
         case RelationWitnessDetail.GeometricControl(
               Color.White,
               whitePawn,
@@ -629,6 +641,20 @@ private[chessjudgment] object StructuralDeltaAnalyzer:
              else blackPawn == from && whitePawn == to)
         case _ => false
       }
+      val exactSources =
+        if changedControls.nonEmpty then changedControls
+        else
+          matchingChanges(state, direction, RelationFactKind.PawnPassage) {
+            case RelationWitnessDetail.PawnPassage(owner, pawn, opponents) =>
+              owner == side && pawn == from && opponents.contains(to)
+            case _ => false
+          }
+      exactSources match
+        case change :: Nil => change.key
+        case found =>
+          throw IllegalArgumentException(
+            s"L1 pawn transition '${from.key}-${to.key}' needs one exact changed control or passage source, found ${found.size}"
+          )
 
     def passageKey(
         state: ClosedPawnStateTransition,

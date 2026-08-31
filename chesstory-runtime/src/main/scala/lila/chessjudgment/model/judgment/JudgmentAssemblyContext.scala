@@ -2,10 +2,9 @@ package lila.chessjudgment.model.judgment
 
 import chess.Color
 import lila.chessjudgment.analysis.position.PositionAnalysis
-import lila.chessjudgment.model.ProbeAdmissionDiagnostic
 import lila.chessjudgment.model.line.{ CandidateLineEvaluation, CanonicalPositionHistory, PrincipalVariationEvidence }
 
-final case class NormalizedCandidateLine(
+final case class AdmittedReviewLine(
     role: LineNodeRole,
     rank: Int,
     evaluation: CandidateLineEvaluation,
@@ -15,27 +14,27 @@ final case class NormalizedCandidateLine(
   def rootMove: Option[String] =
     evaluation.moves.headOption.map(_.trim.toLowerCase)
 
-final case class NormalizedThreatBranch(
+final case class AdmittedReviewBranchReply(
     sourceProbeId: String,
     probedMoveUci: String,
     branchFen: String,
     branchPly: Int,
     certifiedHorizonPlyOffset: Int,
-    lines: List[NormalizedCandidateLine],
+    lines: List[AdmittedReviewLine],
 ):
   require(certifiedHorizonPlyOffset > 0, "a branch-reply probe needs an exact positive horizon")
   require(
     lines.groupBy(_.rootMove).values.forall(group => group.map(line => line.evaluation -> line.replay).distinct.size == 1),
-    "one threat-branch root move cannot carry conflicting evaluations"
+    "one branch-reply root move cannot carry conflicting evaluations"
   )
-  def rankedUniqueLines: List[NormalizedCandidateLine] =
+  def firstRankedLinePerRootMove: List[AdmittedReviewLine] =
     lines.sortBy(_.rank).distinctBy(_.rootMove)
 
-final case class ThreatLineOccurrenceOwner(
+final case class BranchReplyLineOccurrenceOwner(
     probedMoveUci: String,
     branchPosition: PositionNodeRef
 ):
-  require(EvidenceRef.normalizeMove(probedMoveUci).nonEmpty, "a threat-line occurrence requires its probed move")
+  require(EvidenceRef.normalizeMove(probedMoveUci).nonEmpty, "a branch-reply line occurrence requires its probed move")
 
 final case class LineRootOccurrence(
     start: PositionNodeRef,
@@ -44,53 +43,47 @@ final case class LineRootOccurrence(
 ):
   require(transitionEvidenceId.trim.nonEmpty, "a line-root occurrence requires its exact transition")
 
-final case class NormalizedMoveReviewInput(
+final case class AdmittedMoveReviewInput(
     beforeFen: String,
     playedMoveUci: String,
     beforePly: Int,
     sideToMove: Option[Color],
     afterPlayedFen: String,
     afterReferenceFen: Option[String],
-    lines: List[NormalizedCandidateLine],
+    lines: List[AdmittedReviewLine],
     completeCandidateSet: Option[CompleteCandidateSet],
     positionHistory: CanonicalPositionHistory,
-    openingContext: OpeningContextEvidence,
-    threatBranches: List[NormalizedThreatBranch] = Nil,
-    probeDiagnostics: List[ProbeAdmissionDiagnostic] = Nil
+    branchReplies: List[AdmittedReviewBranchReply] = Nil
 ):
-  private[chessjudgment] lazy val historyReplay: Option[CanonicalLineReplay] =
-    CanonicalLineReplay.fromHistory(positionHistory.segmentReplaySteps)
-
   require(
     lines.groupBy(_.rootMove).values.forall(group => group.map(line => line.evaluation -> line.replay).distinct.size == 1),
-    "one root move cannot carry conflicting normalized evaluations"
+    "one root move cannot carry conflicting admitted review evaluations"
   )
-  def playedLine: Option[NormalizedCandidateLine] =
+  def playedLine: Option[AdmittedReviewLine] =
     lines.filter(_.role == LineNodeRole.Played) match
       case line :: Nil => Some(line)
       case _           => None
 
-  def referenceLine: Option[NormalizedCandidateLine] =
+  def referenceLine: Option[AdmittedReviewLine] =
     lines.filter(_.role == LineNodeRole.BestReference) match
       case line :: Nil => Some(line)
       case _           => None
 
-  def rankedUniqueLines: List[NormalizedCandidateLine] =
+  def firstRankedLinePerRootMove: List[AdmittedReviewLine] =
     lines.sortBy(_.rank).distinctBy(_.rootMove)
 
 final case class JudgmentAssemblyContext(
-    input: NormalizedMoveReviewInput,
+    input: AdmittedMoveReviewInput,
     positions: List[PositionNode],
     positionAnalyses: Map[PositionNodeRef, PositionAnalysis] = Map.empty,
     lines: List[CandidateLineNode],
     transitions: List[MoveTransitionEdge],
     lineReplays: Map[LineNodeRef, CanonicalLineReplay] = Map.empty,
     transitionReplays: Map[String, CanonicalLineReplay] = Map.empty,
-    threatLineOwners: Map[LineNodeRef, ThreatLineOccurrenceOwner] = Map.empty,
+    branchReplyLineOwners: Map[LineNodeRef, BranchReplyLineOccurrenceOwner] = Map.empty,
     lineRootOccurrences: Map[LineNodeRef, LineRootOccurrence] = Map.empty,
     evidenceGraph: TypedEvidenceGraph,
-    claims: List[JudgmentClaim],
-    probeDiagnostics: List[ProbeAdmissionDiagnostic] = Nil
+    claims: List[JudgmentClaim]
 ):
   def position(role: PositionNodeRole): Option[PositionNode] =
     exactlyOne(positions.filter(_.role == role))
@@ -107,10 +100,10 @@ final case class JudgmentAssemblyContext(
   private[chessjudgment] def transitionReplay(edge: MoveTransitionEdge): Option[CanonicalLineReplay] =
     transitionReplays.get(edge.evidence.id)
 
-  private[chessjudgment] def threatLineOwner(
+  private[chessjudgment] def branchReplyLineOwner(
       line: LineNodeRef
-  ): Option[ThreatLineOccurrenceOwner] =
-    threatLineOwners.get(line)
+  ): Option[BranchReplyLineOccurrenceOwner] =
+    branchReplyLineOwners.get(line)
 
   private[chessjudgment] def lineRootOccurrence(
       line: LineNodeRef
@@ -282,9 +275,9 @@ final case class JudgmentAssemblyContext(
               transitionReplays = transitionReplays.updated(edge.evidence.id, admittedReplay)
             )
 
-  private[chessjudgment] def withThreatLineOwner(
+  private[chessjudgment] def withBranchReplyLineOwner(
       line: LineNodeRef,
-      owner: ThreatLineOccurrenceOwner
+      owner: BranchReplyLineOccurrenceOwner
   ): JudgmentAssemblyContext =
     val exactLine = lines.exists(_.ref == line)
     val exactStart = lineReplays.get(line).exists(_.replaySteps.headOption.exists(step =>
@@ -292,14 +285,14 @@ final case class JudgmentAssemblyContext(
         PrincipalVariationEvidence.sameBoardState(step.fenBefore, owner.branchPosition.fen)
     ))
     require(
-      line.role == LineNodeRole.Threat && exactLine && exactStart,
-      s"threat line '${line.id}' must be bound to its exact branch occurrence"
+      line.role == LineNodeRole.BranchReply && exactLine && exactStart,
+      s"branch-reply line '${line.id}' must be bound to its exact branch occurrence"
     )
-    threatLineOwners.get(line) match
-      case None => copy(threatLineOwners = threatLineOwners.updated(line, owner))
+    branchReplyLineOwners.get(line) match
+      case None => copy(branchReplyLineOwners = branchReplyLineOwners.updated(line, owner))
       case Some(existing) if existing == owner => this
       case Some(_) =>
-        throw IllegalArgumentException(s"threat line '${line.id}' has more than one occurrence owner")
+        throw IllegalArgumentException(s"branch-reply line '${line.id}' has more than one occurrence owner")
 
   private[chessjudgment] def withLineRootOccurrence(
       line: LineNodeRef,
@@ -378,7 +371,7 @@ final case class JudgmentAssemblyContext(
 
 object JudgmentAssemblyContext:
   def empty(
-      input: NormalizedMoveReviewInput,
+      input: AdmittedMoveReviewInput,
       evidenceGraph: TypedEvidenceGraph = TypedEvidenceGraph.empty
   ): JudgmentAssemblyContext =
     JudgmentAssemblyContext(
@@ -389,9 +382,8 @@ object JudgmentAssemblyContext:
       transitions = Nil,
       lineReplays = Map.empty,
       transitionReplays = Map.empty,
-      threatLineOwners = Map.empty,
+      branchReplyLineOwners = Map.empty,
       lineRootOccurrences = Map.empty,
       evidenceGraph = evidenceGraph,
-      claims = Nil,
-      probeDiagnostics = input.probeDiagnostics
+      claims = Nil
     )

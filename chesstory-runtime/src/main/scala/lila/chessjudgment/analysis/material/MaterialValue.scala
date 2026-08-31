@@ -1,6 +1,6 @@
 package lila.chessjudgment.analysis.material
 
-import chess.{ Bishop, Board, Color, King, Knight, Pawn, Queen, Role, Rook }
+import chess.{ Bishop, King, Knight, Pawn, Queen, Role, Rook }
 
 object MaterialValue:
 
@@ -11,13 +11,3 @@ object MaterialValue:
     case Rook   => 500
     case Queen  => 900
     case King   => 0
-
-  def sideMaterialCp(board: Board, side: Color): Int =
-    board.byPiece(side, Pawn).count * materialValueCp(Pawn) +
-      board.byPiece(side, Knight).count * materialValueCp(Knight) +
-      board.byPiece(side, Bishop).count * materialValueCp(Bishop) +
-      board.byPiece(side, Rook).count * materialValueCp(Rook) +
-      board.byPiece(side, Queen).count * materialValueCp(Queen)
-
-  def materialBalanceCp(board: Board): Int =
-    sideMaterialCp(board, Color.White) - sideMaterialCp(board, Color.Black)

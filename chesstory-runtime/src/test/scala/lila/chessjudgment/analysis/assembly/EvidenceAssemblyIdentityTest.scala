@@ -6,7 +6,7 @@ import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.analysis.relation.ClosedRelationEvidence
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.{ CandidateLineEvaluation, CanonicalPositionHistory, PrincipalVariationEvidence }
-import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.model.line.EngineLine
 
 class EvidenceAssemblyIdentityTest extends munit.FunSuite:
 
@@ -61,7 +61,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
     val rootA = PositionNodeRef(afterE4, 1, Some(Black), Some("branch-root-a"))
     val rootB = PositionNodeRef(afterD4, 1, Some(Black), Some("branch-root-b"))
     val move = "g8f6"
-    def normalized(root: PositionNodeRef): NormalizedCandidateLine =
+    def normalized(root: PositionNodeRef): AdmittedReviewLine =
       val history = CanonicalPositionHistory
         .from(root.fen, Nil, root.fen)
         .getOrElse(fail("expected a branch history"))
@@ -69,8 +69,8 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       val replay = CanonicalLineReplay
         .fromHistory(extended.segmentReplaySteps.drop(history.segmentReplaySteps.size))
         .getOrElse(fail("expected a canonical branch replay"))
-      NormalizedCandidateLine(
-        LineNodeRole.Threat,
+      AdmittedReviewLine(
+        LineNodeRole.BranchReply,
         rank = 1,
         CandidateLineEvaluation.EngineSearch(EngineLine(List(move), scoreCp = 0, depth = 18)),
         replay
@@ -103,8 +103,8 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       Some("branch-to-b")
     )
     assertNotEquals(
-      allocator.transitionOccurrenceKey(TransitionEdgeRole.Threat, rootA, move, toA),
-      allocator.transitionOccurrenceKey(TransitionEdgeRole.Threat, rootB, move, toB)
+      allocator.transitionOccurrenceKey(TransitionEdgeRole.BranchReply, rootA, move, toA),
+      allocator.transitionOccurrenceKey(TransitionEdgeRole.BranchReply, rootB, move, toB)
     )
 
   test("fresh double-check control stays on one transition occurrence and feeds king forcing"):
@@ -261,7 +261,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
     assert(PrincipalVariationEvidence.sameBoardState(boundA.before.position.fen, boundB.before.position.fen))
     assertNotEquals(boundA.after.position, boundB.after.position)
 
-  test("threat relation production uses each exact branch occurrence owner"):
+  test("branch-reply relation production uses each exact branch occurrence owner"):
     val rootFen = "4k3/8/8/2b5/8/2N5/P7/4K3 w - - 0 1"
     val rootPly = 0
     val relationMove = "c5b4"
@@ -270,19 +270,19 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
         .legalMoveReplay(startFen, moves, startPly)
         .flatMap(CanonicalLineReplay.fromLegalReplay)
         .getOrElse(fail(s"expected legal replay: $startFen ${moves.mkString(" ")}"))
-    def branch(sourceProbeId: String, probedMove: String): NormalizedThreatBranch =
+    def branch(sourceProbeId: String, probedMove: String): AdmittedReviewBranchReply =
       val predecessor = replay(rootFen, List(probedMove), startPly = rootPly)
       val branchFen = predecessor.replaySteps.last.fenAfter
       val continuation = replay(branchFen, List(relationMove), startPly = rootPly + 1)
-      NormalizedThreatBranch(
+      AdmittedReviewBranchReply(
         sourceProbeId = sourceProbeId,
         probedMoveUci = probedMove,
         branchFen = branchFen,
         branchPly = rootPly + 1,
         certifiedHorizonPlyOffset = 1,
         lines = List(
-          NormalizedCandidateLine(
-            role = LineNodeRole.Threat,
+          AdmittedReviewLine(
+            role = LineNodeRole.BranchReply,
             rank = 1,
             evaluation = CandidateLineEvaluation.EngineSearch(
               EngineLine(List(relationMove), scoreCp = 0, depth = 20)
@@ -295,7 +295,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
 
     val branches = List(branch("branch-a", "a2a3"), branch("branch-b", "a2a4"))
     val playedReplay = replay(rootFen, List(branches.head.probedMoveUci), startPly = rootPly)
-    val playedLine = NormalizedCandidateLine(
+    val playedLine = AdmittedReviewLine(
       role = LineNodeRole.Played,
       rank = 1,
       evaluation = CandidateLineEvaluation.EngineSearch(
@@ -306,7 +306,7 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
     val history = CanonicalPositionHistory
       .from(rootFen, Nil, rootFen)
       .fold(error => fail(error.toString), identity)
-    val reviewInput = NormalizedMoveReviewInput(
+    val reviewInput = AdmittedMoveReviewInput(
       beforeFen = rootFen,
       playedMoveUci = branches.head.probedMoveUci,
       beforePly = rootPly,
@@ -316,25 +316,24 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       lines = List(playedLine),
       completeCandidateSet = None,
       positionHistory = history,
-      openingContext = OpeningContextEvidence(None, Nil),
-      threatBranches = branches
+      branchReplies = branches
     )
     val assembled = NodeLineTransitionAssembler
       .assemble(reviewInput)
-      .getOrElse(fail("expected both threat branches to assemble"))
-    val threatLines = assembled.lines.filter(_.role == LineNodeRole.Threat)
+      .getOrElse(fail("expected both branch replies to assemble"))
+    val branchReplyLines = assembled.lines.filter(_.role == LineNodeRole.BranchReply)
     assertEquals(
-      threatLines.map(line => (line.role, line.ref.rank, line.ref.rootMove)).toSet,
-      Set((LineNodeRole.Threat, 1, relationMove))
+      branchReplyLines.map(line => (line.role, line.ref.rank, line.ref.rootMove)).toSet,
+      Set((LineNodeRole.BranchReply, 1, relationMove))
     )
-    val expectedPositionByLine = threatLines.map { line =>
+    val expectedPositionByLine = branchReplyLines.map { line =>
       val owner = assembled
-        .threatLineOwner(line.ref)
+        .branchReplyLineOwner(line.ref)
         .getOrElse(fail(s"expected exact owner for ${line.ref.id}"))
       line.ref -> owner.branchPosition
     }.toMap
     assertEquals(expectedPositionByLine.values.toSet.size, 2)
-    val afterPositionByLine = threatLines.map { line =>
+    val afterPositionByLine = branchReplyLines.map { line =>
       line.ref -> assembled
         .lineRootOccurrence(line.ref)
         .getOrElse(fail(s"expected root occurrence for ${line.ref.id}"))
@@ -392,6 +391,80 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       assert(enriched.evidenceGraph.proofEligible(record))
     }
 
+  test("a branch-reply carrier cannot become a defensive claim without a line reference"):
+    val carrier = EvidenceRecord(
+      EvidenceRef(
+        id = "branch-reply-defensive-carrier",
+        producer = EvidenceProducer.TacticalMechanismProducer,
+        layer = EvidenceLayer.TacticalMechanism,
+        position = position,
+        line = None,
+        scope = EvidenceScope.BranchReplyLine,
+        confidence = EvidenceConfidence.LegalReplayVerified
+      ),
+      TacticalMechanismEvidence(
+        kind = TacticalMechanismKind.DefensiveResource,
+        moveUci = Some("e2e4"),
+        line = None,
+        signals = List(
+          TacticalMechanismSignal(
+            kind = TacticalMechanismSignalKind.LineEvent,
+            label = "branch-reply-carrier",
+            sourceLayer = EvidenceLayer.Line
+          )
+        )
+      )
+    )
+    val context = JudgmentAssemblyContext(
+      input = input,
+      positions = Nil,
+      lines = Nil,
+      transitions = Nil,
+      evidenceGraph = TypedEvidenceGraph.empty.add(carrier),
+      claims = Nil
+    )
+
+    assertEquals(JudgmentClaimAssembler.propose(context), Nil)
+
+  test("a defensive resource remains owned by its exact line rather than inventing a threat subject"):
+    val carrier = EvidenceRecord(
+      EvidenceRef(
+        id = "played-line-defensive-carrier",
+        producer = EvidenceProducer.TacticalMechanismProducer,
+        layer = EvidenceLayer.TacticalMechanism,
+        position = position,
+        line = Some(line),
+        scope = EvidenceScope.PlayedLine,
+        confidence = EvidenceConfidence.LegalReplayVerified
+      ),
+      TacticalMechanismEvidence(
+        kind = TacticalMechanismKind.DefensiveResource,
+        moveUci = Some(line.rootMove),
+        line = Some(line),
+        signals = List(
+          TacticalMechanismSignal(
+            kind = TacticalMechanismSignalKind.LineEvent,
+            label = "exact-played-defense",
+            sourceLayer = EvidenceLayer.Line
+          )
+        )
+      )
+    )
+    val context = JudgmentAssemblyContext(
+      input = input,
+      positions = Nil,
+      lines = Nil,
+      transitions = Nil,
+      evidenceGraph = TypedEvidenceGraph.empty.add(carrier),
+      claims = Nil
+    )
+
+    val claims = JudgmentClaimAssembler.propose(context)
+    assertEquals(claims.size, 1)
+    assertEquals(claims.head.family, ClaimFamily.Defensive)
+    assertEquals(claims.head.subject, ClaimSubject.PlayedMove)
+    assertEquals(claims.head.primaryLine, Some(line))
+
   private def mateEvaluation(id: String, mate: Int): EvidenceRecord =
     val evaluation = CandidateLineEvaluation.EngineSearch(
       EngineLine(List(line.rootMove), scoreCp = 900, mate = Some(mate), depth = 20)
@@ -414,14 +487,14 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       case CandidateLineEvaluationEvidence(_, evaluation) => evaluation
       case _                                               => fail("expected candidate evaluation")
 
-  private def input: NormalizedMoveReviewInput =
+  private def input: AdmittedMoveReviewInput =
     val after = PrincipalVariationEvidence
       .legalFenAfter(fen, line.rootMove)
       .getOrElse(fail("expected legal root move"))
     val history = CanonicalPositionHistory
       .from(fen, Nil, fen)
       .fold(error => fail(error.toString), identity)
-    NormalizedMoveReviewInput(
+    AdmittedMoveReviewInput(
       beforeFen = fen,
       playedMoveUci = line.rootMove,
       beforePly = 0,
@@ -431,5 +504,4 @@ class EvidenceAssemblyIdentityTest extends munit.FunSuite:
       lines = Nil,
       completeCandidateSet = None,
       positionHistory = history,
-      openingContext = OpeningContextEvidence(None, Nil)
     )

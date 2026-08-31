@@ -59,7 +59,7 @@ export function makeMoveReviewWork(
   profile: MoveReviewEngineProfile,
   input: MoveReviewWorkInput,
 ): MoveReviewWork {
-  const spec = moveReviewEngineProfileSpec(profile);
+  const spec = moveReviewEngineProfileSpec();
   return {
     ...input,
     threads: spec.threads,

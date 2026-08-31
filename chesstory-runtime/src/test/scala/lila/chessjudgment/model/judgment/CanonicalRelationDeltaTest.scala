@@ -209,6 +209,14 @@ class CanonicalRelationDeltaTest extends munit.FunSuite:
     val advanced = transitionDelta("4k3/8/8/3P4/8/8/8/4K3 w - - 0 1", "d5d6")
 
     assertEquals(created.pawnTopology.passedCreated.map(_.square.key), List("d5"))
+    assertEquals(
+      created.pawnTopology.resolvedTensions.map(edge => edge.from.key -> edge.to.key),
+      List("d5" -> "e6")
+    )
+    assertEquals(
+      created.pawnTopology.resolvedTensions.map(_.relationKey.kind),
+      List(RelationFactKind.PawnPassage)
+    )
     assertEquals(created.pawnTopology.passedAdvanced, Nil)
     assertEquals(
       advanced.pawnTopology.passedAdvanced.map(item => (item.from.key, item.to.key, item.kind.toString)),

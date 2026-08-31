@@ -4,37 +4,28 @@ package lila.chessjudgment.model.judgment
 object ConversionContextPolicy:
 
   def supports(records: List[EvidenceRecord]): Boolean =
-    supports(records, allowPassedPawnConcession = false)
+    records.exists {
+      case EvidenceRecord(_, payload: LineFactEvidence, _) =>
+        payload.directCauseProjectionEligibleConsequenceKinds.exists {
+          case LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow |
+              LineConsequenceKind.Promotion | LineConsequenceKind.PromotionRace =>
+            true
+          case _ =>
+            false
+        }
+      case _ =>
+        false
+    }
 
   def supports(
       records: List[EvidenceRecord],
       causeKind: RelativeCauseKind
   ): Boolean =
-    supports(records, allowPassedPawnConcession = causeKind == RelativeCauseKind.ConversionMiss)
-
-  private def supports(
-      records: List[EvidenceRecord],
-      allowPassedPawnConcession: Boolean
-  ): Boolean =
-    records.exists(record => supportsNonRelation(record, allowPassedPawnConcession))
-
-  private def supportsNonRelation(
-      record: EvidenceRecord,
-      allowPassedPawnConcession: Boolean
-  ): Boolean =
-    record match
+    records.exists {
       case EvidenceRecord(_, payload: LineFactEvidence, _) =>
-        payload.hasConversionConsequence
-      case EvidenceRecord(_, payload: StructuralDeltaEvidence, _) =>
-        structuralContext(payload, allowPassedPawnConcession)
+        payload.directCauseProjectionEligibleConsequenceKinds.exists(
+          RelativeCauseKind.acceptsLineConsequence(causeKind, _)
+        )
       case _ =>
         false
-
-  private def structuralContext(
-      payload: StructuralDeltaEvidence,
-      allowPassedPawnConcession: Boolean
-  ): Boolean =
-    import TransitionConsequenceKind.*
-    payload.hasConsequence(PassedPawnProgress) ||
-      (allowPassedPawnConcession &&
-        payload.hasConsequence(PassedPawnConcession))
+    }

@@ -39,17 +39,17 @@
         "input_format",
         "unit",
         "contamination_exclusions",
-        "family_count",
-        "cases_per_family",
-        "sealed_per_family",
+        "stratum_count",
+        "cases_per_stratum",
+        "sealed_per_stratum",
         "assignment_sha256",
         "case_assignments"
       ],
       "properties": {
-        "algorithm": {"const": "minimum-sha256-per-cause-family-after-contamination-exclusions.v1"},
-        "salt": {"const": "cause-audit-v1-family-seal"},
-        "input_format": {"const": "{salt}|{cause_family}|{case_id}"},
-        "unit": {"const": "cause_family"},
+        "algorithm": {"const": "minimum-sha256-per-stratum-after-contamination-exclusions.v1"},
+        "salt": {"const": "cause-audit-v1-stratum-seal"},
+        "input_format": {"const": "{salt}|{stratum_id}|{case_id}"},
+        "unit": {"const": "stratum_id"},
         "contamination_exclusions": {
           "type": "array",
           "uniqueItems": true,
@@ -64,9 +64,9 @@
             }
           }
         },
-        "family_count": {"const": 8},
-        "cases_per_family": {"const": 3},
-        "sealed_per_family": {"const": 1},
+        "stratum_count": {"const": 8},
+        "cases_per_stratum": {"const": 3},
+        "sealed_per_stratum": {"const": 1},
         "assignment_sha256": {"$ref": "#/$defs/sha256"},
         "case_assignments": {
           "type": "array",
@@ -79,7 +79,7 @@
             "additionalProperties": false,
             "required": [
               "case_id",
-              "cause_family",
+              "stratum_id",
               "embedded_partition",
               "logical_partition",
               "sealed_eligible",
@@ -87,18 +87,7 @@
             ],
             "properties": {
               "case_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
-              "cause_family": {
-                "enum": [
-                  "activity_restriction",
-                  "conversion_control",
-                  "drawing_defense",
-                  "move_order_tempo",
-                  "pawn_breaks_center",
-                  "strategic_plan",
-                  "structure_targets",
-                  "tactical_resource"
-                ]
-              },
+              "stratum_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
               "embedded_partition": {"enum": ["explore", "sealed_confirm"]},
               "logical_partition": {"enum": ["explore", "sealed_confirm"]},
               "sealed_eligible": {"type": "boolean"},

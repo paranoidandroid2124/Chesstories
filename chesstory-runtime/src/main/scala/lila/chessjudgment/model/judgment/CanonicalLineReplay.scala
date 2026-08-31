@@ -4,7 +4,11 @@ import chess.{ Move, Position, Role }
 import chess.format.Fen
 
 import lila.chessjudgment.analysis.position.{ PositionAnalysis, PositionAnalyzer }
-import lila.chessjudgment.analysis.structure.{ StructuralDeltaAnalyzer, TransitionStructuralDelta }
+import lila.chessjudgment.analysis.structure.{
+  StructuralDeltaAnalyzer,
+  StructuralDeltaContracts,
+  TransitionStructuralDelta
+}
 import lila.chessjudgment.model.line.{ CanonicalPositionHistoryStep, LegalReplayStep, PrincipalVariationEvidence }
 
 private final class CanonicalReplayTransitionCalculation(
@@ -65,6 +69,41 @@ private final class CanonicalReplayTransitionCalculation(
         throw IllegalArgumentException("a closed vertical relation batch failed typed contract certification")
       )
 
+  lazy val structuralDelta: TransitionStructuralDelta =
+    StructuralDeltaAnalyzer.delta(
+      beforeAnalysis,
+      afterAnalysis,
+      legalStep,
+      relationDelta,
+      certifiedCombinations.resultsFor(RelationCombinationContractKind.GeometricControlSetDelta),
+      certifiedCombinations.resultsFor(RelationCombinationContractKind.NamedRayTransition),
+      certifiedVertical.resultsFor(VerticalRelationContractKind.PawnTopologyTransition),
+      certifiedVertical.resultsFor(VerticalRelationContractKind.SliderReachDelta)
+    )
+
+  lazy val structuralSignals: List[StructuralSignal] =
+    StructuralDeltaContracts.signals(structuralDelta)
+
+  lazy val structuralConsequences: List[TransitionConsequence] =
+    StructuralDeltaContracts.consequences(structuralDelta)
+
+  def structuralOccurrence(step: LineReplayStep): ReplayStructuralOccurrence =
+    val verticalSourcePremiseKeys = List(
+      VerticalRelationContractKind.PawnTopologyTransition,
+      VerticalRelationContractKind.SliderReachDelta
+    ).flatMap(contract =>
+      certifiedVertical
+        .resultsFor(contract)
+        .flatMap(ReplayVerticalRelationOccurrence.certifiedSourcePremiseIds)
+    )
+    ReplayStructuralOccurrence.certified(
+      step,
+      relationDelta.rootMove,
+      structuralSignals,
+      structuralConsequences,
+      verticalSourcePremiseKeys
+    )
+
 /** Semantic time-axis address of one certified L1 result. The replay step
   * identifies the exact transition occurrence; graph binding later adds the
   * concrete line occurrence without changing this relation meaning.
@@ -73,7 +112,7 @@ private[chessjudgment] final case class ReplayVerticalRelationOccurrence private
     step: LineReplayStep,
     contract: VerticalRelationContractKind,
     relation: RelationFactEvidence
-):
+)(private val closedInventory: ClosedRelationTransitionInventory):
   require(
     VerticalRelationContractKind.forDetail(relation.detail).contains(contract),
     "a replay vertical occurrence must retain its producing contract"
@@ -87,6 +126,149 @@ private[chessjudgment] final case class ReplayVerticalRelationOccurrence private
       case _ => false),
     "a replay vertical occurrence must retain its exact certified transition"
   )
+
+  /** Exact occurrence identity issued by the canonical replay inventory. A
+    * graph evidence id later binds this occurrence to one admitted line.
+    */
+  private[chessjudgment] lazy val occurrenceId: String =
+    BoundedCausalIdentity.digest(
+      List(
+        "replay-vertical-relation-occurrence:v1",
+        BoundedCausalIdentity.stepKey(step),
+        contract.toString.toLowerCase,
+        DerivedRelationResultKey.from(relation).stableKey,
+        certifiedSourcePremiseIds.mkString("[", ",", "]")
+      )
+    )
+
+  /** Lower-premise identity is exposed only through this replay-owned
+    * occurrence. L2 consumers cannot manufacture a premise manifest from raw
+    * result ids or an arbitrary string list.
+    */
+  private[chessjudgment] lazy val certifiedSourcePremiseIds: List[String] =
+    ReplayVerticalRelationOccurrence.certifiedSourcePremiseIds(relation)
+
+  /** Only this exact L1 result may release one of the absence capabilities
+    * named by its certified derivation proof.
+    */
+  private[chessjudgment] def absenceCapability(
+      premise: ClosedRelationAbsencePremise
+  ): Option[ReplayClosedRelationAbsenceCapability] =
+    closedInventory.absenceCapability(relation, premise)
+
+private[chessjudgment] object ReplayVerticalRelationOccurrence:
+  private[chessjudgment] def certifiedSourcePremiseIds(
+      relation: RelationFactEvidence
+  ): List[String] =
+    val proof = relation.detail match
+      case detail: RelationWitnessDetail.CaptureRecaptureInventory => detail.proof
+      case detail: RelationWitnessDetail.CreatedCheckResponseInventory => detail.proof
+      case detail: RelationWitnessDetail.RootCheckResponse => detail.proof
+      case detail: RelationWitnessDetail.SliderReachDelta => detail.proof
+      case detail: RelationWitnessDetail.PawnTopologyTransition => detail.proof
+      case detail: RelationWitnessDetail.StalemateTransition => detail.proof
+      case _ =>
+        throw IllegalStateException("a replay vertical occurrence lost its vertical derivation proof")
+    proof.sourcePremises.map(_.stableKey).distinct.sorted
+
+/** Minimal transport form for one replay-owned L1 occurrence. It retains the
+  * exact time-axis address and certified lower owners without exposing the
+  * closed inventory capability carried by the source occurrence.
+  */
+private[chessjudgment] final case class ReplayVerticalRelationOccurrenceBinding private (
+    step: LineReplayStep,
+    contract: VerticalRelationContractKind,
+    result: DerivedRelationResultKey,
+    occurrenceId: String,
+    certifiedSourcePremiseIds: List[String]
+):
+  require(occurrenceId.matches("[0-9a-f]{64}"), "an L1 occurrence binding needs its canonical id")
+  require(
+    certifiedSourcePremiseIds.nonEmpty &&
+      certifiedSourcePremiseIds == certifiedSourcePremiseIds.distinct.sorted,
+    "an L1 occurrence binding needs exact canonical lower premise owners"
+  )
+
+  private[chessjudgment] def stableKey: String =
+    BoundedCausalIdentity.digest(List(
+      "replay-vertical-relation-occurrence-binding:v1",
+      BoundedCausalIdentity.stepKey(step),
+      contract.toString.toLowerCase,
+      result.stableKey,
+      occurrenceId,
+      certifiedSourcePremiseIds.mkString("[", ",", "]")
+    ))
+
+private[chessjudgment] object ReplayVerticalRelationOccurrenceBinding:
+  private[chessjudgment] def from(
+      occurrence: ReplayVerticalRelationOccurrence
+  ): ReplayVerticalRelationOccurrenceBinding =
+    ReplayVerticalRelationOccurrenceBinding(
+      occurrence.step,
+      occurrence.contract,
+      DerivedRelationResultKey.from(occurrence.relation),
+      occurrence.occurrenceId,
+      occurrence.certifiedSourcePremiseIds
+    )
+
+/** Replay-owned L0.5 structural result for one admitted transition occurrence.
+  * Root graph records and bounded L2 consumers project this same calculation;
+  * neither is allowed to invoke the structural contracts again.
+  */
+private[chessjudgment] final case class ReplayStructuralOccurrence private[judgment] (
+    step: LineReplayStep,
+    occurrenceId: String,
+    signals: List[StructuralSignal],
+    consequences: List[TransitionConsequence],
+    sourcePremiseKeys: List[String]
+):
+  require(occurrenceId.matches("[0-9a-f]{64}"), "a replay structural occurrence needs a canonical id")
+  require(
+    sourcePremiseKeys.nonEmpty && sourcePremiseKeys == sourcePremiseKeys.distinct.sorted,
+    "a replay structural occurrence needs exact canonical lower premise keys"
+  )
+
+private[chessjudgment] object ReplayStructuralOccurrence:
+  private[judgment] def certified(
+      step: LineReplayStep,
+      movement: CanonicalRootLegalMove,
+      signals: List[StructuralSignal],
+      consequences: List[TransitionConsequence],
+      certifiedVerticalSourcePremiseKeys: List[String]
+  ): ReplayStructuralOccurrence =
+    val relationPremises = consequences.flatMap(consequence =>
+      (consequence.subjectBindings ++ consequence.targetBindings).flatMap(binding =>
+        binding.relationKeys.map(key => s"relation:${key.stableKey}") ++
+          binding.derivedRelationKeys.map(key => s"derived:${key.stableKey}")
+      )
+    )
+    val premiseKeys = (
+      s"legal-move:${movement.fact.semanticId}" ::
+        (certifiedVerticalSourcePremiseKeys ++ relationPremises)
+    ).distinct.sorted
+    val semanticParts = List(
+      "replay-structural-occurrence:v1",
+      step.ply.toString,
+      EvidenceRef.normalizeMove(step.moveUci),
+      PrincipalVariationEvidence.semanticBoardStateFen(step.fenBefore).getOrElse(
+        PrincipalVariationEvidence.normalizeFen(step.fenBefore)
+      ),
+      PrincipalVariationEvidence.semanticBoardStateFen(step.fenAfter).getOrElse(
+        PrincipalVariationEvidence.normalizeFen(step.fenAfter)
+      ),
+      movement.fact.semanticId,
+      signals.map(signal =>
+        List(
+          signal.kind.toString,
+          signal.magnitude.toString,
+          signal.subjectFacts.map(_.stableKey).sorted.mkString("[", ",", "]")
+        ).mkString(":")
+      ).sorted.mkString("[", ",", "]"),
+      consequences.map(_.stableKey).sorted.mkString("[", ",", "]"),
+      premiseKeys.mkString("[", ",", "]")
+    )
+    val digest = BoundedCausalIdentity.digest(semanticParts)
+    ReplayStructuralOccurrence(step, digest, signals, consequences, premiseKeys)
 
 private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
     val declared: LineReplayStep,
@@ -120,19 +302,13 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
   private[chessjudgment] def closedRelationInventory: ClosedRelationTransitionInventory =
     closedRelationOutput
 
-  private lazy val structuralOutput: TransitionStructuralDelta =
-    StructuralDeltaAnalyzer.delta(
-      beforeAnalysis,
-      afterAnalysis,
-      legal,
-      relationDelta,
-      combinationRelationsFor(RelationCombinationContractKind.GeometricControlSetDelta),
-      combinationRelationsFor(RelationCombinationContractKind.NamedRayTransition),
-      verticalRelationsFor(VerticalRelationContractKind.PawnTopologyTransition),
-      verticalRelationsFor(VerticalRelationContractKind.SliderReachDelta)
-    )
+  def structuralDelta: TransitionStructuralDelta = calculation.structuralDelta
 
-  def structuralDelta: TransitionStructuralDelta = structuralOutput
+  private[chessjudgment] def ownsStructuralDelta(delta: TransitionStructuralDelta): Boolean =
+    calculation.structuralDelta.asInstanceOf[AnyRef] eq delta.asInstanceOf[AnyRef]
+
+  private[chessjudgment] lazy val structuralOccurrence: ReplayStructuralOccurrence =
+    calculation.structuralOccurrence(declared)
 
   private[judgment] def certifiesBinding(
       transition: StructuralTransitionBinding
@@ -208,6 +384,10 @@ private[chessjudgment] final class CanonicalLineReplay private (
     replaySteps.zip(legalSteps).toMap
   private val indexByReplayStep: Map[LineReplayStep, Int] =
     replaySteps.zipWithIndex.toMap
+  require(
+    indexByReplayStep.size == replaySteps.size,
+    "a canonical replay cannot contain the same time-axis occurrence twice"
+  )
 
   private lazy val occurrenceAnalyses: LazyList[PositionAnalysis] =
     suppliedOccurrenceAnalyses.getOrElse {
@@ -249,6 +429,11 @@ private[chessjudgment] final class CanonicalLineReplay private (
   def transition(step: LineReplayStep): Option[CanonicalReplayTransition] =
     indexByReplayStep.get(step).flatMap(transitionOccurrences.lift)
 
+  private[chessjudgment] def structuralOccurrence(
+      step: LineReplayStep
+  ): Option[ReplayStructuralOccurrence] =
+    transition(step).map(_.structuralOccurrence)
+
   private[chessjudgment] def verticalRelationOccurrences(
       step: LineReplayStep,
       contracts: List[VerticalRelationContractKind]
@@ -260,10 +445,167 @@ private[chessjudgment] final class CanonicalLineReplay private (
     transition(step).toList.flatMap { exactTransition =>
       contracts.flatMap(contract =>
         exactTransition.verticalRelationsFor(contract).map(relation =>
-          ReplayVerticalRelationOccurrence(step, contract, relation)
+          ReplayVerticalRelationOccurrence(step, contract, relation)(
+            exactTransition.closedRelationInventory
+          )
         )
       )
     }
+
+  /** Exact L1 membership owned by the capture transition occurrence. Missing
+    * or duplicate inventories/resources fail closed instead of creating a
+    * second recapture adjudicator in a line consumer.
+    */
+  private[chessjudgment] def exactRecaptureMembership(
+      captureStep: LineReplayStep,
+      recaptureStep: LineReplayStep
+  ): Option[(DerivedRelationResultKey, RelationLegalMoveResourceWitness)] =
+    exactRecaptureMembership(captureStep, this, recaptureStep)
+
+  private[chessjudgment] def exactRecaptureMembership(
+      captureStep: LineReplayStep,
+      recaptureReplay: CanonicalLineReplay,
+      recaptureStep: LineReplayStep
+  ): Option[(DerivedRelationResultKey, RelationLegalMoveResourceWitness)] =
+    exactRecaptureResolution(captureStep, recaptureReplay, recaptureStep)
+      .flatMap(resolution =>
+        resolution.resource.map(DerivedRelationResultKey.from(resolution.occurrence.relation) -> _)
+      )
+
+  private[chessjudgment] def exactRecaptureOccurrenceMembership(
+      captureStep: LineReplayStep,
+      recaptureStep: LineReplayStep
+  ): Option[(ReplayVerticalRelationOccurrence, RelationLegalMoveResourceWitness)] =
+    exactRecaptureResolution(captureStep, this, recaptureStep)
+      .flatMap(resolution => resolution.resource.map(resolution.occurrence -> _))
+
+  /** Closed recapture classification for consumers that must distinguish a
+    * certified absence from an unresolved inventory. `None` never means
+    * `Excluded`; it means that the canonical occurrence could not certify
+    * either result.
+    */
+  private[chessjudgment] def exactRecaptureStatus(
+      captureStep: LineReplayStep,
+      recaptureReplay: CanonicalLineReplay,
+      recaptureStep: LineReplayStep
+  ): Option[LineMaterialRecaptureStatus] =
+    exactRecaptureResolution(captureStep, recaptureReplay, recaptureStep).map { resolution =>
+      resolution.resource match
+        case Some(_) => LineMaterialRecaptureStatus.Proven(
+            DerivedRelationResultKey.from(resolution.occurrence.relation)
+          )
+        case None    => LineMaterialRecaptureStatus.Excluded
+    }
+
+  private final case class ExactRecaptureResolution(
+      occurrence: ReplayVerticalRelationOccurrence,
+      resource: Option[RelationLegalMoveResourceWitness]
+  )
+
+  private def exactRecaptureResolution(
+      captureStep: LineReplayStep,
+      recaptureReplay: CanonicalLineReplay,
+      recaptureStep: LineReplayStep
+  ): Option[ExactRecaptureResolution] =
+    for
+      _ <- indexByReplayStep.get(captureStep)
+      _ <- recaptureReplay.indexByReplayStep.get(recaptureStep)
+      if recaptureStep.ply == captureStep.ply + 1
+      if PrincipalVariationEvidence.sameBoardState(captureStep.fenAfter, recaptureStep.fenBefore)
+      captureLegal <- legalStep(captureStep)
+      recaptureLegal <- recaptureReplay.legalStep(recaptureStep)
+      captureTransition <- transition(captureStep)
+      recaptureTransition <- recaptureReplay.transition(recaptureStep)
+      captureRoot = captureTransition.relationDelta.rootMove
+      recaptureRoot = recaptureTransition.relationDelta.rootMove
+      if captureRoot.capture.nonEmpty
+      inventory <- only(verticalRelationOccurrences(
+        captureStep,
+        List(VerticalRelationContractKind.CaptureRecaptureInventory)
+      ).flatMap(occurrence =>
+        occurrence.relation.detail match
+          case detail: RelationWitnessDetail.CaptureRecaptureInventory =>
+            List(occurrence -> detail)
+          case _ => Nil
+      ))
+      (occurrence, detail) = inventory
+      if detail.mover == captureRoot.witness && legalMovementMatches(detail.mover, captureLegal)
+      if captureRoot.capture.exists(capture =>
+        detail.captured.side == capture.capturedSide &&
+          detail.captured.role == capture.capturedRole &&
+          detail.captured.square == capture.capturedSquare
+      )
+      resource <- detail.legalRecaptures.filter(resource =>
+        EvidenceRef.sameMove(resource.moveUci, recaptureStep.moveUci) &&
+          resource.movement == recaptureRoot.witness &&
+          resource.capture == recaptureRoot.capture &&
+          legalMovementMatches(resource.movement, recaptureLegal)
+      ) match
+        case exact :: Nil => Some(Some(exact))
+        case Nil          => Some(None)
+        case _            => None
+    yield ExactRecaptureResolution(occurrence, resource)
+
+  /** Exact L1 membership owned by the check-producing transition occurrence.
+    * Only the immediately following canonical response can consume it.
+    */
+  private[chessjudgment] def exactCheckResponseMembership(
+      checkStep: LineReplayStep,
+      responseStep: LineReplayStep
+  ): Option[(DerivedRelationResultKey, RelationCheckResponseWitness)] =
+    exactCheckResponseOccurrenceMembership(checkStep, responseStep).map { case (occurrence, response) =>
+      DerivedRelationResultKey.from(occurrence.relation) -> response
+    }
+
+  private[chessjudgment] def exactCheckResponseOccurrenceMembership(
+      checkStep: LineReplayStep,
+      responseStep: LineReplayStep
+  ): Option[(ReplayVerticalRelationOccurrence, RelationCheckResponseWitness)] =
+    for
+      _ <- indexByReplayStep.get(checkStep)
+      _ <- indexByReplayStep.get(responseStep)
+      if responseStep.ply == checkStep.ply + 1
+      if PrincipalVariationEvidence.sameBoardState(checkStep.fenAfter, responseStep.fenBefore)
+      checkLegal <- legalStep(checkStep)
+      responseLegal <- legalStep(responseStep)
+      if checkLegal.after == responseLegal.before
+      checkTransition <- transition(checkStep)
+      responseTransition <- transition(responseStep)
+      checkRoot = checkTransition.relationDelta.rootMove
+      responseRoot = responseTransition.relationDelta.rootMove
+      inventory <- only(verticalRelationOccurrences(
+        checkStep,
+        List(VerticalRelationContractKind.CreatedCheckResponseInventory)
+      ).flatMap(occurrence =>
+        occurrence.relation.detail match
+          case detail: RelationWitnessDetail.CreatedCheckResponseInventory =>
+            List(occurrence -> detail)
+          case _ => Nil
+      ))
+      (occurrence, detail) = inventory
+      if detail.mover == checkRoot.witness && legalMovementMatches(detail.mover, checkLegal)
+      if detail.checkedSide == responseRoot.side && detail.terminal == RelationCheckTerminalState.Ongoing
+      response <- only(detail.responses.filter(response =>
+        EvidenceRef.sameMove(response.resource.moveUci, responseStep.moveUci) &&
+          response.resource.movement == responseRoot.witness &&
+          response.resource.capture == responseRoot.capture &&
+          legalMovementMatches(response.resource.movement, responseLegal)
+      ))
+    yield occurrence -> response
+
+  private def only[A](values: List[A]): Option[A] =
+    values match
+      case exact :: Nil => Some(exact)
+      case _            => None
+
+  private def legalMovementMatches(
+      movement: RelationMoveTransitionWitness,
+      legal: LegalReplayStep
+  ): Boolean =
+    movement.side == legal.move.piece.color &&
+      movement.from.key.equalsIgnoreCase(legal.move.orig.key) &&
+      movement.to.key.equalsIgnoreCase(legal.move.dest.key) &&
+      movement.beforeRole.name.equalsIgnoreCase(legal.move.piece.role.name)
 
   def onlyTransition: Option[CanonicalReplayTransition] =
     Option.when(replaySteps.size == 1)(transitionOccurrences.head)

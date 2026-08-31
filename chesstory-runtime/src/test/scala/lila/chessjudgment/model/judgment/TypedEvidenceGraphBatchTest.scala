@@ -5,7 +5,7 @@ import lila.chessjudgment.analysis.position.PositionAnalyzer
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 import lila.chessjudgment.model.line.CandidateLineEvaluation
 import lila.chessjudgment.model.position.PositionFeatures
-import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.model.line.EngineLine
 
 class TypedEvidenceGraphBatchTest extends munit.FunSuite:
 
@@ -144,7 +144,7 @@ class TypedEvidenceGraphBatchTest extends munit.FunSuite:
     val exact = mechanism("authority-exact", evaluation.ref)
     val forged = mechanism("authority-forged", evaluation.ref.copy(id = "missing-eval"))
     val wrongProducer = featureRecord("wrong-producer").copy(
-      ref = featureRecord("wrong-producer").ref.copy(producer = EvidenceProducer.OpeningContextProducer)
+      ref = featureRecord("wrong-producer").ref.copy(producer = EvidenceProducer.MoveTransitionProducer)
     )
     val graph = TypedEvidenceGraph.empty.addAll(List(evaluation, exact, forged, wrongProducer))
 

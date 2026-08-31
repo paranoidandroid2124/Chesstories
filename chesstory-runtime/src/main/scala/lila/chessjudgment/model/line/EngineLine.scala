@@ -1,9 +1,9 @@
-package lila.chessjudgment.model.strategic
+package lila.chessjudgment.model.line
 
 import play.api.libs.json.*
 
 /**
- * Canonical engine variation.
+ * Engine transport variation admitted before review assembly.
  *
  * `scoreCp` and `mate` are always from White's perspective. Consumers that reason
  * from the side-to-move's perspective must use `PerspectiveMath`

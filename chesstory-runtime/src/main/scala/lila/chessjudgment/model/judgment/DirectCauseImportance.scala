@@ -61,11 +61,7 @@ object PlayerFacingImpact:
         case PlayerFacingCauseEffectMode.AlternativeResource =>
           Option.when(actorValue)(PlayerFacingImpact.HarmsReviewedMover(actor))
         case PlayerFacingCauseEffectMode.PlayedLiability =>
-          val actorValueDenied = actorValue && Set(
-            DirectCausalChange.Lost,
-            DirectCausalChange.Refuted,
-            DirectCausalChange.Missed
-          )(directChange)
+          val actorValueDenied = actorValue && directChange == DirectCausalChange.Lost
           Option.when(favoredSide.contains(!actor) || actorValueDenied)(
             PlayerFacingImpact.HarmsReviewedMover(actor)
           )
@@ -77,7 +73,7 @@ object PlayerFacingImpact:
           )
 
 enum DirectCauseStructuralOrigin:
-  case PlanResult
+  case PassedPawnResult
 
 /** A domain whose numeric measure has one typed meaning. */
 enum DirectCauseImportanceDomain:
@@ -87,7 +83,7 @@ enum DirectCauseImportanceDomain:
       origin: DirectCauseStructuralOrigin,
       kind: TransitionConsequenceKind,
       polarity: StructuralSignalPolarity,
-      robustness: Option[PlanCausalRobustness]
+      robustness: Option[PassedPawnResultReplyCoverage]
   )
 
   def stableKey: String =
@@ -246,10 +242,6 @@ final case class DirectCauseImportanceResolution(
         decisions.forall(_.fullyMeasured) &&
         frontierCauseEvidenceIds.size == 1
     )(frontierCauseEvidenceIds.head)
-
-object DirectCauseImportanceResolution:
-  val empty: DirectCauseImportanceResolution =
-    DirectCauseImportanceResolution(Nil, Nil, Nil, Nil)
 
 final case class PlayerFacingIdeaOrderingResult(
     selections: List[PlayerFacingCauseSelection],
@@ -428,16 +420,14 @@ object DirectCauseMeasuredEffect:
     proof match
       case RootOwnedEffectProof.LineEpisode(_, _, episode) =>
         lineEpisodeEffect(episode, descriptor)
-      case RootOwnedEffectProof.PlanResult(_, event, assessment, _) =>
+      case RootOwnedEffectProof.PassedPawnResult(_, result) =>
         structuralEffect(
-          DirectCauseStructuralOrigin.PlanResult,
-          event.perspective,
-          assessment.consequence,
-          Some(assessment.robustness),
+          DirectCauseStructuralOrigin.PassedPawnResult,
+          result.event.perspective,
+          result.assessment.consequence,
+          Some(result.assessment.robustness),
           descriptor = descriptor
         )
-      case RootOwnedEffectProof.StrategicAxis(primitive, _, _) =>
-        fromProof(primitive, descriptor)
       case _ =>
         None
 
@@ -476,7 +466,7 @@ object DirectCauseMeasuredEffect:
       origin: DirectCauseStructuralOrigin,
       perspective: Color,
       consequence: TransitionConsequence,
-      robustness: Option[PlanCausalRobustness],
+      robustness: Option[PassedPawnResultReplyCoverage],
       descriptor: RootOwnedEffectDescriptor,
       forcedStake: Option[DirectCauseEffectStake] = None
   ): Option[DirectCauseMeasuredEffect] =

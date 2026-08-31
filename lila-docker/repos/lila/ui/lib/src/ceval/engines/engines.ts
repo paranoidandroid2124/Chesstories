@@ -7,13 +7,12 @@ import {
 } from '../types';
 import type CevalCtrl from '../ctrl';
 import { SimpleEngine } from './simpleEngine';
-import { SingleThreadEngine } from './singleThreadEngine';
 import { StockfishWebEngine } from './stockfishWebEngine';
 import { ThreadedEngine } from './threadedEngine';
 import { storedStringProp, type StoredProp } from '@/storage';
 import { isAndroid, isIos, isIPad, features as browserSupport } from '@/device';
 import {
-  moveReviewEngineCapabilities,
+  moveReviewEngineCapability,
   type MoveReviewEngineCapability,
   type MoveReviewEngineSupportedCapability,
 } from './moveReviewEngineProfiles';
@@ -180,8 +179,8 @@ export class Engines {
     return this.localEngines.filter(e => e.variants?.includes(variant));
   }
 
-  moveReviewCapabilities(): readonly MoveReviewEngineCapability[] {
-    return moveReviewEngineCapabilities(this.moveReviewEnvironment());
+  moveReviewCapability(): MoveReviewEngineCapability {
+    return moveReviewEngineCapability(this.moveReviewEnvironment());
   }
 
   makeMoveReview(
@@ -189,9 +188,7 @@ export class Engines {
     status: EngineNotifier,
     signal: AbortSignal,
   ): MoveReviewEngine {
-    return capability.manifest.loader === 'stockfish-web-pthread'
-      ? new StockfishWebEngine(capability.info, status, signal)
-      : new SingleThreadEngine(capability.info, status, signal);
+    return new StockfishWebEngine(capability.info, status, signal);
   }
 
   getEngine(selector?: { id?: string; variant?: VariantKey }): EngineInfo | undefined {

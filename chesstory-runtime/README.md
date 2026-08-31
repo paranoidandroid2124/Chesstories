@@ -8,12 +8,6 @@ Direct FEN/UCI/PV/probe inputs are development-only. The runtime must not
 depend on the lila application, controllers, database, or internal graph
 transport types.
 
-The existing `lila.chessjudgment` package name is retained during extraction
-to keep the first parity diff mechanical. Package renaming is not a license
-boundary and will be considered only after standalone parity is proven.
-
-This local repository has no remote by design.
-
 ## Run
 
 ```text
@@ -52,8 +46,14 @@ are not player-use. Issued work, reports, status, and responses carry required
 profile equality; missing or unsupported profiles are rejected before semantic
 use. This equality proves configured contract binding, not remote attestation.
 
-`GET /health` verifies that the canonical scalachess opening database and
-Chesstory's theme-prior resource are available before the server starts.
+`GET /health` is a process-liveness check. It returns the health schema version
+and does not certify semantic resources, engine availability, or player-job
+readiness.
+
+The runtime meaning and authority boundary is documented in
+[`docs/JudgmentBoundary.md`](docs/JudgmentBoundary.md). That document is a
+boundary map; executable types, admission checks, and public schemas remain the
+contract authority.
 
 ## Development-only direct API
 

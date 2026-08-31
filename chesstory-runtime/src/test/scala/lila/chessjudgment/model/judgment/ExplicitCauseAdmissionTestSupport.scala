@@ -9,14 +9,14 @@ private[chessjudgment] object ExplicitCauseAdmissionTestSupport:
     records
       .map {
         case record @ EvidenceRecord(_, RelativeCauseFactEvidence(cause), _) =>
-          val occurrences = EvidenceObjectBinding
+          val endpointObservations = EvidenceObjectBinding
             .rawDirectSentenceChannelsForProjection(cause, rawGraph)
-            .map(_.exactOccurrenceFingerprint)
-            .toSet
+            .map(_.exactOccurrenceFingerprint -> None)
+            .toMap
           record.copy(
             payload = RelativeCauseFactEvidence(
               cause.copy(
-                directEffectAdmission = DirectEffectAdmission.Restricted(occurrences)
+                directEffectAdmission = DirectEffectAdmission.Restricted(endpointObservations)
               )
             )
           )

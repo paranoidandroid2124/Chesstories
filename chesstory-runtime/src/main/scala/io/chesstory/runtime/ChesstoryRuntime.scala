@@ -49,7 +49,6 @@ object ChesstoryRuntime:
       workerCount: Int = DefaultWorkers
   ): RunningRuntimeServer =
     require(workerCount > 0 && workerCount <= MaxWorkers, s"workerCount must be between 1 and $MaxWorkers")
-    RuntimeResources.verify()
     val server = HttpServer.create(address, 256)
     val workers = Semaphore(workerCount)
     val admitted = Semaphore(workerCount + MaximumQueuedRequests)

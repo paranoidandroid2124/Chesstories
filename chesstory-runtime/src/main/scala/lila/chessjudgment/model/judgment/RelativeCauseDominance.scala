@@ -68,7 +68,6 @@ object RelativeCauseDominancePolicy:
       RelativeCauseKind.KingForcing,
       RelativeCauseKind.MaterialSwing
     ),
-    RelativeCauseKind.MaterialSwing -> Set(RelativeCauseKind.SacrificeCompensation),
     RelativeCauseKind.CandidateTacticalLiability -> Set(
       RelativeCauseKind.MaterialSwing
     ),
@@ -109,7 +108,7 @@ object RelativeCauseDominancePolicy:
           effectMode <- decision.effectMode
           binding <- graph.relativeCauseBinding(cause)
           candidate <- {
-          val compatibleChannels = EvidenceObjectBinding.canonicalCauseChannels(
+          val compatibleChannels = EvidenceObjectBinding.projectCauseChannelsForExposure(
             PlayerFacingCauseSelectionPolicy
               .compatibleChannels(effectMode, directChannelsByCauseId.getOrElse(ref.id, Nil))
               .map(_._1)
@@ -179,7 +178,7 @@ object RelativeCauseDominancePolicy:
       candidate.effectMode == fallback.effectMode
 
   /** Fallback suppression requires one candidate to own each exact descriptor
-    * by itself. A matching public surface, sibling channel, plan label, or
+    * by itself. A matching public surface, sibling channel, idea label, or
     * evidence id is never sufficient.
     */
   private def ownsEveryFallbackEffect(

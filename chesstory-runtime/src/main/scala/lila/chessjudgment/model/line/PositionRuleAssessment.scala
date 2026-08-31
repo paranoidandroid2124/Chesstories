@@ -2,7 +2,7 @@ package lila.chessjudgment.model.line
 
 import chess.{ Color, HalfMoveClock, Position }
 import lila.chessjudgment.model.evaluation.{ JudgmentThresholds, PerspectiveMath }
-import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.model.line.EngineLine
 
 enum AutomaticTerminal:
   case Checkmate(winner: Color)
@@ -50,27 +50,33 @@ object PositionRuleAssessment:
     else None
 
   def assess(history: CanonicalPositionHistory): PositionRuleAssessment =
-    val position = history.currentPosition
-    automaticTerminal(position)
+    history.currentAutomaticTerminal
       .map(PositionRuleAssessment.Terminal.apply)
-      .getOrElse(
-        PositionRuleAssessment.Nonterminal(
-          fivefoldRepetition =
-            if history.repetitionHistoryComplete || position.history.halfMoveClock < HalfMoveClock(16) then
-              FivefoldRepetitionKnowledge.CertifiedNonterminal
-            else FivefoldRepetitionKnowledge.HistoryUnavailable,
-          threefoldClaim =
-            if position.threefoldRepetition then
-              ThreefoldClaimKnowledge.Known(DrawClaimAvailability.AvailableNow)
-            else if history.repetitionHistoryComplete || position.history.halfMoveClock < HalfMoveClock(8) then
-              ThreefoldClaimKnowledge.Known(DrawClaimAvailability.Unavailable)
-            else ThreefoldClaimKnowledge.HistoryUnavailable,
-          fiftyMoveClaim =
-            if position.history.halfMoveClock >= HalfMoveClock(100) then
-              DrawClaimAvailability.AvailableNow
-            else DrawClaimAvailability.Unavailable
-        )
-      )
+      .getOrElse(assessCertifiedAutomaticNonterminal(history))
+
+  /** Completes the rule assessment after the canonical replay owner has already
+    * certified that no automatic terminal applies to the resulting position.
+    */
+  private[line] def assessCertifiedAutomaticNonterminal(
+      history: CanonicalPositionHistory
+  ): PositionRuleAssessment =
+    val position = history.currentPosition
+    PositionRuleAssessment.Nonterminal(
+      fivefoldRepetition =
+        if history.repetitionHistoryComplete || position.history.halfMoveClock < HalfMoveClock(16) then
+          FivefoldRepetitionKnowledge.CertifiedNonterminal
+        else FivefoldRepetitionKnowledge.HistoryUnavailable,
+      threefoldClaim =
+        if position.threefoldRepetition then
+          ThreefoldClaimKnowledge.Known(DrawClaimAvailability.AvailableNow)
+        else if history.repetitionHistoryComplete || position.history.halfMoveClock < HalfMoveClock(8) then
+          ThreefoldClaimKnowledge.Known(DrawClaimAvailability.Unavailable)
+        else ThreefoldClaimKnowledge.HistoryUnavailable,
+      fiftyMoveClaim =
+        if position.history.halfMoveClock >= HalfMoveClock(100) then
+          DrawClaimAvailability.AvailableNow
+        else DrawClaimAvailability.Unavailable
+    )
 
   def declaredDrawClaims(
       moveUci: String,

@@ -187,10 +187,6 @@
       "type": "string",
       "enum": ["king", "queen", "rook", "bishop", "knight", "pawn"]
     },
-    "square": {
-      "type": "string",
-      "pattern": "^[a-h][1-8]$"
-    },
     "uciMove": {
       "type": "string",
       "pattern": "^(?:[a-h][1-8][a-h][1-8][qrbn]?|0000)$"
@@ -275,21 +271,9 @@
       "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
       "x-canonical": { "mode": "identity-reference", "namespace": "claim" }
     },
-    "planEventIdDefinition": {
-      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
-      "x-canonical": { "mode": "identity-definition", "namespace": "plan-event" }
-    },
-    "planEventIdReference": {
-      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
-      "x-canonical": { "mode": "identity-reference", "namespace": "plan-event" }
-    },
     "proofIdDefinition": {
       "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
       "x-canonical": { "mode": "identity-definition", "namespace": "proof" }
-    },
-    "proofIdReference": {
-      "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
-      "x-canonical": { "mode": "identity-reference", "namespace": "proof" }
     },
     "projectionIdDefinition": {
       "allOf": [{ "$ref": "#/$defs/nonEmptyString" }],
@@ -327,18 +311,6 @@
         "game_phase": {
           "type": "string",
           "enum": ["opening", "middlegame", "endgame"]
-        },
-        "family_tags": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["tactical", "strategic", "defensive", "conversion", "material", "evaluation"]
-          },
-          "uniqueItems": true,
-          "x-canonical": {
-            "mode": "unordered-set",
-            "sort_by": "value"
-          }
         }
       },
       "additionalProperties": false
@@ -737,7 +709,7 @@
         "binding_id": { "$ref": "#/$defs/bindingIdDefinition" },
         "kind": {
           "type": "string",
-          "enum": ["piece", "square", "file", "rank", "diagonal", "move", "position", "line", "threat", "plan"]
+          "enum": ["piece", "square", "file", "rank", "diagonal", "move", "position", "line"]
         },
         "value": { "$ref": "#/$defs/nonEmptyString" },
         "color": { "$ref": "#/$defs/color" },
@@ -1137,44 +1109,13 @@
     },
 
     "claimSubject": {
-      "oneOf": [
-        {
-          "type": "object",
-          "required": ["kind", "position_id"],
-          "properties": {
-            "kind": { "const": "position" },
-            "position_id": { "$ref": "#/$defs/positionIdReference" }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": ["kind", "line_id"],
-          "properties": {
-            "kind": { "enum": ["played-move", "reference-move", "candidate-line"] },
-            "line_id": { "$ref": "#/$defs/lineIdReference" }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": ["kind", "binding_id"],
-          "properties": {
-            "kind": { "enum": ["threat", "transition"] },
-            "binding_id": { "$ref": "#/$defs/bindingIdReference" }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": ["kind", "plan_event_id"],
-          "properties": {
-            "kind": { "const": "plan" },
-            "plan_event_id": { "$ref": "#/$defs/planEventIdReference" }
-          },
-          "additionalProperties": false
-        }
-      ]
+      "type": "object",
+      "required": ["kind", "line_id"],
+      "properties": {
+        "kind": { "enum": ["played-move", "reference-move", "candidate-line"] },
+        "line_id": { "$ref": "#/$defs/lineIdReference" }
+      },
+      "additionalProperties": false
     },
     "claimAssertion": {
       "type": "object",
@@ -1195,38 +1136,6 @@
       },
       "additionalProperties": false
     },
-    "planEvent": {
-      "type": "object",
-      "required": ["plan_event_id", "action", "result", "conditional", "supporting_fact_ids", "observed_line_ids"],
-      "properties": {
-        "plan_event_id": { "$ref": "#/$defs/planEventIdDefinition" },
-        "action": { "$ref": "#/$defs/semanticTerm" },
-        "result": { "$ref": "#/$defs/semanticTerm" },
-        "conditional": { "type": "boolean" },
-        "condition": { "$ref": "#/$defs/nonEmptyString" },
-        "supporting_fact_ids": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/factIdReference" },
-          "uniqueItems": true,
-          "x-canonical": {
-            "modes": ["unordered-set", "identity-reference-set"],
-            "namespace": "fact",
-            "sort_by": "canonical-id"
-          }
-        },
-        "observed_line_ids": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/lineIdReference" },
-          "uniqueItems": true,
-          "x-canonical": {
-            "modes": ["unordered-set", "identity-reference-set"],
-            "namespace": "line",
-            "sort_by": "canonical-id"
-          }
-        }
-      },
-      "additionalProperties": false
-    },
     "claim": {
       "type": "object",
       "required": [
@@ -1240,14 +1149,13 @@
         "supporting_cause_ids",
         "supporting_evidence_ids",
         "binding_ids",
-        "observed_line_ids",
-        "plan_event_ids"
+        "observed_line_ids"
       ],
       "properties": {
         "claim_id": { "$ref": "#/$defs/claimIdDefinition" },
         "family": {
           "type": "string",
-          "enum": ["tactical", "strategic", "opening", "endgame", "judgment", "defensive", "conversion", "material", "evaluation", "plan"]
+          "enum": ["tactical", "pawn-structure", "passed-pawn-result", "defensive", "conversion", "material", "evaluation"]
         },
         "subject": { "$ref": "#/$defs/claimSubject" },
         "scope": {
@@ -1310,34 +1218,19 @@
             "namespace": "line",
             "sort_by": "canonical-id"
           }
-        },
-        "plan_event_ids": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/planEventIdReference" },
-          "uniqueItems": true,
-          "x-canonical": {
-            "modes": ["unordered-set", "identity-reference-set"],
-            "namespace": "plan-event",
-            "sort_by": "canonical-id"
-          }
         }
       },
       "additionalProperties": false
     },
     "proposalBundle": {
       "type": "object",
-      "required": ["proposal_status", "plan_events", "proposals"],
+      "required": ["proposal_status", "proposals"],
       "properties": {
         "proposal_status": {
           "type": "string",
           "enum": ["complete", "abstained"]
         },
         "abstention_reason": { "$ref": "#/$defs/nonEmptyString" },
-        "plan_events": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/planEvent" },
-          "x-canonical": { "mode": "unordered-set", "sort_by": ["plan_event_id"] }
-        },
         "proposals": {
           "type": "array",
           "items": { "$ref": "#/$defs/claim" },
@@ -1359,8 +1252,6 @@
             "subject-binding",
             "object-binding",
             "tactical-causal-chain",
-            "strategic-sustainability",
-            "opening-theme-match",
             "endgame-entry-and-line",
             "relative-comparison",
             "exact-proof"
@@ -1493,8 +1384,7 @@
         "supporting_cause_ids",
         "supporting_evidence_ids",
         "binding_ids",
-        "observed_line_ids",
-        "plan_event_ids"
+        "observed_line_ids"
       ],
       "properties": {
         "claim_id": {
@@ -1508,7 +1398,7 @@
         },
         "family": {
           "type": "string",
-          "enum": ["tactical", "strategic", "opening", "endgame", "judgment", "defensive", "conversion", "material", "evaluation", "plan"]
+          "enum": ["tactical", "pawn-structure", "passed-pawn-result", "defensive", "conversion", "material", "evaluation"]
         },
         "subject": { "$ref": "#/$defs/claimSubject" },
         "scope": {
@@ -1571,16 +1461,6 @@
             "namespace": "line",
             "sort_by": "canonical-id"
           }
-        },
-        "plan_event_ids": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/planEventIdReference" },
-          "uniqueItems": true,
-          "x-canonical": {
-            "modes": ["unordered-set", "identity-reference-set"],
-            "namespace": "plan-event",
-            "sort_by": "canonical-id"
-          }
         }
       },
       "additionalProperties": false
@@ -1609,7 +1489,6 @@
         "relative_causes",
         "bindings",
         "observed_lines",
-        "plan_events",
         "exact_results"
       ],
       "properties": {
@@ -1644,11 +1523,6 @@
           "$comment": "Line order is retained because MultiPV/public ordering can be meaningful.",
           "type": "array",
           "items": { "$ref": "#/$defs/engineLine" }
-        },
-        "plan_events": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/planEvent" },
-          "x-canonical": { "mode": "unordered-set", "sort_by": ["plan_event_id"] }
         },
         "exact_results": {
           "type": "array",

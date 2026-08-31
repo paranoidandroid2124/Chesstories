@@ -15,14 +15,14 @@ import lila.chessjudgment.model.line.{
   CanonicalPositionHistory,
   PreInitialHistoryKnowledge
 }
-import lila.chessjudgment.model.strategic.EngineLine
+import lila.chessjudgment.model.line.EngineLine
 
-class HistoryOpeningContinuityTest extends munit.FunSuite:
+class HistoryTerminalContinuityTest extends munit.FunSuite:
 
   test("engine lines stop at the history-owned automatic terminal boundary"):
     val fen = "7k/8/8/8/K7/1p6/8/8 w - - 0 1"
-    val prepared = MoveReviewInputNormalizer
-      .normalize(
+    val prepared = MoveReviewInputAdmission
+      .admit(
         RawMoveReviewInput(
           fen = fen,
           playedMoveUci = "a4b3",
@@ -48,8 +48,8 @@ class HistoryOpeningContinuityTest extends munit.FunSuite:
     val fen = "k7/6b1/8/8/8/8/3R4/7K w - - 0 1"
     val playedMove = "d2d4"
     val replyMove = "g7d4"
-    val prepared = MoveReviewInputNormalizer
-      .normalize(
+    val prepared = MoveReviewInputAdmission
+      .admit(
         RawMoveReviewInput(
           fen = fen,
           playedMoveUci = playedMove,
@@ -95,9 +95,9 @@ class HistoryOpeningContinuityTest extends munit.FunSuite:
         )
       )
     )
-    val admission = MoveReviewInputNormalizer
+    val admission = MoveReviewInputAdmission
       .admitIssuedProbeResult(prepared, request, result, prepared.lines.map(_.rank).max + 1)
-      .fold(diagnostic => fail(diagnostic.reasonCodes.mkString(",")), identity)
+      .getOrElse(fail("expected the exact automatic terminal probe to be admitted"))
 
     assertEquals(admission.branch.certifiedHorizonPlyOffset, horizon)
     assertEquals(
@@ -111,8 +111,8 @@ class HistoryOpeningContinuityTest extends munit.FunSuite:
     )
 
   test("trusted prepared probe pairs fail loudly before the shared executor on impossible metadata"):
-    val prepared = MoveReviewInputNormalizer
-      .normalize(
+    val prepared = MoveReviewInputAdmission
+      .admit(
         RawMoveReviewInput(
           fen = Standard.initialFen.value,
           playedMoveUci = "d2d4",
