@@ -529,7 +529,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
   private def specificTargetReady(targets: List[ConcreteChessObject]): Boolean =
     targets.exists(target =>
       target.key.trim.nonEmpty &&
-        Set(EvidenceObjectKind.Square, EvidenceObjectKind.File, EvidenceObjectKind.Pawn)(target.kind)
+        Set(EvidenceObjectKind.Square, EvidenceObjectKind.File)(target.kind)
     )
 
   private def lineBeneficiaryCompatible(
@@ -542,9 +542,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
       case CauseAttributionKind.CandidateAllowsLiability => Some(!actor)
       case CauseAttributionKind.SharedContext | CauseAttributionKind.ContextOnly |
           CauseAttributionKind.Unattributed => None
-    expected.exists(expectedBeneficiary => consequence.beneficiary.contains(expectedBeneficiary)) &&
-      consequence.kind != LineConsequenceKind.ForcedTheme &&
-      consequence.kind != LineConsequenceKind.Sacrifice
+    expected.exists(expectedBeneficiary => consequence.beneficiary.contains(expectedBeneficiary))
 
   private[chessjudgment] def relationDirectlyProvesCause(
       payload: RelationFactEvidence,
@@ -587,7 +585,6 @@ private[chessjudgment] object RootOwnedEffectPolicy:
           LineConsequenceKind.Promotion =>
         Some(DirectCausalChange.Occurred)
       case LineConsequenceKind.DrawResource => Some(DirectCausalChange.Maintained)
-      case LineConsequenceKind.ForcedTheme | LineConsequenceKind.Sacrifice => None
     raw
 
   private def lineEventChange(

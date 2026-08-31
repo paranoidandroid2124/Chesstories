@@ -406,7 +406,6 @@ object EvidenceFactAssembler:
       s"occurrences:${consequence.proofOccurrences.map(_.stableKey).mkString(",")}",
       s"root-side:${consequence.rootSide.map(_.toString).getOrElse("none")}",
       s"beneficiary:${consequence.beneficiary.map(_.toString).getOrElse("none")}",
-      s"captures:${consequence.stationarySacrificeCaptures.mkString(",")}",
       s"material:${consequence.materialOutcome.map(_.toString).getOrElse("none")}"
     )
 

@@ -5,7 +5,7 @@ import chess.format.Fen
 import chess.variant.Standard
 import lila.chessjudgment.analysis.position.{ PositionAnalyzer, PositionRelationExtractor }
 import lila.chessjudgment.analysis.structure.{ StructuralDeltaAnalyzer, StructuralDeltaContracts }
-import lila.chessjudgment.model.{ ProbeResolution, ProbeResult }
+import lila.chessjudgment.model.{ ProbeResolution, ProbeResult, ProbeVariant }
 import lila.chessjudgment.model.judgment.*
 import lila.chessjudgment.model.line.{
   CandidateLineEvaluation,
@@ -359,6 +359,28 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       .execute(raw.copy(probeResults = List(malformed)))
       .getOrElse(fail("expected the submitted review to remain reportable"))
     assert(replayed.probeRequests.exists(_.id == request.id))
+
+  test("one root and reply receive only the maximum passed-pawn result horizon"):
+    val raw = RawMoveReviewInput(
+      fen = "7k/8/8/PP6/8/8/8/4K3 w - - 0 1",
+      playedMoveUci = "a5a6",
+      variations = List(
+        EngineLine(List("e1e2", "h8g8", "e2e3"), scoreCp = 50, depth = 20),
+        EngineLine(List("a5a6", "h8g8", "a6a7", "g8h8", "a7a8q"), scoreCp = 0, depth = 20)
+      )
+    )
+    val initial = MoveReviewJudgmentOrchestrator
+      .execute(raw)
+      .getOrElse(fail("expected a bounded passed-pawn result review"))
+    val playedRequests = initial.probeRequests.filter(request =>
+      EvidenceRef.sameMove(request.candidateMove, raw.playedMoveUci)
+    )
+    assert(playedRequests.nonEmpty, "the exact legal replies must still be demanded")
+    val horizons = playedRequests.map(_.variant).collect {
+      case ProbeVariant.BranchReply(_, horizon) => horizon
+    }
+    assertEquals(horizons.distinct, List(4))
+    assertEquals(playedRequests.map(_.moves).distinct.size, playedRequests.size)
 
   test("every exact legal reply must realize the passed-pawn result before one typed L2 proof is public"):
     val raw = RawMoveReviewInput(
@@ -871,6 +893,7 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       captureProof.relationIssuers.map(issuer => issuer.contract -> issuer.relationKind),
       List("capture_recapture_inventory" -> "capture_recapture_inventory")
     )
+    assertEquals(captureProof.relationIssuers.map(_.stepKey), List(BoundedCausalIdentity.stepKey(replyStep)))
 
   test("a line-access dependency publishes its exact slider-reach issuer without recomputing access"):
     val exactFixture = fixture(
@@ -938,6 +961,7 @@ class PassedPawnResultProofTest extends munit.FunSuite:
     assertEquals(issuer.relationKind, "slider_reach_delta")
     assertEquals(issuer.resultKey, trajectory.relationOccurrenceBinding.result.stableKey)
     assertEquals(issuer.occurrenceId, trajectory.relationOccurrenceBinding.occurrenceId)
+    assertEquals(issuer.stepKey, BoundedCausalIdentity.stepKey(enablingStep))
     assertEquals(issuer.sourcePremiseIds, trajectory.relationOccurrenceBinding.certifiedSourcePremiseIds)
 
   test("a reply-backed passed-pawn result dependency retains its exact L1 occurrence owners in the result premise"):
@@ -1096,6 +1120,7 @@ class PassedPawnResultProofTest extends munit.FunSuite:
     assertEquals(issuer.relationKind, "pawn_topology_transition")
     assertEquals(issuer.resultKey, occurrence.result.stableKey)
     assertEquals(issuer.occurrenceId, occurrence.occurrenceId)
+    assertEquals(issuer.stepKey, BoundedCausalIdentity.stepKey(replyStep))
     assertEquals(issuer.sourcePremiseIds, occurrence.certifiedSourcePremiseIds)
 
   test("an inactive passed-pawn-result trace computes no event pair until an exact relation is demanded"):

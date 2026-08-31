@@ -760,9 +760,6 @@ private[assembly] object PassedPawnResultEventProof:
       if enabled then reached + to else reached
     } - root
 
-  def rootActorIsPawn(rootLine: LineNodeRef, structural: StructuralDeltaEvidence): Boolean =
-    rootActor(rootLine, structural).exists(_._2.role == _root_.chess.Pawn)
-
   private def rootActor(
       rootLine: LineNodeRef,
       structural: StructuralDeltaEvidence

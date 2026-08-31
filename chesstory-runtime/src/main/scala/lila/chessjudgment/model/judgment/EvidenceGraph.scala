@@ -78,8 +78,6 @@ enum EvidenceObjectKind:
   case Side
   case Square
   case File
-  case Pawn
-  case PassedPawnSubject
   case Relation
   case Line
   case Mechanism
@@ -1172,7 +1170,7 @@ object EvidenceObjectBinding:
 
     val rootEpisodes = payload
       .rootOwnedCausalEpisodes(payload.line.rootMove)
-      .filter(episode => lineEpisodeFamily(episode.consequence.kind).contains(family))
+      .filter(episode => lineEpisodeFamily(episode.consequence.kind) == family)
     val episodeProjected = rootEpisodes.flatMap { episode =>
         val proof = RootOwnedEffectProof.LineEpisode(source, payload, episode)
         val binding = rootOwnedEpisodeBinding(source, payload, episode)
@@ -1234,17 +1232,16 @@ object EvidenceObjectBinding:
 
   private def lineEpisodeFamily(
       kind: LineConsequenceKind
-  ): Option[ComparisonEndpointLineProofFamily] =
+  ): ComparisonEndpointLineProofFamily =
     kind match
       case LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss =>
-        Some(ComparisonEndpointLineProofFamily.LineEpisodeMaterial)
+        ComparisonEndpointLineProofFamily.LineEpisodeMaterial
       case LineConsequenceKind.Mate =>
-        Some(ComparisonEndpointLineProofFamily.LineEpisodeMate)
+        ComparisonEndpointLineProofFamily.LineEpisodeMate
       case LineConsequenceKind.ImmediateReplyCheck | LineConsequenceKind.DrawResource |
           LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow |
           LineConsequenceKind.Promotion =>
-        Some(ComparisonEndpointLineProofFamily.LineEpisodeQualitative)
-      case _ => None
+        ComparisonEndpointLineProofFamily.LineEpisodeQualitative
 
   private def rootLineEventFamily(
       kind: LineEventKind
@@ -2200,7 +2197,6 @@ object EvidenceObjectBinding:
     DirectCauseProofSegment.allFrom(proof).map { segment =>
       passedPawnResultBinding(
         ref,
-        payload,
         actor,
         assessment,
         eventLine,
@@ -2210,7 +2206,6 @@ object EvidenceObjectBinding:
 
   private def passedPawnResultBinding(
       ref: EvidenceRef,
-      payload: PassedPawnResultEventEvidence,
       actor: RootCausalActor,
       assessment: PassedPawnResultReplyAssessment,
       eventLine: LineNodeRef,
@@ -2237,8 +2232,7 @@ object EvidenceObjectBinding:
         s"${assessment.consequence.anchorKey}:${assessment.robustness}"
       ),
       witness = (
-        objectOf(EvidenceObjectKind.PassedPawnSubject, payload.passedPawnResultKind.id) ++
-          objectOf(EvidenceObjectKind.Move, sourceEvent.moveUci) ++
+        objectOf(EvidenceObjectKind.Move, sourceEvent.moveUci) ++
           objectOf(EvidenceObjectKind.Piece, sourceEvent.identity.actor.beforeRole) ++
           assessment.realizedObservations.flatMap(observation => lineObject(observation.line)) ++
           assessment.realizedObservations.flatMap(_.realizationMoves).flatMap(objectOf(EvidenceObjectKind.Move, _)) ++
@@ -2425,11 +2419,6 @@ object EvidenceObjectBinding:
           )
           .toList
           .flatMap(event => roleObject(event.targetRole))
-      case LineConsequenceKind.Sacrifice =>
-        episode.consequence.sacrificeOccurrence.toList
-          .flatMap(occurrence => roleObject(Some(occurrence.acceptance.capturedRole)))
-      case LineConsequenceKind.ForcedTheme =>
-        Nil
     (square ++ role).distinctBy(_.signaturePart)
 
   private def rootLocalEventBinding(
@@ -2509,7 +2498,7 @@ object EvidenceObjectBinding:
 
   private[chessjudgment] def specificSurfaceTargetObject(obj: ConcreteChessObject): Boolean =
     obj.kind match
-      case EvidenceObjectKind.Square | EvidenceObjectKind.File | EvidenceObjectKind.Pawn | EvidenceObjectKind.Piece =>
+      case EvidenceObjectKind.Square | EvidenceObjectKind.File | EvidenceObjectKind.Piece =>
         true
       case _ =>
         false
@@ -2519,7 +2508,7 @@ object EvidenceObjectBinding:
   ): List[Set[ConcreteChessObject]] =
     consequence.resultSubjectFacts.flatMap { subject =>
       val group = subjectObject(subject)
-        .filter(obj => specificSurfaceTargetObject(obj) && obj.kind != EvidenceObjectKind.PassedPawnSubject)
+        .filter(specificSurfaceTargetObject)
         .toSet
       val pieceRolesValid = group.collect {
         case obj if obj.kind == EvidenceObjectKind.Piece => obj.key.toLowerCase
@@ -2673,20 +2662,9 @@ object EvidenceObjectBinding:
       }
     val consequenceBindings =
       payload.directCauseProjectionEligibleConsequences.flatMap { consequence =>
-        val ownedSacrificeOccurrence = consequence.sacrificeOccurrence.filter(_ =>
-          consequence.kind == LineConsequenceKind.Sacrifice &&
-            consequence.rootMove.exists(root => payload.rootMove.exists(EvidenceRef.sameMove(_, root)))
-        )
         val eventActor = consequence.eventOccurrence.flatMap(occurrence =>
           exactLineActorAt(payload, occurrence.plyOffset, occurrence.moveUci)
         )
-        val sacrificeCaptureTargets =
-          ownedSacrificeOccurrence.toList.flatMap { occurrence =>
-            val capture = occurrence.acceptance
-            squareObject(Some(capture.square)) ++
-              roleObject(Some(capture.capturedRole)) ++
-              objectOf(EvidenceObjectKind.PassedPawnSubject, s"material-sacrifice:${capture.square.key}")
-          }
         val lineMoveWitness =
           consequence.proofOccurrences.flatMap(occurrence =>
             exactLineActorAt(payload, occurrence.plyOffset, occurrence.moveUci).toList.flatMap(actor =>
@@ -2706,7 +2684,7 @@ object EvidenceObjectBinding:
           EvidenceObjectBinding(
             source = ref,
             actor = rootActorObjects(actor),
-            target = actorTargetSquare(actor) ++ sacrificeCaptureTargets,
+            target = actorTargetSquare(actor),
             mechanism = objectOf(EvidenceObjectKind.Mechanism, consequence.kind.toString),
             consequence = objectOf(EvidenceObjectKind.Consequence, consequence.kind.toString),
             witness = lineMoveWitness ++ lineEventWitness ++ lineObject(payload.line),
@@ -2720,21 +2698,10 @@ object EvidenceObjectBinding:
       payload.materialCaptures.flatMap { capture =>
         exactLineActorAt(payload, capture.plyOffset, capture.moveUci).map { actor =>
           val move = EvidenceRef.normalizeMove(capture.moveUci)
-          val rootMove = payload.rootMove.map(normalize)
-          val rootMoveCapture = capture.plyOffset == 0 && rootMove.contains(move)
-          val prefix = if capture.recapture then "material-recapture" else "material-capture"
-          val materialIdentityTargets =
-            if rootMoveCapture then
-              objectOf(EvidenceObjectKind.PassedPawnSubject, s"$prefix:${capture.square.key}") ++
-                Option
-                  .when(payload.materialSacrificeCapture(capture))(s"material-sacrifice:${capture.square.key}")
-                  .toList
-                  .flatMap(objectOf(EvidenceObjectKind.PassedPawnSubject, _))
-            else Nil
           EvidenceObjectBinding(
             source = ref,
             actor = rootActorObjects(actor),
-            target = squareObject(Some(capture.square)) ++ roleObject(Some(capture.capturedRole)) ++ materialIdentityTargets,
+            target = squareObject(Some(capture.square)) ++ roleObject(Some(capture.capturedRole)),
             mechanism = objectOf(
               EvidenceObjectKind.Mechanism,
               if capture.recapture then "MaterialRecapture" else "MaterialCapture"
@@ -2985,7 +2952,6 @@ object EvidenceObjectBinding:
     objectOf(EvidenceObjectKind.Line, line.id) ++ objectOf(EvidenceObjectKind.Move, line.rootMove)
 
   private def subjectObject(subject: StructuralSubject): List[ConcreteChessObject] =
-    val identityObject = subject.identityKey.toList.flatMap(objectOf(EvidenceObjectKind.PassedPawnSubject, _))
     val values = subject match
       case StructuralSubject.OpenFile(file) =>
         objectOf(EvidenceObjectKind.File, file.key)
@@ -3015,7 +2981,7 @@ object EvidenceObjectBinding:
       case StructuralSubject.PassedPawnPromoted(side, from, to) =>
         objectOf(EvidenceObjectKind.Side, colorKey(side)) ++ objectOf(EvidenceObjectKind.Piece, "pawn") ++
           objectOf(EvidenceObjectKind.Square, from.key) ++ objectOf(EvidenceObjectKind.Square, to.key)
-    (identityObject ++ values).distinctBy(_.signaturePart)
+    values.distinctBy(_.signaturePart)
 
   private def objectOf(kind: EvidenceObjectKind, raw: String): List[ConcreteChessObject] =
     val key = normalize(raw)
@@ -4169,12 +4135,13 @@ final case class PassedPawnResultPublicRelationIssuer(
     relationKind: String,
     resultKey: String,
     occurrenceId: String,
+    stepKey: String,
     sourcePremiseIds: List[String]
 ):
   require(contract.nonEmpty && relationKind.nonEmpty, "a public relation issuer needs its exact contract and result kind")
   require(
     resultKey.matches(s"${java.util.regex.Pattern.quote(relationKind)}:[0-9a-f]{64}") &&
-      occurrenceId.matches("[0-9a-f]{64}"),
+      occurrenceId.matches("[0-9a-f]{64}") && stepKey.nonEmpty,
     "a public relation issuer needs exact result and occurrence identities"
   )
   require(
@@ -4449,11 +4416,6 @@ final case class PassedPawnResultProofEvidence private[chessjudgment] (
       .replaceAll("([a-z0-9])([A-Z])", "$1_$2")
       .replace('-', '_')
       .toLowerCase
-
-final case class ForcedLineThemeEvidence(
-    id: String,
-    lineMoves: List[String]
-)
 
 final case class LineReplayStep(
     ply: Int,
@@ -4857,7 +4819,6 @@ enum LineEventKind:
   case Mate
   case Stalemate
   case Promotion
-  case ForcedTheme
 
 final case class LineMoveEvent(
     kind: LineEventKind,
@@ -4870,7 +4831,6 @@ final case class LineMoveEvent(
 )
 
 enum LineConsequenceKind:
-  case ForcedTheme
   case ImmediateReplyCheck
   case Mate
   case DrawResource
@@ -4878,7 +4838,6 @@ enum LineConsequenceKind:
   case MaterialLoss
   case RecaptureSequence
   case RecoveryWindow
-  case Sacrifice
   case Promotion
 
 object LineConsequenceKind:
@@ -4891,17 +4850,6 @@ object LineConsequenceKind:
           LineConsequenceKind.ImmediateReplyCheck | LineConsequenceKind.Mate |
           LineConsequenceKind.DrawResource | LineConsequenceKind.Promotion =>
         true
-      case LineConsequenceKind.ForcedTheme | LineConsequenceKind.Sacrifice =>
-        false
-
-enum LineMaterialOutcomeSignal:
-  case MoverCapture
-  case OpponentCapture
-  case PromotionGain
-  case PromotionLoss
-  case UnrecoveredPawnGain
-  case UnrecoveredPawnLoss
-  case RecoveryWindow
 
 final case class LineMoveOccurrence(
     moveUci: String,
@@ -4927,7 +4875,6 @@ final case class LineConsequence(
     rootMove: Option[String] = None,
     rootSide: Option[Color] = None,
     beneficiary: Option[Color] = None,
-    sacrificeOccurrence: Option[LineSacrificeOccurrence] = None,
     materialOutcome: Option[RootOwnedMaterialOutcome] = None
 ):
   require(
@@ -4962,37 +4909,6 @@ final case class LineConsequence(
   def rootMoveMatched(rootMove: String): Boolean =
     this.rootMove.exists(move => EvidenceRef.sameMove(move, rootMove))
 
-  /** Exact stationary projection. Cardinality is zero or one because every
-    * sacrifice consequence owns one occurrence.
-    */
-  def stationarySacrificeCaptures: List[LineMaterialCapture] =
-    sacrificeOccurrence.filter(_.stationary).map(_.acceptance).toList
-
-final case class LineConsequenceProfile(
-    directCauseProjectionEligibleKinds: List[LineConsequenceKind],
-    hasDirectCauseProjectionEligibleConsequence: Boolean,
-    hasMaterialResult: Boolean,
-    hasRecaptureRecovery: Boolean,
-    hasSacrifice: Boolean,
-    hasMate: Boolean,
-    hasDrawResource: Boolean
-)
-final case class LineMaterialOutcomeProfile(
-    gainSignals: Set[LineMaterialOutcomeSignal],
-    lossSignals: Set[LineMaterialOutcomeSignal]
-):
-  def merge(other: LineMaterialOutcomeProfile): LineMaterialOutcomeProfile =
-    LineMaterialOutcomeProfile(
-      gainSignals = gainSignals ++ other.gainSignals,
-      lossSignals = lossSignals ++ other.lossSignals
-    )
-
-
-
-object LineMaterialOutcomeProfile:
-  val empty: LineMaterialOutcomeProfile =
-    LineMaterialOutcomeProfile(Set.empty, Set.empty)
-
 enum LineMaterialRecaptureStatus:
   case Proven(inventory: DerivedRelationResultKey)
   case Excluded
@@ -5009,8 +4925,6 @@ final case class LineMaterialCapture private[chessjudgment] (
     recaptureStatus: LineMaterialRecaptureStatus
 ):
   def recapture: Boolean = recaptureStatus.isInstanceOf[LineMaterialRecaptureStatus.Proven]
-  private[chessjudgment] def recaptureExcluded: Boolean =
-    recaptureStatus == LineMaterialRecaptureStatus.Excluded
 
 private[chessjudgment] final case class ObservedLineMaterialEvent(
     moveUci: String,
@@ -5047,102 +4961,6 @@ final case class ClosedLineMaterialOutcome(
     terminalPlyOffset: Int
 ):
   require(terminalPlyOffset >= 0, "a closed material outcome needs an exact terminal ply")
-
-/** One exact replay occurrence at which a piece was placed on the square on
-  * which it was later accepted. `None` on [[LineSacrificeOccurrence.offer]]
-  * means that the accepted piece already occupied the square at the root.
-  */
-final case class LineSacrificeOffer(
-    moveUci: String,
-    plyOffset: Int
-):
-  require(moveUci.nonEmpty, "a sacrifice offer needs an exact move")
-  require(plyOffset >= 0, "a sacrifice offer needs a root-relative ply offset")
-
-/** Exact identity of one accepted material offer in the canonical replay.
-  * The acceptance capture is never shared or inferred across occurrences.
-  */
-final case class LineSacrificeOccurrence private (
-    offer: Option[LineSacrificeOffer],
-    acceptance: LineMaterialCapture
-):
-  require(acceptance.plyOffset >= 0, "a sacrifice acceptance needs a root-relative ply offset")
-  require(
-    offer.forall(_.plyOffset < acceptance.plyOffset),
-    "a moved sacrifice offer must precede its acceptance"
-  )
-
-  def target: EvidenceSquare = acceptance.square
-  def stationary: Boolean = offer.isEmpty
-
-object LineSacrificeOccurrence:
-  private final case class TrackedOffer(
-      piece: RelationColoredPieceWitness,
-      offer: Option[LineSacrificeOffer]
-  )
-
-  private[chessjudgment] def acceptanceKey(
-      occurrence: LineSacrificeOccurrence
-  ): (Int, String) =
-    LineMaterialSummary.captureOccurrenceKey(occurrence.acceptance)
-
-  /** Builds an occurrence by following the acceptance square through the
-    * canonical move footprints. Every legal move is interpreted once by the
-    * replay owner; this consumer never reopens its boards.
-    */
-  private[chessjudgment] def fromCanonicalReplay(
-      replay: CanonicalLineReplay,
-      offeredSide: Color,
-      acceptance: LineMaterialCapture
-  ): Option[LineSacrificeOccurrence] =
-    for
-      square <- Square.fromKey(acceptance.square.key)
-      acceptanceReplay <- replay.replaySteps.lift(acceptance.plyOffset)
-      acceptanceStep <- replay.legalSteps.lift(acceptance.plyOffset)
-      acceptanceTransition <- replay.transition(acceptanceReplay)
-      if EvidenceRef.sameMove(acceptanceReplay.moveUci, acceptance.moveUci)
-      if EvidenceRef.sameMove(acceptanceStep.uci, acceptance.moveUci)
-      if acceptanceTransition.relationDelta.rootMove.capture.exists(capture =>
-        capture.capturedSquare == acceptance.square &&
-          capture.capturedRole == acceptance.capturedRole
-      )
-      if acceptance.side == acceptanceStep.move.piece.color
-      if acceptanceStep.move.piece.role.toString.equalsIgnoreCase(acceptance.attackerRole.name)
-      if acceptance.side != offeredSide
-      initialInventory <- replay.replaySteps.headOption.flatMap(replay.analysisBefore).map(_.relationInventory)
-      initial = initialInventory.occupantAt(EvidenceSquare(square.key)).map(piece => TrackedOffer(piece, None))
-      tracked = replay.replaySteps
-        .take(acceptance.plyOffset)
-        .zipWithIndex
-        .foldLeft(initial) { case (current, (declared, plyOffset)) =>
-          replay.transition(declared) match
-            case None => None
-            case Some(transition) =>
-              transition.boardFootprint.pieceTransitions.find(_.to == square) match
-                case Some(arrival) =>
-                  Some(TrackedOffer(
-                    RelationColoredPieceWitness(
-                      square = EvidenceSquare(arrival.to.key),
-                      role = EvidencePieceRole(arrival.afterRole.name),
-                      side = arrival.side
-                    ),
-                    Some(LineSacrificeOffer(EvidenceRef.normalizeMove(declared.moveUci), plyOffset))
-                  ))
-                case None if transition.boardFootprint.changedSquareSet(square) => None
-                case None => current
-        }
-      offered <- tracked
-      if offered.piece.side == offeredSide
-      if offered.piece.role == acceptance.capturedRole
-      if acceptanceStep.capturedRole.exists(role => offered.piece.role.name.equalsIgnoreCase(role.name))
-      if acceptanceTransition.boardFootprint.cellChanges.exists(change =>
-        change.square == square &&
-          change.before.exists(piece =>
-            piece.color == offered.piece.side && piece.role.name.equalsIgnoreCase(offered.piece.role.name)
-          ) &&
-          !change.after.exists(_.color == offered.piece.side)
-      )
-    yield LineSacrificeOccurrence(offered.offer, LineMaterialSummary.normalizedCapture(acceptance))
 
 /** Concrete capture salience is sentence-facing event identity, not the
   * magnitude of the material result that survives the exchange sequence.
@@ -5236,18 +5054,6 @@ final case class LineMaterialSummary private[chessjudgment] (
   private[chessjudgment] def exactCaptures: Option[List[LineMaterialCapture]] =
     exactCaptureInventory
 
-  private[chessjudgment] def exactCaptureAt(
-      plyOffset: Int,
-      moveUci: String
-  ): Option[LineMaterialCapture] =
-    exactCaptureInventory.flatMap { inventory =>
-      inventory.filter(capture =>
-        capture.plyOffset == plyOffset && EvidenceRef.sameMove(capture.moveUci, moveUci)
-      ) match
-        case capture :: Nil => Some(capture)
-        case _              => None
-    }
-
   def observedNetCpForMover: Int = runningBalancesForMover.lastOption.getOrElse(0)
   def observedMaxGainCpForMover: Int = (0 :: runningBalancesForMover).max
   def observedMaxLossCpForMover: Int = (0 :: runningBalancesForMover).min
@@ -5324,13 +5130,6 @@ final case class LineMaterialSummary private[chessjudgment] (
       hasUnrecoveredPawnLossForMover ||
       hasResolvedMaterialSequence
 
-  private[chessjudgment] def sacrificeResponsesFor(
-      capture: LineMaterialCapture
-  ): List[LineMaterialCapture] =
-    exactCaptureInventory.toList
-      .flatten
-      .filter(response => LineMaterialSummary.materialSacrificePair(capture, response))
-
   private def directCauseProjectionEligibleCapturedRole(role: EvidencePieceRole): Boolean =
     val normalized = role.name.trim.toLowerCase
     normalized.nonEmpty && normalized != "pawn" && normalized != "king"
@@ -5366,27 +5165,6 @@ object LineMaterialSummary:
         capture.square.key.toLowerCase
       ))
     )
-
-  private[chessjudgment] def materialSacrificePair(
-      offer: LineMaterialCapture,
-      response: LineMaterialCapture
-  ): Boolean =
-    offer.recaptureExcluded &&
-      response.recapture &&
-      response.plyOffset > offer.plyOffset &&
-      response.square == offer.square &&
-      response.side != offer.side &&
-      response.capturedRole == offer.attackerRole &&
-      materialValue(offer.attackerRole) > materialValue(offer.capturedRole)
-
-  private def materialValue(role: EvidencePieceRole): Int =
-    role.name.toLowerCase match
-      case "queen"             => 9
-      case "rook"              => 5
-      case "bishop" | "knight" => 3
-      case "pawn"              => 1
-      case "king"              => 100
-      case _                    => 0
 
 enum RootCausalLinkKind:
   case ImmediateRootAction
@@ -5549,7 +5327,6 @@ private[chessjudgment] object LineReplayDerivedFacts:
 
 final case class LineFactEvidence private[chessjudgment] (
     line: LineNodeRef,
-    private val forcedTheme: Option[ForcedLineThemeEvidence] = None,
     private val material: Option[LineMaterialSummary] = None,
     private val replay: List[LineReplayStep] = Nil,
     private val events: List[LineMoveEvent] = Nil,
@@ -5603,19 +5380,6 @@ final case class LineFactEvidence private[chessjudgment] (
     uniqueMaterialCaptureAt(0, rootMoveUci)
   def rootIsRecapture(rootMoveUci: String): Boolean =
     rootMaterialCapture(rootMoveUci).exists(_.recapture)
-  def rootIsCaptureSacrifice(rootMoveUci: String): Boolean =
-    rootMaterialCapture(rootMoveUci).nonEmpty &&
-      sacrificeOccurrencesForRootMove(rootMoveUci).exists(_.offer.exists(offer =>
-        offer.plyOffset == 0 && EvidenceRef.sameMove(offer.moveUci, rootMoveUci)
-      ))
-  def rootCaptureSacrificeResponses(rootMoveUci: String): List[LineMaterialCapture] =
-    sacrificeOccurrencesForRootMove(rootMoveUci).collect {
-      case occurrence
-          if occurrence.offer.exists(offer =>
-            offer.plyOffset == 0 && EvidenceRef.sameMove(offer.moveUci, rootMoveUci)
-          ) =>
-        occurrence.acceptance
-    }
   def materialGainCapturesFor(side: Color): List[LineMaterialCapture] =
     val lastingGainOccurrences = consequences.collect {
       case consequence
@@ -5634,15 +5398,6 @@ final case class LineFactEvidence private[chessjudgment] (
         capture.capturedRole.name.equalsIgnoreCase("pawn")
     )
     (materialGainCapturesFor(side) ++ immediatePawnPunishments).distinct
-  def materialSacrificeCapture(capture: LineMaterialCapture): Boolean =
-    rootMove.exists(root =>
-      sacrificeOccurrencesForRootMove(root).exists { occurrence =>
-        occurrence.acceptance == LineMaterialSummary.normalizedCapture(capture) ||
-          occurrence.offer.exists(offer =>
-            offer.plyOffset == capture.plyOffset && EvidenceRef.sameMove(offer.moveUci, capture.moveUci)
-          )
-      }
-    )
   def lineEvents: List[LineMoveEvent] =
     events
   def lineConsequences: List[LineConsequence] =
@@ -5676,12 +5431,8 @@ final case class LineFactEvidence private[chessjudgment] (
     material.exists(_.hasRecaptureChain)
   def hasClosedMaterialRecovery: Boolean =
     material.exists(_.hasClosedRecovery)
-  def hasClosedMaterialOutcome: Boolean =
-    material.exists(_.isClosed)
   def hasDirectCauseProjectionEligibleMaterialEvent: Boolean =
     material.exists(_.hasDirectCauseProjectionEligibleMaterialEvent)
-  def hasSacrificeMaterialEvent: Boolean =
-    rootMove.exists(root => sacrificeOccurrencesForRootMove(root).nonEmpty)
   def directCauseProjectionEligibleConsequences: List[LineConsequence] =
     consequences.filter(_.directCauseProjectionEligible)
   private[chessjudgment] def proofConsequenceCandidatesForRootMove(
@@ -5721,58 +5472,20 @@ final case class LineFactEvidence private[chessjudgment] (
           case _ =>
             false)
     )
-  def sacrificeSquaresForRootMove(rootMoveUci: String): List[EvidenceSquare] =
-    sacrificeOccurrencesForRootMove(rootMoveUci).map(_.target).distinct
-  def sacrificeOccurrencesForRootMove(rootMoveUci: String): List[LineSacrificeOccurrence] =
-    val grouped = consequencesForRootMove(rootMoveUci)
-      .filter(_.kind == LineConsequenceKind.Sacrifice)
-      .flatMap(_.sacrificeOccurrence)
-      .groupBy(LineSacrificeOccurrence.acceptanceKey)
-    val resolved = grouped.toList.map { case (_, sameAcceptance) =>
-      sameAcceptance.distinct match
-        case occurrence :: Nil => Some(occurrence)
-        case _                 => None
-    }
-    Option
-      .when(resolved.forall(_.nonEmpty))(
-        resolved.flatten.sortBy(occurrence => (
-          occurrence.acceptance.plyOffset,
-          EvidenceRef.normalizeMove(occurrence.acceptance.moveUci),
-          occurrence.acceptance.square.key.toLowerCase
-        ))
-      )
-      .getOrElse(Nil)
-  def principalSacrificeCostSequenceForRootMove(rootMoveUci: String): List[LineMaterialCapture] =
-    sacrificeOccurrencesForRootMove(rootMoveUci).map(_.acceptance)
-  def hasDirectCauseProjectionEligibleConsequence: Boolean =
-    directCauseProjectionEligibleConsequences.nonEmpty
   def directCauseProjectionEligibleConsequenceKinds: List[LineConsequenceKind] =
     directCauseProjectionEligibleConsequences.map(_.kind)
   def hasDirectCauseProjectionEligibleConsequence(kind: LineConsequenceKind): Boolean =
     directCauseProjectionEligibleConsequenceKinds.contains(kind)
-  def consequenceProfile: LineConsequenceProfile =
-    val kinds = directCauseProjectionEligibleConsequenceKinds
-    LineConsequenceProfile(
-      directCauseProjectionEligibleKinds = kinds,
-      hasDirectCauseProjectionEligibleConsequence = kinds.nonEmpty,
-      hasMaterialResult = kinds.exists {
-        case LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss |
-            LineConsequenceKind.Sacrifice | LineConsequenceKind.Promotion =>
-          true
-        case _ =>
-          false
-      },
-      hasRecaptureRecovery = kinds.exists(kind =>
-        kind == LineConsequenceKind.RecaptureSequence || kind == LineConsequenceKind.RecoveryWindow
-      ),
-      hasSacrifice = kinds.contains(LineConsequenceKind.Sacrifice),
-      hasMate = kinds.contains(LineConsequenceKind.Mate),
-      hasDrawResource = kinds.contains(LineConsequenceKind.DrawResource)
-    )
   def hasMaterialConsequence: Boolean =
-    consequenceProfile.hasMaterialResult
+    directCauseProjectionEligibleConsequenceKinds.exists {
+      case LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss |
+          LineConsequenceKind.Promotion => true
+      case _ => false
+    }
   def hasRecaptureRecoveryConsequence: Boolean =
-    consequenceProfile.hasRecaptureRecovery
+    directCauseProjectionEligibleConsequenceKinds.exists(kind =>
+      kind == LineConsequenceKind.RecaptureSequence || kind == LineConsequenceKind.RecoveryWindow
+    )
   def semanticGroupingAnchors: List[EvidenceSemanticAnchor] =
     Option
       .when(hasLineEvent(LineEventKind.Castling))(
@@ -5782,49 +5495,6 @@ final case class LineFactEvidence private[chessjudgment] (
       directCauseProjectionEligibleConsequenceKinds.map(kind =>
         EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.LineConsequence, kind.toString)
       )
-
-  def materialOutcomeProfile: LineMaterialOutcomeProfile =
-    val consequenceGainSignals =
-      consequences.collect {
-        case LineConsequence(LineConsequenceKind.MaterialGain, _, true, _, _, _, _, _, _) =>
-          LineMaterialOutcomeSignal.MoverCapture
-        case LineConsequence(LineConsequenceKind.MaterialGain, _, false, _, _, _, _, _, _) =>
-          LineMaterialOutcomeSignal.UnrecoveredPawnGain
-        case LineConsequence(LineConsequenceKind.RecoveryWindow, _, true, _, _, _, _, _, _) =>
-          LineMaterialOutcomeSignal.RecoveryWindow
-      }.toSet
-    val consequenceLossSignals =
-      consequences.collect {
-        case LineConsequence(LineConsequenceKind.MaterialLoss, _, true, _, _, _, _, _, _) =>
-          LineMaterialOutcomeSignal.OpponentCapture
-        case LineConsequence(LineConsequenceKind.MaterialLoss, _, false, _, _, _, _, _, _) =>
-          LineMaterialOutcomeSignal.UnrecoveredPawnLoss
-      }.toSet
-    val materialGainSignals =
-      material
-        .map(summary =>
-          Set(
-            Option.when(summary.closedNetCpForMover.exists(_ > 0) && summary.nonPawnCapturesByMover.nonEmpty)(LineMaterialOutcomeSignal.MoverCapture),
-            Option.when(summary.closedNetCpForMover.exists(_ > 0) && summary.hasPromotionGainForMover)(LineMaterialOutcomeSignal.PromotionGain),
-            Option.when(summary.hasUnrecoveredPawnGainForMover)(LineMaterialOutcomeSignal.UnrecoveredPawnGain),
-            Option.when(summary.hasClosedRecovery)(LineMaterialOutcomeSignal.RecoveryWindow)
-          ).flatten
-        )
-        .getOrElse(Set.empty)
-    val materialLossSignals =
-      material
-        .map(summary =>
-          Set(
-            Option.when(summary.closedNetCpForMover.exists(_ < 0) && summary.nonPawnCapturesByOpponent.nonEmpty)(LineMaterialOutcomeSignal.OpponentCapture),
-            Option.when(summary.closedNetCpForMover.exists(_ < 0) && summary.hasPromotionLossForMover)(LineMaterialOutcomeSignal.PromotionLoss),
-            Option.when(summary.hasUnrecoveredPawnLossForMover)(LineMaterialOutcomeSignal.UnrecoveredPawnLoss)
-          ).flatten
-        )
-        .getOrElse(Set.empty)
-    LineMaterialOutcomeProfile(
-      gainSignals = consequenceGainSignals ++ materialGainSignals,
-      lossSignals = consequenceLossSignals ++ materialLossSignals
-    )
 
 object RootOwnedCausalEpisode:
   private final case class TrackedActor(square: Square, role: EvidencePieceRole)
@@ -5908,10 +5578,6 @@ object RootOwnedCausalEpisode:
               !movement.afterRole.name.equalsIgnoreCase(Pawn.toString)
           )(movement.to)
         }
-      case LineConsequenceKind.Sacrifice =>
-        consequence.sacrificeOccurrence.map(_.target)
-      case LineConsequenceKind.ForcedTheme =>
-        None
 
   private enum VerifiedKingState:
     case InCheck
@@ -5996,15 +5662,6 @@ object RootOwnedCausalEpisode:
             movement.beforeRole.name.equalsIgnoreCase(Pawn.name) &&
             !movement.afterRole.name.equalsIgnoreCase(Pawn.name)
         )
-      case LineConsequenceKind.Sacrifice =>
-        consequence.sacrificeOccurrence.exists(occurrence =>
-          occurrence.acceptance.plyOffset == eventPlyOffset &&
-            capture.contains(occurrence.acceptance) &&
-            consequence.rootSide.contains(rootColor) &&
-            occurrence.acceptance.side != rootColor
-        )
-      case LineConsequenceKind.ForcedTheme =>
-        false
 
   private def causalLinks(
       line: LineFactEvidence,
@@ -6120,9 +5777,7 @@ object RootOwnedCausalEpisode:
       immediateReplyOwnsLoss =
         eventPlyOffset == 1 &&
           line.lineReplaySteps.lift(1).contains(eventStep)
-      rootSacrificeOwnsLoss =
-        line.rootCaptureSacrificeResponses(line.line.rootMove).contains(capture)
-      if immediateReplyOwnsLoss || rootSacrificeOwnsLoss
+      if immediateReplyOwnsLoss
     yield RootCausalLink(
       RootCausalLinkKind.RootActorCaptured,
       LineMoveOccurrence(EvidenceRef.normalizeMove(rootStep.moveUci), 0),
@@ -6308,7 +5963,6 @@ object LineFactEvidence:
   private[chessjudgment] def fromCertifiedReplay(
       line: LineNodeRef,
       replay: CanonicalLineReplay,
-      forcedTheme: Option[ForcedLineThemeEvidence] = None,
       material: Option[LineMaterialSummary] = None,
       events: List[LineMoveEvent] = Nil,
       consequences: List[LineConsequence] = Nil,
@@ -6332,7 +5986,6 @@ object LineFactEvidence:
     val derived = LineReplayDerivedFacts.from(replay)
     val provisional = LineFactEvidence(
       line = line,
-      forcedTheme = forcedTheme,
       material = material,
       replay = replay.replaySteps,
       events = events,
@@ -6347,23 +6000,6 @@ object LineFactEvidence:
     provisional.copy(
       replayDerived = LineReplayDerivedFacts.withRootOwnedEpisodes(derived, episodes)
     )
-
-  def fromRecords(records: List[EvidenceRecord]): List[LineFactEvidence] =
-    records.collect { case EvidenceRecord(_, payload: LineFactEvidence, _) => payload }
-
-  def materialOutcomeProfile(records: List[EvidenceRecord]): LineMaterialOutcomeProfile =
-    fromRecords(records).map(_.materialOutcomeProfile).foldLeft(LineMaterialOutcomeProfile.empty)(_.merge(_))
-
-
-
-
-
-  def hasMaterialRecaptureChain(records: List[EvidenceRecord]): Boolean =
-    fromRecords(records).exists(_.hasMaterialRecaptureChain)
-
-  def hasClosedMaterialRecovery(records: List[EvidenceRecord]): Boolean =
-    fromRecords(records).exists(_.hasClosedMaterialRecovery)
-
 
 final case class CandidateLineEvaluationEvidence(
     line: LineNodeRef,
@@ -6440,14 +6076,6 @@ enum StructuralSubject:
       case PassedPawnAdvanced(_, _, to, _) => List(to)
       case PassedStatusCreated(_, _, to, _) => List(to)
       case PassedPawnPromoted(_, _, to) => List(to)
-
-  def identityKey: Option[String] =
-    this match
-      case _: PawnTensionCreated | _: PawnTensionResolved |
-          _: PassedPawnCreated | _: PassedPawnLost | _: PassedPawnAdvanced |
-          _: PassedStatusCreated | _: PassedPawnPromoted =>
-        Some(label)
-      case _ => None
 
 object StructuralSubject:
   private def atom(value: String): String =
@@ -7144,8 +6772,6 @@ object TacticalMechanismKind:
         List(TacticalMechanismKind.DrawResource)
       case LineConsequenceKind.Promotion =>
         List(TacticalMechanismKind.PawnPromotion)
-      case LineConsequenceKind.ForcedTheme | LineConsequenceKind.Sacrifice =>
-        Nil
 
   def relativeCauseKind(
       kind: TacticalMechanismKind,
@@ -8356,6 +7982,7 @@ private[chessjudgment] final case class CausalDependencyPremiseWitness private (
           relationKind = RelationFactKind.id(issuer.result.kind),
           resultKey = issuer.result.stableKey,
           occurrenceId = issuer.occurrenceId,
+          stepKey = BoundedCausalIdentity.stepKey(issuer.step),
           sourcePremiseIds = issuer.certifiedSourcePremiseIds
         )
       )
@@ -8922,17 +8549,8 @@ final case class PassedPawnResultEventEvidence(
         )
       }
     }.distinct
-  def positiveCausalResultAssessments: List[PassedPawnResultReplyAssessment] =
-    causalResultAssessments.filter(_.positiveProofReady)
   def realizedResultAssessments: List[PassedPawnResultReplyAssessment] =
-    positiveCausalResultAssessments
-  def resolvedCausalResultAssessments: List[PassedPawnResultReplyAssessment] =
-    causalResultAssessments.filterNot(assessment =>
-      assessment.robustness == PassedPawnResultReplyCoverage.NoReplyWitnesses ||
-        assessment.robustness == PassedPawnResultReplyCoverage.IncompleteReplyCoverage
-    )
-  def resolvedResultAssessments: List[PassedPawnResultReplyAssessment] =
-    resolvedCausalResultAssessments
+    causalResultAssessments.filter(_.positiveProofReady)
   /** Every exact result authorized for an affirmative public passed-pawn-result Cause.
     * Sibling results retain independent robustness and proof identity.
     */
@@ -8965,10 +8583,6 @@ final case class PassedPawnResultEventEvidence(
         assessment.robustness != PassedPawnResultReplyCoverage.NoReplyWitnesses &&
           assessment.robustness != PassedPawnResultReplyCoverage.IncompleteReplyCoverage
       )
-  def episodePublicProofReady: Boolean =
-    observedRootEnablesContinuation &&
-      branchCoverageComplete &&
-      realizedResultAssessments.nonEmpty
   def semanticGroupingAnchors: List[EvidenceSemanticAnchor] =
     List(
       EvidenceSemanticAnchor.of(EvidenceSemanticAnchorKind.PassedPawnResultKind, passedPawnResultKind.id),

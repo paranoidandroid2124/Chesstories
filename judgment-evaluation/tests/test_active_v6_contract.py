@@ -733,6 +733,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
                         "relation_kind": "slider_reach_delta",
                         "result_key": "slider_reach_delta:" + "1" * 64,
                         "occurrence_id": "2" * 64,
+                        "step_key": "1:a2a3:issuer-before:issuer-after",
                         "source_premise_ids": ["l1-slider-reach"],
                     }
                 ],
@@ -758,6 +759,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
                         "relation_kind": "pawn_topology_transition",
                         "result_key": "pawn_topology_transition:" + "3" * 64,
                         "occurrence_id": "4" * 64,
+                        "step_key": "2:b4a3:issuer-before:issuer-after",
                         "source_premise_ids": ["l1-pawn-topology"],
                     }
                 ],
@@ -782,6 +784,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
                         "relation_kind": "capture_recapture_inventory",
                         "result_key": "capture_recapture_inventory:" + "5" * 64,
                         "occurrence_id": "6" * 64,
+                        "step_key": "2:b4a3:issuer-before:issuer-after",
                         "source_premise_ids": ["l1-capture-recapture"],
                     }
                 ],

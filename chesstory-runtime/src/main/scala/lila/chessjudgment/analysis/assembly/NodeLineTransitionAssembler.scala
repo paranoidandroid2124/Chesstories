@@ -3,7 +3,7 @@ package lila.chessjudgment.analysis.assembly
 import chess.Pawn
 import chess.format.Fen
 import lila.chessjudgment.analysis.evaluation.EvalFactNormalizer
-import lila.chessjudgment.analysis.line.{ ForcedLineTruth, LineFactNormalizer }
+import lila.chessjudgment.analysis.line.LineFactNormalizer
 import lila.chessjudgment.analysis.material.MaterialValue
 import lila.chessjudgment.analysis.position.PositionRelationExtractor
 import lila.chessjudgment.analysis.transition.TransitionFactNormalizer
@@ -101,12 +101,6 @@ object CandidateLineAssembler:
       .flatMap { case (line, replay) => replayFacts(line, replay, root, positionHistory) }
       .map { replayed =>
       val facts = replayed.facts
-      val forcedTheme =
-        line.evaluation.engineLine.flatMap(engineLine =>
-          ForcedLineTruth
-            .detect(replayed.replay, List(engineLine))
-            .map(LineFactNormalizer.fromForcedTheme)
-        )
       val lineEvidence =
         allocator.evidenceRef(
           suffix = s"line:$occurrenceKey",
@@ -131,7 +125,6 @@ object CandidateLineAssembler:
           replay = replayed.replay,
           position = root,
           scope = scope,
-          forcedTheme = forcedTheme,
           materialSummary = replayed.materialSummary,
           predecessorReplay = line.predecessorReplay,
           whitePovMate = line.evaluation.engineLine.flatMap(_.mate)

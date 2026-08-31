@@ -878,6 +878,7 @@ object RuntimeProtocol:
             "relation_kind" -> issuer.relationKind,
             "result_key" -> issuer.resultKey,
             "occurrence_id" -> issuer.occurrenceId,
+            "step_key" -> issuer.stepKey,
             "source_premise_ids" -> issuer.sourcePremiseIds
           )
         )
@@ -977,8 +978,6 @@ object RuntimeProtocol:
         case EvidenceObjectKind.Side        => "side"
         case EvidenceObjectKind.Square      => "square"
         case EvidenceObjectKind.File        => "file"
-        case EvidenceObjectKind.Pawn        => "pawn"
-        case EvidenceObjectKind.PassedPawnSubject => "passed_pawn_subject"
         case EvidenceObjectKind.Relation    => "relation"
         case EvidenceObjectKind.Line        => "line"
         case EvidenceObjectKind.Mechanism   => "mechanism"

@@ -15,14 +15,13 @@ object LineFactNormalizer:
       replay: CanonicalLineReplay,
       position: PositionNodeRef,
       scope: EvidenceScope,
-      forcedTheme: Option[ForcedLineThemeEvidence] = None,
       materialSummary: Option[LineMaterialSummary] = None,
       predecessorReplay: Option[CanonicalLineReplay] = None,
       whitePovMate: Option[Int] = None,
       parents: List[EvidenceRef] = Nil
   ): EvidenceRecord =
-    val events = lineEvents(facts, replay, forcedTheme, materialSummary)
-    val consequences = lineConsequences(facts, replay, forcedTheme, materialSummary, whitePovMate)
+    val events = lineEvents(facts, replay, materialSummary)
+    val consequences = lineConsequences(facts, replay, events, materialSummary, whitePovMate)
     val ref =
       EvidenceRef(
         id = id,
@@ -35,7 +34,6 @@ object LineFactNormalizer:
       )
     val payload = LineFactEvidence.fromCertifiedReplay(
       line = lineRef,
-      forcedTheme = forcedTheme,
       material = materialSummary,
       replay = replay,
       events = events,
@@ -48,16 +46,9 @@ object LineFactNormalizer:
       parents = parents
     )
 
-  def fromForcedTheme(theme: ForcedLineTruth.VerifiedTheme): ForcedLineThemeEvidence =
-    ForcedLineThemeEvidence(
-      id = theme.id,
-      lineMoves = theme.lineMoves
-    )
-
   private def lineEvents(
       facts: PrincipalVariationEvidence.LineFacts,
       replay: CanonicalLineReplay,
-      forcedTheme: Option[ForcedLineThemeEvidence],
       materialSummary: Option[LineMaterialSummary]
   ): List[LineMoveEvent] =
     val replayEvents =
@@ -144,16 +135,6 @@ object LineFactNormalizer:
         }
         castling.toList ++ checkDefense ++ stateEvents
       }
-    val forcedEvents =
-      forcedTheme.toList.flatMap(theme =>
-        theme.lineMoves.headOption.toList.flatMap(move =>
-          List(LineMoveEvent(
-            kind = LineEventKind.ForcedTheme,
-            moveUci = move,
-            plyOffset = 0
-          ))
-        )
-      )
     val captureEvents =
       materialSummary.toList.flatMap(_.captures).flatMap { capture =>
         val captureEvent =
@@ -181,12 +162,12 @@ object LineFactNormalizer:
           )
       }
     val materialEvents = captureEvents ++ promotionEvents
-    (replayEvents ++ forcedEvents ++ materialEvents).distinct
+    (replayEvents ++ materialEvents).distinct
 
   private def lineConsequences(
       facts: PrincipalVariationEvidence.LineFacts,
       replay: CanonicalLineReplay,
-      forcedTheme: Option[ForcedLineThemeEvidence],
+      events: List[LineMoveEvent],
       materialSummary: Option[LineMaterialSummary],
       whitePovMate: Option[Int]
   ): List[LineConsequence] =
@@ -242,22 +223,27 @@ object LineFactNormalizer:
           )
         }
       }
-    val forced =
-      forcedTheme.toList.map(theme =>
-        LineConsequence(
-          kind =
-            if theme.id == ForcedLineTruth.ImmediateReplyCheckId then LineConsequenceKind.ImmediateReplyCheck
-            else LineConsequenceKind.ForcedTheme,
-          proofOccurrences = theme.lineMoves.zipWithIndex.map { case (move, plyOffset) =>
-            LineMoveOccurrence(PrincipalVariationEvidence.normalizeUci(move), plyOffset)
-          },
-          directCauseProjectionEligible = false,
-          eventOccurrence = theme.lineMoves.headOption.map(move =>
-            LineMoveOccurrence(PrincipalVariationEvidence.normalizeUci(move), 0)
-          ),
-          rootMove = rootMove,
-          rootSide = rootSide
-        )
+    val immediateReplyChecks =
+      for
+        normalizedRoot <- rootMove.toList
+        replyCheck <- events.filter(event => event.kind == LineEventKind.Check && event.plyOffset == 1)
+        rootStep <- replay.replaySteps.headOption.toList
+        replyStep <- replay.replaySteps.lift(1).toList
+        if EvidenceRef.sameMove(rootStep.moveUci, normalizedRoot)
+        if EvidenceRef.sameMove(replyStep.moveUci, replyCheck.moveUci)
+        checker <- replyCheck.side.toList
+        if rootSide.exists(_ != checker)
+      yield LineConsequence(
+        kind = LineConsequenceKind.ImmediateReplyCheck,
+        proofOccurrences = List(
+          LineMoveOccurrence(EvidenceRef.normalizeMove(rootStep.moveUci), 0),
+          LineMoveOccurrence(EvidenceRef.normalizeMove(replyStep.moveUci), 1)
+        ),
+        directCauseProjectionEligible = false,
+        eventOccurrence = Some(LineMoveOccurrence(EvidenceRef.normalizeMove(replyStep.moveUci), 1)),
+        rootMove = Some(normalizedRoot),
+        rootSide = rootSide,
+        beneficiary = Some(checker)
       )
     val material =
       materialSummary.toList.flatMap { summary =>
@@ -266,7 +252,6 @@ object LineFactNormalizer:
           .map(event =>
             LineMoveOccurrence(EvidenceRef.normalizeMove(event.moveUci), event.plyOffset)
           )
-        val sacrificeOccurrences = offeredSacrificeOccurrences(replay, summary, rootMove)
         val materialEvents = materialOutcomeEvents(summary)
         val lastingMaterialOutcome = lastingMaterialOutcomeFor(materialEvents, summary)
         val materialOutcomeEvent = lastingMaterialOutcome.map(_.event)
@@ -334,24 +319,6 @@ object LineFactNormalizer:
                 beneficiary = Some(capture.side)
               )
           )
-        val sacrificeConsequences =
-          sacrificeOccurrences.map { occurrence =>
-            val acceptance = occurrence.acceptance
-            LineConsequence(
-              LineConsequenceKind.Sacrifice,
-              replay.replaySteps.take(acceptance.plyOffset + 1).zipWithIndex.map { case (step, plyOffset) =>
-                LineMoveOccurrence(EvidenceRef.normalizeMove(step.moveUci), plyOffset)
-              },
-              directCauseProjectionEligible = true,
-              eventOccurrence = Some(
-                LineMoveOccurrence(EvidenceRef.normalizeMove(acceptance.moveUci), acceptance.plyOffset)
-              ),
-              rootMove = rootMove,
-              rootSide = Some(summary.sideToMove),
-              beneficiary = Some(acceptance.side),
-              sacrificeOccurrence = Some(occurrence)
-            )
-          }
         val recoveryConsequences = summary.durableRecoveryCaptureForMover.toList.map(capture =>
             LineConsequence(
               LineConsequenceKind.RecoveryWindow,
@@ -375,10 +342,10 @@ object LineFactNormalizer:
               beneficiary = Some(event.side)
             )
           )
-        materialResultConsequences ++ recaptureConsequences ++ sacrificeConsequences ++
+        materialResultConsequences ++ recaptureConsequences ++
           recoveryConsequences ++ promotionConsequences
       }
-    (outcome ++ forced ++ material).distinct
+    (outcome ++ immediateReplyChecks ++ material).distinct
 
 
   private final case class MaterialOutcomeEvent(
@@ -454,36 +421,6 @@ object LineFactNormalizer:
               .map(durableNetCp => LastingMaterialOutcome(event, durableNetCp))
         }.flatten
       }.flatten
-    }
-
-  private def offeredSacrificeOccurrences(
-      replay: CanonicalLineReplay,
-      summary: LineMaterialSummary,
-      rootMove: Option[String]
-  ): List[LineSacrificeOccurrence] =
-    summary.exactCaptures.toList.flatMap { captures =>
-      val rootCaptureResponses = rootMove.toList.flatMap(move =>
-        summary.exactCaptureAt(0, move).toList.flatMap(summary.sacrificeResponsesFor)
-      )
-      val acceptedMaterialLosses =
-        Option
-          .when(summary.closedNetCpForMover.exists(_ < 0))(
-            captures.filter(capture =>
-              capture.side != summary.sideToMove && capture.recaptureExcluded
-            )
-          )
-          .toList
-          .flatten
-      (acceptedMaterialLosses ++ rootCaptureResponses)
-        .distinct
-        .sortBy(capture => (
-          capture.plyOffset,
-          EvidenceRef.normalizeMove(capture.moveUci),
-          capture.square.key.toLowerCase
-        ))
-        .flatMap(capture =>
-          LineSacrificeOccurrence.fromCanonicalReplay(replay, summary.sideToMove, capture)
-        )
     }
 
   private def mateResultMatches(whitePovMate: Option[Int], winner: Color): Boolean =

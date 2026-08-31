@@ -493,8 +493,7 @@ object RelativeCauseKind:
         consequenceKind == LineConsequenceKind.DrawResource
       case RelativeCauseKind.MaterialSwing =>
         consequenceKind == LineConsequenceKind.MaterialGain ||
-          consequenceKind == LineConsequenceKind.MaterialLoss ||
-          consequenceKind == LineConsequenceKind.Sacrifice
+          consequenceKind == LineConsequenceKind.MaterialLoss
       case RelativeCauseKind.MissedTacticalResource | RelativeCauseKind.TacticalRefutationOfPlayed |
           RelativeCauseKind.CandidateTacticalLiability =>
         LineConsequenceKind.tacticalDriver(consequenceKind)

@@ -1035,6 +1035,7 @@
         "relation_kind",
         "result_key",
         "occurrence_id",
+        "step_key",
         "source_premise_ids"
       ],
       "properties": {
@@ -1049,6 +1050,7 @@
           "pattern": "^(slider_reach_delta|pawn_topology_transition|capture_recapture_inventory):[0-9a-f]{64}$"
         },
         "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "step_key": {"$ref": "#/$defs/nonEmptyString"},
         "source_premise_ids": {
           "type": "array",
           "minItems": 1,
@@ -1774,8 +1776,6 @@
             "side",
             "square",
             "file",
-            "pawn",
-            "passed_pawn_subject",
             "relation",
             "line",
             "mechanism",

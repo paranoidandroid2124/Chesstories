@@ -1,6 +1,6 @@
 import { isMoveReviewEngineProfile, type MoveReviewEngineProfile } from 'lib/ceval/types';
 import { makeFen, parseFen } from 'chessops/fen';
-import { parseUci } from 'chessops/util';
+import { parseSquare, parseUci } from 'chessops/util';
 import { setupPosition } from 'chessops/variant';
 
 const moveReviewJobRequestSchema = 'chesstory.position-commentary.job-request.v6' as const;
@@ -159,6 +159,7 @@ interface MoveReviewPassedPawnDependencyProof {
     relationKind: MoveReviewPassedPawnRelationKind;
     resultKey: string;
     occurrenceId: string;
+    stepKey: string;
     sourcePremiseIds: string[];
   }[];
 }
@@ -2961,6 +2962,7 @@ function projectPassedPawnResultDependencyProof(
         'relation_kind',
         'result_key',
         'occurrence_id',
+        'step_key',
         'source_premise_ids',
       ])
     )
@@ -2974,6 +2976,7 @@ function projectPassedPawnResultDependencyProof(
       !issuer.result_key.startsWith(`${contract}:`) ||
       !typedHash(issuer.result_key.slice(contract.length + 1)) ||
       !typedHash(issuer.occurrence_id) ||
+      !nonEmptyWireString(issuer.step_key) ||
       !canonicalWireStrings(issuer.source_premise_ids, 1)
     )
       return;
@@ -2982,6 +2985,7 @@ function projectPassedPawnResultDependencyProof(
       relationKind,
       resultKey: issuer.result_key,
       occurrenceId: issuer.occurrence_id as string,
+      stepKey: issuer.step_key as string,
       sourcePremiseIds: [...issuer.source_premise_ids],
     };
   });
@@ -3210,6 +3214,76 @@ function validPassedPawnResultPremiseManifest(
         premise.sourcePremiseIds.includes(source),
       ),
     );
+  const bindsDependencyOccurrence = (
+    premise: MoveReviewTypedPremise,
+    branch: MoveReviewPassedPawnResultWireBranch,
+  ): boolean => {
+    const proof = premise.dependencyProof;
+    const fromIndex = premise.fromStepIndex;
+    const toIndex = premise.toStepIndex;
+    if (!proof || fromIndex === undefined || toIndex === undefined) return false;
+    const issuer = proof.relationIssuers[0];
+    const from = passedPawnDependencyActor(branch.steps[fromIndex]);
+    const to = passedPawnDependencyActor(branch.steps[toIndex]);
+    if (!from || !to || from.side !== to.side) return false;
+    const square = (role: string): Key | undefined =>
+      proof.squares.find(witness => witness.role === role)?.square;
+    const piece = (role: string) => proof.pieces.find(witness => witness.role === role);
+    const actorPiece = (role: string, actor: PassedPawnDependencyActor, after = false): boolean => {
+      const witness = piece(role);
+      const actual = after ? actor.after : actor.before;
+      return !!witness && witness.side === actual.side && witness.piece === actual.piece;
+    };
+
+    switch (proof.proofKind) {
+      case 'object_state':
+        return (
+          square('root_from') === from.from &&
+          square('root_to') === from.to &&
+          square('future_from') === to.from &&
+          square('future_to') === to.to &&
+          from.to === to.from &&
+          actorPiece('root_before', from) &&
+          actorPiece('tracked', from, true) &&
+          actorPiece('tracked', to) &&
+          actorPiece('future_after', to, true)
+        );
+      case 'line_access':
+        return (
+          issuer?.stepKey === branch.steps[fromIndex]?.stepKey &&
+          square('enabled_from') === to.from &&
+          square('enabled_to') === to.to &&
+          actorPiece('enabled_piece', to) &&
+          proof.squares
+            .filter(witness => witness.role === 'vacated_gate')
+            .every(witness => squareVacatedByStep(branch.steps[fromIndex]!, witness.square))
+        );
+      case 'pawn_break_follow_up':
+      case 'capture_follow_up': {
+        const reply = passedPawnDependencyActor(branch.steps[fromIndex + 1]);
+        const triggerRole = proof.proofKind === 'pawn_break_follow_up' ? 'trigger_pawn' : 'trigger_piece';
+        const responderRole =
+          proof.proofKind === 'pawn_break_follow_up' ? 'responder_pawn' : 'responder_piece';
+        const followUpRole =
+          proof.proofKind === 'pawn_break_follow_up' ? 'follow_up_pawn' : 'follow_up_piece';
+        return (
+          !!reply &&
+          issuer?.stepKey === branch.steps[fromIndex + 1]?.stepKey &&
+          toIndex > fromIndex + 1 &&
+          (proof.proofKind !== 'capture_follow_up' || toIndex === fromIndex + 2) &&
+          square('reply_from') === reply.from &&
+          square('reply_to') === reply.to &&
+          reply.side !== from.side &&
+          square('follow_up_from') === to.from &&
+          square('follow_up_to') === to.to &&
+          (proof.proofKind !== 'pawn_break_follow_up' || square('released_passed_pawn') === to.from) &&
+          actorPiece(triggerRole, from) &&
+          actorPiece(responderRole, reply) &&
+          actorPiece(followUpRole, to)
+        );
+      }
+    }
+  };
   const expectedDependencies = premises.filter(premise => premise.role === 'expected_dependency');
   const observedDependencies = premises.filter(premise => premise.role === 'observed_dependency');
   if (
@@ -3229,6 +3303,7 @@ function validPassedPawnResultPremiseManifest(
           eventEvidenceId,
         ) ||
         !ownsDependencyProof(premise) ||
+        !bindsDependencyOccurrence(premise, expectedBranch) ||
         premise.resultId !== expectedBranch.steps[index + 1]!.incomingLink?.occurrenceLinkKey,
     ) ||
     observedDependencies.some(
@@ -3238,6 +3313,7 @@ function validPassedPawnResultPremiseManifest(
         premise.branchRole !== replyBranch.role ||
         premise.relatedBranchIds?.length !== 0 ||
         !ownsDependencyProof(premise) ||
+        !bindsDependencyOccurrence(premise, replyBranch) ||
         !premise.sourcePremiseIds.includes(eventEvidenceId) ||
         premise.fromStepIndex === undefined ||
         premise.toStepIndex === undefined ||
@@ -3261,6 +3337,45 @@ function validPassedPawnResultPremiseManifest(
   return (
     premises.length === exactOrder.length && premises.every((premise, index) => premise === exactOrder[index])
   );
+}
+
+interface PassedPawnDependencyActor {
+  from: Key;
+  to: Key;
+  side: 'white' | 'black';
+  before: { side: 'white' | 'black'; piece: MoveReviewPieceRole };
+  after: { side: 'white' | 'black'; piece: MoveReviewPieceRole };
+}
+
+function passedPawnDependencyActor(
+  step: MoveReviewWireStep | undefined,
+): PassedPawnDependencyActor | undefined {
+  if (!step) return;
+  const from = step.move.slice(0, 2) as Key;
+  const to = step.move.slice(2, 4) as Key;
+  const side = fenSideToMove(step.fenBefore);
+  const before = fenPieceAt(step.fenBefore, from);
+  const after = fenPieceAt(step.fenAfter, to);
+  return side && before?.side === side && after?.side === side
+    ? { from, to, side, before, after }
+    : undefined;
+}
+
+function squareVacatedByStep(step: MoveReviewWireStep, square: Key): boolean {
+  return !!fenPieceAt(step.fenBefore, square) && !fenPieceAt(step.fenAfter, square);
+}
+
+function fenPieceAt(
+  fen: FEN,
+  square: Key,
+): { side: 'white' | 'black'; piece: MoveReviewPieceRole } | undefined {
+  try {
+    const parsed = parseSquare(square);
+    const piece = parsed === undefined ? undefined : parseFen(fen).unwrap().board.get(parsed);
+    return piece ? { side: piece.color, piece: piece.role } : undefined;
+  } catch (_) {
+    return;
+  }
 }
 
 function typedActorMatchesMove(actor: MoveReviewTypedActor, move: Uci): boolean {
@@ -3650,8 +3765,6 @@ function chessObjectKind(value: unknown): value is string {
     value === 'side' ||
     value === 'square' ||
     value === 'file' ||
-    value === 'pawn' ||
-    value === 'passed_pawn_subject' ||
     value === 'relation' ||
     value === 'line' ||
     value === 'mechanism' ||

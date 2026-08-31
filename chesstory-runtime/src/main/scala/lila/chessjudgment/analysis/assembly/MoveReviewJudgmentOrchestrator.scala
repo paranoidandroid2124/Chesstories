@@ -247,7 +247,7 @@ private[assembly] object BranchReplyProbePlanner:
     ctx.root.toList
       .flatMap { root =>
         val selectedLines = selectedRootLines(ctx.lines)
-        val requiredCausalResultsByHorizon =
+        val requiredHorizonByRootMove =
           ctx.evidenceGraph.records
             .flatMap {
               case record @ EvidenceRecord(_, event: PassedPawnResultEventEvidence, _)
@@ -255,20 +255,14 @@ private[assembly] object BranchReplyProbePlanner:
                     event.observedRootEnablesContinuation &&
                     event.causalResultAssessments.nonEmpty &&
                     !event.branchCoverageComplete =>
-                event.causalResultAssessments.map(assessment =>
-                  (EvidenceRef.normalizeMove(event.rootMove) -> assessment.sourcePlyOffset) -> assessment
-                )
+                List(EvidenceRef.normalizeMove(event.rootMove) -> event.requiredHorizonPlyOffset)
               case _ => Nil
             }
-            .groupMap(_._1)(_._2)
+            .groupMapReduce(_._1)(_._2)(math.max)
         selectedLines
           .flatMap { line =>
             val rootMove = EvidenceRef.normalizeMove(line.ref.rootMove)
-            val requiredHorizons = requiredCausalResultsByHorizon.keysIterator.collect {
-              case (`rootMove`, horizon) => horizon
-            }.toList.sorted
-            requiredHorizons.flatMap {
-              requiredHorizon =>
+            requiredHorizonByRootMove.get(rootMove).toList.flatMap { requiredHorizon =>
                 line.evaluation.engineLine.toList.flatMap { engineLine =>
                   ctx.lineReplay(line.ref).toList.flatMap { replay =>
                     val covered = coveredReplies(ctx, line.ref.rootMove, requiredHorizon)

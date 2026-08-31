@@ -1099,22 +1099,31 @@ test('keeps every independent passed-pawn-result proof path while projecting the
     ),
   );
 
-  const lineAccessChannel = structuredClone(channel);
-  const lineAccessProof = object(lineAccessChannel.passed_pawn_result_proof);
-  const lineAccessPremise = object(
-    (object((lineAccessProof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1],
-  );
+  const accessRoot = '7k/8/8/8/p7/1pP5/P7/R3K3 w - - 0 1' as FEN;
+  const accessFens = [
+    '7k/8/8/8/p7/1PP5/8/R3K3 b - - 0 1',
+    '6k1/8/8/8/p7/1PP5/8/R3K3 w - - 1 2',
+    '6k1/8/8/8/R7/1PP5/8/4K3 b - - 0 2',
+  ] as FEN[];
+  const accessReferenceMoves = ['e1e2', 'h8g8', 'e2e3'] as Uci[];
+  const accessPlayedMoves = ['a2b3', 'h8g8', 'a1a4'] as Uci[];
+  const accessLine = { line_id: 'line.played.access', line_role: 'played', line_rank: 1, root_move: 'a2b3' };
+  const accessReplyLine = {
+    line_id: 'line.reply.access.h8g8',
+    line_role: 'alternative',
+    line_rank: 1,
+    root_move: 'h8g8',
+  };
+  const accessRootKey = stepKey(1, 'a2b3' as Uci, accessRoot, accessFens[0]!);
+  const accessReplyKey = stepKey(2, 'h8g8' as Uci, accessFens[0]!, accessFens[1]!);
+  const accessResultKey = stepKey(3, 'a1a4' as Uci, accessFens[1]!, accessFens[2]!);
+  const accessDependencyKey = 'expected-line-access-dependency';
   const relationOccurrenceId = hash('6');
-  lineAccessPremise.source_premise_ids = [
-    relationOccurrenceId,
-    'l1.slider-reach',
-    'passed-pawn-result.event',
-  ];
-  lineAccessPremise.dependency_proof = {
+  const dependencyProof = () => ({
     dependency_kind: 'line_access_precondition',
     proof_kind: 'line_access',
     squares: [
-      { role: 'vacated_gate', square: 'a3' },
+      { role: 'vacated_gate', square: 'a2' },
       { role: 'enabled_from', square: 'a1' },
       { role: 'enabled_to', square: 'a4' },
     ],
@@ -1125,14 +1134,158 @@ test('keeps every independent passed-pawn-result proof path while projecting the
         relation_kind: 'slider_reach_delta',
         result_key: `slider_reach_delta:${hash('7')}`,
         occurrence_id: relationOccurrenceId,
+        step_key: accessRootKey,
         source_premise_ids: ['l1.slider-reach'],
       },
     ],
+  });
+  const accessRootStep = {
+    step_index: 0,
+    step_key: accessRootKey,
+    ply: 1,
+    move_uci: 'a2b3',
+    fen_before: accessRoot,
+    fen_after: accessFens[0],
+    line: accessLine,
+    provenance: 'observed_game_move',
   };
+  const accessExpectedSteps = [
+    accessRootStep,
+    {
+      step_index: 1,
+      step_key: accessResultKey,
+      ply: 3,
+      move_uci: 'a1a4',
+      fen_before: accessFens[1],
+      fen_after: accessFens[2],
+      line: accessLine,
+      provenance: 'certified_analysis_move',
+      incoming_link: {
+        kind: 'certified_causal_dependency',
+        from_step_key: accessRootKey,
+        to_step_key: accessResultKey,
+        occurrence_link_key: accessDependencyKey,
+      },
+    },
+  ];
+  const accessReplySteps = [
+    accessRootStep,
+    {
+      step_index: 1,
+      step_key: accessReplyKey,
+      ply: 2,
+      move_uci: 'h8g8',
+      fen_before: accessFens[0],
+      fen_after: accessFens[1],
+      line: accessReplyLine,
+      provenance: 'certified_analysis_move',
+      incoming_link: {
+        kind: 'adjacent_legal_replay',
+        from_step_key: accessRootKey,
+        to_step_key: accessReplyKey,
+        occurrence_link_key: 'adjacent-access-reply-step',
+      },
+    },
+    {
+      step_index: 2,
+      step_key: accessResultKey,
+      ply: 3,
+      move_uci: 'a1a4',
+      fen_before: accessFens[1],
+      fen_after: accessFens[2],
+      line: accessReplyLine,
+      provenance: 'certified_analysis_move',
+      incoming_link: {
+        kind: 'adjacent_legal_replay',
+        from_step_key: accessReplyKey,
+        to_step_key: accessResultKey,
+        occurrence_link_key: 'adjacent-access-result-step',
+      },
+    },
+  ];
+  const lineAccessChannel = structuredClone(channel);
+  const lineAccessProof = object(lineAccessChannel.passed_pawn_result_proof);
+  lineAccessProof.result_target_subjects = [
+    `21:passed-status-created5:white2:b32:b31:3:relations:[established:pawn_passage:${hash('f')}]:derived:[]`,
+  ];
+  lineAccessProof.root_actor = {
+    side: 'white',
+    piece_before: 'pawn',
+    piece_after: 'pawn',
+    from: 'a2',
+    to: 'b3',
+    legal_move_relation: hash('d'),
+  };
+  lineAccessProof.realizing_actor = {
+    side: 'white',
+    piece_before: 'rook',
+    piece_after: 'rook',
+    from: 'a1',
+    to: 'a4',
+    legal_move_relation: hash('e'),
+  };
+  lineAccessProof.root_line = accessLine;
+  lineAccessProof.root_move = 'a2b3';
+  lineAccessProof.realizing_move = 'a1a4';
+  const accessInventory = object(lineAccessProof.closed_legal_reply_inventory);
+  accessInventory.root_after = { fen: accessFens[0], ply: 1, scope: 'played_transition' };
+  lineAccessProof.branches = [
+    {
+      branch_id: expectedBranchId,
+      role: 'expected_result_route',
+      line: accessLine,
+      root_provenance: 'observed_game_root',
+      steps: accessExpectedSteps,
+    },
+    {
+      branch_id: replyBranchId,
+      role: 'legal_reply',
+      reply_move: 'h8g8',
+      source_probe_id: 'probe.h8g8',
+      line: accessLine,
+      root_provenance: 'observed_game_root',
+      steps: accessReplySteps,
+    },
+  ];
+  for (const rawPath of lineAccessProof.proof_paths as JsonObject[]) {
+    const accessPath = object(rawPath);
+    accessPath.realization_actor = {
+      side: 'white',
+      piece_before: 'rook',
+      piece_after: 'rook',
+      from: 'a1',
+      to: 'a4',
+      legal_move_relation: hash('e'),
+    };
+    accessPath.realization_move = 'a1a4';
+    const premises = accessPath.premises as JsonObject[];
+    const expectedDependency = object(premises[1]);
+    expectedDependency.lower_semantic_key = accessDependencyKey;
+    expectedDependency.source_premise_ids = [
+      relationOccurrenceId,
+      'l1.slider-reach',
+      'passed-pawn-result.event',
+    ];
+    expectedDependency.dependency_proof = dependencyProof();
+    const observedDependency = object(premises[3]);
+    observedDependency.source_premise_ids = [
+      relationOccurrenceId,
+      'l1.slider-reach',
+      'passed-pawn-result.event',
+    ];
+    observedDependency.dependency_proof = dependencyProof();
+  }
+  const accessFocus = typedSubject(accessRoot, accessPlayedMoves[0]!, accessFens[0]!);
   assert.equal(
     decodeMoveReviewSnapshot(
-      rawTypedResponse(focus, referenceMoves, playedMoves, 'passed_pawn_result', lineAccessChannel),
-      { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
+      rawTypedResponse(
+        accessFocus,
+        accessReferenceMoves,
+        accessPlayedMoves,
+        'passed_pawn_result',
+        lineAccessChannel,
+      ),
+      { requestId, subject: accessFocus, engineProfile: moveReviewEngineProfile },
     )?.kind,
     'completed',
   );
@@ -1144,8 +1297,14 @@ test('keeps every independent passed-pawn-result proof path while projecting the
   unownedPremise.source_premise_ids = ['l1.slider-reach', 'passed-pawn-result.event'];
   assert.equal(
     decodeMoveReviewSnapshot(
-      rawTypedResponse(focus, referenceMoves, playedMoves, 'passed_pawn_result', unownedRelationOccurrence),
-      { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
+      rawTypedResponse(
+        accessFocus,
+        accessReferenceMoves,
+        accessPlayedMoves,
+        'passed_pawn_result',
+        unownedRelationOccurrence,
+      ),
+      { requestId, subject: accessFocus, engineProfile: moveReviewEngineProfile },
     ),
     undefined,
   );
@@ -1160,8 +1319,37 @@ test('keeps every independent passed-pawn-result proof path while projecting the
   mismatchedIssuer.result_key = `pawn_topology_transition:${hash('7')}`;
   assert.equal(
     decodeMoveReviewSnapshot(
-      rawTypedResponse(focus, referenceMoves, playedMoves, 'passed_pawn_result', mismatchedRelationResult),
-      { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
+      rawTypedResponse(
+        accessFocus,
+        accessReferenceMoves,
+        accessPlayedMoves,
+        'passed_pawn_result',
+        mismatchedRelationResult,
+      ),
+      { requestId, subject: accessFocus, engineProfile: moveReviewEngineProfile },
+    ),
+    undefined,
+  );
+
+  const detachedRelationOccurrence = structuredClone(lineAccessChannel);
+  const detachedProof = object(detachedRelationOccurrence.passed_pawn_result_proof);
+  const detachedPremise = object(
+    (object((detachedProof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1],
+  );
+  const detachedIssuer = object(
+    (object(detachedPremise.dependency_proof).relation_issuers as JsonObject[])[0],
+  );
+  detachedIssuer.step_key = accessResultKey;
+  assert.equal(
+    decodeMoveReviewSnapshot(
+      rawTypedResponse(
+        accessFocus,
+        accessReferenceMoves,
+        accessPlayedMoves,
+        'passed_pawn_result',
+        detachedRelationOccurrence,
+      ),
+      { requestId, subject: accessFocus, engineProfile: moveReviewEngineProfile },
     ),
     undefined,
   );
@@ -1224,6 +1412,123 @@ test('keeps every independent passed-pawn-result proof path while projecting the
       const premise = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1]);
       const pieces = object(premise.dependency_proof).pieces as JsonObject[];
       object(pieces[2]).side = 'black';
+    }),
+    malformedProof(proof => {
+      const premise = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1]);
+      for (const piece of object(premise.dependency_proof).pieces as JsonObject[])
+        object(piece).side = 'black';
+    }),
+    malformedProof(proof => {
+      const premise = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1]);
+      const rootFrom = (object(premise.dependency_proof).squares as JsonObject[]).find(
+        witness => object(witness).role === 'root_from',
+      );
+      object(rootFrom).square = 'b6';
+    }),
+    malformedProof(proof => {
+      const delayedWhiteFen = '6k1/P7/8/1P6/8/8/4K3/8 b - - 2 2' as FEN;
+      const delayedBlackFen = '7k/P7/8/1P6/8/8/4K3/8 w - - 3 3' as FEN;
+      const delayedResultFen = 'Q6k/8/8/1P6/8/8/4K3/8 b - - 0 3' as FEN;
+      const whiteDelayKey = stepKey(3, 'e1e2' as Uci, fens[1]!, delayedWhiteFen);
+      const blackDelayKey = stepKey(4, 'g8h8' as Uci, delayedWhiteFen, delayedBlackFen);
+      const delayedResultKey = stepKey(5, 'a7a8q' as Uci, delayedBlackFen, delayedResultFen);
+      const replyBranch = object((proof.branches as JsonObject[])[1]);
+      const originalSteps = replyBranch.steps as JsonObject[];
+      replyBranch.steps = [
+        originalSteps[0],
+        originalSteps[1],
+        {
+          step_index: 2,
+          step_key: whiteDelayKey,
+          ply: 3,
+          move_uci: 'e1e2',
+          fen_before: fens[1],
+          fen_after: delayedWhiteFen,
+          line: replyLine,
+          provenance: 'certified_analysis_move',
+          incoming_link: {
+            kind: 'adjacent_legal_replay',
+            from_step_key: replyStepKey,
+            to_step_key: whiteDelayKey,
+            occurrence_link_key: 'adjacent-white-delay',
+          },
+        },
+        {
+          step_index: 3,
+          step_key: blackDelayKey,
+          ply: 4,
+          move_uci: 'g8h8',
+          fen_before: delayedWhiteFen,
+          fen_after: delayedBlackFen,
+          line: replyLine,
+          provenance: 'certified_analysis_move',
+          incoming_link: {
+            kind: 'adjacent_legal_replay',
+            from_step_key: whiteDelayKey,
+            to_step_key: blackDelayKey,
+            occurrence_link_key: 'adjacent-black-delay',
+          },
+        },
+        {
+          step_index: 4,
+          step_key: delayedResultKey,
+          ply: 5,
+          move_uci: 'a7a8q',
+          fen_before: delayedBlackFen,
+          fen_after: delayedResultFen,
+          line: replyLine,
+          provenance: 'certified_analysis_move',
+          incoming_link: {
+            kind: 'adjacent_legal_replay',
+            from_step_key: blackDelayKey,
+            to_step_key: delayedResultKey,
+            occurrence_link_key: 'adjacent-delayed-result',
+          },
+        },
+      ];
+      object(proof.closed_legal_reply_inventory).certified_horizon_ply_offset = 4;
+      for (const rawPath of proof.proof_paths as JsonObject[]) {
+        const delayedPath = object(rawPath);
+        delayedPath.realization_ply = 5;
+        delayedPath.realization_match_kind = 'equivalent_function';
+        const premises = delayedPath.premises as JsonObject[];
+        const observedDependency = object(premises[3]);
+        observedDependency.to_step_index = 4;
+        observedDependency.source_premise_ids = [
+          relationOccurrenceId,
+          'l1.capture-recapture',
+          'passed-pawn-result.event',
+        ];
+        observedDependency.dependency_proof = {
+          dependency_kind: 'response_continuation_precondition',
+          proof_kind: 'capture_follow_up',
+          squares: [
+            { role: 'reply_from', square: 'g8' },
+            { role: 'reply_to', square: 'h8' },
+            { role: 'follow_up_from', square: 'a7' },
+            { role: 'follow_up_to', square: 'a8' },
+          ],
+          pieces: [
+            { role: 'trigger_piece', side: 'white', piece: 'pawn' },
+            { role: 'responder_piece', side: 'black', piece: 'king' },
+            { role: 'follow_up_piece', side: 'white', piece: 'pawn' },
+          ],
+          relation_issuers: [
+            {
+              contract: 'capture_recapture_inventory',
+              relation_kind: 'capture_recapture_inventory',
+              result_key: `capture_recapture_inventory:${hash('7')}`,
+              occurrence_id: relationOccurrenceId,
+              step_key: replyStepKey,
+              source_premise_ids: ['l1.capture-recapture'],
+            },
+          ],
+        };
+        object(premises[4]).from_step_index = 4;
+        object(premises[4]).to_step_index = 4;
+        object(premises[5]).from_step_index = 4;
+        object(premises[5]).to_step_index = 4;
+      }
     }),
     malformedProof(proof => {
       const premise = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[3]);
@@ -1333,6 +1638,17 @@ test('rejects retired public commentary projections', () => {
   const facet = (explanation.facets as JsonObject[])[0]!;
   facet.only_move_qualifiers = [];
   assert.equal(decodeMoveReviewSnapshot(raw, decodeContext()), undefined, 'only_move_qualifiers');
+
+  for (const retiredKind of ['pawn', 'passed_pawn_subject']) {
+    const retiredObject = rawResponse();
+    const retiredSelected = object(retiredObject.result).selected_move_reviews as JsonObject[];
+    const retiredCommentary = retiredSelected[1]!.commentary as JsonObject;
+    const retiredExplanation = (retiredCommentary.causal_explanations as JsonObject[])[0]!;
+    const retiredFacet = (retiredExplanation.facets as JsonObject[])[0]!;
+    const retiredChannel = (retiredFacet.channels as JsonObject[])[0]!;
+    object((retiredChannel.targets as JsonObject[])[0]).kind = retiredKind;
+    assert.equal(decodeMoveReviewSnapshot(retiredObject, decodeContext()), undefined, retiredKind);
+  }
 });
 
 test('rejects an explicitly empty causal explanation list', () => {

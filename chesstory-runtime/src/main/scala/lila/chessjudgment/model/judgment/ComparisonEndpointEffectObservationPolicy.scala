@@ -156,17 +156,16 @@ private[chessjudgment] object ComparisonEndpointEffectObservationPolicy:
           RootCausalActor.fromLineFact(line, eventLine.rootMove)
         case _ => None
       stake <- RootOwnedEffectPolicy.effectStake(proof, actor)
-      change <- episode.consequence.kind match
+      change = episode.consequence.kind match
         case LineConsequenceKind.MaterialGain if stake == RootOwnedEffectStake.ActorValue =>
-          Some(DirectCausalChange.Occurred)
+          DirectCausalChange.Occurred
         case LineConsequenceKind.MaterialGain | LineConsequenceKind.MaterialLoss =>
-          Some(DirectCausalChange.Lost)
+          DirectCausalChange.Lost
         case LineConsequenceKind.ImmediateReplyCheck | LineConsequenceKind.Mate |
             LineConsequenceKind.RecaptureSequence | LineConsequenceKind.RecoveryWindow |
             LineConsequenceKind.Promotion =>
-          Some(DirectCausalChange.Occurred)
-        case LineConsequenceKind.DrawResource => Some(DirectCausalChange.Maintained)
-        case _ => None
+          DirectCausalChange.Occurred
+        case LineConsequenceKind.DrawResource => DirectCausalChange.Maintained
       observation <- fromOwnedProof(rootPosition, binding, proof, change, stake, actor)
     yield observation
 

@@ -69,7 +69,7 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
   test("repeated promotion UCI retains two exact consequence occurrences"):
     val rootFen = "8/P7/P6k/8/8/8/8/7K w - - 0 1"
     val moves = List("a7a8q", "h6h5", "a8b8", "h5h4", "a6a7", "h4h3", "a7a8q")
-    val (payload, line) = normalizedMaterialLine(
+    val (payload, line) = normalizedLine(
       id = "repeated-promotion",
       initialFen = rootFen,
       historyMoves = Nil,
@@ -97,7 +97,7 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
   test("lasting material gain does not absorb a later repeated UCI capture"):
     val initialFen = "7k/8/5KQ1/8/1r6/8/r7/R7 b - - 0 1"
     val rootFen = "7k/8/5KQ1/8/8/1r6/r7/R7 w - - 1 2"
-    val (payload, _) = normalizedMaterialLine(
+    val (payload, _) = normalizedLine(
       id = "repeated-material-capture",
       initialFen = initialFen,
       historyMoves = List("b4b3"),
@@ -107,12 +107,65 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
 
     assertEquals(payload.materialGainCapturesFor(White).map(_.plyOffset), List(0))
 
-  private def normalizedMaterialLine(
+  test("a queen-for-pawn blunder remains an exact capture sequence without an upper idea label"):
+    val initialFen = "3r4/3p3k/8/8/8/8/8/3Q3K b - - 0 1"
+    val rootFen = "3r3k/3p4/8/8/8/8/8/3Q3K w - - 1 2"
+    val (payload, _) = normalizedLine(
+      id = "queen-for-pawn-blunder",
+      initialFen = initialFen,
+      historyMoves = List("h7h8"),
+      rootFen = rootFen,
+      moves = List("d1d7", "d8d7")
+    )
+
+    assertEquals(
+      payload.materialCaptures.map(capture =>
+        (capture.moveUci, capture.plyOffset, capture.attackerRole.name, capture.capturedRole.name, capture.recapture)
+      ),
+      List(
+        ("d1d7", 0, "queen", "pawn", false),
+        ("d8d7", 1, "rook", "queen", true)
+      )
+    )
+    assertEquals(payload.lineConsequences.map(_.kind), List(LineConsequenceKind.RecaptureSequence))
+
+  test("an immediate reply check is projected from its exact L1 event but is not causal without a link"):
+    val rootFen = "1r5k/8/8/8/8/8/8/K6N w - - 0 1"
+    val (payload, line) = normalizedLine(
+      id = "unlinked-immediate-reply-check",
+      initialFen = rootFen,
+      historyMoves = Nil,
+      rootFen = rootFen,
+      moves = List("h1f2", "b8b1"),
+      requireMaterial = false
+    )
+
+    val checkEvent = payload.lineEvents.filter(_.kind == LineEventKind.Check) match
+      case exact :: Nil => exact
+      case other        => fail(s"expected one exact reply check event, got $other")
+    assertEquals(checkEvent.moveUci, "b8b1")
+    assertEquals(checkEvent.plyOffset, 1)
+    assertEquals(checkEvent.side, Some(Black))
+
+    val liability = payload.lineConsequences.filter(_.kind == LineConsequenceKind.ImmediateReplyCheck) match
+      case exact :: Nil => exact
+      case other        => fail(s"expected one exact immediate-reply-check projection, got $other")
+    assertEquals(
+      liability.proofOccurrences.map(occurrence => occurrence.plyOffset -> occurrence.moveUci),
+      List(0 -> "h1f2", 1 -> "b8b1")
+    )
+    assertEquals(liability.eventOccurrence.map(_.plyOffset), Some(1))
+    assertEquals(liability.beneficiary, Some(Black))
+    assert(!liability.directCauseProjectionEligible)
+    assertEquals(payload.rootOwnedCausalEpisodes(line.rootMove), Nil)
+
+  private def normalizedLine(
       id: String,
       initialFen: String,
       historyMoves: List[String],
       rootFen: String,
-      moves: List[String]
+      moves: List[String],
+      requireMaterial: Boolean = true
   ): (LineFactEvidence, LineNodeRef) =
     val history = CanonicalPositionHistory
       .from(initialFen, historyMoves, rootFen)
@@ -139,7 +192,7 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     )
     val material = CandidateLineAssembler
       .lineMaterialSummary(history, lineHistory)
-      .getOrElse(fail(s"expected a canonical material ledger for $id"))
+    if requireMaterial && material.isEmpty then fail(s"expected a canonical material ledger for $id")
     val payload = LineFactNormalizer
       .fromValidatedLine(
         id = s"$id-evidence",
@@ -148,7 +201,7 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
         replay = replay,
         position = PositionNodeRef(rootFen, 0, replay.legalSteps.headOption.map(_.move.piece.color)),
         scope = line.role.scope,
-        materialSummary = Some(material)
+        materialSummary = material
       )
       .payload match
       case value: LineFactEvidence => value
