@@ -1575,11 +1575,6 @@ private[chessjudgment] final class VerticalRelationInput private (
 
   private var derivedBySemanticId = Map.empty[String, RelationFactEvidence]
 
-  private var absenceCertificatesByKey = Map.empty[
-    String,
-    Option[PositionRelationExtractor.ClosedRelationAbsenceCertificate]
-  ]
-
   private var stateCertificatesByKey = Map.empty[
     String,
     Option[PositionRelationExtractor.ClosedPositionStateCertificate]
@@ -2006,15 +2001,10 @@ private[chessjudgment] final class VerticalRelationInput private (
   private[judgment] def absenceCertificate(
       absence: ClosedRelationAbsencePremise
   ): Option[PositionRelationExtractor.ClosedRelationAbsenceCertificate] =
-    absenceCertificatesByKey.get(absence.stableKey) match
-      case Some(cached) => cached
-      case None =>
-        val inventory = absence.occurrence match
-          case RelationSnapshotOccurrence.Before => delta.beforeInventory
-          case RelationSnapshotOccurrence.After  => delta.afterInventory
-        val certified = inventory.certifyAbsence(absence.query)
-        absenceCertificatesByKey = absenceCertificatesByKey.updated(absence.stableKey, certified)
-        certified
+    val inventory = absence.occurrence match
+      case RelationSnapshotOccurrence.Before => delta.beforeInventory
+      case RelationSnapshotOccurrence.After  => delta.afterInventory
+    inventory.certifyAbsence(absence.query)
 
   private[judgment] def stateCertificate(
       state: ClosedPositionStatePremise

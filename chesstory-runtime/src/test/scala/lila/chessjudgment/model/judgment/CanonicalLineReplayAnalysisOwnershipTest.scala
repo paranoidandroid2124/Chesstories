@@ -60,6 +60,30 @@ class CanonicalLineReplayAnalysisOwnershipTest extends munit.FunSuite:
     assert(rebasedBefore.actualLegalMoves eq originalBefore.actualLegalMoves)
     assert(rebasedAfter.boardRelations eq originalAfter.boardRelations)
 
+  test("transposed replay destinations share semantic occurrence identity without sharing steps"):
+    val first = replayFrom(
+      Standard.initialFen.value,
+      List("g1f3", "g8f6", "g2g3", "g7g6")
+    )
+    val second = replayFrom(
+      Standard.initialFen.value,
+      List("g2g3", "g7g6", "g1f3", "g8f6")
+    )
+    val firstStep = first.replaySteps.last
+    val secondStep = second.replaySteps.last
+    val firstOccurrence = first.positionAfter(firstStep).getOrElse(fail("missing first destination"))
+    val secondOccurrence = second.positionAfter(secondStep).getOrElse(fail("missing transposed destination"))
+
+    assertNotEquals(firstStep, secondStep)
+    assert(
+      lila.chessjudgment.model.line.PrincipalVariationEvidence.sameBoardState(
+        firstOccurrence.position.fen,
+        secondOccurrence.position.fen
+      )
+    )
+    assertEquals(firstOccurrence.position.ply, secondOccurrence.position.ply)
+    assertEquals(firstOccurrence.occurrenceId, secondOccurrence.occurrenceId)
+
   test("exact recapture membership returns its occurrence-owned L1 key and resource"):
     val replay = replayFrom(
       "3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1",

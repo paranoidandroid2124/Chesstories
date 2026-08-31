@@ -88,7 +88,9 @@ L2는 공격맵, 합법수, ray, 핀, pawn topology를 다시 계산하지 않�
   premise use와 closed-absence use를 소유한다.
 - premise는 하위 result ID, source evidence ID, branch와 step을 잃지
   않는다.
-- closed absence는 query, position, scope와 issuer를 보존한다.
+- closed absence는 query, position, scope, 정확한 `LegalLine`과 그
+  after-step position occurrence를 보존한다. 특정 L1 결과가 임의의
+  위치 부재 발급자로 가장하지 않는다.
 - dependency fingerprint는 두 line, 실제 demand, proposition,
   occurrence와 모든 proof path를 포함한다.
 
@@ -96,8 +98,10 @@ L2는 공격맵, 합법수, ray, 핀, pawn topology를 다시 계산하지 않�
 수 있지만 서로 다른 history와 branch occurrence를 합치지 않는다.
 문장이 같거나 target이 같다는 이유로 proof path를 dedup하지 않는다.
 
-L2 전용 보드 캐시는 두지 않는다. 하위 보드 사실과 합법수 캐시는
-기존 생산자가 계속 소유한다. 동일 immutable assembly snapshot의 같은
+L2 전용 보드 캐시는 두지 않는다. 부재 질의 캐시는 L0의
+`PositionRelationInventoryCertificate`가 완전한 query identity로
+유일하게 소유하며 L1과 L2가 같은 사실을 다시 판정하지 않는다.
+동일 immutable assembly snapshot의 같은
 dependency에 인증된 결과가 정확히 하나 있을 때만 파생 전에 재사용한다.
 없으면 새로 파생하고 복수 소유자는 fail-closed한다. 하위 dependency가
 바뀌면 새 fingerprint로 demand가 실행된다.
@@ -118,8 +122,9 @@ dependency에 인증된 결과가 정확히 하나 있을 때만 파생 전에 �
 - reference branch에는 해당 수비 기물의 `LegalCaptureOf`가 없고,
   played branch에는 같은 수비 기물의 합법 재포획이 실제 line으로
   있어야 한다.
-- 부재는 reference `LegalLine` evidence와 그 line의 정확한 L1 relation
-  occurrence가 함께 발급자를 소유한다.
+- 부재는 reference `LegalLine` evidence와 그 line의 정확한 after-step
+  position occurrence가 함께 발급자를 소유한다. L1 relation은 체크와
+  포획 명제의 premise이지 임의 위치 부재의 별도 진실 원천이 아니다.
 - 결과는 `WrongMoveOrder`의 direct proof로 claim 승인·선택을 거쳐
   public v6의 typed `resource_differential_proof`까지 소비된다.
 
@@ -136,8 +141,9 @@ dependency에 인증된 결과가 정확히 하나 있을 때만 파생 전에 �
   상대의 정확히 하나인 재포획으로 되잡혀야 한다. 같은 편의 세 번째 수는
   played 첫 수와 동일한 exploit·대상을 실제로 소비해야 한다.
 - reference의 later exploit에는 합법 재포획이 하나도 없어야 하고,
-  `LegalCaptureOf(수비측, exploit 칸)`의 폐쇄 부재를 해당 L1
-  `CaptureRecaptureInventory` occurrence가 발급해야 한다.
+  `LegalCaptureOf(수비측, exploit 칸)`의 폐쇄 부재를 해당
+  `LegalLine`의 after-step position occurrence가 발급해야 한다. L1
+  `CaptureRecaptureInventory`는 이 결과와 일치하는 포획 premise다.
 - played의 immediate exploit에는 제거 전의 동일 기물이 정확히 하나인
   합법 재포획자로 남아 실제 둘째 수로 나타나야 한다.
 - 세 L1 inventory, 두 occurrence branch, 관련 기물 identity, exploit과

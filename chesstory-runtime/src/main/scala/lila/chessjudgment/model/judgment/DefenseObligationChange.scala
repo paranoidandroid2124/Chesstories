@@ -495,17 +495,9 @@ private[chessjudgment] final class CertifiedDefenseObligationChange private (
       stepOccurrence <- branch.stepAt(binding.afterStepIndex)
       if stepOccurrence.step.ply == binding.position.ply
       if PrincipalVariationEvidence.sameBoardState(stepOccurrence.step.fenAfter, binding.position.fen)
-      afterAnalysis <- referenceReplay.analysisAfter(stepOccurrence.step)
-      issuerOccurrence <- referenceReplay
-        .verticalRelationOccurrences(
-          stepOccurrence.step,
-          List(VerticalRelationContractKind.CaptureRecaptureInventory)
-        )
-        .find(_.occurrenceId == binding.issuerOccurrenceId)
-      reboundCapability <- issuerOccurrence.absenceCapability(
-        ClosedRelationAbsencePremise(RelationSnapshotOccurrence.After, absenceAuthority.query)
-      )
-      reboundAuthority <- reboundCapability.bind(binding.position, binding.scope)
+      issuerOccurrence <- referenceReplay.positionAfter(stepOccurrence.step)
+      if issuerOccurrence.occurrenceId == binding.issuerOccurrenceId
+      reboundAuthority <- issuerOccurrence.closedAbsence(absenceAuthority.query, binding.scope)
       semanticBoard <- PrincipalVariationEvidence.semanticBoardStateFen(absenceAuthority.position.fen)
     yield
       absenceAuthority.query.stableKey == binding.queryKey &&
@@ -513,8 +505,8 @@ private[chessjudgment] final class CertifiedDefenseObligationChange private (
         BoundedCausalIdentity.digest(
           List("closed-relation-absence:v1", semanticBoard, absenceAuthority.query.stableKey)
         ) == binding.semanticProofId &&
-        absenceAuthority.sameOwner(binding.position, binding.scope, afterAnalysis.relationInventory) &&
-        reboundAuthority.sameOwner(binding.position, binding.scope, afterAnalysis.relationInventory)
+        issuerOccurrence.certifies(absenceAuthority, binding.scope) &&
+        issuerOccurrence.certifies(reboundAuthority, binding.scope)
     certified.getOrElse(false)
 
 private[chessjudgment] object CertifiedDefenseObligationChange:
@@ -564,6 +556,7 @@ private[chessjudgment] object DefenseObligationChangeProof:
       playedRecapture: RelationLegalMoveResourceWitness,
       referenceBranch: CausalBranchOccurrence,
       playedBranch: CausalBranchOccurrence,
+      absenceOccurrence: ReplayPositionOccurrence,
       boundAbsence: PositionRelationExtractor.ClosedRelationAbsenceProof
   )
 
@@ -626,16 +619,8 @@ private[chessjudgment] object DefenseObligationChangeProof:
         rootCapture.captured.side,
         referenceExploit.mover.to
       )
-      absenceCapability <- referenceExploitOccurrence.absenceCapability(
-        ClosedRelationAbsencePremise(RelationSnapshotOccurrence.After, absenceQuery)
-      )
-      afterPositionState <- referenceReplay.after(referenceExploitStep)
-      absencePosition = PositionNodeRef(
-        referenceExploitStep.fenAfter,
-        referenceExploitStep.ply,
-        Some(afterPositionState.color)
-      )
-      boundAbsence <- absenceCapability.bind(absencePosition, referenceLine.role.scope)
+      absenceOccurrence <- referenceReplay.positionAfter(referenceExploitStep)
+      boundAbsence <- absenceOccurrence.closedAbsence(absenceQuery, referenceLine.role.scope)
       if rootCaptureOccurrence.certifiedSourcePremiseIds.nonEmpty
       if referenceExploitOccurrence.certifiedSourcePremiseIds.nonEmpty
       if playedExploitOccurrence.certifiedSourcePremiseIds.nonEmpty
@@ -662,6 +647,7 @@ private[chessjudgment] object DefenseObligationChangeProof:
       playedRecapture,
       referenceBranch,
       playedBranch,
+      absenceOccurrence,
       boundAbsence
     )
 
@@ -723,7 +709,7 @@ private[chessjudgment] object DefenseObligationChangeProof:
       inputs.referenceBranch,
       2,
       referenceLineRecord,
-      inputs.referenceExploitOccurrence
+      inputs.absenceOccurrence
     )
     val manifest = DefenseObligationChangeManifest.soleRecapturerRemoval(
       referenceRemovalUse,

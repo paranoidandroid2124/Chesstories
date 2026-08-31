@@ -952,6 +952,14 @@ object PositionRelationExtractor:
     private val actualLegalMoves = actualLegalMoveEffects.map(_._1)
     private val state = new ClosedPositionStateFacet(position, canonicalInCheck)
     private lazy val semanticFen = chess.format.Fen.write(position).value
+    /** The full typed query is the complete cache key. L1 and L2 both enter
+      * through `certifyAbsence`, so one inventory adjudicates each query once.
+      */
+    private val absenceCertificateCache =
+      scala.collection.mutable.HashMap.empty[
+        ClosedRelationAbsenceQuery,
+        Option[ClosedRelationAbsenceCertificate]
+      ]
     require(
       actualLegalMoves.forall(move => move.before == position && move.piece.color == position.color),
       "a closed position inventory accepts only its already-generated legal moves"
@@ -1799,11 +1807,10 @@ object PositionRelationExtractor:
               case _ => false)
       exact && count == snapshot.factCount
 
-    /** Targeted closed lookup shared by semantic L1 certification and
-      * occurrence-owned absence capability minting. No relation-kind scan is
-      * repeated here.
+    /** Targeted closed lookup shared by semantic L1 certification and exact
+      * replay-position absence binding. No relation-kind scan is repeated here.
       */
-    private[chessjudgment] def absenceHolds(
+    private def absenceHolds(
         query: ClosedRelationAbsenceQuery
     ): Boolean =
       query.admissible(state) && (query match
@@ -1831,9 +1838,14 @@ object PositionRelationExtractor:
     private[chessjudgment] def certifyAbsence(
         query: ClosedRelationAbsenceQuery
     ): Option[ClosedRelationAbsenceCertificate] =
-      Option.when(absenceHolds(query))(
-        new ClosedRelationAbsenceCertificate(query, this)
-      )
+      absenceCertificateCache.synchronized {
+        absenceCertificateCache.getOrElseUpdate(
+          query,
+          Option.when(absenceHolds(query))(
+            new ClosedRelationAbsenceCertificate(query, this)
+          )
+        )
+      }
 
     private[chessjudgment] def certifyState(
         query: ClosedPositionStateQuery

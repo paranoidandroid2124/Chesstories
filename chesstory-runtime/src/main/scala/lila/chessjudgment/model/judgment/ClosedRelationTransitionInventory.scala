@@ -151,31 +151,6 @@ private[chessjudgment] object ClosedRelationCombinationResults:
       None
     )
 
-/** Opaque occurrence capability for an absence already certified while one
-  * exact L1 result was closed. Consumers may bind that certificate to the
-  * matching replay position, but cannot ask the L0 inventory to adjudicate the
-  * query again.
-  */
-private[chessjudgment] final class ReplayClosedRelationAbsenceCapability private[judgment] (
-    premise: ClosedRelationAbsencePremise,
-    transition: LineReplayStep,
-    certificate: PositionRelationExtractor.ClosedRelationAbsenceCertificate,
-    inventory: PositionRelationExtractor.PositionRelationInventoryCertificate
-):
-  private[chessjudgment] def bind(
-      position: PositionNodeRef,
-      scope: EvidenceScope
-  ): Option[PositionRelationExtractor.ClosedRelationAbsenceProof] =
-    val (expectedFen, expectedPly) = premise.occurrence match
-      case RelationSnapshotOccurrence.Before => transition.fenBefore -> (transition.ply - 1)
-      case RelationSnapshotOccurrence.After  => transition.fenAfter -> transition.ply
-    Option
-      .when(
-        certificate.query == premise.query && position.ply == expectedPly &&
-          PrincipalVariationEvidence.sameBoardState(position.fen, expectedFen)
-      )((): Unit)
-      .flatMap(_ => inventory.bindAbsence(certificate, position, scope))
-
 /** Exact relation-output inventory for one admitted transition. Only contracts
   * whose canonical changed-source set is non-empty execute. `bind` adds
   * occurrence ownership.
@@ -226,31 +201,6 @@ private[chessjudgment] final class ClosedRelationTransitionInventory private (
       premise: ClosedRelationAbsencePremise
   ): Option[PositionRelationExtractor.ClosedRelationAbsenceCertificate] =
     vertical.absenceCertificate(premise)
-
-  /** Mint only from an exact absence obligation of this exact L1 output. The
-    * vertical producer resolved and cached the certificate before admitting
-    * the result, so this handoff never opens a second truth query.
-    */
-  private[chessjudgment] def absenceCapability(
-      relation: RelationFactEvidence,
-      premise: ClosedRelationAbsencePremise
-  ): Option[ReplayClosedRelationAbsenceCapability] =
-    for
-      proof <- VerticalRelationContracts.proofOf(relation.detail)
-      if verticalRelations.exists(existing =>
-        existing.asInstanceOf[AnyRef].eq(relation.asInstanceOf[AnyRef])
-      )
-      if proof.absences.contains(premise)
-      certificate <- absenceCertificate(premise)
-      inventory = premise.occurrence match
-        case RelationSnapshotOccurrence.Before => delta.beforeInventory
-        case RelationSnapshotOccurrence.After  => delta.afterInventory
-    yield new ReplayClosedRelationAbsenceCapability(
-      premise,
-      transition,
-      certificate,
-      inventory
-    )
 
   private[judgment] def stateCertificate(
       premise: ClosedPositionStatePremise

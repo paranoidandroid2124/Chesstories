@@ -402,7 +402,7 @@ private[chessjudgment] object CausalClosedAbsenceBinding:
       branch: CausalBranchOccurrence,
       stepIndex: Int,
       issuerRecord: EvidenceRecord,
-      issuerOccurrence: ReplayVerticalRelationOccurrence
+      issuerOccurrence: ReplayPositionOccurrence
   ): CausalClosedAbsenceBinding =
     val step = branch.stepAt(stepIndex).map(_.step)
       .getOrElse(throw IllegalArgumentException("a closed absence must bind a retained branch step"))
@@ -422,14 +422,17 @@ private[chessjudgment] object CausalClosedAbsenceBinding:
           ref.confidence == EvidenceConfidence.LegalReplayVerified &&
           ref.line.contains(branch.line) && ref.scope == branch.line.role.scope &&
           line.line == branch.line && line.certifiedReplay.exists(replay =>
-            replay.verticalRelationOccurrences(step, List(issuerOccurrence.contract)).exists(
-              _.occurrenceId == issuerOccurrence.occurrenceId
+            replay.positionAfter(step).exists(exactOccurrence =>
+              exactOccurrence.occurrenceId == issuerOccurrence.occurrenceId &&
+                exactOccurrence.sameOwner(issuerOccurrence) &&
+                exactOccurrence.certifies(proof, branch.line.role.scope)
             )
           )
       case _ => false
     require(
-      issuerCertified && issuerOccurrence.step == step,
-      "a closed absence must name its exact graph-owned LegalLine relation occurrence"
+      issuerCertified && issuerOccurrence.step == step &&
+        issuerOccurrence.certifies(proof, branch.line.role.scope),
+      "a closed absence must name its exact graph-owned LegalLine position occurrence"
     )
     val semanticBoard = PrincipalVariationEvidence
       .semanticBoardStateFen(proof.position.fen)

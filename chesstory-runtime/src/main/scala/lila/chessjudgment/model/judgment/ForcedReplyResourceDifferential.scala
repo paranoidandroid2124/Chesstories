@@ -391,20 +391,9 @@ private[chessjudgment] final class ForcedReplyResourceOccurrenceProof private[ch
           stepOccurrence.step.fenAfter,
           binding.position.fen
         )
-        afterAnalysis <- exactReplay.analysisAfter(stepOccurrence.step)
-        issuerOccurrence <- exactReplay
-          .verticalRelationOccurrences(
-            stepOccurrence.step,
-            List(VerticalRelationContractKind.CaptureRecaptureInventory)
-          )
-          .find(_.occurrenceId == binding.issuerOccurrenceId)
-        reboundCapability <- issuerOccurrence.absenceCapability(
-          ClosedRelationAbsencePremise(
-            RelationSnapshotOccurrence.After,
-            authority.query
-          )
-        )
-        reboundAuthority <- reboundCapability.bind(binding.position, binding.scope)
+        issuerOccurrence <- exactReplay.positionAfter(stepOccurrence.step)
+        if issuerOccurrence.occurrenceId == binding.issuerOccurrenceId
+        reboundAuthority <- issuerOccurrence.closedAbsence(authority.query, binding.scope)
         semanticBoard <- PrincipalVariationEvidence.semanticBoardStateFen(authority.position.fen)
       yield
         authority.query.stableKey == binding.queryKey && authority.position == binding.position &&
@@ -412,8 +401,8 @@ private[chessjudgment] final class ForcedReplyResourceOccurrenceProof private[ch
           BoundedCausalIdentity.digest(
             List("closed-relation-absence:v1", semanticBoard, authority.query.stableKey)
           ) == binding.semanticProofId &&
-          authority.sameOwner(binding.position, binding.scope, afterAnalysis.relationInventory) &&
-          reboundAuthority.sameOwner(binding.position, binding.scope, afterAnalysis.relationInventory)
+          issuerOccurrence.certifies(authority, binding.scope) &&
+          issuerOccurrence.certifies(reboundAuthority, binding.scope)
       certified.getOrElse(false)
     }
 
@@ -437,6 +426,7 @@ private[chessjudgment] object ForcedReplyResourceProof:
       playedDefense: RelationLegalMoveResourceWitness,
       referenceBranch: CausalBranchOccurrence,
       playedBranch: CausalBranchOccurrence,
+      absenceOccurrence: ReplayPositionOccurrence,
       boundAbsence: PositionRelationExtractor.ClosedRelationAbsenceProof
   )
 
@@ -558,21 +548,8 @@ private[chessjudgment] object ForcedReplyResourceProof:
         referenceCapture.captured.side,
         referenceCapture.mover.to
       )
-      absencePremise = ClosedRelationAbsencePremise(
-        RelationSnapshotOccurrence.After,
-        absenceQuery
-      )
-      absenceCapability <- referenceCaptureOccurrence.absenceCapability(absencePremise)
-      afterPosition <- referenceReplay.after(realizerStep)
-      absencePosition = PositionNodeRef(
-        realizerStep.fenAfter,
-        realizerStep.ply,
-        Some(afterPosition.color)
-      )
-      boundAbsence <- absenceCapability.bind(
-        absencePosition,
-        referenceLine.role.scope
-      )
+      absenceOccurrence <- referenceReplay.positionAfter(realizerStep)
+      boundAbsence <- absenceOccurrence.closedAbsence(absenceQuery, referenceLine.role.scope)
       if checkOccurrence.certifiedSourcePremiseIds.nonEmpty
       if referenceCaptureOccurrence.certifiedSourcePremiseIds.nonEmpty
       if playedCaptureOccurrence.certifiedSourcePremiseIds.nonEmpty
@@ -599,6 +576,7 @@ private[chessjudgment] object ForcedReplyResourceProof:
       defense,
       referenceBranch,
       playedBranch,
+      absenceOccurrence,
       boundAbsence
     )
 
@@ -669,7 +647,7 @@ private[chessjudgment] object ForcedReplyResourceProof:
       referenceBranch,
       referenceRealizerIndex,
       referenceLineRecord,
-      inputs.referenceCaptureOccurrence
+      inputs.absenceOccurrence
     )
     val manifest = ForcedReplyResourceManifest.displacement(
       checkUse,

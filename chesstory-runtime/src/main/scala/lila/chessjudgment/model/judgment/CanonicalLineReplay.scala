@@ -3,7 +3,7 @@ package lila.chessjudgment.model.judgment
 import chess.{ Move, Position, Role }
 import chess.format.Fen
 
-import lila.chessjudgment.analysis.position.{ PositionAnalysis, PositionAnalyzer }
+import lila.chessjudgment.analysis.position.{ PositionAnalysis, PositionAnalyzer, PositionRelationExtractor }
 import lila.chessjudgment.analysis.structure.{
   StructuralDeltaAnalyzer,
   StructuralDeltaContracts,
@@ -92,6 +92,55 @@ private final class CanonicalReplayTransitionCalculation(
       resultPremiseOccurrences
     )
 
+/** Opaque owner of one replay destination and its already-closed position
+  * inventory. It may answer only targeted queries against that exact inventory;
+  * no board fact is recomputed or persisted as another graph record.
+  */
+private[chessjudgment] final class ReplayPositionOccurrence private[judgment] (
+    val step: LineReplayStep,
+    private val analysis: PositionAnalysis
+):
+  require(
+    analysis.occurrence.plyCount == step.ply &&
+      analysis.occurrence.sideToMove == analysis.position.color &&
+      PrincipalVariationEvidence.sameBoardState(analysis.occurrence.fen, step.fenAfter),
+    "a replay position occurrence must retain its exact after-step analysis"
+  )
+
+  val position: PositionNodeRef =
+    PositionNodeRef(step.fenAfter, step.ply, Some(analysis.occurrence.sideToMove))
+
+  private val inventory = analysis.relationInventory
+
+  /** Transposed routes share the same semantic occurrence at the same ply.
+    * Concrete route ownership remains in the causal branch and LegalLine
+    * evidence ids rather than being folded into this position identity.
+    */
+  private[chessjudgment] lazy val occurrenceId: String =
+    val semanticBoard = PrincipalVariationEvidence
+      .semanticBoardStateFen(position.fen)
+      .getOrElse(throw IllegalArgumentException("a replay position occurrence needs a semantic board state"))
+    BoundedCausalIdentity.digest(
+      List("replay-position-after-occurrence:v1", semanticBoard, position.ply.toString)
+    )
+
+  private[chessjudgment] def closedAbsence(
+      query: PositionRelationExtractor.ClosedRelationAbsenceQuery,
+      scope: EvidenceScope
+  ): Option[PositionRelationExtractor.ClosedRelationAbsenceProof] =
+    inventory.certifyAbsence(query).flatMap(certificate =>
+      inventory.bindAbsence(certificate, position, scope)
+    )
+
+  private[chessjudgment] def certifies(
+      proof: PositionRelationExtractor.ClosedRelationAbsenceProof,
+      scope: EvidenceScope
+  ): Boolean =
+    proof.sameOwner(position, scope, inventory)
+
+  private[chessjudgment] def sameOwner(other: ReplayPositionOccurrence): Boolean =
+    occurrenceId == other.occurrenceId && inventory.sameOwner(other.inventory)
+
 /** Semantic time-axis address of one certified L1 result. The replay step
   * identifies the exact transition occurrence; graph binding later adds the
   * concrete line occurrence without changing this relation meaning.
@@ -100,7 +149,7 @@ private[chessjudgment] final case class ReplayVerticalRelationOccurrence private
     step: LineReplayStep,
     contract: VerticalRelationContractKind,
     relation: RelationFactEvidence
-)(private val closedInventory: ClosedRelationTransitionInventory):
+):
   require(
     VerticalRelationContractKind.forDetail(relation.detail).contains(contract),
     "a replay vertical occurrence must retain its producing contract"
@@ -135,14 +184,6 @@ private[chessjudgment] final case class ReplayVerticalRelationOccurrence private
     */
   private[chessjudgment] lazy val certifiedSourcePremiseIds: List[String] =
     ReplayVerticalRelationOccurrence.certifiedSourcePremiseIds(relation)
-
-  /** Only this exact L1 result may release one of the absence capabilities
-    * named by its certified derivation proof.
-    */
-  private[chessjudgment] def absenceCapability(
-      premise: ClosedRelationAbsencePremise
-  ): Option[ReplayClosedRelationAbsenceCapability] =
-    closedInventory.absenceCapability(relation, premise)
 
 private[chessjudgment] object ReplayVerticalRelationOccurrence:
   private[chessjudgment] def certifiedSourcePremiseIds(
@@ -309,7 +350,7 @@ private[chessjudgment] final class CanonicalReplayTransition private[judgment] (
         val key = DerivedRelationResultKey.from(relation)
         Option.when(expectedKeys(key))(
           ReplayVerticalRelationOccurrenceBinding.from(
-            ReplayVerticalRelationOccurrence(declared, contract, relation)(closedRelationOutput)
+            ReplayVerticalRelationOccurrence(declared, contract, relation)
           )
         )
       }
@@ -437,6 +478,11 @@ private[chessjudgment] final class CanonicalLineReplay private (
   def analysisAfter(step: LineReplayStep): Option[PositionAnalysis] =
     indexByReplayStep.get(step).flatMap(index => occurrenceAnalyses.lift(index + 1))
 
+  private[chessjudgment] def positionAfter(
+      step: LineReplayStep
+  ): Option[ReplayPositionOccurrence] =
+    analysisAfter(step).map(new ReplayPositionOccurrence(step, _))
+
   def transition(step: LineReplayStep): Option[CanonicalReplayTransition] =
     indexByReplayStep.get(step).flatMap(transitionOccurrences.lift)
 
@@ -456,9 +502,7 @@ private[chessjudgment] final class CanonicalLineReplay private (
     transition(step).toList.flatMap { exactTransition =>
       contracts.flatMap(contract =>
         exactTransition.verticalRelationsFor(contract).map(relation =>
-          ReplayVerticalRelationOccurrence(step, contract, relation)(
-            exactTransition.closedRelationInventory
-          )
+          ReplayVerticalRelationOccurrence(step, contract, relation)
         )
       )
     }

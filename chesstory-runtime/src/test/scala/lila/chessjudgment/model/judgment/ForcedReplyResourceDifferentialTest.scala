@@ -70,57 +70,100 @@ class ForcedReplyResourceDifferentialTest extends munit.FunSuite:
     assertEquals(absenceUse.binding.afterStepIndex, 2)
     assertEquals(absenceUse.binding.branchId, exact.occurrence.referenceBranch.branchId)
     assertEquals(absenceUse.binding.issuerEvidenceId, "reference-source-exact")
-    val issuerOccurrence = referenceReplay.verticalRelationOccurrences(
-      referenceReplay.replaySteps(2),
-      List(VerticalRelationContractKind.CaptureRecaptureInventory)
-    ) match
-      case exact :: Nil => exact
-      case other        => fail(s"expected one exact absence issuer occurrence, found ${other.size}")
+    val issuerOccurrence = referenceReplay
+      .positionAfter(referenceReplay.replaySteps(2))
+      .getOrElse(fail("expected the exact absence issuer occurrence"))
     assertEquals(absenceUse.binding.issuerOccurrenceId, issuerOccurrence.occurrenceId)
     assert(absenceUse.binding.semanticProofId.matches("[0-9a-f]{64}"))
     assert(exact.dependency.value.matches("[0-9a-f]{64}"))
 
-  test("the exact L1 absence capability binds once and mismatched premises fail closed"):
+  test("the exact replay position owns one cached absence while line paths remain distinct"):
     val replay = certifiedReplay(referenceMoves)
     val captureStep = replay.replaySteps.lift(2).getOrElse(fail("missing reference capture"))
-    val occurrence = replay
-      .verticalRelationOccurrences(
-        captureStep,
-        List(VerticalRelationContractKind.CaptureRecaptureInventory)
-      ) match
-      case exact :: Nil => exact
-      case other        => fail(s"expected one capture inventory, found ${other.size}")
-    val capture = occurrence.relation.detail match
-      case exact: RelationWitnessDetail.CaptureRecaptureInventory => exact
-      case _ => fail("expected the capture-recapture detail")
+    val occurrence = replay.positionAfter(captureStep).getOrElse(fail("missing capture destination"))
     val exactQuery = lila.chessjudgment.analysis.position.PositionRelationExtractor
       .ClosedRelationAbsenceQuery
-      .LegalCaptureOf(capture.captured.side, capture.mover.to)
-    val exactPremise = ClosedRelationAbsencePremise(
-      RelationSnapshotOccurrence.After,
-      exactQuery
-    )
-    val capability = occurrence
-      .absenceCapability(exactPremise)
-      .getOrElse(fail("expected the L1-owned recapture-absence capability"))
-    val after = replay.after(captureStep).getOrElse(fail("missing capture destination"))
-    val position = PositionNodeRef(captureStep.fenAfter, captureStep.ply, Some(after.color))
-    val bound = capability
-      .bind(position, EvidenceScope.Counterfactual)
+      .LegalCaptureOf(chess.Black, EvidenceSquare("d8"))
+    val absenceScope = LineNodeRole.BestReference.scope
+    val bound = occurrence
+      .closedAbsence(exactQuery, absenceScope)
       .getOrElse(fail("expected exact after-occurrence binding"))
     assertEquals(bound.query, exactQuery)
+    assert(occurrence.certifies(bound, absenceScope))
+
+    val repeated = replay.positionAfter(captureStep).getOrElse(fail("missing repeated destination"))
+    assertEquals(repeated.occurrenceId, occurrence.occurrenceId)
+    assert(repeated.sameOwner(occurrence))
+
+    val inventory = replay
+      .analysisAfter(captureStep)
+      .getOrElse(fail("missing capture analysis"))
+      .relationInventory
+    val firstCertificate = inventory.certifyAbsence(exactQuery).getOrElse(fail("missing cached absence"))
+    val secondCertificate = inventory.certifyAbsence(exactQuery).getOrElse(fail("missing repeated absence"))
+    assert(firstCertificate eq secondCertificate)
+
+    val line = LineNodeRef("position-owner", referenceMoves.head, 1, LineNodeRole.BestReference)
+    val branch = CausalBranchOccurrence.certifiedCounterfactual(
+      ForcedReplyResourceBranchRole.CounterfactualReference,
+      line,
+      replay,
+      referenceMoves.size
+    )
+    val record = EvidenceRecord(
+      lineRef("position-owner-record", line, rootFen),
+      LineFactEvidence.fromCertifiedReplay(line, replay)
+    )
+    val binding = CausalClosedAbsenceBinding.afterStep(
+      ForcedReplyResourceAbsenceRole.ReferenceRecaptureAbsent,
+      bound,
+      branch,
+      2,
+      record,
+      occurrence
+    )
+    val foreignLine = line.copy(id = "foreign-position-owner")
+    val foreignBranch = CausalBranchOccurrence.certifiedCounterfactual(
+      ForcedReplyResourceBranchRole.CounterfactualReference,
+      foreignLine,
+      replay,
+      referenceMoves.size
+    )
+    val foreignRecord = EvidenceRecord(
+      lineRef("foreign-position-owner-record", foreignLine, rootFen),
+      LineFactEvidence.fromCertifiedReplay(foreignLine, replay)
+    )
+    val foreignBinding = CausalClosedAbsenceBinding.afterStep(
+      ForcedReplyResourceAbsenceRole.ReferenceRecaptureAbsent,
+      bound,
+      foreignBranch,
+      2,
+      foreignRecord,
+      occurrence
+    )
+    assertEquals(binding.issuerOccurrenceId, foreignBinding.issuerOccurrenceId)
+    assertNotEquals(binding.branchId, foreignBinding.branchId)
+    assertNotEquals(binding.issuerEvidenceId, foreignBinding.issuerEvidenceId)
+    intercept[IllegalArgumentException] {
+      CausalClosedAbsenceBinding.afterStep(
+        ForcedReplyResourceAbsenceRole.ReferenceRecaptureAbsent,
+        bound,
+        branch,
+        2,
+        foreignRecord,
+        occurrence
+      )
+    }
 
     assertEquals(
-      occurrence.absenceCapability(exactPremise.copy(occurrence = RelationSnapshotOccurrence.Before)),
+      occurrence.closedAbsence(
+        lila.chessjudgment.analysis.position.PositionRelationExtractor
+          .ClosedRelationAbsenceQuery
+          .GeometricControlOf(chess.Black, EvidenceSquare("f7")),
+        absenceScope
+      ),
       None
     )
-    val missingPremise = ClosedRelationAbsencePremise(
-      RelationSnapshotOccurrence.After,
-      lila.chessjudgment.analysis.position.PositionRelationExtractor
-        .ClosedRelationAbsenceQuery
-        .AnyLegalMove(capture.captured.side)
-    )
-    assertEquals(occurrence.absenceCapability(missingPremise), None)
 
   test("semantic proof survives line transposition identity while occurrences remain distinct"):
     val referenceReplay = certifiedReplay(referenceMoves)
