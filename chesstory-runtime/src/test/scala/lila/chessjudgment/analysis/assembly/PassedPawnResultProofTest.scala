@@ -650,6 +650,62 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       ),
       "the public passed-pawn-result premise must retain the exact lower L1 source ids"
     )
+    val publicDependencyPremises = proof.publicProofPaths
+      .flatMap(_.premises)
+      .filter(premise => Set("expected_dependency", "observed_dependency")(premise.role))
+    assert(publicDependencyPremises.nonEmpty, "expected exact public dependency witnesses")
+    assert(publicDependencyPremises.forall(_.dependencyProof.nonEmpty))
+    assert(
+      publicDependencyPremises.flatMap(_.dependencyProof).exists(_.proofKind == "object_state"),
+      "the exact repeated-pawn route must publish its object-state proof"
+    )
+    val objectStateProof = publicDependencyPremises
+      .flatMap(_.dependencyProof)
+      .find(_.proofKind == "object_state")
+      .getOrElse(fail("expected the exact repeated-pawn object-state proof"))
+    assertEquals(
+      objectStateProof.squares.map(witness => witness.role -> witness.square),
+      List("root_from" -> "a5", "root_to" -> "a6", "future_from" -> "a6", "future_to" -> "a7")
+    )
+    assertEquals(
+      objectStateProof.pieces.map(witness => (witness.role, witness.side, witness.piece)),
+      List(
+        ("root_before", "white", "pawn"),
+        ("tracked", "white", "pawn"),
+        ("future_after", "white", "pawn")
+      )
+    )
+    assertEquals(objectStateProof.relationIssuers, Nil)
+    assert(
+      proof.publicProofPaths
+        .flatMap(_.premises)
+        .filterNot(premise => Set("expected_dependency", "observed_dependency")(premise.role))
+        .forall(_.dependencyProof.isEmpty),
+      "non-dependency premises must not acquire a speculative dependency proof"
+    )
+    publicDependencyPremises.flatMap(_.dependencyProof).foreach { dependencyProof =>
+      assert(dependencyProof.squares.nonEmpty)
+      assert(dependencyProof.pieces.nonEmpty)
+      (dependencyProof.dependencyKind, dependencyProof.proofKind) match
+        case ("object_state_precondition", "object_state") =>
+          assertEquals(dependencyProof.relationIssuers, Nil)
+        case ("line_access_precondition", "line_access") =>
+          assertEquals(
+            dependencyProof.relationIssuers.map(issuer => issuer.contract -> issuer.relationKind),
+            List("slider_reach_delta" -> "slider_reach_delta")
+          )
+        case ("response_continuation_precondition", "pawn_break_follow_up") =>
+          assertEquals(
+            dependencyProof.relationIssuers.map(issuer => issuer.contract -> issuer.relationKind),
+            List("pawn_topology_transition" -> "pawn_topology_transition")
+          )
+        case ("response_continuation_precondition", "capture_follow_up") =>
+          assertEquals(
+            dependencyProof.relationIssuers.map(issuer => issuer.contract -> issuer.relationKind),
+            List("capture_recapture_inventory" -> "capture_recapture_inventory")
+          )
+        case other => fail(s"unexpected public dependency proof $other")
+    }
 
     val missingDemandParent = proofRecord.copy(parents = List(proof.eventSource))
     assert(
@@ -796,6 +852,93 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       }.toSet,
       Set("capture")
     )
+    val captureProof = CausalDependencyPremiseWitness.from(dependencies.head).publicProof
+    assertEquals(captureProof.dependencyKind, "response_continuation_precondition")
+    assertEquals(captureProof.proofKind, "capture_follow_up")
+    assertEquals(
+      captureProof.squares.map(witness => witness.role -> witness.square),
+      List("reply_from" -> "f8", "reply_to" -> "f7", "follow_up_from" -> "b3", "follow_up_to" -> "f7")
+    )
+    assertEquals(
+      captureProof.pieces.map(witness => (witness.role, witness.side, witness.piece)),
+      List(
+        ("trigger_piece", "white", "bishop"),
+        ("responder_piece", "black", "rook"),
+        ("follow_up_piece", "white", "queen")
+      )
+    )
+    assertEquals(
+      captureProof.relationIssuers.map(issuer => issuer.contract -> issuer.relationKind),
+      List("capture_recapture_inventory" -> "capture_recapture_inventory")
+    )
+
+  test("a line-access dependency publishes its exact slider-reach issuer without recomputing access"):
+    val exactFixture = fixture(
+      "7k/8/8/8/8/8/P7/R6K w - - 0 1",
+      List("a2a3", "h8g8", "a1a2")
+    )
+    val lineOwner = EvidenceRef(
+      "line-access-witness-owner",
+      EvidenceProducer.LegalLineProducer,
+      EvidenceLayer.Line,
+      exactFixture.structural.from,
+      Some(exactFixture.line),
+      exactFixture.line.role.scope,
+      EvidenceConfidence.LegalReplayVerified
+    )
+    val lineRecord = EvidenceRecord(lineOwner, exactFixture.facts)
+    val trace = PassedPawnResultEventProof.causalTrace(
+      exactFixture.replay,
+      List(lineRecord -> exactFixture.facts)
+    )
+    def event(step: LineReplayStep): PassedPawnResultEventNode =
+      val observation = trace.observation(step).getOrElse(fail("expected the exact step observation"))
+      val transition = exactFixture.replay.transition(step).getOrElse(fail("expected the exact replay transition"))
+      PassedPawnResultEventNode(
+        PassedPawnResultEventIdentityBuilder.from(
+          step.moveUci,
+          transition.relationDelta.rootMove,
+          PassedPawnResultKind.Creation
+        ),
+        step,
+        observation.transition.perspective,
+        observation.consequences,
+        observation.lineOccurrenceOwner,
+        observation.structuralOccurrence,
+        observation.transition,
+        Some(transition.legal),
+        Some(transition.relationDelta.rootMove)
+      )
+    val enablingStep :: interveningStep :: enabledStep :: Nil = exactFixture.replay.replaySteps: @unchecked
+    val trajectory = LineAccessTrajectory
+      .findRootClearanceBeforeUse(enablingStep, enabledStep, List(interveningStep), exactFixture.replay)
+      .getOrElse(fail("expected the exact line-access trajectory"))
+    val dependency = PassedPawnResultDependency(
+      event(enablingStep),
+      event(enabledStep),
+      PassedPawnResultDependencyKind.LineAccessPrecondition,
+      PassedPawnResultDependencyProof.LineAccess(trajectory),
+      plyOffset = 2
+    )
+    val publicProof = CausalDependencyPremiseWitness.from(dependency).publicProof
+    assertEquals(publicProof.dependencyKind, "line_access_precondition")
+    assertEquals(publicProof.proofKind, "line_access")
+    assertEquals(
+      publicProof.squares.map(witness => witness.role -> witness.square),
+      List("vacated_gate" -> "a2", "enabled_from" -> "a1", "enabled_to" -> "a2")
+    )
+    assertEquals(
+      publicProof.pieces.map(witness => (witness.role, witness.side, witness.piece)),
+      List(("enabled_piece", "white", "rook"))
+    )
+    val issuer = publicProof.relationIssuers match
+      case exact :: Nil => exact
+      case other        => fail(s"expected one exact slider-reach issuer, got $other")
+    assertEquals(issuer.contract, "slider_reach_delta")
+    assertEquals(issuer.relationKind, "slider_reach_delta")
+    assertEquals(issuer.resultKey, trajectory.relationOccurrenceBinding.result.stableKey)
+    assertEquals(issuer.occurrenceId, trajectory.relationOccurrenceBinding.occurrenceId)
+    assertEquals(issuer.sourcePremiseIds, trajectory.relationOccurrenceBinding.certifiedSourcePremiseIds)
 
   test("a reply-backed passed-pawn result dependency retains its exact L1 occurrence owners in the result premise"):
     val fen = "4k3/8/3p4/2P5/4P3/8/8/4K3 w - - 0 1"
@@ -920,10 +1063,40 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       branchRole = "expected_result_route",
       relatedBranchIds = premise.relatedBranchIds,
       fromStepIndex = premise.fromStepIndex,
-      toStepIndex = premise.toStepIndex
+      toStepIndex = premise.toStepIndex,
+      dependencyProof = premise.dependencyWitness.map(_.publicProof)
     )
     assert(publicPremise.sourcePremiseIds.contains(occurrence.occurrenceId))
     assert(occurrence.certifiedSourcePremiseIds.forall(publicPremise.sourcePremiseIds.contains))
+    val dependencyProof = publicPremise.dependencyProof.getOrElse(fail("expected the exact dependency proof"))
+    assertEquals(dependencyProof.dependencyKind, "response_continuation_precondition")
+    assertEquals(dependencyProof.proofKind, "pawn_break_follow_up")
+    assertEquals(
+      dependencyProof.squares.map(witness => witness.role -> witness.square),
+      List(
+        "reply_from" -> "d6",
+        "reply_to" -> "e5",
+        "follow_up_from" -> "c5",
+        "follow_up_to" -> "c6",
+        "released_passed_pawn" -> "c5"
+      )
+    )
+    assertEquals(
+      dependencyProof.pieces.map(witness => (witness.role, witness.side, witness.piece)),
+      List(
+        ("trigger_pawn", "white", "pawn"),
+        ("responder_pawn", "black", "pawn"),
+        ("follow_up_pawn", "white", "pawn")
+      )
+    )
+    val issuer = dependencyProof.relationIssuers match
+      case exact :: Nil => exact
+      case other        => fail(s"expected one exact pawn-topology issuer, got $other")
+    assertEquals(issuer.contract, "pawn_topology_transition")
+    assertEquals(issuer.relationKind, "pawn_topology_transition")
+    assertEquals(issuer.resultKey, occurrence.result.stableKey)
+    assertEquals(issuer.occurrenceId, occurrence.occurrenceId)
+    assertEquals(issuer.sourcePremiseIds, occurrence.certifiedSourcePremiseIds)
 
   test("an inactive passed-pawn-result trace computes no event pair until an exact relation is demanded"):
     val quiet = fixture(Standard.initialFen.value, List("g1f3", "g8f6", "b1c3"))

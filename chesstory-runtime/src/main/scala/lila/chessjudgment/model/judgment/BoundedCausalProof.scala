@@ -409,7 +409,8 @@ private[chessjudgment] final case class CausalTypedPremiseUse private (
     branchRole: CausalBranchRole,
     relatedBranchIds: List[String],
     fromStepIndex: Int,
-    toStepIndex: Int
+    toStepIndex: Int,
+    private[chessjudgment] val dependencyWitness: Option[CausalDependencyPremiseWitness] = None
 ) extends CausalSupplementalPremiseUse:
   require(lowerKind.nonEmpty && lowerSemanticKey.nonEmpty, "a typed causal premise needs exact lower meaning")
   require(sourcePremiseIds.nonEmpty, "a typed causal premise needs exact lower evidence owners")
@@ -422,6 +423,15 @@ private[chessjudgment] final case class CausalTypedPremiseUse private (
     relatedBranchIds == relatedBranchIds.sorted && relatedBranchIds.distinct.size == relatedBranchIds.size &&
       !relatedBranchIds.contains(branchId),
     "related causal branches must be distinct and canonical"
+  )
+  require(
+    if Set("passed_pawn_result_dependency", "observed_passed_pawn_result_dependency")(lowerKind) then
+      dependencyWitness.exists(witness =>
+        witness.dependencyOccurrenceKey == lowerSemanticKey &&
+          witness.relationOwnerIds.forall(sourcePremiseIds.contains)
+      )
+    else dependencyWitness.isEmpty,
+    "only exact passed-pawn dependency premises may retain a dependency witness"
   )
 
   val branchIds: Set[String] = relatedBranchIds.toSet + branchId
@@ -436,7 +446,8 @@ private[chessjudgment] final case class CausalTypedPremiseUse private (
       branchRole.stableKey,
       relatedBranchIds.mkString("[", ",", "]"),
       fromStepIndex.toString,
-      toStepIndex.toString
+      toStepIndex.toString,
+      dependencyWitness.map(_.dependencyOccurrenceKey).getOrElse("none")
     ).mkString("|")
 
 private[chessjudgment] object CausalTypedPremiseUse:
@@ -484,22 +495,6 @@ private[chessjudgment] object CausalTypedPremiseUse:
       ) ++ proof.sourcePremiseKeys
     ).distinct.sorted
 
-  private def relationOccurrencePremiseIds(
-      dependency: PassedPawnResultDependency
-  ): List[String] =
-    val retainedSteps = dependency.proof match
-      case PassedPawnResultDependencyProof.ResponseContinuation(trajectory) =>
-        dependency.from.step :: (trajectory.interveningSteps :+ dependency.to.step)
-      case _ => List(dependency.from.step, dependency.to.step)
-    val bindings = dependency.relationOccurrenceBindings
-    require(
-      bindings.forall(binding => retainedSteps.contains(binding.step)),
-      "a typed passed-pawn result dependency must retain every exact L1 occurrence on its certified route"
-    )
-    bindings.flatMap(binding =>
-      binding.occurrenceId :: binding.certifiedSourcePremiseIds
-    ).distinct.sorted
-
   def passedPawnResultDependency(
       role: CausalPremiseRole,
       dependency: PassedPawnResultDependency,
@@ -526,6 +521,7 @@ private[chessjudgment] object CausalTypedPremiseUse:
       lineOccurrenceOwners.forall(id => sourceRecord.parents.exists(_.id == id)),
       "a typed passed-pawn result dependency must retain both exact line occurrence owners"
     )
+    val dependencyWitness = CausalDependencyPremiseWitness.from(dependency)
     CausalTypedPremiseUse(
       role,
       "passed_pawn_result_dependency",
@@ -535,14 +531,15 @@ private[chessjudgment] object CausalTypedPremiseUse:
           (
             structuralPremiseIds(dependency.from) ++
               structuralPremiseIds(dependency.to) ++
-              relationOccurrencePremiseIds(dependency)
+              dependencyWitness.relationOwnerIds
           )
       ).distinct.sorted,
       branch.branchId,
       branch.role,
       Nil,
       fromStepIndex,
-      toStepIndex
+      toStepIndex,
+      Some(dependencyWitness)
     )
 
   def passedPawnResult(
@@ -615,6 +612,7 @@ private[chessjudgment] object CausalTypedPremiseUse:
       lineOccurrenceOwners.forall(id => sourceRecord.parents.exists(_.id == id)),
       "an observed passed-pawn result dependency must retain both exact line occurrence owners"
     )
+    val dependencyWitness = CausalDependencyPremiseWitness.from(dependency)
     CausalTypedPremiseUse(
       role,
       "observed_passed_pawn_result_dependency",
@@ -625,14 +623,15 @@ private[chessjudgment] object CausalTypedPremiseUse:
             branchLineOwners ++
               structuralPremiseIds(dependency.from) ++
               structuralPremiseIds(dependency.to) ++
-              relationOccurrencePremiseIds(dependency)
+              dependencyWitness.relationOwnerIds
           )
       ).distinct.sorted,
       branch.branchId,
       branch.role,
       Nil,
       fromStepIndex,
-      toStepIndex
+      toStepIndex,
+      Some(dependencyWitness)
     )
 
   def observedPassedPawnResult(

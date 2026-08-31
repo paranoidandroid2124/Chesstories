@@ -51,6 +51,25 @@ def _passed_pawn_result_proof() -> dict[str, object]:
     reply_key = f"2:h8g8:{PASSED_PAWN_AFTER_A3}:{after_reply}"
     result_key = f"3:a3a4:{after_reply}:{after_result}"
     expected_dependency_key = "expected-passed-pawn-result-dependency"
+
+    def object_state_dependency_proof() -> dict[str, object]:
+        return {
+            "dependency_kind": "object_state_precondition",
+            "proof_kind": "object_state",
+            "squares": [
+                {"role": "root_from", "square": "a2"},
+                {"role": "root_to", "square": "a3"},
+                {"role": "future_from", "square": "a3"},
+                {"role": "future_to", "square": "a4"},
+            ],
+            "pieces": [
+                {"role": "root_before", "side": "white", "piece": "pawn"},
+                {"role": "tracked", "side": "white", "piece": "pawn"},
+                {"role": "future_after", "side": "white", "piece": "pawn"},
+            ],
+            "relation_issuers": [],
+        }
+
     root_step = {
         "step_index": 0,
         "step_key": root_key,
@@ -209,6 +228,7 @@ def _passed_pawn_result_proof() -> dict[str, object]:
                         "related_branch_ids": [],
                         "from_step_index": 0,
                         "to_step_index": 1,
+                        "dependency_proof": object_state_dependency_proof(),
                     },
                     {
                         "role": "expected_result",
@@ -231,6 +251,7 @@ def _passed_pawn_result_proof() -> dict[str, object]:
                         "related_branch_ids": [],
                         "from_step_index": 0,
                         "to_step_index": 2,
+                        "dependency_proof": object_state_dependency_proof(),
                     },
                     {
                         "role": "observed_result",
@@ -694,6 +715,98 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             label="public v6 independent proof paths",
         )
 
+        dependency_variants = [
+            {
+                "dependency_kind": "line_access_precondition",
+                "proof_kind": "line_access",
+                "squares": [
+                    {"role": "vacated_gate", "square": "a3"},
+                    {"role": "enabled_from", "square": "a1"},
+                    {"role": "enabled_to", "square": "a4"},
+                ],
+                "pieces": [
+                    {"role": "enabled_piece", "side": "white", "piece": "rook"}
+                ],
+                "relation_issuers": [
+                    {
+                        "contract": "slider_reach_delta",
+                        "relation_kind": "slider_reach_delta",
+                        "result_key": "slider_reach_delta:" + "1" * 64,
+                        "occurrence_id": "2" * 64,
+                        "source_premise_ids": ["l1-slider-reach"],
+                    }
+                ],
+            },
+            {
+                "dependency_kind": "response_continuation_precondition",
+                "proof_kind": "pawn_break_follow_up",
+                "squares": [
+                    {"role": "reply_from", "square": "b4"},
+                    {"role": "reply_to", "square": "a3"},
+                    {"role": "follow_up_from", "square": "a3"},
+                    {"role": "follow_up_to", "square": "a4"},
+                    {"role": "released_passed_pawn", "square": "a3"},
+                ],
+                "pieces": [
+                    {"role": "trigger_pawn", "side": "white", "piece": "pawn"},
+                    {"role": "responder_pawn", "side": "black", "piece": "pawn"},
+                    {"role": "follow_up_pawn", "side": "white", "piece": "pawn"},
+                ],
+                "relation_issuers": [
+                    {
+                        "contract": "pawn_topology_transition",
+                        "relation_kind": "pawn_topology_transition",
+                        "result_key": "pawn_topology_transition:" + "3" * 64,
+                        "occurrence_id": "4" * 64,
+                        "source_premise_ids": ["l1-pawn-topology"],
+                    }
+                ],
+            },
+            {
+                "dependency_kind": "response_continuation_precondition",
+                "proof_kind": "capture_follow_up",
+                "squares": [
+                    {"role": "reply_from", "square": "b4"},
+                    {"role": "reply_to", "square": "a3"},
+                    {"role": "follow_up_from", "square": "a2"},
+                    {"role": "follow_up_to", "square": "a3"},
+                ],
+                "pieces": [
+                    {"role": "trigger_piece", "side": "white", "piece": "bishop"},
+                    {"role": "responder_piece", "side": "black", "piece": "rook"},
+                    {"role": "follow_up_piece", "side": "white", "piece": "queen"},
+                ],
+                "relation_issuers": [
+                    {
+                        "contract": "capture_recapture_inventory",
+                        "relation_kind": "capture_recapture_inventory",
+                        "result_key": "capture_recapture_inventory:" + "5" * 64,
+                        "occurrence_id": "6" * 64,
+                        "source_premise_ids": ["l1-capture-recapture"],
+                    }
+                ],
+            },
+        ]
+        valid_dependency_documents = []
+        for variant in dependency_variants:
+            document = copy.deepcopy(ready)
+            premises = document["move_commentary"]["causal_explanations"][0]["facets"][0][
+                "channels"
+            ][0]["passed_pawn_result_proof"]["proof_paths"][0]["premises"]
+            issuer = variant["relation_issuers"][0]
+            issuer_sources = [issuer["occurrence_id"], *issuer["source_premise_ids"]]
+            for premise_index in (1, 3):
+                premises[premise_index]["dependency_proof"] = copy.deepcopy(variant)
+                premises[premise_index]["source_premise_ids"] = sorted(
+                    [*premises[premise_index]["source_premise_ids"], *issuer_sources]
+                )
+            registry.validate_document(
+                document,
+                move_path,
+                label=f"public v6 {variant['proof_kind']} dependency proof",
+            )
+            valid_dependency_documents.append(document)
+
         invalid_documents = []
         passed_pawn_result_without_typed_proof = copy.deepcopy(ready)
         del passed_pawn_result_without_typed_proof["move_commentary"]["causal_explanations"][0]["facets"][0][
@@ -864,6 +977,36 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         ][0]["channels"][0]["passed_pawn_result_proof"]["proof_paths"][0]["premises"]
         premises[1] = copy.deepcopy(premises[0])
         invalid_documents.append(incomplete_premise_manifest)
+
+        missing_dependency_proof = copy.deepcopy(ready)
+        premises = missing_dependency_proof["move_commentary"]["causal_explanations"][0]["facets"][0][
+            "channels"
+        ][0]["passed_pawn_result_proof"]["proof_paths"][0]["premises"]
+        del premises[1]["dependency_proof"]
+        invalid_documents.append(missing_dependency_proof)
+
+        dependency_proof_on_result = copy.deepcopy(ready)
+        premises = dependency_proof_on_result["move_commentary"]["causal_explanations"][0]["facets"][0][
+            "channels"
+        ][0]["passed_pawn_result_proof"]["proof_paths"][0]["premises"]
+        premises[2]["dependency_proof"] = copy.deepcopy(premises[1]["dependency_proof"])
+        invalid_documents.append(dependency_proof_on_result)
+
+        mismatched_dependency_kind = copy.deepcopy(ready)
+        premises = mismatched_dependency_kind["move_commentary"]["causal_explanations"][0]["facets"][0][
+            "channels"
+        ][0]["passed_pawn_result_proof"]["proof_paths"][0]["premises"]
+        premises[1]["dependency_proof"]["proof_kind"] = "line_access"
+        invalid_documents.append(mismatched_dependency_kind)
+
+        mismatched_relation_issuer = copy.deepcopy(valid_dependency_documents[0])
+        premises = mismatched_relation_issuer["move_commentary"]["causal_explanations"][0]["facets"][0][
+            "channels"
+        ][0]["passed_pawn_result_proof"]["proof_paths"][0]["premises"]
+        premises[1]["dependency_proof"]["relation_issuers"][0][
+            "relation_kind"
+        ] = "pawn_topology_transition"
+        invalid_documents.append(mismatched_relation_issuer)
 
         duplicate_path_identifier = copy.deepcopy(ready)
         proof_paths = duplicate_path_identifier["move_commentary"]["causal_explanations"][0][

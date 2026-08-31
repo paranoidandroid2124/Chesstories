@@ -980,6 +980,331 @@
         }
       }
     },
+    "passedPawnResultDependencySquare": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "square"],
+      "properties": {
+        "role": {
+          "enum": [
+            "root_from",
+            "root_to",
+            "future_from",
+            "future_to",
+            "vacated_gate",
+            "enabled_from",
+            "enabled_to",
+            "reply_from",
+            "reply_to",
+            "follow_up_from",
+            "follow_up_to",
+            "released_passed_pawn"
+          ]
+        },
+        "square": {"$ref": "#/$defs/square"}
+      }
+    },
+    "passedPawnResultDependencyPiece": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "side", "piece"],
+      "properties": {
+        "role": {
+          "enum": [
+            "root_before",
+            "tracked",
+            "future_after",
+            "enabled_piece",
+            "trigger_pawn",
+            "responder_pawn",
+            "follow_up_pawn",
+            "trigger_piece",
+            "responder_piece",
+            "follow_up_piece"
+          ]
+        },
+        "side": {"$ref": "#/$defs/side"},
+        "piece": {"$ref": "#/$defs/pieceRole"}
+      }
+    },
+    "passedPawnResultRelationIssuer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "relation_kind",
+        "result_key",
+        "occurrence_id",
+        "source_premise_ids"
+      ],
+      "properties": {
+        "contract": {
+          "enum": ["slider_reach_delta", "pawn_topology_transition", "capture_recapture_inventory"]
+        },
+        "relation_kind": {
+          "enum": ["slider_reach_delta", "pawn_topology_transition", "capture_recapture_inventory"]
+        },
+        "result_key": {
+          "type": "string",
+          "pattern": "^(slider_reach_delta|pawn_topology_transition|capture_recapture_inventory):[0-9a-f]{64}$"
+        },
+        "occurrence_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "source_premise_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonEmptyString"}
+        }
+      }
+    },
+    "passedPawnResultDependencyProof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dependency_kind", "proof_kind", "squares", "pieces", "relation_issuers"],
+      "properties": {
+        "dependency_kind": {
+          "enum": [
+            "object_state_precondition",
+            "line_access_precondition",
+            "response_continuation_precondition"
+          ]
+        },
+        "proof_kind": {
+          "enum": ["object_state", "line_access", "pawn_break_follow_up", "capture_follow_up"]
+        },
+        "squares": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/passedPawnResultDependencySquare"}
+        },
+        "pieces": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/passedPawnResultDependencyPiece"}
+        },
+        "relation_issuers": {
+          "type": "array",
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/passedPawnResultRelationIssuer"}
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "dependency_kind": {"const": "object_state_precondition"},
+            "proof_kind": {"const": "object_state"},
+            "squares": {
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "allOf": [
+                  {"$ref": "#/$defs/passedPawnResultDependencySquare"},
+                  {"properties": {"role": {"enum": ["root_from", "root_to", "future_from", "future_to"]}}}
+                ]
+              },
+              "allOf": [
+                {"contains": {"properties": {"role": {"const": "root_from"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "root_to"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "future_from"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "future_to"}}, "required": ["role"]}}
+              ]
+            },
+            "pieces": {
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "allOf": [
+                  {"$ref": "#/$defs/passedPawnResultDependencyPiece"},
+                  {"properties": {"role": {"enum": ["root_before", "tracked", "future_after"]}}}
+                ]
+              },
+              "allOf": [
+                {"contains": {"properties": {"role": {"const": "root_before"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "tracked"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "future_after"}}, "required": ["role"]}}
+              ]
+            },
+            "relation_issuers": {"maxItems": 0}
+          }
+        },
+        {
+          "properties": {
+            "dependency_kind": {"const": "line_access_precondition"},
+            "proof_kind": {"const": "line_access"},
+            "squares": {
+              "minItems": 3,
+              "items": {
+                "allOf": [
+                  {"$ref": "#/$defs/passedPawnResultDependencySquare"},
+                  {"properties": {"role": {"enum": ["vacated_gate", "enabled_from", "enabled_to"]}}}
+                ]
+              },
+              "allOf": [
+                {"contains": {"properties": {"role": {"const": "vacated_gate"}}, "required": ["role"]}},
+                {
+                  "contains": {"properties": {"role": {"const": "enabled_from"}}, "required": ["role"]},
+                  "minContains": 1,
+                  "maxContains": 1
+                },
+                {
+                  "contains": {"properties": {"role": {"const": "enabled_to"}}, "required": ["role"]},
+                  "minContains": 1,
+                  "maxContains": 1
+                }
+              ]
+            },
+            "pieces": {
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "allOf": [
+                  {"$ref": "#/$defs/passedPawnResultDependencyPiece"},
+                  {"properties": {"role": {"const": "enabled_piece"}}}
+                ]
+              }
+            },
+            "relation_issuers": {
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "allOf": [
+                  {"$ref": "#/$defs/passedPawnResultRelationIssuer"},
+                  {
+                    "properties": {
+                      "contract": {"const": "slider_reach_delta"},
+                      "relation_kind": {"const": "slider_reach_delta"},
+                      "result_key": {"type": "string", "pattern": "^slider_reach_delta:[0-9a-f]{64}$"}
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "dependency_kind": {"const": "response_continuation_precondition"},
+            "proof_kind": {"const": "pawn_break_follow_up"},
+            "squares": {
+              "minItems": 5,
+              "maxItems": 5,
+              "items": {
+                "allOf": [
+                  {"$ref": "#/$defs/passedPawnResultDependencySquare"},
+                  {
+                    "properties": {
+                      "role": {
+                        "enum": [
+                          "reply_from",
+                          "reply_to",
+                          "follow_up_from",
+                          "follow_up_to",
+                          "released_passed_pawn"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              "allOf": [
+                {"contains": {"properties": {"role": {"const": "reply_from"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "reply_to"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "follow_up_from"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "follow_up_to"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "released_passed_pawn"}}, "required": ["role"]}}
+              ]
+            },
+            "pieces": {
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "allOf": [
+                  {"$ref": "#/$defs/passedPawnResultDependencyPiece"},
+                  {"properties": {"role": {"enum": ["trigger_pawn", "responder_pawn", "follow_up_pawn"]}}}
+                ]
+              },
+              "allOf": [
+                {"contains": {"properties": {"role": {"const": "trigger_pawn"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "responder_pawn"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "follow_up_pawn"}}, "required": ["role"]}}
+              ]
+            },
+            "relation_issuers": {
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "allOf": [
+                  {"$ref": "#/$defs/passedPawnResultRelationIssuer"},
+                  {
+                    "properties": {
+                      "contract": {"const": "pawn_topology_transition"},
+                      "relation_kind": {"const": "pawn_topology_transition"},
+                      "result_key": {"type": "string", "pattern": "^pawn_topology_transition:[0-9a-f]{64}$"}
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "dependency_kind": {"const": "response_continuation_precondition"},
+            "proof_kind": {"const": "capture_follow_up"},
+            "squares": {
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "allOf": [
+                  {"$ref": "#/$defs/passedPawnResultDependencySquare"},
+                  {"properties": {"role": {"enum": ["reply_from", "reply_to", "follow_up_from", "follow_up_to"]}}}
+                ]
+              },
+              "allOf": [
+                {"contains": {"properties": {"role": {"const": "reply_from"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "reply_to"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "follow_up_from"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "follow_up_to"}}, "required": ["role"]}}
+              ]
+            },
+            "pieces": {
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "allOf": [
+                  {"$ref": "#/$defs/passedPawnResultDependencyPiece"},
+                  {"properties": {"role": {"enum": ["trigger_piece", "responder_piece", "follow_up_piece"]}}}
+                ]
+              },
+              "allOf": [
+                {"contains": {"properties": {"role": {"const": "trigger_piece"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "responder_piece"}}, "required": ["role"]}},
+                {"contains": {"properties": {"role": {"const": "follow_up_piece"}}, "required": ["role"]}}
+              ]
+            },
+            "relation_issuers": {
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "allOf": [
+                  {"$ref": "#/$defs/passedPawnResultRelationIssuer"},
+                  {
+                    "properties": {
+                      "contract": {"const": "capture_recapture_inventory"},
+                      "relation_kind": {"const": "capture_recapture_inventory"},
+                      "result_key": {"type": "string", "pattern": "^capture_recapture_inventory:[0-9a-f]{64}$"}
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
     "passedPawnResultPremise": {
       "type": "object",
       "additionalProperties": false,
@@ -1012,10 +1337,12 @@
           "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
         },
         "from_step_index": {"type": "integer", "minimum": 0},
-        "to_step_index": {"type": "integer", "minimum": 0}
+        "to_step_index": {"type": "integer", "minimum": 0},
+        "dependency_proof": {"$ref": "#/$defs/passedPawnResultDependencyProof"}
       },
       "oneOf": [
         {
+          "not": {"required": ["dependency_proof"]},
           "properties": {
             "role": {"const": "comparison_demand"},
             "lower_kind": {"const": "played_vs_best_demand"},
@@ -1024,6 +1351,7 @@
           }
         },
         {
+          "required": ["dependency_proof"],
           "properties": {
             "role": {"const": "expected_dependency"},
             "lower_kind": {"const": "passed_pawn_result_dependency"},
@@ -1032,6 +1360,7 @@
           }
         },
         {
+          "not": {"required": ["dependency_proof"]},
           "properties": {
             "role": {"const": "expected_result"},
             "lower_kind": {"const": "passed_pawn_result"},
@@ -1040,6 +1369,7 @@
           }
         },
         {
+          "required": ["dependency_proof"],
           "properties": {
             "role": {"const": "observed_dependency"},
             "lower_kind": {"const": "observed_passed_pawn_result_dependency"},
@@ -1048,6 +1378,7 @@
           }
         },
         {
+          "not": {"required": ["dependency_proof"]},
           "properties": {
             "role": {"const": "observed_result"},
             "lower_kind": {"const": "observed_passed_pawn_result"},
@@ -1056,6 +1387,7 @@
           }
         },
         {
+          "not": {"required": ["dependency_proof"]},
           "properties": {
             "role": {"const": "functional_match"},
             "lower_kind": {"const": "passed_pawn_result_functional_match"},

@@ -768,7 +768,9 @@ object RuntimeProtocol:
                   "related_branch_ids" -> premise.relatedBranchIds,
                   "from_step_index" -> premise.fromStepIndex,
                   "to_step_index" -> premise.toStepIndex
-                )
+                ) ++ premise.dependencyProof
+                  .map(proof => Json.obj("dependency_proof" -> passedPawnResultDependencyProofJson(proof)))
+                  .getOrElse(Json.obj())
               ),
               "closure_use_ids" -> path.closureUseIds
             )
@@ -851,6 +853,34 @@ object RuntimeProtocol:
         "from" -> actor.from,
         "to" -> actor.to,
         "legal_move_relation" -> actor.legalMoveSemanticId
+      )
+
+    private def passedPawnResultDependencyProofJson(proof: PassedPawnResultPublicDependencyProof): JsObject =
+      Json.obj(
+        "dependency_kind" -> proof.dependencyKind,
+        "proof_kind" -> proof.proofKind,
+        "squares" -> proof.squares.map(witness =>
+          Json.obj(
+            "role" -> witness.role,
+            "square" -> witness.square
+          )
+        ),
+        "pieces" -> proof.pieces.map(witness =>
+          Json.obj(
+            "role" -> witness.role,
+            "side" -> witness.side,
+            "piece" -> witness.piece
+          )
+        ),
+        "relation_issuers" -> proof.relationIssuers.map(issuer =>
+          Json.obj(
+            "contract" -> issuer.contract,
+            "relation_kind" -> issuer.relationKind,
+            "result_key" -> issuer.resultKey,
+            "occurrence_id" -> issuer.occurrenceId,
+            "source_premise_ids" -> issuer.sourcePremiseIds
+          )
+        )
       )
 
     private def causalRoleCode(value: String): String =

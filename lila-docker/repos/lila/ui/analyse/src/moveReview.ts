@@ -133,6 +133,36 @@ interface MoveReviewTypedActor {
   legalMoveRelation?: string;
 }
 
+type MoveReviewPassedPawnDependencyKind =
+  | 'object_state_precondition'
+  | 'line_access_precondition'
+  | 'response_continuation_precondition';
+
+type MoveReviewPassedPawnDependencyProofKind =
+  | 'object_state'
+  | 'line_access'
+  | 'pawn_break_follow_up'
+  | 'capture_follow_up';
+
+type MoveReviewPassedPawnRelationKind =
+  | 'slider_reach_delta'
+  | 'pawn_topology_transition'
+  | 'capture_recapture_inventory';
+
+interface MoveReviewPassedPawnDependencyProof {
+  dependencyKind: MoveReviewPassedPawnDependencyKind;
+  proofKind: MoveReviewPassedPawnDependencyProofKind;
+  squares: { role: string; square: Key }[];
+  pieces: { role: string; side: 'white' | 'black'; piece: MoveReviewPieceRole }[];
+  relationIssuers: {
+    contract: MoveReviewPassedPawnRelationKind;
+    relationKind: MoveReviewPassedPawnRelationKind;
+    resultKey: string;
+    occurrenceId: string;
+    sourcePremiseIds: string[];
+  }[];
+}
+
 interface MoveReviewTypedPremise {
   role: string;
   contract: string;
@@ -144,6 +174,7 @@ interface MoveReviewTypedPremise {
   relatedBranchIds?: string[];
   fromStepIndex?: number;
   toStepIndex?: number;
+  dependencyProof?: MoveReviewPassedPawnDependencyProof;
 }
 
 interface MoveReviewTypedLine {
@@ -2818,17 +2849,32 @@ function projectPassedPawnResultPremise(
 ): MoveReviewTypedPremise | undefined {
   if (
     !isObject(value) ||
-    !hasExactKeys(value, [
-      'role',
-      'lower_kind',
-      'lower_semantic_key',
-      'source_premise_ids',
-      'branch_id',
-      'branch_role',
-      'related_branch_ids',
-      'from_step_index',
-      'to_step_index',
-    ]) ||
+    !hasOnlyKeys(
+      value,
+      [
+        'role',
+        'lower_kind',
+        'lower_semantic_key',
+        'source_premise_ids',
+        'branch_id',
+        'branch_role',
+        'related_branch_ids',
+        'from_step_index',
+        'to_step_index',
+        'dependency_proof',
+      ],
+      [
+        'role',
+        'lower_kind',
+        'lower_semantic_key',
+        'source_premise_ids',
+        'branch_id',
+        'branch_role',
+        'related_branch_ids',
+        'from_step_index',
+        'to_step_index',
+      ],
+    ) ||
     !nonEmptyWireString(value.role) ||
     !nonEmptyWireString(value.lower_kind) ||
     !nonEmptyWireString(value.lower_semantic_key) ||
@@ -2841,6 +2887,14 @@ function projectPassedPawnResultPremise(
     )
   )
     return;
+  const dependencyPremise =
+    value.lower_kind === 'passed_pawn_result_dependency' ||
+    value.lower_kind === 'observed_passed_pawn_result_dependency';
+  const hasDependencyProof = Object.prototype.hasOwnProperty.call(value, 'dependency_proof');
+  const dependencyProof = hasDependencyProof
+    ? projectPassedPawnResultDependencyProof(value.dependency_proof)
+    : undefined;
+  if (dependencyPremise !== hasDependencyProof || (hasDependencyProof && !dependencyProof)) return;
   const from = nonNegativeInteger(value.from_step_index);
   const to = nonNegativeInteger(value.to_step_index);
   const branch = branches.get(value.branch_id as string);
@@ -2856,7 +2910,198 @@ function projectPassedPawnResultPremise(
         relatedBranchIds: [...value.related_branch_ids],
         fromStepIndex: from,
         toStepIndex: to,
+        ...(dependencyProof ? { dependencyProof } : {}),
       };
+}
+
+function projectPassedPawnResultDependencyProof(
+  value: unknown,
+): MoveReviewPassedPawnDependencyProof | undefined {
+  if (
+    !isObject(value) ||
+    !hasExactKeys(value, ['dependency_kind', 'proof_kind', 'squares', 'pieces', 'relation_issuers']) ||
+    !Array.isArray(value.squares) ||
+    !Array.isArray(value.pieces) ||
+    !Array.isArray(value.relation_issuers)
+  )
+    return;
+
+  const dependencyKind = passedPawnDependencyKind(value.dependency_kind);
+  const proofKind = passedPawnDependencyProofKind(value.proof_kind);
+  const squares = value.squares.map(square => {
+    if (
+      !isObject(square) ||
+      !hasExactKeys(square, ['role', 'square']) ||
+      !nonEmptyWireString(square.role) ||
+      !key(square.square)
+    )
+      return;
+    return { role: square.role as string, square: square.square as Key };
+  });
+  const pieces = value.pieces.map(piece => {
+    if (
+      !isObject(piece) ||
+      !hasExactKeys(piece, ['role', 'side', 'piece']) ||
+      !nonEmptyWireString(piece.role) ||
+      (piece.side !== 'white' && piece.side !== 'black') ||
+      !pieceRole(piece.piece)
+    )
+      return;
+    return {
+      role: piece.role as string,
+      side: piece.side as 'white' | 'black',
+      piece: piece.piece as MoveReviewPieceRole,
+    };
+  });
+  const relationIssuers = value.relation_issuers.map(issuer => {
+    if (
+      !isObject(issuer) ||
+      !hasExactKeys(issuer, [
+        'contract',
+        'relation_kind',
+        'result_key',
+        'occurrence_id',
+        'source_premise_ids',
+      ])
+    )
+      return;
+    const contract = passedPawnRelationKind(issuer.contract);
+    const relationKind = passedPawnRelationKind(issuer.relation_kind);
+    if (
+      !contract ||
+      relationKind !== contract ||
+      typeof issuer.result_key !== 'string' ||
+      !issuer.result_key.startsWith(`${contract}:`) ||
+      !typedHash(issuer.result_key.slice(contract.length + 1)) ||
+      !typedHash(issuer.occurrence_id) ||
+      !canonicalWireStrings(issuer.source_premise_ids, 1)
+    )
+      return;
+    return {
+      contract,
+      relationKind,
+      resultKey: issuer.result_key,
+      occurrenceId: issuer.occurrence_id as string,
+      sourcePremiseIds: [...issuer.source_premise_ids],
+    };
+  });
+  if (
+    !dependencyKind ||
+    !proofKind ||
+    !squares.every((square): square is NonNullable<typeof square> => !!square) ||
+    !pieces.every((piece): piece is NonNullable<typeof piece> => !!piece) ||
+    !relationIssuers.every((issuer): issuer is NonNullable<typeof issuer> => !!issuer) ||
+    !unique(squares.map(square => `${square.role}:${square.square}`)) ||
+    !unique(pieces.map(piece => piece.role)) ||
+    !validPassedPawnDependencyProofShape(dependencyKind, proofKind, squares, pieces, relationIssuers)
+  )
+    return;
+  return { dependencyKind, proofKind, squares, pieces, relationIssuers };
+}
+
+function validPassedPawnDependencyProofShape(
+  dependencyKind: MoveReviewPassedPawnDependencyKind,
+  proofKind: MoveReviewPassedPawnDependencyProofKind,
+  squares: { role: string; square: Key }[],
+  pieces: { role: string; side: 'white' | 'black'; piece: MoveReviewPieceRole }[],
+  issuers: MoveReviewPassedPawnDependencyProof['relationIssuers'],
+): boolean {
+  const squareRoles = squares.map(square => square.role);
+  const pieceRoles = pieces.map(piece => piece.role);
+  const exactRoles = (actual: string[], expected: string[]): boolean =>
+    actual.length === expected.length && unique(actual) && expected.every(role => actual.includes(role));
+  const exactIssuer = (kind: MoveReviewPassedPawnRelationKind): boolean =>
+    issuers.length === 1 && issuers[0]!.contract === kind;
+  const piece = (role: string) => pieces.find(witness => witness.role === role);
+
+  switch (proofKind) {
+    case 'object_state':
+      return (
+        dependencyKind === 'object_state_precondition' &&
+        exactRoles(squareRoles, ['root_from', 'root_to', 'future_from', 'future_to']) &&
+        exactRoles(pieceRoles, ['root_before', 'tracked', 'future_after']) &&
+        pieces.every(witness => witness.side === pieces[0]!.side) &&
+        issuers.length === 0
+      );
+    case 'line_access':
+      return (
+        dependencyKind === 'line_access_precondition' &&
+        squareRoles.filter(role => role === 'vacated_gate').length >= 1 &&
+        squareRoles.filter(role => role === 'enabled_from').length === 1 &&
+        squareRoles.filter(role => role === 'enabled_to').length === 1 &&
+        squareRoles.every(
+          role => role === 'vacated_gate' || role === 'enabled_from' || role === 'enabled_to',
+        ) &&
+        exactRoles(pieceRoles, ['enabled_piece']) &&
+        exactIssuer('slider_reach_delta')
+      );
+    case 'pawn_break_follow_up': {
+      const trigger = piece('trigger_pawn');
+      const responder = piece('responder_pawn');
+      const followUp = piece('follow_up_pawn');
+      return (
+        dependencyKind === 'response_continuation_precondition' &&
+        exactRoles(squareRoles, [
+          'reply_from',
+          'reply_to',
+          'follow_up_from',
+          'follow_up_to',
+          'released_passed_pawn',
+        ]) &&
+        exactRoles(pieceRoles, ['trigger_pawn', 'responder_pawn', 'follow_up_pawn']) &&
+        !!trigger &&
+        !!responder &&
+        !!followUp &&
+        trigger.piece === 'pawn' &&
+        responder.piece === 'pawn' &&
+        followUp.piece === 'pawn' &&
+        trigger.side === followUp.side &&
+        trigger.side !== responder.side &&
+        exactIssuer('pawn_topology_transition')
+      );
+    }
+    case 'capture_follow_up': {
+      const trigger = piece('trigger_piece');
+      const responder = piece('responder_piece');
+      const followUp = piece('follow_up_piece');
+      return (
+        dependencyKind === 'response_continuation_precondition' &&
+        exactRoles(squareRoles, ['reply_from', 'reply_to', 'follow_up_from', 'follow_up_to']) &&
+        exactRoles(pieceRoles, ['trigger_piece', 'responder_piece', 'follow_up_piece']) &&
+        !!trigger &&
+        !!responder &&
+        !!followUp &&
+        trigger.side === followUp.side &&
+        trigger.side !== responder.side &&
+        exactIssuer('capture_recapture_inventory')
+      );
+    }
+  }
+}
+
+function passedPawnDependencyKind(value: unknown): MoveReviewPassedPawnDependencyKind | undefined {
+  return value === 'object_state_precondition' ||
+    value === 'line_access_precondition' ||
+    value === 'response_continuation_precondition'
+    ? value
+    : undefined;
+}
+
+function passedPawnDependencyProofKind(value: unknown): MoveReviewPassedPawnDependencyProofKind | undefined {
+  return value === 'object_state' ||
+    value === 'line_access' ||
+    value === 'pawn_break_follow_up' ||
+    value === 'capture_follow_up'
+    ? value
+    : undefined;
+}
+
+function passedPawnRelationKind(value: unknown): MoveReviewPassedPawnRelationKind | undefined {
+  return value === 'slider_reach_delta' ||
+    value === 'pawn_topology_transition' ||
+    value === 'capture_recapture_inventory'
+    ? value
+    : undefined;
 }
 
 function validPassedPawnResultPremiseManifest(
@@ -2950,10 +3195,21 @@ function validPassedPawnResultPremiseManifest(
       realizationStepIndex,
       [expectedBranch.id],
       eventEvidenceId,
-    )
+    ) ||
+    !!comparison?.dependencyProof ||
+    !!expectedResult?.dependencyProof ||
+    !!observedResult?.dependencyProof ||
+    !!functionalMatch?.dependencyProof
   )
     return false;
 
+  const ownsDependencyProof = (premise: MoveReviewTypedPremise): boolean =>
+    !!premise.dependencyProof &&
+    premise.dependencyProof.relationIssuers.every(issuer =>
+      [issuer.occurrenceId, ...issuer.sourcePremiseIds].every(source =>
+        premise.sourcePremiseIds.includes(source),
+      ),
+    );
   const expectedDependencies = premises.filter(premise => premise.role === 'expected_dependency');
   const observedDependencies = premises.filter(premise => premise.role === 'observed_dependency');
   if (
@@ -2971,7 +3227,9 @@ function validPassedPawnResultPremiseManifest(
           index + 1,
           [],
           eventEvidenceId,
-        ) || premise.resultId !== expectedBranch.steps[index + 1]!.incomingLink?.occurrenceLinkKey,
+        ) ||
+        !ownsDependencyProof(premise) ||
+        premise.resultId !== expectedBranch.steps[index + 1]!.incomingLink?.occurrenceLinkKey,
     ) ||
     observedDependencies.some(
       (premise, position) =>
@@ -2979,6 +3237,7 @@ function validPassedPawnResultPremiseManifest(
         premise.branchId !== replyBranch.id ||
         premise.branchRole !== replyBranch.role ||
         premise.relatedBranchIds?.length !== 0 ||
+        !ownsDependencyProof(premise) ||
         !premise.sourcePremiseIds.includes(eventEvidenceId) ||
         premise.fromStepIndex === undefined ||
         premise.toStepIndex === undefined ||

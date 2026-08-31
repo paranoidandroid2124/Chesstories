@@ -4147,6 +4147,68 @@ final case class PassedPawnResultPublicBranch(
   )
 
 /** One exact lower-premise occurrence use retained by an independent path. */
+final case class PassedPawnResultPublicSquareWitness(
+    role: String,
+    square: String
+):
+  require(role.nonEmpty && square.matches("[a-h][1-8]"), "a public dependency square needs an exact labeled coordinate")
+
+final case class PassedPawnResultPublicPieceWitness(
+    role: String,
+    side: String,
+    piece: String
+):
+  require(
+    role.nonEmpty && Set("white", "black")(side) &&
+      Set("pawn", "knight", "bishop", "rook", "queen", "king")(piece),
+    "a public dependency piece needs an exact labeled side and role"
+  )
+
+final case class PassedPawnResultPublicRelationIssuer(
+    contract: String,
+    relationKind: String,
+    resultKey: String,
+    occurrenceId: String,
+    sourcePremiseIds: List[String]
+):
+  require(contract.nonEmpty && relationKind.nonEmpty, "a public relation issuer needs its exact contract and result kind")
+  require(
+    resultKey.matches(s"${java.util.regex.Pattern.quote(relationKind)}:[0-9a-f]{64}") &&
+      occurrenceId.matches("[0-9a-f]{64}"),
+    "a public relation issuer needs exact result and occurrence identities"
+  )
+  require(
+    sourcePremiseIds.nonEmpty && sourcePremiseIds == sourcePremiseIds.distinct.sorted,
+    "a public relation issuer needs canonical lower premise owners"
+  )
+
+final case class PassedPawnResultPublicDependencyProof(
+    dependencyKind: String,
+    proofKind: String,
+    squares: List[PassedPawnResultPublicSquareWitness],
+    pieces: List[PassedPawnResultPublicPieceWitness],
+    relationIssuers: List[PassedPawnResultPublicRelationIssuer]
+):
+  require(squares.nonEmpty && squares.distinct.size == squares.size, "a public dependency proof needs exact labeled squares")
+  require(pieces.nonEmpty && pieces.distinct.size == pieces.size, "a public dependency proof needs exact labeled pieces")
+  require(
+    (dependencyKind, proofKind, relationIssuers.map(issuer => issuer.contract -> issuer.relationKind)) match
+      case ("object_state_precondition", "object_state", Nil) => true
+      case ("line_access_precondition", "line_access", List(("slider_reach_delta", "slider_reach_delta"))) => true
+      case (
+            "response_continuation_precondition",
+            "pawn_break_follow_up",
+            List(("pawn_topology_transition", "pawn_topology_transition"))
+          ) => true
+      case (
+            "response_continuation_precondition",
+            "capture_follow_up",
+            List(("capture_recapture_inventory", "capture_recapture_inventory"))
+          ) => true
+      case _ => false,
+    "a public dependency proof needs the exact lower relation issuer for its proof kind"
+  )
+
 final case class PassedPawnResultPublicPremise(
     role: String,
     lowerKind: String,
@@ -4156,8 +4218,15 @@ final case class PassedPawnResultPublicPremise(
     branchRole: String,
     relatedBranchIds: List[String],
     fromStepIndex: Int,
-    toStepIndex: Int
-)
+    toStepIndex: Int,
+    dependencyProof: Option[PassedPawnResultPublicDependencyProof] = None
+):
+  require(
+    if Set("passed_pawn_result_dependency", "observed_passed_pawn_result_dependency")(lowerKind) then
+      dependencyProof.nonEmpty
+    else dependencyProof.isEmpty,
+    "only dependency premises may publish an exact dependency proof"
+  )
 
 /** Public projection of one independent proof path. */
 final case class PassedPawnResultPublicProofPath(
@@ -4353,7 +4422,8 @@ final case class PassedPawnResultProofEvidence private[chessjudgment] (
       branchRole = passedPawnResultBranchRoleCode(premise.branchRole),
       relatedBranchIds = premise.relatedBranchIds,
       fromStepIndex = premise.fromStepIndex,
-      toStepIndex = premise.toStepIndex
+      toStepIndex = premise.toStepIndex,
+      dependencyProof = premise.dependencyWitness.map(_.publicProof)
     )
 
   private def passedPawnResultPremiseRoleCode(role: CausalPremiseRole): String =
@@ -4477,10 +4547,18 @@ final case class LineAccessTrajectory private (
     enabledFrom: EvidenceSquare,
     enabledTo: EvidenceSquare,
     plyOffset: Int,
-    private[chessjudgment] val accessRelationKey: DerivedRelationResultKey
+    private[chessjudgment] val relationOccurrenceBinding: ReplayVerticalRelationOccurrenceBinding
 ):
   require(vacatedSquares.nonEmpty, "a line-access trajectory needs an exact vacated gate")
+  require(
+    relationOccurrenceBinding.step == enablingStep &&
+      relationOccurrenceBinding.contract == VerticalRelationContractKind.SliderReachDelta &&
+      relationOccurrenceBinding.result.kind == RelationFactKind.SliderReachDelta,
+    "a line-access trajectory needs its exact L1 slider-reach occurrence"
+  )
   def vacatedSquare: EvidenceSquare = vacatedSquares.head
+  private[chessjudgment] def accessRelationKey: DerivedRelationResultKey =
+    relationOccurrenceBinding.result
 
 object LineAccessTrajectory:
   /** Exact root-to-effect access used by causal episodes. Merely placing a
@@ -4549,7 +4627,7 @@ object LineAccessTrajectory:
         enabledFrom = enabledPiece.square,
         enabledTo = destination,
         plyOffset = enabledIndex - enablingIndex,
-        accessRelationKey = DerivedRelationResultKey.from(occurrence.relation)
+        relationOccurrenceBinding = ReplayVerticalRelationOccurrenceBinding.from(occurrence)
       )
 
     candidates match
@@ -7440,6 +7518,8 @@ final case class PassedPawnResultDependency(
 
   private[chessjudgment] def relationOccurrenceBindings: List[ReplayVerticalRelationOccurrenceBinding] =
     proof match
+      case PassedPawnResultDependencyProof.LineAccess(trajectory) =>
+        List(trajectory.relationOccurrenceBinding)
       case PassedPawnResultDependencyProof.ResponseContinuation(trajectory) =>
         List(trajectory.relationOccurrenceBinding)
       case _ => Nil
@@ -8147,6 +8227,169 @@ object CausalDependencyFunctionProof:
           trajectory.followUpTo,
           trajectory.recaptureInventoryKey.stableKey
         )
+
+/** Exact lower-proof witness retained by dependency premises. It projects
+  * only the certified dependency and its replay-owned L1 occurrences; it has
+  * no board, move-generation, or relation-extraction capability.
+  */
+private[chessjudgment] final case class CausalDependencyPremiseWitness private (
+    dependencyOccurrenceKey: String,
+    dependencyKind: PassedPawnResultDependencyKind,
+    functionProof: CausalDependencyFunctionProof,
+    fromSide: Color,
+    toSide: Color,
+    relationOccurrences: List[ReplayVerticalRelationOccurrenceBinding]
+):
+  require(dependencyOccurrenceKey.nonEmpty, "a dependency witness needs its exact occurrence identity")
+  require(fromSide == toSide, "a passed-pawn dependency must retain one exact acting side")
+  require(
+    relationOccurrences == relationOccurrences.sortBy(_.stableKey),
+    "dependency relation issuers must retain canonical occurrence order"
+  )
+  require(
+    (dependencyKind, functionProof, relationOccurrences) match
+      case (
+            PassedPawnResultDependencyKind.ObjectStatePrecondition,
+            proof: CausalDependencyFunctionProof.ObjectState,
+            Nil
+          ) => proof.color == fromSide
+      case (
+            PassedPawnResultDependencyKind.LineAccessPrecondition,
+            proof: CausalDependencyFunctionProof.LineAccess,
+            List(issuer)
+          ) =>
+        proof.color == fromSide &&
+          issuer.contract == VerticalRelationContractKind.SliderReachDelta &&
+          issuer.result.kind == RelationFactKind.SliderReachDelta &&
+          issuer.result.stableKey == proof.accessRelationKey
+      case (
+            PassedPawnResultDependencyKind.ResponseContinuationPrecondition,
+            proof: CausalDependencyFunctionProof.PawnBreakFollowUp,
+            List(issuer)
+          ) =>
+        proof.color == fromSide &&
+          issuer.contract == VerticalRelationContractKind.PawnTopologyTransition &&
+          issuer.result.kind == RelationFactKind.PawnTopologyTransition &&
+          issuer.result.stableKey == proof.pawnTopologyTransitionKey
+      case (
+            PassedPawnResultDependencyKind.ResponseContinuationPrecondition,
+            proof: CausalDependencyFunctionProof.CaptureFollowUp,
+            List(issuer)
+          ) =>
+        issuer.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
+          issuer.result.kind == RelationFactKind.CaptureRecaptureInventory &&
+          issuer.result.stableKey == proof.recaptureInventoryKey
+      case _ => false,
+    "a dependency witness needs the exact proof-specific L1 issuer inventory"
+  )
+
+  private[chessjudgment] def relationOwnerIds: List[String] =
+    relationOccurrences.flatMap(issuer => issuer.occurrenceId :: issuer.certifiedSourcePremiseIds).distinct.sorted
+
+  private[chessjudgment] def publicProof: PassedPawnResultPublicDependencyProof =
+    val (proofKind, squares, pieces) = functionProof match
+      case proof: CausalDependencyFunctionProof.ObjectState =>
+        (
+          "object_state",
+          List(
+            square("root_from", proof.rootFrom),
+            square("root_to", proof.rootTo),
+            square("future_from", proof.futureFrom),
+            square("future_to", proof.futureTo)
+          ),
+          List(
+            piece("root_before", proof.color, proof.rootBeforeRole),
+            piece("tracked", proof.color, proof.pieceRole),
+            piece("future_after", proof.color, proof.futureAfterRole)
+          )
+        )
+      case proof: CausalDependencyFunctionProof.LineAccess =>
+        (
+          "line_access",
+          proof.vacatedSquares.map(square("vacated_gate", _)) ++
+            List(square("enabled_from", proof.enabledFrom), square("enabled_to", proof.enabledTo)),
+          List(piece("enabled_piece", proof.color, proof.enabledPieceRole))
+        )
+      case proof: CausalDependencyFunctionProof.PawnBreakFollowUp =>
+        (
+          "pawn_break_follow_up",
+          List(
+            square("reply_from", proof.replyFrom),
+            square("reply_to", proof.replyTo),
+            square("follow_up_from", proof.followUpFrom),
+            square("follow_up_to", proof.followUpTo),
+            square("released_passed_pawn", proof.releasedPassedPawn)
+          ),
+          List(
+            piece("trigger_pawn", proof.color, EvidencePieceRole(Pawn.name)),
+            piece("responder_pawn", !proof.color, EvidencePieceRole(Pawn.name)),
+            piece("follow_up_pawn", proof.color, EvidencePieceRole(Pawn.name))
+          )
+        )
+      case proof: CausalDependencyFunctionProof.CaptureFollowUp =>
+        (
+          "capture_follow_up",
+          List(
+            square("reply_from", proof.replyFrom),
+            square("reply_to", proof.replyTo),
+            square("follow_up_from", proof.followUpFrom),
+            square("follow_up_to", proof.followUpTo)
+          ),
+          List(
+            piece("trigger_piece", fromSide, proof.triggerRole),
+            piece("responder_piece", !fromSide, proof.responderRole),
+            piece("follow_up_piece", toSide, proof.followUpRole)
+          )
+        )
+    PassedPawnResultPublicDependencyProof(
+      dependencyKind = dependencyKind match
+        case PassedPawnResultDependencyKind.ObjectStatePrecondition => "object_state_precondition"
+        case PassedPawnResultDependencyKind.LineAccessPrecondition  => "line_access_precondition"
+        case PassedPawnResultDependencyKind.ResponseContinuationPrecondition =>
+          "response_continuation_precondition",
+      proofKind = proofKind,
+      squares = squares,
+      pieces = pieces,
+      relationIssuers = relationOccurrences.map(issuer =>
+        PassedPawnResultPublicRelationIssuer(
+          contract = VerticalRelationContractKind.id(issuer.contract),
+          relationKind = RelationFactKind.id(issuer.result.kind),
+          resultKey = issuer.result.stableKey,
+          occurrenceId = issuer.occurrenceId,
+          sourcePremiseIds = issuer.certifiedSourcePremiseIds
+        )
+      )
+    )
+
+  private def square(role: String, value: EvidenceSquare): PassedPawnResultPublicSquareWitness =
+    PassedPawnResultPublicSquareWitness(role, value.key.toLowerCase)
+
+  private def piece(
+      role: String,
+      side: Color,
+      value: EvidencePieceRole
+  ): PassedPawnResultPublicPieceWitness =
+    PassedPawnResultPublicPieceWitness(role, side.toString.toLowerCase, value.name.toLowerCase)
+
+private[chessjudgment] object CausalDependencyPremiseWitness:
+  def from(dependency: PassedPawnResultDependency): CausalDependencyPremiseWitness =
+    require(dependency.causalConnectionProven, "a dependency premise witness requires an exact proven occurrence")
+    val retainedSteps = dependency.proof match
+      case PassedPawnResultDependencyProof.ResponseContinuation(trajectory) =>
+        dependency.from.step :: (trajectory.interveningSteps :+ dependency.to.step)
+      case _ => List(dependency.from.step, dependency.to.step)
+    require(
+      dependency.relationOccurrenceBindings.forall(binding => retainedSteps.contains(binding.step)),
+      "a dependency premise witness must retain every exact L1 occurrence on its certified route"
+    )
+    CausalDependencyPremiseWitness(
+      dependencyOccurrenceKey = dependency.stableKey,
+      dependencyKind = dependency.kind,
+      functionProof = CausalDependencyFunctionProof.from(dependency),
+      fromSide = dependency.from.perspective,
+      toSide = dependency.to.perspective,
+      relationOccurrences = dependency.relationOccurrenceBindings.sortBy(_.stableKey)
+    )
 
 final case class CausalDependencyFunctionIdentity(
     fromMoveUci: String,

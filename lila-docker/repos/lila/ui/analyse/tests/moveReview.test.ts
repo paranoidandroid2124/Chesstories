@@ -892,6 +892,22 @@ test('keeps every independent passed-pawn-result proof path while projecting the
         related_branch_ids: [],
         from_step_index: 0,
         to_step_index: 1,
+        dependency_proof: {
+          dependency_kind: 'object_state_precondition',
+          proof_kind: 'object_state',
+          squares: [
+            { role: 'root_from', square: 'a6' },
+            { role: 'root_to', square: 'a7' },
+            { role: 'future_from', square: 'a7' },
+            { role: 'future_to', square: 'a8' },
+          ],
+          pieces: [
+            { role: 'root_before', side: 'white', piece: 'pawn' },
+            { role: 'tracked', side: 'white', piece: 'pawn' },
+            { role: 'future_after', side: 'white', piece: 'queen' },
+          ],
+          relation_issuers: [],
+        },
       },
       {
         role: 'expected_result',
@@ -914,6 +930,22 @@ test('keeps every independent passed-pawn-result proof path while projecting the
         related_branch_ids: [],
         from_step_index: 0,
         to_step_index: 2,
+        dependency_proof: {
+          dependency_kind: 'object_state_precondition',
+          proof_kind: 'object_state',
+          squares: [
+            { role: 'root_from', square: 'a6' },
+            { role: 'root_to', square: 'a7' },
+            { role: 'future_from', square: 'a7' },
+            { role: 'future_to', square: 'a8' },
+          ],
+          pieces: [
+            { role: 'root_before', side: 'white', piece: 'pawn' },
+            { role: 'tracked', side: 'white', piece: 'pawn' },
+            { role: 'future_after', side: 'white', piece: 'queen' },
+          ],
+          relation_issuers: [],
+        },
       },
       {
         role: 'observed_result',
@@ -1059,9 +1091,79 @@ test('keeps every independent passed-pawn-result proof path while projecting the
         reason.message.pathRealizationMatchKind === 'exact_move' &&
         reason.message.expectedOccurrenceSteps.length === 2 &&
         reason.message.expectedOccurrenceSteps[1]?.incomingLink?.kind === 'certified_causal_dependency' &&
+        reason.message.premises
+          .filter(premise => premise.role.endsWith('_dependency'))
+          .every(premise => premise.dependencyProof?.proofKind === 'object_state') &&
         reason.message.replyOccurrenceSteps[1]?.line.rootMove === 'h8g8' &&
         reason.message.occurrenceLinkKeys.length === 2,
     ),
+  );
+
+  const lineAccessChannel = structuredClone(channel);
+  const lineAccessProof = object(lineAccessChannel.passed_pawn_result_proof);
+  const lineAccessPremise = object(
+    (object((lineAccessProof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1],
+  );
+  const relationOccurrenceId = hash('6');
+  lineAccessPremise.source_premise_ids = [
+    relationOccurrenceId,
+    'l1.slider-reach',
+    'passed-pawn-result.event',
+  ];
+  lineAccessPremise.dependency_proof = {
+    dependency_kind: 'line_access_precondition',
+    proof_kind: 'line_access',
+    squares: [
+      { role: 'vacated_gate', square: 'a3' },
+      { role: 'enabled_from', square: 'a1' },
+      { role: 'enabled_to', square: 'a4' },
+    ],
+    pieces: [{ role: 'enabled_piece', side: 'white', piece: 'rook' }],
+    relation_issuers: [
+      {
+        contract: 'slider_reach_delta',
+        relation_kind: 'slider_reach_delta',
+        result_key: `slider_reach_delta:${hash('7')}`,
+        occurrence_id: relationOccurrenceId,
+        source_premise_ids: ['l1.slider-reach'],
+      },
+    ],
+  };
+  assert.equal(
+    decodeMoveReviewSnapshot(
+      rawTypedResponse(focus, referenceMoves, playedMoves, 'passed_pawn_result', lineAccessChannel),
+      { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
+    )?.kind,
+    'completed',
+  );
+  const unownedRelationOccurrence = structuredClone(lineAccessChannel);
+  const unownedProof = object(unownedRelationOccurrence.passed_pawn_result_proof);
+  const unownedPremise = object(
+    (object((unownedProof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1],
+  );
+  unownedPremise.source_premise_ids = ['l1.slider-reach', 'passed-pawn-result.event'];
+  assert.equal(
+    decodeMoveReviewSnapshot(
+      rawTypedResponse(focus, referenceMoves, playedMoves, 'passed_pawn_result', unownedRelationOccurrence),
+      { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
+    ),
+    undefined,
+  );
+  const mismatchedRelationResult = structuredClone(lineAccessChannel);
+  const mismatchedProof = object(mismatchedRelationResult.passed_pawn_result_proof);
+  const mismatchedPremise = object(
+    (object((mismatchedProof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1],
+  );
+  const mismatchedIssuer = object(
+    (object(mismatchedPremise.dependency_proof).relation_issuers as JsonObject[])[0],
+  );
+  mismatchedIssuer.result_key = `pawn_topology_transition:${hash('7')}`;
+  assert.equal(
+    decodeMoveReviewSnapshot(
+      rawTypedResponse(focus, referenceMoves, playedMoves, 'passed_pawn_result', mismatchedRelationResult),
+      { requestId, subject: focus, engineProfile: moveReviewEngineProfile },
+    ),
+    undefined,
   );
 
   for (const invalidate of [
@@ -1105,6 +1207,23 @@ test('keeps every independent passed-pawn-result proof path while projecting the
     malformedProof(proof => {
       object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1]).lower_kind =
         'guessed_dependency';
+    }),
+    malformedProof(proof => {
+      delete object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1])
+        .dependency_proof;
+    }),
+    malformedProof(proof => {
+      const premises = object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[];
+      object(premises[2]).dependency_proof = structuredClone(object(premises[1]).dependency_proof);
+    }),
+    malformedProof(proof => {
+      const premise = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1]);
+      object(premise.dependency_proof).proof_kind = 'line_access';
+    }),
+    malformedProof(proof => {
+      const premise = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[1]);
+      const pieces = object(premise.dependency_proof).pieces as JsonObject[];
+      object(pieces[2]).side = 'black';
     }),
     malformedProof(proof => {
       const premise = object((object((proof.proof_paths as JsonObject[])[0]).premises as JsonObject[])[3]);
