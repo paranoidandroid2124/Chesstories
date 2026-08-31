@@ -5386,8 +5386,6 @@ object LineMaterialSummary:
 enum RootCausalLinkKind:
   case ImmediateRootAction
   case RootActorContinuation
-  case ContinuousLineAccess
-  case ForcedCaptureResponse
   case RootActorCaptured
   case MaterialActorContinuation
   case MaterialCaptureResponse
@@ -5913,67 +5911,17 @@ object RootOwnedCausalEpisode:
             LineMoveOccurrence(eventMove, eventPlyOffset),
             eventAnchor
           ))
-        val lineAccess =
-          continuousLineAccessSeedLink(line, eventPlyOffset, replay)
-        val forcedCaptureResponse =
-          forcedCaptureResponseLink(line, rootStep, eventStep, eventPlyOffset, replay)
         val actorCaptured =
           Option.when(consequence.kind == LineConsequenceKind.MaterialLoss)(
             rootActorCapturedSeedLink(line, actor, eventPlyOffset, replay)
           ).flatten
         val materialSequence =
           materialSequenceLinks(line, rootStep, actor, consequence, eventPlyOffset, replay)
-        (List(actorAction, lineAccess, forcedCaptureResponse, actorCaptured).flatten ++
+        (List(actorAction, actorCaptured).flatten ++
           materialSequence) match
           case Nil   => None
           case links => Some(links.distinct)
     }
-
-  private def forcedCaptureResponseLink(
-      line: LineFactEvidence,
-      rootStep: LineReplayStep,
-      eventStep: LineReplayStep,
-      eventPlyOffset: Int,
-      replay: CanonicalLineReplay
-  ): Option[RootCausalLink] =
-    val rootMove = EvidenceRef.normalizeMove(rootStep.moveUci)
-    val eventMove = EvidenceRef.normalizeMove(eventStep.moveUci)
-    if eventPlyOffset != 2 || !line.materialCaptures.exists(capture =>
-        capture.plyOffset == 0 && EvidenceRef.sameMove(capture.moveUci, rootMove)
-      )
-    then None
-    else
-      for
-        reply <- line.lineReplaySteps.lift(1)
-        trajectory <- CaptureResponseFollowUpTrajectory.find(rootStep, reply, eventStep, List(reply), replay)
-      yield RootCausalLink(
-        RootCausalLinkKind.ForcedCaptureResponse,
-        LineMoveOccurrence(rootMove, 0),
-        LineMoveOccurrence(eventMove, eventPlyOffset),
-        trajectory.replyTo
-      )
-
-  private def continuousLineAccessSeedLink(
-      line: LineFactEvidence,
-      eventPlyOffset: Int,
-      replay: CanonicalLineReplay
-  ): Option[RootCausalLink] =
-    for
-      rootStep <- line.lineReplaySteps.headOption
-      if EvidenceRef.sameMove(rootStep.moveUci, line.line.rootMove)
-      eventStep <- line.lineReplaySteps.lift(eventPlyOffset)
-      trajectory <- LineAccessTrajectory.findRootClearanceBeforeUse(
-        rootStep,
-        eventStep,
-        line.lineReplaySteps.slice(1, eventPlyOffset),
-        replay
-      )
-    yield RootCausalLink(
-      RootCausalLinkKind.ContinuousLineAccess,
-      LineMoveOccurrence(EvidenceRef.normalizeMove(rootStep.moveUci), 0),
-      LineMoveOccurrence(EvidenceRef.normalizeMove(eventStep.moveUci), eventPlyOffset),
-      trajectory.vacatedSquare
-    )
 
   private def rootActorCapturedSeedLink(
       line: LineFactEvidence,
@@ -6065,9 +6013,7 @@ object RootOwnedCausalEpisode:
               movement.to
             ))
         List(
-          forcedCaptureResponseLink(line, rootStep, eventStep, eventPlyOffset, replay),
           rootActorCapturedSeedLink(line, actor, eventPlyOffset, replay),
-          continuousLineAccessSeedLink(line, eventPlyOffset, replay),
           actorAction
         ).flatten.distinct
       }

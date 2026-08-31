@@ -168,9 +168,7 @@ private[chessjudgment] object RootOwnedEffectPolicy:
       link.kind match
         case RootCausalLinkKind.ImmediateRootAction =>
           episode.chain.size == 1 && rootSeed && link.effect == root && event == root
-        case RootCausalLinkKind.ContinuousLineAccess |
-            RootCausalLinkKind.ForcedCaptureResponse |
-            RootCausalLinkKind.RootActorCaptured =>
+        case RootCausalLinkKind.RootActorCaptured =>
           rootSeed &&
             reachesEvent(
               link.effect,

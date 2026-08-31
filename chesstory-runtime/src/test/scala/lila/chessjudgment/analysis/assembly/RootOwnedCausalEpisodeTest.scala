@@ -159,13 +159,84 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
     assert(!liability.directCauseProjectionEligible)
     assertEquals(payload.rootOwnedCausalEpisodes(line.rootMove), Nil)
 
+  test("exact slider reach does not become a general causal episode without a bounded proof"):
+    val rootFen = "r6k/8/6Kp/8/8/8/B7/R7 w - - 0 1"
+    val (payload, line) = normalizedLine(
+      id = "line-clearance-without-bounded-proof",
+      initialFen = rootFen,
+      historyMoves = Nil,
+      rootFen = rootFen,
+      moves = List("a2b3", "h6h5", "a1a8"),
+      whitePovMate = Some(1)
+    )
+    val replay = payload.certifiedReplay.getOrElse(fail("expected the certified clearance replay"))
+    val steps = payload.lineReplaySteps
+    val trajectory = LineAccessTrajectory
+      .findRootClearanceBeforeUse(steps.head, steps(2), List(steps(1)), replay)
+      .getOrElse(fail("expected the exact slider-reach occurrence"))
+
+    assertEquals(trajectory.vacatedSquares, List(EvidenceSquare("a2")))
+    assertEquals(trajectory.enabledFrom, EvidenceSquare("a1"))
+    assertEquals(trajectory.enabledTo, EvidenceSquare("a8"))
+    assertEquals(
+      trajectory.relationOccurrenceBinding.contract,
+      VerticalRelationContractKind.SliderReachDelta
+    )
+    assert(trajectory.relationOccurrenceBinding.occurrenceId.matches("[0-9a-f]{64}"))
+    assert(trajectory.relationOccurrenceBinding.certifiedSourcePremiseIds.nonEmpty)
+    assert(payload.lineConsequences.exists(_.kind == LineConsequenceKind.Mate))
+    assertEquals(payload.rootOwnedCausalEpisodes(line.rootMove), Nil)
+
+  test("capture and recapture keep their exact material path without a duplicate response seed"):
+    val initialFen = "r5k1/p7/1B6/8/8/8/8/R3K3 b - - 0 1"
+    val rootFen = "r6k/p7/1B6/8/8/8/8/R3K3 w - - 1 2"
+    val (payload, line) = normalizedLine(
+      id = "capture-recapture-material-path",
+      initialFen = initialFen,
+      historyMoves = List("g8h8"),
+      rootFen = rootFen,
+      moves = List("a1a7", "a8a7", "b6a7")
+    )
+    val replay = payload.certifiedReplay.getOrElse(fail("expected the certified recapture replay"))
+    val steps = payload.lineReplaySteps
+    val trajectory = CaptureResponseFollowUpTrajectory
+      .find(steps.head, steps(1), steps(2), List(steps(1)), replay)
+      .getOrElse(fail("expected the exact capture-response continuation"))
+    val episode = payload
+      .rootOwnedCausalEpisodes(line.rootMove)
+      .find(_.eventOccurrence.sameOccurrence(2, "b6a7"))
+      .getOrElse(fail("expected the transported material episode"))
+
+    assertEquals(
+      trajectory.relationOccurrenceBinding.contract,
+      VerticalRelationContractKind.CaptureRecaptureInventory
+    )
+    assert(trajectory.relationOccurrenceBinding.occurrenceId.matches("[0-9a-f]{64}"))
+    assert(trajectory.relationOccurrenceBinding.certifiedSourcePremiseIds.nonEmpty)
+    assertEquals(
+      episode.links.map(_.kind).toSet,
+      Set(RootCausalLinkKind.RootActorCaptured, RootCausalLinkKind.MaterialCaptureResponse)
+    )
+    assert(episode.links.exists(link =>
+      link.kind == RootCausalLinkKind.RootActorCaptured &&
+        link.cause.sameOccurrence(0, "a1a7") &&
+        link.effect.sameOccurrence(1, "a8a7")
+    ))
+    assert(episode.links.exists(link =>
+      link.kind == RootCausalLinkKind.MaterialCaptureResponse &&
+        link.cause.sameOccurrence(1, "a8a7") &&
+        link.effect.sameOccurrence(2, "b6a7")
+    ))
+    assert(RootOwnedEffectPolicy.admitsLineEpisode(payload, episode))
+
   private def normalizedLine(
       id: String,
       initialFen: String,
       historyMoves: List[String],
       rootFen: String,
       moves: List[String],
-      requireMaterial: Boolean = true
+      requireMaterial: Boolean = true,
+      whitePovMate: Option[Int] = None
   ): (LineFactEvidence, LineNodeRef) =
     val history = CanonicalPositionHistory
       .from(initialFen, historyMoves, rootFen)
@@ -201,7 +272,8 @@ class RootOwnedCausalEpisodeTest extends munit.FunSuite:
         replay = replay,
         position = PositionNodeRef(rootFen, 0, replay.legalSteps.headOption.map(_.move.piece.color)),
         scope = line.role.scope,
-        materialSummary = material
+        materialSummary = material,
+        whitePovMate = whitePovMate
       )
       .payload match
       case value: LineFactEvidence => value
