@@ -16,6 +16,58 @@ private[chessjudgment] object ForcedReplyResourceDifferentialDemand:
       fact.hasDistinctRootMoves && fact.comparison.verdict.isActionableLoss &&
       fact.comparison.winPercentLossForMover >= JudgmentThresholds.INACCURACY_WP
 
+/** Sole family construction authority. It validates and emits the exact
+  * semantic descriptor consumed by the common identity core.
+  */
+private[chessjudgment] object ForcedReplyResourceCausalAuthority:
+  private final case class PropositionDescriptor(
+      rootFen: String,
+      mechanism: ForcedReplyResourceMechanism,
+      trigger: RelationMoveTransitionWitness,
+      forcedReply: RelationLegalMoveResourceWitness,
+      realizer: RelationMoveTransitionWitness,
+      capturedTarget: RelationColoredPieceWitness,
+      playedDefense: RelationLegalMoveResourceWitness,
+      disabledDefender: RelationColoredPieceWitness
+  ) extends CausalSemanticDescriptor:
+    require(mechanism.stableKey.nonEmpty, "a causal proposition needs its exact mechanism")
+    val contractKind = BoundedCausalContractKind.ImmediateForcedReplyResourceDifferential
+    val semanticParts: List[String] = List(
+      mechanism.stableKey,
+      trigger.stableKey,
+      forcedReply.stableKey,
+      realizer.stableKey,
+      coloredPieceStableKey(capturedTarget),
+      playedDefense.stableKey,
+      coloredPieceStableKey(disabledDefender)
+    )
+
+  def proposition(
+      rootFen: String,
+      mechanism: ForcedReplyResourceMechanism,
+      trigger: RelationMoveTransitionWitness,
+      forcedReply: RelationLegalMoveResourceWitness,
+      realizer: RelationMoveTransitionWitness,
+      capturedTarget: RelationColoredPieceWitness,
+      playedDefense: RelationLegalMoveResourceWitness,
+      disabledDefender: RelationColoredPieceWitness
+  ): CausalPropositionIdentity =
+    CausalPropositionIdentity.from(
+      PropositionDescriptor(
+        rootFen,
+        mechanism,
+        trigger,
+        forcedReply,
+        realizer,
+        capturedTarget,
+        playedDefense,
+        disabledDefender
+      )
+    )
+
+  def coloredPieceStableKey(piece: RelationColoredPieceWitness): String =
+    s"${piece.side.toString.toLowerCase}:${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}"
+
 private[chessjudgment] enum ForcedReplyResourceBranchRole extends CausalBranchRole:
   case CounterfactualReference
   case ObservedPlayedRoot
@@ -79,19 +131,19 @@ private[chessjudgment] sealed trait ForcedReplyResourceManifest
 
 private[chessjudgment] object ForcedReplyResourceManifest:
   private final case class Displacement(
-      checkResponse: CausalRelationPremiseUse,
-      referenceRecapture: CausalRelationPremiseUse,
-      playedRecapture: CausalRelationPremiseUse,
+      checkResponse: CausalVerticalRelationPremiseUse,
+      referenceRecapture: CausalVerticalRelationPremiseUse,
+      playedRecapture: CausalVerticalRelationPremiseUse,
       referenceNoRecapture: CausalClosedAbsenceBinding
   ) extends ForcedReplyResourceManifest:
     val mechanism = ForcedReplyResourceMechanism.ForcedDisplacement
     val premiseUses = List(checkResponse, referenceRecapture, playedRecapture)
 
   private final case class RecapturerRemoval(
-      referenceRootCapture: CausalRelationPremiseUse,
-      checkResponse: CausalRelationPremiseUse,
-      referenceRecapture: CausalRelationPremiseUse,
-      playedRecapture: CausalRelationPremiseUse,
+      referenceRootCapture: CausalVerticalRelationPremiseUse,
+      checkResponse: CausalVerticalRelationPremiseUse,
+      referenceRecapture: CausalVerticalRelationPremiseUse,
+      playedRecapture: CausalVerticalRelationPremiseUse,
       referenceNoRecapture: CausalClosedAbsenceBinding
   ) extends ForcedReplyResourceManifest:
     val mechanism = ForcedReplyResourceMechanism.ForcedRecapturerRemoval
@@ -103,19 +155,19 @@ private[chessjudgment] object ForcedReplyResourceManifest:
     )
 
   def displacement(
-      checkResponse: CausalRelationPremiseUse,
-      referenceRecapture: CausalRelationPremiseUse,
-      playedRecapture: CausalRelationPremiseUse,
+      checkResponse: CausalVerticalRelationPremiseUse,
+      referenceRecapture: CausalVerticalRelationPremiseUse,
+      playedRecapture: CausalVerticalRelationPremiseUse,
       referenceNoRecapture: CausalClosedAbsenceBinding
   ): ForcedReplyResourceManifest =
     validateShared(checkResponse, referenceRecapture, playedRecapture, referenceNoRecapture)
     Displacement(checkResponse, referenceRecapture, playedRecapture, referenceNoRecapture)
 
   def recapturerRemoval(
-      referenceRootCapture: CausalRelationPremiseUse,
-      checkResponse: CausalRelationPremiseUse,
-      referenceRecapture: CausalRelationPremiseUse,
-      playedRecapture: CausalRelationPremiseUse,
+      referenceRootCapture: CausalVerticalRelationPremiseUse,
+      checkResponse: CausalVerticalRelationPremiseUse,
+      referenceRecapture: CausalVerticalRelationPremiseUse,
+      playedRecapture: CausalVerticalRelationPremiseUse,
       referenceNoRecapture: CausalClosedAbsenceBinding
   ): ForcedReplyResourceManifest =
     validateShared(checkResponse, referenceRecapture, playedRecapture, referenceNoRecapture)
@@ -137,9 +189,9 @@ private[chessjudgment] object ForcedReplyResourceManifest:
     )
 
   private def validateShared(
-      checkResponse: CausalRelationPremiseUse,
-      referenceRecapture: CausalRelationPremiseUse,
-      playedRecapture: CausalRelationPremiseUse,
+      checkResponse: CausalVerticalRelationPremiseUse,
+      referenceRecapture: CausalVerticalRelationPremiseUse,
+      playedRecapture: CausalVerticalRelationPremiseUse,
       referenceNoRecapture: CausalClosedAbsenceBinding
   ): Unit =
     require(
@@ -293,7 +345,7 @@ private[chessjudgment] final case class ForcedReplyResourceDependencyManifest pr
       CandidateComparisonSemanticKey.from(demandingComparison).stableKey,
       java.lang.Double.toHexString(demandingComparison.comparison.winPercentLossForMover),
       mechanism.stableKey,
-      BoundedCausalIdentity.coloredPieceKey(disabledDefender),
+      ForcedReplyResourceCausalAuthority.coloredPieceStableKey(disabledDefender),
       proofSet.proposition.semanticId,
       proofSet.occurrence.occurrenceId,
       proofSet.paths.map(_.pathOccurrenceId).mkString("[", ",", "]")
@@ -637,9 +689,9 @@ private[chessjudgment] object ForcedReplyResourceProof:
       playedReplay: CanonicalLineReplay,
       referenceRealizerIndex: Int
   ): CertifiedForcedReplyResourceDifferential =
-    val proposition = CausalPropositionIdentity.forcedReplyResourceDifferential(
+    val proposition = ForcedReplyResourceCausalAuthority.proposition(
       inputs.rootBoard,
-      binding.mechanism.stableKey,
+      binding.mechanism,
       inputs.check.mover,
       inputs.forcedReply,
       inputs.referenceCapture.mover,
@@ -653,19 +705,19 @@ private[chessjudgment] object ForcedReplyResourceProof:
       proposition,
       List(referenceBranch, playedBranch)
     )
-    val checkUse = CausalRelationPremiseUse.from(
+    val checkUse = CausalVerticalRelationPremiseUse.from(
       ForcedReplyResourcePremiseRole.CreatedCheckResponse,
       inputs.checkOccurrence,
       referenceBranch,
       0
     )
-    val referenceRecaptureUse = CausalRelationPremiseUse.from(
+    val referenceRecaptureUse = CausalVerticalRelationPremiseUse.from(
       ForcedReplyResourcePremiseRole.ReferenceCaptureRecapture,
       inputs.referenceCaptureOccurrence,
       referenceBranch,
       referenceRealizerIndex
     )
-    val playedRecaptureUse = CausalRelationPremiseUse.from(
+    val playedRecaptureUse = CausalVerticalRelationPremiseUse.from(
       ForcedReplyResourcePremiseRole.PlayedCaptureRecapture,
       inputs.playedCaptureOccurrence,
       playedBranch,
@@ -690,7 +742,7 @@ private[chessjudgment] object ForcedReplyResourceProof:
         )
       case Some(rootCaptureOccurrence) =>
         require(binding.mechanism == ForcedReplyResourceMechanism.ForcedRecapturerRemoval)
-        val rootCaptureUse = CausalRelationPremiseUse.from(
+        val rootCaptureUse = CausalVerticalRelationPremiseUse.from(
           ForcedReplyResourcePremiseRole.ReferenceRootCapture,
           rootCaptureOccurrence,
           referenceBranch,

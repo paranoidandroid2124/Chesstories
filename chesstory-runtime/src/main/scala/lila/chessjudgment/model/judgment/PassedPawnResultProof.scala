@@ -35,17 +35,17 @@ private[chessjudgment] enum PassedPawnResultPremiseRole extends CausalPremiseRol
 private[chessjudgment] final case class PassedPawnResultPathManifest(
     replyWitness: PassedPawnReplyBranchWitness,
     realization: PassedPawnResultRealization,
-    comparisonDemand: CausalTypedPremiseUse,
-    expectedDependencies: List[CausalTypedPremiseUse],
-    expectedResult: CausalTypedPremiseUse,
-    observedDependencies: List[CausalTypedPremiseUse],
-    observedResult: CausalTypedPremiseUse,
-    functionalMatch: CausalTypedPremiseUse,
-    replyInventory: CausalClosedReplyInventoryBinding
+    comparisonDemand: PassedPawnResultPremiseUse,
+    expectedDependencies: List[PassedPawnResultPremiseUse],
+    expectedResult: PassedPawnResultPremiseUse,
+    observedDependencies: List[PassedPawnResultPremiseUse],
+    observedResult: PassedPawnResultPremiseUse,
+    functionalMatch: PassedPawnResultPremiseUse,
+    replyInventory: PassedPawnResultClosedReplyInventoryBinding
 ) extends BoundedCausalContractManifest:
   val contractKind: BoundedCausalContractKind =
     BoundedCausalContractKind.PassedPawnResultUnderClosedReplies
-  val premiseUses: List[CausalRelationPremiseUse] = Nil
+  val premiseUses: List[CausalVerticalRelationPremiseUse] = Nil
   val absenceBindings: List[CausalClosedAbsenceBinding] = Nil
   override val supplementalPremiseUses: List[CausalSupplementalPremiseUse] =
     comparisonDemand ::
@@ -72,7 +72,7 @@ private[chessjudgment] final case class PassedPawnResultDependencyManifest(
     replyInventoryRecord: EvidenceRecord,
     semanticIdentity: PassedPawnResultSemanticIdentity,
     proofSet: BoundedCausalProofSet,
-    replyInventory: CausalClosedReplyInventoryBinding
+    replyInventory: PassedPawnResultClosedReplyInventoryBinding
 ) extends BoundedCausalDependencyManifest:
   val contractKind: BoundedCausalContractKind =
     BoundedCausalContractKind.PassedPawnResultUnderClosedReplies
@@ -98,7 +98,7 @@ private[chessjudgment] final class PassedPawnResultOccurrenceProof private[chess
     val assessment: PassedPawnResultReplyAssessment,
     val semanticIdentity: PassedPawnResultSemanticIdentity,
     val proofSet: BoundedCausalProofSet,
-    val replyInventory: CausalClosedReplyInventoryBinding,
+    val replyInventory: PassedPawnResultClosedReplyInventoryBinding,
     val dependency: BoundedCausalDependencyFingerprint,
     private val dependencyManifest: PassedPawnResultDependencyManifest,
     private val sourceRecord: EvidenceRecord,
@@ -197,13 +197,9 @@ private[chessjudgment] object PassedPawnResultProofDerivation:
       if event.exactRobustPublicResultAssessments.contains(assessment)
       if assessment.consequence.kind == TransitionConsequenceKind.PassedPawnProgress
       if event.branchSetComplete && event.branchCoverageComplete
-      sourceBranch = CausalBranchOccurrence.certifiedPassedPawnResultRoute(
-        PassedPawnResultBranchRole.ExpectedResultRoute,
-        event,
-        assessment
-      )
+      sourceBranch = PassedPawnResultCausalAuthority.expectedRoute(event, assessment)
       replyPairs <- exactReplyBranches(event)
-      replyInventory = CausalClosedReplyInventoryBinding.from(
+      replyInventory = PassedPawnResultClosedReplyInventoryBinding.from(
         replyInventoryRecord,
         sourceRecord,
         event,
@@ -219,7 +215,7 @@ private[chessjudgment] object PassedPawnResultProofDerivation:
         replyInventory
       )
       if manifests.nonEmpty
-      proposition = CausalPropositionIdentity.passedPawnResult(event, assessment)
+      proposition = PassedPawnResultCausalAuthority.proposition(event, assessment)
       occurrence = CausalOccurrenceIdentity.from(
         proposition,
         sourceBranch :: replyPairs.map(_._2)
@@ -268,11 +264,7 @@ private[chessjudgment] object PassedPawnResultProofDerivation:
       event: PassedPawnResultEventEvidence
   ): Option[List[(PassedPawnReplyBranchWitness, CausalBranchOccurrence)]] =
     val pairs = event.branchWitnesses.map { witness =>
-      witness -> CausalBranchOccurrence.certifiedPassedPawnReply(
-        PassedPawnResultBranchRole.LegalReply(witness.line.rootMove, witness.sourceProbeId),
-        event,
-        witness
-      )
+      witness -> PassedPawnResultCausalAuthority.legalReply(event, witness)
     }.sortBy { case (witness, _) => EvidenceRef.normalizeMove(witness.line.rootMove) }
     Option.when(
       pairs.nonEmpty && pairs.map(_._1.line.rootMove).map(EvidenceRef.normalizeMove).distinct.size == pairs.size
@@ -285,7 +277,7 @@ private[chessjudgment] object PassedPawnResultProofDerivation:
       assessment: PassedPawnResultReplyAssessment,
       sourceBranch: CausalBranchOccurrence,
       replyPairs: List[(PassedPawnReplyBranchWitness, CausalBranchOccurrence)],
-      replyInventory: CausalClosedReplyInventoryBinding
+      replyInventory: PassedPawnResultClosedReplyInventoryBinding
   ): Option[List[PassedPawnResultPathManifest]] =
     val observationsByLine = assessment.observations.groupBy(_.line)
     val manifests = replyPairs.flatMap { case (witness, replyBranch) =>
@@ -323,7 +315,7 @@ private[chessjudgment] object PassedPawnResultProofDerivation:
       witness: PassedPawnReplyBranchWitness,
       replyBranch: CausalBranchOccurrence,
       realization: PassedPawnResultRealization,
-      replyInventory: CausalClosedReplyInventoryBinding
+      replyInventory: PassedPawnResultClosedReplyInventoryBinding
   ): Option[PassedPawnResultPathManifest] =
     val observedDependencies = realization.resultRoute.causalPath
     for
@@ -331,17 +323,16 @@ private[chessjudgment] object PassedPawnResultProofDerivation:
       observedDependencyIndices <- exactDependencyIndices(replyBranch, observedDependencies)
       if assessment.causalPath.size + 1 == sourceBranch.steps.size
       expectedDependencies = assessment.causalPath.zipWithIndex.map { case (dependency, index) =>
-        CausalTypedPremiseUse.passedPawnResultDependency(
-          PassedPawnResultPremiseRole.ExpectedDependency(index),
+        PassedPawnResultPremiseUse.dependency(
           dependency,
+          assessment,
           sourceRecord,
           sourceBranch,
           index,
           index + 1
         )
       }
-      expectedResult = CausalTypedPremiseUse.passedPawnResult(
-        PassedPawnResultPremiseRole.ExpectedResult,
+      expectedResult = PassedPawnResultPremiseUse.result(
         assessment,
         sourceRecord,
         sourceBranch,
@@ -349,9 +340,9 @@ private[chessjudgment] object PassedPawnResultProofDerivation:
       )
       observedPremises = observedDependencies.zip(observedDependencyIndices).zipWithIndex.map {
         case ((dependency, (fromIndex, toIndex)), index) =>
-          CausalTypedPremiseUse.observedPassedPawnResultDependency(
-            PassedPawnResultPremiseRole.ObservedDependency(witness.line.rootMove, index),
+          PassedPawnResultPremiseUse.observedDependency(
             dependency,
+            realization,
             sourceRecord,
             witness,
             replyBranch,
@@ -359,28 +350,28 @@ private[chessjudgment] object PassedPawnResultProofDerivation:
             toIndex
           )
       }
-      observedResult = CausalTypedPremiseUse.observedPassedPawnResult(
-        PassedPawnResultPremiseRole.ObservedResult(witness.line.rootMove),
+      observedResult = PassedPawnResultPremiseUse.observedResult(
         realization,
         sourceRecord,
         witness,
         replyBranch,
         observedResultIndex
       )
-      functionalMatch = CausalTypedPremiseUse.functionalMatch(
-        PassedPawnResultPremiseRole.FunctionalMatch(witness.line.rootMove),
+      functionalMatch = PassedPawnResultPremiseUse.functionalMatch(
         assessment,
         realization,
         sourceRecord,
+        witness,
         sourceBranch,
         replyBranch,
         sourceBranch.steps.size - 1,
         observedResultIndex
       )
-      demand = CausalTypedPremiseUse.comparisonDemand(
-        PassedPawnResultPremiseRole.ComparisonDemand,
+      demand = PassedPawnResultPremiseUse.comparisonDemand(
         comparisonRecord,
-        sourceBranch
+        sourceBranch,
+        event,
+        assessment
       )
     yield PassedPawnResultPathManifest(
       witness,

@@ -10,6 +10,13 @@ private[chessjudgment] enum BoundedCausalContractKind:
   case ImmediateForcedReplyResourceDifferential
   case PassedPawnResultUnderClosedReplies
 
+  def semanticNamespace: String =
+    this match
+      case ImmediateForcedReplyResourceDifferential =>
+        "causal-proposition:immediate-forced-reply-resource-differential:v2"
+      case PassedPawnResultUnderClosedReplies =>
+        "causal-proposition:passed-pawn-result-under-closed-replies:v1"
+
 private[chessjudgment] final case class SemanticPositionIdentity private (value: String)
 
 private[chessjudgment] object SemanticPositionIdentity:
@@ -19,6 +26,15 @@ private[chessjudgment] object SemanticPositionIdentity:
         .semanticBoardStateFen(fen)
         .getOrElse(throw IllegalArgumentException("a causal proposition needs a valid root board"))
     )
+
+/** Package-internal family extension capability. It carries semantic parts
+  * only after a private family constructor has validated the exact lower
+  * witnesses; the descriptor itself is not chess-proof authority.
+  */
+private[chessjudgment] trait CausalSemanticDescriptor:
+  def contractKind: BoundedCausalContractKind
+  def rootFen: String
+  def semanticParts: List[String]
 
 /** Shared transposition identity. Concrete proof paths and line occurrences
   * are deliberately excluded so independently reached proofs retain one
@@ -32,62 +48,13 @@ private[chessjudgment] final case class CausalPropositionIdentity private (
   require(semanticId.matches("[0-9a-f]{64}"), "a causal proposition needs a canonical id")
 
 private[chessjudgment] object CausalPropositionIdentity:
-  def forcedReplyResourceDifferential(
-      rootFen: String,
-      mechanismKey: String,
-      trigger: RelationMoveTransitionWitness,
-      forcedReply: RelationLegalMoveResourceWitness,
-      realizer: RelationMoveTransitionWitness,
-      capturedTarget: RelationColoredPieceWitness,
-      playedDefense: RelationLegalMoveResourceWitness,
-      disabledDefender: RelationColoredPieceWitness
-  ): CausalPropositionIdentity =
-    require(mechanismKey.nonEmpty, "a causal proposition needs its exact mechanism")
-    val rootPositionIdentity = SemanticPositionIdentity.fromFen(rootFen)
+  private[judgment] def from(descriptor: CausalSemanticDescriptor): CausalPropositionIdentity =
+    require(descriptor.semanticParts.nonEmpty, "a causal proposition needs exact semantic parts")
+    val rootPositionIdentity = SemanticPositionIdentity.fromFen(descriptor.rootFen)
     val semanticId = BoundedCausalIdentity.digest(
-      List(
-        "causal-proposition:immediate-forced-reply-resource-differential:v2",
-        rootPositionIdentity.value,
-        mechanismKey,
-        trigger.stableKey,
-        forcedReply.stableKey,
-        realizer.stableKey,
-        BoundedCausalIdentity.coloredPieceKey(capturedTarget),
-        playedDefense.stableKey,
-        BoundedCausalIdentity.coloredPieceKey(disabledDefender)
-      )
+      descriptor.contractKind.semanticNamespace :: rootPositionIdentity.value :: descriptor.semanticParts
     )
-    CausalPropositionIdentity(
-      semanticId,
-      BoundedCausalContractKind.ImmediateForcedReplyResourceDifferential,
-      rootPositionIdentity
-    )
-
-  def passedPawnResult(
-      event: PassedPawnResultEventEvidence,
-      assessment: PassedPawnResultReplyAssessment
-  ): CausalPropositionIdentity =
-    require(
-      event.exactRobustPublicResultAssessments.contains(assessment) &&
-        assessment.consequence.kind == TransitionConsequenceKind.PassedPawnProgress,
-      "a passed-pawn causal proposition needs an exact robust passed-pawn result"
-    )
-    val rootPositionIdentity = SemanticPositionIdentity.fromFen(event.causalEpisode.root.step.fenBefore)
-    val semanticId = BoundedCausalIdentity.digest(
-      List(
-        "causal-proposition:passed-pawn-result-under-closed-replies:v1",
-        rootPositionIdentity.value,
-        event.causalEpisode.root.identity.stableKey,
-        assessment.sourceEvent.identity.stableKey,
-        assessment.consequence.stableKey,
-        assessment.resultProof.functionIdentity(event.causalEpisode.root).stableKey
-      )
-    )
-    CausalPropositionIdentity(
-      semanticId,
-      BoundedCausalContractKind.PassedPawnResultUnderClosedReplies,
-      rootPositionIdentity
-    )
+    CausalPropositionIdentity(semanticId, descriptor.contractKind, rootPositionIdentity)
 
 private[chessjudgment] trait CausalBranchRole:
   def stableKey: String
@@ -103,6 +70,15 @@ private[chessjudgment] enum CausalStepProvenance:
 private[chessjudgment] enum CausalOccurrenceLinkKind:
   case AdjacentLegalReplay
   case CertifiedCausalDependency
+
+/** Package-internal family extension capability for one certified
+  * non-adjacent occurrence jump. Private family tokens validate the lower
+  * dependency; this projection itself does not certify chess truth.
+  */
+private[chessjudgment] trait CausalCertifiedDependencyAuthority:
+  def before: LineReplayStep
+  def after: LineReplayStep
+  def lowerProofKey: String
 
 /** Exact authority for the jump from one retained occurrence to the next.
   * Adjacent replay is proved by board continuity. A non-adjacent jump is
@@ -156,15 +132,16 @@ private[chessjudgment] object CausalOccurrenceLink:
       )
     )
 
-  def passedPawnResultDependency(
-      dependency: PassedPawnResultDependency
+  private[judgment] def fromCertifiedDependency(
+      authority: CausalCertifiedDependencyAuthority
   ): CausalOccurrenceLink =
-    require(dependency.enablesContinuation, "a causal occurrence jump needs a certified passed-pawn-result dependency")
+    require(authority.after.ply > authority.before.ply, "a certified dependency must move to a later occurrence")
+    require(authority.lowerProofKey.nonEmpty, "a certified dependency needs its exact lower authority")
     CausalOccurrenceLink(
       CausalOccurrenceLinkKind.CertifiedCausalDependency,
-      BoundedCausalIdentity.stepKey(dependency.from.step),
-      BoundedCausalIdentity.stepKey(dependency.to.step),
-      dependency.stableKey
+      BoundedCausalIdentity.stepKey(authority.before),
+      BoundedCausalIdentity.stepKey(authority.after),
+      authority.lowerProofKey
     )
 
 private[chessjudgment] final case class CausalStepOccurrence private[judgment] (
@@ -229,7 +206,7 @@ private[chessjudgment] object CausalBranchOccurrence:
       retainedStepCount: Int
   ): CausalBranchOccurrence =
     val steps = retainedSteps(replay, retainedStepCount)
-    build(
+    fromCertifiedOccurrences(
       role,
       CausalRootProvenance.CounterfactualAnalyzedRoot,
       line,
@@ -251,7 +228,7 @@ private[chessjudgment] object CausalBranchOccurrence:
       retainedStepCount: Int
   ): CausalBranchOccurrence =
     val steps = retainedSteps(replay, retainedStepCount)
-    build(
+    fromCertifiedOccurrences(
       role,
       CausalRootProvenance.ObservedGameRoot,
       line,
@@ -267,79 +244,7 @@ private[chessjudgment] object CausalBranchOccurrence:
       }
     )
 
-  def certifiedPassedPawnResultRoute(
-      role: CausalBranchRole,
-      event: PassedPawnResultEventEvidence,
-      assessment: PassedPawnResultReplyAssessment
-  ): CausalBranchOccurrence =
-    require(
-      event.exactRobustPublicResultAssessments.contains(assessment),
-      "a bounded passed-pawn result route needs an exact robust result owned by its event"
-    )
-    val dependencies = assessment.causalPath
-    require(
-      dependencies.nonEmpty && dependencies.head.from == event.causalEpisode.root &&
-        dependencies.last.to == assessment.sourceEvent &&
-        dependencies.zip(dependencies.drop(1)).forall { case (left, right) => left.to == right.from },
-      "a bounded passed-pawn result route needs one connected root-owned dependency path"
-    )
-    val nodes = event.causalEpisode.root :: dependencies.map(_.to)
-    require(nodes.forall(_.certifiedLegalStep.nonEmpty), "every retained passed-pawn result occurrence needs legal certification")
-    val continuationLine = event.continuationSourceLine.getOrElse(event.rootLine)
-    val rootProvenance = provenanceFor(event.rootLine)
-    build(
-      role,
-      rootProvenance,
-      event.rootLine,
-      nodes.zipWithIndex.map { case (node, index) =>
-        new CausalStepOccurrence(
-          index,
-          node.step,
-          if index == 0 then event.rootLine else continuationLine,
-          if index == 0 && rootProvenance == CausalRootProvenance.ObservedGameRoot then
-            CausalStepProvenance.ObservedGameMove
-          else CausalStepProvenance.CertifiedAnalysisMove,
-          Option.when(index > 0)(CausalOccurrenceLink.passedPawnResultDependency(dependencies(index - 1)))
-        )
-      }
-    )
-
-  def certifiedPassedPawnReply(
-      role: CausalBranchRole,
-      event: PassedPawnResultEventEvidence,
-      witness: PassedPawnReplyBranchWitness
-  ): CausalBranchOccurrence =
-    require(event.branchWitnesses.contains(witness), "a bounded reply must belong to the exact passed-pawn result event")
-    val replay = witness.canonicalReplay.getOrElse(
-      throw IllegalArgumentException("a bounded reply needs its admitted canonical replay")
-    )
-    val replySteps = replay.replaySteps
-    require(
-      replySteps.nonEmpty && replySteps.size == witness.observedThroughPlyOffset &&
-        replySteps.forall(replay.legalStep(_).nonEmpty) &&
-        EvidenceRef.sameMove(replySteps.head.moveUci, witness.line.rootMove),
-      "a bounded reply must retain its complete certified observation horizon"
-    )
-    val allSteps = event.causalEpisode.root.step :: replySteps
-    val rootProvenance = provenanceFor(event.rootLine)
-    build(
-      role,
-      rootProvenance,
-      event.rootLine,
-      allSteps.zipWithIndex.map { case (step, index) =>
-        new CausalStepOccurrence(
-          index,
-          step,
-          if index == 0 then event.rootLine else witness.line,
-          if index == 0 && rootProvenance == CausalRootProvenance.ObservedGameRoot then
-            CausalStepProvenance.ObservedGameMove
-          else CausalStepProvenance.CertifiedAnalysisMove,
-          incomingAdjacentLink(allSteps, index)
-        )
-      }
-    )
-
-  private def build(
+  private[judgment] def fromCertifiedOccurrences(
       role: CausalBranchRole,
       rootProvenance: CausalRootProvenance,
       line: LineNodeRef,
@@ -384,7 +289,7 @@ private[chessjudgment] object CausalBranchOccurrence:
   ): Option[CausalOccurrenceLink] =
     Option.when(index > 0)(CausalOccurrenceLink.adjacent(steps(index - 1), steps(index)))
 
-  private def provenanceFor(line: LineNodeRef): CausalRootProvenance =
+  private[judgment] def rootProvenanceFor(line: LineNodeRef): CausalRootProvenance =
     line.role match
       case LineNodeRole.Played => CausalRootProvenance.ObservedGameRoot
       case _                   => CausalRootProvenance.CounterfactualAnalyzedRoot
@@ -396,379 +301,7 @@ private[chessjudgment] trait CausalSupplementalPremiseUse:
   def branchIds: Set[String]
   def stableKey: String
 
-/** Exact typed lower premise that is not itself an L1 relation occurrence.
-  * Construction stays inside typed factories; callers cannot mint a proof by
-  * supplying only a label or a guessed identifier.
-  */
-private[chessjudgment] final case class CausalTypedPremiseUse private (
-    role: CausalPremiseRole,
-    lowerKind: String,
-    lowerSemanticKey: String,
-    sourcePremiseIds: List[String],
-    branchId: String,
-    branchRole: CausalBranchRole,
-    relatedBranchIds: List[String],
-    fromStepIndex: Int,
-    toStepIndex: Int,
-    private[chessjudgment] val dependencyWitness: Option[CausalDependencyPremiseWitness] = None
-) extends CausalSupplementalPremiseUse:
-  require(lowerKind.nonEmpty && lowerSemanticKey.nonEmpty, "a typed causal premise needs exact lower meaning")
-  require(sourcePremiseIds.nonEmpty, "a typed causal premise needs exact lower evidence owners")
-  require(
-    sourcePremiseIds == sourcePremiseIds.sorted && sourcePremiseIds.distinct.size == sourcePremiseIds.size,
-    "typed causal premise owners must be unique and canonical"
-  )
-  require(fromStepIndex >= 0 && toStepIndex >= fromStepIndex, "a typed premise needs ordered occurrences")
-  require(
-    relatedBranchIds == relatedBranchIds.sorted && relatedBranchIds.distinct.size == relatedBranchIds.size &&
-      !relatedBranchIds.contains(branchId),
-    "related causal branches must be distinct and canonical"
-  )
-  require(
-    if Set("passed_pawn_result_dependency", "observed_passed_pawn_result_dependency")(lowerKind) then
-      dependencyWitness.exists(witness =>
-        witness.dependencyOccurrenceKey == lowerSemanticKey &&
-          witness.relationOwnerIds.forall(sourcePremiseIds.contains)
-      )
-    else dependencyWitness.isEmpty,
-    "only exact passed-pawn dependency premises may retain a dependency witness"
-  )
-
-  val branchIds: Set[String] = relatedBranchIds.toSet + branchId
-
-  def stableKey: String =
-    List(
-      role.stableKey,
-      lowerKind,
-      lowerSemanticKey,
-      sourcePremiseIds.mkString("[", ",", "]"),
-      branchId,
-      branchRole.stableKey,
-      relatedBranchIds.mkString("[", ",", "]"),
-      fromStepIndex.toString,
-      toStepIndex.toString,
-      dependencyWitness.map(_.dependencyOccurrenceKey).getOrElse("none")
-    ).mkString("|")
-
-private[chessjudgment] object CausalTypedPremiseUse:
-  private def lineOccurrenceOwnerStepBinding(
-      ownerId: String,
-      occurrenceId: String,
-      step: LineReplayStep
-  ): String =
-    BoundedCausalIdentity.digest(List(
-      "passed-pawn-result-line-occurrence-owner-step:v1",
-      ownerId,
-      BoundedCausalIdentity.stepKey(step),
-      occurrenceId
-    ))
-
-  private def structuralPremiseIds(event: PassedPawnResultEventNode): List[String] =
-    (
-      List(
-        event.lineOccurrenceOwner.id,
-        event.structuralOccurrence.occurrenceId,
-        lineOccurrenceOwnerStepBinding(
-          event.lineOccurrenceOwner.id,
-          event.structuralOccurrence.occurrenceId,
-          event.step
-        )
-      ) ++
-        event.structuralOccurrence.sourcePremiseKeys
-    ).distinct.sorted
-
-  private def resultPremiseIds(proof: PassedPawnResultTransitionProof): List[String] =
-    (
-      List(
-        proof.sourceLineOccurrenceOwner.id,
-        proof.sourceOccurrenceId,
-        lineOccurrenceOwnerStepBinding(
-          proof.sourceLineOccurrenceOwner.id,
-          proof.sourceOccurrenceId,
-          LineReplayStep(
-            proof.sourceTransition.to.ply,
-            proof.sourceTransition.moveUci,
-            proof.sourceTransition.from.fen,
-            proof.sourceTransition.to.fen
-          )
-        )
-      ) ++ proof.sourcePremiseKeys
-    ).distinct.sorted
-
-  def passedPawnResultDependency(
-      role: CausalPremiseRole,
-      dependency: PassedPawnResultDependency,
-      sourceRecord: EvidenceRecord,
-      branch: CausalBranchOccurrence,
-      fromStepIndex: Int,
-      toStepIndex: Int
-  ): CausalTypedPremiseUse =
-    val event = sourceRecord.payload match
-      case exact: PassedPawnResultEventEvidence => exact
-      case _ => throw IllegalArgumentException("a passed-pawn result dependency premise needs its owning event record")
-    require(
-      event.causalEpisode.dependencies.contains(dependency) && dependency.enablesContinuation,
-      "a typed passed-pawn result premise must belong to its event's certified dependency inventory"
-    )
-    require(
-      branch.stepAt(fromStepIndex).exists(_.step == dependency.from.step) &&
-        branch.stepAt(toStepIndex).exists(_.step == dependency.to.step),
-      "a typed passed-pawn result premise must bind its exact ordered occurrence endpoints"
-    )
-    val lineOccurrenceOwners =
-      List(dependency.from.lineOccurrenceOwner.id, dependency.to.lineOccurrenceOwner.id).distinct
-    require(
-      lineOccurrenceOwners.forall(id => sourceRecord.parents.exists(_.id == id)),
-      "a typed passed-pawn result dependency must retain both exact line occurrence owners"
-    )
-    val dependencyWitness = CausalDependencyPremiseWitness.from(dependency)
-    CausalTypedPremiseUse(
-      role,
-      "passed_pawn_result_dependency",
-      dependency.stableKey,
-      (
-        sourceRecord.ref.id ::
-          (
-            structuralPremiseIds(dependency.from) ++
-              structuralPremiseIds(dependency.to) ++
-              dependencyWitness.relationOwnerIds
-          )
-      ).distinct.sorted,
-      branch.branchId,
-      branch.role,
-      Nil,
-      fromStepIndex,
-      toStepIndex,
-      Some(dependencyWitness)
-    )
-
-  def passedPawnResult(
-      role: CausalPremiseRole,
-      assessment: PassedPawnResultReplyAssessment,
-      sourceRecord: EvidenceRecord,
-      branch: CausalBranchOccurrence,
-      stepIndex: Int
-  ): CausalTypedPremiseUse =
-    val event = sourceRecord.payload match
-      case exact: PassedPawnResultEventEvidence => exact
-      case _ => throw IllegalArgumentException("a passed-pawn-result premise needs its owning event record")
-    require(
-      event.exactRobustPublicResultAssessments.contains(assessment) &&
-        assessment.resultProof.binds(assessment.sourceEvent, assessment.consequence, assessment.causalPath),
-      "a typed passed-pawn-result premise needs an exact robust result route"
-    )
-    require(
-      branch.stepAt(stepIndex).exists(_.step == assessment.sourceEvent.step),
-      "a passed-pawn-result premise must bind its exact realizing occurrence"
-    )
-    require(
-      sourceRecord.parents.exists(_.id == assessment.resultProof.sourceLineOccurrenceOwner.id),
-      "a passed-pawn-result premise must retain its exact line occurrence owner"
-    )
-    CausalTypedPremiseUse(
-      role,
-      "passed_pawn_result",
-      assessment.resultProof.stableKey,
-      (sourceRecord.ref.id :: resultPremiseIds(assessment.resultProof)).distinct.sorted,
-      branch.branchId,
-      branch.role,
-      Nil,
-      stepIndex,
-      stepIndex
-    )
-
-  def observedPassedPawnResultDependency(
-      role: CausalPremiseRole,
-      dependency: PassedPawnResultDependency,
-      sourceRecord: EvidenceRecord,
-      witness: PassedPawnReplyBranchWitness,
-      branch: CausalBranchOccurrence,
-      fromStepIndex: Int,
-      toStepIndex: Int
-  ): CausalTypedPremiseUse =
-    val event = sourceRecord.payload match
-      case exact: PassedPawnResultEventEvidence => exact
-      case _ => throw IllegalArgumentException("an observed passed-pawn result dependency needs its owning event record")
-    val observedEpisode = witness.observedEpisode.getOrElse(
-      throw IllegalArgumentException("an observed passed-pawn result dependency needs its exact reply episode")
-    )
-    require(
-      event.branchWitnesses.contains(witness) && observedEpisode.dependencies.contains(dependency) &&
-        dependency.enablesContinuation,
-      "an observed passed-pawn result premise must belong to its exact branch episode"
-    )
-    require(
-      branch.stepAt(fromStepIndex).exists(_.step == dependency.from.step) &&
-        branch.stepAt(toStepIndex).exists(_.step == dependency.to.step),
-      "an observed passed-pawn result premise must bind its exact ordered reply occurrences"
-    )
-    val branchLineOwners = sourceRecord.parents
-      .filter(_.line.contains(witness.line))
-      .map(_.id)
-    require(branchLineOwners.nonEmpty, "an observed passed-pawn result premise needs its exact branch-line owner")
-    val lineOccurrenceOwners =
-      List(dependency.from.lineOccurrenceOwner.id, dependency.to.lineOccurrenceOwner.id).distinct
-    require(
-      lineOccurrenceOwners.forall(id => sourceRecord.parents.exists(_.id == id)),
-      "an observed passed-pawn result dependency must retain both exact line occurrence owners"
-    )
-    val dependencyWitness = CausalDependencyPremiseWitness.from(dependency)
-    CausalTypedPremiseUse(
-      role,
-      "observed_passed_pawn_result_dependency",
-      dependency.stableKey,
-      (
-        sourceRecord.ref.id ::
-          (
-            branchLineOwners ++
-              structuralPremiseIds(dependency.from) ++
-              structuralPremiseIds(dependency.to) ++
-              dependencyWitness.relationOwnerIds
-          )
-      ).distinct.sorted,
-      branch.branchId,
-      branch.role,
-      Nil,
-      fromStepIndex,
-      toStepIndex,
-      Some(dependencyWitness)
-    )
-
-  def observedPassedPawnResult(
-      role: CausalPremiseRole,
-      realization: PassedPawnResultRealization,
-      sourceRecord: EvidenceRecord,
-      witness: PassedPawnReplyBranchWitness,
-      branch: CausalBranchOccurrence,
-      stepIndex: Int
-  ): CausalTypedPremiseUse =
-    val event = sourceRecord.payload match
-      case exact: PassedPawnResultEventEvidence => exact
-      case _ => throw IllegalArgumentException("an observed passed-pawn result needs its owning event record")
-    val observedEpisode = witness.observedEpisode.getOrElse(
-      throw IllegalArgumentException("an observed passed-pawn result needs its exact reply episode")
-    )
-    require(
-      event.branchWitnesses.contains(witness) && realization.observedRoot == observedEpisode.root &&
-        observedEpisode.resultRoutes.contains(realization.resultRoute) &&
-        realization.resultRoute.resultProof.binds(
-          realization.resultRoute.sourceEvent,
-          realization.resultRoute.consequence,
-          realization.resultRoute.causalPath
-        ),
-      "an observed passed-pawn result must be an exact certified result route in its branch"
-    )
-    require(
-      branch.stepAt(stepIndex).exists(_.step == realization.event.step),
-      "an observed passed-pawn result must bind its exact realizing occurrence"
-    )
-    val branchLineOwners = sourceRecord.parents
-      .filter(_.line.contains(witness.line))
-      .map(_.id)
-    require(branchLineOwners.nonEmpty, "an observed passed-pawn result needs its exact branch-line owner")
-    require(
-      sourceRecord.parents.exists(_.id == realization.resultRoute.resultProof.sourceLineOccurrenceOwner.id),
-      "an observed passed-pawn result must retain its exact line occurrence owner"
-    )
-    CausalTypedPremiseUse(
-      role,
-      "observed_passed_pawn_result",
-      realization.resultRoute.resultProof.stableKey,
-      (
-        sourceRecord.ref.id ::
-          (branchLineOwners ++ resultPremiseIds(realization.resultRoute.resultProof))
-      ).distinct.sorted,
-      branch.branchId,
-      branch.role,
-      Nil,
-      stepIndex,
-      stepIndex
-    )
-
-  def functionalMatch(
-      role: CausalPremiseRole,
-      expected: PassedPawnResultReplyAssessment,
-      realization: PassedPawnResultRealization,
-      sourceRecord: EvidenceRecord,
-      expectedBranch: CausalBranchOccurrence,
-      observedBranch: CausalBranchOccurrence,
-      expectedStepIndex: Int,
-      observedStepIndex: Int
-  ): CausalTypedPremiseUse =
-    val event = sourceRecord.payload match
-      case exact: PassedPawnResultEventEvidence => exact
-      case _ => throw IllegalArgumentException("a passed-pawn result functional match needs its owning event record")
-    require(
-      event.exactRobustPublicResultAssessments.contains(expected) &&
-        PassedPawnResultFunctionalMatch.causallyEquivalent(
-          event.causalEpisode.root,
-          expected.resultRoute,
-          realization.observedRoot,
-          realization.resultRoute
-        ),
-      "a passed-pawn result functional-match premise needs two exact causally equivalent routes"
-    )
-    require(
-      expectedBranch.stepAt(expectedStepIndex).exists(_.step == expected.sourceEvent.step) &&
-        observedBranch.stepAt(observedStepIndex).exists(_.step == realization.event.step),
-      "a passed-pawn result functional match must bind both exact result occurrences"
-    )
-    val lineOccurrenceOwners =
-      List(
-        expected.resultProof.sourceLineOccurrenceOwner.id,
-        realization.resultRoute.resultProof.sourceLineOccurrenceOwner.id
-      ).distinct
-    require(
-      lineOccurrenceOwners.forall(id => sourceRecord.parents.exists(_.id == id)),
-      "a passed-pawn result functional match must retain both exact line occurrence owners"
-    )
-    CausalTypedPremiseUse(
-      role,
-      "passed_pawn_result_functional_match",
-      BoundedCausalIdentity.digest(
-        List(
-          expected.resultRoute.stableKey,
-          realization.resultRoute.stableKey,
-          realization.matchKind.toString.toLowerCase
-        )
-      ),
-      (
-        sourceRecord.ref.id ::
-          (resultPremiseIds(expected.resultProof) ++ resultPremiseIds(realization.resultRoute.resultProof))
-      ).distinct.sorted,
-      observedBranch.branchId,
-      observedBranch.role,
-      List(expectedBranch.branchId).sorted,
-      observedStepIndex,
-      observedStepIndex
-    )
-
-  def comparisonDemand(
-      role: CausalPremiseRole,
-      comparisonRecord: EvidenceRecord,
-      branch: CausalBranchOccurrence
-  ): CausalTypedPremiseUse =
-    val comparison = comparisonRecord.payload match
-      case CandidateComparisonEvidence(exact) => exact
-      case _ => throw IllegalArgumentException("a causal demand premise needs a typed comparison record")
-    require(
-      comparison.kind == CandidateComparisonKind.PlayedVsBest &&
-        Set(comparison.referenceLine, comparison.candidateLine)(branch.line),
-      "a passed-pawn result demand must be the exact PlayedVsBest endpoint comparison"
-    )
-    CausalTypedPremiseUse(
-      role,
-      "played_vs_best_demand",
-      CandidateComparisonSemanticKey.from(comparison).stableKey,
-      (comparisonRecord.ref.id :: comparisonRecord.parents.map(_.id)).distinct.sorted,
-      branch.branchId,
-      branch.role,
-      Nil,
-      0,
-      0
-    )
-
-private[chessjudgment] final case class CausalRelationPremiseUse private (
+private[chessjudgment] final case class CausalVerticalRelationPremiseUse private (
     role: CausalPremiseRole,
     contract: VerticalRelationContractKind,
     result: DerivedRelationResultKey,
@@ -795,19 +328,19 @@ private[chessjudgment] final case class CausalRelationPremiseUse private (
       stepIndex.toString
     ).mkString("|")
 
-private[chessjudgment] object CausalRelationPremiseUse:
+private[chessjudgment] object CausalVerticalRelationPremiseUse:
   def from(
       role: CausalPremiseRole,
       occurrence: ReplayVerticalRelationOccurrence,
       branch: CausalBranchOccurrence,
       stepIndex: Int
-  ): CausalRelationPremiseUse =
+  ): CausalVerticalRelationPremiseUse =
     require(
       branch.stepAt(stepIndex).exists(_.step == occurrence.step),
       "a relation premise must bind its exact certified replay occurrence"
     )
     val sourcePremiseIds = occurrence.certifiedSourcePremiseIds
-    CausalRelationPremiseUse(
+    CausalVerticalRelationPremiseUse(
       role,
       occurrence.contract,
       DerivedRelationResultKey.from(occurrence.relation),
@@ -823,92 +356,6 @@ private[chessjudgment] trait CausalAbsenceRole:
 private[chessjudgment] trait CausalSupplementalClosureBinding:
   def branchIds: Set[String]
   def stableKey: String
-
-private[chessjudgment] final case class CausalClosedReplyInventoryBinding private (
-    issuerEvidenceId: String,
-    coverageEvidenceId: String,
-    rootAfter: PositionNodeRef,
-    scope: EvidenceScope,
-    legalReplyMoves: List[String],
-    branchByReply: List[(String, String)],
-    certifiedHorizonPlyOffset: Int
-) extends CausalSupplementalClosureBinding:
-  require(issuerEvidenceId.nonEmpty, "a closed reply inventory needs its exact issuer")
-  require(coverageEvidenceId.nonEmpty, "a closed reply inventory needs its exact branch-coverage issuer")
-  require(legalReplyMoves.nonEmpty, "a closed reply inventory needs at least one legal reply")
-  require(
-    legalReplyMoves == legalReplyMoves.sorted && legalReplyMoves.distinct.size == legalReplyMoves.size,
-    "closed legal replies must be unique and canonical"
-  )
-  require(
-    branchByReply.map(_._1) == legalReplyMoves && branchByReply.map(_._2).distinct.size == branchByReply.size,
-    "a closed reply inventory needs one occurrence branch for every legal reply"
-  )
-  require(certifiedHorizonPlyOffset > 0, "a closed reply inventory needs an exact positive horizon")
-
-  val branchIds: Set[String] = branchByReply.map(_._2).toSet
-
-  def stableKey: String =
-    List(
-      issuerEvidenceId,
-      coverageEvidenceId,
-      PrincipalVariationEvidence.normalizeFen(rootAfter.fen),
-      rootAfter.ply.toString,
-      scope.toString.toLowerCase,
-      branchByReply.map { case (move, branch) => s"$move@$branch" }.mkString("[", ",", "]"),
-      certifiedHorizonPlyOffset.toString
-    ).mkString("|")
-
-private[chessjudgment] object CausalClosedReplyInventoryBinding:
-  def from(
-      inventoryRecord: EvidenceRecord,
-      sourceRecord: EvidenceRecord,
-      event: PassedPawnResultEventEvidence,
-      replyBranches: List[(PassedPawnReplyBranchWitness, CausalBranchOccurrence)]
-  ): CausalClosedReplyInventoryBinding =
-    val inventory = inventoryRecord.payload match
-      case exact: StructuralDeltaEvidence => exact
-      case _ => throw IllegalArgumentException("a closed reply inventory needs a StructuralDelta authority")
-    require(
-      sourceRecord.payload == event && event.branchSetComplete &&
-        sourceRecord.parents.contains(inventoryRecord.ref),
-      "a reply closure must retain its exact lower inventory and branch-coverage authorities"
-    )
-    require(
-      inventoryRecord.ref.producer == EvidenceProducer.StructuralDeltaProducer &&
-        inventoryRecord.ref.layer == EvidenceLayer.StructuralDelta &&
-        inventoryRecord.ref.confidence == EvidenceConfidence.BoardDerived &&
-        inventoryRecord.ref.position == event.rootTransition.from &&
-        inventoryRecord.ref.line.contains(event.rootLine) &&
-        inventoryRecord.ref.scope == event.rootTransition.role.scope &&
-        inventory.transition == event.rootTransition &&
-        inventory.transitionIsCertified && inventory.canonicalOutputShapeCertified &&
-        inventory.canonicalTransitionProof == event.canonicalRootTransitionProof,
-      "a reply closure must consume the exact graph-owned root transition inventory"
-    )
-    val legalReplies = inventory.certifiedRootResponseMoves
-      .map(_.map(EvidenceRef.normalizeMove).sorted)
-      .getOrElse(throw IllegalArgumentException("a closed passed-pawn result needs the root legal-reply inventory"))
-    val byMove = replyBranches.map { case (witness, branch) =>
-      require(event.branchWitnesses.contains(witness), "a closed reply branch must belong to its event")
-      EvidenceRef.normalizeMove(witness.line.rootMove) -> branch.branchId
-    }.sortBy(_._1)
-    require(
-      byMove.map(_._1) == legalReplies,
-      "a closed passed-pawn result must preserve every and only root legal reply"
-    )
-    val horizons = event.branchWitnesses.map(_.certifiedHorizonPlyOffset).distinct
-    CausalClosedReplyInventoryBinding(
-      inventoryRecord.ref.id,
-      sourceRecord.ref.id,
-      event.rootTransition.to,
-      inventoryRecord.ref.scope,
-      legalReplies,
-      byMove,
-      horizons match
-        case exact :: Nil => exact
-        case _ => throw IllegalArgumentException("a closed passed-pawn result needs one exact branch horizon")
-    )
 
 /** Semantic absence id plus one exact branch use. The same semantic absence
   * may occur in several paths or steps; uniqueness never collapses by proof id.
@@ -1002,7 +449,7 @@ private[chessjudgment] object CausalClosedAbsenceBinding:
 
 private[chessjudgment] trait BoundedCausalContractManifest:
   def contractKind: BoundedCausalContractKind
-  def premiseUses: List[CausalRelationPremiseUse]
+  def premiseUses: List[CausalVerticalRelationPremiseUse]
   def absenceBindings: List[CausalClosedAbsenceBinding]
   def supplementalPremiseUses: List[CausalSupplementalPremiseUse] = Nil
   def supplementalClosureBindings: List[CausalSupplementalClosureBinding] = Nil
@@ -1041,7 +488,7 @@ private[chessjudgment] final case class CausalProofPathOccurrence private (
     "causal closure uses must retain their exact proof-path ownership"
   )
 
-  def premiseUses: List[CausalRelationPremiseUse] = manifest.premiseUses
+  def premiseUses: List[CausalVerticalRelationPremiseUse] = manifest.premiseUses
 
 private[chessjudgment] object CausalProofPathOccurrence:
   def from(
@@ -1190,9 +637,6 @@ private[chessjudgment] object BoundedCausalIdentity:
       PrincipalVariationEvidence.normalizeFen(step.fenBefore),
       PrincipalVariationEvidence.normalizeFen(step.fenAfter)
     ).mkString(":")
-
-  def coloredPieceKey(piece: RelationColoredPieceWitness): String =
-    s"${piece.side.toString.toLowerCase}:${piece.role.name.toLowerCase}@${piece.square.key.toLowerCase}"
 
   def evidenceRecordKey(record: EvidenceRecord): String =
     val ref = record.ref

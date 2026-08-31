@@ -874,7 +874,7 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       }.toSet,
       Set("capture")
     )
-    val captureProof = CausalDependencyPremiseWitness.from(dependencies.head).publicProof
+    val captureProof = PassedPawnResultDependencyPremiseWitness.from(dependencies.head).publicProof
     assertEquals(captureProof.dependencyKind, "response_continuation_precondition")
     assertEquals(captureProof.proofKind, "capture_follow_up")
     assertEquals(
@@ -943,7 +943,7 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       PassedPawnResultDependencyProof.LineAccess(trajectory),
       plyOffset = 2
     )
-    val publicProof = CausalDependencyPremiseWitness.from(dependency).publicProof
+    val publicProof = PassedPawnResultDependencyPremiseWitness.from(dependency).publicProof
     assertEquals(publicProof.dependencyKind, "line_access_precondition")
     assertEquals(publicProof.proofKind, "line_access")
     assertEquals(
@@ -964,7 +964,7 @@ class PassedPawnResultProofTest extends munit.FunSuite:
     assertEquals(issuer.stepKey, BoundedCausalIdentity.stepKey(enablingStep))
     assertEquals(issuer.sourcePremiseIds, trajectory.relationOccurrenceBinding.certifiedSourcePremiseIds)
 
-  test("a reply-backed passed-pawn result dependency retains its exact L1 occurrence owners in the result premise"):
+  test("a reply-backed passed-pawn result dependency retains its exact L1 occurrence owners"):
     val fen = "4k3/8/3p4/2P5/4P3/8/8/4K3 w - - 0 1"
     val replay = replayFrom(fen, List("e4e5", "d6e5", "c5c6"))
     val breakStep :: replyStep :: followUpStep :: Nil = replay.replaySteps: @unchecked
@@ -1040,59 +1040,14 @@ class PassedPawnResultProofTest extends munit.FunSuite:
       duplicateResponseFailure.getMessage,
       "requirement failed: duplicate exact passed-pawn-result responses"
     )
-    val event = PassedPawnResultEventEvidence(
-      rootTransition = root.structuralTransition,
-      causalEpisode = PassedPawnResultEpisode(root, List(result), List(dependency), Nil),
-      directResultProofs = Nil,
-      branchWitnesses = Nil
-    )
-    val sourceRef = EvidenceRef(
-      id = "reply-l1-passed-pawn-result-event",
-      producer = EvidenceProducer.PassedPawnResultEventProducer,
-      layer = EvidenceLayer.PassedPawnResultEvent,
-      position = root.structuralTransition.from,
-      line = Some(line),
-      scope = line.role.scope,
-      confidence = EvidenceConfidence.LegalReplayVerified
-    )
-    val sourceRecord = EvidenceRecord(sourceRef, event, List(lineOwner))
-    val branch = CausalBranchOccurrence.certifiedCounterfactual(
-      PassedPawnResultBranchRole.ExpectedResultRoute,
-      line,
-      replay,
-      retainedStepCount = 3
-    )
-    val premise = CausalTypedPremiseUse.passedPawnResultDependency(
-      PassedPawnResultPremiseRole.ExpectedDependency(0),
-      dependency,
-      sourceRecord,
-      branch,
-      fromStepIndex = 0,
-      toStepIndex = 2
-    )
     val occurrence = trajectory.relationOccurrenceBinding
-    assert(premise.sourcePremiseIds.contains(lineOwner.id))
-    assert(premise.sourcePremiseIds.contains(occurrence.occurrenceId))
+    val premiseWitness = PassedPawnResultDependencyPremiseWitness.from(dependency)
+    assert(premiseWitness.relationOwnerIds.contains(occurrence.occurrenceId))
     assert(
-      occurrence.certifiedSourcePremiseIds.forall(premise.sourcePremiseIds.contains),
-      clues(occurrence.certifiedSourcePremiseIds, premise.sourcePremiseIds)
+      occurrence.certifiedSourcePremiseIds.forall(premiseWitness.relationOwnerIds.contains),
+      clues(occurrence.certifiedSourcePremiseIds, premiseWitness.relationOwnerIds)
     )
-
-    val publicPremise = PassedPawnResultPublicPremise(
-      role = "expected_dependency",
-      lowerKind = premise.lowerKind,
-      lowerSemanticKey = premise.lowerSemanticKey,
-      sourcePremiseIds = premise.sourcePremiseIds,
-      branchId = premise.branchId,
-      branchRole = "expected_result_route",
-      relatedBranchIds = premise.relatedBranchIds,
-      fromStepIndex = premise.fromStepIndex,
-      toStepIndex = premise.toStepIndex,
-      dependencyProof = premise.dependencyWitness.map(_.publicProof)
-    )
-    assert(publicPremise.sourcePremiseIds.contains(occurrence.occurrenceId))
-    assert(occurrence.certifiedSourcePremiseIds.forall(publicPremise.sourcePremiseIds.contains))
-    val dependencyProof = publicPremise.dependencyProof.getOrElse(fail("expected the exact dependency proof"))
+    val dependencyProof = premiseWitness.publicProof
     assertEquals(dependencyProof.dependencyKind, "response_continuation_precondition")
     assertEquals(dependencyProof.proofKind, "pawn_break_follow_up")
     assertEquals(

@@ -4230,7 +4230,7 @@ final case class PassedPawnResultProofEvidence private[chessjudgment] (
     assessment: PassedPawnResultReplyAssessment,
     semanticIdentity: PassedPawnResultSemanticIdentity,
     private[chessjudgment] val proofSet: BoundedCausalProofSet,
-    private[chessjudgment] val closedReplyInventory: CausalClosedReplyInventoryBinding,
+    private[chessjudgment] val closedReplyInventory: PassedPawnResultClosedReplyInventoryBinding,
     dependencyFingerprint: String,
     lowerPremiseIds: List[String],
     private[chessjudgment] val occurrenceProof: Option[PassedPawnResultOccurrenceProof] = None
@@ -4280,7 +4280,7 @@ final case class PassedPawnResultProofEvidence private[chessjudgment] (
         realizationPly = manifest.realization.event.step.ply,
         realizationMatchKind = manifest.realization.matchKind,
         premises = manifest.supplementalPremiseUses.map {
-          case premise: CausalTypedPremiseUse => publicPremise(premise)
+          case premise: PassedPawnResultPremiseUse => publicPremise(premise)
           case _ =>
             throw IllegalStateException("a public passed-pawn-result path lost a typed lower premise")
         },
@@ -4379,7 +4379,7 @@ final case class PassedPawnResultProofEvidence private[chessjudgment] (
       }
     )
 
-  private def publicPremise(premise: CausalTypedPremiseUse): PassedPawnResultPublicPremise =
+  private def publicPremise(premise: PassedPawnResultPremiseUse): PassedPawnResultPublicPremise =
     PassedPawnResultPublicPremise(
       role = passedPawnResultPremiseRoleCode(premise.role),
       lowerKind = premise.lowerKind,
@@ -7858,7 +7858,7 @@ object CausalDependencyFunctionProof:
   * only the certified dependency and its replay-owned L1 occurrences; it has
   * no board, move-generation, or relation-extraction capability.
   */
-private[chessjudgment] final case class CausalDependencyPremiseWitness private (
+private[chessjudgment] final case class PassedPawnResultDependencyPremiseWitness private (
     dependencyOccurrenceKey: String,
     dependencyKind: PassedPawnResultDependencyKind,
     functionProof: CausalDependencyFunctionProof,
@@ -7998,8 +7998,8 @@ private[chessjudgment] final case class CausalDependencyPremiseWitness private (
   ): PassedPawnResultPublicPieceWitness =
     PassedPawnResultPublicPieceWitness(role, side.toString.toLowerCase, value.name.toLowerCase)
 
-private[chessjudgment] object CausalDependencyPremiseWitness:
-  def from(dependency: PassedPawnResultDependency): CausalDependencyPremiseWitness =
+private[chessjudgment] object PassedPawnResultDependencyPremiseWitness:
+  def from(dependency: PassedPawnResultDependency): PassedPawnResultDependencyPremiseWitness =
     require(dependency.causalConnectionProven, "a dependency premise witness requires an exact proven occurrence")
     val retainedSteps = dependency.proof match
       case PassedPawnResultDependencyProof.ResponseContinuation(trajectory) =>
@@ -8009,7 +8009,7 @@ private[chessjudgment] object CausalDependencyPremiseWitness:
       dependency.relationOccurrenceBindings.forall(binding => retainedSteps.contains(binding.step)),
       "a dependency premise witness must retain every exact L1 occurrence on its certified route"
     )
-    CausalDependencyPremiseWitness(
+    PassedPawnResultDependencyPremiseWitness(
       dependencyOccurrenceKey = dependency.stableKey,
       dependencyKind = dependency.kind,
       functionProof = CausalDependencyFunctionProof.from(dependency),
