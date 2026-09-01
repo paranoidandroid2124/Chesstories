@@ -328,6 +328,11 @@ object RuntimeProtocol:
             "channel_id" -> selected.channelId,
             "square_release_route_proof" -> squareReleaseRouteProofJson(proof)
           )
+        case proof: RootOwnedEffectProof.CaptureExclusionMoveOrder =>
+          Json.obj(
+            "channel_id" -> selected.channelId,
+            "capture_exclusion_move_order_proof" -> captureExclusionMoveOrderProofJson(proof)
+          )
         case proof: RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply =>
           Json.obj(
             "channel_id" -> selected.channelId,
@@ -624,6 +629,21 @@ object RuntimeProtocol:
             ),
             "terminal_state" -> causalEnumCode(terminalState.toString)
           )
+
+    private def captureExclusionMoveOrderProofJson(
+        proof: RootOwnedEffectProof.CaptureExclusionMoveOrder
+    ): JsObject =
+      val source = proof.source
+      val result = proof.result
+      Json.obj(
+        "source_evidence_id" -> source.id,
+        "semantic_id" -> result.semanticId,
+        "occurrence_id" -> result.occurrenceId,
+        "dependency_fingerprint" -> result.dependencyId,
+        "counterfactual_reference_branch" -> causalBranchJson(result.publicReferenceBranch),
+        "played_root_branch" -> causalBranchJson(result.publicPlayedBranch),
+        "proof_paths" -> result.publicProofPaths.map(causalProofPathWithStateJson)
+      )
 
     private def passedPawnProgressRealizedAfterOnlyLegalReplyProofJson(
         proof: RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply

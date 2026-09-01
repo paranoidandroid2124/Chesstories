@@ -90,6 +90,10 @@ enum RootOwnedEffectProof:
       source: EvidenceRef,
       result: SquareReleaseRouteEvidence
   )
+  case CaptureExclusionMoveOrder(
+      source: EvidenceRef,
+      result: CaptureExclusionMoveOrderEvidence
+  )
   case PassedPawnProgressRealizedAfterOnlyLegalReply(
       source: EvidenceRef,
       result: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence
@@ -102,6 +106,7 @@ enum RootOwnedEffectProof:
       case RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(source, _)         => source
       case RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(source, _)     => source
       case RootOwnedEffectProof.SquareReleaseRoute(source, _)                          => source
+      case RootOwnedEffectProof.CaptureExclusionMoveOrder(source, _)                   => source
       case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(source, _)               => source
 
   final def provenance: List[EvidenceRef] =
@@ -110,6 +115,7 @@ enum RootOwnedEffectProof:
       case RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(_, result)         => result.proofParentSources
       case RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(_, result)     => result.proofParentSources
       case RootOwnedEffectProof.SquareReleaseRoute(_, result)                          => result.proofParentSources
+      case RootOwnedEffectProof.CaptureExclusionMoveOrder(_, result)                   => result.proofParentSources
       case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(_, result)                => result.proofParentSources
 
   final def eventLine: LineNodeRef =
@@ -118,6 +124,7 @@ enum RootOwnedEffectProof:
       case RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture(_, result)         => result.occurrence.referenceLine
       case RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(_, result)     => result.occurrence.referenceLine
       case RootOwnedEffectProof.SquareReleaseRoute(_, result)                          => result.occurrence.referenceLine
+      case RootOwnedEffectProof.CaptureExclusionMoveOrder(_, result)                   => result.occurrence.referenceLine
       case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(_, result)                => result.rootLine
 
   /** Compact producer-issued identity for one exact proof occurrence. */
@@ -153,6 +160,15 @@ enum RootOwnedEffectProof:
       case RootOwnedEffectProof.SquareReleaseRoute(source, result) =>
         RootOwnedEffectOccurrenceIdentity(
           family = "square-release-route",
+          sourceEvidenceId = source.id,
+          semanticId = result.semanticId,
+          occurrenceId = result.occurrenceId,
+          dependencyFingerprint = result.dependencyId,
+          proofPathOccurrenceIds = result.publicProofPaths.map(_.pathOccurrenceId).sorted
+        )
+      case RootOwnedEffectProof.CaptureExclusionMoveOrder(source, result) =>
+        RootOwnedEffectOccurrenceIdentity(
+          family = "capture-exclusion-move-order",
           sourceEvidenceId = source.id,
           semanticId = result.semanticId,
           occurrenceId = result.occurrenceId,
@@ -280,6 +296,8 @@ object DirectCauseChannel:
         Some(DirectCauseChannel(RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture(ref, payload)))
       case EvidenceRecord(ref, payload: SquareReleaseRouteEvidence, _) =>
         Some(DirectCauseChannel(RootOwnedEffectProof.SquareReleaseRoute(ref, payload)))
+      case EvidenceRecord(ref, payload: CaptureExclusionMoveOrderEvidence, _) =>
+        Some(DirectCauseChannel(RootOwnedEffectProof.CaptureExclusionMoveOrder(ref, payload)))
       case EvidenceRecord(ref, payload: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _) =>
         Some(DirectCauseChannel(RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(ref, payload)))
       case _ => None
@@ -1695,6 +1713,71 @@ private[chessjudgment] final case class SquareReleaseRouteEvidence private[chess
   def terminalReplyMove: Option[String] = occurrence.terminalReplyStep.map(_.moveUci)
   def publicTerminal: SquareReleaseRoutePublicTerminal =
     SquareReleaseRoutePublicTerminal.from(semantic.terminal)
+
+  private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
+    occurrenceProof.exists(_.proves(record, this))
+
+  private[chessjudgment] def proofParentSources: List[EvidenceRef] =
+    occurrenceProof.toList.flatMap(_.parentSources)
+
+  private[chessjudgment] def lowerRecordsAreCanonical(
+      byId: Map[String, EvidenceRecord]
+  ): Boolean =
+    occurrenceProof.exists(_.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record)))
+
+  private[chessjudgment] def consumesDependencies(
+      referenceSource: EvidenceRecord,
+      playedSource: EvidenceRecord
+  ): Boolean =
+    occurrenceProof.exists(_.consumesDependencies(referenceSource, playedSource))
+
+/** Exact move-order occurrence where vacating an ordinary capture target
+  * excludes the played branch's immediate capture reply before the same move
+  * is realized later. It does not assert prevention, bestness, or a plan.
+  */
+private[chessjudgment] final case class CaptureExclusionMoveOrderEvidence private[chessjudgment] (
+    semantic: CaptureExclusionMoveOrderSemanticProof,
+    occurrence: CaptureExclusionMoveOrderOccurrence,
+    dependencyFingerprint: String,
+    private[chessjudgment] val resultSet: ExactCausalProofResultSet,
+    private[chessjudgment] val occurrenceProof: Option[CertifiedCaptureExclusionMoveOrder] = None
+) extends EvidencePayload:
+  require(occurrence.semanticId == semantic.semanticId)
+  require(
+    dependencyFingerprint.matches("[0-9a-f]{64}"),
+    "capture-exclusion move order needs its complete dependency fingerprint"
+  )
+  require(
+    resultSet.contains(dependencyFingerprint),
+    "capture-exclusion move order must belong to its complete demanded result set"
+  )
+
+  def semanticId: String = semantic.semanticId
+  def occurrenceId: String = occurrence.occurrenceId
+  def dependencyId: String = dependencyFingerprint
+  def referenceLine: LineNodeRef = occurrence.referenceLine
+  def playedLine: LineNodeRef = occurrence.playedLine
+  def referenceBranch: CausalBranchOccurrence = occurrence.referenceBranch
+  def playedBranch: CausalBranchOccurrence = occurrence.playedBranch
+  def publicReferenceBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(referenceBranch)
+  def publicPlayedBranch: BoundedCausalPublicBranch =
+    BoundedCausalPublicProjection.branch(playedBranch)
+  def proofPaths: List[CausalProofPathOccurrence] = occurrence.proofPaths
+  def publicProofPaths: List[BoundedCausalPublicProofPath] =
+    BoundedCausalPublicProjection.legalMovePaths(proofPaths)
+  def hasCompleteProofPaths: Boolean =
+    val deferredIndex = occurrence.referenceDeferredStepIndex
+    proofPaths.size == 1 && proofPaths.forall(path =>
+        path.premiseUses.isEmpty && path.manifest.supplementalPremiseUses.size == 4 &&
+        path.manifest.supplementalPremiseUses.forall(_.isInstanceOf[CausalLegalMovePremiseUse]) &&
+        path.closedAbsenceUses.size == 2 && path.closedStateUses.size == 3 * deferredIndex + 2
+    )
+  def vacatingMove: RelationMoveTransitionWitness = semantic.vacatingMove
+  def deferredMove: RelationMoveTransitionWitness = semantic.deferredMove
+  def captureReply: RelationMoveTransitionWitness = semantic.captureReply
+  def capturedTarget: RelationColoredPieceWitness = semantic.capturedTarget
+  def referenceDeferredStepIndex: Int = occurrence.referenceDeferredStepIndex
 
   private[chessjudgment] def exactOccurrenceCertified(record: EvidenceRecord): Boolean =
     occurrenceProof.exists(_.proves(record, this))
@@ -5573,6 +5656,8 @@ final case class EvidenceRecord(
         List(payload.occurrence.referenceLine, payload.occurrence.playedLine)
       case payload: SquareReleaseRouteEvidence =>
         List(payload.occurrence.referenceLine, payload.occurrence.playedLine)
+      case payload: CaptureExclusionMoveOrderEvidence =>
+        List(payload.occurrence.referenceLine, payload.occurrence.playedLine)
       case CandidateLineEvaluationEvidence(payloadLine, _) =>
         List(payloadLine)
       case CandidateComparisonEvidence(fact) =>
@@ -6029,6 +6114,9 @@ final class TypedEvidenceGraph private (
           exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
             payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
         case payload: SquareReleaseRouteEvidence =>
+          exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
+            payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
+        case payload: CaptureExclusionMoveOrderEvidence =>
           exactAuthority(record, EvidenceProducer.CausalProofProducer, EvidenceLayer.CausalProof) &&
             payload.exactOccurrenceCertified(record) && payload.lowerRecordsAreCanonical(byId)
         case payload: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence =>

@@ -27,7 +27,8 @@ private[chessjudgment] object RootOwnedEffectPolicy:
   ): DirectCauseFamilyMetadata =
     proof match
       case _: RootOwnedEffectProof.UniqueCheckReplyDefenderDisplacementBeforeCapture |
-          _: RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture =>
+          _: RootOwnedEffectProof.SoleRecapturerRemovalBeforeTargetCapture |
+          _: RootOwnedEffectProof.CaptureExclusionMoveOrder =>
         DirectCauseFamilyMetadata(RelativeCauseKind.WrongMoveOrder, RelativeCauseSourceSide.Reference)
       case _: RootOwnedEffectProof.VacatedGateEnablesUnrecapturableSliderCapture =>
         DirectCauseFamilyMetadata(RelativeCauseKind.MissedTacticalResource, RelativeCauseSourceSide.Reference)
@@ -93,6 +94,12 @@ private[chessjudgment] object RootOwnedEffectPolicy:
             result.occurrence.referenceLine == comparison.referenceLine &&
               result.occurrence.playedLine == comparison.candidateLine
           )
+      case RootOwnedEffectProof.CaptureExclusionMoveOrder(_, result) =>
+        result.hasCompleteProofPaths &&
+          graph.comparisonFor(cause).exists(comparison =>
+            result.occurrence.referenceLine == comparison.referenceLine &&
+              result.occurrence.playedLine == comparison.candidateLine
+          )
       case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(_, result) =>
         result.consequenceKind == TransitionConsequenceKind.PassedPawnProgress &&
           result.hasCompleteProofPaths &&
@@ -137,6 +144,11 @@ private[chessjudgment] object RootOwnedEffectPolicy:
         source.line.contains(eventLine) &&
           result.occurrence.referenceLine == eventLine &&
           EvidenceRef.sameMove(result.occurrence.releaseStep.moveUci, eventLine.rootMove) &&
+          graph.record(source).exists(record => record.payload == result && graph.proofEligible(record))
+      case RootOwnedEffectProof.CaptureExclusionMoveOrder(source, result) =>
+        source.line.contains(eventLine) &&
+          result.occurrence.referenceLine == eventLine &&
+          EvidenceRef.sameMove(result.occurrence.vacatingStep.moveUci, eventLine.rootMove) &&
           graph.record(source).exists(record => record.payload == result && graph.proofEligible(record))
       case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(source, result) =>
         source.line.contains(eventLine) &&

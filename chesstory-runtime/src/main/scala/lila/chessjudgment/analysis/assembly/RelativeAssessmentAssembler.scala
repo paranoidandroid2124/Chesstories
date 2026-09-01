@@ -78,6 +78,13 @@ object RelativeAssessmentAssembler:
                 demand
               )
             )
+            val captureExclusionMoveOrderProofRecords = causalDemand.toList.flatMap(demand =>
+              CaptureExclusionMoveOrderAssembler.fromDemand(
+                comparisonContext,
+                inputs.allocator,
+                demand
+              )
+            )
             val passedPawnResultEventRecords = passedPawnResultDemand.toList.flatMap(demand =>
               PassedPawnResultEventAssembler.fromDemand(
                 comparisonContext,
@@ -96,7 +103,7 @@ object RelativeAssessmentAssembler:
             passedPawnResultContext.withEvidence(
               passedPawnProgressRealizedAfterOnlyLegalReplyProofRecords ++ defenderDisplacementProofRecords ++
                 soleRecapturerRemovalProofRecords ++ vacatedGateCaptureProofRecords ++
-                squareReleaseRouteProofRecords
+                squareReleaseRouteProofRecords ++ captureExclusionMoveOrderProofRecords
             )
           }
         }
@@ -499,6 +506,7 @@ object RelativeAssessmentAssembler:
             _: SoleRecapturerRemovalBeforeTargetCaptureEvidence |
             _: VacatedGateEnablesUnrecapturableSliderCaptureEvidence |
             _: SquareReleaseRouteEvidence |
+            _: CaptureExclusionMoveOrderEvidence |
             _: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence => true
         case _ => false
       typedProof && context.evidenceGraph.proofEligible(record) && record.referencesLine(line)

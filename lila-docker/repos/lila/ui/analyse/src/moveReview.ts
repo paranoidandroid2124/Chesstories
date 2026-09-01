@@ -218,9 +218,32 @@ interface MoveReviewLegalMovePremise {
   issuerOccurrenceId: string;
   sourcePremiseIds: string[];
   branchId: string;
-  branchRole: 'counterfactual_reference';
+  branchRole: 'counterfactual_reference' | 'played_root_analysis_continuation';
   stepIndex: number;
 }
+
+type MoveReviewCaptureExclusionMoveOrderPremises = [
+  MoveReviewLegalMovePremise & {
+    role: 'reference_vacating_move';
+    branchRole: 'counterfactual_reference';
+    stepIndex: 0;
+  },
+  MoveReviewLegalMovePremise & {
+    role: 'played_deferred_move';
+    branchRole: 'played_root_analysis_continuation';
+    stepIndex: 0;
+  },
+  MoveReviewLegalMovePremise & {
+    role: 'played_capture_reply';
+    branchRole: 'played_root_analysis_continuation';
+    stepIndex: 1;
+    capture: NonNullable<MoveReviewLegalMovePremise['capture']>;
+  },
+  MoveReviewLegalMovePremise & {
+    role: 'reference_deferred_move';
+    branchRole: 'counterfactual_reference';
+  },
+];
 
 interface MoveReviewPieceWitness {
   piece: MoveReviewPieceRole;
@@ -346,6 +369,22 @@ export type MoveReviewReasonMessage =
         ply: number;
         scope: 'best_line';
       };
+    }
+  | {
+      kind: 'capture-exclusion-move-order';
+      channelId: string;
+      causeEvidenceId: string;
+      causeKind: 'wrong_move_order';
+      sourceEvidenceId: string;
+      semanticId: string;
+      occurrenceId: string;
+      dependencyFingerprint: string;
+      pathOccurrenceId: string;
+      branch: MoveReviewTypedBranch;
+      counterpart: MoveReviewTypedBranch;
+      premises: MoveReviewCaptureExclusionMoveOrderPremises;
+      absences: MoveReviewCausalClosureUse[];
+      states: MoveReviewCausalClosureUse[];
     }
   | {
       kind: 'vacated-gate-enables-unrecapturable-slider-capture';
@@ -853,6 +892,25 @@ export function moveReviewReasonText(
     return locale === 'ko-KR'
       ? `[${message.causeKind}] ${occurrenceComparison}. 경로 ${message.pathOccurrenceId.slice(0, 8)}는 ${message.absence.issuerEvidenceId}가 ${message.absence.fen} (ply ${message.absence.ply})에서 발급한 ${message.absence.query} 부재와 하위 증거 ${premises}를 보존합니다.`
       : `[${message.causeKind}] ${occurrenceComparison}. Path ${message.pathOccurrenceId.slice(0, 8)} retains absence ${message.absence.query}, issued by ${message.absence.issuerEvidenceId} at ${message.absence.fen} (ply ${message.absence.ply}), and lower proofs ${premises}.`;
+  }
+  if (message.kind === 'capture-exclusion-move-order') {
+    const [vacatingMove, deferredMove, captureReply] = message.premises;
+    const capturedTarget = captureReply.capture;
+    const reference =
+      locale === 'ko-KR'
+        ? `반사실 기준 분석에서 ${vacatingMove.moveUci}가 ${capturedTarget.square}의 ${capturedTarget.piece}을 먼저 옮긴 뒤 ${deferredMove.moveUci}가 나중에 실행됩니다`
+        : `in the counterfactual reference analysis, ${vacatingMove.moveUci} first moves the ${capturedTarget.piece} from ${capturedTarget.square}, and ${deferredMove.moveUci} is played later`;
+    const played =
+      locale === 'ko-KR'
+        ? `관측된 실전 첫 수 ${deferredMove.moveUci} 뒤 인증 분석 응수 ${captureReply.moveUci}가 그 기물을 ${capturedTarget.square}에서 잡습니다`
+        : `after the observed root ${deferredMove.moveUci}, the certified analysis reply ${captureReply.moveUci} captures that piece on ${capturedTarget.square}`;
+    const occurrenceComparison =
+      message.branch.role === 'counterfactual_reference'
+        ? `${reference}; ${played}`
+        : `${played}; ${reference}`;
+    return locale === 'ko-KR'
+      ? `[${message.causeKind}] ${occurrenceComparison}. 경로 ${message.pathOccurrenceId.slice(0, 8)}는 A 직후와 later-B 직후의 동일 포획 응수 부재 ${message.absences.length}개와 대상·포획자·deferred mover의 폐쇄 상태 ${message.states.length}개를 보존합니다.`
+      : `[${message.causeKind}] ${occurrenceComparison}. Path ${message.pathOccurrenceId.slice(0, 8)} retains ${message.absences.length} endpoint absences for the same capture reply and ${message.states.length} closed target, capturer, and deferred-mover states.`;
   }
   if (message.kind === 'vacated-gate-enables-unrecapturable-slider-capture') {
     const reference =
@@ -1808,6 +1866,10 @@ function projectCausalChannel(
       startFen,
     );
   }
+  if (Object.prototype.hasOwnProperty.call(value, 'capture_exclusion_move_order_proof')) {
+    if (causeKind !== 'wrong_move_order') return;
+    return projectCaptureExclusionMoveOrder(value, causeEvidenceId, candidateMove, bestMove, startFen);
+  }
   if (
     Object.prototype.hasOwnProperty.call(value, 'vacated_gate_enables_unrecapturable_slider_capture_proof')
   ) {
@@ -1912,6 +1974,10 @@ interface MoveReviewCausalPath<Premise> {
 
 type MoveReviewRelationCausalPath = MoveReviewCausalPath<MoveReviewTypedPremise>;
 type MoveReviewSquareReleaseRoutePath = MoveReviewCausalPath<MoveReviewSquareReleaseRoutePremise>;
+type MoveReviewCaptureExclusionMoveOrderPath = Omit<
+  MoveReviewCausalPath<MoveReviewLegalMovePremise>,
+  'premises'
+> & { premises: MoveReviewCaptureExclusionMoveOrderPremises };
 
 type MoveReviewPassedPawnProgressRealizedAfterOnlyLegalReplyPath = {
   id: string;
@@ -1926,6 +1992,7 @@ type MoveReviewPassedPawnProgressRealizedAfterOnlyLegalReplyPath = {
 type MoveReviewTypedProofKey =
   | 'unique_check_reply_defender_displacement_before_capture_proof'
   | 'sole_recapturer_removal_before_target_capture_proof'
+  | 'capture_exclusion_move_order_proof'
   | 'vacated_gate_enables_unrecapturable_slider_capture_proof'
   | 'square_release_route_proof'
   | 'passed_pawn_progress_realized_after_only_legal_reply_proof';
@@ -2385,6 +2452,169 @@ function projectSoleRecapturerRemovalBeforeTargetCaptureParticipants(value: unkn
         playedSoleRecapture: { ...playedSoleRecapture, moveUci: playedSoleRecapture.moveUci },
       }
     : undefined;
+}
+
+function projectCaptureExclusionMoveOrder(
+  channel: Record<string, unknown>,
+  causeEvidenceId: string,
+  candidateMove: Uci,
+  bestMove: Uci,
+  startFen: FEN,
+): MoveReviewReason[] | undefined {
+  const projected = projectVariableTwoBranchProof(
+    channel,
+    'capture_exclusion_move_order_proof',
+    [],
+    candidateMove,
+    bestMove,
+    startFen,
+  );
+  if (!projected) return;
+  const { wire, reference, played } = projected;
+  if (reference.steps.length % 2 !== 1 || played.steps.length !== 2 || wire.proof_paths.length !== 1) return;
+  const path = projectCaptureExclusionMoveOrderPath(wire.proof_paths[0], reference, played);
+  if (!path) return;
+  return [reference, played].map(branch => {
+    const proof = proofFromWireSteps(`cause:${path.id}:${branch.id}`, startFen, branch.steps)!;
+    return {
+      id: proof.id,
+      messageSlots: { candidateUci: candidateMove },
+      message: {
+        kind: 'capture-exclusion-move-order' as const,
+        channelId: channel.channel_id as string,
+        causeEvidenceId,
+        causeKind: 'wrong_move_order' as const,
+        sourceEvidenceId: wire.source_evidence_id as string,
+        semanticId: wire.semantic_id as string,
+        occurrenceId: wire.occurrence_id as string,
+        dependencyFingerprint: wire.dependency_fingerprint as string,
+        pathOccurrenceId: path.id,
+        branch: wireBranchIdentity(branch),
+        counterpart: wireBranchIdentity(branch === reference ? played : reference),
+        premises: path.premises,
+        absences: path.absences,
+        states: path.states,
+      },
+      proof,
+    };
+  });
+}
+
+function projectCaptureExclusionMoveOrderPath(
+  value: unknown,
+  reference: MoveReviewWireBranch,
+  played: MoveReviewWireBranch,
+): MoveReviewCaptureExclusionMoveOrderPath | undefined {
+  const path = projectCausalPath(
+    value,
+    reference,
+    played,
+    { premises: 4, absences: 2, minStates: 8 },
+    premise => {
+      if (!isObject(premise)) return;
+      const branch =
+        premise.branch_id === reference.id && premise.branch_role === reference.role
+          ? reference
+          : premise.branch_id === played.id && premise.branch_role === played.role
+            ? played
+            : undefined;
+      return branch ? projectLegalMovePremise(premise, branch) : undefined;
+    },
+    premise => `${premise.legalMoveSemanticId}:${premise.branchId}:${premise.stepIndex}`,
+    premise => premise.issuerOccurrenceId,
+  );
+  if (!path) return;
+  const [vacating, playedDeferred, playedReply, referenceDeferred] = path.premises;
+  const deferredIndex = reference.steps.length - 1;
+  const capturedTarget = playedReply?.capture;
+  const sameDeferredCapture = playedDeferred?.capture
+    ? sameColoredPiece(playedDeferred.capture, referenceDeferred?.capture)
+    : referenceDeferred?.capture === undefined;
+  if (
+    !vacating ||
+    !playedDeferred ||
+    !playedReply ||
+    !referenceDeferred ||
+    vacating.role !== 'reference_vacating_move' ||
+    vacating.branchId !== reference.id ||
+    vacating.branchRole !== reference.role ||
+    vacating.stepIndex !== 0 ||
+    playedDeferred.role !== 'played_deferred_move' ||
+    playedDeferred.branchId !== played.id ||
+    playedDeferred.branchRole !== played.role ||
+    playedDeferred.stepIndex !== 0 ||
+    playedReply.role !== 'played_capture_reply' ||
+    playedReply.branchId !== played.id ||
+    playedReply.branchRole !== played.role ||
+    playedReply.stepIndex !== 1 ||
+    referenceDeferred.role !== 'reference_deferred_move' ||
+    referenceDeferred.branchId !== reference.id ||
+    referenceDeferred.branchRole !== reference.role ||
+    referenceDeferred.stepIndex !== deferredIndex ||
+    deferredIndex < 2 ||
+    deferredIndex % 2 !== 0 ||
+    playedDeferred.legalMoveSemanticId !== referenceDeferred.legalMoveSemanticId ||
+    playedDeferred.moveUci !== referenceDeferred.moveUci ||
+    !sameTypedActor(playedDeferred.movement, referenceDeferred.movement) ||
+    playedDeferred.movementMode !== referenceDeferred.movementMode ||
+    !sameDeferredCapture ||
+    !capturedTarget ||
+    capturedTarget.square !== playedReply.movement.to ||
+    capturedTarget.square !== vacating.movement.from ||
+    capturedTarget.side !== vacating.movement.side ||
+    capturedTarget.piece !== vacating.movement.pieceBefore ||
+    vacating.movement.side !== playedDeferred.movement.side ||
+    playedReply.movement.side === playedDeferred.movement.side
+  )
+    return;
+  const replyQuery = `legal-move-from-to:${playedReply.movement.side}:${playedReply.movement.from}:${playedReply.movement.to}`;
+  if (
+    path.absences.some(
+      (absence, index) =>
+        absence.role !== 'reference_capture_reply_absent' ||
+        absence.branchId !== reference.id ||
+        absence.branchRole !== reference.role ||
+        absence.afterStepIndex !== [0, deferredIndex][index] ||
+        absence.query !== replyQuery,
+    )
+  )
+    return;
+  const expectedStates = Array.from({ length: deferredIndex + 1 }, (_, index) => [
+    {
+      role: 'reference_vacated_target',
+      stepIndex: index,
+      query: `vacant:${capturedTarget.square}`,
+    },
+    {
+      role: 'reference_reply_actor',
+      stepIndex: index,
+      query: `occupied-by:${playedReply.movement.side}:${playedReply.movement.pieceBefore}@${playedReply.movement.from}`,
+    },
+    ...(index < deferredIndex
+      ? [
+          {
+            role: 'reference_deferred_actor',
+            stepIndex: index,
+            query: `occupied-by:${playedDeferred.movement.side}:${playedDeferred.movement.pieceBefore}@${playedDeferred.movement.from}`,
+          },
+        ]
+      : []),
+  ]).flat();
+  if (
+    path.states.length !== expectedStates.length ||
+    path.states.some((state, index) => {
+      const expected = expectedStates[index]!;
+      return (
+        state.role !== expected.role ||
+        state.branchId !== reference.id ||
+        state.branchRole !== reference.role ||
+        state.afterStepIndex !== expected.stepIndex ||
+        state.query !== expected.query
+      );
+    })
+  )
+    return;
+  return path as MoveReviewCaptureExclusionMoveOrderPath;
 }
 
 function projectVacatedGateEnablesUnrecapturableSliderCapture(
@@ -3429,7 +3659,7 @@ function sameColoredPiece(
 
 function projectLegalMovePremise(
   value: unknown,
-  reference: MoveReviewWireBranch,
+  branch: MoveReviewWireBranch,
 ): MoveReviewLegalMovePremise | undefined {
   if (
     !isObject(value) ||
@@ -3474,8 +3704,8 @@ function projectLegalMovePremise(
     !(value.source_premise_ids as string[]).includes(value.issuer_evidence_id as string) ||
     !(value.source_premise_ids as string[]).includes(value.issuer_occurrence_id as string) ||
     !(value.source_premise_ids as string[]).includes(`legal-move:${value.legal_move_semantic_id}`) ||
-    value.branch_id !== reference.id ||
-    value.branch_role !== reference.role ||
+    value.branch_id !== branch.id ||
+    value.branch_role !== branch.role ||
     !legalMovementMode(value.movement_mode)
   )
     return;
@@ -3489,7 +3719,7 @@ function projectLegalMovePremise(
     !move ||
     !movement ||
     stepIndex === undefined ||
-    reference.steps[stepIndex]?.move !== move ||
+    branch.steps[stepIndex]?.move !== move ||
     !typedActorMatchesMove(movement, move) ||
     (Object.prototype.hasOwnProperty.call(value, 'capture') && !capture)
   )
@@ -3505,8 +3735,8 @@ function projectLegalMovePremise(
     issuerEvidenceId: value.issuer_evidence_id as string,
     issuerOccurrenceId: value.issuer_occurrence_id as string,
     sourcePremiseIds: [...value.source_premise_ids],
-    branchId: reference.id,
-    branchRole: reference.role as 'counterfactual_reference',
+    branchId: branch.id,
+    branchRole: branch.role,
     stepIndex,
   };
 }

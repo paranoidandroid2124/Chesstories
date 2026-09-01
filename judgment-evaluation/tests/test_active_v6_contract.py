@@ -590,6 +590,237 @@ def _vacated_gate_enables_unrecapturable_slider_capture_proof() -> dict[str, obj
     }
 
 
+def _capture_exclusion_move_order_proof() -> dict[str, object]:
+    root = "r2qrbk1/1bpn1p1p/p2p1np1/Pp2p3/3PP3/2P2NNP/1PB2PP1/R1BQR1K1 w - - 1 17"
+    reference_moves = ["d4d5", "c7c6", "d5c6", "b7c6", "b2b4"]
+    reference_fens = [
+        "r2qrbk1/1bpn1p1p/p2p1np1/Pp1Pp3/4P3/2P2NNP/1PB2PP1/R1BQR1K1 b - - 0 17",
+        "r2qrbk1/1b1n1p1p/p1pp1np1/Pp1Pp3/4P3/2P2NNP/1PB2PP1/R1BQR1K1 w - - 0 18",
+        "r2qrbk1/1b1n1p1p/p1Pp1np1/Pp2p3/4P3/2P2NNP/1PB2PP1/R1BQR1K1 b - - 0 18",
+        "r2qrbk1/3n1p1p/p1bp1np1/Pp2p3/4P3/2P2NNP/1PB2PP1/R1BQR1K1 w - - 0 19",
+        "r2qrbk1/3n1p1p/p1bp1np1/Pp2p3/1P2P3/2P2NNP/2B2PP1/R1BQR1K1 b - - 0 19",
+    ]
+    played_moves = ["b2b4", "e5d4"]
+    played_fens = [
+        "r2qrbk1/1bpn1p1p/p2p1np1/Pp2p3/1P1PP3/2P2NNP/2B2PP1/R1BQR1K1 b - - 0 17",
+        "r2qrbk1/1bpn1p1p/p2p1np1/Pp6/1P1pP3/2P2NNP/2B2PP1/R1BQR1K1 w - - 0 18",
+    ]
+    reference_id = "1" * 64
+    played_id = "2" * 64
+
+    def steps(
+        moves: list[str], fens: list[str], observed_root: bool
+    ) -> list[dict[str, object]]:
+        return [
+            {
+                "step_index": index,
+                "provenance": (
+                    "observed_game_move"
+                    if observed_root and index == 0
+                    else "certified_analysis_move"
+                ),
+                "ply": 33 + index,
+                "move_uci": move,
+                "fen_before": root if index == 0 else fens[index - 1],
+                "fen_after": fens[index],
+            }
+            for index, move in enumerate(moves)
+        ]
+
+    def legal_move(
+        role: str,
+        move: str,
+        movement: dict[str, str],
+        branch_id: str,
+        branch_role: str,
+        step_index: int,
+        identity: int,
+        capture: dict[str, str] | None = None,
+        semantic_identity: int | None = None,
+    ) -> dict[str, object]:
+        semantic_number = semantic_identity if semantic_identity is not None else identity
+        semantic_id = f"{semantic_number:064x}"
+        occurrence_id = f"{identity + 1:064x}"
+        issuer = "line.reference" if branch_id == reference_id else "line.played"
+        premise: dict[str, object] = {
+            "role": role,
+            "contract": "legal_move",
+            "move_uci": move,
+            "movement": movement,
+            "movement_mode": (
+                "controlled_destination" if capture is not None else "pawn_advance"
+            ),
+            "legal_move_semantic_id": semantic_id,
+            "issuer_evidence_id": issuer,
+            "issuer_occurrence_id": occurrence_id,
+            "source_premise_ids": sorted(
+                [issuer, occurrence_id, f"legal-move:{semantic_id}"]
+            ),
+            "branch_id": branch_id,
+            "branch_role": branch_role,
+            "step_index": step_index,
+        }
+        if capture is not None:
+            premise["capture"] = capture
+        return premise
+
+    def closure(
+        identity: int,
+        role: str,
+        issuer: str,
+        query: str,
+        step_index: int,
+    ) -> dict[str, object]:
+        return {
+            "use_id": f"{identity:064x}",
+            "role": role,
+            "semantic_proof_id": f"{identity + 100:064x}",
+            "issuer": issuer,
+            "issuer_evidence_id": "line.reference",
+            "issuer_occurrence_id": f"{200 + step_index:064x}",
+            "query": query,
+            "branch_id": reference_id,
+            "branch_role": "counterfactual_reference",
+            "after_step_index": step_index,
+            "position": {
+                "fen": reference_fens[step_index],
+                "ply": 33 + step_index,
+                "scope": "best_line",
+            },
+        }
+
+    white_pawn_b4 = {
+        "side": "white",
+        "from": "b2",
+        "to": "b4",
+        "piece_before": "pawn",
+        "piece_after": "pawn",
+    }
+    capture = {"square": "d4", "piece": "pawn", "side": "white"}
+    path = {
+        "path_occurrence_id": "3" * 64,
+        "premises": [
+            legal_move(
+                "reference_vacating_move",
+                "d4d5",
+                {
+                    "side": "white",
+                    "from": "d4",
+                    "to": "d5",
+                    "piece_before": "pawn",
+                    "piece_after": "pawn",
+                },
+                reference_id,
+                "counterfactual_reference",
+                0,
+                10,
+            ),
+            legal_move(
+                "played_deferred_move",
+                "b2b4",
+                white_pawn_b4,
+                played_id,
+                "played_root_analysis_continuation",
+                0,
+                20,
+            ),
+            legal_move(
+                "played_capture_reply",
+                "e5d4",
+                {
+                    "side": "black",
+                    "from": "e5",
+                    "to": "d4",
+                    "piece_before": "pawn",
+                    "piece_after": "pawn",
+                },
+                played_id,
+                "played_root_analysis_continuation",
+                1,
+                30,
+                capture,
+            ),
+            legal_move(
+                "reference_deferred_move",
+                "b2b4",
+                white_pawn_b4,
+                reference_id,
+                "counterfactual_reference",
+                4,
+                40,
+                semantic_identity=20,
+            ),
+        ],
+        "closed_absence_uses": [
+            closure(
+                50 + offset,
+                "reference_capture_reply_absent",
+                "position_relation_extractor.closed_relation_inventory",
+                "legal-move-from-to:black:e5:d4",
+                index,
+            )
+            for offset, index in enumerate((0, 4))
+        ],
+        "closed_state_uses": [],
+    }
+    state_uses = path["closed_state_uses"]
+    identity = 60
+    for index in range(5):
+        for role, query in (
+            ("reference_vacated_target", "vacant:d4"),
+            ("reference_reply_actor", "occupied-by:black:pawn@e5"),
+        ):
+            state_uses.append(
+                closure(
+                    identity,
+                    role,
+                    "position_relation_extractor.closed_position_state_inventory",
+                    query,
+                    index,
+                )
+            )
+            identity += 1
+        if index < 4:
+            state_uses.append(
+                closure(
+                    identity,
+                    "reference_deferred_actor",
+                    "position_relation_extractor.closed_position_state_inventory",
+                    "occupied-by:white:pawn@b2",
+                    index,
+                )
+            )
+            identity += 1
+
+    return {
+        "source_evidence_id": "capture-order.source",
+        "semantic_id": "4" * 64,
+        "occurrence_id": "5" * 64,
+        "dependency_fingerprint": "6" * 64,
+        "counterfactual_reference_branch": {
+            "branch_id": reference_id,
+            "line_id": "line.reference",
+            "line_role": "best_reference",
+            "branch_role": "counterfactual_reference",
+            "root_provenance": "counterfactual_analyzed_root",
+            "line_rank": 1,
+            "root_move": reference_moves[0],
+            "steps": steps(reference_moves, reference_fens, False),
+        },
+        "played_root_branch": {
+            "branch_id": played_id,
+            "line_id": "line.played",
+            "line_role": "played",
+            "branch_role": "played_root_analysis_continuation",
+            "root_provenance": "observed_game_root",
+            "line_rank": 1,
+            "root_move": played_moves[0],
+            "steps": steps(played_moves, played_fens, True),
+        },
+        "proof_paths": [path],
+    }
+
+
 def _square_release_route_proof() -> dict[str, object]:
     root = "1r4k1/p1q2p1p/2BRbp1B/4p3/P1p4P/6P1/1P2PP1K/3R4 w - - 0 30"
     reference_moves = ["c6g2", "e6f5", "d6c6"]
@@ -1356,6 +1587,70 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             with self.subTest(kind=kind, exposure=exposure):
                 self.assertTrue(any(".exposure:" in error for error in errors))
 
+    def test_capture_exclusion_move_order_binds_exact_occurrences_and_closure(self) -> None:
+        registry = SchemaRegistry(ROOT / "schemas")
+        move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
+        proof_schema = registry.load(move_path)["$defs"]["captureExclusionMoveOrderProof"]
+
+        def validation_errors(candidate: dict[str, object]) -> list[str]:
+            errors: list[str] = []
+            registry._validate(candidate, proof_schema, move_path, "$", errors)
+            if not errors:
+                registry._validate_capture_exclusion_move_order_proof_identifiers(
+                    candidate, "$", errors
+                )
+            return errors
+
+        proof = _capture_exclusion_move_order_proof()
+        self.assertEqual(validation_errors(proof), [])
+
+        mutations = (
+            lambda candidate: candidate["proof_paths"][0]["premises"][2][
+                "capture"
+            ].update(square="c4"),
+            lambda candidate: candidate["proof_paths"][0]["premises"][3].update(
+                move_uci="b2b3"
+            ),
+            lambda candidate: candidate["proof_paths"][0]["premises"][3].update(
+                legal_move_semantic_id="f" * 64,
+                source_premise_ids=sorted(
+                    [
+                        "line.reference",
+                        candidate["proof_paths"][0]["premises"][3][
+                            "issuer_occurrence_id"
+                        ],
+                        f"legal-move:{'f' * 64}",
+                    ]
+                ),
+            ),
+            lambda candidate: candidate["proof_paths"][0][
+                "closed_absence_uses"
+            ].pop(),
+            lambda candidate: candidate["proof_paths"][0]["closed_absence_uses"][1].update(
+                after_step_index=2
+            ),
+            lambda candidate: candidate["proof_paths"][0]["closed_state_uses"][0].update(
+                query="vacant:c4"
+            ),
+            lambda candidate: candidate["proof_paths"][0]["closed_state_uses"][4].update(
+                query="occupied-by:black:pawn@e4"
+            ),
+            lambda candidate: candidate["proof_paths"][0]["premises"][3].update(
+                branch_id=candidate["played_root_branch"]["branch_id"]
+            ),
+            lambda candidate: candidate["proof_paths"].append(
+                copy.deepcopy(candidate["proof_paths"][0])
+            ),
+            lambda candidate: candidate.update(
+                participants={"claim": "duplicate public identity"}
+            ),
+        )
+        for index, mutate in enumerate(mutations):
+            candidate = copy.deepcopy(proof)
+            mutate(candidate)
+            with self.subTest(mutation=index):
+                self.assertTrue(validation_errors(candidate))
+
     def test_square_release_route_binds_exact_moves_and_sibling_closure(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
         move_path = ROOT / "schemas" / "public-v6" / "move-meaning-response.schema.json"
@@ -2013,6 +2308,29 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             move_path,
             label="public v6 legal sole-recapturer-removal-before-target-capture schema shape",
         )
+        order_ready = copy.deepcopy(ready)
+        order_primary = order_ready["move_commentary"]["primary"]
+        order_primary["reference_endpoint"]["moves"] = [
+            "d4d5",
+            "c7c6",
+            "d5c6",
+            "b7c6",
+            "b2b4",
+        ]
+        order_primary["played_endpoint"]["moves"] = ["b2b4", "e5d4"]
+        order_facet = order_ready["move_commentary"]["causal_explanations"][0]
+        order_facet.update(kind="wrong_move_order", exposure="primary")
+        order_facet["channels"] = [
+            {
+                "channel_id": "channel-capture-exclusion-move-order",
+                "capture_exclusion_move_order_proof": _capture_exclusion_move_order_proof(),
+            }
+        ]
+        registry.validate_document(
+            order_ready,
+            move_path,
+            label="public v6 exact capture-exclusion move order",
+        )
         direct_ready = copy.deepcopy(ready)
         direct_primary = direct_ready["move_commentary"]["primary"]
         direct_primary["reference_endpoint"]["moves"] = ["a2b4", "h8g8", "a1a7", "g8f8"]
@@ -2054,6 +2372,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         )
         for label, document, exposure in (
             ("wrong move order", defense_ready, "complementary"),
+            ("capture-exclusion move order", order_ready, "complementary"),
             ("missed tactical resource", direct_ready, "complementary"),
             ("missed square release", route_ready, "complementary"),
             ("passed pawn progress", ready, "primary"),

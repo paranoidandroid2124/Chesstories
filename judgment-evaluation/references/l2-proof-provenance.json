@@ -120,6 +120,78 @@
       }
     },
     {
+      "contract_kind": "CaptureExclusionMoveOrder",
+      "producer": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/CaptureExclusionMoveOrderAssembler.scala",
+        "symbol": "CaptureExclusionMoveOrderAssembler"
+      },
+      "proof_type": {
+        "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/model/judgment/EvidenceGraph.scala",
+        "symbol": "CaptureExclusionMoveOrderEvidence"
+      },
+      "public_consumer": {
+        "serializer_file": "chesstory-runtime/src/main/scala/io/chesstory/runtime/RuntimeProtocol.scala",
+        "serializer_symbol": "captureExclusionMoveOrderProofJson",
+        "field": "capture_exclusion_move_order_proof",
+        "schema_channel_definition": "captureExclusionMoveOrderCausalChannel",
+        "schema_proof_definition": "captureExclusionMoveOrderProof"
+      },
+      "browser_consumer": {
+        "file": "lila-docker/repos/lila/ui/analyse/src/moveReview.ts",
+        "projection_symbol": "projectCaptureExclusionMoveOrder",
+        "discriminant": "capture-exclusion-move-order"
+      },
+      "cause": {
+        "scala_symbol": "WrongMoveOrder",
+        "wire_kind": "wrong_move_order",
+        "schema_facet_definition": "wrongMoveOrderCausalFacet"
+      },
+      "coverage_status": "exact_ordered_skeleton",
+      "references": [
+        {
+          "coverage": "exact_ordered_skeleton",
+          "locator": {
+            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
+            "pdf_page": 78
+          }
+        },
+        {
+          "coverage": "exact_ordered_skeleton",
+          "locator": {
+            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
+            "pdf_page": 79
+          }
+        },
+        {
+          "coverage": "exact_ordered_skeleton",
+          "locator": {
+            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
+            "pdf_page": 80
+          }
+        },
+        {
+          "coverage": "exact_ordered_skeleton",
+          "locator": {
+            "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
+            "pdf_page": 81
+          }
+        }
+      ],
+      "unsupported_claims": [
+        "best_plan",
+        "counterplay_value",
+        "general_prevention",
+        "generic_resource_exclusion",
+        "plan",
+        "preparation",
+        "sole_cause"
+      ],
+      "formal_test": {
+        "file": "chesstory-runtime/src/test/scala/lila/chessjudgment/model/judgment/CaptureExclusionMoveOrderTest.scala",
+        "symbol": "CaptureExclusionMoveOrderTest"
+      }
+    },
+    {
       "contract_kind": "VacatedGateEnablesUnrecapturableSliderCapture",
       "producer": {
         "file": "chesstory-runtime/src/main/scala/lila/chessjudgment/analysis/assembly/VacatedGateEnablesUnrecapturableSliderCaptureAssembler.scala",

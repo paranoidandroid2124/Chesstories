@@ -83,7 +83,8 @@ private[assembly] final case class RelationCausalProofDemand private (
     uniqueCheckReplyDefenderDisplacementBeforeCaptureSeed: Option[UniqueCheckReplyDefenderDisplacementBeforeCaptureChangedSeed],
     soleRecapturerRemovalBeforeTargetCaptureSeed: Option[SoleRecapturerRemovalBeforeTargetCaptureChangedSeed],
     vacatedGateEnablesUnrecapturableSliderCaptureSeeds: List[VacatedGateEnablesUnrecapturableSliderCaptureChangedSeed],
-    squareReleaseRouteSeeds: List[SquareReleaseRouteChangedSeed]
+    squareReleaseRouteSeeds: List[SquareReleaseRouteChangedSeed],
+    captureExclusionMoveOrderSeeds: List[CaptureExclusionMoveOrderChangedSeed]
 )
 
 private[assembly] object RelationCausalProofDemand:
@@ -248,12 +249,44 @@ private[assembly] object RelationCausalProofDemand:
       "one exact square-release route occurrence may be dispatched only once"
     )
 
+    val captureExclusionMoveOrderSeeds =
+      (for
+        referenceRootStep <- referenceSteps.headOption.toList
+        playedRootStep <- playedSteps.headOption.toList
+        playedReplyStep <- playedSteps.lift(1).toList
+        referenceRoot <- reference.legalMoveOccurrence(referenceRootStep).toList
+        playedRoot <- played.legalMoveOccurrence(playedRootStep).toList
+        playedReply <- played.legalMoveOccurrence(playedReplyStep).toList
+        replyCapture <- playedReply.movement.capture.toList
+        if replyCapture.capturedSquare == playedReply.movement.to
+        if referenceRoot.movement.witness.from == replyCapture.capturedSquare &&
+          referenceRoot.movement.witness.side == replyCapture.capturedSide &&
+          referenceRoot.movement.witness.beforeRole == replyCapture.capturedRole &&
+          referenceRoot.movement.witness.side == playedRoot.movement.witness.side &&
+          playedReply.movement.witness.side != playedRoot.movement.witness.side
+        deferredIndex <- referenceSteps.indices.drop(2).filter(_ % 2 == 0).toList
+        deferredStep <- referenceSteps.lift(deferredIndex).toList
+        referenceDeferred <- reference.legalMoveOccurrence(deferredStep).toList
+        if CaptureExclusionMoveOrderChangedSeed.sameMove(playedRoot, referenceDeferred)
+      yield CaptureExclusionMoveOrderChangedSeed(
+        referenceRoot,
+        playedRoot,
+        playedReply,
+        referenceDeferred,
+        deferredIndex
+      )).sortBy(_.stableKey)
+    require(
+      captureExclusionMoveOrderSeeds.map(_.stableKey).distinct.size == captureExclusionMoveOrderSeeds.size,
+      "one exact capture-exclusion move-order occurrence may be dispatched only once"
+    )
+
     RelationCausalProofDemand(
       input,
       forcedSeed,
       defenseSeed,
       directSeeds.sortBy(_.stableKey),
-      squareReleaseRouteSeeds
+      squareReleaseRouteSeeds,
+      captureExclusionMoveOrderSeeds
     )
 
   /** Follows the replay-owned same object until the first later leg that owns

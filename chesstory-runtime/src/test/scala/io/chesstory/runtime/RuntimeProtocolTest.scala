@@ -654,6 +654,78 @@ class RuntimeProtocolTest extends munit.FunSuite:
       "legal-capture:black:d5"
     )
 
+  test("v6 commentary serializes only the common capture-exclusion move-order proof"):
+    val rootFen =
+      "r2qrbk1/1bpn1p1p/p2p1np1/Pp2p3/3PP3/2P2NNP/1PB2PP1/R1BQR1K1 w - - 1 17"
+    val referenceMoves = List("d4d5", "c7c6", "d5c6", "b7c6", "b2b4")
+    val playedMoves = List("b2b4", "e5d4")
+    val packet = MoveReviewJudgmentOrchestrator
+      .execute(
+        RawMoveReviewInput(
+          fen = rootFen,
+          playedMoveUci = playedMoves.head,
+          variations = List(
+            EngineLine(referenceMoves, scoreCp = 600, depth = 24),
+            EngineLine(playedMoves, scoreCp = 0, depth = 24)
+          )
+        )
+      )
+      .getOrElse(fail("expected an evidence-backed capture-exclusion packet"))
+
+    val channel = (RuntimeProtocol.moveCommentaryJson(packet) \ "causal_explanations")
+      .as[List[JsObject]]
+      .filter(facet => (facet \ "kind").as[String] == "wrong_move_order")
+      .flatMap(facet => (facet \ "channels").as[List[JsObject]])
+      .filter(channel =>
+        (channel \ "capture_exclusion_move_order_proof").asOpt[JsObject].nonEmpty
+      ) match
+        case exact :: Nil => exact
+        case other        => fail(s"expected one public capture-exclusion channel, found ${other.size}")
+    assertEquals(channel.keys, Set("channel_id", "capture_exclusion_move_order_proof"))
+
+    val proof = (channel \ "capture_exclusion_move_order_proof").as[JsObject]
+    assertEquals(
+      proof.keys,
+      Set(
+        "source_evidence_id",
+        "semantic_id",
+        "occurrence_id",
+        "dependency_fingerprint",
+        "counterfactual_reference_branch",
+        "played_root_branch",
+        "proof_paths"
+      )
+    )
+    val path = (proof \ "proof_paths").as[List[JsObject]] match
+      case exact :: Nil => exact
+      case other =>
+        fail(s"expected one independent capture-exclusion path, found ${other.size}")
+    val premises = (path \ "premises").as[List[JsObject]]
+    val deferredMoves = premises.filter(premise =>
+      Set("played_deferred_move", "reference_deferred_move")((premise \ "role").as[String])
+    )
+    assertEquals(deferredMoves.map(move => (move \ "move_uci").as[String]), List.fill(2)("b2b4"))
+    assertEquals(
+      deferredMoves.map(move => (move \ "legal_move_semantic_id").as[String]).distinct.size,
+      1
+    )
+    assertEquals(
+      deferredMoves.map(move => (move \ "issuer_occurrence_id").as[String]).distinct.size,
+      2
+    )
+
+    val absences = (path \ "closed_absence_uses").as[List[JsObject]]
+    assertEquals(absences.map(use => (use \ "after_step_index").as[Int]), List(0, 4))
+    assertEquals(
+      absences.map(use => (use \ "query").as[String]).distinct,
+      List("legal-move-from-to:black:e5:d4")
+    )
+    val states = (path \ "closed_state_uses").as[List[JsObject]]
+    assertEquals(states.size, 14)
+    assertEquals(states.count(use => (use \ "role").as[String] == "reference_vacated_target"), 5)
+    assertEquals(states.count(use => (use \ "role").as[String] == "reference_reply_actor"), 5)
+    assertEquals(states.count(use => (use \ "role").as[String] == "reference_deferred_actor"), 4)
+
   test("v6 commentary keeps direct line-access proof in its exact typed channel"):
     val rootFen = "7k/q7/8/8/8/8/N7/R6K w - - 0 1"
     val referenceSourceMoves = List("a2b4", "h8g8", "a1a7")

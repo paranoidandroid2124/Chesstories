@@ -191,5 +191,12 @@ private[chessjudgment] object RelativeCauseSignalProfile:
               payload.consumesDependencies(reference, played) &&
               graph.proofEligible(record) =>
           record
+        case record @ EvidenceRecord(_, payload: CaptureExclusionMoveOrderEvidence, _)
+            if payload.occurrence.referenceLine == fact.referenceLine &&
+              payload.occurrence.playedLine == fact.candidateLine &&
+              payload.proofPaths.nonEmpty &&
+              payload.consumesDependencies(reference, played) &&
+              graph.proofEligible(record) =>
+          record
       }
     }

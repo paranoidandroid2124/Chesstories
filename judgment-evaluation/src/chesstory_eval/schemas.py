@@ -375,6 +375,13 @@ class SchemaRegistry:
                     f"{location}.square_release_route_proof",
                     errors,
                 )
+            capture_order = value.get("capture_exclusion_move_order_proof")
+            if isinstance(capture_order, Mapping):
+                self._validate_capture_exclusion_move_order_proof_identifiers(
+                    capture_order,
+                    f"{location}.capture_exclusion_move_order_proof",
+                    errors,
+                )
             for key, child in value.items():
                 self._validate_public_proof_transport(
                     child,
@@ -1631,6 +1638,193 @@ class SchemaRegistry:
                 errors.append(
                     f"{location}.proof_paths[{path_index}].closed_absence_uses[0].query: does not close the exploit destination"
                 )
+
+    def _validate_capture_exclusion_move_order_proof_identifiers(
+        self,
+        proof: Mapping[str, Any],
+        location: str,
+        errors: list[str],
+    ) -> None:
+        """Bind the capture-target vacancy claim to all retained occurrences."""
+        self._validate_two_branch_causal_proof_identifiers(proof, location, errors)
+        reference = proof.get("counterfactual_reference_branch")
+        played = proof.get("played_root_branch")
+        paths = proof.get("proof_paths")
+        if not (
+            isinstance(reference, Mapping)
+            and isinstance(played, Mapping)
+            and isinstance(reference.get("steps"), list)
+            and isinstance(played.get("steps"), list)
+            and isinstance(paths, list)
+        ):
+            return
+        reference_steps = reference.get("steps")
+        played_steps = played.get("steps")
+        if not (
+            len(reference_steps) >= 3
+            and len(reference_steps) % 2 == 1
+            and len(played_steps) == 2
+            and all(isinstance(step, Mapping) for step in reference_steps + played_steps)
+        ):
+            errors.append(f"{location}: branch bounds do not retain A...B and B-R")
+            return
+
+        reference_id = reference.get("branch_id")
+        played_id = played.get("branch_id")
+        for path_index, path in enumerate(paths):
+            if not isinstance(path, Mapping):
+                continue
+            path_location = f"{location}.proof_paths[{path_index}]"
+            premises = path.get("premises")
+            absences = path.get("closed_absence_uses")
+            states = path.get("closed_state_uses")
+            if not (
+                isinstance(premises, list)
+                and len(premises) == 4
+                and all(isinstance(premise, Mapping) for premise in premises)
+                and isinstance(absences, list)
+                and isinstance(states, list)
+            ):
+                continue
+            vacating, played_deferred, played_reply, reference_deferred = premises
+            deferred_index = reference_deferred.get("step_index")
+            expected_coordinates = (
+                ("reference_vacating_move", reference_id, reference.get("branch_role"), 0),
+                ("played_deferred_move", played_id, played.get("branch_role"), 0),
+                ("played_capture_reply", played_id, played.get("branch_role"), 1),
+                (
+                    "reference_deferred_move",
+                    reference_id,
+                    reference.get("branch_role"),
+                    deferred_index,
+                ),
+            )
+            if any(
+                premise.get("role") != expected[0]
+                or premise.get("branch_id") != expected[1]
+                or premise.get("branch_role") != expected[2]
+                or premise.get("step_index") != expected[3]
+                for premise, expected in zip(premises, expected_coordinates, strict=True)
+            ):
+                errors.append(f"{path_location}.premises: exact A/B/R/later-B coordinates were lost")
+                continue
+            if not (
+                isinstance(deferred_index, int)
+                and deferred_index >= 2
+                and deferred_index % 2 == 0
+                and deferred_index == len(reference_steps) - 1
+                and all(
+                    isinstance(premise.get("move_uci"), str)
+                    and _movement_matches_uci(premise.get("movement"), premise.get("move_uci"))
+                    for premise in premises
+                )
+                and vacating.get("move_uci") == reference_steps[0].get("move_uci")
+                and played_deferred.get("move_uci") == played_steps[0].get("move_uci")
+                and played_reply.get("move_uci") == played_steps[1].get("move_uci")
+                and reference_deferred.get("move_uci")
+                == reference_steps[deferred_index].get("move_uci")
+            ):
+                errors.append(f"{path_location}.premises: legal moves do not own their branch steps")
+                continue
+
+            vacating_move = vacating.get("movement")
+            deferred_move = played_deferred.get("movement")
+            reply_move = played_reply.get("movement")
+            reply_capture = played_reply.get("capture")
+            if not all(
+                isinstance(value, Mapping)
+                for value in (vacating_move, deferred_move, reply_move, reply_capture)
+            ):
+                continue
+            same_deferred = all(
+                played_deferred.get(field) == reference_deferred.get(field)
+                for field in (
+                    "move_uci",
+                    "movement",
+                    "movement_mode",
+                    "capture",
+                    "legal_move_semantic_id",
+                )
+            )
+            if not (
+                same_deferred
+                and reply_capture.get("square") == reply_move.get("to")
+                and vacating_move.get("from") == reply_capture.get("square")
+                and vacating_move.get("side") == reply_capture.get("side")
+                and vacating_move.get("piece_before") == reply_capture.get("piece")
+                and vacating_move.get("side") == deferred_move.get("side")
+                and reply_move.get("side") != deferred_move.get("side")
+            ):
+                errors.append(f"{path_location}.premises: ordinary captured-target vacancy identity diverged")
+                continue
+
+            reply_query = (
+                f"legal-move-from-to:{reply_move.get('side')}:{reply_move.get('from')}"
+                f":{reply_move.get('to')}"
+            )
+            expected_absence_indices = [0, deferred_index]
+            if len(absences) != len(expected_absence_indices) or any(
+                not isinstance(use, Mapping)
+                or use.get("role") != "reference_capture_reply_absent"
+                or use.get("branch_id") != reference_id
+                or use.get("branch_role") != reference.get("branch_role")
+                or use.get("after_step_index") != index
+                or use.get("query") != reply_query
+                for use, index in zip(absences, expected_absence_indices, strict=True)
+            ):
+                errors.append(
+                    f"{path_location}.closed_absence_uses: exact reply-absence endpoint pair was lost"
+                )
+
+            target_query = f"vacant:{reply_capture.get('square')}"
+            reply_actor = (
+                f"occupied-by:{reply_move.get('side')}:{reply_move.get('piece_before')}"
+                f"@{reply_move.get('from')}"
+            )
+            deferred_actor = (
+                f"occupied-by:{deferred_move.get('side')}:{deferred_move.get('piece_before')}"
+                f"@{deferred_move.get('from')}"
+            )
+            expected_states: list[tuple[str, Any, Any, int, str]] = []
+            for index in range(deferred_index + 1):
+                expected_states.extend(
+                    [
+                        (
+                            "reference_vacated_target",
+                            reference_id,
+                            reference.get("branch_role"),
+                            index,
+                            target_query,
+                        ),
+                        (
+                            "reference_reply_actor",
+                            reference_id,
+                            reference.get("branch_role"),
+                            index,
+                            reply_actor,
+                        ),
+                    ]
+                )
+                if index < deferred_index:
+                    expected_states.append(
+                        (
+                            "reference_deferred_actor",
+                            reference_id,
+                            reference.get("branch_role"),
+                            index,
+                            deferred_actor,
+                        )
+                    )
+            if len(states) != len(expected_states) or any(
+                not isinstance(state, Mapping)
+                or state.get("role") != expected[0]
+                or state.get("branch_id") != expected[1]
+                or state.get("branch_role") != expected[2]
+                or state.get("after_step_index") != expected[3]
+                or state.get("query") != expected[4]
+                for state, expected in zip(states, expected_states, strict=True)
+            ):
+                errors.append(f"{path_location}.closed_state_uses: exact actor/target interval was lost")
 
     def _validate_two_branch_causal_proof_identifiers(
         self,

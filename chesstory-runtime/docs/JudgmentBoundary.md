@@ -98,6 +98,7 @@ CI에서 전수 대조한다. 이 manifest는 레퍼런스 provenance 게이트�
 | --- | --- | --- | --- |
 | `UniqueCheckReplyDefenderDisplacementBeforeCapture` | **exact ordered skeleton** | Chess.com, [*Deflection*](https://www.chess.com/terms/deflection-chess): `Bxf7+`의 유일 합법 응수 `Kxf7` 뒤 queen 방어가 사라지는 예. `ref-bc7b3f1ff52f4c7a9940dad53cd6b975`, p.178의 `13.Qa4+! ... 14.Qxb4`는 forcing/zwischenzug **motif-only** 보조 anchor다. | 동일한 유일 응수자가 played sibling의 정확한 재포획자이고, reference 후속 포획에는 합법 재포획이 없을 때만 승인한다. |
 | `SoleRecapturerRemovalBeforeTargetCapture` | **exact ordered skeleton + 책의 motif-only breadth** | Chess.com, [*Removing the Defender*](https://www.chess.com/terms/removing-the-defender-chess)는 rook이 유일 수비자를 잡고 상대가 그 rook을 재포획한 뒤 원래 target의 보호가 사라져 실제로 material을 얻는 구조를 명시한다. `ref-4f1abd0745b24746b58928d162f837f6`, pp.154–156; `ref-7a451d5c87b9422a901f0486386aeb44`, pp.269–272; `ref-dc427a9593ab48248d19627b245fafaa`, p.131은 defender displacement/removal의 **motif-only** 전략적 폭이다. | 일반 과부하가 아니라, sibling의 유일 재포획자를 먼저 제거하고 상대 재포획 뒤 같은 exploit이 실제로 소비되며 대체 재포획자가 없을 때만 승인한다. |
+| `CaptureExclusionMoveOrder` | **exact ordered skeleton** | `ref-b6054fc614ae9d9c17933ce856013081`, pp.78–81, Game 12 E. L'Ami–E. Van den Doel의 reference `17.d5 c6 18.dxc6 Bxc6 19.b4`와 sibling `17.b4?! exd4 18.cxd4 c5`다. 책의 counterplay 평가는 motif를 설명하지만 runtime premise가 아니다. | played의 exact `B→R` 즉시 포획과 reference의 `A→…→B`를 동일한 `B`, `R` 포획 target, physical actor로 묶는다. `A` 뒤부터 later `B`까지 target vacancy와 두 actor를 연속 인증하고 `R` from/to의 endpoint 부재를 닫을 때만 승인한다. 일반 예방·준비·counterplay 가치·유일 원인은 승인하지 않는다. |
 | `VacatedGateEnablesUnrecapturableSliderCapture` | **motif-only; full contract exact example은 아직 없음** | `ref-4f1abd0745b24746b58928d162f837f6`, pp.145–147의 `47.Rxc5 bxc5 48.Qh4`와 pp.153–156의 열린 g-file/diagonal; `ref-7a451d5c87b9422a901f0486386aeb44`, pp.270–272의 e-file/e7 진입은 line opening/invasion 의미를 검증하지만 현재 계약 전체의 실행 예는 아니다. | 일반 파일 개방이나 계획이 아니라, 정확한 gate 이탈·같은 slider의 reach 유지·뒤의 실제 포획·played sibling의 닫힌 부재를 모두 증명하는 보수적 formal strengthening이다. 이를 책이 그대로 검증한 계약이라고 부르지 않는다. |
 | `SquareReleaseRoute` | **one-leg와 multi-leg terminal의 exact ordered skeleton** | `ref-dc427a9593ab48248d19627b245fafaa`, pp.130–131의 P.Prohaszka–K.Wang은 `30.Bg2! ... 31.Rc6!`와 `30.R1d2?` sibling을 함께 주는 one-leg exact 사례다. 같은 책 pp.124–125의 Goryachkina–Dubov는 `...Rc6`가 b6을 비운 뒤 동일 knight가 `d5-b6-c4-a3-b1`로 이동해 `Nxb1`을 실행하고 실제 `Rxb1`이 이어지는 capture-terminal exact 사례다. `ref-7a451d5c87b9422a901f0486386aeb44`, pp.57–58은 `b4`가 b3을 비운 뒤 동일 knight가 `a5-b3-c1-d3-f4`로 와 `Nf4+`를 실행하고 실제 `Kf7`이 이어지는 check-terminal exact 사례다. 이 체크에는 합법 응수가 다섯 개이므로 유일·강제라고 부르지 않는다. `ref-4f1abd0745b24746b58928d162f837f6`, pp.160–164, `ref-bc7b3f1ff52f4c7a9940dad53cd6b975`, pp.379–382, `ref-03c77bd9c6c6ae987e07067822fd63b`, pp.130–132는 route·timing의 **exact component/motif**만 제공한다. | release부터 첫 route leg까지의 vacancy, 같은 physical mover의 모든 route endpoint와 intervening `OccupiedBy`, exact terminal L1 capture/check, 필요한 실제 다음 응수, sibling의 blocker·route-origin 연속 점유와 첫 leg 부재가 모두 있어야 한다. retained interval 밖의 기물 identity, 최선성·유일 원인·준비·기동·outpost·계획은 승인하지 않는다. |
 | `PassedPawnProgressRealizedAfterOnlyLegalReply` | **exact route component; singleton reply closure는 runtime strengthening** | `ref-dc427a9593ab48248d19627b245fafaa`, pp.507–508의 `37.Nxa6 ... 39.a6 ... 41.a8=Q`는 실제 통과폰 진행·승격 occurrence를 검증한다. 책이 root의 합법 응수 인벤토리를 발급한 것은 아니다. | root의 합법 응수가 정확히 하나임을 canonical inventory가 인증하고, observed played root와 그 인증 분석 continuation에서 뒤의 통과폰 진행 결과 occurrence가 발급될 때만 승인한다. 승리·의도·장기 계획이나 다른 sibling 실패는 말하지 않는다. |
@@ -121,6 +122,14 @@ vacancy라는 단어만 나오는 예도 positive anchor로 승격하지 않는�
 pp.149–169와 `ref-7a451d5c87b9422a901f0486386aeb44` pp.257–269다.
 예방의 핵심 반례는 `ref-b7e552e8d8914cdc31ce1002fbb8252e` p.33의
 `10.a4` 뒤에도 남는 `...Nb6`이며, 구체적 활성 자원은 pp.37–38에 나온다.
+`ref-4f1abd0745b24746b58928d162f837f6`, p.253의 `20.Ng5`가
+`...f6`을 막는다는 해설과 `ref-03c77bd9c6c6ae987e07067822fd63b`,
+p.76의 `29...Qe2!`/`29...Qe8? 30.Nd6 Rh8 30...Qe2 31.Rc3`도
+수가 전술적으로 작동하지 않는다는 설명이지 합법 자원 부재
+인벤토리가 아니다. 또 `ref-b6054fc614ae9d9c17933ce856013081`,
+pp.98–105의 `Rg5 Qh3+` 대 `Rg3 f5 Rg5`는 `...f5`가 중간에
+새로 만든 조건이므로 `Rg3`만으로 이를 강제했다고 인과를
+바꾸지 않는다.
 반격의 기준은 `ref-dc427a9593ab48248d19627b245fafaa` p.507의
 `32...Rf4!`처럼 상대 계획과 별개의 자원 및 시간 순서를 함께 보이는
 경우다. 이 premise들이 닫히기 전에는 해당 L2 이름을 만들지 않는다.
@@ -176,7 +185,12 @@ occurrence를 가질 수 없는 reference suffix는 seed materialization 전에
 route의 공석 closure는 reference occurrence를
 한 번만 전진하며 최초 non-vacant state에서 닫히고, 각 position inventory의
 완전한 `Vacant(square)` query cache를 재사용한다. occupation seed마다 앞 수순을
-다시 전수 검사하지 않는다. 통과폰 증명군은
+다시 전수 검사하지 않는다. 다섯 번째 compared-line 증명군인
+capture-exclusion move order는 demand된 두 canonical replay를 한 번 순회해
+played의 exact root/reply와 같은 later reference root occurrence를 모두
+seed로 보존한다. 점수·top-N·horizon으로 suffix를 잘라내지 않고,
+부재와 actor/target state는 기존 폐쇄 inventory에서만 재인증한다.
+통과폰 증명군은
 root `StructuralDelta`의 canonical 응수 인벤토리가 singleton이고 그 수가
 main replay의 첫 응수와 같은지를 먼저 검사한다. 이 cheap gate를 통과한
 경우에만 main replay의 `PassedPawnProgress` changed occurrence와 causal
@@ -188,7 +202,7 @@ episode를 materialize한다. 구조 결과가 없는 합법 전이도 동일한
 
 - **P0는 발견되지 않았다.** L0~L1을 다시 열어야 할 보드 사실 오류도
   발견되지 않았다.
-- **P1 평가 오염은 제거했다.** 다섯 typed L2의 proposition, premise,
+- **P1 평가 오염은 제거했다.** 여섯 typed L2의 proposition, premise,
   parent, dependency/cache와 proof ID에서 `PlayedVsBest` record 및
   score/verdict/confidence를 제거했다. 비교는 dispatch와 상위 Cause
   결속에만 남는다.
@@ -200,6 +214,14 @@ episode를 materialize한다. 구조 결과가 없는 합법 전이도 동일한
   line 기준 조회에서는 해당 증명이 사라질 수 있었다. 다른 compared-line
   L2와 동일하게 reference와 played line을 모두 등록하고 양쪽 조회를
   회귀 테스트로 봉인했다.
+- **P1 Cause 운송 누락은 제거했다.** capture-exclusion typed
+  record가 graph에서 생산되어도 Cause의 line proof 집합에 포함되지
+  않던 경로를 닫았다. exact record 하나가 `WrongMoveOrder`/reference
+  Cause 하나와 Runtime channel까지 연결되는 회귀 테스트를 둔다.
+- **P1 사용자 없는 relation scaffold는 삭제했다.**
+  `ReplayRelationChangeWitness`는 정의와 self-construction 외에 producer·graph
+  owner·Cause/UI 소비자가 없었다. alias·adapter를 남기지 않고
+  정규 relation-delta inventory만 보존했다.
 - **P1 provenance 과장은 제거했다.** played root만 관측 수이고 모든 PV
   suffix는 `certified_analysis_move`다. 공개 이름도
   `played_root_analysis_continuation`으로 통일하여 전체 suffix를 실제
@@ -249,7 +271,8 @@ episode를 materialize한다. 구조 결과가 없는 합법 전이도 동일한
   검증 경계를 뜻하는 `BoundedCausal` claim family 하나로 묶었다.
 - **P1 가족별 공통 계약 재구현을 줄였다.** compared-line branch role,
   public premise/path/closure projection과 vacancy sibling 하한은 공통 owner가
-  맡는다. 네 assembler가 반복하던 cache-owner 조회, semantic/occurrence 충돌
+  맡는다. 다섯 compared-line assembler가 공유하는 cache-owner 조회,
+  semantic/occurrence 충돌
   거부, canonical parent/path와 `EvidenceRecord` 발급도
   `ExactCausalProofOwnerReuse.comparedLineRecords` 한 경계로 모았다. 가족별
   object는 서로 다른 체스 명제의 exact derivation과 typed payload만 보유한다.
@@ -264,7 +287,7 @@ episode를 materialize한다. 구조 결과가 없는 합법 전이도 동일한
   sibling이 필요한 pre-use occurrence를 보유한 reference index까지만 exact
   legal-move seed를 materialize한다. 이는 top-N이나 horizon이 아니라 typed
   proof의 필수 branch cardinality로 닫힌 demand 범위다.
-- **P2 identity recipe 중복은 제거했다.** 네 compared-line family가 각각
+- **P2 identity recipe 중복은 제거했다.** 다섯 compared-line family가 각각
   만들던 `side+role@square` 기물 키를 공통 `BoundedCausalIdentity` 한 곳으로
   옮겨 semantic/dependency ID의 다중 권위를 없앴다.
 - **P2 표현 커버리지는 보강했다.** 실제 projector가 있던 VacatedGate를
@@ -286,7 +309,7 @@ P0/P1 중복은 발견되지 않았다.
 
 ## 5. 현재 봉인된 L2 증명군
 
-현재 공통 뼈대를 끝까지 사용하는 증명군은 다섯 개다.
+현재 공통 뼈대를 끝까지 사용하는 증명군은 여섯 개다.
 
 ### `UniqueCheckReplyDefenderDisplacementBeforeCapture`: 후속 포획 전에 강제된 수비자 이동
 
@@ -334,6 +357,46 @@ P0/P1 중복은 발견되지 않았다.
 “기준 순서가 실전의 유일 재포획자를 먼저 제거했기 때문에 뒤의 동일
 exploit에는 대체 재포획이 없지만, 실전 즉시 exploit에는 그 수비자가
 남아 있다”는 명제만 승인한다.
+
+### `CaptureExclusionMoveOrder`: target-vacation으로 닫힌 exact capture 순서
+
+- 유일 생산자는 `CaptureExclusionMoveOrderAssembler`다. actionable
+  `PlayedVsBest` demand가 선택한 reference/played LegalLine pair에서만
+  실행하며 demand·score·verdict는 premise나 identity가 아니다.
+- played branch는 exact root `B`와 상대의 즉시 ordinary capture `R`을
+  보존한다. reference branch는 root `A`가 `R`의 exact captured target을
+  떠나고, 같은 side/from/to/role/mode/capture/semantic의 `B`가 뒤의
+  같은-편 occurrence에서 실제로 나오는 최소 3-ply `A→…→B`를
+  모두 허용한다. en-passant와 non-capture reply는 제외한다.
+- 네 `legal_move` premise use는 `A`, played `B`, played `R`, reference
+  later `B`의 semantic ID, LegalLine issuer evidence, replay occurrence ID,
+  source premise ID, branch/step을 보존한다. 두 `B`는 같은 하위
+  semantic을 공유하지만 서로 다른 branch occurrence로 남는다.
+- reference의 `A` 직후와 later `B` 직후에 exact
+  `LegalMoveFromTo(R.side,R.from,R.to)` 부재를 폐쇄 relation inventory가
+  발급한다. 두 endpoint 사이의 모든 after-step에서 target
+  `Vacant`, `R` actor `OccupiedBy`, later `B` 직전까지 `B` actor
+  `OccupiedBy`를 폐쇄 state inventory가 발급해 target 복귀와 actor
+  교체를 거부한다.
+- reference는 later `B`까지, played는 `B→R`까지의 exact ordered
+  occurrence다. 각 later `B` occurrence는 별도 proof record로 남아
+  transposition/history를 합치지 않는다. 현재 lower authority가 발급하는
+  정규 경로는 하나이므로 공개 path cardinality도 정확히 하나다.
+- dependency fingerprint는 두 line record, semantic proposition, 두 branch
+  occurrence와 exact path/use ID 전체를 포함한다. immutable snapshot의 같은
+  dependency에 단일 graph owner가 있을 때만 재사용하며, 불완전한
+  position key나 별도 L2 board cache를 두지 않는다.
+- 결과는 `WrongMoveOrder`/reference Cause의 direct proof가 되고 Runtime의
+  common seven-field wire, public-v6 binder, `projectCaptureExclusionMoveOrder`에서
+  실제 소비된다. Runtime·Python·UI는 actor와 target을 premise에서
+  파생할 뿐 별도 보드 계산을 하지 않는다.
+
+따라서 이 계약은 “`A`가 played의 exact ordinary capture target을
+비운 순서에서는 같은 `B`가 뒤에 실현되고, played에서는
+`B`에 즉시 `R`이 따랐지만 reference의 두 causal endpoint에서는
+그 from/to 자원이 닫혔다”까지만 승인한다. `A`가 부재의 유일
+원인이라는 것, `B`를 준비했다는 것, 상대의 counterplay를
+예방했다는 평가, 최선수·계획·장기 가치는 승인하지 않는다.
 
 ### `VacatedGateEnablesUnrecapturableSliderCapture`: 비워진 gate와 같은 slider의 후속 포획
 
@@ -440,7 +503,7 @@ proof는 played root 뒤 분석 continuation의 결과만 인증하며 sibling�
 
 ### 공개 계약 전수 인벤토리
 
-아래 표는 공개 다섯 계약에 대해 생산자, 정확한 premise ID, 폐쇄 부재,
+아래 표는 공개 여섯 계약에 대해 생산자, 정확한 premise ID, 폐쇄 부재,
 branch와 실제 소비를 한곳에 고정한다. premise ID는 평가 비교 ID가 아니라
 각 proof path가 보존하는 하위 occurrence/result ID다.
 
@@ -448,11 +511,12 @@ branch와 실제 소비를 한곳에 고정한다. premise ID는 평가 비교 I
 | --- | --- | --- | --- | --- |
 | `UniqueCheckReplyDefenderDisplacementBeforeCapture` | exact trigger/forced-reply/realizer/captured-target/disabled-defender와 `created-check-response`, `reference-capture-recapture`, `played-capture-recapture` result ID | reference exploit 뒤 `LegalCaptureOf` 부재 | `counterfactual_reference`와 `played_root_analysis_continuation`; line owner·세 premise·absence·모든 path/occurrence가 fingerprint를 구성하며 평가 demand는 제외 | 전용 assembler → `WrongMoveOrder` Cause → Runtime/public-v6 → `projectUniqueCheckReplyDefenderDisplacementBeforeCapture` |
 | `SoleRecapturerRemovalBeforeTargetCapture` | exact remover/removed-defender/removal-recapture/exploit/target/played-recapture와 `reference-defender-removal`, `reference-later-exploit-inventory`, `played-immediate-exploit-inventory` result ID | reference later exploit 뒤 replacement `LegalCaptureOf` 부재 | 같은 두 branch; line owner·세 premise·absence·모든 path/occurrence만 fingerprint에 포함 | 전용 assembler → `WrongMoveOrder` Cause → Runtime/public-v6 → `projectSoleRecapturerRemovalBeforeTargetCapture` |
+| `CaptureExclusionMoveOrder` | exact vacating `A`, played deferred `B`, immediate ordinary capture `R`, reference later `B`의 legal-move semantic/issuer/occurrence/source premise ID; exact captured target; interval의 target·reply actor·deferred actor state ID | reference `A` 직후와 later `B` 직후의 exact `LegalMoveFromTo(R)` 부재 | reference `A→…→B`, played `B→R`; 두 line owner·semantic·occurrence·정확히 하나인 정규 path의 모든 premise/closure ID가 fingerprint를 구성 | `CaptureExclusionMoveOrderAssembler` → `WrongMoveOrder`/reference Cause → Runtime/public-v6 common wire → `projectCaptureExclusionMoveOrder` |
 | `VacatedGateEnablesUnrecapturableSliderCapture` | exact gate mover/slider/target/later capture와 `reference-root-slider-reach`, `reference-exploit-capture` result ID; reference target 및 played slider/target/gate의 모든 pre-exploit `OccupiedBy` | reference immediate recapture, played exact exploit move, played replacement capture의 세 폐쇄 부재 | 같은 두 branch; 두 premise·모든 연속 positive state·세 absence·모든 path/occurrence와 line owner가 fingerprint를 구성 | `VacatedGateEnablesUnrecapturableSliderCaptureAssembler` → `MissedTacticalResource` Cause → Runtime/public-v6 → `projectVacatedGateEnablesUnrecapturableSliderCapture` |
 | `SquareReleaseRoute` | exact release·ordered route legal-move semantic/issuer/source premise ID; optional terminal capture/check result ID; 모든 pre-first-leg `Vacant(S)`, route endpoint·gap persistence와 played blocker/route-origin `OccupiedBy` ID | played first-leg 직전 exact `LegalMoveFromTo(F,S)` 부재 | reference는 terminal/reply까지, played는 first leg 직전까지; 모든 path와 complete trajectory key, occurrence 및 두 line owner가 fingerprint를 구성 | `SquareReleaseRouteAssembler` → `MissedSquareRelease` Cause → Runtime/public-v6 typed route/terminal/reply → `projectSquareReleaseRoute` |
 | `PassedPawnProgressRealizedAfterOnlyLegalReply` | exact root actor/result actor/target subjects와 event result ID, ordered `dependency:*` 및 `result` route ID | structural-delta의 singleton legal-reply inventory와 각 dependency state certificate | observed root + certified suffix인 단일 `played_root_analysis_continuation`; event/inventory owner·모든 route/path/occurrence가 fingerprint를 구성 | 전용 proof assembler → `PassedPawnProgress` complementary Cause → Runtime/public-v6 → `projectPassedPawnProgressRealizedAfterOnlyLegalReply` |
 
-다섯 생산자는 changed lower dependency와 상위 `PlayedVsBest` dispatch가
+여섯 생산자는 changed lower dependency와 상위 `PlayedVsBest` dispatch가
 함께 있을 때만 실행한다. semantic proposition은 같아도 occurrence와
 transposition history는 합치지 않으며, 한 occurrence의 독립 path만 한
 proof set에 모두 보존한다. Cause draft도 exact proof record마다 하나씩
@@ -466,6 +530,7 @@ proof set에 모두 보존한다. Cause draft도 exact proof record마다 하나
 | --- | --- | --- | --- |
 | unique-check displacement | 정확히 같은 수비자가 유일 체크 응수로 이동한 뒤 동일 target 포획의 재포획 자원이 사라짐 | 체크라는 이유만으로 다른 수비자 이동, 복수 응수, 대체 재포획을 무시함 | non-check deflection, 복수 합법 응수 중 전략적으로 강제된 응수, 일반 tempo/deflection |
 | sole-recapturer removal | 실전의 유일 재포획자를 먼저 잡고 그 제거자가 되잡힌 뒤 동일 exploit을 실제 소비함 | 제거된 말과 실전 재포획자의 identity가 다르거나 다른 합법 재포획자가 있는데도 ‘수비자 제거’로 부름 | 재포획 없는 제거, 일반 과부하·간섭·수비 붕괴 |
+| capture-exclusion move order | Doknjas Ruy의 `17.d5 c6 18.dxc6 Bxc6 19.b4` 대 `17.b4?! exd4`: `d4` target, `e5` capturer, `b2` deferred pawn을 occurrence별로 보존 | `...exd4`가 아직 합법이거나 target/actor가 중간에 교체되었는데 ‘예방’으로 부름; `20.Ng5`가 `...f6`을 나쁘게 만들었다는 평가만으로 합법 부재를 조작 | non-capture resource, en-passant, 타출은 합법이지만 전술적으로 나쁜 경우, counterplay 가치·준비·예방·유일 원인 |
 | vacated-gate slider capture | exact blocker 이탈 뒤 같은 slider가 reach를 유지하여 exact target을 잡고 sibling에는 같은 자원이 없음 | 다른 slider/target을 대입하거나 단순 열린 선, target 이동, 대체 capture를 무시함 | non-capture 침투, rook lift, 장기 파일 장악, 일반 준비·기동 |
 | square-release route | one-leg `30.Bg2! ... Rc6!`; Doknjas의 `...Rc6` 뒤 동일 knight `d5-b6-c4-a3-b1`과 `Nxb1 Rxb1`; Sadler의 `b4` 뒤 동일 knight `a5-b3-c1-d3-f4+ Kf7`처럼 release·route·terminal·sibling을 정확히 닫음 | 중간 재점유·same-role 이탈/복귀, route leg 생략, 다른 기물의 terminal, terminal L1·actual reply 누락, 다섯 check reply를 ‘강제’로 승격, 책 평가만으로 승인 | retained interval 밖의 token, terminal 뒤 장기 가치, 일반 준비·기동·outpost·예방 |
 | passed-pawn after only reply | observed root 뒤 singleton 합법 응수와 인증 분석 continuation의 terminal passed-pawn result | PV suffix 전체를 실제 게임으로 부르거나 평가 손실·승리·불가피한 승격을 역추론함 | 복수 합법 응수가 모두 같은 결과에 이르는 경우, demand되지 않은 endpoint, 장기 계획·의도 |
@@ -485,13 +550,13 @@ dependency와 실제 후속 소비가 닫히기 전에는 이 이름들을 만�
 
 | 분류 | 의미군 | 레퍼런스가 요구하는 연결과 현재 판정 |
 | --- | --- | --- |
-| **현재 정확히 증명 가능** | 위 다섯 봉인 계약, 그중 one/multi-leg `SquareReleaseRoute` | 표에 적은 exact side/role/square·movement occurrence/target, ordered occurrence, actual reply, branch, premise와 closure까지만 가능하다. route는 retained interval의 동일 physical mover를 증명하지만 전역 token이나 넓은 체스 이름은 승인하지 않는다. |
+| **현재 정확히 증명 가능** | 위 여섯 봉인 계약, 그중 one/multi-leg `SquareReleaseRoute`와 ordinary-capture `CaptureExclusionMoveOrder` | 표에 적은 exact side/role/square·movement occurrence/target, ordered occurrence, actual reply, branch, premise와 closure까지만 가능하다. route는 retained interval의 동일 physical mover를 증명하지만 전역 token을 말하지 않는다. capture-exclusion은 Doknjas Ruy pp.78–81의 `17.d5 … 19.b4` 대 `17.b4?! exd4`를 exact actor/target·두 endpoint 부재로 닫지만 일반 예방·counterplay 가치를 승인하지 않는다. |
 | **필요한 L0/L0.5/L1 사실이 부족함** | 일반 수비 의무 변화 | 제거·교환·간섭 뒤 모든 합법 repair/대체 수비와 두 의무의 동시 수행 불가능성을 닫는 인벤토리가 없다. |
-| **필요한 L0/L0.5/L1 사실이 부족함** | 예방 | 수가 없을 때의 exact 상대 resource route와 수 뒤 동일 resource의 소멸을 같은 occurrence 좌표로 닫는 branch inventory가 일반형으로 없다. Doknjas `ref-b6054fc614ae9d9c17933ce856013081`, pp.74–81의 `b4/...b4/...Nc5`와 `d5/...exd4/...c5`는 정확한 대안 수순을 주지만 ‘좋은 counterplay의 방지’라는 평가는 premise가 될 수 없다. |
+| **필요한 L0/L0.5/L1 사실이 부족함** | 일반 예방·임의 상대 자원 소멸 | 실행되지 않은 임의 합법 자원의 record-bound positive occurrence, actor 이동·교체까지 포괄하는 exact-resource absence, 뒤 수가 그 부재를 실제 premise로 소비했다는 하부 계약이 없다. Doknjas `ref-b6054fc614ae9d9c17933ce856013081`, pp.78–81의 `d5/...exd4/...c5`는 봉인된 ordinary-capture 하위형은 정확히 지지하지만 ‘좋은 counterplay의 방지’라는 평가나 일반 예방은 premise가 아니다. |
 | **필요한 L0/L0.5/L1 사실이 부족함** | 반격 | 상대 위협의 exact realization과 별개의 forcing resource, 양측의 reply closure 및 선후 경주를 함께 발급하는 하위 계약이 없다. `ref-dc427a9593ab48248d19627b245fafaa`, p.507의 `32...Rf4!`는 motif와 수순 anchor이지 폐쇄 인벤토리가 아니다. |
 | **필요한 L0/L0.5/L1 사실이 부족함** | 안정된 outpost·일반 수비 기동 | 상대 pawn challenge, 합법 교환·추방, 대체 경로 전체의 부재와 도착 뒤 역할 소비가 닫히지 않았다. |
-| **하부 사실은 충분하지만 L2 결합 계약이 없음** | exact same-resource presence→absence timing | positive legal-move occurrence와 exact `LegalMoveFromTo`/`LegalCaptureOf` 부재는 발급할 수 있지만, 동일 상대 자원의 branch 간 identity, 현재 수가 바꾼 premise, 뒤의 actual consumer를 한 계약으로 아직 결속하지 않는다. Najdorf의 이른/늦은 `Nc6`와 `...Nb4` 사례는 이 경계를 감사하는 anchor이지 아직 ‘예방’ 증명이 아니다. |
-| **하부 사실은 충분하지만 L2 결합 계약이 없음** | released access를 다른 기물이 소비하는 cross-piece route | ordered legal moves와 terminal L1은 있으나 현재 route 계약은 first occupant와 terminal mover가 같은 physical piece일 때만 닫힌다. `ref-03c77bd9c6c6ae987e07067822fd63b`, pp.130–132처럼 다른 기물이 최종 자원을 소비하는 사례는 별도 causal join이 필요하다. |
+| **필요한 L0/L0.5/L1 사실이 부족함** | generic same-resource presence→absence와 later consumption | 임의 legal resource는 PV에 실행되지 않으면 record-bound positive occurrence가 없고, actor 제거·대체와 target 소멸 전체를 포괄하는 exact absence 및 later-consumption 계약도 없다. Najdorf의 `...Bc4` 뒤 `Nb4–d5`, `...Nb4 no longer possible`, 이른/늦은 `Nc6`는 합법성이 남거나 다른 knight로 재등장하므로 이 결손을 드러내는 적대 anchor다. |
+| **하부 사실은 충분하지만 L2 결합 계약이 없음** | released access를 다른 기물이 소비하는 actor-handoff route | ordered legal moves, retained square/actor state와 terminal L1은 있으나 현재 `SquareReleaseRoute`는 first occupant와 terminal mover가 같은 physical piece일 때만 닫힌다. `ref-03c77bd9c6c6ae987e07067822fd63b`, pp.130–132의 exact component를 다른 Doknjas·Sadler·Van Delft sibling으로 보강해 직접 join을 검증해야 한다. |
 | **설명 선택·평가·장기 계획처럼 L2보다 높은 층의 책임임** | 준비, 예방, 반격, 기동, 공간, 약점이라는 일반 라벨과 최선성·의도·장기 가치 | 하위 exact proof가 생겨도 어느 인간 용어로 묶어 보여 줄지와 그 가치 평가는 exposure/설명 계층의 책임이다. 평가치나 책의 서술로 L2 명제를 역생성하지 않는다. |
 
 특히 outpost는 L0의 정적 `outpost=true`가 아니다. 같은 기물이 실제로
@@ -501,24 +566,29 @@ L2가 말할 수 있다.
 
 ### 새 활성 목표와 후보 경계
 
-old vacancy working name과 개념별 청사진은 one/multi-leg
-`SquareReleaseRoute` 정규 계약·전수 인벤토리로 흡수했다. 별도 alias,
-호환 wrapper나 같은 의미의 두 번째 문서를 보존하지 않는다. 이 단계에서
-현재 lower authority로 닫히면서 미구현이던 same-piece release route는 없다.
+ordinary-capture target-vacation 후보는 새 `CaptureExclusionMoveOrder`
+계약으로 닫았다. 이름은 예방·준비·counterplay를 암시하지
+않고 exact capture 배제와 순서만 표현한다. alias·wrapper·이전
+working name·개념별 문서를 남기지 않았다.
 
-다음 공통 후보는 ‘수비 의무 변화’라는 이름이 아니라 **동일 상대 자원의
-presence→absence와 뒤의 actual consumer**라는 구조다. 이는 예방, 수비 의무,
-counterplay timing이 공유할 수 있지만 세 인간 라벨 중 어느 것도 미리
-승인하지 않는다. 다음 조사에서는 Doknjas Najdorf의 `18...Bc4` 뒤에도
-`19.Nb4`가 남는 적대 반례, 이른 `22.Nc6?`와 실제 `32.Nc6`의 timing,
-Sadler·Van Delft의 구체적 대안 가지를 함께 대조한다.
+다음 활성 목표는 새 인간 라벨이나 새 enum을 먼저 만드는
+것이 아니라, **기존 `SquareReleaseRoute`의 exact actor-handoff
+consumption을 현 하부 권한으로 닫을 수 있는지 검증하는 것**이다.
+이 구조는 사각 해제, clearance, 기동, 준비 사례가 공유하지만
+그 이름을 L2 명제로 승인하지 않는다. 새 생산자를 두기 전에
+정규 route family의 typed terminal/path로 흡수할 수 있는지를 먼저 판정한다.
 
-활성 완료 조건은 (1) 같은 side/from/to/capture/target 자원의 positive
-occurrence와 sibling closed absence, (2) 현재 수가 바꾼 exact lower premise,
-(3) 그 부재를 실제 premise로 소비하는 뒤 occurrence, (4) actual과 exact
-counterfactual branch, 모든 독립 path·transposition·완전한 dependency를
-현 인벤토리만으로 닫는 완결 사례군을 찾는 것이다. 하나라도 없으면 새
-enum을 만들지 않고 P2 lower-premise 결손 또는 상위 설명 책임으로 기록한다.
+활성 완료 조건은 (1) Doknjas·Sadler·Van Delft에서 release,
+첫 consumer, 다른 exact terminal actor, actual reply와 sibling failure가 모두
+있는 완결 사례를 확보하고, (2) 각 legal move와 terminal L1,
+release square/actor의 연속 `Vacant`/`OccupiedBy`, sibling의 exact
+`LegalMoveFromTo` 부재를 현 inventory로만 발급하며, (3) actor handoff를
+별도 ray·attack·legal 재계산 없이 typed path로 결속하고, (4) 복수
+actor/path/transposition과 전체 dependency/cache, `Cause→Runtime/schema→UI`를
+손실 없이 보존하는 것이다. 완결 sibling이나 하부 join 하나라도
+없으면 기존 family를 넓히지 않고 정확한 P2 reference/L2-join
+결손으로 남긴다. 일반 presence→absence, 수비 의무 변화, 예방,
+반격은 하부 premise가 부족하므로 이 후보보다 뒤다.
 
 ## 6. 공개와 평가의 분리
 
@@ -536,7 +606,7 @@ closed absence, 관련 기물과 realizing/defense move를 보존한다. 공개
 - `exposure`는 R이 인증한 `primary | complementary`를 그대로 운반한다.
   브라우저는 proof path 또는 branch occurrence 수로 이 등급을 다시 정하지 않는다.
 - candidate/reference source와 comparison kind가 지시하는 실제 primary
-  root가 event/actor/proof occurrence를 소유한다. 현재 다섯 typed L2
+  root가 event/actor/proof occurrence를 소유한다. 현재 여섯 typed L2
   증명군은 actionable `PlayedVsBest` 수요에서만 공개된다.
 - Runtime·Python·브라우저는 공격맵이나 합법 자원을 다시 계산하거나
   typed proof의 체스 의미를 재승인하지 않는다. 서버가 낸 wire vocabulary,

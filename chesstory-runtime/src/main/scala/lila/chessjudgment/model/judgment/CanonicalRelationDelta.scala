@@ -19,47 +19,6 @@ private[chessjudgment] final case class RelationChangeKey(
   def stableKey: String =
     s"${direction.toString.toLowerCase}:${RelationFactKind.id(kind)}:$semanticId"
 
-/** Exact occurrence of one canonical relation change in an admitted line.
-  *
-  * The semantic relation id alone is position-agnostic. Keeping the replay
-  * step prevents a later proof from silently treating the same-shaped edge in
-  * another position as the occurrence that established or removed it.
-  */
-private[chessjudgment] final case class ReplayRelationChangeWitness private (
-    step: LineReplayStep,
-    changeKey: RelationChangeKey
-):
-  def stableKey: String =
-    ReplayRelationChangeWitness.product(
-      "replay-relation-change",
-      List(
-        step.ply.toString,
-        PrincipalVariationEvidence.normalizeUci(step.moveUci),
-        Option(step.fenBefore).getOrElse("").trim,
-        Option(step.fenAfter).getOrElse("").trim,
-        changeKey.stableKey
-      )
-    )
-
-  def resolve(replay: CanonicalLineReplay): Option[RelationSemanticChange] =
-    replay.transition(step).flatMap { transition =>
-      transition.relationDelta.changes.filter(_.key == changeKey) match
-        case change :: Nil => Some(change)
-        case _             => None
-    }
-
-private[chessjudgment] object ReplayRelationChangeWitness:
-  def certify(
-      replay: CanonicalLineReplay,
-      step: LineReplayStep,
-      change: RelationSemanticChange
-  ): Option[ReplayRelationChangeWitness] =
-    val witness = ReplayRelationChangeWitness(step, change.key)
-    Option.when(witness.resolve(replay).contains(change))(witness)
-
-  private def product(label: String, values: List[String]): String =
-    (label :: values).map(value => s"${value.length}:$value").mkString
-
 private[chessjudgment] enum RelationProofKey:
   case ChangedSquare(square: EvidenceSquare)
   case MovedPiece(

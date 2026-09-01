@@ -11,6 +11,7 @@ private[chessjudgment] enum BoundedCausalContractKind:
   case SoleRecapturerRemovalBeforeTargetCapture
   case VacatedGateEnablesUnrecapturableSliderCapture
   case SquareReleaseRoute
+  case CaptureExclusionMoveOrder
   case PassedPawnProgressRealizedAfterOnlyLegalReply
 
   def semanticNamespace: String =
@@ -23,6 +24,8 @@ private[chessjudgment] enum BoundedCausalContractKind:
         "causal-proposition:vacated-gate-enables-unrecapturable-slider-capture:v1"
       case SquareReleaseRoute =>
         "causal-proposition:square-release-route:v1"
+      case CaptureExclusionMoveOrder =>
+        "causal-proposition:capture-exclusion-move-order:v1"
       case PassedPawnProgressRealizedAfterOnlyLegalReply =>
         "causal-proposition:passed-pawn-progress-realized-after-only-legal-reply:v1"
 
