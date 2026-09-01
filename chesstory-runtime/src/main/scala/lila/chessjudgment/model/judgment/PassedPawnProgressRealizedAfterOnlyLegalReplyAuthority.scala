@@ -3,7 +3,7 @@ package lila.chessjudgment.model.judgment
 import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 /** Sole construction authority for the passed-pawn-progress-realized-after-only-legal-reply
-  * bounded causal core. It consumes only the graph-owned actual result routes and the
+  * bounded causal core. It consumes only graph-owned certified analysis continuations and the
   * StructuralDelta root-response closure; it performs no board analysis.
   */
 private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyAuthority:
@@ -22,21 +22,21 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyAutho
   ): CausalPropositionIdentity =
     CausalPropositionIdentity.from(PropositionDescriptor(event, routes))
 
-  def actualRoute(
+  def analysisContinuationRoute(
       event: PassedPawnResultEventEvidence,
       routes: List[PassedPawnResultRoute]
   ): CausalBranchOccurrence =
-    val steps = exactActualRouteSteps(event, routes)
+    val steps = exactAnalysisContinuationSteps(event, routes)
     val replyMove = steps.lift(1).map(_.moveUci).getOrElse(
-      throw IllegalArgumentException("an actual passed-pawn route needs the certified root reply")
+      throw IllegalArgumentException("a passed-pawn analysis continuation needs the certified root reply")
     )
     require(
       event.onlyLegalReplyMove.exists(EvidenceRef.sameMove(_, replyMove)),
-      "an actual passed-pawn route must begin with the StructuralDelta-certified only reply"
+      "a passed-pawn analysis continuation must begin with the StructuralDelta-certified only reply"
     )
     val rootProvenance = CausalBranchOccurrence.rootProvenanceFor(event.rootLine)
     CausalBranchOccurrence.fromCertifiedOccurrences(
-      PassedPawnProgressBranchRole.ActualResultRoute(
+      PassedPawnProgressBranchRole.PlayedRootAnalysisContinuation(
         EvidenceRef.normalizeMove(replyMove),
         event.causalEpisode.root.structuralOccurrence.occurrenceId
       ),
@@ -54,16 +54,16 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyAutho
       }
     )
 
-  private[judgment] def ownsActualRoute(
+  private[judgment] def ownsAnalysisContinuationRoute(
       event: PassedPawnResultEventEvidence,
       routes: List[PassedPawnResultRoute],
       branch: CausalBranchOccurrence
   ): Boolean =
     scala.util.Try {
-      val steps = exactActualRouteSteps(event, routes)
+      val steps = exactAnalysisContinuationSteps(event, routes)
       val replyMove = steps(1).moveUci
       val rootProvenance = CausalBranchOccurrence.rootProvenanceFor(event.rootLine)
-      branch.role == PassedPawnProgressBranchRole.ActualResultRoute(
+      branch.role == PassedPawnProgressBranchRole.PlayedRootAnalysisContinuation(
         EvidenceRef.normalizeMove(replyMove),
         event.causalEpisode.root.structuralOccurrence.occurrenceId
       ) && branch.rootProvenance == rootProvenance && branch.line == event.rootLine &&
@@ -86,7 +86,7 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyAutho
     require(
       routes.nonEmpty && routes == routes.sortBy(_.stableKey) && routes.distinct.size == routes.size &&
         routes.forall(event.exactOnlyReplyResultRoutes.contains),
-      "a passed-pawn proof needs canonical graph-owned actual result routes"
+      "a passed-pawn proof needs canonical graph-owned analysis result routes"
     )
     routes.map(PassedPawnProgressSemanticIdentity.from(event, _)).distinct match
       case exact :: Nil => exact
@@ -95,7 +95,7 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyAutho
           "independent passed-pawn proof paths must share one exact result proposition"
         )
 
-  private def exactActualRouteSteps(
+  private def exactAnalysisContinuationSteps(
       event: PassedPawnResultEventEvidence,
       routes: List[PassedPawnResultRoute]
   ): List[LineReplayStep] =
@@ -107,13 +107,13 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyAutho
     )
     require(
       paths.forall(path => path.size > 1 && path.map(_.ply) == (path.head.ply to path.last.ply).toList),
-      "an actual passed-pawn route must retain every ordered replay occurrence"
+      "a passed-pawn analysis continuation must retain every ordered replay occurrence"
     )
     paths.distinct match
       case exact :: Nil => exact
       case _ =>
         throw IllegalArgumentException(
-          "independent dependency proofs for one result must retain the same actual move occurrence"
+          "independent dependency proofs for one result must retain the same certified analysis occurrence"
         )
 
 private[chessjudgment] final case class PassedPawnProgressClosedReplyInventoryBinding private (
@@ -122,14 +122,17 @@ private[chessjudgment] final case class PassedPawnProgressClosedReplyInventoryBi
     rootAfter: PositionNodeRef,
     scope: EvidenceScope,
     legalReplyMove: String,
-    actualBranchId: String
+    analysisContinuationBranchId: String
 ) extends CausalSupplementalClosureBinding:
   require(issuerEvidenceId.nonEmpty, "a closed reply inventory needs its exact issuer")
   require(eventEvidenceId.nonEmpty, "a closed reply inventory needs its exact progress-event owner")
   require(EvidenceRef.normalizeMove(legalReplyMove).nonEmpty, "a closed reply inventory needs its only legal reply")
-  require(actualBranchId.nonEmpty, "a closed reply inventory needs its actual route occurrence")
+  require(
+    analysisContinuationBranchId.nonEmpty,
+    "a closed reply inventory needs its analysis-continuation occurrence"
+  )
 
-  val branchIds: Set[String] = Set(actualBranchId)
+  val branchIds: Set[String] = Set(analysisContinuationBranchId)
 
   def stableKey: String =
     List(
@@ -139,7 +142,7 @@ private[chessjudgment] final case class PassedPawnProgressClosedReplyInventoryBi
       rootAfter.ply.toString,
       scope.toString.toLowerCase,
       EvidenceRef.normalizeMove(legalReplyMove),
-      actualBranchId
+      analysisContinuationBranchId
     ).mkString("|")
 
 private[chessjudgment] object PassedPawnProgressClosedReplyInventoryBinding:
@@ -148,7 +151,7 @@ private[chessjudgment] object PassedPawnProgressClosedReplyInventoryBinding:
       sourceRecord: EvidenceRecord,
       event: PassedPawnResultEventEvidence,
       routes: List[PassedPawnResultRoute],
-      actualBranch: CausalBranchOccurrence
+      analysisContinuation: CausalBranchOccurrence
   ): PassedPawnProgressClosedReplyInventoryBinding =
     val inventory = inventoryRecord.payload match
       case exact: StructuralDeltaEvidence => exact
@@ -179,9 +182,10 @@ private[chessjudgment] object PassedPawnProgressClosedReplyInventoryBinding:
       )
     require(
       event.onlyLegalReplyMove.exists(EvidenceRef.sameMove(_, legalReply)) &&
-        PassedPawnProgressRealizedAfterOnlyLegalReplyAuthority.ownsActualRoute(event, routes, actualBranch) &&
-        actualBranch.steps.lift(1).exists(step => EvidenceRef.sameMove(step.step.moveUci, legalReply)),
-      "a closed reply inventory may bind only the same actual route certified by its StructuralDelta owner"
+        PassedPawnProgressRealizedAfterOnlyLegalReplyAuthority
+          .ownsAnalysisContinuationRoute(event, routes, analysisContinuation) &&
+        analysisContinuation.steps.lift(1).exists(step => EvidenceRef.sameMove(step.step.moveUci, legalReply)),
+      "a closed reply inventory may bind only the same analysis continuation certified by its StructuralDelta owner"
     )
     PassedPawnProgressClosedReplyInventoryBinding(
       inventoryRecord.ref.id,
@@ -189,7 +193,7 @@ private[chessjudgment] object PassedPawnProgressClosedReplyInventoryBinding:
       event.rootTransition.to,
       inventoryRecord.ref.scope,
       legalReply,
-      actualBranch.branchId
+      analysisContinuation.branchId
     )
 
 /** One exact passed-pawn lower-premise occurrence use. */
@@ -291,12 +295,13 @@ private[chessjudgment] object PassedPawnProgressPremiseUse:
       case (owned, index) if owned == dependency => index
     } match
       case exact :: Nil => exact
-      case _ => throw IllegalArgumentException("an actual dependency needs one exact result-route index")
+      case _ =>
+        throw IllegalArgumentException("an analysis-continuation dependency needs one exact result-route index")
     require(
       routes.contains(route) && event.causalEpisode.dependencies.contains(dependency) &&
         dependency.enablesContinuation &&
-        PassedPawnProgressRealizedAfterOnlyLegalReplyAuthority.ownsActualRoute(event, routes, branch),
-      "a typed passed-pawn premise must belong to its event's actual certified dependency inventory"
+        PassedPawnProgressRealizedAfterOnlyLegalReplyAuthority.ownsAnalysisContinuationRoute(event, routes, branch),
+      "a typed passed-pawn premise must belong to its event's certified analysis dependency inventory"
     )
     require(
       fromStepIndex < toStepIndex && branch.stepAt(fromStepIndex).exists(_.step == dependency.from.step) &&
@@ -335,8 +340,8 @@ private[chessjudgment] object PassedPawnProgressPremiseUse:
     require(
       routes.contains(route) && event.exactOnlyReplyResultRoutes.contains(route) &&
         route.resultProof.binds(route.sourceEvent, route.consequence, route.causalPath) &&
-        PassedPawnProgressRealizedAfterOnlyLegalReplyAuthority.ownsActualRoute(event, routes, branch),
-      "a typed passed-pawn result premise needs an exact actual result route"
+        PassedPawnProgressRealizedAfterOnlyLegalReplyAuthority.ownsAnalysisContinuationRoute(event, routes, branch),
+      "a typed passed-pawn result premise needs an exact analysis-continuation route"
     )
     require(
       branch.stepAt(stepIndex).exists(_.step == route.sourceEvent.step) &&
@@ -352,32 +357,6 @@ private[chessjudgment] object PassedPawnProgressPremiseUse:
       branch.role,
       stepIndex,
       stepIndex
-    )
-
-  def comparisonDemand(
-      comparisonRecord: EvidenceRecord,
-      branch: CausalBranchOccurrence,
-      event: PassedPawnResultEventEvidence,
-      routes: List[PassedPawnResultRoute]
-  ): PassedPawnProgressPremiseUse =
-    val comparison = comparisonRecord.payload match
-      case CandidateComparisonEvidence(exact) => exact
-      case _ => throw IllegalArgumentException("a causal demand premise needs a typed comparison record")
-    require(
-      comparison.kind == CandidateComparisonKind.PlayedVsBest && comparison.candidateLine == branch.line &&
-        branch.line == event.rootLine &&
-        PassedPawnProgressRealizedAfterOnlyLegalReplyAuthority.ownsActualRoute(event, routes, branch),
-      "a passed-pawn demand must be the exact PlayedVsBest played endpoint"
-    )
-    PassedPawnProgressPremiseUse(
-      PassedPawnProgressPremiseRole.ComparisonDemand,
-      "played_vs_best_demand",
-      CandidateComparisonSemanticKey.from(comparison).stableKey,
-      (comparisonRecord.ref.id :: comparisonRecord.parents.map(_.id)).distinct.sorted,
-      branch.branchId,
-      branch.role,
-      0,
-      0
     )
 
   private def exactEvent(sourceRecord: EvidenceRecord): PassedPawnResultEventEvidence =

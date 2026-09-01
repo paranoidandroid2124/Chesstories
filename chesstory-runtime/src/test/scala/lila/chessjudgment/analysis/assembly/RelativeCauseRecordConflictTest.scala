@@ -113,3 +113,94 @@ class RelativeCauseRecordConflictTest extends munit.FunSuite:
     assertEquals(reversed, forward)
     assert(forward._1.forall(!_.matches(".*:\\d+$")))
     assert(forward._2.forall(!_.matches(".*:\\d+$")))
+
+  test("independent WrongMoveOrder proof records remain independent Cause drafts"):
+    val uniquePacket = resolved(
+      RawMoveReviewInput(
+        fen = "3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1",
+        playedMoveUci = "d1d8",
+        variations = List(
+          EngineLine(List("c4f7", "f8f7", "d1d8"), scoreCp = 600, mate = Some(1), depth = 24),
+          EngineLine(List("d1d8", "f8d8"), scoreCp = 0, depth = 24)
+        )
+      )
+    )
+    val solePacket = resolved(
+      RawMoveReviewInput(
+        fen = "8/4p2k/5n2/3r2B1/8/8/8/K2Q4 w - - 0 1",
+        playedMoveUci = "d1d5",
+        variations = List(
+          EngineLine(List("g5f6", "e7f6", "d1d5"), scoreCp = 600, depth = 24),
+          EngineLine(List("d1d5", "f6d5"), scoreCp = 0, depth = 24)
+        )
+      )
+    )
+    val proofRecords = List(
+      uniquePacket.evidenceGraph.records.collectFirst {
+        case record @ EvidenceRecord(_, _: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence, _) => record
+      }.getOrElse(fail("expected the unique-check WrongMoveOrder proof")),
+      solePacket.evidenceGraph.records.collectFirst {
+        case record @ EvidenceRecord(_, _: SoleRecapturerRemovalBeforeTargetCaptureEvidence, _) => record
+      }.getOrElse(fail("expected the sole-recapturer WrongMoveOrder proof"))
+    )
+
+    val drafts = RelativeCauseDraftPlanner.onePerExactProofRecord(proofRecords)
+    assertEquals(drafts.map(_.kind), List.fill(2)(RelativeCauseKind.WrongMoveOrder))
+    assertEquals(drafts.map(_.support.map(_.ref.id)), proofRecords.map(record => List(record.ref.id)))
+
+    val causes = List(uniquePacket, solePacket).flatMap(_.evidenceGraph.records.collect {
+      case EvidenceRecord(_, RelativeCauseFactEvidence(cause), _)
+          if cause.kind == RelativeCauseKind.WrongMoveOrder => cause
+    })
+    assertEquals(causes.size, 2)
+    assertEquals(
+      causes.map(_.proofSources.map(_.id)).toSet,
+      proofRecords.map(record => List(record.ref.id)).toSet
+    )
+
+  test("multiple proof paths in one proposition remain one Cause draft"):
+    val packet = resolved(
+      RawMoveReviewInput(
+        fen = "3q1rkr/5ppp/8/8/2B5/1Q6/8/3R2K1 w - - 0 1",
+        playedMoveUci = "d1d8",
+        variations = List(
+          EngineLine(List("c4f7", "f8f7", "d1d8"), scoreCp = 600, mate = Some(1), depth = 24),
+          EngineLine(List("d1d8", "f8d8"), scoreCp = 0, depth = 24)
+        )
+      )
+    )
+    val proofRecord = packet.evidenceGraph.records.collectFirst {
+      case record @ EvidenceRecord(_, payload: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence, _) =>
+        record -> payload
+    }.getOrElse(fail("expected one exact WrongMoveOrder proof"))
+    val (record, payload) = proofRecord
+    val proofSet = payload.occurrence.proofSet
+    val originalPath = proofSet.paths.head
+    val independentManifest = new BoundedCausalContractManifest:
+      val contractKind = originalPath.manifest.contractKind
+      val premiseUses = originalPath.manifest.premiseUses
+      val absenceBindings = originalPath.manifest.absenceBindings
+      override val stateBindings = originalPath.manifest.stateBindings
+      override val supplementalPremiseUses = originalPath.manifest.supplementalPremiseUses
+      override val supplementalClosureBindings = originalPath.manifest.supplementalClosureBindings
+      val stableKey = s"${originalPath.manifest.stableKey}|independent-path"
+    val secondPath = CausalProofPathOccurrence.from(proofSet.proposition, independentManifest)
+    val multiPathSet = BoundedCausalProofSet.from(
+      proofSet.proposition,
+      proofSet.occurrence,
+      proofSet.paths :+ secondPath
+    )
+    val multiPathPayload = payload.copy(
+      occurrence = payload.occurrence.copy(proofSet = multiPathSet)
+    )
+    val multiPathRecord = record.copy(payload = multiPathPayload)
+
+    assertEquals(multiPathPayload.proofPaths.size, 2)
+    val drafts = RelativeCauseDraftPlanner.onePerExactProofRecord(List(multiPathRecord))
+    assertEquals(drafts.size, 1)
+    assertEquals(drafts.head.support, List(multiPathRecord))
+
+  private def resolved(input: RawMoveReviewInput): EvidenceBackedJudgmentPacket =
+    MoveReviewJudgmentOrchestrator
+      .execute(input)
+      .getOrElse(fail("expected an exact relative Cause fixture"))

@@ -364,7 +364,7 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
       },
       counterpart: {
         id: '2'.repeat(64),
-        role: 'observed_played_root',
+        role: 'played_root_analysis_continuation',
         provenance: 'observed_game_root',
         lineId: 'line.played',
         lineRole: 'played',
@@ -446,7 +446,7 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
       },
       counterpart: {
         id: '2'.repeat(64),
-        role: 'observed_played_root',
+        role: 'played_root_analysis_continuation',
         provenance: 'observed_game_root',
         lineId: 'line.played',
         lineRole: 'played',
@@ -506,7 +506,7 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
           resultId: `capture_recapture_inventory:${'2'.repeat(64)}`,
           sourcePremiseIds: ['played-exploit'],
           branchId: '2'.repeat(64),
-          branchRole: 'observed_played_root',
+          branchRole: 'played_root_analysis_continuation',
           stepIndex: 0,
         },
       ],
@@ -536,7 +536,6 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
       causeKind: 'passed_pawn_progress',
       sourceEvidenceId: 'passed-pawn-result.source',
       eventEvidenceId: 'passed-pawn-result.event',
-      comparisonEvidenceId: 'comparison',
       semanticId: 'a'.repeat(64),
       occurrenceId: 'b'.repeat(64),
       dependencyFingerprint: 'c'.repeat(64),
@@ -577,16 +576,16 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
       },
       pathRealizationMove: 'a7a8q' as Uci,
       pathRealizationPly: 3,
-      actualBranch: {
+      analysisContinuationBranch: {
         id: '7'.repeat(64),
-        role: 'actual_result_route',
+        role: 'played_root_analysis_continuation',
         provenance: 'observed_game_root',
         lineId: 'line.played',
         lineRole: 'played',
         lineRank: 1,
         rootMove: 'a6a7' as Uci,
       },
-      actualOccurrenceSteps: [
+      analysisContinuationSteps: [
         {
           index: 0,
           stepKey: `1:a6a7:${beforeFen}:${firstFen}`,
@@ -602,10 +601,10 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
         {
           role: 'result',
           contract: 'passed_pawn_progress',
-          resultId: 'actual-result',
+          resultId: 'analysis-result',
           sourcePremiseIds: ['passed-pawn-result.event'],
           branchId: '7'.repeat(64),
-          branchRole: 'actual_result_route',
+          branchRole: 'played_root_analysis_continuation',
           fromStepIndex: 2,
           toStepIndex: 2,
         },
@@ -616,8 +615,97 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
         issuerEvidenceId: 'structural.delta.reply.inventory',
         rootAfter: { fen: firstFen, ply: 1, scope: 'played_transition' },
         legalReplyMove: 'h8g8' as Uci,
-        actualBranchId: '7'.repeat(64),
+        analysisContinuationBranchId: '7'.repeat(64),
       },
+    },
+  };
+  const vacatedGate: MoveReviewReason = {
+    ...primaryReason,
+    id: 'vacated-gate.typed',
+    message: {
+      kind: 'vacated-gate-enables-unrecapturable-slider-capture',
+      channelId: 'typed.vacated-gate',
+      causeEvidenceId: 'cause.vacated-gate',
+      causeKind: 'missed_tactical_resource',
+      sourceEvidenceId: 'vacated-gate.source',
+      semanticId: '1'.repeat(64),
+      occurrenceId: '2'.repeat(64),
+      dependencyFingerprint: '3'.repeat(64),
+      pathOccurrenceId: '4'.repeat(64),
+      branch: {
+        id: '5'.repeat(64),
+        role: 'counterfactual_reference',
+        provenance: 'counterfactual_analyzed_root',
+        lineId: 'line.reference.vacated-gate',
+        lineRole: 'best_reference',
+        lineRank: 1,
+        rootMove: 'a2b4' as Uci,
+      },
+      counterpart: {
+        id: '6'.repeat(64),
+        role: 'played_root_analysis_continuation',
+        provenance: 'observed_game_root',
+        lineId: 'line.played.vacated-gate',
+        lineRole: 'played',
+        lineRank: 2,
+        rootMove: playedUci,
+      },
+      enabler: { side: 'white', from: 'a2', to: 'b4', pieceBefore: 'knight', pieceAfter: 'knight' },
+      slider: { side: 'white', piece: 'rook', square: 'a1' },
+      gateBlocker: { side: 'white', piece: 'knight', square: 'a2' },
+      exploit: { side: 'white', from: 'a1', to: 'a7', pieceBefore: 'rook', pieceAfter: 'rook' },
+      capturedTarget: { side: 'black', piece: 'queen', square: 'a7' },
+      exploitMove: 'a1a7' as Uci,
+      premises: [
+        {
+          role: 'reference_root_slider_reach',
+          contract: 'slider_reach_delta',
+          resultId: `slider_reach_delta:${'7'.repeat(64)}`,
+          sourcePremiseIds: ['reference-reach'],
+          branchId: '5'.repeat(64),
+          branchRole: 'counterfactual_reference',
+          stepIndex: 0,
+        },
+        {
+          role: 'reference_exploit_capture',
+          contract: 'capture_recapture_inventory',
+          resultId: `capture_recapture_inventory:${'8'.repeat(64)}`,
+          sourcePremiseIds: ['reference-capture'],
+          branchId: '5'.repeat(64),
+          branchRole: 'counterfactual_reference',
+          stepIndex: 2,
+        },
+      ],
+      absences: Array.from({ length: 3 }, (_, index) => ({
+        useId: String(index + 1).repeat(64),
+        role: `closed-absence-${index}`,
+        semanticProofId: '9'.repeat(64),
+        issuer: 'position_relation_extractor.closed_relation_inventory',
+        issuerEvidenceId: 'reference-line-evidence',
+        issuerOccurrenceId: 'a'.repeat(64),
+        query: 'legal-capture:black:a7',
+        branchId: '5'.repeat(64),
+        branchRole: 'counterfactual_reference',
+        afterStepIndex: 2,
+        fen: secondFen,
+        ply: 3,
+        scope: 'best_line',
+      })),
+      states: Array.from({ length: 5 }, (_, index) => ({
+        useId: String(index + 4).repeat(64),
+        role: `closed-state-${index}`,
+        semanticProofId: 'b'.repeat(64),
+        issuer: 'position_relation_extractor.closed_position_state_inventory',
+        issuerEvidenceId: 'played-line-evidence',
+        issuerOccurrenceId: 'c'.repeat(64),
+        query: 'occupied-by:white:knight@a2',
+        branchId: '6'.repeat(64),
+        branchRole: 'played_root_analysis_continuation',
+        afterStepIndex: 1,
+        fen: secondFen,
+        ply: 2,
+        scope: 'played_line',
+      })),
     },
   };
   const resourceText = moveReviewReasonText(resource, candidate, 'en-US');
@@ -633,26 +721,29 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
     defenseText,
     /bishop from g5 captures the knight on f6, is recaptured by e7f6.*d1d5.*rook on d5/,
   );
-  assert.match(defenseText, /observed played branch.*knight from f6.*f6d5/);
+  assert.match(defenseText, /observed played root.*certified analysis continuation.*knight from f6.*f6d5/);
   assert.match(defenseText, /legal-capture:black:d5.*reference defender removal/);
   const passedPawnResultText = moveReviewReasonText(passedPawnResult, candidate, 'en-US');
   assert.match(
     passedPawnResultText,
-    /pawn moves a6–a7.*only legal reply h8g8 and a7a8q.*20:passed-pawn-promoted5:white2:a72:a8/,
+    /observed played root a6–a7.*certified analysis continuation.*only legal reply h8g8 and a7a8q.*20:passed-pawn-promoted5:white2:a72:a8/,
   );
   assert.ok(passedPawnResultText.includes('structural.delta.reply.inventory'));
   assert.ok(passedPawnResultText.includes('passed-pawn-result.event'));
   assert.ok(passedPawnResultText.includes(firstFen));
   assert.match(
     passedPawnResultText,
-    /certifies that reply.*owns the actual result occurrence.*path premises actual.*independent path/,
+    /certifies that reply.*owns the analysis-result occurrence.*path premises analysis.*independent path/,
   );
   const passedPawnResultKorean = moveReviewReasonText(passedPawnResult, candidate, 'ko-KR');
   assert.match(
     passedPawnResultKorean,
     /유일 합법 응수 h8g8.*structural\.delta\.reply\.inventory 인벤토리가.*그 응수를 인증/,
   );
-  assert.match(passedPawnResultKorean, /통과폰 진행 결과.*passed-pawn-result\.event가 실제 결과 occurrence를 소유/);
+  assert.match(
+    passedPawnResultKorean,
+    /인증 분석 후속 수순.*통과폰 진행 결과.*passed-pawn-result\.event가 분석 결과 occurrence를 소유/,
+  );
   assert.doesNotMatch(passedPawnResultKorean, /passed-pawn-result\.event.*가지 완결/);
 
   const candidates = completedJob.snapshot.evidence.candidates.map(item =>
@@ -663,25 +754,64 @@ test('renders typed L2 coordinates and their transmitted proof moves without leg
             ...item.review,
             core: {
               ...item.review.core,
-              reasonRefs: { primary: [resource.id], support: [defense.id, passedPawnResult.id], routes: [] },
+              reasonRefs: {
+                primary: [resource.id],
+                support: [defense.id, passedPawnResult.id, vacatedGate.id],
+                routes: [],
+              },
             },
-            reasons: [resource, defense, passedPawnResult],
+            reasons: [resource, defense, passedPawnResult, vacatedGate],
           },
         }
       : item,
   );
+  const typedL2Job: CompletedJob = {
+    ...completedJob,
+    snapshot: { ...completedJob.snapshot, evidence: { candidates } },
+  };
   const panel = renderMoveReview(
     props({
-      job: {
-        ...completedJob,
-        snapshot: { ...completedJob.snapshot, evidence: { candidates } },
-      },
+      job: typedL2Job,
       view: { evidenceExpanded: true, expandedReasonId: resource.id },
     }),
   );
-  assert.match(renderedText(panel), /counterfactual reference branch/);
+  assert.match(renderedText(panel), /counterfactual reference analysis/);
   assert.match(renderedText(panel), /reference defender removal/);
   assert.deepEqual(findNodes(panel, 'button.move-review__proof-san').map(renderedText), ['e2e3', 'h1g2']);
+
+  const vacatedPanel = renderMoveReview(
+    props({
+      job: typedL2Job,
+      view: { evidenceExpanded: true, expandedReasonId: vacatedGate.id },
+    }),
+  );
+  const vacatedPanelText = renderedText(vacatedPanel);
+  assert.match(vacatedPanelText, /counterfactual reference analysis.*knight vacates a2.*a1a7.*queen on a7/);
+  assert.match(
+    vacatedPanelText,
+    /observed played root.*certified analysis continuation.*knight on a2.*a1a7 resource is absent/,
+  );
+  assert.match(vacatedPanelText, /2 relation premises, 3 closed absences, and 5 closed states/);
+  assert.equal(findNodes(vacatedPanel, 'button.move-review__reason-button').length, 4);
+
+  const koreanPanel = renderMoveReview(
+    props({
+      job: typedL2Job,
+      locale: 'ko-KR',
+      view: { evidenceExpanded: true, expandedReasonId: vacatedGate.id },
+    }),
+  );
+  const koreanPanelText = renderedText(koreanPanel);
+  assert.match(
+    koreanPanelText,
+    /반사실 기준 분석.*a2의 knight가 게이트를 비운 뒤.*a1a7.*a7의 queen을 잡습니다/,
+  );
+  assert.match(
+    koreanPanelText,
+    /관측된 실전 첫 수 이후 인증 분석 후속 수순.*a2의 knight.*같은 a1a7 자원이 없습니다/,
+  );
+  assert.match(koreanPanelText, /관계 전제 2개, 폐쇄 부재 3개, 폐쇄 상태 5개/);
+  assert.equal(findNodes(koreanPanel, 'button.move-review__reason-button').length, 4);
 });
 
 test('closes a verdict-only review with an explicit cause-withheld message', () => {

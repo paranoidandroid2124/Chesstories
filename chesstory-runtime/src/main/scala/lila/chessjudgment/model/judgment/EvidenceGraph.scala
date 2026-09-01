@@ -1407,14 +1407,10 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
   ): Boolean =
     occurrenceProof.exists(_.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record)))
   private[chessjudgment] def consumesDependencies(
-      fact: CandidateComparisonFact,
       referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord,
-      demandSource: EvidenceRecord
+      playedSource: EvidenceRecord
   ): Boolean =
-    occurrenceProof.exists(
-      _.consumesDependencies(fact, referenceSource, playedSource, demandSource)
-    )
+    occurrenceProof.exists(_.consumesDependencies(referenceSource, playedSource))
 /** Exact occurrence of one defense obligation changing between the retained
   * BestReference and Played branches. The mechanism remains family-specific;
   * this payload does not claim general overload or defense collapse.
@@ -1480,14 +1476,10 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
     occurrenceProof.exists(_.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record)))
 
   private[chessjudgment] def consumesDependencies(
-      fact: CandidateComparisonFact,
       referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord,
-      demandSource: EvidenceRecord
+      playedSource: EvidenceRecord
   ): Boolean =
-    occurrenceProof.exists(
-      _.consumesDependencies(fact, referenceSource, playedSource, demandSource)
-    )
+    occurrenceProof.exists(_.consumesDependencies(referenceSource, playedSource))
 
 /** Exact capture-only preparation: the reference root vacates a certified
   * gate, the same slider later consumes the opened line, and the Played
@@ -1553,14 +1545,10 @@ private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCa
     occurrenceProof.exists(_.lowerIssuerRecords.forall(record => byId.get(record.ref.id).contains(record)))
 
   private[chessjudgment] def consumesDependencies(
-      fact: CandidateComparisonFact,
       referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord,
-      demandSource: EvidenceRecord
+      playedSource: EvidenceRecord
   ): Boolean =
-    occurrenceProof.exists(
-      _.consumesDependencies(fact, referenceSource, playedSource, demandSource)
-    )
+    occurrenceProof.exists(_.consumesDependencies(referenceSource, playedSource))
 
 /** Read-only public occurrence projection of one exact replay step. */
 final case class PassedPawnProgressPublicStep(
@@ -1593,8 +1581,9 @@ final case class PassedPawnProgressPublicBranch(
     steps: List[PassedPawnProgressPublicStep]
 ):
   require(
-    role == "actual_result_route" && EvidenceRef.normalizeMove(replyMove).nonEmpty && sourceOccurrenceId.nonEmpty,
-    "a public passed-pawn result branch needs its single exact actual-route identity"
+    role == "played_root_analysis_continuation" && EvidenceRef.normalizeMove(replyMove).nonEmpty &&
+      sourceOccurrenceId.nonEmpty,
+    "a public passed-pawn result branch needs its exact analysis-continuation identity"
   )
 
 /** One exact lower-premise occurrence use retained by an independent path. */
@@ -1743,7 +1732,7 @@ final case class PassedPawnProgressPublicPremise(
 /** Public projection of one independent proof path. */
 final case class PassedPawnProgressPublicProofPath(
     pathOccurrenceId: String,
-    actualBranchId: String,
+    analysisContinuationBranchId: String,
     realizationActor: PassedPawnResultActorOccurrence,
     realizationMove: String,
     realizationPly: Int,
@@ -1758,7 +1747,7 @@ final case class PassedPawnProgressPublicClosedReplyInventory(
     rootAfterPly: Int,
     scope: String,
     legalReplyMove: String,
-    actualBranchId: String
+    analysisContinuationBranchId: String
 )
 
 /** Publicly consumed L2 result for passed-pawn progress realized after the only legal reply.
@@ -1767,7 +1756,6 @@ final case class PassedPawnProgressPublicClosedReplyInventory(
   */
 final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence private[chessjudgment] (
     eventSource: EvidenceRef,
-    comparisonDemand: EvidenceRef,
     event: PassedPawnResultEventEvidence,
     resultRoutes: List[PassedPawnResultRoute],
     semanticIdentity: PassedPawnProgressSemanticIdentity,
@@ -1784,7 +1772,7 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
       resultRoutes.distinct.size == resultRoutes.size &&
       resultRoutes.forall(route => event.exactOnlyReplyResultRoutes.contains(route)) &&
       resultRoutes.map(PassedPawnProgressSemanticIdentity.from(event, _)).distinct == List(semanticIdentity),
-    "a passed-pawn result needs every independent route for one exact actual result occurrence"
+    "a passed-pawn result needs every independent route for one exact certified analysis result occurrence"
   )
 
   def contract: String = "passed_pawn_progress_realized_after_only_legal_reply"
@@ -1792,7 +1780,7 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
   def occurrenceId: String = proofSet.occurrence.occurrenceId
   def rootLine: LineNodeRef = event.rootLine
   def rootMove: String = EvidenceRef.normalizeMove(event.rootMove)
-  def rootPly: Int = actualBranch.steps.head.step.ply
+  def rootPly: Int = analysisContinuationBranch.steps.head.step.ply
   def realizingMove: String = EvidenceRef.normalizeMove(resultRoute.sourceEvent.moveUci)
   def realizingPly: Int = resultRoute.sourceEvent.step.ply
   def resultPlyOffset: Int = realizingPly - rootPly
@@ -1801,10 +1789,12 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
   def resultTargetSubjects: List[String] = semanticIdentity.resultTargetSubjects
   def rootActor: PassedPawnResultActorOccurrence = event.identity.actor
   def resultActor: PassedPawnResultActorOccurrence = resultRoute.sourceEvent.identity.actor
-  def actualBranch: CausalBranchOccurrence =
+  def analysisContinuationBranch: CausalBranchOccurrence =
     proofSet.occurrence.branches match
-      case exact :: Nil if exact.role.isInstanceOf[PassedPawnProgressBranchRole.ActualResultRoute] => exact
-      case _ => throw IllegalStateException("a passed-pawn result lost its single actual route occurrence")
+      case exact :: Nil
+          if exact.role.isInstanceOf[PassedPawnProgressBranchRole.PlayedRootAnalysisContinuation] => exact
+      case _ =>
+        throw IllegalStateException("a passed-pawn result lost its single analysis-continuation occurrence")
   def proofPaths: List[CausalProofPathOccurrence] = proofSet.paths
   def legalReplyMove: String = closedReplyInventory.legalReplyMove
 
@@ -1824,7 +1814,7 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
           )
       PassedPawnProgressPublicProofPath(
         pathOccurrenceId = path.pathOccurrenceId,
-        actualBranchId = manifest.actualBranchId,
+        analysisContinuationBranchId = manifest.analysisContinuationBranchId,
         realizationActor = manifest.resultRoute.sourceEvent.identity.actor,
         realizationMove = EvidenceRef.normalizeMove(manifest.resultRoute.sourceEvent.moveUci),
         realizationPly = manifest.resultRoute.sourceEvent.step.ply,
@@ -1846,20 +1836,21 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
       rootAfterPly = closedReplyInventory.rootAfter.ply,
       scope = snakeCode(closedReplyInventory.scope.toString),
       legalReplyMove = closedReplyInventory.legalReplyMove,
-      actualBranchId = closedReplyInventory.actualBranchId
+      analysisContinuationBranchId = closedReplyInventory.analysisContinuationBranchId
     )
 
   def hasCompleteProofPaths: Boolean =
-    proofSet.occurrence.branches == List(actualBranch) && proofPaths.nonEmpty &&
+    proofSet.occurrence.branches == List(analysisContinuationBranch) && proofPaths.nonEmpty &&
       proofPaths.collect {
         case path if path.manifest.isInstanceOf[PassedPawnProgressPathManifest] =>
           path.manifest.asInstanceOf[PassedPawnProgressPathManifest].resultRoute.stableKey
       }.toSet == resultRoutes.map(_.stableKey).toSet &&
       proofPaths.forall {
         case path if path.manifest.isInstanceOf[PassedPawnProgressPathManifest] =>
-          path.manifest.asInstanceOf[PassedPawnProgressPathManifest].actualBranchId == actualBranch.branchId
+          path.manifest.asInstanceOf[PassedPawnProgressPathManifest].analysisContinuationBranchId ==
+            analysisContinuationBranch.branchId
         case _ => false
-      } && closedReplyInventory.branchIds == Set(actualBranch.branchId)
+      } && closedReplyInventory.branchIds == Set(analysisContinuationBranch.branchId)
 
   private def resultRoute: PassedPawnResultRoute = resultRoutes.head
 
@@ -1868,11 +1859,10 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
 
   private[chessjudgment] def consumesExactDependencies(
       source: EvidenceRecord,
-      comparison: EvidenceRecord,
       inventory: EvidenceRecord,
       routes: List[PassedPawnResultRoute]
   ): Boolean =
-    occurrenceProof.exists(_.consumesExactDependencies(source, comparison, inventory, routes))
+    occurrenceProof.exists(_.consumesExactDependencies(source, inventory, routes))
 
   private[chessjudgment] def proofParentSources: List[EvidenceRef] =
     occurrenceProof.toList.flatMap(_.parentSources)
@@ -1884,13 +1874,13 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
 
   private def publicBranch(branch: CausalBranchOccurrence): PassedPawnProgressPublicBranch =
     val (replyMove, sourceOccurrenceId) = branch.role match
-      case PassedPawnProgressBranchRole.ActualResultRoute(move, occurrence) =>
+      case PassedPawnProgressBranchRole.PlayedRootAnalysisContinuation(move, occurrence) =>
         EvidenceRef.normalizeMove(move) -> occurrence
       case _ =>
         throw IllegalStateException("a public passed-pawn result contains an unsupported branch role")
     PassedPawnProgressPublicBranch(
       branchId = branch.branchId,
-      role = "actual_result_route",
+      role = "played_root_analysis_continuation",
       replyMove = replyMove,
       sourceOccurrenceId = sourceOccurrenceId,
       lineId = branch.line.id,
@@ -1935,15 +1925,15 @@ final case class PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence priv
 
   private def passedPawnResultPremiseRoleCode(role: CausalPremiseRole): String =
     role match
-      case PassedPawnProgressPremiseRole.ComparisonDemand => "comparison_demand"
-      case PassedPawnProgressPremiseRole.Dependency(_)    => "dependency"
-      case PassedPawnProgressPremiseRole.Result           => "result"
+      case PassedPawnProgressPremiseRole.Dependency(_) => "dependency"
+      case PassedPawnProgressPremiseRole.Result        => "result"
       case _ =>
         throw IllegalStateException("a public passed-pawn result contains an unsupported premise role")
 
   private def passedPawnResultBranchRoleCode(role: CausalBranchRole): String =
     role match
-      case PassedPawnProgressBranchRole.ActualResultRoute(_, _) => "actual_result_route"
+      case PassedPawnProgressBranchRole.PlayedRootAnalysisContinuation(_, _) =>
+        "played_root_analysis_continuation"
       case _ =>
         throw IllegalStateException("a public passed-pawn result contains an unsupported premise branch")
 
@@ -5088,7 +5078,7 @@ final case class PassedPawnResultEventEvidence(
     causalEpisode.dependencies.filter(dependency => dependency.from == causalEpisode.root && dependency.enablesContinuation)
   def observedRootEnablesContinuation: Boolean = causalEpisode.rootEnablesContinuation
   private lazy val certifiedOnlyReplyStep: Option[LineReplayStep] =
-    exactResultRoutes.flatMap(actualRouteSteps(_).lift(1)).distinct match
+    exactResultRoutes.flatMap(analysisContinuationSteps(_).lift(1)).distinct match
       case exact :: Nil => Some(exact)
       case _            => None
 
@@ -5136,7 +5126,7 @@ final case class PassedPawnResultEventEvidence(
     record.payload == this && lineOccurrenceOwners.nonEmpty &&
       lineOccurrenceOwners.forall(owner => record.parents.contains(owner))
 
-  private def actualRouteSteps(route: PassedPawnResultRoute): List[LineReplayStep] =
+  private def analysisContinuationSteps(route: PassedPawnResultRoute): List[LineReplayStep] =
     causalEpisode.root.step :: route.causalPath.flatMap(dependency =>
       dependency.interveningSteps :+ dependency.to.step
     )

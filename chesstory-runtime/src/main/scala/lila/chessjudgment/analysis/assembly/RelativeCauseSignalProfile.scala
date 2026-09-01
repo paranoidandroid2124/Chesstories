@@ -113,26 +113,16 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
 
   private def rawDrafts(profile: RelativeCauseSignalProfile): List[RelativeCauseDraft] =
     import profile.*
-    List(
-      causeDraft(
-        referenceVacatedGateEnablesUnrecapturableSliderCaptures,
-        referenceVacatedGateEnablesUnrecapturableSliderCaptures.nonEmpty &&
-          ActionablePlayedVsBestCausalProofDemand.accepts(fact)
-      ),
-      causeDraft(
-        referenceMoveOrderProofs,
-        referenceMoveOrderProofs.nonEmpty &&
-          ActionablePlayedVsBestCausalProofDemand.accepts(fact)
-      ),
-    ).flatten
+    if ActionablePlayedVsBestCausalProofDemand.accepts(fact) then
+      onePerExactProofRecord(
+        referenceVacatedGateEnablesUnrecapturableSliderCaptures ++ referenceMoveOrderProofs
+      )
+    else Nil
 
-  private def causeDraft(
-      support: List[EvidenceRecord],
-      condition: Boolean
-  ): Option[RelativeCauseDraft] =
-    Option.when(condition)(
-      RelativeCauseDraft.fromExactSupport(support)
-    )
+  private[chessjudgment] def onePerExactProofRecord(
+      records: List[EvidenceRecord]
+  ): List[RelativeCauseDraft] =
+    records.map(record => RelativeCauseDraft.fromExactSupport(List(record)))
 
   private def exactPassedPawnProgressRealizedAfterOnlyLegalReplyProofSupportRecord(
       record: EvidenceRecord,
@@ -144,11 +134,8 @@ private[chessjudgment] object RelativeCauseDraftPlanner:
       case exact @ EvidenceRecord(ref, proof: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _)
           if ref.line.contains(eventLine) && proof.rootLine == eventLine &&
             graph.proofEligible(exact) &&
-            proof.resultActor.side == fact.comparison.mover &&
-            graph.record(proof.comparisonDemand).exists {
-              case EvidenceRecord(_, CandidateComparisonEvidence(exact), _) => exact == fact
-              case _ => false
-            } =>
+            fact.candidateLine == proof.rootLine &&
+            proof.resultActor.side == fact.comparison.mover =>
         Some(exact)
       case _ =>
         None
@@ -187,14 +174,14 @@ private[chessjudgment] object RelativeCauseSignalProfile:
             if payload.occurrence.referenceLine == fact.referenceLine &&
               payload.occurrence.playedLine == fact.candidateLine &&
               payload.proofPaths.nonEmpty &&
-              payload.consumesDependencies(fact, reference, played, demand) &&
+              payload.consumesDependencies(reference, played) &&
               graph.proofEligible(record) =>
           record
         case record @ EvidenceRecord(_, payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence, _)
             if payload.occurrence.referenceLine == fact.referenceLine &&
               payload.occurrence.playedLine == fact.candidateLine &&
               payload.proofPaths.nonEmpty &&
-              payload.consumesDependencies(fact, reference, played, demand) &&
+              payload.consumesDependencies(reference, played) &&
               graph.proofEligible(record) =>
           record
       }
@@ -217,7 +204,7 @@ private[chessjudgment] object RelativeCauseSignalProfile:
             if payload.occurrence.referenceLine == fact.referenceLine &&
               payload.occurrence.playedLine == fact.candidateLine &&
               payload.proofPaths.nonEmpty &&
-              payload.consumesDependencies(fact, reference, played, demand) &&
+              payload.consumesDependencies(reference, played) &&
               graph.proofEligible(record) =>
           record
       }

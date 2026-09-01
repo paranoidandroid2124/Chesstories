@@ -406,7 +406,6 @@ class SchemaRegistry:
         explanations = commentary.get("causal_explanations")
         if not isinstance(primary, Mapping) or not isinstance(explanations, list):
             return
-        comparison_id = primary.get("comparison_evidence_id")
         seen_cause_evidence_ids: set[str] = set()
         seen_channel_ids: set[str] = set()
         for facet_index, facet in enumerate(explanations):
@@ -420,6 +419,15 @@ class SchemaRegistry:
                         f"{facet_location}.cause_evidence_id: duplicate public Cause owner"
                     )
                 seen_cause_evidence_ids.add(cause_evidence_id)
+            expected_exposure = {
+                "wrong_move_order": "primary",
+                "missed_tactical_resource": "primary",
+                "passed_pawn_progress": "complementary",
+            }.get(facet.get("kind"))
+            if expected_exposure is None or facet.get("exposure") != expected_exposure:
+                errors.append(
+                    f"{facet_location}.exposure: does not match Cause kind {facet.get('kind')!r}"
+                )
             channels = facet.get("channels")
             if not isinstance(channels, list):
                 continue
@@ -434,16 +442,6 @@ class SchemaRegistry:
                             f"{channel_location}.channel_id: duplicate public proof occurrence"
                         )
                     seen_channel_ids.add(channel_id)
-                passed = channel.get("passed_pawn_progress_realized_after_only_legal_reply_proof")
-                if (
-                    isinstance(comparison_id, str)
-                    and isinstance(passed, Mapping)
-                    and passed.get("comparison_evidence_id") != comparison_id
-                ):
-                    errors.append(
-                        f"{channel_location}.passed_pawn_progress_realized_after_only_legal_reply_proof."
-                        "comparison_evidence_id: does not retain the primary comparison owner"
-                    )
 
     def _validate_passed_pawn_progress_realized_after_only_legal_reply_proof_identifiers(
         self,
@@ -472,42 +470,41 @@ class SchemaRegistry:
             errors,
         )
 
-        actual_branches = branches
         self._validate_passed_pawn_progress_root_contract(
             proof,
-            actual_branches,
+            branches,
             location,
             errors,
         )
 
         inventory = proof.get("closed_legal_reply_inventory")
         if isinstance(inventory, Mapping):
-            branch_id = inventory.get("actual_branch_id")
+            branch_id = inventory.get("analysis_continuation_branch_id")
             self._validate_branch_reference(
                 branch_id,
-                "actual_result_route",
+                "played_root_analysis_continuation",
                 branches,
                 "role",
-                f"{location}.closed_legal_reply_inventory.actual_branch_id",
+                f"{location}.closed_legal_reply_inventory.analysis_continuation_branch_id",
                 errors,
             )
             branch = branches.get(branch_id) if isinstance(branch_id, str) else None
             if isinstance(branch, Mapping) and inventory.get("legal_reply_move") != branch.get("reply_move"):
                 errors.append(
-                    f"{location}.closed_legal_reply_inventory.legal_reply_move: does not match the actual route"
+                    f"{location}.closed_legal_reply_inventory.legal_reply_move: does not match the analysis continuation"
                 )
 
         for path_index, path in enumerate(paths):
             if not isinstance(path, Mapping):
                 continue
             path_location = f"{location}.proof_paths[{path_index}]"
-            actual_branch_id = path.get("actual_branch_id")
+            analysis_continuation_branch_id = path.get("analysis_continuation_branch_id")
             self._validate_branch_reference(
-                actual_branch_id,
-                "actual_result_route",
+                analysis_continuation_branch_id,
+                "played_root_analysis_continuation",
                 branches,
                 "role",
-                f"{path_location}.actual_branch_id",
+                f"{path_location}.analysis_continuation_branch_id",
                 errors,
             )
             premises = path.get("premises")
@@ -549,13 +546,13 @@ class SchemaRegistry:
         location: str,
         errors: list[str],
     ) -> None:
-        actual_branch = next(iter(branches.values()), None)
-        raw_steps = actual_branch.get("steps") if isinstance(actual_branch, Mapping) else None
-        actual_steps = raw_steps if isinstance(raw_steps, list) else []
-        if not actual_steps or not all(isinstance(step, Mapping) for step in actual_steps):
+        analysis_continuation = next(iter(branches.values()), None)
+        raw_steps = analysis_continuation.get("steps") if isinstance(analysis_continuation, Mapping) else None
+        continuation_steps = raw_steps if isinstance(raw_steps, list) else []
+        if not continuation_steps or not all(isinstance(step, Mapping) for step in continuation_steps):
             return
-        root = actual_steps[0]
-        result = actual_steps[-1]
+        root = continuation_steps[0]
+        result = continuation_steps[-1]
         assert isinstance(root, Mapping)
         assert isinstance(result, Mapping)
 
@@ -566,14 +563,14 @@ class SchemaRegistry:
         if (
             root_move != root.get("move_uci")
             or root_ply != root.get("ply")
-            or proof.get("root_line") != actual_branch.get("line")
+            or proof.get("root_line") != analysis_continuation.get("line")
         ):
             errors.append(f"{location}: root move, ply, and line do not identify one occurrence")
         if (
             realizing_move != result.get("move_uci")
             or realizing_ply != result.get("ply")
         ):
-            errors.append(f"{location}: realizing move and ply do not identify the actual terminal occurrence")
+            errors.append(f"{location}: realizing move and ply do not identify the certified analysis occurrence")
         if (
             not isinstance(root_ply, int)
             or not isinstance(realizing_ply, int)
@@ -592,12 +589,12 @@ class SchemaRegistry:
                 f"{location}.closed_legal_reply_inventory.root_after: closure does not certify the shared root result"
             )
         if (
-            len(actual_steps) < 2
+            len(continuation_steps) < 2
             or not isinstance(inventory, Mapping)
-            or inventory.get("legal_reply_move") != actual_steps[1].get("move_uci")
+            or inventory.get("legal_reply_move") != continuation_steps[1].get("move_uci")
         ):
             errors.append(
-                f"{location}.closed_legal_reply_inventory.legal_reply_move: does not identify the first actual reply"
+                f"{location}.closed_legal_reply_inventory.legal_reply_move: does not identify the first analysis reply"
             )
 
     @staticmethod
@@ -657,9 +654,9 @@ class SchemaRegistry:
                 if step.get("provenance") != "certified_analysis_move":
                     errors.append(f"{step_location}.provenance: continuation is not certified analysis")
                 if step.get("line") != branch_line:
-                    errors.append(f"{step_location}.line: actual occurrences do not share their line owner")
+                    errors.append(f"{step_location}.line: analysis occurrences do not share their line owner")
 
-            if branch.get("role") == "actual_result_route" and len(typed_steps) > 1:
+            if branch.get("role") == "played_root_analysis_continuation" and len(typed_steps) > 1:
                 reply_move = branch.get("reply_move")
                 if typed_steps[1].get("move_uci") != reply_move:
                     errors.append(f"{branch_location}.reply_move: does not identify the first reply occurrence")
@@ -672,15 +669,19 @@ class SchemaRegistry:
         location: str,
         errors: list[str],
     ) -> None:
-        actual_branch_id = path.get("actual_branch_id")
-        actual_branch = branches.get(actual_branch_id) if isinstance(actual_branch_id, str) else None
-        if not isinstance(actual_branch, Mapping):
+        analysis_continuation_branch_id = path.get("analysis_continuation_branch_id")
+        analysis_continuation = (
+            branches.get(analysis_continuation_branch_id)
+            if isinstance(analysis_continuation_branch_id, str)
+            else None
+        )
+        if not isinstance(analysis_continuation, Mapping):
             return
         raw_premises = path.get("premises")
         premises = raw_premises if isinstance(raw_premises, list) else []
         if not all(isinstance(premise, Mapping) for premise in premises):
             return
-        steps_raw = actual_branch.get("steps")
+        steps_raw = analysis_continuation.get("steps")
         steps = steps_raw if isinstance(steps_raw, list) else []
         if not steps:
             return
@@ -695,7 +696,7 @@ class SchemaRegistry:
             and step.get("ply") == realization_ply
         ]
         if len(realization_indices) != 1:
-            errors.append(f"{location}: realization_move and realization_ply must identify one actual occurrence")
+            errors.append(f"{location}: realization_move and realization_ply must identify one analysis occurrence")
             return
         if realization_move != proof.get("realizing_move") or realization_ply != proof.get("realizing_ply"):
             errors.append(f"{location}: proof path does not terminate at the public realizing occurrence")
@@ -705,8 +706,8 @@ class SchemaRegistry:
             from_index = premise.get("from_step_index")
             to_index = premise.get("to_step_index")
             if (
-                premise.get("branch_id") != actual_branch_id
-                or premise.get("branch_role") != actual_branch.get("role")
+                premise.get("branch_id") != analysis_continuation_branch_id
+                or premise.get("branch_role") != analysis_continuation.get("role")
                 or not isinstance(from_index, int)
                 or not isinstance(to_index, int)
                 or not (0 <= from_index <= to_index < len(steps))
@@ -764,11 +765,6 @@ class SchemaRegistry:
             if isinstance(step, Mapping) and isinstance(step.get("step_key"), str)
         }
         branch_line = branch.get("line") if isinstance(branch, Mapping) else None
-        scope_by_role = {
-            "played": "played_line",
-            "best_reference": "best_line",
-            "alternative": "candidate_line",
-        }
         for index, issuer in enumerate(relations):
             if not isinstance(issuer, Mapping):
                 continue
@@ -791,10 +787,8 @@ class SchemaRegistry:
                 errors.append(
                     f"{issuer_location}.line: relation issuer does not own its replay route"
                 )
-            issuer_line = issuer.get("line")
-            line_role = issuer_line.get("line_role") if isinstance(issuer_line, Mapping) else None
-            if issuer.get("scope") != scope_by_role.get(line_role):
-                errors.append(f"{issuer_location}.scope: relation issuer scope does not match its line")
+            if issuer.get("scope") != "played_line":
+                errors.append(f"{issuer_location}.scope: relation issuer scope is not played_line")
 
         for index, state in enumerate(states):
             if not isinstance(state, Mapping):
@@ -816,9 +810,8 @@ class SchemaRegistry:
                     f"{state_location}: state issuer does not equal its exact branch occurrence"
                 )
             state_line = state.get("line")
-            line_role = state_line.get("line_role") if isinstance(state_line, Mapping) else None
-            if state.get("scope") != scope_by_role.get(line_role):
-                errors.append(f"{state_location}.scope: state issuer scope does not match its line")
+            if state.get("scope") != "played_line":
+                errors.append(f"{state_location}.scope: state issuer scope is not played_line")
             if state_line != branch_line:
                 errors.append(
                     f"{state_location}.line: state issuer does not own the dependency route"

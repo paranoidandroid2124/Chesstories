@@ -42,6 +42,17 @@
       "explore_contaminated": true
     },
     {
+      "document_id": "ref-b6054fc614ae9d9c17933ce856013081",
+      "basename": "Opening Repertoire_ The Ruy Lopez.pdf",
+      "title": "Opening Repertoire: The Ruy Lopez",
+      "sha256": "b6054fc614ae9d9c17933ce856013081cbdc962c2158c746995f3b62e6bddc05",
+      "byte_size": 14904664,
+      "page_count": 292,
+      "source_type": "local-reference-only",
+      "locator_policy_id": "document-id-plus-pdf-page-only",
+      "explore_contaminated": false
+    },
+    {
       "document_id": "ref-bc7b3f1ff52f4c7a9940dad53cd6b975",
       "basename": "Mastering Positional Sacrifices _ A Practical Guide to a -- Merijn van Delft.pdf",
       "title": "Mastering Positional Sacrifices",

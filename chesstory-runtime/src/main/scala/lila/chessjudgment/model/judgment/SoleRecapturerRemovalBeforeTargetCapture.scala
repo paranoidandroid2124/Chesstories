@@ -5,12 +5,12 @@ import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 private[chessjudgment] enum SoleRecapturerRemovalBeforeTargetCaptureBranchRole extends CausalBranchRole:
   case CounterfactualReference
-  case ObservedPlayedRoot
+  case PlayedRootAnalysisContinuation
 
   def stableKey: String =
     this match
       case CounterfactualReference => "counterfactual-reference"
-      case ObservedPlayedRoot       => "observed-played-root"
+      case PlayedRootAnalysisContinuation => "played-root-analysis-continuation"
 
 private[chessjudgment] enum SoleRecapturerRemovalBeforeTargetCapturePremiseRole extends CausalPremiseRole:
   case ReferenceDefenderRemoval
@@ -159,7 +159,7 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureManifest:
       playedExploit.role == SoleRecapturerRemovalBeforeTargetCapturePremiseRole.PlayedImmediateExploitInventory &&
         playedExploit.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
         playedExploit.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-        playedExploit.branchRole == SoleRecapturerRemovalBeforeTargetCaptureBranchRole.ObservedPlayedRoot &&
+        playedExploit.branchRole == SoleRecapturerRemovalBeforeTargetCaptureBranchRole.PlayedRootAnalysisContinuation &&
         playedExploit.stepIndex == 0,
       "the failed exploit must consume the played root capture inventory"
     )
@@ -214,13 +214,13 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
       proofSet.occurrence.branch(SoleRecapturerRemovalBeforeTargetCaptureBranchRole.CounterfactualReference).exists(
         _.line.role == LineNodeRole.BestReference
       ) &&
-      proofSet.occurrence.branch(SoleRecapturerRemovalBeforeTargetCaptureBranchRole.ObservedPlayedRoot).exists(
+      proofSet.occurrence.branch(SoleRecapturerRemovalBeforeTargetCaptureBranchRole.PlayedRootAnalysisContinuation).exists(
         _.line.role == LineNodeRole.Played
       ),
-    "a sole-recapturer-removal-before-target-capture occurrence needs one BestReference and one Played branch"
+    "a sole-recapturer-removal-before-target-capture occurrence needs one BestReference and one played-root analysis continuation"
   )
   require(referenceSteps.size == 3, "the reference occurrence needs removal, reply, and exploit")
-  require(playedSteps.size == 2, "the played occurrence needs exploit and recapture")
+  require(playedSteps.size == 2, "the played-root analysis continuation needs exploit and recapture")
 
   private def exactBranch(role: SoleRecapturerRemovalBeforeTargetCaptureBranchRole): CausalBranchOccurrence =
     proofSet.occurrence
@@ -234,7 +234,8 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
   def semanticId: String = proofSet.proposition.semanticId
   def occurrenceId: String = proofSet.occurrence.occurrenceId
   def referenceBranch: CausalBranchOccurrence = exactBranch(SoleRecapturerRemovalBeforeTargetCaptureBranchRole.CounterfactualReference)
-  def playedBranch: CausalBranchOccurrence = exactBranch(SoleRecapturerRemovalBeforeTargetCaptureBranchRole.ObservedPlayedRoot)
+  def playedBranch: CausalBranchOccurrence =
+    exactBranch(SoleRecapturerRemovalBeforeTargetCaptureBranchRole.PlayedRootAnalysisContinuation)
   def referenceLine: LineNodeRef = referenceBranch.line
   def playedLine: LineNodeRef = playedBranch.line
   def referenceSteps: List[LineReplayStep] = referenceBranch.replaySteps
@@ -249,8 +250,6 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
 private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCaptureDependencyManifest private[chessjudgment] (
     referenceLineRecord: EvidenceRecord,
     playedLineRecord: EvidenceRecord,
-    demandRecord: EvidenceRecord,
-    demandingComparison: CandidateComparisonFact,
     removedDefender: RelationColoredPieceWitness,
     proofSet: BoundedCausalProofSet
 ) extends BoundedCausalDependencyManifest:
@@ -265,22 +264,14 @@ private[chessjudgment] final case class SoleRecapturerRemovalBeforeTargetCapture
     List(
       BoundedCausalIdentity.evidenceRecordKey(referenceLineRecord),
       BoundedCausalIdentity.evidenceRecordKey(playedLineRecord),
-      BoundedCausalIdentity.evidenceRecordKey(demandRecord),
-      CandidateComparisonSemanticKey.from(demandingComparison).stableKey,
       SoleRecapturerRemovalBeforeTargetCaptureCausalAuthority.coloredPieceStableKey(removedDefender),
       proofSet.proposition.semanticId,
       proofSet.occurrence.occurrenceId,
       proofSet.paths.map(_.pathOccurrenceId).mkString("[", ",", "]")
     ).mkString("|")
 
-  def consumes(
-      comparison: CandidateComparisonFact,
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord,
-      demandSource: EvidenceRecord
-  ): Boolean =
-    demandingComparison == comparison && referenceLineRecord == referenceSource &&
-      playedLineRecord == playedSource && demandRecord == demandSource
+  def consumes(referenceSource: EvidenceRecord, playedSource: EvidenceRecord): Boolean =
+    referenceLineRecord == referenceSource && playedLineRecord == playedSource
 
 /** Opaque certified family result and sole graph-record proof authority. */
 private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCapture private (
@@ -290,8 +281,6 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
     private val dependencyManifest: SoleRecapturerRemovalBeforeTargetCaptureDependencyManifest,
     private val referenceLineRecord: EvidenceRecord,
     private val playedLineRecord: EvidenceRecord,
-    private val demandRecord: EvidenceRecord,
-    private val demandingComparison: CandidateComparisonFact,
     private val referenceReplay: CanonicalLineReplay,
     private val playedReplay: CanonicalLineReplay,
     private val absenceUse: CausalClosedAbsenceUse,
@@ -310,18 +299,13 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
   )
 
   def parentSources: List[EvidenceRef] =
-    List(referenceLineRecord.ref, playedLineRecord.ref, demandRecord.ref).sortBy(_.id)
+    List(referenceLineRecord.ref, playedLineRecord.ref).sortBy(_.id)
 
   private[chessjudgment] def lowerIssuerRecords: List[EvidenceRecord] =
-    List(referenceLineRecord, playedLineRecord, demandRecord)
+    List(referenceLineRecord, playedLineRecord)
 
-  def consumesDependencies(
-      comparison: CandidateComparisonFact,
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord,
-      demandSource: EvidenceRecord
-  ): Boolean =
-    dependencyManifest.consumes(comparison, referenceSource, playedSource, demandSource)
+  def consumesDependencies(referenceSource: EvidenceRecord, playedSource: EvidenceRecord): Boolean =
+    dependencyManifest.consumes(referenceSource, playedSource)
 
   def proves(record: EvidenceRecord, payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence): Boolean =
     record.ref.producer == EvidenceProducer.CausalProofProducer &&
@@ -344,16 +328,7 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
         playedLineRecord,
         occurrence.playedLine,
         playedReplay
-      ) &&
-      SoleRecapturerRemovalBeforeTargetCaptureProof.exactDemandRecord(
-        demandRecord,
-        demandingComparison,
-        referenceLineRecord.ref.position,
-        referenceLineRecord,
-        playedLineRecord
-      ) &&
-      referenceLineRecord.ref.position == playedLineRecord.ref.position &&
-      demandRecord.ref.position == referenceLineRecord.ref.position &&
+      ) && referenceLineRecord.ref.position == playedLineRecord.ref.position &&
       referenceReplay.replaySteps.take(3) == occurrence.referenceSteps &&
       playedReplay.replaySteps.take(2) == occurrence.playedSteps &&
       semanticIdentityRemainsCertified && captureSemanticsRemainCertified &&
@@ -433,13 +408,8 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
             SoleRecapturerRemovalBeforeTargetCaptureAbsenceRole.ReferenceReplacementRecaptureAbsent &&
           absenceUse.binding.branchId == occurrence.referenceBranch.branchId &&
           absenceUse.binding.afterStepIndex == 2 &&
-          parentSources.map(_.id).distinct.size == 3 &&
-          dependencyManifest.consumes(
-            demandingComparison,
-            referenceLineRecord,
-            playedLineRecord,
-            demandRecord
-          )
+          parentSources.map(_.id).distinct.size == 2 &&
+          dependencyManifest.consumes(referenceLineRecord, playedLineRecord)
       case _ => false
 
   private def uniqueCapture(
@@ -461,7 +431,7 @@ private[chessjudgment] final class CertifiedSoleRecapturerRemovalBeforeTargetCap
       val replayAndOwner = Option.when(
         use.branchRole == SoleRecapturerRemovalBeforeTargetCaptureBranchRole.CounterfactualReference
       )(referenceReplay -> referenceLineRecord).orElse(
-        Option.when(use.branchRole == SoleRecapturerRemovalBeforeTargetCaptureBranchRole.ObservedPlayedRoot)(
+        Option.when(use.branchRole == SoleRecapturerRemovalBeforeTargetCaptureBranchRole.PlayedRootAnalysisContinuation)(
           playedReplay -> playedLineRecord
         )
       )
@@ -501,8 +471,6 @@ private[chessjudgment] object CertifiedSoleRecapturerRemovalBeforeTargetCapture:
       dependencyManifest: SoleRecapturerRemovalBeforeTargetCaptureDependencyManifest,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
-      demandRecord: EvidenceRecord,
-      demandingComparison: CandidateComparisonFact,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
       absenceUse: CausalClosedAbsenceUse,
@@ -515,8 +483,6 @@ private[chessjudgment] object CertifiedSoleRecapturerRemovalBeforeTargetCapture:
       dependencyManifest,
       referenceLineRecord,
       playedLineRecord,
-      demandRecord,
-      demandingComparison,
       referenceReplay,
       playedReplay,
       absenceUse,
@@ -575,8 +541,6 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
       playedLine: LineNodeRef,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
-      demandRecord: EvidenceRecord,
-      demandingComparison: CandidateComparisonFact,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
       changedSeed: SoleRecapturerRemovalBeforeTargetCaptureChangedSeed
@@ -594,15 +558,7 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
         playedLine,
         playedReplay
       )
-      if exactDemandRecord(
-        demandRecord,
-        demandingComparison,
-        referenceLineRecord.ref.position,
-        referenceLineRecord,
-        playedLineRecord
-      )
-      if demandingComparison.referenceLine == referenceLine
-      if demandingComparison.candidateLine == playedLine
+      if referenceLineRecord.ref.position == playedLineRecord.ref.position
       removalStep <- referenceReplay.replaySteps.headOption
       removalRecaptureStep <- referenceReplay.replaySteps.lift(1)
       referenceExploitStep <- referenceReplay.replaySteps.lift(2)
@@ -653,7 +609,7 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
         3
       )
       playedBranch = CausalBranchOccurrence.observedRootWithAnalyzedContinuation(
-        SoleRecapturerRemovalBeforeTargetCaptureBranchRole.ObservedPlayedRoot,
+        SoleRecapturerRemovalBeforeTargetCaptureBranchRole.PlayedRootAnalysisContinuation,
         playedLine,
         playedReplay,
         2
@@ -677,8 +633,6 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
         exact,
         referenceLineRecord,
         playedLineRecord,
-        demandRecord,
-        demandingComparison,
         referenceReplay,
         playedReplay
       )
@@ -688,8 +642,6 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
       inputs: ExactInputs,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
-      demandRecord: EvidenceRecord,
-      demandingComparison: CandidateComparisonFact,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay
   ): CertifiedSoleRecapturerRemovalBeforeTargetCapture =
@@ -767,8 +719,6 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
     val dependencyManifest = SoleRecapturerRemovalBeforeTargetCaptureDependencyManifest(
       referenceLineRecord,
       playedLineRecord,
-      demandRecord,
-      demandingComparison,
       semantic.removedDefender,
       proofSet
     )
@@ -780,8 +730,6 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
       dependencyManifest,
       referenceLineRecord,
       playedLineRecord,
-      demandRecord,
-      demandingComparison,
       referenceReplay,
       playedReplay,
       absenceUse,
@@ -821,19 +769,4 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureProof:
           !protectedSquares(square.key.toLowerCase)
         )
       )
-    )
-
-  private[chessjudgment] def exactDemandRecord(
-      source: EvidenceRecord,
-      comparison: CandidateComparisonFact,
-      root: PositionNodeRef,
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord
-  ): Boolean =
-    ActionablePlayedVsBestCausalProofDemand.acceptsRecord(
-      source,
-      comparison,
-      root,
-      referenceSource,
-      playedSource
     )

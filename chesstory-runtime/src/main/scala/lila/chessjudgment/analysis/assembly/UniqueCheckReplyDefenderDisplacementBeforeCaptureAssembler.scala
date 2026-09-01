@@ -21,10 +21,8 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureA
         context.evidenceGraph.recordsFor(input.comparison.referenceLine).collect {
           case record @ EvidenceRecord(_, payload: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence, _)
               if payload.consumesDependencies(
-                input.comparison,
                 input.referenceSource,
-                input.playedSource,
-                input.demandSource
+                input.playedSource
               ) && context.evidenceGraph.proofEligible(record) =>
             record
         }
@@ -64,8 +62,6 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureA
       input.comparison.candidateLine,
       input.referenceSource,
       input.playedSource,
-      input.demandSource,
-      input.comparison,
       input.referenceReplay,
       input.playedReplay,
       changedSeed

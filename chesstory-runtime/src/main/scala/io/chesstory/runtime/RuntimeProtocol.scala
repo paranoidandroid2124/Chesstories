@@ -535,7 +535,7 @@ object RuntimeProtocol:
       val proofPaths = result.publicProofPaths.map { path =>
         Json.obj(
           "path_occurrence_id" -> path.pathOccurrenceId,
-          "actual_branch_id" -> path.actualBranchId,
+          "analysis_continuation_branch_id" -> path.analysisContinuationBranchId,
           "realization_actor" -> passedPawnResultActorJson(path.realizationActor),
           "realization_move" -> EvidenceRef.normalizeMove(path.realizationMove),
           "realization_ply" -> path.realizationPly,
@@ -559,7 +559,6 @@ object RuntimeProtocol:
       Json.obj(
         "source_evidence_id" -> source.id,
         "event_evidence_id" -> result.eventSource.id,
-        "comparison_evidence_id" -> result.comparisonDemand.id,
         "semantic_id" -> result.semanticId,
         "occurrence_id" -> result.occurrenceId,
         "dependency_fingerprint" -> result.dependencyFingerprint,
@@ -580,7 +579,7 @@ object RuntimeProtocol:
             "scope" -> inventory.scope
           ),
           "legal_reply_move" -> EvidenceRef.normalizeMove(inventory.legalReplyMove),
-          "actual_branch_id" -> inventory.actualBranchId
+          "analysis_continuation_branch_id" -> inventory.analysisContinuationBranchId
         ),
         "branches" -> branches,
         "proof_paths" -> proofPaths,

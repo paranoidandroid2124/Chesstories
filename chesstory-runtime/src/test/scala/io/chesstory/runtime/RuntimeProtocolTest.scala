@@ -506,7 +506,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
       referenceMoves
     )
     assertEquals((playedBranch \ "line_role").as[String], "played")
-    assertEquals((playedBranch \ "branch_role").as[String], "observed_played_root")
+    assertEquals((playedBranch \ "branch_role").as[String], "played_root_analysis_continuation")
     assertEquals((playedBranch \ "root_provenance").as[String], "observed_game_root")
     assertEquals(
       (playedBranch \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
@@ -616,6 +616,13 @@ class RuntimeProtocolTest extends munit.FunSuite:
 
     assertEquals((proof \ "later_exploit_move").as[String], "d1d5")
     assertEquals((proof \ "played_sole_recapture_move").as[String], "f6d5")
+    val playedBranch = (proof \ "played_root_branch").as[JsObject]
+    assertEquals((playedBranch \ "branch_role").as[String], "played_root_analysis_continuation")
+    assertEquals((playedBranch \ "root_provenance").as[String], "observed_game_root")
+    assertEquals(
+      (playedBranch \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
+      List("observed_game_move", "certified_analysis_move")
+    )
     val premises = (proof \ "proof_paths" \ 0 \ "premises").as[List[JsObject]]
     assertEquals(
       premises.map(premise => (premise \ "role").as[String]),
@@ -690,7 +697,12 @@ class RuntimeProtocolTest extends munit.FunSuite:
       (played \ "steps").as[List[JsObject]].map(step => (step \ "move_uci").as[String]),
       playedMoves
     )
-    assertEquals((played \ "branch_role").as[String], "observed_played_sibling")
+    assertEquals((played \ "branch_role").as[String], "played_root_analysis_continuation")
+    assertEquals((played \ "root_provenance").as[String], "observed_game_root")
+    assertEquals(
+      (played \ "steps").as[List[JsObject]].map(step => (step \ "provenance").as[String]),
+      List("observed_game_move", "certified_analysis_move")
+    )
 
     val path = (proof \ "proof_paths").as[List[JsObject]] match
       case exact :: Nil => exact
@@ -803,6 +815,7 @@ class RuntimeProtocolTest extends munit.FunSuite:
       Set.empty[String]
     )
     val proof = (channel \ "passed_pawn_progress_realized_after_only_legal_reply_proof").as[JsObject]
+    assert(!proof.keys.contains("comparison_evidence_id"))
     assert((proof \ "semantic_id").as[String].matches("[0-9a-f]{64}"))
     assert((proof \ "occurrence_id").as[String].matches("[0-9a-f]{64}"))
     assert((proof \ "dependency_fingerprint").as[String].matches("[0-9a-f]{64}"))
@@ -819,30 +832,42 @@ class RuntimeProtocolTest extends munit.FunSuite:
         "issuer_evidence_id",
         "root_after",
         "legal_reply_move",
-        "actual_branch_id"
+        "analysis_continuation_branch_id"
       )
     )
     assert((inventory \ "issuer_evidence_id").as[String].nonEmpty)
     assertEquals((inventory \ "legal_reply_move").as[String], "h8h7")
     val branches = (proof \ "branches").as[List[JsObject]]
     assertEquals(branches.size, 1)
-    val actualBranch = branches.head
-    assertEquals((actualBranch \ "role").as[String], "actual_result_route")
-    assertEquals((actualBranch \ "reply_move").as[String], "h8h7")
-    assert((actualBranch \ "source_occurrence_id").as[String].nonEmpty)
-    assertEquals((inventory \ "actual_branch_id").as[String], (actualBranch \ "branch_id").as[String])
-    assert(branches.flatMap(branch => (branch \ "steps").as[List[JsObject]]).forall(step =>
-      (step \ "step_key").as[String].nonEmpty &&
-        (step \ "line" \ "line_id").as[String].nonEmpty &&
-        Set("observed_game_move", "certified_analysis_move")((step \ "provenance").as[String])
+    val analysisContinuation = branches.head
+    assertEquals((analysisContinuation \ "role").as[String], "played_root_analysis_continuation")
+    assertEquals((analysisContinuation \ "root_provenance").as[String], "observed_game_root")
+    assertEquals((analysisContinuation \ "reply_move").as[String], "h8h7")
+    assert((analysisContinuation \ "source_occurrence_id").as[String].nonEmpty)
+    assertEquals(
+      (inventory \ "analysis_continuation_branch_id").as[String],
+      (analysisContinuation \ "branch_id").as[String]
+    )
+    val continuationSteps = (analysisContinuation \ "steps").as[List[JsObject]]
+    assert(continuationSteps.forall(step =>
+      (step \ "step_key").as[String].nonEmpty && (step \ "line" \ "line_id").as[String].nonEmpty
     ))
+    assertEquals(
+      continuationSteps.map(step => (step \ "provenance").as[String]),
+      List("observed_game_move", "certified_analysis_move", "certified_analysis_move")
+    )
     val proofPaths = (proof \ "proof_paths").as[List[JsObject]]
     assertEquals(proofPaths.map(path => (path \ "path_occurrence_id").as[String]).distinct.size, proofPaths.size)
     assertEquals(
-      proofPaths.map(path => (path \ "actual_branch_id").as[String]).toSet,
-      Set((actualBranch \ "branch_id").as[String])
+      proofPaths.map(path => (path \ "analysis_continuation_branch_id").as[String]).toSet,
+      Set((analysisContinuation \ "branch_id").as[String])
     )
     assert(proofPaths.forall(path => (path \ "premises").as[List[JsObject]].nonEmpty))
+    assert(proofPaths.forall(path =>
+      (path \ "premises").as[List[JsObject]].forall(premise =>
+        Set("dependency", "result")((premise \ "role").as[String])
+      )
+    ))
     val dependencyPremises = proofPaths.flatMap(path =>
       (path \ "premises").as[List[JsObject]].filter(_.keys.contains("dependency_proof"))
     )
@@ -872,10 +897,10 @@ class RuntimeProtocolTest extends munit.FunSuite:
         (path \ "realization_ply").as[Int] >= 0
     ))
     assert(proofPaths.forall { path =>
-      val branchId = (path \ "actual_branch_id").as[String]
+      val branchId = (path \ "analysis_continuation_branch_id").as[String]
       val move = (path \ "realization_move").as[String]
       val ply = (path \ "realization_ply").as[Int]
-      Option(actualBranch)
+      Option(analysisContinuation)
         .filter(branch => (branch \ "branch_id").as[String] == branchId)
         .exists(branch => (branch \ "steps").as[List[JsObject]].exists(step =>
           (step \ "move_uci").as[String] == move && (step \ "ply").as[Int] == ply

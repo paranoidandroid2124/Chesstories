@@ -25,7 +25,6 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureC
       playedDefense.stableKey,
       coloredPieceStableKey(disabledDefender)
     )
-
   def proposition(
       rootFen: String,
       trigger: RelationMoveTransitionWitness,
@@ -52,12 +51,12 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureC
 
 private[chessjudgment] enum UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole extends CausalBranchRole:
   case CounterfactualReference
-  case ObservedPlayedRoot
+  case PlayedRootAnalysisContinuation
 
   def stableKey: String =
     this match
       case CounterfactualReference => "counterfactual-reference"
-      case ObservedPlayedRoot       => "observed-played-root"
+      case PlayedRootAnalysisContinuation => "played-root-analysis-continuation"
 
 private[chessjudgment] enum UniqueCheckReplyDefenderDisplacementBeforeCapturePremiseRole extends CausalPremiseRole:
   case CreatedCheckResponse
@@ -135,9 +134,9 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureM
       playedRecapture.role == UniqueCheckReplyDefenderDisplacementBeforeCapturePremiseRole.PlayedCaptureRecapture &&
         playedRecapture.contract == VerticalRelationContractKind.CaptureRecaptureInventory &&
         playedRecapture.result.kind == RelationFactKind.CaptureRecaptureInventory &&
-        playedRecapture.branchRole == UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.ObservedPlayedRoot &&
+        playedRecapture.branchRole == UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.PlayedRootAnalysisContinuation &&
         playedRecapture.stepIndex == 0,
-      "the third premise must be the observed played-root recapture inventory"
+      "the third premise must be the played-root analysis-continuation recapture inventory"
     )
     require(
       referenceNoRecapture.role == UniqueCheckReplyDefenderDisplacementBeforeCaptureAbsenceRole.ReferenceRecaptureAbsent &&
@@ -181,7 +180,7 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
   def semanticId: String = identity.semanticId
   def rootBoardState: String = identity.rootPositionIdentity.value
 
-/** One exact counterfactual-reference / observed-played-root occurrence. Each
+/** One exact counterfactual-reference / played-root-analysis-continuation occurrence. Each
   * branch owns its ordered provenance, while every independent proof path is
   * retained in the common proof set.
   */
@@ -199,16 +198,16 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
       proofSet.occurrence.branch(UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.CounterfactualReference).exists(
         _.line.role == LineNodeRole.BestReference
       ) &&
-      proofSet.occurrence.branch(UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.ObservedPlayedRoot).exists(
+      proofSet.occurrence.branch(UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.PlayedRootAnalysisContinuation).exists(
         _.line.role == LineNodeRole.Played
       ),
-    "this contract needs one exact BestReference and observed Played branch"
+    "this contract needs one exact BestReference and one played-root analysis continuation"
   )
   require(
     referenceSteps.size == 3,
     "a unique-check-reply defender-displacement occurrence needs trigger, reply, and realizer"
   )
-  require(playedSteps.size == 2, "the immediate played occurrence needs realizer and reply")
+  require(playedSteps.size == 2, "the played-root analysis continuation needs realizer and reply")
   require(referenceRealizerIndex == 2, "the first proof family admits only its immediate realizer")
 
   private def exactBranch(role: UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole): CausalBranchOccurrence =
@@ -221,7 +220,7 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
   def referenceBranch: CausalBranchOccurrence =
     exactBranch(UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.CounterfactualReference)
   def playedBranch: CausalBranchOccurrence =
-    exactBranch(UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.ObservedPlayedRoot)
+    exactBranch(UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.PlayedRootAnalysisContinuation)
   def referenceLine: LineNodeRef = referenceBranch.line
   def playedLine: LineNodeRef = playedBranch.line
   def referenceSteps: List[LineReplayStep] = referenceBranch.replaySteps
@@ -235,14 +234,12 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
 
 /** Exact invalidation input for the first contract. This is the only L2 cache
   * key owner: lower replays retain their own calculation caches, while this
-  * manifest names only the records, comparison, occurrence, and proof paths
+  * manifest names only the line records, occurrence, and proof paths
   * actually consumed by the result.
   */
 private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBeforeCaptureDependencyManifest private[chessjudgment] (
     referenceLineRecord: EvidenceRecord,
     playedLineRecord: EvidenceRecord,
-    demandRecord: EvidenceRecord,
-    demandingComparison: CandidateComparisonFact,
     disabledDefender: RelationColoredPieceWitness,
     proofSet: BoundedCausalProofSet
 ) extends BoundedCausalDependencyManifest:
@@ -257,22 +254,14 @@ private[chessjudgment] final case class UniqueCheckReplyDefenderDisplacementBefo
     List(
       BoundedCausalIdentity.evidenceRecordKey(referenceLineRecord),
       BoundedCausalIdentity.evidenceRecordKey(playedLineRecord),
-      BoundedCausalIdentity.evidenceRecordKey(demandRecord),
-      CandidateComparisonSemanticKey.from(demandingComparison).stableKey,
       UniqueCheckReplyDefenderDisplacementBeforeCaptureCausalAuthority.coloredPieceStableKey(disabledDefender),
       proofSet.proposition.semanticId,
       proofSet.occurrence.occurrenceId,
       proofSet.paths.map(_.pathOccurrenceId).mkString("[", ",", "]")
     ).mkString("|")
 
-  def consumes(
-      comparison: CandidateComparisonFact,
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord,
-      demandSource: EvidenceRecord
-  ): Boolean =
-    demandingComparison == comparison && referenceLineRecord == referenceSource &&
-      playedLineRecord == playedSource && demandRecord == demandSource
+  def consumes(referenceSource: EvidenceRecord, playedSource: EvidenceRecord): Boolean =
+    referenceLineRecord == referenceSource && playedLineRecord == playedSource
 
 /** Opaque occurrence authority. It retains the admitted line replays and the
   * exact lower absence proof for every path use. No legal move, attack map,
@@ -285,8 +274,6 @@ private[chessjudgment] final class UniqueCheckReplyDefenderDisplacementBeforeCap
     private val dependencyManifest: UniqueCheckReplyDefenderDisplacementBeforeCaptureDependencyManifest,
     private val referenceLineRecord: EvidenceRecord,
     private val playedLineRecord: EvidenceRecord,
-    private val demandRecord: EvidenceRecord,
-    private val demandingComparison: CandidateComparisonFact,
     private val referenceReplay: CanonicalLineReplay,
     private val playedReplay: CanonicalLineReplay,
     private val absenceAuthorities: List[
@@ -309,18 +296,13 @@ private[chessjudgment] final class UniqueCheckReplyDefenderDisplacementBeforeCap
   )
 
   def parentSources: List[EvidenceRef] =
-    List(referenceLineRecord.ref, playedLineRecord.ref, demandRecord.ref).sortBy(_.id)
+    List(referenceLineRecord.ref, playedLineRecord.ref).sortBy(_.id)
 
   private[chessjudgment] def lowerIssuerRecords: List[EvidenceRecord] =
-    List(referenceLineRecord, playedLineRecord, demandRecord)
+    List(referenceLineRecord, playedLineRecord)
 
-  def consumesDependencies(
-      comparison: CandidateComparisonFact,
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord,
-      demandSource: EvidenceRecord
-  ): Boolean =
-    dependencyManifest.consumes(comparison, referenceSource, playedSource, demandSource)
+  def consumesDependencies(referenceSource: EvidenceRecord, playedSource: EvidenceRecord): Boolean =
+    dependencyManifest.consumes(referenceSource, playedSource)
 
   def proves(record: EvidenceRecord, payload: UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence): Boolean =
     record.ref.producer == EvidenceProducer.CausalProofProducer &&
@@ -341,15 +323,7 @@ private[chessjudgment] final class UniqueCheckReplyDefenderDisplacementBeforeCap
         playedLineRecord,
         occurrence.playedLine,
         playedReplay
-      ) &&
-      UniqueCheckReplyDefenderDisplacementBeforeCaptureProof.exactDemandRecord(
-        demandRecord,
-        demandingComparison,
-        referenceLineRecord.ref.position,
-        referenceLineRecord,
-        playedLineRecord
       ) && referenceLineRecord.ref.position == playedLineRecord.ref.position &&
-      demandRecord.ref.position == referenceLineRecord.ref.position &&
       referenceReplay.replaySteps.take(occurrence.referenceSteps.size) == occurrence.referenceSteps &&
       playedReplay.replaySteps.take(occurrence.playedSteps.size) == occurrence.playedSteps &&
       closedAbsencesRemainCertified
@@ -360,7 +334,7 @@ private[chessjudgment] final class UniqueCheckReplyDefenderDisplacementBeforeCap
       val issuerRecord = binding.branchRole match
         case UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.CounterfactualReference =>
           referenceLineRecord
-        case UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.ObservedPlayedRoot =>
+        case UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.PlayedRootAnalysisContinuation =>
           playedLineRecord
         case _ =>
           throw IllegalStateException(
@@ -431,8 +405,6 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       playedLine: LineNodeRef,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
-      demandRecord: EvidenceRecord,
-      demandingComparison: CandidateComparisonFact,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
       changedSeed: UniqueCheckReplyDefenderDisplacementBeforeCaptureChangedSeed
@@ -447,8 +419,6 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
           playedLine,
           referenceLineRecord,
           playedLineRecord,
-          demandRecord,
-          demandingComparison,
           referenceReplay,
           playedReplay,
           referenceRealizerIndex = 2,
@@ -462,8 +432,6 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       playedLine: LineNodeRef,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
-      demandRecord: EvidenceRecord,
-      demandingComparison: CandidateComparisonFact,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
       referenceRealizerIndex: Int,
@@ -482,15 +450,7 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
         playedLine,
         playedReplay
       )
-      if exactDemandRecord(
-        demandRecord,
-        demandingComparison,
-        referenceLineRecord.ref.position,
-        referenceLineRecord,
-        playedLineRecord
-      )
-      if demandingComparison.referenceLine == referenceLine
-      if demandingComparison.candidateLine == playedLine
+      if referenceLineRecord.ref.position == playedLineRecord.ref.position
       triggerStep <- referenceReplay.replaySteps.headOption
       forcedReplyStep <- referenceReplay.replaySteps.lift(1)
       realizerStep <- referenceReplay.replaySteps.lift(referenceRealizerIndex)
@@ -552,7 +512,7 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
         referenceRealizerIndex + 1
       )
       playedBranch = CausalBranchOccurrence.observedRootWithAnalyzedContinuation(
-        UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.ObservedPlayedRoot,
+        UniqueCheckReplyDefenderDisplacementBeforeCaptureBranchRole.PlayedRootAnalysisContinuation,
         playedLine,
         playedReplay,
         2
@@ -578,8 +538,6 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
           defender,
           referenceLineRecord,
           playedLineRecord,
-          demandRecord,
-          demandingComparison,
           referenceReplay,
           playedReplay,
           referenceRealizerIndex
@@ -592,8 +550,6 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       disabledDefender: RelationColoredPieceWitness,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
-      demandRecord: EvidenceRecord,
-      demandingComparison: CandidateComparisonFact,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
       referenceRealizerIndex: Int
@@ -674,8 +630,6 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
     val dependencyManifest = UniqueCheckReplyDefenderDisplacementBeforeCaptureDependencyManifest(
       referenceLineRecord,
       playedLineRecord,
-      demandRecord,
-      demandingComparison,
       semantic.disabledDefender,
       proofSet
     )
@@ -687,8 +641,6 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
       dependencyManifest,
       referenceLineRecord,
       playedLineRecord,
-      demandRecord,
-      demandingComparison,
       referenceReplay,
       playedReplay,
       List(absenceUse -> inputs.absenceAuthority)
@@ -732,19 +684,4 @@ private[chessjudgment] object UniqueCheckReplyDefenderDisplacementBeforeCaptureP
           !protectedSquares(square.key.toLowerCase)
         )
       )
-    )
-
-  private[chessjudgment] def exactDemandRecord(
-      source: EvidenceRecord,
-      comparison: CandidateComparisonFact,
-      root: PositionNodeRef,
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord
-  ): Boolean =
-    ActionablePlayedVsBestCausalProofDemand.acceptsRecord(
-      source,
-      comparison,
-      root,
-      referenceSource,
-      playedSource
     )

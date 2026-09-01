@@ -99,9 +99,6 @@ object PassedPawnResultEventAssembler:
       allocator: JudgmentProvenanceAllocator,
       demand: PassedPawnResultDemand
   ): List[EvidenceRecord] =
-    val exactDemand = demand.input
-    val demandingComparison = exactDemand.demandSource
-    val demandIdentity = demand.stableKey
     demand.roots.flatMap { rootDemand =>
         val rootLine = rootDemand.rootLine
         val transition = rootDemand.rootTransition
@@ -206,8 +203,7 @@ object PassedPawnResultEventAssembler:
           val occurrenceKey = allocator.key(episodeOccurrenceKey(payload))
           val parents = List(
             structuralRecord.ref,
-            transition.evidence,
-            demandingComparison.ref
+            transition.evidence
           ) ++ payload.lineOccurrenceOwners
           require(
             parents.map(_.id).distinct.size == parents.size,
@@ -215,7 +211,7 @@ object PassedPawnResultEventAssembler:
           )
           PassedPawnResultEventDraft(
             suffix =
-              s"passed-pawn-result-event:${allocator.key(rootLine.role)}:${rootLine.rootMove}:${allocator.key(payload.passedPawnResultKind.id)}:demand:$demandIdentity:causal:$occurrenceKey",
+              s"passed-pawn-result-event:${allocator.key(rootLine.role)}:${rootLine.rootMove}:${allocator.key(payload.passedPawnResultKind.id)}:causal:$occurrenceKey",
             position = transition.from,
             line = rootLine,
             scope = transition.role.scope,

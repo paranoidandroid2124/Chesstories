@@ -107,11 +107,7 @@ export interface MoveReviewReason {
 
 interface MoveReviewTypedBranch {
   id: string;
-  role:
-    | 'counterfactual_reference'
-    | 'observed_played_root'
-    | 'observed_played_sibling'
-    | 'actual_result_route';
+  role: 'counterfactual_reference' | 'played_root_analysis_continuation';
   provenance: 'counterfactual_analyzed_root' | 'observed_game_root';
   lineId: string;
   lineRole: 'played' | 'best_reference' | 'alternative';
@@ -149,7 +145,7 @@ type MoveReviewPassedPawnRelationKind =
   | 'pawn_topology_transition'
   | 'capture_recapture_inventory';
 
-type MoveReviewPassedPawnLineScope = 'best_line' | 'played_line' | 'candidate_line';
+type MoveReviewPassedPawnLineScope = 'played_line';
 
 type MoveReviewPassedPawnPositionState =
   | { kind: 'occupied_by'; side: 'white' | 'black'; square: Key; piece: MoveReviewPieceRole }
@@ -176,7 +172,7 @@ interface MoveReviewPassedPawnDependencyProof {
     stepKey: string;
     sourcePremiseIds: string[];
     issuerEvidenceId: string;
-    line: MoveReviewTypedLine;
+    line: MoveReviewTypedLine & { role: 'played' };
     scope: MoveReviewPassedPawnLineScope;
   }[];
   positionStateIssuers: {
@@ -189,7 +185,7 @@ interface MoveReviewPassedPawnDependencyProof {
     move: Uci;
     fenBefore: FEN;
     fenAfter: FEN;
-    line: MoveReviewTypedLine;
+    line: MoveReviewTypedLine & { role: 'played' };
     scope: MoveReviewPassedPawnLineScope;
   }[];
 }
@@ -318,7 +314,6 @@ export type MoveReviewReasonMessage =
       causeKind: 'passed_pawn_progress';
       sourceEvidenceId: string;
       eventEvidenceId: string;
-      comparisonEvidenceId: string;
       semanticId: string;
       occurrenceId: string;
       dependencyFingerprint: string;
@@ -336,16 +331,20 @@ export type MoveReviewReasonMessage =
       pathRealizationActor: MoveReviewTypedActor;
       pathRealizationMove: Uci;
       pathRealizationPly: number;
-      actualBranch: MoveReviewTypedBranch;
-      actualOccurrenceSteps: MoveReviewPassedPawnProgressWireStep[];
+      analysisContinuationBranch: MoveReviewTypedBranch & {
+        role: 'played_root_analysis_continuation';
+        provenance: 'observed_game_root';
+        lineRole: 'played';
+      };
+      analysisContinuationSteps: MoveReviewPassedPawnProgressWireStep[];
       premises: MoveReviewTypedPremise[];
       closureUseIds: string[];
       lowerPremiseIds: string[];
       replyClosure: {
         issuerEvidenceId: string;
-        rootAfter: { fen: FEN; ply: number; scope: string };
+        rootAfter: { fen: FEN; ply: number; scope: 'played_transition' };
         legalReplyMove: Uci;
-        actualBranchId: string;
+        analysisContinuationBranchId: string;
       };
     };
 
@@ -733,11 +732,11 @@ export function moveReviewReasonText(
     const occurrenceComparison =
       message.branch.role === 'counterfactual_reference'
         ? locale === 'ko-KR'
-          ? `반사실 기준 가지: ${referenceSummary}. 실제 둔 수 가지에서는 ${playedSummary}`
-          : `counterfactual reference branch: ${referenceSummary}. In the observed played branch, ${playedSummary}`
+          ? `반사실 기준 분석: ${referenceSummary}. 관측된 실전 첫 수 이후 인증 분석 후속 수순에서는 ${playedSummary}`
+          : `counterfactual reference analysis: ${referenceSummary}. From the observed played root, the certified analysis continuation shows ${playedSummary}`
         : locale === 'ko-KR'
-          ? `실제 둔 수 가지: ${playedSummary}. 반사실 기준 가지에서는 ${referenceSummary}`
-          : `observed played branch: ${playedSummary}. In the counterfactual reference branch, ${referenceSummary}`;
+          ? `관측된 실전 첫 수 이후 인증 분석 후속 수순: ${playedSummary}. 반사실 기준 분석에서는 ${referenceSummary}`
+          : `from the observed played root, the certified analysis continuation shows ${playedSummary}. In the counterfactual reference analysis, ${referenceSummary}`;
     return locale === 'ko-KR'
       ? `[${message.causeKind}] ${occurrenceComparison}. 경로 ${message.pathOccurrenceId.slice(0, 8)}는 ${absenceIssuer}가 ${message.absence.fen} (ply ${message.absence.ply})에서 인증한 부재 ${message.absence.query}와 하위 증거 ${premises}를 대조합니다${disabled}${mechanism}.`
       : `[${message.causeKind}] ${occurrenceComparison}. Path ${message.pathOccurrenceId.slice(0, 8)} contrasts absence ${message.absence.query}, certified by the ${absenceIssuer} at ${message.absence.fen} (ply ${message.absence.ply}), with lower proofs ${premises}${disabled}${mechanism}.`;
@@ -756,12 +755,12 @@ export function moveReviewReasonText(
       .join(', ');
     const reference =
       locale === 'ko-KR'
-        ? `반사실 기준 가지에서 ${message.remover.from}의 ${message.remover.pieceBefore}가 ${message.removedDefender.square}의 ${message.removedDefender.piece}을 잡고, ${message.removalRecapture.moveUci}로 재포획된 뒤 ${message.laterExploitMove}가 ${message.capturedTarget.square}의 ${message.capturedTarget.piece}을 잡습니다`
-        : `in the counterfactual reference branch, the ${message.remover.pieceBefore} from ${message.remover.from} captures the ${message.removedDefender.piece} on ${message.removedDefender.square}, is recaptured by ${message.removalRecapture.moveUci}, and ${message.laterExploitMove} then captures the ${message.capturedTarget.piece} on ${message.capturedTarget.square}`;
+        ? `반사실 기준 분석에서 ${message.remover.from}의 ${message.remover.pieceBefore}가 ${message.removedDefender.square}의 ${message.removedDefender.piece}을 잡고, ${message.removalRecapture.moveUci}로 재포획된 뒤 ${message.laterExploitMove}가 ${message.capturedTarget.square}의 ${message.capturedTarget.piece}을 잡습니다`
+        : `in the counterfactual reference analysis, the ${message.remover.pieceBefore} from ${message.remover.from} captures the ${message.removedDefender.piece} on ${message.removedDefender.square}, is recaptured by ${message.removalRecapture.moveUci}, and ${message.laterExploitMove} then captures the ${message.capturedTarget.piece} on ${message.capturedTarget.square}`;
     const played =
       locale === 'ko-KR'
-        ? `실전 가지에서는 같은 ${message.laterExploitMove}에 ${message.removedDefender.square}의 ${message.removedDefender.piece}이 ${message.playedSoleRecaptureMove}로 재포획합니다`
-        : `in the observed played branch, the same ${message.laterExploitMove} is recaptured by the ${message.removedDefender.piece} from ${message.removedDefender.square} with ${message.playedSoleRecaptureMove}`;
+        ? `관측된 실전 첫 수 이후 인증 분석 후속 수순에서는 같은 ${message.laterExploitMove}에 ${message.removedDefender.square}의 ${message.removedDefender.piece}이 ${message.playedSoleRecaptureMove}로 재포획합니다`
+        : `from the observed played root, the certified analysis continuation shows the same ${message.laterExploitMove} recaptured by the ${message.removedDefender.piece} from ${message.removedDefender.square} with ${message.playedSoleRecaptureMove}`;
     const occurrenceComparison =
       message.branch.role === 'counterfactual_reference'
         ? `${reference}; ${played}`
@@ -773,12 +772,12 @@ export function moveReviewReasonText(
   if (message.kind === 'vacated-gate-enables-unrecapturable-slider-capture') {
     const reference =
       locale === 'ko-KR'
-        ? `반사실 기준 가지에서 ${message.enabler.from}의 ${message.enabler.pieceBefore}가 게이트를 비운 뒤 ${message.exploitMove}로 ${message.capturedTarget.square}의 ${message.capturedTarget.piece}을 잡습니다`
-        : `in the counterfactual reference branch, the ${message.enabler.pieceBefore} vacates ${message.enabler.from}, and ${message.exploitMove} then captures the ${message.capturedTarget.piece} on ${message.capturedTarget.square}`;
+        ? `반사실 기준 분석에서 ${message.enabler.from}의 ${message.enabler.pieceBefore}가 게이트를 비운 뒤 ${message.exploitMove}로 ${message.capturedTarget.square}의 ${message.capturedTarget.piece}을 잡습니다`
+        : `in the counterfactual reference analysis, the ${message.enabler.pieceBefore} vacates ${message.enabler.from}, and ${message.exploitMove} then captures the ${message.capturedTarget.piece} on ${message.capturedTarget.square}`;
     const played =
       locale === 'ko-KR'
-        ? `실전 형제 가지에서는 ${message.gateBlocker.square}의 ${message.gateBlocker.piece}이 남아 같은 ${message.exploitMove} 자원이 없습니다`
-        : `in the observed played sibling, the ${message.gateBlocker.piece} remains on ${message.gateBlocker.square}, so the same ${message.exploitMove} resource is absent`;
+        ? `관측된 실전 첫 수 이후 인증 분석 후속 수순에서는 ${message.gateBlocker.square}의 ${message.gateBlocker.piece}이 남아 같은 ${message.exploitMove} 자원이 없습니다`
+        : `from the observed played root, the certified analysis continuation keeps the ${message.gateBlocker.piece} on ${message.gateBlocker.square}, so the same ${message.exploitMove} resource is absent`;
     const occurrenceComparison =
       message.branch.role === 'counterfactual_reference'
         ? `${reference}; ${played}`
@@ -790,8 +789,8 @@ export function moveReviewReasonText(
   const targets = message.resultTargetSubjects.join(', ');
   const premises = message.premises.map(premise => premise.resultId.slice(0, 8)).join(', ');
   return locale === 'ko-KR'
-    ? `[${message.causeKind}] ${message.rootActor.from}의 ${message.rootActor.pieceBefore}가 ${message.rootActor.to}로 간 뒤, 유일 합법 응수 ${message.replyMove}와 ${message.pathRealizationMove}를 거쳐 ${targets}의 통과폰 진행 결과가 발생합니다 (ply ${message.pathRealizationPly}; ${message.replyClosure.issuerEvidenceId} 인벤토리가 ${message.replyClosure.rootAfter.fen}에서 그 응수를 인증하고, ${message.eventEvidenceId}가 실제 결과 occurrence를 소유함, 경로 전제 ${premises}, 독립 경로 ${message.pathOccurrenceId.slice(0, 8)}).`
-    : `[${message.causeKind}] After the ${message.rootActor.pieceBefore} moves ${message.rootActor.from}–${message.rootActor.to}, the only legal reply ${message.replyMove} and ${message.pathRealizationMove} lead to the passed-pawn progress result for ${targets} (ply ${message.pathRealizationPly}; inventory ${message.replyClosure.issuerEvidenceId} certifies that reply at ${message.replyClosure.rootAfter.fen}; ${message.eventEvidenceId} owns the actual result occurrence; path premises ${premises}; independent path ${message.pathOccurrenceId.slice(0, 8)}).`;
+    ? `[${message.causeKind}] 관측된 실전 첫 수 ${message.rootActor.from}–${message.rootActor.to} 뒤 인증 분석 후속 수순의 유일 합법 응수 ${message.replyMove}와 ${message.pathRealizationMove}에서 ${targets}의 통과폰 진행 결과가 확인됩니다 (ply ${message.pathRealizationPly}; ${message.replyClosure.issuerEvidenceId} 인벤토리가 ${message.replyClosure.rootAfter.fen}에서 그 응수를 인증하고, ${message.eventEvidenceId}가 분석 결과 occurrence를 소유함, 경로 전제 ${premises}, 독립 경로 ${message.pathOccurrenceId.slice(0, 8)}).`
+    : `[${message.causeKind}] From the observed played root ${message.rootActor.from}–${message.rootActor.to}, the certified analysis continuation through the only legal reply ${message.replyMove} and ${message.pathRealizationMove} establishes the passed-pawn progress result for ${targets} (ply ${message.pathRealizationPly}; inventory ${message.replyClosure.issuerEvidenceId} certifies that reply at ${message.replyClosure.rootAfter.fen}; ${message.eventEvidenceId} owns the analysis-result occurrence; path premises ${premises}; independent path ${message.pathOccurrenceId.slice(0, 8)}).`;
 }
 
 export function moveReviewReasonRole(
@@ -1499,7 +1498,6 @@ function projectCommentary(
   if (!bestUci || !verdictCode || !referenceEndpoint || !reviewedEndpoint) return;
   const causalTransport = projectCausalTransport(
     value.causal_explanations,
-    verdictRef,
     move,
     bestUci,
     subject.before.fen,
@@ -1555,22 +1553,27 @@ interface ProjectedCausalReason {
 }
 
 type MoveReviewPublicCauseKind = 'wrong_move_order' | 'missed_tactical_resource' | 'passed_pawn_progress';
-type MoveReviewPublicCauseExposure = 'primary' | 'complementary';
 
 interface ProjectedCausalTransport {
   reasons: ProjectedCausalReason[];
 }
 
-interface CausalFacetMetadata {
+type CausalFacetMetadata = {
   causeEvidenceId: string;
-  causeKind: MoveReviewPublicCauseKind;
-  exposure: MoveReviewPublicCauseExposure;
   channels: unknown[];
-}
+} & (
+  | {
+      causeKind: 'wrong_move_order' | 'missed_tactical_resource';
+      exposure: 'primary';
+    }
+  | {
+      causeKind: 'passed_pawn_progress';
+      exposure: 'complementary';
+    }
+);
 
 function projectCausalTransport(
   value: unknown,
-  comparisonEvidenceId: string,
   candidateMove: Uci,
   bestMove: Uci,
   startFen: FEN,
@@ -1598,7 +1601,6 @@ function projectCausalTransport(
         channel,
         facet.causeEvidenceId,
         facet.causeKind,
-        comparisonEvidenceId,
         candidateMove,
         bestMove,
         startFen,
@@ -1625,27 +1627,22 @@ function projectCausalFacetMetadata(value: unknown): CausalFacetMetadata | undef
   if (!isObject(value)) return;
   const causeEvidenceId = nonEmptyWireString(value.cause_evidence_id);
   if (!causeEvidenceId || !Array.isArray(value.channels) || value.channels.length < 1) return;
-  if (
-    !hasExactKeys(value, ['cause_evidence_id', 'kind', 'exposure', 'channels']) ||
-    (value.kind !== 'wrong_move_order' &&
-      value.kind !== 'passed_pawn_progress' &&
-      value.kind !== 'missed_tactical_resource') ||
-    (value.exposure !== 'primary' && value.exposure !== 'complementary')
-  )
-    return;
-  return {
-    causeEvidenceId,
-    causeKind: value.kind,
-    exposure: value.exposure,
-    channels: value.channels,
-  };
+  if (!hasExactKeys(value, ['cause_evidence_id', 'kind', 'exposure', 'channels'])) return;
+  if (value.kind === 'passed_pawn_progress') {
+    if (value.exposure !== 'complementary') return;
+    return { causeEvidenceId, causeKind: value.kind, exposure: value.exposure, channels: value.channels };
+  }
+  if (value.kind === 'wrong_move_order' || value.kind === 'missed_tactical_resource') {
+    if (value.exposure !== 'primary') return;
+    return { causeEvidenceId, causeKind: value.kind, exposure: value.exposure, channels: value.channels };
+  }
+  return;
 }
 
 function projectCausalChannel(
   value: unknown,
   causeEvidenceId: string,
   causeKind: MoveReviewPublicCauseKind,
-  comparisonEvidenceId: string,
   candidateMove: Uci,
   bestMove: Uci,
   startFen: FEN,
@@ -1695,7 +1692,6 @@ function projectCausalChannel(
     return projectPassedPawnProgressRealizedAfterOnlyLegalReply(
       value,
       causeEvidenceId,
-      comparisonEvidenceId,
       candidateMove,
       startFen,
     );
@@ -1716,10 +1712,13 @@ interface MoveReviewWireStep {
 
 interface MoveReviewPassedPawnProgressWireStep extends MoveReviewWireStep {
   stepKey: string;
-  line: MoveReviewTypedLine;
+  line: MoveReviewTypedLine & { role: 'played' };
 }
 
 interface MoveReviewPassedPawnProgressWireBranch extends MoveReviewWireBranch {
+  role: 'played_root_analysis_continuation';
+  provenance: 'observed_game_root';
+  lineRole: 'played';
   steps: MoveReviewPassedPawnProgressWireStep[];
 }
 
@@ -1758,7 +1757,7 @@ interface MoveReviewVacatedGateEnablesUnrecapturableSliderCaptureClosureUse {
   issuerOccurrenceId: string;
   query: string;
   branchId: string;
-  branchRole: 'counterfactual_reference' | 'observed_played_sibling';
+  branchRole: 'counterfactual_reference' | 'played_root_analysis_continuation';
   afterStepIndex: number;
   fen: FEN;
   ply: number;
@@ -1829,7 +1828,7 @@ function projectUniqueCheckReplyDefenderDisplacementBeforeCapture(
     'counterfactual_reference',
     startFen,
   );
-  const played = projectTypedBranch(wire.played_root_branch, 'observed_played_root', startFen);
+  const played = projectTypedBranch(wire.played_root_branch, 'played_root_analysis_continuation', startFen);
   const realizingMove = uci(wire.realizing_move);
   const defenseMove = uci(wire.played_root_branch_legal_defense_move);
   const participants = projectUniqueCheckReplyDefenderDisplacementBeforeCaptureParticipants(
@@ -1927,7 +1926,7 @@ function projectSoleRecapturerRemovalBeforeTargetCapture(
     'counterfactual_reference',
     startFen,
   );
-  const played = projectTypedBranch(wire.played_root_branch, 'observed_played_root', startFen);
+  const played = projectTypedBranch(wire.played_root_branch, 'played_root_analysis_continuation', startFen);
   const laterExploitMove = uci(wire.later_exploit_move);
   const playedSoleRecaptureMove = uci(wire.played_sole_recapture_move);
   const participants = projectSoleRecapturerRemovalBeforeTargetCaptureParticipants(wire.participants);
@@ -2146,7 +2145,12 @@ function projectVacatedGateEnablesUnrecapturableSliderCapture(
     startFen,
     true,
   );
-  const played = projectTypedBranch(wire.played_root_branch, 'observed_played_sibling', startFen, true);
+  const played = projectTypedBranch(
+    wire.played_root_branch,
+    'played_root_analysis_continuation',
+    startFen,
+    true,
+  );
   const participants = projectVacatedGateEnablesUnrecapturableSliderCaptureParticipants(wire.participants);
   const exploitMove = uci(wire.exploit_move);
   if (
@@ -2374,7 +2378,7 @@ function projectVacatedGateEnablesUnrecapturableSliderCaptureClosureUse(
     issuerOccurrenceId: value.issuer_occurrence_id as string,
     query: value.query as string,
     branchId: branch.id,
-    branchRole: branch.role as 'counterfactual_reference' | 'observed_played_sibling',
+    branchRole: branch.role as 'counterfactual_reference' | 'played_root_analysis_continuation',
     afterStepIndex: stepIndex,
     fen,
     ply,
@@ -2630,7 +2634,6 @@ function projectTypedPremise(
 function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
   channel: Record<string, unknown>,
   causeEvidenceId: string,
-  comparisonEvidenceId: string,
   candidateMove: Uci,
   startFen: FEN,
 ): MoveReviewReason[] | undefined {
@@ -2640,7 +2643,6 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
     !hasExactKeys(wire, [
       'source_evidence_id',
       'event_evidence_id',
-      'comparison_evidence_id',
       'semantic_id',
       'occurrence_id',
       'dependency_fingerprint',
@@ -2660,7 +2662,6 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
     ]) ||
     !nonEmptyWireString(wire.source_evidence_id) ||
     !nonEmptyWireString(wire.event_evidence_id) ||
-    wire.comparison_evidence_id !== comparisonEvidenceId ||
     !typedHash(wire.semantic_id) ||
     !typedHash(wire.occurrence_id) ||
     !typedHash(wire.dependency_fingerprint) ||
@@ -2676,7 +2677,7 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
   const realizingMove = uci(wire.realizing_move);
   const rootActor = projectTypedActor(wire.root_actor, false, true);
   const realizingActor = projectTypedActor(wire.realizing_actor, false, true);
-  const rootLine = projectPassedPawnProgressLine(wire.root_line);
+  const rootLine = projectTypedLine(wire.root_line);
   const rootPly = nonNegativeInteger(wire.root_ply);
   const realizingPly = nonNegativeInteger(wire.realizing_ply);
   const resultPlyOffset = nonNegativeInteger(wire.result_ply_offset);
@@ -2692,7 +2693,7 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
     !rootLine ||
     rootLine.role !== 'played' ||
     rootLine.rootMove !== rootMove ||
-    inventory?.rootAfter.scope !== passedPawnResultTransitionScope(rootLine.role) ||
+    inventory?.rootAfter.scope !== 'played_transition' ||
     rootPly === undefined ||
     rootPly < 1 ||
     realizingPly === undefined ||
@@ -2700,15 +2701,18 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
     resultPlyOffset < 1 ||
     !inventory ||
     !(wire.lower_premise_ids as string[]).includes(wire.event_evidence_id as string) ||
-    !(wire.lower_premise_ids as string[]).includes(inventory.issuerEvidenceId) ||
-    !(wire.lower_premise_ids as string[]).includes(comparisonEvidenceId)
+    !(wire.lower_premise_ids as string[]).includes(inventory.issuerEvidenceId)
   )
     return;
   const branches = wire.branches.map(branch => projectTypedBranch(branch, undefined, startFen));
   if (
     !branches.every(
       (branch): branch is MoveReviewPassedPawnProgressWireBranch =>
-        !!branch && branch.steps.every(isPassedPawnResultWireStep),
+        !!branch &&
+        branch.role === 'played_root_analysis_continuation' &&
+        branch.provenance === 'observed_game_root' &&
+        branch.lineRole === 'played' &&
+        branch.steps.every(isPassedPawnResultWireStep),
     ) ||
     !canonicalStrings(branches.map(branch => branch.id)) ||
     branches.some(
@@ -2722,23 +2726,23 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
     )
   )
     return;
-  const actualBranch = branches[0];
-  const actualLast = actualBranch?.steps[actualBranch.steps.length - 1];
+  const analysisContinuation = branches[0];
+  const continuationLast = analysisContinuation?.steps[analysisContinuation.steps.length - 1];
   if (
-    !actualBranch ||
-    actualBranch.role !== 'actual_result_route' ||
-    !actualBranch.replyMove ||
-    !actualBranch.sourceOccurrenceId ||
-    actualBranch.steps.length < 2 ||
-    actualBranch.steps[0]?.ply !== rootPly ||
-    actualLast?.move !== realizingMove ||
-    actualLast.ply !== realizingPly ||
+    !analysisContinuation ||
+    analysisContinuation.role !== 'played_root_analysis_continuation' ||
+    !analysisContinuation.replyMove ||
+    !analysisContinuation.sourceOccurrenceId ||
+    analysisContinuation.steps.length < 2 ||
+    analysisContinuation.steps[0]?.ply !== rootPly ||
+    continuationLast?.move !== realizingMove ||
+    continuationLast.ply !== realizingPly ||
     realizingPly - rootPly !== resultPlyOffset ||
-    actualBranch.id !== inventory.actualBranchId ||
-    actualBranch.replyMove !== inventory.legalReplyMove ||
-    actualBranch.steps[1]?.move !== inventory.legalReplyMove ||
-    actualBranch.steps[0]?.fenAfter !== inventory.rootAfter.fen ||
-    actualBranch.steps[0]?.ply !== inventory.rootAfter.ply
+    analysisContinuation.id !== inventory.analysisContinuationBranchId ||
+    analysisContinuation.replyMove !== inventory.legalReplyMove ||
+    analysisContinuation.steps[1]?.move !== inventory.legalReplyMove ||
+    analysisContinuation.steps[0]?.fenAfter !== inventory.rootAfter.fen ||
+    analysisContinuation.steps[0]?.ply !== inventory.rootAfter.ply
   )
     return;
   const branchById = new Map(branches.map(branch => [branch.id, branch]));
@@ -2749,7 +2753,7 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
     !paths.every((path): path is MoveReviewPassedPawnProgressRealizedAfterOnlyLegalReplyPath => !!path) ||
     !canonicalStrings(paths.map(path => path.id)) ||
     !unique(paths.flatMap(path => path.closureUseIds)) ||
-    paths.some(path => path.branch.id !== actualBranch.id)
+    paths.some(path => path.branch.id !== analysisContinuation.id)
   )
     return;
   return paths.map(path => {
@@ -2764,7 +2768,6 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
         causeKind: 'passed_pawn_progress' as const,
         sourceEvidenceId: wire.source_evidence_id as string,
         eventEvidenceId: wire.event_evidence_id as string,
-        comparisonEvidenceId: wire.comparison_evidence_id as string,
         semanticId: wire.semantic_id as string,
         occurrenceId: wire.occurrence_id as string,
         dependencyFingerprint: wire.dependency_fingerprint as string,
@@ -2782,8 +2785,8 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
         pathRealizationActor: path.realizationActor,
         pathRealizationMove: path.realizationMove,
         pathRealizationPly: path.realizationPly,
-        actualBranch: wireBranchIdentity(path.branch),
-        actualOccurrenceSteps: path.branch.steps,
+        analysisContinuationBranch: wireBranchIdentity(path.branch),
+        analysisContinuationSteps: path.branch.steps,
         premises: path.premises,
         closureUseIds: path.closureUseIds,
         lowerPremiseIds: [...(wire.lower_premise_ids as string[])],
@@ -2791,7 +2794,7 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
           issuerEvidenceId: inventory.issuerEvidenceId,
           rootAfter: inventory.rootAfter,
           legalReplyMove: inventory.legalReplyMove,
-          actualBranchId: inventory.actualBranchId,
+          analysisContinuationBranchId: inventory.analysisContinuationBranchId,
         },
       },
       proof,
@@ -2802,14 +2805,19 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReply(
 function projectPassedPawnProgressRealizedAfterOnlyLegalReplyInventory(value: unknown):
   | {
       issuerEvidenceId: string;
-      rootAfter: { fen: FEN; ply: number; scope: string };
+      rootAfter: { fen: FEN; ply: number; scope: 'played_transition' };
       legalReplyMove: Uci;
-      actualBranchId: string;
+      analysisContinuationBranchId: string;
     }
   | undefined {
   if (
     !isObject(value) ||
-    !hasExactKeys(value, ['issuer_evidence_id', 'root_after', 'legal_reply_move', 'actual_branch_id']) ||
+    !hasExactKeys(value, [
+      'issuer_evidence_id',
+      'root_after',
+      'legal_reply_move',
+      'analysis_continuation_branch_id',
+    ]) ||
     !nonEmptyWireString(value.issuer_evidence_id) ||
     !isObject(value.root_after) ||
     !hasExactKeys(value.root_after, ['fen', 'ply', 'scope'])
@@ -2817,26 +2825,27 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReplyInventory(value: un
     return;
   const rootAfterFen = fenText(value.root_after.fen);
   const rootAfterPly = nonNegativeInteger(value.root_after.ply);
-  const rootAfterScope = nonEmptyWireString(value.root_after.scope);
+  const rootAfterScope = value.root_after.scope;
   const legalReplyMove = uci(value.legal_reply_move);
-  const actualBranchId = typedHash(value.actual_branch_id);
-  return !rootAfterFen || rootAfterPly === undefined || rootAfterPly < 1 || !rootAfterScope || !legalReplyMove || !actualBranchId
+  const analysisContinuationBranchId = typedHash(value.analysis_continuation_branch_id);
+  return !rootAfterFen ||
+    rootAfterPly === undefined ||
+    rootAfterPly < 1 ||
+    rootAfterScope !== 'played_transition' ||
+    !legalReplyMove ||
+    !analysisContinuationBranchId
     ? undefined
     : {
         issuerEvidenceId: value.issuer_evidence_id as string,
-        rootAfter: { fen: rootAfterFen, ply: rootAfterPly, scope: rootAfterScope },
+        rootAfter: { fen: rootAfterFen, ply: rootAfterPly, scope: 'played_transition' },
         legalReplyMove,
-        actualBranchId,
+        analysisContinuationBranchId,
       };
 }
 
 function projectTypedBranch(
   value: unknown,
-  boundedCausalRole:
-    | 'counterfactual_reference'
-    | 'observed_played_root'
-    | 'observed_played_sibling'
-    | undefined,
+  boundedCausalRole: 'counterfactual_reference' | 'played_root_analysis_continuation' | undefined,
   startFen: FEN,
   variableBoundedLength = false,
 ): MoveReviewWireBranch | undefined {
@@ -2865,7 +2874,7 @@ function projectTypedBranch(
     !Array.isArray(value.steps)
   )
     return;
-  const line = projectPassedPawnProgressLine(
+  const line = projectTypedLine(
     boundedCausal
       ? {
           line_id: value.line_id,
@@ -2875,7 +2884,7 @@ function projectTypedBranch(
         }
       : value.line,
   );
-  if (!line) return;
+  if (!line || (!boundedCausal && line.role !== 'played')) return;
   const steps = value.steps.map(step => projectWireStep(step, !boundedCausal));
   if (
     !steps.every((step): step is MoveReviewWireStep => !!step) ||
@@ -2886,7 +2895,6 @@ function projectTypedBranch(
     return;
   if (boundedCausal) {
     const reference = boundedCausalRole === 'counterfactual_reference';
-    const observedSibling = boundedCausalRole === 'observed_played_sibling';
     const lengthIsExact = variableBoundedLength
       ? steps.length >= (reference ? 3 : 2)
       : steps.length === (reference ? 3 : 2);
@@ -2895,7 +2903,6 @@ function projectTypedBranch(
       line.role !== (reference ? 'best_reference' : 'played') ||
       value.root_provenance !== (reference ? 'counterfactual_analyzed_root' : 'observed_game_root') ||
       !lengthIsExact ||
-      (!reference && observedSibling !== variableBoundedLength) ||
       !wireStepsAreContinuous(steps, startFen) ||
       (reference
         ? steps.some(step => step.provenance !== 'certified_analysis_move')
@@ -2914,13 +2921,12 @@ function projectTypedBranch(
       steps,
     };
   }
-  if (value.role !== 'actual_result_route') return;
+  if (value.role !== 'played_root_analysis_continuation') return;
   const occurrenceSteps = steps as MoveReviewPassedPawnProgressWireStep[];
-  const observedRoot = line.role === 'played';
   if (
     !unique(occurrenceSteps.map(step => step.stepKey)) ||
-    value.root_provenance !== (observedRoot ? 'observed_game_root' : 'counterfactual_analyzed_root') ||
-    occurrenceSteps[0]?.provenance !== (observedRoot ? 'observed_game_move' : 'certified_analysis_move') ||
+    value.root_provenance !== 'observed_game_root' ||
+    occurrenceSteps[0]?.provenance !== 'observed_game_move' ||
     occurrenceSteps.slice(1).some(step => step.provenance !== 'certified_analysis_move') ||
     occurrenceSteps.some(step => !samePassedPawnResultLine(step.line, line)) ||
     occurrenceSteps
@@ -2962,7 +2968,7 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReplyPath(
     !isObject(value) ||
     !hasExactKeys(value, [
       'path_occurrence_id',
-      'actual_branch_id',
+      'analysis_continuation_branch_id',
       'realization_actor',
       'realization_move',
       'realization_ply',
@@ -2970,12 +2976,12 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReplyPath(
       'closure_use_ids',
     ]) ||
     !typedHash(value.path_occurrence_id) ||
-    !typedHash(value.actual_branch_id) ||
+    !typedHash(value.analysis_continuation_branch_id) ||
     !Array.isArray(value.premises) ||
     !validWireStrings(value.closure_use_ids, 1, typedHash)
   )
     return;
-  const branch = branches.get(value.actual_branch_id as string);
+  const branch = branches.get(value.analysis_continuation_branch_id as string);
   const realizationActor = projectTypedActor(value.realization_actor, false, true);
   const realizationMove = uci(value.realization_move);
   const realizationPly = nonNegativeInteger(value.realization_ply);
@@ -2986,13 +2992,13 @@ function projectPassedPawnProgressRealizedAfterOnlyLegalReplyPath(
     ) ?? [];
   if (
     !branch?.replyMove ||
-    branch.role !== 'actual_result_route' ||
+    branch.role !== 'played_root_analysis_continuation' ||
     !realizationActor ||
     !realizationMove ||
     realizationPly === undefined ||
     realizationStepIndices.length !== 1 ||
     !premises.every((premise): premise is MoveReviewTypedPremise => !!premise) ||
-    !passedPawnPremisesBelongToActualBranch(premises, branch)
+    !passedPawnPremisesBelongToAnalysisContinuation(premises, branch)
   )
     return;
   return {
@@ -3036,14 +3042,12 @@ function projectPassedPawnProgressPremise(
         'to_step_index',
       ],
     ) ||
-    (value.role !== 'comparison_demand' && value.role !== 'dependency' && value.role !== 'result') ||
-    (value.lower_kind !== 'played_vs_best_demand' &&
-      value.lower_kind !== 'passed_pawn_progress_dependency' &&
-      value.lower_kind !== 'passed_pawn_progress') ||
+    (value.role !== 'dependency' && value.role !== 'result') ||
+    (value.lower_kind !== 'passed_pawn_progress_dependency' && value.lower_kind !== 'passed_pawn_progress') ||
     !nonEmptyWireString(value.lower_semantic_key) ||
     !typedHash(value.branch_id) ||
     branches.get(value.branch_id as string)?.role !== value.branch_role ||
-    value.branch_role !== 'actual_result_route' ||
+    value.branch_role !== 'played_root_analysis_continuation' ||
     !canonicalWireStrings(value.source_premise_ids, 1)
   )
     return;
@@ -3133,7 +3137,7 @@ function projectPassedPawnProgressDependencyProof(
     )
       return;
     const contract = passedPawnRelationKind(issuer.contract);
-    const line = projectPassedPawnProgressLine(issuer.line);
+    const line = projectTypedLine(issuer.line);
     if (
       !contract ||
       typeof issuer.result_key !== 'string' ||
@@ -3144,8 +3148,8 @@ function projectPassedPawnProgressDependencyProof(
       !canonicalWireStrings(issuer.source_premise_ids, 1) ||
       !nonEmptyWireString(issuer.issuer_evidence_id) ||
       !line ||
-      !passedPawnPositionStateScope(issuer.scope) ||
-      issuer.scope !== passedPawnLineScope(line.role)
+      line.role !== 'played' ||
+      issuer.scope !== 'played_line'
     )
       return;
     return {
@@ -3155,8 +3159,8 @@ function projectPassedPawnProgressDependencyProof(
       stepKey: issuer.step_key as string,
       sourcePremiseIds: [...issuer.source_premise_ids],
       issuerEvidenceId: issuer.issuer_evidence_id as string,
-      line,
-      scope: issuer.scope,
+      line: { ...line, role: 'played' as const },
+      scope: 'played_line' as const,
     };
   });
   const positionStateIssuers = value.position_state_issuers.map(issuer => {
@@ -3190,15 +3194,11 @@ function projectPassedPawnProgressDependencyProof(
       !move ||
       !fenBefore ||
       !fenAfter ||
-      !passedPawnPositionStateScope(issuer.scope)
+      issuer.scope !== 'played_line'
     )
       return;
-    const line = projectPassedPawnProgressLine(issuer.line);
-    if (
-      !line ||
-      issuer.scope !== passedPawnLineScope(line.role) ||
-      issuer.step_key !== causalStepKey(ply, move, fenBefore, fenAfter)
-    )
+    const line = projectTypedLine(issuer.line);
+    if (!line || line.role !== 'played' || issuer.step_key !== causalStepKey(ply, move, fenBefore, fenAfter))
       return;
     return {
       state,
@@ -3210,8 +3210,8 @@ function projectPassedPawnProgressDependencyProof(
       move,
       fenBefore,
       fenAfter,
-      line,
-      scope: issuer.scope as MoveReviewPassedPawnLineScope,
+      line: { ...line, role: 'played' as const },
+      scope: 'played_line' as const,
     };
   });
   if (
@@ -3283,23 +3283,6 @@ function projectPassedPawnPositionState(value: unknown): MoveReviewPassedPawnPos
   };
 }
 
-function passedPawnPositionStateScope(value: unknown): value is MoveReviewPassedPawnLineScope {
-  return value === 'best_line' || value === 'played_line' || value === 'candidate_line';
-}
-
-function passedPawnLineScope(role: MoveReviewTypedLine['role'] | undefined): string | undefined {
-  switch (role) {
-    case 'played':
-      return 'played_line';
-    case 'best_reference':
-      return 'best_line';
-    case 'alternative':
-      return 'candidate_line';
-    default:
-      return undefined;
-  }
-}
-
 function passedPawnDependencyKind(value: unknown): MoveReviewPassedPawnDependencyKind | undefined {
   return value === 'object_state_precondition' ||
     value === 'line_access_precondition' ||
@@ -3325,34 +3308,23 @@ function passedPawnRelationKind(value: unknown): MoveReviewPassedPawnRelationKin
     : undefined;
 }
 
-function passedPawnPremisesBelongToActualBranch(
+function passedPawnPremisesBelongToAnalysisContinuation(
   premises: MoveReviewTypedPremise[],
-  actualBranch: MoveReviewPassedPawnProgressWireBranch,
+  analysisContinuation: MoveReviewPassedPawnProgressWireBranch,
 ): boolean {
   return premises.every(
     premise =>
-      premise.branchId === actualBranch.id &&
-      premise.branchRole === actualBranch.role &&
+      premise.branchId === analysisContinuation.id &&
+      premise.branchRole === analysisContinuation.role &&
       premise.fromStepIndex !== undefined &&
       premise.toStepIndex !== undefined &&
-      !!actualBranch.steps[premise.fromStepIndex] &&
-      !!actualBranch.steps[premise.toStepIndex],
+      !!analysisContinuation.steps[premise.fromStepIndex] &&
+      !!analysisContinuation.steps[premise.toStepIndex],
   );
 }
 
-function passedPawnResultTransitionScope(role: MoveReviewTypedLine['role']): string {
-  switch (role) {
-    case 'played':
-      return 'played_transition';
-    case 'best_reference':
-      return 'reference_transition';
-    case 'alternative':
-      return 'alternative_transition';
-  }
-}
-
 function isPassedPawnResultWireStep(step: MoveReviewWireStep): step is MoveReviewPassedPawnProgressWireStep {
-  return !!step.stepKey && !!step.line;
+  return !!step.stepKey && step.line?.role === 'played';
 }
 
 function samePassedPawnResultLine(
@@ -3390,7 +3362,7 @@ function projectWireStep(value: unknown, withOccurrenceProof: boolean): MoveRevi
   const move = uci(value.move_uci);
   const fenBefore = fenText(value.fen_before);
   const fenAfter = fenText(value.fen_after);
-  const line = withOccurrenceProof ? projectPassedPawnProgressLine(value.line) : undefined;
+  const line = withOccurrenceProof ? projectTypedLine(value.line) : undefined;
   if (
     index === undefined ||
     ply === undefined ||
@@ -3412,7 +3384,7 @@ function projectWireStep(value: unknown, withOccurrenceProof: boolean): MoveRevi
   };
 }
 
-function projectPassedPawnProgressLine(value: unknown): MoveReviewTypedLine | undefined {
+function projectTypedLine(value: unknown): MoveReviewTypedLine | undefined {
   if (
     !isObject(value) ||
     !hasExactKeys(value, ['line_id', 'line_role', 'line_rank', 'root_move']) ||
@@ -3465,7 +3437,13 @@ function wireStepsHaveOrderedOccurrences(steps: MoveReviewWireStep[], startFen: 
   );
 }
 
-function wireBranchIdentity(branch: MoveReviewWireBranch): MoveReviewTypedBranch {
+function wireBranchIdentity<Branch extends MoveReviewWireBranch>(
+  branch: Branch,
+): MoveReviewTypedBranch & {
+  role: Branch['role'];
+  provenance: Branch['provenance'];
+  lineRole: Branch['lineRole'];
+} {
   return {
     id: branch.id,
     role: branch.role,

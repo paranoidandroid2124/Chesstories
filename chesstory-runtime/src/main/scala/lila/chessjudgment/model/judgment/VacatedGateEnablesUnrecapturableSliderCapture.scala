@@ -5,12 +5,12 @@ import lila.chessjudgment.model.line.PrincipalVariationEvidence
 
 private[chessjudgment] enum VacatedGateEnablesUnrecapturableSliderCaptureBranchRole extends CausalBranchRole:
   case CounterfactualReference
-  case ObservedPlayedSibling
+  case PlayedRootAnalysisContinuation
 
   def stableKey: String =
     this match
       case CounterfactualReference => "counterfactual-reference"
-      case ObservedPlayedSibling    => "observed-played-sibling"
+      case PlayedRootAnalysisContinuation => "played-root-analysis-continuation"
 
 private[chessjudgment] enum VacatedGateEnablesUnrecapturableSliderCapturePremiseRole extends CausalPremiseRole:
   case ReferenceRootSliderReach
@@ -135,7 +135,7 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureManif
       playedPositionStates: List[CausalClosedStateBinding]
   ): VacatedGateEnablesUnrecapturableSliderCaptureManifest =
     val referenceRole = VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.CounterfactualReference
-    val playedRole = VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.ObservedPlayedSibling
+    val playedRole = VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.PlayedRootAnalysisContinuation
     val exploitIndex = referenceExploit.stepIndex
     val playedPreExploitIndex = exploitIndex - 1
     require(
@@ -236,7 +236,7 @@ private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCa
       proofSet.occurrence.branch(VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.CounterfactualReference).exists(
         _.line.role == LineNodeRole.BestReference
       ) &&
-      proofSet.occurrence.branch(VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.ObservedPlayedSibling).exists(
+      proofSet.occurrence.branch(VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.PlayedRootAnalysisContinuation).exists(
         _.line.role == LineNodeRole.Played
       ),
     "a vacated-gate-enables-unrecapturable-slider-capture occurrence needs one BestReference and one Played branch"
@@ -257,7 +257,7 @@ private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCa
   def referenceBranch: CausalBranchOccurrence =
     exactBranch(VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.CounterfactualReference)
   def playedBranch: CausalBranchOccurrence =
-    exactBranch(VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.ObservedPlayedSibling)
+    exactBranch(VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.PlayedRootAnalysisContinuation)
   def referenceLine: LineNodeRef = referenceBranch.line
   def playedLine: LineNodeRef = playedBranch.line
   def referenceSteps: List[LineReplayStep] = referenceBranch.replaySteps
@@ -271,8 +271,6 @@ private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCa
 private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCaptureDependencyManifest private[chessjudgment] (
     referenceLineRecord: EvidenceRecord,
     playedLineRecord: EvidenceRecord,
-    demandRecord: EvidenceRecord,
-    demandingComparison: CandidateComparisonFact,
     proofSet: BoundedCausalProofSet
 ) extends BoundedCausalDependencyManifest:
   val contractKind = BoundedCausalContractKind.VacatedGateEnablesUnrecapturableSliderCapture
@@ -286,22 +284,14 @@ private[chessjudgment] final case class VacatedGateEnablesUnrecapturableSliderCa
     List(
       BoundedCausalIdentity.evidenceRecordKey(referenceLineRecord),
       BoundedCausalIdentity.evidenceRecordKey(playedLineRecord),
-      BoundedCausalIdentity.evidenceRecordKey(demandRecord),
-      CandidateComparisonSemanticKey.from(demandingComparison).stableKey,
       contractKind.toString.toLowerCase,
       proofSet.proposition.semanticId,
       proofSet.occurrence.occurrenceId,
       proofSet.paths.map(_.pathOccurrenceId).mkString("[", ",", "]")
     ).mkString("|")
 
-  def consumes(
-      comparison: CandidateComparisonFact,
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord,
-      demandSource: EvidenceRecord
-  ): Boolean =
-    demandingComparison == comparison && referenceLineRecord == referenceSource &&
-      playedLineRecord == playedSource && demandRecord == demandSource
+  def consumes(referenceSource: EvidenceRecord, playedSource: EvidenceRecord): Boolean =
+    referenceLineRecord == referenceSource && playedLineRecord == playedSource
 
 private final case class DirectLineAccessBoundAbsence(
     role: VacatedGateEnablesUnrecapturableSliderCaptureAbsenceRole,
@@ -346,8 +336,6 @@ private[chessjudgment] final class CertifiedVacatedGateEnablesUnrecapturableSlid
     private val dependencyManifest: VacatedGateEnablesUnrecapturableSliderCaptureDependencyManifest,
     private val referenceLineRecord: EvidenceRecord,
     private val playedLineRecord: EvidenceRecord,
-    private val demandRecord: EvidenceRecord,
-    private val demandingComparison: CandidateComparisonFact,
     private val referenceReplay: CanonicalLineReplay,
     private val playedReplay: CanonicalLineReplay,
     private val trajectory: LineAccessTrajectory,
@@ -364,18 +352,13 @@ private[chessjudgment] final class CertifiedVacatedGateEnablesUnrecapturableSlid
   )
 
   def parentSources: List[EvidenceRef] =
-    List(referenceLineRecord.ref, playedLineRecord.ref, demandRecord.ref).sortBy(_.id)
+    List(referenceLineRecord.ref, playedLineRecord.ref).sortBy(_.id)
 
   private[chessjudgment] def lowerIssuerRecords: List[EvidenceRecord] =
-    List(referenceLineRecord, playedLineRecord, demandRecord)
+    List(referenceLineRecord, playedLineRecord)
 
-  def consumesDependencies(
-      comparison: CandidateComparisonFact,
-      referenceSource: EvidenceRecord,
-      playedSource: EvidenceRecord,
-      demandSource: EvidenceRecord
-  ): Boolean =
-    dependencyManifest.consumes(comparison, referenceSource, playedSource, demandSource)
+  def consumesDependencies(referenceSource: EvidenceRecord, playedSource: EvidenceRecord): Boolean =
+    dependencyManifest.consumes(referenceSource, playedSource)
 
   def proves(record: EvidenceRecord, payload: VacatedGateEnablesUnrecapturableSliderCaptureEvidence): Boolean =
     record.ref.producer == EvidenceProducer.CausalProofProducer &&
@@ -398,17 +381,7 @@ private[chessjudgment] final class CertifiedVacatedGateEnablesUnrecapturableSlid
         playedLineRecord,
         occurrence.playedLine,
         playedReplay
-      ) &&
-      ActionablePlayedVsBestCausalProofDemand.acceptsRecord(
-        demandRecord,
-        demandingComparison,
-        referenceLineRecord.ref.position,
-        referenceLineRecord,
-        playedLineRecord
-      ) &&
-      demandingComparison.referenceLine == occurrence.referenceLine &&
-      demandingComparison.candidateLine == occurrence.playedLine &&
-      referenceLineRecord.ref.position == playedLineRecord.ref.position &&
+      ) && referenceLineRecord.ref.position == playedLineRecord.ref.position &&
       referenceReplay.replaySteps.take(occurrence.referenceSteps.size) == occurrence.referenceSteps &&
       playedReplay.replaySteps.take(occurrence.playedSteps.size) == occurrence.playedSteps &&
       semanticIdentityRemainsCertified && lowerOccurrencesRemainCertified &&
@@ -469,13 +442,8 @@ private[chessjudgment] final class CertifiedVacatedGateEnablesUnrecapturableSlid
           path.closedAbsenceUses.map(_.binding.role) == absenceAuthorities.map(_.role) &&
           path.closedAbsenceUses.map(_.binding.authority) == absenceAuthorities.map(_.authority) &&
           path.closedStateUses.map(_.binding.role) == stateAuthorities.map(_.role) &&
-          parentSources.map(_.id).distinct.size == 3 &&
-          dependencyManifest.consumes(
-            demandingComparison,
-            referenceLineRecord,
-            playedLineRecord,
-            demandRecord
-          )
+          parentSources.map(_.id).distinct.size == 2 &&
+          dependencyManifest.consumes(referenceLineRecord, playedLineRecord)
       case _ => false
 
   private def closureAuthoritiesRemainCertified: Boolean =
@@ -494,8 +462,6 @@ private[chessjudgment] object CertifiedVacatedGateEnablesUnrecapturableSliderCap
       dependencyManifest: VacatedGateEnablesUnrecapturableSliderCaptureDependencyManifest,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
-      demandRecord: EvidenceRecord,
-      demandingComparison: CandidateComparisonFact,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
       trajectory: LineAccessTrajectory,
@@ -511,8 +477,6 @@ private[chessjudgment] object CertifiedVacatedGateEnablesUnrecapturableSliderCap
       dependencyManifest,
       referenceLineRecord,
       playedLineRecord,
-      demandRecord,
-      demandingComparison,
       referenceReplay,
       playedReplay,
       trajectory,
@@ -579,8 +543,6 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
       playedLine: LineNodeRef,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
-      demandRecord: EvidenceRecord,
-      demandingComparison: CandidateComparisonFact,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
       changedSeeds: List[VacatedGateEnablesUnrecapturableSliderCaptureChangedSeed]
@@ -601,17 +563,7 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
           playedLineRecord,
           playedLine,
           playedReplay
-        ) &&
-        ActionablePlayedVsBestCausalProofDemand.acceptsRecord(
-          demandRecord,
-          demandingComparison,
-          referenceLineRecord.ref.position,
-          referenceLineRecord,
-          playedLineRecord
-        ) &&
-        demandingComparison.referenceLine == referenceLine &&
-        demandingComparison.candidateLine == playedLine &&
-        referenceLineRecord.ref.position == playedLineRecord.ref.position &&
+        ) && referenceLineRecord.ref.position == playedLineRecord.ref.position &&
         !EvidenceRef.sameMove(referenceLine.rootMove, playedLine.rootMove)
     if !admitted then Nil
     else
@@ -698,7 +650,7 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
           exploitIndex + 1
         )
         playedBranch = CausalBranchOccurrence.observedRootWithAnalyzedContinuation(
-          VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.ObservedPlayedSibling,
+          VacatedGateEnablesUnrecapturableSliderCaptureBranchRole.PlayedRootAnalysisContinuation,
           playedLine,
           playedReplay,
           exploitIndex
@@ -780,8 +732,6 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
           input,
           referenceLineRecord,
           playedLineRecord,
-          demandRecord,
-          demandingComparison,
           referenceReplay,
           playedReplay
         )
@@ -791,8 +741,6 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
       inputs: ExactInputs,
       referenceLineRecord: EvidenceRecord,
       playedLineRecord: EvidenceRecord,
-      demandRecord: EvidenceRecord,
-      demandingComparison: CandidateComparisonFact,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay
   ): CertifiedVacatedGateEnablesUnrecapturableSliderCapture =
@@ -884,8 +832,6 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
     val dependencyManifest = VacatedGateEnablesUnrecapturableSliderCaptureDependencyManifest(
       referenceLineRecord,
       playedLineRecord,
-      demandRecord,
-      demandingComparison,
       proofSet
     )
     CertifiedVacatedGateEnablesUnrecapturableSliderCapture.from(
@@ -895,8 +841,6 @@ private[chessjudgment] object VacatedGateEnablesUnrecapturableSliderCaptureProof
       dependencyManifest,
       referenceLineRecord,
       playedLineRecord,
-      demandRecord,
-      demandingComparison,
       referenceReplay,
       playedReplay,
       inputs.trajectory,

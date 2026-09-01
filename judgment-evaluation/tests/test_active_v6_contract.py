@@ -28,7 +28,7 @@ PASSED_PAWN_AFTER_A3 = "7k/8/5KB1/8/8/P7/8/8 b - - 0 1"
 # Schema-only wire sample. Exact private ancestry and owner identities are
 # certified by the Scala assembler-to-serializer tests, not these placeholders.
 def _passed_pawn_progress_realized_after_only_legal_reply_proof() -> dict[str, object]:
-    actual_branch_id = "1" * 64
+    analysis_continuation_branch_id = "1" * 64
     played_line = {
         "line_id": "line.played.passed-pawn-result",
         "line_role": "played",
@@ -118,7 +118,6 @@ def _passed_pawn_progress_realized_after_only_legal_reply_proof() -> dict[str, o
     return {
         "source_evidence_id": "passed-pawn-result-proof-evidence",
         "event_evidence_id": "passed-pawn-result-event-evidence",
-        "comparison_evidence_id": "comparison-evidence",
         "semantic_id": "a" * 64,
         "occurrence_id": "b" * 64,
         "dependency_fingerprint": "c" * 64,
@@ -155,12 +154,12 @@ def _passed_pawn_progress_realized_after_only_legal_reply_proof() -> dict[str, o
             "issuer_evidence_id": "structural-delta-evidence",
             "root_after": {"fen": PASSED_PAWN_AFTER_A3, "ply": 1, "scope": "played_transition"},
             "legal_reply_move": "h8g8",
-            "actual_branch_id": actual_branch_id,
+            "analysis_continuation_branch_id": analysis_continuation_branch_id,
         },
         "branches": [
             {
-                "branch_id": actual_branch_id,
-                "role": "actual_result_route",
+                "branch_id": analysis_continuation_branch_id,
+                "role": "played_root_analysis_continuation",
                 "reply_move": "h8g8",
                 "source_occurrence_id": "0" * 64,
                 "line": played_line,
@@ -171,7 +170,7 @@ def _passed_pawn_progress_realized_after_only_legal_reply_proof() -> dict[str, o
         "proof_paths": [
             {
                 "path_occurrence_id": "8" * 64,
-                "actual_branch_id": actual_branch_id,
+                "analysis_continuation_branch_id": analysis_continuation_branch_id,
                 "realization_actor": {
                     "side": "white",
                     "piece_before": "pawn",
@@ -184,30 +183,20 @@ def _passed_pawn_progress_realized_after_only_legal_reply_proof() -> dict[str, o
                 "realization_ply": 3,
                 "premises": [
                     {
-                        "role": "comparison_demand",
-                        "lower_kind": "played_vs_best_demand",
-                        "lower_semantic_key": "comparison-key",
-                        "source_premise_ids": ["comparison-evidence"],
-                        "branch_id": actual_branch_id,
-                        "branch_role": "actual_result_route",
-                        "from_step_index": 0,
-                        "to_step_index": 0,
-                    },
-                    {
                         "role": "dependency",
                         "lower_kind": "passed_pawn_progress_dependency",
                         "lower_semantic_key": dependency_key,
                         "source_premise_ids": sorted([
                             "passed-pawn-result-event-evidence",
-                            "object-state-owner.actual",
+                            "object-state-owner.analysis",
                             "4" * 64,
                         ]),
-                        "branch_id": actual_branch_id,
-                        "branch_role": "actual_result_route",
+                        "branch_id": analysis_continuation_branch_id,
+                        "branch_role": "played_root_analysis_continuation",
                         "from_step_index": 0,
                         "to_step_index": 2,
                         "dependency_proof": object_state_dependency_proof(
-                            "object-state-owner.actual",
+                            "object-state-owner.analysis",
                             "4" * 64,
                             played_line,
                             "played_line",
@@ -216,10 +205,10 @@ def _passed_pawn_progress_realized_after_only_legal_reply_proof() -> dict[str, o
                     {
                         "role": "result",
                         "lower_kind": "passed_pawn_progress",
-                        "lower_semantic_key": "actual-result",
+                        "lower_semantic_key": "analysis-result",
                         "source_premise_ids": ["passed-pawn-result-event-evidence"],
-                        "branch_id": actual_branch_id,
-                        "branch_role": "actual_result_route",
+                        "branch_id": analysis_continuation_branch_id,
+                        "branch_role": "played_root_analysis_continuation",
                         "from_step_index": 2,
                         "to_step_index": 2,
                     },
@@ -228,9 +217,8 @@ def _passed_pawn_progress_realized_after_only_legal_reply_proof() -> dict[str, o
             }
         ],
         "lower_premise_ids": sorted([
-            "comparison-evidence",
             "4" * 64,
-            "object-state-owner.actual",
+            "object-state-owner.analysis",
             "passed-pawn-result-event-evidence",
             "structural-delta-evidence",
         ]),
@@ -247,7 +235,7 @@ def _line_access_passed_pawn_progress_realized_after_only_legal_reply_proof() ->
     """
 
     proof = _passed_pawn_progress_realized_after_only_legal_reply_proof()
-    actual_branch_id = "1" * 64
+    analysis_continuation_branch_id = "1" * 64
     initial = "6kr/8/5K2/8/p7/1n6/P7/R6B w - - 0 1"
     after_root = "6kr/8/5K2/8/p7/1P6/8/R6B b - - 0 1"
     after_reply = "6k1/8/5K2/8/p7/1P6/8/R6r w - - 0 2"
@@ -284,7 +272,7 @@ def _line_access_passed_pawn_progress_realized_after_only_legal_reply_proof() ->
         }
         return value
 
-    actual_steps = [
+    continuation_steps = [
         step(
             index=0,
             ply=1,
@@ -407,42 +395,44 @@ def _line_access_passed_pawn_progress_realized_after_only_legal_reply_proof() ->
         "scope": "played_transition",
     }
     proof["closed_legal_reply_inventory"]["legal_reply_move"] = "h8h1"
-    proof["closed_legal_reply_inventory"]["actual_branch_id"] = actual_branch_id
+    proof["closed_legal_reply_inventory"]["analysis_continuation_branch_id"] = (
+        analysis_continuation_branch_id
+    )
     proof["branches"] = [
         {
-            "branch_id": actual_branch_id,
-            "role": "actual_result_route",
+            "branch_id": analysis_continuation_branch_id,
+            "role": "played_root_analysis_continuation",
             "reply_move": "h8h1",
             "source_occurrence_id": "0" * 64,
             "line": played_line,
             "root_provenance": "observed_game_root",
-            "steps": actual_steps,
+            "steps": continuation_steps,
         },
     ]
     path = proof["proof_paths"][0]
     path.update(
-        actual_branch_id=actual_branch_id,
+        analysis_continuation_branch_id=analysis_continuation_branch_id,
         realization_actor=copy.deepcopy(proof["realizing_actor"]),
         realization_move="a1a4",
     )
-    dependency = path["premises"][1]
-    actual_proof = dependency_proof(
+    dependency = path["premises"][0]
+    analysis_proof = dependency_proof(
         line=played_line,
         scope="played_line",
-        owner="line-access-relation-owner.actual",
+        owner="line-access-relation-owner.analysis",
         occurrence_id="2" * 64,
-        lower_source="l1-slider-reach.actual",
-        state_owner="line-access-state-owner.actual",
+        lower_source="l1-slider-reach.analysis",
+        state_owner="line-access-state-owner.analysis",
         state_occurrence_id="3" * 64,
     )
-    dependency["dependency_proof"] = actual_proof
+    dependency["dependency_proof"] = analysis_proof
     dependency["source_premise_ids"] = sorted(
         [
             "passed-pawn-result-event-evidence",
-            "line-access-relation-owner.actual",
+            "line-access-relation-owner.analysis",
             "2" * 64,
-            "l1-slider-reach.actual",
-            "line-access-state-owner.actual",
+            "l1-slider-reach.analysis",
+            "line-access-state-owner.analysis",
             "3" * 64,
         ]
     )
@@ -546,15 +536,15 @@ def _vacated_gate_enables_unrecapturable_slider_capture_proof() -> dict[str, obj
         ],
         "closed_absence_uses": [
             closure("a" * 64, "reference_immediate_recapture_absent", "position_relation_extractor.closed_relation_inventory", "line.reference", reference_occurrence, "legal-capture:black:a7", reference_id, "counterfactual_reference", 2, reference_fens[2], 3, "best_line"),
-            closure("b" * 64, "played_exploit_move_absent", "position_relation_extractor.closed_relation_inventory", "line.played", played_occurrence, "legal-move-from-to:white:a1:a7", played_id, "observed_played_sibling", 1, played_fens[1], 2, "played_line"),
-            closure("c" * 64, "played_replacement_capture_absent", "position_relation_extractor.closed_relation_inventory", "line.played", played_occurrence, "legal-capture:white:a7", played_id, "observed_played_sibling", 1, played_fens[1], 2, "played_line"),
+            closure("b" * 64, "played_exploit_move_absent", "position_relation_extractor.closed_relation_inventory", "line.played", played_occurrence, "legal-move-from-to:white:a1:a7", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
+            closure("c" * 64, "played_replacement_capture_absent", "position_relation_extractor.closed_relation_inventory", "line.played", played_occurrence, "legal-capture:white:a7", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
         ],
         "closed_state_uses": [
             closure("d" * 64, "reference_intervening_slider_reach", "position_relation_extractor.closed_position_state_inventory", "line.reference", "d" * 64, "slider-reach:white:rook@a1:north:open", reference_id, "counterfactual_reference", 1, reference_fens[1], 2, "best_line"),
-            closure("e" * 64, "played_slider_occupied", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "occupied-by:white:rook@a1", played_id, "observed_played_sibling", 1, played_fens[1], 2, "played_line"),
-            closure("f" * 64, "played_target_occupied", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "occupied-by:black:queen@a7", played_id, "observed_played_sibling", 1, played_fens[1], 2, "played_line"),
-            closure("0" * 64, "played_gate_blocker_occupied", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "occupied-by:white:knight@a2", played_id, "observed_played_sibling", 1, played_fens[1], 2, "played_line"),
-            closure("1" * 63 + "0", "played_blocked_slider_reach", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "slider-reach:white:rook@a1:north:blocked-a2", played_id, "observed_played_sibling", 1, played_fens[1], 2, "played_line"),
+            closure("e" * 64, "played_slider_occupied", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "occupied-by:white:rook@a1", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
+            closure("f" * 64, "played_target_occupied", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "occupied-by:black:queen@a7", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
+            closure("0" * 64, "played_gate_blocker_occupied", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "occupied-by:white:knight@a2", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
+            closure("1" * 63 + "0", "played_blocked_slider_reach", "position_relation_extractor.closed_position_state_inventory", "line.played", played_occurrence, "slider-reach:white:rook@a1:north:blocked-a2", played_id, "played_root_analysis_continuation", 1, played_fens[1], 2, "played_line"),
         ],
     }
     return {
@@ -576,7 +566,7 @@ def _vacated_gate_enables_unrecapturable_slider_capture_proof() -> dict[str, obj
             "branch_id": played_id,
             "line_id": "line.played",
             "line_role": "played",
-            "branch_role": "observed_played_sibling",
+            "branch_role": "played_root_analysis_continuation",
             "root_provenance": "observed_game_root",
             "line_rank": 1,
             "root_move": played_moves[0],
@@ -674,7 +664,7 @@ def _sole_recapturer_removal_before_target_capture_proof() -> dict[str, object]:
             "branch_id": played_id,
             "line_id": "line.played",
             "line_role": "played",
-            "branch_role": "observed_played_root",
+            "branch_role": "played_root_analysis_continuation",
             "root_provenance": "observed_game_root",
             "line_rank": 1,
             "root_move": played_moves[0],
@@ -686,7 +676,7 @@ def _sole_recapturer_removal_before_target_capture_proof() -> dict[str, object]:
                 "premises": [
                     premise("reference_defender_removal", "capture_recapture_inventory", reference_id, "counterfactual_reference", 0, "0"),
                     premise("reference_later_exploit_inventory", "capture_recapture_inventory", reference_id, "counterfactual_reference", 2, "4"),
-                    premise("played_immediate_exploit_inventory", "capture_recapture_inventory", played_id, "observed_played_root", 0, "5"),
+                    premise("played_immediate_exploit_inventory", "capture_recapture_inventory", played_id, "played_root_analysis_continuation", 0, "5"),
                 ],
                 "closed_absence_uses": [
                     {
@@ -877,6 +867,30 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
 
         self.assertTrue(errors_for([facet("cause", "channel-a"), facet("cause", "channel-b")]))
         self.assertTrue(errors_for([facet("cause-a", "channel"), facet("cause-b", "channel")]))
+
+    def test_public_causal_exposure_is_fixed_by_cause_kind(self) -> None:
+        registry = SchemaRegistry(ROOT / "schemas")
+
+        for kind, exposure in (
+            ("wrong_move_order", "complementary"),
+            ("missed_tactical_resource", "complementary"),
+            ("passed_pawn_progress", "primary"),
+        ):
+            commentary = {
+                "primary": {},
+                "causal_explanations": [
+                    {
+                        "cause_evidence_id": f"cause-{kind}",
+                        "kind": kind,
+                        "exposure": exposure,
+                        "channels": [{"channel_id": f"channel-{kind}"}],
+                    }
+                ],
+            }
+            errors: list[str] = []
+            registry._validate_move_commentary_proof_transport(commentary, "$", errors)
+            with self.subTest(kind=kind, exposure=exposure):
+                self.assertTrue(any(".exposure:" in error for error in errors))
 
     def test_sole_recapturer_removal_before_target_capture_requires_its_exact_three_premise_manifest(self) -> None:
         registry = SchemaRegistry(ROOT / "schemas")
@@ -1242,6 +1256,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         defense_facet = defense_ready["move_commentary"]["causal_explanations"][0]
         defense_facet.update(
             kind="wrong_move_order",
+            exposure="primary",
         )
         defense_facet["channels"] = [
             {
@@ -1262,6 +1277,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         direct_facet.update(
             {
                 "kind": "missed_tactical_resource",
+                "exposure": "primary",
             }
         )
         direct_facet["channels"] = [
@@ -1275,6 +1291,19 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             move_path,
             label="public v6 exact direct-line-access preparation",
         )
+        for label, document, exposure in (
+            ("wrong move order", defense_ready, "complementary"),
+            ("missed tactical resource", direct_ready, "complementary"),
+            ("passed pawn progress", ready, "primary"),
+        ):
+            invalid = copy.deepcopy(document)
+            invalid["move_commentary"]["causal_explanations"][0]["exposure"] = exposure
+            with self.subTest(cause=label), self.assertRaises(ContractError):
+                registry.validate_document(
+                    invalid,
+                    move_path,
+                    label=f"invalid {label} exposure",
+                )
         dangling_direct_branch = copy.deepcopy(direct_ready)
         dangling_direct_proof = dangling_direct_branch["move_commentary"][
             "causal_explanations"
@@ -1365,8 +1394,8 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["branches"][0]
         invalid_documents.append(passed_pawn_progress_without_closed_reply_branch)
 
-        passed_pawn_progress_with_second_actual_branch = copy.deepcopy(ready)
-        duplicate_proof = passed_pawn_progress_with_second_actual_branch["move_commentary"][
+        passed_pawn_progress_with_second_analysis_branch = copy.deepcopy(ready)
+        duplicate_proof = passed_pawn_progress_with_second_analysis_branch["move_commentary"][
             "causal_explanations"
         ][0]["channels"][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]
         duplicate_branch = copy.deepcopy(duplicate_proof["branches"][0])
@@ -1376,7 +1405,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
             source_occurrence_id="7" * 64,
         )
         duplicate_proof["branches"].append(duplicate_branch)
-        invalid_documents.append(passed_pawn_progress_with_second_actual_branch)
+        invalid_documents.append(passed_pawn_progress_with_second_analysis_branch)
 
         passed_pawn_progress_with_unproved_inventory_reply = copy.deepcopy(ready)
         unproved_proof = passed_pawn_progress_with_unproved_inventory_reply["move_commentary"][
@@ -1384,6 +1413,53 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         ][0]["channels"][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]
         unproved_proof["closed_legal_reply_inventory"]["legal_reply_move"] = "h8h7"
         invalid_documents.append(passed_pawn_progress_with_unproved_inventory_reply)
+
+        passed_pawn_progress_with_forged_observed_suffix = copy.deepcopy(ready)
+        forged_suffix_proof = passed_pawn_progress_with_forged_observed_suffix[
+            "move_commentary"
+        ]["causal_explanations"][0]["channels"][0][
+            "passed_pawn_progress_realized_after_only_legal_reply_proof"
+        ]
+        forged_suffix_proof["branches"][0]["steps"][1]["provenance"] = (
+            "observed_game_move"
+        )
+        invalid_documents.append(passed_pawn_progress_with_forged_observed_suffix)
+
+        passed_pawn_progress_with_reference_root_line = copy.deepcopy(ready)
+        passed_pawn_progress_with_reference_root_line["move_commentary"][
+            "causal_explanations"
+        ][0]["channels"][0][
+            "passed_pawn_progress_realized_after_only_legal_reply_proof"
+        ]["root_line"]["line_role"] = "best_reference"
+        invalid_documents.append(passed_pawn_progress_with_reference_root_line)
+
+        passed_pawn_progress_with_counterfactual_branch_root = copy.deepcopy(ready)
+        passed_pawn_progress_with_counterfactual_branch_root["move_commentary"][
+            "causal_explanations"
+        ][0]["channels"][0][
+            "passed_pawn_progress_realized_after_only_legal_reply_proof"
+        ]["branches"][0]["root_provenance"] = "counterfactual_analyzed_root"
+        invalid_documents.append(passed_pawn_progress_with_counterfactual_branch_root)
+
+        passed_pawn_progress_with_reference_reply_scope = copy.deepcopy(ready)
+        passed_pawn_progress_with_reference_reply_scope["move_commentary"][
+            "causal_explanations"
+        ][0]["channels"][0][
+            "passed_pawn_progress_realized_after_only_legal_reply_proof"
+        ]["closed_legal_reply_inventory"]["root_after"]["scope"] = (
+            "reference_transition"
+        )
+        invalid_documents.append(passed_pawn_progress_with_reference_reply_scope)
+
+        passed_pawn_progress_with_reference_state_scope = copy.deepcopy(ready)
+        passed_pawn_progress_with_reference_state_scope["move_commentary"][
+            "causal_explanations"
+        ][0]["channels"][0][
+            "passed_pawn_progress_realized_after_only_legal_reply_proof"
+        ]["proof_paths"][0]["premises"][0]["dependency_proof"][
+            "position_state_issuers"
+        ][0]["scope"] = "best_line"
+        invalid_documents.append(passed_pawn_progress_with_reference_state_scope)
 
         wrong_move_order_without_l2 = copy.deepcopy(ready)
         wrong_move_order_without_l2["move_commentary"]["causal_explanations"][0][
@@ -1491,27 +1567,27 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         premises = missing_dependency_proof["move_commentary"]["causal_explanations"][0][
             "channels"
         ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"]
-        del premises[1]["dependency_proof"]
+        del premises[0]["dependency_proof"]
 
         dependency_proof_on_result = copy.deepcopy(ready)
         premises = dependency_proof_on_result["move_commentary"]["causal_explanations"][0][
             "channels"
         ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"]
-        premises[2]["dependency_proof"] = copy.deepcopy(premises[1]["dependency_proof"])
-        premises[2]["source_premise_ids"] = copy.deepcopy(premises[1]["source_premise_ids"])
-        premises[2]["from_step_index"] = premises[1]["from_step_index"]
-        premises[2]["to_step_index"] = premises[1]["to_step_index"]
+        premises[1]["dependency_proof"] = copy.deepcopy(premises[0]["dependency_proof"])
+        premises[1]["source_premise_ids"] = copy.deepcopy(premises[0]["source_premise_ids"])
+        premises[1]["from_step_index"] = premises[0]["from_step_index"]
+        premises[1]["to_step_index"] = premises[0]["to_step_index"]
 
         mismatched_dependency_kind = copy.deepcopy(ready)
         premises = mismatched_dependency_kind["move_commentary"]["causal_explanations"][0][
             "channels"
         ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"]
-        premises[1]["dependency_proof"]["proof_kind"] = "line_access"
+        premises[0]["dependency_proof"]["proof_kind"] = "line_access"
 
         detached_result = copy.deepcopy(ready)
         premise = detached_result["move_commentary"]["causal_explanations"][0][
             "channels"
-        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][2]
+        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][1]
         premise["from_step_index"] = 0
         premise["to_step_index"] = 0
 
@@ -1519,7 +1595,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         premises = duplicated_dependency["move_commentary"]["causal_explanations"][0][
             "channels"
         ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"]
-        premises.insert(2, copy.deepcopy(premises[1]))
+        premises.insert(1, copy.deepcopy(premises[0]))
         for label, document in (
             ("transport does not require a producer-family premise role manifest", incomplete_premise_manifest),
             ("transport does not require a dependency witness from its role name", missing_dependency_proof),
@@ -1533,7 +1609,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         unrejudged_ray_geometry = copy.deepcopy(valid_dependency_documents[0])
         state = unrejudged_ray_geometry["move_commentary"]["causal_explanations"][0][
             "channels"
-        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][1][
+        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][0][
             "dependency_proof"
         ]["position_state_issuers"][0]["state"]
         state["file_step"] = 1
@@ -1549,11 +1625,11 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         proof = discontinuous_occurrence["move_commentary"]["causal_explanations"][0][
             "channels"
         ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]
-        actual_steps = proof["branches"][0]["steps"]
-        actual_steps[-1]["fen_before"] = actual_steps[0]["fen_after"]
-        actual_steps[-1]["step_key"] = (
-            f'{actual_steps[-1]["ply"]}:{actual_steps[-1]["move_uci"]}:'
-            f'{actual_steps[-1]["fen_before"]}:{actual_steps[-1]["fen_after"]}'
+        continuation_steps = proof["branches"][0]["steps"]
+        continuation_steps[-1]["fen_before"] = continuation_steps[0]["fen_after"]
+        continuation_steps[-1]["step_key"] = (
+            f'{continuation_steps[-1]["ply"]}:{continuation_steps[-1]["move_uci"]}:'
+            f'{continuation_steps[-1]["fen_before"]}:{continuation_steps[-1]["fen_after"]}'
         )
         invalid_documents.append(discontinuous_occurrence)
 
@@ -1616,7 +1692,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         premises = mismatched_relation_issuer["move_commentary"]["causal_explanations"][0][
             "channels"
         ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"]
-        premises[1]["dependency_proof"]["relation_issuers"][0][
+        premises[0]["dependency_proof"]["relation_issuers"][0][
             "contract"
         ] = "pawn_topology_transition"
         invalid_documents.append(mismatched_relation_issuer)
@@ -1624,7 +1700,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         unowned_relation_owner = copy.deepcopy(valid_dependency_documents[0])
         premise = unowned_relation_owner["move_commentary"]["causal_explanations"][0][
             "channels"
-        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][1]
+        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][0]
         relation = premise["dependency_proof"]["relation_issuers"][0]
         premise["source_premise_ids"].remove(relation["issuer_evidence_id"])
         invalid_documents.append(unowned_relation_owner)
@@ -1632,7 +1708,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         unowned_relation_occurrence = copy.deepcopy(valid_dependency_documents[0])
         premise = unowned_relation_occurrence["move_commentary"]["causal_explanations"][0][
             "channels"
-        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][1]
+        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][0]
         relation = premise["dependency_proof"]["relation_issuers"][0]
         premise["source_premise_ids"].remove(relation["occurrence_id"])
         invalid_documents.append(unowned_relation_occurrence)
@@ -1640,7 +1716,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         unowned_relation_lower_source = copy.deepcopy(valid_dependency_documents[0])
         premise = unowned_relation_lower_source["move_commentary"]["causal_explanations"][0][
             "channels"
-        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][1]
+        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][0]
         relation = premise["dependency_proof"]["relation_issuers"][0]
         premise["source_premise_ids"].remove(relation["source_premise_ids"][0])
         invalid_documents.append(unowned_relation_lower_source)
@@ -1649,7 +1725,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         proof = detached_relation_occurrence["move_commentary"]["causal_explanations"][0][
             "channels"
         ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]
-        relation = proof["proof_paths"][0]["premises"][1]["dependency_proof"][
+        relation = proof["proof_paths"][0]["premises"][0]["dependency_proof"][
             "relation_issuers"
         ][0]
         relation["step_key"] = proof["branches"][0]["steps"][1]["step_key"]
@@ -1662,7 +1738,7 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         mismatched_relation_scope = copy.deepcopy(valid_dependency_documents[0])
         relation = mismatched_relation_scope["move_commentary"]["causal_explanations"][0][
             "channels"
-        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][1][
+        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][0][
             "dependency_proof"
         ]["relation_issuers"][0]
         relation["scope"] = "candidate_line"
@@ -1672,16 +1748,16 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         premises = unowned_position_state["move_commentary"]["causal_explanations"][0][
             "channels"
         ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"]
-        state_owner = premises[1]["dependency_proof"]["position_state_issuers"][0][
+        state_owner = premises[0]["dependency_proof"]["position_state_issuers"][0][
             "issuer_evidence_id"
         ]
-        premises[1]["source_premise_ids"].remove(state_owner)
+        premises[0]["source_premise_ids"].remove(state_owner)
         invalid_documents.append(unowned_position_state)
 
         unowned_position_state_occurrence = copy.deepcopy(valid_dependency_documents[0])
         premise = unowned_position_state_occurrence["move_commentary"]["causal_explanations"][0][
             "channels"
-        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][1]
+        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][0]
         state_occurrence = premise["dependency_proof"]["position_state_issuers"][0][
             "issuer_occurrence_id"
         ]
@@ -1692,22 +1768,22 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         proof = detached_position_state_line["move_commentary"]["causal_explanations"][0][
             "channels"
         ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]
-        actual_state = proof["proof_paths"][0]["premises"][1]["dependency_proof"][
+        analysis_state = proof["proof_paths"][0]["premises"][0]["dependency_proof"][
             "position_state_issuers"
         ][0]
-        actual_state["line"] = {
+        analysis_state["line"] = {
             "line_id": "line.foreign",
             "line_role": "alternative",
             "line_rank": 3,
             "root_move": "h8h1",
         }
-        actual_state["scope"] = "candidate_line"
+        analysis_state["scope"] = "candidate_line"
         invalid_documents.append(detached_position_state_line)
 
         discontinuous_position_state_route = copy.deepcopy(valid_dependency_documents[0])
         state = discontinuous_position_state_route["move_commentary"]["causal_explanations"][0][
             "channels"
-        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][1]["dependency_proof"][
+        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["premises"][0]["dependency_proof"][
             "position_state_issuers"
         ][0]
         state["fen_before"] = FEN
@@ -1725,7 +1801,9 @@ class RuntimePublicResponseTransportTest(unittest.TestCase):
         dangling_branch_reference = copy.deepcopy(ready)
         dangling_branch_reference["move_commentary"]["causal_explanations"][0][
             "channels"
-        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0]["actual_branch_id"] = "f" * 64
+        ][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]["proof_paths"][0][
+            "analysis_continuation_branch_id"
+        ] = "f" * 64
         invalid_documents.append(dangling_branch_reference)
 
         for document in invalid_documents:

@@ -16,10 +16,8 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureAssembler:
         context.evidenceGraph.recordsFor(input.comparison.referenceLine).collect {
           case record @ EvidenceRecord(_, payload: SoleRecapturerRemovalBeforeTargetCaptureEvidence, _)
               if payload.consumesDependencies(
-                input.comparison,
                 input.referenceSource,
-                input.playedSource,
-                input.demandSource
+                input.playedSource
               ) && context.evidenceGraph.proofEligible(record) =>
             record
         }
@@ -80,8 +78,6 @@ private[chessjudgment] object SoleRecapturerRemovalBeforeTargetCaptureAssembler:
       input.comparison.candidateLine,
       input.referenceSource,
       input.playedSource,
-      input.demandSource,
-      input.comparison,
       input.referenceReplay,
       input.playedReplay,
       changedSeed

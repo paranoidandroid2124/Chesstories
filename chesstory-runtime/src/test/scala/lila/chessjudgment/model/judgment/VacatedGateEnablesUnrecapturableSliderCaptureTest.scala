@@ -90,6 +90,12 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
     assert(exact.occurrence.occurrenceId.matches("[0-9a-f]{64}"))
     assert(exact.dependency.value.matches("[0-9a-f]{64}"))
     assert(exact.remainsCertified)
+    assertEquals(
+      exact.parentSources.map(_.id).toSet,
+      Set("reference-source-positive", "played-source-positive")
+    )
+    assert(exact.parentSources.forall(_.layer == EvidenceLayer.Line))
+    assert(exact.lowerIssuerRecords.forall(_.ref.layer == EvidenceLayer.Line))
 
   test("replacement recapture, changed reply, already-open line, and opened Played sibling fail closed"):
     val replacementFen = "7k/q3r3/8/8/8/8/N7/R6K w - - 0 1"
@@ -142,11 +148,11 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
       Nil
     )
 
-  test("the Played occurrence certifies exact occupants and rejects false state and absence claims"):
+  test("the played-root analysis continuation certifies exact occupants and rejects false state and absence claims"):
     val replay = certifiedReplay(rootFen, playedMoves)
     val occurrence = replay
       .positionAfter(replay.replaySteps.last)
-      .getOrElse(fail("expected the Played pre-exploit occurrence"))
+      .getOrElse(fail("expected the played-root analysis-continuation pre-exploit occurrence"))
     val scope = EvidenceScope.PlayedLine
     val exactPieces = List(
       RelationColoredPieceWitness(EvidenceSquare("a1"), EvidencePieceRole("rook"), chess.White),
@@ -207,7 +213,7 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
     val openedReplay = certifiedReplay(rootFen, openedMoves)
     val openedOccurrence = openedReplay
       .positionAfter(openedReplay.replaySteps.last)
-      .getOrElse(fail("expected the opened Played occurrence"))
+      .getOrElse(fail("expected the opened played-root analysis-continuation occurrence"))
     assertEquals(
       openedOccurrence.closedAbsence(
         PositionRelationExtractor.ClosedRelationAbsenceQuery.LegalMoveFromTo(
@@ -348,36 +354,6 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
       lineRef(s"played-source-$path", playedLine, fen),
       LineFactEvidence.fromCertifiedReplay(playedLine, playedReplay)
     )
-    val comparison = CandidateComparisonFact(
-      kind = CandidateComparisonKind.PlayedVsBest,
-      referenceLine = referenceLine,
-      candidateLine = playedLine,
-      comparison = EvalComparison(
-        mover = White,
-        candidateWinPercentDeltaForMover = -25.0,
-        verdict = MoveChoiceVerdict.Blunder,
-        detail = CandidateComparisonDeltaDetail.EngineEvaluation(0, None)
-      ),
-      verdictConfidence = VerdictConfidence.EngineBacked
-    )
-    val demandRecord = EvidenceRecord(
-      ref = EvidenceRef(
-        id = s"comparison-demand-$path",
-        producer = EvidenceProducer.RelativeMoveProducer,
-        layer = EvidenceLayer.CandidateComparison,
-        position = referenceRecord.ref.position,
-        line = Some(playedLine),
-        scope = EvidenceScope.Counterfactual,
-        confidence = EvidenceConfidence.EngineBacked
-      ),
-      payload = CandidateComparisonEvidence(comparison),
-      parents = List(
-        referenceRecord.ref,
-        playedRecord.ref,
-        evaluationRef(s"reference-eval-$path", referenceLine, referenceRecord.ref.position),
-        evaluationRef(s"played-eval-$path", playedLine, playedRecord.ref.position)
-      ).sortBy(_.id)
-    )
     val changedSeeds = for
       enablingStep <- referenceReplay.replaySteps.headOption.toList
       rootReachOccurrence <- referenceReplay.verticalRelationOccurrences(
@@ -397,8 +373,6 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
       playedLine,
       referenceRecord,
       playedRecord,
-      demandRecord,
-      comparison,
       referenceReplay,
       playedReplay,
       changedSeeds.sortBy(_.stableKey)
@@ -413,15 +387,4 @@ class VacatedGateEnablesUnrecapturableSliderCaptureTest extends munit.FunSuite:
       line = Some(line),
       scope = line.role.scope,
       confidence = EvidenceConfidence.LegalReplayVerified
-    )
-
-  private def evaluationRef(id: String, line: LineNodeRef, root: PositionNodeRef): EvidenceRef =
-    EvidenceRef(
-      id = id,
-      producer = EvidenceProducer.EngineEvalProducer,
-      layer = EvidenceLayer.Eval,
-      position = root,
-      line = Some(line),
-      scope = line.role.scope,
-      confidence = EvidenceConfidence.EngineBacked
     )

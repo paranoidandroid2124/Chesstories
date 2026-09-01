@@ -74,6 +74,12 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
     assert(exact.occurrence.occurrenceId.matches("[0-9a-f]{64}"))
     assert(exact.dependency.value.matches("[0-9a-f]{64}"))
     assert(exact.remainsCertified)
+    assertEquals(
+      exact.parentSources.map(_.id).toSet,
+      Set("reference-source-positive", "played-source-positive")
+    )
+    assert(exact.parentSources.forall(_.layer == EvidenceLayer.Line))
+    assert(exact.lowerIssuerRecords.forall(_.ref.layer == EvidenceLayer.Line))
 
   test("the specified bishop alternative prevents a sole-recapturer certificate"):
     val referenceReplay = certifiedReplay(negativeFen, referenceMoves)
@@ -116,7 +122,7 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
       Nil
     )
 
-  test("exact demand ownership changes only the dependency fingerprint"):
+  test("evaluation-only demand ownership leaves the structural proof identity unchanged"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
@@ -148,12 +154,10 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
 
     assertEquals(first.semantic.semanticId, second.semantic.semanticId)
     assertEquals(first.occurrence.occurrenceId, second.occurrence.occurrenceId)
-    assertNotEquals(first.dependency.value, second.dependency.value)
+    assertEquals(first.dependency.value, second.dependency.value)
     assert(first.consumesDependencies(
-      demand.payload.asInstanceOf[CandidateComparisonEvidence].comparison,
       context.evidenceGraph.uniqueProofEligibleLineFactRecordFor(first.occurrence.referenceLine).get._1,
-      context.evidenceGraph.uniqueProofEligibleLineFactRecordFor(first.occurrence.playedLine).get._1,
-      demand
+      context.evidenceGraph.uniqueProofEligibleLineFactRecordFor(first.occurrence.playedLine).get._1
     ))
 
   test("forged comparison confidence, scope, or ancestry cannot open an L2 demand"):
@@ -185,14 +189,7 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
       .getOrElse(fail("missing exact played line source"))
     val root = referenceSource.ref.position
     assert(context.evidenceGraph.proofEligible(demand))
-    assert(SoleRecapturerRemovalBeforeTargetCaptureProof.exactDemandRecord(
-      demand,
-      fact,
-      root,
-      referenceSource,
-      playedSource
-    ))
-    assert(UniqueCheckReplyDefenderDisplacementBeforeCaptureProof.exactDemandRecord(
+    assert(ActionablePlayedVsBestCausalProofDemand.acceptsRecord(
       demand,
       fact,
       root,
@@ -214,14 +211,7 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
     )
     forged.foreach { carrier =>
       assert(!context.withEvidence(carrier).evidenceGraph.proofEligible(carrier))
-      assert(!SoleRecapturerRemovalBeforeTargetCaptureProof.exactDemandRecord(
-        carrier,
-        fact,
-        root,
-        referenceSource,
-        playedSource
-      ))
-      assert(!UniqueCheckReplyDefenderDisplacementBeforeCaptureProof.exactDemandRecord(
+      assert(!ActionablePlayedVsBestCausalProofDemand.acceptsRecord(
         carrier,
         fact,
         root,
@@ -302,36 +292,6 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
       lineRef(s"played-source-$path", playedLine, rootFen),
       LineFactEvidence.fromCertifiedReplay(playedLine, playedReplay)
     )
-    val comparison = CandidateComparisonFact(
-      kind = CandidateComparisonKind.PlayedVsBest,
-      referenceLine = referenceLine,
-      candidateLine = playedLine,
-      comparison = EvalComparison(
-        mover = White,
-        candidateWinPercentDeltaForMover = -25.0,
-        verdict = MoveChoiceVerdict.Blunder,
-        detail = CandidateComparisonDeltaDetail.EngineEvaluation(0, None)
-      ),
-      verdictConfidence = VerdictConfidence.EngineBacked
-    )
-    val demandRecord = EvidenceRecord(
-      ref = EvidenceRef(
-        id = s"comparison-demand-$path",
-        producer = EvidenceProducer.RelativeMoveProducer,
-        layer = EvidenceLayer.CandidateComparison,
-        position = referenceRecord.ref.position,
-        line = Some(playedLine),
-        scope = EvidenceScope.Counterfactual,
-        confidence = EvidenceConfidence.EngineBacked
-      ),
-      payload = CandidateComparisonEvidence(comparison),
-      parents = List(
-        referenceRecord.ref,
-        playedRecord.ref,
-        evaluationRef(s"reference-eval-$path", referenceLine, referenceRecord.ref.position),
-        evaluationRef(s"played-eval-$path", playedLine, playedRecord.ref.position)
-      ).sortBy(_.id)
-    )
     val changedSeed = for
       removalStep <- referenceReplay.replaySteps.headOption
       removalReplyStep <- referenceReplay.replaySteps.lift(1)
@@ -361,8 +321,6 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
         playedLine,
         referenceRecord,
         playedRecord,
-        demandRecord,
-        comparison,
         referenceReplay,
         playedReplay,
         seed
@@ -395,19 +353,4 @@ class SoleRecapturerRemovalBeforeTargetCaptureTest extends munit.FunSuite:
       line = Some(line),
       scope = line.role.scope,
       confidence = EvidenceConfidence.LegalReplayVerified
-    )
-
-  private def evaluationRef(
-      id: String,
-      line: LineNodeRef,
-      root: PositionNodeRef
-  ): EvidenceRef =
-    EvidenceRef(
-      id = id,
-      producer = EvidenceProducer.EngineEvalProducer,
-      layer = EvidenceLayer.Eval,
-      position = root,
-      line = Some(line),
-      scope = line.role.scope,
-      confidence = EvidenceConfidence.EngineBacked
     )

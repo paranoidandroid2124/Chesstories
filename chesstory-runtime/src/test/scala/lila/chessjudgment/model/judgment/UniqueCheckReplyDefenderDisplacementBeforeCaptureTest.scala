@@ -75,6 +75,12 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     assertEquals(absenceUse.binding.issuerOccurrenceId, issuerOccurrence.occurrenceId)
     assert(absenceUse.binding.semanticProofId.matches("[0-9a-f]{64}"))
     assert(exact.dependency.value.matches("[0-9a-f]{64}"))
+    assertEquals(
+      exact.proof.parentSources.map(_.id).toSet,
+      Set("reference-source-exact", "played-source-exact")
+    )
+    assert(exact.proof.parentSources.forall(_.layer == EvidenceLayer.Line))
+    assert(exact.proof.lowerIssuerRecords.forall(_.ref.layer == EvidenceLayer.Line))
 
   test("the exact replay position owns one cached absence while line paths remain distinct"):
     val replay = certifiedReplay(referenceMoves)
@@ -180,33 +186,7 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     assertNotEquals(first.occurrence.occurrenceId, second.occurrence.occurrenceId)
     assertNotEquals(first.dependency.value, second.dependency.value)
 
-  test("dependency fingerprint retains exact demand ownership"):
-    val referenceLine = LineNodeRef("reference-demand", referenceMoves.head, 1, LineNodeRole.BestReference)
-    val playedLine = LineNodeRef("played-demand", playedMoves.head, 1, LineNodeRole.Played)
-    val referenceReplay = certifiedReplay(referenceMoves)
-    val playedReplay = certifiedReplay(playedMoves)
-    val first = deriveProofs(
-      "same-path",
-      referenceLine,
-      playedLine,
-      referenceReplay,
-      playedReplay,
-      demandId = "demand-owner-a"
-    ).head
-    val second = deriveProofs(
-      "same-path",
-      referenceLine,
-      playedLine,
-      referenceReplay,
-      playedReplay,
-      demandId = "demand-owner-b"
-    ).head
-
-    assertEquals(first.semantic.semanticId, second.semantic.semanticId)
-    assertEquals(first.occurrence.occurrenceId, second.occurrence.occurrenceId)
-    assertNotEquals(first.dependency.value, second.dependency.value)
-
-  test("a changed exact demand dispatches beside stale proof state and only its proof is consumed"):
+  test("evaluation-only demand ownership reuses the structural proof identity"):
     val lowerFacts = EvidenceFactAssembler
       .assemble(
         RawMoveReviewInput(
@@ -244,20 +224,18 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     val newPayload = dispatched.payload.asInstanceOf[UniqueCheckReplyDefenderDisplacementBeforeCaptureEvidence]
     assertEquals(newPayload.semanticId, oldPayload.semanticId)
     assertEquals(newPayload.occurrenceId, oldPayload.occurrenceId)
-    assertNotEquals(newPayload.dependencyId, oldPayload.dependencyId)
-    assertNotEquals(dispatched.ref.id, oldProof.ref.id)
-    assert(dispatched.ref.id.contains(newPayload.semanticId))
-    assert(dispatched.ref.id.contains(newPayload.occurrenceId))
-    assert(dispatched.ref.id.contains(newPayload.dependencyId))
+    assertEquals(newPayload.dependencyId, oldPayload.dependencyId)
+    assertEquals(dispatched.ref.id, oldProof.ref.id)
+    assertEquals(dispatched.parents.map(_.layer).distinct, List(EvidenceLayer.Line))
 
-    val current = staleContext.withEvidence(dispatched)
+    val current = staleContext
     assertEquals(
       dispatchForcedReply(
         current,
         JudgmentProvenanceAllocator.forInput(lowerFacts.input),
         changedDemand
       ).map(_.ref.id),
-      List(dispatched.ref.id)
+      List(oldProof.ref.id)
     )
     assertEquals(
       dispatchForcedReply(
@@ -276,7 +254,7 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
       referenceRecords,
       candidateRecords
     )
-    assertEquals(profile.referenceMoveOrderProofs.map(_.ref.id), List(dispatched.ref.id))
+    assertEquals(profile.referenceMoveOrderProofs.map(_.ref.id), List(oldProof.ref.id))
 
   test("missing sibling defense fails closed"):
     val referenceLine = LineNodeRef("reference-closed", referenceMoves.head, 1, LineNodeRole.BestReference)
@@ -576,7 +554,6 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
       playedLine: LineNodeRef,
       referenceReplay: CanonicalLineReplay,
       playedReplay: CanonicalLineReplay,
-      demandId: String = "",
       root: String = rootFen
   ): List[CertifiedUniqueCheckReplyDefenderDisplacementBeforeCapture] =
     val referenceRecord = EvidenceRecord(
@@ -586,36 +563,6 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
     val playedRecord = EvidenceRecord(
       lineRef(s"played-source-$path", playedLine, root),
       LineFactEvidence.fromCertifiedReplay(playedLine, playedReplay)
-    )
-    val comparison = CandidateComparisonFact(
-      kind = CandidateComparisonKind.PlayedVsBest,
-      referenceLine = referenceLine,
-      candidateLine = playedLine,
-      comparison = EvalComparison(
-        mover = White,
-        candidateWinPercentDeltaForMover = -25.0,
-        verdict = MoveChoiceVerdict.Blunder,
-        detail = CandidateComparisonDeltaDetail.EngineEvaluation(0, None)
-      ),
-      verdictConfidence = VerdictConfidence.EngineBacked
-    )
-    val demandRecord = EvidenceRecord(
-      ref = EvidenceRef(
-        id = Option(demandId).filter(_.nonEmpty).getOrElse(s"comparison-demand-$path"),
-        producer = EvidenceProducer.RelativeMoveProducer,
-        layer = EvidenceLayer.CandidateComparison,
-        position = referenceRecord.ref.position,
-        line = Some(playedLine),
-        scope = EvidenceScope.Counterfactual,
-        confidence = EvidenceConfidence.EngineBacked
-      ),
-      payload = CandidateComparisonEvidence(comparison),
-      parents = List(
-        referenceRecord.ref,
-        playedRecord.ref,
-        evaluationRef(s"reference-eval-$path", referenceLine, referenceRecord.ref.position),
-        evaluationRef(s"played-eval-$path", playedLine, playedRecord.ref.position)
-      ).sortBy(_.id)
     )
     val changedSeed = for
       trigger <- referenceReplay.replaySteps.headOption
@@ -646,8 +593,6 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
         playedLine,
         referenceRecord,
         playedRecord,
-        demandRecord,
-        comparison,
         referenceReplay,
         playedReplay,
         seed
@@ -670,19 +615,4 @@ class UniqueCheckReplyDefenderDisplacementBeforeCaptureTest extends munit.FunSui
       line = Some(line),
       scope = line.role.scope,
       confidence = EvidenceConfidence.LegalReplayVerified
-    )
-
-  private def evaluationRef(
-      id: String,
-      line: LineNodeRef,
-      root: PositionNodeRef
-  ): EvidenceRef =
-    EvidenceRef(
-      id = id,
-      producer = EvidenceProducer.EngineEvalProducer,
-      layer = EvidenceLayer.Eval,
-      position = root,
-      line = Some(line),
-      scope = line.role.scope,
-      confidence = EvidenceConfidence.EngineBacked
     )

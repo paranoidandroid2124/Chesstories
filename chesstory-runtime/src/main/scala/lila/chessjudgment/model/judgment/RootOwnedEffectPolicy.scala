@@ -86,9 +86,13 @@ private[chessjudgment] object RootOwnedEffectPolicy:
               result.occurrence.playedLine == comparison.candidateLine
           )
       case RootOwnedEffectProof.PassedPawnProgressRealizedAfterOnlyLegalReply(_, result) =>
-        result.comparisonDemand == cause.comparisonEvidence &&
-          result.consequenceKind == TransitionConsequenceKind.PassedPawnProgress &&
-          result.hasCompleteProofPaths
+        result.consequenceKind == TransitionConsequenceKind.PassedPawnProgress &&
+          result.hasCompleteProofPaths &&
+          graph.comparisonFor(cause).exists(comparison =>
+            ActionablePlayedVsBestCausalProofDemand.accepts(comparison) &&
+              comparison.candidateLine == result.rootLine &&
+              comparison.comparison.mover == result.resultActor.side
+          )
     )
 
   private def sameCausalRootBoard(

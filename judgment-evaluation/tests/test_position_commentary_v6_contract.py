@@ -20,7 +20,7 @@ PROFILE = "sf18-smallnet-t2-h16-v1"
 # Schema-only wire sample. Exact private ancestry and owner identities are
 # certified by the Scala assembler-to-serializer tests, not these placeholders.
 def _passed_pawn_progress_realized_after_only_legal_reply_proof(after_a3: str) -> dict[str, object]:
-    actual_branch_id = "1" * 64
+    analysis_continuation_branch_id = "1" * 64
     played_line = {
         "line_id": "line.played.passed-pawn-result",
         "line_role": "played",
@@ -110,7 +110,6 @@ def _passed_pawn_progress_realized_after_only_legal_reply_proof(after_a3: str) -
     return {
         "source_evidence_id": "passed-pawn-result-proof-evidence",
         "event_evidence_id": "passed-pawn-result-event-evidence",
-        "comparison_evidence_id": "comparison.played-vs-best",
         "semantic_id": "a" * 64,
         "occurrence_id": "b" * 64,
         "dependency_fingerprint": "c" * 64,
@@ -147,12 +146,12 @@ def _passed_pawn_progress_realized_after_only_legal_reply_proof(after_a3: str) -
             "issuer_evidence_id": "structural-delta-evidence",
             "root_after": {"fen": after_a3, "ply": 1, "scope": "played_transition"},
             "legal_reply_move": "h8g8",
-            "actual_branch_id": actual_branch_id,
+            "analysis_continuation_branch_id": analysis_continuation_branch_id,
         },
         "branches": [
             {
-                "branch_id": actual_branch_id,
-                "role": "actual_result_route",
+                "branch_id": analysis_continuation_branch_id,
+                "role": "played_root_analysis_continuation",
                 "reply_move": "h8g8",
                 "source_occurrence_id": "0" * 64,
                 "line": played_line,
@@ -163,7 +162,7 @@ def _passed_pawn_progress_realized_after_only_legal_reply_proof(after_a3: str) -
         "proof_paths": [
             {
                 "path_occurrence_id": "8" * 64,
-                "actual_branch_id": actual_branch_id,
+                "analysis_continuation_branch_id": analysis_continuation_branch_id,
                 "realization_actor": {
                     "side": "white",
                     "piece_before": "pawn",
@@ -176,30 +175,20 @@ def _passed_pawn_progress_realized_after_only_legal_reply_proof(after_a3: str) -
                 "realization_ply": 3,
                 "premises": [
                     {
-                        "role": "comparison_demand",
-                        "lower_kind": "played_vs_best_demand",
-                        "lower_semantic_key": "comparison-key",
-                        "source_premise_ids": ["comparison.played-vs-best"],
-                        "branch_id": actual_branch_id,
-                        "branch_role": "actual_result_route",
-                        "from_step_index": 0,
-                        "to_step_index": 0,
-                    },
-                    {
                         "role": "dependency",
                         "lower_kind": "passed_pawn_progress_dependency",
                         "lower_semantic_key": dependency_key,
                         "source_premise_ids": sorted([
                             "passed-pawn-result-event-evidence",
-                            "object-state-owner.actual",
+                            "object-state-owner.analysis",
                             "4" * 64,
                         ]),
-                        "branch_id": actual_branch_id,
-                        "branch_role": "actual_result_route",
+                        "branch_id": analysis_continuation_branch_id,
+                        "branch_role": "played_root_analysis_continuation",
                         "from_step_index": 0,
                         "to_step_index": 2,
                         "dependency_proof": object_state_dependency_proof(
-                            "object-state-owner.actual",
+                            "object-state-owner.analysis",
                             "4" * 64,
                             played_line,
                             "played_line",
@@ -208,10 +197,10 @@ def _passed_pawn_progress_realized_after_only_legal_reply_proof(after_a3: str) -
                     {
                         "role": "result",
                         "lower_kind": "passed_pawn_progress",
-                        "lower_semantic_key": "actual-result",
+                        "lower_semantic_key": "analysis-result",
                         "source_premise_ids": ["passed-pawn-result-event-evidence"],
-                        "branch_id": actual_branch_id,
-                        "branch_role": "actual_result_route",
+                        "branch_id": analysis_continuation_branch_id,
+                        "branch_role": "played_root_analysis_continuation",
                         "from_step_index": 2,
                         "to_step_index": 2,
                     },
@@ -220,9 +209,8 @@ def _passed_pawn_progress_realized_after_only_legal_reply_proof(after_a3: str) -
             }
         ],
         "lower_premise_ids": sorted([
-            "comparison.played-vs-best",
             "4" * 64,
-            "object-state-owner.actual",
+            "object-state-owner.analysis",
             "passed-pawn-result-event-evidence",
             "structural-delta-evidence",
         ]),
@@ -534,18 +522,18 @@ class PositionCommentaryV6ContractTest(unittest.TestCase):
                 "position-commentary-response.schema.json", retired_projection_fields
             )
 
-        detached_actual_route = copy.deepcopy(response)
-        proof = detached_actual_route["result"]["selected_move_reviews"][1]["commentary"][
+        detached_analysis_route = copy.deepcopy(response)
+        proof = detached_analysis_route["result"]["selected_move_reviews"][1]["commentary"][
             "causal_explanations"
         ][0]["channels"][0]["passed_pawn_progress_realized_after_only_legal_reply_proof"]
-        actual_steps = proof["branches"][0]["steps"]
-        actual_steps[-1]["fen_before"] = actual_steps[0]["fen_after"]
-        actual_steps[-1]["step_key"] = (
-            f'{actual_steps[-1]["ply"]}:{actual_steps[-1]["move_uci"]}:'
-            f'{actual_steps[-1]["fen_before"]}:{actual_steps[-1]["fen_after"]}'
+        continuation_steps = proof["branches"][0]["steps"]
+        continuation_steps[-1]["fen_before"] = continuation_steps[0]["fen_after"]
+        continuation_steps[-1]["step_key"] = (
+            f'{continuation_steps[-1]["ply"]}:{continuation_steps[-1]["move_uci"]}:'
+            f'{continuation_steps[-1]["fen_before"]}:{continuation_steps[-1]["fen_after"]}'
         )
         with self.assertRaises(ContractError):
-            self.validate("position-commentary-response.schema.json", detached_actual_route)
+            self.validate("position-commentary-response.schema.json", detached_analysis_route)
 
         skipped_ply = copy.deepcopy(response)
         proof = skipped_ply["result"]["selected_move_reviews"][1]["commentary"][

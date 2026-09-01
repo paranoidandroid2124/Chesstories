@@ -2,8 +2,8 @@ package lila.chessjudgment.analysis.assembly
 
 import lila.chessjudgment.model.judgment.*
 
-/** Seals one played actual result occurrence and all of its independent
-  * graph-owned dependency routes after an exact PlayedVsBest demand.
+/** Seals one played root with its certified analysis-result continuation and
+  * all graph-owned dependency routes after an exact PlayedVsBest demand.
   */
 private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProofAssembler:
 
@@ -12,7 +12,6 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
       allocator: JudgmentProvenanceAllocator,
       demand: PassedPawnResultEventAssembler.PassedPawnResultDemand
   ): List[EvidenceRecord] =
-    val comparison = demand.input.demandSource
     val records = demand.rootLines.toList.sortBy(_.id).flatMap { line =>
       val lineRecords = context.evidenceGraph.recordsFor(line)
       val proofOwnersBySemantic = lineRecords.collect {
@@ -28,16 +27,15 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
               exactOwnersForDependencies(
                 proofOwnersBySemantic.getOrElse(semanticIdentity, Nil),
                 source,
-                comparison,
                 inventoryOwner,
                 routes
               ) match
                 case exact :: Nil => List(exact)
                 case Nil =>
                   PassedPawnProgressRealizedAfterOnlyLegalReplyProofDerivation
-                    .derive(source, comparison, inventoryOwner, routes)
+                    .derive(source, inventoryOwner, routes)
                     .map { proof =>
-                      val parents = List(source.ref, comparison.ref, inventoryOwner.ref)
+                      val parents = List(source.ref, inventoryOwner.ref)
                       require(
                         parents.map(_.id).distinct.size == parents.size,
                         "passed-pawn causal proof parents must have distinct derivation owners"
@@ -61,7 +59,7 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
                     .toList
                 case _ :: _ =>
                   throw IllegalStateException(
-                    "one exact passed-pawn actual-route dependency manifest has multiple graph owners"
+                    "one exact passed-pawn analysis-continuation dependency manifest has multiple graph owners"
                   )
             }
           }
@@ -70,7 +68,7 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
     }
     require(
       records.map(_.ref.id).distinct.size == records.size,
-      "one exact passed-pawn actual result occurrence may be produced only once"
+      "one exact passed-pawn analysis-result occurrence may be produced only once"
     )
     records.sortBy(record =>
       record.payload match
@@ -83,14 +81,12 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
       graph: TypedEvidenceGraph,
       line: LineNodeRef,
       source: EvidenceRecord,
-      comparison: EvidenceRecord,
       inventory: EvidenceRecord,
       routes: List[PassedPawnResultRoute]
   ): List[EvidenceRecord] =
     exactOwnersForDependencies(
       graph.recordsFor(line).filter(graph.proofEligible),
       source,
-      comparison,
       inventory,
       routes
     )
@@ -98,13 +94,12 @@ private[chessjudgment] object PassedPawnProgressRealizedAfterOnlyLegalReplyProof
   private def exactOwnersForDependencies(
       eligibleOwners: List[EvidenceRecord],
       source: EvidenceRecord,
-      comparison: EvidenceRecord,
       inventory: EvidenceRecord,
       routes: List[PassedPawnResultRoute]
   ): List[EvidenceRecord] =
     eligibleOwners.collect {
       case record @ EvidenceRecord(_, proof: PassedPawnProgressRealizedAfterOnlyLegalReplyProofEvidence, _)
-          if proof.consumesExactDependencies(source, comparison, inventory, routes) =>
+          if proof.consumesExactDependencies(source, inventory, routes) =>
         record
     }
 
